@@ -230,6 +230,148 @@ end
     @test isnothing(edge_coefficients.coefficient_matrix)
     @test !edge_coefficients.coefficient_maps_materialized
 
+    facet_context =
+        CPBMForLWAdapter.white_lindsey_boundary_stratum_unit_coefficient_context(
+            facet_descriptor,
+        )
+    @test facet_context.object_kind ==
+          :white_lindsey_boundary_stratum_unit_coefficient_context
+    @test facet_context.status ==
+          :blocked_missing_white_lindsey_facet_kernel_context
+    @test facet_context.blocker ==
+          :missing_white_lindsey_doside_source_1d
+    @test facet_context.planned_old_calls ==
+          (:_nested_doside_1d, :_nested_face_product)
+    @test facet_context.face_kind == :yz
+    @test facet_context.fixed_index == 1
+    @test isnothing(facet_context.fixed_side)
+    @test facet_context.missing_inputs == (
+        :missing_white_lindsey_doside_source_1d,
+        :missing_white_lindsey_retained_count,
+        :missing_white_lindsey_parent_dims,
+        :missing_white_lindsey_fixed_side_metadata,
+    )
+    @test !facet_context.coefficient_maps_materialized
+    @test !facet_context.source_operator_blocks_materialized
+    @test !facet_context.final_pair_blocks_materialized
+
+    edge_context =
+        CPBMForLWAdapter.white_lindsey_boundary_stratum_unit_coefficient_context(
+            edge_descriptor,
+        )
+    @test edge_context.status ==
+          :blocked_missing_white_lindsey_edge_kernel_context
+    @test edge_context.blocker ==
+          :missing_white_lindsey_doside_source_1d
+    @test edge_context.planned_old_calls ==
+          (:_nested_doside_1d, :_nested_edge_product)
+    @test edge_context.free_axis == :z
+    @test edge_context.free_axis_interval == 1:3
+    @test edge_context.fixed_indices == (4, 2)
+    @test isnothing(edge_context.fixed_sides)
+    @test edge_context.missing_inputs == (
+        :missing_white_lindsey_doside_source_1d,
+        :missing_white_lindsey_retained_count,
+        :missing_white_lindsey_parent_dims,
+        :missing_white_lindsey_fixed_side_metadata,
+    )
+    @test !edge_context.coefficient_maps_materialized
+
+    ready_facet_descriptor = merge(
+        facet_descriptor,
+        (;
+            fixed_side_metadata = ((; axis = :x, side = :low),),
+            retained_count = 9,
+            parent_dims = (7, 7, 7),
+            doside_source_1d = :synthetic_doside_source_1d,
+        ),
+    )
+    ready_facet_context =
+        CPBMForLWAdapter.white_lindsey_boundary_stratum_unit_coefficient_context(
+            ready_facet_descriptor,
+        )
+    @test ready_facet_context.status ==
+          :ready_white_lindsey_facet_kernel_context_not_materialized
+    @test isnothing(ready_facet_context.blocker)
+    @test ready_facet_context.face_kind == :yz
+    @test ready_facet_context.fixed_side == :low
+    @test ready_facet_context.fixed_index == 1
+    @test ready_facet_context.active_product_axis_intervals == (
+        (; axis = :y, interval = 1:3),
+        (; axis = :z, interval = 1:3),
+    )
+    @test ready_facet_context.retained_count == 9
+    @test ready_facet_context.parent_dims == (7, 7, 7)
+    @test ready_facet_context.doside_source_1d == :synthetic_doside_source_1d
+    @test ready_facet_context.planned_old_calls ==
+          (:_nested_doside_1d, :_nested_face_product)
+    @test ready_facet_context.missing_inputs == ()
+    @test !ready_facet_context.coefficient_maps_materialized
+
+    ready_edge_descriptor = merge(
+        edge_descriptor,
+        (;
+            fixed_side_metadata = (
+                (; axis = :x, side = :high),
+                (; axis = :y, side = :low),
+            ),
+            retained_count = 3,
+            parent_dims = (7, 7, 7),
+            doside_source_1d = :synthetic_doside_source_1d,
+        ),
+    )
+    ready_edge_context =
+        CPBMForLWAdapter.white_lindsey_boundary_stratum_unit_coefficient_context(
+            ready_edge_descriptor,
+        )
+    @test ready_edge_context.status ==
+          :ready_white_lindsey_edge_kernel_context_not_materialized
+    @test isnothing(ready_edge_context.blocker)
+    @test ready_edge_context.free_axis == :z
+    @test ready_edge_context.free_axis_interval == 1:3
+    @test ready_edge_context.fixed_sides == (:high, :low)
+    @test ready_edge_context.fixed_indices == (4, 2)
+    @test ready_edge_context.retained_count == 3
+    @test ready_edge_context.parent_dims == (7, 7, 7)
+    @test ready_edge_context.doside_source_1d == :synthetic_doside_source_1d
+    @test ready_edge_context.planned_old_calls ==
+          (:_nested_doside_1d, :_nested_edge_product)
+    @test ready_edge_context.missing_inputs == ()
+    @test !ready_edge_context.edge_facet_coefficient_maps_materialized
+
+    ready_corner_descriptor = merge(
+        corner_descriptor,
+        (;
+            fixed_side_metadata = (
+                (; axis = :x, side = :high),
+                (; axis = :y, side = :high),
+                (; axis = :z, side = :high),
+            ),
+            parent_dims = (7, 7, 7),
+        ),
+    )
+    ready_corner_context =
+        CPBMForLWAdapter.white_lindsey_boundary_stratum_unit_coefficient_context(
+            ready_corner_descriptor,
+        )
+    @test ready_corner_context.status ==
+          :ready_white_lindsey_corner_kernel_context_not_materialized
+    @test isnothing(ready_corner_context.blocker)
+    @test ready_corner_context.fixed_sides == (:high, :high, :high)
+    @test ready_corner_context.fixed_indices == (4, 3, 3)
+    @test ready_corner_context.parent_dims == (7, 7, 7)
+    @test ready_corner_context.planned_old_calls == (:_nested_corner_piece,)
+    @test ready_corner_context.missing_inputs == ()
+    @test !ready_corner_context.coefficient_maps_materialized
+
+    ready_corner_coefficients =
+        CPBMForLWAdapter.white_lindsey_boundary_stratum_unit_coefficients(
+            ready_corner_descriptor,
+        )
+    @test ready_corner_coefficients.status ==
+          :materialized_white_lindsey_corner_unit_coefficients
+    @test ready_corner_coefficients.coefficient_matrix == [1.0;;]
+
     bad_descriptor = (;
         object_kind = :white_lindsey_boundary_stratum_unit_adapter_descriptor,
         status = :available_metadata_only_white_lindsey_unit_adapter_descriptor,

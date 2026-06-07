@@ -29,6 +29,39 @@ function white_lindsey_boundary_stratum_unit_coefficients(unit_or_descriptor)
     )
 end
 
+"""
+    white_lindsey_boundary_stratum_unit_coefficient_context(unit_or_descriptor)
+
+Return metadata-only old-kernel input context for one White--Lindsey
+boundary-stratum unit. This reports the facts needed by future edge/facet
+coefficient adapters without calling old kernels or materializing those
+coefficient maps.
+"""
+function white_lindsey_boundary_stratum_unit_coefficient_context(unit_or_descriptor)
+    descriptor =
+        _white_lindsey_is_unit_adapter_descriptor(unit_or_descriptor) ?
+        unit_or_descriptor :
+        _white_lindsey_has_retained_unit_fields(unit_or_descriptor) ?
+        white_lindsey_boundary_stratum_unit_adapter_descriptor(unit_or_descriptor) :
+        nothing
+
+    isnothing(descriptor) && return _white_lindsey_unit_coefficient_context(
+        (;),
+        :blocked_unknown_white_lindsey_unit_coefficient_context,
+        :not_white_lindsey_boundary_stratum_unit_or_descriptor,
+        (),
+    )
+
+    status, blocker, planned_old_calls =
+        _white_lindsey_unit_coefficient_context_status(descriptor)
+    return _white_lindsey_unit_coefficient_context(
+        descriptor,
+        status,
+        blocker,
+        planned_old_calls,
+    )
+end
+
 function _white_lindsey_boundary_stratum_unit_coefficients_from_descriptor(
     descriptor,
 )
@@ -204,6 +237,174 @@ end
 function _white_lindsey_descriptor_property(value, key::Symbol, default = nothing)
     hasproperty(value, key) && return getproperty(value, key)
     return default
+end
+
+function _white_lindsey_unit_coefficient_context_status(descriptor)
+    descriptor_status = _white_lindsey_descriptor_property(descriptor, :status)
+    descriptor_status ===
+        :available_metadata_only_white_lindsey_unit_adapter_descriptor || return (
+        :blocked_unavailable_white_lindsey_unit_coefficient_context,
+        _white_lindsey_descriptor_property(
+            descriptor,
+            :blocker,
+            :unavailable_white_lindsey_unit_adapter_descriptor,
+        ),
+        (),
+    )
+
+    stratum_kind = _white_lindsey_descriptor_property(descriptor, :stratum_kind)
+    missing = _white_lindsey_context_missing_inputs(descriptor)
+    if stratum_kind in (:facet_cpb, :face_cpb)
+        isempty(missing) && return (
+            :ready_white_lindsey_facet_kernel_context_not_materialized,
+            nothing,
+            (:_nested_doside_1d, :_nested_face_product),
+        )
+        return (
+            :blocked_missing_white_lindsey_facet_kernel_context,
+            first(missing),
+            (:_nested_doside_1d, :_nested_face_product),
+        )
+    elseif stratum_kind === :edge_cpb
+        isempty(missing) && return (
+            :ready_white_lindsey_edge_kernel_context_not_materialized,
+            nothing,
+            (:_nested_doside_1d, :_nested_edge_product),
+        )
+        return (
+            :blocked_missing_white_lindsey_edge_kernel_context,
+            first(missing),
+            (:_nested_doside_1d, :_nested_edge_product),
+        )
+    elseif stratum_kind === :corner_cpb
+        isempty(missing) && return (
+            :ready_white_lindsey_corner_kernel_context_not_materialized,
+            nothing,
+            (:_nested_corner_piece,),
+        )
+        return (
+            :blocked_missing_white_lindsey_corner_kernel_context,
+            first(missing),
+            (:_nested_corner_piece,),
+        )
+    end
+    return (
+        :blocked_unknown_white_lindsey_unit_coefficient_context,
+        :unknown_white_lindsey_unit_coefficients_stratum,
+        (),
+    )
+end
+
+function _white_lindsey_unit_coefficient_context(
+    descriptor,
+    status::Symbol,
+    blocker,
+    planned_old_calls,
+)
+    stratum_kind = _white_lindsey_descriptor_property(descriptor, :stratum_kind)
+    return (;
+        object_kind = :white_lindsey_boundary_stratum_unit_coefficient_context,
+        status,
+        blocker,
+        unit_key = _white_lindsey_descriptor_property(descriptor, :unit_key),
+        unit_index = _white_lindsey_descriptor_property(descriptor, :unit_index),
+        unit_kind = _white_lindsey_descriptor_property(descriptor, :unit_kind),
+        stratum_kind,
+        planned_old_calls,
+        missing_inputs = _white_lindsey_context_missing_inputs(descriptor),
+        source_cpb_role =
+            _white_lindsey_descriptor_property(descriptor, :source_cpb_role),
+        source_cpb_intervals =
+            _white_lindsey_descriptor_property(descriptor, :source_cpb_intervals),
+        source_axis_intervals =
+            _white_lindsey_descriptor_property(descriptor, :source_axis_intervals),
+        active_product_axis_intervals =
+            _white_lindsey_descriptor_property(
+                descriptor,
+                :active_product_axis_intervals,
+            ),
+        face_kind = _white_lindsey_context_face_kind(descriptor),
+        fixed_side = _white_lindsey_context_fixed_side(descriptor),
+        fixed_index = _white_lindsey_context_fixed_index(descriptor),
+        free_axis = _white_lindsey_descriptor_property(descriptor, :free_axis),
+        free_axis_interval =
+            _white_lindsey_descriptor_property(descriptor, :free_axis_interval),
+        fixed_sides = _white_lindsey_context_fixed_sides(descriptor),
+        fixed_indices = _white_lindsey_context_fixed_indices(descriptor),
+        retained_count =
+            _white_lindsey_descriptor_property(descriptor, :retained_count),
+        parent_dims = _white_lindsey_descriptor_property(descriptor, :parent_dims),
+        doside_source_1d =
+            _white_lindsey_descriptor_property(descriptor, :doside_source_1d),
+        coefficient_maps_materialized = false,
+        edge_facet_coefficient_maps_materialized = false,
+        source_operator_blocks_materialized = false,
+        final_pair_blocks_materialized = false,
+        operator_blocks_materialized = false,
+        hamiltonian_data_materialized = false,
+        artifacts_materialized = false,
+    )
+end
+
+function _white_lindsey_context_missing_inputs(descriptor)
+    stratum_kind = _white_lindsey_descriptor_property(descriptor, :stratum_kind)
+    if stratum_kind in (:facet_cpb, :face_cpb, :edge_cpb)
+        return _white_lindsey_missing_unit_coefficient_inputs(descriptor)
+    elseif stratum_kind === :corner_cpb
+        missing = Symbol[]
+        isnothing(_white_lindsey_context_fixed_sides(descriptor)) &&
+            push!(missing, :missing_white_lindsey_fixed_side_metadata)
+        isnothing(_white_lindsey_context_fixed_indices(descriptor)) &&
+            push!(missing, :missing_white_lindsey_corner_fixed_coordinates)
+        return Tuple(missing)
+    end
+    return ()
+end
+
+function _white_lindsey_context_fixed_side_metadata(descriptor)
+    return _white_lindsey_descriptor_property(descriptor, :fixed_side_metadata)
+end
+
+function _white_lindsey_context_fixed_sides(descriptor)
+    fixed_side_metadata = _white_lindsey_context_fixed_side_metadata(descriptor)
+    isnothing(fixed_side_metadata) && return nothing
+    return Tuple(entry.side for entry in fixed_side_metadata)
+end
+
+function _white_lindsey_context_fixed_indices(descriptor)
+    fixed_coordinates =
+        _white_lindsey_descriptor_property(descriptor, :fixed_axis_coordinates)
+    isnothing(fixed_coordinates) && return nothing
+    return Tuple(entry.coordinate for entry in fixed_coordinates)
+end
+
+function _white_lindsey_context_fixed_side(descriptor)
+    fixed_sides = _white_lindsey_context_fixed_sides(descriptor)
+    isnothing(fixed_sides) && return nothing
+    length(fixed_sides) == 1 || return nothing
+    return only(fixed_sides)
+end
+
+function _white_lindsey_context_fixed_index(descriptor)
+    fixed_indices = _white_lindsey_context_fixed_indices(descriptor)
+    isnothing(fixed_indices) && return nothing
+    length(fixed_indices) == 1 || return nothing
+    return only(fixed_indices)
+end
+
+function _white_lindsey_context_face_kind(descriptor)
+    active_axes = Tuple(
+        entry.axis for entry in _white_lindsey_descriptor_property(
+            descriptor,
+            :active_product_axis_intervals,
+            (),
+        )
+    )
+    length(active_axes) == 2 || return nothing
+    active_axes == (:x, :y) && return :xy
+    active_axes == (:x, :z) && return :xz
+    active_axes == (:y, :z) && return :yz
+    return nothing
 end
 
 function _white_lindsey_unit_coefficient_input_requirements(descriptor)
