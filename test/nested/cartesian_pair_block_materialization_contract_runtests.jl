@@ -121,11 +121,110 @@ function _pair_block_retained_plan()
     )
 end
 
+function _pair_block_rectangular_retained_plan()
+    left_source = CPBForPairBlocks.cpb(
+        1:2,
+        1:2,
+        1:1;
+        role = :pair_block_direct_left_source_cpb,
+    )
+    right_source = CPBForPairBlocks.cpb(
+        3:3,
+        2:3,
+        1:3;
+        role = :pair_block_direct_right_source_cpb,
+    )
+    left_direct = _pair_block_retained_unit(
+        :pair_block_direct_left_unit,
+        1,
+        :direct_cpb_retained_unit,
+        :direct_core_identity_cpb,
+        :direct_source_modes,
+        :direct_or_trivial_embedding;
+        owned_support = CRCForPairBlocks.owned_cpb(left_source),
+        source_cpbs = (left_source,),
+    )
+    right_direct = _pair_block_retained_unit(
+        :pair_block_direct_right_unit,
+        2,
+        :direct_cpb_retained_unit,
+        :direct_core_identity_cpb,
+        :direct_source_modes,
+        :direct_or_trivial_embedding;
+        owned_support = CRCForPairBlocks.owned_cpb(right_source),
+        source_cpbs = (right_source,),
+    )
+    pqs = _pair_block_retained_unit(
+        :pair_block_rectangular_pqs_unit,
+        3,
+        :pqs_shell_retained_unit,
+        :pqs_filled_source_cpb,
+        :pqs_boundary_comx_product_modes,
+        :shell_projection_lowdin,
+    )
+    units = (left_direct, right_direct, pqs)
+    return CRUForPairBlocks.RetainedUnitPlan(
+        CRUForPairBlocks.MetadataOnlyRetainedUnits(),
+        _pair_block_minimal_lowering_plan(),
+        units,
+        (;
+            object_kind = :synthetic_retained_unit_plan_summary,
+            status = :available_retained_unit_plan,
+            retained_unit_count = length(units),
+            materialized = false,
+            transforms_materialized = false,
+            coefficient_maps_materialized = false,
+            pair_inventory_materialized = false,
+            operator_blocks_materialized = false,
+            hamiltonian_data_materialized = false,
+        ),
+        (; fixture = :cartesian_pair_block_rectangular_direct_direct),
+    )
+end
+
 function _pair_block_record_for(plan, left_key::Symbol, right_key::Symbol)
     return only(
         record for record in CPBM.pair_block_materialization_records(plan)
         if record.pair_key == (left_key, right_key)
     )
+end
+
+function _pair_block_overlap_axes()
+    overlap_x = [
+        1.00 0.11 0.13 0.17
+        0.11 1.20 0.19 0.23
+        0.13 0.19 1.40 0.29
+        0.17 0.23 0.29 1.60
+    ]
+    overlap_y = [
+        1.70 0.31 0.37 0.41
+        0.31 1.90 0.43 0.47
+        0.37 0.43 2.10 0.53
+        0.41 0.47 0.53 2.30
+    ]
+    overlap_z = [
+        2.50 0.59 0.61 0.67
+        0.59 2.70 0.71 0.73
+        0.61 0.71 2.90 0.79
+        0.67 0.73 0.79 3.10
+    ]
+    return overlap_x, overlap_y, overlap_z
+end
+
+function _pair_block_cpb_states(source_cpb)
+    ix, iy, iz = CPBForPairBlocks.intervals(source_cpb)
+    return Tuple((x, y, z) for x in ix for y in iy for z in iz)
+end
+
+function _pair_block_expected_overlap(left_cpb, right_cpb, overlap_x, overlap_y, overlap_z)
+    left_states = _pair_block_cpb_states(left_cpb)
+    right_states = _pair_block_cpb_states(right_cpb)
+    return [
+        overlap_x[left[1], right[1]] *
+        overlap_y[left[2], right[2]] *
+        overlap_z[left[3], right[3]]
+        for left in left_states, right in right_states
+    ]
 end
 
 @testset "CartesianPairBlockMaterialization unavailable summary" begin
@@ -219,36 +318,21 @@ end
     @test direct_record.blocker === nothing
     @test !direct_record.materialized
 
-    overlap_x = [
-        1.00 0.11 0.13 0.17
-        0.11 1.20 0.19 0.23
-        0.13 0.19 1.40 0.29
-        0.17 0.23 0.29 1.60
-    ]
-    overlap_y = [
-        1.70 0.31 0.37 0.41
-        0.31 1.90 0.43 0.47
-        0.37 0.43 2.10 0.53
-        0.41 0.47 0.53 2.30
-    ]
-    overlap_z = [
-        2.50 0.59 0.61 0.67
-        0.59 2.70 0.71 0.73
-        0.61 0.71 2.90 0.79
-        0.67 0.73 0.79 3.10
-    ]
+    overlap_x, overlap_y, overlap_z = _pair_block_overlap_axes()
     overlap_result = CPBM.direct_direct_overlap_block(
         direct_record;
         parent_axis_counts = (4, 4, 4),
         overlap_1d = (; x = overlap_x, y = overlap_y, z = overlap_z),
     )
-    direct_states = Tuple((ix, iy, iz) for ix in 1:2 for iy in 2:3 for iz in 1:2)
-    expected_overlap = [
-        overlap_x[left[1], right[1]] *
-        overlap_y[left[2], right[2]] *
-        overlap_z[left[3], right[3]]
-        for left in direct_states, right in direct_states
-    ]
+    direct_source = only(direct_record.metadata.left_source_cpbs)
+    expected_overlap =
+        _pair_block_expected_overlap(
+            direct_source,
+            direct_source,
+            overlap_x,
+            overlap_y,
+            overlap_z,
+        )
 
     @test overlap_result isa CPBM.PairBlockMaterializationResult
     @test overlap_result.term == :overlap
@@ -281,4 +365,82 @@ end
     @test !materialization_summary.operator_blocks_materialized
     @test !materialization_summary.hamiltonian_data_materialized
     @test !materialization_summary.artifacts_materialized
+end
+
+@testset "CartesianPairBlockMaterialization direct/direct overlap selector" begin
+    retained_plan = _pair_block_rectangular_retained_plan()
+    unit_pair_plan = CUPForPairBlocks.unit_pair_plan(retained_plan)
+    transform_plan =
+        CRTCForPairBlocks.retained_unit_transform_contract_plan(retained_plan)
+    pair_operator_plan =
+        CPOPForPairBlocks.pair_operator_plan(
+            unit_pair_plan,
+            transform_plan;
+            route_core_sidecars = false,
+        )
+    materialization_plan =
+        CPBM.pair_block_materialization_plan(pair_operator_plan)
+    materialization_summary = CPBM.summary(materialization_plan)
+
+    @test length(CPBM.pair_block_materialization_records(materialization_plan)) == 6
+    @test materialization_summary.ready_record_count == 3
+    @test materialization_summary.blocked_record_count == 3
+
+    cross_record = _pair_block_record_for(
+        materialization_plan,
+        :pair_block_direct_left_unit,
+        :pair_block_direct_right_unit,
+    )
+    overlap_x, overlap_y, overlap_z = _pair_block_overlap_axes()
+    cross_result = CPBM.direct_direct_overlap_block(
+        cross_record;
+        parent_axis_counts = (4, 4, 4),
+        overlap_1d = (; x = overlap_x, y = overlap_y, z = overlap_z),
+    )
+    left_source = only(cross_record.metadata.left_source_cpbs)
+    right_source = only(cross_record.metadata.right_source_cpbs)
+    expected_cross =
+        _pair_block_expected_overlap(
+            left_source,
+            right_source,
+            overlap_x,
+            overlap_y,
+            overlap_z,
+        )
+
+    @test size(cross_result.block) == (4, 6)
+    @test cross_result.block ≈ expected_cross
+
+    batch_result = CPBM.direct_direct_overlap_blocks(
+        materialization_plan;
+        parent_axis_counts = (4, 4, 4),
+        overlap_1d = (; x = overlap_x, y = overlap_y, z = overlap_z),
+    )
+    batch_cross = only(
+        result for result in batch_result.materialized_results
+        if result.pair_key == (:pair_block_direct_left_unit, :pair_block_direct_right_unit)
+    )
+    materialized_keys = Set(result.pair_key for result in batch_result.materialized_results)
+
+    @test batch_result isa CPBM.PairBlockMaterializationBatchResult
+    @test batch_result.term == :overlap
+    @test batch_result.materialized_count == 3
+    @test batch_result.skipped_count == 3
+    @test materialized_keys == Set((
+        (:pair_block_direct_left_unit, :pair_block_direct_left_unit),
+        (:pair_block_direct_left_unit, :pair_block_direct_right_unit),
+        (:pair_block_direct_right_unit, :pair_block_direct_right_unit),
+    ))
+    @test all(
+        skipped -> skipped.blocker ==
+                   :non_direct_direct_pair_block_materialization_not_implemented,
+        batch_result.skipped_records,
+    )
+    @test batch_cross.block ≈ expected_cross
+    @test batch_result.materialized
+    @test batch_result.source_operator_blocks_materialized
+    @test batch_result.final_pair_blocks_materialized
+    @test !batch_result.operator_blocks_materialized
+    @test !batch_result.hamiltonian_data_materialized
+    @test !batch_result.artifacts_materialized
 end

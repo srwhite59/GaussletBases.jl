@@ -60,6 +60,27 @@ struct PairBlockMaterializationResult
 end
 
 """
+    PairBlockMaterializationBatchResult
+
+Compact result for a narrow plan-level materialization pass. It carries local
+pair-block results and skipped-record summaries only.
+"""
+struct PairBlockMaterializationBatchResult
+    term::Symbol
+    materialized_results::Tuple{Vararg{PairBlockMaterializationResult}}
+    skipped_records::Tuple{Vararg{NamedTuple}}
+    materialized_count::Int
+    skipped_count::Int
+    materialized::Bool
+    source_operator_blocks_materialized::Bool
+    final_pair_blocks_materialized::Bool
+    operator_blocks_materialized::Bool
+    hamiltonian_data_materialized::Bool
+    artifacts_materialized::Bool
+    metadata::NamedTuple
+end
+
+"""
     PairBlockMaterializationPlan
 
 Metadata-only pair-block materialization readiness plan for one pair-operator

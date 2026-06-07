@@ -54,6 +54,58 @@ function direct_direct_overlap_block(
     )
 end
 
+"""
+    direct_direct_overlap_blocks(plan; parent_axis_counts, overlap_1d)
+
+Materialize overlap only for ready direct/direct records in a pair-block
+materialization plan. Unsupported or blocked records are returned as compact
+skipped summaries.
+"""
+function direct_direct_overlap_blocks(
+    plan::PairBlockMaterializationPlan;
+    parent_axis_counts,
+    overlap_1d,
+)
+    results = PairBlockMaterializationResult[]
+    skipped = NamedTuple[]
+
+    for record in pair_block_materialization_records(plan)
+        if _is_ready_direct_direct_overlap_record(record)
+            push!(
+                results,
+                direct_direct_overlap_block(
+                    record;
+                    parent_axis_counts,
+                    overlap_1d,
+                ),
+            )
+        else
+            push!(skipped, _skipped_overlap_record_summary(record))
+        end
+    end
+
+    result_tuple = Tuple(results)
+    skipped_tuple = Tuple(skipped)
+    any_materialized = !isempty(result_tuple)
+    return PairBlockMaterializationBatchResult(
+        :overlap,
+        result_tuple,
+        skipped_tuple,
+        length(result_tuple),
+        length(skipped_tuple),
+        any_materialized,
+        any_materialized,
+        any_materialized,
+        false,
+        false,
+        false,
+        (;
+            materialization_path = :ready_direct_direct_overlap_blocks_only,
+            pair_block_record_count = length(pair_block_materialization_records(plan)),
+        ),
+    )
+end
+
 function _assert_direct_direct_overlap_record(record::PairBlockMaterializationRecord)
     record.materialization_path === :direct_direct_pair_block_materialization_pilot ||
         throw(ArgumentError("direct/direct overlap requires a direct/direct materialization record"))
@@ -62,6 +114,25 @@ function _assert_direct_direct_overlap_record(record::PairBlockMaterializationRe
     isnothing(record.blocker) ||
         throw(ArgumentError("direct/direct overlap record is blocked"))
     return nothing
+end
+
+function _is_ready_direct_direct_overlap_record(record::PairBlockMaterializationRecord)
+    return record.materialization_path === :direct_direct_pair_block_materialization_pilot &&
+           record.readiness_status === :ready_metadata_only_not_materialized
+end
+
+function _skipped_overlap_record_summary(record::PairBlockMaterializationRecord)
+    return (;
+        pair_key = record.pair_key,
+        pair_index = record.pair_index,
+        pair_family = record.pair_family,
+        materialization_path = record.materialization_path,
+        readiness_status = record.readiness_status,
+        blocker =
+            isnothing(record.blocker) ?
+            :unsupported_direct_direct_overlap_materialization_record :
+            record.blocker,
+    )
 end
 
 function _axis_counts_tuple(parent_axis_counts)

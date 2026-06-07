@@ -25,10 +25,12 @@ export PairBlockMaterializationPolicy,
        MetadataOnlyPairBlockMaterialization,
        PairBlockMaterializationRecord,
        PairBlockMaterializationResult,
+       PairBlockMaterializationBatchResult,
        PairBlockMaterializationPlan,
        pair_block_materialization_plan,
        pair_block_materialization_records,
        direct_direct_overlap_block,
+       direct_direct_overlap_blocks,
        unavailable_summary,
        summary
 
