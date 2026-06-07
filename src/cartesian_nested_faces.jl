@@ -1493,16 +1493,7 @@ end
 function _cartesian_raw_product_box_source_mode_indices(
     source_mode_dims::NTuple{3,Int},
 )
-    all(>(0), source_mode_dims) || throw(
-        ArgumentError("raw product-box source-mode dimensions must be positive"),
-    )
-    nx, ny, nz = source_mode_dims
-    mode_indices = NTuple{3,Int}[]
-    sizehint!(mode_indices, nx * ny * nz)
-    for mode_x in 1:nx, mode_y in 1:ny, mode_z in 1:nz
-        push!(mode_indices, (mode_x, mode_y, mode_z))
-    end
-    return mode_indices
+    return collect(CartesianRawProductSources.source_mode_indices(source_mode_dims))
 end
 
 function _cartesian_raw_product_box_plan(
@@ -1521,6 +1512,16 @@ function _cartesian_raw_product_box_plan(
     resolved_source_mode_dims = axis_transform_plan.source_mode_dims
     source_mode_indices =
         _cartesian_raw_product_box_source_mode_indices(resolved_source_mode_dims)
+    raw_product_source_cpb = CartesianCPB.cpb(
+        source_box;
+        role = :raw_product_source_box,
+        metadata = (; source = :cartesian_raw_product_box_plan_adapter),
+    )
+    raw_product_source_plan = CartesianRawProductSources.raw_product_box_plan(
+        raw_product_source_cpb;
+        source_key = :raw_product_source_box,
+        source_mode_dims = resolved_source_mode_dims,
+    )
     max_axis_overlap_error =
         axis_transform_plan.diagnostics.max_axis_overlap_error
     numerical_reference_fallback = any(
@@ -1530,6 +1531,8 @@ function _cartesian_raw_product_box_plan(
     return (
         object_kind = :cartesian_raw_product_box_plan_3d,
         source_box = source_box,
+        raw_product_source_plan = raw_product_source_plan,
+        raw_product_source_summary = CartesianRawProductSources.summary(raw_product_source_plan),
         axis_intervals = source_box,
         source_mode_dims_requested = source_mode_dims,
         source_mode_dims = resolved_source_mode_dims,

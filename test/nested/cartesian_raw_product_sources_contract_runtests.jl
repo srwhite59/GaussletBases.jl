@@ -102,3 +102,19 @@ end
     @test unavailable.hamiltonian_data_materialized == false
     @test unavailable.artifacts_materialized == false
 end
+
+@testset "old raw product source-mode indices adapter" begin
+    old_indices = GaussletBases._cartesian_raw_product_box_source_mode_indices((3, 4, 5))
+    new_indices = CRPS.source_mode_indices((3, 4, 5))
+
+    @test old_indices isa Vector{NTuple{3,Int}}
+    @test old_indices == collect(new_indices)
+    @test first(old_indices) == first(new_indices)
+    @test old_indices[2] == (1, 1, 2)
+    @test old_indices[6] == (1, 2, 1)
+    @test last(old_indices) == last(new_indices)
+
+    @test_throws ArgumentError GaussletBases._cartesian_raw_product_box_source_mode_indices(
+        (3, 0, 5),
+    )
+end
