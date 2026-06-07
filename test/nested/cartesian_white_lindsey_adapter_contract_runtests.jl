@@ -335,7 +335,7 @@ end
     @test ready_facet_coefficients.status ==
           :blocked_white_lindsey_boundary_stratum_unit_coefficients
     @test ready_facet_coefficients.blocker ==
-          :white_lindsey_facet_coefficients_not_implemented
+          :white_lindsey_facet_doside_source_not_materializable
     @test ready_facet_coefficients.coefficient_input_requirements.status ==
           :available_white_lindsey_facet_kernel_context_inputs
     @test ready_facet_coefficients.missing_coefficient_inputs == ()
@@ -373,6 +373,85 @@ end
     @test ready_edge_context.missing_inputs == ()
     @test !ready_edge_context.edge_facet_coefficient_maps_materialized
 
+    real_doside_source_1d = _lw_adapter_doside_source_1d()
+
+    real_facet_source = CPBForLWAdapter.slab_cpb(
+        1:1,
+        2:6,
+        2:6;
+        role = :lw_adapter_test_real_facet_source_cpb,
+        metadata = (;
+            stratum_kind = :facet_cpb,
+            source_cpb_index = 5,
+            fixed_axes = (:x,),
+            sides = (:low,),
+        ),
+    )
+    real_facet_unit = _lw_adapter_retained_unit(
+        :lw_adapter_test_real_facet_unit,
+        5,
+        real_facet_source,
+        :facet_cpb,
+        5,
+    )
+    real_facet_descriptor = merge(
+        CPBMForLWAdapter.white_lindsey_boundary_stratum_unit_adapter_descriptor(
+            real_facet_unit,
+        ),
+        (;
+            retained_count = 3,
+            parent_dims = (7, 7, 7),
+            doside_source_1d = real_doside_source_1d,
+        ),
+    )
+    real_facet_context =
+        CPBMForLWAdapter.white_lindsey_boundary_stratum_unit_coefficient_context(
+            real_facet_descriptor,
+        )
+    @test real_facet_context.status ==
+          :ready_white_lindsey_facet_kernel_context_not_materialized
+    @test real_facet_context.face_kind == :yz
+    @test real_facet_context.fixed_side == :low
+    @test real_facet_context.fixed_index == 1
+    @test real_facet_context.active_product_axis_intervals == (
+        (; axis = :y, interval = 2:6),
+        (; axis = :z, interval = 2:6),
+    )
+    real_facet_coefficients =
+        CPBMForLWAdapter.white_lindsey_boundary_stratum_unit_coefficients(
+            real_facet_descriptor,
+        )
+    @test real_facet_coefficients.status ==
+          :materialized_white_lindsey_facet_unit_coefficients
+    @test isnothing(real_facet_coefficients.blocker)
+    @test real_facet_coefficients.coefficient_space ==
+          :parent_cartesian_sparse_adapter
+    @test size(real_facet_coefficients.coefficient_matrix) == (7^3, 9)
+    @test real_facet_coefficients.source_support_row_count == 25
+    @test real_facet_coefficients.retained_column_count == 9
+    @test length(real_facet_coefficients.support_indices) == 25
+    @test issorted(real_facet_coefficients.support_indices)
+    @test real_facet_coefficients.nonzero_count > 0
+    @test real_facet_coefficients.old_kernels_used ==
+          (:_nested_doside_1d, :_nested_face_product)
+    @test real_facet_coefficients.active_axes == (:y, :z)
+    @test real_facet_coefficients.active_axis_intervals == (2:6, 2:6)
+    @test real_facet_coefficients.active_axis_retained_counts == (3, 3)
+    @test real_facet_coefficients.retained_count_policy ==
+          :scalar_retained_count_reused_for_active_axes
+    @test real_facet_coefficients.doside_source_policy ==
+          (:shared_doside_source_1d, :shared_doside_source_1d)
+    @test real_facet_coefficients.coefficient_input_requirements.status ==
+          :available_white_lindsey_facet_kernel_context_inputs
+    @test real_facet_coefficients.missing_coefficient_inputs == ()
+    @test real_facet_coefficients.coefficient_maps_materialized
+    @test real_facet_coefficients.parent_row_indices_available
+    @test !real_facet_coefficients.source_operator_blocks_materialized
+    @test !real_facet_coefficients.final_pair_blocks_materialized
+    @test !real_facet_coefficients.operator_blocks_materialized
+    @test !real_facet_coefficients.hamiltonian_data_materialized
+    @test !real_facet_coefficients.artifacts_materialized
+
     real_edge_source = CPBForLWAdapter.cpb(
         7:7,
         1:1,
@@ -399,7 +478,7 @@ end
         (;
             retained_count = 3,
             parent_dims = (7, 7, 7),
-            doside_source_1d = _lw_adapter_doside_source_1d(),
+            doside_source_1d = real_doside_source_1d,
         ),
     )
     real_edge_context =

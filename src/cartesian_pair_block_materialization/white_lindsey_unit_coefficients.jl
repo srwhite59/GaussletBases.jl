@@ -5,11 +5,11 @@
 
 Materialize the narrow unit coefficient map supported by the current LW adapter
 checkpoint. This pass supports corner strata as a support-local one-row,
-one-column map with value `1.0`, and edge strata only when the metadata context
-has real old-kernel inputs.
+one-column map with value `1.0`, plus edge and facet strata only when the
+metadata context has real old-kernel inputs.
 
-Facet strata block explicitly. This helper does not build one-body pair blocks,
-Hamiltonian data, exports, artifacts, IDA/MWG data, or Coulomb.
+This helper does not build one-body pair blocks, Hamiltonian data, exports,
+artifacts, IDA/MWG data, or Coulomb.
 """
 function white_lindsey_boundary_stratum_unit_coefficients(unit_or_descriptor)
     descriptor =
@@ -67,6 +67,8 @@ function _white_lindsey_boundary_stratum_unit_coefficients_from_descriptor(
 )
     status, blocker =
         _white_lindsey_unit_coefficients_status(descriptor)
+    status === :materialized_white_lindsey_facet_unit_coefficients &&
+        return _white_lindsey_facet_unit_coefficients_result(descriptor)
     status === :materialized_white_lindsey_edge_unit_coefficients &&
         return _white_lindsey_edge_unit_coefficients_result(descriptor)
     status === :materialized_white_lindsey_corner_unit_coefficients ||
@@ -100,12 +102,16 @@ function _white_lindsey_unit_coefficients_status(descriptor)
     if stratum_kind in (:facet_cpb, :face_cpb)
         context =
             white_lindsey_boundary_stratum_unit_coefficient_context(descriptor)
-        context.status ===
-            :ready_white_lindsey_facet_kernel_context_not_materialized &&
+        if context.status ===
+           :ready_white_lindsey_facet_kernel_context_not_materialized
+            _white_lindsey_facet_context_sources_materializable(context) &&
+                return :materialized_white_lindsey_facet_unit_coefficients,
+                       nothing
             return (
                 :blocked_white_lindsey_boundary_stratum_unit_coefficients,
-                :white_lindsey_facet_coefficients_not_implemented,
+                :white_lindsey_facet_doside_source_not_materializable,
             )
+        end
         return (
             :blocked_white_lindsey_boundary_stratum_unit_coefficients,
             :incomplete_white_lindsey_edge_facet_kernel_input_context,
@@ -113,8 +119,14 @@ function _white_lindsey_unit_coefficients_status(descriptor)
     elseif stratum_kind === :edge_cpb
         context =
             white_lindsey_boundary_stratum_unit_coefficient_context(descriptor)
-        context.status === :ready_white_lindsey_edge_kernel_context_not_materialized &&
-            return :materialized_white_lindsey_edge_unit_coefficients, nothing
+        if context.status === :ready_white_lindsey_edge_kernel_context_not_materialized
+            _white_lindsey_edge_context_source_materializable(context) &&
+                return :materialized_white_lindsey_edge_unit_coefficients, nothing
+            return (
+                :blocked_white_lindsey_boundary_stratum_unit_coefficients,
+                :white_lindsey_edge_doside_source_not_materializable,
+            )
+        end
         return (
             :blocked_white_lindsey_boundary_stratum_unit_coefficients,
             :incomplete_white_lindsey_edge_facet_kernel_input_context,
@@ -141,6 +153,86 @@ function _white_lindsey_unit_coefficients_status(descriptor)
         :missing_white_lindsey_corner_fixed_coordinates,
     )
     return :materialized_white_lindsey_corner_unit_coefficients, nothing
+end
+
+function _white_lindsey_facet_unit_coefficients_result(descriptor)
+    context =
+        white_lindsey_boundary_stratum_unit_coefficient_context(descriptor)
+    context.status === :ready_white_lindsey_facet_kernel_context_not_materialized ||
+        return _white_lindsey_unit_coefficients_result(
+            descriptor,
+            :blocked_white_lindsey_boundary_stratum_unit_coefficients,
+            :incomplete_white_lindsey_edge_facet_kernel_input_context,
+            nothing,
+        )
+
+    active_entries = _white_lindsey_facet_active_axis_entries(context)
+    first_entry, second_entry = active_entries
+    first_source, first_source_policy = _white_lindsey_doside_source_for_axis(
+        context.doside_source_1d,
+        first_entry.axis,
+    )
+    second_source, second_source_policy = _white_lindsey_doside_source_for_axis(
+        context.doside_source_1d,
+        second_entry.axis,
+    )
+    first_retained, retained_policy =
+        _white_lindsey_retained_count_for_axis(context, first_entry.axis)
+    second_retained, second_retained_policy =
+        _white_lindsey_retained_count_for_axis(context, second_entry.axis)
+    retained_policy =
+        retained_policy == second_retained_policy ?
+        retained_policy :
+        :mixed_axis_retained_counts
+    fixed_side = Symbol(context.fixed_side)
+    fixed_index = Int(context.fixed_index)
+    parent_dims = _white_lindsey_checked_context_tuple(
+        context.parent_dims,
+        Val(3),
+        Int,
+        :parent_dims,
+    )
+    side_first = ParentGaussletBases._nested_doside_1d(
+        first_source,
+        first_entry.interval,
+        first_retained;
+        enforce_symmetric_odd = true,
+    )
+    side_second = ParentGaussletBases._nested_doside_1d(
+        second_source,
+        second_entry.interval,
+        second_retained;
+        enforce_symmetric_odd = true,
+    )
+    face = ParentGaussletBases._nested_face_product(
+        context.face_kind,
+        fixed_side,
+        side_first,
+        side_second,
+        fixed_index,
+        parent_dims,
+    )
+    coefficient_matrix = face.coefficient_matrix
+    return _white_lindsey_unit_coefficients_result(
+        descriptor,
+        :materialized_white_lindsey_facet_unit_coefficients,
+        nothing,
+        coefficient_matrix;
+        coefficient_space = :parent_cartesian_sparse_adapter,
+        parent_row_indices_available = true,
+        support_indices = face.support_indices,
+        source_support_row_count = length(face.support_indices),
+        retained_column_count = size(coefficient_matrix, 2),
+        source_support_row_index = nothing,
+        retained_column_index = nothing,
+        old_kernels_used = context.planned_old_calls,
+        nonzero_values = (),
+        active_axes = (first_entry.axis, second_entry.axis),
+        active_axis_intervals = (first_entry.interval, second_entry.interval),
+        active_axis_retained_counts = (first_retained, second_retained),
+        retained_count_policy = retained_policy,
+        doside_source_policy = (first_source_policy, second_source_policy),
+    )
 end
 
 function _white_lindsey_edge_unit_coefficients_result(descriptor)
@@ -172,8 +264,13 @@ function _white_lindsey_edge_unit_coefficients_result(descriptor)
         Int,
         :parent_dims,
     )
+    doside_source, doside_source_policy =
+        _white_lindsey_doside_source_for_axis(
+            context.doside_source_1d,
+            context.free_axis,
+        )
     side = ParentGaussletBases._nested_doside_1d(
-        context.doside_source_1d,
+        doside_source,
         context.free_axis_interval,
         context.retained_count;
         enforce_symmetric_odd = true,
@@ -200,6 +297,11 @@ function _white_lindsey_edge_unit_coefficients_result(descriptor)
         retained_column_index = nothing,
         old_kernels_used = context.planned_old_calls,
         nonzero_values = (),
+        active_axes = (context.free_axis,),
+        active_axis_intervals = (context.free_axis_interval,),
+        active_axis_retained_counts = (context.retained_count,),
+        retained_count_policy = :scalar_retained_count,
+        doside_source_policy = doside_source_policy,
     )
 end
 
@@ -217,6 +319,11 @@ function _white_lindsey_unit_coefficients_result(
     retained_column_index = nothing,
     old_kernels_used = (),
     nonzero_values = nothing,
+    active_axes = nothing,
+    active_axis_intervals = nothing,
+    active_axis_retained_counts = nothing,
+    retained_count_policy = nothing,
+    doside_source_policy = nothing,
 )
     materialized = !isnothing(coefficient_matrix)
     source_support_row_count_resolved =
@@ -286,6 +393,11 @@ function _white_lindsey_unit_coefficients_result(
         nonzero_count,
         nonzero_values = nonzero_values_resolved,
         old_kernels_used,
+        active_axes,
+        active_axis_intervals,
+        active_axis_retained_counts,
+        retained_count_policy,
+        doside_source_policy,
         coefficient_maps_materialized = materialized,
         source_operator_blocks_materialized = false,
         final_pair_blocks_materialized = false,
@@ -302,9 +414,69 @@ function _white_lindsey_checked_context_tuple(
     field::Symbol,
 ) where {N,T}
     value isa Tuple && length(value) == N || throw(
-        ArgumentError("White--Lindsey edge context requires $(field) length $(N)"),
+        ArgumentError("White--Lindsey coefficient context requires $(field) length $(N)"),
     )
     return ntuple(index -> T(value[index]), N)
+end
+
+function _white_lindsey_facet_active_axis_entries(context)
+    active_entries = context.active_product_axis_intervals
+    active_entries isa Tuple && length(active_entries) == 2 || throw(
+        ArgumentError("White--Lindsey facet context requires two active axis intervals"),
+    )
+    return active_entries
+end
+
+function _white_lindsey_doside_source_for_axis(source, axis::Symbol)
+    isnothing(source) && return nothing, :missing_doside_source_1d
+    hasproperty(source, axis) &&
+        return getproperty(source, axis), :axis_keyed_doside_source_1d
+    source isa AbstractDict && haskey(source, axis) &&
+        return source[axis], :axis_keyed_doside_source_1d
+    return source, :shared_doside_source_1d
+end
+
+function _white_lindsey_retained_count_for_axis(context, axis::Symbol)
+    retained_counts =
+        _white_lindsey_descriptor_property(context, :retained_counts)
+    if !isnothing(retained_counts)
+        hasproperty(retained_counts, axis) &&
+            return Int(getproperty(retained_counts, axis)),
+                   :axis_keyed_retained_counts
+        retained_counts isa AbstractDict && haskey(retained_counts, axis) &&
+            return Int(retained_counts[axis]), :axis_keyed_retained_counts
+    end
+    return Int(context.retained_count),
+           :scalar_retained_count_reused_for_active_axes
+end
+
+function _white_lindsey_doside_source_materializable(source)
+    isnothing(source) && return false
+    return hasmethod(
+        ParentGaussletBases._nested_doside_1d,
+        Tuple{typeof(source),UnitRange{Int},Int},
+    )
+end
+
+function _white_lindsey_edge_context_source_materializable(context)
+    doside_source, _ =
+        _white_lindsey_doside_source_for_axis(
+            context.doside_source_1d,
+            context.free_axis,
+        )
+    return _white_lindsey_doside_source_materializable(doside_source)
+end
+
+function _white_lindsey_facet_context_sources_materializable(context)
+    active_entries = _white_lindsey_facet_active_axis_entries(context)
+    return all(active_entries) do entry
+        doside_source, _ =
+            _white_lindsey_doside_source_for_axis(
+                context.doside_source_1d,
+                entry.axis,
+            )
+        _white_lindsey_doside_source_materializable(doside_source)
+    end
 end
 
 function _white_lindsey_nonzero_count(coefficient_matrix)
@@ -461,6 +633,8 @@ function _white_lindsey_unit_coefficient_context(
         fixed_indices = _white_lindsey_context_fixed_indices(descriptor),
         retained_count =
             _white_lindsey_descriptor_property(descriptor, :retained_count),
+        retained_counts =
+            _white_lindsey_descriptor_property(descriptor, :retained_counts),
         parent_dims = _white_lindsey_descriptor_property(descriptor, :parent_dims),
         doside_source_1d =
             _white_lindsey_descriptor_property(descriptor, :doside_source_1d),
