@@ -523,5 +523,7 @@ contracts. It must not rediscover realization paths by inspecting retained-unit
 kinds. Current pair-block materialization is a preflight layer plus a
 direct/direct final local one-body pilot and a PQS/PQS raw source-space
 safe-term pilot. The PQS source pilot does not apply shell projection, Lowdin,
-or final retained-block assembly. Broader PQS, White--Lindsey, Coulomb/IDA, and
-Hamiltonian assembly remain future work.
+or final retained-block assembly. Its current bridge summaries are
+metadata-only records of the later shell-realization handoff, not the
+realization itself. Broader PQS, White--Lindsey, Coulomb/IDA, and Hamiltonian
+assembly remain future work.

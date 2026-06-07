@@ -52,6 +52,7 @@ CartesianShellification
 -> CartesianPairBlockMaterialization preflight
 -> direct/direct one-body local pair-block pilot
 -> PQS/PQS raw source-space safe-term pilot
+-> PQS source-to-shell-realization bridge summaries
 -> future shell realization and final pair-block materialization
 -> future assembly
 ```
@@ -73,6 +74,7 @@ geometry ownership
 -> pair-block materialization readiness
 -> direct/direct one-body pair blocks for the current pilot
 -> PQS/PQS raw source-space one-body blocks for the current source pilot
+-> metadata-only bridge summaries for later PQS shell realization
 -> broader final pair blocks and assembly later
 ```
 
@@ -80,9 +82,14 @@ geometry ownership
 `CartesianPairOperatorPlans`. It has also started numerical local pair-block
 pilots: direct/direct final local one-body terms and PQS/PQS raw source-space
 safe one-body terms for overlap, position, x2, and kinetic. The PQS pilot is
-not a final shell-realized PQS pair-block path. It is also not a
+not a final shell-realized PQS pair-block path. Its bridge summaries record
+source term/status, source-mode facts, transform/source contract keys,
+realization paths, status/blocker counts, and nonmaterialized final flags for
+single results or batches. They do not build shell projection, Lowdin, final
+PQS retained blocks, or Hamiltonian data. This path is also not a
 White--Lindsey block path, Coulomb/IDA path, full operator assembly,
-Hamiltonian bundle, export, or artifact writer.
+Hamiltonian bundle, export, or artifact writer. The local PQS safe-term
+descriptor helper is private implementation metadata, not route API.
 
 ### Why “lowering”?
 

@@ -60,7 +60,9 @@ It must not infer realization paths directly from retained-unit kinds.
 - local direct/direct one-body pair-block pilots for overlap, position, `x2`,
   and kinetic;
 - PQS/PQS raw source-space safe one-body helpers for overlap, position, `x2`,
-  and kinetic.
+  and kinetic;
+- metadata-only PQS source-to-shell-realization bridge summaries for single
+  source results and batches.
 
 The PQS helpers materialize source-space blocks only. They consume ready
 `:pqs_source_pair_preflight` records and caller-supplied 1D source factors,
@@ -69,6 +71,8 @@ following the old source-mode product pattern from
 `_source_box_separable_term_factor_kinds(...)`. They do not apply shell
 projection, Lowdin cleanup, final retained PQS transforms, Coulomb/IDA
 materialization, full operator assembly, Ham export, or artifact writing.
+The bridge summaries only record the planned handoff from source-space blocks
+to later shell realization. They do not build shell projection or Lowdin data.
 
 The PQS guardrails are unchanged: support-row or shell-row contraction is an
 oracle/debug path, not the PQS algorithm; shell projection and Lowdin cleanup
@@ -554,6 +558,7 @@ pqs_source_pair_position_block(record; axis, overlap_1d, position_1d)
 pqs_source_pair_x2_block(record; axis, overlap_1d, x2_1d)
 pqs_source_pair_kinetic_block(record; overlap_1d, kinetic_1d)
 pqs_source_pair_one_body_block(record, term; ...)
+pqs_source_pair_shell_realization_bridge_summary(result_or_batch)
 ```
 
 with matching plan-level plural helpers. The accepted one-body terms are:
@@ -572,6 +577,7 @@ from final operator materialization:
 ```text
 source_operator_blocks_materialized = true
 final_pair_blocks_materialized = false
+shell_realization_materialized = false
 operator_blocks_materialized = false
 hamiltonian_data_materialized = false
 artifacts_materialized = false
@@ -579,6 +585,16 @@ artifacts_materialized = false
 
 Do not describe these as final PQS pair blocks. They are source-side inputs to
 later shell realization and final retained-block assembly.
+
+The bridge summaries are metadata-only checkpoints over those source-side
+inputs. A single-result bridge records source block term/status, source-mode
+dims/counts and ordering, transform/source contract keys, realization paths,
+and materialization flags. Batch bridge summaries add compact term counts,
+status counts, blocker counts, skipped-record counts, and source-mode-ordering
+uniformity. The private safe-term descriptor helper is local implementation
+metadata for selecting supported safe terms and preserving source-term,
+required-factor, batch-path, and blocker facts in one place; it is not public
+API and must not be treated as a retained rule or realization object.
 
 ## First PQS/PQS Implementation Target
 
