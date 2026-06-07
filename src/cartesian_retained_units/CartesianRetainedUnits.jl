@@ -32,6 +32,7 @@ export RetainedUnitPolicy,
        RetainedUnitPlan,
        retained_unit_plan,
        units,
+       unavailable_summary,
        summary,
        route_core_final_units
 

@@ -199,6 +199,26 @@ function _units_for_contract(plan, contract_key::Symbol)
     )
 end
 
+@testset "CartesianRetainedUnits unavailable summary" begin
+    summary = CRU.unavailable_summary(:not_selected, :not_selected_route)
+
+    @test summary.object_kind == :cartesian_retained_unit_plan_summary
+    @test summary.status == :not_selected
+    @test summary.blocker == :not_selected_route
+    @test summary.retained_unit_count == 0
+    @test summary.unit_kinds == ()
+    @test summary.unit_kind_counts == ()
+    @test summary.route_core_final_unit_count == 0
+    @test summary.route_core_final_unit_available_count == 0
+    @test summary.route_core_final_unit_blocked_count == 0
+    @test !summary.materialized
+    @test !summary.transforms_materialized
+    @test !summary.coefficient_maps_materialized
+    @test !summary.pair_inventory_materialized
+    @test !summary.operator_blocks_materialized
+    @test !summary.hamiltonian_data_materialized
+end
+
 @testset "CartesianRetainedUnits White-Lindsey metadata plan" begin
     retained_plan = _SYNTHETIC_WL_RETAINED_PLAN
     retained_summary = CRU.summary(retained_plan)

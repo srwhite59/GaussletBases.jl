@@ -60,3 +60,23 @@ function _retained_unit_plan_summary(
         hamiltonian_data_materialized = false,
     )
 end
+
+function unavailable_summary(status::Symbol, blocker = nothing)
+    return (;
+        object_kind = :cartesian_retained_unit_plan_summary,
+        status,
+        blocker,
+        retained_unit_count = 0,
+        unit_kinds = (),
+        unit_kind_counts = (),
+        route_core_final_unit_count = 0,
+        route_core_final_unit_available_count = 0,
+        route_core_final_unit_blocked_count = 0,
+        materialized = false,
+        transforms_materialized = false,
+        coefficient_maps_materialized = false,
+        pair_inventory_materialized = false,
+        operator_blocks_materialized = false,
+        hamiltonian_data_materialized = false,
+    )
+end

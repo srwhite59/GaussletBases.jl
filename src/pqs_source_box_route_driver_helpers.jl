@@ -6511,29 +6511,6 @@ function _pqs_source_box_route_driver_terminal_route_state_summary(;
     )
 end
 
-function _pqs_source_box_route_driver_retained_unit_unavailable_summary(
-    status::Symbol,
-    blocker = nothing,
-)
-    return (;
-        object_kind = :cartesian_retained_unit_plan_summary,
-        status,
-        blocker,
-        retained_unit_count = 0,
-        unit_kinds = (),
-        unit_kind_counts = (),
-        route_core_final_unit_count = 0,
-        route_core_final_unit_available_count = 0,
-        route_core_final_unit_blocked_count = 0,
-        materialized = false,
-        transforms_materialized = false,
-        coefficient_maps_materialized = false,
-        pair_inventory_materialized = false,
-        operator_blocks_materialized = false,
-        hamiltonian_data_materialized = false,
-    )
-end
-
 function _pqs_source_box_route_driver_terminal_route_state(;
     status,
     selected::Bool,
@@ -6586,7 +6563,7 @@ function _pqs_source_box_route_driver_terminal_route_state(;
         CartesianRetainedUnits.RetainedUnitPlan ?
         CartesianRetainedUnits.summary(retained_unit_plan) :
         isnothing(retained_unit_summary) ?
-        _pqs_source_box_route_driver_retained_unit_unavailable_summary(
+        CartesianRetainedUnits.unavailable_summary(
             selected ? status : :not_selected,
             blocker,
         ) :
