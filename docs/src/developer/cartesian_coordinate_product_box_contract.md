@@ -556,3 +556,17 @@ readiness or pair-block materialization. The helper records symbols only; it
 does not call those kernels and does not build LW numerical blocks,
 coefficient maps, doside transforms, Hamiltonians, exports, artifacts,
 IDA/MWG data, or Coulomb.
+
+### Next low-order White--Lindsey adapter target
+
+The next White--Lindsey numerical step should be a narrow adapter behind
+`:white_lindsey_boundary_stratum_adapter_preflight`. It should reuse the old
+low-order kernels `_nested_doside_1d`, `_nested_face_product`,
+`_nested_edge_product`, and `_nested_corner_piece` through the adapter boundary,
+not by making the old route the new route authority. The old White--Lindsey
+materialized seed fixture is the validation oracle for this step.
+
+Initial acceptance should check retained counts, stratum/source CPB roles,
+coefficient-map shapes, and one-body local block agreement. Do not start with
+Coulomb, IDA, Hamiltonian export, or artifact generation. Do not make
+support-row or dense-parent fallback the production algorithm.
