@@ -407,6 +407,24 @@ function _pair_block_result_with_metadata(result, metadata)
     )
 end
 
+function _pair_block_record_with_metadata(record, metadata)
+    return CPBM.PairBlockMaterializationRecord(
+        record.pair_key,
+        record.pair_index,
+        record.pair_family,
+        record.source_operator_path,
+        record.transform_path,
+        record.realization_path,
+        record.final_block_path,
+        record.supported_terms,
+        record.materialization_path,
+        record.readiness_status,
+        record.blocker,
+        record.materialized,
+        NamedTuple(metadata),
+    )
+end
+
 function _pair_block_overlap_axes()
     overlap_x = [
         1.00 0.11 0.13 0.17
@@ -1040,6 +1058,63 @@ end
     @test !lw_cross_record.metadata.operator_blocks_materialized
     @test !lw_cross_record.metadata.hamiltonian_data_materialized
     @test !lw_cross_record.metadata.artifacts_materialized
+
+    lw_adapter_summary =
+        CPBM.white_lindsey_boundary_stratum_adapter_summary(lw_cross_record)
+    @test lw_adapter_summary.object_kind ==
+          :white_lindsey_boundary_stratum_adapter_summary
+    @test lw_adapter_summary.status == lw_cross_record.readiness_status
+    @test lw_adapter_summary.blocker == lw_cross_record.blocker
+    @test lw_adapter_summary.pair_key == lw_cross_record.pair_key
+    @test lw_adapter_summary.pair_index == lw_cross_record.pair_index
+    @test lw_adapter_summary.materialization_path ==
+          :white_lindsey_boundary_stratum_adapter_preflight
+    @test lw_adapter_summary.left_stratum_kind == :facet_cpb
+    @test lw_adapter_summary.right_stratum_kind == :edge_cpb
+    @test lw_adapter_summary.left_planned_kernel == :_nested_face_product
+    @test lw_adapter_summary.right_planned_kernel == :_nested_edge_product
+    @test lw_adapter_summary.left_side_1d_helper == :_nested_doside_1d
+    @test lw_adapter_summary.right_side_1d_helper == :_nested_doside_1d
+    @test lw_adapter_summary.shared_1d_helper == :_nested_doside_1d
+    @test lw_adapter_summary.legacy_kernel_reuse_map.corner ==
+          :_nested_corner_piece
+    @test !lw_adapter_summary.source_operator_blocks_materialized
+    @test !lw_adapter_summary.final_pair_blocks_materialized
+    @test !lw_adapter_summary.operator_blocks_materialized
+    @test !lw_adapter_summary.hamiltonian_data_materialized
+    @test !lw_adapter_summary.artifacts_materialized
+
+    missing_stratum_record =
+        _pair_block_record_with_metadata(
+            lw_cross_record,
+            merge(lw_cross_record.metadata, (; left_stratum_kind = nothing)),
+        )
+    missing_stratum_summary =
+        CPBM.white_lindsey_boundary_stratum_adapter_summary(
+            missing_stratum_record,
+        )
+    @test missing_stratum_summary.status ==
+          :blocked_white_lindsey_boundary_stratum_adapter_summary
+    @test missing_stratum_summary.blocker ==
+          :missing_white_lindsey_stratum_kind
+    @test isnothing(missing_stratum_summary.left_planned_kernel)
+    @test !missing_stratum_summary.final_pair_blocks_materialized
+
+    unknown_stratum_record =
+        _pair_block_record_with_metadata(
+            lw_cross_record,
+            merge(lw_cross_record.metadata, (; right_stratum_kind = :ridge_cpb)),
+        )
+    unknown_stratum_summary =
+        CPBM.white_lindsey_boundary_stratum_adapter_summary(
+            unknown_stratum_record,
+        )
+    @test unknown_stratum_summary.status ==
+          :blocked_white_lindsey_boundary_stratum_adapter_summary
+    @test unknown_stratum_summary.blocker ==
+          :unknown_white_lindsey_stratum_kind
+    @test isnothing(unknown_stratum_summary.right_planned_kernel)
+    @test !unknown_stratum_summary.final_pair_blocks_materialized
 end
 
 @testset "CartesianPairBlockMaterialization PQS source-pair preflight" begin
