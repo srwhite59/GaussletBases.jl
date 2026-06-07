@@ -83,6 +83,14 @@ function _flat_glue_cleanup_alias_source_without_crc_field()
     )
 end
 
+function _flat_glue_cleanup_route_skeleton_fixture()
+    return (;
+        pair_entries = (),
+        pair_family_counts = nothing,
+        helper_by_pair_family = nothing,
+    )
+end
+
 @testset "terminal route flat glue transform summary fingerprint" begin
     missing_summary =
         GaussletBases._pqs_source_box_route_driver_transform_stage_low_order_summary((;))
@@ -122,4 +130,38 @@ end
     )
     @test alias_fields.terminal_shellification_selected_crc_sidecar_summary.status ==
           alias_source.terminal_route_state.selected_crc_sidecar_summary.status
+end
+
+@testset "terminal route flat glue pair summary fingerprint" begin
+    missing_summary =
+        GaussletBases._pqs_source_box_route_driver_pair_stage_low_order_summary(
+            (;),
+            (;),
+            _flat_glue_cleanup_route_skeleton_fixture(),
+        )
+    @test missing_summary.status == :not_available_missing_transform_stage_summary
+    @test hasproperty(missing_summary, :terminal_route_summary)
+    @test !hasproperty(
+        missing_summary,
+        :terminal_shellification_selected_crc_sidecar_summary,
+    )
+    @test !missing_summary.terminal_route_summary.pair_inventory_available
+
+    transform_summary =
+        GaussletBases._pqs_source_box_route_driver_transform_stage_low_order_summary(
+            (; low_order_units = _flat_glue_cleanup_low_order_units_fixture()),
+        )
+    summary =
+        GaussletBases._pqs_source_box_route_driver_pair_stage_low_order_summary(
+            (;),
+            (; low_order_transforms = transform_summary),
+            _flat_glue_cleanup_route_skeleton_fixture(),
+        )
+    @test summary.status == :available_pair_stage_low_order_summary
+    @test hasproperty(summary, :terminal_route_summary)
+    @test !hasproperty(
+        summary,
+        :terminal_shellification_selected_crc_sidecar_summary,
+    )
+    @test !summary.terminal_route_summary.pair_inventory_available
 end

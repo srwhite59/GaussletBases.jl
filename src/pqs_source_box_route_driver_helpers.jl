@@ -8247,10 +8247,6 @@ function _pqs_source_box_route_driver_pair_stage_low_order_summary(
                 :not_available,
                 nothing,
             )...,
-            terminal_shellification_selected_crc_sidecar_summary =
-                _pqs_source_box_route_driver_selected_terminal_crc_sidecar_summary(
-                    nothing,
-                ),
             terminal_shellification_contract_counts_by_unit = (),
             terminal_shellification_lw_complete_shell_cpb_count = 0,
             terminal_shellification_lw_complete_shell_cpb_family_counts =
@@ -8470,7 +8466,8 @@ function _pqs_source_box_route_driver_pair_stage_low_order_summary(
         terminal_shellification_pair_summary_available,
         _pqs_source_box_route_driver_terminal_shellification_alias_fields(
             low_order_transforms,
-            terminal_shellification_pairs_selected,
+            terminal_shellification_pairs_selected;
+            include_crc_sidecar_summary = false,
         )...,
         terminal_shellification_transform_contracts_available =
             terminal_shellification_pairs_selected &&
