@@ -404,6 +404,13 @@ function _pair_block_record_for(plan, left_key::Symbol, right_key::Symbol)
     )
 end
 
+function _pair_block_unit_pair_for(plan, left_key::Symbol, right_key::Symbol)
+    return only(
+        pair for pair in CUPForPairBlocks.unit_pairs(plan)
+        if pair.pair_key == (left_key, right_key)
+    )
+end
+
 function _pair_block_batch_result_for(batch_result, left_key::Symbol, right_key::Symbol)
     return only(
         result for result in batch_result.materialized_results
@@ -1127,6 +1134,84 @@ end
         :white_lindsey_boundary_stratum_pair_block_adapter_not_materialized,
     ) == 6
 
+    lw_records = CPBM.pair_block_materialization_records(materialization_plan)
+    lw_pair_descriptors = Tuple(
+        CPBM.white_lindsey_boundary_stratum_pair_adapter_descriptor(
+            record,
+            _pair_block_unit_pair_for(unit_pair_plan, record.pair_key...),
+        )
+        for record in lw_records
+    )
+    @test length(lw_pair_descriptors) == 6
+    @test count(
+        descriptor ->
+            descriptor.pair_family_classification === :facet_facet,
+        lw_pair_descriptors,
+    ) == 1
+    @test count(
+        descriptor -> descriptor.pair_family_classification === :facet_edge,
+        lw_pair_descriptors,
+    ) == 1
+    @test count(
+        descriptor -> descriptor.pair_family_classification === :facet_corner,
+        lw_pair_descriptors,
+    ) == 1
+    @test count(
+        descriptor -> descriptor.pair_family_classification === :edge_edge,
+        lw_pair_descriptors,
+    ) == 1
+    @test count(
+        descriptor -> descriptor.pair_family_classification === :edge_corner,
+        lw_pair_descriptors,
+    ) == 1
+    @test count(
+        descriptor -> descriptor.pair_family_classification === :corner_corner,
+        lw_pair_descriptors,
+    ) == 1
+
+    lw_facet_edge_descriptor = only(
+        descriptor for descriptor in lw_pair_descriptors
+        if descriptor.pair_key ==
+           (:pair_block_lw_left_unit, :pair_block_lw_right_unit)
+    )
+    @test lw_facet_edge_descriptor.object_kind ==
+          :white_lindsey_boundary_stratum_pair_adapter_descriptor
+    @test lw_facet_edge_descriptor.status ==
+          :available_metadata_only_white_lindsey_pair_adapter_descriptor
+    @test isnothing(lw_facet_edge_descriptor.blocker)
+    @test lw_facet_edge_descriptor.descriptor_source ==
+          :unit_pair_retained_unit_descriptors
+    @test lw_facet_edge_descriptor.pair_family_classification == :facet_edge
+    @test lw_facet_edge_descriptor.left_unit_key == :pair_block_lw_left_unit
+    @test lw_facet_edge_descriptor.right_unit_key == :pair_block_lw_right_unit
+    @test lw_facet_edge_descriptor.left_unit_kind ==
+          :white_lindsey_boundary_stratum_retained_unit
+    @test lw_facet_edge_descriptor.right_unit_kind ==
+          :white_lindsey_boundary_stratum_retained_unit
+    @test lw_facet_edge_descriptor.left_stratum_kind == :facet_cpb
+    @test lw_facet_edge_descriptor.right_stratum_kind == :edge_cpb
+    @test lw_facet_edge_descriptor.left_planned_old_kernel ==
+          :_nested_face_product
+    @test lw_facet_edge_descriptor.right_planned_old_kernel ==
+          :_nested_edge_product
+    @test lw_facet_edge_descriptor.left_planned_1d_helper ==
+          :_nested_doside_1d
+    @test lw_facet_edge_descriptor.right_planned_1d_helper ==
+          :_nested_doside_1d
+    @test lw_facet_edge_descriptor.shared_1d_helper == :_nested_doside_1d
+    @test lw_facet_edge_descriptor.materialization_path ==
+          :white_lindsey_boundary_stratum_adapter_preflight
+    @test lw_facet_edge_descriptor.pair_block_readiness_status ==
+          :blocked_white_lindsey_boundary_stratum_adapter_not_available
+    @test lw_facet_edge_descriptor.pair_block_blocker ==
+          :white_lindsey_boundary_stratum_pair_block_adapter_not_materialized
+    @test !lw_facet_edge_descriptor.coefficient_maps_materialized
+    @test !lw_facet_edge_descriptor.source_operator_blocks_materialized
+    @test !lw_facet_edge_descriptor.final_pair_blocks_materialized
+    @test !lw_facet_edge_descriptor.operator_blocks_materialized
+    @test !lw_facet_edge_descriptor.hamiltonian_data_materialized
+    @test !lw_facet_edge_descriptor.artifacts_materialized
+
     lw_cross_record = _pair_block_record_for(
         materialization_plan,
         :pair_block_lw_left_unit,
@@ -1199,6 +1284,22 @@ end
     @test !lw_adapter_summary.hamiltonian_data_materialized
     @test !lw_adapter_summary.artifacts_materialized
 
+    record_only_pair_descriptor =
+        CPBM.white_lindsey_boundary_stratum_pair_adapter_descriptor(
+            lw_cross_record,
+        )
+    @test record_only_pair_descriptor.status ==
+          :available_metadata_only_white_lindsey_pair_adapter_descriptor
+    @test record_only_pair_descriptor.descriptor_source ==
+          :pair_block_materialization_record_metadata
+    @test record_only_pair_descriptor.pair_family_classification == :facet_edge
+    @test record_only_pair_descriptor.left_planned_old_kernel ==
+          :_nested_face_product
+    @test record_only_pair_descriptor.right_planned_old_kernel ==
+          :_nested_edge_product
+    @test isnothing(record_only_pair_descriptor.left_unit_descriptor_status)
+    @test !record_only_pair_descriptor.coefficient_maps_materialized
+
     missing_stratum_record =
         _pair_block_record_with_metadata(
             lw_cross_record,
@@ -1215,6 +1316,17 @@ end
     @test isnothing(missing_stratum_summary.left_planned_kernel)
     @test !missing_stratum_summary.final_pair_blocks_materialized
 
+    missing_stratum_pair_descriptor =
+        CPBM.white_lindsey_boundary_stratum_pair_adapter_descriptor(
+            missing_stratum_record,
+        )
+    @test missing_stratum_pair_descriptor.status ==
+          :blocked_white_lindsey_boundary_stratum_pair_adapter_descriptor
+    @test missing_stratum_pair_descriptor.blocker ==
+          :missing_white_lindsey_stratum_kind
+    @test isnothing(missing_stratum_pair_descriptor.pair_family_classification)
+    @test !missing_stratum_pair_descriptor.final_pair_blocks_materialized
+
     unknown_stratum_record =
         _pair_block_record_with_metadata(
             lw_cross_record,
@@ -1230,6 +1342,17 @@ end
           :unknown_white_lindsey_stratum_kind
     @test isnothing(unknown_stratum_summary.right_planned_kernel)
     @test !unknown_stratum_summary.final_pair_blocks_materialized
+
+    unknown_stratum_pair_descriptor =
+        CPBM.white_lindsey_boundary_stratum_pair_adapter_descriptor(
+            unknown_stratum_record,
+        )
+    @test unknown_stratum_pair_descriptor.status ==
+          :blocked_white_lindsey_boundary_stratum_pair_adapter_descriptor
+    @test unknown_stratum_pair_descriptor.blocker ==
+          :unknown_white_lindsey_stratum_kind
+    @test isnothing(unknown_stratum_pair_descriptor.pair_family_classification)
+    @test !unknown_stratum_pair_descriptor.coefficient_maps_materialized
 
     lw_batch_summary =
         CPBM.white_lindsey_boundary_stratum_adapter_summary(materialization_plan)

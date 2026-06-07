@@ -126,6 +126,55 @@ function white_lindsey_boundary_stratum_unit_adapter_descriptor(unit)
     )
 end
 
+"""
+    white_lindsey_boundary_stratum_pair_adapter_descriptor(record)
+    white_lindsey_boundary_stratum_pair_adapter_descriptor(record, unit_pair)
+
+Return compact metadata describing one White--Lindsey boundary-stratum adapter
+pair. The `unit_pair` overload uses unit-level descriptors when available; the
+record-only overload reports record-derived facts only. This does not call old
+kernels or build coefficient maps, LW numerical blocks, Hamiltonian data,
+exports, artifacts, IDA/MWG data, or Coulomb.
+"""
+function white_lindsey_boundary_stratum_pair_adapter_descriptor(
+    record::PairBlockMaterializationRecord,
+)
+    return _white_lindsey_boundary_stratum_pair_adapter_descriptor(
+        record,
+        nothing,
+        nothing,
+        :pair_block_materialization_record_metadata,
+    )
+end
+
+function white_lindsey_boundary_stratum_pair_adapter_descriptor(
+    record::PairBlockMaterializationRecord,
+    unit_pair::CUP.UnitPairRecord,
+)
+    if record.pair_key != unit_pair.pair_key
+        return _white_lindsey_boundary_stratum_pair_adapter_descriptor(
+            record,
+            nothing,
+            nothing,
+            :unit_pair_context_mismatch,
+            :blocked_white_lindsey_boundary_stratum_pair_adapter_descriptor,
+            :white_lindsey_pair_record_unit_pair_mismatch,
+        )
+    end
+
+    left_descriptor =
+        white_lindsey_boundary_stratum_unit_adapter_descriptor(unit_pair.left_unit)
+    right_descriptor =
+        white_lindsey_boundary_stratum_unit_adapter_descriptor(unit_pair.right_unit)
+
+    return _white_lindsey_boundary_stratum_pair_adapter_descriptor(
+        record,
+        left_descriptor,
+        right_descriptor,
+        :unit_pair_retained_unit_descriptors,
+    )
+end
+
 function white_lindsey_boundary_stratum_adapter_summary(
     records::Tuple{Vararg{PairBlockMaterializationRecord}},
 )
@@ -339,6 +388,155 @@ function _white_lindsey_record_metadata_value(
     return haskey(record.metadata, key) ? getfield(record.metadata, key) : default
 end
 
+function _white_lindsey_boundary_stratum_pair_adapter_descriptor(
+    record::PairBlockMaterializationRecord,
+    left_descriptor,
+    right_descriptor,
+    descriptor_source::Symbol,
+    status_override = nothing,
+    blocker_override = nothing,
+)
+    left_stratum_kind = _white_lindsey_pair_descriptor_stratum_kind(
+        record,
+        left_descriptor,
+        :left_stratum_kind,
+    )
+    right_stratum_kind = _white_lindsey_pair_descriptor_stratum_kind(
+        record,
+        right_descriptor,
+        :right_stratum_kind,
+    )
+    left_plan = _white_lindsey_stratum_kernel_plan(left_stratum_kind)
+    right_plan = _white_lindsey_stratum_kernel_plan(right_stratum_kind)
+    pair_family_classification =
+        _white_lindsey_pair_family_classification(
+            left_stratum_kind,
+            right_stratum_kind,
+        )
+    status, blocker =
+        isnothing(status_override) ?
+        _white_lindsey_pair_descriptor_status(
+            record,
+            left_descriptor,
+            right_descriptor,
+            left_plan,
+            right_plan,
+            pair_family_classification,
+        ) :
+        (status_override, blocker_override)
+
+    return (;
+        object_kind =
+            :white_lindsey_boundary_stratum_pair_adapter_descriptor,
+        status,
+        blocker,
+        descriptor_source,
+        pair_key = record.pair_key,
+        pair_index = record.pair_index,
+        pair_family = record.pair_family,
+        pair_family_classification,
+        left_unit_key = record.pair_key[1],
+        right_unit_key = record.pair_key[2],
+        left_unit_kind = _white_lindsey_pair_descriptor_unit_kind(
+            record,
+            left_descriptor,
+            :left_unit_kind,
+        ),
+        right_unit_kind = _white_lindsey_pair_descriptor_unit_kind(
+            record,
+            right_descriptor,
+            :right_unit_kind,
+        ),
+        left_unit_descriptor_status =
+            isnothing(left_descriptor) ? nothing : left_descriptor.status,
+        right_unit_descriptor_status =
+            isnothing(right_descriptor) ? nothing : right_descriptor.status,
+        left_stratum_kind,
+        right_stratum_kind,
+        left_planned_old_kernel = left_plan.kernel,
+        right_planned_old_kernel = right_plan.kernel,
+        left_planned_1d_helper = left_plan.side_1d_helper,
+        right_planned_1d_helper = right_plan.side_1d_helper,
+        shared_1d_helper =
+            _white_lindsey_shared_1d_helper(left_plan, right_plan),
+        materialization_path = record.materialization_path,
+        pair_block_readiness_status = record.readiness_status,
+        pair_block_blocker = record.blocker,
+        coefficient_maps_materialized = false,
+        source_operator_blocks_materialized = false,
+        final_pair_blocks_materialized = false,
+        operator_blocks_materialized = false,
+        hamiltonian_data_materialized = false,
+        artifacts_materialized = false,
+    )
+end
+
+function _white_lindsey_pair_descriptor_status(
+    record::PairBlockMaterializationRecord,
+    left_descriptor,
+    right_descriptor,
+    left_plan,
+    right_plan,
+    pair_family_classification,
+)
+    record.materialization_path ===
+        :white_lindsey_boundary_stratum_adapter_preflight || return (
+        :blocked_white_lindsey_boundary_stratum_pair_adapter_descriptor,
+        :not_white_lindsey_boundary_stratum_adapter_preflight,
+    )
+    if !isnothing(left_descriptor) &&
+       left_descriptor.status !==
+       :available_metadata_only_white_lindsey_unit_adapter_descriptor
+        return (
+            :blocked_white_lindsey_boundary_stratum_pair_adapter_descriptor,
+            left_descriptor.blocker,
+        )
+    elseif !isnothing(right_descriptor) &&
+           right_descriptor.status !==
+           :available_metadata_only_white_lindsey_unit_adapter_descriptor
+        return (
+            :blocked_white_lindsey_boundary_stratum_pair_adapter_descriptor,
+            right_descriptor.blocker,
+        )
+    elseif left_plan.status !== :available_white_lindsey_stratum_kernel_plan
+        return (
+            :blocked_white_lindsey_boundary_stratum_pair_adapter_descriptor,
+            left_plan.blocker,
+        )
+    elseif right_plan.status !== :available_white_lindsey_stratum_kernel_plan
+        return (
+            :blocked_white_lindsey_boundary_stratum_pair_adapter_descriptor,
+            right_plan.blocker,
+        )
+    elseif isnothing(pair_family_classification)
+        return (
+            :blocked_white_lindsey_boundary_stratum_pair_adapter_descriptor,
+            :unknown_white_lindsey_pair_family_classification,
+        )
+    end
+    return :available_metadata_only_white_lindsey_pair_adapter_descriptor, nothing
+end
+
+function _white_lindsey_pair_descriptor_stratum_kind(
+    record::PairBlockMaterializationRecord,
+    unit_descriptor,
+    metadata_key::Symbol,
+)
+    isnothing(unit_descriptor) ||
+        return unit_descriptor.stratum_kind
+    return _white_lindsey_record_metadata_value(record, metadata_key)
+end
+
+function _white_lindsey_pair_descriptor_unit_kind(
+    record::PairBlockMaterializationRecord,
+    unit_descriptor,
+    metadata_key::Symbol,
+)
+    isnothing(unit_descriptor) ||
+        return unit_descriptor.unit_kind
+    return _white_lindsey_record_metadata_value(record, metadata_key)
+end
+
 function _white_lindsey_unit_metadata_value(unit, key::Symbol, default = nothing)
     return haskey(unit.metadata, key) ? getfield(unit.metadata, key) : default
 end
@@ -377,6 +575,37 @@ function _white_lindsey_stratum_codimension_matches(stratum_kind, codimension)
     stratum_kind === :edge_cpb && return codimension == 2
     stratum_kind === :corner_cpb && return codimension == 3
     return false
+end
+
+function _white_lindsey_pair_family_classification(
+    left_stratum_kind,
+    right_stratum_kind,
+)
+    left_family = _white_lindsey_stratum_family(left_stratum_kind)
+    right_family = _white_lindsey_stratum_family(right_stratum_kind)
+    isnothing(left_family) && return nothing
+    isnothing(right_family) && return nothing
+    left_rank = _white_lindsey_stratum_family_rank(left_family)
+    right_rank = _white_lindsey_stratum_family_rank(right_family)
+    first_family, second_family =
+        left_rank <= right_rank ?
+        (left_family, right_family) :
+        (right_family, left_family)
+    return Symbol(String(first_family), "_", String(second_family))
+end
+
+function _white_lindsey_stratum_family(stratum_kind)
+    stratum_kind in (:facet_cpb, :face_cpb) && return :facet
+    stratum_kind === :edge_cpb && return :edge
+    stratum_kind === :corner_cpb && return :corner
+    return nothing
+end
+
+function _white_lindsey_stratum_family_rank(stratum_family::Symbol)
+    stratum_family === :facet && return 1
+    stratum_family === :edge && return 2
+    stratum_family === :corner && return 3
+    return typemax(Int)
 end
 
 function _white_lindsey_source_cpb_active_product_axes(source_cpb)
