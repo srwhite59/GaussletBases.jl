@@ -41,6 +41,25 @@ struct PairBlockMaterializationRecord
 end
 
 """
+    PairBlockMaterializationResult
+
+Numerical result for one materialized pair block. This is still local pair-block
+data, not a global operator or Hamiltonian assembly.
+"""
+struct PairBlockMaterializationResult
+    term::Symbol
+    pair_key::Tuple{Symbol,Symbol}
+    block::Matrix{Float64}
+    materialized::Bool
+    source_operator_blocks_materialized::Bool
+    final_pair_blocks_materialized::Bool
+    operator_blocks_materialized::Bool
+    hamiltonian_data_materialized::Bool
+    artifacts_materialized::Bool
+    metadata::NamedTuple
+end
+
+"""
     PairBlockMaterializationPlan
 
 Metadata-only pair-block materialization readiness plan for one pair-operator

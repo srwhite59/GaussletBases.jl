@@ -7,6 +7,8 @@ const CUPForPairBlocks = GaussletBases.CartesianUnitPairs
 const CRTCForPairBlocks = GaussletBases.CartesianRetainedUnitTransformContracts
 const CRUForPairBlocks = GaussletBases.CartesianRetainedUnits
 const CTLForPairBlocks = GaussletBases.CartesianTerminalLowering
+const CRCForPairBlocks = GaussletBases.CartesianRouteCore
+const CPBForPairBlocks = GaussletBases.CartesianCPB
 
 function _pair_block_count(counts, field::Symbol, value)
     matches = Tuple(entry for entry in counts if getproperty(entry, field) == value)
@@ -45,7 +47,10 @@ function _pair_block_retained_unit(
     unit_kind::Symbol,
     lowering_kind::Symbol,
     retained_rule::Symbol,
-    realization_rule,
+    realization_rule;
+    owned_support = nothing,
+    source_cpbs = (),
+    source_cpb_index = nothing,
 )
     return CRUForPairBlocks.RetainedUnitRecord(
         unit_key,
@@ -58,9 +63,9 @@ function _pair_block_retained_unit(
         lowering_kind,
         retained_rule,
         realization_rule,
-        nothing,
-        (),
-        nothing,
+        owned_support,
+        Tuple(source_cpbs),
+        source_cpb_index,
         :not_materialized,
         nothing,
         :not_materialized,
@@ -72,13 +77,21 @@ function _pair_block_retained_unit(
 end
 
 function _pair_block_retained_plan()
+    direct_source = CPBForPairBlocks.filled_cpb(
+        1:2,
+        2:3,
+        1:2;
+        role = :pair_block_direct_source_cpb,
+    )
     direct = _pair_block_retained_unit(
         :pair_block_direct_unit,
         1,
         :direct_cpb_retained_unit,
         :direct_core_identity_cpb,
         :direct_source_modes,
-        :direct_or_trivial_embedding,
+        :direct_or_trivial_embedding;
+        owned_support = CRCForPairBlocks.owned_cpb(direct_source),
+        source_cpbs = (direct_source,),
     )
     pqs = _pair_block_retained_unit(
         :pair_block_pqs_unit,
@@ -205,10 +218,59 @@ end
     @test direct_record.readiness_status == :ready_metadata_only_not_materialized
     @test direct_record.blocker === nothing
     @test !direct_record.materialized
+
+    overlap_x = [
+        1.00 0.11 0.13 0.17
+        0.11 1.20 0.19 0.23
+        0.13 0.19 1.40 0.29
+        0.17 0.23 0.29 1.60
+    ]
+    overlap_y = [
+        1.70 0.31 0.37 0.41
+        0.31 1.90 0.43 0.47
+        0.37 0.43 2.10 0.53
+        0.41 0.47 0.53 2.30
+    ]
+    overlap_z = [
+        2.50 0.59 0.61 0.67
+        0.59 2.70 0.71 0.73
+        0.61 0.71 2.90 0.79
+        0.67 0.73 0.79 3.10
+    ]
+    overlap_result = CPBM.direct_direct_overlap_block(
+        direct_record;
+        parent_axis_counts = (4, 4, 4),
+        overlap_1d = (; x = overlap_x, y = overlap_y, z = overlap_z),
+    )
+    direct_states = Tuple((ix, iy, iz) for ix in 1:2 for iy in 2:3 for iz in 1:2)
+    expected_overlap = [
+        overlap_x[left[1], right[1]] *
+        overlap_y[left[2], right[2]] *
+        overlap_z[left[3], right[3]]
+        for left in direct_states, right in direct_states
+    ]
+
+    @test overlap_result isa CPBM.PairBlockMaterializationResult
+    @test overlap_result.term == :overlap
+    @test overlap_result.pair_key == (:pair_block_direct_unit, :pair_block_direct_unit)
+    @test size(overlap_result.block) == (8, 8)
+    @test overlap_result.block ≈ expected_overlap
+    @test overlap_result.materialized
+    @test overlap_result.source_operator_blocks_materialized
+    @test overlap_result.final_pair_blocks_materialized
+    @test !overlap_result.operator_blocks_materialized
+    @test !overlap_result.hamiltonian_data_materialized
+    @test !overlap_result.artifacts_materialized
+
     @test direct_pqs_record.readiness_status ==
           :blocked_pair_block_materialization_not_implemented
     @test direct_pqs_record.blocker ==
           :non_direct_direct_pair_block_materialization_not_implemented
+    @test_throws ArgumentError CPBM.direct_direct_overlap_block(
+        direct_pqs_record;
+        parent_axis_counts = (4, 4, 4),
+        overlap_1d = (; x = overlap_x, y = overlap_y, z = overlap_z),
+    )
     @test pqs_pqs_record.readiness_status ==
           :blocked_pair_block_materialization_not_implemented
     @test pqs_pqs_record.blocker ==

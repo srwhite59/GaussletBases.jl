@@ -13,16 +13,22 @@ artifacts.
 """
 module CartesianPairBlockMaterialization
 
+using ..CartesianCPB
+using ..CartesianUnitPairs
 using ..CartesianPairOperatorPlans
 
+const CPB = CartesianCPB
+const CUP = CartesianUnitPairs
 const CPOP = CartesianPairOperatorPlans
 
 export PairBlockMaterializationPolicy,
        MetadataOnlyPairBlockMaterialization,
        PairBlockMaterializationRecord,
+       PairBlockMaterializationResult,
        PairBlockMaterializationPlan,
        pair_block_materialization_plan,
        pair_block_materialization_records,
+       direct_direct_overlap_block,
        unavailable_summary,
        summary
 
@@ -36,8 +42,12 @@ export PairBlockMaterializationPolicy,
 #
 # summaries.jl
 #     Compact summaries for tests and reports.
+#
+# direct_overlap.jl
+#     First tiny direct/direct overlap pair-block pilot.
 include("records.jl")
 include("preflight.jl")
 include("summaries.jl")
+include("direct_overlap.jl")
 
 end # module CartesianPairBlockMaterialization
