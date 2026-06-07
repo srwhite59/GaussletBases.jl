@@ -676,6 +676,46 @@ end
         @test !position_result.metadata.artifacts_materialized
     end
 
+    x2_1d = (;
+        x = [Float64((i + j)^2) for i in 1:7, j in 1:7],
+        y = [Float64((2i + j)^2) for i in 1:7, j in 1:7],
+        z = [Float64((i + 2j)^2) for i in 1:7, j in 1:7],
+    )
+    for (axis, term) in ((:x, :x2_x), (:y, :x2_y), (:z, :x2_z))
+        x2_result =
+            CPBMForLWAdapter.white_lindsey_boundary_stratum_x2_block(
+                real_pair_coefficients;
+                axis,
+                parent_axis_counts = (7, 7, 7),
+                overlap_1d,
+                x2_1d,
+            )
+        @test x2_result.term == term
+        @test x2_result.pair_key == real_pair_coefficients.pair_key
+        @test size(x2_result.block) == (9, 3)
+        @test all(isfinite, x2_result.block)
+        @test sum(abs, x2_result.block) > 0.0
+        @test x2_result.materialized
+        @test x2_result.source_operator_blocks_materialized
+        @test x2_result.final_pair_blocks_materialized
+        @test !x2_result.operator_blocks_materialized
+        @test !x2_result.hamiltonian_data_materialized
+        @test !x2_result.artifacts_materialized
+        @test x2_result.metadata.materialization_path ==
+              :white_lindsey_boundary_stratum_x2_adapter
+        @test x2_result.metadata.x2_axis == axis
+        @test x2_result.metadata.supported_terms == (:x2_x, :x2_y, :x2_z)
+        @test x2_result.metadata.operator_factor_form ==
+              :x2_on_selected_axis_overlap_on_inactive_axes
+        @test x2_result.metadata.left_support_count == 25
+        @test x2_result.metadata.right_support_count == 5
+        @test x2_result.metadata.left_retained_column_count == 9
+        @test x2_result.metadata.right_retained_column_count == 3
+        @test !x2_result.metadata.operator_blocks_materialized
+        @test !x2_result.metadata.hamiltonian_data_materialized
+        @test !x2_result.metadata.artifacts_materialized
+    end
+
     blocked_pair_coefficients =
         CPBMForLWAdapter.white_lindsey_boundary_stratum_pair_unit_coefficients(
             ready_facet_descriptor,
