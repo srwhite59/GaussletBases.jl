@@ -38,6 +38,36 @@ pair planning  -> pairs of final retained units
 | **Materialization**                | Actually building concrete numerical objects: coefficient matrices, basis blocks, operator blocks, Hamiltonian matrices, or files.                                                                                                             | Metadata planning. A plan can exist without being materialized.                                                                        |
 | **Final retained unit**            | A column-owning retained object used by pair planning and Hamiltonian assembly. It should link back to its owned support, source CPB, lowering recipe, intermediate retained space, and shell realization.                                     | Terminal shellification region. A terminal region becomes a final retained unit only after lowering/construction metadata is attached. |
 
+### Current Cartesian metadata chain
+
+The current staged metadata chain is:
+
+```text
+CartesianShellification
+-> CartesianTerminalLowering
+-> CartesianRetainedUnits
+-> CartesianRetainedUnitTransformContracts
+-> CartesianUnitPairs
+-> CartesianPairOperatorPlans
+-> CartesianPairBlockMaterialization later
+```
+
+Plainly:
+
+```text
+geometry ownership
+-> source boxes and lowering recipes
+-> final retained-unit records
+-> per-unit transform/realization contracts
+-> retained-unit pairs
+-> pair-operator construction plans
+-> numerical pair blocks later
+```
+
+`CartesianPairBlockMaterialization` is not part of the current metadata chain
+yet. It is the later numerical step that will build concrete pair blocks from
+pair-operator plans.
+
 ### Why “lowering”?
 
 “Lowering” is compiler-style language: it means translating a higher-level geometric object into a lower-level construction representation. Here:
@@ -172,14 +202,27 @@ The PQS source geometry is “one filled box,” but the actual retained space c
 | ----------------------------------- | ----------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
 | **Unit inventory**                  | A list of retained-unit records. At metadata stage, it describes units planned from terminal regions. | It does not necessarily contain numerical basis functions yet.   |
 | **Final retained unit**             | A unit ready to be used for pair planning.                                                            | It should not be an aggregate atom box.                          |
+| **Retained-unit transform contract** | Metadata saying how one retained unit will later get from source rows or modes to final retained columns. It records transform and realization paths without building matrices. | It is not a coefficient matrix, COMX transform, Lowdin matrix, or operator block. |
 | **Unit pair**                       | A pair of final retained units whose operator block must eventually be built.                         | For symmetric matrices, only upper-triangular pairs are counted. |
 | **Upper-triangular pair inventory** | All pairs `(i, j)` with `i ≤ j`. If there are `N` units, count is `N(N+1)/2`.                         | Pure bookkeeping.                                                |
-| **Pair operator plan**              | Metadata describing how an operator block between two units should be built.                          | It may be ready, blocked, adapter-only, or not materialized.     |
+| **Pair operator plan**              | Metadata describing how an operator block between two units should be built.                          | It reads transform and realization paths from retained-unit transform contracts, not directly from retained-unit kinds. It may be ready, blocked, adapter-only, or not materialized. |
 | **Source operator block**           | Operator block built between source CPBs/intermediate retained spaces.                                | For PQS, this is the natural first numerical block.              |
 | **Final pair block**                | Operator block between final retained units after any realization/transform maps.                     | This is what assembly eventually places into the global matrix.  |
+| **Pair-block materialization**      | The later numerical step that builds concrete pair blocks from pair-operator plans.                    | Not metadata planning, not Hamiltonian assembly, and not artifact export. |
 | **Pair operator block**             | Numerical block for one pair of final retained units and one or more operator terms.                  | Not yet built when report says metadata-only.                    |
 | **Assembly**                        | Placing pair blocks into full retained operator/Hamiltonian matrices.                                 | Comes after pair-block construction.                             |
 | **Hamiltonian matrix / Ham bundle** | Final or export-ready operator/Hamiltonian data.                                                      | Much later than shellification and lowering.                     |
+
+Important rule:
+
+```text
+PairOperatorPlans reads transform and realization paths from
+RetainedUnitTransformContracts, not directly from retained-unit kinds.
+```
+
+Retained-unit kinds can still help classify pair families and source-operator
+paths. They should not be the authority for how a retained unit is realized in
+the final pair block.
 
 ---
 

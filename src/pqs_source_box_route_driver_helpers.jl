@@ -6532,6 +6532,7 @@ function _pqs_source_box_route_driver_terminal_route_state(;
     unit_pair_summary = nothing,
     pair_operator_plan = nothing,
     pair_operator_summary = nothing,
+    pair_operator_route_core_sidecars::Bool = true,
     blocker = nothing,
 )
     shellification_plan_available =
@@ -6615,10 +6616,14 @@ function _pqs_source_box_route_driver_terminal_route_state(;
         CartesianPairOperatorPlans.pair_operator_plan(
             unit_pair_plan,
             retained_unit_transform_contract_plan,
+            route_core_sidecars = pair_operator_route_core_sidecars,
         ) :
         isnothing(pair_operator_plan) && unit_pair_plan isa
         CartesianUnitPairs.UnitPairPlan ?
-        CartesianPairOperatorPlans.pair_operator_plan(unit_pair_plan) :
+        CartesianPairOperatorPlans.pair_operator_plan(
+            unit_pair_plan;
+            route_core_sidecars = pair_operator_route_core_sidecars,
+        ) :
         pair_operator_plan
     pair_operator_summary =
         isnothing(pair_operator_summary) && pair_operator_plan isa

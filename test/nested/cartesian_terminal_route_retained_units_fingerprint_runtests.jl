@@ -3,6 +3,8 @@ using GaussletBases
 
 const CTLForTerminalRouteFingerprint = GaussletBases.CartesianTerminalLowering
 const CRUForTerminalRouteFingerprint = GaussletBases.CartesianRetainedUnits
+const CRTCForTerminalRouteFingerprint =
+    GaussletBases.CartesianRetainedUnitTransformContracts
 const CUPForTerminalRouteFingerprint = GaussletBases.CartesianUnitPairs
 const CPOPForTerminalRouteFingerprint = GaussletBases.CartesianPairOperatorPlans
 const CRCForTerminalRouteFingerprint = GaussletBases.CartesianRouteCore
@@ -107,7 +109,13 @@ function _terminal_route_fingerprint_kind_count(summary, unit_kind::Symbol)
     return 0
 end
 
-@testset "terminal route state retained-unit fingerprint" begin
+function _terminal_route_fingerprint_count(counts, field::Symbol, value)
+    matches = Tuple(entry for entry in counts if getproperty(entry, field) == value)
+    isempty(matches) && return 0
+    return only(matches).count
+end
+
+@testset "terminal route state metadata-chain fingerprint" begin
     lowering_plan = _terminal_route_fingerprint_lowering_plan()
     lowering_summary = CTLForTerminalRouteFingerprint.summary(lowering_plan)
     terminal_route_state =
@@ -117,14 +125,19 @@ end
             route_lowering_family = :pqs_terminal_route_fingerprint,
             lowering_plan,
             lowering_summary,
+            pair_operator_route_core_sidecars = false,
     )
     terminal_route_summary = terminal_route_state.summary
     retained_unit_summary = terminal_route_summary.retained_unit_summary
+    transform_contract_summary =
+        terminal_route_summary.retained_unit_transform_contract_summary
     unit_pair_summary = terminal_route_summary.unit_pair_summary
     pair_operator_summary = terminal_route_summary.pair_operator_summary
 
     @test terminal_route_state.retained_unit_plan isa
           CRUForTerminalRouteFingerprint.RetainedUnitPlan
+    @test terminal_route_state.retained_unit_transform_contract_plan isa
+          CRTCForTerminalRouteFingerprint.RetainedUnitTransformContractPlan
     @test terminal_route_state.unit_pair_plan isa
           CUPForTerminalRouteFingerprint.UnitPairPlan
     @test terminal_route_state.pair_operator_plan isa
@@ -151,8 +164,33 @@ end
     @test !retained_unit_summary.hamiltonian_data_materialized
     @test terminal_route_summary.retained_unit_summary.status ==
           retained_unit_summary.status
+    @test terminal_route_summary.retained_unit_transform_contract_summary.status ==
+          transform_contract_summary.status
     @test terminal_route_summary.unit_pair_summary.status == unit_pair_summary.status
     @test terminal_route_summary.selected_contract_count == 2
+    @test transform_contract_summary.status ==
+          :available_retained_unit_transform_contract_plan
+    @test transform_contract_summary.retained_unit_count ==
+          retained_unit_summary.retained_unit_count
+    @test transform_contract_summary.transform_contract_count ==
+          retained_unit_summary.retained_unit_count
+    @test _terminal_route_fingerprint_count(
+        transform_contract_summary.transform_path_counts,
+        :transform_path,
+        :direct_identity_transform_contract,
+    ) == 1
+    @test _terminal_route_fingerprint_count(
+        transform_contract_summary.transform_path_counts,
+        :transform_path,
+        :pqs_source_modes_boundary_selection_shell_realization_contract,
+    ) == 1
+    @test !transform_contract_summary.materialized
+    @test !transform_contract_summary.transforms_materialized
+    @test !transform_contract_summary.coefficient_maps_materialized
+    @test !transform_contract_summary.pair_inventory_materialized
+    @test !transform_contract_summary.operator_blocks_materialized
+    @test !transform_contract_summary.hamiltonian_data_materialized
+    @test !transform_contract_summary.artifacts_materialized
     @test terminal_route_summary.pair_inventory_available
     @test unit_pair_summary.status == :available_unit_pair_plan
     @test unit_pair_summary.retained_unit_count ==
@@ -177,9 +215,33 @@ end
           pair_operator_summary.unit_pair_count
     @test pair_operator_summary.expected_pair_operator_plan_count ==
           unit_pair_summary.expected_upper_triangular_pair_count
-    @test pair_operator_summary.route_core_pair_operator_plan_inventory_available
-    @test pair_operator_summary.route_core_pair_operator_plan_count ==
-          pair_operator_summary.pair_operator_plan_count
+    @test !pair_operator_summary.route_core_pair_operator_plan_inventory_available
+    @test pair_operator_summary.route_core_pair_operator_plan_inventory_status ==
+          :not_requested_route_core_pair_operator_plan_inventory
+    @test _terminal_route_fingerprint_count(
+        pair_operator_summary.realization_path_counts,
+        :realization_path,
+        (;
+            left = :identity_or_trivial_embedding,
+            right = :identity_or_trivial_embedding,
+        ),
+    ) == 1
+    @test _terminal_route_fingerprint_count(
+        pair_operator_summary.realization_path_counts,
+        :realization_path,
+        (;
+            left = :identity_or_trivial_embedding,
+            right = :shell_projection_lowdin_planned,
+        ),
+    ) == 1
+    @test _terminal_route_fingerprint_count(
+        pair_operator_summary.realization_path_counts,
+        :realization_path,
+        (;
+            left = :shell_projection_lowdin_planned,
+            right = :shell_projection_lowdin_planned,
+        ),
+    ) == 1
     @test !pair_operator_summary.materialized
     @test !pair_operator_summary.source_operator_blocks_materialized
     @test !pair_operator_summary.final_pair_blocks_materialized
@@ -196,13 +258,17 @@ end
             route_lowering_family = :pqs_terminal_route_fingerprint,
             lowering_plan,
             lowering_summary,
+            pair_operator_route_core_sidecars = false,
         )
     unselected_summary = unselected_state.summary.retained_unit_summary
+    unselected_transform_summary =
+        unselected_state.summary.retained_unit_transform_contract_summary
     unselected_pair_summary = unselected_state.summary.unit_pair_summary
     unselected_pair_operator_summary =
         unselected_state.summary.pair_operator_summary
 
     @test unselected_state.retained_unit_plan === nothing
+    @test unselected_state.retained_unit_transform_contract_plan === nothing
     @test unselected_state.unit_pair_plan === nothing
     @test unselected_state.pair_operator_plan === nothing
     @test unselected_summary.status == :not_selected
@@ -214,6 +280,16 @@ end
     @test !unselected_summary.pair_inventory_materialized
     @test !unselected_summary.operator_blocks_materialized
     @test !unselected_summary.hamiltonian_data_materialized
+    @test unselected_transform_summary.status == :not_selected
+    @test unselected_transform_summary.retained_unit_count == 0
+    @test unselected_transform_summary.transform_contract_count == 0
+    @test !unselected_transform_summary.materialized
+    @test !unselected_transform_summary.transforms_materialized
+    @test !unselected_transform_summary.coefficient_maps_materialized
+    @test !unselected_transform_summary.pair_inventory_materialized
+    @test !unselected_transform_summary.operator_blocks_materialized
+    @test !unselected_transform_summary.hamiltonian_data_materialized
+    @test !unselected_transform_summary.artifacts_materialized
     @test unselected_pair_summary.status == :not_selected
     @test unselected_pair_summary.pair_count == 0
     @test unselected_pair_summary.expected_upper_triangular_pair_count == 0
