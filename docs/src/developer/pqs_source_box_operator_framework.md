@@ -62,7 +62,9 @@ It must not infer realization paths directly from retained-unit kinds.
 - PQS/PQS raw source-space safe one-body helpers for overlap, position, `x2`,
   and kinetic;
 - metadata-only PQS source-to-shell-realization bridge summaries for single
-  source results and batches.
+  source results and batches;
+- metadata-only final PQS pair-block readiness summaries over those bridge
+  summaries.
 
 The PQS helpers materialize source-space blocks only. They consume ready
 `:pqs_source_pair_preflight` records and caller-supplied 1D source factors,
@@ -80,6 +82,15 @@ Hamiltonians, exports, artifacts, IDA/MWG data, or Coulomb blocks. The private
 PQS source safe-term descriptor helper is local selector metadata for the
 supported source safe terms. It is not public API and not a route-adoption
 surface.
+
+`pqs_source_pair_final_block_readiness_summary(bridge_summary)` consumes either
+a single PQS source shell-realization bridge summary or a bridge batch summary.
+It reports whether a future final retained PQS pair block could be attempted.
+At the current checkpoint the expected status remains blocked by
+`:shell_realization_not_materialized`; blocked bridge summaries propagate their
+own blockers. This helper is metadata-only and does not build shell projection,
+Lowdin data, final retained PQS pair blocks, Hamiltonians, exports, artifacts,
+IDA/MWG data, or Coulomb blocks.
 
 The PQS guardrails are unchanged: support-row or shell-row contraction is an
 oracle/debug path, not the PQS algorithm; shell projection and Lowdin cleanup
@@ -566,6 +577,7 @@ pqs_source_pair_x2_block(record; axis, overlap_1d, x2_1d)
 pqs_source_pair_kinetic_block(record; overlap_1d, kinetic_1d)
 pqs_source_pair_one_body_block(record, term; ...)
 pqs_source_pair_shell_realization_bridge_summary(result_or_batch)
+pqs_source_pair_final_block_readiness_summary(bridge_summary)
 ```
 
 with matching plan-level plural helpers. The accepted one-body terms are:
@@ -605,6 +617,14 @@ API and must not be treated as a retained rule or realization object.
 Bridge summaries do not build shell projection, Lowdin data, final retained
 PQS pair blocks, Hamiltonians, exports, artifacts, IDA/MWG data, or Coulomb
 blocks.
+
+The final-block readiness summary is the next metadata-only checkpoint. It
+consumes a single bridge summary or a bridge batch summary and reports whether
+a future final retained PQS pair block could be attempted. Current source
+bridges correctly block with `:shell_realization_not_materialized`, and blocked
+bridge summaries propagate their blockers. The readiness summary builds no
+shell projection, Lowdin data, final retained PQS pair block, Hamiltonian,
+export, artifact, IDA/MWG data, or Coulomb block.
 
 ## First PQS/PQS Implementation Target
 

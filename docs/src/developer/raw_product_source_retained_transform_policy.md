@@ -245,6 +245,16 @@ data, or Coulomb blocks. The private safe-term descriptor helper used by
 supported safe-term selection and duplicated-branch cleanup; it is not a
 public API, retained rule, shell realization, or operator block.
 
+`pqs_source_pair_final_block_readiness_summary(bridge_summary)` is the
+metadata-only checkpoint after the bridge summary. It consumes either a single
+PQS source shell-realization bridge summary or a bridge batch summary and
+reports whether a future final retained PQS pair block could be attempted.
+Current summaries are expected to remain blocked by
+`:shell_realization_not_materialized`; blocked bridge summaries propagate their
+own blockers. The readiness helper does not build shell projection, Lowdin
+cleanup, final retained PQS pair blocks, Hamiltonians, exports, artifacts,
+IDA/MWG data, or Coulomb blocks.
+
 The following record descriptions remain a source-box policy guide for that
 adapter boundary, not the current implementation spine and not public API.
 

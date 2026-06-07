@@ -525,5 +525,9 @@ direct/direct final local one-body pilot and a PQS/PQS raw source-space
 safe-term pilot. The PQS source pilot does not apply shell projection, Lowdin,
 or final retained-block assembly. Its current bridge summaries are
 metadata-only records of the later shell-realization handoff, not the
-realization itself. Broader PQS, White--Lindsey, Coulomb/IDA, and Hamiltonian
-assembly remain future work.
+realization itself. The final PQS pair-block readiness summary consumes those
+single or batch bridge summaries and currently blocks on
+`:shell_realization_not_materialized`; it does not build shell projection,
+Lowdin, final retained blocks, Hamiltonians, exports, artifacts, IDA/MWG data,
+or Coulomb. Broader PQS, White--Lindsey, Coulomb/IDA, and Hamiltonian assembly
+remain future work.

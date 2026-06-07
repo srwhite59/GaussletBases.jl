@@ -53,6 +53,7 @@ CartesianShellification
 -> direct/direct one-body local pair-block pilot
 -> PQS/PQS raw source-space safe-term pilot
 -> PQS source-to-shell-realization bridge summaries
+-> metadata-only final PQS pair-block readiness summaries
 -> future shell realization and final pair-block materialization
 -> future assembly
 ```
@@ -75,6 +76,7 @@ geometry ownership
 -> direct/direct one-body pair blocks for the current pilot
 -> PQS/PQS raw source-space one-body blocks for the current source pilot
 -> metadata-only bridge summaries for later PQS shell realization
+-> metadata-only readiness summaries for later final PQS pair blocks
 -> broader final pair blocks and assembly later
 ```
 
@@ -92,6 +94,13 @@ White--Lindsey block path, Coulomb/IDA path, full operator assembly,
 Hamiltonian bundle, export, or artifact writer. The local PQS safe-term
 descriptor helper is private implementation metadata for supported safe-term
 selection and duplicated-branch cleanup, not route API.
+
+The local final-readiness helper
+`pqs_source_pair_final_block_readiness_summary(bridge_summary)` consumes single
+or batch PQS source shell-realization bridge summaries and reports whether a
+future final retained PQS pair block could be attempted. Current summaries are
+blocked by `:shell_realization_not_materialized`, and blocked bridge summaries
+propagate their blockers.
 
 ### Why “lowering”?
 
@@ -237,6 +246,7 @@ The PQS source geometry is “one filled box,” but the actual retained space c
 | **Pair operator block**             | Numerical block for one pair of final retained units and one or more operator terms.                  | Not yet built when report says metadata-only.                    |
 | **PQS source-space block**          | A raw source-mode block for a PQS/PQS safe one-body term, built from caller-supplied 1D source factors. | Not a final shell-realized PQS pair block.                       |
 | **PQS source shell-realization bridge summary** | Metadata-only summary describing how a PQS source-space block or batch can later be consumed by shell realization. | It records keys, source-mode facts, statuses, blockers, paths, and flags; it builds no shell projection, Lowdin, final pair block, Hamiltonian, export, artifact, IDA/MWG data, or Coulomb. |
+| **PQS final pair-block readiness summary** | Metadata-only summary over a single or batch PQS source shell-realization bridge summary. | Reports whether a future final retained PQS pair block could be attempted; currently blocks on `:shell_realization_not_materialized` and builds no shell projection, Lowdin, final block, Hamiltonian, export, artifact, IDA/MWG data, or Coulomb. |
 | **PQS source safe-term descriptor** | Private local metadata in `CartesianPairBlockMaterialization` for supported PQS source safe one-body terms. | Selector/code-organization helper only, not public API or route behavior. |
 | **Assembly**                        | Placing pair blocks into full retained operator/Hamiltonian matrices.                                 | Comes after pair-block construction.                             |
 | **Hamiltonian matrix / Ham bundle** | Final or export-ready operator/Hamiltonian data.                                                      | Much later than shellification and lowering.                     |
