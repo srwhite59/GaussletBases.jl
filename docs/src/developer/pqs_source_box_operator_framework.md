@@ -104,6 +104,12 @@ This is adapter-boundary metadata only. It does not build LW numerical blocks,
 coefficient maps, doside transforms, Hamiltonians, exports, artifacts, IDA/MWG
 data, or Coulomb.
 
+`white_lindsey_boundary_stratum_adapter_summary(record)` is the matching
+metadata-only reuse summary for those preflight records. It records only symbol
+targets for future adapters: facet/face -> `_nested_face_product`, edge ->
+`_nested_edge_product`, corner -> `_nested_corner_piece`, and facet/edge side
+helper -> `_nested_doside_1d`. It does not call those old kernels.
+
 The PQS guardrails are unchanged: support-row or shell-row contraction is an
 oracle/debug path, not the PQS algorithm; shell projection and Lowdin cleanup
 belong to shell realization, not raw product-box operator construction;

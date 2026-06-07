@@ -542,3 +542,13 @@ blocked by
 only an adapter-boundary checkpoint; it does not build LW numerical blocks,
 coefficient maps, doside transforms, Hamiltonians, exports, artifacts,
 IDA/MWG data, or Coulomb.
+
+`white_lindsey_boundary_stratum_adapter_summary(record)` is the internal
+metadata helper that records the intended old-kernel reuse map for that
+adapter boundary. It consumes
+`:white_lindsey_boundary_stratum_adapter_preflight` records. Facet/face strata
+point to `_nested_face_product`, edge strata to `_nested_edge_product`, corner
+strata to `_nested_corner_piece`, and facet/edge side helpers to
+`_nested_doside_1d`. The helper records symbols only; it does not call those
+kernels and does not build LW numerical blocks, coefficient maps, doside
+transforms, Hamiltonians, exports, artifacts, IDA/MWG data, or Coulomb.
