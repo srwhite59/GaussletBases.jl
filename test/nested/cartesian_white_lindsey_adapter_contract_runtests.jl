@@ -4,6 +4,7 @@ using GaussletBases
 const CPBMForLWAdapter = GaussletBases.CartesianPairBlockMaterialization
 const CRUForLWAdapter = GaussletBases.CartesianRetainedUnits
 const CRCForLWAdapter = GaussletBases.CartesianRouteCore
+const CUPForLWAdapter = GaussletBases.CartesianUnitPairs
 const CPBForLWAdapter = GaussletBases.CartesianCPB
 
 function _lw_adapter_retained_unit(
@@ -11,7 +12,10 @@ function _lw_adapter_retained_unit(
     unit_index::Int,
     source_cpb,
     stratum_kind::Symbol,
-    source_cpb_index::Int,
+    source_cpb_index::Int;
+    dimension_status::Symbol = :not_materialized,
+    dimension = nothing,
+    extra_metadata = (;),
 )
     return CRUForLWAdapter.RetainedUnitRecord(
         unit_key,
@@ -27,13 +31,32 @@ function _lw_adapter_retained_unit(
         CRCForLWAdapter.owned_cpb(source_cpb),
         (source_cpb,),
         source_cpb_index,
-        :not_materialized,
-        nothing,
+        dimension_status,
+        dimension,
         :not_materialized,
         nothing,
         nothing,
         false,
-        (; stratum_kind, source_cpb_index),
+        merge((; stratum_kind, source_cpb_index), extra_metadata),
+    )
+end
+
+function _lw_adapter_unit_pair(left_unit, right_unit, pair_index::Int)
+    return CUPForLWAdapter.UnitPairRecord(
+        (left_unit.unit_key, right_unit.unit_key),
+        pair_index,
+        Symbol(String(left_unit.unit_kind), "__", String(right_unit.unit_kind)),
+        left_unit,
+        right_unit,
+        left_unit.unit_index,
+        right_unit.unit_index,
+        left_unit.unit_key,
+        right_unit.unit_key,
+        left_unit.unit_kind,
+        right_unit.unit_kind,
+        nothing,
+        false,
+        (;),
     )
 end
 
@@ -392,7 +415,13 @@ end
         5,
         real_facet_source,
         :facet_cpb,
-        5,
+        5;
+        dimension_status = :available,
+        dimension = 3,
+        extra_metadata = (;
+            parent_dims = (7, 7, 7),
+            doside_source_1d = real_doside_source_1d,
+        ),
     )
     real_facet_descriptor = merge(
         CPBMForLWAdapter.white_lindsey_boundary_stratum_unit_adapter_descriptor(
@@ -469,7 +498,13 @@ end
         4,
         real_edge_source,
         :edge_cpb,
-        4,
+        4;
+        dimension_status = :available,
+        dimension = 3,
+        extra_metadata = (;
+            parent_dims = (7, 7, 7),
+            doside_source_1d = real_doside_source_1d,
+        ),
     )
     real_edge_descriptor = merge(
         CPBMForLWAdapter.white_lindsey_boundary_stratum_unit_adapter_descriptor(
@@ -519,6 +554,85 @@ end
     @test !real_edge_coefficients.operator_blocks_materialized
     @test !real_edge_coefficients.hamiltonian_data_materialized
     @test !real_edge_coefficients.artifacts_materialized
+
+    real_facet_edge_pair = _lw_adapter_unit_pair(real_facet_unit, real_edge_unit, 1)
+    real_pair_coefficients =
+        CPBMForLWAdapter.white_lindsey_boundary_stratum_pair_unit_coefficients(
+            real_facet_edge_pair,
+        )
+    @test real_pair_coefficients.object_kind ==
+          :white_lindsey_boundary_stratum_pair_unit_coefficients
+    @test real_pair_coefficients.status ==
+          :materialized_white_lindsey_pair_unit_coefficients
+    @test isnothing(real_pair_coefficients.blocker)
+    @test real_pair_coefficients.pair_key == (
+        :lw_adapter_test_real_facet_unit,
+        :lw_adapter_test_real_edge_unit,
+    )
+    @test real_pair_coefficients.left_stratum_kind == :facet_cpb
+    @test real_pair_coefficients.right_stratum_kind == :edge_cpb
+    @test real_pair_coefficients.left_coefficient_status ==
+          :materialized_white_lindsey_facet_unit_coefficients
+    @test real_pair_coefficients.right_coefficient_status ==
+          :materialized_white_lindsey_edge_unit_coefficients
+    @test size(real_pair_coefficients.left_coefficient_matrix) == (7^3, 9)
+    @test size(real_pair_coefficients.right_coefficient_matrix) == (7^3, 3)
+    @test length(real_pair_coefficients.left_support_indices) == 25
+    @test length(real_pair_coefficients.right_support_indices) == 5
+    @test real_pair_coefficients.left_retained_column_count == 9
+    @test real_pair_coefficients.right_retained_column_count == 3
+    @test real_pair_coefficients.unit_coefficient_cache_scope ==
+          :local_pair_or_batch_call
+    @test real_pair_coefficients.unit_coefficient_cache_entry_count == 2
+    @test real_pair_coefficients.coefficient_maps_materialized
+    @test real_pair_coefficients.pair_unit_coefficient_maps_materialized
+    @test !real_pair_coefficients.pair_blocks_materialized
+    @test !real_pair_coefficients.source_operator_blocks_materialized
+    @test !real_pair_coefficients.final_pair_blocks_materialized
+    @test !real_pair_coefficients.operator_blocks_materialized
+    @test !real_pair_coefficients.hamiltonian_data_materialized
+    @test !real_pair_coefficients.artifacts_materialized
+
+    blocked_pair_coefficients =
+        CPBMForLWAdapter.white_lindsey_boundary_stratum_pair_unit_coefficients(
+            ready_facet_descriptor,
+            ready_edge_descriptor;
+            pair_index = 2,
+        )
+    @test blocked_pair_coefficients.status ==
+          :blocked_white_lindsey_pair_unit_coefficients
+    @test blocked_pair_coefficients.blocker ==
+          :left_white_lindsey_unit_coefficients_not_materialized
+    @test blocked_pair_coefficients.left_coefficient_status ==
+          :blocked_white_lindsey_boundary_stratum_unit_coefficients
+    @test blocked_pair_coefficients.right_coefficient_status ==
+          :blocked_white_lindsey_boundary_stratum_unit_coefficients
+    @test blocked_pair_coefficients.left_blocker ==
+          :white_lindsey_facet_doside_source_not_materializable
+    @test blocked_pair_coefficients.right_blocker ==
+          :white_lindsey_edge_doside_source_not_materializable
+    @test isnothing(blocked_pair_coefficients.left_coefficient_matrix)
+    @test isnothing(blocked_pair_coefficients.right_coefficient_matrix)
+    @test !blocked_pair_coefficients.coefficient_maps_materialized
+    @test !blocked_pair_coefficients.pair_blocks_materialized
+
+    edge_corner_pair = _lw_adapter_unit_pair(real_edge_unit, corner_unit, 3)
+    edge_corner_coefficients =
+        CPBMForLWAdapter.white_lindsey_boundary_stratum_pair_unit_coefficients(
+            edge_corner_pair,
+        )
+    @test edge_corner_coefficients.status ==
+          :materialized_white_lindsey_pair_unit_coefficients
+    @test edge_corner_coefficients.left_coefficient_status ==
+          :materialized_white_lindsey_edge_unit_coefficients
+    @test edge_corner_coefficients.right_coefficient_status ==
+          :materialized_white_lindsey_corner_unit_coefficients
+    @test size(edge_corner_coefficients.left_coefficient_matrix) == (7^3, 3)
+    @test size(edge_corner_coefficients.right_coefficient_matrix) == (1, 1)
+    @test edge_corner_coefficients.right_retained_column_count == 1
+    @test edge_corner_coefficients.unit_coefficient_cache_entry_count == 2
+    @test edge_corner_coefficients.pair_unit_coefficient_maps_materialized
+    @test !edge_corner_coefficients.pair_blocks_materialized
 
     ready_corner_descriptor = merge(
         corner_descriptor,
