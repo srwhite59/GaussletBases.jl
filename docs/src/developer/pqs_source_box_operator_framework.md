@@ -108,7 +108,10 @@ data, or Coulomb.
 metadata-only reuse summary for those preflight records. It records only symbol
 targets for future adapters: facet/face -> `_nested_face_product`, edge ->
 `_nested_edge_product`, corner -> `_nested_corner_piece`, and facet/edge side
-helper -> `_nested_doside_1d`. It does not call those old kernels.
+helper -> `_nested_doside_1d`. For batch or plan-level inputs,
+`reuse_metadata_available_count` and `reuse_metadata_blocked_count` count only
+old-kernel reuse metadata availability, not numerical adapter readiness or
+pair-block materialization. It does not call those old kernels.
 
 The PQS guardrails are unchanged: support-row or shell-row contraction is an
 oracle/debug path, not the PQS algorithm; shell projection and Lowdin cleanup

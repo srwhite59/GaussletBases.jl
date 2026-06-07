@@ -118,7 +118,11 @@ The companion internal helper
 preflight records and records old-kernel reuse guidance only: facet/face
 strata point to `_nested_face_product`, edge strata to `_nested_edge_product`,
 corner strata to `_nested_corner_piece`, and facet/edge side helpers to
-`_nested_doside_1d`. It does not call those kernels.
+`_nested_doside_1d`. For batch or plan inputs, the summary reports
+`reuse_metadata_available_count` and `reuse_metadata_blocked_count`; these
+counts describe old-kernel reuse metadata availability only, not numerical
+adapter readiness or pair-block materialization. It does not call those
+kernels.
 
 ### Why “lowering”?
 
@@ -266,7 +270,7 @@ The PQS source geometry is “one filled box,” but the actual retained space c
 | **PQS source shell-realization bridge summary** | Metadata-only summary describing how a PQS source-space block or batch can later be consumed by shell realization. | It records keys, source-mode facts, statuses, blockers, paths, and flags; it builds no shell projection, Lowdin, final pair block, Hamiltonian, export, artifact, IDA/MWG data, or Coulomb. |
 | **PQS final pair-block readiness summary** | Metadata-only summary over a single or batch PQS source shell-realization bridge summary. | Reports whether a future final retained PQS pair block could be attempted; currently blocks on `:shell_realization_not_materialized` and builds no shell projection, Lowdin, final block, Hamiltonian, export, artifact, IDA/MWG data, or Coulomb. |
 | **LW boundary-stratum adapter preflight** | Metadata-only pair-block materialization classification for `:white_lindsey_boundary_stratum_adapter_path`. | Uses `:white_lindsey_boundary_stratum_adapter_preflight` and currently blocks on `:white_lindsey_boundary_stratum_pair_block_adapter_not_materialized`; builds no LW numerical block, coefficient map, doside transform, Hamiltonian, export, artifact, IDA/MWG data, or Coulomb. |
-| **LW adapter reuse summary** | Internal metadata helper `white_lindsey_boundary_stratum_adapter_summary(record)` over LW adapter preflight records. | Records future reuse targets only: facet/face -> `_nested_face_product`, edge -> `_nested_edge_product`, corner -> `_nested_corner_piece`, facet/edge side helper -> `_nested_doside_1d`; it does not call those kernels or materialize LW blocks. |
+| **LW adapter reuse summary** | Internal metadata helper `white_lindsey_boundary_stratum_adapter_summary(record)` over LW adapter preflight records. | Records future reuse targets only: facet/face -> `_nested_face_product`, edge -> `_nested_edge_product`, corner -> `_nested_corner_piece`, facet/edge side helper -> `_nested_doside_1d`; batch summaries expose `reuse_metadata_available_count` and `reuse_metadata_blocked_count` for metadata availability only, not numerical adapter readiness or pair-block materialization; it does not call those kernels or materialize LW blocks. |
 | **PQS source safe-term descriptor** | Private local metadata in `CartesianPairBlockMaterialization` for supported PQS source safe one-body terms. | Selector/code-organization helper only, not public API or route behavior. |
 | **Assembly**                        | Placing pair blocks into full retained operator/Hamiltonian matrices.                                 | Comes after pair-block construction.                             |
 | **Hamiltonian matrix / Ham bundle** | Final or export-ready operator/Hamiltonian data.                                                      | Much later than shellification and lowering.                     |
