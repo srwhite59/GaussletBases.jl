@@ -17,6 +17,7 @@ include("cartesian_retained_unit_transform_contracts_runtests.jl")
 include("cartesian_terminal_route_retained_units_fingerprint_runtests.jl")
 include("cartesian_unit_pairs_contract_runtests.jl")
 include("cartesian_pair_operator_plans_contract_runtests.jl")
+include("cartesian_pair_block_materialization_contract_runtests.jl")
 include("cartesian_terminal_route_flat_glue_cleanup_runtests.jl")
 include("cartesian_pair_stage_fingerprint_helpers_runtests.jl")
 
