@@ -12,6 +12,7 @@ include("pqs_source_box_route_skeleton_runtests.jl")
 include("pqs_source_box_route_driver_crc_print_line_runtests.jl")
 include("cartesian_route_core_examples_runtests.jl")
 include("cartesian_selected_terminal_lowering_contract_inventory_runtests.jl")
+include("cartesian_retained_units_contract_runtests.jl")
 include("cartesian_pair_stage_fingerprint_helpers_runtests.jl")
 
 @testset "Cartesian nested owned-unit coverage audit" begin
