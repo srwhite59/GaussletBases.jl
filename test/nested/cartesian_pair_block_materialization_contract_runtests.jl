@@ -1471,6 +1471,145 @@ end
         (:overlap, :overlap, :kinetic),
     )
     @test batch_kinetic_record.block ≈ record_kinetic.block
+
+    selector_record_overlap = CPBM.pqs_source_pair_one_body_block(
+        pqs_record,
+        :overlap;
+        overlap_1d = selector_overlap_1d,
+    )
+    selector_record_position = CPBM.pqs_source_pair_one_body_block(
+        pqs_record,
+        :position_y;
+        overlap_1d = selector_overlap_1d,
+        position_1d = (;
+            x = selector_position_x,
+            y = selector_position_y,
+            z = selector_position_z,
+        ),
+    )
+    selector_record_x2 = CPBM.pqs_source_pair_one_body_block(
+        pqs_record,
+        :x2_z;
+        overlap_1d = selector_overlap_1d,
+        x2_1d = (selector_x2_x, selector_x2_y, selector_x2_z),
+    )
+    selector_record_kinetic = CPBM.pqs_source_pair_one_body_block(
+        pqs_record,
+        :kinetic;
+        overlap_1d = selector_overlap_1d,
+        kinetic_1d = (;
+            x = selector_kinetic_x,
+            y = selector_kinetic_y,
+            z = selector_kinetic_z,
+        ),
+    )
+
+    @test selector_record_overlap.term == :source_overlap
+    @test selector_record_overlap.block ≈ record_overlap.block
+    @test selector_record_position.term == :source_position_y
+    @test selector_record_position.block ≈ record_position.block
+    @test selector_record_x2.term == :source_x2_z
+    @test selector_record_x2.block ≈ record_x2.block
+    @test selector_record_kinetic.term == :source_kinetic
+    @test selector_record_kinetic.block ≈ record_kinetic.block
+    @test selector_record_kinetic.source_operator_blocks_materialized
+    @test !selector_record_kinetic.final_pair_blocks_materialized
+    @test !selector_record_kinetic.operator_blocks_materialized
+    @test !selector_record_kinetic.hamiltonian_data_materialized
+    @test !selector_record_kinetic.artifacts_materialized
+
+    selector_batch_overlap = CPBM.pqs_source_pair_one_body_blocks(
+        materialization_plan,
+        :overlap;
+        overlap_1d = selector_overlap_1d,
+    )
+    selector_batch_position = CPBM.pqs_source_pair_one_body_blocks(
+        materialization_plan,
+        :position_y;
+        overlap_1d = selector_overlap_1d,
+        position_1d = (
+            selector_position_x,
+            selector_position_y,
+            selector_position_z,
+        ),
+    )
+    selector_batch_x2 = CPBM.pqs_source_pair_one_body_blocks(
+        materialization_plan,
+        :x2_z;
+        overlap_1d = selector_overlap_1d,
+        x2_1d = (; x = selector_x2_x, y = selector_x2_y, z = selector_x2_z),
+    )
+    selector_batch_kinetic = CPBM.pqs_source_pair_one_body_blocks(
+        materialization_plan,
+        :kinetic;
+        overlap_1d = selector_overlap_1d,
+        kinetic_1d = (
+            selector_kinetic_x,
+            selector_kinetic_y,
+            selector_kinetic_z,
+        ),
+    )
+
+    @test selector_batch_overlap.term == batch_overlap.term
+    @test _pair_block_batch_result_for(
+        selector_batch_overlap,
+        :pair_block_selector_pqs_unit,
+        :pair_block_selector_pqs_unit,
+    ).block ≈ batch_overlap_record.block
+    @test selector_batch_position.term == batch_position.term
+    @test _pair_block_batch_result_for(
+        selector_batch_position,
+        :pair_block_selector_pqs_unit,
+        :pair_block_selector_pqs_unit,
+    ).block ≈ batch_position_record.block
+    @test selector_batch_x2.term == batch_x2.term
+    @test _pair_block_batch_result_for(
+        selector_batch_x2,
+        :pair_block_selector_pqs_unit,
+        :pair_block_selector_pqs_unit,
+    ).block ≈ batch_x2_record.block
+    @test selector_batch_kinetic.term == batch_kinetic.term
+    @test _pair_block_batch_result_for(
+        selector_batch_kinetic,
+        :pair_block_selector_pqs_unit,
+        :pair_block_selector_pqs_unit,
+    ).block ≈ batch_kinetic_record.block
+    @test selector_batch_kinetic.source_operator_blocks_materialized
+    @test !selector_batch_kinetic.final_pair_blocks_materialized
+    @test !selector_batch_kinetic.operator_blocks_materialized
+    @test !selector_batch_kinetic.hamiltonian_data_materialized
+    @test !selector_batch_kinetic.artifacts_materialized
+
+    @test_throws ArgumentError CPBM.pqs_source_pair_one_body_block(
+        pqs_record,
+        :position_x;
+        overlap_1d = selector_overlap_1d,
+    )
+    @test_throws ArgumentError CPBM.pqs_source_pair_one_body_block(
+        pqs_record,
+        :x2_z;
+        overlap_1d = selector_overlap_1d,
+    )
+    @test_throws ArgumentError CPBM.pqs_source_pair_one_body_block(
+        pqs_record,
+        :kinetic;
+        overlap_1d = selector_overlap_1d,
+    )
+    @test_throws ArgumentError CPBM.pqs_source_pair_one_body_block(
+        pqs_record,
+        :unsupported_safe_term;
+        overlap_1d = selector_overlap_1d,
+    )
+    @test_throws ArgumentError CPBM.pqs_source_pair_one_body_blocks(
+        materialization_plan,
+        :position_x;
+        overlap_1d = selector_overlap_1d,
+    )
+    @test_throws ArgumentError CPBM.pqs_source_pair_one_body_blocks(
+        materialization_plan,
+        :unsupported_safe_term;
+        overlap_1d = selector_overlap_1d,
+    )
 end
 
 @testset "CartesianPairBlockMaterialization direct/direct overlap selector" begin

@@ -57,6 +57,8 @@ export PairBlockMaterializationPolicy,
        pqs_source_pair_position_blocks,
        pqs_source_pair_x2_blocks,
        pqs_source_pair_kinetic_blocks,
+       pqs_source_pair_one_body_block,
+       pqs_source_pair_one_body_blocks,
        direct_direct_overlap_block,
        direct_direct_overlap_blocks,
        direct_direct_position_block,
@@ -98,6 +100,9 @@ export PairBlockMaterializationPolicy,
 #
 # direct_one_body.jl
 #     Direct/direct one-body term selector.
+#
+# pqs_source_one_body.jl
+#     PQS/PQS raw source-space one-body term selector.
 include("records.jl")
 include("preflight.jl")
 include("summaries.jl")
@@ -107,5 +112,6 @@ include("direct_position.jl")
 include("direct_x2.jl")
 include("direct_kinetic.jl")
 include("direct_one_body.jl")
+include("pqs_source_one_body.jl")
 
 end # module CartesianPairBlockMaterialization
