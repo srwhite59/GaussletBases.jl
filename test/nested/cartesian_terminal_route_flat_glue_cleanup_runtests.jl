@@ -178,3 +178,88 @@ end
     )
     @test !summary.terminal_route_summary.pair_inventory_available
 end
+
+@testset "pair-operator report aliases prefer compact summary" begin
+    compact_summary = (;
+        object_kind = :cartesian_pair_operator_plan_summary,
+        route_core_pair_operator_plan_inventory_available = true,
+        route_core_pair_operator_plan_inventory_status =
+            :available_route_core_pair_operator_plan_inventory,
+        route_core_pair_operator_plan_inventory_blocker = nothing,
+        route_core_pair_operator_plan_count = 3,
+        route_core_pair_operator_plan_blocked_count = 1,
+        materialized = false,
+        source_operator_path_counts = (
+            (; source_operator_path = :direct_identity_cpb_path, count = 1),
+            (; source_operator_path = :pqs_source_cpb_1d_factor_path, count = 2),
+        ),
+        final_block_path_counts = (
+            (; final_block_path = :source_block_direct_to_final_block, count = 1),
+            (;
+                final_block_path =
+                    :source_block_realization_then_final_block,
+                count = 2,
+            ),
+        ),
+        materialization_status_counts = (
+            (; materialization_status = :metadata_only_not_materialized, count = 2),
+            (;
+                materialization_status =
+                    :blocked_metadata_only_not_materialized,
+                count = 1,
+            ),
+        ),
+        blocker_counts = (
+            (; blocker = nothing, count = 2),
+            (; blocker = :aggregate_subtree_operator_plan_required, count = 1),
+        ),
+    )
+    fallback = (;
+        route_core_typed_pair_operator_plan_inventory_available = false,
+        route_core_typed_pair_operator_plan_inventory_status =
+            :blocked_route_core_pair_operator_plan_inventory,
+        route_core_typed_pair_operator_plan_blocker = :fallback_blocker,
+        route_core_typed_pair_operator_plan_count = 0,
+        route_core_typed_pair_operator_plan_blocked_count = 0,
+        route_core_typed_pair_operator_plan_materialized = true,
+        route_core_typed_pair_operator_source_path_counts = (),
+        route_core_typed_pair_operator_final_block_path_counts = (),
+        route_core_typed_pair_operator_materialization_status_counts = (),
+        route_core_typed_pair_operator_blocker_counts = (),
+    )
+    aliases =
+        GaussletBases._pqs_source_box_route_driver_pair_operator_report_aliases(
+            (; pair_operator_summary = compact_summary),
+            fallback,
+        )
+
+    @test aliases.route_core_typed_pair_operator_plan_inventory_available
+    @test aliases.route_core_typed_pair_operator_plan_inventory_status ==
+          fallback.route_core_typed_pair_operator_plan_inventory_status
+    @test aliases.route_core_typed_pair_operator_plan_blocker ==
+          fallback.route_core_typed_pair_operator_plan_blocker
+    @test aliases.route_core_typed_pair_operator_plan_count == 3
+    @test aliases.route_core_typed_pair_operator_plan_blocked_count == 1
+    @test !aliases.route_core_typed_pair_operator_plan_materialized
+    @test aliases.route_core_typed_pair_operator_source_path_counts[1] ==
+          (; source_operator_path = :direct_identity_cpb_path, pair_count = 1)
+    @test aliases.route_core_typed_pair_operator_final_block_path_counts[2] ==
+          (;
+              final_block_path = :source_block_realization_then_final_block,
+              pair_count = 2,
+          )
+    @test aliases.route_core_typed_pair_operator_blocker_counts[2] ==
+          (;
+              blocker = :aggregate_subtree_operator_plan_required,
+              pair_count = 1,
+          )
+
+    fallback_aliases =
+        GaussletBases._pqs_source_box_route_driver_pair_operator_report_aliases(
+            (;),
+            fallback,
+        )
+    @test fallback_aliases.route_core_typed_pair_operator_plan_inventory_status ==
+          :blocked_route_core_pair_operator_plan_inventory
+    @test fallback_aliases.route_core_typed_pair_operator_plan_materialized
+end
