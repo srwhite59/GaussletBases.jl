@@ -37,12 +37,14 @@ using ..CartesianUnitPairs
 using ..CartesianPairOperatorPlans
 using ..CartesianRetainedUnitTransformContracts
 using ..CartesianRawProductSources
+using SparseArrays
 
 const CPB = CartesianCPB
 const CUP = CartesianUnitPairs
 const CPOP = CartesianPairOperatorPlans
 const CRTC = CartesianRetainedUnitTransformContracts
 const CRPS = CartesianRawProductSources
+const ParentGaussletBases = Base.parentmodule(@__MODULE__)
 
 export PairBlockMaterializationPolicy,
        MetadataOnlyPairBlockMaterialization,

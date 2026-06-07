@@ -4,11 +4,11 @@
     white_lindsey_boundary_stratum_unit_coefficients(unit_or_descriptor)
 
 Materialize the narrow unit coefficient map supported by the current LW adapter
-checkpoint. This pass supports only corner strata as a support-local one-row,
-one-column map with value `1.0`.
+checkpoint. This pass supports corner strata as a support-local one-row,
+one-column map with value `1.0`, and edge strata only when the metadata context
+has real old-kernel inputs.
 
-Facet and edge strata block explicitly. This helper does not call old
-White--Lindsey kernels, does not build one-body pair blocks, and does not build
+Facet strata block explicitly. This helper does not build one-body pair blocks,
 Hamiltonian data, exports, artifacts, IDA/MWG data, or Coulomb.
 """
 function white_lindsey_boundary_stratum_unit_coefficients(unit_or_descriptor)
@@ -67,6 +67,8 @@ function _white_lindsey_boundary_stratum_unit_coefficients_from_descriptor(
 )
     status, blocker =
         _white_lindsey_unit_coefficients_status(descriptor)
+    status === :materialized_white_lindsey_edge_unit_coefficients &&
+        return _white_lindsey_edge_unit_coefficients_result(descriptor)
     status === :materialized_white_lindsey_corner_unit_coefficients ||
         return _white_lindsey_unit_coefficients_result(
             descriptor,
@@ -95,10 +97,29 @@ function _white_lindsey_unit_coefficients_status(descriptor)
         ),
     )
     stratum_kind = _white_lindsey_descriptor_property(descriptor, :stratum_kind)
-    stratum_kind in (:facet_cpb, :face_cpb, :edge_cpb) && return (
-        :blocked_white_lindsey_boundary_stratum_unit_coefficients,
-        :incomplete_white_lindsey_edge_facet_kernel_input_context,
-    )
+    if stratum_kind in (:facet_cpb, :face_cpb)
+        context =
+            white_lindsey_boundary_stratum_unit_coefficient_context(descriptor)
+        context.status ===
+            :ready_white_lindsey_facet_kernel_context_not_materialized &&
+            return (
+                :blocked_white_lindsey_boundary_stratum_unit_coefficients,
+                :white_lindsey_facet_coefficients_not_implemented,
+            )
+        return (
+            :blocked_white_lindsey_boundary_stratum_unit_coefficients,
+            :incomplete_white_lindsey_edge_facet_kernel_input_context,
+        )
+    elseif stratum_kind === :edge_cpb
+        context =
+            white_lindsey_boundary_stratum_unit_coefficient_context(descriptor)
+        context.status === :ready_white_lindsey_edge_kernel_context_not_materialized &&
+            return :materialized_white_lindsey_edge_unit_coefficients, nothing
+        return (
+            :blocked_white_lindsey_boundary_stratum_unit_coefficients,
+            :incomplete_white_lindsey_edge_facet_kernel_input_context,
+        )
+    end
     stratum_kind === :corner_cpb || return (
         :blocked_white_lindsey_boundary_stratum_unit_coefficients,
         :unknown_white_lindsey_unit_coefficients_stratum,
@@ -122,13 +143,100 @@ function _white_lindsey_unit_coefficients_status(descriptor)
     return :materialized_white_lindsey_corner_unit_coefficients, nothing
 end
 
+function _white_lindsey_edge_unit_coefficients_result(descriptor)
+    context =
+        white_lindsey_boundary_stratum_unit_coefficient_context(descriptor)
+    context.status === :ready_white_lindsey_edge_kernel_context_not_materialized ||
+        return _white_lindsey_unit_coefficients_result(
+            descriptor,
+            :blocked_white_lindsey_boundary_stratum_unit_coefficients,
+            :incomplete_white_lindsey_edge_facet_kernel_input_context,
+            nothing,
+        )
+
+    fixed_sides = _white_lindsey_checked_context_tuple(
+        context.fixed_sides,
+        Val(2),
+        Symbol,
+        :fixed_sides,
+    )
+    fixed_indices = _white_lindsey_checked_context_tuple(
+        context.fixed_indices,
+        Val(2),
+        Int,
+        :fixed_indices,
+    )
+    parent_dims = _white_lindsey_checked_context_tuple(
+        context.parent_dims,
+        Val(3),
+        Int,
+        :parent_dims,
+    )
+    side = ParentGaussletBases._nested_doside_1d(
+        context.doside_source_1d,
+        context.free_axis_interval,
+        context.retained_count;
+        enforce_symmetric_odd = true,
+    )
+    edge = ParentGaussletBases._nested_edge_product(
+        context.free_axis,
+        fixed_sides,
+        side,
+        fixed_indices,
+        parent_dims,
+    )
+    coefficient_matrix = edge.coefficient_matrix
+    return _white_lindsey_unit_coefficients_result(
+        descriptor,
+        :materialized_white_lindsey_edge_unit_coefficients,
+        nothing,
+        coefficient_matrix;
+        coefficient_space = :parent_cartesian_sparse_adapter,
+        parent_row_indices_available = true,
+        support_indices = edge.support_indices,
+        source_support_row_count = length(edge.support_indices),
+        retained_column_count = size(coefficient_matrix, 2),
+        source_support_row_index = nothing,
+        retained_column_index = nothing,
+        old_kernels_used = context.planned_old_calls,
+        nonzero_values = (),
+    )
+end
+
 function _white_lindsey_unit_coefficients_result(
     descriptor,
     status::Symbol,
     blocker,
-    coefficient_matrix,
+    coefficient_matrix;
+    coefficient_space = :source_cpb_support_local,
+    parent_row_indices_available = false,
+    support_indices = nothing,
+    source_support_row_count = nothing,
+    retained_column_count = nothing,
+    source_support_row_index = nothing,
+    retained_column_index = nothing,
+    old_kernels_used = (),
+    nonzero_values = nothing,
 )
     materialized = !isnothing(coefficient_matrix)
+    source_support_row_count_resolved =
+        isnothing(source_support_row_count) && materialized ? 1 :
+        source_support_row_count
+    retained_column_count_resolved =
+        isnothing(retained_column_count) && materialized ? 1 :
+        retained_column_count
+    source_support_row_index_resolved =
+        isnothing(source_support_row_index) && materialized &&
+        source_support_row_count_resolved == 1 ? 1 : source_support_row_index
+    retained_column_index_resolved =
+        isnothing(retained_column_index) && materialized &&
+        retained_column_count_resolved == 1 ? 1 : retained_column_index
+    nonzero_count = materialized ? _white_lindsey_nonzero_count(
+        coefficient_matrix,
+    ) : 0
+    nonzero_values_resolved = isnothing(nonzero_values) ?
+                              (materialized ? (1.0,) : ()) :
+                              nonzero_values
     return (;
         object_kind = :white_lindsey_boundary_stratum_unit_coefficients,
         status,
@@ -167,15 +275,17 @@ function _white_lindsey_unit_coefficients_result(
             _white_lindsey_unit_coefficient_input_requirements(descriptor),
         missing_coefficient_inputs =
             _white_lindsey_missing_unit_coefficient_inputs(descriptor),
-        coefficient_space = :source_cpb_support_local,
-        parent_row_indices_available = false,
-        source_support_row_count = materialized ? 1 : nothing,
-        retained_column_count = materialized ? 1 : nothing,
-        source_support_row_index = materialized ? 1 : nothing,
-        retained_column_index = materialized ? 1 : nothing,
+        coefficient_space,
+        parent_row_indices_available,
+        support_indices,
+        source_support_row_count = source_support_row_count_resolved,
+        retained_column_count = retained_column_count_resolved,
+        source_support_row_index = source_support_row_index_resolved,
+        retained_column_index = retained_column_index_resolved,
         coefficient_matrix,
-        nonzero_count = materialized ? 1 : 0,
-        nonzero_values = materialized ? (1.0,) : (),
+        nonzero_count,
+        nonzero_values = nonzero_values_resolved,
+        old_kernels_used,
         coefficient_maps_materialized = materialized,
         source_operator_blocks_materialized = false,
         final_pair_blocks_materialized = false,
@@ -183,6 +293,24 @@ function _white_lindsey_unit_coefficients_result(
         hamiltonian_data_materialized = false,
         artifacts_materialized = false,
     )
+end
+
+function _white_lindsey_checked_context_tuple(
+    value,
+    ::Val{N},
+    ::Type{T},
+    field::Symbol,
+) where {N,T}
+    value isa Tuple && length(value) == N || throw(
+        ArgumentError("White--Lindsey edge context requires $(field) length $(N)"),
+    )
+    return ntuple(index -> T(value[index]), N)
+end
+
+function _white_lindsey_nonzero_count(coefficient_matrix)
+    SparseArrays.issparse(coefficient_matrix) &&
+        return SparseArrays.nnz(coefficient_matrix)
+    return count(!iszero, coefficient_matrix)
 end
 
 function _white_lindsey_blocked_unit_coefficients(input, blocker::Symbol)
@@ -409,36 +537,43 @@ end
 
 function _white_lindsey_unit_coefficient_input_requirements(descriptor)
     stratum_kind = _white_lindsey_descriptor_property(descriptor, :stratum_kind)
-    stratum_kind in (:facet_cpb, :face_cpb) && return (;
-        object_kind = :white_lindsey_unit_coefficient_input_requirements,
-        status = :blocked_missing_white_lindsey_facet_kernel_inputs,
-        required_old_kernel = :_nested_face_product,
-        required_1d_helper = :_nested_doside_1d,
-        required_inputs = (
-            :doside_source_1d,
-            :active_product_axis_intervals,
-            :fixed_side_metadata,
-            :retained_count,
-            :parent_dims,
-        ),
-        missing_inputs =
-            _white_lindsey_missing_unit_coefficient_inputs(descriptor),
-    )
-    stratum_kind === :edge_cpb && return (;
-        object_kind = :white_lindsey_unit_coefficient_input_requirements,
-        status = :blocked_missing_white_lindsey_edge_kernel_inputs,
-        required_old_kernel = :_nested_edge_product,
-        required_1d_helper = :_nested_doside_1d,
-        required_inputs = (
-            :doside_source_1d,
-            :free_axis_interval,
-            :fixed_side_metadata,
-            :retained_count,
-            :parent_dims,
-        ),
-        missing_inputs =
-            _white_lindsey_missing_unit_coefficient_inputs(descriptor),
-    )
+    if stratum_kind in (:facet_cpb, :face_cpb)
+        missing = _white_lindsey_missing_unit_coefficient_inputs(descriptor)
+        return (;
+            object_kind = :white_lindsey_unit_coefficient_input_requirements,
+            status = isempty(missing) ?
+                     :available_white_lindsey_facet_kernel_context_inputs :
+                     :blocked_missing_white_lindsey_facet_kernel_inputs,
+            required_old_kernel = :_nested_face_product,
+            required_1d_helper = :_nested_doside_1d,
+            required_inputs = (
+                :doside_source_1d,
+                :active_product_axis_intervals,
+                :fixed_side_metadata,
+                :retained_count,
+                :parent_dims,
+            ),
+            missing_inputs = missing,
+        )
+    elseif stratum_kind === :edge_cpb
+        missing = _white_lindsey_missing_unit_coefficient_inputs(descriptor)
+        return (;
+            object_kind = :white_lindsey_unit_coefficient_input_requirements,
+            status = isempty(missing) ?
+                     :available_white_lindsey_edge_kernel_context_inputs :
+                     :blocked_missing_white_lindsey_edge_kernel_inputs,
+            required_old_kernel = :_nested_edge_product,
+            required_1d_helper = :_nested_doside_1d,
+            required_inputs = (
+                :doside_source_1d,
+                :free_axis_interval,
+                :fixed_side_metadata,
+                :retained_count,
+                :parent_dims,
+            ),
+            missing_inputs = missing,
+        )
+    end
     stratum_kind === :corner_cpb && return (;
         object_kind = :white_lindsey_unit_coefficient_input_requirements,
         status = :available_corner_support_local_coefficients,

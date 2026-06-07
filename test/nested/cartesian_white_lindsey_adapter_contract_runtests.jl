@@ -84,6 +84,27 @@ function _lw_adapter_descriptor_units()
     )
 end
 
+function _lw_adapter_doside_source_1d()
+    count = 7
+    endpoint = (count - 1) / 2
+    a = 0.25
+    xmax = 10.0
+    tail_spacing = 10.0
+    s = asinh(xmax / a) / (endpoint - xmax / tail_spacing)
+    basis = build_basis(MappedUniformBasisSpec(:G10;
+        count,
+        mapping = AsinhMapping(; a, s, tail_spacing),
+        reference_spacing = 1.0,
+    ))
+    expansion = coulomb_gaussian_expansion(doacc = false)
+    return GaussletBases._mapped_ordinary_gausslet_1d_bundle(
+        basis;
+        exponents = expansion.exponents,
+        backend = :numerical_reference,
+        refinement_levels = 0,
+    )
+end
+
 @testset "CartesianPairBlockMaterialization White-Lindsey corner coefficients" begin
     facet_unit, edge_unit, corner_unit = _lw_adapter_descriptor_units()
     facet_descriptor =
@@ -307,6 +328,19 @@ end
           (:_nested_doside_1d, :_nested_face_product)
     @test ready_facet_context.missing_inputs == ()
     @test !ready_facet_context.coefficient_maps_materialized
+    ready_facet_coefficients =
+        CPBMForLWAdapter.white_lindsey_boundary_stratum_unit_coefficients(
+            ready_facet_descriptor,
+        )
+    @test ready_facet_coefficients.status ==
+          :blocked_white_lindsey_boundary_stratum_unit_coefficients
+    @test ready_facet_coefficients.blocker ==
+          :white_lindsey_facet_coefficients_not_implemented
+    @test ready_facet_coefficients.coefficient_input_requirements.status ==
+          :available_white_lindsey_facet_kernel_context_inputs
+    @test ready_facet_coefficients.missing_coefficient_inputs == ()
+    @test isnothing(ready_facet_coefficients.coefficient_matrix)
+    @test !ready_facet_coefficients.coefficient_maps_materialized
 
     ready_edge_descriptor = merge(
         edge_descriptor,
@@ -338,6 +372,74 @@ end
           (:_nested_doside_1d, :_nested_edge_product)
     @test ready_edge_context.missing_inputs == ()
     @test !ready_edge_context.edge_facet_coefficient_maps_materialized
+
+    real_edge_source = CPBForLWAdapter.cpb(
+        7:7,
+        1:1,
+        2:6;
+        role = :lw_adapter_test_real_edge_source_cpb,
+        metadata = (;
+            stratum_kind = :edge_cpb,
+            source_cpb_index = 4,
+            fixed_axes = (:x, :y),
+            sides = (:high, :low),
+        ),
+    )
+    real_edge_unit = _lw_adapter_retained_unit(
+        :lw_adapter_test_real_edge_unit,
+        4,
+        real_edge_source,
+        :edge_cpb,
+        4,
+    )
+    real_edge_descriptor = merge(
+        CPBMForLWAdapter.white_lindsey_boundary_stratum_unit_adapter_descriptor(
+            real_edge_unit,
+        ),
+        (;
+            retained_count = 3,
+            parent_dims = (7, 7, 7),
+            doside_source_1d = _lw_adapter_doside_source_1d(),
+        ),
+    )
+    real_edge_context =
+        CPBMForLWAdapter.white_lindsey_boundary_stratum_unit_coefficient_context(
+            real_edge_descriptor,
+        )
+    @test real_edge_context.status ==
+          :ready_white_lindsey_edge_kernel_context_not_materialized
+    @test real_edge_context.free_axis == :z
+    @test real_edge_context.free_axis_interval == 2:6
+    @test real_edge_context.fixed_sides == (:high, :low)
+    @test real_edge_context.fixed_indices == (7, 1)
+    @test real_edge_context.parent_dims == (7, 7, 7)
+    real_edge_coefficients =
+        CPBMForLWAdapter.white_lindsey_boundary_stratum_unit_coefficients(
+            real_edge_descriptor,
+        )
+    @test real_edge_coefficients.status ==
+          :materialized_white_lindsey_edge_unit_coefficients
+    @test isnothing(real_edge_coefficients.blocker)
+    @test real_edge_coefficients.coefficient_space ==
+          :parent_cartesian_sparse_adapter
+    @test size(real_edge_coefficients.coefficient_matrix) == (7^3, 3)
+    @test real_edge_coefficients.source_support_row_count == 5
+    @test real_edge_coefficients.retained_column_count == 3
+    @test length(real_edge_coefficients.support_indices) == 5
+    @test issorted(real_edge_coefficients.support_indices)
+    @test real_edge_coefficients.nonzero_count > 0
+    @test real_edge_coefficients.old_kernels_used ==
+          (:_nested_doside_1d, :_nested_edge_product)
+    @test real_edge_coefficients.coefficient_input_requirements.status ==
+          :available_white_lindsey_edge_kernel_context_inputs
+    @test real_edge_coefficients.missing_coefficient_inputs == ()
+    @test real_edge_coefficients.coefficient_maps_materialized
+    @test real_edge_coefficients.parent_row_indices_available
+    @test !real_edge_coefficients.source_operator_blocks_materialized
+    @test !real_edge_coefficients.final_pair_blocks_materialized
+    @test !real_edge_coefficients.operator_blocks_materialized
+    @test !real_edge_coefficients.hamiltonian_data_materialized
+    @test !real_edge_coefficients.artifacts_materialized
 
     ready_corner_descriptor = merge(
         corner_descriptor,
