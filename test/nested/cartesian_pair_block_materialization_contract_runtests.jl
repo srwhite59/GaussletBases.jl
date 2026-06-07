@@ -255,6 +255,28 @@ function _pair_block_x2_axes()
     return x2_x, x2_y, x2_z
 end
 
+function _pair_block_kinetic_axes()
+    kinetic_x = [
+        -1.10 0.12 0.14 0.18
+        0.12 -1.30 0.20 0.24
+        0.14 0.20 -1.50 0.30
+        0.18 0.24 0.30 -1.70
+    ]
+    kinetic_y = [
+        -2.10 0.32 0.34 0.38
+        0.32 -2.30 0.40 0.44
+        0.34 0.40 -2.50 0.50
+        0.38 0.44 0.50 -2.70
+    ]
+    kinetic_z = [
+        -3.10 0.52 0.54 0.58
+        0.52 -3.30 0.60 0.64
+        0.54 0.60 -3.50 0.70
+        0.58 0.64 0.70 -3.70
+    ]
+    return kinetic_x, kinetic_y, kinetic_z
+end
+
 function _pair_block_cpb_states(source_cpb)
     ix, iy, iz = CPBForPairBlocks.intervals(source_cpb)
     return Tuple((x, y, z) for x in ix for y in iy for z in iz)
@@ -309,6 +331,39 @@ function _pair_block_expected_x2(
         axis === :y ? (overlap_x, x2_y, overlap_z) :
         (overlap_x, overlap_y, x2_z)
     return _pair_block_expected_product(left_cpb, right_cpb, operator_x, operator_y, operator_z)
+end
+
+function _pair_block_expected_kinetic(
+    left_cpb,
+    right_cpb,
+    overlap_x,
+    overlap_y,
+    overlap_z,
+    kinetic_x,
+    kinetic_y,
+    kinetic_z,
+)
+    return _pair_block_expected_product(
+        left_cpb,
+        right_cpb,
+        kinetic_x,
+        overlap_y,
+        overlap_z,
+    ) +
+           _pair_block_expected_product(
+        left_cpb,
+        right_cpb,
+        overlap_x,
+        kinetic_y,
+        overlap_z,
+    ) +
+           _pair_block_expected_product(
+        left_cpb,
+        right_cpb,
+        overlap_x,
+        overlap_y,
+        kinetic_z,
+    )
 end
 
 @testset "CartesianPairBlockMaterialization unavailable summary" begin
@@ -455,6 +510,13 @@ end
         overlap_1d = (; x = overlap_x, y = overlap_y, z = overlap_z),
         x2_1d = (; x = x2_x, y = x2_y, z = x2_z),
     )
+    kinetic_x, kinetic_y, kinetic_z = _pair_block_kinetic_axes()
+    @test_throws ArgumentError CPBM.direct_direct_kinetic_block(
+        direct_pqs_record;
+        parent_axis_counts = (4, 4, 4),
+        overlap_1d = (; x = overlap_x, y = overlap_y, z = overlap_z),
+        kinetic_1d = (; x = kinetic_x, y = kinetic_y, z = kinetic_z),
+    )
     @test pqs_pqs_record.readiness_status ==
           :blocked_pair_block_materialization_not_implemented
     @test pqs_pqs_record.blocker ==
@@ -587,6 +649,35 @@ end
         @test !x2_result.artifacts_materialized
     end
 
+    kinetic_x, kinetic_y, kinetic_z = _pair_block_kinetic_axes()
+    kinetic_result = CPBM.direct_direct_kinetic_block(
+        cross_record;
+        parent_axis_counts = (4, 4, 4),
+        overlap_1d = (; x = overlap_x, y = overlap_y, z = overlap_z),
+        kinetic_1d = (; x = kinetic_x, y = kinetic_y, z = kinetic_z),
+    )
+    expected_kinetic =
+        _pair_block_expected_kinetic(
+            left_source,
+            right_source,
+            overlap_x,
+            overlap_y,
+            overlap_z,
+            kinetic_x,
+            kinetic_y,
+            kinetic_z,
+        )
+
+    @test kinetic_result.term == :kinetic
+    @test size(kinetic_result.block) == (4, 6)
+    @test kinetic_result.block ≈ expected_kinetic
+    @test kinetic_result.materialized
+    @test kinetic_result.source_operator_blocks_materialized
+    @test kinetic_result.final_pair_blocks_materialized
+    @test !kinetic_result.operator_blocks_materialized
+    @test !kinetic_result.hamiltonian_data_materialized
+    @test !kinetic_result.artifacts_materialized
+
     batch_result = CPBM.direct_direct_overlap_blocks(
         materialization_plan;
         parent_axis_counts = (4, 4, 4),
@@ -605,6 +696,12 @@ end
         parent_axis_counts = (4, 4, 4),
         overlap_1d = (; x = overlap_x, y = overlap_y, z = overlap_z),
         x2_1d = (; x = x2_x, y = x2_y, z = x2_z),
+    )
+    kinetic_batch_result = CPBM.direct_direct_kinetic_blocks(
+        materialization_plan;
+        parent_axis_counts = (4, 4, 4),
+        overlap_1d = (; x = overlap_x, y = overlap_y, z = overlap_z),
+        kinetic_1d = (; x = kinetic_x, y = kinetic_y, z = kinetic_z),
     )
     batch_cross = only(
         result for result in batch_result.materialized_results
@@ -653,4 +750,14 @@ end
     @test !x2_batch_result.operator_blocks_materialized
     @test !x2_batch_result.hamiltonian_data_materialized
     @test !x2_batch_result.artifacts_materialized
+
+    @test kinetic_batch_result.term == :kinetic
+    @test kinetic_batch_result.materialized_count == 3
+    @test kinetic_batch_result.skipped_count == 3
+    @test kinetic_batch_result.materialized
+    @test kinetic_batch_result.source_operator_blocks_materialized
+    @test kinetic_batch_result.final_pair_blocks_materialized
+    @test !kinetic_batch_result.operator_blocks_materialized
+    @test !kinetic_batch_result.hamiltonian_data_materialized
+    @test !kinetic_batch_result.artifacts_materialized
 end

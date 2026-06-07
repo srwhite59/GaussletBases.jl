@@ -35,6 +35,8 @@ export PairBlockMaterializationPolicy,
        direct_direct_position_blocks,
        direct_direct_x2_block,
        direct_direct_x2_blocks,
+       direct_direct_kinetic_block,
+       direct_direct_kinetic_blocks,
        unavailable_summary,
        summary
 
@@ -57,11 +59,15 @@ export PairBlockMaterializationPolicy,
 #
 # direct_x2.jl
 #     Direct/direct x2 pair-block pilot.
+#
+# direct_kinetic.jl
+#     Direct/direct kinetic pair-block pilot.
 include("records.jl")
 include("preflight.jl")
 include("summaries.jl")
 include("direct_overlap.jl")
 include("direct_position.jl")
 include("direct_x2.jl")
+include("direct_kinetic.jl")
 
 end # module CartesianPairBlockMaterialization
