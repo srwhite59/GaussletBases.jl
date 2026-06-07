@@ -19,9 +19,10 @@ The direct/direct one-body selector is local pair-block materialization only.
 Signs and prefactors for supplied 1D factors are owned by the caller-provided
 parent/axis blocks.
 
-PQS/PQS raw-source pair support currently has metadata preflight plus narrow
-raw source-space overlap, position, x2, and kinetic pilots from caller-supplied
-1D factors. It does not build shell projection, Lowdin realization, or final
+PQS/PQS raw-source pair support currently has metadata preflight plus raw
+source-space safe one-body helpers for overlap, position, x2, kinetic, and a
+selector over those terms. Caller-supplied 1D factors own signs and prefactors.
+This path does not build shell projection, Lowdin realization, or final
 retained PQS pair blocks.
 
 This module still does not assemble full operators, Hamiltonians, Ham bundles,
@@ -83,8 +84,8 @@ export PairBlockMaterializationPolicy,
 # summaries.jl
 #     Compact summaries for tests and reports.
 #
-# pqs_source_overlap.jl
-#     Tiny PQS/PQS raw source-space safe-term pilots.
+# pqs_source_safe_terms.jl
+#     PQS/PQS raw source-space safe-term helpers.
 #
 # direct_overlap.jl
 #     First tiny direct/direct overlap pair-block pilot.
@@ -107,7 +108,7 @@ include("records.jl")
 include("preflight.jl")
 include("summaries.jl")
 include("direct_overlap.jl")
-include("pqs_source_overlap.jl")
+include("pqs_source_safe_terms.jl")
 include("direct_position.jl")
 include("direct_x2.jl")
 include("direct_kinetic.jl")

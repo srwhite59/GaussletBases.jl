@@ -1,4 +1,4 @@
-# Tiny PQS/PQS raw source-space safe-term pilots.
+# PQS/PQS raw source-space safe-term helpers.
 
 """
     pqs_source_pair_overlap_block(record; overlap_1d)
