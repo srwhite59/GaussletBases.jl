@@ -6538,39 +6538,6 @@ function _pqs_source_box_route_driver_unit_pair_unavailable_summary(
     )
 end
 
-function _pqs_source_box_route_driver_pair_operator_unavailable_summary(
-    status::Symbol,
-    blocker = nothing,
-)
-    return (;
-        object_kind = :cartesian_pair_operator_plan_summary,
-        status,
-        blocker,
-        retained_unit_count = 0,
-        unit_pair_count = 0,
-        pair_operator_plan_count = 0,
-        expected_pair_operator_plan_count = 0,
-        pair_families = (),
-        pair_family_counts = (),
-        source_operator_path_counts = (),
-        final_block_path_counts = (),
-        materialization_status_counts = (),
-        blocker_counts = (),
-        blocked_pair_operator_plan_count = 0,
-        route_core_pair_operator_plan_inventory_available = false,
-        route_core_pair_operator_plan_inventory_status = :not_available,
-        route_core_pair_operator_plan_inventory_blocker = blocker,
-        route_core_pair_operator_plan_count = 0,
-        route_core_pair_operator_plan_blocked_count = 0,
-        materialized = false,
-        source_operator_blocks_materialized = false,
-        final_pair_blocks_materialized = false,
-        operator_blocks_materialized = false,
-        hamiltonian_data_materialized = false,
-        artifacts_materialized = false,
-    )
-end
-
 function _pqs_source_box_route_driver_retained_unit_unavailable_summary(
     status::Symbol,
     blocker = nothing,
@@ -6676,7 +6643,7 @@ function _pqs_source_box_route_driver_terminal_route_state(;
         CartesianPairOperatorPlans.PairOperatorPlan ?
         CartesianPairOperatorPlans.summary(pair_operator_plan) :
         isnothing(pair_operator_summary) ?
-        _pqs_source_box_route_driver_pair_operator_unavailable_summary(
+        CartesianPairOperatorPlans.unavailable_summary(
             selected ? status : :not_selected,
             blocker,
         ) :

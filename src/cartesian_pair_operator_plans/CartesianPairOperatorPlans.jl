@@ -28,6 +28,7 @@ export PairOperatorPlanPolicy,
        PairOperatorPlan,
        pair_operator_plan,
        pair_operator_records,
+       unavailable_summary,
        summary,
        route_core_pair_operator_plan_inventory
 

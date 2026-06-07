@@ -328,6 +328,32 @@ function _pair_ops_retained_unit_record(
     )
 end
 
+@testset "CartesianPairOperatorPlans unavailable summary" begin
+    summary = CPOP.unavailable_summary(:not_selected, :not_selected_route)
+
+    @test summary.object_kind == :cartesian_pair_operator_plan_summary
+    @test summary.status == :not_selected
+    @test summary.blocker == :not_selected_route
+    @test summary.retained_unit_count == 0
+    @test summary.unit_pair_count == 0
+    @test summary.pair_operator_plan_count == 0
+    @test summary.expected_pair_operator_plan_count == 0
+    @test summary.pair_family_counts == ()
+    @test summary.source_operator_path_counts == ()
+    @test !summary.route_core_pair_operator_plan_inventory_available
+    @test summary.route_core_pair_operator_plan_inventory_status == :not_available
+    @test summary.route_core_pair_operator_plan_inventory_blocker ==
+          :not_selected_route
+    @test summary.route_core_pair_operator_plan_count == 0
+    @test summary.route_core_pair_operator_plan_blocked_count == 0
+    @test !summary.materialized
+    @test !summary.source_operator_blocks_materialized
+    @test !summary.final_pair_blocks_materialized
+    @test !summary.operator_blocks_materialized
+    @test !summary.hamiltonian_data_materialized
+    @test !summary.artifacts_materialized
+end
+
 @testset "CartesianPairOperatorPlans metadata inventory" begin
     retained_plan = _pair_ops_small_retained_plan()
     pair_plan = CUPForPairOps.unit_pair_plan(retained_plan)

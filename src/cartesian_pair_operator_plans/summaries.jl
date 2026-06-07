@@ -73,3 +73,33 @@ function _pair_operator_plan_summary(
         artifacts_materialized = false,
     )
 end
+
+function unavailable_summary(status::Symbol, blocker = nothing)
+    return (;
+        object_kind = :cartesian_pair_operator_plan_summary,
+        status,
+        blocker,
+        retained_unit_count = 0,
+        unit_pair_count = 0,
+        pair_operator_plan_count = 0,
+        expected_pair_operator_plan_count = 0,
+        pair_families = (),
+        pair_family_counts = (),
+        source_operator_path_counts = (),
+        final_block_path_counts = (),
+        materialization_status_counts = (),
+        blocker_counts = (),
+        blocked_pair_operator_plan_count = 0,
+        route_core_pair_operator_plan_inventory_available = false,
+        route_core_pair_operator_plan_inventory_status = :not_available,
+        route_core_pair_operator_plan_inventory_blocker = blocker,
+        route_core_pair_operator_plan_count = 0,
+        route_core_pair_operator_plan_blocked_count = 0,
+        materialized = false,
+        source_operator_blocks_materialized = false,
+        final_pair_blocks_materialized = false,
+        operator_blocks_materialized = false,
+        hamiltonian_data_materialized = false,
+        artifacts_materialized = false,
+    )
+end
