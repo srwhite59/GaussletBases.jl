@@ -237,6 +237,59 @@ function _pair_block_pqs_retained_plan()
     )
 end
 
+function _pair_block_mixed_pqs_retained_plan()
+    direct_source = CPBForPairBlocks.filled_cpb(
+        1:2,
+        1:2,
+        1:2;
+        role = :pair_block_selector_direct_source_cpb,
+    )
+    pqs_source = CPBForPairBlocks.filled_cpb(
+        1:3,
+        1:3,
+        1:3;
+        role = :pair_block_selector_pqs_source_cpb,
+    )
+    direct = _pair_block_retained_unit(
+        :pair_block_selector_direct_unit,
+        1,
+        :direct_cpb_retained_unit,
+        :direct_core_identity_cpb,
+        :direct_source_modes,
+        :direct_or_trivial_embedding;
+        owned_support = CRCForPairBlocks.owned_cpb(direct_source),
+        source_cpbs = (direct_source,),
+    )
+    pqs = _pair_block_retained_unit(
+        :pair_block_selector_pqs_unit,
+        2,
+        :pqs_shell_retained_unit,
+        :pqs_filled_source_cpb,
+        :pqs_boundary_comx_product_modes,
+        :shell_projection_lowdin;
+        source_cpbs = (pqs_source,),
+        metadata = (; q = 3, source_mode_shape = nothing),
+    )
+    units = (direct, pqs)
+    return CRUForPairBlocks.RetainedUnitPlan(
+        CRUForPairBlocks.MetadataOnlyRetainedUnits(),
+        _pair_block_minimal_lowering_plan(),
+        units,
+        (;
+            object_kind = :synthetic_retained_unit_plan_summary,
+            status = :available_retained_unit_plan,
+            retained_unit_count = length(units),
+            materialized = false,
+            transforms_materialized = false,
+            coefficient_maps_materialized = false,
+            pair_inventory_materialized = false,
+            operator_blocks_materialized = false,
+            hamiltonian_data_materialized = false,
+        ),
+        (; fixture = :cartesian_pair_block_pqs_source_selector),
+    )
+end
+
 function _pair_block_transform_contract_with_metadata(contract, metadata)
     return CRTCForPairBlocks.RetainedUnitTransformContract(
         contract.unit_key,
@@ -270,6 +323,13 @@ function _pair_block_record_for(plan, left_key::Symbol, right_key::Symbol)
     return only(
         record for record in CPBM.pair_block_materialization_records(plan)
         if record.pair_key == (left_key, right_key)
+    )
+end
+
+function _pair_block_batch_result_for(batch_result, left_key::Symbol, right_key::Symbol)
+    return only(
+        result for result in batch_result.materialized_results
+        if result.pair_key == (left_key, right_key)
     )
 end
 
@@ -1230,6 +1290,187 @@ end
             z = pqs_kinetic_z,
         ),
     )
+end
+
+@testset "CartesianPairBlockMaterialization PQS source-pair batch selectors" begin
+    retained_plan = _pair_block_mixed_pqs_retained_plan()
+    unit_pair_plan = CUPForPairBlocks.unit_pair_plan(retained_plan)
+    transform_plan =
+        CRTCForPairBlocks.retained_unit_transform_contract_plan(retained_plan)
+    pair_operator_plan =
+        CPOPForPairBlocks.pair_operator_plan(
+            unit_pair_plan,
+            transform_plan;
+            route_core_sidecars = false,
+        )
+    materialization_plan =
+        CPBM.pair_block_materialization_plan(pair_operator_plan)
+    pqs_record = _pair_block_record_for(
+        materialization_plan,
+        :pair_block_selector_pqs_unit,
+        :pair_block_selector_pqs_unit,
+    )
+
+    @test pqs_record.materialization_path == :pqs_source_pair_preflight
+    @test pqs_record.readiness_status == :ready_metadata_only_not_materialized
+    @test pqs_record.metadata.left_source_mode_dims == (3, 3, 3)
+    @test pqs_record.metadata.right_source_mode_dims == (3, 3, 3)
+
+    source_dims = pqs_record.metadata.left_source_mode_dims
+    selector_overlap_x, selector_overlap_y, selector_overlap_z =
+        _pair_block_pqs_source_overlap_axes(source_dims, source_dims)
+    selector_position_x, selector_position_y, selector_position_z =
+        _pair_block_pqs_source_position_axes(source_dims, source_dims)
+    selector_x2_x, selector_x2_y, selector_x2_z =
+        _pair_block_pqs_source_x2_axes(source_dims, source_dims)
+    selector_kinetic_x, selector_kinetic_y, selector_kinetic_z =
+        _pair_block_pqs_source_kinetic_axes(source_dims, source_dims)
+    selector_overlap_1d =
+        (; x = selector_overlap_x, y = selector_overlap_y, z = selector_overlap_z)
+
+    record_overlap = CPBM.pqs_source_pair_overlap_block(
+        pqs_record;
+        overlap_1d = selector_overlap_1d,
+    )
+    batch_overlap = CPBM.pqs_source_pair_overlap_blocks(
+        materialization_plan;
+        overlap_1d = selector_overlap_1d,
+    )
+    batch_overlap_record = _pair_block_batch_result_for(
+        batch_overlap,
+        :pair_block_selector_pqs_unit,
+        :pair_block_selector_pqs_unit,
+    )
+
+    @test batch_overlap.term == :source_overlap
+    @test batch_overlap.materialized_count == 1
+    @test batch_overlap.skipped_count == 2
+    @test batch_overlap.materialized
+    @test batch_overlap.source_operator_blocks_materialized
+    @test !batch_overlap.final_pair_blocks_materialized
+    @test !batch_overlap.operator_blocks_materialized
+    @test !batch_overlap.hamiltonian_data_materialized
+    @test !batch_overlap.artifacts_materialized
+    @test batch_overlap.metadata.materialization_path ==
+          :ready_pqs_source_overlap_blocks_only
+    @test batch_overlap.metadata.pair_block_record_count == 3
+    @test batch_overlap_record.block ≈ record_overlap.block
+    @test :unsupported_pqs_source_overlap_materialization_record in
+          Tuple(skipped.blocker for skipped in batch_overlap.skipped_records)
+
+    record_position = CPBM.pqs_source_pair_position_block(
+        pqs_record;
+        axis = :y,
+        overlap_1d = selector_overlap_1d,
+        position_1d = (
+            selector_position_x,
+            selector_position_y,
+            selector_position_z,
+        ),
+    )
+    batch_position = CPBM.pqs_source_pair_position_blocks(
+        materialization_plan;
+        axis = :y,
+        overlap_1d = selector_overlap_1d,
+        position_1d = (;
+            x = selector_position_x,
+            y = selector_position_y,
+            z = selector_position_z,
+        ),
+    )
+    batch_position_record = _pair_block_batch_result_for(
+        batch_position,
+        :pair_block_selector_pqs_unit,
+        :pair_block_selector_pqs_unit,
+    )
+
+    @test batch_position.term == :source_position_y
+    @test batch_position.materialized_count == 1
+    @test batch_position.skipped_count == 2
+    @test batch_position.materialized
+    @test batch_position.source_operator_blocks_materialized
+    @test !batch_position.final_pair_blocks_materialized
+    @test !batch_position.operator_blocks_materialized
+    @test !batch_position.hamiltonian_data_materialized
+    @test !batch_position.artifacts_materialized
+    @test batch_position.metadata.materialization_path ==
+          :ready_pqs_source_position_blocks_only
+    @test batch_position.metadata.position_axis == :y
+    @test batch_position_record.block ≈ record_position.block
+
+    record_x2 = CPBM.pqs_source_pair_x2_block(
+        pqs_record;
+        axis = :z,
+        overlap_1d = selector_overlap_1d,
+        x2_1d = (; x = selector_x2_x, y = selector_x2_y, z = selector_x2_z),
+    )
+    batch_x2 = CPBM.pqs_source_pair_x2_blocks(
+        materialization_plan;
+        axis = :z,
+        overlap_1d = selector_overlap_1d,
+        x2_1d = (selector_x2_x, selector_x2_y, selector_x2_z),
+    )
+    batch_x2_record = _pair_block_batch_result_for(
+        batch_x2,
+        :pair_block_selector_pqs_unit,
+        :pair_block_selector_pqs_unit,
+    )
+
+    @test batch_x2.term == :source_x2_z
+    @test batch_x2.materialized_count == 1
+    @test batch_x2.skipped_count == 2
+    @test batch_x2.materialized
+    @test batch_x2.source_operator_blocks_materialized
+    @test !batch_x2.final_pair_blocks_materialized
+    @test !batch_x2.operator_blocks_materialized
+    @test !batch_x2.hamiltonian_data_materialized
+    @test !batch_x2.artifacts_materialized
+    @test batch_x2.metadata.materialization_path ==
+          :ready_pqs_source_x2_blocks_only
+    @test batch_x2.metadata.x2_axis == :z
+    @test batch_x2_record.block ≈ record_x2.block
+
+    record_kinetic = CPBM.pqs_source_pair_kinetic_block(
+        pqs_record;
+        overlap_1d = selector_overlap_1d,
+        kinetic_1d = (;
+            x = selector_kinetic_x,
+            y = selector_kinetic_y,
+            z = selector_kinetic_z,
+        ),
+    )
+    batch_kinetic = CPBM.pqs_source_pair_kinetic_blocks(
+        materialization_plan;
+        overlap_1d = selector_overlap_1d,
+        kinetic_1d = (
+            selector_kinetic_x,
+            selector_kinetic_y,
+            selector_kinetic_z,
+        ),
+    )
+    batch_kinetic_record = _pair_block_batch_result_for(
+        batch_kinetic,
+        :pair_block_selector_pqs_unit,
+        :pair_block_selector_pqs_unit,
+    )
+
+    @test batch_kinetic.term == :source_kinetic
+    @test batch_kinetic.materialized_count == 1
+    @test batch_kinetic.skipped_count == 2
+    @test batch_kinetic.materialized
+    @test batch_kinetic.source_operator_blocks_materialized
+    @test !batch_kinetic.final_pair_blocks_materialized
+    @test !batch_kinetic.operator_blocks_materialized
+    @test !batch_kinetic.hamiltonian_data_materialized
+    @test !batch_kinetic.artifacts_materialized
+    @test batch_kinetic.metadata.materialization_path ==
+          :ready_pqs_source_kinetic_blocks_only
+    @test batch_kinetic.metadata.kinetic_factor_form == (
+        (:kinetic, :overlap, :overlap),
+        (:overlap, :kinetic, :overlap),
+        (:overlap, :overlap, :kinetic),
+    )
+    @test batch_kinetic_record.block ≈ record_kinetic.block
 end
 
 @testset "CartesianPairBlockMaterialization direct/direct overlap selector" begin

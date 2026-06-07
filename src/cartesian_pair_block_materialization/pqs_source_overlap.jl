@@ -25,6 +25,27 @@ function pqs_source_pair_overlap_block(
 end
 
 """
+    pqs_source_pair_overlap_blocks(plan; overlap_1d)
+
+Materialize raw source-space overlap blocks only for ready PQS/PQS source-pair
+records in a pair-block materialization plan. Unsupported or blocked records
+are returned as compact skipped summaries.
+"""
+function pqs_source_pair_overlap_blocks(
+    plan::PairBlockMaterializationPlan;
+    overlap_1d,
+)
+    return _pqs_source_pair_batch_results(
+        record -> pqs_source_pair_overlap_block(record; overlap_1d),
+        plan,
+        :source_overlap,
+        :ready_pqs_source_overlap_blocks_only,
+        :unsupported_pqs_source_overlap_materialization_record,
+        (;),
+    )
+end
+
+"""
     pqs_source_pair_position_block(record; axis, overlap_1d, position_1d)
 
 Materialize one PQS/PQS raw source-space position block for
@@ -60,6 +81,34 @@ function pqs_source_pair_position_block(
 end
 
 """
+    pqs_source_pair_position_blocks(plan; axis, overlap_1d, position_1d)
+
+Materialize raw source-space position blocks only for ready PQS/PQS source-pair
+records in a pair-block materialization plan.
+"""
+function pqs_source_pair_position_blocks(
+    plan::PairBlockMaterializationPlan;
+    axis,
+    overlap_1d,
+    position_1d,
+)
+    source_term = _source_position_term(axis)
+    return _pqs_source_pair_batch_results(
+        record -> pqs_source_pair_position_block(
+            record;
+            axis,
+            overlap_1d,
+            position_1d,
+        ),
+        plan,
+        source_term,
+        :ready_pqs_source_position_blocks_only,
+        :unsupported_pqs_source_position_materialization_record,
+        (; position_axis = axis),
+    )
+end
+
+"""
     pqs_source_pair_x2_block(record; axis, overlap_1d, x2_1d)
 
 Materialize one PQS/PQS raw source-space x2 block for
@@ -89,6 +138,34 @@ function pqs_source_pair_x2_block(
         record,
         source_term,
         operator_axes,
+        (; x2_axis = axis),
+    )
+end
+
+"""
+    pqs_source_pair_x2_blocks(plan; axis, overlap_1d, x2_1d)
+
+Materialize raw source-space x2 blocks only for ready PQS/PQS source-pair
+records in a pair-block materialization plan.
+"""
+function pqs_source_pair_x2_blocks(
+    plan::PairBlockMaterializationPlan;
+    axis,
+    overlap_1d,
+    x2_1d,
+)
+    source_term = _source_x2_term(axis)
+    return _pqs_source_pair_batch_results(
+        record -> pqs_source_pair_x2_block(
+            record;
+            axis,
+            overlap_1d,
+            x2_1d,
+        ),
+        plan,
+        source_term,
+        :ready_pqs_source_x2_blocks_only,
+        :unsupported_pqs_source_x2_materialization_record,
         (; x2_axis = axis),
     )
 end
@@ -149,6 +226,27 @@ function pqs_source_pair_kinetic_block(
     )
 end
 
+"""
+    pqs_source_pair_kinetic_blocks(plan; overlap_1d, kinetic_1d)
+
+Materialize raw source-space kinetic blocks only for ready PQS/PQS source-pair
+records in a pair-block materialization plan.
+"""
+function pqs_source_pair_kinetic_blocks(
+    plan::PairBlockMaterializationPlan;
+    overlap_1d,
+    kinetic_1d,
+)
+    return _pqs_source_pair_batch_results(
+        record -> pqs_source_pair_kinetic_block(record; overlap_1d, kinetic_1d),
+        plan,
+        :source_kinetic,
+        :ready_pqs_source_kinetic_blocks_only,
+        :unsupported_pqs_source_kinetic_materialization_record,
+        (; kinetic_factor_form = _pqs_source_kinetic_factor_form()),
+    )
+end
+
 function _source_position_term(axis)
     return Symbol(:source_, _position_term(axis))
 end
@@ -162,6 +260,71 @@ function _pqs_source_kinetic_factor_form()
         (:kinetic, :overlap, :overlap),
         (:overlap, :kinetic, :overlap),
         (:overlap, :overlap, :kinetic),
+    )
+end
+
+function _is_ready_pqs_source_pair_record(record::PairBlockMaterializationRecord)
+    return record.materialization_path === :pqs_source_pair_preflight &&
+           record.readiness_status === :ready_metadata_only_not_materialized &&
+           isnothing(record.blocker)
+end
+
+function _skipped_pqs_source_record_summary(
+    record::PairBlockMaterializationRecord,
+    unsupported_blocker::Symbol,
+)
+    return (;
+        pair_key = record.pair_key,
+        pair_index = record.pair_index,
+        pair_family = record.pair_family,
+        materialization_path = record.materialization_path,
+        readiness_status = record.readiness_status,
+        blocker = isnothing(record.blocker) ? unsupported_blocker : record.blocker,
+    )
+end
+
+function _pqs_source_pair_batch_results(
+    materialize_record,
+    plan::PairBlockMaterializationPlan,
+    term::Symbol,
+    materialization_path::Symbol,
+    unsupported_blocker::Symbol,
+    metadata,
+)
+    results = PairBlockMaterializationResult[]
+    skipped = NamedTuple[]
+
+    for record in pair_block_materialization_records(plan)
+        if _is_ready_pqs_source_pair_record(record)
+            push!(results, materialize_record(record))
+        else
+            push!(
+                skipped,
+                _skipped_pqs_source_record_summary(record, unsupported_blocker),
+            )
+        end
+    end
+
+    result_tuple = Tuple(results)
+    skipped_tuple = Tuple(skipped)
+    any_materialized = !isempty(result_tuple)
+    return PairBlockMaterializationBatchResult(
+        term,
+        result_tuple,
+        skipped_tuple,
+        length(result_tuple),
+        length(skipped_tuple),
+        any_materialized,
+        any_materialized,
+        false,
+        false,
+        false,
+        false,
+        merge(
+            (; materialization_path),
+            NamedTuple(metadata),
+            (; pair_block_record_count = length(pair_block_materialization_records(plan))),
+        ),
     )
 end
 
