@@ -8,6 +8,7 @@ const CUPForTransformContracts = GaussletBases.CartesianUnitPairs
 const CPOPForTransformContracts = GaussletBases.CartesianPairOperatorPlans
 const CRCForTransformContracts = GaussletBases.CartesianRouteCore
 const CPBForTransformContracts = GaussletBases.CartesianCPB
+const CRPSForTransformContracts = GaussletBases.CartesianRawProductSources
 
 function _transform_contract_count_by_field(summary, field::Symbol, value::Symbol)
     count_field = Symbol(String(field), "_counts")
@@ -118,6 +119,32 @@ function _transform_contract_distorted_contract()
         :one_terminal_region,
         false,
         (; q = 3, L = 7, source_mode_shape = (7, 3, 3), aspect_ratio = 7 / 3),
+    )
+end
+
+function _transform_contract_pqs_contract(
+    source;
+    contract_key::Symbol,
+    terminal_region_key::Symbol,
+    metadata,
+)
+    return CTLForTransformContracts.TerminalLoweringContract(
+        contract_key,
+        terminal_region_key,
+        :synthetic_pqs_region,
+        :complete_shell,
+        :pqs_filled_source_cpb,
+        CRCForTransformContracts.owned_cpb(
+            source;
+            support_kind = :synthetic_pqs_owned_support,
+            metadata = (; terminal_region_key),
+        ),
+        (source,),
+        :pqs_boundary_comx_product_modes,
+        :shell_projection_lowdin,
+        :one_terminal_region,
+        false,
+        metadata,
     )
 end
 
@@ -242,6 +269,8 @@ const _TRANSFORM_PQS_RETAINED_PLAN =
     @test !contract_summary.operator_blocks_materialized
     @test !contract_summary.hamiltonian_data_materialized
     @test !contract_summary.artifacts_materialized
+    @test contract_summary.raw_product_source_plan_available_count == 0
+    @test contract_summary.raw_product_source_plan_blocked_count == 0
 end
 
 @testset "CartesianRetainedUnitTransformContracts path classification" begin
@@ -280,6 +309,10 @@ end
         :distorted_product_realization_planned,
     ) == 1
     @test all(!contract.materialized for contract in CRTC.transform_contracts(wl_plan))
+    @test all(
+        contract -> !haskey(contract.metadata, :raw_product_source_plan_status),
+        CRTC.transform_contracts(wl_plan),
+    )
     @test !wl_summary.materialized
     @test !wl_summary.transforms_materialized
     @test !wl_summary.coefficient_maps_materialized
@@ -298,6 +331,8 @@ end
 
     @test pqs_summary.status == :available_retained_unit_transform_contract_plan
     @test pqs_summary.transform_contract_count == 4
+    @test pqs_summary.raw_product_source_plan_available_count == 1
+    @test pqs_summary.raw_product_source_plan_blocked_count == 0
     @test _transform_contract_count_by_field(
         pqs_summary,
         :transform_path,
@@ -318,6 +353,117 @@ end
     @test pqs_contract.realization_path == :shell_projection_lowdin_planned
     @test pqs_contract.dimension_status == :planned_not_materialized
     @test pqs_contract.column_range_status == :not_materialized
+    @test pqs_contract.metadata.raw_product_source_plan_status ==
+          :available_raw_product_box_plan
+    @test pqs_contract.metadata.raw_product_source_plan isa
+          CRPSForTransformContracts.RawProductBoxPlan
+    @test pqs_contract.metadata.raw_product_source_plan.source_mode_dims ==
+          (3, 3, 3)
+    @test pqs_contract.metadata.raw_product_source_plan.source_mode_count == 27
+    @test pqs_contract.metadata.raw_product_source_summary.source_mode_dims ==
+          (3, 3, 3)
+    @test pqs_contract.metadata.raw_product_source_summary.source_mode_count == 27
+    @test pqs_contract.metadata.raw_product_source_summary.retained_rule_materialized ==
+          false
+    @test pqs_contract.metadata.raw_product_source_summary.shell_realization_materialized ==
+          false
+    @test pqs_contract.metadata.raw_product_source_summary.pair_blocks_materialized ==
+          false
+    @test pqs_contract.metadata.raw_product_source_summary.hamiltonian_data_materialized ==
+          false
+    @test pqs_contract.metadata.raw_product_source_summary.artifacts_materialized ==
+          false
+    @test all(
+        fact -> fact.coefficient_status === :not_materialized,
+        CRPSForTransformContracts.axis_transform_facts(
+            pqs_contract.metadata.raw_product_source_plan,
+        ),
+    )
+    @test all(
+        fact -> isnothing(fact.coefficient_matrix),
+        CRPSForTransformContracts.axis_transform_facts(
+            pqs_contract.metadata.raw_product_source_plan,
+        ),
+    )
+    @test all(
+        contract -> contract.unit_kind == :pqs_shell_retained_unit ||
+                    !haskey(contract.metadata, :raw_product_source_plan_status),
+        CRTC.transform_contracts(pqs_plan),
+    )
+end
+
+@testset "CartesianRetainedUnitTransformContracts PQS raw source facts" begin
+    explicit_source = CPBForTransformContracts.filled_cpb(
+        10:11,
+        20:22,
+        30:33;
+        role = :synthetic_explicit_pqs_source_cpb,
+    )
+    explicit_contract = _transform_contract_pqs_contract(
+        explicit_source;
+        contract_key = :synthetic_explicit_pqs_source,
+        terminal_region_key = :synthetic_explicit_pqs,
+        metadata = (; q = 9, source_mode_shape = (5, 4, 3)),
+    )
+    explicit_lowering_plan = _transform_contract_lowering_plan(
+        CTLForTransformContracts.PQSLowering(q = 9),
+        (explicit_contract,),
+        :pqs_terminal_lowering,
+    )
+    explicit_retained_plan =
+        CRUForTransformContracts.retained_unit_plan(explicit_lowering_plan)
+    explicit_transform_plan =
+        CRTC.retained_unit_transform_contract_plan(explicit_retained_plan)
+    explicit_transform_contract =
+        only(CRTC.transform_contracts(explicit_transform_plan))
+    explicit_summary = CRTC.summary(explicit_transform_plan)
+
+    @test explicit_summary.raw_product_source_plan_available_count == 1
+    @test explicit_summary.raw_product_source_plan_blocked_count == 0
+    @test explicit_transform_contract.metadata.raw_product_source_plan_status ==
+          :available_raw_product_box_plan
+    @test explicit_transform_contract.metadata.raw_product_source_plan.source_mode_dims ==
+          (5, 4, 3)
+    @test explicit_transform_contract.metadata.raw_product_source_plan.source_mode_count == 60
+    @test explicit_transform_contract.metadata.raw_product_source_summary.source_mode_dims ==
+          (5, 4, 3)
+    @test explicit_transform_contract.metadata.raw_product_source_summary.source_mode_count ==
+          60
+
+    missing_source = CPBForTransformContracts.filled_cpb(
+        1:3,
+        1:3,
+        1:3;
+        role = :synthetic_missing_dims_pqs_source_cpb,
+    )
+    missing_contract = _transform_contract_pqs_contract(
+        missing_source;
+        contract_key = :synthetic_missing_dims_pqs_source,
+        terminal_region_key = :synthetic_missing_dims_pqs,
+        metadata = (; q = nothing, source_mode_shape = nothing),
+    )
+    missing_lowering_plan = _transform_contract_lowering_plan(
+        CTLForTransformContracts.PQSLowering(q = 3),
+        (missing_contract,),
+        :pqs_terminal_lowering,
+    )
+    missing_retained_plan =
+        CRUForTransformContracts.retained_unit_plan(missing_lowering_plan)
+    missing_transform_plan =
+        CRTC.retained_unit_transform_contract_plan(missing_retained_plan)
+    missing_transform_contract =
+        only(CRTC.transform_contracts(missing_transform_plan))
+    missing_summary = CRTC.summary(missing_transform_plan)
+
+    @test missing_summary.raw_product_source_plan_available_count == 0
+    @test missing_summary.raw_product_source_plan_blocked_count == 1
+    @test isnothing(missing_transform_contract.metadata.raw_product_source_plan)
+    @test missing_transform_contract.metadata.raw_product_source_plan_status ==
+          :blocked_missing_source_mode_dims
+    @test missing_transform_contract.metadata.raw_product_source_summary.status ==
+          :blocked_missing_source_mode_dims
+    @test missing_transform_contract.metadata.raw_product_source_summary.blocker ==
+          :missing_pqs_source_mode_dims
 end
 
 @testset "CartesianRetainedUnitTransformContracts unknown retained unit blocks" begin

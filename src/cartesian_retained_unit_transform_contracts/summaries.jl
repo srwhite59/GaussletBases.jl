@@ -41,6 +41,10 @@ function _retained_unit_transform_contract_plan_summary(
         realization_path_counts =
             _count_by_symbol(realization_paths, :realization_path),
         blocked_contract_count = length(blockers),
+        raw_product_source_plan_available_count =
+            _raw_product_source_plan_available_count(contracts),
+        raw_product_source_plan_blocked_count =
+            _raw_product_source_plan_blocked_count(contracts),
         materialized = false,
         transforms_materialized = false,
         coefficient_maps_materialized = false,
@@ -49,6 +53,27 @@ function _retained_unit_transform_contract_plan_summary(
         hamiltonian_data_materialized = false,
         artifacts_materialized = false,
     )
+end
+
+function _raw_product_source_plan_status(contract)
+    haskey(contract.metadata, :raw_product_source_plan_status) ||
+        return nothing
+    return contract.metadata.raw_product_source_plan_status
+end
+
+function _raw_product_source_plan_available_count(contracts)
+    return count(
+        contract -> _raw_product_source_plan_status(contract) ===
+                    :available_raw_product_box_plan,
+        contracts,
+    )
+end
+
+function _raw_product_source_plan_blocked_count(contracts)
+    return count(contracts) do contract
+        status = _raw_product_source_plan_status(contract)
+        return !isnothing(status) && status !== :available_raw_product_box_plan
+    end
 end
 
 function unavailable_summary(status::Symbol, blocker = nothing)
@@ -62,6 +87,8 @@ function unavailable_summary(status::Symbol, blocker = nothing)
         transform_path_counts = (),
         realization_path_counts = (),
         blocked_contract_count = 0,
+        raw_product_source_plan_available_count = 0,
+        raw_product_source_plan_blocked_count = 0,
         materialized = false,
         transforms_materialized = false,
         coefficient_maps_materialized = false,

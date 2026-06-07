@@ -15,8 +15,10 @@ Hamiltonians, artifacts, or reports.
 module CartesianRetainedUnitTransformContracts
 
 using ..CartesianRetainedUnits
+using ..CartesianRawProductSources
 
 const CRU = CartesianRetainedUnits
+const CRPS = CartesianRawProductSources
 
 export RetainedUnitTransformContractPolicy,
        MetadataOnlyRetainedUnitTransformContracts,

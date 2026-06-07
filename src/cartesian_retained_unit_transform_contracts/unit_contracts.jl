@@ -50,6 +50,7 @@ function _retained_unit_transform_contract(
             source_cpb_index = unit.source_cpb_index,
             retained_unit_materialized = unit.materialized,
         ),
+        _raw_product_source_contract_metadata(unit),
     )
 
     return RetainedUnitTransformContract(
@@ -67,6 +68,77 @@ function _retained_unit_transform_contract(
         false,
         blocker,
         contract_metadata,
+    )
+end
+
+function _metadata_value(metadata::NamedTuple, key::Symbol, default = nothing)
+    return haskey(metadata, key) ? getfield(metadata, key) : default
+end
+
+function _valid_source_mode_dims(value)
+    value isa Tuple || return nothing
+    length(value) == 3 || return nothing
+    all(dim -> dim isa Integer && dim > 0, value) || return nothing
+    return Tuple(Int(dim) for dim in value)::NTuple{3,Int}
+end
+
+function _pqs_source_mode_dims(unit::CRU.RetainedUnitRecord)
+    source_mode_shape = _valid_source_mode_dims(
+        _metadata_value(unit.metadata, :source_mode_shape),
+    )
+    !isnothing(source_mode_shape) && return source_mode_shape
+
+    q = _metadata_value(unit.metadata, :q)
+    q isa Integer && q > 0 && return (Int(q), Int(q), Int(q))
+    return nothing
+end
+
+function _pqs_source_cpb(unit::CRU.RetainedUnitRecord)
+    length(unit.source_cpbs) == 1 || return nothing
+    source_cpb = only(unit.source_cpbs)
+    source_cpb isa CRPS.CPB.CoordinateProductBox || return nothing
+    CRPS.CPB.codimension(source_cpb) == 0 || return nothing
+    return source_cpb
+end
+
+function _raw_product_source_unavailable_metadata(status::Symbol, blocker::Symbol)
+    return (;
+        raw_product_source_plan = nothing,
+        raw_product_source_summary = CRPS.unavailable_summary(status, blocker),
+        raw_product_source_plan_status = status,
+    )
+end
+
+function _raw_product_source_contract_metadata(unit::CRU.RetainedUnitRecord)
+    unit.unit_kind === :pqs_shell_retained_unit || return (;)
+
+    dims = _pqs_source_mode_dims(unit)
+    isnothing(dims) && return _raw_product_source_unavailable_metadata(
+        :blocked_missing_source_mode_dims,
+        :missing_pqs_source_mode_dims,
+    )
+
+    source_cpb = _pqs_source_cpb(unit)
+    isnothing(source_cpb) && return _raw_product_source_unavailable_metadata(
+        :blocked_missing_pqs_source_cpb,
+        :missing_single_filled_pqs_source_cpb,
+    )
+
+    raw_plan = CRPS.raw_product_box_plan(
+        source_cpb;
+        source_key = unit.unit_key,
+        source_mode_dims = dims,
+        metadata = (;
+            source = :cartesian_retained_unit_transform_contracts,
+            unit_key = unit.unit_key,
+            source_contract_key = unit.source_contract_key,
+        ),
+    )
+    raw_summary = CRPS.summary(raw_plan)
+    return (;
+        raw_product_source_plan = raw_plan,
+        raw_product_source_summary = raw_summary,
+        raw_product_source_plan_status = raw_summary.status,
     )
 end
 
