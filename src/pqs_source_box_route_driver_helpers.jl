@@ -6275,6 +6275,22 @@ function _pqs_source_box_route_driver_selected_terminal_crc_sidecar_summary(
     )
 end
 
+function _pqs_source_box_route_driver_source_selected_crc_sidecar_summary(
+    source,
+    selected::Bool,
+)
+    !selected &&
+        return _pqs_source_box_route_driver_selected_terminal_crc_sidecar_summary(nothing)
+    if hasproperty(source, :terminal_shellification_selected_crc_sidecar_summary)
+        return source.terminal_shellification_selected_crc_sidecar_summary
+    end
+    if hasproperty(source, :terminal_route_state) &&
+       hasproperty(source.terminal_route_state, :selected_crc_sidecar_summary)
+        return source.terminal_route_state.selected_crc_sidecar_summary
+    end
+    return _pqs_source_box_route_driver_selected_terminal_crc_sidecar_summary(nothing)
+end
+
 function _pqs_source_box_route_driver_terminal_shellification_alias_fields(
     source,
     selected::Bool;
@@ -6297,14 +6313,9 @@ function _pqs_source_box_route_driver_terminal_shellification_alias_fields(
         include_crc_sidecar_summary ?
         (;
             terminal_shellification_selected_crc_sidecar_summary =
-                selected &&
-                hasproperty(
+                _pqs_source_box_route_driver_source_selected_crc_sidecar_summary(
                     source,
-                    :terminal_shellification_selected_crc_sidecar_summary,
-                ) ?
-                source.terminal_shellification_selected_crc_sidecar_summary :
-                _pqs_source_box_route_driver_selected_terminal_crc_sidecar_summary(
-                    nothing,
+                    selected,
                 ),
         ) :
         (;)
@@ -7329,10 +7340,6 @@ function _pqs_source_box_route_driver_transform_stage_low_order_summary(units)
                 :not_available,
                 nothing,
             )...,
-            terminal_shellification_selected_crc_sidecar_summary =
-                _pqs_source_box_route_driver_selected_terminal_crc_sidecar_summary(
-                    nothing,
-                ),
             terminal_shellification_contract_counts_by_unit = (),
             terminal_shellification_lw_complete_shell_cpb_count = 0,
             terminal_shellification_lw_complete_shell_cpb_family_counts =
@@ -7487,7 +7494,8 @@ function _pqs_source_box_route_driver_transform_stage_low_order_summary(units)
         terminal_shellification_transform_summary_available,
         _pqs_source_box_route_driver_terminal_shellification_alias_fields(
             low_order_units,
-            terminal_shellification_transforms_selected,
+            terminal_shellification_transforms_selected;
+            include_crc_sidecar_summary = false,
         )...,
         terminal_shellification_transform_contracts_available = false,
         terminal_shellification_transform_materialization_status,
