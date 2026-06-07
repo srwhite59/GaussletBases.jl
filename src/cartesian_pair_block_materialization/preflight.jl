@@ -195,6 +195,18 @@ function _raw_product_source_facts_complete(summary)
     return true
 end
 
+function _transform_contract_key(contract)
+    isnothing(contract) && return nothing
+    return contract.unit_key
+end
+
+function _source_contract_key(contract)
+    isnothing(contract) && return nothing
+    haskey(contract.metadata, :source_contract_key) ||
+        return nothing
+    return contract.metadata.source_contract_key
+end
+
 function _pair_block_materialization_record_metadata(
     record::CPOP.PairOperatorPlanRecord,
     unit_pair::CUP.UnitPairRecord,
@@ -237,6 +249,14 @@ function _pair_block_materialization_record_metadata(
     return merge(
         base_metadata,
         (;
+            transform_contract_keys = (;
+                left = _transform_contract_key(left_contract),
+                right = _transform_contract_key(right_contract),
+            ),
+            source_contract_keys = (;
+                left = _source_contract_key(left_contract),
+                right = _source_contract_key(right_contract),
+            ),
             left_raw_product_source_plan_status =
                 _raw_product_source_plan_status(left_contract),
             right_raw_product_source_plan_status =

@@ -22,8 +22,9 @@ parent/axis blocks.
 PQS/PQS raw-source pair support currently has metadata preflight plus raw
 source-space safe one-body helpers for overlap, position, x2, kinetic, and a
 selector over those terms. Caller-supplied 1D factors own signs and prefactors.
-This path does not build shell projection, Lowdin realization, or final
-retained PQS pair blocks.
+It also provides a metadata-only shell-realization bridge summary for those
+source-space blocks. This path does not build shell projection, Lowdin
+realization, or final retained PQS pair blocks.
 
 This module still does not assemble full operators, Hamiltonians, Ham bundles,
 exports, artifacts, final retained PQS pair blocks, or White--Lindsey blocks.
@@ -60,6 +61,7 @@ export PairBlockMaterializationPolicy,
        pqs_source_pair_kinetic_blocks,
        pqs_source_pair_one_body_block,
        pqs_source_pair_one_body_blocks,
+       pqs_source_pair_shell_realization_bridge_summary,
        direct_direct_overlap_block,
        direct_direct_overlap_blocks,
        direct_direct_position_block,
@@ -87,6 +89,9 @@ export PairBlockMaterializationPolicy,
 # pqs_source_safe_terms.jl
 #     PQS/PQS raw source-space safe-term helpers.
 #
+# pqs_source_shell_bridge.jl
+#     Metadata-only bridge summaries for future PQS shell realization.
+#
 # direct_overlap.jl
 #     First tiny direct/direct overlap pair-block pilot.
 #
@@ -109,6 +114,7 @@ include("preflight.jl")
 include("summaries.jl")
 include("direct_overlap.jl")
 include("pqs_source_safe_terms.jl")
+include("pqs_source_shell_bridge.jl")
 include("direct_position.jl")
 include("direct_x2.jl")
 include("direct_kinetic.jl")

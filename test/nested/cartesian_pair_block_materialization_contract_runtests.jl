@@ -333,6 +333,21 @@ function _pair_block_batch_result_for(batch_result, left_key::Symbol, right_key:
     )
 end
 
+function _pair_block_result_with_metadata(result, metadata)
+    return CPBM.PairBlockMaterializationResult(
+        result.term,
+        result.pair_key,
+        result.block,
+        result.materialized,
+        result.source_operator_blocks_materialized,
+        result.final_pair_blocks_materialized,
+        result.operator_blocks_materialized,
+        result.hamiltonian_data_materialized,
+        result.artifacts_materialized,
+        NamedTuple(metadata),
+    )
+end
+
 function _pair_block_overlap_axes()
     overlap_x = [
         1.00 0.11 0.13 0.17
@@ -920,6 +935,14 @@ end
           :available_raw_product_box_plan
     @test pqs_cross_record.metadata.right_raw_product_source_plan_status ==
           :available_raw_product_box_plan
+    @test pqs_cross_record.metadata.transform_contract_keys.left ==
+          :pair_block_pqs_left_unit
+    @test pqs_cross_record.metadata.transform_contract_keys.right ==
+          :pair_block_pqs_right_unit
+    @test pqs_cross_record.metadata.source_contract_keys.left ==
+          :pair_block_pqs_left_unit_contract
+    @test pqs_cross_record.metadata.source_contract_keys.right ==
+          :pair_block_pqs_right_unit_contract
     @test pqs_cross_record.metadata.left_source_mode_dims == (3, 3, 3)
     @test pqs_cross_record.metadata.right_source_mode_dims == (5, 4, 3)
     @test pqs_cross_record.metadata.left_source_mode_count == 27
@@ -980,8 +1003,81 @@ end
     @test pqs_overlap_result.metadata.right_source_mode_dims == right_source_dims
     @test pqs_overlap_result.metadata.source_mode_ordering ==
           :x_major_y_major_z_fast
+    @test pqs_overlap_result.metadata.transform_contract_keys.left ==
+          :pair_block_pqs_left_unit
+    @test pqs_overlap_result.metadata.transform_contract_keys.right ==
+          :pair_block_pqs_right_unit
+    @test pqs_overlap_result.metadata.transform_paths.left ==
+          :pqs_source_modes_boundary_selection_shell_realization_contract
+    @test pqs_overlap_result.metadata.transform_paths.right ==
+          :pqs_source_modes_boundary_selection_shell_realization_contract
+    @test pqs_overlap_result.metadata.realization_paths.left ==
+          :shell_projection_lowdin_planned
+    @test pqs_overlap_result.metadata.realization_paths.right ==
+          :shell_projection_lowdin_planned
     @test pqs_overlap_result.metadata.source_operator_blocks_materialized
     @test !pqs_overlap_result.metadata.final_pair_blocks_materialized
+    @test !pqs_overlap_result.metadata.shell_realization_materialized
+
+    shell_bridge =
+        CPBM.pqs_source_pair_shell_realization_bridge_summary(pqs_overlap_result)
+    @test shell_bridge.object_kind ==
+          :pqs_source_pair_shell_realization_bridge_summary
+    @test shell_bridge.status ==
+          :available_metadata_only_shell_realization_bridge
+    @test isnothing(shell_bridge.blocker)
+    @test shell_bridge.source_block_term == :source_overlap
+    @test shell_bridge.source_block_status == :source_operator_block_materialized
+    @test shell_bridge.block_space == :raw_product_source_modes
+    @test shell_bridge.left_source_mode_dims == left_source_dims
+    @test shell_bridge.right_source_mode_dims == right_source_dims
+    @test shell_bridge.left_source_mode_count == 27
+    @test shell_bridge.right_source_mode_count == 60
+    @test shell_bridge.source_mode_ordering == :x_major_y_major_z_fast
+    @test shell_bridge.transform_contract_keys.left == :pair_block_pqs_left_unit
+    @test shell_bridge.transform_contract_keys.right == :pair_block_pqs_right_unit
+    @test shell_bridge.source_contract_keys.left ==
+          :pair_block_pqs_left_unit_contract
+    @test shell_bridge.source_contract_keys.right ==
+          :pair_block_pqs_right_unit_contract
+    @test shell_bridge.realization_paths.left == :shell_projection_lowdin_planned
+    @test shell_bridge.realization_paths.right == :shell_projection_lowdin_planned
+    @test shell_bridge.source_operator_blocks_materialized
+    @test !shell_bridge.final_pair_blocks_materialized
+    @test !shell_bridge.shell_realization_materialized
+    @test !shell_bridge.operator_blocks_materialized
+    @test !shell_bridge.hamiltonian_data_materialized
+    @test !shell_bridge.artifacts_materialized
+
+    missing_bridge_realization_result =
+        _pair_block_result_with_metadata(
+            pqs_overlap_result,
+            merge(pqs_overlap_result.metadata, (; realization_paths = nothing)),
+        )
+    missing_bridge_realization =
+        CPBM.pqs_source_pair_shell_realization_bridge_summary(
+            missing_bridge_realization_result,
+        )
+    @test missing_bridge_realization.status ==
+          :blocked_missing_shell_realization_facts
+    @test missing_bridge_realization.blocker == :missing_shell_realization_path
+    @test !missing_bridge_realization.final_pair_blocks_materialized
+    @test !missing_bridge_realization.shell_realization_materialized
+
+    missing_bridge_contract_result =
+        _pair_block_result_with_metadata(
+            pqs_overlap_result,
+            merge(pqs_overlap_result.metadata, (; transform_contract_keys = nothing)),
+        )
+    missing_bridge_contract =
+        CPBM.pqs_source_pair_shell_realization_bridge_summary(
+            missing_bridge_contract_result,
+        )
+    @test missing_bridge_contract.status ==
+          :blocked_missing_shell_realization_facts
+    @test missing_bridge_contract.blocker == :missing_transform_contract_keys
+    @test !missing_bridge_contract.final_pair_blocks_materialized
+    @test !missing_bridge_contract.shell_realization_materialized
 
     pqs_position_x, pqs_position_y, pqs_position_z =
         _pair_block_pqs_source_position_axes(left_source_dims, right_source_dims)

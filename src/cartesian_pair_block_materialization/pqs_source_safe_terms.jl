@@ -379,8 +379,23 @@ function _pqs_source_pair_product_result(
                 right_source_mode_dims = right_dims,
                 left_source_mode_count = left_count,
                 right_source_mode_count = right_count,
+                transform_contract_keys =
+                    _pqs_source_pair_metadata_value(
+                        record,
+                        :transform_contract_keys,
+                        (; left = nothing, right = nothing),
+                    ),
+                source_contract_keys =
+                    _pqs_source_pair_metadata_value(
+                        record,
+                        :source_contract_keys,
+                        (; left = nothing, right = nothing),
+                    ),
+                transform_paths = record.transform_path,
+                realization_paths = record.realization_path,
                 source_operator_blocks_materialized = true,
                 final_pair_blocks_materialized = false,
+                shell_realization_materialized = false,
                 operator_blocks_materialized = false,
                 hamiltonian_data_materialized = false,
                 artifacts_materialized = false,
@@ -388,6 +403,14 @@ function _pqs_source_pair_product_result(
             NamedTuple(metadata),
         ),
     )
+end
+
+function _pqs_source_pair_metadata_value(
+    record::PairBlockMaterializationRecord,
+    key::Symbol,
+    default = nothing,
+)
+    return haskey(record.metadata, key) ? getfield(record.metadata, key) : default
 end
 
 function _assert_pqs_source_pair_overlap_record(record::PairBlockMaterializationRecord)
