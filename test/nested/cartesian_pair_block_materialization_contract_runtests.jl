@@ -211,20 +211,64 @@ function _pair_block_overlap_axes()
     return overlap_x, overlap_y, overlap_z
 end
 
+function _pair_block_position_axes()
+    position_x = [
+        0.20 1.10 1.30 1.70
+        1.10 0.40 1.90 2.30
+        1.30 1.90 0.60 2.90
+        1.70 2.30 2.90 0.80
+    ]
+    position_y = [
+        3.10 0.21 0.23 0.27
+        0.21 3.30 0.29 0.31
+        0.23 0.29 3.50 0.37
+        0.27 0.31 0.37 3.70
+    ]
+    position_z = [
+        4.10 0.41 0.43 0.47
+        0.41 4.30 0.49 0.51
+        0.43 0.49 4.50 0.57
+        0.47 0.51 0.57 4.70
+    ]
+    return position_x, position_y, position_z
+end
+
 function _pair_block_cpb_states(source_cpb)
     ix, iy, iz = CPBForPairBlocks.intervals(source_cpb)
     return Tuple((x, y, z) for x in ix for y in iy for z in iz)
 end
 
-function _pair_block_expected_overlap(left_cpb, right_cpb, overlap_x, overlap_y, overlap_z)
+function _pair_block_expected_product(left_cpb, right_cpb, operator_x, operator_y, operator_z)
     left_states = _pair_block_cpb_states(left_cpb)
     right_states = _pair_block_cpb_states(right_cpb)
     return [
-        overlap_x[left[1], right[1]] *
-        overlap_y[left[2], right[2]] *
-        overlap_z[left[3], right[3]]
+        operator_x[left[1], right[1]] *
+        operator_y[left[2], right[2]] *
+        operator_z[left[3], right[3]]
         for left in left_states, right in right_states
     ]
+end
+
+function _pair_block_expected_overlap(left_cpb, right_cpb, overlap_x, overlap_y, overlap_z)
+    return _pair_block_expected_product(left_cpb, right_cpb, overlap_x, overlap_y, overlap_z)
+end
+
+function _pair_block_expected_position(
+    left_cpb,
+    right_cpb,
+    axis,
+    overlap_x,
+    overlap_y,
+    overlap_z,
+    position_x,
+    position_y,
+    position_z,
+)
+    operator_x, operator_y, operator_z =
+        axis === :x ? (position_x, overlap_y, overlap_z) :
+        axis === :y ? (overlap_x, position_y, overlap_z) :
+        (overlap_x, overlap_y, position_z)
+    return _pair_block_expected_product(left_cpb, right_cpb, operator_x, operator_y, operator_z)
 end
 
 @testset "CartesianPairBlockMaterialization unavailable summary" begin
@@ -355,6 +399,14 @@ end
         parent_axis_counts = (4, 4, 4),
         overlap_1d = (; x = overlap_x, y = overlap_y, z = overlap_z),
     )
+    position_x, position_y, position_z = _pair_block_position_axes()
+    @test_throws ArgumentError CPBM.direct_direct_position_block(
+        direct_pqs_record;
+        axis = :x,
+        parent_axis_counts = (4, 4, 4),
+        overlap_1d = (; x = overlap_x, y = overlap_y, z = overlap_z),
+        position_1d = (; x = position_x, y = position_y, z = position_z),
+    )
     @test pqs_pqs_record.readiness_status ==
           :blocked_pair_block_materialization_not_implemented
     @test pqs_pqs_record.blocker ==
@@ -411,10 +463,55 @@ end
     @test size(cross_result.block) == (4, 6)
     @test cross_result.block ≈ expected_cross
 
+    position_x, position_y, position_z = _pair_block_position_axes()
+    expected_position_terms = (;
+        x = :position_x,
+        y = :position_y,
+        z = :position_z,
+    )
+    for axis in (:x, :y, :z)
+        position_result = CPBM.direct_direct_position_block(
+            cross_record;
+            axis,
+            parent_axis_counts = (4, 4, 4),
+            overlap_1d = (; x = overlap_x, y = overlap_y, z = overlap_z),
+            position_1d = (; x = position_x, y = position_y, z = position_z),
+        )
+        expected_position =
+            _pair_block_expected_position(
+                left_source,
+                right_source,
+                axis,
+                overlap_x,
+                overlap_y,
+                overlap_z,
+                position_x,
+                position_y,
+                position_z,
+            )
+
+        @test position_result.term == getproperty(expected_position_terms, axis)
+        @test size(position_result.block) == (4, 6)
+        @test position_result.block ≈ expected_position
+        @test position_result.materialized
+        @test position_result.source_operator_blocks_materialized
+        @test position_result.final_pair_blocks_materialized
+        @test !position_result.operator_blocks_materialized
+        @test !position_result.hamiltonian_data_materialized
+        @test !position_result.artifacts_materialized
+    end
+
     batch_result = CPBM.direct_direct_overlap_blocks(
         materialization_plan;
         parent_axis_counts = (4, 4, 4),
         overlap_1d = (; x = overlap_x, y = overlap_y, z = overlap_z),
+    )
+    position_batch_result = CPBM.direct_direct_position_blocks(
+        materialization_plan;
+        axis = :z,
+        parent_axis_counts = (4, 4, 4),
+        overlap_1d = (; x = overlap_x, y = overlap_y, z = overlap_z),
+        position_1d = (; x = position_x, y = position_y, z = position_z),
     )
     batch_cross = only(
         result for result in batch_result.materialized_results
@@ -443,4 +540,14 @@ end
     @test !batch_result.operator_blocks_materialized
     @test !batch_result.hamiltonian_data_materialized
     @test !batch_result.artifacts_materialized
+
+    @test position_batch_result.term == :position_z
+    @test position_batch_result.materialized_count == 3
+    @test position_batch_result.skipped_count == 3
+    @test position_batch_result.materialized
+    @test position_batch_result.source_operator_blocks_materialized
+    @test position_batch_result.final_pair_blocks_materialized
+    @test !position_batch_result.operator_blocks_materialized
+    @test !position_batch_result.hamiltonian_data_materialized
+    @test !position_batch_result.artifacts_materialized
 end

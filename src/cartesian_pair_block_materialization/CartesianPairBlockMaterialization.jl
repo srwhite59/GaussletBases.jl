@@ -31,6 +31,8 @@ export PairBlockMaterializationPolicy,
        pair_block_materialization_records,
        direct_direct_overlap_block,
        direct_direct_overlap_blocks,
+       direct_direct_position_block,
+       direct_direct_position_blocks,
        unavailable_summary,
        summary
 
@@ -47,9 +49,13 @@ export PairBlockMaterializationPolicy,
 #
 # direct_overlap.jl
 #     First tiny direct/direct overlap pair-block pilot.
+#
+# direct_position.jl
+#     Direct/direct position pair-block pilot.
 include("records.jl")
 include("preflight.jl")
 include("summaries.jl")
 include("direct_overlap.jl")
+include("direct_position.jl")
 
 end # module CartesianPairBlockMaterialization

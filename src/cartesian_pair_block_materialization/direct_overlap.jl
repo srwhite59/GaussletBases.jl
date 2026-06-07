@@ -152,23 +152,35 @@ function _axis_counts_tuple(parent_axis_counts)
 end
 
 function _overlap_1d_tuple(overlap_1d)
-    if overlap_1d isa NamedTuple &&
-       all(key -> haskey(overlap_1d, key), (:x, :y, :z))
-        return (overlap_1d.x, overlap_1d.y, overlap_1d.z)
+    return _operator_1d_tuple(overlap_1d, "overlap_1d")
+end
+
+function _operator_1d_tuple(operator_1d, name::AbstractString)
+    if operator_1d isa NamedTuple &&
+       all(key -> haskey(operator_1d, key), (:x, :y, :z))
+        return (operator_1d.x, operator_1d.y, operator_1d.z)
     end
 
-    length(overlap_1d) == 3 ||
-        throw(ArgumentError("overlap_1d must provide x, y, and z matrices"))
-    return (overlap_1d[1], overlap_1d[2], overlap_1d[3])
+    length(operator_1d) == 3 ||
+        throw(ArgumentError("$(name) must provide x, y, and z matrices"))
+    return (operator_1d[1], operator_1d[2], operator_1d[3])
 end
 
 function _assert_overlap_axis_sizes(overlap_axes, axis_counts::NTuple{3,Int})
-    for (axis_index, overlap) in pairs(overlap_axes)
+    return _assert_operator_axis_sizes(overlap_axes, axis_counts, "overlap_1d")
+end
+
+function _assert_operator_axis_sizes(
+    operator_axes,
+    axis_counts::NTuple{3,Int},
+    name::AbstractString,
+)
+    for (axis_index, overlap) in pairs(operator_axes)
         overlap isa AbstractMatrix{<:Real} ||
-            throw(ArgumentError("overlap_1d entries must be real matrices"))
+            throw(ArgumentError("$(name) entries must be real matrices"))
         size(overlap, 1) >= axis_counts[axis_index] &&
             size(overlap, 2) >= axis_counts[axis_index] ||
-            throw(ArgumentError("overlap_1d matrix is smaller than parent_axis_counts"))
+            throw(ArgumentError("$(name) matrix is smaller than parent_axis_counts"))
     end
     return nothing
 end
