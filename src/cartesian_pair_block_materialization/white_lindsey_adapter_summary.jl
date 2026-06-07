@@ -174,6 +174,8 @@ function _white_lindsey_boundary_stratum_adapter_batch_summary(
         record_count = length(adapter_summaries),
         available_count,
         blocked_count,
+        reuse_metadata_available_count = available_count,
+        reuse_metadata_blocked_count = blocked_count,
         skipped_record_count = skipped_count,
         skipped_blocker_counts =
             skipped_count == 0 ?

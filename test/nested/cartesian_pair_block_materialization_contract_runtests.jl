@@ -1127,6 +1127,8 @@ end
     @test lw_batch_summary.record_count == 3
     @test lw_batch_summary.available_count == 3
     @test lw_batch_summary.blocked_count == 0
+    @test lw_batch_summary.reuse_metadata_available_count == 3
+    @test lw_batch_summary.reuse_metadata_blocked_count == 0
     @test lw_batch_summary.skipped_record_count == 0
     @test _pair_block_count(
         lw_batch_summary.status_counts,
@@ -1210,6 +1212,8 @@ end
     @test mixed_batch_summary.record_count == 1
     @test mixed_batch_summary.available_count == 1
     @test mixed_batch_summary.blocked_count == 0
+    @test mixed_batch_summary.reuse_metadata_available_count == 1
+    @test mixed_batch_summary.reuse_metadata_blocked_count == 0
     @test mixed_batch_summary.skipped_record_count == 1
     @test _pair_block_count(
         mixed_batch_summary.skipped_blocker_counts,
