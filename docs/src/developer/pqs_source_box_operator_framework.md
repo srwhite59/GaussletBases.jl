@@ -30,6 +30,36 @@ representations are useful for construction checks, current-route authority
 comparisons, and debug oracles. They are not the desired computational
 primitive for PQS operator assembly.
 
+## 2026-06-07 Module-Spine Checkpoint
+
+The current private Cartesian module spine is:
+
+```text
+CartesianCPB
+-> CartesianShellification
+-> CartesianTerminalLowering
+-> CartesianRetainedUnits
+-> CartesianRetainedUnitTransformContracts
+-> CartesianUnitPairs
+-> CartesianPairOperatorPlans
+-> CartesianPairBlockMaterialization preflight/direct-direct pilot
+```
+
+`CartesianPairOperatorPlans` consumes retained-unit pairs plus
+`CartesianRetainedUnitTransformContracts` for transform and realization paths.
+It must not infer realization paths directly from retained-unit kinds.
+
+`CartesianPairBlockMaterialization` is currently a preflight layer plus local
+direct/direct one-body pair-block pilots for overlap, position, `x2`, and
+kinetic. It is not yet PQS or White--Lindsey block materialization, Coulomb or
+IDA materialization, full operator assembly, Ham export, or artifact writing.
+
+The PQS guardrails are unchanged: support-row or shell-row contraction is an
+oracle/debug path, not the PQS algorithm; shell projection and Lowdin cleanup
+belong to shell realization, not raw product-box operator construction;
+retained-column diagnostic weights are not final IDA weights; final PQS IDA
+weights are first-class unsquared integrals of final retained functions.
+
 ## Source Documents
 
 Future work in this lane should read this page first, then the detailed policy

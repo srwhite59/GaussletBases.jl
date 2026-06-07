@@ -176,9 +176,36 @@ raw-box boundary-mode rule, not that shell-realization map.
 
 ## Private Source-Box Migration Plan
 
-The next implementation line should make the current private helpers converge
-on three explicit records. These are private planning/reference records first,
-not public API.
+The older three-record plan below is still conceptually useful:
+
+```text
+CartesianRawProductBox3D
+CartesianRetainedRule3D / CartesianRetainedUnit3D
+CartesianSourceBoxPairOperatorPlan3D
+```
+
+It is no longer the current module split. The active private implementation
+uses the finer spine:
+
+```text
+CartesianRetainedUnits
+-> CartesianRetainedUnitTransformContracts
+-> CartesianUnitPairs
+-> CartesianPairOperatorPlans
+-> CartesianPairBlockMaterialization
+```
+
+In that split, pair-operator plans consume final retained-unit pairs plus
+retained-unit transform contracts. They must not infer realization paths
+directly from retained-unit kinds. `CartesianPairBlockMaterialization`
+currently provides preflight plus local direct/direct one-body pilots only.
+
+The next missing boundary is still a clean module or explicit adapter for
+`RawProductBoxPlan` and source-box source facts before PQS materialization
+expands.
+
+The following record descriptions remain a source-box policy guide for that
+adapter boundary, not the current implementation spine and not public API.
 
 `CartesianRawProductBox3D` should own the source-box facts:
 

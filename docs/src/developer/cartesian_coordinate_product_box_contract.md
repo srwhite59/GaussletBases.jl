@@ -467,8 +467,12 @@ parent lattice
 -> intermediate retained spaces
 -> shell realization, if needed
 -> final retained units
--> unit-pair inventory
--> pair operator blocks
+-> retained-unit inventory
+-> retained-unit transform contracts
+-> unit pairs
+-> pair operator plans
+-> pair-block materialization preflight/direct-direct pilot
+-> final pair-block assembly
 -> assembly
 ```
 
@@ -479,7 +483,11 @@ ShellificationRegion Ω
 -> boundary-stratum CPBs: facets, edges, corners
 -> product/doside contractions or direct selectors
 -> final retained units
--> unit-pair blocks
+-> retained-unit transform contracts
+-> unit pairs
+-> pair operator plans
+-> pair-block materialization preflight/direct-direct pilot
+-> final pair-block assembly
 -> assembly
 ```
 
@@ -493,6 +501,25 @@ ShellificationRegion Ω
 -> intermediate source-retained operators
 -> shell projection + Lowdin realization
 -> final retained units
--> unit-pair blocks
+-> retained-unit transform contracts
+-> unit pairs
+-> pair operator plans
+-> pair-block materialization preflight/direct-direct pilot
+-> final pair-block assembly
 -> assembly
 ```
+
+The layering rule remains:
+
+```text
+shellification owns support
+lowering chooses CPBs and recipes
+construction plans retained units and realization
+pair planning starts from final retained units and transform contracts
+```
+
+Pair planning must use final retained units plus retained-unit transform
+contracts. It must not rediscover realization paths by inspecting retained-unit
+kinds. Current pair-block materialization is only a preflight layer plus a
+direct/direct one-body pilot; broader PQS, White--Lindsey, Coulomb/IDA, and
+Hamiltonian assembly remain future work.
