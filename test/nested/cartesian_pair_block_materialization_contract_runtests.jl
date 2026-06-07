@@ -1049,6 +1049,29 @@ end
     @test !shell_bridge.hamiltonian_data_materialized
     @test !shell_bridge.artifacts_materialized
 
+    final_readiness =
+        CPBM.pqs_source_pair_final_block_readiness_summary(shell_bridge)
+    @test final_readiness.object_kind ==
+          :pqs_source_pair_final_block_readiness_summary
+    @test final_readiness.status == :blocked_final_pqs_pair_block_not_ready
+    @test final_readiness.blocker == :shell_realization_not_materialized
+    @test final_readiness.bridge_status ==
+          :available_metadata_only_shell_realization_bridge
+    @test final_readiness.pair_key == shell_bridge.pair_key
+    @test final_readiness.source_block_term == :source_overlap
+    @test final_readiness.left_source_mode_dims == left_source_dims
+    @test final_readiness.right_source_mode_dims == right_source_dims
+    @test final_readiness.transform_contract_keys.left ==
+          :pair_block_pqs_left_unit
+    @test final_readiness.realization_paths.left ==
+          :shell_projection_lowdin_planned
+    @test final_readiness.source_operator_blocks_materialized
+    @test !final_readiness.shell_realization_materialized
+    @test !final_readiness.final_pair_blocks_materialized
+    @test !final_readiness.operator_blocks_materialized
+    @test !final_readiness.hamiltonian_data_materialized
+    @test !final_readiness.artifacts_materialized
+
     missing_bridge_realization_result =
         _pair_block_result_with_metadata(
             pqs_overlap_result,
@@ -1063,6 +1086,33 @@ end
     @test missing_bridge_realization.blocker == :missing_shell_realization_path
     @test !missing_bridge_realization.final_pair_blocks_materialized
     @test !missing_bridge_realization.shell_realization_materialized
+    missing_realization_readiness =
+        CPBM.pqs_source_pair_final_block_readiness_summary(
+            missing_bridge_realization,
+        )
+    @test missing_realization_readiness.status ==
+          :blocked_final_pqs_pair_block_not_ready
+    @test missing_realization_readiness.blocker == :missing_shell_realization_path
+    @test !missing_realization_readiness.final_pair_blocks_materialized
+
+    missing_bridge_source_metadata_result =
+        _pair_block_result_with_metadata(
+            pqs_overlap_result,
+            merge(pqs_overlap_result.metadata, (; left_source_mode_dims = nothing)),
+        )
+    missing_bridge_source_metadata =
+        CPBM.pqs_source_pair_shell_realization_bridge_summary(
+            missing_bridge_source_metadata_result,
+        )
+    missing_source_metadata_readiness =
+        CPBM.pqs_source_pair_final_block_readiness_summary(
+            missing_bridge_source_metadata,
+        )
+    @test missing_source_metadata_readiness.status ==
+          :blocked_final_pqs_pair_block_not_ready
+    @test missing_source_metadata_readiness.blocker ==
+          :missing_left_source_mode_dims
+    @test !missing_source_metadata_readiness.final_pair_blocks_materialized
 
     missing_bridge_contract_result =
         _pair_block_result_with_metadata(
@@ -1078,6 +1128,11 @@ end
     @test missing_bridge_contract.blocker == :missing_transform_contract_keys
     @test !missing_bridge_contract.final_pair_blocks_materialized
     @test !missing_bridge_contract.shell_realization_materialized
+    missing_contract_readiness =
+        CPBM.pqs_source_pair_final_block_readiness_summary(missing_bridge_contract)
+    @test missing_contract_readiness.status ==
+          :blocked_final_pqs_pair_block_not_ready
+    @test missing_contract_readiness.blocker == :missing_transform_contract_keys
 
     pqs_position_x, pqs_position_y, pqs_position_z =
         _pair_block_pqs_source_position_axes(left_source_dims, right_source_dims)
@@ -1738,6 +1793,24 @@ end
     @test !overlap_bridge_batch.hamiltonian_data_materialized
     @test !overlap_bridge_batch.artifacts_materialized
 
+    overlap_final_readiness =
+        CPBM.pqs_source_pair_final_block_readiness_summary(overlap_bridge_batch)
+    @test overlap_final_readiness.object_kind ==
+          :pqs_source_pair_final_block_readiness_batch_summary
+    @test overlap_final_readiness.status ==
+          :blocked_final_pqs_pair_block_not_ready
+    @test overlap_final_readiness.blocker == :shell_realization_not_materialized
+    @test overlap_final_readiness.bridge_status ==
+          :available_metadata_only_shell_realization_bridge_batch
+    @test overlap_final_readiness.term == :source_overlap
+    @test overlap_final_readiness.result_count == 1
+    @test overlap_final_readiness.available_count == 1
+    @test overlap_final_readiness.blocked_count == 0
+    @test overlap_final_readiness.source_operator_blocks_materialized
+    @test !overlap_final_readiness.shell_realization_materialized
+    @test !overlap_final_readiness.final_pair_blocks_materialized
+    @test !overlap_final_readiness.operator_blocks_materialized
+
     bridge_tuple =
         CPBM.pqs_source_pair_shell_realization_bridge_summary((
             selector_record_overlap,
@@ -1847,6 +1920,15 @@ end
     @test blocked_bridge_batch.source_operator_blocks_materialized
     @test !blocked_bridge_batch.final_pair_blocks_materialized
     @test !blocked_bridge_batch.shell_realization_materialized
+    blocked_final_readiness =
+        CPBM.pqs_source_pair_final_block_readiness_summary(blocked_bridge_batch)
+    @test blocked_final_readiness.status ==
+          :blocked_final_pqs_pair_block_not_ready
+    @test blocked_final_readiness.blocker == :not_raw_product_source_modes
+    @test blocked_final_readiness.result_count == 4
+    @test blocked_final_readiness.blocked_count == 4
+    @test !blocked_final_readiness.final_pair_blocks_materialized
+    @test !blocked_final_readiness.shell_realization_materialized
 
     @test_throws ArgumentError CPBM.pqs_source_pair_one_body_block(
         pqs_record,

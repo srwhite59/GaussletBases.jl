@@ -23,7 +23,8 @@ PQS/PQS raw-source pair support currently has metadata preflight plus raw
 source-space safe one-body helpers for overlap, position, x2, kinetic, and a
 selector over those terms. Caller-supplied 1D factors own signs and prefactors.
 It also provides metadata-only shell-realization bridge summaries for those
-source-space blocks and batches. This path does not build shell projection,
+source-space blocks and batches, plus metadata-only readiness summaries for
+future final PQS pair blocks. This path does not build shell projection,
 Lowdin realization, or final retained PQS pair blocks.
 
 This module still does not assemble full operators, Hamiltonians, Ham bundles,
@@ -62,6 +63,7 @@ export PairBlockMaterializationPolicy,
        pqs_source_pair_one_body_block,
        pqs_source_pair_one_body_blocks,
        pqs_source_pair_shell_realization_bridge_summary,
+       pqs_source_pair_final_block_readiness_summary,
        direct_direct_overlap_block,
        direct_direct_overlap_blocks,
        direct_direct_position_block,
@@ -92,6 +94,9 @@ export PairBlockMaterializationPolicy,
 # pqs_source_shell_bridge.jl
 #     Metadata-only bridge summaries for future PQS shell realization.
 #
+# pqs_source_final_readiness.jl
+#     Metadata-only readiness summaries for future final PQS pair blocks.
+#
 # direct_overlap.jl
 #     First tiny direct/direct overlap pair-block pilot.
 #
@@ -115,6 +120,7 @@ include("summaries.jl")
 include("direct_overlap.jl")
 include("pqs_source_safe_terms.jl")
 include("pqs_source_shell_bridge.jl")
+include("pqs_source_final_readiness.jl")
 include("direct_position.jl")
 include("direct_x2.jl")
 include("direct_kinetic.jl")
