@@ -91,6 +91,19 @@ function _flat_glue_cleanup_route_skeleton_fixture()
     )
 end
 
+@testset "terminal route flat glue unit summary fingerprint" begin
+    missing_summary =
+        GaussletBases._pqs_source_box_route_driver_unit_stage_low_order_summary((;))
+    @test missing_summary.status == :not_available_missing_shell_stage_summary
+    @test hasproperty(missing_summary, :terminal_route_summary)
+    @test !hasproperty(
+        missing_summary,
+        :terminal_shellification_selected_crc_sidecar_summary,
+    )
+    @test missing_summary.terminal_route_summary.selected_crc_sidecar_status ==
+          :not_available_selected_terminal_lowering_contract_inventory
+end
+
 @testset "terminal route flat glue transform summary fingerprint" begin
     missing_summary =
         GaussletBases._pqs_source_box_route_driver_transform_stage_low_order_summary((;))
