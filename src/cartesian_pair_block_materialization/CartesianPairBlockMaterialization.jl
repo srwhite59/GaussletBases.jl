@@ -73,6 +73,7 @@ export PairBlockMaterializationPolicy,
        white_lindsey_boundary_stratum_unit_coefficients,
        white_lindsey_boundary_stratum_unit_coefficient_context,
        white_lindsey_boundary_stratum_pair_unit_coefficients,
+       white_lindsey_boundary_stratum_overlap_block,
        direct_direct_overlap_block,
        direct_direct_overlap_blocks,
        direct_direct_position_block,
@@ -120,6 +121,9 @@ export PairBlockMaterializationPolicy,
 #     Pair-level gathering of LW unit coefficient maps, without operator
 #     blocks.
 #
+# white_lindsey_overlap.jl
+#     First overlap-only LW pair-block pilot.
+#
 # direct_overlap.jl
 #     First tiny direct/direct overlap pair-block pilot.
 #
@@ -148,6 +152,7 @@ include("white_lindsey_adapter_summary.jl")
 include("white_lindsey_seed_oracle_summary.jl")
 include("white_lindsey_unit_coefficients.jl")
 include("white_lindsey_pair_unit_coefficients.jl")
+include("white_lindsey_overlap.jl")
 include("direct_position.jl")
 include("direct_x2.jl")
 include("direct_kinetic.jl")

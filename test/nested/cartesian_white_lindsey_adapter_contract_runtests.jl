@@ -593,6 +593,44 @@ end
     @test !real_pair_coefficients.hamiltonian_data_materialized
     @test !real_pair_coefficients.artifacts_materialized
 
+    overlap_1d = (;
+        x = ones(Float64, 7, 7),
+        y = ones(Float64, 7, 7),
+        z = ones(Float64, 7, 7),
+    )
+    overlap_result =
+        CPBMForLWAdapter.white_lindsey_boundary_stratum_overlap_block(
+            real_pair_coefficients;
+            parent_axis_counts = (7, 7, 7),
+            overlap_1d,
+        )
+    @test overlap_result.term == :overlap
+    @test overlap_result.pair_key == real_pair_coefficients.pair_key
+    @test size(overlap_result.block) == (9, 3)
+    @test all(isfinite, overlap_result.block)
+    @test sum(abs, overlap_result.block) > 0.0
+    @test overlap_result.materialized
+    @test overlap_result.source_operator_blocks_materialized
+    @test overlap_result.final_pair_blocks_materialized
+    @test !overlap_result.operator_blocks_materialized
+    @test !overlap_result.hamiltonian_data_materialized
+    @test !overlap_result.artifacts_materialized
+    @test overlap_result.metadata.materialization_path ==
+          :white_lindsey_boundary_stratum_overlap_adapter
+    @test overlap_result.metadata.left_stratum_kind == :facet_cpb
+    @test overlap_result.metadata.right_stratum_kind == :edge_cpb
+    @test overlap_result.metadata.left_support_count == 25
+    @test overlap_result.metadata.right_support_count == 5
+    @test overlap_result.metadata.left_retained_column_count == 9
+    @test overlap_result.metadata.right_retained_column_count == 3
+    @test overlap_result.metadata.parent_axis_counts == (7, 7, 7)
+    @test overlap_result.metadata.support_overlap_shape == (25, 5)
+    @test overlap_result.metadata.local_pair_block_materialized
+    @test !overlap_result.metadata.operator_blocks_materialized
+    @test !overlap_result.metadata.hamiltonian_data_materialized
+    @test !overlap_result.metadata.artifacts_materialized
+    @test !overlap_result.metadata.dense_parent_parent_overlap_materialized
+
     blocked_pair_coefficients =
         CPBMForLWAdapter.white_lindsey_boundary_stratum_pair_unit_coefficients(
             ready_facet_descriptor,
