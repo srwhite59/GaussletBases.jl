@@ -17,6 +17,36 @@ function white_lindsey_boundary_stratum_overlap_block(
     axis_counts = _axis_counts_tuple(parent_axis_counts)
     overlap_axes = _overlap_1d_tuple(overlap_1d)
     _assert_overlap_axis_sizes(overlap_axes, axis_counts)
+    return _white_lindsey_boundary_stratum_product_block(
+        pair_unit_coefficients,
+        :overlap,
+        axis_counts,
+        overlap_axes,
+        :white_lindsey_boundary_stratum_overlap_adapter,
+        (;),
+    )
+end
+
+function white_lindsey_boundary_stratum_overlap_block(
+    unit_pair::CUP.UnitPairRecord;
+    parent_axis_counts,
+    overlap_1d,
+)
+    return white_lindsey_boundary_stratum_overlap_block(
+        white_lindsey_boundary_stratum_pair_unit_coefficients(unit_pair);
+        parent_axis_counts,
+        overlap_1d,
+    )
+end
+
+function _white_lindsey_boundary_stratum_product_block(
+    pair_unit_coefficients,
+    term::Symbol,
+    axis_counts::NTuple{3,Int},
+    operator_axes,
+    materialization_path::Symbol,
+    metadata,
+)
     _assert_white_lindsey_pair_unit_coefficients_ready(pair_unit_coefficients)
 
     left_support = pair_unit_coefficients.left_support_indices
@@ -36,9 +66,9 @@ function white_lindsey_boundary_stratum_overlap_block(
         support_overlap,
         left_states,
         right_states,
-        overlap_axes[1],
-        overlap_axes[2],
-        overlap_axes[3],
+        operator_axes[1],
+        operator_axes[2],
+        operator_axes[3],
     )
 
     left_support_coefficients = Matrix{Float64}(
@@ -54,7 +84,7 @@ function white_lindsey_boundary_stratum_overlap_block(
     )
 
     return PairBlockMaterializationResult(
-        :overlap,
+        term,
         pair_unit_coefficients.pair_key,
         block,
         true,
@@ -63,47 +93,37 @@ function white_lindsey_boundary_stratum_overlap_block(
         false,
         false,
         false,
-        (;
-            materialization_path =
-                :white_lindsey_boundary_stratum_overlap_adapter,
-            pair_family = pair_unit_coefficients.pair_family,
-            left_stratum_kind = pair_unit_coefficients.left_stratum_kind,
-            right_stratum_kind = pair_unit_coefficients.right_stratum_kind,
-            left_support_count = length(left_support),
-            right_support_count = length(right_support),
-            left_retained_column_count =
-                pair_unit_coefficients.left_retained_column_count,
-            right_retained_column_count =
-                pair_unit_coefficients.right_retained_column_count,
-            parent_axis_counts = axis_counts,
-            support_overlap_shape = size(support_overlap),
-            left_support_coefficient_shape =
-                size(left_support_coefficients),
-            right_support_coefficient_shape =
-                size(right_support_coefficients),
-            coefficient_source =
-                :white_lindsey_boundary_stratum_pair_unit_coefficients,
-            local_pair_block_materialized = true,
-            source_operator_blocks_materialized = true,
-            final_pair_blocks_materialized = true,
-            operator_blocks_materialized = false,
-            hamiltonian_data_materialized = false,
-            artifacts_materialized = false,
-            ida_mwg_data_materialized = false,
-            dense_parent_parent_overlap_materialized = false,
+        merge(
+            (;
+                materialization_path,
+                pair_family = pair_unit_coefficients.pair_family,
+                left_stratum_kind = pair_unit_coefficients.left_stratum_kind,
+                right_stratum_kind = pair_unit_coefficients.right_stratum_kind,
+                left_support_count = length(left_support),
+                right_support_count = length(right_support),
+                left_retained_column_count =
+                    pair_unit_coefficients.left_retained_column_count,
+                right_retained_column_count =
+                    pair_unit_coefficients.right_retained_column_count,
+                parent_axis_counts = axis_counts,
+                support_overlap_shape = size(support_overlap),
+                left_support_coefficient_shape =
+                    size(left_support_coefficients),
+                right_support_coefficient_shape =
+                    size(right_support_coefficients),
+                coefficient_source =
+                    :white_lindsey_boundary_stratum_pair_unit_coefficients,
+                local_pair_block_materialized = true,
+                source_operator_blocks_materialized = true,
+                final_pair_blocks_materialized = true,
+                operator_blocks_materialized = false,
+                hamiltonian_data_materialized = false,
+                artifacts_materialized = false,
+                ida_mwg_data_materialized = false,
+                dense_parent_parent_overlap_materialized = false,
+            ),
+            NamedTuple(metadata),
         ),
-    )
-end
-
-function white_lindsey_boundary_stratum_overlap_block(
-    unit_pair::CUP.UnitPairRecord;
-    parent_axis_counts,
-    overlap_1d,
-)
-    return white_lindsey_boundary_stratum_overlap_block(
-        white_lindsey_boundary_stratum_pair_unit_coefficients(unit_pair);
-        parent_axis_counts,
-        overlap_1d,
     )
 end
 

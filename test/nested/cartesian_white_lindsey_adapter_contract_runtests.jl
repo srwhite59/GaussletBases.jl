@@ -631,6 +631,51 @@ end
     @test !overlap_result.metadata.artifacts_materialized
     @test !overlap_result.metadata.dense_parent_parent_overlap_materialized
 
+    position_1d = (;
+        x = [Float64(i + j) for i in 1:7, j in 1:7],
+        y = [Float64(2i + j) for i in 1:7, j in 1:7],
+        z = [Float64(i + 2j) for i in 1:7, j in 1:7],
+    )
+    for (axis, term) in (
+        (:x, :position_x),
+        (:y, :position_y),
+        (:z, :position_z),
+    )
+        position_result =
+            CPBMForLWAdapter.white_lindsey_boundary_stratum_position_block(
+                real_pair_coefficients;
+                axis,
+                parent_axis_counts = (7, 7, 7),
+                overlap_1d,
+                position_1d,
+            )
+        @test position_result.term == term
+        @test position_result.pair_key == real_pair_coefficients.pair_key
+        @test size(position_result.block) == (9, 3)
+        @test all(isfinite, position_result.block)
+        @test sum(abs, position_result.block) > 0.0
+        @test position_result.materialized
+        @test position_result.source_operator_blocks_materialized
+        @test position_result.final_pair_blocks_materialized
+        @test !position_result.operator_blocks_materialized
+        @test !position_result.hamiltonian_data_materialized
+        @test !position_result.artifacts_materialized
+        @test position_result.metadata.materialization_path ==
+              :white_lindsey_boundary_stratum_position_adapter
+        @test position_result.metadata.position_axis == axis
+        @test position_result.metadata.supported_terms ==
+              (:position_x, :position_y, :position_z)
+        @test position_result.metadata.operator_factor_form ==
+              :position_on_selected_axis_overlap_on_inactive_axes
+        @test position_result.metadata.left_support_count == 25
+        @test position_result.metadata.right_support_count == 5
+        @test position_result.metadata.left_retained_column_count == 9
+        @test position_result.metadata.right_retained_column_count == 3
+        @test !position_result.metadata.operator_blocks_materialized
+        @test !position_result.metadata.hamiltonian_data_materialized
+        @test !position_result.metadata.artifacts_materialized
+    end
+
     blocked_pair_coefficients =
         CPBMForLWAdapter.white_lindsey_boundary_stratum_pair_unit_coefficients(
             ready_facet_descriptor,
