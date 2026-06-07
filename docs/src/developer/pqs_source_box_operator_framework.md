@@ -72,7 +72,14 @@ following the old source-mode product pattern from
 projection, Lowdin cleanup, final retained PQS transforms, Coulomb/IDA
 materialization, full operator assembly, Ham export, or artifact writing.
 The bridge summaries only record the planned handoff from source-space blocks
-to later shell realization. They do not build shell projection or Lowdin data.
+to later shell realization. They record source block term/status, source-mode
+dims/counts and ordering, transform/source contract keys, realization paths,
+compact status and blocker counts for batches, and materialization flags. They
+do not build shell projection, Lowdin data, final retained PQS pair blocks,
+Hamiltonians, exports, artifacts, IDA/MWG data, or Coulomb blocks. The private
+PQS source safe-term descriptor helper is local selector metadata for the
+supported source safe terms. It is not public API and not a route-adoption
+surface.
 
 The PQS guardrails are unchanged: support-row or shell-row contraction is an
 oracle/debug path, not the PQS algorithm; shell projection and Lowdin cleanup
@@ -595,6 +602,9 @@ uniformity. The private safe-term descriptor helper is local implementation
 metadata for selecting supported safe terms and preserving source-term,
 required-factor, batch-path, and blocker facts in one place; it is not public
 API and must not be treated as a retained rule or realization object.
+Bridge summaries do not build shell projection, Lowdin data, final retained
+PQS pair blocks, Hamiltonians, exports, artifacts, IDA/MWG data, or Coulomb
+blocks.
 
 ## First PQS/PQS Implementation Target
 

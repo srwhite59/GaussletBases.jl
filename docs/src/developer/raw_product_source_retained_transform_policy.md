@@ -238,10 +238,12 @@ assembly exist.
 Bridge summaries record source block term/status, source-mode dims/counts and
 ordering, transform/source contract keys, realization paths, compact status and
 blocker counts for batches, and the same nonmaterialized final flags. They are
-interface checkpoints only. The private safe-term descriptor helper used by
+interface checkpoints only and do not build shell projection, Lowdin cleanup,
+final retained PQS pair blocks, Hamiltonians, exports, artifacts, IDA/MWG
+data, or Coulomb blocks. The private safe-term descriptor helper used by
 `CartesianPairBlockMaterialization` is likewise implementation metadata for
-supported safe-term selection; it is not a public API, retained rule, shell
-realization, or operator block.
+supported safe-term selection and duplicated-branch cleanup; it is not a
+public API, retained rule, shell realization, or operator block.
 
 The following record descriptions remain a source-box policy guide for that
 adapter boundary, not the current implementation spine and not public API.
