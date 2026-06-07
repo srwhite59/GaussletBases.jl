@@ -24,6 +24,12 @@ close-outs, ready-for-review reports, gate completions, audit results, and
 safe-to-resume judgments. Do not sign progress updates while continuing work
 without waiting on the user. The signoff must be the final line.
 
+After compaction, session resume, or any sign that live context has been
+replaced by a summary, treat the next turn as reentry before continuing
+substantive work. Reread this file, the role prompt or current assignment, and
+any governing framework doc cited by the task; then briefly restate role,
+current task boundary, and signoff line.
+
 ## Julia execution
 
 Prefer one of these two launch styles for routine work:
@@ -56,6 +62,17 @@ Reason:
 - `env ... julia ...` causes unnecessary permission friction in this
   environment
 - Dropbox-local depots have previously caused operational problems
+
+For routine Julia test/probe timing, prefer Julia-level timing rather than
+wrapping commands with `/usr/bin/time`:
+
+- `julia --project=. -e '@time include("tmp/work/script.jl")'`
+- `julia --project=. -e 't = @elapsed include("tmp/work/script.jl"); println("elapsed_s=", t)'`
+
+Do not use `/usr/bin/time` routinely. If OS-level memory data such as maximum
+RSS is genuinely needed, use a stable wrapper script such as `tools/time_julia`
+and get that wrapper prefix approved once instead of requesting broad
+`/usr/bin/time` approval.
 
 ## Runtime environment policy
 
@@ -103,6 +120,8 @@ Short commandment:
 - choose the smallest test that validates the edit
 - before running any test expected to take more than 60 seconds, explain why it
   is necessary
+- time routine Julia tests/probes with Julia-level timing such as `@elapsed` or
+  `@time`, not broad `/usr/bin/time` wrappers
 - do not use `test/nested/cartesian_pair_stage_low_order_policy_runtests.jl` as
   a per-pass gate; it is an integration gate
 

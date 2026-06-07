@@ -231,6 +231,17 @@ Hard Codex operating rule:
   field-carry passes
 - do not run full integration tests with `--compiled-modules=no`; reserve that
   for parse/load diagnostics only
+- time routine Julia tests and probes with Julia-level timing, for example:
+
+  ```julia
+  t = @elapsed include("tmp/work/script.jl")
+  println("elapsed_s=", t)
+  ```
+
+  Avoid routine `/usr/bin/time` wrappers. If OS-level memory data such as
+  maximum RSS is genuinely needed, use a stable wrapper script such as
+  `tools/time_julia` and approve that wrapper prefix once rather than approving
+  broad `/usr/bin/time` usage.
 
 Recommended per-pass cadence:
 
