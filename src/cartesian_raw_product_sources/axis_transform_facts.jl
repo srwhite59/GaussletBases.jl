@@ -1,4 +1,8 @@
 # Metadata-only axis transform fact defaults.
+#
+# These facts document what a raw product source would need on each axis. They
+# do not construct source-mode coefficient matrices. Numerical axis transforms
+# remain owned by legacy adapters or future materialization modules.
 
 function _default_axis_transform_fact(
     axis::Int,

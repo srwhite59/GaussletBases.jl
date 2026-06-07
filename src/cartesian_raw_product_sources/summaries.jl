@@ -1,5 +1,15 @@
 # Compact raw product source summaries.
 
+"""
+    summary(plan::RawProductBoxPlan)
+
+Return a compact, stable summary of a raw product source plan.
+
+The summary is intended for reports and tests that need source shape,
+source-mode dimensions, source-mode count, ordering, axis-transform statuses,
+and materialization flags. It deliberately does not expose large source-mode
+inventories or numerical transform data.
+"""
 function summary(plan::RawProductBoxPlan)
     return (;
         object_kind = :raw_product_box_plan_summary,
@@ -20,6 +30,16 @@ function summary(plan::RawProductBoxPlan)
     )
 end
 
+"""
+    unavailable_summary(status, blocker = nothing)
+
+Return the compact summary shape used when a raw product source plan is not
+available.
+
+This keeps downstream metadata paths explicit about why raw source facts are
+absent, while preserving the same materialization flags as an available
+metadata-only plan.
+"""
 function unavailable_summary(status::Symbol, blocker = nothing)
     return (;
         object_kind = :raw_product_box_plan_summary,

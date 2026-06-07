@@ -3,8 +3,15 @@
 """
     AxisSourceTransformFact
 
-Metadata record for one source-axis transform. In this module's initial
-contract pass, coefficient matrices are not materialized.
+Metadata record for one source-axis transform fact.
+
+This is a status/provenance record, not a numerical transform builder. In the
+current raw-source fact layer, axis coefficient matrices are not materialized:
+default facts use `coefficient_status = :not_materialized` and
+`coefficient_matrix = nothing`.
+
+Future adapters may attach externally built axis transforms, but that numerical
+work belongs outside `CartesianRawProductSources`.
 """
 struct AxisSourceTransformFact
     axis::Int
@@ -18,8 +25,16 @@ end
 """
     RawProductBoxPlan
 
-Metadata-only raw product-box source facts. Source-mode dimensions are total
-source-mode lengths, not interior counts.
+Metadata-only raw product-box source facts.
+
+A `RawProductBoxPlan` records the filled/source CPB, explicit source-mode
+dimensions, source-mode ordering, source-mode tuple order, and per-axis
+transform facts for a raw product source space. Source-mode dimensions are
+total source-mode lengths, not interior counts, and are not inferred from the
+CPB shape.
+
+This object owns no retained rule, no boundary-mode selection, no shell
+projection/Lowdin realization, no IDA weights, and no pair/operator blocks.
 """
 struct RawProductBoxPlan
     source_key::Symbol
@@ -36,10 +51,41 @@ struct RawProductBoxPlan
     metadata::NamedTuple
 end
 
+"""
+    source_cpb(plan)
+
+Return the coordinate product box used as the raw product source support.
+"""
 source_cpb(plan::RawProductBoxPlan) = plan.source_cpb
+
+"""
+    source_mode_dims(plan)
+
+Return the three total source-mode lengths attached to a raw product source
+plan.
+"""
 source_mode_dims(plan::RawProductBoxPlan) = plan.source_mode_dims
+
+"""
+    source_mode_count(plan)
+
+Return `prod(source_mode_dims(plan))`.
+"""
 source_mode_count(plan::RawProductBoxPlan) = plan.source_mode_count
+
+"""
+    source_mode_indices(plan)
+
+Return the deterministic source-mode tuples for the plan's ordering.
+"""
 source_mode_indices(plan::RawProductBoxPlan) = plan.source_mode_indices
+
+"""
+    axis_transform_facts(plan)
+
+Return the per-axis metadata-only transform facts. These are not numerical
+axis transforms unless a later adapter explicitly marks them as such.
+"""
 axis_transform_facts(plan::RawProductBoxPlan) = plan.axis_transform_facts
 
 function _normalize_source_mode_dims(dims)

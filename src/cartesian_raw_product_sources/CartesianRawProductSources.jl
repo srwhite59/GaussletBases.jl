@@ -12,6 +12,10 @@ It depends only on `CartesianCPB`. It does not own retained rules, shell
 projection or Lowdin cleanup, final retained units, pair blocks, IDA weights,
 support-row oracle contraction, Hamiltonians, Ham bundles, exports, or
 artifacts.
+
+There is deliberately no policy object yet. The module currently supports one
+source-mode ordering, `:x_major_y_major_z_fast`; a policy type should be added
+only when there is a real second ordering or source-mode convention to select.
 """
 module CartesianRawProductSources
 
