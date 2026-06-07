@@ -678,6 +678,77 @@ end
     @test !kinetic_result.hamiltonian_data_materialized
     @test !kinetic_result.artifacts_materialized
 
+    selector_overlap = CPBM.direct_direct_one_body_block(
+        cross_record,
+        :overlap;
+        parent_axis_counts = (4, 4, 4),
+        overlap_1d = (; x = overlap_x, y = overlap_y, z = overlap_z),
+    )
+    position_y_result = CPBM.direct_direct_position_block(
+        cross_record;
+        axis = :y,
+        parent_axis_counts = (4, 4, 4),
+        overlap_1d = (; x = overlap_x, y = overlap_y, z = overlap_z),
+        position_1d = (; x = position_x, y = position_y, z = position_z),
+    )
+    selector_position_y = CPBM.direct_direct_one_body_block(
+        cross_record,
+        :position_y;
+        parent_axis_counts = (4, 4, 4),
+        overlap_1d = (; x = overlap_x, y = overlap_y, z = overlap_z),
+        position_1d = (; x = position_x, y = position_y, z = position_z),
+    )
+    x2_z_result = CPBM.direct_direct_x2_block(
+        cross_record;
+        axis = :z,
+        parent_axis_counts = (4, 4, 4),
+        overlap_1d = (; x = overlap_x, y = overlap_y, z = overlap_z),
+        x2_1d = (; x = x2_x, y = x2_y, z = x2_z),
+    )
+    selector_x2_z = CPBM.direct_direct_one_body_block(
+        cross_record,
+        :x2_z;
+        parent_axis_counts = (4, 4, 4),
+        overlap_1d = (; x = overlap_x, y = overlap_y, z = overlap_z),
+        x2_1d = (; x = x2_x, y = x2_y, z = x2_z),
+    )
+    selector_kinetic = CPBM.direct_direct_one_body_block(
+        cross_record,
+        :kinetic;
+        parent_axis_counts = (4, 4, 4),
+        overlap_1d = (; x = overlap_x, y = overlap_y, z = overlap_z),
+        kinetic_1d = (; x = kinetic_x, y = kinetic_y, z = kinetic_z),
+    )
+
+    @test selector_overlap.block ≈ cross_result.block
+    @test selector_position_y.block ≈ position_y_result.block
+    @test selector_x2_z.block ≈ x2_z_result.block
+    @test selector_kinetic.block ≈ kinetic_result.block
+    @test_throws ArgumentError CPBM.direct_direct_one_body_block(
+        cross_record,
+        :coulomb;
+        parent_axis_counts = (4, 4, 4),
+        overlap_1d = (; x = overlap_x, y = overlap_y, z = overlap_z),
+    )
+    @test_throws ArgumentError CPBM.direct_direct_one_body_block(
+        cross_record,
+        :position_x;
+        parent_axis_counts = (4, 4, 4),
+        overlap_1d = (; x = overlap_x, y = overlap_y, z = overlap_z),
+    )
+    @test_throws ArgumentError CPBM.direct_direct_one_body_block(
+        cross_record,
+        :x2_x;
+        parent_axis_counts = (4, 4, 4),
+        overlap_1d = (; x = overlap_x, y = overlap_y, z = overlap_z),
+    )
+    @test_throws ArgumentError CPBM.direct_direct_one_body_block(
+        cross_record,
+        :kinetic;
+        parent_axis_counts = (4, 4, 4),
+        overlap_1d = (; x = overlap_x, y = overlap_y, z = overlap_z),
+    )
+
     batch_result = CPBM.direct_direct_overlap_blocks(
         materialization_plan;
         parent_axis_counts = (4, 4, 4),
@@ -699,6 +770,13 @@ end
     )
     kinetic_batch_result = CPBM.direct_direct_kinetic_blocks(
         materialization_plan;
+        parent_axis_counts = (4, 4, 4),
+        overlap_1d = (; x = overlap_x, y = overlap_y, z = overlap_z),
+        kinetic_1d = (; x = kinetic_x, y = kinetic_y, z = kinetic_z),
+    )
+    selector_kinetic_batch = CPBM.direct_direct_one_body_blocks(
+        materialization_plan,
+        :kinetic;
         parent_axis_counts = (4, 4, 4),
         overlap_1d = (; x = overlap_x, y = overlap_y, z = overlap_z),
         kinetic_1d = (; x = kinetic_x, y = kinetic_y, z = kinetic_z),
@@ -760,4 +838,9 @@ end
     @test !kinetic_batch_result.operator_blocks_materialized
     @test !kinetic_batch_result.hamiltonian_data_materialized
     @test !kinetic_batch_result.artifacts_materialized
+
+    @test selector_kinetic_batch.materialized_count ==
+          kinetic_batch_result.materialized_count
+    @test selector_kinetic_batch.skipped_count == kinetic_batch_result.skipped_count
+    @test selector_kinetic_batch.term == kinetic_batch_result.term
 end
