@@ -80,6 +80,7 @@ export PairBlockMaterializationPolicy,
        white_lindsey_boundary_stratum_kinetic_block,
        white_lindsey_boundary_stratum_one_body_block,
        white_lindsey_boundary_stratum_one_body_blocks,
+       white_lindsey_boundary_stratum_one_body_adapter_summary,
        direct_direct_overlap_block,
        direct_direct_overlap_blocks,
        direct_direct_position_block,
@@ -140,7 +141,7 @@ export PairBlockMaterializationPolicy,
 #     Kinetic-only LW pair-block pilot.
 #
 # white_lindsey_one_body.jl
-#     Selector over LW one-body safe-term pilots.
+#     Selector and compact summaries over LW one-body safe-term pilots.
 #
 # direct_overlap.jl
 #     First tiny direct/direct overlap pair-block pilot.

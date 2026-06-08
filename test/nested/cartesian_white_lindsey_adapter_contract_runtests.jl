@@ -877,6 +877,77 @@ end
         overlap_1d,
     )
 
+    adapter_surface_summary =
+        CPBMForLWAdapter.white_lindsey_boundary_stratum_one_body_adapter_summary()
+    @test adapter_surface_summary.object_kind ==
+          :white_lindsey_boundary_stratum_one_body_adapter_summary
+    @test adapter_surface_summary.status ==
+          :available_local_white_lindsey_one_body_adapter_surface
+    @test adapter_surface_summary.supported_one_body_terms == (
+        :overlap,
+        :position_x,
+        :position_y,
+        :position_z,
+        :x2_x,
+        :x2_y,
+        :x2_z,
+        :kinetic,
+    )
+    @test adapter_surface_summary.supported_unit_strata ==
+          (:facet_cpb, :face_cpb, :edge_cpb, :corner_cpb)
+    @test adapter_surface_summary.coefficient_map_scope ==
+          :local_adapter_inputs_only
+    @test adapter_surface_summary.unit_coefficient_maps_supported
+    @test !adapter_surface_summary.unit_coefficient_maps_materialized_as_route_global_state
+    @test adapter_surface_summary.record_selector ==
+          :white_lindsey_boundary_stratum_one_body_block
+    @test adapter_surface_summary.batch_selector ==
+          :white_lindsey_boundary_stratum_one_body_blocks
+    @test adapter_surface_summary.local_one_body_pair_blocks_available
+    @test !adapter_surface_summary.coulomb_materialized
+    @test !adapter_surface_summary.ida_mwg_data_materialized
+    @test !adapter_surface_summary.hamiltonian_data_materialized
+    @test !adapter_surface_summary.exports_materialized
+    @test !adapter_surface_summary.artifacts_materialized
+    @test !adapter_surface_summary.production_dense_parent_fallback_available
+    @test !adapter_surface_summary.old_white_lindsey_seed_route_authority
+    @test !adapter_surface_summary.driver_wide_plan_plumbing_available
+
+    batch_summary =
+        CPBMForLWAdapter.white_lindsey_boundary_stratum_one_body_adapter_summary(
+            batch_overlap,
+        )
+    @test batch_summary.object_kind ==
+          :white_lindsey_boundary_stratum_one_body_batch_summary
+    @test batch_summary.status ==
+          :available_white_lindsey_one_body_batch_summary
+    @test batch_summary.term == :overlap
+    @test batch_summary.materialized_count == 1
+    @test batch_summary.skipped_count == 1
+    @test batch_summary.materialized_terms == (:overlap,)
+    @test batch_summary.skipped_status_counts == (
+        (;
+            status = :blocked_white_lindsey_pair_unit_coefficients,
+            count = 1,
+        ),
+    )
+    @test batch_summary.skipped_blocker_counts == (
+        (;
+            blocker = :left_white_lindsey_unit_coefficients_not_materialized,
+            count = 1,
+        ),
+    )
+    @test batch_summary.materialized
+    @test batch_summary.source_operator_blocks_materialized
+    @test batch_summary.final_pair_blocks_materialized
+    @test !batch_summary.operator_blocks_materialized
+    @test !batch_summary.hamiltonian_data_materialized
+    @test !batch_summary.artifacts_materialized
+    @test !batch_summary.coulomb_materialized
+    @test !batch_summary.ida_mwg_data_materialized
+    @test !batch_summary.production_dense_parent_fallback_used
+    @test !batch_summary.driver_wide_plan_plumbing_used
+
     edge_corner_pair = _lw_adapter_unit_pair(real_edge_unit, corner_unit, 3)
     edge_corner_coefficients =
         CPBMForLWAdapter.white_lindsey_boundary_stratum_pair_unit_coefficients(

@@ -180,6 +180,116 @@ function white_lindsey_boundary_stratum_one_body_blocks(
     )
 end
 
+"""
+    white_lindsey_boundary_stratum_one_body_adapter_summary()
+    white_lindsey_boundary_stratum_one_body_adapter_summary(batch_result)
+
+Return compact readiness metadata for the local White--Lindsey
+boundary-stratum one-body adapter surface. The no-argument form reports static
+local capabilities and unavailable global paths. The batch-result form reports
+compact materialized/skipped counts and flags for one local batch selector
+result.
+"""
+function white_lindsey_boundary_stratum_one_body_adapter_summary()
+    return (;
+        object_kind =
+            :white_lindsey_boundary_stratum_one_body_adapter_summary,
+        status = :available_local_white_lindsey_one_body_adapter_surface,
+        supported_one_body_terms = _WHITE_LINDSEY_ONE_BODY_TERMS,
+        supported_unit_strata =
+            (:facet_cpb, :face_cpb, :edge_cpb, :corner_cpb),
+        coefficient_map_scope = :local_adapter_inputs_only,
+        unit_coefficient_maps_supported = true,
+        unit_coefficient_maps_materialized_as_route_global_state = false,
+        pair_unit_coefficient_helper =
+            :white_lindsey_boundary_stratum_pair_unit_coefficients,
+        record_selector = :white_lindsey_boundary_stratum_one_body_block,
+        batch_selector = :white_lindsey_boundary_stratum_one_body_blocks,
+        local_one_body_pair_blocks_available = true,
+        source_operator_blocks_available_for_supported_terms = true,
+        final_pair_blocks_available_for_supported_terms = true,
+        materialized = false,
+        source_operator_blocks_materialized = false,
+        final_pair_blocks_materialized = false,
+        operator_blocks_materialized = false,
+        hamiltonian_data_materialized = false,
+        artifacts_materialized = false,
+        coulomb_materialized = false,
+        ida_mwg_data_materialized = false,
+        exports_materialized = false,
+        production_dense_parent_fallback_available = false,
+        old_white_lindsey_seed_route_authority = false,
+        driver_wide_plan_plumbing_available = false,
+    )
+end
+
+function white_lindsey_boundary_stratum_one_body_adapter_summary(
+    batch_result::PairBlockMaterializationBatchResult,
+)
+    materialized_terms =
+        Tuple(result.term for result in batch_result.materialized_results)
+    skipped_statuses = Tuple(
+        _white_lindsey_descriptor_property(skipped, :status)
+        for skipped in batch_result.skipped_records
+        if !isnothing(_white_lindsey_descriptor_property(skipped, :status))
+    )
+    skipped_blockers = Tuple(
+        _white_lindsey_descriptor_property(skipped, :blocker)
+        for skipped in batch_result.skipped_records
+        if !isnothing(_white_lindsey_descriptor_property(skipped, :blocker))
+    )
+
+    return (;
+        object_kind =
+            :white_lindsey_boundary_stratum_one_body_batch_summary,
+        status = :available_white_lindsey_one_body_batch_summary,
+        term = batch_result.term,
+        materialization_path = _white_lindsey_descriptor_property(
+            batch_result.metadata,
+            :materialization_path,
+        ),
+        materialized_count = batch_result.materialized_count,
+        skipped_count = batch_result.skipped_count,
+        materialized_terms = _white_lindsey_unique_tuple(materialized_terms),
+        materialized_term_counts =
+            _white_lindsey_count_by_value(materialized_terms, :term),
+        skipped_status_counts =
+            _white_lindsey_count_by_value(skipped_statuses, :status),
+        skipped_blocker_counts =
+            _white_lindsey_count_by_value(skipped_blockers, :blocker),
+        materialized = batch_result.materialized,
+        source_operator_blocks_materialized =
+            batch_result.source_operator_blocks_materialized,
+        final_pair_blocks_materialized =
+            batch_result.final_pair_blocks_materialized,
+        operator_blocks_materialized =
+            batch_result.operator_blocks_materialized,
+        hamiltonian_data_materialized =
+            batch_result.hamiltonian_data_materialized,
+        artifacts_materialized = batch_result.artifacts_materialized,
+        coulomb_materialized = false,
+        ida_mwg_data_materialized = _white_lindsey_descriptor_property(
+            batch_result.metadata,
+            :ida_mwg_data_materialized,
+            false,
+        ),
+        exports_materialized = false,
+        production_dense_parent_fallback_used =
+            _white_lindsey_descriptor_property(
+                batch_result.metadata,
+                :dense_parent_fallback_used,
+                false,
+            ),
+        driver_wide_plan_plumbing_used = false,
+        old_white_lindsey_seed_route_authority =
+            _white_lindsey_descriptor_property(
+                batch_result.metadata,
+                :old_white_lindsey_seed_route_authority,
+                false,
+            ),
+    )
+end
+
 function _white_lindsey_one_body_term(term)
     term isa Symbol || throw(
         ArgumentError("White--Lindsey one-body term must be a Symbol"),
@@ -317,6 +427,15 @@ function _skipped_white_lindsey_pair_unit_coefficients_summary(
                 false,
             ),
     )
+end
+
+function _white_lindsey_unique_tuple(values)
+    unique_values = Any[]
+    for value in values
+        value in unique_values && continue
+        push!(unique_values, value)
+    end
+    return Tuple(unique_values)
 end
 
 function _white_lindsey_term_axis(term::Symbol, prefix::AbstractString)
