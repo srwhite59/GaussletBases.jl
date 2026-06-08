@@ -123,6 +123,10 @@ export PairBlockMaterializationPolicy,
 #     Private route-shaped adapter from pair-block plans to local one-body
 #     block collections.
 #
+# one_body_placement_plan.jl
+#     Metadata-only local one-body placement records for future global retained
+#     operator assembly.
+#
 # pqs_source_safe_terms.jl
 #     PQS/PQS raw source-space safe-term helpers.
 #
@@ -186,6 +190,7 @@ include("one_body_factor_inputs.jl")
 include("one_body_dispatch.jl")
 include("one_body_block_collection.jl")
 include("route_one_body_adapter.jl")
+include("one_body_placement_plan.jl")
 include("direct_overlap.jl")
 include("pqs_source_safe_terms.jl")
 include("pqs_source_shell_bridge.jl")
