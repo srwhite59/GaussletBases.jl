@@ -311,6 +311,7 @@ end
         :overlap;
         inputs = (; parent_axis_counts = (4, 4, 4), overlap_1d),
         unit_pair = (; pair_key = (:lw_left, :lw_right)),
+        materialize_selector_families = (:direct_direct, :pqs_source_pair),
     )
     @test lw_skipped.blocker ==
           :mixed_one_body_selector_family_not_materialized_yet
