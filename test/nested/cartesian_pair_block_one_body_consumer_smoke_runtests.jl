@@ -711,4 +711,119 @@ end
     @test direct_result.final_pair_blocks_materialized
     @test pqs_result.source_operator_blocks_materialized
     @test !pqs_result.final_pair_blocks_materialized
+
+    direct_entry =
+        CPBMSmoke._one_body_local_block_collection_entry(direct_result)
+    @test direct_entry.object_kind ==
+          :cartesian_pair_block_local_one_body_block_collection_entry
+    @test direct_entry.entry_kind === :materialized_result
+    @test direct_entry.status ===
+          :materialized_local_one_body_block_collection_entry
+    @test direct_entry.term === :overlap
+    @test direct_entry.pair_key == (:direct_left, :direct_right)
+    @test direct_entry.selector_family === :direct_direct
+    @test direct_entry.block_space === :final_local_space
+    @test direct_entry.block_shape == (2, 2)
+    @test direct_entry.block_size == 4
+    @test direct_entry.result_available
+    @test !direct_entry.skipped_record_available
+    @test direct_entry.result.term === :overlap
+    @test isnothing(direct_entry.skipped_record)
+    @test direct_entry.final_pair_blocks_materialized
+    @test !direct_entry.operator_blocks_materialized
+    @test !direct_entry.hamiltonian_data_materialized
+    @test !direct_entry.artifacts_materialized
+    @test !direct_entry.block_copied_into_entry
+    @test !direct_entry.local_operator_assembled
+    @test !direct_entry.global_operator_assembled
+    @test !direct_entry.route_driver_wiring
+    @test !direct_entry.coulomb_materialized
+    @test !direct_entry.ida_mwg_data_materialized
+    @test !direct_entry.pqs_lowdin_materialized
+    @test !direct_entry.pqs_shell_projection_materialized
+    @test !direct_entry.full_white_lindsey_route_assembled
+
+    pqs_entry = CPBMSmoke._one_body_local_block_collection_entry(pqs_result)
+    @test pqs_entry.entry_kind === :materialized_result
+    @test pqs_entry.term === :source_overlap
+    @test pqs_entry.pair_key == (:pqs_left, :pqs_right)
+    @test pqs_entry.selector_family === :pqs_source_pair
+    @test pqs_entry.block_space === :source_space
+    @test pqs_entry.block_shape == (8, 8)
+    @test pqs_entry.block_size == 64
+    @test pqs_entry.result_available
+    @test !pqs_entry.skipped_record_available
+    @test pqs_entry.result.term === :source_overlap
+    @test pqs_entry.source_operator_blocks_materialized
+    @test !pqs_entry.final_pair_blocks_materialized
+    @test !pqs_entry.operator_blocks_materialized
+    @test !pqs_entry.hamiltonian_data_materialized
+    @test !pqs_entry.artifacts_materialized
+    @test !pqs_entry.block_copied_into_entry
+    @test !pqs_entry.route_driver_wiring
+    @test !pqs_entry.coulomb_materialized
+    @test !pqs_entry.ida_mwg_data_materialized
+    @test !pqs_entry.pqs_lowdin_materialized
+    @test !pqs_entry.pqs_shell_projection_materialized
+    @test !pqs_entry.full_white_lindsey_route_assembled
+
+    lw_skip = only(
+        skip for skip in consumption.batch_result.skipped_records
+        if skip.selector_family === :white_lindsey_boundary_stratum
+    )
+    unsupported_skip = only(
+        skip for skip in consumption.batch_result.skipped_records
+        if skip.selector_family === :unsupported
+    )
+    lw_entry =
+        CPBMSmoke._one_body_local_block_collection_skipped_entry(lw_skip)
+    @test lw_entry.entry_kind === :skipped_record
+    @test lw_entry.status === :skipped_local_one_body_block_collection_entry
+    @test lw_entry.term === :overlap
+    @test lw_entry.pair_key == (:lw_left, :lw_right)
+    @test lw_entry.selector_family === :white_lindsey_boundary_stratum
+    @test lw_entry.blocker === :missing_white_lindsey_unit_pair
+    @test lw_entry.block_space === :not_materialized
+    @test isnothing(lw_entry.block_shape)
+    @test lw_entry.block_size == 0
+    @test !lw_entry.result_available
+    @test lw_entry.skipped_record_available
+    @test isnothing(lw_entry.result)
+    @test lw_entry.skipped_record.blocker === :missing_white_lindsey_unit_pair
+    @test !lw_entry.source_operator_blocks_materialized
+    @test !lw_entry.final_pair_blocks_materialized
+    @test !lw_entry.operator_blocks_materialized
+    @test !lw_entry.hamiltonian_data_materialized
+    @test !lw_entry.artifacts_materialized
+    @test !lw_entry.route_driver_wiring
+    @test !lw_entry.coulomb_materialized
+    @test !lw_entry.ida_mwg_data_materialized
+    @test !lw_entry.pqs_lowdin_materialized
+    @test !lw_entry.pqs_shell_projection_materialized
+    @test !lw_entry.full_white_lindsey_route_assembled
+
+    unsupported_entry =
+        CPBMSmoke._one_body_local_block_collection_skipped_entry(
+            unsupported_skip,
+        )
+    @test unsupported_entry.entry_kind === :skipped_record
+    @test unsupported_entry.term === :overlap
+    @test unsupported_entry.pair_key == (:unsupported_left, :unsupported_right)
+    @test unsupported_entry.selector_family === :unsupported
+    @test unsupported_entry.blocker ===
+          :unsupported_pair_block_materialization_path
+    @test unsupported_entry.block_space === :not_materialized
+    @test !unsupported_entry.result_available
+    @test unsupported_entry.skipped_record_available
+    @test isnothing(unsupported_entry.result)
+    @test unsupported_entry.skipped_record.blocker ===
+          :unsupported_pair_block_materialization_path
+    @test !unsupported_entry.hamiltonian_data_materialized
+    @test !unsupported_entry.artifacts_materialized
+    @test !unsupported_entry.route_driver_wiring
+    @test !unsupported_entry.coulomb_materialized
+    @test !unsupported_entry.ida_mwg_data_materialized
+    @test !unsupported_entry.pqs_lowdin_materialized
+    @test !unsupported_entry.pqs_shell_projection_materialized
+    @test !unsupported_entry.full_white_lindsey_route_assembled
 end

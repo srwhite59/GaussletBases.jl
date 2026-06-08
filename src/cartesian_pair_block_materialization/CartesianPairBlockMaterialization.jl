@@ -116,6 +116,9 @@ export PairBlockMaterializationPolicy,
 # one_body_dispatch.jl
 #     Metadata-only mixed one-body dispatch classifier.
 #
+# one_body_block_collection.jl
+#     Private local one-body block collection entry vocabulary.
+#
 # pqs_source_safe_terms.jl
 #     PQS/PQS raw source-space safe-term helpers.
 #
@@ -177,6 +180,7 @@ include("summaries.jl")
 include("one_body_terms.jl")
 include("one_body_factor_inputs.jl")
 include("one_body_dispatch.jl")
+include("one_body_block_collection.jl")
 include("direct_overlap.jl")
 include("pqs_source_safe_terms.jl")
 include("pqs_source_shell_bridge.jl")
