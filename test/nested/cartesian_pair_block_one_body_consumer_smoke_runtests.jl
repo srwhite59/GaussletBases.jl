@@ -606,6 +606,100 @@ end
     @test !absent_pair_status.matrix_fields_stored_in_status
     @test _mixed_consumer_smoke_compact_summary(absent_pair_status)
 
+    direct_lookup =
+        CPBMSmoke._one_body_pair_block_lookup(
+            block_set_consumption,
+            :overlap,
+            (:direct_left, :direct_right),
+        )
+    @test direct_lookup.status ==
+          :materialized_mixed_one_body_pair_block_lookup
+    @test direct_lookup.result_available
+    @test !direct_lookup.skipped_record_available
+    @test direct_lookup.selector_family === :direct_direct
+    @test direct_lookup.result.term === :overlap
+    @test direct_lookup.result.metadata.selector_family === :direct_direct
+    @test direct_lookup.final_pair_blocks_materialized
+    @test direct_lookup.explicit_result_field_contains_matrix
+    @test !direct_lookup.hidden_matrix_fields_stored_in_lookup
+    @test _mixed_consumer_smoke_compact_summary(direct_lookup)
+
+    pqs_lookup =
+        CPBMSmoke._one_body_pair_block_lookup(
+            block_set_consumption,
+            :overlap,
+            (:pqs_left, :pqs_right),
+        )
+    @test pqs_lookup.status ==
+          :materialized_mixed_one_body_pair_block_lookup
+    @test pqs_lookup.result_available
+    @test pqs_lookup.selector_family === :pqs_source_pair
+    @test pqs_lookup.result.term === :source_overlap
+    @test pqs_lookup.source_operator_blocks_materialized
+    @test !pqs_lookup.final_pair_blocks_materialized
+    @test pqs_lookup.explicit_result_field_contains_matrix
+    @test !pqs_lookup.hidden_matrix_fields_stored_in_lookup
+    @test _mixed_consumer_smoke_compact_summary(pqs_lookup)
+
+    lw_lookup =
+        CPBMSmoke._one_body_pair_block_lookup(
+            block_set_consumption,
+            :overlap,
+            (:lw_left, :lw_right),
+        )
+    @test lw_lookup.status == :skipped_mixed_one_body_pair_block_lookup
+    @test !lw_lookup.result_available
+    @test lw_lookup.skipped_record_available
+    @test lw_lookup.selector_family === :white_lindsey_boundary_stratum
+    @test lw_lookup.blocker == :missing_white_lindsey_unit_pair
+    @test lw_lookup.skipped_record.blocker === :missing_white_lindsey_unit_pair
+    @test !lw_lookup.explicit_result_field_contains_matrix
+    @test !lw_lookup.hidden_matrix_fields_stored_in_lookup
+    @test _mixed_consumer_smoke_compact_summary(lw_lookup)
+
+    deferred_lookup =
+        CPBMSmoke._one_body_pair_block_lookup(
+            block_set_consumption,
+            :kinetic,
+            (:direct_left, :direct_right),
+        )
+    @test deferred_lookup.status ==
+          :deferred_metadata_only_mixed_one_body_pair_block_lookup
+    @test deferred_lookup.requested
+    @test !deferred_lookup.requested_materialization
+    @test !deferred_lookup.result_available
+    @test !deferred_lookup.skipped_record_available
+    @test isnothing(deferred_lookup.blocker)
+    @test _mixed_consumer_smoke_compact_summary(deferred_lookup)
+
+    unrequested_lookup =
+        CPBMSmoke._one_body_pair_block_lookup(
+            block_set_consumption,
+            :position_x,
+            (:direct_left, :direct_right),
+        )
+    @test unrequested_lookup.status == :term_not_requested
+    @test unrequested_lookup.blocker == :term_not_requested
+    @test !unrequested_lookup.requested
+    @test !unrequested_lookup.result_available
+    @test !unrequested_lookup.skipped_record_available
+    @test _mixed_consumer_smoke_compact_summary(unrequested_lookup)
+
+    absent_lookup =
+        CPBMSmoke._one_body_pair_block_lookup(
+            block_set_consumption,
+            :overlap,
+            (:missing_left, :missing_right),
+        )
+    @test absent_lookup.status == :pair_key_not_found
+    @test absent_lookup.blocker == :pair_key_not_found
+    @test absent_lookup.requested
+    @test absent_lookup.requested_materialization
+    @test !absent_lookup.result_available
+    @test !absent_lookup.skipped_record_available
+    @test !absent_lookup.hidden_matrix_fields_stored_in_lookup
+    @test _mixed_consumer_smoke_compact_summary(absent_lookup)
+
     direct_result = only(
         result for result in consumption.batch_result.materialized_results
         if result.metadata.selector_family == :direct_direct

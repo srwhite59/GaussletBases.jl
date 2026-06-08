@@ -803,6 +803,40 @@ function _one_body_pair_block_pair_status(consumption, pair_key)
     )
 end
 
+function _one_body_pair_block_lookup(
+    consumption::NamedTuple,
+    term::Symbol,
+    pair_key::Tuple{Symbol,Symbol},
+)
+    term_status = _one_body_pair_block_term_status(consumption, term)
+    result = _one_body_lookup_result_for_pair(
+        _one_body_pair_block_results_for_term(consumption, term),
+        pair_key,
+    )
+    skipped_record = _one_body_lookup_skip_for_pair(
+        _one_body_pair_block_skips_for_term(consumption, term),
+        pair_key,
+    )
+    base = _one_body_pair_block_lookup_base(
+        term_status,
+        term,
+        pair_key,
+        result,
+        skipped_record,
+    )
+    !isnothing(result) && return merge(base, (; result))
+    !isnothing(skipped_record) && return merge(base, (; skipped_record))
+    return base
+end
+
+function _one_body_pair_block_lookup(consumption, term, pair_key)
+    throw(
+        ArgumentError(
+            "one-body block-set lookup requires a NamedTuple consumption object, Symbol term, and pair_key::Tuple{Symbol,Symbol}",
+        ),
+    )
+end
+
 function _one_body_block_set_consumption_batch_results(consumption::NamedTuple)
     hasproperty(consumption, :term_batch_results) || return ()
     return values(_one_body_block_set_batch_result_lookup(consumption.term_batch_results))
@@ -839,6 +873,136 @@ function _one_body_block_set_pair_access_blocker(status::Symbol, skips::Tuple)
         return :no_materialized_terms_for_pair_key
     isempty(skips) && return nothing
     return _one_body_namedtuple_value(first(skips), :blocker, nothing)
+end
+
+function _one_body_lookup_result_for_pair(
+    results::Tuple{Vararg{PairBlockMaterializationResult}},
+    pair_key::Tuple{Symbol,Symbol},
+)
+    for result in results
+        result.pair_key == pair_key && return result
+    end
+    return nothing
+end
+
+function _one_body_lookup_skip_for_pair(
+    skips::Tuple,
+    pair_key::Tuple{Symbol,Symbol},
+)
+    for skip in skips
+        _one_body_namedtuple_value(skip, :pair_key, nothing) == pair_key &&
+            return skip
+    end
+    return nothing
+end
+
+function _one_body_pair_block_lookup_base(
+    term_status,
+    term::Symbol,
+    pair_key::Tuple{Symbol,Symbol},
+    result,
+    skipped_record,
+)
+    result_available = !isnothing(result)
+    skipped_record_available = !isnothing(skipped_record)
+    status = _one_body_pair_block_lookup_status(
+        term_status,
+        result_available,
+        skipped_record_available,
+    )
+    return (;
+        object_kind = :cartesian_pair_block_mixed_one_body_block_lookup,
+        term,
+        pair_key,
+        status,
+        blocker = _one_body_pair_block_lookup_blocker(
+            status,
+            term_status,
+            skipped_record,
+        ),
+        requested = _one_body_namedtuple_value(term_status, :requested, false),
+        requested_materialization =
+            _one_body_namedtuple_value(term_status, :requested_materialization, false),
+        result_available,
+        skipped_record_available,
+        selector_family = _one_body_pair_block_lookup_selector_family(
+            result,
+            skipped_record,
+        ),
+        materialization_path = _one_body_pair_block_lookup_materialization_path(
+            result,
+            skipped_record,
+        ),
+        term_status = term_status.status,
+        term_blocker = _one_body_namedtuple_value(term_status, :blocker, nothing),
+        term_batch_results_stored_in_lookup = false,
+        batch_result_objects_stored_in_lookup = false,
+        hidden_matrix_fields_stored_in_lookup = false,
+        explicit_result_field_contains_matrix = result_available,
+        skipped_record_stored_in_lookup = skipped_record_available,
+        term_separated_result = true,
+        block_set_results_summed = false,
+        source_operator_blocks_materialized =
+            result_available && result.source_operator_blocks_materialized,
+        final_pair_blocks_materialized =
+            result_available && result.final_pair_blocks_materialized,
+        operator_blocks_materialized =
+            result_available && result.operator_blocks_materialized,
+        hamiltonian_data_materialized =
+            result_available && result.hamiltonian_data_materialized,
+        artifacts_materialized =
+            result_available && result.artifacts_materialized,
+        route_driver_wiring = false,
+        coulomb_materialized = false,
+        density_density_materialized = false,
+        ida_mwg_data_materialized = false,
+        pqs_lowdin_materialized = false,
+        full_white_lindsey_route_assembled = false,
+    )
+end
+
+function _one_body_pair_block_lookup_status(
+    term_status,
+    result_available::Bool,
+    skipped_record_available::Bool,
+)
+    result_available && return :materialized_mixed_one_body_pair_block_lookup
+    skipped_record_available && return :skipped_mixed_one_body_pair_block_lookup
+    term_status.status === :term_not_requested && return :term_not_requested
+    term_status.status === :blocked_mixed_one_body_block_set_term &&
+        return :blocked_mixed_one_body_pair_block_lookup
+    term_status.status ===
+    :deferred_metadata_only_mixed_one_body_pair_block_batch &&
+        return :deferred_metadata_only_mixed_one_body_pair_block_lookup
+    return :pair_key_not_found
+end
+
+function _one_body_pair_block_lookup_blocker(status::Symbol, term_status, skipped_record)
+    status === :term_not_requested &&
+        return _one_body_namedtuple_value(term_status, :blocker, :term_not_requested)
+    status === :blocked_mixed_one_body_pair_block_lookup &&
+        return _one_body_namedtuple_value(term_status, :blocker, nothing)
+    status === :deferred_metadata_only_mixed_one_body_pair_block_lookup &&
+        return nothing
+    status === :pair_key_not_found && return :pair_key_not_found
+    isnothing(skipped_record) && return nothing
+    return _one_body_namedtuple_value(skipped_record, :blocker, nothing)
+end
+
+function _one_body_pair_block_lookup_selector_family(result, skipped_record)
+    !isnothing(result) &&
+        return _one_body_namedtuple_value(result.metadata, :selector_family, nothing)
+    !isnothing(skipped_record) &&
+        return _one_body_namedtuple_value(skipped_record, :selector_family, nothing)
+    return nothing
+end
+
+function _one_body_pair_block_lookup_materialization_path(result, skipped_record)
+    !isnothing(result) &&
+        return _one_body_namedtuple_value(result.metadata, :materialization_path, nothing)
+    !isnothing(skipped_record) &&
+        return _one_body_namedtuple_value(skipped_record, :materialization_path, nothing)
+    return nothing
 end
 
 function _one_body_block_set_materialized_terms_for_pair(
