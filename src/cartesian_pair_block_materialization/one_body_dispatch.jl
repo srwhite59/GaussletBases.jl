@@ -100,6 +100,86 @@ function _one_body_pair_block_dispatch_summary(record, term; kwargs...)
     )
 end
 
+function _one_body_pair_block_plan_dispatch_summary(
+    plan::PairBlockMaterializationPlan,
+    term::Symbol;
+    inputs = (;),
+    provider = nothing,
+)
+    unit_pair_lookup = _one_body_unit_pair_lookup(plan)
+    record_summaries = Tuple(
+        _one_body_pair_block_dispatch_summary(
+            record,
+            term;
+            inputs,
+            provider,
+            unit_pair = _one_body_dispatch_unit_pair(record, unit_pair_lookup),
+        ) for record in pair_block_materialization_records(plan)
+    )
+    ready_count = count(
+        summary -> summary.status === :ready_metadata_only_not_materialized,
+        record_summaries,
+    )
+    record_count = length(record_summaries)
+    blocked_count = record_count - ready_count
+
+    return (;
+        object_kind =
+            :cartesian_pair_block_mixed_one_body_plan_dispatch_summary,
+        status =
+            blocked_count == 0 ?
+            :ready_metadata_only_not_materialized :
+            ready_count == 0 ?
+            :blocked_mixed_one_body_plan_dispatch :
+            :partially_ready_mixed_one_body_plan_dispatch,
+        blocker =
+            blocked_count == 0 ?
+            nothing :
+            :blocked_mixed_one_body_dispatch_records,
+        requested_term = term,
+        term_descriptor = _one_body_term_descriptor(term),
+        record_count,
+        ready_count,
+        blocked_count,
+        selector_family_counts =
+            _one_body_count_by(record_summaries, :selector_family),
+        dispatch_status_counts = _one_body_count_by(record_summaries, :status),
+        blocker_counts = _one_body_blocker_counts(record_summaries),
+        record_materialization_path_counts =
+            _one_body_count_by(record_summaries, :record_materialization_path),
+        materialization_path_counts =
+            _one_body_count_by(record_summaries, :materialization_path),
+        white_lindsey_unit_pair_required_count = count(
+            summary -> summary.unit_pair_required,
+            record_summaries,
+        ),
+        white_lindsey_unit_pair_available_count = count(
+            summary -> summary.unit_pair_required && summary.unit_pair_available,
+            record_summaries,
+        ),
+        record_summaries,
+        factors_constructed = false,
+        numerical_blocks_materialized = false,
+        source_operator_blocks_materialized = false,
+        final_pair_blocks_materialized = false,
+        operator_blocks_materialized = false,
+        hamiltonian_data_materialized = false,
+        artifacts_materialized = false,
+        mixed_dispatcher_materialized = false,
+        route_driver_wiring = false,
+        pqs_lowdin_materialized = false,
+        full_white_lindsey_route_assembled = false,
+    )
+end
+
+function _one_body_pair_block_plan_dispatch_summary(plan, term; kwargs...)
+    throw(
+        ArgumentError(
+            "one-body plan dispatch summary requires a PairBlockMaterializationPlan",
+        ),
+    )
+end
+
 function _one_body_record_selector_family(record::PairBlockMaterializationRecord)
     record.materialization_path === :direct_direct_pair_block_materialization_pilot &&
         return :direct_direct
@@ -109,6 +189,57 @@ function _one_body_record_selector_family(record::PairBlockMaterializationRecord
         :white_lindsey_boundary_stratum_adapter_preflight &&
         return :white_lindsey_boundary_stratum
     return :unsupported
+end
+
+function _one_body_unit_pair_lookup(plan::PairBlockMaterializationPlan)
+    lookup = Dict{Tuple{Symbol,Symbol},Any}()
+    for unit_pair in CUP.unit_pairs(plan.pair_operator_plan.unit_pair_plan)
+        lookup[unit_pair.pair_key] = unit_pair
+    end
+    return lookup
+end
+
+function _one_body_dispatch_unit_pair(
+    record::PairBlockMaterializationRecord,
+    unit_pair_lookup,
+)
+    record.materialization_path ===
+        :white_lindsey_boundary_stratum_adapter_preflight || return nothing
+    return get(unit_pair_lookup, record.pair_key, nothing)
+end
+
+function _one_body_count_by(record_summaries::Tuple, field::Symbol)
+    values = Any[]
+    for summary in record_summaries
+        value = getproperty(summary, field)
+        isnothing(value) && continue
+        push!(values, value)
+    end
+    return _one_body_count_values(values, field)
+end
+
+function _one_body_blocker_counts(record_summaries::Tuple)
+    blockers = Any[]
+    for summary in record_summaries
+        append!(blockers, summary.blockers)
+    end
+    return _one_body_count_values(blockers, :blocker)
+end
+
+function _one_body_count_values(values, field::Symbol)
+    counts = Dict{Any,Int}()
+    ordered_values = Any[]
+    for value in values
+        if !haskey(counts, value)
+            counts[value] = 0
+            push!(ordered_values, value)
+        end
+        counts[value] += 1
+    end
+    return Tuple(
+        NamedTuple{(field, :count)}((value, counts[value]))
+        for value in ordered_values
+    )
 end
 
 function _one_body_dispatch_parent_axis_counts_required(selector_family)
