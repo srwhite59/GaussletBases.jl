@@ -526,6 +526,271 @@ function _one_body_pair_block_batch_summary(batch_result)
     )
 end
 
+function _one_body_pair_block_set_summary(
+    plan::PairBlockMaterializationPlan;
+    terms = _ONE_BODY_TERMS,
+    term_batch_results = (;),
+)
+    term_set_descriptor = _one_body_term_set_descriptor(terms)
+    batch_result_lookup =
+        _one_body_block_set_batch_result_lookup(term_batch_results)
+    term_summaries = Tuple(
+        _one_body_pair_block_set_term_summary(
+            term,
+            _one_body_block_set_batch_result_for_term(
+                term,
+                batch_result_lookup,
+            ),
+        ) for term in term_set_descriptor.terms
+    )
+    supplied_term_count =
+        count(summary -> summary.batch_result_supplied, term_summaries)
+    deferred_term_count = length(term_summaries) - supplied_term_count
+    total_materialized_count =
+        sum(summary.materialized_count for summary in term_summaries)
+    total_skipped_count = sum(summary.skipped_count for summary in term_summaries)
+    any_source_materialized =
+        any(summary -> summary.source_operator_blocks_materialized, term_summaries)
+    any_final_materialized =
+        any(summary -> summary.final_pair_blocks_materialized, term_summaries)
+    any_operator_materialized =
+        any(summary -> summary.operator_blocks_materialized, term_summaries)
+    any_hamiltonian_materialized =
+        any(summary -> summary.hamiltonian_data_materialized, term_summaries)
+    any_artifacts_materialized =
+        any(summary -> summary.artifacts_materialized, term_summaries)
+
+    return (;
+        object_kind = :cartesian_pair_block_mixed_one_body_block_set_summary,
+        status = _one_body_block_set_summary_status(
+            supplied_term_count,
+            deferred_term_count,
+            total_materialized_count,
+            total_skipped_count,
+        ),
+        plan_record_count = length(pair_block_materialization_records(plan)),
+        plan_summary_status = _one_body_namedtuple_value(
+            summary(plan),
+            :status,
+            nothing,
+        ),
+        term_set_descriptor,
+        requested_terms = term_set_descriptor.terms,
+        terms = term_set_descriptor.terms,
+        term_count = term_set_descriptor.term_count,
+        supplied_term_count,
+        deferred_term_count,
+        term_statuses = Tuple(
+            (;
+                term = term_summary.term,
+                status = term_summary.status,
+                batch_result_supplied = term_summary.batch_result_supplied,
+            ) for term_summary in term_summaries
+        ),
+        term_status_counts = _one_body_count_by(term_summaries, :status),
+        total_materialized_count,
+        total_skipped_count,
+        materialized_selector_family_counts =
+            _one_body_block_set_aggregate_counts(
+                term_summaries,
+                :materialized_selector_family_counts,
+                :selector_family,
+            ),
+        skipped_selector_family_counts = _one_body_block_set_aggregate_counts(
+            term_summaries,
+            :skipped_selector_family_counts,
+            :selector_family,
+        ),
+        skipped_blocker_counts = _one_body_block_set_aggregate_counts(
+            term_summaries,
+            :skipped_blocker_counts,
+            :blocker,
+        ),
+        term_summaries,
+        result_terms_remain_separated = true,
+        block_set_results_summed = false,
+        term_batch_results_stored_in_summary = false,
+        factor_provider_scope = term_set_descriptor.factor_provider_scope,
+        factors_constructed = false,
+        materialized = total_materialized_count > 0,
+        source_operator_blocks_materialized = any_source_materialized,
+        final_pair_blocks_materialized = any_final_materialized,
+        operator_blocks_materialized = any_operator_materialized,
+        hamiltonian_data_materialized = any_hamiltonian_materialized,
+        artifacts_materialized = any_artifacts_materialized,
+        global_operator_blocks_materialized = any_operator_materialized,
+        global_hamiltonian_data_materialized = any_hamiltonian_materialized,
+        global_artifacts_materialized = any_artifacts_materialized,
+        mixed_dispatcher_materialized = false,
+        route_driver_wiring = false,
+        coulomb_materialized = false,
+        density_density_materialized = false,
+        ida_mwg_data_materialized = false,
+        pqs_lowdin_materialized = false,
+        full_white_lindsey_route_assembled = false,
+    )
+end
+
+function _one_body_pair_block_set_summary(plan; kwargs...)
+    throw(
+        ArgumentError(
+            "one-body pair block-set summary requires a PairBlockMaterializationPlan",
+        ),
+    )
+end
+
+function _one_body_pair_block_set_term_summary(
+    term::Symbol,
+    batch_result::Nothing,
+)
+    return (;
+        object_kind =
+            :cartesian_pair_block_mixed_one_body_block_set_term_summary,
+        status = :deferred_metadata_only_mixed_one_body_pair_block_batch,
+        blocker = nothing,
+        term,
+        batch_result_supplied = false,
+        materialized_count = 0,
+        skipped_count = 0,
+        materialized_selector_family_counts = (),
+        skipped_selector_family_counts = (),
+        skipped_blocker_counts = (),
+        materialized = false,
+        source_operator_blocks_materialized = false,
+        final_pair_blocks_materialized = false,
+        operator_blocks_materialized = false,
+        hamiltonian_data_materialized = false,
+        artifacts_materialized = false,
+    )
+end
+
+function _one_body_pair_block_set_term_summary(
+    term::Symbol,
+    batch_result::PairBlockMaterializationBatchResult,
+)
+    batch_result.term === term || throw(
+        ArgumentError(
+            "one-body block-set batch result term $(batch_result.term) does not match requested term $(term)",
+        ),
+    )
+    batch_summary = _one_body_pair_block_batch_summary(batch_result)
+    return (;
+        object_kind =
+            :cartesian_pair_block_mixed_one_body_block_set_term_summary,
+        status = batch_summary.status,
+        blocker = nothing,
+        term,
+        batch_result_supplied = true,
+        materialized_count = batch_summary.materialized_count,
+        skipped_count = batch_summary.skipped_count,
+        materialized_selector_family_counts =
+            batch_summary.materialized_selector_family_counts,
+        skipped_selector_family_counts =
+            batch_summary.skipped_selector_family_counts,
+        skipped_blocker_counts = batch_summary.skipped_blocker_counts,
+        materialized = batch_summary.materialized,
+        source_operator_blocks_materialized =
+            batch_summary.source_operator_blocks_materialized,
+        final_pair_blocks_materialized =
+            batch_summary.final_pair_blocks_materialized,
+        operator_blocks_materialized = batch_summary.operator_blocks_materialized,
+        hamiltonian_data_materialized =
+            batch_summary.hamiltonian_data_materialized,
+        artifacts_materialized = batch_summary.artifacts_materialized,
+    )
+end
+
+function _one_body_block_set_batch_result_lookup(term_batch_results::NamedTuple)
+    return term_batch_results
+end
+
+function _one_body_block_set_batch_result_lookup(
+    batch_result::PairBlockMaterializationBatchResult,
+)
+    return NamedTuple{(batch_result.term,)}((batch_result,))
+end
+
+function _one_body_block_set_batch_result_lookup(batch_results::Tuple)
+    all(result -> result isa PairBlockMaterializationBatchResult, batch_results) ||
+        throw(
+            ArgumentError(
+                "one-body block-set term_batch_results tuple must contain PairBlockMaterializationBatchResult values",
+            ),
+        )
+    terms = Tuple(result.term for result in batch_results)
+    length(unique(terms)) == length(terms) || throw(
+        ArgumentError("one-body block-set term_batch_results contain duplicate terms"),
+    )
+    return NamedTuple{terms}(batch_results)
+end
+
+function _one_body_block_set_batch_result_lookup(term_batch_results)
+    throw(
+        ArgumentError(
+            "one-body block-set term_batch_results must be a NamedTuple, PairBlockMaterializationBatchResult, or tuple of PairBlockMaterializationBatchResult values",
+        ),
+    )
+end
+
+function _one_body_block_set_batch_result_for_term(
+    term::Symbol,
+    batch_result_lookup::NamedTuple,
+)
+    hasproperty(batch_result_lookup, term) || return nothing
+    batch_result = getproperty(batch_result_lookup, term)
+    batch_result isa PairBlockMaterializationBatchResult || throw(
+        ArgumentError(
+            "one-body block-set result for term $(term) must be a PairBlockMaterializationBatchResult",
+        ),
+    )
+    return batch_result
+end
+
+function _one_body_block_set_summary_status(
+    supplied_term_count::Int,
+    deferred_term_count::Int,
+    total_materialized_count::Int,
+    total_skipped_count::Int,
+)
+    supplied_term_count == 0 &&
+        return :deferred_metadata_only_mixed_one_body_block_set
+    deferred_term_count > 0 &&
+        return :partially_deferred_mixed_one_body_block_set
+    total_materialized_count == 0 &&
+        return :skipped_mixed_one_body_block_set
+    total_skipped_count == 0 &&
+        return :materialized_mixed_one_body_block_set
+    return :partially_materialized_mixed_one_body_block_set
+end
+
+function _one_body_block_set_aggregate_counts(
+    term_summaries::Tuple,
+    count_field::Symbol,
+    value_field::Symbol,
+)
+    counts = Dict{Any,Int}()
+    ordered_values = Any[]
+    for term_summary in term_summaries
+        for entry in getproperty(term_summary, count_field)
+            value = getproperty(entry, value_field)
+            if !haskey(counts, value)
+                counts[value] = 0
+                push!(ordered_values, value)
+            end
+            counts[value] += entry.count
+        end
+    end
+    return Tuple(
+        NamedTuple{(value_field, :count)}((value, counts[value]))
+        for value in ordered_values
+    )
+end
+
+function _one_body_namedtuple_value(nt::NamedTuple, key::Symbol, default)
+    haskey(nt, key) || return default
+    return getproperty(nt, key)
+end
+
 function _one_body_pair_block_consumption(
     plan::PairBlockMaterializationPlan,
     term::Symbol;
