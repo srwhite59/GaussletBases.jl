@@ -2,9 +2,9 @@
 #
 # This bridge composes the existing route-local one-body collection, local
 # placement plan, and dense global safe one-body matrix pilots. It currently
-# supports overlap, kinetic, and position_x/y/z only and does not assemble
-# Hamiltonians, Coulomb data, IDA/MWG data, exports, artifacts, or PQS
-# shell/Lowdin realizations.
+# supports the safe one-body terms only and does not assemble Hamiltonians,
+# Coulomb data, IDA/MWG data, exports, artifacts, or PQS shell/Lowdin
+# realizations.
 
 function route_global_one_body_matrix(
     source;
@@ -85,8 +85,37 @@ function route_global_position_z_matrix(source; kwargs...)
     return route_global_one_body_matrix(source; term = :position_z, kwargs...)
 end
 
+function route_global_x2_matrix(source; axis, kwargs...)
+    return route_global_one_body_matrix(
+        source;
+        term = _route_global_x2_term(axis),
+        kwargs...,
+    )
+end
+
+function route_global_x2_x_matrix(source; kwargs...)
+    return route_global_one_body_matrix(source; term = :x2_x, kwargs...)
+end
+
+function route_global_x2_y_matrix(source; kwargs...)
+    return route_global_one_body_matrix(source; term = :x2_y, kwargs...)
+end
+
+function route_global_x2_z_matrix(source; kwargs...)
+    return route_global_one_body_matrix(source; term = :x2_z, kwargs...)
+end
+
 function _route_global_one_body_supported_terms()
-    return (:overlap, :kinetic, :position_x, :position_y, :position_z)
+    return (
+        :overlap,
+        :kinetic,
+        :position_x,
+        :position_y,
+        :position_z,
+        :x2_x,
+        :x2_y,
+        :x2_z,
+    )
 end
 
 function _route_global_one_body_placement_plan(
@@ -114,6 +143,18 @@ function _route_global_one_body_placement_plan(
         collection;
         global_dimension,
     )
+    term === :x2_x && return one_body_x2_x_placement_plan(
+        collection;
+        global_dimension,
+    )
+    term === :x2_y && return one_body_x2_y_placement_plan(
+        collection;
+        global_dimension,
+    )
+    term === :x2_z && return one_body_x2_z_placement_plan(
+        collection;
+        global_dimension,
+    )
     throw(ArgumentError("unsupported route global one-body term: $(term)"))
 end
 
@@ -129,6 +170,9 @@ function _route_global_one_body_global_matrix(
         return one_body_global_position_y_matrix(placement_plan)
     term === :position_z &&
         return one_body_global_position_z_matrix(placement_plan)
+    term === :x2_x && return one_body_global_x2_x_matrix(placement_plan)
+    term === :x2_y && return one_body_global_x2_y_matrix(placement_plan)
+    term === :x2_z && return one_body_global_x2_z_matrix(placement_plan)
     throw(ArgumentError("unsupported route global one-body term: $(term)"))
 end
 
@@ -137,6 +181,13 @@ function _route_global_position_term(axis)
     axis === :y && return :position_y
     axis === :z && return :position_z
     throw(ArgumentError("route global position axis must be :x, :y, or :z"))
+end
+
+function _route_global_x2_term(axis)
+    axis === :x && return :x2_x
+    axis === :y && return :x2_y
+    axis === :z && return :x2_z
+    throw(ArgumentError("route global x2 axis must be :x, :y, or :z"))
 end
 
 function _route_global_one_body_inputs(inputs::NamedTuple, factors)
@@ -264,6 +315,24 @@ function _route_global_one_body_result(
                 :global_position_z_matrix_materialized,
                 false,
             ),
+        global_x2_x_matrix_materialized =
+            _route_global_one_body_value(
+                global_matrix_result,
+                :global_x2_x_matrix_materialized,
+                false,
+            ),
+        global_x2_y_matrix_materialized =
+            _route_global_one_body_value(
+                global_matrix_result,
+                :global_x2_y_matrix_materialized,
+                false,
+            ),
+        global_x2_z_matrix_materialized =
+            _route_global_one_body_value(
+                global_matrix_result,
+                :global_x2_z_matrix_materialized,
+                false,
+            ),
         operator_matrix_materialized =
             _route_global_one_body_value(
                 global_matrix_result,
@@ -318,6 +387,9 @@ function _route_global_one_body_blocked_result(
         global_position_x_matrix_materialized = false,
         global_position_y_matrix_materialized = false,
         global_position_z_matrix_materialized = false,
+        global_x2_x_matrix_materialized = false,
+        global_x2_y_matrix_materialized = false,
+        global_x2_z_matrix_materialized = false,
         operator_matrix_materialized = false,
         global_operator_assembled = false,
         _route_global_one_body_nonclaim_flags()...,

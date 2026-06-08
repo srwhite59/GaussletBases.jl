@@ -69,6 +69,9 @@ function _route_global_record(
         :position_x,
         :position_y,
         :position_z,
+        :x2_x,
+        :x2_y,
+        :x2_z,
     ),
     metadata = (;),
 )
@@ -185,6 +188,11 @@ function _route_global_inputs()
             y = [7.0 0.9; 1.0 8.0],
             z = [9.0 1.1; 1.2 10.0],
         ),
+        x2_1d = (;
+            x = [11.0 1.3; 1.4 12.0],
+            y = [13.0 1.5; 1.6 14.0],
+            z = [15.0 1.7; 1.8 16.0],
+        ),
         kinetic_1d = (;
             x = [2.0 0.5; 0.5 2.2],
             y = [3.0 0.6; 0.6 3.3],
@@ -246,6 +254,58 @@ function _route_global_position_adapter(term::Symbol, plan)
     throw(ArgumentError("route global position term must be position_x/y/z"))
 end
 
+function _route_global_x2_operator_axes(term::Symbol)
+    inputs = _route_global_inputs()
+    overlap = inputs.overlap_1d
+    x2 = inputs.x2_1d
+    term === :x2_x && return (x2.x, overlap.y, overlap.z)
+    term === :x2_y && return (overlap.x, x2.y, overlap.z)
+    term === :x2_z && return (overlap.x, overlap.y, x2.z)
+    throw(ArgumentError("route global x2 term must be x2_x/y/z"))
+end
+
+function _route_global_x2_direct_block(term::Symbol, left_states, right_states)
+    operator_x, operator_y, operator_z = _route_global_x2_operator_axes(term)
+    return [
+        operator_x[left[1], right[1]] *
+        operator_y[left[2], right[2]] *
+        operator_z[left[3], right[3]]
+        for left in left_states, right in right_states
+    ]
+end
+
+function _route_global_x2_expected(term::Symbol)
+    left_states = ((1, 1, 1), (1, 2, 1))
+    right_states = ((2, 1, 1), (2, 2, 1))
+    diagonal = _route_global_x2_direct_block(term, left_states, left_states)
+    off_diagonal = _route_global_x2_direct_block(term, left_states, right_states)
+    return [
+        diagonal[1, 1] diagonal[1, 2] off_diagonal[1, 1] off_diagonal[1, 2]
+        diagonal[2, 1] diagonal[2, 2] off_diagonal[2, 1] off_diagonal[2, 2]
+        off_diagonal[1, 1] off_diagonal[2, 1] 0.0 0.0
+        off_diagonal[1, 2] off_diagonal[2, 2] 0.0 0.0
+    ]
+end
+
+function _route_global_x2_adapter(term::Symbol, plan)
+    term === :x2_x && return CPBMRouteGlobal.route_global_x2_x_matrix(
+        plan;
+        global_dimension = 4,
+        inputs = _route_global_inputs(),
+    )
+    term === :x2_y && return CPBMRouteGlobal.route_global_x2_y_matrix(
+        plan;
+        global_dimension = 4,
+        inputs = _route_global_inputs(),
+    )
+    term === :x2_z && return CPBMRouteGlobal.route_global_x2_z_matrix(
+        plan;
+        global_dimension = 4,
+        inputs = _route_global_inputs(),
+    )
+    throw(ArgumentError("route global x2 term must be x2_x/y/z"))
+end
+
 @testset "CartesianPairBlockMaterialization route global overlap adapter" begin
     plan = _route_global_plan()
     adapter = CPBMRouteGlobal.route_global_overlap_matrix(
@@ -278,6 +338,9 @@ end
     @test !adapter.global_position_x_matrix_materialized
     @test !adapter.global_position_y_matrix_materialized
     @test !adapter.global_position_z_matrix_materialized
+    @test !adapter.global_x2_x_matrix_materialized
+    @test !adapter.global_x2_y_matrix_materialized
+    @test !adapter.global_x2_z_matrix_materialized
     @test adapter.operator_matrix_materialized
     @test adapter.global_operator_assembled
     @test adapter.global_matrix_result.matrix ≈ expected
@@ -308,7 +371,7 @@ end
 
     unsupported = CPBMRouteGlobal.route_global_one_body_matrix(
         plan;
-        term = :x2_x,
+        term = :coulomb,
         global_dimension = 4,
         inputs = _route_global_inputs(),
     )
@@ -394,6 +457,9 @@ end
     @test !adapter.global_position_x_matrix_materialized
     @test !adapter.global_position_y_matrix_materialized
     @test !adapter.global_position_z_matrix_materialized
+    @test !adapter.global_x2_x_matrix_materialized
+    @test !adapter.global_x2_y_matrix_materialized
+    @test !adapter.global_x2_z_matrix_materialized
     @test adapter.operator_matrix_materialized
     @test adapter.global_operator_assembled
     @test adapter.global_matrix_result.matrix ≈ expected
@@ -471,12 +537,100 @@ end
         @test !adapter.global_overlap_matrix_materialized
         @test !adapter.global_kinetic_matrix_materialized
         @test getproperty(adapter, term_flag)
+        @test !adapter.global_x2_x_matrix_materialized
+        @test !adapter.global_x2_y_matrix_materialized
+        @test !adapter.global_x2_z_matrix_materialized
         @test adapter.operator_matrix_materialized
         @test adapter.global_operator_assembled
         @test adapter.global_matrix_result.matrix ≈
               _route_global_position_expected(term)
         @test alias_adapter.global_matrix_result.matrix ≈
               _route_global_position_expected(term)
+
+        @test adapter.materialized_local_block_count == 3
+        @test adapter.skipped_local_block_count == 2
+        @test adapter.placeable_record_count == 2
+        @test adapter.blocked_placement_count == 3
+        @test adapter.placed_block_count == 3
+        @test adapter.skipped_block_count == 3
+        @test adapter.global_matrix_result.global_dimension == 4
+
+        pqs_record = only(
+            record for record in adapter.placement_plan.blocked_records
+            if record.selector_family === :pqs_source_pair
+        )
+        @test pqs_record.blocker === :source_space_block_requires_shell_realization
+        @test !any(value -> value > 100.0, adapter.global_matrix_result.matrix)
+
+        missing_dimension = CPBMRouteGlobal.route_global_one_body_matrix(
+            plan;
+            term,
+            inputs = _route_global_inputs(),
+        )
+        @test missing_dimension.status ===
+              Symbol("blocked_route_global_", term_string, "_matrix")
+        @test missing_dimension.blocker === :missing_global_dimension
+        @test !missing_dimension.global_one_body_term_matrix_materialized
+
+        @test !adapter.route_driver_wiring
+        @test !adapter.operator_blocks_materialized
+        @test !adapter.hamiltonian_data_materialized
+        @test !adapter.artifacts_materialized
+        @test !adapter.exports_materialized
+        @test !adapter.global_operator_blocks_materialized
+        @test !adapter.global_hamiltonian_data_materialized
+        @test !adapter.global_artifacts_materialized
+        @test !adapter.coulomb_materialized
+        @test !adapter.density_density_materialized
+        @test !adapter.ida_mwg_data_materialized
+        @test !adapter.pqs_lowdin_materialized
+        @test !adapter.pqs_shell_projection_materialized
+        @test !adapter.full_white_lindsey_route_assembled
+    end
+end
+
+@testset "CartesianPairBlockMaterialization route global x2 adapter" begin
+    plan = _route_global_plan()
+    axis_adapter = CPBMRouteGlobal.route_global_x2_matrix(
+        plan;
+        axis = :x,
+        global_dimension = 4,
+        inputs = _route_global_inputs(),
+    )
+    @test axis_adapter.status === :materialized_route_global_x2_x_matrix
+    @test axis_adapter.global_matrix_result.matrix ≈
+          _route_global_x2_expected(:x2_x)
+
+    for term in (:x2_x, :x2_y, :x2_z)
+        adapter = _route_global_x2_adapter(term, plan)
+        alias_adapter = CPBMRouteGlobal.route_global_one_body_matrix(
+            (; pair_block_materialization_plan = plan);
+            term,
+            global_dimension = 4,
+            factors = _route_global_inputs(),
+        )
+        term_string = String(term)
+        term_flag = Symbol("global_", term_string, "_matrix_materialized")
+
+        @test adapter.object_kind ===
+              :cartesian_pair_block_route_global_one_body_matrix_adapter
+        @test adapter.status ===
+              Symbol("materialized_route_global_", term_string, "_matrix")
+        @test isnothing(adapter.blocker)
+        @test adapter.term === term
+        @test adapter.global_one_body_term_matrix_materialized
+        @test !adapter.global_overlap_matrix_materialized
+        @test !adapter.global_kinetic_matrix_materialized
+        @test !adapter.global_position_x_matrix_materialized
+        @test !adapter.global_position_y_matrix_materialized
+        @test !adapter.global_position_z_matrix_materialized
+        @test getproperty(adapter, term_flag)
+        @test adapter.operator_matrix_materialized
+        @test adapter.global_operator_assembled
+        @test adapter.global_matrix_result.matrix ≈
+              _route_global_x2_expected(term)
+        @test alias_adapter.global_matrix_result.matrix ≈
+              _route_global_x2_expected(term)
 
         @test adapter.materialized_local_block_count == 3
         @test adapter.skipped_local_block_count == 2
