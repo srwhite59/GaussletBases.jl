@@ -22,6 +22,21 @@ function _mixed_consumer_smoke_count(counts, field::Symbol, value)
     return only(matches).count
 end
 
+function _mixed_consumer_smoke_compact_summary(summary)
+    forbidden_fields = (
+        :term_batch_results,
+        :batch_result,
+        :block,
+        :blocks,
+        :materialized_results,
+        :skipped_records,
+        :preflight_summary,
+        :block_set_summary,
+        :term_summaries,
+    )
+    return !any(field -> hasproperty(summary, field), forbidden_fields)
+end
+
 function _mixed_consumer_smoke_pair_operator_plan()
     lowering_plan = CTLSmoke.TerminalLoweringPlan(
         CTLSmoke.PQSLowering(q = 2),
@@ -218,6 +233,86 @@ end
         :blocker,
         :unsupported_pair_block_materialization_path,
     ) == 1
+
+    block_set_consumption = CPBMSmoke._one_body_pair_block_set_consumption(
+        _mixed_consumer_smoke_plan();
+        terms = (:overlap, :kinetic),
+        inputs = (;
+            parent_axis_counts = (2, 2, 2),
+            overlap_1d = _mixed_consumer_smoke_overlap_1d(),
+        ),
+        materialize_terms = (:overlap,),
+    )
+    block_set_summary =
+        CPBMSmoke._one_body_pair_block_set_consumption_summary(
+            block_set_consumption,
+        )
+    @test block_set_summary.object_kind ==
+          :cartesian_pair_block_mixed_one_body_block_set_consumption_summary
+    @test block_set_summary.status ==
+          :partially_materialized_mixed_one_body_block_set_consumption
+    @test isnothing(block_set_summary.blocker)
+    @test block_set_summary.requested_terms == (:overlap, :kinetic)
+    @test block_set_summary.requested_materialize_terms == (:overlap,)
+    @test block_set_summary.materialized_terms == (:overlap,)
+    @test block_set_summary.deferred_terms == (:kinetic,)
+    @test block_set_summary.preflight_status ==
+          :partially_ready_mixed_one_body_block_set_preflight
+    @test block_set_summary.block_set_summary_status ==
+          :partially_deferred_mixed_one_body_block_set
+    @test block_set_summary.supplied_term_count == 1
+    @test block_set_summary.deferred_term_count == 1
+    @test block_set_summary.total_materialized_count == 2
+    @test block_set_summary.total_skipped_count == 2
+    @test _mixed_consumer_smoke_count(
+        block_set_summary.materialized_selector_family_counts,
+        :selector_family,
+        :direct_direct,
+    ) == 1
+    @test _mixed_consumer_smoke_count(
+        block_set_summary.materialized_selector_family_counts,
+        :selector_family,
+        :pqs_source_pair,
+    ) == 1
+    @test _mixed_consumer_smoke_count(
+        block_set_summary.skipped_selector_family_counts,
+        :selector_family,
+        :white_lindsey_boundary_stratum,
+    ) == 1
+    @test _mixed_consumer_smoke_count(
+        block_set_summary.skipped_selector_family_counts,
+        :selector_family,
+        :unsupported,
+    ) == 1
+    @test _mixed_consumer_smoke_count(
+        block_set_summary.skipped_blocker_counts,
+        :blocker,
+        :missing_white_lindsey_unit_pair,
+    ) == 1
+    @test _mixed_consumer_smoke_count(
+        block_set_summary.skipped_blocker_counts,
+        :blocker,
+        :unsupported_pair_block_materialization_path,
+    ) == 1
+    @test block_set_summary.term_batch_results_available_on_consumption
+    @test !block_set_summary.term_batch_results_stored_in_summary
+    @test !block_set_summary.factors_constructed
+    @test block_set_summary.source_operator_blocks_materialized
+    @test block_set_summary.final_pair_blocks_materialized
+    @test !block_set_summary.operator_blocks_materialized
+    @test !block_set_summary.hamiltonian_data_materialized
+    @test !block_set_summary.artifacts_materialized
+    @test !block_set_summary.route_driver_wiring
+    @test !block_set_summary.coulomb_materialized
+    @test !block_set_summary.ida_mwg_data_materialized
+    @test !block_set_summary.pqs_lowdin_materialized
+    @test !block_set_summary.full_white_lindsey_route_assembled
+    @test _mixed_consumer_smoke_compact_summary(block_set_summary)
+    @test all(
+        term_status -> !hasproperty(term_status, :batch_result) &&
+                       !hasproperty(term_status, :block),
+        block_set_summary.term_statuses,
+    )
 
     direct_result = only(
         result for result in consumption.batch_result.materialized_results
