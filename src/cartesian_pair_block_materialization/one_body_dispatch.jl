@@ -501,6 +501,13 @@ function _one_body_block_set_requested_materialize_terms(materialize_terms)
     )
 end
 
+const _ONE_BODY_BLOCK_SET_MATERIALIZABLE_TERMS = (
+    :overlap,
+    :position_x,
+    :position_y,
+    :position_z,
+)
+
 function _one_body_validate_block_set_materialize_terms(
     materialize_terms::Tuple,
     requested_terms::Tuple,
@@ -511,9 +518,9 @@ function _one_body_validate_block_set_materialize_terms(
                 "one-body block-set materialize term $(term) is not in requested terms $(requested_terms)",
             ),
         )
-        term === :overlap || throw(
+        term in _ONE_BODY_BLOCK_SET_MATERIALIZABLE_TERMS || throw(
             ArgumentError(
-                "one-body block-set materialization currently supports only explicit :overlap, got $(term)",
+                "one-body block-set materialization currently supports only explicit overlap/position terms, got $(term)",
             ),
         )
     end
@@ -530,7 +537,7 @@ function _one_body_block_set_materialized_term_batch_results(
     batch_results = PairBlockMaterializationBatchResult[]
     materialized_terms = Symbol[]
     for term in materialize_terms
-        term === :overlap || continue
+        term in _ONE_BODY_BLOCK_SET_MATERIALIZABLE_TERMS || continue
         consumption = _one_body_pair_block_consumption(
             plan,
             term;

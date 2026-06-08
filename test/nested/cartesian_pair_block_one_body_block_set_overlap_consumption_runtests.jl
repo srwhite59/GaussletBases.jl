@@ -1,8 +1,8 @@
 # Runtime role: tiny contract.
 #
-# Opt-in overlap materialization for the mixed one-body block-set consumer.
-# This delegates only the explicit `:overlap` term to the existing one-term
-# consumer and leaves other requested terms deferred.
+# Opt-in overlap/position materialization for the mixed one-body block-set
+# consumer. This delegates only explicit overlap/position terms to the existing
+# one-term consumer and leaves other requested terms deferred.
 
 using Test
 using GaussletBases
@@ -77,7 +77,7 @@ function _block_overlap_record(
         (; left = :synthetic_left_transform, right = :synthetic_right_transform),
         (; left = :synthetic_left_realization, right = :synthetic_right_realization),
         :synthetic_final_block_path,
-        (:overlap, :kinetic),
+        (:overlap, :position_x, :position_y, :position_z, :kinetic),
         materialization_path,
         :ready_metadata_only_not_materialized,
         nothing,
@@ -154,6 +154,7 @@ end
     inputs = (;
         parent_axis_counts = (2, 2, 2),
         overlap_1d = _block_overlap_1d(),
+        position_1d = _block_overlap_1d(),
         kinetic_1d = _block_overlap_1d(),
     )
 
@@ -236,11 +237,102 @@ end
         :unsupported_pair_block_materialization_path,
     ) == 1
 
+    position = CPBMBlockOverlap._one_body_pair_block_set_consumption(
+        plan;
+        terms = (:overlap, :position_y, :kinetic),
+        inputs,
+        materialize_terms = (:position_y,),
+    )
+    @test position.status ==
+          :partially_materialized_mixed_one_body_block_set_consumption
+    @test position.materialized_terms == (:position_y,)
+    @test position.deferred_terms == (:overlap, :kinetic)
+    @test position.total_materialized_count == 2
+    @test position.total_skipped_count == 1
+    @test position.source_operator_blocks_materialized
+    @test position.final_pair_blocks_materialized
+    @test position.term_statuses[1].status ==
+          :deferred_metadata_only_mixed_one_body_pair_block_batch
+    @test position.term_statuses[2].term == :position_y
+    @test position.term_statuses[2].status ==
+          :partially_materialized_mixed_one_body_pair_block_batch
+    @test position.term_statuses[2].batch_result_supplied
+    @test position.term_statuses[3].status ==
+          :deferred_metadata_only_mixed_one_body_pair_block_batch
+    @test _block_overlap_count(
+        position.block_set_summary.materialized_selector_family_counts,
+        :selector_family,
+        :direct_direct,
+    ) == 1
+    @test _block_overlap_count(
+        position.block_set_summary.materialized_selector_family_counts,
+        :selector_family,
+        :pqs_source_pair,
+    ) == 1
+
+    overlap_position = CPBMBlockOverlap._one_body_pair_block_set_consumption(
+        plan;
+        terms = (:overlap, :position_x),
+        inputs,
+        materialize_terms = (:overlap, :position_x),
+    )
+    @test overlap_position.materialized_terms == (:overlap, :position_x)
+    @test overlap_position.deferred_terms == ()
+    @test overlap_position.total_materialized_count == 4
+    @test overlap_position.total_skipped_count == 2
+    @test overlap_position.block_set_summary.supplied_term_count == 2
+    @test overlap_position.block_set_summary.deferred_term_count == 0
+    @test _block_overlap_count(
+        overlap_position.block_set_summary.materialized_selector_family_counts,
+        :selector_family,
+        :direct_direct,
+    ) == 2
+    @test _block_overlap_count(
+        overlap_position.block_set_summary.materialized_selector_family_counts,
+        :selector_family,
+        :pqs_source_pair,
+    ) == 2
+
+    all_positions = CPBMBlockOverlap._one_body_pair_block_set_consumption(
+        plan;
+        terms = (:position_x, :position_y, :position_z),
+        inputs,
+        materialize_terms = (:position_x, :position_y, :position_z),
+    )
+    @test all_positions.materialized_terms ==
+          (:position_x, :position_y, :position_z)
+    @test all_positions.deferred_terms == ()
+    @test all_positions.total_materialized_count == 6
+    @test all_positions.total_skipped_count == 3
+    @test all_positions.block_set_summary.supplied_term_count == 3
+    @test all_positions.block_set_summary.deferred_term_count == 0
+    @test _block_overlap_count(
+        all_positions.block_set_summary.materialized_selector_family_counts,
+        :selector_family,
+        :direct_direct,
+    ) == 3
+    @test _block_overlap_count(
+        all_positions.block_set_summary.materialized_selector_family_counts,
+        :selector_family,
+        :pqs_source_pair,
+    ) == 3
+    @test _block_overlap_count(
+        all_positions.block_set_summary.skipped_selector_family_counts,
+        :selector_family,
+        :unsupported,
+    ) == 3
+
     @test_throws ArgumentError CPBMBlockOverlap._one_body_pair_block_set_consumption(
         plan;
         terms = (:overlap, :kinetic),
         inputs,
         materialize_terms = (:kinetic,),
+    )
+    @test_throws ArgumentError CPBMBlockOverlap._one_body_pair_block_set_consumption(
+        plan;
+        terms = (:overlap, :x2_x),
+        inputs = merge(inputs, (; x2_1d = _block_overlap_1d())),
+        materialize_terms = (:x2_x,),
     )
     @test_throws ArgumentError CPBMBlockOverlap._one_body_pair_block_set_consumption(
         plan;
