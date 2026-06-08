@@ -180,6 +180,200 @@ function _one_body_pair_block_plan_dispatch_summary(plan, term; kwargs...)
     )
 end
 
+function _one_body_pair_block_set_preflight_summary(
+    plan::PairBlockMaterializationPlan;
+    terms = _ONE_BODY_TERMS,
+    inputs = (;),
+    provider = nothing,
+    parent_axis_counts_required =
+        _one_body_block_set_parent_axis_counts_required(plan),
+)
+    term_set_descriptor = _one_body_term_set_descriptor(terms)
+    input_summary = _one_body_term_set_factor_input_summary(
+        term_set_descriptor.terms;
+        inputs,
+        provider,
+        parent_axis_counts_required,
+    )
+    term_summaries = Tuple(
+        _one_body_pair_block_set_preflight_term_summary(
+            _one_body_pair_block_plan_dispatch_summary(
+                plan,
+                term;
+                inputs,
+                provider,
+            ),
+        ) for term in term_set_descriptor.terms
+    )
+    total_ready_record_count = sum(summary.ready_count for summary in term_summaries)
+    total_blocked_record_count =
+        sum(summary.blocked_count for summary in term_summaries)
+
+    return (;
+        object_kind =
+            :cartesian_pair_block_mixed_one_body_block_set_preflight_summary,
+        status = _one_body_block_set_preflight_status(
+            input_summary,
+            total_ready_record_count,
+            total_blocked_record_count,
+        ),
+        blocker = _one_body_block_set_preflight_blocker(
+            input_summary,
+            total_blocked_record_count,
+        ),
+        term_set_descriptor,
+        input_summary,
+        requested_terms = term_set_descriptor.terms,
+        terms = term_set_descriptor.terms,
+        term_count = term_set_descriptor.term_count,
+        plan_record_count = length(pair_block_materialization_records(plan)),
+        term_set_input_status = input_summary.status,
+        term_set_input_blocker = input_summary.blocker,
+        term_set_input_blockers = input_summary.blockers,
+        input_source = input_summary.input_source,
+        factor_provider_scope = input_summary.factor_provider_scope,
+        parent_axis_counts_required = input_summary.parent_axis_counts_required,
+        parent_axis_counts_status = input_summary.parent_axis_counts_status,
+        required_factor_names = input_summary.required_factor_names,
+        present_factor_names = input_summary.present_factor_names,
+        missing_factor_names = input_summary.missing_factor_names,
+        term_statuses = Tuple(
+            (;
+                term = term_summary.term,
+                status = term_summary.status,
+                ready_count = term_summary.ready_count,
+                blocked_count = term_summary.blocked_count,
+            ) for term_summary in term_summaries
+        ),
+        term_status_counts = _one_body_count_by(term_summaries, :status),
+        total_ready_record_count,
+        total_blocked_record_count,
+        selector_family_counts = _one_body_block_set_aggregate_counts(
+            term_summaries,
+            :selector_family_counts,
+            :selector_family,
+        ),
+        dispatch_status_counts = _one_body_block_set_aggregate_counts(
+            term_summaries,
+            :dispatch_status_counts,
+            :status,
+        ),
+        record_materialization_path_counts =
+            _one_body_block_set_aggregate_counts(
+                term_summaries,
+                :record_materialization_path_counts,
+                :record_materialization_path,
+            ),
+        materialization_path_counts = _one_body_block_set_aggregate_counts(
+            term_summaries,
+            :materialization_path_counts,
+            :materialization_path,
+        ),
+        blocker_counts = _one_body_block_set_aggregate_counts(
+            term_summaries,
+            :blocker_counts,
+            :blocker,
+        ),
+        term_summaries,
+        result_terms_remain_separated = true,
+        block_set_results_summed = false,
+        factor_values_stored = false,
+        factors_constructed = false,
+        numerical_blocks_materialized = false,
+        materialized = false,
+        source_operator_blocks_materialized = false,
+        final_pair_blocks_materialized = false,
+        operator_blocks_materialized = false,
+        hamiltonian_data_materialized = false,
+        artifacts_materialized = false,
+        global_operator_blocks_materialized = false,
+        global_hamiltonian_data_materialized = false,
+        global_artifacts_materialized = false,
+        mixed_dispatcher_materialized = false,
+        route_driver_wiring = false,
+        coulomb_materialized = false,
+        density_density_materialized = false,
+        ida_mwg_data_materialized = false,
+        pqs_lowdin_materialized = false,
+        full_white_lindsey_route_assembled = false,
+    )
+end
+
+function _one_body_pair_block_set_preflight_summary(plan; kwargs...)
+    throw(
+        ArgumentError(
+            "one-body block-set preflight summary requires a PairBlockMaterializationPlan",
+        ),
+    )
+end
+
+function _one_body_pair_block_set_preflight_term_summary(plan_dispatch_summary)
+    return (;
+        object_kind =
+            :cartesian_pair_block_mixed_one_body_block_set_preflight_term_summary,
+        term = plan_dispatch_summary.requested_term,
+        status = plan_dispatch_summary.status,
+        blocker = plan_dispatch_summary.blocker,
+        record_count = plan_dispatch_summary.record_count,
+        ready_count = plan_dispatch_summary.ready_count,
+        blocked_count = plan_dispatch_summary.blocked_count,
+        selector_family_counts = plan_dispatch_summary.selector_family_counts,
+        dispatch_status_counts = plan_dispatch_summary.dispatch_status_counts,
+        blocker_counts = plan_dispatch_summary.blocker_counts,
+        record_materialization_path_counts =
+            plan_dispatch_summary.record_materialization_path_counts,
+        materialization_path_counts =
+            plan_dispatch_summary.materialization_path_counts,
+        white_lindsey_unit_pair_required_count =
+            plan_dispatch_summary.white_lindsey_unit_pair_required_count,
+        white_lindsey_unit_pair_available_count =
+            plan_dispatch_summary.white_lindsey_unit_pair_available_count,
+        factors_constructed = false,
+        numerical_blocks_materialized = false,
+        materialized = false,
+        source_operator_blocks_materialized = false,
+        final_pair_blocks_materialized = false,
+        operator_blocks_materialized = false,
+        hamiltonian_data_materialized = false,
+        artifacts_materialized = false,
+    )
+end
+
+function _one_body_block_set_parent_axis_counts_required(
+    plan::PairBlockMaterializationPlan,
+)
+    return any(
+        record -> _one_body_dispatch_parent_axis_counts_required(
+            _one_body_record_selector_family(record),
+        ),
+        pair_block_materialization_records(plan),
+    )
+end
+
+function _one_body_block_set_preflight_status(
+    input_summary,
+    total_ready_record_count::Int,
+    total_blocked_record_count::Int,
+)
+    input_summary.status === :available_one_body_term_set_factor_inputs ||
+        return :blocked_mixed_one_body_block_set_preflight
+    total_blocked_record_count == 0 &&
+        return :ready_metadata_only_not_materialized
+    total_ready_record_count > 0 &&
+        return :partially_ready_mixed_one_body_block_set_preflight
+    return :blocked_mixed_one_body_block_set_preflight
+end
+
+function _one_body_block_set_preflight_blocker(
+    input_summary,
+    total_blocked_record_count::Int,
+)
+    input_summary.status === :available_one_body_term_set_factor_inputs ||
+        return input_summary.blocker
+    total_blocked_record_count == 0 && return nothing
+    return :blocked_mixed_one_body_dispatch_records
+end
+
 function _one_body_pair_block(
     record::PairBlockMaterializationRecord,
     term::Symbol;
