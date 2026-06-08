@@ -8544,9 +8544,7 @@ function cartesian_pair_terms(units, transforms, recipe)
             low_order_pairs.route_core_pair_inventory_available,
         route_core_pair_inventory_status =
             low_order_pairs.route_core_pair_inventory_status,
-        route_core_pair_inventory = low_order_pairs.route_core_pair_inventory,
         route_core_pair_count = low_order_pairs.route_core_pair_count,
-        route_core_pair_keys = low_order_pairs.route_core_pair_keys,
         route_core_pair_order_matches_staged =
             low_order_pairs.route_core_pair_order_matches_staged,
         route_core_pair_order_comparison_source =

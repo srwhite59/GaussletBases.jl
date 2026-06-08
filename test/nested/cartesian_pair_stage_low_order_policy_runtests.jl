@@ -460,7 +460,8 @@ end
           expected_pair_keys
     @test atom_growth_summary.route_core_pair_keys == expected_pair_keys
     @test atom_growth_summary.route_core_pair_order_matches_staged
-    @test atom_growth_pairs.route_core_pair_keys == expected_pair_keys
+    @test atom_growth_pairs.low_order_pairs.route_core_pair_keys ==
+          expected_pair_keys
     route_core_family_counts =
         atom_growth_summary.route_core_pair_family_counts
     @test !isempty(route_core_family_counts)
