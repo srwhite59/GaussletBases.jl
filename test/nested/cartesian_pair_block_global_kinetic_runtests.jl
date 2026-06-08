@@ -188,7 +188,7 @@ end
 
     @test_throws ArgumentError CPBMGlobalKinetic.one_body_placement_plan(
         _global_kinetic_collection();
-        term = :position_x,
+        term = :coulomb,
     )
 
     placeable = only(

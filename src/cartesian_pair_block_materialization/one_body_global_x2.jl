@@ -72,26 +72,15 @@ function _one_body_global_x2_matrix(placement_plan::NamedTuple, term::Symbol)
             validation_blocker,
         )
 
-    matrix = zeros(Float64, dimension, dimension)
-    placed_block_count = 0
-    for record in placement_plan.placeable_records
-        block = record.result.block
-        rows = record.target_ranges.rows
-        columns = record.target_ranges.columns
-        matrix[rows, columns] .+= block
-        placed_block_count += 1
-        rows == columns && continue
-        matrix[columns, rows] .+= transpose(block)
-        placed_block_count += 1
-    end
+    placed = _one_body_global_symmetric_matrix_and_count(placement_plan, dimension)
 
     return _one_body_global_x2_result(
         placement_plan,
         term,
         Symbol("materialized_global_", String(term), "_matrix"),
         nothing,
-        matrix;
-        placed_block_count,
+        placed.matrix;
+        placed_block_count = placed.placed_block_count,
         skipped_block_count = placement_plan.blocked_count,
         materialized = true,
     )
@@ -115,13 +104,7 @@ function _one_body_assert_x2_placement_plan_object(
     placement_plan::NamedTuple,
     term::Symbol,
 )
-    _one_body_placement_value(placement_plan, :object_kind, nothing) ===
-    :cartesian_pair_block_local_one_body_placement_plan || throw(
-        ArgumentError(
-            "global $(term) matrix assembly requires a local one-body placement plan",
-        ),
-    )
-    return nothing
+    return _one_body_assert_global_placement_plan_object(placement_plan, term)
 end
 
 function _one_body_global_x2_validation_blocker(
@@ -129,41 +112,11 @@ function _one_body_global_x2_validation_blocker(
     term::Symbol,
     dimension::Int,
 )
-    for record in placement_plan.placeable_records
-        symmetry = _one_body_placement_value(record, :symmetry, :symmetric)
-        symmetry === :symmetric ||
-            return Symbol("non_symmetric_", String(term), "_placement_record")
-
-        result = _one_body_placement_value(record, :result, nothing)
-        result isa PairBlockMaterializationResult ||
-            return :missing_local_block_result
-
-        block = result.block
-        block isa AbstractMatrix{<:Real} ||
-            return :missing_local_block_result
-
-        target_ranges = _one_body_placement_value(record, :target_ranges, nothing)
-        target_ranges isa NamedTuple ||
-            return :missing_column_ranges
-        haskey(target_ranges, :rows) && haskey(target_ranges, :columns) ||
-            return :missing_column_ranges
-        rows = target_ranges.rows
-        columns = target_ranges.columns
-        (
-            _one_body_placement_valid_column_range(rows) &&
-            _one_body_placement_valid_column_range(columns)
-        ) || return :missing_column_ranges
-
-        size(block) == (length(rows), length(columns)) ||
-            return :local_block_shape_mismatch
-
-        _one_body_placement_ranges_inside_global_dimension(
-            rows,
-            columns,
-            dimension,
-        ) || return :target_ranges_outside_global_dimension
-    end
-    return nothing
+    return _one_body_global_symmetric_validation_blocker(
+        placement_plan,
+        dimension,
+        Symbol("non_symmetric_", String(term), "_placement_record"),
+    )
 end
 
 function _one_body_global_x2_blocked_result(
