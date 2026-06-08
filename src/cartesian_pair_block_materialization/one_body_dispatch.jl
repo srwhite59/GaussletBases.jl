@@ -243,7 +243,11 @@ function _one_body_pair_blocks(
     term::Symbol;
     inputs = (;),
     provider = nothing,
-    materialize_selector_families = (:direct_direct, :pqs_source_pair),
+    materialize_selector_families = (
+        :direct_direct,
+        :pqs_source_pair,
+        :white_lindsey_boundary_stratum,
+    ),
 )
     unit_pair_lookup = _one_body_unit_pair_lookup(plan)
     materialized_results = PairBlockMaterializationResult[]
@@ -305,7 +309,11 @@ function _one_body_pair_blocks(
                     result_tuple,
                     :pqs_source_pair,
                 ),
-            white_lindsey_materialized = false,
+            white_lindsey_materialized =
+                _one_body_result_selector_family_materialized(
+                    result_tuple,
+                    :white_lindsey_boundary_stratum,
+                ),
             route_driver_wiring = false,
             hamiltonian_data_materialized = false,
             artifacts_materialized = false,
@@ -319,6 +327,11 @@ function _one_body_plan_dispatcher_name(materialize_selector_families)
         return :direct_direct_only_plan_dispatcher
     selector_families == (:direct_direct, :pqs_source_pair) &&
         return :direct_pqs_source_plan_dispatcher
+    selector_families == (
+        :direct_direct,
+        :pqs_source_pair,
+        :white_lindsey_boundary_stratum,
+    ) && return :direct_pqs_source_lw_plan_dispatcher
     return :mixed_one_body_plan_dispatcher
 end
 
@@ -327,6 +340,11 @@ function _one_body_numerical_dispatch_scope(materialize_selector_families)
     selector_families == (:direct_direct,) && return :direct_direct_only
     selector_families == (:direct_direct, :pqs_source_pair) &&
         return :direct_direct_and_pqs_source_pair
+    selector_families == (
+        :direct_direct,
+        :pqs_source_pair,
+        :white_lindsey_boundary_stratum,
+    ) && return :direct_direct_pqs_source_pair_and_white_lindsey_boundary_stratum
     return :custom_selector_family_scope
 end
 

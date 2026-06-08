@@ -284,9 +284,9 @@ end
     @test !overlap_batch.hamiltonian_data_materialized
     @test !overlap_batch.artifacts_materialized
     @test overlap_batch.metadata.mixed_one_body_dispatcher ==
-          :direct_pqs_source_plan_dispatcher
+          :direct_pqs_source_lw_plan_dispatcher
     @test overlap_batch.metadata.numerical_dispatch_scope ==
-          :direct_direct_and_pqs_source_pair
+          :direct_direct_pqs_source_pair_and_white_lindsey_boundary_stratum
     @test overlap_batch.metadata.pqs_source_pair_materialized
     @test !overlap_batch.metadata.white_lindsey_materialized
     @test _batch_dispatch_count(
