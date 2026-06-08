@@ -1,8 +1,9 @@
-# Runtime role: tiny contract.
+# Runtime role: tiny contract / semantic surface.
 #
 # Metadata-only block-set summary shape for future mixed one-body term-set
 # consumption. This does not call the numerical one-term consumer or build
-# factors; use the smoke/contract tests for numerical dispatch behavior.
+# factors. Use this when the block-set summary contract changes; use the smoke
+# test for routine per-pass status/count validation.
 
 using Test
 using GaussletBases

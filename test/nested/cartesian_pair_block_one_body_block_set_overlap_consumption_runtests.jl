@@ -1,8 +1,10 @@
-# Runtime role: tiny contract.
+# Runtime role: contract / semantic materialization.
 #
 # Opt-in safe-term materialization for the mixed one-body block-set consumer.
 # This delegates only explicit safe one-body terms to the existing one-term
-# consumer and leaves other requested terms deferred.
+# consumer and leaves other requested terms deferred. Use it for safe-term
+# materialization semantics; use the smoke test for routine per-pass compact
+# status/count validation.
 
 using Test
 using GaussletBases

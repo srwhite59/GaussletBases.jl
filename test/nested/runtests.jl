@@ -4,7 +4,9 @@
 # For mixed one-body consumer edits, prefer the tiny smoke test directly:
 #   julia --project=. test/nested/cartesian_pair_block_one_body_consumer_smoke_runtests.jl
 # Heavier mixed one-body contract/boundary files are for semantic changes or
-# baton closeout, not routine small-edit validation.
+# baton closeout, not routine small-edit validation. White-Lindsey boundary and
+# oracle comparisons are gate tests only when LW adapter behavior changes or at
+# baton closeout.
 
 using Test
 using LinearAlgebra

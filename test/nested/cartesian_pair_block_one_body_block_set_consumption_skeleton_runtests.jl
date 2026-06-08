@@ -1,7 +1,9 @@
-# Runtime role: tiny contract.
+# Runtime role: tiny contract / semantic surface.
 #
 # Deferred metadata-only block-set consumption skeleton. This does not call the
-# one-term numerical consumer, construct factors, or store batch matrices.
+# one-term numerical consumer, construct factors, or store batch matrices. Use
+# it when deferred-consumption skeleton semantics change; use the smoke test for
+# routine per-pass status/count validation.
 
 using Test
 using GaussletBases

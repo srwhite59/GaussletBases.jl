@@ -1,9 +1,9 @@
 # Runtime role: tiny smoke / routine per-pass.
 #
-# This is the preferred mixed one-body consumer validation for small edits.
-# It uses synthetic metadata only, checks compact counts/flags, and avoids the
-# real White-Lindsey adapter fixture. Use the contract/boundary tests for
-# semantic changes or closeout validation.
+# This is the preferred mixed one-body consumer gate for small status/count
+# edits. It uses synthetic metadata only, checks compact summaries/flags, and
+# avoids the real White-Lindsey adapter fixture. Use the block-set
+# contract/boundary tests for semantic changes or baton closeout validation.
 
 using Test
 using GaussletBases

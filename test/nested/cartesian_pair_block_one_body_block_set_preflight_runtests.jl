@@ -1,8 +1,9 @@
-# Runtime role: tiny contract.
+# Runtime role: tiny contract / semantic surface.
 #
 # Metadata-only preflight over a mixed one-body term set. This test does not
 # call numerical one-term consumption, construct factors, or build the
-# White-Lindsey fixture.
+# White-Lindsey fixture. Use it when preflight/readiness semantics change; use
+# the smoke test for routine per-pass status/count validation.
 
 using Test
 using GaussletBases
