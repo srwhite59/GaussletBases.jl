@@ -449,6 +449,109 @@ function _one_body_pair_blocks(plan, term; kwargs...)
     )
 end
 
+function _one_body_pair_block_batch_summary(
+    batch_result::PairBlockMaterializationBatchResult,
+)
+    result_tuple = batch_result.materialized_results
+    skipped_tuple = batch_result.skipped_records
+    return (;
+        object_kind = :cartesian_pair_block_mixed_one_body_batch_summary,
+        status = _one_body_batch_summary_status(batch_result),
+        term = batch_result.term,
+        materialized_count = batch_result.materialized_count,
+        skipped_count = batch_result.skipped_count,
+        materialized_selector_family_counts =
+            _one_body_materialized_selector_family_counts(result_tuple),
+        skipped_selector_family_counts =
+            _one_body_count_optional_by(skipped_tuple, :selector_family),
+        skipped_blocker_counts =
+            _one_body_count_optional_by(skipped_tuple, :blocker),
+        source_space_only_result_count =
+            _one_body_source_space_only_result_count(result_tuple),
+        final_local_block_result_count =
+            _one_body_final_local_block_result_count(result_tuple),
+        direct_direct_materialized =
+            _one_body_result_selector_family_materialized(
+                result_tuple,
+                :direct_direct,
+            ),
+        pqs_source_pair_materialized =
+            _one_body_result_selector_family_materialized(
+                result_tuple,
+                :pqs_source_pair,
+            ),
+        white_lindsey_boundary_stratum_materialized =
+            _one_body_result_selector_family_materialized(
+                result_tuple,
+                :white_lindsey_boundary_stratum,
+            ),
+        white_lindsey_materialized =
+            _one_body_result_selector_family_materialized(
+                result_tuple,
+                :white_lindsey_boundary_stratum,
+            ),
+        materialized = batch_result.materialized,
+        source_operator_blocks_materialized =
+            batch_result.source_operator_blocks_materialized,
+        final_pair_blocks_materialized = batch_result.final_pair_blocks_materialized,
+        operator_blocks_materialized = batch_result.operator_blocks_materialized,
+        hamiltonian_data_materialized =
+            batch_result.hamiltonian_data_materialized,
+        artifacts_materialized = batch_result.artifacts_materialized,
+        global_operator_blocks_materialized =
+            batch_result.operator_blocks_materialized,
+        global_hamiltonian_data_materialized =
+            batch_result.hamiltonian_data_materialized,
+        global_artifacts_materialized = batch_result.artifacts_materialized,
+        materialization_path =
+            _one_body_get_metadata(batch_result, :materialization_path, nothing),
+        mixed_one_body_dispatcher =
+            _one_body_get_metadata(batch_result, :mixed_one_body_dispatcher, nothing),
+        numerical_dispatch_scope =
+            _one_body_get_metadata(batch_result, :numerical_dispatch_scope, nothing),
+        pair_block_record_count =
+            _one_body_get_metadata(batch_result, :pair_block_record_count, nothing),
+        factors_constructed =
+            _one_body_get_metadata(batch_result, :factors_constructed, false),
+        route_driver_wiring =
+            _one_body_get_metadata(batch_result, :route_driver_wiring, false),
+    )
+end
+
+function _one_body_pair_block_batch_summary(batch_result)
+    throw(
+        ArgumentError(
+            "one-body pair block batch summary requires a PairBlockMaterializationBatchResult",
+        ),
+    )
+end
+
+function _one_body_batch_summary_status(
+    batch_result::PairBlockMaterializationBatchResult,
+)
+    batch_result.materialized_count == 0 &&
+        return :skipped_mixed_one_body_pair_block_batch
+    batch_result.skipped_count == 0 &&
+        return :materialized_mixed_one_body_pair_block_batch
+    return :partially_materialized_mixed_one_body_pair_block_batch
+end
+
+function _one_body_source_space_only_result_count(
+    results::Tuple{Vararg{PairBlockMaterializationResult}},
+)
+    return count(
+        result -> result.source_operator_blocks_materialized &&
+                  !result.final_pair_blocks_materialized,
+        results,
+    )
+end
+
+function _one_body_final_local_block_result_count(
+    results::Tuple{Vararg{PairBlockMaterializationResult}},
+)
+    return count(result -> result.final_pair_blocks_materialized, results)
+end
+
 function _one_body_record_selector_family(record::PairBlockMaterializationRecord)
     record.materialization_path === :direct_direct_pair_block_materialization_pilot &&
         return :direct_direct
@@ -625,6 +728,17 @@ function _one_body_blocker_counts(record_summaries::Tuple)
     return _one_body_count_values(blockers, :blocker)
 end
 
+function _one_body_count_optional_by(record_summaries::Tuple, field::Symbol)
+    values = Any[]
+    for summary in record_summaries
+        haskey(summary, field) || continue
+        value = getproperty(summary, field)
+        isnothing(value) && continue
+        push!(values, value)
+    end
+    return _one_body_count_values(values, field)
+end
+
 function _one_body_count_values(values, field::Symbol)
     counts = Dict{Any,Int}()
     ordered_values = Any[]
@@ -639,6 +753,15 @@ function _one_body_count_values(values, field::Symbol)
         NamedTuple{(field, :count)}((value, counts[value]))
         for value in ordered_values
     )
+end
+
+function _one_body_get_metadata(
+    batch_result::PairBlockMaterializationBatchResult,
+    key::Symbol,
+    default,
+)
+    haskey(batch_result.metadata, key) || return default
+    return getproperty(batch_result.metadata, key)
 end
 
 function _one_body_dispatch_parent_axis_counts_required(selector_family)
