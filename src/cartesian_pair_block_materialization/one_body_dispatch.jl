@@ -565,6 +565,31 @@ function _one_body_pair_block_set_consumption_summary(consumption)
     )
 end
 
+function _one_body_pair_block_set_view(consumption::NamedTuple)
+    compact_summary =
+        _one_body_pair_block_set_consumption_summary(consumption)
+    return merge(
+        compact_summary,
+        (;
+            object_kind = :cartesian_pair_block_mixed_one_body_block_set_view,
+            summary_object_kind = compact_summary.object_kind,
+            view_status = :available_mixed_one_body_block_set_view,
+            term_batch_results_stored_in_view = false,
+            batch_result_objects_stored_in_view = false,
+            matrix_fields_stored_in_view = false,
+            nested_preflight_or_block_set_summaries_stored_in_view = false,
+        ),
+    )
+end
+
+function _one_body_pair_block_set_view(consumption)
+    throw(
+        ArgumentError(
+            "one-body block-set view requires a NamedTuple consumption object",
+        ),
+    )
+end
+
 function _one_body_block_set_consumption_preflight_summary(
     plan::PairBlockMaterializationPlan,
     term_set_descriptor,

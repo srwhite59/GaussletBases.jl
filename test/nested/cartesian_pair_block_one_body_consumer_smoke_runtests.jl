@@ -33,6 +33,7 @@ function _mixed_consumer_smoke_compact_summary(summary)
         :preflight_summary,
         :block_set_summary,
         :term_summaries,
+        :consumption_summary,
     )
     return !any(field -> hasproperty(summary, field), forbidden_fields)
 end
@@ -313,6 +314,74 @@ end
                        !hasproperty(term_status, :block),
         block_set_summary.term_statuses,
     )
+
+    block_set_view =
+        CPBMSmoke._one_body_pair_block_set_view(block_set_consumption)
+    @test block_set_view.object_kind ==
+          :cartesian_pair_block_mixed_one_body_block_set_view
+    @test block_set_view.summary_object_kind ==
+          :cartesian_pair_block_mixed_one_body_block_set_consumption_summary
+    @test block_set_view.view_status == :available_mixed_one_body_block_set_view
+    @test block_set_view.status ==
+          :partially_materialized_mixed_one_body_block_set_consumption
+    @test isnothing(block_set_view.blocker)
+    @test block_set_view.requested_terms == (:overlap, :kinetic)
+    @test block_set_view.requested_materialize_terms == (:overlap,)
+    @test block_set_view.materialized_terms == (:overlap,)
+    @test block_set_view.deferred_terms == (:kinetic,)
+    @test block_set_view.term_statuses == block_set_summary.term_statuses
+    @test block_set_view.total_materialized_count == 2
+    @test block_set_view.total_skipped_count == 2
+    @test _mixed_consumer_smoke_count(
+        block_set_view.materialized_selector_family_counts,
+        :selector_family,
+        :direct_direct,
+    ) == 1
+    @test _mixed_consumer_smoke_count(
+        block_set_view.materialized_selector_family_counts,
+        :selector_family,
+        :pqs_source_pair,
+    ) == 1
+    @test _mixed_consumer_smoke_count(
+        block_set_view.skipped_selector_family_counts,
+        :selector_family,
+        :white_lindsey_boundary_stratum,
+    ) == 1
+    @test _mixed_consumer_smoke_count(
+        block_set_view.skipped_selector_family_counts,
+        :selector_family,
+        :unsupported,
+    ) == 1
+    @test _mixed_consumer_smoke_count(
+        block_set_view.skipped_blocker_counts,
+        :blocker,
+        :missing_white_lindsey_unit_pair,
+    ) == 1
+    @test _mixed_consumer_smoke_count(
+        block_set_view.skipped_blocker_counts,
+        :blocker,
+        :unsupported_pair_block_materialization_path,
+    ) == 1
+    @test !block_set_view.term_batch_results_stored_in_view
+    @test !block_set_view.batch_result_objects_stored_in_view
+    @test !block_set_view.matrix_fields_stored_in_view
+    @test !block_set_view.nested_preflight_or_block_set_summaries_stored_in_view
+    @test !block_set_view.term_batch_results_stored_in_summary
+    @test !block_set_view.factors_constructed
+    @test block_set_view.source_operator_blocks_materialized
+    @test block_set_view.final_pair_blocks_materialized
+    @test !block_set_view.operator_blocks_materialized
+    @test !block_set_view.hamiltonian_data_materialized
+    @test !block_set_view.artifacts_materialized
+    @test !block_set_view.global_operator_blocks_materialized
+    @test !block_set_view.global_hamiltonian_data_materialized
+    @test !block_set_view.global_artifacts_materialized
+    @test !block_set_view.route_driver_wiring
+    @test !block_set_view.coulomb_materialized
+    @test !block_set_view.ida_mwg_data_materialized
+    @test !block_set_view.pqs_lowdin_materialized
+    @test !block_set_view.full_white_lindsey_route_assembled
+    @test _mixed_consumer_smoke_compact_summary(block_set_view)
 
     direct_result = only(
         result for result in consumption.batch_result.materialized_results
