@@ -279,8 +279,13 @@ end
     @test position_z_plan.status === :empty_local_one_body_placement_plan
     @test position_z_plan.record_count == 0
 
+    x2_x_plan = CPBMPlacement.one_body_x2_x_placement_plan(collection)
+    @test x2_x_plan.term === :x2_x
+    @test x2_x_plan.status === :empty_local_one_body_placement_plan
+    @test x2_x_plan.record_count == 0
+
     @test_throws ArgumentError CPBMPlacement.one_body_placement_plan(
         collection;
-        term = :x2_x,
+        term = :x2_y,
     )
 end

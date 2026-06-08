@@ -139,6 +139,10 @@ export PairBlockMaterializationPolicy,
 #     Position-axis dense global retained-matrix assembly pilots from placeable
 #     local placement records only.
 #
+# one_body_global_x2.jl
+#     X2-axis dense global retained-matrix assembly pilots from placeable local
+#     placement records only.
+#
 # pqs_source_safe_terms.jl
 #     PQS/PQS raw source-space safe-term helpers.
 #
@@ -206,6 +210,7 @@ include("one_body_placement_plan.jl")
 include("one_body_global_overlap.jl")
 include("one_body_global_kinetic.jl")
 include("one_body_global_position.jl")
+include("one_body_global_x2.jl")
 include("direct_overlap.jl")
 include("pqs_source_safe_terms.jl")
 include("pqs_source_shell_bridge.jl")

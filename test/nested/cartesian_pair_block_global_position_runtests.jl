@@ -340,6 +340,6 @@ end
 
     @test_throws ArgumentError CPBMGlobalPosition.one_body_placement_plan(
         _global_position_collection(:position_x);
-        term = :x2_x,
+        term = :x2_y,
     )
 end
