@@ -118,6 +118,91 @@ const CPBMOneBodyTerms = GaussletBases.CartesianPairBlockMaterialization
     @test_throws ArgumentError CPBMOneBodyTerms._one_body_term_descriptor("overlap")
 end
 
+@testset "CartesianPairBlockMaterialization one-body term-set descriptor" begin
+    default_terms = (
+        :overlap,
+        :position_x,
+        :position_y,
+        :position_z,
+        :x2_x,
+        :x2_y,
+        :x2_z,
+        :kinetic,
+    )
+
+    descriptor = CPBMOneBodyTerms._one_body_term_set_descriptor()
+    @test descriptor.object_kind ==
+          :cartesian_pair_block_one_body_term_set_descriptor
+    @test descriptor.status == :available_one_body_term_set_descriptor
+    @test descriptor.requested_terms == default_terms
+    @test descriptor.terms == default_terms
+    @test descriptor.term_count == 8
+    @test length(descriptor.term_descriptors) == 8
+    @test getproperty.(descriptor.term_descriptors, :requested_term) ==
+          default_terms
+    @test descriptor.term_families == (
+        :overlap,
+        :position,
+        :position,
+        :position,
+        :x2,
+        :x2,
+        :x2,
+        :kinetic,
+    )
+    @test descriptor.required_factor_names ==
+          (:overlap_1d, :position_1d, :x2_1d, :kinetic_1d)
+    @test descriptor.result_terms_remain_separated
+    @test !descriptor.block_set_results_summed
+    @test descriptor.factor_provider_scope == :caller_supplied_or_family_provider
+    @test !descriptor.factors_constructed
+    @test !descriptor.numerical_blocks_materialized
+    @test !descriptor.mixed_dispatcher_materialized
+    @test !descriptor.route_driver_wiring
+    @test !descriptor.global_operator_blocks_materialized
+    @test !descriptor.hamiltonian_data_materialized
+    @test !descriptor.artifacts_materialized
+    @test !descriptor.coulomb_materialized
+    @test !descriptor.density_density_materialized
+    @test !descriptor.ida_mwg_data_materialized
+    @test !descriptor.pqs_lowdin_materialized
+    @test !descriptor.full_white_lindsey_route_assembled
+
+    custom = CPBMOneBodyTerms._one_body_term_set_descriptor(
+        (:kinetic, :overlap, :position_y),
+    )
+    @test custom.terms == (:kinetic, :overlap, :position_y)
+    @test custom.term_count == 3
+    @test getproperty.(custom.term_descriptors, :requested_term) ==
+          (:kinetic, :overlap, :position_y)
+    @test custom.required_factor_names ==
+          (:overlap_1d, :kinetic_1d, :position_1d)
+
+    singleton = CPBMOneBodyTerms._one_body_term_set_descriptor(:overlap)
+    @test singleton.terms == (:overlap,)
+    @test singleton.term_count == 1
+
+    vector_terms = CPBMOneBodyTerms._one_body_term_set_descriptor([:x2_z, :x2_x])
+    @test vector_terms.terms == (:x2_z, :x2_x)
+
+    @test_throws ArgumentError CPBMOneBodyTerms._one_body_term_set_descriptor(())
+    @test_throws ArgumentError CPBMOneBodyTerms._one_body_term_set_descriptor(
+        (:overlap, :coulomb),
+    )
+    @test_throws ArgumentError CPBMOneBodyTerms._one_body_term_set_descriptor(
+        (:density_density,),
+    )
+    @test_throws ArgumentError CPBMOneBodyTerms._one_body_term_set_descriptor(
+        (:nuclear_attraction,),
+    )
+    @test_throws ArgumentError CPBMOneBodyTerms._one_body_term_set_descriptor(
+        (:gaussian_local,),
+    )
+    @test_throws ArgumentError CPBMOneBodyTerms._one_body_term_set_descriptor(
+        "overlap",
+    )
+end
+
 @testset "CartesianPairBlockMaterialization one-body selector surface audit" begin
     summary = CPBMOneBodyTerms._one_body_selector_surface_summary()
     @test summary.object_kind ==

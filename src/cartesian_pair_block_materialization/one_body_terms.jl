@@ -21,6 +21,61 @@ const _ONE_BODY_TERMS = (
     :kinetic,
 )
 
+# Block-set consumers use this descriptor to keep one-body results term-separated.
+# Callers own factor supply; this metadata layer does not build factors or
+# assemble operator/Hamiltonian sums.
+function _one_body_term_set_descriptor()
+    return _one_body_term_set_descriptor(_ONE_BODY_TERMS)
+end
+
+function _one_body_term_set_descriptor(term::Symbol)
+    return _one_body_term_set_descriptor((term,))
+end
+
+function _one_body_term_set_descriptor(terms::AbstractVector)
+    return _one_body_term_set_descriptor(Tuple(terms))
+end
+
+function _one_body_term_set_descriptor(terms::Tuple)
+    isempty(terms) &&
+        throw(ArgumentError("one-body term set must contain at least one term"))
+    descriptors = Tuple(_one_body_term_descriptor(term) for term in terms)
+    return (;
+        object_kind = :cartesian_pair_block_one_body_term_set_descriptor,
+        status = :available_one_body_term_set_descriptor,
+        requested_terms = terms,
+        terms,
+        term_count = length(terms),
+        term_descriptors = descriptors,
+        term_families = Tuple(descriptor.family for descriptor in descriptors),
+        required_factor_names =
+            _one_body_ordered_unique_required_factor_names(descriptors),
+        result_terms_remain_separated = true,
+        block_set_results_summed = false,
+        factor_provider_scope = :caller_supplied_or_family_provider,
+        factors_constructed = false,
+        numerical_blocks_materialized = false,
+        mixed_dispatcher_materialized = false,
+        route_driver_wiring = false,
+        global_operator_blocks_materialized = false,
+        hamiltonian_data_materialized = false,
+        artifacts_materialized = false,
+        coulomb_materialized = false,
+        density_density_materialized = false,
+        ida_mwg_data_materialized = false,
+        pqs_lowdin_materialized = false,
+        full_white_lindsey_route_assembled = false,
+    )
+end
+
+function _one_body_term_set_descriptor(terms)
+    throw(
+        ArgumentError(
+            "one-body term set must be a Symbol, Tuple, or AbstractVector, got $(typeof(terms))",
+        ),
+    )
+end
+
 function _one_body_term_descriptor(term)
     throw(ArgumentError("one-body term must be a Symbol, got $(typeof(term))"))
 end
@@ -99,6 +154,17 @@ function _one_body_term_descriptor_result(
         hamiltonian_data_materialized = false,
         artifacts_materialized = false,
     )
+end
+
+function _one_body_ordered_unique_required_factor_names(descriptors::Tuple)
+    names = Symbol[]
+    for descriptor in descriptors
+        for name in descriptor.required_factor_names
+            name in names && continue
+            push!(names, name)
+        end
+    end
+    return Tuple(names)
 end
 
 function _one_body_axis_for_prefixed_term(term::Symbol, prefix::AbstractString)
