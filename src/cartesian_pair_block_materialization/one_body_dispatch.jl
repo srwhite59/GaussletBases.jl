@@ -388,9 +388,10 @@ function _one_body_pair_block_set_consumption(
         requested_materialize_terms,
         term_set_descriptor.terms,
     )
-    preflight_summary = _one_body_pair_block_set_preflight_summary(
-        plan;
-        terms = term_set_descriptor.terms,
+    preflight_summary = _one_body_block_set_consumption_preflight_summary(
+        plan,
+        term_set_descriptor,
+        requested_materialize_terms;
         inputs,
         provider,
     )
@@ -471,6 +472,78 @@ function _one_body_pair_block_set_consumption(plan; kwargs...)
         ArgumentError(
             "one-body block-set consumption requires a PairBlockMaterializationPlan",
         ),
+    )
+end
+
+function _one_body_block_set_consumption_preflight_summary(
+    plan::PairBlockMaterializationPlan,
+    term_set_descriptor,
+    requested_materialize_terms::Tuple;
+    inputs,
+    provider,
+)
+    isempty(requested_materialize_terms) &&
+        return _one_body_block_set_deferred_preflight_summary(
+            plan,
+            term_set_descriptor,
+        )
+    return _one_body_pair_block_set_preflight_summary(
+        plan;
+        terms = requested_materialize_terms,
+        inputs,
+        provider,
+    )
+end
+
+function _one_body_block_set_deferred_preflight_summary(
+    plan::PairBlockMaterializationPlan,
+    term_set_descriptor,
+)
+    return (;
+        object_kind =
+            :cartesian_pair_block_mixed_one_body_block_set_preflight_summary,
+        status = :deferred_metadata_only_mixed_one_body_block_set_preflight,
+        blocker = nothing,
+        requested_terms = (),
+        terms = (),
+        term_count = 0,
+        deferred_requested_terms = term_set_descriptor.terms,
+        deferred_term_count = term_set_descriptor.term_count,
+        plan_record_count = length(pair_block_materialization_records(plan)),
+        term_set_input_status = :not_required_deferred_terms_only,
+        term_set_input_blocker = nothing,
+        term_set_input_blockers = (),
+        input_source = :not_required_deferred_terms_only,
+        parent_axis_counts_required = false,
+        parent_axis_counts_status = :not_required,
+        required_factor_names = (),
+        present_factor_names = (),
+        missing_factor_names = (),
+        total_ready_record_count = 0,
+        total_blocked_record_count = 0,
+        selector_family_counts = (),
+        dispatch_status_counts = (),
+        record_materialization_path_counts = (),
+        materialization_path_counts = (),
+        blocker_counts = (),
+        term_statuses = (),
+        term_summaries = (),
+        factor_values_stored = false,
+        factors_constructed = false,
+        numerical_blocks_materialized = false,
+        materialized = false,
+        source_operator_blocks_materialized = false,
+        final_pair_blocks_materialized = false,
+        operator_blocks_materialized = false,
+        hamiltonian_data_materialized = false,
+        artifacts_materialized = false,
+        mixed_dispatcher_materialized = false,
+        route_driver_wiring = false,
+        coulomb_materialized = false,
+        density_density_materialized = false,
+        ida_mwg_data_materialized = false,
+        pqs_lowdin_materialized = false,
+        full_white_lindsey_route_assembled = false,
     )
 end
 

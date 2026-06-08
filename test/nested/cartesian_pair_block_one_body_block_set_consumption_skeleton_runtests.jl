@@ -133,8 +133,8 @@ end
     @test consumption.materialized_terms == ()
     @test consumption.deferred_terms == (:overlap, :kinetic)
     @test consumption.preflight_status ==
-          :partially_ready_mixed_one_body_block_set_preflight
-    @test consumption.preflight_blocker == :blocked_mixed_one_body_dispatch_records
+          :deferred_metadata_only_mixed_one_body_block_set_preflight
+    @test isnothing(consumption.preflight_blocker)
     @test consumption.block_set_summary_status ==
           :deferred_metadata_only_mixed_one_body_block_set
     @test consumption.term_statuses == (
@@ -182,6 +182,7 @@ end
         plan;
         terms = (:overlap, :kinetic),
         inputs = (; parent_axis_counts = (2, 2, 2), overlap_1d = :overlap_factors),
+        materialize_terms = (:kinetic,),
     )
     @test missing_input.status == :blocked_mixed_one_body_block_set_consumption
     @test missing_input.blocker == :missing_required_one_body_factors

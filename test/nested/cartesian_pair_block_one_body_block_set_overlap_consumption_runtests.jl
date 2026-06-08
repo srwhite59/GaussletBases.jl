@@ -167,6 +167,16 @@ end
         x2_1d = _block_overlap_1d(),
         kinetic_1d = _block_overlap_1d(),
     )
+    safe_terms = (
+        :overlap,
+        :position_x,
+        :position_y,
+        :position_z,
+        :x2_x,
+        :x2_y,
+        :x2_z,
+        :kinetic,
+    )
 
     deferred = CPBMBlockOverlap._one_body_pair_block_set_consumption(
         plan;
@@ -181,6 +191,24 @@ end
     @test !deferred.one_term_consumer_called
     @test deferred.total_materialized_count == 0
     @test deferred.total_skipped_count == 0
+
+    no_factor_deferred = CPBMBlockOverlap._one_body_pair_block_set_consumption(
+        plan;
+        terms = safe_terms,
+        inputs = (;),
+    )
+    @test no_factor_deferred.status ==
+          :deferred_metadata_only_mixed_one_body_block_set_consumption
+    @test no_factor_deferred.preflight_status ==
+          :deferred_metadata_only_mixed_one_body_block_set_preflight
+    @test no_factor_deferred.preflight_summary.term_set_input_status ==
+          :not_required_deferred_terms_only
+    @test no_factor_deferred.materialized_terms == ()
+    @test no_factor_deferred.deferred_terms == safe_terms
+    @test no_factor_deferred.total_materialized_count == 0
+    @test no_factor_deferred.total_skipped_count == 0
+    @test !no_factor_deferred.one_term_consumer_called
+    @test !hasproperty(no_factor_deferred, :term_batch_results)
 
     overlap = CPBMBlockOverlap._one_body_pair_block_set_consumption(
         plan;
@@ -246,6 +274,35 @@ end
         :blocker,
         :unsupported_pair_block_materialization_path,
     ) == 1
+
+    overlap_from_all_requested = CPBMBlockOverlap._one_body_pair_block_set_consumption(
+        plan;
+        terms = safe_terms,
+        inputs = (;
+            parent_axis_counts = (2, 2, 2),
+            overlap_1d = _block_overlap_1d(),
+        ),
+        materialize_terms = (:overlap,),
+    )
+    @test overlap_from_all_requested.status ==
+          :partially_materialized_mixed_one_body_block_set_consumption
+    @test overlap_from_all_requested.materialized_terms == (:overlap,)
+    @test overlap_from_all_requested.deferred_terms == (
+        :position_x,
+        :position_y,
+        :position_z,
+        :x2_x,
+        :x2_y,
+        :x2_z,
+        :kinetic,
+    )
+    @test overlap_from_all_requested.total_materialized_count == 2
+    @test overlap_from_all_requested.total_skipped_count == 1
+    @test overlap_from_all_requested.block_set_summary.supplied_term_count == 1
+    @test overlap_from_all_requested.block_set_summary.deferred_term_count == 7
+    @test overlap_from_all_requested.preflight_summary.required_factor_names ==
+          (:overlap_1d,)
+    @test overlap_from_all_requested.preflight_summary.missing_factor_names == ()
 
     position = CPBMBlockOverlap._one_body_pair_block_set_consumption(
         plan;
@@ -430,16 +487,6 @@ end
     @test kinetic.term_statuses[2].status ==
           :partially_materialized_mixed_one_body_pair_block_batch
 
-    safe_terms = (
-        :overlap,
-        :position_x,
-        :position_y,
-        :position_z,
-        :x2_x,
-        :x2_y,
-        :x2_z,
-        :kinetic,
-    )
     all_safe = CPBMBlockOverlap._one_body_pair_block_set_consumption(
         plan;
         terms = safe_terms,
@@ -480,6 +527,29 @@ end
         :selector_family,
         :unsupported,
     ) == 8
+
+    missing_position = CPBMBlockOverlap._one_body_pair_block_set_consumption(
+        plan;
+        terms = safe_terms,
+        inputs = (;
+            parent_axis_counts = (2, 2, 2),
+            overlap_1d = _block_overlap_1d(),
+        ),
+        materialize_terms = (:position_x,),
+    )
+    @test missing_position.status ==
+          :blocked_mixed_one_body_block_set_consumption
+    @test missing_position.blocker == :missing_required_one_body_factors
+    @test missing_position.preflight_status ==
+          :blocked_mixed_one_body_block_set_preflight
+    @test missing_position.preflight_summary.required_factor_names ==
+          (:overlap_1d, :position_1d)
+    @test missing_position.preflight_summary.missing_factor_names ==
+          (:position_1d,)
+    @test missing_position.total_materialized_count == 0
+    @test missing_position.total_skipped_count == 0
+    @test !missing_position.one_term_consumer_called
+    @test !hasproperty(missing_position, :term_batch_results)
 
     @test_throws ArgumentError CPBMBlockOverlap._one_body_pair_block_set_consumption(
         plan;
