@@ -186,6 +186,7 @@ function _one_body_pair_block(
     inputs = (;),
     provider = nothing,
     unit_pair = nothing,
+    materialize_selector_families = (:direct_direct, :pqs_source_pair),
 )
     dispatch_summary = _one_body_pair_block_dispatch_summary(
         record,
@@ -197,32 +198,23 @@ function _one_body_pair_block(
     dispatch_summary.status === :ready_metadata_only_not_materialized ||
         return _one_body_skipped_pair_block_summary(dispatch_summary)
 
-    dispatch_summary.selector_family === :direct_direct ||
+    dispatch_summary.selector_family in materialize_selector_families ||
         return _one_body_skipped_pair_block_summary(
             dispatch_summary,
             :mixed_one_body_selector_family_not_materialized_yet,
         )
 
-    factor_input_summary = _one_body_factor_input_summary(
-        term;
-        inputs,
-        provider,
-        selector_family = :direct_direct,
-        parent_axis_counts_required = true,
-    )
-    result = direct_direct_one_body_block(
-        record,
-        term;
-        parent_axis_counts = factor_input_summary.parent_axis_counts,
-        overlap_1d = getproperty(factor_input_summary.factor_values, :overlap_1d),
-        position_1d =
-            _one_body_optional_factor(factor_input_summary.factor_values, :position_1d),
-        x2_1d =
-            _one_body_optional_factor(factor_input_summary.factor_values, :x2_1d),
-        kinetic_1d =
-            _one_body_optional_factor(factor_input_summary.factor_values, :kinetic_1d),
-    )
-    return _one_body_result_with_mixed_metadata(result, dispatch_summary)
+    result_or_skip =
+        dispatch_summary.selector_family === :direct_direct ?
+        _one_body_direct_direct_pair_block(record, term; inputs, provider) :
+        dispatch_summary.selector_family === :pqs_source_pair ?
+        _one_body_pqs_source_pair_block(record, term; inputs, provider, dispatch_summary) :
+        return _one_body_skipped_pair_block_summary(
+            dispatch_summary,
+            :mixed_one_body_selector_family_not_materialized_yet,
+        )
+    result_or_skip isa PairBlockMaterializationResult || return result_or_skip
+    return _one_body_result_with_mixed_metadata(result_or_skip, dispatch_summary)
 end
 
 function _one_body_pair_block(record, term; kwargs...)
@@ -249,6 +241,7 @@ function _one_body_pair_blocks(
             inputs,
             provider,
             unit_pair = _one_body_dispatch_unit_pair(record, unit_pair_lookup),
+            materialize_selector_families = (:direct_direct,),
         )
         if result_or_skip isa PairBlockMaterializationResult
             push!(materialized_results, result_or_skip)
@@ -296,6 +289,65 @@ function _one_body_pair_blocks(
     )
 end
 
+function _one_body_direct_direct_pair_block(
+    record::PairBlockMaterializationRecord,
+    term::Symbol;
+    inputs,
+    provider,
+)
+    factor_input_summary = _one_body_factor_input_summary(
+        term;
+        inputs,
+        provider,
+        selector_family = :direct_direct,
+        parent_axis_counts_required = true,
+    )
+    return direct_direct_one_body_block(
+        record,
+        term;
+        parent_axis_counts = factor_input_summary.parent_axis_counts,
+        overlap_1d = getproperty(factor_input_summary.factor_values, :overlap_1d),
+        position_1d =
+            _one_body_optional_factor(factor_input_summary.factor_values, :position_1d),
+        x2_1d =
+            _one_body_optional_factor(factor_input_summary.factor_values, :x2_1d),
+        kinetic_1d =
+            _one_body_optional_factor(factor_input_summary.factor_values, :kinetic_1d),
+    )
+end
+
+function _one_body_pqs_source_pair_block(
+    record::PairBlockMaterializationRecord,
+    term::Symbol;
+    inputs,
+    provider,
+    dispatch_summary,
+)
+    _one_body_pqs_source_metadata_ready(record) ||
+        return _one_body_skipped_pair_block_summary(
+            dispatch_summary,
+            :missing_pqs_source_mode_metadata,
+        )
+    factor_input_summary = _one_body_factor_input_summary(
+        term;
+        inputs,
+        provider,
+        selector_family = :pqs_source_pair,
+        parent_axis_counts_required = false,
+    )
+    return pqs_source_pair_one_body_block(
+        record,
+        term;
+        overlap_1d = getproperty(factor_input_summary.factor_values, :overlap_1d),
+        position_1d =
+            _one_body_optional_factor(factor_input_summary.factor_values, :position_1d),
+        x2_1d =
+            _one_body_optional_factor(factor_input_summary.factor_values, :x2_1d),
+        kinetic_1d =
+            _one_body_optional_factor(factor_input_summary.factor_values, :kinetic_1d),
+    )
+end
+
 function _one_body_pair_blocks(plan, term; kwargs...)
     throw(
         ArgumentError(
@@ -337,6 +389,20 @@ function _one_body_optional_factor(factor_values::NamedTuple, name::Symbol)
     return getproperty(factor_values, name)
 end
 
+function _one_body_pqs_source_metadata_ready(record::PairBlockMaterializationRecord)
+    required_keys = (
+        :left_source_mode_dims,
+        :right_source_mode_dims,
+        :left_source_mode_count,
+        :right_source_mode_count,
+        :source_mode_ordering,
+    )
+    return all(
+        key -> haskey(record.metadata, key) && !isnothing(getfield(record.metadata, key)),
+        required_keys,
+    )
+end
+
 function _one_body_result_with_mixed_metadata(
     result::PairBlockMaterializationResult,
     dispatch_summary,
@@ -355,14 +421,29 @@ function _one_body_result_with_mixed_metadata(
             result.metadata,
             (;
                 mixed_one_body_dispatcher =
-                    :direct_direct_only_record_dispatcher,
+                    _one_body_record_dispatcher_name(dispatch_summary.selector_family),
                 mixed_one_body_dispatch_status = dispatch_summary.status,
                 selector_family = dispatch_summary.selector_family,
                 factor_input_status = dispatch_summary.factor_input_status,
-                numerical_family_selector = :direct_direct_one_body_block,
+                numerical_family_selector =
+                    _one_body_numerical_family_selector(dispatch_summary.selector_family),
             ),
         ),
     )
+end
+
+function _one_body_record_dispatcher_name(selector_family)
+    selector_family === :direct_direct &&
+        return :direct_direct_only_record_dispatcher
+    selector_family === :pqs_source_pair &&
+        return :pqs_source_pair_record_dispatcher
+    return :mixed_one_body_record_dispatcher
+end
+
+function _one_body_numerical_family_selector(selector_family)
+    selector_family === :direct_direct && return :direct_direct_one_body_block
+    selector_family === :pqs_source_pair && return :pqs_source_pair_one_body_block
+    return nothing
 end
 
 function _one_body_skipped_pair_block_summary(

@@ -28,6 +28,23 @@ function _record_dispatch_direct_record()
     )
 end
 
+function _record_dispatch_pqs_record()
+    return _record_dispatch_record(
+        :pqs_source_pair_preflight;
+        pair_key = (:pqs_left, :pqs_right),
+        pair_family = :pqs_pqs,
+        metadata = (;
+            left_source_mode_dims = (2, 2, 1),
+            right_source_mode_dims = (3, 1, 2),
+            left_source_mode_count = 4,
+            right_source_mode_count = 6,
+            source_mode_ordering = :x_major_y_major_z_fast,
+            left_source_mode_ordering = :x_major_y_major_z_fast,
+            right_source_mode_ordering = :x_major_y_major_z_fast,
+        ),
+    )
+end
+
 function _record_dispatch_record(
     materialization_path::Symbol;
     pair_key = (:left_unit, :right_unit),
@@ -106,6 +123,28 @@ function _record_dispatch_position_1d()
     )
 end
 
+function _record_dispatch_pqs_overlap_1d()
+    return (;
+        x = [
+            1.0 0.1 0.2
+            0.3 1.1 0.4
+        ],
+        y = reshape([1.2, 1.3], 2, 1),
+        z = reshape([1.4, 1.5], 1, 2),
+    )
+end
+
+function _record_dispatch_pqs_position_1d()
+    return (;
+        x = [
+            2.0 2.1 2.2
+            2.3 2.4 2.5
+        ],
+        y = reshape([3.0, 3.1], 2, 1),
+        z = reshape([4.0, 4.1], 1, 2),
+    )
+end
+
 function _check_record_dispatch_skipped_flags(summary)
     @test summary.status == :skipped_mixed_one_body_pair_block
     @test !summary.materialized
@@ -172,6 +211,67 @@ end
     @test position_y.metadata.selector_family == :direct_direct
 end
 
+@testset "CartesianPairBlockMaterialization mixed PQS source record dispatch" begin
+    record = _record_dispatch_pqs_record()
+    overlap_1d = _record_dispatch_pqs_overlap_1d()
+    position_1d = _record_dispatch_pqs_position_1d()
+
+    overlap = CPBMRecordDispatch._one_body_pair_block(
+        record,
+        :overlap;
+        inputs = (; overlap_1d),
+    )
+    expected_overlap = CPBMRecordDispatch.pqs_source_pair_one_body_block(
+        record,
+        :overlap;
+        overlap_1d,
+    )
+    @test overlap isa CPBMRecordDispatch.PairBlockMaterializationResult
+    @test overlap.term == :source_overlap
+    @test overlap.pair_key == (:pqs_left, :pqs_right)
+    @test overlap.materialized
+    @test overlap.source_operator_blocks_materialized
+    @test !overlap.final_pair_blocks_materialized
+    @test !overlap.operator_blocks_materialized
+    @test !overlap.hamiltonian_data_materialized
+    @test !overlap.artifacts_materialized
+    @test overlap.block == expected_overlap.block
+    @test overlap.metadata.block_space == :raw_product_source_modes
+    @test overlap.metadata.source_mode_ordering == :x_major_y_major_z_fast
+    @test overlap.metadata.left_source_mode_dims == (2, 2, 1)
+    @test overlap.metadata.right_source_mode_dims == (3, 1, 2)
+    @test overlap.metadata.left_source_mode_count == 4
+    @test overlap.metadata.right_source_mode_count == 6
+    @test !overlap.metadata.final_pair_blocks_materialized
+    @test !overlap.metadata.shell_realization_materialized
+    @test !overlap.metadata.operator_blocks_materialized
+    @test !overlap.metadata.hamiltonian_data_materialized
+    @test !overlap.metadata.artifacts_materialized
+    @test overlap.metadata.mixed_one_body_dispatcher ==
+          :pqs_source_pair_record_dispatcher
+    @test overlap.metadata.selector_family == :pqs_source_pair
+    @test overlap.metadata.numerical_family_selector ==
+          :pqs_source_pair_one_body_block
+
+    position_y = CPBMRecordDispatch._one_body_pair_block(
+        record,
+        :position_y;
+        inputs = (; overlap_1d, position_1d),
+    )
+    expected_position_y = CPBMRecordDispatch.pqs_source_pair_one_body_block(
+        record,
+        :position_y;
+        overlap_1d,
+        position_1d,
+    )
+    @test position_y isa CPBMRecordDispatch.PairBlockMaterializationResult
+    @test position_y.term == :source_position_y
+    @test position_y.block == expected_position_y.block
+    @test position_y.metadata.position_axis == :y
+    @test !position_y.final_pair_blocks_materialized
+    @test !position_y.metadata.shell_realization_materialized
+end
+
 @testset "CartesianPairBlockMaterialization mixed record dispatch skipped cases" begin
     direct_record = _record_dispatch_direct_record()
     overlap_1d = _record_dispatch_overlap_1d()
@@ -196,8 +296,7 @@ end
         :overlap;
         inputs = (; overlap_1d),
     )
-    @test pqs_skipped.blocker ==
-          :mixed_one_body_selector_family_not_materialized_yet
+    @test pqs_skipped.blocker == :missing_pqs_source_mode_metadata
     @test pqs_skipped.selector_family == :pqs_source_pair
     @test pqs_skipped.dispatch_status == :ready_metadata_only_not_materialized
     _check_record_dispatch_skipped_flags(pqs_skipped)
