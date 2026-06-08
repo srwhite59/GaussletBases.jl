@@ -603,6 +603,12 @@ and no parent support index is guessed. This is a local adapter-slice
 checkpoint only; it is not exhaustive over all faces/edges/corners and does
 not assemble a full White--Lindsey route.
 
+The focused oracle-comparison test includes an aggregate coverage summary for
+this selected checkpoint: 5 pair families x 8 one-body terms = 40 value
+comparisons, with zero blocked comparisons in that focused coverage. This test
+is a focused validation gate for the LW oracle comparison surface, not a
+casual tiny test to run on unrelated passes.
+
 ### Next low-order White--Lindsey adapter target
 
 The first local White--Lindsey one-body adapter surface now exists behind

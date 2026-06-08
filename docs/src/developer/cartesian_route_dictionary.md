@@ -163,6 +163,12 @@ not full White--Lindsey route validation, not route-driver wiring, and not
 Coulomb, IDA/MWG, Hamiltonian/export, artifact, or production dense-parent
 fallback readiness.
 
+The focused oracle-comparison test exposes an aggregate validation coverage
+summary for this checkpoint: 5 selected pair families x 8 one-body terms = 40
+value comparisons, with zero blocked or metadata-shape-only comparisons in the
+current focused coverage. Treat that test as a focused validation gate for LW
+oracle coverage, not as a tiny per-pass smoke test.
+
 ### Why “lowering”?
 
 “Lowering” is compiler-style language: it means translating a higher-level geometric object into a lower-level construction representation. Here:

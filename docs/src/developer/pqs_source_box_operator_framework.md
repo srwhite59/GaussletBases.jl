@@ -146,6 +146,12 @@ exhaustive over all orientations, not full LW route assembly, not old-seed
 route authority, and not evidence for Coulomb, IDA/MWG, Hamiltonian/export,
 artifact, or production dense-parent fallback readiness.
 
+The focused oracle-comparison test now carries an aggregate coverage summary:
+the selected representative checkpoint has 5 pair families x 8 one-body terms
+= 40 value comparisons, zero blocked comparisons, and no route/Hamiltonian/
+export/artifact materialization flags. This is a focused validation gate for
+the LW oracle-comparison surface, not a casual tiny per-pass smoke test.
+
 The PQS guardrails are unchanged: support-row or shell-row contraction is an
 oracle/debug path, not the PQS algorithm; shell projection and Lowdin cleanup
 belong to shell realization, not raw product-box operator construction;
