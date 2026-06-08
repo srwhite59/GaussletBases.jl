@@ -353,6 +353,151 @@ function _one_body_local_block_collection_term_status(collection, term)
     )
 end
 
+function _one_body_local_block_collection_entries_for_pair(
+    collection::NamedTuple,
+    pair_key::Tuple{Symbol,Symbol},
+)
+    _one_body_assert_local_block_collection(collection)
+    return Tuple(entry for entry in collection.entries if entry.pair_key == pair_key)
+end
+
+function _one_body_local_block_collection_entries_for_pair(collection, pair_key)
+    throw(
+        ArgumentError(
+            "local one-body block collection pair entry accessor requires a collection NamedTuple and pair_key::Tuple{Symbol,Symbol}",
+        ),
+    )
+end
+
+function _one_body_local_block_collection_materialized_entries_for_pair(
+    collection::NamedTuple,
+    pair_key::Tuple{Symbol,Symbol},
+)
+    _one_body_assert_local_block_collection(collection)
+    return Tuple(
+        entry for entry in collection.materialized_entries
+        if entry.pair_key == pair_key
+    )
+end
+
+function _one_body_local_block_collection_materialized_entries_for_pair(
+    collection,
+    pair_key,
+)
+    throw(
+        ArgumentError(
+            "local one-body block collection materialized pair accessor requires a collection NamedTuple and pair_key::Tuple{Symbol,Symbol}",
+        ),
+    )
+end
+
+function _one_body_local_block_collection_skipped_entries_for_pair(
+    collection::NamedTuple,
+    pair_key::Tuple{Symbol,Symbol},
+)
+    _one_body_assert_local_block_collection(collection)
+    return Tuple(
+        entry for entry in collection.skipped_entries
+        if entry.pair_key == pair_key
+    )
+end
+
+function _one_body_local_block_collection_skipped_entries_for_pair(
+    collection,
+    pair_key,
+)
+    throw(
+        ArgumentError(
+            "local one-body block collection skipped pair accessor requires a collection NamedTuple and pair_key::Tuple{Symbol,Symbol}",
+        ),
+    )
+end
+
+function _one_body_local_block_collection_pair_status(
+    collection::NamedTuple,
+    pair_key::Tuple{Symbol,Symbol},
+)
+    _one_body_assert_local_block_collection(collection)
+    materialized_entries =
+        _one_body_local_block_collection_materialized_entries_for_pair(
+            collection,
+            pair_key,
+        )
+    skipped_entries =
+        _one_body_local_block_collection_skipped_entries_for_pair(
+            collection,
+            pair_key,
+        )
+    entries = (materialized_entries..., skipped_entries...)
+    status = _one_body_local_block_collection_pair_status_symbol(
+        materialized_entries,
+        skipped_entries,
+    )
+    return (;
+        object_kind = :cartesian_pair_block_local_one_body_collection_pair_status,
+        pair_key,
+        status,
+        blocker = _one_body_local_block_collection_pair_blocker(
+            status,
+            skipped_entries,
+        ),
+        collection_status = collection.status,
+        collection_blocker = collection.blocker,
+        block_set_terms = _one_body_collection_unique_values(
+            entries,
+            :block_set_term,
+        ),
+        result_terms = _one_body_collection_unique_values(entries, :result_term),
+        source_space_terms =
+            _one_body_collection_unique_values(entries, :source_space_term),
+        materialized_entry_count = length(materialized_entries),
+        skipped_entry_count = length(skipped_entries),
+        entry_count = length(entries),
+        selector_family_counts =
+            _one_body_count_optional_by(entries, :selector_family),
+        materialized_selector_family_counts =
+            _one_body_count_optional_by(materialized_entries, :selector_family),
+        skipped_selector_family_counts =
+            _one_body_count_optional_by(skipped_entries, :selector_family),
+        skipped_blocker_counts =
+            _one_body_count_optional_by(skipped_entries, :blocker),
+        block_space_counts = _one_body_count_optional_by(entries, :block_space),
+        term_separated_entries = true,
+        pair_separated_entries = true,
+        entries_stored_in_status = false,
+        matrix_fields_stored_in_status = false,
+        block_set_results_summed = false,
+        block_matrices_copied_into_status = false,
+        local_operator_assembled = false,
+        global_operator_assembled = false,
+        route_driver_wiring = false,
+        source_operator_blocks_materialized =
+            any(entry -> entry.source_operator_blocks_materialized, materialized_entries),
+        final_pair_blocks_materialized =
+            any(entry -> entry.final_pair_blocks_materialized, materialized_entries),
+        operator_blocks_materialized = false,
+        hamiltonian_data_materialized = false,
+        artifacts_materialized = false,
+        global_operator_blocks_materialized = false,
+        global_hamiltonian_data_materialized = false,
+        global_artifacts_materialized = false,
+        coulomb_materialized = false,
+        density_density_materialized = false,
+        ida_mwg_data_materialized = false,
+        pqs_lowdin_materialized = false,
+        pqs_shell_projection_materialized = false,
+        full_white_lindsey_route_assembled = false,
+    )
+end
+
+function _one_body_local_block_collection_pair_status(collection, pair_key)
+    throw(
+        ArgumentError(
+            "local one-body block collection pair status requires a collection NamedTuple and pair_key::Tuple{Symbol,Symbol}",
+        ),
+    )
+end
+
 function _one_body_collection_result_block_space(
     result::PairBlockMaterializationResult,
 )
@@ -406,6 +551,39 @@ function _one_body_local_block_collection_term_blocker(
     status === :term_not_requested && return :term_not_requested
     isempty(skipped_entries) && return nothing
     return _one_body_collection_value(first(skipped_entries), :blocker, nothing)
+end
+
+function _one_body_local_block_collection_pair_status_symbol(
+    materialized_entries::Tuple,
+    skipped_entries::Tuple,
+)
+    !isempty(materialized_entries) && !isempty(skipped_entries) &&
+        return :partially_materialized_local_one_body_collection_pair
+    !isempty(materialized_entries) &&
+        return :materialized_local_one_body_collection_pair
+    !isempty(skipped_entries) && return :skipped_local_one_body_collection_pair
+    return :pair_key_not_found
+end
+
+function _one_body_local_block_collection_pair_blocker(
+    status::Symbol,
+    skipped_entries::Tuple,
+)
+    status === :pair_key_not_found && return :pair_key_not_found
+    isempty(skipped_entries) && return nothing
+    return _one_body_collection_value(first(skipped_entries), :blocker, nothing)
+end
+
+function _one_body_collection_unique_values(entries::Tuple, field::Symbol)
+    values = Any[]
+    for entry in entries
+        haskey(entry, field) || continue
+        value = getfield(entry, field)
+        isnothing(value) && continue
+        value in values && continue
+        push!(values, value)
+    end
+    return Tuple(values)
 end
 
 function _one_body_assert_local_block_collection(collection::NamedTuple)
