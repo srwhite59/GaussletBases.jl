@@ -113,6 +113,9 @@ export PairBlockMaterializationPolicy,
 #     Caller-supplied one-body factor input normalization for future mixed
 #     dispatch.
 #
+# one_body_dispatch.jl
+#     Metadata-only mixed one-body dispatch classifier.
+#
 # pqs_source_safe_terms.jl
 #     PQS/PQS raw source-space safe-term helpers.
 #
@@ -173,6 +176,7 @@ include("preflight.jl")
 include("summaries.jl")
 include("one_body_terms.jl")
 include("one_body_factor_inputs.jl")
+include("one_body_dispatch.jl")
 include("direct_overlap.jl")
 include("pqs_source_safe_terms.jl")
 include("pqs_source_shell_bridge.jl")
