@@ -1,9 +1,9 @@
-# Runtime role: focused oracle / global position x/y equivalence.
+# Runtime role: focused oracle / global position x/y/z equivalence.
 #
-# This compares selected White-Lindsey fixed-block position x/y slices against
+# This compares selected White-Lindsey fixed-block position x/y/z slices against
 # the new local-block placement and global position-axis assembly pilot. It is
 # narrower than the broad White-Lindsey oracle comparison gate and covers
-# position_x and position_y only.
+# position_x, position_y, and position_z only.
 
 using Test
 
@@ -121,7 +121,8 @@ end
 function _global_position_oracle_term(axis::Symbol)
     axis === :x && return :position_x
     axis === :y && return :position_y
-    throw(ArgumentError("global position oracle currently covers axis :x or :y"))
+    axis === :z && return :position_z
+    throw(ArgumentError("global position oracle currently covers axis :x, :y, or :z"))
 end
 
 function _global_position_oracle_placement_plan(term::Symbol, collection; global_dimension)
@@ -135,7 +136,12 @@ function _global_position_oracle_placement_plan(term::Symbol, collection; global
             collection;
             global_dimension,
         )
-    throw(ArgumentError("global position oracle currently covers position_x/y"))
+    term === :position_z &&
+        return CPBMGlobalPositionOracle.one_body_position_z_placement_plan(
+            collection;
+            global_dimension,
+        )
+    throw(ArgumentError("global position oracle currently covers position_x/y/z"))
 end
 
 function _global_position_oracle_global_matrix(term::Symbol, placement_plan)
@@ -147,7 +153,11 @@ function _global_position_oracle_global_matrix(term::Symbol, placement_plan)
         return CPBMGlobalPositionOracle.one_body_global_position_y_matrix(
             placement_plan,
         )
-    throw(ArgumentError("global position oracle currently covers position_x/y"))
+    term === :position_z &&
+        return CPBMGlobalPositionOracle.one_body_global_position_z_matrix(
+            placement_plan,
+        )
+    throw(ArgumentError("global position oracle currently covers position_x/y/z"))
 end
 
 @testset "CartesianPairBlockMaterialization global position oracle equivalence" begin
@@ -166,7 +176,7 @@ end
     doside_source_1d =
         _global_position_oracle_seed_source_1d(seed; expansion)
     factors = _global_position_oracle_factors(doside_source_1d)
-    for axis in (:x, :y)
+    for axis in (:x, :y, :z)
         term = _global_position_oracle_term(axis)
         real_units = _lw_adapter_real_units(
             doside_source_1d;
