@@ -28,10 +28,11 @@ future final PQS pair blocks. This path does not build shell projection,
 Lowdin realization, or final retained PQS pair blocks.
 
 The private route-shaped global one-body adapter currently composes existing
-local block collections, placement plans, and global overlap/kinetic matrix
-pilots for term-separated overlap and kinetic only. This module still does not
-assemble Hamiltonians, Ham bundles, exports, artifacts, final retained PQS pair
-blocks, or full White--Lindsey route/operator inventories.
+local block collections, placement plans, and global overlap/kinetic/position
+matrix pilots for term-separated overlap, kinetic, and position_x/y/z only.
+This module still does not assemble Hamiltonians, Ham bundles, exports,
+artifacts, final retained PQS pair blocks, or full White--Lindsey route/operator
+inventories.
 """
 module CartesianPairBlockMaterialization
 
@@ -127,7 +128,7 @@ export PairBlockMaterializationPolicy,
 #
 # route_global_one_body_adapter.jl
 #     Private route-shaped adapter from pair-block plans to one global retained
-#     one-body term matrix, overlap and kinetic only for now.
+#     one-body term matrix, overlap, kinetic, and position_x/y/z only for now.
 #
 # one_body_placement_plan.jl
 #     Metadata-only local one-body placement records for future global retained

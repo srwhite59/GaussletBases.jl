@@ -2,8 +2,9 @@
 #
 # This bridge composes the existing route-local one-body collection, local
 # placement plan, and dense global safe one-body matrix pilots. It currently
-# supports overlap and kinetic only and does not assemble Hamiltonians, Coulomb
-# data, IDA/MWG data, exports, artifacts, or PQS shell/Lowdin realizations.
+# supports overlap, kinetic, and position_x/y/z only and does not assemble
+# Hamiltonians, Coulomb data, IDA/MWG data, exports, artifacts, or PQS
+# shell/Lowdin realizations.
 
 function route_global_one_body_matrix(
     source;
@@ -64,8 +65,28 @@ function route_global_kinetic_matrix(source; kwargs...)
     return route_global_one_body_matrix(source; term = :kinetic, kwargs...)
 end
 
+function route_global_position_matrix(source; axis, kwargs...)
+    return route_global_one_body_matrix(
+        source;
+        term = _route_global_position_term(axis),
+        kwargs...,
+    )
+end
+
+function route_global_position_x_matrix(source; kwargs...)
+    return route_global_one_body_matrix(source; term = :position_x, kwargs...)
+end
+
+function route_global_position_y_matrix(source; kwargs...)
+    return route_global_one_body_matrix(source; term = :position_y, kwargs...)
+end
+
+function route_global_position_z_matrix(source; kwargs...)
+    return route_global_one_body_matrix(source; term = :position_z, kwargs...)
+end
+
 function _route_global_one_body_supported_terms()
-    return (:overlap, :kinetic)
+    return (:overlap, :kinetic, :position_x, :position_y, :position_z)
 end
 
 function _route_global_one_body_placement_plan(
@@ -81,6 +102,18 @@ function _route_global_one_body_placement_plan(
         collection;
         global_dimension,
     )
+    term === :position_x && return one_body_position_x_placement_plan(
+        collection;
+        global_dimension,
+    )
+    term === :position_y && return one_body_position_y_placement_plan(
+        collection;
+        global_dimension,
+    )
+    term === :position_z && return one_body_position_z_placement_plan(
+        collection;
+        global_dimension,
+    )
     throw(ArgumentError("unsupported route global one-body term: $(term)"))
 end
 
@@ -90,7 +123,20 @@ function _route_global_one_body_global_matrix(
 )
     term === :overlap && return one_body_global_overlap_matrix(placement_plan)
     term === :kinetic && return one_body_global_kinetic_matrix(placement_plan)
+    term === :position_x &&
+        return one_body_global_position_x_matrix(placement_plan)
+    term === :position_y &&
+        return one_body_global_position_y_matrix(placement_plan)
+    term === :position_z &&
+        return one_body_global_position_z_matrix(placement_plan)
     throw(ArgumentError("unsupported route global one-body term: $(term)"))
+end
+
+function _route_global_position_term(axis)
+    axis === :x && return :position_x
+    axis === :y && return :position_y
+    axis === :z && return :position_z
+    throw(ArgumentError("route global position axis must be :x, :y, or :z"))
 end
 
 function _route_global_one_body_inputs(inputs::NamedTuple, factors)
@@ -200,6 +246,24 @@ function _route_global_one_body_result(
                 :global_kinetic_matrix_materialized,
                 false,
             ),
+        global_position_x_matrix_materialized =
+            _route_global_one_body_value(
+                global_matrix_result,
+                :global_position_x_matrix_materialized,
+                false,
+            ),
+        global_position_y_matrix_materialized =
+            _route_global_one_body_value(
+                global_matrix_result,
+                :global_position_y_matrix_materialized,
+                false,
+            ),
+        global_position_z_matrix_materialized =
+            _route_global_one_body_value(
+                global_matrix_result,
+                :global_position_z_matrix_materialized,
+                false,
+            ),
         operator_matrix_materialized =
             _route_global_one_body_value(
                 global_matrix_result,
@@ -251,6 +315,9 @@ function _route_global_one_body_blocked_result(
         global_one_body_term_matrix_materialized = false,
         global_overlap_matrix_materialized = false,
         global_kinetic_matrix_materialized = false,
+        global_position_x_matrix_materialized = false,
+        global_position_y_matrix_materialized = false,
+        global_position_z_matrix_materialized = false,
         operator_matrix_materialized = false,
         global_operator_assembled = false,
         _route_global_one_body_nonclaim_flags()...,
@@ -258,14 +325,14 @@ function _route_global_one_body_blocked_result(
 end
 
 function _route_global_one_body_materialized_status(term::Symbol)
-    term === :overlap && return :materialized_route_global_overlap_matrix
-    term === :kinetic && return :materialized_route_global_kinetic_matrix
+    term in _route_global_one_body_supported_terms() &&
+        return Symbol("materialized_route_global_", String(term), "_matrix")
     return :materialized_route_global_one_body_matrix
 end
 
 function _route_global_one_body_blocked_status(term::Symbol)
-    term === :overlap && return :blocked_route_global_overlap_matrix
-    term === :kinetic && return :blocked_route_global_kinetic_matrix
+    term in _route_global_one_body_supported_terms() &&
+        return Symbol("blocked_route_global_", String(term), "_matrix")
     return :blocked_route_global_one_body_matrix
 end
 
