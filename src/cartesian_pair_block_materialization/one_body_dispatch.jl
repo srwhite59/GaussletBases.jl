@@ -506,6 +506,9 @@ const _ONE_BODY_BLOCK_SET_MATERIALIZABLE_TERMS = (
     :position_x,
     :position_y,
     :position_z,
+    :x2_x,
+    :x2_y,
+    :x2_z,
 )
 
 function _one_body_validate_block_set_materialize_terms(
@@ -520,7 +523,7 @@ function _one_body_validate_block_set_materialize_terms(
         )
         term in _ONE_BODY_BLOCK_SET_MATERIALIZABLE_TERMS || throw(
             ArgumentError(
-                "one-body block-set materialization currently supports only explicit overlap/position terms, got $(term)",
+                "one-body block-set materialization currently supports only explicit overlap/position/x2 terms, got $(term)",
             ),
         )
     end
