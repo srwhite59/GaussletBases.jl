@@ -57,6 +57,7 @@ CartesianShellification
 -> LW boundary-stratum adapter preflight
 -> local old-kernel-backed LW unit coefficient maps
 -> local LW one-body pair-block pilots and summaries
+-> private mixed one-body batch consumer and compact summary
 -> future full route final pair-block materialization
 -> future assembly
 ```
@@ -81,6 +82,7 @@ geometry ownership
 -> metadata-only bridge summaries for later PQS shell realization
 -> metadata-only readiness summaries for later final PQS pair blocks
 -> local LW boundary-stratum one-body pair blocks for the current adapter pilot
+-> private mixed one-body consumer over existing local one-body families
 -> broader final pair blocks and assembly later
 ```
 
@@ -98,6 +100,16 @@ Coulomb blocks. The LW pilot is local boundary-stratum adapter materialization
 only; it is not full White--Lindsey route assembly, Coulomb/IDA, a Hamiltonian
 bundle, export, or artifact writer. The local PQS and LW selector/summary
 helpers are private implementation metadata, not route API.
+
+The private mixed one-body consumer in `CartesianPairBlockMaterialization`
+wraps a `PairBlockMaterializationPlan`, one safe one-body term, and
+caller-supplied factor/provider facts. It dispatches only to existing local
+family selectors: direct/direct local blocks, PQS/PQS raw source-space blocks,
+and White--Lindsey boundary-stratum local adapter blocks. It returns a local
+batch result plus compact summary. It does not wire into route drivers, build
+global operators or Hamiltonians, construct Coulomb, change IDA/MWG semantics,
+export artifacts, build PQS shell projection/Lowdin data, or assemble a full
+White--Lindsey route.
 
 The local final-readiness helper
 `pqs_source_pair_final_block_readiness_summary(bridge_summary)` consumes single
@@ -310,6 +322,7 @@ The PQS source geometry is “one filled box,” but the actual retained space c
 | **Source operator block**           | Operator block built between source CPBs/intermediate retained spaces.                                | For PQS, this is the natural first numerical block.              |
 | **Final pair block**                | Operator block between final retained units after any realization/transform maps.                     | This is what assembly eventually places into the global matrix.  |
 | **Pair-block materialization**      | The step that preflights and then builds concrete pair blocks from pair-operator plans.                | Current numerical pilots include direct/direct local one-body blocks, PQS/PQS raw source-space one-body blocks, and local LW boundary-stratum one-body adapter blocks; not Coulomb/IDA, Hamiltonian assembly, or artifact export. |
+| **Mixed one-body pair-block consumer** | Private `CartesianPairBlockMaterialization` helper over a `PairBlockMaterializationPlan`, one safe one-body term, and caller-supplied factors/provider facts. | Dispatches to existing direct/direct, PQS/PQS source-space, and LW boundary-stratum local one-body selectors and returns a batch result plus compact summary; not route-driver wiring, Coulomb, IDA/MWG, PQS shell projection/Lowdin, Hamiltonian/export, artifact writing, or full LW route assembly. |
 | **Pair operator block**             | Numerical block for one pair of final retained units and one or more operator terms.                  | Not yet built when report says metadata-only.                    |
 | **PQS source-space block**          | A raw source-mode block for a PQS/PQS safe one-body term, built from caller-supplied 1D source factors. | Not a final shell-realized PQS pair block.                       |
 | **PQS source shell-realization bridge summary** | Metadata-only summary describing how a PQS source-space block or batch can later be consumed by shell realization. | It records keys, source-mode facts, statuses, blockers, paths, and flags; it builds no shell projection, Lowdin, final pair block, Hamiltonian, export, artifact, IDA/MWG data, or Coulomb. |

@@ -341,6 +341,16 @@ source CPB_i, source CPB_j
 -> final retained operator block
 ```
 
+The current private mixed one-body consumer lives at the pair-block
+materialization layer, after pair planning has produced a
+`PairBlockMaterializationPlan`. It consumes one safe one-body term plus
+caller-supplied factor/provider facts and dispatches to existing local
+direct/direct, PQS/PQS raw source-space, and White-Lindsey boundary-stratum
+adapter selectors. Its output is a local batch result plus compact summary.
+It is not route-driver wiring, global operator assembly, Hamiltonian assembly,
+Coulomb, IDA/MWG, artifact/export, PQS shell projection/Lowdin, or full
+White-Lindsey route assembly.
+
 LW often collapses the intermediate and final stages because its CPB boundary
 strata already live on disjoint shell support. PQS must not collapse them unless
 a reviewed contract explicitly permits it.

@@ -686,6 +686,24 @@ bridge summaries propagate their blockers. The readiness summary builds no
 shell projection, Lowdin data, final retained PQS pair block, Hamiltonian,
 export, artifact, IDA/MWG data, or Coulomb block.
 
+The current mixed one-body consumer checkpoint remains private to
+`CartesianPairBlockMaterialization`. It accepts a
+`PairBlockMaterializationPlan`, one supported safe one-body term, and
+caller-supplied factor/provider facts. It then dispatches to the existing local
+family selectors: direct/direct local pair blocks, PQS/PQS raw source-space
+safe-term blocks, and White-Lindsey boundary-stratum local adapter blocks. The
+consumer returns a local batch result plus compact summary. For PQS/PQS, that
+still means source-space blocks only; it does not build shell projection,
+Lowdin cleanup, final retained PQS pair blocks, route-driver wiring, global
+operators, Hamiltonians, exports, artifacts, Coulomb, IDA/MWG data, or full
+White-Lindsey route assembly.
+
+The focused mixed record-dispatch and plan-batch tests are contract tests for
+this private consumer surface. The White-Lindsey focused tests use real local
+adapter fixtures and are boundary tests, not tiny smoke tests. The
+White-Lindsey oracle-comparison test remains a separate validation gate and is
+not part of ordinary mixed-consumer passes.
+
 ## First PQS/PQS Implementation Target
 
 The first PQS/PQS implementation target was the private mode-selected raw-box
