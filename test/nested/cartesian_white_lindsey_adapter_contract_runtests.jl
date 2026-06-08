@@ -716,6 +716,44 @@ end
         @test !x2_result.metadata.artifacts_materialized
     end
 
+    kinetic_1d = (;
+        x = [Float64(i + 3j) for i in 1:7, j in 1:7],
+        y = [Float64(3i + j) for i in 1:7, j in 1:7],
+        z = [Float64(2i + 2j) for i in 1:7, j in 1:7],
+    )
+    kinetic_result =
+        CPBMForLWAdapter.white_lindsey_boundary_stratum_kinetic_block(
+            real_pair_coefficients;
+            parent_axis_counts = (7, 7, 7),
+            overlap_1d,
+            kinetic_1d,
+        )
+    @test kinetic_result.term == :kinetic
+    @test kinetic_result.pair_key == real_pair_coefficients.pair_key
+    @test size(kinetic_result.block) == (9, 3)
+    @test all(isfinite, kinetic_result.block)
+    @test sum(abs, kinetic_result.block) > 0.0
+    @test kinetic_result.materialized
+    @test kinetic_result.source_operator_blocks_materialized
+    @test kinetic_result.final_pair_blocks_materialized
+    @test !kinetic_result.operator_blocks_materialized
+    @test !kinetic_result.hamiltonian_data_materialized
+    @test !kinetic_result.artifacts_materialized
+    @test kinetic_result.metadata.materialization_path ==
+          :white_lindsey_boundary_stratum_kinetic_adapter
+    @test kinetic_result.metadata.kinetic_factor_form ==
+          :factorized_cartesian_sum_kss_sks_ssk
+    @test kinetic_result.metadata.kinetic_component_axes == (:x, :y, :z)
+    @test kinetic_result.metadata.kinetic_component_block_shapes ==
+          ((9, 3), (9, 3), (9, 3))
+    @test kinetic_result.metadata.left_support_count == 25
+    @test kinetic_result.metadata.right_support_count == 5
+    @test kinetic_result.metadata.left_retained_column_count == 9
+    @test kinetic_result.metadata.right_retained_column_count == 3
+    @test !kinetic_result.metadata.operator_blocks_materialized
+    @test !kinetic_result.metadata.hamiltonian_data_materialized
+    @test !kinetic_result.metadata.artifacts_materialized
+
     blocked_pair_coefficients =
         CPBMForLWAdapter.white_lindsey_boundary_stratum_pair_unit_coefficients(
             ready_facet_descriptor,
