@@ -284,8 +284,18 @@ end
     @test x2_x_plan.status === :empty_local_one_body_placement_plan
     @test x2_x_plan.record_count == 0
 
+    x2_y_plan = CPBMPlacement.one_body_x2_y_placement_plan(collection)
+    @test x2_y_plan.term === :x2_y
+    @test x2_y_plan.status === :empty_local_one_body_placement_plan
+    @test x2_y_plan.record_count == 0
+
+    x2_z_plan = CPBMPlacement.one_body_x2_z_placement_plan(collection)
+    @test x2_z_plan.term === :x2_z
+    @test x2_z_plan.status === :empty_local_one_body_placement_plan
+    @test x2_z_plan.record_count == 0
+
     @test_throws ArgumentError CPBMPlacement.one_body_placement_plan(
         collection;
-        term = :x2_y,
+        term = :coulomb,
     )
 end

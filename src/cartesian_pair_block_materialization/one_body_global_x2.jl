@@ -1,19 +1,48 @@
 # Dense global x2-axis assembly pilots from local placement records.
 #
-# This is deliberately limited to x2_x. It consumes only placement records
-# already marked placeable in final retained space and keeps x2 axis terms
-# separated. It ignores blocked records except for counts. It does not assemble
-# Hamiltonians, overlap/kinetic/position, x2_y/z, Coulomb/IDA/MWG data, exports,
-# artifacts, or PQS shell/Lowdin realization.
+# This is deliberately limited to x2_x, x2_y, and x2_z. It consumes only
+# placement records already marked placeable in final retained space and keeps
+# x2 axis terms separated. It ignores blocked records except for counts. It does
+# not assemble Hamiltonians, overlap/kinetic/position, Coulomb/IDA/MWG data,
+# exports, artifacts, or PQS shell/Lowdin realization.
 
 function one_body_global_x2_x_matrix(placement_plan::NamedTuple)
-    _one_body_assert_x2_placement_plan_object(placement_plan, :x2_x)
+    return _one_body_global_x2_matrix(placement_plan, :x2_x)
+end
 
-    placement_plan.term === :x2_x ||
+function one_body_global_x2_y_matrix(placement_plan::NamedTuple)
+    return _one_body_global_x2_matrix(placement_plan, :x2_y)
+end
+
+function one_body_global_x2_z_matrix(placement_plan::NamedTuple)
+    return _one_body_global_x2_matrix(placement_plan, :x2_z)
+end
+
+function one_body_global_x2_x_matrix(placement_plan)
+    _one_body_global_x2_throw_requires_plan(:x2_x)
+end
+
+function one_body_global_x2_y_matrix(placement_plan)
+    _one_body_global_x2_throw_requires_plan(:x2_y)
+end
+
+function one_body_global_x2_z_matrix(placement_plan)
+    _one_body_global_x2_throw_requires_plan(:x2_z)
+end
+
+const global_x2_x_matrix = one_body_global_x2_x_matrix
+const global_x2_y_matrix = one_body_global_x2_y_matrix
+const global_x2_z_matrix = one_body_global_x2_z_matrix
+
+function _one_body_global_x2_matrix(placement_plan::NamedTuple, term::Symbol)
+    _one_body_assert_x2_term(term)
+    _one_body_assert_x2_placement_plan_object(placement_plan, term)
+
+    placement_plan.term === term ||
         return _one_body_global_x2_blocked_result(
             placement_plan,
-            :x2_x,
-            :non_x2_x_placement_plan,
+            term,
+            Symbol("non_", String(term), "_placement_plan"),
         )
 
     if _one_body_placement_value(placement_plan, :global_dimension_status, nothing) !==
@@ -21,7 +50,7 @@ function one_body_global_x2_x_matrix(placement_plan::NamedTuple)
        isnothing(_one_body_placement_value(placement_plan, :global_dimension, nothing))
         return _one_body_global_x2_blocked_result(
             placement_plan,
-            :x2_x,
+            term,
             :missing_global_dimension,
         )
     end
@@ -30,16 +59,16 @@ function one_body_global_x2_x_matrix(placement_plan::NamedTuple)
     isempty(placement_plan.placeable_records) &&
         return _one_body_global_x2_blocked_result(
             placement_plan,
-            :x2_x,
-            :no_placeable_x2_x_blocks,
+            term,
+            Symbol("no_placeable_", String(term), "_blocks"),
         )
 
     validation_blocker =
-        _one_body_global_x2_validation_blocker(placement_plan, :x2_x, dimension)
+        _one_body_global_x2_validation_blocker(placement_plan, term, dimension)
     isnothing(validation_blocker) ||
         return _one_body_global_x2_blocked_result(
             placement_plan,
-            :x2_x,
+            term,
             validation_blocker,
         )
 
@@ -58,8 +87,8 @@ function one_body_global_x2_x_matrix(placement_plan::NamedTuple)
 
     return _one_body_global_x2_result(
         placement_plan,
-        :x2_x,
-        :materialized_global_x2_x_matrix,
+        term,
+        Symbol("materialized_global_", String(term), "_matrix"),
         nothing,
         matrix;
         placed_block_count,
@@ -68,15 +97,19 @@ function one_body_global_x2_x_matrix(placement_plan::NamedTuple)
     )
 end
 
-function one_body_global_x2_x_matrix(placement_plan)
+function _one_body_global_x2_throw_requires_plan(term::Symbol)
     throw(
         ArgumentError(
-            "global x2_x matrix assembly requires a local one-body placement plan NamedTuple",
+            "global $(term) matrix assembly requires a local one-body placement plan NamedTuple",
         ),
     )
 end
 
-const global_x2_x_matrix = one_body_global_x2_x_matrix
+function _one_body_assert_x2_term(term::Symbol)
+    term in (:x2_x, :x2_y, :x2_z) ||
+        throw(ArgumentError("global x2 matrix assembly supports x2_x/y/z only"))
+    return nothing
+end
 
 function _one_body_assert_x2_placement_plan_object(
     placement_plan::NamedTuple,

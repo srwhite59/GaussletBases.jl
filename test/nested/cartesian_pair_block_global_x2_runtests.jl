@@ -1,9 +1,9 @@
-# Runtime role: tiny smoke / global x2_x assembly pilot.
+# Runtime role: tiny smoke / global x2-axis assembly pilots.
 #
-# This validates x2_x dense global assembly from already-placeable final-local
-# placement records. It does not cover Hamiltonians, overlap, kinetic/position,
-# x2_y/z, Coulomb, IDA/MWG, PQS realization, exports, or White-Lindsey oracle
-# paths.
+# This validates x2_x/y/z dense global assembly from already-placeable
+# final-local placement records. It keeps x2 terms separated and does not cover
+# Hamiltonians, overlap, kinetic/position, Coulomb, IDA/MWG, PQS realization,
+# exports, or White-Lindsey oracle paths.
 
 using Test
 using GaussletBases
@@ -32,6 +32,13 @@ function _global_x2_result(
     )
 end
 
+function _global_x2_axis_offset(term::Symbol)
+    term === :x2_x && return 0.0
+    term === :x2_y && return 20.0
+    term === :x2_z && return 40.0
+    throw(ArgumentError("x2 test term must be x2_x/y/z"))
+end
+
 function _global_x2_entry(result; block_set_term)
     return CPBMGlobalX2._one_body_local_block_collection_entry(
         result;
@@ -45,17 +52,30 @@ function _global_x2_count(counts, field::Symbol, value)
     return sum(entry -> hasproperty(entry, :count) ? entry.count : 1, matches)
 end
 
-function _global_x2_blocks()
+function _global_x2_blocks(term::Symbol)
+    offset = _global_x2_axis_offset(term)
     return (;
-        diagonal = [7.5 0.8; 0.8 8.5],
-        off_diagonal = [9.0 10.0; 11.0 12.0],
-        source = [100.0 101.0; 102.0 103.0],
-        missing_ranges = [4.0 0.2; 0.2 4.4],
+        diagonal = [
+            7.5 + offset 0.8 + offset
+            0.8 + offset 8.5 + offset
+        ],
+        off_diagonal = [
+            9.0 + offset 10.0 + offset
+            11.0 + offset 12.0 + offset
+        ],
+        source = [
+            100.0 + offset 101.0 + offset
+            102.0 + offset 103.0 + offset
+        ],
+        missing_ranges = [
+            4.0 + offset 0.2 + offset
+            0.2 + offset 4.4 + offset
+        ],
     )
 end
 
-function _global_x2_expected()
-    blocks = _global_x2_blocks()
+function _global_x2_expected(term::Symbol)
+    blocks = _global_x2_blocks(term)
     diagonal = blocks.diagonal
     off_diagonal = blocks.off_diagonal
     return [
@@ -66,11 +86,11 @@ function _global_x2_expected()
     ]
 end
 
-function _global_x2_collection(; include_missing_ranges::Bool = true)
-    blocks = _global_x2_blocks()
+function _global_x2_collection(term::Symbol; include_missing_ranges::Bool = true)
+    blocks = _global_x2_blocks(term)
     diagonal = _global_x2_entry(
         _global_x2_result(
-            :x2_x,
+            term,
             (:diag_left, :diag_left),
             blocks.diagonal;
             source_operator_blocks_materialized = true,
@@ -84,11 +104,11 @@ function _global_x2_collection(; include_missing_ranges::Bool = true)
                 right_column_range = 1:2,
             ),
         );
-        block_set_term = :x2_x,
+        block_set_term = term,
     )
     off_diagonal = _global_x2_entry(
         _global_x2_result(
-            :x2_x,
+            term,
             (:left, :right),
             blocks.off_diagonal;
             source_operator_blocks_materialized = true,
@@ -102,11 +122,12 @@ function _global_x2_collection(; include_missing_ranges::Bool = true)
                 right_column_range = 3:4,
             ),
         );
-        block_set_term = :x2_x,
+        block_set_term = term,
     )
+    source_term = Symbol("source_", String(term))
     pqs_source = _global_x2_entry(
         _global_x2_result(
-            :source_x2_x,
+            source_term,
             (:pqs_left, :pqs_right),
             blocks.source;
             source_operator_blocks_materialized = true,
@@ -117,13 +138,13 @@ function _global_x2_collection(; include_missing_ranges::Bool = true)
                 materialization_path = :pqs_source_pair_preflight,
             ),
         );
-        block_set_term = :x2_x,
+        block_set_term = term,
     )
     materialized_entries = (diagonal, off_diagonal, pqs_source)
     if include_missing_ranges
         missing_ranges = _global_x2_entry(
             _global_x2_result(
-                :x2_x,
+                term,
                 (:missing_left, :missing_right),
                 blocks.missing_ranges;
                 source_operator_blocks_materialized = true,
@@ -135,15 +156,15 @@ function _global_x2_collection(; include_missing_ranges::Bool = true)
                         :direct_direct_pair_block_materialization_pilot,
                 ),
             );
-            block_set_term = :x2_x,
+            block_set_term = term,
         )
         materialized_entries = (materialized_entries..., missing_ranges)
     end
     return (;
         object_kind = :cartesian_pair_block_local_one_body_block_collection,
-        terms = (:x2_x,),
-        requested_terms = (:x2_x,),
-        materialized_terms = (:x2_x,),
+        terms = (term,),
+        requested_terms = (term,),
+        materialized_terms = (term,),
         deferred_terms = (),
         entries = materialized_entries,
         materialized_entries,
@@ -151,128 +172,164 @@ function _global_x2_collection(; include_missing_ranges::Bool = true)
     )
 end
 
-function _global_x2_plan(; global_dimension = 4, include_missing_ranges::Bool = true)
-    return CPBMGlobalX2.one_body_x2_x_placement_plan(
-        _global_x2_collection(; include_missing_ranges);
+function _global_x2_plan(
+    term::Symbol;
+    global_dimension = 4,
+    include_missing_ranges::Bool = true,
+)
+    term === :x2_x && return CPBMGlobalX2.one_body_x2_x_placement_plan(
+        _global_x2_collection(term; include_missing_ranges);
         global_dimension,
     )
+    term === :x2_y && return CPBMGlobalX2.one_body_x2_y_placement_plan(
+        _global_x2_collection(term; include_missing_ranges);
+        global_dimension,
+    )
+    term === :x2_z && return CPBMGlobalX2.one_body_x2_z_placement_plan(
+        _global_x2_collection(term; include_missing_ranges);
+        global_dimension,
+    )
+    throw(ArgumentError("x2 test term must be x2_x/y/z"))
 end
 
-@testset "CartesianPairBlockMaterialization global x2_x matrix" begin
-    placement_plan = _global_x2_plan()
-    result = CPBMGlobalX2.one_body_global_x2_x_matrix(placement_plan)
-    alias_result = CPBMGlobalX2.global_x2_x_matrix(placement_plan)
+function _global_x2_matrix(term::Symbol, placement_plan)
+    term === :x2_x &&
+        return CPBMGlobalX2.one_body_global_x2_x_matrix(placement_plan)
+    term === :x2_y &&
+        return CPBMGlobalX2.one_body_global_x2_y_matrix(placement_plan)
+    term === :x2_z &&
+        return CPBMGlobalX2.one_body_global_x2_z_matrix(placement_plan)
+    throw(ArgumentError("x2 test term must be x2_x/y/z"))
+end
 
-    @test result.object_kind === :cartesian_pair_block_global_x2_x_matrix
-    @test result.status === :materialized_global_x2_x_matrix
-    @test isnothing(result.blocker)
-    @test result.term === :x2_x
-    @test result.global_dimension == 4
-    @test result.matrix == _global_x2_expected()
-    @test alias_result.matrix == _global_x2_expected()
-    @test result.placeable_record_count == 2
-    @test result.blocked_record_count == 2
-    @test result.placed_block_count == 3
-    @test result.skipped_block_count == 2
-    @test result.symmetry === :symmetric
+function _global_x2_alias_matrix(term::Symbol, placement_plan)
+    term === :x2_x && return CPBMGlobalX2.global_x2_x_matrix(placement_plan)
+    term === :x2_y && return CPBMGlobalX2.global_x2_y_matrix(placement_plan)
+    term === :x2_z && return CPBMGlobalX2.global_x2_z_matrix(placement_plan)
+    throw(ArgumentError("x2 test term must be x2_x/y/z"))
+end
 
-    @test _global_x2_count(
-        placement_plan.blocker_counts,
-        :blocker,
-        :source_space_block_requires_shell_realization,
-    ) == 1
-    @test _global_x2_count(
-        placement_plan.blocker_counts,
-        :blocker,
-        :missing_column_ranges,
-    ) == 1
-    @test !any(value -> value >= 100.0, result.matrix)
+@testset "CartesianPairBlockMaterialization global x2 matrices" begin
+    for term in (:x2_x, :x2_y, :x2_z)
+        placement_plan = _global_x2_plan(term)
+        result = _global_x2_matrix(term, placement_plan)
+        alias_result = _global_x2_alias_matrix(term, placement_plan)
+        term_string = String(term)
+        materialized_flag = Symbol("global_", term_string, "_matrix_materialized")
 
-    missing_dimension_plan = _global_x2_plan(global_dimension = nothing)
-    missing_dimension =
-        CPBMGlobalX2.one_body_global_x2_x_matrix(missing_dimension_plan)
-    @test missing_dimension.status === :blocked_global_x2_x_matrix
-    @test missing_dimension.blocker === :missing_global_dimension
-    @test isnothing(missing_dimension.matrix)
+        @test result.object_kind ===
+              Symbol("cartesian_pair_block_global_", term_string, "_matrix")
+        @test result.status === Symbol("materialized_global_", term_string, "_matrix")
+        @test isnothing(result.blocker)
+        @test result.term === term
+        @test result.global_dimension == 4
+        @test result.matrix == _global_x2_expected(term)
+        @test alias_result.matrix == _global_x2_expected(term)
+        @test result.placeable_record_count == 2
+        @test result.blocked_record_count == 2
+        @test result.placed_block_count == 3
+        @test result.skipped_block_count == 2
+        @test result.symmetry === :symmetric
 
-    non_x2_x = CPBMGlobalX2.one_body_global_x2_x_matrix(
-        merge(placement_plan, (; term = :overlap)),
-    )
-    @test non_x2_x.status === :blocked_global_x2_x_matrix
-    @test non_x2_x.blocker === :non_x2_x_placement_plan
+        @test _global_x2_count(
+            placement_plan.blocker_counts,
+            :blocker,
+            :source_space_block_requires_shell_realization,
+        ) == 1
+        @test _global_x2_count(
+            placement_plan.blocker_counts,
+            :blocker,
+            :missing_column_ranges,
+        ) == 1
+        @test !any(value -> value >= 100.0, result.matrix)
 
-    placeable = only(
-        record for record in placement_plan.placeable_records
-        if record.pair_key == (:left, :right)
-    )
-    shape_mismatch_record = merge(
-        placeable,
-        (; target_ranges = (; rows = 1:3, columns = 3:4)),
-    )
-    shape_mismatch_plan = merge(
-        placement_plan,
-        (;
-            placeable_records = (shape_mismatch_record,),
-            placeable_count = 1,
-            blocked_count = 0,
-            blocked_records = (),
-            record_count = 1,
-        ),
-    )
-    shape_mismatch =
-        CPBMGlobalX2.one_body_global_x2_x_matrix(shape_mismatch_plan)
-    @test shape_mismatch.status === :blocked_global_x2_x_matrix
-    @test shape_mismatch.blocker === :local_block_shape_mismatch
+        missing_dimension_plan = _global_x2_plan(term; global_dimension = nothing)
+        missing_dimension = _global_x2_matrix(term, missing_dimension_plan)
+        @test missing_dimension.status ===
+              Symbol("blocked_global_", term_string, "_matrix")
+        @test missing_dimension.blocker === :missing_global_dimension
+        @test isnothing(missing_dimension.matrix)
 
-    outside_record = merge(
-        placeable,
-        (; target_ranges = (; rows = 1:2, columns = 4:5)),
-    )
-    outside_plan = merge(
-        placement_plan,
-        (;
-            placeable_records = (outside_record,),
-            placeable_count = 1,
-            blocked_count = 0,
-            blocked_records = (),
-            record_count = 1,
-        ),
-    )
-    outside = CPBMGlobalX2.one_body_global_x2_x_matrix(outside_plan)
-    @test outside.status === :blocked_global_x2_x_matrix
-    @test outside.blocker === :target_ranges_outside_global_dimension
+        non_x2 = _global_x2_matrix(
+            term,
+            merge(placement_plan, (; term = :overlap)),
+        )
+        @test non_x2.status === Symbol("blocked_global_", term_string, "_matrix")
+        @test non_x2.blocker === Symbol("non_", term_string, "_placement_plan")
 
-    empty_plan = merge(
-        placement_plan,
-        (;
-            placeable_records = (),
-            placeable_count = 0,
-            blocked_count = placement_plan.record_count,
-        ),
-    )
-    empty = CPBMGlobalX2.one_body_global_x2_x_matrix(empty_plan)
-    @test empty.status === :blocked_global_x2_x_matrix
-    @test empty.blocker === :no_placeable_x2_x_blocks
+        placeable = only(
+            record for record in placement_plan.placeable_records
+            if record.pair_key == (:left, :right)
+        )
+        shape_mismatch_record = merge(
+            placeable,
+            (; target_ranges = (; rows = 1:3, columns = 3:4)),
+        )
+        shape_mismatch_plan = merge(
+            placement_plan,
+            (;
+                placeable_records = (shape_mismatch_record,),
+                placeable_count = 1,
+                blocked_count = 0,
+                blocked_records = (),
+                record_count = 1,
+            ),
+        )
+        shape_mismatch = _global_x2_matrix(term, shape_mismatch_plan)
+        @test shape_mismatch.status ===
+              Symbol("blocked_global_", term_string, "_matrix")
+        @test shape_mismatch.blocker === :local_block_shape_mismatch
 
-    @test result.operator_matrix_materialized
-    @test result.global_x2_x_matrix_materialized
-    @test result.global_operator_assembled
-    @test !result.operator_blocks_materialized
-    @test !result.hamiltonian_data_materialized
-    @test !result.artifacts_materialized
-    @test !result.exports_materialized
-    @test !result.global_operator_blocks_materialized
-    @test !result.global_hamiltonian_data_materialized
-    @test !result.global_artifacts_materialized
-    @test !result.coulomb_materialized
-    @test !result.density_density_materialized
-    @test !result.ida_mwg_data_materialized
-    @test !result.pqs_lowdin_materialized
-    @test !result.pqs_shell_projection_materialized
-    @test !result.full_white_lindsey_route_assembled
+        outside_record = merge(
+            placeable,
+            (; target_ranges = (; rows = 1:2, columns = 4:5)),
+        )
+        outside_plan = merge(
+            placement_plan,
+            (;
+                placeable_records = (outside_record,),
+                placeable_count = 1,
+                blocked_count = 0,
+                blocked_records = (),
+                record_count = 1,
+            ),
+        )
+        outside = _global_x2_matrix(term, outside_plan)
+        @test outside.status === Symbol("blocked_global_", term_string, "_matrix")
+        @test outside.blocker === :target_ranges_outside_global_dimension
+
+        empty_plan = merge(
+            placement_plan,
+            (;
+                placeable_records = (),
+                placeable_count = 0,
+                blocked_count = placement_plan.record_count,
+            ),
+        )
+        empty = _global_x2_matrix(term, empty_plan)
+        @test empty.status === Symbol("blocked_global_", term_string, "_matrix")
+        @test empty.blocker === Symbol("no_placeable_", term_string, "_blocks")
+
+        @test result.operator_matrix_materialized
+        @test getproperty(result, materialized_flag)
+        @test result.global_operator_assembled
+        @test !result.operator_blocks_materialized
+        @test !result.hamiltonian_data_materialized
+        @test !result.artifacts_materialized
+        @test !result.exports_materialized
+        @test !result.global_operator_blocks_materialized
+        @test !result.global_hamiltonian_data_materialized
+        @test !result.global_artifacts_materialized
+        @test !result.coulomb_materialized
+        @test !result.density_density_materialized
+        @test !result.ida_mwg_data_materialized
+        @test !result.pqs_lowdin_materialized
+        @test !result.pqs_shell_projection_materialized
+        @test !result.full_white_lindsey_route_assembled
+    end
 
     @test_throws ArgumentError CPBMGlobalX2.one_body_placement_plan(
-        _global_x2_collection();
-        term = :x2_y,
+        _global_x2_collection(:x2_x);
+        term = :coulomb,
     )
 end
