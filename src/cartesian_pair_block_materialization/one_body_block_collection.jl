@@ -212,6 +212,85 @@ function _one_body_local_block_collection(consumption)
     )
 end
 
+function _one_body_local_block_collection_summary(collection::NamedTuple)
+    _one_body_assert_local_block_collection(collection)
+    return (;
+        object_kind = :cartesian_pair_block_local_one_body_block_collection_summary,
+        collection_object_kind = collection.object_kind,
+        status = collection.status,
+        blocker = collection.blocker,
+        terms = collection.terms,
+        requested_terms = collection.requested_terms,
+        requested_materialize_terms = collection.requested_materialize_terms,
+        materialized_terms = collection.materialized_terms,
+        deferred_terms = collection.deferred_terms,
+        term_count = length(collection.terms),
+        materialized_term_count = length(collection.materialized_terms),
+        deferred_term_count = length(collection.deferred_terms),
+        entry_count = collection.entry_count,
+        materialized_entry_count = collection.materialized_entry_count,
+        skipped_entry_count = collection.skipped_entry_count,
+        source_space_entry_count = collection.source_space_entry_count,
+        final_local_entry_count = collection.final_local_entry_count,
+        not_materialized_entry_count = count(
+            entry -> entry.block_space === :not_materialized,
+            collection.skipped_entries,
+        ),
+        selector_family_counts =
+            _one_body_count_optional_by(collection.entries, :selector_family),
+        materialized_selector_family_counts =
+            _one_body_count_optional_by(
+                collection.materialized_entries,
+                :selector_family,
+            ),
+        skipped_selector_family_counts =
+            _one_body_count_optional_by(
+                collection.skipped_entries,
+                :selector_family,
+            ),
+        skipped_blocker_counts =
+            _one_body_count_optional_by(collection.skipped_entries, :blocker),
+        block_space_counts =
+            _one_body_count_optional_by(collection.entries, :block_space),
+        term_separated_entries = collection.term_separated_entries,
+        pair_separated_entries = collection.pair_separated_entries,
+        entries_stored_in_summary = false,
+        materialized_entries_stored_in_summary = false,
+        skipped_entries_stored_in_summary = false,
+        result_records_stored_in_summary = false,
+        skipped_records_stored_in_summary = false,
+        matrix_fields_stored_in_summary = false,
+        block_set_results_summed = collection.block_set_results_summed,
+        block_matrices_copied_into_summary = false,
+        local_operator_assembled = false,
+        global_operator_assembled = false,
+        route_driver_wiring = false,
+        source_operator_blocks_materialized =
+            collection.source_operator_blocks_materialized,
+        final_pair_blocks_materialized = collection.final_pair_blocks_materialized,
+        operator_blocks_materialized = false,
+        hamiltonian_data_materialized = false,
+        artifacts_materialized = false,
+        global_operator_blocks_materialized = false,
+        global_hamiltonian_data_materialized = false,
+        global_artifacts_materialized = false,
+        coulomb_materialized = false,
+        density_density_materialized = false,
+        ida_mwg_data_materialized = false,
+        pqs_lowdin_materialized = false,
+        pqs_shell_projection_materialized = false,
+        full_white_lindsey_route_assembled = false,
+    )
+end
+
+function _one_body_local_block_collection_summary(collection)
+    throw(
+        ArgumentError(
+            "local one-body block collection summary requires a collection NamedTuple",
+        ),
+    )
+end
+
 function _one_body_local_block_collection_entries_for_term(
     collection::NamedTuple,
     term::Symbol,

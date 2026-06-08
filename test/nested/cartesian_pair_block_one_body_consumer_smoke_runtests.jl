@@ -422,6 +422,77 @@ end
     @test !local_collection.pqs_shell_projection_materialized
     @test !local_collection.full_white_lindsey_route_assembled
 
+    local_collection_summary =
+        CPBMSmoke._one_body_local_block_collection_summary(local_collection)
+    @test local_collection_summary.object_kind ==
+          :cartesian_pair_block_local_one_body_block_collection_summary
+    @test local_collection_summary.status ==
+          :partially_materialized_local_one_body_block_collection
+    @test local_collection_summary.terms == (:overlap, :kinetic)
+    @test local_collection_summary.materialized_terms == (:overlap,)
+    @test local_collection_summary.deferred_terms == (:kinetic,)
+    @test local_collection_summary.entry_count == 4
+    @test local_collection_summary.materialized_entry_count == 2
+    @test local_collection_summary.skipped_entry_count == 2
+    @test local_collection_summary.source_space_entry_count == 1
+    @test local_collection_summary.final_local_entry_count == 1
+    @test local_collection_summary.not_materialized_entry_count == 2
+    @test _mixed_consumer_smoke_count(
+        local_collection_summary.selector_family_counts,
+        :selector_family,
+        :direct_direct,
+    ) == 1
+    @test _mixed_consumer_smoke_count(
+        local_collection_summary.selector_family_counts,
+        :selector_family,
+        :pqs_source_pair,
+    ) == 1
+    @test _mixed_consumer_smoke_count(
+        local_collection_summary.skipped_blocker_counts,
+        :blocker,
+        :missing_white_lindsey_unit_pair,
+    ) == 1
+    @test _mixed_consumer_smoke_count(
+        local_collection_summary.block_space_counts,
+        :block_space,
+        :not_materialized,
+    ) == 2
+    @test all(
+        field -> !hasproperty(local_collection_summary, field),
+        (
+            :entries,
+            :materialized_entries,
+            :skipped_entries,
+            :entry,
+            :result,
+            :skipped_record,
+            :block,
+            :blocks,
+            :matrix,
+            :matrices,
+        ),
+    )
+    @test !local_collection_summary.entries_stored_in_summary
+    @test !local_collection_summary.materialized_entries_stored_in_summary
+    @test !local_collection_summary.skipped_entries_stored_in_summary
+    @test !local_collection_summary.result_records_stored_in_summary
+    @test !local_collection_summary.skipped_records_stored_in_summary
+    @test !local_collection_summary.matrix_fields_stored_in_summary
+    @test !local_collection_summary.block_set_results_summed
+    @test !local_collection_summary.block_matrices_copied_into_summary
+    @test !local_collection_summary.local_operator_assembled
+    @test !local_collection_summary.global_operator_assembled
+    @test !local_collection_summary.route_driver_wiring
+    @test !local_collection_summary.operator_blocks_materialized
+    @test !local_collection_summary.hamiltonian_data_materialized
+    @test !local_collection_summary.artifacts_materialized
+    @test !local_collection_summary.coulomb_materialized
+    @test !local_collection_summary.density_density_materialized
+    @test !local_collection_summary.ida_mwg_data_materialized
+    @test !local_collection_summary.pqs_lowdin_materialized
+    @test !local_collection_summary.pqs_shell_projection_materialized
+    @test !local_collection_summary.full_white_lindsey_route_assembled
+
     @test count(
         entry -> entry.selector_family === :direct_direct,
         local_collection.materialized_entries,
