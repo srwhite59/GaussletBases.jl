@@ -127,6 +127,10 @@ export PairBlockMaterializationPolicy,
 #     Metadata-only local one-body placement records for future global retained
 #     operator assembly.
 #
+# one_body_global_overlap.jl
+#     First dense global retained-overlap assembly pilot from placeable local
+#     placement records only.
+#
 # pqs_source_safe_terms.jl
 #     PQS/PQS raw source-space safe-term helpers.
 #
@@ -191,6 +195,7 @@ include("one_body_dispatch.jl")
 include("one_body_block_collection.jl")
 include("route_one_body_adapter.jl")
 include("one_body_placement_plan.jl")
+include("one_body_global_overlap.jl")
 include("direct_overlap.jl")
 include("pqs_source_safe_terms.jl")
 include("pqs_source_shell_bridge.jl")
