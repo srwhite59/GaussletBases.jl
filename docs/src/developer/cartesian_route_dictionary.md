@@ -147,15 +147,21 @@ The materialized LW adapter helpers are local and explicit:
 kernels as adapter inputs, not as route authority. The old-seed oracle helper
 remains validation-only and not adapter authority.
 
-Current focused oracle validation covers one representative local
-White--Lindsey facet/edge pair only. The adapter fixture maps the x-low `yz`
-facet to old seed face index 5 and the x-high/y-low `z` edge to old seed edge
-index 11, with old fixed-block retained ranges `162:170` and `210:212`.
-Local `(9, 3)` adapter blocks for overlap, position_x/y/z, x2_x/y/z, and
-kinetic compare against those old seed fixed-block slices within the focused
-test tolerance. This is selected local adapter validation, not full
-White--Lindsey route validation, not route-driver wiring, and not Coulomb,
-IDA/MWG, Hamiltonian/export, or artifact readiness.
+Current focused oracle validation covers selected representative local
+White--Lindsey boundary-stratum pairs, not an exhaustive enumeration. The
+adapter fixture maps the x-low `yz` facet to old seed face index 5, retained
+range `162:170`; the x-high/y-low `z` edge to old seed edge index 11, retained
+range `210:212`; and the adjacent x-high/y-low/z-high corner to old seed
+corner index 6, retained range `221:221`. Representative local pairs now
+validated against old fixed-block slices are facet/edge, facet/facet,
+edge/edge, edge/corner, and corner/corner. The validated one-body terms are
+overlap, position_x/y/z, x2_x/y/z, and kinetic. Corner unit coefficients expose
+parent support indices when `parent_dims` and fixed coordinates are available;
+without `parent_dims`, the support-local metadata path remains explicit and no
+parent support index is guessed. This is selected local adapter validation,
+not full White--Lindsey route validation, not route-driver wiring, and not
+Coulomb, IDA/MWG, Hamiltonian/export, artifact, or production dense-parent
+fallback readiness.
 
 ### Why “lowering”?
 

@@ -131,15 +131,20 @@ local helper family
 reuse old kernels as adapter inputs, not as route authority, and still build no
 Coulomb, IDA/MWG data, Hamiltonians, exports, or artifacts.
 
-The current LW oracle-validation checkpoint is deliberately narrow. One
-representative local facet/edge adapter pair has been compared against old
-seed fixed-block slices: old seed face index 5, old seed edge index 11,
-retained ranges `162:170` and `210:212`, local block shape `(9, 3)`. The
+The current LW oracle-validation checkpoint is deliberately narrow but broader
+than the initial facet/edge slice. Selected representative local adapter pairs
+have been compared against old seed fixed-block slices using old seed face
+index 5, range `162:170`; old seed edge index 11, range `210:212`; and old
+seed corner index 6, range `221:221`. The covered pair families are
+facet/edge, facet/facet, edge/edge, edge/corner, and corner/corner. The
 validated one-body terms are overlap, position_x/y/z, x2_x/y/z, and kinetic,
-all within the focused test tolerance. This validates one selected local
-adapter slice only. It is not full LW route assembly, not old-seed route
-authority, and not evidence for Coulomb, IDA/MWG, Hamiltonian/export, artifact,
-or production dense-parent fallback readiness.
+all within the focused test tolerance. Corner unit coefficients expose parent
+support indices when `parent_dims` and fixed coordinates are available; absent
+`parent_dims`, support-local metadata stays explicit and no parent support
+index is guessed. This validates selected local adapter slices only. It is not
+exhaustive over all orientations, not full LW route assembly, not old-seed
+route authority, and not evidence for Coulomb, IDA/MWG, Hamiltonian/export,
+artifact, or production dense-parent fallback readiness.
 
 The PQS guardrails are unchanged: support-row or shell-row contraction is an
 oracle/debug path, not the PQS algorithm; shell projection and Lowdin cleanup
