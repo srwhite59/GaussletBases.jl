@@ -408,6 +408,88 @@ function _lw_adapter_oracle_comparison_summary(comparisons)
     )
 end
 
+function _lw_adapter_unique_tuple(values)
+    unique_values = Any[]
+    for value in values
+        any(existing -> existing == value, unique_values) && continue
+        push!(unique_values, value)
+    end
+    return Tuple(unique_values)
+end
+
+function _lw_adapter_oracle_validation_coverage_summary(comparisons)
+    comparison_tuple = Tuple(comparisons)
+    pair_families = _lw_adapter_unique_tuple(
+        Tuple(comparison.pair_family for comparison in comparison_tuple),
+    )
+    terms = _lw_adapter_unique_tuple(
+        Tuple(comparison.term for comparison in comparison_tuple),
+    )
+    max_abs_errors = Tuple(
+        comparison.max_abs_error for comparison in comparison_tuple
+        if !isnothing(comparison.max_abs_error)
+    )
+    return (;
+        object_kind =
+            :white_lindsey_adapter_oracle_validation_coverage_summary,
+        pair_family_count = length(pair_families),
+        pair_families,
+        term_count = length(terms),
+        terms,
+        comparison_count = length(comparison_tuple),
+        value_comparison_count =
+            count(comparison -> !isnothing(comparison.max_abs_error),
+                comparison_tuple),
+        blocked_count =
+            count(comparison -> !isnothing(comparison.blocker),
+                comparison_tuple),
+        metadata_shape_only_count =
+            count(comparison -> comparison.status === :metadata_shape_only,
+                comparison_tuple),
+        max_abs_error =
+            isempty(max_abs_errors) ? nothing : maximum(max_abs_errors),
+        all_within_tolerance = all(
+            comparison -> (
+                comparison.status === :value_compared &&
+                !isnothing(comparison.max_abs_error) &&
+                comparison.max_abs_error <= comparison.tolerance
+            ),
+            comparison_tuple,
+        ),
+        old_seed_validation_oracle_only =
+            all(comparison -> comparison.oracle_role === :validation_oracle_only,
+                comparison_tuple),
+        route_authority = any(comparison -> comparison.route_authority,
+            comparison_tuple),
+        adapter_authority = any(comparison -> comparison.adapter_authority,
+            comparison_tuple),
+        local_pair_blocks_materialized =
+            all(comparison -> comparison.local_pair_block_materialized,
+                comparison_tuple),
+        source_operator_blocks_materialized =
+            all(comparison -> comparison.source_operator_blocks_materialized,
+                comparison_tuple),
+        final_pair_blocks_materialized =
+            all(comparison -> comparison.final_pair_blocks_materialized,
+                comparison_tuple),
+        operator_blocks_materialized =
+            any(comparison -> comparison.operator_blocks_materialized,
+                comparison_tuple),
+        hamiltonian_data_materialized =
+            any(comparison -> comparison.hamiltonian_data_materialized,
+                comparison_tuple),
+        exports_materialized = false,
+        artifacts_materialized =
+            any(comparison -> comparison.artifacts_materialized,
+                comparison_tuple),
+        dense_parent_parent_overlap_materialized =
+            any(
+                comparison -> comparison.dense_parent_parent_overlap_materialized,
+                comparison_tuple,
+            ),
+    )
+end
+
 @testset "CartesianPairBlockMaterialization White-Lindsey oracle comparison scaffold" begin
     expansion = coulomb_gaussian_expansion(doacc = false)
     seed_report =
@@ -658,6 +740,44 @@ end
                 :square_local_pair_symmetric_within_tolerance,
         ),
     )
+
+    coverage_comparisons = Tuple(
+        comparison for batch in comparison_batches
+        for comparison in batch.comparisons
+    )
+    coverage_summary = _lw_adapter_oracle_validation_coverage_summary(
+        coverage_comparisons,
+    )
+    @test coverage_summary.object_kind ==
+          :white_lindsey_adapter_oracle_validation_coverage_summary
+    @test coverage_summary.pair_family_count == 5
+    @test coverage_summary.pair_families == (
+        :facet_cpb__edge_cpb,
+        :facet_cpb__facet_cpb,
+        :edge_cpb__edge_cpb,
+        :edge_cpb__corner_cpb,
+        :corner_cpb__corner_cpb,
+    )
+    @test coverage_summary.term_count == length(comparison_terms)
+    @test coverage_summary.terms == comparison_terms
+    @test coverage_summary.comparison_count == 5 * length(comparison_terms)
+    @test coverage_summary.value_comparison_count ==
+          5 * length(comparison_terms)
+    @test coverage_summary.blocked_count == 0
+    @test coverage_summary.metadata_shape_only_count == 0
+    @test coverage_summary.max_abs_error <= 1.0e-10
+    @test coverage_summary.all_within_tolerance
+    @test coverage_summary.old_seed_validation_oracle_only
+    @test !coverage_summary.route_authority
+    @test !coverage_summary.adapter_authority
+    @test coverage_summary.local_pair_blocks_materialized
+    @test coverage_summary.source_operator_blocks_materialized
+    @test coverage_summary.final_pair_blocks_materialized
+    @test !coverage_summary.operator_blocks_materialized
+    @test !coverage_summary.hamiltonian_data_materialized
+    @test !coverage_summary.exports_materialized
+    @test !coverage_summary.artifacts_materialized
+    @test !coverage_summary.dense_parent_parent_overlap_materialized
 
     for batch in comparison_batches, comparison in batch.comparisons
         @test comparison.object_kind ==
