@@ -146,9 +146,8 @@ term-specific global retained matrices for the current safe one-body pilots.
 Synthetic global retained matrix coverage now exists for `:overlap`,
 `:kinetic`, `:position_x`, `:position_y`, `:position_z`, `:x2_x`, `:x2_y`,
 and `:x2_z`. Selected White--Lindsey old-oracle equivalence currently covers
-global overlap, kinetic, position_x, position_y, position_z, and x2_x only.
-X2_y and x2_z have synthetic placement/global-matrix coverage but no
-old-oracle equivalence coverage yet.
+all of those safe one-body global matrix pilots on selected face/face and
+face/edge slices.
 `one_body_global_matrix_helpers.jl` owns only behavior-neutral symmetric
 placement validation and insertion. Term-specific files still own supported
 terms, result statuses, blockers, object kinds, and materialization flags. This
