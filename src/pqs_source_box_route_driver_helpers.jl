@@ -8551,8 +8551,6 @@ function cartesian_pair_terms(units, transforms, recipe)
             low_order_pairs.route_core_pair_order_comparison_source,
         route_core_pair_family_counts =
             low_order_pairs.route_core_pair_family_counts,
-        route_core_pair_family_count_source =
-            low_order_pairs.route_core_pair_family_count_source,
         route_core_summary_status =
             low_order_pairs.route_core_summary_status,
         active_source_authority = low_order_pairs.active_source_authority,
