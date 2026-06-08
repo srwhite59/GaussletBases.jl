@@ -5,6 +5,56 @@
 # matrix data; materialized entries keep only compact block-shape fields beside
 # the original result reference.
 
+function _one_body_local_block_collection_entry_materialization_flags(;
+    source_operator_blocks_materialized = false,
+    final_pair_blocks_materialized = false,
+    operator_blocks_materialized = false,
+    hamiltonian_data_materialized = false,
+    artifacts_materialized = false,
+)
+    return (;
+        source_operator_blocks_materialized,
+        final_pair_blocks_materialized,
+        operator_blocks_materialized,
+        hamiltonian_data_materialized,
+        artifacts_materialized,
+        block_copied_into_entry = false,
+        local_operator_assembled = false,
+        global_operator_assembled = false,
+        route_driver_wiring = false,
+        coulomb_materialized = false,
+        ida_mwg_data_materialized = false,
+        pqs_lowdin_materialized = false,
+        pqs_shell_projection_materialized = false,
+        full_white_lindsey_route_assembled = false,
+    )
+end
+
+function _one_body_local_block_collection_summary_materialization_flags(;
+    source_operator_blocks_materialized = false,
+    final_pair_blocks_materialized = false,
+)
+    return (;
+        local_operator_assembled = false,
+        global_operator_assembled = false,
+        route_driver_wiring = false,
+        source_operator_blocks_materialized,
+        final_pair_blocks_materialized,
+        operator_blocks_materialized = false,
+        hamiltonian_data_materialized = false,
+        artifacts_materialized = false,
+        global_operator_blocks_materialized = false,
+        global_hamiltonian_data_materialized = false,
+        global_artifacts_materialized = false,
+        coulomb_materialized = false,
+        density_density_materialized = false,
+        ida_mwg_data_materialized = false,
+        pqs_lowdin_materialized = false,
+        pqs_shell_projection_materialized = false,
+        full_white_lindsey_route_assembled = false,
+    )
+end
+
 function _one_body_local_block_collection_entry(
     result::PairBlockMaterializationResult,
     ;
@@ -44,21 +94,15 @@ function _one_body_local_block_collection_entry(
         skipped_record_available = false,
         result,
         skipped_record = nothing,
-        source_operator_blocks_materialized =
-            result.source_operator_blocks_materialized,
-        final_pair_blocks_materialized = result.final_pair_blocks_materialized,
-        operator_blocks_materialized = result.operator_blocks_materialized,
-        hamiltonian_data_materialized = result.hamiltonian_data_materialized,
-        artifacts_materialized = result.artifacts_materialized,
-        block_copied_into_entry = false,
-        local_operator_assembled = false,
-        global_operator_assembled = false,
-        route_driver_wiring = false,
-        coulomb_materialized = false,
-        ida_mwg_data_materialized = false,
-        pqs_lowdin_materialized = false,
-        pqs_shell_projection_materialized = false,
-        full_white_lindsey_route_assembled = false,
+        _one_body_local_block_collection_entry_materialization_flags(
+            source_operator_blocks_materialized =
+                result.source_operator_blocks_materialized,
+            final_pair_blocks_materialized =
+                result.final_pair_blocks_materialized,
+            operator_blocks_materialized = result.operator_blocks_materialized,
+            hamiltonian_data_materialized = result.hamiltonian_data_materialized,
+            artifacts_materialized = result.artifacts_materialized,
+        )...,
     )
 end
 
@@ -96,20 +140,7 @@ function _one_body_local_block_collection_skipped_entry(
         skipped_record_available = true,
         result = nothing,
         skipped_record = skip,
-        source_operator_blocks_materialized = false,
-        final_pair_blocks_materialized = false,
-        operator_blocks_materialized = false,
-        hamiltonian_data_materialized = false,
-        artifacts_materialized = false,
-        block_copied_into_entry = false,
-        local_operator_assembled = false,
-        global_operator_assembled = false,
-        route_driver_wiring = false,
-        coulomb_materialized = false,
-        ida_mwg_data_materialized = false,
-        pqs_lowdin_materialized = false,
-        pqs_shell_projection_materialized = false,
-        full_white_lindsey_route_assembled = false,
+        _one_body_local_block_collection_entry_materialization_flags()...,
     )
 end
 
@@ -182,25 +213,16 @@ function _one_body_local_block_collection(consumption::NamedTuple)
         pair_separated_entries = true,
         block_set_results_summed = false,
         block_matrices_copied_into_collection = false,
-        local_operator_assembled = false,
-        global_operator_assembled = false,
-        route_driver_wiring = false,
-        source_operator_blocks_materialized =
-            any(entry -> entry.source_operator_blocks_materialized, materialized_tuple),
-        final_pair_blocks_materialized =
-            any(entry -> entry.final_pair_blocks_materialized, materialized_tuple),
-        operator_blocks_materialized = false,
-        hamiltonian_data_materialized = false,
-        artifacts_materialized = false,
-        global_operator_blocks_materialized = false,
-        global_hamiltonian_data_materialized = false,
-        global_artifacts_materialized = false,
-        coulomb_materialized = false,
-        density_density_materialized = false,
-        ida_mwg_data_materialized = false,
-        pqs_lowdin_materialized = false,
-        pqs_shell_projection_materialized = false,
-        full_white_lindsey_route_assembled = false,
+        _one_body_local_block_collection_summary_materialization_flags(
+            source_operator_blocks_materialized = any(
+                entry -> entry.source_operator_blocks_materialized,
+                materialized_tuple,
+            ),
+            final_pair_blocks_materialized = any(
+                entry -> entry.final_pair_blocks_materialized,
+                materialized_tuple,
+            ),
+        )...,
     )
 end
 
@@ -262,24 +284,12 @@ function _one_body_local_block_collection_summary(collection::NamedTuple)
         matrix_fields_stored_in_summary = false,
         block_set_results_summed = collection.block_set_results_summed,
         block_matrices_copied_into_summary = false,
-        local_operator_assembled = false,
-        global_operator_assembled = false,
-        route_driver_wiring = false,
-        source_operator_blocks_materialized =
-            collection.source_operator_blocks_materialized,
-        final_pair_blocks_materialized = collection.final_pair_blocks_materialized,
-        operator_blocks_materialized = false,
-        hamiltonian_data_materialized = false,
-        artifacts_materialized = false,
-        global_operator_blocks_materialized = false,
-        global_hamiltonian_data_materialized = false,
-        global_artifacts_materialized = false,
-        coulomb_materialized = false,
-        density_density_materialized = false,
-        ida_mwg_data_materialized = false,
-        pqs_lowdin_materialized = false,
-        pqs_shell_projection_materialized = false,
-        full_white_lindsey_route_assembled = false,
+        _one_body_local_block_collection_summary_materialization_flags(
+            source_operator_blocks_materialized =
+                collection.source_operator_blocks_materialized,
+            final_pair_blocks_materialized =
+                collection.final_pair_blocks_materialized,
+        )...,
     )
 end
 
@@ -402,25 +412,16 @@ function _one_body_local_block_collection_term_status(
         matrix_fields_stored_in_status = false,
         block_set_results_summed = false,
         block_matrices_copied_into_status = false,
-        local_operator_assembled = false,
-        global_operator_assembled = false,
-        route_driver_wiring = false,
-        source_operator_blocks_materialized =
-            any(entry -> entry.source_operator_blocks_materialized, materialized_entries),
-        final_pair_blocks_materialized =
-            any(entry -> entry.final_pair_blocks_materialized, materialized_entries),
-        operator_blocks_materialized = false,
-        hamiltonian_data_materialized = false,
-        artifacts_materialized = false,
-        global_operator_blocks_materialized = false,
-        global_hamiltonian_data_materialized = false,
-        global_artifacts_materialized = false,
-        coulomb_materialized = false,
-        density_density_materialized = false,
-        ida_mwg_data_materialized = false,
-        pqs_lowdin_materialized = false,
-        pqs_shell_projection_materialized = false,
-        full_white_lindsey_route_assembled = false,
+        _one_body_local_block_collection_summary_materialization_flags(
+            source_operator_blocks_materialized = any(
+                entry -> entry.source_operator_blocks_materialized,
+                materialized_entries,
+            ),
+            final_pair_blocks_materialized = any(
+                entry -> entry.final_pair_blocks_materialized,
+                materialized_entries,
+            ),
+        )...,
     )
 end
 
@@ -547,25 +548,16 @@ function _one_body_local_block_collection_pair_status(
         matrix_fields_stored_in_status = false,
         block_set_results_summed = false,
         block_matrices_copied_into_status = false,
-        local_operator_assembled = false,
-        global_operator_assembled = false,
-        route_driver_wiring = false,
-        source_operator_blocks_materialized =
-            any(entry -> entry.source_operator_blocks_materialized, materialized_entries),
-        final_pair_blocks_materialized =
-            any(entry -> entry.final_pair_blocks_materialized, materialized_entries),
-        operator_blocks_materialized = false,
-        hamiltonian_data_materialized = false,
-        artifacts_materialized = false,
-        global_operator_blocks_materialized = false,
-        global_hamiltonian_data_materialized = false,
-        global_artifacts_materialized = false,
-        coulomb_materialized = false,
-        density_density_materialized = false,
-        ida_mwg_data_materialized = false,
-        pqs_lowdin_materialized = false,
-        pqs_shell_projection_materialized = false,
-        full_white_lindsey_route_assembled = false,
+        _one_body_local_block_collection_summary_materialization_flags(
+            source_operator_blocks_materialized = any(
+                entry -> entry.source_operator_blocks_materialized,
+                materialized_entries,
+            ),
+            final_pair_blocks_materialized = any(
+                entry -> entry.final_pair_blocks_materialized,
+                materialized_entries,
+            ),
+        )...,
     )
 end
 
@@ -659,25 +651,16 @@ function _one_body_local_block_collection_lookup(
         matrix_fields_stored_in_lookup = false,
         block_set_results_summed = false,
         block_matrices_copied_into_lookup = false,
-        local_operator_assembled = false,
-        global_operator_assembled = false,
-        route_driver_wiring = false,
-        source_operator_blocks_materialized =
-            any(entry -> entry.source_operator_blocks_materialized, materialized_entries),
-        final_pair_blocks_materialized =
-            any(entry -> entry.final_pair_blocks_materialized, materialized_entries),
-        operator_blocks_materialized = false,
-        hamiltonian_data_materialized = false,
-        artifacts_materialized = false,
-        global_operator_blocks_materialized = false,
-        global_hamiltonian_data_materialized = false,
-        global_artifacts_materialized = false,
-        coulomb_materialized = false,
-        density_density_materialized = false,
-        ida_mwg_data_materialized = false,
-        pqs_lowdin_materialized = false,
-        pqs_shell_projection_materialized = false,
-        full_white_lindsey_route_assembled = false,
+        _one_body_local_block_collection_summary_materialization_flags(
+            source_operator_blocks_materialized = any(
+                entry -> entry.source_operator_blocks_materialized,
+                materialized_entries,
+            ),
+            final_pair_blocks_materialized = any(
+                entry -> entry.final_pair_blocks_materialized,
+                materialized_entries,
+            ),
+        )...,
     )
     length(entries) == 1 && return merge(base, (; entry = only(entries)))
     return base

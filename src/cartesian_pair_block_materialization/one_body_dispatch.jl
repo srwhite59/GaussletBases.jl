@@ -1,8 +1,8 @@
-# Metadata-only mixed one-body dispatch classifier.
+# Mixed one-body dispatch and local selector orchestration.
 #
-# This skeleton classifies which existing family selector would be used later
-# and whether caller-supplied inputs are present. It deliberately does not call
-# numerical family selectors.
+# The early preflight summaries classify selector readiness without numerical
+# work. The materialization entry points below call the direct, PQS source-space,
+# and White--Lindsey local selectors when caller-supplied inputs are ready.
 
 function _one_body_pair_block_dispatch_summary(
     record::PairBlockMaterializationRecord,
