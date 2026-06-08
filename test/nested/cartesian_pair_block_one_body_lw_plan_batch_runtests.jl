@@ -9,6 +9,17 @@ const CRTCMixedLWPlan = GaussletBases.CartesianRetainedUnitTransformContracts
 const CUPMixedLWPlan = GaussletBases.CartesianUnitPairs
 const COPMixedLWPlan = GaussletBases.CartesianPairOperatorPlans
 
+const _MIXED_LW_PLAN_SAFE_TERMS = (
+    :overlap,
+    :position_x,
+    :position_y,
+    :position_z,
+    :x2_x,
+    :x2_y,
+    :x2_z,
+    :kinetic,
+)
+
 function _mixed_lw_plan_record(unit_pair)
     return CPBMMixedLWPlan.PairBlockMaterializationRecord(
         unit_pair.pair_key,
@@ -119,6 +130,58 @@ function _check_mixed_lw_batch_result(batch, term::Symbol)
     return result
 end
 
+function _mixed_lw_plan_count(counts, field::Symbol, value)
+    matches = Tuple(entry for entry in counts if getproperty(entry, field) == value)
+    isempty(matches) && return 0
+    return only(matches).count
+end
+
+function _mixed_lw_plan_axis(term::Symbol)
+    term in (:position_x, :x2_x) && return :x
+    term in (:position_y, :x2_y) && return :y
+    term in (:position_z, :x2_z) && return :z
+    return nothing
+end
+
+function _check_mixed_lw_plan_summary(batch, term::Symbol)
+    summary = CPBMMixedLWPlan._one_body_pair_block_batch_summary(batch)
+    @test summary.term == term
+    @test summary.materialized_count == 1
+    @test summary.skipped_count == 0
+    @test !summary.direct_direct_materialized
+    @test !summary.pqs_source_pair_materialized
+    @test summary.white_lindsey_materialized
+    @test summary.source_space_only_result_count == 0
+    @test summary.final_local_block_result_count == 1
+    @test !summary.global_operator_blocks_materialized
+    @test !summary.global_hamiltonian_data_materialized
+    @test !summary.global_artifacts_materialized
+    @test _mixed_lw_plan_count(
+        summary.materialized_selector_family_counts,
+        :selector_family,
+        :white_lindsey_boundary_stratum,
+    ) == 1
+end
+
+function _check_mixed_lw_plan_term_metadata(result, term::Symbol)
+    if term === :overlap
+        @test result.metadata.materialization_path ==
+              :white_lindsey_boundary_stratum_overlap_adapter
+    elseif term in (:position_x, :position_y, :position_z)
+        @test result.metadata.materialization_path ==
+              :white_lindsey_boundary_stratum_position_adapter
+        @test result.metadata.position_axis == _mixed_lw_plan_axis(term)
+    elseif term in (:x2_x, :x2_y, :x2_z)
+        @test result.metadata.materialization_path ==
+              :white_lindsey_boundary_stratum_x2_adapter
+        @test result.metadata.x2_axis == _mixed_lw_plan_axis(term)
+    elseif term === :kinetic
+        @test result.metadata.materialization_path ==
+              :white_lindsey_boundary_stratum_kinetic_adapter
+        @test result.metadata.kinetic_component_axes == (:x, :y, :z)
+    end
+end
+
 @testset "CartesianPairBlockMaterialization mixed White-Lindsey plan batch" begin
     fixture = _lw_adapter_prepared_facet_edge_fixture(;
         prefix = "mixed_lw_plan_batch",
@@ -132,23 +195,14 @@ end
     parent_axis_counts = (7, 7, 7)
     overlap_1d = fixture.factors.overlap_1d
     position_1d = fixture.factors.position_1d
+    x2_1d = fixture.factors.x2_1d
+    kinetic_1d = fixture.factors.kinetic_1d
+    inputs = (; parent_axis_counts, overlap_1d, position_1d, x2_1d, kinetic_1d)
 
-    overlap_batch = CPBMMixedLWPlan._one_body_pair_blocks(
-        plan,
-        :overlap;
-        inputs = (; parent_axis_counts, overlap_1d),
-    )
-    overlap_result = _check_mixed_lw_batch_result(overlap_batch, :overlap)
-    @test overlap_result.metadata.materialization_path ==
-          :white_lindsey_boundary_stratum_overlap_adapter
-
-    position_batch = CPBMMixedLWPlan._one_body_pair_blocks(
-        plan,
-        :position_y;
-        inputs = (; parent_axis_counts, overlap_1d, position_1d),
-    )
-    position_result = _check_mixed_lw_batch_result(position_batch, :position_y)
-    @test position_result.metadata.position_axis == :y
-    @test position_result.metadata.materialization_path ==
-          :white_lindsey_boundary_stratum_position_adapter
+    for term in _MIXED_LW_PLAN_SAFE_TERMS
+        batch = CPBMMixedLWPlan._one_body_pair_blocks(plan, term; inputs)
+        result = _check_mixed_lw_batch_result(batch, term)
+        _check_mixed_lw_plan_summary(batch, term)
+        _check_mixed_lw_plan_term_metadata(result, term)
+    end
 end
