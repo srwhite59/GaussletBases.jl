@@ -383,6 +383,104 @@ end
     @test !block_set_view.full_white_lindsey_route_assembled
     @test _mixed_consumer_smoke_compact_summary(block_set_view)
 
+    local_collection =
+        CPBMSmoke._one_body_local_block_collection(block_set_consumption)
+    @test local_collection.object_kind ==
+          :cartesian_pair_block_local_one_body_block_collection
+    @test local_collection.status ==
+          :partially_materialized_local_one_body_block_collection
+    @test isnothing(local_collection.blocker)
+    @test local_collection.terms == (:overlap, :kinetic)
+    @test local_collection.requested_materialize_terms == (:overlap,)
+    @test local_collection.materialized_terms == (:overlap,)
+    @test local_collection.deferred_terms == (:kinetic,)
+    @test local_collection.entry_count == 4
+    @test local_collection.materialized_entry_count == 2
+    @test local_collection.skipped_entry_count == 2
+    @test local_collection.deferred_term_count == 1
+    @test local_collection.source_space_entry_count == 1
+    @test local_collection.final_local_entry_count == 1
+    @test local_collection.term_separated_entries
+    @test local_collection.pair_separated_entries
+    @test !local_collection.block_set_results_summed
+    @test !local_collection.block_matrices_copied_into_collection
+    @test local_collection.source_operator_blocks_materialized
+    @test local_collection.final_pair_blocks_materialized
+    @test !local_collection.operator_blocks_materialized
+    @test !local_collection.hamiltonian_data_materialized
+    @test !local_collection.artifacts_materialized
+    @test !local_collection.global_operator_blocks_materialized
+    @test !local_collection.global_hamiltonian_data_materialized
+    @test !local_collection.global_artifacts_materialized
+    @test !local_collection.local_operator_assembled
+    @test !local_collection.global_operator_assembled
+    @test !local_collection.route_driver_wiring
+    @test !local_collection.coulomb_materialized
+    @test !local_collection.density_density_materialized
+    @test !local_collection.ida_mwg_data_materialized
+    @test !local_collection.pqs_lowdin_materialized
+    @test !local_collection.pqs_shell_projection_materialized
+    @test !local_collection.full_white_lindsey_route_assembled
+
+    @test count(
+        entry -> entry.selector_family === :direct_direct,
+        local_collection.materialized_entries,
+    ) == 1
+    @test count(
+        entry -> entry.selector_family === :pqs_source_pair,
+        local_collection.materialized_entries,
+    ) == 1
+    @test count(
+        entry -> entry.selector_family === :white_lindsey_boundary_stratum,
+        local_collection.skipped_entries,
+    ) == 1
+    @test count(
+        entry -> entry.selector_family === :unsupported,
+        local_collection.skipped_entries,
+    ) == 1
+
+    direct_collection_entry = only(
+        entry for entry in local_collection.materialized_entries
+        if entry.selector_family === :direct_direct
+    )
+    pqs_collection_entry = only(
+        entry for entry in local_collection.materialized_entries
+        if entry.selector_family === :pqs_source_pair
+    )
+    lw_collection_entry = only(
+        entry for entry in local_collection.skipped_entries
+        if entry.selector_family === :white_lindsey_boundary_stratum
+    )
+    unsupported_collection_entry = only(
+        entry for entry in local_collection.skipped_entries
+        if entry.selector_family === :unsupported
+    )
+    @test direct_collection_entry.block_set_term === :overlap
+    @test direct_collection_entry.result_term === :overlap
+    @test isnothing(direct_collection_entry.source_space_term)
+    @test direct_collection_entry.block_space === :final_local_space
+    @test direct_collection_entry.result_available
+    @test direct_collection_entry.result.term === :overlap
+    @test pqs_collection_entry.block_set_term === :overlap
+    @test pqs_collection_entry.result_term === :source_overlap
+    @test pqs_collection_entry.source_space_term === :source_overlap
+    @test pqs_collection_entry.block_space === :source_space
+    @test pqs_collection_entry.result_available
+    @test pqs_collection_entry.result.term === :source_overlap
+    @test lw_collection_entry.block_set_term === :overlap
+    @test isnothing(lw_collection_entry.result_term)
+    @test lw_collection_entry.blocker === :missing_white_lindsey_unit_pair
+    @test lw_collection_entry.skipped_record_available
+    @test lw_collection_entry.skipped_record.blocker ===
+          :missing_white_lindsey_unit_pair
+    @test unsupported_collection_entry.block_set_term === :overlap
+    @test isnothing(unsupported_collection_entry.result_term)
+    @test unsupported_collection_entry.blocker ===
+          :unsupported_pair_block_materialization_path
+    @test unsupported_collection_entry.skipped_record_available
+    @test unsupported_collection_entry.skipped_record.blocker ===
+          :unsupported_pair_block_materialization_path
+
     overlap_results =
         CPBMSmoke._one_body_pair_block_results_for_term(
             block_set_consumption,
