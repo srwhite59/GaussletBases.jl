@@ -374,6 +374,88 @@ function _one_body_block_set_preflight_blocker(
     return :blocked_mixed_one_body_dispatch_records
 end
 
+function _one_body_pair_block_set_consumption(
+    plan::PairBlockMaterializationPlan;
+    terms = _ONE_BODY_TERMS,
+    inputs = (;),
+    provider = nothing,
+    materialize_terms = (),
+)
+    term_set_descriptor = _one_body_term_set_descriptor(terms)
+    preflight_summary = _one_body_pair_block_set_preflight_summary(
+        plan;
+        terms = term_set_descriptor.terms,
+        inputs,
+        provider,
+    )
+    block_set_summary = _one_body_pair_block_set_summary(
+        plan;
+        terms = term_set_descriptor.terms,
+    )
+
+    return (;
+        object_kind = :cartesian_pair_block_mixed_one_body_block_set_consumption,
+        status = _one_body_block_set_consumption_status(preflight_summary),
+        blocker = _one_body_block_set_consumption_blocker(preflight_summary),
+        requested_terms = term_set_descriptor.terms,
+        terms = term_set_descriptor.terms,
+        term_count = term_set_descriptor.term_count,
+        requested_materialize_terms = Tuple(materialize_terms),
+        materialized_terms = (),
+        deferred_terms = term_set_descriptor.terms,
+        preflight_summary,
+        preflight_status = preflight_summary.status,
+        preflight_blocker = preflight_summary.blocker,
+        block_set_summary,
+        block_set_summary_status = block_set_summary.status,
+        term_statuses = block_set_summary.term_statuses,
+        total_materialized_count = 0,
+        total_skipped_count = 0,
+        result_terms_remain_separated = true,
+        block_set_results_summed = false,
+        term_batch_results_stored = false,
+        one_term_consumer_called = false,
+        factors_constructed = false,
+        numerical_blocks_materialized = false,
+        materialized = false,
+        source_operator_blocks_materialized = false,
+        final_pair_blocks_materialized = false,
+        operator_blocks_materialized = false,
+        hamiltonian_data_materialized = false,
+        artifacts_materialized = false,
+        global_operator_blocks_materialized = false,
+        global_hamiltonian_data_materialized = false,
+        global_artifacts_materialized = false,
+        mixed_dispatcher_materialized = false,
+        route_driver_wiring = false,
+        coulomb_materialized = false,
+        density_density_materialized = false,
+        ida_mwg_data_materialized = false,
+        pqs_lowdin_materialized = false,
+        full_white_lindsey_route_assembled = false,
+    )
+end
+
+function _one_body_pair_block_set_consumption(plan; kwargs...)
+    throw(
+        ArgumentError(
+            "one-body block-set consumption requires a PairBlockMaterializationPlan",
+        ),
+    )
+end
+
+function _one_body_block_set_consumption_status(preflight_summary)
+    preflight_summary.status === :blocked_mixed_one_body_block_set_preflight &&
+        return :blocked_mixed_one_body_block_set_consumption
+    return :deferred_metadata_only_mixed_one_body_block_set_consumption
+end
+
+function _one_body_block_set_consumption_blocker(preflight_summary)
+    preflight_summary.status === :blocked_mixed_one_body_block_set_preflight ||
+        return nothing
+    return preflight_summary.blocker
+end
+
 function _one_body_pair_block(
     record::PairBlockMaterializationRecord,
     term::Symbol;
