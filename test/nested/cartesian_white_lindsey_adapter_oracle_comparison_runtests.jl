@@ -471,6 +471,16 @@ end
         )
     edge_corner_adapter_blocks =
         _lw_adapter_seed_one_body_blocks(edge_corner_pair_coefficients, factors)
+    corner_corner_pair_coefficients =
+        CPBMForLWAdapter.white_lindsey_boundary_stratum_pair_unit_coefficients(
+            _lw_adapter_unit_pair(
+                real_corner_unit,
+                real_corner_unit,
+                5,
+            ),
+        )
+    corner_corner_adapter_blocks =
+        _lw_adapter_seed_one_body_blocks(corner_corner_pair_coefficients, factors)
 
     @test seed_local_facts.object_kind ==
           :white_lindsey_seed_local_pair_facts
@@ -582,6 +592,15 @@ end
         seed_local_facts.edge_global_range,
         seed_local_facts.corner_global_range,
     )
+    corner_corner_comparisons = _lw_adapter_oracle_value_comparisons(
+        corner_corner_adapter_blocks,
+        oracle_summary,
+        seed,
+        seed_local_facts,
+        comparison_terms,
+        seed_local_facts.corner_global_range,
+        seed_local_facts.corner_global_range,
+    )
     comparison_batches = (
         (;
             comparisons = facet_edge_comparisons,
@@ -626,6 +645,17 @@ end
             expected_shape = (3, 1),
             expected_symmetry_status =
                 :not_applicable_rectangular_local_pair_block,
+        ),
+        (;
+            comparisons = corner_corner_comparisons,
+            expected_pair_key = (
+                :lw_oracle_comparison_real_corner_unit,
+                :lw_oracle_comparison_real_corner_unit,
+            ),
+            expected_pair_family = :corner_cpb__corner_cpb,
+            expected_shape = (1, 1),
+            expected_symmetry_status =
+                :square_local_pair_symmetric_within_tolerance,
         ),
     )
 
@@ -741,4 +771,19 @@ end
         @test comparison.seed_slice_shape == seed_local_facts.edge_corner_slice_shape
         @test comparison.max_abs_error <= comparison.tolerance
     end
+
+    corner_corner_summary = _lw_adapter_oracle_comparison_summary(
+        corner_corner_comparisons,
+    )
+    @test corner_corner_summary.object_kind ==
+          :white_lindsey_adapter_oracle_comparison_summary
+    @test corner_corner_summary.comparison_count == length(comparison_terms)
+    @test corner_corner_summary.terms == comparison_terms
+    @test corner_corner_summary.pair_families ==
+          ntuple(_ -> :corner_cpb__corner_cpb, length(comparison_terms))
+    @test corner_corner_summary.statuses ==
+          ntuple(_ -> :value_compared, length(comparison_terms))
+    @test corner_corner_summary.metadata_shape_only_count == 0
+    @test corner_corner_summary.value_comparison_count == length(comparison_terms)
+    @test corner_corner_summary.blocked_count == 0
 end
