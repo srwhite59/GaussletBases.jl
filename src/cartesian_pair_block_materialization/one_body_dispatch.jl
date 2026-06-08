@@ -590,6 +590,169 @@ function _one_body_pair_block_set_view(consumption)
     )
 end
 
+function _one_body_pair_block_results_for_term(
+    consumption::NamedTuple,
+    term::Symbol,
+)
+    _one_body_pair_block_set_consumption_summary(consumption)
+    batch_result =
+        _one_body_block_set_consumption_batch_result_for_term(consumption, term)
+    isnothing(batch_result) && return ()
+    return batch_result.materialized_results
+end
+
+function _one_body_pair_block_results_for_term(consumption, term)
+    throw(
+        ArgumentError(
+            "one-body block-set term result accessor requires a NamedTuple consumption object and Symbol term",
+        ),
+    )
+end
+
+function _one_body_pair_block_skips_for_term(
+    consumption::NamedTuple,
+    term::Symbol,
+)
+    _one_body_pair_block_set_consumption_summary(consumption)
+    batch_result =
+        _one_body_block_set_consumption_batch_result_for_term(consumption, term)
+    isnothing(batch_result) && return ()
+    return batch_result.skipped_records
+end
+
+function _one_body_pair_block_skips_for_term(consumption, term)
+    throw(
+        ArgumentError(
+            "one-body block-set term skip accessor requires a NamedTuple consumption object and Symbol term",
+        ),
+    )
+end
+
+function _one_body_pair_block_term_status(
+    consumption::NamedTuple,
+    term::Symbol,
+)
+    compact_summary = _one_body_pair_block_set_consumption_summary(consumption)
+    requested = term in consumption.requested_terms
+    requested_materialization = term in consumption.requested_materialize_terms
+    if !requested
+        return _one_body_block_set_term_access_status(
+            compact_summary,
+            term,
+            :term_not_requested,
+            :term_not_requested,
+            false,
+            false,
+        )
+    end
+    if consumption.status === :blocked_mixed_one_body_block_set_consumption &&
+       requested_materialization
+        return _one_body_block_set_term_access_status(
+            compact_summary,
+            term,
+            :blocked_mixed_one_body_block_set_term,
+            consumption.blocker,
+            true,
+            requested_materialization,
+        )
+    end
+    term_summary = _one_body_block_set_compact_term_summary(consumption, term)
+    isnothing(term_summary) && return _one_body_block_set_term_access_status(
+        compact_summary,
+        term,
+        :deferred_metadata_only_mixed_one_body_pair_block_batch,
+        nothing,
+        true,
+        requested_materialization,
+    )
+    return merge(
+        term_summary,
+        (;
+            object_kind =
+                :cartesian_pair_block_mixed_one_body_block_set_term_status,
+            requested = true,
+            requested_materialization,
+            blocker = _one_body_namedtuple_value(term_summary, :blocker, nothing),
+            term_batch_results_stored_in_status = false,
+            batch_result_objects_stored_in_status = false,
+            matrix_fields_stored_in_status = false,
+        ),
+    )
+end
+
+function _one_body_pair_block_term_status(consumption, term)
+    throw(
+        ArgumentError(
+            "one-body block-set term status requires a NamedTuple consumption object and Symbol term",
+        ),
+    )
+end
+
+function _one_body_block_set_consumption_batch_result_for_term(
+    consumption::NamedTuple,
+    term::Symbol,
+)
+    hasproperty(consumption, :term_batch_results) || return nothing
+    return _one_body_block_set_batch_result_for_term(
+        term,
+        _one_body_block_set_batch_result_lookup(consumption.term_batch_results),
+    )
+end
+
+function _one_body_block_set_compact_term_summary(
+    consumption::NamedTuple,
+    term::Symbol,
+)
+    block_set_summary =
+        _one_body_namedtuple_value(consumption, :block_set_summary, nothing)
+    if block_set_summary isa NamedTuple &&
+       hasproperty(block_set_summary, :term_summaries)
+        for term_summary in block_set_summary.term_summaries
+            term_summary.term === term && return term_summary
+        end
+    end
+    for term_status in consumption.term_statuses
+        term_status.term === term && return term_status
+    end
+    return nothing
+end
+
+function _one_body_block_set_term_access_status(
+    compact_summary,
+    term::Symbol,
+    status::Symbol,
+    blocker,
+    requested::Bool,
+    requested_materialization::Bool,
+)
+    return (;
+        object_kind =
+            :cartesian_pair_block_mixed_one_body_block_set_term_status,
+        term,
+        status,
+        blocker,
+        requested,
+        requested_materialization,
+        batch_result_supplied = false,
+        materialized_count = 0,
+        skipped_count = 0,
+        materialized_selector_family_counts = (),
+        skipped_selector_family_counts = (),
+        skipped_blocker_counts = (),
+        block_set_status = compact_summary.status,
+        block_set_blocker = compact_summary.blocker,
+        term_batch_results_stored_in_status = false,
+        batch_result_objects_stored_in_status = false,
+        matrix_fields_stored_in_status = false,
+        materialized = false,
+        source_operator_blocks_materialized = false,
+        final_pair_blocks_materialized = false,
+        operator_blocks_materialized = false,
+        hamiltonian_data_materialized = false,
+        artifacts_materialized = false,
+    )
+end
+
 function _one_body_block_set_consumption_preflight_summary(
     plan::PairBlockMaterializationPlan,
     term_set_descriptor,

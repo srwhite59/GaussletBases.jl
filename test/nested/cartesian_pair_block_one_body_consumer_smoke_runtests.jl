@@ -19,7 +19,7 @@ const CPOPSmoke = GaussletBases.CartesianPairOperatorPlans
 function _mixed_consumer_smoke_count(counts, field::Symbol, value)
     matches = Tuple(entry for entry in counts if getproperty(entry, field) == value)
     isempty(matches) && return 0
-    return only(matches).count
+    return sum(entry -> hasproperty(entry, :count) ? entry.count : 1, matches)
 end
 
 function _mixed_consumer_smoke_compact_summary(summary)
@@ -382,6 +382,106 @@ end
     @test !block_set_view.pqs_lowdin_materialized
     @test !block_set_view.full_white_lindsey_route_assembled
     @test _mixed_consumer_smoke_compact_summary(block_set_view)
+
+    overlap_results =
+        CPBMSmoke._one_body_pair_block_results_for_term(
+            block_set_consumption,
+            :overlap,
+        )
+    overlap_skips =
+        CPBMSmoke._one_body_pair_block_skips_for_term(
+            block_set_consumption,
+            :overlap,
+        )
+    overlap_status =
+        CPBMSmoke._one_body_pair_block_term_status(
+            block_set_consumption,
+            :overlap,
+        )
+    @test length(overlap_results) == 2
+    @test length(overlap_skips) == 2
+    @test count(
+        result -> result.metadata.selector_family === :direct_direct,
+        overlap_results,
+    ) == 1
+    @test count(
+        result -> result.metadata.selector_family === :pqs_source_pair,
+        overlap_results,
+    ) == 1
+    @test _mixed_consumer_smoke_count(
+        overlap_skips,
+        :selector_family,
+        :white_lindsey_boundary_stratum,
+    ) == 1
+    @test _mixed_consumer_smoke_count(
+        overlap_skips,
+        :selector_family,
+        :unsupported,
+    ) == 1
+    @test _mixed_consumer_smoke_count(
+        overlap_skips,
+        :blocker,
+        :missing_white_lindsey_unit_pair,
+    ) == 1
+    @test _mixed_consumer_smoke_count(
+        overlap_skips,
+        :blocker,
+        :unsupported_pair_block_materialization_path,
+    ) == 1
+    @test overlap_status.status ==
+          :partially_materialized_mixed_one_body_pair_block_batch
+    @test overlap_status.requested
+    @test overlap_status.requested_materialization
+    @test overlap_status.batch_result_supplied
+    @test overlap_status.materialized_count == 2
+    @test overlap_status.skipped_count == 2
+    @test !overlap_status.term_batch_results_stored_in_status
+    @test !overlap_status.batch_result_objects_stored_in_status
+    @test !overlap_status.matrix_fields_stored_in_status
+    @test _mixed_consumer_smoke_compact_summary(overlap_status)
+
+    kinetic_status =
+        CPBMSmoke._one_body_pair_block_term_status(
+            block_set_consumption,
+            :kinetic,
+        )
+    @test CPBMSmoke._one_body_pair_block_results_for_term(
+        block_set_consumption,
+        :kinetic,
+    ) == ()
+    @test CPBMSmoke._one_body_pair_block_skips_for_term(
+        block_set_consumption,
+        :kinetic,
+    ) == ()
+    @test kinetic_status.status ==
+          :deferred_metadata_only_mixed_one_body_pair_block_batch
+    @test kinetic_status.requested
+    @test !kinetic_status.requested_materialization
+    @test !kinetic_status.batch_result_supplied
+    @test kinetic_status.materialized_count == 0
+    @test kinetic_status.skipped_count == 0
+    @test _mixed_consumer_smoke_compact_summary(kinetic_status)
+
+    position_status =
+        CPBMSmoke._one_body_pair_block_term_status(
+            block_set_consumption,
+            :position_x,
+        )
+    @test CPBMSmoke._one_body_pair_block_results_for_term(
+        block_set_consumption,
+        :position_x,
+    ) == ()
+    @test CPBMSmoke._one_body_pair_block_skips_for_term(
+        block_set_consumption,
+        :position_x,
+    ) == ()
+    @test position_status.status == :term_not_requested
+    @test position_status.blocker == :term_not_requested
+    @test !position_status.requested
+    @test !position_status.requested_materialization
+    @test position_status.materialized_count == 0
+    @test position_status.skipped_count == 0
+    @test _mixed_consumer_smoke_compact_summary(position_status)
 
     direct_result = only(
         result for result in consumption.batch_result.materialized_results
