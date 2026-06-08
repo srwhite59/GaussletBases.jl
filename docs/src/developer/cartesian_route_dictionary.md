@@ -111,6 +111,20 @@ global operators or Hamiltonians, construct Coulomb, change IDA/MWG semantics,
 export artifacts, build PQS shell projection/Lowdin data, or assemble a full
 White--Lindsey route.
 
+The private mixed one-body block-set consumer keeps results term-separated.
+For routing/reporting, use `_one_body_pair_block_set_view(consumption)` as the
+compact status/count view; it is not a matrix or batch-result container. Term
+accessors retrieve materialized result records or skipped records for one
+requested term. Pair-key accessors retrieve materialized result records or
+skipped records for one retained-unit pair key across materialized terms.
+`_one_body_pair_block_lookup(consumption, term, pair_key)` is the explicit
+exact lookup for one term and one pair key. It may expose one matrix-bearing
+`result` field for a materialized hit, or one `skipped_record` field for a
+skipped hit. These helpers are retrieval and reporting conveniences only. They
+do not sum terms, assemble local/global operators, build Hamiltonians, add
+Coulomb, change IDA/MWG semantics, wire route drivers, export artifacts, build
+PQS shell projection/Lowdin data, or assemble a full White--Lindsey route.
+
 The local final-readiness helper
 `pqs_source_pair_final_block_readiness_summary(bridge_summary)` consumes single
 or batch PQS source shell-realization bridge summaries and reports whether a
@@ -330,7 +344,8 @@ The PQS source geometry is “one filled box,” but the actual retained space c
 | **Source operator block**           | Operator block built between source CPBs/intermediate retained spaces.                                | For PQS, this is the natural first numerical block.              |
 | **Final pair block**                | Operator block between final retained units after any realization/transform maps.                     | This is what assembly eventually places into the global matrix.  |
 | **Pair-block materialization**      | The step that preflights and then builds concrete pair blocks from pair-operator plans.                | Current numerical pilots include direct/direct local one-body blocks, PQS/PQS raw source-space one-body blocks, and local LW boundary-stratum one-body adapter blocks; not Coulomb/IDA, Hamiltonian assembly, or artifact export. |
-| **Mixed one-body pair-block consumer** | Private `CartesianPairBlockMaterialization` helper over a `PairBlockMaterializationPlan`, one safe one-body term, and caller-supplied factors/provider facts. | Dispatches to existing direct/direct, PQS/PQS source-space, and LW boundary-stratum local one-body selectors and returns a batch result plus compact summary; not route-driver wiring, Coulomb, IDA/MWG, PQS shell projection/Lowdin, Hamiltonian/export, artifact writing, or full LW route assembly. |
+| **Mixed one-body pair-block consumer** | Private `CartesianPairBlockMaterialization` helper over a `PairBlockMaterializationPlan`, safe one-body term or term set, and caller-supplied factors/provider facts. | Dispatches to existing direct/direct, PQS/PQS source-space, and LW boundary-stratum local one-body selectors and returns term-separated local results plus compact views/accessors; not route-driver wiring, local/global assembly, Coulomb, IDA/MWG, PQS shell projection/Lowdin, Hamiltonian/export, artifact writing, or full LW route assembly. |
+| **Mixed one-body block-set view/accessors** | Private status/count view and explicit retrieval helpers for a mixed one-body block-set consumption result. | `_one_body_pair_block_set_view` is compact and matrix-free; term and pair-key accessors can explicitly retrieve result or skip records; `_one_body_pair_block_lookup` is the exact term/pair accessor that may expose one matrix-bearing `result`. None of these helpers perform assembly or route adoption. |
 | **Pair operator block**             | Numerical block for one pair of final retained units and one or more operator terms.                  | Not yet built when report says metadata-only.                    |
 | **PQS source-space block**          | A raw source-mode block for a PQS/PQS safe one-body term, built from caller-supplied 1D source factors. | Not a final shell-realized PQS pair block.                       |
 | **PQS source shell-realization bridge summary** | Metadata-only summary describing how a PQS source-space block or batch can later be consumed by shell realization. | It records keys, source-mode facts, statuses, blockers, paths, and flags; it builds no shell projection, Lowdin, final pair block, Hamiltonian, export, artifact, IDA/MWG data, or Coulomb. |
