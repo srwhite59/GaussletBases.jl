@@ -526,6 +526,62 @@ function _one_body_pair_block_batch_summary(batch_result)
     )
 end
 
+function _one_body_pair_block_consumption(
+    plan::PairBlockMaterializationPlan,
+    term::Symbol;
+    inputs = (;),
+    provider = nothing,
+    materialize_selector_families = (
+        :direct_direct,
+        :pqs_source_pair,
+        :white_lindsey_boundary_stratum,
+    ),
+)
+    batch_result = _one_body_pair_blocks(
+        plan,
+        term;
+        inputs,
+        provider,
+        materialize_selector_families,
+    )
+    summary = _one_body_pair_block_batch_summary(batch_result)
+    return (;
+        object_kind = :cartesian_pair_block_mixed_one_body_consumption,
+        status = summary.status,
+        term = summary.term,
+        batch_result,
+        summary,
+        materialized_count = summary.materialized_count,
+        skipped_count = summary.skipped_count,
+        direct_direct_materialized = summary.direct_direct_materialized,
+        pqs_source_pair_materialized = summary.pqs_source_pair_materialized,
+        white_lindsey_materialized = summary.white_lindsey_materialized,
+        source_space_only_result_count = summary.source_space_only_result_count,
+        final_local_block_result_count = summary.final_local_block_result_count,
+        materialized = summary.materialized,
+        source_operator_blocks_materialized =
+            summary.source_operator_blocks_materialized,
+        final_pair_blocks_materialized = summary.final_pair_blocks_materialized,
+        operator_blocks_materialized = summary.global_operator_blocks_materialized,
+        hamiltonian_data_materialized =
+            summary.global_hamiltonian_data_materialized,
+        artifacts_materialized = summary.global_artifacts_materialized,
+        route_driver_wiring = summary.route_driver_wiring,
+        factors_constructed = summary.factors_constructed,
+        materialization_path = summary.materialization_path,
+        mixed_one_body_dispatcher = summary.mixed_one_body_dispatcher,
+        numerical_dispatch_scope = summary.numerical_dispatch_scope,
+    )
+end
+
+function _one_body_pair_block_consumption(plan, term; kwargs...)
+    throw(
+        ArgumentError(
+            "one-body pair block consumption requires a PairBlockMaterializationPlan",
+        ),
+    )
+end
+
 function _one_body_batch_summary_status(
     batch_result::PairBlockMaterializationBatchResult,
 )

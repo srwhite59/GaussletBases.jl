@@ -384,6 +384,63 @@ end
     end
 end
 
+@testset "CartesianPairBlockMaterialization mixed one-body consumption wrapper" begin
+    plan = _batch_dispatch_plan(; pqs_ready = true, include_lw = true)
+    parent_axis_counts = (4, 4, 4)
+    overlap_1d = _batch_dispatch_overlap_1d()
+    inputs = _batch_dispatch_inputs(parent_axis_counts, overlap_1d)
+
+    consumption = CPBMBatchDispatch._one_body_pair_block_consumption(
+        plan,
+        :x2_z;
+        inputs,
+    )
+
+    @test consumption.object_kind ==
+          :cartesian_pair_block_mixed_one_body_consumption
+    @test consumption.status ==
+          :partially_materialized_mixed_one_body_pair_block_batch
+    @test consumption.term == :x2_z
+    @test consumption.batch_result isa
+          CPBMBatchDispatch.PairBlockMaterializationBatchResult
+    @test consumption.summary.object_kind ==
+          :cartesian_pair_block_mixed_one_body_batch_summary
+    @test consumption.materialized_count == 2
+    @test consumption.skipped_count == 1
+    @test consumption.direct_direct_materialized
+    @test consumption.pqs_source_pair_materialized
+    @test !consumption.white_lindsey_materialized
+    @test consumption.source_space_only_result_count == 1
+    @test consumption.final_local_block_result_count == 1
+    @test consumption.materialized
+    @test consumption.source_operator_blocks_materialized
+    @test consumption.final_pair_blocks_materialized
+    @test !consumption.operator_blocks_materialized
+    @test !consumption.hamiltonian_data_materialized
+    @test !consumption.artifacts_materialized
+    @test !consumption.route_driver_wiring
+    @test !consumption.factors_constructed
+    @test consumption.materialization_path ==
+          :mixed_one_body_pair_block_batch_selector
+    @test consumption.mixed_one_body_dispatcher ==
+          :direct_pqs_source_lw_plan_dispatcher
+    @test consumption.numerical_dispatch_scope ==
+          :direct_direct_pqs_source_pair_and_white_lindsey_boundary_stratum
+    @test consumption.materialized_count == consumption.summary.materialized_count
+    @test consumption.skipped_count == consumption.summary.skipped_count
+    @test consumption.operator_blocks_materialized ==
+          consumption.summary.global_operator_blocks_materialized
+    @test consumption.hamiltonian_data_materialized ==
+          consumption.summary.global_hamiltonian_data_materialized
+    @test consumption.artifacts_materialized ==
+          consumption.summary.global_artifacts_materialized
+
+    @test_throws ArgumentError CPBMBatchDispatch._one_body_pair_block_consumption(
+        (;),
+        :overlap,
+    )
+end
+
 @testset "CartesianPairBlockMaterialization mixed one-body plan batch missing inputs" begin
     plan = _batch_dispatch_plan()
     overlap_1d = _batch_dispatch_overlap_1d()
