@@ -840,6 +840,43 @@ end
     @test !blocked_pair_coefficients.coefficient_maps_materialized
     @test !blocked_pair_coefficients.pair_blocks_materialized
 
+    batch_overlap =
+        CPBMForLWAdapter.white_lindsey_boundary_stratum_one_body_blocks(
+            (real_pair_coefficients, blocked_pair_coefficients),
+            :overlap;
+            parent_axis_counts = (7, 7, 7),
+            overlap_1d,
+        )
+    @test batch_overlap isa CPBMForLWAdapter.PairBlockMaterializationBatchResult
+    @test batch_overlap.term == :overlap
+    @test batch_overlap.materialized_count == 1
+    @test batch_overlap.skipped_count == 1
+    @test batch_overlap.materialized
+    @test batch_overlap.source_operator_blocks_materialized
+    @test batch_overlap.final_pair_blocks_materialized
+    @test !batch_overlap.operator_blocks_materialized
+    @test !batch_overlap.hamiltonian_data_materialized
+    @test !batch_overlap.artifacts_materialized
+    @test batch_overlap.metadata.materialization_path ==
+          :white_lindsey_boundary_stratum_one_body_batch_selector
+    @test batch_overlap.metadata.selector_helper ==
+          :white_lindsey_boundary_stratum_one_body_block
+    @test batch_overlap.metadata.pair_input_kind ==
+          :prepared_pair_unit_coefficients
+    @test batch_overlap.metadata.pair_unit_coefficient_record_count == 2
+    @test batch_overlap.materialized_results[1].block == overlap_result.block
+    @test batch_overlap.skipped_records[1].pair_key ==
+          blocked_pair_coefficients.pair_key
+    @test batch_overlap.skipped_records[1].blocker ==
+          :left_white_lindsey_unit_coefficients_not_materialized
+    @test !batch_overlap.skipped_records[1].pair_unit_coefficient_maps_materialized
+    @test_throws ArgumentError CPBMForLWAdapter.white_lindsey_boundary_stratum_one_body_blocks(
+        (blocked_pair_coefficients,),
+        :position_x;
+        parent_axis_counts = (7, 7, 7),
+        overlap_1d,
+    )
+
     edge_corner_pair = _lw_adapter_unit_pair(real_edge_unit, corner_unit, 3)
     edge_corner_coefficients =
         CPBMForLWAdapter.white_lindsey_boundary_stratum_pair_unit_coefficients(
