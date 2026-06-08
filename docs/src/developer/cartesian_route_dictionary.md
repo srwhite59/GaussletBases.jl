@@ -141,6 +141,20 @@ global retained matrices, wire route drivers, build Hamiltonians, add Coulomb,
 change IDA/MWG semantics, export artifacts, build PQS shell projection/Lowdin
 data, or assemble a full White--Lindsey route.
 
+The next private layer places local one-body block collections into
+term-specific global retained matrices for the current safe one-body pilots.
+Synthetic global retained matrix coverage now exists for `:overlap`,
+`:kinetic`, `:position_x`, `:position_y`, `:position_z`, `:x2_x`, `:x2_y`,
+and `:x2_z`. Selected White--Lindsey old-oracle equivalence currently covers
+global overlap and kinetic only; position and x2 have synthetic
+placement/global-matrix coverage but no old-oracle equivalence coverage yet.
+`one_body_global_matrix_helpers.jl` owns only behavior-neutral symmetric
+placement validation and insertion. Term-specific files still own supported
+terms, result statuses, blockers, object kinds, and materialization flags. This
+global safe-term pilot does not sum terms, assemble Hamiltonians, add Coulomb,
+change IDA/MWG semantics, build PQS projection/Lowdin data, wire route drivers,
+export artifacts, or assemble a full White--Lindsey route.
+
 The local final-readiness helper
 `pqs_source_pair_final_block_readiness_summary(bridge_summary)` consumes single
 or batch PQS source shell-realization bridge summaries and reports whether a
