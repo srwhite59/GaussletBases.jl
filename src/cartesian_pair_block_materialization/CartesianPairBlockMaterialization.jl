@@ -131,6 +131,10 @@ export PairBlockMaterializationPolicy,
 #     First dense global retained-overlap assembly pilot from placeable local
 #     placement records only.
 #
+# one_body_global_kinetic.jl
+#     Kinetic-only dense global retained-matrix assembly pilot from placeable
+#     local placement records only.
+#
 # pqs_source_safe_terms.jl
 #     PQS/PQS raw source-space safe-term helpers.
 #
@@ -196,6 +200,7 @@ include("one_body_block_collection.jl")
 include("route_one_body_adapter.jl")
 include("one_body_placement_plan.jl")
 include("one_body_global_overlap.jl")
+include("one_body_global_kinetic.jl")
 include("direct_overlap.jl")
 include("pqs_source_safe_terms.jl")
 include("pqs_source_shell_bridge.jl")

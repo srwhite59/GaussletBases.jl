@@ -259,8 +259,13 @@ end
     @test !plan.pqs_shell_projection_materialized
     @test !plan.full_white_lindsey_route_assembled
 
+    kinetic_plan = CPBMPlacement.one_body_kinetic_placement_plan(collection)
+    @test kinetic_plan.term === :kinetic
+    @test kinetic_plan.status === :empty_local_one_body_placement_plan
+    @test kinetic_plan.record_count == 0
+
     @test_throws ArgumentError CPBMPlacement.one_body_placement_plan(
         collection;
-        term = :kinetic,
+        term = :position_x,
     )
 end

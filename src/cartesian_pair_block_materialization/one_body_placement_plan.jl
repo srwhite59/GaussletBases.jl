@@ -10,13 +10,20 @@ function one_body_overlap_placement_plan(collection; global_dimension = nothing)
     return one_body_placement_plan(collection; term = :overlap, global_dimension)
 end
 
+function one_body_kinetic_placement_plan(collection; global_dimension = nothing)
+    return one_body_placement_plan(collection; term = :kinetic, global_dimension)
+end
+
 function one_body_placement_plan(
     collection::NamedTuple;
     term::Symbol = :overlap,
     global_dimension = nothing,
 )
-    term === :overlap ||
-        throw(ArgumentError("local one-body placement planning currently supports :overlap only"))
+    term in _one_body_supported_global_placement_terms() || throw(
+        ArgumentError(
+            "local one-body placement planning currently supports :overlap and :kinetic only",
+        ),
+    )
     _one_body_assert_local_block_collection(collection)
     global_dimension_status =
         _one_body_placement_global_dimension_status(global_dimension)
@@ -62,6 +69,10 @@ function one_body_placement_plan(
         records_copy_block_matrices = false,
         _one_body_placement_nonclaim_flags()...,
     )
+end
+
+function _one_body_supported_global_placement_terms()
+    return (:overlap, :kinetic)
 end
 
 function one_body_placement_plan(collection; kwargs...)
