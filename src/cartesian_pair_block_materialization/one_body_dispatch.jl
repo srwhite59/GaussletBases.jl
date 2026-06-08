@@ -233,6 +233,77 @@ function _one_body_pair_block(record, term; kwargs...)
     )
 end
 
+function _one_body_pair_blocks(
+    plan::PairBlockMaterializationPlan,
+    term::Symbol;
+    inputs = (;),
+    provider = nothing,
+)
+    unit_pair_lookup = _one_body_unit_pair_lookup(plan)
+    materialized_results = PairBlockMaterializationResult[]
+    skipped_records = NamedTuple[]
+    for record in pair_block_materialization_records(plan)
+        result_or_skip = _one_body_pair_block(
+            record,
+            term;
+            inputs,
+            provider,
+            unit_pair = _one_body_dispatch_unit_pair(record, unit_pair_lookup),
+        )
+        if result_or_skip isa PairBlockMaterializationResult
+            push!(materialized_results, result_or_skip)
+        else
+            push!(skipped_records, NamedTuple(result_or_skip))
+        end
+    end
+
+    result_tuple = Tuple(materialized_results)
+    skipped_tuple = Tuple(skipped_records)
+    any_materialized = !isempty(result_tuple)
+    return PairBlockMaterializationBatchResult(
+        term,
+        result_tuple,
+        skipped_tuple,
+        length(result_tuple),
+        length(skipped_tuple),
+        any_materialized,
+        any_materialized,
+        any_materialized,
+        false,
+        false,
+        false,
+        (;
+            materialization_path = :mixed_one_body_pair_block_batch_selector,
+            mixed_one_body_dispatcher = :direct_direct_only_plan_dispatcher,
+            pair_block_record_count =
+                length(pair_block_materialization_records(plan)),
+            materialized_selector_family_counts =
+                _one_body_materialized_selector_family_counts(result_tuple),
+            skipped_selector_family_counts =
+                _one_body_count_by(skipped_tuple, :selector_family),
+            skipped_blocker_counts =
+                _one_body_count_by(skipped_tuple, :blocker),
+            skipped_status_counts =
+                _one_body_count_by(skipped_tuple, :status),
+            factors_constructed = false,
+            numerical_dispatch_scope = :direct_direct_only,
+            pqs_source_pair_materialized = false,
+            white_lindsey_materialized = false,
+            route_driver_wiring = false,
+            hamiltonian_data_materialized = false,
+            artifacts_materialized = false,
+        ),
+    )
+end
+
+function _one_body_pair_blocks(plan, term; kwargs...)
+    throw(
+        ArgumentError(
+            "mixed one-body pair blocks require a PairBlockMaterializationPlan",
+        ),
+    )
+end
+
 function _one_body_record_selector_family(record::PairBlockMaterializationRecord)
     record.materialization_path === :direct_direct_pair_block_materialization_pilot &&
         return :direct_direct
@@ -342,6 +413,18 @@ function _one_body_count_by(record_summaries::Tuple, field::Symbol)
         push!(values, value)
     end
     return _one_body_count_values(values, field)
+end
+
+function _one_body_materialized_selector_family_counts(
+    results::Tuple{Vararg{PairBlockMaterializationResult}},
+)
+    selector_families = Any[]
+    for result in results
+        haskey(result.metadata, :selector_family) ||
+            continue
+        push!(selector_families, result.metadata.selector_family)
+    end
+    return _one_body_count_values(selector_families, :selector_family)
 end
 
 function _one_body_blocker_counts(record_summaries::Tuple)
