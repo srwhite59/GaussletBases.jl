@@ -1,8 +1,8 @@
 # Runtime role: tiny contract.
 #
-# Opt-in overlap/position/x2 materialization for the mixed one-body block-set
-# consumer. This delegates only explicit safe terms enabled so far to the
-# existing one-term consumer and leaves other requested terms deferred.
+# Opt-in safe-term materialization for the mixed one-body block-set consumer.
+# This delegates only explicit safe one-body terms to the existing one-term
+# consumer and leaves other requested terms deferred.
 
 using Test
 using GaussletBases
@@ -412,17 +412,86 @@ end
         :pqs_source_pair,
     ) == 3
 
-    @test_throws ArgumentError CPBMBlockOverlap._one_body_pair_block_set_consumption(
+    kinetic = CPBMBlockOverlap._one_body_pair_block_set_consumption(
         plan;
         terms = (:overlap, :kinetic),
         inputs,
         materialize_terms = (:kinetic,),
     )
+    @test kinetic.status ==
+          :partially_materialized_mixed_one_body_block_set_consumption
+    @test kinetic.materialized_terms == (:kinetic,)
+    @test kinetic.deferred_terms == (:overlap,)
+    @test kinetic.total_materialized_count == 2
+    @test kinetic.total_skipped_count == 1
+    @test kinetic.source_operator_blocks_materialized
+    @test kinetic.final_pair_blocks_materialized
+    @test kinetic.term_statuses[2].term == :kinetic
+    @test kinetic.term_statuses[2].status ==
+          :partially_materialized_mixed_one_body_pair_block_batch
+
+    safe_terms = (
+        :overlap,
+        :position_x,
+        :position_y,
+        :position_z,
+        :x2_x,
+        :x2_y,
+        :x2_z,
+        :kinetic,
+    )
+    all_safe = CPBMBlockOverlap._one_body_pair_block_set_consumption(
+        plan;
+        terms = safe_terms,
+        inputs,
+        materialize_terms = safe_terms,
+    )
+    @test all_safe.materialized_terms == safe_terms
+    @test all_safe.deferred_terms == ()
+    @test all_safe.total_materialized_count == 16
+    @test all_safe.total_skipped_count == 8
+    @test all_safe.block_set_summary.supplied_term_count == 8
+    @test all_safe.block_set_summary.deferred_term_count == 0
+    @test all_safe.result_terms_remain_separated
+    @test !all_safe.block_set_results_summed
+    @test !all_safe.operator_blocks_materialized
+    @test !all_safe.hamiltonian_data_materialized
+    @test !all_safe.artifacts_materialized
+    @test !all_safe.route_driver_wiring
+    @test !all_safe.coulomb_materialized
+    @test !all_safe.ida_mwg_data_materialized
+    @test !all_safe.pqs_lowdin_materialized
+    @test !all_safe.full_white_lindsey_route_assembled
+    @test !hasproperty(all_safe.block_set_summary, :term_batch_results)
+    @test !hasproperty(all_safe.block_set_summary.term_summaries[1], :batch_result)
+    @test !hasproperty(all_safe.block_set_summary.term_summaries[1], :block)
+    @test _block_overlap_count(
+        all_safe.block_set_summary.materialized_selector_family_counts,
+        :selector_family,
+        :direct_direct,
+    ) == 8
+    @test _block_overlap_count(
+        all_safe.block_set_summary.materialized_selector_family_counts,
+        :selector_family,
+        :pqs_source_pair,
+    ) == 8
+    @test _block_overlap_count(
+        all_safe.block_set_summary.skipped_selector_family_counts,
+        :selector_family,
+        :unsupported,
+    ) == 8
+
     @test_throws ArgumentError CPBMBlockOverlap._one_body_pair_block_set_consumption(
         plan;
         terms = (:kinetic,),
         inputs,
         materialize_terms = (:overlap,),
+    )
+    @test_throws ArgumentError CPBMBlockOverlap._one_body_pair_block_set_consumption(
+        plan;
+        terms = (:overlap, :coulomb),
+        inputs,
+        materialize_terms = (:coulomb,),
     )
     @test_throws ArgumentError CPBMBlockOverlap._one_body_pair_block_set_consumption(
         plan;
