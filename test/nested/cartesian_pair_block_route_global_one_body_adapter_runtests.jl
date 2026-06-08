@@ -1,8 +1,9 @@
 # Runtime role: tiny smoke / route-shaped global overlap adapter contract.
 #
-# This verifies the private route-global one-body adapter for overlap only. It
-# does not cover Hamiltonians, Coulomb, IDA/MWG, PQS Lowdin/projection, exports,
-# route-driver wiring, or White-Lindsey oracle fixtures.
+# This verifies the private route-global one-body adapter for overlap and
+# kinetic only. It does not cover Hamiltonians, Coulomb, IDA/MWG, PQS
+# Lowdin/projection, exports, route-driver wiring, or White-Lindsey oracle
+# fixtures.
 
 using Test
 using GaussletBases
@@ -62,6 +63,7 @@ function _route_global_record(
     pair_index::Int,
     pair_family::Symbol,
     materialization_path::Symbol;
+    supported_terms = (:overlap, :kinetic),
     metadata = (;),
 )
     return CPBMRouteGlobal.PairBlockMaterializationRecord(
@@ -72,7 +74,7 @@ function _route_global_record(
         (; left = :synthetic_left_transform, right = :synthetic_right_transform),
         (; left = :synthetic_left_realization, right = :synthetic_right_realization),
         :synthetic_final_block_path,
-        (:overlap,),
+        supported_terms,
         materialization_path,
         :ready_metadata_only_not_materialized,
         nothing,
@@ -172,6 +174,11 @@ function _route_global_inputs()
     return (;
         parent_axis_counts = (2, 2, 2),
         overlap_1d = _route_global_overlap_1d(),
+        kinetic_1d = (;
+            x = [2.0 0.5; 0.5 2.2],
+            y = [3.0 0.6; 0.6 3.3],
+            z = [4.0 0.7; 0.7 4.4],
+        ),
     )
 end
 
@@ -203,6 +210,7 @@ end
     @test adapter.term === :overlap
     @test adapter.global_one_body_term_matrix_materialized
     @test adapter.global_overlap_matrix_materialized
+    @test !adapter.global_kinetic_matrix_materialized
     @test adapter.operator_matrix_materialized
     @test adapter.global_operator_assembled
     @test adapter.global_matrix_result.matrix ≈ expected
@@ -233,11 +241,11 @@ end
 
     unsupported = CPBMRouteGlobal.route_global_one_body_matrix(
         plan;
-        term = :kinetic,
+        term = :position_x,
         global_dimension = 4,
         inputs = _route_global_inputs(),
     )
-    @test unsupported.status === :blocked_route_global_overlap_matrix
+    @test unsupported.status === :blocked_route_global_one_body_matrix
     @test unsupported.blocker === :unsupported_route_global_one_body_term
     @test !unsupported.global_one_body_term_matrix_materialized
 
@@ -271,6 +279,78 @@ end
     @test no_ranges.status === :blocked_route_global_overlap_matrix
     @test no_ranges.blocker === :no_placeable_overlap_blocks
     @test no_ranges.placement_plan.blocker === :missing_column_ranges
+
+    @test !adapter.route_driver_wiring
+    @test !adapter.operator_blocks_materialized
+    @test !adapter.hamiltonian_data_materialized
+    @test !adapter.artifacts_materialized
+    @test !adapter.exports_materialized
+    @test !adapter.global_operator_blocks_materialized
+    @test !adapter.global_hamiltonian_data_materialized
+    @test !adapter.global_artifacts_materialized
+    @test !adapter.coulomb_materialized
+    @test !adapter.density_density_materialized
+    @test !adapter.ida_mwg_data_materialized
+    @test !adapter.pqs_lowdin_materialized
+    @test !adapter.pqs_shell_projection_materialized
+    @test !adapter.full_white_lindsey_route_assembled
+end
+
+@testset "CartesianPairBlockMaterialization route global kinetic adapter" begin
+    plan = _route_global_plan()
+    adapter = CPBMRouteGlobal.route_global_kinetic_matrix(
+        plan;
+        global_dimension = 4,
+        inputs = _route_global_inputs(),
+    )
+    alias_adapter = CPBMRouteGlobal.route_global_one_body_matrix(
+        (; pair_block_materialization_plan = plan);
+        term = :kinetic,
+        global_dimension = 4,
+        factors = _route_global_inputs(),
+    )
+
+    expected = [
+        12.36 2.88 2.64 0.618
+        2.88 13.46 0.618 2.874
+        2.64 0.618 0.0 0.0
+        0.618 2.874 0.0 0.0
+    ]
+    @test adapter.object_kind ===
+          :cartesian_pair_block_route_global_one_body_matrix_adapter
+    @test adapter.status === :materialized_route_global_kinetic_matrix
+    @test isnothing(adapter.blocker)
+    @test adapter.term === :kinetic
+    @test adapter.global_one_body_term_matrix_materialized
+    @test !adapter.global_overlap_matrix_materialized
+    @test adapter.global_kinetic_matrix_materialized
+    @test adapter.operator_matrix_materialized
+    @test adapter.global_operator_assembled
+    @test adapter.global_matrix_result.matrix ≈ expected
+    @test alias_adapter.global_matrix_result.matrix ≈ expected
+
+    @test adapter.materialized_local_block_count == 3
+    @test adapter.skipped_local_block_count == 2
+    @test adapter.placeable_record_count == 2
+    @test adapter.blocked_placement_count == 3
+    @test adapter.placed_block_count == 3
+    @test adapter.skipped_block_count == 3
+    @test adapter.global_matrix_result.global_dimension == 4
+
+    pqs_record = only(
+        record for record in adapter.placement_plan.blocked_records
+        if record.selector_family === :pqs_source_pair
+    )
+    @test pqs_record.blocker === :source_space_block_requires_shell_realization
+    @test !any(value -> value > 13.5, adapter.global_matrix_result.matrix)
+
+    missing_dimension = CPBMRouteGlobal.route_global_kinetic_matrix(
+        plan;
+        inputs = _route_global_inputs(),
+    )
+    @test missing_dimension.status === :blocked_route_global_kinetic_matrix
+    @test missing_dimension.blocker === :missing_global_dimension
+    @test !missing_dimension.global_one_body_term_matrix_materialized
 
     @test !adapter.route_driver_wiring
     @test !adapter.operator_blocks_materialized

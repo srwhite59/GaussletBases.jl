@@ -46,6 +46,11 @@ paths from becoming new route authority.
 - Synthetic global retained matrix pilots now exist for the safe one-body
   terms `:overlap`, `:kinetic`, `:position_x`, `:position_y`, `:position_z`,
   `:x2_x`, `:x2_y`, and `:x2_z`.
+- A private route-shaped global one-body adapter now composes
+  `PairBlockMaterializationPlan` inputs through the local block collection,
+  placement plan, and global matrix layers for term-separated `:overlap` and
+  `:kinetic` only. This is module-level adapter coverage, not route-driver
+  wiring or Hamiltonian assembly.
 - Selected White--Lindsey old-oracle equivalence currently covers overlap,
   kinetic, position_x, position_y, position_z, x2_x, x2_y, and x2_z.
 - `src/cartesian_pair_block_materialization/one_body_global_matrix_helpers.jl`

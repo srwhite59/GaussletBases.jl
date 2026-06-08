@@ -155,6 +155,20 @@ global safe-term pilot does not sum terms, assemble Hamiltonians, add Coulomb,
 change IDA/MWG semantics, build PQS projection/Lowdin data, wire route drivers,
 export artifacts, or assemble a full White--Lindsey route.
 
+`CartesianPairBlockMaterialization` also has a private route-shaped global
+one-body adapter for `:overlap` and `:kinetic`. It accepts a
+`PairBlockMaterializationPlan` or a wrapper carrying
+`pair_block_materialization_plan`, then follows the term-separated path:
+`route_local_one_body_block_collection(...; terms = (:overlap,)) ->
+one_body_overlap_placement_plan(...; global_dimension) ->
+one_body_global_overlap_matrix(...)` for overlap, and the matching
+`:kinetic` path through `one_body_kinetic_placement_plan` and
+`one_body_global_kinetic_matrix`. This adapter is private and nonproduction:
+it does not wire the route driver, does not sum terms, and does not build
+Hamiltonians. PQS source-space blocks remain blocked from final global
+placement with `:source_space_block_requires_shell_realization` until explicit
+shell realization exists.
+
 The local final-readiness helper
 `pqs_source_pair_final_block_readiness_summary(bridge_summary)` consumes single
 or batch PQS source shell-realization bridge summaries and reports whether a

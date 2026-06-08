@@ -1,9 +1,9 @@
 # Private route-shaped global one-body matrix adapter.
 #
 # This bridge composes the existing route-local one-body collection, local
-# placement plan, and dense global overlap matrix pilot. It is overlap-only for
-# now and does not assemble Hamiltonians, Coulomb data, IDA/MWG data, exports,
-# artifacts, or PQS shell/Lowdin realizations.
+# placement plan, and dense global safe one-body matrix pilots. It currently
+# supports overlap and kinetic only and does not assemble Hamiltonians, Coulomb
+# data, IDA/MWG data, exports, artifacts, or PQS shell/Lowdin realizations.
 
 function route_global_one_body_matrix(
     source;
@@ -15,11 +15,12 @@ function route_global_one_body_matrix(
     factor_provider = nothing,
     metadata = (;),
 )
-    term === :overlap || return _route_global_one_body_blocked_result(
-        term,
-        :unsupported_route_global_one_body_term;
-        metadata,
-    )
+    term in _route_global_one_body_supported_terms() ||
+        return _route_global_one_body_blocked_result(
+            term,
+            :unsupported_route_global_one_body_term;
+            metadata,
+        )
 
     if isnothing(global_dimension)
         return _route_global_one_body_blocked_result(
@@ -33,16 +34,18 @@ function route_global_one_body_matrix(
     resolved_provider = _route_global_one_body_provider(provider, factor_provider)
     local_adapter = route_local_one_body_block_collection(
         source;
-        terms = (:overlap,),
+        terms = (term,),
         inputs = resolved_inputs,
         provider = resolved_provider,
-        materialize_terms = (:overlap,),
+        materialize_terms = (term,),
     )
-    placement_plan = one_body_overlap_placement_plan(
+    placement_plan = _route_global_one_body_placement_plan(
+        term,
         local_adapter.local_block_collection;
         global_dimension,
     )
-    global_matrix_result = one_body_global_overlap_matrix(placement_plan)
+    global_matrix_result =
+        _route_global_one_body_global_matrix(term, placement_plan)
 
     return _route_global_one_body_result(
         term,
@@ -55,6 +58,39 @@ end
 
 function route_global_overlap_matrix(source; kwargs...)
     return route_global_one_body_matrix(source; term = :overlap, kwargs...)
+end
+
+function route_global_kinetic_matrix(source; kwargs...)
+    return route_global_one_body_matrix(source; term = :kinetic, kwargs...)
+end
+
+function _route_global_one_body_supported_terms()
+    return (:overlap, :kinetic)
+end
+
+function _route_global_one_body_placement_plan(
+    term::Symbol,
+    collection::NamedTuple;
+    global_dimension,
+)
+    term === :overlap && return one_body_overlap_placement_plan(
+        collection;
+        global_dimension,
+    )
+    term === :kinetic && return one_body_kinetic_placement_plan(
+        collection;
+        global_dimension,
+    )
+    throw(ArgumentError("unsupported route global one-body term: $(term)"))
+end
+
+function _route_global_one_body_global_matrix(
+    term::Symbol,
+    placement_plan::NamedTuple,
+)
+    term === :overlap && return one_body_global_overlap_matrix(placement_plan)
+    term === :kinetic && return one_body_global_kinetic_matrix(placement_plan)
+    throw(ArgumentError("unsupported route global one-body term: $(term)"))
 end
 
 function _route_global_one_body_inputs(inputs::NamedTuple, factors)
@@ -105,8 +141,8 @@ function _route_global_one_body_result(
         term,
         status =
             materialized ?
-            :materialized_route_global_overlap_matrix :
-            :blocked_route_global_overlap_matrix,
+            _route_global_one_body_materialized_status(term) :
+            _route_global_one_body_blocked_status(term),
         blocker =
             materialized ?
             nothing :
@@ -158,6 +194,12 @@ function _route_global_one_body_result(
                 :global_overlap_matrix_materialized,
                 false,
             ),
+        global_kinetic_matrix_materialized =
+            _route_global_one_body_value(
+                global_matrix_result,
+                :global_kinetic_matrix_materialized,
+                false,
+            ),
         operator_matrix_materialized =
             _route_global_one_body_value(
                 global_matrix_result,
@@ -182,7 +224,7 @@ function _route_global_one_body_blocked_result(
     return (;
         object_kind = :cartesian_pair_block_route_global_one_body_matrix_adapter,
         term,
-        status = :blocked_route_global_overlap_matrix,
+        status = _route_global_one_body_blocked_status(term),
         blocker,
         pair_block_materialization_plan = nothing,
         block_set_consumption = nothing,
@@ -208,10 +250,23 @@ function _route_global_one_body_blocked_result(
         global_dimension = nothing,
         global_one_body_term_matrix_materialized = false,
         global_overlap_matrix_materialized = false,
+        global_kinetic_matrix_materialized = false,
         operator_matrix_materialized = false,
         global_operator_assembled = false,
         _route_global_one_body_nonclaim_flags()...,
     )
+end
+
+function _route_global_one_body_materialized_status(term::Symbol)
+    term === :overlap && return :materialized_route_global_overlap_matrix
+    term === :kinetic && return :materialized_route_global_kinetic_matrix
+    return :materialized_route_global_one_body_matrix
+end
+
+function _route_global_one_body_blocked_status(term::Symbol)
+    term === :overlap && return :blocked_route_global_overlap_matrix
+    term === :kinetic && return :blocked_route_global_kinetic_matrix
+    return :blocked_route_global_one_body_matrix
 end
 
 function _route_global_one_body_nonclaim_flags()
