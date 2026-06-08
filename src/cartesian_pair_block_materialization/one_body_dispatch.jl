@@ -688,6 +688,126 @@ function _one_body_pair_block_term_status(consumption, term)
     )
 end
 
+function _one_body_pair_block_results_for_pair(
+    consumption::NamedTuple,
+    pair_key::Tuple{Symbol,Symbol},
+)
+    _one_body_pair_block_set_consumption_summary(consumption)
+    results = PairBlockMaterializationResult[]
+    for batch_result in _one_body_block_set_consumption_batch_results(consumption)
+        append!(
+            results,
+            result for result in batch_result.materialized_results
+            if result.pair_key == pair_key
+        )
+    end
+    return Tuple(results)
+end
+
+function _one_body_pair_block_results_for_pair(consumption, pair_key)
+    throw(
+        ArgumentError(
+            "one-body block-set pair result accessor requires a NamedTuple consumption object and pair_key::Tuple{Symbol,Symbol}",
+        ),
+    )
+end
+
+function _one_body_pair_block_skips_for_pair(
+    consumption::NamedTuple,
+    pair_key::Tuple{Symbol,Symbol},
+)
+    _one_body_pair_block_set_consumption_summary(consumption)
+    skips = NamedTuple[]
+    for batch_result in _one_body_block_set_consumption_batch_results(consumption)
+        append!(
+            skips,
+            skip for skip in batch_result.skipped_records
+            if _one_body_namedtuple_value(skip, :pair_key, nothing) == pair_key
+        )
+    end
+    return Tuple(skips)
+end
+
+function _one_body_pair_block_skips_for_pair(consumption, pair_key)
+    throw(
+        ArgumentError(
+            "one-body block-set pair skip accessor requires a NamedTuple consumption object and pair_key::Tuple{Symbol,Symbol}",
+        ),
+    )
+end
+
+function _one_body_pair_block_pair_status(
+    consumption::NamedTuple,
+    pair_key::Tuple{Symbol,Symbol},
+)
+    compact_summary = _one_body_pair_block_set_consumption_summary(consumption)
+    results = _one_body_pair_block_results_for_pair(consumption, pair_key)
+    skips = _one_body_pair_block_skips_for_pair(consumption, pair_key)
+    status = _one_body_block_set_pair_access_status(
+        consumption,
+        results,
+        skips,
+    )
+    return (;
+        object_kind =
+            :cartesian_pair_block_mixed_one_body_block_set_pair_status,
+        pair_key,
+        status,
+        blocker = _one_body_block_set_pair_access_blocker(status, skips),
+        block_set_status = compact_summary.status,
+        block_set_blocker = compact_summary.blocker,
+        requested_terms = compact_summary.requested_terms,
+        materialized_terms = compact_summary.materialized_terms,
+        deferred_terms = compact_summary.deferred_terms,
+        materialized_count = length(results),
+        skipped_count = length(skips),
+        materialized_terms_for_pair =
+            _one_body_block_set_materialized_terms_for_pair(consumption, pair_key),
+        skipped_terms_for_pair = _one_body_skip_terms(skips),
+        materialized_selector_family_counts =
+            _one_body_materialized_selector_family_counts(results),
+        skipped_selector_family_counts =
+            _one_body_count_optional_by(skips, :selector_family),
+        skipped_blocker_counts = _one_body_count_optional_by(skips, :blocker),
+        term_separated_results = true,
+        block_set_results_summed = false,
+        term_batch_results_stored_in_status = false,
+        batch_result_objects_stored_in_status = false,
+        result_records_stored_in_status = false,
+        skipped_records_stored_in_status = false,
+        matrix_fields_stored_in_status = false,
+        source_operator_blocks_materialized =
+            any(result -> result.source_operator_blocks_materialized, results),
+        final_pair_blocks_materialized =
+            any(result -> result.final_pair_blocks_materialized, results),
+        operator_blocks_materialized =
+            any(result -> result.operator_blocks_materialized, results),
+        hamiltonian_data_materialized =
+            any(result -> result.hamiltonian_data_materialized, results),
+        artifacts_materialized =
+            any(result -> result.artifacts_materialized, results),
+        route_driver_wiring = false,
+        coulomb_materialized = false,
+        density_density_materialized = false,
+        ida_mwg_data_materialized = false,
+        pqs_lowdin_materialized = false,
+        full_white_lindsey_route_assembled = false,
+    )
+end
+
+function _one_body_pair_block_pair_status(consumption, pair_key)
+    throw(
+        ArgumentError(
+            "one-body block-set pair status requires a NamedTuple consumption object and pair_key::Tuple{Symbol,Symbol}",
+        ),
+    )
+end
+
+function _one_body_block_set_consumption_batch_results(consumption::NamedTuple)
+    hasproperty(consumption, :term_batch_results) || return ()
+    return values(_one_body_block_set_batch_result_lookup(consumption.term_batch_results))
+end
+
 function _one_body_block_set_consumption_batch_result_for_term(
     consumption::NamedTuple,
     term::Symbol,
@@ -697,6 +817,60 @@ function _one_body_block_set_consumption_batch_result_for_term(
         term,
         _one_body_block_set_batch_result_lookup(consumption.term_batch_results),
     )
+end
+
+function _one_body_block_set_pair_access_status(
+    consumption::NamedTuple,
+    results::Tuple,
+    skips::Tuple,
+)
+    !isempty(results) && !isempty(skips) &&
+        return :partially_materialized_mixed_one_body_pair_key
+    !isempty(results) && return :materialized_mixed_one_body_pair_key
+    !isempty(skips) && return :skipped_mixed_one_body_pair_key
+    isempty(consumption.materialized_terms) && !isempty(consumption.deferred_terms) &&
+        return :no_materialized_terms_for_pair_key
+    return :pair_key_not_found
+end
+
+function _one_body_block_set_pair_access_blocker(status::Symbol, skips::Tuple)
+    status === :pair_key_not_found && return :pair_key_not_found
+    status === :no_materialized_terms_for_pair_key &&
+        return :no_materialized_terms_for_pair_key
+    isempty(skips) && return nothing
+    return _one_body_namedtuple_value(first(skips), :blocker, nothing)
+end
+
+function _one_body_block_set_materialized_terms_for_pair(
+    consumption::NamedTuple,
+    pair_key::Tuple{Symbol,Symbol},
+)
+    terms = Symbol[]
+    for batch_result in _one_body_block_set_consumption_batch_results(consumption)
+        any(result -> result.pair_key == pair_key, batch_result.materialized_results) ||
+            continue
+        push!(terms, batch_result.term)
+    end
+    return _one_body_unique_symbols(Tuple(terms))
+end
+
+function _one_body_skip_terms(skips::Tuple)
+    return _one_body_unique_symbols(
+        Tuple(
+            _one_body_namedtuple_value(skip, :requested_term, nothing)
+            for skip in skips
+        ),
+    )
+end
+
+function _one_body_unique_symbols(values::Tuple)
+    ordered = Symbol[]
+    for value in values
+        value isa Symbol || continue
+        value in ordered && continue
+        push!(ordered, value)
+    end
+    return Tuple(ordered)
 end
 
 function _one_body_block_set_compact_term_summary(

@@ -483,6 +483,129 @@ end
     @test position_status.skipped_count == 0
     @test _mixed_consumer_smoke_compact_summary(position_status)
 
+    direct_pair_results =
+        CPBMSmoke._one_body_pair_block_results_for_pair(
+            block_set_consumption,
+            (:direct_left, :direct_right),
+        )
+    direct_pair_skips =
+        CPBMSmoke._one_body_pair_block_skips_for_pair(
+            block_set_consumption,
+            (:direct_left, :direct_right),
+        )
+    direct_pair_status =
+        CPBMSmoke._one_body_pair_block_pair_status(
+            block_set_consumption,
+            (:direct_left, :direct_right),
+        )
+    @test length(direct_pair_results) == 1
+    @test direct_pair_skips == ()
+    @test only(direct_pair_results).term === :overlap
+    @test only(direct_pair_results).metadata.selector_family === :direct_direct
+    @test direct_pair_status.status == :materialized_mixed_one_body_pair_key
+    @test isnothing(direct_pair_status.blocker)
+    @test direct_pair_status.materialized_count == 1
+    @test direct_pair_status.skipped_count == 0
+    @test direct_pair_status.materialized_terms_for_pair == (:overlap,)
+    @test direct_pair_status.skipped_terms_for_pair == ()
+    @test direct_pair_status.final_pair_blocks_materialized
+    @test !direct_pair_status.operator_blocks_materialized
+    @test _mixed_consumer_smoke_compact_summary(direct_pair_status)
+
+    pqs_pair_results =
+        CPBMSmoke._one_body_pair_block_results_for_pair(
+            block_set_consumption,
+            (:pqs_left, :pqs_right),
+        )
+    pqs_pair_status =
+        CPBMSmoke._one_body_pair_block_pair_status(
+            block_set_consumption,
+            (:pqs_left, :pqs_right),
+        )
+    @test length(pqs_pair_results) == 1
+    @test CPBMSmoke._one_body_pair_block_skips_for_pair(
+        block_set_consumption,
+        (:pqs_left, :pqs_right),
+    ) == ()
+    @test only(pqs_pair_results).term === :source_overlap
+    @test only(pqs_pair_results).metadata.selector_family === :pqs_source_pair
+    @test pqs_pair_status.status == :materialized_mixed_one_body_pair_key
+    @test pqs_pair_status.source_operator_blocks_materialized
+    @test !pqs_pair_status.final_pair_blocks_materialized
+    @test pqs_pair_status.materialized_terms_for_pair == (:overlap,)
+    @test _mixed_consumer_smoke_compact_summary(pqs_pair_status)
+
+    lw_pair_skips =
+        CPBMSmoke._one_body_pair_block_skips_for_pair(
+            block_set_consumption,
+            (:lw_left, :lw_right),
+        )
+    lw_pair_status =
+        CPBMSmoke._one_body_pair_block_pair_status(
+            block_set_consumption,
+            (:lw_left, :lw_right),
+        )
+    @test CPBMSmoke._one_body_pair_block_results_for_pair(
+        block_set_consumption,
+        (:lw_left, :lw_right),
+    ) == ()
+    @test length(lw_pair_skips) == 1
+    @test only(lw_pair_skips).blocker === :missing_white_lindsey_unit_pair
+    @test lw_pair_status.status == :skipped_mixed_one_body_pair_key
+    @test lw_pair_status.blocker == :missing_white_lindsey_unit_pair
+    @test lw_pair_status.materialized_count == 0
+    @test lw_pair_status.skipped_count == 1
+    @test lw_pair_status.skipped_terms_for_pair == (:overlap,)
+    @test _mixed_consumer_smoke_count(
+        lw_pair_status.skipped_blocker_counts,
+        :blocker,
+        :missing_white_lindsey_unit_pair,
+    ) == 1
+    @test _mixed_consumer_smoke_compact_summary(lw_pair_status)
+
+    unsupported_pair_skips =
+        CPBMSmoke._one_body_pair_block_skips_for_pair(
+            block_set_consumption,
+            (:unsupported_left, :unsupported_right),
+        )
+    unsupported_pair_status =
+        CPBMSmoke._one_body_pair_block_pair_status(
+            block_set_consumption,
+            (:unsupported_left, :unsupported_right),
+        )
+    @test CPBMSmoke._one_body_pair_block_results_for_pair(
+        block_set_consumption,
+        (:unsupported_left, :unsupported_right),
+    ) == ()
+    @test length(unsupported_pair_skips) == 1
+    @test only(unsupported_pair_skips).blocker ===
+          :unsupported_pair_block_materialization_path
+    @test unsupported_pair_status.status == :skipped_mixed_one_body_pair_key
+    @test unsupported_pair_status.blocker ==
+          :unsupported_pair_block_materialization_path
+    @test unsupported_pair_status.skipped_count == 1
+    @test _mixed_consumer_smoke_compact_summary(unsupported_pair_status)
+
+    absent_pair_status =
+        CPBMSmoke._one_body_pair_block_pair_status(
+            block_set_consumption,
+            (:missing_left, :missing_right),
+        )
+    @test CPBMSmoke._one_body_pair_block_results_for_pair(
+        block_set_consumption,
+        (:missing_left, :missing_right),
+    ) == ()
+    @test CPBMSmoke._one_body_pair_block_skips_for_pair(
+        block_set_consumption,
+        (:missing_left, :missing_right),
+    ) == ()
+    @test absent_pair_status.status == :pair_key_not_found
+    @test absent_pair_status.blocker == :pair_key_not_found
+    @test absent_pair_status.materialized_count == 0
+    @test absent_pair_status.skipped_count == 0
+    @test !absent_pair_status.matrix_fields_stored_in_status
+    @test _mixed_consumer_smoke_compact_summary(absent_pair_status)
+
     direct_result = only(
         result for result in consumption.batch_result.materialized_results
         if result.metadata.selector_family == :direct_direct
