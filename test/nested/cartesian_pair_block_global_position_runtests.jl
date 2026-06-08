@@ -1,9 +1,9 @@
-# Runtime role: tiny smoke / global position_x assembly pilot.
+# Runtime role: tiny smoke / global position-axis assembly pilots.
 #
-# This validates position_x-only dense global assembly from already-placeable
-# final-local placement records. It does not cover Hamiltonians, overlap,
-# kinetic/x2, Coulomb, IDA/MWG, PQS realization, exports, or White-Lindsey
-# oracle paths.
+# This validates position_x/y/z dense global assembly from already-placeable
+# final-local placement records. It keeps position terms separated and does not
+# cover Hamiltonians, overlap, kinetic/x2, Coulomb, IDA/MWG, PQS realization,
+# exports, or White-Lindsey oracle paths.
 
 using Test
 using GaussletBases
@@ -32,19 +32,64 @@ function _global_position_result(
     )
 end
 
-function _global_position_entry(result; block_set_term = :position_x)
+function _global_position_axis_offset(term::Symbol)
+    term === :position_x && return 0.0
+    term === :position_y && return 10.0
+    term === :position_z && return 20.0
+    throw(ArgumentError("position test term must be position_x/y/z"))
+end
+
+function _global_position_entry(result; block_set_term)
     return CPBMGlobalPosition._one_body_local_block_collection_entry(
         result;
         block_set_term,
     )
 end
 
-function _global_position_collection(; include_missing_ranges::Bool = true)
+function _global_position_blocks(term::Symbol)
+    offset = _global_position_axis_offset(term)
+    return (;
+        diagonal = [
+            1.5 + offset 0.4 + offset
+            0.4 + offset 2.5 + offset
+        ],
+        off_diagonal = [
+            3.0 + offset 4.0 + offset
+            5.0 + offset 6.0 + offset
+        ],
+        source = [
+            100.0 + offset 101.0 + offset
+            102.0 + offset 103.0 + offset
+        ],
+        missing_ranges = [
+            2.0 + offset 0.1 + offset
+            0.1 + offset 2.2 + offset
+        ],
+    )
+end
+
+function _global_position_expected(term::Symbol)
+    blocks = _global_position_blocks(term)
+    diagonal = blocks.diagonal
+    off_diagonal = blocks.off_diagonal
+    return [
+        diagonal[1, 1] diagonal[1, 2] off_diagonal[1, 1] off_diagonal[1, 2]
+        diagonal[2, 1] diagonal[2, 2] off_diagonal[2, 1] off_diagonal[2, 2]
+        off_diagonal[1, 1] off_diagonal[2, 1] 0.0 0.0
+        off_diagonal[1, 2] off_diagonal[2, 2] 0.0 0.0
+    ]
+end
+
+function _global_position_collection(
+    term::Symbol;
+    include_missing_ranges::Bool = true,
+)
+    blocks = _global_position_blocks(term)
     diagonal = _global_position_entry(
         _global_position_result(
-            :position_x,
+            term,
             (:diag_left, :diag_left),
-            [1.5 0.4; 0.4 2.5];
+            blocks.diagonal;
             source_operator_blocks_materialized = true,
             final_pair_blocks_materialized = true,
             metadata = (;
@@ -55,13 +100,14 @@ function _global_position_collection(; include_missing_ranges::Bool = true)
                 left_column_range = 1:2,
                 right_column_range = 1:2,
             ),
-        ),
+        );
+        block_set_term = term,
     )
     off_diagonal = _global_position_entry(
         _global_position_result(
-            :position_x,
+            term,
             (:left, :right),
-            [3.0 4.0; 5.0 6.0];
+            blocks.off_diagonal;
             source_operator_blocks_materialized = true,
             final_pair_blocks_materialized = true,
             metadata = (;
@@ -72,13 +118,14 @@ function _global_position_collection(; include_missing_ranges::Bool = true)
                 left_column_range = 1:2,
                 right_column_range = 3:4,
             ),
-        ),
+        );
+        block_set_term = term,
     )
     pqs_source = _global_position_entry(
         _global_position_result(
-            :source_position_x,
+            Symbol("source_", String(term)),
             (:pqs_left, :pqs_right),
-            [10.0 11.0; 12.0 13.0];
+            blocks.source;
             source_operator_blocks_materialized = true,
             final_pair_blocks_materialized = false,
             metadata = (;
@@ -86,15 +133,16 @@ function _global_position_collection(; include_missing_ranges::Bool = true)
                 selector_family = :pqs_source_pair,
                 materialization_path = :pqs_source_pair_preflight,
             ),
-        ),
+        );
+        block_set_term = term,
     )
     materialized_entries = (diagonal, off_diagonal, pqs_source)
     if include_missing_ranges
         missing_ranges = _global_position_entry(
             _global_position_result(
-                :position_x,
+                term,
                 (:missing_left, :missing_right),
-                [2.0 0.1; 0.1 2.2];
+                blocks.missing_ranges;
                 source_operator_blocks_materialized = true,
                 final_pair_blocks_materialized = true,
                 metadata = (;
@@ -103,15 +151,16 @@ function _global_position_collection(; include_missing_ranges::Bool = true)
                     materialization_path =
                         :direct_direct_pair_block_materialization_pilot,
                 ),
-            ),
+            );
+            block_set_term = term,
         )
         materialized_entries = (materialized_entries..., missing_ranges)
     end
     return (;
         object_kind = :cartesian_pair_block_local_one_body_block_collection,
-        terms = (:position_x,),
-        requested_terms = (:position_x,),
-        materialized_terms = (:position_x,),
+        terms = (term,),
+        requested_terms = (term,),
+        materialized_terms = (term,),
         deferred_terms = (),
         entries = materialized_entries,
         materialized_entries,
@@ -119,14 +168,44 @@ function _global_position_collection(; include_missing_ranges::Bool = true)
     )
 end
 
-function _global_position_plan(;
+function _global_position_plan(
+    term::Symbol;
     global_dimension = 4,
     include_missing_ranges::Bool = true,
 )
-    return CPBMGlobalPosition.one_body_position_x_placement_plan(
-        _global_position_collection(; include_missing_ranges);
+    term === :position_x && return CPBMGlobalPosition.one_body_position_x_placement_plan(
+        _global_position_collection(term; include_missing_ranges);
         global_dimension,
     )
+    term === :position_y && return CPBMGlobalPosition.one_body_position_y_placement_plan(
+        _global_position_collection(term; include_missing_ranges);
+        global_dimension,
+    )
+    term === :position_z && return CPBMGlobalPosition.one_body_position_z_placement_plan(
+        _global_position_collection(term; include_missing_ranges);
+        global_dimension,
+    )
+    throw(ArgumentError("position test term must be position_x/y/z"))
+end
+
+function _global_position_matrix(term::Symbol, placement_plan)
+    term === :position_x &&
+        return CPBMGlobalPosition.one_body_global_position_x_matrix(placement_plan)
+    term === :position_y &&
+        return CPBMGlobalPosition.one_body_global_position_y_matrix(placement_plan)
+    term === :position_z &&
+        return CPBMGlobalPosition.one_body_global_position_z_matrix(placement_plan)
+    throw(ArgumentError("position test term must be position_x/y/z"))
+end
+
+function _global_position_alias_matrix(term::Symbol, placement_plan)
+    term === :position_x &&
+        return CPBMGlobalPosition.global_position_x_matrix(placement_plan)
+    term === :position_y &&
+        return CPBMGlobalPosition.global_position_y_matrix(placement_plan)
+    term === :position_z &&
+        return CPBMGlobalPosition.global_position_z_matrix(placement_plan)
+    throw(ArgumentError("position test term must be position_x/y/z"))
 end
 
 function _global_position_count(counts, field::Symbol, value)
@@ -135,133 +214,132 @@ function _global_position_count(counts, field::Symbol, value)
     return sum(entry -> hasproperty(entry, :count) ? entry.count : 1, matches)
 end
 
-@testset "CartesianPairBlockMaterialization global position_x matrix" begin
-    placement_plan = _global_position_plan()
-    result = CPBMGlobalPosition.one_body_global_position_x_matrix(placement_plan)
-    alias_result = CPBMGlobalPosition.global_position_x_matrix(placement_plan)
+@testset "CartesianPairBlockMaterialization global position matrices" begin
+    for term in (:position_x, :position_y, :position_z)
+        placement_plan = _global_position_plan(term)
+        result = _global_position_matrix(term, placement_plan)
+        alias_result = _global_position_alias_matrix(term, placement_plan)
+        term_string = String(term)
+        materialized_flag = Symbol("global_", term_string, "_matrix_materialized")
 
-    expected = [
-        1.5 0.4 3.0 4.0
-        0.4 2.5 5.0 6.0
-        3.0 5.0 0.0 0.0
-        4.0 6.0 0.0 0.0
-    ]
-    @test result.object_kind === :cartesian_pair_block_global_position_x_matrix
-    @test result.status === :materialized_global_position_x_matrix
-    @test isnothing(result.blocker)
-    @test result.term === :position_x
-    @test result.global_dimension == 4
-    @test result.matrix == expected
-    @test alias_result.matrix == expected
-    @test result.placeable_record_count == 2
-    @test result.blocked_record_count == 2
-    @test result.placed_block_count == 3
-    @test result.skipped_block_count == 2
-    @test result.symmetry === :symmetric
+        @test result.object_kind ===
+              Symbol("cartesian_pair_block_global_", term_string, "_matrix")
+        @test result.status === Symbol("materialized_global_", term_string, "_matrix")
+        @test isnothing(result.blocker)
+        @test result.term === term
+        @test result.global_dimension == 4
+        @test result.matrix == _global_position_expected(term)
+        @test alias_result.matrix == _global_position_expected(term)
+        @test result.placeable_record_count == 2
+        @test result.blocked_record_count == 2
+        @test result.placed_block_count == 3
+        @test result.skipped_block_count == 2
+        @test result.symmetry === :symmetric
 
-    @test _global_position_count(
-        placement_plan.blocker_counts,
-        :blocker,
-        :source_space_block_requires_shell_realization,
-    ) == 1
-    @test _global_position_count(
-        placement_plan.blocker_counts,
-        :blocker,
-        :missing_column_ranges,
-    ) == 1
-    @test !any(value -> value >= 10.0, result.matrix)
+        @test _global_position_count(
+            placement_plan.blocker_counts,
+            :blocker,
+            :source_space_block_requires_shell_realization,
+        ) == 1
+        @test _global_position_count(
+            placement_plan.blocker_counts,
+            :blocker,
+            :missing_column_ranges,
+        ) == 1
+        @test !any(value -> value >= 100.0, result.matrix)
 
-    missing_dimension_plan = CPBMGlobalPosition.one_body_position_x_placement_plan(
-        _global_position_collection(),
-    )
-    missing_dimension =
-        CPBMGlobalPosition.one_body_global_position_x_matrix(
-            missing_dimension_plan,
+        missing_dimension_plan = _global_position_plan(
+            term;
+            global_dimension = nothing,
         )
-    @test missing_dimension.status === :blocked_global_position_x_matrix
-    @test missing_dimension.blocker === :missing_global_dimension
-    @test isnothing(missing_dimension.matrix)
+        missing_dimension = _global_position_matrix(term, missing_dimension_plan)
+        @test missing_dimension.status ===
+              Symbol("blocked_global_", term_string, "_matrix")
+        @test missing_dimension.blocker === :missing_global_dimension
+        @test isnothing(missing_dimension.matrix)
 
-    non_position = CPBMGlobalPosition.one_body_global_position_x_matrix(
-        merge(placement_plan, (; term = :overlap)),
-    )
-    @test non_position.status === :blocked_global_position_x_matrix
-    @test non_position.blocker === :non_position_x_placement_plan
+        non_position = _global_position_matrix(
+            term,
+            merge(placement_plan, (; term = :overlap)),
+        )
+        @test non_position.status ===
+              Symbol("blocked_global_", term_string, "_matrix")
+        @test non_position.blocker ===
+              Symbol("non_", term_string, "_placement_plan")
+
+        placeable = only(
+            record for record in placement_plan.placeable_records
+            if record.pair_key == (:left, :right)
+        )
+        shape_mismatch_record = merge(
+            placeable,
+            (; target_ranges = (; rows = 1:3, columns = 3:4)),
+        )
+        shape_mismatch_plan = merge(
+            placement_plan,
+            (;
+                placeable_records = (shape_mismatch_record,),
+                placeable_count = 1,
+                blocked_count = 0,
+                blocked_records = (),
+                record_count = 1,
+            ),
+        )
+        shape_mismatch = _global_position_matrix(term, shape_mismatch_plan)
+        @test shape_mismatch.status ===
+              Symbol("blocked_global_", term_string, "_matrix")
+        @test shape_mismatch.blocker === :local_block_shape_mismatch
+
+        outside_record = merge(
+            placeable,
+            (; target_ranges = (; rows = 1:2, columns = 4:5)),
+        )
+        outside_plan = merge(
+            placement_plan,
+            (;
+                placeable_records = (outside_record,),
+                placeable_count = 1,
+                blocked_count = 0,
+                blocked_records = (),
+                record_count = 1,
+            ),
+        )
+        outside = _global_position_matrix(term, outside_plan)
+        @test outside.status === Symbol("blocked_global_", term_string, "_matrix")
+        @test outside.blocker === :target_ranges_outside_global_dimension
+
+        empty_plan = merge(
+            placement_plan,
+            (;
+                placeable_records = (),
+                placeable_count = 0,
+                blocked_count = placement_plan.record_count,
+            ),
+        )
+        empty = _global_position_matrix(term, empty_plan)
+        @test empty.status === Symbol("blocked_global_", term_string, "_matrix")
+        @test empty.blocker === Symbol("no_placeable_", term_string, "_blocks")
+
+        @test result.operator_matrix_materialized
+        @test getproperty(result, materialized_flag)
+        @test result.global_operator_assembled
+        @test !result.operator_blocks_materialized
+        @test !result.hamiltonian_data_materialized
+        @test !result.artifacts_materialized
+        @test !result.exports_materialized
+        @test !result.global_operator_blocks_materialized
+        @test !result.global_hamiltonian_data_materialized
+        @test !result.global_artifacts_materialized
+        @test !result.coulomb_materialized
+        @test !result.density_density_materialized
+        @test !result.ida_mwg_data_materialized
+        @test !result.pqs_lowdin_materialized
+        @test !result.pqs_shell_projection_materialized
+        @test !result.full_white_lindsey_route_assembled
+    end
 
     @test_throws ArgumentError CPBMGlobalPosition.one_body_placement_plan(
-        _global_position_collection();
-        term = :position_y,
+        _global_position_collection(:position_x);
+        term = :x2_x,
     )
-
-    placeable = only(
-        record for record in placement_plan.placeable_records
-        if record.pair_key == (:left, :right)
-    )
-    shape_mismatch_record = merge(
-        placeable,
-        (; target_ranges = (; rows = 1:3, columns = 3:4)),
-    )
-    shape_mismatch_plan = merge(
-        placement_plan,
-        (;
-            placeable_records = (shape_mismatch_record,),
-            placeable_count = 1,
-            blocked_count = 0,
-            blocked_records = (),
-            record_count = 1,
-        ),
-    )
-    shape_mismatch =
-        CPBMGlobalPosition.one_body_global_position_x_matrix(
-            shape_mismatch_plan,
-        )
-    @test shape_mismatch.status === :blocked_global_position_x_matrix
-    @test shape_mismatch.blocker === :local_block_shape_mismatch
-
-    outside_record = merge(
-        placeable,
-        (; target_ranges = (; rows = 1:2, columns = 4:5)),
-    )
-    outside_plan = merge(
-        placement_plan,
-        (;
-            placeable_records = (outside_record,),
-            placeable_count = 1,
-            blocked_count = 0,
-            blocked_records = (),
-            record_count = 1,
-        ),
-    )
-    outside = CPBMGlobalPosition.one_body_global_position_x_matrix(outside_plan)
-    @test outside.status === :blocked_global_position_x_matrix
-    @test outside.blocker === :target_ranges_outside_global_dimension
-
-    empty_plan = merge(
-        placement_plan,
-        (;
-            placeable_records = (),
-            placeable_count = 0,
-            blocked_count = placement_plan.record_count,
-        ),
-    )
-    empty = CPBMGlobalPosition.one_body_global_position_x_matrix(empty_plan)
-    @test empty.status === :blocked_global_position_x_matrix
-    @test empty.blocker === :no_placeable_position_x_blocks
-
-    @test result.operator_matrix_materialized
-    @test result.global_position_x_matrix_materialized
-    @test result.global_operator_assembled
-    @test !result.operator_blocks_materialized
-    @test !result.hamiltonian_data_materialized
-    @test !result.artifacts_materialized
-    @test !result.exports_materialized
-    @test !result.global_operator_blocks_materialized
-    @test !result.global_hamiltonian_data_materialized
-    @test !result.global_artifacts_materialized
-    @test !result.coulomb_materialized
-    @test !result.density_density_materialized
-    @test !result.ida_mwg_data_materialized
-    @test !result.pqs_lowdin_materialized
-    @test !result.pqs_shell_projection_materialized
-    @test !result.full_white_lindsey_route_assembled
 end

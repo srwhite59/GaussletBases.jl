@@ -136,8 +136,8 @@ export PairBlockMaterializationPolicy,
 #     local placement records only.
 #
 # one_body_global_position.jl
-#     Position_x-only dense global retained-matrix assembly pilot from
-#     placeable local placement records only.
+#     Position-axis dense global retained-matrix assembly pilots from placeable
+#     local placement records only.
 #
 # pqs_source_safe_terms.jl
 #     PQS/PQS raw source-space safe-term helpers.
