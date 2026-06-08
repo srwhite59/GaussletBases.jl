@@ -180,6 +180,59 @@ function _one_body_pair_block_plan_dispatch_summary(plan, term; kwargs...)
     )
 end
 
+function _one_body_pair_block(
+    record::PairBlockMaterializationRecord,
+    term::Symbol;
+    inputs = (;),
+    provider = nothing,
+    unit_pair = nothing,
+)
+    dispatch_summary = _one_body_pair_block_dispatch_summary(
+        record,
+        term;
+        inputs,
+        provider,
+        unit_pair,
+    )
+    dispatch_summary.status === :ready_metadata_only_not_materialized ||
+        return _one_body_skipped_pair_block_summary(dispatch_summary)
+
+    dispatch_summary.selector_family === :direct_direct ||
+        return _one_body_skipped_pair_block_summary(
+            dispatch_summary,
+            :mixed_one_body_selector_family_not_materialized_yet,
+        )
+
+    factor_input_summary = _one_body_factor_input_summary(
+        term;
+        inputs,
+        provider,
+        selector_family = :direct_direct,
+        parent_axis_counts_required = true,
+    )
+    result = direct_direct_one_body_block(
+        record,
+        term;
+        parent_axis_counts = factor_input_summary.parent_axis_counts,
+        overlap_1d = getproperty(factor_input_summary.factor_values, :overlap_1d),
+        position_1d =
+            _one_body_optional_factor(factor_input_summary.factor_values, :position_1d),
+        x2_1d =
+            _one_body_optional_factor(factor_input_summary.factor_values, :x2_1d),
+        kinetic_1d =
+            _one_body_optional_factor(factor_input_summary.factor_values, :kinetic_1d),
+    )
+    return _one_body_result_with_mixed_metadata(result, dispatch_summary)
+end
+
+function _one_body_pair_block(record, term; kwargs...)
+    throw(
+        ArgumentError(
+            "mixed one-body pair block requires a PairBlockMaterializationRecord",
+        ),
+    )
+end
+
 function _one_body_record_selector_family(record::PairBlockMaterializationRecord)
     record.materialization_path === :direct_direct_pair_block_materialization_pilot &&
         return :direct_direct
@@ -206,6 +259,79 @@ function _one_body_dispatch_unit_pair(
     record.materialization_path ===
         :white_lindsey_boundary_stratum_adapter_preflight || return nothing
     return get(unit_pair_lookup, record.pair_key, nothing)
+end
+
+function _one_body_optional_factor(factor_values::NamedTuple, name::Symbol)
+    hasproperty(factor_values, name) || return nothing
+    return getproperty(factor_values, name)
+end
+
+function _one_body_result_with_mixed_metadata(
+    result::PairBlockMaterializationResult,
+    dispatch_summary,
+)
+    return PairBlockMaterializationResult(
+        result.term,
+        result.pair_key,
+        result.block,
+        result.materialized,
+        result.source_operator_blocks_materialized,
+        result.final_pair_blocks_materialized,
+        result.operator_blocks_materialized,
+        result.hamiltonian_data_materialized,
+        result.artifacts_materialized,
+        merge(
+            result.metadata,
+            (;
+                mixed_one_body_dispatcher =
+                    :direct_direct_only_record_dispatcher,
+                mixed_one_body_dispatch_status = dispatch_summary.status,
+                selector_family = dispatch_summary.selector_family,
+                factor_input_status = dispatch_summary.factor_input_status,
+                numerical_family_selector = :direct_direct_one_body_block,
+            ),
+        ),
+    )
+end
+
+function _one_body_skipped_pair_block_summary(
+    dispatch_summary,
+    blocker = dispatch_summary.blocker,
+)
+    return (;
+        object_kind = :cartesian_pair_block_mixed_one_body_skipped_summary,
+        status = :skipped_mixed_one_body_pair_block,
+        blocker,
+        dispatch_status = dispatch_summary.status,
+        dispatch_blocker = dispatch_summary.blocker,
+        dispatch_blockers = dispatch_summary.blockers,
+        pair_key = dispatch_summary.pair_key,
+        pair_index = dispatch_summary.pair_index,
+        pair_family = dispatch_summary.pair_family,
+        selector_family = dispatch_summary.selector_family,
+        requested_term = dispatch_summary.requested_term,
+        materialization_path = dispatch_summary.materialization_path,
+        record_materialization_path = dispatch_summary.record_materialization_path,
+        record_readiness_status = dispatch_summary.record_readiness_status,
+        record_blocker = dispatch_summary.record_blocker,
+        factor_input_status = dispatch_summary.factor_input_status,
+        factor_input_blocker = dispatch_summary.factor_input_blocker,
+        factor_input_blockers = dispatch_summary.factor_input_blockers,
+        unit_pair_requirement_status =
+            dispatch_summary.unit_pair_requirement_status,
+        materialized = false,
+        factors_constructed = false,
+        numerical_blocks_materialized = false,
+        source_operator_blocks_materialized = false,
+        final_pair_blocks_materialized = false,
+        operator_blocks_materialized = false,
+        hamiltonian_data_materialized = false,
+        artifacts_materialized = false,
+        mixed_dispatcher_materialized = false,
+        route_driver_wiring = false,
+        pqs_lowdin_materialized = false,
+        full_white_lindsey_route_assembled = false,
+    )
 end
 
 function _one_body_count_by(record_summaries::Tuple, field::Symbol)
