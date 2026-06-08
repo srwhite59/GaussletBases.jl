@@ -264,8 +264,13 @@ end
     @test kinetic_plan.status === :empty_local_one_body_placement_plan
     @test kinetic_plan.record_count == 0
 
+    position_x_plan = CPBMPlacement.one_body_position_x_placement_plan(collection)
+    @test position_x_plan.term === :position_x
+    @test position_x_plan.status === :empty_local_one_body_placement_plan
+    @test position_x_plan.record_count == 0
+
     @test_throws ArgumentError CPBMPlacement.one_body_placement_plan(
         collection;
-        term = :position_x,
+        term = :position_y,
     )
 end
