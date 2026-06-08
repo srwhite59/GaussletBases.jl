@@ -4,6 +4,17 @@ include("cartesian_white_lindsey_adapter_fixture_helpers.jl")
 
 const CPBMMixedLWDispatch = GaussletBases.CartesianPairBlockMaterialization
 
+const _MIXED_LW_DISPATCH_SAFE_TERMS = (
+    :overlap,
+    :position_x,
+    :position_y,
+    :position_z,
+    :x2_x,
+    :x2_y,
+    :x2_z,
+    :kinetic,
+)
+
 function _mixed_lw_dispatch_record(unit_pair)
     return CPBMMixedLWDispatch.PairBlockMaterializationRecord(
         unit_pair.pair_key,
@@ -54,6 +65,32 @@ function _check_mixed_lw_result(result, expected, term::Symbol)
           :white_lindsey_boundary_stratum_pair_unit_coefficients
 end
 
+function _mixed_lw_dispatch_axis(term::Symbol)
+    term in (:position_x, :x2_x) && return :x
+    term in (:position_y, :x2_y) && return :y
+    term in (:position_z, :x2_z) && return :z
+    return nothing
+end
+
+function _check_mixed_lw_term_metadata(result, term::Symbol)
+    if term === :overlap
+        @test result.metadata.materialization_path ==
+              :white_lindsey_boundary_stratum_overlap_adapter
+    elseif term in (:position_x, :position_y, :position_z)
+        @test result.metadata.materialization_path ==
+              :white_lindsey_boundary_stratum_position_adapter
+        @test result.metadata.position_axis == _mixed_lw_dispatch_axis(term)
+    elseif term in (:x2_x, :x2_y, :x2_z)
+        @test result.metadata.materialization_path ==
+              :white_lindsey_boundary_stratum_x2_adapter
+        @test result.metadata.x2_axis == _mixed_lw_dispatch_axis(term)
+    elseif term === :kinetic
+        @test result.metadata.materialization_path ==
+              :white_lindsey_boundary_stratum_kinetic_adapter
+        @test result.metadata.kinetic_component_axes == (:x, :y, :z)
+    end
+end
+
 @testset "CartesianPairBlockMaterialization mixed White-Lindsey record dispatch" begin
     fixture = _lw_adapter_prepared_facet_edge_fixture(;
         prefix = "mixed_lw_record_dispatch",
@@ -67,40 +104,29 @@ end
     parent_axis_counts = (7, 7, 7)
     overlap_1d = fixture.factors.overlap_1d
     position_1d = fixture.factors.position_1d
+    x2_1d = fixture.factors.x2_1d
+    kinetic_1d = fixture.factors.kinetic_1d
+    inputs = (; parent_axis_counts, overlap_1d, position_1d, x2_1d, kinetic_1d)
 
-    overlap = CPBMMixedLWDispatch._one_body_pair_block(
-        record,
-        :overlap;
-        inputs = (; parent_axis_counts, overlap_1d),
-        unit_pair,
-    )
-    expected_overlap =
-        CPBMMixedLWDispatch.white_lindsey_boundary_stratum_one_body_block(
+    for term in _MIXED_LW_DISPATCH_SAFE_TERMS
+        result = CPBMMixedLWDispatch._one_body_pair_block(
+            record,
+            term;
+            inputs,
             unit_pair,
-            :overlap;
-            parent_axis_counts,
-            overlap_1d,
         )
-    _check_mixed_lw_result(overlap, expected_overlap, :overlap)
-    @test overlap.metadata.materialization_path ==
-          :white_lindsey_boundary_stratum_overlap_adapter
-
-    position_y = CPBMMixedLWDispatch._one_body_pair_block(
-        record,
-        :position_y;
-        inputs = (; parent_axis_counts, overlap_1d, position_1d),
-        unit_pair,
-    )
-    expected_position_y =
-        CPBMMixedLWDispatch.white_lindsey_boundary_stratum_one_body_block(
+        expected = CPBMMixedLWDispatch.white_lindsey_boundary_stratum_one_body_block(
             unit_pair,
-            :position_y;
+            term;
             parent_axis_counts,
             overlap_1d,
             position_1d,
+            x2_1d,
+            kinetic_1d,
         )
-    _check_mixed_lw_result(position_y, expected_position_y, :position_y)
-    @test position_y.metadata.position_axis == :y
+        _check_mixed_lw_result(result, expected, term)
+        _check_mixed_lw_term_metadata(result, term)
+    end
 
     missing_unit_pair = CPBMMixedLWDispatch._one_body_pair_block(
         record,
