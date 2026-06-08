@@ -1,3 +1,10 @@
+# Runtime role: contract, around 8 seconds in recent closeout validation.
+#
+# Plan-level mixed batch contract across all safe one-body terms for synthetic
+# direct/PQS records plus skipped LW metadata. Use for semantic changes or
+# closeout validation; the tiny consumer smoke is preferred for routine
+# mixed-consumer edits.
+
 using Test
 using GaussletBases
 

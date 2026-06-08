@@ -1,3 +1,8 @@
+# Runtime role: tiny contract.
+#
+# Synthetic compact batch-summary contract. This is cheap, but the consumer
+# smoke is the preferred single routine per-pass test for mixed-consumer edits.
+
 using Test
 using GaussletBases
 

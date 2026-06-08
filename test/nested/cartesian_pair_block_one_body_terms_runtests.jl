@@ -1,3 +1,9 @@
+# Runtime role: contract.
+#
+# Focused metadata contract for supported one-body term descriptors. Use after
+# selector-surface changes; the tiny consumer smoke is preferred for routine
+# mixed-consumer edits.
+
 using Test
 using GaussletBases
 

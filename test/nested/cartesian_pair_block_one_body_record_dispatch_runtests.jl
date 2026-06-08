@@ -1,3 +1,9 @@
+# Runtime role: contract.
+#
+# Record-level numerical mixed dispatch contract across all safe one-body terms
+# for direct/direct and PQS source-space families. Use for selector semantics;
+# the tiny consumer smoke is preferred for routine mixed-consumer edits.
+
 using Test
 using GaussletBases
 

@@ -1,3 +1,9 @@
+# Runtime role: oracle/gate.
+#
+# This compares selected White-Lindsey local adapter blocks against old
+# fixed-block slices. It is not a casual smoke test and should not be part of
+# routine mixed-consumer per-pass validation.
+
 using Test
 
 include("cartesian_white_lindsey_adapter_fixture_helpers.jl")

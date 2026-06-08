@@ -1,3 +1,9 @@
+# Runtime role: boundary, around 20 seconds in recent closeout validation.
+#
+# Uses a real White-Lindsey local adapter fixture to validate plan-level mixed
+# dispatch across all safe one-body terms. Run for LW adapter semantics or
+# closeout, not routine small edits.
+
 using Test
 
 include("cartesian_white_lindsey_adapter_fixture_helpers.jl")

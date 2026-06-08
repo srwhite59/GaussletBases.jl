@@ -181,6 +181,14 @@ value comparisons, with zero blocked or metadata-shape-only comparisons in the
 current focused coverage. Treat that test as a focused validation gate for LW
 oracle coverage, not as a tiny per-pass smoke test.
 
+Routine validation should use the smallest test that validates the edit. For
+the private mixed one-body consumer, the tiny synthetic smoke test is the
+default per-pass check. The generic record/plan mixed one-body tests are
+contract tests for semantic changes or closeout. The White--Lindsey focused
+mixed tests use real local adapter fixtures and are boundary tests. The
+White--Lindsey oracle comparison remains a gate-only validation, not a casual
+smoke test.
+
 ### Why “lowering”?
 
 “Lowering” is compiler-style language: it means translating a higher-level geometric object into a lower-level construction representation. Here:

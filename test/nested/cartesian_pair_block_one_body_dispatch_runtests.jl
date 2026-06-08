@@ -1,3 +1,9 @@
+# Runtime role: contract.
+#
+# Metadata-only mixed dispatch classifier contract. Use for classifier
+# semantics; the tiny consumer smoke is preferred for routine mixed-consumer
+# edits.
+
 using Test
 using GaussletBases
 

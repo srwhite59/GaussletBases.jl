@@ -3,6 +3,8 @@
 #   GAUSSLETBASES_TEST_GROUPS=nested GAUSSLETBASES_SLOW_TESTS=1 julia --project=. test/runtests.jl
 #
 # Some fixture-bound tests below depend on helpers defined by test/runtests.jl.
+# Do not use this runner, docs builds, route-driver tests, or oracle/gate tests
+# as routine per-pass validation for small mixed one-body consumer edits.
 
 using Test
 using LinearAlgebra

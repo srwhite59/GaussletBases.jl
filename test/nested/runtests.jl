@@ -1,5 +1,10 @@
 # Default nested runner: fast/default nested contract tests only.
 # Slow/manual integration and audit tests live in integration_runtests.jl.
+#
+# For mixed one-body consumer edits, prefer the tiny smoke test directly:
+#   julia --project=. test/nested/cartesian_pair_block_one_body_consumer_smoke_runtests.jl
+# Heavier mixed one-body contract/boundary files are for semantic changes or
+# baton closeout, not routine small-edit validation.
 
 using Test
 using LinearAlgebra
@@ -17,6 +22,7 @@ include("cartesian_retained_unit_transform_contracts_runtests.jl")
 include("cartesian_terminal_route_retained_units_fingerprint_runtests.jl")
 include("cartesian_unit_pairs_contract_runtests.jl")
 include("cartesian_pair_operator_plans_contract_runtests.jl")
+include("cartesian_pair_block_one_body_consumer_smoke_runtests.jl")
 include("cartesian_pair_block_materialization_contract_runtests.jl")
 include("cartesian_terminal_route_flat_glue_cleanup_runtests.jl")
 include("cartesian_pair_stage_fingerprint_helpers_runtests.jl")

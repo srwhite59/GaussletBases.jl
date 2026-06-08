@@ -1,3 +1,9 @@
+# Runtime role: contract.
+#
+# Plan-level metadata dispatch summary contract. Use for dispatch summary
+# semantics; the tiny consumer smoke is preferred for routine mixed-consumer
+# edits.
+
 using Test
 using GaussletBases
 

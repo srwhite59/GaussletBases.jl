@@ -1,3 +1,9 @@
+# Runtime role: contract.
+#
+# Focused caller-supplied factor input contract. Use for input convention
+# changes; the tiny consumer smoke is preferred for routine mixed-consumer
+# edits.
+
 using Test
 using GaussletBases
 
