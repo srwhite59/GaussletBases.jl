@@ -93,41 +93,120 @@ function _lw_adapter_seed_local_facet_edge_facts(seed_report)
     )
 end
 
-function _lw_adapter_seed_overlap_slice(seed, seed_local_facts)
+function _lw_adapter_seed_one_body_factors(doside_source_1d)
+    pgdg = doside_source_1d.pgdg_intermediate
+    return (;
+        overlap_1d = (;
+            x = pgdg.overlap,
+            y = pgdg.overlap,
+            z = pgdg.overlap,
+        ),
+        position_1d = (;
+            x = pgdg.position,
+            y = pgdg.position,
+            z = pgdg.position,
+        ),
+        x2_1d = (;
+            x = pgdg.x2,
+            y = pgdg.x2,
+            z = pgdg.x2,
+        ),
+    )
+end
+
+function _lw_adapter_seed_one_body_blocks(pair_unit_coefficients, factors)
+    return (;
+        overlap = CPBMForLWAdapter.white_lindsey_boundary_stratum_overlap_block(
+            pair_unit_coefficients;
+            parent_axis_counts = (7, 7, 7),
+            overlap_1d = factors.overlap_1d,
+        ),
+        position_x = CPBMForLWAdapter.white_lindsey_boundary_stratum_position_block(
+            pair_unit_coefficients;
+            axis = :x,
+            parent_axis_counts = (7, 7, 7),
+            overlap_1d = factors.overlap_1d,
+            position_1d = factors.position_1d,
+        ),
+        position_y = CPBMForLWAdapter.white_lindsey_boundary_stratum_position_block(
+            pair_unit_coefficients;
+            axis = :y,
+            parent_axis_counts = (7, 7, 7),
+            overlap_1d = factors.overlap_1d,
+            position_1d = factors.position_1d,
+        ),
+        position_z = CPBMForLWAdapter.white_lindsey_boundary_stratum_position_block(
+            pair_unit_coefficients;
+            axis = :z,
+            parent_axis_counts = (7, 7, 7),
+            overlap_1d = factors.overlap_1d,
+            position_1d = factors.position_1d,
+        ),
+        x2_x = CPBMForLWAdapter.white_lindsey_boundary_stratum_x2_block(
+            pair_unit_coefficients;
+            axis = :x,
+            parent_axis_counts = (7, 7, 7),
+            overlap_1d = factors.overlap_1d,
+            x2_1d = factors.x2_1d,
+        ),
+        x2_y = CPBMForLWAdapter.white_lindsey_boundary_stratum_x2_block(
+            pair_unit_coefficients;
+            axis = :y,
+            parent_axis_counts = (7, 7, 7),
+            overlap_1d = factors.overlap_1d,
+            x2_1d = factors.x2_1d,
+        ),
+        x2_z = CPBMForLWAdapter.white_lindsey_boundary_stratum_x2_block(
+            pair_unit_coefficients;
+            axis = :z,
+            parent_axis_counts = (7, 7, 7),
+            overlap_1d = factors.overlap_1d,
+            x2_1d = factors.x2_1d,
+        ),
+    )
+end
+
+function _lw_adapter_seed_operator_slice(seed, seed_local_facts, term::Symbol)
     seed_local_facts.status === :available_seed_local_pair_slice || throw(
         ArgumentError("White-Lindsey seed local facts must expose a local pair slice"),
     )
-    return seed.fixed_block.overlap[
+    matrix = getproperty(seed.fixed_block, term)
+    return matrix[
         seed_local_facts.face_global_range,
         seed_local_facts.edge_global_range,
     ]
 end
 
-function _lw_adapter_oracle_overlap_comparison(
+function _lw_adapter_oracle_value_comparison(
     adapter_block,
     oracle_summary;
     seed_local_facts = nothing,
-    seed_overlap_slice = nothing,
+    seed_operator_slice = nothing,
     tolerance::Float64 = 1.0e-10,
 )
+    term = adapter_block.term
     expected_adapter_shape = (
         adapter_block.metadata.left_retained_column_count,
         adapter_block.metadata.right_retained_column_count,
     )
     adapter_shape = size(adapter_block.block)
     oracle_shape_available =
-        hasproperty(oracle_summary.fixed_block_operator_matrix_sizes, :overlap)
+        hasproperty(oracle_summary.fixed_block_operator_matrix_sizes, term)
+    oracle_term_available =
+        hasproperty(oracle_summary.one_body_operator_matrix_available, term) &&
+        getproperty(oracle_summary.one_body_operator_matrix_available, term)
     oracle_shape = oracle_shape_available ?
-                   oracle_summary.fixed_block_operator_matrix_sizes.overlap :
+                   getproperty(oracle_summary.fixed_block_operator_matrix_sizes, term) :
                    nothing
     oracle_shape_status =
-        oracle_summary.overlap_ready && oracle_shape_available ?
-        :available_global_retained_overlap_shape :
-        :blocked_missing_global_retained_overlap_shape
+        oracle_summary.overlap_ready && oracle_term_available && oracle_shape_available ?
+        Symbol("available_global_retained_", String(term), "_shape") :
+        Symbol("blocked_missing_global_retained_", String(term), "_shape")
 
     shape_status =
         adapter_shape == expected_adapter_shape &&
-        oracle_shape_status === :available_global_retained_overlap_shape ?
+        oracle_term_available &&
+        oracle_shape_available ?
         :local_pair_shape_matches_adapter_metadata_global_oracle_shape_available :
         :blocked_shape_metadata_mismatch
     seed_slice_status =
@@ -135,11 +214,11 @@ function _lw_adapter_oracle_overlap_comparison(
         :not_requested :
         seed_local_facts.status
     seed_slice_shape =
-        isnothing(seed_overlap_slice) ? nothing : size(seed_overlap_slice)
+        isnothing(seed_operator_slice) ? nothing : size(seed_operator_slice)
     max_abs_error =
-        isnothing(seed_overlap_slice) ?
+        isnothing(seed_operator_slice) ?
         nothing :
-        maximum(abs.(adapter_block.block .- seed_overlap_slice))
+        maximum(abs.(adapter_block.block .- seed_operator_slice))
     max_abs_error_status =
         isnothing(max_abs_error) ?
         :not_compared_local_seed_pair_block_not_available :
@@ -165,7 +244,7 @@ function _lw_adapter_oracle_overlap_comparison(
 
     return (;
         object_kind = :white_lindsey_adapter_oracle_comparison,
-        term = adapter_block.term,
+        term,
         pair_key = adapter_block.pair_key,
         pair_family = _lw_adapter_oracle_pair_family(adapter_block),
         adapter_materialization_path = adapter_block.metadata.materialization_path,
@@ -234,11 +313,11 @@ end
     oracle_summary =
         CPBMForLWAdapter.white_lindsey_materialized_seed_oracle_summary(
             seed_report,
-        )
+    )
     seed_local_facts = _lw_adapter_seed_local_facet_edge_facts(seed_report)
-    seed_overlap_slice = _lw_adapter_seed_overlap_slice(seed, seed_local_facts)
     doside_source_1d =
         _lw_adapter_seed_compatible_doside_source_1d(seed; expansion)
+    factors = _lw_adapter_seed_one_body_factors(doside_source_1d)
     real_units = _lw_adapter_real_units(
         doside_source_1d;
         prefix = "lw_oracle_comparison",
@@ -251,17 +330,8 @@ end
                 1,
             ),
         )
-    overlap_1d = (;
-        x = doside_source_1d.pgdg_intermediate.overlap,
-        y = doside_source_1d.pgdg_intermediate.overlap,
-        z = doside_source_1d.pgdg_intermediate.overlap,
-    )
-    overlap_result =
-        CPBMForLWAdapter.white_lindsey_boundary_stratum_overlap_block(
-            real_pair_coefficients;
-            parent_axis_counts = (7, 7, 7),
-            overlap_1d,
-        )
+    adapter_blocks =
+        _lw_adapter_seed_one_body_blocks(real_pair_coefficients, factors)
 
     @test seed_local_facts.object_kind ==
           :white_lindsey_seed_local_pair_facts
@@ -298,60 +368,85 @@ end
     @test seed_local_facts.validation_oracle_only
     @test !seed_local_facts.route_authority
     @test !seed_local_facts.adapter_authority
-    @test size(seed_overlap_slice) == (9, 3)
 
-    comparison = _lw_adapter_oracle_overlap_comparison(
-        overlap_result,
-        oracle_summary;
-        seed_local_facts,
-        seed_overlap_slice,
+    comparison_terms = (
+        :overlap,
+        :position_x,
+        :position_y,
+        :position_z,
+        :x2_x,
+        :x2_y,
+        :x2_z,
     )
-    @test comparison.object_kind ==
-          :white_lindsey_adapter_oracle_comparison
-    @test comparison.term == :overlap
-    @test comparison.pair_key == (
-        :lw_oracle_comparison_real_facet_unit,
-        :lw_oracle_comparison_real_edge_unit,
+    adapter_paths = (;
+        overlap = :white_lindsey_boundary_stratum_overlap_adapter,
+        position_x = :white_lindsey_boundary_stratum_position_adapter,
+        position_y = :white_lindsey_boundary_stratum_position_adapter,
+        position_z = :white_lindsey_boundary_stratum_position_adapter,
+        x2_x = :white_lindsey_boundary_stratum_x2_adapter,
+        x2_y = :white_lindsey_boundary_stratum_x2_adapter,
+        x2_z = :white_lindsey_boundary_stratum_x2_adapter,
     )
-    @test comparison.pair_family == :facet_cpb__edge_cpb
-    @test comparison.adapter_materialization_path ==
-          :white_lindsey_boundary_stratum_overlap_adapter
-    @test comparison.adapter_shape == (9, 3)
-    @test comparison.expected_adapter_shape == (9, 3)
-    @test comparison.oracle_shape == (223, 223)
-    @test comparison.oracle_shape_status ==
-          :available_global_retained_overlap_shape
-    @test comparison.shape_status ==
-          :local_pair_shape_matches_adapter_metadata_global_oracle_shape_available
-    @test comparison.seed_slice_status == :available_seed_local_pair_slice
-    @test comparison.seed_slice_shape == (9, 3)
-    @test comparison.status == :value_compared
-    @test isnothing(comparison.blocker)
-    @test comparison.max_abs_error <= comparison.tolerance
-    @test comparison.max_abs_error_status ==
-          :compared_local_seed_pair_slice_within_tolerance
-    @test isnothing(comparison.symmetry_error)
-    @test comparison.symmetry_error_status ==
-          :not_applicable_rectangular_local_pair_block
-    @test comparison.oracle_role == :validation_oracle_only
-    @test !comparison.route_authority
-    @test !comparison.adapter_authority
-    @test comparison.local_pair_block_materialized
-    @test comparison.source_operator_blocks_materialized
-    @test comparison.final_pair_blocks_materialized
-    @test !comparison.operator_blocks_materialized
-    @test !comparison.hamiltonian_data_materialized
-    @test !comparison.artifacts_materialized
-    @test !comparison.dense_parent_parent_overlap_materialized
+    comparisons = Tuple(
+        _lw_adapter_oracle_value_comparison(
+            getproperty(adapter_blocks, term),
+            oracle_summary;
+            seed_local_facts,
+            seed_operator_slice =
+                _lw_adapter_seed_operator_slice(seed, seed_local_facts, term),
+        )
+        for term in comparison_terms
+    )
 
-    summary = _lw_adapter_oracle_comparison_summary((comparison,))
+    for comparison in comparisons
+        @test comparison.object_kind ==
+              :white_lindsey_adapter_oracle_comparison
+        @test comparison.pair_key == (
+            :lw_oracle_comparison_real_facet_unit,
+            :lw_oracle_comparison_real_edge_unit,
+        )
+        @test comparison.pair_family == :facet_cpb__edge_cpb
+        @test comparison.adapter_materialization_path ==
+              getproperty(adapter_paths, comparison.term)
+        @test comparison.adapter_shape == (9, 3)
+        @test comparison.expected_adapter_shape == (9, 3)
+        @test comparison.oracle_shape == (223, 223)
+        @test comparison.oracle_shape_status ==
+              Symbol("available_global_retained_", String(comparison.term), "_shape")
+        @test comparison.shape_status ==
+              :local_pair_shape_matches_adapter_metadata_global_oracle_shape_available
+        @test comparison.seed_slice_status == :available_seed_local_pair_slice
+        @test comparison.seed_slice_shape == (9, 3)
+        @test comparison.status == :value_compared
+        @test isnothing(comparison.blocker)
+        @test comparison.max_abs_error <= comparison.tolerance
+        @test comparison.max_abs_error_status ==
+              :compared_local_seed_pair_slice_within_tolerance
+        @test isnothing(comparison.symmetry_error)
+        @test comparison.symmetry_error_status ==
+              :not_applicable_rectangular_local_pair_block
+        @test comparison.oracle_role == :validation_oracle_only
+        @test !comparison.route_authority
+        @test !comparison.adapter_authority
+        @test comparison.local_pair_block_materialized
+        @test comparison.source_operator_blocks_materialized
+        @test comparison.final_pair_blocks_materialized
+        @test !comparison.operator_blocks_materialized
+        @test !comparison.hamiltonian_data_materialized
+        @test !comparison.artifacts_materialized
+        @test !comparison.dense_parent_parent_overlap_materialized
+    end
+
+    summary = _lw_adapter_oracle_comparison_summary(comparisons)
     @test summary.object_kind ==
           :white_lindsey_adapter_oracle_comparison_summary
-    @test summary.comparison_count == 1
-    @test summary.terms == (:overlap,)
-    @test summary.pair_families == (:facet_cpb__edge_cpb,)
-    @test summary.statuses == (:value_compared,)
+    @test summary.comparison_count == length(comparison_terms)
+    @test summary.terms == comparison_terms
+    @test summary.pair_families ==
+          ntuple(_ -> :facet_cpb__edge_cpb, length(comparison_terms))
+    @test summary.statuses ==
+          ntuple(_ -> :value_compared, length(comparison_terms))
     @test summary.metadata_shape_only_count == 0
-    @test summary.value_comparison_count == 1
+    @test summary.value_comparison_count == length(comparison_terms)
     @test summary.blocked_count == 0
 end
