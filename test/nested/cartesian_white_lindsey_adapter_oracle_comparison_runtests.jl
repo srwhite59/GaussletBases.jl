@@ -39,7 +39,11 @@ function _lw_adapter_seed_local_facet_edge_facts(seed_report)
         ),
         shell.edges,
     )
-    if isnothing(face_index) || isnothing(edge_index)
+    corner_index = findfirst(
+        corner -> corner.fixed_sides == (:high, :low, :high),
+        shell.corners,
+    )
+    if isnothing(face_index) || isnothing(edge_index) || isnothing(corner_index)
         return (;
             object_kind = :white_lindsey_seed_local_pair_facts,
             status = :blocked_seed_local_pair_slice_not_found,
@@ -51,8 +55,10 @@ function _lw_adapter_seed_local_facet_edge_facts(seed_report)
 
     face_range = seed.inventory.retained_ranges.faces[face_index]
     edge_range = seed.inventory.retained_ranges.edges[edge_index]
+    corner_range = seed.inventory.retained_ranges.corners[corner_index]
     face = shell.faces[face_index]
     edge = shell.edges[edge_index]
+    corner = shell.corners[corner_index]
     route_ranges = seed_report.route_units.unit_inventory.ranges
 
     return (;
@@ -77,19 +83,60 @@ function _lw_adapter_seed_local_facet_edge_facts(seed_report)
             fixed_sides = edge.fixed_sides,
             fixed_indices = edge.fixed_indices,
         ),
+        corner_index,
+        corner_signature = (;
+            fixed_sides = corner.fixed_sides,
+            fixed_indices = corner.fixed_indices,
+        ),
         face_global_range = face_range,
         edge_global_range = edge_range,
+        corner_global_range = corner_range,
         face_local_range =
             seed.inventory.materialized_shell_local_ranges.faces[face_index],
         edge_local_range =
             seed.inventory.materialized_shell_local_ranges.edges[edge_index],
+        corner_local_range =
+            seed.inventory.materialized_shell_local_ranges.corners[corner_index],
         grouped_face_range = route_ranges.low_order_face_interiors,
         grouped_edge_range = route_ranges.low_order_edges,
+        grouped_corner_range = route_ranges.low_order_corners,
         slice_shape = (length(face_range), length(edge_range)),
+        edge_corner_slice_shape = (length(edge_range), length(corner_range)),
         overlap_slice_available = true,
         validation_oracle_only = true,
         route_authority = false,
         adapter_authority = false,
+    )
+end
+
+function _lw_adapter_real_corner_unit(
+    doside_source_1d;
+    prefix::AbstractString = "lw_oracle_comparison",
+)
+    real_corner_source = CPBForLWAdapter.cpb(
+        7:7,
+        1:1,
+        7:7;
+        role = Symbol(prefix, "_real_corner_source_cpb"),
+        metadata = (;
+            stratum_kind = :corner_cpb,
+            source_cpb_index = 6,
+            fixed_axes = (:x, :y, :z),
+            sides = (:high, :low, :high),
+        ),
+    )
+    return _lw_adapter_retained_unit(
+        Symbol(prefix, "_real_corner_unit"),
+        6,
+        real_corner_source,
+        :corner_cpb,
+        6;
+        dimension_status = :available,
+        dimension = 1,
+        extra_metadata = (;
+            parent_dims = (7, 7, 7),
+            doside_source_1d,
+        ),
     )
 end
 
@@ -361,6 +408,57 @@ function _lw_adapter_oracle_comparison_summary(comparisons)
     )
 end
 
+function _lw_adapter_blocked_corner_pair_comparisons(
+    pair_unit_coefficients,
+    seed_local_facts,
+    comparison_terms,
+    adapter_paths,
+)
+    expected_shape = (
+        pair_unit_coefficients.left_retained_column_count,
+        pair_unit_coefficients.right_retained_column_count,
+    )
+    pair_family = Symbol(
+        String(pair_unit_coefficients.left_stratum_kind),
+        "__",
+        String(pair_unit_coefficients.right_stratum_kind),
+    )
+    return Tuple(
+        (;
+            object_kind = :white_lindsey_adapter_oracle_comparison,
+            term,
+            pair_key = pair_unit_coefficients.pair_key,
+            pair_family,
+            adapter_materialization_path = getproperty(adapter_paths, term),
+            adapter_shape = nothing,
+            expected_adapter_shape = expected_shape,
+            seed_slice_status = seed_local_facts.status,
+            seed_slice_shape = seed_local_facts.edge_corner_slice_shape,
+            old_seed_corner_index = seed_local_facts.corner_index,
+            old_seed_corner_range = seed_local_facts.corner_global_range,
+            max_abs_error = nothing,
+            max_abs_error_status =
+                :not_compared_corner_pair_block_not_materialized,
+            symmetry_error = nothing,
+            symmetry_error_status =
+                :not_applicable_rectangular_local_pair_block,
+            status = :blocked_corner_unit_pair_block_not_materialized,
+            blocker = :corner_unit_pair_block_not_materialized,
+            blocker_detail = :right_parent_support_indices_not_available,
+            pair_unit_coefficient_maps_materialized =
+                pair_unit_coefficients.pair_unit_coefficient_maps_materialized,
+            local_pair_block_materialized = false,
+            source_operator_blocks_materialized = false,
+            final_pair_blocks_materialized = false,
+            operator_blocks_materialized = false,
+            hamiltonian_data_materialized = false,
+            artifacts_materialized = false,
+            dense_parent_parent_overlap_materialized = false,
+        )
+        for term in comparison_terms
+    )
+end
+
 @testset "CartesianPairBlockMaterialization White-Lindsey oracle comparison scaffold" begin
     expansion = coulomb_gaussian_expansion(doacc = false)
     seed_report =
@@ -377,6 +475,10 @@ end
         _lw_adapter_seed_compatible_doside_source_1d(seed; expansion)
     factors = _lw_adapter_seed_one_body_factors(doside_source_1d)
     real_units = _lw_adapter_real_units(
+        doside_source_1d;
+        prefix = "lw_oracle_comparison",
+    )
+    real_corner_unit = _lw_adapter_real_corner_unit(
         doside_source_1d;
         prefix = "lw_oracle_comparison",
     )
@@ -410,6 +512,14 @@ end
         )
     edge_edge_adapter_blocks =
         _lw_adapter_seed_one_body_blocks(edge_edge_pair_coefficients, factors)
+    edge_corner_pair_coefficients =
+        CPBMForLWAdapter.white_lindsey_boundary_stratum_pair_unit_coefficients(
+            _lw_adapter_unit_pair(
+                real_units.real_edge_unit,
+                real_corner_unit,
+                4,
+            ),
+        )
 
     @test seed_local_facts.object_kind ==
           :white_lindsey_seed_local_pair_facts
@@ -435,13 +545,22 @@ end
         fixed_sides = (:high, :low),
         fixed_indices = (7, 1),
     )
+    @test seed_local_facts.corner_index == 6
+    @test seed_local_facts.corner_signature == (;
+        fixed_sides = (:high, :low, :high),
+        fixed_indices = (7, 1, 7),
+    )
     @test seed_local_facts.face_global_range == 162:170
     @test seed_local_facts.edge_global_range == 210:212
+    @test seed_local_facts.corner_global_range == 221:221
     @test seed_local_facts.face_local_range == 37:45
     @test seed_local_facts.edge_local_range == 85:87
+    @test seed_local_facts.corner_local_range == 96:96
     @test seed_local_facts.grouped_face_range == 126:179
     @test seed_local_facts.grouped_edge_range == 180:215
+    @test seed_local_facts.grouped_corner_range == 216:223
     @test seed_local_facts.slice_shape == (9, 3)
+    @test seed_local_facts.edge_corner_slice_shape == (3, 1)
     @test seed_local_facts.overlap_slice_available
     @test seed_local_facts.validation_oracle_only
     @test !seed_local_facts.route_authority
@@ -493,6 +612,24 @@ end
         comparison_terms,
         seed_local_facts.edge_global_range,
         seed_local_facts.edge_global_range,
+    )
+    @test edge_corner_pair_coefficients.status ==
+          :materialized_white_lindsey_pair_unit_coefficients
+    @test edge_corner_pair_coefficients.left_stratum_kind == :edge_cpb
+    @test edge_corner_pair_coefficients.right_stratum_kind == :corner_cpb
+    @test edge_corner_pair_coefficients.left_retained_column_count == 3
+    @test edge_corner_pair_coefficients.right_retained_column_count == 1
+    @test edge_corner_pair_coefficients.left_support_indices !== nothing
+    @test isnothing(edge_corner_pair_coefficients.right_support_indices)
+    @test_throws ArgumentError _lw_adapter_seed_one_body_blocks(
+        edge_corner_pair_coefficients,
+        factors,
+    )
+    edge_corner_comparisons = _lw_adapter_blocked_corner_pair_comparisons(
+        edge_corner_pair_coefficients,
+        seed_local_facts,
+        comparison_terms,
+        adapter_paths,
     )
     comparison_batches = (
         (;
@@ -623,4 +760,44 @@ end
     @test edge_edge_summary.metadata_shape_only_count == 0
     @test edge_edge_summary.value_comparison_count == length(comparison_terms)
     @test edge_edge_summary.blocked_count == 0
+
+    edge_corner_summary = _lw_adapter_oracle_comparison_summary(
+        edge_corner_comparisons,
+    )
+    @test edge_corner_summary.object_kind ==
+          :white_lindsey_adapter_oracle_comparison_summary
+    @test edge_corner_summary.comparison_count == length(comparison_terms)
+    @test edge_corner_summary.terms == comparison_terms
+    @test edge_corner_summary.pair_families ==
+          ntuple(_ -> :edge_cpb__corner_cpb, length(comparison_terms))
+    @test edge_corner_summary.statuses ==
+          ntuple(
+              _ -> :blocked_corner_unit_pair_block_not_materialized,
+              length(comparison_terms),
+          )
+    @test edge_corner_summary.metadata_shape_only_count == 0
+    @test edge_corner_summary.value_comparison_count == 0
+    @test edge_corner_summary.blocked_count == length(comparison_terms)
+    for comparison in edge_corner_comparisons
+        @test comparison.pair_key == (
+            :lw_oracle_comparison_real_edge_unit,
+            :lw_oracle_comparison_real_corner_unit,
+        )
+        @test comparison.expected_adapter_shape == (3, 1)
+        @test comparison.seed_slice_status == :available_seed_local_pair_slice
+        @test comparison.seed_slice_shape == (3, 1)
+        @test comparison.old_seed_corner_index == 6
+        @test comparison.old_seed_corner_range == 221:221
+        @test comparison.blocker == :corner_unit_pair_block_not_materialized
+        @test comparison.blocker_detail ==
+              :right_parent_support_indices_not_available
+        @test comparison.pair_unit_coefficient_maps_materialized
+        @test !comparison.local_pair_block_materialized
+        @test !comparison.source_operator_blocks_materialized
+        @test !comparison.final_pair_blocks_materialized
+        @test !comparison.operator_blocks_materialized
+        @test !comparison.hamiltonian_data_materialized
+        @test !comparison.artifacts_materialized
+        @test !comparison.dense_parent_parent_overlap_materialized
+    end
 end
