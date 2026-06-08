@@ -1,0 +1,152 @@
+# Shared one-body term descriptors for future mixed pair-block consumers.
+#
+# Existing local selectors that a mixed consumer should call:
+# - direct_direct_one_body_block / direct_direct_one_body_blocks
+# - pqs_source_pair_one_body_block / pqs_source_pair_one_body_blocks
+# - white_lindsey_boundary_stratum_one_body_block /
+#   white_lindsey_boundary_stratum_one_body_blocks
+#
+# This file only describes term vocabulary and selector surfaces. It does not
+# construct 1D factors, pair blocks, Hamiltonian data, exports, artifacts, PQS
+# Lowdin realization, or White--Lindsey route assembly.
+
+const _ONE_BODY_TERMS = (
+    :overlap,
+    :position_x,
+    :position_y,
+    :position_z,
+    :x2_x,
+    :x2_y,
+    :x2_z,
+    :kinetic,
+)
+
+function _one_body_term_descriptor(term)
+    throw(ArgumentError("one-body term must be a Symbol, got $(typeof(term))"))
+end
+
+function _one_body_term_descriptor(term::Symbol)
+    term === :overlap && return _one_body_term_descriptor_result(
+        term,
+        :overlap,
+        :one_body_overlap,
+        nothing,
+        (:overlap,),
+        (:overlap_1d,),
+    )
+
+    if term in (:position_x, :position_y, :position_z)
+        axis = _one_body_axis_for_prefixed_term(term, "position_")
+        return _one_body_term_descriptor_result(
+            term,
+            :position,
+            :one_body_axis_position,
+            axis,
+            (:overlap, :position),
+            (:overlap_1d, :position_1d),
+        )
+    end
+
+    if term in (:x2_x, :x2_y, :x2_z)
+        axis = _one_body_axis_for_prefixed_term(term, "x2_")
+        return _one_body_term_descriptor_result(
+            term,
+            :x2,
+            :one_body_axis_x2,
+            axis,
+            (:overlap, :x2),
+            (:overlap_1d, :x2_1d),
+        )
+    end
+
+    term === :kinetic && return _one_body_term_descriptor_result(
+        term,
+        :kinetic,
+        :one_body_cartesian_kinetic_sum,
+        nothing,
+        (:overlap, :kinetic),
+        (:overlap_1d, :kinetic_1d),
+    )
+
+    throw(ArgumentError("unsupported one-body term: $(term)"))
+end
+
+function _one_body_term_descriptor_result(
+    requested_term::Symbol,
+    family::Symbol,
+    term_kind::Symbol,
+    axis,
+    required_factor_roles::Tuple,
+    required_factor_names::Tuple,
+)
+    return (;
+        object_kind = :cartesian_pair_block_one_body_term_descriptor,
+        status = :available_one_body_term_descriptor,
+        requested_term,
+        term = requested_term,
+        family,
+        term_family = family,
+        term_kind,
+        axis,
+        axis_index = _one_body_axis_index(axis),
+        required_factor_roles,
+        required_factor_names,
+        factor_provider_scope = :caller_supplied_or_family_provider,
+        factors_constructed = false,
+        numerical_blocks_materialized = false,
+        mixed_dispatcher_materialized = false,
+        route_driver_wiring = false,
+        hamiltonian_data_materialized = false,
+        artifacts_materialized = false,
+    )
+end
+
+function _one_body_axis_for_prefixed_term(term::Symbol, prefix::AbstractString)
+    suffix = replace(String(term), prefix => ""; count = 1)
+    suffix == "x" && return :x
+    suffix == "y" && return :y
+    suffix == "z" && return :z
+    throw(ArgumentError("unsupported axis one-body term: $(term)"))
+end
+
+function _one_body_axis_index(axis)
+    isnothing(axis) && return nothing
+    axis === :x && return 1
+    axis === :y && return 2
+    axis === :z && return 3
+    throw(ArgumentError("unsupported one-body axis: $(axis)"))
+end
+
+function _one_body_selector_surface_summary()
+    return (;
+        object_kind = :cartesian_pair_block_one_body_selector_surface_summary,
+        status = :available_internal_one_body_selector_surface_audit,
+        supported_terms = _ONE_BODY_TERMS,
+        selector_family_count = 3,
+        selector_families =
+            (:direct_direct, :pqs_source_pair, :white_lindsey_boundary_stratum),
+        record_selectors = (;
+            direct_direct = :direct_direct_one_body_block,
+            pqs_source_pair = :pqs_source_pair_one_body_block,
+            white_lindsey_boundary_stratum =
+                :white_lindsey_boundary_stratum_one_body_block,
+        ),
+        batch_selectors = (;
+            direct_direct = :direct_direct_one_body_blocks,
+            pqs_source_pair = :pqs_source_pair_one_body_blocks,
+            white_lindsey_boundary_stratum =
+                :white_lindsey_boundary_stratum_one_body_blocks,
+        ),
+        factor_provider_scope = :caller_supplied_or_family_provider,
+        factors_constructed = false,
+        numerical_blocks_materialized = false,
+        mixed_dispatcher_materialized = false,
+        route_driver_wiring = false,
+        hamiltonian_data_materialized = false,
+        artifacts_materialized = false,
+        coulomb_materialized = false,
+        ida_mwg_data_materialized = false,
+        pqs_lowdin_materialized = false,
+        full_white_lindsey_route_assembled = false,
+    )
+end

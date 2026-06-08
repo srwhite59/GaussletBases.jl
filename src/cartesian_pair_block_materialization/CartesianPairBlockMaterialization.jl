@@ -105,6 +105,10 @@ export PairBlockMaterializationPolicy,
 # summaries.jl
 #     Compact summaries for tests and reports.
 #
+# one_body_terms.jl
+#     Shared internal one-body term descriptors and selector-surface audit for
+#     the future mixed one-body consumer.
+#
 # pqs_source_safe_terms.jl
 #     PQS/PQS raw source-space safe-term helpers.
 #
@@ -163,6 +167,7 @@ export PairBlockMaterializationPolicy,
 include("records.jl")
 include("preflight.jl")
 include("summaries.jl")
+include("one_body_terms.jl")
 include("direct_overlap.jl")
 include("pqs_source_safe_terms.jl")
 include("pqs_source_shell_bridge.jl")
