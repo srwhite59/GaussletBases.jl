@@ -177,15 +177,26 @@ function _lw_adapter_seed_one_body_blocks(pair_unit_coefficients, factors)
     )
 end
 
+function _lw_adapter_seed_operator_slice(
+    seed,
+    left_range::UnitRange{Int},
+    right_range::UnitRange{Int},
+    term::Symbol,
+)
+    matrix = getproperty(seed.fixed_block, term)
+    return matrix[left_range, right_range]
+end
+
 function _lw_adapter_seed_operator_slice(seed, seed_local_facts, term::Symbol)
     seed_local_facts.status === :available_seed_local_pair_slice || throw(
         ArgumentError("White-Lindsey seed local facts must expose a local pair slice"),
     )
-    matrix = getproperty(seed.fixed_block, term)
-    return matrix[
+    return _lw_adapter_seed_operator_slice(
+        seed,
         seed_local_facts.face_global_range,
         seed_local_facts.edge_global_range,
-    ]
+        term,
+    )
 end
 
 function _lw_adapter_oracle_value_comparison(
@@ -252,6 +263,16 @@ function _lw_adapter_oracle_value_comparison(
         status === :blocked_oracle_value_comparison ?
         :local_seed_pair_slice_mismatch :
         :shape_metadata_mismatch
+    symmetry_error =
+        adapter_shape[1] == adapter_shape[2] ?
+        maximum(abs.(adapter_block.block .- transpose(adapter_block.block))) :
+        nothing
+    symmetry_error_status =
+        isnothing(symmetry_error) ?
+        :not_applicable_rectangular_local_pair_block :
+        symmetry_error <= tolerance ?
+        :square_local_pair_symmetric_within_tolerance :
+        :square_local_pair_symmetry_exceeds_tolerance
 
     return (;
         object_kind = :white_lindsey_adapter_oracle_comparison,
@@ -269,9 +290,8 @@ function _lw_adapter_oracle_value_comparison(
         tolerance,
         max_abs_error,
         max_abs_error_status,
-        symmetry_error = nothing,
-        symmetry_error_status =
-            :not_applicable_rectangular_local_pair_block,
+        symmetry_error,
+        symmetry_error_status,
         status,
         blocker,
         oracle_role = oracle_summary.oracle_role,
@@ -296,6 +316,27 @@ function _lw_adapter_oracle_value_comparison(
             get(adapter_block.metadata, :kinetic_component_axes, nothing),
         kinetic_component_terms =
             get(adapter_block.metadata, :kinetic_component_terms, nothing),
+    )
+end
+
+function _lw_adapter_oracle_value_comparisons(
+    adapter_blocks,
+    oracle_summary,
+    seed,
+    seed_local_facts,
+    comparison_terms,
+    left_range::UnitRange{Int},
+    right_range::UnitRange{Int},
+)
+    return Tuple(
+        _lw_adapter_oracle_value_comparison(
+            getproperty(adapter_blocks, term),
+            oracle_summary;
+            seed_local_facts,
+            seed_operator_slice =
+                _lw_adapter_seed_operator_slice(seed, left_range, right_range, term),
+        )
+        for term in comparison_terms
     )
 end
 
@@ -347,8 +388,18 @@ end
                 1,
             ),
         )
-    adapter_blocks =
+    facet_edge_adapter_blocks =
         _lw_adapter_seed_one_body_blocks(real_pair_coefficients, factors)
+    facet_facet_pair_coefficients =
+        CPBMForLWAdapter.white_lindsey_boundary_stratum_pair_unit_coefficients(
+            _lw_adapter_unit_pair(
+                real_units.real_facet_unit,
+                real_units.real_facet_unit,
+                2,
+            ),
+        )
+    facet_facet_adapter_blocks =
+        _lw_adapter_seed_one_body_blocks(facet_facet_pair_coefficients, factors)
 
     @test seed_local_facts.object_kind ==
           :white_lindsey_seed_local_pair_facts
@@ -406,44 +457,76 @@ end
         x2_z = :white_lindsey_boundary_stratum_x2_adapter,
         kinetic = :white_lindsey_boundary_stratum_kinetic_adapter,
     )
-    comparisons = Tuple(
-        _lw_adapter_oracle_value_comparison(
-            getproperty(adapter_blocks, term),
-            oracle_summary;
-            seed_local_facts,
-            seed_operator_slice =
-                _lw_adapter_seed_operator_slice(seed, seed_local_facts, term),
-        )
-        for term in comparison_terms
+    facet_edge_comparisons = _lw_adapter_oracle_value_comparisons(
+        facet_edge_adapter_blocks,
+        oracle_summary,
+        seed,
+        seed_local_facts,
+        comparison_terms,
+        seed_local_facts.face_global_range,
+        seed_local_facts.edge_global_range,
+    )
+    facet_facet_comparisons = _lw_adapter_oracle_value_comparisons(
+        facet_facet_adapter_blocks,
+        oracle_summary,
+        seed,
+        seed_local_facts,
+        comparison_terms,
+        seed_local_facts.face_global_range,
+        seed_local_facts.face_global_range,
+    )
+    comparison_batches = (
+        (;
+            comparisons = facet_edge_comparisons,
+            expected_pair_key = (
+                :lw_oracle_comparison_real_facet_unit,
+                :lw_oracle_comparison_real_edge_unit,
+            ),
+            expected_pair_family = :facet_cpb__edge_cpb,
+            expected_shape = (9, 3),
+            expected_symmetry_status =
+                :not_applicable_rectangular_local_pair_block,
+        ),
+        (;
+            comparisons = facet_facet_comparisons,
+            expected_pair_key = (
+                :lw_oracle_comparison_real_facet_unit,
+                :lw_oracle_comparison_real_facet_unit,
+            ),
+            expected_pair_family = :facet_cpb__facet_cpb,
+            expected_shape = (9, 9),
+            expected_symmetry_status =
+                :square_local_pair_symmetric_within_tolerance,
+        ),
     )
 
-    for comparison in comparisons
+    for batch in comparison_batches, comparison in batch.comparisons
         @test comparison.object_kind ==
               :white_lindsey_adapter_oracle_comparison
-        @test comparison.pair_key == (
-            :lw_oracle_comparison_real_facet_unit,
-            :lw_oracle_comparison_real_edge_unit,
-        )
-        @test comparison.pair_family == :facet_cpb__edge_cpb
+        @test comparison.pair_key == batch.expected_pair_key
+        @test comparison.pair_family == batch.expected_pair_family
         @test comparison.adapter_materialization_path ==
               getproperty(adapter_paths, comparison.term)
-        @test comparison.adapter_shape == (9, 3)
-        @test comparison.expected_adapter_shape == (9, 3)
+        @test comparison.adapter_shape == batch.expected_shape
+        @test comparison.expected_adapter_shape == batch.expected_shape
         @test comparison.oracle_shape == (223, 223)
         @test comparison.oracle_shape_status ==
               Symbol("available_global_retained_", String(comparison.term), "_shape")
         @test comparison.shape_status ==
               :local_pair_shape_matches_adapter_metadata_global_oracle_shape_available
         @test comparison.seed_slice_status == :available_seed_local_pair_slice
-        @test comparison.seed_slice_shape == (9, 3)
+        @test comparison.seed_slice_shape == batch.expected_shape
         @test comparison.status == :value_compared
         @test isnothing(comparison.blocker)
         @test comparison.max_abs_error <= comparison.tolerance
         @test comparison.max_abs_error_status ==
               :compared_local_seed_pair_slice_within_tolerance
-        @test isnothing(comparison.symmetry_error)
-        @test comparison.symmetry_error_status ==
-              :not_applicable_rectangular_local_pair_block
+        @test comparison.symmetry_error_status == batch.expected_symmetry_status
+        if batch.expected_shape[1] == batch.expected_shape[2]
+            @test comparison.symmetry_error <= comparison.tolerance
+        else
+            @test isnothing(comparison.symmetry_error)
+        end
         @test comparison.oracle_role == :validation_oracle_only
         @test !comparison.route_authority
         @test !comparison.adapter_authority
@@ -455,7 +538,7 @@ end
         @test !comparison.artifacts_materialized
         @test !comparison.dense_parent_parent_overlap_materialized
     end
-    kinetic_comparison = comparisons[end]
+    kinetic_comparison = facet_edge_comparisons[end]
     @test kinetic_comparison.term == :kinetic
     @test kinetic_comparison.kinetic_factor_form ==
           :factorized_cartesian_sum_kss_sks_ssk
@@ -466,16 +549,33 @@ end
         :kinetic_z_component,
     )
 
-    summary = _lw_adapter_oracle_comparison_summary(comparisons)
-    @test summary.object_kind ==
+    facet_edge_summary = _lw_adapter_oracle_comparison_summary(
+        facet_edge_comparisons,
+    )
+    @test facet_edge_summary.object_kind ==
           :white_lindsey_adapter_oracle_comparison_summary
-    @test summary.comparison_count == length(comparison_terms)
-    @test summary.terms == comparison_terms
-    @test summary.pair_families ==
+    @test facet_edge_summary.comparison_count == length(comparison_terms)
+    @test facet_edge_summary.terms == comparison_terms
+    @test facet_edge_summary.pair_families ==
           ntuple(_ -> :facet_cpb__edge_cpb, length(comparison_terms))
-    @test summary.statuses ==
+    @test facet_edge_summary.statuses ==
           ntuple(_ -> :value_compared, length(comparison_terms))
-    @test summary.metadata_shape_only_count == 0
-    @test summary.value_comparison_count == length(comparison_terms)
-    @test summary.blocked_count == 0
+    @test facet_edge_summary.metadata_shape_only_count == 0
+    @test facet_edge_summary.value_comparison_count == length(comparison_terms)
+    @test facet_edge_summary.blocked_count == 0
+
+    facet_facet_summary = _lw_adapter_oracle_comparison_summary(
+        facet_facet_comparisons,
+    )
+    @test facet_facet_summary.object_kind ==
+          :white_lindsey_adapter_oracle_comparison_summary
+    @test facet_facet_summary.comparison_count == length(comparison_terms)
+    @test facet_facet_summary.terms == comparison_terms
+    @test facet_facet_summary.pair_families ==
+          ntuple(_ -> :facet_cpb__facet_cpb, length(comparison_terms))
+    @test facet_facet_summary.statuses ==
+          ntuple(_ -> :value_compared, length(comparison_terms))
+    @test facet_facet_summary.metadata_shape_only_count == 0
+    @test facet_facet_summary.value_comparison_count == length(comparison_terms)
+    @test facet_facet_summary.blocked_count == 0
 end
