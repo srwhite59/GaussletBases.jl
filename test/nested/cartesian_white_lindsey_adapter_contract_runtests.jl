@@ -79,6 +79,7 @@ include("cartesian_white_lindsey_adapter_fixture_helpers.jl")
     @test corner_coefficients.coefficient_input_requirements.status ==
           :available_corner_support_local_coefficients
     @test !corner_coefficients.parent_row_indices_available
+    @test isnothing(corner_coefficients.support_indices)
     @test size(corner_coefficients.coefficient_matrix) == (1, 1)
     @test corner_coefficients.coefficient_matrix[1, 1] == 1.0
     @test corner_coefficients.source_support_row_count == 1
@@ -799,6 +800,11 @@ include("cartesian_white_lindsey_adapter_fixture_helpers.jl")
     @test ready_corner_coefficients.status ==
           :materialized_white_lindsey_corner_unit_coefficients
     @test ready_corner_coefficients.coefficient_matrix == [1.0;;]
+    @test ready_corner_coefficients.parent_row_indices_available
+    @test ready_corner_coefficients.support_indices ==
+          [GaussletBases._cartesian_flat_index(4, 3, 3, (7, 7, 7))]
+    @test ready_corner_coefficients.source_support_row_count == 1
+    @test ready_corner_coefficients.retained_column_count == 1
 
     bad_descriptor = (;
         object_kind = :white_lindsey_boundary_stratum_unit_adapter_descriptor,

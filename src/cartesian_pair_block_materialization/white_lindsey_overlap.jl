@@ -71,11 +71,17 @@ function _white_lindsey_boundary_stratum_product_block(
         operator_axes[3],
     )
 
-    left_support_coefficients = Matrix{Float64}(
-        pair_unit_coefficients.left_coefficient_matrix[left_support, :],
+    left_support_coefficients = _white_lindsey_support_coefficient_matrix(
+        pair_unit_coefficients.left_coefficient_matrix,
+        left_support,
+        pair_unit_coefficients.left_coefficient_space,
+        :left,
     )
-    right_support_coefficients = Matrix{Float64}(
-        pair_unit_coefficients.right_coefficient_matrix[right_support, :],
+    right_support_coefficients = _white_lindsey_support_coefficient_matrix(
+        pair_unit_coefficients.right_coefficient_matrix,
+        right_support,
+        pair_unit_coefficients.right_coefficient_space,
+        :right,
     )
     block = Matrix{Float64}(
         transpose(left_support_coefficients) *
@@ -125,6 +131,23 @@ function _white_lindsey_boundary_stratum_product_block(
             NamedTuple(metadata),
         ),
     )
+end
+
+function _white_lindsey_support_coefficient_matrix(
+    coefficient_matrix,
+    support_indices,
+    coefficient_space::Symbol,
+    side::Symbol,
+)
+    if coefficient_space === :source_cpb_support_local
+        size(coefficient_matrix, 1) == length(support_indices) || throw(
+            ArgumentError(
+                "White--Lindsey $(side) support-local coefficient rows must match support indices",
+            ),
+        )
+        return Matrix{Float64}(coefficient_matrix)
+    end
+    return Matrix{Float64}(coefficient_matrix[support_indices, :])
 end
 
 function _assert_white_lindsey_pair_unit_coefficients_ready(pair_unit_coefficients)

@@ -80,11 +80,14 @@ function _white_lindsey_boundary_stratum_unit_coefficients_from_descriptor(
         )
 
     coefficient_matrix = reshape([1.0], 1, 1)
+    support_indices = _white_lindsey_corner_parent_support_indices(descriptor)
     return _white_lindsey_unit_coefficients_result(
         descriptor,
         status,
         blocker,
-        coefficient_matrix,
+        coefficient_matrix;
+        parent_row_indices_available = !isnothing(support_indices),
+        support_indices,
     )
 end
 
@@ -153,6 +156,32 @@ function _white_lindsey_unit_coefficients_status(descriptor)
         :missing_white_lindsey_corner_fixed_coordinates,
     )
     return :materialized_white_lindsey_corner_unit_coefficients, nothing
+end
+
+function _white_lindsey_corner_parent_support_indices(descriptor)
+    parent_dims = _white_lindsey_descriptor_property(descriptor, :parent_dims)
+    isnothing(parent_dims) && return nothing
+    fixed_coordinates =
+        _white_lindsey_descriptor_property(descriptor, :fixed_axis_coordinates)
+    isnothing(fixed_coordinates) && return nothing
+    ix = _white_lindsey_corner_fixed_coordinate(fixed_coordinates, :x)
+    iy = _white_lindsey_corner_fixed_coordinate(fixed_coordinates, :y)
+    iz = _white_lindsey_corner_fixed_coordinate(fixed_coordinates, :z)
+    any(isnothing, (ix, iy, iz)) && return nothing
+    dims = _white_lindsey_checked_context_tuple(
+        parent_dims,
+        Val(3),
+        Int,
+        :parent_dims,
+    )
+    return [ParentGaussletBases._cartesian_flat_index(ix, iy, iz, dims)]
+end
+
+function _white_lindsey_corner_fixed_coordinate(fixed_coordinates, axis::Symbol)
+    for entry in fixed_coordinates
+        entry.axis === axis && return Int(entry.coordinate)
+    end
+    return nothing
 end
 
 function _white_lindsey_facet_unit_coefficients_result(descriptor)
