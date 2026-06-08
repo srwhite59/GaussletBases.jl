@@ -109,6 +109,10 @@ export PairBlockMaterializationPolicy,
 #     Shared internal one-body term descriptors and selector-surface audit for
 #     the future mixed one-body consumer.
 #
+# one_body_factor_inputs.jl
+#     Caller-supplied one-body factor input normalization for future mixed
+#     dispatch.
+#
 # pqs_source_safe_terms.jl
 #     PQS/PQS raw source-space safe-term helpers.
 #
@@ -168,6 +172,7 @@ include("records.jl")
 include("preflight.jl")
 include("summaries.jl")
 include("one_body_terms.jl")
+include("one_body_factor_inputs.jl")
 include("direct_overlap.jl")
 include("pqs_source_safe_terms.jl")
 include("pqs_source_shell_bridge.jl")
