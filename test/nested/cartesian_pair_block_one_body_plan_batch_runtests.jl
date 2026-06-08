@@ -114,20 +114,47 @@ function _batch_dispatch_direct_record()
     )
 end
 
-function _batch_dispatch_plan()
-    records = (
-        _batch_dispatch_direct_record(),
-        _batch_dispatch_record(
-            (:pqs_left, :pqs_right),
-            2,
-            :pqs_pqs,
-            :pqs_source_pair_preflight,
-        ),
+function _batch_dispatch_pqs_record(; ready::Bool)
+    metadata =
+        ready ?
+        (;
+            left_source_mode_dims = (4, 4, 4),
+            right_source_mode_dims = (4, 4, 4),
+            left_source_mode_count = 64,
+            right_source_mode_count = 64,
+            source_mode_ordering = :x_major_y_major_z_fast,
+            left_source_mode_ordering = :x_major_y_major_z_fast,
+            right_source_mode_ordering = :x_major_y_major_z_fast,
+        ) :
+        (;)
+    return _batch_dispatch_record(
+        (:pqs_left, :pqs_right),
+        2,
+        :pqs_pqs,
+        :pqs_source_pair_preflight;
+        metadata,
     )
+end
+
+function _batch_dispatch_lw_record()
+    return _batch_dispatch_record(
+        (:lw_left, :lw_right),
+        3,
+        :white_lindsey_boundary_stratum,
+        :white_lindsey_boundary_stratum_adapter_preflight,
+    )
+end
+
+function _batch_dispatch_plan(; pqs_ready::Bool = false, include_lw::Bool = false)
+    records = [
+        _batch_dispatch_direct_record(),
+        _batch_dispatch_pqs_record(; ready = pqs_ready),
+    ]
+    include_lw && push!(records, _batch_dispatch_lw_record())
     return CPBMBatchDispatch.PairBlockMaterializationPlan(
         CPBMBatchDispatch.MetadataOnlyPairBlockMaterialization(),
         _batch_dispatch_minimal_pair_operator_plan(),
-        records,
+        Tuple(records),
         (; status = :available_pair_block_materialization_plan),
         (; fixture = :one_body_plan_batch),
     )
@@ -169,7 +196,7 @@ function _batch_dispatch_position_1d()
     )
 end
 
-@testset "CartesianPairBlockMaterialization mixed one-body plan batch" begin
+@testset "CartesianPairBlockMaterialization mixed one-body direct-only plan batch" begin
     plan = _batch_dispatch_plan()
     parent_axis_counts = (4, 4, 4)
     overlap_1d = _batch_dispatch_overlap_1d()
@@ -179,6 +206,7 @@ end
         plan,
         :overlap;
         inputs = (; parent_axis_counts, overlap_1d),
+        materialize_selector_families = (:direct_direct,),
     )
     @test overlap_batch isa CPBMBatchDispatch.PairBlockMaterializationBatchResult
     @test overlap_batch.term == :overlap
@@ -194,6 +222,8 @@ end
           :mixed_one_body_pair_block_batch_selector
     @test overlap_batch.metadata.mixed_one_body_dispatcher ==
           :direct_direct_only_plan_dispatcher
+    @test overlap_batch.metadata.numerical_dispatch_scope == :direct_direct_only
+    @test !overlap_batch.metadata.pqs_source_pair_materialized
     @test overlap_batch.metadata.pair_block_record_count == 2
     @test _batch_dispatch_count(
         overlap_batch.metadata.materialized_selector_family_counts,
@@ -224,12 +254,94 @@ end
         plan,
         :position_y;
         inputs = (; parent_axis_counts, overlap_1d, position_1d),
+        materialize_selector_families = (:direct_direct,),
     )
     @test position_batch.term == :position_y
     @test position_batch.materialized_count == 1
     @test position_batch.skipped_count == 1
     @test only(position_batch.materialized_results).term == :position_y
     @test only(position_batch.materialized_results).metadata.position_axis == :y
+end
+
+@testset "CartesianPairBlockMaterialization mixed one-body direct/PQS plan batch" begin
+    plan = _batch_dispatch_plan(; pqs_ready = true, include_lw = true)
+    parent_axis_counts = (4, 4, 4)
+    overlap_1d = _batch_dispatch_overlap_1d()
+    position_1d = _batch_dispatch_position_1d()
+
+    overlap_batch = CPBMBatchDispatch._one_body_pair_blocks(
+        plan,
+        :overlap;
+        inputs = (; parent_axis_counts, overlap_1d),
+    )
+    @test overlap_batch.term == :overlap
+    @test overlap_batch.materialized_count == 2
+    @test overlap_batch.skipped_count == 1
+    @test overlap_batch.materialized
+    @test overlap_batch.source_operator_blocks_materialized
+    @test overlap_batch.final_pair_blocks_materialized
+    @test !overlap_batch.operator_blocks_materialized
+    @test !overlap_batch.hamiltonian_data_materialized
+    @test !overlap_batch.artifacts_materialized
+    @test overlap_batch.metadata.mixed_one_body_dispatcher ==
+          :direct_pqs_source_plan_dispatcher
+    @test overlap_batch.metadata.numerical_dispatch_scope ==
+          :direct_direct_and_pqs_source_pair
+    @test overlap_batch.metadata.pqs_source_pair_materialized
+    @test !overlap_batch.metadata.white_lindsey_materialized
+    @test _batch_dispatch_count(
+        overlap_batch.metadata.materialized_selector_family_counts,
+        :selector_family,
+        :direct_direct,
+    ) == 1
+    @test _batch_dispatch_count(
+        overlap_batch.metadata.materialized_selector_family_counts,
+        :selector_family,
+        :pqs_source_pair,
+    ) == 1
+    @test _batch_dispatch_count(
+        overlap_batch.metadata.skipped_selector_family_counts,
+        :selector_family,
+        :white_lindsey_boundary_stratum,
+    ) == 1
+
+    direct_result = only(
+        result for result in overlap_batch.materialized_results
+        if result.metadata.selector_family == :direct_direct
+    )
+    pqs_result = only(
+        result for result in overlap_batch.materialized_results
+        if result.metadata.selector_family == :pqs_source_pair
+    )
+    lw_skip = only(overlap_batch.skipped_records)
+    @test direct_result.term == :overlap
+    @test direct_result.final_pair_blocks_materialized
+    @test pqs_result.term == :source_overlap
+    @test pqs_result.metadata.block_space == :raw_product_source_modes
+    @test pqs_result.source_operator_blocks_materialized
+    @test !pqs_result.final_pair_blocks_materialized
+    @test !pqs_result.metadata.final_pair_blocks_materialized
+    @test !pqs_result.metadata.shell_realization_materialized
+    @test !pqs_result.metadata.operator_blocks_materialized
+    @test !pqs_result.metadata.hamiltonian_data_materialized
+    @test !pqs_result.metadata.artifacts_materialized
+    @test lw_skip.selector_family == :white_lindsey_boundary_stratum
+    @test !lw_skip.materialized
+
+    position_batch = CPBMBatchDispatch._one_body_pair_blocks(
+        plan,
+        :position_y;
+        inputs = (; parent_axis_counts, overlap_1d, position_1d),
+    )
+    @test position_batch.materialized_count == 2
+    @test position_batch.skipped_count == 1
+    pqs_position = only(
+        result for result in position_batch.materialized_results
+        if result.metadata.selector_family == :pqs_source_pair
+    )
+    @test pqs_position.term == :source_position_y
+    @test pqs_position.metadata.position_axis == :y
+    @test !pqs_position.final_pair_blocks_materialized
 end
 
 @testset "CartesianPairBlockMaterialization mixed one-body plan batch missing inputs" begin

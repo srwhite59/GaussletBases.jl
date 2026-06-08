@@ -230,6 +230,7 @@ function _one_body_pair_blocks(
     term::Symbol;
     inputs = (;),
     provider = nothing,
+    materialize_selector_families = (:direct_direct, :pqs_source_pair),
 )
     unit_pair_lookup = _one_body_unit_pair_lookup(plan)
     materialized_results = PairBlockMaterializationResult[]
@@ -241,7 +242,7 @@ function _one_body_pair_blocks(
             inputs,
             provider,
             unit_pair = _one_body_dispatch_unit_pair(record, unit_pair_lookup),
-            materialize_selector_families = (:direct_direct,),
+            materialize_selector_families,
         )
         if result_or_skip isa PairBlockMaterializationResult
             push!(materialized_results, result_or_skip)
@@ -253,6 +254,10 @@ function _one_body_pair_blocks(
     result_tuple = Tuple(materialized_results)
     skipped_tuple = Tuple(skipped_records)
     any_materialized = !isempty(result_tuple)
+    any_source_materialized =
+        any(result -> result.source_operator_blocks_materialized, result_tuple)
+    any_final_materialized =
+        any(result -> result.final_pair_blocks_materialized, result_tuple)
     return PairBlockMaterializationBatchResult(
         term,
         result_tuple,
@@ -260,14 +265,15 @@ function _one_body_pair_blocks(
         length(result_tuple),
         length(skipped_tuple),
         any_materialized,
-        any_materialized,
-        any_materialized,
+        any_source_materialized,
+        any_final_materialized,
         false,
         false,
         false,
         (;
             materialization_path = :mixed_one_body_pair_block_batch_selector,
-            mixed_one_body_dispatcher = :direct_direct_only_plan_dispatcher,
+            mixed_one_body_dispatcher =
+                _one_body_plan_dispatcher_name(materialize_selector_families),
             pair_block_record_count =
                 length(pair_block_materialization_records(plan)),
             materialized_selector_family_counts =
@@ -279,14 +285,36 @@ function _one_body_pair_blocks(
             skipped_status_counts =
                 _one_body_count_by(skipped_tuple, :status),
             factors_constructed = false,
-            numerical_dispatch_scope = :direct_direct_only,
-            pqs_source_pair_materialized = false,
+            numerical_dispatch_scope =
+                _one_body_numerical_dispatch_scope(materialize_selector_families),
+            pqs_source_pair_materialized =
+                _one_body_result_selector_family_materialized(
+                    result_tuple,
+                    :pqs_source_pair,
+                ),
             white_lindsey_materialized = false,
             route_driver_wiring = false,
             hamiltonian_data_materialized = false,
             artifacts_materialized = false,
         ),
     )
+end
+
+function _one_body_plan_dispatcher_name(materialize_selector_families)
+    selector_families = Tuple(materialize_selector_families)
+    selector_families == (:direct_direct,) &&
+        return :direct_direct_only_plan_dispatcher
+    selector_families == (:direct_direct, :pqs_source_pair) &&
+        return :direct_pqs_source_plan_dispatcher
+    return :mixed_one_body_plan_dispatcher
+end
+
+function _one_body_numerical_dispatch_scope(materialize_selector_families)
+    selector_families = Tuple(materialize_selector_families)
+    selector_families == (:direct_direct,) && return :direct_direct_only
+    selector_families == (:direct_direct, :pqs_source_pair) &&
+        return :direct_direct_and_pqs_source_pair
+    return :custom_selector_family_scope
 end
 
 function _one_body_direct_direct_pair_block(
@@ -506,6 +534,18 @@ function _one_body_materialized_selector_family_counts(
         push!(selector_families, result.metadata.selector_family)
     end
     return _one_body_count_values(selector_families, :selector_family)
+end
+
+function _one_body_result_selector_family_materialized(
+    results::Tuple{Vararg{PairBlockMaterializationResult}},
+    selector_family::Symbol,
+)
+    return any(
+        result ->
+            haskey(result.metadata, :selector_family) &&
+            result.metadata.selector_family === selector_family,
+        results,
+    )
 end
 
 function _one_body_blocker_counts(record_summaries::Tuple)
