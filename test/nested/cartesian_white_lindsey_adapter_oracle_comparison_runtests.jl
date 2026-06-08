@@ -400,6 +400,16 @@ end
         )
     facet_facet_adapter_blocks =
         _lw_adapter_seed_one_body_blocks(facet_facet_pair_coefficients, factors)
+    edge_edge_pair_coefficients =
+        CPBMForLWAdapter.white_lindsey_boundary_stratum_pair_unit_coefficients(
+            _lw_adapter_unit_pair(
+                real_units.real_edge_unit,
+                real_units.real_edge_unit,
+                3,
+            ),
+        )
+    edge_edge_adapter_blocks =
+        _lw_adapter_seed_one_body_blocks(edge_edge_pair_coefficients, factors)
 
     @test seed_local_facts.object_kind ==
           :white_lindsey_seed_local_pair_facts
@@ -475,6 +485,15 @@ end
         seed_local_facts.face_global_range,
         seed_local_facts.face_global_range,
     )
+    edge_edge_comparisons = _lw_adapter_oracle_value_comparisons(
+        edge_edge_adapter_blocks,
+        oracle_summary,
+        seed,
+        seed_local_facts,
+        comparison_terms,
+        seed_local_facts.edge_global_range,
+        seed_local_facts.edge_global_range,
+    )
     comparison_batches = (
         (;
             comparisons = facet_edge_comparisons,
@@ -495,6 +514,17 @@ end
             ),
             expected_pair_family = :facet_cpb__facet_cpb,
             expected_shape = (9, 9),
+            expected_symmetry_status =
+                :square_local_pair_symmetric_within_tolerance,
+        ),
+        (;
+            comparisons = edge_edge_comparisons,
+            expected_pair_key = (
+                :lw_oracle_comparison_real_edge_unit,
+                :lw_oracle_comparison_real_edge_unit,
+            ),
+            expected_pair_family = :edge_cpb__edge_cpb,
+            expected_shape = (3, 3),
             expected_symmetry_status =
                 :square_local_pair_symmetric_within_tolerance,
         ),
@@ -578,4 +608,19 @@ end
     @test facet_facet_summary.metadata_shape_only_count == 0
     @test facet_facet_summary.value_comparison_count == length(comparison_terms)
     @test facet_facet_summary.blocked_count == 0
+
+    edge_edge_summary = _lw_adapter_oracle_comparison_summary(
+        edge_edge_comparisons,
+    )
+    @test edge_edge_summary.object_kind ==
+          :white_lindsey_adapter_oracle_comparison_summary
+    @test edge_edge_summary.comparison_count == length(comparison_terms)
+    @test edge_edge_summary.terms == comparison_terms
+    @test edge_edge_summary.pair_families ==
+          ntuple(_ -> :edge_cpb__edge_cpb, length(comparison_terms))
+    @test edge_edge_summary.statuses ==
+          ntuple(_ -> :value_compared, length(comparison_terms))
+    @test edge_edge_summary.metadata_shape_only_count == 0
+    @test edge_edge_summary.value_comparison_count == length(comparison_terms)
+    @test edge_edge_summary.blocked_count == 0
 end
