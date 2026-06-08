@@ -11,7 +11,105 @@ function _lw_adapter_oracle_pair_family(adapter_block)
     )
 end
 
-function _lw_adapter_oracle_overlap_comparison(adapter_block, oracle_summary)
+function _lw_adapter_seed_compatible_doside_source_1d(seed; expansion)
+    return GaussletBases._mapped_ordinary_gausslet_1d_bundle(
+        seed.basis;
+        exponents = expansion.exponents,
+        backend = :numerical_reference,
+        refinement_levels = 0,
+    )
+end
+
+function _lw_adapter_seed_local_facet_edge_facts(seed_report)
+    seed = seed_report.fixture
+    shell = only(seed.sequence.shell_layers)
+    face_index = findfirst(
+        face -> (
+            face.face_kind === :yz &&
+            face.fixed_axis === :x &&
+            face.fixed_side === :low
+        ),
+        shell.faces,
+    )
+    edge_index = findfirst(
+        edge -> (
+            edge.free_axis === :z &&
+            edge.fixed_axes == (:x, :y) &&
+            edge.fixed_sides == (:high, :low)
+        ),
+        shell.edges,
+    )
+    if isnothing(face_index) || isnothing(edge_index)
+        return (;
+            object_kind = :white_lindsey_seed_local_pair_facts,
+            status = :blocked_seed_local_pair_slice_not_found,
+            blocker = :old_seed_local_pair_slice_not_exposed,
+            route_unit_range_status = :grouped_ranges_available,
+            per_piece_range_status = :missing_representative_piece_range,
+        )
+    end
+
+    face_range = seed.inventory.retained_ranges.faces[face_index]
+    edge_range = seed.inventory.retained_ranges.edges[edge_index]
+    face = shell.faces[face_index]
+    edge = shell.edges[edge_index]
+    route_ranges = seed_report.route_units.unit_inventory.ranges
+
+    return (;
+        object_kind = :white_lindsey_seed_local_pair_facts,
+        status = :available_seed_local_pair_slice,
+        blocker = nothing,
+        route_unit_range_status =
+            :grouped_route_ranges_available_not_local_slice_authority,
+        per_piece_range_status = :per_piece_seed_inventory_ranges_available,
+        per_piece_range_source = :seed_inventory_retained_ranges,
+        face_index,
+        edge_index,
+        face_signature = (;
+            face_kind = face.face_kind,
+            fixed_axis = face.fixed_axis,
+            fixed_side = face.fixed_side,
+            fixed_index = face.fixed_index,
+        ),
+        edge_signature = (;
+            free_axis = edge.free_axis,
+            fixed_axes = edge.fixed_axes,
+            fixed_sides = edge.fixed_sides,
+            fixed_indices = edge.fixed_indices,
+        ),
+        face_global_range = face_range,
+        edge_global_range = edge_range,
+        face_local_range =
+            seed.inventory.materialized_shell_local_ranges.faces[face_index],
+        edge_local_range =
+            seed.inventory.materialized_shell_local_ranges.edges[edge_index],
+        grouped_face_range = route_ranges.low_order_face_interiors,
+        grouped_edge_range = route_ranges.low_order_edges,
+        slice_shape = (length(face_range), length(edge_range)),
+        overlap_slice_available = true,
+        validation_oracle_only = true,
+        route_authority = false,
+        adapter_authority = false,
+    )
+end
+
+function _lw_adapter_seed_overlap_slice(seed, seed_local_facts)
+    seed_local_facts.status === :available_seed_local_pair_slice || throw(
+        ArgumentError("White-Lindsey seed local facts must expose a local pair slice"),
+    )
+    return seed.fixed_block.overlap[
+        seed_local_facts.face_global_range,
+        seed_local_facts.edge_global_range,
+    ]
+end
+
+function _lw_adapter_oracle_overlap_comparison(
+    adapter_block,
+    oracle_summary;
+    seed_local_facts = nothing,
+    seed_overlap_slice = nothing,
+    tolerance::Float64 = 1.0e-10,
+)
     expected_adapter_shape = (
         adapter_block.metadata.left_retained_column_count,
         adapter_block.metadata.right_retained_column_count,
@@ -32,13 +130,38 @@ function _lw_adapter_oracle_overlap_comparison(adapter_block, oracle_summary)
         oracle_shape_status === :available_global_retained_overlap_shape ?
         :local_pair_shape_matches_adapter_metadata_global_oracle_shape_available :
         :blocked_shape_metadata_mismatch
+    seed_slice_status =
+        isnothing(seed_local_facts) ?
+        :not_requested :
+        seed_local_facts.status
+    seed_slice_shape =
+        isnothing(seed_overlap_slice) ? nothing : size(seed_overlap_slice)
+    max_abs_error =
+        isnothing(seed_overlap_slice) ?
+        nothing :
+        maximum(abs.(adapter_block.block .- seed_overlap_slice))
+    max_abs_error_status =
+        isnothing(max_abs_error) ?
+        :not_compared_local_seed_pair_block_not_available :
+        max_abs_error <= tolerance ?
+        :compared_local_seed_pair_slice_within_tolerance :
+        :compared_local_seed_pair_slice_exceeds_tolerance
     status =
-        shape_status ===
+        shape_status !==
         :local_pair_shape_matches_adapter_metadata_global_oracle_shape_available ?
+        :blocked_oracle_shape_comparison :
+        max_abs_error_status ===
+        :compared_local_seed_pair_slice_within_tolerance ?
+        :value_compared :
+        isnothing(max_abs_error) ?
         :metadata_shape_only :
-        :blocked_oracle_shape_comparison
+        :blocked_oracle_value_comparison
     blocker =
-        status === :metadata_shape_only ? nothing : :shape_metadata_mismatch
+        status === :value_compared || status === :metadata_shape_only ?
+        nothing :
+        status === :blocked_oracle_value_comparison ?
+        :local_seed_pair_slice_mismatch :
+        :shape_metadata_mismatch
 
     return (;
         object_kind = :white_lindsey_adapter_oracle_comparison,
@@ -51,9 +174,11 @@ function _lw_adapter_oracle_overlap_comparison(adapter_block, oracle_summary)
         oracle_shape,
         oracle_shape_status,
         shape_status,
-        max_abs_error = nothing,
-        max_abs_error_status =
-            :not_compared_local_seed_pair_block_not_available,
+        seed_slice_status,
+        seed_slice_shape,
+        tolerance,
+        max_abs_error,
+        max_abs_error_status,
         symmetry_error = nothing,
         symmetry_error_status =
             :not_applicable_rectangular_local_pair_block,
@@ -100,20 +225,87 @@ function _lw_adapter_oracle_comparison_summary(comparisons)
 end
 
 @testset "CartesianPairBlockMaterialization White-Lindsey oracle comparison scaffold" begin
-    fixture = _lw_adapter_prepared_facet_edge_fixture(;
+    expansion = coulomb_gaussian_expansion(doacc = false)
+    seed_report =
+        GaussletBases._white_lindsey_low_order_materialized_seed_report(;
+            expansion,
+        )
+    seed = seed_report.fixture
+    oracle_summary =
+        CPBMForLWAdapter.white_lindsey_materialized_seed_oracle_summary(
+            seed_report,
+        )
+    seed_local_facts = _lw_adapter_seed_local_facet_edge_facts(seed_report)
+    seed_overlap_slice = _lw_adapter_seed_overlap_slice(seed, seed_local_facts)
+    doside_source_1d =
+        _lw_adapter_seed_compatible_doside_source_1d(seed; expansion)
+    real_units = _lw_adapter_real_units(
+        doside_source_1d;
         prefix = "lw_oracle_comparison",
+    )
+    real_pair_coefficients =
+        CPBMForLWAdapter.white_lindsey_boundary_stratum_pair_unit_coefficients(
+            _lw_adapter_unit_pair(
+                real_units.real_facet_unit,
+                real_units.real_edge_unit,
+                1,
+            ),
+        )
+    overlap_1d = (;
+        x = doside_source_1d.pgdg_intermediate.overlap,
+        y = doside_source_1d.pgdg_intermediate.overlap,
+        z = doside_source_1d.pgdg_intermediate.overlap,
     )
     overlap_result =
         CPBMForLWAdapter.white_lindsey_boundary_stratum_overlap_block(
-            fixture.real_pair_coefficients;
+            real_pair_coefficients;
             parent_axis_counts = (7, 7, 7),
-            overlap_1d = fixture.factors.overlap_1d,
+            overlap_1d,
         )
-    oracle_summary =
-        CPBMForLWAdapter.white_lindsey_materialized_seed_oracle_summary()
 
-    comparison =
-        _lw_adapter_oracle_overlap_comparison(overlap_result, oracle_summary)
+    @test seed_local_facts.object_kind ==
+          :white_lindsey_seed_local_pair_facts
+    @test seed_local_facts.status == :available_seed_local_pair_slice
+    @test isnothing(seed_local_facts.blocker)
+    @test seed_local_facts.route_unit_range_status ==
+          :grouped_route_ranges_available_not_local_slice_authority
+    @test seed_local_facts.per_piece_range_status ==
+          :per_piece_seed_inventory_ranges_available
+    @test seed_local_facts.per_piece_range_source ==
+          :seed_inventory_retained_ranges
+    @test seed_local_facts.face_index == 5
+    @test seed_local_facts.edge_index == 11
+    @test seed_local_facts.face_signature == (;
+        face_kind = :yz,
+        fixed_axis = :x,
+        fixed_side = :low,
+        fixed_index = 1,
+    )
+    @test seed_local_facts.edge_signature == (;
+        free_axis = :z,
+        fixed_axes = (:x, :y),
+        fixed_sides = (:high, :low),
+        fixed_indices = (7, 1),
+    )
+    @test seed_local_facts.face_global_range == 162:170
+    @test seed_local_facts.edge_global_range == 210:212
+    @test seed_local_facts.face_local_range == 37:45
+    @test seed_local_facts.edge_local_range == 85:87
+    @test seed_local_facts.grouped_face_range == 126:179
+    @test seed_local_facts.grouped_edge_range == 180:215
+    @test seed_local_facts.slice_shape == (9, 3)
+    @test seed_local_facts.overlap_slice_available
+    @test seed_local_facts.validation_oracle_only
+    @test !seed_local_facts.route_authority
+    @test !seed_local_facts.adapter_authority
+    @test size(seed_overlap_slice) == (9, 3)
+
+    comparison = _lw_adapter_oracle_overlap_comparison(
+        overlap_result,
+        oracle_summary;
+        seed_local_facts,
+        seed_overlap_slice,
+    )
     @test comparison.object_kind ==
           :white_lindsey_adapter_oracle_comparison
     @test comparison.term == :overlap
@@ -131,11 +323,13 @@ end
           :available_global_retained_overlap_shape
     @test comparison.shape_status ==
           :local_pair_shape_matches_adapter_metadata_global_oracle_shape_available
-    @test comparison.status == :metadata_shape_only
+    @test comparison.seed_slice_status == :available_seed_local_pair_slice
+    @test comparison.seed_slice_shape == (9, 3)
+    @test comparison.status == :value_compared
     @test isnothing(comparison.blocker)
-    @test isnothing(comparison.max_abs_error)
+    @test comparison.max_abs_error <= comparison.tolerance
     @test comparison.max_abs_error_status ==
-          :not_compared_local_seed_pair_block_not_available
+          :compared_local_seed_pair_slice_within_tolerance
     @test isnothing(comparison.symmetry_error)
     @test comparison.symmetry_error_status ==
           :not_applicable_rectangular_local_pair_block
@@ -156,8 +350,8 @@ end
     @test summary.comparison_count == 1
     @test summary.terms == (:overlap,)
     @test summary.pair_families == (:facet_cpb__edge_cpb,)
-    @test summary.statuses == (:metadata_shape_only,)
-    @test summary.metadata_shape_only_count == 1
-    @test summary.value_comparison_count == 0
+    @test summary.statuses == (:value_compared,)
+    @test summary.metadata_shape_only_count == 0
+    @test summary.value_comparison_count == 1
     @test summary.blocked_count == 0
 end
