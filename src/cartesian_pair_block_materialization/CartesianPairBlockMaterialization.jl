@@ -114,10 +114,14 @@ export PairBlockMaterializationPolicy,
 #     dispatch.
 #
 # one_body_dispatch.jl
-#     Metadata-only mixed one-body dispatch classifier.
+#     Mixed one-body dispatch preflight and local selector orchestration.
 #
 # one_body_block_collection.jl
 #     Private local one-body block collection entry vocabulary.
+#
+# route_one_body_adapter.jl
+#     Private route-shaped adapter from pair-block plans to local one-body
+#     block collections.
 #
 # pqs_source_safe_terms.jl
 #     PQS/PQS raw source-space safe-term helpers.
@@ -181,6 +185,7 @@ include("one_body_terms.jl")
 include("one_body_factor_inputs.jl")
 include("one_body_dispatch.jl")
 include("one_body_block_collection.jl")
+include("route_one_body_adapter.jl")
 include("direct_overlap.jl")
 include("pqs_source_safe_terms.jl")
 include("pqs_source_shell_bridge.jl")
