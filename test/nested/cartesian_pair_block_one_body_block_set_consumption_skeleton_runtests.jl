@@ -121,7 +121,6 @@ end
         plan;
         terms = (:overlap, :kinetic),
         inputs,
-        materialize_terms = (:overlap,),
     )
     @test consumption.object_kind ==
           :cartesian_pair_block_mixed_one_body_block_set_consumption
@@ -130,7 +129,7 @@ end
     @test isnothing(consumption.blocker)
     @test consumption.requested_terms == (:overlap, :kinetic)
     @test consumption.term_count == 2
-    @test consumption.requested_materialize_terms == (:overlap,)
+    @test consumption.requested_materialize_terms == ()
     @test consumption.materialized_terms == ()
     @test consumption.deferred_terms == (:overlap, :kinetic)
     @test consumption.preflight_status ==

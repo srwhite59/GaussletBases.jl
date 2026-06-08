@@ -382,50 +382,78 @@ function _one_body_pair_block_set_consumption(
     materialize_terms = (),
 )
     term_set_descriptor = _one_body_term_set_descriptor(terms)
+    requested_materialize_terms =
+        _one_body_block_set_requested_materialize_terms(materialize_terms)
+    _one_body_validate_block_set_materialize_terms(
+        requested_materialize_terms,
+        term_set_descriptor.terms,
+    )
     preflight_summary = _one_body_pair_block_set_preflight_summary(
         plan;
         terms = term_set_descriptor.terms,
         inputs,
         provider,
     )
+    term_batch_results =
+        preflight_summary.status === :blocked_mixed_one_body_block_set_preflight ?
+        (;) :
+        _one_body_block_set_materialized_term_batch_results(
+            plan,
+            requested_materialize_terms;
+            inputs,
+            provider,
+        )
+    materialized_terms = keys(term_batch_results)
     block_set_summary = _one_body_pair_block_set_summary(
         plan;
         terms = term_set_descriptor.terms,
+        term_batch_results,
     )
 
-    return (;
+    base = (;
         object_kind = :cartesian_pair_block_mixed_one_body_block_set_consumption,
-        status = _one_body_block_set_consumption_status(preflight_summary),
+        status = _one_body_block_set_consumption_status(
+            preflight_summary,
+            block_set_summary,
+        ),
         blocker = _one_body_block_set_consumption_blocker(preflight_summary),
         requested_terms = term_set_descriptor.terms,
         terms = term_set_descriptor.terms,
         term_count = term_set_descriptor.term_count,
-        requested_materialize_terms = Tuple(materialize_terms),
-        materialized_terms = (),
-        deferred_terms = term_set_descriptor.terms,
+        requested_materialize_terms,
+        materialized_terms,
+        deferred_terms = _one_body_block_set_deferred_terms(
+            term_set_descriptor.terms,
+            materialized_terms,
+        ),
         preflight_summary,
         preflight_status = preflight_summary.status,
         preflight_blocker = preflight_summary.blocker,
         block_set_summary,
         block_set_summary_status = block_set_summary.status,
         term_statuses = block_set_summary.term_statuses,
-        total_materialized_count = 0,
-        total_skipped_count = 0,
+        total_materialized_count = block_set_summary.total_materialized_count,
+        total_skipped_count = block_set_summary.total_skipped_count,
         result_terms_remain_separated = true,
         block_set_results_summed = false,
-        term_batch_results_stored = false,
-        one_term_consumer_called = false,
+        term_batch_results_stored = !isempty(materialized_terms),
+        one_term_consumer_called = !isempty(materialized_terms),
         factors_constructed = false,
-        numerical_blocks_materialized = false,
-        materialized = false,
-        source_operator_blocks_materialized = false,
-        final_pair_blocks_materialized = false,
-        operator_blocks_materialized = false,
-        hamiltonian_data_materialized = false,
-        artifacts_materialized = false,
-        global_operator_blocks_materialized = false,
-        global_hamiltonian_data_materialized = false,
-        global_artifacts_materialized = false,
+        numerical_blocks_materialized = block_set_summary.materialized,
+        materialized = block_set_summary.materialized,
+        source_operator_blocks_materialized =
+            block_set_summary.source_operator_blocks_materialized,
+        final_pair_blocks_materialized =
+            block_set_summary.final_pair_blocks_materialized,
+        operator_blocks_materialized = block_set_summary.operator_blocks_materialized,
+        hamiltonian_data_materialized =
+            block_set_summary.hamiltonian_data_materialized,
+        artifacts_materialized = block_set_summary.artifacts_materialized,
+        global_operator_blocks_materialized =
+            block_set_summary.global_operator_blocks_materialized,
+        global_hamiltonian_data_materialized =
+            block_set_summary.global_hamiltonian_data_materialized,
+        global_artifacts_materialized = block_set_summary.global_artifacts_materialized,
         mixed_dispatcher_materialized = false,
         route_driver_wiring = false,
         coulomb_materialized = false,
@@ -434,6 +462,8 @@ function _one_body_pair_block_set_consumption(
         pqs_lowdin_materialized = false,
         full_white_lindsey_route_assembled = false,
     )
+    isempty(materialized_terms) && return base
+    return merge(base, (; term_batch_results))
 end
 
 function _one_body_pair_block_set_consumption(plan; kwargs...)
@@ -444,10 +474,94 @@ function _one_body_pair_block_set_consumption(plan; kwargs...)
     )
 end
 
-function _one_body_block_set_consumption_status(preflight_summary)
+function _one_body_block_set_requested_materialize_terms(materialize_terms::Symbol)
+    return _one_body_block_set_requested_materialize_terms((materialize_terms,))
+end
+
+function _one_body_block_set_requested_materialize_terms(
+    materialize_terms::AbstractVector,
+)
+    return _one_body_block_set_requested_materialize_terms(Tuple(materialize_terms))
+end
+
+function _one_body_block_set_requested_materialize_terms(materialize_terms::Tuple)
+    isempty(materialize_terms) && return ()
+    _one_body_term_set_descriptor(materialize_terms)
+    length(unique(materialize_terms)) == length(materialize_terms) || throw(
+        ArgumentError("one-body block-set materialize_terms contain duplicate terms"),
+    )
+    return materialize_terms
+end
+
+function _one_body_block_set_requested_materialize_terms(materialize_terms)
+    throw(
+        ArgumentError(
+            "one-body block-set materialize_terms must be a Symbol, Tuple, or AbstractVector, got $(typeof(materialize_terms))",
+        ),
+    )
+end
+
+function _one_body_validate_block_set_materialize_terms(
+    materialize_terms::Tuple,
+    requested_terms::Tuple,
+)
+    for term in materialize_terms
+        term in requested_terms || throw(
+            ArgumentError(
+                "one-body block-set materialize term $(term) is not in requested terms $(requested_terms)",
+            ),
+        )
+        term === :overlap || throw(
+            ArgumentError(
+                "one-body block-set materialization currently supports only explicit :overlap, got $(term)",
+            ),
+        )
+    end
+    return nothing
+end
+
+function _one_body_block_set_materialized_term_batch_results(
+    plan::PairBlockMaterializationPlan,
+    materialize_terms::Tuple;
+    inputs,
+    provider,
+)
+    isempty(materialize_terms) && return (;)
+    batch_results = PairBlockMaterializationBatchResult[]
+    materialized_terms = Symbol[]
+    for term in materialize_terms
+        term === :overlap || continue
+        consumption = _one_body_pair_block_consumption(
+            plan,
+            term;
+            inputs,
+            provider,
+        )
+        push!(batch_results, consumption.batch_result)
+        push!(materialized_terms, term)
+    end
+    return NamedTuple{Tuple(materialized_terms)}(Tuple(batch_results))
+end
+
+function _one_body_block_set_deferred_terms(
+    requested_terms::Tuple,
+    materialized_terms::Tuple,
+)
+    return Tuple(term for term in requested_terms if !(term in materialized_terms))
+end
+
+function _one_body_block_set_consumption_status(
+    preflight_summary,
+    block_set_summary,
+)
     preflight_summary.status === :blocked_mixed_one_body_block_set_preflight &&
         return :blocked_mixed_one_body_block_set_consumption
-    return :deferred_metadata_only_mixed_one_body_block_set_consumption
+    block_set_summary.materialized || return :deferred_metadata_only_mixed_one_body_block_set_consumption
+    block_set_summary.deferred_term_count > 0 &&
+        return :partially_materialized_mixed_one_body_block_set_consumption
+    block_set_summary.total_skipped_count > 0 &&
+        return :partially_materialized_mixed_one_body_block_set_consumption
+    return :materialized_mixed_one_body_block_set_consumption
 end
 
 function _one_body_block_set_consumption_blocker(preflight_summary)
