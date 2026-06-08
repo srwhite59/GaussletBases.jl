@@ -4,6 +4,25 @@
 # work. The materialization entry points below call the direct, PQS source-space,
 # and White--Lindsey local selectors when caller-supplied inputs are ready.
 
+function _one_body_dispatch_core_nonclaim_flags()
+    return (;
+        route_driver_wiring = false,
+        pqs_lowdin_materialized = false,
+        full_white_lindsey_route_assembled = false,
+    )
+end
+
+function _one_body_dispatch_operator_nonclaim_flags()
+    return (;
+        route_driver_wiring = false,
+        coulomb_materialized = false,
+        density_density_materialized = false,
+        ida_mwg_data_materialized = false,
+        pqs_lowdin_materialized = false,
+        full_white_lindsey_route_assembled = false,
+    )
+end
+
 function _one_body_pair_block_dispatch_summary(
     record::PairBlockMaterializationRecord,
     term::Symbol;
@@ -86,9 +105,7 @@ function _one_body_pair_block_dispatch_summary(
         hamiltonian_data_materialized = false,
         artifacts_materialized = false,
         mixed_dispatcher_materialized = false,
-        route_driver_wiring = false,
-        pqs_lowdin_materialized = false,
-        full_white_lindsey_route_assembled = false,
+        _one_body_dispatch_core_nonclaim_flags()...,
     )
 end
 
@@ -166,9 +183,7 @@ function _one_body_pair_block_plan_dispatch_summary(
         hamiltonian_data_materialized = false,
         artifacts_materialized = false,
         mixed_dispatcher_materialized = false,
-        route_driver_wiring = false,
-        pqs_lowdin_materialized = false,
-        full_white_lindsey_route_assembled = false,
+        _one_body_dispatch_core_nonclaim_flags()...,
     )
 end
 
@@ -290,12 +305,7 @@ function _one_body_pair_block_set_preflight_summary(
         global_hamiltonian_data_materialized = false,
         global_artifacts_materialized = false,
         mixed_dispatcher_materialized = false,
-        route_driver_wiring = false,
-        coulomb_materialized = false,
-        density_density_materialized = false,
-        ida_mwg_data_materialized = false,
-        pqs_lowdin_materialized = false,
-        full_white_lindsey_route_assembled = false,
+        _one_body_dispatch_operator_nonclaim_flags()...,
     )
 end
 
@@ -456,12 +466,7 @@ function _one_body_pair_block_set_consumption(
             block_set_summary.global_hamiltonian_data_materialized,
         global_artifacts_materialized = block_set_summary.global_artifacts_materialized,
         mixed_dispatcher_materialized = false,
-        route_driver_wiring = false,
-        coulomb_materialized = false,
-        density_density_materialized = false,
-        ida_mwg_data_materialized = false,
-        pqs_lowdin_materialized = false,
-        full_white_lindsey_route_assembled = false,
+        _one_body_dispatch_operator_nonclaim_flags()...,
     )
     isempty(materialized_terms) && return base
     return merge(base, (; term_batch_results))
@@ -786,12 +791,7 @@ function _one_body_pair_block_pair_status(
             any(result -> result.hamiltonian_data_materialized, results),
         artifacts_materialized =
             any(result -> result.artifacts_materialized, results),
-        route_driver_wiring = false,
-        coulomb_materialized = false,
-        density_density_materialized = false,
-        ida_mwg_data_materialized = false,
-        pqs_lowdin_materialized = false,
-        full_white_lindsey_route_assembled = false,
+        _one_body_dispatch_operator_nonclaim_flags()...,
     )
 end
 
@@ -952,12 +952,7 @@ function _one_body_pair_block_lookup_base(
             result_available && result.hamiltonian_data_materialized,
         artifacts_materialized =
             result_available && result.artifacts_materialized,
-        route_driver_wiring = false,
-        coulomb_materialized = false,
-        density_density_materialized = false,
-        ida_mwg_data_materialized = false,
-        pqs_lowdin_materialized = false,
-        full_white_lindsey_route_assembled = false,
+        _one_body_dispatch_operator_nonclaim_flags()...,
     )
 end
 
@@ -1154,12 +1149,7 @@ function _one_body_block_set_deferred_preflight_summary(
         hamiltonian_data_materialized = false,
         artifacts_materialized = false,
         mixed_dispatcher_materialized = false,
-        route_driver_wiring = false,
-        coulomb_materialized = false,
-        density_density_materialized = false,
-        ida_mwg_data_materialized = false,
-        pqs_lowdin_materialized = false,
-        full_white_lindsey_route_assembled = false,
+        _one_body_dispatch_operator_nonclaim_flags()...,
     )
 end
 
@@ -1712,12 +1702,7 @@ function _one_body_pair_block_set_summary(
         global_hamiltonian_data_materialized = any_hamiltonian_materialized,
         global_artifacts_materialized = any_artifacts_materialized,
         mixed_dispatcher_materialized = false,
-        route_driver_wiring = false,
-        coulomb_materialized = false,
-        density_density_materialized = false,
-        ida_mwg_data_materialized = false,
-        pqs_lowdin_materialized = false,
-        full_white_lindsey_route_assembled = false,
+        _one_body_dispatch_operator_nonclaim_flags()...,
     )
 end
 
@@ -2091,9 +2076,7 @@ function _one_body_skipped_pair_block_summary(
         hamiltonian_data_materialized = false,
         artifacts_materialized = false,
         mixed_dispatcher_materialized = false,
-        route_driver_wiring = false,
-        pqs_lowdin_materialized = false,
-        full_white_lindsey_route_assembled = false,
+        _one_body_dispatch_core_nonclaim_flags()...,
     )
 end
 
