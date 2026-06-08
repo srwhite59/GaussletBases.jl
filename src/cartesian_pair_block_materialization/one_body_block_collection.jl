@@ -498,6 +498,120 @@ function _one_body_local_block_collection_pair_status(collection, pair_key)
     )
 end
 
+function _one_body_local_block_collection_lookup(
+    collection::NamedTuple,
+    term::Symbol,
+    pair_key::Tuple{Symbol,Symbol},
+)
+    _one_body_assert_local_block_collection(collection)
+    materialized_entries = Tuple(
+        entry for entry in
+        _one_body_local_block_collection_materialized_entries_for_term(
+            collection,
+            term,
+        ) if entry.pair_key == pair_key
+    )
+    skipped_entries = Tuple(
+        entry for entry in _one_body_local_block_collection_skipped_entries_for_term(
+            collection,
+            term,
+        ) if entry.pair_key == pair_key
+    )
+    entries = (materialized_entries..., skipped_entries...)
+    status = _one_body_local_block_collection_lookup_status(
+        collection,
+        term,
+        materialized_entries,
+        skipped_entries,
+    )
+    base = (;
+        object_kind = :cartesian_pair_block_local_one_body_collection_lookup,
+        block_set_term = term,
+        term,
+        pair_key,
+        status,
+        blocker = _one_body_local_block_collection_lookup_blocker(
+            status,
+            skipped_entries,
+        ),
+        collection_status = collection.status,
+        collection_blocker = collection.blocker,
+        entry_available = !isempty(entries),
+        materialized_entry_available = !isempty(materialized_entries),
+        skipped_entry_available = !isempty(skipped_entries),
+        materialized_entry_count = length(materialized_entries),
+        skipped_entry_count = length(skipped_entries),
+        entry_count = length(entries),
+        selector_family =
+            _one_body_local_block_collection_single_entry_value(
+                entries,
+                :selector_family,
+            ),
+        block_space =
+            _one_body_local_block_collection_single_entry_value(
+                entries,
+                :block_space,
+            ),
+        result_term =
+            _one_body_local_block_collection_single_entry_value(
+                entries,
+                :result_term,
+            ),
+        source_space_term =
+            _one_body_local_block_collection_single_entry_value(
+                entries,
+                :source_space_term,
+            ),
+        block_set_terms = _one_body_collection_unique_values(
+            entries,
+            :block_set_term,
+        ),
+        result_terms = _one_body_collection_unique_values(entries, :result_term),
+        source_space_terms =
+            _one_body_collection_unique_values(entries, :source_space_term),
+        term_requested = term in collection.requested_terms,
+        requested_materialization = term in collection.requested_materialize_terms,
+        term_materialized = term in collection.materialized_terms,
+        term_deferred = term in collection.deferred_terms,
+        term_separated_entries = true,
+        pair_separated_entries = true,
+        lookup_chose_between_multiple_entries = false,
+        entry_stored_in_lookup = length(entries) == 1,
+        matrix_fields_stored_in_lookup = false,
+        block_set_results_summed = false,
+        block_matrices_copied_into_lookup = false,
+        local_operator_assembled = false,
+        global_operator_assembled = false,
+        route_driver_wiring = false,
+        source_operator_blocks_materialized =
+            any(entry -> entry.source_operator_blocks_materialized, materialized_entries),
+        final_pair_blocks_materialized =
+            any(entry -> entry.final_pair_blocks_materialized, materialized_entries),
+        operator_blocks_materialized = false,
+        hamiltonian_data_materialized = false,
+        artifacts_materialized = false,
+        global_operator_blocks_materialized = false,
+        global_hamiltonian_data_materialized = false,
+        global_artifacts_materialized = false,
+        coulomb_materialized = false,
+        density_density_materialized = false,
+        ida_mwg_data_materialized = false,
+        pqs_lowdin_materialized = false,
+        pqs_shell_projection_materialized = false,
+        full_white_lindsey_route_assembled = false,
+    )
+    length(entries) == 1 && return merge(base, (; entry = only(entries)))
+    return base
+end
+
+function _one_body_local_block_collection_lookup(collection, term, pair_key)
+    throw(
+        ArgumentError(
+            "local one-body block collection lookup requires a collection NamedTuple, term::Symbol, and pair_key::Tuple{Symbol,Symbol}",
+        ),
+    )
+end
+
 function _one_body_collection_result_block_space(
     result::PairBlockMaterializationResult,
 )
@@ -572,6 +686,41 @@ function _one_body_local_block_collection_pair_blocker(
     status === :pair_key_not_found && return :pair_key_not_found
     isempty(skipped_entries) && return nothing
     return _one_body_collection_value(first(skipped_entries), :blocker, nothing)
+end
+
+function _one_body_local_block_collection_lookup_status(
+    collection::NamedTuple,
+    term::Symbol,
+    materialized_entries::Tuple,
+    skipped_entries::Tuple,
+)
+    term in collection.requested_terms || return :term_not_requested
+    term in collection.deferred_terms &&
+        return :deferred_metadata_only_local_one_body_collection_lookup
+    !isempty(materialized_entries) && !isempty(skipped_entries) &&
+        return :partially_materialized_local_one_body_collection_lookup
+    !isempty(materialized_entries) &&
+        return :materialized_local_one_body_collection_lookup
+    !isempty(skipped_entries) && return :skipped_local_one_body_collection_lookup
+    return :pair_key_not_found
+end
+
+function _one_body_local_block_collection_lookup_blocker(
+    status::Symbol,
+    skipped_entries::Tuple,
+)
+    status === :term_not_requested && return :term_not_requested
+    status === :pair_key_not_found && return :pair_key_not_found
+    isempty(skipped_entries) && return nothing
+    return _one_body_collection_value(first(skipped_entries), :blocker, nothing)
+end
+
+function _one_body_local_block_collection_single_entry_value(
+    entries::Tuple,
+    field::Symbol,
+)
+    length(entries) == 1 || return nothing
+    return _one_body_collection_value(first(entries), field, nothing)
 end
 
 function _one_body_collection_unique_values(entries::Tuple, field::Symbol)

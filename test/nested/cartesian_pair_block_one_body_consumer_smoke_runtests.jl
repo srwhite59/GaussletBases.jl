@@ -780,6 +780,147 @@ end
     @test !absent_collection_pair_status.pqs_lowdin_materialized
     @test !absent_collection_pair_status.full_white_lindsey_route_assembled
 
+    direct_collection_lookup =
+        CPBMSmoke._one_body_local_block_collection_lookup(
+            local_collection,
+            :overlap,
+            (:direct_left, :direct_right),
+        )
+    @test direct_collection_lookup.status ===
+          :materialized_local_one_body_collection_lookup
+    @test direct_collection_lookup.entry_available
+    @test direct_collection_lookup.materialized_entry_available
+    @test !direct_collection_lookup.skipped_entry_available
+    @test direct_collection_lookup.selector_family === :direct_direct
+    @test direct_collection_lookup.block_space === :final_local_space
+    @test direct_collection_lookup.result_term === :overlap
+    @test isnothing(direct_collection_lookup.source_space_term)
+    @test direct_collection_lookup.entry.block_set_term === :overlap
+    @test direct_collection_lookup.entry.result.term === :overlap
+    @test direct_collection_lookup.entry_stored_in_lookup
+    @test !direct_collection_lookup.matrix_fields_stored_in_lookup
+    @test !direct_collection_lookup.block_set_results_summed
+    @test !direct_collection_lookup.block_matrices_copied_into_lookup
+    @test !direct_collection_lookup.local_operator_assembled
+    @test !direct_collection_lookup.global_operator_assembled
+    @test !direct_collection_lookup.route_driver_wiring
+    @test !direct_collection_lookup.operator_blocks_materialized
+    @test !direct_collection_lookup.hamiltonian_data_materialized
+    @test !direct_collection_lookup.artifacts_materialized
+    @test !direct_collection_lookup.coulomb_materialized
+    @test !direct_collection_lookup.ida_mwg_data_materialized
+    @test !direct_collection_lookup.pqs_lowdin_materialized
+    @test !direct_collection_lookup.pqs_shell_projection_materialized
+    @test !direct_collection_lookup.full_white_lindsey_route_assembled
+
+    pqs_collection_lookup =
+        CPBMSmoke._one_body_local_block_collection_lookup(
+            local_collection,
+            :overlap,
+            (:pqs_left, :pqs_right),
+        )
+    @test pqs_collection_lookup.status ===
+          :materialized_local_one_body_collection_lookup
+    @test pqs_collection_lookup.entry_available
+    @test pqs_collection_lookup.materialized_entry_available
+    @test pqs_collection_lookup.selector_family === :pqs_source_pair
+    @test pqs_collection_lookup.block_space === :source_space
+    @test pqs_collection_lookup.result_term === :source_overlap
+    @test pqs_collection_lookup.source_space_term === :source_overlap
+    @test pqs_collection_lookup.entry.block_set_term === :overlap
+    @test pqs_collection_lookup.entry.result.term === :source_overlap
+    @test pqs_collection_lookup.source_operator_blocks_materialized
+    @test !pqs_collection_lookup.final_pair_blocks_materialized
+    @test !pqs_collection_lookup.operator_blocks_materialized
+    @test !pqs_collection_lookup.hamiltonian_data_materialized
+    @test !pqs_collection_lookup.artifacts_materialized
+    @test !pqs_collection_lookup.route_driver_wiring
+    @test !pqs_collection_lookup.coulomb_materialized
+    @test !pqs_collection_lookup.ida_mwg_data_materialized
+    @test !pqs_collection_lookup.pqs_lowdin_materialized
+    @test !pqs_collection_lookup.pqs_shell_projection_materialized
+    @test !pqs_collection_lookup.full_white_lindsey_route_assembled
+
+    lw_collection_lookup =
+        CPBMSmoke._one_body_local_block_collection_lookup(
+            local_collection,
+            :overlap,
+            (:lw_left, :lw_right),
+        )
+    @test lw_collection_lookup.status ===
+          :skipped_local_one_body_collection_lookup
+    @test lw_collection_lookup.entry_available
+    @test !lw_collection_lookup.materialized_entry_available
+    @test lw_collection_lookup.skipped_entry_available
+    @test lw_collection_lookup.selector_family ===
+          :white_lindsey_boundary_stratum
+    @test lw_collection_lookup.block_space === :not_materialized
+    @test lw_collection_lookup.blocker === :missing_white_lindsey_unit_pair
+    @test lw_collection_lookup.entry.blocker === :missing_white_lindsey_unit_pair
+    @test lw_collection_lookup.entry_stored_in_lookup
+    @test !lw_collection_lookup.matrix_fields_stored_in_lookup
+    @test !lw_collection_lookup.hamiltonian_data_materialized
+    @test !lw_collection_lookup.coulomb_materialized
+    @test !lw_collection_lookup.ida_mwg_data_materialized
+    @test !lw_collection_lookup.pqs_lowdin_materialized
+    @test !lw_collection_lookup.full_white_lindsey_route_assembled
+
+    deferred_collection_lookup =
+        CPBMSmoke._one_body_local_block_collection_lookup(
+            local_collection,
+            :kinetic,
+            (:direct_left, :direct_right),
+        )
+    @test deferred_collection_lookup.status ===
+          :deferred_metadata_only_local_one_body_collection_lookup
+    @test deferred_collection_lookup.term_requested
+    @test !deferred_collection_lookup.requested_materialization
+    @test deferred_collection_lookup.term_deferred
+    @test !deferred_collection_lookup.entry_available
+    @test !hasproperty(deferred_collection_lookup, :entry)
+    @test !deferred_collection_lookup.matrix_fields_stored_in_lookup
+    @test !deferred_collection_lookup.hamiltonian_data_materialized
+    @test !deferred_collection_lookup.coulomb_materialized
+    @test !deferred_collection_lookup.ida_mwg_data_materialized
+    @test !deferred_collection_lookup.pqs_lowdin_materialized
+    @test !deferred_collection_lookup.full_white_lindsey_route_assembled
+
+    unrequested_collection_lookup =
+        CPBMSmoke._one_body_local_block_collection_lookup(
+            local_collection,
+            :position_x,
+            (:direct_left, :direct_right),
+        )
+    @test unrequested_collection_lookup.status === :term_not_requested
+    @test unrequested_collection_lookup.blocker === :term_not_requested
+    @test !unrequested_collection_lookup.term_requested
+    @test !unrequested_collection_lookup.entry_available
+    @test !hasproperty(unrequested_collection_lookup, :entry)
+    @test !unrequested_collection_lookup.hamiltonian_data_materialized
+    @test !unrequested_collection_lookup.coulomb_materialized
+    @test !unrequested_collection_lookup.ida_mwg_data_materialized
+    @test !unrequested_collection_lookup.pqs_lowdin_materialized
+    @test !unrequested_collection_lookup.full_white_lindsey_route_assembled
+
+    missing_collection_lookup =
+        CPBMSmoke._one_body_local_block_collection_lookup(
+            local_collection,
+            :overlap,
+            (:missing_left, :missing_right),
+        )
+    @test missing_collection_lookup.status === :pair_key_not_found
+    @test missing_collection_lookup.blocker === :pair_key_not_found
+    @test missing_collection_lookup.term_requested
+    @test missing_collection_lookup.requested_materialization
+    @test !missing_collection_lookup.entry_available
+    @test !hasproperty(missing_collection_lookup, :entry)
+    @test !missing_collection_lookup.matrix_fields_stored_in_lookup
+    @test !missing_collection_lookup.hamiltonian_data_materialized
+    @test !missing_collection_lookup.coulomb_materialized
+    @test !missing_collection_lookup.ida_mwg_data_materialized
+    @test !missing_collection_lookup.pqs_lowdin_materialized
+    @test !missing_collection_lookup.full_white_lindsey_route_assembled
+
     overlap_results =
         CPBMSmoke._one_body_pair_block_results_for_term(
             block_set_consumption,
