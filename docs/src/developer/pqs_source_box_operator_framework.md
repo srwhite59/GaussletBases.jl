@@ -65,8 +65,9 @@ It must not infer realization paths directly from retained-unit kinds.
   source results and batches;
 - metadata-only final PQS pair-block readiness summaries over those bridge
   summaries;
-- metadata-only White--Lindsey boundary-stratum adapter preflight
-  classification.
+- White--Lindsey boundary-stratum adapter preflight classification, local
+  old-kernel-backed unit coefficient maps, local one-body adapter blocks for
+  overlap, position, `x2`, and kinetic, and compact readiness/batch summaries.
 
 The PQS helpers materialize source-space blocks only. They consume ready
 `:pqs_source_pair_preflight` records and caller-supplied 1D source factors,
@@ -97,21 +98,22 @@ IDA/MWG data, or Coulomb blocks.
 For White--Lindsey boundary-stratum pairs,
 `CartesianPairBlockMaterialization` now recognizes pair-operator records whose
 source-operator path is `:white_lindsey_boundary_stratum_adapter_path`. The
-metadata-only preflight materialization path is
-`:white_lindsey_boundary_stratum_adapter_preflight`; current readiness remains
-blocked by `:white_lindsey_boundary_stratum_pair_block_adapter_not_materialized`.
-This is adapter-boundary metadata only. It does not build LW numerical blocks,
-coefficient maps, doside transforms, Hamiltonians, exports, artifacts, IDA/MWG
-data, or Coulomb.
+preflight materialization path is
+`:white_lindsey_boundary_stratum_adapter_preflight`; this remains the
+adapter-boundary classification. Behind that boundary, local old-kernel-backed
+unit coefficient maps now exist for facet/face, edge, and corner strata, local
+pair-level coefficient gathering exists, and local one-body adapter blocks now
+exist for overlap, position_x/y/z, x2_x/y/z, and kinetic. These blocks are
+local adapter pilots only. They are not full route/operator assembly and they
+do not build Hamiltonians, exports, artifacts, IDA/MWG data, or Coulomb.
 
 `white_lindsey_boundary_stratum_adapter_summary(record)` is the matching
-metadata-only reuse summary for those preflight records. It records only symbol
-targets for future adapters: facet/face -> `_nested_face_product`, edge ->
+reuse summary for those preflight records. It records symbol targets used by
+the adapter: facet/face -> `_nested_face_product`, edge ->
 `_nested_edge_product`, corner -> `_nested_corner_piece`, and facet/edge side
 helper -> `_nested_doside_1d`. For batch or plan-level inputs,
-`reuse_metadata_available_count` and `reuse_metadata_blocked_count` count only
-old-kernel reuse metadata availability, not numerical adapter readiness or
-pair-block materialization. It does not call those old kernels.
+`reuse_metadata_available_count` and `reuse_metadata_blocked_count` count
+old-kernel reuse metadata availability, not full route assembly readiness.
 
 The related LW descriptor/oracle helpers
 `white_lindsey_boundary_stratum_unit_adapter_descriptor(unit)`,
@@ -119,9 +121,15 @@ The related LW descriptor/oracle helpers
 and `white_lindsey_materialized_seed_oracle_summary(...)` are also
 metadata/reference-only. They record compact source-CPB/kernel-input facts,
 facet/edge/corner pair-family classifications, and old-seed validation facts;
-they are not route or adapter authority and do not build coefficient maps,
-one-body adapter blocks, Coulomb, IDA/MWG data, Hamiltonians, exports, or
-artifacts.
+they are not route authority. The materialized adapter surface is instead the
+local helper family
+`white_lindsey_boundary_stratum_unit_coefficients(...)`,
+`white_lindsey_boundary_stratum_pair_unit_coefficients(...)`,
+`white_lindsey_boundary_stratum_one_body_block(...)`,
+`white_lindsey_boundary_stratum_one_body_blocks(...)`, and
+`white_lindsey_boundary_stratum_one_body_adapter_summary(...)`. These helpers
+reuse old kernels as adapter inputs, not as route authority, and still build no
+Coulomb, IDA/MWG data, Hamiltonians, exports, or artifacts.
 
 The PQS guardrails are unchanged: support-row or shell-row contraction is an
 oracle/debug path, not the PQS algorithm; shell projection and Lowdin cleanup

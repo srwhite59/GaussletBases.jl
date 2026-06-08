@@ -205,8 +205,10 @@ retained-unit transform contracts. They must not infer realization paths
 directly from retained-unit kinds. `CartesianPairBlockMaterialization`
 currently provides preflight, local direct/direct one-body pilots, and
 PQS/PQS raw source-space safe one-body helpers for overlap, position, `x2`,
-and kinetic. It also provides metadata-only bridge summaries that describe how
-PQS source-space results will later be consumed by shell realization.
+and kinetic. It also provides the local White--Lindsey boundary-stratum
+one-body adapter pilot for the same safe terms, plus metadata-only bridge
+summaries that describe how PQS source-space results will later be consumed by
+shell realization.
 
 `CartesianRawProductSources` is the current metadata-only boundary for
 `RawProductBoxPlan` and source-box source facts. It owns source CPBs,

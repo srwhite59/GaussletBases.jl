@@ -54,8 +54,10 @@ CartesianShellification
 -> PQS/PQS raw source-space safe-term pilot
 -> PQS source-to-shell-realization bridge summaries
 -> metadata-only final PQS pair-block readiness summaries
--> metadata-only LW boundary-stratum adapter preflight
--> future shell realization and final pair-block materialization
+-> LW boundary-stratum adapter preflight
+-> local old-kernel-backed LW unit coefficient maps
+-> local LW one-body pair-block pilots and summaries
+-> future full route final pair-block materialization
 -> future assembly
 ```
 
@@ -78,23 +80,24 @@ geometry ownership
 -> PQS/PQS raw source-space one-body blocks for the current source pilot
 -> metadata-only bridge summaries for later PQS shell realization
 -> metadata-only readiness summaries for later final PQS pair blocks
+-> local LW boundary-stratum one-body pair blocks for the current adapter pilot
 -> broader final pair blocks and assembly later
 ```
 
 `CartesianPairBlockMaterialization` is now the preflight layer after
 `CartesianPairOperatorPlans`. It has also started numerical local pair-block
-pilots: direct/direct final local one-body terms and PQS/PQS raw source-space
-safe one-body terms for overlap, position, x2, and kinetic. The PQS pilot is
-not a final shell-realized PQS pair-block path. Its bridge summaries record
-source term/status, source-mode facts, transform/source contract keys,
-realization paths, status/blocker counts, and nonmaterialized final flags for
-single results or batches. They do not build shell projection, Lowdin, final
-PQS retained blocks, Hamiltonian data, exports, artifacts, IDA/MWG data, or
-Coulomb blocks. This path is also not a
-White--Lindsey block path, Coulomb/IDA path, full operator assembly,
-Hamiltonian bundle, export, or artifact writer. The local PQS safe-term
-descriptor helper is private implementation metadata for supported safe-term
-selection and duplicated-branch cleanup, not route API.
+pilots: direct/direct final local one-body terms, PQS/PQS raw source-space safe
+one-body terms, and local White--Lindsey boundary-stratum one-body adapter
+blocks for overlap, position, x2, and kinetic. The PQS pilot is not a final
+shell-realized PQS pair-block path. Its bridge summaries record source
+term/status, source-mode facts, transform/source contract keys, realization
+paths, status/blocker counts, and nonmaterialized final flags for single
+results or batches. They do not build shell projection, Lowdin, final PQS
+retained blocks, Hamiltonian data, exports, artifacts, IDA/MWG data, or
+Coulomb blocks. The LW pilot is local boundary-stratum adapter materialization
+only; it is not full White--Lindsey route assembly, Coulomb/IDA, a Hamiltonian
+bundle, export, or artifact writer. The local PQS and LW selector/summary
+helpers are private implementation metadata, not route API.
 
 The local final-readiness helper
 `pqs_source_pair_final_block_readiness_summary(bridge_summary)` consumes single
@@ -104,25 +107,24 @@ blocked by `:shell_realization_not_materialized`, and blocked bridge summaries
 propagate their blockers.
 
 For White--Lindsey boundary-stratum retained-unit pairs,
-`CartesianPairBlockMaterialization` now recognizes the pair-operator
-`:white_lindsey_boundary_stratum_adapter_path` as the metadata-only
-`:white_lindsey_boundary_stratum_adapter_preflight`. Current readiness is
-blocked by
-`:white_lindsey_boundary_stratum_pair_block_adapter_not_materialized`. This is
-adapter-boundary metadata only: no LW numerical blocks, coefficient maps,
-doside transforms, Hamiltonians, exports, artifacts, IDA/MWG data, or Coulomb
-are built.
+`CartesianPairBlockMaterialization` still recognizes the pair-operator
+`:white_lindsey_boundary_stratum_adapter_path` as
+`:white_lindsey_boundary_stratum_adapter_preflight`. That preflight remains the
+metadata classification boundary. Behind it, local old-kernel-backed unit
+coefficient maps now exist for facet/face, edge, and corner strata, local
+pair-level coefficient gathering exists, and local one-body adapter blocks now
+exist for overlap, position_x/y/z, x2_x/y/z, and kinetic. These are adapter
+pilot blocks only: they are not full route/operator assembly and they build no
+Hamiltonians, exports, artifacts, IDA/MWG data, or Coulomb.
 
 The companion internal helper
 `white_lindsey_boundary_stratum_adapter_summary(record)` consumes those
-preflight records and records old-kernel reuse guidance only: facet/face
-strata point to `_nested_face_product`, edge strata to `_nested_edge_product`,
-corner strata to `_nested_corner_piece`, and facet/edge side helpers to
+preflight records and records old-kernel reuse guidance: facet/face strata
+point to `_nested_face_product`, edge strata to `_nested_edge_product`, corner
+strata to `_nested_corner_piece`, and facet/edge side helpers to
 `_nested_doside_1d`. For batch or plan inputs, the summary reports
 `reuse_metadata_available_count` and `reuse_metadata_blocked_count`; these
-counts describe old-kernel reuse metadata availability only, not numerical
-adapter readiness or pair-block materialization. It does not call those
-kernels.
+counts describe reuse metadata availability, not route assembly readiness.
 
 The unit-level descriptor
 `white_lindsey_boundary_stratum_unit_adapter_descriptor(unit)` records compact
@@ -136,9 +138,14 @@ edge/edge, edge/corner, or corner/corner. The old-seed oracle helper
 validation counts/ranges/roles and one-body matrix availability metadata only.
 It is not route authority and not adapter authority.
 
-These descriptor/oracle helpers build no coefficient maps, call no old kernels
-for adapter materialization, and build no one-body adapter blocks, Coulomb,
-IDA/MWG data, Hamiltonians, exports, or artifacts.
+The materialized LW adapter helpers are local and explicit:
+`white_lindsey_boundary_stratum_unit_coefficients(...)`,
+`white_lindsey_boundary_stratum_pair_unit_coefficients(...)`,
+`white_lindsey_boundary_stratum_one_body_block(...)`,
+`white_lindsey_boundary_stratum_one_body_blocks(...)`, and
+`white_lindsey_boundary_stratum_one_body_adapter_summary(...)`. They reuse old
+kernels as adapter inputs, not as route authority. The old-seed oracle helper
+remains validation-only and not adapter authority.
 
 ### Why “lowering”?
 
@@ -280,15 +287,18 @@ The PQS source geometry is “one filled box,” but the actual retained space c
 | **Pair operator plan**              | Metadata describing how an operator block between two units should be built.                          | It reads transform and realization paths from retained-unit transform contracts, not directly from retained-unit kinds. It may be ready, blocked, adapter-only, or not materialized. |
 | **Source operator block**           | Operator block built between source CPBs/intermediate retained spaces.                                | For PQS, this is the natural first numerical block.              |
 | **Final pair block**                | Operator block between final retained units after any realization/transform maps.                     | This is what assembly eventually places into the global matrix.  |
-| **Pair-block materialization**      | The step that preflights and then builds concrete pair blocks from pair-operator plans.                | Current numerical pilots are direct/direct one-body local pair blocks only; not PQS/LW blocks, Coulomb/IDA, Hamiltonian assembly, or artifact export. |
+| **Pair-block materialization**      | The step that preflights and then builds concrete pair blocks from pair-operator plans.                | Current numerical pilots include direct/direct local one-body blocks, PQS/PQS raw source-space one-body blocks, and local LW boundary-stratum one-body adapter blocks; not Coulomb/IDA, Hamiltonian assembly, or artifact export. |
 | **Pair operator block**             | Numerical block for one pair of final retained units and one or more operator terms.                  | Not yet built when report says metadata-only.                    |
 | **PQS source-space block**          | A raw source-mode block for a PQS/PQS safe one-body term, built from caller-supplied 1D source factors. | Not a final shell-realized PQS pair block.                       |
 | **PQS source shell-realization bridge summary** | Metadata-only summary describing how a PQS source-space block or batch can later be consumed by shell realization. | It records keys, source-mode facts, statuses, blockers, paths, and flags; it builds no shell projection, Lowdin, final pair block, Hamiltonian, export, artifact, IDA/MWG data, or Coulomb. |
 | **PQS final pair-block readiness summary** | Metadata-only summary over a single or batch PQS source shell-realization bridge summary. | Reports whether a future final retained PQS pair block could be attempted; currently blocks on `:shell_realization_not_materialized` and builds no shell projection, Lowdin, final block, Hamiltonian, export, artifact, IDA/MWG data, or Coulomb. |
-| **LW boundary-stratum adapter preflight** | Metadata-only pair-block materialization classification for `:white_lindsey_boundary_stratum_adapter_path`. | Uses `:white_lindsey_boundary_stratum_adapter_preflight` and currently blocks on `:white_lindsey_boundary_stratum_pair_block_adapter_not_materialized`; builds no LW numerical block, coefficient map, doside transform, Hamiltonian, export, artifact, IDA/MWG data, or Coulomb. |
-| **LW adapter reuse summary** | Internal metadata helper `white_lindsey_boundary_stratum_adapter_summary(record)` over LW adapter preflight records. | Records future reuse targets only: facet/face -> `_nested_face_product`, edge -> `_nested_edge_product`, corner -> `_nested_corner_piece`, facet/edge side helper -> `_nested_doside_1d`; batch summaries expose `reuse_metadata_available_count` and `reuse_metadata_blocked_count` for metadata availability only, not numerical adapter readiness or pair-block materialization; it does not call those kernels or materialize LW blocks. |
-| **LW unit adapter descriptor** | Internal metadata helper `white_lindsey_boundary_stratum_unit_adapter_descriptor(unit)` over one LW boundary-stratum retained unit. | Records compact source-CPB/kernel-input facts only; it does not call old kernels or build coefficient maps. |
+| **LW boundary-stratum adapter preflight** | Pair-block materialization classification for `:white_lindsey_boundary_stratum_adapter_path`. | Uses `:white_lindsey_boundary_stratum_adapter_preflight` as the adapter boundary. Local unit coefficient maps and one-body adapter blocks now exist behind this boundary, but full route/operator assembly, Coulomb, IDA/MWG, Hamiltonian export, and artifacts remain unavailable. |
+| **LW adapter reuse summary** | Internal metadata helper `white_lindsey_boundary_stratum_adapter_summary(record)` over LW adapter preflight records. | Records reuse targets: facet/face -> `_nested_face_product`, edge -> `_nested_edge_product`, corner -> `_nested_corner_piece`, facet/edge side helper -> `_nested_doside_1d`; batch summaries expose reuse metadata counts only, not full route assembly readiness. |
+| **LW unit adapter descriptor** | Internal metadata helper `white_lindsey_boundary_stratum_unit_adapter_descriptor(unit)` over one LW boundary-stratum retained unit. | Records compact source-CPB/kernel-input facts before coefficient materialization. |
 | **LW pair adapter descriptor** | Internal metadata helper `white_lindsey_boundary_stratum_pair_adapter_descriptor(record[, unit_pair])` over one LW adapter-preflight pair. | Classifies facet/facet, facet/edge, facet/corner, edge/edge, edge/corner, and corner/corner pairs; it does not build pair blocks or call old kernels. |
+| **LW boundary-stratum unit coefficients** | Local adapter helper `white_lindsey_boundary_stratum_unit_coefficients(...)` for facet/face, edge, and corner strata. | Builds old-kernel-backed unit coefficient maps as local adapter inputs only; not route-global state, Hamiltonian data, export, artifact, IDA/MWG data, or Coulomb. |
+| **LW one-body adapter block** | Local adapter helper `white_lindsey_boundary_stratum_one_body_block(...)` and batch helper `white_lindsey_boundary_stratum_one_body_blocks(...)` for overlap, position_x/y/z, x2_x/y/z, and kinetic. | Produces local/source/final pair-block pilot results from prepared unit coefficients; not full route/operator assembly, Coulomb, IDA/MWG, Hamiltonian assembly, export, artifact, or production dense-parent fallback. |
+| **LW one-body adapter summary** | Compact readiness helper `white_lindsey_boundary_stratum_one_body_adapter_summary(...)`. | Reports supported terms/strata, local-only coefficient-map scope, materialized/skipped batch counts, and false global-path flags. |
 | **LW seed oracle summary** | Internal validation helper `white_lindsey_materialized_seed_oracle_summary(...)`. | Summarizes old seed counts, ranges, roles, packet/operator availability, and one-body matrix dimensions for validation only; it is not route or adapter authority. |
 | **PQS source safe-term descriptor** | Private local metadata in `CartesianPairBlockMaterialization` for supported PQS source safe one-body terms. | Selector/code-organization helper only, not public API or route behavior. |
 | **Assembly**                        | Placing pair blocks into full retained operator/Hamiltonian matrices.                                 | Comes after pair-block construction.                             |

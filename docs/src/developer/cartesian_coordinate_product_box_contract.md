@@ -487,7 +487,8 @@ ShellificationRegion Ω
 -> unit pairs
 -> pair operator plans
 -> pair-block materialization direct-direct and PQS source pilots
--> pair-block materialization LW boundary-stratum adapter preflight
+-> LW boundary-stratum adapter preflight
+-> local LW unit coefficient maps and one-body adapter pilots
 -> final pair-block assembly
 -> assembly
 ```
@@ -521,55 +522,55 @@ pair planning starts from final retained units and transform contracts
 
 Pair planning must use final retained units plus retained-unit transform
 contracts. It must not rediscover realization paths by inspecting retained-unit
-kinds. Current pair-block materialization is a preflight layer plus a
-direct/direct final local one-body pilot and a PQS/PQS raw source-space
-safe-term pilot. The PQS source pilot does not apply shell projection, Lowdin,
-or final retained-block assembly. Its current bridge summaries are
-metadata-only records of the later shell-realization handoff, not the
-realization itself. The final PQS pair-block readiness summary consumes those
-single or batch bridge summaries and currently blocks on
-`:shell_realization_not_materialized`; it does not build shell projection,
-Lowdin, final retained blocks, Hamiltonians, exports, artifacts, IDA/MWG data,
-or Coulomb. Broader PQS, White--Lindsey, Coulomb/IDA, and Hamiltonian assembly
-remain future work.
+kinds. Current pair-block materialization is a preflight layer plus
+direct/direct final local one-body pilots, PQS/PQS raw source-space safe-term
+pilots, and local White--Lindsey boundary-stratum one-body adapter pilots. The
+PQS source pilot does not apply shell projection, Lowdin, or final
+retained-block assembly. Its current bridge summaries are metadata-only
+records of the later shell-realization handoff, not the realization itself.
+The final PQS pair-block readiness summary consumes those single or batch
+bridge summaries and currently blocks on `:shell_realization_not_materialized`;
+it does not build shell projection, Lowdin, final retained blocks,
+Hamiltonians, exports, artifacts, IDA/MWG data, or Coulomb. Broader PQS final
+blocks, full White--Lindsey route assembly, Coulomb/IDA, and Hamiltonian
+assembly remain future work.
 
 For low-order White--Lindsey boundary-stratum retained-unit pairs, pair-block
 materialization now recognizes `:white_lindsey_boundary_stratum_adapter_path`
-as metadata-only
-`:white_lindsey_boundary_stratum_adapter_preflight`. Current readiness is
-blocked by
-`:white_lindsey_boundary_stratum_pair_block_adapter_not_materialized`. This is
-only an adapter-boundary checkpoint; it does not build LW numerical blocks,
-coefficient maps, doside transforms, Hamiltonians, exports, artifacts,
-IDA/MWG data, or Coulomb.
+as `:white_lindsey_boundary_stratum_adapter_preflight`. This remains the
+adapter-boundary checkpoint. Behind that boundary, local old-kernel-backed
+unit coefficient maps now exist for facet/face, edge, and corner strata, local
+pair-level coefficient gathering exists, and local one-body adapter blocks now
+exist for overlap, position_x/y/z, x2_x/y/z, and kinetic. These are local
+adapter pilot blocks, not full route/operator assembly; they do not build
+Hamiltonians, exports, artifacts, IDA/MWG data, or Coulomb.
 
 `white_lindsey_boundary_stratum_adapter_summary(record)` is the internal
-metadata helper that records the intended old-kernel reuse map for that
-adapter boundary. It consumes
+metadata helper that records the old-kernel reuse map for that adapter
+boundary. It consumes
 `:white_lindsey_boundary_stratum_adapter_preflight` records. Facet/face strata
 point to `_nested_face_product`, edge strata to `_nested_edge_product`, corner
 strata to `_nested_corner_piece`, and facet/edge side helpers to
 `_nested_doside_1d`. For batch or plan-level inputs, the helper reports
 `reuse_metadata_available_count` and `reuse_metadata_blocked_count`; these
-counts are about old-kernel reuse metadata availability, not numerical adapter
-readiness or pair-block materialization. The helper records symbols only; it
-does not call those kernels and does not build LW numerical blocks,
-coefficient maps, doside transforms, Hamiltonians, exports, artifacts,
-IDA/MWG data, or Coulomb.
+counts are about old-kernel reuse metadata availability, not full route
+assembly readiness.
 
 `white_lindsey_boundary_stratum_unit_adapter_descriptor(unit)` is the compact
 unit-level adapter descriptor. It records source-CPB and kernel-input facts
 only: unit identity, stratum kind, source CPB role/codimension/count,
 active/fixed axis metadata, planned old kernel symbol, and the planned
-`_nested_doside_1d` helper for facet/edge strata. It does not build
-coefficient maps and does not call old kernels.
+`_nested_doside_1d` helper for facet/edge strata. The materialized unit
+coefficient helper is `white_lindsey_boundary_stratum_unit_coefficients(...)`;
+it builds local adapter input maps, not route-global state.
 
 `white_lindsey_boundary_stratum_pair_adapter_descriptor(record[, unit_pair])`
 is the compact pair-level adapter descriptor. With unit-pair context it uses
 the unit descriptors; record-only use reports only record-derived facts. It
 classifies upper-triangular LW boundary-stratum pairs as facet/facet,
 facet/edge, facet/corner, edge/edge, edge/corner, or corner/corner. It does
-not build one-body adapter blocks and does not call old kernels.
+not build one-body adapter blocks. Pair-level coefficient gathering is handled
+by `white_lindsey_boundary_stratum_pair_unit_coefficients(...)`.
 
 `white_lindsey_materialized_seed_oracle_summary(...)` is a compact validation
 oracle over the old materialized seed. It reports counts, ranges, roles,
@@ -578,21 +579,25 @@ and fixed-block matrix dimension summaries. It is validation-only: not route
 authority and not adapter authority. It must not be used to make the old route
 the new construction path.
 
+`white_lindsey_boundary_stratum_one_body_block(...)` and
+`white_lindsey_boundary_stratum_one_body_blocks(...)` are the local
+one-body adapter pilots for overlap, position_x/y/z, x2_x/y/z, and kinetic.
+`white_lindsey_boundary_stratum_one_body_adapter_summary(...)` reports compact
+supported-term/stratum readiness and batch materialized/skipped summaries.
+These helpers reuse old kernels as adapter inputs, not as route authority, and
+do not build Coulomb, IDA/MWG data, Hamiltonians, exports, artifacts, or
+production dense-parent fallback.
+
 ### Next low-order White--Lindsey adapter target
 
-The next White--Lindsey numerical step should be a narrow adapter behind
-`:white_lindsey_boundary_stratum_adapter_preflight`. It should reuse the old
-low-order kernels `_nested_doside_1d`, `_nested_face_product`,
-`_nested_edge_product`, and `_nested_corner_piece` through the adapter boundary,
-not by making the old route the new route authority. The old White--Lindsey
-materialized seed fixture is the validation oracle for this step.
+The first local White--Lindsey one-body adapter surface now exists behind
+`:white_lindsey_boundary_stratum_adapter_preflight`. It covers local unit
+coefficient maps, local pair-level coefficient gathering, local one-body blocks
+for overlap/position/x2/kinetic, and compact summaries.
 
-Initial acceptance should check retained counts, stratum/source CPB roles,
-coefficient-map shapes, and one-body local block agreement. Do not start with
-Coulomb, IDA, Hamiltonian export, or artifact generation. Do not make
-support-row or dense-parent fallback the production algorithm.
-
-The descriptor and oracle helpers above are still metadata/reference helpers.
-They build no coefficient maps, call no old kernels for adapter
-materialization, and build no one-body adapter blocks, Coulomb, IDA/MWG data,
-Hamiltonians, exports, or artifacts.
+The next targets are focused oracle validation against the old materialized
+seed, test split/pruning if the focused adapter test grows toward the routine
+runtime ceiling, and only later Coulomb, IDA, or Hamiltonian/export work after
+explicit design review. Do not make support-row or dense-parent fallback the
+production algorithm, and do not treat the old White--Lindsey route as the new
+route authority.
