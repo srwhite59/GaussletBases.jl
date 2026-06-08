@@ -481,6 +481,157 @@ end
     @test unsupported_collection_entry.skipped_record.blocker ===
           :unsupported_pair_block_materialization_path
 
+    overlap_collection_entries =
+        CPBMSmoke._one_body_local_block_collection_entries_for_term(
+            local_collection,
+            :overlap,
+        )
+    overlap_collection_materialized =
+        CPBMSmoke._one_body_local_block_collection_materialized_entries_for_term(
+            local_collection,
+            :overlap,
+        )
+    overlap_collection_skipped =
+        CPBMSmoke._one_body_local_block_collection_skipped_entries_for_term(
+            local_collection,
+            :overlap,
+        )
+    overlap_collection_status =
+        CPBMSmoke._one_body_local_block_collection_term_status(
+            local_collection,
+            :overlap,
+        )
+    @test length(overlap_collection_entries) == 4
+    @test length(overlap_collection_materialized) == 2
+    @test length(overlap_collection_skipped) == 2
+    @test count(
+        entry -> entry.selector_family === :pqs_source_pair,
+        overlap_collection_materialized,
+    ) == 1
+    @test count(
+        entry -> entry.result_term === :source_overlap,
+        overlap_collection_materialized,
+    ) == 1
+    @test CPBMSmoke._one_body_local_block_collection_entries_for_term(
+        local_collection,
+        :source_overlap,
+    ) == ()
+    @test overlap_collection_status.status ==
+          :partially_materialized_local_one_body_collection_term
+    @test overlap_collection_status.blocker === :missing_white_lindsey_unit_pair
+    @test overlap_collection_status.requested
+    @test overlap_collection_status.requested_materialization
+    @test overlap_collection_status.materialized_term
+    @test !overlap_collection_status.deferred_term
+    @test overlap_collection_status.entry_count == 4
+    @test overlap_collection_status.materialized_entry_count == 2
+    @test overlap_collection_status.skipped_entry_count == 2
+    @test _mixed_consumer_smoke_count(
+        overlap_collection_status.materialized_selector_family_counts,
+        :selector_family,
+        :direct_direct,
+    ) == 1
+    @test _mixed_consumer_smoke_count(
+        overlap_collection_status.materialized_selector_family_counts,
+        :selector_family,
+        :pqs_source_pair,
+    ) == 1
+    @test _mixed_consumer_smoke_count(
+        overlap_collection_status.skipped_selector_family_counts,
+        :selector_family,
+        :white_lindsey_boundary_stratum,
+    ) == 1
+    @test _mixed_consumer_smoke_count(
+        overlap_collection_status.skipped_blocker_counts,
+        :blocker,
+        :missing_white_lindsey_unit_pair,
+    ) == 1
+    @test _mixed_consumer_smoke_count(
+        overlap_collection_status.block_space_counts,
+        :block_space,
+        :final_local_space,
+    ) == 1
+    @test _mixed_consumer_smoke_count(
+        overlap_collection_status.block_space_counts,
+        :block_space,
+        :source_space,
+    ) == 1
+    @test _mixed_consumer_smoke_count(
+        overlap_collection_status.block_space_counts,
+        :block_space,
+        :not_materialized,
+    ) == 2
+    @test !overlap_collection_status.entries_stored_in_status
+    @test !overlap_collection_status.matrix_fields_stored_in_status
+    @test !overlap_collection_status.block_set_results_summed
+    @test !overlap_collection_status.block_matrices_copied_into_status
+    @test !overlap_collection_status.local_operator_assembled
+    @test !overlap_collection_status.global_operator_assembled
+    @test !overlap_collection_status.route_driver_wiring
+    @test !overlap_collection_status.operator_blocks_materialized
+    @test !overlap_collection_status.hamiltonian_data_materialized
+    @test !overlap_collection_status.artifacts_materialized
+    @test !overlap_collection_status.coulomb_materialized
+    @test !overlap_collection_status.density_density_materialized
+    @test !overlap_collection_status.ida_mwg_data_materialized
+    @test !overlap_collection_status.pqs_lowdin_materialized
+    @test !overlap_collection_status.pqs_shell_projection_materialized
+    @test !overlap_collection_status.full_white_lindsey_route_assembled
+
+    kinetic_collection_status =
+        CPBMSmoke._one_body_local_block_collection_term_status(
+            local_collection,
+            :kinetic,
+        )
+    @test CPBMSmoke._one_body_local_block_collection_entries_for_term(
+        local_collection,
+        :kinetic,
+    ) == ()
+    @test CPBMSmoke._one_body_local_block_collection_materialized_entries_for_term(
+        local_collection,
+        :kinetic,
+    ) == ()
+    @test CPBMSmoke._one_body_local_block_collection_skipped_entries_for_term(
+        local_collection,
+        :kinetic,
+    ) == ()
+    @test kinetic_collection_status.status ==
+          :deferred_metadata_only_local_one_body_collection_term
+    @test kinetic_collection_status.requested
+    @test !kinetic_collection_status.requested_materialization
+    @test !kinetic_collection_status.materialized_term
+    @test kinetic_collection_status.deferred_term
+    @test kinetic_collection_status.entry_count == 0
+    @test !kinetic_collection_status.route_driver_wiring
+    @test !kinetic_collection_status.hamiltonian_data_materialized
+    @test !kinetic_collection_status.coulomb_materialized
+    @test !kinetic_collection_status.ida_mwg_data_materialized
+    @test !kinetic_collection_status.pqs_lowdin_materialized
+    @test !kinetic_collection_status.pqs_shell_projection_materialized
+    @test !kinetic_collection_status.full_white_lindsey_route_assembled
+
+    position_collection_status =
+        CPBMSmoke._one_body_local_block_collection_term_status(
+            local_collection,
+            :position_x,
+        )
+    @test CPBMSmoke._one_body_local_block_collection_entries_for_term(
+        local_collection,
+        :position_x,
+    ) == ()
+    @test position_collection_status.status === :term_not_requested
+    @test position_collection_status.blocker === :term_not_requested
+    @test !position_collection_status.requested
+    @test !position_collection_status.requested_materialization
+    @test position_collection_status.entry_count == 0
+    @test !position_collection_status.route_driver_wiring
+    @test !position_collection_status.hamiltonian_data_materialized
+    @test !position_collection_status.coulomb_materialized
+    @test !position_collection_status.ida_mwg_data_materialized
+    @test !position_collection_status.pqs_lowdin_materialized
+    @test !position_collection_status.pqs_shell_projection_materialized
+    @test !position_collection_status.full_white_lindsey_route_assembled
+
     overlap_results =
         CPBMSmoke._one_body_pair_block_results_for_term(
             block_set_consumption,

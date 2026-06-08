@@ -212,6 +212,147 @@ function _one_body_local_block_collection(consumption)
     )
 end
 
+function _one_body_local_block_collection_entries_for_term(
+    collection::NamedTuple,
+    term::Symbol,
+)
+    _one_body_assert_local_block_collection(collection)
+    return Tuple(entry for entry in collection.entries if entry.block_set_term === term)
+end
+
+function _one_body_local_block_collection_entries_for_term(collection, term)
+    throw(
+        ArgumentError(
+            "local one-body block collection term entry accessor requires a collection NamedTuple and term::Symbol",
+        ),
+    )
+end
+
+function _one_body_local_block_collection_materialized_entries_for_term(
+    collection::NamedTuple,
+    term::Symbol,
+)
+    _one_body_assert_local_block_collection(collection)
+    return Tuple(
+        entry for entry in collection.materialized_entries
+        if entry.block_set_term === term
+    )
+end
+
+function _one_body_local_block_collection_materialized_entries_for_term(
+    collection,
+    term,
+)
+    throw(
+        ArgumentError(
+            "local one-body block collection materialized term accessor requires a collection NamedTuple and term::Symbol",
+        ),
+    )
+end
+
+function _one_body_local_block_collection_skipped_entries_for_term(
+    collection::NamedTuple,
+    term::Symbol,
+)
+    _one_body_assert_local_block_collection(collection)
+    return Tuple(
+        entry for entry in collection.skipped_entries
+        if entry.block_set_term === term
+    )
+end
+
+function _one_body_local_block_collection_skipped_entries_for_term(collection, term)
+    throw(
+        ArgumentError(
+            "local one-body block collection skipped term accessor requires a collection NamedTuple and term::Symbol",
+        ),
+    )
+end
+
+function _one_body_local_block_collection_term_status(
+    collection::NamedTuple,
+    term::Symbol,
+)
+    _one_body_assert_local_block_collection(collection)
+    materialized_entries =
+        _one_body_local_block_collection_materialized_entries_for_term(
+            collection,
+            term,
+        )
+    skipped_entries =
+        _one_body_local_block_collection_skipped_entries_for_term(
+            collection,
+            term,
+        )
+    entries = (materialized_entries..., skipped_entries...)
+    status = _one_body_local_block_collection_term_status_symbol(
+        collection,
+        term,
+        materialized_entries,
+        skipped_entries,
+    )
+    return (;
+        object_kind = :cartesian_pair_block_local_one_body_collection_term_status,
+        term,
+        status,
+        blocker = _one_body_local_block_collection_term_blocker(
+            status,
+            skipped_entries,
+        ),
+        collection_status = collection.status,
+        collection_blocker = collection.blocker,
+        requested = term in collection.requested_terms,
+        requested_materialization = term in collection.requested_materialize_terms,
+        materialized_term = term in collection.materialized_terms,
+        deferred_term = term in collection.deferred_terms,
+        materialized_entry_count = length(materialized_entries),
+        skipped_entry_count = length(skipped_entries),
+        entry_count = length(entries),
+        selector_family_counts =
+            _one_body_count_optional_by(entries, :selector_family),
+        materialized_selector_family_counts =
+            _one_body_count_optional_by(materialized_entries, :selector_family),
+        skipped_selector_family_counts =
+            _one_body_count_optional_by(skipped_entries, :selector_family),
+        skipped_blocker_counts =
+            _one_body_count_optional_by(skipped_entries, :blocker),
+        block_space_counts = _one_body_count_optional_by(entries, :block_space),
+        term_separated_entries = true,
+        pair_separated_entries = true,
+        entries_stored_in_status = false,
+        matrix_fields_stored_in_status = false,
+        block_set_results_summed = false,
+        block_matrices_copied_into_status = false,
+        local_operator_assembled = false,
+        global_operator_assembled = false,
+        route_driver_wiring = false,
+        source_operator_blocks_materialized =
+            any(entry -> entry.source_operator_blocks_materialized, materialized_entries),
+        final_pair_blocks_materialized =
+            any(entry -> entry.final_pair_blocks_materialized, materialized_entries),
+        operator_blocks_materialized = false,
+        hamiltonian_data_materialized = false,
+        artifacts_materialized = false,
+        global_operator_blocks_materialized = false,
+        global_hamiltonian_data_materialized = false,
+        global_artifacts_materialized = false,
+        coulomb_materialized = false,
+        density_density_materialized = false,
+        ida_mwg_data_materialized = false,
+        pqs_lowdin_materialized = false,
+        pqs_shell_projection_materialized = false,
+        full_white_lindsey_route_assembled = false,
+    )
+end
+
+function _one_body_local_block_collection_term_status(collection, term)
+    throw(
+        ArgumentError(
+            "local one-body block collection term status requires a collection NamedTuple and term::Symbol",
+        ),
+    )
+end
+
 function _one_body_collection_result_block_space(
     result::PairBlockMaterializationResult,
 )
@@ -239,6 +380,42 @@ end
 
 function _one_body_local_block_collection_blocker(summary)
     return _one_body_collection_value(summary, :blocker, nothing)
+end
+
+function _one_body_local_block_collection_term_status_symbol(
+    collection::NamedTuple,
+    term::Symbol,
+    materialized_entries::Tuple,
+    skipped_entries::Tuple,
+)
+    term in collection.requested_terms || return :term_not_requested
+    term in collection.deferred_terms &&
+        return :deferred_metadata_only_local_one_body_collection_term
+    !isempty(materialized_entries) && !isempty(skipped_entries) &&
+        return :partially_materialized_local_one_body_collection_term
+    !isempty(materialized_entries) &&
+        return :materialized_local_one_body_collection_term
+    !isempty(skipped_entries) && return :skipped_local_one_body_collection_term
+    return :empty_requested_local_one_body_collection_term
+end
+
+function _one_body_local_block_collection_term_blocker(
+    status::Symbol,
+    skipped_entries::Tuple,
+)
+    status === :term_not_requested && return :term_not_requested
+    isempty(skipped_entries) && return nothing
+    return _one_body_collection_value(first(skipped_entries), :blocker, nothing)
+end
+
+function _one_body_assert_local_block_collection(collection::NamedTuple)
+    _one_body_collection_value(collection, :object_kind, nothing) ===
+    :cartesian_pair_block_local_one_body_block_collection || throw(
+        ArgumentError(
+            "local one-body block collection accessor requires a local block collection object",
+        ),
+    )
+    return nothing
 end
 
 function _one_body_collection_metadata_value(metadata::NamedTuple, key::Symbol, default)
