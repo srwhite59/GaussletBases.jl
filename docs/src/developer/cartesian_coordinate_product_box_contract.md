@@ -588,6 +588,15 @@ These helpers reuse old kernels as adapter inputs, not as route authority, and
 do not build Coulomb, IDA/MWG data, Hamiltonians, exports, artifacts, or
 production dense-parent fallback.
 
+Focused old-seed oracle validation currently covers one selected local
+facet/edge pair. The selected facet is the old seed x-low `yz` face
+(face index 5, retained range `162:170`), and the selected edge is the old
+seed x-high/y-low `z` edge (edge index 11, retained range `210:212`). Local
+adapter blocks of shape `(9, 3)` for overlap, position_x/y/z, x2_x/y/z, and
+kinetic compare against those old fixed-block slices within the focused test
+tolerance. This is a local adapter-slice checkpoint only; it does not validate
+all LW pair families or assemble a full White--Lindsey route.
+
 ### Next low-order White--Lindsey adapter target
 
 The first local White--Lindsey one-body adapter surface now exists behind
@@ -595,9 +604,11 @@ The first local White--Lindsey one-body adapter surface now exists behind
 coefficient maps, local pair-level coefficient gathering, local one-body blocks
 for overlap/position/x2/kinetic, and compact summaries.
 
-The next targets are focused oracle validation against the old materialized
-seed, test split/pruning if the focused adapter test grows toward the routine
-runtime ceiling, and only later Coulomb, IDA, or Hamiltonian/export work after
+The next validation targets are additional representative pair families such
+as facet/facet, edge/edge, edge/corner, and corner/corner where the old seed
+exposes precise local slices. Keep those tests split from the main LW adapter
+runner so routine validation does not grow toward the runtime ceiling. Coulomb,
+IDA, Hamiltonian/export work, and route assembly remain later work requiring
 explicit design review. Do not make support-row or dense-parent fallback the
 production algorithm, and do not treat the old White--Lindsey route as the new
 route authority.

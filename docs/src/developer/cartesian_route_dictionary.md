@@ -147,6 +147,16 @@ The materialized LW adapter helpers are local and explicit:
 kernels as adapter inputs, not as route authority. The old-seed oracle helper
 remains validation-only and not adapter authority.
 
+Current focused oracle validation covers one representative local
+White--Lindsey facet/edge pair only. The adapter fixture maps the x-low `yz`
+facet to old seed face index 5 and the x-high/y-low `z` edge to old seed edge
+index 11, with old fixed-block retained ranges `162:170` and `210:212`.
+Local `(9, 3)` adapter blocks for overlap, position_x/y/z, x2_x/y/z, and
+kinetic compare against those old seed fixed-block slices within the focused
+test tolerance. This is selected local adapter validation, not full
+White--Lindsey route validation, not route-driver wiring, and not Coulomb,
+IDA/MWG, Hamiltonian/export, or artifact readiness.
+
 ### Why “lowering”?
 
 “Lowering” is compiler-style language: it means translating a higher-level geometric object into a lower-level construction representation. Here:
