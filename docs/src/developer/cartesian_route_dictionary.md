@@ -125,6 +125,22 @@ do not sum terms, assemble local/global operators, build Hamiltonians, add
 Coulomb, change IDA/MWG semantics, wire route drivers, export artifacts, build
 PQS shell projection/Lowdin data, or assemble a full White--Lindsey route.
 
+The private local one-body block collection is the next view layer over an
+existing mixed one-body block-set consumption result. It organizes the same
+materialized results and skipped records by block-set term and retained-unit
+pair key. Collection entries reference the existing result or skipped record
+and store only compact status and shape fields; they do not copy block
+matrices. The term labels are deliberately separated: `block_set_term` is the
+requested term such as `:overlap`, `result_term` is the materialized result
+label, and `source_space_term` is present for PQS raw source-space labels such
+as `:source_overlap`. Term accessors, pair-key accessors, exact
+`(block_set_term, pair_key)` lookup, and compact summary helpers are available
+for private downstream code. The summary is matrix-free and entry-free. This
+collection layer does not sum terms, assemble local or global operators, place
+global retained matrices, wire route drivers, build Hamiltonians, add Coulomb,
+change IDA/MWG semantics, export artifacts, build PQS shell projection/Lowdin
+data, or assemble a full White--Lindsey route.
+
 The local final-readiness helper
 `pqs_source_pair_final_block_readiness_summary(bridge_summary)` consumes single
 or batch PQS source shell-realization bridge summaries and reports whether a
@@ -346,6 +362,7 @@ The PQS source geometry is “one filled box,” but the actual retained space c
 | **Pair-block materialization**      | The step that preflights and then builds concrete pair blocks from pair-operator plans.                | Current numerical pilots include direct/direct local one-body blocks, PQS/PQS raw source-space one-body blocks, and local LW boundary-stratum one-body adapter blocks; not Coulomb/IDA, Hamiltonian assembly, or artifact export. |
 | **Mixed one-body pair-block consumer** | Private `CartesianPairBlockMaterialization` helper over a `PairBlockMaterializationPlan`, safe one-body term or term set, and caller-supplied factors/provider facts. | Dispatches to existing direct/direct, PQS/PQS source-space, and LW boundary-stratum local one-body selectors and returns term-separated local results plus compact views/accessors; not route-driver wiring, local/global assembly, Coulomb, IDA/MWG, PQS shell projection/Lowdin, Hamiltonian/export, artifact writing, or full LW route assembly. |
 | **Mixed one-body block-set view/accessors** | Private status/count view and explicit retrieval helpers for a mixed one-body block-set consumption result. | `_one_body_pair_block_set_view` is compact and matrix-free; term and pair-key accessors can explicitly retrieve result or skip records; `_one_body_pair_block_lookup` is the exact term/pair accessor that may expose one matrix-bearing `result`. None of these helpers perform assembly or route adoption. |
+| **Local one-body block collection** | Private view/index over an existing mixed one-body block-set consumption result.                       | Entries reference existing result or skipped records and preserve `block_set_term`, `result_term`, and `source_space_term`; accessors and exact lookup are term/pair separated, while summaries are matrix-free and entry-free. Not term summing, local/global assembly, route wiring, Hamiltonian/Coulomb/IDA/MWG, PQS shell projection/Lowdin, export/artifacts, or full LW route assembly. |
 | **Pair operator block**             | Numerical block for one pair of final retained units and one or more operator terms.                  | Not yet built when report says metadata-only.                    |
 | **PQS source-space block**          | A raw source-mode block for a PQS/PQS safe one-body term, built from caller-supplied 1D source factors. | Not a final shell-realized PQS pair block.                       |
 | **PQS source shell-realization bridge summary** | Metadata-only summary describing how a PQS source-space block or batch can later be consumed by shell realization. | It records keys, source-mode facts, statuses, blockers, paths, and flags; it builds no shell projection, Lowdin, final pair block, Hamiltonian, export, artifact, IDA/MWG data, or Coulomb. |
