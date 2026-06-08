@@ -3,6 +3,73 @@
 # This layer only normalizes input metadata. It never constructs numerical
 # factors or calls family materializers.
 
+function _one_body_term_set_factor_input_summary(
+    terms = _ONE_BODY_TERMS;
+    inputs = (;),
+    provider = nothing,
+    parent_axis_counts_required::Bool = false,
+)
+    input_source = _one_body_factor_input_source(inputs, provider)
+    term_set_descriptor = _one_body_term_set_descriptor(terms)
+    _, present_factor_names, missing_factor_names =
+        _one_body_required_factor_values(
+            term_set_descriptor.required_factor_names,
+            inputs,
+            provider,
+        )
+    parent_axis_counts_available, parent_axis_counts =
+        _one_body_input_value(:parent_axis_counts, inputs, provider)
+    parent_axis_counts_status = _one_body_parent_axis_counts_status(
+        parent_axis_counts_required,
+        parent_axis_counts_available,
+    )
+    required_factors_available = isempty(missing_factor_names)
+    parent_axis_counts_ready =
+        !parent_axis_counts_required || parent_axis_counts_available
+    blockers = _one_body_factor_input_blockers(
+        required_factors_available,
+        parent_axis_counts_ready,
+    )
+    ready_for_block_set = isempty(blockers)
+
+    return (;
+        object_kind =
+            :cartesian_pair_block_one_body_term_set_factor_input_summary,
+        status =
+            ready_for_block_set ?
+            :available_one_body_term_set_factor_inputs :
+            :blocked_missing_one_body_term_set_inputs,
+        blocker = ready_for_block_set ? nothing : first(blockers),
+        blockers,
+        term_set_descriptor,
+        requested_terms = term_set_descriptor.terms,
+        terms = term_set_descriptor.terms,
+        term_count = term_set_descriptor.term_count,
+        required_factor_names = term_set_descriptor.required_factor_names,
+        present_factor_names,
+        missing_factor_names,
+        required_factors_available,
+        input_source,
+        parent_axis_counts_required,
+        parent_axis_counts_status,
+        parent_axis_counts,
+        factor_provider_scope = term_set_descriptor.factor_provider_scope,
+        factor_values_stored = false,
+        factors_constructed = false,
+        numerical_blocks_materialized = false,
+        mixed_dispatcher_materialized = false,
+        route_driver_wiring = false,
+        global_operator_blocks_materialized = false,
+        hamiltonian_data_materialized = false,
+        artifacts_materialized = false,
+        coulomb_materialized = false,
+        density_density_materialized = false,
+        ida_mwg_data_materialized = false,
+        pqs_lowdin_materialized = false,
+        full_white_lindsey_route_assembled = false,
+    )
+end
+
 function _one_body_factor_input_summary(
     term::Symbol;
     inputs = (;),
