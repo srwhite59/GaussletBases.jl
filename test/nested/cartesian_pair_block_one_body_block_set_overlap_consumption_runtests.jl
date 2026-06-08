@@ -21,6 +21,21 @@ function _block_overlap_count(counts, field::Symbol, value)
     return only(matches).count
 end
 
+function _block_overlap_summary_has_no_matrix_fields(block_set_summary)
+    forbidden_fields = (
+        :term_batch_results,
+        :batch_result,
+        :block,
+        :blocks,
+        :materialized_results,
+        :skipped_records,
+        :preflight_summary,
+        :block_set_summary,
+        :term_summaries,
+    )
+    return !any(field -> hasproperty(block_set_summary, field), forbidden_fields)
+end
+
 function _block_overlap_pair_operator_plan()
     lowering_plan = CTLBlockOverlap.TerminalLoweringPlan(
         CTLBlockOverlap.PQSLowering(q = 2),
@@ -210,6 +225,32 @@ end
     @test !no_factor_deferred.one_term_consumer_called
     @test !hasproperty(no_factor_deferred, :term_batch_results)
 
+    no_factor_deferred_summary =
+        CPBMBlockOverlap._one_body_pair_block_set_consumption_summary(
+            no_factor_deferred,
+        )
+    @test no_factor_deferred_summary.object_kind ==
+          :cartesian_pair_block_mixed_one_body_block_set_consumption_summary
+    @test no_factor_deferred_summary.status ==
+          :deferred_metadata_only_mixed_one_body_block_set_consumption
+    @test isnothing(no_factor_deferred_summary.blocker)
+    @test no_factor_deferred_summary.requested_terms == safe_terms
+    @test no_factor_deferred_summary.requested_materialize_terms == ()
+    @test no_factor_deferred_summary.materialized_terms == ()
+    @test no_factor_deferred_summary.deferred_terms == safe_terms
+    @test no_factor_deferred_summary.preflight_status ==
+          :deferred_metadata_only_mixed_one_body_block_set_preflight
+    @test no_factor_deferred_summary.block_set_summary_status ==
+          :deferred_metadata_only_mixed_one_body_block_set
+    @test no_factor_deferred_summary.supplied_term_count == 0
+    @test no_factor_deferred_summary.deferred_term_count == length(safe_terms)
+    @test no_factor_deferred_summary.total_materialized_count == 0
+    @test no_factor_deferred_summary.total_skipped_count == 0
+    @test !no_factor_deferred_summary.term_batch_results_available_on_consumption
+    @test !no_factor_deferred_summary.term_batch_results_stored_in_summary
+    @test !no_factor_deferred_summary.materialized
+    @test _block_overlap_summary_has_no_matrix_fields(no_factor_deferred_summary)
+
     overlap = CPBMBlockOverlap._one_body_pair_block_set_consumption(
         plan;
         terms = (:overlap, :kinetic),
@@ -303,6 +344,54 @@ end
     @test overlap_from_all_requested.preflight_summary.required_factor_names ==
           (:overlap_1d,)
     @test overlap_from_all_requested.preflight_summary.missing_factor_names == ()
+
+    overlap_from_all_summary =
+        CPBMBlockOverlap._one_body_pair_block_set_consumption_summary(
+            overlap_from_all_requested,
+        )
+    @test overlap_from_all_summary.status ==
+          :partially_materialized_mixed_one_body_block_set_consumption
+    @test overlap_from_all_summary.requested_terms == safe_terms
+    @test overlap_from_all_summary.requested_materialize_terms == (:overlap,)
+    @test overlap_from_all_summary.materialized_terms == (:overlap,)
+    @test overlap_from_all_summary.deferred_terms == (
+        :position_x,
+        :position_y,
+        :position_z,
+        :x2_x,
+        :x2_y,
+        :x2_z,
+        :kinetic,
+    )
+    @test overlap_from_all_summary.preflight_status ==
+          :partially_ready_mixed_one_body_block_set_preflight
+    @test overlap_from_all_summary.block_set_summary_status ==
+          :partially_deferred_mixed_one_body_block_set
+    @test overlap_from_all_summary.supplied_term_count == 1
+    @test overlap_from_all_summary.deferred_term_count == 7
+    @test overlap_from_all_summary.total_materialized_count == 2
+    @test overlap_from_all_summary.total_skipped_count == 1
+    @test overlap_from_all_summary.term_batch_results_available_on_consumption
+    @test !overlap_from_all_summary.term_batch_results_stored_in_summary
+    @test overlap_from_all_summary.source_operator_blocks_materialized
+    @test overlap_from_all_summary.final_pair_blocks_materialized
+    @test !overlap_from_all_summary.operator_blocks_materialized
+    @test _block_overlap_count(
+        overlap_from_all_summary.materialized_selector_family_counts,
+        :selector_family,
+        :direct_direct,
+    ) == 1
+    @test _block_overlap_count(
+        overlap_from_all_summary.materialized_selector_family_counts,
+        :selector_family,
+        :pqs_source_pair,
+    ) == 1
+    @test _block_overlap_count(
+        overlap_from_all_summary.skipped_blocker_counts,
+        :blocker,
+        :unsupported_pair_block_materialization_path,
+    ) == 1
+    @test _block_overlap_summary_has_no_matrix_fields(overlap_from_all_summary)
 
     position = CPBMBlockOverlap._one_body_pair_block_set_consumption(
         plan;
@@ -528,6 +617,60 @@ end
         :unsupported,
     ) == 8
 
+    all_safe_summary =
+        CPBMBlockOverlap._one_body_pair_block_set_consumption_summary(all_safe)
+    @test all_safe_summary.status ==
+          :partially_materialized_mixed_one_body_block_set_consumption
+    @test all_safe_summary.requested_terms == safe_terms
+    @test all_safe_summary.requested_materialize_terms == safe_terms
+    @test all_safe_summary.materialized_terms == safe_terms
+    @test all_safe_summary.deferred_terms == ()
+    @test all_safe_summary.block_set_summary_status ==
+          :partially_materialized_mixed_one_body_block_set
+    @test all_safe_summary.supplied_term_count == 8
+    @test all_safe_summary.deferred_term_count == 0
+    @test all_safe_summary.total_materialized_count == 16
+    @test all_safe_summary.total_skipped_count == 8
+    @test all_safe_summary.term_batch_results_available_on_consumption
+    @test !all_safe_summary.term_batch_results_stored_in_summary
+    @test all_safe_summary.materialized
+    @test all_safe_summary.source_operator_blocks_materialized
+    @test all_safe_summary.final_pair_blocks_materialized
+    @test !all_safe_summary.operator_blocks_materialized
+    @test !all_safe_summary.hamiltonian_data_materialized
+    @test !all_safe_summary.artifacts_materialized
+    @test !all_safe_summary.route_driver_wiring
+    @test !all_safe_summary.coulomb_materialized
+    @test !all_safe_summary.ida_mwg_data_materialized
+    @test !all_safe_summary.pqs_lowdin_materialized
+    @test !all_safe_summary.full_white_lindsey_route_assembled
+    @test _block_overlap_count(
+        all_safe_summary.materialized_selector_family_counts,
+        :selector_family,
+        :direct_direct,
+    ) == 8
+    @test _block_overlap_count(
+        all_safe_summary.materialized_selector_family_counts,
+        :selector_family,
+        :pqs_source_pair,
+    ) == 8
+    @test _block_overlap_count(
+        all_safe_summary.skipped_selector_family_counts,
+        :selector_family,
+        :unsupported,
+    ) == 8
+    @test _block_overlap_count(
+        all_safe_summary.skipped_blocker_counts,
+        :blocker,
+        :unsupported_pair_block_materialization_path,
+    ) == 8
+    @test _block_overlap_summary_has_no_matrix_fields(all_safe_summary)
+    @test all(
+        term_status -> !hasproperty(term_status, :batch_result) &&
+                       !hasproperty(term_status, :block),
+        all_safe_summary.term_statuses,
+    )
+
     missing_position = CPBMBlockOverlap._one_body_pair_block_set_consumption(
         plan;
         terms = safe_terms,
@@ -550,6 +693,32 @@ end
     @test missing_position.total_skipped_count == 0
     @test !missing_position.one_term_consumer_called
     @test !hasproperty(missing_position, :term_batch_results)
+
+    missing_position_summary =
+        CPBMBlockOverlap._one_body_pair_block_set_consumption_summary(
+            missing_position,
+        )
+    @test missing_position_summary.status ==
+          :blocked_mixed_one_body_block_set_consumption
+    @test missing_position_summary.blocker == :missing_required_one_body_factors
+    @test missing_position_summary.preflight_status ==
+          :blocked_mixed_one_body_block_set_preflight
+    @test missing_position_summary.preflight_blocker ==
+          :missing_required_one_body_factors
+    @test missing_position_summary.block_set_summary_status ==
+          :deferred_metadata_only_mixed_one_body_block_set
+    @test missing_position_summary.materialized_terms == ()
+    @test missing_position_summary.deferred_terms == safe_terms
+    @test missing_position_summary.total_materialized_count == 0
+    @test missing_position_summary.total_skipped_count == 0
+    @test !missing_position_summary.term_batch_results_available_on_consumption
+    @test !missing_position_summary.term_batch_results_stored_in_summary
+    @test !missing_position_summary.materialized
+    @test _block_overlap_summary_has_no_matrix_fields(missing_position_summary)
+
+    @test_throws ArgumentError CPBMBlockOverlap._one_body_pair_block_set_consumption_summary(
+        (;),
+    )
 
     @test_throws ArgumentError CPBMBlockOverlap._one_body_pair_block_set_consumption(
         plan;

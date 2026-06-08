@@ -475,6 +475,96 @@ function _one_body_pair_block_set_consumption(plan; kwargs...)
     )
 end
 
+function _one_body_pair_block_set_consumption_summary(consumption::NamedTuple)
+    _one_body_namedtuple_value(consumption, :object_kind, nothing) ===
+    :cartesian_pair_block_mixed_one_body_block_set_consumption || throw(
+        ArgumentError(
+            "one-body block-set consumption summary requires a block-set consumption object",
+        ),
+    )
+    block_set_summary =
+        _one_body_namedtuple_value(consumption, :block_set_summary, nothing)
+    block_set_summary isa NamedTuple || throw(
+        ArgumentError(
+            "one-body block-set consumption summary requires a compact block-set summary",
+        ),
+    )
+
+    return (;
+        object_kind =
+            :cartesian_pair_block_mixed_one_body_block_set_consumption_summary,
+        consumption_object_kind = consumption.object_kind,
+        status = consumption.status,
+        blocker = consumption.blocker,
+        requested_terms = consumption.requested_terms,
+        terms = consumption.terms,
+        term_count = consumption.term_count,
+        requested_materialize_terms = consumption.requested_materialize_terms,
+        materialized_terms = consumption.materialized_terms,
+        deferred_terms = consumption.deferred_terms,
+        preflight_status = consumption.preflight_status,
+        preflight_blocker = consumption.preflight_blocker,
+        block_set_summary_status = consumption.block_set_summary_status,
+        supplied_term_count =
+            _one_body_namedtuple_value(block_set_summary, :supplied_term_count, 0),
+        deferred_term_count =
+            _one_body_namedtuple_value(block_set_summary, :deferred_term_count, 0),
+        term_statuses = consumption.term_statuses,
+        term_status_counts =
+            _one_body_namedtuple_value(block_set_summary, :term_status_counts, ()),
+        total_materialized_count = consumption.total_materialized_count,
+        total_skipped_count = consumption.total_skipped_count,
+        materialized_selector_family_counts = _one_body_namedtuple_value(
+            block_set_summary,
+            :materialized_selector_family_counts,
+            (),
+        ),
+        skipped_selector_family_counts = _one_body_namedtuple_value(
+            block_set_summary,
+            :skipped_selector_family_counts,
+            (),
+        ),
+        skipped_blocker_counts =
+            _one_body_namedtuple_value(block_set_summary, :skipped_blocker_counts, ()),
+        result_terms_remain_separated = consumption.result_terms_remain_separated,
+        block_set_results_summed = consumption.block_set_results_summed,
+        term_batch_results_available_on_consumption =
+            consumption.term_batch_results_stored,
+        term_batch_results_stored_in_summary = false,
+        factors_constructed = consumption.factors_constructed,
+        numerical_blocks_materialized = consumption.numerical_blocks_materialized,
+        materialized = consumption.materialized,
+        source_operator_blocks_materialized =
+            consumption.source_operator_blocks_materialized,
+        final_pair_blocks_materialized =
+            consumption.final_pair_blocks_materialized,
+        operator_blocks_materialized = consumption.operator_blocks_materialized,
+        hamiltonian_data_materialized = consumption.hamiltonian_data_materialized,
+        artifacts_materialized = consumption.artifacts_materialized,
+        global_operator_blocks_materialized =
+            consumption.global_operator_blocks_materialized,
+        global_hamiltonian_data_materialized =
+            consumption.global_hamiltonian_data_materialized,
+        global_artifacts_materialized = consumption.global_artifacts_materialized,
+        mixed_dispatcher_materialized = consumption.mixed_dispatcher_materialized,
+        route_driver_wiring = consumption.route_driver_wiring,
+        coulomb_materialized = consumption.coulomb_materialized,
+        density_density_materialized = consumption.density_density_materialized,
+        ida_mwg_data_materialized = consumption.ida_mwg_data_materialized,
+        pqs_lowdin_materialized = consumption.pqs_lowdin_materialized,
+        full_white_lindsey_route_assembled =
+            consumption.full_white_lindsey_route_assembled,
+    )
+end
+
+function _one_body_pair_block_set_consumption_summary(consumption)
+    throw(
+        ArgumentError(
+            "one-body block-set consumption summary requires a NamedTuple consumption object",
+        ),
+    )
+end
+
 function _one_body_block_set_consumption_preflight_summary(
     plan::PairBlockMaterializationPlan,
     term_set_descriptor,
