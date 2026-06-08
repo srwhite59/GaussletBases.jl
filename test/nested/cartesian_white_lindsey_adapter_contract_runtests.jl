@@ -754,6 +754,69 @@ end
     @test !kinetic_result.metadata.hamiltonian_data_materialized
     @test !kinetic_result.metadata.artifacts_materialized
 
+    selected_overlap =
+        CPBMForLWAdapter.white_lindsey_boundary_stratum_one_body_block(
+            real_pair_coefficients,
+            :overlap;
+            parent_axis_counts = (7, 7, 7),
+            overlap_1d,
+        )
+    @test selected_overlap.term == :overlap
+    @test size(selected_overlap.block) == (9, 3)
+    @test selected_overlap.block == overlap_result.block
+    @test selected_overlap.metadata.materialization_path ==
+          :white_lindsey_boundary_stratum_overlap_adapter
+
+    for term in (
+        :position_x,
+        :position_y,
+        :position_z,
+        :x2_x,
+        :x2_y,
+        :x2_z,
+        :kinetic,
+    )
+        selected_result =
+            CPBMForLWAdapter.white_lindsey_boundary_stratum_one_body_block(
+                real_pair_coefficients,
+                term;
+                parent_axis_counts = (7, 7, 7),
+                overlap_1d,
+                position_1d,
+                x2_1d,
+                kinetic_1d,
+            )
+        @test selected_result.term == term
+        @test selected_result.pair_key == real_pair_coefficients.pair_key
+        @test size(selected_result.block) == (9, 3)
+        @test all(isfinite, selected_result.block)
+        @test selected_result.materialized
+        @test selected_result.source_operator_blocks_materialized
+        @test selected_result.final_pair_blocks_materialized
+        @test !selected_result.operator_blocks_materialized
+        @test !selected_result.hamiltonian_data_materialized
+        @test !selected_result.artifacts_materialized
+    end
+
+    selected_kinetic =
+        CPBMForLWAdapter.white_lindsey_boundary_stratum_one_body_block(
+            real_pair_coefficients,
+            :kinetic;
+            parent_axis_counts = (7, 7, 7),
+            overlap_1d,
+            kinetic_1d,
+        )
+    @test selected_kinetic.block == kinetic_result.block
+    @test selected_kinetic.metadata.materialization_path ==
+          :white_lindsey_boundary_stratum_kinetic_adapter
+
+    @test_throws ArgumentError CPBMForLWAdapter.white_lindsey_boundary_stratum_one_body_block(
+        real_pair_coefficients,
+        :position_x;
+        parent_axis_counts = (7, 7, 7),
+        overlap_1d,
+    )
+
     blocked_pair_coefficients =
         CPBMForLWAdapter.white_lindsey_boundary_stratum_pair_unit_coefficients(
             ready_facet_descriptor,

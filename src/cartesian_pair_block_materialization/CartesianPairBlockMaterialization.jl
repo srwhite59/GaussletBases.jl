@@ -28,7 +28,8 @@ future final PQS pair blocks. This path does not build shell projection,
 Lowdin realization, or final retained PQS pair blocks.
 
 This module still does not assemble full operators, Hamiltonians, Ham bundles,
-exports, artifacts, final retained PQS pair blocks, or White--Lindsey blocks.
+exports, artifacts, final retained PQS pair blocks, or full White--Lindsey
+route/operator inventories.
 """
 module CartesianPairBlockMaterialization
 
@@ -77,6 +78,7 @@ export PairBlockMaterializationPolicy,
        white_lindsey_boundary_stratum_position_block,
        white_lindsey_boundary_stratum_x2_block,
        white_lindsey_boundary_stratum_kinetic_block,
+       white_lindsey_boundary_stratum_one_body_block,
        direct_direct_overlap_block,
        direct_direct_overlap_blocks,
        direct_direct_position_block,
@@ -136,6 +138,9 @@ export PairBlockMaterializationPolicy,
 # white_lindsey_kinetic.jl
 #     Kinetic-only LW pair-block pilot.
 #
+# white_lindsey_one_body.jl
+#     Selector over LW one-body safe-term pilots.
+#
 # direct_overlap.jl
 #     First tiny direct/direct overlap pair-block pilot.
 #
@@ -168,6 +173,7 @@ include("white_lindsey_overlap.jl")
 include("white_lindsey_position.jl")
 include("white_lindsey_x2.jl")
 include("white_lindsey_kinetic.jl")
+include("white_lindsey_one_body.jl")
 include("direct_position.jl")
 include("direct_x2.jl")
 include("direct_kinetic.jl")
