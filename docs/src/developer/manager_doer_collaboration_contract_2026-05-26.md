@@ -142,6 +142,14 @@ Longer manager/doer runs can use a repo-local, ignored handoff directory such
 as `.agent_handoffs/<run_id>/`. This is useful when the manager should direct a
 doer for several bounded passes without a user paste between every pass.
 
+New loops should be created mechanically from `.agent_handoffs/_template/`, not
+hand-written from memory. Start from `_template/SETUP_CHECKLIST.md` when it is
+available locally, or from the tracked template in
+`docs/src/developer/file_baton_loop_template.md`; copy the template directory,
+replace placeholders, then publish `blurb.001.md`. The doer startup paste must
+include the explicit instruction that writing `response.NNN.md` does not end
+the loop.
+
 The durable loop shape is:
 
 1. Manager writes `RUN.md`, `state.md`, `DOER_STARTUP.md`, and
