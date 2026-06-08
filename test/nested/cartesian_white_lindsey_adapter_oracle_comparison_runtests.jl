@@ -111,6 +111,11 @@ function _lw_adapter_seed_one_body_factors(doside_source_1d)
             y = pgdg.x2,
             z = pgdg.x2,
         ),
+        kinetic_1d = (;
+            x = pgdg.kinetic,
+            y = pgdg.kinetic,
+            z = pgdg.kinetic,
+        ),
     )
 end
 
@@ -162,6 +167,12 @@ function _lw_adapter_seed_one_body_blocks(pair_unit_coefficients, factors)
             parent_axis_counts = (7, 7, 7),
             overlap_1d = factors.overlap_1d,
             x2_1d = factors.x2_1d,
+        ),
+        kinetic = CPBMForLWAdapter.white_lindsey_boundary_stratum_kinetic_block(
+            pair_unit_coefficients;
+            parent_axis_counts = (7, 7, 7),
+            overlap_1d = factors.overlap_1d,
+            kinetic_1d = factors.kinetic_1d,
         ),
     )
 end
@@ -279,6 +290,12 @@ function _lw_adapter_oracle_value_comparison(
         artifacts_materialized = adapter_block.metadata.artifacts_materialized,
         dense_parent_parent_overlap_materialized =
             adapter_block.metadata.dense_parent_parent_overlap_materialized,
+        kinetic_factor_form =
+            get(adapter_block.metadata, :kinetic_factor_form, nothing),
+        kinetic_component_axes =
+            get(adapter_block.metadata, :kinetic_component_axes, nothing),
+        kinetic_component_terms =
+            get(adapter_block.metadata, :kinetic_component_terms, nothing),
     )
 end
 
@@ -377,6 +394,7 @@ end
         :x2_x,
         :x2_y,
         :x2_z,
+        :kinetic,
     )
     adapter_paths = (;
         overlap = :white_lindsey_boundary_stratum_overlap_adapter,
@@ -386,6 +404,7 @@ end
         x2_x = :white_lindsey_boundary_stratum_x2_adapter,
         x2_y = :white_lindsey_boundary_stratum_x2_adapter,
         x2_z = :white_lindsey_boundary_stratum_x2_adapter,
+        kinetic = :white_lindsey_boundary_stratum_kinetic_adapter,
     )
     comparisons = Tuple(
         _lw_adapter_oracle_value_comparison(
@@ -436,6 +455,16 @@ end
         @test !comparison.artifacts_materialized
         @test !comparison.dense_parent_parent_overlap_materialized
     end
+    kinetic_comparison = comparisons[end]
+    @test kinetic_comparison.term == :kinetic
+    @test kinetic_comparison.kinetic_factor_form ==
+          :factorized_cartesian_sum_kss_sks_ssk
+    @test kinetic_comparison.kinetic_component_axes == (:x, :y, :z)
+    @test kinetic_comparison.kinetic_component_terms == (
+        :kinetic_x_component,
+        :kinetic_y_component,
+        :kinetic_z_component,
+    )
 
     summary = _lw_adapter_oracle_comparison_summary(comparisons)
     @test summary.object_kind ==
