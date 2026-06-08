@@ -123,6 +123,10 @@ export PairBlockMaterializationPolicy,
 #     Private route-shaped adapter from pair-block plans to local one-body
 #     block collections.
 #
+# route_global_one_body_adapter.jl
+#     Private route-shaped adapter from pair-block plans to one global retained
+#     one-body term matrix, overlap-only for now.
+#
 # one_body_placement_plan.jl
 #     Metadata-only local one-body placement records for future global retained
 #     operator assembly.
@@ -210,6 +214,7 @@ include("one_body_factor_inputs.jl")
 include("one_body_dispatch.jl")
 include("one_body_block_collection.jl")
 include("route_one_body_adapter.jl")
+include("route_global_one_body_adapter.jl")
 include("one_body_placement_plan.jl")
 include("one_body_global_matrix_helpers.jl")
 include("one_body_global_overlap.jl")

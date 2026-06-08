@@ -228,14 +228,31 @@ function _direct_direct_product_result(
             (;
                 materialization_path = record.materialization_path,
                 readiness_status_before_materialization = record.readiness_status,
+                pair_index = record.pair_index,
                 parent_axis_counts = axis_counts,
             ),
+            _direct_direct_product_record_metadata(record.metadata),
             NamedTuple(metadata),
             (;
                 left_source_shape = CPB.shape(left_cpb),
                 right_source_shape = CPB.shape(right_cpb),
             ),
         ),
+    )
+end
+
+function _direct_direct_product_record_metadata(metadata::NamedTuple)
+    keys = (
+        :pair_index,
+        :selector_family,
+        :left_column_range,
+        :right_column_range,
+        :left_final_column_range,
+        :right_final_column_range,
+    )
+    present_keys = Tuple(key for key in keys if haskey(metadata, key))
+    return NamedTuple{present_keys}(
+        Tuple(getfield(metadata, key) for key in present_keys),
     )
 end
 
