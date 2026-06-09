@@ -641,6 +641,58 @@ Metadata should not duplicate large numerical payloads. Dense local matrices
 should live only on the owning dense-block object, while summaries record
 availability, shape, element type, provenance, and convention labels.
 
+### Local Block Records and Collections
+
+A local block record is the bridge between one CPB provider output and later
+placement or assembly layers. For overlap, the current names are:
+
+```julia
+CPBLocalOverlapBlockRecord
+CPBLocalOverlapBlockCollection
+cpb_local_overlap_block_record
+cpb_local_overlap_block_collection
+```
+
+A record may reference either a `CPBOverlapDenseBlock` or a
+`CPBOverlapAxisBlockSet` as `source_block`. The source block is kept by
+reference. Record and collection summaries must remain compact fingerprints and
+must not duplicate dense matrix payloads. Dense numerical data stays on the
+owning block object, for example `dense_block.dense_block`.
+
+Record metadata should include:
+
+- `term = :overlap`;
+- `block_key`;
+- `source_kind`;
+- compact left/right CPB summaries;
+- interval-pair summary;
+- axis-block summary;
+- dense-block summary when materialized;
+- dense availability and shape;
+- factor-space, convention, normalization, and index-domain labels;
+- `placement_status = :unassigned`;
+- `retained_transform_status = :unassigned`;
+- `route_driver_wiring = false`;
+- `global_matrix_materialized = false`.
+
+Collection metadata should include:
+
+- `record_count`;
+- `terms`;
+- `block_keys`;
+- `dense_block_count`;
+- `blocked_record_count`;
+- `blocked_record_blockers`;
+- `placement_status = :unassigned`;
+- `retained_transform_status = :unassigned`;
+- route/global nonclaim flags, including `route_driver_wiring = false` and
+  `global_matrix_materialized = false`.
+
+This collection layer is still local CPB product-space overlap metadata. It is
+not retained placement, not route-global overlap, and not Hamiltonian assembly.
+It only groups local CPB provider outputs so a later, separately reviewed layer
+can decide whether and how to assign placement or retained transforms.
+
 This lets retained-unit and pair-block code choose whether to use axis blocks
 directly, materialize a dense local CPB block, apply left/right transforms, or
 place into a global matrix.
@@ -705,12 +757,16 @@ CartesianParentGaussletBases.parent_overlap_axis_factor_packet
 -> CartesianCPBBlockProviders.cpb_interval_pair
 -> CartesianCPBBlockProviders.cpb_overlap_axis_blocks
 -> CartesianCPBBlockProviders.cpb_overlap_dense_block
+-> CartesianCPBBlockProviders.cpb_local_overlap_block_record
+-> CartesianCPBBlockProviders.cpb_local_overlap_block_collection
 ```
 
 That path can validate CPB interval pairs, slice parent-owned overlap axis
-factors, and optionally materialize a local dense CPB overlap block. It remains
-local CPB overlap only. It is not route/global overlap adoption, does not place
-a global matrix, and does not change private route-driver overlap behavior.
+factors, optionally materialize a local dense CPB overlap block, and group local
+provider outputs into compact collection metadata. It remains local CPB overlap
+only. It is not route/global overlap adoption, does not place a global matrix,
+does not assign retained transforms, and does not change private route-driver
+overlap behavior.
 
 ## What This Does Not Claim
 
