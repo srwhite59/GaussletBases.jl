@@ -113,6 +113,14 @@ function _driver_overlap_expected_matrix()
     return scale .* overlap.y
 end
 
+function _driver_overlap_stage_report(plan = _driver_overlap_plan())
+    return (;
+        low_order_route_summary = (;
+            terminal_route_state = (; pair_block_materialization_plan = plan),
+        ),
+    )
+end
+
 function _test_driver_overlap_nonclaim_flags(result)
     @test !result.route_driver_wiring
     @test !result.hamiltonian_data_materialized
@@ -191,4 +199,79 @@ end
 
     _test_driver_overlap_nonclaim_flags(direct)
     _test_driver_overlap_nonclaim_flags(missing_plan)
+end
+
+@testset "PQS route driver private global overlap option" begin
+    plan = _driver_overlap_plan()
+    report = _driver_overlap_stage_report(plan)
+
+    off_stage =
+        GaussletBases._pqs_source_box_route_driver_private_global_overlap_stage(
+            report,
+        )
+    @test Tuple(keys(off_stage)) ==
+          (:private_global_overlap_result, :private_global_overlap_summary)
+    @test isnothing(off_stage.private_global_overlap_result)
+    @test isnothing(off_stage.private_global_overlap_summary)
+
+    missing_plan =
+        GaussletBases._pqs_source_box_route_driver_private_global_overlap_stage(
+            (;);
+            private_global_overlap_requested = true,
+        )
+    @test Tuple(keys(missing_plan)) ==
+          (:private_global_overlap_result, :private_global_overlap_summary)
+    @test missing_plan.private_global_overlap_result.blocker ===
+          :missing_pair_block_materialization_plan
+    @test missing_plan.private_global_overlap_summary.blocker ===
+          :missing_pair_block_materialization_plan
+
+    missing_dimension =
+        GaussletBases._pqs_source_box_route_driver_private_global_overlap_stage(
+            report;
+            private_global_overlap_requested = true,
+        )
+    @test missing_dimension.private_global_overlap_result.blocker ===
+          :missing_global_dimension
+    @test missing_dimension.private_global_overlap_summary.blocker ===
+          :missing_global_dimension
+
+    missing_inputs =
+        GaussletBases._pqs_source_box_route_driver_private_global_overlap_stage(
+            report;
+            private_global_overlap_requested = true,
+            private_global_overlap_global_dimension = 2,
+        )
+    @test isnothing(missing_inputs.private_global_overlap_result)
+    @test missing_inputs.private_global_overlap_summary.status ===
+          :blocked_private_global_overlap
+    @test missing_inputs.private_global_overlap_summary.blocker ===
+          :missing_overlap_inputs
+
+    materialized =
+        GaussletBases._pqs_source_box_route_driver_private_global_overlap_stage(
+            report;
+            private_global_overlap_requested = true,
+            private_global_overlap_global_dimension = 2,
+            private_global_overlap_inputs = _driver_overlap_inputs(),
+        )
+    @test materialized.private_global_overlap_result.status ===
+          :materialized_route_global_overlap_matrix
+    @test materialized.private_global_overlap_summary.status ===
+          :materialized_route_global_overlap_matrix
+    @test materialized.private_global_overlap_summary.result_available
+    @test materialized.private_global_overlap_summary.global_overlap_matrix_materialized
+    @test materialized.private_global_overlap_result.global_matrix_result.matrix ≈
+          _driver_overlap_expected_matrix()
+    _test_driver_overlap_nonclaim_flags(materialized.private_global_overlap_result)
+    @test !materialized.private_global_overlap_summary.route_driver_wiring
+    @test !materialized.private_global_overlap_summary.hamiltonian_data_materialized
+    @test !materialized.private_global_overlap_summary.global_hamiltonian_data_materialized
+    @test !materialized.private_global_overlap_summary.coulomb_materialized
+    @test !materialized.private_global_overlap_summary.ida_mwg_data_materialized
+    @test !materialized.private_global_overlap_summary.pqs_lowdin_materialized
+    @test !materialized.private_global_overlap_summary.pqs_shell_projection_materialized
+    @test !materialized.private_global_overlap_summary.artifacts_materialized
+    @test !materialized.private_global_overlap_summary.exports_materialized
+    @test !materialized.private_global_overlap_summary.full_white_lindsey_route_assembled
 end

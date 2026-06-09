@@ -3321,6 +3321,120 @@ function _pqs_source_box_route_driver_low_order_shellization_policy(
     )
 end
 
+function _pqs_source_box_route_driver_private_global_overlap_stage(
+    report;
+    private_global_overlap_requested::Bool = false,
+    private_global_overlap_global_dimension = nothing,
+    private_global_overlap_inputs = (;),
+    private_global_overlap_provider = nothing,
+    private_global_overlap_factors = nothing,
+    private_global_overlap_factor_provider = nothing,
+)
+    if !private_global_overlap_requested
+        return (;
+            private_global_overlap_result = nothing,
+            private_global_overlap_summary = nothing,
+        )
+    end
+
+    if !isnothing(private_global_overlap_global_dimension) &&
+       private_global_overlap_inputs isa NamedTuple &&
+       isempty(keys(private_global_overlap_inputs)) &&
+       isnothing(private_global_overlap_provider) &&
+       isnothing(private_global_overlap_factors) &&
+       isnothing(private_global_overlap_factor_provider)
+        return _pqs_source_box_route_driver_private_global_overlap_blocked_stage(
+            :missing_overlap_inputs;
+            global_dimension = private_global_overlap_global_dimension,
+        )
+    end
+
+    terminal_route_state =
+        _pqs_source_box_route_driver_private_global_overlap_source(report)
+    result =
+        CartesianPairBlockMaterialization.driver_global_overlap_result(
+            terminal_route_state;
+            global_dimension = private_global_overlap_global_dimension,
+            inputs = private_global_overlap_inputs,
+            provider = private_global_overlap_provider,
+            factors = private_global_overlap_factors,
+            factor_provider = private_global_overlap_factor_provider,
+        )
+    return (;
+        private_global_overlap_result = result,
+        private_global_overlap_summary =
+            _pqs_source_box_route_driver_private_global_overlap_summary(result),
+    )
+end
+
+function _pqs_source_box_route_driver_private_global_overlap_source(report)
+    if hasproperty(report, :low_order_route_summary)
+        low_order_route_summary = report.low_order_route_summary
+        if hasproperty(low_order_route_summary, :terminal_route_state)
+            return low_order_route_summary.terminal_route_state
+        end
+    end
+    hasproperty(report, :terminal_route_state) && return report.terminal_route_state
+    return (;)
+end
+
+function _pqs_source_box_route_driver_private_global_overlap_blocked_stage(
+    blocker::Symbol;
+    global_dimension = nothing,
+)
+    summary = (;
+        object_kind = :cartesian_route_driver_private_global_overlap_summary,
+        requested = true,
+        status = :blocked_private_global_overlap,
+        blocker,
+        result_available = false,
+        global_dimension,
+        global_overlap_matrix_materialized = false,
+        global_one_body_term_matrix_materialized = false,
+        route_driver_wiring = false,
+        hamiltonian_data_materialized = false,
+        global_hamiltonian_data_materialized = false,
+        coulomb_materialized = false,
+        ida_mwg_data_materialized = false,
+        pqs_lowdin_materialized = false,
+        pqs_shell_projection_materialized = false,
+        artifacts_materialized = false,
+        exports_materialized = false,
+        full_white_lindsey_route_assembled = false,
+    )
+    return (;
+        private_global_overlap_result = nothing,
+        private_global_overlap_summary = summary,
+    )
+end
+
+function _pqs_source_box_route_driver_private_global_overlap_summary(result)
+    return (;
+        object_kind = :cartesian_route_driver_private_global_overlap_summary,
+        requested = true,
+        status = result.status,
+        blocker = result.blocker,
+        result_available = true,
+        global_dimension = result.global_dimension,
+        global_overlap_matrix_materialized =
+            result.global_overlap_matrix_materialized,
+        global_one_body_term_matrix_materialized =
+            result.global_one_body_term_matrix_materialized,
+        route_driver_wiring = result.route_driver_wiring,
+        hamiltonian_data_materialized = result.hamiltonian_data_materialized,
+        global_hamiltonian_data_materialized =
+            result.global_hamiltonian_data_materialized,
+        coulomb_materialized = result.coulomb_materialized,
+        ida_mwg_data_materialized = result.ida_mwg_data_materialized,
+        pqs_lowdin_materialized = result.pqs_lowdin_materialized,
+        pqs_shell_projection_materialized = result.pqs_shell_projection_materialized,
+        artifacts_materialized = result.artifacts_materialized,
+        exports_materialized = result.exports_materialized,
+        full_white_lindsey_route_assembled =
+            result.full_white_lindsey_route_assembled,
+    )
+end
+
 function _pqs_source_box_route_driver_materialization(
     report;
     materialize_route::Bool = false,
@@ -3336,8 +3450,24 @@ function _pqs_source_box_route_driver_materialization(
     route_configured_diatomic_ham_interaction_treatment::Symbol = :ggt_nearest,
     white_lindsey_expansion = nothing,
     white_lindsey_Z = nothing,
+    private_global_overlap_requested::Bool = false,
+    private_global_overlap_global_dimension = nothing,
+    private_global_overlap_inputs = (;),
+    private_global_overlap_provider = nothing,
+    private_global_overlap_factors = nothing,
+    private_global_overlap_factor_provider = nothing,
 )
     route_family = report.route_family
+    private_global_overlap_stage =
+        _pqs_source_box_route_driver_private_global_overlap_stage(
+            report;
+            private_global_overlap_requested,
+            private_global_overlap_global_dimension,
+            private_global_overlap_inputs,
+            private_global_overlap_provider,
+            private_global_overlap_factors,
+            private_global_overlap_factor_provider,
+        )
     route_configured_shellization_request =
         _cartesian_shellization_route_configured_request(
             report;
@@ -3702,6 +3832,7 @@ function _pqs_source_box_route_driver_materialization(
             object_kind = :cartesian_nesting_route_driver_materialization,
             route_family,
             private_development_only = true,
+            private_global_overlap_stage...,
             materialize_route_requested = false,
             save_basis_artifact_requested = save_basis_artifact,
             save_ham_artifact_requested = save_ham_artifact,
@@ -3803,6 +3934,7 @@ function _pqs_source_box_route_driver_materialization(
             object_kind = :cartesian_nesting_route_driver_materialization,
             route_family,
             private_development_only = true,
+            private_global_overlap_stage...,
             materialize_route_requested = true,
             save_basis_artifact_requested = save_basis_artifact,
             save_ham_artifact_requested = save_ham_artifact,
@@ -4236,6 +4368,7 @@ function _pqs_source_box_route_driver_materialization(
                 object_kind = :cartesian_nesting_route_driver_materialization,
                 route_family,
                 private_development_only = true,
+                private_global_overlap_stage...,
                 materialize_route_requested = true,
                 save_basis_artifact_requested = save_basis_artifact,
                 save_ham_artifact_requested = save_ham_artifact,
@@ -4533,6 +4666,7 @@ function _pqs_source_box_route_driver_materialization(
             object_kind = :cartesian_nesting_route_driver_materialization,
             route_family,
             private_development_only = true,
+            private_global_overlap_stage...,
             materialize_route_requested = true,
             save_basis_artifact_requested = save_basis_artifact,
             save_ham_artifact_requested = save_ham_artifact,
@@ -4626,6 +4760,7 @@ function _pqs_source_box_route_driver_materialization(
         object_kind = :cartesian_nesting_route_driver_materialization,
         route_family,
         private_development_only = true,
+        private_global_overlap_stage...,
         materialize_route_requested = true,
         save_basis_artifact_requested = save_basis_artifact,
         save_ham_artifact_requested = save_ham_artifact,

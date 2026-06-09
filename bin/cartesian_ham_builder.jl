@@ -49,6 +49,9 @@ white_lindsey_expansion = coulomb_gaussian_expansion(doacc = false)
 save_artifact = false
 save_tsv = false
 materialize_route = false
+private_global_overlap_requested = false
+private_global_overlap_global_dimension = nothing
+private_global_overlap_inputs = (;)
 probe_route_configured_one_center_materializer = false
 probe_route_configured_diatomic_atom_growth_materializer = false
 low_order_shellization_policy = nothing
@@ -91,6 +94,8 @@ route_inputs = (; route_family, route_kind, route_shape, product_body_rule,
     white_lindsey_nesting_rule, white_lindsey_retained_rule,
     white_lindsey_operator_rule, white_lindsey_benchmark_role)
 materialization_inputs = (; materialize_route, probe_route_configured_one_center_materializer,
+    private_global_overlap_requested, private_global_overlap_global_dimension,
+    private_global_overlap_inputs,
     probe_route_configured_diatomic_atom_growth_materializer,
     low_order_shellization_policy,
     save_basis_artifact, save_ham_artifact, basisfile, hamfile,

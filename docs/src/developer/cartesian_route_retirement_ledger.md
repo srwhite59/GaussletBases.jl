@@ -71,6 +71,13 @@ paths from becoming new route authority.
   blocks with `:missing_pair_block_materialization_plan` when no structured
   pair-block materialization plan is present. It is not production driver
   wiring and does not retire the old route by itself.
+- A private opt-in overlap driver option,
+  `private_global_overlap_requested`, carries
+  `private_global_overlap_result` plus `private_global_overlap_summary` from the
+  materialization stage. It returns the structured overlap result when enough
+  structured state, global dimension, and overlap inputs are present, or a
+  compact blocked summary otherwise. This remains nonproduction and off by
+  default; it is not old-route retirement.
 - Selected White--Lindsey old-oracle equivalence currently covers overlap,
   kinetic, position_x, position_y, position_z, x2_x, x2_y, and x2_z.
 - `src/cartesian_pair_block_materialization/one_body_global_matrix_helpers.jl`
