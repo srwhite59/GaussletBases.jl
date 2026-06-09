@@ -205,6 +205,13 @@ paths from becoming new route authority.
   overlap availability, Hamiltonian assembly, or new physics path is claimed.
   Provider-level materialization is recorded with provider-level summary fields;
   unqualified and route-global matrix materialization flags remain false.
+- The synthetic provider-level overlap placement pilot also has a small
+  collection wrapper. It matches local overlap records by `block_key`, requires
+  dense local source blocks plus reviewed placement facts, and adds each
+  retained block into one provider-level target matrix under the explicit
+  accumulation rule. It still does not infer transpose/symmetry fill, consume
+  real route placement facts, wire the private driver, or claim route-global
+  overlap availability.
 - The next overlap implementation boundary is no longer additional
   fingerprinting. It is a reviewed placement design and implementation plan for
   turning local CPB overlap collections into retained/global overlap. That plan

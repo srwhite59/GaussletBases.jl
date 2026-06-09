@@ -367,8 +367,9 @@ provider-level numerical placement pilot, unless manager direction asks for a
 broader retained-unit metadata audit first.
 
 The synthetic provider-level placement pilot now exists for one fully reviewed
-local dense overlap block. It consumes a `CPBOverlapDenseBlock`, available left
-and right `CPBRetainedTransformCarry` objects, an available
+local dense overlap block and for a small reviewed local overlap collection.
+For one block, it consumes a `CPBOverlapDenseBlock`, available left and right
+`CPBRetainedTransformCarry` objects, an available
 `CPBSourcePairPlacementRange`, and reviewed `CPBOverlapPlacementFacts`, then
 applies:
 
@@ -382,11 +383,14 @@ synthetic fixtures. Its summary must use provider-level materialization fields,
 such as `provider_level_matrix_materialized` and
 `provider_level_overlap_matrix_materialized`, for that synthetic target matrix.
 Unqualified or route-global materialization flags must remain false and must
-not be used to claim provider-level pilot success. The pilot is not
-route-driver adoption, not private global overlap stage adoption, and not
-evidence that real route placement is available. Real route placement remains
-blocked until structured retained transforms and source-pair retained column
-ranges are carried from real route/report state.
+not be used to claim provider-level pilot success. The collection pilot repeats
+the same operation for each accepted dense local record and adds the retained
+blocks into one provider-level target matrix under
+`:add_explicit_blocks_into_ranges`; it does not infer symmetry or transpose
+fills. These pilots are not route-driver adoption, not private global overlap
+stage adoption, and not evidence that real route placement is available. Real
+route placement remains blocked until structured retained transforms and
+source-pair retained column ranges are carried from real route/report state.
 
 ## Structured Carry Objects For Placement
 

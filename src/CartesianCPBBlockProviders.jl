@@ -159,6 +159,23 @@ struct CPBPlacedOverlapBlock{S,L,R,P,F,G,M}
     metadata::M
 end
 
+"""
+    CPBPlacedOverlapCollection
+
+Provider-level synthetic placement pilot for a local CPB overlap block
+collection. This object may carry a dense provider-level target matrix, but it
+is not route-driver adoption and does not imply route-global overlap
+availability.
+"""
+struct CPBPlacedOverlapCollection{C,T,R,F,G,M}
+    collection::C
+    transform_carries::T
+    placement_ranges::R
+    placement_facts::F
+    global_overlap_matrix::G
+    metadata::M
+end
+
 summary(pair::CPBIntervalPair3D) = pair.metadata
 summary(block_set::CPBOverlapAxisBlockSet) = block_set.metadata
 summary(block::CPBOverlapDenseBlock) = block.metadata
@@ -169,6 +186,7 @@ summary(range::CPBSourcePairPlacementRange) = range.metadata
 summary(facts::CPBOverlapPlacementFacts) = facts.metadata
 summary(plan::CPBReviewedOverlapPlacementPlan) = plan.metadata
 summary(placed::CPBPlacedOverlapBlock) = placed.metadata
+summary(placed::CPBPlacedOverlapCollection) = placed.metadata
 
 function cpb_interval_pair(
     parent::CPGB.CartesianParentGaussletBasis3D,
@@ -2051,6 +2069,339 @@ function _cpb_place_overlap_block_summary(
         global_dimension_source =
             isnothing(range_summary) ? :unavailable : range_summary.global_dimension_source,
         retained_block_shape,
+        provider_level_global_overlap_matrix_shape =
+            available ? size(global_overlap_matrix) : :not_materialized,
+        global_overlap_matrix_shape = :route_global_matrix_not_materialized,
+        provider_level_matrix_materialized = available,
+        provider_level_overlap_matrix_materialized = available,
+        provider_level_pilot = true,
+        synthetic_fixture_only = true,
+        global_matrix_materialized = false,
+        global_overlap_matrix_materialized = false,
+        route_global_matrix_materialized = false,
+        route_global_overlap_matrix_materialized = false,
+        route_driver_wiring = false,
+        route_global_overlap_stage_source = false,
+        route_global_overlap_available = false,
+        hamiltonian_data_materialized = false,
+        coulomb_data_materialized = false,
+        ida_mwg_semantics = false,
+        pqs_lowdin_materialized = false,
+        pqs_shell_projection_materialized = false,
+        exports_or_artifacts = false,
+    )
+end
+
+function cpb_place_overlap_collection(
+    collection::CPBLocalOverlapBlockCollection,
+    transform_carries,
+    placement_ranges,
+    placement_facts,
+)
+    return cpb_place_overlap_collection(
+        collection;
+        transform_carries,
+        placement_ranges,
+        placement_facts,
+    )
+end
+
+function cpb_place_overlap_collection(
+    collection::CPBLocalOverlapBlockCollection;
+    transform_carries = (),
+    placement_ranges = (),
+    placement_facts = nothing,
+)
+    normalized_transform_carries =
+        _cpb_overlap_placement_items_tuple(transform_carries)
+    normalized_placement_ranges =
+        _cpb_overlap_placement_items_tuple(placement_ranges)
+    transform_lookup =
+        _cpb_overlap_placement_transform_object_lookup(normalized_transform_carries)
+    range_lookup =
+        _cpb_overlap_placement_range_object_lookup(normalized_placement_ranges)
+    facts_summary = _cpb_overlap_pilot_facts_summary(placement_facts)
+    collection_summary = summary(collection)
+    record_placement_summaries = Tuple(
+        _cpb_place_overlap_collection_record_summary(
+            record,
+            transform_lookup,
+            range_lookup,
+            placement_facts,
+            facts_summary,
+        )
+        for record in collection.records
+    )
+    blocker = _cpb_place_overlap_collection_blocker(
+        collection,
+        collection_summary,
+        placement_facts,
+        facts_summary,
+        record_placement_summaries,
+    )
+    global_overlap_matrix =
+        isnothing(blocker) ?
+        _cpb_place_overlap_collection_matrix(
+            collection,
+            transform_lookup,
+            range_lookup,
+        ) :
+        nothing
+    status =
+        isnothing(blocker) ?
+        :materialized_cpb_overlap_collection_placement_pilot :
+        :blocked_cpb_overlap_collection_placement_pilot
+    return CPBPlacedOverlapCollection(
+        collection,
+        normalized_transform_carries,
+        normalized_placement_ranges,
+        placement_facts,
+        global_overlap_matrix,
+        _cpb_place_overlap_collection_summary(
+            status,
+            blocker,
+            collection_summary,
+            facts_summary,
+            record_placement_summaries,
+            global_overlap_matrix,
+        ),
+    )
+end
+
+function _cpb_overlap_placement_transform_object_lookup(transform_carries::Tuple)
+    lookup = Dict{Any,Any}()
+    for transform_carry in transform_carries
+        transform_summary =
+            _cpb_overlap_placement_transform_summary(transform_carry)
+        isnothing(transform_summary) && continue
+        block_key = _summary_property(transform_summary, :block_key)
+        side = _summary_property(transform_summary, :side)
+        isnothing(block_key) && continue
+        side in (:left, :right) || continue
+        lookup[(block_key, side)] = transform_carry
+    end
+    return lookup
+end
+
+function _cpb_overlap_placement_range_object_lookup(placement_ranges::Tuple)
+    lookup = Dict{Any,Any}()
+    for placement_range in placement_ranges
+        range_summary = _cpb_overlap_placement_range_summary(placement_range)
+        isnothing(range_summary) && continue
+        block_key = _summary_property(range_summary, :block_key)
+        isnothing(block_key) && continue
+        lookup[block_key] = placement_range
+    end
+    return lookup
+end
+
+function _cpb_place_overlap_collection_record_summary(
+    record::CPBLocalOverlapBlockRecord,
+    transform_lookup,
+    range_lookup,
+    placement_facts,
+    facts_summary,
+)
+    record_summary = summary(record)
+    block_key = record.block_key
+    left_transform_carry = get(transform_lookup, (block_key, :left), nothing)
+    right_transform_carry = get(transform_lookup, (block_key, :right), nothing)
+    placement_range = get(range_lookup, block_key, nothing)
+    left_transform_summary =
+        _cpb_overlap_placement_transform_summary(left_transform_carry)
+    right_transform_summary =
+        _cpb_overlap_placement_transform_summary(right_transform_carry)
+    range_summary = _cpb_overlap_placement_range_summary(placement_range)
+    source_summary = _cpb_overlap_pilot_summary(record.source_block)
+    blocker = _cpb_place_overlap_block_blocker(
+        record.source_block,
+        source_summary,
+        left_transform_carry,
+        left_transform_summary,
+        right_transform_carry,
+        right_transform_summary,
+        placement_range,
+        range_summary,
+        placement_facts,
+        facts_summary,
+    )
+    status =
+        isnothing(blocker) ?
+        :materialized_cpb_overlap_collection_record_pilot :
+        :blocked_cpb_overlap_collection_record_pilot
+    return (;
+        block_key,
+        status,
+        blocker,
+        source_kind =
+            record.source_block isa CPBOverlapDenseBlock ?
+            :cpb_overlap_dense_block :
+            :unavailable,
+        source_block_status =
+            isnothing(source_summary) ? :unavailable : source_summary.status,
+        source_dense_block_shape =
+            record.source_block isa CPBOverlapDenseBlock ?
+            size(record.source_block.dense_block) :
+            :unavailable,
+        left_transform_status =
+            isnothing(left_transform_summary) ?
+            :unavailable :
+            left_transform_summary.status,
+        right_transform_status =
+            isnothing(right_transform_summary) ?
+            :unavailable :
+            right_transform_summary.status,
+        placement_range_status =
+            isnothing(range_summary) ? :unavailable : range_summary.status,
+        left_column_range =
+            isnothing(range_summary) ? :unavailable : range_summary.left_column_range,
+        right_column_range =
+            isnothing(range_summary) ? :unavailable : range_summary.right_column_range,
+        global_dimension =
+            isnothing(range_summary) ? :unavailable : range_summary.global_dimension,
+        local_ordering =
+            _summary_property(record_summary, :local_ordering),
+    )
+end
+
+function _cpb_place_overlap_collection_blocker(
+    _collection::CPBLocalOverlapBlockCollection,
+    collection_summary,
+    placement_facts,
+    facts_summary,
+    record_placement_summaries::Tuple,
+)
+    placement_facts isa CPBOverlapPlacementFacts ||
+        return :missing_reviewed_overlap_placement_facts
+    collection_summary.status === :available_cpb_local_overlap_block_collection ||
+        return _cpb_overlap_placement_collection_blocker(collection_summary)
+    facts_summary.placement_plan_review_status === :reviewed_placement_plan ||
+        return :placement_facts_not_reviewed
+    isempty(facts_summary.missing_requirements) ||
+        return :placement_requirements_missing
+    facts_summary.blocker === :placement_not_implemented ||
+        return facts_summary.blocker
+    facts_summary.accumulation_rule === :add_explicit_blocks_into_ranges ||
+        return :unsupported_overlap_accumulation_rule
+    facts_summary.symmetry_policy === :explicit_blocks_only ||
+        return :unsupported_overlap_symmetry_policy
+    facts_summary.duplicate_record_policy === :reject_duplicate_block_keys ||
+        return :unsupported_overlap_duplicate_record_policy
+    dimension_blocker =
+        _cpb_place_overlap_collection_global_dimension_blocker(
+            record_placement_summaries,
+        )
+    isnothing(dimension_blocker) || return dimension_blocker
+    for record_summary in record_placement_summaries
+        record_summary.status === :materialized_cpb_overlap_collection_record_pilot ||
+            return record_summary.blocker
+    end
+    return nothing
+end
+
+function _cpb_place_overlap_collection_global_dimension_blocker(
+    record_placement_summaries::Tuple,
+)
+    global_dimensions = Tuple(
+        record.global_dimension for record in record_placement_summaries
+        if record.global_dimension isa Integer
+    )
+    isempty(global_dimensions) && return nothing
+    all(==(first(global_dimensions)), global_dimensions) ||
+        return :placement_range_global_dimension_mismatch
+    return nothing
+end
+
+function _cpb_place_overlap_collection_matrix(
+    collection::CPBLocalOverlapBlockCollection,
+    transform_lookup,
+    range_lookup,
+)
+    retained_blocks = Tuple(
+        _cpb_place_overlap_collection_retained_block(
+            record,
+            transform_lookup,
+            range_lookup,
+        )
+        for record in collection.records
+    )
+    element_type = promote_type(
+        Tuple(eltype(retained.retained_block) for retained in retained_blocks)...,
+    )
+    global_dimension = first(retained_blocks).range_summary.global_dimension
+    global_overlap_matrix = zeros(element_type, global_dimension, global_dimension)
+    for retained in retained_blocks
+        global_overlap_matrix[
+            retained.range_summary.left_column_range,
+            retained.range_summary.right_column_range,
+        ] .+= retained.retained_block
+    end
+    return global_overlap_matrix
+end
+
+function _cpb_place_overlap_collection_retained_block(
+    record::CPBLocalOverlapBlockRecord,
+    transform_lookup,
+    range_lookup,
+)
+    block_key = record.block_key
+    left_transform_carry = transform_lookup[(block_key, :left)]
+    right_transform_carry = transform_lookup[(block_key, :right)]
+    placement_range = range_lookup[block_key]
+    retained_block =
+        left_transform_carry.transform_object' *
+        record.source_block.dense_block *
+        right_transform_carry.transform_object
+    return (;
+        range_summary = summary(placement_range),
+        retained_block,
+    )
+end
+
+function _cpb_place_overlap_collection_summary(
+    status::Symbol,
+    blocker,
+    collection_summary,
+    facts_summary,
+    record_placement_summaries::Tuple,
+    global_overlap_matrix,
+)
+    available = status === :materialized_cpb_overlap_collection_placement_pilot
+    return (;
+        object_kind = :cartesian_cpb_placed_overlap_collection_summary,
+        status,
+        blocker,
+        record_count = collection_summary.record_count,
+        placed_record_count =
+            count(
+                record ->
+                    record.status ===
+                    :materialized_cpb_overlap_collection_record_pilot,
+                record_placement_summaries,
+            ),
+        blocked_record_count =
+            count(
+                record ->
+                    record.status !==
+                    :materialized_cpb_overlap_collection_record_pilot,
+                record_placement_summaries,
+            ),
+        block_keys = collection_summary.block_keys,
+        record_placement_summaries,
+        placement_facts_status =
+            isnothing(facts_summary) ? :unavailable : facts_summary.status,
+        placement_facts_blocker =
+            isnothing(facts_summary) ? :unavailable : facts_summary.blocker,
+        placement_plan_review_status =
+            isnothing(facts_summary) ?
+            :unavailable :
+            facts_summary.placement_plan_review_status,
+        accumulation_rule =
+            isnothing(facts_summary) ? :unavailable : facts_summary.accumulation_rule,
+        symmetry_policy =
+            isnothing(facts_summary) ? :unavailable : facts_summary.symmetry_policy,
+        duplicate_record_policy =
+            isnothing(facts_summary) ? :unavailable : facts_summary.duplicate_record_policy,
         provider_level_global_overlap_matrix_shape =
             available ? size(global_overlap_matrix) : :not_materialized,
         global_overlap_matrix_shape = :route_global_matrix_not_materialized,
