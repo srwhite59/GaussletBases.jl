@@ -1092,6 +1092,12 @@ function cpb_overlap_placement_facts(
             placement_plan,
             accumulation_rule,
         )
+    placement_record_inventory =
+        _cpb_overlap_placement_record_inventory_summary(
+            collection_available,
+            collection_summary,
+            placement_plan,
+        )
     missing_requirements =
         _cpb_overlap_placement_missing_requirements(
             collection_available,
@@ -1113,9 +1119,14 @@ function cpb_overlap_placement_facts(
         (
             isnothing(propagated_blocker) ?
             (
-                isempty(missing_requirements) ?
-                :placement_not_implemented :
-                :missing_placement_or_retained_transform
+                placement_record_inventory.status ===
+                :blocked_cpb_overlap_placement_record_inventory ?
+                placement_record_inventory.blocker :
+                (
+                    isempty(missing_requirements) ?
+                    :placement_not_implemented :
+                    :missing_placement_or_retained_transform
+                )
             ) :
             propagated_blocker
         ) :
@@ -1135,6 +1146,14 @@ function cpb_overlap_placement_facts(
         record_fact_summaries,
         placement_plan_status,
         placement_plan_kind = _cpb_overlap_placement_plan_kind(placement_plan),
+        placement_record_inventory_status = placement_record_inventory.status,
+        placement_record_inventory_blocker = placement_record_inventory.blocker,
+        accepted_block_keys = placement_record_inventory.accepted_block_keys,
+        provided_block_keys = placement_record_inventory.provided_block_keys,
+        rejected_block_keys = placement_record_inventory.rejected_block_keys,
+        duplicate_block_keys = placement_record_inventory.duplicate_block_keys,
+        duplicate_record_policy =
+            placement_record_inventory.duplicate_record_policy,
         accumulation_rule_status,
         accumulation_rule =
             isnothing(effective_accumulation_rule) ?
@@ -1309,6 +1328,98 @@ end
 function _cpb_overlap_placement_collection_blocker(collection_summary)
     blocker = _summary_property(collection_summary, :blocker)
     isnothing(blocker) ? :missing_local_overlap_collection : blocker
+end
+
+function _cpb_overlap_placement_record_inventory_summary(
+    collection_available::Bool,
+    collection_summary,
+    placement_plan,
+)
+    provided_block_keys =
+        collection_available ? collection_summary.block_keys : ()
+    plan_summary = _cpb_overlap_placement_plan_summary(placement_plan)
+    plan_is_reviewed = placement_plan isa CPBReviewedOverlapPlacementPlan
+    plan_status =
+        isnothing(plan_summary) ?
+        :unavailable :
+        _summary_property(plan_summary, :status)
+    duplicate_record_policy =
+        isnothing(plan_summary) ?
+        :unavailable :
+        _summary_property(
+            plan_summary,
+            :duplicate_record_policy,
+        )
+    accepted_block_keys =
+        plan_is_reviewed && !isnothing(plan_summary) ?
+        _summary_property(plan_summary, :accepted_block_keys) :
+        ()
+    isnothing(accepted_block_keys) && (accepted_block_keys = ())
+    duplicate_block_keys =
+        _cpb_overlap_placement_duplicate_block_keys(provided_block_keys)
+    rejected_block_keys =
+        plan_is_reviewed &&
+        plan_status === :available_cpb_reviewed_overlap_placement_plan ?
+        _cpb_overlap_placement_rejected_block_keys(
+            provided_block_keys,
+            accepted_block_keys,
+        ) :
+        ()
+    status, blocker =
+        !collection_available ?
+        (:unavailable_cpb_overlap_placement_record_inventory,
+            :missing_local_overlap_collection) :
+        !plan_is_reviewed ?
+        (:not_checked_cpb_overlap_placement_record_inventory,
+            nothing) :
+        plan_status !== :available_cpb_reviewed_overlap_placement_plan ?
+        (:blocked_cpb_overlap_placement_record_inventory,
+            _summary_property(plan_summary, :blocker)) :
+        !isempty(duplicate_block_keys) &&
+        duplicate_record_policy === :reject_duplicate_block_keys ?
+        (:blocked_cpb_overlap_placement_record_inventory,
+            :duplicate_overlap_placement_record) :
+        !isempty(rejected_block_keys) ?
+        (:blocked_cpb_overlap_placement_record_inventory,
+            :unaccepted_overlap_placement_record) :
+        (:available_cpb_overlap_placement_record_inventory,
+            nothing)
+    return (;
+        status,
+        blocker,
+        accepted_block_keys,
+        provided_block_keys,
+        rejected_block_keys,
+        duplicate_block_keys,
+        duplicate_record_policy,
+    )
+end
+
+function _cpb_overlap_placement_rejected_block_keys(
+    provided_block_keys::Tuple,
+    accepted_block_keys::Tuple,
+)
+    return Tuple(
+        block_key for block_key in unique(provided_block_keys)
+        if !(block_key in accepted_block_keys)
+    )
+end
+
+function _cpb_overlap_placement_duplicate_block_keys(block_keys::Tuple)
+    duplicate_block_keys = Any[]
+    seen_block_keys = Set{Any}()
+    pushed_block_keys = Set{Any}()
+    for block_key in block_keys
+        if block_key in seen_block_keys
+            if !(block_key in pushed_block_keys)
+                push!(duplicate_block_keys, block_key)
+                push!(pushed_block_keys, block_key)
+            end
+        else
+            push!(seen_block_keys, block_key)
+        end
+    end
+    return Tuple(duplicate_block_keys)
 end
 
 function _cpb_overlap_placement_missing_requirements(

@@ -648,6 +648,34 @@ function _driver_overlap_real_report_overlap_placement_source_audit(
             isnothing(reviewed_placement_facts_summary) ?
             :not_attempted_missing_reviewed_placement_plan :
             reviewed_placement_facts_summary.accumulation_rule,
+        reviewed_placement_facts_inventory_status =
+            isnothing(reviewed_placement_facts_summary) ?
+            :not_attempted_missing_reviewed_placement_plan :
+            reviewed_placement_facts_summary.placement_record_inventory_status,
+        reviewed_placement_facts_inventory_blocker =
+            isnothing(reviewed_placement_facts_summary) ?
+            :not_attempted_missing_reviewed_placement_plan :
+            reviewed_placement_facts_summary.placement_record_inventory_blocker,
+        reviewed_placement_facts_accepted_block_keys =
+            isnothing(reviewed_placement_facts_summary) ?
+            () :
+            reviewed_placement_facts_summary.accepted_block_keys,
+        reviewed_placement_facts_provided_block_keys =
+            isnothing(reviewed_placement_facts_summary) ?
+            () :
+            reviewed_placement_facts_summary.provided_block_keys,
+        reviewed_placement_facts_rejected_block_keys =
+            isnothing(reviewed_placement_facts_summary) ?
+            () :
+            reviewed_placement_facts_summary.rejected_block_keys,
+        reviewed_placement_facts_duplicate_block_keys =
+            isnothing(reviewed_placement_facts_summary) ?
+            () :
+            reviewed_placement_facts_summary.duplicate_block_keys,
+        reviewed_placement_facts_duplicate_record_policy =
+            isnothing(reviewed_placement_facts_summary) ?
+            :not_attempted_missing_reviewed_placement_plan :
+            reviewed_placement_facts_summary.duplicate_record_policy,
         reviewed_placement_facts_skeleton_status =
             isnothing(reviewed_placement_facts_skeleton) ?
             :not_attempted_missing_reviewed_placement_facts :
@@ -1763,6 +1791,20 @@ end
           :available_accumulation_rule
     @test placement_source_audit.reviewed_placement_facts_accumulation_rule ===
           :add_explicit_blocks_into_ranges
+    @test placement_source_audit.reviewed_placement_facts_inventory_status ===
+          :available_cpb_overlap_placement_record_inventory
+    @test placement_source_audit.reviewed_placement_facts_inventory_blocker ===
+          nothing
+    @test placement_source_audit.reviewed_placement_facts_accepted_block_keys ===
+          ((:product, :product),)
+    @test placement_source_audit.reviewed_placement_facts_provided_block_keys ===
+          ((:product, :product),)
+    @test placement_source_audit.reviewed_placement_facts_rejected_block_keys ===
+          ()
+    @test placement_source_audit.reviewed_placement_facts_duplicate_block_keys ===
+          ()
+    @test placement_source_audit.reviewed_placement_facts_duplicate_record_policy ===
+          :reject_duplicate_block_keys
     @test placement_source_audit.reviewed_placement_facts_skeleton_status ===
           :blocked_private_global_overlap_placement_plan_skeleton
     @test placement_source_audit.reviewed_placement_facts_skeleton_blocker ===

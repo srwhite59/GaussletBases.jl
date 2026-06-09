@@ -54,6 +54,10 @@ function _placement_facts_collection(; record = _placement_facts_record())
     return CPBPlacementFacts.cpb_local_overlap_block_collection((record,))
 end
 
+function _placement_facts_collection(records::Tuple)
+    return CPBPlacementFacts.cpb_local_overlap_block_collection(records)
+end
+
 function _placement_facts_transform_carry(;
     side = :left,
     source_shape = _PLACEMENT_FACTS_SOURCE_SHAPE,
@@ -90,6 +94,18 @@ function _placement_facts_range(;
         range_provenance = :test_fixture,
         left_transform_carry,
         right_transform_carry,
+    )
+end
+
+function _placement_facts_reviewed_plan(;
+    accepted_block_keys = (_PLACEMENT_FACTS_BLOCK_KEY,),
+    accumulation_rule = :add_explicit_blocks_into_ranges,
+)
+    return CPBPlacementFacts.cpb_reviewed_overlap_placement_plan(;
+        placement_plan_kind = :test_reviewed_overlap_placement_plan,
+        accumulation_rule,
+        accepted_block_keys,
+        required_global_dimension_source = :test_retained_layout,
     )
 end
 
@@ -228,6 +244,13 @@ end
     )
     @test complete_summary.placement_plan_status === :available_placement_plan
     @test complete_summary.placement_plan_kind === :test_overlap_placement_plan
+    @test complete_summary.placement_record_inventory_status ===
+          :not_checked_cpb_overlap_placement_record_inventory
+    @test complete_summary.placement_record_inventory_blocker === nothing
+    @test complete_summary.accepted_block_keys === ()
+    @test complete_summary.provided_block_keys === (_PLACEMENT_FACTS_BLOCK_KEY,)
+    @test complete_summary.rejected_block_keys === ()
+    @test complete_summary.duplicate_block_keys === ()
     @test complete_summary.accumulation_rule_status ===
           :available_accumulation_rule
     @test complete_summary.accumulation_rule === :test_accumulation_rule
@@ -303,6 +326,89 @@ end
     @test !(:missing_accumulation_rule in missing_plan_summary.missing_requirements)
     @test missing_plan_summary.global_matrix_materialized === false
     @test missing_plan_summary.route_driver_wiring === false
+
+    reviewed_plan = _placement_facts_reviewed_plan()
+    reviewed_plan_facts = _complete_placement_facts(;
+        placement_plan = reviewed_plan,
+    )
+    reviewed_plan_summary = CPBPlacementFacts.summary(reviewed_plan_facts)
+    @test reviewed_plan_summary.status === :blocked_cpb_overlap_placement_facts
+    @test reviewed_plan_summary.blocker === :placement_not_implemented
+    @test reviewed_plan_summary.placement_plan_status === :available_placement_plan
+    @test reviewed_plan_summary.placement_plan_kind ===
+          :test_reviewed_overlap_placement_plan
+    @test reviewed_plan_summary.accumulation_rule_status ===
+          :available_accumulation_rule
+    @test reviewed_plan_summary.accumulation_rule ===
+          :add_explicit_blocks_into_ranges
+    @test reviewed_plan_summary.placement_record_inventory_status ===
+          :available_cpb_overlap_placement_record_inventory
+    @test reviewed_plan_summary.placement_record_inventory_blocker === nothing
+    @test reviewed_plan_summary.accepted_block_keys ===
+          (_PLACEMENT_FACTS_BLOCK_KEY,)
+    @test reviewed_plan_summary.provided_block_keys ===
+          (_PLACEMENT_FACTS_BLOCK_KEY,)
+    @test reviewed_plan_summary.rejected_block_keys === ()
+    @test reviewed_plan_summary.duplicate_block_keys === ()
+    @test reviewed_plan_summary.duplicate_record_policy ===
+          :reject_duplicate_block_keys
+
+    unaccepted_plan = _placement_facts_reviewed_plan(;
+        accepted_block_keys = ((:other_left, :other_right),),
+    )
+    unaccepted_facts = _complete_placement_facts(;
+        placement_plan = unaccepted_plan,
+    )
+    unaccepted_summary = CPBPlacementFacts.summary(unaccepted_facts)
+    @test unaccepted_summary.status === :blocked_cpb_overlap_placement_facts
+    @test unaccepted_summary.blocker === :unaccepted_overlap_placement_record
+    @test unaccepted_summary.placement_record_inventory_status ===
+          :blocked_cpb_overlap_placement_record_inventory
+    @test unaccepted_summary.placement_record_inventory_blocker ===
+          :unaccepted_overlap_placement_record
+    @test unaccepted_summary.rejected_block_keys ===
+          (_PLACEMENT_FACTS_BLOCK_KEY,)
+    @test unaccepted_summary.duplicate_block_keys === ()
+    @test unaccepted_summary.global_matrix_materialized === false
+    @test unaccepted_summary.route_driver_wiring === false
+
+    duplicate_collection = _placement_facts_collection((
+        _placement_facts_record(),
+        _placement_facts_record(),
+    ))
+    duplicate_facts = CPBPlacementFacts.cpb_overlap_placement_facts(
+        duplicate_collection;
+        placement_plan = reviewed_plan,
+    )
+    duplicate_summary = CPBPlacementFacts.summary(duplicate_facts)
+    @test duplicate_summary.status === :blocked_cpb_overlap_placement_facts
+    @test duplicate_summary.blocker === :duplicate_overlap_placement_record
+    @test duplicate_summary.placement_record_inventory_status ===
+          :blocked_cpb_overlap_placement_record_inventory
+    @test duplicate_summary.placement_record_inventory_blocker ===
+          :duplicate_overlap_placement_record
+    @test duplicate_summary.duplicate_block_keys === (_PLACEMENT_FACTS_BLOCK_KEY,)
+    @test duplicate_summary.rejected_block_keys === ()
+    @test duplicate_summary.global_matrix_materialized === false
+    @test duplicate_summary.route_driver_wiring === false
+
+    blocked_plan = _placement_facts_reviewed_plan(;
+        accumulation_rule = nothing,
+    )
+    blocked_plan_facts = _complete_placement_facts(;
+        placement_plan = blocked_plan,
+        accumulation_rule = :test_accumulation_rule,
+    )
+    blocked_plan_summary = CPBPlacementFacts.summary(blocked_plan_facts)
+    @test blocked_plan_summary.status === :blocked_cpb_overlap_placement_facts
+    @test blocked_plan_summary.blocker === :missing_accumulation_rule
+    @test blocked_plan_summary.placement_plan_status === :blocked_placement_plan
+    @test blocked_plan_summary.placement_record_inventory_status ===
+          :blocked_cpb_overlap_placement_record_inventory
+    @test blocked_plan_summary.placement_record_inventory_blocker ===
+          :missing_accumulation_rule
+    @test blocked_plan_summary.rejected_block_keys === ()
+    @test blocked_plan_summary.duplicate_block_keys === ()
 
     left_transform = _placement_facts_transform_carry(; side = :left)
     right_transform = _placement_facts_transform_carry(; side = :right)

@@ -291,6 +291,14 @@ fingerprint can supply this reviewed plan, making `:placement_plan` and
 column ranges, and placement-derived global dimension remain missing. This is
 still not numerical placement and does not make route-global overlap available.
 
+`CPBOverlapPlacementFacts` now checks the reviewed plan's accepted record
+inventory against the local overlap collection block keys. The check records
+compact tuples for provided, accepted, rejected, and duplicate block keys. It
+blocks metadata coherence when an available local collection record is not
+accepted by the reviewed plan, or when duplicate block keys violate a
+`:reject_duplicate_block_keys` policy. This remains metadata-only validation:
+it does not apply transforms, place blocks, or assemble route/global overlap.
+
 ## Structured Carry Objects For Placement
 
 The next implementation boundary should introduce compact carry objects before
