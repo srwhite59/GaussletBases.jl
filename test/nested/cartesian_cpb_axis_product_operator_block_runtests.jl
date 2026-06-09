@@ -217,11 +217,38 @@ function _operator_block_overlap_1d()
     )
 end
 
-function _operator_block_axis_bundle(overlap_1d)
+function _operator_block_kinetic_1d()
     return (;
-        x = (; pgdg_intermediate = (; overlap = overlap_1d.x)),
-        y = (; pgdg_intermediate = (; overlap = overlap_1d.y)),
-        z = (; pgdg_intermediate = (; overlap = overlap_1d.z)),
+        x = [
+            2.0 -0.1 -0.2
+            -0.3 2.1 -0.4
+            -0.5 -0.6 2.2
+        ],
+        y = [
+            2.3 -0.7 -0.8
+            -0.9 2.4 -1.0
+            -1.1 -1.2 2.5
+        ],
+        z = [
+            2.6 -1.3 -1.4
+            -1.5 2.7 -1.6
+            -1.7 -1.8 2.8
+        ],
+    )
+end
+
+function _operator_block_axis_bundle(overlap_1d; kinetic_1d = nothing)
+    axis_bundle(axis, overlap_matrix) =
+        isnothing(kinetic_1d) ?
+        (; pgdg_intermediate = (; overlap = overlap_matrix)) :
+        (; pgdg_intermediate = (;
+            overlap = overlap_matrix,
+            kinetic = getproperty(kinetic_1d, axis),
+        ))
+    return (;
+        x = axis_bundle(:x, overlap_1d.x),
+        y = axis_bundle(:y, overlap_1d.y),
+        z = axis_bundle(:z, overlap_1d.z),
     )
 end
 
@@ -421,4 +448,81 @@ end
     @test !hasproperty(overlap_summary, :global_overlap_matrix)
     @test !hasproperty(overlap_summary, :axis_ops)
     @test !hasproperty(overlap_summary, :retained_blocks)
+
+    missing_kinetic_operator =
+        CBPOperatorBlock.cpb_kinetic_operator_block(packet, interval_pair)
+    missing_kinetic_summary =
+        CBPOperatorBlock.summary(missing_kinetic_operator)
+
+    @test missing_kinetic_summary.status === :blocked_cpb_kinetic_operator_block
+    @test missing_kinetic_summary.blocker ===
+          :missing_parent_axis_bundle_kinetic_factors
+    @test isnothing(missing_kinetic_operator.sum_axis_product_block)
+    @test missing_kinetic_summary.dense_block_available === false
+    @test missing_kinetic_summary.route_driver_wiring === false
+    @test missing_kinetic_summary.global_matrix_materialized === false
+
+    kinetic_1d = _operator_block_kinetic_1d()
+    kinetic_packet = CPGBOperatorBlock.parent_overlap_axis_factor_packet(
+        parent,
+        _operator_block_axis_bundle(overlap_1d; kinetic_1d),
+    )
+    kinetic_operator =
+        CBPOperatorBlock.cpb_kinetic_operator_block(kinetic_packet, interval_pair)
+    kinetic_summary = CBPOperatorBlock.summary(kinetic_operator)
+    left_intervals = CBPOperatorBlock.summary(interval_pair).left_intervals
+    right_intervals = CBPOperatorBlock.summary(interval_pair).right_intervals
+    overlap_blocks = (;
+        x = view(overlap_1d.x, left_intervals.x, right_intervals.x),
+        y = view(overlap_1d.y, left_intervals.y, right_intervals.y),
+        z = view(overlap_1d.z, left_intervals.z, right_intervals.z),
+    )
+    kinetic_blocks = (;
+        x = view(kinetic_1d.x, left_intervals.x, right_intervals.x),
+        y = view(kinetic_1d.y, left_intervals.y, right_intervals.y),
+        z = view(kinetic_1d.z, left_intervals.z, right_intervals.z),
+    )
+    expected_kinetic_sum =
+        CBPOperatorBlock.cpb_sum_of_axis_products_operator_block((
+            (;
+                coefficient = 1.0,
+                axis_ops = (x = kinetic_blocks.x, y = overlap_blocks.y, z = overlap_blocks.z),
+                label = :kinetic_x_component,
+            ),
+            (;
+                coefficient = 1.0,
+                axis_ops = (x = overlap_blocks.x, y = kinetic_blocks.y, z = overlap_blocks.z),
+                label = :kinetic_y_component,
+            ),
+            (;
+                coefficient = 1.0,
+                axis_ops = (x = overlap_blocks.x, y = overlap_blocks.y, z = kinetic_blocks.z),
+                label = :kinetic_z_component,
+            ),
+        ))
+
+    @test kinetic_summary.status === :materialized_cpb_kinetic_operator_block
+    @test kinetic_summary.blocker === nothing
+    @test kinetic_summary.term === :kinetic
+    @test kinetic_summary.representation === :dense_local_cpb_sum_of_axis_products
+    @test kinetic_summary.kinetic_factor_form === :sum_of_axis_products
+    @test kinetic_summary.kinetic_component_axes == (:x, :y, :z)
+    @test kinetic_summary.product_term_labels ==
+          (:kinetic_x_component, :kinetic_y_component, :kinetic_z_component)
+    @test kinetic_summary.factor_space === :parent_axis_bundle_pgdg_intermediate
+    @test kinetic_summary.factor_convention === :axis_bundle_one_body_kinetic_sum
+    @test kinetic_summary.index_domain === :parent_axis_indices
+    @test kinetic_summary.provider_level_local_matrix_materialized === true
+    @test kinetic_summary.realization_status === :unrealized
+    @test kinetic_summary.route_global_status === :unassigned
+    @test kinetic_summary.route_driver_wiring === false
+    @test kinetic_summary.route_global_matrix_materialized === false
+    @test kinetic_summary.global_matrix_materialized === false
+    @test !hasproperty(kinetic_summary, :dense_block)
+    @test !hasproperty(kinetic_summary, :axis_ops)
+    @test !hasproperty(kinetic_summary, :global_overlap_matrix)
+    @test !hasproperty(kinetic_summary, :retained_blocks)
+    @test !isnothing(kinetic_operator.sum_axis_product_block)
+    @test kinetic_operator.sum_axis_product_block.dense_block ==
+          expected_kinetic_sum.dense_block
 end

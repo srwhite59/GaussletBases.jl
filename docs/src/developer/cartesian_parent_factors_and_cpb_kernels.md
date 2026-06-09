@@ -253,6 +253,12 @@ Factor packets may be partial. A parent packet can have overlap factors
 available while kinetic, coordinate moments, Coulomb expansion factors, or
 nuclear factors are unavailable or not requested. Availability should be
 reported by category rather than inferred from a single packet-level status.
+The current packet implementation keeps the overlap packet-level status stable
+for compatibility and also carries kinetic factors when the axis bundle already
+provides structured 1D kinetic matrices. The audited source names are
+`axis.pgdg_intermediate.kinetic` first and `axis.kinetic` as a structured
+fallback. Missing or malformed kinetic factors are reported by kinetic category
+status; they do not invalidate an otherwise available overlap packet.
 
 ### Dependency Classes
 
@@ -625,6 +631,13 @@ For kinetic, the result should preserve the sum-of-axis structure:
 The exact representation can be refined, but the key contract is that kinetic
 is not a single arbitrary dense 3D object at this layer. It is an axis-factor
 sum that can be materialized locally only when requested.
+
+The current CPB-local kinetic wrapper follows this contract. It requires the
+parent axis factor packet to carry both overlap and kinetic 1D factors, slices
+those factors over the CPB interval pair, and delegates dense local
+materialization to `cpb_sum_of_axis_products_operator_block` with the three
+explicit terms `Kx Sy Sz`, `Sx Ky Sz`, and `Sx Sy Kz`. It is not a production
+Hamiltonian path, not WL/PQS realization, and not route/global placement.
 
 Future one-body terms should be sums or wrappers around the same axis-product
 primitive, for example:

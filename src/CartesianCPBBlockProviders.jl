@@ -15,6 +15,7 @@ export CPBIntervalPair3D,
        CPBAxisProductOperatorBlock,
        CPBSumOfAxisProductsOperatorBlock,
        CPBOverlapOperatorBlock,
+       CPBKineticOperatorBlock,
        CPBOverlapDenseBlock,
        CPBLocalOverlapBlockRecord,
        CPBLocalOverlapBlockCollection,
@@ -23,6 +24,7 @@ export CPBIntervalPair3D,
        cpb_axis_product_operator_block,
        cpb_sum_of_axis_products_operator_block,
        cpb_overlap_operator_block,
+       cpb_kinetic_operator_block,
        cpb_overlap_dense_block,
        cpb_local_overlap_block_record,
        cpb_local_overlap_block_collection,
@@ -96,6 +98,20 @@ struct CPBOverlapOperatorBlock{P,I,S,B,M}
     interval_pair::I
     axis_block_set::S
     axis_product_block::B
+    metadata::M
+end
+
+"""
+    CPBKineticOperatorBlock
+
+Thin CPB-local kinetic wrapper around the sum-of-axis-products primitive. It
+uses parent-owned 1D kinetic factors and explicit overlap factors on inactive
+directions. It does not imply WL/PQS realization or route/global placement.
+"""
+struct CPBKineticOperatorBlock{P,I,B,M}
+    parent_axis_factor_packet::P
+    interval_pair::I
+    sum_axis_product_block::B
     metadata::M
 end
 
@@ -230,6 +246,7 @@ summary(block_set::CPBOverlapAxisBlockSet) = block_set.metadata
 summary(block::CPBAxisProductOperatorBlock) = block.metadata
 summary(block::CPBSumOfAxisProductsOperatorBlock) = block.metadata
 summary(block::CPBOverlapOperatorBlock) = block.metadata
+summary(block::CPBKineticOperatorBlock) = block.metadata
 summary(block::CPBOverlapDenseBlock) = block.metadata
 summary(record::CPBLocalOverlapBlockRecord) = record.metadata
 summary(collection::CPBLocalOverlapBlockCollection) = collection.metadata
@@ -986,6 +1003,197 @@ function _cpb_overlap_operator_block_summary(
         index_domain_status = axis_block_summary.index_domain_status,
         axis_order = axis_block_summary.axis_order,
         bra_ket_order = axis_block_summary.bra_ket_order,
+        route_driver_wiring = false,
+        route_global_matrix_materialized = false,
+        route_global_overlap_matrix_materialized = false,
+        global_matrix_materialized = false,
+        global_overlap_matrix_materialized = false,
+        hamiltonian_data_materialized = false,
+        coulomb_data_materialized = false,
+        ida_mwg_semantics = false,
+        pqs_lowdin_materialized = false,
+        pqs_shell_projection_materialized = false,
+        exports_or_artifacts = false,
+    )
+end
+
+function cpb_kinetic_operator_block(
+    parent_axis_factor_packet::CPGB.CartesianParentAxisFactorPacket3D,
+    interval_pair::CPBIntervalPair3D,
+)
+    packet_summary = CPGB.summary(parent_axis_factor_packet)
+    interval_summary = summary(interval_pair)
+    blocker = _cpb_kinetic_operator_block_blocker(
+        parent_axis_factor_packet,
+        packet_summary,
+        interval_pair,
+        interval_summary,
+    )
+    product_terms =
+        isnothing(blocker) ?
+        _cpb_kinetic_axis_product_terms(parent_axis_factor_packet, interval_summary) :
+        ()
+    sum_block =
+        isnothing(blocker) ?
+        cpb_sum_of_axis_products_operator_block(
+            product_terms;
+            term = :kinetic,
+            source_kind = :parent_axis_factor_packet_kinetic_overlap,
+            source_summary = packet_summary,
+            factor_space = :parent_axis_bundle_pgdg_intermediate,
+            factor_convention = :axis_bundle_one_body_kinetic_sum,
+            normalization_convention =
+                :not_separate_from_axis_bundle_one_body_factors,
+            index_domain = :parent_axis_indices,
+            index_domain_source = :axis_bundle_contract,
+            index_domain_status =
+                :assumed_parent_axis_indexed_by_current_axis_bundle_contract,
+            axis_order = packet_summary.axis_order,
+            bra_ket_order = packet_summary.bra_ket_order,
+        ) :
+        nothing
+    sum_summary = isnothing(sum_block) ? nothing : summary(sum_block)
+    blocker =
+        isnothing(sum_summary) ?
+        blocker :
+        sum_summary.blocker
+    status =
+        isnothing(blocker) ?
+        :materialized_cpb_kinetic_operator_block :
+        :blocked_cpb_kinetic_operator_block
+    return CPBKineticOperatorBlock(
+        parent_axis_factor_packet,
+        interval_pair,
+        sum_block,
+        _cpb_kinetic_operator_block_summary(
+            status,
+            blocker,
+            packet_summary,
+            interval_summary,
+            sum_summary,
+        ),
+    )
+end
+
+function _cpb_kinetic_operator_block_blocker(
+    parent_axis_factor_packet,
+    packet_summary,
+    interval_pair,
+    interval_summary,
+)
+    packet_summary.status === :available_parent_overlap_axis_factors ||
+        return isnothing(packet_summary.blocker) ?
+               :unavailable_parent_overlap_axis_factors :
+               packet_summary.blocker
+    _summary_property(packet_summary, :kinetic_1d_available) === true ||
+        return :missing_parent_axis_bundle_kinetic_factors
+    _summary_property(packet_summary, :kinetic_sliceable_by_cpb) === true ||
+        return :kinetic_packet_not_cpb_sliceable
+    _summary_property(packet_summary, :kinetic_index_domain) ===
+        :parent_axis_indices ||
+        return :kinetic_packet_not_cpb_sliceable
+    _summary_property(packet_summary, :kinetic_index_domain_source) ===
+        :axis_bundle_contract ||
+        return :kinetic_packet_not_cpb_sliceable
+    _summary_property(
+        packet_summary,
+        :kinetic_index_domain_status,
+    ) === :assumed_parent_axis_indexed_by_current_axis_bundle_contract ||
+        return :kinetic_packet_not_cpb_sliceable
+    interval_summary.status === :available_cpb_interval_pair ||
+        return isnothing(interval_summary.blocker) ?
+               :unavailable_cpb_interval_pair :
+               interval_summary.blocker
+    parent_axis_factor_packet.parent === interval_pair.parent || return :parent_mismatch
+    return nothing
+end
+
+function _cpb_kinetic_axis_product_terms(parent_axis_factor_packet, interval_summary)
+    overlap_1d = parent_axis_factor_packet.overlap_1d
+    kinetic_1d = parent_axis_factor_packet.kinetic_1d
+    left = interval_summary.left_intervals
+    right = interval_summary.right_intervals
+    overlap_blocks = (;
+        x = view(overlap_1d.x, left.x, right.x),
+        y = view(overlap_1d.y, left.y, right.y),
+        z = view(overlap_1d.z, left.z, right.z),
+    )
+    kinetic_blocks = (;
+        x = view(kinetic_1d.x, left.x, right.x),
+        y = view(kinetic_1d.y, left.y, right.y),
+        z = view(kinetic_1d.z, left.z, right.z),
+    )
+    return (
+        (;
+            coefficient = 1.0,
+            axis_ops = (x = kinetic_blocks.x, y = overlap_blocks.y, z = overlap_blocks.z),
+            label = :kinetic_x_component,
+        ),
+        (;
+            coefficient = 1.0,
+            axis_ops = (x = overlap_blocks.x, y = kinetic_blocks.y, z = overlap_blocks.z),
+            label = :kinetic_y_component,
+        ),
+        (;
+            coefficient = 1.0,
+            axis_ops = (x = overlap_blocks.x, y = overlap_blocks.y, z = kinetic_blocks.z),
+            label = :kinetic_z_component,
+        ),
+    )
+end
+
+function _cpb_kinetic_operator_block_summary(
+    status::Symbol,
+    blocker,
+    packet_summary,
+    interval_summary,
+    sum_summary,
+)
+    available = status === :materialized_cpb_kinetic_operator_block
+    return (;
+        object_kind = :cartesian_cpb_kinetic_operator_block_summary,
+        status,
+        blocker,
+        term = :kinetic,
+        source_kind = :parent_axis_factor_packet_kinetic_overlap,
+        parent_axis_factor_packet_summary = packet_summary,
+        interval_pair_summary = interval_summary,
+        sum_axis_product_block_summary =
+            isnothing(sum_summary) ? :unavailable : sum_summary,
+        representation = :dense_local_cpb_sum_of_axis_products,
+        local_ordering = interval_summary.local_ordering,
+        kinetic_factor_form = :sum_of_axis_products,
+        kinetic_component_axes = (:x, :y, :z),
+        kinetic_component_terms =
+            (:kinetic_x_component, :kinetic_y_component, :kinetic_z_component),
+        product_term_count = available ? sum_summary.product_term_count : :unavailable,
+        product_term_labels =
+            available ? sum_summary.product_term_labels : :unavailable,
+        left_shape = available ? sum_summary.left_shape : :unavailable,
+        right_shape = available ? sum_summary.right_shape : :unavailable,
+        dense_block_available = available,
+        dense_block_shape =
+            available ? sum_summary.dense_block_shape : :unavailable,
+        dense_block_eltype =
+            available ? sum_summary.dense_block_eltype : :unavailable,
+        provider_level_local_matrix_materialized = available,
+        realization_status = :unrealized,
+        route_global_status = :unassigned,
+        factor_space =
+            available ? sum_summary.factor_space : :unavailable,
+        factor_convention =
+            available ? sum_summary.factor_convention : :unavailable,
+        normalization_convention =
+            available ? sum_summary.normalization_convention : :unavailable,
+        index_domain =
+            available ? sum_summary.index_domain : :unavailable,
+        index_domain_source =
+            available ? sum_summary.index_domain_source : :unavailable,
+        index_domain_status =
+            available ? sum_summary.index_domain_status : :unavailable,
+        axis_order = packet_summary.axis_order,
+        bra_ket_order =
+            available ? packet_summary.bra_ket_order : :unavailable,
         route_driver_wiring = false,
         route_global_matrix_materialized = false,
         route_global_overlap_matrix_materialized = false,

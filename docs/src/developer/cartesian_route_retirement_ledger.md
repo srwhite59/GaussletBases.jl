@@ -265,6 +265,17 @@ paths from becoming new route authority.
   summaries. It is for simple separable one-body terms only; no production
   kinetic, position, x2, Coulomb-family kernel, WL/PQS realization, or
   route/global placement was added with it.
+- Parent axis bundle kinetic support has been audited and added narrowly where
+  the bundle already owns structured 1D kinetic matrices. The parent axis
+  factor packet now carries optional `kinetic_1d` from
+  `axis.pgdg_intermediate.kinetic` or `axis.kinetic`, with matrix/count
+  validation and compact kinetic availability metadata. A CPB-local kinetic
+  wrapper materializes `Kx Sy Sz + Sx Ky Sz + Sx Sy Kz` through
+  `cpb_sum_of_axis_products_operator_block`; inactive directions use explicit
+  overlap factors. This does not add position, x2, Coulomb-family kernels,
+  WL/PQS realization, retained transforms, route/global placement, driver
+  wiring, Hamiltonian assembly, IDA/MWG, PQS projection/Lowdin, exports, or
+  artifacts.
 - The next overlap implementation boundary is no longer additional placement
   fingerprinting. First decide the CPB operator-block and WL/PQS realization
   design: what local block objects exist, how White-Lindsey consumes them, how
