@@ -16,7 +16,10 @@ export CartesianParentGaussletBasis3D,
        parent_dimension,
        parent_flat_index,
        parent_unflat_index,
-       parent_center
+       parent_center,
+       CartesianParentAxisFactorPacket3D,
+       parent_overlap_axis_factor_packet,
+       summary
 
 """
     CartesianParentGaussletBasis3D
@@ -307,5 +310,7 @@ end
 
 parent_center(parent::CartesianParentGaussletBasis3D, state::NTuple{3,Int}) =
     parent_center(parent, state...)
+
+include("CartesianParentAxisFactors.jl")
 
 end

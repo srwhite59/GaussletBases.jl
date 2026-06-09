@@ -1,8 +1,3 @@
-module CartesianParentAxisFactors
-
-using ..CartesianParentGaussletBases
-
-const CPGB = CartesianParentGaussletBases
 const _AXIS_ORDER = (:x, :y, :z)
 const _BRA_KET_ORDER = (:bra, :ket)
 
@@ -26,12 +21,12 @@ end
 summary(packet::CartesianParentAxisFactorPacket3D) = packet.metadata
 
 function parent_overlap_axis_factor_packet(
-    parent::CPGB.CartesianParentGaussletBasis3D,
+    parent::CartesianParentGaussletBasis3D,
     parent_axis_bundle_object,
 )
-    parent_axis_counts = CPGB.parent_axis_counts(parent)
+    axis_counts = parent_axis_counts(parent)
     overlap_1d = _overlap_1d_from_axis_bundle(parent_axis_bundle_object)
-    blocker = _overlap_1d_blocker(overlap_1d, parent_axis_counts)
+    blocker = _overlap_1d_blocker(overlap_1d, axis_counts)
     status =
         isnothing(blocker) ?
         :available_parent_overlap_axis_factors :
@@ -43,14 +38,14 @@ function parent_overlap_axis_factor_packet(
         _parent_axis_factor_packet_summary(
             status,
             blocker,
-            parent_axis_counts,
+            axis_counts,
             overlap_value,
         ),
     )
 end
 
 function parent_overlap_axis_factor_packet(
-    parent::CPGB.CartesianParentGaussletBasis3D;
+    parent::CartesianParentGaussletBasis3D;
     parent_axis_bundle_object = nothing,
 )
     return parent_overlap_axis_factor_packet(parent, parent_axis_bundle_object)
@@ -177,5 +172,3 @@ function _axis_overlap_from_bundle_axis(axis)
     !isnothing(overlap) && return overlap
     return _property(axis, :overlap)
 end
-
-end # module CartesianParentAxisFactors

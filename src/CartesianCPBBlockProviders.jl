@@ -1,4 +1,4 @@
-module CartesianCPBMatrixKernels
+module CartesianCPBBlockProviders
 
 using ..CartesianCPB
 using ..CartesianParentGaussletBases
@@ -15,7 +15,7 @@ export CPBIntervalPair3D,
 """
     CPBIntervalPair3D
 
-Metadata-only CPB pair contract for future Cartesian CPB matrix kernels.
+Metadata-only CPB pair contract for future Cartesian CPB block providers.
 
 This object validates CPB windows against a Cartesian parent and records
 axis-ordered intervals and shapes. It does not consume parent factor packets or
@@ -118,4 +118,4 @@ function _outside_interval_blocker(record)
     return Symbol("$(record.side)_$(record.axis)_interval_outside_parent")
 end
 
-end # module CartesianCPBMatrixKernels
+end # module CartesianCPBBlockProviders

@@ -9,7 +9,7 @@ using GaussletBases
 
 const CPBPairTest = GaussletBases.CartesianCPB
 const CPGBPairTest = GaussletBases.CartesianParentGaussletBases
-const CKPairTest = GaussletBases.CartesianCPBMatrixKernels
+const CKPairTest = GaussletBases.CartesianCPBBlockProviders
 
 function _interval_pair_test_parent()
     axis_x = build_basis(MappedUniformBasisSpec(

@@ -7,7 +7,6 @@
 using Test
 using GaussletBases
 
-const CPAFPacketTest = GaussletBases.CartesianParentAxisFactors
 const CPGBPacketTest = GaussletBases.CartesianParentGaussletBases
 
 function _packet_test_parent()
@@ -39,11 +38,11 @@ end
 @testset "Cartesian parent overlap axis factor packet" begin
     parent = _packet_test_parent()
     overlap_1d = _packet_test_overlap_1d()
-    packet = CPAFPacketTest.parent_overlap_axis_factor_packet(
+    packet = CPGBPacketTest.parent_overlap_axis_factor_packet(
         parent,
         _packet_test_axis_bundle(overlap_1d),
     )
-    packet_summary = CPAFPacketTest.summary(packet)
+    packet_summary = CPGBPacketTest.summary(packet)
 
     @test packet.parent === parent
     @test packet.overlap_1d.x === overlap_1d.x
@@ -93,11 +92,11 @@ end
         y = (; pgdg_intermediate = (; overlap = overlap_1d.y)),
         z = (; pgdg_intermediate = (;)),
     )
-    blocked_packet = CPAFPacketTest.parent_overlap_axis_factor_packet(
+    blocked_packet = CPGBPacketTest.parent_overlap_axis_factor_packet(
         parent,
         incomplete_bundle,
     )
-    blocked_summary = CPAFPacketTest.summary(blocked_packet)
+    blocked_summary = CPGBPacketTest.summary(blocked_packet)
 
     @test blocked_packet.parent === parent
     @test blocked_packet.overlap_1d === nothing
@@ -131,11 +130,11 @@ end
         y = overlap_1d.y,
         z = overlap_1d.z,
     ))
-    nonmatrix_packet = CPAFPacketTest.parent_overlap_axis_factor_packet(
+    nonmatrix_packet = CPGBPacketTest.parent_overlap_axis_factor_packet(
         parent,
         nonmatrix_bundle,
     )
-    nonmatrix_summary = CPAFPacketTest.summary(nonmatrix_packet)
+    nonmatrix_summary = CPGBPacketTest.summary(nonmatrix_packet)
 
     @test nonmatrix_packet.parent === parent
     @test nonmatrix_packet.overlap_1d === nothing
@@ -153,11 +152,11 @@ end
         y = overlap_1d.y,
         z = overlap_1d.z,
     ))
-    size_mismatch_packet = CPAFPacketTest.parent_overlap_axis_factor_packet(
+    size_mismatch_packet = CPGBPacketTest.parent_overlap_axis_factor_packet(
         parent,
         size_mismatch_bundle,
     )
-    size_mismatch_summary = CPAFPacketTest.summary(size_mismatch_packet)
+    size_mismatch_summary = CPGBPacketTest.summary(size_mismatch_packet)
 
     @test size_mismatch_packet.parent === parent
     @test size_mismatch_packet.overlap_1d === nothing
