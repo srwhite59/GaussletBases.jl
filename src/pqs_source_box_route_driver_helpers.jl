@@ -3337,12 +3337,36 @@ function _pqs_source_box_route_driver_private_global_overlap_stage(
         )
     end
 
-    if !isnothing(private_global_overlap_global_dimension) &&
-       private_global_overlap_inputs isa NamedTuple &&
-       isempty(keys(private_global_overlap_inputs)) &&
-       isnothing(private_global_overlap_provider) &&
-       isnothing(private_global_overlap_factors) &&
-       isnothing(private_global_overlap_factor_provider)
+    manual_overlap_inputs_available =
+        _pqs_source_box_route_driver_private_global_overlap_inputs_available(
+            private_global_overlap_inputs,
+        )
+    manual_overlap_inputs_requested =
+        manual_overlap_inputs_available ||
+        !isnothing(private_global_overlap_provider) ||
+        !isnothing(private_global_overlap_factors) ||
+        !isnothing(private_global_overlap_factor_provider)
+
+    if !manual_overlap_inputs_requested
+        facts =
+            _pqs_source_box_route_driver_private_global_overlap_input_facts(report)
+        if facts.status != :available_private_global_overlap_input_facts
+            return _pqs_source_box_route_driver_private_global_overlap_blocked_stage(
+                facts.blocker;
+                global_dimension = facts.global_dimension,
+            )
+        end
+        private_global_overlap_global_dimension = facts.global_dimension
+        private_global_overlap_inputs = (;
+            parent_axis_counts = facts.parent_axis_counts,
+            overlap_1d = facts.overlap_1d,
+        )
+    elseif !isnothing(private_global_overlap_global_dimension) &&
+           private_global_overlap_inputs isa NamedTuple &&
+           isempty(keys(private_global_overlap_inputs)) &&
+           isnothing(private_global_overlap_provider) &&
+           isnothing(private_global_overlap_factors) &&
+           isnothing(private_global_overlap_factor_provider)
         return _pqs_source_box_route_driver_private_global_overlap_blocked_stage(
             :missing_overlap_inputs;
             global_dimension = private_global_overlap_global_dimension,
@@ -3367,6 +3391,12 @@ function _pqs_source_box_route_driver_private_global_overlap_stage(
     )
 end
 
+function _pqs_source_box_route_driver_private_global_overlap_inputs_available(inputs)
+    return inputs isa NamedTuple &&
+           haskey(inputs, :parent_axis_counts) &&
+           haskey(inputs, :overlap_1d)
+end
+
 function _pqs_source_box_route_driver_private_global_overlap_source(report)
     if hasproperty(report, :low_order_route_summary)
         low_order_route_summary = report.low_order_route_summary
@@ -3376,6 +3406,361 @@ function _pqs_source_box_route_driver_private_global_overlap_source(report)
     end
     hasproperty(report, :terminal_route_state) && return report.terminal_route_state
     return (;)
+end
+
+function _pqs_source_box_route_driver_private_global_overlap_input_facts(report)
+    global_dimension, final_layout_source =
+        _pqs_source_box_route_driver_private_global_overlap_global_dimension(report)
+    if isnothing(global_dimension)
+        return _pqs_source_box_route_driver_private_global_overlap_blocked_facts(
+            :missing_final_retained_column_layout;
+            global_dimension,
+            final_layout_source,
+        )
+    end
+
+    parent_axis_counts, parent_axis_counts_source =
+        _pqs_source_box_route_driver_private_global_overlap_parent_axis_counts(
+            report,
+        )
+    if isnothing(parent_axis_counts)
+        return _pqs_source_box_route_driver_private_global_overlap_blocked_facts(
+            :missing_parent_axis_counts;
+            global_dimension,
+            final_layout_source,
+            parent_axis_counts_source,
+        )
+    end
+
+    overlap_1d, axis_bundle_source =
+        _pqs_source_box_route_driver_private_global_overlap_axis_overlap_1d(
+            report,
+        )
+    if isnothing(overlap_1d)
+        return _pqs_source_box_route_driver_private_global_overlap_blocked_facts(
+            :missing_parent_axis_bundle_overlap_factors;
+            global_dimension,
+            parent_axis_counts,
+            final_layout_source,
+            parent_axis_counts_source,
+            axis_bundle_source,
+        )
+    end
+
+    return merge(
+        _pqs_source_box_route_driver_private_global_overlap_facts_header(
+            :available_private_global_overlap_input_facts,
+            nothing,
+        ),
+        (;
+            global_dimension,
+            parent_axis_counts,
+            overlap_1d,
+            input_source = :structured_driver_report,
+            final_layout_source,
+            parent_axis_counts_source,
+            axis_bundle_source,
+        ),
+        _pqs_source_box_route_driver_private_global_overlap_facts_nonclaims(),
+    )
+end
+
+function _pqs_source_box_route_driver_private_global_overlap_blocked_facts(
+    blocker::Symbol;
+    global_dimension = nothing,
+    parent_axis_counts = nothing,
+    final_layout_source = :unavailable,
+    parent_axis_counts_source = :unavailable,
+    axis_bundle_source = :unavailable,
+)
+    return merge(
+        _pqs_source_box_route_driver_private_global_overlap_facts_header(
+            :blocked_private_global_overlap_input_facts,
+            blocker,
+        ),
+        (;
+            global_dimension,
+            parent_axis_counts,
+            overlap_1d = nothing,
+            input_source = :unavailable,
+            final_layout_source,
+            parent_axis_counts_source,
+            axis_bundle_source,
+        ),
+        _pqs_source_box_route_driver_private_global_overlap_facts_nonclaims(),
+    )
+end
+
+function _pqs_source_box_route_driver_private_global_overlap_facts_header(
+    status::Symbol,
+    blocker,
+)
+    return (;
+        object_kind = :cartesian_route_driver_private_global_overlap_input_facts,
+        status,
+        blocker,
+    )
+end
+
+function _pqs_source_box_route_driver_private_global_overlap_facts_nonclaims()
+    return (;
+        materialized = false,
+        hamiltonian_data_materialized = false,
+        coulomb_materialized = false,
+        ida_mwg_data_materialized = false,
+        pqs_lowdin_materialized = false,
+        pqs_shell_projection_materialized = false,
+        artifacts_materialized = false,
+        exports_materialized = false,
+    )
+end
+
+function _pqs_source_box_route_driver_private_global_overlap_property(
+    object,
+    key::Symbol,
+)
+    isnothing(object) && return nothing
+    return hasproperty(object, key) ? getproperty(object, key) : nothing
+end
+
+function _pqs_source_box_route_driver_private_global_overlap_nested_property(
+    object,
+    keys::Tuple,
+)
+    current = object
+    for key in keys
+        current =
+            _pqs_source_box_route_driver_private_global_overlap_property(
+                current,
+                key,
+            )
+        isnothing(current) && return nothing
+    end
+    return current
+end
+
+function _pqs_source_box_route_driver_private_global_overlap_contexts(report)
+    low_order_route_summary =
+        _pqs_source_box_route_driver_private_global_overlap_property(
+            report,
+            :low_order_route_summary,
+        )
+    terminal_route_state =
+        _pqs_source_box_route_driver_private_global_overlap_source(report)
+    parent =
+        _pqs_source_box_route_driver_private_global_overlap_property(
+            report,
+            :parent,
+        )
+    parent_axis_probe =
+        _pqs_source_box_route_driver_private_global_overlap_property(
+            report,
+            :parent_axis_probe,
+        )
+    return (report, low_order_route_summary, terminal_route_state, parent, parent_axis_probe)
+end
+
+function _pqs_source_box_route_driver_private_global_overlap_global_dimension(
+    report,
+)
+    terminal_route_state =
+        _pqs_source_box_route_driver_private_global_overlap_source(report)
+    retained_unit_plan =
+        _pqs_source_box_route_driver_private_global_overlap_property(
+            terminal_route_state,
+            :retained_unit_plan,
+        )
+    dimension =
+        _pqs_source_box_route_driver_private_global_overlap_dimension_from_retained_unit_plan(
+            retained_unit_plan,
+        )
+    !isnothing(dimension) && return dimension, :terminal_route_state_retained_unit_plan
+
+    retained_units =
+        _pqs_source_box_route_driver_private_global_overlap_property(
+            terminal_route_state,
+            :retained_units,
+        )
+    dimension =
+        _pqs_source_box_route_driver_private_global_overlap_dimension_from_units(
+            retained_units,
+        )
+    !isnothing(dimension) && return dimension, :terminal_route_state_retained_units
+
+    for context in _pqs_source_box_route_driver_private_global_overlap_contexts(report)
+        dimension =
+            _pqs_source_box_route_driver_private_global_overlap_property(
+                context,
+                :retained_dimension,
+            )
+        if !isnothing(dimension)
+            return Int(dimension), :retained_dimension_compatibility
+        end
+    end
+
+    return nothing, :unavailable
+end
+
+function _pqs_source_box_route_driver_private_global_overlap_dimension_from_retained_unit_plan(
+    retained_unit_plan,
+)
+    retained_unit_plan isa CartesianRetainedUnits.RetainedUnitPlan ||
+        return nothing
+    return _pqs_source_box_route_driver_private_global_overlap_dimension_from_units(
+        CartesianRetainedUnits.units(retained_unit_plan),
+    )
+end
+
+function _pqs_source_box_route_driver_private_global_overlap_dimension_from_units(
+    retained_units,
+)
+    isnothing(retained_units) && return nothing
+    isempty(retained_units) && return nothing
+
+    max_column = 0
+    for unit in retained_units
+        column_range =
+            _pqs_source_box_route_driver_private_global_overlap_property(
+                unit,
+                :column_range,
+            )
+        if isnothing(column_range)
+            route_core_final_unit =
+                _pqs_source_box_route_driver_private_global_overlap_property(
+                    unit,
+                    :route_core_final_unit,
+                )
+            column_range =
+                _pqs_source_box_route_driver_private_global_overlap_property(
+                    route_core_final_unit,
+                    :column_range,
+                )
+        end
+        isnothing(column_range) && return nothing
+        max_column = max(max_column, Int(last(column_range)))
+    end
+    return max_column > 0 ? max_column : nothing
+end
+
+function _pqs_source_box_route_driver_private_global_overlap_parent_axis_counts(
+    report,
+)
+    for (source, value) in (
+        (:report_parent_axis_counts,
+            _pqs_source_box_route_driver_private_global_overlap_property(
+                report,
+                :parent_axis_counts,
+            )),
+        (:report_route_axis_counts,
+            _pqs_source_box_route_driver_private_global_overlap_nested_property(
+                report,
+                (:route_axis_counts, :parent_axis_counts),
+            )),
+        (:low_order_route_summary_parent_axis_counts,
+            _pqs_source_box_route_driver_private_global_overlap_nested_property(
+                report,
+                (:low_order_route_summary, :parent_axis_counts),
+            )),
+        (:parent_axis_counts,
+            _pqs_source_box_route_driver_private_global_overlap_nested_property(
+                report,
+                (:parent, :axis_counts),
+            )),
+    )
+        counts =
+            _pqs_source_box_route_driver_private_global_overlap_axis_counts(value)
+        !isnothing(counts) && return _pqs_route_driver_axis_count_tuple(counts), source
+    end
+    return nothing, :unavailable
+end
+
+function _pqs_source_box_route_driver_private_global_overlap_axis_counts(value)
+    isnothing(value) && return nothing
+    try
+        return _pqs_route_driver_axis_counts(value)
+    catch
+        return nothing
+    end
+end
+
+function _pqs_source_box_route_driver_private_global_overlap_axis_overlap_1d(
+    report,
+)
+    for (source, bundle) in (
+        (:report_parent_axis_bundle_object,
+            _pqs_source_box_route_driver_private_global_overlap_property(
+                report,
+                :parent_axis_bundle_object,
+            )),
+        (:parent_parent_axis_bundle_object,
+            _pqs_source_box_route_driver_private_global_overlap_nested_property(
+                report,
+                (:parent, :parent_axis_bundle_object),
+            )),
+        (:parent_axis_probe_axis_bundle_object,
+            _pqs_source_box_route_driver_private_global_overlap_nested_property(
+                report,
+                (:parent_axis_probe, :axis_bundle_object),
+            )),
+        (:low_order_route_summary_parent_axis_bundle_object,
+            _pqs_source_box_route_driver_private_global_overlap_nested_property(
+                report,
+                (:low_order_route_summary, :parent_axis_bundle_object),
+            )),
+    )
+        overlap_1d =
+            _pqs_source_box_route_driver_private_global_overlap_overlap_1d_from_bundle(
+                bundle,
+            )
+        !isnothing(overlap_1d) && return overlap_1d, source
+    end
+    return nothing, :unavailable
+end
+
+function _pqs_source_box_route_driver_private_global_overlap_overlap_1d_from_bundle(
+    bundle,
+)
+    isnothing(bundle) && return nothing
+    bundle_x =
+        hasproperty(bundle, :bundle_x) ? bundle.bundle_x :
+        hasproperty(bundle, :x) ? bundle.x :
+        nothing
+    bundle_y =
+        hasproperty(bundle, :bundle_y) ? bundle.bundle_y :
+        hasproperty(bundle, :y) ? bundle.y :
+        nothing
+    bundle_z =
+        hasproperty(bundle, :bundle_z) ? bundle.bundle_z :
+        hasproperty(bundle, :z) ? bundle.z :
+        nothing
+    overlap_x =
+        _pqs_source_box_route_driver_private_global_overlap_axis_overlap(bundle_x)
+    overlap_y =
+        _pqs_source_box_route_driver_private_global_overlap_axis_overlap(bundle_y)
+    overlap_z =
+        _pqs_source_box_route_driver_private_global_overlap_axis_overlap(bundle_z)
+    any(isnothing, (overlap_x, overlap_y, overlap_z)) && return nothing
+    return (x = overlap_x, y = overlap_y, z = overlap_z)
+end
+
+function _pqs_source_box_route_driver_private_global_overlap_axis_overlap(axis)
+    isnothing(axis) && return nothing
+    axis isa AbstractMatrix && return axis
+    pgdg_intermediate =
+        _pqs_source_box_route_driver_private_global_overlap_property(
+            axis,
+            :pgdg_intermediate,
+        )
+    overlap =
+        _pqs_source_box_route_driver_private_global_overlap_property(
+            pgdg_intermediate,
+            :overlap,
+        )
+    !isnothing(overlap) && return overlap
+    return _pqs_source_box_route_driver_private_global_overlap_property(
+        axis,
+        :overlap,
+    )
 end
 
 function _pqs_source_box_route_driver_private_global_overlap_blocked_stage(

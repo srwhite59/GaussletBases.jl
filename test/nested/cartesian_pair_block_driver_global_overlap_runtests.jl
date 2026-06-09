@@ -121,6 +121,26 @@ function _driver_overlap_stage_report(plan = _driver_overlap_plan())
     )
 end
 
+function _driver_overlap_axis_bundle_object()
+    overlap = _driver_overlap_inputs().overlap_1d
+    return (;
+        x = (; pgdg_intermediate = (; overlap = overlap.x)),
+        y = (; pgdg_intermediate = (; overlap = overlap.y)),
+        z = (; pgdg_intermediate = (; overlap = overlap.z)),
+    )
+end
+
+function _driver_overlap_facts_report(plan = _driver_overlap_plan())
+    return merge(
+        _driver_overlap_stage_report(plan),
+        (;
+            retained_dimension = 2,
+            parent_axis_counts = (2, 2, 2),
+            parent_axis_bundle_object = _driver_overlap_axis_bundle_object(),
+        ),
+    )
+end
+
 function _driver_overlap_example_overrides()
     example_module = Module(:PrivateGlobalOverlapOptionExample)
     example_path =
@@ -229,13 +249,24 @@ end
     @test isnothing(off_stage.private_global_overlap_result)
     @test isnothing(off_stage.private_global_overlap_summary)
 
-    missing_plan =
+    missing_facts =
         GaussletBases._pqs_source_box_route_driver_private_global_overlap_stage(
             (;);
             private_global_overlap_requested = true,
         )
-    @test Tuple(keys(missing_plan)) ==
+    @test Tuple(keys(missing_facts)) ==
           (:private_global_overlap_result, :private_global_overlap_summary)
+    @test isnothing(missing_facts.private_global_overlap_result)
+    @test missing_facts.private_global_overlap_summary.blocker ===
+          :missing_final_retained_column_layout
+
+    missing_plan =
+        GaussletBases._pqs_source_box_route_driver_private_global_overlap_stage(
+            (;);
+            private_global_overlap_requested = true,
+            private_global_overlap_global_dimension = 2,
+            private_global_overlap_inputs = _driver_overlap_inputs(),
+        )
     @test missing_plan.private_global_overlap_result.blocker ===
           :missing_pair_block_materialization_plan
     @test missing_plan.private_global_overlap_summary.blocker ===
@@ -245,23 +276,47 @@ end
         GaussletBases._pqs_source_box_route_driver_private_global_overlap_stage(
             report;
             private_global_overlap_requested = true,
+            private_global_overlap_inputs = _driver_overlap_inputs(),
         )
     @test missing_dimension.private_global_overlap_result.blocker ===
           :missing_global_dimension
     @test missing_dimension.private_global_overlap_summary.blocker ===
           :missing_global_dimension
 
-    missing_inputs =
+    missing_structured_facts =
         GaussletBases._pqs_source_box_route_driver_private_global_overlap_stage(
             report;
             private_global_overlap_requested = true,
             private_global_overlap_global_dimension = 2,
         )
-    @test isnothing(missing_inputs.private_global_overlap_result)
-    @test missing_inputs.private_global_overlap_summary.status ===
+    @test isnothing(missing_structured_facts.private_global_overlap_result)
+    @test missing_structured_facts.private_global_overlap_summary.status ===
           :blocked_private_global_overlap
-    @test missing_inputs.private_global_overlap_summary.blocker ===
-          :missing_overlap_inputs
+    @test missing_structured_facts.private_global_overlap_summary.blocker ===
+          :missing_final_retained_column_layout
+
+    structured_facts =
+        GaussletBases._pqs_source_box_route_driver_private_global_overlap_input_facts(
+            _driver_overlap_facts_report(plan),
+        )
+    @test structured_facts.status ===
+          :available_private_global_overlap_input_facts
+    @test structured_facts.global_dimension == 2
+    @test structured_facts.parent_axis_counts == (2, 2, 2)
+    @test structured_facts.final_layout_source === :retained_dimension_compatibility
+    @test structured_facts.parent_axis_counts_source === :report_parent_axis_counts
+    @test structured_facts.axis_bundle_source === :report_parent_axis_bundle_object
+    @test structured_facts.overlap_1d.x ≈ _driver_overlap_inputs().overlap_1d.x
+
+    materialized_from_facts =
+        GaussletBases._pqs_source_box_route_driver_private_global_overlap_stage(
+            _driver_overlap_facts_report(plan);
+            private_global_overlap_requested = true,
+        )
+    @test materialized_from_facts.private_global_overlap_result.status ===
+          :materialized_route_global_overlap_matrix
+    @test materialized_from_facts.private_global_overlap_result.global_matrix_result.matrix ≈
+          _driver_overlap_expected_matrix()
 
     materialized =
         GaussletBases._pqs_source_box_route_driver_private_global_overlap_stage(
@@ -321,7 +376,7 @@ end
                 overrides.private_global_overlap_global_dimension,
         )
     @test missing_inputs.private_global_overlap_summary.blocker ===
-          :missing_overlap_inputs
+          :missing_final_retained_column_layout
 
     materialized =
         GaussletBases._pqs_source_box_route_driver_private_global_overlap_stage(
