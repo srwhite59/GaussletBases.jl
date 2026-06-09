@@ -83,9 +83,10 @@ end
 Compact collection of local CPB overlap block records. This layer does not
 assign placement, infer retained transforms, or assemble a global matrix.
 """
-struct CPBLocalOverlapBlockCollection{R,M}
+struct CPBLocalOverlapBlockCollection{R,M,I}
     records::R
     metadata::M
+    identity_token::I
 end
 
 """
@@ -693,7 +694,11 @@ function cpb_local_overlap_block_collection(records::Union{Tuple,AbstractVector}
     normalized_records = _cpb_local_overlap_block_records_tuple(records)
     collection_summary =
         _cpb_local_overlap_block_collection_summary(normalized_records)
-    return CPBLocalOverlapBlockCollection(normalized_records, collection_summary)
+    return CPBLocalOverlapBlockCollection(
+        normalized_records,
+        collection_summary,
+        Ref(nothing),
+    )
 end
 
 function cpb_local_overlap_block_collection(
@@ -2265,7 +2270,7 @@ function _cpb_place_overlap_collection_record_summary(
 end
 
 function _cpb_place_overlap_collection_blocker(
-    _collection::CPBLocalOverlapBlockCollection,
+    collection::CPBLocalOverlapBlockCollection,
     collection_summary,
     placement_facts,
     facts_summary,
@@ -2275,8 +2280,23 @@ function _cpb_place_overlap_collection_blocker(
         return :missing_reviewed_overlap_placement_facts
     collection_summary.status === :available_cpb_local_overlap_block_collection ||
         return _cpb_overlap_placement_collection_blocker(collection_summary)
+    _cpb_place_overlap_collection_facts_aligned(
+        collection,
+        collection_summary,
+        placement_facts,
+        facts_summary,
+    ) || return :placement_facts_collection_mismatch
     facts_summary.placement_plan_review_status === :reviewed_placement_plan ||
         return :placement_facts_not_reviewed
+    coverage = _cpb_place_overlap_collection_record_coverage(
+        record_placement_summaries,
+    )
+    (
+        isempty(coverage.missing_left_transform_block_keys) &&
+        isempty(coverage.missing_right_transform_block_keys)
+    ) || return :missing_retained_transform
+    isempty(coverage.missing_placement_range_block_keys) ||
+        return :missing_placement_range
     isempty(facts_summary.missing_requirements) ||
         return :placement_requirements_missing
     facts_summary.blocker === :placement_not_implemented ||
@@ -2297,6 +2317,38 @@ function _cpb_place_overlap_collection_blocker(
             return record_summary.blocker
     end
     return nothing
+end
+
+function _cpb_place_overlap_collection_facts_aligned(
+    collection::CPBLocalOverlapBlockCollection,
+    collection_summary,
+    placement_facts::CPBOverlapPlacementFacts,
+    facts_summary,
+)
+    placement_facts.collection.identity_token === collection.identity_token ||
+        return false
+    facts_block_keys = _summary_property(facts_summary, :block_keys)
+    isnothing(facts_block_keys) && return false
+    return facts_block_keys == collection_summary.block_keys
+end
+
+function _cpb_place_overlap_collection_record_coverage(
+    record_placement_summaries::Tuple,
+)
+    return (;
+        missing_left_transform_block_keys = Tuple(
+            record.block_key for record in record_placement_summaries
+            if record.left_transform_status === :unavailable
+        ),
+        missing_right_transform_block_keys = Tuple(
+            record.block_key for record in record_placement_summaries
+            if record.right_transform_status === :unavailable
+        ),
+        missing_placement_range_block_keys = Tuple(
+            record.block_key for record in record_placement_summaries
+            if record.placement_range_status === :unavailable
+        ),
+    )
 end
 
 function _cpb_place_overlap_collection_global_dimension_blocker(
@@ -2367,6 +2419,9 @@ function _cpb_place_overlap_collection_summary(
     global_overlap_matrix,
 )
     available = status === :materialized_cpb_overlap_collection_placement_pilot
+    coverage = _cpb_place_overlap_collection_record_coverage(
+        record_placement_summaries,
+    )
     return (;
         object_kind = :cartesian_cpb_placed_overlap_collection_summary,
         status,
@@ -2388,6 +2443,12 @@ function _cpb_place_overlap_collection_summary(
             ),
         block_keys = collection_summary.block_keys,
         record_placement_summaries,
+        missing_left_transform_block_keys =
+            coverage.missing_left_transform_block_keys,
+        missing_right_transform_block_keys =
+            coverage.missing_right_transform_block_keys,
+        missing_placement_range_block_keys =
+            coverage.missing_placement_range_block_keys,
         placement_facts_status =
             isnothing(facts_summary) ? :unavailable : facts_summary.status,
         placement_facts_blocker =

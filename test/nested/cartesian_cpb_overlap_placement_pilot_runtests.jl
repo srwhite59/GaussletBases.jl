@@ -210,7 +210,7 @@ end
 
 function _test_blocked_pilot_nonclaims(placed)
     placed_summary = CPBPilot.summary(placed)
-    @test placed.global_overlap_matrix === nothing
+    @test isnothing(placed.global_overlap_matrix)
     @test placed_summary.provider_level_matrix_materialized === false
     @test placed_summary.provider_level_overlap_matrix_materialized === false
     @test placed_summary.global_matrix_materialized === false
@@ -262,7 +262,7 @@ end
     @test placed_summary.provider_level_global_overlap_matrix_shape == (2, 2)
     @test placed_summary.global_overlap_matrix_shape ===
           :route_global_matrix_not_materialized
-    @test placed.global_overlap_matrix !== nothing
+    @test !isnothing(placed.global_overlap_matrix)
     @test placed.global_overlap_matrix == [0.0 0.5; 0.0 0.0]
     @test placed_summary.provider_level_matrix_materialized === true
     @test placed_summary.provider_level_overlap_matrix_materialized === true
@@ -472,6 +472,12 @@ end
     @test placed_collection_summary.placed_record_count == 2
     @test placed_collection_summary.blocked_record_count == 0
     @test placed_collection_summary.block_keys == (key_a, key_b)
+    @test placed_collection_summary.missing_left_transform_block_keys == ()
+    @test placed_collection_summary.missing_right_transform_block_keys == ()
+    @test placed_collection_summary.missing_placement_range_block_keys == ()
+    @test !hasproperty(placed_collection_summary, :global_overlap_matrix)
+    @test !hasproperty(placed_collection_summary, :dense_block)
+    @test !hasproperty(placed_collection_summary, :retained_blocks)
     @test placed_collection.global_overlap_matrix == expected_collection_matrix
     @test placed_collection_summary.provider_level_global_overlap_matrix_shape == (4, 4)
     _test_provider_collection_nonclaims(placed_collection)
@@ -564,6 +570,26 @@ end
           :duplicate_overlap_placement_record
     _test_blocked_pilot_nonclaims(duplicate_placed)
 
+    cloned_collection = CPBPilot.cpb_local_overlap_block_collection((
+        _pilot_record(block_a; block_key = key_a),
+        _pilot_record(block_b; block_key = key_b),
+    ))
+    cloned_facts = _pilot_collection_facts(
+        cloned_collection,
+        (left_a, right_a, left_b, right_b),
+        (range_a, range_b);
+        plan = collection_plan,
+    )
+    mismatched_facts_collection = CPBPilot.cpb_place_overlap_collection(
+        collection,
+        (left_a, right_a, left_b, right_b),
+        (range_a, range_b),
+        cloned_facts,
+    )
+    @test CPBPilot.summary(mismatched_facts_collection).blocker ===
+          :placement_facts_collection_mismatch
+    _test_blocked_pilot_nonclaims(mismatched_facts_collection)
+
     missing_transform_facts = _pilot_collection_facts(
         collection,
         (left_a, right_a, left_b),
@@ -579,8 +605,60 @@ end
     @test CPBPilot.summary(missing_transform_collection).status ===
           :blocked_cpb_overlap_collection_placement_pilot
     @test CPBPilot.summary(missing_transform_collection).blocker ===
-          :placement_requirements_missing
+          :missing_retained_transform
+    @test CPBPilot.summary(missing_transform_collection).missing_left_transform_block_keys ==
+          ()
+    @test CPBPilot.summary(missing_transform_collection).missing_right_transform_block_keys ==
+          (key_b,)
+    @test CPBPilot.summary(missing_transform_collection).missing_placement_range_block_keys ==
+          ()
     _test_blocked_pilot_nonclaims(missing_transform_collection)
+
+    missing_range_facts = _pilot_collection_facts(
+        collection,
+        (left_a, right_a, left_b, right_b),
+        (range_a,);
+        plan = collection_plan,
+    )
+    missing_range_collection = CPBPilot.cpb_place_overlap_collection(
+        collection,
+        (left_a, right_a, left_b, right_b),
+        (range_a,),
+        missing_range_facts,
+    )
+    @test CPBPilot.summary(missing_range_collection).blocker ===
+          :missing_placement_range
+    @test CPBPilot.summary(missing_range_collection).missing_left_transform_block_keys ==
+          ()
+    @test CPBPilot.summary(missing_range_collection).missing_right_transform_block_keys ==
+          ()
+    @test CPBPilot.summary(missing_range_collection).missing_placement_range_block_keys ==
+          (key_b,)
+    _test_blocked_pilot_nonclaims(missing_range_collection)
+
+    range_b_dimension_mismatch = _pilot_range(
+        left_b,
+        right_b;
+        block_key = key_b,
+        left_column_range = 3:3,
+        right_column_range = 4:4,
+        global_dimension = 5,
+    )
+    dimension_mismatch_facts = _pilot_collection_facts(
+        collection,
+        (left_a, right_a, left_b, right_b),
+        (range_a, range_b_dimension_mismatch);
+        plan = collection_plan,
+    )
+    dimension_mismatch_collection = CPBPilot.cpb_place_overlap_collection(
+        collection,
+        (left_a, right_a, left_b, right_b),
+        (range_a, range_b_dimension_mismatch),
+        dimension_mismatch_facts,
+    )
+    @test CPBPilot.summary(dimension_mismatch_collection).blocker ===
+          :placement_range_global_dimension_mismatch
+    _test_blocked_pilot_nonclaims(dimension_mismatch_collection)
 
     non_dense_key = (:axis_only_left, :axis_only_right)
     non_dense_left = _pilot_transform(

@@ -387,10 +387,15 @@ not be used to claim provider-level pilot success. The collection pilot repeats
 the same operation for each accepted dense local record and adds the retained
 blocks into one provider-level target matrix under
 `:add_explicit_blocks_into_ranges`; it does not infer symmetry or transpose
-fills. These pilots are not route-driver adoption, not private global overlap
-stage adoption, and not evidence that real route placement is available. Real
-route placement remains blocked until structured retained transforms and
-source-pair retained column ranges are carried from real route/report state.
+fills. The collection pilot requires `CPBOverlapPlacementFacts` to refer to the
+same local collection object and block-key inventory, records compact missing
+left/right transform and placement-range block-key coverage, and checks that
+placement ranges agree on one provider-level target dimension. Summaries remain
+compact and do not duplicate dense numerical payloads. These pilots are not
+route-driver adoption, not private global overlap stage adoption, and not
+evidence that real route placement is available. Real route placement remains
+blocked until structured retained transforms and source-pair retained column
+ranges are carried from real route/report state.
 
 ## Structured Carry Objects For Placement
 
