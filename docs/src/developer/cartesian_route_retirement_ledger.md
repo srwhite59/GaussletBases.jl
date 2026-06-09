@@ -60,6 +60,11 @@ paths from becoming new route authority.
   results for unsupported terms, and is still not term summing, a one-body
   Hamiltonian object, or Hamiltonian assembly. PQS source-space records remain
   blocked inside term results until shell projection/Lowdin realization exists.
+- A private overlap-only route-state adapter now accepts structured state that
+  already carries a `PairBlockMaterializationPlan` and delegates to the existing
+  route-global overlap matrix path. This is replacement pressure only: it is
+  not production route-driver wiring and does not retire the old route by
+  itself.
 - Selected White--Lindsey old-oracle equivalence currently covers overlap,
   kinetic, position_x, position_y, position_z, x2_x, x2_y, and x2_z.
 - `src/cartesian_pair_block_materialization/one_body_global_matrix_helpers.jl`
