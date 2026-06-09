@@ -728,6 +728,27 @@ collection. This boundary is separate from Hamiltonian assembly and should not
 claim Hamiltonian readiness, IDA/MWG semantics, PQS Lowdin/projection, exports,
 or artifacts.
 
+The private overlap local collection adapter is a boundary/fingerprint object
+for this state. It recognizes `CPBLocalOverlapBlockCollection` as structured
+local overlap source data, but it is not global overlap input-facts
+availability and not route-global overlap stage adoption. The expected current
+state is:
+
+```text
+local collection available
+global overlap blocked
+blocker = :missing_placement_or_retained_transform
+private_global_overlap_input_facts_available = false
+route_global_overlap_stage_source = false
+global_matrix_materialized = false
+route_driver_wiring = false
+```
+
+The adapter should remain a fingerprint until a later placement layer supplies
+the required retained-transform, column-range, dimension, placement-plan, and
+accumulation-rule facts. It must not become a placement engine by accumulating
+local CPB blocks into a route/global matrix.
+
 This lets retained-unit and pair-block code choose whether to use axis blocks
 directly, materialize a dense local CPB block, apply left/right transforms, or
 place into a global matrix.

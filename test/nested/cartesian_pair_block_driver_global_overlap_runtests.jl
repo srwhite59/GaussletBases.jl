@@ -356,6 +356,12 @@ function _driver_overlap_real_report_local_cpb_provider_fingerprint(report)
         GaussletBases._pqs_source_box_route_driver_private_global_overlap_local_collection_adapter(
             local_block_collection,
         )
+    placement_requirements =
+        isnothing(local_block_collection_adapter) ?
+        nothing :
+        GaussletBases._pqs_source_box_route_driver_private_global_overlap_placement_requirements_fingerprint(
+            local_block_collection_adapter,
+        )
 
     return (;
         parent_source_status =
@@ -503,6 +509,26 @@ function _driver_overlap_real_report_local_cpb_provider_fingerprint(report)
         local_overlap_collection_adapter_route_global_stage_source =
             !isnothing(local_block_collection_adapter) &&
             local_block_collection_adapter.route_global_overlap_stage_source,
+        placement_requirements_status =
+            isnothing(placement_requirements) ?
+            :not_attempted_missing_local_overlap_collection :
+            placement_requirements.status,
+        placement_requirements_blocker =
+            isnothing(placement_requirements) ?
+            :not_attempted_missing_local_overlap_collection :
+            placement_requirements.blocker,
+        placement_missing_requirements =
+            isnothing(placement_requirements) ?
+            () :
+            placement_requirements.missing_requirements,
+        placement_global_overlap_status =
+            isnothing(placement_requirements) ?
+            :not_attempted_missing_local_overlap_collection :
+            placement_requirements.global_overlap_status,
+        placement_global_overlap_blocker =
+            isnothing(placement_requirements) ?
+            :not_attempted_missing_local_overlap_collection :
+            placement_requirements.global_overlap_blocker,
         route_driver_wiring = false,
         global_matrix_materialized = false,
         route_global_overlap_stage_source = false,
@@ -929,6 +955,22 @@ end
           :missing_placement_or_retained_transform
     @test !local_cpb_overlap_fingerprint.local_overlap_collection_adapter_private_input_facts_available
     @test !local_cpb_overlap_fingerprint.local_overlap_collection_adapter_route_global_stage_source
+    @test local_cpb_overlap_fingerprint.placement_requirements_status ===
+          :blocked_private_global_overlap_placement_requirements
+    @test local_cpb_overlap_fingerprint.placement_requirements_blocker ===
+          :missing_placement_or_retained_transform
+    @test local_cpb_overlap_fingerprint.placement_missing_requirements === (
+        :missing_retained_transform,
+        :missing_left_column_range,
+        :missing_right_column_range,
+        :missing_global_dimension,
+        :missing_placement_plan,
+        :missing_accumulation_rule,
+    )
+    @test local_cpb_overlap_fingerprint.placement_global_overlap_status ===
+          :blocked
+    @test local_cpb_overlap_fingerprint.placement_global_overlap_blocker ===
+          :missing_placement_or_retained_transform
     @test local_cpb_overlap_fingerprint.route_driver_wiring === false
     @test local_cpb_overlap_fingerprint.global_matrix_materialized === false
     @test local_cpb_overlap_fingerprint.route_global_overlap_stage_source === false

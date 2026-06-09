@@ -3612,6 +3612,79 @@ function _pqs_source_box_route_driver_private_global_overlap_collection_blocker(
     return :unavailable_cpb_local_overlap_collection
 end
 
+function _pqs_source_box_route_driver_private_global_overlap_placement_requirements_fingerprint(
+    collection::CartesianCPBBlockProviders.CPBLocalOverlapBlockCollection,
+)
+    adapter =
+        _pqs_source_box_route_driver_private_global_overlap_local_collection_adapter(
+            collection,
+        )
+    return _pqs_source_box_route_driver_private_global_overlap_placement_requirements_fingerprint(
+        adapter,
+    )
+end
+
+function _pqs_source_box_route_driver_private_global_overlap_placement_requirements_fingerprint(
+    adapter,
+)
+    collection_available =
+        _pqs_source_box_route_driver_private_global_overlap_property(
+            adapter,
+            :local_cpb_overlap_collection_available,
+        ) === true
+    placement_requirements_status =
+        collection_available ?
+        :blocked_missing_placement_requirements :
+        :blocked_missing_local_overlap_collection
+    missing_requirements =
+        collection_available ?
+        (
+            :missing_retained_transform,
+            :missing_left_column_range,
+            :missing_right_column_range,
+            :missing_global_dimension,
+            :missing_placement_plan,
+            :missing_accumulation_rule,
+        ) :
+        (:missing_local_overlap_collection,)
+    blocker =
+        collection_available ?
+        :missing_placement_or_retained_transform :
+        _pqs_source_box_route_driver_private_global_overlap_property(
+            adapter,
+            :global_overlap_blocker,
+        )
+    isnothing(blocker) && (blocker = :missing_local_overlap_collection)
+    return (;
+        object_kind =
+            :cartesian_route_driver_private_global_overlap_placement_requirements_fingerprint,
+        status = :blocked_private_global_overlap_placement_requirements,
+        blocker,
+        local_cpb_overlap_collection_available = collection_available,
+        placement_requirements_status,
+        missing_requirements,
+        retained_transform_status =
+            collection_available ? :missing_retained_transform : :unavailable,
+        left_column_range_status =
+            collection_available ? :missing_left_column_range : :unavailable,
+        right_column_range_status =
+            collection_available ? :missing_right_column_range : :unavailable,
+        global_dimension_status =
+            collection_available ? :missing_global_dimension : :unavailable,
+        placement_plan_status =
+            collection_available ? :missing_placement_plan : :unavailable,
+        accumulation_rule_status =
+            collection_available ? :missing_accumulation_rule : :unavailable,
+        global_overlap_status = :blocked,
+        global_overlap_blocker = blocker,
+        route_driver_wiring = false,
+        global_matrix_materialized = false,
+        global_overlap_matrix_materialized = false,
+        private_global_overlap_input_facts_available = false,
+        route_global_overlap_stage_source = false,
+    )
+end
+
 function _pqs_source_box_route_driver_private_global_overlap_local_source_fingerprint(
     source,
 )
