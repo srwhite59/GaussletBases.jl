@@ -3550,6 +3550,68 @@ function _pqs_source_box_route_driver_private_global_overlap_local_source_finger
     )
 end
 
+function _pqs_source_box_route_driver_private_global_overlap_local_collection_adapter(
+    collection::CartesianCPBBlockProviders.CPBLocalOverlapBlockCollection,
+)
+    collection_summary = CartesianCPBBlockProviders.summary(collection)
+    collection_available =
+        collection_summary.status === :available_cpb_local_overlap_block_collection
+    placement_ready =
+        _pqs_source_box_route_driver_private_global_overlap_property(
+            collection_summary,
+            :placement_status,
+        ) !== :unassigned
+    retained_transform_ready =
+        _pqs_source_box_route_driver_private_global_overlap_property(
+            collection_summary,
+            :retained_transform_status,
+        ) !== :unassigned
+    global_blocker =
+        collection_available ?
+        (
+            placement_ready && retained_transform_ready ?
+            :missing_placement_plan :
+            :missing_placement_or_retained_transform
+        ) :
+        _pqs_source_box_route_driver_private_global_overlap_collection_blocker(
+            collection_summary,
+        )
+    return (;
+        object_kind =
+            :cartesian_route_driver_private_global_overlap_local_collection_adapter,
+        status = :blocked_private_global_overlap_local_collection_adapter,
+        blocker = global_blocker,
+        local_cpb_overlap_collection_status = collection_summary.status,
+        local_cpb_overlap_collection_source =
+            :cpb_provider_local_overlap_collection,
+        local_cpb_overlap_collection_available = collection_available,
+        record_count = collection_summary.record_count,
+        block_keys = collection_summary.block_keys,
+        dense_block_count = collection_summary.dense_block_count,
+        placement_status = collection_summary.placement_status,
+        retained_transform_status = collection_summary.retained_transform_status,
+        global_overlap_status = :blocked,
+        global_overlap_blocker = global_blocker,
+        global_matrix_materialized = false,
+        global_overlap_matrix_materialized = false,
+        route_driver_wiring = false,
+        private_global_overlap_input_facts_available = false,
+        route_global_overlap_stage_source = false,
+    )
+end
+
+function _pqs_source_box_route_driver_private_global_overlap_collection_blocker(
+    collection_summary,
+)
+    blocker =
+        _pqs_source_box_route_driver_private_global_overlap_property(
+            collection_summary,
+            :blocker,
+        )
+    !isnothing(blocker) && return blocker
+    return :unavailable_cpb_local_overlap_collection
+end
+
 function _pqs_source_box_route_driver_private_global_overlap_local_source_fingerprint(
     source,
 )

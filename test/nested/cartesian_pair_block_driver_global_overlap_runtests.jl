@@ -350,6 +350,12 @@ function _driver_overlap_real_report_local_cpb_provider_fingerprint(report)
         isnothing(local_block_collection) ?
         nothing :
         CPBProviderDriverOverlap.summary(local_block_collection)
+    local_block_collection_adapter =
+        isnothing(local_block_collection) ?
+        nothing :
+        GaussletBases._pqs_source_box_route_driver_private_global_overlap_local_collection_adapter(
+            local_block_collection,
+        )
 
     return (;
         parent_source_status =
@@ -475,6 +481,28 @@ function _driver_overlap_real_report_local_cpb_provider_fingerprint(report)
         local_overlap_collection_route_driver_wiring =
             !isnothing(local_block_collection_summary) &&
             local_block_collection_summary.route_driver_wiring,
+        local_overlap_collection_adapter_status =
+            isnothing(local_block_collection_adapter) ?
+            :not_attempted_missing_local_overlap_collection :
+            local_block_collection_adapter.status,
+        local_overlap_collection_adapter_blocker =
+            isnothing(local_block_collection_adapter) ?
+            :not_attempted_missing_local_overlap_collection :
+            local_block_collection_adapter.blocker,
+        local_overlap_collection_adapter_global_overlap_status =
+            isnothing(local_block_collection_adapter) ?
+            :not_attempted_missing_local_overlap_collection :
+            local_block_collection_adapter.global_overlap_status,
+        local_overlap_collection_adapter_global_overlap_blocker =
+            isnothing(local_block_collection_adapter) ?
+            :not_attempted_missing_local_overlap_collection :
+            local_block_collection_adapter.global_overlap_blocker,
+        local_overlap_collection_adapter_private_input_facts_available =
+            !isnothing(local_block_collection_adapter) &&
+            local_block_collection_adapter.private_global_overlap_input_facts_available,
+        local_overlap_collection_adapter_route_global_stage_source =
+            !isnothing(local_block_collection_adapter) &&
+            local_block_collection_adapter.route_global_overlap_stage_source,
         route_driver_wiring = false,
         global_matrix_materialized = false,
         route_global_overlap_stage_source = false,
@@ -891,6 +919,16 @@ end
           :unassigned
     @test !local_cpb_overlap_fingerprint.local_overlap_collection_global_matrix_materialized
     @test !local_cpb_overlap_fingerprint.local_overlap_collection_route_driver_wiring
+    @test local_cpb_overlap_fingerprint.local_overlap_collection_adapter_status ===
+          :blocked_private_global_overlap_local_collection_adapter
+    @test local_cpb_overlap_fingerprint.local_overlap_collection_adapter_blocker ===
+          :missing_placement_or_retained_transform
+    @test local_cpb_overlap_fingerprint.local_overlap_collection_adapter_global_overlap_status ===
+          :blocked
+    @test local_cpb_overlap_fingerprint.local_overlap_collection_adapter_global_overlap_blocker ===
+          :missing_placement_or_retained_transform
+    @test !local_cpb_overlap_fingerprint.local_overlap_collection_adapter_private_input_facts_available
+    @test !local_cpb_overlap_fingerprint.local_overlap_collection_adapter_route_global_stage_source
     @test local_cpb_overlap_fingerprint.route_driver_wiring === false
     @test local_cpb_overlap_fingerprint.global_matrix_materialized === false
     @test local_cpb_overlap_fingerprint.route_global_overlap_stage_source === false

@@ -62,7 +62,45 @@ function _local_overlap_fingerprint_source()
         CBPLocalOverlapFingerprint.cpb_overlap_axis_blocks(packet, interval_pair)
     dense_block =
         CBPLocalOverlapFingerprint.cpb_overlap_dense_block(axis_blocks)
-    return (; parent, packet, interval_pair, axis_blocks, dense_block)
+    record = CBPLocalOverlapFingerprint.cpb_local_overlap_block_record(
+        dense_block;
+        block_key = (:tiny_left, :tiny_right),
+    )
+    collection =
+        CBPLocalOverlapFingerprint.cpb_local_overlap_block_collection((record,))
+    blocked_interval_pair = CBPLocalOverlapFingerprint.cpb_interval_pair(
+        parent,
+        CPBLocalOverlapFingerprint.cpb(
+            0:1,
+            1:2,
+            1:1;
+            role = :private_overlap_local_outside_left,
+        ),
+        right,
+    )
+    blocked_axis_blocks =
+        CBPLocalOverlapFingerprint.cpb_overlap_axis_blocks(
+            packet,
+            blocked_interval_pair,
+        )
+    blocked_record =
+        CBPLocalOverlapFingerprint.cpb_local_overlap_block_record(
+            blocked_axis_blocks;
+            block_key = (:outside_left, :tiny_right),
+        )
+    blocked_collection =
+        CBPLocalOverlapFingerprint.cpb_local_overlap_block_collection((
+            blocked_record,
+        ))
+    return (;
+        parent,
+        packet,
+        interval_pair,
+        axis_blocks,
+        dense_block,
+        collection,
+        blocked_collection,
+    )
 end
 
 @testset "Private overlap CPB local source fingerprint" begin
@@ -113,6 +151,55 @@ end
     @test axis_fingerprint.dense_block_shape === :not_materialized
     @test axis_fingerprint.left_shape ==
           axis_block_summary.interval_pair_summary.left_shape
+
+    collection_adapter =
+        GaussletBases._pqs_source_box_route_driver_private_global_overlap_local_collection_adapter(
+            source.collection,
+        )
+    @test collection_adapter.object_kind ===
+          :cartesian_route_driver_private_global_overlap_local_collection_adapter
+    @test collection_adapter.status ===
+          :blocked_private_global_overlap_local_collection_adapter
+    @test collection_adapter.blocker ===
+          :missing_placement_or_retained_transform
+    @test collection_adapter.local_cpb_overlap_collection_status ===
+          :available_cpb_local_overlap_block_collection
+    @test collection_adapter.local_cpb_overlap_collection_source ===
+          :cpb_provider_local_overlap_collection
+    @test collection_adapter.local_cpb_overlap_collection_available
+    @test collection_adapter.record_count == 1
+    @test collection_adapter.block_keys === ((:tiny_left, :tiny_right),)
+    @test collection_adapter.dense_block_count == 1
+    @test collection_adapter.placement_status === :unassigned
+    @test collection_adapter.retained_transform_status === :unassigned
+    @test collection_adapter.global_overlap_status === :blocked
+    @test collection_adapter.global_overlap_blocker ===
+          :missing_placement_or_retained_transform
+    @test collection_adapter.global_matrix_materialized === false
+    @test collection_adapter.global_overlap_matrix_materialized === false
+    @test collection_adapter.route_driver_wiring === false
+    @test collection_adapter.private_global_overlap_input_facts_available === false
+    @test collection_adapter.route_global_overlap_stage_source === false
+
+    blocked_collection_adapter =
+        GaussletBases._pqs_source_box_route_driver_private_global_overlap_local_collection_adapter(
+            source.blocked_collection,
+        )
+    @test blocked_collection_adapter.status ===
+          :blocked_private_global_overlap_local_collection_adapter
+    @test blocked_collection_adapter.blocker ===
+          :blocked_cpb_local_overlap_block_records
+    @test blocked_collection_adapter.local_cpb_overlap_collection_status ===
+          :blocked_cpb_local_overlap_block_collection
+    @test blocked_collection_adapter.local_cpb_overlap_collection_available === false
+    @test blocked_collection_adapter.record_count == 1
+    @test blocked_collection_adapter.block_keys === ((:outside_left, :tiny_right),)
+    @test blocked_collection_adapter.dense_block_count == 0
+    @test blocked_collection_adapter.global_overlap_status === :blocked
+    @test blocked_collection_adapter.global_overlap_blocker ===
+          :blocked_cpb_local_overlap_block_records
+    @test blocked_collection_adapter.global_matrix_materialized === false
+    @test blocked_collection_adapter.route_driver_wiring === false
 
     facts_report = (;
         retained_dimension = 2,
