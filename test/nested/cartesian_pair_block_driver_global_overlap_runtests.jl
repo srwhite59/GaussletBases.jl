@@ -121,6 +121,21 @@ function _driver_overlap_stage_report(plan = _driver_overlap_plan())
     )
 end
 
+function _driver_overlap_example_overrides()
+    example_module = Module(:PrivateGlobalOverlapOptionExample)
+    example_path =
+        joinpath(@__DIR__, "..", "..", "examples", "private_global_overlap_option.jl")
+    Base.include(example_module, example_path)
+    return (;
+        private_global_overlap_requested =
+            Core.eval(example_module, :private_global_overlap_requested),
+        private_global_overlap_global_dimension =
+            Core.eval(example_module, :private_global_overlap_global_dimension),
+        private_global_overlap_inputs =
+            Core.eval(example_module, :private_global_overlap_inputs),
+    )
+end
+
 function _test_driver_overlap_nonclaim_flags(result)
     @test !result.route_driver_wiring
     @test !result.hamiltonian_data_materialized
@@ -274,4 +289,53 @@ end
     @test !materialized.private_global_overlap_summary.artifacts_materialized
     @test !materialized.private_global_overlap_summary.exports_materialized
     @test !materialized.private_global_overlap_summary.full_white_lindsey_route_assembled
+end
+
+@testset "PQS route driver private global overlap option config" begin
+    overrides = _driver_overlap_example_overrides()
+    inputs = overrides.private_global_overlap_inputs
+
+    @test overrides.private_global_overlap_requested === true
+    @test overrides.private_global_overlap_global_dimension == 2
+    @test haskey(inputs, :parent_axis_counts)
+    @test haskey(inputs, :overlap_1d)
+    @test inputs.parent_axis_counts == (2, 2, 2)
+    @test all(key -> haskey(inputs.overlap_1d, key), (:x, :y, :z))
+    @test size(inputs.overlap_1d.x) == (2, 2)
+    @test size(inputs.overlap_1d.y) == (2, 2)
+    @test size(inputs.overlap_1d.z) == (2, 2)
+
+    off_stage =
+        GaussletBases._pqs_source_box_route_driver_private_global_overlap_stage(
+            _driver_overlap_stage_report(),
+        )
+    @test isnothing(off_stage.private_global_overlap_result)
+    @test isnothing(off_stage.private_global_overlap_summary)
+
+    missing_inputs =
+        GaussletBases._pqs_source_box_route_driver_private_global_overlap_stage(
+            _driver_overlap_stage_report();
+            private_global_overlap_requested =
+                overrides.private_global_overlap_requested,
+            private_global_overlap_global_dimension =
+                overrides.private_global_overlap_global_dimension,
+        )
+    @test missing_inputs.private_global_overlap_summary.blocker ===
+          :missing_overlap_inputs
+
+    materialized =
+        GaussletBases._pqs_source_box_route_driver_private_global_overlap_stage(
+            _driver_overlap_stage_report();
+            private_global_overlap_requested =
+                overrides.private_global_overlap_requested,
+            private_global_overlap_global_dimension =
+                overrides.private_global_overlap_global_dimension,
+            private_global_overlap_inputs = inputs,
+        )
+    @test materialized.private_global_overlap_result.status ===
+          :materialized_route_global_overlap_matrix
+    @test materialized.private_global_overlap_result.global_matrix_result.matrix ≈
+          _driver_overlap_expected_matrix()
+    @test materialized.private_global_overlap_summary.global_overlap_matrix_materialized
+    _test_driver_overlap_nonclaim_flags(materialized.private_global_overlap_result)
 end

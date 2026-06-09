@@ -77,7 +77,10 @@ paths from becoming new route authority.
   materialization stage. It returns the structured overlap result when enough
   structured state, global dimension, and overlap inputs are present, or a
   compact blocked summary otherwise. This remains nonproduction and off by
-  default; it is not old-route retirement.
+  default; it is not old-route retirement. The override example
+  `examples/private_global_overlap_option.jl` documents option shape only, and
+  focused tests validate that option plumbing without running the full builder
+  route.
 - Selected White--Lindsey old-oracle equivalence currently covers overlap,
   kinetic, position_x, position_y, position_z, x2_x, x2_y, and x2_z.
 - `src/cartesian_pair_block_materialization/one_body_global_matrix_helpers.jl`
