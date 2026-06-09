@@ -97,6 +97,28 @@ paths from becoming new route authority.
   `:parent_axis_bundle_pgdg_intermediate` /
   `:axis_bundle_one_body_overlap`. This is a fingerprint of carried facts only,
   not overlap driver adoption or route retirement.
+- The local CPB overlap provider chain is implemented through
+  `parent_overlap_axis_factor_packet -> cpb_interval_pair ->
+  cpb_overlap_axis_blocks -> cpb_overlap_dense_block ->
+  cpb_local_overlap_block_record -> cpb_local_overlap_block_collection`. The
+  real probe-enabled report can build one local overlap collection from the
+  `(:product, :product)` source pair with dense local block shape `(25, 25)`;
+  the placement-candidate probe uses `report.retained_dimension` as its
+  retained/global dimension source. The private local collection adapter
+  recognizes the collection as structured local overlap source data, but global
+  overlap remains blocked on `:missing_placement_or_retained_transform`.
+  Placement candidates now split partial placeholder facts into available and
+  missing requirements, and even all placeholder facts remain blocked on
+  `:placement_not_implemented`. This milestone claims no retained transforms,
+  no placement plan, no global matrix materialization, no route-global overlap
+  stage adoption, and no kinetic, position, x2, Coulomb, Hamiltonian, IDA/MWG,
+  PQS projection/Lowdin, export, or artifact work.
+- The next overlap implementation boundary is no longer additional
+  fingerprinting. It is a reviewed placement design and implementation plan for
+  turning local CPB overlap collections into retained/global overlap. That plan
+  must define retained transform objects, column/range placement, global
+  dimension, accumulation rule, ordering, and blockers before any matrix
+  placement code is written.
 - Selected White--Lindsey old-oracle equivalence currently covers overlap,
   kinetic, position_x, position_y, position_z, x2_x, x2_y, and x2_z.
 - `src/cartesian_pair_block_materialization/one_body_global_matrix_helpers.jl`
