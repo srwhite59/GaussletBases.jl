@@ -61,9 +61,15 @@ end
     @test packet_summary.normalization_convention ===
           :not_separate_from_axis_bundle_one_body_overlap
     @test packet_summary.index_domain === :parent_axis_indices
+    @test packet_summary.index_domain_source === :axis_bundle_contract
+    @test packet_summary.index_domain_status ===
+          :assumed_parent_axis_indexed_by_current_axis_bundle_contract
     @test packet_summary.axis_order === (:x, :y, :z)
     @test packet_summary.bra_ket_order === (:bra, :ket)
     @test packet_summary.sliceable_by_cpb
+    @test packet_summary.sliceability_source === :index_domain_contract
+    @test packet_summary.sliceability_status ===
+          :sliceable_by_cpb_parent_axis_index_contract
     @test packet_summary.category_availability.overlap ===
           :available_parent_overlap_axis_factors
     @test packet_summary.category_availability.kinetic ===
@@ -103,8 +109,12 @@ end
     @test blocked_summary.factor_convention === :unavailable
     @test blocked_summary.normalization_convention === :unavailable
     @test blocked_summary.index_domain === :unavailable
+    @test blocked_summary.index_domain_source === :unavailable
+    @test blocked_summary.index_domain_status === :unavailable
     @test blocked_summary.bra_ket_order === :unavailable
     @test blocked_summary.sliceable_by_cpb === false
+    @test blocked_summary.sliceability_source === :unavailable
+    @test blocked_summary.sliceability_status === :unavailable
     @test blocked_summary.category_availability.overlap ===
           :missing_parent_axis_bundle_overlap_factors
     @test blocked_summary.category_availability.kinetic ===
@@ -115,4 +125,49 @@ end
           :not_requested_parent_x2_axis_factors
     @test blocked_summary.category_availability.coulomb ===
           :not_requested_parent_coulomb_axis_factors
+
+    nonmatrix_bundle = _packet_test_axis_bundle((
+        x = :not_a_matrix,
+        y = overlap_1d.y,
+        z = overlap_1d.z,
+    ))
+    nonmatrix_packet = CPAFPacketTest.parent_overlap_axis_factor_packet(
+        parent,
+        nonmatrix_bundle,
+    )
+    nonmatrix_summary = CPAFPacketTest.summary(nonmatrix_packet)
+
+    @test nonmatrix_packet.parent === parent
+    @test nonmatrix_packet.overlap_1d === nothing
+    @test nonmatrix_summary.status === :blocked_parent_overlap_axis_factors
+    @test nonmatrix_summary.blocker === :x_overlap_axis_factor_not_matrix
+    @test nonmatrix_summary.index_domain === :unavailable
+    @test nonmatrix_summary.index_domain_source === :unavailable
+    @test nonmatrix_summary.index_domain_status === :unavailable
+    @test nonmatrix_summary.sliceable_by_cpb === false
+    @test nonmatrix_summary.sliceability_source === :unavailable
+    @test nonmatrix_summary.sliceability_status === :unavailable
+
+    size_mismatch_bundle = _packet_test_axis_bundle((
+        x = [1.0 0.2 0.0; 0.2 1.1 0.0],
+        y = overlap_1d.y,
+        z = overlap_1d.z,
+    ))
+    size_mismatch_packet = CPAFPacketTest.parent_overlap_axis_factor_packet(
+        parent,
+        size_mismatch_bundle,
+    )
+    size_mismatch_summary = CPAFPacketTest.summary(size_mismatch_packet)
+
+    @test size_mismatch_packet.parent === parent
+    @test size_mismatch_packet.overlap_1d === nothing
+    @test size_mismatch_summary.status === :blocked_parent_overlap_axis_factors
+    @test size_mismatch_summary.blocker ===
+          :x_overlap_axis_factor_size_mismatch
+    @test size_mismatch_summary.index_domain === :unavailable
+    @test size_mismatch_summary.index_domain_source === :unavailable
+    @test size_mismatch_summary.index_domain_status === :unavailable
+    @test size_mismatch_summary.sliceable_by_cpb === false
+    @test size_mismatch_summary.sliceability_source === :unavailable
+    @test size_mismatch_summary.sliceability_status === :unavailable
 end

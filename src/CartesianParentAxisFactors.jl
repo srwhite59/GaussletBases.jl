@@ -91,12 +91,28 @@ function _parent_axis_factor_packet_summary(
             overlap_available ?
             :parent_axis_indices :
             :unavailable,
+        index_domain_source =
+            overlap_available ?
+            :axis_bundle_contract :
+            :unavailable,
+        index_domain_status =
+            overlap_available ?
+            :assumed_parent_axis_indexed_by_current_axis_bundle_contract :
+            :unavailable,
         axis_order = _AXIS_ORDER,
         bra_ket_order =
             overlap_available ?
             _BRA_KET_ORDER :
             :unavailable,
         sliceable_by_cpb = overlap_available,
+        sliceability_source =
+            overlap_available ?
+            :index_domain_contract :
+            :unavailable,
+        sliceability_status =
+            overlap_available ?
+            :sliceable_by_cpb_parent_axis_index_contract :
+            :unavailable,
         category_availability = (;
             overlap =
                 overlap_available ?
