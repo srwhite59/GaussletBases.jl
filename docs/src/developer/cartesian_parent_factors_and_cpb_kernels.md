@@ -474,6 +474,109 @@ future Coulomb CPB kernel should not allocate one dense CPB product matrix per
 Gaussian term unless a separate performance review demonstrates that such a
 materialization strategy is better for a specific backend or cache policy.
 
+### Current Coulomb Source Audit
+
+The current parent axis-bundle construction carries several Coulomb-family
+ingredients, but not a reviewed parent Coulomb factor packet.
+
+The current bundle shape is:
+
+```text
+parent_axis_bundle_object::_CartesianNestedAxisBundles3D
+  .bundle_x::_MappedOrdinaryGausslet1DBundle
+  .bundle_y::_MappedOrdinaryGausslet1DBundle
+  .bundle_z::_MappedOrdinaryGausslet1DBundle
+```
+
+Each axis bundle owns a `pgdg_intermediate` with one-body and Gaussian-factor
+fields:
+
+```text
+axis.pgdg_intermediate.gaussian_factors
+axis.pgdg_intermediate.gaussian_factor_terms
+axis.pgdg_intermediate.pair_factor_terms_raw
+axis.pgdg_intermediate.pair_factors
+axis.pgdg_intermediate.pair_factor_terms
+axis.pgdg_intermediate.exponents
+axis.pgdg_intermediate.center
+axis.pgdg_intermediate.weights
+axis.pgdg_intermediate.centers
+```
+
+For the route materializer reports, the axis bundle is carried through:
+
+```text
+report.route_materializer_payload.parent_axis_bundle_object
+report.route_materializer_payload.axis_bundle_backend
+```
+
+The route parent report carries structured center metadata separately:
+
+```text
+report.nuclear_charges
+report.atom_locations
+report.center_table
+```
+
+For basis objects, the route-neutral parent metadata or QW parent object may
+also carry nuclei and nuclear charges, for example:
+
+```text
+parent.metadata.nuclei
+parent.metadata.nuclear_charges
+report.route_materializer_payload.parent_qw_basis_object.nuclei
+report.route_materializer_payload.parent_qw_basis_object.nuclear_charges
+```
+
+These are useful source facts, but they are not yet a single Coulomb factor
+packet.
+
+Audit answers:
+
+1. The current parent axis bundle does not carry reviewed one-body
+   electron-nuclear factors indexed by nucleus and Gaussian term. It carries
+   centered one-body Gaussian factors for `axis.pgdg_intermediate.center`
+   through `axis.pgdg_intermediate.gaussian_factor_terms` and
+   `axis.pgdg_intermediate.gaussian_factors`. The existing White-Lindsey
+   nuclear helpers construct per-center axis term tables on demand by rebuilding
+   or caching `_mapped_ordinary_gausslet_1d_bundle(...; center = center_value)`.
+   Those per-nucleus tables are not currently carried on
+   `parent_axis_bundle_object`.
+2. The current parent axis bundle does carry 1D Gaussian pair-factor
+   ingredients at `axis.pgdg_intermediate.pair_factor_terms` and
+   `axis.pgdg_intermediate.pair_factors`, plus raw weighted terms at
+   `axis.pgdg_intermediate.pair_factor_terms_raw`. These are electron-electron
+   Coulomb ingredients, but not yet a CPB-local pair-pair Coulomb record or a
+   reviewed parent electron-electron factor packet.
+3. The current axis bundle carries Gaussian exponents at
+   `axis.pgdg_intermediate.exponents` and `axis.exponents`; it does not carry
+   the full `CoulombGaussianExpansion` object or the expansion coefficients.
+   Existing route/materializer code can receive an expansion and records
+   `term_coefficients_source = :coulomb_expansion_coefficients` in materializer
+   options, but the transient report payload does not make the expansion
+   coefficients a durable parent-axis-bundle field.
+4. Current reports carry nuclei, charges, and center data in structured route
+   parent fields, and the transient materializer payload may carry a QW parent
+   basis object with nuclei and charges. These facts are usable inputs for a
+   future Coulomb packet, but they are separate from the Gaussian axis factors.
+5. A future parent Coulomb factor packet should therefore be an explicit object
+   tying together:
+   - parent identity and axis counts;
+   - Gaussian expansion identity, coefficients, and exponents;
+   - electron-nuclear axis terms indexed by center/nucleus, Gaussian term, and
+     axis;
+   - electron-electron pair-axis terms indexed by Gaussian term and axis;
+   - nucleus labels, charges, and coordinates for electron-nuclear terms;
+   - factor-space, convention, index-domain, and backend provenance labels;
+   - nonclaim flags for WL/PQS realization, route/global placement,
+     Hamiltonian assembly, exports, and artifacts.
+
+The next Coulomb implementation step should not infer this packet from loose
+scalar fields or route-report aliases. Either build a metadata-only parent
+Coulomb factor packet from these existing structured ingredients, or first
+design the per-nucleus and pair-pair CPB kernel input records if the packet
+shape is still unsettled.
+
 ### Provenance and Metadata
 
 A parent factor packet should carry compact metadata such as:

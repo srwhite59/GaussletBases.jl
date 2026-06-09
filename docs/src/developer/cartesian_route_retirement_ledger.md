@@ -295,6 +295,26 @@ paths from becoming new route authority.
   performance review justifies it. No Coulomb production code, parent Coulomb
   packet structs, WL/PQS realization, route/global placement, driver wiring, or
   Hamiltonian assembly was added with this audit.
+- The current parent axis-bundle Coulomb source audit found structured
+  ingredients but no reviewed parent Coulomb factor packet. Axis bundles carry
+  centered Gaussian one-body terms at
+  `axis.pgdg_intermediate.gaussian_factor_terms` and
+  `axis.pgdg_intermediate.gaussian_factors`, pair Gaussian ingredients at
+  `axis.pgdg_intermediate.pair_factor_terms`,
+  `axis.pgdg_intermediate.pair_factors`, and
+  `axis.pgdg_intermediate.pair_factor_terms_raw`, and expansion exponents at
+  `axis.pgdg_intermediate.exponents` / `axis.exponents`. They do not carry
+  expansion coefficients or a full `CoulombGaussianExpansion` object. Real
+  reports carry center data separately through `report.nuclear_charges`,
+  `report.atom_locations`, and `report.center_table`, while
+  `report.route_materializer_payload.parent_axis_bundle_object` carries the
+  axis bundle. One-body electron-nuclear factors are not currently carried as
+  per-nucleus Gaussian axis terms on the parent bundle; existing nuclear
+  helpers build those per-center term tables on demand. Electron-electron
+  1D pair factors are present as ingredients, but not as a CPB pair-pair
+  Coulomb source record. No numerical Coulomb kernel, packet struct,
+  WL/PQS realization, route placement, driver wiring, Hamiltonian assembly,
+  IDA/MWG change, PQS projection/Lowdin, export, or artifact was added.
 - The next overlap implementation boundary is no longer additional placement
   fingerprinting. First decide the CPB operator-block and WL/PQS realization
   design: what local block objects exist, how White-Lindsey consumes them, how
