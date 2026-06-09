@@ -246,6 +246,45 @@ dimension source in that fixture. It still does not carry structured retained
 transforms, source-pair retained column ranges for `(:product, :product)`, a
 reviewed overlap placement plan, or an accumulation rule.
 
+`CPBOverlapPlacementFacts` is implemented as a metadata-only coherence bundle,
+and the private placement skeleton can consume it directly. The current real
+probe report negative fingerprint builds facts from the real local overlap
+collection without placeholders. It reports:
+
+- `available_requirements = (:local_cpb_overlap_collection,)`;
+- `missing_requirements = (:missing_retained_transform,
+  :missing_left_column_range, :missing_right_column_range,
+  :missing_global_dimension, :missing_placement_plan,
+  :missing_accumulation_rule)`.
+
+Those facts preserve left and right CPB summaries into the private placement
+skeleton. Missing placement ranges also report `:missing_global_dimension`
+because global dimension is an independent required placement fact. Non-matrix
+retained-transform references block with
+`:unsupported_retained_transform_reference`.
+
+There is still no transform application, placement, global overlap
+accumulation, route adoption, kinetic, position, x2, Coulomb, Hamiltonian,
+IDA/MWG, PQS Lowdin/projection, export, or artifact work.
+
+## Next Implementation Unit
+
+The next implementation unit should be a metadata-only reviewed overlap
+placement plan object. It should own:
+
+- placement plan kind;
+- accumulation rule;
+- symmetry or transpose policy;
+- duplicate record policy;
+- accepted block keys and record inventory;
+- required global dimension source;
+- status and blocker;
+- route/global nonclaim flags.
+
+It should not apply transforms or assemble any matrix. Its purpose is to
+replace placeholder `placement_plan` and `accumulation_rule` values with a
+compact reviewed contract before numerical placement code exists.
+
 ## Structured Carry Objects For Placement
 
 The next implementation boundary should introduce compact carry objects before

@@ -131,6 +131,29 @@ paths from becoming new route authority.
   materialization, route-global overlap adoption, kinetic, position, x2,
   Coulomb, Hamiltonian, IDA/MWG, PQS projection/Lowdin, export, or artifact
   work.
+- The overlap placement metadata boundary is now explicit. The provider layer
+  owns `CPBRetainedTransformCarry`, `CPBSourcePairPlacementRange`, and
+  `CPBOverlapPlacementFacts`; the private placement skeleton can consume
+  `CPBOverlapPlacementFacts` directly. The real probe report negative
+  fingerprint builds placement facts from the real local collection without
+  placeholder transforms or ranges and still reports only
+  `available_requirements = (:local_cpb_overlap_collection,)`. Missing
+  requirements are `:missing_retained_transform`,
+  `:missing_left_column_range`, `:missing_right_column_range`,
+  `:missing_global_dimension`, `:missing_placement_plan`, and
+  `:missing_accumulation_rule`. Left and right CPB summaries are preserved
+  through placement facts into the private skeleton. Missing placement ranges
+  also report `:missing_global_dimension`, and non-matrix retained-transform
+  references block with `:unsupported_retained_transform_reference`. This still
+  claims no transform application, placement, global overlap accumulation,
+  route adoption, kinetic, position, x2, Coulomb, Hamiltonian, IDA/MWG, PQS
+  projection/Lowdin, export, or artifact work.
+- The next overlap placement unit should be a metadata-only reviewed overlap
+  placement plan object. It should own placement plan kind, accumulation rule,
+  symmetry or transpose policy, duplicate record policy, accepted block keys
+  and record inventory, required global dimension source, status/blocker, and
+  route/global nonclaim flags. It should not apply transforms or assemble a
+  matrix.
 - The next overlap implementation boundary is no longer additional
   fingerprinting. It is a reviewed placement design and implementation plan for
   turning local CPB overlap collections into retained/global overlap. That plan
