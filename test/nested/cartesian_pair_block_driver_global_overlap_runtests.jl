@@ -357,6 +357,45 @@ end
     @test materialized_from_carried_parent_facts.private_global_overlap_result.global_matrix_result.matrix ≈
           _driver_overlap_expected_matrix()
 
+    retained_units_facts_report = (;
+        low_order_route_summary = (;
+            terminal_route_state = (;
+                pair_block_materialization_plan = plan,
+                retained_units = ((; column_range = 1:2),),
+            ),
+        ),
+        parent = _driver_overlap_parent_object(),
+        parent_axis_bundle_object = _driver_overlap_axis_bundle_object(),
+    )
+    retained_units_facts =
+        GaussletBases._pqs_source_box_route_driver_private_global_overlap_input_facts(
+            retained_units_facts_report,
+        )
+    @test retained_units_facts.status ===
+          :available_private_global_overlap_input_facts
+    @test retained_units_facts.global_dimension == 2
+    @test retained_units_facts.final_layout_source ===
+          :terminal_route_state_retained_units
+    @test retained_units_facts.parent_axis_counts == (2, 2, 2)
+    @test retained_units_facts.parent_axis_counts_source ===
+          :parent_object_parent_axis_counts
+    @test retained_units_facts.axis_bundle_source ===
+          :report_parent_axis_bundle_object
+    @test retained_units_facts.factor_space ===
+          :parent_axis_bundle_pgdg_intermediate
+    @test retained_units_facts.factor_convention ===
+          :axis_bundle_one_body_overlap
+
+    materialized_from_retained_units_facts =
+        GaussletBases._pqs_source_box_route_driver_private_global_overlap_stage(
+            retained_units_facts_report;
+            private_global_overlap_requested = true,
+        )
+    @test materialized_from_retained_units_facts.private_global_overlap_result.status ===
+          :materialized_route_global_overlap_matrix
+    @test materialized_from_retained_units_facts.private_global_overlap_result.global_matrix_result.matrix ≈
+          _driver_overlap_expected_matrix()
+
     missing_parent_axis_counts_facts =
         GaussletBases._pqs_source_box_route_driver_private_global_overlap_input_facts(
             (;
