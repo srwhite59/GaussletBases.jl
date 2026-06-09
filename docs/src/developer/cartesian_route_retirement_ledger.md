@@ -148,12 +148,17 @@ paths from becoming new route authority.
   claims no transform application, placement, global overlap accumulation,
   route adoption, kinetic, position, x2, Coulomb, Hamiltonian, IDA/MWG, PQS
   projection/Lowdin, export, or artifact work.
-- The next overlap placement unit should be a metadata-only reviewed overlap
-  placement plan object. It should own placement plan kind, accumulation rule,
-  symmetry or transpose policy, duplicate record policy, accepted block keys
-  and record inventory, required global dimension source, status/blocker, and
-  route/global nonclaim flags. It should not apply transforms or assemble a
-  matrix.
+- The reviewed overlap placement plan object now exists as metadata-only
+  contract data. It owns placement plan kind, accumulation rule, symmetry or
+  transpose policy, duplicate record policy, accepted block keys and record
+  inventory, required global dimension source, status/blocker, and route/global
+  nonclaim flags. `CPBOverlapPlacementFacts` and the private placement
+  skeleton can use it instead of placeholder `placement_plan` and
+  `accumulation_rule` values. A real-report fingerprint can supply this
+  reviewed plan, making `:placement_plan` and `:accumulation_rule` available
+  while real retained transforms, source-pair column ranges, and
+  placement-derived global dimension remain missing. It still does not apply
+  transforms or assemble a matrix.
 - The next overlap implementation boundary is no longer additional
   fingerprinting. It is a reviewed placement design and implementation plan for
   turning local CPB overlap collections into retained/global overlap. That plan

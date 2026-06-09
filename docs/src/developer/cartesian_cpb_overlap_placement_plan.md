@@ -223,14 +223,13 @@ Implemented so far:
 - `CPBRetainedTransformCarry`;
 - `CPBSourcePairPlacementRange`;
 - `CPBOverlapPlacementFacts`;
+- `CPBReviewedOverlapPlacementPlan`;
 - private skeleton consumption of `CPBOverlapPlacementFacts`.
 
 Still missing:
 
-- reviewed placement plan object;
 - real retained transforms;
 - source-pair retained column ranges;
-- accumulation rule;
 - numerical transform application;
 - global overlap accumulation.
 
@@ -267,10 +266,9 @@ There is still no transform application, placement, global overlap
 accumulation, route adoption, kinetic, position, x2, Coulomb, Hamiltonian,
 IDA/MWG, PQS Lowdin/projection, export, or artifact work.
 
-## Next Implementation Unit
+## Reviewed Placement Plan Object
 
-The next implementation unit should be a metadata-only reviewed overlap
-placement plan object. It should own:
+The reviewed overlap placement plan object is metadata-only. It owns:
 
 - placement plan kind;
 - accumulation rule;
@@ -284,6 +282,14 @@ placement plan object. It should own:
 It should not apply transforms or assemble any matrix. Its purpose is to
 replace placeholder `placement_plan` and `accumulation_rule` values with a
 compact reviewed contract before numerical placement code exists.
+
+The reviewed placement plan object now exists as metadata-only contract data.
+`CPBOverlapPlacementFacts` and the private placement skeleton can use it instead
+of placeholder `placement_plan` and `accumulation_rule` values. A real-report
+fingerprint can supply this reviewed plan, making `:placement_plan` and
+`:accumulation_rule` available while real retained transforms, source-pair
+column ranges, and placement-derived global dimension remain missing. This is
+still not numerical placement and does not make route-global overlap available.
 
 ## Structured Carry Objects For Placement
 

@@ -494,6 +494,94 @@ end
     @test all_facts_placement_plan_skeleton.route_driver_wiring === false
     @test all_facts_placement_plan_skeleton.route_global_overlap_stage_source === false
 
+    reviewed_left_transform =
+        CBPLocalOverlapFingerprint.cpb_retained_transform_carry(
+            :left,
+            (:tiny_left, :tiny_right),
+            (; object_kind = :test_left_cpb_summary, shape = (x = 1, y = 2, z = 1)),
+            (x = 1, y = 2, z = 1),
+            :parent_compatible_x_slowest_z_fastest,
+            1:2;
+            transform_object = [1.0 0.0; 0.0 1.0],
+            transform_convention = :test_local_to_retained_columns,
+            transform_provenance = :test_fixture,
+        )
+    reviewed_right_transform =
+        CBPLocalOverlapFingerprint.cpb_retained_transform_carry(
+            :right,
+            (:tiny_left, :tiny_right),
+            (; object_kind = :test_right_cpb_summary, shape = (x = 1, y = 2, z = 1)),
+            (x = 1, y = 2, z = 1),
+            :parent_compatible_x_slowest_z_fastest,
+            1:2;
+            transform_object = [1.0 0.0; 0.0 1.0],
+            transform_convention = :test_local_to_retained_columns,
+            transform_provenance = :test_fixture,
+        )
+    reviewed_range =
+        CBPLocalOverlapFingerprint.cpb_source_pair_placement_range(
+            (:tiny_left, :tiny_right);
+            left_column_range = 1:2,
+            right_column_range = 1:2,
+            global_dimension = 2,
+            global_dimension_source = :test_retained_layout,
+            range_source = :test_source_pair_ranges,
+            range_provenance = :test_fixture,
+            left_transform_carry = reviewed_left_transform,
+            right_transform_carry = reviewed_right_transform,
+        )
+    reviewed_plan =
+        CBPLocalOverlapFingerprint.cpb_reviewed_overlap_placement_plan(;
+            placement_plan_kind = :test_reviewed_overlap_placement_plan,
+            accumulation_rule = :add_explicit_blocks_into_ranges,
+            accepted_block_keys = ((:tiny_left, :tiny_right),),
+            required_global_dimension_source = :test_retained_layout,
+        )
+    reviewed_plan_facts =
+        CBPLocalOverlapFingerprint.cpb_overlap_placement_facts(
+            source.collection;
+            transform_carries = (reviewed_left_transform, reviewed_right_transform),
+            placement_ranges = (reviewed_range,),
+            placement_plan = reviewed_plan,
+        )
+    reviewed_plan_facts_summary =
+        CBPLocalOverlapFingerprint.summary(reviewed_plan_facts)
+    @test reviewed_plan_facts_summary.status ===
+          :blocked_cpb_overlap_placement_facts
+    @test reviewed_plan_facts_summary.blocker === :placement_not_implemented
+    @test reviewed_plan_facts_summary.placement_plan_status ===
+          :available_placement_plan
+    @test reviewed_plan_facts_summary.placement_plan_kind ===
+          :test_reviewed_overlap_placement_plan
+    @test reviewed_plan_facts_summary.accumulation_rule_status ===
+          :available_accumulation_rule
+    @test reviewed_plan_facts_summary.accumulation_rule ===
+          :add_explicit_blocks_into_ranges
+    @test reviewed_plan_facts_summary.missing_requirements === ()
+
+    reviewed_plan_skeleton =
+        GaussletBases._pqs_source_box_route_driver_private_global_overlap_placement_plan_skeleton(
+            reviewed_plan_facts,
+        )
+    @test reviewed_plan_skeleton.status ===
+          :blocked_private_global_overlap_placement_plan_skeleton
+    @test reviewed_plan_skeleton.blocker === :placement_not_implemented
+    @test reviewed_plan_skeleton.placement_plan_status ===
+          :available_placement_plan
+    @test reviewed_plan_skeleton.placement_plan_kind ===
+          :test_reviewed_overlap_placement_plan
+    @test reviewed_plan_skeleton.accumulation_rule_status ===
+          :available_accumulation_rule
+    @test reviewed_plan_skeleton.accumulation_rule ===
+          :add_explicit_blocks_into_ranges
+    @test reviewed_plan_skeleton.global_overlap_status === :blocked
+    @test reviewed_plan_skeleton.global_overlap_blocker ===
+          :placement_not_implemented
+    @test reviewed_plan_skeleton.route_driver_wiring === false
+    @test reviewed_plan_skeleton.transform_application_implemented === false
+    @test reviewed_plan_skeleton.global_matrix_materialized === false
+    @test reviewed_plan_skeleton.route_global_overlap_stage_source === false
+
     blocked_collection_adapter =
         GaussletBases._pqs_source_box_route_driver_private_global_overlap_local_collection_adapter(
             source.blocked_collection,
