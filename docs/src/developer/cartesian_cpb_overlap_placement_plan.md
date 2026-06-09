@@ -293,6 +293,8 @@ local source-pair record. Ranges should remain separate from transform carry
 objects. A transform may know its own target range, but the source-pair range
 object is the placement authority that says where the left and right retained
 blocks would land in the global overlap matrix.
+The current implementation is metadata-only: it validates range, dimension,
+and transform target-count metadata, but does not place matrices.
 
 Required fields:
 

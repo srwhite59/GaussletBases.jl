@@ -100,12 +100,27 @@ struct CPBRetainedTransformCarry{K,S,T,M}
     metadata::M
 end
 
+"""
+    CPBSourcePairPlacementRange
+
+Metadata-only retained-column range authority for one local source-pair
+record. This object validates range/dimension/count metadata but does not place
+matrices or assemble route/global overlap.
+"""
+struct CPBSourcePairPlacementRange{K,L,R,M}
+    block_key::K
+    left_transform_carry::L
+    right_transform_carry::R
+    metadata::M
+end
+
 summary(pair::CPBIntervalPair3D) = pair.metadata
 summary(block_set::CPBOverlapAxisBlockSet) = block_set.metadata
 summary(block::CPBOverlapDenseBlock) = block.metadata
 summary(record::CPBLocalOverlapBlockRecord) = record.metadata
 summary(collection::CPBLocalOverlapBlockCollection) = collection.metadata
 summary(carry::CPBRetainedTransformCarry) = carry.metadata
+summary(range::CPBSourcePairPlacementRange) = range.metadata
 
 function cpb_interval_pair(
     parent::CPGB.CartesianParentGaussletBasis3D,
@@ -796,6 +811,141 @@ function _cpb_retained_transform_carry_blocker(
     transform_shape[2] == target_retained_column_count ||
         return :retained_transform_target_count_mismatch
     return nothing
+end
+
+function cpb_source_pair_placement_range(
+    block_key;
+    left_column_range = nothing,
+    right_column_range = nothing,
+    global_dimension = nothing,
+    global_dimension_source = :unavailable,
+    range_source = :unavailable,
+    range_provenance = :unavailable,
+    left_transform_carry = nothing,
+    right_transform_carry = nothing,
+)
+    left_column_count = _cpb_source_pair_column_count(left_column_range)
+    right_column_count = _cpb_source_pair_column_count(right_column_range)
+    normalized_global_dimension =
+        _cpb_source_pair_global_dimension(global_dimension)
+    left_transform_summary =
+        _cpb_source_pair_transform_summary(left_transform_carry)
+    right_transform_summary =
+        _cpb_source_pair_transform_summary(right_transform_carry)
+    left_transform_status =
+        _cpb_source_pair_transform_status(left_transform_summary)
+    right_transform_status =
+        _cpb_source_pair_transform_status(right_transform_summary)
+    left_transform_target_count =
+        _cpb_source_pair_transform_target_count(left_transform_summary)
+    right_transform_target_count =
+        _cpb_source_pair_transform_target_count(right_transform_summary)
+    blocker = _cpb_source_pair_placement_range_blocker(
+        left_column_range,
+        right_column_range,
+        left_column_count,
+        right_column_count,
+        normalized_global_dimension,
+        left_transform_status,
+        right_transform_status,
+        left_transform_target_count,
+        right_transform_target_count,
+    )
+    status =
+        isnothing(blocker) ?
+        :available_cpb_source_pair_placement_range :
+        :blocked_cpb_source_pair_placement_range
+    return CPBSourcePairPlacementRange(
+        block_key,
+        left_transform_carry,
+        right_transform_carry,
+        (;
+            object_kind = :cartesian_cpb_source_pair_placement_range_summary,
+            status,
+            blocker,
+            block_key,
+            left_column_range,
+            right_column_range,
+            left_column_count,
+            right_column_count,
+            global_dimension = normalized_global_dimension,
+            global_dimension_source,
+            range_source,
+            range_provenance,
+            left_transform_status,
+            right_transform_status,
+            left_transform_target_count,
+            right_transform_target_count,
+            placement_status = :unassigned,
+            global_matrix_materialized = false,
+            route_driver_wiring = false,
+        ),
+    )
+end
+
+function _cpb_source_pair_column_count(column_range)
+    column_range isa AbstractUnitRange{<:Integer} || return :unavailable
+    return length(column_range)
+end
+
+function _cpb_source_pair_global_dimension(global_dimension)
+    isnothing(global_dimension) && return nothing
+    global_dimension isa Integer || return nothing
+    dimension = Int(global_dimension)
+    dimension > 0 || return nothing
+    return dimension
+end
+
+function _cpb_source_pair_transform_summary(transform_carry)
+    isnothing(transform_carry) && return nothing
+    transform_carry isa CPBRetainedTransformCarry && return summary(transform_carry)
+    transform_carry isa NamedTuple && return transform_carry
+    return nothing
+end
+
+function _cpb_source_pair_transform_status(transform_summary)
+    isnothing(transform_summary) && return :unavailable
+    return _summary_property(transform_summary, :status)
+end
+
+function _cpb_source_pair_transform_target_count(transform_summary)
+    isnothing(transform_summary) && return :unavailable
+    target_count = _summary_property(transform_summary, :target_retained_column_count)
+    isnothing(target_count) ? :unavailable : target_count
+end
+
+function _cpb_source_pair_placement_range_blocker(
+    left_column_range,
+    right_column_range,
+    left_column_count,
+    right_column_count,
+    global_dimension,
+    left_transform_status,
+    right_transform_status,
+    left_transform_target_count,
+    right_transform_target_count,
+)
+    isnothing(left_column_range) && return :missing_left_column_range
+    isnothing(right_column_range) && return :missing_right_column_range
+    isnothing(global_dimension) && return :missing_global_dimension
+    _cpb_source_pair_range_inside_dimension(left_column_range, global_dimension) ||
+        return :left_column_range_dimension_mismatch
+    _cpb_source_pair_range_inside_dimension(right_column_range, global_dimension) ||
+        return :right_column_range_dimension_mismatch
+    if left_transform_status === :available_cpb_retained_transform_carry
+        left_column_count == left_transform_target_count ||
+            return :left_column_range_dimension_mismatch
+    end
+    if right_transform_status === :available_cpb_retained_transform_carry
+        right_column_count == right_transform_target_count ||
+            return :right_column_range_dimension_mismatch
+    end
+    return nothing
+end
+
+function _cpb_source_pair_range_inside_dimension(column_range, global_dimension::Integer)
+    column_range isa AbstractUnitRange{<:Integer} || return false
+    return first(column_range) >= 1 && last(column_range) <= global_dimension
 end
 
 end # module CartesianCPBBlockProviders
