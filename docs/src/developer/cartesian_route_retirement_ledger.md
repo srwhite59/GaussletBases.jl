@@ -48,9 +48,11 @@ paths from becoming new route authority.
   `:x2_x`, `:x2_y`, and `:x2_z`.
 - A private route-shaped global one-body adapter now composes
   `PairBlockMaterializationPlan` inputs through the local block collection,
-  placement plan, and global matrix layers for term-separated `:overlap` and
-  `:kinetic` only. This is module-level adapter coverage, not route-driver
-  wiring or Hamiltonian assembly.
+  term-specific placement plans, and term-specific dense global retained matrix
+  pilots for the individual safe one-body terms `:overlap`, `:kinetic`,
+  `:position_x`, `:position_y`, `:position_z`, `:x2_x`, `:x2_y`, and `:x2_z`.
+  This is module-level adapter coverage, not route-driver wiring, term summing,
+  one-body Hamiltonian construction, or Hamiltonian assembly.
 - Selected White--Lindsey old-oracle equivalence currently covers overlap,
   kinetic, position_x, position_y, position_z, x2_x, x2_y, and x2_z.
 - `src/cartesian_pair_block_materialization/one_body_global_matrix_helpers.jl`
@@ -59,6 +61,8 @@ paths from becoming new route authority.
   object kinds, and materialization flags.
 - The next replacement slice should decide whether to broaden selected
   safe-term oracle coverage or move toward carefully scoped driver wiring.
-- The current global one-body pilots do not assemble Hamiltonians, sum terms,
-  build Coulomb, touch IDA/MWG, perform PQS projection/Lowdin, wire route
-  drivers, export artifacts, or assemble a full White--Lindsey route.
+- The current global one-body pilots do not assemble Hamiltonians, build
+  one-body Hamiltonian objects, sum terms, build Coulomb, touch IDA/MWG, build
+  density-density, nuclear attraction, or Gaussian local terms, perform PQS
+  projection/Lowdin, wire route drivers, export artifacts, or assemble a full
+  White--Lindsey route.
