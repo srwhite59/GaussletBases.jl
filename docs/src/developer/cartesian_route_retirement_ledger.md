@@ -194,6 +194,15 @@ paths from becoming new route authority.
   numerical overlap placement pilot, not another metadata layer. This still
   claims no transform application, placement, global matrix assembly, or
   route-global overlap adoption.
+- A tiny synthetic provider-level numerical overlap placement pilot now exists
+  for one fully reviewed local dense overlap block. It applies
+  `T_left' * O_cpb * T_right` and accumulates into an explicitly supplied dense
+  provider-level global overlap matrix range. The pilot is gated by available
+  transform carries, placement range, reviewed placement facts, reviewed
+  placement plan status, explicit accumulation rule, explicit symmetry policy,
+  and duplicate-record policy. It is synthetic/provider-level only: no real
+  route/report placement, private driver global overlap adoption, route-global
+  overlap availability, Hamiltonian assembly, or new physics path is claimed.
 - The next overlap implementation boundary is no longer additional
   fingerprinting. It is a reviewed placement design and implementation plan for
   turning local CPB overlap collections into retained/global overlap. That plan

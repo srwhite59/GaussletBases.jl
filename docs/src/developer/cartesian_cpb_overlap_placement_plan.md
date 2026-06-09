@@ -366,6 +366,23 @@ The next implementation step should therefore be B, the tiny synthetic
 provider-level numerical placement pilot, unless manager direction asks for a
 broader retained-unit metadata audit first.
 
+The synthetic provider-level placement pilot now exists for one fully reviewed
+local dense overlap block. It consumes a `CPBOverlapDenseBlock`, available left
+and right `CPBRetainedTransformCarry` objects, an available
+`CPBSourcePairPlacementRange`, and reviewed `CPBOverlapPlacementFacts`, then
+applies:
+
+```text
+O_retained = T_left' * O_cpb * T_right
+global[left_range, right_range] += O_retained
+```
+
+The pilot materializes only a provider-level dense overlap placement result for
+synthetic fixtures. It is not route-driver adoption, not private global overlap
+stage adoption, and not evidence that real route placement is available. Real
+route placement remains blocked until structured retained transforms and
+source-pair retained column ranges are carried from real route/report state.
+
 ## Structured Carry Objects For Placement
 
 The next implementation boundary should introduce compact carry objects before

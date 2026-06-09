@@ -142,6 +142,23 @@ struct CPBReviewedOverlapPlacementPlan{K,M}
     metadata::M
 end
 
+"""
+    CPBPlacedOverlapBlock
+
+Provider-level synthetic placement pilot for one local CPB overlap block. This
+object may carry a dense placement matrix, but it is not route-driver adoption
+and does not imply route-global overlap availability.
+"""
+struct CPBPlacedOverlapBlock{S,L,R,P,F,G,M}
+    source_block::S
+    left_transform_carry::L
+    right_transform_carry::R
+    placement_range::P
+    placement_facts::F
+    global_overlap_matrix::G
+    metadata::M
+end
+
 summary(pair::CPBIntervalPair3D) = pair.metadata
 summary(block_set::CPBOverlapAxisBlockSet) = block_set.metadata
 summary(block::CPBOverlapDenseBlock) = block.metadata
@@ -151,6 +168,7 @@ summary(carry::CPBRetainedTransformCarry) = carry.metadata
 summary(range::CPBSourcePairPlacementRange) = range.metadata
 summary(facts::CPBOverlapPlacementFacts) = facts.metadata
 summary(plan::CPBReviewedOverlapPlacementPlan) = plan.metadata
+summary(placed::CPBPlacedOverlapBlock) = placed.metadata
 
 function cpb_interval_pair(
     parent::CPGB.CartesianParentGaussletBasis3D,
@@ -1165,6 +1183,7 @@ function cpb_overlap_placement_facts(
         record_fact_summaries,
         placement_plan_status,
         placement_plan_kind = _cpb_overlap_placement_plan_kind(placement_plan),
+        symmetry_policy = _cpb_overlap_placement_plan_symmetry_policy(placement_plan),
         placement_plan_review_status =
             _cpb_overlap_placement_plan_review_status(placement_plan),
         placement_plan_blocker,
@@ -1796,6 +1815,258 @@ function _cpb_overlap_placement_plan_kind(placement_plan)
         isnothing(kind) || return kind
     end
     return Symbol(nameof(typeof(placement_plan)))
+end
+
+function _cpb_overlap_placement_plan_symmetry_policy(placement_plan)
+    isnothing(placement_plan) && return :unavailable
+    plan_summary = _cpb_overlap_placement_plan_summary(placement_plan)
+    isnothing(plan_summary) && return :unavailable
+    symmetry_policy = _summary_property(plan_summary, :symmetry_policy)
+    isnothing(symmetry_policy) ? :unavailable : symmetry_policy
+end
+
+function cpb_place_overlap_block(
+    source_block,
+    left_transform_carry,
+    right_transform_carry,
+    placement_range,
+    placement_facts,
+)
+    source_summary = _cpb_overlap_pilot_summary(source_block)
+    left_transform_summary = _cpb_overlap_placement_transform_summary(
+        left_transform_carry,
+    )
+    right_transform_summary = _cpb_overlap_placement_transform_summary(
+        right_transform_carry,
+    )
+    range_summary = _cpb_overlap_placement_range_summary(placement_range)
+    facts_summary = _cpb_overlap_pilot_facts_summary(placement_facts)
+    blocker = _cpb_place_overlap_block_blocker(
+        source_block,
+        source_summary,
+        left_transform_carry,
+        left_transform_summary,
+        right_transform_carry,
+        right_transform_summary,
+        placement_range,
+        range_summary,
+        placement_facts,
+        facts_summary,
+    )
+    global_overlap_matrix =
+        isnothing(blocker) ?
+        _cpb_place_overlap_block_matrix(
+            source_block,
+            left_transform_carry,
+            right_transform_carry,
+            range_summary,
+        ) :
+        nothing
+    status =
+        isnothing(blocker) ?
+        :materialized_cpb_overlap_placement_pilot :
+        :blocked_cpb_overlap_placement_pilot
+    return CPBPlacedOverlapBlock(
+        source_block,
+        left_transform_carry,
+        right_transform_carry,
+        placement_range,
+        placement_facts,
+        global_overlap_matrix,
+        _cpb_place_overlap_block_summary(
+            status,
+            blocker,
+            source_block,
+            source_summary,
+            left_transform_summary,
+            right_transform_summary,
+            range_summary,
+            facts_summary,
+            global_overlap_matrix,
+        ),
+    )
+end
+
+function _cpb_overlap_pilot_summary(object)
+    (
+        object isa CPBOverlapDenseBlock ||
+        object isa CPBOverlapAxisBlockSet ||
+        object isa CPBLocalOverlapBlockRecord ||
+        object isa CPBLocalOverlapBlockCollection
+    ) && return summary(object)
+    return nothing
+end
+
+function _cpb_overlap_pilot_facts_summary(placement_facts)
+    placement_facts isa CPBOverlapPlacementFacts && return summary(placement_facts)
+    return nothing
+end
+
+function _cpb_place_overlap_block_blocker(
+    source_block,
+    _source_summary,
+    left_transform_carry,
+    left_transform_summary,
+    right_transform_carry,
+    right_transform_summary,
+    placement_range,
+    range_summary,
+    placement_facts,
+    facts_summary,
+)
+    placement_facts isa CPBOverlapPlacementFacts ||
+        return :missing_reviewed_overlap_placement_facts
+    source_block isa CPBOverlapDenseBlock ||
+        return :local_overlap_source_not_dense
+    facts_summary.placement_plan_review_status === :reviewed_placement_plan ||
+        return :placement_facts_not_reviewed
+    isempty(facts_summary.missing_requirements) ||
+        return :placement_requirements_missing
+    facts_summary.blocker === :placement_not_implemented ||
+        return facts_summary.blocker
+    isnothing(left_transform_summary) && return :retained_transform_unavailable
+    isnothing(right_transform_summary) && return :retained_transform_unavailable
+    isnothing(range_summary) && return :placement_range_unavailable
+    left_transform_summary.status === :available_cpb_retained_transform_carry ||
+        return :retained_transform_unavailable
+    right_transform_summary.status === :available_cpb_retained_transform_carry ||
+        return :retained_transform_unavailable
+    left_transform_carry.transform_object isa AbstractMatrix ||
+        return :retained_transform_unavailable
+    right_transform_carry.transform_object isa AbstractMatrix ||
+        return :retained_transform_unavailable
+    range_summary.status === :available_cpb_source_pair_placement_range ||
+        return :placement_range_unavailable
+    facts_summary.accumulation_rule === :add_explicit_blocks_into_ranges ||
+        return :unsupported_overlap_accumulation_rule
+    facts_summary.symmetry_policy === :explicit_blocks_only ||
+        return :unsupported_overlap_symmetry_policy
+    facts_summary.duplicate_record_policy === :reject_duplicate_block_keys ||
+        return :unsupported_overlap_duplicate_record_policy
+    dense_shape = size(source_block.dense_block)
+    size(left_transform_carry.transform_object, 1) == dense_shape[1] ||
+        return :retained_transform_shape_mismatch
+    size(right_transform_carry.transform_object, 1) == dense_shape[2] ||
+        return :retained_transform_shape_mismatch
+    size(left_transform_carry.transform_object, 2) == range_summary.left_column_count ||
+        return :retained_transform_shape_mismatch
+    size(right_transform_carry.transform_object, 2) == range_summary.right_column_count ||
+        return :retained_transform_shape_mismatch
+    return nothing
+end
+
+function _cpb_place_overlap_block_matrix(
+    source_block::CPBOverlapDenseBlock,
+    left_transform_carry::CPBRetainedTransformCarry,
+    right_transform_carry::CPBRetainedTransformCarry,
+    range_summary,
+)
+    retained_block =
+        left_transform_carry.transform_object' *
+        source_block.dense_block *
+        right_transform_carry.transform_object
+    element_type = promote_type(
+        eltype(retained_block),
+        eltype(source_block.dense_block),
+        eltype(left_transform_carry.transform_object),
+        eltype(right_transform_carry.transform_object),
+    )
+    global_overlap_matrix = zeros(
+        element_type,
+        range_summary.global_dimension,
+        range_summary.global_dimension,
+    )
+    global_overlap_matrix[
+        range_summary.left_column_range,
+        range_summary.right_column_range,
+    ] .+= retained_block
+    return global_overlap_matrix
+end
+
+function _cpb_place_overlap_block_summary(
+    status::Symbol,
+    blocker,
+    source_block,
+    source_summary,
+    left_transform_summary,
+    right_transform_summary,
+    range_summary,
+    facts_summary,
+    global_overlap_matrix,
+)
+    available = status === :materialized_cpb_overlap_placement_pilot
+    retained_block_shape =
+        available ?
+        (
+            left_transform_summary.target_retained_column_count,
+            right_transform_summary.target_retained_column_count,
+        ) :
+        :not_materialized
+    return (;
+        object_kind = :cartesian_cpb_placed_overlap_block_summary,
+        status,
+        blocker,
+        source_kind =
+            source_block isa CPBOverlapDenseBlock ?
+            :cpb_overlap_dense_block :
+            :unavailable,
+        source_block_status =
+            isnothing(source_summary) ? :unavailable : source_summary.status,
+        source_dense_block_shape =
+            source_block isa CPBOverlapDenseBlock ?
+            size(source_block.dense_block) :
+            :unavailable,
+        left_transform_status =
+            isnothing(left_transform_summary) ?
+            :unavailable :
+            left_transform_summary.status,
+        right_transform_status =
+            isnothing(right_transform_summary) ?
+            :unavailable :
+            right_transform_summary.status,
+        placement_range_status =
+            isnothing(range_summary) ? :unavailable : range_summary.status,
+        placement_facts_status =
+            isnothing(facts_summary) ? :unavailable : facts_summary.status,
+        placement_facts_blocker =
+            isnothing(facts_summary) ? :unavailable : facts_summary.blocker,
+        placement_plan_review_status =
+            isnothing(facts_summary) ?
+            :unavailable :
+            facts_summary.placement_plan_review_status,
+        accumulation_rule =
+            isnothing(facts_summary) ? :unavailable : facts_summary.accumulation_rule,
+        symmetry_policy =
+            isnothing(facts_summary) ? :unavailable : facts_summary.symmetry_policy,
+        duplicate_record_policy =
+            isnothing(facts_summary) ? :unavailable : facts_summary.duplicate_record_policy,
+        block_key =
+            isnothing(range_summary) ? :unavailable : range_summary.block_key,
+        left_column_range =
+            isnothing(range_summary) ? :unavailable : range_summary.left_column_range,
+        right_column_range =
+            isnothing(range_summary) ? :unavailable : range_summary.right_column_range,
+        global_dimension =
+            isnothing(range_summary) ? :unavailable : range_summary.global_dimension,
+        global_dimension_source =
+            isnothing(range_summary) ? :unavailable : range_summary.global_dimension_source,
+        retained_block_shape,
+        global_overlap_matrix_shape =
+            available ? size(global_overlap_matrix) : :not_materialized,
+        global_matrix_materialized = available,
+        global_overlap_matrix_materialized = available,
+        provider_level_pilot = true,
+        synthetic_fixture_only = true,
+        route_driver_wiring = false,
+        route_global_overlap_stage_source = false,
+        route_global_overlap_available = false,
+        hamiltonian_data_materialized = false,
+        coulomb_data_materialized = false,
+        ida_mwg_semantics = false,
+        pqs_lowdin_materialized = false,
+        pqs_shell_projection_materialized = false,
+        exports_or_artifacts = false,
+    )
 end
 
 end # module CartesianCPBBlockProviders
