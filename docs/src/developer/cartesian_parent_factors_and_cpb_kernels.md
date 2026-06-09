@@ -577,6 +577,196 @@ Coulomb factor packet from these existing structured ingredients, or first
 design the per-nucleus and pair-pair CPB kernel input records if the packet
 shape is still unsettled.
 
+### Coulomb Port Map From Current Cartesian/WL Code
+
+The repo already has working Cartesian/White-Lindsey Coulomb machinery. The CPB
+operator-layer work should port the local kernel structure, not rediscover it
+or route it through simple axis-product one-body primitives.
+
+Current electron-nuclear construction and consumption:
+
+- `src/ordinary_qw_raw_blocks.jl`:
+  - `_qwrg_diatomic_factor_term_cache(basis, centers_1d, expansion, backend)`
+    builds a cache keyed by 1D nuclear center value. Each entry is
+    `bundle.pgdg_intermediate.gaussian_factor_terms`, where the bundle is built
+    by `_mapped_ordinary_gausslet_1d_bundle(...; exponents =
+    expansion.exponents, center = center_value, backend)`.
+  - `_qwrg_contracted_nuclear_axis_term_tables(axis_functions, basis,
+    centers_1d, expansion, backend)` builds or reuses those per-center
+    Gaussian term tables, then projects them through
+    `_nested_factorized_axis_term_tables(...)`.
+  - `_qwrg_fill_direct_contracted_nuclear_matrix!(destination, x_indices,
+    y_indices, z_indices, amplitudes, term_coefficients, operator_terms_x,
+    operator_terms_y, operator_terms_z)` is the important local contraction:
+    it loops over local Cartesian states and sums over Gaussian terms inside
+    the fill.
+  - `_qwrg_bond_aligned_direct_contracted_nuclear_one_body_by_center(...)`
+    consumes a factorized parent basis plus x/y/z axis bundles and returns one
+    dense matrix per nucleus.
+  - `_qwrg_fill_staged_nuclear_submatrix!(...)` fills a rectangular local
+    parent submatrix from left/right state lists and per-axis Gaussian term
+    tables.
+  - `_qwrg_contract_staged_nuclear_block(left_coefficients,
+    right_coefficients, parent_submatrix)` applies local retained coefficients
+    to that submatrix.
+  - `_qwrg_bond_aligned_staged_by_center_nuclear_one_body_by_center(...)` has
+    staged and product-staged methods that iterate block pairs, fill local
+    parent submatrices, contract them, and place them into final by-center
+    matrices.
+  - `_qwrg_diatomic_nuclear_one_body_by_center(basis, bundle_x, bundle_y,
+    bundle_z, expansion)` is the full direct product parent version. It builds
+    per-axis center caches and calls `_mapped_coulomb_expanded_symmetric_matrix`
+    with `-expansion.coefficients`.
+  - `_qwrg_fixed_block_one_body_matrix(fixed_block, expansion; Z)` consumes
+    `fixed_block.gaussian_sum` as the already materialized positive Gaussian
+    sum and applies the nuclear charge at one-body assembly time.
+
+- `src/ordinary_qw_operator_assembly.jl`:
+  - `_qwrg_bond_aligned_general_contracted_nuclear_one_body_by_center(...)`
+    contracts parent by-center nuclear matrices with a carried-space
+    contraction matrix.
+  - `_qwrg_bond_aligned_nested_fixed_block_nuclear_one_body_by_center(...)`
+    chooses staged-by-center, factorized direct, or general contraction.
+  - `_qwrg_final_nuclear_one_body_by_center(...)` mixes carried fixed-block,
+    Gaussian-residual, and residual-residual nuclear blocks into final-basis
+    by-center matrices.
+  - `assembled_one_body_hamiltonian(operators; nuclear_charges = ...)` can
+    reassemble the one-body Hamiltonian from stored kinetic and by-center
+    nuclear matrices when `nuclear_term_storage = :by_center`.
+
+Current electron-electron construction and consumption:
+
+- `src/ordinary_qw_raw_blocks.jl`:
+  - `_qwrg_gausslet_interaction_matrix(data, expansion)` consumes
+    `data.pair_gg_terms` on x/y/z and `expansion.coefficients` to build the
+    direct-product density-density interaction matrix.
+  - `_qwrg_diatomic_interaction_matrix(bundle_x, bundle_y, bundle_z,
+    expansion)` consumes
+    `bundle_*.pgdg_intermediate.pair_factor_terms` and
+    `expansion.coefficients` to build the direct-product density-density
+    interaction matrix with `_mapped_coulomb_expanded_symmetric_matrix`.
+  - `_qwrg_fixed_block_interaction_matrix(fixed_block, expansion)` consumes
+    `fixed_block.pair_sum`.
+
+- `src/ordinary_qw_operator_assembly.jl`:
+  - `_qwrg_interaction_matrix_nearest(...)` extends a carried gausslet or
+    fixed-block interaction matrix to residuals by nearest-source copying.
+  - `_qwrg_mwg_interaction_components(...)` builds matched-width Gaussian
+    gausslet-residual and residual-residual interaction components from split
+    pair matrices and analytic Gaussian blocks.
+  - `_qwrg_interaction_matrix_mwg(...)` and
+    `_qwrg_diatomic_interaction_matrix_mwg(...)` assemble those MWG components
+    into final two-index density-density interaction matrices.
+  - `_qwrg_bond_aligned_molecular_interaction_matrix(...)` chooses direct
+    product versus fixed-block interaction, and `:ggt_nearest` versus `:mwg`.
+
+These electron-electron routines currently produce two-index density-density
+interaction matrices for the WL/QW operator payload. They are not CPB-local
+pair-pair records yet, and they are not four-index Galerkin Coulomb tensors.
+
+Gaussian expansion source:
+
+- `src/ordinary_coulomb.jl` defines `CoulombGaussianExpansion` and
+  `coulomb_gaussian_expansion(...)`.
+- Frontend defaults such as
+  `_normalized_nested_source_frontend_context(...; expansion =
+  coulomb_gaussian_expansion(doacc = false))` and
+  `bond_aligned_diatomic_nested_fixed_source(...; expansion = ...)` pass the
+  expansion into axis-bundle construction and source assembly.
+- Route materializer helpers also default or receive `white_lindsey_expansion`,
+  and materializer options record
+  `term_coefficients_source = :coulomb_expansion_coefficients`.
+
+Per-axis transformed Gaussian factors and caches:
+
+- `_mapped_ordinary_pgdg_intermediate_1d(...)` builds
+  `gaussian_factor_terms`, `pair_factor_terms_raw`, `pair_factors`, and
+  `pair_factor_terms` from `expansion.exponents`.
+- `_qwrg_gausslet_1d_blocks(bundle)` exposes these as `factor_gg_terms` and
+  `pair_gg_terms` for raw block assembly.
+- `_qwrg_diatomic_factor_term_cache(...)` and
+  `_qwrg_contracted_nuclear_axis_term_tables(...)` are the main per-center
+  electron-nuclear caches.
+- `_qwrg_mwg_interaction_components(...)` builds split gausslet-residual and
+  residual-residual pair matrices for MWG electron-electron interaction.
+
+Nuclei, charges, and center metadata:
+
+- `BondAlignedDiatomicQWBasis3D` and related QW basis objects carry `nuclei`
+  and `nuclear_charges`.
+- `CartesianParentGaussletBasis3D` metadata preserves `nuclei`,
+  `nuclear_charges`, and related family fields for QW parent objects.
+- Route parent reports carry `report.nuclear_charges`,
+  `report.atom_locations`, and `report.center_table`.
+- `report.route_materializer_payload.parent_qw_basis_object` may carry the QW
+  basis object, and `report.route_materializer_payload.parent_axis_bundle_object`
+  carries the current axis bundles.
+
+Existing tests and oracle surfaces:
+
+- `test/nested/cartesian_nested_fixed_block_qw_pgdg_adapter_runtests.jl`
+  checks that `fixed_block.gaussian_sum` and `fixed_block.pair_sum` match the
+  nested shell packet, and that the nested operator carries a valid
+  `interaction_matrix`.
+- `test/nested/cartesian_basis_bundle_export_runtests.jl` checks Hamiltonian
+  bundle export of `interaction_matrix`, `nuclear_term_storage = "by_center"`,
+  default nuclear charges, and `nuclear_one_body_by_center` records.
+- `test/nested/pqs_source_box_route_driver_report_runtests.jl` checks route
+  configured WL Hamiltonian export statuses including
+  `:available_low_order_density_density_interaction_matrix`.
+- `test/nested/cartesian_white_lindsey_adapter_oracle_comparison_runtests.jl`
+  is an overlap/one-body adapter oracle surface for selected safe terms. It is
+  useful context but not a Coulomb CPB kernel test.
+
+Smallest clean CPB adaptation boundary:
+
+1. Parent/axis source adapter:
+   - consume existing `_CartesianNestedAxisBundles3D` plus
+     `CoulombGaussianExpansion` plus structured center metadata;
+   - expose a compact parent Coulomb packet or source summary with expansion
+     coefficients/exponents, per-axis pair-factor terms, and per-center
+     one-body Gaussian term access;
+   - do not copy route-report scalar fields into a flat cloud.
+2. Electron-nuclear CPB-local kernel:
+   - adapt the `_qwrg_fill_staged_nuclear_submatrix!` loop shape to CPB
+     intervals, using left/right CPB local state lists and per-axis center
+     term tables;
+   - return one CPB-local rectangular block per nucleus/center or a compact
+     by-center record;
+   - keep alpha/Gaussian summation inside the kernel.
+3. Electron-electron CPB-local kernel:
+   - adapt the `_qwrg_diatomic_interaction_matrix` /
+     `_mapped_coulomb_expanded_symmetric_matrix` factor product to CPB
+     pair-pair windows;
+   - return a local two-index density-density pair-pair record first, unless a
+     reviewed design asks for another local two-body representation;
+   - keep the existing global/Hamiltonian `interaction_matrix` paths as oracle
+     surfaces, not the first CPB API.
+
+Parent-owned versus WL/route-specific split:
+
+- Parent-owned Coulomb packet data should include parent identity, axis counts,
+  expansion coefficients/exponents, backend/provenance, per-axis
+  electron-electron pair terms, and per-center electron-nuclear axis-term
+  access keyed by center/nucleus and axis.
+- WL realization should own carried-space contraction matrices, residual
+  centers/widths, `:ggt_nearest` and `:mwg` residual policies, final operator
+  payload assembly, and by-center Hamiltonian reassembly.
+- Route/global layers should own artifact export, final Hamiltonian bundle
+  writing, retained/global placement, and route status reporting.
+
+First tiny equivalence test to add later:
+
+- Build a tiny CPB/source-pair electron-nuclear block for one center using the
+  same per-axis term tables as `_qwrg_fill_staged_nuclear_submatrix!`, then
+  compare it to the corresponding submatrix from the existing WL
+  `_qwrg_diatomic_nuclear_one_body_by_center` or staged-by-center path.
+- For electron-electron, build a tiny CPB pair-pair density-density block from
+  `bundle_*.pgdg_intermediate.pair_factor_terms` and compare it to the
+  corresponding submatrix of `_qwrg_diatomic_interaction_matrix`.
+- Do not make the first equivalence test build a full Hamiltonian or export an
+  artifact.
+
 ### Provenance and Metadata
 
 A parent factor packet should carry compact metadata such as:

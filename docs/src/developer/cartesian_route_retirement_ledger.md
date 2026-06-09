@@ -315,6 +315,27 @@ paths from becoming new route authority.
   Coulomb source record. No numerical Coulomb kernel, packet struct,
   WL/PQS realization, route placement, driver wiring, Hamiltonian assembly,
   IDA/MWG change, PQS projection/Lowdin, export, or artifact was added.
+- The current Cartesian/White-Lindsey Coulomb port map identifies the working
+  code that should guide the CPB-local adaptation. Electron-nuclear construction
+  currently lives mainly in `src/ordinary_qw_raw_blocks.jl` through
+  `_qwrg_diatomic_factor_term_cache`,
+  `_qwrg_contracted_nuclear_axis_term_tables`,
+  `_qwrg_fill_direct_contracted_nuclear_matrix!`,
+  `_qwrg_fill_staged_nuclear_submatrix!`,
+  `_qwrg_bond_aligned_direct_contracted_nuclear_one_body_by_center`,
+  `_qwrg_bond_aligned_staged_by_center_nuclear_one_body_by_center`, and
+  `_qwrg_diatomic_nuclear_one_body_by_center`, with final/by-center packaging
+  in `src/ordinary_qw_operator_assembly.jl`. Electron-electron construction
+  currently uses `_qwrg_gausslet_interaction_matrix`,
+  `_qwrg_diatomic_interaction_matrix`, `_qwrg_fixed_block_interaction_matrix`,
+  `_qwrg_interaction_matrix_nearest`, `_qwrg_mwg_interaction_components`, and
+  `_qwrg_bond_aligned_molecular_interaction_matrix` to produce WL/QW
+  two-index density-density interaction matrices. The smallest CPB boundary is
+  not full Hamiltonian export: first adapt the existing parent/axis sources into
+  a compact Coulomb packet/source summary, then port the staged nuclear
+  submatrix fill to a CPB-local by-center one-body kernel and the pair-factor
+  interaction fill to a CPB pair-pair density-density record. Existing global
+  Hamiltonian/export tests remain oracle surfaces only.
 - The next overlap implementation boundary is no longer additional placement
   fingerprinting. First decide the CPB operator-block and WL/PQS realization
   design: what local block objects exist, how White-Lindsey consumes them, how
