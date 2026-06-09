@@ -400,6 +400,80 @@ factors are consumed by a two-body CPB block provider: two bra/ket CPB pairs.
 Keeping that arity distinction explicit is required for later API names and
 tests.
 
+### Coulomb-Family CPB Kernel Plan
+
+The existing CPB-local one-body kernels are deliberately narrow:
+
+- `cpb_axis_product_operator_block`;
+- `cpb_sum_of_axis_products_operator_block`.
+
+They are the right primitives for overlap, kinetic pieces, position, x2, and
+similar simple separable one-body terms. They are not the universal Coulomb
+kernel. Coulomb-family terms should share compact CPB-local result records and
+metadata with the one-body operator layer, but their numerical kernels need a
+different loop structure.
+
+The relevant `PureGaussianGausslet.jl` Coulomb routines use a Gaussian
+expansion and keep the Gaussian expansion index inside the optimized local
+contraction. In the electron-nuclear path, `getAtomPot` builds transformed 1D
+factors indexed by Gaussian term and axis, then fills the local 3D block with
+an inner sum of the form:
+
+```text
+sum_g c_g * Vx[g, ix, jx, A] * Vy[g, iy, jy, A] * Vz[g, iz, jz, A]
+```
+
+with the nuclear charge and center applied for nucleus `A`. The mixed Gaussian
+addition path in `addinGaussians` uses the same pattern with atom and Gaussian
+indices carried on the transformed 1D factors. That structure is important:
+electron-nuclear attraction should have a separate CPB-local Gaussian-sum
+one-body kernel, with inputs like:
+
+- left CPB and right CPB;
+- a parent Coulomb or nuclear factor packet;
+- nucleus or center identity, charge, and coordinates;
+- Gaussian expansion coefficients and exponents;
+- compact convention and provenance metadata.
+
+The output should be a local rectangular CPB product-space block. The Gaussian
+index `g` must be an inner loop, vectorized contraction, or otherwise optimized
+inside that kernel. It should not be implemented as an outer loop that calls
+`cpb_axis_product_operator_block` once per Gaussian term and allocates one dense
+CPB product matrix per term.
+
+For electron-electron Coulomb, `gethamsNoPot` builds transformed 1D Gaussian
+pair factors, applies the relevant axis weights, and fills the local Coulomb
+object with the same inner Gaussian sum pattern:
+
+```text
+sum_g c_g * Gx[g, ...] * Gy[g, ...] * Gz[g, ...]
+```
+
+The CPB form has different arity from the electron-nuclear one-body block. It
+should consume two CPB source pairs or a structured CPB pair-pair window. Its
+output may be dense, factorized, or a compact local two-body record, depending
+on the reviewed storage and contraction plan. The Gaussian expansion index
+again belongs inside the specialized kernel, not outside as repeated
+axis-product calls.
+
+Parent-layer Coulomb requirements follow this split. Universal 1D
+Coulomb-family factors belong with the parent and Gaussian-expansion policy:
+
+- electron-nuclear factors depend on parent axes, nuclei, nuclear charges,
+  nuclear locations, and the chosen Gaussian expansion;
+- electron-electron factors depend on parent axes and the Gaussian expansion
+  for the pair interaction;
+- neither factor family depends on WL/PQS realization, retained units, source
+  pair placement, or route-global matrix assembly.
+
+The performance contract should imitate the highly optimized
+`PureGaussianGausslet.jl` structure. That code precomputes or transforms 1D
+Gaussian factors, then sums over the Gaussian expansion index in the local
+contraction. Reusing that organization should give excellent performance. A
+future Coulomb CPB kernel should not allocate one dense CPB product matrix per
+Gaussian term unless a separate performance review demonstrates that such a
+materialization strategy is better for a specific backend or cache policy.
+
 ### Provenance and Metadata
 
 A parent factor packet should carry compact metadata such as:

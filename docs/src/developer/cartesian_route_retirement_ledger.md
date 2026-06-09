@@ -278,6 +278,23 @@ paths from becoming new route authority.
   Coulomb-family kernels, WL/PQS realization, retained transforms,
   route/global placement, driver wiring, Hamiltonian assembly, IDA/MWG, PQS
   projection/Lowdin, exports, or artifacts.
+- Coulomb-family CPB kernels have been audited against
+  `PureGaussianGausslet.jl` and should not be forced through the simple
+  axis-product one-body primitive. Existing separable kernels
+  `cpb_axis_product_operator_block` and
+  `cpb_sum_of_axis_products_operator_block` cover overlap, kinetic, position,
+  x2, and similar one-body terms. Electron-nuclear Coulomb needs a separate
+  CPB-local Gaussian-sum one-body kernel over left/right CPBs, parent
+  Coulomb/nuclear factors, nucleus data, and Gaussian expansion data.
+  Electron-electron Coulomb needs a separate CPB-local two-body or pair-pair
+  Gaussian-sum kernel. In both cases the Gaussian expansion index must be an
+  inner optimized loop or contraction inside the kernel, following the
+  `getAtomPot`, `gethamsNoPot`, and `addinGaussians` pattern of precomputed or
+  transformed 1D Gaussian factors followed by local alpha summation. Do not
+  allocate one dense CPB product matrix per Gaussian term unless a later
+  performance review justifies it. No Coulomb production code, parent Coulomb
+  packet structs, WL/PQS realization, route/global placement, driver wiring, or
+  Hamiltonian assembly was added with this audit.
 - The next overlap implementation boundary is no longer additional placement
   fingerprinting. First decide the CPB operator-block and WL/PQS realization
   design: what local block objects exist, how White-Lindsey consumes them, how
