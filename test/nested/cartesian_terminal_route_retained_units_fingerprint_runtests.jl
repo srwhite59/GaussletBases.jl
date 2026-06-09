@@ -7,6 +7,8 @@ const CRTCForTerminalRouteFingerprint =
     GaussletBases.CartesianRetainedUnitTransformContracts
 const CUPForTerminalRouteFingerprint = GaussletBases.CartesianUnitPairs
 const CPOPForTerminalRouteFingerprint = GaussletBases.CartesianPairOperatorPlans
+const CPBMForTerminalRouteFingerprint =
+    GaussletBases.CartesianPairBlockMaterialization
 const CRCForTerminalRouteFingerprint = GaussletBases.CartesianRouteCore
 const CPBForTerminalRouteFingerprint = GaussletBases.CartesianCPB
 
@@ -133,6 +135,8 @@ end
         terminal_route_summary.retained_unit_transform_contract_summary
     unit_pair_summary = terminal_route_summary.unit_pair_summary
     pair_operator_summary = terminal_route_summary.pair_operator_summary
+    pair_block_materialization_summary =
+        terminal_route_summary.pair_block_materialization_summary
 
     @test terminal_route_state.retained_unit_plan isa
           CRUForTerminalRouteFingerprint.RetainedUnitPlan
@@ -142,6 +146,8 @@ end
           CUPForTerminalRouteFingerprint.UnitPairPlan
     @test terminal_route_state.pair_operator_plan isa
           CPOPForTerminalRouteFingerprint.PairOperatorPlan
+    @test terminal_route_state.pair_block_materialization_plan isa
+          CPBMForTerminalRouteFingerprint.PairBlockMaterializationPlan
     @test retained_unit_summary.status == :available_retained_unit_plan
     @test retained_unit_summary.selected_contract_count == 2
     @test retained_unit_summary.retained_unit_count == 2
@@ -248,8 +254,29 @@ end
     @test !pair_operator_summary.operator_blocks_materialized
     @test !pair_operator_summary.hamiltonian_data_materialized
     @test !pair_operator_summary.artifacts_materialized
+    @test pair_block_materialization_summary.status ==
+          :blocked_pair_block_materialization_plan
+    @test pair_block_materialization_summary.pair_operator_plan_count ==
+          pair_operator_summary.pair_operator_plan_count
+    @test pair_block_materialization_summary.pair_block_record_count ==
+          pair_operator_summary.pair_operator_plan_count
+    @test pair_block_materialization_summary.ready_record_count +
+          pair_block_materialization_summary.blocked_record_count ==
+          pair_block_materialization_summary.pair_block_record_count
+    @test !pair_block_materialization_summary.materialized
+    @test !pair_block_materialization_summary.source_operator_blocks_materialized
+    @test !pair_block_materialization_summary.final_pair_blocks_materialized
+    @test !pair_block_materialization_summary.operator_blocks_materialized
+    @test !pair_block_materialization_summary.hamiltonian_data_materialized
+    @test !pair_block_materialization_summary.artifacts_materialized
     @test !terminal_route_summary.operator_blocks_materialized
     @test !terminal_route_summary.hamiltonian_data_materialized
+
+    driver_overlap_probe =
+        CPBMForTerminalRouteFingerprint.driver_global_overlap_result(
+            terminal_route_state,
+        )
+    @test driver_overlap_probe.blocker === :missing_global_dimension
 
     unselected_state =
         GaussletBases._pqs_source_box_route_driver_terminal_route_state(;
@@ -266,11 +293,14 @@ end
     unselected_pair_summary = unselected_state.summary.unit_pair_summary
     unselected_pair_operator_summary =
         unselected_state.summary.pair_operator_summary
+    unselected_pair_block_materialization_summary =
+        unselected_state.summary.pair_block_materialization_summary
 
     @test unselected_state.retained_unit_plan === nothing
     @test unselected_state.retained_unit_transform_contract_plan === nothing
     @test unselected_state.unit_pair_plan === nothing
     @test unselected_state.pair_operator_plan === nothing
+    @test unselected_state.pair_block_materialization_plan === nothing
     @test unselected_summary.status == :not_selected
     @test unselected_summary.retained_unit_count == 0
     @test unselected_summary.route_core_final_unit_available_count == 0
@@ -310,4 +340,13 @@ end
     @test !unselected_pair_operator_summary.operator_blocks_materialized
     @test !unselected_pair_operator_summary.hamiltonian_data_materialized
     @test !unselected_pair_operator_summary.artifacts_materialized
+    @test unselected_pair_block_materialization_summary.status == :not_selected
+    @test unselected_pair_block_materialization_summary.pair_operator_plan_count == 0
+    @test unselected_pair_block_materialization_summary.pair_block_record_count == 0
+    @test !unselected_pair_block_materialization_summary.materialized
+    @test !unselected_pair_block_materialization_summary.source_operator_blocks_materialized
+    @test !unselected_pair_block_materialization_summary.final_pair_blocks_materialized
+    @test !unselected_pair_block_materialization_summary.operator_blocks_materialized
+    @test !unselected_pair_block_materialization_summary.hamiltonian_data_materialized
+    @test !unselected_pair_block_materialization_summary.artifacts_materialized
 end

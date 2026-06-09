@@ -6420,6 +6420,7 @@ function _pqs_source_box_route_driver_terminal_route_state_summary(;
     retained_unit_transform_contract_summary,
     unit_pair_summary,
     pair_operator_summary,
+    pair_block_materialization_summary,
 )
     return (;
         object_kind = :cartesian_driver_terminal_route_state_summary,
@@ -6494,6 +6495,7 @@ function _pqs_source_box_route_driver_terminal_route_state_summary(;
         retained_unit_transform_contract_summary,
         unit_pair_summary,
         pair_operator_summary,
+        pair_block_materialization_summary,
         final_retained_unit_inventory_available =
             !isnothing(selected_crc_sidecar_summary) &&
             selected_crc_sidecar_summary.final_retained_unit_inventory_available,
@@ -6532,6 +6534,8 @@ function _pqs_source_box_route_driver_terminal_route_state(;
     unit_pair_summary = nothing,
     pair_operator_plan = nothing,
     pair_operator_summary = nothing,
+    pair_block_materialization_plan = nothing,
+    pair_block_materialization_summary = nothing,
     pair_operator_route_core_sidecars::Bool = true,
     blocker = nothing,
 )
@@ -6635,6 +6639,24 @@ function _pqs_source_box_route_driver_terminal_route_state(;
             blocker,
         ) :
         pair_operator_summary
+    pair_block_materialization_plan =
+        isnothing(pair_block_materialization_plan) &&
+        pair_operator_plan isa CartesianPairOperatorPlans.PairOperatorPlan ?
+        CartesianPairBlockMaterialization.pair_block_materialization_plan(
+            pair_operator_plan,
+        ) :
+        pair_block_materialization_plan
+    pair_block_materialization_summary =
+        isnothing(pair_block_materialization_summary) &&
+        pair_block_materialization_plan isa
+        CartesianPairBlockMaterialization.PairBlockMaterializationPlan ?
+        CartesianPairBlockMaterialization.summary(pair_block_materialization_plan) :
+        isnothing(pair_block_materialization_summary) ?
+        CartesianPairBlockMaterialization.unavailable_summary(
+            selected ? status : :not_selected,
+            blocker,
+        ) :
+        pair_block_materialization_summary
     summary =
         _pqs_source_box_route_driver_terminal_route_state_summary(;
             status,
@@ -6652,6 +6674,7 @@ function _pqs_source_box_route_driver_terminal_route_state(;
             retained_unit_transform_contract_summary,
             unit_pair_summary,
             pair_operator_summary,
+            pair_block_materialization_summary,
         )
 
     return (;
@@ -6681,6 +6704,8 @@ function _pqs_source_box_route_driver_terminal_route_state(;
         unit_pair_summary,
         pair_operator_plan,
         pair_operator_summary,
+        pair_block_materialization_plan,
+        pair_block_materialization_summary,
         summary,
         blocker,
         compatibility_alias_status =
