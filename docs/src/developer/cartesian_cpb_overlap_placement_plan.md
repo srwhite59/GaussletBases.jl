@@ -359,6 +359,9 @@ should still not materialize a global matrix; it should only decide whether the
 inputs are coherent enough for a later placement engine.
 `CPBOverlapPlacementFacts` now exists as a metadata-only coherence bundle and
 remains blocked until a placement engine is reviewed.
+The private placement plan skeleton can consume this facts bundle as its
+structured status source, but it remains a blocked fingerprint until a
+placement engine exists.
 
 Nonclaims for these carry objects:
 

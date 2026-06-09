@@ -4033,6 +4033,93 @@ function _pqs_source_box_route_driver_private_global_overlap_placement_plan_skel
     )
 end
 
+function _pqs_source_box_route_driver_private_global_overlap_placement_plan_skeleton(
+    facts::CartesianCPBBlockProviders.CPBOverlapPlacementFacts,
+)
+    facts_summary = CartesianCPBBlockProviders.summary(facts)
+    collection_available =
+        _pqs_source_box_route_driver_private_global_overlap_property(
+            facts_summary,
+            :collection_available,
+        ) === true
+    blocker =
+        _pqs_source_box_route_driver_private_global_overlap_property(
+            facts_summary,
+            :global_overlap_blocker,
+        )
+    isnothing(blocker) &&
+        (blocker =
+            _pqs_source_box_route_driver_private_global_overlap_property(
+                facts_summary,
+                :blocker,
+            ))
+    isnothing(blocker) &&
+        (blocker =
+            collection_available ?
+            :missing_placement_or_retained_transform :
+            :missing_local_overlap_collection)
+    record_fact_summaries =
+        _pqs_source_box_route_driver_private_global_overlap_property(
+            facts_summary,
+            :record_fact_summaries,
+        )
+    isnothing(record_fact_summaries) && (record_fact_summaries = ())
+    record_placement_summaries = Tuple(
+        _pqs_source_box_route_driver_private_global_overlap_facts_record_placement_summary(
+            record_fact_summary,
+        )
+        for record_fact_summary in record_fact_summaries
+    )
+    return (;
+        object_kind =
+            :cartesian_route_driver_private_global_overlap_placement_plan_skeleton,
+        status = :blocked_private_global_overlap_placement_plan_skeleton,
+        blocker,
+        local_cpb_overlap_collection_available = collection_available,
+        collection_summary = facts_summary,
+        record_count = facts_summary.record_count,
+        block_keys = facts_summary.block_keys,
+        placement_plan_status = facts_summary.placement_plan_status,
+        placement_plan_kind = facts_summary.placement_plan_kind,
+        retained_transform_status =
+            _pqs_source_box_route_driver_private_global_overlap_facts_retained_transform_status(
+                facts_summary,
+            ),
+        left_column_range_status =
+            _pqs_source_box_route_driver_private_global_overlap_facts_left_column_range_status(
+                facts_summary,
+            ),
+        right_column_range_status =
+            _pqs_source_box_route_driver_private_global_overlap_facts_right_column_range_status(
+                facts_summary,
+            ),
+        global_dimension_status =
+            _pqs_source_box_route_driver_private_global_overlap_facts_global_dimension_status(
+                facts_summary,
+            ),
+        global_dimension =
+            _pqs_source_box_route_driver_private_global_overlap_facts_global_dimension(
+                record_fact_summaries,
+            ),
+        global_dimension_source =
+            _pqs_source_box_route_driver_private_global_overlap_facts_global_dimension_source(
+                record_fact_summaries,
+            ),
+        accumulation_rule_status = facts_summary.accumulation_rule_status,
+        accumulation_rule = facts_summary.accumulation_rule,
+        available_requirements = facts_summary.available_requirements,
+        missing_requirements = facts_summary.missing_requirements,
+        record_placement_summaries,
+        global_overlap_status = :blocked,
+        global_overlap_blocker = blocker,
+        route_driver_wiring = false,
+        global_matrix_materialized = false,
+        global_overlap_matrix_materialized = false,
+        private_global_overlap_input_facts_available = false,
+        route_global_overlap_stage_source = false,
+    )
+end
+
 function _pqs_source_box_route_driver_private_global_overlap_record_placement_summary(
     record_summary,
     retained_transform_status::Symbol,
@@ -4052,6 +4139,146 @@ function _pqs_source_box_route_driver_private_global_overlap_record_placement_su
         left_column_range_status,
         right_column_range_status,
     )
+end
+
+function _pqs_source_box_route_driver_private_global_overlap_facts_record_placement_summary(
+    record_fact_summary,
+)
+    left_column_range_status =
+        _pqs_source_box_route_driver_private_global_overlap_facts_record_left_column_range_status(
+            record_fact_summary,
+        )
+    right_column_range_status =
+        _pqs_source_box_route_driver_private_global_overlap_facts_record_right_column_range_status(
+            record_fact_summary,
+        )
+    return (;
+        block_key = record_fact_summary.block_key,
+        source_kind = :cpb_overlap_placement_facts_record,
+        dense_block_available = record_fact_summary.dense_block_available,
+        dense_block_shape = record_fact_summary.dense_block_shape,
+        left_cpb_summary = :unavailable,
+        right_cpb_summary = :unavailable,
+        local_ordering = record_fact_summary.local_ordering,
+        placement_status = :unassigned,
+        retained_transform_status =
+            _pqs_source_box_route_driver_private_global_overlap_facts_record_retained_transform_status(
+                record_fact_summary,
+            ),
+        left_column_range_status,
+        right_column_range_status,
+        left_transform_status = record_fact_summary.left_transform_status,
+        right_transform_status = record_fact_summary.right_transform_status,
+        placement_range_status = record_fact_summary.placement_range_status,
+        left_column_range = record_fact_summary.left_column_range,
+        right_column_range = record_fact_summary.right_column_range,
+        global_dimension = record_fact_summary.global_dimension,
+        global_dimension_source = record_fact_summary.global_dimension_source,
+    )
+end
+
+function _pqs_source_box_route_driver_private_global_overlap_facts_retained_transform_status(
+    facts_summary,
+)
+    facts_summary.collection_available || return :unavailable
+    :retained_transform in facts_summary.available_requirements &&
+        return :available_retained_transform
+    :missing_retained_transform in facts_summary.missing_requirements &&
+        return :missing_retained_transform
+    return :blocked_retained_transform
+end
+
+function _pqs_source_box_route_driver_private_global_overlap_facts_left_column_range_status(
+    facts_summary,
+)
+    facts_summary.collection_available || return :unavailable
+    :left_column_range in facts_summary.available_requirements &&
+        return :available_left_column_range
+    :missing_left_column_range in facts_summary.missing_requirements &&
+        return :missing_left_column_range
+    return :blocked_left_column_range
+end
+
+function _pqs_source_box_route_driver_private_global_overlap_facts_right_column_range_status(
+    facts_summary,
+)
+    facts_summary.collection_available || return :unavailable
+    :right_column_range in facts_summary.available_requirements &&
+        return :available_right_column_range
+    :missing_right_column_range in facts_summary.missing_requirements &&
+        return :missing_right_column_range
+    return :blocked_right_column_range
+end
+
+function _pqs_source_box_route_driver_private_global_overlap_facts_global_dimension_status(
+    facts_summary,
+)
+    facts_summary.collection_available || return :unavailable
+    :global_dimension in facts_summary.available_requirements &&
+        return :available_global_dimension
+    :missing_global_dimension in facts_summary.missing_requirements &&
+        return :missing_global_dimension
+    return :blocked_global_dimension
+end
+
+function _pqs_source_box_route_driver_private_global_overlap_facts_global_dimension(
+    record_fact_summaries,
+)
+    isempty(record_fact_summaries) && return nothing
+    global_dimension = record_fact_summaries[1].global_dimension
+    global_dimension isa Integer || return nothing
+    return global_dimension
+end
+
+function _pqs_source_box_route_driver_private_global_overlap_facts_global_dimension_source(
+    record_fact_summaries,
+)
+    isempty(record_fact_summaries) && return :unavailable
+    return record_fact_summaries[1].global_dimension_source
+end
+
+function _pqs_source_box_route_driver_private_global_overlap_facts_record_retained_transform_status(
+    record_fact_summary,
+)
+    if record_fact_summary.left_transform_status ===
+       :available_cpb_retained_transform_carry &&
+       record_fact_summary.right_transform_status ===
+       :available_cpb_retained_transform_carry
+        return :available_retained_transform
+    end
+    if record_fact_summary.left_transform_status === :missing_retained_transform ||
+       record_fact_summary.right_transform_status === :missing_retained_transform
+        return :missing_retained_transform
+    end
+    return :blocked_retained_transform
+end
+
+function _pqs_source_box_route_driver_private_global_overlap_facts_record_left_column_range_status(
+    record_fact_summary,
+)
+    record_fact_summary.placement_range_status ===
+    :available_cpb_source_pair_placement_range &&
+        !isnothing(record_fact_summary.left_column_range) &&
+        return :available_left_column_range
+    record_fact_summary.placement_range_status ===
+    :missing_source_pair_placement_range && return :missing_left_column_range
+    record_fact_summary.placement_range_blocker === :missing_left_column_range &&
+        return :missing_left_column_range
+    return :blocked_left_column_range
+end
+
+function _pqs_source_box_route_driver_private_global_overlap_facts_record_right_column_range_status(
+    record_fact_summary,
+)
+    record_fact_summary.placement_range_status ===
+    :available_cpb_source_pair_placement_range &&
+        !isnothing(record_fact_summary.right_column_range) &&
+        return :available_right_column_range
+    record_fact_summary.placement_range_status ===
+    :missing_source_pair_placement_range && return :missing_right_column_range
+    record_fact_summary.placement_range_blocker === :missing_right_column_range &&
+        return :missing_right_column_range
+    return :blocked_right_column_range
 end
 
 function _pqs_source_box_route_driver_private_global_overlap_placement_plan_kind(

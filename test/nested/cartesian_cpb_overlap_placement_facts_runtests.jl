@@ -143,6 +143,53 @@ end
     @test missing_record_summary.local_ordering ===
           :parent_compatible_x_slowest_z_fastest
 
+    missing_skeleton =
+        GaussletBases._pqs_source_box_route_driver_private_global_overlap_placement_plan_skeleton(
+            missing_carries,
+        )
+    @test missing_skeleton.object_kind ===
+          :cartesian_route_driver_private_global_overlap_placement_plan_skeleton
+    @test missing_skeleton.status ===
+          :blocked_private_global_overlap_placement_plan_skeleton
+    @test missing_skeleton.blocker ===
+          :missing_placement_or_retained_transform
+    @test missing_skeleton.local_cpb_overlap_collection_available === true
+    @test missing_skeleton.record_count == 1
+    @test missing_skeleton.block_keys === (_PLACEMENT_FACTS_BLOCK_KEY,)
+    @test length(missing_skeleton.record_placement_summaries) == 1
+    @test missing_skeleton.available_requirements ===
+          missing_summary.available_requirements
+    @test missing_skeleton.missing_requirements ===
+          missing_summary.missing_requirements
+    @test missing_skeleton.placement_plan_status === :missing_placement_plan
+    @test missing_skeleton.placement_plan_kind === :unavailable
+    @test missing_skeleton.accumulation_rule_status ===
+          :missing_accumulation_rule
+    @test missing_skeleton.global_overlap_status === :blocked
+    @test missing_skeleton.global_overlap_blocker ===
+          :missing_placement_or_retained_transform
+    @test missing_skeleton.global_matrix_materialized === false
+    @test missing_skeleton.global_overlap_matrix_materialized === false
+    @test missing_skeleton.route_driver_wiring === false
+    @test missing_skeleton.private_global_overlap_input_facts_available === false
+    @test missing_skeleton.route_global_overlap_stage_source === false
+
+    missing_skeleton_record =
+        only(missing_skeleton.record_placement_summaries)
+    @test missing_skeleton_record.block_key === _PLACEMENT_FACTS_BLOCK_KEY
+    @test missing_skeleton_record.source_kind ===
+          :cpb_overlap_placement_facts_record
+    @test missing_skeleton_record.retained_transform_status ===
+          :missing_retained_transform
+    @test missing_skeleton_record.left_column_range_status ===
+          :missing_left_column_range
+    @test missing_skeleton_record.right_column_range_status ===
+          :missing_right_column_range
+    @test missing_skeleton_record.left_transform_status ===
+          :missing_retained_transform
+    @test missing_skeleton_record.placement_range_status ===
+          :missing_source_pair_placement_range
+
     complete = _complete_placement_facts(;
         placement_plan = (; kind = :test_overlap_placement_plan),
         accumulation_rule = :test_accumulation_rule,
@@ -185,6 +232,42 @@ end
     @test complete_record_summary.global_dimension_source ===
           :test_retained_layout
 
+    complete_skeleton =
+        GaussletBases._pqs_source_box_route_driver_private_global_overlap_placement_plan_skeleton(
+            complete,
+        )
+    @test complete_skeleton.status ===
+          :blocked_private_global_overlap_placement_plan_skeleton
+    @test complete_skeleton.blocker === :placement_not_implemented
+    @test complete_skeleton.missing_requirements === ()
+    @test complete_skeleton.available_requirements ===
+          complete_summary.available_requirements
+    @test complete_skeleton.placement_plan_status === :available_placement_plan
+    @test complete_skeleton.placement_plan_kind === :test_overlap_placement_plan
+    @test complete_skeleton.accumulation_rule_status ===
+          :available_accumulation_rule
+    @test complete_skeleton.global_dimension == 4
+    @test complete_skeleton.global_dimension_source === :test_retained_layout
+    @test complete_skeleton.global_overlap_status === :blocked
+    @test complete_skeleton.global_overlap_blocker === :placement_not_implemented
+    @test complete_skeleton.global_matrix_materialized === false
+    @test complete_skeleton.global_overlap_matrix_materialized === false
+    @test complete_skeleton.route_driver_wiring === false
+    @test complete_skeleton.private_global_overlap_input_facts_available === false
+    @test complete_skeleton.route_global_overlap_stage_source === false
+
+    complete_skeleton_record =
+        only(complete_skeleton.record_placement_summaries)
+    @test complete_skeleton_record.retained_transform_status ===
+          :available_retained_transform
+    @test complete_skeleton_record.left_column_range_status ===
+          :available_left_column_range
+    @test complete_skeleton_record.right_column_range_status ===
+          :available_right_column_range
+    @test complete_skeleton_record.left_column_range == 1:2
+    @test complete_skeleton_record.right_column_range == 3:4
+    @test complete_skeleton_record.global_dimension == 4
+
     missing_plan = _complete_placement_facts(;
         accumulation_rule = :test_accumulation_rule,
     )
@@ -225,6 +308,20 @@ end
     @test range_blocked_summary.global_matrix_materialized === false
     @test range_blocked_summary.route_driver_wiring === false
 
+    range_blocked_skeleton =
+        GaussletBases._pqs_source_box_route_driver_private_global_overlap_placement_plan_skeleton(
+            range_blocked_facts,
+        )
+    @test range_blocked_skeleton.status ===
+          :blocked_private_global_overlap_placement_plan_skeleton
+    @test range_blocked_skeleton.blocker ===
+          :left_column_range_dimension_mismatch
+    @test only(range_blocked_skeleton.record_placement_summaries).left_column_range_status ===
+          :blocked_left_column_range
+    @test range_blocked_skeleton.global_overlap_status === :blocked
+    @test range_blocked_skeleton.global_matrix_materialized === false
+    @test range_blocked_skeleton.route_driver_wiring === false
+
     blocked_left_transform = _placement_facts_transform_carry(;
         side = :left,
         source_shape = (x = 1, y = 3, z = 1),
@@ -250,6 +347,20 @@ end
           :retained_transform_source_shape_mismatch
     @test transform_blocked_summary.global_matrix_materialized === false
     @test transform_blocked_summary.route_driver_wiring === false
+
+    transform_blocked_skeleton =
+        GaussletBases._pqs_source_box_route_driver_private_global_overlap_placement_plan_skeleton(
+            transform_blocked_facts,
+        )
+    @test transform_blocked_skeleton.status ===
+          :blocked_private_global_overlap_placement_plan_skeleton
+    @test transform_blocked_skeleton.blocker ===
+          :retained_transform_source_shape_mismatch
+    @test only(transform_blocked_skeleton.record_placement_summaries).retained_transform_status ===
+          :blocked_retained_transform
+    @test transform_blocked_skeleton.global_overlap_status === :blocked
+    @test transform_blocked_skeleton.global_matrix_materialized === false
+    @test transform_blocked_skeleton.route_driver_wiring === false
 
     blocked_collection = _placement_facts_collection(;
         record = _placement_facts_record(;
