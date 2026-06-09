@@ -108,6 +108,7 @@ CartesianParentAxisFactorPacket3D
     one-body factors
     electron-electron Gaussian factors
     electron-nuclear Gaussian factors
+    factor index-domain and convention labels
     provenance and availability summaries
 
 CartesianCPB
@@ -159,6 +160,36 @@ the factors match the parent axes and mappings they are using.
 The packet is not a retained basis, not a source-box route, not a Hamiltonian
 object, and not a dense 3D operator store. It owns universal 1D factor data and
 summaries about how those factors were produced.
+
+Factor packets may be partial. A parent packet can have overlap factors
+available while kinetic, coordinate moments, Coulomb expansion factors, or
+nuclear factors are unavailable or not requested. Availability should be
+reported by category rather than inferred from a single packet-level status.
+
+### Dependency Classes
+
+Not every factor in the parent layer has the same dependency footprint. The
+packet metadata should distinguish at least:
+
+```text
+parent_only
+  depends on parent axes and mappings/distortions only
+  examples: overlap, kinetic, position, x2
+
+parent_plus_expansion
+  depends on parent axes plus a Gaussian expansion policy
+  example: electron-electron Gaussian axis factors
+
+parent_plus_nuclear_configuration
+  depends on parent axes, Gaussian expansion policy, nuclei, charges, and
+  nuclear locations
+  example: electron-nuclear Gaussian axis factors
+```
+
+All of these can be parent-layer data because none depends on shellification,
+source boxes, retained units, pair plans, or placement. They should not be
+treated as equally reusable, though: changing nuclei or Gaussian expansion
+policy invalidates some packet parts but not parent-only one-body factors.
 
 ### One-Body Subobject
 
@@ -310,6 +341,48 @@ factor_convention = :axis_bundle_one_body_overlap
 Every parent factor packet and CPB block result should preserve comparable
 labels so downstream code does not infer semantics from field names alone.
 
+### Index-Space Contract
+
+Every factor must also state the index domain its rows, columns, or tensor axes
+use. CPB kernels can slice a factor by CPB intervals only when the factor is in
+a CPB-addressable parent-axis index domain.
+
+This is separate from mathematical factor space. For example:
+
+```text
+factor_space = :parent_axis_bundle_pgdg_intermediate
+factor_convention = :axis_bundle_one_body_overlap
+index_domain = :parent_axis_indices
+axis_order = (:x, :y, :z)
+bra_ket_order = (:bra, :ket)
+```
+
+The important rule:
+
+```text
+CPB interval slicing is valid only for factors whose index domain is compatible
+with parent axis indices.
+```
+
+A transformed/localized axis matrix may have the right dimensions but still be
+unsafe to slice by raw CPB intervals if its rows and columns no longer
+correspond to parent-axis indices. Such factors need either an explicit
+index-map object or a different consumer. Do not infer sliceability from matrix
+size.
+
+For two-electron factors, the index-domain contract must name all particle and
+bra/ket axes. A future tensor-like electron-electron factor should carry a
+domain summary comparable to:
+
+```text
+index_domain = :parent_axis_pair_indices
+particle_order = (:electron1, :electron2)
+bra_ket_order = (:bra1, :ket1, :bra2, :ket2)
+axis_order = (:x, :y, :z)
+```
+
+The exact labels can change, but the information cannot be omitted.
+
 ## CPB Matrix-Kernel Layer
 
 A CPB is only coordinate-window geometry. A CPB block provider or matrix kernel
@@ -428,6 +501,11 @@ This matches `parent_flat_index` ordering restricted to the CPB intervals:
 using 1-based Julia indexing after adding one as needed. Retained-unit
 transforms and column ranges should not have to guess the local dense ordering.
 
+Dense CPB blocks are still local CPB product-space operator blocks. They are
+not retained blocks, not global matrices, not Hamiltonian objects, and not
+evidence of route adoption. Retained-unit transforms, PQS shell realization,
+Lowdin cleanup, and global placement remain downstream responsibilities.
+
 ### Possible API
 
 The provider API should start small and explicit:
@@ -485,6 +563,7 @@ Metadata should include:
 - left/right CPB intervals and shapes;
 - local dense ordering, when materialized;
 - term;
+- factor index domain and any required index maps;
 - whether blocks are views or copied matrices;
 - whether a dense local CPB block has been materialized;
 - factor backend/provenance;
@@ -538,7 +617,9 @@ The intended replacement direction is:
 parent basis
 -> parent axis factor packet
 -> CPB block provider
+-> local CPB source/operator blocks
 -> pair-block materialization
+-> local block collection
 -> optional route/global placement
 ```
 
@@ -571,8 +652,8 @@ The migration should be incremental:
 0. Keep one-body CPB-pair kernels distinct from electron-electron CPB-pair-pair
    kernels in names, tests, and returned objects.
 1. Define a parent-layer contract for one-body axis factors, starting with
-   overlap and provenance. Map the existing `parent_axis_bundle_object` seed to
-   that contract.
+   overlap, provenance, factor convention, and index-domain labels. Map the
+   existing `parent_axis_bundle_object` seed to that contract.
 2. Add a small private parent factor packet object or summary for overlap-only
    facts. Keep it tied to `CartesianParentGaussletBasis3D`.
 3. Add CPB interval-pair helpers that return parent-axis slice ranges for CPB
@@ -595,7 +676,10 @@ boundary rather than carrying them through every stage.
 Early tests should be narrow and factual:
 
 - parent factor packet availability and provenance;
+- factor convention and index-domain labels;
 - parent identity/fingerprint match;
+- partial packet availability, for example overlap available while Coulomb is
+  not requested;
 - CPB interval slicing for small boxes;
 - CPB parent-box validation failures for out-of-parent intervals;
 - local dense ordering for one small CPB block;
