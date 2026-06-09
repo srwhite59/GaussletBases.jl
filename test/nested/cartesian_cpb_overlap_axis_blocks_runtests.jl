@@ -42,6 +42,20 @@ function _overlap_blocks_overlap_1d()
     )
 end
 
+function _overlap_blocks_driver_fixture_overlap_1d()
+    return (;
+        x = [1.0 0.2; 0.2 1.1],
+        y = [1.2 0.3; 0.3 1.3],
+        z = [1.4 0.4; 0.4 1.5],
+    )
+end
+
+function _overlap_blocks_driver_fixture_expected_matrix()
+    overlap_1d = _overlap_blocks_driver_fixture_overlap_1d()
+    scale = overlap_1d.x[1, 1] * overlap_1d.z[1, 1]
+    return scale .* overlap_1d.y
+end
+
 function _overlap_blocks_axis_bundle(overlap_1d = _overlap_blocks_overlap_1d())
     return (;
         x = (; pgdg_intermediate = (; overlap = overlap_1d.x)),
@@ -234,4 +248,38 @@ end
     @test mismatch_summary.index_domain === :parent_axis_indices
     @test mismatch_summary.blocks_are_views === false
     @test mismatch_summary.dense_local_block_materialized === false
+end
+
+@testset "Cartesian CPB local overlap bridge comparison" begin
+    parent = _overlap_blocks_parent(count = 2)
+    overlap_1d = _overlap_blocks_driver_fixture_overlap_1d()
+    packet = CPGBOverlapBlocks.parent_overlap_axis_factor_packet(
+        parent,
+        _overlap_blocks_axis_bundle(overlap_1d),
+    )
+    left = CPBOverlapBlocks.cpb(1:1, 1:2, 1:1; role = :driver_fixture_left)
+    right = CPBOverlapBlocks.cpb(1:1, 1:2, 1:1; role = :driver_fixture_right)
+    interval_pair = CBPOverlapBlocks.cpb_interval_pair(parent, left, right)
+    axis_block_set = CBPOverlapBlocks.cpb_overlap_axis_blocks(packet, interval_pair)
+    dense_block = CBPOverlapBlocks.cpb_overlap_dense_block(axis_block_set)
+    dense_summary = CBPOverlapBlocks.summary(dense_block)
+    packet_summary = CPGBOverlapBlocks.summary(packet)
+
+    @test Matrix(dense_summary.dense_block) ==
+          _overlap_blocks_driver_fixture_expected_matrix()
+    @test dense_summary.dense_block_shape == (2, 2)
+    @test dense_summary.dense_local_block_materialized
+    @test dense_summary.global_matrix_materialized === false
+    @test dense_summary.route_driver_wiring === false
+    @test dense_summary.factor_space === packet_summary.factor_space
+    @test dense_summary.factor_convention === packet_summary.factor_convention
+    @test dense_summary.normalization_convention ===
+          packet_summary.normalization_convention
+    @test dense_summary.index_domain === packet_summary.index_domain
+    @test dense_summary.index_domain_source === packet_summary.index_domain_source
+    @test dense_summary.index_domain_status === packet_summary.index_domain_status
+    @test dense_summary.local_ordering ===
+          :parent_compatible_x_slowest_z_fastest
+    @test dense_summary.source_axis_block_summary.status ===
+          :available_cpb_overlap_axis_blocks
 end
