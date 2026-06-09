@@ -114,6 +114,21 @@ struct CPBSourcePairPlacementRange{K,L,R,M}
     metadata::M
 end
 
+"""
+    CPBOverlapPlacementFacts
+
+Metadata-only coherence bundle for local CPB overlap placement facts. This
+object records collection, transform-carry, placement-range, placement-plan,
+and accumulation-rule statuses, but does not apply transforms or place
+matrices.
+"""
+struct CPBOverlapPlacementFacts{C,T,R,M}
+    collection::C
+    transform_carries::T
+    placement_ranges::R
+    metadata::M
+end
+
 summary(pair::CPBIntervalPair3D) = pair.metadata
 summary(block_set::CPBOverlapAxisBlockSet) = block_set.metadata
 summary(block::CPBOverlapDenseBlock) = block.metadata
@@ -121,6 +136,7 @@ summary(record::CPBLocalOverlapBlockRecord) = record.metadata
 summary(collection::CPBLocalOverlapBlockCollection) = collection.metadata
 summary(carry::CPBRetainedTransformCarry) = carry.metadata
 summary(range::CPBSourcePairPlacementRange) = range.metadata
+summary(facts::CPBOverlapPlacementFacts) = facts.metadata
 
 function cpb_interval_pair(
     parent::CPGB.CartesianParentGaussletBasis3D,
@@ -946,6 +962,373 @@ end
 function _cpb_source_pair_range_inside_dimension(column_range, global_dimension::Integer)
     column_range isa AbstractUnitRange{<:Integer} || return false
     return first(column_range) >= 1 && last(column_range) <= global_dimension
+end
+
+function cpb_overlap_placement_facts(
+    collection::CPBLocalOverlapBlockCollection;
+    transform_carries = (),
+    placement_ranges = (),
+    placement_plan = nothing,
+    accumulation_rule = nothing,
+)
+    collection_summary = summary(collection)
+    collection_available =
+        collection_summary.status === :available_cpb_local_overlap_block_collection
+    normalized_transform_carries =
+        _cpb_overlap_placement_items_tuple(transform_carries)
+    normalized_placement_ranges =
+        _cpb_overlap_placement_items_tuple(placement_ranges)
+    transform_lookup =
+        _cpb_overlap_placement_transform_lookup(normalized_transform_carries)
+    range_lookup =
+        _cpb_overlap_placement_range_lookup(normalized_placement_ranges)
+    record_fact_summaries = Tuple(
+        _cpb_overlap_placement_record_fact_summary(
+            record_summary,
+            transform_lookup,
+            range_lookup,
+        )
+        for record_summary in collection_summary.record_summaries
+    )
+    missing_requirements =
+        _cpb_overlap_placement_missing_requirements(
+            collection_available,
+            record_fact_summaries,
+            placement_plan,
+            accumulation_rule,
+        )
+    available_requirements =
+        _cpb_overlap_placement_available_requirements(
+            collection_available,
+            record_fact_summaries,
+            placement_plan,
+            accumulation_rule,
+        )
+    propagated_blocker =
+        _cpb_overlap_placement_specific_record_blocker(record_fact_summaries)
+    blocker =
+        collection_available ?
+        (
+            isnothing(propagated_blocker) ?
+            (
+                isempty(missing_requirements) ?
+                :placement_not_implemented :
+                :missing_placement_or_retained_transform
+            ) :
+            propagated_blocker
+        ) :
+        _cpb_overlap_placement_collection_blocker(collection_summary)
+    placement_plan_status =
+        isnothing(placement_plan) ?
+        :missing_placement_plan :
+        :available_placement_plan
+    accumulation_rule_status =
+        isnothing(accumulation_rule) ?
+        :missing_accumulation_rule :
+        :available_accumulation_rule
+    metadata = (;
+        object_kind = :cartesian_cpb_overlap_placement_facts_summary,
+        status = :blocked_cpb_overlap_placement_facts,
+        blocker,
+        collection_available,
+        record_count = collection_summary.record_count,
+        block_keys = collection_summary.block_keys,
+        record_fact_summaries,
+        placement_plan_status,
+        placement_plan_kind = _cpb_overlap_placement_plan_kind(placement_plan),
+        accumulation_rule_status,
+        accumulation_rule =
+            isnothing(accumulation_rule) ? :unavailable : accumulation_rule,
+        available_requirements,
+        missing_requirements,
+        global_overlap_status = :blocked,
+        global_overlap_blocker = blocker,
+        placement_engine_implemented = false,
+        transform_application_implemented = false,
+        global_matrix_materialized = false,
+        route_driver_wiring = false,
+    )
+    return CPBOverlapPlacementFacts(
+        collection,
+        normalized_transform_carries,
+        normalized_placement_ranges,
+        metadata,
+    )
+end
+
+function _cpb_overlap_placement_items_tuple(items)
+    isnothing(items) && return ()
+    items isa Tuple && return items
+    items isa AbstractVector && return Tuple(items)
+    return (items,)
+end
+
+function _cpb_overlap_placement_transform_lookup(transform_carries::Tuple)
+    lookup = Dict{Any,Any}()
+    for transform_carry in transform_carries
+        transform_summary =
+            _cpb_overlap_placement_transform_summary(transform_carry)
+        isnothing(transform_summary) && continue
+        block_key = _summary_property(transform_summary, :block_key)
+        side = _summary_property(transform_summary, :side)
+        isnothing(block_key) && continue
+        side in (:left, :right) || continue
+        lookup[(block_key, side)] = transform_summary
+    end
+    return lookup
+end
+
+function _cpb_overlap_placement_range_lookup(placement_ranges::Tuple)
+    lookup = Dict{Any,Any}()
+    for placement_range in placement_ranges
+        range_summary = _cpb_overlap_placement_range_summary(placement_range)
+        isnothing(range_summary) && continue
+        block_key = _summary_property(range_summary, :block_key)
+        isnothing(block_key) && continue
+        lookup[block_key] = range_summary
+    end
+    return lookup
+end
+
+function _cpb_overlap_placement_transform_summary(transform_carry)
+    transform_carry isa CPBRetainedTransformCarry && return summary(transform_carry)
+    transform_carry isa NamedTuple && return transform_carry
+    return nothing
+end
+
+function _cpb_overlap_placement_range_summary(placement_range)
+    placement_range isa CPBSourcePairPlacementRange && return summary(placement_range)
+    placement_range isa NamedTuple && return placement_range
+    return nothing
+end
+
+function _cpb_overlap_placement_record_fact_summary(
+    record_summary,
+    transform_lookup,
+    range_lookup,
+)
+    block_key = record_summary.block_key
+    left_transform_summary = get(transform_lookup, (block_key, :left), nothing)
+    right_transform_summary = get(transform_lookup, (block_key, :right), nothing)
+    placement_range_summary = get(range_lookup, block_key, nothing)
+    left_transform_status =
+        _cpb_overlap_placement_transform_fact_status(left_transform_summary)
+    right_transform_status =
+        _cpb_overlap_placement_transform_fact_status(right_transform_summary)
+    placement_range_status =
+        _cpb_overlap_placement_range_fact_status(placement_range_summary)
+    return (;
+        block_key,
+        record_status = record_summary.status,
+        record_blocker = record_summary.blocker,
+        left_transform_status,
+        left_transform_blocker =
+            _cpb_overlap_placement_fact_blocker(left_transform_summary),
+        right_transform_status,
+        right_transform_blocker =
+            _cpb_overlap_placement_fact_blocker(right_transform_summary),
+        placement_range_status,
+        placement_range_blocker =
+            _cpb_overlap_placement_fact_blocker(placement_range_summary),
+        left_column_range =
+            _cpb_overlap_placement_range_property(
+                placement_range_summary,
+                :left_column_range,
+            ),
+        right_column_range =
+            _cpb_overlap_placement_range_property(
+                placement_range_summary,
+                :right_column_range,
+            ),
+        global_dimension =
+            _cpb_overlap_placement_range_property(
+                placement_range_summary,
+                :global_dimension,
+            ),
+        global_dimension_source =
+            _cpb_overlap_placement_range_property(
+                placement_range_summary,
+                :global_dimension_source,
+                :unavailable,
+            ),
+        dense_block_available = record_summary.dense_block_available,
+        dense_block_shape = record_summary.dense_block_shape,
+        local_ordering = record_summary.local_ordering,
+    )
+end
+
+function _cpb_overlap_placement_transform_fact_status(transform_summary)
+    isnothing(transform_summary) && return :missing_retained_transform
+    status = _summary_property(transform_summary, :status)
+    isnothing(status) ? :unavailable_retained_transform : status
+end
+
+function _cpb_overlap_placement_range_fact_status(range_summary)
+    isnothing(range_summary) && return :missing_source_pair_placement_range
+    status = _summary_property(range_summary, :status)
+    isnothing(status) ? :unavailable_source_pair_placement_range : status
+end
+
+function _cpb_overlap_placement_fact_blocker(fact_summary)
+    isnothing(fact_summary) && return nothing
+    return _summary_property(fact_summary, :blocker)
+end
+
+function _cpb_overlap_placement_range_property(
+    range_summary,
+    property::Symbol,
+    default = nothing,
+)
+    isnothing(range_summary) && return default
+    value = _summary_property(range_summary, property)
+    isnothing(value) ? default : value
+end
+
+function _cpb_overlap_placement_collection_blocker(collection_summary)
+    blocker = _summary_property(collection_summary, :blocker)
+    isnothing(blocker) ? :missing_local_overlap_collection : blocker
+end
+
+function _cpb_overlap_placement_missing_requirements(
+    collection_available::Bool,
+    record_fact_summaries::Tuple,
+    placement_plan,
+    accumulation_rule,
+)
+    missing = Symbol[]
+    if !collection_available
+        push!(missing, :missing_local_overlap_collection)
+    else
+        if any(_cpb_overlap_placement_missing_transform, record_fact_summaries)
+            push!(missing, :missing_retained_transform)
+        end
+        if any(_cpb_overlap_placement_missing_left_range, record_fact_summaries)
+            push!(missing, :missing_left_column_range)
+        end
+        if any(_cpb_overlap_placement_missing_right_range, record_fact_summaries)
+            push!(missing, :missing_right_column_range)
+        end
+        if any(_cpb_overlap_placement_missing_global_dimension, record_fact_summaries)
+            push!(missing, :missing_global_dimension)
+        end
+    end
+    isnothing(placement_plan) && push!(missing, :missing_placement_plan)
+    isnothing(accumulation_rule) && push!(missing, :missing_accumulation_rule)
+    return Tuple(unique(missing))
+end
+
+function _cpb_overlap_placement_available_requirements(
+    collection_available::Bool,
+    record_fact_summaries::Tuple,
+    placement_plan,
+    accumulation_rule,
+)
+    available = Symbol[]
+    collection_available && push!(available, :local_cpb_overlap_collection)
+    if collection_available && !isempty(record_fact_summaries)
+        all(_cpb_overlap_placement_available_transforms, record_fact_summaries) &&
+            push!(available, :retained_transform)
+        all(_cpb_overlap_placement_available_left_range, record_fact_summaries) &&
+            push!(available, :left_column_range)
+        all(_cpb_overlap_placement_available_right_range, record_fact_summaries) &&
+            push!(available, :right_column_range)
+        all(_cpb_overlap_placement_available_global_dimension, record_fact_summaries) &&
+            push!(available, :global_dimension)
+    end
+    isnothing(placement_plan) || push!(available, :placement_plan)
+    isnothing(accumulation_rule) || push!(available, :accumulation_rule)
+    return Tuple(available)
+end
+
+function _cpb_overlap_placement_missing_transform(record_fact_summary)
+    return record_fact_summary.left_transform_status === :missing_retained_transform ||
+           record_fact_summary.right_transform_status === :missing_retained_transform ||
+           record_fact_summary.left_transform_blocker === :missing_retained_transform ||
+           record_fact_summary.right_transform_blocker === :missing_retained_transform
+end
+
+function _cpb_overlap_placement_missing_left_range(record_fact_summary)
+    return record_fact_summary.placement_range_status ===
+           :missing_source_pair_placement_range ||
+           record_fact_summary.placement_range_blocker ===
+           :missing_left_column_range
+end
+
+function _cpb_overlap_placement_missing_right_range(record_fact_summary)
+    return record_fact_summary.placement_range_status ===
+           :missing_source_pair_placement_range ||
+           record_fact_summary.placement_range_blocker ===
+           :missing_right_column_range
+end
+
+function _cpb_overlap_placement_missing_global_dimension(record_fact_summary)
+    return record_fact_summary.placement_range_blocker === :missing_global_dimension
+end
+
+function _cpb_overlap_placement_available_transforms(record_fact_summary)
+    return record_fact_summary.left_transform_status ===
+           :available_cpb_retained_transform_carry &&
+           record_fact_summary.right_transform_status ===
+           :available_cpb_retained_transform_carry
+end
+
+function _cpb_overlap_placement_available_left_range(record_fact_summary)
+    return record_fact_summary.placement_range_status ===
+           :available_cpb_source_pair_placement_range &&
+           !isnothing(record_fact_summary.left_column_range)
+end
+
+function _cpb_overlap_placement_available_right_range(record_fact_summary)
+    return record_fact_summary.placement_range_status ===
+           :available_cpb_source_pair_placement_range &&
+           !isnothing(record_fact_summary.right_column_range)
+end
+
+function _cpb_overlap_placement_available_global_dimension(record_fact_summary)
+    return record_fact_summary.placement_range_status ===
+           :available_cpb_source_pair_placement_range &&
+           record_fact_summary.global_dimension isa Integer
+end
+
+function _cpb_overlap_placement_specific_record_blocker(record_fact_summaries::Tuple)
+    for record_fact_summary in record_fact_summaries
+        record_fact_summary.record_status ===
+        :available_cpb_local_overlap_block_record ||
+            return something(
+                record_fact_summary.record_blocker,
+                :blocked_cpb_local_overlap_block_record,
+            )
+        for blocker in (
+            record_fact_summary.left_transform_blocker,
+            record_fact_summary.right_transform_blocker,
+            record_fact_summary.placement_range_blocker,
+        )
+            isnothing(blocker) && continue
+            _cpb_overlap_placement_missing_blocker(blocker) && continue
+            return blocker
+        end
+    end
+    return nothing
+end
+
+function _cpb_overlap_placement_missing_blocker(blocker::Symbol)
+    return blocker in (
+        :missing_retained_transform,
+        :missing_left_column_range,
+        :missing_right_column_range,
+        :missing_global_dimension,
+        :missing_source_pair_placement_range,
+    )
+end
+
+function _cpb_overlap_placement_plan_kind(placement_plan)
+    isnothing(placement_plan) && return :unavailable
+    placement_plan isa Symbol && return placement_plan
+    if placement_plan isa NamedTuple
+        kind = _summary_property(placement_plan, :kind)
+        isnothing(kind) || return kind
+    end
+    return Symbol(nameof(typeof(placement_plan)))
 end
 
 end # module CartesianCPBBlockProviders

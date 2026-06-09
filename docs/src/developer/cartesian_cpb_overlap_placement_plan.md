@@ -357,6 +357,8 @@ The facts bundle should remain blocked unless all required carries are
 available and a reviewed placement plan plus accumulation rule are present. It
 should still not materialize a global matrix; it should only decide whether the
 inputs are coherent enough for a later placement engine.
+`CPBOverlapPlacementFacts` now exists as a metadata-only coherence bundle and
+remains blocked until a placement engine is reviewed.
 
 Nonclaims for these carry objects:
 

@@ -1,0 +1,273 @@
+# Runtime role: metadata-only CPB overlap placement facts contract.
+#
+# This test validates placement-fact coherence summaries only. It does not
+# apply transforms, place local CPB overlap blocks, or assemble route/global
+# overlap.
+
+using Test
+using GaussletBases
+
+const CPBPlacementFacts = GaussletBases.CartesianCPBBlockProviders
+
+const _PLACEMENT_FACTS_BLOCK_KEY = (:tiny_left, :tiny_right)
+const _PLACEMENT_FACTS_SOURCE_SHAPE = (x = 1, y = 2, z = 1)
+
+function _placement_facts_record(;
+    status = :available_cpb_local_overlap_block_record,
+    blocker = nothing,
+)
+    metadata = (;
+        object_kind = :test_cpb_local_overlap_block_record_summary,
+        term = :overlap,
+        block_key = _PLACEMENT_FACTS_BLOCK_KEY,
+        source_kind = :cpb_overlap_dense_block,
+        status,
+        blocker,
+        dense_block_available = status === :available_cpb_local_overlap_block_record,
+        dense_block_shape =
+            status === :available_cpb_local_overlap_block_record ? (2, 2) :
+            :not_materialized,
+        local_ordering = :parent_compatible_x_slowest_z_fastest,
+        placement_status = :unassigned,
+        retained_transform_status = :unassigned,
+        global_matrix_materialized = false,
+        route_driver_wiring = false,
+    )
+    return CPBPlacementFacts.CPBLocalOverlapBlockRecord(
+        _PLACEMENT_FACTS_BLOCK_KEY,
+        nothing,
+        metadata,
+    )
+end
+
+function _placement_facts_collection(; record = _placement_facts_record())
+    return CPBPlacementFacts.cpb_local_overlap_block_collection((record,))
+end
+
+function _placement_facts_transform_carry(;
+    side = :left,
+    source_shape = _PLACEMENT_FACTS_SOURCE_SHAPE,
+    target_retained_column_range = side === :left ? (1:2) : (3:4),
+    transform_object = [1.0 0.0; 0.0 1.0],
+)
+    return CPBPlacementFacts.cpb_retained_transform_carry(
+        side,
+        _PLACEMENT_FACTS_BLOCK_KEY,
+        (; object_kind = :test_cpb_source_summary, shape = source_shape),
+        source_shape,
+        :parent_compatible_x_slowest_z_fastest,
+        target_retained_column_range;
+        transform_object,
+        transform_convention = :test_local_to_retained_columns,
+        transform_provenance = :test_fixture,
+    )
+end
+
+function _placement_facts_range(;
+    left_transform_carry = _placement_facts_transform_carry(; side = :left),
+    right_transform_carry = _placement_facts_transform_carry(; side = :right),
+    left_column_range = 1:2,
+    right_column_range = 3:4,
+    global_dimension = 4,
+)
+    return CPBPlacementFacts.cpb_source_pair_placement_range(
+        _PLACEMENT_FACTS_BLOCK_KEY;
+        left_column_range,
+        right_column_range,
+        global_dimension,
+        global_dimension_source = :test_retained_layout,
+        range_source = :test_source_pair_ranges,
+        range_provenance = :test_fixture,
+        left_transform_carry,
+        right_transform_carry,
+    )
+end
+
+function _complete_placement_facts(; kwargs...)
+    left_transform = _placement_facts_transform_carry(; side = :left)
+    right_transform = _placement_facts_transform_carry(; side = :right)
+    placement_range = _placement_facts_range(;
+        left_transform_carry = left_transform,
+        right_transform_carry = right_transform,
+    )
+    return CPBPlacementFacts.cpb_overlap_placement_facts(
+        _placement_facts_collection();
+        transform_carries = (left_transform, right_transform),
+        placement_ranges = (placement_range,),
+        kwargs...,
+    )
+end
+
+@testset "CPB overlap placement facts metadata" begin
+    collection = _placement_facts_collection()
+
+    missing_carries = CPBPlacementFacts.cpb_overlap_placement_facts(collection)
+    missing_summary = CPBPlacementFacts.summary(missing_carries)
+    @test missing_summary.object_kind ===
+          :cartesian_cpb_overlap_placement_facts_summary
+    @test missing_summary.status === :blocked_cpb_overlap_placement_facts
+    @test missing_summary.blocker === :missing_placement_or_retained_transform
+    @test missing_summary.collection_available === true
+    @test missing_summary.record_count == 1
+    @test missing_summary.block_keys === (_PLACEMENT_FACTS_BLOCK_KEY,)
+    @test missing_summary.placement_plan_status === :missing_placement_plan
+    @test missing_summary.accumulation_rule_status === :missing_accumulation_rule
+    @test missing_summary.available_requirements ===
+          (:local_cpb_overlap_collection,)
+    @test :missing_retained_transform in missing_summary.missing_requirements
+    @test :missing_left_column_range in missing_summary.missing_requirements
+    @test :missing_right_column_range in missing_summary.missing_requirements
+    @test :missing_placement_plan in missing_summary.missing_requirements
+    @test :missing_accumulation_rule in missing_summary.missing_requirements
+    @test missing_summary.global_overlap_status === :blocked
+    @test missing_summary.global_overlap_blocker ===
+          :missing_placement_or_retained_transform
+    @test missing_summary.placement_engine_implemented === false
+    @test missing_summary.transform_application_implemented === false
+    @test missing_summary.global_matrix_materialized === false
+    @test missing_summary.route_driver_wiring === false
+
+    missing_record_summary = only(missing_summary.record_fact_summaries)
+    @test missing_record_summary.left_transform_status ===
+          :missing_retained_transform
+    @test missing_record_summary.right_transform_status ===
+          :missing_retained_transform
+    @test missing_record_summary.placement_range_status ===
+          :missing_source_pair_placement_range
+    @test missing_record_summary.left_column_range === nothing
+    @test missing_record_summary.right_column_range === nothing
+    @test missing_record_summary.global_dimension === nothing
+    @test missing_record_summary.global_dimension_source === :unavailable
+    @test missing_record_summary.dense_block_available === true
+    @test missing_record_summary.dense_block_shape == (2, 2)
+    @test missing_record_summary.local_ordering ===
+          :parent_compatible_x_slowest_z_fastest
+
+    complete = _complete_placement_facts(;
+        placement_plan = (; kind = :test_overlap_placement_plan),
+        accumulation_rule = :test_accumulation_rule,
+    )
+    complete_summary = CPBPlacementFacts.summary(complete)
+    @test complete_summary.status === :blocked_cpb_overlap_placement_facts
+    @test complete_summary.blocker === :placement_not_implemented
+    @test complete_summary.missing_requirements === ()
+    @test complete_summary.available_requirements === (
+        :local_cpb_overlap_collection,
+        :retained_transform,
+        :left_column_range,
+        :right_column_range,
+        :global_dimension,
+        :placement_plan,
+        :accumulation_rule,
+    )
+    @test complete_summary.placement_plan_status === :available_placement_plan
+    @test complete_summary.placement_plan_kind === :test_overlap_placement_plan
+    @test complete_summary.accumulation_rule_status ===
+          :available_accumulation_rule
+    @test complete_summary.accumulation_rule === :test_accumulation_rule
+    @test complete_summary.global_overlap_status === :blocked
+    @test complete_summary.global_overlap_blocker === :placement_not_implemented
+    @test complete_summary.placement_engine_implemented === false
+    @test complete_summary.transform_application_implemented === false
+    @test complete_summary.global_matrix_materialized === false
+    @test complete_summary.route_driver_wiring === false
+
+    complete_record_summary = only(complete_summary.record_fact_summaries)
+    @test complete_record_summary.left_transform_status ===
+          :available_cpb_retained_transform_carry
+    @test complete_record_summary.right_transform_status ===
+          :available_cpb_retained_transform_carry
+    @test complete_record_summary.placement_range_status ===
+          :available_cpb_source_pair_placement_range
+    @test complete_record_summary.left_column_range == 1:2
+    @test complete_record_summary.right_column_range == 3:4
+    @test complete_record_summary.global_dimension == 4
+    @test complete_record_summary.global_dimension_source ===
+          :test_retained_layout
+
+    missing_plan = _complete_placement_facts(;
+        accumulation_rule = :test_accumulation_rule,
+    )
+    missing_plan_summary = CPBPlacementFacts.summary(missing_plan)
+    @test missing_plan_summary.status === :blocked_cpb_overlap_placement_facts
+    @test missing_plan_summary.blocker ===
+          :missing_placement_or_retained_transform
+    @test missing_plan_summary.placement_plan_status === :missing_placement_plan
+    @test :missing_placement_plan in missing_plan_summary.missing_requirements
+    @test !(:missing_accumulation_rule in missing_plan_summary.missing_requirements)
+    @test missing_plan_summary.global_matrix_materialized === false
+    @test missing_plan_summary.route_driver_wiring === false
+
+    left_transform = _placement_facts_transform_carry(; side = :left)
+    right_transform = _placement_facts_transform_carry(; side = :right)
+    blocked_range = _placement_facts_range(;
+        left_transform_carry = left_transform,
+        right_transform_carry = right_transform,
+        left_column_range = 1:3,
+        global_dimension = 5,
+    )
+    range_blocked_facts = CPBPlacementFacts.cpb_overlap_placement_facts(
+        collection;
+        transform_carries = (left_transform, right_transform),
+        placement_ranges = (blocked_range,),
+        placement_plan = (; kind = :test_overlap_placement_plan),
+        accumulation_rule = :test_accumulation_rule,
+    )
+    range_blocked_summary = CPBPlacementFacts.summary(range_blocked_facts)
+    @test range_blocked_summary.status ===
+          :blocked_cpb_overlap_placement_facts
+    @test range_blocked_summary.blocker ===
+          :left_column_range_dimension_mismatch
+    @test only(range_blocked_summary.record_fact_summaries).placement_range_status ===
+          :blocked_cpb_source_pair_placement_range
+    @test only(range_blocked_summary.record_fact_summaries).placement_range_blocker ===
+          :left_column_range_dimension_mismatch
+    @test range_blocked_summary.global_matrix_materialized === false
+    @test range_blocked_summary.route_driver_wiring === false
+
+    blocked_left_transform = _placement_facts_transform_carry(;
+        side = :left,
+        source_shape = (x = 1, y = 3, z = 1),
+    )
+    transform_blocked_facts = CPBPlacementFacts.cpb_overlap_placement_facts(
+        collection;
+        transform_carries = (
+            blocked_left_transform,
+            _placement_facts_transform_carry(; side = :right),
+        ),
+        placement_ranges = (_placement_facts_range(),),
+        placement_plan = (; kind = :test_overlap_placement_plan),
+        accumulation_rule = :test_accumulation_rule,
+    )
+    transform_blocked_summary = CPBPlacementFacts.summary(transform_blocked_facts)
+    @test transform_blocked_summary.status ===
+          :blocked_cpb_overlap_placement_facts
+    @test transform_blocked_summary.blocker ===
+          :retained_transform_source_shape_mismatch
+    @test only(transform_blocked_summary.record_fact_summaries).left_transform_status ===
+          :blocked_cpb_retained_transform_carry
+    @test only(transform_blocked_summary.record_fact_summaries).left_transform_blocker ===
+          :retained_transform_source_shape_mismatch
+    @test transform_blocked_summary.global_matrix_materialized === false
+    @test transform_blocked_summary.route_driver_wiring === false
+
+    blocked_collection = _placement_facts_collection(;
+        record = _placement_facts_record(;
+            status = :blocked_cpb_local_overlap_block_record,
+            blocker = :test_local_overlap_blocker,
+        ),
+    )
+    blocked_collection_facts =
+        CPBPlacementFacts.cpb_overlap_placement_facts(blocked_collection)
+    blocked_collection_summary =
+        CPBPlacementFacts.summary(blocked_collection_facts)
+    @test blocked_collection_summary.status ===
+          :blocked_cpb_overlap_placement_facts
+    @test blocked_collection_summary.blocker ===
+          :blocked_cpb_local_overlap_block_records
+    @test blocked_collection_summary.collection_available === false
+    @test :missing_local_overlap_collection in
+          blocked_collection_summary.missing_requirements
+    @test blocked_collection_summary.global_matrix_materialized === false
+    @test blocked_collection_summary.route_driver_wiring === false
+end
