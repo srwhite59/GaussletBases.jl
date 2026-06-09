@@ -56,6 +56,34 @@ function _overlap_blocks_interval_pair(parent)
     return CBPOverlapBlocks.cpb_interval_pair(parent, left, right)
 end
 
+function _overlap_blocks_expected_dense(axis_blocks)
+    nx_left, nx_right = size(axis_blocks.x)
+    ny_left, ny_right = size(axis_blocks.y)
+    nz_left, nz_right = size(axis_blocks.z)
+    dense = Matrix{Float64}(
+        undef,
+        nx_left * ny_left * nz_left,
+        nx_right * ny_right * nz_right,
+    )
+    for ix_left in 1:nx_left, iy_left in 1:ny_left, iz_left in 1:nz_left
+        left_index =
+            (ix_left - 1) * ny_left * nz_left +
+            (iy_left - 1) * nz_left +
+            iz_left
+        for ix_right in 1:nx_right, iy_right in 1:ny_right, iz_right in 1:nz_right
+            right_index =
+                (ix_right - 1) * ny_right * nz_right +
+                (iy_right - 1) * nz_right +
+                iz_right
+            dense[left_index, right_index] =
+                axis_blocks.x[ix_left, ix_right] *
+                axis_blocks.y[iy_left, iy_right] *
+                axis_blocks.z[iz_left, iz_right]
+        end
+    end
+    return dense
+end
+
 @testset "Cartesian CPB overlap axis-block slices" begin
     parent = _overlap_blocks_parent()
     overlap_1d = _overlap_blocks_overlap_1d()
@@ -101,6 +129,36 @@ end
     @test block_summary.interval_pair_summary.status ===
           :available_cpb_interval_pair
 
+    dense_block = CBPOverlapBlocks.cpb_overlap_dense_block(block_set)
+    dense_summary = CBPOverlapBlocks.summary(dense_block)
+
+    @test dense_block.axis_block_set === block_set
+    @test dense_block.dense_block === dense_summary.dense_block
+    @test dense_summary.status === :materialized_cpb_overlap_dense_block
+    @test dense_summary.blocker === nothing
+    @test dense_summary.dense_block ==
+          _overlap_blocks_expected_dense(block_set.axis_blocks)
+    @test dense_summary.dense_block_shape == (
+        block_summary.interval_pair_summary.left_support_count,
+        block_summary.interval_pair_summary.right_support_count,
+    )
+    @test dense_summary.left_shape == (x = 2, y = 2, z = 3)
+    @test dense_summary.right_shape == (x = 2, y = 2, z = 1)
+    @test dense_summary.local_ordering ===
+          :parent_compatible_x_slowest_z_fastest
+    @test dense_summary.source_axis_block_summary === block_summary
+    @test dense_summary.factor_space ===
+          :parent_axis_bundle_pgdg_intermediate
+    @test dense_summary.factor_convention === :axis_bundle_one_body_overlap
+    @test dense_summary.index_domain === :parent_axis_indices
+    @test dense_summary.dense_local_block_materialized
+    @test dense_summary.route_driver_wiring === false
+    @test dense_summary.global_matrix_materialized === false
+    @test dense_summary.hamiltonian_data_materialized === false
+    @test dense_summary.coulomb_data_materialized === false
+    @test dense_summary.ida_mwg_semantics === false
+    @test dense_summary.exports_or_artifacts === false
+
     blocked_packet = CPGBOverlapBlocks.parent_overlap_axis_factor_packet(
         parent,
         (;
@@ -124,6 +182,25 @@ end
     @test blocked_packet_summary.blocks_are_views === false
     @test blocked_packet_summary.blocks_are_copies === false
     @test blocked_packet_summary.dense_local_block_materialized === false
+
+    blocked_dense =
+        CBPOverlapBlocks.cpb_overlap_dense_block(blocked_packet_blocks)
+    blocked_dense_summary = CBPOverlapBlocks.summary(blocked_dense)
+
+    @test blocked_dense.axis_block_set === blocked_packet_blocks
+    @test blocked_dense.dense_block === nothing
+    @test blocked_dense_summary.status === :blocked_cpb_overlap_dense_block
+    @test blocked_dense_summary.blocker ===
+          :missing_parent_axis_bundle_overlap_factors
+    @test blocked_dense_summary.dense_block === nothing
+    @test blocked_dense_summary.dense_block_shape === :unavailable
+    @test blocked_dense_summary.source_axis_block_summary ===
+          blocked_packet_summary
+    @test blocked_dense_summary.factor_space === :unavailable
+    @test blocked_dense_summary.index_domain === :unavailable
+    @test blocked_dense_summary.dense_local_block_materialized === false
+    @test blocked_dense_summary.route_driver_wiring === false
+    @test blocked_dense_summary.global_matrix_materialized === false
 
     outside_pair = CBPOverlapBlocks.cpb_interval_pair(
         parent,

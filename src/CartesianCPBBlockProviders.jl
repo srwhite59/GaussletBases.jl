@@ -10,8 +10,10 @@ const _LOCAL_ORDERING = :parent_compatible_x_slowest_z_fastest
 
 export CPBIntervalPair3D,
        CPBOverlapAxisBlockSet,
+       CPBOverlapDenseBlock,
        cpb_interval_pair,
        cpb_overlap_axis_blocks,
+       cpb_overlap_dense_block,
        summary
 
 """
@@ -43,8 +45,22 @@ struct CPBOverlapAxisBlockSet{P,I,B,M}
     metadata::M
 end
 
+"""
+    CPBOverlapDenseBlock
+
+Local dense CPB product-space overlap block materialized from overlap axis
+blocks. This remains local to the CPB pair and does not imply route/global
+matrix placement.
+"""
+struct CPBOverlapDenseBlock{S,D,M}
+    axis_block_set::S
+    dense_block::D
+    metadata::M
+end
+
 summary(pair::CPBIntervalPair3D) = pair.metadata
 summary(block_set::CPBOverlapAxisBlockSet) = block_set.metadata
+summary(block::CPBOverlapDenseBlock) = block.metadata
 
 function cpb_interval_pair(
     parent::CPGB.CartesianParentGaussletBasis3D,
@@ -242,6 +258,126 @@ function _axis_block_shapes(axis_blocks)
         x = size(axis_blocks.x),
         y = size(axis_blocks.y),
         z = size(axis_blocks.z),
+    )
+end
+
+function cpb_overlap_dense_block(axis_block_set::CPBOverlapAxisBlockSet)
+    axis_block_summary = summary(axis_block_set)
+    blocker =
+        axis_block_summary.status === :available_cpb_overlap_axis_blocks ?
+        nothing :
+        _cpb_overlap_dense_block_blocker(axis_block_summary)
+    dense_block =
+        isnothing(blocker) ?
+        _materialize_cpb_overlap_dense_block(axis_block_set.axis_blocks) :
+        nothing
+    status =
+        isnothing(blocker) ?
+        :materialized_cpb_overlap_dense_block :
+        :blocked_cpb_overlap_dense_block
+    return CPBOverlapDenseBlock(
+        axis_block_set,
+        dense_block,
+        _cpb_overlap_dense_block_summary(
+            status,
+            blocker,
+            axis_block_summary,
+            dense_block,
+        ),
+    )
+end
+
+function _cpb_overlap_dense_block_blocker(axis_block_summary)
+    isnothing(axis_block_summary.blocker) &&
+        return :unavailable_cpb_overlap_axis_blocks
+    return axis_block_summary.blocker
+end
+
+function _materialize_cpb_overlap_dense_block(axis_blocks)
+    nx_left, nx_right = size(axis_blocks.x)
+    ny_left, ny_right = size(axis_blocks.y)
+    nz_left, nz_right = size(axis_blocks.z)
+    element_type = promote_type(
+        eltype(axis_blocks.x),
+        eltype(axis_blocks.y),
+        eltype(axis_blocks.z),
+    )
+    dense_block = Matrix{element_type}(
+        undef,
+        nx_left * ny_left * nz_left,
+        nx_right * ny_right * nz_right,
+    )
+    for ix_left in 1:nx_left, iy_left in 1:ny_left, iz_left in 1:nz_left
+        left_index = _local_product_index(
+            ix_left,
+            iy_left,
+            iz_left,
+            (nx_left, ny_left, nz_left),
+        )
+        for ix_right in 1:nx_right, iy_right in 1:ny_right, iz_right in 1:nz_right
+            right_index = _local_product_index(
+                ix_right,
+                iy_right,
+                iz_right,
+                (nx_right, ny_right, nz_right),
+            )
+            dense_block[left_index, right_index] =
+                axis_blocks.x[ix_left, ix_right] *
+                axis_blocks.y[iy_left, iy_right] *
+                axis_blocks.z[iz_left, iz_right]
+        end
+    end
+    return dense_block
+end
+
+function _local_product_index(
+    ix::Integer,
+    iy::Integer,
+    iz::Integer,
+    shape::NTuple{3,Int},
+)
+    _nx, ny, nz = shape
+    return (Int(ix) - 1) * ny * nz + (Int(iy) - 1) * nz + Int(iz)
+end
+
+function _cpb_overlap_dense_block_summary(
+    status::Symbol,
+    blocker,
+    axis_block_summary,
+    dense_block,
+)
+    available = status === :materialized_cpb_overlap_dense_block
+    interval_summary = axis_block_summary.interval_pair_summary
+    return (;
+        object_kind = :cartesian_cpb_overlap_dense_block_summary,
+        status,
+        blocker,
+        dense_block,
+        dense_block_shape =
+            available ?
+            size(dense_block) :
+            :unavailable,
+        left_shape = interval_summary.left_shape,
+        right_shape = interval_summary.right_shape,
+        left_support_count = interval_summary.left_support_count,
+        right_support_count = interval_summary.right_support_count,
+        local_ordering = axis_block_summary.local_ordering,
+        source_axis_block_summary = axis_block_summary,
+        factor_space = axis_block_summary.factor_space,
+        factor_convention = axis_block_summary.factor_convention,
+        normalization_convention = axis_block_summary.normalization_convention,
+        index_domain = axis_block_summary.index_domain,
+        index_domain_source = axis_block_summary.index_domain_source,
+        index_domain_status = axis_block_summary.index_domain_status,
+        axis_order = axis_block_summary.axis_order,
+        bra_ket_order = axis_block_summary.bra_ket_order,
+        dense_local_block_materialized = available,
+        route_driver_wiring = false,
+        global_matrix_materialized = false,
+        hamiltonian_data_materialized = false,
+        coulomb_data_materialized = false,
+        ida_mwg_semantics = false,
+        exports_or_artifacts = false,
     )
 end
 
