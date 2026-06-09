@@ -3521,6 +3521,111 @@ function _pqs_source_box_route_driver_private_global_overlap_facts_nonclaims()
     )
 end
 
+function _pqs_source_box_route_driver_private_global_overlap_local_source_fingerprint(
+    source::CartesianCPBBlockProviders.CPBOverlapAxisBlockSet,
+)
+    source_summary = CartesianCPBBlockProviders.summary(source)
+    interval_summary = source_summary.interval_pair_summary
+    available = source_summary.status === :available_cpb_overlap_axis_blocks
+    return _pqs_source_box_route_driver_private_global_overlap_local_source_fingerprint(
+        source_summary,
+        interval_summary,
+        :not_materialized,
+        available,
+    )
+end
+
+function _pqs_source_box_route_driver_private_global_overlap_local_source_fingerprint(
+    source::CartesianCPBBlockProviders.CPBOverlapDenseBlock,
+)
+    source_summary = CartesianCPBBlockProviders.summary(source)
+    axis_block_summary = source_summary.source_axis_block_summary
+    interval_summary = axis_block_summary.interval_pair_summary
+    available = source_summary.status === :materialized_cpb_overlap_dense_block
+    return _pqs_source_box_route_driver_private_global_overlap_local_source_fingerprint(
+        source_summary,
+        interval_summary,
+        source_summary.dense_block_shape,
+        available,
+    )
+end
+
+function _pqs_source_box_route_driver_private_global_overlap_local_source_fingerprint(
+    source,
+)
+    return (;
+        object_kind =
+            :cartesian_route_driver_private_global_overlap_local_source_fingerprint,
+        status = :blocked_private_global_overlap_local_source_fingerprint,
+        blocker = :unrecognized_private_overlap_local_source,
+        source_kind = :unavailable,
+        axis_blocks_available = false,
+        dense_local_block_materialized = false,
+        global_matrix_materialized = false,
+        global_overlap_matrix_materialized = false,
+        route_driver_wiring = false,
+        private_global_overlap_input_facts_available = false,
+        route_global_overlap_stage_source = false,
+        factor_space = :unavailable,
+        factor_convention = :unavailable,
+        normalization_convention = :unavailable,
+        index_domain = :unavailable,
+        index_domain_source = :unavailable,
+        index_domain_status = :unavailable,
+        local_ordering = :unavailable,
+        left_shape = :unavailable,
+        right_shape = :unavailable,
+        dense_block_shape = :unavailable,
+    )
+end
+
+function _pqs_source_box_route_driver_private_global_overlap_local_source_fingerprint(
+    source_summary,
+    interval_summary,
+    dense_block_shape,
+    available::Bool,
+)
+    return (;
+        object_kind =
+            :cartesian_route_driver_private_global_overlap_local_source_fingerprint,
+        status =
+            available ?
+            :available_private_global_overlap_local_source_fingerprint :
+            :blocked_private_global_overlap_local_source_fingerprint,
+        blocker = available ? nothing : source_summary.blocker,
+        source_kind = :cpb_provider_local_overlap,
+        axis_blocks_available =
+            _pqs_source_box_route_driver_private_global_overlap_property(
+                source_summary,
+                :axis_blocks_available,
+            ) === true ||
+            _pqs_source_box_route_driver_private_global_overlap_property(
+                source_summary,
+                :dense_local_block_materialized,
+            ) === true,
+        dense_local_block_materialized =
+            _pqs_source_box_route_driver_private_global_overlap_property(
+                source_summary,
+                :dense_local_block_materialized,
+            ) === true,
+        global_matrix_materialized = false,
+        global_overlap_matrix_materialized = false,
+        route_driver_wiring = false,
+        private_global_overlap_input_facts_available = false,
+        route_global_overlap_stage_source = false,
+        factor_space = source_summary.factor_space,
+        factor_convention = source_summary.factor_convention,
+        normalization_convention = source_summary.normalization_convention,
+        index_domain = source_summary.index_domain,
+        index_domain_source = source_summary.index_domain_source,
+        index_domain_status = source_summary.index_domain_status,
+        local_ordering = source_summary.local_ordering,
+        left_shape = interval_summary.left_shape,
+        right_shape = interval_summary.right_shape,
+        dense_block_shape,
+    )
+end
+
 function _pqs_source_box_route_driver_private_global_overlap_property(
     object,
     key::Symbol,
