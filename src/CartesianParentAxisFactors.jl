@@ -2,7 +2,9 @@ const _AXIS_ORDER = (:x, :y, :z)
 const _BRA_KET_ORDER = (:bra, :ket)
 
 export CartesianParentAxisFactorPacket3D,
+       CartesianParentCoulombSourceSummary,
        parent_overlap_axis_factor_packet,
+       parent_coulomb_axis_source_summary,
        summary
 
 """
@@ -19,6 +21,10 @@ struct CartesianParentAxisFactorPacket3D{P,O,K,X,Q,M}
     kinetic_1d::K
     position_1d::X
     x2_1d::Q
+    metadata::M
+end
+
+struct CartesianParentCoulombSourceSummary{M}
     metadata::M
 end
 
@@ -43,6 +49,139 @@ CartesianParentAxisFactorPacket3D(parent, overlap_1d, kinetic_1d, metadata) =
     )
 
 summary(packet::CartesianParentAxisFactorPacket3D) = packet.metadata
+summary(summary_object::CartesianParentCoulombSourceSummary) =
+    summary_object.metadata
+
+function parent_coulomb_axis_source_summary(
+    parent::CartesianParentGaussletBasis3D,
+    parent_axis_bundle_object,
+    expansion;
+    nuclear_charges = nothing,
+    atom_locations = nothing,
+    center_table = nothing,
+    parent_qw_basis_object = nothing,
+)
+    parent_axis_counts_value = parent_axis_counts(parent)
+    axis_bundle_available = !isnothing(parent_axis_bundle_object)
+    expansion_available = !isnothing(expansion)
+    expansion_coefficients =
+        _property(expansion, :coefficients)
+    expansion_exponents =
+        _property(expansion, :exponents)
+    expansion_coefficients_available =
+        expansion_coefficients isa AbstractVector && !isempty(expansion_coefficients)
+    expansion_exponents_available =
+        expansion_exponents isa AbstractVector && !isempty(expansion_exponents)
+    gaussian_factor_terms_available =
+        _axis_coulomb_source_available(parent_axis_bundle_object, :gaussian_factor_terms)
+    gaussian_factors_available =
+        _axis_coulomb_source_available(parent_axis_bundle_object, :gaussian_factors)
+    pair_factor_terms_available =
+        _axis_coulomb_source_available(parent_axis_bundle_object, :pair_factor_terms)
+    pair_factors_available =
+        _axis_coulomb_source_available(parent_axis_bundle_object, :pair_factors)
+    pair_factor_terms_raw_available =
+        _axis_coulomb_source_available(parent_axis_bundle_object, :pair_factor_terms_raw)
+    axis_exponents_available =
+        _axis_coulomb_source_available(parent_axis_bundle_object, :exponents)
+    center_metadata =
+        _parent_coulomb_center_metadata(
+            nuclear_charges,
+            atom_locations,
+            center_table,
+            parent_qw_basis_object,
+            parent,
+        )
+    electron_nuclear_center_metadata_available = center_metadata.available
+    electron_nuclear_axis_terms_available = false
+    electron_electron_pair_axis_terms_available =
+        pair_factor_terms_available || pair_factors_available
+    missing_sources = Symbol[]
+    axis_bundle_available || push!(missing_sources, :missing_parent_axis_bundle_object)
+    expansion_available || push!(missing_sources, :missing_coulomb_gaussian_expansion)
+    expansion_coefficients_available ||
+        push!(missing_sources, :missing_coulomb_expansion_coefficients)
+    expansion_exponents_available ||
+        push!(missing_sources, :missing_coulomb_expansion_exponents)
+    electron_electron_pair_axis_terms_available ||
+        push!(missing_sources, :missing_electron_electron_pair_axis_terms)
+    electron_nuclear_center_metadata_available ||
+        push!(missing_sources, :missing_electron_nuclear_center_metadata)
+    missing_sources_tuple = Tuple(unique(missing_sources))
+    status =
+        axis_bundle_available &&
+        expansion_available &&
+        expansion_coefficients_available &&
+        expansion_exponents_available &&
+        electron_electron_pair_axis_terms_available ?
+        :available_parent_coulomb_axis_source_summary :
+        :blocked_parent_coulomb_axis_source_summary
+    blocker =
+        status === :available_parent_coulomb_axis_source_summary ||
+        isempty(missing_sources_tuple) ?
+        nothing :
+        first(missing_sources_tuple)
+
+    return CartesianParentCoulombSourceSummary((;
+        object_kind = :cartesian_parent_coulomb_axis_source_summary,
+        status,
+        blocker,
+        parent_axis_counts = parent_axis_counts_value,
+        parent_axis_counts_source = :parent_object_parent_axis_counts,
+        axis_bundle_available,
+        expansion_available,
+        expansion_coefficients_available,
+        expansion_exponents_available,
+        gaussian_expansion_source =
+            expansion_available ? :coulomb_gaussian_expansion_object : :unavailable,
+        electron_nuclear_center_metadata_available,
+        electron_nuclear_center_metadata_source = center_metadata.source,
+        electron_nuclear_axis_terms_available,
+        electron_nuclear_axis_terms_status =
+            electron_nuclear_axis_terms_available ?
+            :available_parent_electron_nuclear_axis_terms :
+            :missing_per_center_electron_nuclear_axis_term_tables,
+        electron_electron_pair_axis_terms_available,
+        electron_electron_pair_axis_terms_status =
+            electron_electron_pair_axis_terms_available ?
+            :available_parent_electron_electron_pair_axis_terms :
+            :missing_electron_electron_pair_axis_terms,
+        electron_electron_cpb_pair_pair_source_record_available = false,
+        gaussian_factor_terms_available,
+        gaussian_factors_available,
+        pair_factor_terms_available,
+        pair_factors_available,
+        pair_factor_terms_raw_available,
+        axis_exponents_available,
+        missing_sources = missing_sources_tuple,
+        source_paths = (;
+            electron_nuclear_gaussian_factor_terms =
+                :axis_pgdg_intermediate_gaussian_factor_terms,
+            electron_nuclear_gaussian_factors =
+                :axis_pgdg_intermediate_gaussian_factors,
+            electron_electron_pair_factor_terms =
+                :axis_pgdg_intermediate_pair_factor_terms,
+            electron_electron_pair_factors =
+                :axis_pgdg_intermediate_pair_factors,
+            electron_electron_pair_factor_terms_raw =
+                :axis_pgdg_intermediate_pair_factor_terms_raw,
+            axis_exponents = :axis_pgdg_intermediate_exponents,
+            expansion_coefficients = :expansion_coefficients,
+            expansion_exponents = :expansion_exponents,
+            nuclear_charges = center_metadata.nuclear_charges_source,
+            atom_locations = center_metadata.atom_locations_source,
+            center_table = center_metadata.center_table_source,
+        ),
+        numerical_coulomb_blocks_materialized = false,
+        cpb_local_coulomb_kernel_implemented = false,
+        wl_pqs_realization = false,
+        route_global_placement = false,
+        route_driver_wiring = false,
+        hamiltonian_assembly = false,
+        ida_mwg_pqs_semantics = false,
+        exports_or_artifacts = false,
+    ))
+end
 
 function parent_overlap_axis_factor_packet(
     parent::CartesianParentGaussletBasis3D,
@@ -419,6 +558,90 @@ function _property(object, name::Symbol)
     isnothing(object) && return nothing
     hasproperty(object, name) && return getproperty(object, name)
     return nothing
+end
+
+function _axis_coulomb_source_available(bundle, factor_name::Symbol)
+    isnothing(bundle) && return false
+    bundle_x = _axis_bundle_property(bundle, :bundle_x, :x)
+    bundle_y = _axis_bundle_property(bundle, :bundle_y, :y)
+    bundle_z = _axis_bundle_property(bundle, :bundle_z, :z)
+    return all(
+        axis -> !isnothing(_axis_coulomb_factor_from_bundle_axis(axis, factor_name)),
+        (bundle_x, bundle_y, bundle_z),
+    )
+end
+
+function _axis_coulomb_factor_from_bundle_axis(axis, factor_name::Symbol)
+    isnothing(axis) && return nothing
+    pgdg_intermediate = _property(axis, :pgdg_intermediate)
+    pgdg_factor = _property(pgdg_intermediate, factor_name)
+    !isnothing(pgdg_factor) && return pgdg_factor
+    return _property(axis, factor_name)
+end
+
+function _parent_coulomb_center_metadata(
+    nuclear_charges,
+    atom_locations,
+    center_table,
+    parent_qw_basis_object,
+    parent::CartesianParentGaussletBasis3D,
+)
+    if !isnothing(center_table)
+        return (;
+            available = true,
+            source = :center_table,
+            nuclear_charges_source =
+                _center_table_has_property(center_table, :nuclear_charge) ?
+                :center_table_nuclear_charge :
+                :unavailable,
+            atom_locations_source =
+                _center_table_has_property(center_table, :location) ?
+                :center_table_location :
+                :unavailable,
+            center_table_source = :center_table,
+        )
+    elseif !isnothing(nuclear_charges) && !isnothing(atom_locations)
+        return (;
+            available = true,
+            source = :nuclear_charges_and_atom_locations,
+            nuclear_charges_source = :report_nuclear_charges,
+            atom_locations_source = :report_atom_locations,
+            center_table_source = :unavailable,
+        )
+    elseif !isnothing(parent_qw_basis_object) &&
+           hasproperty(parent_qw_basis_object, :nuclei) &&
+           hasproperty(parent_qw_basis_object, :nuclear_charges)
+        return (;
+            available = true,
+            source = :parent_qw_basis_object_nuclei_and_charges,
+            nuclear_charges_source = :parent_qw_basis_object_nuclear_charges,
+            atom_locations_source = :parent_qw_basis_object_nuclei,
+            center_table_source = :unavailable,
+        )
+    elseif hasproperty(parent.metadata, :nuclei) &&
+           hasproperty(parent.metadata, :nuclear_charges)
+        return (;
+            available = true,
+            source = :parent_metadata_nuclei_and_charges,
+            nuclear_charges_source = :parent_metadata_nuclear_charges,
+            atom_locations_source = :parent_metadata_nuclei,
+            center_table_source = :unavailable,
+        )
+    end
+    return (;
+        available = false,
+        source = :unavailable,
+        nuclear_charges_source = :unavailable,
+        atom_locations_source = :unavailable,
+        center_table_source = :unavailable,
+    )
+end
+
+function _center_table_has_property(center_table, property_name::Symbol)
+    for center in center_table
+        hasproperty(center, property_name) || return false
+    end
+    return true
 end
 
 function _axis_overlap_from_bundle_axis(axis)

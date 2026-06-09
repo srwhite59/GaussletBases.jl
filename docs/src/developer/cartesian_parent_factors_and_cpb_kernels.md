@@ -577,6 +577,32 @@ Coulomb factor packet from these existing structured ingredients, or first
 design the per-nucleus and pair-pair CPB kernel input records if the packet
 shape is still unsettled.
 
+The first metadata-only adapter now exists as:
+
+```text
+CartesianParentGaussletBases.parent_coulomb_axis_source_summary
+```
+
+It consumes an existing parent axis bundle, a `CoulombGaussianExpansion`, and
+optional structured center metadata such as `center_table`,
+`nuclear_charges`/`atom_locations`, parent metadata, or a QW parent basis
+object. It reports compact availability and source-path facts only. It does
+not store Coulomb arrays, build per-center numerical blocks, create CPB-local
+Coulomb kernels, apply WL/PQS realization, place route/global matrices, assemble
+Hamiltonians, add IDA/MWG/PQS semantics, or export artifacts.
+
+The current expected source summary is intentionally partial:
+
+- electron-electron pair-axis ingredients can be available through
+  `axis.pgdg_intermediate.pair_factor_terms` or
+  `axis.pgdg_intermediate.pair_factors`;
+- expansion coefficients and exponents are available from the supplied
+  `CoulombGaussianExpansion`;
+- center metadata can be available from structured route or parent objects;
+- electron-nuclear per-center axis term tables remain missing unless they are
+  explicitly built or carried;
+- a CPB pair-pair Coulomb source record remains missing.
+
 ### Coulomb Port Map From Current Cartesian/WL Code
 
 The repo already has working Cartesian/White-Lindsey Coulomb machinery. The CPB

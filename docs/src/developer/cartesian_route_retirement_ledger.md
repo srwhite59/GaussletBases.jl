@@ -336,6 +336,18 @@ paths from becoming new route authority.
   submatrix fill to a CPB-local by-center one-body kernel and the pair-factor
   interaction fill to a CPB pair-pair density-density record. Existing global
   Hamiltonian/export tests remain oracle surfaces only.
+- A metadata-only parent Coulomb source adapter now exists as
+  `CartesianParentGaussletBases.parent_coulomb_axis_source_summary`. It consumes
+  existing structured inputs: parent axis bundle, `CoulombGaussianExpansion`,
+  and optional center metadata from route/parent/QW objects. It reports compact
+  availability and source paths for expansion coefficients/exponents,
+  Gaussian one-body ingredients, electron-electron pair-axis ingredients, and
+  center metadata. The current expected fingerprint remains partial:
+  electron-electron pair-axis ingredients can be available, but per-center
+  electron-nuclear axis term tables and CPB pair-pair Coulomb source records
+  are not built or carried by this adapter. No numerical Coulomb block, CPB
+  Coulomb kernel, WL/PQS realization, route/global placement, Hamiltonian
+  assembly, IDA/MWG/PQS semantic change, export, or artifact was added.
 - The next overlap implementation boundary is no longer additional placement
   fingerprinting. First decide the CPB operator-block and WL/PQS realization
   design: what local block objects exist, how White-Lindsey consumes them, how
