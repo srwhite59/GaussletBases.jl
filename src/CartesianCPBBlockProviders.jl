@@ -11,9 +11,13 @@ const _LOCAL_ORDERING = :parent_compatible_x_slowest_z_fastest
 export CPBIntervalPair3D,
        CPBOverlapAxisBlockSet,
        CPBOverlapDenseBlock,
+       CPBLocalOverlapBlockRecord,
+       CPBLocalOverlapBlockCollection,
        cpb_interval_pair,
        cpb_overlap_axis_blocks,
        cpb_overlap_dense_block,
+       cpb_local_overlap_block_record,
+       cpb_local_overlap_block_collection,
        summary
 
 """
@@ -58,9 +62,35 @@ struct CPBOverlapDenseBlock{S,D,M}
     metadata::M
 end
 
+"""
+    CPBLocalOverlapBlockRecord
+
+One local CPB overlap provider output prepared for future collection and
+placement layers. The source block is kept by reference; metadata remains a
+compact fingerprint and does not duplicate dense numerical payloads.
+"""
+struct CPBLocalOverlapBlockRecord{K,S,M}
+    block_key::K
+    source_block::S
+    metadata::M
+end
+
+"""
+    CPBLocalOverlapBlockCollection
+
+Compact collection of local CPB overlap block records. This layer does not
+assign placement, infer retained transforms, or assemble a global matrix.
+"""
+struct CPBLocalOverlapBlockCollection{R,M}
+    records::R
+    metadata::M
+end
+
 summary(pair::CPBIntervalPair3D) = pair.metadata
 summary(block_set::CPBOverlapAxisBlockSet) = block_set.metadata
 summary(block::CPBOverlapDenseBlock) = block.metadata
+summary(record::CPBLocalOverlapBlockRecord) = record.metadata
+summary(collection::CPBLocalOverlapBlockCollection) = collection.metadata
 
 function cpb_interval_pair(
     parent::CPGB.CartesianParentGaussletBasis3D,
@@ -408,6 +438,238 @@ function _cpb_overlap_dense_block_summary(
         dense_local_block_materialized = available,
         route_driver_wiring = false,
         global_matrix_materialized = false,
+        hamiltonian_data_materialized = false,
+        coulomb_data_materialized = false,
+        ida_mwg_semantics = false,
+        exports_or_artifacts = false,
+    )
+end
+
+function cpb_local_overlap_block_record(
+    source_block;
+    block_key = :local_overlap_block,
+)
+    source_summary = summary(source_block)
+    record_summary = _cpb_local_overlap_block_record_summary(
+        block_key,
+        source_block,
+        source_summary,
+    )
+    return CPBLocalOverlapBlockRecord(block_key, source_block, record_summary)
+end
+
+function _cpb_local_overlap_block_record_summary(
+    block_key,
+    source_block::CPBOverlapDenseBlock,
+    dense_block_summary,
+)
+    axis_block_summary = dense_block_summary.source_axis_block_summary
+    interval_summary = axis_block_summary.interval_pair_summary
+    available =
+        dense_block_summary.status === :materialized_cpb_overlap_dense_block
+    status =
+        available ?
+        :available_cpb_local_overlap_block_record :
+        :blocked_cpb_local_overlap_block_record
+    blocker =
+        available ?
+        nothing :
+        _cpb_local_overlap_source_blocker(dense_block_summary)
+    return _cpb_local_overlap_block_record_summary(
+        block_key,
+        :cpb_overlap_dense_block,
+        status,
+        blocker,
+        interval_summary,
+        axis_block_summary,
+        dense_block_summary,
+        dense_block_summary.dense_block_available,
+        dense_block_summary.dense_block_shape,
+        dense_block_summary.local_ordering,
+        dense_block_summary.factor_space,
+        dense_block_summary.factor_convention,
+        dense_block_summary.normalization_convention,
+        dense_block_summary.index_domain,
+        dense_block_summary.index_domain_source,
+        dense_block_summary.index_domain_status,
+    )
+end
+
+function _cpb_local_overlap_block_record_summary(
+    block_key,
+    source_block::CPBOverlapAxisBlockSet,
+    axis_block_summary,
+)
+    interval_summary = axis_block_summary.interval_pair_summary
+    available = axis_block_summary.status === :available_cpb_overlap_axis_blocks
+    status =
+        available ?
+        :available_cpb_local_overlap_block_record :
+        :blocked_cpb_local_overlap_block_record
+    blocker =
+        available ?
+        nothing :
+        _cpb_local_overlap_source_blocker(axis_block_summary)
+    return _cpb_local_overlap_block_record_summary(
+        block_key,
+        :cpb_overlap_axis_block_set,
+        status,
+        blocker,
+        interval_summary,
+        axis_block_summary,
+        nothing,
+        false,
+        :not_materialized,
+        axis_block_summary.local_ordering,
+        axis_block_summary.factor_space,
+        axis_block_summary.factor_convention,
+        axis_block_summary.normalization_convention,
+        axis_block_summary.index_domain,
+        axis_block_summary.index_domain_source,
+        axis_block_summary.index_domain_status,
+    )
+end
+
+function _cpb_local_overlap_source_blocker(source_summary)
+    isnothing(source_summary.blocker) && return :unavailable_cpb_local_overlap_source_block
+    return source_summary.blocker
+end
+
+function _cpb_local_overlap_block_record_summary(
+    block_key,
+    source_kind::Symbol,
+    status::Symbol,
+    blocker,
+    interval_summary,
+    axis_block_summary,
+    dense_block_summary,
+    dense_block_available::Bool,
+    dense_block_shape,
+    local_ordering,
+    factor_space,
+    factor_convention,
+    normalization_convention,
+    index_domain,
+    index_domain_source,
+    index_domain_status,
+)
+    return (;
+        object_kind = :cartesian_cpb_local_overlap_block_record_summary,
+        term = :overlap,
+        block_key,
+        source_kind,
+        status,
+        blocker,
+        left_cpb_summary = (;
+            intervals = interval_summary.left_intervals,
+            shape = interval_summary.left_shape,
+            support_count = interval_summary.left_support_count,
+        ),
+        right_cpb_summary = (;
+            intervals = interval_summary.right_intervals,
+            shape = interval_summary.right_shape,
+            support_count = interval_summary.right_support_count,
+        ),
+        interval_pair_summary = interval_summary,
+        axis_block_summary,
+        dense_block_summary,
+        dense_block_available,
+        dense_block_shape,
+        local_ordering,
+        factor_space,
+        factor_convention,
+        normalization_convention,
+        index_domain,
+        index_domain_source,
+        index_domain_status,
+        placement_status = :unassigned,
+        retained_transform_status = :unassigned,
+        global_matrix_materialized = false,
+        route_driver_wiring = false,
+        hamiltonian_data_materialized = false,
+        coulomb_data_materialized = false,
+        ida_mwg_semantics = false,
+        exports_or_artifacts = false,
+    )
+end
+
+function cpb_local_overlap_block_collection(records::Union{Tuple,AbstractVector})
+    normalized_records = _cpb_local_overlap_block_records_tuple(records)
+    collection_summary =
+        _cpb_local_overlap_block_collection_summary(normalized_records)
+    return CPBLocalOverlapBlockCollection(normalized_records, collection_summary)
+end
+
+function cpb_local_overlap_block_collection(
+    record::Union{
+        CPBLocalOverlapBlockRecord,
+        CPBOverlapDenseBlock,
+        CPBOverlapAxisBlockSet,
+    },
+    records...,
+)
+    return cpb_local_overlap_block_collection((record, records...))
+end
+
+function _cpb_local_overlap_block_records_tuple(records)
+    records isa Tuple && return _cpb_local_overlap_block_records_tuple(records, Val(:tuple))
+    return _cpb_local_overlap_block_records_tuple(Tuple(records), Val(:tuple))
+end
+
+function _cpb_local_overlap_block_records_tuple(records::Tuple, ::Val{:tuple})
+    return Tuple(
+        _cpb_local_overlap_block_record_from_source(record, index)
+        for (index, record) in enumerate(records)
+    )
+end
+
+function _cpb_local_overlap_block_record_from_source(
+    record::CPBLocalOverlapBlockRecord,
+    _index::Integer,
+)
+    return record
+end
+
+function _cpb_local_overlap_block_record_from_source(source_block, index::Integer)
+    return cpb_local_overlap_block_record(
+        source_block;
+        block_key = Symbol("local_overlap_block_", index),
+    )
+end
+
+function _cpb_local_overlap_block_collection_summary(records::Tuple)
+    record_summaries = Tuple(summary(record) for record in records)
+    blocked = filter(record -> record.status !== :available_cpb_local_overlap_block_record,
+        record_summaries)
+    empty = isempty(records)
+    status =
+        empty ?
+        :blocked_cpb_local_overlap_block_collection :
+        isempty(blocked) ?
+        :available_cpb_local_overlap_block_collection :
+        :blocked_cpb_local_overlap_block_collection
+    blocker =
+        empty ?
+        :empty_cpb_local_overlap_block_collection :
+        isempty(blocked) ?
+        nothing :
+        :blocked_cpb_local_overlap_block_records
+    return (;
+        object_kind = :cartesian_cpb_local_overlap_block_collection_summary,
+        status,
+        blocker,
+        record_count = length(records),
+        record_summaries,
+        terms = Tuple(unique(record.term for record in record_summaries)),
+        block_keys = Tuple(record.block_key for record in record_summaries),
+        dense_block_count =
+            count(record -> record.dense_block_available, record_summaries),
+        blocked_record_count = length(blocked),
+        blocked_record_blockers = Tuple(record.blocker for record in blocked),
+        placement_status = :unassigned,
+        retained_transform_status = :unassigned,
+        global_matrix_materialized = false,
+        route_driver_wiring = false,
         hamiltonian_data_materialized = false,
         coulomb_data_materialized = false,
         ida_mwg_semantics = false,
