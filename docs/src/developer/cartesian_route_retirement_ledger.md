@@ -84,6 +84,19 @@ paths from becoming new route authority.
 - Private overlap input facts now label the 1D factor space and convention
   explicitly, following the legacy PGDG lesson that overlap factors are
   axis-space objects with a specific contraction convention.
+- Real dry-run overlap fingerprints currently split by parent-axis construction
+  mode. The manual-count dry report keeps `probe_parent_axis_construction =
+  false`, derives `global_dimension = 221` from retained-dimension
+  compatibility and `parent_axis_counts = (5, 5, 5)` from route-axis counts, but
+  remains blocked on `:missing_parent_axis_bundle_overlap_factors`. The
+  probe-enabled dry report carries a structured
+  `route_materializer_payload.parent_axis_bundle_object`; private overlap input
+  facts can read that object as
+  `:route_materializer_payload_parent_axis_bundle_object`, yielding available
+  overlap facts with factor provenance
+  `:parent_axis_bundle_pgdg_intermediate` /
+  `:axis_bundle_one_body_overlap`. This is a fingerprint of carried facts only,
+  not overlap driver adoption or route retirement.
 - Selected White--Lindsey old-oracle equivalence currently covers overlap,
   kinetic, position_x, position_y, position_z, x2_x, x2_y, and x2_z.
 - `src/cartesian_pair_block_materialization/one_body_global_matrix_helpers.jl`
