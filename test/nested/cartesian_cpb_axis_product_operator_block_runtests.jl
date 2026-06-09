@@ -208,13 +208,52 @@ function _test_one_body_axis_operator(
     @test operator_summary.route_driver_wiring === false
     @test operator_summary.route_global_matrix_materialized === false
     @test operator_summary.global_matrix_materialized === false
+    @test operator_summary.hamiltonian_data_materialized === false
+    @test operator_summary.coulomb_data_materialized === false
+    @test operator_summary.ida_mwg_semantics === false
+    @test operator_summary.pqs_lowdin_materialized === false
+    @test operator_summary.pqs_shell_projection_materialized === false
+    @test operator_summary.exports_or_artifacts === false
     @test !hasproperty(operator_summary, :dense_block)
     @test !hasproperty(operator_summary, :axis_ops)
+    @test !hasproperty(operator_summary, :global_matrix)
+    @test !hasproperty(operator_summary, :route_global_matrix)
+    @test !hasproperty(operator_summary, :route_global_overlap_matrix)
     @test !hasproperty(operator_summary, :global_overlap_matrix)
     @test !hasproperty(operator_summary, :retained_blocks)
     @test !isnothing(operator.axis_product_block)
     @test operator.axis_product_block.dense_block == expected_dense
     return nothing
+end
+
+function _test_blocked_one_body_axis_operator(operator, expected_blocker)
+    operator_summary = CBPOperatorBlock.summary(operator)
+    @test operator_summary.status === :blocked_cpb_one_body_axis_operator_block
+    @test operator_summary.blocker === expected_blocker
+    @test isnothing(operator.axis_product_block)
+    @test operator_summary.dense_block_available === false
+    @test operator_summary.dense_block_shape === :unavailable
+    @test operator_summary.dense_block_eltype === :unavailable
+    @test operator_summary.provider_level_local_matrix_materialized === false
+    @test operator_summary.realization_status === :unrealized
+    @test operator_summary.route_global_status === :unassigned
+    @test operator_summary.route_driver_wiring === false
+    @test operator_summary.route_global_matrix_materialized === false
+    @test operator_summary.global_matrix_materialized === false
+    @test operator_summary.hamiltonian_data_materialized === false
+    @test operator_summary.coulomb_data_materialized === false
+    @test operator_summary.ida_mwg_semantics === false
+    @test operator_summary.pqs_lowdin_materialized === false
+    @test operator_summary.pqs_shell_projection_materialized === false
+    @test operator_summary.exports_or_artifacts === false
+    @test !hasproperty(operator_summary, :dense_block)
+    @test !hasproperty(operator_summary, :axis_ops)
+    @test !hasproperty(operator_summary, :global_matrix)
+    @test !hasproperty(operator_summary, :route_global_matrix)
+    @test !hasproperty(operator_summary, :route_global_overlap_matrix)
+    @test !hasproperty(operator_summary, :global_overlap_matrix)
+    @test !hasproperty(operator_summary, :retained_blocks)
+    return operator_summary
 end
 
 function _operator_block_parent(; count = 3)
@@ -642,6 +681,97 @@ end
             x2_1d,
         ),
     )
+
+    missing_position_summary = _test_blocked_one_body_axis_operator(
+        CBPOperatorBlock.cpb_position_operator_block(
+            kinetic_packet,
+            interval_pair;
+            axis = :x,
+        ),
+        :missing_parent_axis_bundle_position_factors,
+    )
+    @test missing_position_summary.term === :position_x
+    @test missing_position_summary.one_body_factor_name === :position
+    @test missing_position_summary.active_axis === :x
+
+    missing_x2_summary = _test_blocked_one_body_axis_operator(
+        CBPOperatorBlock.cpb_x2_operator_block(
+            kinetic_packet,
+            interval_pair;
+            axis = :y,
+        ),
+        :missing_parent_axis_bundle_x2_factors,
+    )
+    @test missing_x2_summary.term === :x2_y
+    @test missing_x2_summary.one_body_factor_name === :x2
+    @test missing_x2_summary.active_axis === :y
+
+    unsupported_position_axis_summary = _test_blocked_one_body_axis_operator(
+        CBPOperatorBlock.cpb_position_operator_block(
+            one_body_packet,
+            interval_pair;
+            axis = :q,
+        ),
+        :unsupported_position_axis,
+    )
+    @test unsupported_position_axis_summary.term === :position_q
+    @test unsupported_position_axis_summary.active_axis === :q
+
+    unsupported_x2_axis_summary = _test_blocked_one_body_axis_operator(
+        CBPOperatorBlock.cpb_x2_operator_block(
+            one_body_packet,
+            interval_pair;
+            axis = :q,
+        ),
+        :unsupported_x2_axis,
+    )
+    @test unsupported_x2_axis_summary.term === :x2_q
+    @test unsupported_x2_axis_summary.active_axis === :q
+
+    nonsliceable_position_packet =
+        CPGBOperatorBlock.CartesianParentAxisFactorPacket3D(
+            one_body_packet.parent,
+            one_body_packet.overlap_1d,
+            one_body_packet.kinetic_1d,
+            one_body_packet.position_1d,
+            one_body_packet.x2_1d,
+            merge(
+                CPGBOperatorBlock.summary(one_body_packet),
+                (; position_sliceable_by_cpb = false),
+            ),
+        )
+    nonsliceable_position_summary = _test_blocked_one_body_axis_operator(
+        CBPOperatorBlock.cpb_position_operator_block(
+            nonsliceable_position_packet,
+            interval_pair;
+            axis = :x,
+        ),
+        :position_packet_not_cpb_sliceable,
+    )
+    @test nonsliceable_position_summary.term === :position_x
+
+    nonsliceable_x2_packet =
+        CPGBOperatorBlock.CartesianParentAxisFactorPacket3D(
+            one_body_packet.parent,
+            one_body_packet.overlap_1d,
+            one_body_packet.kinetic_1d,
+            one_body_packet.position_1d,
+            one_body_packet.x2_1d,
+            merge(
+                CPGBOperatorBlock.summary(one_body_packet),
+                (; x2_sliceable_by_cpb = false),
+            ),
+        )
+    nonsliceable_x2_summary = _test_blocked_one_body_axis_operator(
+        CBPOperatorBlock.cpb_x2_operator_block(
+            nonsliceable_x2_packet,
+            interval_pair;
+            axis = :z,
+        ),
+        :x2_packet_not_cpb_sliceable,
+    )
+    @test nonsliceable_x2_summary.term === :x2_z
+
     position_x_ops = (x = position_1d.x, y = overlap_1d.y, z = overlap_1d.z)
     position_y_ops = (x = overlap_1d.x, y = position_1d.y, z = overlap_1d.z)
     position_z_ops = (x = overlap_1d.x, y = overlap_1d.y, z = position_1d.z)
