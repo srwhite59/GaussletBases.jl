@@ -361,17 +361,26 @@ are `:missing_retained_transform_source` and
 `CPBSourcePairPlacementRange` can be built from real route facts without
 inventing aliases or changing semantics.
 
-That result keeps A blocked unless a nearby real carry source is identified.
-The next implementation step should therefore be B, the tiny synthetic
-provider-level numerical placement pilot, unless manager direction asks for a
-broader retained-unit metadata audit first.
+That result kept A blocked unless a nearby real carry source was identified.
+The synthetic provider-level numerical pilot was implemented to test local
+retained-transform mechanics. With that pilot in place, the next step should no
+longer be more placement machinery. The next decision should be either a
+broader retained-unit/terminal-route audit or a reviewed CPB operator-block and
+White-Lindsey/PQS realization design.
 
-The synthetic provider-level placement pilot now exists for one fully reviewed
-local dense overlap block and for a small reviewed local overlap collection.
-For one block, it consumes a `CPBOverlapDenseBlock`, available left and right
-`CPBRetainedTransformCarry` objects, an available
-`CPBSourcePairPlacementRange`, and reviewed `CPBOverlapPlacementFacts`, then
-applies:
+Architecture pivot: the synthetic provider-level placement pilot is now best
+understood as evidence for local realization mechanics over CPB operator
+blocks, not as the beginning of route-global overlap placement machinery. The
+CPB layer builds rectangular local operator blocks. White-Lindsey can consume
+those blocks nearly directly, while PQS applies local retained transforms. The
+route/global layer assigns retained/global ranges and accumulates matrices
+later.
+
+The synthetic pilot now exists for one fully reviewed local dense overlap block
+and for a small reviewed local overlap collection. For one block, it consumes a
+`CPBOverlapDenseBlock`, available left and right `CPBRetainedTransformCarry`
+objects, an available `CPBSourcePairPlacementRange`, and reviewed
+`CPBOverlapPlacementFacts`, then applies:
 
 ```text
 O_retained = T_left' * O_cpb * T_right
@@ -430,8 +439,10 @@ Real route placement is still blocked. The missing route-facing sources are:
 The recommended next choice is not more synthetic placement feature work.
 Prefer either architectural review before any route wiring, or a broader
 retained-unit/terminal-route audit for real transform and range sources. A
-separate design pass is needed to decide how real retained transforms should be
-produced and carried before any route-global overlap placement is attempted.
+separate design pass is needed to decide how real White-Lindsey and PQS
+realizations should consume CPB operator blocks and how real retained
+transforms and ranges should be produced. Do not keep adding placement metadata
+layers before that realization design exists.
 
 ## Structured Carry Objects For Placement
 

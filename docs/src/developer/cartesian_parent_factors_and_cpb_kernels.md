@@ -155,6 +155,54 @@ factors, operator terms, Hamiltonian concepts, route reports, or retained-space
 state. The CPB block-provider layer is the function group that sits above both
 CPB geometry and parent-owned factors.
 
+## Architecture Pivot: CPB-Local Operator Blocks
+
+The overlap placement pilot should now be read as evidence for a CPB-local
+operator-block layer, not as route-global placement machinery. The useful
+organizing split is:
+
+```text
+parent / axis-factor layer
+  owns universal 1D factors tied to the Cartesian parent
+
+CPB operator layer
+  builds local rectangular CPB operator blocks for source CPB pairs
+  may materialize dense provider-level local matrices
+  remains realization-neutral and route-neutral
+
+realization layer
+  White-Lindsey consumes CPB blocks nearly directly
+  PQS applies local retained transforms:
+    O_retained = T_left' * O_cpb * T_right
+
+route/global layer
+  assigns retained/global ranges
+  accumulates route/global matrices later
+```
+
+The CPB layer is the right place to fill local operator blocks because its
+geometry is rectangular, local, and parent-axis-addressable. It sees both the
+parent-axis factor contract and the left/right CPB intervals, but it does not
+own retained-unit choices, shell realization, Lowdin cleanup, pair-block
+placement, or global matrix ranges.
+
+Overlap is the current pilot term. Kinetic, position, and x2 should later
+become analogous one-body CPB operator blocks over the same geometry and
+axis-factor contracts. Coulomb and other two-body terms should also remain
+CPB-local at this layer, but they may require pair-pair windows or factorized
+records rather than the one-body `(left_cpb, right_cpb)` shape.
+
+The synthetic numerical pilot demonstrates local retained-transform mechanics:
+
+```text
+O_retained = T_left' * O_cpb * T_right
+```
+
+It does not demonstrate route-global overlap adoption. Do not continue adding
+placement metadata layers before deciding how real White-Lindsey and PQS
+realization should consume CPB operator blocks and how real retained transforms
+and ranges should be produced.
+
 ## Parent Axis Factor Packet
 
 A possible top-level shape is:
@@ -425,10 +473,10 @@ axis_order = (:x, :y, :z)
 
 The exact labels can change, but the information cannot be omitted.
 
-## CPB Block-Provider Layer
+## CPB Operator-Block Provider Layer
 
-A CPB is only coordinate-window geometry. A CPB block provider binds a parent
-factor packet to operations over CPB pairs:
+A CPB is only coordinate-window geometry. A CPB operator-block provider binds a
+parent factor packet to local operator-block operations over CPB pairs:
 
 ```julia
 struct CartesianCPBBlockProvider{P,F,M}
@@ -440,8 +488,9 @@ end
 
 The preferred module name is `CartesianCPBBlockProviders`. "Provider" is more
 accurate than "matrix kernel" for this layer because the functions may return
-views, copied slices, factored axis blocks, or dense local blocks. Dense matrix
-materialization is only one possible service, not the defining behavior.
+views, copied slices, factored axis blocks, or dense local operator blocks.
+Dense matrix materialization is only one possible service, not the defining
+behavior.
 
 The first implementation should prefer a stateless, deterministic block
 provider. Cache policy can be added as a wrapper:
@@ -546,9 +595,11 @@ using 1-based Julia indexing after adding one as needed. Retained-unit
 transforms and column ranges should not have to guess the local dense ordering.
 
 Dense CPB blocks are still local CPB product-space operator blocks. They are
-not retained blocks, not global matrices, not Hamiltonian objects, and not
-evidence of route adoption. Retained-unit transforms, PQS shell realization,
-Lowdin cleanup, and global placement remain downstream responsibilities.
+not retained blocks, not route/global matrices, not Hamiltonian objects, and
+not evidence of route adoption. White-Lindsey may consume these local blocks
+nearly directly. PQS realization applies local retained transforms such as
+`O_retained = T_left' * O_cpb * T_right`. Retained/global range assignment and
+route/global accumulation remain downstream responsibilities.
 
 CPB provider summaries should remain compact. If a provider materializes a
 dense local block, the numerical matrix belongs on the returned object field,
@@ -836,6 +887,14 @@ provider outputs into compact collection metadata. It remains local CPB overlap
 only. It is not route/global overlap adoption, does not place a global matrix,
 does not assign retained transforms, and does not change private route-driver
 overlap behavior.
+
+The later synthetic retained-transform pilot should be treated as proof that
+local CPB operator blocks can be transformed by realization-specific maps, not
+as proof that route/global placement is ready. The next useful implementation,
+if any, should be an overlap-only cleanup/renaming pass or a small generic
+`CPBOperatorBlock` design. It should not be another placement metadata layer
+unless a reviewed White-Lindsey/PQS realization design has first identified
+real retained transforms and range ownership.
 
 ## What This Does Not Claim
 

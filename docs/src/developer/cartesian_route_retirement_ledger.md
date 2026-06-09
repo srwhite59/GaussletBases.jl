@@ -225,12 +225,28 @@ paths from becoming new route authority.
   terminal-route audit before any further implementation; do not keep extending
   synthetic placement features without a reviewed plan for real transforms and
   ranges.
-- The next overlap implementation boundary is no longer additional
-  fingerprinting. It is a reviewed placement design and implementation plan for
-  turning local CPB overlap collections into retained/global overlap. That plan
-  must define retained transform objects, column/range placement, global
-  dimension, accumulation rule, ordering, and blockers before any matrix
-  placement code is written.
+- Architecture pivot: the overlap pilot is better evidence for a CPB-local
+  operator-block layer than for route-global placement machinery. The parent /
+  axis-factor layer owns universal 1D factors. The CPB operator layer fills
+  rectangular local blocks for source CPB pairs and may materialize dense
+  provider-level local matrices while remaining realization-neutral and
+  route-neutral. The realization layer then differs by route: White-Lindsey can
+  consume CPB blocks nearly directly, while PQS applies local retained
+  transforms such as `O_retained = T_left' * O_cpb * T_right`. The route/global
+  layer should assign retained/global ranges and accumulate global matrices
+  later. Overlap is the current pilot term; kinetic, position, and x2 should
+  become analogous one-body CPB operator blocks later, and Coulomb/two-body
+  work should remain CPB-local but may require pair-pair or factorized records.
+  Do not add more placement metadata layers before a reviewed WL/PQS
+  realization design identifies real transform and range ownership. The next
+  likely implementation should be an overlap-only cleanup/renaming pass or a
+  small generic `CPBOperatorBlock` design, not more placement code.
+- The next overlap implementation boundary is no longer additional placement
+  fingerprinting. First decide the CPB operator-block and WL/PQS realization
+  design: what local block objects exist, how White-Lindsey consumes them, how
+  PQS obtains real retained transforms, and where source-pair ranges are owned.
+  Only after that should a route/global placement plan define column/range
+  placement, global dimension, accumulation rule, ordering, and blockers.
 - Selected White--Lindsey old-oracle equivalence currently covers overlap,
   kinetic, position_x, position_y, position_z, x2_x, x2_y, and x2_z.
 - `src/cartesian_pair_block_materialization/one_body_global_matrix_helpers.jl`
