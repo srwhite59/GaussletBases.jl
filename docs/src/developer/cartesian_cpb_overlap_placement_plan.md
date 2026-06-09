@@ -236,3 +236,132 @@ dimension source in that fixture. It still does not carry structured retained
 transforms, source-pair retained column ranges for `(:product, :product)`, a
 reviewed overlap placement plan, or an accumulation rule. The next code step
 should design those structured carry objects before numerical placement.
+
+## Structured Carry Objects For Placement
+
+The next implementation boundary should introduce compact carry objects before
+any numerical placement code. These objects should be private or internal at
+first and should be consumed by the placement skeleton. They should not make
+global overlap available by themselves.
+
+### CPBRetainedTransformCarry
+
+`CPBRetainedTransformCarry` should describe one side of one local CPB overlap
+record. It should be keyed by side and by local source identity, not by a flat
+report field. A transform can be shared by key across records when the same
+source CPB and retained range are reused, but the placement skeleton should
+resolve that sharing into per-record left/right carry summaries.
+
+Required fields:
+
+- `side = :left` or `:right`;
+- `block_key` or pair key;
+- source CPB summary or source CPB key;
+- source local CPB product-space shape;
+- source local ordering, currently
+  `:parent_compatible_x_slowest_z_fastest`;
+- target retained column count;
+- target retained column range;
+- transform object or transform reference;
+- transform convention and provenance;
+- status;
+- blocker.
+
+The transform carry should answer only whether a transform is available and
+contractually compatible with the local source shape and retained target. It
+should not apply the transform. Validation should check:
+
+- source shape matches the local CPB block side shape;
+- source ordering matches, or an explicit permutation/conversion is carried;
+- target retained column count matches `length(target_retained_column_range)`;
+- transform matrix or reference dimensions match source support count and
+  target retained count.
+
+Expected blockers include:
+
+- `:missing_retained_transform`;
+- `:retained_transform_source_shape_mismatch`;
+- `:retained_transform_target_count_mismatch`;
+- `:retained_transform_ordering_mismatch`.
+
+### CPBSourcePairPlacementRange
+
+`CPBSourcePairPlacementRange` should describe the retained column ranges for a
+local source-pair record. Ranges should remain separate from transform carry
+objects. A transform may know its own target range, but the source-pair range
+object is the placement authority that says where the left and right retained
+blocks would land in the global overlap matrix.
+
+Required fields:
+
+- `block_key` or pair key;
+- `left_column_range`;
+- `right_column_range`;
+- global dimension;
+- global dimension source;
+- range source and provenance;
+- status;
+- blocker.
+
+Validation should check:
+
+- left and right ranges are present;
+- range lengths match the left and right transform target column counts;
+- ranges lie inside the global dimension;
+- range source is a reviewed retained layout or placement plan, not old
+  support-row or fixed-block authority.
+
+Preferred global dimension source is retained-unit column ranges or another
+structured retained layout. `retained_dimension` remains a compatibility
+fallback only and must be labeled as such.
+
+Expected blockers include:
+
+- `:missing_left_column_range`;
+- `:missing_right_column_range`;
+- `:left_column_range_dimension_mismatch`;
+- `:right_column_range_dimension_mismatch`;
+- `:missing_global_dimension`.
+
+### CPBOverlapPlacementFacts
+
+`CPBOverlapPlacementFacts` should bundle the available carry objects for one
+local overlap collection. It is the object that a future placement adapter
+should consume instead of loose transform, range, dimension, and rule
+arguments.
+
+Required fields:
+
+- local CPB overlap collection reference or compact summary;
+- left and right `CPBRetainedTransformCarry` summaries by record;
+- `CPBSourcePairPlacementRange` summaries by record;
+- global dimension and source;
+- placement-plan status;
+- accumulation-rule status;
+- available requirements;
+- missing requirements;
+- status;
+- blocker;
+- route/global nonclaim flags.
+
+Transforms are logically per side of each placement record. They may be stored
+or cached by CPB key, retained-unit key, or another reviewed source key, but
+the facts bundle should expose record-level left/right carry summaries so
+shape and range validation is local and auditable.
+
+The facts bundle should remain blocked unless all required carries are
+available and a reviewed placement plan plus accumulation rule are present. It
+should still not materialize a global matrix; it should only decide whether the
+inputs are coherent enough for a later placement engine.
+
+Nonclaims for these carry objects:
+
+- no placement code;
+- no transform application;
+- no matrix assembly;
+- no global overlap availability;
+- no kinetic, position, x2, or Coulomb work;
+- no Hamiltonian assembly;
+- no IDA/MWG semantics;
+- no PQS Lowdin or projection;
+- no exports or artifacts.
