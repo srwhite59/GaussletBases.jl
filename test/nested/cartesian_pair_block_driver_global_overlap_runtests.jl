@@ -167,6 +167,39 @@ function _driver_overlap_example_overrides()
     )
 end
 
+function _driver_overlap_real_report_fingerprint()
+    return GaussletBases._pqs_source_box_route_driver_dry_run(
+        route_family = :pqs_source_box,
+        route_kind = :overlap_facts_fingerprint_probe,
+        atom_symbols = ("Be", "Be"),
+        nuclear_charges = (4, 4),
+        atom_locations = ((-2.0, 0.0, 0.0), (2.0, 0.0, 0.0)),
+        radius = 15.0,
+        parent_axis_counts = (x = 5, y = 5, z = 5),
+        map_backend = :pgdg_localized_experimental,
+        q = 5,
+        n_s = 5,
+        reference_spacing = 1.0,
+        tail_spacing = 10.0,
+        q_to_core_spacing_rule = :standard_pqs_ns_equals_q,
+        core_spacing = nothing,
+        probe_parent_axis_construction = false,
+        parent_axis_probe_backend = :pgdg_localized_experimental,
+        parent_axis_probe_family = :G10,
+        probe_raw_product_box_plans = false,
+        raw_product_box_probe_backend = :pgdg_localized_experimental,
+        route_shape = (:pqs_left, :product, :pqs_right),
+        product_body_rule = :centered_single_z_slab,
+        pqs_retained_rule = :boundary_comx_product_mode_selection,
+        product_retained_rule = :product_doside_retained_unit,
+        terms = (:overlap,),
+        pair_factor_normalization = :density_normalized,
+        support_dense_direct_allowed = false,
+        reference_only_authorities =
+            (:support_row_oracle, :dense_parent_projection),
+    )
+end
+
 function _test_driver_overlap_nonclaim_flags(result)
     @test !result.route_driver_wiring
     @test !result.hamiltonian_data_materialized
@@ -480,6 +513,25 @@ end
     @test !materialized.private_global_overlap_summary.artifacts_materialized
     @test !materialized.private_global_overlap_summary.exports_materialized
     @test !materialized.private_global_overlap_summary.full_white_lindsey_route_assembled
+end
+
+@testset "PQS route driver private global overlap real report fingerprint" begin
+    report = _driver_overlap_real_report_fingerprint()
+    facts =
+        GaussletBases._pqs_source_box_route_driver_private_global_overlap_input_facts(
+            report,
+        )
+
+    @test hasproperty(report, :low_order_route_summary)
+    @test facts.status === :blocked_private_global_overlap_input_facts
+    @test facts.blocker === :missing_parent_axis_bundle_overlap_factors
+    @test facts.global_dimension == 221
+    @test facts.final_layout_source === :retained_dimension_compatibility
+    @test facts.parent_axis_counts == (5, 5, 5)
+    @test facts.parent_axis_counts_source === :report_route_axis_counts
+    @test facts.axis_bundle_source === :unavailable
+    @test facts.factor_space === :unavailable
+    @test facts.factor_convention === :unavailable
 end
 
 @testset "PQS route driver private global overlap option config" begin
