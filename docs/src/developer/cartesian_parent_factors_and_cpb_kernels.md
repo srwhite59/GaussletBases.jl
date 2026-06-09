@@ -1,4 +1,4 @@
-# Cartesian Parent Factors and CPB Matrix Kernels
+# Cartesian Parent Factors and CPB Block Providers
 
 Date: 2026-06-09
 
@@ -21,7 +21,7 @@ tests show two different real dry-run report states:
 That is useful evidence, but it should not turn route-driver report payloads
 into the long-term owner of parent operator data. The better direction is to
 promote the underlying idea into a parent-owned axis factor packet and a CPB
-matrix-kernel layer.
+block-provider layer.
 
 ## Core Correction
 
@@ -67,7 +67,10 @@ rediscover or reconstruct universal axis factors as private report payloads.
 
 ## Module Boundary Direction
 
-This design should preserve the current module split:
+This design should preserve the current conceptual split, but "parent layer"
+should map to a Julia module boundary. Parent-owned factors should live in the
+`CartesianParentGaussletBases` module namespace, even if their implementation
+is split into separate files for readability.
 
 ```text
 cartesian_cpb/
@@ -75,21 +78,40 @@ cartesian_cpb/
 
 CartesianParentGaussletBases.jl
   route-neutral Cartesian parent identity
-
-future CartesianParentAxisFactors
   parent-owned one-body and Coulomb axis factor packets
+  parent factor provenance, convention, and index-domain summaries
 
-future CartesianCPBMatrixKernels
-  depends on CPB geometry plus parent factor packets
-  returns CPB-local axis blocks or optional dense local blocks
+future CartesianCPBBlockProviders
+  depends on CPB geometry plus CartesianParentGaussletBases
+  returns CPB-local axis blocks, slices, factored blocks, or optional dense
+  local blocks
 
 route helpers and materializers
-  consume parent factors and CPB kernels
+  consume parent factors and CPB block providers
 ```
 
 Parent-dependent code should not move into `CartesianCPB`. CPB geometry remains
-the coordinate-window language; parent factors and CPB kernels are separate
-layers above it.
+the coordinate-window language. Parent factors are part of the parent module;
+CPB block providers are the layer above both parent factors and CPB geometry.
+
+The intended namespace direction is:
+
+```julia
+GaussletBases.CartesianParentGaussletBases.parent_overlap_axis_factor_packet(
+    parent,
+    axis_bundle,
+)
+
+GaussletBases.CartesianCPBBlockProviders.cpb_interval_pair(
+    parent,
+    left_cpb,
+    right_cpb,
+)
+```
+
+The old spelling with a sibling `CartesianParentAxisFactors` namespace should
+be treated as a temporary implementation shape, not the long-term module
+contract.
 
 ## Proposed Ownership Layers
 
@@ -118,7 +140,7 @@ CartesianCPB
     boundary-stratum decomposition
     support counts
 
-CartesianCPBBlockProvider / CartesianCPBMatrixKernel
+CartesianCPBBlockProvider
   bound operations:
     parent factors + CPB windows -> local axis blocks
     parent factors + CPB windows -> optional local dense blocks
@@ -130,8 +152,8 @@ Shellification / PQS / retained-unit / pair-block layers
 
 `CartesianCPB` should remain pure geometry. It should not acquire parent
 factors, operator terms, Hamiltonian concepts, route reports, or retained-space
-state. The CPB block-provider layer is the function group that sits above CPB
-geometry.
+state. The CPB block-provider layer is the function group that sits above both
+CPB geometry and parent-owned factors.
 
 ## Parent Axis Factor Packet
 
@@ -229,8 +251,8 @@ Z3 = kron(Sx, Sy, Xz)
 ```
 
 The parent factor packet should not materialize these full 3D parent matrices
-as routine working data. Later CPB kernels and retained transforms can slice
-and contract the axis factors.
+as routine working data. Later CPB block providers and retained transforms can
+slice and contract the axis factors.
 
 ### Coulomb Subobject
 
@@ -299,9 +321,10 @@ pair-block placement.
 Electron-nuclear factors belong naturally in the parent Coulomb or potential
 factor packet because their source is a Gaussian expansion of a Coulomb
 potential. Downstream, however, electron-nuclear attraction is consumed by a
-one-body CPB kernel: one bra CPB and one ket CPB. Electron-electron factors are
-consumed by a two-body CPB kernel: two bra/ket CPB pairs. Keeping that arity
-distinction explicit is required for later API names and tests.
+one-body CPB block provider: one bra CPB and one ket CPB. Electron-electron
+factors are consumed by a two-body CPB block provider: two bra/ket CPB pairs.
+Keeping that arity distinction explicit is required for later API names and
+tests.
 
 ### Provenance and Metadata
 
@@ -344,8 +367,8 @@ labels so downstream code does not infer semantics from field names alone.
 ### Index-Space Contract
 
 Every factor must also state the index domain its rows, columns, or tensor axes
-use. CPB kernels can slice a factor by CPB intervals only when the factor is in
-a CPB-addressable parent-axis index domain.
+use. CPB block providers can slice a factor by CPB intervals only when the
+factor is in a CPB-addressable parent-axis index domain.
 
 This is separate from mathematical factor space. For example:
 
@@ -383,33 +406,35 @@ axis_order = (:x, :y, :z)
 
 The exact labels can change, but the information cannot be omitted.
 
-## CPB Matrix-Kernel Layer
+## CPB Block-Provider Layer
 
-A CPB is only coordinate-window geometry. A CPB block provider or matrix kernel
-binds a parent factor packet to operations over CPB pairs:
+A CPB is only coordinate-window geometry. A CPB block provider binds a parent
+factor packet to operations over CPB pairs:
 
 ```julia
-struct CartesianCPBMatrixKernel{P,F,M}
+struct CartesianCPBBlockProvider{P,F,M}
     parent::P
     parent_factors::F
     metadata::M
 end
 ```
 
-The first implementation should prefer a stateless, deterministic matrix
-kernel. Cache policy can be added as a wrapper:
+The preferred module name is `CartesianCPBBlockProviders`. "Provider" is more
+accurate than "matrix kernel" for this layer because the functions may return
+views, copied slices, factored axis blocks, or dense local blocks. Dense matrix
+materialization is only one possible service, not the defining behavior.
+
+The first implementation should prefer a stateless, deterministic block
+provider. Cache policy can be added as a wrapper:
 
 ```julia
 struct CachedCartesianCPBBlockProvider{K,C,M}
-    kernel::K
+    provider::K
     cache::C
     metadata::M
 end
 ```
 
-The name `provider` or `kernel` is intentional. This layer does not necessarily
-allocate a matrix every time. It may return views, copied axis slices,
-factorized axis-block objects, or dense local CPB blocks depending on the API.
 Keeping cache policy out of the first scientific contract makes early tests
 smaller and avoids treating performance cache behavior as route semantics.
 
@@ -422,9 +447,9 @@ left_cpb  -> IxL, IyL, IzL
 right_cpb -> IxR, IyR, IzR
 ```
 
-The provider or kernel is the first layer that sees both parent identity and CPB
-geometry. It must validate that every CPB interval lies inside the parent box.
-This validation belongs here, not in `CartesianCPB`, because a bare CPB has no
+The provider is the first layer that sees both parent identity and CPB geometry.
+It must validate that every CPB interval lies inside the parent box. This
+validation belongs here, not in `CartesianCPB`, because a bare CPB has no
 parent.
 
 For one-body terms and electron-nuclear attraction, the provider knows how to
@@ -579,20 +604,20 @@ place into a global matrix.
 
 PQS should remain source-box-first. The source CPB is the compact product-type
 parent block where operator information is gathered before shell projection and
-Lowdin cleanup. The CPB kernel layer is a natural way to obtain source-box
-operator blocks from parent factors:
+Lowdin cleanup. The CPB block-provider layer is a natural way to obtain
+source-box operator blocks from parent factors:
 
 ```text
 parent factor packet
--> CPB kernel over source CPB pairs
+-> CPB block provider over source CPB pairs
 -> source-box local operator blocks
 -> retained-rule transforms
 -> later shell realization / Lowdin where required
 ```
 
 Support-row or shell-row contractions remain oracle/debug surfaces unless a
-reviewed framework decision promotes them. The CPB kernel layer should not make
-support-row contraction the PQS algorithm.
+reviewed framework decision promotes them. The CPB block-provider layer should
+not make support-row contraction the PQS algorithm.
 
 ## Relation to Current Private Overlap Facts
 
@@ -649,8 +674,8 @@ assembly.
 
 The migration should be incremental:
 
-0. Keep one-body CPB-pair kernels distinct from electron-electron CPB-pair-pair
-   kernels in names, tests, and returned objects.
+0. Keep one-body CPB-pair providers distinct from electron-electron
+   CPB-pair-pair providers in names, tests, and returned objects.
 1. Define a parent-layer contract for one-body axis factors, starting with
    overlap, provenance, factor convention, and index-domain labels. Map the
    existing `parent_axis_bundle_object` seed to that contract.
@@ -701,14 +726,14 @@ routes or public APIs.
   submodules under the parent layer?
 - Should electron-nuclear factors live under a Coulomb factor packet, a
   potential factor packet, or a one-body factor packet while still preserving
-  their one-body CPB-kernel consumption path?
+  their one-body CPB-provider consumption path?
 - Which factor values should be views, copied matrices, or lazy objects?
 - What parent fingerprint is stable enough for packet/parent compatibility
   checks without comparing large objects?
 - How should axis-factor caches be invalidated or shared across repeated CPB
   provider calls?
 - Should the CPB provider own a cache, or should caching be a wrapper around a
-  stateless matrix kernel?
+  stateless block provider?
 - Where should electron-nuclear Gaussian expansion policy live when different
   nuclei or ECP/reference paths need different approximations?
 - How should future CR2 exports refer to parent factors without defining repo
