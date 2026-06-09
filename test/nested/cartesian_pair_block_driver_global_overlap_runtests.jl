@@ -311,6 +311,31 @@ end
     @test structured_facts.overlap_1d_source === :report_parent_axis_bundle_object
     @test structured_facts.overlap_1d.x ≈ _driver_overlap_inputs().overlap_1d.x
 
+    missing_parent_axis_counts_facts =
+        GaussletBases._pqs_source_box_route_driver_private_global_overlap_input_facts(
+            (;
+                low_order_route_summary = (;
+                    terminal_route_state =
+                        (; pair_block_materialization_plan = plan),
+                ),
+                retained_dimension = 2,
+                parent_axis_bundle_object = _driver_overlap_axis_bundle_object(),
+            ),
+        )
+    @test missing_parent_axis_counts_facts.status ===
+          :blocked_private_global_overlap_input_facts
+    @test missing_parent_axis_counts_facts.blocker ===
+          :missing_parent_axis_counts
+    @test missing_parent_axis_counts_facts.global_dimension == 2
+    @test missing_parent_axis_counts_facts.parent_axis_counts === nothing
+    @test missing_parent_axis_counts_facts.final_layout_source ===
+          :retained_dimension_compatibility
+    @test missing_parent_axis_counts_facts.parent_axis_counts_source ===
+          :unavailable
+    @test missing_parent_axis_counts_facts.factor_space === :unavailable
+    @test missing_parent_axis_counts_facts.factor_convention === :unavailable
+    @test missing_parent_axis_counts_facts.overlap_1d === nothing
+
     missing_axis_bundle_facts =
         GaussletBases._pqs_source_box_route_driver_private_global_overlap_input_facts(
             (;
