@@ -178,16 +178,48 @@ function route_global_position_matrix(source; axis, kwargs...)
     )
 end
 
+function route_state_global_position_matrix(source; axis, kwargs...)
+    return _route_state_global_one_body_matrix(
+        source,
+        _route_global_position_term(axis);
+        kwargs...,
+    )
+end
+
 function route_global_position_x_matrix(source; kwargs...)
     return route_global_one_body_matrix(source; term = :position_x, kwargs...)
+end
+
+function route_state_global_position_x_matrix(source; kwargs...)
+    return _route_state_global_one_body_matrix(
+        source,
+        :position_x;
+        kwargs...,
+    )
 end
 
 function route_global_position_y_matrix(source; kwargs...)
     return route_global_one_body_matrix(source; term = :position_y, kwargs...)
 end
 
+function route_state_global_position_y_matrix(source; kwargs...)
+    return _route_state_global_one_body_matrix(
+        source,
+        :position_y;
+        kwargs...,
+    )
+end
+
 function route_global_position_z_matrix(source; kwargs...)
     return route_global_one_body_matrix(source; term = :position_z, kwargs...)
+end
+
+function route_state_global_position_z_matrix(source; kwargs...)
+    return _route_state_global_one_body_matrix(
+        source,
+        :position_z;
+        kwargs...,
+    )
 end
 
 function route_global_x2_matrix(source; axis, kwargs...)
@@ -198,16 +230,48 @@ function route_global_x2_matrix(source; axis, kwargs...)
     )
 end
 
+function route_state_global_x2_matrix(source; axis, kwargs...)
+    return _route_state_global_one_body_matrix(
+        source,
+        _route_global_x2_term(axis);
+        kwargs...,
+    )
+end
+
 function route_global_x2_x_matrix(source; kwargs...)
     return route_global_one_body_matrix(source; term = :x2_x, kwargs...)
+end
+
+function route_state_global_x2_x_matrix(source; kwargs...)
+    return _route_state_global_one_body_matrix(
+        source,
+        :x2_x;
+        kwargs...,
+    )
 end
 
 function route_global_x2_y_matrix(source; kwargs...)
     return route_global_one_body_matrix(source; term = :x2_y, kwargs...)
 end
 
+function route_state_global_x2_y_matrix(source; kwargs...)
+    return _route_state_global_one_body_matrix(
+        source,
+        :x2_y;
+        kwargs...,
+    )
+end
+
 function route_global_x2_z_matrix(source; kwargs...)
     return route_global_one_body_matrix(source; term = :x2_z, kwargs...)
+end
+
+function route_state_global_x2_z_matrix(source; kwargs...)
+    return _route_state_global_one_body_matrix(
+        source,
+        :x2_z;
+        kwargs...,
+    )
 end
 
 function route_global_safe_one_body_terms()
@@ -304,12 +368,12 @@ end
 function _route_state_global_one_body_matrix(
     source,
     term::Symbol;
-    global_dimension,
-    inputs,
-    provider,
-    factors,
-    factor_provider,
-    metadata,
+    global_dimension = nothing,
+    inputs = (;),
+    provider = nothing,
+    factors = nothing,
+    factor_provider = nothing,
+    metadata = (;),
 )
     plan = _route_state_global_pair_block_materialization_plan(source)
     isnothing(plan) &&
