@@ -53,12 +53,26 @@ paths from becoming new route authority.
   `:position_x`, `:position_y`, `:position_z`, `:x2_x`, `:x2_y`, and `:x2_z`.
   This is module-level adapter coverage, not route-driver wiring, term summing,
   one-body Hamiltonian construction, or Hamiltonian assembly.
+- A private route-shaped safe one-body matrix-set adapter now wraps individual
+  `route_global_one_body_matrix(...; term = ...)` calls and returns
+  term-separated result objects plus a compact summary. It does not copy dense
+  matrices out of term results, allows partial success with blocked per-term
+  results for unsupported terms, and is still not term summing, a one-body
+  Hamiltonian object, or Hamiltonian assembly. PQS source-space records remain
+  blocked inside term results until shell projection/Lowdin realization exists.
 - Selected White--Lindsey old-oracle equivalence currently covers overlap,
   kinetic, position_x, position_y, position_z, x2_x, x2_y, and x2_z.
 - `src/cartesian_pair_block_materialization/one_body_global_matrix_helpers.jl`
   owns only behavior-neutral symmetric placement validation/insertion. The
   term-specific global matrix files still own result statuses, blockers,
   object kinds, and materialization flags.
+- Route-global adapter validation should stay focused:
+  `cartesian_pair_block_route_global_one_body_adapter_runtests.jl` is the
+  broader individual-term adapter contract at about 40--45 seconds, and
+  `cartesian_pair_block_route_global_matrix_set_smoke_runtests.jl` is the
+  focused matrix-set smoke at about 40 seconds after slimming. Do not add these
+  casually to broader default runners; old-oracle tests remain gate/oracle
+  tests, not routine per-pass checks.
 - The next replacement slice should decide whether to broaden selected
   safe-term oracle coverage or move toward carefully scoped driver wiring.
 - The current global one-body pilots do not assemble Hamiltonians, build

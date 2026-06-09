@@ -170,6 +170,16 @@ projection/Lowdin realization exists. The route-shaped adapter does not cover
 Coulomb, IDA/MWG, density-density, nuclear attraction, Gaussian local terms,
 exports/artifacts, or full White--Lindsey route assembly.
 
+`CartesianPairBlockMaterialization` also has a private route-shaped safe
+one-body matrix-set adapter. It is a term-separated wrapper over individual
+`route_global_one_body_matrix(...; term = ...)` calls. It returns per-term
+result objects plus a compact summary and does not copy dense matrices out of
+the term results. Partial success is allowed: supported terms can materialize
+while unsupported terms are represented as blocked per-term results. This
+matrix-set adapter is not term summing, not a one-body Hamiltonian object, and
+not Hamiltonian assembly. PQS source-space records still remain blocked inside
+term results until explicit shell projection/Lowdin realization exists.
+
 The local final-readiness helper
 `pqs_source_pair_final_block_readiness_summary(bridge_summary)` consumes single
 or batch PQS source shell-realization bridge summaries and reports whether a
@@ -247,6 +257,14 @@ contract tests for semantic changes or closeout. The White--Lindsey focused
 mixed tests use real local adapter fixtures and are boundary tests. The
 White--Lindsey oracle comparison remains a gate-only validation, not a casual
 smoke test.
+
+For route-global safe one-body adapter changes, use focused checks rather than
+default runners. `cartesian_pair_block_route_global_one_body_adapter_runtests.jl`
+is the broader individual-term adapter contract and is about 40--45 seconds.
+`cartesian_pair_block_route_global_matrix_set_smoke_runtests.jl` is the focused
+matrix-set smoke and was about 40 seconds after slimming. Do not add either to
+more default runners casually. Old-oracle tests remain gate/oracle tests, not
+routine per-pass tests.
 
 ### Why “lowering”?
 

@@ -1,7 +1,9 @@
 # Runtime role: tiny smoke / route-shaped global overlap adapter contract.
 #
-# This verifies the private route-global one-body adapter for overlap, kinetic,
-# and position_x/y/z only. It does not cover Hamiltonians, Coulomb, IDA/MWG,
+# This verifies the private route-global one-body adapter for individual
+# term-separated safe one-body terms. Matrix-set wrapper coverage lives in
+# `cartesian_pair_block_route_global_matrix_set_smoke_runtests.jl`. It does
+# not cover Hamiltonians, Coulomb, IDA/MWG,
 # PQS Lowdin/projection, exports, route-driver wiring, or White-Lindsey oracle
 # fixtures.
 

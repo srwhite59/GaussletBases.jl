@@ -57,6 +57,69 @@ function route_global_one_body_matrix(
     )
 end
 
+function route_global_one_body_matrix_set(
+    source;
+    terms = route_global_safe_one_body_terms(),
+    global_dimension = nothing,
+    inputs = (;),
+    provider = nothing,
+    factors = nothing,
+    factor_provider = nothing,
+    metadata = (;),
+)
+    term_tuple = _route_global_one_body_term_tuple(terms)
+    term_results = Tuple(
+        route_global_one_body_matrix(
+            source;
+            term,
+            global_dimension,
+            inputs,
+            provider,
+            factors,
+            factor_provider,
+            metadata,
+        ) for term in term_tuple
+    )
+    summary = _route_global_one_body_matrix_set_summary(
+        term_tuple,
+        term_results,
+    )
+    return (;
+        object_kind =
+            :cartesian_pair_block_route_global_safe_one_body_matrix_set,
+        status = summary.status,
+        blocker = summary.blocker,
+        terms = term_tuple,
+        term_results,
+        summary,
+        metadata = NamedTuple(metadata),
+        all_terms_materialized = summary.all_terms_materialized,
+        any_terms_materialized = summary.any_terms_materialized,
+        term_count = summary.term_count,
+        materialized_term_count = summary.materialized_term_count,
+        blocked_term_count = summary.blocked_term_count,
+        global_one_body_term_matrices_materialized =
+            summary.all_terms_materialized,
+        any_global_one_body_term_matrix_materialized =
+            summary.any_terms_materialized,
+        _route_global_one_body_nonclaim_flags()...,
+    )
+end
+
+function route_global_safe_one_body_matrices(source; kwargs...)
+    return route_global_one_body_matrix_set(source; kwargs...)
+end
+
+function route_global_one_body_matrix_set_result(
+    matrix_set::NamedTuple,
+    term::Symbol,
+)
+    for result in matrix_set.term_results
+        result.term === term && return result
+    end
+    return nothing
+end
+
 function route_global_overlap_matrix(source; kwargs...)
     return route_global_one_body_matrix(source; term = :overlap, kwargs...)
 end
@@ -105,6 +168,10 @@ function route_global_x2_z_matrix(source; kwargs...)
     return route_global_one_body_matrix(source; term = :x2_z, kwargs...)
 end
 
+function route_global_safe_one_body_terms()
+    return _route_global_one_body_supported_terms()
+end
+
 function _route_global_one_body_supported_terms()
     return (
         :overlap,
@@ -116,6 +183,80 @@ function _route_global_one_body_supported_terms()
         :x2_y,
         :x2_z,
     )
+end
+
+function _route_global_one_body_term_tuple(terms::Symbol)
+    return (terms,)
+end
+
+function _route_global_one_body_term_tuple(terms)
+    term_tuple = Tuple(terms)
+    all(term -> term isa Symbol, term_tuple) ||
+        throw(ArgumentError("route global one-body terms must be Symbols"))
+    return term_tuple
+end
+
+function _route_global_one_body_matrix_set_summary(
+    terms::Tuple,
+    term_results::Tuple,
+)
+    materialized_terms = Tuple(
+        result.term for result in term_results
+        if result.global_one_body_term_matrix_materialized
+    )
+    blocked_results = Tuple(
+        result for result in term_results
+        if !result.global_one_body_term_matrix_materialized
+    )
+    blocked_terms = Tuple(result.term for result in blocked_results)
+    materialized_count = length(materialized_terms)
+    blocked_count = length(blocked_terms)
+    term_count = length(terms)
+    all_materialized = term_count > 0 && blocked_count == 0
+    any_materialized = materialized_count > 0
+
+    return (;
+        object_kind =
+            :cartesian_pair_block_route_global_safe_one_body_matrix_set_summary,
+        status =
+            all_materialized ?
+            :materialized_route_global_safe_one_body_matrix_set :
+            any_materialized ?
+            :partial_route_global_safe_one_body_matrix_set :
+            :blocked_route_global_safe_one_body_matrix_set,
+        blocker =
+            all_materialized ?
+            nothing :
+            any_materialized ?
+            :some_route_global_safe_one_body_terms_blocked :
+            _route_global_one_body_matrix_set_blocker(blocked_results),
+        terms,
+        materialized_terms,
+        blocked_terms,
+        term_count,
+        materialized_term_count = materialized_count,
+        blocked_term_count = blocked_count,
+        all_terms_materialized = all_materialized,
+        any_terms_materialized = any_materialized,
+        term_status_counts =
+            _count_by_value((result.status for result in term_results), :status),
+        blocked_term_blocker_counts =
+            _count_by_value(
+                (result.blocker for result in blocked_results),
+                :blocker,
+            ),
+        global_one_body_term_matrices_materialized = all_materialized,
+        any_global_one_body_term_matrix_materialized = any_materialized,
+        _route_global_one_body_nonclaim_flags()...,
+    )
+end
+
+function _route_global_one_body_matrix_set_blocker(blocked_results::Tuple)
+    isempty(blocked_results) && return nothing
+    for result in blocked_results
+        !isnothing(result.blocker) && return result.blocker
+    end
+    return :no_route_global_safe_one_body_terms_materialized
 end
 
 function _route_global_one_body_placement_plan(
