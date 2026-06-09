@@ -20,6 +20,7 @@ This section is where to go when you want:
 - [Architecture and current direction](architecture.md)
 - [Cartesian source/build unification plan](cartesian_source_build_unification_plan.md)
 - [Cartesian nesting route driver organization memo](cartesian_nesting_route_driver_organization_2026-06-04.md)
+- [Cartesian parent factors and CPB matrix kernels](cartesian_parent_factors_and_cpb_kernels.md)
 - [Cartesian coordinate product box contract](cartesian_coordinate_product_box_contract.md)
 - [Cartesian route dictionary](cartesian_route_dictionary.md)
 - [Cartesian QW receipt wrapper status](cartesian_qw_receipt_wrapper_status.md)
