@@ -501,8 +501,10 @@ end
 function _cpb_axis_product_operator_block_blocker(axis_ops)
     for axis in _AXIS_ORDER
         hasproperty(axis_ops, axis) || return Symbol("missing_$(axis)_axis_operator")
-        getproperty(axis_ops, axis) isa AbstractMatrix ||
+        axis_op = getproperty(axis_ops, axis)
+        axis_op isa AbstractMatrix ||
             return Symbol("$(axis)_axis_operator_not_matrix")
+        isempty(axis_op) && return Symbol("$(axis)_axis_operator_empty")
     end
     return nothing
 end

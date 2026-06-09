@@ -17,7 +17,12 @@ function _axis_product_expected_dense(axis_ops)
     nx_left, nx_right = size(axis_ops.x)
     ny_left, ny_right = size(axis_ops.y)
     nz_left, nz_right = size(axis_ops.z)
-    dense = Matrix{Float64}(
+    element_type = promote_type(
+        eltype(axis_ops.x),
+        eltype(axis_ops.y),
+        eltype(axis_ops.z),
+    )
+    dense = Matrix{element_type}(
         undef,
         nx_left * ny_left * nz_left,
         nx_right * ny_right * nz_right,
@@ -41,7 +46,7 @@ function _axis_product_expected_dense(axis_ops)
     return dense
 end
 
-function _axis_product_case(axis_ops)
+function _axis_product_case(axis_ops; expected_eltype = Float64)
     block = CBPOperatorBlock.cpb_axis_product_operator_block(
         axis_ops;
         term = :test_axis_product,
@@ -68,7 +73,7 @@ function _axis_product_case(axis_ops)
     )
     @test block_summary.dense_block_shape ==
           (block_summary.left_support_count, block_summary.right_support_count)
-    @test block_summary.dense_block_eltype === Float64
+    @test block_summary.dense_block_eltype === expected_eltype
     @test block_summary.provider_level_local_matrix_materialized === true
     @test block_summary.realization_status === :unrealized
     @test block_summary.route_global_status === :unassigned
@@ -76,8 +81,33 @@ function _axis_product_case(axis_ops)
     @test block_summary.route_global_matrix_materialized === false
     @test block_summary.global_matrix_materialized === false
     @test !hasproperty(block_summary, :dense_block)
+    @test !hasproperty(block_summary, :axis_ops)
+    @test !hasproperty(block_summary, :global_overlap_matrix)
+    @test !hasproperty(block_summary, :retained_blocks)
     @test block.dense_block == _axis_product_expected_dense(axis_ops)
     return block
+end
+
+function _test_blocked_axis_product(axis_ops, expected_blocker)
+    block = CBPOperatorBlock.cpb_axis_product_operator_block(axis_ops)
+    block_summary = CBPOperatorBlock.summary(block)
+    @test block_summary.status === :blocked_cpb_axis_product_operator_block
+    @test block_summary.blocker === expected_blocker
+    @test isnothing(block.dense_block)
+    @test block_summary.dense_block_available === false
+    @test block_summary.dense_block_shape === :unavailable
+    @test block_summary.dense_block_eltype === :unavailable
+    @test block_summary.provider_level_local_matrix_materialized === false
+    @test block_summary.realization_status === :unrealized
+    @test block_summary.route_global_status === :unassigned
+    @test block_summary.route_driver_wiring === false
+    @test block_summary.route_global_matrix_materialized === false
+    @test block_summary.global_matrix_materialized === false
+    @test !hasproperty(block_summary, :dense_block)
+    @test !hasproperty(block_summary, :axis_ops)
+    @test !hasproperty(block_summary, :global_overlap_matrix)
+    @test !hasproperty(block_summary, :retained_blocks)
+    return nothing
 end
 
 function _operator_block_parent(; count = 3)
@@ -151,6 +181,56 @@ end
     @test CBPOperatorBlock.summary(cube_block).left_shape == (x = 2, y = 2, z = 2)
     @test CBPOperatorBlock.summary(cube_block).right_shape == (x = 2, y = 1, z = 2)
 
+    mixed_ops = (;
+        x = Int16[1 2],
+        y = reshape(Float32[3.0, 4.0], 2, 1),
+        z = [5.0 6.0],
+    )
+    mixed_eltype = promote_type(Int16, Float32, Float64)
+    mixed_block = _axis_product_case(mixed_ops; expected_eltype = mixed_eltype)
+    @test eltype(mixed_block.dense_block) === mixed_eltype
+
+    _test_blocked_axis_product(
+        (; y = fill(1.0, 1, 1), z = fill(1.0, 1, 1)),
+        :missing_x_axis_operator,
+    )
+    _test_blocked_axis_product(
+        (; x = fill(1.0, 1, 1), z = fill(1.0, 1, 1)),
+        :missing_y_axis_operator,
+    )
+    _test_blocked_axis_product(
+        (; x = fill(1.0, 1, 1), y = fill(1.0, 1, 1)),
+        :missing_z_axis_operator,
+    )
+    _test_blocked_axis_product(
+        (; x = [1.0, 2.0], y = fill(1.0, 1, 1), z = fill(1.0, 1, 1)),
+        :x_axis_operator_not_matrix,
+    )
+    _test_blocked_axis_product(
+        (;
+            x = Matrix{Float64}(undef, 0, 1),
+            y = fill(1.0, 1, 1),
+            z = fill(1.0, 1, 1),
+        ),
+        :x_axis_operator_empty,
+    )
+    _test_blocked_axis_product(
+        (;
+            x = fill(1.0, 1, 1),
+            y = Matrix{Float64}(undef, 1, 0),
+            z = fill(1.0, 1, 1),
+        ),
+        :y_axis_operator_empty,
+    )
+    _test_blocked_axis_product(
+        (;
+            x = fill(1.0, 1, 1),
+            y = fill(1.0, 1, 1),
+            z = Matrix{Float64}(undef, 0, 0),
+        ),
+        :z_axis_operator_empty,
+    )
+
     parent = _operator_block_parent()
     overlap_1d = _operator_block_overlap_1d()
     packet = CPGBOperatorBlock.parent_overlap_axis_factor_packet(
@@ -178,7 +258,10 @@ end
     @test overlap_summary.factor_convention === :axis_bundle_one_body_overlap
     @test !isnothing(overlap_operator.axis_product_block)
     @test overlap_operator.axis_product_block.dense_block == existing_dense.dense_block
+    @test existing_dense.dense_block == overlap_operator.axis_product_block.dense_block
     @test CBPOperatorBlock.summary(overlap_operator.axis_product_block).term === :overlap
     @test !hasproperty(overlap_summary, :dense_block)
     @test !hasproperty(overlap_summary, :global_overlap_matrix)
+    @test !hasproperty(overlap_summary, :axis_ops)
+    @test !hasproperty(overlap_summary, :retained_blocks)
 end
