@@ -65,6 +65,12 @@ paths from becoming new route authority.
   route-global overlap matrix path. This is replacement pressure only: it is
   not production route-driver wiring and does not retire the old route by
   itself.
+- A private overlap-only driver-facing hook,
+  `driver_global_overlap_result`, delegates structured state carrying
+  `pair_block_materialization_plan` to the route-state overlap adapter. It
+  blocks with `:missing_pair_block_materialization_plan` when no structured
+  pair-block materialization plan is present. It is not production driver
+  wiring and does not retire the old route by itself.
 - Selected White--Lindsey old-oracle equivalence currently covers overlap,
   kinetic, position_x, position_y, position_z, x2_x, x2_y, and x2_z.
 - `src/cartesian_pair_block_materialization/one_body_global_matrix_helpers.jl`

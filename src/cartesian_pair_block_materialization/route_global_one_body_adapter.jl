@@ -145,6 +145,26 @@ function route_state_global_overlap_matrix(
     )
 end
 
+function driver_global_overlap_result(
+    source;
+    global_dimension = nothing,
+    inputs = (;),
+    provider = nothing,
+    factors = nothing,
+    factor_provider = nothing,
+    metadata = (;),
+)
+    return route_state_global_overlap_matrix(
+        source;
+        global_dimension,
+        inputs,
+        provider,
+        factors,
+        factor_provider,
+        metadata,
+    )
+end
+
 function route_global_kinetic_matrix(source; kwargs...)
     return route_global_one_body_matrix(source; term = :kinetic, kwargs...)
 end
