@@ -3731,6 +3731,11 @@ function _pqs_source_box_route_driver_private_global_overlap_axis_overlap_1d(
                 report,
                 (:low_order_route_summary, :parent_axis_bundle_object),
             )),
+        (:route_materializer_payload_parent_axis_bundle_object,
+            _pqs_source_box_route_driver_private_global_overlap_nested_property(
+                report,
+                (:route_materializer_payload, :parent_axis_bundle_object),
+            )),
     )
         overlap_1d =
             _pqs_source_box_route_driver_private_global_overlap_overlap_1d_from_bundle(
