@@ -264,6 +264,253 @@ function _driver_overlap_smallest_source_pair_key(report)
     end
 end
 
+function _driver_overlap_nested_property(object, path::Tuple)
+    current = object
+    for key in path
+        current =
+            !isnothing(current) && hasproperty(current, key) ?
+            getproperty(current, key) :
+            nothing
+        isnothing(current) && return nothing
+    end
+    return current
+end
+
+function _driver_overlap_first_report_source(report, candidates)
+    for candidate in candidates
+        value = _driver_overlap_nested_property(report, candidate.path)
+        isnothing(value) || return (; source = candidate.source, value)
+    end
+    return (; source = :unavailable, value = nothing)
+end
+
+function _driver_overlap_recorded_range(value)
+    isnothing(value) && return nothing
+    if hasproperty(value, :column_range)
+        return value.column_range
+    elseif hasproperty(value, :retained_range)
+        return value.retained_range
+    end
+    return nothing
+end
+
+function _driver_overlap_retained_units_dimension(units)
+    isnothing(units) && return nothing
+    ranges = UnitRange{Int}[]
+    for unit in units
+        range = _driver_overlap_recorded_range(unit)
+        isnothing(range) && return nothing
+        push!(ranges, range)
+    end
+    isempty(ranges) && return nothing
+    return maximum(last, ranges)
+end
+
+function _driver_overlap_global_dimension_source_audit(report)
+    retained_unit_sources = (
+        (;
+            source = :low_order_terminal_route_state_retained_units,
+            path = (:low_order_route_summary, :terminal_route_state, :retained_units),
+        ),
+        (;
+            source = :terminal_route_state_retained_units,
+            path = (:terminal_route_state, :retained_units),
+        ),
+        (; source = :report_retained_units, path = (:retained_units,)),
+    )
+    for candidate in retained_unit_sources
+        units = _driver_overlap_nested_property(report, candidate.path)
+        dimension = _driver_overlap_retained_units_dimension(units)
+        isnothing(dimension) || return (;
+            status = :available_retained_layout_global_dimension,
+            source = candidate.source,
+            global_dimension = dimension,
+        )
+    end
+    if hasproperty(report, :retained_dimension) && !isnothing(report.retained_dimension)
+        return (;
+            status = :available_compatibility_global_dimension,
+            source = :report_retained_dimension,
+            global_dimension = report.retained_dimension,
+        )
+    end
+    return (;
+        status = :missing_global_dimension_source,
+        source = :unavailable,
+        global_dimension = nothing,
+    )
+end
+
+function _driver_overlap_pair_entry_column_range_source_status(pair_entry, side::Symbol)
+    isnothing(pair_entry) && return (;
+        status = :missing_structured_source_box_pair,
+        source = :unavailable,
+    )
+    keys =
+        side === :left ?
+        (:left_column_range, :left_final_column_range, :left_retained_column_range) :
+        (:right_column_range, :right_final_column_range, :right_retained_column_range)
+    for key in keys
+        if hasproperty(pair_entry, key) && !isnothing(getproperty(pair_entry, key))
+            return (;
+                status =
+                    :ambiguous_pair_entry_column_range_without_reviewed_placement_plan,
+                source = Symbol(:report_pair_entry_, key),
+            )
+        end
+    end
+    return (;
+        status = :missing_source_pair_retained_column_range,
+        source = :unavailable,
+    )
+end
+
+function _driver_overlap_real_report_overlap_placement_source_audit(
+    report,
+    local_block_collection,
+    pair_entry,
+)
+    retained_transform_source = _driver_overlap_first_report_source(
+        report,
+        (
+            (;
+                source = :route_materializer_payload_retained_transform,
+                path = (:route_materializer_payload, :retained_transform),
+            ),
+            (;
+                source = :route_materializer_payload_retained_transforms,
+                path = (:route_materializer_payload, :retained_transforms),
+            ),
+            (;
+                source = :terminal_route_state_retained_transform,
+                path = (:low_order_route_summary, :terminal_route_state, :retained_transform),
+            ),
+            (;
+                source = :terminal_route_state_retained_transforms,
+                path = (:low_order_route_summary, :terminal_route_state, :retained_transforms),
+            ),
+        ),
+    )
+    left_column_range_source =
+        _driver_overlap_pair_entry_column_range_source_status(pair_entry, :left)
+    right_column_range_source =
+        _driver_overlap_pair_entry_column_range_source_status(pair_entry, :right)
+    global_dimension_source = _driver_overlap_global_dimension_source_audit(report)
+    placement_plan_source = _driver_overlap_first_report_source(
+        report,
+        (
+            (;
+                source = :terminal_route_state_overlap_placement_plan,
+                path = (:low_order_route_summary, :terminal_route_state, :overlap_placement_plan),
+            ),
+            (;
+                source = :terminal_route_state_pair_block_materialization_plan,
+                path = (:low_order_route_summary, :terminal_route_state, :pair_block_materialization_plan),
+            ),
+        ),
+    )
+    placement_plan_source_status =
+        isnothing(placement_plan_source.value) ?
+        :missing_reviewed_overlap_placement_plan :
+        placement_plan_source.source === :terminal_route_state_pair_block_materialization_plan ?
+        :ambiguous_pair_block_materialization_plan_not_overlap_placement_plan :
+        :available_reviewed_overlap_placement_plan
+    accumulation_rule_source = _driver_overlap_first_report_source(
+        report,
+        (
+            (;
+                source = :terminal_route_state_overlap_accumulation_rule,
+                path = (:low_order_route_summary, :terminal_route_state, :overlap_accumulation_rule),
+            ),
+            (;
+                source = :route_materializer_payload_overlap_accumulation_rule,
+                path = (:route_materializer_payload, :overlap_accumulation_rule),
+            ),
+        ),
+    )
+    accumulation_rule_source_status =
+        isnothing(accumulation_rule_source.value) ?
+        :missing_overlap_accumulation_rule :
+        :available_overlap_accumulation_rule
+    retained_transform =
+        isnothing(retained_transform_source.value) ?
+        nothing :
+        retained_transform_source.value
+    global_dimension =
+        global_dimension_source.status in (
+            :available_retained_layout_global_dimension,
+            :available_compatibility_global_dimension,
+        ) ?
+        global_dimension_source.global_dimension :
+        nothing
+    candidate =
+        isnothing(local_block_collection) ?
+        nothing :
+        GaussletBases._pqs_source_box_route_driver_private_global_overlap_placement_candidate(
+            local_block_collection;
+            retained_transform,
+            global_dimension,
+        )
+    skeleton =
+        isnothing(local_block_collection) ?
+        nothing :
+        GaussletBases._pqs_source_box_route_driver_private_global_overlap_placement_plan_skeleton(
+            local_block_collection;
+            retained_transform,
+            global_dimension,
+            global_dimension_source = global_dimension_source.source,
+        )
+    return (;
+        retained_transform_source_status =
+            isnothing(retained_transform_source.value) ?
+            :missing_actual_retained_transform_source :
+            :available_actual_retained_transform_source,
+        retained_transform_source = retained_transform_source.source,
+        left_column_range_source_status = left_column_range_source.status,
+        left_column_range_source = left_column_range_source.source,
+        right_column_range_source_status = right_column_range_source.status,
+        right_column_range_source = right_column_range_source.source,
+        global_dimension_source_status = global_dimension_source.status,
+        global_dimension_source = global_dimension_source.source,
+        global_dimension = global_dimension_source.global_dimension,
+        placement_plan_source_status,
+        placement_plan_source = placement_plan_source.source,
+        accumulation_rule_source_status,
+        accumulation_rule_source = accumulation_rule_source.source,
+        candidate_status_with_real_sources =
+            isnothing(candidate) ?
+            :not_attempted_missing_local_overlap_collection :
+            candidate.status,
+        candidate_blocker_with_real_sources =
+            isnothing(candidate) ?
+            :not_attempted_missing_local_overlap_collection :
+            candidate.blocker,
+        skeleton_status_with_real_sources =
+            isnothing(skeleton) ?
+            :not_attempted_missing_local_overlap_collection :
+            skeleton.status,
+        skeleton_blocker_with_real_sources =
+            isnothing(skeleton) ?
+            :not_attempted_missing_local_overlap_collection :
+            skeleton.blocker,
+        missing_requirements_with_real_sources =
+            isnothing(skeleton) ? () : skeleton.missing_requirements,
+        available_requirements_with_real_sources =
+            isnothing(skeleton) ? () : skeleton.available_requirements,
+        global_overlap_status =
+            isnothing(skeleton) ?
+            :not_attempted_missing_local_overlap_collection :
+            skeleton.global_overlap_status,
+        global_overlap_blocker =
+            isnothing(skeleton) ?
+            :not_attempted_missing_local_overlap_collection :
+            skeleton.global_overlap_blocker,
+        global_matrix_materialized = false,
+        route_driver_wiring = false,
+        route_global_overlap_stage_source = false,
+    )
+end
+
 function _driver_overlap_real_report_local_cpb_provider_fingerprint(report)
     payload =
         hasproperty(report, :route_materializer_payload) ?
@@ -402,6 +649,12 @@ function _driver_overlap_real_report_local_cpb_provider_fingerprint(report)
             global_dimension_source = :report_retained_dimension,
             placement_plan = (; kind = :test_placement_plan),
             accumulation_rule = :test_accumulation_rule,
+        )
+    placement_source_audit =
+        _driver_overlap_real_report_overlap_placement_source_audit(
+            report,
+            local_block_collection,
+            pair_entry,
         )
 
     return (;
@@ -718,6 +971,7 @@ function _driver_overlap_real_report_local_cpb_provider_fingerprint(report)
         all_facts_placement_plan_skeleton_route_global_stage_source =
             !isnothing(all_facts_placement_plan_skeleton) &&
             all_facts_placement_plan_skeleton.route_global_overlap_stage_source,
+        placement_source_audit,
         route_driver_wiring = false,
         global_matrix_materialized = false,
         route_global_overlap_stage_source = false,
@@ -1237,6 +1491,52 @@ end
     @test !local_cpb_overlap_fingerprint.all_facts_placement_plan_skeleton_route_driver_wiring
     @test !local_cpb_overlap_fingerprint.all_facts_placement_plan_skeleton_global_matrix_materialized
     @test !local_cpb_overlap_fingerprint.all_facts_placement_plan_skeleton_route_global_stage_source
+    placement_source_audit =
+        local_cpb_overlap_fingerprint.placement_source_audit
+    @test placement_source_audit.retained_transform_source_status ===
+          :missing_actual_retained_transform_source
+    @test placement_source_audit.retained_transform_source === :unavailable
+    @test placement_source_audit.left_column_range_source_status ===
+          :missing_source_pair_retained_column_range
+    @test placement_source_audit.left_column_range_source === :unavailable
+    @test placement_source_audit.right_column_range_source_status ===
+          :missing_source_pair_retained_column_range
+    @test placement_source_audit.right_column_range_source === :unavailable
+    @test placement_source_audit.global_dimension_source_status ===
+          :available_retained_layout_global_dimension
+    @test placement_source_audit.global_dimension_source === :report_retained_units
+    @test placement_source_audit.global_dimension == report.retained_dimension
+    @test placement_source_audit.placement_plan_source_status ===
+          :missing_reviewed_overlap_placement_plan
+    @test placement_source_audit.placement_plan_source === :unavailable
+    @test placement_source_audit.accumulation_rule_source_status ===
+          :missing_overlap_accumulation_rule
+    @test placement_source_audit.accumulation_rule_source === :unavailable
+    @test placement_source_audit.candidate_status_with_real_sources ===
+          :blocked_private_global_overlap_placement_candidate
+    @test placement_source_audit.candidate_blocker_with_real_sources ===
+          :missing_placement_or_retained_transform
+    @test placement_source_audit.skeleton_status_with_real_sources ===
+          :blocked_private_global_overlap_placement_plan_skeleton
+    @test placement_source_audit.skeleton_blocker_with_real_sources ===
+          :missing_placement_or_retained_transform
+    @test placement_source_audit.available_requirements_with_real_sources === (
+        :local_cpb_overlap_collection,
+        :global_dimension,
+    )
+    @test placement_source_audit.missing_requirements_with_real_sources === (
+        :missing_retained_transform,
+        :missing_left_column_range,
+        :missing_right_column_range,
+        :missing_placement_plan,
+        :missing_accumulation_rule,
+    )
+    @test placement_source_audit.global_overlap_status === :blocked
+    @test placement_source_audit.global_overlap_blocker ===
+          :missing_placement_or_retained_transform
+    @test !placement_source_audit.global_matrix_materialized
+    @test !placement_source_audit.route_driver_wiring
+    @test !placement_source_audit.route_global_overlap_stage_source
     @test local_cpb_overlap_fingerprint.route_driver_wiring === false
     @test local_cpb_overlap_fingerprint.global_matrix_materialized === false
     @test local_cpb_overlap_fingerprint.route_global_overlap_stage_source === false
