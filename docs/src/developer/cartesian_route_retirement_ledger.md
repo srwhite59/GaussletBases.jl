@@ -203,6 +203,8 @@ paths from becoming new route authority.
   and duplicate-record policy. It is synthetic/provider-level only: no real
   route/report placement, private driver global overlap adoption, route-global
   overlap availability, Hamiltonian assembly, or new physics path is claimed.
+  Provider-level materialization is recorded with provider-level summary fields;
+  unqualified and route-global matrix materialization flags remain false.
 - The next overlap implementation boundary is no longer additional
   fingerprinting. It is a reviewed placement design and implementation plan for
   turning local CPB overlap collections into retained/global overlap. That plan

@@ -378,10 +378,15 @@ global[left_range, right_range] += O_retained
 ```
 
 The pilot materializes only a provider-level dense overlap placement result for
-synthetic fixtures. It is not route-driver adoption, not private global overlap
-stage adoption, and not evidence that real route placement is available. Real
-route placement remains blocked until structured retained transforms and
-source-pair retained column ranges are carried from real route/report state.
+synthetic fixtures. Its summary must use provider-level materialization fields,
+such as `provider_level_matrix_materialized` and
+`provider_level_overlap_matrix_materialized`, for that synthetic target matrix.
+Unqualified or route-global materialization flags must remain false and must
+not be used to claim provider-level pilot success. The pilot is not
+route-driver adoption, not private global overlap stage adoption, and not
+evidence that real route placement is available. Real route placement remains
+blocked until structured retained transforms and source-pair retained column
+ranges are carried from real route/report state.
 
 ## Structured Carry Objects For Placement
 

@@ -152,6 +152,20 @@ function _pilot_facts(block, left_transform, right_transform, placement_range; p
     )
 end
 
+function _test_blocked_pilot_nonclaims(placed)
+    placed_summary = CPBPilot.summary(placed)
+    @test placed.global_overlap_matrix === nothing
+    @test placed_summary.provider_level_matrix_materialized === false
+    @test placed_summary.provider_level_overlap_matrix_materialized === false
+    @test placed_summary.global_matrix_materialized === false
+    @test placed_summary.global_overlap_matrix_materialized === false
+    @test placed_summary.route_global_matrix_materialized === false
+    @test placed_summary.route_global_overlap_matrix_materialized === false
+    @test placed_summary.route_global_overlap_available === false
+    @test placed_summary.route_driver_wiring === false
+    return nothing
+end
+
 @testset "CPB overlap placement pilot" begin
     dense_block = _pilot_dense_block([2.0 0.5; 0.5 3.0])
     left_transform = _pilot_transform(:left, reshape([1.0, 0.0], 2, 1); target_range = 1:1)
@@ -176,12 +190,19 @@ end
     @test placed_summary.status === :materialized_cpb_overlap_placement_pilot
     @test placed_summary.blocker === nothing
     @test placed_summary.retained_block_shape == (1, 1)
-    @test placed_summary.global_overlap_matrix_shape == (2, 2)
+    @test placed_summary.provider_level_global_overlap_matrix_shape == (2, 2)
+    @test placed_summary.global_overlap_matrix_shape ===
+          :route_global_matrix_not_materialized
+    @test placed.global_overlap_matrix !== nothing
     @test placed.global_overlap_matrix == [0.0 0.5; 0.0 0.0]
-    @test placed_summary.global_matrix_materialized === true
-    @test placed_summary.global_overlap_matrix_materialized === true
+    @test placed_summary.provider_level_matrix_materialized === true
+    @test placed_summary.provider_level_overlap_matrix_materialized === true
     @test placed_summary.provider_level_pilot === true
     @test placed_summary.synthetic_fixture_only === true
+    @test placed_summary.global_matrix_materialized === false
+    @test placed_summary.global_overlap_matrix_materialized === false
+    @test placed_summary.route_global_matrix_materialized === false
+    @test placed_summary.route_global_overlap_matrix_materialized === false
     @test placed_summary.route_driver_wiring === false
     @test placed_summary.route_global_overlap_stage_source === false
     @test placed_summary.route_global_overlap_available === false
@@ -264,7 +285,7 @@ end
           :blocked_cpb_overlap_placement_pilot
     @test CPBPilot.summary(mismatch_placed).blocker ===
           :retained_transform_shape_mismatch
-    @test mismatch_placed.global_overlap_matrix === nothing
+    _test_blocked_pilot_nonclaims(mismatch_placed)
 
     placeholder_facts = CPBPilot.cpb_overlap_placement_facts(
         CPBPilot.cpb_local_overlap_block_collection((_pilot_record(dense_block),));
@@ -282,7 +303,7 @@ end
     )
     @test CPBPilot.summary(placeholder_placed).blocker ===
           :placement_facts_not_reviewed
-    @test placeholder_placed.global_overlap_matrix === nothing
+    _test_blocked_pilot_nonclaims(placeholder_placed)
 
     missing_facts = CPBPilot.cpb_overlap_placement_facts(
         CPBPilot.cpb_local_overlap_block_collection((_pilot_record(dense_block),));
@@ -297,7 +318,7 @@ end
     )
     @test CPBPilot.summary(missing_placed).blocker ===
           :placement_requirements_missing
-    @test missing_placed.global_overlap_matrix === nothing
+    _test_blocked_pilot_nonclaims(missing_placed)
 
     source_blocked = CPBPilot.cpb_place_overlap_block(
         nothing,
@@ -308,5 +329,5 @@ end
     )
     @test CPBPilot.summary(source_blocked).blocker ===
           :local_overlap_source_not_dense
-    @test source_blocked.global_overlap_matrix === nothing
+    _test_blocked_pilot_nonclaims(source_blocked)
 end

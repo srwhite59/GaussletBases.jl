@@ -2051,12 +2051,17 @@ function _cpb_place_overlap_block_summary(
         global_dimension_source =
             isnothing(range_summary) ? :unavailable : range_summary.global_dimension_source,
         retained_block_shape,
-        global_overlap_matrix_shape =
+        provider_level_global_overlap_matrix_shape =
             available ? size(global_overlap_matrix) : :not_materialized,
-        global_matrix_materialized = available,
-        global_overlap_matrix_materialized = available,
+        global_overlap_matrix_shape = :route_global_matrix_not_materialized,
+        provider_level_matrix_materialized = available,
+        provider_level_overlap_matrix_materialized = available,
         provider_level_pilot = true,
         synthetic_fixture_only = true,
+        global_matrix_materialized = false,
+        global_overlap_matrix_materialized = false,
+        route_global_matrix_materialized = false,
+        route_global_overlap_matrix_materialized = false,
         route_driver_wiring = false,
         route_global_overlap_stage_source = false,
         route_global_overlap_available = false,
