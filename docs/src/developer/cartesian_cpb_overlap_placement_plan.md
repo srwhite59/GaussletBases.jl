@@ -251,6 +251,8 @@ record. It should be keyed by side and by local source identity, not by a flat
 report field. A transform can be shared by key across records when the same
 source CPB and retained range are reused, but the placement skeleton should
 resolve that sharing into per-record left/right carry summaries.
+The current implementation is metadata-only: it validates shape, count, and
+ordering metadata, but does not apply transforms.
 
 Required fields:
 

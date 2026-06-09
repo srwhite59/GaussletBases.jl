@@ -86,11 +86,26 @@ struct CPBLocalOverlapBlockCollection{R,M}
     metadata::M
 end
 
+"""
+    CPBRetainedTransformCarry
+
+Metadata-only retained-transform carry for one side of one local CPB overlap
+record. This object validates shape/count/order metadata but does not apply the
+transform or assign global placement.
+"""
+struct CPBRetainedTransformCarry{K,S,T,M}
+    block_key::K
+    source_cpb_summary::S
+    transform_object::T
+    metadata::M
+end
+
 summary(pair::CPBIntervalPair3D) = pair.metadata
 summary(block_set::CPBOverlapAxisBlockSet) = block_set.metadata
 summary(block::CPBOverlapDenseBlock) = block.metadata
 summary(record::CPBLocalOverlapBlockRecord) = record.metadata
 summary(collection::CPBLocalOverlapBlockCollection) = collection.metadata
+summary(carry::CPBRetainedTransformCarry) = carry.metadata
 
 function cpb_interval_pair(
     parent::CPGB.CartesianParentGaussletBasis3D,
@@ -675,6 +690,112 @@ function _cpb_local_overlap_block_collection_summary(records::Tuple)
         ida_mwg_semantics = false,
         exports_or_artifacts = false,
     )
+end
+
+function cpb_retained_transform_carry(
+    side::Symbol,
+    block_key,
+    source_cpb_summary,
+    source_shape,
+    source_ordering,
+    target_retained_column_range;
+    transform_object = nothing,
+    transform_convention = :unavailable,
+    transform_provenance = :unavailable,
+)
+    side in (:left, :right) ||
+        throw(ArgumentError("CPB retained transform carry side must be :left or :right"))
+    source_support_count = _cpb_retained_transform_source_support_count(source_shape)
+    target_retained_column_count =
+        _cpb_retained_transform_target_count(target_retained_column_range)
+    transform_available = !isnothing(transform_object)
+    transform_shape =
+        transform_object isa AbstractMatrix ? size(transform_object) : :unavailable
+    transform_reference_kind =
+        isnothing(transform_object) ?
+        :unavailable :
+        transform_object isa AbstractMatrix ?
+        :matrix :
+        Symbol(nameof(typeof(transform_object)))
+    blocker = _cpb_retained_transform_carry_blocker(
+        source_support_count,
+        source_ordering,
+        target_retained_column_count,
+        transform_object,
+        transform_shape,
+    )
+    status =
+        isnothing(blocker) ?
+        :available_cpb_retained_transform_carry :
+        :blocked_cpb_retained_transform_carry
+    return CPBRetainedTransformCarry(
+        block_key,
+        source_cpb_summary,
+        transform_object,
+        (;
+            object_kind = :cartesian_cpb_retained_transform_carry_summary,
+            status,
+            blocker,
+            side,
+            block_key,
+            source_cpb_summary,
+            source_shape,
+            source_support_count,
+            source_ordering,
+            target_retained_column_range,
+            target_retained_column_count,
+            transform_available,
+            transform_convention,
+            transform_provenance,
+            transform_shape,
+            transform_reference_kind,
+            placement_status = :unassigned,
+            transform_applied = false,
+            global_matrix_materialized = false,
+            route_driver_wiring = false,
+        ),
+    )
+end
+
+function _cpb_retained_transform_source_support_count(source_shape)
+    if source_shape isa NamedTuple
+        all(hasproperty(source_shape, axis) for axis in _AXIS_ORDER) ||
+            return :unavailable
+        return prod(Int(getproperty(source_shape, axis)) for axis in _AXIS_ORDER)
+    elseif source_shape isa Tuple && length(source_shape) == 3
+        return prod(Int(value) for value in source_shape)
+    elseif source_shape isa Integer
+        return Int(source_shape)
+    end
+    return :unavailable
+end
+
+function _cpb_retained_transform_target_count(target_retained_column_range)
+    target_retained_column_range isa AbstractUnitRange{<:Integer} ||
+        return :unavailable
+    return length(target_retained_column_range)
+end
+
+function _cpb_retained_transform_carry_blocker(
+    source_support_count,
+    source_ordering,
+    target_retained_column_count,
+    transform_object,
+    transform_shape,
+)
+    isnothing(transform_object) && return :missing_retained_transform
+    source_ordering === _LOCAL_ORDERING ||
+        return :retained_transform_ordering_mismatch
+    transform_object isa AbstractMatrix || return nothing
+    source_support_count isa Integer ||
+        return :retained_transform_source_shape_mismatch
+    target_retained_column_count isa Integer ||
+        return :retained_transform_target_count_mismatch
+    transform_shape[1] == source_support_count ||
+        return :retained_transform_source_shape_mismatch
+    transform_shape[2] == target_retained_column_count ||
+        return :retained_transform_target_count_mismatch
+    return nothing
 end
 
 end # module CartesianCPBBlockProviders
