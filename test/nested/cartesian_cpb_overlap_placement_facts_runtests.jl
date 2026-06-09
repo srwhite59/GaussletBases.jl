@@ -15,6 +15,7 @@ const _PLACEMENT_FACTS_SOURCE_SHAPE = (x = 1, y = 2, z = 1)
 function _placement_facts_record(;
     status = :available_cpb_local_overlap_block_record,
     blocker = nothing,
+    local_ordering = :parent_compatible_x_slowest_z_fastest,
 )
     metadata = (;
         object_kind = :test_cpb_local_overlap_block_record_summary,
@@ -37,7 +38,7 @@ function _placement_facts_record(;
             role = :right_fixture,
             shape = _PLACEMENT_FACTS_SOURCE_SHAPE,
         ),
-        local_ordering = :parent_compatible_x_slowest_z_fastest,
+        local_ordering,
         placement_status = :unassigned,
         retained_transform_status = :unassigned,
         global_matrix_materialized = false,
@@ -83,13 +84,14 @@ function _placement_facts_range(;
     left_column_range = 1:2,
     right_column_range = 3:4,
     global_dimension = 4,
+    global_dimension_source = :test_retained_layout,
 )
     return CPBPlacementFacts.cpb_source_pair_placement_range(
         _PLACEMENT_FACTS_BLOCK_KEY;
         left_column_range,
         right_column_range,
         global_dimension,
-        global_dimension_source = :test_retained_layout,
+        global_dimension_source,
         range_source = :test_source_pair_ranges,
         range_provenance = :test_fixture,
         left_transform_carry,
@@ -251,6 +253,20 @@ end
     @test complete_summary.provided_block_keys === (_PLACEMENT_FACTS_BLOCK_KEY,)
     @test complete_summary.rejected_block_keys === ()
     @test complete_summary.duplicate_block_keys === ()
+    @test complete_summary.local_ordering_contract_status ===
+          :not_checked_cpb_overlap_local_ordering_contract
+    @test complete_summary.local_ordering_contract_blocker === nothing
+    @test complete_summary.local_ordering_contract === :unavailable
+    @test complete_summary.provided_local_orderings ===
+          (:parent_compatible_x_slowest_z_fastest,)
+    @test complete_summary.mismatched_local_ordering_block_keys === ()
+    @test complete_summary.global_dimension_source_contract_status ===
+          :not_checked_cpb_overlap_global_dimension_source_contract
+    @test complete_summary.global_dimension_source_contract_blocker === nothing
+    @test complete_summary.required_global_dimension_source === :unavailable
+    @test complete_summary.provided_global_dimension_sources ===
+          (:test_retained_layout,)
+    @test complete_summary.mismatched_global_dimension_source_block_keys === ()
     @test complete_summary.accumulation_rule_status ===
           :available_accumulation_rule
     @test complete_summary.accumulation_rule === :test_accumulation_rule
@@ -352,6 +368,126 @@ end
     @test reviewed_plan_summary.duplicate_block_keys === ()
     @test reviewed_plan_summary.duplicate_record_policy ===
           :reject_duplicate_block_keys
+    @test reviewed_plan_summary.local_ordering_contract_status ===
+          :available_cpb_overlap_local_ordering_contract
+    @test reviewed_plan_summary.local_ordering_contract_blocker === nothing
+    @test reviewed_plan_summary.local_ordering_contract ===
+          :parent_compatible_x_slowest_z_fastest
+    @test reviewed_plan_summary.provided_local_orderings ===
+          (:parent_compatible_x_slowest_z_fastest,)
+    @test reviewed_plan_summary.mismatched_local_ordering_block_keys === ()
+    @test reviewed_plan_summary.global_dimension_source_contract_status ===
+          :available_cpb_overlap_global_dimension_source_contract
+    @test reviewed_plan_summary.global_dimension_source_contract_blocker ===
+          nothing
+    @test reviewed_plan_summary.required_global_dimension_source ===
+          :test_retained_layout
+    @test reviewed_plan_summary.provided_global_dimension_sources ===
+          (:test_retained_layout,)
+    @test reviewed_plan_summary.mismatched_global_dimension_source_block_keys ===
+          ()
+
+    ordering_mismatch_collection = _placement_facts_collection(;
+        record = _placement_facts_record(;
+            local_ordering = :test_other_local_ordering,
+        ),
+    )
+    ordering_mismatch_left_transform =
+        _placement_facts_transform_carry(; side = :left)
+    ordering_mismatch_right_transform =
+        _placement_facts_transform_carry(; side = :right)
+    ordering_mismatch_facts = CPBPlacementFacts.cpb_overlap_placement_facts(
+        ordering_mismatch_collection;
+        transform_carries = (
+            ordering_mismatch_left_transform,
+            ordering_mismatch_right_transform,
+        ),
+        placement_ranges = (
+            _placement_facts_range(;
+                left_transform_carry = ordering_mismatch_left_transform,
+                right_transform_carry = ordering_mismatch_right_transform,
+            ),
+        ),
+        placement_plan = reviewed_plan,
+    )
+    ordering_mismatch_summary =
+        CPBPlacementFacts.summary(ordering_mismatch_facts)
+    @test ordering_mismatch_summary.status ===
+          :blocked_cpb_overlap_placement_facts
+    @test ordering_mismatch_summary.blocker ===
+          :overlap_local_ordering_contract_mismatch
+    @test ordering_mismatch_summary.local_ordering_contract_status ===
+          :blocked_cpb_overlap_local_ordering_contract
+    @test ordering_mismatch_summary.local_ordering_contract_blocker ===
+          :overlap_local_ordering_contract_mismatch
+    @test ordering_mismatch_summary.provided_local_orderings ===
+          (:test_other_local_ordering,)
+    @test ordering_mismatch_summary.mismatched_local_ordering_block_keys ===
+          (_PLACEMENT_FACTS_BLOCK_KEY,)
+    @test ordering_mismatch_summary.global_matrix_materialized === false
+    @test ordering_mismatch_summary.route_driver_wiring === false
+
+    source_mismatch_left_transform =
+        _placement_facts_transform_carry(; side = :left)
+    source_mismatch_right_transform =
+        _placement_facts_transform_carry(; side = :right)
+    source_mismatch_facts = CPBPlacementFacts.cpb_overlap_placement_facts(
+        collection;
+        transform_carries = (
+            source_mismatch_left_transform,
+            source_mismatch_right_transform,
+        ),
+        placement_ranges = (
+            _placement_facts_range(;
+                left_transform_carry = source_mismatch_left_transform,
+                right_transform_carry = source_mismatch_right_transform,
+                global_dimension_source = :test_other_retained_layout,
+            ),
+        ),
+        placement_plan = reviewed_plan,
+    )
+    source_mismatch_summary = CPBPlacementFacts.summary(source_mismatch_facts)
+    @test source_mismatch_summary.status ===
+          :blocked_cpb_overlap_placement_facts
+    @test source_mismatch_summary.blocker ===
+          :global_dimension_source_mismatch
+    @test source_mismatch_summary.global_dimension_source_contract_status ===
+          :blocked_cpb_overlap_global_dimension_source_contract
+    @test source_mismatch_summary.global_dimension_source_contract_blocker ===
+          :global_dimension_source_mismatch
+    @test source_mismatch_summary.required_global_dimension_source ===
+          :test_retained_layout
+    @test source_mismatch_summary.provided_global_dimension_sources ===
+          (:test_other_retained_layout,)
+    @test source_mismatch_summary.mismatched_global_dimension_source_block_keys ===
+          (_PLACEMENT_FACTS_BLOCK_KEY,)
+    @test source_mismatch_summary.global_matrix_materialized === false
+    @test source_mismatch_summary.route_driver_wiring === false
+
+    reviewed_missing_ranges = CPBPlacementFacts.cpb_overlap_placement_facts(
+        collection;
+        placement_plan = reviewed_plan,
+    )
+    reviewed_missing_ranges_summary =
+        CPBPlacementFacts.summary(reviewed_missing_ranges)
+    @test reviewed_missing_ranges_summary.status ===
+          :blocked_cpb_overlap_placement_facts
+    @test reviewed_missing_ranges_summary.blocker ===
+          :missing_placement_or_retained_transform
+    @test :missing_left_column_range in
+          reviewed_missing_ranges_summary.missing_requirements
+    @test :missing_right_column_range in
+          reviewed_missing_ranges_summary.missing_requirements
+    @test :missing_global_dimension in
+          reviewed_missing_ranges_summary.missing_requirements
+    @test reviewed_missing_ranges_summary.global_dimension_source_contract_status ===
+          :not_checked_cpb_overlap_global_dimension_source_contract
+    @test reviewed_missing_ranges_summary.global_dimension_source_contract_blocker ===
+          nothing
+    @test reviewed_missing_ranges_summary.provided_global_dimension_sources ===
+          ()
+    @test reviewed_missing_ranges_summary.mismatched_global_dimension_source_block_keys ===
+          ()
 
     unaccepted_plan = _placement_facts_reviewed_plan(;
         accepted_block_keys = ((:other_left, :other_right),),

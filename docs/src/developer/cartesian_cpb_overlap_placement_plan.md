@@ -296,8 +296,13 @@ inventory against the local overlap collection block keys. The check records
 compact tuples for provided, accepted, rejected, and duplicate block keys. It
 blocks metadata coherence when an available local collection record is not
 accepted by the reviewed plan, or when duplicate block keys violate a
-`:reject_duplicate_block_keys` policy. This remains metadata-only validation:
-it does not apply transforms, place blocks, or assemble route/global overlap.
+`:reject_duplicate_block_keys` policy. It also validates that available local
+records match the reviewed plan's local ordering contract, and that available
+placement ranges use the reviewed plan's required global dimension source. If
+placement ranges are missing, the dimension-source gate is not checked and the
+existing missing range/dimension requirements remain the authority. This
+remains metadata-only validation: it does not apply transforms, place blocks,
+or assemble route/global overlap.
 
 ## Structured Carry Objects For Placement
 

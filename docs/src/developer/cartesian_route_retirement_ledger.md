@@ -164,9 +164,12 @@ paths from becoming new route authority.
   fingerprint accepts the `(:product, :product)` local overlap source pair;
   unaccepted records block with `:unaccepted_overlap_placement_record`, and
   duplicate block keys under `:reject_duplicate_block_keys` block with
-  `:duplicate_overlap_placement_record`. This is compact metadata validation
-  only; it does not apply transforms, place blocks, assemble global overlap, or
-  adopt route-global overlap.
+  `:duplicate_overlap_placement_record`. It also validates local ordering
+  contracts for available records and required global dimension source for
+  available placement ranges; missing ranges still report missing range and
+  dimension requirements rather than a source mismatch. This is compact
+  metadata validation only; it does not apply transforms, place blocks,
+  assemble global overlap, or adopt route-global overlap.
 - The next overlap implementation boundary is no longer additional
   fingerprinting. It is a reviewed placement design and implementation plan for
   turning local CPB overlap collections into retained/global overlap. That plan

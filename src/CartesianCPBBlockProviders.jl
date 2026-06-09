@@ -1098,6 +1098,18 @@ function cpb_overlap_placement_facts(
             collection_summary,
             placement_plan,
         )
+    local_ordering_contract =
+        _cpb_overlap_placement_local_ordering_contract_summary(
+            collection_available,
+            record_fact_summaries,
+            placement_plan,
+        )
+    global_dimension_source_contract =
+        _cpb_overlap_placement_global_dimension_source_contract_summary(
+            collection_available,
+            record_fact_summaries,
+            placement_plan,
+        )
     missing_requirements =
         _cpb_overlap_placement_missing_requirements(
             collection_available,
@@ -1122,6 +1134,12 @@ function cpb_overlap_placement_facts(
                 placement_record_inventory.status ===
                 :blocked_cpb_overlap_placement_record_inventory ?
                 placement_record_inventory.blocker :
+                local_ordering_contract.status ===
+                :blocked_cpb_overlap_local_ordering_contract ?
+                local_ordering_contract.blocker :
+                global_dimension_source_contract.status ===
+                :blocked_cpb_overlap_global_dimension_source_contract ?
+                global_dimension_source_contract.blocker :
                 (
                     isempty(missing_requirements) ?
                     :placement_not_implemented :
@@ -1154,6 +1172,22 @@ function cpb_overlap_placement_facts(
         duplicate_block_keys = placement_record_inventory.duplicate_block_keys,
         duplicate_record_policy =
             placement_record_inventory.duplicate_record_policy,
+        local_ordering_contract_status = local_ordering_contract.status,
+        local_ordering_contract_blocker = local_ordering_contract.blocker,
+        local_ordering_contract = local_ordering_contract.local_ordering_contract,
+        provided_local_orderings = local_ordering_contract.provided_local_orderings,
+        mismatched_local_ordering_block_keys =
+            local_ordering_contract.mismatched_local_ordering_block_keys,
+        global_dimension_source_contract_status =
+            global_dimension_source_contract.status,
+        global_dimension_source_contract_blocker =
+            global_dimension_source_contract.blocker,
+        required_global_dimension_source =
+            global_dimension_source_contract.required_global_dimension_source,
+        provided_global_dimension_sources =
+            global_dimension_source_contract.provided_global_dimension_sources,
+        mismatched_global_dimension_source_block_keys =
+            global_dimension_source_contract.mismatched_global_dimension_source_block_keys,
         accumulation_rule_status,
         accumulation_rule =
             isnothing(effective_accumulation_rule) ?
@@ -1420,6 +1454,112 @@ function _cpb_overlap_placement_duplicate_block_keys(block_keys::Tuple)
         end
     end
     return Tuple(duplicate_block_keys)
+end
+
+function _cpb_overlap_placement_local_ordering_contract_summary(
+    collection_available::Bool,
+    record_fact_summaries::Tuple,
+    placement_plan,
+)
+    plan_summary = _cpb_overlap_placement_plan_summary(placement_plan)
+    plan_is_reviewed = placement_plan isa CPBReviewedOverlapPlacementPlan
+    plan_status =
+        isnothing(plan_summary) ?
+        :unavailable :
+        _summary_property(plan_summary, :status)
+    local_ordering_contract =
+        plan_is_reviewed && !isnothing(plan_summary) ?
+        _summary_property(plan_summary, :local_ordering_contract) :
+        :unavailable
+    provided_local_orderings =
+        collection_available ?
+        Tuple(unique(record.local_ordering for record in record_fact_summaries)) :
+        ()
+    mismatched_block_keys =
+        plan_is_reviewed &&
+        plan_status === :available_cpb_reviewed_overlap_placement_plan ?
+        Tuple(
+            record.block_key for record in record_fact_summaries
+            if record.record_status === :available_cpb_local_overlap_block_record &&
+               record.local_ordering !== local_ordering_contract
+        ) :
+        ()
+    status, blocker =
+        !collection_available ?
+        (:unavailable_cpb_overlap_local_ordering_contract,
+            :missing_local_overlap_collection) :
+        !plan_is_reviewed ?
+        (:not_checked_cpb_overlap_local_ordering_contract, nothing) :
+        plan_status !== :available_cpb_reviewed_overlap_placement_plan ?
+        (:blocked_cpb_overlap_local_ordering_contract,
+            _summary_property(plan_summary, :blocker)) :
+        !isempty(mismatched_block_keys) ?
+        (:blocked_cpb_overlap_local_ordering_contract,
+            :overlap_local_ordering_contract_mismatch) :
+        (:available_cpb_overlap_local_ordering_contract, nothing)
+    return (;
+        status,
+        blocker,
+        local_ordering_contract,
+        provided_local_orderings,
+        mismatched_local_ordering_block_keys = mismatched_block_keys,
+    )
+end
+
+function _cpb_overlap_placement_global_dimension_source_contract_summary(
+    collection_available::Bool,
+    record_fact_summaries::Tuple,
+    placement_plan,
+)
+    plan_summary = _cpb_overlap_placement_plan_summary(placement_plan)
+    plan_is_reviewed = placement_plan isa CPBReviewedOverlapPlacementPlan
+    plan_status =
+        isnothing(plan_summary) ?
+        :unavailable :
+        _summary_property(plan_summary, :status)
+    required_global_dimension_source =
+        plan_is_reviewed && !isnothing(plan_summary) ?
+        _summary_property(plan_summary, :required_global_dimension_source) :
+        :unavailable
+    available_range_records = Tuple(
+        record for record in record_fact_summaries
+        if record.placement_range_status ===
+           :available_cpb_source_pair_placement_range
+    )
+    provided_global_dimension_sources =
+        collection_available ?
+        Tuple(unique(record.global_dimension_source for record in available_range_records)) :
+        ()
+    mismatched_block_keys =
+        plan_is_reviewed &&
+        plan_status === :available_cpb_reviewed_overlap_placement_plan ?
+        Tuple(
+            record.block_key for record in available_range_records
+            if record.global_dimension_source !== required_global_dimension_source
+        ) :
+        ()
+    status, blocker =
+        !collection_available ?
+        (:unavailable_cpb_overlap_global_dimension_source_contract,
+            :missing_local_overlap_collection) :
+        !plan_is_reviewed ?
+        (:not_checked_cpb_overlap_global_dimension_source_contract, nothing) :
+        plan_status !== :available_cpb_reviewed_overlap_placement_plan ?
+        (:blocked_cpb_overlap_global_dimension_source_contract,
+            _summary_property(plan_summary, :blocker)) :
+        isempty(available_range_records) ?
+        (:not_checked_cpb_overlap_global_dimension_source_contract, nothing) :
+        !isempty(mismatched_block_keys) ?
+        (:blocked_cpb_overlap_global_dimension_source_contract,
+            :global_dimension_source_mismatch) :
+        (:available_cpb_overlap_global_dimension_source_contract, nothing)
+    return (;
+        status,
+        blocker,
+        required_global_dimension_source,
+        provided_global_dimension_sources,
+        mismatched_global_dimension_source_block_keys = mismatched_block_keys,
+    )
 end
 
 function _cpb_overlap_placement_missing_requirements(

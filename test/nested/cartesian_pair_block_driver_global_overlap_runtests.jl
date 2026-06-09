@@ -676,6 +676,46 @@ function _driver_overlap_real_report_overlap_placement_source_audit(
             isnothing(reviewed_placement_facts_summary) ?
             :not_attempted_missing_reviewed_placement_plan :
             reviewed_placement_facts_summary.duplicate_record_policy,
+        reviewed_placement_facts_local_ordering_contract_status =
+            isnothing(reviewed_placement_facts_summary) ?
+            :not_attempted_missing_reviewed_placement_plan :
+            reviewed_placement_facts_summary.local_ordering_contract_status,
+        reviewed_placement_facts_local_ordering_contract_blocker =
+            isnothing(reviewed_placement_facts_summary) ?
+            :not_attempted_missing_reviewed_placement_plan :
+            reviewed_placement_facts_summary.local_ordering_contract_blocker,
+        reviewed_placement_facts_local_ordering_contract =
+            isnothing(reviewed_placement_facts_summary) ?
+            :not_attempted_missing_reviewed_placement_plan :
+            reviewed_placement_facts_summary.local_ordering_contract,
+        reviewed_placement_facts_provided_local_orderings =
+            isnothing(reviewed_placement_facts_summary) ?
+            () :
+            reviewed_placement_facts_summary.provided_local_orderings,
+        reviewed_placement_facts_mismatched_local_ordering_block_keys =
+            isnothing(reviewed_placement_facts_summary) ?
+            () :
+            reviewed_placement_facts_summary.mismatched_local_ordering_block_keys,
+        reviewed_placement_facts_global_dimension_source_contract_status =
+            isnothing(reviewed_placement_facts_summary) ?
+            :not_attempted_missing_reviewed_placement_plan :
+            reviewed_placement_facts_summary.global_dimension_source_contract_status,
+        reviewed_placement_facts_global_dimension_source_contract_blocker =
+            isnothing(reviewed_placement_facts_summary) ?
+            :not_attempted_missing_reviewed_placement_plan :
+            reviewed_placement_facts_summary.global_dimension_source_contract_blocker,
+        reviewed_placement_facts_required_global_dimension_source =
+            isnothing(reviewed_placement_facts_summary) ?
+            :not_attempted_missing_reviewed_placement_plan :
+            reviewed_placement_facts_summary.required_global_dimension_source,
+        reviewed_placement_facts_provided_global_dimension_sources =
+            isnothing(reviewed_placement_facts_summary) ?
+            () :
+            reviewed_placement_facts_summary.provided_global_dimension_sources,
+        reviewed_placement_facts_mismatched_global_dimension_source_block_keys =
+            isnothing(reviewed_placement_facts_summary) ?
+            () :
+            reviewed_placement_facts_summary.mismatched_global_dimension_source_block_keys,
         reviewed_placement_facts_skeleton_status =
             isnothing(reviewed_placement_facts_skeleton) ?
             :not_attempted_missing_reviewed_placement_facts :
@@ -1805,6 +1845,26 @@ end
           ()
     @test placement_source_audit.reviewed_placement_facts_duplicate_record_policy ===
           :reject_duplicate_block_keys
+    @test placement_source_audit.reviewed_placement_facts_local_ordering_contract_status ===
+          :available_cpb_overlap_local_ordering_contract
+    @test placement_source_audit.reviewed_placement_facts_local_ordering_contract_blocker ===
+          nothing
+    @test placement_source_audit.reviewed_placement_facts_local_ordering_contract ===
+          :parent_compatible_x_slowest_z_fastest
+    @test placement_source_audit.reviewed_placement_facts_provided_local_orderings ===
+          (:parent_compatible_x_slowest_z_fastest,)
+    @test placement_source_audit.reviewed_placement_facts_mismatched_local_ordering_block_keys ===
+          ()
+    @test placement_source_audit.reviewed_placement_facts_global_dimension_source_contract_status ===
+          :not_checked_cpb_overlap_global_dimension_source_contract
+    @test placement_source_audit.reviewed_placement_facts_global_dimension_source_contract_blocker ===
+          nothing
+    @test placement_source_audit.reviewed_placement_facts_required_global_dimension_source ===
+          :report_retained_units
+    @test placement_source_audit.reviewed_placement_facts_provided_global_dimension_sources ===
+          ()
+    @test placement_source_audit.reviewed_placement_facts_mismatched_global_dimension_source_block_keys ===
+          ()
     @test placement_source_audit.reviewed_placement_facts_skeleton_status ===
           :blocked_private_global_overlap_placement_plan_skeleton
     @test placement_source_audit.reviewed_placement_facts_skeleton_blocker ===
