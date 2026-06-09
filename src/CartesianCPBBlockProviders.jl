@@ -12,11 +12,15 @@ const _OVERLAP_PLACEMENT_DUPLICATE_POLICIES = (:reject_duplicate_block_keys,)
 
 export CPBIntervalPair3D,
        CPBOverlapAxisBlockSet,
+       CPBAxisProductOperatorBlock,
+       CPBOverlapOperatorBlock,
        CPBOverlapDenseBlock,
        CPBLocalOverlapBlockRecord,
        CPBLocalOverlapBlockCollection,
        cpb_interval_pair,
        cpb_overlap_axis_blocks,
+       cpb_axis_product_operator_block,
+       cpb_overlap_operator_block,
        cpb_overlap_dense_block,
        cpb_local_overlap_block_record,
        cpb_local_overlap_block_collection,
@@ -48,6 +52,34 @@ struct CPBOverlapAxisBlockSet{P,I,B,M}
     overlap_packet::P
     interval_pair::I
     axis_blocks::B
+    metadata::M
+end
+
+"""
+    CPBAxisProductOperatorBlock
+
+Generic dense local CPB product-space operator block materialized from
+axis-local left/right blocks. This is local to the CPB operator layer and does
+not imply route/global placement or realization.
+"""
+struct CPBAxisProductOperatorBlock{A,D,M}
+    axis_ops::A
+    dense_block::D
+    metadata::M
+end
+
+"""
+    CPBOverlapOperatorBlock
+
+Thin overlap wrapper around the generic CPB axis-product operator block. The
+overlap term supplies the local overlap axis blocks; dense product-space
+materialization is performed by `cpb_axis_product_operator_block`.
+"""
+struct CPBOverlapOperatorBlock{P,I,S,B,M}
+    overlap_packet::P
+    interval_pair::I
+    axis_block_set::S
+    axis_product_block::B
     metadata::M
 end
 
@@ -179,6 +211,8 @@ end
 
 summary(pair::CPBIntervalPair3D) = pair.metadata
 summary(block_set::CPBOverlapAxisBlockSet) = block_set.metadata
+summary(block::CPBAxisProductOperatorBlock) = block.metadata
+summary(block::CPBOverlapOperatorBlock) = block.metadata
 summary(block::CPBOverlapDenseBlock) = block.metadata
 summary(record::CPBLocalOverlapBlockRecord) = record.metadata
 summary(collection::CPBLocalOverlapBlockCollection) = collection.metadata
@@ -418,46 +452,69 @@ function _axis_block_shapes(axis_blocks)
     )
 end
 
-function cpb_overlap_dense_block(axis_block_set::CPBOverlapAxisBlockSet)
-    axis_block_summary = summary(axis_block_set)
-    blocker =
-        axis_block_summary.status === :available_cpb_overlap_axis_blocks ?
-        nothing :
-        _cpb_overlap_dense_block_blocker(axis_block_summary)
+function cpb_axis_product_operator_block(
+    axis_ops;
+    term = :axis_product_operator,
+    source_kind = :axis_product_axis_ops,
+    source_summary = :unavailable,
+    factor_space = :unavailable,
+    factor_convention = :unavailable,
+    normalization_convention = :unavailable,
+    index_domain = :unavailable,
+    index_domain_source = :unavailable,
+    index_domain_status = :unavailable,
+    axis_order = _AXIS_ORDER,
+    bra_ket_order = (:bra, :ket),
+)
+    blocker = _cpb_axis_product_operator_block_blocker(axis_ops)
     dense_block =
         isnothing(blocker) ?
-        _materialize_cpb_overlap_dense_block(axis_block_set.axis_blocks) :
+        _materialize_cpb_axis_product_dense_block(axis_ops) :
         nothing
     status =
         isnothing(blocker) ?
-        :materialized_cpb_overlap_dense_block :
-        :blocked_cpb_overlap_dense_block
-    return CPBOverlapDenseBlock(
-        axis_block_set,
+        :materialized_cpb_axis_product_operator_block :
+        :blocked_cpb_axis_product_operator_block
+    return CPBAxisProductOperatorBlock(
+        axis_ops,
         dense_block,
-        _cpb_overlap_dense_block_summary(
+        _cpb_axis_product_operator_block_summary(
             status,
             blocker,
-            axis_block_summary,
-            dense_block,
+            axis_ops,
+            dense_block;
+            term,
+            source_kind,
+            source_summary,
+            factor_space,
+            factor_convention,
+            normalization_convention,
+            index_domain,
+            index_domain_source,
+            index_domain_status,
+            axis_order,
+            bra_ket_order,
         ),
     )
 end
 
-function _cpb_overlap_dense_block_blocker(axis_block_summary)
-    isnothing(axis_block_summary.blocker) &&
-        return :unavailable_cpb_overlap_axis_blocks
-    return axis_block_summary.blocker
+function _cpb_axis_product_operator_block_blocker(axis_ops)
+    for axis in _AXIS_ORDER
+        hasproperty(axis_ops, axis) || return Symbol("missing_$(axis)_axis_operator")
+        getproperty(axis_ops, axis) isa AbstractMatrix ||
+            return Symbol("$(axis)_axis_operator_not_matrix")
+    end
+    return nothing
 end
 
-function _materialize_cpb_overlap_dense_block(axis_blocks)
-    nx_left, nx_right = size(axis_blocks.x)
-    ny_left, ny_right = size(axis_blocks.y)
-    nz_left, nz_right = size(axis_blocks.z)
+function _materialize_cpb_axis_product_dense_block(axis_ops)
+    nx_left, nx_right = size(axis_ops.x)
+    ny_left, ny_right = size(axis_ops.y)
+    nz_left, nz_right = size(axis_ops.z)
     element_type = promote_type(
-        eltype(axis_blocks.x),
-        eltype(axis_blocks.y),
-        eltype(axis_blocks.z),
+        eltype(axis_ops.x),
+        eltype(axis_ops.y),
+        eltype(axis_ops.z),
     )
     dense_block = Matrix{element_type}(
         undef,
@@ -479,12 +536,240 @@ function _materialize_cpb_overlap_dense_block(axis_blocks)
                 (nx_right, ny_right, nz_right),
             )
             dense_block[left_index, right_index] =
-                axis_blocks.x[ix_left, ix_right] *
-                axis_blocks.y[iy_left, iy_right] *
-                axis_blocks.z[iz_left, iz_right]
+                axis_ops.x[ix_left, ix_right] *
+                axis_ops.y[iy_left, iy_right] *
+                axis_ops.z[iz_left, iz_right]
         end
     end
     return dense_block
+end
+
+function _cpb_axis_product_operator_block_summary(
+    status::Symbol,
+    blocker,
+    axis_ops,
+    dense_block;
+    term,
+    source_kind,
+    source_summary,
+    factor_space,
+    factor_convention,
+    normalization_convention,
+    index_domain,
+    index_domain_source,
+    index_domain_status,
+    axis_order,
+    bra_ket_order,
+)
+    available = status === :materialized_cpb_axis_product_operator_block
+    left_shape =
+        available ?
+        (x = size(axis_ops.x, 1), y = size(axis_ops.y, 1), z = size(axis_ops.z, 1)) :
+        :unavailable
+    right_shape =
+        available ?
+        (x = size(axis_ops.x, 2), y = size(axis_ops.y, 2), z = size(axis_ops.z, 2)) :
+        :unavailable
+    return (;
+        object_kind = :cartesian_cpb_axis_product_operator_block_summary,
+        status,
+        blocker,
+        term,
+        source_kind,
+        source_summary,
+        representation = :dense_local_cpb_product_space,
+        local_ordering = _LOCAL_ORDERING,
+        left_shape,
+        right_shape,
+        left_support_count =
+            available ? left_shape.x * left_shape.y * left_shape.z : :unavailable,
+        right_support_count =
+            available ? right_shape.x * right_shape.y * right_shape.z : :unavailable,
+        axis_operator_shapes =
+            available ? _axis_block_shapes(axis_ops) : :unavailable,
+        dense_block_available = available,
+        dense_block_shape =
+            available ?
+            size(dense_block) :
+            :unavailable,
+        dense_block_eltype =
+            available ?
+            eltype(dense_block) :
+            :unavailable,
+        provider_level_local_matrix_materialized = available,
+        dense_local_block_materialized = available,
+        realization_status = :unrealized,
+        route_global_status = :unassigned,
+        factor_space,
+        factor_convention,
+        normalization_convention,
+        index_domain,
+        index_domain_source,
+        index_domain_status,
+        axis_order,
+        bra_ket_order,
+        route_driver_wiring = false,
+        route_global_matrix_materialized = false,
+        route_global_overlap_matrix_materialized = false,
+        global_matrix_materialized = false,
+        global_overlap_matrix_materialized = false,
+        hamiltonian_data_materialized = false,
+        coulomb_data_materialized = false,
+        ida_mwg_semantics = false,
+        pqs_lowdin_materialized = false,
+        pqs_shell_projection_materialized = false,
+        exports_or_artifacts = false,
+    )
+end
+
+function cpb_overlap_operator_block(
+    overlap_packet::CPGB.CartesianParentAxisFactorPacket3D,
+    interval_pair::CPBIntervalPair3D,
+)
+    axis_block_set = cpb_overlap_axis_blocks(overlap_packet, interval_pair)
+    axis_block_summary = summary(axis_block_set)
+    axis_product_block =
+        axis_block_summary.status === :available_cpb_overlap_axis_blocks ?
+        cpb_axis_product_operator_block(
+            axis_block_set.axis_blocks;
+            term = :overlap,
+            source_kind = :cpb_overlap_axis_blocks,
+            source_summary = axis_block_summary,
+            factor_space = axis_block_summary.factor_space,
+            factor_convention = axis_block_summary.factor_convention,
+            normalization_convention = axis_block_summary.normalization_convention,
+            index_domain = axis_block_summary.index_domain,
+            index_domain_source = axis_block_summary.index_domain_source,
+            index_domain_status = axis_block_summary.index_domain_status,
+            axis_order = axis_block_summary.axis_order,
+            bra_ket_order = axis_block_summary.bra_ket_order,
+        ) :
+        nothing
+    axis_product_summary =
+        isnothing(axis_product_block) ? nothing : summary(axis_product_block)
+    blocker =
+        isnothing(axis_product_summary) ?
+        _cpb_overlap_dense_block_blocker(axis_block_summary) :
+        axis_product_summary.blocker
+    status =
+        isnothing(blocker) ?
+        :materialized_cpb_overlap_operator_block :
+        :blocked_cpb_overlap_operator_block
+    return CPBOverlapOperatorBlock(
+        overlap_packet,
+        interval_pair,
+        axis_block_set,
+        axis_product_block,
+        _cpb_overlap_operator_block_summary(
+            status,
+            blocker,
+            axis_block_summary,
+            axis_product_summary,
+        ),
+    )
+end
+
+function _cpb_overlap_operator_block_summary(
+    status::Symbol,
+    blocker,
+    axis_block_summary,
+    axis_product_summary,
+)
+    available = status === :materialized_cpb_overlap_operator_block
+    return (;
+        object_kind = :cartesian_cpb_overlap_operator_block_summary,
+        status,
+        blocker,
+        term = :overlap,
+        source_kind = :cpb_overlap_axis_blocks,
+        axis_block_summary,
+        axis_product_block_summary =
+            isnothing(axis_product_summary) ? :unavailable : axis_product_summary,
+        representation = :dense_local_cpb_product_space,
+        local_ordering = axis_block_summary.local_ordering,
+        left_shape =
+            available ? axis_product_summary.left_shape : :unavailable,
+        right_shape =
+            available ? axis_product_summary.right_shape : :unavailable,
+        dense_block_available = available,
+        dense_block_shape =
+            available ? axis_product_summary.dense_block_shape : :unavailable,
+        dense_block_eltype =
+            available ? axis_product_summary.dense_block_eltype : :unavailable,
+        provider_level_local_matrix_materialized = available,
+        realization_status = :unrealized,
+        route_global_status = :unassigned,
+        factor_space = axis_block_summary.factor_space,
+        factor_convention = axis_block_summary.factor_convention,
+        normalization_convention = axis_block_summary.normalization_convention,
+        index_domain = axis_block_summary.index_domain,
+        index_domain_source = axis_block_summary.index_domain_source,
+        index_domain_status = axis_block_summary.index_domain_status,
+        axis_order = axis_block_summary.axis_order,
+        bra_ket_order = axis_block_summary.bra_ket_order,
+        route_driver_wiring = false,
+        route_global_matrix_materialized = false,
+        route_global_overlap_matrix_materialized = false,
+        global_matrix_materialized = false,
+        global_overlap_matrix_materialized = false,
+        hamiltonian_data_materialized = false,
+        coulomb_data_materialized = false,
+        ida_mwg_semantics = false,
+        pqs_lowdin_materialized = false,
+        pqs_shell_projection_materialized = false,
+        exports_or_artifacts = false,
+    )
+end
+
+function cpb_overlap_dense_block(axis_block_set::CPBOverlapAxisBlockSet)
+    axis_block_summary = summary(axis_block_set)
+    blocker =
+        axis_block_summary.status === :available_cpb_overlap_axis_blocks ?
+        nothing :
+        _cpb_overlap_dense_block_blocker(axis_block_summary)
+    axis_product_block =
+        isnothing(blocker) ?
+        cpb_axis_product_operator_block(
+            axis_block_set.axis_blocks;
+            term = :overlap,
+            source_kind = :cpb_overlap_axis_blocks,
+            source_summary = axis_block_summary,
+            factor_space = axis_block_summary.factor_space,
+            factor_convention = axis_block_summary.factor_convention,
+            normalization_convention = axis_block_summary.normalization_convention,
+            index_domain = axis_block_summary.index_domain,
+            index_domain_source = axis_block_summary.index_domain_source,
+            index_domain_status = axis_block_summary.index_domain_status,
+            axis_order = axis_block_summary.axis_order,
+            bra_ket_order = axis_block_summary.bra_ket_order,
+        ) :
+        nothing
+    axis_product_summary =
+        isnothing(axis_product_block) ? nothing : summary(axis_product_block)
+    blocker =
+        isnothing(axis_product_summary) ? blocker : axis_product_summary.blocker
+    dense_block =
+        isnothing(axis_product_block) ? nothing : axis_product_block.dense_block
+    status =
+        isnothing(blocker) ?
+        :materialized_cpb_overlap_dense_block :
+        :blocked_cpb_overlap_dense_block
+    return CPBOverlapDenseBlock(
+        axis_block_set,
+        dense_block,
+        _cpb_overlap_dense_block_summary(
+            status,
+            blocker,
+            axis_block_summary,
+            dense_block,
+        ),
+    )
+end
+
+function _cpb_overlap_dense_block_blocker(axis_block_summary)
+    isnothing(axis_block_summary.blocker) &&
+        return :unavailable_cpb_overlap_axis_blocks
+    return axis_block_summary.blocker
 end
 
 function _local_product_index(

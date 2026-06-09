@@ -559,6 +559,34 @@ For one-body overlap, the axis-block result is simply:
 (x = Sx_slice, y = Sy_slice, z = Sz_slice)
 ```
 
+The generic local dense primitive for one product term is an axis-product CPB
+operator block:
+
+```text
+axis_ops = (x = Ox, y = Oy, z = Oz)
+
+O[(ix,iy,iz), (jx,jy,jz)] =
+  Ox[ix,jx] * Oy[iy,jy] * Oz[iz,jz]
+```
+
+The implemented `cpb_axis_product_operator_block` materializes this dense local
+CPB product-space block with x slowest and z fastest. It is generic over the
+operator term and works for point, edge, face, and rectangular/cube CPB shapes
+where one or more axis lengths may be one. Its summary is compact: the dense
+matrix lives on the returned object, not in metadata. Realization and
+route/global flags remain unset.
+
+Overlap is the first thin wrapper over this primitive:
+
+```text
+parent overlap packet
+-> CPB interval pair
+-> local overlap axis blocks
+-> cpb_axis_product_operator_block(term = :overlap)
+```
+
+It should not grow a separate overlap-only contraction kernel.
+
 For kinetic, the result should preserve the sum-of-axis structure:
 
 ```julia
@@ -572,6 +600,20 @@ For kinetic, the result should preserve the sum-of-axis structure:
 The exact representation can be refined, but the key contract is that kinetic
 is not a single arbitrary dense 3D object at this layer. It is an axis-factor
 sum that can be materialized locally only when requested.
+
+Future one-body terms should be sums or wrappers around the same axis-product
+primitive, for example:
+
+```text
+kinetic    = Kx Sy Sz + Sx Ky Sz + Sx Sy Kz
+position_x = Xx Sy Sz
+x2_y       = Sx X2y Sz
+```
+
+Inactive directions should use explicit overlap factors such as `Sx`, `Sy`,
+and `Sz`, not ambiguous "identity" labels. That preserves the tensor-product
+operator meaning and prevents CPB-local blocks from silently changing the
+one-body convention.
 
 ### Local Dense Ordering
 

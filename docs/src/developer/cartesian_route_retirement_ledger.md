@@ -241,6 +241,17 @@ paths from becoming new route authority.
   realization design identifies real transform and range ownership. The next
   likely implementation should be an overlap-only cleanup/renaming pass or a
   small generic `CPBOperatorBlock` design, not more placement code.
+- A generic CPB-local axis-product operator block primitive now exists. It
+  materializes one dense local product-space block from prepared 1D axis
+  operators `(x = Ox, y = Oy, z = Oz)` using x-slowest, z-fastest ordering and
+  compact route-neutral metadata. Overlap is a thin wrapper over that primitive:
+  parent overlap packet -> CPB interval pair -> overlap axis blocks ->
+  axis-product block with `term = :overlap`. This is still CPB-local operator
+  construction, not WL/PQS realization and not route/global placement. Future
+  kinetic, position, and x2 CPB one-body blocks should be sums of axis-product
+  terms such as `Kx Sy Sz + Sx Ky Sz + Sx Sy Kz`, `Xx Sy Sz`, and
+  `Sx X2y Sz`; inactive directions should use explicit overlap factors, not
+  ambiguous identity labels.
 - The next overlap implementation boundary is no longer additional placement
   fingerprinting. First decide the CPB operator-block and WL/PQS realization
   design: what local block objects exist, how White-Lindsey consumes them, how
