@@ -110,6 +110,83 @@ function _test_blocked_axis_product(axis_ops, expected_blocker)
     return nothing
 end
 
+function _sum_axis_products_expected_dense(product_terms)
+    first_dense = _axis_product_expected_dense(first(product_terms).axis_ops)
+    dense_eltype = Union{}
+    for product_term in product_terms
+        dense_eltype = promote_type(
+            dense_eltype,
+            typeof(product_term.coefficient),
+            eltype(product_term.axis_ops.x),
+            eltype(product_term.axis_ops.y),
+            eltype(product_term.axis_ops.z),
+        )
+    end
+    dense = zeros(dense_eltype, size(first_dense))
+    for product_term in product_terms
+        dense .+= product_term.coefficient .*
+                  _axis_product_expected_dense(product_term.axis_ops)
+    end
+    return dense
+end
+
+function _sum_axis_products_case(product_terms; expected_dense)
+    block = CBPOperatorBlock.cpb_sum_of_axis_products_operator_block(
+        product_terms;
+        term = :test_sum_of_axis_products,
+        factor_space = :test_factor_space,
+        factor_convention = :test_factor_convention,
+        index_domain = :parent_axis_indices,
+    )
+    block_summary = CBPOperatorBlock.summary(block)
+    @test block_summary.status ===
+          :materialized_cpb_sum_of_axis_products_operator_block
+    @test block_summary.blocker === nothing
+    @test block_summary.term === :test_sum_of_axis_products
+    @test block_summary.representation === :dense_local_cpb_sum_of_axis_products
+    @test block_summary.product_term_count == length(product_terms)
+    @test block_summary.product_term_labels ==
+          Tuple(product_term.label for product_term in product_terms)
+    @test block_summary.dense_block_available === true
+    @test block_summary.dense_block_shape == size(expected_dense)
+    @test block_summary.dense_block_eltype === eltype(expected_dense)
+    @test block_summary.provider_level_local_matrix_materialized === true
+    @test block_summary.realization_status === :unrealized
+    @test block_summary.route_global_status === :unassigned
+    @test block_summary.route_driver_wiring === false
+    @test block_summary.route_global_matrix_materialized === false
+    @test block_summary.global_matrix_materialized === false
+    @test !hasproperty(block_summary, :dense_block)
+    @test !hasproperty(block_summary, :axis_ops)
+    @test !hasproperty(block_summary, :global_overlap_matrix)
+    @test !hasproperty(block_summary, :retained_blocks)
+    @test block.dense_block == expected_dense
+    return block
+end
+
+function _test_blocked_sum_axis_products(product_terms, expected_blocker)
+    block = CBPOperatorBlock.cpb_sum_of_axis_products_operator_block(product_terms)
+    block_summary = CBPOperatorBlock.summary(block)
+    @test block_summary.status ===
+          :blocked_cpb_sum_of_axis_products_operator_block
+    @test block_summary.blocker === expected_blocker
+    @test isnothing(block.dense_block)
+    @test block_summary.dense_block_available === false
+    @test block_summary.dense_block_shape === :unavailable
+    @test block_summary.dense_block_eltype === :unavailable
+    @test block_summary.provider_level_local_matrix_materialized === false
+    @test block_summary.realization_status === :unrealized
+    @test block_summary.route_global_status === :unassigned
+    @test block_summary.route_driver_wiring === false
+    @test block_summary.route_global_matrix_materialized === false
+    @test block_summary.global_matrix_materialized === false
+    @test !hasproperty(block_summary, :dense_block)
+    @test !hasproperty(block_summary, :axis_ops)
+    @test !hasproperty(block_summary, :global_overlap_matrix)
+    @test !hasproperty(block_summary, :retained_blocks)
+    return block
+end
+
 function _operator_block_parent(; count = 3)
     axis = build_basis(MappedUniformBasisSpec(
         :G10;
@@ -230,6 +307,86 @@ end
         ),
         :z_axis_operator_empty,
     )
+
+    one_term = (
+        (;
+            coefficient = 2.0,
+            axis_ops = edge_ops,
+            label = :scaled_edge_product,
+        ),
+    )
+    one_term_sum = _sum_axis_products_case(
+        one_term;
+        expected_dense = 2.0 .* edge_block.dense_block,
+    )
+    @test one_term_sum.dense_block == 2.0 .* edge_block.dense_block
+
+    two_term_ops = (;
+        x = [0.5 1.0; 1.5 2.0],
+        y = fill(3.0, 1, 1),
+        z = fill(4.0, 1, 1),
+    )
+    two_terms = (
+        (; coefficient = 1.5, axis_ops = edge_ops, label = :left_product),
+        (; coefficient = -0.25, axis_ops = two_term_ops, label = :right_product),
+    )
+    _sum_axis_products_case(
+        two_terms;
+        expected_dense = _sum_axis_products_expected_dense(two_terms),
+    )
+
+    sx = [1.0 0.1; 0.2 1.1]
+    sy = [1.2 0.3; 0.4 1.3]
+    sz = [1.4 0.5; 0.6 1.5]
+    kx = [2.0 -0.7; -0.8 2.1]
+    ky = [2.2 -0.9; -1.0 2.3]
+    kz = [2.4 -1.1; -1.2 2.5]
+    kinetic_shaped_terms = (
+        (; coefficient = 1.0, axis_ops = (x = kx, y = sy, z = sz), label = :x_piece),
+        (; coefficient = 1.0, axis_ops = (x = sx, y = ky, z = sz), label = :y_piece),
+        (; coefficient = 1.0, axis_ops = (x = sx, y = sy, z = kz), label = :z_piece),
+    )
+    kinetic_shaped_block = _sum_axis_products_case(
+        kinetic_shaped_terms;
+        expected_dense = _sum_axis_products_expected_dense(kinetic_shaped_terms),
+    )
+    @test CBPOperatorBlock.summary(kinetic_shaped_block).product_term_labels ==
+          (:x_piece, :y_piece, :z_piece)
+
+    _test_blocked_sum_axis_products((), :empty_axis_product_term_list)
+
+    shape_mismatch_terms = (
+        (; coefficient = 1.0, axis_ops = edge_ops, label = :base_shape),
+        (; coefficient = 1.0, axis_ops = face_ops, label = :other_shape),
+    )
+    _test_blocked_sum_axis_products(
+        shape_mismatch_terms,
+        :axis_product_term_shape_mismatch,
+    )
+
+    blocked_product_terms = (
+        (;
+            coefficient = 1.0,
+            axis_ops = (x = [1.0, 2.0], y = fill(1.0, 1, 1), z = fill(1.0, 1, 1)),
+            label = :bad_axis_product,
+        ),
+    )
+    blocked_product_sum = _test_blocked_sum_axis_products(
+        blocked_product_terms,
+        :axis_product_term_blocked,
+    )
+    blocked_product_summary = CBPOperatorBlock.summary(blocked_product_sum)
+    @test blocked_product_summary.product_term_summaries[1].axis_product_blocker ===
+          :x_axis_operator_not_matrix
+
+    coefficient_blocked_sum = _test_blocked_sum_axis_products(
+        ((; axis_ops = edge_ops, label = :missing_coefficient),),
+        :axis_product_term_coefficient_unavailable,
+    )
+    coefficient_blocked_summary =
+        CBPOperatorBlock.summary(coefficient_blocked_sum)
+    @test coefficient_blocked_summary.product_term_summaries[1].coefficient_available ===
+          false
 
     parent = _operator_block_parent()
     overlap_1d = _operator_block_overlap_1d()

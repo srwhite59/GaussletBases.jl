@@ -252,6 +252,19 @@ paths from becoming new route authority.
   terms such as `Kx Sy Sz + Sx Ky Sz + Sx Sy Kz`, `Xx Sy Sz`, and
   `Sx X2y Sz`; inactive directions should use explicit overlap factors, not
   ambiguous identity labels.
+- The CPB operator-block layer now distinguishes kernel families. Axis-product
+  and sum-of-axis-products kernels cover simple separable one-body terms such
+  as overlap, kinetic pieces, position, and x2. Electron-nuclear and
+  electron-electron Coulomb-family blocks should use specialized CPB-local
+  Gaussian-sum kernels with the Gaussian expansion index as an inner loop, not
+  an outer loop over repeated calls to `cpb_axis_product_operator_block`. The
+  shared abstraction should eventually be compact result records and metadata,
+  not necessarily a single universal kernel implementation.
+- A small `cpb_sum_of_axis_products_operator_block` primitive now materializes
+  dense CPB-local sums of prepared axis-product terms with compact per-term
+  summaries. It is for simple separable one-body terms only; no production
+  kinetic, position, x2, Coulomb-family kernel, WL/PQS realization, or
+  route/global placement was added with it.
 - The next overlap implementation boundary is no longer additional placement
   fingerprinting. First decide the CPB operator-block and WL/PQS realization
   design: what local block objects exist, how White-Lindsey consumes them, how

@@ -13,6 +13,7 @@ const _OVERLAP_PLACEMENT_DUPLICATE_POLICIES = (:reject_duplicate_block_keys,)
 export CPBIntervalPair3D,
        CPBOverlapAxisBlockSet,
        CPBAxisProductOperatorBlock,
+       CPBSumOfAxisProductsOperatorBlock,
        CPBOverlapOperatorBlock,
        CPBOverlapDenseBlock,
        CPBLocalOverlapBlockRecord,
@@ -20,6 +21,7 @@ export CPBIntervalPair3D,
        cpb_interval_pair,
        cpb_overlap_axis_blocks,
        cpb_axis_product_operator_block,
+       cpb_sum_of_axis_products_operator_block,
        cpb_overlap_operator_block,
        cpb_overlap_dense_block,
        cpb_local_overlap_block_record,
@@ -64,6 +66,20 @@ not imply route/global placement or realization.
 """
 struct CPBAxisProductOperatorBlock{A,D,M}
     axis_ops::A
+    dense_block::D
+    metadata::M
+end
+
+"""
+    CPBSumOfAxisProductsOperatorBlock
+
+Dense local CPB product-space operator block materialized from a sum of
+axis-product terms. This is for simple separable one-body terms only; it does
+not imply Coulomb-family Gaussian-sum kernels, realization, or route/global
+placement.
+"""
+struct CPBSumOfAxisProductsOperatorBlock{T,D,M}
+    product_terms::T
     dense_block::D
     metadata::M
 end
@@ -212,6 +228,7 @@ end
 summary(pair::CPBIntervalPair3D) = pair.metadata
 summary(block_set::CPBOverlapAxisBlockSet) = block_set.metadata
 summary(block::CPBAxisProductOperatorBlock) = block.metadata
+summary(block::CPBSumOfAxisProductsOperatorBlock) = block.metadata
 summary(block::CPBOverlapOperatorBlock) = block.metadata
 summary(block::CPBOverlapDenseBlock) = block.metadata
 summary(record::CPBLocalOverlapBlockRecord) = record.metadata
@@ -589,6 +606,266 @@ function _cpb_axis_product_operator_block_summary(
             available ? right_shape.x * right_shape.y * right_shape.z : :unavailable,
         axis_operator_shapes =
             available ? _axis_block_shapes(axis_ops) : :unavailable,
+        dense_block_available = available,
+        dense_block_shape =
+            available ?
+            size(dense_block) :
+            :unavailable,
+        dense_block_eltype =
+            available ?
+            eltype(dense_block) :
+            :unavailable,
+        provider_level_local_matrix_materialized = available,
+        dense_local_block_materialized = available,
+        realization_status = :unrealized,
+        route_global_status = :unassigned,
+        factor_space,
+        factor_convention,
+        normalization_convention,
+        index_domain,
+        index_domain_source,
+        index_domain_status,
+        axis_order,
+        bra_ket_order,
+        route_driver_wiring = false,
+        route_global_matrix_materialized = false,
+        route_global_overlap_matrix_materialized = false,
+        global_matrix_materialized = false,
+        global_overlap_matrix_materialized = false,
+        hamiltonian_data_materialized = false,
+        coulomb_data_materialized = false,
+        ida_mwg_semantics = false,
+        pqs_lowdin_materialized = false,
+        pqs_shell_projection_materialized = false,
+        exports_or_artifacts = false,
+    )
+end
+
+function cpb_sum_of_axis_products_operator_block(
+    product_terms;
+    term = :sum_of_axis_products_operator,
+    source_kind = :axis_product_term_list,
+    source_summary = :unavailable,
+    factor_space = :unavailable,
+    factor_convention = :unavailable,
+    normalization_convention = :unavailable,
+    index_domain = :unavailable,
+    index_domain_source = :unavailable,
+    index_domain_status = :unavailable,
+    axis_order = _AXIS_ORDER,
+    bra_ket_order = (:bra, :ket),
+)
+    normalized_terms = Tuple(product_terms)
+    product_term_summaries = _cpb_axis_product_term_summaries(normalized_terms)
+    blocker = _cpb_sum_of_axis_products_operator_block_blocker(
+        product_term_summaries,
+    )
+    dense_block =
+        isnothing(blocker) ?
+        _materialize_cpb_sum_of_axis_products_dense_block(normalized_terms) :
+        nothing
+    status =
+        isnothing(blocker) ?
+        :materialized_cpb_sum_of_axis_products_operator_block :
+        :blocked_cpb_sum_of_axis_products_operator_block
+    return CPBSumOfAxisProductsOperatorBlock(
+        normalized_terms,
+        dense_block,
+        _cpb_sum_of_axis_products_operator_block_summary(
+            status,
+            blocker,
+            product_term_summaries,
+            dense_block;
+            term,
+            source_kind,
+            source_summary,
+            factor_space,
+            factor_convention,
+            normalization_convention,
+            index_domain,
+            index_domain_source,
+            index_domain_status,
+            axis_order,
+            bra_ket_order,
+        ),
+    )
+end
+
+function _cpb_axis_product_term_summaries(product_terms::Tuple)
+    return Tuple(
+        _cpb_axis_product_term_summary(product_term, product_term_index)
+        for (product_term_index, product_term) in enumerate(product_terms)
+    )
+end
+
+function _cpb_axis_product_term_summary(product_term, product_term_index::Integer)
+    label =
+        hasproperty(product_term, :label) ?
+        getproperty(product_term, :label) :
+        Symbol("axis_product_term_", product_term_index)
+    coefficient =
+        hasproperty(product_term, :coefficient) ?
+        getproperty(product_term, :coefficient) :
+        nothing
+    coefficient_available = coefficient isa Number
+    axis_ops =
+        hasproperty(product_term, :axis_ops) ?
+        getproperty(product_term, :axis_ops) :
+        nothing
+    axis_product_blocker =
+        isnothing(axis_ops) ?
+        :missing_axis_ops :
+        _cpb_axis_product_operator_block_blocker(axis_ops)
+    blocker =
+        coefficient_available ?
+        axis_product_blocker :
+        :axis_product_term_coefficient_unavailable
+    available = isnothing(blocker)
+    left_shape =
+        available ?
+        (x = size(axis_ops.x, 1), y = size(axis_ops.y, 1), z = size(axis_ops.z, 1)) :
+        :unavailable
+    right_shape =
+        available ?
+        (x = size(axis_ops.x, 2), y = size(axis_ops.y, 2), z = size(axis_ops.z, 2)) :
+        :unavailable
+    return (;
+        object_kind = :cartesian_cpb_axis_product_term_summary,
+        product_term_index = Int(product_term_index),
+        label,
+        status =
+            available ?
+            :available_cpb_axis_product_term :
+            :blocked_cpb_axis_product_term,
+        blocker,
+        coefficient_available,
+        coefficient = coefficient_available ? coefficient : :unavailable,
+        axis_product_blocker,
+        left_shape,
+        right_shape,
+        left_support_count =
+            available ? left_shape.x * left_shape.y * left_shape.z : :unavailable,
+        right_support_count =
+            available ? right_shape.x * right_shape.y * right_shape.z : :unavailable,
+        axis_operator_shapes =
+            available ? _axis_block_shapes(axis_ops) : :unavailable,
+        dense_block_available = available,
+        dense_block_shape =
+            available ?
+            (
+                left_shape.x * left_shape.y * left_shape.z,
+                right_shape.x * right_shape.y * right_shape.z,
+            ) :
+            :unavailable,
+        dense_block_eltype =
+            available ?
+            promote_type(
+                typeof(coefficient),
+                eltype(axis_ops.x),
+                eltype(axis_ops.y),
+                eltype(axis_ops.z),
+            ) :
+            :unavailable,
+    )
+end
+
+function _cpb_sum_of_axis_products_operator_block_blocker(product_term_summaries)
+    isempty(product_term_summaries) && return :empty_axis_product_term_list
+    for product_term_summary in product_term_summaries
+        product_term_summary.blocker ===
+            :axis_product_term_coefficient_unavailable &&
+            return :axis_product_term_coefficient_unavailable
+    end
+    for product_term_summary in product_term_summaries
+        isnothing(product_term_summary.blocker) || return :axis_product_term_blocked
+    end
+    first_left_shape = first(product_term_summaries).left_shape
+    first_right_shape = first(product_term_summaries).right_shape
+    for product_term_summary in product_term_summaries
+        (
+            product_term_summary.left_shape == first_left_shape &&
+            product_term_summary.right_shape == first_right_shape
+        ) || return :axis_product_term_shape_mismatch
+    end
+    return nothing
+end
+
+function _materialize_cpb_sum_of_axis_products_dense_block(product_terms::Tuple)
+    first_term = first(product_terms)
+    first_axis_ops = getproperty(first_term, :axis_ops)
+    first_dense = _materialize_cpb_axis_product_dense_block(first_axis_ops)
+    dense_eltype = _cpb_sum_of_axis_products_dense_eltype(product_terms)
+    dense_block = zeros(dense_eltype, size(first_dense))
+    for product_term in product_terms
+        coefficient = getproperty(product_term, :coefficient)
+        axis_dense = _materialize_cpb_axis_product_dense_block(
+            getproperty(product_term, :axis_ops),
+        )
+        dense_block .+= coefficient .* axis_dense
+    end
+    return dense_block
+end
+
+function _cpb_sum_of_axis_products_dense_eltype(product_terms::Tuple)
+    element_type = Union{}
+    for product_term in product_terms
+        coefficient = getproperty(product_term, :coefficient)
+        axis_ops = getproperty(product_term, :axis_ops)
+        element_type = promote_type(
+            element_type,
+            typeof(coefficient),
+            eltype(axis_ops.x),
+            eltype(axis_ops.y),
+            eltype(axis_ops.z),
+        )
+    end
+    return element_type
+end
+
+function _cpb_sum_of_axis_products_operator_block_summary(
+    status::Symbol,
+    blocker,
+    product_term_summaries,
+    dense_block;
+    term,
+    source_kind,
+    source_summary,
+    factor_space,
+    factor_convention,
+    normalization_convention,
+    index_domain,
+    index_domain_source,
+    index_domain_status,
+    axis_order,
+    bra_ket_order,
+)
+    available =
+        status === :materialized_cpb_sum_of_axis_products_operator_block
+    first_product_term_summary =
+        isempty(product_term_summaries) ? nothing : first(product_term_summaries)
+    return (;
+        object_kind = :cartesian_cpb_sum_of_axis_products_operator_block_summary,
+        status,
+        blocker,
+        term,
+        source_kind,
+        source_summary,
+        representation = :dense_local_cpb_sum_of_axis_products,
+        local_ordering = _LOCAL_ORDERING,
+        product_term_count = length(product_term_summaries),
+        product_term_labels = Tuple(
+            product_term_summary.label
+            for product_term_summary in product_term_summaries
+        ),
+        product_term_summaries,
+        left_shape =
+            available ? first_product_term_summary.left_shape : :unavailable,
+        right_shape =
+            available ? first_product_term_summary.right_shape : :unavailable,
+        left_support_count =
+            available ? first_product_term_summary.left_support_count : :unavailable,
+        right_support_count =
+            available ? first_product_term_summary.right_support_count : :unavailable,
         dense_block_available = available,
         dense_block_shape =
             available ?

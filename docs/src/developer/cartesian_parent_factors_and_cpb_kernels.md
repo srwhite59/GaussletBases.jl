@@ -192,6 +192,24 @@ axis-factor contracts. Coulomb and other two-body terms should also remain
 CPB-local at this layer, but they may require pair-pair windows or factorized
 records rather than the one-body `(left_cpb, right_cpb)` shape.
 
+The CPB operator layer should keep separate kernel families instead of forcing
+every term through one universal product kernel:
+
+1. Axis-product and sum-of-axis-products kernels cover simple separable
+   one-body terms such as overlap, kinetic pieces, position, and x2.
+2. Electron-nuclear Gaussian-sum kernels cover CPB-local one-body potential
+   blocks with the Gaussian expansion index as an inner loop.
+3. Electron-electron Gaussian-sum kernels cover CPB-local two-body or
+   pair-pair/factorized records, also with the Gaussian expansion index as an
+   inner loop.
+
+Coulomb-family blocks should not be built by an outer loop that repeatedly
+calls `cpb_axis_product_operator_block` for each Gaussian alpha. Their common
+surface with one-body blocks should eventually be compact result records and
+metadata, not necessarily one universal kernel implementation. For separable
+one-body terms, inactive directions still use explicit overlap factors, not
+ambiguous identity labels.
+
 The synthetic numerical pilot demonstrates local retained-transform mechanics:
 
 ```text
@@ -575,6 +593,13 @@ operator term and works for point, edge, face, and rectangular/cube CPB shapes
 where one or more axis lengths may be one. Its summary is compact: the dense
 matrix lives on the returned object, not in metadata. Realization and
 route/global flags remain unset.
+
+The sibling primitive for simple separable one-body sums is
+`cpb_sum_of_axis_products_operator_block`. It accepts a compact list of product
+terms, each with a scalar coefficient and prepared local axis operators, then
+accumulates the dense CPB product-space sum. This is still an axis-product
+family kernel; it is not a Coulomb Gaussian-sum kernel and should not be used as
+one.
 
 Overlap is the first thin wrapper over this primitive:
 
