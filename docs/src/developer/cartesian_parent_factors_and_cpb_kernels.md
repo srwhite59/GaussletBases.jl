@@ -393,6 +393,25 @@ correspond to parent-axis indices. Such factors need either an explicit
 index-map object or a different consumer. Do not infer sliceability from matrix
 size.
 
+CPB block providers must treat this as a mandatory pre-slice gate. A provider
+must not slice parent factors unless the factor packet summary explicitly says
+the factors are CPB-sliceable and parent-axis-indexed. For the current
+overlap-only packet, the intended labels are:
+
+```text
+sliceable_by_cpb = true
+index_domain = :parent_axis_indices
+index_domain_source = :axis_bundle_contract
+index_domain_status =
+  :assumed_parent_axis_indexed_by_current_axis_bundle_contract
+sliceability_source = :index_domain_contract
+sliceability_status = :sliceable_by_cpb_parent_axis_index_contract
+```
+
+If any required label is missing or incompatible, the CPB provider should block
+before slicing. This preserves the distinction between "has the right shape"
+and "is contractually indexed by parent axis coordinates."
+
 For two-electron factors, the index-domain contract must name all particle and
 bra/ket axes. A future tensor-like electron-electron factor should carry a
 domain summary comparable to:
@@ -531,6 +550,28 @@ not retained blocks, not global matrices, not Hamiltonian objects, and not
 evidence of route adoption. Retained-unit transforms, PQS shell realization,
 Lowdin cleanup, and global placement remain downstream responsibilities.
 
+CPB provider summaries should remain compact. If a provider materializes a
+dense local block, the numerical matrix belongs on the returned object field,
+for example:
+
+```julia
+dense_block.dense_block
+```
+
+The summary metadata should not duplicate that matrix. It should carry compact
+facts such as:
+
+```text
+dense_block_available
+dense_block_shape
+dense_block_eltype
+dense_local_block_materialized
+```
+
+plus provenance, factor-space, convention, index-domain, local-ordering, and
+nonclaim labels. This keeps summaries usable as fingerprints without turning
+metadata into a second numerical payload.
+
 ### Possible API
 
 The provider API should start small and explicit:
@@ -596,6 +637,10 @@ Metadata should include:
 - no-go flags for Hamiltonian assembly, retained transforms, route adoption,
   Coulomb/IDA/MWG where irrelevant, exports, and artifacts.
 
+Metadata should not duplicate large numerical payloads. Dense local matrices
+should live only on the owning dense-block object, while summaries record
+availability, shape, element type, provenance, and convention labels.
+
 This lets retained-unit and pair-block code choose whether to use axis blocks
 directly, materialize a dense local CPB block, apply left/right transforms, or
 place into a global matrix.
@@ -651,6 +696,21 @@ parent basis
 The private overlap facts helper should eventually become a compatibility
 adapter or disappear. It should not expand into a broad scalar report-field
 interface for every operator term.
+
+The current overlap-only implementation already has a local CPB product-space
+path:
+
+```text
+CartesianParentGaussletBases.parent_overlap_axis_factor_packet
+-> CartesianCPBBlockProviders.cpb_interval_pair
+-> CartesianCPBBlockProviders.cpb_overlap_axis_blocks
+-> CartesianCPBBlockProviders.cpb_overlap_dense_block
+```
+
+That path can validate CPB interval pairs, slice parent-owned overlap axis
+factors, and optionally materialize a local dense CPB overlap block. It remains
+local CPB overlap only. It is not route/global overlap adoption, does not place
+a global matrix, and does not change private route-driver overlap behavior.
 
 ## What This Does Not Claim
 
