@@ -179,6 +179,10 @@ while unsupported terms are represented as blocked per-term results. This
 matrix-set adapter is not term summing, not a one-body Hamiltonian object, and
 not Hamiltonian assembly. PQS source-space records still remain blocked inside
 term results until explicit shell projection/Lowdin realization exists.
+The matrix-set adapter is a convenience over already validated per-term
+route-global matrices; it is not the retirement proof by itself. The current
+old-surface retirement evidence is the selected White--Lindsey fixed-block
+old-oracle equivalence for overlap, kinetic, position_x/y/z, and x2_x/y/z.
 
 The local final-readiness helper
 `pqs_source_pair_final_block_readiness_summary(bridge_summary)` consumes single
