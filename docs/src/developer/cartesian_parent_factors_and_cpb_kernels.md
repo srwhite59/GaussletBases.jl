@@ -12,9 +12,11 @@ tests show two different real dry-run report states:
 - a manual-count dry report can carry parent axis counts, but has no parent
   axis-bundle factors and correctly blocks on
   `:missing_parent_axis_bundle_overlap_factors`;
-- a probe-enabled dry report carries
-  `route_materializer_payload.parent_axis_bundle_object`, and the private
-  overlap facts helper can read its 1D overlap factors.
+- a probe-enabled dry report shows that the structured axis-bundle object
+  already exists under `route_materializer_payload.parent_axis_bundle_object`.
+  The private overlap facts helper can read those 1D overlap factors through a
+  narrow structured source path, but the route materializer payload should not
+  become the long-term owner of universal parent-axis data.
 
 That is useful evidence, but it should not turn route-driver report payloads
 into the long-term owner of parent operator data. The better direction is to
@@ -62,6 +64,32 @@ then it belongs to the Cartesian parent factor layer.
 
 Downstream route layers should consume this parent-owned data. They should not
 rediscover or reconstruct universal axis factors as private report payloads.
+
+## Module Boundary Direction
+
+This design should preserve the current module split:
+
+```text
+cartesian_cpb/
+  pure coordinate-product-box geometry
+
+CartesianParentGaussletBases.jl
+  route-neutral Cartesian parent identity
+
+future CartesianParentAxisFactors
+  parent-owned one-body and Coulomb axis factor packets
+
+future CartesianCPBMatrixKernels
+  depends on CPB geometry plus parent factor packets
+  returns CPB-local axis blocks or optional dense local blocks
+
+route helpers and materializers
+  consume parent factors and CPB kernels
+```
+
+Parent-dependent code should not move into `CartesianCPB`. CPB geometry remains
+the coordinate-window language; parent factors and CPB kernels are separate
+layers above it.
 
 ## Proposed Ownership Layers
 
@@ -237,6 +265,13 @@ These factors depend on parent axes, nuclear positions/charges, and Gaussian
 expansion policy. They do not depend on shellification, PQS retained rules, or
 pair-block placement.
 
+Electron-nuclear factors belong naturally in the parent Coulomb or potential
+factor packet because their source is a Gaussian expansion of a Coulomb
+potential. Downstream, however, electron-nuclear attraction is consumed by a
+one-body CPB kernel: one bra CPB and one ket CPB. Electron-electron factors are
+consumed by a two-body CPB kernel: two bra/ket CPB pairs. Keeping that arity
+distinction explicit is required for later API names and tests.
+
 ### Provenance and Metadata
 
 A parent factor packet should carry compact metadata such as:
@@ -245,6 +280,11 @@ A parent factor packet should carry compact metadata such as:
 - parent fingerprint or parent object identity;
 - axis counts;
 - axis basis family and mapping summary;
+- factor space;
+- factor convention;
+- normalization convention;
+- axis order;
+- bra/ket ordering;
 - factor backend, for example PGDG analytic integrals;
 - Gaussian expansion identity and parameters for Coulomb factors;
 - nucleus labels, positions, and charges for electron-nuclear factors;
@@ -257,21 +297,23 @@ A parent factor packet should carry compact metadata such as:
 The metadata should be summary-like. It should not become a flat cloud of
 scalar report aliases copied through every route stage.
 
+The convention labels are not optional. The same-looking 1D matrix can live in
+raw parent axis space, localized PGDG intermediate space, dictionary-basis
+space, density-normalized convention, raw-weighted convention, or another
+future convention. Immediate overlap facts already use labels of this form:
+
+```text
+factor_space = :parent_axis_bundle_pgdg_intermediate
+factor_convention = :axis_bundle_one_body_overlap
+```
+
+Every parent factor packet and CPB block result should preserve comparable
+labels so downstream code does not infer semantics from field names alone.
+
 ## CPB Matrix-Kernel Layer
 
 A CPB is only coordinate-window geometry. A CPB block provider or matrix kernel
 binds a parent factor packet to operations over CPB pairs:
-
-```julia
-struct CartesianCPBBlockProvider{P,F,C,M}
-    parent::P
-    parent_factors::F
-    cache::C
-    metadata::M
-end
-```
-
-or:
 
 ```julia
 struct CartesianCPBMatrixKernel{P,F,M}
@@ -281,9 +323,22 @@ struct CartesianCPBMatrixKernel{P,F,M}
 end
 ```
 
+The first implementation should prefer a stateless, deterministic matrix
+kernel. Cache policy can be added as a wrapper:
+
+```julia
+struct CachedCartesianCPBBlockProvider{K,C,M}
+    kernel::K
+    cache::C
+    metadata::M
+end
+```
+
 The name `provider` or `kernel` is intentional. This layer does not necessarily
 allocate a matrix every time. It may return views, copied axis slices,
 factorized axis-block objects, or dense local CPB blocks depending on the API.
+Keeping cache policy out of the first scientific contract makes early tests
+smaller and avoids treating performance cache behavior as route semantics.
 
 ### Basic Operation
 
@@ -294,7 +349,13 @@ left_cpb  -> IxL, IyL, IzL
 right_cpb -> IxR, IyR, IzR
 ```
 
-The provider knows how to slice parent-owned factors:
+The provider or kernel is the first layer that sees both parent identity and CPB
+geometry. It must validate that every CPB interval lies inside the parent box.
+This validation belongs here, not in `CartesianCPB`, because a bare CPB has no
+parent.
+
+For one-body terms and electron-nuclear attraction, the provider knows how to
+slice parent-owned factors:
 
 ```text
 Sx[IxL, IxR],  Sy[IyL, IyR],  Sz[IzL, IzR]
@@ -302,9 +363,29 @@ Tx[IxL, IxR],  Ty[IyL, IyR],  Tz[IzL, IzR]
 Xx[IxL, IxR],  Xy[IyL, IyR],  Xz[IzL, IzR]
 X2x[IxL, IxR], X2y[IyL, IyR], X2z[IzL, IzR]
 
-Gx[g][IxL, IxR], Gy[g][IyL, IyR], Gz[g][IzL, IzR]
 Vx[A,g][IxL, IxR], Vy[A,g][IyL, IyR], Vz[A,g][IzL, IzR]
 ```
+
+Electron-electron factors have different arity. A two-electron kernel needs two
+bra/ket CPB pairs:
+
+```text
+electron 1: bra_cpb_1 -> IaB, ket_cpb_1 -> IaK
+electron 2: bra_cpb_2 -> IbB, ket_cpb_2 -> IbK
+```
+
+For Gaussian term `g`, the axis factors are sliced with four one-particle
+windows or an equivalent structured pair-pair object:
+
+```text
+Gx[g][Ix1B, Ix1K, Ix2B, Ix2K]
+Gy[g][Iy1B, Iy1K, Iy2B, Iy2K]
+Gz[g][Iz1B, Iz1K, Iz2B, Iz2K]
+```
+
+The exact storage may be matrix-like, tensor-like, or lazy, depending on the
+Gaussian factor backend. The API must not squeeze electron-electron Coulomb
+into the one-body `(left_cpb, right_cpb)` shape.
 
 For one-body overlap, the axis-block result is simply:
 
@@ -326,6 +407,27 @@ The exact representation can be refined, but the key contract is that kinetic
 is not a single arbitrary dense 3D object at this layer. It is an axis-factor
 sum that can be materialized locally only when requested.
 
+### Local Dense Ordering
+
+If a CPB provider materializes a dense local block, the local indexing order
+must be explicit. The default should be parent-compatible local flattening:
+
+```text
+local x index is slowest
+local z index is fastest
+```
+
+This matches `parent_flat_index` ordering restricted to the CPB intervals:
+
+```text
+(ix - first(Ix)) * length(Iy) * length(Iz)
++ (iy - first(Iy)) * length(Iz)
++ (iz - first(Iz))
+```
+
+using 1-based Julia indexing after adding one as needed. Retained-unit
+transforms and column ranges should not have to guess the local dense ordering.
+
 ### Possible API
 
 The provider API should start small and explicit:
@@ -338,22 +440,29 @@ cpb_one_body_block(provider, left, right, term)
 
 cpb_electron_nuclear_axis_blocks(
     provider,
-    left,
-    right;
+    bra_cpb,
+    ket_cpb;
     nucleus,
     gaussian_index,
 )
 
 cpb_electron_electron_axis_blocks(
     provider,
-    left,
-    right;
+    bra_cpb_1,
+    ket_cpb_1,
+    bra_cpb_2,
+    ket_cpb_2;
     gaussian_index,
 )
 ```
 
 Later generic dispatch can exist, but the first implementation should avoid a
 large catch-all API that hides term-specific contracts.
+
+For two-electron work, a structured helper such as `CPBPairPair3D` or
+`CPBTwoParticleWindow3D` may be better than a long argument list. The important
+contract is the same: electron-electron axis blocks are indexed by two
+bra/ket CPB pairs, not by one CPB pair.
 
 ### Returned Objects
 
@@ -374,10 +483,12 @@ Metadata should include:
 
 - source parent factor packet fingerprint;
 - left/right CPB intervals and shapes;
+- local dense ordering, when materialized;
 - term;
 - whether blocks are views or copied matrices;
 - whether a dense local CPB block has been materialized;
 - factor backend/provenance;
+- factor space, convention, normalization, axis order, and bra/ket ordering;
 - no-go flags for Hamiltonian assembly, retained transforms, route adoption,
   Coulomb/IDA/MWG where irrelevant, exports, and artifacts.
 
@@ -414,10 +525,12 @@ driver report fields
 -> route-global overlap adapter
 ```
 
-The real-report fingerprints show why this bridge is temporary. The helper can
-read overlap factors when a route materializer payload happens to carry a
-parent axis-bundle object, but that payload is not the natural authority for
-universal parent-axis factors.
+The real-report fingerprints show why this bridge is temporary. A probe-enabled
+dry report shows that a structured axis-bundle object may exist under
+`route_materializer_payload.parent_axis_bundle_object`, and the current private
+helper can read that object through a narrow compatibility source path. That is
+useful as a fingerprint. It should not make the route materializer payload the
+natural authority for universal parent-axis factors.
 
 The intended replacement direction is:
 
@@ -455,6 +568,8 @@ assembly.
 
 The migration should be incremental:
 
+0. Keep one-body CPB-pair kernels distinct from electron-electron CPB-pair-pair
+   kernels in names, tests, and returned objects.
 1. Define a parent-layer contract for one-body axis factors, starting with
    overlap and provenance. Map the existing `parent_axis_bundle_object` seed to
    that contract.
@@ -482,8 +597,11 @@ Early tests should be narrow and factual:
 - parent factor packet availability and provenance;
 - parent identity/fingerprint match;
 - CPB interval slicing for small boxes;
+- CPB parent-box validation failures for out-of-parent intervals;
+- local dense ordering for one small CPB block;
 - overlap axis-block slices against known parent 1D factors;
 - local dense overlap block materialization for one small CPB pair, if needed;
+- two-electron CPB pair-pair arity, initially metadata-only;
 - private report compatibility fingerprints that state what is still missing.
 
 Avoid broad nested/integration tests for each small contract pass. Performance
@@ -497,6 +615,9 @@ routes or public APIs.
   `parent_axis_bundle_object` language?
 - Should one-body and Coulomb factor packets live in one module or separate
   submodules under the parent layer?
+- Should electron-nuclear factors live under a Coulomb factor packet, a
+  potential factor packet, or a one-body factor packet while still preserving
+  their one-body CPB-kernel consumption path?
 - Which factor values should be views, copied matrices, or lazy objects?
 - What parent fingerprint is stable enough for packet/parent compatibility
   checks without comparing large objects?
@@ -508,6 +629,8 @@ routes or public APIs.
   nuclei or ECP/reference paths need different approximations?
 - How should future CR2 exports refer to parent factors without defining repo
   API prematurely?
+- What should the two-electron window object be called:
+  `CPBPairPair3D`, `CPBTwoParticleWindow3D`, or something more explicit?
 
 These questions should be resolved by small contracts and focused tests, not by
 expanding route-driver report fields.
