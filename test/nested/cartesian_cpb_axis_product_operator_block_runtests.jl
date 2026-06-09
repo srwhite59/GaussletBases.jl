@@ -187,6 +187,36 @@ function _test_blocked_sum_axis_products(product_terms, expected_blocker)
     return block
 end
 
+function _test_one_body_axis_operator(
+    operator;
+    term,
+    factor_name,
+    active_axis,
+    expected_dense,
+)
+    operator_summary = CBPOperatorBlock.summary(operator)
+    @test operator_summary.status ===
+          :materialized_cpb_one_body_axis_operator_block
+    @test operator_summary.blocker === nothing
+    @test operator_summary.term === term
+    @test operator_summary.one_body_factor_name === factor_name
+    @test operator_summary.active_axis === active_axis
+    @test operator_summary.dense_block_available === true
+    @test operator_summary.provider_level_local_matrix_materialized === true
+    @test operator_summary.realization_status === :unrealized
+    @test operator_summary.route_global_status === :unassigned
+    @test operator_summary.route_driver_wiring === false
+    @test operator_summary.route_global_matrix_materialized === false
+    @test operator_summary.global_matrix_materialized === false
+    @test !hasproperty(operator_summary, :dense_block)
+    @test !hasproperty(operator_summary, :axis_ops)
+    @test !hasproperty(operator_summary, :global_overlap_matrix)
+    @test !hasproperty(operator_summary, :retained_blocks)
+    @test !isnothing(operator.axis_product_block)
+    @test operator.axis_product_block.dense_block == expected_dense
+    return nothing
+end
+
 function _operator_block_parent(; count = 3)
     axis = build_basis(MappedUniformBasisSpec(
         :G10;
@@ -237,13 +267,58 @@ function _operator_block_kinetic_1d()
     )
 end
 
-function _operator_block_axis_bundle(overlap_1d; kinetic_1d = nothing)
+function _operator_block_position_1d()
+    return (;
+        x = [
+            0.0 0.1 0.2
+            0.3 0.4 0.5
+            0.6 0.7 0.8
+        ],
+        y = [
+            0.9 1.0 1.1
+            1.2 1.3 1.4
+            1.5 1.6 1.7
+        ],
+        z = [
+            1.8 1.9 2.0
+            2.1 2.2 2.3
+            2.4 2.5 2.6
+        ],
+    )
+end
+
+function _operator_block_x2_1d()
+    return (;
+        x = [
+            3.0 0.1 0.2
+            0.3 3.1 0.4
+            0.5 0.6 3.2
+        ],
+        y = [
+            3.3 0.7 0.8
+            0.9 3.4 1.0
+            1.1 1.2 3.5
+        ],
+        z = [
+            3.6 1.3 1.4
+            1.5 3.7 1.6
+            1.7 1.8 3.8
+        ],
+    )
+end
+
+function _operator_block_axis_bundle(
+    overlap_1d;
+    kinetic_1d = nothing,
+    position_1d = nothing,
+    x2_1d = nothing,
+)
     axis_bundle(axis, overlap_matrix) =
-        isnothing(kinetic_1d) ?
-        (; pgdg_intermediate = (; overlap = overlap_matrix)) :
-        (; pgdg_intermediate = (;
-            overlap = overlap_matrix,
-            kinetic = getproperty(kinetic_1d, axis),
+        (; pgdg_intermediate = merge(
+            (; overlap = overlap_matrix),
+            isnothing(kinetic_1d) ? (;) : (; kinetic = getproperty(kinetic_1d, axis)),
+            isnothing(position_1d) ? (;) : (; position = getproperty(position_1d, axis)),
+            isnothing(x2_1d) ? (;) : (; x2 = getproperty(x2_1d, axis)),
         ))
     return (;
         x = axis_bundle(:x, overlap_1d.x),
@@ -525,4 +600,143 @@ end
     @test !isnothing(kinetic_operator.sum_axis_product_block)
     @test kinetic_operator.sum_axis_product_block.dense_block ==
           expected_kinetic_sum.dense_block
+    @test !hasproperty(kinetic_summary, :dense_block)
+    kinetic_sum_summary =
+        CBPOperatorBlock.summary(kinetic_operator.sum_axis_product_block)
+    @test !hasproperty(kinetic_sum_summary, :dense_block)
+
+    nonsliceable_kinetic_packet =
+        CPGBOperatorBlock.CartesianParentAxisFactorPacket3D(
+            kinetic_packet.parent,
+            kinetic_packet.overlap_1d,
+            kinetic_packet.kinetic_1d,
+            merge(
+                CPGBOperatorBlock.summary(kinetic_packet),
+                (; kinetic_sliceable_by_cpb = false),
+            ),
+        )
+    nonsliceable_kinetic_operator =
+        CBPOperatorBlock.cpb_kinetic_operator_block(
+            nonsliceable_kinetic_packet,
+            interval_pair,
+        )
+    nonsliceable_kinetic_summary =
+        CBPOperatorBlock.summary(nonsliceable_kinetic_operator)
+
+    @test nonsliceable_kinetic_summary.status ===
+          :blocked_cpb_kinetic_operator_block
+    @test nonsliceable_kinetic_summary.blocker === :kinetic_packet_not_cpb_sliceable
+    @test isnothing(nonsliceable_kinetic_operator.sum_axis_product_block)
+    @test nonsliceable_kinetic_summary.dense_block_available === false
+    @test nonsliceable_kinetic_summary.route_driver_wiring === false
+    @test nonsliceable_kinetic_summary.global_matrix_materialized === false
+
+    position_1d = _operator_block_position_1d()
+    x2_1d = _operator_block_x2_1d()
+    one_body_packet = CPGBOperatorBlock.parent_overlap_axis_factor_packet(
+        parent,
+        _operator_block_axis_bundle(
+            overlap_1d;
+            kinetic_1d,
+            position_1d,
+            x2_1d,
+        ),
+    )
+    position_x_ops = (x = position_1d.x, y = overlap_1d.y, z = overlap_1d.z)
+    position_y_ops = (x = overlap_1d.x, y = position_1d.y, z = overlap_1d.z)
+    position_z_ops = (x = overlap_1d.x, y = overlap_1d.y, z = position_1d.z)
+    x2_x_ops = (x = x2_1d.x, y = overlap_1d.y, z = overlap_1d.z)
+    x2_y_ops = (x = overlap_1d.x, y = x2_1d.y, z = overlap_1d.z)
+    x2_z_ops = (x = overlap_1d.x, y = overlap_1d.y, z = x2_1d.z)
+
+    _test_one_body_axis_operator(
+        CBPOperatorBlock.cpb_position_operator_block(
+            one_body_packet,
+            interval_pair;
+            axis = :x,
+        );
+        term = :position_x,
+        factor_name = :position,
+        active_axis = :x,
+        expected_dense = _axis_product_expected_dense((
+            x = view(position_x_ops.x, left_intervals.x, right_intervals.x),
+            y = view(position_x_ops.y, left_intervals.y, right_intervals.y),
+            z = view(position_x_ops.z, left_intervals.z, right_intervals.z),
+        )),
+    )
+    _test_one_body_axis_operator(
+        CBPOperatorBlock.cpb_position_operator_block(
+            one_body_packet,
+            interval_pair;
+            axis = :y,
+        );
+        term = :position_y,
+        factor_name = :position,
+        active_axis = :y,
+        expected_dense = _axis_product_expected_dense((
+            x = view(position_y_ops.x, left_intervals.x, right_intervals.x),
+            y = view(position_y_ops.y, left_intervals.y, right_intervals.y),
+            z = view(position_y_ops.z, left_intervals.z, right_intervals.z),
+        )),
+    )
+    _test_one_body_axis_operator(
+        CBPOperatorBlock.cpb_position_operator_block(
+            one_body_packet,
+            interval_pair;
+            axis = :z,
+        );
+        term = :position_z,
+        factor_name = :position,
+        active_axis = :z,
+        expected_dense = _axis_product_expected_dense((
+            x = view(position_z_ops.x, left_intervals.x, right_intervals.x),
+            y = view(position_z_ops.y, left_intervals.y, right_intervals.y),
+            z = view(position_z_ops.z, left_intervals.z, right_intervals.z),
+        )),
+    )
+    _test_one_body_axis_operator(
+        CBPOperatorBlock.cpb_x2_operator_block(
+            one_body_packet,
+            interval_pair;
+            axis = :x,
+        );
+        term = :x2_x,
+        factor_name = :x2,
+        active_axis = :x,
+        expected_dense = _axis_product_expected_dense((
+            x = view(x2_x_ops.x, left_intervals.x, right_intervals.x),
+            y = view(x2_x_ops.y, left_intervals.y, right_intervals.y),
+            z = view(x2_x_ops.z, left_intervals.z, right_intervals.z),
+        )),
+    )
+    _test_one_body_axis_operator(
+        CBPOperatorBlock.cpb_x2_operator_block(
+            one_body_packet,
+            interval_pair;
+            axis = :y,
+        );
+        term = :x2_y,
+        factor_name = :x2,
+        active_axis = :y,
+        expected_dense = _axis_product_expected_dense((
+            x = view(x2_y_ops.x, left_intervals.x, right_intervals.x),
+            y = view(x2_y_ops.y, left_intervals.y, right_intervals.y),
+            z = view(x2_y_ops.z, left_intervals.z, right_intervals.z),
+        )),
+    )
+    _test_one_body_axis_operator(
+        CBPOperatorBlock.cpb_x2_operator_block(
+            one_body_packet,
+            interval_pair;
+            axis = :z,
+        );
+        term = :x2_z,
+        factor_name = :x2,
+        active_axis = :z,
+        expected_dense = _axis_product_expected_dense((
+            x = view(x2_z_ops.x, left_intervals.x, right_intervals.x),
+            y = view(x2_z_ops.y, left_intervals.y, right_intervals.y),
+            z = view(x2_z_ops.z, left_intervals.z, right_intervals.z),
+        )),
+    )
 end

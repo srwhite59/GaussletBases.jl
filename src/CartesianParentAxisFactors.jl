@@ -10,17 +10,37 @@ export CartesianParentAxisFactorPacket3D,
 
 Internal parent-owned axis factor packet. The initial production contract
 requires overlap factors and may also carry same-source kinetic factors when
-the parent axis bundle already owns them.
+the parent axis bundle already owns them. Position and x2 factors are also
+carried when present in the same parent-axis bundle.
 """
-struct CartesianParentAxisFactorPacket3D{P,O,K,M}
+struct CartesianParentAxisFactorPacket3D{P,O,K,X,Q,M}
     parent::P
     overlap_1d::O
     kinetic_1d::K
+    position_1d::X
+    x2_1d::Q
     metadata::M
 end
 
 CartesianParentAxisFactorPacket3D(parent, overlap_1d, metadata) =
-    CartesianParentAxisFactorPacket3D(parent, overlap_1d, nothing, metadata)
+    CartesianParentAxisFactorPacket3D(
+        parent,
+        overlap_1d,
+        nothing,
+        nothing,
+        nothing,
+        metadata,
+    )
+
+CartesianParentAxisFactorPacket3D(parent, overlap_1d, kinetic_1d, metadata) =
+    CartesianParentAxisFactorPacket3D(
+        parent,
+        overlap_1d,
+        kinetic_1d,
+        nothing,
+        nothing,
+        metadata,
+    )
 
 summary(packet::CartesianParentAxisFactorPacket3D) = packet.metadata
 
@@ -31,18 +51,26 @@ function parent_overlap_axis_factor_packet(
     axis_counts = parent_axis_counts(parent)
     overlap_1d = _overlap_1d_from_axis_bundle(parent_axis_bundle_object)
     kinetic_1d = _kinetic_1d_from_axis_bundle(parent_axis_bundle_object)
+    position_1d = _position_1d_from_axis_bundle(parent_axis_bundle_object)
+    x2_1d = _x2_1d_from_axis_bundle(parent_axis_bundle_object)
     blocker = _overlap_1d_blocker(overlap_1d, axis_counts)
     kinetic_blocker = _kinetic_1d_blocker(kinetic_1d, axis_counts)
+    position_blocker = _position_1d_blocker(position_1d, axis_counts)
+    x2_blocker = _x2_1d_blocker(x2_1d, axis_counts)
     status =
         isnothing(blocker) ?
         :available_parent_overlap_axis_factors :
         :blocked_parent_overlap_axis_factors
     overlap_value = isnothing(blocker) ? overlap_1d : nothing
     kinetic_value = isnothing(kinetic_blocker) ? kinetic_1d : nothing
+    position_value = isnothing(position_blocker) ? position_1d : nothing
+    x2_value = isnothing(x2_blocker) ? x2_1d : nothing
     return CartesianParentAxisFactorPacket3D(
         parent,
         overlap_value,
         kinetic_value,
+        position_value,
+        x2_value,
         _parent_axis_factor_packet_summary(
             status,
             blocker,
@@ -50,6 +78,10 @@ function parent_overlap_axis_factor_packet(
             overlap_value,
             kinetic_value,
             kinetic_blocker,
+            position_value,
+            position_blocker,
+            x2_value,
+            x2_blocker,
         ),
     )
 end
@@ -68,14 +100,20 @@ function _parent_axis_factor_packet_summary(
     overlap_1d,
     kinetic_1d,
     kinetic_blocker,
+    position_1d,
+    position_blocker,
+    x2_1d,
+    x2_blocker,
 )
     overlap_available = !isnothing(overlap_1d)
     kinetic_available = !isnothing(kinetic_1d)
+    position_available = !isnothing(position_1d)
+    x2_available = !isnothing(x2_1d)
     return (;
         object_kind = :cartesian_parent_axis_factor_packet_summary,
         packet_kind =
-            kinetic_available ?
-            :overlap_kinetic_parent_axis_factors :
+            (kinetic_available || position_available || x2_available) ?
+            :overlap_one_body_parent_axis_factors :
             :overlap_only_parent_axis_factors,
         status,
         blocker,
@@ -122,6 +160,82 @@ function _parent_axis_factor_packet_summary(
             :unavailable,
         kinetic_sliceability_status =
             kinetic_available ?
+            :sliceable_by_cpb_parent_axis_index_contract :
+            :unavailable,
+        position_status =
+            position_available ?
+            :available_parent_position_axis_factors :
+            (
+                isnothing(position_blocker) ?
+                :missing_parent_axis_bundle_position_factors :
+                position_blocker
+            ),
+        position_1d_available = position_available,
+        position_factor_space =
+            position_available ?
+            :parent_axis_bundle_pgdg_intermediate :
+            :unavailable,
+        position_factor_convention =
+            position_available ?
+            :axis_bundle_one_body_position :
+            :unavailable,
+        position_index_domain =
+            position_available ?
+            :parent_axis_indices :
+            :unavailable,
+        position_index_domain_source =
+            position_available ?
+            :axis_bundle_contract :
+            :unavailable,
+        position_index_domain_status =
+            position_available ?
+            :assumed_parent_axis_indexed_by_current_axis_bundle_contract :
+            :unavailable,
+        position_sliceable_by_cpb = position_available,
+        position_sliceability_source =
+            position_available ?
+            :index_domain_contract :
+            :unavailable,
+        position_sliceability_status =
+            position_available ?
+            :sliceable_by_cpb_parent_axis_index_contract :
+            :unavailable,
+        x2_status =
+            x2_available ?
+            :available_parent_x2_axis_factors :
+            (
+                isnothing(x2_blocker) ?
+                :missing_parent_axis_bundle_x2_factors :
+                x2_blocker
+            ),
+        x2_1d_available = x2_available,
+        x2_factor_space =
+            x2_available ?
+            :parent_axis_bundle_pgdg_intermediate :
+            :unavailable,
+        x2_factor_convention =
+            x2_available ?
+            :axis_bundle_one_body_x2 :
+            :unavailable,
+        x2_index_domain =
+            x2_available ?
+            :parent_axis_indices :
+            :unavailable,
+        x2_index_domain_source =
+            x2_available ?
+            :axis_bundle_contract :
+            :unavailable,
+        x2_index_domain_status =
+            x2_available ?
+            :assumed_parent_axis_indexed_by_current_axis_bundle_contract :
+            :unavailable,
+        x2_sliceable_by_cpb = x2_available,
+        x2_sliceability_source =
+            x2_available ?
+            :index_domain_contract :
+            :unavailable,
+        x2_sliceability_status =
+            x2_available ?
             :sliceable_by_cpb_parent_axis_index_contract :
             :unavailable,
         factor_space =
@@ -175,8 +289,22 @@ function _parent_axis_factor_packet_summary(
                     :missing_parent_axis_bundle_kinetic_factors :
                     kinetic_blocker
                 ),
-            position = :not_requested_parent_position_axis_factors,
-            x2 = :not_requested_parent_x2_axis_factors,
+            position =
+                position_available ?
+                :available_parent_position_axis_factors :
+                (
+                    isnothing(position_blocker) ?
+                    :missing_parent_axis_bundle_position_factors :
+                    position_blocker
+                ),
+            x2 =
+                x2_available ?
+                :available_parent_x2_axis_factors :
+                (
+                    isnothing(x2_blocker) ?
+                    :missing_parent_axis_bundle_x2_factors :
+                    x2_blocker
+                ),
             coulomb = :not_requested_parent_coulomb_axis_factors,
         ),
         full_3d_parent_matrices = false,
@@ -202,13 +330,45 @@ function _overlap_1d_blocker(overlap_1d, parent_axis_counts::NTuple{3,Int})
 end
 
 function _kinetic_1d_blocker(kinetic_1d, parent_axis_counts::NTuple{3,Int})
-    isnothing(kinetic_1d) && return :missing_parent_axis_bundle_kinetic_factors
+    return _one_body_1d_blocker(
+        kinetic_1d,
+        parent_axis_counts,
+        :kinetic,
+        :missing_parent_axis_bundle_kinetic_factors,
+    )
+end
+
+function _position_1d_blocker(position_1d, parent_axis_counts::NTuple{3,Int})
+    return _one_body_1d_blocker(
+        position_1d,
+        parent_axis_counts,
+        :position,
+        :missing_parent_axis_bundle_position_factors,
+    )
+end
+
+function _x2_1d_blocker(x2_1d, parent_axis_counts::NTuple{3,Int})
+    return _one_body_1d_blocker(
+        x2_1d,
+        parent_axis_counts,
+        :x2,
+        :missing_parent_axis_bundle_x2_factors,
+    )
+end
+
+function _one_body_1d_blocker(
+    one_body_1d,
+    parent_axis_counts::NTuple{3,Int},
+    factor_name::Symbol,
+    missing_blocker::Symbol,
+)
+    isnothing(one_body_1d) && return missing_blocker
     for (axis, count) in zip(_AXIS_ORDER, parent_axis_counts)
-        matrix = getproperty(kinetic_1d, axis)
+        matrix = getproperty(one_body_1d, axis)
         matrix isa AbstractMatrix ||
-            return Symbol("$(axis)_kinetic_axis_factor_not_matrix")
+            return Symbol("$(axis)_$(factor_name)_axis_factor_not_matrix")
         size(matrix) == (count, count) ||
-            return Symbol("$(axis)_kinetic_axis_factor_size_mismatch")
+            return Symbol("$(axis)_$(factor_name)_axis_factor_size_mismatch")
     end
     return nothing
 end
@@ -226,15 +386,27 @@ function _overlap_1d_from_axis_bundle(bundle)
 end
 
 function _kinetic_1d_from_axis_bundle(bundle)
+    return _one_body_1d_from_axis_bundle(bundle, :kinetic)
+end
+
+function _position_1d_from_axis_bundle(bundle)
+    return _one_body_1d_from_axis_bundle(bundle, :position)
+end
+
+function _x2_1d_from_axis_bundle(bundle)
+    return _one_body_1d_from_axis_bundle(bundle, :x2)
+end
+
+function _one_body_1d_from_axis_bundle(bundle, factor_name::Symbol)
     isnothing(bundle) && return nothing
     bundle_x = _axis_bundle_property(bundle, :bundle_x, :x)
     bundle_y = _axis_bundle_property(bundle, :bundle_y, :y)
     bundle_z = _axis_bundle_property(bundle, :bundle_z, :z)
-    kinetic_x = _axis_kinetic_from_bundle_axis(bundle_x)
-    kinetic_y = _axis_kinetic_from_bundle_axis(bundle_y)
-    kinetic_z = _axis_kinetic_from_bundle_axis(bundle_z)
-    any(isnothing, (kinetic_x, kinetic_y, kinetic_z)) && return nothing
-    return (x = kinetic_x, y = kinetic_y, z = kinetic_z)
+    factor_x = _axis_one_body_factor_from_bundle_axis(bundle_x, factor_name)
+    factor_y = _axis_one_body_factor_from_bundle_axis(bundle_y, factor_name)
+    factor_z = _axis_one_body_factor_from_bundle_axis(bundle_z, factor_name)
+    any(isnothing, (factor_x, factor_y, factor_z)) && return nothing
+    return (x = factor_x, y = factor_y, z = factor_z)
 end
 
 function _axis_bundle_property(bundle, primary::Symbol, fallback::Symbol)
@@ -259,9 +431,13 @@ function _axis_overlap_from_bundle_axis(axis)
 end
 
 function _axis_kinetic_from_bundle_axis(axis)
+    return _axis_one_body_factor_from_bundle_axis(axis, :kinetic)
+end
+
+function _axis_one_body_factor_from_bundle_axis(axis, factor_name::Symbol)
     isnothing(axis) && return nothing
     pgdg_intermediate = _property(axis, :pgdg_intermediate)
-    kinetic = _property(pgdg_intermediate, :kinetic)
-    !isnothing(kinetic) && return kinetic
-    return _property(axis, :kinetic)
+    pgdg_factor = _property(pgdg_intermediate, factor_name)
+    !isnothing(pgdg_factor) && return pgdg_factor
+    return _property(axis, factor_name)
 end

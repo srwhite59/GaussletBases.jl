@@ -35,25 +35,51 @@ function _packet_test_kinetic_1d()
     )
 end
 
+function _packet_test_position_1d()
+    return (;
+        x = [0.0 0.1; 0.1 0.2],
+        y = [0.3 0.4; 0.4 0.5],
+        z = [0.6 0.7; 0.7 0.8],
+    )
+end
+
+function _packet_test_x2_1d()
+    return (;
+        x = [1.0 0.2; 0.2 1.1],
+        y = [1.2 0.3; 0.3 1.3],
+        z = [1.4 0.4; 0.4 1.5],
+    )
+end
+
 function _packet_test_axis_bundle(
     overlap_1d = _packet_test_overlap_1d();
     kinetic_1d = nothing,
+    position_1d = nothing,
+    x2_1d = nothing,
     kinetic_source = :missing,
+    position_source = :missing,
+    x2_source = :missing,
 )
-    axis_bundle(axis, overlap_matrix) =
+    function axis_bundle(axis, overlap_matrix)
+        pgdg = (; overlap = overlap_matrix)
+        top_level = (;)
         if kinetic_source === :pgdg_intermediate
-            (; pgdg_intermediate = (;
-                overlap = overlap_matrix,
-                kinetic = getproperty(kinetic_1d, axis),
-            ))
+            pgdg = merge(pgdg, (; kinetic = getproperty(kinetic_1d, axis)))
         elseif kinetic_source === :axis_property
-            (;
-                pgdg_intermediate = (; overlap = overlap_matrix),
-                kinetic = getproperty(kinetic_1d, axis),
-            )
-        else
-            (; pgdg_intermediate = (; overlap = overlap_matrix))
+            top_level = merge(top_level, (; kinetic = getproperty(kinetic_1d, axis)))
         end
+        if position_source === :pgdg_intermediate
+            pgdg = merge(pgdg, (; position = getproperty(position_1d, axis)))
+        elseif position_source === :axis_property
+            top_level = merge(top_level, (; position = getproperty(position_1d, axis)))
+        end
+        if x2_source === :pgdg_intermediate
+            pgdg = merge(pgdg, (; x2 = getproperty(x2_1d, axis)))
+        elseif x2_source === :axis_property
+            top_level = merge(top_level, (; x2 = getproperty(x2_1d, axis)))
+        end
+        return merge((; pgdg_intermediate = pgdg), top_level)
+    end
     return (;
         x = axis_bundle(:x, overlap_1d.x),
         y = axis_bundle(:y, overlap_1d.y),
@@ -75,6 +101,8 @@ end
     @test packet.overlap_1d.y === overlap_1d.y
     @test packet.overlap_1d.z === overlap_1d.z
     @test isnothing(packet.kinetic_1d)
+    @test isnothing(packet.position_1d)
+    @test isnothing(packet.x2_1d)
     @test packet_summary.status === :available_parent_overlap_axis_factors
     @test packet_summary.blocker === nothing
     @test packet_summary.parent_axis_counts == (2, 2, 2)
@@ -101,9 +129,9 @@ end
     @test packet_summary.category_availability.kinetic ===
           :missing_parent_axis_bundle_kinetic_factors
     @test packet_summary.category_availability.position ===
-          :not_requested_parent_position_axis_factors
+          :missing_parent_axis_bundle_position_factors
     @test packet_summary.category_availability.x2 ===
-          :not_requested_parent_x2_axis_factors
+          :missing_parent_axis_bundle_x2_factors
     @test packet_summary.category_availability.coulomb ===
           :not_requested_parent_coulomb_axis_factors
     @test packet_summary.full_3d_parent_matrices === false
@@ -146,9 +174,9 @@ end
     @test blocked_summary.category_availability.kinetic ===
           :missing_parent_axis_bundle_kinetic_factors
     @test blocked_summary.category_availability.position ===
-          :not_requested_parent_position_axis_factors
+          :missing_parent_axis_bundle_position_factors
     @test blocked_summary.category_availability.x2 ===
-          :not_requested_parent_x2_axis_factors
+          :missing_parent_axis_bundle_x2_factors
     @test blocked_summary.category_availability.coulomb ===
           :not_requested_parent_coulomb_axis_factors
 
@@ -215,7 +243,7 @@ end
     @test kinetic_packet.kinetic_1d.z === kinetic_1d.z
     @test kinetic_summary.status === :available_parent_overlap_axis_factors
     @test kinetic_summary.blocker === nothing
-    @test kinetic_summary.packet_kind === :overlap_kinetic_parent_axis_factors
+    @test kinetic_summary.packet_kind === :overlap_one_body_parent_axis_factors
     @test kinetic_summary.overlap_1d_available === true
     @test kinetic_summary.kinetic_status ===
           :available_parent_kinetic_axis_factors
@@ -293,4 +321,107 @@ end
     @test size_mismatch_kinetic_summary.kinetic_status ===
           :x_kinetic_axis_factor_size_mismatch
     @test size_mismatch_kinetic_summary.kinetic_sliceable_by_cpb === false
+
+    position_1d = _packet_test_position_1d()
+    x2_1d = _packet_test_x2_1d()
+    one_body_packet = CPGBPacketTest.parent_overlap_axis_factor_packet(
+        parent,
+        _packet_test_axis_bundle(
+            overlap_1d;
+            kinetic_1d,
+            position_1d,
+            x2_1d,
+            kinetic_source = :pgdg_intermediate,
+            position_source = :pgdg_intermediate,
+            x2_source = :pgdg_intermediate,
+        ),
+    )
+    one_body_summary = CPGBPacketTest.summary(one_body_packet)
+
+    @test one_body_packet.position_1d.x === position_1d.x
+    @test one_body_packet.position_1d.y === position_1d.y
+    @test one_body_packet.position_1d.z === position_1d.z
+    @test one_body_packet.x2_1d.x === x2_1d.x
+    @test one_body_packet.x2_1d.y === x2_1d.y
+    @test one_body_packet.x2_1d.z === x2_1d.z
+    @test one_body_summary.packet_kind === :overlap_one_body_parent_axis_factors
+    @test one_body_summary.position_status ===
+          :available_parent_position_axis_factors
+    @test one_body_summary.x2_status === :available_parent_x2_axis_factors
+    @test one_body_summary.position_factor_space ===
+          :parent_axis_bundle_pgdg_intermediate
+    @test one_body_summary.x2_factor_space ===
+          :parent_axis_bundle_pgdg_intermediate
+    @test one_body_summary.position_factor_convention ===
+          :axis_bundle_one_body_position
+    @test one_body_summary.x2_factor_convention === :axis_bundle_one_body_x2
+    @test one_body_summary.position_index_domain === :parent_axis_indices
+    @test one_body_summary.x2_index_domain === :parent_axis_indices
+    @test one_body_summary.position_sliceable_by_cpb === true
+    @test one_body_summary.x2_sliceable_by_cpb === true
+    @test one_body_summary.category_availability.position ===
+          :available_parent_position_axis_factors
+    @test one_body_summary.category_availability.x2 ===
+          :available_parent_x2_axis_factors
+
+    top_level_one_body_packet = CPGBPacketTest.parent_overlap_axis_factor_packet(
+        parent,
+        _packet_test_axis_bundle(
+            overlap_1d;
+            position_1d,
+            x2_1d,
+            position_source = :axis_property,
+            x2_source = :axis_property,
+        ),
+    )
+    top_level_one_body_summary =
+        CPGBPacketTest.summary(top_level_one_body_packet)
+
+    @test top_level_one_body_packet.position_1d.x === position_1d.x
+    @test top_level_one_body_packet.x2_1d.z === x2_1d.z
+    @test top_level_one_body_summary.position_status ===
+          :available_parent_position_axis_factors
+    @test top_level_one_body_summary.x2_status ===
+          :available_parent_x2_axis_factors
+
+    nonmatrix_position_packet =
+        CPGBPacketTest.parent_overlap_axis_factor_packet(
+            parent,
+            _packet_test_axis_bundle(
+                overlap_1d;
+                position_1d = (
+                    x = :not_a_matrix,
+                    y = position_1d.y,
+                    z = position_1d.z,
+                ),
+                position_source = :pgdg_intermediate,
+            ),
+        )
+    nonmatrix_position_summary =
+        CPGBPacketTest.summary(nonmatrix_position_packet)
+
+    @test isnothing(nonmatrix_position_packet.position_1d)
+    @test nonmatrix_position_summary.position_status ===
+          :x_position_axis_factor_not_matrix
+    @test nonmatrix_position_summary.position_sliceable_by_cpb === false
+
+    size_mismatch_x2_packet = CPGBPacketTest.parent_overlap_axis_factor_packet(
+        parent,
+        _packet_test_axis_bundle(
+            overlap_1d;
+            x2_1d = (
+                x = [1.0 0.2 0.0; 0.2 1.1 0.0],
+                y = x2_1d.y,
+                z = x2_1d.z,
+            ),
+            x2_source = :pgdg_intermediate,
+        ),
+    )
+    size_mismatch_x2_summary =
+        CPGBPacketTest.summary(size_mismatch_x2_packet)
+
+    @test isnothing(size_mismatch_x2_packet.x2_1d)
+    @test size_mismatch_x2_summary.x2_status ===
+          :x_x2_axis_factor_size_mismatch
+    @test size_mismatch_x2_summary.x2_sliceable_by_cpb === false
 end

@@ -254,11 +254,13 @@ available while kinetic, coordinate moments, Coulomb expansion factors, or
 nuclear factors are unavailable or not requested. Availability should be
 reported by category rather than inferred from a single packet-level status.
 The current packet implementation keeps the overlap packet-level status stable
-for compatibility and also carries kinetic factors when the axis bundle already
-provides structured 1D kinetic matrices. The audited source names are
-`axis.pgdg_intermediate.kinetic` first and `axis.kinetic` as a structured
-fallback. Missing or malformed kinetic factors are reported by kinetic category
-status; they do not invalidate an otherwise available overlap packet.
+for compatibility and also carries one-body factors when the axis bundle
+already provides structured 1D matrices. The audited real-bundle source paths
+are `axis.pgdg_intermediate.kinetic`, `axis.pgdg_intermediate.position`, and
+`axis.pgdg_intermediate.x2`. Structured top-level fallbacks `axis.kinetic`,
+`axis.position`, and `axis.x2` are also accepted. Missing or malformed optional
+one-body factors are reported by category status; they do not invalidate an
+otherwise available overlap packet.
 
 ### Dependency Classes
 
@@ -636,8 +638,11 @@ The current CPB-local kinetic wrapper follows this contract. It requires the
 parent axis factor packet to carry both overlap and kinetic 1D factors, slices
 those factors over the CPB interval pair, and delegates dense local
 materialization to `cpb_sum_of_axis_products_operator_block` with the three
-explicit terms `Kx Sy Sz`, `Sx Ky Sz`, and `Sx Sy Kz`. It is not a production
-Hamiltonian path, not WL/PQS realization, and not route/global placement.
+explicit terms `Kx Sy Sz`, `Sx Ky Sz`, and `Sx Sy Kz`. Position and x2 wrappers
+are single axis-product terms: `position_x = Xx Sy Sz`,
+`position_y = Sx Xy Sz`, `position_z = Sx Sy Xz`, `x2_x = X2x Sy Sz`,
+`x2_y = Sx X2y Sz`, and `x2_z = Sx Sy X2z`. These wrappers are not production
+Hamiltonian paths, not WL/PQS realization, and not route/global placement.
 
 Future one-body terms should be sums or wrappers around the same axis-product
 primitive, for example:

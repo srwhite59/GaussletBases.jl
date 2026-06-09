@@ -265,17 +265,19 @@ paths from becoming new route authority.
   summaries. It is for simple separable one-body terms only; no production
   kinetic, position, x2, Coulomb-family kernel, WL/PQS realization, or
   route/global placement was added with it.
-- Parent axis bundle kinetic support has been audited and added narrowly where
-  the bundle already owns structured 1D kinetic matrices. The parent axis
-  factor packet now carries optional `kinetic_1d` from
-  `axis.pgdg_intermediate.kinetic` or `axis.kinetic`, with matrix/count
-  validation and compact kinetic availability metadata. A CPB-local kinetic
-  wrapper materializes `Kx Sy Sz + Sx Ky Sz + Sx Sy Kz` through
-  `cpb_sum_of_axis_products_operator_block`; inactive directions use explicit
-  overlap factors. This does not add position, x2, Coulomb-family kernels,
-  WL/PQS realization, retained transforms, route/global placement, driver
-  wiring, Hamiltonian assembly, IDA/MWG, PQS projection/Lowdin, exports, or
-  artifacts.
+- Parent axis bundle one-body factor support has been audited and added
+  narrowly where the bundle already owns structured 1D matrices. The audited
+  real-bundle paths are `axis.pgdg_intermediate.kinetic`,
+  `axis.pgdg_intermediate.position`, and `axis.pgdg_intermediate.x2`; structured
+  top-level fallbacks `axis.kinetic`, `axis.position`, and `axis.x2` are also
+  accepted. The parent axis factor packet now carries optional `kinetic_1d`,
+  `position_1d`, and `x2_1d` with matrix/count validation and compact category
+  metadata. CPB-local wrappers materialize kinetic as
+  `Kx Sy Sz + Sx Ky Sz + Sx Sy Kz`, position as `Xi` on one active axis with
+  overlap factors on inactive axes, and x2 similarly. This does not add
+  Coulomb-family kernels, WL/PQS realization, retained transforms,
+  route/global placement, driver wiring, Hamiltonian assembly, IDA/MWG, PQS
+  projection/Lowdin, exports, or artifacts.
 - The next overlap implementation boundary is no longer additional placement
   fingerprinting. First decide the CPB operator-block and WL/PQS realization
   design: what local block objects exist, how White-Lindsey consumes them, how
