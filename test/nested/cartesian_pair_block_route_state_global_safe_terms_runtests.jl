@@ -8,58 +8,58 @@
 using Test
 using GaussletBases
 
-const CPBMRouteStateOverlap = GaussletBases.CartesianPairBlockMaterialization
-const CPBRouteStateOverlap = GaussletBases.CartesianCPB
-const CTLRouteStateOverlap = GaussletBases.CartesianTerminalLowering
-const CRURouteStateOverlap = GaussletBases.CartesianRetainedUnits
-const CRTCRouteStateOverlap =
+const CPBMRouteStateSafeTerms = GaussletBases.CartesianPairBlockMaterialization
+const CPBRouteStateSafeTerms = GaussletBases.CartesianCPB
+const CTLRouteStateSafeTerms = GaussletBases.CartesianTerminalLowering
+const CRURouteStateSafeTerms = GaussletBases.CartesianRetainedUnits
+const CRTCRouteStateSafeTerms =
     GaussletBases.CartesianRetainedUnitTransformContracts
-const CUPRouteStateOverlap = GaussletBases.CartesianUnitPairs
-const CPOPRouteStateOverlap = GaussletBases.CartesianPairOperatorPlans
+const CUPRouteStateSafeTerms = GaussletBases.CartesianUnitPairs
+const CPOPRouteStateSafeTerms = GaussletBases.CartesianPairOperatorPlans
 
-function _route_state_overlap_pair_operator_plan()
-    lowering_plan = CTLRouteStateOverlap.TerminalLoweringPlan(
-        CTLRouteStateOverlap.PQSLowering(q = 2),
+function _route_state_safe_terms_pair_operator_plan()
+    lowering_plan = CTLRouteStateSafeTerms.TerminalLoweringPlan(
+        CTLRouteStateSafeTerms.PQSLowering(q = 2),
         (),
         (),
         (; status = :available_terminal_lowering_plan, materialized = false),
-        (; fixture = :route_state_global_overlap_adapter),
+        (; fixture = :route_state_global_safe_terms_adapter),
     )
-    retained_plan = CRURouteStateOverlap.RetainedUnitPlan(
-        CRURouteStateOverlap.MetadataOnlyRetainedUnits(),
+    retained_plan = CRURouteStateSafeTerms.RetainedUnitPlan(
+        CRURouteStateSafeTerms.MetadataOnlyRetainedUnits(),
         lowering_plan,
         (),
         (; status = :available_retained_unit_plan, materialized = false),
-        (; fixture = :route_state_global_overlap_adapter),
+        (; fixture = :route_state_global_safe_terms_adapter),
     )
-    unit_pair_plan = CUPRouteStateOverlap.UnitPairPlan(
-        CUPRouteStateOverlap.MetadataOnlyUnitPairs(),
+    unit_pair_plan = CUPRouteStateSafeTerms.UnitPairPlan(
+        CUPRouteStateSafeTerms.MetadataOnlyUnitPairs(),
         retained_plan,
         (),
         nothing,
         (; status = :available_unit_pair_plan, materialized = false),
-        (; fixture = :route_state_global_overlap_adapter),
+        (; fixture = :route_state_global_safe_terms_adapter),
     )
-    transform_plan = CRTCRouteStateOverlap.RetainedUnitTransformContractPlan(
-        CRTCRouteStateOverlap.MetadataOnlyRetainedUnitTransformContracts(),
+    transform_plan = CRTCRouteStateSafeTerms.RetainedUnitTransformContractPlan(
+        CRTCRouteStateSafeTerms.MetadataOnlyRetainedUnitTransformContracts(),
         retained_plan,
         (),
         (; status = :available_transform_contract_plan, materialized = false),
-        (; fixture = :route_state_global_overlap_adapter),
+        (; fixture = :route_state_global_safe_terms_adapter),
     )
-    return CPOPRouteStateOverlap.PairOperatorPlan(
-        CPOPRouteStateOverlap.MetadataOnlyPairOperatorPlans(),
+    return CPOPRouteStateSafeTerms.PairOperatorPlan(
+        CPOPRouteStateSafeTerms.MetadataOnlyPairOperatorPlans(),
         unit_pair_plan,
         transform_plan,
         (),
         nothing,
         (; status = :available_pair_operator_plan, materialized = false),
-        (; fixture = :route_state_global_overlap_adapter),
+        (; fixture = :route_state_global_safe_terms_adapter),
     )
 end
 
-function _route_state_overlap_record(; metadata = (;))
-    return CPBMRouteStateOverlap.PairBlockMaterializationRecord(
+function _route_state_safe_terms_record(; metadata = (;))
+    return CPBMRouteStateSafeTerms.PairBlockMaterializationRecord(
         (:direct_diag, :direct_diag),
         1,
         :direct_direct,
@@ -85,14 +85,14 @@ function _route_state_overlap_record(; metadata = (;))
     )
 end
 
-function _route_state_overlap_plan()
-    direct_source = CPBRouteStateOverlap.cpb(
+function _route_state_safe_terms_plan()
+    direct_source = CPBRouteStateSafeTerms.cpb(
         1:1,
         1:2,
         1:1;
-        role = :route_state_global_overlap_direct_source,
+        role = :route_state_global_safe_terms_direct_source,
     )
-    record = _route_state_overlap_record(
+    record = _route_state_safe_terms_record(
         metadata = (;
             left_source_cpbs = (direct_source,),
             right_source_cpbs = (direct_source,),
@@ -102,16 +102,16 @@ function _route_state_overlap_plan()
             right_column_range = 1:2,
         ),
     )
-    return CPBMRouteStateOverlap.PairBlockMaterializationPlan(
-        CPBMRouteStateOverlap.MetadataOnlyPairBlockMaterialization(),
-        _route_state_overlap_pair_operator_plan(),
+    return CPBMRouteStateSafeTerms.PairBlockMaterializationPlan(
+        CPBMRouteStateSafeTerms.MetadataOnlyPairBlockMaterialization(),
+        _route_state_safe_terms_pair_operator_plan(),
         (record,),
         (; status = :available_pair_block_materialization_plan),
-        (; fixture = :route_state_global_overlap_adapter),
+        (; fixture = :route_state_global_safe_terms_adapter),
     )
 end
 
-function _route_state_overlap_inputs()
+function _route_state_safe_terms_inputs()
     return (;
         parent_axis_counts = (2, 2, 2),
         overlap_1d = (;
@@ -139,17 +139,17 @@ end
 
 function _route_state_position_global_matrix(term::Symbol, source; kwargs...)
     term === :position_x &&
-        return CPBMRouteStateOverlap.route_global_position_x_matrix(
+        return CPBMRouteStateSafeTerms.route_global_position_x_matrix(
             source;
             kwargs...,
         )
     term === :position_y &&
-        return CPBMRouteStateOverlap.route_global_position_y_matrix(
+        return CPBMRouteStateSafeTerms.route_global_position_y_matrix(
             source;
             kwargs...,
         )
     term === :position_z &&
-        return CPBMRouteStateOverlap.route_global_position_z_matrix(
+        return CPBMRouteStateSafeTerms.route_global_position_z_matrix(
             source;
             kwargs...,
         )
@@ -158,17 +158,17 @@ end
 
 function _route_state_position_adapter(term::Symbol, source; kwargs...)
     term === :position_x &&
-        return CPBMRouteStateOverlap.route_state_global_position_x_matrix(
+        return CPBMRouteStateSafeTerms.route_state_global_position_x_matrix(
             source;
             kwargs...,
         )
     term === :position_y &&
-        return CPBMRouteStateOverlap.route_state_global_position_y_matrix(
+        return CPBMRouteStateSafeTerms.route_state_global_position_y_matrix(
             source;
             kwargs...,
         )
     term === :position_z &&
-        return CPBMRouteStateOverlap.route_state_global_position_z_matrix(
+        return CPBMRouteStateSafeTerms.route_state_global_position_z_matrix(
             source;
             kwargs...,
         )
@@ -177,27 +177,27 @@ end
 
 function _route_state_x2_global_matrix(term::Symbol, source; kwargs...)
     term === :x2_x &&
-        return CPBMRouteStateOverlap.route_global_x2_x_matrix(source; kwargs...)
+        return CPBMRouteStateSafeTerms.route_global_x2_x_matrix(source; kwargs...)
     term === :x2_y &&
-        return CPBMRouteStateOverlap.route_global_x2_y_matrix(source; kwargs...)
+        return CPBMRouteStateSafeTerms.route_global_x2_y_matrix(source; kwargs...)
     term === :x2_z &&
-        return CPBMRouteStateOverlap.route_global_x2_z_matrix(source; kwargs...)
+        return CPBMRouteStateSafeTerms.route_global_x2_z_matrix(source; kwargs...)
     throw(ArgumentError("expected route-state x2 term"))
 end
 
 function _route_state_x2_adapter(term::Symbol, source; kwargs...)
     term === :x2_x &&
-        return CPBMRouteStateOverlap.route_state_global_x2_x_matrix(
+        return CPBMRouteStateSafeTerms.route_state_global_x2_x_matrix(
             source;
             kwargs...,
         )
     term === :x2_y &&
-        return CPBMRouteStateOverlap.route_state_global_x2_y_matrix(
+        return CPBMRouteStateSafeTerms.route_state_global_x2_y_matrix(
             source;
             kwargs...,
         )
     term === :x2_z &&
-        return CPBMRouteStateOverlap.route_state_global_x2_z_matrix(
+        return CPBMRouteStateSafeTerms.route_state_global_x2_z_matrix(
             source;
             kwargs...,
         )
@@ -217,26 +217,26 @@ function _test_route_state_nonclaim_flags(result)
 end
 
 @testset "CartesianPairBlockMaterialization route-state global overlap adapter" begin
-    plan = _route_state_overlap_plan()
-    expected = CPBMRouteStateOverlap.route_global_overlap_matrix(
+    plan = _route_state_safe_terms_plan()
+    expected = CPBMRouteStateSafeTerms.route_global_overlap_matrix(
         plan;
         global_dimension = 2,
-        inputs = _route_state_overlap_inputs(),
+        inputs = _route_state_safe_terms_inputs(),
     )
-    direct = CPBMRouteStateOverlap.route_state_global_overlap_matrix(
+    direct = CPBMRouteStateSafeTerms.route_state_global_overlap_matrix(
         plan;
         global_dimension = 2,
-        inputs = _route_state_overlap_inputs(),
+        inputs = _route_state_safe_terms_inputs(),
     )
-    wrapped = CPBMRouteStateOverlap.route_state_global_overlap_matrix(
+    wrapped = CPBMRouteStateSafeTerms.route_state_global_overlap_matrix(
         (; pair_block_materialization_plan = plan);
         global_dimension = 2,
-        factors = _route_state_overlap_inputs(),
+        factors = _route_state_safe_terms_inputs(),
     )
-    route_state = CPBMRouteStateOverlap.route_state_global_overlap_matrix(
+    route_state = CPBMRouteStateSafeTerms.route_state_global_overlap_matrix(
         (; terminal_route_state = (; pair_block_materialization_plan = plan));
         global_dimension = 2,
-        inputs = _route_state_overlap_inputs(),
+        inputs = _route_state_safe_terms_inputs(),
     )
 
     @test direct.status === :materialized_route_global_overlap_matrix
@@ -247,10 +247,10 @@ end
           expected.global_matrix_result.matrix
     @test direct.pair_block_materialization_plan === plan
 
-    missing_plan = CPBMRouteStateOverlap.route_state_global_overlap_matrix(
+    missing_plan = CPBMRouteStateSafeTerms.route_state_global_overlap_matrix(
         (; route_state = :missing_pair_block_plan);
         global_dimension = 2,
-        inputs = _route_state_overlap_inputs(),
+        inputs = _route_state_safe_terms_inputs(),
     )
     @test missing_plan.status === :blocked_route_global_overlap_matrix
     @test missing_plan.blocker === :missing_pair_block_materialization_plan
@@ -258,9 +258,9 @@ end
     @test !missing_plan.global_overlap_matrix_materialized
 
     missing_dimension =
-        CPBMRouteStateOverlap.route_state_global_overlap_matrix(
+        CPBMRouteStateSafeTerms.route_state_global_overlap_matrix(
             (; pair_block_materialization_plan = plan);
-            inputs = _route_state_overlap_inputs(),
+            inputs = _route_state_safe_terms_inputs(),
         )
     @test missing_dimension.status === :blocked_route_global_overlap_matrix
     @test missing_dimension.blocker === :missing_global_dimension
@@ -270,26 +270,26 @@ end
 end
 
 @testset "CartesianPairBlockMaterialization route-state global kinetic adapter" begin
-    plan = _route_state_overlap_plan()
-    expected = CPBMRouteStateOverlap.route_global_kinetic_matrix(
+    plan = _route_state_safe_terms_plan()
+    expected = CPBMRouteStateSafeTerms.route_global_kinetic_matrix(
         plan;
         global_dimension = 2,
-        inputs = _route_state_overlap_inputs(),
+        inputs = _route_state_safe_terms_inputs(),
     )
-    direct = CPBMRouteStateOverlap.route_state_global_kinetic_matrix(
+    direct = CPBMRouteStateSafeTerms.route_state_global_kinetic_matrix(
         plan;
         global_dimension = 2,
-        inputs = _route_state_overlap_inputs(),
+        inputs = _route_state_safe_terms_inputs(),
     )
-    wrapped = CPBMRouteStateOverlap.route_state_global_kinetic_matrix(
+    wrapped = CPBMRouteStateSafeTerms.route_state_global_kinetic_matrix(
         (; pair_block_materialization_plan = plan);
         global_dimension = 2,
-        factors = _route_state_overlap_inputs(),
+        factors = _route_state_safe_terms_inputs(),
     )
-    route_state = CPBMRouteStateOverlap.route_state_global_kinetic_matrix(
+    route_state = CPBMRouteStateSafeTerms.route_state_global_kinetic_matrix(
         (; terminal_route_state = (; pair_block_materialization_plan = plan));
         global_dimension = 2,
-        inputs = _route_state_overlap_inputs(),
+        inputs = _route_state_safe_terms_inputs(),
     )
 
     @test direct.status === :materialized_route_global_kinetic_matrix
@@ -300,10 +300,10 @@ end
           expected.global_matrix_result.matrix
     @test direct.pair_block_materialization_plan === plan
 
-    missing_plan = CPBMRouteStateOverlap.route_state_global_kinetic_matrix(
+    missing_plan = CPBMRouteStateSafeTerms.route_state_global_kinetic_matrix(
         (; route_state = :missing_pair_block_plan);
         global_dimension = 2,
-        inputs = _route_state_overlap_inputs(),
+        inputs = _route_state_safe_terms_inputs(),
     )
     @test missing_plan.status === :blocked_route_global_kinetic_matrix
     @test missing_plan.blocker === :missing_pair_block_materialization_plan
@@ -311,9 +311,9 @@ end
     @test !missing_plan.global_kinetic_matrix_materialized
 
     missing_dimension =
-        CPBMRouteStateOverlap.route_state_global_kinetic_matrix(
+        CPBMRouteStateSafeTerms.route_state_global_kinetic_matrix(
             (; pair_block_materialization_plan = plan);
-            inputs = _route_state_overlap_inputs(),
+            inputs = _route_state_safe_terms_inputs(),
         )
     @test missing_dimension.status === :blocked_route_global_kinetic_matrix
     @test missing_dimension.blocker === :missing_global_dimension
@@ -323,18 +323,18 @@ end
 end
 
 @testset "CartesianPairBlockMaterialization route-state global position adapter" begin
-    plan = _route_state_overlap_plan()
+    plan = _route_state_safe_terms_plan()
 
-    axis_adapter = CPBMRouteStateOverlap.route_state_global_position_matrix(
+    axis_adapter = CPBMRouteStateSafeTerms.route_state_global_position_matrix(
         plan;
         axis = :x,
         global_dimension = 2,
-        inputs = _route_state_overlap_inputs(),
+        inputs = _route_state_safe_terms_inputs(),
     )
-    axis_expected = CPBMRouteStateOverlap.route_global_position_x_matrix(
+    axis_expected = CPBMRouteStateSafeTerms.route_global_position_x_matrix(
         plan;
         global_dimension = 2,
-        inputs = _route_state_overlap_inputs(),
+        inputs = _route_state_safe_terms_inputs(),
     )
     @test axis_adapter.global_matrix_result.matrix ≈
           axis_expected.global_matrix_result.matrix
@@ -344,13 +344,13 @@ end
             term,
             plan;
             global_dimension = 2,
-            inputs = _route_state_overlap_inputs(),
+            inputs = _route_state_safe_terms_inputs(),
         )
         direct = _route_state_position_adapter(
             term,
             plan;
             global_dimension = 2,
-            inputs = _route_state_overlap_inputs(),
+            inputs = _route_state_safe_terms_inputs(),
         )
         @test direct.status ===
               Symbol("materialized_route_global_", String(term), "_matrix")
@@ -364,63 +364,63 @@ end
         _test_route_state_nonclaim_flags(direct)
     end
 
-    wrapped = CPBMRouteStateOverlap.route_state_global_position_y_matrix(
+    wrapped = CPBMRouteStateSafeTerms.route_state_global_position_y_matrix(
         (; pair_block_materialization_plan = plan);
         global_dimension = 2,
-        factors = _route_state_overlap_inputs(),
+        factors = _route_state_safe_terms_inputs(),
     )
-    wrapped_expected = CPBMRouteStateOverlap.route_global_position_y_matrix(
+    wrapped_expected = CPBMRouteStateSafeTerms.route_global_position_y_matrix(
         plan;
         global_dimension = 2,
-        inputs = _route_state_overlap_inputs(),
+        inputs = _route_state_safe_terms_inputs(),
     )
     @test wrapped.global_matrix_result.matrix ≈
           wrapped_expected.global_matrix_result.matrix
 
-    route_state = CPBMRouteStateOverlap.route_state_global_position_z_matrix(
+    route_state = CPBMRouteStateSafeTerms.route_state_global_position_z_matrix(
         (; terminal_route_state = (; pair_block_materialization_plan = plan));
         global_dimension = 2,
-        inputs = _route_state_overlap_inputs(),
+        inputs = _route_state_safe_terms_inputs(),
     )
     route_state_expected =
-        CPBMRouteStateOverlap.route_global_position_z_matrix(
+        CPBMRouteStateSafeTerms.route_global_position_z_matrix(
             plan;
             global_dimension = 2,
-            inputs = _route_state_overlap_inputs(),
+            inputs = _route_state_safe_terms_inputs(),
         )
     @test route_state.global_matrix_result.matrix ≈
           route_state_expected.global_matrix_result.matrix
 
-    missing_plan = CPBMRouteStateOverlap.route_state_global_position_x_matrix(
+    missing_plan = CPBMRouteStateSafeTerms.route_state_global_position_x_matrix(
         (; route_state = :missing_pair_block_plan);
         global_dimension = 2,
-        inputs = _route_state_overlap_inputs(),
+        inputs = _route_state_safe_terms_inputs(),
     )
     @test missing_plan.status === :blocked_route_global_position_x_matrix
     @test missing_plan.blocker === :missing_pair_block_materialization_plan
 
     missing_dimension =
-        CPBMRouteStateOverlap.route_state_global_position_x_matrix(
+        CPBMRouteStateSafeTerms.route_state_global_position_x_matrix(
             (; pair_block_materialization_plan = plan);
-            inputs = _route_state_overlap_inputs(),
+            inputs = _route_state_safe_terms_inputs(),
         )
     @test missing_dimension.status === :blocked_route_global_position_x_matrix
     @test missing_dimension.blocker === :missing_global_dimension
 end
 
 @testset "CartesianPairBlockMaterialization route-state global x2 adapter" begin
-    plan = _route_state_overlap_plan()
+    plan = _route_state_safe_terms_plan()
 
-    axis_adapter = CPBMRouteStateOverlap.route_state_global_x2_matrix(
+    axis_adapter = CPBMRouteStateSafeTerms.route_state_global_x2_matrix(
         plan;
         axis = :x,
         global_dimension = 2,
-        inputs = _route_state_overlap_inputs(),
+        inputs = _route_state_safe_terms_inputs(),
     )
-    axis_expected = CPBMRouteStateOverlap.route_global_x2_x_matrix(
+    axis_expected = CPBMRouteStateSafeTerms.route_global_x2_x_matrix(
         plan;
         global_dimension = 2,
-        inputs = _route_state_overlap_inputs(),
+        inputs = _route_state_safe_terms_inputs(),
     )
     @test axis_adapter.global_matrix_result.matrix ≈
           axis_expected.global_matrix_result.matrix
@@ -430,13 +430,13 @@ end
             term,
             plan;
             global_dimension = 2,
-            inputs = _route_state_overlap_inputs(),
+            inputs = _route_state_safe_terms_inputs(),
         )
         direct = _route_state_x2_adapter(
             term,
             plan;
             global_dimension = 2,
-            inputs = _route_state_overlap_inputs(),
+            inputs = _route_state_safe_terms_inputs(),
         )
         @test direct.status ===
               Symbol("materialized_route_global_", String(term), "_matrix")
@@ -450,43 +450,43 @@ end
         _test_route_state_nonclaim_flags(direct)
     end
 
-    wrapped = CPBMRouteStateOverlap.route_state_global_x2_y_matrix(
+    wrapped = CPBMRouteStateSafeTerms.route_state_global_x2_y_matrix(
         (; pair_block_materialization_plan = plan);
         global_dimension = 2,
-        factors = _route_state_overlap_inputs(),
+        factors = _route_state_safe_terms_inputs(),
     )
-    wrapped_expected = CPBMRouteStateOverlap.route_global_x2_y_matrix(
+    wrapped_expected = CPBMRouteStateSafeTerms.route_global_x2_y_matrix(
         plan;
         global_dimension = 2,
-        inputs = _route_state_overlap_inputs(),
+        inputs = _route_state_safe_terms_inputs(),
     )
     @test wrapped.global_matrix_result.matrix ≈
           wrapped_expected.global_matrix_result.matrix
 
-    route_state = CPBMRouteStateOverlap.route_state_global_x2_z_matrix(
+    route_state = CPBMRouteStateSafeTerms.route_state_global_x2_z_matrix(
         (; terminal_route_state = (; pair_block_materialization_plan = plan));
         global_dimension = 2,
-        inputs = _route_state_overlap_inputs(),
+        inputs = _route_state_safe_terms_inputs(),
     )
-    route_state_expected = CPBMRouteStateOverlap.route_global_x2_z_matrix(
+    route_state_expected = CPBMRouteStateSafeTerms.route_global_x2_z_matrix(
         plan;
         global_dimension = 2,
-        inputs = _route_state_overlap_inputs(),
+        inputs = _route_state_safe_terms_inputs(),
     )
     @test route_state.global_matrix_result.matrix ≈
           route_state_expected.global_matrix_result.matrix
 
-    missing_plan = CPBMRouteStateOverlap.route_state_global_x2_x_matrix(
+    missing_plan = CPBMRouteStateSafeTerms.route_state_global_x2_x_matrix(
         (; route_state = :missing_pair_block_plan);
         global_dimension = 2,
-        inputs = _route_state_overlap_inputs(),
+        inputs = _route_state_safe_terms_inputs(),
     )
     @test missing_plan.status === :blocked_route_global_x2_x_matrix
     @test missing_plan.blocker === :missing_pair_block_materialization_plan
 
-    missing_dimension = CPBMRouteStateOverlap.route_state_global_x2_x_matrix(
+    missing_dimension = CPBMRouteStateSafeTerms.route_state_global_x2_x_matrix(
         (; pair_block_materialization_plan = plan);
-        inputs = _route_state_overlap_inputs(),
+        inputs = _route_state_safe_terms_inputs(),
     )
     @test missing_dimension.status === :blocked_route_global_x2_x_matrix
     @test missing_dimension.blocker === :missing_global_dimension
