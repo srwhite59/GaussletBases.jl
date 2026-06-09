@@ -3685,6 +3685,215 @@ function _pqs_source_box_route_driver_private_global_overlap_placement_requireme
     )
 end
 
+function _pqs_source_box_route_driver_private_global_overlap_placement_candidate(
+    collection::CartesianCPBBlockProviders.CPBLocalOverlapBlockCollection;
+    retained_transform = nothing,
+    left_column_ranges = nothing,
+    right_column_ranges = nothing,
+    global_dimension = nothing,
+    placement_plan = nothing,
+    accumulation_rule = nothing,
+)
+    requirements =
+        _pqs_source_box_route_driver_private_global_overlap_placement_requirements_fingerprint(
+            collection,
+        )
+    return _pqs_source_box_route_driver_private_global_overlap_placement_candidate(
+        requirements;
+        retained_transform,
+        left_column_ranges,
+        right_column_ranges,
+        global_dimension,
+        placement_plan,
+        accumulation_rule,
+    )
+end
+
+function _pqs_source_box_route_driver_private_global_overlap_placement_candidate(
+    requirements;
+    retained_transform = nothing,
+    left_column_ranges = nothing,
+    right_column_ranges = nothing,
+    global_dimension = nothing,
+    placement_plan = nothing,
+    accumulation_rule = nothing,
+)
+    collection_available =
+        _pqs_source_box_route_driver_private_global_overlap_property(
+            requirements,
+            :local_cpb_overlap_collection_available,
+        ) === true
+    if !collection_available
+        blocker =
+            _pqs_source_box_route_driver_private_global_overlap_property(
+                requirements,
+                :global_overlap_blocker,
+            )
+        isnothing(blocker) && (blocker = :missing_local_overlap_collection)
+        return _pqs_source_box_route_driver_private_global_overlap_placement_candidate_summary(
+            blocker,
+            false,
+            :blocked_missing_local_overlap_collection,
+            (),
+            (:missing_local_overlap_collection,),
+            :unavailable,
+            :unavailable,
+            :unavailable,
+            :unavailable,
+            :unavailable,
+            :unavailable,
+        )
+    end
+
+    retained_transform_status =
+        isnothing(retained_transform) ?
+        :missing_retained_transform :
+        :available_retained_transform
+    left_column_range_status =
+        isnothing(left_column_ranges) ?
+        :missing_left_column_range :
+        :available_left_column_range
+    right_column_range_status =
+        isnothing(right_column_ranges) ?
+        :missing_right_column_range :
+        :available_right_column_range
+    global_dimension_status =
+        isnothing(global_dimension) ?
+        :missing_global_dimension :
+        :available_global_dimension
+    placement_plan_status =
+        isnothing(placement_plan) ?
+        :missing_placement_plan :
+        :available_placement_plan
+    accumulation_rule_status =
+        isnothing(accumulation_rule) ?
+        :missing_accumulation_rule :
+        :available_accumulation_rule
+    available_requirements =
+        _pqs_source_box_route_driver_private_global_overlap_available_placement_requirements(
+            retained_transform_status,
+            left_column_range_status,
+            right_column_range_status,
+            global_dimension_status,
+            placement_plan_status,
+            accumulation_rule_status,
+        )
+    missing_requirements =
+        _pqs_source_box_route_driver_private_global_overlap_missing_placement_requirements(
+            retained_transform_status,
+            left_column_range_status,
+            right_column_range_status,
+            global_dimension_status,
+            placement_plan_status,
+            accumulation_rule_status,
+        )
+    blocker =
+        isempty(missing_requirements) ?
+        :placement_not_implemented :
+        :missing_placement_or_retained_transform
+    return _pqs_source_box_route_driver_private_global_overlap_placement_candidate_summary(
+        blocker,
+        true,
+        isempty(missing_requirements) ?
+        :blocked_placement_not_implemented :
+        :blocked_missing_placement_requirements,
+        available_requirements,
+        missing_requirements,
+        retained_transform_status,
+        left_column_range_status,
+        right_column_range_status,
+        global_dimension_status,
+        placement_plan_status,
+        accumulation_rule_status,
+    )
+end
+
+function _pqs_source_box_route_driver_private_global_overlap_available_placement_requirements(
+    retained_transform_status,
+    left_column_range_status,
+    right_column_range_status,
+    global_dimension_status,
+    placement_plan_status,
+    accumulation_rule_status,
+)
+    available = Symbol[:local_cpb_overlap_collection]
+    retained_transform_status === :available_retained_transform &&
+        push!(available, :retained_transform)
+    left_column_range_status === :available_left_column_range &&
+        push!(available, :left_column_range)
+    right_column_range_status === :available_right_column_range &&
+        push!(available, :right_column_range)
+    global_dimension_status === :available_global_dimension &&
+        push!(available, :global_dimension)
+    placement_plan_status === :available_placement_plan &&
+        push!(available, :placement_plan)
+    accumulation_rule_status === :available_accumulation_rule &&
+        push!(available, :accumulation_rule)
+    return Tuple(available)
+end
+
+function _pqs_source_box_route_driver_private_global_overlap_missing_placement_requirements(
+    retained_transform_status,
+    left_column_range_status,
+    right_column_range_status,
+    global_dimension_status,
+    placement_plan_status,
+    accumulation_rule_status,
+)
+    missing = Symbol[]
+    retained_transform_status === :missing_retained_transform &&
+        push!(missing, :missing_retained_transform)
+    left_column_range_status === :missing_left_column_range &&
+        push!(missing, :missing_left_column_range)
+    right_column_range_status === :missing_right_column_range &&
+        push!(missing, :missing_right_column_range)
+    global_dimension_status === :missing_global_dimension &&
+        push!(missing, :missing_global_dimension)
+    placement_plan_status === :missing_placement_plan &&
+        push!(missing, :missing_placement_plan)
+    accumulation_rule_status === :missing_accumulation_rule &&
+        push!(missing, :missing_accumulation_rule)
+    return Tuple(missing)
+end
+
+function _pqs_source_box_route_driver_private_global_overlap_placement_candidate_summary(
+    blocker,
+    local_cpb_overlap_collection_available::Bool,
+    placement_candidate_status::Symbol,
+    available_requirements::Tuple,
+    missing_requirements::Tuple,
+    retained_transform_status::Symbol,
+    left_column_range_status::Symbol,
+    right_column_range_status::Symbol,
+    global_dimension_status::Symbol,
+    placement_plan_status::Symbol,
+    accumulation_rule_status::Symbol,
+)
+    return (;
+        object_kind =
+            :cartesian_route_driver_private_global_overlap_placement_candidate,
+        status = :blocked_private_global_overlap_placement_candidate,
+        blocker,
+        local_cpb_overlap_collection_available,
+        placement_candidate_status,
+        available_requirements,
+        missing_requirements,
+        retained_transform_status,
+        left_column_range_status,
+        right_column_range_status,
+        global_dimension_status,
+        placement_plan_status,
+        accumulation_rule_status,
+        global_overlap_status = :blocked,
+        global_overlap_blocker = blocker,
+        route_driver_wiring = false,
+        global_matrix_materialized = false,
+        global_overlap_matrix_materialized = false,
+        private_global_overlap_input_facts_available = false,
+        route_global_overlap_stage_source = false,
+    )
+end
+
 function _pqs_source_box_route_driver_private_global_overlap_local_source_fingerprint(
     source,
 )

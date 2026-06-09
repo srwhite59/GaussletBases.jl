@@ -749,6 +749,16 @@ the required retained-transform, column-range, dimension, placement-plan, and
 accumulation-rule facts. It must not become a placement engine by accumulating
 local CPB blocks into a route/global matrix.
 
+A placement candidate is the next metadata-only status carrier. It may combine
+the local collection adapter or placement-requirements fingerprint with
+optional placement facts, but it is still not a placement plan and not global
+assembly. Its purpose is to record which requirements are available and which
+are still missing, without inventing ad hoc scalar placement fields in later
+adapters. With the current local collection and no placement facts, the
+candidate should report only `:local_cpb_overlap_collection` available and keep
+the retained transform, column ranges, global dimension, placement plan, and
+accumulation rule as missing. It must keep route/global nonclaim flags false.
+
 This lets retained-unit and pair-block code choose whether to use axis blocks
 directly, materialize a dense local CPB block, apply left/right transforms, or
 place into a global matrix.

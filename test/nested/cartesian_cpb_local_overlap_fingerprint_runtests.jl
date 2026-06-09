@@ -228,6 +228,56 @@ end
         )
     @test collection_placement_requirements == placement_requirements
 
+    placement_candidate =
+        GaussletBases._pqs_source_box_route_driver_private_global_overlap_placement_candidate(
+            placement_requirements,
+        )
+    @test placement_candidate.object_kind ===
+          :cartesian_route_driver_private_global_overlap_placement_candidate
+    @test placement_candidate.status ===
+          :blocked_private_global_overlap_placement_candidate
+    @test placement_candidate.blocker ===
+          :missing_placement_or_retained_transform
+    @test placement_candidate.local_cpb_overlap_collection_available
+    @test placement_candidate.placement_candidate_status ===
+          :blocked_missing_placement_requirements
+    @test placement_candidate.available_requirements ===
+          (:local_cpb_overlap_collection,)
+    @test placement_candidate.missing_requirements === (
+        :missing_retained_transform,
+        :missing_left_column_range,
+        :missing_right_column_range,
+        :missing_global_dimension,
+        :missing_placement_plan,
+        :missing_accumulation_rule,
+    )
+    @test placement_candidate.retained_transform_status ===
+          :missing_retained_transform
+    @test placement_candidate.left_column_range_status ===
+          :missing_left_column_range
+    @test placement_candidate.right_column_range_status ===
+          :missing_right_column_range
+    @test placement_candidate.global_dimension_status ===
+          :missing_global_dimension
+    @test placement_candidate.placement_plan_status ===
+          :missing_placement_plan
+    @test placement_candidate.accumulation_rule_status ===
+          :missing_accumulation_rule
+    @test placement_candidate.global_overlap_status === :blocked
+    @test placement_candidate.global_overlap_blocker ===
+          :missing_placement_or_retained_transform
+    @test placement_candidate.global_matrix_materialized === false
+    @test placement_candidate.global_overlap_matrix_materialized === false
+    @test placement_candidate.route_driver_wiring === false
+    @test placement_candidate.private_global_overlap_input_facts_available === false
+    @test placement_candidate.route_global_overlap_stage_source === false
+
+    collection_placement_candidate =
+        GaussletBases._pqs_source_box_route_driver_private_global_overlap_placement_candidate(
+            source.collection,
+        )
+    @test collection_placement_candidate == placement_candidate
+
     blocked_collection_adapter =
         GaussletBases._pqs_source_box_route_driver_private_global_overlap_local_collection_adapter(
             source.blocked_collection,
@@ -267,6 +317,27 @@ end
           :blocked_cpb_local_overlap_block_records
     @test blocked_placement_requirements.global_matrix_materialized === false
     @test blocked_placement_requirements.route_driver_wiring === false
+
+    blocked_placement_candidate =
+        GaussletBases._pqs_source_box_route_driver_private_global_overlap_placement_candidate(
+            blocked_placement_requirements,
+        )
+    @test blocked_placement_candidate.status ===
+          :blocked_private_global_overlap_placement_candidate
+    @test blocked_placement_candidate.blocker ===
+          :blocked_cpb_local_overlap_block_records
+    @test blocked_placement_candidate.local_cpb_overlap_collection_available === false
+    @test blocked_placement_candidate.placement_candidate_status ===
+          :blocked_missing_local_overlap_collection
+    @test blocked_placement_candidate.available_requirements === ()
+    @test blocked_placement_candidate.missing_requirements ===
+          (:missing_local_overlap_collection,)
+    @test blocked_placement_candidate.retained_transform_status === :unavailable
+    @test blocked_placement_candidate.global_overlap_status === :blocked
+    @test blocked_placement_candidate.global_overlap_blocker ===
+          :blocked_cpb_local_overlap_block_records
+    @test blocked_placement_candidate.global_matrix_materialized === false
+    @test blocked_placement_candidate.route_driver_wiring === false
 
     facts_report = (;
         retained_dimension = 2,
