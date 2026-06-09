@@ -1,9 +1,9 @@
 # Runtime role: tiny CPB overlap axis-block provider contract test.
 #
 # This validates axis-level overlap slices from a parent factor packet and a
-# CPB interval pair. It does not materialize dense local 3D blocks, wire route
-# drivers, or exercise kinetic/position/x2/Coulomb, Hamiltonian, IDA/MWG, PQS
-# Lowdin/projection, exports, or artifacts.
+# CPB interval pair, plus local dense CPB overlap materialization. It does not
+# wire route/global placement or exercise kinetic/position/x2/Coulomb,
+# Hamiltonian, IDA/MWG, PQS Lowdin/projection, exports, or artifacts.
 
 using Test
 using GaussletBases
@@ -68,6 +68,14 @@ function _overlap_blocks_interval_pair(parent)
     left = CPBOverlapBlocks.cpb(1:2, 2:3, 1:3; role = :left_overlap_slice)
     right = CPBOverlapBlocks.cpb(2:3, 1:2, 2:2; role = :right_overlap_slice)
     return CBPOverlapBlocks.cpb_interval_pair(parent, left, right)
+end
+
+function _overlap_blocks_packet_with_metadata(packet, metadata)
+    return CPGBOverlapBlocks.CartesianParentAxisFactorPacket3D(
+        packet.parent,
+        packet.overlap_1d,
+        metadata,
+    )
 end
 
 function _overlap_blocks_expected_dense(axis_blocks)
@@ -147,15 +155,16 @@ end
     dense_summary = CBPOverlapBlocks.summary(dense_block)
 
     @test dense_block.axis_block_set === block_set
-    @test dense_block.dense_block === dense_summary.dense_block
     @test dense_summary.status === :materialized_cpb_overlap_dense_block
     @test dense_summary.blocker === nothing
-    @test dense_summary.dense_block ==
+    @test dense_summary.dense_block_available
+    @test dense_block.dense_block ==
           _overlap_blocks_expected_dense(block_set.axis_blocks)
     @test dense_summary.dense_block_shape == (
         block_summary.interval_pair_summary.left_support_count,
         block_summary.interval_pair_summary.right_support_count,
     )
+    @test dense_summary.dense_block_eltype === Float64
     @test dense_summary.left_shape == (x = 2, y = 2, z = 3)
     @test dense_summary.right_shape == (x = 2, y = 2, z = 1)
     @test dense_summary.local_ordering ===
@@ -206,8 +215,9 @@ end
     @test blocked_dense_summary.status === :blocked_cpb_overlap_dense_block
     @test blocked_dense_summary.blocker ===
           :missing_parent_axis_bundle_overlap_factors
-    @test blocked_dense_summary.dense_block === nothing
+    @test blocked_dense_summary.dense_block_available === false
     @test blocked_dense_summary.dense_block_shape === :unavailable
+    @test blocked_dense_summary.dense_block_eltype === :unavailable
     @test blocked_dense_summary.source_axis_block_summary ===
           blocked_packet_summary
     @test blocked_dense_summary.factor_space === :unavailable
@@ -233,6 +243,22 @@ end
     @test blocked_interval_summary.index_domain === :parent_axis_indices
     @test blocked_interval_summary.blocks_are_views === false
     @test blocked_interval_summary.dense_local_block_materialized === false
+
+    nonsliceable_packet = _overlap_blocks_packet_with_metadata(
+        packet,
+        merge(CPGBOverlapBlocks.summary(packet), (; sliceable_by_cpb = false)),
+    )
+    nonsliceable_blocks =
+        CBPOverlapBlocks.cpb_overlap_axis_blocks(nonsliceable_packet, interval_pair)
+    nonsliceable_summary = CBPOverlapBlocks.summary(nonsliceable_blocks)
+
+    @test nonsliceable_blocks.axis_blocks === nothing
+    @test nonsliceable_summary.status === :blocked_cpb_overlap_axis_blocks
+    @test nonsliceable_summary.blocker === :overlap_packet_not_cpb_sliceable
+    @test nonsliceable_summary.axis_blocks_available === false
+    @test nonsliceable_summary.axis_block_shapes === :unavailable
+    @test nonsliceable_summary.blocks_are_views === false
+    @test nonsliceable_summary.dense_local_block_materialized === false
 
     other_parent = _overlap_blocks_parent()
     mismatch_pair = _overlap_blocks_interval_pair(other_parent)
@@ -265,7 +291,7 @@ end
     dense_summary = CBPOverlapBlocks.summary(dense_block)
     packet_summary = CPGBOverlapBlocks.summary(packet)
 
-    @test Matrix(dense_summary.dense_block) ==
+    @test Matrix(dense_block.dense_block) ==
           _overlap_blocks_driver_fixture_expected_matrix()
     @test dense_summary.dense_block_shape == (2, 2)
     @test dense_summary.dense_local_block_materialized

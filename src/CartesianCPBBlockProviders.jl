@@ -194,11 +194,41 @@ function _cpb_overlap_axis_blocks_blocker(
         return isnothing(packet_summary.blocker) ?
                :unavailable_parent_overlap_axis_factors :
                packet_summary.blocker
+    sliceability_blocker = _cpb_overlap_packet_sliceability_blocker(packet_summary)
+    isnothing(sliceability_blocker) || return sliceability_blocker
     interval_summary.status === :available_cpb_interval_pair ||
         return isnothing(interval_summary.blocker) ?
                :unavailable_cpb_interval_pair :
                interval_summary.blocker
     overlap_packet.parent === interval_pair.parent || return :parent_mismatch
+    return nothing
+end
+
+function _cpb_overlap_packet_sliceability_blocker(packet_summary)
+    _summary_property(packet_summary, :sliceable_by_cpb) === true ||
+        return :overlap_packet_not_cpb_sliceable
+    _summary_property(packet_summary, :index_domain) === :parent_axis_indices ||
+        return :overlap_packet_not_cpb_sliceable
+    _summary_property(packet_summary, :index_domain_source) === :axis_bundle_contract ||
+        return :overlap_packet_not_cpb_sliceable
+    _summary_property(
+        packet_summary,
+        :index_domain_status,
+    ) === :assumed_parent_axis_indexed_by_current_axis_bundle_contract ||
+        return :overlap_packet_not_cpb_sliceable
+    sliceability_source = _summary_property(packet_summary, :sliceability_source)
+    isnothing(sliceability_source) ||
+        sliceability_source === :index_domain_contract ||
+        return :overlap_packet_not_cpb_sliceable
+    sliceability_status = _summary_property(packet_summary, :sliceability_status)
+    isnothing(sliceability_status) ||
+        sliceability_status === :sliceable_by_cpb_parent_axis_index_contract ||
+        return :overlap_packet_not_cpb_sliceable
+    return nothing
+end
+
+function _summary_property(summary, name::Symbol)
+    hasproperty(summary, name) && return getproperty(summary, name)
     return nothing
 end
 
@@ -352,10 +382,14 @@ function _cpb_overlap_dense_block_summary(
         object_kind = :cartesian_cpb_overlap_dense_block_summary,
         status,
         blocker,
-        dense_block,
+        dense_block_available = available,
         dense_block_shape =
             available ?
             size(dense_block) :
+            :unavailable,
+        dense_block_eltype =
+            available ?
+            eltype(dense_block) :
             :unavailable,
         left_shape = interval_summary.left_shape,
         right_shape = interval_summary.right_shape,
