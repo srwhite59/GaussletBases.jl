@@ -229,3 +229,10 @@ carrier. It records local collection, record-placement, transform, range,
 dimension-source, placement-plan, and accumulation-rule statuses, but it is not
 a placement engine. It must remain blocked until numerical placement is
 reviewed and implemented separately.
+
+The current real probe-enabled report audit finds a structured dimension source
+through `report.retained_units`, so `report.retained_dimension` is not the only
+dimension source in that fixture. It still does not carry structured retained
+transforms, source-pair retained column ranges for `(:product, :product)`, a
+reviewed overlap placement plan, or an accumulation rule. The next code step
+should design those structured carry objects before numerical placement.

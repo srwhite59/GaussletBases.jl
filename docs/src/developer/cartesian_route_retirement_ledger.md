@@ -113,6 +113,24 @@ paths from becoming new route authority.
   no placement plan, no global matrix materialization, no route-global overlap
   stage adoption, and no kinetic, position, x2, Coulomb, Hamiltonian, IDA/MWG,
   PQS projection/Lowdin, export, or artifact work.
+- A real-report overlap placement source audit now shows that the
+  probe-enabled report carries a structured retained dimension source through
+  `report.retained_units`; `report.retained_dimension` is not the only
+  dimension source in that fixture. The same audit still finds no structured
+  retained transforms, no retained column ranges for the `(:product, :product)`
+  local overlap source pair, no reviewed overlap placement plan, and no overlap
+  accumulation rule. With only `:local_cpb_overlap_collection` and
+  `:global_dimension` available, the private placement candidate and placement
+  plan skeleton remain blocked on
+  `:missing_placement_or_retained_transform`; missing requirements remain
+  `:missing_retained_transform`, `:missing_left_column_range`,
+  `:missing_right_column_range`, `:missing_placement_plan`, and
+  `:missing_accumulation_rule`. The next implementation boundary is therefore
+  structured retained-transform and column-range carry design, not numerical
+  placement. This claims no placement, retained transforms, global matrix
+  materialization, route-global overlap adoption, kinetic, position, x2,
+  Coulomb, Hamiltonian, IDA/MWG, PQS projection/Lowdin, export, or artifact
+  work.
 - The next overlap implementation boundary is no longer additional
   fingerprinting. It is a reviewed placement design and implementation plan for
   turning local CPB overlap collections into retained/global overlap. That plan
