@@ -351,6 +351,21 @@ additional metadata-only layers now risk diminishing returns. C is useful only
 if the route retained-unit metadata looks ambiguous enough that A cannot be
 answered directly.
 
+The first real-source carry audit used the probe-enabled dry report and the
+real local overlap source pair `(:product, :product)`. It found the local
+collection, source support count, local ordering, reviewed plan, accumulation
+rule, and retained/global dimension source, but it did not find structured
+retained transforms or source-pair retained column ranges. The current blockers
+are `:missing_retained_transform_source` and
+`:missing_source_pair_column_ranges`. No `CPBRetainedTransformCarry` or
+`CPBSourcePairPlacementRange` can be built from real route facts without
+inventing aliases or changing semantics.
+
+That result keeps A blocked unless a nearby real carry source is identified.
+The next implementation step should therefore be B, the tiny synthetic
+provider-level numerical placement pilot, unless manager direction asks for a
+broader retained-unit metadata audit first.
+
 ## Structured Carry Objects For Placement
 
 The next implementation boundary should introduce compact carry objects before

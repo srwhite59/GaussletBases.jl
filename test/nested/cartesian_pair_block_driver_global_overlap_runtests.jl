@@ -370,6 +370,27 @@ function _driver_overlap_real_report_overlap_placement_source_audit(
     local_block_collection,
     pair_entry,
 )
+    local_collection_summary =
+        isnothing(local_block_collection) ?
+        nothing :
+        CPBProviderDriverOverlap.summary(local_block_collection)
+    local_record_summary =
+        isnothing(local_collection_summary) ||
+        isempty(local_collection_summary.record_summaries) ?
+        nothing :
+        only(local_collection_summary.record_summaries)
+    dense_block_shape =
+        isnothing(local_record_summary) ?
+        :not_materialized :
+        local_record_summary.dense_block_shape
+    source_support_count =
+        dense_block_shape isa Tuple && !isempty(dense_block_shape) ?
+        first(dense_block_shape) :
+        :unknown
+    source_ordering =
+        isnothing(local_record_summary) ?
+        :unknown :
+        local_record_summary.local_ordering
     retained_transform_source = _driver_overlap_first_report_source(
         report,
         (
@@ -396,6 +417,55 @@ function _driver_overlap_real_report_overlap_placement_source_audit(
     right_column_range_source =
         _driver_overlap_pair_entry_column_range_source_status(pair_entry, :right)
     global_dimension_source = _driver_overlap_global_dimension_source_audit(report)
+    retained_transform_candidate_status =
+        isnothing(retained_transform_source.value) ?
+        :missing_retained_transform_source :
+        source_support_count === :unknown ?
+        :source_support_count_mismatch :
+        :ambiguous_retained_transform_source
+    retained_transform_candidate_blocker =
+        retained_transform_candidate_status === :missing_retained_transform_source ?
+        :missing_retained_transform_source :
+        retained_transform_candidate_status === :source_support_count_mismatch ?
+        :source_support_count_mismatch :
+        :target_retained_count_unknown
+    placement_range_candidate_status =
+        left_column_range_source.status === :missing_source_pair_retained_column_range ||
+        right_column_range_source.status === :missing_source_pair_retained_column_range ?
+        :missing_source_pair_column_ranges :
+        left_column_range_source.status ===
+        :ambiguous_pair_entry_column_range_without_reviewed_placement_plan ||
+        right_column_range_source.status ===
+        :ambiguous_pair_entry_column_range_without_reviewed_placement_plan ?
+        :ambiguous_source_pair_column_ranges :
+        :available_source_pair_column_ranges
+    placement_range_candidate_blocker =
+        placement_range_candidate_status === :missing_source_pair_column_ranges ?
+        :missing_source_pair_column_ranges :
+        placement_range_candidate_status === :ambiguous_source_pair_column_ranges ?
+        :missing_source_pair_column_ranges :
+        nothing
+    target_retained_column_count = :unknown
+    left_transform_carry_status =
+        retained_transform_candidate_status === :missing_retained_transform_source ?
+        :not_attempted_missing_retained_transform_source :
+        :not_attempted_ambiguous_retained_transform_source
+    right_transform_carry_status = left_transform_carry_status
+    placement_range_carry_status =
+        placement_range_candidate_status === :missing_source_pair_column_ranges ?
+        :not_attempted_missing_source_pair_column_ranges :
+        :not_attempted_ambiguous_source_pair_column_ranges
+    real_source_carry_audit_status =
+        retained_transform_candidate_status === :missing_retained_transform_source ||
+        placement_range_candidate_status === :missing_source_pair_column_ranges ?
+        :blocked_real_source_overlap_carry_audit :
+        :blocked_ambiguous_real_source_overlap_carry_audit
+    real_source_carry_audit_blocker =
+        retained_transform_candidate_status === :missing_retained_transform_source ?
+        :missing_retained_transform_source :
+        placement_range_candidate_status === :missing_source_pair_column_ranges ?
+        :missing_source_pair_column_ranges :
+        :target_retained_count_unknown
     placement_plan_source = _driver_overlap_first_report_source(
         report,
         (
@@ -525,13 +595,27 @@ function _driver_overlap_real_report_overlap_placement_source_audit(
             :missing_actual_retained_transform_source :
             :available_actual_retained_transform_source,
         retained_transform_source = retained_transform_source.source,
+        retained_transform_candidate_status,
+        retained_transform_candidate_blocker,
+        left_transform_candidate_source = retained_transform_source.source,
+        right_transform_candidate_source = retained_transform_source.source,
+        source_support_count,
+        target_retained_column_count,
+        source_ordering,
+        left_transform_carry_status,
+        right_transform_carry_status,
         left_column_range_source_status = left_column_range_source.status,
         left_column_range_source = left_column_range_source.source,
         right_column_range_source_status = right_column_range_source.status,
         right_column_range_source = right_column_range_source.source,
+        placement_range_candidate_status,
+        placement_range_candidate_blocker,
+        placement_range_carry_status,
         global_dimension_source_status = global_dimension_source.status,
         global_dimension_source = global_dimension_source.source,
         global_dimension = global_dimension_source.global_dimension,
+        real_source_carry_audit_status,
+        real_source_carry_audit_blocker,
         placement_plan_source_status,
         placement_plan_source = placement_plan_source.source,
         accumulation_rule_source_status,
@@ -1750,16 +1834,42 @@ end
     @test placement_source_audit.retained_transform_source_status ===
           :missing_actual_retained_transform_source
     @test placement_source_audit.retained_transform_source === :unavailable
+    @test placement_source_audit.retained_transform_candidate_status ===
+          :missing_retained_transform_source
+    @test placement_source_audit.retained_transform_candidate_blocker ===
+          :missing_retained_transform_source
+    @test placement_source_audit.left_transform_candidate_source ===
+          :unavailable
+    @test placement_source_audit.right_transform_candidate_source ===
+          :unavailable
+    @test placement_source_audit.source_support_count == 25
+    @test placement_source_audit.target_retained_column_count === :unknown
+    @test placement_source_audit.source_ordering ===
+          :parent_compatible_x_slowest_z_fastest
+    @test placement_source_audit.left_transform_carry_status ===
+          :not_attempted_missing_retained_transform_source
+    @test placement_source_audit.right_transform_carry_status ===
+          :not_attempted_missing_retained_transform_source
     @test placement_source_audit.left_column_range_source_status ===
           :missing_source_pair_retained_column_range
     @test placement_source_audit.left_column_range_source === :unavailable
     @test placement_source_audit.right_column_range_source_status ===
           :missing_source_pair_retained_column_range
     @test placement_source_audit.right_column_range_source === :unavailable
+    @test placement_source_audit.placement_range_candidate_status ===
+          :missing_source_pair_column_ranges
+    @test placement_source_audit.placement_range_candidate_blocker ===
+          :missing_source_pair_column_ranges
+    @test placement_source_audit.placement_range_carry_status ===
+          :not_attempted_missing_source_pair_column_ranges
     @test placement_source_audit.global_dimension_source_status ===
           :available_retained_layout_global_dimension
     @test placement_source_audit.global_dimension_source === :report_retained_units
     @test placement_source_audit.global_dimension == report.retained_dimension
+    @test placement_source_audit.real_source_carry_audit_status ===
+          :blocked_real_source_overlap_carry_audit
+    @test placement_source_audit.real_source_carry_audit_blocker ===
+          :missing_retained_transform_source
     @test placement_source_audit.placement_plan_source_status ===
           :missing_reviewed_overlap_placement_plan
     @test placement_source_audit.placement_plan_source === :unavailable

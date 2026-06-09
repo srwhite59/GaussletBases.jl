@@ -183,6 +183,17 @@ paths from becoming new route authority.
   quickly. A broader retained-unit metadata audit remains an option if the
   existing route metadata is ambiguous. None of these options is route-driver
   adoption by itself.
+- The first real-source carry audit for the probe-enabled `(:product,
+  :product)` local overlap source found source support count, local ordering,
+  reviewed-plan metadata, accumulation rule, and retained/global dimension
+  source, but no structured retained-transform source and no source-pair
+  retained column ranges. Current blockers are
+  `:missing_retained_transform_source` and
+  `:missing_source_pair_column_ranges`. Without a newly identified real carry
+  source, the next implementation should be the tiny synthetic provider-level
+  numerical overlap placement pilot, not another metadata layer. This still
+  claims no transform application, placement, global matrix assembly, or
+  route-global overlap adoption.
 - The next overlap implementation boundary is no longer additional
   fingerprinting. It is a reviewed placement design and implementation plan for
   turning local CPB overlap collections into retained/global overlap. That plan
