@@ -212,6 +212,19 @@ paths from becoming new route authority.
   accumulation rule. It still does not infer transpose/symmetry fill, consume
   real route placement facts, wire the private driver, or claim route-global
   overlap availability.
+- The provider-level overlap placement pilot is now a milestone, not a prompt
+  for more synthetic feature work. The implemented synthetic boundary includes
+  one-block placement, collection placement, additive accumulation under
+  `:add_explicit_blocks_into_ranges`, reviewed metadata gates, collection/facts
+  alignment, compact missing transform/range block-key coverage, provider-level
+  dimension consistency, and compact summaries with provider-level matrix flags
+  distinct from route/global flags. Remaining route blockers are real
+  retained-transform sources, real source-pair retained column ranges,
+  route-owned placement-plan/range carry, route-global overlap adoption, and
+  driver wiring. Prefer architectural review or a broader retained-unit /
+  terminal-route audit before any further implementation; do not keep extending
+  synthetic placement features without a reviewed plan for real transforms and
+  ranges.
 - The next overlap implementation boundary is no longer additional
   fingerprinting. It is a reviewed placement design and implementation plan for
   turning local CPB overlap collections into retained/global overlap. That plan

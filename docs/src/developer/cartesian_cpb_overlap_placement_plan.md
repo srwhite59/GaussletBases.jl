@@ -397,6 +397,42 @@ evidence that real route placement is available. Real route placement remains
 blocked until structured retained transforms and source-pair retained column
 ranges are carried from real route/report state.
 
+### Synthetic Pilot Milestone And Pause
+
+The synthetic provider-level placement lane has now crossed the intended
+numerical boundary for this pass:
+
+- one-block dense local overlap placement exists;
+- small local collection placement exists;
+- additive accumulation is explicit under
+  `:add_explicit_blocks_into_ranges`;
+- no symmetry or transpose fill is inferred;
+- reviewed placement facts and reviewed placement-plan gates are required;
+- materialized matrices are provider-level pilot outputs only.
+
+The collection contract is also hardened enough for review:
+
+- placement facts must align with the exact local collection and block-key
+  inventory;
+- missing left and right transform block keys are reported compactly;
+- missing placement-range block keys are reported compactly;
+- placement ranges must agree on one provider-level target dimension;
+- summaries remain compact and do not duplicate dense numerical payloads.
+
+Real route placement is still blocked. The missing route-facing sources are:
+
+- real retained-transform source objects;
+- real source-pair retained column ranges;
+- route-owned placement-plan and range carry;
+- route-global overlap adoption;
+- driver wiring.
+
+The recommended next choice is not more synthetic placement feature work.
+Prefer either architectural review before any route wiring, or a broader
+retained-unit/terminal-route audit for real transform and range sources. A
+separate design pass is needed to decide how real retained transforms should be
+produced and carried before any route-global overlap placement is attempted.
+
 ## Structured Carry Objects For Placement
 
 The next implementation boundary should introduce compact carry objects before
