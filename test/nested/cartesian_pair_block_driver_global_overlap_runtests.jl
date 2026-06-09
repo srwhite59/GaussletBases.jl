@@ -460,6 +460,36 @@ function _driver_overlap_real_report_overlap_placement_source_audit(
             global_dimension,
             global_dimension_source = global_dimension_source.source,
         )
+    placement_facts =
+        isnothing(local_block_collection) ?
+        nothing :
+        CPBProviderDriverOverlap.cpb_overlap_placement_facts(
+            local_block_collection;
+            transform_carries = (),
+            placement_ranges = (),
+            placement_plan = nothing,
+            accumulation_rule = nothing,
+        )
+    placement_facts_summary =
+        isnothing(placement_facts) ?
+        nothing :
+        CPBProviderDriverOverlap.summary(placement_facts)
+    placement_facts_record_summary =
+        isnothing(placement_facts_summary) ||
+        isempty(placement_facts_summary.record_fact_summaries) ?
+        nothing :
+        only(placement_facts_summary.record_fact_summaries)
+    placement_facts_skeleton =
+        isnothing(placement_facts) ?
+        nothing :
+        GaussletBases._pqs_source_box_route_driver_private_global_overlap_placement_plan_skeleton(
+            placement_facts,
+        )
+    placement_facts_skeleton_record_summary =
+        isnothing(placement_facts_skeleton) ||
+        isempty(placement_facts_skeleton.record_placement_summaries) ?
+        nothing :
+        only(placement_facts_skeleton.record_placement_summaries)
     return (;
         retained_transform_source_status =
             isnothing(retained_transform_source.value) ?
@@ -497,6 +527,66 @@ function _driver_overlap_real_report_overlap_placement_source_audit(
             isnothing(skeleton) ? () : skeleton.missing_requirements,
         available_requirements_with_real_sources =
             isnothing(skeleton) ? () : skeleton.available_requirements,
+        placement_facts_status =
+            isnothing(placement_facts_summary) ?
+            :not_attempted_missing_local_overlap_collection :
+            placement_facts_summary.status,
+        placement_facts_blocker =
+            isnothing(placement_facts_summary) ?
+            :not_attempted_missing_local_overlap_collection :
+            placement_facts_summary.blocker,
+        placement_facts_available_requirements =
+            isnothing(placement_facts_summary) ?
+            () :
+            placement_facts_summary.available_requirements,
+        placement_facts_missing_requirements =
+            isnothing(placement_facts_summary) ?
+            () :
+            placement_facts_summary.missing_requirements,
+        placement_facts_record_left_cpb_summary =
+            isnothing(placement_facts_record_summary) ?
+            :unavailable :
+            placement_facts_record_summary.left_cpb_summary,
+        placement_facts_record_right_cpb_summary =
+            isnothing(placement_facts_record_summary) ?
+            :unavailable :
+            placement_facts_record_summary.right_cpb_summary,
+        placement_facts_skeleton_status =
+            isnothing(placement_facts_skeleton) ?
+            :not_attempted_missing_placement_facts :
+            placement_facts_skeleton.status,
+        placement_facts_skeleton_blocker =
+            isnothing(placement_facts_skeleton) ?
+            :not_attempted_missing_placement_facts :
+            placement_facts_skeleton.blocker,
+        placement_facts_skeleton_missing_requirements =
+            isnothing(placement_facts_skeleton) ?
+            () :
+            placement_facts_skeleton.missing_requirements,
+        placement_facts_skeleton_global_overlap_status =
+            isnothing(placement_facts_skeleton) ?
+            :not_attempted_missing_placement_facts :
+            placement_facts_skeleton.global_overlap_status,
+        placement_facts_skeleton_route_driver_wiring =
+            !isnothing(placement_facts_skeleton) &&
+            placement_facts_skeleton.route_driver_wiring,
+        placement_facts_skeleton_global_matrix_materialized =
+            !isnothing(placement_facts_skeleton) &&
+            placement_facts_skeleton.global_matrix_materialized,
+        placement_facts_skeleton_private_input_facts_available =
+            !isnothing(placement_facts_skeleton) &&
+            placement_facts_skeleton.private_global_overlap_input_facts_available,
+        placement_facts_skeleton_route_global_stage_source =
+            !isnothing(placement_facts_skeleton) &&
+            placement_facts_skeleton.route_global_overlap_stage_source,
+        placement_facts_skeleton_record_left_cpb_summary =
+            isnothing(placement_facts_skeleton_record_summary) ?
+            :unavailable :
+            placement_facts_skeleton_record_summary.left_cpb_summary,
+        placement_facts_skeleton_record_right_cpb_summary =
+            isnothing(placement_facts_skeleton_record_summary) ?
+            :unavailable :
+            placement_facts_skeleton_record_summary.right_cpb_summary,
         global_overlap_status =
             isnothing(skeleton) ?
             :not_attempted_missing_local_overlap_collection :
@@ -1531,6 +1621,40 @@ end
         :missing_placement_plan,
         :missing_accumulation_rule,
     )
+    @test placement_source_audit.placement_facts_status ===
+          :blocked_cpb_overlap_placement_facts
+    @test placement_source_audit.placement_facts_blocker ===
+          :missing_placement_or_retained_transform
+    @test placement_source_audit.placement_facts_available_requirements ===
+          (:local_cpb_overlap_collection,)
+    @test placement_source_audit.placement_facts_missing_requirements === (
+        :missing_retained_transform,
+        :missing_left_column_range,
+        :missing_right_column_range,
+        :missing_global_dimension,
+        :missing_placement_plan,
+        :missing_accumulation_rule,
+    )
+    @test placement_source_audit.placement_facts_record_left_cpb_summary !==
+          :unavailable
+    @test placement_source_audit.placement_facts_record_right_cpb_summary !==
+          :unavailable
+    @test placement_source_audit.placement_facts_skeleton_status ===
+          :blocked_private_global_overlap_placement_plan_skeleton
+    @test placement_source_audit.placement_facts_skeleton_blocker ===
+          :missing_placement_or_retained_transform
+    @test placement_source_audit.placement_facts_skeleton_missing_requirements ===
+          placement_source_audit.placement_facts_missing_requirements
+    @test placement_source_audit.placement_facts_skeleton_global_overlap_status ===
+          :blocked
+    @test !placement_source_audit.placement_facts_skeleton_route_driver_wiring
+    @test !placement_source_audit.placement_facts_skeleton_global_matrix_materialized
+    @test !placement_source_audit.placement_facts_skeleton_private_input_facts_available
+    @test !placement_source_audit.placement_facts_skeleton_route_global_stage_source
+    @test placement_source_audit.placement_facts_skeleton_record_left_cpb_summary ==
+          placement_source_audit.placement_facts_record_left_cpb_summary
+    @test placement_source_audit.placement_facts_skeleton_record_right_cpb_summary ==
+          placement_source_audit.placement_facts_record_right_cpb_summary
     @test placement_source_audit.global_overlap_status === :blocked
     @test placement_source_audit.global_overlap_blocker ===
           :missing_placement_or_retained_transform
