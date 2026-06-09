@@ -81,6 +81,9 @@ paths from becoming new route authority.
   `examples/private_global_overlap_option.jl` documents option shape only, and
   focused tests validate that option plumbing without running the full builder
   route.
+- Private overlap input facts now label the 1D factor space and convention
+  explicitly, following the legacy PGDG lesson that overlap factors are
+  axis-space objects with a specific contraction convention.
 - Selected White--Lindsey old-oracle equivalence currently covers overlap,
   kinetic, position_x, position_y, position_z, x2_x, x2_y, and x2_z.
 - `src/cartesian_pair_block_materialization/one_body_global_matrix_helpers.jl`

@@ -3460,6 +3460,9 @@ function _pqs_source_box_route_driver_private_global_overlap_input_facts(report)
             final_layout_source,
             parent_axis_counts_source,
             axis_bundle_source,
+            factor_space = :parent_axis_bundle_pgdg_intermediate,
+            factor_convention = :axis_bundle_one_body_overlap,
+            overlap_1d_source = axis_bundle_source,
         ),
         _pqs_source_box_route_driver_private_global_overlap_facts_nonclaims(),
     )
@@ -3486,6 +3489,9 @@ function _pqs_source_box_route_driver_private_global_overlap_blocked_facts(
             final_layout_source,
             parent_axis_counts_source,
             axis_bundle_source,
+            factor_space = :unavailable,
+            factor_convention = :unavailable,
+            overlap_1d_source = axis_bundle_source,
         ),
         _pqs_source_box_route_driver_private_global_overlap_facts_nonclaims(),
     )
@@ -3661,6 +3667,13 @@ function _pqs_source_box_route_driver_private_global_overlap_parent_axis_counts(
                 report,
                 (:low_order_route_summary, :parent_axis_counts),
             )),
+        (:parent_object_parent_axis_counts,
+            _pqs_source_box_route_driver_private_global_overlap_parent_object_axis_counts(
+                _pqs_source_box_route_driver_private_global_overlap_property(
+                    report,
+                    :parent,
+                ),
+            )),
         (:parent_axis_counts,
             _pqs_source_box_route_driver_private_global_overlap_nested_property(
                 report,
@@ -3672,6 +3685,17 @@ function _pqs_source_box_route_driver_private_global_overlap_parent_axis_counts(
         !isnothing(counts) && return _pqs_route_driver_axis_count_tuple(counts), source
     end
     return nothing, :unavailable
+end
+
+function _pqs_source_box_route_driver_private_global_overlap_parent_object_axis_counts(
+    parent,
+)
+    isnothing(parent) && return nothing
+    try
+        return CartesianParentGaussletBases.parent_axis_counts(parent)
+    catch
+        return nothing
+    end
 end
 
 function _pqs_source_box_route_driver_private_global_overlap_axis_counts(value)

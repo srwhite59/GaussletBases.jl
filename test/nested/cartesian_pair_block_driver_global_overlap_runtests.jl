@@ -306,6 +306,9 @@ end
     @test structured_facts.final_layout_source === :retained_dimension_compatibility
     @test structured_facts.parent_axis_counts_source === :report_parent_axis_counts
     @test structured_facts.axis_bundle_source === :report_parent_axis_bundle_object
+    @test structured_facts.factor_space === :parent_axis_bundle_pgdg_intermediate
+    @test structured_facts.factor_convention === :axis_bundle_one_body_overlap
+    @test structured_facts.overlap_1d_source === :report_parent_axis_bundle_object
     @test structured_facts.overlap_1d.x ≈ _driver_overlap_inputs().overlap_1d.x
 
     materialized_from_facts =
