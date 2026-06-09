@@ -589,6 +589,29 @@ end
     @test facts.factor_space === :parent_axis_bundle_pgdg_intermediate
     @test facts.factor_convention === :axis_bundle_one_body_overlap
     @test !isnothing(facts.overlap_1d)
+
+    stage =
+        GaussletBases._pqs_source_box_route_driver_private_global_overlap_stage(
+            report;
+            private_global_overlap_requested = true,
+        )
+    @test !isnothing(stage.private_global_overlap_result)
+    @test stage.private_global_overlap_result.status ===
+          :blocked_route_global_overlap_matrix
+    @test stage.private_global_overlap_result.blocker ===
+          :missing_pair_block_materialization_plan
+    @test stage.private_global_overlap_result.global_dimension === nothing
+    @test !stage.private_global_overlap_result.global_overlap_matrix_materialized
+    @test !stage.private_global_overlap_result.global_one_body_term_matrix_materialized
+    @test stage.private_global_overlap_summary.status ===
+          :blocked_route_global_overlap_matrix
+    @test stage.private_global_overlap_summary.blocker ===
+          :missing_pair_block_materialization_plan
+    @test stage.private_global_overlap_summary.result_available
+    @test stage.private_global_overlap_summary.global_dimension === nothing
+    @test !stage.private_global_overlap_summary.global_overlap_matrix_materialized
+    @test !stage.private_global_overlap_summary.global_one_body_term_matrix_materialized
+    _test_driver_overlap_nonclaim_flags(stage.private_global_overlap_result)
 end
 
 @testset "PQS route driver private global overlap option config" begin
