@@ -278,6 +278,98 @@ end
         )
     @test collection_placement_candidate == placement_candidate
 
+    partial_placement_candidate =
+        GaussletBases._pqs_source_box_route_driver_private_global_overlap_placement_candidate(
+            source.collection;
+            retained_transform = (; kind = :test_retained_transform),
+            global_dimension = 2,
+        )
+    @test partial_placement_candidate.status ===
+          :blocked_private_global_overlap_placement_candidate
+    @test partial_placement_candidate.blocker ===
+          :missing_placement_or_retained_transform
+    @test partial_placement_candidate.local_cpb_overlap_collection_available
+    @test partial_placement_candidate.placement_candidate_status ===
+          :blocked_missing_placement_requirements
+    @test partial_placement_candidate.available_requirements === (
+        :local_cpb_overlap_collection,
+        :retained_transform,
+        :global_dimension,
+    )
+    @test partial_placement_candidate.missing_requirements === (
+        :missing_left_column_range,
+        :missing_right_column_range,
+        :missing_placement_plan,
+        :missing_accumulation_rule,
+    )
+    @test partial_placement_candidate.retained_transform_status ===
+          :available_retained_transform
+    @test partial_placement_candidate.left_column_range_status ===
+          :missing_left_column_range
+    @test partial_placement_candidate.right_column_range_status ===
+          :missing_right_column_range
+    @test partial_placement_candidate.global_dimension_status ===
+          :available_global_dimension
+    @test partial_placement_candidate.placement_plan_status ===
+          :missing_placement_plan
+    @test partial_placement_candidate.accumulation_rule_status ===
+          :missing_accumulation_rule
+    @test partial_placement_candidate.global_overlap_status === :blocked
+    @test partial_placement_candidate.global_overlap_blocker ===
+          :missing_placement_or_retained_transform
+    @test partial_placement_candidate.global_matrix_materialized === false
+    @test partial_placement_candidate.global_overlap_matrix_materialized === false
+    @test partial_placement_candidate.route_driver_wiring === false
+    @test partial_placement_candidate.private_global_overlap_input_facts_available === false
+    @test partial_placement_candidate.route_global_overlap_stage_source === false
+
+    all_facts_placement_candidate =
+        GaussletBases._pqs_source_box_route_driver_private_global_overlap_placement_candidate(
+            source.collection;
+            retained_transform = (; kind = :test_retained_transform),
+            left_column_ranges = (; left = 1:2),
+            right_column_ranges = (; right = 1:2),
+            global_dimension = 2,
+            placement_plan = (; kind = :test_placement_plan),
+            accumulation_rule = :test_accumulation_rule,
+        )
+    @test all_facts_placement_candidate.status ===
+          :blocked_private_global_overlap_placement_candidate
+    @test all_facts_placement_candidate.blocker === :placement_not_implemented
+    @test all_facts_placement_candidate.local_cpb_overlap_collection_available
+    @test all_facts_placement_candidate.placement_candidate_status ===
+          :blocked_placement_not_implemented
+    @test all_facts_placement_candidate.available_requirements === (
+        :local_cpb_overlap_collection,
+        :retained_transform,
+        :left_column_range,
+        :right_column_range,
+        :global_dimension,
+        :placement_plan,
+        :accumulation_rule,
+    )
+    @test all_facts_placement_candidate.missing_requirements === ()
+    @test all_facts_placement_candidate.retained_transform_status ===
+          :available_retained_transform
+    @test all_facts_placement_candidate.left_column_range_status ===
+          :available_left_column_range
+    @test all_facts_placement_candidate.right_column_range_status ===
+          :available_right_column_range
+    @test all_facts_placement_candidate.global_dimension_status ===
+          :available_global_dimension
+    @test all_facts_placement_candidate.placement_plan_status ===
+          :available_placement_plan
+    @test all_facts_placement_candidate.accumulation_rule_status ===
+          :available_accumulation_rule
+    @test all_facts_placement_candidate.global_overlap_status === :blocked
+    @test all_facts_placement_candidate.global_overlap_blocker ===
+          :placement_not_implemented
+    @test all_facts_placement_candidate.global_matrix_materialized === false
+    @test all_facts_placement_candidate.global_overlap_matrix_materialized === false
+    @test all_facts_placement_candidate.route_driver_wiring === false
+    @test all_facts_placement_candidate.private_global_overlap_input_facts_available === false
+    @test all_facts_placement_candidate.route_global_overlap_stage_source === false
+
     blocked_collection_adapter =
         GaussletBases._pqs_source_box_route_driver_private_global_overlap_local_collection_adapter(
             source.blocked_collection,

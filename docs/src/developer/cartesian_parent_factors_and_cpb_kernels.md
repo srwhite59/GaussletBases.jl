@@ -758,6 +758,9 @@ adapters. With the current local collection and no placement facts, the
 candidate should report only `:local_cpb_overlap_collection` available and keep
 the retained transform, column ranges, global dimension, placement plan, and
 accumulation rule as missing. It must keep route/global nonclaim flags false.
+Even if placeholder values for all placement facts are supplied, the candidate
+must remain blocked on `:placement_not_implemented` until a reviewed placement
+engine exists.
 
 This lets retained-unit and pair-block code choose whether to use axis blocks
 directly, materialize a dense local CPB block, apply left/right transforms, or
