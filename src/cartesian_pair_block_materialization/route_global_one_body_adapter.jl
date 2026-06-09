@@ -133,16 +133,9 @@ function route_state_global_overlap_matrix(
     factor_provider = nothing,
     metadata = (;),
 )
-    plan = _route_state_global_pair_block_materialization_plan(source)
-    isnothing(plan) &&
-        return _route_global_one_body_blocked_result(
-            :overlap,
-            :missing_pair_block_materialization_plan;
-            metadata,
-        )
-
-    return route_global_overlap_matrix(
-        plan;
+    return _route_state_global_one_body_matrix(
+        source,
+        :overlap;
         global_dimension,
         inputs,
         provider,
@@ -154,6 +147,27 @@ end
 
 function route_global_kinetic_matrix(source; kwargs...)
     return route_global_one_body_matrix(source; term = :kinetic, kwargs...)
+end
+
+function route_state_global_kinetic_matrix(
+    source;
+    global_dimension = nothing,
+    inputs = (;),
+    provider = nothing,
+    factors = nothing,
+    factor_provider = nothing,
+    metadata = (;),
+)
+    return _route_state_global_one_body_matrix(
+        source,
+        :kinetic;
+        global_dimension,
+        inputs,
+        provider,
+        factors,
+        factor_provider,
+        metadata,
+    )
 end
 
 function route_global_position_matrix(source; axis, kwargs...)
@@ -285,6 +299,36 @@ function _route_global_one_body_matrix_set_blocker(blocked_results::Tuple)
         !isnothing(result.blocker) && return result.blocker
     end
     return :no_route_global_safe_one_body_terms_materialized
+end
+
+function _route_state_global_one_body_matrix(
+    source,
+    term::Symbol;
+    global_dimension,
+    inputs,
+    provider,
+    factors,
+    factor_provider,
+    metadata,
+)
+    plan = _route_state_global_pair_block_materialization_plan(source)
+    isnothing(plan) &&
+        return _route_global_one_body_blocked_result(
+            term,
+            :missing_pair_block_materialization_plan;
+            metadata,
+        )
+
+    return route_global_one_body_matrix(
+        plan;
+        term,
+        global_dimension,
+        inputs,
+        provider,
+        factors,
+        factor_provider,
+        metadata,
+    )
 end
 
 function _route_state_global_pair_block_materialization_plan(
