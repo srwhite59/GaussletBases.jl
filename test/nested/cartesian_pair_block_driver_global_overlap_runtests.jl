@@ -107,6 +107,12 @@ function _driver_overlap_inputs()
     )
 end
 
+function _driver_overlap_expected_matrix()
+    overlap = _driver_overlap_inputs().overlap_1d
+    scale = overlap.x[1, 1] * overlap.z[1, 1]
+    return scale .* overlap.y
+end
+
 function _test_driver_overlap_nonclaim_flags(result)
     @test !result.route_driver_wiring
     @test !result.hamiltonian_data_materialized
@@ -137,16 +143,29 @@ end
         global_dimension = 2,
         factors = _driver_overlap_inputs(),
     )
+    terminal_route_state_source =
+        (; terminal_route_state = (; pair_block_materialization_plan = plan))
     terminal_route_state = CPBMDriverOverlap.driver_global_overlap_result(
-        (; terminal_route_state = (; pair_block_materialization_plan = plan));
+        terminal_route_state_source;
         global_dimension = 2,
         inputs = _driver_overlap_inputs(),
     )
+    expected_matrix = _driver_overlap_expected_matrix()
 
     @test direct.status === :materialized_route_global_overlap_matrix
     @test direct.global_one_body_term_matrix_materialized
     @test direct.global_overlap_matrix_materialized
+    @test size(terminal_route_state.global_matrix_result.matrix) == (2, 2)
+    @test terminal_route_state.status === :materialized_route_global_overlap_matrix
+    @test terminal_route_state.global_overlap_matrix_materialized
+    @test terminal_route_state.global_one_body_term_matrix_materialized
+    @test terminal_route_state.global_matrix_result.matrix ≈ expected_matrix
+    @test terminal_route_state.global_matrix_result.matrix[1, 1] ≈ 1.68
+    @test terminal_route_state.global_matrix_result.matrix[1, 2] ≈ 0.42
+    @test terminal_route_state.global_matrix_result.matrix[2, 1] ≈ 0.42
+    @test terminal_route_state.global_matrix_result.matrix[2, 2] ≈ 1.82
     @test direct.global_matrix_result.matrix ≈ expected.global_matrix_result.matrix
+    @test direct.global_matrix_result.matrix ≈ expected_matrix
     @test wrapped.global_matrix_result.matrix ≈ expected.global_matrix_result.matrix
     @test terminal_route_state.global_matrix_result.matrix ≈
           expected.global_matrix_result.matrix
