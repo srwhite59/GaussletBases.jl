@@ -7,6 +7,8 @@ const CPB = CartesianCPB
 const CPGB = CartesianParentGaussletBases
 const _AXIS_ORDER = (:x, :y, :z)
 const _LOCAL_ORDERING = :parent_compatible_x_slowest_z_fastest
+const _OVERLAP_PLACEMENT_SYMMETRY_POLICIES = (:explicit_blocks_only,)
+const _OVERLAP_PLACEMENT_DUPLICATE_POLICIES = (:reject_duplicate_block_keys,)
 
 export CPBIntervalPair3D,
        CPBOverlapAxisBlockSet,
@@ -129,6 +131,17 @@ struct CPBOverlapPlacementFacts{C,T,R,M}
     metadata::M
 end
 
+"""
+    CPBReviewedOverlapPlacementPlan
+
+Metadata-only reviewed overlap placement plan. This object records the planned
+placement contract but does not apply transforms or assemble any matrix.
+"""
+struct CPBReviewedOverlapPlacementPlan{K,M}
+    accepted_block_keys::K
+    metadata::M
+end
+
 summary(pair::CPBIntervalPair3D) = pair.metadata
 summary(block_set::CPBOverlapAxisBlockSet) = block_set.metadata
 summary(block::CPBOverlapDenseBlock) = block.metadata
@@ -137,6 +150,7 @@ summary(collection::CPBLocalOverlapBlockCollection) = collection.metadata
 summary(carry::CPBRetainedTransformCarry) = carry.metadata
 summary(range::CPBSourcePairPlacementRange) = range.metadata
 summary(facts::CPBOverlapPlacementFacts) = facts.metadata
+summary(plan::CPBReviewedOverlapPlacementPlan) = plan.metadata
 
 function cpb_interval_pair(
     parent::CPGB.CartesianParentGaussletBasis3D,
@@ -965,6 +979,88 @@ function _cpb_source_pair_range_inside_dimension(column_range, global_dimension:
     return first(column_range) >= 1 && last(column_range) <= global_dimension
 end
 
+function cpb_reviewed_overlap_placement_plan(;
+    placement_plan_kind = :reviewed_overlap_placement_plan,
+    accumulation_rule = nothing,
+    symmetry_policy = :explicit_blocks_only,
+    duplicate_record_policy = :reject_duplicate_block_keys,
+    accepted_block_keys = (),
+    required_global_dimension_source = :unavailable,
+    local_ordering_contract = _LOCAL_ORDERING,
+)
+    normalized_block_keys =
+        _cpb_reviewed_overlap_placement_plan_block_keys(accepted_block_keys)
+    accepted_record_count =
+        normalized_block_keys === :unavailable ? 0 : length(normalized_block_keys)
+    blocker = _cpb_reviewed_overlap_placement_plan_blocker(
+        accumulation_rule,
+        symmetry_policy,
+        duplicate_record_policy,
+        normalized_block_keys,
+        required_global_dimension_source,
+        local_ordering_contract,
+    )
+    status =
+        isnothing(blocker) ?
+        :available_cpb_reviewed_overlap_placement_plan :
+        :blocked_cpb_reviewed_overlap_placement_plan
+    metadata = (;
+        object_kind = :cartesian_cpb_reviewed_overlap_placement_plan_summary,
+        status,
+        blocker,
+        placement_plan_kind,
+        accumulation_rule =
+            isnothing(accumulation_rule) ? :unavailable : accumulation_rule,
+        symmetry_policy,
+        duplicate_record_policy,
+        accepted_block_keys =
+            normalized_block_keys === :unavailable ? () : normalized_block_keys,
+        accepted_record_count,
+        required_global_dimension_source,
+        local_ordering_contract,
+        transform_application_implemented = false,
+        numerical_placement_implemented = false,
+        global_matrix_materialized = false,
+        global_overlap_matrix_materialized = false,
+        route_driver_wiring = false,
+    )
+    return CPBReviewedOverlapPlacementPlan(
+        metadata.accepted_block_keys,
+        metadata,
+    )
+end
+
+function _cpb_reviewed_overlap_placement_plan_block_keys(accepted_block_keys)
+    isnothing(accepted_block_keys) && return :unavailable
+    accepted_block_keys isa Tuple && return accepted_block_keys
+    accepted_block_keys isa AbstractVector && return Tuple(accepted_block_keys)
+    return (accepted_block_keys,)
+end
+
+function _cpb_reviewed_overlap_placement_plan_blocker(
+    accumulation_rule,
+    symmetry_policy,
+    duplicate_record_policy,
+    accepted_block_keys,
+    required_global_dimension_source,
+    local_ordering_contract,
+)
+    isnothing(accumulation_rule) && return :missing_accumulation_rule
+    accepted_block_keys === :unavailable && return :missing_accepted_record_inventory
+    isempty(accepted_block_keys) && return :missing_accepted_record_inventory
+    symmetry_policy in _OVERLAP_PLACEMENT_SYMMETRY_POLICIES ||
+        return :unsupported_overlap_symmetry_policy
+    duplicate_record_policy in _OVERLAP_PLACEMENT_DUPLICATE_POLICIES ||
+        return :unsupported_overlap_duplicate_record_policy
+    required_global_dimension_source === :unavailable &&
+        return :missing_required_global_dimension_source
+    isnothing(required_global_dimension_source) &&
+        return :missing_required_global_dimension_source
+    local_ordering_contract === _LOCAL_ORDERING ||
+        return :unsupported_overlap_local_ordering_contract
+    return nothing
+end
+
 function cpb_overlap_placement_facts(
     collection::CPBLocalOverlapBlockCollection;
     transform_carries = (),
@@ -991,19 +1087,24 @@ function cpb_overlap_placement_facts(
         )
         for record_summary in collection_summary.record_summaries
     )
+    effective_accumulation_rule =
+        _cpb_overlap_placement_effective_accumulation_rule(
+            placement_plan,
+            accumulation_rule,
+        )
     missing_requirements =
         _cpb_overlap_placement_missing_requirements(
             collection_available,
             record_fact_summaries,
             placement_plan,
-            accumulation_rule,
+            effective_accumulation_rule,
         )
     available_requirements =
         _cpb_overlap_placement_available_requirements(
             collection_available,
             record_fact_summaries,
             placement_plan,
-            accumulation_rule,
+            effective_accumulation_rule,
         )
     propagated_blocker =
         _cpb_overlap_placement_specific_record_blocker(record_fact_summaries)
@@ -1019,12 +1120,9 @@ function cpb_overlap_placement_facts(
             propagated_blocker
         ) :
         _cpb_overlap_placement_collection_blocker(collection_summary)
-    placement_plan_status =
-        isnothing(placement_plan) ?
-        :missing_placement_plan :
-        :available_placement_plan
+    placement_plan_status = _cpb_overlap_placement_plan_status(placement_plan)
     accumulation_rule_status =
-        isnothing(accumulation_rule) ?
+        isnothing(effective_accumulation_rule) ?
         :missing_accumulation_rule :
         :available_accumulation_rule
     metadata = (;
@@ -1039,7 +1137,9 @@ function cpb_overlap_placement_facts(
         placement_plan_kind = _cpb_overlap_placement_plan_kind(placement_plan),
         accumulation_rule_status,
         accumulation_rule =
-            isnothing(accumulation_rule) ? :unavailable : accumulation_rule,
+            isnothing(effective_accumulation_rule) ?
+            :unavailable :
+            effective_accumulation_rule,
         available_requirements,
         missing_requirements,
         global_overlap_status = :blocked,
@@ -1345,9 +1445,47 @@ function _cpb_overlap_placement_missing_blocker(blocker::Symbol)
     )
 end
 
+function _cpb_overlap_placement_plan_summary(placement_plan)
+    placement_plan isa CPBReviewedOverlapPlacementPlan && return summary(placement_plan)
+    placement_plan isa NamedTuple && return placement_plan
+    return nothing
+end
+
+function _cpb_overlap_placement_plan_status(placement_plan)
+    isnothing(placement_plan) && return :missing_placement_plan
+    plan_summary = _cpb_overlap_placement_plan_summary(placement_plan)
+    if !isnothing(plan_summary)
+        status = _summary_property(plan_summary, :status)
+        status === :available_cpb_reviewed_overlap_placement_plan &&
+            return :available_placement_plan
+        status === :blocked_cpb_reviewed_overlap_placement_plan &&
+            return :blocked_placement_plan
+    end
+    return :available_placement_plan
+end
+
+function _cpb_overlap_placement_effective_accumulation_rule(
+    placement_plan,
+    accumulation_rule,
+)
+    isnothing(accumulation_rule) || return accumulation_rule
+    plan_summary = _cpb_overlap_placement_plan_summary(placement_plan)
+    isnothing(plan_summary) && return nothing
+    plan_accumulation_rule =
+        _summary_property(plan_summary, :accumulation_rule)
+    plan_accumulation_rule === :unavailable && return nothing
+    return plan_accumulation_rule
+end
+
 function _cpb_overlap_placement_plan_kind(placement_plan)
     isnothing(placement_plan) && return :unavailable
     placement_plan isa Symbol && return placement_plan
+    plan_summary = _cpb_overlap_placement_plan_summary(placement_plan)
+    if !isnothing(plan_summary)
+        placement_plan_kind =
+            _summary_property(plan_summary, :placement_plan_kind)
+        isnothing(placement_plan_kind) || return placement_plan_kind
+    end
     if placement_plan isa NamedTuple
         kind = _summary_property(placement_plan, :kind)
         isnothing(kind) || return kind
