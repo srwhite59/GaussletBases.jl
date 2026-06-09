@@ -9,7 +9,9 @@ const _AXIS_ORDER = (:x, :y, :z)
 const _LOCAL_ORDERING = :parent_compatible_x_slowest_z_fastest
 
 export CPBIntervalPair3D,
+       CPBOverlapAxisBlockSet,
        cpb_interval_pair,
+       cpb_overlap_axis_blocks,
        summary
 
 """
@@ -28,7 +30,21 @@ struct CPBIntervalPair3D{P,L,R,M}
     metadata::M
 end
 
+"""
+    CPBOverlapAxisBlockSet
+
+Axis-level overlap blocks for one CPB interval pair. The blocks are slices of a
+parent-owned overlap factor packet; no dense local 3D block is materialized.
+"""
+struct CPBOverlapAxisBlockSet{P,I,B,M}
+    overlap_packet::P
+    interval_pair::I
+    axis_blocks::B
+    metadata::M
+end
+
 summary(pair::CPBIntervalPair3D) = pair.metadata
+summary(block_set::CPBOverlapAxisBlockSet) = block_set.metadata
 
 function cpb_interval_pair(
     parent::CPGB.CartesianParentGaussletBasis3D,
@@ -116,6 +132,117 @@ end
 
 function _outside_interval_blocker(record)
     return Symbol("$(record.side)_$(record.axis)_interval_outside_parent")
+end
+
+function cpb_overlap_axis_blocks(
+    overlap_packet::CPGB.CartesianParentAxisFactorPacket3D,
+    interval_pair::CPBIntervalPair3D,
+)
+    packet_summary = CPGB.summary(overlap_packet)
+    interval_summary = summary(interval_pair)
+    blocker = _cpb_overlap_axis_blocks_blocker(
+        overlap_packet,
+        packet_summary,
+        interval_pair,
+        interval_summary,
+    )
+    axis_blocks =
+        isnothing(blocker) ?
+        _cpb_overlap_axis_block_views(overlap_packet, interval_summary) :
+        nothing
+    status =
+        isnothing(blocker) ?
+        :available_cpb_overlap_axis_blocks :
+        :blocked_cpb_overlap_axis_blocks
+    return CPBOverlapAxisBlockSet(
+        overlap_packet,
+        interval_pair,
+        axis_blocks,
+        _cpb_overlap_axis_block_summary(
+            status,
+            blocker,
+            packet_summary,
+            interval_summary,
+            axis_blocks,
+        ),
+    )
+end
+
+function _cpb_overlap_axis_blocks_blocker(
+    overlap_packet,
+    packet_summary,
+    interval_pair,
+    interval_summary,
+)
+    packet_summary.status === :available_parent_overlap_axis_factors ||
+        return isnothing(packet_summary.blocker) ?
+               :unavailable_parent_overlap_axis_factors :
+               packet_summary.blocker
+    interval_summary.status === :available_cpb_interval_pair ||
+        return isnothing(interval_summary.blocker) ?
+               :unavailable_cpb_interval_pair :
+               interval_summary.blocker
+    overlap_packet.parent === interval_pair.parent || return :parent_mismatch
+    return nothing
+end
+
+function _cpb_overlap_axis_block_views(overlap_packet, interval_summary)
+    overlap_1d = overlap_packet.overlap_1d
+    left = interval_summary.left_intervals
+    right = interval_summary.right_intervals
+    return (;
+        x = view(overlap_1d.x, left.x, right.x),
+        y = view(overlap_1d.y, left.y, right.y),
+        z = view(overlap_1d.z, left.z, right.z),
+    )
+end
+
+function _cpb_overlap_axis_block_summary(
+    status::Symbol,
+    blocker,
+    packet_summary,
+    interval_summary,
+    axis_blocks,
+)
+    available = status === :available_cpb_overlap_axis_blocks
+    return (;
+        object_kind = :cartesian_cpb_overlap_axis_block_set_summary,
+        status,
+        blocker,
+        overlap_packet_summary = packet_summary,
+        interval_pair_summary = interval_summary,
+        axis_blocks_available = available,
+        axis_block_shapes =
+            available ?
+            _axis_block_shapes(axis_blocks) :
+            :unavailable,
+        factor_space = packet_summary.factor_space,
+        factor_convention = packet_summary.factor_convention,
+        normalization_convention = packet_summary.normalization_convention,
+        index_domain = packet_summary.index_domain,
+        index_domain_source = packet_summary.index_domain_source,
+        index_domain_status = packet_summary.index_domain_status,
+        axis_order = packet_summary.axis_order,
+        bra_ket_order = packet_summary.bra_ket_order,
+        local_ordering = interval_summary.local_ordering,
+        blocks_are_views = available,
+        blocks_are_copies = false,
+        dense_local_block_materialized = false,
+        parent_factor_packet_consumed = true,
+        route_driver_wiring = false,
+        hamiltonian_data_materialized = false,
+        coulomb_data_materialized = false,
+        ida_mwg_semantics = false,
+        exports_or_artifacts = false,
+    )
+end
+
+function _axis_block_shapes(axis_blocks)
+    return (;
+        x = size(axis_blocks.x),
+        y = size(axis_blocks.y),
+        z = size(axis_blocks.z),
+    )
 end
 
 end # module CartesianCPBBlockProviders

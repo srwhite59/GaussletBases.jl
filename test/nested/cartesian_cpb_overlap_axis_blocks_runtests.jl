@@ -1,0 +1,160 @@
+# Runtime role: tiny CPB overlap axis-block provider contract test.
+#
+# This validates axis-level overlap slices from a parent factor packet and a
+# CPB interval pair. It does not materialize dense local 3D blocks, wire route
+# drivers, or exercise kinetic/position/x2/Coulomb, Hamiltonian, IDA/MWG, PQS
+# Lowdin/projection, exports, or artifacts.
+
+using Test
+using GaussletBases
+
+const CPBOverlapBlocks = GaussletBases.CartesianCPB
+const CPGBOverlapBlocks = GaussletBases.CartesianParentGaussletBases
+const CBPOverlapBlocks = GaussletBases.CartesianCPBBlockProviders
+
+function _overlap_blocks_parent(; count = 3)
+    axis = build_basis(MappedUniformBasisSpec(
+        :G10;
+        count,
+        mapping = IdentityMapping(),
+        reference_spacing = 1.0,
+    ))
+    return CPGBOverlapBlocks.CartesianParentGaussletBasis3D(axis)
+end
+
+function _overlap_blocks_overlap_1d()
+    return (;
+        x = [
+            1.0 0.1 0.2
+            0.3 1.1 0.4
+            0.5 0.6 1.2
+        ],
+        y = [
+            2.0 0.7 0.8
+            0.9 2.1 1.0
+            1.1 1.2 2.2
+        ],
+        z = [
+            3.0 1.3 1.4
+            1.5 3.1 1.6
+            1.7 1.8 3.2
+        ],
+    )
+end
+
+function _overlap_blocks_axis_bundle(overlap_1d = _overlap_blocks_overlap_1d())
+    return (;
+        x = (; pgdg_intermediate = (; overlap = overlap_1d.x)),
+        y = (; pgdg_intermediate = (; overlap = overlap_1d.y)),
+        z = (; pgdg_intermediate = (; overlap = overlap_1d.z)),
+    )
+end
+
+function _overlap_blocks_interval_pair(parent)
+    left = CPBOverlapBlocks.cpb(1:2, 2:3, 1:3; role = :left_overlap_slice)
+    right = CPBOverlapBlocks.cpb(2:3, 1:2, 2:2; role = :right_overlap_slice)
+    return CBPOverlapBlocks.cpb_interval_pair(parent, left, right)
+end
+
+@testset "Cartesian CPB overlap axis-block slices" begin
+    parent = _overlap_blocks_parent()
+    overlap_1d = _overlap_blocks_overlap_1d()
+    packet = CPGBOverlapBlocks.parent_overlap_axis_factor_packet(
+        parent,
+        _overlap_blocks_axis_bundle(overlap_1d),
+    )
+    interval_pair = _overlap_blocks_interval_pair(parent)
+    block_set = CBPOverlapBlocks.cpb_overlap_axis_blocks(packet, interval_pair)
+    block_summary = CBPOverlapBlocks.summary(block_set)
+
+    @test block_set.overlap_packet === packet
+    @test block_set.interval_pair === interval_pair
+    @test block_summary.status === :available_cpb_overlap_axis_blocks
+    @test block_summary.blocker === nothing
+    @test Matrix(block_set.axis_blocks.x) == overlap_1d.x[1:2, 2:3]
+    @test Matrix(block_set.axis_blocks.y) == overlap_1d.y[2:3, 1:2]
+    @test Matrix(block_set.axis_blocks.z) == overlap_1d.z[1:3, 2:2]
+    @test block_summary.axis_block_shapes == (x = (2, 2), y = (2, 2), z = (3, 1))
+    @test block_summary.factor_space === :parent_axis_bundle_pgdg_intermediate
+    @test block_summary.factor_convention === :axis_bundle_one_body_overlap
+    @test block_summary.normalization_convention ===
+          :not_separate_from_axis_bundle_one_body_overlap
+    @test block_summary.index_domain === :parent_axis_indices
+    @test block_summary.index_domain_source === :axis_bundle_contract
+    @test block_summary.index_domain_status ===
+          :assumed_parent_axis_indexed_by_current_axis_bundle_contract
+    @test block_summary.axis_order === (:x, :y, :z)
+    @test block_summary.bra_ket_order === (:bra, :ket)
+    @test block_summary.local_ordering ===
+          :parent_compatible_x_slowest_z_fastest
+    @test block_summary.blocks_are_views
+    @test block_summary.blocks_are_copies === false
+    @test block_summary.dense_local_block_materialized === false
+    @test block_summary.parent_factor_packet_consumed
+    @test block_summary.route_driver_wiring === false
+    @test block_summary.hamiltonian_data_materialized === false
+    @test block_summary.coulomb_data_materialized === false
+    @test block_summary.ida_mwg_semantics === false
+    @test block_summary.exports_or_artifacts === false
+    @test block_summary.overlap_packet_summary.status ===
+          :available_parent_overlap_axis_factors
+    @test block_summary.interval_pair_summary.status ===
+          :available_cpb_interval_pair
+
+    blocked_packet = CPGBOverlapBlocks.parent_overlap_axis_factor_packet(
+        parent,
+        (;
+            x = (; pgdg_intermediate = (; overlap = overlap_1d.x)),
+            y = (; pgdg_intermediate = (; overlap = overlap_1d.y)),
+            z = (; pgdg_intermediate = (;)),
+        ),
+    )
+    blocked_packet_blocks =
+        CBPOverlapBlocks.cpb_overlap_axis_blocks(blocked_packet, interval_pair)
+    blocked_packet_summary = CBPOverlapBlocks.summary(blocked_packet_blocks)
+
+    @test blocked_packet_blocks.axis_blocks === nothing
+    @test blocked_packet_summary.status === :blocked_cpb_overlap_axis_blocks
+    @test blocked_packet_summary.blocker ===
+          :missing_parent_axis_bundle_overlap_factors
+    @test blocked_packet_summary.axis_blocks_available === false
+    @test blocked_packet_summary.axis_block_shapes === :unavailable
+    @test blocked_packet_summary.factor_space === :unavailable
+    @test blocked_packet_summary.index_domain === :unavailable
+    @test blocked_packet_summary.blocks_are_views === false
+    @test blocked_packet_summary.blocks_are_copies === false
+    @test blocked_packet_summary.dense_local_block_materialized === false
+
+    outside_pair = CBPOverlapBlocks.cpb_interval_pair(
+        parent,
+        CPBOverlapBlocks.cpb(0:1, 1:2, 1:2; role = :outside_left),
+        CPBOverlapBlocks.cpb(1:2, 1:2, 1:2; role = :inside_right),
+    )
+    blocked_interval_blocks =
+        CBPOverlapBlocks.cpb_overlap_axis_blocks(packet, outside_pair)
+    blocked_interval_summary = CBPOverlapBlocks.summary(blocked_interval_blocks)
+
+    @test blocked_interval_blocks.axis_blocks === nothing
+    @test blocked_interval_summary.status === :blocked_cpb_overlap_axis_blocks
+    @test blocked_interval_summary.blocker === :left_x_interval_outside_parent
+    @test blocked_interval_summary.factor_space ===
+          :parent_axis_bundle_pgdg_intermediate
+    @test blocked_interval_summary.index_domain === :parent_axis_indices
+    @test blocked_interval_summary.blocks_are_views === false
+    @test blocked_interval_summary.dense_local_block_materialized === false
+
+    other_parent = _overlap_blocks_parent()
+    mismatch_pair = _overlap_blocks_interval_pair(other_parent)
+    mismatch_blocks = CBPOverlapBlocks.cpb_overlap_axis_blocks(packet, mismatch_pair)
+    mismatch_summary = CBPOverlapBlocks.summary(mismatch_blocks)
+
+    @test packet.parent !== mismatch_pair.parent
+    @test mismatch_blocks.axis_blocks === nothing
+    @test mismatch_summary.status === :blocked_cpb_overlap_axis_blocks
+    @test mismatch_summary.blocker === :parent_mismatch
+    @test mismatch_summary.factor_space ===
+          :parent_axis_bundle_pgdg_intermediate
+    @test mismatch_summary.index_domain === :parent_axis_indices
+    @test mismatch_summary.blocks_are_views === false
+    @test mismatch_summary.dense_local_block_materialized === false
+end
