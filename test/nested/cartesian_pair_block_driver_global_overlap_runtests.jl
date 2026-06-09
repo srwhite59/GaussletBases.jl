@@ -329,6 +329,27 @@ function _driver_overlap_real_report_local_cpb_provider_fingerprint(report)
         GaussletBases._pqs_source_box_route_driver_private_global_overlap_local_source_fingerprint(
             dense_block,
         )
+    local_block_record =
+        isnothing(dense_block) || isnothing(pair_entry) ?
+        nothing :
+        CPBProviderDriverOverlap.cpb_local_overlap_block_record(
+            dense_block;
+            block_key = pair_entry.pair_key,
+        )
+    local_block_record_summary =
+        isnothing(local_block_record) ?
+        nothing :
+        CPBProviderDriverOverlap.summary(local_block_record)
+    local_block_collection =
+        isnothing(local_block_record) ?
+        nothing :
+        CPBProviderDriverOverlap.cpb_local_overlap_block_collection((
+            local_block_record,
+        ))
+    local_block_collection_summary =
+        isnothing(local_block_collection) ?
+        nothing :
+        CPBProviderDriverOverlap.summary(local_block_collection)
 
     return (;
         parent_source_status =
@@ -385,6 +406,75 @@ function _driver_overlap_real_report_local_cpb_provider_fingerprint(report)
             isnothing(local_source_fingerprint) ?
             :not_attempted_missing_dense_local_overlap :
             local_source_fingerprint.blocker,
+        local_overlap_record_status =
+            isnothing(local_block_record_summary) ?
+            :not_attempted_missing_dense_local_overlap :
+            local_block_record_summary.status,
+        local_overlap_record_blocker =
+            isnothing(local_block_record_summary) ?
+            :not_attempted_missing_dense_local_overlap :
+            local_block_record_summary.blocker,
+        local_overlap_record_source_kind =
+            isnothing(local_block_record_summary) ?
+            :not_attempted_missing_dense_local_overlap :
+            local_block_record_summary.source_kind,
+        local_overlap_record_term =
+            isnothing(local_block_record_summary) ?
+            :not_attempted_missing_dense_local_overlap :
+            local_block_record_summary.term,
+        local_overlap_record_dense_block_available =
+            !isnothing(local_block_record_summary) &&
+            local_block_record_summary.dense_block_available,
+        local_overlap_record_dense_block_shape =
+            isnothing(local_block_record_summary) ?
+            :not_materialized :
+            local_block_record_summary.dense_block_shape,
+        local_overlap_record_placement_status =
+            isnothing(local_block_record_summary) ?
+            :not_attempted_missing_dense_local_overlap :
+            local_block_record_summary.placement_status,
+        local_overlap_record_retained_transform_status =
+            isnothing(local_block_record_summary) ?
+            :not_attempted_missing_dense_local_overlap :
+            local_block_record_summary.retained_transform_status,
+        local_overlap_collection_status =
+            isnothing(local_block_collection_summary) ?
+            :not_attempted_missing_local_overlap_record :
+            local_block_collection_summary.status,
+        local_overlap_collection_blocker =
+            isnothing(local_block_collection_summary) ?
+            :not_attempted_missing_local_overlap_record :
+            local_block_collection_summary.blocker,
+        local_overlap_collection_record_count =
+            isnothing(local_block_collection_summary) ?
+            0 :
+            local_block_collection_summary.record_count,
+        local_overlap_collection_terms =
+            isnothing(local_block_collection_summary) ?
+            () :
+            local_block_collection_summary.terms,
+        local_overlap_collection_block_keys =
+            isnothing(local_block_collection_summary) ?
+            () :
+            local_block_collection_summary.block_keys,
+        local_overlap_collection_dense_block_count =
+            isnothing(local_block_collection_summary) ?
+            0 :
+            local_block_collection_summary.dense_block_count,
+        local_overlap_collection_placement_status =
+            isnothing(local_block_collection_summary) ?
+            :not_attempted_missing_local_overlap_record :
+            local_block_collection_summary.placement_status,
+        local_overlap_collection_retained_transform_status =
+            isnothing(local_block_collection_summary) ?
+            :not_attempted_missing_local_overlap_record :
+            local_block_collection_summary.retained_transform_status,
+        local_overlap_collection_global_matrix_materialized =
+            !isnothing(local_block_collection_summary) &&
+            local_block_collection_summary.global_matrix_materialized,
+        local_overlap_collection_route_driver_wiring =
+            !isnothing(local_block_collection_summary) &&
+            local_block_collection_summary.route_driver_wiring,
         route_driver_wiring = false,
         global_matrix_materialized = false,
         route_global_overlap_stage_source = false,
@@ -773,6 +863,34 @@ end
     @test local_cpb_overlap_fingerprint.local_source_fingerprint_status ===
           :available_private_global_overlap_local_source_fingerprint
     @test local_cpb_overlap_fingerprint.local_source_fingerprint_blocker === nothing
+    @test local_cpb_overlap_fingerprint.local_overlap_record_status ===
+          :available_cpb_local_overlap_block_record
+    @test local_cpb_overlap_fingerprint.local_overlap_record_blocker === nothing
+    @test local_cpb_overlap_fingerprint.local_overlap_record_source_kind ===
+          :cpb_overlap_dense_block
+    @test local_cpb_overlap_fingerprint.local_overlap_record_term === :overlap
+    @test local_cpb_overlap_fingerprint.local_overlap_record_dense_block_available
+    @test local_cpb_overlap_fingerprint.local_overlap_record_dense_block_shape ==
+          (25, 25)
+    @test local_cpb_overlap_fingerprint.local_overlap_record_placement_status ===
+          :unassigned
+    @test local_cpb_overlap_fingerprint.local_overlap_record_retained_transform_status ===
+          :unassigned
+    @test local_cpb_overlap_fingerprint.local_overlap_collection_status ===
+          :available_cpb_local_overlap_block_collection
+    @test local_cpb_overlap_fingerprint.local_overlap_collection_blocker === nothing
+    @test local_cpb_overlap_fingerprint.local_overlap_collection_record_count == 1
+    @test local_cpb_overlap_fingerprint.local_overlap_collection_terms ===
+          (:overlap,)
+    @test local_cpb_overlap_fingerprint.local_overlap_collection_block_keys ===
+          ((:product, :product),)
+    @test local_cpb_overlap_fingerprint.local_overlap_collection_dense_block_count == 1
+    @test local_cpb_overlap_fingerprint.local_overlap_collection_placement_status ===
+          :unassigned
+    @test local_cpb_overlap_fingerprint.local_overlap_collection_retained_transform_status ===
+          :unassigned
+    @test !local_cpb_overlap_fingerprint.local_overlap_collection_global_matrix_materialized
+    @test !local_cpb_overlap_fingerprint.local_overlap_collection_route_driver_wiring
     @test local_cpb_overlap_fingerprint.route_driver_wiring === false
     @test local_cpb_overlap_fingerprint.global_matrix_materialized === false
     @test local_cpb_overlap_fingerprint.route_global_overlap_stage_source === false

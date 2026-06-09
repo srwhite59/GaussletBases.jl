@@ -693,6 +693,41 @@ not retained placement, not route-global overlap, and not Hamiltonian assembly.
 It only groups local CPB provider outputs so a later, separately reviewed layer
 can decide whether and how to assign placement or retained transforms.
 
+### Placement Contract Boundary
+
+The next boundary after a local CPB overlap block collection is
+placement/retained-transform assignment. Local collection availability is not
+global overlap availability. A collection says "local CPB product-space overlap
+blocks exist"; it does not say where those blocks belong in a retained or
+global matrix, how they should be transformed, or how multiple contributions
+should be accumulated.
+
+A future placement adapter must require explicit facts such as:
+
+- local block collection;
+- left/right retained transforms or retained-unit transforms;
+- left/right retained column ranges or placement ranges;
+- local-to-retained ordering convention;
+- global or retained dimension;
+- placement plan;
+- accumulation rule for multiple local blocks.
+
+Expected blockers at this boundary include:
+
+- `:missing_local_overlap_collection`;
+- `:missing_retained_transform`;
+- `:missing_left_column_range`;
+- `:missing_right_column_range`;
+- `:missing_global_dimension`;
+- `:missing_placement_plan`;
+- `:missing_accumulation_rule`.
+
+Until those facts are present, route-global overlap remains unavailable even if
+the CPB provider has produced local overlap records or a local overlap
+collection. This boundary is separate from Hamiltonian assembly and should not
+claim Hamiltonian readiness, IDA/MWG semantics, PQS Lowdin/projection, exports,
+or artifacts.
+
 This lets retained-unit and pair-block code choose whether to use axis blocks
 directly, materialize a dense local CPB block, apply left/right transforms, or
 place into a global matrix.
