@@ -311,6 +311,46 @@ existing missing range/dimension requirements remain the authority. This
 remains metadata-only validation: it does not apply transforms, place blocks,
 or assemble route/global overlap.
 
+## Next-Step Decision
+
+The overlap placement metadata layer is now tight enough to stop adding status
+layers for its own sake. The active metadata gates are:
+
+- `CPBLocalOverlapBlockCollection`;
+- `CPBRetainedTransformCarry`;
+- `CPBSourcePairPlacementRange`;
+- `CPBReviewedOverlapPlacementPlan`;
+- `CPBOverlapPlacementFacts`.
+
+The next implementation decision is a fork:
+
+- A. Real-source carry path: find or design how real retained transforms and
+  source-pair retained column ranges should be carried from route/report state
+  into `CPBRetainedTransformCarry` and `CPBSourcePairPlacementRange`. This
+  keeps placement blocked until real facts exist.
+- B. Tiny numerical placement pilot: use a synthetic fully reviewed fixture
+  with a local overlap collection, matrix retained transforms, placement
+  ranges, a reviewed placement plan, and an accumulation rule. Then implement
+  the smallest provider-private placement operation:
+
+```text
+O_retained = T_left' * O_cpb * T_right
+global[left_range, right_range] += O_retained
+```
+
+  This would remain synthetic/provider-level only, not route-driver adoption.
+- C. Defer numerical placement and broaden audit: inspect whether current
+  terminal retained-unit route metadata has enough structure to define
+  source-pair retained column ranges and transforms.
+
+Recommendation: choose A first if a credible real retained-transform/range
+source is nearby in the route metadata. If that audit does not find a usable
+source quickly, choose B as a deliberately synthetic placement pilot. The
+reviewed metadata contract is strong enough for a tiny numerical pilot, and
+additional metadata-only layers now risk diminishing returns. C is useful only
+if the route retained-unit metadata looks ambiguous enough that A cannot be
+answered directly.
+
 ## Structured Carry Objects For Placement
 
 The next implementation boundary should introduce compact carry objects before

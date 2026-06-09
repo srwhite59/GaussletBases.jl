@@ -173,6 +173,16 @@ paths from becoming new route authority.
   dimension requirements rather than a source mismatch. This is compact
   metadata validation only; it does not apply transforms, place blocks,
   assemble global overlap, or adopt route-global overlap.
+- The overlap placement metadata gates are now sufficient for a strategic
+  implementation fork rather than more status layers. The next step should be
+  either a real-source carry audit/design for retained transforms and
+  source-pair column ranges, or, if no credible real source is nearby, a tiny
+  synthetic provider-level numerical overlap placement pilot using fully
+  reviewed metadata. The preferred order is real-source carry first, then a
+  deliberately synthetic pilot if the audit does not find usable route facts
+  quickly. A broader retained-unit metadata audit remains an option if the
+  existing route metadata is ambiguous. None of these options is route-driver
+  adoption by itself.
 - The next overlap implementation boundary is no longer additional
   fingerprinting. It is a reviewed placement design and implementation plan for
   turning local CPB overlap collections into retained/global overlap. That plan
