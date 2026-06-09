@@ -223,3 +223,9 @@ record-level placement facts, transform and range statuses, global dimension
 source, accumulation-rule status, compact summaries, and blockers. It should
 continue to block global overlap until a reviewed numerical placement engine is
 implemented and tested.
+
+The private placement plan skeleton now exists as a metadata-only status
+carrier. It records local collection, record-placement, transform, range,
+dimension-source, placement-plan, and accumulation-rule statuses, but it is not
+a placement engine. It must remain blocked until numerical placement is
+reviewed and implemented separately.
