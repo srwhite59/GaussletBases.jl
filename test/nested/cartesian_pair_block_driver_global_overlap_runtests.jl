@@ -10,6 +10,7 @@ using GaussletBases
 
 const CPBMDriverOverlap = GaussletBases.CartesianPairBlockMaterialization
 const CPBDriverOverlap = GaussletBases.CartesianCPB
+const CPBProviderDriverOverlap = GaussletBases.CartesianCPBBlockProviders
 const CPGBDriverOverlap = GaussletBases.CartesianParentGaussletBases
 const CTLDriverOverlap = GaussletBases.CartesianTerminalLowering
 const CRUDriverOverlap = GaussletBases.CartesianRetainedUnits
@@ -230,6 +231,163 @@ function _driver_overlap_probe_enabled_real_report_fingerprint()
         support_dense_direct_allowed = false,
         reference_only_authorities =
             (:support_row_oracle, :dense_parent_projection),
+    )
+end
+
+function _driver_overlap_source_box_cpb(report, source_key::Symbol)
+    hasproperty(report, :source_boxes) || return nothing
+    hasproperty(report.source_boxes, source_key) || return nothing
+    source_box = getproperty(report.source_boxes, source_key)
+    return CPBDriverOverlap.cpb(
+        source_box.x,
+        source_box.y,
+        source_box.z;
+        role = Symbol("real_report_", source_key, "_source_cpb"),
+    )
+end
+
+function _driver_overlap_smallest_source_pair_key(report)
+    hasproperty(report, :pair_entries) || return nothing
+    hasproperty(report, :source_boxes) || return nothing
+    candidates = filter(report.pair_entries) do entry
+        left_key, right_key = entry.pair_key
+        return hasproperty(report.source_boxes, left_key) &&
+               hasproperty(report.source_boxes, right_key)
+    end
+    isempty(candidates) && return nothing
+    return argmin(candidates) do entry
+        left_key, right_key = entry.pair_key
+        left_cpb = _driver_overlap_source_box_cpb(report, left_key)
+        right_cpb = _driver_overlap_source_box_cpb(report, right_key)
+        return CPBDriverOverlap.support_count(left_cpb) *
+               CPBDriverOverlap.support_count(right_cpb)
+    end
+end
+
+function _driver_overlap_real_report_local_cpb_provider_fingerprint(report)
+    payload =
+        hasproperty(report, :route_materializer_payload) ?
+        report.route_materializer_payload :
+        nothing
+    parent_qw_basis =
+        !isnothing(payload) && hasproperty(payload, :parent_qw_basis_object) ?
+        payload.parent_qw_basis_object :
+        nothing
+    parent =
+        isnothing(parent_qw_basis) ?
+        nothing :
+        CPGBDriverOverlap.cartesian_parent_gausslet_basis(parent_qw_basis)
+    axis_bundle =
+        !isnothing(payload) && hasproperty(payload, :parent_axis_bundle_object) ?
+        payload.parent_axis_bundle_object :
+        nothing
+    packet =
+        isnothing(parent) || isnothing(axis_bundle) ?
+        nothing :
+        CPGBDriverOverlap.parent_overlap_axis_factor_packet(parent, axis_bundle)
+    packet_summary = isnothing(packet) ? nothing : CPGBDriverOverlap.summary(packet)
+    pair_entry =
+        isnothing(parent) ?
+        nothing :
+        _driver_overlap_smallest_source_pair_key(report)
+    left_cpb =
+        isnothing(pair_entry) ?
+        nothing :
+        _driver_overlap_source_box_cpb(report, pair_entry.pair_key[1])
+    right_cpb =
+        isnothing(pair_entry) ?
+        nothing :
+        _driver_overlap_source_box_cpb(report, pair_entry.pair_key[2])
+    interval_pair =
+        isnothing(parent) || isnothing(left_cpb) || isnothing(right_cpb) ?
+        nothing :
+        CPBProviderDriverOverlap.cpb_interval_pair(parent, left_cpb, right_cpb)
+    interval_summary =
+        isnothing(interval_pair) ?
+        nothing :
+        CPBProviderDriverOverlap.summary(interval_pair)
+    axis_blocks =
+        isnothing(packet) || isnothing(interval_pair) ?
+        nothing :
+        CPBProviderDriverOverlap.cpb_overlap_axis_blocks(packet, interval_pair)
+    axis_block_summary =
+        isnothing(axis_blocks) ?
+        nothing :
+        CPBProviderDriverOverlap.summary(axis_blocks)
+    dense_block =
+        !isnothing(axis_block_summary) &&
+        axis_block_summary.status === :available_cpb_overlap_axis_blocks ?
+        CPBProviderDriverOverlap.cpb_overlap_dense_block(axis_blocks) :
+        nothing
+    dense_summary =
+        isnothing(dense_block) ?
+        nothing :
+        CPBProviderDriverOverlap.summary(dense_block)
+    local_source_fingerprint =
+        isnothing(dense_block) ?
+        nothing :
+        GaussletBases._pqs_source_box_route_driver_private_global_overlap_local_source_fingerprint(
+            dense_block,
+        )
+
+    return (;
+        parent_source_status =
+            isnothing(parent) ?
+            :missing_route_materializer_payload_parent_qw_basis_object :
+            :available_route_materializer_payload_parent_qw_basis_object,
+        parent_axis_counts =
+            isnothing(parent) ?
+            nothing :
+            CPGBDriverOverlap.parent_axis_counts(parent),
+        parent_overlap_packet_source_status =
+            isnothing(packet_summary) ?
+            :missing_parent_overlap_packet_source :
+            packet_summary.status,
+        parent_overlap_packet_blocker =
+            isnothing(packet_summary) ? :missing_parent_overlap_packet_source :
+            packet_summary.blocker,
+        cpb_source_pair_status =
+            isnothing(pair_entry) ?
+            :missing_structured_source_box_pair :
+            :available_report_pair_entry_source_boxes,
+        cpb_source_pair_key =
+            isnothing(pair_entry) ? nothing : pair_entry.pair_key,
+        interval_pair_status =
+            isnothing(interval_summary) ?
+            :not_attempted_missing_cpb_source_pair :
+            interval_summary.status,
+        interval_pair_blocker =
+            isnothing(interval_summary) ? :not_attempted_missing_cpb_source_pair :
+            interval_summary.blocker,
+        overlap_axis_blocks_status =
+            isnothing(axis_block_summary) ?
+            :not_attempted_missing_parent_packet_or_interval_pair :
+            axis_block_summary.status,
+        overlap_axis_blocks_blocker =
+            isnothing(axis_block_summary) ?
+            :not_attempted_missing_parent_packet_or_interval_pair :
+            axis_block_summary.blocker,
+        dense_local_overlap_status =
+            isnothing(dense_summary) ?
+            :not_attempted_missing_available_axis_blocks :
+            dense_summary.status,
+        dense_local_overlap_blocker =
+            isnothing(dense_summary) ?
+            :not_attempted_missing_available_axis_blocks :
+            dense_summary.blocker,
+        dense_block_shape =
+            isnothing(dense_summary) ? :not_materialized : dense_summary.dense_block_shape,
+        local_source_fingerprint_status =
+            isnothing(local_source_fingerprint) ?
+            :not_attempted_missing_dense_local_overlap :
+            local_source_fingerprint.status,
+        local_source_fingerprint_blocker =
+            isnothing(local_source_fingerprint) ?
+            :not_attempted_missing_dense_local_overlap :
+            local_source_fingerprint.blocker,
+        route_driver_wiring = false,
+        global_matrix_materialized = false,
+        route_global_overlap_stage_source = false,
     )
 end
 
@@ -589,6 +747,35 @@ end
     @test facts.factor_space === :parent_axis_bundle_pgdg_intermediate
     @test facts.factor_convention === :axis_bundle_one_body_overlap
     @test !isnothing(facts.overlap_1d)
+
+    local_cpb_overlap_fingerprint =
+        _driver_overlap_real_report_local_cpb_provider_fingerprint(report)
+    @test local_cpb_overlap_fingerprint.parent_source_status ===
+          :available_route_materializer_payload_parent_qw_basis_object
+    @test local_cpb_overlap_fingerprint.parent_axis_counts == (31, 17, 17)
+    @test local_cpb_overlap_fingerprint.parent_overlap_packet_source_status ===
+          :available_parent_overlap_axis_factors
+    @test local_cpb_overlap_fingerprint.parent_overlap_packet_blocker === nothing
+    @test local_cpb_overlap_fingerprint.cpb_source_pair_status ===
+          :available_report_pair_entry_source_boxes
+    @test local_cpb_overlap_fingerprint.cpb_source_pair_key ===
+          (:product, :product)
+    @test local_cpb_overlap_fingerprint.interval_pair_status ===
+          :available_cpb_interval_pair
+    @test local_cpb_overlap_fingerprint.interval_pair_blocker === nothing
+    @test local_cpb_overlap_fingerprint.overlap_axis_blocks_status ===
+          :available_cpb_overlap_axis_blocks
+    @test local_cpb_overlap_fingerprint.overlap_axis_blocks_blocker === nothing
+    @test local_cpb_overlap_fingerprint.dense_local_overlap_status ===
+          :materialized_cpb_overlap_dense_block
+    @test local_cpb_overlap_fingerprint.dense_local_overlap_blocker === nothing
+    @test local_cpb_overlap_fingerprint.dense_block_shape == (25, 25)
+    @test local_cpb_overlap_fingerprint.local_source_fingerprint_status ===
+          :available_private_global_overlap_local_source_fingerprint
+    @test local_cpb_overlap_fingerprint.local_source_fingerprint_blocker === nothing
+    @test local_cpb_overlap_fingerprint.route_driver_wiring === false
+    @test local_cpb_overlap_fingerprint.global_matrix_materialized === false
+    @test local_cpb_overlap_fingerprint.route_global_overlap_stage_source === false
 
     stage =
         GaussletBases._pqs_source_box_route_driver_private_global_overlap_stage(
