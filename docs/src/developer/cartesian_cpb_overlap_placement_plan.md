@@ -291,6 +291,13 @@ fingerprint can supply this reviewed plan, making `:placement_plan` and
 column ranges, and placement-derived global dimension remain missing. This is
 still not numerical placement and does not make route-global overlap available.
 
+Reviewed placement plans are now the intended metadata contract for placement
+facts. Older non-reviewed `placement_plan` values may still be accepted by
+compatibility paths, but facts label them explicitly as
+`:placeholder_placement_plan_compatibility` rather than reviewed placement
+plans. That label preserves transition tests without allowing placeholder
+metadata to masquerade as reviewed placement authority.
+
 `CPBOverlapPlacementFacts` now checks the reviewed plan's accepted record
 inventory against the local overlap collection block keys. The check records
 compact tuples for provided, accepted, rejected, and duplicate block keys. It

@@ -158,7 +158,10 @@ paths from becoming new route authority.
   reviewed plan, making `:placement_plan` and `:accumulation_rule` available
   while real retained transforms, source-pair column ranges, and
   placement-derived global dimension remain missing. It still does not apply
-  transforms or assemble a matrix.
+  transforms or assemble a matrix. Non-reviewed `placement_plan` values are
+  now labeled as `:placeholder_placement_plan_compatibility`, preserving
+  transition compatibility without treating them as reviewed placement
+  authority.
 - `CPBOverlapPlacementFacts` now validates the reviewed plan's accepted record
   inventory against local collection block keys. A matching real-report
   fingerprint accepts the `(:product, :product)` local overlap source pair;

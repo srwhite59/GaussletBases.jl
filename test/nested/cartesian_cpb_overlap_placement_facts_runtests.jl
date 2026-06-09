@@ -139,6 +139,9 @@ end
     @test missing_summary.record_count == 1
     @test missing_summary.block_keys === (_PLACEMENT_FACTS_BLOCK_KEY,)
     @test missing_summary.placement_plan_status === :missing_placement_plan
+    @test missing_summary.placement_plan_review_status === :missing_placement_plan
+    @test missing_summary.placement_plan_blocker === :missing_placement_plan
+    @test missing_summary.placement_plan_is_reviewed === false
     @test missing_summary.accumulation_rule_status === :missing_accumulation_rule
     @test missing_summary.available_requirements ===
           (:local_cpb_overlap_collection,)
@@ -196,6 +199,10 @@ end
           missing_summary.missing_requirements
     @test missing_skeleton.placement_plan_status === :missing_placement_plan
     @test missing_skeleton.placement_plan_kind === :unavailable
+    @test missing_skeleton.placement_plan_review_status ===
+          :missing_placement_plan
+    @test missing_skeleton.placement_plan_blocker === :missing_placement_plan
+    @test missing_skeleton.placement_plan_is_reviewed === false
     @test missing_skeleton.accumulation_rule_status ===
           :missing_accumulation_rule
     @test missing_skeleton.global_overlap_status === :blocked
@@ -246,6 +253,10 @@ end
     )
     @test complete_summary.placement_plan_status === :available_placement_plan
     @test complete_summary.placement_plan_kind === :test_overlap_placement_plan
+    @test complete_summary.placement_plan_review_status ===
+          :placeholder_placement_plan_compatibility
+    @test complete_summary.placement_plan_blocker === nothing
+    @test complete_summary.placement_plan_is_reviewed === false
     @test complete_summary.placement_record_inventory_status ===
           :not_checked_cpb_overlap_placement_record_inventory
     @test complete_summary.placement_record_inventory_blocker === nothing
@@ -302,6 +313,10 @@ end
           complete_summary.available_requirements
     @test complete_skeleton.placement_plan_status === :available_placement_plan
     @test complete_skeleton.placement_plan_kind === :test_overlap_placement_plan
+    @test complete_skeleton.placement_plan_review_status ===
+          :placeholder_placement_plan_compatibility
+    @test complete_skeleton.placement_plan_blocker === nothing
+    @test complete_skeleton.placement_plan_is_reviewed === false
     @test complete_skeleton.accumulation_rule_status ===
           :available_accumulation_rule
     @test complete_skeleton.global_dimension == 4
@@ -338,10 +353,30 @@ end
     @test missing_plan_summary.blocker ===
           :missing_placement_or_retained_transform
     @test missing_plan_summary.placement_plan_status === :missing_placement_plan
+    @test missing_plan_summary.placement_plan_review_status ===
+          :missing_placement_plan
+    @test missing_plan_summary.placement_plan_blocker === :missing_placement_plan
+    @test missing_plan_summary.placement_plan_is_reviewed === false
     @test :missing_placement_plan in missing_plan_summary.missing_requirements
     @test !(:missing_accumulation_rule in missing_plan_summary.missing_requirements)
     @test missing_plan_summary.global_matrix_materialized === false
     @test missing_plan_summary.route_driver_wiring === false
+
+    symbol_plan = _complete_placement_facts(;
+        placement_plan = :test_symbol_overlap_placement_plan,
+        accumulation_rule = :test_accumulation_rule,
+    )
+    symbol_plan_summary = CPBPlacementFacts.summary(symbol_plan)
+    @test symbol_plan_summary.placement_plan_status === :available_placement_plan
+    @test symbol_plan_summary.placement_plan_kind ===
+          :test_symbol_overlap_placement_plan
+    @test symbol_plan_summary.placement_plan_review_status ===
+          :placeholder_placement_plan_compatibility
+    @test symbol_plan_summary.placement_plan_blocker === nothing
+    @test symbol_plan_summary.placement_plan_is_reviewed === false
+    @test symbol_plan_summary.blocker === :placement_not_implemented
+    @test symbol_plan_summary.global_matrix_materialized === false
+    @test symbol_plan_summary.route_driver_wiring === false
 
     reviewed_plan = _placement_facts_reviewed_plan()
     reviewed_plan_facts = _complete_placement_facts(;
@@ -353,6 +388,10 @@ end
     @test reviewed_plan_summary.placement_plan_status === :available_placement_plan
     @test reviewed_plan_summary.placement_plan_kind ===
           :test_reviewed_overlap_placement_plan
+    @test reviewed_plan_summary.placement_plan_review_status ===
+          :reviewed_placement_plan
+    @test reviewed_plan_summary.placement_plan_blocker === nothing
+    @test reviewed_plan_summary.placement_plan_is_reviewed === true
     @test reviewed_plan_summary.accumulation_rule_status ===
           :available_accumulation_rule
     @test reviewed_plan_summary.accumulation_rule ===
@@ -386,6 +425,24 @@ end
           (:test_retained_layout,)
     @test reviewed_plan_summary.mismatched_global_dimension_source_block_keys ===
           ()
+
+    reviewed_plan_skeleton =
+        GaussletBases._pqs_source_box_route_driver_private_global_overlap_placement_plan_skeleton(
+            reviewed_plan_facts,
+        )
+    @test reviewed_plan_skeleton.status ===
+          :blocked_private_global_overlap_placement_plan_skeleton
+    @test reviewed_plan_skeleton.blocker === :placement_not_implemented
+    @test reviewed_plan_skeleton.placement_plan_status ===
+          :available_placement_plan
+    @test reviewed_plan_skeleton.placement_plan_kind ===
+          :test_reviewed_overlap_placement_plan
+    @test reviewed_plan_skeleton.placement_plan_review_status ===
+          :reviewed_placement_plan
+    @test reviewed_plan_skeleton.placement_plan_blocker === nothing
+    @test reviewed_plan_skeleton.placement_plan_is_reviewed === true
+    @test reviewed_plan_skeleton.global_matrix_materialized === false
+    @test reviewed_plan_skeleton.route_driver_wiring === false
 
     ordering_mismatch_collection = _placement_facts_collection(;
         record = _placement_facts_record(;
@@ -539,6 +596,11 @@ end
     @test blocked_plan_summary.status === :blocked_cpb_overlap_placement_facts
     @test blocked_plan_summary.blocker === :missing_accumulation_rule
     @test blocked_plan_summary.placement_plan_status === :blocked_placement_plan
+    @test blocked_plan_summary.placement_plan_review_status ===
+          :blocked_reviewed_placement_plan
+    @test blocked_plan_summary.placement_plan_blocker ===
+          :missing_accumulation_rule
+    @test blocked_plan_summary.placement_plan_is_reviewed === true
     @test blocked_plan_summary.placement_record_inventory_status ===
           :blocked_cpb_overlap_placement_record_inventory
     @test blocked_plan_summary.placement_record_inventory_blocker ===

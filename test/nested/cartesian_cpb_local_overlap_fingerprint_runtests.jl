@@ -553,6 +553,10 @@ end
           :available_placement_plan
     @test reviewed_plan_facts_summary.placement_plan_kind ===
           :test_reviewed_overlap_placement_plan
+    @test reviewed_plan_facts_summary.placement_plan_review_status ===
+          :reviewed_placement_plan
+    @test reviewed_plan_facts_summary.placement_plan_blocker === nothing
+    @test reviewed_plan_facts_summary.placement_plan_is_reviewed === true
     @test reviewed_plan_facts_summary.accumulation_rule_status ===
           :available_accumulation_rule
     @test reviewed_plan_facts_summary.accumulation_rule ===
@@ -570,6 +574,10 @@ end
           :available_placement_plan
     @test reviewed_plan_skeleton.placement_plan_kind ===
           :test_reviewed_overlap_placement_plan
+    @test reviewed_plan_skeleton.placement_plan_review_status ===
+          :reviewed_placement_plan
+    @test reviewed_plan_skeleton.placement_plan_blocker === nothing
+    @test reviewed_plan_skeleton.placement_plan_is_reviewed === true
     @test reviewed_plan_skeleton.accumulation_rule_status ===
           :available_accumulation_rule
     @test reviewed_plan_skeleton.accumulation_rule ===

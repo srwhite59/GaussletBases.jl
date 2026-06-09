@@ -1126,6 +1126,8 @@ function cpb_overlap_placement_facts(
         )
     propagated_blocker =
         _cpb_overlap_placement_specific_record_blocker(record_fact_summaries)
+    placement_plan_status = _cpb_overlap_placement_plan_status(placement_plan)
+    placement_plan_blocker = _cpb_overlap_placement_plan_blocker(placement_plan)
     blocker =
         collection_available ?
         (
@@ -1149,7 +1151,6 @@ function cpb_overlap_placement_facts(
             propagated_blocker
         ) :
         _cpb_overlap_placement_collection_blocker(collection_summary)
-    placement_plan_status = _cpb_overlap_placement_plan_status(placement_plan)
     accumulation_rule_status =
         isnothing(effective_accumulation_rule) ?
         :missing_accumulation_rule :
@@ -1164,6 +1165,11 @@ function cpb_overlap_placement_facts(
         record_fact_summaries,
         placement_plan_status,
         placement_plan_kind = _cpb_overlap_placement_plan_kind(placement_plan),
+        placement_plan_review_status =
+            _cpb_overlap_placement_plan_review_status(placement_plan),
+        placement_plan_blocker,
+        placement_plan_is_reviewed =
+            _cpb_overlap_placement_plan_is_reviewed(placement_plan),
         placement_record_inventory_status = placement_record_inventory.status,
         placement_record_inventory_blocker = placement_record_inventory.blocker,
         accepted_block_keys = placement_record_inventory.accepted_block_keys,
@@ -1372,7 +1378,8 @@ function _cpb_overlap_placement_record_inventory_summary(
     provided_block_keys =
         collection_available ? collection_summary.block_keys : ()
     plan_summary = _cpb_overlap_placement_plan_summary(placement_plan)
-    plan_is_reviewed = placement_plan isa CPBReviewedOverlapPlacementPlan
+    plan_is_reviewed =
+        _cpb_overlap_placement_plan_is_reviewed(placement_plan, plan_summary)
     plan_status =
         isnothing(plan_summary) ?
         :unavailable :
@@ -1462,7 +1469,8 @@ function _cpb_overlap_placement_local_ordering_contract_summary(
     placement_plan,
 )
     plan_summary = _cpb_overlap_placement_plan_summary(placement_plan)
-    plan_is_reviewed = placement_plan isa CPBReviewedOverlapPlacementPlan
+    plan_is_reviewed =
+        _cpb_overlap_placement_plan_is_reviewed(placement_plan, plan_summary)
     plan_status =
         isnothing(plan_summary) ?
         :unavailable :
@@ -1512,7 +1520,8 @@ function _cpb_overlap_placement_global_dimension_source_contract_summary(
     placement_plan,
 )
     plan_summary = _cpb_overlap_placement_plan_summary(placement_plan)
-    plan_is_reviewed = placement_plan isa CPBReviewedOverlapPlacementPlan
+    plan_is_reviewed =
+        _cpb_overlap_placement_plan_is_reviewed(placement_plan, plan_summary)
     plan_status =
         isnothing(plan_summary) ?
         :unavailable :
@@ -1702,6 +1711,23 @@ function _cpb_overlap_placement_plan_summary(placement_plan)
     return nothing
 end
 
+function _cpb_overlap_placement_plan_is_reviewed(
+    placement_plan,
+    plan_summary = _cpb_overlap_placement_plan_summary(placement_plan),
+)
+    placement_plan isa CPBReviewedOverlapPlacementPlan && return true
+    isnothing(plan_summary) && return false
+    _summary_property(
+        plan_summary,
+        :object_kind,
+    ) === :cartesian_cpb_reviewed_overlap_placement_plan_summary && return true
+    status = _summary_property(plan_summary, :status)
+    return status in (
+        :available_cpb_reviewed_overlap_placement_plan,
+        :blocked_cpb_reviewed_overlap_placement_plan,
+    )
+end
+
 function _cpb_overlap_placement_plan_status(placement_plan)
     isnothing(placement_plan) && return :missing_placement_plan
     plan_summary = _cpb_overlap_placement_plan_summary(placement_plan)
@@ -1713,6 +1739,34 @@ function _cpb_overlap_placement_plan_status(placement_plan)
             return :blocked_placement_plan
     end
     return :available_placement_plan
+end
+
+function _cpb_overlap_placement_plan_review_status(placement_plan)
+    isnothing(placement_plan) && return :missing_placement_plan
+    plan_summary = _cpb_overlap_placement_plan_summary(placement_plan)
+    _cpb_overlap_placement_plan_is_reviewed(placement_plan, plan_summary) ||
+        return :placeholder_placement_plan_compatibility
+    plan_status =
+        isnothing(plan_summary) ?
+        :unavailable :
+        _summary_property(plan_summary, :status)
+    plan_status === :available_cpb_reviewed_overlap_placement_plan &&
+        return :reviewed_placement_plan
+    plan_status === :blocked_cpb_reviewed_overlap_placement_plan &&
+        return :blocked_reviewed_placement_plan
+    return :blocked_reviewed_placement_plan
+end
+
+function _cpb_overlap_placement_plan_blocker(placement_plan)
+    isnothing(placement_plan) && return :missing_placement_plan
+    plan_summary = _cpb_overlap_placement_plan_summary(placement_plan)
+    _cpb_overlap_placement_plan_is_reviewed(placement_plan, plan_summary) ||
+        return nothing
+    blocker =
+        isnothing(plan_summary) ?
+        nothing :
+        _summary_property(plan_summary, :blocker)
+    return blocker
 end
 
 function _cpb_overlap_placement_effective_accumulation_rule(

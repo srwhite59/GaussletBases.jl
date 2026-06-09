@@ -640,6 +640,17 @@ function _driver_overlap_real_report_overlap_placement_source_audit(
             isnothing(reviewed_placement_facts_summary) ?
             :not_attempted_missing_reviewed_placement_plan :
             reviewed_placement_facts_summary.placement_plan_kind,
+        reviewed_placement_facts_placement_plan_review_status =
+            isnothing(reviewed_placement_facts_summary) ?
+            :not_attempted_missing_reviewed_placement_plan :
+            reviewed_placement_facts_summary.placement_plan_review_status,
+        reviewed_placement_facts_placement_plan_blocker =
+            isnothing(reviewed_placement_facts_summary) ?
+            :not_attempted_missing_reviewed_placement_plan :
+            reviewed_placement_facts_summary.placement_plan_blocker,
+        reviewed_placement_facts_placement_plan_is_reviewed =
+            !isnothing(reviewed_placement_facts_summary) &&
+            reviewed_placement_facts_summary.placement_plan_is_reviewed,
         reviewed_placement_facts_accumulation_rule_status =
             isnothing(reviewed_placement_facts_summary) ?
             :not_attempted_missing_reviewed_placement_plan :
@@ -1827,6 +1838,12 @@ end
           :available_placement_plan
     @test placement_source_audit.reviewed_placement_facts_placement_plan_kind ===
           :real_report_reviewed_overlap_placement_plan_fingerprint
+    @test placement_source_audit.reviewed_placement_facts_placement_plan_review_status ===
+          :reviewed_placement_plan
+    @test placement_source_audit.reviewed_placement_facts_placement_plan_blocker ===
+          nothing
+    @test placement_source_audit.reviewed_placement_facts_placement_plan_is_reviewed ===
+          true
     @test placement_source_audit.reviewed_placement_facts_accumulation_rule_status ===
           :available_accumulation_rule
     @test placement_source_audit.reviewed_placement_facts_accumulation_rule ===
