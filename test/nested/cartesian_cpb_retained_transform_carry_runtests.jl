@@ -70,6 +70,20 @@ end
     @test available_summary.global_matrix_materialized === false
     @test available_summary.route_driver_wiring === false
 
+    unsupported_reference = _transform_carry(;
+        transform_object = :opaque_transform_reference,
+    )
+    unsupported_summary = CPBTransformCarry.summary(unsupported_reference)
+    @test unsupported_summary.status === :blocked_cpb_retained_transform_carry
+    @test unsupported_summary.blocker ===
+          :unsupported_retained_transform_reference
+    @test unsupported_summary.transform_available === false
+    @test unsupported_summary.transform_shape === :unavailable
+    @test unsupported_summary.transform_reference_kind === :Symbol
+    @test unsupported_summary.transform_applied === false
+    @test unsupported_summary.global_matrix_materialized === false
+    @test unsupported_summary.route_driver_wiring === false
+
     source_shape_mismatch = _transform_carry(;
         source_shape = (x = 1, y = 3, z = 1),
         transform_object = [1.0 0.0; 0.0 1.0],

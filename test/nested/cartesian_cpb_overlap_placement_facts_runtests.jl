@@ -27,6 +27,16 @@ function _placement_facts_record(;
         dense_block_shape =
             status === :available_cpb_local_overlap_block_record ? (2, 2) :
             :not_materialized,
+        left_cpb_summary = (;
+            object_kind = :test_left_cpb_summary,
+            role = :left_fixture,
+            shape = _PLACEMENT_FACTS_SOURCE_SHAPE,
+        ),
+        right_cpb_summary = (;
+            object_kind = :test_right_cpb_summary,
+            role = :right_fixture,
+            shape = _PLACEMENT_FACTS_SOURCE_SHAPE,
+        ),
         local_ordering = :parent_compatible_x_slowest_z_fastest,
         placement_status = :unassigned,
         retained_transform_status = :unassigned,
@@ -117,6 +127,7 @@ end
     @test :missing_retained_transform in missing_summary.missing_requirements
     @test :missing_left_column_range in missing_summary.missing_requirements
     @test :missing_right_column_range in missing_summary.missing_requirements
+    @test :missing_global_dimension in missing_summary.missing_requirements
     @test :missing_placement_plan in missing_summary.missing_requirements
     @test :missing_accumulation_rule in missing_summary.missing_requirements
     @test missing_summary.global_overlap_status === :blocked
@@ -138,6 +149,10 @@ end
     @test missing_record_summary.right_column_range === nothing
     @test missing_record_summary.global_dimension === nothing
     @test missing_record_summary.global_dimension_source === :unavailable
+    @test missing_record_summary.left_cpb_summary.object_kind ===
+          :test_left_cpb_summary
+    @test missing_record_summary.right_cpb_summary.object_kind ===
+          :test_right_cpb_summary
     @test missing_record_summary.dense_block_available === true
     @test missing_record_summary.dense_block_shape == (2, 2)
     @test missing_record_summary.local_ordering ===
@@ -185,6 +200,10 @@ end
           :missing_left_column_range
     @test missing_skeleton_record.right_column_range_status ===
           :missing_right_column_range
+    @test missing_skeleton_record.left_cpb_summary.object_kind ===
+          :test_left_cpb_summary
+    @test missing_skeleton_record.right_cpb_summary.object_kind ===
+          :test_right_cpb_summary
     @test missing_skeleton_record.left_transform_status ===
           :missing_retained_transform
     @test missing_skeleton_record.placement_range_status ===
@@ -267,6 +286,10 @@ end
     @test complete_skeleton_record.left_column_range == 1:2
     @test complete_skeleton_record.right_column_range == 3:4
     @test complete_skeleton_record.global_dimension == 4
+    @test complete_skeleton_record.left_cpb_summary.object_kind ===
+          :test_left_cpb_summary
+    @test complete_skeleton_record.right_cpb_summary.object_kind ===
+          :test_right_cpb_summary
 
     missing_plan = _complete_placement_facts(;
         accumulation_rule = :test_accumulation_rule,

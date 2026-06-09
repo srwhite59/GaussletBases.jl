@@ -4157,8 +4157,8 @@ function _pqs_source_box_route_driver_private_global_overlap_facts_record_placem
         source_kind = :cpb_overlap_placement_facts_record,
         dense_block_available = record_fact_summary.dense_block_available,
         dense_block_shape = record_fact_summary.dense_block_shape,
-        left_cpb_summary = :unavailable,
-        right_cpb_summary = :unavailable,
+        left_cpb_summary = record_fact_summary.left_cpb_summary,
+        right_cpb_summary = record_fact_summary.right_cpb_summary,
         local_ordering = record_fact_summary.local_ordering,
         placement_status = :unassigned,
         retained_transform_status =

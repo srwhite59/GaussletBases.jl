@@ -739,7 +739,7 @@ function cpb_retained_transform_carry(
     source_support_count = _cpb_retained_transform_source_support_count(source_shape)
     target_retained_column_count =
         _cpb_retained_transform_target_count(target_retained_column_range)
-    transform_available = !isnothing(transform_object)
+    transform_available = transform_object isa AbstractMatrix
     transform_shape =
         transform_object isa AbstractMatrix ? size(transform_object) : :unavailable
     transform_reference_kind =
@@ -815,9 +815,10 @@ function _cpb_retained_transform_carry_blocker(
     transform_shape,
 )
     isnothing(transform_object) && return :missing_retained_transform
+    transform_object isa AbstractMatrix ||
+        return :unsupported_retained_transform_reference
     source_ordering === _LOCAL_ORDERING ||
         return :retained_transform_ordering_mismatch
-    transform_object isa AbstractMatrix || return nothing
     source_support_count isa Integer ||
         return :retained_transform_source_shape_mismatch
     target_retained_column_count isa Integer ||
@@ -1153,6 +1154,18 @@ function _cpb_overlap_placement_record_fact_summary(
             ),
         dense_block_available = record_summary.dense_block_available,
         dense_block_shape = record_summary.dense_block_shape,
+        left_cpb_summary =
+            _cpb_overlap_placement_record_property(
+                record_summary,
+                :left_cpb_summary,
+                :unavailable,
+            ),
+        right_cpb_summary =
+            _cpb_overlap_placement_record_property(
+                record_summary,
+                :right_cpb_summary,
+                :unavailable,
+            ),
         local_ordering = record_summary.local_ordering,
     )
 end
@@ -1181,6 +1194,15 @@ function _cpb_overlap_placement_range_property(
 )
     isnothing(range_summary) && return default
     value = _summary_property(range_summary, property)
+    isnothing(value) ? default : value
+end
+
+function _cpb_overlap_placement_record_property(
+    record_summary,
+    property::Symbol,
+    default = nothing,
+)
+    value = _summary_property(record_summary, property)
     isnothing(value) ? default : value
 end
 
@@ -1262,7 +1284,9 @@ function _cpb_overlap_placement_missing_right_range(record_fact_summary)
 end
 
 function _cpb_overlap_placement_missing_global_dimension(record_fact_summary)
-    return record_fact_summary.placement_range_blocker === :missing_global_dimension
+    return record_fact_summary.placement_range_status ===
+           :missing_source_pair_placement_range ||
+           record_fact_summary.placement_range_blocker === :missing_global_dimension
 end
 
 function _cpb_overlap_placement_available_transforms(record_fact_summary)

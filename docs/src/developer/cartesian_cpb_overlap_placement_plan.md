@@ -215,27 +215,36 @@ Local CPB overlap collection availability is not global overlap availability.
 It means only that structured local CPB product-space overlap data exists and
 is ready for a reviewed placement layer to consume.
 
-## Next Code Step
+## Current Metadata Status
 
-The next likely implementation is a metadata-only placement plan skeleton, not
-numerical placement. That skeleton should carry the collection reference,
-record-level placement facts, transform and range statuses, global dimension
-source, accumulation-rule status, compact summaries, and blockers. It should
-continue to block global overlap until a reviewed numerical placement engine is
-implemented and tested.
+Implemented so far:
 
-The private placement plan skeleton now exists as a metadata-only status
-carrier. It records local collection, record-placement, transform, range,
-dimension-source, placement-plan, and accumulation-rule statuses, but it is not
-a placement engine. It must remain blocked until numerical placement is
-reviewed and implemented separately.
+- private placement plan skeleton;
+- `CPBRetainedTransformCarry`;
+- `CPBSourcePairPlacementRange`;
+- `CPBOverlapPlacementFacts`;
+- private skeleton consumption of `CPBOverlapPlacementFacts`.
+
+Still missing:
+
+- reviewed placement plan object;
+- real retained transforms;
+- source-pair retained column ranges;
+- accumulation rule;
+- numerical transform application;
+- global overlap accumulation.
+
+The private placement plan skeleton is a metadata-only status carrier. It
+records local collection, record-placement, transform, range, dimension-source,
+placement-plan, and accumulation-rule statuses, but it is not a placement
+engine. It must remain blocked until numerical placement is reviewed and
+implemented separately.
 
 The current real probe-enabled report audit finds a structured dimension source
 through `report.retained_units`, so `report.retained_dimension` is not the only
 dimension source in that fixture. It still does not carry structured retained
 transforms, source-pair retained column ranges for `(:product, :product)`, a
-reviewed overlap placement plan, or an accumulation rule. The next code step
-should design those structured carry objects before numerical placement.
+reviewed overlap placement plan, or an accumulation rule.
 
 ## Structured Carry Objects For Placement
 
@@ -264,7 +273,7 @@ Required fields:
   `:parent_compatible_x_slowest_z_fastest`;
 - target retained column count;
 - target retained column range;
-- transform object or transform reference;
+- transform object;
 - transform convention and provenance;
 - status;
 - blocker.
@@ -276,15 +285,21 @@ should not apply the transform. Validation should check:
 - source shape matches the local CPB block side shape;
 - source ordering matches, or an explicit permutation/conversion is carried;
 - target retained column count matches `length(target_retained_column_range)`;
-- transform matrix or reference dimensions match source support count and
-  target retained count.
+- transform matrix dimensions match source support count and target retained
+  count.
+
+The current metadata contract accepts only `AbstractMatrix` transform objects.
+Opaque transform references block with
+`:unsupported_retained_transform_reference` until reference-aware metadata is
+reviewed.
 
 Expected blockers include:
 
 - `:missing_retained_transform`;
 - `:retained_transform_source_shape_mismatch`;
 - `:retained_transform_target_count_mismatch`;
-- `:retained_transform_ordering_mismatch`.
+- `:retained_transform_ordering_mismatch`;
+- `:unsupported_retained_transform_reference`.
 
 ### CPBSourcePairPlacementRange
 
