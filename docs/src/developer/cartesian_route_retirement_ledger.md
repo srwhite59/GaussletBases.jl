@@ -71,7 +71,13 @@ boundary units cover `126:223`, and the retained overlap metric is full rank for
 the 223-column basis. The current q = 5, ns = 5 H energy is
 `-0.4788666674548281` Hartree. The current H2+ `R = 2.0` bohr electronic energy
 is `-1.033841728044377` Hartree, and its Born-Oppenheimer total energy is
-`-0.533841728044377` Hartree.
+`-0.533841728044377` Hartree. The H2+ plus H cc-pVTZ `lmax = 0` diatomic GTO
+supplement now follows the same final-basis supplement projection contract: six
+raw supplement directions, six retained residual directions, final overlap
+identity error about `3.0953017926549364e-13`, final electronic energy
+`-1.0988624733888488` Hartree, and final Born-Oppenheimer total energy
+`-0.5988624733888488` Hartree. The raw generalized combined solve remains a
+diagnostic checkpoint only.
 
 A stabilization audit after the H/H2+ milestone found no active scientific
 acceptance test that still uses a full-parent CPB, direct Cartesian product
@@ -497,7 +503,15 @@ outside this decomposed WL acceptance contract.
   three supplement residual directions are retained, with residual overlap
   eigenvalues approximately `(0.0071608405425023485, 0.03763578221680196,
   0.1570846017479633)` and final overlap identity error about
-  `8.317790900491673e-13`. No generalized-overlap final-basis transfer logic,
+  `8.317790900491673e-13`. The same path now covers H2+ at `R = 2.0` bohr with
+  a two-center H cc-pVTZ `lmax = 0` supplement: the combined dimension is 229,
+  all six supplement residual directions are retained, residual overlap
+  eigenvalues are approximately `(0.015478038531741194, 0.030082756449740733,
+  0.06353938150352825, 0.08009418517290771, 0.22009314627028076,
+  0.27285313627325114)`, final overlap identity error is about
+  `3.0953017926549364e-13`, final electronic energy is
+  `-1.0988624733888488` Hartree, and final Born-Oppenheimer total energy is
+  `-0.5988624733888488` Hartree. No generalized-overlap final-basis transfer logic,
   `ordinary_cartesian_ida_operators`, full-window CPB acceptance route, PQS
   transform, export, or artifact was added.
 - The next overlap implementation boundary is no longer additional placement

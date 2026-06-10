@@ -177,6 +177,16 @@ uses the same full-rank retained overlap metric. The electronic energy is
 Born-Oppenheimer total energy is `-0.533841728044377` Hartree. This is
 variational relative to the exact total reference near `-0.6026342144949465`.
 
+The H2+ plus GTO supplement acceptance uses the same decomposed WL route and
+final-basis GTO residual projection as the H plus GTO fixture. For `R = 2.0`
+bohr with H cc-pVTZ `lmax = 0` supplements on both centers, the combined
+dimension is 229, all six raw supplement residual directions are retained, and
+the final overlap identity error is about `3.0953017926549364e-13`. The final
+ordinary symmetric electronic energy is `-1.0988624733888488` Hartree and the
+Born-Oppenheimer total energy is `-0.5988624733888488` Hartree. The raw
+generalized combined solve is diagnostic-only and is not the active final-basis
+acceptance result.
+
 Do not use the existing nested fixed-block operator matrices as the acceptance
 path. They remain useful historical/oracle material, but they bypass the
 decomposed retained-unit pair inventory that the active WL scientific tests are

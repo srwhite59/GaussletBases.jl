@@ -69,6 +69,18 @@ function _wl_h_acceptance_gto_supplement()
     )
 end
 
+function _wl_h2plus_acceptance_gto_supplement()
+    nuclei = [record.location for record in _wl_h2plus_acceptance_center_records()]
+    return basis_representation(
+        legacy_bond_aligned_diatomic_gaussian_supplement(
+            "H",
+            "cc-pVTZ",
+            nuclei;
+            lmax = 0,
+        ),
+    )
+end
+
 function _wl_acceptance_direct_core_cpb()
     return WLAcceptanceReadinessCPB.cpb(
         2:6,
@@ -1079,6 +1091,197 @@ function _wl_decomposed_h_gto_supplement_acceptance_report()
     )
 end
 
+function _wl_decomposed_h2plus_gto_supplement_acceptance_report()
+    seed_report = GaussletBases._white_lindsey_low_order_materialized_seed_report()
+    axis_inputs = _wl_acceptance_parent_axis_inputs()
+    center_records = _wl_h2plus_acceptance_center_records()
+    decomposed_inventory =
+        WLAcceptanceReadinessCPBM.white_lindsey_decomposed_unit_pair_inventory(
+            seed_report;
+            metadata = (;
+                parent_axis_counts = axis_inputs.parent_axis_counts,
+                parent_axis_bundle_object = axis_inputs.parent_axis_bundle_object,
+            ),
+        )
+    parent = _wl_acceptance_parent_basis(axis_inputs)
+    supplement = _wl_h2plus_acceptance_gto_supplement()
+    expansion = coulomb_gaussian_expansion(doacc = false)
+    bond_length = 2.0
+    nuclear_repulsion = 1.0 / bond_length
+    exact_electronic = -1.1026342144949465
+    exact_total = -0.6026342144949465
+
+    overlap_global = nothing
+    kinetic_global = nothing
+    by_center_global = nothing
+    route_global_mixed_gto_blocks = nothing
+    combined_layout = nothing
+    combined_matrix_assembly = nothing
+    gausslet_hamiltonian = nothing
+    gausslet_solve = nothing
+    combined_solve = nothing
+    final_basis_projection = nothing
+    final_basis_solve = nothing
+    elapsed_seconds = @elapsed begin
+        overlap_global =
+            WLAcceptanceReadinessCPBM.route_global_decomposed_wl_overlap_matrix(
+                seed_report;
+                parent_axis_counts = axis_inputs.parent_axis_counts,
+                parent_axis_bundle_object =
+                    axis_inputs.parent_axis_bundle_object,
+                overlap_1d = axis_inputs.overlap_1d,
+            )
+        kinetic_global =
+            WLAcceptanceReadinessCPBM.route_global_decomposed_wl_kinetic_matrix(
+                seed_report;
+                parent_axis_counts = axis_inputs.parent_axis_counts,
+                parent_axis_bundle_object =
+                    axis_inputs.parent_axis_bundle_object,
+                overlap_1d = axis_inputs.overlap_1d,
+                kinetic_1d = axis_inputs.kinetic_1d,
+            )
+        by_center_global =
+            WLAcceptanceReadinessCPBM.route_global_electron_nuclear_by_center_matrices(
+                seed_report;
+                parent_axis_counts = axis_inputs.parent_axis_counts,
+                parent_axis_bundle_object =
+                    axis_inputs.parent_axis_bundle_object,
+                coulomb_expansion = expansion,
+                center_records,
+            )
+        combined_layout =
+            WLAcceptanceReadinessCPBM.route_global_combined_gto_basis_layout(
+                decomposed_inventory,
+                supplement,
+            )
+        route_global_mixed_gto_blocks =
+            WLAcceptanceReadinessCPBM.route_global_mixed_gto_blocks_from_decomposed_units(
+                decomposed_inventory,
+                parent,
+                supplement;
+                expansion,
+                center_records,
+            )
+        combined_matrix_assembly =
+            WLAcceptanceReadinessCPBM.route_global_combined_gto_one_electron_matrices(
+                combined_layout;
+                overlap_result = overlap_global,
+                kinetic_result = kinetic_global,
+                electron_nuclear_by_center_results = by_center_global,
+                gto_bundle = route_global_mixed_gto_blocks,
+                mixed_gausslet_row_range =
+                    route_global_mixed_gto_blocks.mixed_gausslet_row_range,
+            )
+        gausslet_hamiltonian =
+            WLAcceptanceReadinessCPBM.white_lindsey_decomposed_one_electron_hamiltonian(
+                kinetic_global,
+                by_center_global,
+            )
+        gausslet_overlap_diagnostics =
+            _wl_overlap_metric_diagnostics(overlap_global.matrix, decomposed_inventory)
+        gausslet_solve = _wl_lowest_one_electron_energy(
+            gausslet_hamiltonian.matrix,
+            overlap_global.matrix,
+            gausslet_overlap_diagnostics,
+        )
+        combined_solve =
+            _wl_combined_gto_one_electron_solve(combined_matrix_assembly)
+        final_basis_projection =
+            WLAcceptanceReadinessCPBM.route_global_combined_gto_final_basis_projection(
+                combined_matrix_assembly,
+            )
+        final_basis_solve =
+            _wl_final_basis_gto_one_electron_solve(final_basis_projection)
+    end
+
+    gausslet_total_energy = gausslet_solve.energy + nuclear_repulsion
+    final_total_energy = final_basis_solve.energy + nuclear_repulsion
+    final_basis_solve_available =
+        final_basis_solve.status ===
+        :materialized_decomposed_wl_gto_final_basis_one_electron_solve
+    return (;
+        object_kind =
+            :decomposed_wl_h2plus_gto_supplement_final_basis_acceptance_report,
+        status =
+            final_basis_solve_available ?
+            :materialized_decomposed_wl_h2plus_gto_supplement_acceptance :
+            :blocked_decomposed_wl_h2plus_gto_supplement_acceptance,
+        blocker = final_basis_solve.blocker,
+        acceptance_suite =
+            :decomposed_wl_gausslet_plus_gto_one_electron_acceptance,
+        acceptance_fixture = :h2plus_gto_supplement,
+        q = 5,
+        ns = 5,
+        n_s = 5,
+        bond_length,
+        center_count = length(center_records),
+        center_keys = Tuple(record.center_key for record in center_records),
+        center_locations = Tuple(record.location for record in center_records),
+        nuclear_charges = Tuple(record.nuclear_charge for record in center_records),
+        nuclear_repulsion,
+        supplement_kind = supplement.supplement_kind,
+        supplement_orbital_count = length(supplement.orbitals),
+        supplement_orbital_labels =
+            Tuple(orbital.label for orbital in supplement.orbitals),
+        decomposed_unit_count = decomposed_inventory.unit_count,
+        decomposed_unit_pair_count = decomposed_inventory.pair_count,
+        gausslet_retained_dimension = decomposed_inventory.retained_dimension,
+        combined_dimension = combined_layout.total_combined_dimension,
+        route_global_combined_matrix_assembly_status =
+            combined_matrix_assembly.status,
+        route_global_combined_matrix_assembly_blocker =
+            combined_matrix_assembly.blocker,
+        route_global_combined_overlap_positive_definite =
+            combined_matrix_assembly.overlap_positive_definite,
+        route_global_combined_overlap_condition_estimate =
+            combined_matrix_assembly.overlap_condition_estimate,
+        raw_combined_galerkin_checkpoint_status =
+            combined_solve.status ===
+            :materialized_decomposed_wl_gto_supplement_one_electron_solve ?
+            :temporary_raw_combined_galerkin_checkpoint :
+            :blocked_temporary_raw_combined_galerkin_checkpoint,
+        raw_combined_galerkin_solve_kind = combined_solve.solve_kind,
+        raw_combined_galerkin_energy = combined_solve.energy,
+        final_basis_projection_status = final_basis_projection.status,
+        final_basis_projection_blocker = final_basis_projection.blocker,
+        raw_supplement_count = final_basis_projection.raw_supplement_count,
+        retained_supplement_count =
+            final_basis_projection.retained_supplement_count,
+        dropped_supplement_count =
+            final_basis_projection.dropped_supplement_count,
+        residual_overlap_eigenvalues =
+            final_basis_projection.residual_overlap_eigenvalues,
+        final_overlap_identity_error =
+            final_basis_projection.final_overlap_identity_error,
+        final_overlap_identity_tolerance =
+            final_basis_projection.final_overlap_identity_tolerance,
+        generalized_overlap_final_solve =
+            final_basis_projection.generalized_overlap_final_solve,
+        ordinary_hermitian_final_solve_ready =
+            final_basis_projection.ordinary_hermitian_final_solve_ready,
+        final_basis_solve_status = final_basis_solve.status,
+        final_basis_solve_blocker = final_basis_solve.blocker,
+        final_basis_solve_kind = final_basis_solve.solve_kind,
+        gausslet_only_electronic_energy = gausslet_solve.energy,
+        gausslet_only_total_bo_energy = gausslet_total_energy,
+        final_electronic_energy = final_basis_solve.energy,
+        final_total_bo_energy = final_total_energy,
+        total_bo_energy_improvement =
+            gausslet_total_energy - final_total_energy,
+        exact_electronic_energy = exact_electronic,
+        exact_total_bo_energy = exact_total,
+        final_total_bo_energy_distance_from_exact =
+            final_total_energy - exact_total,
+        active_h2plus_gto_acceptance_solve = final_basis_solve_available,
+        elapsed_seconds,
+        full_parent_window_cpb_used = false,
+        direct_cartesian_product_assembly_used = false,
+        ordinary_cartesian_ida_operators_used = false,
+        pqs_transforms_materialized = false,
+        exports_or_artifacts = false,
+    )
+end
+
 @testset "decomposed WL gausslet-only H atom acceptance" begin
     report = _wl_decomposed_h_atom_acceptance_report()
     println("decomposed WL gausslet-only H atom acceptance: ", report)
@@ -1176,6 +1379,61 @@ end
     @test report.h_atom_acceptance_active
     @test report.acceptance_fixture_active
     @test report.elapsed_seconds >= 0.0
+end
+
+@testset "decomposed WL H2+ GTO supplement final-basis acceptance" begin
+    report = _wl_decomposed_h2plus_gto_supplement_acceptance_report()
+    println("decomposed WL H2+ GTO supplement final-basis acceptance: ", report)
+
+    @test report.status ==
+          :materialized_decomposed_wl_h2plus_gto_supplement_acceptance
+    @test isnothing(report.blocker)
+    @test report.acceptance_suite ==
+          :decomposed_wl_gausslet_plus_gto_one_electron_acceptance
+    @test report.acceptance_fixture == :h2plus_gto_supplement
+    @test report.q == 5
+    @test report.ns == 5
+    @test report.n_s == 5
+    @test report.bond_length == 2.0
+    @test report.center_count == 2
+    @test report.center_keys == (:proton_a, :proton_b)
+    @test report.supplement_kind == :bond_aligned_diatomic_cartesian_shell
+    @test report.supplement_orbital_count == 6
+    @test report.gausslet_retained_dimension == 223
+    @test report.combined_dimension == 229
+    @test report.route_global_combined_matrix_assembly_status ==
+          :materialized_route_global_combined_gto_one_electron_matrices
+    @test isnothing(report.route_global_combined_matrix_assembly_blocker)
+    @test report.route_global_combined_overlap_positive_definite
+    @test report.raw_combined_galerkin_checkpoint_status ==
+          :temporary_raw_combined_galerkin_checkpoint
+    @test report.raw_combined_galerkin_solve_kind == :generalized_symmetric
+    @test report.final_basis_projection_status ==
+          :materialized_route_global_combined_gto_final_basis_projection
+    @test isnothing(report.final_basis_projection_blocker)
+    @test report.raw_supplement_count == 6
+    @test 0 < report.retained_supplement_count <= report.raw_supplement_count
+    @test length(report.residual_overlap_eigenvalues) ==
+          report.raw_supplement_count
+    @test report.final_overlap_identity_error <=
+          report.final_overlap_identity_tolerance
+    @test !report.generalized_overlap_final_solve
+    @test report.ordinary_hermitian_final_solve_ready
+    @test report.final_basis_solve_status ==
+          :materialized_decomposed_wl_gto_final_basis_one_electron_solve
+    @test isnothing(report.final_basis_solve_blocker)
+    @test report.final_basis_solve_kind == :ordinary_symmetric
+    @test report.active_h2plus_gto_acceptance_solve
+    @test report.final_total_bo_energy < report.gausslet_only_total_bo_energy
+    @test report.total_bo_energy_improvement > 0.0
+    @test report.final_total_bo_energy > report.exact_total_bo_energy
+    @test report.final_electronic_energy > report.exact_electronic_energy
+    @test report.elapsed_seconds >= 0.0
+    @test !report.full_parent_window_cpb_used
+    @test !report.direct_cartesian_product_assembly_used
+    @test !report.ordinary_cartesian_ida_operators_used
+    @test !report.pqs_transforms_materialized
+    @test !report.exports_or_artifacts
 end
 
 @testset "decomposed WL H GTO supplement final-basis acceptance" begin
