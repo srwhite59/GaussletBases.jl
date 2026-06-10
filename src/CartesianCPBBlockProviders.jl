@@ -29,6 +29,7 @@ export CPBIntervalPair3D,
        CPBGTOSupplementOneBodyBlock,
        CPBMixedGTOSupplementNuclearByCenterBlock,
        CPBGTOSupplementNuclearByCenterBlock,
+       CPBGTOSupplementLocalOperatorBundle,
        CPBElectronElectronLocalBlock,
        CPBElectronNuclearByCenterLocalBlock,
        CPBLocalIntegralWeights,
@@ -53,6 +54,7 @@ export CPBIntervalPair3D,
        cpb_gto_kinetic_operator_block,
        cpb_mixed_gto_nuclear_by_center_block,
        cpb_gto_nuclear_by_center_block,
+       cpb_gto_supplement_local_operator_bundle,
        cpb_electron_electron_local_block,
        cpb_electron_nuclear_by_center_local_block,
        cpb_local_integral_weights,
@@ -272,6 +274,28 @@ struct CPBGTOSupplementNuclearByCenterBlock{S,E,R,D,M}
 end
 
 """
+    CPBGTOSupplementLocalOperatorBundle
+
+Compact provider-level bundle of the early-stage CPB/GTO supplement local
+operator blocks. The bundle stores references to existing mixed CPB/GTO,
+GTO/GTO, and by-center nuclear block objects; its summary stays compact and
+does not duplicate dense block payloads. It is not route/global placement,
+Hamiltonian assembly, or WL/PQS realization.
+"""
+struct CPBGTOSupplementLocalOperatorBundle{P,C,S,E,R,MB,GB,MN,GN,M}
+    parent::P
+    cpb::C
+    supplement::S
+    expansion::E
+    center_records::R
+    mixed_blocks::MB
+    gto_blocks::GB
+    mixed_nuclear_by_center_blocks::MN
+    gto_nuclear_by_center_blocks::GN
+    metadata::M
+end
+
+"""
     CPBElectronElectronLocalBlock
 
 Provider-level CPB-local electron-electron pair-factor interaction block. This
@@ -459,6 +483,7 @@ summary(block::CPBMixedGTOSupplementLocalBlock) = block.metadata
 summary(block::CPBGTOSupplementOneBodyBlock) = block.metadata
 summary(block::CPBMixedGTOSupplementNuclearByCenterBlock) = block.metadata
 summary(block::CPBGTOSupplementNuclearByCenterBlock) = block.metadata
+summary(bundle::CPBGTOSupplementLocalOperatorBundle) = bundle.metadata
 summary(block::CPBElectronElectronLocalBlock) = block.metadata
 summary(block::CPBElectronNuclearByCenterLocalBlock) = block.metadata
 summary(weights::CPBLocalIntegralWeights) = weights.metadata
@@ -2055,6 +2080,90 @@ function cpb_gto_nuclear_by_center_block(supplement, expansion, center_record)
     )
 end
 
+function cpb_gto_supplement_local_operator_bundle(
+    parent::CPGB.CartesianParentGaussletBasis3D,
+    cpb::CPB.CoordinateProductBox,
+    supplement;
+    expansion = nothing,
+    center_records = (),
+)
+    center_records_tuple = Tuple(center_records)
+    mixed_blocks = (;
+        overlap = cpb_mixed_gto_overlap_block(parent, cpb, supplement),
+        kinetic = cpb_mixed_gto_kinetic_operator_block(parent, cpb, supplement),
+        position_x = cpb_mixed_gto_position_operator_block(
+            parent,
+            cpb,
+            supplement;
+            axis = :x,
+        ),
+        position_y = cpb_mixed_gto_position_operator_block(
+            parent,
+            cpb,
+            supplement;
+            axis = :y,
+        ),
+        position_z = cpb_mixed_gto_position_operator_block(
+            parent,
+            cpb,
+            supplement;
+            axis = :z,
+        ),
+        x2_x = cpb_mixed_gto_x2_operator_block(parent, cpb, supplement; axis = :x),
+        x2_y = cpb_mixed_gto_x2_operator_block(parent, cpb, supplement; axis = :y),
+        x2_z = cpb_mixed_gto_x2_operator_block(parent, cpb, supplement; axis = :z),
+    )
+    gto_blocks = (;
+        overlap = cpb_gto_overlap_operator_block(supplement),
+        kinetic = cpb_gto_kinetic_operator_block(supplement),
+        position_x = cpb_gto_position_operator_block(supplement; axis = :x),
+        position_y = cpb_gto_position_operator_block(supplement; axis = :y),
+        position_z = cpb_gto_position_operator_block(supplement; axis = :z),
+        x2_x = cpb_gto_x2_operator_block(supplement; axis = :x),
+        x2_y = cpb_gto_x2_operator_block(supplement; axis = :y),
+        x2_z = cpb_gto_x2_operator_block(supplement; axis = :z),
+    )
+    mixed_nuclear_by_center_blocks = Tuple(
+        cpb_mixed_gto_nuclear_by_center_block(
+            parent,
+            cpb,
+            supplement,
+            expansion,
+            center_record,
+        ) for center_record in center_records_tuple
+    )
+    gto_nuclear_by_center_blocks = Tuple(
+        cpb_gto_nuclear_by_center_block(
+            supplement,
+            expansion,
+            center_record,
+        ) for center_record in center_records_tuple
+    )
+    metadata = _cpb_gto_supplement_local_operator_bundle_summary(
+        parent,
+        cpb,
+        supplement,
+        expansion,
+        center_records_tuple,
+        mixed_blocks,
+        gto_blocks,
+        mixed_nuclear_by_center_blocks,
+        gto_nuclear_by_center_blocks,
+    )
+    return CPBGTOSupplementLocalOperatorBundle(
+        parent,
+        cpb,
+        supplement,
+        expansion,
+        center_records_tuple,
+        mixed_blocks,
+        gto_blocks,
+        mixed_nuclear_by_center_blocks,
+        gto_nuclear_by_center_blocks,
+        metadata,
+    )
+end
+
 function _cpb_mixed_gto_supplement_block(
     parent::CPGB.CartesianParentGaussletBasis3D,
     cpb::CPB.CoordinateProductBox,
@@ -3320,6 +3429,171 @@ function _cpb_gto_nuclear_by_center_block_summary(
         hamiltonian_assembly = false,
         hamiltonian_data_materialized = false,
         coulomb_data_materialized = false,
+        ida_mwg_semantics = false,
+        pqs_lowdin_materialized = false,
+        pqs_shell_projection_materialized = false,
+        exports_or_artifacts = false,
+    )
+end
+
+function _cpb_gto_supplement_bundle_one_body_entries(blocks)
+    return Tuple(
+        let block_summary = summary(block)
+            (;
+                term = block_summary.term,
+                status = block_summary.status,
+                blocker = block_summary.blocker,
+                dense_block_available = block_summary.dense_block_available,
+                dense_block_shape = block_summary.dense_block_shape,
+                dense_block_eltype = block_summary.dense_block_eltype,
+            )
+        end for block in values(blocks)
+    )
+end
+
+function _cpb_gto_supplement_bundle_nuclear_entries(blocks, term::Symbol)
+    return Tuple(
+        let block_summary = summary(block)
+            (;
+                term,
+                status = block_summary.status,
+                blocker = block_summary.blocker,
+                center_index = block_summary.center_index,
+                center_location = block_summary.center_location,
+                nuclear_charge = block_summary.nuclear_charge,
+                dense_block_available = block_summary.dense_block_available,
+                dense_block_shape = block_summary.dense_block_shape,
+                dense_block_eltype = block_summary.dense_block_eltype,
+            )
+        end for block in blocks
+    )
+end
+
+function _cpb_gto_supplement_local_operator_bundle_summary(
+    parent::CPGB.CartesianParentGaussletBasis3D,
+    cpb::CPB.CoordinateProductBox,
+    supplement,
+    expansion,
+    center_records,
+    mixed_blocks,
+    gto_blocks,
+    mixed_nuclear_by_center_blocks,
+    gto_nuclear_by_center_blocks,
+)
+    mixed_entries = _cpb_gto_supplement_bundle_one_body_entries(mixed_blocks)
+    gto_entries = _cpb_gto_supplement_bundle_one_body_entries(gto_blocks)
+    mixed_nuclear_entries = _cpb_gto_supplement_bundle_nuclear_entries(
+        mixed_nuclear_by_center_blocks,
+        :mixed_gto_electron_nuclear_by_center,
+    )
+    gto_nuclear_entries = _cpb_gto_supplement_bundle_nuclear_entries(
+        gto_nuclear_by_center_blocks,
+        :gto_electron_nuclear_by_center,
+    )
+    term_entries = (
+        mixed_entries...,
+        gto_entries...,
+        mixed_nuclear_entries...,
+        gto_nuclear_entries...,
+    )
+    included_terms = Tuple(
+        unique(entry.term for entry in term_entries if entry.dense_block_available == true),
+    )
+    missing_terms = Tuple(
+        unique(entry.term for entry in term_entries if entry.dense_block_available != true),
+    )
+    first_blocked_index = findfirst(
+        entry -> entry.dense_block_available != true,
+        term_entries,
+    )
+    blocker =
+        isnothing(first_blocked_index) ?
+        nothing :
+        term_entries[first_blocked_index].blocker
+    status =
+        isempty(missing_terms) ?
+        :materialized_cpb_gto_supplement_local_operator_bundle :
+        :blocked_cpb_gto_supplement_local_operator_bundle
+    local_shape = _axis_named_tuple(CPB.shape(cpb))
+    orbital_count =
+        _is_cartesian_gaussian_shell_supplement(supplement) ?
+        length(supplement.orbitals) :
+        :unavailable
+    center_summaries = Tuple(
+        _cpb_electron_nuclear_center_summary(center_record) for
+        center_record in center_records
+    )
+    nuclear_requested = !isempty(center_records)
+    nuclear_charge_recorded =
+        nuclear_requested &&
+        all(center_summary.charge != :unavailable for center_summary in center_summaries)
+    return (;
+        object_kind = :cartesian_cpb_gto_supplement_local_operator_bundle_summary,
+        status,
+        blocker,
+        supplement_representation_kind =
+            :cartesian_gaussian_shell_supplement_representation,
+        supplement_kind =
+            _is_cartesian_gaussian_shell_supplement(supplement) ?
+            supplement.supplement_kind :
+            :unavailable,
+        source_metadata_summary =
+            _is_cartesian_gaussian_shell_supplement(supplement) ?
+            supplement.metadata :
+            :unavailable,
+        cpb_summary = (;
+            role = CPB.role(cpb),
+            intervals = _axis_named_tuple(CPB.intervals(cpb)),
+            shape = local_shape,
+            support_count = CPB.support_count(cpb),
+            codimension = CPB.codimension(cpb),
+        ),
+        cpb_support_count = CPB.support_count(cpb),
+        gto_orbital_count = orbital_count,
+        orbital_count,
+        orbital_labels =
+            _is_cartesian_gaussian_shell_supplement(supplement) ?
+            Tuple(orbital.label for orbital in supplement.orbitals) :
+            :unavailable,
+        included_term_list = included_terms,
+        missing_term_list = missing_terms,
+        included_terms,
+        missing_terms,
+        mixed_one_body_term_count = length(mixed_entries),
+        gto_one_body_term_count = length(gto_entries),
+        by_center_nuclear_count = length(center_records),
+        mixed_by_center_nuclear_count = length(mixed_nuclear_by_center_blocks),
+        gto_by_center_nuclear_count = length(gto_nuclear_by_center_blocks),
+        nuclear_charge_recorded,
+        nuclear_charge_applied = false,
+        center_summation = false,
+        centers_summed = false,
+        center_records_available = nuclear_requested,
+        center_indices = Tuple(center_summary.center_index for center_summary in center_summaries),
+        center_locations = Tuple(center_summary.location for center_summary in center_summaries),
+        nuclear_charges = Tuple(center_summary.charge for center_summary in center_summaries),
+        expansion_available =
+            nuclear_requested ?
+            isnothing(_cpb_gto_nuclear_expansion_blocker(expansion)) :
+            expansion !== nothing,
+        provider_level_local_blocks_materialized = isempty(missing_terms),
+        provider_level_pilot = true,
+        mixed_gto_pilot = true,
+        gto_supplement_self_blocks_included = true,
+        nuclear_by_center_blocks_included = nuclear_requested,
+        dense_payloads_stored_on_block_objects = true,
+        summary_copies_dense_payloads = false,
+        local_ordering = _LOCAL_ORDERING,
+        representation = :provider_level_cpb_gto_supplement_local_operator_bundle,
+        realization_status = :unrealized,
+        route_global_status = :unassigned,
+        route_driver_wiring = false,
+        route_global_matrix_materialized = false,
+        route_global_overlap_matrix_materialized = false,
+        global_matrix_materialized = false,
+        global_overlap_matrix_materialized = false,
+        hamiltonian_assembly = false,
+        hamiltonian_data_materialized = false,
         ida_mwg_semantics = false,
         pqs_lowdin_materialized = false,
         pqs_shell_projection_materialized = false,
