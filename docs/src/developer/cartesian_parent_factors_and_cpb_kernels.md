@@ -221,6 +221,224 @@ placement metadata layers before deciding how real White-Lindsey and PQS
 realization should consume CPB operator blocks and how real retained transforms
 and ranges should be produced.
 
+## Mixed Gausslet/GTO Supplement Port Map
+
+The mixed gausslet/GTO supplement path should be ported into the CPB operator
+layer by adapting the existing polynomial-Gaussian integral code. Do not
+rederive shell formulas in CPB providers.
+
+### Existing Function Surfaces
+
+The exact supplement representation is
+`CartesianGaussianShellSupplementRepresentation3D` in
+`src/cartesian_basis_representation.jl`. Each
+`CartesianGaussianShellOrbitalRepresentation3D` carries:
+
+- `label`
+- `angular_powers`
+- `center`
+- `exponents`
+- `coefficients`
+- `primitive_normalization`
+
+The active normalization convention is
+`:axiswise_normalized_cartesian_gaussian`. This convention is part of the
+mixed-kernel metadata contract; CPB adapters should not silently accept another
+normalization.
+
+The current mixed overlap/GTO projection surfaces are:
+
+- `src/cartesian_cross_overlap.jl`
+  - `_cartesian_basis_supplement_axis_primitive_cross` builds one-axis
+    primitive overlap tables between a Cartesian basis axis and one supplement
+    orbital using `_qwrg_atomic_basic_integral`.
+  - `_cartesian_basis_supplement_cross` contracts those axis tables into a 3D
+    Cartesian-by-supplement overlap block.
+  - `_cartesian_supplement_orbital_axis_overlap_matrix` and
+    `_cartesian_supplement_cross_overlap` build supplement-by-supplement
+    overlap blocks.
+- `src/cartesian_gto_probes.jl`
+  - `_pqs_source_box_gto_axis_projection` slices/projects one-axis primitive
+    supplement overlaps for a raw product-box interval.
+  - `_pqs_source_box_gto_cross_overlap_shadow` forms a source-box/GTO overlap
+    diagnostic from those projected axis tables. It is a shadow/fingerprint
+    route, not CPB operator adoption.
+  - `gto_overlap_matrix` and `_cartesian_final_gto_cross_overlap_handoff`
+    remain final-basis/GTO diagnostic and handoff surfaces.
+
+The current Qiu-White/raw mixed one-body and Gaussian-factor surfaces are:
+
+- `src/ordinary_qw_raw_blocks.jl`
+  - `_qwrg_atomic_shell_prefactor`, `_qwrg_atomic_basic_integral`, and
+    `_qwrg_atomic_kinetic_integral` are wrappers around
+    `GaussianAnalyticIntegrals` polynomial-Gaussian formulas.
+  - `_qwrg_atomic_axis_cross_data` builds one-axis gausslet-proxy by
+    supplement-primitive tables for overlap, kinetic, position, x2, and
+    centered Gaussian factor terms.
+  - `_qwrg_atomic_axis_aa_data` builds the corresponding
+    supplement-primitive by supplement-primitive tables.
+  - `_qwrg_cartesian_shell_cross_moment_blocks_3d` contracts mixed axis tables
+    into 3D `overlap_ga`, `kinetic_ga`, `position_*_ga`, `x2_*_ga`, and
+    `factor_ga` blocks.
+  - `_qwrg_cartesian_shell_self_moment_blocks_3d` builds the analogous
+    supplement self blocks.
+  - `_qwrg_atomic_axis_factor_cross_data` and
+    `_qwrg_atomic_axis_factor_aa_data` build shifted per-center Gaussian factor
+    tables used by molecular nuclear terms.
+  - `_qwrg_diatomic_cartesian_shell_overlap_blocks_3d` and
+    `_qwrg_diatomic_cartesian_shell_blocks_3d` are the existing mixed
+    Cartesian-shell molecular block surfaces. The latter returns by-center
+    nuclear mixed pieces as `nuclear_ga_by_center` and `nuclear_aa_by_center`.
+  - `_qwrg_cross_1d_blocks_proxy` and `_qwrg_cross_1d_blocks` provide the
+    current proxy-based analytic Gaussian primitive cross-block path for
+    simple 1D supplement data. `_qwrg_cross_1d_blocks_midpoint` is an older
+    midpoint route and should be treated as reference/debug context, not the
+    preferred CPB port.
+  - `_qwrg_raw_overlap_blocks`, `_qwrg_raw_kinetic_cross_block`,
+    `_qwrg_raw_axis_blocks`, `_qwrg_raw_factor_cross_blocks`, and
+    `_qwrg_raw_one_body_blocks` show the current product contractions for
+    overlap, kinetic, position/x2, Gaussian factors, and combined one-body
+    terms.
+
+The shared formula source is `src/GaussianAnalyticIntegrals.jl`:
+
+- `polynomial_gaussian_shell_prefactor`
+- `polynomial_gaussian_basic_integral`
+- `polynomial_gaussian_kinetic_integral`
+- `polynomial_gaussian_pair_factor_integral`
+- `centered_polynomial_gaussian_pair_factor_integral`
+
+`polynomial_gaussian_basic_integral` already accepts `xpower`, so higher
+coordinate moments are formula-supported. The existing mixed QW surfaces expose
+position and x2 explicitly; x3 and higher should be added later as named
+wrappers over this existing formula source only after a term-level convention is
+reviewed.
+
+For pure GTO/supplement Coulomb references, `src/gaussian_coulomb_reference.jl`
+contains the small-system analytic reference path:
+
+- `gaussian_coulomb_pair_matrix`
+- `_gaussian_coulomb_pair_terms`
+- `_gaussian_coulomb_pair_integral`
+- `_gaussian_coulomb_pair_matrix_compressed_checked`
+- `_gaussian_centered_pair_terms`
+
+These are oracle/reference surfaces for supplement pair Coulomb behavior. They
+are not a large-system CPB kernel, but they define useful polynomial-Gaussian
+pair conventions.
+
+`src/radial_ylm_gto_bridge.jl` is an input-record bridge, not an operator
+kernel. `radial_ylm_fit_cartesian_gto_adapter` converts centered radial/Ylm
+fits into `CartesianGaussianShellSupplementRepresentation3D` plus a coefficient
+map using the same axiswise normalized Cartesian primitive convention.
+
+### CPB-Local Reuse Boundary
+
+The CPB-local mixed supplement layer should consume prepared source records and
+existing axis kernels:
+
+1. Build or reference mixed one-axis tables with the existing
+   polynomial-Gaussian helpers.
+2. Slice those tables by CPB intervals or source-box intervals.
+3. Use the existing CPB operator primitives for simple one-body separable
+   terms:
+   - overlap as one axis-product term;
+   - kinetic as `Kx Sy Sz + Sx Ky Sz + Sx Sy Kz`;
+   - position as one explicit coordinate axis factor times overlap factors;
+   - x2 and later coordinate moments as explicit moment factors times overlap
+     factors.
+4. Keep nuclear attraction as a by-center Gaussian-sum one-body kernel, using
+   `_qwrg_atomic_axis_factor_cross_data` /
+   `_qwrg_atomic_axis_factor_aa_data` conventions for shifted centers and
+   expansion terms.
+5. Keep electron-electron or Gaussian pair-factor work in the Coulomb-family
+   kernel family, not in the simple axis-product one-body primitive.
+
+Reusable CPB-local axis kernel candidates are therefore:
+
+- mixed overlap axis tables from `_cartesian_basis_supplement_axis_primitive_cross`
+  for product-box/GTO overlap projections;
+- mixed overlap/kinetic/position/x2/factor axis tables from
+  `_qwrg_atomic_axis_cross_data`;
+- supplement self overlap/kinetic/position/x2/factor axis tables from
+  `_qwrg_atomic_axis_aa_data`;
+- shifted center factor tables from `_qwrg_atomic_axis_factor_cross_data` and
+  `_qwrg_atomic_axis_factor_aa_data`;
+- pure supplement Coulomb pair reference terms from
+  `gaussian_coulomb_pair_matrix` and its private term builders for tiny oracle
+  comparisons only.
+
+The CPB layer should not consume loose dense final matrices or final-basis GTO
+handoff results as authority. Those are oracle surfaces or diagnostics.
+
+### Required Input Records
+
+A future mixed CPB supplement adapter needs compact structured inputs:
+
+- parent identity and parent axis counts;
+- left/right CPB or source-box interval metadata, in x/y/z order;
+- local ordering `:parent_compatible_x_slowest_z_fastest`;
+- `CartesianGaussianShellSupplementRepresentation3D` or a compact per-orbital
+  record with label, angular powers, center, exponents, coefficients, and
+  primitive normalization;
+- a contraction convention for primitive-to-orbital coefficients;
+- a source for gausslet/proxy axis rows, for example
+  `_MappedOrdinaryGausslet1DBundle` plus its auxiliary proxy layer or an
+  already-carried axis table object;
+- `CoulombGaussianExpansion` when Gaussian factors, nuclear attraction, or
+  pair factors are requested;
+- center/nucleus identity, charge, and center coordinates for electron-nuclear
+  by-center terms;
+- explicit term labels such as `:overlap`, `:kinetic`, `:position_x`,
+  `:x2_z`, `:electron_nuclear_by_center`, or
+  `:electron_electron_pair_factor`.
+
+### Metadata And Convention Labels
+
+Mixed CPB operator records should carry compact labels rather than scalar field
+clouds:
+
+- `source_kind = :mixed_gausslet_gto_supplement_operator_block`
+- `axis_kernel_source = :existing_qw_polynomial_gaussian_axis_tables`
+- `formula_source = :GaussianAnalyticIntegrals_polynomial_gaussian`
+- `supplement_representation = :CartesianGaussianShellSupplementRepresentation3D`
+- `primitive_normalization = :axiswise_normalized_cartesian_gaussian`
+- `contraction_convention = :orbital_coefficients_contract_primitive_axis_tables`
+- `center_shift_convention = :explicit_axis_center_coordinates`
+- `shell_power_order = (:x, :y, :z)`
+- `axis_order = (:x, :y, :z)`
+- `local_ordering = :parent_compatible_x_slowest_z_fastest`
+- `galerkin_operator = true` for one-body operator blocks
+- `by_center = true` for electron-nuclear center records
+- `centers_summed = false` unless a later summation wrapper is explicitly added
+- `ida_mwg_semantics = false`
+- `route_driver_wiring = false`
+- `route_global_matrix_materialized = false`
+- `hamiltonian_assembly = false`
+- `exports_or_artifacts = false`
+
+### First Equivalence Test Later
+
+The first implementation test should be a tiny provider-level equivalence, not
+a route/Hamiltonian test:
+
+1. Build a small Cartesian product parent plus one
+   `CartesianGaussianShellSupplementRepresentation3D` orbital.
+2. Select a point, edge, or face CPB interval pair.
+3. Build a CPB-local mixed overlap block from the existing axis table source and
+   the CPB axis-product primitive.
+4. Compare only the corresponding local submatrix against the existing
+   `_cartesian_basis_supplement_cross`, `_pqs_source_box_gto_cross_overlap_shadow`,
+   or `_qwrg_diatomic_cartesian_shell_overlap_blocks_3d` oracle, depending on
+   the fixture.
+
+A second tiny test can do `position_x` or `x2_x` against
+`_qwrg_diatomic_cartesian_shell_blocks_3d`. Nuclear attraction should remain
+by-center and compare against `nuclear_ga_by_center` /
+`nuclear_aa_by_center` from that existing path. Electron-electron supplement
+pair behavior should use `gaussian_coulomb_pair_matrix` or the current
+White-Lindsey Coulomb matrix as an oracle, not a route-global Hamiltonian.
+
 ## Parent Axis Factor Packet
 
 A possible top-level shape is:

@@ -348,6 +348,23 @@ paths from becoming new route authority.
   are not built or carried by this adapter. No numerical Coulomb block, CPB
   Coulomb kernel, WL/PQS realization, route/global placement, Hamiltonian
   assembly, IDA/MWG/PQS semantic change, export, or artifact was added.
+- The mixed gausslet/GTO supplement port map is now documented as a CPB-local
+  operator-layer adaptation of existing polynomial-Gaussian code, not a formula
+  rewrite. The reusable source surfaces are
+  `_cartesian_basis_supplement_axis_primitive_cross`,
+  `_cartesian_basis_supplement_cross`,
+  `_qwrg_atomic_axis_cross_data`, `_qwrg_atomic_axis_aa_data`,
+  `_qwrg_cartesian_shell_cross_moment_blocks_3d`,
+  `_qwrg_cartesian_shell_self_moment_blocks_3d`,
+  `_qwrg_atomic_axis_factor_cross_data`,
+  `_qwrg_atomic_axis_factor_aa_data`,
+  `_qwrg_diatomic_cartesian_shell_overlap_blocks_3d`, and
+  `_qwrg_diatomic_cartesian_shell_blocks_3d`, with
+  `GaussianAnalyticIntegrals` as the polynomial-Gaussian formula source. The
+  first future test should compare a tiny CPB-local mixed overlap or coordinate
+  moment block against those existing QW/GTO oracle surfaces. No mixed GTO CPB
+  kernel, route/global placement, Hamiltonian assembly, IDA/MWG/PQS semantic
+  change, export, or artifact was added.
 - The next overlap implementation boundary is no longer additional placement
   fingerprinting. First decide the CPB operator-block and WL/PQS realization
   design: what local block objects exist, how White-Lindsey consumes them, how
