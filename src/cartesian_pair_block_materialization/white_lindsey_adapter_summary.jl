@@ -591,6 +591,7 @@ function _white_lindsey_unit_descriptor_status(
 end
 
 function _white_lindsey_stratum_codimension_matches(stratum_kind, codimension)
+    stratum_kind === :direct_core && return codimension == 0
     stratum_kind in (:facet_cpb, :face_cpb) && return codimension == 1
     stratum_kind === :edge_cpb && return codimension == 2
     stratum_kind === :corner_cpb && return codimension == 3
@@ -615,6 +616,7 @@ function _white_lindsey_pair_family_classification(
 end
 
 function _white_lindsey_stratum_family(stratum_kind)
+    stratum_kind === :direct_core && return :direct_core
     stratum_kind in (:facet_cpb, :face_cpb) && return :facet
     stratum_kind === :edge_cpb && return :edge
     stratum_kind === :corner_cpb && return :corner
@@ -622,6 +624,7 @@ function _white_lindsey_stratum_family(stratum_kind)
 end
 
 function _white_lindsey_stratum_family_rank(stratum_family::Symbol)
+    stratum_family === :direct_core && return 0
     stratum_family === :facet && return 1
     stratum_family === :edge && return 2
     stratum_family === :corner && return 3
@@ -742,6 +745,12 @@ function _white_lindsey_stratum_kernel_plan(stratum_kind)
         status = :available_white_lindsey_stratum_kernel_plan,
         blocker = nothing,
         kernel = :_nested_corner_piece,
+        side_1d_helper = nothing,
+    )
+    stratum_kind === :direct_core && return (;
+        status = :available_white_lindsey_stratum_kernel_plan,
+        blocker = nothing,
+        kernel = :direct_core_identity_support,
         side_1d_helper = nothing,
     )
     return _white_lindsey_unavailable_stratum_kernel_plan(

@@ -179,6 +179,7 @@ function _white_lindsey_seed_decomposed_units(source::NamedTuple; metadata = (;)
     shell = only(source.fixture.sequence.shell_layers)
     inventory = source.inventory
     unit_context = _white_lindsey_seed_unit_context_metadata(metadata)
+    core_unit = _white_lindsey_seed_core_unit(inventory, unit_context)
     face_units = _white_lindsey_seed_units_for_strata(
         :face,
         shell.faces,
@@ -203,7 +204,65 @@ function _white_lindsey_seed_decomposed_units(source::NamedTuple; metadata = (;)
         length(face_units) + length(edge_units),
         unit_context,
     )
-    return Tuple(vcat(collect(face_units), collect(edge_units), collect(corner_units)))
+    return Tuple(
+        vcat(
+            [core_unit],
+            collect(face_units),
+            collect(edge_units),
+            collect(corner_units),
+        ),
+    )
+end
+
+function _white_lindsey_seed_core_unit(inventory, unit_context)
+    source_side_count = Int(inventory.source_side_count)
+    intervals = ntuple(_ -> 2:(source_side_count - 1), 3)
+    retained_counts = ntuple(axis -> length(intervals[axis]), 3)
+    source_cpb = CPB.cpb(
+        intervals[1],
+        intervals[2],
+        intervals[3];
+        role = :white_lindsey_seed_direct_core_source_cpb,
+        metadata = (;
+            stratum_kind = :direct_core,
+            source_cpb_index = 1,
+            retained_counts,
+        ),
+    )
+    column_range = inventory.retained_ranges.core
+    dimension = length(column_range)
+    metadata = merge(
+        (;
+            stratum_kind = :direct_core,
+            source_cpb_index = 1,
+            shell_piece_signature = :direct_core,
+            retained_counts = CPB.shape(source_cpb),
+            direct_core = true,
+        ),
+        unit_context,
+    )
+    return CRU.RetainedUnitRecord(
+        :white_lindsey_seed_direct_core,
+        1,
+        :white_lindsey_boundary_stratum_retained_unit,
+        :white_lindsey_seed_direct_core_contract,
+        :white_lindsey_seed_direct_core_terminal_region,
+        :white_lindsey_seed_complete_shell,
+        :synthetic_terminal_region,
+        :white_lindsey_boundary_strata,
+        :white_lindsey_boundary_stratum_product,
+        :direct_or_trivial_embedding,
+        CRC.owned_cpb(source_cpb),
+        (source_cpb,),
+        1,
+        :available,
+        dimension,
+        :available,
+        column_range,
+        nothing,
+        false,
+        metadata,
+    )
 end
 
 function _white_lindsey_seed_source_cpbs(group::Symbol, shell_pieces)

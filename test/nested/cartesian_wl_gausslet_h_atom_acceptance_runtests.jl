@@ -121,9 +121,12 @@ function _wl_lowest_one_electron_energy(
         energy = minimum(values),
         solve_kind =
             overlap_identity ? :ordinary_symmetric : :generalized_symmetric,
-        overlap_minimum_eigenvalue,
-        overlap_maximum_eigenvalue,
-        overlap_condition_estimate,
+        overlap_minimum_eigenvalue =
+            overlap_diagnostics.overlap_minimum_eigenvalue,
+        overlap_maximum_eigenvalue =
+            overlap_diagnostics.overlap_maximum_eigenvalue,
+        overlap_condition_estimate =
+            overlap_diagnostics.overlap_condition_estimate,
         overlap_identity,
     )
 end
@@ -330,9 +333,8 @@ end
     report = _wl_decomposed_h_atom_acceptance_report()
     println("decomposed WL gausslet-only H atom acceptance: ", report)
 
-    @test report.status == :blocked_decomposed_wl_h_atom_acceptance
-    @test report.blocker ==
-          :missing_decomposed_wl_interior_retained_operator_inventory
+    @test report.status == :materialized_decomposed_wl_h_atom_acceptance
+    @test isnothing(report.blocker)
     @test report.q == 5
     @test report.ns == 5
     @test report.n_s == 5
@@ -361,8 +363,9 @@ end
     @test report.decomposed_unit_pair_inventory_source_kind ==
           :white_lindsey_low_order_materialized_seed_ranges
     @test report.route_owned_decomposed_unit_pair_inventory_available
-    @test report.decomposed_unit_count == 26
-    @test report.decomposed_unit_pair_count == 351
+    @test report.decomposed_unit_count == 27
+    @test report.decomposed_unit_pair_count == 378
+    @test first(report.decomposed_unit_key_sample) == :white_lindsey_seed_direct_core
     @test report.retained_unit_column_ranges_materialized
     @test report.retained_dimension_from_decomposed_unit_inventory_available
     @test report.decomposed_unit_pair_column_ranges_available
@@ -388,31 +391,36 @@ end
     @test report.retained_dimension == 223
     @test report.overlap_matrix_dimension == report.retained_dimension
     @test report.hamiltonian_matrix_dimension == report.retained_dimension
-    @test report.overlap_minimum_eigenvalue <= 0.0
-    @test !isfinite(report.overlap_condition_estimate)
+    @test report.overlap_minimum_eigenvalue > 0.0
+    @test report.overlap_condition_estimate < 1.0000001
     @test report.overlap_symmetry_error < 1.0e-12
-    @test report.overlap_diagonal_minimum == 0.0
+    @test isapprox(report.overlap_diagonal_minimum, 1.0; atol = 1.0e-12)
     @test isapprox(report.overlap_diagonal_maximum, 1.0; atol = 1.0e-12)
-    @test report.overlap_near_zero_eigenvalue_count == 125
+    @test report.overlap_near_zero_eigenvalue_count == 0
     @test report.overlap_negative_eigenvalue_count == 0
-    @test report.overlap_rank_estimate == 98
-    @test report.overlap_zero_diagonal_count == 125
-    @test report.decomposed_unit_column_range_span == 126:223
-    @test report.missing_interior_retained_column_count == 125
-    @test report.boundary_inventory_only
-    @test report.solve_status == :blocked_decomposed_wl_one_electron_solve
-    @test report.solve_blocker ==
-          :missing_decomposed_wl_interior_retained_operator_inventory
-    @test report.solve_kind == :blocked_overlap_metric
-    @test !isfinite(report.lowest_h_atom_energy)
+    @test report.overlap_rank_estimate == report.retained_dimension
+    @test report.overlap_zero_diagonal_count == 0
+    @test report.decomposed_unit_column_range_span == 1:223
+    @test report.missing_interior_retained_column_count == 0
+    @test !report.boundary_inventory_only
+    @test report.solve_status == :materialized_decomposed_wl_one_electron_solve
+    @test isnothing(report.solve_blocker)
+    @test report.solve_kind == :ordinary_symmetric
+    @test report.lowest_h_atom_energy > report.h_atom_exact_energy
+    @test report.lowest_h_atom_energy < -0.45
+    @test isapprox(
+        report.lowest_h_atom_energy,
+        -0.4788666674548281;
+        atol = 1.0e-10,
+    )
     @test report.fixed_block_operator_matrices_available
     @test !report.fixed_block_operator_matrices_used
     @test report.decomposed_wl_units_consumed
     @test !report.full_parent_window_cpb_used
     @test !report.direct_cartesian_product_assembly_used
     @test !report.ordinary_cartesian_ida_operators_used
-    @test !report.acceptance_energy_materialized
-    @test !report.h_atom_acceptance_active
+    @test report.acceptance_energy_materialized
+    @test report.h_atom_acceptance_active
     @test !report.h2plus_acceptance_active
     @test report.h2plus_acceptance_blocker ==
           :deferred_until_single_center_decomposed_wl_acceptance_review

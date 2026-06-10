@@ -46,8 +46,8 @@ end
     @test by_center.retained_dimension == 223
     @test by_center.retained_dimension_status ==
           :available_from_decomposed_wl_unit_column_ranges
-    @test by_center.unit_count == 26
-    @test by_center.pair_count == 351
+    @test by_center.unit_count == 27
+    @test by_center.pair_count == 378
     @test by_center.center_count == 1
     @test by_center.by_center_matrix_count == 1
     @test by_center.center_indices == (1,)
@@ -70,17 +70,17 @@ end
         @test result.status ==
               :materialized_route_global_electron_nuclear_by_center_matrix
         @test result.retained_dimension == 223
-        @test result.unit_count == 26
-        @test result.pair_count == 351
-        @test result.local_pair_block_count == 351
-        @test result.placeable_record_count == 351
+        @test result.unit_count == 27
+        @test result.pair_count == 378
+        @test result.local_pair_block_count == 378
+        @test result.placeable_record_count == 378
         @test result.global_electron_nuclear_by_center_matrix_materialized
         @test result.global_one_body_term_matrix_materialized
         @test result.by_center
         @test !result.centers_summed
         @test result.nuclear_charge_recorded
         @test !result.nuclear_charge_applied
-        @test result.charge_application_stage ===
+        @test result.charge_application_stage ==
               :acceptance_or_hamiltonian_assembly
         @test size(result.matrix) == (223, 223)
         @test all(isfinite, result.matrix)

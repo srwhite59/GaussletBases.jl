@@ -63,12 +63,12 @@ Scientific acceptance checks should force the intended algorithm to exist. The
 H/H2+ acceptance checkpoint is the current example: the full-window CPB
 workaround produced plausible energies, but it was not a decomposed
 White-Lindsey route and was retired rather than kept as an active passing
-test. The active readiness audit now materializes decomposed route-global
+test. The active H acceptance path now materializes decomposed route-global
 overlap, kinetic, one-center electron-nuclear by-center, and a charge-applied
-one-electron Hamiltonian. It blocks at the solve boundary because the current
-route-global matrices cover only the decomposed boundary-unit retained columns
-`126:223` inside a full 223-column retained dimension:
-`:missing_decomposed_wl_interior_retained_operator_inventory`.
+one-electron Hamiltonian from a 27-unit, 378-pair decomposed inventory. The
+direct-core retained unit covers columns `1:125`, boundary units cover
+`126:223`, and the retained overlap metric is full rank for the 223-column
+basis. The current q = 5, ns = 5 H energy is `-0.4788666674548281` Hartree.
 
 ## Current Replacement Pressure
 
@@ -89,10 +89,10 @@ route-global matrices cover only the decomposed boundary-unit retained columns
   route-global kinetic and separated route-global electron-nuclear by-center
   matrices. By-center matrices remain uncharged and center-separated; recorded
   nuclear charges and center summation are applied only at Hamiltonian assembly.
-  The current H atom audit reaches this assembled Hamiltonian but still does not
-  produce an accepted scientific energy because the decomposed overlap solve
-  metric has 125 zero diagonal/eigenvalue directions corresponding to retained
-  columns `1:125`, which are outside the current boundary-unit inventory.
+  The current H atom audit reaches this assembled Hamiltonian and solves through
+  the decomposed WL path. The direct-core retained operator inventory supplies
+  columns `1:125`, the shell boundary inventory supplies `126:223`, and the
+  overlap metric is positive definite with rank estimate 223.
 - A private route-shaped safe one-body matrix-set adapter now wraps individual
   `route_global_one_body_matrix(...; term = ...)` calls and returns
   term-separated result objects plus a compact summary. It does not copy dense

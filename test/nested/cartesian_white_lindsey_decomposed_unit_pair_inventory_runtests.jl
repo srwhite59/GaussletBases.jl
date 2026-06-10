@@ -143,9 +143,13 @@ end
     @test isnothing(seed_inventory.blocker)
     @test seed_inventory.source_kind ==
           :white_lindsey_low_order_materialized_seed_ranges
-    @test seed_inventory.unit_count == 26
-    @test seed_inventory.pair_count == 351
+    @test seed_inventory.unit_count == 27
+    @test seed_inventory.pair_count == 378
     @test seed_inventory.retained_dimension == 223
+    @test first(seed_inventory.unit_summaries).stratum_kind == :direct_core
+    @test first(seed_inventory.unit_summaries).column_range == 1:125
+    @test first(seed_inventory.pair_keys) ==
+          (:white_lindsey_seed_direct_core, :white_lindsey_seed_direct_core)
     @test seed_inventory.retained_unit_column_ranges_materialized
     @test seed_inventory.decomposed_unit_pair_column_ranges_available
     @test seed_inventory.term_compatibility.overlap

@@ -120,28 +120,31 @@ Current status:
   it applies recorded nuclear charges and sums centers only at Hamiltonian
   assembly
 - a decomposed WL unit-pair inventory source is now exposed from the
-  materialized low-order seed per-piece retained ranges
-- therefore active H scientific acceptance through the decomposed WL path is
-  now blocked one step later, on
-  `:missing_decomposed_wl_interior_retained_operator_inventory`
+  materialized low-order seed retained ranges, including the direct-core
+  retained operator inventory
+- therefore active H scientific acceptance through the decomposed WL path now
+  reaches a real one-electron solve without a full-window CPB or direct
+  Cartesian fallback
 
 The current q = 5, ns = 5 route metadata exposes terminal shellification unit
 inventory at terminal-region granularity, and the local White-Lindsey adapter can
 materialize overlap, kinetic, and one-center electron-nuclear by-center blocks
 for a supplied decomposed unit pair. The terminal shellification summary still
 marks its own pair inventory as deferred, but the materialized low-order seed now
-provides a narrow decomposed inventory source through its per-piece face, edge,
-and corner retained ranges. A compact
+provides a narrow decomposed inventory source through its direct-core, face,
+edge, and corner retained ranges. A compact
 `white_lindsey_decomposed_unit_pair_inventory` validator now exists in the
 pair-block materialization layer; it accepts a `UnitPairPlan` or unit-pair
 records when they carry retained dimensions and column ranges, and reports
 compact pair/range/global-dimension metadata. The active readiness audit now
-validates the seed-backed source as 26 decomposed units, 351 upper-triangular
-unit pairs, and retained/global dimension 223. The route-global by-center
+validates the seed-backed source as 27 decomposed units, 378 upper-triangular
+unit pairs, retained/global dimension 223, and retained column coverage
+`1:223`. The direct-core unit covers columns `1:125`; boundary units cover the
+shell range `126:223`. The route-global by-center
 nuclear adapter uses that inventory plus the existing local
 `electron_nuclear_by_center` block path to materialize one uncharged
 retained/global matrix per supplied center. A focused one-center fingerprint
-currently materializes all 351 decomposed local pair blocks into a 223 by 223
+currently materializes all 378 decomposed local pair blocks into a 223 by 223
 retained matrix. Centers are not summed and nuclear charges are recorded but not
 applied in the by-center matrix path. The decomposed Hamiltonian helper consumes
 the unit-charge nuclear-attraction convention already carried by those matrices
@@ -149,20 +152,16 @@ and multiplies by the recorded nuclear charge at Hamiltonian assembly.
 
 The current H atom audit materializes decomposed route-global overlap, kinetic,
 one-center electron-nuclear by-center, and the one-electron Hamiltonian for
-`q = 5`, `ns = 5`, retained dimension 223. The scientific solve is intentionally
-not accepted yet. The decomposed boundary-unit inventory spans retained columns
-`126:223`; columns `1:125` are not covered by the current unit-pair inventory,
-so the assembled overlap has 125 zero diagonal entries, 125 near-zero
-eigenvalues, rank estimate 98, minimum eigenvalue `0.0`, maximum eigenvalue
-about `1.000000000000166`, symmetry error about `2.8e-17`, and an infinite
-condition estimate. This is a boundary-only matrix inside a full retained
-dimension, not evidence that the boundary block placement itself is corrupt.
-The current blocker is
-`:missing_decomposed_wl_interior_retained_operator_inventory`. Do not silently
-replace that metric with an ordinary solve, a pseudoinverse solve, or a direct
-Cartesian fallback. H2+ remains a deferred next-step acceptance item until the
-single-center decomposed route has the missing interior/core retained operator
-inventory or a reviewed final-basis reduction contract.
+`q = 5`, `ns = 5`, retained dimension 223. The decomposed unit inventory spans
+retained columns `1:223`, so the assembled overlap is full rank with no missing
+prefix columns. The current diagnostic values are: minimum overlap eigenvalue
+about `0.999999999999839`, maximum about `1.000000000000165`, condition
+estimate about `1.000000000000327`, symmetry error about `2.7e-17`, zero
+near-zero eigenvalues, and rank estimate 223. The one-electron H solve uses the
+ordinary symmetric path and gives `-0.4788666674548281` Hartree, which is
+variational relative to the exact `-0.5` Hartree value. H2+ remains a deferred
+next-step acceptance item until the single-center decomposed route result has
+been reviewed and the two-center by-center summation path is explicitly enabled.
 
 Do not use the existing nested fixed-block operator matrices as the acceptance
 path. They remain useful historical/oracle material, but they bypass the
@@ -187,11 +186,8 @@ only:
 - H2+ R = 2.0 direct electronic energy `-1.0654839328172023` Hartree
 - H2+ R = 2.0 direct total energy `-0.5654839328172023` Hartree
 
-The next implementation needed before restoring active scientific H/H2+
-acceptance is not Hamiltonian assembly; it is the missing interior/core retained
-operator inventory or a reviewed final-basis reduction contract. The route needs
-the retained columns `1:125` to be supplied by real decomposed WL operator
-records, or a documented decision that the active acceptance solve should use a
-reduced final basis containing only the covered retained-unit columns. Do not
+The next implementation before extending scientific acceptance to H2+ is not a
+full-window fallback; it is a small reviewed two-center acceptance step using
+the same decomposed inventory and by-center route-global matrices. Do not
 reintroduce the full-parent CPB helper or a direct Cartesian product fallback as
 the active route.

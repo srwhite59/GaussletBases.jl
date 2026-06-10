@@ -71,6 +71,8 @@ function _white_lindsey_boundary_stratum_unit_coefficients_from_descriptor(
         return _white_lindsey_facet_unit_coefficients_result(descriptor)
     status === :materialized_white_lindsey_edge_unit_coefficients &&
         return _white_lindsey_edge_unit_coefficients_result(descriptor)
+    status === :materialized_white_lindsey_direct_core_unit_coefficients &&
+        return _white_lindsey_direct_core_unit_coefficients_result(descriptor)
     status === :materialized_white_lindsey_corner_unit_coefficients ||
         return _white_lindsey_unit_coefficients_result(
             descriptor,
@@ -102,7 +104,26 @@ function _white_lindsey_unit_coefficients_status(descriptor)
         ),
     )
     stratum_kind = _white_lindsey_descriptor_property(descriptor, :stratum_kind)
-    if stratum_kind in (:facet_cpb, :face_cpb)
+    if stratum_kind === :direct_core
+        _white_lindsey_descriptor_property(descriptor, :planned_old_kernel) ===
+        :direct_core_identity_support || return (
+            :blocked_white_lindsey_boundary_stratum_unit_coefficients,
+            :white_lindsey_direct_core_kernel_plan_not_available,
+        )
+        source_shape =
+            _white_lindsey_descriptor_property(descriptor, :source_cpb_shape)
+        retained_count =
+            _white_lindsey_descriptor_property(descriptor, :retained_count)
+        source_shape isa Tuple || return (
+            :blocked_white_lindsey_boundary_stratum_unit_coefficients,
+            :missing_white_lindsey_direct_core_source_shape,
+        )
+        prod(source_shape) == retained_count || return (
+            :blocked_white_lindsey_boundary_stratum_unit_coefficients,
+            :white_lindsey_direct_core_retained_count_mismatch,
+        )
+        return :materialized_white_lindsey_direct_core_unit_coefficients, nothing
+    elseif stratum_kind in (:facet_cpb, :face_cpb)
         context =
             white_lindsey_boundary_stratum_unit_coefficient_context(descriptor)
         if context.status ===
@@ -156,6 +177,71 @@ function _white_lindsey_unit_coefficients_status(descriptor)
         :missing_white_lindsey_corner_fixed_coordinates,
     )
     return :materialized_white_lindsey_corner_unit_coefficients, nothing
+end
+
+function _white_lindsey_direct_core_unit_coefficients_result(descriptor)
+    support_indices =
+        _white_lindsey_direct_core_parent_support_indices(descriptor)
+    isnothing(support_indices) &&
+        return _white_lindsey_unit_coefficients_result(
+            descriptor,
+            :blocked_white_lindsey_boundary_stratum_unit_coefficients,
+            :missing_white_lindsey_direct_core_parent_support_indices,
+            nothing,
+        )
+    retained_count =
+        Int(_white_lindsey_descriptor_property(descriptor, :retained_count))
+    length(support_indices) == retained_count ||
+        return _white_lindsey_unit_coefficients_result(
+            descriptor,
+            :blocked_white_lindsey_boundary_stratum_unit_coefficients,
+            :white_lindsey_direct_core_support_count_mismatch,
+            nothing,
+        )
+    coefficient_matrix = zeros(Float64, retained_count, retained_count)
+    for index in 1:retained_count
+        coefficient_matrix[index, index] = 1.0
+    end
+    return _white_lindsey_unit_coefficients_result(
+        descriptor,
+        :materialized_white_lindsey_direct_core_unit_coefficients,
+        nothing,
+        coefficient_matrix;
+        coefficient_space = :source_cpb_support_local,
+        parent_row_indices_available = true,
+        support_indices,
+        source_support_row_count = retained_count,
+        retained_column_count = retained_count,
+        nonzero_values = (1.0,),
+        active_axes = (:x, :y, :z),
+        active_axis_intervals =
+            _white_lindsey_descriptor_property(
+                descriptor,
+                :source_axis_intervals,
+            ),
+        active_axis_retained_counts =
+            _white_lindsey_descriptor_property(descriptor, :source_cpb_shape),
+        retained_count_policy = :direct_core_support_identity,
+        doside_source_policy = :not_required_for_direct_core,
+    )
+end
+
+function _white_lindsey_direct_core_parent_support_indices(descriptor)
+    parent_dims = _white_lindsey_descriptor_property(descriptor, :parent_dims)
+    intervals =
+        _white_lindsey_descriptor_property(descriptor, :source_axis_intervals)
+    isnothing(parent_dims) && return nothing
+    isnothing(intervals) && return nothing
+    dims = _white_lindsey_checked_context_tuple(
+        parent_dims,
+        Val(3),
+        Int,
+        :parent_dims,
+    )
+    return Int[
+        ParentGaussletBases._cartesian_flat_index(ix, iy, iz, dims)
+        for ix in intervals.x for iy in intervals.y for iz in intervals.z
+    ]
 end
 
 function _white_lindsey_corner_parent_support_indices(descriptor)
