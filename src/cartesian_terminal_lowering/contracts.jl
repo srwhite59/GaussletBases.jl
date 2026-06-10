@@ -14,7 +14,7 @@ struct TerminalLoweringContract
     terminal_region_kind::Symbol
     lowering_kind::Symbol
     owned_support::Any
-    source_cpbs::Tuple{Vararg{CPB.CoordinateProductBox}}
+    source_cpbs::Tuple{Vararg{CartesianCPB.CoordinateProductBox}}
     retained_rule::Symbol
     realization_rule::Union{Symbol,Nothing}
     final_unit_granularity::Symbol
@@ -59,7 +59,7 @@ function _terminal_lowering_contract(;
     cpb_tuple = Tuple(source_cpbs)
     isempty(cpb_tuple) &&
         throw(ArgumentError("terminal lowering contract requires at least one source CPB"))
-    all(cpb -> cpb isa CPB.CoordinateProductBox, cpb_tuple) ||
+    all(cpb -> cpb isa CartesianCPB.CoordinateProductBox, cpb_tuple) ||
         throw(ArgumentError("terminal lowering source_cpbs must be CoordinateProductBox objects"))
 
     return TerminalLoweringContract(

@@ -15,11 +15,11 @@ used; unselected available alternatives are not carried downstream as retained
 units.
 """
 function retained_unit_plan(
-    lowering_plan::CTL.TerminalLoweringPlan;
+    lowering_plan::CartesianTerminalLowering.TerminalLoweringPlan;
     policy::RetainedUnitPolicy = MetadataOnlyRetainedUnits(),
     metadata = (;),
 )
-    selected = CTL.selected_contracts(lowering_plan)
+    selected = CartesianTerminalLowering.selected_contracts(lowering_plan)
     unit_chunks = Tuple(
         _retained_units_for_contract(contract, policy)
         for contract in selected
@@ -37,10 +37,10 @@ function retained_unit_plan(
 end
 
 function _retained_units_for_contract(
-    contract::CTL.TerminalLoweringContract,
+    contract::CartesianTerminalLowering.TerminalLoweringContract,
     ::MetadataOnlyRetainedUnits,
 )
-    kind = CTL.lowering_kind(contract)
+    kind = CartesianTerminalLowering.lowering_kind(contract)
     kind in _DIRECT_LOWERING_KINDS &&
         return (_direct_retained_unit(contract),)
     kind === :white_lindsey_boundary_strata &&
@@ -81,7 +81,9 @@ function _replace_unit_index(unit::RetainedUnitRecord, unit_index::Int)
     )
 end
 
-function _direct_retained_unit(contract::CTL.TerminalLoweringContract)
+function _direct_retained_unit(
+    contract::CartesianTerminalLowering.TerminalLoweringContract,
+)
     return _make_retained_unit(
         contract,
         _unit_key(contract, :retained_unit),
@@ -98,7 +100,9 @@ function _direct_retained_unit(contract::CTL.TerminalLoweringContract)
     )
 end
 
-function _white_lindsey_boundary_stratum_units(contract::CTL.TerminalLoweringContract)
+function _white_lindsey_boundary_stratum_units(
+    contract::CartesianTerminalLowering.TerminalLoweringContract,
+)
     return Tuple(
         _make_retained_unit(
             contract,
@@ -107,7 +111,7 @@ function _white_lindsey_boundary_stratum_units(contract::CTL.TerminalLoweringCon
             :white_lindsey_boundary_stratum_retained_unit,
             (source_cpb,),
             index;
-            owned_support = CRC.owned_cpb(
+            owned_support = CartesianRouteCore.owned_cpb(
                 source_cpb;
                 support_kind = :white_lindsey_boundary_stratum_owned_support,
                 metadata = (;
@@ -130,7 +134,9 @@ function _white_lindsey_boundary_stratum_units(contract::CTL.TerminalLoweringCon
     )
 end
 
-function _pqs_shell_retained_unit(contract::CTL.TerminalLoweringContract)
+function _pqs_shell_retained_unit(
+    contract::CartesianTerminalLowering.TerminalLoweringContract,
+)
     return _make_retained_unit(
         contract,
         _unit_key(contract, :retained_unit),
@@ -149,7 +155,9 @@ function _pqs_shell_retained_unit(contract::CTL.TerminalLoweringContract)
     )
 end
 
-function _distorted_product_retained_unit(contract::CTL.TerminalLoweringContract)
+function _distorted_product_retained_unit(
+    contract::CartesianTerminalLowering.TerminalLoweringContract,
+)
     retained_metadata = (;
         q = _metadata_value(contract.metadata, :q),
         L = _metadata_value(contract.metadata, :L),
@@ -173,7 +181,7 @@ function _distorted_product_retained_unit(contract::CTL.TerminalLoweringContract
 end
 
 function _make_retained_unit(
-    contract::CTL.TerminalLoweringContract,
+    contract::CartesianTerminalLowering.TerminalLoweringContract,
     unit_key::Symbol,
     unit_index::Int,
     unit_kind::Symbol,
@@ -235,7 +243,7 @@ end
 function _route_core_final_unit_sidecar(
     unit_key::Symbol,
     unit_kind::Symbol,
-    contract::CTL.TerminalLoweringContract,
+    contract::CartesianTerminalLowering.TerminalLoweringContract,
     owned_support,
     source_cpbs::Tuple,
     retained_rule::Symbol,
@@ -243,7 +251,7 @@ function _route_core_final_unit_sidecar(
     metadata,
 )
     try
-        owned_region = CRC.shellification_region(
+        owned_region = CartesianRouteCore.shellification_region(
             unit_kind,
             owned_support;
             metadata = (;
@@ -260,7 +268,7 @@ function _route_core_final_unit_sidecar(
             source_cpbs,
             metadata,
         )
-        intermediate = CRC.intermediate_retained_space(
+        intermediate = CartesianRouteCore.intermediate_retained_space(
             lowering;
             retained_rule,
             dimension = nothing,
@@ -277,7 +285,7 @@ function _route_core_final_unit_sidecar(
             realization_rule,
             metadata,
         )
-        final_unit = CRC.final_retained_unit(
+        final_unit = CartesianRouteCore.final_retained_unit(
             unit_key,
             unit_kind,
             lowering,
@@ -297,13 +305,13 @@ function _route_core_final_unit_sidecar(
 end
 
 function _route_core_lowering_source(
-    contract::CTL.TerminalLoweringContract,
-    owned_region::CRC.ShellificationRegion,
+    contract::CartesianTerminalLowering.TerminalLoweringContract,
+    owned_region::CartesianRouteCore.ShellificationRegion,
     source_cpbs::Tuple,
     metadata,
 )
     if contract.lowering_kind === :pqs_filled_source_cpb && length(source_cpbs) == 1
-        return CRC.pqs_filled_source_lowering(
+        return CartesianRouteCore.pqs_filled_source_lowering(
             owned_region,
             only(source_cpbs);
             metadata = _merge_metadata(
@@ -312,7 +320,7 @@ function _route_core_lowering_source(
             ),
         )
     end
-    return CRC.lowering_source(
+    return CartesianRouteCore.lowering_source(
         contract.lowering_kind,
         owned_region,
         source_cpbs;
@@ -324,13 +332,13 @@ function _route_core_lowering_source(
 end
 
 function _route_core_shell_realization(
-    intermediate::CRC.IntermediateRetainedSpace,
-    owned_region::CRC.ShellificationRegion,
+    intermediate::CartesianRouteCore.IntermediateRetainedSpace,
+    owned_region::CartesianRouteCore.ShellificationRegion,
     realization_rule,
     metadata,
 )
     if realization_rule === :shell_projection_lowdin
-        return CRC.pqs_shell_realization(
+        return CartesianRouteCore.pqs_shell_realization(
             intermediate,
             owned_region;
             status = :planned_shell_projection_lowdin,
@@ -339,7 +347,7 @@ function _route_core_shell_realization(
         )
     end
     if realization_rule === :direct_or_trivial_embedding
-        return CRC.trivial_shell_realization(
+        return CartesianRouteCore.trivial_shell_realization(
             intermediate,
             owned_region;
             status = :planned_not_materialized,
@@ -347,7 +355,7 @@ function _route_core_shell_realization(
             metadata,
         )
     end
-    return CRC.shell_realization(
+    return CartesianRouteCore.shell_realization(
         intermediate,
         owned_region;
         realization_kind = isnothing(realization_rule) ? :planned_realization : realization_rule,

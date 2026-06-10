@@ -41,11 +41,11 @@ Select metadata-only lowering contracts for the terminal regions in a
 `CartesianShellification.ShellificationPlan`.
 """
 function lower_terminal_regions(
-    shellification_plan::CSH.ShellificationPlan,
+    shellification_plan::CartesianShellification.ShellificationPlan,
     policy::TerminalLoweringPolicy = WhiteLindseyLowering();
     metadata = (;),
 )
-    regions = CSH.terminal_regions(shellification_plan)
+    regions = CartesianShellification.terminal_regions(shellification_plan)
     available = Tuple(
         contract
         for region in regions

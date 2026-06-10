@@ -46,7 +46,7 @@ struct RetainedUnitRecord
     dimension::Union{Int,Nothing}
     column_range_status::Symbol
     column_range::Union{UnitRange{Int},Nothing}
-    route_core_final_unit::Union{CRC.FinalRetainedUnit,Nothing}
+    route_core_final_unit::Union{CartesianRouteCore.FinalRetainedUnit,Nothing}
     materialized::Bool
     metadata::NamedTuple
 end
@@ -58,7 +58,7 @@ Metadata-only retained-unit plan for one terminal-lowering plan.
 """
 struct RetainedUnitPlan
     policy::RetainedUnitPolicy
-    lowering_plan::CTL.TerminalLoweringPlan
+    lowering_plan::CartesianTerminalLowering.TerminalLoweringPlan
     units::Tuple{Vararg{RetainedUnitRecord}}
     summary::NamedTuple
     metadata::NamedTuple
@@ -87,14 +87,21 @@ function _merge_metadata(parts...)
     return merged
 end
 
-function _unit_key(contract::CTL.TerminalLoweringContract, suffix::Symbol)
+function _unit_key(
+    contract::CartesianTerminalLowering.TerminalLoweringContract,
+    suffix::Symbol,
+)
     return Symbol(String(contract.contract_key), "_", String(suffix))
 end
 
-function _unit_key(contract::CTL.TerminalLoweringContract, suffix::Symbol, index::Int)
+function _unit_key(
+    contract::CartesianTerminalLowering.TerminalLoweringContract,
+    suffix::Symbol,
+    index::Int,
+)
     return Symbol(String(contract.contract_key), "_", String(suffix), "_", index)
 end
 
-function _stratum_kind(cpb::CPB.CoordinateProductBox)
+function _stratum_kind(cpb::CartesianCPB.CoordinateProductBox)
     return _metadata_value(cpb.metadata, :stratum_kind, :unknown_cpb)
 end

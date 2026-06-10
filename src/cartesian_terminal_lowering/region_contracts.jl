@@ -1,11 +1,11 @@
 # Region-to-contract lowering rules.
 
 function _source_cpb_from_box(box; role::Symbol, metadata = (;))
-    return CPB.cpb(box; role, metadata)
+    return CartesianCPB.cpb(box; role, metadata)
 end
 
 function _filled_source_cpb_from_box(box; role::Symbol, metadata = (;))
-    return CPB.filled_cpb(box...; role, metadata)
+    return CartesianCPB.filled_cpb(box...; role, metadata)
 end
 
 function _terminal_source_role(region, suffix::Symbol)
@@ -65,7 +65,7 @@ function _white_lindsey_complete_shell_contract(region)
         role = _terminal_source_role(region, :inner_box),
         metadata = (; terminal_region_key = region.key),
     )
-    strata = CPB.complete_shell_boundary_strata(outer, inner)
+    strata = CartesianCPB.complete_shell_boundary_strata(outer, inner)
     return _terminal_lowering_contract(
         contract_key = Symbol(String(region.key), "_white_lindsey_boundary_strata"),
         terminal_region = region,
@@ -102,7 +102,7 @@ function _pqs_complete_shell_contract(region, policy::PQSLowering)
         final_unit_granularity = :one_terminal_region,
         metadata = (;
             q = policy.q,
-            source_mode_shape = CPB.shape(source),
+            source_mode_shape = CartesianCPB.shape(source),
             face_edge_corner_decomposition_required = false,
         ),
     )
@@ -132,7 +132,7 @@ function _pqs_unparameterized_complete_shell_contract(region)
             q = nothing,
             parameter_status = :available_but_unparameterized,
             source_mode_shape = nothing,
-            source_box_shape = CPB.shape(source),
+            source_box_shape = CartesianCPB.shape(source),
             face_edge_corner_decomposition_required = false,
         ),
     )
@@ -163,7 +163,7 @@ function _distorted_product_contract(region)
     )
 end
 
-function available_contracts(region::CSH.TerminalRegion; pqs_q = nothing)
+function available_contracts(region::CartesianShellification.TerminalRegion; pqs_q = nothing)
     if region.region_kind in (
         :direct_core,
         :direct_midpoint_slab,
