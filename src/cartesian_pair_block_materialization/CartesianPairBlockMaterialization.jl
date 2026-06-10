@@ -97,6 +97,7 @@ export PairBlockMaterializationPolicy,
        route_global_combined_gto_basis_layout,
        route_global_mixed_gto_blocks_from_decomposed_units,
        route_global_combined_gto_one_electron_matrices,
+       route_global_combined_gto_final_basis_projection,
        direct_direct_overlap_block,
        direct_direct_overlap_blocks,
        direct_direct_position_block,
@@ -155,6 +156,10 @@ export PairBlockMaterializationPolicy,
 #     Narrow combined gausslet+GTO overlap and one-electron Hamiltonian matrix
 #     assembly from already materialized gausslet route-global and provider
 #     GTO blocks.
+#
+# route_global_combined_gto_final_basis.jl
+#     Final-basis orthogonalization/projection of the GTO supplement residual
+#     against the decomposed WL gausslet sector.
 #
 # one_body_placement_plan.jl
 #     Metadata-only local one-body placement records for future global retained
@@ -258,6 +263,7 @@ include("route_global_one_body_adapter.jl")
 include("route_global_combined_gto_basis_layout.jl")
 include("route_global_mixed_gto_blocks.jl")
 include("route_global_combined_gto_matrix_assembly.jl")
+include("route_global_combined_gto_final_basis.jl")
 include("one_body_placement_plan.jl")
 include("one_body_global_matrix_helpers.jl")
 include("one_body_global_overlap.jl")

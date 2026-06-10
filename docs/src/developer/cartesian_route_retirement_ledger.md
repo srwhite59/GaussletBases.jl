@@ -485,15 +485,19 @@ outside this decomposed WL acceptance contract.
   `1:223`, representing one direct-core unit and 26 boundary units, and the
   combined 226 by 226 overlap/Hamiltonian matrices materialize without a direct
   Cartesian fallback. The raw generalized Galerkin solve over those combined
-  matrices is explicitly quarantined as a temporary diagnostic checkpoint, not
-  the final WL+GTO working-basis contract. For the q/ns = 5/5 H fixture with H
-  cc-pVTZ `lmax = 0`, the decomposed gausslet-only energy remains
-  `-0.4788666674548281` Hartree and the raw combined Galerkin diagnostic energy
-  is `-0.49982597871004913` Hartree. Active H plus GTO acceptance is blocked on
-  `:missing_gto_supplement_final_basis_orthogonalization`; final production
-  solve/transfer should use an orthogonalized final working basis and an
-  ordinary Hermitian solve unless a reviewed future contract says otherwise.
-  No generalized-overlap final-basis transfer logic,
+  matrices remains explicitly quarantined as a temporary diagnostic checkpoint,
+  not the final WL+GTO working-basis contract. `route_global_combined_gto_final_basis_projection`
+  now constructs the GTO residual supplement against the decomposed WL gausslet
+  sector, filters residual directions by overlap eigenvalue, and transforms the
+  combined Hamiltonian into an orthonormal final basis for an ordinary Hermitian
+  solve. For the q/ns = 5/5 H fixture with H cc-pVTZ `lmax = 0`, the decomposed
+  gausslet-only energy remains `-0.4788666674548281` Hartree, the raw combined
+  Galerkin diagnostic energy is `-0.49982597871004913` Hartree, and the active
+  final-basis H+GTO acceptance energy is `-0.4998259787100418` Hartree. All
+  three supplement residual directions are retained, with residual overlap
+  eigenvalues approximately `(0.0071608405425023485, 0.03763578221680196,
+  0.1570846017479633)` and final overlap identity error about
+  `8.317790900491673e-13`. No generalized-overlap final-basis transfer logic,
   `ordinary_cartesian_ida_operators`, full-window CPB acceptance route, PQS
   transform, export, or artifact was added.
 - The next overlap implementation boundary is no longer additional placement

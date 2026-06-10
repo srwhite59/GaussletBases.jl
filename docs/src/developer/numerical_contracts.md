@@ -47,6 +47,14 @@ For transfers between final orthonormal working bases:
 - treat self-overlaps of those final bases as diagnostic-only
 - do not turn the final working path into a generalized-overlap formulation
 
+For decomposed White--Lindsey plus GTO supplement acceptance, the raw combined
+gausslet+GTO Galerkin generalized solve is diagnostic-only. The active final
+path first projects the GTO supplement into the residual space against the
+decomposed WL gausslet sector, orthonormalizes the retained residual directions,
+and then solves an ordinary Hermitian problem in the resulting final working
+basis. The raw combined overlap and supplement self-overlap are construction
+and validation data, not normal downstream working-basis data.
+
 After that, the working representation should simply regard the block as having
 identity overlap.
 
