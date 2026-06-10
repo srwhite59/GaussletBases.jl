@@ -91,3 +91,28 @@ In particular, for nested fixed-block routes:
   the same nested kinetic contract
 - not against a separate total-only route that rebuilds one-body terms through a
   different parent-space contraction path
+
+## WL Gausslet-Only H Atom Acceptance Baseline
+
+The first WL/Cartesian gausslet-only hydrogen acceptance check is
+`test/nested/cartesian_wl_gausslet_h_atom_acceptance_runtests.jl`. It is a
+bounded scientific gate, not an exhaustive local-helper test.
+
+Baseline fixture:
+
+- one proton at `(0.0, 0.0, 0.0)` with `Z = 1.0`
+- `MappedUniformBasisSpec(:G10)` with `count = 7`
+- `fit_asinh_mapping_for_strength(s = 0.5, npoints = 7, xmax = 6.0)`
+- `reference_spacing = 1.0`
+- backend `:pgdg_localized_experimental`
+- Coulomb expansion `coulomb_gaussian_expansion(doacc = false)`
+- basis dimension / parent support size `343`
+- generalized solve against the carried Cartesian overlap
+
+The current baseline lowest one-electron energy is approximately
+`-0.4706400351534759` Hartree, so the acceptance window is deliberately loose:
+`-0.5 < E < -0.45`. This verifies the expected variational side of the
+hydrogen ground state while keeping the fixture small enough for a focused
+acceptance gate. It does not include GTO supplements, PQS retained transforms,
+CPB/GTO bundle consumption, route/global refactors, or Hamiltonian assembly
+beyond the one-electron `H1 = kinetic + nuclear attraction` path.
