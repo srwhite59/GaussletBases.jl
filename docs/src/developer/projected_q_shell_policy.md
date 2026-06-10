@@ -219,11 +219,12 @@ factors, selects PQS boundary modes, applies product/doside retained mode
 metadata, and assembles retained blocks directly. The multi-term private
 helpers `_pqs_product_source_box_reference_blocks_from_pair_plan(...)` and
 `_pqs_product_source_box_reference_blocks(...)` reuse one PQS/product pair plan
-across overlap, position, `x2`, and kinetic requests; `_pqs_product_source_box_shadow_blocks(...)`
-uses that path for its PQS/product component blocks. This remains
-private/shadow-only source-box infrastructure, with no shell projection,
-Lowdin, retained PQS weight division, packet adoption, QW/Hamiltonian route, or
-public/default behavior change.
+across overlap, position, `x2`, and kinetic requests. The old two-unit
+PQS/product shadow checkpoint that consumed this path has been retired; the
+reference-block helpers remain available only for narrower private oracle
+coverage. This remains private source-box infrastructure, with no shell
+projection, Lowdin, retained PQS weight division, packet adoption,
+QW/Hamiltonian route, or public/default behavior change.
 
 The corresponding PQS/PQS source-box seam is now private/shadow infrastructure
 too. `_pqs_pqs_source_box_pair_plan(...)`,
@@ -245,23 +246,14 @@ for validation, while the algorithmic block path streams 1D factors. The path
 does not use shell projection, Lowdin, support-local PQS coefficients,
 retained PQS weights, or IDA division.
 
-`_pqs_product_source_box_shadow_blocks(...)` is the private two-block
-layout/reference consumer for this path. It places one mode-selected PQS
-source-box unit and one product/doside retained unit into a shadow layout and
-fills PQS/PQS, PQS/product, product/PQS by transpose for symmetric real terms,
-and product/product blocks. Its PQS/PQS component now uses the PQS/PQS
-source-box helper with same-box and compatible cross-box validation support;
-its mixed PQS/product component blocks use the multi-term pair-plan reuse
-path, and its product/product component now uses
-`_product_doside_source_box_reference_block(...)`,
-which still compares to the existing product-staged retained helpers as
-authority. The helper also records a tiny
-private all-pairs inventory with two units, `:pqs` and `:product`, and three
-upper-triangular pair entries: `(:pqs, :pqs)`, `(:pqs, :product)`, and
-`(:product, :product)`. Covered terms are `:overlap`, `:position_x/y/z`,
-`:x2_x/y/z`, and `:kinetic`. The tests include a rectangular PQS source box
-and a non-identity product/doside transform. This remains private source-box
-shadow evidence only: no shell-row projection, no Lowdin, no
+The old private two-block layout/reference consumer for this path has been
+retired. It formerly placed one mode-selected PQS source-box unit and one
+product/doside retained unit into a shadow layout and filled PQS/PQS,
+PQS/product, product/PQS by transpose for symmetric real terms, and
+product/product blocks. The retained private coverage now lives in narrower
+PQS/product reference-block tests and in the still-live three-unit
+PQS/PQS/product shadow family. This remains private source-box evidence only:
+no shell-row projection, no Lowdin, no
 `support_coefficient_matrix` PQS oracle, no retained PQS weight division, no
 packet adoption, and no QW/Hamiltonian, public/default, CR2,
 local/ECP/Gaussian/MWG/interaction, or IDA/MWG behavior change.

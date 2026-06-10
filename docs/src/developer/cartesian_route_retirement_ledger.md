@@ -535,3 +535,21 @@ First retirement cut:
   inventory/oracle comparisons. The next deletion-oriented cut should replace
   those route-shadow component calls with CPB provider blocks or quarantine the
   whole shadow route as oracle-only.
+
+Second deletion pass:
+
+- The two-unit PQS/product shadow helper family was deleted:
+  the raw-plan helper, descriptor overload, and private all-pairs inventory.
+  This does not delete the still-live three-unit
+  `_pqs_pqs_product_source_box_shadow_blocks(...)` or
+  `_pqs_pqs_product_source_box_all_pairs_inventory(...)` family.
+- The matching slow-test helper in
+  `test/nested/pqs_projected_q_shell_local_layer_integration_runtests.jl` was
+  removed with its call site.
+- Removed assertions that preserved old all-pairs inventory vocabulary,
+  reference-helper names, dense-raw-storage flags, retained-weight flags, and
+  explicit sub-block equality against development-era reference helpers. Those
+  details are transitional architecture, not active scientific contract.
+- No current source or test caller requires the deleted two-unit helper. The
+  remaining source-box shadow burden is the separate three-unit
+  PQS/PQS/product route-shadow family, which still has live callers.

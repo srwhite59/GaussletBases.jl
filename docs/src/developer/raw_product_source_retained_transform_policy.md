@@ -378,9 +378,10 @@ The private multi-term checkpoint adds
 `_pqs_product_source_box_reference_blocks_from_pair_plan(...)` and
 `_pqs_product_source_box_reference_blocks(...)`. These helpers reuse one
 `_pqs_product_source_box_pair_plan(...)` across requested terms and call the
-same direct retained-block assembly for each term. `_pqs_product_source_box_shadow_blocks(...)`
-now uses that multi-term path for its PQS/product component blocks. The
-PQS/PQS source-box seam is now also explicit:
+same direct retained-block assembly for each term. The old two-unit
+PQS/product shadow checkpoint that consumed this path has been retired; the
+reference-block helpers remain available only for narrower private oracle
+coverage. The PQS/PQS source-box seam is now also explicit:
 `_pqs_pqs_source_box_pair_plan(...)`,
 `_pqs_pqs_source_box_reference_blocks_from_pair_plan(...)`,
 `_pqs_pqs_source_box_reference_blocks(...)`, and
@@ -402,12 +403,10 @@ about `5.7e-14`; reverse-orientation transpose consistency is about
 validation oracle, not for the streamed 1D-factor algorithmic block. The
 supported terms remain overlap, `position_x/y/z`, `x2_x/y/z`, and kinetic.
 
-`_pqs_product_source_box_shadow_blocks(...)` now carries a tiny private
-all-pairs inventory for its two retained units. The units are `:pqs` with
-source family `:mode_selected_raw_product_box` and `:product` with source
-family `:product_doside`. The upper-triangular entries are `(:pqs, :pqs)` via
-`:_pqs_pqs_source_box_reference_blocks`, `(:pqs, :product)` via
-`:_pqs_product_source_box_reference_blocks`, and
+The retired two-unit PQS/product shadow checkpoint carried a private all-pairs
+inventory for retained units `:pqs` and `:product`. Its upper-triangular entries
+were `(:pqs, :pqs)` via `:_pqs_pqs_source_box_reference_blocks`,
+`(:pqs, :product)` via `:_pqs_product_source_box_reference_blocks`, and
 `(:product, :product)` via
 `_product_doside_source_box_reference_block(...)`. That product/product path
 uses source-box vocabulary while still comparing to the existing
@@ -1383,23 +1382,12 @@ reference with that product transform applied. This keeps the contract at
 `T_PQS' * O_raw_box_pair * T_product`; it does not use shell projection,
 Lowdin, support-local PQS coefficients, retained PQS weights, or IDA division.
 
-The private `_pqs_product_source_box_shadow_blocks(...)` checkpoint is the
-first block-layout consumer of those references. It builds a small two-block
-shadow layout containing one mode-selected PQS source-box unit and one
-product/doside retained unit, then fills PQS/PQS, PQS/product, product/PQS by
-transpose for symmetric real terms, and product/product blocks. Its PQS/PQS
-component uses `_pqs_pqs_source_box_reference_blocks(...)` with helper-internal
-explicit boundary-column validation for supported compatible raw-box fixtures;
-its PQS/product component uses the multi-term PQS/product pair-plan reuse path;
-and its product/product component uses
-`_product_doside_source_box_reference_block(...)`, which still compares to the
-existing product-staged retained helpers as authority. The
-helper records a tiny private all-pairs inventory over units `:pqs` and
-`:product` with upper-triangular entries `(:pqs, :pqs)`,
-`(:pqs, :product)`, and `(:product, :product)`. The supported terms are
-`:overlap`, `:position_x/y/z`, `:x2_x/y/z`, and `:kinetic`. Focused tests
-cover a rectangular PQS source box and a non-identity product/doside
-transform.
+The old private two-unit PQS/product shadow checkpoint has been retired. It
+was the first block-layout consumer of those references: one mode-selected PQS
+source-box unit, one product/doside retained unit, PQS/PQS, PQS/product,
+product/PQS by transpose for symmetric real terms, and product/product blocks.
+The retained private coverage now lives in narrower PQS/product reference-block
+tests and in the still-live three-unit PQS/PQS/product shadow family.
 
 The cross-PQS checkpoint extends the PQS/PQS source-box seam from self-only to
 distinct compatible raw product-box plans. Compatibility currently requires
