@@ -452,6 +452,43 @@ separable sum `Kx Sy Sz + Sx Ky Sz + Sx Sy Kz` from existing QW polynomial
 Gaussian kinetic axis-integral wrappers and compares against
 `_qwrg_cartesian_shell_cross_moment_blocks_3d(...).kinetic_ga`.
 
+### Whole-Supplement Source Boundary
+
+The current numerical mixed GTO CPB pilots are deliberately one supplement
+orbital at a time. The next layer should consume whole supplement source
+representations, not loose orbital lists or route-final GTO handoff matrices.
+The intended source conversion remains:
+
+```julia
+LegacyAtomicGaussianSupplement
+LegacyBondAlignedDiatomicGaussianSupplement
+LegacyBondAlignedHeteronuclearGaussianSupplement
+    -> basis_representation(...)
+    -> CartesianGaussianShellSupplementRepresentation3D
+```
+
+The source-adapter fingerprint now covers the vendored
+`data/legacy/BasisSets` fixtures for H and He cc-pVTZ. It verifies that legacy
+atomic, homonuclear bond-aligned diatomic, and heteronuclear bond-aligned
+supplements convert into `CartesianGaussianShellSupplementRepresentation3D`
+with explicit source metadata, nuclei, `lmax`, contracted/uncontracted mode,
+orbital labels, angular powers, centers, exponents, coefficients, and
+`:axiswise_normalized_cartesian_gaussian` primitive normalization.
+
+That conversion is the planned input boundary for the whole-GTO CPB-local
+operator layer:
+
+- mixed gausslet/GTO one-body blocks should become rectangular CPB rows by GTO
+  orbital columns;
+- GTO/GTO one-body Galerkin blocks should become GTO orbital by GTO orbital
+  local/provider records;
+- contraction metadata must stay explicit, including whether a legacy source is
+  contracted or uncontracted and how primitive coefficients are applied.
+
+This is still CPB-local provider work. It is not route/global placement,
+WL/PQS realization, Hamiltonian assembly, IDA/MWG semantics, export, or
+artifact work.
+
 Nuclear attraction should remain by-center and compare against
 `nuclear_ga_by_center` / `nuclear_aa_by_center` from that existing path.
 Electron-electron supplement pair behavior should use

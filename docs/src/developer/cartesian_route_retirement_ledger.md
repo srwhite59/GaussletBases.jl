@@ -375,6 +375,23 @@ paths from becoming new route authority.
   `position_*_ga`, `x2_*_ga`, and `kinetic_ga`. No mixed GTO nuclear/Coulomb
   term, route/global placement, Hamiltonian assembly, IDA/MWG/PQS semantic
   change, export, or artifact was added.
+- The whole-supplement source boundary for CPB-local GTO work now has a focused
+  fingerprint over existing objects and the modern conversion surface. Vendored
+  `data/legacy/BasisSets` H/He cc-pVTZ fixtures load through
+  `LegacyAtomicGaussianSupplement`,
+  `LegacyBondAlignedDiatomicGaussianSupplement`, and
+  `LegacyBondAlignedHeteronuclearGaussianSupplement`, then convert through
+  `basis_representation(...)` into
+  `CartesianGaussianShellSupplementRepresentation3D`. The fingerprint records
+  source kind, atom/basis or nuclei metadata, `lmax`, contracted/uncontracted
+  convention, orbital labels, angular powers, centers, exponents,
+  coefficients, and `:axiswise_normalized_cartesian_gaussian` primitive
+  normalization. The next CPB-local GTO unit should consume this whole
+  supplement representation to build CPB rows by GTO orbital one-body blocks
+  and GTO/GTO one-body Galerkin records with explicit contraction metadata. No
+  multi-orbital CPB block, mixed nuclear/Coulomb term, route/global placement,
+  Hamiltonian assembly, IDA/MWG/PQS semantic change, export, or artifact was
+  added.
 - The next overlap implementation boundary is no longer additional placement
   fingerprinting. First decide the CPB operator-block and WL/PQS realization
   design: what local block objects exist, how White-Lindsey consumes them, how
