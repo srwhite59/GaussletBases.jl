@@ -18,6 +18,7 @@ export CPBIntervalPair3D,
        CPBKineticOperatorBlock,
        CPBOneBodyAxisOperatorBlock,
        CPBElectronElectronLocalBlock,
+       CPBLocalIntegralWeights,
        CPBOverlapDenseBlock,
        CPBLocalOverlapBlockRecord,
        CPBLocalOverlapBlockCollection,
@@ -30,6 +31,7 @@ export CPBIntervalPair3D,
        cpb_position_operator_block,
        cpb_x2_operator_block,
        cpb_electron_electron_local_block,
+       cpb_local_integral_weights,
        cpb_overlap_dense_block,
        cpb_local_overlap_block_record,
        cpb_local_overlap_block_collection,
@@ -148,6 +150,20 @@ struct CPBElectronElectronLocalBlock{S,E,I,D,M}
     expansion::E
     interval_pair::I
     dense_block::D
+    metadata::M
+end
+
+"""
+    CPBLocalIntegralWeights
+
+Provider-level CPB-local product integral weights built from parent-axis 1D
+integral weights. These weights are a local realization/final-density support
+object; they are not applied inside raw pair-factor Coulomb blocks.
+"""
+struct CPBLocalIntegralWeights{S,C,W,M}
+    parent_axis_bundle_object::S
+    cpb::C
+    local_weights::W
     metadata::M
 end
 
@@ -285,6 +301,7 @@ summary(block::CPBOverlapOperatorBlock) = block.metadata
 summary(block::CPBKineticOperatorBlock) = block.metadata
 summary(block::CPBOneBodyAxisOperatorBlock) = block.metadata
 summary(block::CPBElectronElectronLocalBlock) = block.metadata
+summary(weights::CPBLocalIntegralWeights) = weights.metadata
 summary(block::CPBOverlapDenseBlock) = block.metadata
 summary(record::CPBLocalOverlapBlockRecord) = record.metadata
 summary(collection::CPBLocalOverlapBlockCollection) = collection.metadata
@@ -1760,6 +1777,129 @@ function _cpb_axis_value(values, axis::Symbol)
     axis === :y && return values[2]
     axis === :z && return values[3]
     throw(ArgumentError("unsupported Cartesian axis $(axis)"))
+end
+
+function cpb_local_integral_weights(parent_axis_bundle_object, cpb::CPB.CoordinateProductBox)
+    axis_weights = _cpb_axis_integral_weights(parent_axis_bundle_object)
+    blocker = _cpb_local_integral_weights_blocker(axis_weights, cpb)
+    local_weights =
+        isnothing(blocker) ?
+        _materialize_cpb_local_integral_weights(axis_weights, cpb) :
+        nothing
+    status =
+        isnothing(blocker) ?
+        :available_cpb_local_integral_weights :
+        :blocked_cpb_local_integral_weights
+    return CPBLocalIntegralWeights(
+        parent_axis_bundle_object,
+        cpb,
+        local_weights,
+        _cpb_local_integral_weights_summary(
+            status,
+            blocker,
+            axis_weights,
+            cpb,
+            local_weights,
+        ),
+    )
+end
+
+function cpb_local_integral_weights(axis_bundles; cpb::CPB.CoordinateProductBox)
+    return cpb_local_integral_weights(axis_bundles, cpb)
+end
+
+function _cpb_axis_integral_weights(parent_axis_bundle_object)
+    return (;
+        x = _cpb_axis_integral_weights(parent_axis_bundle_object, :x),
+        y = _cpb_axis_integral_weights(parent_axis_bundle_object, :y),
+        z = _cpb_axis_integral_weights(parent_axis_bundle_object, :z),
+    )
+end
+
+function _cpb_axis_integral_weights(parent_axis_bundle_object, axis::Symbol)
+    axis_bundle = _cpb_axis_bundle(parent_axis_bundle_object, axis)
+    pgdg_intermediate = _summary_property(axis_bundle, :pgdg_intermediate)
+    return _summary_property(pgdg_intermediate, :weights)
+end
+
+function _cpb_local_integral_weights_blocker(axis_weights, cpb::CPB.CoordinateProductBox)
+    intervals = CPB.intervals(cpb)
+    for (axis_index, axis) in enumerate(_AXIS_ORDER)
+        weights = getproperty(axis_weights, axis)
+        weights isa AbstractVector{<:Real} ||
+            return Symbol("missing_$(axis)_axis_integral_weights")
+        isempty(weights) && return Symbol("$(axis)_axis_integral_weights_empty")
+        last(intervals[axis_index]) <= length(weights) ||
+            return Symbol("$(axis)_axis_integral_weight_length_mismatch")
+    end
+    return nothing
+end
+
+function _materialize_cpb_local_integral_weights(axis_weights, cpb::CPB.CoordinateProductBox)
+    intervals = CPB.intervals(cpb)
+    shape = CPB.shape(cpb)
+    local_weights = Vector{Float64}(undef, CPB.support_count(cpb))
+    for ix in intervals[1], iy in intervals[2], iz in intervals[3]
+        local_index = _local_product_index(
+            ix - first(intervals[1]) + 1,
+            iy - first(intervals[2]) + 1,
+            iz - first(intervals[3]) + 1,
+            shape,
+        )
+        local_weights[local_index] =
+            Float64(axis_weights.x[ix]) *
+            Float64(axis_weights.y[iy]) *
+            Float64(axis_weights.z[iz])
+    end
+    return local_weights
+end
+
+function _cpb_local_integral_weights_summary(
+    status::Symbol,
+    blocker,
+    axis_weights,
+    cpb::CPB.CoordinateProductBox,
+    local_weights,
+)
+    available = status === :available_cpb_local_integral_weights
+    return (;
+        object_kind = :cartesian_cpb_local_integral_weights_summary,
+        status,
+        blocker,
+        weight_source = :axis_pgdg_intermediate_weights,
+        weight_kind = :basis_function_integral_weights,
+        squared_self_integral = false,
+        retained_pqs_weights = false,
+        ida_mwg_semantics = false,
+        cpb,
+        cpb_role = CPB.role(cpb),
+        local_shape = _axis_named_tuple(CPB.shape(cpb)),
+        local_ordering = _LOCAL_ORDERING,
+        local_weight_count = available ? length(local_weights) : 0,
+        axis_weight_counts = _cpb_axis_weight_counts(axis_weights),
+        local_weights_available = available,
+        local_weights_eltype = available ? eltype(local_weights) : :unavailable,
+        route_driver_wiring = false,
+        route_global_matrix_materialized = false,
+        route_global_overlap_matrix_materialized = false,
+        global_matrix_materialized = false,
+        global_overlap_matrix_materialized = false,
+        hamiltonian_assembly = false,
+        hamiltonian_data_materialized = false,
+        exports_or_artifacts = false,
+    )
+end
+
+function _cpb_axis_weight_counts(axis_weights)
+    return (;
+        x = _cpb_axis_weight_count(axis_weights.x),
+        y = _cpb_axis_weight_count(axis_weights.y),
+        z = _cpb_axis_weight_count(axis_weights.z),
+    )
+end
+
+function _cpb_axis_weight_count(weights)
+    weights isa AbstractVector ? length(weights) : :unavailable
 end
 
 function cpb_overlap_dense_block(axis_block_set::CPBOverlapAxisBlockSet)
