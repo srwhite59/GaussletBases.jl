@@ -1223,6 +1223,10 @@ function _wl_decomposed_h2plus_gto_supplement_acceptance_report()
         supplement_orbital_count = length(supplement.orbitals),
         supplement_orbital_labels =
             Tuple(orbital.label for orbital in supplement.orbitals),
+        supplement_orbital_centers =
+            Tuple(orbital.center for orbital in supplement.orbitals),
+        supplement_unique_orbital_centers =
+            Tuple(unique(orbital.center for orbital in supplement.orbitals)),
         decomposed_unit_count = decomposed_inventory.unit_count,
         decomposed_unit_pair_count = decomposed_inventory.pair_count,
         gausslet_retained_dimension = decomposed_inventory.retained_dimension,
@@ -1381,276 +1385,6 @@ end
     @test report.elapsed_seconds >= 0.0
 end
 
-@testset "decomposed WL H2+ GTO supplement final-basis acceptance" begin
-    report = _wl_decomposed_h2plus_gto_supplement_acceptance_report()
-    println("decomposed WL H2+ GTO supplement final-basis acceptance: ", report)
-
-    @test report.status ==
-          :materialized_decomposed_wl_h2plus_gto_supplement_acceptance
-    @test isnothing(report.blocker)
-    @test report.acceptance_suite ==
-          :decomposed_wl_gausslet_plus_gto_one_electron_acceptance
-    @test report.acceptance_fixture == :h2plus_gto_supplement
-    @test report.q == 5
-    @test report.ns == 5
-    @test report.n_s == 5
-    @test report.bond_length == 2.0
-    @test report.center_count == 2
-    @test report.center_keys == (:proton_a, :proton_b)
-    @test report.supplement_kind == :bond_aligned_diatomic_cartesian_shell
-    @test report.supplement_orbital_count == 6
-    @test report.gausslet_retained_dimension == 223
-    @test report.combined_dimension == 229
-    @test report.route_global_combined_matrix_assembly_status ==
-          :materialized_route_global_combined_gto_one_electron_matrices
-    @test isnothing(report.route_global_combined_matrix_assembly_blocker)
-    @test report.route_global_combined_overlap_positive_definite
-    @test report.raw_combined_galerkin_checkpoint_status ==
-          :temporary_raw_combined_galerkin_checkpoint
-    @test report.raw_combined_galerkin_solve_kind == :generalized_symmetric
-    @test report.final_basis_projection_status ==
-          :materialized_route_global_combined_gto_final_basis_projection
-    @test isnothing(report.final_basis_projection_blocker)
-    @test report.raw_supplement_count == 6
-    @test 0 < report.retained_supplement_count <= report.raw_supplement_count
-    @test length(report.residual_overlap_eigenvalues) ==
-          report.raw_supplement_count
-    @test report.final_overlap_identity_error <=
-          report.final_overlap_identity_tolerance
-    @test !report.generalized_overlap_final_solve
-    @test report.ordinary_hermitian_final_solve_ready
-    @test report.final_basis_solve_status ==
-          :materialized_decomposed_wl_gto_final_basis_one_electron_solve
-    @test isnothing(report.final_basis_solve_blocker)
-    @test report.final_basis_solve_kind == :ordinary_symmetric
-    @test report.active_h2plus_gto_acceptance_solve
-    @test report.final_total_bo_energy < report.gausslet_only_total_bo_energy
-    @test report.total_bo_energy_improvement > 0.0
-    @test report.final_total_bo_energy > report.exact_total_bo_energy
-    @test report.final_electronic_energy > report.exact_electronic_energy
-    @test report.elapsed_seconds >= 0.0
-    @test !report.full_parent_window_cpb_used
-    @test !report.direct_cartesian_product_assembly_used
-    @test !report.ordinary_cartesian_ida_operators_used
-    @test !report.pqs_transforms_materialized
-    @test !report.exports_or_artifacts
-end
-
-@testset "decomposed WL H GTO supplement final-basis acceptance" begin
-    report = _wl_decomposed_h_gto_supplement_acceptance_report()
-    println("decomposed WL H GTO supplement final-basis acceptance: ", report)
-
-    @test report.status ==
-          :materialized_decomposed_wl_gto_supplement_acceptance
-    @test isnothing(report.blocker)
-    @test report.acceptance_suite ==
-          :decomposed_wl_gausslet_plus_gto_one_electron_acceptance
-    @test report.acceptance_fixture == :h_atom_gto_supplement
-    @test report.base_decomposed_wl_fixture == :h_atom
-    @test report.q == 5
-    @test report.ns == 5
-    @test report.n_s == 5
-    @test report.parent_axis_counts == (7, 7, 7)
-    @test report.decomposed_wl_gausslet_base_path_available
-    @test report.decomposed_unit_pair_inventory_status ==
-          :available_white_lindsey_decomposed_unit_pair_inventory
-    @test isnothing(report.decomposed_unit_pair_inventory_blocker)
-    @test report.decomposed_unit_count == 27
-    @test report.decomposed_unit_pair_count == 378
-    @test report.decomposed_retained_dimension == 223
-    @test report.decomposed_unit_column_range_span == 1:223
-    @test report.route_global_overlap_available
-    @test report.route_global_kinetic_available
-    @test report.route_global_electron_nuclear_by_center_available
-    @test report.parent_pgdg_intermediate_available
-    @test report.parent_pgdg_overlap_available
-    @test report.parent_pgdg_kinetic_available
-    @test report.parent_pgdg_position_available
-    @test report.parent_pgdg_x2_available
-    @test report.parent_pgdg_gaussian_factor_terms_available
-    @test report.parent_pgdg_pair_factor_terms_available
-    @test report.parent_pgdg_weights_available
-    @test report.mixed_gto_axis_contract_status ==
-          :available_mixed_gto_axis_representation_adapter
-    @test isnothing(report.mixed_gto_axis_contract_blocker)
-    @test report.mixed_gto_rejected_helper == :unavailable
-    @test report.mixed_gto_axis_representation_source ==
-          :mapped_ordinary_working_gaussian_proxy_axis_representation
-    @test report.mixed_gto_required_source ==
-          :mapped_ordinary_working_gaussian_proxy_axis_representation
-    @test report.supplement_source_available
-    @test report.supplement_kind == :atomic_cartesian_shell
-    @test report.supplement_atom == "H"
-    @test report.supplement_basis_name == "cc-pVTZ"
-    @test report.supplement_lmax == 0
-    @test report.supplement_orbital_count == 3
-    @test report.supplement_orbital_labels == ("s1", "s2", "s3")
-    @test report.cpb_local_gto_bundle_status ==
-          :materialized_cpb_gto_supplement_local_operator_bundle
-    @test isnothing(report.cpb_local_gto_bundle_blocker)
-    @test report.cpb_local_gto_bundle_terms_available
-    @test report.cpb_local_gto_missing_terms == ()
-    for term in (
-        :mixed_gto_overlap,
-        :mixed_gto_kinetic,
-        :mixed_gto_electron_nuclear_by_center,
-        :gto_overlap,
-        :gto_kinetic,
-        :gto_electron_nuclear_by_center,
-    )
-        @test term in report.cpb_local_gto_included_terms
-    end
-    @test report.cpb_local_direct_core_support_count == 125
-    @test report.mixed_gausslet_gto_overlap_available
-    @test report.mixed_gausslet_gto_kinetic_available
-    @test report.mixed_gausslet_gto_nuclear_by_center_available
-    @test isnothing(report.mixed_gausslet_gto_blocker)
-    @test report.mixed_gausslet_gto_blocker_source ==
-          :_cpb_mixed_gto_parent_axis_representations
-    @test report.mixed_gausslet_gto_rejected_helper == :unavailable
-    @test report.mixed_gausslet_gto_blocker_detail ==
-          :mapped_working_gaussian_proxy_axis_representation_available
-    @test report.mixed_gausslet_gto_required_source ==
-          :mapped_ordinary_working_gaussian_proxy_axis_representation
-    @test report.gto_gto_overlap_available
-    @test report.gto_gto_kinetic_available
-    @test report.gto_gto_nuclear_by_center_available
-    @test report.mixed_gausslet_gto_shapes.overlap == (125, 3)
-    @test report.mixed_gausslet_gto_shapes.kinetic == (125, 3)
-    @test report.mixed_gausslet_gto_shapes.nuclear_by_center == ((125, 3),)
-    @test report.direct_core_mixed_gausslet_gto_shapes.overlap == (125, 3)
-    @test report.route_global_mixed_gto_blocks_status ==
-          :materialized_route_global_mixed_gto_blocks
-    @test isnothing(report.route_global_mixed_gto_blocks_blocker)
-    @test report.route_global_mixed_gto_blocks_materialized
-    @test report.route_global_mixed_gto_placed_unit_count == 27
-    @test report.route_global_mixed_gto_direct_core_unit_count == 1
-    @test report.route_global_mixed_gto_boundary_unit_count == 26
-    @test report.route_global_mixed_gto_direct_core_units_represented
-    @test report.route_global_mixed_gto_boundary_units_represented
-    @test report.route_global_mixed_gto_missing_row_ranges == ()
-    @test report.gto_gto_shapes.overlap == (3, 3)
-    @test report.gto_gto_shapes.kinetic == (3, 3)
-    @test report.gto_gto_shapes.nuclear_by_center == ((3, 3),)
-    @test report.route_global_combined_basis_layout_status ==
-          :available_route_global_combined_gto_basis_layout
-    @test isnothing(report.route_global_combined_basis_layout_blocker)
-    @test report.route_global_combined_basis_layout_kind ==
-          :decomposed_wl_gausslet_plus_gto_supplement
-    @test report.gausslet_retained_range == 1:223
-    @test report.gausslet_retained_dimension == 223
-    @test report.gto_supplement_range == 224:226
-    @test report.gto_supplement_orbital_count == 3
-    @test report.total_combined_dimension == 226
-    @test report.combined_basis_dimension == 226
-    @test report.combined_block_layout_keys ==
-          (:gausslet_gausslet, :gausslet_gto, :gto_gausslet, :gto_gto)
-    @test report.gausslet_gausslet_block_layout.row_range == 1:223
-    @test report.gausslet_gausslet_block_layout.column_range == 1:223
-    @test report.gausslet_gto_block_layout.row_range == 1:223
-    @test report.gausslet_gto_block_layout.column_range == 224:226
-    @test report.gto_gausslet_block_layout.row_range == 224:226
-    @test report.gto_gausslet_block_layout.column_range == 1:223
-    @test report.gto_gto_block_layout.row_range == 224:226
-    @test report.gto_gto_block_layout.column_range == 224:226
-    @test report.mixed_cpb_gto_blocks_orientation ==
-          :gausslet_rows_by_gto_columns
-    @test report.gto_gto_blocks_orientation == :gto_rows_by_gto_columns
-    @test report.final_combined_overlap_layout_available
-    @test report.final_combined_hamiltonian_layout_available
-    @test report.route_global_combined_matrix_assembly_status ==
-          :materialized_route_global_combined_gto_one_electron_matrices
-    @test isnothing(report.route_global_combined_matrix_assembly_blocker)
-    @test report.route_global_combined_mixed_gausslet_row_range == 1:223
-    @test report.route_global_combined_mixed_gausslet_row_count == 223
-    @test report.route_global_combined_mixed_gausslet_row_coverage_status ==
-          :full_mixed_gto_route_global_row_coverage
-    @test report.route_global_combined_overlap_matrix_shape == (226, 226)
-    @test report.route_global_combined_hamiltonian_matrix_shape == (226, 226)
-    @test report.route_global_combined_overlap_symmetry_error < 1.0e-12
-    @test report.route_global_combined_overlap_positive_definite
-    @test report.route_global_combined_overlap_minimum_eigenvalue > 0.0
-    @test report.route_global_combined_overlap_maximum_eigenvalue > 1.0
-    @test report.route_global_combined_overlap_condition_estimate > 1.0
-    @test report.route_global_combined_overlap_near_zero_eigenvalue_count == 0
-    @test report.route_global_combined_overlap_negative_eigenvalue_count == 0
-    @test report.route_global_combined_solve_ready
-    @test report.gausslet_only_h_energy == report.lowest_h_atom_energy
-    @test report.raw_combined_galerkin_checkpoint_status ==
-          :temporary_raw_combined_galerkin_checkpoint
-    @test report.raw_combined_galerkin_solve_status ==
-          :materialized_decomposed_wl_gto_supplement_one_electron_solve
-    @test isnothing(report.raw_combined_galerkin_solve_blocker)
-    @test report.raw_combined_galerkin_solve_kind == :generalized_symmetric
-    @test !report.route_global_combined_overlap_identity
-    @test report.raw_combined_galerkin_energy < report.gausslet_only_h_energy
-    @test report.raw_combined_galerkin_energy > report.h_exact_energy
-    @test isapprox(
-        report.raw_combined_galerkin_energy,
-        -0.49982597871004913;
-        atol = 1.0e-10,
-    )
-    @test report.raw_combined_galerkin_energy_improvement > 0.0
-    @test report.raw_combined_galerkin_distance_from_exact > 0.0
-    @test report.raw_combined_galerkin_elapsed_seconds >= 0.0
-    @test report.final_basis_projection_status ==
-          :materialized_route_global_combined_gto_final_basis_projection
-    @test isnothing(report.final_basis_projection_blocker)
-    @test report.raw_supplement_count == 3
-    @test report.retained_supplement_count == report.raw_supplement_count
-    @test report.dropped_supplement_count ==
-          report.raw_supplement_count - report.retained_supplement_count
-    @test length(report.residual_overlap_eigenvalues) ==
-          report.raw_supplement_count
-    @test minimum(report.residual_overlap_eigenvalues) > 1.0e-4
-    @test report.residual_drop_tolerance > 0.0
-    @test report.final_dimension ==
-          report.gausslet_retained_dimension + report.retained_supplement_count
-    @test report.final_overlap_identity_error <=
-          report.final_overlap_identity_tolerance
-    @test report.transformation_provenance ==
-          :residual_supplement_eigendecomposition_from_combined_overlap
-    @test report.final_orthogonalized_basis_available
-    @test report.final_basis_overlap_identity
-    @test report.final_basis_hamiltonian_available
-    @test !report.generalized_overlap_final_solve
-    @test report.ordinary_hermitian_final_solve_ready
-    @test report.final_basis_solve_status ==
-          :materialized_decomposed_wl_gto_final_basis_one_electron_solve
-    @test isnothing(report.final_basis_solve_blocker)
-    @test report.final_basis_solve_kind == :ordinary_symmetric
-    @test report.active_h_gto_acceptance_solve
-    @test report.active_h_gto_acceptance_energy == report.final_basis_energy
-    @test isapprox(
-        report.final_basis_energy,
-        -0.4998259787100418;
-        atol = 1.0e-10,
-    )
-    @test isapprox(
-        report.final_basis_energy,
-        report.raw_combined_galerkin_energy;
-        atol = 1.0e-10,
-    )
-    @test report.final_basis_energy < report.gausslet_only_h_energy
-    @test report.final_basis_energy > report.h_exact_energy
-    @test report.final_basis_energy_improvement > 0.0
-    @test report.final_basis_distance_from_exact > 0.0
-    @test report.final_basis_solve_elapsed_seconds >= 0.0
-    @test isnothing(report.final_basis_blocker)
-    @test report.route_global_combined_nuclear_charge_application_stage ==
-          :route_global_combined_gto_hamiltonian_assembly
-    @test report.route_global_combined_nuclear_charge_applied_at_hamiltonian_assembly
-    @test report.route_global_combined_centers_summed_at_hamiltonian_assembly
-    @test report.route_global_combined_overlap_matrix_materialized
-    @test report.route_global_combined_hamiltonian_matrix_materialized
-    @test report.gto_route_global_blocks_materialized
-    @test report.gto_hamiltonian_assembly_materialized
-    @test !report.full_parent_window_cpb_used
-    @test !report.direct_cartesian_product_assembly_used
-    @test !report.ordinary_cartesian_ida_operators_used
-    @test !report.exports_or_artifacts
-end
-
 @testset "decomposed WL gausslet-only H2+ acceptance" begin
     report = _wl_decomposed_h2plus_acceptance_report()
     println("decomposed WL gausslet-only H2+ acceptance: ", report)
@@ -1742,4 +1476,167 @@ end
     @test report.h2plus_acceptance_active
     @test report.acceptance_fixture_active
     @test report.elapsed_seconds >= 0.0
+end
+
+@testset "decomposed WL H GTO supplement final-basis acceptance" begin
+    report = _wl_decomposed_h_gto_supplement_acceptance_report()
+    println("decomposed WL H GTO supplement final-basis acceptance: ", report)
+
+    @test report.status ==
+          :materialized_decomposed_wl_gto_supplement_acceptance
+    @test isnothing(report.blocker)
+    @test report.acceptance_suite ==
+          :decomposed_wl_gausslet_plus_gto_one_electron_acceptance
+    @test report.acceptance_fixture == :h_atom_gto_supplement
+    @test report.q == 5
+    @test report.ns == 5
+    @test report.n_s == 5
+    @test report.decomposed_wl_gausslet_base_path_available
+    @test report.decomposed_unit_count == 27
+    @test report.decomposed_unit_pair_count == 378
+    @test report.decomposed_retained_dimension == 223
+    @test report.supplement_source_available
+    @test report.supplement_kind == :atomic_cartesian_shell
+    @test report.supplement_lmax == 0
+    @test report.supplement_orbital_count == 3
+    @test report.supplement_orbital_labels == ("s1", "s2", "s3")
+    @test report.cpb_local_gto_bundle_status ==
+          :materialized_cpb_gto_supplement_local_operator_bundle
+    @test isnothing(report.cpb_local_gto_bundle_blocker)
+    @test report.route_global_mixed_gto_blocks_status ==
+          :materialized_route_global_mixed_gto_blocks
+    @test isnothing(report.route_global_mixed_gto_blocks_blocker)
+    @test report.route_global_mixed_gto_missing_row_ranges == ()
+    @test report.route_global_combined_basis_layout_status ==
+          :available_route_global_combined_gto_basis_layout
+    @test report.gausslet_retained_dimension == 223
+    @test report.gto_supplement_orbital_count == 3
+    @test report.combined_basis_dimension == 226
+    @test report.route_global_combined_matrix_assembly_status ==
+          :materialized_route_global_combined_gto_one_electron_matrices
+    @test isnothing(report.route_global_combined_matrix_assembly_blocker)
+    @test report.route_global_combined_overlap_matrix_shape == (226, 226)
+    @test report.route_global_combined_hamiltonian_matrix_shape == (226, 226)
+    @test report.route_global_combined_overlap_positive_definite
+    @test report.gausslet_only_h_energy == report.lowest_h_atom_energy
+    @test report.raw_combined_galerkin_checkpoint_status ==
+          :temporary_raw_combined_galerkin_checkpoint
+    @test report.raw_combined_galerkin_solve_kind == :generalized_symmetric
+    @test isapprox(
+        report.raw_combined_galerkin_energy,
+        -0.49982597871004913;
+        atol = 1.0e-10,
+    )
+    @test report.final_basis_projection_status ==
+          :materialized_route_global_combined_gto_final_basis_projection
+    @test isnothing(report.final_basis_projection_blocker)
+    @test report.raw_supplement_count == 3
+    @test report.retained_supplement_count == report.raw_supplement_count
+    @test report.dropped_supplement_count == 0
+    @test minimum(report.residual_overlap_eigenvalues) > 1.0e-4
+    @test report.final_overlap_identity_error <=
+          report.final_overlap_identity_tolerance
+    @test report.final_basis_overlap_identity
+    @test !report.generalized_overlap_final_solve
+    @test report.ordinary_hermitian_final_solve_ready
+    @test report.final_basis_solve_status ==
+          :materialized_decomposed_wl_gto_final_basis_one_electron_solve
+    @test isnothing(report.final_basis_solve_blocker)
+    @test report.final_basis_solve_kind == :ordinary_symmetric
+    @test report.active_h_gto_acceptance_solve
+    @test report.active_h_gto_acceptance_energy == report.final_basis_energy
+    @test isapprox(
+        report.final_basis_energy,
+        -0.4998259787100418;
+        atol = 1.0e-10,
+    )
+    @test isapprox(
+        report.final_basis_energy,
+        report.raw_combined_galerkin_energy;
+        atol = 1.0e-10,
+    )
+    @test report.final_basis_energy < report.gausslet_only_h_energy
+    @test report.final_basis_energy > report.h_exact_energy
+    @test report.final_basis_energy_improvement > 0.0
+    @test isnothing(report.final_basis_blocker)
+    @test report.route_global_combined_nuclear_charge_application_stage ==
+          :route_global_combined_gto_hamiltonian_assembly
+    @test report.route_global_combined_nuclear_charge_applied_at_hamiltonian_assembly
+    @test report.route_global_combined_centers_summed_at_hamiltonian_assembly
+    @test !report.full_parent_window_cpb_used
+    @test !report.direct_cartesian_product_assembly_used
+    @test !report.ordinary_cartesian_ida_operators_used
+    @test !report.exports_or_artifacts
+end
+
+@testset "decomposed WL H2+ GTO supplement final-basis acceptance" begin
+    report = _wl_decomposed_h2plus_gto_supplement_acceptance_report()
+    println("decomposed WL H2+ GTO supplement final-basis acceptance: ", report)
+
+    @test report.status ==
+          :materialized_decomposed_wl_h2plus_gto_supplement_acceptance
+    @test isnothing(report.blocker)
+    @test report.acceptance_suite ==
+          :decomposed_wl_gausslet_plus_gto_one_electron_acceptance
+    @test report.acceptance_fixture == :h2plus_gto_supplement
+    @test report.q == 5
+    @test report.ns == 5
+    @test report.n_s == 5
+    @test report.bond_length == 2.0
+    @test report.center_count == 2
+    @test report.center_keys == (:proton_a, :proton_b)
+    @test report.supplement_kind == :bond_aligned_diatomic_cartesian_shell
+    @test report.supplement_orbital_count == 6
+    @test report.supplement_unique_orbital_centers == report.center_locations
+    @test report.gausslet_retained_dimension == 223
+    @test report.combined_dimension == 229
+    @test report.route_global_combined_matrix_assembly_status ==
+          :materialized_route_global_combined_gto_one_electron_matrices
+    @test isnothing(report.route_global_combined_matrix_assembly_blocker)
+    @test report.route_global_combined_overlap_positive_definite
+    @test report.raw_combined_galerkin_checkpoint_status ==
+          :temporary_raw_combined_galerkin_checkpoint
+    @test report.raw_combined_galerkin_solve_kind == :generalized_symmetric
+    @test report.final_basis_projection_status ==
+          :materialized_route_global_combined_gto_final_basis_projection
+    @test isnothing(report.final_basis_projection_blocker)
+    @test report.raw_supplement_count == 6
+    @test report.retained_supplement_count == 6
+    @test report.dropped_supplement_count == 0
+    @test length(report.residual_overlap_eigenvalues) ==
+          report.raw_supplement_count
+    @test minimum(report.residual_overlap_eigenvalues) > 1.0e-4
+    @test report.final_overlap_identity_error <=
+          report.final_overlap_identity_tolerance
+    @test !report.generalized_overlap_final_solve
+    @test report.ordinary_hermitian_final_solve_ready
+    @test report.final_basis_solve_status ==
+          :materialized_decomposed_wl_gto_final_basis_one_electron_solve
+    @test isnothing(report.final_basis_solve_blocker)
+    @test report.final_basis_solve_kind == :ordinary_symmetric
+    @test report.active_h2plus_gto_acceptance_solve
+    @test isapprox(
+        report.final_electronic_energy,
+        -1.0988624733888488;
+        atol = 1.0e-10,
+    )
+    @test isapprox(
+        report.final_total_bo_energy,
+        -0.5988624733888488;
+        atol = 1.0e-10,
+    )
+    @test isapprox(
+        report.total_bo_energy_improvement,
+        0.06502074534447178;
+        atol = 1.0e-10,
+    )
+    @test report.final_total_bo_energy < report.gausslet_only_total_bo_energy
+    @test report.final_total_bo_energy > report.exact_total_bo_energy
+    @test report.final_electronic_energy > report.exact_electronic_energy
+    @test report.elapsed_seconds >= 0.0
+    @test !report.full_parent_window_cpb_used
+    @test !report.direct_cartesian_product_assembly_used
+    @test !report.ordinary_cartesian_ida_operators_used
+    @test !report.pqs_transforms_materialized
+    @test !report.exports_or_artifacts
 end
