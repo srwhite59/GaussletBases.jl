@@ -112,7 +112,23 @@ Current status:
   charge application to acceptance/Hamiltonian assembly
 - therefore active H and H2+ scientific acceptance through the decomposed WL
   path is now blocked one step later, on
-  `:missing_decomposed_wl_acceptance_unit_inventory`
+  `:missing_decomposed_wl_unit_pair_inventory_with_column_ranges`
+
+The current q = 5, ns = 5 route metadata exposes terminal shellification unit
+inventory at terminal-region granularity, and the local White-Lindsey adapter can
+materialize overlap, kinetic, and one-center electron-nuclear by-center blocks
+for a supplied decomposed unit pair. However, the acceptance path still lacks a
+real route-owned inventory of individual decomposed unit pairs with retained
+column ranges and a retained/global dimension derived from those units. The
+generic route-global one-body adapter currently owns only the safe one-body terms
+(`overlap`, `kinetic`, `position_*`, `x2_*`); the by-center nuclear path is
+available at local-collection placement level, but not yet as a route-global
+acceptance matrix over a real decomposed inventory.
+
+Do not use the existing nested fixed-block operator matrices as the acceptance
+path. They remain useful historical/oracle material, but they bypass the
+decomposed retained-unit pair inventory that the active WL scientific tests are
+intended to protect.
 
 The retired transition helpers built one full-parent CPB with role
 `:wl_cpb_acceptance_full_parent_window`. That path exercised CPB-local
@@ -133,9 +149,10 @@ only:
 - H2+ R = 2.0 direct total energy `-0.5654839328172023` Hartree
 
 The next implementation needed before restoring active scientific H/H2+
-acceptance is a q = 5, ns = 5 decomposed acceptance assembly over real
-White-Lindsey retained/boundary units: build the relevant unit-pair local
-blocks, place overlap/kinetic/by-center nuclear matrices through retained-unit
-ranges, and apply nuclear charges only at the acceptance/Hamiltonian assembly
-boundary. Do not reintroduce the full-parent CPB helper or a direct Cartesian
+acceptance is a q = 5, ns = 5 decomposed acceptance inventory over real
+White-Lindsey retained/boundary units: expose the relevant unit-pair records and
+retained column ranges, build the local pair blocks, place
+overlap/kinetic/by-center nuclear matrices through those ranges, and apply
+nuclear charges only at the acceptance/Hamiltonian assembly boundary. Do not
+reintroduce the full-parent CPB helper or a direct Cartesian
 product fallback as the active route.
