@@ -9,6 +9,7 @@ const _WHITE_LINDSEY_ONE_BODY_TERMS = (
     :x2_y,
     :x2_z,
     :kinetic,
+    :electron_nuclear_by_center,
 )
 
 """
@@ -28,6 +29,9 @@ function white_lindsey_boundary_stratum_one_body_block(
     position_1d = nothing,
     x2_1d = nothing,
     kinetic_1d = nothing,
+    parent_axis_bundle_object = nothing,
+    coulomb_expansion = nothing,
+    center_record = nothing,
 )
     term = _white_lindsey_one_body_term(term)
     if term === :overlap
@@ -66,6 +70,29 @@ function white_lindsey_boundary_stratum_one_body_block(
             overlap_1d,
             kinetic_1d,
         )
+    elseif term === :electron_nuclear_by_center
+        _white_lindsey_require_one_body_factor(
+            term,
+            :parent_axis_bundle_object,
+            parent_axis_bundle_object,
+        )
+        _white_lindsey_require_one_body_factor(
+            term,
+            :coulomb_expansion,
+            coulomb_expansion,
+        )
+        _white_lindsey_require_one_body_factor(
+            term,
+            :center_record,
+            center_record,
+        )
+        return white_lindsey_boundary_stratum_electron_nuclear_by_center_block(
+            pair_unit_coefficients;
+            parent_axis_counts,
+            parent_axis_bundle_object,
+            coulomb_expansion,
+            center_record,
+        )
     end
     throw(ArgumentError("unsupported White--Lindsey one-body term $(term)"))
 end
@@ -78,6 +105,9 @@ function white_lindsey_boundary_stratum_one_body_block(
     position_1d = nothing,
     x2_1d = nothing,
     kinetic_1d = nothing,
+    parent_axis_bundle_object = nothing,
+    coulomb_expansion = nothing,
+    center_record = nothing,
 )
     return white_lindsey_boundary_stratum_one_body_block(
         white_lindsey_boundary_stratum_pair_unit_coefficients(unit_pair),
@@ -87,6 +117,9 @@ function white_lindsey_boundary_stratum_one_body_block(
         position_1d,
         x2_1d,
         kinetic_1d,
+        parent_axis_bundle_object,
+        coulomb_expansion,
+        center_record,
     )
 end
 
@@ -107,6 +140,9 @@ function white_lindsey_boundary_stratum_one_body_blocks(
     position_1d = nothing,
     x2_1d = nothing,
     kinetic_1d = nothing,
+    parent_axis_bundle_object = nothing,
+    coulomb_expansion = nothing,
+    center_record = nothing,
 )
     term = _white_lindsey_one_body_term(term)
     _white_lindsey_require_one_body_factors(
@@ -115,6 +151,9 @@ function white_lindsey_boundary_stratum_one_body_blocks(
         position_1d,
         x2_1d,
         kinetic_1d,
+        parent_axis_bundle_object,
+        coulomb_expansion,
+        center_record,
     )
     pair_unit_coefficients, input_kind, cache_entry_count =
         _white_lindsey_one_body_batch_pair_inputs(records_or_pairs)
@@ -133,6 +172,9 @@ function white_lindsey_boundary_stratum_one_body_blocks(
                     position_1d,
                     x2_1d,
                     kinetic_1d,
+                    parent_axis_bundle_object,
+                    coulomb_expansion,
+                    center_record,
                 ),
             )
         else
@@ -306,6 +348,9 @@ function _white_lindsey_require_one_body_factors(
     position_1d,
     x2_1d,
     kinetic_1d,
+    parent_axis_bundle_object,
+    coulomb_expansion,
+    center_record,
 )
     if term === :overlap
         _white_lindsey_require_one_body_factor(term, :overlap_1d, overlap_1d)
@@ -318,6 +363,22 @@ function _white_lindsey_require_one_body_factors(
     elseif term === :kinetic
         _white_lindsey_require_one_body_factor(term, :overlap_1d, overlap_1d)
         _white_lindsey_require_one_body_factor(term, :kinetic_1d, kinetic_1d)
+    elseif term === :electron_nuclear_by_center
+        _white_lindsey_require_one_body_factor(
+            term,
+            :parent_axis_bundle_object,
+            parent_axis_bundle_object,
+        )
+        _white_lindsey_require_one_body_factor(
+            term,
+            :coulomb_expansion,
+            coulomb_expansion,
+        )
+        _white_lindsey_require_one_body_factor(
+            term,
+            :center_record,
+            center_record,
+        )
     else
         throw(ArgumentError("unsupported White--Lindsey one-body term $(term)"))
     end

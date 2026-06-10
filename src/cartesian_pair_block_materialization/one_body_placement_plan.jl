@@ -14,6 +14,17 @@ function one_body_kinetic_placement_plan(collection; global_dimension = nothing)
     return one_body_placement_plan(collection; term = :kinetic, global_dimension)
 end
 
+function one_body_electron_nuclear_by_center_placement_plan(
+    collection;
+    global_dimension = nothing,
+)
+    return one_body_placement_plan(
+        collection;
+        term = :electron_nuclear_by_center,
+        global_dimension,
+    )
+end
+
 function one_body_position_x_placement_plan(collection; global_dimension = nothing)
     return one_body_placement_plan(collection; term = :position_x, global_dimension)
 end
@@ -45,7 +56,7 @@ function one_body_placement_plan(
 )
     term in _one_body_supported_global_placement_terms() || throw(
         ArgumentError(
-            "local one-body placement planning currently supports :overlap, :kinetic, :position_x/:position_y/:position_z, and :x2_x/:x2_y/:x2_z only",
+            "local one-body placement planning currently supports :overlap, :kinetic, :position_x/:position_y/:position_z, :x2_x/:x2_y/:x2_z, and :electron_nuclear_by_center only",
         ),
     )
     _one_body_assert_local_block_collection(collection)
@@ -105,6 +116,7 @@ function _one_body_supported_global_placement_terms()
         :x2_x,
         :x2_y,
         :x2_z,
+        :electron_nuclear_by_center,
     )
 end
 
@@ -141,6 +153,31 @@ function _one_body_placement_record(
         result_term = _one_body_placement_value(entry, :result_term, nothing),
         source_space_term =
             _one_body_placement_value(entry, :source_space_term, nothing),
+        center_index = _one_body_placement_entry_metadata_value(
+            entry,
+            :center_index,
+            nothing,
+        ),
+        center_key = _one_body_placement_entry_metadata_value(
+            entry,
+            :center_key,
+            nothing,
+        ),
+        center_location = _one_body_placement_entry_metadata_value(
+            entry,
+            :center_location,
+            nothing,
+        ),
+        nuclear_charge_recorded = _one_body_placement_entry_metadata_value(
+            entry,
+            :nuclear_charge_recorded,
+            false,
+        ),
+        nuclear_charge_applied = _one_body_placement_entry_metadata_value(
+            entry,
+            :nuclear_charge_applied,
+            false,
+        ),
         pair_key = _one_body_placement_value(entry, :pair_key, nothing),
         pair_index = _one_body_placement_value(entry, :pair_index, nothing),
         selector_family =
@@ -238,6 +275,17 @@ function _one_body_placement_entry_metadata(entry::NamedTuple)
     skipped_record isa NamedTuple && return skipped_record
 
     return (;)
+end
+
+function _one_body_placement_entry_metadata_value(
+    entry::NamedTuple,
+    key::Symbol,
+    default = nothing,
+)
+    value = _one_body_placement_value(entry, key, nothing)
+    isnothing(value) || return value
+    metadata = _one_body_placement_entry_metadata(entry)
+    return _one_body_placement_value(metadata, key, default)
 end
 
 function _one_body_placement_valid_column_range(value)

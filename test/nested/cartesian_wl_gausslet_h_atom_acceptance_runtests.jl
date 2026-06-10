@@ -2,8 +2,8 @@
 #
 # The former post-CPB acceptance test used one CPB covering the full parent
 # window. That is not a decomposed White-Lindsey acceptance path. Keep this file
-# as a small blocker audit until decomposed by-center electron-nuclear placement
-# exists for q = 5, ns = 5 scientific H/H2+ acceptance calculations.
+# as a small blocker audit until q = 5, ns = 5 scientific H/H2+ acceptance
+# assembly consumes a real decomposed unit inventory.
 
 using Test
 using GaussletBases
@@ -40,7 +40,7 @@ function _wl_decomposed_acceptance_blocker_report()
     return (;
         object_kind = :decomposed_wl_h_h2plus_acceptance_readiness_audit,
         status = :blocked_decomposed_wl_h_h2plus_acceptance,
-        blocker = :missing_decomposed_wl_electron_nuclear_by_center_placement,
+        blocker = :missing_decomposed_wl_acceptance_unit_inventory,
         q = 5,
         ns = 5,
         n_s = 5,
@@ -53,10 +53,12 @@ function _wl_decomposed_acceptance_blocker_report()
         decomposed_kinetic_available = :kinetic in local_terms,
         decomposed_electron_nuclear_by_center_available =
             :electron_nuclear_by_center in local_terms,
-        decomposed_electron_nuclear_by_center_selector_available = false,
+        decomposed_electron_nuclear_by_center_selector_available =
+            :electron_nuclear_by_center in local_terms,
         decomposed_electron_nuclear_by_center_placement_plan_available =
             !placement_plan_blocked,
-        decomposed_electron_nuclear_by_center_global_matrix_available = false,
+        decomposed_electron_nuclear_by_center_global_matrix_available =
+            !placement_plan_blocked,
         placement_plan_error_type =
             isnothing(placement_plan_error) ? nothing : typeof(placement_plan_error),
         acceptance_energy_materialized = false,
@@ -71,16 +73,16 @@ end
 
     @test report.status == :blocked_decomposed_wl_h_h2plus_acceptance
     @test report.blocker ==
-          :missing_decomposed_wl_electron_nuclear_by_center_placement
+          :missing_decomposed_wl_acceptance_unit_inventory
     @test report.q == 5
     @test report.ns == 5
     @test report.n_s == 5
     @test report.decomposed_overlap_available
     @test report.decomposed_kinetic_available
-    @test !report.decomposed_electron_nuclear_by_center_available
-    @test !report.decomposed_electron_nuclear_by_center_selector_available
-    @test !report.decomposed_electron_nuclear_by_center_placement_plan_available
-    @test !report.decomposed_electron_nuclear_by_center_global_matrix_available
+    @test report.decomposed_electron_nuclear_by_center_available
+    @test report.decomposed_electron_nuclear_by_center_selector_available
+    @test report.decomposed_electron_nuclear_by_center_placement_plan_available
+    @test report.decomposed_electron_nuclear_by_center_global_matrix_available
     @test !report.decomposed_wl_units_consumed
     @test !report.full_parent_window_cpb_used
     @test !report.direct_cartesian_product_assembly_used

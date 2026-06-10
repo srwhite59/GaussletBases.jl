@@ -104,11 +104,15 @@ Current status:
 - decomposed White-Lindsey overlap and kinetic local pair-block paths exist
 - global pilots exist for those supported safe one-body terms
 - CPB-local electron-nuclear by-center provider blocks exist
-- decomposed White-Lindsey electron-nuclear by-center selector, placement plan,
-  and global by-center matrix path do not exist yet
+- decomposed White-Lindsey electron-nuclear by-center local block support now
+  exists for one center
+- placement-plan and global by-center matrix pilots now accept
+  `:electron_nuclear_by_center` records
+- by-center records keep center identity separated and defer physical nuclear
+  charge application to acceptance/Hamiltonian assembly
 - therefore active H and H2+ scientific acceptance through the decomposed WL
-  path is blocked on
-  `:missing_decomposed_wl_electron_nuclear_by_center_placement`
+  path is now blocked one step later, on
+  `:missing_decomposed_wl_acceptance_unit_inventory`
 
 The retired transition helpers built one full-parent CPB with role
 `:wl_cpb_acceptance_full_parent_window`. That path exercised CPB-local
@@ -129,8 +133,9 @@ only:
 - H2+ R = 2.0 direct total energy `-0.5654839328172023` Hartree
 
 The next implementation needed before restoring active scientific H/H2+
-acceptance is a decomposed WL electron-nuclear by-center path that keeps center
-records separate, applies nuclear charges at the acceptance/Hamiltonian
-assembly boundary, and places the resulting by-center blocks through real
-boundary-unit ranges. Do not reintroduce the full-parent CPB helper or a direct
-Cartesian product fallback as the active route.
+acceptance is a q = 5, ns = 5 decomposed acceptance assembly over real
+White-Lindsey retained/boundary units: build the relevant unit-pair local
+blocks, place overlap/kinetic/by-center nuclear matrices through retained-unit
+ranges, and apply nuclear charges only at the acceptance/Hamiltonian assembly
+boundary. Do not reintroduce the full-parent CPB helper or a direct Cartesian
+product fallback as the active route.

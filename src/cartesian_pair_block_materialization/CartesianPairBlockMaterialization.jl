@@ -81,9 +81,12 @@ export PairBlockMaterializationPolicy,
        white_lindsey_boundary_stratum_position_block,
        white_lindsey_boundary_stratum_x2_block,
        white_lindsey_boundary_stratum_kinetic_block,
+       white_lindsey_boundary_stratum_electron_nuclear_by_center_block,
        white_lindsey_boundary_stratum_one_body_block,
        white_lindsey_boundary_stratum_one_body_blocks,
        white_lindsey_boundary_stratum_one_body_adapter_summary,
+       one_body_electron_nuclear_by_center_placement_plan,
+       one_body_global_electron_nuclear_by_center_matrix,
        direct_direct_overlap_block,
        direct_direct_overlap_blocks,
        direct_direct_position_block,
@@ -154,6 +157,10 @@ export PairBlockMaterializationPolicy,
 #     X2-axis dense global retained-matrix assembly pilots from placeable local
 #     placement records only.
 #
+# one_body_global_electron_nuclear.jl
+#     By-center electron-nuclear dense global retained-matrix pilot from
+#     placeable local placement records only.
+#
 # pqs_source_safe_terms.jl
 #     PQS/PQS raw source-space safe-term helpers.
 #
@@ -188,6 +195,9 @@ export PairBlockMaterializationPolicy,
 #
 # white_lindsey_kinetic.jl
 #     Kinetic-only LW pair-block pilot.
+#
+# white_lindsey_electron_nuclear.jl
+#     By-center electron-nuclear LW pair-block pilot.
 #
 # white_lindsey_one_body.jl
 #     Selector and compact summaries over LW one-body safe-term pilots.
@@ -224,6 +234,7 @@ include("one_body_global_overlap.jl")
 include("one_body_global_kinetic.jl")
 include("one_body_global_position.jl")
 include("one_body_global_x2.jl")
+include("one_body_global_electron_nuclear.jl")
 include("direct_overlap.jl")
 include("pqs_source_safe_terms.jl")
 include("pqs_source_shell_bridge.jl")
@@ -236,6 +247,7 @@ include("white_lindsey_overlap.jl")
 include("white_lindsey_position.jl")
 include("white_lindsey_x2.jl")
 include("white_lindsey_kinetic.jl")
+include("white_lindsey_electron_nuclear.jl")
 include("white_lindsey_one_body.jl")
 include("direct_position.jl")
 include("direct_x2.jl")

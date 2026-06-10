@@ -694,6 +694,7 @@ include("cartesian_white_lindsey_adapter_fixture_helpers.jl")
         :x2_y,
         :x2_z,
         :kinetic,
+        :electron_nuclear_by_center,
     )
     @test adapter_surface_summary.supported_unit_strata ==
           (:facet_cpb, :face_cpb, :edge_cpb, :corner_cpb)
