@@ -2,6 +2,16 @@
 
 These are local Julia style preferences. They are meant to guide small cleanup passes and new code edits without changing algorithms or method contracts.
 
+## Account For Carrying Cost
+
+Every line of source, test, documentation, compatibility glue, metadata, and
+adapter code has carrying cost. New lines should earn that cost by protecting a
+live contract, improving clarity, reducing duplication, improving performance,
+or enabling a current workflow.
+
+Do not optimize for the fewest lines when clarity or numerical safety would
+suffer, but prefer net simplification when the benefit is otherwise equal.
+
 ## Prefer Module-Owned Concepts Over Flat Field Clouds
 
 When new code introduces a stable concept, prefer a small internal module with
@@ -189,6 +199,36 @@ specifically about that internal representation.
 
 Do not compare large staged objects with `==` or `===`. Compare compact
 summaries, counts, keys, statuses, dimensions, and selected numerical values.
+
+## Keep Tests Small And Outcome-Oriented
+
+A good test should protect an active contract or a meaningful numerical result.
+It should not preserve implementation vocabulary for its own sake.
+
+Prefer tests that check:
+
+- physically meaningful endpoint behavior;
+- representative numerical values;
+- shapes, dimensions, counts, and symmetry;
+- compact statuses and blockers at module boundaries;
+- one or two representative failure modes.
+
+Avoid tests that check:
+
+- private helper names;
+- every field of a large summary;
+- repeated nonclaim flags in many places;
+- exhaustive blocked-path matrices for stable helpers;
+- all internal inventory vocabulary;
+- stale route-shadow or diagnostic scaffolding.
+
+Use compact fingerprints rather than deep object comparisons. Do not compare
+large staged objects with `==` or `===`; compare selected fields that define the
+contract.
+
+When removing obsolete code, shrink tests at the same time. Do not replace a
+large stale test with new local scaffolding unless that scaffolding is clearly
+part of the active contract and the net result is simpler.
 
 ## Prefer Comprehensions For Simple Filled Arrays
 

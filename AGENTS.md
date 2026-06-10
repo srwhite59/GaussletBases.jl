@@ -103,6 +103,13 @@ Use `JuliaStyle.md` as the local guide for small Julia cleanup passes and new
 code edits. These preferences are low priority relative to correctness and
 contract clarity; do not churn numerical kernels solely for style.
 
+Every line of source, test, documentation, compatibility glue, metadata, and
+adapter code has carrying cost. New code should earn that cost by protecting a
+live contract, improving clarity, reducing duplication, improving performance,
+or enabling a current workflow. Do not optimize for the fewest lines when
+clarity or numerical safety would suffer, but prefer net simplification when the
+benefit is otherwise equal.
+
 ## Structured state, staged metadata, and test runtime rules
 
 Short commandment:
@@ -127,6 +134,52 @@ Short commandment:
 
 Detailed policy lives in
 `docs/src/developer/test_suite_reorganization_plan.md`.
+
+## Test scope and deletion bias
+
+Tests are code. They carry runtime cost, maintenance cost, and conceptual cost.
+Do not treat more tests as automatically better.
+
+Prefer this test hierarchy:
+
+- Scientific endpoint tests: highest value. Prefer checks that exercise real
+  user workflows and physically meaningful results, such as atom/molecule
+  energies, matrix symmetries, convergence, and known reference values.
+  Endpoint tests should still be representative and bounded; they are high value
+  as acceptance gates, not default per-edit gates.
+- Compact module-contract tests: useful for active kernels, public/module-level
+  constructors, and boundaries likely to be edited.
+- Oracle/reference tests: keep only when they validate a live replacement path
+  or a difficult numerical convention.
+- Development scaffolding tests: delete or quarantine once the transition they
+  supported is complete.
+- Exhaustive metadata tests: avoid unless the metadata itself is the active
+  contract.
+
+Before adding a new test, state what non-obvious bug it would catch and why an
+existing endpoint, smoke, or module-contract test would not catch or localize
+that bug well enough.
+
+During cleanup or retirement work:
+
+- Prefer deleting stale helpers and their tests over preserving them through
+  adapters.
+- If a path is obsolete and only tests call it, delete both the path and the
+  test pressure.
+- If deletion is blocked by live source callers, report the exact callers and
+  stop rather than adding a bridge by default.
+- Net line count should usually go down for retirement tasks. New scaffolding is
+  justified only when it replaces more stale code than it adds.
+- Do not add tests that mainly preserve old helper names, route-shadow
+  vocabulary, all-pairs inventory details, or transitional metadata flags.
+
+Stable code that is not expected to change soon usually needs only a small smoke
+or endpoint check, not all development-era blocked-path and internal-vocabulary
+tests.
+
+When uncertain during cleanup, prefer a smaller active-contract smoke test plus
+a real downstream endpoint check over preserving exhaustive development-era
+tests.
 
 ## Final-basis overlap policy
 
