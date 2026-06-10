@@ -622,3 +622,30 @@ Batch actions:
   facts through `_pqs_pqs_product_source_box_all_pairs_inventory(...)`.
 - Updated developer docs so the deleted shadow/helper families are described
   as retirement history, not present-tense provider or route contracts.
+
+Sixth Coulomb-family route-shaped sweep:
+
+| Helper family | Caller classification | Action |
+| --- | --- | --- |
+| `_pqs_pqs_product_raw_box_density_density_route_producer(...)` | `SHRINK_TEST_ONLY` / `MOVE_LATER_TO_CPB` | Kept. Source callers remain the IDA-provenance adapter and component route smoke path. Slow tests now keep only finite route-shaped matrix smoke and raw-vs-normalized agreement. |
+| `_pqs_pqs_product_density_density_route_ranges(...)` | `KEEP_ORACLE_ONLY` | Kept. Source caller remains `_pqs_pqs_product_route_shaped_density_density_consumer(...)`. Tests no longer assert route-range implementation vocabulary directly. |
+| `_pqs_pqs_product_density_density_all_pairs_inventory(...)` | `SHRINK_TEST_ONLY` / `MOVE_LATER_TO_CPB` | Kept. Source caller remains `_pqs_pqs_product_route_shaped_density_density_consumer(...)`. Slow tests no longer preserve all-pairs inventory object names or helper-family maps. |
+| `_pqs_pqs_product_density_density_pair_block(...)` | `MOVE_LATER_TO_CPB` | Kept. Source caller remains the route-shaped density-density consumer. CPB-local electron-electron provider tests now own detailed local pair-factor numerical coverage. |
+| `_pqs_pqs_product_route_shaped_density_density_consumer(...)` | `SHRINK_TEST_ONLY` / `MOVE_LATER_TO_CPB` | Kept. Source caller remains `_pqs_pqs_product_raw_box_density_density_route_producer(...)`. Slow tests now assert only retained shape, finite output, pair counts, symmetry, and raw-weighted equivalence. |
+| `_pqs_pqs_product_nuclear_attraction_pair_block(...)` | `MOVE_LATER_TO_CPB` | Kept. Source caller remains `_pqs_pqs_product_route_shaped_nuclear_attraction_by_center(...)`. CPB-local electron-nuclear provider tests own detailed by-center local block coverage. |
+| `_pqs_pqs_product_nuclear_attraction_all_pairs_inventory(...)` | `SHRINK_TEST_ONLY` / `MOVE_LATER_TO_CPB` | Kept. Source caller remains `_pqs_pqs_product_route_shaped_nuclear_attraction_by_center(...)`. Slow tests no longer assert all-pairs inventory helper-family vocabulary. |
+| `_pqs_pqs_product_route_shaped_nuclear_attraction_by_center(...)` | `SHRINK_TEST_ONLY` / `MOVE_LATER_TO_CPB` | Kept. Source caller remains the component route smoke path. Slow tests now keep by-center separation, finite matrices, center labels/charges, and summed-center smoke only. |
+
+Batch actions:
+
+- No Coulomb-family source helper was deleted in this sweep because each
+  candidate still has a source caller inside the remaining CCPM IDA provenance
+  or component route smoke path.
+- The slow PQS local-layer integration test no longer reconstructs route-shaped
+  density-density or nuclear matrices from every old source-box pair helper.
+  It also no longer asserts all-pairs inventory object names, helper maps, or
+  repeated diagnostic nonclaims for these Coulomb-family paths.
+- Detailed local Coulomb numerical correctness is intentionally owned by the
+  CPB provider electron-electron and electron-nuclear local block tests. The
+  CCPM route-shaped Coulomb helpers remain retirement-bound diagnostics/oracles
+  until a real CPB route adaptation replaces their remaining source callers.

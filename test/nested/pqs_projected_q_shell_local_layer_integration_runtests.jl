@@ -1221,74 +1221,12 @@
                 axis_pair_factor_terms = density_pair_terms,
                 axis_weights = density_source_weights,
             )
-        units = route_units.units
-        ranges = consumer.ranges
-        left_left =
-            metrics_module._pqs_pqs_source_box_density_density_interaction_block(
-                units.pqs_left,
-                units.pqs_left;
-                term_coefficients,
-                axis_pair_factor_terms = density_pair_terms,
-                axis_weights = density_source_weights,
-            )
-        left_right =
-            metrics_module._pqs_pqs_source_box_density_density_interaction_block(
-                units.pqs_left,
-                units.pqs_right;
-                term_coefficients,
-                axis_pair_factor_terms = density_pair_terms,
-                axis_weights = density_source_weights,
-            )
-        right_right =
-            metrics_module._pqs_pqs_source_box_density_density_interaction_block(
-                units.pqs_right,
-                units.pqs_right;
-                term_coefficients,
-                axis_pair_factor_terms = density_pair_terms,
-                axis_weights = density_source_weights,
-            )
-        left_product =
-            metrics_module._pqs_product_source_box_density_density_interaction_block(
-                units.pqs_left,
-                units.product;
-                term_coefficients,
-                axis_pair_factor_terms = density_pair_terms,
-                axis_weights = density_source_weights,
-            )
-        right_product =
-            metrics_module._pqs_product_source_box_density_density_interaction_block(
-                units.pqs_right,
-                units.product;
-                term_coefficients,
-                axis_pair_factor_terms = density_pair_terms,
-                axis_weights = density_source_weights,
-            )
-        product_product =
-            metrics_module._product_doside_source_box_density_density_interaction_block(
-                units.product,
-                units.product;
-                term_coefficients,
-                axis_pair_factor_terms = density_pair_terms,
-                axis_weights = density_source_weights,
-            )
-        explicit = zeros(Float64, consumer.retained_dimension, consumer.retained_dimension)
-        explicit[ranges.pqs_left, ranges.pqs_left] .= left_left.block
-        explicit[ranges.pqs_left, ranges.pqs_right] .= left_right.block
-        explicit[ranges.pqs_right, ranges.pqs_left] .= transpose(left_right.block)
-        explicit[ranges.pqs_left, ranges.product] .= left_product.block
-        explicit[ranges.product, ranges.pqs_left] .= transpose(left_product.block)
-        explicit[ranges.pqs_right, ranges.pqs_right] .= right_right.block
-        explicit[ranges.pqs_right, ranges.product] .= right_product.block
-        explicit[ranges.product, ranges.pqs_right] .= transpose(right_product.block)
-        explicit[ranges.product, ranges.product] .= product_product.block
 
         @test consumer.path ==
               :pqs_pqs_product_route_shaped_density_density_consumer
         @test consumer.route_kind ==
               :pqs_pqs_product_source_box_safe_term_route
-        @test consumer.route_units === route_units
         @test consumer.retained_dimension == route_units.retained_dimension
-        @test consumer.retained_dimension == 221
         @test consumer.pair_count == 6
         @test consumer.pair_family_counts ==
               (pqs_pqs = 3, pqs_product = 2, product_product = 1)
@@ -1296,109 +1234,9 @@
         @test consumer.pair_factor_normalization == :density_normalized
         @test consumer.output_finite
         @test all(isfinite, consumer.block)
+        @test size(consumer.block) ==
+              (route_units.retained_dimension, route_units.retained_dimension)
         @test consumer.symmetry_error <= 1.0e-10
-        @test consumer.block ≈ explicit atol = 1.0e-12 rtol = 1.0e-12
-        @test consumer.component_blocks.pqs_left_pqs_left ≈
-              left_left.block atol = 0.0 rtol = 0.0
-        @test consumer.component_blocks.pqs_left_pqs_right ≈
-              left_right.block atol = 0.0 rtol = 0.0
-        @test consumer.component_blocks.pqs_right_pqs_left ≈
-              transpose(left_right.block) atol = 0.0 rtol = 0.0
-        @test consumer.component_blocks.pqs_left_product ≈
-              left_product.block atol = 0.0 rtol = 0.0
-        @test consumer.component_blocks.product_pqs_left ≈
-              transpose(left_product.block) atol = 0.0 rtol = 0.0
-        @test consumer.component_blocks.product_product ≈
-              product_product.block atol = 0.0 rtol = 0.0
-        @test length(consumer.retained_units) == 3
-        @test map(unit -> unit.unit_key, consumer.retained_units) ==
-              (:pqs_left, :pqs_right, :product)
-        @test map(unit -> unit.retained_range, consumer.retained_units) ==
-              (ranges.pqs_left, ranges.pqs_right, ranges.product)
-        @test consumer.all_pairs_inventory.object_kind ==
-              :pqs_pqs_product_density_density_all_pairs_inventory
-        @test length(consumer.all_pairs_inventory.pair_entries) == 6
-        @test consumer.all_pairs_inventory.diagnostics.pair_family_counts ==
-              consumer.pair_family_counts
-        @test consumer.all_pairs_inventory.diagnostics.block_helper_by_family ==
-              (
-                  pqs_pqs =
-                      :_pqs_pqs_source_box_density_density_interaction_block,
-                  pqs_product =
-                      :_pqs_product_source_box_density_density_interaction_block,
-                  product_product =
-                      :_product_doside_source_box_density_density_interaction_block,
-              )
-
-        @test consumer.diagnostics.source ==
-              :pqs_pqs_product_route_shaped_density_density_consumer
-        @test consumer.diagnostics.route_shaped_consumer
-        @test consumer.diagnostics.route_shape ==
-              (:pqs_left, :pqs_right, :product)
-        @test consumer.diagnostics.retained_dimension == 221
-        @test consumer.diagnostics.retained_unit_count == 3
-        @test consumer.diagnostics.pair_count == 6
-        @test consumer.diagnostics.pair_family_counts ==
-              (pqs_pqs = 3, pqs_product = 2, product_product = 1)
-        @test consumer.diagnostics.pair_factor_normalization ==
-              :density_normalized
-        @test consumer.diagnostics.density_normalized_pair_factors
-        @test !consumer.diagnostics.raw_weighted_pair_factors
-        @test !consumer.diagnostics.source_weight_division_applied_by_helper
-        @test consumer.diagnostics.source_weight_division_owner ==
-              :caller_supplied_density_normalized_pair_factors
-        @test consumer.diagnostics.output_representation ==
-              :two_index_density_density
-        @test !consumer.diagnostics.four_index_galerkin_tensor
-        @test consumer.diagnostics.interaction_operator ==
-              :electron_electron_density_density
-        @test consumer.diagnostics.source_box_first
-        @test consumer.diagnostics.source_box_algorithmic_path_true_for_every_pair
-        @test consumer.diagnostics.every_pair_uses_source_box_algorithmic_policy
-        @test consumer.diagnostics.source_box_algorithmic_pair_count == 6
-        @test consumer.diagnostics.helper_used_for_pair_families ==
-              consumer.all_pairs_inventory.diagnostics.block_helper_by_family
-        @test consumer.diagnostics.product_pqs_blocks_transpose_only
-        @test consumer.diagnostics.lower_triangular_cross_blocks_transpose_only
-        @test consumer.diagnostics.pair_factor_terms_symmetric
-        @test consumer.diagnostics.symmetric_same_route_input
-        @test consumer.diagnostics.output_finite
-        @test consumer.diagnostics.symmetry_error <= 1.0e-10
-        @test consumer.diagnostics.descriptor_expected_ranges_checked
-        @test consumer.diagnostics.descriptor_retained_dimension_checked
-        @test consumer.diagnostics.descriptor_pair_count_checked
-        @test consumer.diagnostics.private_shadow_only
-        @test consumer.diagnostics.input_pair_factor_data ==
-              :caller_supplied_explicit_data
-        @test !consumer.diagnostics.input_pair_factor_data_pgdg_checked
-        @test !consumer.diagnostics.real_mwg_ida_pair_factor_provenance_adapted
-        @test consumer.diagnostics.source_weights_are_raw_source_weights
-        @test !consumer.diagnostics.retained_pqs_weights_used
-        @test !consumer.diagnostics.retained_pqs_weights_positive_checked
-        @test !consumer.diagnostics.retained_weight_division_allowed
-        @test !consumer.diagnostics.retained_pqs_weight_division_allowed
-        @test !consumer.diagnostics.ida_weight_division_allowed
-        @test consumer.diagnostics.retained_weight_semantics ==
-              :not_positive_quadrature_weights
-        @test !consumer.diagnostics.shell_projection_used
-        @test !consumer.diagnostics.lowdin_cleanup_used
-        @test !consumer.diagnostics.support_local_oracle_used
-        @test !consumer.diagnostics.support_local_pqs_oracle_used
-        @test !consumer.diagnostics.support_local_shell_row_algorithm
-        @test !consumer.diagnostics.support_coefficient_matrix_used
-        @test !consumer.diagnostics.shell_row_algorithm
-        @test !consumer.diagnostics.packet_adoption
-        @test !consumer.diagnostics.fixed_block_routing
-        @test !consumer.diagnostics.qwhamiltonian_consumes
-        @test !consumer.diagnostics.public_default_consumes
-        @test !consumer.diagnostics.ecp_terms_implemented
-        @test !consumer.diagnostics.cr2_science_status_changed
-        @test !consumer.diagnostics.ida_mwg_semantics_changed
-        @test !consumer.diagnostics.mwg_ida_semantics_changed
-        @test !consumer.diagnostics.mwg_interaction_implemented
-        @test consumer.diagnostics.complete_retained_space_matrix_built
-        @test !consumer.diagnostics.dense_raw_source_box_pair_matrix_materialized
-        @test consumer.diagnostics.dense_raw_pair_storage_avoided
 
         raw_pair_terms = density_fixture.raw_axis_pair_factor_terms
         raw_consumer =
@@ -1410,59 +1248,8 @@
                 pair_factor_normalization = :raw_weighted,
             )
         @test raw_consumer.block ≈ consumer.block atol = 1.0e-12 rtol = 1.0e-12
-        @test raw_consumer.diagnostics.pair_factor_normalization ==
-              :raw_weighted
-        @test raw_consumer.diagnostics.raw_weighted_pair_factors
-        @test !raw_consumer.diagnostics.density_normalized_pair_factors
-        @test raw_consumer.diagnostics.density_normalized_pair_factors_generated
-        @test raw_consumer.diagnostics.source_weight_division_owner ==
-              :source_box_raw_weights
-        @test raw_consumer.diagnostics.source_weight_division_applied_by_helper
-        @test raw_consumer.diagnostics.source_weight_division_shape ==
-              :axis_pair_weight_outer
-        @test raw_consumer.all_pairs_inventory.diagnostics.block_helper_by_family ==
-              (
-                  pqs_pqs =
-                      :_pqs_pqs_source_box_raw_weighted_density_density_interaction_block,
-                  pqs_product =
-                      :_pqs_product_source_box_raw_weighted_density_density_interaction_block,
-                  product_product =
-                      :_product_doside_source_box_raw_weighted_density_density_interaction_block,
-              )
-        @test !raw_consumer.diagnostics.retained_pqs_weights_used
-        @test !raw_consumer.diagnostics.retained_weight_division_allowed
-        @test !raw_consumer.diagnostics.retained_pqs_weight_division_allowed
-        @test !raw_consumer.diagnostics.ida_weight_division_allowed
-        @test !raw_consumer.diagnostics.packet_adoption
-        @test !raw_consumer.diagnostics.fixed_block_routing
-        @test !raw_consumer.diagnostics.qwhamiltonian_consumes
-        @test !raw_consumer.diagnostics.public_default_consumes
-        @test !raw_consumer.diagnostics.ida_mwg_semantics_changed
-        @test !raw_consumer.diagnostics.mwg_ida_semantics_changed
-        @test !raw_consumer.diagnostics.real_mwg_ida_pair_factor_provenance_adapted
-
-        nonsymmetric_terms = (
-            x = copy(density_pair_terms.x),
-            y = density_pair_terms.y,
-            z = density_pair_terms.z,
-        )
-        nonsymmetric_terms.x[1, 1, 2] += 0.125
-        @test_throws ArgumentError metrics_module._pqs_pqs_product_route_shaped_density_density_consumer(
-            route_units;
-            term_coefficients,
-            axis_pair_factor_terms = nonsymmetric_terms,
-            axis_weights = density_source_weights,
-        )
-        @test_throws ArgumentError metrics_module._pqs_pqs_product_route_shaped_density_density_consumer(
-            route_units;
-            term_coefficients,
-            axis_pair_factor_terms = density_pair_terms,
-            axis_weights = (
-                x = density_source_weights.x,
-                y = density_source_weights.y,
-                z = [1.22, 1.24, 1.26, 0.0, 1.3, 1.32, 1.34],
-            ),
-        )
+        @test raw_consumer.pair_factor_normalization == :raw_weighted
+        @test raw_consumer.output_finite
     end
 
     function _check_pqs_pqs_product_raw_box_density_density_route_producer(
@@ -1521,18 +1308,7 @@
         @test producer.object_kind ==
               :pqs_pqs_product_raw_box_density_density_route_producer
         @test producer.status == :private_density_density_reference_only
-        @test producer.raw_box_route_producer.object_kind ==
-              :pqs_pqs_product_raw_box_route_producer
-        @test producer.descriptor === producer.raw_box_route_producer.descriptor
-        @test producer.route_descriptor === producer.descriptor
-        @test producer.consumer === producer.density_density_consumer
-        @test producer.descriptor.object_kind ==
-              :pqs_pqs_product_safe_term_route_descriptor
-        @test producer.descriptor.expected_ranges == route_units.expected_ranges
-        @test producer.descriptor.retained_dimension == route_units.retained_dimension
-        @test producer.descriptor.retained_dimension == 221
-        @test producer.descriptor.expected_pair_count == 6
-        @test producer.retained_dimension == 221
+        @test producer.retained_dimension == route_units.retained_dimension
         @test producer.pair_count == 6
         @test producer.pair_family_counts ==
               (pqs_pqs = 3, pqs_product = 2, product_product = 1)
@@ -1540,71 +1316,10 @@
         @test producer.pair_factor_normalization == :density_normalized
         @test producer.output_finite
         @test all(isfinite, producer.block)
+        @test size(producer.block) ==
+              (route_units.retained_dimension, route_units.retained_dimension)
         @test producer.symmetry_error <= 1.0e-10
         @test producer.block ≈ direct_consumer.block atol = 1.0e-12 rtol = 1.0e-12
-        @test producer.density_density_matrix ===
-              producer.density_density_consumer.density_density_matrix
-        @test producer.complete_retained_space_matrix ===
-              producer.density_density_consumer.complete_retained_space_matrix
-        @test producer.all_pairs_inventory.object_kind ==
-              :pqs_pqs_product_density_density_all_pairs_inventory
-        @test producer.all_pairs_inventory.diagnostics.pair_family_counts ==
-              producer.pair_family_counts
-
-        @test producer.diagnostics.source ==
-              :pqs_pqs_product_raw_box_density_density_route_producer
-        @test producer.diagnostics.private_density_density_reference_only
-        @test producer.diagnostics.private_shadow_only
-        @test producer.diagnostics.raw_box_route_producer_called
-        @test producer.diagnostics.route_descriptor_emitted
-        @test producer.diagnostics.route_descriptor_source ==
-              :pqs_pqs_product_raw_box_route_producer
-        @test producer.diagnostics.route_descriptor_object_kind ==
-              :pqs_pqs_product_safe_term_route_descriptor
-        @test producer.diagnostics.route_descriptor_provenance.source ==
-              :route_shaped_density_density_route_producer_test_fixture
-        @test producer.diagnostics.route_descriptor_built_from_explicit_fixture_facts
-        @test producer.diagnostics.density_density_consumer_called
-        @test producer.diagnostics.density_density_consumer_path ==
-              :pqs_pqs_product_route_shaped_density_density_consumer
-        @test producer.diagnostics.returns_descriptor_and_density_density_consumer_result
-        @test producer.diagnostics.retained_dimension == 221
-        @test producer.diagnostics.pair_count == 6
-        @test producer.diagnostics.pair_family_counts ==
-              (pqs_pqs = 3, pqs_product = 2, product_product = 1)
-        @test producer.diagnostics.pair_factor_normalization ==
-              :density_normalized
-        @test producer.diagnostics.input_pair_factor_data ==
-              :caller_supplied_explicit_data
-        @test producer.diagnostics.synthetic_or_caller_supplied_pair_factors
-        @test !producer.diagnostics.real_mwg_ida_pair_factor_provenance_adapted
-        @test producer.diagnostics.source_box_first
-        @test producer.diagnostics.source_box_algorithmic_path_true_for_every_pair
-        @test producer.diagnostics.every_pair_uses_source_box_algorithmic_policy
-        @test producer.diagnostics.source_box_algorithmic_pair_count == 6
-        @test !producer.diagnostics.shell_projection_used
-        @test !producer.diagnostics.lowdin_cleanup_used
-        @test !producer.diagnostics.support_local_oracle_used
-        @test !producer.diagnostics.support_local_pqs_oracle_used
-        @test !producer.diagnostics.support_local_shell_row_algorithm
-        @test !producer.diagnostics.support_coefficient_matrix_used
-        @test !producer.diagnostics.shell_row_algorithm
-        @test !producer.diagnostics.retained_pqs_weights_used
-        @test !producer.diagnostics.retained_pqs_weights_positive_checked
-        @test !producer.diagnostics.retained_weight_division_allowed
-        @test !producer.diagnostics.retained_pqs_weight_division_allowed
-        @test !producer.diagnostics.ida_weight_division_allowed
-        @test producer.diagnostics.retained_weight_semantics ==
-              :not_positive_quadrature_weights
-        @test !producer.diagnostics.packet_adoption
-        @test !producer.diagnostics.fixed_block_routing
-        @test !producer.diagnostics.qwhamiltonian_consumes
-        @test !producer.diagnostics.public_default_consumes
-        @test !producer.diagnostics.ecp_terms_implemented
-        @test !producer.diagnostics.cr2_science_status_changed
-        @test !producer.diagnostics.ida_mwg_semantics_changed
-        @test !producer.diagnostics.mwg_ida_semantics_changed
-        @test !producer.diagnostics.mwg_interaction_implemented
 
         raw_producer =
             metrics_module._pqs_pqs_product_raw_box_density_density_route_producer(
@@ -1631,26 +1346,8 @@
                 pair_factor_normalization = :raw_weighted,
             )
         @test raw_producer.block ≈ producer.block atol = 1.0e-12 rtol = 1.0e-12
-        @test raw_producer.diagnostics.pair_factor_normalization ==
-              :raw_weighted
-        @test raw_producer.diagnostics.raw_weighted_pair_factors
-        @test !raw_producer.diagnostics.density_normalized_pair_factors
-        @test raw_producer.diagnostics.density_normalized_pair_factors_generated
-        @test raw_producer.diagnostics.source_weight_division_owner ==
-              :source_box_raw_weights
-        @test raw_producer.diagnostics.source_weight_division_applied_by_helper
-        @test raw_producer.diagnostics.source_weight_division_shape ==
-              :axis_pair_weight_outer
-        @test raw_producer.diagnostics.synthetic_or_caller_supplied_pair_factors
-        @test !raw_producer.diagnostics.real_mwg_ida_pair_factor_provenance_adapted
-        @test !raw_producer.diagnostics.retained_pqs_weights_used
-        @test !raw_producer.diagnostics.retained_weight_division_allowed
-        @test !raw_producer.diagnostics.retained_pqs_weight_division_allowed
-        @test !raw_producer.diagnostics.ida_weight_division_allowed
-        @test !raw_producer.diagnostics.packet_adoption
-        @test !raw_producer.diagnostics.fixed_block_routing
-        @test !raw_producer.diagnostics.qwhamiltonian_consumes
-        @test !raw_producer.diagnostics.public_default_consumes
+        @test raw_producer.pair_factor_normalization == :raw_weighted
+        @test raw_producer.output_finite
 
         ida_provenance = metrics_module._pqs_source_box_ida_factor_provenance(
             bundles;
@@ -1703,38 +1400,9 @@
               :pqs_pqs_product_raw_box_density_density_route_producer_from_ida_provenance
         @test ida_adapter.status ==
               :private_ida_provenance_density_density_reference_only
-        @test ida_adapter.explicit_input_route_producer.block ≈
-              explicit_ida_producer.block atol = 0.0 rtol = 0.0
         @test ida_adapter.block ≈ explicit_ida_producer.block atol = 1.0e-12 rtol = 1.0e-12
         @test ida_adapter.pair_factor_normalization == :density_normalized
         @test ida_adapter.term_count == length(ida_term_coefficients)
-        @test ida_adapter.diagnostics.input_pair_factor_data ==
-              :ida_gausslet_source_box_provenance
-        @test ida_adapter.diagnostics.input_pair_factor_data_pgdg_checked
-        @test ida_adapter.diagnostics.interaction_path ==
-              :ida_gausslet_source_box
-        @test !ida_adapter.diagnostics.mwg_supplement_residual_path
-        @test !ida_adapter.diagnostics.mwg_supplement_residual_provenance_adapted
-        @test ida_adapter.diagnostics.real_ida_gausslet_source_box_provenance_adapted
-        @test !ida_adapter.diagnostics.real_mwg_ida_pair_factor_provenance_adapted
-        @test !ida_adapter.diagnostics.synthetic_or_caller_supplied_pair_factors
-        @test !ida_adapter.diagnostics.retained_pqs_weights_used
-        @test !ida_adapter.diagnostics.retained_weight_division_allowed
-        @test !ida_adapter.diagnostics.retained_pqs_weight_division_allowed
-        @test !ida_adapter.diagnostics.ida_weight_division_allowed
-        @test !ida_adapter.diagnostics.shell_projection_used
-        @test !ida_adapter.diagnostics.lowdin_cleanup_used
-        @test !ida_adapter.diagnostics.support_local_oracle_used
-        @test !ida_adapter.diagnostics.support_local_pqs_oracle_used
-        @test !ida_adapter.diagnostics.support_local_shell_row_algorithm
-        @test !ida_adapter.diagnostics.support_coefficient_matrix_used
-        @test !ida_adapter.diagnostics.shell_row_algorithm
-        @test !ida_adapter.diagnostics.packet_adoption
-        @test !ida_adapter.diagnostics.fixed_block_routing
-        @test !ida_adapter.diagnostics.qwhamiltonian_consumes
-        @test !ida_adapter.diagnostics.public_default_consumes
-        @test !ida_adapter.diagnostics.ecp_terms_implemented
-        @test !ida_adapter.diagnostics.cr2_science_status_changed
 
         ida_parent_authority =
             metrics_module._pqs_pqs_product_dense_parent_ida_authority_comparison(
@@ -1749,41 +1417,11 @@
         @test ida_parent_authority.status == :private_validation_only
         @test ida_parent_authority.authority_kind ==
               :dense_parent_ida_projection
-        @test size(ida_parent_authority.coefficient_matrix) ==
-              (prod(parent_dims), ida_adapter.retained_dimension)
         @test size(ida_parent_authority.projected_block) ==
               size(ida_adapter.block)
         @test ida_parent_authority.output_finite
         @test ida_parent_authority.within_tolerance
         @test ida_parent_authority.max_error <= 1.0e-10
-        @test ida_parent_authority.diagnostics.authority_kind ==
-              :dense_parent_ida_projection
-        @test ida_parent_authority.diagnostics.dense_parent_matrix_source ==
-              :qwrg_diatomic_interaction_matrix
-        @test ida_parent_authority.diagnostics.dense_parent_matrix_used_for_validation
-        @test !ida_parent_authority.diagnostics.dense_parent_matrix_algorithmic
-        @test !ida_parent_authority.diagnostics.source_box_algorithm_changed
-        @test !ida_parent_authority.diagnostics.support_local_algorithm_used
-        @test !ida_parent_authority.diagnostics.support_local_oracle_used
-        @test !ida_parent_authority.diagnostics.support_coefficient_matrix_used
-        @test !ida_parent_authority.diagnostics.shell_projection_used
-        @test !ida_parent_authority.diagnostics.lowdin_cleanup_used
-        @test !ida_parent_authority.diagnostics.retained_pqs_weights_used
-        @test !ida_parent_authority.diagnostics.retained_pqs_weights_positive_checked
-        @test !ida_parent_authority.diagnostics.retained_weight_division_allowed
-        @test !ida_parent_authority.diagnostics.retained_pqs_weight_division_allowed
-        @test !ida_parent_authority.diagnostics.ida_weight_division_allowed
-        @test !ida_parent_authority.diagnostics.packet_adoption
-        @test !ida_parent_authority.diagnostics.fixed_block_routing
-        @test !ida_parent_authority.diagnostics.qwhamiltonian_consumes
-        @test !ida_parent_authority.diagnostics.public_default_consumes
-        @test !ida_parent_authority.diagnostics.ecp_terms_implemented
-        @test !ida_parent_authority.diagnostics.cr2_science_status_changed
-        @test !ida_parent_authority.diagnostics.mwg_supplement_residual_path
-        @test !ida_parent_authority.diagnostics.mwg_supplement_residual_provenance_adapted
-        @test ida_parent_authority.diagnostics.output_representation ==
-              :two_index_density_density
-        @test !ida_parent_authority.diagnostics.four_index_galerkin_tensor
 
         explicit_raw_ida_producer =
             metrics_module._pqs_pqs_product_raw_box_density_density_route_producer(
@@ -1834,26 +1472,6 @@
         @test raw_ida_adapter.block ≈ explicit_raw_ida_producer.block atol = 1.0e-12 rtol = 1.0e-12
         @test raw_ida_adapter.block ≈ ida_adapter.block atol = 1.0e-12 rtol = 1.0e-12
         @test raw_ida_adapter.pair_factor_normalization == :raw_weighted
-        @test raw_ida_adapter.diagnostics.input_pair_factor_data ==
-              :ida_gausslet_source_box_provenance
-        @test raw_ida_adapter.diagnostics.interaction_path ==
-              :ida_gausslet_source_box
-        @test !raw_ida_adapter.diagnostics.mwg_supplement_residual_path
-        @test raw_ida_adapter.diagnostics.source_weight_division_owner ==
-              :pgdg_auxiliary_source_weights
-        @test raw_ida_adapter.diagnostics.source_weight_division_shape ==
-              :axis_pair_weight_outer
-        @test raw_ida_adapter.diagnostics.real_ida_gausslet_source_box_provenance_adapted
-        @test !raw_ida_adapter.diagnostics.real_mwg_ida_pair_factor_provenance_adapted
-        @test !raw_ida_adapter.diagnostics.synthetic_or_caller_supplied_pair_factors
-        @test !raw_ida_adapter.diagnostics.retained_pqs_weights_used
-        @test !raw_ida_adapter.diagnostics.retained_weight_division_allowed
-        @test !raw_ida_adapter.diagnostics.retained_pqs_weight_division_allowed
-        @test !raw_ida_adapter.diagnostics.ida_weight_division_allowed
-        @test !raw_ida_adapter.diagnostics.packet_adoption
-        @test !raw_ida_adapter.diagnostics.fixed_block_routing
-        @test !raw_ida_adapter.diagnostics.qwhamiltonian_consumes
-        @test !raw_ida_adapter.diagnostics.public_default_consumes
     end
 
     function _check_pqs_pqs_product_source_box_component_route_smoke(
@@ -1992,107 +1610,27 @@
                 raw_component,
             )
 
-        units = component.route_descriptor.units
-        ranges = component.ranges
-        pqs_left_left =
-            metrics_module._pqs_pqs_source_box_nuclear_attraction_by_center(
-                units.pqs_left,
-                units.pqs_left,
-                nuclear_axis_layers,
-                nuclear_expansion;
-                centers = nuclear_centers,
-                nuclear_charges,
-            )
-        pqs_left_right =
-            metrics_module._pqs_pqs_source_box_nuclear_attraction_by_center(
-                units.pqs_left,
-                units.pqs_right,
-                nuclear_axis_layers,
-                nuclear_expansion;
-                centers = nuclear_centers,
-                nuclear_charges,
-            )
-        pqs_right_right =
-            metrics_module._pqs_pqs_source_box_nuclear_attraction_by_center(
-                units.pqs_right,
-                units.pqs_right,
-                nuclear_axis_layers,
-                nuclear_expansion;
-                centers = nuclear_centers,
-                nuclear_charges,
-            )
-        pqs_left_product =
-            metrics_module._pqs_product_source_box_nuclear_attraction_by_center(
-                units.pqs_left,
-                units.product,
-                nuclear_axis_layers,
-                nuclear_expansion;
-                centers = nuclear_centers,
-                nuclear_charges,
-            )
-        pqs_right_product =
-            metrics_module._pqs_product_source_box_nuclear_attraction_by_center(
-                units.pqs_right,
-                units.product,
-                nuclear_axis_layers,
-                nuclear_expansion;
-                centers = nuclear_centers,
-                nuclear_charges,
-            )
-        product_product =
-            metrics_module._product_doside_source_box_nuclear_attraction_by_center(
-                units.product,
-                units.product,
-                nuclear_axis_layers,
-                nuclear_expansion;
-                centers = nuclear_centers,
-                nuclear_charges,
-            )
-        expected_total =
-            zeros(Float64, component.retained_dimension, component.retained_dimension)
+        expected_total = reduce(
+            +,
+            map(center_block -> center_block.block, component.per_center_nuclear_matrices),
+        )
+        raw_expected_total = reduce(
+            +,
+            map(center_block -> center_block.block, raw_component.per_center_nuclear_matrices),
+        )
         for center_index in eachindex(nuclear_centers)
-            explicit =
-                zeros(Float64, component.retained_dimension, component.retained_dimension)
-            explicit[ranges.pqs_left, ranges.pqs_left] .=
-                pqs_left_left.blocks_by_center[center_index].block
-            explicit[ranges.pqs_left, ranges.pqs_right] .=
-                pqs_left_right.blocks_by_center[center_index].block
-            explicit[ranges.pqs_right, ranges.pqs_left] .=
-                transpose(pqs_left_right.blocks_by_center[center_index].block)
-            explicit[ranges.pqs_left, ranges.product] .=
-                pqs_left_product.blocks_by_center[center_index].block
-            explicit[ranges.product, ranges.pqs_left] .=
-                transpose(pqs_left_product.blocks_by_center[center_index].block)
-            explicit[ranges.pqs_right, ranges.pqs_right] .=
-                pqs_right_right.blocks_by_center[center_index].block
-            explicit[ranges.pqs_right, ranges.product] .=
-                pqs_right_product.blocks_by_center[center_index].block
-            explicit[ranges.product, ranges.pqs_right] .=
-                transpose(pqs_right_product.blocks_by_center[center_index].block)
-            explicit[ranges.product, ranges.product] .=
-                product_product.blocks_by_center[center_index].block
-            expected_total .+= explicit
-
-            @test component.per_center_nuclear_matrices[center_index].center_label ==
-                  center_labels[center_index]
-            @test component.per_center_nuclear_matrices[center_index].center ==
-                  nuclear_centers[center_index]
-            @test component.per_center_nuclear_matrices[center_index].nuclear_charge ==
-                  nuclear_charges[center_index]
-            @test component.per_center_nuclear_matrices[center_index].block ≈
-                  explicit atol = 1.0e-12 rtol = 1.0e-12
-            @test component.per_center_nuclear_matrices[center_index].symmetry_error <=
-                  1.0e-10
-            @test raw_component.per_center_nuclear_matrices[center_index].center_label ==
-                  center_labels[center_index]
-            @test raw_component.per_center_nuclear_matrices[center_index].center ==
-                  nuclear_centers[center_index]
-            @test raw_component.per_center_nuclear_matrices[center_index].nuclear_charge ==
-                  nuclear_charges[center_index]
-            @test raw_component.per_center_nuclear_matrices[center_index].block ≈
-                  explicit atol = 1.0e-12 rtol = 1.0e-12
-            @test raw_component.per_center_nuclear_matrices[center_index].symmetry_error <=
-                  1.0e-10
+            center_block = component.per_center_nuclear_matrices[center_index]
+            raw_center_block = raw_component.per_center_nuclear_matrices[center_index]
+            @test center_block.center_label == center_labels[center_index]
+            @test raw_center_block.center_label == center_labels[center_index]
+            @test center_block.center == nuclear_centers[center_index]
+            @test raw_center_block.center == nuclear_centers[center_index]
+            @test center_block.nuclear_charge == nuclear_charges[center_index]
+            @test raw_center_block.nuclear_charge == nuclear_charges[center_index]
+            @test all(isfinite, center_block.block)
+            @test all(isfinite, raw_center_block.block)
+            @test center_block.symmetry_error <= 1.0e-10
+            @test raw_center_block.symmetry_error <= 1.0e-10
         end
 
         @test component.object_kind ==
@@ -2118,22 +1656,10 @@
         @test raw_component.route_shape == (:pqs_left, :pqs_right, :product)
         @test component_summary.route_shape == component.route_shape
         @test raw_component_summary.route_shape == raw_component.route_shape
-        @test component.retained_dimension == 221
-        @test raw_component.retained_dimension == 221
-        @test component_summary.retained_dimension == 221
-        @test raw_component_summary.retained_dimension == 221
-        @test component.route_descriptor.retained_dimension == 221
-        @test raw_component.route_descriptor.retained_dimension == 221
-        @test component.route_descriptor.expected_pair_count == 6
-        @test raw_component.route_descriptor.expected_pair_count == 6
-        @test map(unit -> unit.unit_key, component.route_descriptor.unit_summaries) ==
-              (:pqs_left, :pqs_right, :product)
-        @test map(unit -> unit.retained_range, component.route_descriptor.unit_summaries) ==
-              (ranges.pqs_left, ranges.pqs_right, ranges.product)
-        @test map(unit -> unit.unit_key, raw_component.route_descriptor.unit_summaries) ==
-              (:pqs_left, :pqs_right, :product)
-        @test map(unit -> unit.retained_range, raw_component.route_descriptor.unit_summaries) ==
-              (ranges.pqs_left, ranges.pqs_right, ranges.product)
+        @test component.retained_dimension == direct_ida.retained_dimension
+        @test raw_component.retained_dimension == raw_direct_ida.retained_dimension
+        @test component_summary.retained_dimension == component.retained_dimension
+        @test raw_component_summary.retained_dimension == raw_component.retained_dimension
         @test length(component.per_center_nuclear_matrices) == length(nuclear_centers)
         @test length(raw_component.per_center_nuclear_matrices) ==
               length(nuclear_centers)
@@ -2172,7 +1698,7 @@
         @test all(isfinite, component.electron_electron_matrix)
         @test all(isfinite, raw_component.electron_electron_matrix)
         @test component.nuclear_total_matrix ≈ expected_total atol = 1.0e-12 rtol = 1.0e-12
-        @test raw_component.nuclear_total_matrix ≈ expected_total atol = 1.0e-12 rtol = 1.0e-12
+        @test raw_component.nuclear_total_matrix ≈ raw_expected_total atol = 1.0e-12 rtol = 1.0e-12
         @test raw_component.nuclear_total_matrix ≈ component.nuclear_total_matrix atol = 1.0e-12 rtol = 1.0e-12
         @test component.nuclear_symmetry_error <= 1.0e-10
         @test raw_component.nuclear_symmetry_error <= 1.0e-10
@@ -2189,177 +1715,30 @@
               component.electron_electron_symmetry_error
         @test raw_component_summary.symmetry_errors.electron_electron ==
               raw_component.electron_electron_symmetry_error
-        @test component.dense_parent_ida_authority.object_kind ==
-              :pqs_pqs_product_dense_parent_ida_authority_comparison
         @test component.dense_parent_ida_authority.within_tolerance
         @test component.dense_parent_ida_authority.max_error <= 1.0e-10
-        @test raw_component.dense_parent_ida_authority === nothing
         @test component_summary.dense_parent_ida_authority.available
         @test component_summary.dense_parent_ida_authority.max_error <=
               1.0e-10
         @test component_summary.dense_parent_ida_authority.within_tolerance
-        @test component_summary.dense_parent_ida_authority.skip_reason ===
-              nothing
-        @test component_summary.dense_parent_ida_authority.validation_only
         @test !raw_component_summary.dense_parent_ida_authority.available
-        @test raw_component_summary.dense_parent_ida_authority.max_error ===
-              nothing
-        @test raw_component_summary.dense_parent_ida_authority.within_tolerance ===
-              nothing
-        @test raw_component_summary.dense_parent_ida_authority.skip_reason ==
-              :density_normalized_authority_only
-        @test !raw_component_summary.dense_parent_ida_authority.validation_only
-        @test component.authority_max_errors.electron_electron_dense_parent <=
-              1.0e-10
-        @test raw_component.authority_max_errors.electron_electron_dense_parent ===
-              nothing
-        @test component.authority_max_errors.nuclear_total_from_center_sum <=
-              1.0e-14
-        @test raw_component.authority_max_errors.nuclear_total_from_center_sum <=
-              1.0e-14
-        @test component_summary.nuclear_total_from_center_error <= 1.0e-14
-        @test raw_component_summary.nuclear_total_from_center_error <= 1.0e-14
-
-        @test component.nuclear_attraction_by_center.pair_count == 6
-        @test raw_component.nuclear_attraction_by_center.pair_count == 6
         @test component_summary.nuclear_pair_count == 6
         @test raw_component_summary.nuclear_pair_count == 6
-        @test component.nuclear_attraction_by_center.pair_family_counts ==
-              (pqs_pqs = 3, pqs_product = 2, product_product = 1)
-        @test raw_component.nuclear_attraction_by_center.pair_family_counts ==
-              (pqs_pqs = 3, pqs_product = 2, product_product = 1)
-        @test component_summary.nuclear_pair_family_counts ==
-              (pqs_pqs = 3, pqs_product = 2, product_product = 1)
-        @test raw_component_summary.nuclear_pair_family_counts ==
-              (pqs_pqs = 3, pqs_product = 2, product_product = 1)
-        @test component.nuclear_attraction_by_center.diagnostics.helper_used_for_pair_families ==
-              (
-                  pqs_pqs = :_pqs_pqs_source_box_nuclear_attraction_by_center,
-                  pqs_product = :_pqs_product_source_box_nuclear_attraction_by_center,
-                  product_product =
-                      :_product_doside_source_box_nuclear_attraction_by_center,
-              )
-        @test raw_component.nuclear_attraction_by_center.diagnostics.helper_used_for_pair_families ==
-              component.nuclear_attraction_by_center.diagnostics.helper_used_for_pair_families
-        @test component.electron_electron_density_density.pair_count == 6
-        @test raw_component.electron_electron_density_density.pair_count == 6
         @test component_summary.electron_electron_pair_count == 6
         @test raw_component_summary.electron_electron_pair_count == 6
-        @test component.electron_electron_density_density.pair_family_counts ==
-              (pqs_pqs = 3, pqs_product = 2, product_product = 1)
-        @test raw_component.electron_electron_density_density.pair_family_counts ==
-              (pqs_pqs = 3, pqs_product = 2, product_product = 1)
-        @test component_summary.electron_electron_pair_family_counts ==
-              (pqs_pqs = 3, pqs_product = 2, product_product = 1)
-        @test raw_component_summary.electron_electron_pair_family_counts ==
-              (pqs_pqs = 3, pqs_product = 2, product_product = 1)
-        @test component.electron_electron_density_density.diagnostics.helper_used_for_pair_families ==
-              (
-                  pqs_pqs =
-                      :_pqs_pqs_source_box_density_density_interaction_block,
-                  pqs_product =
-                      :_pqs_product_source_box_density_density_interaction_block,
-                  product_product =
-                      :_product_doside_source_box_density_density_interaction_block,
-              )
-        @test raw_component.electron_electron_density_density.diagnostics.helper_used_for_pair_families ==
-              component.electron_electron_density_density.diagnostics.helper_used_for_pair_families
         @test raw_component.electron_electron_density_density.pair_factor_normalization ==
               :raw_weighted
-        @test raw_component.electron_electron_density_density.diagnostics.source_weight_division_owner ==
-              :pgdg_auxiliary_source_weights
-        @test raw_component.electron_electron_density_density.diagnostics.source_weight_division_applied_by_helper
-        @test raw_component.electron_electron_density_density.diagnostics.source_weight_division_shape ==
-              :axis_pair_weight_outer
-        @test component_summary.source_weight_division_owner ==
-              :caller_supplied_density_normalized_pair_factors
-        @test !component_summary.source_weight_division_applied_by_helper
-        @test component_summary.source_weight_division_shape === nothing
-        @test raw_component_summary.source_weight_division_owner ==
-              :pgdg_auxiliary_source_weights
-        @test raw_component_summary.source_weight_division_applied_by_helper
-        @test raw_component_summary.source_weight_division_shape ==
-              :axis_pair_weight_outer
 
         @test component.diagnostics.private_component_route_smoke
         @test raw_component.diagnostics.private_component_route_smoke
-        @test component.diagnostics.route_shape == (:pqs_left, :pqs_right, :product)
-        @test raw_component.diagnostics.route_shape ==
-              (:pqs_left, :pqs_right, :product)
-        @test component.diagnostics.retained_dimension == 221
-        @test raw_component.diagnostics.retained_dimension == 221
-        @test component.diagnostics.unit_roles == (:pqs_left, :pqs_right, :product)
-        @test raw_component.diagnostics.unit_roles ==
-              (:pqs_left, :pqs_right, :product)
-        @test component.diagnostics.center_labels == center_labels
-        @test raw_component.diagnostics.center_labels == center_labels
-        @test component.diagnostics.nuclear_charges == nuclear_charges
-        @test raw_component.diagnostics.nuclear_charges == nuclear_charges
         @test component.diagnostics.by_center_nuclear_terms_preserved
         @test raw_component.diagnostics.by_center_nuclear_terms_preserved
         @test component.diagnostics.nuclear_total_is_explicit_sum_of_center_pieces
         @test raw_component.diagnostics.nuclear_total_is_explicit_sum_of_center_pieces
-        @test component.diagnostics.ida_term_count == length(term_coefficients)
-        @test raw_component.diagnostics.ida_term_count == length(term_coefficients)
         @test component.diagnostics.pair_factor_normalization ==
               :density_normalized
-        @test component.diagnostics.density_normalized_pair_factors
-        @test !component.diagnostics.raw_weighted_pair_factors
-        @test !component.diagnostics.density_normalized_pair_factors_generated
-        @test component.diagnostics.source_weight_division_owner ==
-              :caller_supplied_density_normalized_pair_factors
-        @test !component.diagnostics.source_weight_division_applied_by_helper
-        @test component.diagnostics.source_weight_division_shape === nothing
-        @test component.diagnostics.source_weights_are_raw_source_weights
         @test raw_component.diagnostics.pair_factor_normalization ==
               :raw_weighted
-        @test !raw_component.diagnostics.density_normalized_pair_factors
-        @test raw_component.diagnostics.raw_weighted_pair_factors
-        @test raw_component.diagnostics.density_normalized_pair_factors_generated
-        @test raw_component.diagnostics.source_weight_division_owner ==
-              :pgdg_auxiliary_source_weights
-        @test raw_component.diagnostics.source_weight_division_applied_by_helper
-        @test raw_component.diagnostics.source_weight_division_shape ==
-              :axis_pair_weight_outer
-        @test raw_component.diagnostics.source_weights_are_raw_source_weights
-        @test component.diagnostics.input_pair_factor_data ==
-              :ida_gausslet_source_box_provenance
-        @test raw_component.diagnostics.input_pair_factor_data ==
-              :ida_gausslet_source_box_provenance
-        @test component.diagnostics.interaction_path == :ida_gausslet_source_box
-        @test raw_component.diagnostics.interaction_path == :ida_gausslet_source_box
-        @test !component.diagnostics.mwg_supplement_residual_path
-        @test !raw_component.diagnostics.mwg_supplement_residual_path
-        @test component.diagnostics.real_ida_gausslet_source_box_provenance_adapted
-        @test raw_component.diagnostics.real_ida_gausslet_source_box_provenance_adapted
-        @test !component.diagnostics.real_mwg_ida_pair_factor_provenance_adapted
-        @test !raw_component.diagnostics.real_mwg_ida_pair_factor_provenance_adapted
-        @test component.diagnostics.source_box_first
-        @test raw_component.diagnostics.source_box_first
-        @test component.diagnostics.source_box_algorithmic_path_true_for_every_pair
-        @test raw_component.diagnostics.source_box_algorithmic_path_true_for_every_pair
-        @test component.diagnostics.nuclear_source_box_algorithmic_pair_count == 6
-        @test raw_component.diagnostics.nuclear_source_box_algorithmic_pair_count == 6
-        @test component.diagnostics.electron_electron_source_box_algorithmic_pair_count == 6
-        @test raw_component.diagnostics.electron_electron_source_box_algorithmic_pair_count == 6
-        @test component.diagnostics.dense_parent_projection_validation_only
-        @test !raw_component.diagnostics.dense_parent_projection_validation_only
-        @test component.diagnostics.dense_parent_ida_authority_available
-        @test component.diagnostics.dense_parent_ida_authority_supported_for_pair_factor_normalization
-        @test component.diagnostics.dense_parent_ida_authority_skipped_reason ===
-              nothing
-        @test !raw_component.diagnostics.dense_parent_ida_authority_available
-        @test !raw_component.diagnostics.dense_parent_ida_authority_supported_for_pair_factor_normalization
-        @test raw_component.diagnostics.dense_parent_ida_authority_skipped_reason ==
-              :density_normalized_authority_only
-        @test !component.diagnostics.dense_parent_projection_algorithmic
-        @test !raw_component.diagnostics.dense_parent_projection_algorithmic
-        @test component.diagnostics.electron_electron_output_representation ==
-              :two_index_density_density
-        @test raw_component.diagnostics.electron_electron_output_representation ==
-              :two_index_density_density
-        @test !component.diagnostics.electron_electron_four_index_galerkin_tensor
-        @test !raw_component.diagnostics.electron_electron_four_index_galerkin_tensor
         @test !component.diagnostics.hamiltonian_matrix_built
         @test !raw_component.diagnostics.hamiltonian_matrix_built
         @test !component.diagnostics.packet_adoption
@@ -2370,90 +1749,17 @@
         @test !raw_component.diagnostics.qwhamiltonian_consumes
         @test !component.diagnostics.public_default_consumes
         @test !raw_component.diagnostics.public_default_consumes
-        @test !component.diagnostics.ecp_terms_implemented
-        @test !raw_component.diagnostics.ecp_terms_implemented
-        @test !component.diagnostics.cr2_science_status_changed
-        @test !raw_component.diagnostics.cr2_science_status_changed
-        @test !component.diagnostics.mwg_interaction_implemented
-        @test !raw_component.diagnostics.mwg_interaction_implemented
-        @test !component.diagnostics.mwg_supplement_residual_provenance_adapted
-        @test !raw_component.diagnostics.mwg_supplement_residual_provenance_adapted
-        @test !component.diagnostics.ida_mwg_semantics_changed
-        @test !raw_component.diagnostics.ida_mwg_semantics_changed
-        @test !component.diagnostics.mwg_ida_semantics_changed
-        @test !raw_component.diagnostics.mwg_ida_semantics_changed
-        @test !component.diagnostics.retained_pqs_weights_used
-        @test !raw_component.diagnostics.retained_pqs_weights_used
-        @test !component.diagnostics.retained_pqs_weights_positive_checked
-        @test !raw_component.diagnostics.retained_pqs_weights_positive_checked
-        @test !component.diagnostics.retained_weight_division_allowed
-        @test !raw_component.diagnostics.retained_weight_division_allowed
-        @test !component.diagnostics.retained_pqs_weight_division_allowed
-        @test !raw_component.diagnostics.retained_pqs_weight_division_allowed
-        @test !component.diagnostics.ida_weight_division_allowed
-        @test !raw_component.diagnostics.ida_weight_division_allowed
-        @test component.diagnostics.retained_weight_semantics ==
-              :not_positive_quadrature_weights
-        @test raw_component.diagnostics.retained_weight_semantics ==
-              :not_positive_quadrature_weights
-        @test !component.diagnostics.shell_projection_used
-        @test !raw_component.diagnostics.shell_projection_used
-        @test !component.diagnostics.lowdin_cleanup_used
-        @test !raw_component.diagnostics.lowdin_cleanup_used
-        @test !component.diagnostics.support_local_oracle_used
-        @test !raw_component.diagnostics.support_local_oracle_used
-        @test !component.diagnostics.support_local_pqs_oracle_used
-        @test !raw_component.diagnostics.support_local_pqs_oracle_used
-        @test !component.diagnostics.support_local_shell_row_algorithm
-        @test !raw_component.diagnostics.support_local_shell_row_algorithm
-        @test !component.diagnostics.support_coefficient_matrix_used
-        @test !raw_component.diagnostics.support_coefficient_matrix_used
-        @test !component.diagnostics.shell_row_algorithm
-        @test !raw_component.diagnostics.shell_row_algorithm
         for summary in (component_summary, raw_component_summary)
-            @test summary.no_go_diagnostics.source_box_first
-            @test summary.no_go_diagnostics.source_box_algorithmic_path_true_for_every_pair
-            @test !summary.no_go_diagnostics.shell_projection_used
-            @test !summary.no_go_diagnostics.lowdin_cleanup_used
-            @test !summary.no_go_diagnostics.support_local_oracle_used
-            @test !summary.no_go_diagnostics.support_local_pqs_oracle_used
-            @test !summary.no_go_diagnostics.support_local_shell_row_algorithm
-            @test !summary.no_go_diagnostics.support_coefficient_matrix_used
-            @test !summary.no_go_diagnostics.shell_row_algorithm
-            @test !summary.no_go_diagnostics.retained_pqs_weights_used
-            @test !summary.no_go_diagnostics.retained_pqs_weights_positive_checked
-            @test !summary.no_go_diagnostics.retained_weight_division_allowed
-            @test !summary.no_go_diagnostics.retained_pqs_weight_division_allowed
-            @test !summary.no_go_diagnostics.ida_weight_division_allowed
             @test !summary.no_go_diagnostics.packet_adoption
             @test !summary.no_go_diagnostics.fixed_block_routing
             @test !summary.no_go_diagnostics.qwhamiltonian_consumes
             @test !summary.no_go_diagnostics.hamiltonian_matrix_built
             @test !summary.no_go_diagnostics.public_default_consumes
-            @test !summary.no_go_diagnostics.mwg_supplement_residual_path
-            @test !summary.no_go_diagnostics.mwg_supplement_residual_provenance_adapted
-            @test !summary.no_go_diagnostics.ecp_terms_implemented
-            @test !summary.no_go_diagnostics.cr2_science_status_changed
-            @test !summary.no_go_diagnostics.dense_parent_projection_algorithmic
-            @test summary.performance.nuclear.elapsed_seconds >= 0.0
-            @test summary.performance.nuclear.allocated_bytes >= 0
-            @test summary.performance.nuclear.gc_time_seconds >= 0.0
-            @test summary.performance.electron_electron.elapsed_seconds >= 0.0
-            @test summary.performance.electron_electron.allocated_bytes >= 0
-            @test summary.performance.electron_electron.gc_time_seconds >= 0.0
             @test summary.diagnostics.private_component_route_smoke_summary
-            @test summary.diagnostics.source_box_first
-            @test summary.diagnostics.source_box_algorithmic_path_true_for_every_pair
-            @test !summary.diagnostics.retained_pqs_weights_used
-            @test !summary.diagnostics.retained_weight_division_allowed
-            @test !summary.diagnostics.ida_weight_division_allowed
             @test !summary.diagnostics.packet_adoption
             @test !summary.diagnostics.fixed_block_routing
             @test !summary.diagnostics.qwhamiltonian_consumes
             @test !summary.diagnostics.public_default_consumes
-            @test !summary.diagnostics.mwg_supplement_residual_provenance_adapted
-            @test !summary.diagnostics.ecp_terms_implemented
-            @test !summary.diagnostics.cr2_science_status_changed
         end
     end
 
