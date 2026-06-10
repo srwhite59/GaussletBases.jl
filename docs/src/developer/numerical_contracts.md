@@ -187,6 +187,20 @@ Born-Oppenheimer total energy is `-0.5988624733888488` Hartree. The raw
 generalized combined solve is diagnostic-only and is not the active final-basis
 acceptance result.
 
+The first He atom decomposed WL audit uses the same q/ns = 5/5 gausslet-only
+fixture with one center at the origin and `Z = 2`. The decomposed route
+materializes overlap, kinetic, one separated uncharged electron-nuclear
+by-center matrix, and the charge-applied one-electron Hamiltonian in the
+223-column retained basis. The ordinary symmetric one-electron orbital energy is
+`-1.686304880476951` Hartree, giving a closed-shell one-electron contribution
+of `-3.372609760953902` Hartree before electron-electron terms. The audit is
+intentionally blocked on `:missing_decomposed_wl_density_density_interaction_route`:
+there is not yet a decomposed WL route-global density-density/IDA interaction
+producer, so no He total energy or SCF/IDA interpretation is accepted. The audit
+does not use a full-parent CPB, direct Cartesian fallback,
+`ordinary_cartesian_ida_operators`, a generalized final solve, GTO supplements,
+PQS transforms, exports, or artifacts.
+
 Do not use the existing nested fixed-block operator matrices as the acceptance
 path. They remain useful historical/oracle material, but they bypass the
 decomposed retained-unit pair inventory that the active WL scientific tests are
