@@ -113,8 +113,11 @@ function _check_gto_nuclear_common_summary(summary; expected_shape, expected_orb
     @test isnothing(summary.blocker)
     @test summary.term == :electron_nuclear_by_center
     @test summary.by_center == true
+    @test summary.center_summation == false
     @test summary.centers_summed == false
+    @test summary.nuclear_charge_recorded == true
     @test summary.nuclear_charge_applied == false
+    @test summary.oracle_convention == :qw_nuclear_by_center_uncharged
     @test summary.charge_application_stage == :hamiltonian_or_center_summation
     @test summary.nuclear_attraction_sign_applied == true
     @test summary.galerkin_operator == true
@@ -125,6 +128,8 @@ function _check_gto_nuclear_common_summary(summary; expected_shape, expected_orb
     @test summary.orbital_count == expected_orbital_count
     @test summary.dense_block_available == true
     @test summary.dense_block_shape == expected_shape
+    @test summary.nuclear_by_center_block_materialized == true
+    @test summary.charged_nuclear_operator_materialized == false
     @test summary.provider_level_local_matrix_materialized == true
     @test summary.route_driver_wiring == false
     @test summary.route_global_matrix_materialized == false
@@ -141,6 +146,8 @@ function _check_gto_nuclear_common_summary(summary; expected_shape, expected_orb
     @test !hasproperty(summary, :oracle_matrix)
     @test !hasproperty(summary, :nuclear_ga_by_center)
     @test !hasproperty(summary, :nuclear_aa_by_center)
+    @test !hasproperty(summary, :charged_nuclear_operator)
+    @test !hasproperty(summary, :summed_center_block)
     @test !hasproperty(summary, :route_global_matrix)
     @test !hasproperty(summary, :retained_matrix)
     @test !hasproperty(summary, :payload)
@@ -200,6 +207,8 @@ end
         @test mixed_summary.mixed_gto_pilot == true
         @test mixed_summary.gto_supplement_self_block == false
         @test mixed_summary.center_index == center_index
+        @test mixed_summary.center_location ==
+              fixture.center_records[center_index].location
         @test mixed_summary.center_coordinates ==
               fixture.center_records[center_index].location
         @test mixed_summary.nuclear_charge ==
@@ -225,6 +234,8 @@ end
         @test self_summary.mixed_gto_pilot == false
         @test self_summary.gto_supplement_self_block == true
         @test self_summary.center_index == center_index
+        @test self_summary.center_location ==
+              fixture.center_records[center_index].location
         @test self_summary.center_coordinates ==
               fixture.center_records[center_index].location
         @test self_summary.nuclear_charge ==
@@ -248,6 +259,9 @@ end
     @test missing_expansion_summary.blocker == :missing_coulomb_gaussian_expansion
     @test isnothing(missing_expansion.dense_block)
     @test missing_expansion_summary.dense_block_available == false
+    @test missing_expansion_summary.nuclear_by_center_block_materialized == false
+    @test missing_expansion_summary.charged_nuclear_operator_materialized == false
+    @test missing_expansion_summary.centers_summed == false
     @test missing_expansion_summary.route_driver_wiring == false
     @test missing_expansion_summary.hamiltonian_data_materialized == false
 
@@ -265,6 +279,11 @@ end
           :missing_electron_nuclear_center_record
     @test isnothing(missing_center.dense_block)
     @test missing_center_summary.dense_block_available == false
+    @test missing_center_summary.nuclear_charge_recorded == false
+    @test missing_center_summary.nuclear_charge_applied == false
+    @test missing_center_summary.nuclear_by_center_block_materialized == false
+    @test missing_center_summary.charged_nuclear_operator_materialized == false
+    @test missing_center_summary.centers_summed == false
     @test missing_center_summary.route_driver_wiring == false
     @test missing_center_summary.hamiltonian_data_materialized == false
 end
