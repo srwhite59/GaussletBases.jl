@@ -2119,6 +2119,7 @@ function _cpb_mixed_gto_overlap_block_summary(
         object_kind = :cartesian_cpb_mixed_gto_local_overlap_block_summary,
         status,
         blocker,
+        _cpb_mixed_gto_summary_convention_fields()...,
         term = :mixed_gto_overlap,
         source_kind = :mixed_gausslet_gto_supplement_overlap,
         supplement_representation_kind = :cartesian_gaussian_shell_orbital,
@@ -2186,6 +2187,7 @@ function _cpb_mixed_gto_coordinate_moment_block_summary(
         object_kind = :cartesian_cpb_mixed_gto_coordinate_moment_local_block_summary,
         status,
         blocker,
+        _cpb_mixed_gto_summary_convention_fields()...,
         term,
         coordinate_moment = moment,
         active_axis = axis,
@@ -2251,6 +2253,7 @@ function _cpb_mixed_gto_kinetic_block_summary(
         object_kind = :cartesian_cpb_mixed_gto_kinetic_local_block_summary,
         status,
         blocker,
+        _cpb_mixed_gto_summary_convention_fields()...,
         term = :mixed_gto_kinetic,
         source_kind = :mixed_gausslet_gto_supplement_kinetic,
         kinetic_factor_form = :sum_of_axis_products,
@@ -2297,6 +2300,23 @@ function _cpb_mixed_gto_kinetic_block_summary(
         pqs_lowdin_materialized = false,
         pqs_shell_projection_materialized = false,
         exports_or_artifacts = false,
+    )
+end
+
+function _cpb_mixed_gto_summary_convention_fields()
+    return (;
+        contraction_convention =
+            :orbital_coefficients_contract_primitive_axis_tables,
+        center_shift_convention = :explicit_axis_center_coordinates,
+        shell_power_order = _AXIS_ORDER,
+        axis_order = _AXIS_ORDER,
+        right_basis_kind = :single_cartesian_gaussian_shell_orbital,
+        right_orbital_count = 1,
+        provider_level_pilot = true,
+        mixed_gto_pilot = true,
+        parent_one_body_factor_packet_consumed = false,
+        mixed_gto_axis_integral_source =
+            :qw_polynomial_gaussian_primitive_tables,
     )
 end
 

@@ -96,6 +96,7 @@ function _check_blocked_mixed_gto(
     block_summary = CBPMixedGTO.summary(block)
     @test block_summary.status == expected_status
     @test block_summary.blocker == expected_blocker
+    _check_mixed_gto_convention_fields(block_summary)
     @test isnothing(block.dense_block)
     @test block_summary.dense_block_available == false
     @test block_summary.dense_block_shape == :unavailable
@@ -112,9 +113,34 @@ function _check_blocked_mixed_gto(
     @test !hasproperty(block_summary, :axis_tables)
     @test !hasproperty(block_summary, :primitive_tables)
     @test !hasproperty(block_summary, :oracle_matrix)
+    @test !hasproperty(block_summary, :oracle_matrices)
     @test !hasproperty(block_summary, :global_matrix)
     @test !hasproperty(block_summary, :global_overlap_matrix)
+    @test !hasproperty(block_summary, :route_global_matrix)
+    @test !hasproperty(block_summary, :route_global_overlap_matrix)
+    @test !hasproperty(block_summary, :retained_matrix)
+    @test !hasproperty(block_summary, :retained_matrices)
     @test !hasproperty(block_summary, :retained_blocks)
+    @test !hasproperty(block_summary, :payload)
+    @test !hasproperty(block_summary, :payload_copy)
+    return nothing
+end
+
+function _check_mixed_gto_convention_fields(block_summary)
+    @test block_summary.contraction_convention ==
+          :orbital_coefficients_contract_primitive_axis_tables
+    @test block_summary.center_shift_convention ==
+          :explicit_axis_center_coordinates
+    @test block_summary.shell_power_order == (:x, :y, :z)
+    @test block_summary.axis_order == (:x, :y, :z)
+    @test block_summary.right_basis_kind ==
+          :single_cartesian_gaussian_shell_orbital
+    @test block_summary.right_orbital_count == 1
+    @test block_summary.provider_level_pilot == true
+    @test block_summary.mixed_gto_pilot == true
+    @test block_summary.parent_one_body_factor_packet_consumed == false
+    @test block_summary.mixed_gto_axis_integral_source ==
+          :qw_polynomial_gaussian_primitive_tables
     return nothing
 end
 
@@ -130,6 +156,7 @@ function _check_mixed_gto_summary_common(
           :axiswise_normalized_cartesian_gaussian
     @test block_summary.formula_source ==
           :GaussianAnalyticIntegrals_polynomial_gaussian
+    _check_mixed_gto_convention_fields(block_summary)
     @test block_summary.local_shape == expected_shape
     @test block_summary.dense_block_shape == expected_dense_shape
     @test block_summary.local_ordering ==
@@ -148,9 +175,16 @@ function _check_mixed_gto_summary_common(
     @test !hasproperty(block_summary, :axis_tables)
     @test !hasproperty(block_summary, :primitive_tables)
     @test !hasproperty(block_summary, :oracle_matrix)
+    @test !hasproperty(block_summary, :oracle_matrices)
     @test !hasproperty(block_summary, :global_matrix)
     @test !hasproperty(block_summary, :global_overlap_matrix)
+    @test !hasproperty(block_summary, :route_global_matrix)
+    @test !hasproperty(block_summary, :route_global_overlap_matrix)
+    @test !hasproperty(block_summary, :retained_matrix)
+    @test !hasproperty(block_summary, :retained_matrices)
     @test !hasproperty(block_summary, :retained_blocks)
+    @test !hasproperty(block_summary, :payload)
+    @test !hasproperty(block_summary, :payload_copy)
     return nothing
 end
 
@@ -300,6 +334,71 @@ end
     @test kinetic_block.dense_block[:, 1] ≈
           moment_oracle.kinetic_ga[oracle_rows, 1] atol = 1.0e-12 rtol = 1.0e-12
 
+    edge_cpb = CPBMixedGTO.cpb(2:2, 1:3, 2:2; role = :mixed_gto_edge_cpb)
+    edge_rows = _mixed_gto_oracle_rows(parent, edge_cpb)
+    edge_overlap = CBPMixedGTO.cpb_mixed_gto_overlap_block(parent, edge_cpb, orbital)
+    edge_overlap_summary = CBPMixedGTO.summary(edge_overlap)
+    @test edge_overlap_summary.status ==
+          :materialized_cpb_mixed_gto_local_overlap_block
+    _check_mixed_gto_summary_common(
+        edge_overlap_summary;
+        expected_shape = (x = 1, y = 3, z = 1),
+        expected_dense_shape = (3, 1),
+    )
+    @test edge_overlap.dense_block[:, 1] ≈ oracle[edge_rows, 1] atol = 1.0e-12 rtol = 1.0e-12
+
+    edge_position_y = CBPMixedGTO.cpb_mixed_gto_position_operator_block(
+        parent,
+        edge_cpb,
+        orbital;
+        axis = :y,
+    )
+    edge_position_y_summary = CBPMixedGTO.summary(edge_position_y)
+    @test edge_position_y_summary.status ==
+          :materialized_cpb_mixed_gto_coordinate_moment_local_block
+    @test edge_position_y_summary.active_axis == :y
+    _check_mixed_gto_summary_common(
+        edge_position_y_summary;
+        expected_shape = (x = 1, y = 3, z = 1),
+        expected_dense_shape = (3, 1),
+    )
+    @test edge_position_y.dense_block[:, 1] ≈
+          moment_oracle.position_y_ga[edge_rows, 1] atol = 1.0e-12 rtol = 1.0e-12
+
+    edge_x2_y = CBPMixedGTO.cpb_mixed_gto_x2_operator_block(
+        parent,
+        edge_cpb,
+        orbital;
+        axis = :y,
+    )
+    edge_x2_y_summary = CBPMixedGTO.summary(edge_x2_y)
+    @test edge_x2_y_summary.status ==
+          :materialized_cpb_mixed_gto_coordinate_moment_local_block
+    @test edge_x2_y_summary.active_axis == :y
+    _check_mixed_gto_summary_common(
+        edge_x2_y_summary;
+        expected_shape = (x = 1, y = 3, z = 1),
+        expected_dense_shape = (3, 1),
+    )
+    @test edge_x2_y.dense_block[:, 1] ≈
+          moment_oracle.x2_y_ga[edge_rows, 1] atol = 1.0e-12 rtol = 1.0e-12
+
+    edge_kinetic = CBPMixedGTO.cpb_mixed_gto_kinetic_operator_block(
+        parent,
+        edge_cpb,
+        orbital,
+    )
+    edge_kinetic_summary = CBPMixedGTO.summary(edge_kinetic)
+    @test edge_kinetic_summary.status ==
+          :materialized_cpb_mixed_gto_kinetic_local_block
+    _check_mixed_gto_summary_common(
+        edge_kinetic_summary;
+        expected_shape = (x = 1, y = 3, z = 1),
+        expected_dense_shape = (3, 1),
+    )
+    @test edge_kinetic.dense_block[:, 1] ≈
+          moment_oracle.kinetic_ga[edge_rows, 1] atol = 1.0e-12 rtol = 1.0e-12
+
     unsupported_axis_block =
         CBPMixedGTO.cpb_mixed_gto_position_operator_block(
             parent,
@@ -382,10 +481,22 @@ end
         CBPMixedGTO.cpb_mixed_gto_overlap_block(parent, cpb, invalid_exponents),
         :invalid_supplement_exponents,
     )
+    _check_mixed_gto_one_body_wrapper_blockers(
+        parent,
+        cpb,
+        invalid_exponents,
+        :invalid_supplement_exponents,
+    )
 
     invalid_coefficients = _mixed_gto_orbital(coefficients = [0.8, Inf])
     _check_blocked_mixed_gto(
         CBPMixedGTO.cpb_mixed_gto_overlap_block(parent, cpb, invalid_coefficients),
+        :invalid_supplement_coefficients,
+    )
+    _check_mixed_gto_one_body_wrapper_blockers(
+        parent,
+        cpb,
+        invalid_coefficients,
         :invalid_supplement_coefficients,
     )
 
