@@ -102,9 +102,10 @@ path, not an exhaustive local-helper test.
 Active fixture:
 
 - one proton at `(0.0, 0.0, 0.0)` with `Z = 1.0`
-- `q = 5`, `n_s = q`
-- standard q-to-core-spacing rule, recorded as
-  `:standard_pqs_ns_equals_q`
+- `q = 5`, `ns = 5`, `n_s = 5`
+- axis count rule recorded as `:two_ns_plus_q`
+- standard WL core-spacing rule, recorded as
+  `:standard_wl_ns_equals_q`
 - core spacing `d = 0.15`
 - `MappedUniformBasisSpec(:G10)` parent axes with counts `(15, 15, 15)`
 - `white_lindsey_atomic_mapping(Z = 1.0, d = 0.15, tail_spacing = 10.0)`
@@ -139,9 +140,10 @@ Fixture:
 - two protons on the z axis at `(0.0, 0.0, -1.0)` and `(0.0, 0.0, 1.0)`
 - internuclear distance `R = 2.0` bohr
 - nuclear charges `(1.0, 1.0)`
-- `q = 5`, `n_s = q`
-- standard q-to-core-spacing rule, recorded as
-  `:standard_pqs_ns_equals_q`
+- `q = 5`, `ns = 5`, `n_s = 5`
+- axis count rule recorded as `:two_ns_plus_q`
+- standard WL core-spacing rule, recorded as
+  `:standard_wl_ns_equals_q`
 - core spacing `d = 0.15`
 - `MappedUniformBasisSpec(:G10)` parent axes with counts `(15, 15, 17)`
 - `white_lindsey_atomic_mapping(Z = 1.0, d = 0.15, tail_spacing = 10.0)`

@@ -6,11 +6,26 @@ const WLCBPAcceptanceCPGB = GaussletBases.CartesianParentGaussletBases
 const WLCBPAcceptanceProvider = GaussletBases.CartesianCPBBlockProviders
 
 const _WL_CPB_ACCEPTANCE_Q = 5
-const _WL_CPB_ACCEPTANCE_NS = _WL_CPB_ACCEPTANCE_Q
+const _WL_CPB_ACCEPTANCE_NS = 5
 const _WL_CPB_ACCEPTANCE_D = 0.15
 const _WL_CPB_ACCEPTANCE_REFERENCE_SPACING = 1.0
 const _WL_CPB_ACCEPTANCE_TAIL_SPACING = 10.0
 const _WL_CPB_ACCEPTANCE_BACKEND = :pgdg_localized_experimental
+
+function _wl_cpb_acceptance_axis_count(; extra_tail_points::Integer = 0)
+    return 2 * _WL_CPB_ACCEPTANCE_NS + _WL_CPB_ACCEPTANCE_Q + Int(extra_tail_points)
+end
+
+function _wl_cpb_acceptance_h_atom_axis_counts()
+    count = _wl_cpb_acceptance_axis_count()
+    return (x = count, y = count, z = count)
+end
+
+function _wl_cpb_acceptance_h2plus_axis_counts()
+    transverse_count = _wl_cpb_acceptance_axis_count()
+    bond_count = _wl_cpb_acceptance_axis_count(extra_tail_points = 2)
+    return (x = transverse_count, y = transverse_count, z = bond_count)
+end
 
 function _wl_cpb_acceptance_axis(count::Integer)
     return build_basis(MappedUniformBasisSpec(
@@ -53,9 +68,11 @@ function _wl_cpb_acceptance_parent(axis_counts)
         metadata = (;
             basis_family = :post_cpb_white_lindsey_acceptance_fixture,
             q = _WL_CPB_ACCEPTANCE_Q,
+            ns = _WL_CPB_ACCEPTANCE_NS,
             n_s = _WL_CPB_ACCEPTANCE_NS,
             core_spacing = _WL_CPB_ACCEPTANCE_D,
-            q_to_core_spacing_rule = :standard_pqs_ns_equals_q,
+            wl_axis_count_rule = :two_ns_plus_q,
+            q_to_core_spacing_rule = :standard_wl_ns_equals_q,
         ),
     )
     expansion = coulomb_gaussian_expansion(doacc = false)
@@ -154,8 +171,10 @@ function _wl_cpb_acceptance_result(;
         route = :post_cpb_wl_gausslet_only,
         system,
         q = _WL_CPB_ACCEPTANCE_Q,
+        ns = _WL_CPB_ACCEPTANCE_NS,
         n_s = _WL_CPB_ACCEPTANCE_NS,
-        q_to_core_spacing_rule = :standard_pqs_ns_equals_q,
+        wl_axis_count_rule = :two_ns_plus_q,
+        q_to_core_spacing_rule = :standard_wl_ns_equals_q,
         core_spacing = _WL_CPB_ACCEPTANCE_D,
         reference_spacing = _WL_CPB_ACCEPTANCE_REFERENCE_SPACING,
         tail_spacing = _WL_CPB_ACCEPTANCE_TAIL_SPACING,

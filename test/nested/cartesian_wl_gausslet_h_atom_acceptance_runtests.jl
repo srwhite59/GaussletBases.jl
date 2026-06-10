@@ -20,7 +20,7 @@ const _H_OLD_DIRECT_COARSE_DISTORTED_ENERGY = -0.4966106635473884
         system = :h_atom,
         centers = ((0.0, 0.0, 0.0),),
         charges = (1.0,),
-        axis_counts = (x = 15, y = 15, z = 15),
+        axis_counts = _wl_cpb_acceptance_h_atom_axis_counts(),
         old_direct_electronic_baseline = _H_OLD_DIRECT_COARSE_DISTORTED_ENERGY,
         physical_electronic_reference = _H_EXACT_ENERGY,
     )
@@ -30,7 +30,10 @@ const _H_OLD_DIRECT_COARSE_DISTORTED_ENERGY = -0.4966106635473884
     @test report.route == :post_cpb_wl_gausslet_only
     @test report.system == :h_atom
     @test report.q == 5
+    @test report.ns == 5
+    @test report.n_s == 5
     @test report.n_s == report.q
+    @test report.wl_axis_count_rule == :two_ns_plus_q
     @test report.core_spacing == 0.15
     @test report.axis_counts == (x = 15, y = 15, z = 15)
     @test report.parent_support_size == 3375

@@ -24,7 +24,7 @@ const _H2PLUS_OLD_DIRECT_TOTAL_BASELINE = -0.5654839328172023
         system = :h2plus,
         centers = ((0.0, 0.0, -R / 2), (0.0, 0.0, R / 2)),
         charges = (1.0, 1.0),
-        axis_counts = (x = 15, y = 15, z = 17),
+        axis_counts = _wl_cpb_acceptance_h2plus_axis_counts(),
         old_direct_electronic_baseline = _H2PLUS_OLD_DIRECT_ELECTRONIC_BASELINE,
         physical_electronic_reference = _H2PLUS_R2_EXACT_ELECTRONIC_ENERGY,
         physical_total_reference = _H2PLUS_R2_EXACT_TOTAL_ENERGY,
@@ -36,7 +36,10 @@ const _H2PLUS_OLD_DIRECT_TOTAL_BASELINE = -0.5654839328172023
     @test report.route == :post_cpb_wl_gausslet_only
     @test report.system == :h2plus
     @test report.q == 5
+    @test report.ns == 5
+    @test report.n_s == 5
     @test report.n_s == report.q
+    @test report.wl_axis_count_rule == :two_ns_plus_q
     @test report.core_spacing == 0.15
     @test report.axis_counts == (x = 15, y = 15, z = 17)
     @test report.parent_support_size == 3825
