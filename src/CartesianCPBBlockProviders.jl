@@ -1,5 +1,7 @@
 module CartesianCPBBlockProviders
 
+import ..GaussletBases: _mapped_ordinary_gausslet_1d_bundle
+
 using ..CartesianCPB
 using ..CartesianParentGaussletBases
 
@@ -18,6 +20,7 @@ export CPBIntervalPair3D,
        CPBKineticOperatorBlock,
        CPBOneBodyAxisOperatorBlock,
        CPBElectronElectronLocalBlock,
+       CPBElectronNuclearByCenterLocalBlock,
        CPBLocalIntegralWeights,
        CPBOverlapDenseBlock,
        CPBLocalOverlapBlockRecord,
@@ -31,6 +34,7 @@ export CPBIntervalPair3D,
        cpb_position_operator_block,
        cpb_x2_operator_block,
        cpb_electron_electron_local_block,
+       cpb_electron_nuclear_by_center_local_block,
        cpb_local_integral_weights,
        cpb_overlap_dense_block,
        cpb_local_overlap_block_record,
@@ -148,6 +152,23 @@ Hamiltonian assembly, or WL/PQS realization.
 struct CPBElectronElectronLocalBlock{S,E,I,D,M}
     parent_axis_bundle_object::S
     expansion::E
+    interval_pair::I
+    dense_block::D
+    metadata::M
+end
+
+"""
+    CPBElectronNuclearByCenterLocalBlock
+
+Provider-level CPB-local electron-nuclear Galerkin block for one center. This
+pilot keeps center terms separate, keeps the Gaussian expansion term loop
+inside the local contraction, and does not apply CPB integral weights or sum a
+Hamiltonian.
+"""
+struct CPBElectronNuclearByCenterLocalBlock{S,E,C,I,D,M}
+    parent_axis_bundle_object::S
+    expansion::E
+    center_record::C
     interval_pair::I
     dense_block::D
     metadata::M
@@ -301,6 +322,7 @@ summary(block::CPBOverlapOperatorBlock) = block.metadata
 summary(block::CPBKineticOperatorBlock) = block.metadata
 summary(block::CPBOneBodyAxisOperatorBlock) = block.metadata
 summary(block::CPBElectronElectronLocalBlock) = block.metadata
+summary(block::CPBElectronNuclearByCenterLocalBlock) = block.metadata
 summary(weights::CPBLocalIntegralWeights) = weights.metadata
 summary(block::CPBOverlapDenseBlock) = block.metadata
 summary(record::CPBLocalOverlapBlockRecord) = record.metadata
@@ -1777,6 +1799,338 @@ function _cpb_axis_value(values, axis::Symbol)
     axis === :y && return values[2]
     axis === :z && return values[3]
     throw(ArgumentError("unsupported Cartesian axis $(axis)"))
+end
+
+function cpb_electron_nuclear_by_center_local_block(
+    parent_axis_bundle_object,
+    expansion,
+    center_record,
+    interval_pair::CPBIntervalPair3D,
+)
+    interval_summary = summary(interval_pair)
+    center_summary = _cpb_electron_nuclear_center_summary(center_record)
+    axis_terms = _cpb_electron_nuclear_axis_terms(
+        parent_axis_bundle_object,
+        expansion,
+        center_summary,
+    )
+    blocker = _cpb_electron_nuclear_by_center_local_block_blocker(
+        interval_summary,
+        center_summary,
+        axis_terms,
+        expansion,
+    )
+    dense_block =
+        isnothing(blocker) ?
+        _materialize_cpb_electron_nuclear_by_center_dense_block(
+            axis_terms,
+            expansion,
+            center_summary,
+            interval_summary,
+        ) :
+        nothing
+    status =
+        isnothing(blocker) ?
+        :materialized_cpb_electron_nuclear_by_center_local_block :
+        :blocked_cpb_electron_nuclear_by_center_local_block
+    return CPBElectronNuclearByCenterLocalBlock(
+        parent_axis_bundle_object,
+        expansion,
+        center_record,
+        interval_pair,
+        dense_block,
+        _cpb_electron_nuclear_by_center_local_block_summary(
+            status,
+            blocker,
+            center_summary,
+            interval_summary,
+            axis_terms,
+            expansion,
+            dense_block,
+        ),
+    )
+end
+
+function _cpb_electron_nuclear_center_summary(center_record)
+    isnothing(center_record) && return (;
+        status = :blocked_electron_nuclear_center_record,
+        blocker = :missing_electron_nuclear_center_record,
+        center_key = :unavailable,
+        center_index = :unavailable,
+        charge = :unavailable,
+        location = :unavailable,
+        x = :unavailable,
+        y = :unavailable,
+        z = :unavailable,
+    )
+    charge = _summary_property(center_record, :charge)
+    isnothing(charge) && (charge = _summary_property(center_record, :nuclear_charge))
+    isnothing(charge) && (charge = _summary_property(center_record, :Z))
+    location = _summary_property(center_record, :location)
+    if isnothing(location)
+        x = _summary_property(center_record, :x)
+        y = _summary_property(center_record, :y)
+        z = _summary_property(center_record, :z)
+        if !isnothing(x) && !isnothing(y) && !isnothing(z)
+            location = (x, y, z)
+        end
+    end
+    location_tuple =
+        _cpb_electron_nuclear_location_tuple(location)
+    blocker =
+        isnothing(charge) ?
+        :missing_electron_nuclear_center_charge :
+        (
+            isnothing(location_tuple) ?
+            :missing_electron_nuclear_center_location :
+            nothing
+        )
+    return (;
+        status =
+            isnothing(blocker) ?
+            :available_electron_nuclear_center_record :
+            :blocked_electron_nuclear_center_record,
+        blocker,
+        center_key =
+            something(_summary_property(center_record, :center_key), :unavailable),
+        center_index =
+            something(_summary_property(center_record, :center_index), :unavailable),
+        charge =
+            isnothing(charge) ? :unavailable : Float64(charge),
+        location =
+            isnothing(location_tuple) ? :unavailable : location_tuple,
+        x = isnothing(location_tuple) ? :unavailable : location_tuple[1],
+        y = isnothing(location_tuple) ? :unavailable : location_tuple[2],
+        z = isnothing(location_tuple) ? :unavailable : location_tuple[3],
+    )
+end
+
+function _cpb_electron_nuclear_location_tuple(location)
+    isnothing(location) && return nothing
+    length(location) == 3 || return nothing
+    return (
+        Float64(location[1]),
+        Float64(location[2]),
+        Float64(location[3]),
+    )
+end
+
+function _cpb_electron_nuclear_axis_terms(
+    parent_axis_bundle_object,
+    expansion,
+    center_summary,
+)
+    exponents = _summary_property(expansion, :exponents)
+    center_summary.status === :available_electron_nuclear_center_record ||
+        return (x = nothing, y = nothing, z = nothing)
+    exponents isa AbstractVector || return (x = nothing, y = nothing, z = nothing)
+    return (;
+        x = _cpb_electron_nuclear_axis_terms(
+            parent_axis_bundle_object,
+            :x,
+            exponents,
+            center_summary.x,
+        ),
+        y = _cpb_electron_nuclear_axis_terms(
+            parent_axis_bundle_object,
+            :y,
+            exponents,
+            center_summary.y,
+        ),
+        z = _cpb_electron_nuclear_axis_terms(
+            parent_axis_bundle_object,
+            :z,
+            exponents,
+            center_summary.z,
+        ),
+    )
+end
+
+function _cpb_electron_nuclear_axis_terms(
+    parent_axis_bundle_object,
+    axis::Symbol,
+    exponents,
+    center_coordinate,
+)
+    axis_bundle = _cpb_axis_bundle(parent_axis_bundle_object, axis)
+    basis = _summary_property(axis_bundle, :basis)
+    backend = _summary_property(axis_bundle, :backend)
+    isnothing(basis) && return nothing
+    isnothing(backend) && return nothing
+    centered_bundle = _mapped_ordinary_gausslet_1d_bundle(
+        basis;
+        exponents,
+        center = center_coordinate,
+        backend,
+    )
+    pgdg_intermediate = _summary_property(centered_bundle, :pgdg_intermediate)
+    return _summary_property(pgdg_intermediate, :gaussian_factor_terms)
+end
+
+function _cpb_electron_nuclear_by_center_local_block_blocker(
+    interval_summary,
+    center_summary,
+    axis_terms,
+    expansion,
+)
+    interval_summary.status === :available_cpb_interval_pair ||
+        return isnothing(interval_summary.blocker) ?
+               :unavailable_cpb_interval_pair :
+               interval_summary.blocker
+    center_summary.status === :available_electron_nuclear_center_record ||
+        return center_summary.blocker
+    isnothing(expansion) && return :missing_coulomb_gaussian_expansion
+    coefficients = _summary_property(expansion, :coefficients)
+    exponents = _summary_property(expansion, :exponents)
+    coefficients isa AbstractVector ||
+        return :missing_coulomb_expansion_coefficients
+    exponents isa AbstractVector ||
+        return :missing_coulomb_expansion_exponents
+    for axis in _AXIS_ORDER
+        terms = getproperty(axis_terms, axis)
+        terms isa AbstractArray{<:Real,3} ||
+            return Symbol("missing_$(axis)_electron_nuclear_axis_factor_terms")
+        isempty(terms) &&
+            return Symbol("$(axis)_electron_nuclear_axis_factor_terms_empty")
+        size(terms, 1) == length(coefficients) ||
+            return :electron_nuclear_axis_factor_term_count_mismatch
+        parent_axis_count = _cpb_axis_value(
+            interval_summary.parent_axis_counts,
+            axis,
+        )
+        (
+            size(terms, 2) == parent_axis_count &&
+            size(terms, 3) == parent_axis_count
+        ) || return Symbol("$(axis)_electron_nuclear_axis_factor_terms_size_mismatch")
+    end
+    return nothing
+end
+
+function _materialize_cpb_electron_nuclear_by_center_dense_block(
+    axis_terms,
+    expansion,
+    center_summary,
+    interval_summary,
+)
+    coefficients = Float64[-center_summary.charge * Float64(value) for value in expansion.coefficients]
+    left = interval_summary.left_intervals
+    right = interval_summary.right_intervals
+    left_shape = interval_summary.left_shape
+    right_shape = interval_summary.right_shape
+    dense_block = zeros(
+        Float64,
+        interval_summary.left_support_count,
+        interval_summary.right_support_count,
+    )
+
+    # Keep alpha inside the by-center Galerkin contraction as the stride-1
+    # term-first index. Do not apply CPB local integral weights and do not sum
+    # over centers in this provider block.
+    for ix_left in left.x, iy_left in left.y, iz_left in left.z
+        row = _local_product_index(
+            ix_left - first(left.x) + 1,
+            iy_left - first(left.y) + 1,
+            iz_left - first(left.z) + 1,
+            (left_shape.x, left_shape.y, left_shape.z),
+        )
+        for ix_right in right.x, iy_right in right.y, iz_right in right.z
+            column = _local_product_index(
+                ix_right - first(right.x) + 1,
+                iy_right - first(right.y) + 1,
+                iz_right - first(right.z) + 1,
+                (right_shape.x, right_shape.y, right_shape.z),
+            )
+            value = 0.0
+            @inbounds for term in eachindex(coefficients)
+                value +=
+                    coefficients[term] *
+                    axis_terms.x[term, ix_left, ix_right] *
+                    axis_terms.y[term, iy_left, iy_right] *
+                    axis_terms.z[term, iz_left, iz_right]
+            end
+            dense_block[row, column] = value
+        end
+    end
+    return dense_block
+end
+
+function _cpb_electron_nuclear_by_center_local_block_summary(
+    status::Symbol,
+    blocker,
+    center_summary,
+    interval_summary,
+    axis_terms,
+    expansion,
+    dense_block,
+)
+    available = status === :materialized_cpb_electron_nuclear_by_center_local_block
+    coefficients = _summary_property(expansion, :coefficients)
+    coefficient_count = coefficients isa AbstractVector ? length(coefficients) : 0
+    return (;
+        object_kind = :cartesian_cpb_electron_nuclear_by_center_local_block_summary,
+        status,
+        blocker,
+        term = :electron_nuclear_by_center_galerkin,
+        source_kind = :parent_axis_bundle_per_center_gaussian_factor_terms,
+        center_key = center_summary.center_key,
+        center_index = center_summary.center_index,
+        charge = center_summary.charge,
+        center_location = center_summary.location,
+        by_center = true,
+        centers_summed = false,
+        cpb_integral_weights_applied = false,
+        galerkin_operator = true,
+        ida_mwg_semantics = false,
+        representation = :dense_local_cpb_electron_nuclear_by_center_galerkin,
+        factor_source_path = :axis_pgdg_intermediate_gaussian_factor_terms,
+        gaussian_expansion_loop = :inner_local_contraction,
+        gaussian_term_count = coefficient_count,
+        coefficient_count,
+        axis_factor_term_shapes = _cpb_pair_factor_term_shapes(axis_terms),
+        local_ordering = interval_summary.local_ordering,
+        left_shape = available ? interval_summary.left_shape : :unavailable,
+        right_shape = available ? interval_summary.right_shape : :unavailable,
+        left_support_count =
+            available ? interval_summary.left_support_count : :unavailable,
+        right_support_count =
+            available ? interval_summary.right_support_count : :unavailable,
+        dense_block_available = available,
+        dense_block_shape = available ? size(dense_block) : :unavailable,
+        dense_block_eltype = available ? eltype(dense_block) : :unavailable,
+        provider_level_local_matrix_materialized = available,
+        provider_level_coulomb_block_materialized = available,
+        provider_level_electron_nuclear_block_materialized = available,
+        cpb_local_coulomb_kernel_implemented = available,
+        cpb_local_electron_nuclear_kernel_implemented = available,
+        realization_status = :unrealized,
+        route_global_status = :unassigned,
+        factor_space =
+            available ? :parent_axis_bundle_pgdg_intermediate : :unavailable,
+        factor_convention =
+            available ?
+            :axis_bundle_electron_nuclear_per_center_gaussian_factor_terms :
+            :unavailable,
+        index_domain =
+            available ? :parent_axis_indices : :unavailable,
+        index_domain_source =
+            available ? :axis_bundle_contract : :unavailable,
+        index_domain_status =
+            available ?
+            :assumed_parent_axis_indexed_by_current_axis_bundle_contract :
+            :unavailable,
+        axis_order = _AXIS_ORDER,
+        bra_ket_order = (:bra, :ket),
+        route_driver_wiring = false,
+        route_global_matrix_materialized = false,
+        route_global_overlap_matrix_materialized = false,
+        global_matrix_materialized = false,
+        global_overlap_matrix_materialized = false,
+        hamiltonian_assembly = false,
+        hamiltonian_data_materialized = false,
+        pqs_lowdin_materialized = false,
+        pqs_shell_projection_materialized = false,
+        exports_or_artifacts = false,
+    )
 end
 
 function cpb_local_integral_weights(parent_axis_bundle_object, cpb::CPB.CoordinateProductBox)
