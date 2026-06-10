@@ -1,10 +1,10 @@
 # Runtime role: CPB-local mixed gausslet/GTO overlap pilot.
 #
-# This test validates the tiny provider-level mixed gausslet/GTO overlap block
-# against the existing Cartesian/GTO overlap oracle. It does not add kinetic,
-# position, x2, nuclear/Coulomb terms, WL/PQS realization, retained transforms,
-# route/global placement, driver wiring, Hamiltonian assembly, IDA/MWG,
-# PQS Lowdin/projection, exports, or artifacts.
+# This test validates tiny provider-level mixed gausslet/GTO overlap and
+# coordinate-moment blocks against existing Cartesian/GTO and QW/GTO oracles.
+# It does not add kinetic, x2, nuclear/Coulomb terms, WL/PQS realization,
+# retained transforms, route/global placement, driver wiring, Hamiltonian
+# assembly, IDA/MWG, PQS Lowdin/projection, exports, or artifacts.
 
 using Test
 using GaussletBases
@@ -50,9 +50,51 @@ function _mixed_gto_oracle_rows(parent, cpb)
     return rows
 end
 
-function _check_blocked_mixed_gto(block, expected_blocker)
+function _mixed_gto_internal_orbital(orbital)
+    return GaussletBases._AtomicCartesianShellOrbital3D(
+        orbital.label,
+        orbital.angular_powers[1],
+        orbital.angular_powers[2],
+        orbital.angular_powers[3],
+        orbital.exponents,
+        orbital.coefficients,
+        orbital.center,
+    )
+end
+
+function _mixed_gto_qw_cross_moment_oracle(axis_basis, orbital)
+    expansion = CoulombGaussianExpansion(
+        [1.0],
+        [1.0];
+        del = 1.0,
+        s = 1.0,
+        c = 1.0,
+        maxu = 1.0,
+    )
+    bundle = GaussletBases._mapped_ordinary_gausslet_1d_bundle(
+        axis_basis;
+        exponents = expansion.exponents,
+        center = 0.0,
+        backend = :numerical_reference,
+    )
+    proxy = GaussletBases._qwrg_mapped_supplement_proxy_layer(axis_basis, bundle)
+    supplement = (; orbitals = [ _mixed_gto_internal_orbital(orbital) ])
+    return GaussletBases._qwrg_cartesian_shell_cross_moment_blocks_3d(
+        (x = proxy, y = proxy, z = proxy),
+        supplement,
+        expansion,
+        length(axis_basis)^3;
+        include_factor_terms = false,
+    )
+end
+
+function _check_blocked_mixed_gto(
+    block,
+    expected_blocker;
+    expected_status = :blocked_cpb_mixed_gto_local_overlap_block,
+)
     block_summary = CBPMixedGTO.summary(block)
-    @test block_summary.status == :blocked_cpb_mixed_gto_local_overlap_block
+    @test block_summary.status == expected_status
     @test block_summary.blocker == expected_blocker
     @test isnothing(block.dense_block)
     @test block_summary.dense_block_available == false
@@ -128,6 +170,61 @@ end
     @test !hasproperty(block_summary, :global_overlap_matrix)
     @test !hasproperty(block_summary, :retained_blocks)
     @test block.dense_block[:, 1] ≈ oracle[oracle_rows, 1] atol = 1.0e-12 rtol = 1.0e-12
+
+    position_block =
+        CBPMixedGTO.cpb_mixed_gto_position_operator_block(parent, cpb, orbital)
+    position_summary = CBPMixedGTO.summary(position_block)
+    position_oracle = _mixed_gto_qw_cross_moment_oracle(axis, orbital)
+
+    @test position_summary.status ==
+          :materialized_cpb_mixed_gto_coordinate_moment_local_block
+    @test isnothing(position_summary.blocker)
+    @test position_summary.term == :mixed_gto_position_x
+    @test position_summary.coordinate_moment == :position
+    @test position_summary.active_axis == :x
+    @test position_summary.xpower == 1
+    @test position_summary.source_kind ==
+          :mixed_gausslet_gto_supplement_coordinate_moment
+    @test position_summary.orbital_label == orbital.label
+    @test position_summary.primitive_normalization ==
+          :axiswise_normalized_cartesian_gaussian
+    @test position_summary.formula_source ==
+          :GaussianAnalyticIntegrals_polynomial_gaussian
+    @test position_summary.axis_kernel_source ==
+          :existing_qw_polynomial_gaussian_axis_integrals
+    @test position_summary.local_shape == (x = 2, y = 2, z = 1)
+    @test position_summary.dense_block_shape == (4, 1)
+    @test position_summary.local_ordering ==
+          :parent_compatible_x_slowest_z_fastest
+    @test position_summary.galerkin_operator == true
+    @test position_summary.provider_level_local_matrix_materialized == true
+    @test position_summary.route_driver_wiring == false
+    @test position_summary.route_global_matrix_materialized == false
+    @test position_summary.global_matrix_materialized == false
+    @test position_summary.hamiltonian_data_materialized == false
+    @test position_summary.coulomb_data_materialized == false
+    @test position_summary.ida_mwg_semantics == false
+    @test position_summary.exports_or_artifacts == false
+    @test !hasproperty(position_summary, :dense_block)
+    @test !hasproperty(position_summary, :axis_ops)
+    @test !hasproperty(position_summary, :global_matrix)
+    @test !hasproperty(position_summary, :global_overlap_matrix)
+    @test !hasproperty(position_summary, :retained_blocks)
+    @test position_block.dense_block[:, 1] ≈
+          position_oracle.position_x_ga[oracle_rows, 1] atol = 1.0e-12 rtol = 1.0e-12
+
+    unsupported_axis_block =
+        CBPMixedGTO.cpb_mixed_gto_position_operator_block(
+            parent,
+            cpb,
+            orbital;
+            axis = :q,
+        )
+    _check_blocked_mixed_gto(
+        unsupported_axis_block,
+        :unsupported_mixed_gto_position_axis;
+        expected_status = :blocked_cpb_mixed_gto_coordinate_moment_local_block,
+    )
 
     unsupported_normalization = _mixed_gto_orbital(
         primitive_normalization = :unsupported_normalization,

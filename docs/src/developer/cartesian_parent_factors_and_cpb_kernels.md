@@ -437,9 +437,16 @@ provider-level only. It accepts the existing
 metadata and route/global/Hamiltonian nonclaim flags, and does not duplicate the
 dense block in its summary.
 
-A second tiny test can do `position_x` or `x2_x` against
-`_qwrg_diatomic_cartesian_shell_blocks_3d`. Nuclear attraction should remain
-by-center and compare against `nuclear_ga_by_center` /
+The first coordinate-moment pilot is `position_x`, represented by
+`CPBMixedGTOCoordinateMomentLocalBlock` and
+`cpb_mixed_gto_position_operator_block(...; axis = :x)`. It reuses existing QW
+polynomial-Gaussian axis-integral wrappers for the active-axis moment and
+compares CPB-local rows against
+`_qwrg_cartesian_shell_cross_moment_blocks_3d(...).position_x_ga`.
+
+A next tiny test can do `x2_x` against
+`_qwrg_cartesian_shell_cross_moment_blocks_3d`. Nuclear attraction should
+remain by-center and compare against `nuclear_ga_by_center` /
 `nuclear_aa_by_center` from that existing path. Electron-electron supplement
 pair behavior should use `gaussian_coulomb_pair_matrix` or the current
 White-Lindsey Coulomb matrix as an oracle, not a route-global Hamiltonian.
