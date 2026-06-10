@@ -473,12 +473,16 @@ outside this decomposed WL acceptance contract.
   `1:223`, the three H cc-pVTZ `lmax = 0` supplement orbitals occupy
   `224:226`, the total combined dimension is `226`, and the block layout keys
   are `:gausslet_gausslet`, `:gausslet_gto`, `:gto_gausslet`, and `:gto_gto`.
-  This is layout metadata only. The next blocker is
-  `:missing_route_global_combined_gto_matrix_assembly`: there is still no
-  combined gausslet+GTO overlap matrix, combined Hamiltonian matrix, supplement
-  Hamiltonian assembly, direct Cartesian fallback,
-  `ordinary_cartesian_ida_operators`, full-window CPB acceptance route, export,
-  or artifact.
+  `route_global_combined_gto_one_electron_matrices` now provides the narrow
+  combined overlap/Hamiltonian assembly helper when mixed gausslet/GTO rows
+  cover the full gausslet retained range; it keeps by-center nuclear blocks
+  separated until Hamiltonian assembly, then applies recorded nuclear charges
+  and sums centers. The real H plus GTO readiness path remains blocked on
+  `:missing_mixed_gto_route_global_row_coverage` because the current provider
+  bundle supplies the direct-core mixed rows `1:125`, not the full decomposed
+  gausslet retained range `1:223`. No H plus GTO solve, direct Cartesian
+  fallback, `ordinary_cartesian_ida_operators`, full-window CPB acceptance
+  route, PQS transform, export, or artifact was added.
 - The next overlap implementation boundary is no longer additional placement
   fingerprinting. First decide the CPB operator-block and WL/PQS realization
   design: what local block objects exist, how White-Lindsey consumes them, how

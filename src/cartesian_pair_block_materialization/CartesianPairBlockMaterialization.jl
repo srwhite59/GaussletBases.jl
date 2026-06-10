@@ -44,6 +44,7 @@ using ..CartesianRouteCore
 using ..CartesianPairOperatorPlans
 using ..CartesianRetainedUnitTransformContracts
 using ..CartesianRawProductSources
+using LinearAlgebra
 using SparseArrays
 
 const CPB = CartesianCPB
@@ -94,6 +95,7 @@ export PairBlockMaterializationPolicy,
        one_body_electron_nuclear_by_center_placement_plan,
        one_body_global_electron_nuclear_by_center_matrix,
        route_global_combined_gto_basis_layout,
+       route_global_combined_gto_one_electron_matrices,
        direct_direct_overlap_block,
        direct_direct_overlap_blocks,
        direct_direct_position_block,
@@ -143,6 +145,11 @@ export PairBlockMaterializationPolicy,
 # route_global_combined_gto_basis_layout.jl
 #     Metadata-only layout for appending a small GTO supplement sector to the
 #     decomposed WL retained gausslet sector.
+#
+# route_global_combined_gto_matrix_assembly.jl
+#     Narrow combined gausslet+GTO overlap and one-electron Hamiltonian matrix
+#     assembly from already materialized gausslet route-global and provider
+#     GTO blocks.
 #
 # one_body_placement_plan.jl
 #     Metadata-only local one-body placement records for future global retained
@@ -244,6 +251,7 @@ include("one_body_block_collection.jl")
 include("route_one_body_adapter.jl")
 include("route_global_one_body_adapter.jl")
 include("route_global_combined_gto_basis_layout.jl")
+include("route_global_combined_gto_matrix_assembly.jl")
 include("one_body_placement_plan.jl")
 include("one_body_global_matrix_helpers.jl")
 include("one_body_global_overlap.jl")

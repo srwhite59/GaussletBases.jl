@@ -637,13 +637,16 @@ function _wl_decomposed_h_gto_supplement_readiness_report()
             decomposed_inventory,
             supplement,
         )
+    mixed_gausslet_row_range = 1:WLAcceptanceReadinessCPB.support_count(direct_core_cpb)
+    combined_matrix_assembly =
+        WLAcceptanceReadinessCPBM.route_global_combined_gto_one_electron_matrices(
+            combined_layout;
+            gto_bundle = bundle,
+            mixed_gausslet_row_range,
+        )
     route_global_combined_basis_layout_status = combined_layout.status
     route_global_combined_basis_layout_blocker = combined_layout.blocker
-    readiness_blocker =
-        route_global_combined_basis_layout_status ===
-        :available_route_global_combined_gto_basis_layout ?
-        :missing_route_global_combined_gto_matrix_assembly :
-        route_global_combined_basis_layout_blocker
+    readiness_blocker = combined_matrix_assembly.blocker
     decomposed_unit_range_start = minimum(
         first(summary.column_range) for summary in decomposed_inventory.unit_summaries
     )
@@ -758,10 +761,35 @@ function _wl_decomposed_h_gto_supplement_readiness_report()
             combined_layout.combined_overlap_layout_available,
         final_combined_hamiltonian_layout_available =
             combined_layout.combined_hamiltonian_layout_available,
+        route_global_combined_matrix_assembly_status =
+            combined_matrix_assembly.status,
+        route_global_combined_matrix_assembly_blocker =
+            combined_matrix_assembly.blocker,
+        route_global_combined_mixed_gausslet_row_range =
+            combined_matrix_assembly.mixed_gausslet_row_range,
+        route_global_combined_mixed_gausslet_row_count =
+            combined_matrix_assembly.mixed_gausslet_row_count,
+        route_global_combined_mixed_gausslet_row_coverage_status =
+            combined_matrix_assembly.mixed_gausslet_row_coverage_status,
+        route_global_combined_overlap_matrix_shape =
+            combined_matrix_assembly.overlap_matrix_shape,
+        route_global_combined_hamiltonian_matrix_shape =
+            combined_matrix_assembly.hamiltonian_matrix_shape,
+        route_global_combined_overlap_symmetry_error =
+            combined_matrix_assembly.overlap_symmetry_error,
+        route_global_combined_overlap_positive_definite =
+            combined_matrix_assembly.overlap_positive_definite,
+        route_global_combined_solve_ready = combined_matrix_assembly.solve_ready,
+        route_global_combined_nuclear_charge_application_stage =
+            combined_matrix_assembly.nuclear_charge_application_stage,
+        route_global_combined_nuclear_charge_applied_at_hamiltonian_assembly =
+            combined_matrix_assembly.nuclear_charge_applied_at_hamiltonian_assembly,
+        route_global_combined_centers_summed_at_hamiltonian_assembly =
+            combined_matrix_assembly.centers_summed_at_hamiltonian_assembly,
         route_global_combined_overlap_matrix_materialized =
-            combined_layout.combined_overlap_matrix_materialized,
+            combined_matrix_assembly.combined_overlap_matrix_materialized,
         route_global_combined_hamiltonian_matrix_materialized =
-            combined_layout.combined_hamiltonian_matrix_materialized,
+            combined_matrix_assembly.combined_hamiltonian_matrix_materialized,
         gto_route_global_blocks_materialized = false,
         gto_hamiltonian_assembly_materialized = false,
         full_parent_window_cpb_used = false,
@@ -877,7 +905,7 @@ end
     @test report.status ==
           :blocked_decomposed_wl_gto_supplement_acceptance_readiness
     @test report.blocker ==
-          :missing_route_global_combined_gto_matrix_assembly
+          :missing_mixed_gto_route_global_row_coverage
     @test report.acceptance_suite ==
           :decomposed_wl_gausslet_plus_gto_one_electron_acceptance
     @test report.acceptance_fixture == :h_atom_gto_supplement_readiness
@@ -982,6 +1010,23 @@ end
     @test report.gto_gto_blocks_orientation == :gto_rows_by_gto_columns
     @test report.final_combined_overlap_layout_available
     @test report.final_combined_hamiltonian_layout_available
+    @test report.route_global_combined_matrix_assembly_status ==
+          :blocked_route_global_combined_gto_one_electron_matrices
+    @test report.route_global_combined_matrix_assembly_blocker ==
+          :missing_mixed_gto_route_global_row_coverage
+    @test report.route_global_combined_mixed_gausslet_row_range == 1:125
+    @test report.route_global_combined_mixed_gausslet_row_count == 125
+    @test report.route_global_combined_mixed_gausslet_row_coverage_status ==
+          :partial_mixed_gto_route_global_row_coverage
+    @test report.route_global_combined_overlap_matrix_shape == :unavailable
+    @test report.route_global_combined_hamiltonian_matrix_shape == :unavailable
+    @test report.route_global_combined_overlap_symmetry_error == :unavailable
+    @test !report.route_global_combined_overlap_positive_definite
+    @test !report.route_global_combined_solve_ready
+    @test report.route_global_combined_nuclear_charge_application_stage ==
+          :route_global_combined_gto_hamiltonian_assembly
+    @test !report.route_global_combined_nuclear_charge_applied_at_hamiltonian_assembly
+    @test !report.route_global_combined_centers_summed_at_hamiltonian_assembly
     @test !report.route_global_combined_overlap_matrix_materialized
     @test !report.route_global_combined_hamiltonian_matrix_materialized
     @test !report.gto_route_global_blocks_materialized
