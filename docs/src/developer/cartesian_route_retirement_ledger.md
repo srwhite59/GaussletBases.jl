@@ -559,14 +559,41 @@ Third deletion-oriented pass:
 - The three-unit `_pqs_pqs_product_source_box_shadow_blocks(...)` and
   `_pqs_pqs_product_source_box_all_pairs_inventory(...)` family was not
   deleted because it is still used by live route-diagnostic source paths:
-  `_pqs_pqs_product_route_shaped_safe_term_consumer(...)` calls the shadow
-  helper, and `_pqs_pqs_product_raw_box_route_producer(...)` builds the
-  inventory for descriptor validation.
+  `_pqs_pqs_product_raw_box_route_producer(...)` builds the inventory for
+  descriptor validation.
 - The slow integration tests for this family were reduced to smoke coverage:
   expected ranges, retained dimension, finite block payloads, and route-shaped
-  consumer shape/status checks. Detailed all-pairs inventory vocabulary,
+  descriptor checks. Detailed all-pairs inventory vocabulary,
   helper-name assertions, reference sub-block equality, and repeated metadata
   nonclaims were removed.
 - `src/CartesianContractedParentMetrics.jl` marks this family as
   route-diagnostic / oracle-only. It should not be extended as a production
   placement or provider-layer contract.
+
+Fourth caller-driven audit:
+
+- `_pqs_product_source_box_reference_blocks_from_pair_plan(...)` and
+  `_pqs_product_source_box_reference_blocks(...)` are `KEEP_ORACLE_ONLY` for
+  now. Exact source callers remain inside
+  `_pqs_pqs_product_source_box_shadow_blocks(...)`, which builds the three-unit
+  PQS/PQS/product route-shadow block while that diagnostic path exists.
+- `_pqs_pqs_source_box_reference_blocks_from_pair_plan(...)` and
+  `_pqs_pqs_source_box_reference_blocks(...)` are also `KEEP_ORACLE_ONLY`.
+  Exact source callers remain the PQS/PQS reference wrapper and
+  `_pqs_pqs_product_source_box_shadow_blocks(...)`.
+- `_pqs_pqs_product_raw_box_route_producer(...)` is `SHRINK_TEST_ONLY`, not a
+  deletion target in this pass. Exact source callers are
+  `_pqs_pqs_product_raw_box_route_from_geometry_facts(...)` and the
+  density-density route producer path. Tests should not preserve every raw-box
+  helper flag as contract.
+- `_pqs_pqs_product_route_shaped_safe_term_consumer(...)` was `DELETE_NOW`.
+  Exact caller audit found no source caller outside its own definition; only
+  slow-test route-shadow assertions exercised it. The source function and those
+  slow-test call sites were deleted rather than migrated.
+- The slow PQS local-layer integration test was reduced again: the
+  PQS/product mixed source-box check no longer keeps the unused shared raw-plan
+  scaffold, no longer exercises the single-term reference wrapper, and no
+  longer asserts unsupported-term helper vocabulary. It now keeps only compact
+  pair-plan shape/status checks plus finite numerical equivalence for the
+  active multi-term oracle. CPB provider tests remain responsible for detailed
+  local one-body operator correctness.

@@ -339,7 +339,6 @@
         metrics;
         expected_source_mode_dims,
         expected_retained_count,
-        shared_raw_product_box_plan = nothing,
     )
         pair_plan = metrics_module._pqs_product_source_box_pair_plan(
             pqs_plan,
@@ -347,95 +346,12 @@
             metrics,
         )
         @test pair_plan.pair_kind == :pqs_product_source_box
-        @test pair_plan.left_source_family == :mode_selected_raw_product_box
-        @test pair_plan.right_source_family == :product_doside
         @test pair_plan.left_source_dimensions == expected_source_mode_dims
-        @test pair_plan.left_source_dimension == prod(expected_source_mode_dims)
-        @test pair_plan.right_source_dimensions == (2, 2, 1)
-        @test pair_plan.right_source_dimension == 4
         @test pair_plan.left_retained_count == expected_retained_count
         @test pair_plan.right_retained_count == length(product_unit.column_range)
-        @test pair_plan.axis_intervals.pqs == pqs_plan.axis_intervals
-        @test pair_plan.axis_intervals.product == (1:2, 1:2, 1:1)
-        @test length(pair_plan.axis_centers.pqs) == 3
-        @test length(pair_plan.axis_centers.product) == 3
-        @test pair_plan.pqs_boundary_mode_selector.mode_indices ==
-              descriptor.boundary_mode_indices
-        @test pair_plan.pqs_boundary_mode_selector.column_indices ==
-              descriptor.boundary_column_indices
-        @test pair_plan.product_retained_transform.kind == :product_doside
-        @test pair_plan.product_retained_transform.object_kind ==
-              :product_doside_retained_unit_plan
-        @test pair_plan.product_retained_transform.retained_rule_kind ==
-              :product_doside
-        @test pair_plan.product_retained_unit_plan ===
-              pair_plan.product_retained_transform
-        @test pair_plan.product_retained_unit_plan.source_axis_intervals ==
-              (1:2, 1:2, 1:1)
-        @test pair_plan.product_retained_unit_plan.source_axis_lengths ==
-              (2, 2, 1)
-        @test pair_plan.product_retained_unit_plan.source_dimension == 4
-        @test pair_plan.product_retained_unit_plan.retained_axis_counts ==
-              (2, 2, 1)
-        @test pair_plan.product_retained_unit_plan.retained_count ==
-              length(product_unit.column_range)
-        @test pair_plan.product_retained_unit_plan.column_range ==
-              product_unit.column_range
-        @test pair_plan.product_retained_unit_plan.axis_coefficient_matrices[1] ==
-              product_unit.axes[1].coefficient_matrix
-        @test pair_plan.product_retained_transform.axis_function_indices ==
-              product_unit.axis_function_indices
         @test size(pair_plan.one_dimensional_cross_factors.x.overlap) ==
               (expected_source_mode_dims[1], 2)
-        @test size(pair_plan.one_dimensional_cross_factors.y.position) ==
-              (expected_source_mode_dims[2], 2)
-        @test size(pair_plan.one_dimensional_cross_factors.z.kinetic) ==
-              (expected_source_mode_dims[3], 1)
         @test pair_plan.diagnostics.private_shadow_only
-        @test pair_plan.diagnostics.pqs_representation ==
-              :mode_selected_raw_product_box
-        @test pair_plan.diagnostics.raw_product_box_plan_used
-        @test pair_plan.diagnostics.pqs_raw_product_box_plan_used
-        if !isnothing(shared_raw_product_box_plan)
-            @test pqs_plan.shared_raw_product_box_plan === shared_raw_product_box_plan
-            @test pqs_plan.shared_raw_product_box_plan_used
-            @test pqs_plan.source_mode_indices ==
-                  shared_raw_product_box_plan.source_mode_indices
-            @test pqs_plan.source_mode_ordering ==
-                  shared_raw_product_box_plan.source_mode_ordering
-            @test pair_plan.diagnostics.shared_raw_product_box_plan_available
-            @test pair_plan.diagnostics.shared_raw_product_box_plan_used
-            @test pair_plan.diagnostics.source_mode_ordering ==
-                  shared_raw_product_box_plan.source_mode_ordering
-        else
-            @test !pqs_plan.shared_raw_product_box_plan_used
-            @test !pair_plan.diagnostics.shared_raw_product_box_plan_used
-        end
-        @test pair_plan.diagnostics.pqs_boundary_mode_selection_used
-        @test pair_plan.diagnostics.product_doside_retained_transform_used
-        @test pair_plan.diagnostics.product_doside_retained_unit_plan_used
-        @test pair_plan.product_retained_unit_plan.diagnostics.private_adapter
-        @test pair_plan.product_retained_unit_plan.diagnostics.metadata_only
-        @test !pair_plan.product_retained_unit_plan.diagnostics.coefficients_rebuilt
-        @test !pair_plan.product_retained_unit_plan.diagnostics.block_math_changed
-        @test !pair_plan.product_retained_unit_plan.diagnostics.packet_adoption
-        @test !pair_plan.product_retained_unit_plan.diagnostics.ida_weight_semantics_changed
-        @test !pair_plan.product_retained_unit_plan.diagnostics.generic_retained_unit_framework
-        @test pair_plan.diagnostics.raw_product_box_operators_use_1d_factors
-        @test !pair_plan.diagnostics.shell_projection_used
-        @test !pair_plan.diagnostics.lowdin_cleanup_used
-        @test !pair_plan.diagnostics.support_coefficient_matrix_used
-        @test !pair_plan.diagnostics.support_local_pqs_oracle_used
-        @test !pair_plan.diagnostics.retained_pqs_weights_used
-        @test !pair_plan.diagnostics.retained_pqs_weights_positive_checked
-        @test !pair_plan.diagnostics.ida_weight_division_allowed
-        @test !pair_plan.diagnostics.packet_adoption
-        @test !pair_plan.diagnostics.fixed_block_routing
-        @test !pair_plan.diagnostics.qwhamiltonian_consumes
-        @test !pair_plan.diagnostics.public_default_consumes
-        @test !pair_plan.diagnostics.cr2_science_status_changed
-        @test !pair_plan.diagnostics.local_ecp_gaussian_mwg_implemented
-        @test !pair_plan.diagnostics.generic_retained_unit_framework
 
         terms = (
             :overlap,
@@ -462,93 +378,23 @@
         @test multi_term_blocks.path == :pqs_product_source_box_reference_blocks
         @test multi_term_blocks.terms == terms
         @test wrapper_multi_term_blocks.terms == terms
-        @test multi_term_blocks.pair_plan === pair_plan
         @test wrapper_multi_term_blocks.pair_plan.pair_kind ==
               :pqs_product_source_box
         @test multi_term_blocks.diagnostics.pair_plan_reused_for_terms
         @test multi_term_blocks.diagnostics.pair_plan_reuse_term_count ==
               length(terms)
-        @test !multi_term_blocks.diagnostics.dense_raw_source_box_pair_matrix_materialized
-        @test multi_term_blocks.diagnostics.dense_raw_pair_storage_avoided
-        @test multi_term_blocks.diagnostics.retained_block_assembled_directly_from_1d_factors
-        @test multi_term_blocks.diagnostics.source_box_pair_storage_scaling ==
-              :one_dimensional_factors_plus_retained_block
-        @test !multi_term_blocks.diagnostics.shell_projection_used
-        @test !multi_term_blocks.diagnostics.lowdin_cleanup_used
-        @test !multi_term_blocks.diagnostics.support_coefficient_matrix_used
-        @test !multi_term_blocks.diagnostics.support_local_pqs_oracle_used
-        @test !multi_term_blocks.diagnostics.retained_pqs_weights_used
-        @test !multi_term_blocks.diagnostics.ida_weight_division_allowed
-        @test !multi_term_blocks.diagnostics.packet_adoption
-        @test !multi_term_blocks.diagnostics.fixed_block_routing
-        @test !multi_term_blocks.diagnostics.qwhamiltonian_consumes
-        @test !multi_term_blocks.diagnostics.public_default_consumes
-        @test :weights in multi_term_blocks.diagnostics.unsupported_terms
         for term in terms
-            source_box_block =
-                metrics_module._pqs_product_source_box_reference_block(
-                    pqs_plan,
-                    product_unit,
-                    metrics;
-                    term,
-                )
             expected = _pqs_product_source_box_explicit_reference(
                 descriptor,
                 product_unit,
                 metrics;
                 term,
             )
-            @test source_box_block.path == :pqs_product_source_box_reference
-            @test source_box_block.term == term
-            @test size(source_box_block.block) ==
+            @test size(multi_term_blocks.blocks[term]) ==
                   (expected_retained_count, length(product_unit.column_range))
-            @test source_box_block.block ≈ expected atol = 1.0e-10 rtol = 1.0e-10
-            @test multi_term_blocks.blocks[term] ≈ source_box_block.block atol = 1.0e-14 rtol = 1.0e-14
-            @test wrapper_multi_term_blocks.blocks[term] ≈ source_box_block.block atol = 1.0e-14 rtol = 1.0e-14
-            @test source_box_block.diagnostics.raw_product_box_plan_used
-            @test source_box_block.diagnostics.pqs_raw_product_box_plan_used
-            if !isnothing(shared_raw_product_box_plan)
-                @test source_box_block.diagnostics.shared_raw_product_box_plan_used
-                @test source_box_block.diagnostics.source_mode_ordering ==
-                      shared_raw_product_box_plan.source_mode_ordering
-            else
-                @test !source_box_block.diagnostics.shared_raw_product_box_plan_used
-            end
-            @test !source_box_block.diagnostics.shell_projection_used
-            @test !source_box_block.diagnostics.lowdin_cleanup_used
-            @test !source_box_block.diagnostics.support_coefficient_matrix_used
-            @test !source_box_block.diagnostics.support_local_pqs_oracle_used
-            @test !source_box_block.diagnostics.retained_pqs_weights_used
-            @test !source_box_block.diagnostics.ida_weight_division_allowed
-            @test !source_box_block.diagnostics.packet_adoption
-            @test !source_box_block.diagnostics.fixed_block_routing
-            @test !source_box_block.diagnostics.qwhamiltonian_consumes
-            @test !source_box_block.diagnostics.public_default_consumes
-            @test !source_box_block.diagnostics.cr2_science_status_changed
-            @test !source_box_block.diagnostics.pair_plan_reused_for_terms
-            @test !source_box_block.diagnostics.dense_raw_source_box_pair_matrix_materialized
-            @test source_box_block.diagnostics.dense_raw_pair_storage_avoided
-            @test source_box_block.diagnostics.retained_block_assembled_directly_from_1d_factors
-            @test source_box_block.diagnostics.source_box_pair_storage_scaling ==
-                  :one_dimensional_factors_plus_retained_block
-            @test :weights in source_box_block.diagnostics.unsupported_terms
+            @test multi_term_blocks.blocks[term] ≈ expected atol = 1.0e-10 rtol = 1.0e-10
+            @test wrapper_multi_term_blocks.blocks[term] ≈ expected atol = 1.0e-10 rtol = 1.0e-10
         end
-        @test_throws ArgumentError metrics_module._pqs_product_source_box_reference_blocks_from_pair_plan(
-            pair_plan;
-            terms = (:weights,),
-        )
-        @test_throws ArgumentError metrics_module._pqs_product_source_box_reference_blocks(
-            pqs_plan,
-            product_unit,
-            metrics;
-            terms = (:weights,),
-        )
-        @test_throws ArgumentError metrics_module._pqs_product_source_box_reference_block(
-            pqs_plan,
-            product_unit,
-            metrics;
-            term = :weights,
-        )
     end
 
     function _check_pqs_source_box_gto_cross_overlap_shadow(
@@ -1373,80 +1219,6 @@
         for term in terms
             block = shadow.blocks[term]
             @test size(block) == (retained_dimension, retained_dimension)
-            @test all(isfinite, block)
-        end
-    end
-
-    function _check_pqs_pqs_product_route_shaped_safe_term_consumer(
-        metrics_module,
-        route_units,
-        metrics,
-    )
-        terms = (
-            :overlap,
-            :position_x,
-            :position_y,
-            :position_z,
-            :x2_x,
-            :x2_y,
-            :x2_z,
-            :kinetic,
-        )
-        units = route_units.units
-        shadow = metrics_module._pqs_pqs_product_source_box_shadow_blocks(
-            units.pqs_left,
-            units.pqs_right,
-            units.product,
-            metrics;
-            terms,
-        )
-        consumer = metrics_module._pqs_pqs_product_route_shaped_safe_term_consumer(
-            route_units,
-            metrics;
-            terms,
-        )
-
-        @test consumer.path == :pqs_pqs_product_route_shaped_safe_term_consumer
-        @test consumer.route_kind ==
-              :pqs_pqs_product_source_box_safe_term_route
-        @test consumer.route_name == :q5_L5_slab5_test_route
-        @test route_units.object_kind ==
-              :pqs_pqs_product_safe_term_route_descriptor
-        @test route_units.expected_ranges == shadow.ranges
-        @test route_units.retained_dimension == 221
-        @test route_units.retained_unit_count == 3
-        @test route_units.expected_pair_count == 6
-        @test consumer.terms == terms
-        @test consumer.ranges == shadow.ranges
-        @test consumer.retained_dimension == 221
-        @test consumer.retained_dimension == shadow.retained_dimension
-        @test consumer.pair_count == 6
-        @test consumer.term_count == length(terms)
-        @test consumer.shadow.path == :pqs_pqs_product_source_box_shadow_blocks
-
-        @test consumer.diagnostics.source ==
-              :pqs_pqs_product_route_shaped_safe_term_consumer
-        @test consumer.diagnostics.route_shaped_consumer
-        @test consumer.diagnostics.route_kind ==
-              :pqs_pqs_product_source_box_safe_term_route
-        @test consumer.diagnostics.route_descriptor_object_kind ==
-              :pqs_pqs_product_safe_term_route_descriptor
-        @test consumer.diagnostics.descriptor_expected_ranges_checked
-        @test consumer.diagnostics.descriptor_retained_dimension_checked
-        @test consumer.diagnostics.descriptor_pair_count_checked
-        @test consumer.diagnostics.descriptor_supported_terms_checked
-        @test consumer.diagnostics.private_shadow_only
-        @test consumer.diagnostics.performance_recorded
-        @test consumer.diagnostics.retained_dimension == 221
-        @test consumer.diagnostics.pair_count == 6
-        @test consumer.diagnostics.term_count == length(terms)
-        @test consumer.diagnostics.source_box_shadow_helper ==
-              :_pqs_pqs_product_source_box_shadow_blocks
-
-        for term in terms
-            @test haskey(consumer.blocks, term)
-            block = consumer.blocks[term]
-            @test size(block) == (221, 221)
             @test all(isfinite, block)
         end
     end
@@ -3269,7 +3041,6 @@
         cubic_metrics;
         expected_source_mode_dims = (5, 5, 5),
         expected_retained_count = 98,
-        shared_raw_product_box_plan = cubic_shared_raw_product_box_plan,
     )
     cubic_pqs_pqs_source_box_plan = CCPM._pqs_raw_product_box_plan(
         cubic_descriptor,
@@ -4039,24 +3810,6 @@
     @test !geometry_route.diagnostics.retained_pqs_weights_used
     @test !geometry_route.diagnostics.ida_weight_division_allowed
     @test !geometry_route.diagnostics.packet_adoption
-    geometry_route_consumer =
-        CCPM._pqs_pqs_product_route_shaped_safe_term_consumer(
-            geometry_route.descriptor,
-            route_metrics,
-        )
-    produced_route_consumer_for_geometry =
-        CCPM._pqs_pqs_product_route_shaped_safe_term_consumer(
-            produced_route.descriptor,
-            route_metrics,
-        )
-    max_geometry_route_error = maximum(
-        norm(
-            geometry_route_consumer.blocks[term] -
-            produced_route_consumer_for_geometry.blocks[term],
-            Inf,
-        ) for term in geometry_route_consumer.terms
-    )
-    @test max_geometry_route_error < 1.0e-10
     @test_throws ArgumentError CCPM._pqs_pqs_product_raw_box_homonuclear_geometry_facts(
         parent_dims = route_dims,
         bond_axis = :z,
@@ -4173,11 +3926,6 @@
         @test err isa ArgumentError
         @test occursin("unsupported term", sprint(showerror, err))
     end
-    _check_pqs_pqs_product_route_shaped_safe_term_consumer(
-        CCPM,
-        route_units,
-        route_metrics,
-    )
     _check_pqs_pqs_product_route_shaped_density_density_consumer(
         CCPM,
         route_units,
@@ -4220,26 +3968,8 @@
         ),
         nuclear_expansion = expansion,
     )
-    produced_route_consumer =
-        CCPM._pqs_pqs_product_route_shaped_safe_term_consumer(
-            produced_route.descriptor,
-            route_metrics,
-        )
-    hand_built_route_consumer =
-        CCPM._pqs_pqs_product_route_shaped_safe_term_consumer(
-            route_units,
-            route_metrics,
-        )
-    max_produced_route_error = maximum(
-        norm(
-            produced_route_consumer.blocks[term] -
-            hand_built_route_consumer.blocks[term],
-            Inf,
-        ) for term in produced_route_consumer.terms
-    )
-    @test max_produced_route_error < 1.0e-10
-    @test produced_route_consumer.diagnostics.every_pair_uses_source_box_algorithmic_policy
-    @test produced_route_consumer.diagnostics.source_box_algorithmic_pair_count == 6
+    @test produced_route.all_pairs_inventory.diagnostics.every_pair_uses_source_box_algorithmic_policy
+    @test produced_route.all_pairs_inventory.diagnostics.source_box_algorithmic_pair_count == 6
     route_producer_sample_specs = (
         (
             name = :shifted_cubic_q5_L5,
@@ -4275,28 +4005,15 @@
             provenance = (source = :sampled_route_producer_validation,),
         )
         sample_producer = sample_producer_timed.value
-        sample_consumer_timed =
-            @timed CCPM._pqs_pqs_product_route_shaped_safe_term_consumer(
-                sample_producer.descriptor,
-                route_metrics,
-            )
-        sample_consumer = sample_consumer_timed.value
         sample_shadow = CCPM._pqs_pqs_product_source_box_shadow_blocks(
             sample_producer.raw_pqs_plans.pqs_left,
             sample_producer.raw_pqs_plans.pqs_right,
             sample_producer.product_unit,
             route_metrics,
         )
-        sample_error = maximum(
-            norm(
-                sample_consumer.blocks[term] - sample_shadow.blocks[term],
-                Inf,
-            ) for term in sample_consumer.terms
-        )
-        @test sample_error < 1.0e-10
         @test sample_producer.diagnostics.every_pair_uses_source_box_algorithmic_policy
-        @test sample_consumer.diagnostics.every_pair_uses_source_box_algorithmic_policy
-        @test sample_consumer.pair_count == 6
+        @test sample_shadow.diagnostics.every_pair_uses_source_box_algorithmic_policy
+        @test length(sample_shadow.all_pairs_inventory.pair_entries) == 6
         @test !sample_producer.diagnostics.dense_raw_source_box_pair_matrix_materialized
         @test !sample_producer.diagnostics.shell_projection_used
         @test !sample_producer.diagnostics.lowdin_cleanup_used
@@ -4304,9 +4021,6 @@
         @test !sample_producer.diagnostics.support_coefficient_matrix_used
         @test !sample_producer.diagnostics.retained_pqs_weights_used
         @test !sample_producer.diagnostics.ida_weight_division_allowed
-        @test !sample_consumer.diagnostics.packet_adoption
-        @test !sample_consumer.diagnostics.fixed_block_routing
-        @test !sample_consumer.diagnostics.qwhamiltonian_consumes
         sample_left_start = ntuple(axis -> first(sample.left_box[axis]), 3)
         sample_right_shift = ntuple(
             axis -> first(sample.right_box[axis]) - first(sample.left_box[axis]),
@@ -4358,19 +4072,6 @@
                   sample_geometry_route.descriptor.unit_summaries) ==
               map(summary -> summary.retained_count,
                   sample_producer.descriptor.unit_summaries)
-        sample_geometry_consumer =
-            CCPM._pqs_pqs_product_route_shaped_safe_term_consumer(
-                sample_geometry_route.descriptor,
-                route_metrics,
-            )
-        sample_geometry_error = maximum(
-            norm(
-                sample_geometry_consumer.blocks[term] -
-                sample_consumer.blocks[term],
-                Inf,
-            ) for term in sample_geometry_consumer.terms
-        )
-        @test sample_geometry_error < 1.0e-10
         @test sample_geometry_route.diagnostics.geometry_facts_consumed
         @test !sample_geometry_route.diagnostics.shell_projection_used
         @test !sample_geometry_route.diagnostics.lowdin_cleanup_used
@@ -4385,16 +4086,12 @@
                 left_box_lengths = ntuple(axis -> length(sample.left_box[axis]), 3),
                 right_box_lengths = ntuple(axis -> length(sample.right_box[axis]), 3),
                 product_box_lengths = ntuple(axis -> length(sample.product_box[axis]), 3),
-                retained_dimension = sample_consumer.retained_dimension,
-                pair_count = sample_consumer.pair_count,
+                retained_dimension = sample_shadow.retained_dimension,
+                pair_count = length(sample_shadow.all_pairs_inventory.pair_entries),
                 producer_elapsed_seconds = Float64(sample_producer_timed.time),
                 producer_allocated_bytes = Int(sample_producer_timed.bytes),
-                consumer_elapsed_seconds = Float64(sample_consumer_timed.time),
-                consumer_allocated_bytes = Int(sample_consumer_timed.bytes),
                 dense_raw_source_box_pair_matrix_validation_only =
-                    sample_consumer.diagnostics.dense_raw_source_box_pair_matrix_materialized_for_validation,
-                max_consumer_shadow_error = sample_error,
-                max_geometry_consumer_error = sample_geometry_error,
+                    sample_shadow.diagnostics.dense_raw_source_box_pair_matrix_materialized_for_validation,
             ),
         )
     end
@@ -4404,19 +4101,8 @@
         route_producer_sample_summaries,
     )
     @test all(summary -> summary.pair_count == 6, route_producer_sample_summaries)
-    @test all(
-        summary -> summary.producer_allocated_bytes > 0 &&
-                   summary.consumer_allocated_bytes > 0,
-        route_producer_sample_summaries,
-    )
-    @test all(
-        summary -> summary.max_consumer_shadow_error < 1.0e-10,
-        route_producer_sample_summaries,
-    )
-    @test all(
-        summary -> summary.max_geometry_consumer_error < 1.0e-10,
-        route_producer_sample_summaries,
-    )
+    @test all(summary -> summary.producer_allocated_bytes > 0,
+              route_producer_sample_summaries)
     x_axis_route_bundles =
         GaussletBases._CartesianNestedAxisBundles3D(bundle7, bundle5, bundle5)
     x_axis_route_metrics = _pqs_axis_metrics(x_axis_route_bundles)
@@ -4502,29 +4188,6 @@
     @test !x_axis_geometry_route.diagnostics.support_coefficient_matrix_used
     @test !x_axis_geometry_route.diagnostics.retained_pqs_weights_used
     @test !x_axis_geometry_route.diagnostics.ida_weight_division_allowed
-    x_axis_explicit_consumer =
-        CCPM._pqs_pqs_product_route_shaped_safe_term_consumer(
-            x_axis_explicit_route.descriptor,
-            x_axis_route_metrics,
-        )
-    x_axis_geometry_consumer =
-        CCPM._pqs_pqs_product_route_shaped_safe_term_consumer(
-            x_axis_geometry_route.descriptor,
-            x_axis_route_metrics,
-        )
-    x_axis_geometry_error = maximum(
-        norm(
-            x_axis_geometry_consumer.blocks[term] -
-            x_axis_explicit_consumer.blocks[term],
-            Inf,
-        ) for term in x_axis_geometry_consumer.terms
-    )
-    @test x_axis_geometry_error < 1.0e-10
-    @test x_axis_geometry_consumer.pair_count == 6
-    @test !x_axis_geometry_consumer.diagnostics.packet_adoption
-    @test !x_axis_geometry_consumer.diagnostics.fixed_block_routing
-    @test !x_axis_geometry_consumer.diagnostics.qwhamiltonian_consumes
-    @test x_axis_geometry_consumer.diagnostics.dense_raw_source_box_pair_matrix_materialized_for_validation
     route_fact_diagnostic =
         CCPM._pqs_pqs_product_route_descriptor_diagnostic(
             route_units,
@@ -4547,13 +4210,6 @@
           :not_positive_quadrature_weights
     @test !route_fact_diagnostic.diagnostics.ida_weight_division_allowed
     @test !route_fact_diagnostic.diagnostics.direct_support_reinterpreted_as_product_doside
-    route_fact_consumer =
-        CCPM._pqs_pqs_product_route_shaped_safe_term_consumer(
-            route_fact_diagnostic.descriptor,
-            route_metrics,
-        )
-    @test route_fact_consumer.retained_dimension == route_units.retained_dimension
-    @test route_fact_consumer.pair_count == route_units.expected_pair_count
     nonidentity_product_axes = (
         GaussletBases._nested_product_staged_active_axis(
             1:2,
@@ -7016,7 +6672,6 @@
         rectangular_metrics;
         expected_source_mode_dims = (5, 5, 7),
         expected_retained_count = 130,
-        shared_raw_product_box_plan = rectangular_shared_raw_product_box_plan,
     )
     nuclear_axis_layers = (
         x = bundle5.basis,

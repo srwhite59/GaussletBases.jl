@@ -284,22 +284,21 @@ metadata/provenance, and no-adoption diagnostics. This is private/shadow-only
 route metadata, not route geometry construction and not a generic retained-unit
 framework.
 
-`_pqs_pqs_product_route_shaped_safe_term_consumer(...)` accepts the descriptor
-route kind `:pqs_pqs_product_source_box_safe_term_route` while preserving the
-older fixture route kind. It still delegates numerical work to
-`_pqs_pqs_product_source_box_shadow_blocks(...)`; no new operator algebra was
-added. `_pqs_pqs_product_supported_safe_terms(...)` centralizes validation for
-overlap, `position_x/y/z`, `x2_x/y/z`, and kinetic. Unsupported terms such as
-`:weights` reject.
+The former route-shaped safe-term consumer accepted the descriptor route kind
+`:pqs_pqs_product_source_box_safe_term_route` while preserving the older
+fixture route kind. It was deleted during CCPM retirement. Do not reintroduce
+this consumer as a production/provider contract. Route-shaped validation now
+stops at the remaining raw-box route producer and the still-live three-unit
+shadow diagnostic/oracle path. `_pqs_pqs_product_supported_safe_terms(...)`
+still centralizes validation for the historical safe set: overlap,
+`position_x/y/z`, `x2_x/y/z`, and kinetic.
 
-Commit `770b7be` records the route-shaped raw-box safe-term consumer
-checkpoint. Every route pair is labeled
+Commit `770b7be` records the historical route-shaped raw-box safe-term
+consumer checkpoint. That consumer was deleted during CCPM retirement. Every
+route pair in the remaining shadow diagnostic is still labeled
 `:source_box_algorithm_available`. Cross-PQS/PQS uses the helper-internal
 explicit raw product-box boundary-selection oracle for validation. Dense raw
-source-box pair matrices are validation-only, not the algorithmic path. The
-consumer remains source-box-first and avoids shell projection, Lowdin cleanup,
-support-local fallback, support coefficient matrices, retained PQS weight
-semantics, and IDA division.
+source-box pair matrices are validation-only, not the algorithmic path.
 
 Commit `93a9af8` adds the analogous private route-shaped source-box
 density-density consumer for the left-PQS/right-PQS/product-slab fixture. It
@@ -462,8 +461,8 @@ It is diagnostic/read-path infrastructure only. It returns
 `status = :descriptor_available` only when the input already supplies left and
 right raw-box PQS plans plus an explicit
 `_CartesianNestedProductStagedByCenterUnit3D(kind = :product_doside)`. The
-hand-built descriptor-available route can be consumed by the existing private
-route-shaped safe-term consumer. The current high-order PQS source
+hand-built descriptor-available route is no longer consumed by the deleted
+private route-shaped safe-term consumer. The current high-order PQS source
 construction honestly returns `status = :descriptor_unavailable`: in the
 focused fixture it records `pqs_descriptor_count = 1`,
 `pqs_raw_plan_convertible_count = 1`, `product_doside_unit_count = 0`, and

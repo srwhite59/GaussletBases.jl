@@ -927,21 +927,21 @@ What is established:
   `gaussian_factor_matrices(...)` machinery, require the analytic primitive
   backend, and then feed the explicit source-box helpers. Nuclear charge and
   attraction sign application remain outside these helpers.
-- Commit `770b7be` adds the first private route-shaped safe-term consumer.
-  It composes PQS/PQS, PQS/product, and product/product source-box blocks for
-  overlap, `position_x/y/z`, `x2_x/y/z`, and kinetic. Every route pair is
-  labeled `:source_box_algorithm_available`. Product/product blocks go through
-  `_product_doside_source_box_reference_block(...)`, which still compares to
-  the existing product-staged retained helpers as authority.
+- Commit `770b7be` added the former private route-shaped safe-term consumer.
+  That consumer was deleted during CCPM retirement; do not reintroduce it as
+  a production/provider contract. Route-shaped validation now stops at the
+  remaining raw-box route producer and the still-live three-unit shadow
+  diagnostic/oracle path. Product/product blocks still have historical oracle
+  coverage through `_product_doside_source_box_reference_block(...)`, which
+  compares to the existing product-staged retained helpers as authority.
 - Commits `95d7b11` and `804bdd9` add the first private raw-box route
   producer checkpoint. Explicit fixture facts now produce the same route
   descriptor through `RawProductBoxPlan -> RetainedRule -> route descriptor`.
   The producer uses left/right mode-selected raw-box PQS retained rules and an
-  identity product/doside slab retained rule, then feeds the produced
-  descriptor into `_pqs_pqs_product_route_shaped_safe_term_consumer(...)`.
-  Sampled validation covers the shifted cubic `q5/L5` fixture and a
-  rectangular `q5/L7` fixture with `L != q`; consumer output matches the
-  source-box shadow or hand-built route path to roundoff. Timing and
+  identity product/doside slab retained rule, then checks the produced
+  descriptor and source-box inventory against the still-live three-unit shadow
+  diagnostic/oracle path. Sampled validation covers the shifted cubic `q5/L5`
+  fixture and a rectangular `q5/L7` fixture with `L != q`. Timing and
   allocation summaries are captured as diagnostic evidence only, not as
   performance thresholds.
 - Commit `047af1d` adds the first private geometry/recipe facts producer for
@@ -953,12 +953,13 @@ What is established:
   metadata, provenance, and diagnostics. This is private fixture
   infrastructure, not a general diatomic route geometry policy or public
   builder. The shifted `q5/L5` and rectangular `q5/L7` samples match the
-  explicit-fixture producer and safe-term consumer path to roundoff.
+  explicit-fixture producer and three-unit shadow diagnostic path to
+  roundoff.
 - Commit `17dd86d` validates that this geometry facts producer is mechanically
   axis-general over fixture bond-axis labels. A non-`:z` `:x` fixture emits
   source boxes, source-mode dimensions, product slab fixed-axis metadata,
-  retained dimension, pair count, and safe-term consumer output matching the
-  explicit route-producer path to roundoff. The same checkpoint adds focused
+  retained dimension, pair count, and source-box inventory matching the
+  explicit route-producer path. The same checkpoint adds focused
   guards for invalid bond axes, missing `q` when `source_mode_dims` is absent,
   malformed source-mode dimensions, and source-mode axis lengths below two.
   This is still explicit fixture/recipe infrastructure, not an atom-centered
@@ -1057,21 +1058,14 @@ framework is wrong or incomplete, stop and make the framework update explicit.
 
 ## Next Intended Correction
 
-The private route-shaped raw-box safe-term consumer checkpoint is commit
-`770b7be`. It is a route-shaped consumer, not route adoption: it takes an
-already-built private descriptor with left PQS raw plan, right PQS raw plan,
-and product/doside unit, then delegates numerical blocks to the source-box
-helpers. PQS/PQS uses `_pqs_pqs_source_box_reference_blocks(...)` with
-helper-internal explicit raw product-box boundary-selection validation.
-PQS/product uses `_pqs_product_source_box_reference_blocks(...)`.
-Product/product uses `_product_doside_source_box_reference_block(...)`, so it
-is labeled as source-box vocabulary while still checking against the existing
-product-staged retained helpers.
+The former private route-shaped raw-box safe-term consumer checkpoint was
+commit `770b7be`. That consumer was deleted during CCPM retirement. The
+remaining safe-term route-shaped validation boundary is the raw-box route
+producer plus the still-live three-unit shadow diagnostic/oracle path. Do not
+reintroduce the deleted consumer as a production/provider contract.
 
-The algorithmic path remains source-box first. Dense raw source-box pair
-matrices are validation-only. The consumer does not use shell projection,
-Lowdin cleanup, support-local fallback, support coefficient matrices, retained
-PQS weight semantics, or IDA division, and it does not change packet,
+The historical algorithmic path was source-box first. Dense raw source-box
+pair matrices remain validation-only. The retirement does not change packet,
 fixed-block, QW/Hamiltonian, public/default, local/ECP/Gaussian/MWG/
 interaction, IDA/MWG, or CR2 behavior.
 
@@ -1084,13 +1078,13 @@ should still wait until an explicit source-space realization rule is defined
 or the pass is scoped as compatibility/oracle-only.
 
 The private raw-box route producer checkpoint is commits `95d7b11` and
-`804bdd9`. It is the first producer-side complement to the route-shaped
+`804bdd9`. It was the producer-side complement to the former route-shaped
 consumer. It starts from explicit fixture facts, builds left/right
 `RawProductBoxPlan` objects, attaches boundary COMX-product mode-selection
 `RetainedRule` facts for the two PQS units, creates an identity
 product/doside slab retained rule for the middle unit, and emits the existing
-route descriptor shape consumed by
-`_pqs_pqs_product_route_shaped_safe_term_consumer(...)`.
+route descriptor shape now checked by the raw-box producer and three-unit
+shadow diagnostic/oracle path.
 
 This producer is still private/shadow-only. The sampled validation matrix
 covers the shifted cubic `q5/L5` fixture and a rectangular `q5/L7` fixture
@@ -1112,8 +1106,8 @@ producer only: it is not a broad diatomic geometry policy, public builder, or
 operator-algebra authority.
 
 The geometry checkpoint validates the shifted `q5/L5` and rectangular
-`q5/L7` samples against the explicit-fixture route producer and safe-term
-consumer path to roundoff. It adds no shell projection, Lowdin cleanup,
+`q5/L7` samples against the explicit-fixture route producer and three-unit
+shadow diagnostic path. It adds no shell projection, Lowdin cleanup,
 support-local fallback as an algorithm, support coefficient matrices,
 retained-column diagnostic weights, IDA division, packet or fixed-block
 adoption, QW/Hamiltonian routing, public/default behavior,
@@ -1124,8 +1118,8 @@ Commit `17dd86d` records the focused axis-general validation checkpoint for
 the same helper. The helper is now validated for `:z` and `:x` fixture bond
 axes: the `:x` sample emits the expected left/right PQS source boxes,
 product/doside slab source box with fixed axis `1`, source-mode dimensions,
-retained dimension, pair count, pair policy, and safe-term consumer output
-matching the explicit route-producer path to roundoff. This axis check is
+retained dimension, pair count, and pair policy matching the explicit
+route-producer path. This axis check is
 mechanical; it does not add center inference, atom boxes, shell-realized
 current-route PQS, or broad diatomic route geometry policy.
 

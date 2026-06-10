@@ -453,36 +453,33 @@ supported safe terms, metadata/provenance, and no-adoption diagnostics. This
 descriptor is private/shadow-only route metadata: it does not construct route
 geometry and is not a generic retained-unit framework.
 
-`_pqs_pqs_product_route_shaped_safe_term_consumer(...)` accepts the descriptor
-route kind `:pqs_pqs_product_source_box_safe_term_route` while preserving
-compatibility with the older fixture route kind. The consumer still delegates
-all numerical work to `_pqs_pqs_product_source_box_shadow_blocks(...)`; no new
-operator algebra was added. `_pqs_pqs_product_supported_safe_terms(...)`
-centralizes validation for the current safe set: overlap, `position_x/y/z`,
-`x2_x/y/z`, and kinetic. Unsupported terms such as `:weights` reject before
-being treated as route-supported.
+The former route-shaped safe-term consumer accepted the descriptor route kind
+`:pqs_pqs_product_source_box_safe_term_route` while preserving compatibility
+with the older fixture route kind. It was deleted during CCPM retirement. Do
+not reintroduce this consumer as a production/provider contract. Route-shaped
+validation now stops at the remaining raw-box route producer and the
+still-live three-unit shadow diagnostic/oracle path. The helper
+`_pqs_pqs_product_supported_safe_terms(...)` still centralizes validation for
+the historical safe set: overlap, `position_x/y/z`, `x2_x/y/z`, and kinetic.
 
-Commit `770b7be` records this route-shaped raw-box consumer as a private
-checkpoint. Every route pair is explicitly labeled
+Commit `770b7be` records the historical route-shaped raw-box safe-term
+consumer checkpoint. That consumer was deleted during CCPM retirement. Every
+route pair in the remaining shadow diagnostic is explicitly labeled
 `:source_box_algorithm_available`. Cross-PQS/PQS uses the helper-internal
 explicit raw product-box boundary-selection oracle for validation. Dense raw
 source-box pair matrices remain validation-only, not the algorithmic path.
-The route consumer remains source-box-first and avoids shell projection,
-Lowdin cleanup, support-local fallback, support coefficient matrices,
-retained PQS weight semantics, and IDA division.
 
 The private raw-box route producer checkpoint is recorded by commits
 `95d7b11` and `804bdd9`. It starts from explicit fixture facts and produces
 the same descriptor through
 `RawProductBoxPlan -> RetainedRule -> route descriptor`. The producer uses
 left/right mode-selected raw-box PQS retained rules plus an identity
-product/doside slab retained rule, then feeds the produced descriptor into
-`_pqs_pqs_product_route_shaped_safe_term_consumer(...)`. Sampled validation
-covers a shifted cubic `q5/L5` fixture and a rectangular `q5/L7` fixture with
-`L != q`; consumer output matches the source-box shadow or hand-built route
-path to roundoff. Timing and allocation summaries are captured as diagnostic
-evidence only, not as performance thresholds. Dense raw source-box matrices
-remain validation-only.
+product/doside slab retained rule, then checks the produced descriptor and
+inventory against the still-live three-unit shadow diagnostic/oracle path.
+Sampled validation covers a shifted cubic `q5/L5` fixture and a rectangular
+`q5/L7` fixture with `L != q`. Timing and allocation summaries are captured
+as diagnostic evidence only, not as performance thresholds. Dense raw
+source-box matrices remain validation-only.
 
 This producer checkpoint remains private/shadow-only. It adds no shell
 projection, Lowdin cleanup, support-local PQS oracle, support coefficient
@@ -501,8 +498,8 @@ route producer.
 This is private fixture infrastructure only. It is not a general diatomic
 route geometry policy, public builder, packet-adoption seam, or operator
 authority. The shifted cubic `q5/L5` and rectangular `q5/L7` samples match the
-explicit-fixture producer and safe-term consumer path to roundoff. The
-negative boundary remains unchanged: no shell projection, Lowdin cleanup,
+explicit-fixture producer and three-unit shadow diagnostic path. The negative
+boundary remains unchanged: no shell projection, Lowdin cleanup,
 support-local fallback as an algorithm, support coefficient matrices,
 retained PQS weights, IDA division, packet or fixed-block adoption,
 QW/Hamiltonian routing, public/default behavior, local/ECP/Gaussian/MWG/
@@ -511,9 +508,9 @@ interaction terms, IDA/MWG change, or CR2 science claim.
 Commit `17dd86d` validates the same private geometry facts helper for `:z` and
 `:x` fixture bond axes. The `:x` sample emits the expected left/right PQS
 source boxes, product/doside slab source box, product slab fixed-axis
-metadata, source-mode dimensions, retained dimension, pair count, pair policy,
-and safe-term consumer output matching the explicit route-producer path to
-roundoff. This is only mechanical axis-label coverage for explicit fixture
+metadata, source-mode dimensions, retained dimension, pair count, and pair
+policy matching the explicit route-producer path. This is only mechanical
+axis-label coverage for explicit fixture
 facts; it is not a general atom-centered, shell-realized current-route, or CR2
 geometry builder.
 
@@ -543,9 +540,10 @@ This is diagnostic/read-path infrastructure only. It emits
 `status = :descriptor_available` only when the input already supplies a left
 raw-box PQS plan, a right raw-box PQS plan, and an explicit
 `_CartesianNestedProductStagedByCenterUnit3D(kind = :product_doside)`. The
-hand-built descriptor-available route remains consumable by the existing
-private route-shaped safe-term consumer. The current high-order PQS source
-construction returns `status = :descriptor_unavailable`; the focused fixture
+former private route-shaped safe-term consumer was deleted during CCPM
+retirement, so descriptor diagnostics now stop at availability/readiness facts.
+The current high-order PQS source construction returns
+`status = :descriptor_unavailable`; the focused fixture
 records `pqs_descriptor_count = 1`, `pqs_raw_plan_convertible_count = 1`,
 `product_doside_unit_count = 0`, and
 `direct_or_support_body_piece_count = 4`. Missing facts include the second PQS
@@ -652,10 +650,10 @@ slab at `z = 4`. Both PQS source boxes use source-mode dimensions `(5,5,5)`
 with retained count `98`; the product slab retained count is `25`; the total
 retained dimension is `221`.
 
-The ignored probe `tmp/work/validate_route_shaped_safe_term_consumer.jl` now
-runs a focused scaling ladder and writes an ignored TSV under `tmp/work/`.
-Each route has three retained units, six upper-triangular pairs, eight safe
-terms, `dense_raw_source_box_pair_matrix_materialized=false`,
+The historical ignored probe `tmp/work/validate_route_shaped_safe_term_consumer.jl`
+was tied to the now-deleted safe-term consumer. Its recorded route samples had
+three retained units, six upper-triangular pairs, eight safe terms,
+`dense_raw_source_box_pair_matrix_materialized=false`,
 `dense_raw_pair_storage_avoided=true`, unsupported `:weights` rejected, and
 max full/component error `0.0` against the direct shadow helper.
 
