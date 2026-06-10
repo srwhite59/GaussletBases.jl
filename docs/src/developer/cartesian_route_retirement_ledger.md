@@ -433,3 +433,82 @@ paths from becoming new route authority.
   density-density, nuclear attraction, or Gaussian local terms, perform PQS
   projection/Lowdin, wire route drivers, export artifacts, or assemble a full
   White--Lindsey route.
+
+## CartesianContractedParentMetrics CPB-Layer Retirement Audit
+
+Audit target: `src/CartesianContractedParentMetrics.jl` as of the CPB-local
+operator layer pivot. This file is about 19.8k lines and currently mixes five
+different roles: core retained metric packet construction, source-box operator
+kernels, oracle comparisons, route diagnostics/report writers, and private
+shadow/fallback transition paths. No code was deleted in this audit.
+
+Classification labels:
+
+- `KEEP_CORE_METRICS`: retained overlap, weights, centers, first moments, and
+  retained position packet construction.
+- `MOVE_TO_CPB_PROVIDER`: local source-box/operator block kernels now better
+  expressed as CPB-local operator blocks.
+- `KEEP_AS_ORACLE_REFERENCE`: comparison helpers useful for testing CPB blocks
+  or route adapters.
+- `MOVE_TO_ROUTE_DIAGNOSTICS`: readiness, route-smoke, schema, report, and
+  inventory diagnostics.
+- `RETIRE_OR_QUARANTINE`: shadow, fallback, and private transition paths
+  superseded by the CPB operator layer once tests are moved.
+
+Classified regions by line/function family:
+
+| Line range | Function family | Classification | Notes |
+| --- | --- | --- | --- |
+| `65-313` | `CartesianContractedParentMetricPacket3D`, `_AxisMetricData1D`, coefficient-entry helpers, `_contract_pair_matrix`, `_contract_linear_vector`, `_contracted_first_moments` | `KEEP_CORE_METRICS` | This is the retained metric packet core for overlap, weights, centers, and position moments. |
+| `315-655` | `_metric_dispatch_*`, `_pqs_product_mixed_block_policy`, `_contracted_parent_metric_dispatch_shadow_plan` | `MOVE_TO_ROUTE_DIAGNOSTICS`; `RETIRE_OR_QUARANTINE` for the shadow wrapper | These are readiness/dispatch diagnostics, not CPB kernels. |
+| `657-809` | staged-axis interval/count/projection helpers and `_product_doside_retained_unit_plan` | `KEEP_AS_ORACLE_REFERENCE` | Useful retained transform/range facts for old product/doside units; do not make them new provider authority. |
+| `811-1221` | product/doside source-box pair plans, safe one-body factor blocks, reference blocks, and `_product_doside_source_box_shadow_blocks` | `MOVE_TO_CPB_PROVIDER`; `RETIRE_OR_QUARANTINE` for shadow layout | Safe one-body local block math maps to CPB axis-product and sum-of-axis-products blocks. |
+| `1222-1705` | local Gaussian-sum and density-density product/doside source-box helpers | `MOVE_TO_CPB_PROVIDER` | CPB-local Coulomb-family kernels or precursors. |
+| `1716-2026` | IDA pair-factor provenance and raw-weight to density-normalized conversion | `KEEP_AS_ORACLE_REFERENCE` / future CPB source adapter | Keep as convention oracle until CPB source summaries carry the same facts. |
+| `2028-2177` | centered local Gaussian term-table construction | `MOVE_TO_CPB_PROVIDER` | Belongs with CPB-local electron-nuclear/electron-electron Gaussian-sum kernels. |
+| `2178-2294` | product/doside retained low-order, separable-sum, kinetic retained blocks | `KEEP_AS_ORACLE_REFERENCE` | Useful retained-block oracle while CPB blocks and realization transforms are validated. |
+| `2295-2580` | PQS/product support-local low-order and kinetic reference blocks | `KEEP_AS_ORACLE_REFERENCE` | Compares factored PQS/product blocks against support-local oracle entries. |
+| `2599-3352` | raw product-box mode matrices, structural plans, operator factors, shell realization plans | `MOVE_TO_ROUTE_DIAGNOSTICS` | Route-state/readiness facts; future home is route-spine modules. |
+| `3364-4557` | PQS/product source-box safe one-body, Gaussian-sum, density-density, and by-center nuclear helpers | `MOVE_TO_CPB_PROVIDER`; selected outputs `KEEP_AS_ORACLE_REFERENCE` | Local operator kernels belong to CPB provider/result records. |
+| `4559-5722` | PQS/PQS source-box safe one-body, Gaussian-sum, density-density, and by-center nuclear helpers | `MOVE_TO_CPB_PROVIDER`; selected outputs `KEEP_AS_ORACLE_REFERENCE` | Same as PQS/product, but for PQS/PQS raw-box pairs. |
+| `5722-6170` | PQS/product source-box shadow blocks and all-pairs inventory | `RETIRE_OR_QUARANTINE` | Private shadow layout; replace with CPB provider collections plus explicit route inventory. |
+| `6172-6793` | PQS/PQS/product route descriptor, raw-box geometry facts, raw-box route producer | `MOVE_TO_ROUTE_DIAGNOSTICS` / `RETIRE_OR_QUARANTINE` | Fixture route producer and descriptor diagnostics. |
+| `6795-8042` | route descriptor diagnostics, route fact audits, contact-cap and mismatch fixture construction | `MOVE_TO_ROUTE_DIAGNOSTICS` | Readiness and fixture diagnostics. |
+| `8042-8897` | contact-cap, outer-mismatch, and atom-box safe-term operator comparisons | `KEEP_AS_ORACLE_REFERENCE` | Old retained/support path comparisons, not provider-layer authority. |
+| `8913-12153` | current-route inventories, shell-realization transform facts, source metadata exports, safe-term matrices, authority comparisons | `MOVE_TO_ROUTE_DIAGNOSTICS`; selected comparison payloads `KEEP_AS_ORACLE_REFERENCE` | Route/report inventory and authority comparison plumbing. |
+| `12155-12617` | route descriptor diagnostic and three-unit safe-term shadow consumer | `RETIRE_OR_QUARANTINE` | Private route-shaped shadow consumer. |
+| `12619-16016` | density-density and nuclear-attraction route producers/consumers | `MOVE_TO_CPB_PROVIDER` for pair kernels; `MOVE_TO_ROUTE_DIAGNOSTICS` for route-shaped assembly | Local pair blocks belong to CPB provider Coulomb-family kernels; retained route assembly is diagnostic. |
+| `16018-18187` | component route smoke, summaries, report adapters, sidecar/schema writers | `MOVE_TO_ROUTE_DIAGNOSTICS` | Smoke reports and schema/report writers. |
+| `18187-18877` | raw-product reference blocks, fallback staged separable/kinetic/metric/x2 blocks, staged linear vectors | `KEEP_AS_ORACLE_REFERENCE`; fallback entry points `RETIRE_OR_QUARANTINE` | Useful dense/support-local oracle contractions. |
+| `18892-19255` | packet-build safe-field shadows, `_cartesian_packet_build_source_safe_field_shadow` | `RETIRE_OR_QUARANTINE` | Explicit shadow/source-field transition path. |
+| `19256-19749` | packet diagnostics, `_metric_packet_from_matrices`, `_support_local_metric_packet`, `_resolved_payload_product_staged_metric_packet`, public packet constructors, dense reference oracle | `KEEP_CORE_METRICS`; dense reference constructor `KEEP_AS_ORACLE_REFERENCE` | This is the CCPM core API surface; dense parent reference remains tiny-test oracle only. |
+
+Tests that still call private CCPM helpers:
+
+- `test/nested/pqs_projected_q_shell_local_layer_integration_runtests.jl`
+  is the main private-helper dependency. It calls raw-box plan producers,
+  source-box reference/shadow helpers, density-density and nuclear source-box
+  helpers, retained low-order/kinetic helpers, route-shaped consumers,
+  descriptor diagnostics, and staged entry helpers.
+- `test/nested/bond_aligned_diatomic_high_order_recipe_opt_in_source_construction_integration_runtests.jl`
+  calls current-route inventory, retained pair inventory, current-route
+  safe-term matrices, contact-cap / outer-mismatch / atom-box comparison
+  helpers, route fact audit, shell-realization transform fact, and authority
+  comparison helpers.
+- `test/nested/bond_aligned_diatomic_endcap_panel_shared_shell_source_policy_runtests.jl`
+  calls packet-build shadow helpers, staged-unit entries, retained kinetic
+  shadow matrices, resolved-payload product-staged metric packet, and dispatch
+  shadow plan helpers.
+
+Recommended first extraction target:
+
+Move the product/product safe one-body source-box reference family into
+`CartesianCPBBlockProviders` first: `_product_doside_source_box_pair_plan`,
+`_product_doside_source_box_block_from_factors`, and the safe-term path behind
+`_product_doside_source_box_reference_block(...)`. This is the lowest-risk
+extraction because the CPB provider layer already has overlap, kinetic,
+position, x2, axis-product, and sum-of-axis-products blocks. After equivalence
+tests move to provider summaries, quarantine
+`_product_doside_source_box_shadow_blocks(...)` as the first deletion
+candidate. Do not delete it until the integration tests above stop using it as
+a private oracle.
