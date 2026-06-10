@@ -484,13 +484,18 @@ outside this decomposed WL acceptance contract.
   coefficient maps. The real H plus GTO readiness path now covers rows
   `1:223`, representing one direct-core unit and 26 boundary units, and the
   combined 226 by 226 overlap/Hamiltonian matrices materialize without a direct
-  Cartesian fallback. The H plus GTO acceptance path now solves the combined
-  generalized eigenproblem with the nonidentity combined overlap metric. For the
-  q/ns = 5/5 H fixture with H cc-pVTZ `lmax = 0`, the decomposed gausslet-only
-  energy remains `-0.4788666674548281` Hartree and the combined H plus GTO
-  energy is `-0.49982597871004913` Hartree. This is still route-global
-  gausslet+GTO acceptance only: no `ordinary_cartesian_ida_operators`,
-  full-window CPB acceptance route, PQS transform, export, or artifact.
+  Cartesian fallback. The raw generalized Galerkin solve over those combined
+  matrices is explicitly quarantined as a temporary diagnostic checkpoint, not
+  the final WL+GTO working-basis contract. For the q/ns = 5/5 H fixture with H
+  cc-pVTZ `lmax = 0`, the decomposed gausslet-only energy remains
+  `-0.4788666674548281` Hartree and the raw combined Galerkin diagnostic energy
+  is `-0.49982597871004913` Hartree. Active H plus GTO acceptance is blocked on
+  `:missing_gto_supplement_final_basis_orthogonalization`; final production
+  solve/transfer should use an orthogonalized final working basis and an
+  ordinary Hermitian solve unless a reviewed future contract says otherwise.
+  No generalized-overlap final-basis transfer logic,
+  `ordinary_cartesian_ida_operators`, full-window CPB acceptance route, PQS
+  transform, export, or artifact was added.
 - The next overlap implementation boundary is no longer additional placement
   fingerprinting. First decide the CPB operator-block and WL/PQS realization
   design: what local block objects exist, how White-Lindsey consumes them, how
