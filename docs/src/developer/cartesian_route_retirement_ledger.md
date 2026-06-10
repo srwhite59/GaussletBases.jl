@@ -365,13 +365,16 @@ paths from becoming new route authority.
   `CPBMixedGTOLocalOverlapBlock` / `cpb_mixed_gto_overlap_block(parent, cpb,
   orbital)` reuses `_cartesian_basis_supplement_axis_primitive_cross` and
   compares local CPB rows against `_cartesian_basis_supplement_cross`. It is
-  one supplement orbital only. A second tiny CPB-local pilot now covers
-  `position_x` through `CPBMixedGTOCoordinateMomentLocalBlock` /
-  `cpb_mixed_gto_position_operator_block(...; axis = :x)`, reusing existing QW
-  polynomial-Gaussian axis-integral wrappers and comparing local rows against
-  `_qwrg_cartesian_shell_cross_moment_blocks_3d(...).position_x_ga`. No mixed
-  GTO kinetic, x2, nuclear/Coulomb term, route/global placement, Hamiltonian
-  assembly, IDA/MWG/PQS semantic change, export, or artifact was added.
+  one supplement orbital only. The simple CPB-local mixed one-body pilots now
+  cover all `position_*` and `x2_*` coordinate moments through
+  `CPBMixedGTOCoordinateMomentLocalBlock` plus `cpb_mixed_gto_position_operator_block`
+  and `cpb_mixed_gto_x2_operator_block`, and kinetic through
+  `CPBMixedGTOKineticLocalBlock` / `cpb_mixed_gto_kinetic_operator_block`. They
+  reuse existing QW polynomial-Gaussian axis-integral wrappers and compare
+  local rows against `_qwrg_cartesian_shell_cross_moment_blocks_3d` fields
+  `position_*_ga`, `x2_*_ga`, and `kinetic_ga`. No mixed GTO nuclear/Coulomb
+  term, route/global placement, Hamiltonian assembly, IDA/MWG/PQS semantic
+  change, export, or artifact was added.
 - The next overlap implementation boundary is no longer additional placement
   fingerprinting. First decide the CPB operator-block and WL/PQS realization
   design: what local block objects exist, how White-Lindsey consumes them, how

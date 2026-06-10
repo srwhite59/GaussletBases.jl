@@ -437,19 +437,26 @@ provider-level only. It accepts the existing
 metadata and route/global/Hamiltonian nonclaim flags, and does not duplicate the
 dense block in its summary.
 
-The first coordinate-moment pilot is `position_x`, represented by
-`CPBMixedGTOCoordinateMomentLocalBlock` and
-`cpb_mixed_gto_position_operator_block(...; axis = :x)`. It reuses existing QW
-polynomial-Gaussian axis-integral wrappers for the active-axis moment and
-compares CPB-local rows against
-`_qwrg_cartesian_shell_cross_moment_blocks_3d(...).position_x_ga`.
+The simple one-body mixed pilots now cover all coordinate moments
+`position_x`, `position_y`, `position_z`, `x2_x`, `x2_y`, and `x2_z` through
+`CPBMixedGTOCoordinateMomentLocalBlock` plus the
+`cpb_mixed_gto_position_operator_block` and `cpb_mixed_gto_x2_operator_block`
+wrappers. They reuse existing QW polynomial-Gaussian axis-integral wrappers for
+the active-axis moment and compare CPB-local rows against
+`_qwrg_cartesian_shell_cross_moment_blocks_3d(...).position_*_ga` and
+`...x2_*_ga`.
 
-A next tiny test can do `x2_x` against
-`_qwrg_cartesian_shell_cross_moment_blocks_3d`. Nuclear attraction should
-remain by-center and compare against `nuclear_ga_by_center` /
-`nuclear_aa_by_center` from that existing path. Electron-electron supplement
-pair behavior should use `gaussian_coulomb_pair_matrix` or the current
-White-Lindsey Coulomb matrix as an oracle, not a route-global Hamiltonian.
+The simple mixed kinetic pilot is `CPBMixedGTOKineticLocalBlock`, constructed by
+`cpb_mixed_gto_kinetic_operator_block(parent, cpb, orbital)`. It uses the
+separable sum `Kx Sy Sz + Sx Ky Sz + Sx Sy Kz` from existing QW polynomial
+Gaussian kinetic axis-integral wrappers and compares against
+`_qwrg_cartesian_shell_cross_moment_blocks_3d(...).kinetic_ga`.
+
+Nuclear attraction should remain by-center and compare against
+`nuclear_ga_by_center` / `nuclear_aa_by_center` from that existing path.
+Electron-electron supplement pair behavior should use
+`gaussian_coulomb_pair_matrix` or the current White-Lindsey Coulomb matrix as an
+oracle, not a route-global Hamiltonian.
 
 ## Parent Axis Factor Packet
 

@@ -24,6 +24,7 @@ export CPBIntervalPair3D,
        CPBOneBodyAxisOperatorBlock,
        CPBMixedGTOLocalOverlapBlock,
        CPBMixedGTOCoordinateMomentLocalBlock,
+       CPBMixedGTOKineticLocalBlock,
        CPBElectronElectronLocalBlock,
        CPBElectronNuclearByCenterLocalBlock,
        CPBLocalIntegralWeights,
@@ -40,6 +41,8 @@ export CPBIntervalPair3D,
        cpb_x2_operator_block,
        cpb_mixed_gto_overlap_block,
        cpb_mixed_gto_position_operator_block,
+       cpb_mixed_gto_x2_operator_block,
+       cpb_mixed_gto_kinetic_operator_block,
        cpb_electron_electron_local_block,
        cpb_electron_nuclear_by_center_local_block,
        cpb_local_integral_weights,
@@ -172,6 +175,22 @@ helpers and does not imply route/global placement, Hamiltonian assembly, or
 broader GTO operator support.
 """
 struct CPBMixedGTOCoordinateMomentLocalBlock{P,C,O,D,M}
+    parent::P
+    cpb::C
+    orbital::O
+    dense_block::D
+    metadata::M
+end
+
+"""
+    CPBMixedGTOKineticLocalBlock
+
+Provider-level CPB-local mixed gausslet/GTO kinetic pilot for one supplement
+orbital. This reuses existing QW polynomial-Gaussian kinetic axis-integral
+helpers in the separable sum Kx Sy Sz + Sx Ky Sz + Sx Sy Kz and does not imply
+route/global placement, Hamiltonian assembly, or broader GTO operator support.
+"""
+struct CPBMixedGTOKineticLocalBlock{P,C,O,D,M}
     parent::P
     cpb::C
     orbital::O
@@ -362,6 +381,7 @@ summary(block::CPBKineticOperatorBlock) = block.metadata
 summary(block::CPBOneBodyAxisOperatorBlock) = block.metadata
 summary(block::CPBMixedGTOLocalOverlapBlock) = block.metadata
 summary(block::CPBMixedGTOCoordinateMomentLocalBlock) = block.metadata
+summary(block::CPBMixedGTOKineticLocalBlock) = block.metadata
 summary(block::CPBElectronElectronLocalBlock) = block.metadata
 summary(block::CPBElectronNuclearByCenterLocalBlock) = block.metadata
 summary(weights::CPBLocalIntegralWeights) = weights.metadata
@@ -1657,6 +1677,84 @@ function cpb_mixed_gto_position_operator_block(
     )
 end
 
+function cpb_mixed_gto_x2_operator_block(
+    parent::CPGB.CartesianParentGaussletBasis3D,
+    cpb::CPB.CoordinateProductBox,
+    orbital;
+    axis::Symbol = :x,
+)
+    blocker = _cpb_mixed_gto_coordinate_moment_block_blocker(
+        parent,
+        cpb,
+        orbital;
+        axis,
+        moment = :x2,
+    )
+    dense_block =
+        isnothing(blocker) ?
+        _materialize_cpb_mixed_gto_coordinate_moment_block(
+            parent,
+            cpb,
+            orbital;
+            axis,
+            xpower = 2,
+        ) :
+        nothing
+    status =
+        isnothing(blocker) ?
+        :materialized_cpb_mixed_gto_coordinate_moment_local_block :
+        :blocked_cpb_mixed_gto_coordinate_moment_local_block
+    term = Symbol("mixed_gto_x2_", String(axis))
+    return CPBMixedGTOCoordinateMomentLocalBlock(
+        parent,
+        cpb,
+        orbital,
+        dense_block,
+        _cpb_mixed_gto_coordinate_moment_block_summary(
+            status,
+            blocker,
+            parent,
+            cpb,
+            orbital,
+            dense_block;
+            axis,
+            moment = :x2,
+            xpower = 2,
+            term,
+        ),
+    )
+end
+
+function cpb_mixed_gto_kinetic_operator_block(
+    parent::CPGB.CartesianParentGaussletBasis3D,
+    cpb::CPB.CoordinateProductBox,
+    orbital,
+)
+    blocker = _cpb_mixed_gto_overlap_block_blocker(parent, cpb, orbital)
+    dense_block =
+        isnothing(blocker) ?
+        _materialize_cpb_mixed_gto_kinetic_block(parent, cpb, orbital) :
+        nothing
+    status =
+        isnothing(blocker) ?
+        :materialized_cpb_mixed_gto_kinetic_local_block :
+        :blocked_cpb_mixed_gto_kinetic_local_block
+    return CPBMixedGTOKineticLocalBlock(
+        parent,
+        cpb,
+        orbital,
+        dense_block,
+        _cpb_mixed_gto_kinetic_block_summary(
+            status,
+            blocker,
+            parent,
+            cpb,
+            orbital,
+            dense_block,
+        ),
+    )
+end
+
 function _cpb_mixed_gto_coordinate_moment_block_blocker(
     parent::CPGB.CartesianParentGaussletBasis3D,
     cpb::CPB.CoordinateProductBox,
@@ -1748,10 +1846,35 @@ function _materialize_cpb_mixed_gto_coordinate_moment_block(
     )
 end
 
+function _materialize_cpb_mixed_gto_kinetic_block(
+    parent::CPGB.CartesianParentGaussletBasis3D,
+    cpb::CPB.CoordinateProductBox,
+    orbital,
+)
+    axis_tables = _cpb_mixed_gto_kinetic_axis_tables(parent, orbital)
+    return _materialize_cpb_mixed_gto_dense_from_axis_table_terms(
+        cpb,
+        orbital,
+        axis_tables,
+    )
+end
+
 function _materialize_cpb_mixed_gto_dense_from_axis_tables(
     cpb::CPB.CoordinateProductBox,
     orbital,
     axis_tables,
+)
+    return _materialize_cpb_mixed_gto_dense_from_axis_table_terms(
+        cpb,
+        orbital,
+        (axis_tables,),
+    )
+end
+
+function _materialize_cpb_mixed_gto_dense_from_axis_table_terms(
+    cpb::CPB.CoordinateProductBox,
+    orbital,
+    axis_table_terms,
 )
     intervals = _axis_named_tuple(CPB.intervals(cpb))
     local_shape = CPB.shape(cpb)
@@ -1762,11 +1885,14 @@ function _materialize_cpb_mixed_gto_dense_from_axis_tables(
         row = _local_product_index(local_ix, local_iy, local_iz, local_shape)
         value = 0.0
         for primitive in eachindex(orbital.coefficients)
-            value +=
-                Float64(orbital.coefficients[primitive]) *
-                axis_tables.x[ix, primitive] *
-                axis_tables.y[iy, primitive] *
-                axis_tables.z[iz, primitive]
+            coefficient = Float64(orbital.coefficients[primitive])
+            for axis_tables in axis_table_terms
+                value +=
+                    coefficient *
+                    axis_tables.x[ix, primitive] *
+                    axis_tables.y[iy, primitive] *
+                    axis_tables.z[iz, primitive]
+            end
         end
         dense_block[row, 1] = value
     end
@@ -1830,6 +1956,33 @@ function _cpb_mixed_gto_coordinate_moment_axis_tables(
     )
 end
 
+function _cpb_mixed_gto_kinetic_axis_tables(
+    parent::CPGB.CartesianParentGaussletBasis3D,
+    orbital,
+)
+    axes = CPGB.parent_axes(parent)
+    axis_representations = (;
+        x = basis_representation(axes.x; operators = (:overlap,)),
+        y = basis_representation(axes.y; operators = (:overlap,)),
+        z = basis_representation(axes.z; operators = (:overlap,)),
+    )
+    overlap_tables = (;
+        x = _cpb_mixed_gto_axis_overlap_table(axis_representations.x, orbital, :x),
+        y = _cpb_mixed_gto_axis_overlap_table(axis_representations.y, orbital, :y),
+        z = _cpb_mixed_gto_axis_overlap_table(axis_representations.z, orbital, :z),
+    )
+    kinetic_tables = (;
+        x = _cpb_mixed_gto_axis_kinetic_table(axis_representations.x, orbital, :x),
+        y = _cpb_mixed_gto_axis_kinetic_table(axis_representations.y, orbital, :y),
+        z = _cpb_mixed_gto_axis_kinetic_table(axis_representations.z, orbital, :z),
+    )
+    return (
+        (x = kinetic_tables.x, y = overlap_tables.y, z = overlap_tables.z),
+        (x = overlap_tables.x, y = kinetic_tables.y, z = overlap_tables.z),
+        (x = overlap_tables.x, y = overlap_tables.y, z = kinetic_tables.z),
+    )
+end
+
 function _is_cartesian_gaussian_shell_orbital(orbital)
     return hasproperty(orbital, :label) &&
            hasproperty(orbital, :angular_powers) &&
@@ -1890,6 +2043,49 @@ function _cpb_mixed_gto_axis_moment_table(
                 power,
                 prefactor;
                 xpower,
+            )
+        end
+    end
+    return Matrix{Float64}(transpose(axis_representation.coefficient_matrix) * primitive_cross)
+end
+
+function _cpb_mixed_gto_axis_kinetic_table(axis_representation, orbital, axis::Symbol)
+    basis_primitives = collect(primitives(primitive_set(axis_representation)))
+    gausslet_module = parentmodule(@__MODULE__)
+    gaussian_type = getproperty(gausslet_module, :Gaussian)
+    all(primitive -> primitive isa gaussian_type, basis_primitives) || throw(
+        ArgumentError(
+            "mixed GTO kinetic pilot requires Gaussian 1D primitives on the Cartesian axis representation",
+        ),
+    )
+    center_value =
+        axis === :x ? orbital.center[1] :
+        axis === :y ? orbital.center[2] :
+        axis === :z ? orbital.center[3] :
+        throw(ArgumentError("axis must be :x, :y, or :z"))
+    power =
+        axis === :x ? orbital.angular_powers[1] :
+        axis === :y ? orbital.angular_powers[2] :
+        axis === :z ? orbital.angular_powers[3] :
+        throw(ArgumentError("axis must be :x, :y, or :z"))
+    shell_prefactor = getproperty(gausslet_module, :_qwrg_atomic_shell_prefactor)
+    kinetic_integral = getproperty(gausslet_module, :_qwrg_atomic_kinetic_integral)
+    gaussian_exponent = getproperty(gausslet_module, :_qwrg_gaussian_exponent)
+    primitive_cross = zeros(Float64, length(basis_primitives), length(orbital.exponents))
+    for (row, primitive) in pairs(basis_primitives)
+        alpha_basis = gaussian_exponent(primitive)
+        for column in eachindex(orbital.exponents)
+            exponent = Float64(orbital.exponents[column])
+            prefactor = shell_prefactor(exponent, power)
+            primitive_cross[row, column] = kinetic_integral(
+                alpha_basis,
+                primitive.center_value,
+                0,
+                1.0,
+                exponent,
+                center_value,
+                power,
+                prefactor,
             )
         end
     end
@@ -1984,6 +2180,71 @@ function _cpb_mixed_gto_coordinate_moment_block_summary(
         active_axis = axis,
         xpower,
         source_kind = :mixed_gausslet_gto_supplement_coordinate_moment,
+        supplement_representation_kind = :cartesian_gaussian_shell_orbital,
+        orbital_label = _mixed_gto_property(orbital, :label),
+        angular_powers = _mixed_gto_property(orbital, :angular_powers),
+        center = _mixed_gto_property(orbital, :center),
+        primitive_count,
+        primitive_normalization =
+            _mixed_gto_property(orbital, :primitive_normalization),
+        formula_source = :GaussianAnalyticIntegrals_polynomial_gaussian,
+        axis_kernel_source = :existing_qw_polynomial_gaussian_axis_integrals,
+        parent_axis_counts = CPGB.parent_axis_counts(parent),
+        parent_axis_counts_source = :parent_object_parent_axis_counts,
+        cpb_summary = (;
+            role = CPB.role(cpb),
+            intervals = _axis_named_tuple(CPB.intervals(cpb)),
+            shape = local_shape,
+            support_count = CPB.support_count(cpb),
+            codimension = CPB.codimension(cpb),
+        ),
+        local_shape,
+        left_shape = local_shape,
+        right_shape = (gto = 1,),
+        dense_block_available = available,
+        dense_block_shape = available ? size(dense_block) : :unavailable,
+        dense_block_eltype = available ? eltype(dense_block) : :unavailable,
+        local_ordering = _LOCAL_ORDERING,
+        representation = :dense_local_cpb_product_space_by_gto_orbital,
+        galerkin_operator = true,
+        provider_level_local_matrix_materialized = available,
+        realization_status = :unrealized,
+        route_global_status = :unassigned,
+        route_driver_wiring = false,
+        route_global_matrix_materialized = false,
+        route_global_overlap_matrix_materialized = false,
+        global_matrix_materialized = false,
+        global_overlap_matrix_materialized = false,
+        hamiltonian_data_materialized = false,
+        coulomb_data_materialized = false,
+        ida_mwg_semantics = false,
+        pqs_lowdin_materialized = false,
+        pqs_shell_projection_materialized = false,
+        exports_or_artifacts = false,
+    )
+end
+
+function _cpb_mixed_gto_kinetic_block_summary(
+    status::Symbol,
+    blocker,
+    parent::CPGB.CartesianParentGaussletBasis3D,
+    cpb::CPB.CoordinateProductBox,
+    orbital,
+    dense_block,
+)
+    available = status === :materialized_cpb_mixed_gto_kinetic_local_block
+    local_shape = _axis_named_tuple(CPB.shape(cpb))
+    primitive_count =
+        hasproperty(orbital, :exponents) ? length(orbital.exponents) : :unavailable
+    return (;
+        object_kind = :cartesian_cpb_mixed_gto_kinetic_local_block_summary,
+        status,
+        blocker,
+        term = :mixed_gto_kinetic,
+        source_kind = :mixed_gausslet_gto_supplement_kinetic,
+        kinetic_factor_form = :sum_of_axis_products,
+        kinetic_component_terms =
+            (:kinetic_x_component, :kinetic_y_component, :kinetic_z_component),
         supplement_representation_kind = :cartesian_gaussian_shell_orbital,
         orbital_label = _mixed_gto_property(orbital, :label),
         angular_powers = _mixed_gto_property(orbital, :angular_powers),
