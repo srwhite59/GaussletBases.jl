@@ -457,6 +457,24 @@ outside this decomposed WL acceptance contract.
   one-body provider record only; no mixed nuclear/Coulomb term, route/global
   placement, Hamiltonian assembly, IDA/MWG/PQS semantic change, export, or
   artifact was added.
+- The first decomposed WL H plus GTO supplement readiness audit uses the active
+  q/ns = 5/5 H acceptance fixture and H cc-pVTZ `lmax = 0` supplement. The
+  decomposed gausslet route, route-global overlap/kinetic/nuclear-by-center
+  sources, and GTO/GTO supplement overlap/kinetic/nuclear-by-center provider
+  blocks are available. Mixed CPB/GTO local blocks are not called yet because
+  the current mixed wrapper builds generic parent axis representations and then
+  `_cartesian_basis_supplement_axis_primitive_cross` rejects them: that helper
+  requires Gaussian primitive axis records. This is recorded as
+  `:missing_mixed_gto_axis_representation_adapter` /
+  `:missing_gausslet_gto_cross_axis_table_source`, not as a claim that
+  distorted/asinh WL axes are conceptually incompatible with GTO. The WL parent
+  axis bundle carries `pgdg_intermediate` overlap, kinetic, position, x2,
+  Gaussian-factor, pair-factor, and weight data; the missing contract is an
+  adapter or table source from that PGDG/WL parent axis bundle shape into the
+  existing supplement cross-axis helper path. Combined route-global GTO basis
+  layout remains not reached, and no direct Cartesian fallback,
+  `ordinary_cartesian_ida_operators`, full-window CPB acceptance route,
+  Hamiltonian supplement assembly, export, or artifact was added.
 - The next overlap implementation boundary is no longer additional placement
   fingerprinting. First decide the CPB operator-block and WL/PQS realization
   design: what local block objects exist, how White-Lindsey consumes them, how

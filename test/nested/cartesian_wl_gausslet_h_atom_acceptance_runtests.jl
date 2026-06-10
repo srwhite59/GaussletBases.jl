@@ -12,6 +12,8 @@ using GaussletBases
 include("cartesian_white_lindsey_adapter_fixture_helpers.jl")
 
 const WLAcceptanceReadinessCPBM = GaussletBases.CartesianPairBlockMaterialization
+const WLAcceptanceReadinessCPB = GaussletBases.CartesianCPB
+const WLAcceptanceReadinessCBP = GaussletBases.CartesianCPBBlockProviders
 
 function _wl_acceptance_parent_axis_inputs()
     doside_source_1d = _lw_adapter_doside_source_1d()
@@ -57,6 +59,21 @@ function _wl_h2plus_acceptance_center_records()
             nuclear_charge = 1.0,
             location = (0.0, 0.0, 1.0),
         ),
+    )
+end
+
+function _wl_h_acceptance_gto_supplement()
+    return basis_representation(
+        legacy_atomic_gaussian_supplement("H", "cc-pVTZ"; lmax = 0),
+    )
+end
+
+function _wl_acceptance_direct_core_cpb()
+    return WLAcceptanceReadinessCPB.cpb(
+        2:6,
+        2:6,
+        2:6;
+        role = :decomposed_wl_gto_readiness_direct_core_cpb,
     )
 end
 
@@ -540,6 +557,167 @@ function _wl_decomposed_h2plus_acceptance_report()
     )
 end
 
+function _wl_decomposed_h_gto_supplement_readiness_report()
+    seed_report = GaussletBases._white_lindsey_low_order_materialized_seed_report()
+    axis_inputs = _wl_acceptance_parent_axis_inputs()
+    decomposed_inventory =
+        WLAcceptanceReadinessCPBM.white_lindsey_decomposed_unit_pair_inventory(
+            seed_report,
+        )
+    route_global_terms = WLAcceptanceReadinessCPBM.route_global_safe_one_body_terms()
+    route_global_supported_terms =
+        WLAcceptanceReadinessCPBM._route_global_one_body_supported_terms()
+    supplement = _wl_h_acceptance_gto_supplement()
+    direct_core_cpb = _wl_acceptance_direct_core_cpb()
+    expansion = coulomb_gaussian_expansion(doacc = false)
+    center_records = _wl_acceptance_center_records()
+    pgdg = axis_inputs.parent_axis_bundle_object.x.pgdg_intermediate
+    required_local_terms = (
+        :mixed_gto_overlap,
+        :mixed_gto_kinetic,
+        :mixed_gto_electron_nuclear_by_center,
+        :gto_overlap,
+        :gto_kinetic,
+        :gto_electron_nuclear_by_center,
+    )
+    gto_overlap = WLAcceptanceReadinessCBP.cpb_gto_overlap_operator_block(supplement)
+    gto_kinetic = WLAcceptanceReadinessCBP.cpb_gto_kinetic_operator_block(supplement)
+    gto_nuclear_by_center = Tuple(
+        WLAcceptanceReadinessCBP.cpb_gto_nuclear_by_center_block(
+            supplement,
+            expansion,
+            center_record,
+        ) for center_record in center_records
+    )
+    gto_included_terms = (
+        :gto_overlap,
+        :gto_kinetic,
+        :gto_electron_nuclear_by_center,
+    )
+    gto_shapes = (;
+        overlap = size(gto_overlap.dense_block),
+        kinetic = size(gto_kinetic.dense_block),
+        nuclear_by_center =
+            Tuple(size(block.dense_block) for block in gto_nuclear_by_center),
+    )
+    mixed_gto_blocker =
+        :missing_mixed_gto_axis_representation_adapter
+    mixed_gto_blocker_source =
+        :_cpb_mixed_gto_parent_axis_representations
+    mixed_gto_rejected_helper =
+        :_cartesian_basis_supplement_axis_primitive_cross
+    mixed_gto_blocker_detail =
+        :generic_parent_basis_representation_exposes_non_gaussian_primitives
+    mixed_gto_required_source = :gausslet_gto_cross_axis_table_source
+    bundle_status = :not_constructed_cpb_gto_supplement_local_operator_bundle
+    bundle_blocker = mixed_gto_blocker
+    mixed_terms = (
+        :mixed_gto_overlap,
+        :mixed_gto_kinetic,
+        :mixed_gto_electron_nuclear_by_center,
+    )
+    route_global_combined_basis_layout_status = :not_reached
+    route_global_combined_basis_layout_blocker =
+        :blocked_by_mixed_cpb_gto_local_blocks
+    decomposed_unit_range_start = minimum(
+        first(summary.column_range) for summary in decomposed_inventory.unit_summaries
+    )
+    decomposed_unit_range_stop = maximum(
+        last(summary.column_range) for summary in decomposed_inventory.unit_summaries
+    )
+    decomposed_unit_column_range_span =
+        decomposed_unit_range_start:decomposed_unit_range_stop
+    return (;
+        object_kind = :decomposed_wl_h_gto_supplement_acceptance_readiness_report,
+        status = :blocked_decomposed_wl_gto_supplement_acceptance_readiness,
+        blocker = mixed_gto_blocker,
+        acceptance_suite =
+            :decomposed_wl_gausslet_plus_gto_one_electron_acceptance,
+        acceptance_fixture = :h_atom_gto_supplement_readiness,
+        base_decomposed_wl_fixture = :h_atom,
+        q = 5,
+        ns = 5,
+        n_s = 5,
+        parent_axis_counts = axis_inputs.parent_axis_counts,
+        decomposed_wl_gausslet_base_path_available =
+            decomposed_inventory.status ===
+            :available_white_lindsey_decomposed_unit_pair_inventory &&
+            :overlap in route_global_terms &&
+            :kinetic in route_global_terms &&
+            :electron_nuclear_by_center in route_global_supported_terms,
+        decomposed_unit_pair_inventory_status = decomposed_inventory.status,
+        decomposed_unit_pair_inventory_blocker = decomposed_inventory.blocker,
+        decomposed_unit_count = decomposed_inventory.unit_count,
+        decomposed_unit_pair_count = decomposed_inventory.pair_count,
+        decomposed_retained_dimension = decomposed_inventory.retained_dimension,
+        decomposed_unit_column_range_span,
+        route_global_overlap_available = :overlap in route_global_terms,
+        route_global_kinetic_available = :kinetic in route_global_terms,
+        route_global_electron_nuclear_by_center_available =
+            :electron_nuclear_by_center in route_global_supported_terms,
+        parent_pgdg_intermediate_available = !isnothing(pgdg),
+        parent_pgdg_overlap_available = hasproperty(pgdg, :overlap),
+        parent_pgdg_kinetic_available = hasproperty(pgdg, :kinetic),
+        parent_pgdg_position_available = hasproperty(pgdg, :position),
+        parent_pgdg_x2_available = hasproperty(pgdg, :x2),
+        parent_pgdg_gaussian_factor_terms_available =
+            hasproperty(pgdg, :gaussian_factor_terms),
+        parent_pgdg_pair_factor_terms_available =
+            hasproperty(pgdg, :pair_factor_terms),
+        parent_pgdg_weights_available = hasproperty(pgdg, :weights),
+        mixed_gto_axis_contract_status =
+            :missing_gausslet_gto_cross_axis_table_source,
+        mixed_gto_axis_contract_blocker = mixed_gto_blocker,
+        mixed_gto_rejected_helper,
+        mixed_gto_required_source,
+        supplement_source_available = true,
+        supplement_kind = supplement.supplement_kind,
+        supplement_atom = supplement.metadata.atom,
+        supplement_basis_name = supplement.metadata.basis_name,
+        supplement_lmax = supplement.metadata.lmax,
+        supplement_orbital_count = length(supplement.orbitals),
+        supplement_orbital_labels =
+            Tuple(orbital.label for orbital in supplement.orbitals),
+        cpb_local_gto_bundle_status = bundle_status,
+        cpb_local_gto_bundle_blocker = bundle_blocker,
+        cpb_local_gto_bundle_terms_available = false,
+        cpb_local_gto_required_terms = required_local_terms,
+        cpb_local_gto_included_terms = gto_included_terms,
+        cpb_local_gto_missing_terms = mixed_terms,
+        cpb_local_direct_core_support_count =
+            WLAcceptanceReadinessCPB.support_count(direct_core_cpb),
+        mixed_gausslet_gto_overlap_available = false,
+        mixed_gausslet_gto_kinetic_available = false,
+        mixed_gausslet_gto_nuclear_by_center_available = false,
+        mixed_gausslet_gto_blocker = mixed_gto_blocker,
+        mixed_gausslet_gto_blocker_source = mixed_gto_blocker_source,
+        mixed_gausslet_gto_rejected_helper = mixed_gto_rejected_helper,
+        mixed_gausslet_gto_blocker_detail = mixed_gto_blocker_detail,
+        mixed_gausslet_gto_required_source = mixed_gto_required_source,
+        gto_gto_overlap_available =
+            WLAcceptanceReadinessCBP.summary(gto_overlap).dense_block_available,
+        gto_gto_kinetic_available =
+            WLAcceptanceReadinessCBP.summary(gto_kinetic).dense_block_available,
+        gto_gto_nuclear_by_center_available = all(
+            block -> WLAcceptanceReadinessCBP.summary(block).dense_block_available,
+            gto_nuclear_by_center,
+        ),
+        mixed_gausslet_gto_shapes = :unavailable,
+        gto_gto_shapes = gto_shapes,
+        route_global_combined_basis_layout_status,
+        route_global_combined_basis_layout_blocker,
+        final_combined_overlap_layout_available = false,
+        final_combined_hamiltonian_layout_available = false,
+        combined_basis_dimension = :unavailable,
+        gto_route_global_blocks_materialized = false,
+        gto_hamiltonian_assembly_materialized = false,
+        full_parent_window_cpb_used = false,
+        direct_cartesian_product_assembly_used = false,
+        ordinary_cartesian_ida_operators_used = false,
+        exports_or_artifacts = false,
+    )
+end
+
 @testset "decomposed WL gausslet-only H atom acceptance" begin
     report = _wl_decomposed_h_atom_acceptance_report()
     println("decomposed WL gausslet-only H atom acceptance: ", report)
@@ -637,6 +815,111 @@ end
     @test report.h_atom_acceptance_active
     @test report.acceptance_fixture_active
     @test report.elapsed_seconds >= 0.0
+end
+
+@testset "decomposed WL H GTO supplement acceptance readiness" begin
+    report = _wl_decomposed_h_gto_supplement_readiness_report()
+    println("decomposed WL H GTO supplement readiness: ", report)
+
+    @test report.status ==
+          :blocked_decomposed_wl_gto_supplement_acceptance_readiness
+    @test report.blocker ==
+          :missing_mixed_gto_axis_representation_adapter
+    @test report.acceptance_suite ==
+          :decomposed_wl_gausslet_plus_gto_one_electron_acceptance
+    @test report.acceptance_fixture == :h_atom_gto_supplement_readiness
+    @test report.base_decomposed_wl_fixture == :h_atom
+    @test report.q == 5
+    @test report.ns == 5
+    @test report.n_s == 5
+    @test report.parent_axis_counts == (7, 7, 7)
+    @test report.decomposed_wl_gausslet_base_path_available
+    @test report.decomposed_unit_pair_inventory_status ==
+          :available_white_lindsey_decomposed_unit_pair_inventory
+    @test isnothing(report.decomposed_unit_pair_inventory_blocker)
+    @test report.decomposed_unit_count == 27
+    @test report.decomposed_unit_pair_count == 378
+    @test report.decomposed_retained_dimension == 223
+    @test report.decomposed_unit_column_range_span == 1:223
+    @test report.route_global_overlap_available
+    @test report.route_global_kinetic_available
+    @test report.route_global_electron_nuclear_by_center_available
+    @test report.parent_pgdg_intermediate_available
+    @test report.parent_pgdg_overlap_available
+    @test report.parent_pgdg_kinetic_available
+    @test report.parent_pgdg_position_available
+    @test report.parent_pgdg_x2_available
+    @test report.parent_pgdg_gaussian_factor_terms_available
+    @test report.parent_pgdg_pair_factor_terms_available
+    @test report.parent_pgdg_weights_available
+    @test report.mixed_gto_axis_contract_status ==
+          :missing_gausslet_gto_cross_axis_table_source
+    @test report.mixed_gto_axis_contract_blocker ==
+          :missing_mixed_gto_axis_representation_adapter
+    @test report.mixed_gto_rejected_helper ==
+          :_cartesian_basis_supplement_axis_primitive_cross
+    @test report.mixed_gto_required_source ==
+          :gausslet_gto_cross_axis_table_source
+    @test report.supplement_source_available
+    @test report.supplement_kind == :atomic_cartesian_shell
+    @test report.supplement_atom == "H"
+    @test report.supplement_basis_name == "cc-pVTZ"
+    @test report.supplement_lmax == 0
+    @test report.supplement_orbital_count == 3
+    @test report.supplement_orbital_labels == ("s1", "s2", "s3")
+    @test report.cpb_local_gto_bundle_status ==
+          :not_constructed_cpb_gto_supplement_local_operator_bundle
+    @test report.cpb_local_gto_bundle_blocker ==
+          :missing_mixed_gto_axis_representation_adapter
+    @test !report.cpb_local_gto_bundle_terms_available
+    @test report.cpb_local_gto_missing_terms == (
+        :mixed_gto_overlap,
+        :mixed_gto_kinetic,
+        :mixed_gto_electron_nuclear_by_center,
+    )
+    for term in (
+        :gto_overlap,
+        :gto_kinetic,
+        :gto_electron_nuclear_by_center,
+    )
+        @test term in report.cpb_local_gto_included_terms
+    end
+    for term in report.cpb_local_gto_missing_terms
+        @test term in report.cpb_local_gto_required_terms
+    end
+    @test report.cpb_local_direct_core_support_count == 125
+    @test !report.mixed_gausslet_gto_overlap_available
+    @test !report.mixed_gausslet_gto_kinetic_available
+    @test !report.mixed_gausslet_gto_nuclear_by_center_available
+    @test report.mixed_gausslet_gto_blocker ==
+          :missing_mixed_gto_axis_representation_adapter
+    @test report.mixed_gausslet_gto_blocker_source ==
+          :_cpb_mixed_gto_parent_axis_representations
+    @test report.mixed_gausslet_gto_rejected_helper ==
+          :_cartesian_basis_supplement_axis_primitive_cross
+    @test report.mixed_gausslet_gto_blocker_detail ==
+          :generic_parent_basis_representation_exposes_non_gaussian_primitives
+    @test report.mixed_gausslet_gto_required_source ==
+          :gausslet_gto_cross_axis_table_source
+    @test report.gto_gto_overlap_available
+    @test report.gto_gto_kinetic_available
+    @test report.gto_gto_nuclear_by_center_available
+    @test report.mixed_gausslet_gto_shapes == :unavailable
+    @test report.gto_gto_shapes.overlap == (3, 3)
+    @test report.gto_gto_shapes.kinetic == (3, 3)
+    @test report.gto_gto_shapes.nuclear_by_center == ((3, 3),)
+    @test report.route_global_combined_basis_layout_status == :not_reached
+    @test report.route_global_combined_basis_layout_blocker ==
+          :blocked_by_mixed_cpb_gto_local_blocks
+    @test !report.final_combined_overlap_layout_available
+    @test !report.final_combined_hamiltonian_layout_available
+    @test report.combined_basis_dimension == :unavailable
+    @test !report.gto_route_global_blocks_materialized
+    @test !report.gto_hamiltonian_assembly_materialized
+    @test !report.full_parent_window_cpb_used
+    @test !report.direct_cartesian_product_assembly_used
+    @test !report.ordinary_cartesian_ida_operators_used
+    @test !report.exports_or_artifacts
 end
 
 @testset "decomposed WL gausslet-only H2+ acceptance" begin
