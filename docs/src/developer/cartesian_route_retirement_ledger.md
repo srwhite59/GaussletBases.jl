@@ -500,15 +500,38 @@ Tests that still call private CCPM helpers:
   shadow matrices, resolved-payload product-staged metric packet, and dispatch
   shadow plan helpers.
 
-Recommended first extraction target:
+Recommended first cleanup target:
 
-Move the product/product safe one-body source-box reference family into
-`CartesianCPBBlockProviders` first: `_product_doside_source_box_pair_plan`,
-`_product_doside_source_box_block_from_factors`, and the safe-term path behind
-`_product_doside_source_box_reference_block(...)`. This is the lowest-risk
-extraction because the CPB provider layer already has overlap, kinetic,
-position, x2, axis-product, and sum-of-axis-products blocks. After equivalence
-tests move to provider summaries, quarantine
-`_product_doside_source_box_shadow_blocks(...)` as the first deletion
-candidate. Do not delete it until the integration tests above stop using it as
-a private oracle.
+Shrink the product/product safe one-body source-box test burden instead of
+moving its full transitional architecture into new scaffolding. The CPB
+provider layer already owns active coverage for overlap, kinetic, position,
+x2, axis-product, and sum-of-axis-products blocks. The old
+`_product_doside_source_box_pair_plan(...)`,
+`_product_doside_source_box_block_from_factors(...)`,
+`_product_doside_source_box_reference_block(...)`, and
+`_product_doside_source_box_shadow_blocks(...)` family should remain only a
+private oracle / route-shadow bridge until the route diagnostics are retired.
+Do not add new routine tests that preserve every old diagnostic flag.
+
+First retirement cut:
+
+- The exhaustive product/product source-box pair-plan assertions and
+  shadow-component oracle comparisons were removed from
+  `test/nested/pqs_projected_q_shell_local_layer_integration_runtests.jl`.
+  The slow integration file now keeps only a small legacy smoke that
+  `_product_doside_source_box_shadow_blocks(...)` returns finite blocks with
+  expected terms, ranges, and shapes while route diagnostics still call it.
+- Detailed safe one-body correctness is intentionally left to focused CPB
+  provider tests for axis-product, sum-of-axis-products, overlap, kinetic,
+  position, and x2 blocks.
+- `src/CartesianContractedParentMetrics.jl` marks the product/product
+  source-box family as a private oracle and route-shadow bridge. New safe
+  one-body product-box checks should use CPB provider axis-product or
+  sum-of-axis-products blocks directly.
+- Deletion is still blocked by route-shadow and diagnostics paths in
+  `CartesianContractedParentMetrics.jl` that call
+  `_product_doside_source_box_reference_block(...)` internally, especially
+  `_product_doside_source_box_shadow_blocks(...)` and downstream current-route
+  inventory/oracle comparisons. The next deletion-oriented cut should replace
+  those route-shadow component calls with CPB provider blocks or quarantine the
+  whole shadow route as oracle-only.

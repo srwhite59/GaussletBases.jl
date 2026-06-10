@@ -845,6 +845,10 @@ const _PRODUCT_DOSIDE_SOURCE_BOX_REFERENCE_TERMS = (
     :kinetic,
 )
 
+# CCPM retirement note: this product/product source-box family remains only as
+# a private oracle and route-shadow bridge while old diagnostics are retired.
+# New safe one-body product-box checks should use CartesianCPBBlockProviders
+# axis-product or sum-of-axis-products blocks directly.
 function _product_doside_source_box_axis_centers(
     retained_unit_plan,
     metrics::NamedTuple{(:x,:y,:z)},
