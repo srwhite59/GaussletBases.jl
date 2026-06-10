@@ -15,10 +15,10 @@ function _wl_decomposed_acceptance_blocker_report()
     adapter = WLAcceptanceReadinessCPBM.white_lindsey_boundary_stratum_one_body_adapter_summary()
     local_terms = adapter.supported_one_body_terms
     route_global_terms = WLAcceptanceReadinessCPBM.route_global_safe_one_body_terms()
+    seed_report = GaussletBases._white_lindsey_low_order_materialized_seed_report()
     decomposed_inventory =
         WLAcceptanceReadinessCPBM.white_lindsey_decomposed_unit_pair_inventory(
-            nothing;
-            source_kind = :terminal_shellification_pair_inventory,
+            seed_report,
         )
     collection = (;
         object_kind = :cartesian_pair_block_local_one_body_block_collection,
@@ -47,11 +47,11 @@ function _wl_decomposed_acceptance_blocker_report()
     return (;
         object_kind = :decomposed_wl_h_h2plus_acceptance_readiness_audit,
         status = :blocked_decomposed_wl_h_h2plus_acceptance,
-        blocker = decomposed_inventory.blocker,
+        blocker = :missing_route_global_electron_nuclear_by_center_adapter,
         q = 5,
         ns = 5,
         n_s = 5,
-        decomposed_wl_units_consumed = false,
+        decomposed_wl_units_consumed = true,
         full_parent_window_cpb_used = false,
         direct_cartesian_product_assembly_used = false,
         ordinary_cartesian_ida_operators_used = false,
@@ -74,7 +74,7 @@ function _wl_decomposed_acceptance_blocker_report()
         placement_plan_error_type =
             isnothing(placement_plan_error) ? nothing : typeof(placement_plan_error),
         unit_inventory_audit_source =
-            :terminal_cartesian_shellification_geometry_route_summary,
+            decomposed_inventory.source_kind,
         terminal_shellification_unit_inventory_exposed = true,
         terminal_shellification_unit_inventory_granularity =
             :terminal_region_units,
@@ -89,13 +89,22 @@ function _wl_decomposed_acceptance_blocker_report()
             decomposed_inventory.source_kind,
         route_owned_decomposed_unit_pair_inventory_available =
             decomposed_inventory.decomposed_wl_unit_pair_inventory_available,
+        decomposed_unit_count = decomposed_inventory.unit_count,
+        decomposed_unit_pair_count = decomposed_inventory.pair_count,
+        decomposed_unit_key_sample =
+            Tuple(Iterators.take(decomposed_inventory.unit_keys, 6)),
+        decomposed_unit_pair_key_sample =
+            Tuple(Iterators.take(decomposed_inventory.pair_keys, 6)),
         retained_unit_column_ranges_materialized =
             decomposed_inventory.retained_unit_column_ranges_materialized,
-        retained_dimension_from_decomposed_unit_inventory_available = false,
+        retained_dimension_from_decomposed_unit_inventory_available =
+            !isnothing(decomposed_inventory.retained_dimension),
         decomposed_unit_pair_column_ranges_available =
             decomposed_inventory.decomposed_unit_pair_column_ranges_available,
         decomposed_unit_pair_inventory_retained_dimension =
             decomposed_inventory.retained_dimension,
+        retained_global_dimension_source =
+            decomposed_inventory.retained_dimension_status,
         route_global_by_center_acceptance_matrix_available = false,
         fixed_block_operator_matrices_available =
             :overlap in route_global_terms && :kinetic in route_global_terms,
@@ -114,7 +123,7 @@ end
 
     @test report.status == :blocked_decomposed_wl_h_h2plus_acceptance
     @test report.blocker ==
-          :missing_decomposed_wl_unit_pair_inventory_source
+          :missing_route_global_electron_nuclear_by_center_adapter
     @test report.q == 5
     @test report.ns == 5
     @test report.n_s == 5
@@ -134,20 +143,23 @@ end
     @test report.terminal_shellification_pair_inventory_status ==
           :deferred_terminal_shellification_pair_inventory
     @test report.decomposed_unit_pair_inventory_status ==
-          :blocked_white_lindsey_decomposed_unit_pair_inventory
-    @test report.decomposed_unit_pair_inventory_blocker ==
-          :missing_decomposed_wl_unit_pair_inventory_source
+          :available_white_lindsey_decomposed_unit_pair_inventory
+    @test isnothing(report.decomposed_unit_pair_inventory_blocker)
     @test report.decomposed_unit_pair_inventory_source_kind ==
-          :terminal_shellification_pair_inventory
-    @test !report.route_owned_decomposed_unit_pair_inventory_available
-    @test !report.retained_unit_column_ranges_materialized
-    @test !report.retained_dimension_from_decomposed_unit_inventory_available
-    @test !report.decomposed_unit_pair_column_ranges_available
-    @test isnothing(report.decomposed_unit_pair_inventory_retained_dimension)
+          :white_lindsey_low_order_materialized_seed_ranges
+    @test report.route_owned_decomposed_unit_pair_inventory_available
+    @test report.decomposed_unit_count == 26
+    @test report.decomposed_unit_pair_count == 351
+    @test report.retained_unit_column_ranges_materialized
+    @test report.retained_dimension_from_decomposed_unit_inventory_available
+    @test report.decomposed_unit_pair_column_ranges_available
+    @test report.decomposed_unit_pair_inventory_retained_dimension == 223
+    @test report.retained_global_dimension_source ==
+          :available_from_decomposed_wl_unit_column_ranges
     @test !report.route_global_by_center_acceptance_matrix_available
     @test report.fixed_block_operator_matrices_available
     @test !report.fixed_block_operator_matrices_used
-    @test !report.decomposed_wl_units_consumed
+    @test report.decomposed_wl_units_consumed
     @test !report.full_parent_window_cpb_used
     @test !report.direct_cartesian_product_assembly_used
     @test !report.ordinary_cartesian_ida_operators_used

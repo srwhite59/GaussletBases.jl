@@ -110,26 +110,29 @@ Current status:
   `:electron_nuclear_by_center` records
 - by-center records keep center identity separated and defer physical nuclear
   charge application to acceptance/Hamiltonian assembly
+- a decomposed WL unit-pair inventory source is now exposed from the
+  materialized low-order seed per-piece retained ranges
 - therefore active H and H2+ scientific acceptance through the decomposed WL
   path is now blocked one step later, on
-  `:missing_decomposed_wl_unit_pair_inventory_source`
+  `:missing_route_global_electron_nuclear_by_center_adapter`
 
 The current q = 5, ns = 5 route metadata exposes terminal shellification unit
 inventory at terminal-region granularity, and the local White-Lindsey adapter can
 materialize overlap, kinetic, and one-center electron-nuclear by-center blocks
-for a supplied decomposed unit pair. However, the acceptance path still lacks a
-real route-owned source of individual decomposed unit pairs with retained column
-ranges and a retained/global dimension derived from those units. A compact
+for a supplied decomposed unit pair. The terminal shellification summary still
+marks its own pair inventory as deferred, but the materialized low-order seed now
+provides a narrow decomposed inventory source through its per-piece face, edge,
+and corner retained ranges. A compact
 `white_lindsey_decomposed_unit_pair_inventory` validator now exists in the
 pair-block materialization layer; it accepts a `UnitPairPlan` or unit-pair
 records when they carry retained dimensions and column ranges, and reports
-compact pair/range/global-dimension metadata. The active readiness audit
-consumes that validator and currently blocks because the terminal shellification
-route still exposes no such source inventory. The generic route-global one-body
+compact pair/range/global-dimension metadata. The active readiness audit now
+validates the seed-backed source as 26 decomposed units, 351 upper-triangular
+unit pairs, and retained/global dimension 223. The generic route-global one-body
 adapter currently owns only the safe one-body terms (`overlap`, `kinetic`,
 `position_*`, `x2_*`); the by-center nuclear path is available at
 local-collection placement level, but not yet as a route-global acceptance
-matrix over a real decomposed inventory.
+matrix over the decomposed inventory.
 
 Do not use the existing nested fixed-block operator matrices as the acceptance
 path. They remain useful historical/oracle material, but they bypass the
@@ -155,10 +158,8 @@ only:
 - H2+ R = 2.0 direct total energy `-0.5654839328172023` Hartree
 
 The next implementation needed before restoring active scientific H/H2+
-acceptance is a q = 5, ns = 5 decomposed acceptance inventory over real
-White-Lindsey retained/boundary units: expose the relevant unit-pair records and
-retained column ranges, build the local pair blocks, place
-overlap/kinetic/by-center nuclear matrices through those ranges, and apply
-nuclear charges only at the acceptance/Hamiltonian assembly boundary. Do not
-reintroduce the full-parent CPB helper or a direct Cartesian
-product fallback as the active route.
+acceptance is route-global by-center nuclear assembly over the decomposed
+inventory: build the local pair blocks, place overlap/kinetic/by-center nuclear
+matrices through the retained ranges, and apply nuclear charges only at the
+acceptance/Hamiltonian assembly boundary. Do not reintroduce the full-parent CPB
+helper or a direct Cartesian product fallback as the active route.

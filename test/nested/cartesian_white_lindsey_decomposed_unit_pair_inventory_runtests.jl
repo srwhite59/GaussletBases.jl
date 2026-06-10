@@ -134,4 +134,34 @@ end
     @test missing_source.unit_count == 0
     @test missing_source.pair_count == 0
     @test !missing_source.decomposed_unit_pair_column_ranges_available
+
+    seed_report = GaussletBases._white_lindsey_low_order_materialized_seed_report()
+    seed_inventory =
+        WLDInvCPBM.white_lindsey_decomposed_unit_pair_inventory(seed_report)
+    @test seed_inventory.status ==
+          :available_white_lindsey_decomposed_unit_pair_inventory
+    @test isnothing(seed_inventory.blocker)
+    @test seed_inventory.source_kind ==
+          :white_lindsey_low_order_materialized_seed_ranges
+    @test seed_inventory.unit_count == 26
+    @test seed_inventory.pair_count == 351
+    @test seed_inventory.retained_dimension == 223
+    @test seed_inventory.retained_unit_column_ranges_materialized
+    @test seed_inventory.decomposed_unit_pair_column_ranges_available
+    @test seed_inventory.term_compatibility.overlap
+    @test seed_inventory.term_compatibility.kinetic
+    @test seed_inventory.term_compatibility.electron_nuclear_by_center
+    @test all(summary -> summary.source_cpb_count == 1, seed_inventory.unit_summaries)
+    @test all(
+        summary -> !isnothing(summary.left_column_range) &&
+                   !isnothing(summary.right_column_range),
+        seed_inventory.pair_summaries,
+    )
+    @test seed_inventory.metadata.seed_inventory_source ==
+          :white_lindsey_low_order_materialized_seed_inventory
+    @test !seed_inventory.metadata.fixed_block_operator_matrices_used
+    @test !seed_inventory.full_parent_window_cpb_used
+    @test !seed_inventory.direct_cartesian_product_assembly_used
+    @test !seed_inventory.ordinary_cartesian_ida_operators_used
+    @test !seed_inventory.global_matrices_materialized
 end

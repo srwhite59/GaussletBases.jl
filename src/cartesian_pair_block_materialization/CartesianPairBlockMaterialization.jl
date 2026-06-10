@@ -38,6 +38,8 @@ module CartesianPairBlockMaterialization
 
 using ..CartesianCPB
 using ..CartesianUnitPairs
+using ..CartesianRetainedUnits
+using ..CartesianRouteCore
 using ..CartesianPairOperatorPlans
 using ..CartesianRetainedUnitTransformContracts
 using ..CartesianRawProductSources
@@ -45,6 +47,8 @@ using SparseArrays
 
 const CPB = CartesianCPB
 const CUP = CartesianUnitPairs
+const CRU = CartesianRetainedUnits
+const CRC = CartesianRouteCore
 const CPOP = CartesianPairOperatorPlans
 const CRTC = CartesianRetainedUnitTransformContracts
 const CRPS = CartesianRawProductSources
