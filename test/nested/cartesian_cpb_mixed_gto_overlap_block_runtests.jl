@@ -78,7 +78,11 @@ function _mixed_gto_qw_cross_moment_oracle(axis_basis, orbital)
         backend = :numerical_reference,
     )
     proxy = GaussletBases._qwrg_mapped_supplement_proxy_layer(axis_basis, bundle)
-    supplement = (; orbitals = [ _mixed_gto_internal_orbital(orbital) ])
+    supplement_orbitals =
+        hasproperty(orbital, :orbitals) ?
+        [ _mixed_gto_internal_orbital(current) for current in orbital.orbitals ] :
+        [ _mixed_gto_internal_orbital(orbital) ]
+    supplement = (; orbitals = supplement_orbitals)
     return GaussletBases._qwrg_cartesian_shell_cross_moment_blocks_3d(
         (x = proxy, y = proxy, z = proxy),
         supplement,
@@ -158,6 +162,78 @@ function _check_mixed_gto_summary_common(
           :GaussianAnalyticIntegrals_polynomial_gaussian
     _check_mixed_gto_convention_fields(block_summary)
     @test block_summary.local_shape == expected_shape
+    @test block_summary.dense_block_shape == expected_dense_shape
+    @test block_summary.local_ordering ==
+          :parent_compatible_x_slowest_z_fastest
+    @test block_summary.galerkin_operator == true
+    @test block_summary.provider_level_local_matrix_materialized == true
+    @test block_summary.route_driver_wiring == false
+    @test block_summary.route_global_matrix_materialized == false
+    @test block_summary.global_matrix_materialized == false
+    @test block_summary.hamiltonian_data_materialized == false
+    @test block_summary.coulomb_data_materialized == false
+    @test block_summary.ida_mwg_semantics == false
+    @test block_summary.exports_or_artifacts == false
+    @test !hasproperty(block_summary, :dense_block)
+    @test !hasproperty(block_summary, :axis_ops)
+    @test !hasproperty(block_summary, :axis_tables)
+    @test !hasproperty(block_summary, :primitive_tables)
+    @test !hasproperty(block_summary, :oracle_matrix)
+    @test !hasproperty(block_summary, :oracle_matrices)
+    @test !hasproperty(block_summary, :global_matrix)
+    @test !hasproperty(block_summary, :global_overlap_matrix)
+    @test !hasproperty(block_summary, :route_global_matrix)
+    @test !hasproperty(block_summary, :route_global_overlap_matrix)
+    @test !hasproperty(block_summary, :retained_matrix)
+    @test !hasproperty(block_summary, :retained_matrices)
+    @test !hasproperty(block_summary, :retained_blocks)
+    @test !hasproperty(block_summary, :payload)
+    @test !hasproperty(block_summary, :payload_copy)
+    return nothing
+end
+
+function _check_whole_mixed_gto_summary_common(
+    block_summary,
+    supplement;
+    expected_shape = (x = 2, y = 2, z = 1),
+    expected_dense_shape = (4, length(supplement.orbitals)),
+)
+    @test isnothing(block_summary.blocker)
+    @test block_summary.supplement_representation_kind ==
+          :cartesian_gaussian_shell_supplement_representation
+    @test block_summary.supplement_kind == supplement.supplement_kind
+    @test block_summary.source_metadata_summary == supplement.metadata
+    @test block_summary.orbital_count == length(supplement.orbitals)
+    @test block_summary.orbital_labels ==
+          Tuple(orbital.label for orbital in supplement.orbitals)
+    @test block_summary.orbital_angular_powers ==
+          Tuple(orbital.angular_powers for orbital in supplement.orbitals)
+    @test block_summary.orbital_centers ==
+          Tuple(orbital.center for orbital in supplement.orbitals)
+    @test length(block_summary.orbital_summaries) == length(supplement.orbitals)
+    @test block_summary.blocked_orbital_labels == ()
+    @test block_summary.blocked_orbital_blockers == ()
+    @test block_summary.contraction_convention ==
+          :orbital_coefficients_contract_primitive_axis_tables
+    @test block_summary.center_shift_convention ==
+          :explicit_axis_center_coordinates
+    @test block_summary.shell_power_order == (:x, :y, :z)
+    @test block_summary.axis_order == (:x, :y, :z)
+    @test block_summary.right_basis_kind ==
+          :cartesian_gaussian_shell_supplement_representation
+    @test block_summary.right_orbital_count == length(supplement.orbitals)
+    @test block_summary.per_orbital_right_basis_kind ==
+          :single_cartesian_gaussian_shell_orbital
+    @test block_summary.provider_level_pilot == true
+    @test block_summary.mixed_gto_pilot == true
+    @test block_summary.parent_one_body_factor_packet_consumed == false
+    @test block_summary.mixed_gto_axis_integral_source ==
+          :qw_polynomial_gaussian_primitive_tables
+    @test block_summary.formula_source ==
+          :GaussianAnalyticIntegrals_polynomial_gaussian
+    @test block_summary.local_shape == expected_shape
+    @test block_summary.left_shape == expected_shape
+    @test block_summary.right_shape == (gto = length(supplement.orbitals),)
     @test block_summary.dense_block_shape == expected_dense_shape
     @test block_summary.local_ordering ==
           :parent_compatible_x_slowest_z_fastest
@@ -398,6 +474,116 @@ end
     )
     @test edge_kinetic.dense_block[:, 1] ≈
           moment_oracle.kinetic_ga[edge_rows, 1] atol = 1.0e-12 rtol = 1.0e-12
+
+    whole_supplement = basis_representation(
+        legacy_atomic_gaussian_supplement("He", "cc-pVTZ"; lmax = 0),
+    )
+    whole_oracle = GaussletBases._cartesian_basis_supplement_cross(
+        parent_representation,
+        whole_supplement,
+    )
+    whole_overlap =
+        CBPMixedGTO.cpb_mixed_gto_overlap_block(parent, cpb, whole_supplement)
+    whole_overlap_summary = CBPMixedGTO.summary(whole_overlap)
+    @test whole_overlap_summary.status ==
+          :materialized_cpb_mixed_gto_supplement_local_overlap_block
+    @test whole_overlap_summary.term == :mixed_gto_overlap
+    @test whole_overlap_summary.source_kind ==
+          :mixed_gausslet_gto_whole_supplement_overlap
+    @test whole_overlap_summary.axis_kernel_source ==
+          :existing_cartesian_basis_supplement_axis_cross
+    _check_whole_mixed_gto_summary_common(whole_overlap_summary, whole_supplement)
+    @test whole_overlap.dense_block ≈ whole_oracle[oracle_rows, :] atol = 1.0e-12 rtol = 1.0e-12
+
+    whole_moment_oracle = _mixed_gto_qw_cross_moment_oracle(axis, whole_supplement)
+    whole_position_y = CBPMixedGTO.cpb_mixed_gto_position_operator_block(
+        parent,
+        cpb,
+        whole_supplement;
+        axis = :y,
+    )
+    whole_position_y_summary = CBPMixedGTO.summary(whole_position_y)
+    @test whole_position_y_summary.status ==
+          :materialized_cpb_mixed_gto_supplement_coordinate_moment_local_block
+    @test whole_position_y_summary.term == :mixed_gto_position_y
+    @test whole_position_y_summary.active_axis == :y
+    @test whole_position_y_summary.coordinate_moment == :position
+    @test whole_position_y_summary.xpower == 1
+    @test whole_position_y_summary.source_kind ==
+          :mixed_gausslet_gto_whole_supplement_coordinate_moment
+    @test whole_position_y_summary.axis_kernel_source ==
+          :existing_qw_polynomial_gaussian_axis_integrals
+    _check_whole_mixed_gto_summary_common(
+        whole_position_y_summary,
+        whole_supplement,
+    )
+    @test whole_position_y.dense_block ≈
+          whole_moment_oracle.position_y_ga[oracle_rows, :] atol = 1.0e-12 rtol = 1.0e-12
+
+    whole_x2_z = CBPMixedGTO.cpb_mixed_gto_x2_operator_block(
+        parent,
+        cpb,
+        whole_supplement;
+        axis = :z,
+    )
+    whole_x2_z_summary = CBPMixedGTO.summary(whole_x2_z)
+    @test whole_x2_z_summary.status ==
+          :materialized_cpb_mixed_gto_supplement_coordinate_moment_local_block
+    @test whole_x2_z_summary.term == :mixed_gto_x2_z
+    @test whole_x2_z_summary.active_axis == :z
+    @test whole_x2_z_summary.coordinate_moment == :x2
+    @test whole_x2_z_summary.xpower == 2
+    @test whole_x2_z_summary.source_kind ==
+          :mixed_gausslet_gto_whole_supplement_coordinate_moment
+    @test whole_x2_z_summary.axis_kernel_source ==
+          :existing_qw_polynomial_gaussian_axis_integrals
+    _check_whole_mixed_gto_summary_common(whole_x2_z_summary, whole_supplement)
+    @test whole_x2_z.dense_block ≈
+          whole_moment_oracle.x2_z_ga[oracle_rows, :] atol = 1.0e-12 rtol = 1.0e-12
+
+    whole_kinetic =
+        CBPMixedGTO.cpb_mixed_gto_kinetic_operator_block(parent, cpb, whole_supplement)
+    whole_kinetic_summary = CBPMixedGTO.summary(whole_kinetic)
+    @test whole_kinetic_summary.status ==
+          :materialized_cpb_mixed_gto_supplement_kinetic_local_block
+    @test whole_kinetic_summary.term == :mixed_gto_kinetic
+    @test whole_kinetic_summary.source_kind ==
+          :mixed_gausslet_gto_whole_supplement_kinetic
+    @test whole_kinetic_summary.axis_kernel_source ==
+          :existing_qw_polynomial_gaussian_axis_integrals
+    _check_whole_mixed_gto_summary_common(whole_kinetic_summary, whole_supplement)
+    @test whole_kinetic.dense_block ≈
+          whole_moment_oracle.kinetic_ga[oracle_rows, :] atol = 1.0e-12 rtol = 1.0e-12
+
+    uncontracted_supplement = basis_representation(
+        legacy_atomic_gaussian_supplement(
+            "He",
+            "cc-pVTZ";
+            lmax = 0,
+            uncontracted = true,
+        ),
+    )
+    uncontracted_overlap = CBPMixedGTO.cpb_mixed_gto_overlap_block(
+        parent,
+        cpb,
+        uncontracted_supplement,
+    )
+    uncontracted_summary = CBPMixedGTO.summary(uncontracted_overlap)
+    @test uncontracted_summary.status ==
+          :materialized_cpb_mixed_gto_supplement_local_overlap_block
+    @test uncontracted_summary.orbital_count == 6
+    @test uncontracted_summary.source_metadata_summary.uncontracted == true
+    _check_whole_mixed_gto_summary_common(
+        uncontracted_summary,
+        uncontracted_supplement;
+        expected_dense_shape = (4, 6),
+    )
+    uncontracted_oracle = GaussletBases._cartesian_basis_supplement_cross(
+        parent_representation,
+        uncontracted_supplement,
+    )
+    @test uncontracted_overlap.dense_block ≈
+          uncontracted_oracle[oracle_rows, :] atol = 1.0e-12 rtol = 1.0e-12
 
     unsupported_axis_block =
         CBPMixedGTO.cpb_mixed_gto_position_operator_block(

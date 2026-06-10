@@ -386,12 +386,18 @@ paths from becoming new route authority.
   source kind, atom/basis or nuclei metadata, `lmax`, contracted/uncontracted
   convention, orbital labels, angular powers, centers, exponents,
   coefficients, and `:axiswise_normalized_cartesian_gaussian` primitive
-  normalization. The next CPB-local GTO unit should consume this whole
-  supplement representation to build CPB rows by GTO orbital one-body blocks
-  and GTO/GTO one-body Galerkin records with explicit contraction metadata. No
-  multi-orbital CPB block, mixed nuclear/Coulomb term, route/global placement,
-  Hamiltonian assembly, IDA/MWG/PQS semantic change, export, or artifact was
-  added.
+  normalization.
+- Whole-supplement CPB-local mixed GTO one-body blocks now consume
+  `CartesianGaussianShellSupplementRepresentation3D` directly through the
+  existing overlap, position, x2, and kinetic wrapper names. The returned
+  `CPBMixedGTOSupplementLocalBlock` stores a dense provider-level local matrix
+  shaped as CPB support rows by GTO orbital columns, plus compact
+  whole-supplement and per-orbital summaries. Tests compare overlap,
+  representative position/x2 axes, and kinetic against existing Cartesian/QW
+  oracle rows for contracted and uncontracted source counts. This is not yet a
+  GTO/GTO one-body Galerkin record, mixed nuclear/Coulomb term, route/global
+  placement, Hamiltonian assembly, IDA/MWG/PQS semantic change, export, or
+  artifact.
 - The next overlap implementation boundary is no longer additional placement
   fingerprinting. First decide the CPB operator-block and WL/PQS realization
   design: what local block objects exist, how White-Lindsey consumes them, how

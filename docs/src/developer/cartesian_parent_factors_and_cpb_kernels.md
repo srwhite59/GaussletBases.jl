@@ -475,15 +475,25 @@ with explicit source metadata, nuclei, `lmax`, contracted/uncontracted mode,
 orbital labels, angular powers, centers, exponents, coefficients, and
 `:axiswise_normalized_cartesian_gaussian` primitive normalization.
 
-That conversion is the planned input boundary for the whole-GTO CPB-local
-operator layer:
+That conversion is now the input boundary for the whole-GTO CPB-local mixed
+one-body layer. The whole-supplement wrappers accept
+`CartesianGaussianShellSupplementRepresentation3D` through the existing names:
 
-- mixed gausslet/GTO one-body blocks should become rectangular CPB rows by GTO
-  orbital columns;
-- GTO/GTO one-body Galerkin blocks should become GTO orbital by GTO orbital
-  local/provider records;
-- contraction metadata must stay explicit, including whether a legacy source is
-  contracted or uncontracted and how primitive coefficients are applied.
+- `cpb_mixed_gto_overlap_block`
+- `cpb_mixed_gto_position_operator_block`
+- `cpb_mixed_gto_x2_operator_block`
+- `cpb_mixed_gto_kinetic_operator_block`
+
+and return `CPBMixedGTOSupplementLocalBlock` records with dense local blocks of
+shape `CPB support_count x supplement orbital_count`. The implementation is a
+thin collection over the one-orbital CPB-local mixed GTO pilots, preserving
+per-orbital compact summaries, source metadata, contracted/uncontracted
+conventions, local/right shapes, and provider-level nonclaim flags.
+
+The next whole-GTO provider layer after this should be GTO/GTO one-body
+Galerkin blocks, shaped as GTO orbital by GTO orbital local/provider records.
+Contraction metadata must stay explicit, including whether a legacy source is
+contracted or uncontracted and how primitive coefficients are applied.
 
 This is still CPB-local provider work. It is not route/global placement,
 WL/PQS realization, Hamiltonian assembly, IDA/MWG semantics, export, or
