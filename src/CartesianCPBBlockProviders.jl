@@ -17,6 +17,7 @@ export CPBIntervalPair3D,
        CPBOverlapOperatorBlock,
        CPBKineticOperatorBlock,
        CPBOneBodyAxisOperatorBlock,
+       CPBElectronElectronLocalBlock,
        CPBOverlapDenseBlock,
        CPBLocalOverlapBlockRecord,
        CPBLocalOverlapBlockCollection,
@@ -28,6 +29,7 @@ export CPBIntervalPair3D,
        cpb_kinetic_operator_block,
        cpb_position_operator_block,
        cpb_x2_operator_block,
+       cpb_electron_electron_local_block,
        cpb_overlap_dense_block,
        cpb_local_overlap_block_record,
        cpb_local_overlap_block_collection,
@@ -129,6 +131,23 @@ struct CPBOneBodyAxisOperatorBlock{P,I,B,M}
     parent_axis_factor_packet::P
     interval_pair::I
     axis_product_block::B
+    metadata::M
+end
+
+"""
+    CPBElectronElectronLocalBlock
+
+Provider-level CPB-local electron-electron pair-factor interaction block. This
+pilot uses parent axis pair-factor terms in their existing White-Lindsey
+convention and keeps the Gaussian expansion term loop inside the local
+contraction. It does not apply axis integral weights, route/global placement,
+Hamiltonian assembly, or WL/PQS realization.
+"""
+struct CPBElectronElectronLocalBlock{S,E,I,D,M}
+    parent_axis_bundle_object::S
+    expansion::E
+    interval_pair::I
+    dense_block::D
     metadata::M
 end
 
@@ -265,6 +284,7 @@ summary(block::CPBSumOfAxisProductsOperatorBlock) = block.metadata
 summary(block::CPBOverlapOperatorBlock) = block.metadata
 summary(block::CPBKineticOperatorBlock) = block.metadata
 summary(block::CPBOneBodyAxisOperatorBlock) = block.metadata
+summary(block::CPBElectronElectronLocalBlock) = block.metadata
 summary(block::CPBOverlapDenseBlock) = block.metadata
 summary(record::CPBLocalOverlapBlockRecord) = record.metadata
 summary(collection::CPBLocalOverlapBlockCollection) = collection.metadata
@@ -1477,6 +1497,269 @@ function _cpb_one_body_axis_operator_block_summary(
         pqs_shell_projection_materialized = false,
         exports_or_artifacts = false,
     )
+end
+
+function cpb_electron_electron_local_block(
+    parent_axis_bundle_object,
+    expansion,
+    interval_pair::CPBIntervalPair3D,
+)
+    interval_summary = summary(interval_pair)
+    source_summary = CPGB.summary(
+        CPGB.parent_coulomb_axis_source_summary(
+            interval_pair.parent,
+            parent_axis_bundle_object,
+            expansion,
+        ),
+    )
+    pair_factor_terms = _cpb_electron_electron_pair_factor_terms(
+        parent_axis_bundle_object,
+    )
+    blocker = _cpb_electron_electron_local_block_blocker(
+        source_summary,
+        interval_summary,
+        pair_factor_terms,
+        expansion,
+    )
+    dense_block =
+        isnothing(blocker) ?
+        _materialize_cpb_electron_electron_local_dense_block(
+            pair_factor_terms,
+            expansion,
+            interval_summary,
+        ) :
+        nothing
+    status =
+        isnothing(blocker) ?
+        :materialized_cpb_electron_electron_local_block :
+        :blocked_cpb_electron_electron_local_block
+    return CPBElectronElectronLocalBlock(
+        parent_axis_bundle_object,
+        expansion,
+        interval_pair,
+        dense_block,
+        _cpb_electron_electron_local_block_summary(
+            status,
+            blocker,
+            source_summary,
+            interval_summary,
+            pair_factor_terms,
+            expansion,
+            dense_block,
+        ),
+    )
+end
+
+function _cpb_electron_electron_pair_factor_terms(parent_axis_bundle_object)
+    return (;
+        x = _cpb_axis_pair_factor_terms(parent_axis_bundle_object, :x),
+        y = _cpb_axis_pair_factor_terms(parent_axis_bundle_object, :y),
+        z = _cpb_axis_pair_factor_terms(parent_axis_bundle_object, :z),
+    )
+end
+
+function _cpb_axis_pair_factor_terms(parent_axis_bundle_object, axis::Symbol)
+    axis_bundle = _cpb_axis_bundle(parent_axis_bundle_object, axis)
+    pgdg_intermediate = _summary_property(axis_bundle, :pgdg_intermediate)
+    return _summary_property(pgdg_intermediate, :pair_factor_terms)
+end
+
+function _cpb_axis_bundle(parent_axis_bundle_object, axis::Symbol)
+    axis === :x && hasproperty(parent_axis_bundle_object, :x) &&
+        return getproperty(parent_axis_bundle_object, :x)
+    axis === :y && hasproperty(parent_axis_bundle_object, :y) &&
+        return getproperty(parent_axis_bundle_object, :y)
+    axis === :z && hasproperty(parent_axis_bundle_object, :z) &&
+        return getproperty(parent_axis_bundle_object, :z)
+    bundle_field = Symbol("bundle_", String(axis))
+    hasproperty(parent_axis_bundle_object, bundle_field) &&
+        return getproperty(parent_axis_bundle_object, bundle_field)
+    return nothing
+end
+
+function _cpb_electron_electron_local_block_blocker(
+    source_summary,
+    interval_summary,
+    pair_factor_terms,
+    expansion,
+)
+    interval_summary.status === :available_cpb_interval_pair ||
+        return isnothing(interval_summary.blocker) ?
+               :unavailable_cpb_interval_pair :
+               interval_summary.blocker
+    source_summary.axis_bundle_available ||
+        return :missing_parent_axis_bundle_object
+    source_summary.expansion_available ||
+        return :missing_coulomb_gaussian_expansion
+    source_summary.expansion_coefficients_available ||
+        return :missing_coulomb_expansion_coefficients
+    source_summary.expansion_exponents_available ||
+        return :missing_coulomb_expansion_exponents
+    coefficients = _summary_property(expansion, :coefficients)
+    coefficients isa AbstractVector ||
+        return :missing_coulomb_expansion_coefficients
+    for axis in _AXIS_ORDER
+        terms = getproperty(pair_factor_terms, axis)
+        terms isa AbstractArray{<:Real,3} ||
+            return Symbol("missing_$(axis)_pair_factor_terms")
+        isempty(terms) && return Symbol("$(axis)_pair_factor_terms_empty")
+        size(terms, 1) == length(coefficients) ||
+            return :pair_factor_term_count_mismatch
+        parent_axis_count = _cpb_axis_value(
+            interval_summary.parent_axis_counts,
+            axis,
+        )
+        (
+            size(terms, 2) == parent_axis_count &&
+            size(terms, 3) == parent_axis_count
+        ) || return Symbol("$(axis)_pair_factor_terms_size_mismatch")
+    end
+    return nothing
+end
+
+function _materialize_cpb_electron_electron_local_dense_block(
+    pair_factor_terms,
+    expansion,
+    interval_summary,
+)
+    coefficients = Float64[Float64(value) for value in expansion.coefficients]
+    left = interval_summary.left_intervals
+    right = interval_summary.right_intervals
+    left_shape = interval_summary.left_shape
+    right_shape = interval_summary.right_shape
+    dense_block = zeros(
+        Float64,
+        interval_summary.left_support_count,
+        interval_summary.right_support_count,
+    )
+
+    # Pair-factor terms already match the existing WL interaction oracle. Keep
+    # alpha as the inner, stride-1 first index of the term-first factor arrays.
+    # Do not apply/divide axis weights here; weights belong at a later
+    # realization or final density interpretation boundary.
+    for ix_left in left.x, iy_left in left.y, iz_left in left.z
+        row = _local_product_index(
+            ix_left - first(left.x) + 1,
+            iy_left - first(left.y) + 1,
+            iz_left - first(left.z) + 1,
+            (left_shape.x, left_shape.y, left_shape.z),
+        )
+        for ix_right in right.x, iy_right in right.y, iz_right in right.z
+            column = _local_product_index(
+                ix_right - first(right.x) + 1,
+                iy_right - first(right.y) + 1,
+                iz_right - first(right.z) + 1,
+                (right_shape.x, right_shape.y, right_shape.z),
+            )
+            value = 0.0
+            @inbounds for term in eachindex(coefficients)
+                value +=
+                    coefficients[term] *
+                    pair_factor_terms.x[term, ix_left, ix_right] *
+                    pair_factor_terms.y[term, iy_left, iy_right] *
+                    pair_factor_terms.z[term, iz_left, iz_right]
+            end
+            dense_block[row, column] = value
+        end
+    end
+    return dense_block
+end
+
+function _cpb_electron_electron_local_block_summary(
+    status::Symbol,
+    blocker,
+    source_summary,
+    interval_summary,
+    pair_factor_terms,
+    expansion,
+    dense_block,
+)
+    available = status === :materialized_cpb_electron_electron_local_block
+    coefficients = _summary_property(expansion, :coefficients)
+    coefficient_count = coefficients isa AbstractVector ? length(coefficients) : 0
+    return (;
+        object_kind = :cartesian_cpb_electron_electron_local_block_summary,
+        status,
+        blocker,
+        term = :electron_electron_pair_factor_interaction,
+        source_kind = :parent_axis_bundle_pair_factor_terms,
+        parent_coulomb_source_summary = source_summary,
+        interval_pair_summary = interval_summary,
+        representation = :dense_local_cpb_electron_electron_pair_factor_interaction,
+        pair_factor_source = :axis_pgdg_intermediate_pair_factor_terms,
+        pair_factor_weighting = :wl_pair_factor_terms_existing_convention,
+        axis_integral_weights_applied = false,
+        axis_integral_weights_deferred = true,
+        weight_application_stage = :realization_or_final_density_interpretation,
+        retained_pqs_weights = false,
+        factor_source_path = :axis_pgdg_intermediate_pair_factor_terms,
+        gaussian_expansion_loop = :inner_local_contraction,
+        gaussian_term_count = coefficient_count,
+        coefficient_count,
+        pair_factor_term_shapes =
+            _cpb_pair_factor_term_shapes(pair_factor_terms),
+        local_ordering = interval_summary.local_ordering,
+        left_shape = available ? interval_summary.left_shape : :unavailable,
+        right_shape = available ? interval_summary.right_shape : :unavailable,
+        left_support_count =
+            available ? interval_summary.left_support_count : :unavailable,
+        right_support_count =
+            available ? interval_summary.right_support_count : :unavailable,
+        dense_block_available = available,
+        dense_block_shape = available ? size(dense_block) : :unavailable,
+        dense_block_eltype = available ? eltype(dense_block) : :unavailable,
+        provider_level_local_matrix_materialized = available,
+        provider_level_coulomb_block_materialized = available,
+        provider_level_electron_electron_block_materialized = available,
+        cpb_local_coulomb_kernel_implemented = available,
+        cpb_local_electron_electron_kernel_implemented = available,
+        realization_status = :unrealized,
+        route_global_status = :unassigned,
+        factor_space =
+            available ? :parent_axis_bundle_pgdg_intermediate : :unavailable,
+        factor_convention =
+            available ? :axis_bundle_electron_electron_pair_factor_terms : :unavailable,
+        index_domain =
+            available ? :parent_axis_indices : :unavailable,
+        index_domain_source =
+            available ? :axis_bundle_contract : :unavailable,
+        index_domain_status =
+            available ?
+            :assumed_parent_axis_indexed_by_current_axis_bundle_contract :
+            :unavailable,
+        axis_order = _AXIS_ORDER,
+        bra_ket_order = (:density_left, :density_right),
+        route_driver_wiring = false,
+        route_global_matrix_materialized = false,
+        route_global_overlap_matrix_materialized = false,
+        global_matrix_materialized = false,
+        global_overlap_matrix_materialized = false,
+        hamiltonian_assembly = false,
+        hamiltonian_data_materialized = false,
+        ida_mwg_semantics = false,
+        pqs_lowdin_materialized = false,
+        pqs_shell_projection_materialized = false,
+        exports_or_artifacts = false,
+    )
+end
+
+function _cpb_pair_factor_term_shapes(pair_factor_terms)
+    return (;
+        x = _cpb_factor_term_shape(pair_factor_terms.x),
+        y = _cpb_factor_term_shape(pair_factor_terms.y),
+        z = _cpb_factor_term_shape(pair_factor_terms.z),
+    )
+end
+
+function _cpb_factor_term_shape(terms)
+    terms isa AbstractArray ? size(terms) : :unavailable
+end
+
+function _cpb_axis_value(values, axis::Symbol)
+    axis === :x && return values[1]
+    axis === :y && return values[2]
+    axis === :z && return values[3]
+    throw(ArgumentError("unsupported Cartesian axis $(axis)"))
 end
 
 function cpb_overlap_dense_block(axis_block_set::CPBOverlapAxisBlockSet)
