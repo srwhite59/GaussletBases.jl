@@ -540,9 +540,9 @@ Second deletion pass:
 
 - The two-unit PQS/product shadow helper family was deleted:
   the raw-plan helper, descriptor overload, and private all-pairs inventory.
-  This does not delete the still-live three-unit
-  `_pqs_pqs_product_source_box_shadow_blocks(...)` or
-  `_pqs_pqs_product_source_box_all_pairs_inventory(...)` family.
+  At that checkpoint, the three-unit
+  `_pqs_pqs_product_source_box_shadow_blocks(...)` and
+  `_pqs_pqs_product_source_box_all_pairs_inventory(...)` family still existed.
 - The matching slow-test helper in
   `test/nested/pqs_projected_q_shell_local_layer_integration_runtests.jl` was
   removed with its call site.
@@ -550,17 +550,14 @@ Second deletion pass:
   reference-helper names, dense-raw-storage flags, retained-weight flags, and
   explicit sub-block equality against development-era reference helpers. Those
   details are transitional architecture, not active scientific contract.
-- No current source or test caller requires the deleted two-unit helper. The
-  remaining source-box shadow burden is the separate three-unit
-  PQS/PQS/product route-shadow family, which still has live callers.
+- No current source or test caller requires the deleted two-unit helper.
 
 Third deletion-oriented pass:
 
 - The three-unit `_pqs_pqs_product_source_box_shadow_blocks(...)` and
   `_pqs_pqs_product_source_box_all_pairs_inventory(...)` family was not
-  deleted because it is still used by live route-diagnostic source paths:
-  `_pqs_pqs_product_raw_box_route_producer(...)` builds the inventory for
-  descriptor validation.
+  deleted in that pass because `_pqs_pqs_product_raw_box_route_producer(...)`
+  still built the inventory for descriptor validation.
 - The slow integration tests for this family were reduced to smoke coverage:
   expected ranges, retained dimension, finite block payloads, and route-shaped
   descriptor checks. Detailed all-pairs inventory vocabulary,
@@ -573,13 +570,12 @@ Third deletion-oriented pass:
 Fourth caller-driven audit:
 
 - `_pqs_product_source_box_reference_blocks_from_pair_plan(...)` and
-  `_pqs_product_source_box_reference_blocks(...)` are `KEEP_ORACLE_ONLY` for
-  now. Exact source callers remain inside
-  `_pqs_pqs_product_source_box_shadow_blocks(...)`, which builds the three-unit
-  PQS/PQS/product route-shadow block while that diagnostic path exists.
+  `_pqs_product_source_box_reference_blocks(...)` were `KEEP_ORACLE_ONLY` at
+  that point. Their exact source callers were inside the then-live
+  `_pqs_pqs_product_source_box_shadow_blocks(...)`.
 - `_pqs_pqs_source_box_reference_blocks_from_pair_plan(...)` and
-  `_pqs_pqs_source_box_reference_blocks(...)` are also `KEEP_ORACLE_ONLY`.
-  Exact source callers remain the PQS/PQS reference wrapper and
+  `_pqs_pqs_source_box_reference_blocks(...)` were also `KEEP_ORACLE_ONLY`.
+  Exact source callers were the PQS/PQS reference wrapper and the then-live
   `_pqs_pqs_product_source_box_shadow_blocks(...)`.
 - `_pqs_pqs_product_raw_box_route_producer(...)` is `SHRINK_TEST_ONLY`, not a
   deletion target in this pass. Exact source callers are
@@ -597,3 +593,32 @@ Fourth caller-driven audit:
   pair-plan shape/status checks plus finite numerical equivalence for the
   active multi-term oracle. CPB provider tests remain responsible for detailed
   local one-body operator correctness.
+
+Fifth batched caller-driven sweep:
+
+| Helper family | Caller classification | Action |
+| --- | --- | --- |
+| `_product_doside_source_box_reference_block(...)` | `KEEP_ORACLE_ONLY` / `MOVE_LATER_TO_CPB` | Kept. Source callers remain in product/doside shadow/reference comparisons, route authority comparisons, and product-product entries in `_pqs_pqs_product_source_box_all_pairs_inventory(...)`. |
+| `_pqs_product_source_box_reference_block(...)` | `DELETE_NOW` | Deleted. Exact caller audit showed only slow-test/docs references; the surviving multi-term PQS/product oracle covers the remaining narrow private check. |
+| `_pqs_product_source_box_reference_blocks(...)` | `KEEP_ORACLE_ONLY` | Kept. Source caller remains the PQS/product wrapper path and product entries in the all-pairs inventory metadata. |
+| `_pqs_product_source_box_reference_blocks_from_pair_plan(...)` | `KEEP_ORACLE_ONLY` | Kept. Source caller remains `_pqs_product_source_box_reference_blocks(...)`. |
+| `_pqs_pqs_source_box_reference_block(...)` | `DELETE_NOW` | Deleted. Exact caller audit showed only slow-test/docs references; the multi-term PQS/PQS oracle remains. |
+| `_pqs_pqs_source_box_reference_blocks(...)` | `KEEP_ORACLE_ONLY` | Kept. Source caller remains its wrapper/from-pair-plan path and PQS/PQS entries in the all-pairs inventory metadata. |
+| `_pqs_pqs_source_box_reference_blocks_from_pair_plan(...)` | `KEEP_ORACLE_ONLY` | Kept. Source caller remains `_pqs_pqs_source_box_reference_blocks(...)`. |
+| `_pqs_pqs_product_source_box_shadow_blocks(...)` | `DELETE_NOW` | Deleted. After the route-shaped safe-term consumer deletion, exact caller audit showed no source caller and only slow-test/docs pressure. |
+| `_pqs_pqs_product_source_box_all_pairs_inventory(...)` | `SHRINK_TEST_ONLY` / `KEEP_ORACLE_ONLY` | Kept. `_pqs_pqs_product_raw_box_route_producer(...)` still uses it for descriptor inventory validation. |
+| `_pqs_pqs_product_raw_box_route_producer(...)` | `SHRINK_TEST_ONLY` | Kept. Source callers remain `_pqs_pqs_product_raw_box_route_from_geometry_facts(...)` and the density-density route producer. |
+| `_pqs_pqs_product_raw_box_density_density_route_producer(...)` | `MOVE_LATER_TO_CPB` | Kept. Source callers remain the IDA-provenance adapter and component route smoke path. |
+| `_pqs_pqs_product_nuclear_attraction_pair_block(...)` | `MOVE_LATER_TO_CPB` | Kept. Source caller remains `_pqs_pqs_product_route_shaped_nuclear_attraction_by_center(...)`. |
+| `_pqs_pqs_product_route_shaped_nuclear_attraction_by_center(...)` | `MOVE_LATER_TO_CPB` | Kept. Source caller remains the component route smoke path. |
+
+Batch actions:
+
+- Deleted the single-term PQS/product and PQS/PQS source-box reference wrappers.
+  Tests now use the surviving multi-term helpers where a narrow oracle remains.
+- Deleted the three-unit safe-term shadow block helper and removed the slow-test
+  helper/call sites that only preserved complete route-shaped safe-term
+  matrices. The raw-box route producer still checks descriptor and inventory
+  facts through `_pqs_pqs_product_source_box_all_pairs_inventory(...)`.
+- Updated developer docs so the deleted shadow/helper families are described
+  as retirement history, not present-tense provider or route contracts.

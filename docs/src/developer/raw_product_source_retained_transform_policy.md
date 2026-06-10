@@ -315,9 +315,9 @@ Current helpers can migrate as adapters:
   returns both plans together for diagnostics and compatibility.
 - `_pqs_raw_product_box_reference_block(...)` should consume the raw-box plan
   directly for PQS/PQS self references.
-- `_pqs_product_source_box_pair_plan(...)` and
-  `_pqs_product_source_box_reference_block(...)` should consume raw-box and
-  retained-rule facts, not descriptor shell rows.
+- `_pqs_product_source_box_pair_plan(...)` and the multi-term
+  `_pqs_product_source_box_reference_blocks(...)` oracle should consume
+  raw-box and retained-rule facts, not descriptor shell rows.
 - `_product_doside_retained_low_order_block(...)`,
   `_product_doside_retained_kinetic_block(...)`, and product-staged metric
   helpers are existing product-side adapters into the same retained-unit
@@ -364,10 +364,11 @@ raw product-box source plus retained-rule facts on both sides. This is still
 only migration/shadow infrastructure, not a generic retained-unit framework.
 
 The PQS/product source-box path is already the direct 1D-factor retained-block
-path. `_pqs_product_source_box_reference_block(...)` avoids dense 3D raw
-source-box pair matrix materialization: it builds 1D cross-axis factors,
-selects PQS boundary COMX-product modes, applies product/doside retained mode
-metadata, and assembles the retained block directly. The supported terms are
+path. The surviving multi-term `_pqs_product_source_box_reference_blocks(...)`
+oracle avoids dense 3D raw source-box pair matrix materialization: it builds
+1D cross-axis factors, selects PQS boundary COMX-product modes, applies
+product/doside retained mode metadata, and assembles the retained block
+directly. The supported terms are
 overlap, `position_x/y/z`, `x2_x/y/z`, and kinetic, with kinetic represented
 as `(K,S,S) + (S,K,S) + (S,S,K)`. The helper consumes explicit axis
 metric/operator data and reports that it did not invoke a numerical fallback;
@@ -383,9 +384,8 @@ PQS/product shadow checkpoint that consumed this path has been retired; the
 reference-block helpers remain available only for narrower private oracle
 coverage. The PQS/PQS source-box seam is now also explicit:
 `_pqs_pqs_source_box_pair_plan(...)`,
-`_pqs_pqs_source_box_reference_blocks_from_pair_plan(...)`,
-`_pqs_pqs_source_box_reference_blocks(...)`, and
-`_pqs_pqs_source_box_reference_block(...)` build mode-selected PQS/PQS blocks
+`_pqs_pqs_source_box_reference_blocks_from_pair_plan(...)` and
+`_pqs_pqs_source_box_reference_blocks(...)` build mode-selected PQS/PQS blocks
 from 1D source-box factors and boundary COMX-product mode selectors. Self and
 compatible cross blocks now use the helper-internal explicit raw product-box
 boundary-column selection oracle; the older raw-box self helper remains a
@@ -425,10 +425,10 @@ fixed-block, QW/Hamiltonian, IDA/MWG, retained-weight, public/default, or
 science route is adopted. The inventory is not a production all-pairs packet
 builder.
 
-The next route-like private checkpoint adds
-`_pqs_pqs_product_source_box_all_pairs_inventory(...)` and
-`_pqs_pqs_product_source_box_shadow_blocks(...)`. This hard-coded three-unit
-shadow has retained units `(:pqs_left, :pqs_right, :product)` and exactly six
+The former three-unit safe-term shadow block helper was deleted during CCPM
+retirement. The remaining route-like private checkpoint is
+`_pqs_pqs_product_source_box_all_pairs_inventory(...)`, which records retained
+units `(:pqs_left, :pqs_right, :product)` and exactly six
 upper-triangular pair entries: `(:pqs_left, :pqs_left)`,
 `(:pqs_left, :pqs_right)`, `(:pqs_left, :product)`,
 `(:pqs_right, :pqs_right)`, `(:pqs_right, :product)`, and
@@ -437,12 +437,9 @@ upper-triangular pair entries: `(:pqs_left, :pqs_left)`,
 `:_pqs_product_source_box_reference_blocks`, and the product/product entry
 uses `_product_doside_source_box_reference_block(...)`, which still compares
 to the existing product-staged retained helpers as authority. The focused
-fixture uses the shifted cubic PQS pair plus a small product/doside slab; the
-full retained dimension is `200`, pair count is `6`, and component max error
-is about `5.7e-14`. Product/product, PQS/product, and PQS/PQS now participate
-in the same private source-box vocabulary for overlap, position, `x2`, and
-kinetic. This remains a private shadow/reference inventory, not a generic
-route inventory framework and not packet construction adoption.
+fixture uses the shifted cubic PQS pair plus a small product/doside slab. This
+remains a private diagnostic/reference inventory, not a generic route
+inventory framework and not packet construction adoption.
 
 The route-shaped private consumer checkpoint now has a small descriptor
 normalizer. `_pqs_pqs_product_safe_term_route_descriptor(...)` records an
@@ -457,8 +454,8 @@ The former route-shaped safe-term consumer accepted the descriptor route kind
 `:pqs_pqs_product_source_box_safe_term_route` while preserving compatibility
 with the older fixture route kind. It was deleted during CCPM retirement. Do
 not reintroduce this consumer as a production/provider contract. Route-shaped
-validation now stops at the remaining raw-box route producer and the
-still-live three-unit shadow diagnostic/oracle path. The helper
+validation now stops at the remaining raw-box route producer and all-pairs
+inventory diagnostic path. The helper
 `_pqs_pqs_product_supported_safe_terms(...)` still centralizes validation for
 the historical safe set: overlap, `position_x/y/z`, `x2_x/y/z`, and kinetic.
 
@@ -475,7 +472,7 @@ the same descriptor through
 `RawProductBoxPlan -> RetainedRule -> route descriptor`. The producer uses
 left/right mode-selected raw-box PQS retained rules plus an identity
 product/doside slab retained rule, then checks the produced descriptor and
-inventory against the still-live three-unit shadow diagnostic/oracle path.
+inventory against the all-pairs inventory diagnostic path.
 Sampled validation covers a shifted cubic `q5/L5` fixture and a rectangular
 `q5/L7` fixture with `L != q`. Timing and allocation summaries are captured
 as diagnostic evidence only, not as performance thresholds. Dense raw
@@ -498,7 +495,7 @@ route producer.
 This is private fixture infrastructure only. It is not a general diatomic
 route geometry policy, public builder, packet-adoption seam, or operator
 authority. The shifted cubic `q5/L5` and rectangular `q5/L7` samples match the
-explicit-fixture producer and three-unit shadow diagnostic path. The negative
+explicit-fixture producer and all-pairs inventory diagnostic path. The negative
 boundary remains unchanged: no shell projection, Lowdin cleanup,
 support-local fallback as an algorithm, support coefficient matrices,
 retained PQS weights, IDA division, packet or fixed-block adoption,
@@ -1385,7 +1382,7 @@ was the first block-layout consumer of those references: one mode-selected PQS
 source-box unit, one product/doside retained unit, PQS/PQS, PQS/product,
 product/PQS by transpose for symmetric real terms, and product/product blocks.
 The retained private coverage now lives in narrower PQS/product reference-block
-tests and in the still-live three-unit PQS/PQS/product shadow family.
+tests and in the three-unit PQS/PQS/product all-pairs inventory.
 
 The cross-PQS checkpoint extends the PQS/PQS source-box seam from self-only to
 distinct compatible raw product-box plans. Compatibility currently requires
@@ -1399,15 +1396,14 @@ right cubic PQS box: left `(1:5,1:5,1:5)`, right `(3:7,1:5,1:5)`, source dims
 about `7.6e-15`. Dense raw product-box pair matrices are validation-only; the
 retained block path still streams 1D factors and boundary selectors.
 
-The three-unit route-like shadow checkpoint then adds
-`_pqs_pqs_product_source_box_all_pairs_inventory(...)` and
-`_pqs_pqs_product_source_box_shadow_blocks(...)`. It has retained units
+The three-unit route-like checkpoint now keeps only
+`_pqs_pqs_product_source_box_all_pairs_inventory(...)`. It has retained units
 `(:pqs_left, :pqs_right, :product)` and six upper-triangular pair entries:
 `(:pqs_left, :pqs_left)`, `(:pqs_left, :pqs_right)`,
 `(:pqs_left, :product)`, `(:pqs_right, :pqs_right)`,
 `(:pqs_right, :product)`, and `(:product, :product)`. The shifted fixture has
-full retained dimension `200`, pair count `6`, and component max error about
-`5.7e-14`. Product/product, PQS/product, and PQS/PQS now share the private
+full retained dimension `200` and pair count `6`. Product/product,
+PQS/product, and PQS/PQS now share the private
 source-box vocabulary for overlap, position, `x2`, and kinetic; the
 product/product leg is source-box-labeled while retaining the existing
 product-staged helper comparison as authority.

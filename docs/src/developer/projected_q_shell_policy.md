@@ -229,9 +229,8 @@ QW/Hamiltonian route, or public/default behavior change.
 The corresponding PQS/PQS source-box seam is now private/shadow infrastructure
 too. `_pqs_pqs_source_box_pair_plan(...)`,
 `_pqs_pqs_source_box_reference_blocks_from_pair_plan(...)`,
-`_pqs_pqs_source_box_reference_blocks(...)`, and
-`_pqs_pqs_source_box_reference_block(...)` support overlap, position, `x2`,
-and kinetic. Same-raw-plan self blocks are assembled directly from 1D
+and `_pqs_pqs_source_box_reference_blocks(...)` support overlap, position,
+`x2`, and kinetic. Same-raw-plan self blocks are assembled directly from 1D
 source-box factors and boundary COMX-product selectors, then checked against
 `_pqs_raw_product_box_reference_block(...)`. Distinct cross-PQS boxes are also
 accepted when source-mode dimensions, source-mode ordering, and boundary
@@ -251,23 +250,24 @@ retired. It formerly placed one mode-selected PQS source-box unit and one
 product/doside retained unit into a shadow layout and filled PQS/PQS,
 PQS/product, product/PQS by transpose for symmetric real terms, and
 product/product blocks. The retained private coverage now lives in narrower
-PQS/product reference-block tests and in the still-live three-unit
-PQS/PQS/product shadow family. This remains private source-box evidence only:
+PQS/product/PQS/PQS multi-term reference-block tests and in the still-live
+all-pairs inventory. This remains private source-box evidence only:
 no shell-row projection, no Lowdin, no
 `support_coefficient_matrix` PQS oracle, no retained PQS weight division, no
 packet adoption, and no QW/Hamiltonian, public/default, CR2,
 local/ECP/Gaussian/MWG/interaction, or IDA/MWG behavior change.
 
-The next private route-like shadow adds
-`_pqs_pqs_product_source_box_all_pairs_inventory(...)` and
-`_pqs_pqs_product_source_box_shadow_blocks(...)`. It is still hard-coded
-shadow infrastructure, not a generic route inventory framework. The retained
-units are `(:pqs_left, :pqs_right, :product)` and the six upper-triangular
+The former three-unit safe-term shadow block helper was deleted during CCPM
+retirement. The remaining private route-like checkpoint is
+`_pqs_pqs_product_source_box_all_pairs_inventory(...)`. It is still hard-coded
+diagnostic infrastructure, not a generic route inventory framework. The
+retained units are `(:pqs_left, :pqs_right, :product)` and the six
+upper-triangular
 pairs are `(:pqs_left, :pqs_left)`, `(:pqs_left, :pqs_right)`,
 `(:pqs_left, :product)`, `(:pqs_right, :pqs_right)`,
 `(:pqs_right, :product)`, and `(:product, :product)`. The shifted cubic
-fixture has full retained dimension `200`, pair count `6`, and component max
-error about `5.7e-14`. Product/product, PQS/product, and PQS/PQS now all use
+fixture has full retained dimension `200` and pair count `6`. Product/product,
+PQS/product, and PQS/PQS now all use
 the same private source-box vocabulary for overlap, position, `x2`, and
 kinetic; product/product is source-box-labeled while preserving the existing
 product-staged helper comparison as authority. This remains private
@@ -288,8 +288,8 @@ The former route-shaped safe-term consumer accepted the descriptor route kind
 `:pqs_pqs_product_source_box_safe_term_route` while preserving the older
 fixture route kind. It was deleted during CCPM retirement. Do not reintroduce
 this consumer as a production/provider contract. Route-shaped validation now
-stops at the remaining raw-box route producer and the still-live three-unit
-shadow diagnostic/oracle path. `_pqs_pqs_product_supported_safe_terms(...)`
+stops at the remaining raw-box route producer and all-pairs inventory
+diagnostic path. `_pqs_pqs_product_supported_safe_terms(...)`
 still centralizes validation for the historical safe set: overlap,
 `position_x/y/z`, `x2_x/y/z`, and kinetic.
 

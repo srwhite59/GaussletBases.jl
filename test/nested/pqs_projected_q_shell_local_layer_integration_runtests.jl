@@ -928,25 +928,14 @@
                 pqs_plan;
                 term,
             ).block
-            single = metrics_module._pqs_pqs_source_box_reference_block(
-                pqs_plan,
-                pqs_plan,
-                metrics;
-                term,
-            )
             @test size(blocks.blocks[term]) ==
                   (expected_retained_count, expected_retained_count)
             @test blocks.blocks[term] ≈ expected atol = 1.0e-10 rtol = 1.0e-10
             @test blocks.raw_box_reference_blocks[term] ≈ expected atol = 0.0 rtol = 0.0
             @test wrapper_blocks.blocks[term] ≈ blocks.blocks[term] atol = 0.0 rtol = 0.0
             @test blocks.block_errors[term] < 1.0e-10
-            @test single.path == :pqs_pqs_source_box_reference
-            @test single.block ≈ expected atol = 1.0e-10 rtol = 1.0e-10
-            @test single.raw_box_reference_block ≈ expected atol = 0.0 rtol = 0.0
-            @test single.block_error < 1.0e-10
-            @test !single.diagnostics.pair_plan_reused_for_terms
             if term == :overlap
-                @test single.block ≈ Matrix{Float64}(
+                @test blocks.blocks[term] ≈ Matrix{Float64}(
                     I,
                     expected_retained_count,
                     expected_retained_count,
@@ -1136,23 +1125,12 @@
                 metrics;
                 term,
             )
-            single = metrics_module._pqs_pqs_source_box_reference_block(
-                left_pqs_plan,
-                right_pqs_plan,
-                metrics;
-                term,
-            )
             @test size(blocks.blocks[term]) ==
                   (expected_retained_count, expected_retained_count)
             @test blocks.blocks[term] ≈ expected atol = 1.0e-10 rtol = 1.0e-10
             @test wrapper_blocks.blocks[term] ≈ blocks.blocks[term] atol = 0.0 rtol = 0.0
             @test reverse_blocks.blocks[term] ≈ reverse_expected atol = 1.0e-10 rtol = 1.0e-10
             @test reverse_blocks.blocks[term] ≈ transpose(blocks.blocks[term]) atol = 1.0e-10 rtol = 1.0e-10
-            @test single.path == :pqs_pqs_source_box_reference
-            @test single.block ≈ expected atol = 1.0e-10 rtol = 1.0e-10
-            @test single.raw_box_reference_block ≈ expected atol = 1.0e-10 rtol = 1.0e-10
-            @test single.block_error < 1.0e-10
-            @test !single.diagnostics.pair_plan_reused_for_terms
             max_oracle_error = max(
                 max_oracle_error,
                 LinearAlgebra.norm(blocks.blocks[term] - expected, Inf),
@@ -1173,54 +1151,6 @@
             metrics;
             terms = (:weights,),
         )
-    end
-
-    function _check_pqs_pqs_product_source_box_shadow_blocks(
-        metrics_module,
-        left_pqs_plan,
-        right_pqs_plan,
-        product_unit,
-        metrics;
-        expected_retained_count,
-    )
-        terms = (
-            :overlap,
-            :position_x,
-            :position_y,
-            :position_z,
-            :x2_x,
-            :x2_y,
-            :x2_z,
-            :kinetic,
-        )
-        shadow = metrics_module._pqs_pqs_product_source_box_shadow_blocks(
-            left_pqs_plan,
-            right_pqs_plan,
-            product_unit,
-            metrics;
-            terms,
-        )
-        product_count = length(product_unit.column_range)
-        left_range = 1:expected_retained_count
-        right_range =
-            (last(left_range) + 1):(last(left_range) + expected_retained_count)
-        product_range =
-            (last(right_range) + 1):(last(right_range) + product_count)
-        retained_dimension = expected_retained_count + expected_retained_count + product_count
-
-        @test shadow.path == :pqs_pqs_product_source_box_shadow_blocks
-        @test shadow.terms == terms
-        @test shadow.ranges.pqs_left == left_range
-        @test shadow.ranges.pqs_right == right_range
-        @test shadow.ranges.product == product_range
-        @test shadow.retained_dimension == retained_dimension
-        @test shadow.diagnostics.source_box_shadow_only
-        @test shadow.diagnostics.private_shadow_only
-        for term in terms
-            block = shadow.blocks[term]
-            @test size(block) == (retained_dimension, retained_dimension)
-            @test all(isfinite, block)
-        end
     end
 
     function _density_density_route_factor_fixture(parent_dims::NTuple{3,Int})
@@ -3576,14 +3506,6 @@
         expected_retained_count = 98,
         shared_raw_product_box_plan = cubic_shared_raw_product_box_plan,
     )
-    _check_pqs_pqs_product_source_box_shadow_blocks(
-        CCPM,
-        shifted_left_pqs_pqs_source_box_plan,
-        shifted_right_pqs_pqs_source_box_plan,
-        product_unit,
-        shifted_metrics;
-        expected_retained_count = 98,
-    )
     route_bundles =
         GaussletBases._CartesianNestedAxisBundles3D(bundle5, bundle5, bundle7)
     route_left_current = (1:5, 1:5, 1:5)
@@ -4005,15 +3927,9 @@
             provenance = (source = :sampled_route_producer_validation,),
         )
         sample_producer = sample_producer_timed.value
-        sample_shadow = CCPM._pqs_pqs_product_source_box_shadow_blocks(
-            sample_producer.raw_pqs_plans.pqs_left,
-            sample_producer.raw_pqs_plans.pqs_right,
-            sample_producer.product_unit,
-            route_metrics,
-        )
         @test sample_producer.diagnostics.every_pair_uses_source_box_algorithmic_policy
-        @test sample_shadow.diagnostics.every_pair_uses_source_box_algorithmic_policy
-        @test length(sample_shadow.all_pairs_inventory.pair_entries) == 6
+        @test sample_producer.all_pairs_inventory.diagnostics.every_pair_uses_source_box_algorithmic_policy
+        @test length(sample_producer.all_pairs_inventory.pair_entries) == 6
         @test !sample_producer.diagnostics.dense_raw_source_box_pair_matrix_materialized
         @test !sample_producer.diagnostics.shell_projection_used
         @test !sample_producer.diagnostics.lowdin_cleanup_used
@@ -4086,12 +4002,12 @@
                 left_box_lengths = ntuple(axis -> length(sample.left_box[axis]), 3),
                 right_box_lengths = ntuple(axis -> length(sample.right_box[axis]), 3),
                 product_box_lengths = ntuple(axis -> length(sample.product_box[axis]), 3),
-                retained_dimension = sample_shadow.retained_dimension,
-                pair_count = length(sample_shadow.all_pairs_inventory.pair_entries),
+                retained_dimension = sample_producer.descriptor.retained_dimension,
+                pair_count = length(sample_producer.all_pairs_inventory.pair_entries),
                 producer_elapsed_seconds = Float64(sample_producer_timed.time),
                 producer_allocated_bytes = Int(sample_producer_timed.bytes),
                 dense_raw_source_box_pair_matrix_validation_only =
-                    sample_shadow.diagnostics.dense_raw_source_box_pair_matrix_materialized_for_validation,
+                    sample_producer.diagnostics.dense_raw_source_box_pair_matrices_validation_only,
             ),
         )
     end
@@ -4243,31 +4159,25 @@
             (source = :nonidentity_axis_source_box_test_fixture,),
             (support_count = 4, retained_count = 4),
         )
-    for term in (:overlap, :position_x, :x2_x, :kinetic)
-        nonidentity_block = CCPM._pqs_product_source_box_reference_block(
-            cubic_pqs_product_source_box_plan,
-            nonidentity_axis_product_unit,
-            cubic_metrics;
-            term,
-        )
+    nonidentity_terms = (:overlap, :position_x, :x2_x, :kinetic)
+    nonidentity_blocks = CCPM._pqs_product_source_box_reference_blocks(
+        cubic_pqs_product_source_box_plan,
+        nonidentity_axis_product_unit,
+        cubic_metrics;
+        terms = nonidentity_terms,
+    )
+    for term in nonidentity_terms
         nonidentity_expected = _pqs_product_source_box_explicit_reference(
             cubic_descriptor,
             nonidentity_axis_product_unit,
             cubic_metrics;
             term,
         )
-        @test nonidentity_block.block ≈ nonidentity_expected atol = 1.0e-10 rtol = 1.0e-10
-        @test !nonidentity_block.diagnostics.shell_projection_used
-        @test !nonidentity_block.diagnostics.lowdin_cleanup_used
-        @test nonidentity_block.diagnostics.shared_raw_product_box_plan_used
-        @test !nonidentity_block.diagnostics.support_local_pqs_oracle_used
-        @test !nonidentity_block.diagnostics.retained_pqs_weights_used
-        @test !nonidentity_block.diagnostics.ida_weight_division_allowed
-        @test !nonidentity_block.diagnostics.packet_adoption
-        @test !nonidentity_block.diagnostics.qwhamiltonian_consumes
-        @test !nonidentity_block.diagnostics.public_default_consumes
-        @test !nonidentity_block.diagnostics.cr2_science_status_changed
+        @test nonidentity_blocks.blocks[term] ≈ nonidentity_expected atol = 1.0e-10 rtol = 1.0e-10
     end
+    @test !nonidentity_blocks.diagnostics.shell_projection_used
+    @test !nonidentity_blocks.diagnostics.lowdin_cleanup_used
+    @test nonidentity_blocks.diagnostics.shared_raw_product_box_plan_used
     product_source_transform = CCP._cartesian_raw_product_source_retained_transform(
         product_unit;
         source_id = :identity_product_slab_source,

@@ -930,8 +930,8 @@ What is established:
 - Commit `770b7be` added the former private route-shaped safe-term consumer.
   That consumer was deleted during CCPM retirement; do not reintroduce it as
   a production/provider contract. Route-shaped validation now stops at the
-  remaining raw-box route producer and the still-live three-unit shadow
-  diagnostic/oracle path. Product/product blocks still have historical oracle
+  remaining raw-box route producer and all-pairs inventory diagnostic path.
+  Product/product blocks still have historical oracle
   coverage through `_product_doside_source_box_reference_block(...)`, which
   compares to the existing product-staged retained helpers as authority.
 - Commits `95d7b11` and `804bdd9` add the first private raw-box route
@@ -939,8 +939,8 @@ What is established:
   descriptor through `RawProductBoxPlan -> RetainedRule -> route descriptor`.
   The producer uses left/right mode-selected raw-box PQS retained rules and an
   identity product/doside slab retained rule, then checks the produced
-  descriptor and source-box inventory against the still-live three-unit shadow
-  diagnostic/oracle path. Sampled validation covers the shifted cubic `q5/L5`
+  descriptor and source-box inventory against the all-pairs inventory
+  diagnostic path. Sampled validation covers the shifted cubic `q5/L5`
   fixture and a rectangular `q5/L7` fixture with `L != q`. Timing and
   allocation summaries are captured as diagnostic evidence only, not as
   performance thresholds.
@@ -953,8 +953,7 @@ What is established:
   metadata, provenance, and diagnostics. This is private fixture
   infrastructure, not a general diatomic route geometry policy or public
   builder. The shifted `q5/L5` and rectangular `q5/L7` samples match the
-  explicit-fixture producer and three-unit shadow diagnostic path to
-  roundoff.
+  explicit-fixture producer and all-pairs inventory diagnostic path.
 - Commit `17dd86d` validates that this geometry facts producer is mechanically
   axis-general over fixture bond-axis labels. A non-`:z` `:x` fixture emits
   source boxes, source-mode dimensions, product slab fixed-axis metadata,
@@ -1061,7 +1060,7 @@ framework is wrong or incomplete, stop and make the framework update explicit.
 The former private route-shaped raw-box safe-term consumer checkpoint was
 commit `770b7be`. That consumer was deleted during CCPM retirement. The
 remaining safe-term route-shaped validation boundary is the raw-box route
-producer plus the still-live three-unit shadow diagnostic/oracle path. Do not
+producer plus the all-pairs inventory diagnostic path. Do not
 reintroduce the deleted consumer as a production/provider contract.
 
 The historical algorithmic path was source-box first. Dense raw source-box
@@ -1083,16 +1082,16 @@ consumer. It starts from explicit fixture facts, builds left/right
 `RawProductBoxPlan` objects, attaches boundary COMX-product mode-selection
 `RetainedRule` facts for the two PQS units, creates an identity
 product/doside slab retained rule for the middle unit, and emits the existing
-route descriptor shape now checked by the raw-box producer and three-unit
-shadow diagnostic/oracle path.
+route descriptor shape now checked by the raw-box producer and all-pairs
+inventory diagnostic path.
 
 This producer is still private/shadow-only. The sampled validation matrix
 covers the shifted cubic `q5/L5` fixture and a rectangular `q5/L7` fixture
-with `L != q`. The produced descriptor output matches the source-box shadow
-and hand-built descriptor paths to roundoff. Producer and consumer timing plus
-allocation summaries are recorded only as diagnostics; they are not readiness
-thresholds. Dense raw source-box matrices remain validation-only and are not
-the producer algorithm.
+with `L != q`. The produced descriptor output matches hand-built descriptor
+paths at the descriptor and inventory level. Producer timing and allocation
+summaries are recorded only as diagnostics; they are not readiness thresholds.
+Dense raw source-box matrices remain validation-only and are not the producer
+algorithm.
 
 Commit `047af1d` records the first geometry/recipe facts producer checkpoint
 for this lane. `_pqs_pqs_product_raw_box_homonuclear_geometry_facts(...)`
