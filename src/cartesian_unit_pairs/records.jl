@@ -30,15 +30,15 @@ struct UnitPairRecord
     pair_key::Tuple{Symbol,Symbol}
     pair_index::Int
     pair_family::Symbol
-    left_unit::CRU.RetainedUnitRecord
-    right_unit::CRU.RetainedUnitRecord
+    left_unit::CartesianRetainedUnits.RetainedUnitRecord
+    right_unit::CartesianRetainedUnits.RetainedUnitRecord
     left_index::Int
     right_index::Int
     left_unit_key::Symbol
     right_unit_key::Symbol
     left_unit_kind::Symbol
     right_unit_kind::Symbol
-    route_core_pair_sidecar::Union{CRC.UnitPair,Nothing}
+    route_core_pair_sidecar::Union{CartesianRouteCore.UnitPair,Nothing}
     materialized::Bool
     metadata::NamedTuple
 end
@@ -50,9 +50,9 @@ Metadata-only pair inventory for one retained-unit plan.
 """
 struct UnitPairPlan
     policy::UnitPairPolicy
-    retained_unit_plan::CRU.RetainedUnitPlan
+    retained_unit_plan::CartesianRetainedUnits.RetainedUnitPlan
     pairs::Tuple{Vararg{UnitPairRecord}}
-    route_core_pair_inventory::Union{CRC.UnitPairInventory,Nothing}
+    route_core_pair_inventory::Union{CartesianRouteCore.UnitPairInventory,Nothing}
     summary::NamedTuple
     metadata::NamedTuple
 end
@@ -61,6 +61,9 @@ unit_pairs(plan::UnitPairPlan) = plan.pairs
 summary(plan::UnitPairPlan) = plan.summary
 route_core_pair_inventory(plan::UnitPairPlan) = plan.route_core_pair_inventory
 
-function _pair_family(left::CRU.RetainedUnitRecord, right::CRU.RetainedUnitRecord)
+function _pair_family(
+    left::CartesianRetainedUnits.RetainedUnitRecord,
+    right::CartesianRetainedUnits.RetainedUnitRecord,
+)
     return Symbol(String(left.unit_kind), "__", String(right.unit_kind))
 end

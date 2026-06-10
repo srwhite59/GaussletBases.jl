@@ -8,11 +8,11 @@ plan. Pair planning starts from retained units; this function does not inspect
 shellification regions, CPBs, or lowering contracts directly.
 """
 function unit_pair_plan(
-    retained_unit_plan::CRU.RetainedUnitPlan;
+    retained_unit_plan::CartesianRetainedUnits.RetainedUnitPlan;
     policy::UnitPairPolicy = MetadataOnlyUnitPairs(),
     metadata = (;),
 )
-    retained_units = CRU.units(retained_unit_plan)
+    retained_units = CartesianRetainedUnits.units(retained_unit_plan)
     isempty(retained_units) &&
         throw(ArgumentError("unit_pair_plan requires at least one retained unit"))
 
@@ -20,7 +20,7 @@ function unit_pair_plan(
     route_core_pairs =
         isnothing(route_core_inventory.inventory) ?
         nothing :
-        CRC.pair_entries(route_core_inventory.inventory)
+        CartesianRouteCore.pair_entries(route_core_inventory.inventory)
 
     pair_records = UnitPairRecord[]
     pair_index = 0
@@ -75,7 +75,7 @@ function _route_core_pair_inventory_or_nothing(retained_units)
 
     route_core_units = Tuple(unit.route_core_final_unit for unit in retained_units)
     try
-        inventory = CRC.unit_pair_inventory(
+        inventory = CartesianRouteCore.unit_pair_inventory(
             route_core_units;
             metadata = (; source = :cartesian_unit_pairs),
         )
@@ -97,8 +97,8 @@ end
 
 function _unit_pair_record(
     pair_index::Int,
-    left::CRU.RetainedUnitRecord,
-    right::CRU.RetainedUnitRecord,
+    left::CartesianRetainedUnits.RetainedUnitRecord,
+    right::CartesianRetainedUnits.RetainedUnitRecord,
     left_index::Int,
     right_index::Int,
     route_core_sidecar,

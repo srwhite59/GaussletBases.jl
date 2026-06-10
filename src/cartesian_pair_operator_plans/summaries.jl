@@ -15,11 +15,11 @@ end
 
 function _pair_operator_plan_summary(
     policy::PairOperatorPlanPolicy,
-    unit_pair_plan::CUP.UnitPairPlan,
+    unit_pair_plan::CartesianUnitPairs.UnitPairPlan,
     records,
     route_core_plan,
 )
-    unit_pair_summary = CUP.summary(unit_pair_plan)
+    unit_pair_summary = CartesianUnitPairs.summary(unit_pair_plan)
     blockers = Tuple(record.blocker for record in records)
     blocked_count = count(blocker -> !isnothing(blocker), blockers)
     status =
@@ -29,7 +29,10 @@ function _pair_operator_plan_summary(
     return (;
         object_kind = :cartesian_pair_operator_plan_summary,
         status,
-        blocker = blocked_count == 0 ? nothing : first(blocker for blocker in blockers if !isnothing(blocker)),
+        blocker =
+            blocked_count == 0 ?
+            nothing :
+            first(blocker for blocker in blockers if !isnothing(blocker)),
         policy_kind = policy_kind(policy),
         retained_unit_count = unit_pair_summary.retained_unit_count,
         unit_pair_count = unit_pair_summary.pair_count,
@@ -64,13 +67,13 @@ function _pair_operator_plan_summary(
         route_core_pair_operator_plan_count =
             isnothing(route_core_plan.inventory) ?
             0 :
-            CRC.pair_operator_plan_count(route_core_plan.inventory),
+            CartesianRouteCore.pair_operator_plan_count(route_core_plan.inventory),
         route_core_pair_operator_plan_blocked_count =
             isnothing(route_core_plan.inventory) ?
             0 :
             count(
-                plan -> !isnothing(CRC.blocker(plan)),
-                CRC.pair_operator_plans(route_core_plan.inventory),
+                plan -> !isnothing(CartesianRouteCore.blocker(plan)),
+                CartesianRouteCore.pair_operator_plans(route_core_plan.inventory),
             ),
         materialized = false,
         source_operator_blocks_materialized = false,

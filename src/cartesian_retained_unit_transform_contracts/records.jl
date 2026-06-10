@@ -49,7 +49,7 @@ Metadata-only transform-contract plan for one retained-unit plan.
 """
 struct RetainedUnitTransformContractPlan
     policy::RetainedUnitTransformContractPolicy
-    retained_unit_plan::CRU.RetainedUnitPlan
+    retained_unit_plan::CartesianRetainedUnits.RetainedUnitPlan
     contracts::Tuple{Vararg{RetainedUnitTransformContract}}
     summary::NamedTuple
     metadata::NamedTuple

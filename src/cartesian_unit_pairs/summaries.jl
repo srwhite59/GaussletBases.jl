@@ -15,12 +15,12 @@ end
 
 function _unit_pair_plan_summary(
     policy::UnitPairPolicy,
-    retained_unit_plan::CRU.RetainedUnitPlan,
+    retained_unit_plan::CartesianRetainedUnits.RetainedUnitPlan,
     pairs,
     route_core_inventory,
 )
     pair_families = Tuple(pair.pair_family for pair in pairs)
-    retained_unit_count = length(CRU.units(retained_unit_plan))
+    retained_unit_count = length(CartesianRetainedUnits.units(retained_unit_plan))
     return (;
         object_kind = :cartesian_unit_pair_plan_summary,
         status = :available_unit_pair_plan,
@@ -38,7 +38,7 @@ function _unit_pair_plan_summary(
         route_core_pair_count =
             isnothing(route_core_inventory.inventory) ?
             0 :
-            length(CRC.pair_entries(route_core_inventory.inventory)),
+            length(CartesianRouteCore.pair_entries(route_core_inventory.inventory)),
         route_core_pair_missing_final_unit_indices =
             route_core_inventory.missing_indices,
         materialized = false,

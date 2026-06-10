@@ -8,12 +8,12 @@ retained unit. This is a planning contract only: no transform matrices,
 coefficient maps, Lowdin objects, dimensions, or column ranges are built here.
 """
 function retained_unit_transform_contract_plan(
-    retained_unit_plan::CRU.RetainedUnitPlan;
+    retained_unit_plan::CartesianRetainedUnits.RetainedUnitPlan;
     policy::RetainedUnitTransformContractPolicy =
         MetadataOnlyRetainedUnitTransformContracts(),
     metadata = (;),
 )
-    units = CRU.units(retained_unit_plan)
+    units = CartesianRetainedUnits.units(retained_unit_plan)
     contracts = Tuple(
         _retained_unit_transform_contract(unit, policy)
         for unit in units
@@ -34,7 +34,7 @@ function retained_unit_transform_contract_plan(
 end
 
 function _retained_unit_transform_contract(
-    unit::CRU.RetainedUnitRecord,
+    unit::CartesianRetainedUnits.RetainedUnitRecord,
     ::MetadataOnlyRetainedUnitTransformContracts,
 )
     transform_path, realization_path, blocker =
@@ -82,7 +82,7 @@ function _valid_source_mode_dims(value)
     return Tuple(Int(dim) for dim in value)::NTuple{3,Int}
 end
 
-function _pqs_source_mode_dims(unit::CRU.RetainedUnitRecord)
+function _pqs_source_mode_dims(unit::CartesianRetainedUnits.RetainedUnitRecord)
     source_mode_shape = _valid_source_mode_dims(
         _metadata_value(unit.metadata, :source_mode_shape),
     )
@@ -93,23 +93,24 @@ function _pqs_source_mode_dims(unit::CRU.RetainedUnitRecord)
     return nothing
 end
 
-function _pqs_source_cpb(unit::CRU.RetainedUnitRecord)
+function _pqs_source_cpb(unit::CartesianRetainedUnits.RetainedUnitRecord)
     length(unit.source_cpbs) == 1 || return nothing
     source_cpb = only(unit.source_cpbs)
-    source_cpb isa CRPS.CPB.CoordinateProductBox || return nothing
-    CRPS.CPB.codimension(source_cpb) == 0 || return nothing
+    source_cpb isa CartesianRawProductSources.CPB.CoordinateProductBox || return nothing
+    CartesianRawProductSources.CPB.codimension(source_cpb) == 0 || return nothing
     return source_cpb
 end
 
 function _raw_product_source_unavailable_metadata(status::Symbol, blocker::Symbol)
     return (;
         raw_product_source_plan = nothing,
-        raw_product_source_summary = CRPS.unavailable_summary(status, blocker),
+        raw_product_source_summary =
+            CartesianRawProductSources.unavailable_summary(status, blocker),
         raw_product_source_plan_status = status,
     )
 end
 
-function _raw_product_source_contract_metadata(unit::CRU.RetainedUnitRecord)
+function _raw_product_source_contract_metadata(unit::CartesianRetainedUnits.RetainedUnitRecord)
     unit.unit_kind === :pqs_shell_retained_unit || return (;)
 
     dims = _pqs_source_mode_dims(unit)
@@ -124,7 +125,7 @@ function _raw_product_source_contract_metadata(unit::CRU.RetainedUnitRecord)
         :missing_single_filled_pqs_source_cpb,
     )
 
-    raw_plan = CRPS.raw_product_box_plan(
+    raw_plan = CartesianRawProductSources.raw_product_box_plan(
         source_cpb;
         source_key = unit.unit_key,
         source_mode_dims = dims,
@@ -134,7 +135,7 @@ function _raw_product_source_contract_metadata(unit::CRU.RetainedUnitRecord)
             source_contract_key = unit.source_contract_key,
         ),
     )
-    raw_summary = CRPS.summary(raw_plan)
+    raw_summary = CartesianRawProductSources.summary(raw_plan)
     return (;
         raw_product_source_plan = raw_plan,
         raw_product_source_summary = raw_summary,

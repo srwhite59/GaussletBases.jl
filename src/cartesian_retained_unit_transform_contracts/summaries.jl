@@ -15,7 +15,7 @@ end
 
 function _retained_unit_transform_contract_plan_summary(
     policy::RetainedUnitTransformContractPolicy,
-    retained_unit_plan::CRU.RetainedUnitPlan,
+    retained_unit_plan::CartesianRetainedUnits.RetainedUnitPlan,
     contracts,
 )
     transform_paths = Tuple(contract.transform_path for contract in contracts)
@@ -34,7 +34,7 @@ function _retained_unit_transform_contract_plan_summary(
             :blocked_retained_unit_transform_contract_plan,
         blocker = isempty(blockers) ? nothing : first(blockers),
         policy_kind = policy_kind(policy),
-        retained_unit_count = length(CRU.units(retained_unit_plan)),
+        retained_unit_count = length(CartesianRetainedUnits.units(retained_unit_plan)),
         transform_contract_count = length(contracts),
         transform_path_counts =
             _count_by_symbol(transform_paths, :transform_path),

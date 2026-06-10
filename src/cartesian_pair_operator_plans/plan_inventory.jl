@@ -23,14 +23,16 @@ not materialize source operator blocks, final pair blocks, Hamiltonian data, or
 artifacts.
 """
 function pair_operator_plan(
-    unit_pair_plan::CUP.UnitPairPlan;
+    unit_pair_plan::CartesianUnitPairs.UnitPairPlan;
     policy::PairOperatorPlanPolicy = MetadataOnlyPairOperatorPlans(),
     supported_terms = _PAIR_OPERATOR_PLAN_DEFAULT_TERMS,
     route_core_sidecars::Bool = true,
     metadata = (;),
 )
     transform_contract_plan =
-        CRTC.retained_unit_transform_contract_plan(unit_pair_plan.retained_unit_plan)
+        CartesianRetainedUnitTransformContracts.retained_unit_transform_contract_plan(
+            unit_pair_plan.retained_unit_plan,
+        )
     return pair_operator_plan(
         unit_pair_plan,
         transform_contract_plan;
@@ -42,8 +44,8 @@ function pair_operator_plan(
 end
 
 function pair_operator_plan(
-    unit_pair_plan::CUP.UnitPairPlan,
-    transform_contract_plan::CRTC.RetainedUnitTransformContractPlan;
+    unit_pair_plan::CartesianUnitPairs.UnitPairPlan,
+    transform_contract_plan::CartesianRetainedUnitTransformContracts.RetainedUnitTransformContractPlan;
     policy::PairOperatorPlanPolicy = MetadataOnlyPairOperatorPlans(),
     supported_terms = _PAIR_OPERATOR_PLAN_DEFAULT_TERMS,
     route_core_sidecars::Bool = true,
@@ -61,7 +63,7 @@ function pair_operator_plan(
     route_core_plans =
         isnothing(route_core_plan.inventory) ?
         nothing :
-        CRC.pair_operator_plans(route_core_plan.inventory)
+        CartesianRouteCore.pair_operator_plans(route_core_plan.inventory)
 
     records = Tuple(
         _pair_operator_plan_record(
@@ -70,7 +72,7 @@ function pair_operator_plan(
             isnothing(route_core_plans) ? nothing : route_core_plans[pair.pair_index],
             route_core_plan,
             transform_lookup,
-        ) for pair in CUP.unit_pairs(unit_pair_plan)
+        ) for pair in CartesianUnitPairs.unit_pairs(unit_pair_plan)
     )
     plan_summary =
         _pair_operator_plan_summary(policy, unit_pair_plan, records, route_core_plan)
@@ -94,11 +96,15 @@ function _route_core_pair_operator_plan_not_requested()
 end
 
 function _retained_unit_transform_contract_lookup(
-    transform_contract_plan::CRTC.RetainedUnitTransformContractPlan,
+    transform_contract_plan::CartesianRetainedUnitTransformContracts.RetainedUnitTransformContractPlan,
 )
-    contracts_by_key = Dict{Symbol,CRTC.RetainedUnitTransformContract}()
+    contracts_by_key = Dict{
+        Symbol,
+        CartesianRetainedUnitTransformContracts.RetainedUnitTransformContract,
+    }()
     duplicate_keys = Symbol[]
-    for contract in CRTC.transform_contracts(transform_contract_plan)
+    for contract in
+            CartesianRetainedUnitTransformContracts.transform_contracts(transform_contract_plan)
         if haskey(contracts_by_key, contract.unit_key)
             push!(duplicate_keys, contract.unit_key)
         else
@@ -124,12 +130,12 @@ function _supported_terms_tuple(supported_terms)
 end
 
 function _route_core_pair_operator_plan_or_nothing(
-    unit_pair_plan::CUP.UnitPairPlan;
+    unit_pair_plan::CartesianUnitPairs.UnitPairPlan;
     supported_terms,
 )
-    route_core_pairs = CUP.route_core_pair_inventory(unit_pair_plan)
+    route_core_pairs = CartesianUnitPairs.route_core_pair_inventory(unit_pair_plan)
     if isnothing(route_core_pairs)
-        pair_summary = CUP.summary(unit_pair_plan)
+        pair_summary = CartesianUnitPairs.summary(unit_pair_plan)
         return (;
             inventory = nothing,
             status = :blocked_missing_route_core_pair_inventory,
@@ -138,7 +144,7 @@ function _route_core_pair_operator_plan_or_nothing(
     end
 
     try
-        inventory = CRC.pair_operator_plan_inventory(
+        inventory = CartesianRouteCore.pair_operator_plan_inventory(
             route_core_pairs;
             supported_terms,
             metadata = (; source = :cartesian_pair_operator_plans),
@@ -158,7 +164,7 @@ function _route_core_pair_operator_plan_or_nothing(
 end
 
 function _pair_operator_plan_record(
-    pair::CUP.UnitPairRecord,
+    pair::CartesianUnitPairs.UnitPairRecord,
     supported_terms,
     route_core_sidecar,
     route_core_plan,
@@ -227,7 +233,7 @@ function _pair_operator_plan_record(
 end
 
 function _transform_contract_for_pair_unit(
-    pair::CUP.UnitPairRecord,
+    pair::CartesianUnitPairs.UnitPairRecord,
     side::Symbol,
     transform_lookup,
 )
@@ -264,7 +270,7 @@ function _transform_contract_for_pair_unit(
     )
 end
 
-function _source_operator_path(pair::CUP.UnitPairRecord)
+function _source_operator_path(pair::CartesianUnitPairs.UnitPairRecord)
     left = pair.left_unit_kind
     right = pair.right_unit_kind
     if _unit_kind_is_pqs(left) || _unit_kind_is_pqs(right)

@@ -39,7 +39,7 @@ struct PairOperatorPlanRecord
     supported_terms::Tuple{Vararg{Symbol}}
     status::Symbol
     blocker::Union{Symbol,String,Nothing}
-    route_core_pair_operator_sidecar::Union{CRC.PairOperatorPlan,Nothing}
+    route_core_pair_operator_sidecar::Union{CartesianRouteCore.PairOperatorPlan,Nothing}
     materialized::Bool
     metadata::NamedTuple
 end
@@ -52,11 +52,11 @@ unit-pair plan.
 """
 struct PairOperatorPlan
     policy::PairOperatorPlanPolicy
-    unit_pair_plan::CUP.UnitPairPlan
-    transform_contract_plan::CRTC.RetainedUnitTransformContractPlan
+    unit_pair_plan::CartesianUnitPairs.UnitPairPlan
+    transform_contract_plan::CartesianRetainedUnitTransformContracts.RetainedUnitTransformContractPlan
     records::Tuple{Vararg{PairOperatorPlanRecord}}
     route_core_pair_operator_plan_inventory::Union{
-        CRC.PairOperatorPlanInventory,
+        CartesianRouteCore.PairOperatorPlanInventory,
         Nothing,
     }
     summary::NamedTuple
