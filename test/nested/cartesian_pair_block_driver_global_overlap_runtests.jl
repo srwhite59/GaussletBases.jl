@@ -1316,6 +1316,152 @@ function _driver_overlap_real_report_local_cpb_provider_fingerprint(report)
     )
 end
 
+function _driver_overlap_real_report_parent_coulomb_source_fingerprint(report)
+    payload =
+        hasproperty(report, :route_materializer_payload) ?
+        report.route_materializer_payload :
+        nothing
+    parent_qw_basis =
+        !isnothing(payload) && hasproperty(payload, :parent_qw_basis_object) ?
+        payload.parent_qw_basis_object :
+        nothing
+    parent =
+        isnothing(parent_qw_basis) ?
+        nothing :
+        CPGBDriverOverlap.cartesian_parent_gausslet_basis(parent_qw_basis)
+    axis_bundle =
+        !isnothing(payload) && hasproperty(payload, :parent_axis_bundle_object) ?
+        payload.parent_axis_bundle_object :
+        nothing
+    expansion =
+        hasproperty(report, :white_lindsey_expansion) ?
+        report.white_lindsey_expansion :
+        (
+            !isnothing(payload) && hasproperty(payload, :white_lindsey_expansion) ?
+            payload.white_lindsey_expansion :
+            nothing
+        )
+    expansion_source =
+        hasproperty(report, :white_lindsey_expansion) ?
+        :report_white_lindsey_expansion :
+        (
+            !isnothing(payload) && hasproperty(payload, :white_lindsey_expansion) ?
+            :route_materializer_payload_white_lindsey_expansion :
+            :unavailable
+        )
+    source =
+        isnothing(parent) ?
+        nothing :
+        CPGBDriverOverlap.parent_coulomb_axis_source_summary(
+            parent,
+            axis_bundle,
+            expansion;
+            nuclear_charges =
+                hasproperty(report, :nuclear_charges) ?
+                report.nuclear_charges :
+                nothing,
+            atom_locations =
+                hasproperty(report, :atom_locations) ?
+                report.atom_locations :
+                nothing,
+            center_table =
+                hasproperty(report, :center_table) ? report.center_table : nothing,
+            parent_qw_basis_object = parent_qw_basis,
+        )
+    source_summary = isnothing(source) ? nothing : CPGBDriverOverlap.summary(source)
+
+    return (;
+        object_kind = :real_report_parent_coulomb_axis_source_fingerprint,
+        parent_source_status =
+            isnothing(parent) ?
+            :missing_route_materializer_payload_parent_qw_basis_object :
+            :available_route_materializer_payload_parent_qw_basis_object,
+        axis_bundle_source_status =
+            isnothing(axis_bundle) ?
+            :missing_route_materializer_payload_parent_axis_bundle_object :
+            :available_route_materializer_payload_parent_axis_bundle_object,
+        expansion_source,
+        status =
+            isnothing(source_summary) ?
+            :not_attempted_missing_parent :
+            source_summary.status,
+        blocker =
+            isnothing(source_summary) ? :missing_parent : source_summary.blocker,
+        parent_axis_counts =
+            isnothing(source_summary) ? nothing : source_summary.parent_axis_counts,
+        axis_bundle_available =
+            !isnothing(source_summary) && source_summary.axis_bundle_available,
+        expansion_available =
+            !isnothing(source_summary) && source_summary.expansion_available,
+        expansion_coefficients_available =
+            !isnothing(source_summary) &&
+            source_summary.expansion_coefficients_available,
+        expansion_exponents_available =
+            !isnothing(source_summary) &&
+            source_summary.expansion_exponents_available,
+        gaussian_factor_terms_available =
+            !isnothing(source_summary) &&
+            source_summary.gaussian_factor_terms_available,
+        gaussian_factors_available =
+            !isnothing(source_summary) &&
+            source_summary.gaussian_factors_available,
+        pair_factor_terms_available =
+            !isnothing(source_summary) &&
+            source_summary.pair_factor_terms_available,
+        pair_factors_available =
+            !isnothing(source_summary) && source_summary.pair_factors_available,
+        pair_factor_terms_raw_available =
+            !isnothing(source_summary) &&
+            source_summary.pair_factor_terms_raw_available,
+        axis_exponents_available =
+            !isnothing(source_summary) && source_summary.axis_exponents_available,
+        electron_nuclear_center_metadata_available =
+            !isnothing(source_summary) &&
+            source_summary.electron_nuclear_center_metadata_available,
+        electron_nuclear_center_metadata_source =
+            isnothing(source_summary) ?
+            :unavailable :
+            source_summary.electron_nuclear_center_metadata_source,
+        electron_nuclear_axis_terms_available =
+            !isnothing(source_summary) &&
+            source_summary.electron_nuclear_axis_terms_available,
+        electron_nuclear_axis_terms_status =
+            isnothing(source_summary) ?
+            :unavailable :
+            source_summary.electron_nuclear_axis_terms_status,
+        electron_electron_pair_axis_terms_available =
+            !isnothing(source_summary) &&
+            source_summary.electron_electron_pair_axis_terms_available,
+        electron_electron_pair_axis_terms_status =
+            isnothing(source_summary) ?
+            :unavailable :
+            source_summary.electron_electron_pair_axis_terms_status,
+        electron_electron_cpb_pair_pair_source_record_available =
+            !isnothing(source_summary) &&
+            source_summary.electron_electron_cpb_pair_pair_source_record_available,
+        missing_sources =
+            isnothing(source_summary) ? () : source_summary.missing_sources,
+        numerical_coulomb_blocks_materialized =
+            !isnothing(source_summary) &&
+            source_summary.numerical_coulomb_blocks_materialized,
+        cpb_local_coulomb_kernel_implemented =
+            !isnothing(source_summary) &&
+            source_summary.cpb_local_coulomb_kernel_implemented,
+        wl_pqs_realization =
+            !isnothing(source_summary) && source_summary.wl_pqs_realization,
+        route_global_placement =
+            !isnothing(source_summary) && source_summary.route_global_placement,
+        route_driver_wiring =
+            !isnothing(source_summary) && source_summary.route_driver_wiring,
+        hamiltonian_assembly =
+            !isnothing(source_summary) && source_summary.hamiltonian_assembly,
+        ida_mwg_pqs_semantics =
+            !isnothing(source_summary) && source_summary.ida_mwg_pqs_semantics,
+        exports_or_artifacts =
+            !isnothing(source_summary) && source_summary.exports_or_artifacts,
+    )
+end
+
 function _test_driver_overlap_nonclaim_flags(result)
     @test !result.route_driver_wiring
     @test !result.hamiltonian_data_materialized
@@ -1678,6 +1824,60 @@ end
     @test local_cpb_overlap_fingerprint.parent_source_status ===
           :available_route_materializer_payload_parent_qw_basis_object
     @test local_cpb_overlap_fingerprint.parent_axis_counts == (31, 17, 17)
+
+    parent_coulomb_source_fingerprint =
+        _driver_overlap_real_report_parent_coulomb_source_fingerprint(report)
+    @test parent_coulomb_source_fingerprint.parent_source_status ===
+          :available_route_materializer_payload_parent_qw_basis_object
+    @test parent_coulomb_source_fingerprint.axis_bundle_source_status ===
+          :available_route_materializer_payload_parent_axis_bundle_object
+    @test parent_coulomb_source_fingerprint.expansion_source === :unavailable
+    @test parent_coulomb_source_fingerprint.status ===
+          :blocked_parent_coulomb_axis_source_summary
+    @test parent_coulomb_source_fingerprint.blocker ===
+          :missing_coulomb_gaussian_expansion
+    @test parent_coulomb_source_fingerprint.parent_axis_counts == (31, 17, 17)
+    @test parent_coulomb_source_fingerprint.axis_bundle_available
+    @test parent_coulomb_source_fingerprint.expansion_available === false
+    @test parent_coulomb_source_fingerprint.expansion_coefficients_available ===
+          false
+    @test parent_coulomb_source_fingerprint.expansion_exponents_available ===
+          false
+    @test parent_coulomb_source_fingerprint.gaussian_factor_terms_available
+    @test parent_coulomb_source_fingerprint.gaussian_factors_available
+    @test parent_coulomb_source_fingerprint.pair_factor_terms_available
+    @test parent_coulomb_source_fingerprint.pair_factors_available
+    @test parent_coulomb_source_fingerprint.pair_factor_terms_raw_available
+    @test parent_coulomb_source_fingerprint.axis_exponents_available
+    @test parent_coulomb_source_fingerprint.electron_nuclear_center_metadata_available
+    @test parent_coulomb_source_fingerprint.electron_nuclear_center_metadata_source ===
+          :parent_qw_basis_object_nuclei_and_charges
+    @test parent_coulomb_source_fingerprint.electron_nuclear_axis_terms_available ===
+          false
+    @test parent_coulomb_source_fingerprint.electron_nuclear_axis_terms_status ===
+          :missing_per_center_electron_nuclear_axis_term_tables
+    @test parent_coulomb_source_fingerprint.electron_electron_pair_axis_terms_available
+    @test parent_coulomb_source_fingerprint.electron_electron_pair_axis_terms_status ===
+          :available_parent_electron_electron_pair_axis_terms
+    @test parent_coulomb_source_fingerprint.electron_electron_cpb_pair_pair_source_record_available ===
+          false
+    @test :missing_coulomb_gaussian_expansion in
+          parent_coulomb_source_fingerprint.missing_sources
+    @test :missing_coulomb_expansion_coefficients in
+          parent_coulomb_source_fingerprint.missing_sources
+    @test :missing_coulomb_expansion_exponents in
+          parent_coulomb_source_fingerprint.missing_sources
+    @test parent_coulomb_source_fingerprint.numerical_coulomb_blocks_materialized ===
+          false
+    @test parent_coulomb_source_fingerprint.cpb_local_coulomb_kernel_implemented ===
+          false
+    @test parent_coulomb_source_fingerprint.wl_pqs_realization === false
+    @test parent_coulomb_source_fingerprint.route_global_placement === false
+    @test parent_coulomb_source_fingerprint.route_driver_wiring === false
+    @test parent_coulomb_source_fingerprint.hamiltonian_assembly === false
+    @test parent_coulomb_source_fingerprint.ida_mwg_pqs_semantics === false
+    @test parent_coulomb_source_fingerprint.exports_or_artifacts === false
+
     @test local_cpb_overlap_fingerprint.parent_overlap_packet_source_status ===
           :available_parent_overlap_axis_factors
     @test local_cpb_overlap_fingerprint.parent_overlap_packet_blocker === nothing
