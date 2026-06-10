@@ -294,11 +294,116 @@ function route_state_global_x2_z_matrix(source; kwargs...)
     )
 end
 
-function route_global_safe_one_body_terms()
-    return _route_global_one_body_supported_terms()
+function route_global_electron_nuclear_by_center_matrix(
+    source;
+    parent_axis_counts = nothing,
+    parent_axis_bundle_object = nothing,
+    coulomb_expansion = nothing,
+    center_record = nothing,
+    global_dimension = nothing,
+    inputs = (;),
+    provider = nothing,
+    factors = nothing,
+    factor_provider = nothing,
+    metadata = (;),
+)
+    if _route_global_one_body_pair_block_source(source)
+        resolved_inputs = _route_global_electron_nuclear_by_center_inputs(
+            _route_global_one_body_inputs(inputs, factors),
+            parent_axis_bundle_object,
+            coulomb_expansion,
+            center_record,
+        )
+        return route_global_one_body_matrix(
+            source;
+            term = :electron_nuclear_by_center,
+            global_dimension,
+            inputs = resolved_inputs,
+            provider,
+            factor_provider,
+            metadata,
+        )
+    end
+
+    return _route_global_electron_nuclear_by_center_matrix_from_inventory(
+        source;
+        parent_axis_counts,
+        parent_axis_bundle_object,
+        coulomb_expansion,
+        center_record,
+        metadata,
+    )
 end
 
-function _route_global_one_body_supported_terms()
+function route_global_electron_nuclear_by_center_matrices(
+    source;
+    parent_axis_counts = nothing,
+    parent_axis_bundle_object = nothing,
+    coulomb_expansion = nothing,
+    center_records = (),
+    metadata = (;),
+)
+    inventory = _route_global_electron_nuclear_by_center_inventory(
+        source;
+        parent_axis_counts,
+        parent_axis_bundle_object,
+    )
+    if inventory.status !== :available_white_lindsey_decomposed_unit_pair_inventory
+        return _route_global_electron_nuclear_by_center_matrices_result(
+            inventory,
+            (),
+            :blocked_route_global_electron_nuclear_by_center_matrix_set,
+            inventory.blocker;
+            metadata,
+        )
+    end
+
+    center_tuple = _route_global_electron_nuclear_by_center_records(center_records)
+    isempty(center_tuple) &&
+        return _route_global_electron_nuclear_by_center_matrices_result(
+            inventory,
+            (),
+            :blocked_route_global_electron_nuclear_by_center_matrix_set,
+            :missing_electron_nuclear_center_records;
+            metadata,
+        )
+
+    matrix_results = Tuple(
+        _route_global_electron_nuclear_by_center_matrix_from_inventory(
+            inventory;
+            parent_axis_counts,
+            parent_axis_bundle_object,
+            coulomb_expansion,
+            center_record,
+            metadata,
+        ) for center_record in center_tuple
+    )
+    all_materialized = all(
+        result -> result.global_electron_nuclear_by_center_matrix_materialized,
+        matrix_results,
+    )
+    return _route_global_electron_nuclear_by_center_matrices_result(
+        inventory,
+        matrix_results,
+        all_materialized ?
+        :materialized_route_global_electron_nuclear_by_center_matrix_set :
+        :blocked_route_global_electron_nuclear_by_center_matrix_set,
+        all_materialized ?
+        nothing :
+        _route_global_electron_nuclear_by_center_first_blocker(matrix_results);
+        metadata,
+    )
+end
+
+function route_state_global_electron_nuclear_by_center_matrix(source; kwargs...)
+    return route_global_electron_nuclear_by_center_matrix(source; kwargs...)
+end
+
+function route_global_safe_one_body_terms()
+    return _route_global_one_body_safe_terms()
+end
+
+function _route_global_one_body_safe_terms()
     return (
         :overlap,
         :kinetic,
@@ -309,6 +414,10 @@ function _route_global_one_body_supported_terms()
         :x2_y,
         :x2_z,
     )
+end
+
+function _route_global_one_body_supported_terms()
+    return (_route_global_one_body_safe_terms()..., :electron_nuclear_by_center)
 end
 
 function _route_global_one_body_term_tuple(terms::Symbol)
@@ -473,6 +582,11 @@ function _route_global_one_body_placement_plan(
         collection;
         global_dimension,
     )
+    term === :electron_nuclear_by_center &&
+        return one_body_electron_nuclear_by_center_placement_plan(
+            collection;
+            global_dimension,
+        )
     throw(ArgumentError("unsupported route global one-body term: $(term)"))
 end
 
@@ -491,7 +605,366 @@ function _route_global_one_body_global_matrix(
     term === :x2_x && return one_body_global_x2_x_matrix(placement_plan)
     term === :x2_y && return one_body_global_x2_y_matrix(placement_plan)
     term === :x2_z && return one_body_global_x2_z_matrix(placement_plan)
+    term === :electron_nuclear_by_center &&
+        return one_body_global_electron_nuclear_by_center_matrix(placement_plan)
     throw(ArgumentError("unsupported route global one-body term: $(term)"))
+end
+
+function _route_global_one_body_pair_block_source(source)
+    source isa PairBlockMaterializationPlan && return true
+    hasproperty(source, :pair_block_materialization_plan) && return true
+    hasproperty(source, :terminal_route_state) && return true
+    return false
+end
+
+function _route_global_electron_nuclear_by_center_records(center_record::NamedTuple)
+    return (center_record,)
+end
+
+function _route_global_electron_nuclear_by_center_records(center_records)
+    isnothing(center_records) && return ()
+    return Tuple(center_records)
+end
+
+function _route_global_electron_nuclear_by_center_inventory(
+    source;
+    parent_axis_counts = nothing,
+    parent_axis_bundle_object = nothing,
+)
+    if _route_global_one_body_value(source, :object_kind, nothing) ===
+       :white_lindsey_decomposed_unit_pair_inventory
+        return source
+    end
+    return white_lindsey_decomposed_unit_pair_inventory(
+        source;
+        metadata = (;
+            parent_axis_counts,
+            parent_axis_bundle_object,
+        ),
+    )
+end
+
+function _route_global_electron_nuclear_by_center_matrix_from_inventory(
+    source;
+    parent_axis_counts,
+    parent_axis_bundle_object,
+    coulomb_expansion,
+    center_record,
+    metadata,
+)
+    inventory = _route_global_electron_nuclear_by_center_inventory(
+        source;
+        parent_axis_counts,
+        parent_axis_bundle_object,
+    )
+    if inventory.status !== :available_white_lindsey_decomposed_unit_pair_inventory
+        return _route_global_electron_nuclear_by_center_blocked_inventory_result(
+            inventory,
+            inventory.blocker;
+            metadata,
+        )
+    end
+
+    local_batch = white_lindsey_boundary_stratum_one_body_blocks(
+        inventory.unit_pairs,
+        :electron_nuclear_by_center;
+        parent_axis_counts,
+        parent_axis_bundle_object,
+        coulomb_expansion,
+        center_record,
+    )
+    local_collection =
+        _route_global_electron_nuclear_by_center_local_collection(
+            local_batch,
+            inventory.unit_pairs,
+        )
+    placement_plan = one_body_electron_nuclear_by_center_placement_plan(
+        local_collection;
+        global_dimension = inventory.retained_dimension,
+    )
+    global_matrix_result =
+        one_body_global_electron_nuclear_by_center_matrix(placement_plan)
+    return _route_global_electron_nuclear_by_center_result(
+        inventory,
+        local_batch,
+        local_collection,
+        placement_plan,
+        global_matrix_result;
+        metadata,
+    )
+end
+
+function _route_global_electron_nuclear_by_center_local_collection(
+    batch_result::PairBlockMaterializationBatchResult,
+    unit_pairs::Tuple,
+)
+    pair_lookup = Dict(pair.pair_key => pair for pair in unit_pairs)
+    materialized_entries = Tuple(
+        _route_global_electron_nuclear_by_center_collection_entry(
+            result,
+            pair_lookup,
+        ) for result in batch_result.materialized_results
+    )
+    skipped_entries = Tuple(
+        _one_body_local_block_collection_skipped_entry(
+            skip;
+            block_set_term = :electron_nuclear_by_center,
+        ) for skip in batch_result.skipped_records
+    )
+    entries = (materialized_entries..., skipped_entries...)
+    return (;
+        object_kind = :cartesian_pair_block_local_one_body_block_collection,
+        status =
+            isempty(materialized_entries) ?
+            :blocked_local_one_body_block_collection :
+            :materialized_local_one_body_block_collection,
+        blocker =
+            isempty(materialized_entries) ?
+            :no_materialized_electron_nuclear_by_center_blocks :
+            nothing,
+        block_set_status =
+            isempty(materialized_entries) ?
+            :blocked_mixed_one_body_block_set_consumption :
+            :materialized_mixed_one_body_block_set_consumption,
+        block_set_blocker =
+            isempty(materialized_entries) ?
+            :no_materialized_electron_nuclear_by_center_blocks :
+            nothing,
+        terms = (:electron_nuclear_by_center,),
+        requested_terms = (:electron_nuclear_by_center,),
+        requested_materialize_terms = (:electron_nuclear_by_center,),
+        materialized_terms =
+            isempty(materialized_entries) ? () : (:electron_nuclear_by_center,),
+        deferred_terms = (),
+        term_statuses = (),
+        entries,
+        materialized_entries,
+        skipped_entries,
+        entry_count = length(entries),
+        materialized_entry_count = length(materialized_entries),
+        skipped_entry_count = length(skipped_entries),
+        deferred_term_count = 0,
+        source_space_entry_count = 0,
+        final_local_entry_count = length(materialized_entries),
+        term_separated_entries = true,
+        pair_separated_entries = true,
+        block_set_results_summed = false,
+        block_matrices_copied_into_collection = false,
+        _one_body_local_block_collection_summary_materialization_flags(
+            source_operator_blocks_materialized =
+                batch_result.source_operator_blocks_materialized,
+            final_pair_blocks_materialized =
+                batch_result.final_pair_blocks_materialized,
+        )...,
+    )
+end
+
+function _route_global_electron_nuclear_by_center_collection_entry(
+    result::PairBlockMaterializationResult,
+    pair_lookup::Dict,
+)
+    pair = pair_lookup[result.pair_key]
+    return merge(
+        _one_body_local_block_collection_entry(
+            result;
+            block_set_term = :electron_nuclear_by_center,
+        ),
+        (;
+            left_column_range = pair.left_unit.column_range,
+            right_column_range = pair.right_unit.column_range,
+            center_index = result.metadata.center_index,
+            center_key = result.metadata.center_key,
+            center_location = result.metadata.center_location,
+            nuclear_charge_recorded = result.metadata.nuclear_charge_recorded,
+            nuclear_charge_applied = result.metadata.nuclear_charge_applied,
+        ),
+    )
+end
+
+function _route_global_electron_nuclear_by_center_result(
+    inventory,
+    local_batch::PairBlockMaterializationBatchResult,
+    local_collection::NamedTuple,
+    placement_plan::NamedTuple,
+    global_matrix_result::NamedTuple;
+    metadata,
+)
+    materialized =
+        _route_global_one_body_value(
+            global_matrix_result,
+            :global_electron_nuclear_by_center_matrix_materialized,
+            false,
+        ) === true
+    return (;
+        object_kind =
+            :cartesian_pair_block_route_global_electron_nuclear_by_center_matrix_adapter,
+        term = :electron_nuclear_by_center,
+        status =
+            materialized ?
+            :materialized_route_global_electron_nuclear_by_center_matrix :
+            :blocked_route_global_electron_nuclear_by_center_matrix,
+        blocker = materialized ? nothing : global_matrix_result.blocker,
+        inventory_source_kind = inventory.source_kind,
+        decomposed_unit_pair_inventory_status = inventory.status,
+        retained_dimension = inventory.retained_dimension,
+        retained_dimension_status = inventory.retained_dimension_status,
+        unit_count = inventory.unit_count,
+        pair_count = inventory.pair_count,
+        center_index = global_matrix_result.center_index,
+        center_key = global_matrix_result.center_key,
+        center_location = global_matrix_result.center_location,
+        by_center = true,
+        centers_summed = false,
+        nuclear_charge_recorded = global_matrix_result.nuclear_charge_recorded,
+        nuclear_charge_applied = false,
+        charge_application_stage = :acceptance_or_hamiltonian_assembly,
+        local_batch,
+        local_collection,
+        placement_plan,
+        global_matrix_result,
+        matrix = global_matrix_result.matrix,
+        local_pair_block_count = local_batch.materialized_count,
+        placeable_record_count = placement_plan.placeable_count,
+        blocked_placement_count = placement_plan.blocked_count,
+        placed_block_count = global_matrix_result.placed_block_count,
+        skipped_block_count = global_matrix_result.skipped_block_count,
+        global_electron_nuclear_by_center_matrix_materialized = materialized,
+        global_one_body_term_matrix_materialized = materialized,
+        operator_matrix_materialized = materialized,
+        global_operator_assembled = materialized,
+        full_parent_window_cpb_used = false,
+        direct_cartesian_product_assembly_used = false,
+        ordinary_cartesian_ida_operators_used = false,
+        metadata = NamedTuple(metadata),
+        _route_global_one_body_nonclaim_flags()...,
+    )
+end
+
+function _route_global_electron_nuclear_by_center_blocked_inventory_result(
+    inventory,
+    blocker;
+    metadata,
+)
+    return (;
+        object_kind =
+            :cartesian_pair_block_route_global_electron_nuclear_by_center_matrix_adapter,
+        term = :electron_nuclear_by_center,
+        status = :blocked_route_global_electron_nuclear_by_center_matrix,
+        blocker,
+        inventory_source_kind =
+            _route_global_one_body_value(inventory, :source_kind, nothing),
+        decomposed_unit_pair_inventory_status =
+            _route_global_one_body_value(inventory, :status, nothing),
+        retained_dimension = nothing,
+        retained_dimension_status = :not_available,
+        unit_count = 0,
+        pair_count = 0,
+        center_index = nothing,
+        center_key = nothing,
+        center_location = nothing,
+        by_center = true,
+        centers_summed = false,
+        nuclear_charge_recorded = false,
+        nuclear_charge_applied = false,
+        charge_application_stage = :acceptance_or_hamiltonian_assembly,
+        local_batch = nothing,
+        local_collection = nothing,
+        placement_plan = nothing,
+        global_matrix_result = nothing,
+        matrix = nothing,
+        local_pair_block_count = 0,
+        placeable_record_count = 0,
+        blocked_placement_count = 0,
+        placed_block_count = 0,
+        skipped_block_count = 0,
+        global_electron_nuclear_by_center_matrix_materialized = false,
+        global_one_body_term_matrix_materialized = false,
+        operator_matrix_materialized = false,
+        global_operator_assembled = false,
+        full_parent_window_cpb_used = false,
+        direct_cartesian_product_assembly_used = false,
+        ordinary_cartesian_ida_operators_used = false,
+        metadata = NamedTuple(metadata),
+        _route_global_one_body_nonclaim_flags()...,
+    )
+end
+
+function _route_global_electron_nuclear_by_center_matrices_result(
+    inventory,
+    matrix_results::Tuple,
+    status::Symbol,
+    blocker;
+    metadata,
+)
+    materialized = status ===
+                   :materialized_route_global_electron_nuclear_by_center_matrix_set
+    return (;
+        object_kind =
+            :cartesian_pair_block_route_global_electron_nuclear_by_center_matrix_set_adapter,
+        term = :electron_nuclear_by_center,
+        status,
+        blocker,
+        inventory_source_kind =
+            _route_global_one_body_value(inventory, :source_kind, nothing),
+        decomposed_unit_pair_inventory_status =
+            _route_global_one_body_value(inventory, :status, nothing),
+        retained_dimension =
+            _route_global_one_body_value(inventory, :retained_dimension, nothing),
+        retained_dimension_status =
+            _route_global_one_body_value(
+                inventory,
+                :retained_dimension_status,
+                :not_available,
+            ),
+        unit_count = _route_global_one_body_value(inventory, :unit_count, 0),
+        pair_count = _route_global_one_body_value(inventory, :pair_count, 0),
+        center_count = length(matrix_results),
+        by_center_matrix_count = count(
+            result ->
+                result.global_electron_nuclear_by_center_matrix_materialized,
+            matrix_results,
+        ),
+        center_indices = Tuple(result.center_index for result in matrix_results),
+        center_keys = Tuple(result.center_key for result in matrix_results),
+        matrix_results,
+        by_center = true,
+        centers_summed = false,
+        nuclear_charge_recorded = !isempty(matrix_results),
+        nuclear_charge_applied = false,
+        charge_application_stage = :acceptance_or_hamiltonian_assembly,
+        route_global_by_center_matrices_materialized = materialized,
+        global_electron_nuclear_by_center_matrices_materialized = materialized,
+        global_one_body_term_matrix_materialized = materialized,
+        hamiltonian_data_materialized = false,
+        full_parent_window_cpb_used = false,
+        direct_cartesian_product_assembly_used = false,
+        ordinary_cartesian_ida_operators_used = false,
+        metadata = NamedTuple(metadata),
+        _route_global_one_body_nonclaim_flags()...,
+    )
+end
+
+function _route_global_electron_nuclear_by_center_first_blocker(results::Tuple)
+    for result in results
+        !isnothing(result.blocker) && return result.blocker
+    end
+    return :route_global_electron_nuclear_by_center_matrix_blocked
+end
+
+function _route_global_electron_nuclear_by_center_inputs(
+    inputs::NamedTuple,
+    parent_axis_bundle_object,
+    coulomb_expansion,
+    center_record,
+)
+    extra = NamedTuple()
+    isnothing(parent_axis_bundle_object) ||
+        (extra = merge(extra, (; parent_axis_bundle_object)))
+    isnothing(coulomb_expansion) ||
+        (extra = merge(extra, (; coulomb_expansion)))
+    isnothing(center_record) ||
+        (extra = merge(extra, (; center_record)))
+    return merge(inputs, extra)
 end
 
 function _route_global_position_term(axis)
@@ -651,6 +1124,12 @@ function _route_global_one_body_result(
                 :global_x2_z_matrix_materialized,
                 false,
             ),
+        global_electron_nuclear_by_center_matrix_materialized =
+            _route_global_one_body_value(
+                global_matrix_result,
+                :global_electron_nuclear_by_center_matrix_materialized,
+                false,
+            ),
         operator_matrix_materialized =
             _route_global_one_body_value(
                 global_matrix_result,
@@ -708,6 +1187,7 @@ function _route_global_one_body_blocked_result(
         global_x2_x_matrix_materialized = false,
         global_x2_y_matrix_materialized = false,
         global_x2_z_matrix_materialized = false,
+        global_electron_nuclear_by_center_matrix_materialized = false,
         operator_matrix_materialized = false,
         global_operator_assembled = false,
         _route_global_one_body_nonclaim_flags()...,

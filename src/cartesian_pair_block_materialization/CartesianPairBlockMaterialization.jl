@@ -29,8 +29,9 @@ Lowdin realization, or final retained PQS pair blocks.
 
 The private route-shaped global one-body adapter currently composes existing
 local block collections, placement plans, and global safe one-body matrix pilots
-for the term-separated safe one-body terms only: overlap, kinetic,
-position_x/y/z, and x2_x/y/z. This module still does not assemble
+for the term-separated safe one-body terms overlap, kinetic, position_x/y/z,
+x2_x/y/z, plus uncharged by-center electron-nuclear matrices over decomposed
+White--Lindsey unit-pair inventories. This module still does not assemble
 Hamiltonians, Ham bundles, exports, artifacts, final retained PQS pair blocks,
 or full White--Lindsey route/operator inventories.
 """

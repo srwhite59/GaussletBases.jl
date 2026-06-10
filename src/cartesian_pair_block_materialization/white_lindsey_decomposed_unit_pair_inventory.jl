@@ -29,13 +29,17 @@ function white_lindsey_decomposed_unit_pair_inventory(
     metadata = (;),
 )
     if _white_lindsey_seed_source_available(source)
-        pairs = _white_lindsey_seed_decomposed_unit_pairs(source)
+        metadata_tuple = NamedTuple(metadata)
+        pairs = _white_lindsey_seed_decomposed_unit_pairs(
+            source;
+            metadata = metadata_tuple,
+        )
         return white_lindsey_decomposed_unit_pair_inventory(
             pairs;
             source_kind = :white_lindsey_low_order_materialized_seed_ranges,
             supported_terms,
             metadata = merge(
-                NamedTuple(metadata),
+                metadata_tuple,
                 (;
                     seed_inventory_source =
                         :white_lindsey_low_order_materialized_seed_inventory,
@@ -131,8 +135,11 @@ function _white_lindsey_seed_source_available(source::NamedTuple)
         hasproperty(source, :inventory)
 end
 
-function _white_lindsey_seed_decomposed_unit_pairs(source::NamedTuple)
-    units = _white_lindsey_seed_decomposed_units(source)
+function _white_lindsey_seed_decomposed_unit_pairs(
+    source::NamedTuple;
+    metadata = (;),
+)
+    units = _white_lindsey_seed_decomposed_units(source; metadata)
     pair_records = CUP.UnitPairRecord[]
     pair_index = 0
     for left_index in eachindex(units)
@@ -168,45 +175,119 @@ function _white_lindsey_seed_decomposed_unit_pairs(source::NamedTuple)
     return Tuple(pair_records)
 end
 
-function _white_lindsey_seed_decomposed_units(source::NamedTuple)
+function _white_lindsey_seed_decomposed_units(source::NamedTuple; metadata = (;))
     shell = only(source.fixture.sequence.shell_layers)
     inventory = source.inventory
-    source_side_count = inventory.source_side_count
-    outer = CPB.filled_cpb(
-        1:source_side_count,
-        1:source_side_count,
-        1:source_side_count;
-        role = :white_lindsey_seed_complete_shell_outer,
-    )
-    inner = CPB.filled_cpb(
-        2:(source_side_count - 1),
-        2:(source_side_count - 1),
-        2:(source_side_count - 1);
-        role = :white_lindsey_seed_complete_shell_inner,
-    )
-    strata = CPB.complete_shell_boundary_strata(outer, inner)
+    unit_context = _white_lindsey_seed_unit_context_metadata(metadata)
     face_units = _white_lindsey_seed_units_for_strata(
         :face,
         shell.faces,
-        strata.facets,
+        _white_lindsey_seed_source_cpbs(:face, shell.faces),
         inventory.retained_ranges.faces,
         0,
+        unit_context,
     )
     edge_units = _white_lindsey_seed_units_for_strata(
         :edge,
         shell.edges,
-        strata.edges,
+        _white_lindsey_seed_source_cpbs(:edge, shell.edges),
         inventory.retained_ranges.edges,
         length(face_units),
+        unit_context,
     )
     corner_units = _white_lindsey_seed_units_for_strata(
         :corner,
         shell.corners,
-        strata.corners,
+        _white_lindsey_seed_source_cpbs(:corner, shell.corners),
         inventory.retained_ranges.corners,
         length(face_units) + length(edge_units),
+        unit_context,
     )
     return Tuple(vcat(collect(face_units), collect(edge_units), collect(corner_units)))
+end
+
+function _white_lindsey_seed_source_cpbs(group::Symbol, shell_pieces)
+    return Tuple(
+        _white_lindsey_seed_source_cpb(group, index, shell_pieces[index])
+        for index in eachindex(shell_pieces)
+    )
+end
+
+function _white_lindsey_seed_source_cpb(
+    group::Symbol,
+    index::Int,
+    shell_piece,
+)
+    intervals = _white_lindsey_seed_source_cpb_intervals(shell_piece)
+    return CPB.cpb(
+        intervals.x,
+        intervals.y,
+        intervals.z;
+        role = Symbol(:white_lindsey_seed_, group, :_source_cpb_, index),
+        metadata = _white_lindsey_seed_source_cpb_metadata(
+            group,
+            index,
+            shell_piece,
+        ),
+    )
+end
+
+function _white_lindsey_seed_source_cpb_metadata(
+    group::Symbol,
+    index::Int,
+    shell_piece,
+)
+    base = (;
+        stratum_kind = _white_lindsey_seed_stratum_kind(group),
+        source_cpb_index = index,
+    )
+    if hasproperty(shell_piece, :fixed_axis) &&
+       hasproperty(shell_piece, :fixed_side)
+        return merge(
+            base,
+            (;
+                axis = shell_piece.fixed_axis,
+                side = shell_piece.fixed_side,
+            ),
+        )
+    elseif hasproperty(shell_piece, :fixed_axes) &&
+           hasproperty(shell_piece, :fixed_sides)
+        return merge(
+            base,
+            (;
+                fixed_axes = shell_piece.fixed_axes,
+                sides = shell_piece.fixed_sides,
+            ),
+        )
+    end
+    return base
+end
+
+function _white_lindsey_seed_source_cpb_intervals(shell_piece)
+    axes = (:x, :y, :z)
+    intervals = Dict(axis => 1:1 for axis in axes)
+    if hasproperty(shell_piece, :fixed_axis) &&
+       hasproperty(shell_piece, :side_first) &&
+       hasproperty(shell_piece, :side_second)
+        active_axes = Tuple(axis for axis in axes if axis !== shell_piece.fixed_axis)
+        intervals[shell_piece.fixed_axis] =
+            shell_piece.fixed_index:shell_piece.fixed_index
+        intervals[active_axes[1]] = shell_piece.side_first.interval
+        intervals[active_axes[2]] = shell_piece.side_second.interval
+    elseif hasproperty(shell_piece, :free_axis) &&
+           hasproperty(shell_piece, :fixed_axes) &&
+           hasproperty(shell_piece, :fixed_indices)
+        intervals[shell_piece.free_axis] = shell_piece.side.interval
+        for (axis, coordinate) in
+            zip(shell_piece.fixed_axes, shell_piece.fixed_indices)
+            intervals[axis] = coordinate:coordinate
+        end
+    elseif hasproperty(shell_piece, :fixed_indices)
+        for (axis, coordinate) in zip(axes, shell_piece.fixed_indices)
+            intervals[axis] = coordinate:coordinate
+        end
+    end
+    return (; x = intervals[:x], y = intervals[:y], z = intervals[:z])
 end
 
 function _white_lindsey_seed_units_for_strata(
@@ -215,6 +296,7 @@ function _white_lindsey_seed_units_for_strata(
     source_cpbs,
     column_ranges,
     offset::Int,
+    unit_context::NamedTuple,
 )
     length(source_cpbs) == length(column_ranges) ||
         throw(
@@ -235,6 +317,7 @@ function _white_lindsey_seed_units_for_strata(
             source_cpbs[index],
             column_ranges[index],
             shell_pieces[index],
+            unit_context,
         ) for index in eachindex(source_cpbs)
     )
 end
@@ -245,9 +328,24 @@ function _white_lindsey_seed_retained_unit(
     source_cpb,
     column_range,
     shell_piece,
+    unit_context::NamedTuple,
 )
     unit_key = Symbol(:white_lindsey_seed_, group, :_, unit_index)
     dimension = length(column_range)
+    unit_metadata = merge(
+        (;
+            stratum_kind = _white_lindsey_seed_stratum_kind(group),
+            source_cpb_index = unit_index,
+            shell_piece_signature =
+                _white_lindsey_seed_shell_piece_signature(shell_piece),
+            retained_counts =
+                _white_lindsey_seed_unit_retained_counts(shell_piece, source_cpb),
+            retained_range_source =
+                :white_lindsey_low_order_materialized_seed_inventory,
+            fixed_block_operator_matrices_used = false,
+        ),
+        unit_context,
+    )
     return CRU.RetainedUnitRecord(
         unit_key,
         unit_index,
@@ -268,16 +366,53 @@ function _white_lindsey_seed_retained_unit(
         column_range,
         nothing,
         false,
-        (;
-            stratum_kind = _white_lindsey_seed_stratum_kind(group),
-            source_cpb_index = unit_index,
-            shell_piece_signature =
-                _white_lindsey_seed_shell_piece_signature(shell_piece),
-            retained_range_source =
-                :white_lindsey_low_order_materialized_seed_inventory,
-            fixed_block_operator_matrices_used = false,
-        ),
+        unit_metadata,
     )
+end
+
+function _white_lindsey_seed_unit_retained_counts(shell_piece, source_cpb)
+    axes = (:x, :y, :z)
+    counts = Dict(axis => 1 for axis in axes)
+    if hasproperty(shell_piece, :fixed_axis) &&
+       hasproperty(shell_piece, :side_first) &&
+       hasproperty(shell_piece, :side_second)
+        active_axes = Tuple(axis for axis in axes if axis !== shell_piece.fixed_axis)
+        counts[active_axes[1]] = Int(shell_piece.side_first.retained_count)
+        counts[active_axes[2]] = Int(shell_piece.side_second.retained_count)
+    elseif hasproperty(shell_piece, :free_axis) && hasproperty(shell_piece, :side)
+        counts[shell_piece.free_axis] = Int(shell_piece.side.retained_count)
+    else
+        source_shape = CPB.shape(source_cpb)
+        counts[:x] = Int(source_shape[1])
+        counts[:y] = Int(source_shape[2])
+        counts[:z] = Int(source_shape[3])
+    end
+    return (; x = counts[:x], y = counts[:y], z = counts[:z])
+end
+
+function _white_lindsey_seed_unit_context_metadata(metadata::NamedTuple)
+    context = NamedTuple()
+    parent_dims =
+        haskey(metadata, :parent_dims) ?
+        metadata.parent_dims :
+        (
+            haskey(metadata, :parent_axis_counts) ?
+            metadata.parent_axis_counts :
+            nothing
+        )
+    doside_source =
+        haskey(metadata, :doside_source_1d) ?
+        metadata.doside_source_1d :
+        (
+            haskey(metadata, :parent_axis_bundle_object) ?
+            metadata.parent_axis_bundle_object :
+            nothing
+        )
+    isnothing(parent_dims) ||
+        (context = merge(context, (; parent_dims = parent_dims)))
+    isnothing(doside_source) ||
+        (context = merge(context, (; doside_source_1d = doside_source)))
+    return context
 end
 
 function _white_lindsey_seed_stratum_kind(group::Symbol)
@@ -411,6 +546,8 @@ function _white_lindsey_decomposed_unit_pair_inventory_result(
         ),
         unit_count = length(units),
         pair_count = length(pairs),
+        retained_units = units,
+        unit_pairs = pairs,
         unit_keys = Tuple(unit.unit_key for unit in units),
         pair_keys = Tuple(pair.pair_key for pair in pairs),
         unit_summaries,
@@ -422,6 +559,7 @@ function _white_lindsey_decomposed_unit_pair_inventory_result(
             :not_available,
         retained_unit_column_ranges_materialized = available,
         decomposed_unit_pair_column_ranges_available = available,
+        decomposed_unit_pair_records_available = available,
         decomposed_wl_unit_pair_inventory_available = available,
         route_owned_inventory = true,
         full_parent_window_cpb_used = false,

@@ -9,16 +9,49 @@
 using Test
 using GaussletBases
 
+include("cartesian_white_lindsey_adapter_fixture_helpers.jl")
+
 const WLAcceptanceReadinessCPBM = GaussletBases.CartesianPairBlockMaterialization
+
+function _wl_acceptance_parent_axis_bundle_object()
+    doside_source_1d = _lw_adapter_doside_source_1d()
+    return (;
+        x = doside_source_1d,
+        y = doside_source_1d,
+        z = doside_source_1d,
+    )
+end
+
+function _wl_acceptance_center_records()
+    return (
+        (;
+            center_key = :proton_a,
+            center_index = 1,
+            nuclear_charge = 1.0,
+            location = (0.0, 0.0, 0.0),
+        ),
+    )
+end
 
 function _wl_decomposed_acceptance_blocker_report()
     adapter = WLAcceptanceReadinessCPBM.white_lindsey_boundary_stratum_one_body_adapter_summary()
     local_terms = adapter.supported_one_body_terms
     route_global_terms = WLAcceptanceReadinessCPBM.route_global_safe_one_body_terms()
+    route_global_supported_terms =
+        WLAcceptanceReadinessCPBM._route_global_one_body_supported_terms()
     seed_report = GaussletBases._white_lindsey_low_order_materialized_seed_report()
     decomposed_inventory =
         WLAcceptanceReadinessCPBM.white_lindsey_decomposed_unit_pair_inventory(
             seed_report,
+        )
+    by_center_global =
+        WLAcceptanceReadinessCPBM.route_global_electron_nuclear_by_center_matrices(
+            seed_report;
+            parent_axis_counts = (7, 7, 7),
+            parent_axis_bundle_object =
+                _wl_acceptance_parent_axis_bundle_object(),
+            coulomb_expansion = coulomb_gaussian_expansion(doacc = false),
+            center_records = _wl_acceptance_center_records(),
         )
     collection = (;
         object_kind = :cartesian_pair_block_local_one_body_block_collection,
@@ -47,7 +80,7 @@ function _wl_decomposed_acceptance_blocker_report()
     return (;
         object_kind = :decomposed_wl_h_h2plus_acceptance_readiness_audit,
         status = :blocked_decomposed_wl_h_h2plus_acceptance,
-        blocker = :missing_route_global_electron_nuclear_by_center_adapter,
+        blocker = :missing_decomposed_wl_hamiltonian_assembly,
         q = 5,
         ns = 5,
         n_s = 5,
@@ -57,6 +90,7 @@ function _wl_decomposed_acceptance_blocker_report()
         ordinary_cartesian_ida_operators_used = false,
         supported_decomposed_one_body_terms = local_terms,
         route_global_safe_one_body_terms = route_global_terms,
+        route_global_supported_one_body_terms = route_global_supported_terms,
         decomposed_overlap_available = :overlap in local_terms,
         decomposed_kinetic_available = :kinetic in local_terms,
         decomposed_electron_nuclear_by_center_available =
@@ -66,7 +100,7 @@ function _wl_decomposed_acceptance_blocker_report()
         route_global_overlap_adapter_available = :overlap in route_global_terms,
         route_global_kinetic_adapter_available = :kinetic in route_global_terms,
         route_global_electron_nuclear_by_center_adapter_available =
-            :electron_nuclear_by_center in route_global_terms,
+            :electron_nuclear_by_center in route_global_supported_terms,
         decomposed_electron_nuclear_by_center_placement_plan_available =
             !placement_plan_blocked,
         decomposed_electron_nuclear_by_center_global_matrix_available =
@@ -105,7 +139,20 @@ function _wl_decomposed_acceptance_blocker_report()
             decomposed_inventory.retained_dimension,
         retained_global_dimension_source =
             decomposed_inventory.retained_dimension_status,
-        route_global_by_center_acceptance_matrix_available = false,
+        route_global_by_center_acceptance_matrix_available =
+            by_center_global.route_global_by_center_matrices_materialized,
+        route_global_by_center_acceptance_matrix_status =
+            by_center_global.status,
+        route_global_by_center_acceptance_matrix_blocker =
+            by_center_global.blocker,
+        route_global_by_center_matrix_count =
+            by_center_global.by_center_matrix_count,
+        route_global_by_center_center_count =
+            by_center_global.center_count,
+        route_global_by_center_nuclear_charge_applied =
+            by_center_global.nuclear_charge_applied,
+        route_global_by_center_centers_summed =
+            by_center_global.centers_summed,
         fixed_block_operator_matrices_available =
             :overlap in route_global_terms && :kinetic in route_global_terms,
         fixed_block_operator_matrices_used = false,
@@ -122,8 +169,7 @@ end
     println("decomposed WL gausslet-only H/H2+ acceptance readiness: ", report)
 
     @test report.status == :blocked_decomposed_wl_h_h2plus_acceptance
-    @test report.blocker ==
-          :missing_route_global_electron_nuclear_by_center_adapter
+    @test report.blocker == :missing_decomposed_wl_hamiltonian_assembly
     @test report.q == 5
     @test report.ns == 5
     @test report.n_s == 5
@@ -133,7 +179,7 @@ end
     @test report.decomposed_electron_nuclear_by_center_selector_available
     @test report.route_global_overlap_adapter_available
     @test report.route_global_kinetic_adapter_available
-    @test !report.route_global_electron_nuclear_by_center_adapter_available
+    @test report.route_global_electron_nuclear_by_center_adapter_available
     @test report.decomposed_electron_nuclear_by_center_placement_plan_available
     @test report.decomposed_electron_nuclear_by_center_global_matrix_available
     @test report.terminal_shellification_unit_inventory_exposed
@@ -156,7 +202,14 @@ end
     @test report.decomposed_unit_pair_inventory_retained_dimension == 223
     @test report.retained_global_dimension_source ==
           :available_from_decomposed_wl_unit_column_ranges
-    @test !report.route_global_by_center_acceptance_matrix_available
+    @test report.route_global_by_center_acceptance_matrix_available
+    @test report.route_global_by_center_acceptance_matrix_status ==
+          :materialized_route_global_electron_nuclear_by_center_matrix_set
+    @test isnothing(report.route_global_by_center_acceptance_matrix_blocker)
+    @test report.route_global_by_center_matrix_count == 1
+    @test report.route_global_by_center_center_count == 1
+    @test !report.route_global_by_center_nuclear_charge_applied
+    @test !report.route_global_by_center_centers_summed
     @test report.fixed_block_operator_matrices_available
     @test !report.fixed_block_operator_matrices_used
     @test report.decomposed_wl_units_consumed

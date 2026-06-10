@@ -127,6 +127,10 @@ function white_lindsey_boundary_stratum_unit_adapter_descriptor(unit)
             _white_lindsey_source_cpb_fixed_side_metadata(source_cpb),
         retained_count_status = unit.dimension_status,
         retained_count = unit.dimension,
+        retained_counts = _white_lindsey_unit_metadata_value(
+            unit,
+            :retained_counts,
+        ),
         parent_dims = _white_lindsey_unit_metadata_value(unit, :parent_dims),
         doside_source_1d =
             _white_lindsey_unit_metadata_value(unit, :doside_source_1d),
