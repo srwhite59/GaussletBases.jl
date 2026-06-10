@@ -1771,14 +1771,26 @@ function _cpb_mixed_gto_overlap_block_blocker(
     cpb::CPB.CoordinateProductBox,
     orbital,
 )
+    record_blocker = _cpb_mixed_gto_orbital_record_blocker(orbital)
+    isnothing(record_blocker) || return record_blocker
+    outside_interval = _outside_cpb_parent_interval(parent, cpb)
+    isnothing(outside_interval) ||
+        return Symbol("cpb_$(outside_interval.axis)_interval_outside_parent")
+    primitive_blocker = _cpb_mixed_gto_orbital_primitive_blocker(orbital)
+    isnothing(primitive_blocker) || return primitive_blocker
+    return nothing
+end
+
+function _cpb_mixed_gto_orbital_record_blocker(orbital)
     _is_cartesian_gaussian_shell_orbital(orbital) ||
         return :unsupported_supplement_orbital_record
     length(orbital.angular_powers) == 3 ||
         return :invalid_supplement_angular_powers
     length(orbital.center) == 3 || return :invalid_supplement_center
-    outside_interval = _outside_cpb_parent_interval(parent, cpb)
-    isnothing(outside_interval) ||
-        return Symbol("cpb_$(outside_interval.axis)_interval_outside_parent")
+    return nothing
+end
+
+function _cpb_mixed_gto_orbital_primitive_blocker(orbital)
     orbital.primitive_normalization === :axiswise_normalized_cartesian_gaussian ||
         return :unsupported_supplement_primitive_normalization
     all(power -> power >= 0, orbital.angular_powers) ||
@@ -1903,12 +1915,7 @@ function _cpb_mixed_gto_axis_overlap_tables(
     parent::CPGB.CartesianParentGaussletBasis3D,
     orbital,
 )
-    axes = CPGB.parent_axes(parent)
-    axis_representations = (;
-        x = basis_representation(axes.x; operators = (:overlap,)),
-        y = basis_representation(axes.y; operators = (:overlap,)),
-        z = basis_representation(axes.z; operators = (:overlap,)),
-    )
+    axis_representations = _cpb_mixed_gto_parent_axis_representations(parent)
     return (;
         x = _cpb_mixed_gto_axis_overlap_table(
             axis_representations.x,
@@ -1934,12 +1941,7 @@ function _cpb_mixed_gto_coordinate_moment_axis_tables(
     axis::Symbol,
     xpower::Int,
 )
-    axes = CPGB.parent_axes(parent)
-    axis_representations = (;
-        x = basis_representation(axes.x; operators = (:overlap,)),
-        y = basis_representation(axes.y; operators = (:overlap,)),
-        z = basis_representation(axes.z; operators = (:overlap,)),
-    )
+    axis_representations = _cpb_mixed_gto_parent_axis_representations(parent)
     return (;
         x =
             axis === :x ?
@@ -1960,12 +1962,7 @@ function _cpb_mixed_gto_kinetic_axis_tables(
     parent::CPGB.CartesianParentGaussletBasis3D,
     orbital,
 )
-    axes = CPGB.parent_axes(parent)
-    axis_representations = (;
-        x = basis_representation(axes.x; operators = (:overlap,)),
-        y = basis_representation(axes.y; operators = (:overlap,)),
-        z = basis_representation(axes.z; operators = (:overlap,)),
-    )
+    axis_representations = _cpb_mixed_gto_parent_axis_representations(parent)
     overlap_tables = (;
         x = _cpb_mixed_gto_axis_overlap_table(axis_representations.x, orbital, :x),
         y = _cpb_mixed_gto_axis_overlap_table(axis_representations.y, orbital, :y),
@@ -1983,6 +1980,17 @@ function _cpb_mixed_gto_kinetic_axis_tables(
     )
 end
 
+function _cpb_mixed_gto_parent_axis_representations(
+    parent::CPGB.CartesianParentGaussletBasis3D,
+)
+    axes = CPGB.parent_axes(parent)
+    return (;
+        x = basis_representation(axes.x; operators = (:overlap,)),
+        y = basis_representation(axes.y; operators = (:overlap,)),
+        z = basis_representation(axes.z; operators = (:overlap,)),
+    )
+end
+
 function _is_cartesian_gaussian_shell_orbital(orbital)
     return hasproperty(orbital, :label) &&
            hasproperty(orbital, :angular_powers) &&
@@ -1992,6 +2000,9 @@ function _is_cartesian_gaussian_shell_orbital(orbital)
            hasproperty(orbital, :primitive_normalization)
 end
 
+# Mixed GTO helpers are included later than this provider module in
+# GaussletBases.jl, so these references must be resolved from the parent module
+# at call time.
 function _cpb_mixed_gto_axis_overlap_table(axis_representation, orbital, axis::Symbol)
     helper = getproperty(
         parentmodule(@__MODULE__),

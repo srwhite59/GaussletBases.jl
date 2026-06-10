@@ -109,6 +109,9 @@ function _check_blocked_mixed_gto(
     @test block_summary.exports_or_artifacts == false
     @test !hasproperty(block_summary, :dense_block)
     @test !hasproperty(block_summary, :axis_ops)
+    @test !hasproperty(block_summary, :axis_tables)
+    @test !hasproperty(block_summary, :primitive_tables)
+    @test !hasproperty(block_summary, :oracle_matrix)
     @test !hasproperty(block_summary, :global_matrix)
     @test !hasproperty(block_summary, :global_overlap_matrix)
     @test !hasproperty(block_summary, :retained_blocks)
@@ -142,9 +145,36 @@ function _check_mixed_gto_summary_common(
     @test block_summary.exports_or_artifacts == false
     @test !hasproperty(block_summary, :dense_block)
     @test !hasproperty(block_summary, :axis_ops)
+    @test !hasproperty(block_summary, :axis_tables)
+    @test !hasproperty(block_summary, :primitive_tables)
+    @test !hasproperty(block_summary, :oracle_matrix)
     @test !hasproperty(block_summary, :global_matrix)
     @test !hasproperty(block_summary, :global_overlap_matrix)
     @test !hasproperty(block_summary, :retained_blocks)
+    return nothing
+end
+
+function _check_mixed_gto_one_body_wrapper_blockers(
+    parent,
+    cpb,
+    orbital,
+    expected_blocker,
+)
+    _check_blocked_mixed_gto(
+        CBPMixedGTO.cpb_mixed_gto_position_operator_block(parent, cpb, orbital),
+        expected_blocker;
+        expected_status = :blocked_cpb_mixed_gto_coordinate_moment_local_block,
+    )
+    _check_blocked_mixed_gto(
+        CBPMixedGTO.cpb_mixed_gto_x2_operator_block(parent, cpb, orbital),
+        expected_blocker;
+        expected_status = :blocked_cpb_mixed_gto_coordinate_moment_local_block,
+    )
+    _check_blocked_mixed_gto(
+        CBPMixedGTO.cpb_mixed_gto_kinetic_operator_block(parent, cpb, orbital),
+        expected_blocker;
+        expected_status = :blocked_cpb_mixed_gto_kinetic_local_block,
+    )
     return nothing
 end
 
@@ -307,6 +337,12 @@ end
         ),
         :unsupported_supplement_primitive_normalization,
     )
+    _check_mixed_gto_one_body_wrapper_blockers(
+        parent,
+        cpb,
+        unsupported_normalization,
+        :unsupported_supplement_primitive_normalization,
+    )
 
     invalid_powers = _mixed_gto_orbital(angular_powers = (-1, 0, 0))
     _check_blocked_mixed_gto(
@@ -319,6 +355,12 @@ end
         CBPMixedGTO.cpb_mixed_gto_overlap_block(parent, cpb, missing_primitives),
         :missing_supplement_primitive_data,
     )
+    _check_mixed_gto_one_body_wrapper_blockers(
+        parent,
+        cpb,
+        missing_primitives,
+        :missing_supplement_primitive_data,
+    )
 
     mismatched_primitives = _mixed_gto_orbital(
         exponents = [0.7, 1.3],
@@ -328,20 +370,34 @@ end
         CBPMixedGTO.cpb_mixed_gto_overlap_block(parent, cpb, mismatched_primitives),
         :supplement_primitive_count_mismatch,
     )
+    _check_mixed_gto_one_body_wrapper_blockers(
+        parent,
+        cpb,
+        mismatched_primitives,
+        :supplement_primitive_count_mismatch,
+    )
+
+    invalid_exponents = _mixed_gto_orbital(exponents = [0.7, -1.3])
+    _check_blocked_mixed_gto(
+        CBPMixedGTO.cpb_mixed_gto_overlap_block(parent, cpb, invalid_exponents),
+        :invalid_supplement_exponents,
+    )
+
+    invalid_coefficients = _mixed_gto_orbital(coefficients = [0.8, Inf])
+    _check_blocked_mixed_gto(
+        CBPMixedGTO.cpb_mixed_gto_overlap_block(parent, cpb, invalid_coefficients),
+        :invalid_supplement_coefficients,
+    )
 
     outside_cpb = CPBMixedGTO.cpb(1:2, 2:3, 3:4; role = :outside_mixed_gto_cpb)
     _check_blocked_mixed_gto(
         CBPMixedGTO.cpb_mixed_gto_overlap_block(parent, outside_cpb, orbital),
         :cpb_z_interval_outside_parent,
     )
-
-    _check_blocked_mixed_gto(
-        CBPMixedGTO.cpb_mixed_gto_kinetic_operator_block(
-            parent,
-            cpb,
-            unsupported_normalization,
-        ),
-        :unsupported_supplement_primitive_normalization;
-        expected_status = :blocked_cpb_mixed_gto_kinetic_local_block,
+    _check_mixed_gto_one_body_wrapper_blockers(
+        parent,
+        outside_cpb,
+        orbital,
+        :cpb_z_interval_outside_parent,
     )
 end
