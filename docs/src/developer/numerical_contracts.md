@@ -27,7 +27,7 @@ mathematical data.
 
 In particular:
 
-- do not store `S = I + ε` by default when `ε` is just Float64 residue
+- do not store `S = I + eps` by default when `eps` is just Float64 residue
 - do not build downstream logic that keeps consulting such an `S`
 - do not interpret tiny nonorthogonality at the `1e-12` to `1e-14` level as a
   real structural feature
@@ -92,101 +92,45 @@ In particular, for nested fixed-block routes:
 - not against a separate total-only route that rebuilds one-body terms through a
   different parent-space contraction path
 
-## Post-CPB WL Gausslet-Only H Atom Acceptance Baseline
+## Decomposed WL Gausslet-Only Acceptance Boundary
 
-The WL/Cartesian gausslet-only hydrogen acceptance check is
-`test/nested/cartesian_wl_gausslet_h_atom_acceptance_runtests.jl`. It is a
-bounded scientific gate through the post-CPB White-Lindsey local operator
-path, not an exhaustive local-helper test.
+The intended gausslet-only scientific acceptance path is a true decomposed
+White-Lindsey calculation with `q = 5` and `ns = 5`, not a single CPB covering
+the full parent product window. The active readiness check is
+`test/nested/cartesian_wl_gausslet_h_atom_acceptance_runtests.jl`.
 
-Active fixture:
+Current status:
 
-- one proton at `(0.0, 0.0, 0.0)` with `Z = 1.0`
-- `q = 5`, `ns = 5`, `n_s = 5`
-- axis count rule recorded as `:two_ns_plus_q`
-- standard WL core-spacing rule, recorded as
-  `:standard_wl_ns_equals_q`
-- core spacing `d = 0.15`
-- `MappedUniformBasisSpec(:G10)` parent axes with counts `(15, 15, 15)`
-- `white_lindsey_atomic_mapping(Z = 1.0, d = 0.15, tail_spacing = 10.0)`
-- `reference_spacing = 1.0`
-- backend `:pgdg_localized_experimental`
-- Coulomb expansion `coulomb_gaussian_expansion(doacc = false)`
-- basis dimension / parent support size `3375`
-- generalized solve against the carried Cartesian overlap
-- overlap, kinetic, and by-center electron-nuclear blocks materialized by
-  `CartesianCPBBlockProviders`
+- decomposed White-Lindsey overlap and kinetic local pair-block paths exist
+- global pilots exist for those supported safe one-body terms
+- CPB-local electron-nuclear by-center provider blocks exist
+- decomposed White-Lindsey electron-nuclear by-center selector, placement plan,
+  and global by-center matrix path do not exist yet
+- therefore active H and H2+ scientific acceptance through the decomposed WL
+  path is blocked on
+  `:missing_decomposed_wl_electron_nuclear_by_center_placement`
 
-The current post-CPB WL lowest one-electron energy is approximately
-`-0.4832079279118124` Hartree. The test verifies the variational side of the
-hydrogen ground state, records distance from `-0.5` Hartree, and records
-distance from the old direct-route transition baselines:
+The retired transition helpers built one full-parent CPB with role
+`:wl_cpb_acceptance_full_parent_window`. That path exercised CPB-local
+operators but not White-Lindsey boundary-unit decomposition, so it is not an
+active acceptance contract. Its observed values are retained only as transition
+notes:
 
-- small fitted direct route `-0.4706400351534759` Hartree
-- coarse/distorted direct route `-0.4966106635473884` Hartree
+- H full-window CPB energy `-0.4832079279118124` Hartree
+- H2+ full-window CPB electronic energy `-1.0971828374927926` Hartree
+- H2+ full-window CPB total energy `-0.5971828374927926` Hartree
 
-Those direct-route values are reference baselines for the transition only.
-They are not the ongoing route under test.
+Older direct-route transition baselines remain historical comparison points
+only:
 
-## Post-CPB WL Gausslet-Only H2+ Acceptance Baseline
+- H small fitted direct route `-0.4706400351534759` Hartree
+- H coarse/distorted direct route `-0.4966106635473884` Hartree
+- H2+ R = 2.0 direct electronic energy `-1.0654839328172023` Hartree
+- H2+ R = 2.0 direct total energy `-0.5654839328172023` Hartree
 
-The WL/Cartesian gausslet-only H2+ acceptance check is
-`test/nested/cartesian_wl_gausslet_h2plus_acceptance_runtests.jl`. It is a
-bounded one-electron diatomic gate through the same post-CPB local operator
-path, not a route/global or helper-level test.
-
-Fixture:
-
-- two protons on the z axis at `(0.0, 0.0, -1.0)` and `(0.0, 0.0, 1.0)`
-- internuclear distance `R = 2.0` bohr
-- nuclear charges `(1.0, 1.0)`
-- `q = 5`, `ns = 5`, `n_s = 5`
-- axis count rule recorded as `:two_ns_plus_q`
-- standard WL core-spacing rule, recorded as
-  `:standard_wl_ns_equals_q`
-- core spacing `d = 0.15`
-- `MappedUniformBasisSpec(:G10)` parent axes with counts `(15, 15, 17)`
-- `white_lindsey_atomic_mapping(Z = 1.0, d = 0.15, tail_spacing = 10.0)`
-- `reference_spacing = 1.0`
-- backend `:pgdg_localized_experimental`
-- Coulomb expansion `coulomb_gaussian_expansion(doacc = false)`
-- basis dimension / parent support size `3825`
-- generalized solve against the carried Cartesian overlap
-- overlap, kinetic, and two by-center electron-nuclear blocks materialized by
-  `CartesianCPBBlockProviders`
-
-The electronic Hamiltonian is
-
-```text
-H_elec = kinetic - 1/r_A - 1/r_B
-```
-
-and the Born-Oppenheimer total reported by the test is
-
-```text
-E_total = E_electronic + 1/R.
-```
-
-At `R = 2.0`, the reference electronic energy is approximately
-`-1.1026342144949465` Hartree and the reference total energy is approximately
-`-0.6026342144949465` Hartree. The current post-CPB WL fixture reports
-
-- electronic energy `-1.0971828374927926` Hartree
-- proton-proton repulsion `0.5` Hartree
-- total energy `-0.5971828374927926` Hartree
-- total-energy distance from the `R = 2.0` reference of approximately
-  `0.005451377002153923` Hartree
-
-The old direct-route H2+ transition baseline was
-
-- electronic energy `-1.0654839328172023` Hartree
-- total energy `-0.5654839328172023` Hartree
-
-That direct-route value remains only a transition reference. The active test
-asserts the post-CPB path materializes/consumes CPB-local operator blocks and
-does not call `ordinary_cartesian_ida_operators` or hand-build the full
-Cartesian product matrices directly from 1D factors.
-
-These checks do not include GTO supplements, PQS retained transforms, CPB/GTO
-bundle consumption, route/global refactors, or Hamiltonian assembly beyond the
-one-electron `H1 = kinetic + nuclear attraction` path.
+The next implementation needed before restoring active scientific H/H2+
+acceptance is a decomposed WL electron-nuclear by-center path that keeps center
+records separate, applies nuclear charges at the acceptance/Hamiltonian
+assembly boundary, and places the resulting by-center blocks through real
+boundary-unit ranges. Do not reintroduce the full-parent CPB helper or a direct
+Cartesian product fallback as the active route.
