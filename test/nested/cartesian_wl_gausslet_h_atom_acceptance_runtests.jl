@@ -43,33 +43,78 @@ function _wl_acceptance_center_records()
     )
 end
 
-function _wl_lowest_one_electron_energy(hamiltonian_matrix, overlap_matrix)
-    sym_h = Symmetric((hamiltonian_matrix + transpose(hamiltonian_matrix)) ./ 2)
+function _wl_overlap_metric_diagnostics(overlap_matrix, decomposed_inventory)
     sym_s = Symmetric((overlap_matrix + transpose(overlap_matrix)) ./ 2)
+    symmetry_error = maximum(abs.(overlap_matrix - transpose(overlap_matrix)))
+    diagonal_values = diag(overlap_matrix)
     overlap_eigenvalues = eigvals(sym_s)
     overlap_minimum_eigenvalue = minimum(overlap_eigenvalues)
     overlap_maximum_eigenvalue = maximum(overlap_eigenvalues)
     overlap_condition_estimate =
         overlap_maximum_eigenvalue / overlap_minimum_eigenvalue
+    near_zero_eigenvalue_count = count(abs.(overlap_eigenvalues) .<= 1.0e-10)
+    negative_eigenvalue_count = count(overlap_eigenvalues .< -1.0e-10)
+    rank_estimate = count(overlap_eigenvalues .> 1.0e-10)
+    zero_diagonal_count = count(abs.(diagonal_values) .<= 1.0e-10)
+    unit_range_start =
+        minimum(first(summary.column_range) for summary in decomposed_inventory.unit_summaries)
+    unit_range_stop =
+        maximum(last(summary.column_range) for summary in decomposed_inventory.unit_summaries)
+    missing_prefix_column_count = unit_range_start - 1
+    return (;
+        matrix_size = size(overlap_matrix),
+        symmetry_error,
+        diagonal_minimum = minimum(diagonal_values),
+        diagonal_maximum = maximum(diagonal_values),
+        overlap_minimum_eigenvalue,
+        overlap_maximum_eigenvalue,
+        overlap_condition_estimate,
+        near_zero_eigenvalue_count,
+        negative_eigenvalue_count,
+        rank_estimate,
+        zero_diagonal_count,
+        decomposed_unit_column_range_span = unit_range_start:unit_range_stop,
+        missing_prefix_column_count,
+        boundary_inventory_only =
+            missing_prefix_column_count > 0 &&
+            zero_diagonal_count >= missing_prefix_column_count,
+        blocker =
+            missing_prefix_column_count > 0 ?
+            :missing_decomposed_wl_interior_retained_operator_inventory :
+            overlap_minimum_eigenvalue <= 0.0 ?
+            :decomposed_wl_overlap_metric_not_positive_definite :
+            nothing,
+    )
+end
+
+function _wl_lowest_one_electron_energy(
+    hamiltonian_matrix,
+    overlap_matrix,
+    overlap_diagnostics,
+)
+    sym_h = Symmetric((hamiltonian_matrix + transpose(hamiltonian_matrix)) ./ 2)
     overlap_identity =
         isapprox(overlap_matrix, Matrix{Float64}(I, size(overlap_matrix)...);
             atol = 1.0e-9,
             rtol = 1.0e-9,
         )
-    if overlap_minimum_eigenvalue <= 0.0
+    if !isnothing(overlap_diagnostics.blocker)
         return (;
             status = :blocked_decomposed_wl_one_electron_solve,
-            blocker = :decomposed_wl_overlap_metric_not_positive_definite,
+            blocker = overlap_diagnostics.blocker,
             energy = NaN,
             solve_kind = :blocked_overlap_metric,
-            overlap_minimum_eigenvalue,
-            overlap_maximum_eigenvalue,
-            overlap_condition_estimate,
+            overlap_minimum_eigenvalue =
+                overlap_diagnostics.overlap_minimum_eigenvalue,
+            overlap_maximum_eigenvalue =
+                overlap_diagnostics.overlap_maximum_eigenvalue,
+            overlap_condition_estimate =
+                overlap_diagnostics.overlap_condition_estimate,
             overlap_identity,
         )
     end
-    values =
-        overlap_identity ? eigvals(sym_h) : eigen(sym_h, sym_s).values
+    sym_s = Symmetric((overlap_matrix + transpose(overlap_matrix)) ./ 2)
+    values = overlap_identity ? eigvals(sym_h) : eigen(sym_h, sym_s).values
     return (;
         status = :materialized_decomposed_wl_one_electron_solve,
         blocker = nothing,
@@ -99,6 +144,7 @@ function _wl_decomposed_h_atom_acceptance_report()
     kinetic_global = nothing
     by_center_global = nothing
     hamiltonian = nothing
+    overlap_diagnostics = nothing
     solve = nothing
     elapsed_seconds = @elapsed begin
         overlap_global =
@@ -132,9 +178,12 @@ function _wl_decomposed_h_atom_acceptance_report()
                 kinetic_global,
                 by_center_global,
             )
+        overlap_diagnostics =
+            _wl_overlap_metric_diagnostics(overlap_global.matrix, decomposed_inventory)
         solve = _wl_lowest_one_electron_energy(
             hamiltonian.matrix,
             overlap_global.matrix,
+            overlap_diagnostics,
         )
     end
     h_reference = -0.5
@@ -239,6 +288,20 @@ function _wl_decomposed_h_atom_acceptance_report()
         overlap_minimum_eigenvalue = solve.overlap_minimum_eigenvalue,
         overlap_maximum_eigenvalue = solve.overlap_maximum_eigenvalue,
         overlap_condition_estimate = solve.overlap_condition_estimate,
+        overlap_symmetry_error = overlap_diagnostics.symmetry_error,
+        overlap_diagonal_minimum = overlap_diagnostics.diagonal_minimum,
+        overlap_diagonal_maximum = overlap_diagnostics.diagonal_maximum,
+        overlap_near_zero_eigenvalue_count =
+            overlap_diagnostics.near_zero_eigenvalue_count,
+        overlap_negative_eigenvalue_count =
+            overlap_diagnostics.negative_eigenvalue_count,
+        overlap_rank_estimate = overlap_diagnostics.rank_estimate,
+        overlap_zero_diagonal_count = overlap_diagnostics.zero_diagonal_count,
+        decomposed_unit_column_range_span =
+            overlap_diagnostics.decomposed_unit_column_range_span,
+        missing_interior_retained_column_count =
+            overlap_diagnostics.missing_prefix_column_count,
+        boundary_inventory_only = overlap_diagnostics.boundary_inventory_only,
         solve_kind = solve.solve_kind,
         solve_status = solve.status,
         solve_blocker = solve.blocker,
@@ -268,7 +331,8 @@ end
     println("decomposed WL gausslet-only H atom acceptance: ", report)
 
     @test report.status == :blocked_decomposed_wl_h_atom_acceptance
-    @test report.blocker == :decomposed_wl_overlap_metric_not_positive_definite
+    @test report.blocker ==
+          :missing_decomposed_wl_interior_retained_operator_inventory
     @test report.q == 5
     @test report.ns == 5
     @test report.n_s == 5
@@ -326,9 +390,19 @@ end
     @test report.hamiltonian_matrix_dimension == report.retained_dimension
     @test report.overlap_minimum_eigenvalue <= 0.0
     @test !isfinite(report.overlap_condition_estimate)
+    @test report.overlap_symmetry_error < 1.0e-12
+    @test report.overlap_diagonal_minimum == 0.0
+    @test isapprox(report.overlap_diagonal_maximum, 1.0; atol = 1.0e-12)
+    @test report.overlap_near_zero_eigenvalue_count == 125
+    @test report.overlap_negative_eigenvalue_count == 0
+    @test report.overlap_rank_estimate == 98
+    @test report.overlap_zero_diagonal_count == 125
+    @test report.decomposed_unit_column_range_span == 126:223
+    @test report.missing_interior_retained_column_count == 125
+    @test report.boundary_inventory_only
     @test report.solve_status == :blocked_decomposed_wl_one_electron_solve
     @test report.solve_blocker ==
-          :decomposed_wl_overlap_metric_not_positive_definite
+          :missing_decomposed_wl_interior_retained_operator_inventory
     @test report.solve_kind == :blocked_overlap_metric
     @test !isfinite(report.lowest_h_atom_energy)
     @test report.fixed_block_operator_matrices_available

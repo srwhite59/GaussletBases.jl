@@ -123,7 +123,7 @@ Current status:
   materialized low-order seed per-piece retained ranges
 - therefore active H scientific acceptance through the decomposed WL path is
   now blocked one step later, on
-  `:decomposed_wl_overlap_metric_not_positive_definite`
+  `:missing_decomposed_wl_interior_retained_operator_inventory`
 
 The current q = 5, ns = 5 route metadata exposes terminal shellification unit
 inventory at terminal-region granularity, and the local White-Lindsey adapter can
@@ -150,12 +150,19 @@ and multiplies by the recorded nuclear charge at Hamiltonian assembly.
 The current H atom audit materializes decomposed route-global overlap, kinetic,
 one-center electron-nuclear by-center, and the one-electron Hamiltonian for
 `q = 5`, `ns = 5`, retained dimension 223. The scientific solve is intentionally
-not accepted yet: the decomposed overlap matrix has minimum eigenvalue `0.0`
-and an infinite condition estimate, so the generalized solve is blocked on
-`:decomposed_wl_overlap_metric_not_positive_definite`. Do not silently replace
-that metric with an ordinary solve or a direct Cartesian fallback. H2+ remains a
-deferred next-step acceptance item until the single-center decomposed overlap
-metric/final-basis contract is reviewed.
+not accepted yet. The decomposed boundary-unit inventory spans retained columns
+`126:223`; columns `1:125` are not covered by the current unit-pair inventory,
+so the assembled overlap has 125 zero diagonal entries, 125 near-zero
+eigenvalues, rank estimate 98, minimum eigenvalue `0.0`, maximum eigenvalue
+about `1.000000000000166`, symmetry error about `2.8e-17`, and an infinite
+condition estimate. This is a boundary-only matrix inside a full retained
+dimension, not evidence that the boundary block placement itself is corrupt.
+The current blocker is
+`:missing_decomposed_wl_interior_retained_operator_inventory`. Do not silently
+replace that metric with an ordinary solve, a pseudoinverse solve, or a direct
+Cartesian fallback. H2+ remains a deferred next-step acceptance item until the
+single-center decomposed route has the missing interior/core retained operator
+inventory or a reviewed final-basis reduction contract.
 
 Do not use the existing nested fixed-block operator matrices as the acceptance
 path. They remain useful historical/oracle material, but they bypass the
@@ -181,10 +188,10 @@ only:
 - H2+ R = 2.0 direct total energy `-0.5654839328172023` Hartree
 
 The next implementation needed before restoring active scientific H/H2+
-acceptance is not Hamiltonian assembly; it is the decomposed WL solve-metric or
-final-basis overlap contract. The route needs a reviewed decision on whether the
-retained-unit overlap assembled from decomposed pair blocks is the solve metric,
-requires pruning/compression of null directions, or should be replaced by a
-documented final orthonormal WL basis contract. Do not reintroduce the
-full-parent CPB helper or a direct Cartesian product fallback as the active
-route.
+acceptance is not Hamiltonian assembly; it is the missing interior/core retained
+operator inventory or a reviewed final-basis reduction contract. The route needs
+the retained columns `1:125` to be supplied by real decomposed WL operator
+records, or a documented decision that the active acceptance solve should use a
+reduced final basis containing only the covered retained-unit columns. Do not
+reintroduce the full-parent CPB helper or a direct Cartesian product fallback as
+the active route.

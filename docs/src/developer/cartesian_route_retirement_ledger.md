@@ -66,8 +66,9 @@ White-Lindsey route and was retired rather than kept as an active passing
 test. The active readiness audit now materializes decomposed route-global
 overlap, kinetic, one-center electron-nuclear by-center, and a charge-applied
 one-electron Hamiltonian. It blocks at the solve boundary because the current
-decomposed overlap metric is singular:
-`:decomposed_wl_overlap_metric_not_positive_definite`.
+route-global matrices cover only the decomposed boundary-unit retained columns
+`126:223` inside a full 223-column retained dimension:
+`:missing_decomposed_wl_interior_retained_operator_inventory`.
 
 ## Current Replacement Pressure
 
@@ -90,7 +91,8 @@ decomposed overlap metric is singular:
   nuclear charges and center summation are applied only at Hamiltonian assembly.
   The current H atom audit reaches this assembled Hamiltonian but still does not
   produce an accepted scientific energy because the decomposed overlap solve
-  metric is singular.
+  metric has 125 zero diagonal/eigenvalue directions corresponding to retained
+  columns `1:125`, which are outside the current boundary-unit inventory.
 - A private route-shaped safe one-body matrix-set adapter now wraps individual
   `route_global_one_body_matrix(...; term = ...)` calls and returns
   term-separated result objects plus a compact summary. It does not copy dense
