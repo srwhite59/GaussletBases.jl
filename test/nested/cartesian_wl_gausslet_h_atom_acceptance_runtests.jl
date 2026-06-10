@@ -632,9 +632,18 @@ function _wl_decomposed_h_gto_supplement_readiness_report()
         :mapped_working_gaussian_proxy_axis_representation_available
     mixed_gto_required_source =
         :mapped_ordinary_working_gaussian_proxy_axis_representation
-    route_global_combined_basis_layout_status = :not_reached
-    route_global_combined_basis_layout_blocker =
-        :missing_route_global_combined_gto_basis_layout
+    combined_layout =
+        WLAcceptanceReadinessCPBM.route_global_combined_gto_basis_layout(
+            decomposed_inventory,
+            supplement,
+        )
+    route_global_combined_basis_layout_status = combined_layout.status
+    route_global_combined_basis_layout_blocker = combined_layout.blocker
+    readiness_blocker =
+        route_global_combined_basis_layout_status ===
+        :available_route_global_combined_gto_basis_layout ?
+        :missing_route_global_combined_gto_matrix_assembly :
+        route_global_combined_basis_layout_blocker
     decomposed_unit_range_start = minimum(
         first(summary.column_range) for summary in decomposed_inventory.unit_summaries
     )
@@ -646,7 +655,7 @@ function _wl_decomposed_h_gto_supplement_readiness_report()
     return (;
         object_kind = :decomposed_wl_h_gto_supplement_acceptance_readiness_report,
         status = :blocked_decomposed_wl_gto_supplement_acceptance_readiness,
-        blocker = route_global_combined_basis_layout_blocker,
+        blocker = readiness_blocker,
         acceptance_suite =
             :decomposed_wl_gausslet_plus_gto_one_electron_acceptance,
         acceptance_fixture = :h_atom_gto_supplement_readiness,
@@ -727,9 +736,32 @@ function _wl_decomposed_h_gto_supplement_readiness_report()
         gto_gto_shapes = gto_shapes,
         route_global_combined_basis_layout_status,
         route_global_combined_basis_layout_blocker,
-        final_combined_overlap_layout_available = false,
-        final_combined_hamiltonian_layout_available = false,
-        combined_basis_dimension = :unavailable,
+        route_global_combined_basis_layout_kind = combined_layout.layout_kind,
+        gausslet_retained_range = combined_layout.gausslet_retained_range,
+        gausslet_retained_dimension =
+            combined_layout.gausslet_retained_dimension,
+        gto_supplement_range = combined_layout.gto_supplement_range,
+        gto_supplement_orbital_count =
+            combined_layout.gto_supplement_orbital_count,
+        total_combined_dimension = combined_layout.total_combined_dimension,
+        combined_basis_dimension = combined_layout.combined_basis_dimension,
+        combined_block_layout_keys = combined_layout.block_layout_keys,
+        gausslet_gausslet_block_layout =
+            combined_layout.gausslet_gausslet_block_layout,
+        gausslet_gto_block_layout = combined_layout.gausslet_gto_block_layout,
+        gto_gausslet_block_layout = combined_layout.gto_gausslet_block_layout,
+        gto_gto_block_layout = combined_layout.gto_gto_block_layout,
+        mixed_cpb_gto_blocks_orientation =
+            combined_layout.mixed_cpb_gto_blocks_orientation,
+        gto_gto_blocks_orientation = combined_layout.gto_gto_blocks_orientation,
+        final_combined_overlap_layout_available =
+            combined_layout.combined_overlap_layout_available,
+        final_combined_hamiltonian_layout_available =
+            combined_layout.combined_hamiltonian_layout_available,
+        route_global_combined_overlap_matrix_materialized =
+            combined_layout.combined_overlap_matrix_materialized,
+        route_global_combined_hamiltonian_matrix_materialized =
+            combined_layout.combined_hamiltonian_matrix_materialized,
         gto_route_global_blocks_materialized = false,
         gto_hamiltonian_assembly_materialized = false,
         full_parent_window_cpb_used = false,
@@ -845,7 +877,7 @@ end
     @test report.status ==
           :blocked_decomposed_wl_gto_supplement_acceptance_readiness
     @test report.blocker ==
-          :missing_route_global_combined_gto_basis_layout
+          :missing_route_global_combined_gto_matrix_assembly
     @test report.acceptance_suite ==
           :decomposed_wl_gausslet_plus_gto_one_electron_acceptance
     @test report.acceptance_fixture == :h_atom_gto_supplement_readiness
@@ -924,12 +956,34 @@ end
     @test report.gto_gto_shapes.overlap == (3, 3)
     @test report.gto_gto_shapes.kinetic == (3, 3)
     @test report.gto_gto_shapes.nuclear_by_center == ((3, 3),)
-    @test report.route_global_combined_basis_layout_status == :not_reached
-    @test report.route_global_combined_basis_layout_blocker ==
-          :missing_route_global_combined_gto_basis_layout
-    @test !report.final_combined_overlap_layout_available
-    @test !report.final_combined_hamiltonian_layout_available
-    @test report.combined_basis_dimension == :unavailable
+    @test report.route_global_combined_basis_layout_status ==
+          :available_route_global_combined_gto_basis_layout
+    @test isnothing(report.route_global_combined_basis_layout_blocker)
+    @test report.route_global_combined_basis_layout_kind ==
+          :decomposed_wl_gausslet_plus_gto_supplement
+    @test report.gausslet_retained_range == 1:223
+    @test report.gausslet_retained_dimension == 223
+    @test report.gto_supplement_range == 224:226
+    @test report.gto_supplement_orbital_count == 3
+    @test report.total_combined_dimension == 226
+    @test report.combined_basis_dimension == 226
+    @test report.combined_block_layout_keys ==
+          (:gausslet_gausslet, :gausslet_gto, :gto_gausslet, :gto_gto)
+    @test report.gausslet_gausslet_block_layout.row_range == 1:223
+    @test report.gausslet_gausslet_block_layout.column_range == 1:223
+    @test report.gausslet_gto_block_layout.row_range == 1:223
+    @test report.gausslet_gto_block_layout.column_range == 224:226
+    @test report.gto_gausslet_block_layout.row_range == 224:226
+    @test report.gto_gausslet_block_layout.column_range == 1:223
+    @test report.gto_gto_block_layout.row_range == 224:226
+    @test report.gto_gto_block_layout.column_range == 224:226
+    @test report.mixed_cpb_gto_blocks_orientation ==
+          :gausslet_rows_by_gto_columns
+    @test report.gto_gto_blocks_orientation == :gto_rows_by_gto_columns
+    @test report.final_combined_overlap_layout_available
+    @test report.final_combined_hamiltonian_layout_available
+    @test !report.route_global_combined_overlap_matrix_materialized
+    @test !report.route_global_combined_hamiltonian_matrix_materialized
     @test !report.gto_route_global_blocks_materialized
     @test !report.gto_hamiltonian_assembly_materialized
     @test !report.full_parent_window_cpb_used

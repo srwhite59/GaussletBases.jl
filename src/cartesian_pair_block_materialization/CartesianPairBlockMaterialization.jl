@@ -93,6 +93,7 @@ export PairBlockMaterializationPolicy,
        white_lindsey_boundary_stratum_one_body_adapter_summary,
        one_body_electron_nuclear_by_center_placement_plan,
        one_body_global_electron_nuclear_by_center_matrix,
+       route_global_combined_gto_basis_layout,
        direct_direct_overlap_block,
        direct_direct_overlap_blocks,
        direct_direct_position_block,
@@ -138,6 +139,10 @@ export PairBlockMaterializationPolicy,
 # route_global_one_body_adapter.jl
 #     Private route-shaped adapter from pair-block plans to one global retained
 #     one-body term matrix for the safe one-body terms only.
+#
+# route_global_combined_gto_basis_layout.jl
+#     Metadata-only layout for appending a small GTO supplement sector to the
+#     decomposed WL retained gausslet sector.
 #
 # one_body_placement_plan.jl
 #     Metadata-only local one-body placement records for future global retained
@@ -238,6 +243,7 @@ include("one_body_dispatch.jl")
 include("one_body_block_collection.jl")
 include("route_one_body_adapter.jl")
 include("route_global_one_body_adapter.jl")
+include("route_global_combined_gto_basis_layout.jl")
 include("one_body_placement_plan.jl")
 include("one_body_global_matrix_helpers.jl")
 include("one_body_global_overlap.jl")

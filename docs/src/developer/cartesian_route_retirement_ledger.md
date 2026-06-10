@@ -467,10 +467,16 @@ outside this decomposed WL acceptance contract.
   treated as conceptually incompatible with GTO. The readiness fingerprint now
   materializes the provider-level GTO bundle: mixed gausslet/GTO overlap,
   kinetic, and uncharged nuclear-by-center blocks are available, as are GTO/GTO
-  supplement overlap, kinetic, and uncharged nuclear-by-center blocks. The next
-  blocker is `:missing_route_global_combined_gto_basis_layout`: there is still
-  no route-global combined gausslet+GTO overlap/Hamiltonian layout, no
-  supplement Hamiltonian assembly, no direct Cartesian fallback,
+  supplement overlap, kinetic, and uncharged nuclear-by-center blocks.
+  `route_global_combined_gto_basis_layout` now records the combined
+  route-global sector layout: the decomposed WL gausslet retained range stays
+  `1:223`, the three H cc-pVTZ `lmax = 0` supplement orbitals occupy
+  `224:226`, the total combined dimension is `226`, and the block layout keys
+  are `:gausslet_gausslet`, `:gausslet_gto`, `:gto_gausslet`, and `:gto_gto`.
+  This is layout metadata only. The next blocker is
+  `:missing_route_global_combined_gto_matrix_assembly`: there is still no
+  combined gausslet+GTO overlap matrix, combined Hamiltonian matrix, supplement
+  Hamiltonian assembly, direct Cartesian fallback,
   `ordinary_cartesian_ida_operators`, full-window CPB acceptance route, export,
   or artifact.
 - The next overlap implementation boundary is no longer additional placement
