@@ -89,6 +89,7 @@ export PairBlockMaterializationPolicy,
        white_lindsey_boundary_stratum_x2_block,
        white_lindsey_boundary_stratum_kinetic_block,
        white_lindsey_boundary_stratum_electron_nuclear_by_center_block,
+       route_global_decomposed_wl_density_density_matrix,
        white_lindsey_boundary_stratum_one_body_block,
        white_lindsey_boundary_stratum_one_body_blocks,
        white_lindsey_boundary_stratum_one_body_adapter_summary,
@@ -231,6 +232,10 @@ export PairBlockMaterializationPolicy,
 # white_lindsey_electron_nuclear.jl
 #     By-center electron-nuclear LW pair-block pilot.
 #
+# white_lindsey_density_density.jl
+#     Route-global decomposed WL electron-electron density-density interaction
+#     matrix assembly from pair-factor local blocks.
+#
 # white_lindsey_one_body.jl
 #     Selector and compact summaries over LW one-body safe-term pilots.
 #
@@ -285,6 +290,7 @@ include("white_lindsey_position.jl")
 include("white_lindsey_x2.jl")
 include("white_lindsey_kinetic.jl")
 include("white_lindsey_electron_nuclear.jl")
+include("white_lindsey_density_density.jl")
 include("white_lindsey_one_body.jl")
 include("direct_position.jl")
 include("direct_x2.jl")

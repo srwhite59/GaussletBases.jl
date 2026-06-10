@@ -1,9 +1,9 @@
 # Runtime role: decomposed White-Lindsey He acceptance readiness audit.
 #
-# This file exercises the gausslet-only one-center Z = 2 decomposed WL
-# one-electron path and then stops at the current missing decomposed
-# two-electron density-density/IDA route. It must not fall back to full-parent
-# CPBs, direct Cartesian product operators, or ordinary Cartesian IDA operators.
+# This file exercises the gausslet-only one-center Z = 2 decomposed WL path
+# through the first restricted Hartree-Fock acceptance checkpoint. It must not
+# fall back to full-parent CPBs, direct Cartesian product operators, or ordinary
+# Cartesian IDA operators.
 
 using Test
 using LinearAlgebra
@@ -96,30 +96,118 @@ function _wl_he_lowest_one_electron_energy(
     )
 end
 
-function _wl_he_density_density_route_audit(seed_report)
-    route_global_supported_terms =
-        WLHeAcceptanceCPBM._route_global_one_body_supported_terms()
-    route_function_available =
-        isdefined(WLHeAcceptanceCPBM, :route_global_decomposed_wl_density_density_matrix)
-    seed_electron_electron_materialized =
-        hasproperty(seed_report, :electron_electron_materialized) ?
-        seed_report.electron_electron_materialized :
-        false
-    available = route_function_available && seed_electron_electron_materialized
+function _wl_he_restricted_density_density_fock(one_body, interaction, density)
+    h = 0.5 .* (Matrix{Float64}(one_body) .+ transpose(Matrix{Float64}(one_body)))
+    v =
+        0.5 .* (Matrix{Float64}(interaction) .+ transpose(Matrix{Float64}(interaction)))
+    rho = 0.5 .* (Matrix{Float64}(density) .+ transpose(Matrix{Float64}(density)))
+    occupations = vec(diag(rho))
+    fock = h + 2.0 .* Diagonal(v * occupations) - rho .* v
+    return 0.5 .* (fock .+ transpose(fock))
+end
+
+function _wl_he_restricted_density_density_energy(one_body, interaction, density)
+    h = 0.5 .* (Matrix{Float64}(one_body) .+ transpose(Matrix{Float64}(one_body)))
+    v =
+        0.5 .* (Matrix{Float64}(interaction) .+ transpose(Matrix{Float64}(interaction)))
+    rho = 0.5 .* (Matrix{Float64}(density) .+ transpose(Matrix{Float64}(density)))
+    occupations = vec(diag(rho))
+    direct = 2.0 * dot(occupations, v * occupations)
+    exchange = dot(vec(rho), vec(v .* rho))
+    return 2.0 * tr(rho * h) + direct - exchange
+end
+
+function _wl_he_restricted_density_density_interaction_energy(
+    interaction,
+    density,
+)
+    v =
+        0.5 .* (Matrix{Float64}(interaction) .+ transpose(Matrix{Float64}(interaction)))
+    rho = 0.5 .* (Matrix{Float64}(density) .+ transpose(Matrix{Float64}(density)))
+    occupations = vec(diag(rho))
+    direct = 2.0 * dot(occupations, v * occupations)
+    exchange = dot(vec(rho), vec(v .* rho))
+    return direct - exchange
+end
+
+function _wl_he_restricted_hartree_fock(
+    one_body,
+    interaction;
+    maxiter = 80,
+    damping = 0.25,
+    tol = 1.0e-10,
+)
+    h = 0.5 .* (Matrix{Float64}(one_body) .+ transpose(Matrix{Float64}(one_body)))
+    v =
+        0.5 .* (Matrix{Float64}(interaction) .+ transpose(Matrix{Float64}(interaction)))
+    size(h) == size(v) ||
+        throw(DimensionMismatch("He RHF one-body and interaction dimensions must match"))
+
+    initial = eigen(Symmetric(h))
+    occupied = initial.vectors[:, 1:1]
+    density = occupied * transpose(occupied)
+    density = 0.5 .* (density .+ transpose(density))
+    energies = Float64[]
+    residuals = Float64[]
+    converged = false
+    iterations = 0
+    energy_change = Inf
+    fock = h
+    eig = initial
+
+    for iteration in 1:maxiter
+        iterations = iteration
+        fock = _wl_he_restricted_density_density_fock(h, v, density)
+        eig = eigen(Symmetric(fock))
+        occupied_new = eig.vectors[:, 1:1]
+        density_new = occupied_new * transpose(occupied_new)
+        density_new = 0.5 .* (density_new .+ transpose(density_new))
+        mixed_density = (1 - damping) .* density_new .+ damping .* density
+        mixed_density = 0.5 .* (mixed_density .+ transpose(mixed_density))
+        energy = _wl_he_restricted_density_density_energy(h, v, mixed_density)
+        residual = norm(mixed_density - density, Inf)
+        energy_change = isempty(energies) ? Inf : abs(energy - energies[end])
+        push!(energies, energy)
+        push!(residuals, residual)
+        density = mixed_density
+        if residual <= tol && energy_change <= tol
+            converged = true
+            break
+        end
+    end
+
+    fock = _wl_he_restricted_density_density_fock(h, v, density)
+    eig = eigen(Symmetric(fock))
+    occupied = eig.vectors[:, 1:1]
+    projector = occupied * transpose(occupied)
+    projector = 0.5 .* (projector .+ transpose(projector))
+    energy = _wl_he_restricted_density_density_energy(h, v, density)
+    interaction_energy =
+        _wl_he_restricted_density_density_interaction_energy(v, density)
+    one_electron_energy = 2.0 * tr(density * h)
     return (;
         status =
-            available ?
-            :available_decomposed_wl_density_density_interaction_route :
-            :blocked_decomposed_wl_density_density_interaction_route,
-        blocker =
-            available ? nothing : :missing_decomposed_wl_density_density_interaction_route,
-        route_global_density_density_function_available = route_function_available,
-        seed_electron_electron_materialized,
-        electron_electron_term_advertised =
-            :electron_electron_density_density in route_global_supported_terms,
-        ordinary_cartesian_ida_operators_used = false,
-        direct_cartesian_product_assembly_used = false,
-        full_parent_window_cpb_used = false,
+            converged ?
+            :converged_decomposed_wl_he_restricted_hartree_fock :
+            :blocked_decomposed_wl_he_restricted_hartree_fock,
+        blocker = converged ? nothing : :decomposed_wl_hartree_fock_not_converged,
+        energy,
+        one_electron_energy,
+        electron_electron_energy = interaction_energy,
+        fock,
+        density,
+        occupations = 2.0 .* vec(diag(density)),
+        occupied_coefficients = occupied,
+        orbital_energies = Vector{Float64}(eig.values),
+        iterations,
+        converged,
+        residual = isempty(residuals) ? Inf : residuals[end],
+        energy_change,
+        solve_kind = :restricted_closed_shell_density_density_hartree_fock,
+        spin_convention = :restricted_closed_shell_one_alpha_one_beta,
+        spatial_occupation_count = 1,
+        electron_count = sum(2.0 .* vec(diag(density))),
+        projector_residual = norm(projector - density, Inf),
     )
 end
 
@@ -139,9 +227,10 @@ function _wl_decomposed_he_atom_acceptance_audit()
     kinetic_global = nothing
     by_center_global = nothing
     hamiltonian = nothing
+    density_density = nothing
+    hartree_fock = nothing
     overlap_diagnostics = nothing
     solve = nothing
-    density_density_audit = nothing
     elapsed_seconds = @elapsed begin
         overlap_global =
             WLHeAcceptanceCPBM.route_global_decomposed_wl_overlap_matrix(
@@ -184,21 +273,58 @@ function _wl_decomposed_he_atom_acceptance_audit()
             overlap_global.matrix,
             overlap_diagnostics,
         )
-        density_density_audit = _wl_he_density_density_route_audit(seed_report)
+        density_density =
+            WLHeAcceptanceCPBM.route_global_decomposed_wl_density_density_matrix(
+                seed_report;
+                parent_axis_counts = axis_inputs.parent_axis_counts,
+                parent_axis_bundle_object =
+                    axis_inputs.parent_axis_bundle_object,
+                coulomb_expansion = coulomb_gaussian_expansion(doacc = false),
+            )
+        if density_density.status ===
+           :materialized_route_global_density_density_interaction_matrix
+            hartree_fock = _wl_he_restricted_hartree_fock(
+                hamiltonian.matrix,
+                density_density.matrix,
+            )
+        else
+            hartree_fock = (;
+                status = :blocked_decomposed_wl_he_restricted_hartree_fock,
+                blocker = :missing_decomposed_wl_density_density_interaction_route,
+                energy = :unavailable,
+                one_electron_energy = :unavailable,
+                electron_electron_energy = :unavailable,
+                iterations = 0,
+                converged = false,
+                residual = :unavailable,
+                energy_change = :unavailable,
+                solve_kind = :blocked_missing_density_density_interaction,
+                spin_convention = :restricted_closed_shell_one_alpha_one_beta,
+                spatial_occupation_count = 1,
+                electron_count = :unavailable,
+                projector_residual = :unavailable,
+            )
+        end
     end
     two_electron_route_available =
-        density_density_audit.status ===
-        :available_decomposed_wl_density_density_interaction_route
+        density_density.status ===
+        :materialized_route_global_density_density_interaction_matrix
+    hf_available =
+        hartree_fock.status ===
+        :converged_decomposed_wl_he_restricted_hartree_fock
     one_electron_contribution = 2.0 * solve.energy
     return (;
         object_kind = :decomposed_wl_he_atom_acceptance_audit,
         acceptance_suite = :decomposed_wl_gausslet_two_electron_acceptance,
         acceptance_fixture = :he_atom,
         status =
-            two_electron_route_available ?
-            :ready_decomposed_wl_he_atom_two_electron_acceptance :
+            hf_available ?
+            :accepted_decomposed_wl_he_atom_restricted_hartree_fock :
             :blocked_decomposed_wl_he_atom_two_electron_acceptance,
-        blocker = density_density_audit.blocker,
+        blocker =
+            two_electron_route_available ?
+            hartree_fock.blocker :
+            :missing_decomposed_wl_density_density_interaction_route,
         q = 5,
         ns = 5,
         n_s = 5,
@@ -235,13 +361,49 @@ function _wl_decomposed_he_atom_acceptance_audit()
         one_electron_solve_kind = solve.solve_kind,
         lowest_one_electron_orbital_energy = solve.energy,
         closed_shell_one_electron_energy_contribution = one_electron_contribution,
-        electron_electron_status = density_density_audit.status,
-        electron_electron_blocker = density_density_audit.blocker,
-        electron_electron_contribution = :unavailable,
-        total_he_energy = :unavailable,
+        full_two_electron_ida_object_status = density_density.status,
+        full_two_electron_ida_object_blocker = density_density.blocker,
+        electron_electron_status = density_density.status,
+        electron_electron_blocker = density_density.blocker,
+        electron_electron_matrix_shape = density_density.matrix_shape,
+        electron_electron_matrix_dimension =
+            density_density.retained_dimension,
+        electron_electron_placed_block_count =
+            density_density.placed_block_count,
+        electron_electron_gaussian_term_count =
+            density_density.gaussian_term_count,
+        electron_electron_pair_factor_weighting =
+            density_density.pair_factor_weighting,
+        axis_integral_weights_applied =
+            density_density.axis_integral_weights_applied,
+        axis_integral_weights_deferred =
+            density_density.axis_integral_weights_deferred,
+        ida_density_density_convention =
+            density_density.ida_density_density_convention,
+        hartree_fock_status = hartree_fock.status,
+        hartree_fock_blocker = hartree_fock.blocker,
+        hartree_fock_solve_kind = hartree_fock.solve_kind,
+        hartree_fock_iterations = hartree_fock.iterations,
+        hartree_fock_converged = hartree_fock.converged,
+        hartree_fock_residual = hartree_fock.residual,
+        hartree_fock_energy_change = hartree_fock.energy_change,
+        occupancy_spin_convention = hartree_fock.spin_convention,
+        spatial_occupation_count = hartree_fock.spatial_occupation_count,
+        hartree_fock_electron_count = hartree_fock.electron_count,
+        hartree_fock_projector_residual = hartree_fock.projector_residual,
+        electron_electron_contribution = hartree_fock.electron_electron_energy,
+        total_he_energy = hartree_fock.energy,
         exact_he_reference_energy = -2.9037243770341196,
-        total_he_energy_distance_from_exact = :unavailable,
-        ida_scf_energy_interpretation_available = two_electron_route_available,
+        hartree_fock_reference_energy = -2.861679995612234,
+        total_he_energy_distance_from_exact =
+            hf_available ?
+            abs(hartree_fock.energy - -2.9037243770341196) :
+            :unavailable,
+        total_he_energy_distance_from_hf_reference =
+            hf_available ?
+            abs(hartree_fock.energy - -2.861679995612234) :
+            :unavailable,
+        ida_scf_energy_interpretation_available = hf_available,
         elapsed_seconds,
         decomposed_wl_units_consumed = true,
         full_parent_window_cpb_used = false,
@@ -252,11 +414,16 @@ function _wl_decomposed_he_atom_acceptance_audit()
         pqs_transforms_materialized = false,
         exports_or_artifacts = false,
         density_density_route_global_function_available =
-            density_density_audit.route_global_density_density_function_available,
+            isdefined(
+                WLHeAcceptanceCPBM,
+                :route_global_decomposed_wl_density_density_matrix,
+            ),
+        route_global_density_density_matrix_materialized =
+            density_density.route_global_density_density_matrix_materialized,
         seed_electron_electron_materialized =
-            density_density_audit.seed_electron_electron_materialized,
-        electron_electron_term_advertised =
-            density_density_audit.electron_electron_term_advertised,
+            hasproperty(seed_report, :electron_electron_materialized) ?
+            seed_report.electron_electron_materialized :
+            false,
     )
 end
 
@@ -264,9 +431,9 @@ end
     report = _wl_decomposed_he_atom_acceptance_audit()
     println("decomposed WL gausslet-only He atom acceptance readiness: ", report)
 
-    @test report.status == :blocked_decomposed_wl_he_atom_two_electron_acceptance
-    @test report.blocker ==
-          :missing_decomposed_wl_density_density_interaction_route
+    @test report.status ==
+          :accepted_decomposed_wl_he_atom_restricted_hartree_fock
+    @test isnothing(report.blocker)
     @test report.acceptance_suite ==
           :decomposed_wl_gausslet_two_electron_acceptance
     @test report.acceptance_fixture == :he_atom
@@ -302,15 +469,41 @@ end
     @test report.lowest_one_electron_orbital_energy < -1.0
     @test isfinite(report.closed_shell_one_electron_energy_contribution)
     @test report.electron_electron_status ==
-          :blocked_decomposed_wl_density_density_interaction_route
-    @test report.electron_electron_blocker ==
-          :missing_decomposed_wl_density_density_interaction_route
-    @test report.electron_electron_contribution == :unavailable
-    @test report.total_he_energy == :unavailable
-    @test !report.ida_scf_energy_interpretation_available
-    @test !report.density_density_route_global_function_available
-    @test !report.seed_electron_electron_materialized
-    @test !report.electron_electron_term_advertised
+          :materialized_route_global_density_density_interaction_matrix
+    @test isnothing(report.electron_electron_blocker)
+    @test report.full_two_electron_ida_object_status ==
+          :materialized_route_global_density_density_interaction_matrix
+    @test report.electron_electron_matrix_shape == (223, 223)
+    @test report.electron_electron_matrix_dimension == 223
+    @test report.electron_electron_placed_block_count == 729
+    @test report.electron_electron_gaussian_term_count > 0
+    @test report.electron_electron_pair_factor_weighting ==
+          :wl_pair_factor_terms_existing_convention
+    @test !report.axis_integral_weights_applied
+    @test report.axis_integral_weights_deferred
+    @test report.ida_density_density_convention ==
+          :full_retained_two_index_interaction_matrix
+    @test report.hartree_fock_status ==
+          :converged_decomposed_wl_he_restricted_hartree_fock
+    @test isnothing(report.hartree_fock_blocker)
+    @test report.hartree_fock_solve_kind ==
+          :restricted_closed_shell_density_density_hartree_fock
+    @test report.occupancy_spin_convention ==
+          :restricted_closed_shell_one_alpha_one_beta
+    @test report.spatial_occupation_count == 1
+    @test report.hartree_fock_converged
+    @test report.hartree_fock_iterations <= 80
+    @test report.hartree_fock_residual < 1.0e-8
+    @test report.hartree_fock_electron_count ≈ 2.0 atol = 1.0e-8 rtol = 0.0
+    @test report.hartree_fock_projector_residual < 1.0e-8
+    @test isfinite(report.electron_electron_contribution)
+    @test report.electron_electron_contribution > 0.0
+    @test isfinite(report.total_he_energy)
+    @test report.total_he_energy > report.exact_he_reference_energy
+    @test report.total_he_energy < -2.0
+    @test report.ida_scf_energy_interpretation_available
+    @test report.density_density_route_global_function_available
+    @test report.route_global_density_density_matrix_materialized
     @test report.decomposed_wl_units_consumed
     @test !report.full_parent_window_cpb_used
     @test !report.direct_cartesian_product_assembly_used

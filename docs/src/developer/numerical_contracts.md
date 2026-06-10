@@ -187,17 +187,21 @@ Born-Oppenheimer total energy is `-0.5988624733888488` Hartree. The raw
 generalized combined solve is diagnostic-only and is not the active final-basis
 acceptance result.
 
-The first He atom decomposed WL audit uses the same q/ns = 5/5 gausslet-only
-fixture with one center at the origin and `Z = 2`. The decomposed route
-materializes overlap, kinetic, one separated uncharged electron-nuclear
-by-center matrix, and the charge-applied one-electron Hamiltonian in the
-223-column retained basis. The ordinary symmetric one-electron orbital energy is
-`-1.686304880476951` Hartree, giving a closed-shell one-electron contribution
-of `-3.372609760953902` Hartree before electron-electron terms. The audit is
-intentionally blocked on `:missing_decomposed_wl_density_density_interaction_route`:
-there is not yet a decomposed WL route-global density-density/IDA interaction
-producer, so no He total energy or SCF/IDA interpretation is accepted. The audit
-does not use a full-parent CPB, direct Cartesian fallback,
+The first He atom decomposed WL acceptance uses the same q/ns = 5/5
+gausslet-only fixture with one center at the origin and `Z = 2`. The decomposed
+route materializes overlap, kinetic, one separated uncharged electron-nuclear
+by-center matrix, the charge-applied one-electron Hamiltonian, and the full
+retained density-density/IDA electron-electron interaction matrix in the
+223-column retained basis. The full interaction matrix has shape `(223, 223)`,
+uses the existing WL pair-factor-term convention with integral weights deferred
+to the IDA/HF density interpretation stage, and is the object later correlation
+work should consume. Restricted closed-shell HF with one alpha and one beta
+electron converges in 20 iterations. The one-electron contribution is
+`-3.372609760953902` Hartree, the electron-electron contribution is
+`0.7738440146310958` Hartree, and the accepted total HF energy is
+`-2.5403890964852245` Hartree. This is above the He HF reference near
+`-2.861679995612234` Hartree, as expected for the small q/ns = 5/5 fixture. The
+acceptance path does not use a full-parent CPB, direct Cartesian fallback,
 `ordinary_cartesian_ida_operators`, a generalized final solve, GTO supplements,
 PQS transforms, exports, or artifacts.
 
