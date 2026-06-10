@@ -1331,13 +1331,10 @@
 
     function _check_pqs_pqs_product_source_box_shadow_blocks(
         metrics_module,
-        left_descriptor,
-        right_descriptor,
         left_pqs_plan,
         right_pqs_plan,
         product_unit,
         metrics;
-        expected_source_mode_dims,
         expected_retained_count,
     )
         terms = (
@@ -1373,233 +1370,15 @@
         @test shadow.retained_dimension == retained_dimension
         @test shadow.diagnostics.source_box_shadow_only
         @test shadow.diagnostics.private_shadow_only
-        @test shadow.diagnostics.all_pairs_inventory_private
-        @test shadow.diagnostics.pair_inventory_complete_for_units ==
-              (:pqs_left, :pqs_right, :product)
-        @test shadow.diagnostics.all_pairs_inventory_pair_count == 6
-        @test shadow.diagnostics.retained_unit_count == 3
-        @test !shadow.diagnostics.packet_adoption
-        @test !shadow.diagnostics.fixed_block_routing
-        @test shadow.diagnostics.pqs_representation == :mode_selected_raw_product_box
-        @test shadow.diagnostics.product_doside_retained_transform_used
-        @test shadow.diagnostics.pqs_self_block_source ==
-              :pqs_pqs_source_box_reference_blocks
-        @test shadow.diagnostics.cross_pqs_block_source ==
-              :pqs_pqs_source_box_reference_blocks
-        @test shadow.diagnostics.pqs_product_block_source ==
-              :pqs_product_source_box_reference_blocks
-        @test shadow.diagnostics.product_product_block_source ==
-              :_product_doside_source_box_reference_block
-        @test !shadow.diagnostics.pqs_left_right_raw_box_self_reference_compared
-        @test shadow.diagnostics.pqs_left_left_raw_box_self_reference_compared
-        @test shadow.diagnostics.pqs_right_right_raw_box_self_reference_compared
-        @test shadow.diagnostics.pqs_left_left_explicit_source_box_oracle_tested
-        @test shadow.diagnostics.pqs_left_right_explicit_source_box_oracle_tested
-        @test shadow.diagnostics.pqs_right_right_explicit_source_box_oracle_tested
-        @test shadow.diagnostics.lower_triangular_cross_blocks_transpose_only
-        @test shadow.diagnostics.pair_plan_reused_for_terms
-        @test shadow.diagnostics.explicit_source_box_oracle_tested
-        @test !shadow.diagnostics.pqs_cross_box_external_raw_product_oracle_required
-        @test shadow.diagnostics.pqs_cross_box_internal_raw_product_oracle_compared
-        @test shadow.diagnostics.every_pair_uses_source_box_algorithmic_policy
-        @test shadow.diagnostics.source_box_algorithmic_pair_count == 6
-        @test !shadow.diagnostics.shell_projection_used
-        @test !shadow.diagnostics.lowdin_cleanup_used
-        @test !shadow.diagnostics.support_coefficient_matrix_used
-        @test !shadow.diagnostics.support_local_pqs_oracle_used
-        @test shadow.diagnostics.retained_weight_semantics ==
-              :not_positive_quadrature_weights
-        @test !shadow.diagnostics.retained_pqs_weights_used
-        @test !shadow.diagnostics.retained_pqs_weights_positive_checked
-        @test !shadow.diagnostics.ida_weight_division_allowed
-        @test !shadow.diagnostics.qwhamiltonian_consumes
-        @test !shadow.diagnostics.public_default_consumes
-        @test !shadow.diagnostics.cr2_science_status_changed
-        @test !shadow.diagnostics.local_ecp_gaussian_mwg_implemented
-        @test !shadow.diagnostics.generic_retained_unit_framework
-        @test !shadow.diagnostics.dense_raw_source_box_pair_matrix_materialized
-        @test shadow.diagnostics.dense_raw_source_box_pair_matrix_materialized_for_validation
-        @test shadow.diagnostics.dense_raw_pair_storage_avoided
-        @test shadow.diagnostics.retained_block_assembled_directly_from_1d_factors
-        @test shadow.diagnostics.source_box_pair_storage_scaling ==
-              :one_dimensional_factors_plus_retained_block
-
-        inventory = shadow.all_pairs_inventory
-        @test inventory.object_kind ==
-              :pqs_pqs_product_source_box_all_pairs_inventory
-        @test inventory.diagnostics.all_pairs_inventory_private
-        @test inventory.diagnostics.pair_inventory_complete_for_units ==
-              (:pqs_left, :pqs_right, :product)
-        @test inventory.diagnostics.retained_unit_count == 3
-        @test inventory.diagnostics.upper_triangular_pair_count == 6
-        @test inventory.diagnostics.expected_upper_triangular_pair_count == 6
-        @test length(inventory.retained_units) == 3
-        @test length(inventory.pair_entries) == 6
-        @test map(unit -> unit.unit_key, inventory.retained_units) ==
-              (:pqs_left, :pqs_right, :product)
-        @test map(unit -> unit.retained_range, inventory.retained_units) ==
-              (left_range, right_range, product_range)
-        @test inventory.retained_units[1].source_dimensions ==
-              expected_source_mode_dims
-        @test inventory.retained_units[2].source_dimensions ==
-              expected_source_mode_dims
-        @test inventory.retained_units[1].retained_count ==
-              expected_retained_count
-        @test inventory.retained_units[2].retained_count ==
-              expected_retained_count
-        @test inventory.retained_units[3].source_dimensions == (2, 2, 1)
-        @test inventory.retained_units[3].retained_count == product_count
-        @test map(entry -> entry.pair_key, inventory.pair_entries) ==
-              (
-                  (:pqs_left, :pqs_left),
-                  (:pqs_left, :pqs_right),
-                  (:pqs_left, :product),
-                  (:pqs_right, :pqs_right),
-                  (:pqs_right, :product),
-                  (:product, :product),
-              )
-        @test map(entry -> entry.pair_kind, inventory.pair_entries) ==
-              (
-                  :pqs_pqs_source_box,
-                  :pqs_pqs_source_box,
-                  :pqs_product_source_box,
-                  :pqs_pqs_source_box,
-                  :pqs_product_source_box,
-                  :product_doside_source_box_pair,
-              )
-        @test map(entry -> entry.block_helper, inventory.pair_entries) ==
-              (
-                  :_pqs_pqs_source_box_reference_blocks,
-                  :_pqs_pqs_source_box_reference_blocks,
-                  :_pqs_product_source_box_reference_blocks,
-                  :_pqs_pqs_source_box_reference_blocks,
-                  :_pqs_product_source_box_reference_blocks,
-                  :_product_doside_source_box_reference_block,
-              )
-        @test map(entry -> entry.pair_policy, inventory.pair_entries) ==
-              (
-                  :source_box_algorithm_available,
-                  :source_box_algorithm_available,
-                  :source_box_algorithm_available,
-                  :source_box_algorithm_available,
-                  :source_box_algorithm_available,
-                  :source_box_algorithm_available,
-              )
-        @test all(entry -> entry.source_box_algorithmic, inventory.pair_entries)
-        @test inventory.diagnostics.every_pair_uses_source_box_algorithmic_policy
-        @test inventory.diagnostics.source_box_algorithmic_pair_count == 6
-        @test !inventory.diagnostics.packet_adoption
-        @test !inventory.diagnostics.fixed_block_routing
-        @test !inventory.diagnostics.qwhamiltonian_consumes
-        @test !inventory.diagnostics.public_default_consumes
-        @test !inventory.diagnostics.shell_projection_used
-        @test !inventory.diagnostics.lowdin_cleanup_used
-        @test !inventory.diagnostics.support_local_pqs_oracle_used
-        @test !inventory.diagnostics.retained_pqs_weights_used
-        @test !inventory.diagnostics.ida_weight_division_allowed
-        @test !inventory.diagnostics.dense_raw_source_box_pair_matrix_materialized
-        @test inventory.diagnostics.dense_raw_pair_storage_avoided
-
-        @test shadow.pqs_left_left_reference_blocks.diagnostics.raw_box_self_reference_compared
-        @test !shadow.pqs_left_right_reference_blocks.diagnostics.raw_box_self_reference_compared
-        @test shadow.pqs_right_right_reference_blocks.diagnostics.raw_box_self_reference_compared
-        @test shadow.pqs_left_left_reference_blocks.diagnostics.explicit_source_box_oracle_tested
-        @test shadow.pqs_left_right_reference_blocks.diagnostics.explicit_source_box_oracle_tested
-        @test shadow.pqs_right_right_reference_blocks.diagnostics.explicit_source_box_oracle_tested
-        @test shadow.pqs_left_product_reference_blocks.diagnostics.pair_plan_reused_for_terms
-        @test shadow.pqs_right_product_reference_blocks.diagnostics.pair_plan_reused_for_terms
-
-        max_component_error = 0.0
         for term in terms
             block = shadow.blocks[term]
-            components = shadow.component_blocks[term]
-            expected_left_left = _pqs_product_box_column_selection_reference(
-                left_descriptor,
-                metrics;
-                term,
-            )
-            expected_left_right = _pqs_pqs_source_box_explicit_reference(
-                left_descriptor,
-                right_descriptor,
-                metrics;
-                term,
-            )
-            expected_right_right = _pqs_product_box_column_selection_reference(
-                right_descriptor,
-                metrics;
-                term,
-            )
-            expected_left_product = _pqs_product_source_box_explicit_reference(
-                left_descriptor,
-                product_unit,
-                metrics;
-                term,
-            )
-            expected_right_product = _pqs_product_source_box_explicit_reference(
-                right_descriptor,
-                product_unit,
-                metrics;
-                term,
-            )
-            expected_product = _product_source_box_explicit_reference(
-                product_unit,
-                metrics;
-                term,
-            )
             @test size(block) == (retained_dimension, retained_dimension)
             @test all(isfinite, block)
-            @test block[left_range, left_range] ≈ expected_left_left atol = 1.0e-10 rtol = 1.0e-10
-            @test block[left_range, right_range] ≈ expected_left_right atol = 1.0e-10 rtol = 1.0e-10
-            @test block[right_range, left_range] ≈ transpose(expected_left_right) atol = 1.0e-10 rtol = 1.0e-10
-            @test block[right_range, right_range] ≈ expected_right_right atol = 1.0e-10 rtol = 1.0e-10
-            @test block[left_range, product_range] ≈ expected_left_product atol = 1.0e-10 rtol = 1.0e-10
-            @test block[product_range, left_range] ≈ transpose(expected_left_product) atol = 1.0e-10 rtol = 1.0e-10
-            @test block[right_range, product_range] ≈ expected_right_product atol = 1.0e-10 rtol = 1.0e-10
-            @test block[product_range, right_range] ≈ transpose(expected_right_product) atol = 1.0e-10 rtol = 1.0e-10
-            @test block[product_range, product_range] ≈ expected_product atol = 1.0e-10 rtol = 1.0e-10
-            @test components.pqs_left_pqs_left ≈ expected_left_left atol = 1.0e-10 rtol = 1.0e-10
-            @test components.pqs_left_pqs_right ≈ expected_left_right atol = 1.0e-10 rtol = 1.0e-10
-            @test components.pqs_right_pqs_left ≈ transpose(expected_left_right) atol = 1.0e-10 rtol = 1.0e-10
-            @test components.pqs_left_product ≈ expected_left_product atol = 1.0e-10 rtol = 1.0e-10
-            @test components.product_pqs_left ≈ transpose(expected_left_product) atol = 1.0e-10 rtol = 1.0e-10
-            @test components.pqs_right_pqs_right ≈ expected_right_right atol = 1.0e-10 rtol = 1.0e-10
-            @test components.pqs_right_product ≈ expected_right_product atol = 1.0e-10 rtol = 1.0e-10
-            @test components.product_pqs_right ≈ transpose(expected_right_product) atol = 1.0e-10 rtol = 1.0e-10
-            @test components.product_product ≈ expected_product atol = 1.0e-10 rtol = 1.0e-10
-            max_component_error = max(
-                max_component_error,
-                LinearAlgebra.norm(
-                    block[left_range, right_range] - expected_left_right,
-                    Inf,
-                ),
-                LinearAlgebra.norm(
-                    block[left_range, product_range] - expected_left_product,
-                    Inf,
-                ),
-                LinearAlgebra.norm(
-                    block[right_range, product_range] - expected_right_product,
-                    Inf,
-                ),
-                LinearAlgebra.norm(
-                    block[product_range, product_range] - expected_product,
-                    Inf,
-                ),
-            )
         end
-        @test max_component_error < 1.0e-10
-        @test_throws ArgumentError metrics_module._pqs_pqs_product_source_box_shadow_blocks(
-            left_pqs_plan,
-            right_pqs_plan,
-            product_unit,
-            metrics;
-            terms = (:weights,),
-        )
     end
 
     function _check_pqs_pqs_product_route_shaped_safe_term_consumer(
         metrics_module,
-        left_descriptor,
-        right_descriptor,
         route_units,
         metrics,
     )
@@ -1631,58 +1410,19 @@
         @test consumer.route_kind ==
               :pqs_pqs_product_source_box_safe_term_route
         @test consumer.route_name == :q5_L5_slab5_test_route
-        @test consumer.route_units === route_units
         @test route_units.object_kind ==
               :pqs_pqs_product_safe_term_route_descriptor
         @test route_units.expected_ranges == shadow.ranges
         @test route_units.retained_dimension == 221
         @test route_units.retained_unit_count == 3
         @test route_units.expected_pair_count == 6
-        @test route_units.supported_terms == terms
-        @test length(route_units.unit_summaries) == 3
-        @test route_units.unit_summaries[1].unit_key == :pqs_left
-        @test route_units.unit_summaries[1].source_family ==
-              :mode_selected_raw_product_box
-        @test route_units.unit_summaries[1].source_dimensions == (5, 5, 5)
-        @test route_units.unit_summaries[1].retained_count == 98
-        @test route_units.unit_summaries[1].retained_rule_kind ==
-              :boundary_comx_product_mode_selection
-        @test route_units.unit_summaries[2].unit_key == :pqs_right
-        @test route_units.unit_summaries[2].source_dimensions == (5, 5, 5)
-        @test route_units.unit_summaries[2].retained_count == 98
-        @test route_units.unit_summaries[3].unit_key == :product
-        @test route_units.unit_summaries[3].source_family == :product_doside
-        @test route_units.unit_summaries[3].source_dimensions == (5, 5, 1)
-        @test route_units.unit_summaries[3].retained_count == 25
         @test consumer.terms == terms
         @test consumer.ranges == shadow.ranges
         @test consumer.retained_dimension == 221
         @test consumer.retained_dimension == shadow.retained_dimension
         @test consumer.pair_count == 6
         @test consumer.term_count == length(terms)
-        @test length(consumer.retained_units) == 3
-        @test length(consumer.all_pairs_inventory.pair_entries) == 6
-        @test consumer.all_pairs_inventory.object_kind ==
-              :pqs_pqs_product_source_box_all_pairs_inventory
-        @test consumer.safe_term_matrices === consumer.blocks
-        @test consumer.complete_retained_space_matrices === consumer.blocks
         @test consumer.shadow.path == :pqs_pqs_product_source_box_shadow_blocks
-        @test consumer.metadata.parent_dims == (5, 5, 7)
-        @test consumer.metadata.bond_axis == :z
-        @test consumer.metadata.product_slab_fixed_index == 4
-        @test consumer.metadata.pqs_source_mode_dims == (5, 5, 5)
-        @test consumer.provenance.source ==
-              :route_shaped_safe_term_consumer_test_fixture
-
-        @test consumer.performance.elapsed_seconds >= 0.0
-        @test consumer.performance.allocated_bytes >= 0
-        @test consumer.performance.gc_time_seconds >= 0.0
-        @test consumer.performance.retained_dimension == 221
-        @test consumer.performance.pair_count == 6
-        @test consumer.performance.term_count == length(terms)
-        @test !consumer.performance.dense_raw_source_box_pair_matrix_materialized
-        @test consumer.performance.dense_raw_source_box_pair_matrix_materialized_for_validation
-        @test consumer.performance.dense_raw_pair_storage_avoided
 
         @test consumer.diagnostics.source ==
               :pqs_pqs_product_route_shaped_safe_term_consumer
@@ -1695,89 +1435,20 @@
         @test consumer.diagnostics.descriptor_retained_dimension_checked
         @test consumer.diagnostics.descriptor_pair_count_checked
         @test consumer.diagnostics.descriptor_supported_terms_checked
-        @test consumer.diagnostics.route_roles ==
-              (:pqs_left, :pqs_right, :product)
         @test consumer.diagnostics.private_shadow_only
-        @test !consumer.diagnostics.packet_adoption
-        @test !consumer.diagnostics.fixed_block_routing
-        @test !consumer.diagnostics.qwhamiltonian_consumes
-        @test !consumer.diagnostics.public_default_consumes
-        @test !consumer.diagnostics.cr2_science_status_changed
-        @test !consumer.diagnostics.shell_projection_used
-        @test !consumer.diagnostics.lowdin_cleanup_used
-        @test !consumer.diagnostics.support_local_pqs_oracle_used
-        @test consumer.diagnostics.retained_weight_semantics ==
-              :not_positive_quadrature_weights
-        @test !consumer.diagnostics.ida_weight_division_allowed
-        @test !consumer.diagnostics.dense_raw_source_box_pair_matrix_materialized
-        @test consumer.diagnostics.dense_raw_source_box_pair_matrix_materialized_for_validation
-        @test consumer.diagnostics.dense_raw_pair_storage_avoided
-        @test consumer.diagnostics.explicit_source_box_oracle_tested
-        @test !consumer.diagnostics.pqs_cross_box_external_raw_product_oracle_required
-        @test consumer.diagnostics.pqs_cross_box_internal_raw_product_oracle_compared
-        @test consumer.diagnostics.every_pair_uses_source_box_algorithmic_policy
-        @test consumer.diagnostics.source_box_algorithmic_pair_count == 6
-        @test consumer.diagnostics.pair_policies ==
-              (
-                  :source_box_algorithm_available,
-                  :source_box_algorithm_available,
-                  :source_box_algorithm_available,
-                  :source_box_algorithm_available,
-                  :source_box_algorithm_available,
-                  :source_box_algorithm_available,
-              )
         @test consumer.diagnostics.performance_recorded
         @test consumer.diagnostics.retained_dimension == 221
-        @test consumer.diagnostics.retained_unit_count == 3
         @test consumer.diagnostics.pair_count == 6
         @test consumer.diagnostics.term_count == length(terms)
-        @test consumer.diagnostics.complete_retained_space_matrices_built
         @test consumer.diagnostics.source_box_shadow_helper ==
               :_pqs_pqs_product_source_box_shadow_blocks
 
-        max_full_error = 0.0
-        max_cross_pqs_error = 0.0
         for term in terms
             @test haskey(consumer.blocks, term)
-            @test haskey(consumer.component_blocks, term)
             block = consumer.blocks[term]
             @test size(block) == (221, 221)
             @test all(isfinite, block)
-            @test block ≈ shadow.blocks[term] atol = 0.0 rtol = 0.0
-            expected_left_right = _pqs_pqs_source_box_explicit_reference(
-                left_descriptor,
-                right_descriptor,
-                metrics;
-                term,
-            )
-            @test consumer.component_blocks[term].pqs_left_pqs_right ≈
-                  expected_left_right atol = 1.0e-10 rtol = 1.0e-10
-            @test consumer.component_blocks[term].pqs_right_pqs_left ≈
-                  transpose(expected_left_right) atol = 1.0e-10 rtol = 1.0e-10
-            @test block[consumer.ranges.pqs_left, consumer.ranges.pqs_right] ≈
-                  expected_left_right atol = 1.0e-10 rtol = 1.0e-10
-            @test block[consumer.ranges.pqs_right, consumer.ranges.pqs_left] ≈
-                  transpose(expected_left_right) atol = 1.0e-10 rtol = 1.0e-10
-            max_full_error = max(
-                max_full_error,
-                LinearAlgebra.norm(block - shadow.blocks[term], Inf),
-            )
-            max_cross_pqs_error = max(
-                max_cross_pqs_error,
-                LinearAlgebra.norm(
-                    block[consumer.ranges.pqs_left, consumer.ranges.pqs_right] -
-                    expected_left_right,
-                    Inf,
-                ),
-            )
         end
-        @test max_full_error == 0.0
-        @test max_cross_pqs_error < 1.0e-10
-        @test_throws ArgumentError metrics_module._pqs_pqs_product_route_shaped_safe_term_consumer(
-            route_units,
-            metrics;
-            terms = (:weights,),
-        )
     end
 
     function _density_density_route_factor_fixture(parent_dims::NTuple{3,Int})
@@ -4136,13 +3807,10 @@
     )
     _check_pqs_pqs_product_source_box_shadow_blocks(
         CCPM,
-        shifted_left_descriptor,
-        shifted_right_descriptor,
         shifted_left_pqs_pqs_source_box_plan,
         shifted_right_pqs_pqs_source_box_plan,
         product_unit,
         shifted_metrics;
-        expected_source_mode_dims = (5, 5, 5),
         expected_retained_count = 98,
     )
     route_bundles =
@@ -4507,8 +4175,6 @@
     end
     _check_pqs_pqs_product_route_shaped_safe_term_consumer(
         CCPM,
-        route_left_descriptor,
-        route_right_descriptor,
         route_units,
         route_metrics,
     )

@@ -553,3 +553,20 @@ Second deletion pass:
 - No current source or test caller requires the deleted two-unit helper. The
   remaining source-box shadow burden is the separate three-unit
   PQS/PQS/product route-shadow family, which still has live callers.
+
+Third deletion-oriented pass:
+
+- The three-unit `_pqs_pqs_product_source_box_shadow_blocks(...)` and
+  `_pqs_pqs_product_source_box_all_pairs_inventory(...)` family was not
+  deleted because it is still used by live route-diagnostic source paths:
+  `_pqs_pqs_product_route_shaped_safe_term_consumer(...)` calls the shadow
+  helper, and `_pqs_pqs_product_raw_box_route_producer(...)` builds the
+  inventory for descriptor validation.
+- The slow integration tests for this family were reduced to smoke coverage:
+  expected ranges, retained dimension, finite block payloads, and route-shaped
+  consumer shape/status checks. Detailed all-pairs inventory vocabulary,
+  helper-name assertions, reference sub-block equality, and repeated metadata
+  nonclaims were removed.
+- `src/CartesianContractedParentMetrics.jl` marks this family as
+  route-diagnostic / oracle-only. It should not be extended as a production
+  placement or provider-layer contract.

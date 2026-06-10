@@ -5749,6 +5749,8 @@ function _pqs_product_source_box_product_block(
     ).block
 end
 
+# Three-unit PQS/PQS/product shadow inventory remains route-diagnostic only.
+# Do not extend it as a production placement or provider-layer contract.
 function _pqs_pqs_product_source_box_all_pairs_inventory(
     left_raw_plan,
     right_raw_plan,
@@ -11943,6 +11945,8 @@ function _pqs_pqs_product_route_descriptor_diagnostic(
     )
 end
 
+# Private diagnostic/oracle path for the route-shaped safe-term consumer. CPB
+# provider tests own local one-body operator correctness.
 function _pqs_pqs_product_source_box_shadow_blocks(
     left_pqs_plan,
     right_pqs_plan,
