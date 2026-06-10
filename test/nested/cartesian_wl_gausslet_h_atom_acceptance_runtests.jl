@@ -211,6 +211,9 @@ function _wl_decomposed_h_atom_acceptance_report()
 
     return (;
         object_kind = :decomposed_wl_h_atom_acceptance_report,
+        acceptance_suite =
+            :decomposed_wl_gausslet_one_electron_acceptance,
+        acceptance_fixture = :h_atom,
         status =
             solve.status === :materialized_decomposed_wl_one_electron_solve ?
             :materialized_decomposed_wl_h_atom_acceptance :
@@ -340,9 +343,8 @@ function _wl_decomposed_h_atom_acceptance_report()
             solve.status === :materialized_decomposed_wl_one_electron_solve,
         h_atom_acceptance_active =
             solve.status === :materialized_decomposed_wl_one_electron_solve,
-        h2plus_acceptance_active = false,
-        h2plus_acceptance_blocker =
-            :deferred_until_single_center_decomposed_wl_acceptance_review,
+        acceptance_fixture_active =
+            solve.status === :materialized_decomposed_wl_one_electron_solve,
     )
 end
 
@@ -414,6 +416,9 @@ function _wl_decomposed_h2plus_acceptance_report()
 
     return (;
         object_kind = :decomposed_wl_h2plus_acceptance_report,
+        acceptance_suite =
+            :decomposed_wl_gausslet_one_electron_acceptance,
+        acceptance_fixture = :h2plus,
         status =
             solve.status === :materialized_decomposed_wl_one_electron_solve ?
             :materialized_decomposed_wl_h2plus_acceptance :
@@ -530,6 +535,8 @@ function _wl_decomposed_h2plus_acceptance_report()
             solve.status === :materialized_decomposed_wl_one_electron_solve,
         h2plus_acceptance_active =
             solve.status === :materialized_decomposed_wl_one_electron_solve,
+        acceptance_fixture_active =
+            solve.status === :materialized_decomposed_wl_one_electron_solve,
     )
 end
 
@@ -539,6 +546,9 @@ end
 
     @test report.status == :materialized_decomposed_wl_h_atom_acceptance
     @test isnothing(report.blocker)
+    @test report.acceptance_suite ==
+          :decomposed_wl_gausslet_one_electron_acceptance
+    @test report.acceptance_fixture == :h_atom
     @test report.q == 5
     @test report.ns == 5
     @test report.n_s == 5
@@ -625,9 +635,8 @@ end
     @test !report.ordinary_cartesian_ida_operators_used
     @test report.acceptance_energy_materialized
     @test report.h_atom_acceptance_active
-    @test !report.h2plus_acceptance_active
-    @test report.h2plus_acceptance_blocker ==
-          :deferred_until_single_center_decomposed_wl_acceptance_review
+    @test report.acceptance_fixture_active
+    @test report.elapsed_seconds >= 0.0
 end
 
 @testset "decomposed WL gausslet-only H2+ acceptance" begin
@@ -636,6 +645,9 @@ end
 
     @test report.status == :materialized_decomposed_wl_h2plus_acceptance
     @test isnothing(report.blocker)
+    @test report.acceptance_suite ==
+          :decomposed_wl_gausslet_one_electron_acceptance
+    @test report.acceptance_fixture == :h2plus
     @test report.q == 5
     @test report.ns == 5
     @test report.n_s == 5
@@ -716,4 +728,6 @@ end
     @test !report.ordinary_cartesian_ida_operators_used
     @test report.acceptance_energy_materialized
     @test report.h2plus_acceptance_active
+    @test report.acceptance_fixture_active
+    @test report.elapsed_seconds >= 0.0
 end

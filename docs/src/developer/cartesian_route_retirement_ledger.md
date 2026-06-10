@@ -73,6 +73,13 @@ the 223-column basis. The current q = 5, ns = 5 H energy is
 is `-1.033841728044377` Hartree, and its Born-Oppenheimer total energy is
 `-0.533841728044377` Hartree.
 
+A stabilization audit after the H/H2+ milestone found no active scientific
+acceptance test that still uses a full-parent CPB, direct Cartesian product
+fallback, or `ordinary_cartesian_ida_operators` as the decomposed WL acceptance
+route. Remaining fixed-block tests are kept as oracle/local-kernel checks, and
+remaining `ordinary_cartesian_ida_operators` tests are ordinary-route coverage
+outside this decomposed WL acceptance contract.
+
 ## Current Replacement Pressure
 
 - Selected global overlap, kinetic, position_x, position_y, position_z, x2_x,
