@@ -47,7 +47,7 @@ function complete_shell_support(
     support_kind::Symbol = :complete_shell_support,
     metadata = (;),
 )
-    _assert_complete_shell_boxes(outer_box, inner_exclusion_box)
+    CartesianCPB._assert_complete_shell_boxes(outer_box, inner_exclusion_box)
     return OwnedSupport(
         support_kind,
         (),

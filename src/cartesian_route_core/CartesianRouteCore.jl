@@ -50,18 +50,19 @@ Metadata policy:
 """
 module CartesianRouteCore
 
-using ..CartesianCPB:
-    CoordinateProductBox,
-    cpb,
-    filled_cpb,
-    slab_cpb,
-    complete_shell_boundary_strata,
-    intervals,
-    shape,
-    codimension,
-    _assert_complete_shell_boxes
+using ..CartesianCPB
 
 import ..CartesianCPB: role, support_count
+
+const CPB = CartesianCPB
+const CoordinateProductBox = CartesianCPB.CoordinateProductBox
+const cpb = CartesianCPB.cpb
+const filled_cpb = CartesianCPB.filled_cpb
+const slab_cpb = CartesianCPB.slab_cpb
+const complete_shell_boundary_strata = CartesianCPB.complete_shell_boundary_strata
+const intervals = CartesianCPB.intervals
+const shape = CartesianCPB.shape
+const codimension = CartesianCPB.codimension
 
 # Export policy:
 # These exports are internal-to-GaussletBases conveniences, not public package

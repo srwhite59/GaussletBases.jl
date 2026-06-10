@@ -75,7 +75,7 @@ function white_lindsey_boundary_strata_lowering(
         throw(ArgumentError("White-Lindsey boundary-stratum lowering requires CPB strata"))
     all(cpb -> cpb isa CoordinateProductBox, strata_tuple) ||
         throw(ArgumentError("White-Lindsey boundary-stratum lowering requires CPBs"))
-    all(cpb -> codimension(cpb) >= 1, strata_tuple) ||
+    all(cpb -> CartesianCPB.codimension(cpb) >= 1, strata_tuple) ||
         throw(ArgumentError("White-Lindsey boundary-stratum CPBs should be codimension >= 1"))
     return lowering_source(
         :white_lindsey_boundary_strata,
@@ -99,7 +99,7 @@ function pqs_filled_source_lowering(
     source_cpb::CoordinateProductBox;
     metadata = (;),
 )
-    codimension(source_cpb) == 0 ||
+    CartesianCPB.codimension(source_cpb) == 0 ||
         throw(ArgumentError("PQS filled-source lowering requires a codimension-0 source CPB"))
     return lowering_source(
         :pqs_filled_source_cpb,
