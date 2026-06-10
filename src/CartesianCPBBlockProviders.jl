@@ -26,6 +26,7 @@ export CPBIntervalPair3D,
        CPBMixedGTOCoordinateMomentLocalBlock,
        CPBMixedGTOKineticLocalBlock,
        CPBMixedGTOSupplementLocalBlock,
+       CPBGTOSupplementOneBodyBlock,
        CPBElectronElectronLocalBlock,
        CPBElectronNuclearByCenterLocalBlock,
        CPBLocalIntegralWeights,
@@ -44,6 +45,10 @@ export CPBIntervalPair3D,
        cpb_mixed_gto_position_operator_block,
        cpb_mixed_gto_x2_operator_block,
        cpb_mixed_gto_kinetic_operator_block,
+       cpb_gto_overlap_operator_block,
+       cpb_gto_position_operator_block,
+       cpb_gto_x2_operator_block,
+       cpb_gto_kinetic_operator_block,
        cpb_electron_electron_local_block,
        cpb_electron_nuclear_by_center_local_block,
        cpb_local_integral_weights,
@@ -210,6 +215,20 @@ placement, Hamiltonian assembly, or WL/PQS realization.
 struct CPBMixedGTOSupplementLocalBlock{P,C,S,D,M}
     parent::P
     cpb::C
+    supplement::S
+    dense_block::D
+    metadata::M
+end
+
+"""
+    CPBGTOSupplementOneBodyBlock
+
+Provider-level GTO/GTO one-body Galerkin block for a whole Cartesian Gaussian
+shell supplement representation. This reuses existing supplement self helper
+surfaces and does not imply route/global placement, Hamiltonian assembly, or
+WL/PQS realization.
+"""
+struct CPBGTOSupplementOneBodyBlock{S,D,M}
     supplement::S
     dense_block::D
     metadata::M
@@ -400,6 +419,7 @@ summary(block::CPBMixedGTOLocalOverlapBlock) = block.metadata
 summary(block::CPBMixedGTOCoordinateMomentLocalBlock) = block.metadata
 summary(block::CPBMixedGTOKineticLocalBlock) = block.metadata
 summary(block::CPBMixedGTOSupplementLocalBlock) = block.metadata
+summary(block::CPBGTOSupplementOneBodyBlock) = block.metadata
 summary(block::CPBElectronElectronLocalBlock) = block.metadata
 summary(block::CPBElectronNuclearByCenterLocalBlock) = block.metadata
 summary(weights::CPBLocalIntegralWeights) = weights.metadata
@@ -1827,6 +1847,91 @@ function cpb_mixed_gto_kinetic_operator_block(
     )
 end
 
+function cpb_gto_overlap_operator_block(supplement)
+    return _cpb_gto_supplement_one_body_block(
+        supplement;
+        term = :gto_overlap,
+        source_kind = :gto_supplement_self_overlap,
+        available_status = :materialized_cpb_gto_supplement_overlap_block,
+        blocked_status = :blocked_cpb_gto_supplement_overlap_block,
+        dense_builder = _cpb_gto_supplement_self_overlap_matrix,
+        coordinate_moment = :unavailable,
+        active_axis = :unavailable,
+        xpower = :unavailable,
+    )
+end
+
+function cpb_gto_position_operator_block(supplement; axis::Symbol = :x)
+    if !(axis in _AXIS_ORDER)
+        return _cpb_gto_supplement_blocked_one_body_block(
+            supplement,
+            :unsupported_gto_position_axis;
+            term = Symbol("gto_position_", String(axis)),
+            source_kind = :gto_supplement_self_coordinate_moment,
+            blocked_status = :blocked_cpb_gto_supplement_coordinate_moment_block,
+            coordinate_moment = :position,
+            active_axis = axis,
+            xpower = 1,
+        )
+    end
+    return _cpb_gto_supplement_one_body_block(
+        supplement;
+        term = Symbol("gto_position_", String(axis)),
+        source_kind = :gto_supplement_self_coordinate_moment,
+        available_status =
+            :materialized_cpb_gto_supplement_coordinate_moment_block,
+        blocked_status = :blocked_cpb_gto_supplement_coordinate_moment_block,
+        dense_builder = supplement ->
+            _cpb_gto_supplement_self_moment_matrix(supplement, Symbol("position_", axis, "_aa")),
+        coordinate_moment = :position,
+        active_axis = axis,
+        xpower = 1,
+    )
+end
+
+function cpb_gto_x2_operator_block(supplement; axis::Symbol = :x)
+    if !(axis in _AXIS_ORDER)
+        return _cpb_gto_supplement_blocked_one_body_block(
+            supplement,
+            :unsupported_gto_x2_axis;
+            term = Symbol("gto_x2_", String(axis)),
+            source_kind = :gto_supplement_self_coordinate_moment,
+            blocked_status = :blocked_cpb_gto_supplement_coordinate_moment_block,
+            coordinate_moment = :x2,
+            active_axis = axis,
+            xpower = 2,
+        )
+    end
+    return _cpb_gto_supplement_one_body_block(
+        supplement;
+        term = Symbol("gto_x2_", String(axis)),
+        source_kind = :gto_supplement_self_coordinate_moment,
+        available_status =
+            :materialized_cpb_gto_supplement_coordinate_moment_block,
+        blocked_status = :blocked_cpb_gto_supplement_coordinate_moment_block,
+        dense_builder = supplement ->
+            _cpb_gto_supplement_self_moment_matrix(supplement, Symbol("x2_", axis, "_aa")),
+        coordinate_moment = :x2,
+        active_axis = axis,
+        xpower = 2,
+    )
+end
+
+function cpb_gto_kinetic_operator_block(supplement)
+    return _cpb_gto_supplement_one_body_block(
+        supplement;
+        term = :gto_kinetic,
+        source_kind = :gto_supplement_self_kinetic,
+        available_status = :materialized_cpb_gto_supplement_kinetic_block,
+        blocked_status = :blocked_cpb_gto_supplement_kinetic_block,
+        dense_builder = supplement ->
+            _cpb_gto_supplement_self_moment_matrix(supplement, :kinetic_aa),
+        coordinate_moment = :unavailable,
+        active_axis = :unavailable,
+        xpower = :unavailable,
+    )
+end
+
 function _cpb_mixed_gto_supplement_block(
     parent::CPGB.CartesianParentGaussletBasis3D,
     cpb::CPB.CoordinateProductBox,
@@ -1899,6 +2004,131 @@ function _cpb_mixed_gto_supplement_block(
             coordinate_moment,
             xpower,
         ),
+    )
+end
+
+function _cpb_gto_supplement_one_body_block(
+    supplement;
+    term::Symbol,
+    source_kind::Symbol,
+    available_status::Symbol,
+    blocked_status::Symbol,
+    dense_builder,
+    coordinate_moment,
+    active_axis,
+    xpower,
+)
+    blocker = _cpb_gto_supplement_one_body_blocker(supplement)
+    dense_block = isnothing(blocker) ? dense_builder(supplement) : nothing
+    status = isnothing(blocker) ? available_status : blocked_status
+    return CPBGTOSupplementOneBodyBlock(
+        supplement,
+        dense_block,
+        _cpb_gto_supplement_one_body_block_summary(
+            status,
+            blocker,
+            supplement,
+            dense_block;
+            term,
+            source_kind,
+            coordinate_moment,
+            active_axis,
+            xpower,
+        ),
+    )
+end
+
+function _cpb_gto_supplement_blocked_one_body_block(
+    supplement,
+    blocker;
+    term::Symbol,
+    source_kind::Symbol,
+    blocked_status::Symbol,
+    coordinate_moment,
+    active_axis,
+    xpower,
+)
+    return CPBGTOSupplementOneBodyBlock(
+        supplement,
+        nothing,
+        _cpb_gto_supplement_one_body_block_summary(
+            blocked_status,
+            blocker,
+            supplement,
+            nothing;
+            term,
+            source_kind,
+            coordinate_moment,
+            active_axis,
+            xpower,
+        ),
+    )
+end
+
+function _cpb_gto_supplement_one_body_blocker(supplement)
+    _is_cartesian_gaussian_shell_supplement(supplement) ||
+        return :unsupported_gto_supplement_record
+    isempty(supplement.orbitals) && return :empty_gto_supplement_orbitals
+    for orbital in supplement.orbitals
+        record_blocker = _cpb_mixed_gto_orbital_record_blocker(orbital)
+        isnothing(record_blocker) || return record_blocker
+        primitive_blocker = _cpb_mixed_gto_orbital_primitive_blocker(orbital)
+        isnothing(primitive_blocker) || return primitive_blocker
+    end
+    return nothing
+end
+
+function _cpb_gto_supplement_self_overlap_matrix(supplement)
+    helper = getproperty(
+        parentmodule(@__MODULE__),
+        :_cartesian_supplement_cross_overlap,
+    )
+    return helper(supplement, supplement)
+end
+
+function _cpb_gto_supplement_self_moment_matrix(supplement, field::Symbol)
+    blocks = _cpb_gto_supplement_self_moment_blocks(supplement)
+    return Matrix{Float64}(getproperty(blocks, field))
+end
+
+function _cpb_gto_supplement_self_moment_blocks(supplement)
+    helper = getproperty(
+        parentmodule(@__MODULE__),
+        :_qwrg_cartesian_shell_self_moment_blocks_3d,
+    )
+    expansion_type = getproperty(parentmodule(@__MODULE__), :CoulombGaussianExpansion)
+    expansion = expansion_type(
+        [1.0],
+        [1.0];
+        del = 1.0,
+        s = 1.0,
+        c = 1.0,
+        maxu = 1.0,
+    )
+    return helper(
+        _cpb_gto_internal_supplement(supplement),
+        expansion;
+        include_factor_terms = false,
+    )
+end
+
+function _cpb_gto_internal_supplement(supplement)
+    internal_orbital_type = getproperty(
+        parentmodule(@__MODULE__),
+        :_AtomicCartesianShellOrbital3D,
+    )
+    return (;
+        orbitals = [
+            internal_orbital_type(
+                orbital.label,
+                orbital.angular_powers[1],
+                orbital.angular_powers[2],
+                orbital.angular_powers[3],
+                orbital.exponents,
+                orbital.coefficients,
+                orbital.center,
+            ) for orbital in supplement.orbitals
+        ],
     )
 end
 
@@ -2546,6 +2776,96 @@ function _cpb_mixed_gto_supplement_block_summary(
     )
 end
 
+function _cpb_gto_supplement_one_body_block_summary(
+    status::Symbol,
+    blocker,
+    supplement,
+    dense_block;
+    term::Symbol,
+    source_kind::Symbol,
+    coordinate_moment,
+    active_axis,
+    xpower,
+)
+    available =
+        status in (
+            :materialized_cpb_gto_supplement_overlap_block,
+            :materialized_cpb_gto_supplement_coordinate_moment_block,
+            :materialized_cpb_gto_supplement_kinetic_block,
+        )
+    orbital_count =
+        _is_cartesian_gaussian_shell_supplement(supplement) ?
+        length(supplement.orbitals) :
+        :unavailable
+    return (;
+        object_kind = :cartesian_cpb_gto_supplement_one_body_block_summary,
+        status,
+        blocker,
+        _cpb_gto_supplement_one_body_summary_convention_fields(orbital_count)...,
+        term,
+        source_kind,
+        coordinate_moment,
+        active_axis,
+        xpower,
+        supplement_representation_kind =
+            :cartesian_gaussian_shell_supplement_representation,
+        supplement_kind =
+            _is_cartesian_gaussian_shell_supplement(supplement) ?
+            supplement.supplement_kind :
+            :unavailable,
+        source_metadata_summary =
+            _is_cartesian_gaussian_shell_supplement(supplement) ?
+            supplement.metadata :
+            :unavailable,
+        orbital_count,
+        orbital_labels =
+            _is_cartesian_gaussian_shell_supplement(supplement) ?
+            Tuple(orbital.label for orbital in supplement.orbitals) :
+            :unavailable,
+        orbital_angular_powers =
+            _is_cartesian_gaussian_shell_supplement(supplement) ?
+            Tuple(orbital.angular_powers for orbital in supplement.orbitals) :
+            :unavailable,
+        orbital_centers =
+            _is_cartesian_gaussian_shell_supplement(supplement) ?
+            Tuple(orbital.center for orbital in supplement.orbitals) :
+            :unavailable,
+        primitive_normalization_convention =
+            _cpb_gto_supplement_primitive_normalization_convention(supplement),
+        formula_source = :GaussianAnalyticIntegrals_polynomial_gaussian,
+        oracle_source =
+            term == :gto_overlap ?
+            :_cartesian_supplement_cross_overlap :
+            :_qwrg_cartesian_shell_self_moment_blocks_3d,
+        left_basis_kind = :cartesian_gaussian_shell_supplement_representation,
+        right_basis_kind = :cartesian_gaussian_shell_supplement_representation,
+        left_shape = (gto = orbital_count,),
+        right_shape = (gto = orbital_count,),
+        dense_block_available = available,
+        dense_block_shape = available ? size(dense_block) : :unavailable,
+        dense_block_eltype = available ? eltype(dense_block) : :unavailable,
+        representation = :dense_provider_level_gto_supplement_galerkin_block,
+        galerkin_operator = true,
+        provider_level_local_matrix_materialized = available,
+        provider_level_pilot = true,
+        gto_supplement_self_block = true,
+        mixed_gto_pilot = false,
+        realization_status = :unrealized,
+        route_global_status = :unassigned,
+        route_driver_wiring = false,
+        route_global_matrix_materialized = false,
+        route_global_overlap_matrix_materialized = false,
+        global_matrix_materialized = false,
+        global_overlap_matrix_materialized = false,
+        hamiltonian_data_materialized = false,
+        coulomb_data_materialized = false,
+        ida_mwg_semantics = false,
+        pqs_lowdin_materialized = false,
+        pqs_shell_projection_materialized = false,
+        exports_or_artifacts = false,
+    )
+end
+
 function _cpb_mixed_gto_summary_convention_fields()
     return (;
         contraction_convention =
@@ -2579,6 +2899,31 @@ function _cpb_mixed_gto_supplement_summary_convention_fields(orbital_count::Int)
         mixed_gto_axis_integral_source =
             :qw_polynomial_gaussian_primitive_tables,
     )
+end
+
+function _cpb_gto_supplement_one_body_summary_convention_fields(orbital_count)
+    return (;
+        contraction_convention =
+            :orbital_coefficients_contract_primitive_axis_tables,
+        center_shift_convention = :explicit_axis_center_coordinates,
+        shell_power_order = _AXIS_ORDER,
+        axis_order = _AXIS_ORDER,
+        left_orbital_count = orbital_count,
+        right_orbital_count = orbital_count,
+        parent_one_body_factor_packet_consumed = false,
+        gto_axis_integral_source = :qw_polynomial_gaussian_primitive_tables,
+    )
+end
+
+function _cpb_gto_supplement_primitive_normalization_convention(supplement)
+    _is_cartesian_gaussian_shell_supplement(supplement) ||
+        return :unavailable
+    isempty(supplement.orbitals) && return :unavailable
+    normalizations = unique(
+        orbital.primitive_normalization for orbital in supplement.orbitals
+    )
+    length(normalizations) == 1 && return only(normalizations)
+    return Tuple(normalizations)
 end
 
 function _mixed_gto_property(orbital, name::Symbol)

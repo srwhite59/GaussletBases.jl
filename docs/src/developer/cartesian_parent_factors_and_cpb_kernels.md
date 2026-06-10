@@ -490,10 +490,21 @@ thin collection over the one-orbital CPB-local mixed GTO pilots, preserving
 per-orbital compact summaries, source metadata, contracted/uncontracted
 conventions, local/right shapes, and provider-level nonclaim flags.
 
-The next whole-GTO provider layer after this should be GTO/GTO one-body
-Galerkin blocks, shaped as GTO orbital by GTO orbital local/provider records.
-Contraction metadata must stay explicit, including whether a legacy source is
-contracted or uncontracted and how primitive coefficients are applied.
+The GTO/GTO one-body Galerkin provider layer now exists for whole supplements.
+`CPBGTOSupplementOneBodyBlock` records provider-level dense blocks shaped as
+GTO orbital by GTO orbital for:
+
+- `cpb_gto_overlap_operator_block`
+- `cpb_gto_position_operator_block`
+- `cpb_gto_x2_operator_block`
+- `cpb_gto_kinetic_operator_block`
+
+The overlap wrapper reuses `_cartesian_supplement_cross_overlap`. Kinetic,
+position, and x2 reuse `_qwrg_cartesian_shell_self_moment_blocks_3d`. These
+records keep contraction metadata explicit, including whether a legacy source
+is contracted or uncontracted and how primitive coefficients are applied. They
+are still provider-level one-body Galerkin blocks, not route/global placement
+or Hamiltonian assembly.
 
 This is still CPB-local provider work. It is not route/global placement,
 WL/PQS realization, Hamiltonian assembly, IDA/MWG semantics, export, or

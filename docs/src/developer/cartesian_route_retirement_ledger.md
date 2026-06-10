@@ -398,6 +398,15 @@ paths from becoming new route authority.
   GTO/GTO one-body Galerkin record, mixed nuclear/Coulomb term, route/global
   placement, Hamiltonian assembly, IDA/MWG/PQS semantic change, export, or
   artifact.
+- GTO/GTO provider-level one-body Galerkin records now exist through
+  `CPBGTOSupplementOneBodyBlock` and wrappers for overlap, kinetic, position,
+  and x2. Overlap reuses `_cartesian_supplement_cross_overlap`; kinetic,
+  position, and x2 reuse `_qwrg_cartesian_shell_self_moment_blocks_3d`. Tests
+  cover contracted He cc-pVTZ `lmax = 0` overlap, kinetic, all position axes,
+  all x2 axes, and an uncontracted overlap count. This is a supplement-sector
+  one-body provider record only; no mixed nuclear/Coulomb term, route/global
+  placement, Hamiltonian assembly, IDA/MWG/PQS semantic change, export, or
+  artifact was added.
 - The next overlap implementation boundary is no longer additional placement
   fingerprinting. First decide the CPB operator-block and WL/PQS realization
   design: what local block objects exist, how White-Lindsey consumes them, how
