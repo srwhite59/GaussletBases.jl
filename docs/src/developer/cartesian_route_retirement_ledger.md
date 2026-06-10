@@ -457,24 +457,22 @@ outside this decomposed WL acceptance contract.
   one-body provider record only; no mixed nuclear/Coulomb term, route/global
   placement, Hamiltonian assembly, IDA/MWG/PQS semantic change, export, or
   artifact was added.
-- The first decomposed WL H plus GTO supplement readiness audit uses the active
-  q/ns = 5/5 H acceptance fixture and H cc-pVTZ `lmax = 0` supplement. The
-  decomposed gausslet route, route-global overlap/kinetic/nuclear-by-center
-  sources, and GTO/GTO supplement overlap/kinetic/nuclear-by-center provider
-  blocks are available. Mixed CPB/GTO local blocks are not called yet because
-  the current mixed wrapper builds generic parent axis representations and then
-  `_cartesian_basis_supplement_axis_primitive_cross` rejects them: that helper
-  requires Gaussian primitive axis records. This is recorded as
-  `:missing_mixed_gto_axis_representation_adapter` /
-  `:missing_gausslet_gto_cross_axis_table_source`, not as a claim that
-  distorted/asinh WL axes are conceptually incompatible with GTO. The WL parent
-  axis bundle carries `pgdg_intermediate` overlap, kinetic, position, x2,
-  Gaussian-factor, pair-factor, and weight data; the missing contract is an
-  adapter or table source from that PGDG/WL parent axis bundle shape into the
-  existing supplement cross-axis helper path. Combined route-global GTO basis
-  layout remains not reached, and no direct Cartesian fallback,
-  `ordinary_cartesian_ida_operators`, full-window CPB acceptance route,
-  Hamiltonian supplement assembly, export, or artifact was added.
+- The decomposed WL H plus GTO supplement readiness audit uses the active q/ns =
+  5/5 H acceptance fixture and H cc-pVTZ `lmax = 0` supplement. The mixed
+  CPB/GTO axis setup now uses the existing mapped ordinary working Gaussian
+  proxy representation adapter instead of handing distorted mapped primitives to
+  `_cartesian_basis_supplement_axis_primitive_cross`. The WL parent axis bundle
+  still records `pgdg_intermediate` overlap, kinetic, position, x2,
+  Gaussian-factor, pair-factor, and weight data; distorted/asinh WL axes are not
+  treated as conceptually incompatible with GTO. The readiness fingerprint now
+  materializes the provider-level GTO bundle: mixed gausslet/GTO overlap,
+  kinetic, and uncharged nuclear-by-center blocks are available, as are GTO/GTO
+  supplement overlap, kinetic, and uncharged nuclear-by-center blocks. The next
+  blocker is `:missing_route_global_combined_gto_basis_layout`: there is still
+  no route-global combined gausslet+GTO overlap/Hamiltonian layout, no
+  supplement Hamiltonian assembly, no direct Cartesian fallback,
+  `ordinary_cartesian_ida_operators`, full-window CPB acceptance route, export,
+  or artifact.
 - The next overlap implementation boundary is no longer additional placement
   fingerprinting. First decide the CPB operator-block and WL/PQS realization
   design: what local block objects exist, how White-Lindsey consumes them, how

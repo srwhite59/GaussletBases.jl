@@ -2747,10 +2747,11 @@ function _cpb_mixed_gto_parent_axis_representations(
     parent::CPGB.CartesianParentGaussletBasis3D,
 )
     axes = CPGB.parent_axes(parent)
+    axis_representation = getproperty(parentmodule(@__MODULE__), :_cartesian_axis_representation)
     return (;
-        x = basis_representation(axes.x; operators = (:overlap,)),
-        y = basis_representation(axes.y; operators = (:overlap,)),
-        z = basis_representation(axes.z; operators = (:overlap,)),
+        x = axis_representation(axes.x),
+        y = axis_representation(axes.y),
+        z = axis_representation(axes.z),
     )
 end
 

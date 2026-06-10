@@ -13,6 +13,7 @@ include("cartesian_white_lindsey_adapter_fixture_helpers.jl")
 
 const WLAcceptanceReadinessCPBM = GaussletBases.CartesianPairBlockMaterialization
 const WLAcceptanceReadinessCPB = GaussletBases.CartesianCPB
+const WLAcceptanceReadinessCPGB = GaussletBases.CartesianParentGaussletBases
 const WLAcceptanceReadinessCBP = GaussletBases.CartesianCPBBlockProviders
 
 function _wl_acceptance_parent_axis_inputs()
@@ -75,6 +76,11 @@ function _wl_acceptance_direct_core_cpb()
         2:6;
         role = :decomposed_wl_gto_readiness_direct_core_cpb,
     )
+end
+
+function _wl_acceptance_parent_basis(axis_inputs)
+    axis = axis_inputs.parent_axis_bundle_object.x.pgdg_intermediate.basis
+    return WLAcceptanceReadinessCPGB.CartesianParentGaussletBasis3D(axis)
 end
 
 function _wl_overlap_metric_diagnostics(overlap_matrix, decomposed_inventory)
@@ -568,6 +574,7 @@ function _wl_decomposed_h_gto_supplement_readiness_report()
     route_global_supported_terms =
         WLAcceptanceReadinessCPBM._route_global_one_body_supported_terms()
     supplement = _wl_h_acceptance_gto_supplement()
+    parent = _wl_acceptance_parent_basis(axis_inputs)
     direct_core_cpb = _wl_acceptance_direct_core_cpb()
     expansion = coulomb_gaussian_expansion(doacc = false)
     center_records = _wl_acceptance_center_records()
@@ -580,45 +587,54 @@ function _wl_decomposed_h_gto_supplement_readiness_report()
         :gto_kinetic,
         :gto_electron_nuclear_by_center,
     )
-    gto_overlap = WLAcceptanceReadinessCBP.cpb_gto_overlap_operator_block(supplement)
-    gto_kinetic = WLAcceptanceReadinessCBP.cpb_gto_kinetic_operator_block(supplement)
-    gto_nuclear_by_center = Tuple(
-        WLAcceptanceReadinessCBP.cpb_gto_nuclear_by_center_block(
-            supplement,
-            expansion,
-            center_record,
-        ) for center_record in center_records
+    bundle = WLAcceptanceReadinessCBP.cpb_gto_supplement_local_operator_bundle(
+        parent,
+        direct_core_cpb,
+        supplement;
+        expansion,
+        center_records,
     )
-    gto_included_terms = (
-        :gto_overlap,
-        :gto_kinetic,
-        :gto_electron_nuclear_by_center,
+    bundle_summary = WLAcceptanceReadinessCBP.summary(bundle)
+    mixed_overlap_summary =
+        WLAcceptanceReadinessCBP.summary(bundle.mixed_blocks.overlap)
+    mixed_kinetic_summary =
+        WLAcceptanceReadinessCBP.summary(bundle.mixed_blocks.kinetic)
+    mixed_nuclear_summaries = Tuple(
+        WLAcceptanceReadinessCBP.summary(block) for
+        block in bundle.mixed_nuclear_by_center_blocks
+    )
+    gto_overlap_summary =
+        WLAcceptanceReadinessCBP.summary(bundle.gto_blocks.overlap)
+    gto_kinetic_summary =
+        WLAcceptanceReadinessCBP.summary(bundle.gto_blocks.kinetic)
+    gto_nuclear_summaries = Tuple(
+        WLAcceptanceReadinessCBP.summary(block) for
+        block in bundle.gto_nuclear_by_center_blocks
     )
     gto_shapes = (;
-        overlap = size(gto_overlap.dense_block),
-        kinetic = size(gto_kinetic.dense_block),
+        overlap = gto_overlap_summary.dense_block_shape,
+        kinetic = gto_kinetic_summary.dense_block_shape,
         nuclear_by_center =
-            Tuple(size(block.dense_block) for block in gto_nuclear_by_center),
+            Tuple(summary.dense_block_shape for summary in gto_nuclear_summaries),
+    )
+    mixed_shapes = (;
+        overlap = mixed_overlap_summary.dense_block_shape,
+        kinetic = mixed_kinetic_summary.dense_block_shape,
+        nuclear_by_center =
+            Tuple(summary.dense_block_shape for summary in mixed_nuclear_summaries),
     )
     mixed_gto_blocker =
-        :missing_mixed_gto_axis_representation_adapter
+        nothing
     mixed_gto_blocker_source =
         :_cpb_mixed_gto_parent_axis_representations
-    mixed_gto_rejected_helper =
-        :_cartesian_basis_supplement_axis_primitive_cross
+    mixed_gto_rejected_helper = :unavailable
     mixed_gto_blocker_detail =
-        :generic_parent_basis_representation_exposes_non_gaussian_primitives
-    mixed_gto_required_source = :gausslet_gto_cross_axis_table_source
-    bundle_status = :not_constructed_cpb_gto_supplement_local_operator_bundle
-    bundle_blocker = mixed_gto_blocker
-    mixed_terms = (
-        :mixed_gto_overlap,
-        :mixed_gto_kinetic,
-        :mixed_gto_electron_nuclear_by_center,
-    )
+        :mapped_working_gaussian_proxy_axis_representation_available
+    mixed_gto_required_source =
+        :mapped_ordinary_working_gaussian_proxy_axis_representation
     route_global_combined_basis_layout_status = :not_reached
     route_global_combined_basis_layout_blocker =
-        :blocked_by_mixed_cpb_gto_local_blocks
+        :missing_route_global_combined_gto_basis_layout
     decomposed_unit_range_start = minimum(
         first(summary.column_range) for summary in decomposed_inventory.unit_summaries
     )
@@ -630,7 +646,7 @@ function _wl_decomposed_h_gto_supplement_readiness_report()
     return (;
         object_kind = :decomposed_wl_h_gto_supplement_acceptance_readiness_report,
         status = :blocked_decomposed_wl_gto_supplement_acceptance_readiness,
-        blocker = mixed_gto_blocker,
+        blocker = route_global_combined_basis_layout_blocker,
         acceptance_suite =
             :decomposed_wl_gausslet_plus_gto_one_electron_acceptance,
         acceptance_fixture = :h_atom_gto_supplement_readiness,
@@ -666,9 +682,10 @@ function _wl_decomposed_h_gto_supplement_readiness_report()
             hasproperty(pgdg, :pair_factor_terms),
         parent_pgdg_weights_available = hasproperty(pgdg, :weights),
         mixed_gto_axis_contract_status =
-            :missing_gausslet_gto_cross_axis_table_source,
+            :available_mixed_gto_axis_representation_adapter,
         mixed_gto_axis_contract_blocker = mixed_gto_blocker,
         mixed_gto_rejected_helper,
+        mixed_gto_axis_representation_source = mixed_gto_required_source,
         mixed_gto_required_source,
         supplement_source_available = true,
         supplement_kind = supplement.supplement_kind,
@@ -678,31 +695,35 @@ function _wl_decomposed_h_gto_supplement_readiness_report()
         supplement_orbital_count = length(supplement.orbitals),
         supplement_orbital_labels =
             Tuple(orbital.label for orbital in supplement.orbitals),
-        cpb_local_gto_bundle_status = bundle_status,
-        cpb_local_gto_bundle_blocker = bundle_blocker,
-        cpb_local_gto_bundle_terms_available = false,
+        cpb_local_gto_bundle_status = bundle_summary.status,
+        cpb_local_gto_bundle_blocker = bundle_summary.blocker,
+        cpb_local_gto_bundle_terms_available =
+            bundle_summary.provider_level_local_blocks_materialized,
         cpb_local_gto_required_terms = required_local_terms,
-        cpb_local_gto_included_terms = gto_included_terms,
-        cpb_local_gto_missing_terms = mixed_terms,
+        cpb_local_gto_included_terms = bundle_summary.included_terms,
+        cpb_local_gto_missing_terms = bundle_summary.missing_terms,
         cpb_local_direct_core_support_count =
             WLAcceptanceReadinessCPB.support_count(direct_core_cpb),
-        mixed_gausslet_gto_overlap_available = false,
-        mixed_gausslet_gto_kinetic_available = false,
-        mixed_gausslet_gto_nuclear_by_center_available = false,
+        mixed_gausslet_gto_overlap_available =
+            mixed_overlap_summary.dense_block_available,
+        mixed_gausslet_gto_kinetic_available =
+            mixed_kinetic_summary.dense_block_available,
+        mixed_gausslet_gto_nuclear_by_center_available =
+            all(summary.dense_block_available for summary in mixed_nuclear_summaries),
         mixed_gausslet_gto_blocker = mixed_gto_blocker,
         mixed_gausslet_gto_blocker_source = mixed_gto_blocker_source,
         mixed_gausslet_gto_rejected_helper = mixed_gto_rejected_helper,
         mixed_gausslet_gto_blocker_detail = mixed_gto_blocker_detail,
         mixed_gausslet_gto_required_source = mixed_gto_required_source,
         gto_gto_overlap_available =
-            WLAcceptanceReadinessCBP.summary(gto_overlap).dense_block_available,
+            gto_overlap_summary.dense_block_available,
         gto_gto_kinetic_available =
-            WLAcceptanceReadinessCBP.summary(gto_kinetic).dense_block_available,
+            gto_kinetic_summary.dense_block_available,
         gto_gto_nuclear_by_center_available = all(
-            block -> WLAcceptanceReadinessCBP.summary(block).dense_block_available,
-            gto_nuclear_by_center,
+            summary -> summary.dense_block_available,
+            gto_nuclear_summaries,
         ),
-        mixed_gausslet_gto_shapes = :unavailable,
+        mixed_gausslet_gto_shapes = mixed_shapes,
         gto_gto_shapes = gto_shapes,
         route_global_combined_basis_layout_status,
         route_global_combined_basis_layout_blocker,
@@ -824,7 +845,7 @@ end
     @test report.status ==
           :blocked_decomposed_wl_gto_supplement_acceptance_readiness
     @test report.blocker ==
-          :missing_mixed_gto_axis_representation_adapter
+          :missing_route_global_combined_gto_basis_layout
     @test report.acceptance_suite ==
           :decomposed_wl_gausslet_plus_gto_one_electron_acceptance
     @test report.acceptance_fixture == :h_atom_gto_supplement_readiness
@@ -853,13 +874,13 @@ end
     @test report.parent_pgdg_pair_factor_terms_available
     @test report.parent_pgdg_weights_available
     @test report.mixed_gto_axis_contract_status ==
-          :missing_gausslet_gto_cross_axis_table_source
-    @test report.mixed_gto_axis_contract_blocker ==
-          :missing_mixed_gto_axis_representation_adapter
-    @test report.mixed_gto_rejected_helper ==
-          :_cartesian_basis_supplement_axis_primitive_cross
+          :available_mixed_gto_axis_representation_adapter
+    @test isnothing(report.mixed_gto_axis_contract_blocker)
+    @test report.mixed_gto_rejected_helper == :unavailable
+    @test report.mixed_gto_axis_representation_source ==
+          :mapped_ordinary_working_gaussian_proxy_axis_representation
     @test report.mixed_gto_required_source ==
-          :gausslet_gto_cross_axis_table_source
+          :mapped_ordinary_working_gaussian_proxy_axis_representation
     @test report.supplement_source_available
     @test report.supplement_kind == :atomic_cartesian_shell
     @test report.supplement_atom == "H"
@@ -868,49 +889,44 @@ end
     @test report.supplement_orbital_count == 3
     @test report.supplement_orbital_labels == ("s1", "s2", "s3")
     @test report.cpb_local_gto_bundle_status ==
-          :not_constructed_cpb_gto_supplement_local_operator_bundle
-    @test report.cpb_local_gto_bundle_blocker ==
-          :missing_mixed_gto_axis_representation_adapter
-    @test !report.cpb_local_gto_bundle_terms_available
-    @test report.cpb_local_gto_missing_terms == (
+          :materialized_cpb_gto_supplement_local_operator_bundle
+    @test isnothing(report.cpb_local_gto_bundle_blocker)
+    @test report.cpb_local_gto_bundle_terms_available
+    @test report.cpb_local_gto_missing_terms == ()
+    for term in (
         :mixed_gto_overlap,
         :mixed_gto_kinetic,
         :mixed_gto_electron_nuclear_by_center,
-    )
-    for term in (
         :gto_overlap,
         :gto_kinetic,
         :gto_electron_nuclear_by_center,
     )
         @test term in report.cpb_local_gto_included_terms
     end
-    for term in report.cpb_local_gto_missing_terms
-        @test term in report.cpb_local_gto_required_terms
-    end
     @test report.cpb_local_direct_core_support_count == 125
-    @test !report.mixed_gausslet_gto_overlap_available
-    @test !report.mixed_gausslet_gto_kinetic_available
-    @test !report.mixed_gausslet_gto_nuclear_by_center_available
-    @test report.mixed_gausslet_gto_blocker ==
-          :missing_mixed_gto_axis_representation_adapter
+    @test report.mixed_gausslet_gto_overlap_available
+    @test report.mixed_gausslet_gto_kinetic_available
+    @test report.mixed_gausslet_gto_nuclear_by_center_available
+    @test isnothing(report.mixed_gausslet_gto_blocker)
     @test report.mixed_gausslet_gto_blocker_source ==
           :_cpb_mixed_gto_parent_axis_representations
-    @test report.mixed_gausslet_gto_rejected_helper ==
-          :_cartesian_basis_supplement_axis_primitive_cross
+    @test report.mixed_gausslet_gto_rejected_helper == :unavailable
     @test report.mixed_gausslet_gto_blocker_detail ==
-          :generic_parent_basis_representation_exposes_non_gaussian_primitives
+          :mapped_working_gaussian_proxy_axis_representation_available
     @test report.mixed_gausslet_gto_required_source ==
-          :gausslet_gto_cross_axis_table_source
+          :mapped_ordinary_working_gaussian_proxy_axis_representation
     @test report.gto_gto_overlap_available
     @test report.gto_gto_kinetic_available
     @test report.gto_gto_nuclear_by_center_available
-    @test report.mixed_gausslet_gto_shapes == :unavailable
+    @test report.mixed_gausslet_gto_shapes.overlap == (125, 3)
+    @test report.mixed_gausslet_gto_shapes.kinetic == (125, 3)
+    @test report.mixed_gausslet_gto_shapes.nuclear_by_center == ((125, 3),)
     @test report.gto_gto_shapes.overlap == (3, 3)
     @test report.gto_gto_shapes.kinetic == (3, 3)
     @test report.gto_gto_shapes.nuclear_by_center == ((3, 3),)
     @test report.route_global_combined_basis_layout_status == :not_reached
     @test report.route_global_combined_basis_layout_blocker ==
-          :blocked_by_mixed_cpb_gto_local_blocks
+          :missing_route_global_combined_gto_basis_layout
     @test !report.final_combined_overlap_layout_available
     @test !report.final_combined_hamiltonian_layout_available
     @test report.combined_basis_dimension == :unavailable
