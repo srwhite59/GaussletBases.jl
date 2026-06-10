@@ -171,6 +171,60 @@ function _wl_lowest_one_electron_energy(
     )
 end
 
+function _wl_combined_gto_one_electron_solve(combined_matrix_assembly)
+    if combined_matrix_assembly.status !==
+       :materialized_route_global_combined_gto_one_electron_matrices
+        return (;
+            status = :blocked_decomposed_wl_gto_supplement_one_electron_solve,
+            blocker = combined_matrix_assembly.blocker,
+            energy = NaN,
+            solve_kind = :blocked_combined_matrix_assembly,
+            overlap_minimum_eigenvalue =
+                combined_matrix_assembly.overlap_minimum_eigenvalue,
+            overlap_maximum_eigenvalue =
+                combined_matrix_assembly.overlap_maximum_eigenvalue,
+            overlap_condition_estimate =
+                combined_matrix_assembly.overlap_condition_estimate,
+            overlap_identity = false,
+        )
+    end
+    if !combined_matrix_assembly.overlap_positive_definite
+        return (;
+            status = :blocked_decomposed_wl_gto_supplement_one_electron_solve,
+            blocker = :combined_gto_overlap_metric_not_positive_definite,
+            energy = NaN,
+            solve_kind = :blocked_overlap_metric,
+            overlap_minimum_eigenvalue =
+                combined_matrix_assembly.overlap_minimum_eigenvalue,
+            overlap_maximum_eigenvalue =
+                combined_matrix_assembly.overlap_maximum_eigenvalue,
+            overlap_condition_estimate =
+                combined_matrix_assembly.overlap_condition_estimate,
+            overlap_identity = false,
+        )
+    end
+    diagnostics = (;
+        blocker = nothing,
+        overlap_minimum_eigenvalue =
+            combined_matrix_assembly.overlap_minimum_eigenvalue,
+        overlap_maximum_eigenvalue =
+            combined_matrix_assembly.overlap_maximum_eigenvalue,
+        overlap_condition_estimate =
+            combined_matrix_assembly.overlap_condition_estimate,
+    )
+    solve = _wl_lowest_one_electron_energy(
+        combined_matrix_assembly.hamiltonian_matrix,
+        combined_matrix_assembly.overlap_matrix,
+        diagnostics,
+    )
+    return merge(
+        solve,
+        (;
+            status = :materialized_decomposed_wl_gto_supplement_one_electron_solve,
+        ),
+    )
+end
+
 function _wl_decomposed_h_atom_acceptance_report()
     adapter = WLAcceptanceReadinessCPBM.white_lindsey_boundary_stratum_one_body_adapter_summary()
     local_terms = adapter.supported_one_body_terms
@@ -691,12 +745,35 @@ function _wl_decomposed_h_gto_supplement_readiness_report()
             gto_bundle = route_global_mixed_gto_blocks,
             mixed_gausslet_row_range,
         )
+    gausslet_hamiltonian =
+        WLAcceptanceReadinessCPBM.white_lindsey_decomposed_one_electron_hamiltonian(
+            kinetic_global,
+            by_center_global,
+        )
+    gausslet_overlap_diagnostics =
+        _wl_overlap_metric_diagnostics(overlap_global.matrix, decomposed_inventory)
+    gausslet_solve = _wl_lowest_one_electron_energy(
+        gausslet_hamiltonian.matrix,
+        overlap_global.matrix,
+        gausslet_overlap_diagnostics,
+    )
+    combined_solve = nothing
+    combined_solve_elapsed_seconds = @elapsed begin
+        combined_solve = _wl_combined_gto_one_electron_solve(
+            combined_matrix_assembly,
+        )
+    end
     route_global_combined_basis_layout_status = combined_layout.status
     route_global_combined_basis_layout_blocker = combined_layout.blocker
     readiness_blocker =
         route_global_mixed_gto_blocks.status ===
         :materialized_route_global_mixed_gto_blocks ?
-        combined_matrix_assembly.blocker :
+        (
+            combined_matrix_assembly.status ===
+            :materialized_route_global_combined_gto_one_electron_matrices ?
+            combined_solve.blocker :
+            combined_matrix_assembly.blocker
+        ) :
         route_global_mixed_gto_blocks.blocker
     decomposed_unit_range_start = minimum(
         first(summary.column_range) for summary in decomposed_inventory.unit_summaries
@@ -707,12 +784,12 @@ function _wl_decomposed_h_gto_supplement_readiness_report()
     decomposed_unit_column_range_span =
         decomposed_unit_range_start:decomposed_unit_range_stop
     return (;
-        object_kind = :decomposed_wl_h_gto_supplement_acceptance_readiness_report,
+        object_kind = :decomposed_wl_h_gto_supplement_acceptance_report,
         status =
-            combined_matrix_assembly.status ===
-            :materialized_route_global_combined_gto_one_electron_matrices ?
-            :materialized_decomposed_wl_gto_supplement_acceptance_readiness :
-            :blocked_decomposed_wl_gto_supplement_acceptance_readiness,
+            combined_solve.status ===
+            :materialized_decomposed_wl_gto_supplement_one_electron_solve ?
+            :materialized_decomposed_wl_gto_supplement_acceptance :
+            :blocked_decomposed_wl_gto_supplement_acceptance,
         blocker = readiness_blocker,
         acceptance_suite =
             :decomposed_wl_gausslet_plus_gto_one_electron_acceptance,
@@ -853,7 +930,28 @@ function _wl_decomposed_h_gto_supplement_readiness_report()
             combined_matrix_assembly.overlap_symmetry_error,
         route_global_combined_overlap_positive_definite =
             combined_matrix_assembly.overlap_positive_definite,
+        route_global_combined_overlap_minimum_eigenvalue =
+            combined_matrix_assembly.overlap_minimum_eigenvalue,
+        route_global_combined_overlap_maximum_eigenvalue =
+            combined_matrix_assembly.overlap_maximum_eigenvalue,
+        route_global_combined_overlap_condition_estimate =
+            combined_matrix_assembly.overlap_condition_estimate,
+        route_global_combined_overlap_near_zero_eigenvalue_count =
+            combined_matrix_assembly.overlap_near_zero_eigenvalue_count,
+        route_global_combined_overlap_negative_eigenvalue_count =
+            combined_matrix_assembly.overlap_negative_eigenvalue_count,
         route_global_combined_solve_ready = combined_matrix_assembly.solve_ready,
+        route_global_combined_solve_status = combined_solve.status,
+        route_global_combined_solve_blocker = combined_solve.blocker,
+        route_global_combined_solve_kind = combined_solve.solve_kind,
+        route_global_combined_overlap_identity = combined_solve.overlap_identity,
+        gausslet_only_h_energy = gausslet_solve.energy,
+        lowest_h_atom_energy = gausslet_solve.energy,
+        h_gto_energy = combined_solve.energy,
+        h_gto_energy_improvement = gausslet_solve.energy - combined_solve.energy,
+        h_exact_energy = -0.5,
+        h_gto_distance_from_exact = combined_solve.energy - (-0.5),
+        combined_solve_elapsed_seconds,
         route_global_combined_nuclear_charge_application_stage =
             combined_matrix_assembly.nuclear_charge_application_stage,
         route_global_combined_nuclear_charge_applied_at_hamiltonian_assembly =
@@ -974,12 +1072,12 @@ end
     @test report.elapsed_seconds >= 0.0
 end
 
-@testset "decomposed WL H GTO supplement acceptance readiness" begin
+@testset "decomposed WL H GTO supplement acceptance" begin
     report = _wl_decomposed_h_gto_supplement_readiness_report()
-    println("decomposed WL H GTO supplement readiness: ", report)
+    println("decomposed WL H GTO supplement acceptance: ", report)
 
     @test report.status ==
-          :materialized_decomposed_wl_gto_supplement_acceptance_readiness
+          :materialized_decomposed_wl_gto_supplement_acceptance
     @test isnothing(report.blocker)
     @test report.acceptance_suite ==
           :decomposed_wl_gausslet_plus_gto_one_electron_acceptance
@@ -1107,7 +1205,28 @@ end
     @test report.route_global_combined_hamiltonian_matrix_shape == (226, 226)
     @test report.route_global_combined_overlap_symmetry_error < 1.0e-12
     @test report.route_global_combined_overlap_positive_definite
+    @test report.route_global_combined_overlap_minimum_eigenvalue > 0.0
+    @test report.route_global_combined_overlap_maximum_eigenvalue > 1.0
+    @test report.route_global_combined_overlap_condition_estimate > 1.0
+    @test report.route_global_combined_overlap_near_zero_eigenvalue_count == 0
+    @test report.route_global_combined_overlap_negative_eigenvalue_count == 0
     @test report.route_global_combined_solve_ready
+    @test report.route_global_combined_solve_status ==
+          :materialized_decomposed_wl_gto_supplement_one_electron_solve
+    @test isnothing(report.route_global_combined_solve_blocker)
+    @test report.route_global_combined_solve_kind == :generalized_symmetric
+    @test !report.route_global_combined_overlap_identity
+    @test report.gausslet_only_h_energy == report.lowest_h_atom_energy
+    @test report.h_gto_energy < report.gausslet_only_h_energy
+    @test report.h_gto_energy > report.h_exact_energy
+    @test isapprox(
+        report.h_gto_energy,
+        -0.49982597871004913;
+        atol = 1.0e-10,
+    )
+    @test report.h_gto_energy_improvement > 0.0
+    @test report.h_gto_distance_from_exact > 0.0
+    @test report.combined_solve_elapsed_seconds >= 0.0
     @test report.route_global_combined_nuclear_charge_application_stage ==
           :route_global_combined_gto_hamiltonian_assembly
     @test report.route_global_combined_nuclear_charge_applied_at_hamiltonian_assembly
