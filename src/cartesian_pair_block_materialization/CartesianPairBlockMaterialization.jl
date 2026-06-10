@@ -77,6 +77,7 @@ export PairBlockMaterializationPolicy,
        white_lindsey_boundary_stratum_unit_coefficients,
        white_lindsey_boundary_stratum_unit_coefficient_context,
        white_lindsey_boundary_stratum_pair_unit_coefficients,
+       white_lindsey_decomposed_unit_pair_inventory,
        white_lindsey_boundary_stratum_overlap_block,
        white_lindsey_boundary_stratum_position_block,
        white_lindsey_boundary_stratum_x2_block,
@@ -184,6 +185,10 @@ export PairBlockMaterializationPolicy,
 #     Pair-level gathering of LW unit coefficient maps, without operator
 #     blocks.
 #
+# white_lindsey_decomposed_unit_pair_inventory.jl
+#     Route-owned metadata validator for decomposed LW unit pairs with retained
+#     column ranges.
+#
 # white_lindsey_overlap.jl
 #     First overlap-only LW pair-block pilot.
 #
@@ -243,6 +248,7 @@ include("white_lindsey_adapter_summary.jl")
 include("white_lindsey_seed_oracle_summary.jl")
 include("white_lindsey_unit_coefficients.jl")
 include("white_lindsey_pair_unit_coefficients.jl")
+include("white_lindsey_decomposed_unit_pair_inventory.jl")
 include("white_lindsey_overlap.jl")
 include("white_lindsey_position.jl")
 include("white_lindsey_x2.jl")

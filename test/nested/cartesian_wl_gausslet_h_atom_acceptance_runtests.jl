@@ -15,6 +15,11 @@ function _wl_decomposed_acceptance_blocker_report()
     adapter = WLAcceptanceReadinessCPBM.white_lindsey_boundary_stratum_one_body_adapter_summary()
     local_terms = adapter.supported_one_body_terms
     route_global_terms = WLAcceptanceReadinessCPBM.route_global_safe_one_body_terms()
+    decomposed_inventory =
+        WLAcceptanceReadinessCPBM.white_lindsey_decomposed_unit_pair_inventory(
+            nothing;
+            source_kind = :terminal_shellification_pair_inventory,
+        )
     collection = (;
         object_kind = :cartesian_pair_block_local_one_body_block_collection,
         terms = (),
@@ -42,7 +47,7 @@ function _wl_decomposed_acceptance_blocker_report()
     return (;
         object_kind = :decomposed_wl_h_h2plus_acceptance_readiness_audit,
         status = :blocked_decomposed_wl_h_h2plus_acceptance,
-        blocker = :missing_decomposed_wl_unit_pair_inventory_with_column_ranges,
+        blocker = decomposed_inventory.blocker,
         q = 5,
         ns = 5,
         n_s = 5,
@@ -78,9 +83,19 @@ function _wl_decomposed_acceptance_blocker_report()
             :deferred_terminal_shellification_pair_inventory,
         terminal_shellification_pair_materialization_status =
             :deferred_terminal_shellification_pair_materialization,
-        retained_unit_column_ranges_materialized = false,
+        decomposed_unit_pair_inventory_status = decomposed_inventory.status,
+        decomposed_unit_pair_inventory_blocker = decomposed_inventory.blocker,
+        decomposed_unit_pair_inventory_source_kind =
+            decomposed_inventory.source_kind,
+        route_owned_decomposed_unit_pair_inventory_available =
+            decomposed_inventory.decomposed_wl_unit_pair_inventory_available,
+        retained_unit_column_ranges_materialized =
+            decomposed_inventory.retained_unit_column_ranges_materialized,
         retained_dimension_from_decomposed_unit_inventory_available = false,
-        decomposed_unit_pair_column_ranges_available = false,
+        decomposed_unit_pair_column_ranges_available =
+            decomposed_inventory.decomposed_unit_pair_column_ranges_available,
+        decomposed_unit_pair_inventory_retained_dimension =
+            decomposed_inventory.retained_dimension,
         route_global_by_center_acceptance_matrix_available = false,
         fixed_block_operator_matrices_available =
             :overlap in route_global_terms && :kinetic in route_global_terms,
@@ -99,7 +114,7 @@ end
 
     @test report.status == :blocked_decomposed_wl_h_h2plus_acceptance
     @test report.blocker ==
-          :missing_decomposed_wl_unit_pair_inventory_with_column_ranges
+          :missing_decomposed_wl_unit_pair_inventory_source
     @test report.q == 5
     @test report.ns == 5
     @test report.n_s == 5
@@ -118,9 +133,17 @@ end
     @test !report.terminal_shellification_pair_inventory_exposed
     @test report.terminal_shellification_pair_inventory_status ==
           :deferred_terminal_shellification_pair_inventory
+    @test report.decomposed_unit_pair_inventory_status ==
+          :blocked_white_lindsey_decomposed_unit_pair_inventory
+    @test report.decomposed_unit_pair_inventory_blocker ==
+          :missing_decomposed_wl_unit_pair_inventory_source
+    @test report.decomposed_unit_pair_inventory_source_kind ==
+          :terminal_shellification_pair_inventory
+    @test !report.route_owned_decomposed_unit_pair_inventory_available
     @test !report.retained_unit_column_ranges_materialized
     @test !report.retained_dimension_from_decomposed_unit_inventory_available
     @test !report.decomposed_unit_pair_column_ranges_available
+    @test isnothing(report.decomposed_unit_pair_inventory_retained_dimension)
     @test !report.route_global_by_center_acceptance_matrix_available
     @test report.fixed_block_operator_matrices_available
     @test !report.fixed_block_operator_matrices_used
