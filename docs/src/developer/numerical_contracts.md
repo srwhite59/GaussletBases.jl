@@ -122,8 +122,8 @@ Current status:
 - a decomposed WL unit-pair inventory source is now exposed from the
   materialized low-order seed retained ranges, including the direct-core
   retained operator inventory
-- therefore active H scientific acceptance through the decomposed WL path now
-  reaches a real one-electron solve without a full-window CPB or direct
+- therefore active H and H2+ scientific acceptance through the decomposed WL
+  path now reach real one-electron solves without a full-window CPB or direct
   Cartesian fallback
 
 The current q = 5, ns = 5 route metadata exposes terminal shellification unit
@@ -159,9 +159,15 @@ about `0.999999999999839`, maximum about `1.000000000000165`, condition
 estimate about `1.000000000000327`, symmetry error about `2.7e-17`, zero
 near-zero eigenvalues, and rank estimate 223. The one-electron H solve uses the
 ordinary symmetric path and gives `-0.4788666674548281` Hartree, which is
-variational relative to the exact `-0.5` Hartree value. H2+ remains a deferred
-next-step acceptance item until the single-center decomposed route result has
-been reviewed and the two-center by-center summation path is explicitly enabled.
+variational relative to the exact `-0.5` Hartree value.
+
+The current H2+ audit uses the same decomposed route at `R = 2.0` bohr with
+protons at `z = +/-1.0`. It materializes two separated uncharged by-center
+nuclear matrices, applies both unit charges only in Hamiltonian assembly, and
+uses the same full-rank retained overlap metric. The electronic energy is
+`-1.033841728044377` Hartree. With nuclear repulsion `1/R = 0.5`, the
+Born-Oppenheimer total energy is `-0.533841728044377` Hartree. This is
+variational relative to the exact total reference near `-0.6026342144949465`.
 
 Do not use the existing nested fixed-block operator matrices as the acceptance
 path. They remain useful historical/oracle material, but they bypass the
@@ -186,8 +192,8 @@ only:
 - H2+ R = 2.0 direct electronic energy `-1.0654839328172023` Hartree
 - H2+ R = 2.0 direct total energy `-0.5654839328172023` Hartree
 
-The next implementation before extending scientific acceptance to H2+ is not a
-full-window fallback; it is a small reviewed two-center acceptance step using
-the same decomposed inventory and by-center route-global matrices. Do not
+The next implementation after these gausslet-only H/H2+ acceptance baselines is
+not a full-window fallback; it is either a reviewed accuracy improvement for the
+decomposed WL fixture or a separate, explicitly scoped GTO/PQS extension. Do not
 reintroduce the full-parent CPB helper or a direct Cartesian product fallback as
 the active route.
