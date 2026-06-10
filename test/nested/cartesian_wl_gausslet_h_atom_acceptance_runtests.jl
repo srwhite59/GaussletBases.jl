@@ -1050,6 +1050,10 @@ function _wl_decomposed_h_gto_supplement_acceptance_report()
             final_basis_projection.final_basis_overlap_identity,
         final_basis_hamiltonian_available =
             final_basis_projection.final_basis_hamiltonian_available,
+        generalized_overlap_final_solve =
+            final_basis_projection.generalized_overlap_final_solve,
+        ordinary_hermitian_final_solve_ready =
+            final_basis_projection.ordinary_hermitian_final_solve_ready,
         active_h_gto_acceptance_solve = final_basis_solve_available,
         active_h_gto_acceptance_energy =
             final_basis_solve_available ? final_basis_solve.energy : :unavailable,
@@ -1335,11 +1339,12 @@ end
           :materialized_route_global_combined_gto_final_basis_projection
     @test isnothing(report.final_basis_projection_blocker)
     @test report.raw_supplement_count == 3
-    @test 0 < report.retained_supplement_count <= report.raw_supplement_count
+    @test report.retained_supplement_count == report.raw_supplement_count
     @test report.dropped_supplement_count ==
           report.raw_supplement_count - report.retained_supplement_count
     @test length(report.residual_overlap_eigenvalues) ==
           report.raw_supplement_count
+    @test minimum(report.residual_overlap_eigenvalues) > 1.0e-4
     @test report.residual_drop_tolerance > 0.0
     @test report.final_dimension ==
           report.gausslet_retained_dimension + report.retained_supplement_count
@@ -1350,12 +1355,24 @@ end
     @test report.final_orthogonalized_basis_available
     @test report.final_basis_overlap_identity
     @test report.final_basis_hamiltonian_available
+    @test !report.generalized_overlap_final_solve
+    @test report.ordinary_hermitian_final_solve_ready
     @test report.final_basis_solve_status ==
           :materialized_decomposed_wl_gto_final_basis_one_electron_solve
     @test isnothing(report.final_basis_solve_blocker)
     @test report.final_basis_solve_kind == :ordinary_symmetric
     @test report.active_h_gto_acceptance_solve
     @test report.active_h_gto_acceptance_energy == report.final_basis_energy
+    @test isapprox(
+        report.final_basis_energy,
+        -0.4998259787100418;
+        atol = 1.0e-10,
+    )
+    @test isapprox(
+        report.final_basis_energy,
+        report.raw_combined_galerkin_energy;
+        atol = 1.0e-10,
+    )
     @test report.final_basis_energy < report.gausslet_only_h_energy
     @test report.final_basis_energy > report.h_exact_energy
     @test report.final_basis_energy_improvement > 0.0
