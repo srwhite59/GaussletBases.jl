@@ -1,24 +1,34 @@
-# Runtime role: decomposed White-Lindsey H/H2+ acceptance readiness audit.
+# Runtime role: decomposed White-Lindsey H acceptance solve.
 #
 # The former post-CPB acceptance test used one CPB covering the full parent
-# window. That is not a decomposed White-Lindsey acceptance path. Keep this file
-# as a small blocker audit until q = 5, ns = 5 scientific H/H2+ acceptance
-# assembly consumes real decomposed retained-unit and unit-pair inventories with
-# retained column ranges.
+# window. That is not a decomposed White-Lindsey acceptance path. This file keeps
+# the active acceptance path on real q = 5, ns = 5 decomposed retained-unit and
+# unit-pair inventories with retained column ranges.
 
 using Test
+using LinearAlgebra
 using GaussletBases
 
 include("cartesian_white_lindsey_adapter_fixture_helpers.jl")
 
 const WLAcceptanceReadinessCPBM = GaussletBases.CartesianPairBlockMaterialization
 
-function _wl_acceptance_parent_axis_bundle_object()
+function _wl_acceptance_parent_axis_inputs()
     doside_source_1d = _lw_adapter_doside_source_1d()
-    return (;
+    parent_axis_bundle_object = (;
         x = doside_source_1d,
         y = doside_source_1d,
         z = doside_source_1d,
+    )
+    pgdg = doside_source_1d.pgdg_intermediate
+    return (;
+        parent_axis_counts = (7, 7, 7),
+        parent_axis_bundle_object,
+        overlap_1d = (; x = pgdg.overlap, y = pgdg.overlap, z = pgdg.overlap),
+        kinetic_1d = (; x = pgdg.kinetic, y = pgdg.kinetic, z = pgdg.kinetic),
+        spacing_parameter = 0.25,
+        distortion_strength = 1.0,
+        tail_spacing = 10.0,
     )
 end
 
@@ -33,57 +43,117 @@ function _wl_acceptance_center_records()
     )
 end
 
-function _wl_decomposed_acceptance_blocker_report()
+function _wl_lowest_one_electron_energy(hamiltonian_matrix, overlap_matrix)
+    sym_h = Symmetric((hamiltonian_matrix + transpose(hamiltonian_matrix)) ./ 2)
+    sym_s = Symmetric((overlap_matrix + transpose(overlap_matrix)) ./ 2)
+    overlap_eigenvalues = eigvals(sym_s)
+    overlap_minimum_eigenvalue = minimum(overlap_eigenvalues)
+    overlap_maximum_eigenvalue = maximum(overlap_eigenvalues)
+    overlap_condition_estimate =
+        overlap_maximum_eigenvalue / overlap_minimum_eigenvalue
+    overlap_identity =
+        isapprox(overlap_matrix, Matrix{Float64}(I, size(overlap_matrix)...);
+            atol = 1.0e-9,
+            rtol = 1.0e-9,
+        )
+    if overlap_minimum_eigenvalue <= 0.0
+        return (;
+            status = :blocked_decomposed_wl_one_electron_solve,
+            blocker = :decomposed_wl_overlap_metric_not_positive_definite,
+            energy = NaN,
+            solve_kind = :blocked_overlap_metric,
+            overlap_minimum_eigenvalue,
+            overlap_maximum_eigenvalue,
+            overlap_condition_estimate,
+            overlap_identity,
+        )
+    end
+    values =
+        overlap_identity ? eigvals(sym_h) : eigen(sym_h, sym_s).values
+    return (;
+        status = :materialized_decomposed_wl_one_electron_solve,
+        blocker = nothing,
+        energy = minimum(values),
+        solve_kind =
+            overlap_identity ? :ordinary_symmetric : :generalized_symmetric,
+        overlap_minimum_eigenvalue,
+        overlap_maximum_eigenvalue,
+        overlap_condition_estimate,
+        overlap_identity,
+    )
+end
+
+function _wl_decomposed_h_atom_acceptance_report()
     adapter = WLAcceptanceReadinessCPBM.white_lindsey_boundary_stratum_one_body_adapter_summary()
     local_terms = adapter.supported_one_body_terms
     route_global_terms = WLAcceptanceReadinessCPBM.route_global_safe_one_body_terms()
     route_global_supported_terms =
         WLAcceptanceReadinessCPBM._route_global_one_body_supported_terms()
     seed_report = GaussletBases._white_lindsey_low_order_materialized_seed_report()
+    axis_inputs = _wl_acceptance_parent_axis_inputs()
     decomposed_inventory =
         WLAcceptanceReadinessCPBM.white_lindsey_decomposed_unit_pair_inventory(
             seed_report,
         )
-    by_center_global =
+    overlap_global = nothing
+    kinetic_global = nothing
+    by_center_global = nothing
+    hamiltonian = nothing
+    solve = nothing
+    elapsed_seconds = @elapsed begin
+        overlap_global =
+            WLAcceptanceReadinessCPBM.route_global_decomposed_wl_overlap_matrix(
+                seed_report;
+                parent_axis_counts = axis_inputs.parent_axis_counts,
+                parent_axis_bundle_object =
+                    axis_inputs.parent_axis_bundle_object,
+                overlap_1d = axis_inputs.overlap_1d,
+            )
+        kinetic_global =
+            WLAcceptanceReadinessCPBM.route_global_decomposed_wl_kinetic_matrix(
+                seed_report;
+                parent_axis_counts = axis_inputs.parent_axis_counts,
+                parent_axis_bundle_object =
+                    axis_inputs.parent_axis_bundle_object,
+                overlap_1d = axis_inputs.overlap_1d,
+                kinetic_1d = axis_inputs.kinetic_1d,
+            )
+        by_center_global =
         WLAcceptanceReadinessCPBM.route_global_electron_nuclear_by_center_matrices(
             seed_report;
-            parent_axis_counts = (7, 7, 7),
+                parent_axis_counts = axis_inputs.parent_axis_counts,
             parent_axis_bundle_object =
-                _wl_acceptance_parent_axis_bundle_object(),
+                    axis_inputs.parent_axis_bundle_object,
             coulomb_expansion = coulomb_gaussian_expansion(doacc = false),
             center_records = _wl_acceptance_center_records(),
         )
-    collection = (;
-        object_kind = :cartesian_pair_block_local_one_body_block_collection,
-        terms = (),
-        requested_terms = (),
-        materialized_terms = (),
-        deferred_terms = (),
-        entries = (),
-        materialized_entries = (),
-        skipped_entries = (),
-    )
-
-    placement_plan_blocked = false
-    placement_plan_error = nothing
-    try
-        WLAcceptanceReadinessCPBM.one_body_placement_plan(
-            collection;
-            term = :electron_nuclear_by_center,
-            global_dimension = 1,
+        hamiltonian =
+            WLAcceptanceReadinessCPBM.white_lindsey_decomposed_one_electron_hamiltonian(
+                kinetic_global,
+                by_center_global,
+            )
+        solve = _wl_lowest_one_electron_energy(
+            hamiltonian.matrix,
+            overlap_global.matrix,
         )
-    catch error
-        placement_plan_blocked = true
-        placement_plan_error = error
     end
+    h_reference = -0.5
+    old_full_window_reference = -0.4832079279118124
 
     return (;
-        object_kind = :decomposed_wl_h_h2plus_acceptance_readiness_audit,
-        status = :blocked_decomposed_wl_h_h2plus_acceptance,
-        blocker = :missing_decomposed_wl_hamiltonian_assembly,
+        object_kind = :decomposed_wl_h_atom_acceptance_report,
+        status =
+            solve.status === :materialized_decomposed_wl_one_electron_solve ?
+            :materialized_decomposed_wl_h_atom_acceptance :
+            :blocked_decomposed_wl_h_atom_acceptance,
+        blocker = solve.blocker,
         q = 5,
         ns = 5,
         n_s = 5,
+        core_spacing = axis_inputs.spacing_parameter,
+        distortion_strength = axis_inputs.distortion_strength,
+        tail_spacing = axis_inputs.tail_spacing,
+        parent_axis_counts = axis_inputs.parent_axis_counts,
         decomposed_wl_units_consumed = true,
         full_parent_window_cpb_used = false,
         direct_cartesian_product_assembly_used = false,
@@ -101,12 +171,12 @@ function _wl_decomposed_acceptance_blocker_report()
         route_global_kinetic_adapter_available = :kinetic in route_global_terms,
         route_global_electron_nuclear_by_center_adapter_available =
             :electron_nuclear_by_center in route_global_supported_terms,
-        decomposed_electron_nuclear_by_center_placement_plan_available =
-            !placement_plan_blocked,
-        decomposed_electron_nuclear_by_center_global_matrix_available =
-            !placement_plan_blocked,
-        placement_plan_error_type =
-            isnothing(placement_plan_error) ? nothing : typeof(placement_plan_error),
+        route_global_overlap_status = overlap_global.status,
+        route_global_kinetic_status = kinetic_global.status,
+        route_global_overlap_matrix_materialized =
+            overlap_global.global_overlap_matrix_materialized,
+        route_global_kinetic_matrix_materialized =
+            kinetic_global.global_kinetic_matrix_materialized,
         unit_inventory_audit_source =
             decomposed_inventory.source_kind,
         terminal_shellification_unit_inventory_exposed = true,
@@ -153,23 +223,52 @@ function _wl_decomposed_acceptance_blocker_report()
             by_center_global.nuclear_charge_applied,
         route_global_by_center_centers_summed =
             by_center_global.centers_summed,
+        hamiltonian_status = hamiltonian.status,
+        hamiltonian_matrix_materialized =
+            hamiltonian.hamiltonian_data_materialized,
+        nuclear_charge_application_stage =
+            hamiltonian.charge_application_stage,
+        nuclear_charge_applied_at_hamiltonian_assembly =
+            hamiltonian.nuclear_charge_applied_at_hamiltonian_assembly,
+        center_summation_stage = hamiltonian.center_summation_stage,
+        centers_summed_at_hamiltonian_assembly =
+            hamiltonian.centers_summed_at_hamiltonian_assembly,
+        retained_dimension = hamiltonian.retained_dimension,
+        overlap_matrix_dimension = size(overlap_global.matrix, 1),
+        hamiltonian_matrix_dimension = size(hamiltonian.matrix, 1),
+        overlap_minimum_eigenvalue = solve.overlap_minimum_eigenvalue,
+        overlap_maximum_eigenvalue = solve.overlap_maximum_eigenvalue,
+        overlap_condition_estimate = solve.overlap_condition_estimate,
+        solve_kind = solve.solve_kind,
+        solve_status = solve.status,
+        solve_blocker = solve.blocker,
+        lowest_h_atom_energy = solve.energy,
+        h_atom_exact_energy = h_reference,
+        h_atom_distance_from_exact = solve.energy - h_reference,
+        h_atom_distance_from_full_window_transition_baseline =
+            solve.energy - old_full_window_reference,
+        elapsed_seconds,
         fixed_block_operator_matrices_available =
             :overlap in route_global_terms && :kinetic in route_global_terms,
         fixed_block_operator_matrices_used = false,
         fixed_block_operator_matrix_source_rejected =
             :nested_fixed_block_is_not_decomposed_wl_acceptance_path,
-        acceptance_energy_materialized = false,
-        h_atom_acceptance_active = false,
+        acceptance_energy_materialized =
+            solve.status === :materialized_decomposed_wl_one_electron_solve,
+        h_atom_acceptance_active =
+            solve.status === :materialized_decomposed_wl_one_electron_solve,
         h2plus_acceptance_active = false,
+        h2plus_acceptance_blocker =
+            :deferred_until_single_center_decomposed_wl_acceptance_review,
     )
 end
 
-@testset "decomposed WL gausslet-only H/H2+ acceptance readiness" begin
-    report = _wl_decomposed_acceptance_blocker_report()
-    println("decomposed WL gausslet-only H/H2+ acceptance readiness: ", report)
+@testset "decomposed WL gausslet-only H atom acceptance" begin
+    report = _wl_decomposed_h_atom_acceptance_report()
+    println("decomposed WL gausslet-only H atom acceptance: ", report)
 
-    @test report.status == :blocked_decomposed_wl_h_h2plus_acceptance
-    @test report.blocker == :missing_decomposed_wl_hamiltonian_assembly
+    @test report.status == :blocked_decomposed_wl_h_atom_acceptance
+    @test report.blocker == :decomposed_wl_overlap_metric_not_positive_definite
     @test report.q == 5
     @test report.ns == 5
     @test report.n_s == 5
@@ -180,8 +279,12 @@ end
     @test report.route_global_overlap_adapter_available
     @test report.route_global_kinetic_adapter_available
     @test report.route_global_electron_nuclear_by_center_adapter_available
-    @test report.decomposed_electron_nuclear_by_center_placement_plan_available
-    @test report.decomposed_electron_nuclear_by_center_global_matrix_available
+    @test report.route_global_overlap_status ==
+          :materialized_route_global_overlap_matrix
+    @test report.route_global_kinetic_status ==
+          :materialized_route_global_kinetic_matrix
+    @test report.route_global_overlap_matrix_materialized
+    @test report.route_global_kinetic_matrix_materialized
     @test report.terminal_shellification_unit_inventory_exposed
     @test report.terminal_shellification_unit_inventory_granularity ==
           :terminal_region_units
@@ -210,6 +313,24 @@ end
     @test report.route_global_by_center_center_count == 1
     @test !report.route_global_by_center_nuclear_charge_applied
     @test !report.route_global_by_center_centers_summed
+    @test report.hamiltonian_status ==
+          :materialized_white_lindsey_decomposed_one_electron_hamiltonian
+    @test report.hamiltonian_matrix_materialized
+    @test report.nuclear_charge_application_stage ==
+          :white_lindsey_hamiltonian_assembly
+    @test report.nuclear_charge_applied_at_hamiltonian_assembly
+    @test report.center_summation_stage == :white_lindsey_hamiltonian_assembly
+    @test report.centers_summed_at_hamiltonian_assembly
+    @test report.retained_dimension == 223
+    @test report.overlap_matrix_dimension == report.retained_dimension
+    @test report.hamiltonian_matrix_dimension == report.retained_dimension
+    @test report.overlap_minimum_eigenvalue <= 0.0
+    @test !isfinite(report.overlap_condition_estimate)
+    @test report.solve_status == :blocked_decomposed_wl_one_electron_solve
+    @test report.solve_blocker ==
+          :decomposed_wl_overlap_metric_not_positive_definite
+    @test report.solve_kind == :blocked_overlap_metric
+    @test !isfinite(report.lowest_h_atom_energy)
     @test report.fixed_block_operator_matrices_available
     @test !report.fixed_block_operator_matrices_used
     @test report.decomposed_wl_units_consumed
@@ -219,4 +340,6 @@ end
     @test !report.acceptance_energy_materialized
     @test !report.h_atom_acceptance_active
     @test !report.h2plus_acceptance_active
+    @test report.h2plus_acceptance_blocker ==
+          :deferred_until_single_center_decomposed_wl_acceptance_review
 end

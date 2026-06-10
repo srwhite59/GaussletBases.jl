@@ -63,8 +63,11 @@ Scientific acceptance checks should force the intended algorithm to exist. The
 H/H2+ acceptance checkpoint is the current example: the full-window CPB
 workaround produced plausible energies, but it was not a decomposed
 White-Lindsey route and was retired rather than kept as an active passing
-test. The active readiness audit now blocks on the real missing piece:
-`:missing_decomposed_wl_electron_nuclear_by_center_placement`.
+test. The active readiness audit now materializes decomposed route-global
+overlap, kinetic, one-center electron-nuclear by-center, and a charge-applied
+one-electron Hamiltonian. It blocks at the solve boundary because the current
+decomposed overlap metric is singular:
+`:decomposed_wl_overlap_metric_not_positive_definite`.
 
 ## Current Replacement Pressure
 
@@ -81,6 +84,13 @@ test. The active readiness audit now blocks on the real missing piece:
   `:position_x`, `:position_y`, `:position_z`, `:x2_x`, `:x2_y`, and `:x2_z`.
   This is module-level adapter coverage, not route-driver wiring, term summing,
   one-body Hamiltonian construction, or Hamiltonian assembly.
+- A narrow decomposed WL one-electron Hamiltonian assembly helper now consumes
+  route-global kinetic and separated route-global electron-nuclear by-center
+  matrices. By-center matrices remain uncharged and center-separated; recorded
+  nuclear charges and center summation are applied only at Hamiltonian assembly.
+  The current H atom audit reaches this assembled Hamiltonian but still does not
+  produce an accepted scientific energy because the decomposed overlap solve
+  metric is singular.
 - A private route-shaped safe one-body matrix-set adapter now wraps individual
   `route_global_one_body_matrix(...; term = ...)` calls and returns
   term-separated result objects plus a compact summary. It does not copy dense

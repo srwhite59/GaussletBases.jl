@@ -47,7 +47,7 @@ function one_body_global_electron_nuclear_by_center_matrix(
         )
 
     placed = _one_body_global_symmetric_matrix_and_count(placement_plan, dimension)
-    center_index, center_key, center_location =
+    center_index, center_key, center_location, nuclear_charge =
         _one_body_global_electron_nuclear_by_center_identity(placement_plan)
 
     return _one_body_global_electron_nuclear_by_center_result(
@@ -58,6 +58,7 @@ function one_body_global_electron_nuclear_by_center_matrix(
         center_index,
         center_key,
         center_location,
+        nuclear_charge,
         placed_block_count = placed.placed_block_count,
         skipped_block_count = placement_plan.blocked_count,
         materialized = true,
@@ -119,6 +120,7 @@ function _one_body_global_electron_nuclear_by_center_identity(
         _one_body_placement_value(record, :center_index, nothing),
         _one_body_placement_value(record, :center_key, nothing),
         _one_body_placement_value(record, :center_location, nothing),
+        _one_body_placement_value(record, :nuclear_charge, nothing),
     )
 end
 
@@ -134,6 +136,7 @@ function _one_body_global_electron_nuclear_by_center_blocked_result(
         center_index = nothing,
         center_key = nothing,
         center_location = nothing,
+        nuclear_charge = nothing,
         placed_block_count = 0,
         skipped_block_count =
             _one_body_placement_value(placement_plan, :record_count, 0),
@@ -149,6 +152,7 @@ function _one_body_global_electron_nuclear_by_center_result(
     center_index,
     center_key,
     center_location,
+    nuclear_charge,
     placed_block_count::Int,
     skipped_block_count::Int,
     materialized::Bool,
@@ -161,6 +165,7 @@ function _one_body_global_electron_nuclear_by_center_result(
         center_index,
         center_key,
         center_location,
+        nuclear_charge,
         by_center = true,
         centers_summed = false,
         nuclear_charge_recorded = !isnothing(center_index),

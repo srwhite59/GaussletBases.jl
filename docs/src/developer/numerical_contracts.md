@@ -113,11 +113,17 @@ Current status:
   retained/global by-center matrices
 - by-center records keep center identity separated and defer physical nuclear
   charge application to acceptance/Hamiltonian assembly
+- decomposed route-global overlap and kinetic matrices can now be materialized
+  from the same real unit-pair inventory source
+- a narrow decomposed WL one-electron Hamiltonian assembly helper now combines
+  route-global kinetic with separated unit-charge nuclear-attraction matrices;
+  it applies recorded nuclear charges and sums centers only at Hamiltonian
+  assembly
 - a decomposed WL unit-pair inventory source is now exposed from the
   materialized low-order seed per-piece retained ranges
-- therefore active H and H2+ scientific acceptance through the decomposed WL
-  path is now blocked one step later, on
-  `:missing_decomposed_wl_hamiltonian_assembly`
+- therefore active H scientific acceptance through the decomposed WL path is
+  now blocked one step later, on
+  `:decomposed_wl_overlap_metric_not_positive_definite`
 
 The current q = 5, ns = 5 route metadata exposes terminal shellification unit
 inventory at terminal-region granularity, and the local White-Lindsey adapter can
@@ -137,7 +143,19 @@ nuclear adapter uses that inventory plus the existing local
 retained/global matrix per supplied center. A focused one-center fingerprint
 currently materializes all 351 decomposed local pair blocks into a 223 by 223
 retained matrix. Centers are not summed and nuclear charges are recorded but not
-applied.
+applied in the by-center matrix path. The decomposed Hamiltonian helper consumes
+the unit-charge nuclear-attraction convention already carried by those matrices
+and multiplies by the recorded nuclear charge at Hamiltonian assembly.
+
+The current H atom audit materializes decomposed route-global overlap, kinetic,
+one-center electron-nuclear by-center, and the one-electron Hamiltonian for
+`q = 5`, `ns = 5`, retained dimension 223. The scientific solve is intentionally
+not accepted yet: the decomposed overlap matrix has minimum eigenvalue `0.0`
+and an infinite condition estimate, so the generalized solve is blocked on
+`:decomposed_wl_overlap_metric_not_positive_definite`. Do not silently replace
+that metric with an ordinary solve or a direct Cartesian fallback. H2+ remains a
+deferred next-step acceptance item until the single-center decomposed overlap
+metric/final-basis contract is reviewed.
 
 Do not use the existing nested fixed-block operator matrices as the acceptance
 path. They remain useful historical/oracle material, but they bypass the
@@ -163,9 +181,10 @@ only:
 - H2+ R = 2.0 direct total energy `-0.5654839328172023` Hartree
 
 The next implementation needed before restoring active scientific H/H2+
-acceptance is the decomposed WL Hamiltonian/acceptance assembly boundary:
-combine decomposed route-global kinetic with charge-applied by-center nuclear
-matrices, use the decomposed final overlap contract, solve the one-electron
-problem, and keep center charges applied only at that final acceptance or
-Hamiltonian assembly stage. Do not reintroduce the full-parent CPB helper or a
-direct Cartesian product fallback as the active route.
+acceptance is not Hamiltonian assembly; it is the decomposed WL solve-metric or
+final-basis overlap contract. The route needs a reviewed decision on whether the
+retained-unit overlap assembled from decomposed pair blocks is the solve metric,
+requires pruning/compression of null directions, or should be replaced by a
+documented final orthonormal WL basis contract. Do not reintroduce the
+full-parent CPB helper or a direct Cartesian product fallback as the active
+route.

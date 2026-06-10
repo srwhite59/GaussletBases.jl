@@ -399,6 +399,436 @@ function route_state_global_electron_nuclear_by_center_matrix(source; kwargs...)
     return route_global_electron_nuclear_by_center_matrix(source; kwargs...)
 end
 
+function route_global_decomposed_wl_one_body_matrix(
+    source;
+    term::Symbol,
+    parent_axis_counts = nothing,
+    parent_axis_bundle_object = nothing,
+    overlap_1d = nothing,
+    kinetic_1d = nothing,
+    metadata = (;),
+)
+    term in (:overlap, :kinetic) ||
+        return _route_global_decomposed_wl_one_body_blocked_result(
+            term,
+            :unsupported_decomposed_wl_one_body_term;
+            metadata,
+        )
+
+    inventory = _route_global_electron_nuclear_by_center_inventory(
+        source;
+        parent_axis_counts,
+        parent_axis_bundle_object,
+    )
+    if inventory.status !== :available_white_lindsey_decomposed_unit_pair_inventory
+        return _route_global_decomposed_wl_one_body_blocked_result(
+            term,
+            inventory.blocker;
+            inventory,
+            metadata,
+        )
+    end
+
+    local_batch = white_lindsey_boundary_stratum_one_body_blocks(
+        inventory.unit_pairs,
+        term;
+        parent_axis_counts,
+        overlap_1d,
+        kinetic_1d,
+    )
+    local_collection = _route_global_decomposed_wl_one_body_local_collection(
+        local_batch,
+        inventory.unit_pairs,
+        term,
+    )
+    placement_plan = _route_global_one_body_placement_plan(
+        term,
+        local_collection;
+        global_dimension = inventory.retained_dimension,
+    )
+    global_matrix_result =
+        _route_global_one_body_global_matrix(term, placement_plan)
+    return _route_global_decomposed_wl_one_body_result(
+        inventory,
+        local_batch,
+        local_collection,
+        placement_plan,
+        global_matrix_result;
+        term,
+        metadata,
+    )
+end
+
+function route_global_decomposed_wl_overlap_matrix(source; kwargs...)
+    return route_global_decomposed_wl_one_body_matrix(
+        source;
+        term = :overlap,
+        kwargs...,
+    )
+end
+
+function route_global_decomposed_wl_kinetic_matrix(source; kwargs...)
+    return route_global_decomposed_wl_one_body_matrix(
+        source;
+        term = :kinetic,
+        kwargs...,
+    )
+end
+
+function white_lindsey_decomposed_one_electron_hamiltonian(
+    kinetic_result::NamedTuple,
+    electron_nuclear_by_center_results::NamedTuple;
+    metadata = (;),
+)
+    kinetic_matrix = _route_global_one_body_value(kinetic_result, :matrix, nothing)
+    kinetic_materialized =
+        _route_global_one_body_value(
+            kinetic_result,
+            :global_kinetic_matrix_materialized,
+            false,
+        ) === true &&
+        kinetic_matrix isa AbstractMatrix
+    kinetic_materialized ||
+        return _white_lindsey_decomposed_one_electron_hamiltonian_blocked_result(
+            :missing_route_global_kinetic_matrix;
+            metadata,
+        )
+
+    nuclear_materialized =
+        _route_global_one_body_value(
+            electron_nuclear_by_center_results,
+            :global_electron_nuclear_by_center_matrices_materialized,
+            false,
+        ) === true
+    nuclear_materialized ||
+        return _white_lindsey_decomposed_one_electron_hamiltonian_blocked_result(
+            :missing_route_global_electron_nuclear_by_center_matrices;
+            metadata,
+        )
+
+    if _route_global_one_body_value(
+        electron_nuclear_by_center_results,
+        :nuclear_charge_applied,
+        false,
+    ) === true
+        return _white_lindsey_decomposed_one_electron_hamiltonian_blocked_result(
+            :nuclear_charge_already_applied_to_by_center_matrices;
+            metadata,
+        )
+    end
+    if _route_global_one_body_value(
+        electron_nuclear_by_center_results,
+        :centers_summed,
+        false,
+    ) === true
+        return _white_lindsey_decomposed_one_electron_hamiltonian_blocked_result(
+            :centers_already_summed_in_by_center_matrices;
+            metadata,
+        )
+    end
+
+    matrix_results = _route_global_one_body_value(
+        electron_nuclear_by_center_results,
+        :matrix_results,
+        (),
+    )
+    dimension = size(kinetic_matrix)
+    hamiltonian = Matrix{Float64}(kinetic_matrix)
+    applied_center_count = 0
+    center_indices = Any[]
+    nuclear_charges = Float64[]
+    for result in matrix_results
+        by_center_matrix = _route_global_one_body_value(result, :matrix, nothing)
+        by_center_matrix isa AbstractMatrix ||
+            return _white_lindsey_decomposed_one_electron_hamiltonian_blocked_result(
+                :missing_route_global_electron_nuclear_by_center_matrix;
+                metadata,
+            )
+        size(by_center_matrix) == dimension ||
+            return _white_lindsey_decomposed_one_electron_hamiltonian_blocked_result(
+                :route_global_electron_nuclear_matrix_dimension_mismatch;
+                metadata,
+            )
+        charge = _route_global_one_body_value(result, :nuclear_charge, nothing)
+        charge isa Real ||
+            return _white_lindsey_decomposed_one_electron_hamiltonian_blocked_result(
+                :missing_nuclear_charge_for_hamiltonian_assembly;
+                metadata,
+            )
+
+        # The WL by-center result is already a unit-charge nuclear-attraction
+        # matrix; Hamiltonian assembly applies only the recorded nuclear charge.
+        hamiltonian .+= Float64(charge) .* by_center_matrix
+        applied_center_count += 1
+        push!(
+            center_indices,
+            _route_global_one_body_value(result, :center_index, nothing),
+        )
+        push!(nuclear_charges, Float64(charge))
+    end
+
+    return (;
+        object_kind =
+            :white_lindsey_decomposed_one_electron_hamiltonian_assembly,
+        status = :materialized_white_lindsey_decomposed_one_electron_hamiltonian,
+        blocker = nothing,
+        term = :one_electron_hamiltonian,
+        matrix = hamiltonian,
+        matrix_shape = size(hamiltonian),
+        retained_dimension = size(hamiltonian, 1),
+        kinetic_status = kinetic_result.status,
+        kinetic_matrix_materialized = true,
+        electron_nuclear_by_center_status =
+            electron_nuclear_by_center_results.status,
+        by_center_matrix_count =
+            electron_nuclear_by_center_results.by_center_matrix_count,
+        applied_center_count,
+        center_indices = Tuple(center_indices),
+        nuclear_charges = Tuple(nuclear_charges),
+        unit_charge_nuclear_attraction_matrices_consumed = true,
+        nuclear_charge_application_convention =
+            :multiply_unit_charge_nuclear_attraction_by_recorded_charge,
+        charge_application_stage = :white_lindsey_hamiltonian_assembly,
+        nuclear_charge_applied_at_hamiltonian_assembly = true,
+        center_summation_stage = :white_lindsey_hamiltonian_assembly,
+        centers_summed_at_hamiltonian_assembly = true,
+        by_center_matrices_remain_separated =
+            !electron_nuclear_by_center_results.centers_summed,
+        overlap_matrix_consumed = false,
+        overlap_used_as_solve_metric_only = true,
+        full_parent_window_cpb_used = false,
+        direct_cartesian_product_assembly_used = false,
+        ordinary_cartesian_ida_operators_used = false,
+        metadata = NamedTuple(metadata),
+        _route_global_one_body_nonclaim_flags(
+            hamiltonian_data_materialized = true,
+            global_hamiltonian_data_materialized = true,
+        )...,
+    )
+end
+
+function _route_global_decomposed_wl_one_body_local_collection(
+    batch_result::PairBlockMaterializationBatchResult,
+    unit_pairs::Tuple,
+    term::Symbol,
+)
+    pair_lookup = Dict(pair.pair_key => pair for pair in unit_pairs)
+    materialized_entries = Tuple(
+        merge(
+            _one_body_local_block_collection_entry(result; block_set_term = term),
+            (;
+                left_column_range =
+                    pair_lookup[result.pair_key].left_unit.column_range,
+                right_column_range =
+                    pair_lookup[result.pair_key].right_unit.column_range,
+            ),
+        ) for result in batch_result.materialized_results
+    )
+    skipped_entries = Tuple(
+        _one_body_local_block_collection_skipped_entry(skip; block_set_term = term)
+        for skip in batch_result.skipped_records
+    )
+    entries = (materialized_entries..., skipped_entries...)
+    return (;
+        object_kind = :cartesian_pair_block_local_one_body_block_collection,
+        status =
+            isempty(materialized_entries) ?
+            :blocked_local_one_body_block_collection :
+            :materialized_local_one_body_block_collection,
+        blocker =
+            isempty(materialized_entries) ?
+            Symbol("no_materialized_", String(term), "_blocks") :
+            nothing,
+        block_set_status =
+            isempty(materialized_entries) ?
+            :blocked_mixed_one_body_block_set_consumption :
+            :materialized_mixed_one_body_block_set_consumption,
+        block_set_blocker =
+            isempty(materialized_entries) ?
+            Symbol("no_materialized_", String(term), "_blocks") :
+            nothing,
+        terms = (term,),
+        requested_terms = (term,),
+        requested_materialize_terms = (term,),
+        materialized_terms = isempty(materialized_entries) ? () : (term,),
+        deferred_terms = (),
+        term_statuses = (),
+        entries,
+        materialized_entries,
+        skipped_entries,
+        entry_count = length(entries),
+        materialized_entry_count = length(materialized_entries),
+        skipped_entry_count = length(skipped_entries),
+        deferred_term_count = 0,
+        source_space_entry_count = 0,
+        final_local_entry_count = length(materialized_entries),
+        term_separated_entries = true,
+        pair_separated_entries = true,
+        block_set_results_summed = false,
+        block_matrices_copied_into_collection = false,
+        _one_body_local_block_collection_summary_materialization_flags(
+            source_operator_blocks_materialized =
+                batch_result.source_operator_blocks_materialized,
+            final_pair_blocks_materialized =
+                batch_result.final_pair_blocks_materialized,
+        )...,
+    )
+end
+
+function _route_global_decomposed_wl_one_body_result(
+    inventory,
+    local_batch::PairBlockMaterializationBatchResult,
+    local_collection::NamedTuple,
+    placement_plan::NamedTuple,
+    global_matrix_result::NamedTuple;
+    term::Symbol,
+    metadata,
+)
+    materialized =
+        _route_global_one_body_value(
+            global_matrix_result,
+            :operator_matrix_materialized,
+            false,
+        ) === true
+    return (;
+        object_kind =
+            :cartesian_pair_block_route_global_decomposed_wl_one_body_matrix_adapter,
+        term,
+        status =
+            materialized ?
+            _route_global_one_body_materialized_status(term) :
+            _route_global_one_body_blocked_status(term),
+        blocker = materialized ? nothing : global_matrix_result.blocker,
+        inventory_source_kind = inventory.source_kind,
+        decomposed_unit_pair_inventory_status = inventory.status,
+        retained_dimension = inventory.retained_dimension,
+        retained_dimension_status = inventory.retained_dimension_status,
+        unit_count = inventory.unit_count,
+        pair_count = inventory.pair_count,
+        local_batch,
+        local_collection,
+        placement_plan,
+        global_matrix_result,
+        matrix = global_matrix_result.matrix,
+        local_pair_block_count = local_batch.materialized_count,
+        placeable_record_count = placement_plan.placeable_count,
+        blocked_placement_count = placement_plan.blocked_count,
+        placed_block_count =
+            _route_global_one_body_value(
+                global_matrix_result,
+                :placed_block_count,
+                0,
+            ),
+        skipped_block_count =
+            _route_global_one_body_value(
+                global_matrix_result,
+                :skipped_block_count,
+                0,
+            ),
+        global_one_body_term_matrix_materialized = materialized,
+        global_overlap_matrix_materialized =
+            _route_global_one_body_value(
+                global_matrix_result,
+                :global_overlap_matrix_materialized,
+                false,
+            ),
+        global_kinetic_matrix_materialized =
+            _route_global_one_body_value(
+                global_matrix_result,
+                :global_kinetic_matrix_materialized,
+                false,
+            ),
+        operator_matrix_materialized = materialized,
+        global_operator_assembled = materialized,
+        full_parent_window_cpb_used = false,
+        direct_cartesian_product_assembly_used = false,
+        ordinary_cartesian_ida_operators_used = false,
+        metadata = NamedTuple(metadata),
+        _route_global_one_body_nonclaim_flags()...,
+    )
+end
+
+function _route_global_decomposed_wl_one_body_blocked_result(
+    term::Symbol,
+    blocker::Symbol;
+    inventory = nothing,
+    metadata,
+)
+    return (;
+        object_kind =
+            :cartesian_pair_block_route_global_decomposed_wl_one_body_matrix_adapter,
+        term,
+        status = _route_global_one_body_blocked_status(term),
+        blocker,
+        inventory_source_kind =
+            _route_global_one_body_value(inventory, :source_kind, nothing),
+        decomposed_unit_pair_inventory_status =
+            _route_global_one_body_value(inventory, :status, nothing),
+        retained_dimension = nothing,
+        retained_dimension_status = :not_available,
+        unit_count = 0,
+        pair_count = 0,
+        local_batch = nothing,
+        local_collection = nothing,
+        placement_plan = nothing,
+        global_matrix_result = nothing,
+        matrix = nothing,
+        local_pair_block_count = 0,
+        placeable_record_count = 0,
+        blocked_placement_count = 0,
+        placed_block_count = 0,
+        skipped_block_count = 0,
+        global_one_body_term_matrix_materialized = false,
+        global_overlap_matrix_materialized = false,
+        global_kinetic_matrix_materialized = false,
+        operator_matrix_materialized = false,
+        global_operator_assembled = false,
+        full_parent_window_cpb_used = false,
+        direct_cartesian_product_assembly_used = false,
+        ordinary_cartesian_ida_operators_used = false,
+        metadata = NamedTuple(metadata),
+        _route_global_one_body_nonclaim_flags()...,
+    )
+end
+
+function _white_lindsey_decomposed_one_electron_hamiltonian_blocked_result(
+    blocker::Symbol;
+    metadata,
+)
+    return (;
+        object_kind =
+            :white_lindsey_decomposed_one_electron_hamiltonian_assembly,
+        status = :blocked_white_lindsey_decomposed_one_electron_hamiltonian,
+        blocker,
+        term = :one_electron_hamiltonian,
+        matrix = nothing,
+        matrix_shape = :not_materialized,
+        retained_dimension = nothing,
+        kinetic_status = nothing,
+        kinetic_matrix_materialized = false,
+        electron_nuclear_by_center_status = nothing,
+        by_center_matrix_count = 0,
+        applied_center_count = 0,
+        center_indices = (),
+        nuclear_charges = (),
+        unit_charge_nuclear_attraction_matrices_consumed = false,
+        nuclear_charge_application_convention =
+            :multiply_unit_charge_nuclear_attraction_by_recorded_charge,
+        charge_application_stage = :white_lindsey_hamiltonian_assembly,
+        nuclear_charge_applied_at_hamiltonian_assembly = false,
+        center_summation_stage = :white_lindsey_hamiltonian_assembly,
+        centers_summed_at_hamiltonian_assembly = false,
+        by_center_matrices_remain_separated = false,
+        overlap_matrix_consumed = false,
+        overlap_used_as_solve_metric_only = true,
+        full_parent_window_cpb_used = false,
+        direct_cartesian_product_assembly_used = false,
+        ordinary_cartesian_ida_operators_used = false,
+        metadata = NamedTuple(metadata),
+        _route_global_one_body_nonclaim_flags()...,
+    )
+end
+
 function route_global_safe_one_body_terms()
     return _route_global_one_body_safe_terms()
 end
@@ -776,6 +1206,7 @@ function _route_global_electron_nuclear_by_center_collection_entry(
             center_key = result.metadata.center_key,
             center_location = result.metadata.center_location,
             nuclear_charge_recorded = result.metadata.nuclear_charge_recorded,
+            nuclear_charge = result.metadata.nuclear_charge,
             nuclear_charge_applied = result.metadata.nuclear_charge_applied,
         ),
     )
@@ -813,6 +1244,7 @@ function _route_global_electron_nuclear_by_center_result(
         center_index = global_matrix_result.center_index,
         center_key = global_matrix_result.center_key,
         center_location = global_matrix_result.center_location,
+        nuclear_charge = global_matrix_result.nuclear_charge,
         by_center = true,
         centers_summed = false,
         nuclear_charge_recorded = global_matrix_result.nuclear_charge_recorded,
@@ -862,6 +1294,7 @@ function _route_global_electron_nuclear_by_center_blocked_inventory_result(
         center_index = nothing,
         center_key = nothing,
         center_location = nothing,
+        nuclear_charge = nothing,
         by_center = true,
         centers_summed = false,
         nuclear_charge_recorded = false,
@@ -926,6 +1359,7 @@ function _route_global_electron_nuclear_by_center_matrices_result(
         ),
         center_indices = Tuple(result.center_index for result in matrix_results),
         center_keys = Tuple(result.center_key for result in matrix_results),
+        nuclear_charges = Tuple(result.nuclear_charge for result in matrix_results),
         matrix_results,
         by_center = true,
         centers_summed = false,
@@ -1206,15 +1640,18 @@ function _route_global_one_body_blocked_status(term::Symbol)
     return :blocked_route_global_one_body_matrix
 end
 
-function _route_global_one_body_nonclaim_flags()
+function _route_global_one_body_nonclaim_flags(;
+    hamiltonian_data_materialized = false,
+    global_hamiltonian_data_materialized = false,
+)
     return (;
         route_driver_wiring = false,
         operator_blocks_materialized = false,
-        hamiltonian_data_materialized = false,
+        hamiltonian_data_materialized,
         artifacts_materialized = false,
         exports_materialized = false,
         global_operator_blocks_materialized = false,
-        global_hamiltonian_data_materialized = false,
+        global_hamiltonian_data_materialized,
         global_artifacts_materialized = false,
         coulomb_materialized = false,
         density_density_materialized = false,

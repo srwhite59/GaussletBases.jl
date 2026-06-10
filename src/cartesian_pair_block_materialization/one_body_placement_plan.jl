@@ -173,6 +173,11 @@ function _one_body_placement_record(
             :nuclear_charge_recorded,
             false,
         ),
+        nuclear_charge = _one_body_placement_entry_metadata_value(
+            entry,
+            :nuclear_charge,
+            nothing,
+        ),
         nuclear_charge_applied = _one_body_placement_entry_metadata_value(
             entry,
             :nuclear_charge_applied,
