@@ -187,21 +187,29 @@ Born-Oppenheimer total energy is `-0.5988624733888488` Hartree. The raw
 generalized combined solve is diagnostic-only and is not the active final-basis
 acceptance result.
 
-The first He atom decomposed WL acceptance uses the same q/ns = 5/5
-gausslet-only fixture with one center at the origin and `Z = 2`. The decomposed
-route materializes overlap, kinetic, one separated uncharged electron-nuclear
-by-center matrix, the charge-applied one-electron Hamiltonian, and the full
-retained density-density/IDA electron-electron interaction matrix in the
-223-column retained basis. The full interaction matrix has shape `(223, 223)`,
-uses the existing WL pair-factor-term convention with integral weights deferred
-to the IDA/HF density interpretation stage, and is the object later correlation
-work should consume. Restricted closed-shell HF with one alpha and one beta
-electron converges in 20 iterations. The one-electron contribution is
-`-3.372609760953902` Hartree, the electron-electron contribution is
-`0.7738440146310958` Hartree, and the accepted total HF energy is
-`-2.5403890964852245` Hartree. This is above the He HF reference near
-`-2.861679995612234` Hartree, as expected for the small q/ns = 5/5 fixture. The
-acceptance path does not use a full-parent CPB, direct Cartesian fallback,
+The first He atom decomposed WL acceptance uses the q/ns = 5/5 gausslet-only
+fixture with one center at the origin and `Z = 2`. The active fixture follows
+the one-center WL atomic spacing rule: `d = 0.2`, `s = sqrt(d Z) =
+0.6324555320336759`, and `tail_spacing = 10.0`. An earlier readiness checkpoint
+mixed the standard Z = 2 decomposed seed inventory with an H-style shared
+adapter axis source; that violated the Z-dependent spacing contract and is not
+the accepted He baseline.
+
+The corrected decomposed route materializes overlap, kinetic, one separated
+uncharged electron-nuclear by-center matrix, the charge-applied one-electron
+Hamiltonian, and the full retained density-density/IDA electron-electron
+interaction matrix in the 223-column retained basis. The full interaction
+matrix has shape `(223, 223)`, uses the existing WL pair-factor-term convention
+with integral weights deferred to the IDA/HF density interpretation stage, and
+is the object later correlation work should consume. Restricted closed-shell HF
+with one alpha and one beta electron converges in 17 iterations. The bare
+closed-shell one-electron value from the lowest one-electron orbital is
+`-3.7575402050745312` Hartree. The self-consistent RHF one-electron contribution
+is `-3.7316519035708953` Hartree, the electron-electron contribution is
+`1.6861351364925603` Hartree, and the accepted total HF energy is
+`-2.045516767078335` Hartree. This is above the He HF reference near
+`-2.861679995612234` Hartree, as expected for the very small q/ns = 5/5 fixture.
+The acceptance path does not use a full-parent CPB, direct Cartesian fallback,
 `ordinary_cartesian_ida_operators`, a generalized final solve, GTO supplements,
 PQS transforms, exports, or artifacts.
 
