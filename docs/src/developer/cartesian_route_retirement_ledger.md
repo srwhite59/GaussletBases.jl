@@ -361,10 +361,13 @@ paths from becoming new route authority.
   `_qwrg_diatomic_cartesian_shell_overlap_blocks_3d`, and
   `_qwrg_diatomic_cartesian_shell_blocks_3d`, with
   `GaussianAnalyticIntegrals` as the polynomial-Gaussian formula source. The
-  first future test should compare a tiny CPB-local mixed overlap or coordinate
-  moment block against those existing QW/GTO oracle surfaces. No mixed GTO CPB
-  kernel, route/global placement, Hamiltonian assembly, IDA/MWG/PQS semantic
-  change, export, or artifact was added.
+  first mixed overlap test now exists as a tiny provider-level CPB-local pilot:
+  `CPBMixedGTOLocalOverlapBlock` / `cpb_mixed_gto_overlap_block(parent, cpb,
+  orbital)` reuses `_cartesian_basis_supplement_axis_primitive_cross` and
+  compares local CPB rows against `_cartesian_basis_supplement_cross`. It is
+  overlap-only and one supplement orbital only. No mixed GTO kinetic,
+  position, x2, nuclear/Coulomb term, route/global placement, Hamiltonian
+  assembly, IDA/MWG/PQS semantic change, export, or artifact was added.
 - The next overlap implementation boundary is no longer additional placement
   fingerprinting. First decide the CPB operator-block and WL/PQS realization
   design: what local block objects exist, how White-Lindsey consumes them, how

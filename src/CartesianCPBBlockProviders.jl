@@ -1,6 +1,7 @@
 module CartesianCPBBlockProviders
 
-import ..GaussletBases: _mapped_ordinary_gausslet_1d_bundle
+import ..GaussletBases: _mapped_ordinary_gausslet_1d_bundle,
+                         basis_representation
 
 using ..CartesianCPB
 using ..CartesianParentGaussletBases
@@ -19,6 +20,7 @@ export CPBIntervalPair3D,
        CPBOverlapOperatorBlock,
        CPBKineticOperatorBlock,
        CPBOneBodyAxisOperatorBlock,
+       CPBMixedGTOLocalOverlapBlock,
        CPBElectronElectronLocalBlock,
        CPBElectronNuclearByCenterLocalBlock,
        CPBLocalIntegralWeights,
@@ -33,6 +35,7 @@ export CPBIntervalPair3D,
        cpb_kinetic_operator_block,
        cpb_position_operator_block,
        cpb_x2_operator_block,
+       cpb_mixed_gto_overlap_block,
        cpb_electron_electron_local_block,
        cpb_electron_nuclear_by_center_local_block,
        cpb_local_integral_weights,
@@ -137,6 +140,22 @@ struct CPBOneBodyAxisOperatorBlock{P,I,B,M}
     parent_axis_factor_packet::P
     interval_pair::I
     axis_product_block::B
+    metadata::M
+end
+
+"""
+    CPBMixedGTOLocalOverlapBlock
+
+Provider-level CPB-local mixed gausslet/GTO overlap pilot for one supplement
+orbital. This reuses the existing Cartesian/GTO axis overlap helper and does
+not imply route/global placement, Hamiltonian assembly, or broader GTO
+operator support.
+"""
+struct CPBMixedGTOLocalOverlapBlock{P,C,O,D,M}
+    parent::P
+    cpb::C
+    orbital::O
+    dense_block::D
     metadata::M
 end
 
@@ -321,6 +340,7 @@ summary(block::CPBSumOfAxisProductsOperatorBlock) = block.metadata
 summary(block::CPBOverlapOperatorBlock) = block.metadata
 summary(block::CPBKineticOperatorBlock) = block.metadata
 summary(block::CPBOneBodyAxisOperatorBlock) = block.metadata
+summary(block::CPBMixedGTOLocalOverlapBlock) = block.metadata
 summary(block::CPBElectronElectronLocalBlock) = block.metadata
 summary(block::CPBElectronNuclearByCenterLocalBlock) = block.metadata
 summary(weights::CPBLocalIntegralWeights) = weights.metadata
@@ -1536,6 +1556,222 @@ function _cpb_one_body_axis_operator_block_summary(
         pqs_shell_projection_materialized = false,
         exports_or_artifacts = false,
     )
+end
+
+function cpb_mixed_gto_overlap_block(
+    parent::CPGB.CartesianParentGaussletBasis3D,
+    cpb::CPB.CoordinateProductBox,
+    orbital,
+)
+    blocker = _cpb_mixed_gto_overlap_block_blocker(parent, cpb, orbital)
+    dense_block =
+        isnothing(blocker) ?
+        _materialize_cpb_mixed_gto_overlap_block(parent, cpb, orbital) :
+        nothing
+    status =
+        isnothing(blocker) ?
+        :materialized_cpb_mixed_gto_local_overlap_block :
+        :blocked_cpb_mixed_gto_local_overlap_block
+    return CPBMixedGTOLocalOverlapBlock(
+        parent,
+        cpb,
+        orbital,
+        dense_block,
+        _cpb_mixed_gto_overlap_block_summary(
+            status,
+            blocker,
+            parent,
+            cpb,
+            orbital,
+            dense_block,
+        ),
+    )
+end
+
+function _cpb_mixed_gto_overlap_block_blocker(
+    parent::CPGB.CartesianParentGaussletBasis3D,
+    cpb::CPB.CoordinateProductBox,
+    orbital,
+)
+    _is_cartesian_gaussian_shell_orbital(orbital) ||
+        return :unsupported_supplement_orbital_record
+    length(orbital.angular_powers) == 3 ||
+        return :invalid_supplement_angular_powers
+    length(orbital.center) == 3 || return :invalid_supplement_center
+    outside_interval = _outside_cpb_parent_interval(parent, cpb)
+    isnothing(outside_interval) ||
+        return Symbol("cpb_$(outside_interval.axis)_interval_outside_parent")
+    orbital.primitive_normalization === :axiswise_normalized_cartesian_gaussian ||
+        return :unsupported_supplement_primitive_normalization
+    all(power -> power >= 0, orbital.angular_powers) ||
+        return :invalid_supplement_angular_powers
+    isempty(orbital.exponents) && return :missing_supplement_primitive_data
+    isempty(orbital.coefficients) && return :missing_supplement_primitive_data
+    length(orbital.exponents) == length(orbital.coefficients) ||
+        return :supplement_primitive_count_mismatch
+    all(exponent -> isfinite(exponent) && exponent > 0.0, orbital.exponents) ||
+        return :invalid_supplement_exponents
+    all(isfinite, orbital.coefficients) ||
+        return :invalid_supplement_coefficients
+    return nothing
+end
+
+function _outside_cpb_parent_interval(
+    parent::CPGB.CartesianParentGaussletBasis3D,
+    cpb::CPB.CoordinateProductBox,
+)
+    parent_intervals = _axis_named_tuple(CPGB.parent_box(parent))
+    cpb_intervals = _axis_named_tuple(CPB.intervals(cpb))
+    for axis in _AXIS_ORDER
+        interval = getproperty(cpb_intervals, axis)
+        parent_interval = getproperty(parent_intervals, axis)
+        _interval_inside_parent(interval, parent_interval) && continue
+        return (;
+            axis,
+            interval,
+            parent_interval,
+        )
+    end
+    return nothing
+end
+
+function _materialize_cpb_mixed_gto_overlap_block(
+    parent::CPGB.CartesianParentGaussletBasis3D,
+    cpb::CPB.CoordinateProductBox,
+    orbital,
+)
+    axis_cross = _cpb_mixed_gto_axis_overlap_tables(parent, orbital)
+    intervals = _axis_named_tuple(CPB.intervals(cpb))
+    local_shape = CPB.shape(cpb)
+    dense_block = zeros(Float64, CPB.support_count(cpb), 1)
+    for (local_ix, ix) in enumerate(intervals.x),
+            (local_iy, iy) in enumerate(intervals.y),
+            (local_iz, iz) in enumerate(intervals.z)
+        row = _local_product_index(local_ix, local_iy, local_iz, local_shape)
+        value = 0.0
+        for primitive in eachindex(orbital.coefficients)
+            value +=
+                Float64(orbital.coefficients[primitive]) *
+                axis_cross.x[ix, primitive] *
+                axis_cross.y[iy, primitive] *
+                axis_cross.z[iz, primitive]
+        end
+        dense_block[row, 1] = value
+    end
+    return dense_block
+end
+
+function _cpb_mixed_gto_axis_overlap_tables(
+    parent::CPGB.CartesianParentGaussletBasis3D,
+    orbital,
+)
+    axes = CPGB.parent_axes(parent)
+    axis_representations = (;
+        x = basis_representation(axes.x; operators = (:overlap,)),
+        y = basis_representation(axes.y; operators = (:overlap,)),
+        z = basis_representation(axes.z; operators = (:overlap,)),
+    )
+    return (;
+        x = _cpb_mixed_gto_axis_overlap_table(
+            axis_representations.x,
+            orbital,
+            :x,
+        ),
+        y = _cpb_mixed_gto_axis_overlap_table(
+            axis_representations.y,
+            orbital,
+            :y,
+        ),
+        z = _cpb_mixed_gto_axis_overlap_table(
+            axis_representations.z,
+            orbital,
+            :z,
+        ),
+    )
+end
+
+function _is_cartesian_gaussian_shell_orbital(orbital)
+    return hasproperty(orbital, :label) &&
+           hasproperty(orbital, :angular_powers) &&
+           hasproperty(orbital, :center) &&
+           hasproperty(orbital, :exponents) &&
+           hasproperty(orbital, :coefficients) &&
+           hasproperty(orbital, :primitive_normalization)
+end
+
+function _cpb_mixed_gto_axis_overlap_table(axis_representation, orbital, axis::Symbol)
+    helper = getproperty(
+        parentmodule(@__MODULE__),
+        :_cartesian_basis_supplement_axis_primitive_cross,
+    )
+    return helper(axis_representation, orbital, axis)
+end
+
+function _cpb_mixed_gto_overlap_block_summary(
+    status::Symbol,
+    blocker,
+    parent::CPGB.CartesianParentGaussletBasis3D,
+    cpb::CPB.CoordinateProductBox,
+    orbital,
+    dense_block,
+)
+    available = status === :materialized_cpb_mixed_gto_local_overlap_block
+    local_shape = _axis_named_tuple(CPB.shape(cpb))
+    primitive_count =
+        hasproperty(orbital, :exponents) ? length(orbital.exponents) : :unavailable
+    return (;
+        object_kind = :cartesian_cpb_mixed_gto_local_overlap_block_summary,
+        status,
+        blocker,
+        term = :mixed_gto_overlap,
+        source_kind = :mixed_gausslet_gto_supplement_overlap,
+        supplement_representation_kind = :cartesian_gaussian_shell_orbital,
+        orbital_label = _mixed_gto_property(orbital, :label),
+        angular_powers = _mixed_gto_property(orbital, :angular_powers),
+        center = _mixed_gto_property(orbital, :center),
+        primitive_count,
+        primitive_normalization =
+            _mixed_gto_property(orbital, :primitive_normalization),
+        formula_source = :GaussianAnalyticIntegrals_polynomial_gaussian,
+        axis_kernel_source = :existing_cartesian_basis_supplement_axis_cross,
+        parent_axis_counts = CPGB.parent_axis_counts(parent),
+        parent_axis_counts_source = :parent_object_parent_axis_counts,
+        cpb_summary = (;
+            role = CPB.role(cpb),
+            intervals = _axis_named_tuple(CPB.intervals(cpb)),
+            shape = local_shape,
+            support_count = CPB.support_count(cpb),
+            codimension = CPB.codimension(cpb),
+        ),
+        local_shape,
+        left_shape = local_shape,
+        right_shape = (gto = 1,),
+        dense_block_available = available,
+        dense_block_shape = available ? size(dense_block) : :unavailable,
+        dense_block_eltype = available ? eltype(dense_block) : :unavailable,
+        local_ordering = _LOCAL_ORDERING,
+        representation = :dense_local_cpb_product_space_by_gto_orbital,
+        galerkin_operator = true,
+        provider_level_local_matrix_materialized = available,
+        realization_status = :unrealized,
+        route_global_status = :unassigned,
+        route_driver_wiring = false,
+        route_global_matrix_materialized = false,
+        route_global_overlap_matrix_materialized = false,
+        global_matrix_materialized = false,
+        global_overlap_matrix_materialized = false,
+        hamiltonian_data_materialized = false,
+        coulomb_data_materialized = false,
+        ida_mwg_semantics = false,
+        pqs_lowdin_materialized = false,
+        pqs_shell_projection_materialized = false,
+        exports_or_artifacts = false,
+    )
+end
+
+function _mixed_gto_property(orbital, name::Symbol)
+    hasproperty(orbital, name) && return getproperty(orbital, name)
+    return :unavailable
 end
 
 function cpb_electron_electron_local_block(

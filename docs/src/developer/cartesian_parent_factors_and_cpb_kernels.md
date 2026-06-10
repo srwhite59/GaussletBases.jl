@@ -417,20 +417,25 @@ clouds:
 - `hamiltonian_assembly = false`
 - `exports_or_artifacts = false`
 
-### First Equivalence Test Later
+### First Mixed Overlap Pilot
 
-The first implementation test should be a tiny provider-level equivalence, not
-a route/Hamiltonian test:
+The first implementation test is a tiny provider-level equivalence, not a
+route/Hamiltonian test. The implemented overlap pilot:
 
-1. Build a small Cartesian product parent plus one
+1. Builds a small Cartesian product parent plus one
    `CartesianGaussianShellSupplementRepresentation3D` orbital.
-2. Select a point, edge, or face CPB interval pair.
-3. Build a CPB-local mixed overlap block from the existing axis table source and
-   the CPB axis-product primitive.
-4. Compare only the corresponding local submatrix against the existing
-   `_cartesian_basis_supplement_cross`, `_pqs_source_box_gto_cross_overlap_shadow`,
-   or `_qwrg_diatomic_cartesian_shell_overlap_blocks_3d` oracle, depending on
-   the fixture.
+2. Selects a CPB interval.
+3. Builds a CPB-local mixed overlap block from
+   `_cartesian_basis_supplement_axis_primitive_cross`.
+4. Compares only the corresponding local rows against the existing
+   `_cartesian_basis_supplement_cross` oracle.
+
+The record is `CPBMixedGTOLocalOverlapBlock`, constructed by
+`cpb_mixed_gto_overlap_block(parent, cpb, orbital)`. It is CPB-local and
+provider-level only. It accepts the existing
+`:axiswise_normalized_cartesian_gaussian` supplement convention, carries compact
+metadata and route/global/Hamiltonian nonclaim flags, and does not duplicate the
+dense block in its summary.
 
 A second tiny test can do `position_x` or `x2_x` against
 `_qwrg_diatomic_cartesian_shell_blocks_3d`. Nuclear attraction should remain
