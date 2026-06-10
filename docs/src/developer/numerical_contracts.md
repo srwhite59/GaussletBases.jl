@@ -92,48 +92,98 @@ In particular, for nested fixed-block routes:
 - not against a separate total-only route that rebuilds one-body terms through a
   different parent-space contraction path
 
-## WL Gausslet-Only H Atom Acceptance Baselines
+## Post-CPB WL Gausslet-Only H Atom Acceptance Baseline
 
 The WL/Cartesian gausslet-only hydrogen acceptance check is
 `test/nested/cartesian_wl_gausslet_h_atom_acceptance_runtests.jl`. It is a
-bounded scientific gate, not an exhaustive local-helper test.
+bounded scientific gate through the post-CPB White-Lindsey local operator
+path, not an exhaustive local-helper test.
 
-Small fitted-strength fixture:
+Active fixture:
 
 - one proton at `(0.0, 0.0, 0.0)` with `Z = 1.0`
-- `MappedUniformBasisSpec(:G10)` with `count = 7`
-- `fit_asinh_mapping_for_strength(s = 0.5, npoints = 7, xmax = 6.0)`
+- `q = 5`, `n_s = q`
+- standard q-to-core-spacing rule, recorded as
+  `:standard_pqs_ns_equals_q`
+- core spacing `d = 0.15`
+- `MappedUniformBasisSpec(:G10)` parent axes with counts `(15, 15, 15)`
+- `white_lindsey_atomic_mapping(Z = 1.0, d = 0.15, tail_spacing = 10.0)`
 - `reference_spacing = 1.0`
 - backend `:pgdg_localized_experimental`
 - Coulomb expansion `coulomb_gaussian_expansion(doacc = false)`
-- basis dimension / parent support size `343`
+- basis dimension / parent support size `3375`
 - generalized solve against the carried Cartesian overlap
+- overlap, kinetic, and by-center electron-nuclear blocks materialized by
+  `CartesianCPBBlockProviders`
 
-The current small-fixture lowest one-electron energy is approximately
-`-0.4706400351534759` Hartree, so the acceptance window is deliberately loose:
-`-0.5 < E < -0.45`. This verifies the expected variational side of the
-hydrogen ground state while keeping the fixture small.
+The current post-CPB WL lowest one-electron energy is approximately
+`-0.4832079279118124` Hartree. The test verifies the variational side of the
+hydrogen ground state, records distance from `-0.5` Hartree, and records
+distance from the old direct-route transition baselines:
 
-Coarse/distorted WL-style fixture:
+- small fitted direct route `-0.4706400351534759` Hartree
+- coarse/distorted direct route `-0.4966106635473884` Hartree
 
-- one proton at `(0.0, 0.0, 0.0)` with `Z = 1.0`
-- `MappedUniformBasisSpec(:G10)` with `count = 11`
-- `AsinhMapping(c = 0.25, s = 1.0, tail_spacing = 10.0)`
+Those direct-route values are reference baselines for the transition only.
+They are not the ongoing route under test.
+
+## Post-CPB WL Gausslet-Only H2+ Acceptance Baseline
+
+The WL/Cartesian gausslet-only H2+ acceptance check is
+`test/nested/cartesian_wl_gausslet_h2plus_acceptance_runtests.jl`. It is a
+bounded one-electron diatomic gate through the same post-CPB local operator
+path, not a route/global or helper-level test.
+
+Fixture:
+
+- two protons on the z axis at `(0.0, 0.0, -1.0)` and `(0.0, 0.0, 1.0)`
+- internuclear distance `R = 2.0` bohr
+- nuclear charges `(1.0, 1.0)`
+- `q = 5`, `n_s = q`
+- standard q-to-core-spacing rule, recorded as
+  `:standard_pqs_ns_equals_q`
+- core spacing `d = 0.15`
+- `MappedUniformBasisSpec(:G10)` parent axes with counts `(15, 15, 17)`
+- `white_lindsey_atomic_mapping(Z = 1.0, d = 0.15, tail_spacing = 10.0)`
 - `reference_spacing = 1.0`
-- requested old-style core-spacing parameter `d = 0.25` is represented by the
-  repo mapping parameter `c = 0.25`
-- requested `xmax = 8.0` is represented by the bounded `count = 11` endpoint,
-  giving outer centers at approximately `+/-8.182848593885893`
 - backend `:pgdg_localized_experimental`
 - Coulomb expansion `coulomb_gaussian_expansion(doacc = false)`
-- basis dimension / parent support size `1331`
+- basis dimension / parent support size `3825`
 - generalized solve against the carried Cartesian overlap
+- overlap, kinetic, and two by-center electron-nuclear blocks materialized by
+  `CartesianCPBBlockProviders`
 
-The current coarse/distorted lowest one-electron energy is approximately
-`-0.4966106635473884` Hartree, with acceptance window `-0.5 < E < -0.49`.
-The test reports the solve kind, basis size, spacing/core-spacing parameter,
-distortion strength, requested `xmax`, observed energy, and distance from
-`-0.5` Hartree for both fixtures.
+The electronic Hamiltonian is
+
+```text
+H_elec = kinetic - 1/r_A - 1/r_B
+```
+
+and the Born-Oppenheimer total reported by the test is
+
+```text
+E_total = E_electronic + 1/R.
+```
+
+At `R = 2.0`, the reference electronic energy is approximately
+`-1.1026342144949465` Hartree and the reference total energy is approximately
+`-0.6026342144949465` Hartree. The current post-CPB WL fixture reports
+
+- electronic energy `-1.0971828374927926` Hartree
+- proton-proton repulsion `0.5` Hartree
+- total energy `-0.5971828374927926` Hartree
+- total-energy distance from the `R = 2.0` reference of approximately
+  `0.005451377002153923` Hartree
+
+The old direct-route H2+ transition baseline was
+
+- electronic energy `-1.0654839328172023` Hartree
+- total energy `-0.5654839328172023` Hartree
+
+That direct-route value remains only a transition reference. The active test
+asserts the post-CPB path materializes/consumes CPB-local operator blocks and
+does not call `ordinary_cartesian_ida_operators` or hand-build the full
+Cartesian product matrices directly from 1D factors.
 
 These checks do not include GTO supplements, PQS retained transforms, CPB/GTO
 bundle consumption, route/global refactors, or Hamiltonian assembly beyond the
