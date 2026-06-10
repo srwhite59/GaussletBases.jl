@@ -38,6 +38,34 @@ paths from becoming new route authority.
 - Deletion requires an explicit equivalence test and a stated deletion
   condition.
 
+## Development Steering Corrections
+
+The Cartesian route cleanup has exposed two repo-wide steering corrections.
+
+First, new route concepts should be organized as module-owned objects with
+clear dependency direction, not as flat helper and metadata sprawl. When a
+concept crosses a stage boundary, it should usually have a compact record,
+summary, and owning module.
+
+Second, long-term tests should preferentially be scientific or workflow
+acceptance gates plus compact module-contract tests. Development-era helper
+tests, exhaustive metadata checks, and route-shadow scaffolding should be
+deleted or quarantined once they no longer protect the intended algorithm.
+
+This policy also counters an observed default agent bias: agents tend to add
+code, tests, adapters, and compatibility layers more readily than they delete
+them. In this repo, extra source, tests, docs, metadata, compatibility glue,
+and adapter code all have carrying cost. New artifacts should earn that cost
+by protecting a live contract, improving clarity, reducing duplication,
+improving performance, or enabling a current workflow.
+
+Scientific acceptance checks should force the intended algorithm to exist. The
+H/H2+ acceptance checkpoint is the current example: the full-window CPB
+workaround produced plausible energies, but it was not a decomposed
+White-Lindsey route and was retired rather than kept as an active passing
+test. The active readiness audit now blocks on the real missing piece:
+`:missing_decomposed_wl_electron_nuclear_by_center_placement`.
+
 ## Current Replacement Pressure
 
 - Selected global overlap, kinetic, position_x, position_y, position_z, x2_x,
