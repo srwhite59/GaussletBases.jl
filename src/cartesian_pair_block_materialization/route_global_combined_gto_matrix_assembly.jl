@@ -383,10 +383,11 @@ function _route_global_combined_gto_matrix_result(
         mixed_gausslet_row_count =
             _route_global_combined_gto_effective_mixed_row_count(gto_bundle),
         mixed_gausslet_row_coverage_status =
-            isnothing(blocker) ||
-            blocker !== :missing_mixed_gto_route_global_row_coverage ?
-            :full_mixed_gto_route_global_row_coverage :
-            :partial_mixed_gto_route_global_row_coverage,
+            _route_global_combined_gto_mixed_row_coverage_status(
+                layout,
+                gto_bundle,
+                mixed_gausslet_row_range,
+            ),
         overlap_matrix,
         hamiltonian_matrix,
         nuclear_by_center_matrices,
@@ -487,4 +488,22 @@ function _route_global_combined_gto_effective_mixed_row_count(gto_bundle)
     )
     mixed_overlap isa AbstractMatrix || return :unavailable
     return size(mixed_overlap, 1)
+end
+
+function _route_global_combined_gto_mixed_row_coverage_status(
+    layout,
+    gto_bundle,
+    provided_range,
+)
+    row_range =
+        _route_global_combined_gto_effective_mixed_row_range(gto_bundle, provided_range)
+    row_range isa AbstractUnitRange ||
+        return :unavailable_mixed_gto_route_global_row_coverage
+    return row_range == _route_global_combined_gto_property(
+        layout,
+        :gausslet_retained_range,
+        :unavailable,
+    ) ?
+           :full_mixed_gto_route_global_row_coverage :
+           :partial_mixed_gto_route_global_row_coverage
 end

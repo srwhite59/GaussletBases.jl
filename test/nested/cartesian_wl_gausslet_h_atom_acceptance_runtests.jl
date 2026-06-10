@@ -181,7 +181,11 @@ function _wl_decomposed_h_atom_acceptance_report()
     axis_inputs = _wl_acceptance_parent_axis_inputs()
     decomposed_inventory =
         WLAcceptanceReadinessCPBM.white_lindsey_decomposed_unit_pair_inventory(
-            seed_report,
+            seed_report;
+            metadata = (;
+                parent_axis_counts = axis_inputs.parent_axis_counts,
+                parent_axis_bundle_object = axis_inputs.parent_axis_bundle_object,
+            ),
         )
     overlap_global = nothing
     kinetic_global = nothing
@@ -382,7 +386,11 @@ function _wl_decomposed_h2plus_acceptance_report()
     center_records = _wl_h2plus_acceptance_center_records()
     decomposed_inventory =
         WLAcceptanceReadinessCPBM.white_lindsey_decomposed_unit_pair_inventory(
-            seed_report,
+            seed_report;
+            metadata = (;
+                parent_axis_counts = axis_inputs.parent_axis_counts,
+                parent_axis_bundle_object = axis_inputs.parent_axis_bundle_object,
+            ),
         )
     overlap_global = nothing
     kinetic_global = nothing
@@ -568,7 +576,11 @@ function _wl_decomposed_h_gto_supplement_readiness_report()
     axis_inputs = _wl_acceptance_parent_axis_inputs()
     decomposed_inventory =
         WLAcceptanceReadinessCPBM.white_lindsey_decomposed_unit_pair_inventory(
-            seed_report,
+            seed_report;
+            metadata = (;
+                parent_axis_counts = axis_inputs.parent_axis_counts,
+                parent_axis_bundle_object = axis_inputs.parent_axis_bundle_object,
+            ),
         )
     route_global_terms = WLAcceptanceReadinessCPBM.route_global_safe_one_body_terms()
     route_global_supported_terms =
@@ -637,16 +649,55 @@ function _wl_decomposed_h_gto_supplement_readiness_report()
             decomposed_inventory,
             supplement,
         )
-    mixed_gausslet_row_range = 1:WLAcceptanceReadinessCPB.support_count(direct_core_cpb)
+    route_global_mixed_gto_blocks =
+        WLAcceptanceReadinessCPBM.route_global_mixed_gto_blocks_from_decomposed_units(
+            decomposed_inventory,
+            parent,
+            supplement;
+            expansion,
+            center_records,
+        )
+    overlap_global =
+        WLAcceptanceReadinessCPBM.route_global_decomposed_wl_overlap_matrix(
+            seed_report;
+            parent_axis_counts = axis_inputs.parent_axis_counts,
+            parent_axis_bundle_object = axis_inputs.parent_axis_bundle_object,
+            overlap_1d = axis_inputs.overlap_1d,
+        )
+    kinetic_global =
+        WLAcceptanceReadinessCPBM.route_global_decomposed_wl_kinetic_matrix(
+            seed_report;
+            parent_axis_counts = axis_inputs.parent_axis_counts,
+            parent_axis_bundle_object = axis_inputs.parent_axis_bundle_object,
+            overlap_1d = axis_inputs.overlap_1d,
+            kinetic_1d = axis_inputs.kinetic_1d,
+        )
+    by_center_global =
+        WLAcceptanceReadinessCPBM.route_global_electron_nuclear_by_center_matrices(
+            seed_report;
+            parent_axis_counts = axis_inputs.parent_axis_counts,
+            parent_axis_bundle_object = axis_inputs.parent_axis_bundle_object,
+            coulomb_expansion = expansion,
+            center_records,
+        )
+    mixed_gausslet_row_range =
+        route_global_mixed_gto_blocks.mixed_gausslet_row_range
     combined_matrix_assembly =
         WLAcceptanceReadinessCPBM.route_global_combined_gto_one_electron_matrices(
             combined_layout;
-            gto_bundle = bundle,
+            overlap_result = overlap_global,
+            kinetic_result = kinetic_global,
+            electron_nuclear_by_center_results = by_center_global,
+            gto_bundle = route_global_mixed_gto_blocks,
             mixed_gausslet_row_range,
         )
     route_global_combined_basis_layout_status = combined_layout.status
     route_global_combined_basis_layout_blocker = combined_layout.blocker
-    readiness_blocker = combined_matrix_assembly.blocker
+    readiness_blocker =
+        route_global_mixed_gto_blocks.status ===
+        :materialized_route_global_mixed_gto_blocks ?
+        combined_matrix_assembly.blocker :
+        route_global_mixed_gto_blocks.blocker
     decomposed_unit_range_start = minimum(
         first(summary.column_range) for summary in decomposed_inventory.unit_summaries
     )
@@ -657,7 +708,11 @@ function _wl_decomposed_h_gto_supplement_readiness_report()
         decomposed_unit_range_start:decomposed_unit_range_stop
     return (;
         object_kind = :decomposed_wl_h_gto_supplement_acceptance_readiness_report,
-        status = :blocked_decomposed_wl_gto_supplement_acceptance_readiness,
+        status =
+            combined_matrix_assembly.status ===
+            :materialized_route_global_combined_gto_one_electron_matrices ?
+            :materialized_decomposed_wl_gto_supplement_acceptance_readiness :
+            :blocked_decomposed_wl_gto_supplement_acceptance_readiness,
         blocker = readiness_blocker,
         acceptance_suite =
             :decomposed_wl_gausslet_plus_gto_one_electron_acceptance,
@@ -736,6 +791,25 @@ function _wl_decomposed_h_gto_supplement_readiness_report()
             gto_nuclear_summaries,
         ),
         mixed_gausslet_gto_shapes = mixed_shapes,
+        direct_core_mixed_gausslet_gto_shapes = mixed_shapes,
+        route_global_mixed_gto_blocks_status =
+            route_global_mixed_gto_blocks.status,
+        route_global_mixed_gto_blocks_blocker =
+            route_global_mixed_gto_blocks.blocker,
+        route_global_mixed_gto_blocks_materialized =
+            route_global_mixed_gto_blocks.route_global_mixed_gto_blocks_materialized,
+        route_global_mixed_gto_placed_unit_count =
+            route_global_mixed_gto_blocks.placed_unit_count,
+        route_global_mixed_gto_direct_core_unit_count =
+            route_global_mixed_gto_blocks.direct_core_unit_count,
+        route_global_mixed_gto_boundary_unit_count =
+            route_global_mixed_gto_blocks.boundary_unit_count,
+        route_global_mixed_gto_direct_core_units_represented =
+            route_global_mixed_gto_blocks.direct_core_units_represented,
+        route_global_mixed_gto_boundary_units_represented =
+            route_global_mixed_gto_blocks.boundary_units_represented,
+        route_global_mixed_gto_missing_row_ranges =
+            route_global_mixed_gto_blocks.missing_mixed_gausslet_row_ranges,
         gto_gto_shapes = gto_shapes,
         route_global_combined_basis_layout_status,
         route_global_combined_basis_layout_blocker,
@@ -790,8 +864,10 @@ function _wl_decomposed_h_gto_supplement_readiness_report()
             combined_matrix_assembly.combined_overlap_matrix_materialized,
         route_global_combined_hamiltonian_matrix_materialized =
             combined_matrix_assembly.combined_hamiltonian_matrix_materialized,
-        gto_route_global_blocks_materialized = false,
-        gto_hamiltonian_assembly_materialized = false,
+        gto_route_global_blocks_materialized =
+            route_global_mixed_gto_blocks.route_global_mixed_gto_blocks_materialized,
+        gto_hamiltonian_assembly_materialized =
+            combined_matrix_assembly.combined_hamiltonian_matrix_materialized,
         full_parent_window_cpb_used = false,
         direct_cartesian_product_assembly_used = false,
         ordinary_cartesian_ida_operators_used = false,
@@ -903,9 +979,8 @@ end
     println("decomposed WL H GTO supplement readiness: ", report)
 
     @test report.status ==
-          :blocked_decomposed_wl_gto_supplement_acceptance_readiness
-    @test report.blocker ==
-          :missing_mixed_gto_route_global_row_coverage
+          :materialized_decomposed_wl_gto_supplement_acceptance_readiness
+    @test isnothing(report.blocker)
     @test report.acceptance_suite ==
           :decomposed_wl_gausslet_plus_gto_one_electron_acceptance
     @test report.acceptance_fixture == :h_atom_gto_supplement_readiness
@@ -981,6 +1056,17 @@ end
     @test report.mixed_gausslet_gto_shapes.overlap == (125, 3)
     @test report.mixed_gausslet_gto_shapes.kinetic == (125, 3)
     @test report.mixed_gausslet_gto_shapes.nuclear_by_center == ((125, 3),)
+    @test report.direct_core_mixed_gausslet_gto_shapes.overlap == (125, 3)
+    @test report.route_global_mixed_gto_blocks_status ==
+          :materialized_route_global_mixed_gto_blocks
+    @test isnothing(report.route_global_mixed_gto_blocks_blocker)
+    @test report.route_global_mixed_gto_blocks_materialized
+    @test report.route_global_mixed_gto_placed_unit_count == 27
+    @test report.route_global_mixed_gto_direct_core_unit_count == 1
+    @test report.route_global_mixed_gto_boundary_unit_count == 26
+    @test report.route_global_mixed_gto_direct_core_units_represented
+    @test report.route_global_mixed_gto_boundary_units_represented
+    @test report.route_global_mixed_gto_missing_row_ranges == ()
     @test report.gto_gto_shapes.overlap == (3, 3)
     @test report.gto_gto_shapes.kinetic == (3, 3)
     @test report.gto_gto_shapes.nuclear_by_center == ((3, 3),)
@@ -1011,26 +1097,25 @@ end
     @test report.final_combined_overlap_layout_available
     @test report.final_combined_hamiltonian_layout_available
     @test report.route_global_combined_matrix_assembly_status ==
-          :blocked_route_global_combined_gto_one_electron_matrices
-    @test report.route_global_combined_matrix_assembly_blocker ==
-          :missing_mixed_gto_route_global_row_coverage
-    @test report.route_global_combined_mixed_gausslet_row_range == 1:125
-    @test report.route_global_combined_mixed_gausslet_row_count == 125
+          :materialized_route_global_combined_gto_one_electron_matrices
+    @test isnothing(report.route_global_combined_matrix_assembly_blocker)
+    @test report.route_global_combined_mixed_gausslet_row_range == 1:223
+    @test report.route_global_combined_mixed_gausslet_row_count == 223
     @test report.route_global_combined_mixed_gausslet_row_coverage_status ==
-          :partial_mixed_gto_route_global_row_coverage
-    @test report.route_global_combined_overlap_matrix_shape == :unavailable
-    @test report.route_global_combined_hamiltonian_matrix_shape == :unavailable
-    @test report.route_global_combined_overlap_symmetry_error == :unavailable
-    @test !report.route_global_combined_overlap_positive_definite
-    @test !report.route_global_combined_solve_ready
+          :full_mixed_gto_route_global_row_coverage
+    @test report.route_global_combined_overlap_matrix_shape == (226, 226)
+    @test report.route_global_combined_hamiltonian_matrix_shape == (226, 226)
+    @test report.route_global_combined_overlap_symmetry_error < 1.0e-12
+    @test report.route_global_combined_overlap_positive_definite
+    @test report.route_global_combined_solve_ready
     @test report.route_global_combined_nuclear_charge_application_stage ==
           :route_global_combined_gto_hamiltonian_assembly
-    @test !report.route_global_combined_nuclear_charge_applied_at_hamiltonian_assembly
-    @test !report.route_global_combined_centers_summed_at_hamiltonian_assembly
-    @test !report.route_global_combined_overlap_matrix_materialized
-    @test !report.route_global_combined_hamiltonian_matrix_materialized
-    @test !report.gto_route_global_blocks_materialized
-    @test !report.gto_hamiltonian_assembly_materialized
+    @test report.route_global_combined_nuclear_charge_applied_at_hamiltonian_assembly
+    @test report.route_global_combined_centers_summed_at_hamiltonian_assembly
+    @test report.route_global_combined_overlap_matrix_materialized
+    @test report.route_global_combined_hamiltonian_matrix_materialized
+    @test report.gto_route_global_blocks_materialized
+    @test report.gto_hamiltonian_assembly_materialized
     @test !report.full_parent_window_cpb_used
     @test !report.direct_cartesian_product_assembly_used
     @test !report.ordinary_cartesian_ida_operators_used

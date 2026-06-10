@@ -95,6 +95,7 @@ export PairBlockMaterializationPolicy,
        one_body_electron_nuclear_by_center_placement_plan,
        one_body_global_electron_nuclear_by_center_matrix,
        route_global_combined_gto_basis_layout,
+       route_global_mixed_gto_blocks_from_decomposed_units,
        route_global_combined_gto_one_electron_matrices,
        direct_direct_overlap_block,
        direct_direct_overlap_blocks,
@@ -145,6 +146,10 @@ export PairBlockMaterializationPolicy,
 # route_global_combined_gto_basis_layout.jl
 #     Metadata-only layout for appending a small GTO supplement sector to the
 #     decomposed WL retained gausslet sector.
+#
+# route_global_mixed_gto_blocks.jl
+#     Narrow route-global mixed gausslet/GTO block placement over decomposed
+#     WL retained units.
 #
 # route_global_combined_gto_matrix_assembly.jl
 #     Narrow combined gausslet+GTO overlap and one-electron Hamiltonian matrix
@@ -251,6 +256,7 @@ include("one_body_block_collection.jl")
 include("route_one_body_adapter.jl")
 include("route_global_one_body_adapter.jl")
 include("route_global_combined_gto_basis_layout.jl")
+include("route_global_mixed_gto_blocks.jl")
 include("route_global_combined_gto_matrix_assembly.jl")
 include("one_body_placement_plan.jl")
 include("one_body_global_matrix_helpers.jl")

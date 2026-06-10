@@ -477,12 +477,16 @@ outside this decomposed WL acceptance contract.
   combined overlap/Hamiltonian assembly helper when mixed gausslet/GTO rows
   cover the full gausslet retained range; it keeps by-center nuclear blocks
   separated until Hamiltonian assembly, then applies recorded nuclear charges
-  and sums centers. The real H plus GTO readiness path remains blocked on
-  `:missing_mixed_gto_route_global_row_coverage` because the current provider
-  bundle supplies the direct-core mixed rows `1:125`, not the full decomposed
-  gausslet retained range `1:223`. No H plus GTO solve, direct Cartesian
-  fallback, `ordinary_cartesian_ida_operators`, full-window CPB acceptance
-  route, PQS transform, export, or artifact was added.
+  and sums centers. `route_global_mixed_gto_blocks_from_decomposed_units` now
+  fills the mixed gausslet/GTO route-global rows by materializing one
+  provider-level CPB/GTO local block per decomposed WL retained unit and
+  contracting boundary source-support rows with the existing WL unit
+  coefficient maps. The real H plus GTO readiness path now covers rows
+  `1:223`, representing one direct-core unit and 26 boundary units, and the
+  combined 226 by 226 overlap/Hamiltonian matrices materialize without a direct
+  Cartesian fallback. This is still a readiness/matrix-assembly checkpoint, not
+  a committed H plus GTO scientific solve, `ordinary_cartesian_ida_operators`,
+  full-window CPB acceptance route, PQS transform, export, or artifact.
 - The next overlap implementation boundary is no longer additional placement
   fingerprinting. First decide the CPB operator-block and WL/PQS realization
   design: what local block objects exist, how White-Lindsey consumes them, how
