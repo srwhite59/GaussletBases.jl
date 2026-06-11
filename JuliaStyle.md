@@ -80,6 +80,30 @@ owned by a module. Stable concepts crossing stage or module boundaries deserve a
 module or typed object; local temporary values can stay ordinary local variables
 or small `NamedTuple`s.
 
+## Use Arrays Or Lazy Views For Variable-Size Collections
+
+Use tuples for fixed-shape data where the size is part of the type or
+mathematical contract, for example axis triples such as `NTuple{3,Int}`,
+coordinate triples, small keys, or short option lists.
+
+Do not use `Tuple{Vararg{T}}` or `Tuple(...)` as the default storage for
+variable-size homogeneous collections such as retained units, unit pairs,
+operator records, block results, summaries, or pair keys. If a collection can
+grow with basis size, shell count, center count, route regions, or unit-pair
+count, prefer:
+
+- `Vector{T}` for materialized homogeneous records;
+- `AbstractVector{T}` in APIs that only need indexed/sequential access;
+- a lazy/index table when entries are regular and can be computed on demand;
+- compact summaries with counts/ranges/samples when the full collection is not
+  needed downstream.
+
+Large variable tuples increase compile latency, specialize excessively on
+collection length, and make large scientific fixtures behave like new types
+rather than new data. If code is building a vector and immediately converting it
+to a tuple, check whether the tuple is truly fixed-size contract data. If not,
+keep the vector or replace the collection with a lightweight indexed view.
+
 ## Make Internal Modules Human-Facing
 
 Even private/internal modules should be readable by a human who opens the file
