@@ -238,8 +238,9 @@ electron-electron contribution, `1.6861351364925603` Hartree, under the current
 full retained two-index density-density convention.
 
 The current coarse timing split for the active tiny-box He RHF acceptance is
-reported by the test as diagnostics, not asserted as performance thresholds. A
-representative run was:
+reported by the test as diagnostics, not asserted as performance thresholds.
+Before the electron-nuclear cache and precompile workload, a representative
+cold run was:
 
 | phase | elapsed seconds |
 | --- | ---: |
@@ -287,6 +288,29 @@ electron-nuclear by-center route reuse per-axis Gaussian term tables and local
 unit-pair coefficient work across all by-center block construction, following
 the older flat WL batching pattern, rather than reconstructing those local
 inputs per decomposed unit pair.
+
+The decomposed WL electron-nuclear by-center route now caches centered PGDG
+Gaussian axis-term tables once per center/axis/expansion/source context and
+reuses them across all decomposed unit pairs. A post-cache compile-attribution
+probe measured the active electron-nuclear local batch at about `0.072` seconds
+warm and the full route-global electron-nuclear by-center call at about `0.084`
+seconds warm. The avoided diagnostic repeated-axis setup remains about 14 to 17
+seconds on the q/ns = 5/5 He fixture, confirming that the cache targets the
+previous warm bottleneck.
+
+A narrow `PrecompileTools` workload now compiles only the existing decomposed WL
+one-body production route calls for the q/ns = 5/5 seed: route-global overlap,
+kinetic, and electron-nuclear by-center. No route behavior, fallback,
+Hamiltonian solve, acceptance assertion, GTO/PQS path, export, or artifact
+logic lives in the precompile workload. After a content-changing edit to the
+workload, package precompilation took about `39.5` seconds. A cached fresh
+process `using GaussletBases` measured about `0.67` seconds. Fresh-process route
+calls then landed at warm-scale timings: route-global overlap about `0.012`
+seconds cold, route-global kinetic about `0.016` seconds cold, and route-global
+electron-nuclear by-center about `0.089` seconds cold. The He RHF acceptance
+energy remained `-2.045516767078335` Hartree; the one-electron operator build
+was about `0.41` seconds and total acceptance elapsed about `3.64` seconds in a
+representative run.
 
 One supported exploratory probe with the same one-shell decomposed topology and
 finer Z = 2 spacing, `d = 0.15`, shrinks the physical endpoints to about
