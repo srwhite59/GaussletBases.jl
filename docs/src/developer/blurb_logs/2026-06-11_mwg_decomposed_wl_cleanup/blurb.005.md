@@ -23,10 +23,13 @@ Current state:
 - raw GTO density-density is not accepted as final operator data
 - no full-parent CPB, direct Cartesian product, ordinary Cartesian IDA, PQS, or
   generalized final solve is allowed
-- White-Lindsey Fig. 8 has relevant comparison data for this question. Locate
-  the repo-local paper/source/reference first if available; if the data is not
-  present in the repo or known local references, stop and report that rather
-  than reconstructing it from memory.
+- White-Lindsey Fig. 8 has relevant comparison data for this question. The
+  manager's working recollection is: for `ns = 5`, Fig. 8 shows an error of a
+  few tenths of a mH using `d = 0.3` and 447 basis functions, with a very
+  accurate S-only GTO supplement; the error goes up for smaller `d`. Locate the
+  repo-local paper/source/reference first if available and verify these details
+  against it. If the data is not present in the repo or known local references,
+  report that explicitly and treat the manager note as a lead, not a citation.
 
 Exact task:
 
@@ -83,8 +86,12 @@ Audit questions:
 
 6. Compare against White-Lindsey Fig. 8 if the source data is available:
    - identify the exact paper/source file or documented local reference used;
-   - record the relevant fixture/curve/energy values and whether the side13
-     He + GTO diagnostic is consistent with that historical benchmark;
+   - verify the `ns = 5`, `d = 0.3`, 447-basis-function, S-only GTO supplement
+     point and the reported few-tenths-of-a-mH error if present;
+   - check the reported trend that the error worsens for smaller `d`;
+   - record whether the current side13 `d = 0.1`, `s = 1.0`, 520-dimensional
+     diagnostic is consistent with that historical benchmark or is using a
+     materially different fixture;
    - do not treat an uncited remembered value as authority.
 
 Trust boundary:
