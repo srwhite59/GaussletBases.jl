@@ -437,6 +437,25 @@ function route_global_decomposed_wl_one_body_matrix(
     end
 
     if inventory.unit_pairs isa CUP.UnitPairIndexTable
+        factorized = _route_global_decomposed_wl_factorized_one_body_matrix(
+            inventory,
+            term;
+            parent_axis_counts,
+            overlap_1d,
+            kinetic_1d,
+            metadata,
+        )
+        if factorized.status === :materialized_decomposed_wl_factorized_one_body_matrix
+            return _route_global_decomposed_wl_one_body_result(
+                inventory,
+                factorized.local_batch,
+                factorized.local_collection,
+                factorized.placement_plan,
+                factorized.global_matrix_result;
+                term,
+                metadata,
+            )
+        end
         streaming = _route_global_decomposed_wl_streaming_one_body_matrix(
             inventory,
             term;
@@ -1045,6 +1064,323 @@ end
 function _white_lindsey_decomposed_operator_prepared_unit_cache(inventory)
     cache = _white_lindsey_decomposed_operator_cache(inventory)
     return cache.prepared_units
+end
+
+function _white_lindsey_decomposed_operator_factorized_basis_cache(inventory)
+    cache = _white_lindsey_decomposed_operator_cache(inventory)
+    hasproperty(cache, :factorized_retained_basis) ||
+        return Dict{Any,Any}()
+    return cache.factorized_retained_basis
+end
+
+function _white_lindsey_decomposed_factorized_retained_basis(
+    inventory,
+    axis_counts::NTuple{3,Int},
+)
+    cache = _white_lindsey_decomposed_operator_factorized_basis_cache(inventory)
+    cache_key = (:factorized_retained_basis, axis_counts)
+    haskey(cache, cache_key) && return cache[cache_key]
+    result = try
+        coefficient_cache =
+            _white_lindsey_decomposed_operator_unit_coefficient_cache(inventory)
+        coefficient_matrix =
+            _white_lindsey_decomposed_retained_coefficient_matrix(
+                inventory,
+                axis_counts,
+                coefficient_cache,
+            )
+        factorized_basis = @timeg "decomposed_wl.factorized_retained_basis.extract" begin
+            ParentGaussletBases._nested_extract_factorized_basis(
+                coefficient_matrix,
+                axis_counts;
+                verify_reconstruction = false,
+                timing_prefix =
+                    "decomposed_wl.factorized_retained_basis.bridge",
+            )
+        end
+        (;
+            status = :materialized_decomposed_wl_factorized_retained_basis,
+            blocker = nothing,
+            factorized_basis,
+            retained_dimension = inventory.retained_dimension,
+            coefficient_cache_entry_count = length(coefficient_cache),
+            materialization_path =
+                :shellification_retained_units_to_factorized_basis_bridge,
+            old_fixed_block_matrix_authority_used = false,
+            full_parent_window_cpb_used = false,
+            direct_cartesian_product_assembly_used = false,
+            ordinary_cartesian_ida_operators_used = false,
+        )
+    catch err
+        (;
+            status = :blocked_decomposed_wl_factorized_retained_basis,
+            blocker = :decomposed_wl_factorized_basis_extraction_failed,
+            error = sprint(showerror, err),
+            factorized_basis = nothing,
+            retained_dimension =
+                _route_global_one_body_value(inventory, :retained_dimension, nothing),
+            coefficient_cache_entry_count = 0,
+            materialization_path =
+                :shellification_retained_units_to_factorized_basis_bridge,
+            old_fixed_block_matrix_authority_used = false,
+            full_parent_window_cpb_used = false,
+            direct_cartesian_product_assembly_used = false,
+            ordinary_cartesian_ida_operators_used = false,
+        )
+    end
+    cache[cache_key] = result
+    return result
+end
+
+function _white_lindsey_decomposed_retained_coefficient_matrix(
+    inventory,
+    axis_counts::NTuple{3,Int},
+    coefficient_cache,
+)
+    parent_dimension = prod(axis_counts)
+    retained_dimension = Int(inventory.retained_dimension)
+    matrix = zeros(Float64, parent_dimension, retained_dimension)
+    for unit in inventory.retained_units
+        unit_coefficients =
+            _white_lindsey_unit_coefficients_from_local_cache(
+                coefficient_cache,
+                unit,
+            )
+        _white_lindsey_unit_coefficients_materialized(unit_coefficients) ||
+            throw(
+                ArgumentError(
+                    "factorized decomposed WL backend requires materialized retained-unit coefficients",
+                ),
+            )
+        _white_lindsey_insert_unit_coefficients!(
+            matrix,
+            unit,
+            unit_coefficients,
+            parent_dimension,
+        )
+    end
+    return matrix
+end
+
+function _white_lindsey_insert_unit_coefficients!(
+    destination::Matrix{Float64},
+    unit,
+    unit_coefficients,
+    parent_dimension::Int,
+)
+    columns = unit.column_range
+    coefficient_matrix = unit_coefficients.coefficient_matrix
+    size(coefficient_matrix, 2) == length(columns) || throw(
+        ArgumentError("retained-unit coefficient column count does not match retained range"),
+    )
+    if unit_coefficients.coefficient_space === :parent_cartesian_sparse_adapter &&
+       size(coefficient_matrix, 1) == parent_dimension
+        destination[:, columns] .= coefficient_matrix
+        return destination
+    end
+    support_indices = unit_coefficients.support_indices
+    support_indices isa AbstractVector || throw(
+        ArgumentError("retained-unit coefficient insertion requires parent support indices"),
+    )
+    size(coefficient_matrix, 1) == length(support_indices) || throw(
+        ArgumentError("support-local retained-unit coefficient row count mismatch"),
+    )
+    @inbounds for local_column in axes(coefficient_matrix, 2)
+        global_column = first(columns) + local_column - 1
+        for local_row in axes(coefficient_matrix, 1)
+            global_row = Int(support_indices[local_row])
+            destination[global_row, global_column] =
+                Float64(coefficient_matrix[local_row, local_column])
+        end
+    end
+    return destination
+end
+
+function _route_global_decomposed_wl_factorized_one_body_matrix(
+    inventory,
+    term::Symbol;
+    parent_axis_counts,
+    overlap_1d = nothing,
+    kinetic_1d = nothing,
+    metadata = (;),
+)
+    axis_counts = _axis_counts_tuple(parent_axis_counts)
+    overlap_axes = _overlap_1d_tuple(overlap_1d)
+    _assert_overlap_axis_sizes(overlap_axes, axis_counts)
+    kinetic_axes = term === :kinetic ? _operator_1d_tuple(
+        kinetic_1d,
+        "kinetic_1d",
+    ) : nothing
+    term === :kinetic &&
+        _assert_operator_axis_sizes(kinetic_axes, axis_counts, "kinetic_1d")
+    factorized =
+        _white_lindsey_decomposed_factorized_retained_basis(
+            inventory,
+            axis_counts,
+        )
+    factorized.status === :materialized_decomposed_wl_factorized_retained_basis ||
+        return _route_global_decomposed_wl_factorized_one_body_blocked(
+            term,
+            factorized.blocker,
+            inventory;
+            metadata,
+        )
+    matrix = @timeg "decomposed_wl.factorized_retained_basis.one_body_fill" begin
+        axis_overlap_x = _white_lindsey_factorized_axis_matrix_table(
+            factorized.factorized_basis.x_functions,
+            overlap_axes[1],
+        )
+        axis_overlap_y = _white_lindsey_factorized_axis_matrix_table(
+            factorized.factorized_basis.y_functions,
+            overlap_axes[2],
+        )
+        axis_overlap_z = _white_lindsey_factorized_axis_matrix_table(
+            factorized.factorized_basis.z_functions,
+            overlap_axes[3],
+        )
+        if term === :overlap
+            ParentGaussletBases._nested_factorized_product_matrix(
+                factorized.factorized_basis,
+                axis_overlap_x,
+                axis_overlap_y,
+                axis_overlap_z,
+            )
+        elseif term === :kinetic
+            axis_kinetic_x = _white_lindsey_factorized_axis_matrix_table(
+                factorized.factorized_basis.x_functions,
+                kinetic_axes[1],
+            )
+            axis_kinetic_y = _white_lindsey_factorized_axis_matrix_table(
+                factorized.factorized_basis.y_functions,
+                kinetic_axes[2],
+            )
+            axis_kinetic_z = _white_lindsey_factorized_axis_matrix_table(
+                factorized.factorized_basis.z_functions,
+                kinetic_axes[3],
+            )
+            ParentGaussletBases._nested_factorized_sum_of_products(
+                factorized.factorized_basis,
+                (
+                    (axis_kinetic_x, axis_overlap_y, axis_overlap_z),
+                    (axis_overlap_x, axis_kinetic_y, axis_overlap_z),
+                    (axis_overlap_x, axis_overlap_y, axis_kinetic_z),
+                ),
+            )
+        else
+            throw(ArgumentError("unsupported factorized decomposed WL one-body term $(term)"))
+        end
+    end
+    stream_state =
+        _route_global_decomposed_wl_factorized_stream_state(
+            inventory,
+            term,
+            factorized,
+            _white_lindsey_factorized_symmetric_placed_block_count(inventory),
+        )
+    global_matrix_result =
+        _route_global_decomposed_wl_streaming_global_matrix_result(
+            term,
+            inventory,
+            matrix,
+            stream_state,
+        )
+    return (;
+        status = :materialized_decomposed_wl_factorized_one_body_matrix,
+        blocker = nothing,
+        local_batch =
+            _route_global_decomposed_wl_streaming_local_batch(term, stream_state),
+        local_collection =
+            _route_global_decomposed_wl_streaming_local_collection(term, stream_state),
+        placement_plan =
+            _route_global_decomposed_wl_streaming_placement_plan(
+                term,
+                inventory,
+                stream_state,
+            ),
+        global_matrix_result,
+        metadata = NamedTuple(metadata),
+    )
+end
+
+function _white_lindsey_factorized_axis_matrix_table(
+    axis_functions::AbstractMatrix{<:Real},
+    operator::AbstractMatrix{<:Real},
+)
+    scratch = Matrix{Float64}(
+        undef,
+        size(axis_functions, 2),
+        size(axis_functions, 1),
+    )
+    return ParentGaussletBases._nested_factorized_axis_matrix_table(
+        operator,
+        axis_functions,
+        scratch,
+    )
+end
+
+function _route_global_decomposed_wl_factorized_one_body_blocked(
+    term::Symbol,
+    blocker,
+    inventory;
+    metadata,
+)
+    return (;
+        status = :blocked_decomposed_wl_factorized_one_body_matrix,
+        blocker,
+        local_batch = nothing,
+        local_collection = nothing,
+        placement_plan = nothing,
+        global_matrix_result = nothing,
+        metadata = NamedTuple(metadata),
+        inventory_source_kind =
+            _route_global_one_body_value(inventory, :source_kind, nothing),
+    )
+end
+
+function _route_global_decomposed_wl_factorized_stream_state(
+    inventory,
+    term::Symbol,
+    factorized,
+    placed_block_count::Int;
+    center_summary = nothing,
+)
+    return (;
+        materialized_count = Int(inventory.pair_count),
+        skipped_count = 0,
+        placed_block_count,
+        blocker = nothing,
+        unit_coefficient_cache_entry_count =
+            factorized.coefficient_cache_entry_count,
+        electron_nuclear_prepared_unit_cache_entry_count = 0,
+        pair_count = Int(inventory.pair_count),
+        center_index =
+            isnothing(center_summary) ? nothing : center_summary.center_index,
+        center_key =
+            isnothing(center_summary) ? nothing : center_summary.center_key,
+        center_location =
+            isnothing(center_summary) ? nothing : center_summary.location,
+        nuclear_charge =
+            isnothing(center_summary) ? nothing : center_summary.charge,
+        nuclear_charge_applied = false,
+        materialization_path =
+            term === :electron_nuclear_by_center ?
+            :white_lindsey_decomposed_wl_factorized_electron_nuclear_global_assembly :
+            :white_lindsey_decomposed_wl_factorized_one_body_global_assembly,
+        local_blocks_collected = false,
+        pair_lookup_materialized = false,
+        placement_records_materialized = false,
+        factorized_retained_basis_materialized = true,
+        old_fixed_block_matrix_authority_used = false,
+        full_parent_window_cpb_used = false,
+        direct_cartesian_product_assembly_used = false,
+        ordinary_cartesian_ida_operators_used = false,
+    )
+end
+
+function _white_lindsey_factorized_symmetric_placed_block_count(inventory)
+    unit_count = Int(inventory.unit_count)
+    pair_count = Int(inventory.pair_count)
+    return 2 * pair_count - unit_count
 end
 
 function _white_lindsey_pair_product_block_from_prepared_units(
@@ -1694,6 +2030,26 @@ function _route_global_electron_nuclear_by_center_matrix_from_inventory(
     end
 
     if inventory.unit_pairs isa CUP.UnitPairIndexTable
+        factorized =
+            _route_global_decomposed_wl_factorized_electron_nuclear_by_center_matrix(
+                inventory;
+                parent_axis_counts,
+                parent_axis_bundle_object,
+                coulomb_expansion,
+                center_record,
+                metadata,
+            )
+        if factorized.status ===
+           :materialized_decomposed_wl_factorized_electron_nuclear_by_center_matrix
+            return _route_global_electron_nuclear_by_center_result(
+                inventory,
+                factorized.local_batch,
+                factorized.local_collection,
+                factorized.placement_plan,
+                factorized.global_matrix_result;
+                metadata,
+            )
+        end
         streaming =
             _route_global_decomposed_wl_streaming_electron_nuclear_by_center_matrix(
                 inventory;
@@ -1817,6 +2173,109 @@ function _route_global_decomposed_wl_streaming_electron_nuclear_by_center_matrix
         local_batch,
         local_collection,
         placement_plan,
+        global_matrix_result,
+        metadata = NamedTuple(metadata),
+    )
+end
+
+function _route_global_decomposed_wl_factorized_electron_nuclear_by_center_matrix(
+    inventory;
+    parent_axis_counts,
+    parent_axis_bundle_object,
+    coulomb_expansion,
+    center_record,
+    metadata = (;),
+)
+    axis_counts = _axis_counts_tuple(parent_axis_counts)
+    factorized =
+        _white_lindsey_decomposed_factorized_retained_basis(
+            inventory,
+            axis_counts,
+        )
+    factorized.status === :materialized_decomposed_wl_factorized_retained_basis ||
+        return (;
+            status =
+                :blocked_decomposed_wl_factorized_electron_nuclear_by_center_matrix,
+            blocker = factorized.blocker,
+            local_batch = nothing,
+            local_collection = nothing,
+            placement_plan = nothing,
+            global_matrix_result = nothing,
+            metadata = NamedTuple(metadata),
+        )
+    axis_context = _white_lindsey_electron_nuclear_axis_context(
+        parent_axis_counts,
+        parent_axis_bundle_object,
+        coulomb_expansion,
+        center_record,
+    )
+    matrix = @timeg "decomposed_wl.factorized_retained_basis.electron_nuclear_fill" begin
+        axis_term_tables_x =
+            ParentGaussletBases._nested_factorized_axis_term_tables(
+                axis_context.axis_terms.x,
+                factorized.factorized_basis.x_functions,
+            )
+        axis_term_tables_y =
+            ParentGaussletBases._nested_factorized_axis_term_tables(
+                axis_context.axis_terms.y,
+                factorized.factorized_basis.y_functions,
+            )
+        axis_term_tables_z =
+            ParentGaussletBases._nested_factorized_axis_term_tables(
+                axis_context.axis_terms.z,
+                factorized.factorized_basis.z_functions,
+            )
+        matrix_local = Matrix{Float64}(
+            undef,
+            inventory.retained_dimension,
+            inventory.retained_dimension,
+        )
+        ParentGaussletBases._nested_fill_factorized_weighted_term_sum!(
+            matrix_local,
+            factorized.factorized_basis,
+            axis_context.coefficients,
+            axis_term_tables_x,
+            axis_term_tables_y,
+            axis_term_tables_z;
+            include_basis_amplitudes = true,
+        )
+        matrix_local
+    end
+    stream_state =
+        _route_global_decomposed_wl_factorized_stream_state(
+            inventory,
+            :electron_nuclear_by_center,
+            factorized,
+            _white_lindsey_factorized_symmetric_placed_block_count(inventory);
+            center_summary = axis_context.center_summary,
+        )
+    global_matrix_result =
+        _route_global_decomposed_wl_streaming_global_matrix_result(
+            :electron_nuclear_by_center,
+            inventory,
+            matrix,
+            stream_state,
+        )
+    return (;
+        status =
+            :materialized_decomposed_wl_factorized_electron_nuclear_by_center_matrix,
+        blocker = nothing,
+        local_batch =
+            _route_global_decomposed_wl_streaming_local_batch(
+                :electron_nuclear_by_center,
+                stream_state,
+            ),
+        local_collection =
+            _route_global_decomposed_wl_streaming_local_collection(
+                :electron_nuclear_by_center,
+                stream_state,
+            ),
+        placement_plan =
+            _route_global_decomposed_wl_streaming_placement_plan(
+                :electron_nuclear_by_center,
+                inventory,
+                stream_state,
+            ),
         global_matrix_result,
         metadata = NamedTuple(metadata),
     )

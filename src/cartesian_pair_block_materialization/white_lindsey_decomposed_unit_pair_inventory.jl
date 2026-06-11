@@ -17,6 +17,7 @@ function _white_lindsey_decomposed_operator_cache()
     return (;
         unit_coefficients = Dict{Symbol,Any}(),
         prepared_units = Dict{Any,Any}(),
+        factorized_retained_basis = Dict{Any,Any}(),
     )
 end
 

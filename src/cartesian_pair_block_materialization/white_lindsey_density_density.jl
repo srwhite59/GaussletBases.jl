@@ -67,8 +67,50 @@ function route_global_decomposed_wl_density_density_matrix(
             0;
             metadata,
         )
-    matrix = zeros(Float64, retained_dimension, retained_dimension)
     if inventory.unit_pairs isa CUP.UnitPairIndexTable
+        factorized =
+            _white_lindsey_density_density_factorized_matrix(
+                inventory,
+                axis_counts,
+                raw_pair_factor_terms,
+                coefficients,
+                retained_weights.weights,
+            )
+        if factorized.status ===
+           :materialized_decomposed_wl_factorized_density_density_matrix
+            return _route_global_density_density_result(
+                :materialized_route_global_density_density_interaction_matrix,
+                nothing,
+                inventory,
+                factorized.matrix,
+                _white_lindsey_factorized_symmetric_placed_block_count(inventory);
+                gaussian_term_count = length(coefficients),
+                unit_coefficient_cache_entry_count =
+                    factorized.unit_coefficient_cache_entry_count,
+                pair_factor_term_shapes =
+                    _white_lindsey_density_density_pair_factor_term_shapes(
+                        raw_pair_factor_terms,
+                    ),
+                retained_density_weight_count = length(retained_weights.weights),
+                retained_density_weight_minimum = retained_weights.minimum,
+                retained_density_weight_maximum = retained_weights.maximum,
+                metadata = merge(
+                    NamedTuple(metadata),
+                    (;
+                        materialization_path =
+                            :white_lindsey_decomposed_wl_factorized_density_density_global_assembly,
+                        pair_input_kind = :unit_pair_index_table,
+                        local_pair_blocks_collected = false,
+                        pair_coefficients_batch_materialized = false,
+                        streaming_retained_matrix_insertion = false,
+                        factorized_retained_basis_materialized = true,
+                        raw_pair_numerator_projected_before_weight_division =
+                            true,
+                    ),
+                ),
+            )
+        end
+        matrix = zeros(Float64, retained_dimension, retained_dimension)
         coefficient_cache =
             _white_lindsey_decomposed_operator_unit_coefficient_cache(inventory)
         prepared_cache =
@@ -133,6 +175,7 @@ function route_global_decomposed_wl_density_density_matrix(
         )
     end
 
+    matrix = zeros(Float64, retained_dimension, retained_dimension)
     placed_block_count = 0
     pair_coefficients_batch =
         white_lindsey_boundary_stratum_pair_unit_coefficients(inventory.unit_pairs)
@@ -331,6 +374,70 @@ function _route_global_density_density_streaming_placement_blocker(
     _one_body_placement_ranges_inside_global_dimension(rows, columns, dimension) ||
         return :target_ranges_outside_global_dimension
     return nothing
+end
+
+function _white_lindsey_density_density_factorized_matrix(
+    inventory,
+    axis_counts::NTuple{3,Int},
+    raw_pair_factor_terms,
+    coefficients::Vector{Float64},
+    retained_weights::Vector{Float64},
+)
+    factorized =
+        _white_lindsey_decomposed_factorized_retained_basis(
+            inventory,
+            axis_counts,
+        )
+    factorized.status === :materialized_decomposed_wl_factorized_retained_basis ||
+        return (;
+            status = :blocked_decomposed_wl_factorized_density_density_matrix,
+            blocker = factorized.blocker,
+            matrix = nothing,
+            unit_coefficient_cache_entry_count = 0,
+        )
+    matrix = @timeg "decomposed_wl.factorized_retained_basis.density_density_fill" begin
+        axis_term_tables_x =
+            ParentGaussletBases._nested_factorized_axis_term_tables(
+                raw_pair_factor_terms.x,
+                factorized.factorized_basis.x_functions,
+            )
+        axis_term_tables_y =
+            ParentGaussletBases._nested_factorized_axis_term_tables(
+                raw_pair_factor_terms.y,
+                factorized.factorized_basis.y_functions,
+            )
+        axis_term_tables_z =
+            ParentGaussletBases._nested_factorized_axis_term_tables(
+                raw_pair_factor_terms.z,
+                factorized.factorized_basis.z_functions,
+            )
+        matrix_local = Matrix{Float64}(
+            undef,
+            inventory.retained_dimension,
+            inventory.retained_dimension,
+        )
+        ParentGaussletBases._nested_fill_factorized_weighted_term_sum!(
+            matrix_local,
+            factorized.factorized_basis,
+            coefficients,
+            axis_term_tables_x,
+            axis_term_tables_y,
+            axis_term_tables_z;
+            include_basis_amplitudes = true,
+        )
+        _white_lindsey_apply_retained_density_weight_division!(
+            matrix_local,
+            retained_weights,
+        )
+        matrix_local
+    end
+    return (;
+        status = :materialized_decomposed_wl_factorized_density_density_matrix,
+        blocker = nothing,
+        matrix,
+        unit_coefficient_cache_entry_count =
+            factorized.coefficient_cache_entry_count,
+    )
 end
 
 function _white_lindsey_density_density_input_blocker(
