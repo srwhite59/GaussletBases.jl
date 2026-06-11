@@ -234,6 +234,51 @@ See also:
 
 - `docs/code_bloat_and_wrong_contract_cleanup_note.md`
 
+## Physics-target work discipline
+
+For Cartesian and other active algorithmic work, physics targets are the
+default permission source for new code. Before adding a helper, adapter,
+metadata field, summary object, or test, state which live physics target or
+active module contract it advances.
+
+The following answers are not enough without explicit manager approval:
+
+- makes the architecture more complete
+- adds coverage
+- preserves old behavior
+- might be useful later
+
+Prefer tasks phrased as:
+
+- make old surface X unnecessary for physics target Y
+
+over tasks phrased as:
+
+- add helper Z
+
+For each coding handoff, include a compact deletion/shrinkage result:
+
+- deleted:
+- simplified:
+- quarantined:
+- not deleted because:
+- exact remaining caller/blocker:
+
+This does not require every pass to delete code, but it does require every pass
+to account for carrying cost and stale-contract pressure.
+
+Short physics target cards are encouraged at the start of a pass. They should
+state:
+
+- target
+- physics endpoint
+- allowed implementation surface
+- forbidden surfaces
+- success condition
+
+Keep target cards short and task-local. Do not create a new design-note layer
+unless the manager explicitly asks for one.
+
 ## Basis bundle policy
 
 It is acceptable for a basis bundle to carry:
