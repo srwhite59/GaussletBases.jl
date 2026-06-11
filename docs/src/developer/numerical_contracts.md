@@ -246,6 +246,17 @@ retained/final-basis density-interaction boundary, using weights in that final
 basis. Source-level or parent PGDG weight division is not a substitute for the
 post-projection/PQS weight boundary.
 
+For shellification-backed decomposed White-Lindsey inventories, the factorized
+retained-basis backend is the fast production path for route-global overlap,
+kinetic, electron-nuclear by-center, and density-density construction. The
+pair-streaming route remains a reference/fallback path and is used for compact
+equivalence checks. The current factorized retained-basis sidecar is derived
+from shellification retained-unit coefficient maps through a temporary dense
+retained coefficient-matrix bridge into the existing factorized extraction
+kernel. That bridge is implementation scaffolding, not a change of authority:
+old nested fixed-block matrices remain timing or oracle comparators only and
+are not the source of the decomposed route matrices.
+
 Restricted closed-shell HF with one alpha and one beta electron converges in
 16 iterations. The bare closed-shell one-electron value from the lowest
 one-electron orbital is `-3.757540205074538` Hartree. The self-consistent RHF
@@ -275,8 +286,14 @@ improved to about `-1.9748150892830352` Hartree versus the hydrogenic reference
 applied after retained assembly, the retained IDA self-Coulomb term is about
 `1.2158294767735702` Hartree versus `1.25`. The self-Coulomb error moves from
 about `0.1703` in the compact fixture to about `0.0342` in the side-13 fixture,
-so the corrected retained-weight boundary is the active convention. No
-larger-box RHF energy is currently an active acceptance baseline.
+so the corrected retained-weight boundary is the active convention. A follow-up
+factorized-backend side-13 He RHF probe converged in 19 iterations with
+one-electron contribution about `-3.8457802974697652` Hartree,
+electron-electron contribution about `1.0092822977688516` Hartree, and total
+RHF energy about `-2.8364979997009137` Hartree. The retained density trace was
+1.0000000000000004 for the occupied spatial orbital, giving electron count
+2.000000000000001 under the restricted closed-shell convention. This is an
+exploratory larger-box physics result, not yet a permanent acceptance baseline.
 
 The current coarse timing split for the active tiny-box He RHF acceptance is
 reported by the test as diagnostics, not asserted as performance thresholds.
