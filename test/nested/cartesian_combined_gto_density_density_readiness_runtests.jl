@@ -144,7 +144,7 @@ end
     @test density_readiness.status ===
           :blocked_route_global_combined_gto_final_basis_density_density_matrix
     @test density_readiness.blocker ===
-          :missing_residual_mwg_density_density_kernel_for_final_basis_projection
+          :missing_decomposed_wl_density_density_inventory
     @test density_readiness.residual_mwg_representation_available
     @test !density_readiness.raw_gto_density_density_used_as_final_operator
 end

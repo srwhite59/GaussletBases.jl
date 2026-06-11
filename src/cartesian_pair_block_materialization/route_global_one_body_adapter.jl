@@ -1239,6 +1239,7 @@ function _white_lindsey_decomposed_factorized_retained_basis(
             status = :materialized_decomposed_wl_factorized_retained_basis,
             blocker = nothing,
             factorized_basis,
+            coefficient_matrix,
             retained_dimension = inventory.retained_dimension,
             coefficient_cache_entry_count = length(coefficient_cache),
             materialization_path =
@@ -1254,6 +1255,7 @@ function _white_lindsey_decomposed_factorized_retained_basis(
             blocker = :decomposed_wl_factorized_basis_extraction_failed,
             error = sprint(showerror, err),
             factorized_basis = nothing,
+            coefficient_matrix = nothing,
             retained_dimension =
                 _route_global_one_body_value(inventory, :retained_dimension, nothing),
             coefficient_cache_entry_count = 0,

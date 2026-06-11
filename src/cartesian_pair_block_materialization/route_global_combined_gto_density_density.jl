@@ -157,6 +157,10 @@ function route_global_combined_gto_final_basis_density_density_matrix(
     final_basis_projection;
     gausslet_density_density_result,
     residual_mwg_representation = nothing,
+    decomposed_inventory = nothing,
+    parent_axis_counts = nothing,
+    parent_axis_bundle_object = nothing,
+    coulomb_expansion = nothing,
     metadata = (;),
 )
     blocker = _route_global_combined_gto_density_density_blocker(
@@ -209,15 +213,273 @@ function route_global_combined_gto_final_basis_density_density_matrix(
             metadata,
         )
 
+    components = _route_global_combined_gto_residual_mwg_density_density_components(
+        combined_matrices,
+        gausslet_density_density_result,
+        residual_mwg_representation;
+        decomposed_inventory,
+        parent_axis_counts,
+        parent_axis_bundle_object,
+        coulomb_expansion,
+    )
+    components.status ===
+        :materialized_route_global_combined_gto_residual_mwg_density_density_components ||
+        return _route_global_combined_gto_density_density_result(
+            :blocked_route_global_combined_gto_final_basis_density_density_matrix,
+            components.blocker,
+            combined_matrices,
+            final_basis_projection,
+            gausslet_density_density_result,
+            nothing;
+            residual_mwg_representation,
+            residual_mwg_density_density_components = components,
+            metadata,
+        )
+
     return _route_global_combined_gto_density_density_result(
-        :blocked_route_global_combined_gto_final_basis_density_density_matrix,
-        :missing_residual_mwg_density_density_kernel_for_final_basis_projection,
+        :materialized_route_global_combined_gto_final_basis_density_density_matrix,
+        nothing,
         combined_matrices,
         final_basis_projection,
         gausslet_density_density_result,
-        nothing;
+        components.final_interaction;
         residual_mwg_representation,
+        residual_mwg_density_density_components = components,
         metadata,
+    )
+end
+
+function _route_global_combined_gto_residual_mwg_density_density_components(
+    combined_matrices,
+    gausslet_density_density_result,
+    residual_mwg_representation;
+    decomposed_inventory,
+    parent_axis_counts,
+    parent_axis_bundle_object,
+    coulomb_expansion,
+)
+    blocker = _route_global_combined_gto_residual_mwg_component_blocker(
+        decomposed_inventory,
+        parent_axis_counts,
+        parent_axis_bundle_object,
+        coulomb_expansion,
+        residual_mwg_representation,
+    )
+    if !isnothing(blocker)
+        return _route_global_combined_gto_residual_mwg_component_result(
+            :blocked_route_global_combined_gto_residual_mwg_density_density_components,
+            blocker,
+            combined_matrices,
+            gausslet_density_density_result,
+            residual_mwg_representation,
+            nothing;
+            contraction = nothing,
+            parent_axis_counts,
+            decomposed_inventory,
+        )
+    end
+
+    axis_counts = _axis_counts_tuple(parent_axis_counts)
+    factorized = _white_lindsey_decomposed_factorized_retained_basis(
+        decomposed_inventory,
+        axis_counts,
+    )
+    factorized.status === :materialized_decomposed_wl_factorized_retained_basis ||
+        return _route_global_combined_gto_residual_mwg_component_result(
+            :blocked_route_global_combined_gto_residual_mwg_density_density_components,
+            factorized.blocker,
+            combined_matrices,
+            gausslet_density_density_result,
+            residual_mwg_representation,
+            nothing;
+            contraction = nothing,
+            parent_axis_counts,
+            decomposed_inventory,
+        )
+
+    contraction = factorized.coefficient_matrix
+    components = try
+        ParentGaussletBases._qwrg_final_residual_mwg_component_blocks(
+            gausslet_density_density_result.matrix,
+            contraction,
+            _route_global_combined_gto_axis_bundle(parent_axis_bundle_object, :x),
+            _route_global_combined_gto_axis_bundle(parent_axis_bundle_object, :y),
+            _route_global_combined_gto_axis_bundle(parent_axis_bundle_object, :z),
+            coulomb_expansion,
+            residual_mwg_representation.residual_centers,
+            residual_mwg_representation.residual_widths,
+        )
+    catch error
+        return _route_global_combined_gto_residual_mwg_component_result(
+            :blocked_route_global_combined_gto_residual_mwg_density_density_components,
+            :residual_mwg_density_density_component_kernel_failed,
+            combined_matrices,
+            gausslet_density_density_result,
+            residual_mwg_representation,
+            nothing;
+            contraction,
+            parent_axis_counts,
+            decomposed_inventory,
+            metadata = (;
+                residual_mwg_component_error_type = typeof(error),
+                residual_mwg_component_error = sprint(showerror, error),
+            ),
+        )
+    end
+
+    return _route_global_combined_gto_residual_mwg_component_result(
+        :materialized_route_global_combined_gto_residual_mwg_density_density_components,
+        nothing,
+        combined_matrices,
+        gausslet_density_density_result,
+        residual_mwg_representation,
+        components;
+        contraction,
+        parent_axis_counts,
+        decomposed_inventory,
+    )
+end
+
+function _route_global_combined_gto_residual_mwg_component_blocker(
+    decomposed_inventory,
+    parent_axis_counts,
+    parent_axis_bundle_object,
+    coulomb_expansion,
+    residual_mwg_representation,
+)
+    _route_global_combined_gto_property(decomposed_inventory, :status, nothing) ===
+        :available_white_lindsey_decomposed_unit_pair_inventory ||
+        return :missing_decomposed_wl_density_density_inventory
+    parent_axis_counts isa Tuple || return :missing_parent_axis_counts
+    for axis in (:x, :y, :z)
+        isnothing(_route_global_combined_gto_axis_bundle(parent_axis_bundle_object, axis)) &&
+            return Symbol("missing_parent_axis_bundle_", String(axis))
+    end
+    isnothing(coulomb_expansion) &&
+        return :missing_coulomb_gaussian_expansion
+    centers = _route_global_combined_gto_property(
+        residual_mwg_representation,
+        :residual_centers,
+        nothing,
+    )
+    widths = _route_global_combined_gto_property(
+        residual_mwg_representation,
+        :residual_widths,
+        nothing,
+    )
+    centers isa AbstractMatrix || return :missing_residual_mwg_centers
+    widths isa AbstractMatrix || return :missing_residual_mwg_widths
+    size(centers, 2) == 3 || return :residual_mwg_centers_dimension_mismatch
+    size(widths) == size(centers) ||
+        return :residual_mwg_widths_dimension_mismatch
+    all(isfinite, centers) || return :nonfinite_residual_mwg_centers
+    all(isfinite, widths) || return :nonfinite_residual_mwg_widths
+    all(>(0.0), widths) || return :nonpositive_residual_mwg_widths
+    return nothing
+end
+
+function _route_global_combined_gto_axis_bundle(parent_axis_bundle_object, axis::Symbol)
+    primary = axis
+    fallback =
+        axis === :x ? :bundle_x :
+        axis === :y ? :bundle_y :
+        axis === :z ? :bundle_z :
+        throw(ArgumentError("axis bundle selector must be :x, :y, or :z"))
+    bundle = _route_global_combined_gto_property(
+        parent_axis_bundle_object,
+        primary,
+        nothing,
+    )
+    !isnothing(bundle) && return bundle
+    return _route_global_combined_gto_property(
+        parent_axis_bundle_object,
+        fallback,
+        nothing,
+    )
+end
+
+function _route_global_combined_gto_residual_mwg_component_result(
+    status::Symbol,
+    blocker,
+    combined_matrices,
+    gausslet_density_density_result,
+    residual_mwg_representation,
+    components;
+    contraction,
+    parent_axis_counts,
+    decomposed_inventory,
+    metadata = (;),
+)
+    materialized =
+        status ===
+        :materialized_route_global_combined_gto_residual_mwg_density_density_components
+    gausslet_dimension = _route_global_combined_gto_property(
+        combined_matrices,
+        :gausslet_retained_dimension,
+        :unavailable,
+    )
+    retained_supplement_count = _route_global_combined_gto_property(
+        residual_mwg_representation,
+        :retained_supplement_count,
+        :unavailable,
+    )
+    return (;
+        object_kind =
+            :route_global_combined_gto_residual_mwg_density_density_components,
+        status,
+        blocker,
+        gausslet_retained_dimension = gausslet_dimension,
+        retained_supplement_count,
+        parent_axis_counts =
+            isnothing(parent_axis_counts) ? :unavailable : parent_axis_counts,
+        parent_product_dimension =
+            isnothing(parent_axis_counts) ? :unavailable : prod(parent_axis_counts),
+        contraction_matrix_shape =
+            contraction isa AbstractMatrix ? size(contraction) : :unavailable,
+        contraction_matrix_source =
+            :shellification_retained_unit_coefficient_maps,
+        fixed_residual =
+            materialized ? components.fixed_residual : nothing,
+        residual_residual =
+            materialized ? components.residual_residual : nothing,
+        final_interaction =
+            materialized ? components.final_interaction : nothing,
+        fixed_residual_shape =
+            materialized ? size(components.fixed_residual) : :unavailable,
+        residual_residual_shape =
+            materialized ? size(components.residual_residual) : :unavailable,
+        final_interaction_shape =
+            materialized ? size(components.final_interaction) : :unavailable,
+        fixed_fixed_matches_supplied_gausslet_block =
+            materialized ?
+            components.fixed_fixed == gausslet_density_density_result.matrix :
+            false,
+        final_interaction_symmetric =
+            materialized ?
+            iszero(maximum(abs.(components.final_interaction - transpose(components.final_interaction)))) :
+            false,
+        final_interaction_finite =
+            materialized ? all(isfinite, components.final_interaction) : false,
+        mwg_component_kernel = :_qwrg_final_residual_mwg_component_blocks,
+        fixed_residual_component_source = materialized ?
+                                          components.diagnostics.fixed_residual_component_source :
+                                          :unavailable,
+        residual_residual_component_source = materialized ?
+                                             components.diagnostics.residual_residual_component_source :
+                                             :unavailable,
+        residual_mwg_density_weight_convention =
+            :old_mwg_density_normalized_component_kernel,
+        raw_gto_density_density_used_as_final_operator = false,
+        raw_gto_rows_role = :residual_construction_inputs_only,
+        old_fixed_block_matrix_authority_used = false,
+        full_parent_window_cpb_used = false,
+        direct_cartesian_product_assembly_used = false,
+        ordinary_cartesian_ida_operators_used = false,
+        pqs_transforms_materialized = false,
+        exports_or_artifacts = false,
+        inventory_source_kind =
+            _route_global_combined_gto_property(decomposed_inventory, :source_kind, :unavailable),
+        metadata = NamedTuple(metadata),
     )
 end
 
@@ -462,6 +724,7 @@ function _route_global_combined_gto_density_density_result(
     gausslet_density_density_result,
     final_density_density_matrix;
     residual_mwg_representation,
+    residual_mwg_density_density_components = nothing,
     metadata,
 )
     materialized =
@@ -499,6 +762,16 @@ function _route_global_combined_gto_density_density_result(
         gausslet_dimension isa Integer ?
         (gausslet_dimension, gausslet_dimension) :
         :unavailable
+    fixed_residual_block = _route_global_combined_gto_property(
+        residual_mwg_density_density_components,
+        :fixed_residual,
+        nothing,
+    )
+    residual_residual_block = _route_global_combined_gto_property(
+        residual_mwg_density_density_components,
+        :residual_residual,
+        nothing,
+    )
     missing_blocks = materialized ? () : (
         :mixed_gausslet_residual_density_density,
         :residual_residual_density_density,
@@ -517,6 +790,18 @@ function _route_global_combined_gto_density_density_result(
             gausslet_shape == expected_gausslet_shape,
         final_density_density_matrix,
         final_density_density_matrix_shape = final_shape,
+        mixed_gausslet_residual_density_density_matrix =
+            materialized ? fixed_residual_block : nothing,
+        mixed_gausslet_residual_density_density_matrix_shape =
+            fixed_residual_block isa AbstractMatrix ?
+            size(fixed_residual_block) :
+            :unavailable,
+        residual_residual_density_density_matrix =
+            materialized ? residual_residual_block : nothing,
+        residual_residual_density_density_matrix_shape =
+            residual_residual_block isa AbstractMatrix ?
+            size(residual_residual_block) :
+            :unavailable,
         gausslet_retained_dimension = gausslet_dimension,
         raw_supplement_count,
         retained_supplement_count,
@@ -536,13 +821,29 @@ function _route_global_combined_gto_density_density_result(
             gausslet_matrix isa AbstractMatrix,
         gausslet_gausslet_dense_payload_retained_in_blocked_summary =
             materialized,
-        mixed_gausslet_residual_density_density_available = false,
-        residual_residual_density_density_available = false,
+        mixed_gausslet_residual_density_density_available =
+            fixed_residual_block isa AbstractMatrix,
+        residual_residual_density_density_available =
+            residual_residual_block isa AbstractMatrix,
         gausslet_ida_weight_division_stage =
             :after_final_density_projection_at_density_interaction_boundary,
         gausslet_raw_pgdg_pair_numerator_projected_before_weight_division = true,
         residual_mwg_density_weight_convention =
-            :blocked_pending_effective_residual_representation,
+            materialized ?
+            :old_mwg_density_normalized_component_kernel :
+            :blocked_pending_residual_mwg_density_density_components,
+        residual_mwg_component_kernel =
+            _route_global_combined_gto_property(
+                residual_mwg_density_density_components,
+                :mwg_component_kernel,
+                :unavailable,
+            ),
+        parent_product_to_final_contraction_source =
+            _route_global_combined_gto_property(
+                residual_mwg_density_density_components,
+                :contraction_matrix_source,
+                :unavailable,
+            ),
         full_parent_window_cpb_used = false,
         direct_cartesian_product_assembly_used = false,
         ordinary_cartesian_ida_operators_used = false,
