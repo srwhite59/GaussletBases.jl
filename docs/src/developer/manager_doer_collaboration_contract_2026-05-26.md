@@ -121,6 +121,12 @@ The blurb should be concrete enough for a doer to execute without guessing, but
 it should keep the trust boundary explicit. The trust boundary is especially
 important when plumbing work is near numerical kernels or scientific policy.
 
+Use the repo-local `BlurbStyle.md` guide for current blurb-writing practice:
+include exact known code surfaces, explicit exclusions, decision rules, and
+reporting requirements. Named surfaces in a blurb are starting points, not
+authority; if they are stale or inconsistent with the live repo, the doer should
+report that mismatch instead of silently substituting a different path.
+
 ## Commit and push convention
 
 The user generally delegates commit/push judgment to the manager.

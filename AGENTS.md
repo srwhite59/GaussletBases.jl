@@ -110,6 +110,13 @@ or enabling a current workflow. Do not optimize for the fewest lines when
 clarity or numerical safety would suffer, but prefer net simplification when the
 benefit is otherwise equal.
 
+## Blurb style
+
+Use `BlurbStyle.md` when drafting repo-manager to repo-doer blurbs. Blurbs
+should include exact known code surfaces, explicit exclusions, decision rules,
+and reporting requirements rather than expecting the doer to reconstruct the
+manager's searches or reasoning.
+
 ## Structured state, staged metadata, and test runtime rules
 
 Short commandment:

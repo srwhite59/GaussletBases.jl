@@ -30,6 +30,11 @@ If the manager has already searched the repo, name the files, functions,
 fixtures, commits, artifacts, or docs that matter. Do not expect the doer to
 repeat the same search and arrive at the same interpretation.
 
+Named surfaces are starting points, not authority. If a named file, function,
+fixture, or artifact is missing or inconsistent with the live repo, the doer
+should stop and report the mismatch instead of silently substituting a different
+path.
+
 Prefer:
 
 ```text
@@ -111,6 +116,17 @@ Weak targets:
 - might be useful later.
 
 If the target is weak, stop and ask whether the pass should happen.
+
+## Respect Carrying Cost
+
+Every line of source, test, documentation, compatibility glue, metadata, and
+adapter code has carrying cost. A blurb that asks for new artifacts should say
+what live contract, clarity improvement, duplication reduction, performance
+gain, or current workflow justifies that cost.
+
+When two viable approaches have similar value, prefer the one that leaves fewer
+stale surfaces. For cleanup and retirement tasks, ask what old code or tests
+become removable rather than only what new coverage should be added.
 
 ## Give Decision Rules
 
