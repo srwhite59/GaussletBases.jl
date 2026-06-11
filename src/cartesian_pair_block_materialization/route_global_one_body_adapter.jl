@@ -343,56 +343,58 @@ function route_global_electron_nuclear_by_center_matrices(
     center_records = (),
     metadata = (;),
 )
-    inventory = _route_global_electron_nuclear_by_center_inventory(
-        source;
-        parent_axis_counts,
-        parent_axis_bundle_object,
-    )
-    if inventory.status !== :available_white_lindsey_decomposed_unit_pair_inventory
+    return @timeg "decomposed_wl.electron_nuclear_by_center.total" begin
+        inventory = _route_global_electron_nuclear_by_center_inventory(
+            source;
+            parent_axis_counts,
+            parent_axis_bundle_object,
+        )
+        if inventory.status !== :available_white_lindsey_decomposed_unit_pair_inventory
+            return _route_global_electron_nuclear_by_center_matrices_result(
+                inventory,
+                (),
+                :blocked_route_global_electron_nuclear_by_center_matrix_set,
+                inventory.blocker;
+                metadata,
+            )
+        end
+
+        center_tuple = _route_global_electron_nuclear_by_center_records(center_records)
+        isempty(center_tuple) &&
+            return _route_global_electron_nuclear_by_center_matrices_result(
+                inventory,
+                (),
+                :blocked_route_global_electron_nuclear_by_center_matrix_set,
+                :missing_electron_nuclear_center_records;
+                metadata,
+            )
+
+        matrix_results = Tuple(
+            _route_global_electron_nuclear_by_center_matrix_from_inventory(
+                inventory;
+                parent_axis_counts,
+                parent_axis_bundle_object,
+                coulomb_expansion,
+                center_record,
+                metadata,
+            ) for center_record in center_tuple
+        )
+        all_materialized = all(
+            result -> result.global_electron_nuclear_by_center_matrix_materialized,
+            matrix_results,
+        )
         return _route_global_electron_nuclear_by_center_matrices_result(
             inventory,
-            (),
+            matrix_results,
+            all_materialized ?
+            :materialized_route_global_electron_nuclear_by_center_matrix_set :
             :blocked_route_global_electron_nuclear_by_center_matrix_set,
-            inventory.blocker;
+            all_materialized ?
+            nothing :
+            _route_global_electron_nuclear_by_center_first_blocker(matrix_results);
             metadata,
         )
     end
-
-    center_tuple = _route_global_electron_nuclear_by_center_records(center_records)
-    isempty(center_tuple) &&
-        return _route_global_electron_nuclear_by_center_matrices_result(
-            inventory,
-            (),
-            :blocked_route_global_electron_nuclear_by_center_matrix_set,
-            :missing_electron_nuclear_center_records;
-            metadata,
-        )
-
-    matrix_results = Tuple(
-        _route_global_electron_nuclear_by_center_matrix_from_inventory(
-            inventory;
-            parent_axis_counts,
-            parent_axis_bundle_object,
-            coulomb_expansion,
-            center_record,
-            metadata,
-        ) for center_record in center_tuple
-    )
-    all_materialized = all(
-        result -> result.global_electron_nuclear_by_center_matrix_materialized,
-        matrix_results,
-    )
-    return _route_global_electron_nuclear_by_center_matrices_result(
-        inventory,
-        matrix_results,
-        all_materialized ?
-        :materialized_route_global_electron_nuclear_by_center_matrix_set :
-        :blocked_route_global_electron_nuclear_by_center_matrix_set,
-        all_materialized ?
-        nothing :
-        _route_global_electron_nuclear_by_center_first_blocker(matrix_results);
-        metadata,
-    )
 end
 
 function route_state_global_electron_nuclear_by_center_matrix(source; kwargs...)
@@ -408,6 +410,11 @@ function route_global_decomposed_wl_one_body_matrix(
     kinetic_1d = nothing,
     metadata = (;),
 )
+    timing_label =
+        term === :overlap ? "decomposed_wl.overlap.total" :
+        term === :kinetic ? "decomposed_wl.kinetic.total" :
+        "decomposed_wl.one_body.total"
+    return @timeg timing_label begin
     term in (:overlap, :kinetic) ||
         return _route_global_decomposed_wl_one_body_blocked_result(
             term,
@@ -429,25 +436,31 @@ function route_global_decomposed_wl_one_body_matrix(
         )
     end
 
-    local_batch = white_lindsey_boundary_stratum_one_body_blocks(
-        inventory.unit_pairs,
-        term;
-        parent_axis_counts,
-        overlap_1d,
-        kinetic_1d,
-    )
+    local_batch = @timeg "decomposed_wl.one_body.local_batch" begin
+        white_lindsey_boundary_stratum_one_body_blocks(
+            inventory.unit_pairs,
+            term;
+            parent_axis_counts,
+            overlap_1d,
+            kinetic_1d,
+        )
+    end
     local_collection = _route_global_decomposed_wl_one_body_local_collection(
         local_batch,
         inventory.unit_pairs,
         term,
     )
-    placement_plan = _route_global_one_body_placement_plan(
-        term,
-        local_collection;
-        global_dimension = inventory.retained_dimension,
-    )
-    global_matrix_result =
-        _route_global_one_body_global_matrix(term, placement_plan)
+    placement_plan = nothing
+    global_matrix_result = nothing
+    @timeg "decomposed_wl.one_body.global_placement" begin
+        placement_plan = _route_global_one_body_placement_plan(
+            term,
+            local_collection;
+            global_dimension = inventory.retained_dimension,
+        )
+        global_matrix_result =
+            _route_global_one_body_global_matrix(term, placement_plan)
+    end
     return _route_global_decomposed_wl_one_body_result(
         inventory,
         local_batch,
@@ -457,6 +470,7 @@ function route_global_decomposed_wl_one_body_matrix(
         term,
         metadata,
     )
+    end
 end
 
 function route_global_decomposed_wl_overlap_matrix(source; kwargs...)
@@ -1061,17 +1075,19 @@ function _route_global_electron_nuclear_by_center_inventory(
     parent_axis_counts = nothing,
     parent_axis_bundle_object = nothing,
 )
-    if _route_global_one_body_value(source, :object_kind, nothing) ===
-       :white_lindsey_decomposed_unit_pair_inventory
-        return source
+    return @timeg "decomposed_wl.inventory" begin
+        if _route_global_one_body_value(source, :object_kind, nothing) ===
+           :white_lindsey_decomposed_unit_pair_inventory
+            return source
+        end
+        return white_lindsey_decomposed_unit_pair_inventory(
+            source;
+            metadata = (;
+                parent_axis_counts,
+                parent_axis_bundle_object,
+            ),
+        )
     end
-    return white_lindsey_decomposed_unit_pair_inventory(
-        source;
-        metadata = (;
-            parent_axis_counts,
-            parent_axis_bundle_object,
-        ),
-    )
 end
 
 function _route_global_electron_nuclear_by_center_matrix_from_inventory(
@@ -1095,25 +1111,31 @@ function _route_global_electron_nuclear_by_center_matrix_from_inventory(
         )
     end
 
-    local_batch = white_lindsey_boundary_stratum_one_body_blocks(
-        inventory.unit_pairs,
-        :electron_nuclear_by_center;
-        parent_axis_counts,
-        parent_axis_bundle_object,
-        coulomb_expansion,
-        center_record,
-    )
+    local_batch = @timeg "decomposed_wl.electron_nuclear_by_center.local_batch" begin
+        white_lindsey_boundary_stratum_one_body_blocks(
+            inventory.unit_pairs,
+            :electron_nuclear_by_center;
+            parent_axis_counts,
+            parent_axis_bundle_object,
+            coulomb_expansion,
+            center_record,
+        )
+    end
     local_collection =
         _route_global_electron_nuclear_by_center_local_collection(
             local_batch,
             inventory.unit_pairs,
         )
-    placement_plan = one_body_electron_nuclear_by_center_placement_plan(
-        local_collection;
-        global_dimension = inventory.retained_dimension,
-    )
-    global_matrix_result =
-        one_body_global_electron_nuclear_by_center_matrix(placement_plan)
+    placement_plan = nothing
+    global_matrix_result = nothing
+    @timeg "decomposed_wl.electron_nuclear_by_center.global_placement" begin
+        placement_plan = one_body_electron_nuclear_by_center_placement_plan(
+            local_collection;
+            global_dimension = inventory.retained_dimension,
+        )
+        global_matrix_result =
+            one_body_global_electron_nuclear_by_center_matrix(placement_plan)
+    end
     return _route_global_electron_nuclear_by_center_result(
         inventory,
         local_batch,

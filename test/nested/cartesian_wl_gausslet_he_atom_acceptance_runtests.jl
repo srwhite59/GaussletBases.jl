@@ -485,7 +485,7 @@ function _wl_decomposed_he_atom_acceptance_audit(;
             route_global_overlap_build_elapsed_seconds = @elapsed begin
                 overlap_global =
                     WLHeAcceptanceCPBM.route_global_decomposed_wl_overlap_matrix(
-                        seed_report;
+                        decomposed_inventory;
                         parent_axis_counts = axis_inputs.parent_axis_counts,
                         parent_axis_bundle_object =
                             axis_inputs.parent_axis_bundle_object,
@@ -495,7 +495,7 @@ function _wl_decomposed_he_atom_acceptance_audit(;
             route_global_kinetic_build_elapsed_seconds = @elapsed begin
                 kinetic_global =
                     WLHeAcceptanceCPBM.route_global_decomposed_wl_kinetic_matrix(
-                        seed_report;
+                        decomposed_inventory;
                         parent_axis_counts = axis_inputs.parent_axis_counts,
                         parent_axis_bundle_object =
                             axis_inputs.parent_axis_bundle_object,
@@ -507,7 +507,7 @@ function _wl_decomposed_he_atom_acceptance_audit(;
                 @elapsed begin
                     by_center_global =
                         WLHeAcceptanceCPBM.route_global_electron_nuclear_by_center_matrices(
-                            seed_report;
+                            decomposed_inventory;
                             parent_axis_counts = axis_inputs.parent_axis_counts,
                             parent_axis_bundle_object =
                                 axis_inputs.parent_axis_bundle_object,
@@ -538,7 +538,7 @@ function _wl_decomposed_he_atom_acceptance_audit(;
         density_density_elapsed_seconds = @elapsed begin
             density_density =
                 WLHeAcceptanceCPBM.route_global_decomposed_wl_density_density_matrix(
-                    seed_report;
+                    decomposed_inventory;
                     parent_axis_counts = axis_inputs.parent_axis_counts,
                     parent_axis_bundle_object =
                         axis_inputs.parent_axis_bundle_object,

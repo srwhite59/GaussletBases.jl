@@ -243,24 +243,38 @@ representative run was:
 
 | phase | elapsed seconds |
 | --- | ---: |
-| parent seed report | 4.411 |
-| parent-axis setup | 0.026 |
-| decomposed inventory | 4.640 |
-| route-global overlap | 26.927 |
-| route-global kinetic | 0.729 |
-| route-global electron-nuclear by center | 33.788 |
-| one-electron Hamiltonian assembly | 0.063 |
-| density-density matrix build | 0.779 |
-| route operator and interaction build total | 62.287 |
-| Hamiltonian/interactions build total | 66.953 |
-| RHF solve | 0.788 |
-| total acceptance elapsed | 73.813 |
+| parent seed report | 4.413 |
+| parent-axis setup | 0.025 |
+| decomposed inventory | 4.753 |
+| route-global overlap | 26.606 |
+| route-global kinetic | 0.659 |
+| route-global electron-nuclear by center | 34.453 |
+| one-electron Hamiltonian assembly | 0.067 |
+| density-density matrix build | 0.713 |
+| route operator and interaction build total | 62.498 |
+| Hamiltonian/interactions build total | 67.276 |
+| RHF solve | 0.689 |
+| total acceptance elapsed | 74.117 |
 
-The slow phases are therefore route-global overlap and route-global
-electron-nuclear by-center assembly, not RHF, density-density, kinetic, or
-Hamiltonian summation. The older flat/non-module WL path in this repo is the
-right comparison target for the next optimization pass. The corresponding
-optimized functions are `_qwrg_diatomic_overlap_matrix`,
+The production route now carries TimeG scopes for decomposed WL inventory,
+overlap, kinetic, one-body local batching, one-body global placement,
+electron-nuclear by-center local batching, and electron-nuclear by-center
+global placement. In a two-pass same-process probe after threading the
+already-built decomposed inventory into the He route-global operator calls, the
+cold pass took about 79.8 seconds total and the warm pass took about 15.0
+seconds. The warm route-global overlap, kinetic, and density-density phases were
+about `0.013`, `0.017`, and `0.040` seconds respectively. The warm by-center
+electron-nuclear phase was still about `14.675` seconds, with TimeG attributing
+that cost to `decomposed_wl.electron_nuclear_by_center.local_batch`; global
+placement was about `0.29` seconds in the cold pass and below the live threshold
+in the warm pass. Threading the inventory did not materially change the cold
+one-electron timings, so the first redundant inventory rebuild was not the main
+cost center. The remaining slowness is local by-center nuclear block
+construction; the large cold overlap cost is primarily compilation.
+
+The older flat/non-module WL path in this repo is the right comparison target
+for the next optimization pass. The corresponding optimized functions are
+`_qwrg_diatomic_overlap_matrix`,
 `_qwrg_diatomic_kinetic_matrix`, `_qwrg_diatomic_nuclear_one_body_by_center`,
 and the direct/staged by-center nuclear helpers in `ordinary_qw_raw_blocks.jl`,
 with orchestration in `_ordinary_cartesian_qiu_white_operators_pure_bond_aligned_direct`.
@@ -268,11 +282,11 @@ That code batches work by reusing parent 1D bundles, filling product matrices
 directly for overlap/kinetic, precomputing per-axis Gaussian nuclear term
 tables once per unique center, and then contracting/filling blocks without
 reconstructing route inventories or local placement plans per operator. The
-next concrete optimization target is to make the decomposed/module route reuse
-the decomposed unit-pair inventory, pair coefficients, parent factor packets,
-and local block collections across overlap, kinetic, and nuclear assembly,
-rather than rebuilding equivalent route-local scaffolding separately for each
-term.
+next concrete optimization target is to make the decomposed/module
+electron-nuclear by-center route reuse per-axis Gaussian term tables and local
+unit-pair coefficient work across all by-center block construction, following
+the older flat WL batching pattern, rather than reconstructing those local
+inputs per decomposed unit pair.
 
 One supported exploratory probe with the same one-shell decomposed topology and
 finer Z = 2 spacing, `d = 0.15`, shrinks the physical endpoints to about
