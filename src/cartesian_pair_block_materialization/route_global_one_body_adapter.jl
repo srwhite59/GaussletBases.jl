@@ -407,15 +407,29 @@ function route_global_decomposed_wl_one_body_matrix(
     parent_axis_counts = nothing,
     parent_axis_bundle_object = nothing,
     overlap_1d = nothing,
+    position_1d = nothing,
+    x2_1d = nothing,
     kinetic_1d = nothing,
     metadata = (;),
 )
     timing_label =
         term === :overlap ? "decomposed_wl.overlap.total" :
         term === :kinetic ? "decomposed_wl.kinetic.total" :
+        term in (:position_x, :position_y, :position_z) ?
+        "decomposed_wl.position.total" :
+        term in (:x2_x, :x2_y, :x2_z) ? "decomposed_wl.x2.total" :
         "decomposed_wl.one_body.total"
     return @timeg timing_label begin
-    term in (:overlap, :kinetic) ||
+    term in (
+        :overlap,
+        :kinetic,
+        :position_x,
+        :position_y,
+        :position_z,
+        :x2_x,
+        :x2_y,
+        :x2_z,
+    ) ||
         return _route_global_decomposed_wl_one_body_blocked_result(
             term,
             :unsupported_decomposed_wl_one_body_term;
@@ -442,6 +456,8 @@ function route_global_decomposed_wl_one_body_matrix(
             term;
             parent_axis_counts,
             overlap_1d,
+            position_1d,
+            x2_1d,
             kinetic_1d,
             metadata,
         )
@@ -461,6 +477,8 @@ function route_global_decomposed_wl_one_body_matrix(
             term;
             parent_axis_counts,
             overlap_1d,
+            position_1d,
+            x2_1d,
             kinetic_1d,
             metadata,
         )
@@ -481,6 +499,8 @@ function route_global_decomposed_wl_one_body_matrix(
             term;
             parent_axis_counts,
             overlap_1d,
+            position_1d,
+            x2_1d,
             kinetic_1d,
         )
     end
@@ -524,6 +544,54 @@ function route_global_decomposed_wl_kinetic_matrix(source; kwargs...)
     return route_global_decomposed_wl_one_body_matrix(
         source;
         term = :kinetic,
+        kwargs...,
+    )
+end
+
+function route_global_decomposed_wl_position_x_matrix(source; kwargs...)
+    return route_global_decomposed_wl_one_body_matrix(
+        source;
+        term = :position_x,
+        kwargs...,
+    )
+end
+
+function route_global_decomposed_wl_position_y_matrix(source; kwargs...)
+    return route_global_decomposed_wl_one_body_matrix(
+        source;
+        term = :position_y,
+        kwargs...,
+    )
+end
+
+function route_global_decomposed_wl_position_z_matrix(source; kwargs...)
+    return route_global_decomposed_wl_one_body_matrix(
+        source;
+        term = :position_z,
+        kwargs...,
+    )
+end
+
+function route_global_decomposed_wl_x2_x_matrix(source; kwargs...)
+    return route_global_decomposed_wl_one_body_matrix(
+        source;
+        term = :x2_x,
+        kwargs...,
+    )
+end
+
+function route_global_decomposed_wl_x2_y_matrix(source; kwargs...)
+    return route_global_decomposed_wl_one_body_matrix(
+        source;
+        term = :x2_y,
+        kwargs...,
+    )
+end
+
+function route_global_decomposed_wl_x2_z_matrix(source; kwargs...)
+    return route_global_decomposed_wl_one_body_matrix(
+        source;
+        term = :x2_z,
         kwargs...,
     )
 end
@@ -733,6 +801,8 @@ function _route_global_decomposed_wl_streaming_one_body_matrix(
     term::Symbol;
     parent_axis_counts,
     overlap_1d = nothing,
+    position_1d = nothing,
+    x2_1d = nothing,
     kinetic_1d = nothing,
     metadata = (;),
 )
@@ -749,6 +819,8 @@ function _route_global_decomposed_wl_streaming_one_body_matrix(
             term;
             parent_axis_counts,
             overlap_1d,
+            position_1d,
+            x2_1d,
             kinetic_1d,
             unit_coefficient_cache = coefficient_cache,
             prepared_unit_cache = prepared_cache,
@@ -786,6 +858,8 @@ function _route_global_decomposed_wl_streaming_fill!(
     term::Symbol;
     parent_axis_counts,
     overlap_1d = nothing,
+    position_1d = nothing,
+    x2_1d = nothing,
     kinetic_1d = nothing,
     parent_axis_bundle_object = nothing,
     coulomb_expansion = nothing,
@@ -804,18 +878,57 @@ function _route_global_decomposed_wl_streaming_fill!(
         Dict{Any,Any}() :
         prepared_unit_cache
     axis_counts =
-        (term in (:overlap, :kinetic) ||
+        (term in (
+             :overlap,
+             :kinetic,
+             :position_x,
+             :position_y,
+             :position_z,
+             :x2_x,
+             :x2_y,
+             :x2_z,
+         ) ||
          term === :electron_nuclear_by_center) ?
         _axis_counts_tuple(parent_axis_counts) :
         nothing
     overlap_axes =
-        term in (:overlap, :kinetic) ? _overlap_1d_tuple(overlap_1d) : nothing
+        term in (
+            :overlap,
+            :kinetic,
+            :position_x,
+            :position_y,
+            :position_z,
+            :x2_x,
+            :x2_y,
+            :x2_z,
+        ) ? _overlap_1d_tuple(overlap_1d) : nothing
+    position_axes = term in (:position_x, :position_y, :position_z) ?
+                    _operator_1d_tuple(position_1d, "position_1d") :
+                    nothing
+    x2_axes = term in (:x2_x, :x2_y, :x2_z) ?
+              _operator_1d_tuple(x2_1d, "x2_1d") :
+              nothing
     kinetic_axes = term === :kinetic ? _operator_1d_tuple(
         kinetic_1d,
         "kinetic_1d",
     ) : nothing
-    if term in (:overlap, :kinetic)
+    if term in (
+        :overlap,
+        :kinetic,
+        :position_x,
+        :position_y,
+        :position_z,
+        :x2_x,
+        :x2_y,
+        :x2_z,
+    )
         _assert_overlap_axis_sizes(overlap_axes, axis_counts)
+    end
+    if term in (:position_x, :position_y, :position_z)
+        _assert_operator_axis_sizes(position_axes, axis_counts, "position_1d")
+    end
+    if term in (:x2_x, :x2_y, :x2_z)
+        _assert_operator_axis_sizes(x2_axes, axis_counts, "x2_1d")
     end
     if term === :kinetic
         _assert_operator_axis_sizes(kinetic_axes, axis_counts, "kinetic_1d")
@@ -973,7 +1086,31 @@ function _route_global_decomposed_wl_streaming_fill!(
                     overlap_axes,
                     kinetic_axes,
                 ) :
-                nothing
+                (
+                    term in (:position_x, :position_y, :position_z) ?
+                    _white_lindsey_pair_product_block_from_prepared_units(
+                        left_unit,
+                        right_unit,
+                        _route_global_decomposed_wl_axis_product_axes(
+                            term,
+                            overlap_axes,
+                            position_axes,
+                        ),
+                    ) :
+                    (
+                        term in (:x2_x, :x2_y, :x2_z) ?
+                        _white_lindsey_pair_product_block_from_prepared_units(
+                            left_unit,
+                            right_unit,
+                            _route_global_decomposed_wl_axis_product_axes(
+                                term,
+                                overlap_axes,
+                                x2_axes,
+                            ),
+                        ) :
+                        nothing
+                    )
+                )
             )
         isnothing(block) && throw(
             ArgumentError("unsupported streaming decomposed WL one-body term $(term)"),
@@ -1201,12 +1338,24 @@ function _route_global_decomposed_wl_factorized_one_body_matrix(
     term::Symbol;
     parent_axis_counts,
     overlap_1d = nothing,
+    position_1d = nothing,
+    x2_1d = nothing,
     kinetic_1d = nothing,
     metadata = (;),
 )
     axis_counts = _axis_counts_tuple(parent_axis_counts)
     overlap_axes = _overlap_1d_tuple(overlap_1d)
     _assert_overlap_axis_sizes(overlap_axes, axis_counts)
+    position_axes = term in (:position_x, :position_y, :position_z) ?
+                    _operator_1d_tuple(position_1d, "position_1d") :
+                    nothing
+    term in (:position_x, :position_y, :position_z) &&
+        _assert_operator_axis_sizes(position_axes, axis_counts, "position_1d")
+    x2_axes = term in (:x2_x, :x2_y, :x2_z) ?
+              _operator_1d_tuple(x2_1d, "x2_1d") :
+              nothing
+    term in (:x2_x, :x2_y, :x2_z) &&
+        _assert_operator_axis_sizes(x2_axes, axis_counts, "x2_1d")
     kinetic_axes = term === :kinetic ? _operator_1d_tuple(
         kinetic_1d,
         "kinetic_1d",
@@ -1266,6 +1415,62 @@ function _route_global_decomposed_wl_factorized_one_body_matrix(
                     (axis_overlap_x, axis_overlap_y, axis_kinetic_z),
                 ),
             )
+        elseif term in (:position_x, :position_y, :position_z)
+            ParentGaussletBases._nested_factorized_product_matrix(
+                factorized.factorized_basis,
+                _route_global_decomposed_wl_axis_factor_table(
+                    factorized.factorized_basis.x_functions,
+                    _route_global_decomposed_wl_axis_product_axes(
+                        term,
+                        overlap_axes,
+                        position_axes,
+                    )[1],
+                ),
+                _route_global_decomposed_wl_axis_factor_table(
+                    factorized.factorized_basis.y_functions,
+                    _route_global_decomposed_wl_axis_product_axes(
+                        term,
+                        overlap_axes,
+                        position_axes,
+                    )[2],
+                ),
+                _route_global_decomposed_wl_axis_factor_table(
+                    factorized.factorized_basis.z_functions,
+                    _route_global_decomposed_wl_axis_product_axes(
+                        term,
+                        overlap_axes,
+                        position_axes,
+                    )[3],
+                ),
+            )
+        elseif term in (:x2_x, :x2_y, :x2_z)
+            ParentGaussletBases._nested_factorized_product_matrix(
+                factorized.factorized_basis,
+                _route_global_decomposed_wl_axis_factor_table(
+                    factorized.factorized_basis.x_functions,
+                    _route_global_decomposed_wl_axis_product_axes(
+                        term,
+                        overlap_axes,
+                        x2_axes,
+                    )[1],
+                ),
+                _route_global_decomposed_wl_axis_factor_table(
+                    factorized.factorized_basis.y_functions,
+                    _route_global_decomposed_wl_axis_product_axes(
+                        term,
+                        overlap_axes,
+                        x2_axes,
+                    )[2],
+                ),
+                _route_global_decomposed_wl_axis_factor_table(
+                    factorized.factorized_basis.z_functions,
+                    _route_global_decomposed_wl_axis_product_axes(
+                        term,
+                        overlap_axes,
+                        x2_axes,
+                    )[3],
+                ),
+            )
         else
             throw(ArgumentError("unsupported factorized decomposed WL one-body term $(term)"))
         end
@@ -1300,6 +1505,24 @@ function _route_global_decomposed_wl_factorized_one_body_matrix(
         global_matrix_result,
         metadata = NamedTuple(metadata),
     )
+end
+
+function _route_global_decomposed_wl_axis_product_axes(
+    term::Symbol,
+    overlap_axes,
+    selected_axes,
+)
+    term in (:position_x, :x2_x) &&
+        return (selected_axes[1], overlap_axes[2], overlap_axes[3])
+    term in (:position_y, :x2_y) &&
+        return (overlap_axes[1], selected_axes[2], overlap_axes[3])
+    term in (:position_z, :x2_z) &&
+        return (overlap_axes[1], overlap_axes[2], selected_axes[3])
+    throw(ArgumentError("unsupported axis-product decomposed WL term $(term)"))
+end
+
+function _route_global_decomposed_wl_axis_factor_table(axis_functions, operator)
+    return _white_lindsey_factorized_axis_matrix_table(axis_functions, operator)
 end
 
 function _white_lindsey_factorized_axis_matrix_table(
@@ -1581,6 +1804,32 @@ function _route_global_decomposed_wl_streaming_global_matrix_result(
             materialized ?
             :materialized_global_kinetic_matrix :
             :blocked_global_kinetic_matrix,
+            materialized ? nothing : stream_state.blocker,
+            materialized ? matrix : nothing;
+            placed_block_count = stream_state.placed_block_count,
+            skipped_block_count = stream_state.skipped_count,
+            materialized,
+        )
+    elseif term in (:position_x, :position_y, :position_z)
+        return _one_body_global_position_result(
+            placement_plan,
+            term,
+            materialized ?
+            Symbol("materialized_global_", String(term), "_matrix") :
+            Symbol("blocked_global_", String(term), "_matrix"),
+            materialized ? nothing : stream_state.blocker,
+            materialized ? matrix : nothing;
+            placed_block_count = stream_state.placed_block_count,
+            skipped_block_count = stream_state.skipped_count,
+            materialized,
+        )
+    elseif term in (:x2_x, :x2_y, :x2_z)
+        return _one_body_global_x2_result(
+            placement_plan,
+            term,
+            materialized ?
+            Symbol("materialized_global_", String(term), "_matrix") :
+            Symbol("blocked_global_", String(term), "_matrix"),
             materialized ? nothing : stream_state.blocker,
             materialized ? matrix : nothing;
             placed_block_count = stream_state.placed_block_count,

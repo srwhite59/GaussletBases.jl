@@ -28,10 +28,22 @@ const CombinedGTOLayoutCPBM = GaussletBases.CartesianPairBlockMaterialization
         mixed_blocks = (;
             overlap = (; dense_block = [0.1; 0.2;;]),
             kinetic = (; dense_block = [0.3; 0.4;;]),
+            position_x = (; dense_block = [0.5; 0.6;;]),
+            position_y = (; dense_block = [0.7; 0.8;;]),
+            position_z = (; dense_block = [0.9; 1.0;;]),
+            x2_x = (; dense_block = [1.1; 1.2;;]),
+            x2_y = (; dense_block = [1.3; 1.4;;]),
+            x2_z = (; dense_block = [1.5; 1.6;;]),
         ),
         gto_blocks = (;
             overlap = (; dense_block = [1.5;;]),
             kinetic = (; dense_block = [3.0;;]),
+            position_x = (; dense_block = [2.0;;]),
+            position_y = (; dense_block = [2.1;;]),
+            position_z = (; dense_block = [2.2;;]),
+            x2_x = (; dense_block = [2.3;;]),
+            x2_y = (; dense_block = [2.4;;]),
+            x2_z = (; dense_block = [2.5;;]),
         ),
         mixed_nuclear_by_center_blocks = ((; dense_block = [-0.2; -0.3;;]),),
         gto_nuclear_by_center_blocks = ((; dense_block = [-0.7;;]),),
@@ -87,4 +99,37 @@ const CombinedGTOLayoutCPBM = GaussletBases.CartesianPairBlockMaterialization
     @test assembled.centers_summed_at_hamiltonian_assembly
     @test !assembled.direct_cartesian_product_assembly_used
     @test !assembled.ordinary_cartesian_ida_operators_used
+
+    moments =
+        CombinedGTOLayoutCPBM.route_global_combined_gto_residual_moment_matrices(
+            layout;
+            position_x_result = (; matrix = [0.0 0.0; 0.0 1.0]),
+            position_y_result = (; matrix = [0.0 0.1; 0.1 0.0]),
+            position_z_result = (; matrix = [1.0 0.0; 0.0 0.0]),
+            x2_x_result = (; matrix = [1.0 0.2; 0.2 1.5]),
+            x2_y_result = (; matrix = [1.1 0.0; 0.0 1.6]),
+            x2_z_result = (; matrix = [1.2 0.1; 0.1 1.7]),
+            gto_bundle = bundle,
+            mixed_gausslet_row_range = 1:2,
+        )
+
+    @test moments.status ==
+          :materialized_route_global_combined_gto_residual_moment_matrices
+    @test isnothing(moments.blocker)
+    @test moments.raw_moment_matrix_fields ==
+          (:position_x, :position_y, :position_z, :x2_x, :x2_y, :x2_z)
+    @test all(shape -> shape == (3, 3), values(moments.moment_matrix_shapes))
+    @test moments.position_x ≈ [
+        0.0 0.0 0.5
+        0.0 1.0 0.6
+        0.5 0.6 2.0
+    ]
+    @test moments.x2_z ≈ [
+        1.2 0.1 1.5
+        0.1 1.7 1.6
+        1.5 1.6 2.5
+    ]
+    @test !moments.raw_gto_density_density_used_as_final_operator
+    @test !moments.direct_cartesian_product_assembly_used
+    @test !moments.ordinary_cartesian_ida_operators_used
 end

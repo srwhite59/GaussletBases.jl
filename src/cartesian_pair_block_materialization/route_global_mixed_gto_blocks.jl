@@ -47,6 +47,12 @@ function route_global_mixed_gto_blocks_from_decomposed_units(
     center_records_tuple = Tuple(center_records)
     mixed_overlap = zeros(Float64, retained_dimension, gto_count)
     mixed_kinetic = zeros(Float64, retained_dimension, gto_count)
+    mixed_position_x = zeros(Float64, retained_dimension, gto_count)
+    mixed_position_y = zeros(Float64, retained_dimension, gto_count)
+    mixed_position_z = zeros(Float64, retained_dimension, gto_count)
+    mixed_x2_x = zeros(Float64, retained_dimension, gto_count)
+    mixed_x2_y = zeros(Float64, retained_dimension, gto_count)
+    mixed_x2_z = zeros(Float64, retained_dimension, gto_count)
     mixed_nuclear = Tuple(
         zeros(Float64, retained_dimension, gto_count) for _ in center_records_tuple
     )
@@ -101,6 +107,12 @@ function route_global_mixed_gto_blocks_from_decomposed_units(
         covered[row_range] .= true
         mixed_overlap[row_range, :] .= unit_result.mixed_overlap
         mixed_kinetic[row_range, :] .= unit_result.mixed_kinetic
+        mixed_position_x[row_range, :] .= unit_result.mixed_position_x
+        mixed_position_y[row_range, :] .= unit_result.mixed_position_y
+        mixed_position_z[row_range, :] .= unit_result.mixed_position_z
+        mixed_x2_x[row_range, :] .= unit_result.mixed_x2_x
+        mixed_x2_y[row_range, :] .= unit_result.mixed_x2_y
+        mixed_x2_z[row_range, :] .= unit_result.mixed_x2_z
         for index in eachindex(mixed_nuclear)
             mixed_nuclear[index][row_range, :] .= unit_result.mixed_nuclear[index]
         end
@@ -120,7 +132,16 @@ function route_global_mixed_gto_blocks_from_decomposed_units(
             :missing_mixed_gto_route_global_row_coverage,
             inventory,
             supplement,
-            (overlap = mixed_overlap, kinetic = mixed_kinetic),
+            (;
+                overlap = mixed_overlap,
+                kinetic = mixed_kinetic,
+                position_x = mixed_position_x,
+                position_y = mixed_position_y,
+                position_z = mixed_position_z,
+                x2_x = mixed_x2_x,
+                x2_y = mixed_x2_y,
+                x2_z = mixed_x2_z,
+            ),
             gto_blocks,
             mixed_nuclear,
             gto_nuclear_blocks;
@@ -136,7 +157,16 @@ function route_global_mixed_gto_blocks_from_decomposed_units(
         nothing,
         inventory,
         supplement,
-        (overlap = mixed_overlap, kinetic = mixed_kinetic),
+        (;
+            overlap = mixed_overlap,
+            kinetic = mixed_kinetic,
+            position_x = mixed_position_x,
+            position_y = mixed_position_y,
+            position_z = mixed_position_z,
+            x2_x = mixed_x2_x,
+            x2_y = mixed_x2_y,
+            x2_z = mixed_x2_z,
+        ),
         gto_blocks,
         mixed_nuclear,
         gto_nuclear_blocks;
@@ -157,7 +187,7 @@ function _route_global_mixed_gto_blocks_input_blocker(inventory, supplement)
     retained_dimension isa Integer && retained_dimension > 0 ||
         return :missing_decomposed_wl_retained_dimension
     units = _route_global_combined_gto_property(inventory, :retained_units, ())
-    units isa Tuple && !isempty(units) ||
+    (units isa AbstractVector || units isa Tuple) && !isempty(units) ||
         return :missing_decomposed_wl_retained_units
     _route_global_combined_gto_has_orbitals(supplement) ||
         return :missing_gto_supplement_orbitals
@@ -271,6 +301,48 @@ function _route_global_mixed_gto_unit_blocks(
         :mixed_gto_kinetic_dimension_mismatch,
         unit,
     )
+    mixed_position_x = _route_global_mixed_gto_contract_unit_block(
+        support_coefficients,
+        bundle.mixed_blocks.position_x.dense_block,
+        column_range,
+        :mixed_gto_position_x_dimension_mismatch,
+        unit,
+    )
+    mixed_position_y = _route_global_mixed_gto_contract_unit_block(
+        support_coefficients,
+        bundle.mixed_blocks.position_y.dense_block,
+        column_range,
+        :mixed_gto_position_y_dimension_mismatch,
+        unit,
+    )
+    mixed_position_z = _route_global_mixed_gto_contract_unit_block(
+        support_coefficients,
+        bundle.mixed_blocks.position_z.dense_block,
+        column_range,
+        :mixed_gto_position_z_dimension_mismatch,
+        unit,
+    )
+    mixed_x2_x = _route_global_mixed_gto_contract_unit_block(
+        support_coefficients,
+        bundle.mixed_blocks.x2_x.dense_block,
+        column_range,
+        :mixed_gto_x2_x_dimension_mismatch,
+        unit,
+    )
+    mixed_x2_y = _route_global_mixed_gto_contract_unit_block(
+        support_coefficients,
+        bundle.mixed_blocks.x2_y.dense_block,
+        column_range,
+        :mixed_gto_x2_y_dimension_mismatch,
+        unit,
+    )
+    mixed_x2_z = _route_global_mixed_gto_contract_unit_block(
+        support_coefficients,
+        bundle.mixed_blocks.x2_z.dense_block,
+        column_range,
+        :mixed_gto_x2_z_dimension_mismatch,
+        unit,
+    )
     mixed_nuclear = Tuple(
         _route_global_mixed_gto_contract_unit_block(
             support_coefficients,
@@ -280,10 +352,21 @@ function _route_global_mixed_gto_unit_blocks(
             unit,
         ) for block in bundle.mixed_nuclear_by_center_blocks
     )
-    any(block -> block isa Symbol, (mixed_overlap, mixed_kinetic)) &&
+    mixed_one_body_blocks = (
+        mixed_overlap,
+        mixed_kinetic,
+        mixed_position_x,
+        mixed_position_y,
+        mixed_position_z,
+        mixed_x2_x,
+        mixed_x2_y,
+        mixed_x2_z,
+    )
+    one_body_blocker = findfirst(block -> block isa Symbol, mixed_one_body_blocks)
+    isnothing(one_body_blocker) ||
         return _route_global_mixed_gto_unit_result(
             :blocked_route_global_mixed_gto_unit_blocks,
-            mixed_overlap isa Symbol ? mixed_overlap : mixed_kinetic,
+            mixed_one_body_blocks[one_body_blocker],
             unit,
             column_range,
             nothing,
@@ -313,6 +396,12 @@ function _route_global_mixed_gto_unit_blocks(
         mixed_kinetic,
         mixed_nuclear,
         bundle.gto_blocks;
+        mixed_position_x,
+        mixed_position_y,
+        mixed_position_z,
+        mixed_x2_x,
+        mixed_x2_y,
+        mixed_x2_z,
         gto_nuclear_blocks = bundle.gto_nuclear_by_center_blocks,
     )
 end
@@ -339,6 +428,12 @@ function _route_global_mixed_gto_unit_result(
     mixed_kinetic,
     mixed_nuclear,
     gto_blocks;
+    mixed_position_x = nothing,
+    mixed_position_y = nothing,
+    mixed_position_z = nothing,
+    mixed_x2_x = nothing,
+    mixed_x2_y = nothing,
+    mixed_x2_z = nothing,
     gto_nuclear_blocks = (),
 )
     return (;
@@ -355,6 +450,12 @@ function _route_global_mixed_gto_unit_result(
         column_range,
         mixed_overlap,
         mixed_kinetic,
+        mixed_position_x,
+        mixed_position_y,
+        mixed_position_z,
+        mixed_x2_x,
+        mixed_x2_y,
+        mixed_x2_z,
         mixed_nuclear,
         gto_blocks,
         gto_nuclear_blocks,
@@ -397,6 +498,12 @@ function _route_global_mixed_gto_blocks_result(
             (;
                 overlap = (; dense_block = mixed_blocks.overlap),
                 kinetic = (; dense_block = mixed_blocks.kinetic),
+                position_x = (; dense_block = mixed_blocks.position_x),
+                position_y = (; dense_block = mixed_blocks.position_y),
+                position_z = (; dense_block = mixed_blocks.position_z),
+                x2_x = (; dense_block = mixed_blocks.x2_x),
+                x2_y = (; dense_block = mixed_blocks.x2_y),
+                x2_z = (; dense_block = mixed_blocks.x2_z),
             ),
         gto_blocks = isnothing(gto_blocks) ? (;) : gto_blocks,
         mixed_nuclear_by_center_blocks = mixed_nuclear_blocks,

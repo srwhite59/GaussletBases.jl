@@ -89,6 +89,246 @@ function route_global_combined_gto_one_electron_matrices(
     )
 end
 
+function route_global_combined_gto_residual_moment_matrices(
+    layout;
+    position_x_result = nothing,
+    position_y_result = nothing,
+    position_z_result = nothing,
+    x2_x_result = nothing,
+    x2_y_result = nothing,
+    x2_z_result = nothing,
+    gto_bundle = nothing,
+    mixed_gausslet_row_range = nothing,
+    metadata = (;),
+)
+    fields = (:position_x, :position_y, :position_z, :x2_x, :x2_y, :x2_z)
+    gg_results = (;
+        position_x = position_x_result,
+        position_y = position_y_result,
+        position_z = position_z_result,
+        x2_x = x2_x_result,
+        x2_y = x2_y_result,
+        x2_z = x2_z_result,
+    )
+    blocker = _route_global_combined_gto_moment_matrix_blocker(
+        layout,
+        gg_results,
+        gto_bundle,
+        mixed_gausslet_row_range,
+        fields,
+    )
+    if !isnothing(blocker)
+        return _route_global_combined_gto_moment_matrix_result(
+            :blocked_route_global_combined_gto_residual_moment_matrices,
+            blocker,
+            layout,
+            nothing,
+            nothing,
+            nothing,
+            nothing,
+            nothing,
+            nothing;
+            gto_bundle,
+            mixed_gausslet_row_range,
+            metadata,
+        )
+    end
+
+    position_x = _route_global_combined_gto_moment_matrix(layout, gg_results, gto_bundle, :position_x)
+    position_y = _route_global_combined_gto_moment_matrix(layout, gg_results, gto_bundle, :position_y)
+    position_z = _route_global_combined_gto_moment_matrix(layout, gg_results, gto_bundle, :position_z)
+    x2_x = _route_global_combined_gto_moment_matrix(layout, gg_results, gto_bundle, :x2_x)
+    x2_y = _route_global_combined_gto_moment_matrix(layout, gg_results, gto_bundle, :x2_y)
+    x2_z = _route_global_combined_gto_moment_matrix(layout, gg_results, gto_bundle, :x2_z)
+
+    return _route_global_combined_gto_moment_matrix_result(
+        :materialized_route_global_combined_gto_residual_moment_matrices,
+        nothing,
+        layout,
+        position_x,
+        position_y,
+        position_z,
+        x2_x,
+        x2_y,
+        x2_z;
+        gto_bundle,
+        mixed_gausslet_row_range,
+        metadata,
+    )
+end
+
+function _route_global_combined_gto_moment_matrix_blocker(
+    layout,
+    gg_results,
+    gto_bundle,
+    mixed_gausslet_row_range,
+    fields,
+)
+    _route_global_combined_gto_property(layout, :status, nothing) ===
+        :available_route_global_combined_gto_basis_layout ||
+        return :missing_route_global_combined_gto_basis_layout
+    isnothing(gto_bundle) && return :missing_provider_level_gto_bundle
+
+    gausslet_dimension = _route_global_combined_gto_property(
+        layout,
+        :gausslet_retained_dimension,
+        nothing,
+    )
+    gausslet_dimension isa Integer && gausslet_dimension > 0 ||
+        return :missing_gausslet_retained_dimension
+    gto_count = _route_global_combined_gto_property(
+        layout,
+        :gto_supplement_orbital_count,
+        nothing,
+    )
+    gto_count isa Integer && gto_count > 0 ||
+        return :missing_gto_supplement_orbital_count
+
+    first_mixed = _route_global_combined_gto_moment_bundle_block(
+        gto_bundle,
+        :mixed_blocks,
+        first(fields),
+    )
+    first_mixed isa AbstractMatrix ||
+        return Symbol("missing_mixed_gto_", String(first(fields)), "_block")
+    mixed_range = _route_global_combined_gto_mixed_row_range(
+        first_mixed,
+        mixed_gausslet_row_range,
+    )
+    if mixed_range != _route_global_combined_gto_property(
+        layout,
+        :gausslet_retained_range,
+        nothing,
+    )
+        return :missing_mixed_gto_route_global_row_coverage
+    end
+
+    for field in fields
+        gg_matrix = _route_global_combined_gto_moment_gg_matrix(gg_results, field)
+        gg_matrix isa AbstractMatrix ||
+            return Symbol("missing_route_global_", String(field), "_matrix")
+        size(gg_matrix) == (gausslet_dimension, gausslet_dimension) ||
+            return Symbol("route_global_", String(field), "_matrix_dimension_mismatch")
+
+        mixed_matrix =
+            _route_global_combined_gto_moment_bundle_block(gto_bundle, :mixed_blocks, field)
+        mixed_matrix isa AbstractMatrix ||
+            return Symbol("missing_mixed_gto_", String(field), "_block")
+        size(mixed_matrix) == (gausslet_dimension, gto_count) ||
+            return Symbol("mixed_gto_", String(field), "_dimension_mismatch")
+
+        gto_matrix =
+            _route_global_combined_gto_moment_bundle_block(gto_bundle, :gto_blocks, field)
+        gto_matrix isa AbstractMatrix ||
+            return Symbol("missing_gto_gto_", String(field), "_block")
+        size(gto_matrix) == (gto_count, gto_count) ||
+            return Symbol("gto_gto_", String(field), "_dimension_mismatch")
+    end
+    return nothing
+end
+
+function _route_global_combined_gto_moment_matrix(
+    layout,
+    gg_results,
+    gto_bundle,
+    field::Symbol,
+)
+    return _route_global_combined_gto_overlap_matrix(
+        layout,
+        _route_global_combined_gto_moment_gg_matrix(gg_results, field),
+        _route_global_combined_gto_moment_bundle_block(gto_bundle, :mixed_blocks, field),
+        _route_global_combined_gto_moment_bundle_block(gto_bundle, :gto_blocks, field),
+    )
+end
+
+function _route_global_combined_gto_moment_gg_matrix(gg_results, field::Symbol)
+    result = getproperty(gg_results, field)
+    return _route_global_combined_gto_property(result, :matrix, nothing)
+end
+
+function _route_global_combined_gto_moment_bundle_block(
+    gto_bundle,
+    block_group::Symbol,
+    field::Symbol,
+)
+    return _route_global_combined_gto_nested_property(
+        gto_bundle,
+        (block_group, field, :dense_block),
+        nothing,
+    )
+end
+
+function _route_global_combined_gto_moment_matrix_result(
+    status::Symbol,
+    blocker,
+    layout,
+    position_x,
+    position_y,
+    position_z,
+    x2_x,
+    x2_y,
+    x2_z;
+    gto_bundle,
+    mixed_gausslet_row_range,
+    metadata,
+)
+    materialized =
+        status === :materialized_route_global_combined_gto_residual_moment_matrices
+    return (;
+        object_kind = :route_global_combined_gto_residual_moment_matrices,
+        status,
+        blocker,
+        layout_status =
+            _route_global_combined_gto_property(layout, :status, :unavailable),
+        layout_kind =
+            _route_global_combined_gto_property(layout, :layout_kind, :unavailable),
+        gausslet_retained_range =
+            _route_global_combined_gto_property(layout, :gausslet_retained_range, :unavailable),
+        gausslet_retained_dimension =
+            _route_global_combined_gto_property(layout, :gausslet_retained_dimension, :unavailable),
+        gto_supplement_range =
+            _route_global_combined_gto_property(layout, :gto_supplement_range, :unavailable),
+        gto_supplement_orbital_count =
+            _route_global_combined_gto_property(layout, :gto_supplement_orbital_count, :unavailable),
+        total_combined_dimension =
+            _route_global_combined_gto_property(layout, :total_combined_dimension, :unavailable),
+        mixed_gausslet_row_range =
+            _route_global_combined_gto_effective_mixed_row_range(
+                gto_bundle,
+                mixed_gausslet_row_range,
+            ),
+        position_x,
+        position_y,
+        position_z,
+        x2_x,
+        x2_y,
+        x2_z,
+        raw_moment_matrix_fields =
+            materialized ? (:position_x, :position_y, :position_z, :x2_x, :x2_y, :x2_z) : (),
+        moment_matrix_shapes =
+            materialized ?
+            (;
+                position_x = size(position_x),
+                position_y = size(position_y),
+                position_z = size(position_z),
+                x2_x = size(x2_x),
+                x2_y = size(x2_y),
+                x2_z = size(x2_z),
+            ) :
+            (;),
+        route_global_combined_gto_residual_moment_matrices_materialized =
+            materialized,
+        raw_gto_density_density_used_as_final_operator = false,
+        full_parent_window_cpb_used = false,
+        direct_cartesian_product_assembly_used = false,
+        ordinary_cartesian_ida_operators_used = false,
+        generalized_overlap_final_solve = false,
+        pqs_transforms_materialized = false,
+        exports_or_artifacts = false,
+        metadata = NamedTuple(metadata),
+    )
+end
+
 function _route_global_combined_gto_matrix_blocker(
     layout,
     overlap_result,
