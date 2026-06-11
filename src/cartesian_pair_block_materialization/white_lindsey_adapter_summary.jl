@@ -568,7 +568,13 @@ function _white_lindsey_unit_descriptor_status(
     source_cpb,
     source_cpb_count::Int,
 )
-    unit.unit_kind === :white_lindsey_boundary_stratum_retained_unit || return (
+    unit_kind_supported =
+        unit.unit_kind === :white_lindsey_boundary_stratum_retained_unit ||
+        (
+            unit.unit_kind === :direct_cpb_retained_unit &&
+            stratum_kind === :direct_core
+        )
+    unit_kind_supported || return (
         :blocked_white_lindsey_boundary_stratum_unit_adapter_descriptor,
         :not_white_lindsey_boundary_stratum_retained_unit,
     )

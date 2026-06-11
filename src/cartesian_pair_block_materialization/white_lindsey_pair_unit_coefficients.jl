@@ -71,32 +71,40 @@ end
 function white_lindsey_boundary_stratum_pair_unit_coefficients(
     unit_pairs::Tuple{Vararg{CUP.UnitPairRecord}},
 )
-    cache = Dict{Symbol,Any}()
-    results = Tuple(
-        _white_lindsey_pair_unit_coefficients_result(
-            unit_pair,
-            _white_lindsey_unit_coefficients_from_local_cache(
-                cache,
-                unit_pair.left_unit,
-            ),
-            _white_lindsey_unit_coefficients_from_local_cache(
-                cache,
-                unit_pair.right_unit,
-            ),
-            length(cache),
-        )
-        for unit_pair in unit_pairs
-    )
-    return _white_lindsey_pair_unit_coefficients_batch_result(
-        results,
-        length(cache),
-    )
+    return _white_lindsey_boundary_stratum_pair_unit_coefficients(unit_pairs)
 end
 
 function white_lindsey_boundary_stratum_pair_unit_coefficients(
     unit_pairs::AbstractVector{<:CUP.UnitPairRecord},
 )
-    return white_lindsey_boundary_stratum_pair_unit_coefficients(Tuple(unit_pairs))
+    return _white_lindsey_boundary_stratum_pair_unit_coefficients(unit_pairs)
+end
+
+function _white_lindsey_boundary_stratum_pair_unit_coefficients(unit_pairs)
+    cache = Dict{Symbol,Any}()
+    results = map(
+        unit_pair ->
+            _white_lindsey_pair_unit_coefficients_result(
+                unit_pair,
+                _white_lindsey_unit_coefficients_from_local_cache(
+                    cache,
+                    unit_pair.left_unit,
+                ),
+                _white_lindsey_unit_coefficients_from_local_cache(
+                    cache,
+                    unit_pair.right_unit,
+                ),
+                length(cache),
+            ),
+        unit_pairs,
+    )
+    if unit_pairs isa Tuple
+        results = Tuple(results)
+    end
+    return _white_lindsey_pair_unit_coefficients_batch_result(
+        results,
+        length(cache),
+    )
 end
 
 function _white_lindsey_unit_coefficients_from_local_cache(cache, unit_or_descriptor)

@@ -9,12 +9,35 @@ const _WHITE_LINDSEY_ACCEPTANCE_ONE_BODY_TERMS = (
     :kinetic,
     :electron_nuclear_by_center,
 )
+const _WHITE_LINDSEY_COMPACT_PAIR_SUMMARY_LIMIT = 1024
 
 function white_lindsey_decomposed_unit_pair_inventory(
     plan::CUP.UnitPairPlan;
     supported_terms = _WHITE_LINDSEY_ACCEPTANCE_ONE_BODY_TERMS,
     metadata = (;),
 )
+    materialized_pairs =
+        _white_lindsey_shellification_unit_pair_records_with_ranges(
+            plan;
+            metadata = NamedTuple(metadata),
+        )
+    if materialized_pairs.status ===
+       :available_shellification_decomposed_wl_unit_pair_records
+        return white_lindsey_decomposed_unit_pair_inventory(
+            materialized_pairs.unit_pairs;
+            source_kind = :cartesian_shellification_retained_unit_pair_plan,
+            supported_terms,
+            metadata = merge(
+                NamedTuple(metadata),
+                (;
+                    shellification_unit_pair_plan_source =
+                        :cartesian_unit_pair_plan,
+                    retained_range_source =
+                        :shellification_source_cpb_support_order,
+                ),
+            ),
+        )
+    end
     return white_lindsey_decomposed_unit_pair_inventory(
         CUP.unit_pairs(plan);
         source_kind = :cartesian_unit_pair_plan,
@@ -62,11 +85,24 @@ function white_lindsey_decomposed_unit_pair_inventory(
     pairs::AbstractVector{<:CUP.UnitPairRecord};
     kwargs...,
 )
-    return white_lindsey_decomposed_unit_pair_inventory(Tuple(pairs); kwargs...)
+    return _white_lindsey_decomposed_unit_pair_inventory_from_pairs(
+        pairs;
+        kwargs...,
+    )
 end
 
 function white_lindsey_decomposed_unit_pair_inventory(
     pairs::Tuple{Vararg{CUP.UnitPairRecord}};
+    kwargs...,
+)
+    return _white_lindsey_decomposed_unit_pair_inventory_from_pairs(
+        pairs;
+        kwargs...,
+    )
+end
+
+function _white_lindsey_decomposed_unit_pair_inventory_from_pairs(
+    pairs;
     source_kind::Symbol = :unit_pair_records,
     supported_terms = _WHITE_LINDSEY_ACCEPTANCE_ONE_BODY_TERMS,
     metadata = (;),
@@ -173,6 +209,192 @@ function _white_lindsey_seed_decomposed_unit_pairs(
         end
     end
     return Tuple(pair_records)
+end
+
+function _white_lindsey_shellification_unit_pair_records_with_ranges(
+    plan::CUP.UnitPairPlan;
+    metadata::NamedTuple,
+)
+    units = CRU.units(plan.retained_unit_plan)
+    materialized_units = CRU.RetainedUnitRecord[]
+    next_column = 1
+    for unit in units
+        materialized =
+            _white_lindsey_shellification_retained_unit_with_range(
+                unit,
+                next_column;
+                metadata,
+            )
+        materialized.status ===
+        :available_shellification_decomposed_wl_retained_unit ||
+            return (;
+                status = :blocked_shellification_decomposed_wl_unit_pair_records,
+                blocker = materialized.blocker,
+                blocked_unit_key = unit.unit_key,
+                retained_units = (),
+                unit_pairs = (),
+            )
+        push!(materialized_units, materialized.unit)
+        next_column = last(materialized.unit.column_range) + 1
+    end
+    by_key = Dict(unit.unit_key => unit for unit in materialized_units)
+    materialized_pairs = CUP.UnitPairRecord[]
+    for pair in CUP.unit_pairs(plan)
+        push!(
+            materialized_pairs,
+            CUP.UnitPairRecord(
+                pair.pair_key,
+                pair.pair_index,
+                pair.pair_family,
+                by_key[pair.left_unit_key],
+                by_key[pair.right_unit_key],
+                pair.left_index,
+                pair.right_index,
+                pair.left_unit_key,
+                pair.right_unit_key,
+                pair.left_unit_kind,
+                pair.right_unit_kind,
+                pair.route_core_pair_sidecar,
+                false,
+                merge(
+                    pair.metadata,
+                    (;
+                        retained_range_source =
+                            :shellification_source_cpb_support_order,
+                    ),
+                ),
+            ),
+        )
+    end
+    return (;
+        status = :available_shellification_decomposed_wl_unit_pair_records,
+        blocker = nothing,
+        blocked_unit_key = nothing,
+        retained_units = Tuple(materialized_units),
+        unit_pairs = materialized_pairs,
+    )
+end
+
+function _white_lindsey_shellification_retained_unit_with_range(
+    unit::CRU.RetainedUnitRecord,
+    next_column::Int;
+    metadata::NamedTuple,
+)
+    source_cpb_count = length(unit.source_cpbs)
+    source_cpb_count == 1 || return (;
+        status = :blocked_shellification_decomposed_wl_retained_unit,
+        blocker = :white_lindsey_unit_source_cpb_count_not_one,
+        unit = nothing,
+    )
+    source_cpb = only(unit.source_cpbs)
+    stratum_kind = _white_lindsey_shellification_unit_stratum_kind(unit)
+    _white_lindsey_shellification_unit_kind_supported(unit, stratum_kind) ||
+        return (;
+            status = :blocked_shellification_decomposed_wl_retained_unit,
+            blocker = :unsupported_decomposed_wl_unit_kind,
+            unit = nothing,
+        )
+    shape = CPB.shape(source_cpb)
+    retained_counts =
+        _white_lindsey_shellification_unit_retained_counts(
+            stratum_kind,
+            shape,
+            metadata,
+        )
+    isnothing(retained_counts) && return (;
+        status = :blocked_shellification_decomposed_wl_retained_unit,
+        blocker = :missing_shellification_wl_retained_count_policy,
+        unit = nothing,
+    )
+    dimension = retained_counts.x * retained_counts.y * retained_counts.z
+    column_range = next_column:(next_column + dimension - 1)
+    unit_context = _white_lindsey_seed_unit_context_metadata(metadata)
+    materialized_metadata = merge(
+        unit.metadata,
+        unit_context,
+        (;
+            stratum_kind,
+            retained_counts,
+            retained_range_source = :shellification_source_cpb_support_order,
+            shellification_backed_decomposed_wl_inventory = true,
+            low_order_materialized_seed_inventory_used = false,
+        ),
+    )
+    return (;
+        status = :available_shellification_decomposed_wl_retained_unit,
+        blocker = nothing,
+        unit = CRU.RetainedUnitRecord(
+            unit.unit_key,
+            unit.unit_index,
+            unit.unit_kind,
+            unit.source_contract_key,
+            unit.terminal_region_key,
+            unit.terminal_region_role,
+            unit.terminal_region_kind,
+            unit.lowering_kind,
+            unit.retained_rule,
+            unit.realization_rule,
+            unit.owned_support,
+            unit.source_cpbs,
+            unit.source_cpb_index,
+            :available,
+            dimension,
+            :available,
+            column_range,
+            unit.route_core_final_unit,
+            false,
+            materialized_metadata,
+        ),
+    )
+end
+
+function _white_lindsey_shellification_unit_retained_counts(
+    stratum_kind,
+    shape,
+    metadata::NamedTuple,
+)
+    shape_counts = (; x = Int(shape[1]), y = Int(shape[2]), z = Int(shape[3]))
+    stratum_kind === :direct_core && return shape_counts
+    stratum_kind === :corner_cpb && return (; x = 1, y = 1, z = 1)
+    nside = _white_lindsey_shellification_nside(metadata)
+    isnothing(nside) && return nothing
+    nside >= 3 || return nothing
+    retained_side = nside - 2
+    axes = (:x, :y, :z)
+    retained = Dict(axis => 1 for axis in axes)
+    for (axis, count) in zip(axes, shape)
+        if count > 1
+            Int(count) >= nside || return nothing
+            retained[axis] = retained_side
+        end
+    end
+    return (; x = retained[:x], y = retained[:y], z = retained[:z])
+end
+
+function _white_lindsey_shellification_nside(metadata::NamedTuple)
+    haskey(metadata, :nside) && return Int(metadata.nside)
+    haskey(metadata, :q) && return Int(metadata.q)
+    haskey(metadata, :n_s) && return Int(metadata.n_s)
+    haskey(metadata, :ns) && return Int(metadata.ns)
+    return nothing
+end
+
+function _white_lindsey_shellification_unit_stratum_kind(
+    unit::CRU.RetainedUnitRecord,
+)
+    metadata_kind = _white_lindsey_unit_metadata_value(unit, :stratum_kind)
+    !isnothing(metadata_kind) && return metadata_kind
+    unit.unit_kind === :direct_cpb_retained_unit && return :direct_core
+    return nothing
+end
+
+function _white_lindsey_shellification_unit_kind_supported(unit, stratum_kind)
+    unit.unit_kind === :white_lindsey_boundary_stratum_retained_unit &&
+        stratum_kind in (:facet_cpb, :face_cpb, :edge_cpb, :corner_cpb) &&
+        return true
+    unit.unit_kind === :direct_cpb_retained_unit && stratum_kind === :direct_core &&
+        return true
+    return false
 end
 
 function _white_lindsey_seed_decomposed_units(source::NamedTuple; metadata = (;))
@@ -517,7 +739,10 @@ end
 
 function _white_lindsey_decomposed_inventory_blocker(units)
     all(
-        unit -> unit.unit_kind === :white_lindsey_boundary_stratum_retained_unit,
+        unit -> unit.unit_kind in (
+            :direct_cpb_retained_unit,
+            :white_lindsey_boundary_stratum_retained_unit,
+        ),
         units,
     ) || return :unsupported_decomposed_wl_unit_kind
     all(unit -> unit.dimension_status === :available && !isnothing(unit.dimension), units) ||
@@ -556,6 +781,8 @@ function _white_lindsey_decomposed_inventory_unit_summaries(units)
 end
 
 function _white_lindsey_decomposed_inventory_pair_summaries(pairs, blocker)
+    length(pairs) > _WHITE_LINDSEY_COMPACT_PAIR_SUMMARY_LIMIT &&
+        return :omitted_large_decomposed_wl_pair_inventory
     return Tuple(
         (;
             pair_key = pair.pair_key,
@@ -573,6 +800,12 @@ function _white_lindsey_decomposed_inventory_pair_summaries(pairs, blocker)
                 isnothing(blocker) ? pair.right_unit.dimension : nothing,
         ) for pair in pairs
     )
+end
+
+function _white_lindsey_decomposed_inventory_pair_keys(pairs)
+    length(pairs) > _WHITE_LINDSEY_COMPACT_PAIR_SUMMARY_LIMIT &&
+        return :omitted_large_decomposed_wl_pair_inventory
+    return Tuple(pair.pair_key for pair in pairs)
 end
 
 function _white_lindsey_decomposed_unit_pair_inventory_result(
@@ -608,7 +841,7 @@ function _white_lindsey_decomposed_unit_pair_inventory_result(
         retained_units = units,
         unit_pairs = pairs,
         unit_keys = Tuple(unit.unit_key for unit in units),
-        pair_keys = Tuple(pair.pair_key for pair in pairs),
+        pair_keys = _white_lindsey_decomposed_inventory_pair_keys(pairs),
         unit_summaries,
         pair_summaries,
         retained_dimension,

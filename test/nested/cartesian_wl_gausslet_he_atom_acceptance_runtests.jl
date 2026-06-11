@@ -19,10 +19,21 @@ function _wl_he_fixture_diagnostics(seed_report, axis_inputs)
     axis_centers = basis.center_data
     reference_centers = basis.reference_center_data
     coordinate_steps = diff(axis_centers)
+    retained_shell_range_value = seed_report.inventory.retained_ranges.shell
+    retained_shell_ranges =
+        retained_shell_range_value isa Tuple ?
+        retained_shell_range_value :
+        (retained_shell_range_value,)
     return (;
         axis_count = length(axis_centers),
         source_side_count = seed_report.inventory.source_side_count,
         parent_side_count = seed_report.fixture.parent_side_count,
+        explicit_mapping_supplied =
+            hasproperty(seed_report.fixture, :explicit_mapping_supplied) ?
+            seed_report.fixture.explicit_mapping_supplied :
+            false,
+        shell_layer_count = length(seed_report.fixture.sequence.shell_layers),
+        core_side_count = seed_report.fixture.structure.core_side_count,
         reference_coordinate_endpoints =
             (first(reference_centers), last(reference_centers)),
         coordinate_endpoints = (first(axis_centers), last(axis_centers)),
@@ -40,13 +51,21 @@ function _wl_he_fixture_diagnostics(seed_report, axis_inputs)
         mapping_s = axis_inputs.mapping_s,
         tail_spacing = axis_inputs.tail_spacing,
         retained_core_range = seed_report.inventory.retained_ranges.core,
-        retained_shell_range = seed_report.inventory.retained_ranges.shell,
+        retained_shell_ranges,
+        retained_shell_range =
+            length(retained_shell_ranges) == 1 ?
+            only(retained_shell_ranges) :
+            retained_shell_ranges,
     )
 end
 
 function _wl_he_parent_axis_inputs(seed_report, expansion)
+    return _wl_he_parent_axis_inputs_from_basis(seed_report.fixture.basis, expansion)
+end
+
+function _wl_he_parent_axis_inputs_from_basis(basis, expansion)
     doside_source_1d = GaussletBases._mapped_ordinary_gausslet_1d_bundle(
-        seed_report.fixture.basis;
+        basis;
         exponents = expansion.exponents,
         center = 0.0,
         backend = :numerical_reference,
@@ -58,10 +77,10 @@ function _wl_he_parent_axis_inputs(seed_report, expansion)
         z = doside_source_1d,
     )
     pgdg = doside_source_1d.pgdg_intermediate
-    mapping = seed_report.fixture.basis.spec.mapping_value
+    mapping = basis.spec.mapping_value
     core_spacing = mapping.a * mapping.s
     return (;
-        parent_axis_counts = ntuple(_ -> seed_report.fixture.parent_side_count, 3),
+        parent_axis_counts = ntuple(_ -> length(basis.center_data), 3),
         parent_axis_bundle_object,
         overlap_1d = (; x = pgdg.overlap, y = pgdg.overlap, z = pgdg.overlap),
         kinetic_1d = (; x = pgdg.kinetic, y = pgdg.kinetic, z = pgdg.kinetic),
@@ -85,6 +104,39 @@ function _wl_he_center_records()
             nuclear_charge = 2.0,
             location = (0.0, 0.0, 0.0),
         ),
+    )
+end
+
+function _wl_he_shellification_decomposed_inventory(basis, axis_inputs)
+    CSH = GaussletBases.CartesianShellification
+    CTL = GaussletBases.CartesianTerminalLowering
+    CRU = GaussletBases.CartesianRetainedUnits
+    CUP = GaussletBases.CartesianUnitPairs
+    parent_axes = ntuple(_ -> basis.center_data, 3)
+    shellification_plan = CSH.shellify(
+        parent_axes,
+        ((0.0, 0.0, 0.0),);
+        policy = CSH.OneCenterShellification(core_side = 5, q = 5),
+    )
+    lowering_plan =
+        CTL.lower_terminal_regions(shellification_plan, CTL.WhiteLindseyLowering())
+    retained_unit_plan = CRU.retained_unit_plan(lowering_plan)
+    unit_pair_plan = CUP.unit_pair_plan(retained_unit_plan)
+    inventory =
+        WLHeAcceptanceCPBM.white_lindsey_decomposed_unit_pair_inventory(
+            unit_pair_plan;
+            metadata = (;
+                q = 5,
+                parent_axis_counts = axis_inputs.parent_axis_counts,
+                parent_axis_bundle_object = axis_inputs.parent_axis_bundle_object,
+            ),
+        )
+    return (;
+        shellification_plan,
+        lowering_plan,
+        retained_unit_plan,
+        unit_pair_plan,
+        inventory,
     )
 end
 
@@ -263,83 +315,6 @@ function _wl_he_density_diagnostics(density, interaction, inventory, axis_center
     )
 end
 
-function _wl_he_reasonable_parent_box_readiness_audit()
-    d = 0.1
-    requested_s = 1.0
-    tail_spacing = 10.0
-    target_radius = 6.0
-    parent_side_count = 13
-    mapping = AsinhMapping(c = d, s = requested_s, tail_spacing = tail_spacing)
-    basis = build_basis(
-        MappedUniformBasisSpec(
-            :G10;
-            count = parent_side_count,
-            mapping,
-            reference_spacing = 1.0,
-        ),
-    )
-    requested_a = d / requested_s
-    target_u =
-        target_radius / tail_spacing + asinh(target_radius / requested_a) /
-        requested_s
-    seed_front_door_s = sqrt(d * 2.0)
-    seed_report_status = :not_run
-    seed_report_blocker = nothing
-    seed_report_error = nothing
-    elapsed_seconds = @elapsed begin
-        try
-            GaussletBases._white_lindsey_low_order_materialized_seed_report(
-                parent_side_count = parent_side_count,
-                Z = 2.0,
-                d = d,
-                tail_spacing = tail_spacing,
-            )
-            seed_report_status =
-                :materialized_reasonable_parent_box_seed_report
-        catch err
-            seed_report_error = sprint(showerror, err)
-            seed_report_status =
-                :blocked_reasonable_parent_box_seed_report
-            seed_report_blocker =
-                occursin("expects exactly one shell layer", seed_report_error) ?
-                :decomposed_wl_low_order_seed_inventory_requires_single_shell_layer :
-                :reasonable_parent_box_seed_report_failed
-        end
-    end
-    return (;
-        status = seed_report_status,
-        blocker = seed_report_blocker,
-        requested_parent_side_count = parent_side_count,
-        requested_n_s = 5,
-        requested_d = d,
-        requested_s,
-        requested_tail_spacing = tail_spacing,
-        requested_target_radius = target_radius,
-        requested_mapping_kind = :asinh_mapping_c_equals_d_s_explicit,
-        requested_mapping_a = requested_a,
-        requested_target_u = target_u,
-        axis_count = length(basis.center_data),
-        reference_coordinate_endpoints =
-            (first(basis.reference_center_data), last(basis.reference_center_data)),
-        coordinate_endpoints = (first(basis.center_data), last(basis.center_data)),
-        coordinate_tail_extent = maximum(abs, basis.center_data),
-        target_radius_covered =
-            maximum(abs, basis.center_data) >= target_radius,
-        seed_front_door_mapping_kind = :white_lindsey_atomic_mapping,
-        seed_front_door_s,
-        seed_front_door_requested_s_available =
-            isapprox(seed_front_door_s, requested_s; atol = 0.0, rtol = 0.0),
-        seed_front_door_mapping_blocker =
-            :missing_explicit_asinh_mapping_override,
-        seed_report_error,
-        elapsed_seconds,
-        direct_cartesian_product_assembly_used = false,
-        ordinary_cartesian_ida_operators_used = false,
-        full_parent_window_cpb_used = false,
-        gto_supplement_used = false,
-    )
-end
-
 function _wl_he_restricted_hartree_fock(
     one_body,
     interaction;
@@ -429,6 +404,7 @@ function _wl_decomposed_he_atom_acceptance_audit(;
     expansion = nothing
     seed_report = nothing
     axis_inputs = nothing
+    shellification_inventory_source = nothing
     center_records = nothing
     decomposed_inventory = nothing
     overlap_global = nothing
@@ -469,15 +445,12 @@ function _wl_decomposed_he_atom_acceptance_audit(;
         end
         center_records = _wl_he_center_records()
         decomposed_inventory_elapsed_seconds = @elapsed begin
-            decomposed_inventory =
-                WLHeAcceptanceCPBM.white_lindsey_decomposed_unit_pair_inventory(
-                    seed_report;
-                    metadata = (;
-                        parent_axis_counts = axis_inputs.parent_axis_counts,
-                        parent_axis_bundle_object =
-                            axis_inputs.parent_axis_bundle_object,
-                    ),
+            shellification_inventory_source =
+                _wl_he_shellification_decomposed_inventory(
+                    seed_report.fixture.basis,
+                    axis_inputs,
                 )
+            decomposed_inventory = shellification_inventory_source.inventory
         end
         fixture_diagnostics = _wl_he_fixture_diagnostics(seed_report, axis_inputs)
         scalar_convention = _wl_he_scalar_density_density_convention_check()
@@ -626,6 +599,9 @@ function _wl_decomposed_he_atom_acceptance_audit(;
         axis_count = fixture_diagnostics.axis_count,
         source_side_count = fixture_diagnostics.source_side_count,
         parent_side_count = fixture_diagnostics.parent_side_count,
+        explicit_mapping_supplied = fixture_diagnostics.explicit_mapping_supplied,
+        shell_layer_count = fixture_diagnostics.shell_layer_count,
+        core_side_count = fixture_diagnostics.core_side_count,
         reference_coordinate_endpoints =
             fixture_diagnostics.reference_coordinate_endpoints,
         coordinate_endpoints = fixture_diagnostics.coordinate_endpoints,
@@ -637,6 +613,7 @@ function _wl_decomposed_he_atom_acceptance_audit(;
         fixture_box_status = fixture_diagnostics.fixture_box_status,
         retained_core_range = fixture_diagnostics.retained_core_range,
         retained_shell_range = fixture_diagnostics.retained_shell_range,
+        retained_shell_ranges = fixture_diagnostics.retained_shell_ranges,
         spacing_rule = axis_inputs.spacing_rule,
         spacing_rule_formula = axis_inputs.spacing_rule_formula,
         spacing_rule_status = axis_inputs.spacing_rule_status,
@@ -645,6 +622,13 @@ function _wl_decomposed_he_atom_acceptance_audit(;
         parent_axis_counts = axis_inputs.parent_axis_counts,
         decomposed_unit_count = decomposed_inventory.unit_count,
         decomposed_unit_pair_count = decomposed_inventory.pair_count,
+        decomposed_inventory_source_kind = decomposed_inventory.source_kind,
+        shellification_backed_decomposed_wl_inventory =
+            decomposed_inventory.source_kind ===
+            :cartesian_shellification_retained_unit_pair_plan,
+        low_order_materialized_seed_inventory_used =
+            decomposed_inventory.source_kind ===
+            :white_lindsey_low_order_materialized_seed_ranges,
         retained_dimension = decomposed_inventory.retained_dimension,
         route_global_overlap_status = overlap_global.status,
         route_global_kinetic_status = kinetic_global.status,
@@ -830,6 +814,9 @@ end
     @test report.axis_count == 7
     @test report.source_side_count == 7
     @test report.parent_side_count == 7
+    @test !report.explicit_mapping_supplied
+    @test report.shell_layer_count == 1
+    @test report.core_side_count == 5
     @test report.parent_axis_counts == (7, 7, 7)
     @test report.reference_coordinate_endpoints == (-3.0, 3.0)
     @test report.coordinate_minimum < 0.0
@@ -843,6 +830,7 @@ end
     @test report.coordinate_spacing_maximum > report.coordinate_spacing_minimum
     @test report.retained_core_range == 1:125
     @test report.retained_shell_range == 126:223
+    @test report.retained_shell_ranges == (126:223,)
     @test report.spacing_rule == :white_lindsey_atomic_mapping
     @test report.spacing_rule_status == :standard_z_dependent_spacing
     @test report.previous_shared_fixture_spacing_rule_status ==
@@ -850,6 +838,10 @@ end
     @test report.retained_dimension == 223
     @test report.decomposed_unit_count == 27
     @test report.decomposed_unit_pair_count == 378
+    @test report.decomposed_inventory_source_kind ==
+          :cartesian_shellification_retained_unit_pair_plan
+    @test report.shellification_backed_decomposed_wl_inventory
+    @test !report.low_order_materialized_seed_inventory_used
     @test report.route_global_overlap_status ==
           :materialized_route_global_overlap_matrix
     @test report.route_global_kinetic_status ==
@@ -964,36 +956,4 @@ end
     @test !report.pqs_transforms_materialized
     @test !report.exports_or_artifacts
     @test report.elapsed_seconds >= 0.0
-end
-
-@testset "decomposed WL He reasonable parent box readiness" begin
-    report = _wl_he_reasonable_parent_box_readiness_audit()
-    println("decomposed WL He reasonable parent box readiness: ", report)
-
-    @test report.requested_parent_side_count == 13
-    @test report.requested_n_s == 5
-    @test report.requested_d ≈ 0.1 atol = 1.0e-14 rtol = 0.0
-    @test report.requested_s ≈ 1.0 atol = 1.0e-14 rtol = 0.0
-    @test report.requested_tail_spacing ≈ 10.0 atol = 1.0e-14 rtol = 0.0
-    @test report.requested_mapping_a ≈ 0.1 atol = 1.0e-14 rtol = 0.0
-    @test report.requested_target_u ≈
-          6.0 / 10.0 + asinh(6.0 / 0.1) atol = 1.0e-12 rtol = 0.0
-    @test report.axis_count == 13
-    @test report.reference_coordinate_endpoints == (-6.0, 6.0)
-    @test report.coordinate_endpoints[1] ≈ -report.coordinate_endpoints[2] atol =
-          1.0e-12 rtol = 0.0
-    @test report.coordinate_tail_extent > report.requested_target_radius
-    @test report.target_radius_covered
-    @test report.seed_front_door_mapping_kind == :white_lindsey_atomic_mapping
-    @test !report.seed_front_door_requested_s_available
-    @test report.seed_front_door_mapping_blocker ==
-          :missing_explicit_asinh_mapping_override
-    @test report.status == :blocked_reasonable_parent_box_seed_report
-    @test report.blocker ==
-          :decomposed_wl_low_order_seed_inventory_requires_single_shell_layer
-    @test occursin("expects exactly one shell layer", report.seed_report_error)
-    @test !report.direct_cartesian_product_assembly_used
-    @test !report.ordinary_cartesian_ida_operators_used
-    @test !report.full_parent_window_cpb_used
-    @test !report.gto_supplement_used
 end

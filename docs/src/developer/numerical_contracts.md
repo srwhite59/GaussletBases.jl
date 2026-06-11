@@ -117,8 +117,8 @@ Current status:
 - placement-plan and global by-center matrix pilots now accept
   `:electron_nuclear_by_center` records
 - the route-global electron-nuclear by-center adapter can now consume the real
-  decomposed low-order WL seed unit-pair inventory and produce separated
-  retained/global by-center matrices
+  decomposed WL unit-pair inventory and produce separated retained/global
+  by-center matrices
 - by-center records keep center identity separated and defer physical nuclear
   charge application to acceptance/Hamiltonian assembly
 - decomposed route-global overlap and kinetic matrices can now be materialized
@@ -127,9 +127,9 @@ Current status:
   route-global kinetic with separated unit-charge nuclear-attraction matrices;
   it applies recorded nuclear charges and sums centers only at Hamiltonian
   assembly
-- a decomposed WL unit-pair inventory source is now exposed from the
-  materialized low-order seed retained ranges, including the direct-core
-  retained operator inventory
+- a shellification-backed decomposed WL unit-pair inventory source now assigns
+  retained dimensions and column ranges from retained-unit records, including
+  the direct-core retained operator inventory
 - therefore active H and H2+ scientific acceptance through the decomposed WL
   path now reach real one-electron solves without a full-window CPB or direct
   Cartesian fallback
@@ -137,18 +137,16 @@ Current status:
 The current q = 5, ns = 5 route metadata exposes terminal shellification unit
 inventory at terminal-region granularity, and the local White-Lindsey adapter can
 materialize overlap, kinetic, and one-center electron-nuclear by-center blocks
-for a supplied decomposed unit pair. The terminal shellification summary still
-marks its own pair inventory as deferred, but the materialized low-order seed now
-provides a narrow decomposed inventory source through its direct-core, face,
-edge, and corner retained ranges. A compact
+for a supplied decomposed unit pair. A compact
 `white_lindsey_decomposed_unit_pair_inventory` validator now exists in the
-pair-block materialization layer; it accepts a `UnitPairPlan` or unit-pair
-records when they carry retained dimensions and column ranges, and reports
-compact pair/range/global-dimension metadata. The active readiness audit now
-validates the seed-backed source as 27 decomposed units, 378 upper-triangular
-unit pairs, retained/global dimension 223, and retained column coverage
-`1:223`. The direct-core unit covers columns `1:125`; boundary units cover the
-shell range `126:223`. The route-global by-center
+pair-block materialization layer; it accepts a shellification-derived
+`UnitPairPlan`, assigns retained dimensions and column ranges from the
+White-Lindsey complete-shell retained-count policy, and reports compact
+pair/range/global-dimension metadata. The active He readiness audit now validates
+the shellification-backed source as 27 decomposed units, 378 upper-triangular
+unit pairs, retained/global dimension 223, and retained column coverage `1:223`.
+The direct-core unit covers columns `1:125`; boundary units cover the shell
+range `126:223`. The route-global by-center
 nuclear adapter uses that inventory plus the existing local
 `electron_nuclear_by_center` block path to materialize one uncharged
 retained/global matrix per supplied center. A focused one-center fingerprint
@@ -201,20 +199,21 @@ and physical endpoints about `(-0.9666200087560217, 0.9666200087560217)` bohr.
 The minimum adjacent physical spacing is about `0.20858672857920835`, the
 maximum adjacent spacing is about `0.4698383534446874`, the direct-core retained
 range is `1:125`, and the shell retained range is `126:223`. The current
-low-order decomposed seed inventory only accepts the one-shell fixture. A
-physically more reasonable proposed He parent box with `AsinhMapping(c = 0.1, s
-= 1.0, tail_spacing = 10.0)` and `parent_side_count = 13` has reference
-endpoints `(-6, 6)`, physical endpoints about
-`(-8.565228460168399, 8.565228460168399)` bohr, and covers the target radius
-`R = 6`. It is not yet an accepted decomposed WL RHF fixture because the current
-seed-report front door only accepts `white_lindsey_atomic_mapping`, which would
-use `s = sqrt(d Z) = 0.4472135954999579`, not the requested `s = 1.0`, and the
-current low-order seed inventory then blocks with
-`White-Lindsey materialized seed inventory expects exactly one shell layer`.
-The precise route blocker is
-`:decomposed_wl_low_order_seed_inventory_requires_single_shell_layer`, with a
-separate source-shape blocker `:missing_explicit_asinh_mapping_override` for the
-requested mapping.
+low-order decomposed seed inventory remains a one-shell bridge/oracle source; it
+is not the production path for larger parent boxes.
+
+The larger-box He readiness path now starts from shellification-derived units
+instead of extending the low-order seed. With `AsinhMapping(c = 0.1, s = 1.0,
+tail_spacing = 10.0)` and `parent_side_count = 13`, the reference endpoints are
+`(-6, 6)`, the physical endpoints are about
+`(-8.565228460168399, 8.565228460168399)` bohr, and the parent covers the target
+radius `R = 6`. Shellification produces one direct-core region plus four
+complete-shell regions. White-Lindsey lowering selects source CPB counts
+`(1, 26, 26, 26, 26)`, yielding 105 retained units, 5,565 upper-triangular unit
+pairs, and a 517-column retained inventory. The inventory source is
+`:cartesian_shellification_retained_unit_pair_plan`; the old
+`:white_lindsey_low_order_materialized_seed_ranges` source is kept only as the
+compact one-shell acceptance bridge/oracle.
 
 The corrected decomposed route materializes overlap, kinetic, one separated
 uncharged electron-nuclear by-center matrix, the charge-applied one-electron
@@ -236,6 +235,13 @@ core fraction about `0.7661258457949129`, shell/boundary fraction about
 bohr. The converged-density Coulomb contribution is positive and equals the RHF
 electron-electron contribution, `1.6861351364925603` Hartree, under the current
 full retained two-index density-density convention.
+
+The larger-box shellification inventory currently stops at a readiness
+checkpoint. Its retained column coverage is complete, but route-global
+one-electron and density-density operator materialization from the
+shellification-backed inventory is the next validation step:
+`:pending_shellification_backed_operator_materialization_validation`. No
+larger-box RHF energy is currently an active acceptance baseline.
 
 The current coarse timing split for the active tiny-box He RHF acceptance is
 reported by the test as diagnostics, not asserted as performance thresholds.
@@ -305,12 +311,19 @@ Hamiltonian solve, acceptance assertion, GTO/PQS path, export, or artifact
 logic lives in the precompile workload. After a content-changing edit to the
 workload, package precompilation took about `39.5` seconds. A cached fresh
 process `using GaussletBases` measured about `0.67` seconds. Fresh-process route
-calls then landed at warm-scale timings: route-global overlap about `0.012`
-seconds cold, route-global kinetic about `0.016` seconds cold, and route-global
-electron-nuclear by-center about `0.089` seconds cold. The He RHF acceptance
-energy remained `-2.045516767078335` Hartree; the one-electron operator build
-was about `0.41` seconds and total acceptance elapsed about `3.64` seconds in a
-representative run.
+calls then landed at warm-scale timings for the seed-backed one-shell
+route-global operator calls: route-global overlap about `0.012` seconds cold,
+route-global kinetic about `0.016` seconds cold, and route-global
+electron-nuclear by-center about `0.089` seconds cold. After redirecting the
+active He acceptance route to shellification-derived retained units, the He RHF
+energy remained within the same regression window at about
+`-2.045516767078339` Hartree. A representative fresh test run spent about
+`16.4` seconds in shellification retained-unit/unit-pair inventory construction,
+about `6.7` seconds in one-electron operator build, about `0.74` seconds in
+density-density matrix build, and about `0.78` seconds in the RHF solve. This
+identifies shellification retained-unit and pair-plan materialization latency as
+the next performance target before larger-box shellification fixtures become
+routine tests.
 
 One supported exploratory probe with the same one-shell decomposed topology and
 finer Z = 2 spacing, `d = 0.15`, shrinks the physical endpoints to about
@@ -318,9 +331,10 @@ finer Z = 2 spacing, `d = 0.15`, shrinks the physical endpoints to about
 about `0.0633231599983839` Hartree. That probe took about 79 seconds and is not
 promoted into the active test. The current evidence points first to low-order
 box/basis quality, especially the very compact one-shell physical extent, not a
-failure of the closed-shell density-density scalar convention. A larger-box He
-acceptance fixture needs a reviewed decomposed inventory that supports more than
-one shell before it should replace this baseline.
+failure of the closed-shell density-density scalar convention. The larger-box
+readiness probe now exercises shellification-derived decomposed unit inventory;
+operator materialization and any larger-box RHF baseline remain blocked on the
+shellification-backed operator validation noted above.
 
 The He RHF energy is above the He HF reference near `-2.861679995612234`
 Hartree. The acceptance path does not use a full-parent CPB, direct Cartesian

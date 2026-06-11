@@ -427,17 +427,17 @@ function _white_lindsey_one_body_batch_pair_inputs(records_or_pairs)
 
     (records_or_pairs isa Tuple || records_or_pairs isa AbstractVector) ||
         throw(ArgumentError("White--Lindsey one-body batch expects a tuple or vector"))
-    input_tuple = Tuple(records_or_pairs)
-    if all(input -> input isa CUP.UnitPairRecord, input_tuple)
+    inputs = records_or_pairs
+    if all(input -> input isa CUP.UnitPairRecord, inputs)
         batch =
-            white_lindsey_boundary_stratum_pair_unit_coefficients(input_tuple)
+            white_lindsey_boundary_stratum_pair_unit_coefficients(inputs)
         return (
             batch.results,
             :unit_pair_records,
             batch.unit_coefficient_cache_entry_count,
         )
     end
-    return (input_tuple, :prepared_pair_unit_coefficients, nothing)
+    return (inputs, :prepared_pair_unit_coefficients, nothing)
 end
 
 function _is_ready_white_lindsey_pair_unit_coefficients(pair_unit_coefficients)

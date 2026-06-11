@@ -623,7 +623,7 @@ end
 
 function _route_global_decomposed_wl_one_body_local_collection(
     batch_result::PairBlockMaterializationBatchResult,
-    unit_pairs::Tuple,
+    unit_pairs,
     term::Symbol,
 )
     pair_lookup = Dict(pair.pair_key => pair for pair in unit_pairs)
@@ -1148,7 +1148,7 @@ end
 
 function _route_global_electron_nuclear_by_center_local_collection(
     batch_result::PairBlockMaterializationBatchResult,
-    unit_pairs::Tuple,
+    unit_pairs,
 )
     pair_lookup = Dict(pair.pair_key => pair for pair in unit_pairs)
     materialized_entries = Tuple(
