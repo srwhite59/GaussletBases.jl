@@ -107,6 +107,7 @@ export PairBlockMaterializationPolicy,
        route_global_mixed_gto_blocks_from_decomposed_units,
        route_global_combined_gto_one_electron_matrices,
        route_global_combined_gto_final_basis_projection,
+       route_global_residual_gto_mwg_representation,
        route_global_combined_gto_final_basis_density_density_matrix,
        direct_direct_overlap_block,
        direct_direct_overlap_blocks,
@@ -172,9 +173,10 @@ export PairBlockMaterializationPolicy,
 #     against the decomposed WL gausslet sector.
 #
 # route_global_combined_gto_density_density.jl
-#     First final-basis combined gausslet+residual-supplement density-density
-#     readiness surface. It carries the existing gausslet/gausslet block and
-#     blocks rather than treating raw GTO density-density as final MWG data.
+#     Residual GTO -> MWG effective Gaussian representation and first
+#     final-basis combined gausslet+residual-supplement density-density
+#     readiness surface. It blocks rather than treating raw GTO density-density
+#     as final MWG data.
 #
 # one_body_placement_plan.jl
 #     Metadata-only local one-body placement records for future global retained
