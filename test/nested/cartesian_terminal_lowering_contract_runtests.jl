@@ -79,8 +79,13 @@ end
     @test wl_shell_contract.metadata.corner_count == 8
     @test sum(CPBForLowering.support_count, CTL.source_cpbs(wl_shell_contract); init = 0) ==
           wl_shell_contract.metadata.shell_support_count
+    wl_diagnostic_plan = CTL.lower_terminal_regions(
+        shell_plan,
+        CTL.WhiteLindseyLowering();
+        enumerate_available_contracts = true,
+    )
     wl_available_pqs = first(
-        contract for contract in CTL.available_contracts(wl_plan)
+        contract for contract in CTL.available_contracts(wl_diagnostic_plan)
         if CTL.lowering_kind(contract) == :pqs_filled_source_cpb
     )
     @test isnothing(wl_available_pqs.metadata.q)

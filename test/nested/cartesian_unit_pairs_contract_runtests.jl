@@ -210,6 +210,11 @@ end
     @test Tuple(pair.pair_index for pair in CUP.unit_pairs(pair_plan)) == (1, 2, 3, 4, 5, 6)
     @test Tuple(pair.left_index => pair.right_index for pair in CUP.unit_pairs(pair_plan)) ==
           (1 => 1, 1 => 2, 1 => 3, 2 => 2, 2 => 3, 3 => 3)
+    pair_index_table = CUP.unit_pair_index_table(retained_plan)
+    @test length(pair_index_table) == 6
+    @test Tuple(pair.left_index => pair.right_index for pair in pair_index_table) ==
+          (1 => 1, 1 => 2, 1 => 3, 2 => 2, 2 => 3, 3 => 3)
+    @test all(pair -> isnothing(pair.route_core_pair_sidecar), pair_index_table)
     @test pair_summary.route_core_pair_inventory_available
     @test pair_summary.route_core_pair_inventory_status ==
           :available_route_core_pair_inventory

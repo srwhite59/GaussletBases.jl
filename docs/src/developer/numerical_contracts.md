@@ -333,9 +333,13 @@ seconds in density-density matrix build, and about `0.78` seconds in the RHF
 solve. The side-13 inventory probe improved from about `77.9` seconds to about
 `45.9` seconds after replacing the stored rich `UnitPairRecord` tuple with the
 module-owned `CartesianUnitPairs.UnitPairIndexTable` and omitting duplicate pair
-summary materialization. A phase probe now attributes the remaining side-13
-inventory time mainly to retained-unit planning, about `28.2` seconds, and CPBM
-retained-range inventory wrapping, about `13.4` seconds.
+summary materialization. After the WL-only selected-contract path and one-pass
+retained-unit planning cleanup, the same standalone side-13 inventory probe
+reported about `27.5` seconds while preserving 105 units, 5,565 pairs, and
+retained dimension 517. A same-process phase probe showed the warm planning path
+is no longer the main algorithmic cost; remaining cold-process time is dominated
+by first-call compilation and retained-range wrapping rather than rich pair
+tuple storage.
 
 One supported exploratory probe with the same one-shell decomposed topology and
 finer Z = 2 spacing, `d = 0.15`, shrinks the physical endpoints to about

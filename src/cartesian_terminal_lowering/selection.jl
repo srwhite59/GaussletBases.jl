@@ -1,24 +1,19 @@
 # Route-specific lowering selection.
 
-function _selected_lowering_kind(region, ::WhiteLindseyLowering)
-    region.region_kind == :complete_shell && return :white_lindsey_boundary_strata
+function _direct_selected_contract(region, ::WhiteLindseyLowering)
+    region.region_kind == :complete_shell &&
+        return _white_lindsey_complete_shell_contract(region)
     region.region_kind == :central_distorted_product_box &&
-        return :distorted_product_box_comx
-    return _direct_lowering_kind(region)
+        return _distorted_product_contract(region)
+    return _direct_terminal_contract(region)
 end
 
-function _selected_lowering_kind(region, ::PQSLowering)
-    region.region_kind == :complete_shell && return :pqs_filled_source_cpb
+function _direct_selected_contract(region, policy::PQSLowering)
+    region.region_kind == :complete_shell &&
+        return _pqs_complete_shell_contract(region, policy)
     region.region_kind == :central_distorted_product_box &&
-        return :distorted_product_box_comx
-    return _direct_lowering_kind(region)
-end
-
-function _contract_with_kind(contracts, kind::Symbol)
-    matches = Tuple(contract for contract in contracts if contract.lowering_kind == kind)
-    length(matches) == 1 ||
-        throw(ArgumentError("expected exactly one terminal lowering contract with kind $kind"))
-    return only(matches)
+        return _distorted_product_contract(region)
+    return _direct_terminal_contract(region)
 end
 
 function _available_contracts(region, ::WhiteLindseyLowering)
@@ -30,8 +25,7 @@ function _available_contracts(region, policy::PQSLowering)
 end
 
 function _selected_contract(region, policy::TerminalLoweringPolicy)
-    candidates = _available_contracts(region, policy)
-    return _contract_with_kind(candidates, _selected_lowering_kind(region, policy))
+    return _direct_selected_contract(region, policy)
 end
 
 """
@@ -43,15 +37,19 @@ Select metadata-only lowering contracts for the terminal regions in a
 function lower_terminal_regions(
     shellification_plan::CartesianShellification.ShellificationPlan,
     policy::TerminalLoweringPolicy = WhiteLindseyLowering();
+    enumerate_available_contracts::Bool = false,
     metadata = (;),
 )
     regions = CartesianShellification.terminal_regions(shellification_plan)
-    available = Tuple(
-        contract
-        for region in regions
-        for contract in _available_contracts(region, policy)
-    )
     selected = Tuple(_selected_contract(region, policy) for region in regions)
+    available =
+        enumerate_available_contracts ?
+        Tuple(
+            contract
+            for region in regions
+            for contract in _available_contracts(region, policy)
+        ) :
+        selected
     return TerminalLoweringPlan(
         policy,
         available,

@@ -20,74 +20,67 @@ function retained_unit_plan(
     metadata = (;),
 )
     selected = CartesianTerminalLowering.selected_contracts(lowering_plan)
-    unit_chunks = Tuple(
-        _retained_units_for_contract(contract, policy)
-        for contract in selected
-    )
-    planned_units = Tuple(unit for chunk in unit_chunks for unit in chunk)
-    reindexed_units = _reindex_units(planned_units)
-    plan_summary = _retained_unit_plan_summary(policy, lowering_plan, reindexed_units)
+    planned_units = RetainedUnitRecord[]
+    for contract in selected
+        _append_retained_units_for_contract!(planned_units, contract, policy)
+    end
+    retained_units = Tuple(planned_units)
+    plan_summary = _retained_unit_plan_summary(policy, lowering_plan, retained_units)
     return RetainedUnitPlan(
         policy,
         lowering_plan,
-        reindexed_units,
+        retained_units,
         plan_summary,
         NamedTuple(metadata),
     )
 end
 
-function _retained_units_for_contract(
+function _append_retained_units_for_contract!(
+    planned_units::Vector{RetainedUnitRecord},
     contract::CartesianTerminalLowering.TerminalLoweringContract,
-    ::MetadataOnlyRetainedUnits,
+    policy::MetadataOnlyRetainedUnits,
 )
     kind = CartesianTerminalLowering.lowering_kind(contract)
-    kind in _DIRECT_LOWERING_KINDS &&
-        return (_direct_retained_unit(contract),)
-    kind === :white_lindsey_boundary_strata &&
-        return _white_lindsey_boundary_stratum_units(contract)
-    kind === :pqs_filled_source_cpb &&
-        return (_pqs_shell_retained_unit(contract),)
-    kind === :distorted_product_box_comx &&
-        return (_distorted_product_retained_unit(contract),)
+    if kind in _DIRECT_LOWERING_KINDS
+        push!(planned_units, _direct_retained_unit(contract, length(planned_units) + 1))
+        return planned_units
+    end
+    if kind === :white_lindsey_boundary_strata
+        for (index, source_cpb) in enumerate(contract.source_cpbs)
+            push!(
+                planned_units,
+                _white_lindsey_boundary_stratum_unit(
+                    contract,
+                    source_cpb,
+                    index,
+                    length(planned_units) + 1,
+                ),
+            )
+        end
+        return planned_units
+    end
+    if kind === :pqs_filled_source_cpb
+        push!(planned_units, _pqs_shell_retained_unit(contract, length(planned_units) + 1))
+        return planned_units
+    end
+    if kind === :distorted_product_box_comx
+        push!(
+            planned_units,
+            _distorted_product_retained_unit(contract, length(planned_units) + 1),
+        )
+        return planned_units
+    end
     throw(ArgumentError("unsupported retained-unit lowering kind $kind"))
-end
-
-function _reindex_units(planned_units)
-    return Tuple(_replace_unit_index(unit, index) for (index, unit) in enumerate(planned_units))
-end
-
-function _replace_unit_index(unit::RetainedUnitRecord, unit_index::Int)
-    return RetainedUnitRecord(
-        unit.unit_key,
-        unit_index,
-        unit.unit_kind,
-        unit.source_contract_key,
-        unit.terminal_region_key,
-        unit.terminal_region_role,
-        unit.terminal_region_kind,
-        unit.lowering_kind,
-        unit.retained_rule,
-        unit.realization_rule,
-        unit.owned_support,
-        unit.source_cpbs,
-        unit.source_cpb_index,
-        unit.dimension_status,
-        unit.dimension,
-        unit.column_range_status,
-        unit.column_range,
-        unit.route_core_final_unit,
-        unit.materialized,
-        unit.metadata,
-    )
 end
 
 function _direct_retained_unit(
     contract::CartesianTerminalLowering.TerminalLoweringContract,
+    unit_index::Int,
 )
     return _make_retained_unit(
         contract,
         _unit_key(contract, :retained_unit),
-        0,
+        unit_index,
         :direct_cpb_retained_unit,
         contract.source_cpbs,
         nothing;
@@ -100,47 +93,48 @@ function _direct_retained_unit(
     )
 end
 
-function _white_lindsey_boundary_stratum_units(
+function _white_lindsey_boundary_stratum_unit(
     contract::CartesianTerminalLowering.TerminalLoweringContract,
+    source_cpb,
+    source_cpb_index::Int,
+    unit_index::Int,
 )
-    return Tuple(
-        _make_retained_unit(
-            contract,
-            _unit_key(contract, :stratum_unit, index),
-            0,
-            :white_lindsey_boundary_stratum_retained_unit,
-            (source_cpb,),
-            index;
-            owned_support = CartesianRouteCore.owned_cpb(
-                source_cpb;
-                support_kind = :white_lindsey_boundary_stratum_owned_support,
-                metadata = (;
-                    parent_contract_key = contract.contract_key,
-                    source_cpb_index = index,
-                    terminal_region_key = contract.terminal_region_key,
-                ),
-            ),
-            retained_rule = :white_lindsey_boundary_stratum_product,
-            realization_rule = :direct_or_trivial_embedding,
-            dimension_status = :not_materialized,
+    return _make_retained_unit(
+        contract,
+        _unit_key(contract, :stratum_unit, source_cpb_index),
+        unit_index,
+        :white_lindsey_boundary_stratum_retained_unit,
+        (source_cpb,),
+        source_cpb_index;
+        owned_support = CartesianRouteCore.owned_cpb(
+            source_cpb;
+            support_kind = :white_lindsey_boundary_stratum_owned_support,
             metadata = (;
                 parent_contract_key = contract.contract_key,
-                source_cpb_index = index,
-                stratum_kind = _stratum_kind(source_cpb),
-                child_of_complete_shell = true,
+                source_cpb_index,
+                terminal_region_key = contract.terminal_region_key,
             ),
-        )
-        for (index, source_cpb) in enumerate(contract.source_cpbs)
+        ),
+        retained_rule = :white_lindsey_boundary_stratum_product,
+        realization_rule = :direct_or_trivial_embedding,
+        dimension_status = :not_materialized,
+        metadata = (;
+            parent_contract_key = contract.contract_key,
+            source_cpb_index,
+            stratum_kind = _stratum_kind(source_cpb),
+            child_of_complete_shell = true,
+        ),
     )
 end
 
 function _pqs_shell_retained_unit(
     contract::CartesianTerminalLowering.TerminalLoweringContract,
+    unit_index::Int,
 )
     return _make_retained_unit(
         contract,
         _unit_key(contract, :retained_unit),
-        0,
+        unit_index,
         :pqs_shell_retained_unit,
         contract.source_cpbs,
         nothing;
@@ -157,6 +151,7 @@ end
 
 function _distorted_product_retained_unit(
     contract::CartesianTerminalLowering.TerminalLoweringContract,
+    unit_index::Int,
 )
     retained_metadata = (;
         q = _metadata_value(contract.metadata, :q),
@@ -168,7 +163,7 @@ function _distorted_product_retained_unit(
     return _make_retained_unit(
         contract,
         _unit_key(contract, :retained_unit),
-        0,
+        unit_index,
         :distorted_product_box_retained_unit,
         contract.source_cpbs,
         nothing;
