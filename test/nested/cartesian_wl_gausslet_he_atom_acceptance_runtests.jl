@@ -263,6 +263,83 @@ function _wl_he_density_diagnostics(density, interaction, inventory, axis_center
     )
 end
 
+function _wl_he_reasonable_parent_box_readiness_audit()
+    d = 0.1
+    requested_s = 1.0
+    tail_spacing = 10.0
+    target_radius = 6.0
+    parent_side_count = 13
+    mapping = AsinhMapping(c = d, s = requested_s, tail_spacing = tail_spacing)
+    basis = build_basis(
+        MappedUniformBasisSpec(
+            :G10;
+            count = parent_side_count,
+            mapping,
+            reference_spacing = 1.0,
+        ),
+    )
+    requested_a = d / requested_s
+    target_u =
+        target_radius / tail_spacing + asinh(target_radius / requested_a) /
+        requested_s
+    seed_front_door_s = sqrt(d * 2.0)
+    seed_report_status = :not_run
+    seed_report_blocker = nothing
+    seed_report_error = nothing
+    elapsed_seconds = @elapsed begin
+        try
+            GaussletBases._white_lindsey_low_order_materialized_seed_report(
+                parent_side_count = parent_side_count,
+                Z = 2.0,
+                d = d,
+                tail_spacing = tail_spacing,
+            )
+            seed_report_status =
+                :materialized_reasonable_parent_box_seed_report
+        catch err
+            seed_report_error = sprint(showerror, err)
+            seed_report_status =
+                :blocked_reasonable_parent_box_seed_report
+            seed_report_blocker =
+                occursin("expects exactly one shell layer", seed_report_error) ?
+                :decomposed_wl_low_order_seed_inventory_requires_single_shell_layer :
+                :reasonable_parent_box_seed_report_failed
+        end
+    end
+    return (;
+        status = seed_report_status,
+        blocker = seed_report_blocker,
+        requested_parent_side_count = parent_side_count,
+        requested_n_s = 5,
+        requested_d = d,
+        requested_s,
+        requested_tail_spacing = tail_spacing,
+        requested_target_radius = target_radius,
+        requested_mapping_kind = :asinh_mapping_c_equals_d_s_explicit,
+        requested_mapping_a = requested_a,
+        requested_target_u = target_u,
+        axis_count = length(basis.center_data),
+        reference_coordinate_endpoints =
+            (first(basis.reference_center_data), last(basis.reference_center_data)),
+        coordinate_endpoints = (first(basis.center_data), last(basis.center_data)),
+        coordinate_tail_extent = maximum(abs, basis.center_data),
+        target_radius_covered =
+            maximum(abs, basis.center_data) >= target_radius,
+        seed_front_door_mapping_kind = :white_lindsey_atomic_mapping,
+        seed_front_door_s,
+        seed_front_door_requested_s_available =
+            isapprox(seed_front_door_s, requested_s; atol = 0.0, rtol = 0.0),
+        seed_front_door_mapping_blocker =
+            :missing_explicit_asinh_mapping_override,
+        seed_report_error,
+        elapsed_seconds,
+        direct_cartesian_product_assembly_used = false,
+        ordinary_cartesian_ida_operators_used = false,
+        full_parent_window_cpb_used = false,
+        gto_supplement_used = false,
+    )
+end
+
 function _wl_he_restricted_hartree_fock(
     one_body,
     interaction;
@@ -349,24 +426,11 @@ function _wl_decomposed_he_atom_acceptance_audit(;
     d::Real = 0.2,
     tail_spacing::Real = 10.0,
 )
-    expansion = coulomb_gaussian_expansion(doacc = false)
-    seed_report =
-        GaussletBases._white_lindsey_low_order_materialized_seed_report(
-            parent_side_count = parent_side_count,
-            Z = 2.0,
-            d = d,
-            tail_spacing = tail_spacing,
-        )
-    axis_inputs = _wl_he_parent_axis_inputs(seed_report, expansion)
-    center_records = _wl_he_center_records()
-    decomposed_inventory =
-        WLHeAcceptanceCPBM.white_lindsey_decomposed_unit_pair_inventory(
-            seed_report;
-            metadata = (;
-                parent_axis_counts = axis_inputs.parent_axis_counts,
-                parent_axis_bundle_object = axis_inputs.parent_axis_bundle_object,
-            ),
-        )
+    expansion = nothing
+    seed_report = nothing
+    axis_inputs = nothing
+    center_records = nothing
+    decomposed_inventory = nothing
     overlap_global = nothing
     kinetic_global = nothing
     by_center_global = nothing
@@ -374,54 +438,90 @@ function _wl_decomposed_he_atom_acceptance_audit(;
     density_density = nothing
     hartree_fock = nothing
     density_diagnostics = nothing
-    fixture_diagnostics = _wl_he_fixture_diagnostics(seed_report, axis_inputs)
+    fixture_diagnostics = nothing
+    scalar_convention = nothing
+    parent_seed_elapsed_seconds = 0.0
+    parent_axis_setup_elapsed_seconds = 0.0
+    decomposed_inventory_elapsed_seconds = 0.0
+    one_electron_operator_build_elapsed_seconds = 0.0
+    one_electron_solve_elapsed_seconds = 0.0
     density_density_elapsed_seconds = 0.0
     hartree_fock_elapsed_seconds = 0.0
     overlap_diagnostics = nothing
     solve = nothing
-    scalar_convention = _wl_he_scalar_density_density_convention_check()
     elapsed_seconds = @elapsed begin
-        overlap_global =
-            WLHeAcceptanceCPBM.route_global_decomposed_wl_overlap_matrix(
-                seed_report;
-                parent_axis_counts = axis_inputs.parent_axis_counts,
-                parent_axis_bundle_object =
-                    axis_inputs.parent_axis_bundle_object,
-                overlap_1d = axis_inputs.overlap_1d,
-            )
-        kinetic_global =
-            WLHeAcceptanceCPBM.route_global_decomposed_wl_kinetic_matrix(
-                seed_report;
-                parent_axis_counts = axis_inputs.parent_axis_counts,
-                parent_axis_bundle_object =
-                    axis_inputs.parent_axis_bundle_object,
-                overlap_1d = axis_inputs.overlap_1d,
-                kinetic_1d = axis_inputs.kinetic_1d,
-            )
-        by_center_global =
-            WLHeAcceptanceCPBM.route_global_electron_nuclear_by_center_matrices(
-                seed_report;
-                parent_axis_counts = axis_inputs.parent_axis_counts,
-                parent_axis_bundle_object =
-                    axis_inputs.parent_axis_bundle_object,
-                coulomb_expansion = expansion,
-                center_records,
-            )
-        hamiltonian =
-            WLHeAcceptanceCPBM.white_lindsey_decomposed_one_electron_hamiltonian(
-                kinetic_global,
-                by_center_global,
-            )
+        expansion = coulomb_gaussian_expansion(doacc = false)
+        parent_seed_elapsed_seconds = @elapsed begin
+            seed_report =
+                GaussletBases._white_lindsey_low_order_materialized_seed_report(
+                    parent_side_count = parent_side_count,
+                    Z = 2.0,
+                    d = d,
+                    tail_spacing = tail_spacing,
+                )
+        end
+        parent_axis_setup_elapsed_seconds = @elapsed begin
+            axis_inputs = _wl_he_parent_axis_inputs(seed_report, expansion)
+        end
+        center_records = _wl_he_center_records()
+        decomposed_inventory_elapsed_seconds = @elapsed begin
+            decomposed_inventory =
+                WLHeAcceptanceCPBM.white_lindsey_decomposed_unit_pair_inventory(
+                    seed_report;
+                    metadata = (;
+                        parent_axis_counts = axis_inputs.parent_axis_counts,
+                        parent_axis_bundle_object =
+                            axis_inputs.parent_axis_bundle_object,
+                    ),
+                )
+        end
+        fixture_diagnostics = _wl_he_fixture_diagnostics(seed_report, axis_inputs)
+        scalar_convention = _wl_he_scalar_density_density_convention_check()
+        one_electron_operator_build_elapsed_seconds = @elapsed begin
+            overlap_global =
+                WLHeAcceptanceCPBM.route_global_decomposed_wl_overlap_matrix(
+                    seed_report;
+                    parent_axis_counts = axis_inputs.parent_axis_counts,
+                    parent_axis_bundle_object =
+                        axis_inputs.parent_axis_bundle_object,
+                    overlap_1d = axis_inputs.overlap_1d,
+                )
+            kinetic_global =
+                WLHeAcceptanceCPBM.route_global_decomposed_wl_kinetic_matrix(
+                    seed_report;
+                    parent_axis_counts = axis_inputs.parent_axis_counts,
+                    parent_axis_bundle_object =
+                        axis_inputs.parent_axis_bundle_object,
+                    overlap_1d = axis_inputs.overlap_1d,
+                    kinetic_1d = axis_inputs.kinetic_1d,
+                )
+            by_center_global =
+                WLHeAcceptanceCPBM.route_global_electron_nuclear_by_center_matrices(
+                    seed_report;
+                    parent_axis_counts = axis_inputs.parent_axis_counts,
+                    parent_axis_bundle_object =
+                        axis_inputs.parent_axis_bundle_object,
+                    coulomb_expansion = expansion,
+                    center_records,
+                )
+            hamiltonian =
+                WLHeAcceptanceCPBM.white_lindsey_decomposed_one_electron_hamiltonian(
+                    kinetic_global,
+                    by_center_global,
+                )
+        end
         overlap_diagnostics =
             _wl_he_overlap_metric_diagnostics(
                 overlap_global.matrix,
                 decomposed_inventory,
             )
-        solve = _wl_he_lowest_one_electron_energy(
-            hamiltonian.matrix,
-            overlap_global.matrix,
-            overlap_diagnostics,
-        )
+        one_electron_solve_elapsed_seconds = @elapsed begin
+            solve = _wl_he_lowest_one_electron_energy(
+                hamiltonian.matrix,
+                overlap_global.matrix,
+                overlap_diagnostics,
+            )
+        end
         density_density_elapsed_seconds = @elapsed begin
             density_density =
                 WLHeAcceptanceCPBM.route_global_decomposed_wl_density_density_matrix(
@@ -630,9 +730,26 @@ function _wl_decomposed_he_atom_acceptance_audit(;
         scalar_density_density_convention_status = scalar_convention.status,
         scalar_density_density_convention_energy = scalar_convention.energy,
         scalar_density_density_convention_expected = scalar_convention.expected,
+        parent_seed_elapsed_seconds,
+        parent_axis_setup_elapsed =
+            parent_axis_setup_elapsed_seconds,
+        decomposed_inventory_elapsed =
+            decomposed_inventory_elapsed_seconds,
+        one_electron_operator_build_elapsed =
+            one_electron_operator_build_elapsed_seconds,
+        one_electron_solve_elapsed = one_electron_solve_elapsed_seconds,
         density_density_matrix_build_elapsed_seconds =
             density_density_elapsed_seconds,
+        density_density_matrix_build_elapsed =
+            density_density_elapsed_seconds,
+        hamiltonian_build_elapsed_total =
+            parent_axis_setup_elapsed_seconds +
+            decomposed_inventory_elapsed_seconds +
+            one_electron_operator_build_elapsed_seconds +
+            density_density_elapsed_seconds,
         rhf_iteration_elapsed_seconds = hartree_fock_elapsed_seconds,
+        hartree_fock_solve_elapsed = hartree_fock_elapsed_seconds,
+        total_acceptance_elapsed = elapsed_seconds,
         exact_he_reference_energy = -2.9037243770341196,
         hartree_fock_reference_energy = -2.861679995612234,
         total_he_energy_distance_from_exact =
@@ -786,8 +903,17 @@ end
           :passed_closed_shell_density_density_scalar_convention
     @test report.scalar_density_density_convention_energy ≈
           report.scalar_density_density_convention_expected atol = 1.0e-14 rtol = 0.0
+    @test report.parent_axis_setup_elapsed >= 0.0
+    @test report.decomposed_inventory_elapsed >= 0.0
+    @test report.one_electron_operator_build_elapsed >= 0.0
     @test report.density_density_matrix_build_elapsed_seconds >= 0.0
+    @test report.density_density_matrix_build_elapsed >= 0.0
+    @test report.hamiltonian_build_elapsed_total >=
+          report.density_density_matrix_build_elapsed
     @test report.rhf_iteration_elapsed_seconds >= 0.0
+    @test report.hartree_fock_solve_elapsed >= 0.0
+    @test report.total_acceptance_elapsed >=
+          report.hamiltonian_build_elapsed_total
     @test report.total_he_energy > report.exact_he_reference_energy
     @test report.total_he_energy < -2.0
     @test report.ida_scf_energy_interpretation_available
@@ -802,4 +928,36 @@ end
     @test !report.pqs_transforms_materialized
     @test !report.exports_or_artifacts
     @test report.elapsed_seconds >= 0.0
+end
+
+@testset "decomposed WL He reasonable parent box readiness" begin
+    report = _wl_he_reasonable_parent_box_readiness_audit()
+    println("decomposed WL He reasonable parent box readiness: ", report)
+
+    @test report.requested_parent_side_count == 13
+    @test report.requested_n_s == 5
+    @test report.requested_d ≈ 0.1 atol = 1.0e-14 rtol = 0.0
+    @test report.requested_s ≈ 1.0 atol = 1.0e-14 rtol = 0.0
+    @test report.requested_tail_spacing ≈ 10.0 atol = 1.0e-14 rtol = 0.0
+    @test report.requested_mapping_a ≈ 0.1 atol = 1.0e-14 rtol = 0.0
+    @test report.requested_target_u ≈
+          6.0 / 10.0 + asinh(6.0 / 0.1) atol = 1.0e-12 rtol = 0.0
+    @test report.axis_count == 13
+    @test report.reference_coordinate_endpoints == (-6.0, 6.0)
+    @test report.coordinate_endpoints[1] ≈ -report.coordinate_endpoints[2] atol =
+          1.0e-12 rtol = 0.0
+    @test report.coordinate_tail_extent > report.requested_target_radius
+    @test report.target_radius_covered
+    @test report.seed_front_door_mapping_kind == :white_lindsey_atomic_mapping
+    @test !report.seed_front_door_requested_s_available
+    @test report.seed_front_door_mapping_blocker ==
+          :missing_explicit_asinh_mapping_override
+    @test report.status == :blocked_reasonable_parent_box_seed_report
+    @test report.blocker ==
+          :decomposed_wl_low_order_seed_inventory_requires_single_shell_layer
+    @test occursin("expects exactly one shell layer", report.seed_report_error)
+    @test !report.direct_cartesian_product_assembly_used
+    @test !report.ordinary_cartesian_ida_operators_used
+    @test !report.full_parent_window_cpb_used
+    @test !report.gto_supplement_used
 end

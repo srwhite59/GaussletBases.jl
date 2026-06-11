@@ -201,9 +201,20 @@ and physical endpoints about `(-0.9666200087560217, 0.9666200087560217)` bohr.
 The minimum adjacent physical spacing is about `0.20858672857920835`, the
 maximum adjacent spacing is about `0.4698383534446874`, the direct-core retained
 range is `1:125`, and the shell retained range is `126:223`. The current
-low-order decomposed seed inventory only accepts the one-shell fixture; a
-`parent_side_count = 9` exploratory probe is blocked by the existing
-single-shell inventory contract rather than by the RHF convention.
+low-order decomposed seed inventory only accepts the one-shell fixture. A
+physically more reasonable proposed He parent box with `AsinhMapping(c = 0.1, s
+= 1.0, tail_spacing = 10.0)` and `parent_side_count = 13` has reference
+endpoints `(-6, 6)`, physical endpoints about
+`(-8.565228460168399, 8.565228460168399)` bohr, and covers the target radius
+`R = 6`. It is not yet an accepted decomposed WL RHF fixture because the current
+seed-report front door only accepts `white_lindsey_atomic_mapping`, which would
+use `s = sqrt(d Z) = 0.4472135954999579`, not the requested `s = 1.0`, and the
+current low-order seed inventory then blocks with
+`White-Lindsey materialized seed inventory expects exactly one shell layer`.
+The precise route blocker is
+`:decomposed_wl_low_order_seed_inventory_requires_single_shell_layer`, with a
+separate source-shape blocker `:missing_explicit_asinh_mapping_override` for the
+requested mapping.
 
 The corrected decomposed route materializes overlap, kinetic, one separated
 uncharged electron-nuclear by-center matrix, the charge-applied one-electron
@@ -225,6 +236,15 @@ core fraction about `0.7661258457949129`, shell/boundary fraction about
 bohr. The converged-density Coulomb contribution is positive and equals the RHF
 electron-electron contribution, `1.6861351364925603` Hartree, under the current
 full retained two-index density-density convention.
+
+The current coarse timing split for the active tiny-box He RHF acceptance is:
+parent seed report about 4.40 seconds, parent-axis setup about 0.026 seconds,
+decomposed inventory about 4.67 seconds, decomposed one-electron operator build
+about 61.60 seconds, density-density matrix build about 0.77 seconds,
+Hamiltonian/interactions build total about 67.06 seconds, RHF solve about 0.79
+seconds, and total acceptance elapsed about 73.92 seconds. These timings are
+reported by the test as coarse diagnostics, not asserted as performance
+thresholds.
 
 One supported exploratory probe with the same one-shell decomposed topology and
 finer Z = 2 spacing, `d = 0.15`, shrinks the physical endpoints to about
