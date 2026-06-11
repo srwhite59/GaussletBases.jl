@@ -139,17 +139,17 @@ inventory at terminal-region granularity, and the local White-Lindsey adapter ca
 materialize overlap, kinetic, and one-center electron-nuclear by-center blocks
 for a supplied decomposed unit pair. A compact
 `white_lindsey_decomposed_unit_pair_inventory` validator now exists in the
-pair-block materialization layer; it accepts a shellification-derived
-`UnitPairPlan`, assigns retained dimensions and column ranges from the
-White-Lindsey complete-shell retained-count policy, and reports compact
-pair/range/global-dimension metadata. The active He readiness audit now validates
+pair-block materialization layer; for shellification-derived retained units it
+assigns retained dimensions and column ranges from the White-Lindsey
+complete-shell retained-count policy and exposes upper-triangular unit pairs
+through a lightweight index table. The active He readiness audit now validates
 the shellification-backed source as 27 decomposed units, 378 upper-triangular
 unit pairs, retained/global dimension 223, and retained column coverage `1:223`.
 The direct-core unit covers columns `1:125`; boundary units cover the shell
 range `126:223`. The driver-facing helper
 `white_lindsey_shellification_decomposed_unit_pair_inventory` now owns the
-shellification -> lowering -> retained-unit -> unit-pair -> decomposed-inventory
-handoff for this path. The route-global by-center
+shellification -> lowering -> retained-unit -> lightweight unit-pair index table
+-> decomposed-inventory handoff for this path. The route-global by-center
 nuclear adapter uses that inventory plus the existing local
 `electron_nuclear_by_center` block path to materialize one uncharged
 retained/global matrix per supplied center. A focused one-center fingerprint
@@ -243,11 +243,12 @@ The larger-box shellification inventory currently stops at a readiness
 checkpoint through the same driver-facing helper. The side-13 probe with
 `AsinhMapping(c = 0.1, s = 1.0, tail_spacing = 10.0)` reports source kind
 `:cartesian_shellification_retained_unit_pair_plan`, retained dimension 517, 105
-units, 5,565 upper-triangular unit pairs, retained column coverage from `1:125`
-through `517:517`, and no low-order seed, full-parent CPB, direct Cartesian, or
-ordinary IDA fallback. Route-global one-electron and density-density operator
-materialization from that larger shellification-backed inventory is the next
-validation step:
+units, 5,565 upper-triangular unit pairs represented by
+`WhiteLindseyUnitPairIndexTable`, retained column coverage from `1:125` through
+`517:517`, omitted large pair keys/summaries, and no low-order seed,
+full-parent CPB, direct Cartesian, or ordinary IDA fallback. Route-global
+one-electron and density-density operator materialization from that larger
+shellification-backed inventory is the next validation step:
 `:pending_shellification_backed_operator_materialization_validation`. No
 larger-box RHF energy is currently an active acceptance baseline.
 
@@ -326,12 +327,14 @@ electron-nuclear by-center about `0.089` seconds cold. After redirecting the
 active He acceptance route to shellification-derived retained units, the He RHF
 energy remained within the same regression window at about
 `-2.045516767078339` Hartree. A representative fresh test run spent about
-`16.4` seconds in shellification retained-unit/unit-pair inventory construction,
-about `6.7` seconds in one-electron operator build, about `0.74` seconds in
-density-density matrix build, and about `0.78` seconds in the RHF solve. This
-identifies shellification retained-unit and pair-plan materialization latency as
-the next performance target before larger-box shellification fixtures become
-routine tests.
+`9.0` seconds in shellification retained-unit/lightweight-pair inventory
+construction, about `6.6` seconds in one-electron operator build, about `0.75`
+seconds in density-density matrix build, and about `0.78` seconds in the RHF
+solve. The side-13 inventory probe improved from about `77.9` seconds to about
+`43.3` seconds after removing the rich `UnitPairRecord` tuple and duplicate pair
+summary materialization. A phase probe now attributes the remaining side-13
+inventory time mainly to retained-unit planning, about `28.2` seconds, and CPBM
+retained-range inventory wrapping, about `13.4` seconds.
 
 One supported exploratory probe with the same one-shell decomposed topology and
 finer Z = 2 spacing, `d = 0.15`, shrinks the physical endpoints to about

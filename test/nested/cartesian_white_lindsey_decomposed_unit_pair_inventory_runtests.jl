@@ -185,9 +185,16 @@ end
     @test !shellification_source.low_order_materialized_seed_inventory_used
     @test shellification_inventory.source_kind ==
           :cartesian_shellification_retained_unit_pair_plan
+    @test shellification_inventory.metadata.shellification_unit_pair_plan_source ==
+          :upper_triangular_unit_index_table
+    @test !shellification_inventory.metadata.rich_unit_pair_records_stored
+    @test !shellification_inventory.metadata.route_core_pair_sidecars_duplicated
     @test shellification_inventory.unit_count == 27
     @test shellification_inventory.pair_count == 378
     @test shellification_inventory.retained_dimension == 223
+    @test first(shellification_inventory.unit_pairs).pair_key ==
+          (first(shellification_inventory.unit_summaries).unit_key,
+              first(shellification_inventory.unit_summaries).unit_key)
     @test first(shellification_inventory.unit_summaries).stratum_kind == :direct_core
     @test first(shellification_inventory.unit_summaries).column_range == 1:125
     @test !shellification_source.full_parent_window_cpb_used

@@ -425,8 +425,16 @@ function _white_lindsey_one_body_batch_pair_inputs(records_or_pairs)
         )
     end
 
-    (records_or_pairs isa Tuple || records_or_pairs isa AbstractVector) ||
-        throw(ArgumentError("White--Lindsey one-body batch expects a tuple or vector"))
+    (
+        records_or_pairs isa Tuple ||
+        records_or_pairs isa AbstractVector ||
+        records_or_pairs isa WhiteLindseyUnitPairIndexTable
+    ) ||
+        throw(
+            ArgumentError(
+                "White--Lindsey one-body batch expects unit pairs or prepared pair coefficients",
+            ),
+        )
     inputs = records_or_pairs
     if all(input -> input isa CUP.UnitPairRecord, inputs)
         batch =
