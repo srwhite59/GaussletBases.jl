@@ -146,7 +146,10 @@ pair/range/global-dimension metadata. The active He readiness audit now validate
 the shellification-backed source as 27 decomposed units, 378 upper-triangular
 unit pairs, retained/global dimension 223, and retained column coverage `1:223`.
 The direct-core unit covers columns `1:125`; boundary units cover the shell
-range `126:223`. The route-global by-center
+range `126:223`. The driver-facing helper
+`white_lindsey_shellification_decomposed_unit_pair_inventory` now owns the
+shellification -> lowering -> retained-unit -> unit-pair -> decomposed-inventory
+handoff for this path. The route-global by-center
 nuclear adapter uses that inventory plus the existing local
 `electron_nuclear_by_center` block path to materialize one uncharged
 retained/global matrix per supplied center. A focused one-center fingerprint
@@ -237,9 +240,14 @@ electron-electron contribution, `1.6861351364925603` Hartree, under the current
 full retained two-index density-density convention.
 
 The larger-box shellification inventory currently stops at a readiness
-checkpoint. Its retained column coverage is complete, but route-global
-one-electron and density-density operator materialization from the
-shellification-backed inventory is the next validation step:
+checkpoint through the same driver-facing helper. The side-13 probe with
+`AsinhMapping(c = 0.1, s = 1.0, tail_spacing = 10.0)` reports source kind
+`:cartesian_shellification_retained_unit_pair_plan`, retained dimension 517, 105
+units, 5,565 upper-triangular unit pairs, retained column coverage from `1:125`
+through `517:517`, and no low-order seed, full-parent CPB, direct Cartesian, or
+ordinary IDA fallback. Route-global one-electron and density-density operator
+materialization from that larger shellification-backed inventory is the next
+validation step:
 `:pending_shellification_backed_operator_materialization_validation`. No
 larger-box RHF energy is currently an active acceptance baseline.
 

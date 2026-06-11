@@ -31,13 +31,17 @@ The private route-shaped global one-body adapter currently composes existing
 local block collections, placement plans, and global safe one-body matrix pilots
 for the term-separated safe one-body terms overlap, kinetic, position_x/y/z,
 x2_x/y/z, plus uncharged by-center electron-nuclear matrices over decomposed
-White--Lindsey unit-pair inventories. This module still does not assemble
-Hamiltonians, Ham bundles, exports, artifacts, final retained PQS pair blocks,
-or full White--Lindsey route/operator inventories.
+White--Lindsey unit-pair inventories. The module also exposes the narrow
+shellification -> lowering -> retained-unit -> unit-pair source constructor
+needed by those inventories. It still does not assemble Hamiltonians, Ham
+bundles, exports, artifacts, final retained PQS pair blocks, or complete
+White--Lindsey route drivers.
 """
 module CartesianPairBlockMaterialization
 
 using ..CartesianCPB
+using ..CartesianShellification
+using ..CartesianTerminalLowering
 using ..CartesianUnitPairs
 using ..CartesianRetainedUnits
 using ..CartesianRouteCore
@@ -49,6 +53,8 @@ using LinearAlgebra
 using SparseArrays
 
 const CPB = CartesianCPB
+const CSH = CartesianShellification
+const CTL = CartesianTerminalLowering
 const CUP = CartesianUnitPairs
 const CRU = CartesianRetainedUnits
 const CRC = CartesianRouteCore
@@ -84,6 +90,7 @@ export PairBlockMaterializationPolicy,
        white_lindsey_boundary_stratum_unit_coefficients,
        white_lindsey_boundary_stratum_unit_coefficient_context,
        white_lindsey_boundary_stratum_pair_unit_coefficients,
+       white_lindsey_shellification_decomposed_unit_pair_inventory,
        white_lindsey_decomposed_unit_pair_inventory,
        white_lindsey_boundary_stratum_overlap_block,
        white_lindsey_boundary_stratum_position_block,

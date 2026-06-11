@@ -107,39 +107,6 @@ function _wl_he_center_records()
     )
 end
 
-function _wl_he_shellification_decomposed_inventory(basis, axis_inputs)
-    CSH = GaussletBases.CartesianShellification
-    CTL = GaussletBases.CartesianTerminalLowering
-    CRU = GaussletBases.CartesianRetainedUnits
-    CUP = GaussletBases.CartesianUnitPairs
-    parent_axes = ntuple(_ -> basis.center_data, 3)
-    shellification_plan = CSH.shellify(
-        parent_axes,
-        ((0.0, 0.0, 0.0),);
-        policy = CSH.OneCenterShellification(core_side = 5, q = 5),
-    )
-    lowering_plan =
-        CTL.lower_terminal_regions(shellification_plan, CTL.WhiteLindseyLowering())
-    retained_unit_plan = CRU.retained_unit_plan(lowering_plan)
-    unit_pair_plan = CUP.unit_pair_plan(retained_unit_plan)
-    inventory =
-        WLHeAcceptanceCPBM.white_lindsey_decomposed_unit_pair_inventory(
-            unit_pair_plan;
-            metadata = (;
-                q = 5,
-                parent_axis_counts = axis_inputs.parent_axis_counts,
-                parent_axis_bundle_object = axis_inputs.parent_axis_bundle_object,
-            ),
-        )
-    return (;
-        shellification_plan,
-        lowering_plan,
-        retained_unit_plan,
-        unit_pair_plan,
-        inventory,
-    )
-end
-
 function _wl_he_overlap_metric_diagnostics(overlap_matrix, decomposed_inventory)
     sym_s = Symmetric((overlap_matrix + transpose(overlap_matrix)) ./ 2)
     eigenvalues = eigvals(sym_s)
@@ -445,10 +412,14 @@ function _wl_decomposed_he_atom_acceptance_audit(;
         end
         center_records = _wl_he_center_records()
         decomposed_inventory_elapsed_seconds = @elapsed begin
+            parent_axes = ntuple(_ -> seed_report.fixture.basis.center_data, 3)
             shellification_inventory_source =
-                _wl_he_shellification_decomposed_inventory(
-                    seed_report.fixture.basis,
-                    axis_inputs,
+                WLHeAcceptanceCPBM.white_lindsey_shellification_decomposed_unit_pair_inventory(
+                    parent_axes,
+                    ((0.0, 0.0, 0.0),);
+                    metadata = (; q = 5),
+                    parent_axis_counts = axis_inputs.parent_axis_counts,
+                    parent_axis_bundle_object = axis_inputs.parent_axis_bundle_object,
                 )
             decomposed_inventory = shellification_inventory_source.inventory
         end

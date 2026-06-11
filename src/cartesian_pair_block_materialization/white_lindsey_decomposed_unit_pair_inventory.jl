@@ -1,8 +1,10 @@
 # Route-owned decomposed White-Lindsey unit-pair inventory.
 #
 # This validates retained-unit pair metadata that later acceptance assembly can
-# consume. It does not build local blocks, assign ranges, assemble matrices, or
-# call the legacy direct Cartesian operator path.
+# consume. For shellification-derived retained units it materializes retained
+# dimensions and column ranges from the White-Lindsey retained-count policy. It
+# does not build local blocks, assemble matrices, or call the legacy direct
+# Cartesian operator path.
 
 const _WHITE_LINDSEY_ACCEPTANCE_ONE_BODY_TERMS = (
     :overlap,
@@ -10,6 +12,90 @@ const _WHITE_LINDSEY_ACCEPTANCE_ONE_BODY_TERMS = (
     :electron_nuclear_by_center,
 )
 const _WHITE_LINDSEY_COMPACT_PAIR_SUMMARY_LIMIT = 1024
+
+function white_lindsey_shellification_decomposed_unit_pair_inventory(
+    parent_axes::NTuple{3,<:AbstractVector},
+    nuclear_positions;
+    shellification_policy = CSH.OneCenterShellification(core_side = 5, q = 5),
+    lowering_policy = CTL.WhiteLindseyLowering(),
+    supported_terms = _WHITE_LINDSEY_ACCEPTANCE_ONE_BODY_TERMS,
+    metadata = (;),
+    parent_axis_counts = ntuple(index -> length(parent_axes[index]), 3),
+    parent_axis_bundle_object = nothing,
+)
+    metadata_tuple = NamedTuple(metadata)
+    try
+        shellification_plan = CSH.shellify(
+            parent_axes,
+            nuclear_positions;
+            policy = shellification_policy,
+        )
+        lowering_plan =
+            CTL.lower_terminal_regions(shellification_plan, lowering_policy)
+        retained_unit_plan = CRU.retained_unit_plan(lowering_plan)
+        unit_pair_plan = CUP.unit_pair_plan(retained_unit_plan)
+        inventory = white_lindsey_decomposed_unit_pair_inventory(
+            unit_pair_plan;
+            supported_terms,
+            metadata = merge(
+                metadata_tuple,
+                (;
+                    parent_axis_counts,
+                    parent_axis_bundle_object,
+                    shellification_policy =
+                        Symbol(nameof(typeof(shellification_policy))),
+                    lowering_policy = Symbol(nameof(typeof(lowering_policy))),
+                    driver_path_source =
+                        :shellification_lowering_retained_units_unit_pairs,
+                ),
+            ),
+        )
+        return (;
+            object_kind =
+                :white_lindsey_shellification_decomposed_unit_pair_inventory,
+            status = inventory.status,
+            blocker = inventory.blocker,
+            shellification_plan,
+            lowering_plan,
+            retained_unit_plan,
+            unit_pair_plan,
+            inventory,
+            shellification_backed_decomposed_wl_inventory =
+                inventory.source_kind ===
+                :cartesian_shellification_retained_unit_pair_plan,
+            low_order_materialized_seed_inventory_used = false,
+            full_parent_window_cpb_used = false,
+            direct_cartesian_product_assembly_used = false,
+            ordinary_cartesian_ida_operators_used = false,
+        )
+    catch err
+        return (;
+            object_kind =
+                :white_lindsey_shellification_decomposed_unit_pair_inventory,
+            status =
+                :blocked_white_lindsey_shellification_decomposed_unit_pair_inventory,
+            blocker = :shellification_decomposed_inventory_construction_failed,
+            error = sprint(showerror, err),
+            shellification_plan = nothing,
+            lowering_plan = nothing,
+            retained_unit_plan = nothing,
+            unit_pair_plan = nothing,
+            inventory = _white_lindsey_decomposed_unit_pair_inventory_result(
+                :blocked_white_lindsey_decomposed_unit_pair_inventory,
+                :shellification_decomposed_inventory_construction_failed,
+                ();
+                source_kind = :cartesian_shellification_retained_unit_pair_plan,
+                supported_terms = Tuple(supported_terms),
+                metadata = metadata_tuple,
+            ),
+            shellification_backed_decomposed_wl_inventory = false,
+            low_order_materialized_seed_inventory_used = false,
+            full_parent_window_cpb_used = false,
+            direct_cartesian_product_assembly_used = false,
+            ordinary_cartesian_ida_operators_used = false,
+        )
+    end
+end
 
 function white_lindsey_decomposed_unit_pair_inventory(
     plan::CUP.UnitPairPlan;

@@ -168,4 +168,29 @@ end
     @test !seed_inventory.direct_cartesian_product_assembly_used
     @test !seed_inventory.ordinary_cartesian_ida_operators_used
     @test !seed_inventory.global_matrices_materialized
+
+    shellification_source =
+        WLDInvCPBM.white_lindsey_shellification_decomposed_unit_pair_inventory(
+            ntuple(_ -> collect(-3.0:3.0), 3),
+            ((0.0, 0.0, 0.0),);
+            metadata = (; q = 5),
+            parent_axis_counts = (7, 7, 7),
+            parent_axis_bundle_object = nothing,
+        )
+    shellification_inventory = shellification_source.inventory
+    @test shellification_source.status ==
+          :available_white_lindsey_decomposed_unit_pair_inventory
+    @test isnothing(shellification_source.blocker)
+    @test shellification_source.shellification_backed_decomposed_wl_inventory
+    @test !shellification_source.low_order_materialized_seed_inventory_used
+    @test shellification_inventory.source_kind ==
+          :cartesian_shellification_retained_unit_pair_plan
+    @test shellification_inventory.unit_count == 27
+    @test shellification_inventory.pair_count == 378
+    @test shellification_inventory.retained_dimension == 223
+    @test first(shellification_inventory.unit_summaries).stratum_kind == :direct_core
+    @test first(shellification_inventory.unit_summaries).column_range == 1:125
+    @test !shellification_source.full_parent_window_cpb_used
+    @test !shellification_source.direct_cartesian_product_assembly_used
+    @test !shellification_source.ordinary_cartesian_ida_operators_used
 end
