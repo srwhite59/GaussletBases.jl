@@ -768,6 +768,7 @@ function _route_global_decomposed_wl_streaming_fill!(
     electron_nuclear_axis_context = nothing,
 )
     cache = Dict{Symbol,Any}()
+    electron_nuclear_prepared_cache = Dict{Symbol,Any}()
     materialized_count = 0
     skipped_count = 0
     placed_block_count = 0
@@ -778,6 +779,86 @@ function _route_global_decomposed_wl_streaming_fill!(
     nuclear_charge = nothing
     nuclear_charge_applied = false
     for unit_pair in unit_pairs
+        if term === :electron_nuclear_by_center &&
+           !isnothing(electron_nuclear_axis_context)
+            axis_context = electron_nuclear_axis_context
+            left_coefficients =
+                _white_lindsey_unit_coefficients_from_local_cache(
+                    cache,
+                    unit_pair.left_unit,
+                )
+            right_coefficients =
+                _white_lindsey_unit_coefficients_from_local_cache(
+                    cache,
+                    unit_pair.right_unit,
+                )
+            left_ready =
+                _white_lindsey_unit_coefficients_materialized(left_coefficients)
+            right_ready =
+                _white_lindsey_unit_coefficients_materialized(right_coefficients)
+            if !(left_ready && right_ready)
+                skipped_count += 1
+                if isnothing(blocker)
+                    _status, pair_blocker =
+                        _white_lindsey_pair_unit_coefficients_status(
+                            left_ready,
+                            right_ready,
+                        )
+                    blocker = pair_blocker
+                end
+                continue
+            end
+            left_unit =
+                _white_lindsey_prepared_unit_for_electron_nuclear_from_cache(
+                    electron_nuclear_prepared_cache,
+                    cache,
+                    unit_pair.left_unit,
+                    axis_context.axis_counts,
+                )
+            right_unit =
+                _white_lindsey_prepared_unit_for_electron_nuclear_from_cache(
+                    electron_nuclear_prepared_cache,
+                    cache,
+                    unit_pair.right_unit,
+                    axis_context.axis_counts,
+                )
+            block =
+                _white_lindsey_electron_nuclear_pair_block_from_prepared_units(
+                    left_unit,
+                    right_unit,
+                    axis_context,
+                )
+            rows = unit_pair.left_unit.column_range
+            columns = unit_pair.right_unit.column_range
+            placement_blocker =
+                _route_global_decomposed_wl_streaming_placement_blocker(
+                    block,
+                    rows,
+                    columns,
+                    size(matrix, 1),
+                )
+            if !isnothing(placement_blocker)
+                skipped_count += 1
+                isnothing(blocker) && (blocker = placement_blocker)
+                continue
+            end
+            matrix[rows, columns] .+= block
+            placed_block_count += 1
+            if rows != columns
+                matrix[columns, rows] .+= transpose(block)
+                placed_block_count += 1
+            end
+            materialized_count += 1
+            if isnothing(center_index)
+                center_summary = axis_context.center_summary
+                center_index = center_summary.center_index
+                center_key = center_summary.center_key
+                center_location = center_summary.location
+                nuclear_charge = center_summary.charge
+                nuclear_charge_applied = false
+            end
+            continue
+        end
         pair_unit_coefficients = _white_lindsey_pair_unit_coefficients_result(
             unit_pair,
             _white_lindsey_unit_coefficients_from_local_cache(
@@ -841,6 +922,8 @@ function _route_global_decomposed_wl_streaming_fill!(
         placed_block_count,
         blocker,
         unit_coefficient_cache_entry_count = length(cache),
+        electron_nuclear_prepared_unit_cache_entry_count =
+            length(electron_nuclear_prepared_cache),
         pair_count = length(unit_pairs),
         center_index,
         center_key,

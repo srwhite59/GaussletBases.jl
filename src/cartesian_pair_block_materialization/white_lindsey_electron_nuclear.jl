@@ -428,6 +428,102 @@ function _white_lindsey_electron_nuclear_support_block(
     return block
 end
 
+function _white_lindsey_prepared_unit_for_electron_nuclear(
+    unit_coefficients,
+    axis_counts::NTuple{3,Int},
+)
+    _white_lindsey_unit_coefficients_materialized(unit_coefficients) ||
+        throw(
+            ArgumentError(
+                "White--Lindsey electron-nuclear optimized path requires unit coefficients",
+            ),
+        )
+    support_indices = unit_coefficients.support_indices
+    _assert_white_lindsey_overlap_support(support_indices, :unit)
+    support_states = [
+        ParentGaussletBases._cartesian_unflat_index(index, axis_counts)
+        for index in support_indices
+    ]
+    support_coefficients = _white_lindsey_support_coefficient_matrix(
+        unit_coefficients.coefficient_matrix,
+        support_indices,
+        unit_coefficients.coefficient_space,
+        :electron_nuclear_unit,
+    )
+    return (;
+        unit_key = unit_coefficients.unit_key,
+        support_indices,
+        support_states,
+        support_coefficients,
+        retained_column_count = size(support_coefficients, 2),
+    )
+end
+
+function _white_lindsey_prepared_unit_for_electron_nuclear_from_cache(
+    prepared_cache,
+    coefficient_cache,
+    unit,
+    axis_counts::NTuple{3,Int},
+)
+    unit_key = _white_lindsey_descriptor_property(unit, :unit_key)
+    if !isnothing(unit_key) && haskey(prepared_cache, unit_key)
+        return prepared_cache[unit_key]
+    end
+    unit_coefficients =
+        _white_lindsey_unit_coefficients_from_local_cache(coefficient_cache, unit)
+    prepared =
+        _white_lindsey_prepared_unit_for_electron_nuclear(
+            unit_coefficients,
+            axis_counts,
+        )
+    isnothing(unit_key) || (prepared_cache[unit_key] = prepared)
+    return prepared
+end
+
+function _white_lindsey_electron_nuclear_pair_block_from_prepared_units(
+    left_unit,
+    right_unit,
+    axis_context,
+)
+    support_block =
+        _white_lindsey_electron_nuclear_support_block_from_states(
+            left_unit.support_states,
+            right_unit.support_states,
+            axis_context.axis_terms,
+            axis_context.coefficients,
+        )
+    return Matrix{Float64}(
+        transpose(left_unit.support_coefficients) *
+        support_block *
+        right_unit.support_coefficients,
+    )
+end
+
+function _white_lindsey_electron_nuclear_support_block_from_states(
+    left_states,
+    right_states,
+    axis_terms,
+    coefficients,
+)
+    block = Matrix{Float64}(undef, length(left_states), length(right_states))
+    @inbounds for (row, left_state) in pairs(left_states)
+        ix_left, iy_left, iz_left = left_state
+        for (column, right_state) in pairs(right_states)
+            ix_right, iy_right, iz_right = right_state
+            value = 0.0
+            @simd for term in eachindex(coefficients)
+                value +=
+                    coefficients[term] *
+                    axis_terms.x[term, ix_left, ix_right] *
+                    axis_terms.y[term, iy_left, iy_right] *
+                    axis_terms.z[term, iz_left, iz_right]
+            end
+            block[row, column] = value
+        end
+    end
+    return block
+end
+
 function _white_lindsey_electron_nuclear_axis_term_shapes(axis_terms)
     return (x = size(axis_terms.x), y = size(axis_terms.y), z = size(axis_terms.z))
 end
