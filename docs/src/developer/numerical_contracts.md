@@ -271,9 +271,9 @@ bohr. The converged-density Coulomb contribution is positive and equals the RHF
 electron-electron contribution, `1.3106054775285387` Hartree, under the current
 full retained two-index density-density convention.
 
-The larger-box shellification inventory currently stops at a pre-RHF
-convention checkpoint through the same driver-facing helper. The side-13 probe
-with `AsinhMapping(c = 0.1, s = 1.0, tail_spacing = 10.0)` reports source kind
+The larger-box shellification path is currently exploratory rather than a
+routine acceptance gate. The side-13 probe with
+`AsinhMapping(c = 0.1, s = 1.0, tail_spacing = 10.0)` reports source kind
 `:cartesian_shellification_retained_unit_pair_plan`, retained dimension 517, 105
 units, 5,565 upper-triangular unit pairs represented by
 `CartesianUnitPairs.UnitPairIndexTable`, retained column coverage from `1:125`
@@ -294,6 +294,20 @@ RHF energy about `-2.8364979997009137` Hartree. The retained density trace was
 1.0000000000000004 for the occupied spatial orbital, giving electron count
 2.000000000000001 under the restricted closed-shell convention. This is an
 exploratory larger-box physics result, not yet a permanent acceptance baseline.
+
+A short fixed-`ns = 5` gausslet-only He ladder then found the current best
+exploratory point at `d = 0.075`, `s = 0.75`, side count 17, retained dimension
+713, and 157 retained units / 12,403 unit pairs. That point gives H1 error about
+`0.002753`, IDA self-Coulomb error about `0.003389`, and RHF total energy about
+`-2.858531351214` Hartree, about `+0.003149` Hartree above the He HF reference.
+A larger diagnostic point at `d = 0.05`, `s = 0.5`, side count 23, retained
+dimension 1007, improved the H1 and self-Coulomb diagnostics further but moved
+the RHF total slightly away from the HF reference. The side-17 fixture is the
+current best gausslet-only He exploratory point, but it is not a routine
+acceptance test because cold runtime is still too long. Further gausslet-only He
+convergence work should vary `ns`, `s`, and `d` together while keeping an
+adequate box, roughly `R >= 8`, rather than overfitting fixed-`ns = 5` spacing.
+The side-23 result is diagnostic only, not the chosen next fixture.
 
 The current coarse timing split for the active tiny-box He RHF acceptance is
 reported by the test as diagnostics, not asserted as performance thresholds.
