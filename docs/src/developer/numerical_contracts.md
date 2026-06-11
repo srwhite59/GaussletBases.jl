@@ -237,14 +237,42 @@ bohr. The converged-density Coulomb contribution is positive and equals the RHF
 electron-electron contribution, `1.6861351364925603` Hartree, under the current
 full retained two-index density-density convention.
 
-The current coarse timing split for the active tiny-box He RHF acceptance is:
-parent seed report about 4.40 seconds, parent-axis setup about 0.026 seconds,
-decomposed inventory about 4.67 seconds, decomposed one-electron operator build
-about 61.60 seconds, density-density matrix build about 0.77 seconds,
-Hamiltonian/interactions build total about 67.06 seconds, RHF solve about 0.79
-seconds, and total acceptance elapsed about 73.92 seconds. These timings are
-reported by the test as coarse diagnostics, not asserted as performance
-thresholds.
+The current coarse timing split for the active tiny-box He RHF acceptance is
+reported by the test as diagnostics, not asserted as performance thresholds. A
+representative run was:
+
+| phase | elapsed seconds |
+| --- | ---: |
+| parent seed report | 4.411 |
+| parent-axis setup | 0.026 |
+| decomposed inventory | 4.640 |
+| route-global overlap | 26.927 |
+| route-global kinetic | 0.729 |
+| route-global electron-nuclear by center | 33.788 |
+| one-electron Hamiltonian assembly | 0.063 |
+| density-density matrix build | 0.779 |
+| route operator and interaction build total | 62.287 |
+| Hamiltonian/interactions build total | 66.953 |
+| RHF solve | 0.788 |
+| total acceptance elapsed | 73.813 |
+
+The slow phases are therefore route-global overlap and route-global
+electron-nuclear by-center assembly, not RHF, density-density, kinetic, or
+Hamiltonian summation. The older flat/non-module WL path in this repo is the
+right comparison target for the next optimization pass. The corresponding
+optimized functions are `_qwrg_diatomic_overlap_matrix`,
+`_qwrg_diatomic_kinetic_matrix`, `_qwrg_diatomic_nuclear_one_body_by_center`,
+and the direct/staged by-center nuclear helpers in `ordinary_qw_raw_blocks.jl`,
+with orchestration in `_ordinary_cartesian_qiu_white_operators_pure_bond_aligned_direct`.
+That code batches work by reusing parent 1D bundles, filling product matrices
+directly for overlap/kinetic, precomputing per-axis Gaussian nuclear term
+tables once per unique center, and then contracting/filling blocks without
+reconstructing route inventories or local placement plans per operator. The
+next concrete optimization target is to make the decomposed/module route reuse
+the decomposed unit-pair inventory, pair coefficients, parent factor packets,
+and local block collections across overlap, kinetic, and nuclear assembly,
+rather than rebuilding equivalent route-local scaffolding separately for each
+term.
 
 One supported exploratory probe with the same one-shell decomposed topology and
 finer Z = 2 spacing, `d = 0.15`, shrinks the physical endpoints to about

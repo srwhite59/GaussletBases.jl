@@ -444,6 +444,10 @@ function _wl_decomposed_he_atom_acceptance_audit(;
     parent_axis_setup_elapsed_seconds = 0.0
     decomposed_inventory_elapsed_seconds = 0.0
     one_electron_operator_build_elapsed_seconds = 0.0
+    route_global_overlap_build_elapsed_seconds = 0.0
+    route_global_kinetic_build_elapsed_seconds = 0.0
+    route_global_electron_nuclear_by_center_build_elapsed_seconds = 0.0
+    one_electron_hamiltonian_assembly_elapsed_seconds = 0.0
     one_electron_solve_elapsed_seconds = 0.0
     density_density_elapsed_seconds = 0.0
     hartree_fock_elapsed_seconds = 0.0
@@ -478,37 +482,46 @@ function _wl_decomposed_he_atom_acceptance_audit(;
         fixture_diagnostics = _wl_he_fixture_diagnostics(seed_report, axis_inputs)
         scalar_convention = _wl_he_scalar_density_density_convention_check()
         one_electron_operator_build_elapsed_seconds = @elapsed begin
-            overlap_global =
-                WLHeAcceptanceCPBM.route_global_decomposed_wl_overlap_matrix(
-                    seed_report;
-                    parent_axis_counts = axis_inputs.parent_axis_counts,
-                    parent_axis_bundle_object =
-                        axis_inputs.parent_axis_bundle_object,
-                    overlap_1d = axis_inputs.overlap_1d,
-                )
-            kinetic_global =
-                WLHeAcceptanceCPBM.route_global_decomposed_wl_kinetic_matrix(
-                    seed_report;
-                    parent_axis_counts = axis_inputs.parent_axis_counts,
-                    parent_axis_bundle_object =
-                        axis_inputs.parent_axis_bundle_object,
-                    overlap_1d = axis_inputs.overlap_1d,
-                    kinetic_1d = axis_inputs.kinetic_1d,
-                )
-            by_center_global =
-                WLHeAcceptanceCPBM.route_global_electron_nuclear_by_center_matrices(
-                    seed_report;
-                    parent_axis_counts = axis_inputs.parent_axis_counts,
-                    parent_axis_bundle_object =
-                        axis_inputs.parent_axis_bundle_object,
-                    coulomb_expansion = expansion,
-                    center_records,
-                )
-            hamiltonian =
-                WLHeAcceptanceCPBM.white_lindsey_decomposed_one_electron_hamiltonian(
-                    kinetic_global,
-                    by_center_global,
-                )
+            route_global_overlap_build_elapsed_seconds = @elapsed begin
+                overlap_global =
+                    WLHeAcceptanceCPBM.route_global_decomposed_wl_overlap_matrix(
+                        seed_report;
+                        parent_axis_counts = axis_inputs.parent_axis_counts,
+                        parent_axis_bundle_object =
+                            axis_inputs.parent_axis_bundle_object,
+                        overlap_1d = axis_inputs.overlap_1d,
+                    )
+            end
+            route_global_kinetic_build_elapsed_seconds = @elapsed begin
+                kinetic_global =
+                    WLHeAcceptanceCPBM.route_global_decomposed_wl_kinetic_matrix(
+                        seed_report;
+                        parent_axis_counts = axis_inputs.parent_axis_counts,
+                        parent_axis_bundle_object =
+                            axis_inputs.parent_axis_bundle_object,
+                        overlap_1d = axis_inputs.overlap_1d,
+                        kinetic_1d = axis_inputs.kinetic_1d,
+                    )
+            end
+            route_global_electron_nuclear_by_center_build_elapsed_seconds =
+                @elapsed begin
+                    by_center_global =
+                        WLHeAcceptanceCPBM.route_global_electron_nuclear_by_center_matrices(
+                            seed_report;
+                            parent_axis_counts = axis_inputs.parent_axis_counts,
+                            parent_axis_bundle_object =
+                                axis_inputs.parent_axis_bundle_object,
+                            coulomb_expansion = expansion,
+                            center_records,
+                        )
+                end
+            one_electron_hamiltonian_assembly_elapsed_seconds = @elapsed begin
+                hamiltonian =
+                    WLHeAcceptanceCPBM.white_lindsey_decomposed_one_electron_hamiltonian(
+                        kinetic_global,
+                        by_center_global,
+                    )
+            end
         end
         overlap_diagnostics =
             _wl_he_overlap_metric_diagnostics(
@@ -735,6 +748,14 @@ function _wl_decomposed_he_atom_acceptance_audit(;
             parent_axis_setup_elapsed_seconds,
         decomposed_inventory_elapsed =
             decomposed_inventory_elapsed_seconds,
+        route_global_overlap_build_elapsed =
+            route_global_overlap_build_elapsed_seconds,
+        route_global_kinetic_build_elapsed =
+            route_global_kinetic_build_elapsed_seconds,
+        route_global_electron_nuclear_by_center_build_elapsed =
+            route_global_electron_nuclear_by_center_build_elapsed_seconds,
+        one_electron_hamiltonian_assembly_elapsed =
+            one_electron_hamiltonian_assembly_elapsed_seconds,
         one_electron_operator_build_elapsed =
             one_electron_operator_build_elapsed_seconds,
         one_electron_solve_elapsed = one_electron_solve_elapsed_seconds,
@@ -745,6 +766,9 @@ function _wl_decomposed_he_atom_acceptance_audit(;
         hamiltonian_build_elapsed_total =
             parent_axis_setup_elapsed_seconds +
             decomposed_inventory_elapsed_seconds +
+            one_electron_operator_build_elapsed_seconds +
+            density_density_elapsed_seconds,
+        route_operator_and_interaction_build_elapsed_total =
             one_electron_operator_build_elapsed_seconds +
             density_density_elapsed_seconds,
         rhf_iteration_elapsed_seconds = hartree_fock_elapsed_seconds,
@@ -905,11 +929,23 @@ end
           report.scalar_density_density_convention_expected atol = 1.0e-14 rtol = 0.0
     @test report.parent_axis_setup_elapsed >= 0.0
     @test report.decomposed_inventory_elapsed >= 0.0
+    @test report.route_global_overlap_build_elapsed >= 0.0
+    @test report.route_global_kinetic_build_elapsed >= 0.0
+    @test report.route_global_electron_nuclear_by_center_build_elapsed >= 0.0
+    @test report.one_electron_hamiltonian_assembly_elapsed >= 0.0
     @test report.one_electron_operator_build_elapsed >= 0.0
+    @test report.one_electron_operator_build_elapsed >=
+          report.route_global_overlap_build_elapsed
+    @test report.one_electron_operator_build_elapsed >=
+          report.route_global_kinetic_build_elapsed
+    @test report.one_electron_operator_build_elapsed >=
+          report.route_global_electron_nuclear_by_center_build_elapsed
     @test report.density_density_matrix_build_elapsed_seconds >= 0.0
     @test report.density_density_matrix_build_elapsed >= 0.0
-    @test report.hamiltonian_build_elapsed_total >=
+    @test report.route_operator_and_interaction_build_elapsed_total >=
           report.density_density_matrix_build_elapsed
+    @test report.hamiltonian_build_elapsed_total >=
+          report.route_operator_and_interaction_build_elapsed_total
     @test report.rhf_iteration_elapsed_seconds >= 0.0
     @test report.hartree_fock_solve_elapsed >= 0.0
     @test report.total_acceptance_elapsed >=
