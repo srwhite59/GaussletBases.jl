@@ -719,6 +719,10 @@ function _route_global_decomposed_wl_streaming_one_body_matrix(
 )
     dimension = inventory.retained_dimension
     matrix = zeros(Float64, dimension, dimension)
+    coefficient_cache =
+        _white_lindsey_decomposed_operator_unit_coefficient_cache(inventory)
+    prepared_cache =
+        _white_lindsey_decomposed_operator_prepared_unit_cache(inventory)
     stream_state = @timeg "decomposed_wl.one_body.local_batch" begin
         _route_global_decomposed_wl_streaming_fill!(
             matrix,
@@ -727,6 +731,8 @@ function _route_global_decomposed_wl_streaming_one_body_matrix(
             parent_axis_counts,
             overlap_1d,
             kinetic_1d,
+            unit_coefficient_cache = coefficient_cache,
+            prepared_unit_cache = prepared_cache,
         )
     end
     global_matrix_result =
@@ -766,9 +772,35 @@ function _route_global_decomposed_wl_streaming_fill!(
     coulomb_expansion = nothing,
     center_record = nothing,
     electron_nuclear_axis_context = nothing,
+    unit_coefficient_cache = nothing,
+    prepared_unit_cache = nothing,
+    electron_nuclear_scratch = nothing,
 )
-    cache = Dict{Symbol,Any}()
-    electron_nuclear_prepared_cache = Dict{Symbol,Any}()
+    cache =
+        isnothing(unit_coefficient_cache) ?
+        Dict{Symbol,Any}() :
+        unit_coefficient_cache
+    prepared_cache =
+        isnothing(prepared_unit_cache) ?
+        Dict{Any,Any}() :
+        prepared_unit_cache
+    axis_counts =
+        (term in (:overlap, :kinetic) ||
+         term === :electron_nuclear_by_center) ?
+        _axis_counts_tuple(parent_axis_counts) :
+        nothing
+    overlap_axes =
+        term in (:overlap, :kinetic) ? _overlap_1d_tuple(overlap_1d) : nothing
+    kinetic_axes = term === :kinetic ? _operator_1d_tuple(
+        kinetic_1d,
+        "kinetic_1d",
+    ) : nothing
+    if term in (:overlap, :kinetic)
+        _assert_overlap_axis_sizes(overlap_axes, axis_counts)
+    end
+    if term === :kinetic
+        _assert_operator_axis_sizes(kinetic_axes, axis_counts, "kinetic_1d")
+    end
     materialized_count = 0
     skipped_count = 0
     placed_block_count = 0
@@ -809,21 +841,28 @@ function _route_global_decomposed_wl_streaming_fill!(
                 continue
             end
             left_unit =
-                _white_lindsey_prepared_unit_for_electron_nuclear_from_cache(
-                    electron_nuclear_prepared_cache,
+                _white_lindsey_prepared_unit_for_local_operator_from_cache(
+                    prepared_cache,
                     cache,
                     unit_pair.left_unit,
                     axis_context.axis_counts,
                 )
             right_unit =
-                _white_lindsey_prepared_unit_for_electron_nuclear_from_cache(
-                    electron_nuclear_prepared_cache,
+                _white_lindsey_prepared_unit_for_local_operator_from_cache(
+                    prepared_cache,
                     cache,
                     unit_pair.right_unit,
                     axis_context.axis_counts,
                 )
             block =
+                isnothing(electron_nuclear_scratch) ?
                 _white_lindsey_electron_nuclear_pair_block_from_prepared_units(
+                    left_unit,
+                    right_unit,
+                    axis_context,
+                ) :
+                _white_lindsey_fill_electron_nuclear_pair_block!(
+                    electron_nuclear_scratch,
                     left_unit,
                     right_unit,
                     axis_context,
@@ -842,12 +881,13 @@ function _route_global_decomposed_wl_streaming_fill!(
                 isnothing(blocker) && (blocker = placement_blocker)
                 continue
             end
-            matrix[rows, columns] .+= block
-            placed_block_count += 1
-            if rows != columns
-                matrix[columns, rows] .+= transpose(block)
-                placed_block_count += 1
-            end
+            placed_block_count +=
+                _white_lindsey_accumulate_streaming_block!(
+                    matrix,
+                    rows,
+                    columns,
+                    block,
+                )
             materialized_count += 1
             if isnothing(center_index)
                 center_summary = axis_context.center_summary
@@ -859,39 +899,71 @@ function _route_global_decomposed_wl_streaming_fill!(
             end
             continue
         end
-        pair_unit_coefficients = _white_lindsey_pair_unit_coefficients_result(
-            unit_pair,
+        left_coefficients =
             _white_lindsey_unit_coefficients_from_local_cache(
                 cache,
                 unit_pair.left_unit,
-            ),
+            )
+        right_coefficients =
             _white_lindsey_unit_coefficients_from_local_cache(
                 cache,
                 unit_pair.right_unit,
-            ),
-            length(cache),
-        )
-        if !_is_ready_white_lindsey_pair_unit_coefficients(pair_unit_coefficients)
+            )
+        left_ready =
+            _white_lindsey_unit_coefficients_materialized(left_coefficients)
+        right_ready =
+            _white_lindsey_unit_coefficients_materialized(right_coefficients)
+        if !(left_ready && right_ready)
             skipped_count += 1
-            isnothing(blocker) && (blocker = pair_unit_coefficients.blocker)
+            if isnothing(blocker)
+                _status, pair_blocker =
+                    _white_lindsey_pair_unit_coefficients_status(
+                        left_ready,
+                        right_ready,
+                    )
+                blocker = pair_blocker
+            end
             continue
         end
-        result = white_lindsey_boundary_stratum_one_body_block(
-            pair_unit_coefficients,
-            term;
-            parent_axis_counts,
-            overlap_1d,
-            kinetic_1d,
-            parent_axis_bundle_object,
-            coulomb_expansion,
-            center_record,
-            electron_nuclear_axis_context,
+        left_unit =
+            _white_lindsey_prepared_unit_for_local_operator_from_cache(
+                prepared_cache,
+                cache,
+                unit_pair.left_unit,
+                axis_counts,
+            )
+        right_unit =
+            _white_lindsey_prepared_unit_for_local_operator_from_cache(
+                prepared_cache,
+                cache,
+                unit_pair.right_unit,
+                axis_counts,
+            )
+        block =
+            term === :overlap ?
+            _white_lindsey_pair_product_block_from_prepared_units(
+                left_unit,
+                right_unit,
+                overlap_axes,
+            ) :
+            (
+                term === :kinetic ?
+                _white_lindsey_pair_kinetic_block_from_prepared_units(
+                    left_unit,
+                    right_unit,
+                    overlap_axes,
+                    kinetic_axes,
+                ) :
+                nothing
+            )
+        isnothing(block) && throw(
+            ArgumentError("unsupported streaming decomposed WL one-body term $(term)"),
         )
         rows = unit_pair.left_unit.column_range
         columns = unit_pair.right_unit.column_range
         placement_blocker =
             _route_global_decomposed_wl_streaming_placement_blocker(
-                result.block,
+                block,
                 rows,
                 columns,
                 size(matrix, 1),
@@ -901,20 +973,13 @@ function _route_global_decomposed_wl_streaming_fill!(
             isnothing(blocker) && (blocker = placement_blocker)
             continue
         end
-        matrix[rows, columns] .+= result.block
-        placed_block_count += 1
-        if rows != columns
-            matrix[columns, rows] .+= transpose(result.block)
-            placed_block_count += 1
-        end
+        placed_block_count += _white_lindsey_accumulate_streaming_block!(
+            matrix,
+            rows,
+            columns,
+            block,
+        )
         materialized_count += 1
-        if term === :electron_nuclear_by_center && isnothing(center_index)
-            center_index = result.metadata.center_index
-            center_key = result.metadata.center_key
-            center_location = result.metadata.center_location
-            nuclear_charge = result.metadata.nuclear_charge
-            nuclear_charge_applied = result.metadata.nuclear_charge_applied
-        end
     end
     return (;
         materialized_count,
@@ -923,7 +988,7 @@ function _route_global_decomposed_wl_streaming_fill!(
         blocker,
         unit_coefficient_cache_entry_count = length(cache),
         electron_nuclear_prepared_unit_cache_entry_count =
-            length(electron_nuclear_prepared_cache),
+            length(prepared_cache),
         pair_count = length(unit_pairs),
         center_index,
         center_key,
@@ -938,6 +1003,99 @@ function _route_global_decomposed_wl_streaming_fill!(
         pair_lookup_materialized = false,
         placement_records_materialized = false,
     )
+end
+
+function _white_lindsey_accumulate_streaming_block!(
+    matrix::AbstractMatrix{Float64},
+    rows::UnitRange{Int},
+    columns::UnitRange{Int},
+    block,
+)
+    row_first = first(rows)
+    column_first = first(columns)
+    @inbounds for local_column in axes(block, 2)
+        global_column = column_first + local_column - 1
+        for local_row in axes(block, 1)
+            global_row = row_first + local_row - 1
+            matrix[global_row, global_column] += block[local_row, local_column]
+        end
+    end
+    rows == columns && return 1
+    @inbounds for local_column in axes(block, 2)
+        global_row = column_first + local_column - 1
+        for local_row in axes(block, 1)
+            global_column = row_first + local_row - 1
+            matrix[global_row, global_column] += block[local_row, local_column]
+        end
+    end
+    return 2
+end
+
+function _white_lindsey_decomposed_operator_cache(inventory)
+    cache = _route_global_one_body_value(inventory, :operator_cache, nothing)
+    isnothing(cache) && return _white_lindsey_decomposed_operator_cache()
+    return cache
+end
+
+function _white_lindsey_decomposed_operator_unit_coefficient_cache(inventory)
+    cache = _white_lindsey_decomposed_operator_cache(inventory)
+    return cache.unit_coefficients
+end
+
+function _white_lindsey_decomposed_operator_prepared_unit_cache(inventory)
+    cache = _white_lindsey_decomposed_operator_cache(inventory)
+    return cache.prepared_units
+end
+
+function _white_lindsey_pair_product_block_from_prepared_units(
+    left_unit,
+    right_unit,
+    operator_axes,
+)
+    support_block =
+        Matrix{Float64}(
+            undef,
+            length(left_unit.support_states),
+            length(right_unit.support_states),
+        )
+    _fill_source_mode_product_block!(
+        support_block,
+        left_unit.support_states,
+        right_unit.support_states,
+        operator_axes[1],
+        operator_axes[2],
+        operator_axes[3],
+    )
+    return Matrix{Float64}(
+        transpose(left_unit.support_coefficients) *
+        support_block *
+        right_unit.support_coefficients,
+    )
+end
+
+function _white_lindsey_pair_kinetic_block_from_prepared_units(
+    left_unit,
+    right_unit,
+    overlap_axes,
+    kinetic_axes,
+)
+    block =
+        _white_lindsey_pair_product_block_from_prepared_units(
+            left_unit,
+            right_unit,
+            (kinetic_axes[1], overlap_axes[2], overlap_axes[3]),
+        )
+    block .+= _white_lindsey_pair_product_block_from_prepared_units(
+        left_unit,
+        right_unit,
+        (overlap_axes[1], kinetic_axes[2], overlap_axes[3]),
+    )
+    block .+= _white_lindsey_pair_product_block_from_prepared_units(
+        left_unit,
+        right_unit,
+        (overlap_axes[1], overlap_axes[2], kinetic_axes[3]),
+    )
+    return block
 end
 
 function _route_global_decomposed_wl_streaming_placement_blocker(
@@ -1606,6 +1764,16 @@ function _route_global_decomposed_wl_streaming_electron_nuclear_by_center_matrix
         center_record,
     )
     matrix = zeros(Float64, dimension, dimension)
+    coefficient_cache =
+        _white_lindsey_decomposed_operator_unit_coefficient_cache(inventory)
+    prepared_cache =
+        _white_lindsey_decomposed_operator_prepared_unit_cache(inventory)
+    scratch = _white_lindsey_electron_nuclear_streaming_scratch(
+        inventory,
+        coefficient_cache,
+        prepared_cache,
+        axis_context.axis_counts,
+    )
     stream_state =
         @timeg "decomposed_wl.electron_nuclear_by_center.local_batch" begin
             _route_global_decomposed_wl_streaming_fill!(
@@ -1617,6 +1785,9 @@ function _route_global_decomposed_wl_streaming_electron_nuclear_by_center_matrix
                 coulomb_expansion,
                 center_record,
                 electron_nuclear_axis_context = axis_context,
+                unit_coefficient_cache = coefficient_cache,
+                prepared_unit_cache = prepared_cache,
+                electron_nuclear_scratch = scratch,
             )
         end
     global_matrix_result =

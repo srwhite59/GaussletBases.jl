@@ -56,6 +56,7 @@ function route_global_decomposed_wl_density_density_matrix(
             inventory,
             parent_axis_bundle_object,
             axis_counts,
+            _white_lindsey_decomposed_operator_unit_coefficient_cache(inventory),
         )
     retained_weights.status === :materialized_retained_density_weights ||
         return _route_global_density_density_result(
@@ -68,6 +69,10 @@ function route_global_decomposed_wl_density_density_matrix(
         )
     matrix = zeros(Float64, retained_dimension, retained_dimension)
     if inventory.unit_pairs isa CUP.UnitPairIndexTable
+        coefficient_cache =
+            _white_lindsey_decomposed_operator_unit_coefficient_cache(inventory)
+        prepared_cache =
+            _white_lindsey_decomposed_operator_prepared_unit_cache(inventory)
         stream_state = @timeg "decomposed_wl.density_density.local_pair_stream" begin
             _route_global_density_density_streaming_fill!(
                 matrix,
@@ -75,6 +80,8 @@ function route_global_decomposed_wl_density_density_matrix(
                 axis_counts,
                 raw_pair_factor_terms,
                 coefficients,
+                unit_coefficient_cache = coefficient_cache,
+                prepared_unit_cache = prepared_cache,
             )
         end
         if !isnothing(stream_state.blocker)
@@ -201,8 +208,18 @@ function _route_global_density_density_streaming_fill!(
     axis_counts::NTuple{3,Int},
     pair_factor_terms,
     coefficients::Vector{Float64},
+    ;
+    unit_coefficient_cache = nothing,
+    prepared_unit_cache = nothing,
 )
-    cache = Dict{Symbol,Any}()
+    cache =
+        isnothing(unit_coefficient_cache) ?
+        Dict{Symbol,Any}() :
+        unit_coefficient_cache
+    prepared_cache =
+        isnothing(prepared_unit_cache) ?
+        Dict{Any,Any}() :
+        prepared_unit_cache
     materialized_count = 0
     skipped_count = 0
     placed_block_count = 0
@@ -210,30 +227,51 @@ function _route_global_density_density_streaming_fill!(
     blocked_pair_key = nothing
     dimension = size(matrix, 1)
     for unit_pair in unit_pairs
-        pair_coefficients = _white_lindsey_pair_unit_coefficients_result(
-            unit_pair,
+        left_coefficients =
             _white_lindsey_unit_coefficients_from_local_cache(
                 cache,
                 unit_pair.left_unit,
-            ),
+            )
+        right_coefficients =
             _white_lindsey_unit_coefficients_from_local_cache(
                 cache,
                 unit_pair.right_unit,
-            ),
-            length(cache),
-        )
-        if !_is_ready_white_lindsey_pair_unit_coefficients(pair_coefficients)
+            )
+        left_ready =
+            _white_lindsey_unit_coefficients_materialized(left_coefficients)
+        right_ready =
+            _white_lindsey_unit_coefficients_materialized(right_coefficients)
+        if !(left_ready && right_ready)
             skipped_count += 1
             if isnothing(blocker)
-                blocker = pair_coefficients.blocker
-                blocked_pair_key = pair_coefficients.pair_key
+                _status, pair_blocker =
+                    _white_lindsey_pair_unit_coefficients_status(
+                        left_ready,
+                        right_ready,
+                    )
+                blocker = pair_blocker
+                blocked_pair_key = unit_pair.pair_key
             end
             continue
         end
+        left_unit =
+            _white_lindsey_prepared_unit_for_local_operator_from_cache(
+                prepared_cache,
+                cache,
+                unit_pair.left_unit,
+                axis_counts,
+            )
+        right_unit =
+            _white_lindsey_prepared_unit_for_local_operator_from_cache(
+                prepared_cache,
+                cache,
+                unit_pair.right_unit,
+                axis_counts,
+            )
 
-        block = _white_lindsey_density_density_pair_block(
-            pair_coefficients,
-            axis_counts,
+        block = _white_lindsey_density_density_pair_block_from_prepared_units(
+            left_unit,
+            right_unit,
             pair_factor_terms,
             coefficients,
         )
@@ -255,12 +293,12 @@ function _route_global_density_density_streaming_fill!(
             continue
         end
 
-        matrix[rows, columns] .+= block
-        placed_block_count += 1
-        if rows != columns
-            matrix[columns, rows] .+= transpose(block)
-            placed_block_count += 1
-        end
+        placed_block_count += _white_lindsey_accumulate_streaming_block!(
+            matrix,
+            rows,
+            columns,
+            block,
+        )
         materialized_count += 1
     end
     return (;
@@ -270,6 +308,7 @@ function _route_global_density_density_streaming_fill!(
         blocker,
         blocked_pair_key,
         unit_coefficient_cache_entry_count = length(cache),
+        prepared_unit_cache_entry_count = length(prepared_cache),
         pair_count = length(unit_pairs),
         materialization_path =
             :white_lindsey_decomposed_wl_streaming_density_density_global_assembly,
@@ -438,10 +477,56 @@ function _white_lindsey_density_density_support_block(
     return block
 end
 
+function _white_lindsey_density_density_pair_block_from_prepared_units(
+    left_unit,
+    right_unit,
+    pair_factor_terms,
+    coefficients::Vector{Float64},
+)
+    support_block =
+        _white_lindsey_density_density_support_block_from_states(
+            left_unit.support_states,
+            right_unit.support_states,
+            pair_factor_terms,
+            coefficients,
+        )
+    return Matrix{Float64}(
+        transpose(left_unit.support_coefficients) *
+        support_block *
+        right_unit.support_coefficients,
+    )
+end
+
+function _white_lindsey_density_density_support_block_from_states(
+    left_states,
+    right_states,
+    pair_factor_terms,
+    coefficients::Vector{Float64},
+)
+    block = Matrix{Float64}(undef, length(left_states), length(right_states))
+    @inbounds for (row, left_state) in pairs(left_states)
+        ix_left, iy_left, iz_left = left_state
+        for (column, right_state) in pairs(right_states)
+            ix_right, iy_right, iz_right = right_state
+            value = 0.0
+            @simd for term in eachindex(coefficients)
+                value +=
+                    coefficients[term] *
+                    pair_factor_terms.x[term, ix_left, ix_right] *
+                    pair_factor_terms.y[term, iy_left, iy_right] *
+                    pair_factor_terms.z[term, iz_left, iz_right]
+            end
+            block[row, column] = value
+        end
+    end
+    return block
+end
+
 function _white_lindsey_density_density_retained_weights(
     inventory,
     parent_axis_bundle_object,
     axis_counts::NTuple{3,Int},
+    cache = Dict{Symbol,Any}(),
 )
     units = _route_global_one_body_value(inventory, :retained_units, ())
     isempty(units) && return (;
@@ -477,7 +562,6 @@ function _white_lindsey_density_density_retained_weights(
     )
 
     weights = zeros(Float64, Int(retained_dimension))
-    cache = Dict{Symbol,Any}()
     for unit in units
         unit_weights =
             _white_lindsey_density_density_unit_retained_weights(

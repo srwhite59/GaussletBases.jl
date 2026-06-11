@@ -428,7 +428,7 @@ function _white_lindsey_electron_nuclear_support_block(
     return block
 end
 
-function _white_lindsey_prepared_unit_for_electron_nuclear(
+function _white_lindsey_prepared_unit_for_local_operator(
     unit_coefficients,
     axis_counts::NTuple{3,Int},
 )
@@ -459,25 +459,50 @@ function _white_lindsey_prepared_unit_for_electron_nuclear(
     )
 end
 
-function _white_lindsey_prepared_unit_for_electron_nuclear_from_cache(
+function _white_lindsey_prepared_unit_for_electron_nuclear(
+    unit_coefficients,
+    axis_counts::NTuple{3,Int},
+)
+    return _white_lindsey_prepared_unit_for_local_operator(
+        unit_coefficients,
+        axis_counts,
+    )
+end
+
+function _white_lindsey_prepared_unit_for_local_operator_from_cache(
     prepared_cache,
     coefficient_cache,
     unit,
     axis_counts::NTuple{3,Int},
 )
     unit_key = _white_lindsey_descriptor_property(unit, :unit_key)
-    if !isnothing(unit_key) && haskey(prepared_cache, unit_key)
-        return prepared_cache[unit_key]
+    cache_key = isnothing(unit_key) ? nothing : (axis_counts, unit_key)
+    if !isnothing(cache_key) && haskey(prepared_cache, cache_key)
+        return prepared_cache[cache_key]
     end
     unit_coefficients =
         _white_lindsey_unit_coefficients_from_local_cache(coefficient_cache, unit)
     prepared =
-        _white_lindsey_prepared_unit_for_electron_nuclear(
+        _white_lindsey_prepared_unit_for_local_operator(
             unit_coefficients,
             axis_counts,
         )
-    isnothing(unit_key) || (prepared_cache[unit_key] = prepared)
+    isnothing(cache_key) || (prepared_cache[cache_key] = prepared)
     return prepared
+end
+
+function _white_lindsey_prepared_unit_for_electron_nuclear_from_cache(
+    prepared_cache,
+    coefficient_cache,
+    unit,
+    axis_counts::NTuple{3,Int},
+)
+    return _white_lindsey_prepared_unit_for_local_operator_from_cache(
+        prepared_cache,
+        coefficient_cache,
+        unit,
+        axis_counts,
+    )
 end
 
 function _white_lindsey_electron_nuclear_pair_block_from_prepared_units(
@@ -499,6 +524,64 @@ function _white_lindsey_electron_nuclear_pair_block_from_prepared_units(
     )
 end
 
+function _white_lindsey_electron_nuclear_streaming_scratch(
+    inventory,
+    coefficient_cache,
+    prepared_cache,
+    axis_counts::NTuple{3,Int},
+)
+    max_support = 0
+    max_retained = 0
+    for unit in _route_global_one_body_value(inventory, :retained_units, ())
+        prepared =
+            _white_lindsey_prepared_unit_for_local_operator_from_cache(
+                prepared_cache,
+                coefficient_cache,
+                unit,
+                axis_counts,
+            )
+        max_support = max(max_support, length(prepared.support_states))
+        max_retained = max(max_retained, size(prepared.support_coefficients, 2))
+    end
+    max_support > 0 && max_retained > 0 || return nothing
+    return (;
+        support_block = Matrix{Float64}(undef, max_support, max_support),
+        temp_block = Matrix{Float64}(undef, max_retained, max_support),
+        retained_block = Matrix{Float64}(undef, max_retained, max_retained),
+        max_support,
+        max_retained,
+    )
+end
+
+function _white_lindsey_fill_electron_nuclear_pair_block!(
+    scratch,
+    left_unit,
+    right_unit,
+    axis_context,
+)
+    left_support_count = length(left_unit.support_states)
+    right_support_count = length(right_unit.support_states)
+    left_retained_count = size(left_unit.support_coefficients, 2)
+    right_retained_count = size(right_unit.support_coefficients, 2)
+    support_block =
+        view(scratch.support_block, 1:left_support_count, 1:right_support_count)
+    temp_block =
+        view(scratch.temp_block, 1:left_retained_count, 1:right_support_count)
+    retained_block =
+        view(scratch.retained_block, 1:left_retained_count, 1:right_retained_count)
+
+    _white_lindsey_fill_electron_nuclear_support_block_from_states!(
+        support_block,
+        left_unit.support_states,
+        right_unit.support_states,
+        axis_context.axis_terms,
+        axis_context.coefficients,
+    )
+    mul!(temp_block, transpose(left_unit.support_coefficients), support_block)
+    mul!(retained_block, temp_block, right_unit.support_coefficients)
+    return retained_block
+end
+
 function _white_lindsey_electron_nuclear_support_block_from_states(
     left_states,
     right_states,
@@ -506,6 +589,23 @@ function _white_lindsey_electron_nuclear_support_block_from_states(
     coefficients,
 )
     block = Matrix{Float64}(undef, length(left_states), length(right_states))
+    _white_lindsey_fill_electron_nuclear_support_block_from_states!(
+        block,
+        left_states,
+        right_states,
+        axis_terms,
+        coefficients,
+    )
+    return block
+end
+
+function _white_lindsey_fill_electron_nuclear_support_block_from_states!(
+    block,
+    left_states,
+    right_states,
+    axis_terms,
+    coefficients,
+)
     @inbounds for (row, left_state) in pairs(left_states)
         ix_left, iy_left, iz_left = left_state
         for (column, right_state) in pairs(right_states)

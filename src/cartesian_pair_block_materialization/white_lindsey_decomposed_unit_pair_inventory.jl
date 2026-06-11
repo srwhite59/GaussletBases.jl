@@ -13,6 +13,13 @@ const _WHITE_LINDSEY_ACCEPTANCE_ONE_BODY_TERMS = (
 )
 const _WHITE_LINDSEY_COMPACT_PAIR_SUMMARY_LIMIT = 1024
 
+function _white_lindsey_decomposed_operator_cache()
+    return (;
+        unit_coefficients = Dict{Symbol,Any}(),
+        prepared_units = Dict{Any,Any}(),
+    )
+end
+
 function white_lindsey_shellification_decomposed_unit_pair_inventory(
     parent_axes::NTuple{3,<:AbstractVector},
     nuclear_positions;
@@ -1020,6 +1027,9 @@ function _white_lindsey_decomposed_unit_pair_inventory_result(
         global_matrices_materialized = false,
         hamiltonian_data_materialized = false,
         route_driver_wiring = false,
+        operator_cache = _white_lindsey_decomposed_operator_cache(),
+        operator_cache_scope =
+            :white_lindsey_decomposed_unit_pair_inventory_reused_by_route_calls,
         metadata = NamedTuple(metadata),
     )
 end
