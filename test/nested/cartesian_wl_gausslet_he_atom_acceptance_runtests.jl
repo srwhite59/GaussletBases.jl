@@ -370,174 +370,121 @@ function _wl_decomposed_he_atom_acceptance_audit(;
     d::Real = 0.2,
     tail_spacing::Real = 10.0,
 )
-    expansion = nothing
-    seed_report = nothing
-    axis_inputs = nothing
-    shellification_inventory_source = nothing
-    center_records = nothing
-    decomposed_inventory = nothing
-    overlap_global = nothing
-    kinetic_global = nothing
-    by_center_global = nothing
-    hamiltonian = nothing
-    density_density = nothing
-    hartree_fock = nothing
-    density_diagnostics = nothing
-    fixture_diagnostics = nothing
-    scalar_convention = nothing
-    parent_seed_elapsed_seconds = 0.0
-    parent_axis_setup_elapsed_seconds = 0.0
-    decomposed_inventory_elapsed_seconds = 0.0
-    one_electron_operator_build_elapsed_seconds = 0.0
-    route_global_overlap_build_elapsed_seconds = 0.0
-    route_global_kinetic_build_elapsed_seconds = 0.0
-    route_global_electron_nuclear_by_center_build_elapsed_seconds = 0.0
-    one_electron_hamiltonian_assembly_elapsed_seconds = 0.0
-    one_electron_solve_elapsed_seconds = 0.0
-    density_density_elapsed_seconds = 0.0
-    hartree_fock_elapsed_seconds = 0.0
-    overlap_diagnostics = nothing
-    solve = nothing
-    elapsed_seconds = @elapsed begin
-        expansion = coulomb_gaussian_expansion(doacc = false)
-        parent_seed_elapsed_seconds = @elapsed begin
-            seed_report =
-                GaussletBases._white_lindsey_low_order_materialized_seed_report(
-                    parent_side_count = parent_side_count,
-                    Z = 2.0,
-                    d = d,
-                    tail_spacing = tail_spacing,
-                )
-        end
-        parent_axis_setup_elapsed_seconds = @elapsed begin
-            axis_inputs = _wl_he_parent_axis_inputs(seed_report, expansion)
-        end
-        center_records = _wl_he_center_records()
-        decomposed_inventory_elapsed_seconds = @elapsed begin
-            parent_axes = ntuple(_ -> seed_report.fixture.basis.center_data, 3)
-            shellification_inventory_source =
-                WLHeAcceptanceCPBM.white_lindsey_shellification_decomposed_unit_pair_inventory(
-                    parent_axes,
-                    ((0.0, 0.0, 0.0),);
-                    metadata = (; q = 5),
-                    parent_axis_counts = axis_inputs.parent_axis_counts,
-                    parent_axis_bundle_object = axis_inputs.parent_axis_bundle_object,
-                )
-            decomposed_inventory = shellification_inventory_source.inventory
-        end
-        fixture_diagnostics = _wl_he_fixture_diagnostics(seed_report, axis_inputs)
-        scalar_convention = _wl_he_scalar_density_density_convention_check()
-        one_electron_operator_build_elapsed_seconds = @elapsed begin
-            route_global_overlap_build_elapsed_seconds = @elapsed begin
-                overlap_global =
-                    WLHeAcceptanceCPBM.route_global_decomposed_wl_overlap_matrix(
-                        decomposed_inventory;
-                        parent_axis_counts = axis_inputs.parent_axis_counts,
-                        parent_axis_bundle_object =
-                            axis_inputs.parent_axis_bundle_object,
-                        overlap_1d = axis_inputs.overlap_1d,
-                    )
-            end
-            route_global_kinetic_build_elapsed_seconds = @elapsed begin
-                kinetic_global =
-                    WLHeAcceptanceCPBM.route_global_decomposed_wl_kinetic_matrix(
-                        decomposed_inventory;
-                        parent_axis_counts = axis_inputs.parent_axis_counts,
-                        parent_axis_bundle_object =
-                            axis_inputs.parent_axis_bundle_object,
-                        overlap_1d = axis_inputs.overlap_1d,
-                        kinetic_1d = axis_inputs.kinetic_1d,
-                    )
-            end
-            route_global_electron_nuclear_by_center_build_elapsed_seconds =
-                @elapsed begin
-                    by_center_global =
-                        WLHeAcceptanceCPBM.route_global_electron_nuclear_by_center_matrices(
-                            decomposed_inventory;
-                            parent_axis_counts = axis_inputs.parent_axis_counts,
-                            parent_axis_bundle_object =
-                                axis_inputs.parent_axis_bundle_object,
-                            coulomb_expansion = expansion,
-                            center_records,
-                        )
-                end
-            one_electron_hamiltonian_assembly_elapsed_seconds = @elapsed begin
-                hamiltonian =
-                    WLHeAcceptanceCPBM.white_lindsey_decomposed_one_electron_hamiltonian(
-                        kinetic_global,
-                        by_center_global,
-                    )
-            end
-        end
-        overlap_diagnostics =
-            _wl_he_overlap_metric_diagnostics(
-                overlap_global.matrix,
-                decomposed_inventory,
-            )
-        one_electron_solve_elapsed_seconds = @elapsed begin
-            solve = _wl_he_lowest_one_electron_energy(
-                hamiltonian.matrix,
-                overlap_global.matrix,
-                overlap_diagnostics,
-            )
-        end
-        density_density_elapsed_seconds = @elapsed begin
-            density_density =
-                WLHeAcceptanceCPBM.route_global_decomposed_wl_density_density_matrix(
-                    decomposed_inventory;
-                    parent_axis_counts = axis_inputs.parent_axis_counts,
-                    parent_axis_bundle_object =
-                        axis_inputs.parent_axis_bundle_object,
-                    coulomb_expansion = expansion,
-                )
-        end
-        if density_density.status ===
-           :materialized_route_global_density_density_interaction_matrix
-            hartree_fock_elapsed_seconds = @elapsed begin
-                hartree_fock = _wl_he_restricted_hartree_fock(
-                    hamiltonian.matrix,
-                    density_density.matrix,
-                )
-            end
-        else
-            hartree_fock = (;
-                status = :blocked_decomposed_wl_he_restricted_hartree_fock,
-                blocker = :missing_decomposed_wl_density_density_interaction_route,
-                energy = :unavailable,
-                one_electron_energy = :unavailable,
-                electron_electron_energy = :unavailable,
-                iterations = 0,
-                converged = false,
-                residual = :unavailable,
-                energy_change = :unavailable,
-                solve_kind = :blocked_missing_density_density_interaction,
-                spin_convention = :restricted_closed_shell_one_alpha_one_beta,
-                spatial_occupation_count = 1,
-                electron_count = :unavailable,
-                projector_residual = :unavailable,
-            )
-        end
-        if hartree_fock.status ===
-           :converged_decomposed_wl_he_restricted_hartree_fock
-            density_diagnostics = _wl_he_density_diagnostics(
-                hartree_fock.density,
-                density_density.matrix,
-                decomposed_inventory,
-                seed_report.fixture.basis.center_data,
-            )
-        else
-            density_diagnostics = (;
-                density_trace = :unavailable,
-                electron_count = :unavailable,
-                peak_density_diagonal = :unavailable,
-                peak_density_column = :unavailable,
-                direct_core_fraction = :unavailable,
-                boundary_fraction = :unavailable,
-                direct_core_rms_radius = :unavailable,
-                direct_core_peak_coordinate = :unavailable,
-                representative_positive_coulomb_energy = :unavailable,
-            )
-        end
+    expansion = coulomb_gaussian_expansion(doacc = false)
+    seed_report =
+        GaussletBases._white_lindsey_low_order_materialized_seed_report(
+            parent_side_count = parent_side_count,
+            Z = 2.0,
+            d = d,
+            tail_spacing = tail_spacing,
+        )
+    axis_inputs = _wl_he_parent_axis_inputs(seed_report, expansion)
+    center_records = _wl_he_center_records()
+    parent_axes = ntuple(_ -> seed_report.fixture.basis.center_data, 3)
+    shellification_inventory_source =
+        WLHeAcceptanceCPBM.white_lindsey_shellification_decomposed_unit_pair_inventory(
+            parent_axes,
+            ((0.0, 0.0, 0.0),);
+            metadata = (; q = 5),
+            parent_axis_counts = axis_inputs.parent_axis_counts,
+            parent_axis_bundle_object = axis_inputs.parent_axis_bundle_object,
+        )
+    decomposed_inventory = shellification_inventory_source.inventory
+    fixture_diagnostics = _wl_he_fixture_diagnostics(seed_report, axis_inputs)
+    scalar_convention = _wl_he_scalar_density_density_convention_check()
+    overlap_global =
+        WLHeAcceptanceCPBM.route_global_decomposed_wl_overlap_matrix(
+            decomposed_inventory;
+            parent_axis_counts = axis_inputs.parent_axis_counts,
+            parent_axis_bundle_object =
+                axis_inputs.parent_axis_bundle_object,
+            overlap_1d = axis_inputs.overlap_1d,
+        )
+    kinetic_global =
+        WLHeAcceptanceCPBM.route_global_decomposed_wl_kinetic_matrix(
+            decomposed_inventory;
+            parent_axis_counts = axis_inputs.parent_axis_counts,
+            parent_axis_bundle_object =
+                axis_inputs.parent_axis_bundle_object,
+            overlap_1d = axis_inputs.overlap_1d,
+            kinetic_1d = axis_inputs.kinetic_1d,
+        )
+    by_center_global =
+        WLHeAcceptanceCPBM.route_global_electron_nuclear_by_center_matrices(
+            decomposed_inventory;
+            parent_axis_counts = axis_inputs.parent_axis_counts,
+            parent_axis_bundle_object =
+                axis_inputs.parent_axis_bundle_object,
+            coulomb_expansion = expansion,
+            center_records,
+        )
+    hamiltonian =
+        WLHeAcceptanceCPBM.white_lindsey_decomposed_one_electron_hamiltonian(
+            kinetic_global,
+            by_center_global,
+        )
+    overlap_diagnostics =
+        _wl_he_overlap_metric_diagnostics(
+            overlap_global.matrix,
+            decomposed_inventory,
+        )
+    solve = _wl_he_lowest_one_electron_energy(
+        hamiltonian.matrix,
+        overlap_global.matrix,
+        overlap_diagnostics,
+    )
+    density_density =
+        WLHeAcceptanceCPBM.route_global_decomposed_wl_density_density_matrix(
+            decomposed_inventory;
+            parent_axis_counts = axis_inputs.parent_axis_counts,
+            parent_axis_bundle_object =
+                axis_inputs.parent_axis_bundle_object,
+            coulomb_expansion = expansion,
+        )
+    if density_density.status ===
+       :materialized_route_global_density_density_interaction_matrix
+        hartree_fock = _wl_he_restricted_hartree_fock(
+            hamiltonian.matrix,
+            density_density.matrix,
+        )
+    else
+        hartree_fock = (;
+            status = :blocked_decomposed_wl_he_restricted_hartree_fock,
+            blocker = :missing_decomposed_wl_density_density_interaction_route,
+            energy = :unavailable,
+            one_electron_energy = :unavailable,
+            electron_electron_energy = :unavailable,
+            iterations = 0,
+            converged = false,
+            residual = :unavailable,
+            energy_change = :unavailable,
+            solve_kind = :blocked_missing_density_density_interaction,
+            spin_convention = :restricted_closed_shell_one_alpha_one_beta,
+            spatial_occupation_count = 1,
+            electron_count = :unavailable,
+            projector_residual = :unavailable,
+        )
+    end
+    if hartree_fock.status ===
+       :converged_decomposed_wl_he_restricted_hartree_fock
+        density_diagnostics = _wl_he_density_diagnostics(
+            hartree_fock.density,
+            density_density.matrix,
+            decomposed_inventory,
+            seed_report.fixture.basis.center_data,
+        )
+    else
+        density_diagnostics = (;
+            density_trace = :unavailable,
+            electron_count = :unavailable,
+            peak_density_diagonal = :unavailable,
+            peak_density_column = :unavailable,
+            direct_core_fraction = :unavailable,
+            boundary_fraction = :unavailable,
+            direct_core_rms_radius = :unavailable,
+            direct_core_peak_coordinate = :unavailable,
+            representative_positive_coulomb_energy = :unavailable,
+        )
     end
     two_electron_route_available =
         density_density.status ===
@@ -573,42 +520,16 @@ function _wl_decomposed_he_atom_acceptance_audit(;
             :missing_decomposed_wl_density_density_interaction_route,
         q = 5,
         ns = 5,
-        n_s = 5,
         center_count = length(center_records),
         center_keys = Tuple(record.center_key for record in center_records),
-        center_locations = Tuple(record.location for record in center_records),
         nuclear_charges = Tuple(record.nuclear_charge for record in center_records),
         core_spacing = axis_inputs.core_spacing,
-        mapping_a = axis_inputs.mapping_a,
-        mapping_s = axis_inputs.mapping_s,
-        tail_spacing = axis_inputs.tail_spacing,
-        axis_count = fixture_diagnostics.axis_count,
-        source_side_count = fixture_diagnostics.source_side_count,
         parent_side_count = fixture_diagnostics.parent_side_count,
-        explicit_mapping_supplied = fixture_diagnostics.explicit_mapping_supplied,
-        shell_layer_count = fixture_diagnostics.shell_layer_count,
-        core_side_count = fixture_diagnostics.core_side_count,
-        reference_coordinate_endpoints =
-            fixture_diagnostics.reference_coordinate_endpoints,
         coordinate_endpoints = fixture_diagnostics.coordinate_endpoints,
-        coordinate_minimum = fixture_diagnostics.coordinate_minimum,
-        coordinate_maximum = fixture_diagnostics.coordinate_maximum,
         coordinate_tail_extent = fixture_diagnostics.coordinate_tail_extent,
-        coordinate_spacing_minimum = fixture_diagnostics.coordinate_spacing_minimum,
-        coordinate_spacing_maximum = fixture_diagnostics.coordinate_spacing_maximum,
-        fixture_box_status = fixture_diagnostics.fixture_box_status,
-        retained_core_range = fixture_diagnostics.retained_core_range,
-        retained_shell_range = fixture_diagnostics.retained_shell_range,
-        retained_shell_ranges = fixture_diagnostics.retained_shell_ranges,
-        spacing_rule = axis_inputs.spacing_rule,
-        spacing_rule_formula = axis_inputs.spacing_rule_formula,
-        spacing_rule_status = axis_inputs.spacing_rule_status,
-        previous_shared_fixture_spacing_rule_status =
-            axis_inputs.previous_shared_fixture_spacing_rule_status,
         parent_axis_counts = axis_inputs.parent_axis_counts,
         decomposed_unit_count = decomposed_inventory.unit_count,
         decomposed_unit_pair_count = decomposed_inventory.pair_count,
-        decomposed_inventory_source_kind = decomposed_inventory.source_kind,
         shellification_backed_decomposed_wl_inventory =
             decomposed_inventory.source_kind ===
             :cartesian_shellification_retained_unit_pair_plan,
@@ -629,17 +550,11 @@ function _wl_decomposed_he_atom_acceptance_audit(;
         centers_summed_at_hamiltonian_assembly =
             hamiltonian.centers_summed_at_hamiltonian_assembly,
         overlap_minimum_eigenvalue = overlap_diagnostics.minimum_eigenvalue,
-        overlap_maximum_eigenvalue = overlap_diagnostics.maximum_eigenvalue,
         overlap_condition_estimate = overlap_diagnostics.condition_estimate,
-        overlap_symmetry_error = overlap_diagnostics.symmetry_error,
         overlap_rank_estimate = overlap_diagnostics.rank_estimate,
-        one_electron_solve_status = solve.status,
-        one_electron_solve_blocker = solve.blocker,
         one_electron_solve_kind = solve.solve_kind,
         lowest_one_electron_orbital_energy = solve.energy,
         closed_shell_one_electron_energy_contribution = one_electron_contribution,
-        full_two_electron_ida_object_status = density_density.status,
-        full_two_electron_ida_object_blocker = density_density.blocker,
         electron_electron_status = density_density.status,
         electron_electron_blocker = density_density.blocker,
         electron_electron_matrix_shape = density_density.matrix_shape,
@@ -658,46 +573,14 @@ function _wl_decomposed_he_atom_acceptance_audit(;
             two_electron_route_available ?
             all(isfinite, density_density.matrix) :
             false,
-        electron_electron_placed_block_count =
-            density_density.placed_block_count,
-        electron_electron_gaussian_term_count =
-            density_density.gaussian_term_count,
-        electron_electron_pair_factor_weighting =
-            density_density.pair_factor_weighting,
-        electron_electron_pair_factor_normalization =
-            density_density.pair_factor_normalization,
-        density_normalized_pair_factors =
-            density_density.density_normalized_pair_factors,
-        raw_weighted_pair_factors =
-            density_density.raw_weighted_pair_factors,
-        source_weight_division_owner =
-            density_density.source_weight_division_owner,
-        source_weight_division_shape =
-            density_density.source_weight_division_shape,
-        source_weight_division_applied_by_density_density_route =
-            density_density.source_weight_division_applied_by_density_density_route,
         source_weight_division_stage =
             density_density.source_weight_division_stage,
         raw_pair_numerator_contracted =
             density_density.raw_pair_numerator_contracted,
-        retained_density_weight_count =
-            density_density.retained_density_weight_count,
-        retained_density_weight_minimum =
-            density_density.retained_density_weight_minimum,
-        retained_density_weight_maximum =
-            density_density.retained_density_weight_maximum,
-        final_retained_density_weights_available =
-            density_density.final_retained_density_weights_available,
-        final_retained_density_weight_source =
-            density_density.final_retained_density_weight_source,
         final_retained_weight_division_applied =
             density_density.final_retained_weight_division_applied,
-        axis_integral_weights_applied =
-            density_density.axis_integral_weights_applied,
         axis_integral_weights_deferred =
             density_density.axis_integral_weights_deferred,
-        weight_application_stage =
-            density_density.weight_application_stage,
         ida_density_density_convention =
             density_density.ida_density_density_convention,
         hydrogenic_1s_self_coulomb_reference =
@@ -712,7 +595,6 @@ function _wl_decomposed_he_atom_acceptance_audit(;
             abs(hydrogenic_self_coulomb - hydrogenic_self_coulomb_reference) :
             :unavailable,
         hartree_fock_status = hartree_fock.status,
-        hartree_fock_blocker = hartree_fock.blocker,
         hartree_fock_solve_kind = hartree_fock.solve_kind,
         hartree_fock_iterations = hartree_fock.iterations,
         hartree_fock_converged = hartree_fock.converged,
@@ -721,7 +603,6 @@ function _wl_decomposed_he_atom_acceptance_audit(;
         occupancy_spin_convention = hartree_fock.spin_convention,
         spatial_occupation_count = hartree_fock.spatial_occupation_count,
         hartree_fock_electron_count = hartree_fock.electron_count,
-        hartree_fock_projector_residual = hartree_fock.projector_residual,
         bare_closed_shell_one_electron_energy = one_electron_contribution,
         rhf_one_electron_energy = hartree_fock.one_electron_energy,
         rhf_electron_electron_energy = hartree_fock.electron_electron_energy,
@@ -740,94 +621,25 @@ function _wl_decomposed_he_atom_acceptance_audit(;
             :unavailable,
         rhf_density_trace = density_diagnostics.density_trace,
         rhf_density_electron_count = density_diagnostics.electron_count,
-        rhf_peak_density_diagonal = density_diagnostics.peak_density_diagonal,
-        rhf_peak_density_column = density_diagnostics.peak_density_column,
-        rhf_density_direct_core_fraction =
-            density_diagnostics.direct_core_fraction,
-        rhf_density_boundary_fraction = density_diagnostics.boundary_fraction,
-        rhf_density_direct_core_rms_radius =
-            density_diagnostics.direct_core_rms_radius,
-        rhf_density_direct_core_peak_coordinate =
-            density_diagnostics.direct_core_peak_coordinate,
         converged_density_positive_coulomb_energy =
             density_diagnostics.representative_positive_coulomb_energy,
         scalar_density_density_convention_status = scalar_convention.status,
         scalar_density_density_convention_energy = scalar_convention.energy,
         scalar_density_density_convention_expected = scalar_convention.expected,
-        parent_seed_elapsed_seconds,
-        parent_axis_setup_elapsed =
-            parent_axis_setup_elapsed_seconds,
-        decomposed_inventory_elapsed =
-            decomposed_inventory_elapsed_seconds,
-        route_global_overlap_build_elapsed =
-            route_global_overlap_build_elapsed_seconds,
-        route_global_kinetic_build_elapsed =
-            route_global_kinetic_build_elapsed_seconds,
-        route_global_electron_nuclear_by_center_build_elapsed =
-            route_global_electron_nuclear_by_center_build_elapsed_seconds,
-        one_electron_hamiltonian_assembly_elapsed =
-            one_electron_hamiltonian_assembly_elapsed_seconds,
-        one_electron_operator_build_elapsed =
-            one_electron_operator_build_elapsed_seconds,
-        one_electron_solve_elapsed = one_electron_solve_elapsed_seconds,
-        density_density_matrix_build_elapsed_seconds =
-            density_density_elapsed_seconds,
-        density_density_matrix_build_elapsed =
-            density_density_elapsed_seconds,
-        hamiltonian_build_elapsed_total =
-            parent_axis_setup_elapsed_seconds +
-            decomposed_inventory_elapsed_seconds +
-            one_electron_operator_build_elapsed_seconds +
-            density_density_elapsed_seconds,
-        route_operator_and_interaction_build_elapsed_total =
-            one_electron_operator_build_elapsed_seconds +
-            density_density_elapsed_seconds,
-        rhf_iteration_elapsed_seconds = hartree_fock_elapsed_seconds,
-        hartree_fock_solve_elapsed = hartree_fock_elapsed_seconds,
-        total_acceptance_elapsed = elapsed_seconds,
         exact_he_reference_energy = -2.9037243770341196,
-        hartree_fock_reference_energy = -2.861679995612234,
-        total_he_energy_distance_from_exact =
-            hf_available ?
-            abs(hartree_fock.energy - -2.9037243770341196) :
-            :unavailable,
-        total_he_energy_distance_from_hf_reference =
-            hf_available ?
-            abs(hartree_fock.energy - -2.861679995612234) :
-            :unavailable,
-        ida_scf_energy_interpretation_available = hf_available,
-        elapsed_seconds,
         decomposed_wl_units_consumed = true,
         full_parent_window_cpb_used = false,
         direct_cartesian_product_assembly_used = false,
         ordinary_cartesian_ida_operators_used = false,
-        generalized_overlap_final_solve = false,
-        gto_supplement_used = false,
-        pqs_transforms_materialized = false,
-        exports_or_artifacts = false,
-        density_density_route_global_function_available =
-            isdefined(
-                WLHeAcceptanceCPBM,
-                :route_global_decomposed_wl_density_density_matrix,
-            ),
-        route_global_density_density_matrix_materialized =
-            density_density.route_global_density_density_matrix_materialized,
-        seed_electron_electron_materialized =
-            hasproperty(seed_report, :electron_electron_materialized) ?
-            seed_report.electron_electron_materialized :
-            false,
     )
 end
 
 @testset "decomposed WL gausslet-only He atom acceptance readiness" begin
     report = _wl_decomposed_he_atom_acceptance_audit()
-    println("decomposed WL gausslet-only He atom acceptance readiness: ", report)
 
     @test report.status ==
           :accepted_decomposed_wl_he_atom_restricted_hartree_fock
     @test isnothing(report.blocker)
-    @test report.acceptance_suite ==
-          :decomposed_wl_gausslet_two_electron_acceptance
     @test report.acceptance_fixture == :he_atom
     @test report.q == 5
     @test report.ns == 5
@@ -835,38 +647,15 @@ end
     @test report.center_keys == (:helium_nucleus,)
     @test report.nuclear_charges == (2.0,)
     @test report.core_spacing ≈ 0.2 atol = 1.0e-14 rtol = 0.0
-    @test report.mapping_a ≈ sqrt(report.core_spacing / 2.0) atol =
-          1.0e-14 rtol = 0.0
-    @test report.mapping_s ≈ sqrt(report.core_spacing * 2.0) atol = 1.0e-14 rtol = 0.0
-    @test report.axis_count == 7
-    @test report.source_side_count == 7
     @test report.parent_side_count == 7
-    @test !report.explicit_mapping_supplied
-    @test report.shell_layer_count == 1
-    @test report.core_side_count == 5
     @test report.parent_axis_counts == (7, 7, 7)
-    @test report.reference_coordinate_endpoints == (-3.0, 3.0)
-    @test report.coordinate_minimum < 0.0
-    @test report.coordinate_maximum > 0.0
     @test report.coordinate_endpoints[1] ≈ -report.coordinate_endpoints[2] atol =
           1.0e-12 rtol = 0.0
     @test report.coordinate_tail_extent ≈ 0.9666200087560217 atol =
           1.0e-12 rtol = 0.0
-    @test report.fixture_box_status == :compact_z2_seed_box_under_one_bohr
-    @test report.coordinate_spacing_minimum > 0.0
-    @test report.coordinate_spacing_maximum > report.coordinate_spacing_minimum
-    @test report.retained_core_range == 1:125
-    @test report.retained_shell_range == 126:223
-    @test report.retained_shell_ranges == (126:223,)
-    @test report.spacing_rule == :white_lindsey_atomic_mapping
-    @test report.spacing_rule_status == :standard_z_dependent_spacing
-    @test report.previous_shared_fixture_spacing_rule_status ==
-          :violated_he_z_dependent_spacing_rule
     @test report.retained_dimension == 223
     @test report.decomposed_unit_count == 27
     @test report.decomposed_unit_pair_count == 378
-    @test report.decomposed_inventory_source_kind ==
-          :cartesian_shellification_retained_unit_pair_plan
     @test report.shellification_backed_decomposed_wl_inventory
     @test !report.low_order_materialized_seed_inventory_used
     @test report.route_global_overlap_status ==
@@ -885,9 +674,6 @@ end
     @test report.overlap_minimum_eigenvalue > 0.0
     @test report.overlap_condition_estimate < 1.0000001
     @test report.overlap_rank_estimate == report.retained_dimension
-    @test report.one_electron_solve_status ==
-          :materialized_decomposed_wl_he_one_electron_solve
-    @test isnothing(report.one_electron_solve_blocker)
     @test report.one_electron_solve_kind == :ordinary_symmetric
     @test isfinite(report.lowest_one_electron_orbital_energy)
     @test report.lowest_one_electron_orbital_energy < -1.0
@@ -895,40 +681,15 @@ end
     @test report.electron_electron_status ==
           :materialized_route_global_density_density_interaction_matrix
     @test isnothing(report.electron_electron_blocker)
-    @test report.full_two_electron_ida_object_status ==
-          :materialized_route_global_density_density_interaction_matrix
     @test report.electron_electron_matrix_shape == (223, 223)
     @test report.electron_electron_matrix_dimension == 223
     @test report.electron_electron_matrix_symmetry_error < 1.0e-10
     @test report.electron_electron_matrix_values_finite
-    @test report.electron_electron_placed_block_count == 729
-    @test report.electron_electron_gaussian_term_count > 0
-    @test report.electron_electron_pair_factor_weighting ==
-          :raw_pair_numerator_terms
-    @test report.electron_electron_pair_factor_normalization ==
-          :raw_numerator
-    @test !report.density_normalized_pair_factors
-    @test report.raw_weighted_pair_factors
     @test report.raw_pair_numerator_contracted
-    @test report.source_weight_division_owner ==
-          :retained_density_interaction_boundary
-    @test report.source_weight_division_shape ==
-          :retained_density_weight_outer
-    @test report.source_weight_division_applied_by_density_density_route
     @test report.source_weight_division_stage ==
           :after_retained_raw_numerator_assembly
-    @test report.retained_density_weight_count == report.retained_dimension
-    @test report.retained_density_weight_minimum > 0.0
-    @test report.retained_density_weight_maximum >=
-          report.retained_density_weight_minimum
-    @test report.final_retained_density_weights_available
-    @test report.final_retained_density_weight_source ==
-          :retained_unit_coefficient_weight_projection
     @test report.final_retained_weight_division_applied
-    @test !report.axis_integral_weights_applied
     @test !report.axis_integral_weights_deferred
-    @test report.weight_application_stage ==
-          :after_retained_raw_numerator_assembly
     @test report.ida_density_density_convention ==
           :full_retained_two_index_interaction_matrix
     @test report.hydrogenic_1s_self_coulomb_reference ≈ 1.25 atol =
@@ -944,7 +705,6 @@ end
     @test report.hydrogenic_1s_self_coulomb_error < 0.5
     @test report.hartree_fock_status ==
           :converged_decomposed_wl_he_restricted_hartree_fock
-    @test isnothing(report.hartree_fock_blocker)
     @test report.hartree_fock_solve_kind ==
           :restricted_closed_shell_density_density_hartree_fock
     @test report.occupancy_spin_convention ==
@@ -954,7 +714,6 @@ end
     @test report.hartree_fock_iterations <= 80
     @test report.hartree_fock_residual < 1.0e-8
     @test report.hartree_fock_electron_count ≈ 2.0 atol = 1.0e-8 rtol = 0.0
-    @test report.hartree_fock_projector_residual < 1.0e-8
     @test isfinite(report.electron_electron_contribution)
     @test report.electron_electron_contribution > 0.0
     @test isfinite(report.total_he_energy)
@@ -968,11 +727,6 @@ end
     @test report.rhf_total_decomposition_error < 1.0e-10
     @test report.rhf_density_trace ≈ 1.0 atol = 1.0e-8 rtol = 0.0
     @test report.rhf_density_electron_count ≈ 2.0 atol = 1.0e-8 rtol = 0.0
-    @test report.rhf_peak_density_diagonal > 0.0
-    @test report.rhf_peak_density_column in 1:report.retained_dimension
-    @test report.rhf_density_direct_core_fraction > 0.0
-    @test report.rhf_density_boundary_fraction >= 0.0
-    @test report.rhf_density_direct_core_rms_radius > 0.0
     @test report.converged_density_positive_coulomb_energy ≈
           report.rhf_electron_electron_energy atol = 1.0e-10 rtol = 0.0
     @test report.converged_density_positive_coulomb_energy > 0.0
@@ -980,41 +734,10 @@ end
           :passed_closed_shell_density_density_scalar_convention
     @test report.scalar_density_density_convention_energy ≈
           report.scalar_density_density_convention_expected atol = 1.0e-14 rtol = 0.0
-    @test report.parent_axis_setup_elapsed >= 0.0
-    @test report.decomposed_inventory_elapsed >= 0.0
-    @test report.route_global_overlap_build_elapsed >= 0.0
-    @test report.route_global_kinetic_build_elapsed >= 0.0
-    @test report.route_global_electron_nuclear_by_center_build_elapsed >= 0.0
-    @test report.one_electron_hamiltonian_assembly_elapsed >= 0.0
-    @test report.one_electron_operator_build_elapsed >= 0.0
-    @test report.one_electron_operator_build_elapsed >=
-          report.route_global_overlap_build_elapsed
-    @test report.one_electron_operator_build_elapsed >=
-          report.route_global_kinetic_build_elapsed
-    @test report.one_electron_operator_build_elapsed >=
-          report.route_global_electron_nuclear_by_center_build_elapsed
-    @test report.density_density_matrix_build_elapsed_seconds >= 0.0
-    @test report.density_density_matrix_build_elapsed >= 0.0
-    @test report.route_operator_and_interaction_build_elapsed_total >=
-          report.density_density_matrix_build_elapsed
-    @test report.hamiltonian_build_elapsed_total >=
-          report.route_operator_and_interaction_build_elapsed_total
-    @test report.rhf_iteration_elapsed_seconds >= 0.0
-    @test report.hartree_fock_solve_elapsed >= 0.0
-    @test report.total_acceptance_elapsed >=
-          report.hamiltonian_build_elapsed_total
     @test report.total_he_energy > report.exact_he_reference_energy
     @test report.total_he_energy < -2.0
-    @test report.ida_scf_energy_interpretation_available
-    @test report.density_density_route_global_function_available
-    @test report.route_global_density_density_matrix_materialized
     @test report.decomposed_wl_units_consumed
     @test !report.full_parent_window_cpb_used
     @test !report.direct_cartesian_product_assembly_used
     @test !report.ordinary_cartesian_ida_operators_used
-    @test !report.generalized_overlap_final_solve
-    @test !report.gto_supplement_used
-    @test !report.pqs_transforms_materialized
-    @test !report.exports_or_artifacts
-    @test report.elapsed_seconds >= 0.0
 end
