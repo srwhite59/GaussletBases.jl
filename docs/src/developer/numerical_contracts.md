@@ -339,7 +339,13 @@ reported about `27.5` seconds while preserving 105 units, 5,565 pairs, and
 retained dimension 517. A same-process phase probe showed the warm planning path
 is no longer the main algorithmic cost; remaining cold-process time is dominated
 by first-call compilation and retained-range wrapping rather than rich pair
-tuple storage.
+tuple storage. The shellification-backed one-body assembly path now streams over
+`CartesianUnitPairs.UnitPairIndexTable`, materializes each local WL block only
+when needed, and inserts it immediately into the retained/global matrix. On the
+side-13 fixture, a cold probe materialized 5,565 local blocks for each of
+overlap, kinetic, and one by-center electron-nuclear matrix with same-process
+warm route-global times of about `0.092`, `0.218`, and `1.179` seconds,
+respectively, for the 517-column retained basis.
 
 One supported exploratory probe with the same one-shell decomposed topology and
 finer Z = 2 spacing, `d = 0.15`, shrinks the physical endpoints to about

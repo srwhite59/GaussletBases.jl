@@ -436,6 +436,26 @@ function route_global_decomposed_wl_one_body_matrix(
         )
     end
 
+    if inventory.unit_pairs isa CUP.UnitPairIndexTable
+        streaming = _route_global_decomposed_wl_streaming_one_body_matrix(
+            inventory,
+            term;
+            parent_axis_counts,
+            overlap_1d,
+            kinetic_1d,
+            metadata,
+        )
+        return _route_global_decomposed_wl_one_body_result(
+            inventory,
+            streaming.local_batch,
+            streaming.local_collection,
+            streaming.placement_plan,
+            streaming.global_matrix_result;
+            term,
+            metadata,
+        )
+    end
+
     local_batch = @timeg "decomposed_wl.one_body.local_batch" begin
         white_lindsey_boundary_stratum_one_body_blocks(
             inventory.unit_pairs,
@@ -689,9 +709,330 @@ function _route_global_decomposed_wl_one_body_local_collection(
     )
 end
 
+function _route_global_decomposed_wl_streaming_one_body_matrix(
+    inventory,
+    term::Symbol;
+    parent_axis_counts,
+    overlap_1d = nothing,
+    kinetic_1d = nothing,
+    metadata = (;),
+)
+    dimension = inventory.retained_dimension
+    matrix = zeros(Float64, dimension, dimension)
+    stream_state = @timeg "decomposed_wl.one_body.local_batch" begin
+        _route_global_decomposed_wl_streaming_fill!(
+            matrix,
+            inventory.unit_pairs,
+            term;
+            parent_axis_counts,
+            overlap_1d,
+            kinetic_1d,
+        )
+    end
+    global_matrix_result =
+        _route_global_decomposed_wl_streaming_global_matrix_result(
+            term,
+            inventory,
+            matrix,
+            stream_state,
+        )
+    local_batch =
+        _route_global_decomposed_wl_streaming_local_batch(term, stream_state)
+    local_collection =
+        _route_global_decomposed_wl_streaming_local_collection(term, stream_state)
+    placement_plan =
+        _route_global_decomposed_wl_streaming_placement_plan(
+            term,
+            inventory,
+            stream_state,
+        )
+    return (;
+        local_batch,
+        local_collection,
+        placement_plan,
+        global_matrix_result,
+        metadata = NamedTuple(metadata),
+    )
+end
+
+function _route_global_decomposed_wl_streaming_fill!(
+    matrix::AbstractMatrix{Float64},
+    unit_pairs::CUP.UnitPairIndexTable,
+    term::Symbol;
+    parent_axis_counts,
+    overlap_1d = nothing,
+    kinetic_1d = nothing,
+    parent_axis_bundle_object = nothing,
+    coulomb_expansion = nothing,
+    center_record = nothing,
+    electron_nuclear_axis_context = nothing,
+)
+    cache = Dict{Symbol,Any}()
+    materialized_count = 0
+    skipped_count = 0
+    placed_block_count = 0
+    blocker = nothing
+    center_index = nothing
+    center_key = nothing
+    center_location = nothing
+    nuclear_charge = nothing
+    nuclear_charge_applied = false
+    for unit_pair in unit_pairs
+        pair_unit_coefficients = _white_lindsey_pair_unit_coefficients_result(
+            unit_pair,
+            _white_lindsey_unit_coefficients_from_local_cache(
+                cache,
+                unit_pair.left_unit,
+            ),
+            _white_lindsey_unit_coefficients_from_local_cache(
+                cache,
+                unit_pair.right_unit,
+            ),
+            length(cache),
+        )
+        if !_is_ready_white_lindsey_pair_unit_coefficients(pair_unit_coefficients)
+            skipped_count += 1
+            isnothing(blocker) && (blocker = pair_unit_coefficients.blocker)
+            continue
+        end
+        result = white_lindsey_boundary_stratum_one_body_block(
+            pair_unit_coefficients,
+            term;
+            parent_axis_counts,
+            overlap_1d,
+            kinetic_1d,
+            parent_axis_bundle_object,
+            coulomb_expansion,
+            center_record,
+            electron_nuclear_axis_context,
+        )
+        rows = unit_pair.left_unit.column_range
+        columns = unit_pair.right_unit.column_range
+        placement_blocker =
+            _route_global_decomposed_wl_streaming_placement_blocker(
+                result.block,
+                rows,
+                columns,
+                size(matrix, 1),
+            )
+        if !isnothing(placement_blocker)
+            skipped_count += 1
+            isnothing(blocker) && (blocker = placement_blocker)
+            continue
+        end
+        matrix[rows, columns] .+= result.block
+        placed_block_count += 1
+        if rows != columns
+            matrix[columns, rows] .+= transpose(result.block)
+            placed_block_count += 1
+        end
+        materialized_count += 1
+        if term === :electron_nuclear_by_center && isnothing(center_index)
+            center_index = result.metadata.center_index
+            center_key = result.metadata.center_key
+            center_location = result.metadata.center_location
+            nuclear_charge = result.metadata.nuclear_charge
+            nuclear_charge_applied = result.metadata.nuclear_charge_applied
+        end
+    end
+    return (;
+        materialized_count,
+        skipped_count,
+        placed_block_count,
+        blocker,
+        unit_coefficient_cache_entry_count = length(cache),
+        pair_count = length(unit_pairs),
+        center_index,
+        center_key,
+        center_location,
+        nuclear_charge,
+        nuclear_charge_recorded = term === :electron_nuclear_by_center &&
+                                  !isnothing(center_index),
+        nuclear_charge_applied,
+        materialization_path =
+            :white_lindsey_decomposed_wl_streaming_one_body_global_assembly,
+        local_blocks_collected = false,
+        pair_lookup_materialized = false,
+        placement_records_materialized = false,
+    )
+end
+
+function _route_global_decomposed_wl_streaming_placement_blocker(
+    block,
+    rows,
+    columns,
+    dimension::Int,
+)
+    block isa AbstractMatrix{<:Real} || return :missing_local_block_result
+    (
+        _one_body_placement_valid_column_range(rows) &&
+        _one_body_placement_valid_column_range(columns)
+    ) || return :missing_column_ranges
+    size(block) == (length(rows), length(columns)) ||
+        return :local_block_shape_mismatch
+    _one_body_placement_ranges_inside_global_dimension(rows, columns, dimension) ||
+        return :target_ranges_outside_global_dimension
+    return nothing
+end
+
+function _route_global_decomposed_wl_streaming_local_batch(
+    term::Symbol,
+    stream_state,
+)
+    materialized = stream_state.materialized_count > 0
+    return (;
+        object_kind = :white_lindsey_boundary_stratum_one_body_streaming_batch,
+        term,
+        materialized_count = stream_state.materialized_count,
+        skipped_count = stream_state.skipped_count,
+        materialized,
+        source_operator_blocks_materialized = materialized,
+        final_pair_blocks_materialized = materialized,
+        operator_blocks_materialized = false,
+        hamiltonian_data_materialized = false,
+        artifacts_materialized = false,
+        metadata = (;
+            materialization_path = stream_state.materialization_path,
+            pair_input_kind = :unit_pair_index_table,
+            pair_unit_coefficient_record_count = stream_state.pair_count,
+            unit_coefficient_cache_entry_count =
+                stream_state.unit_coefficient_cache_entry_count,
+            local_blocks_collected = false,
+            pair_lookup_materialized = false,
+            placement_records_materialized = false,
+            streaming_global_matrix_insertion = true,
+        ),
+    )
+end
+
+function _route_global_decomposed_wl_streaming_local_collection(
+    term::Symbol,
+    stream_state,
+)
+    materialized = stream_state.materialized_count > 0
+    return (;
+        object_kind = :cartesian_pair_block_local_one_body_streaming_collection,
+        status =
+            materialized ?
+            :materialized_local_one_body_block_collection :
+            :blocked_local_one_body_block_collection,
+        blocker =
+            materialized ? nothing : Symbol("no_materialized_", String(term), "_blocks"),
+        terms = (term,),
+        requested_terms = (term,),
+        requested_materialize_terms = (term,),
+        materialized_terms = materialized ? (term,) : (),
+        deferred_terms = (),
+        term_statuses = (),
+        entries = (),
+        materialized_entries = (),
+        skipped_entries = (),
+        entry_count = stream_state.materialized_count + stream_state.skipped_count,
+        materialized_entry_count = stream_state.materialized_count,
+        skipped_entry_count = stream_state.skipped_count,
+        final_local_entry_count = stream_state.materialized_count,
+        local_blocks_collected = false,
+        pair_lookup_materialized = false,
+        placement_records_materialized = false,
+        streaming_global_matrix_insertion = true,
+        block_matrices_copied_into_collection = false,
+        source_operator_blocks_materialized = materialized,
+        final_pair_blocks_materialized = materialized,
+        operator_blocks_materialized = false,
+        hamiltonian_data_materialized = false,
+        artifacts_materialized = false,
+        global_operator_blocks_materialized = false,
+        route_global_matrix_materialized = true,
+    )
+end
+
+function _route_global_decomposed_wl_streaming_placement_plan(
+    term::Symbol,
+    inventory,
+    stream_state,
+)
+    materialized = stream_state.materialized_count > 0
+    return (;
+        object_kind = :cartesian_pair_block_local_one_body_streaming_placement_plan,
+        term,
+        status =
+            materialized ?
+            :placeable_local_one_body_placement_plan :
+            :blocked_local_one_body_placement_plan,
+        blocker = materialized ? nothing : stream_state.blocker,
+        global_dimension = inventory.retained_dimension,
+        global_dimension_status = inventory.retained_dimension_status,
+        placeable_records = (),
+        blocked_records = (),
+        placeable_count = stream_state.materialized_count,
+        blocked_count = stream_state.skipped_count,
+        record_count = stream_state.materialized_count + stream_state.skipped_count,
+        placement_records_materialized = false,
+        streaming_global_matrix_insertion = true,
+    )
+end
+
+function _route_global_decomposed_wl_streaming_global_matrix_result(
+    term::Symbol,
+    inventory,
+    matrix::Matrix{Float64},
+    stream_state,
+)
+    placement_plan =
+        _route_global_decomposed_wl_streaming_placement_plan(
+            term,
+            inventory,
+            stream_state,
+        )
+    materialized = stream_state.materialized_count > 0 &&
+                   stream_state.skipped_count == 0
+    if term === :overlap
+        return _one_body_global_overlap_result(
+            placement_plan,
+            materialized ?
+            :materialized_global_overlap_matrix :
+            :blocked_global_overlap_matrix,
+            materialized ? nothing : stream_state.blocker,
+            materialized ? matrix : nothing;
+            placed_block_count = stream_state.placed_block_count,
+            skipped_block_count = stream_state.skipped_count,
+            materialized,
+        )
+    elseif term === :kinetic
+        return _one_body_global_kinetic_result(
+            placement_plan,
+            materialized ?
+            :materialized_global_kinetic_matrix :
+            :blocked_global_kinetic_matrix,
+            materialized ? nothing : stream_state.blocker,
+            materialized ? matrix : nothing;
+            placed_block_count = stream_state.placed_block_count,
+            skipped_block_count = stream_state.skipped_count,
+            materialized,
+        )
+    elseif term === :electron_nuclear_by_center
+        return _one_body_global_electron_nuclear_by_center_result(
+            placement_plan,
+            materialized ?
+            :materialized_global_electron_nuclear_by_center_matrix :
+            :blocked_global_electron_nuclear_by_center_matrix,
+            materialized ? nothing : stream_state.blocker,
+            materialized ? matrix : nothing;
+            center_index = stream_state.center_index,
+            center_key = stream_state.center_key,
+            center_location = stream_state.center_location,
+            nuclear_charge = stream_state.nuclear_charge,
+            placed_block_count = stream_state.placed_block_count,
+            skipped_block_count = stream_state.skipped_count,
+            materialized,
+        )
+    end
+    throw(ArgumentError("unsupported streaming decomposed WL one-body term $(term)"))
+end
+
 function _route_global_decomposed_wl_one_body_result(
     inventory,
-    local_batch::PairBlockMaterializationBatchResult,
+    local_batch,
     local_collection::NamedTuple,
     placement_plan::NamedTuple,
     global_matrix_result::NamedTuple;
@@ -1111,6 +1452,26 @@ function _route_global_electron_nuclear_by_center_matrix_from_inventory(
         )
     end
 
+    if inventory.unit_pairs isa CUP.UnitPairIndexTable
+        streaming =
+            _route_global_decomposed_wl_streaming_electron_nuclear_by_center_matrix(
+                inventory;
+                parent_axis_counts,
+                parent_axis_bundle_object,
+                coulomb_expansion,
+                center_record,
+                metadata,
+            )
+        return _route_global_electron_nuclear_by_center_result(
+            inventory,
+            streaming.local_batch,
+            streaming.local_collection,
+            streaming.placement_plan,
+            streaming.global_matrix_result;
+            metadata,
+        )
+    end
+
     local_batch = @timeg "decomposed_wl.electron_nuclear_by_center.local_batch" begin
         white_lindsey_boundary_stratum_one_body_blocks(
             inventory.unit_pairs,
@@ -1143,6 +1504,67 @@ function _route_global_electron_nuclear_by_center_matrix_from_inventory(
         placement_plan,
         global_matrix_result;
         metadata,
+    )
+end
+
+function _route_global_decomposed_wl_streaming_electron_nuclear_by_center_matrix(
+    inventory;
+    parent_axis_counts,
+    parent_axis_bundle_object,
+    coulomb_expansion,
+    center_record,
+    metadata = (;),
+)
+    dimension = inventory.retained_dimension
+    axis_context = _white_lindsey_electron_nuclear_axis_context(
+        parent_axis_counts,
+        parent_axis_bundle_object,
+        coulomb_expansion,
+        center_record,
+    )
+    matrix = zeros(Float64, dimension, dimension)
+    stream_state =
+        @timeg "decomposed_wl.electron_nuclear_by_center.local_batch" begin
+            _route_global_decomposed_wl_streaming_fill!(
+                matrix,
+                inventory.unit_pairs,
+                :electron_nuclear_by_center;
+                parent_axis_counts,
+                parent_axis_bundle_object,
+                coulomb_expansion,
+                center_record,
+                electron_nuclear_axis_context = axis_context,
+            )
+        end
+    global_matrix_result =
+        _route_global_decomposed_wl_streaming_global_matrix_result(
+            :electron_nuclear_by_center,
+            inventory,
+            matrix,
+            stream_state,
+        )
+    local_batch =
+        _route_global_decomposed_wl_streaming_local_batch(
+            :electron_nuclear_by_center,
+            stream_state,
+        )
+    local_collection =
+        _route_global_decomposed_wl_streaming_local_collection(
+            :electron_nuclear_by_center,
+            stream_state,
+        )
+    placement_plan =
+        _route_global_decomposed_wl_streaming_placement_plan(
+            :electron_nuclear_by_center,
+            inventory,
+            stream_state,
+        )
+    return (;
+        local_batch,
+        local_collection,
+        placement_plan,
+        global_matrix_result,
+        metadata = NamedTuple(metadata),
     )
 end
 
@@ -1236,7 +1658,7 @@ end
 
 function _route_global_electron_nuclear_by_center_result(
     inventory,
-    local_batch::PairBlockMaterializationBatchResult,
+    local_batch,
     local_collection::NamedTuple,
     placement_plan::NamedTuple,
     global_matrix_result::NamedTuple;
