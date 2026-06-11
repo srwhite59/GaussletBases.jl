@@ -222,34 +222,60 @@ The corrected decomposed route materializes overlap, kinetic, one separated
 uncharged electron-nuclear by-center matrix, the charge-applied one-electron
 Hamiltonian, and the full retained density-density/IDA electron-electron
 interaction matrix in the 223-column retained basis. The full interaction
-matrix has shape `(223, 223)`, uses the existing WL pair-factor-term convention
-with integral weights deferred to the IDA/HF density interpretation stage, and
-is the object later correlation work should consume. Restricted closed-shell HF
-with one alpha and one beta electron converges in 17 iterations. The bare
-closed-shell one-electron value from the lowest one-electron orbital is
-`-3.7575402050745312` Hartree. The self-consistent RHF one-electron contribution
-is `-3.7316519035708953` Hartree, the electron-electron contribution is
-`1.6861351364925603` Hartree, and the accepted total HF energy is
-`-2.045516767078335` Hartree. The converged retained density has trace 1 for
+matrix has shape `(223, 223)`. The density-density route follows the legacy IDA
+transfer rule: contract `pgdg_intermediate.pair_factor_terms_raw` as the raw
+pair numerator, project retained density weights through the same retained unit
+coefficient maps, and divide the assembled retained numerator by the final
+retained density-weight outer product. The weight-divided
+`pgdg_intermediate.pair_factor_terms` table remains a PGDG storage relation and
+local-oracle convenience, not the authority for transformed retained IDA
+interactions. The resulting matrix is the object later correlation work should
+consume. As a compact physics convention check before RHF, the lowest
+one-electron He+ orbital for the same Z = 2 center has H1 eigenvalue about
+`-1.878770102537269` Hartree versus the hydrogenic 1s reference `-2.0`. Using
+that retained orbital, the IDA Coulomb self term is about
+`1.4202542835594492` Hartree versus the hydrogenic 1s reference
+`5Z/8 = 1.25`, an error of about `0.17025428355944916` on this compact
+one-shell fixture. This self-Coulomb diagnostic is not accepted physics yet; it
+is a convention probe before RHF interpretation.
+
+The same ownership rule applies to projected-shell/PQS IDA paths: raw pair
+numerators must be carried through the projection and Lowdin/final-basis
+transformation first. Division by density weights belongs only at the final
+retained/final-basis density-interaction boundary, using weights in that final
+basis. Source-level or parent PGDG weight division is not a substitute for the
+post-projection/PQS weight boundary.
+
+Restricted closed-shell HF with one alpha and one beta electron converges in
+16 iterations. The bare closed-shell one-electron value from the lowest
+one-electron orbital is `-3.757540205074538` Hartree. The self-consistent RHF
+one-electron contribution is `-3.705023012192527` Hartree, the electron-electron
+contribution is `1.3106054775285387` Hartree, and the accepted total HF energy
+is `-2.3944175346639884` Hartree. The converged retained density has trace 1 for
 the occupied spatial orbital, electron count 2 after closed-shell occupation,
-peak retained-column density about `0.016237877162231747` at column 63, direct
-core fraction about `0.7661258457949129`, shell/boundary fraction about
-`0.23387415420508706`, and direct-core RMS radius about `0.544451699989865`
+peak retained-column density about `0.014711725584653477` at column 63, direct
+core fraction about `0.7281451450072138`, shell/boundary fraction about
+`0.27185485499278617`, and direct-core RMS radius about `0.5509019498518761`
 bohr. The converged-density Coulomb contribution is positive and equals the RHF
-electron-electron contribution, `1.6861351364925603` Hartree, under the current
+electron-electron contribution, `1.3106054775285387` Hartree, under the current
 full retained two-index density-density convention.
 
-The larger-box shellification inventory currently stops at a readiness
-checkpoint through the same driver-facing helper. The side-13 probe with
-`AsinhMapping(c = 0.1, s = 1.0, tail_spacing = 10.0)` reports source kind
+The larger-box shellification inventory currently stops at a pre-RHF
+convention checkpoint through the same driver-facing helper. The side-13 probe
+with `AsinhMapping(c = 0.1, s = 1.0, tail_spacing = 10.0)` reports source kind
 `:cartesian_shellification_retained_unit_pair_plan`, retained dimension 517, 105
 units, 5,565 upper-triangular unit pairs represented by
-`CartesianUnitPairs.UnitPairIndexTable`, retained column coverage from `1:125` through
-`517:517`, omitted large pair keys/summaries, and no low-order seed,
-full-parent CPB, direct Cartesian, or ordinary IDA fallback. Route-global
-one-electron and density-density operator materialization from that larger
-shellification-backed inventory is the next validation step:
-`:pending_shellification_backed_operator_materialization_validation`. No
+`CartesianUnitPairs.UnitPairIndexTable`, retained column coverage from `1:125`
+through `517:517`, omitted large pair keys/summaries, and no low-order seed,
+full-parent CPB, direct Cartesian, or ordinary IDA fallback. The same probe
+materialized route-global overlap, kinetic, electron-nuclear by-center, and the
+full retained density-density matrix. The lowest one-electron Z = 2 orbital
+improved to about `-1.9748150892830352` Hartree versus the hydrogenic reference
+`-2.0`. With raw pair numerators contracted and final retained density weights
+applied after retained assembly, the retained IDA self-Coulomb term is about
+`1.2158294767735702` Hartree versus `1.25`. The self-Coulomb error moves from
+about `0.1703` in the compact fixture to about `0.0342` in the side-13 fixture,
+so the corrected retained-weight boundary is the active convention. No
 larger-box RHF energy is currently an active acceptance baseline.
 
 The current coarse timing split for the active tiny-box He RHF acceptance is

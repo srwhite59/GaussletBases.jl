@@ -59,20 +59,40 @@ Metadata-only retained-unit plan for one terminal-lowering plan.
 struct RetainedUnitPlan
     policy::RetainedUnitPolicy
     lowering_plan::CartesianTerminalLowering.TerminalLoweringPlan
-    units::Tuple{Vararg{RetainedUnitRecord}}
+    units::Vector{RetainedUnitRecord}
     summary::NamedTuple
     metadata::NamedTuple
+
+    function RetainedUnitPlan(
+        policy::RetainedUnitPolicy,
+        lowering_plan::CartesianTerminalLowering.TerminalLoweringPlan,
+        units,
+        summary,
+        metadata,
+    )
+        unit_vector =
+            units isa Vector{RetainedUnitRecord} ?
+            units :
+            RetainedUnitRecord[unit for unit in units]
+        return new(
+            policy,
+            lowering_plan,
+            unit_vector,
+            NamedTuple(summary),
+            NamedTuple(metadata),
+        )
+    end
 end
 
 units(plan::RetainedUnitPlan) = plan.units
 summary(plan::RetainedUnitPlan) = plan.summary
 
 function route_core_final_units(plan::RetainedUnitPlan)
-    return Tuple(
+    return CartesianRouteCore.FinalRetainedUnit[
         unit.route_core_final_unit
         for unit in plan.units
         if !isnothing(unit.route_core_final_unit)
-    )
+    ]
 end
 
 function _metadata_value(metadata::NamedTuple, key::Symbol, default = nothing)

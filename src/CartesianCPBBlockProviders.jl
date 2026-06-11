@@ -3801,10 +3801,10 @@ function _materialize_cpb_electron_electron_local_dense_block(
         interval_summary.right_support_count,
     )
 
-    # Pair-factor terms already match the existing WL interaction oracle. Keep
-    # alpha as the inner, stride-1 first index of the term-first factor arrays.
-    # Do not apply/divide axis weights here; weights belong at a later
-    # realization or final density interpretation boundary.
+    # Pair-factor terms already match the existing WL interaction oracle because
+    # PGDG construction has divided raw pair terms by source-weight outer
+    # products. Keep alpha as the inner, stride-1 first index of the term-first
+    # factor arrays, and do not apply or divide weights again here.
     for ix_left in left.x, iy_left in left.y, iz_left in left.z
         row = _local_product_index(
             ix_left - first(left.x) + 1,
@@ -3855,10 +3855,17 @@ function _cpb_electron_electron_local_block_summary(
         interval_pair_summary = interval_summary,
         representation = :dense_local_cpb_electron_electron_pair_factor_interaction,
         pair_factor_source = :axis_pgdg_intermediate_pair_factor_terms,
-        pair_factor_weighting = :wl_pair_factor_terms_existing_convention,
+        pair_factor_weighting = :pgdg_weight_divided_pair_factor_storage,
+        pair_factor_normalization = :source_weight_divided_storage,
+        density_normalized_pair_factors = false,
+        raw_weighted_pair_factors = false,
+        source_weight_division_owner = :pgdg_auxiliary_source_weights,
+        source_weight_division_shape = :axis_pair_weight_outer,
+        source_weight_division_applied_by_provider = false,
+        source_weight_division_stage = :parent_pgdg_intermediate_construction,
         axis_integral_weights_applied = false,
-        axis_integral_weights_deferred = true,
-        weight_application_stage = :realization_or_final_density_interpretation,
+        axis_integral_weights_deferred = false,
+        weight_application_stage = :not_final_ida_density_interaction,
         retained_pqs_weights = false,
         factor_source_path = :axis_pgdg_intermediate_pair_factor_terms,
         gaussian_expansion_loop = :inner_local_contraction,

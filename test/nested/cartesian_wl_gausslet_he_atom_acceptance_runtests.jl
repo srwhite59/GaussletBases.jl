@@ -144,16 +144,18 @@ function _wl_he_lowest_one_electron_energy(
             rtol = 1.0e-9,
         )
     sym_h = Symmetric((hamiltonian_matrix + transpose(hamiltonian_matrix)) ./ 2)
-    values = overlap_identity ?
-        eigvals(sym_h) :
+    eig = overlap_identity ?
+        eigen(sym_h) :
         eigen(
             sym_h,
             Symmetric((overlap_matrix + transpose(overlap_matrix)) ./ 2),
-        ).values
+        )
+    lowest_index = argmin(eig.values)
     return (;
         status = :materialized_decomposed_wl_he_one_electron_solve,
         blocker = nothing,
-        energy = minimum(values),
+        energy = eig.values[lowest_index],
+        lowest_orbital_coefficients = eig.vectors[:, lowest_index],
         solve_kind =
             overlap_identity ? :ordinary_symmetric : :generalized_symmetric,
         overlap_identity,
@@ -544,6 +546,19 @@ function _wl_decomposed_he_atom_acceptance_audit(;
         hartree_fock.status ===
         :converged_decomposed_wl_he_restricted_hartree_fock
     one_electron_contribution = 2.0 * solve.energy
+    lowest_density =
+        solve.status === :materialized_decomposed_wl_he_one_electron_solve ?
+        solve.lowest_orbital_coefficients *
+        transpose(solve.lowest_orbital_coefficients) :
+        zeros(Float64, 0, 0)
+    hydrogenic_self_coulomb =
+        two_electron_route_available ?
+        _wl_he_restricted_density_density_interaction_energy(
+            density_density.matrix,
+            lowest_density,
+        ) :
+        :unavailable
+    hydrogenic_self_coulomb_reference = 5.0 * 2.0 / 8.0
     return (;
         object_kind = :decomposed_wl_he_atom_acceptance_audit,
         acceptance_suite = :decomposed_wl_gausslet_two_electron_acceptance,
@@ -649,12 +664,53 @@ function _wl_decomposed_he_atom_acceptance_audit(;
             density_density.gaussian_term_count,
         electron_electron_pair_factor_weighting =
             density_density.pair_factor_weighting,
+        electron_electron_pair_factor_normalization =
+            density_density.pair_factor_normalization,
+        density_normalized_pair_factors =
+            density_density.density_normalized_pair_factors,
+        raw_weighted_pair_factors =
+            density_density.raw_weighted_pair_factors,
+        source_weight_division_owner =
+            density_density.source_weight_division_owner,
+        source_weight_division_shape =
+            density_density.source_weight_division_shape,
+        source_weight_division_applied_by_density_density_route =
+            density_density.source_weight_division_applied_by_density_density_route,
+        source_weight_division_stage =
+            density_density.source_weight_division_stage,
+        raw_pair_numerator_contracted =
+            density_density.raw_pair_numerator_contracted,
+        retained_density_weight_count =
+            density_density.retained_density_weight_count,
+        retained_density_weight_minimum =
+            density_density.retained_density_weight_minimum,
+        retained_density_weight_maximum =
+            density_density.retained_density_weight_maximum,
+        final_retained_density_weights_available =
+            density_density.final_retained_density_weights_available,
+        final_retained_density_weight_source =
+            density_density.final_retained_density_weight_source,
+        final_retained_weight_division_applied =
+            density_density.final_retained_weight_division_applied,
         axis_integral_weights_applied =
             density_density.axis_integral_weights_applied,
         axis_integral_weights_deferred =
             density_density.axis_integral_weights_deferred,
+        weight_application_stage =
+            density_density.weight_application_stage,
         ida_density_density_convention =
             density_density.ida_density_density_convention,
+        hydrogenic_1s_self_coulomb_reference =
+            hydrogenic_self_coulomb_reference,
+        hydrogenic_1s_h1_eigenvalue_measured = solve.energy,
+        hydrogenic_1s_h1_eigenvalue_reference = -2.0,
+        hydrogenic_1s_h1_eigenvalue_error = abs(solve.energy - -2.0),
+        hydrogenic_1s_self_coulomb_measured =
+            hydrogenic_self_coulomb,
+        hydrogenic_1s_self_coulomb_error =
+            two_electron_route_available ?
+            abs(hydrogenic_self_coulomb - hydrogenic_self_coulomb_reference) :
+            :unavailable,
         hartree_fock_status = hartree_fock.status,
         hartree_fock_blocker = hartree_fock.blocker,
         hartree_fock_solve_kind = hartree_fock.solve_kind,
@@ -848,11 +904,44 @@ end
     @test report.electron_electron_placed_block_count == 729
     @test report.electron_electron_gaussian_term_count > 0
     @test report.electron_electron_pair_factor_weighting ==
-          :wl_pair_factor_terms_existing_convention
+          :raw_pair_numerator_terms
+    @test report.electron_electron_pair_factor_normalization ==
+          :raw_numerator
+    @test !report.density_normalized_pair_factors
+    @test report.raw_weighted_pair_factors
+    @test report.raw_pair_numerator_contracted
+    @test report.source_weight_division_owner ==
+          :retained_density_interaction_boundary
+    @test report.source_weight_division_shape ==
+          :retained_density_weight_outer
+    @test report.source_weight_division_applied_by_density_density_route
+    @test report.source_weight_division_stage ==
+          :after_retained_raw_numerator_assembly
+    @test report.retained_density_weight_count == report.retained_dimension
+    @test report.retained_density_weight_minimum > 0.0
+    @test report.retained_density_weight_maximum >=
+          report.retained_density_weight_minimum
+    @test report.final_retained_density_weights_available
+    @test report.final_retained_density_weight_source ==
+          :retained_unit_coefficient_weight_projection
+    @test report.final_retained_weight_division_applied
     @test !report.axis_integral_weights_applied
-    @test report.axis_integral_weights_deferred
+    @test !report.axis_integral_weights_deferred
+    @test report.weight_application_stage ==
+          :after_retained_raw_numerator_assembly
     @test report.ida_density_density_convention ==
           :full_retained_two_index_interaction_matrix
+    @test report.hydrogenic_1s_self_coulomb_reference ≈ 1.25 atol =
+          1.0e-14 rtol = 0.0
+    @test report.hydrogenic_1s_h1_eigenvalue_reference ≈ -2.0 atol =
+          1.0e-14 rtol = 0.0
+    @test isfinite(report.hydrogenic_1s_h1_eigenvalue_measured)
+    @test report.hydrogenic_1s_h1_eigenvalue_measured ==
+          report.lowest_one_electron_orbital_energy
+    @test report.hydrogenic_1s_h1_eigenvalue_error < 0.2
+    @test isfinite(report.hydrogenic_1s_self_coulomb_measured)
+    @test report.hydrogenic_1s_self_coulomb_measured > 0.0
+    @test report.hydrogenic_1s_self_coulomb_error < 0.5
     @test report.hartree_fock_status ==
           :converged_decomposed_wl_he_restricted_hartree_fock
     @test isnothing(report.hartree_fock_blocker)
@@ -872,8 +961,9 @@ end
     @test report.rhf_total_energy ≈
           report.rhf_one_electron_energy + report.rhf_electron_electron_energy atol =
           1.0e-10 rtol = 0.0
-    @test report.rhf_total_energy ≈ -2.045516767078335 atol = 1.0e-10 rtol = 0.0
-    @test report.rhf_electron_electron_energy ≈ 1.6861351364925603 atol =
+    @test report.rhf_total_energy ≈ -2.3944175346639884 atol =
+          1.0e-10 rtol = 0.0
+    @test report.rhf_electron_electron_energy ≈ 1.3106054775285387 atol =
           1.0e-10 rtol = 0.0
     @test report.rhf_total_decomposition_error < 1.0e-10
     @test report.rhf_density_trace ≈ 1.0 atol = 1.0e-8 rtol = 0.0

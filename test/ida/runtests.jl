@@ -28,7 +28,8 @@
             expected_term_count,
         )
 
-    density_terms = axis_provenance.density_normalized_pair_factor_terms
+    stored_weight_divided_terms =
+        axis_provenance.density_normalized_pair_factor_terms
     raw_terms = axis_provenance.raw_pair_factor_terms
     weights = axis_provenance.source_weights
     n = length(weights)
@@ -37,21 +38,23 @@
     @test axis_provenance.interaction_path == :ida_gausslet_source_box
     @test axis_provenance.term_count == expected_term_count
     @test axis_provenance.factor_dimensions == (n, n)
-    @test size(density_terms) == (expected_term_count, n, n)
+    @test size(stored_weight_divided_terms) == (expected_term_count, n, n)
     @test size(raw_terms) == (expected_term_count, n, n)
-    @test density_terms === bundle.pgdg_intermediate.pair_factor_terms
+    @test stored_weight_divided_terms === bundle.pgdg_intermediate.pair_factor_terms
     @test raw_terms === bundle.pgdg_intermediate.pair_factor_terms_raw
     @test weights == bundle.pgdg_intermediate.weights
     @test axis_provenance.centers == bundle.pgdg_intermediate.centers
     @test all(isfinite, weights)
     @test all(weight -> abs(weight) > 1.0e-12, weights)
 
-    reconstructed = similar(density_terms)
+    reconstructed = similar(stored_weight_divided_terms)
     weight_outer = weights * transpose(weights)
     for term in 1:expected_term_count
         reconstructed[term, :, :] .= raw_terms[term, :, :] ./ weight_outer
     end
-    @test reconstructed ≈ density_terms atol = 1.0e-12 rtol = 1.0e-12
+    # This is the historical PGDG storage relation. Retained IDA routes must
+    # transform raw numerators and divide only by final retained density weights.
+    @test reconstructed ≈ stored_weight_divided_terms atol = 1.0e-12 rtol = 1.0e-12
     @test axis_provenance.diagnostics.density_normalized_reconstruction_error <
           1.0e-12
     @test axis_provenance.diagnostics.interaction_path ==
@@ -72,7 +75,8 @@
     )
     @test all_axis_provenance.object_kind == :pqs_source_box_ida_factor_provenance
     @test all_axis_provenance.term_count == expected_term_count
-    @test all_axis_provenance.axis_pair_factor_terms.x === density_terms
+    @test all_axis_provenance.axis_pair_factor_terms.x ===
+          stored_weight_divided_terms
     @test all_axis_provenance.raw_axis_pair_factor_terms.x === raw_terms
     @test all_axis_provenance.axis_weights.x == weights
     @test all_axis_provenance.factor_dimensions.x == (n, n)

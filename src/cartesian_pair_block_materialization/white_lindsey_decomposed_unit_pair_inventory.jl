@@ -343,7 +343,7 @@ function _white_lindsey_seed_decomposed_unit_pairs(
             )
         end
     end
-    return Tuple(pair_records)
+    return pair_records
 end
 
 function _white_lindsey_shellification_unit_pair_records_with_ranges(
@@ -397,7 +397,7 @@ function _white_lindsey_shellification_unit_pair_records_with_ranges(
         status = :available_shellification_decomposed_wl_unit_pair_records,
         blocker = nothing,
         blocked_unit_key = nothing,
-        retained_units = Tuple(materialized_units),
+        retained_units = materialized_units,
         unit_pairs = materialized_pairs,
     )
 end
@@ -430,7 +430,7 @@ function _white_lindsey_shellification_retained_units_with_ranges(
         status = :available_shellification_decomposed_wl_retained_units,
         blocker = nothing,
         blocked_unit_key = nothing,
-        retained_units = Tuple(materialized_units),
+        retained_units = materialized_units,
     )
 end
 

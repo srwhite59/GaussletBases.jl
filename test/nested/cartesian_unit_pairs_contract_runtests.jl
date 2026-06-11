@@ -157,7 +157,8 @@ function _unit_pairs_blocked_retained_plan(plan)
             ),
         ),
     )
-    blocked_units = (blocked_first_unit, Base.tail(units)...)
+    blocked_units = CRUForUnitPairs.RetainedUnitRecord[blocked_first_unit]
+    append!(blocked_units, @view units[2:end])
     return CRUForUnitPairs.RetainedUnitPlan(
         plan.policy,
         plan.lowering_plan,
@@ -219,8 +220,14 @@ end
     @test pair_summary.route_core_pair_inventory_status ==
           :available_route_core_pair_inventory
     @test pair_summary.route_core_pair_count == pair_summary.pair_count
+    @test pair_summary.pair_storage == :unit_pair_index_table
+    @test !pair_summary.rich_unit_pair_records_stored
     @test !isnothing(CUP.route_core_pair_inventory(pair_plan))
-    @test all(pair -> !isnothing(pair.route_core_pair_sidecar), CUP.unit_pairs(pair_plan))
+    @test all(pair -> isnothing(pair.route_core_pair_sidecar), CUP.unit_pairs(pair_plan))
+    @test all(
+        pair -> pair.metadata.rich_unit_pair_record_stored === false,
+        CUP.unit_pairs(pair_plan),
+    )
     @test _unit_pair_family_count(
         pair_summary,
         :direct_cpb_retained_unit__direct_cpb_retained_unit,

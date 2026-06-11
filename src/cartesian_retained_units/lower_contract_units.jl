@@ -24,12 +24,11 @@ function retained_unit_plan(
     for contract in selected
         _append_retained_units_for_contract!(planned_units, contract, policy)
     end
-    retained_units = Tuple(planned_units)
-    plan_summary = _retained_unit_plan_summary(policy, lowering_plan, retained_units)
+    plan_summary = _retained_unit_plan_summary(policy, lowering_plan, planned_units)
     return RetainedUnitPlan(
         policy,
         lowering_plan,
-        retained_units,
+        planned_units,
         plan_summary,
         NamedTuple(metadata),
     )

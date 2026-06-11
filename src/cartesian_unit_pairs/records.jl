@@ -51,7 +51,7 @@ units once and computes pair records on iteration for compatibility with older
 pair consumers that still expect `UnitPairRecord`s.
 """
 struct UnitPairIndexTable
-    units::Tuple
+    units::Vector{CartesianRetainedUnits.RetainedUnitRecord}
     metadata::NamedTuple
 end
 
@@ -66,7 +66,11 @@ function unit_pair_index_table(
 end
 
 function unit_pair_index_table(retained_units; metadata = (;))
-    return UnitPairIndexTable(Tuple(retained_units), NamedTuple(metadata))
+    unit_vector =
+        retained_units isa Vector{CartesianRetainedUnits.RetainedUnitRecord} ?
+        retained_units :
+        CartesianRetainedUnits.RetainedUnitRecord[unit for unit in retained_units]
+    return UnitPairIndexTable(unit_vector, NamedTuple(metadata))
 end
 
 Base.length(table::UnitPairIndexTable) =
@@ -153,10 +157,32 @@ Metadata-only pair inventory for one retained-unit plan.
 struct UnitPairPlan
     policy::UnitPairPolicy
     retained_unit_plan::CartesianRetainedUnits.RetainedUnitPlan
-    pairs::Tuple{Vararg{UnitPairRecord}}
+    pairs::Union{UnitPairIndexTable,Vector{UnitPairRecord}}
     route_core_pair_inventory::Union{CartesianRouteCore.UnitPairInventory,Nothing}
     summary::NamedTuple
     metadata::NamedTuple
+
+    function UnitPairPlan(
+        policy::UnitPairPolicy,
+        retained_unit_plan::CartesianRetainedUnits.RetainedUnitPlan,
+        pairs,
+        route_core_pair_inventory,
+        summary,
+        metadata,
+    )
+        pair_storage =
+            pairs isa UnitPairIndexTable ? pairs :
+            pairs isa Vector{UnitPairRecord} ? pairs :
+            UnitPairRecord[pair for pair in pairs]
+        return new(
+            policy,
+            retained_unit_plan,
+            pair_storage,
+            route_core_pair_inventory,
+            NamedTuple(summary),
+            NamedTuple(metadata),
+        )
+    end
 end
 
 unit_pairs(plan::UnitPairPlan) = plan.pairs

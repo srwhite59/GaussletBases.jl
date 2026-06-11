@@ -102,11 +102,22 @@ end
     @test local_summary.pair_factor_source ===
           :axis_pgdg_intermediate_pair_factor_terms
     @test local_summary.pair_factor_weighting ===
-          :wl_pair_factor_terms_existing_convention
+          :pgdg_weight_divided_pair_factor_storage
+    @test local_summary.pair_factor_normalization ===
+          :source_weight_divided_storage
+    @test !local_summary.density_normalized_pair_factors
+    @test !local_summary.raw_weighted_pair_factors
+    @test local_summary.source_weight_division_owner ===
+          :pgdg_auxiliary_source_weights
+    @test local_summary.source_weight_division_shape ===
+          :axis_pair_weight_outer
+    @test !local_summary.source_weight_division_applied_by_provider
+    @test local_summary.source_weight_division_stage ===
+          :parent_pgdg_intermediate_construction
     @test local_summary.axis_integral_weights_applied === false
-    @test local_summary.axis_integral_weights_deferred
+    @test local_summary.axis_integral_weights_deferred === false
     @test local_summary.weight_application_stage ===
-          :realization_or_final_density_interpretation
+          :not_final_ida_density_interaction
     @test local_summary.retained_pqs_weights === false
     @test local_summary.ida_mwg_semantics === false
     @test local_summary.gaussian_expansion_loop === :inner_local_contraction
@@ -125,8 +136,9 @@ end
     @test local_summary.provider_level_electron_electron_block_materialized
     @test local_summary.cpb_local_coulomb_kernel_implemented
     @test local_summary.cpb_local_electron_electron_kernel_implemented
-    # The local CPB pilot consumes WL pair_factor_terms directly. Applying or
-    # dividing axis weights here would break the PQS realization boundary.
+    # The local CPB pilot consumes WL pair_factor_terms directly to match the
+    # existing WL oracle. It is not the final retained IDA density-interaction
+    # boundary, so retained density weights must not be applied here.
     @test local_block.dense_block ≈ expected
     @test !hasproperty(local_summary, :dense_block)
     @test !hasproperty(local_summary, :axis_ops)
@@ -168,7 +180,9 @@ end
     @test missing_pair_summary.blocker === :missing_x_pair_factor_terms
     @test isnothing(missing_pair.dense_block)
     @test missing_pair_summary.axis_integral_weights_applied === false
-    @test missing_pair_summary.axis_integral_weights_deferred
+    @test missing_pair_summary.axis_integral_weights_deferred === false
+    @test missing_pair_summary.pair_factor_normalization ===
+          :source_weight_divided_storage
     @test missing_pair_summary.retained_pqs_weights === false
     @test missing_pair_summary.ida_mwg_semantics === false
     @test missing_pair_summary.provider_level_local_matrix_materialized === false

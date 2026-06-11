@@ -17,36 +17,14 @@ function unit_pair_plan(
         throw(ArgumentError("unit_pair_plan requires at least one retained unit"))
 
     route_core_inventory = _route_core_pair_inventory_or_nothing(retained_units)
-    route_core_pairs =
-        isnothing(route_core_inventory.inventory) ?
-        nothing :
-        CartesianRouteCore.pair_entries(route_core_inventory.inventory)
-
-    pair_records = UnitPairRecord[]
-    pair_index = 0
-    for left_index in eachindex(retained_units)
-        for right_index in left_index:length(retained_units)
-            pair_index += 1
-            left = retained_units[left_index]
-            right = retained_units[right_index]
-            sidecar =
-                isnothing(route_core_pairs) ? nothing : route_core_pairs[pair_index]
-            push!(
-                pair_records,
-                _unit_pair_record(
-                    pair_index,
-                    left,
-                    right,
-                    left_index,
-                    right_index,
-                    sidecar,
-                    route_core_inventory,
-                ),
-            )
-        end
-    end
-
-    pairs = Tuple(pair_records)
+    pairs = unit_pair_index_table(
+        retained_units;
+        metadata = (;
+            retained_pair_source = :upper_triangular_unit_index_table,
+            rich_unit_pair_record_storage = :not_stored,
+            route_core_pair_sidecars_stored_on_pairs = false,
+        ),
+    )
     plan_summary =
         _unit_pair_plan_summary(policy, retained_unit_plan, pairs, route_core_inventory)
     return UnitPairPlan(
@@ -93,39 +71,4 @@ function _route_core_pair_inventory_or_nothing(retained_units)
             missing_indices = (),
         )
     end
-end
-
-function _unit_pair_record(
-    pair_index::Int,
-    left::CartesianRetainedUnits.RetainedUnitRecord,
-    right::CartesianRetainedUnits.RetainedUnitRecord,
-    left_index::Int,
-    right_index::Int,
-    route_core_sidecar,
-    route_core_inventory,
-)
-    sidecar_status =
-        isnothing(route_core_sidecar) ?
-        route_core_inventory.status :
-        :available_route_core_unit_pair
-    return UnitPairRecord(
-        (left.unit_key, right.unit_key),
-        pair_index,
-        _pair_family(left, right),
-        left,
-        right,
-        left_index,
-        right_index,
-        left.unit_key,
-        right.unit_key,
-        left.unit_kind,
-        right.unit_kind,
-        route_core_sidecar,
-        false,
-        (;
-            route_core_pair_sidecar_status = sidecar_status,
-            route_core_pair_sidecar_blocker =
-                isnothing(route_core_sidecar) ? route_core_inventory.blocker : nothing,
-        ),
-    )
 end
