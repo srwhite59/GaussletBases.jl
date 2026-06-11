@@ -29,11 +29,12 @@ end
     seed_report = GaussletBases._white_lindsey_low_order_materialized_seed_report()
     expansion = coulomb_gaussian_expansion(doacc = false)
     center_records = _wl_route_global_en_centers()
+    parent_axis_bundle_object = _wl_route_global_en_parent_axis_bundle()
 
     by_center = WLRouteGlobalENCPBM.route_global_electron_nuclear_by_center_matrices(
         seed_report;
         parent_axis_counts = (7, 7, 7),
-        parent_axis_bundle_object = _wl_route_global_en_parent_axis_bundle(),
+        parent_axis_bundle_object,
         coulomb_expansion = expansion,
         center_records,
     )
@@ -90,4 +91,41 @@ end
         @test !result.hamiltonian_data_materialized
         @test !result.route_driver_wiring
     end
+
+    inventory = WLRouteGlobalENCPBM.white_lindsey_decomposed_unit_pair_inventory(
+        seed_report;
+        metadata = (;
+            parent_axis_counts = (7, 7, 7),
+            parent_axis_bundle_object,
+        ),
+    )
+    representative_coefficients =
+        WLRouteGlobalENCPBM.white_lindsey_boundary_stratum_pair_unit_coefficients(
+            first(inventory.unit_pairs),
+        )
+    cached_batch =
+        WLRouteGlobalENCPBM.white_lindsey_boundary_stratum_one_body_blocks(
+            (representative_coefficients,),
+            :electron_nuclear_by_center;
+            parent_axis_counts = (7, 7, 7),
+            parent_axis_bundle_object,
+            coulomb_expansion = expansion,
+            center_record = only(center_records),
+        )
+    direct_block =
+        WLRouteGlobalENCPBM.white_lindsey_boundary_stratum_one_body_block(
+            representative_coefficients,
+            :electron_nuclear_by_center;
+            parent_axis_counts = (7, 7, 7),
+            parent_axis_bundle_object,
+            coulomb_expansion = expansion,
+            center_record = only(center_records),
+        )
+    cached_block = only(cached_batch.materialized_results)
+    @test cached_batch.metadata.electron_nuclear_axis_terms_cached
+    @test cached_batch.metadata.electron_nuclear_axis_term_cache_scope ==
+          :center_axis_expansion_parent_context
+    @test cached_block.metadata.axis_term_cache_status ==
+          :centered_axis_terms_reused_across_unit_pairs
+    @test cached_block.block ≈ direct_block.block atol = 1.0e-12 rtol = 1.0e-12
 end

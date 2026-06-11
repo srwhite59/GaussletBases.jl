@@ -12,31 +12,20 @@ function white_lindsey_boundary_stratum_electron_nuclear_by_center_block(
     parent_axis_bundle_object,
     coulomb_expansion,
     center_record,
+    electron_nuclear_axis_context = nothing,
 )
-    axis_counts = _axis_counts_tuple(parent_axis_counts)
     _assert_white_lindsey_pair_unit_coefficients_ready(pair_unit_coefficients)
-
-    center_summary = _white_lindsey_electron_nuclear_center_summary(center_record)
-    center_summary.status === :available_electron_nuclear_center_record ||
-        throw(
-            ArgumentError(
-                "White--Lindsey electron-nuclear by-center block requires an available center record",
-            ),
-        )
-    coefficients =
-        _white_lindsey_electron_nuclear_expansion_coefficients(coulomb_expansion)
-    exponents =
-        _white_lindsey_electron_nuclear_expansion_exponents(coulomb_expansion)
-    axis_terms = _white_lindsey_electron_nuclear_axis_terms(
+    axis_context = _white_lindsey_electron_nuclear_axis_context(
+        electron_nuclear_axis_context;
+        parent_axis_counts,
         parent_axis_bundle_object,
-        exponents,
-        center_summary,
+        coulomb_expansion,
+        center_record,
     )
-    _assert_white_lindsey_electron_nuclear_axis_terms(
-        axis_terms,
-        coefficients,
-        axis_counts,
-    )
+    axis_counts = axis_context.axis_counts
+    center_summary = axis_context.center_summary
+    coefficients = axis_context.coefficients
+    axis_terms = axis_context.axis_terms
 
     left_support = pair_unit_coefficients.left_support_indices
     right_support = pair_unit_coefficients.right_support_indices
@@ -111,6 +100,8 @@ function white_lindsey_boundary_stratum_electron_nuclear_by_center_block(
             uncharged_by_center_convention = true,
             factor_source_path =
                 :axis_pgdg_intermediate_gaussian_factor_terms,
+            axis_term_cache_scope = axis_context.cache_scope,
+            axis_term_cache_status = axis_context.cache_status,
             gaussian_expansion_loop = :inner_support_contraction,
             gaussian_term_count = length(coefficients),
             axis_factor_term_shapes =
@@ -134,6 +125,7 @@ function white_lindsey_boundary_stratum_electron_nuclear_by_center_block(
     parent_axis_bundle_object,
     coulomb_expansion,
     center_record,
+    electron_nuclear_axis_context = nothing,
 )
     return white_lindsey_boundary_stratum_electron_nuclear_by_center_block(
         white_lindsey_boundary_stratum_pair_unit_coefficients(unit_pair);
@@ -141,7 +133,84 @@ function white_lindsey_boundary_stratum_electron_nuclear_by_center_block(
         parent_axis_bundle_object,
         coulomb_expansion,
         center_record,
+        electron_nuclear_axis_context,
     )
+end
+
+function _white_lindsey_electron_nuclear_axis_context(
+    context;
+    parent_axis_counts,
+    parent_axis_bundle_object,
+    coulomb_expansion,
+    center_record,
+)
+    if !isnothing(context)
+        _assert_white_lindsey_electron_nuclear_axis_context(context)
+        return context
+    end
+    return _white_lindsey_electron_nuclear_axis_context(
+        parent_axis_counts,
+        parent_axis_bundle_object,
+        coulomb_expansion,
+        center_record,
+    )
+end
+
+function _white_lindsey_electron_nuclear_axis_context(
+    parent_axis_counts,
+    parent_axis_bundle_object,
+    coulomb_expansion,
+    center_record,
+)
+    axis_counts = _axis_counts_tuple(parent_axis_counts)
+    center_summary = _white_lindsey_electron_nuclear_center_summary(center_record)
+    center_summary.status === :available_electron_nuclear_center_record ||
+        throw(
+            ArgumentError(
+                "White--Lindsey electron-nuclear by-center block requires an available center record",
+            ),
+        )
+    coefficients =
+        _white_lindsey_electron_nuclear_expansion_coefficients(coulomb_expansion)
+    exponents =
+        _white_lindsey_electron_nuclear_expansion_exponents(coulomb_expansion)
+    axis_terms = _white_lindsey_electron_nuclear_axis_terms(
+        parent_axis_bundle_object,
+        exponents,
+        center_summary,
+    )
+    _assert_white_lindsey_electron_nuclear_axis_terms(
+        axis_terms,
+        coefficients,
+        axis_counts,
+    )
+    return (;
+        object_kind = :white_lindsey_electron_nuclear_axis_context,
+        status = :available_white_lindsey_electron_nuclear_axis_context,
+        axis_counts,
+        center_summary,
+        coefficients,
+        exponents,
+        axis_terms,
+        cache_scope = :center_axis_expansion_parent_context,
+        cache_status = :centered_axis_terms_reused_across_unit_pairs,
+    )
+end
+
+function _assert_white_lindsey_electron_nuclear_axis_context(context)
+    _white_lindsey_descriptor_property(context, :object_kind) ===
+    :white_lindsey_electron_nuclear_axis_context || throw(
+        ArgumentError(
+            "White--Lindsey electron-nuclear block requires an axis context built by the electron-nuclear axis context helper",
+        ),
+    )
+    _white_lindsey_descriptor_property(context, :status) ===
+    :available_white_lindsey_electron_nuclear_axis_context || throw(
+        ArgumentError(
+            "White--Lindsey electron-nuclear block requires an available axis context",
+        ),
+    )
+    return nothing
 end
 
 function _white_lindsey_electron_nuclear_center_summary(center_record)

@@ -32,6 +32,7 @@ function white_lindsey_boundary_stratum_one_body_block(
     parent_axis_bundle_object = nothing,
     coulomb_expansion = nothing,
     center_record = nothing,
+    electron_nuclear_axis_context = nothing,
 )
     term = _white_lindsey_one_body_term(term)
     if term === :overlap
@@ -92,6 +93,7 @@ function white_lindsey_boundary_stratum_one_body_block(
             parent_axis_bundle_object,
             coulomb_expansion,
             center_record,
+            electron_nuclear_axis_context,
         )
     end
     throw(ArgumentError("unsupported White--Lindsey one-body term $(term)"))
@@ -108,6 +110,7 @@ function white_lindsey_boundary_stratum_one_body_block(
     parent_axis_bundle_object = nothing,
     coulomb_expansion = nothing,
     center_record = nothing,
+    electron_nuclear_axis_context = nothing,
 )
     return white_lindsey_boundary_stratum_one_body_block(
         white_lindsey_boundary_stratum_pair_unit_coefficients(unit_pair),
@@ -120,6 +123,7 @@ function white_lindsey_boundary_stratum_one_body_block(
         parent_axis_bundle_object,
         coulomb_expansion,
         center_record,
+        electron_nuclear_axis_context,
     )
 end
 
@@ -157,6 +161,15 @@ function white_lindsey_boundary_stratum_one_body_blocks(
     )
     pair_unit_coefficients, input_kind, cache_entry_count =
         _white_lindsey_one_body_batch_pair_inputs(records_or_pairs)
+    electron_nuclear_axis_context =
+        term === :electron_nuclear_by_center ?
+        _white_lindsey_electron_nuclear_axis_context(
+            parent_axis_counts,
+            parent_axis_bundle_object,
+            coulomb_expansion,
+            center_record,
+        ) :
+        nothing
 
     results = PairBlockMaterializationResult[]
     skipped = NamedTuple[]
@@ -175,6 +188,7 @@ function white_lindsey_boundary_stratum_one_body_blocks(
                     parent_axis_bundle_object,
                     coulomb_expansion,
                     center_record,
+                    electron_nuclear_axis_context,
                 ),
             )
         else
@@ -209,6 +223,12 @@ function white_lindsey_boundary_stratum_one_body_blocks(
             pair_input_kind = input_kind,
             pair_unit_coefficient_record_count = length(pair_unit_coefficients),
             unit_coefficient_cache_entry_count = cache_entry_count,
+            electron_nuclear_axis_terms_cached =
+                term === :electron_nuclear_by_center,
+            electron_nuclear_axis_term_cache_scope =
+                isnothing(electron_nuclear_axis_context) ?
+                :not_applicable :
+                electron_nuclear_axis_context.cache_scope,
             local_pair_block_materialized = any_materialized,
             source_operator_blocks_materialized = any_materialized,
             final_pair_blocks_materialized = any_materialized,
