@@ -347,6 +347,26 @@ overlap, kinetic, and one by-center electron-nuclear matrix with same-process
 warm route-global times of about `0.092`, `0.218`, and `1.179` seconds,
 respectively, for the 517-column retained basis.
 
+The shellification-backed density-density assembly path now also streams over
+`CartesianUnitPairs.UnitPairIndexTable`. It caches retained-unit coefficient maps
+once per unit, builds one retained pair block at a time, and inserts directly
+into the retained two-index interaction matrix instead of materializing a full
+pair-coefficients batch first. On the accepted one-shell He fixture, the
+streaming and preserved rich-pair batch paths agreed exactly with maximum matrix
+difference `0.0`. The active He RHF energy stayed at about
+`-2.045516767078339` Hartree, with the density-density build about `0.75`
+seconds in a fresh acceptance run. On the side-13 probe, the streaming
+density-density route materialized 5,565 unit pairs for the 517-column retained
+basis in about `17.5` seconds in a cold ordered probe, with the scoped local
+pair-stream phase about `1.08` seconds. A direct side-13 comparison against the
+preserved rich-pair batch route agreed exactly with maximum matrix difference
+`0.0`; forcing the old rich-pair inventory view cost about `10.4` seconds, and
+second same-process density-density calls were essentially tied at about `1.04`
+seconds for streaming versus `1.03` seconds for the preserved batch route. The
+streaming path removes the full pair-coefficients result array and rich-pair
+conversion pressure, but the local support-block contraction is now the shared
+warm cost center rather than a placement-sidecar problem.
+
 One supported exploratory probe with the same one-shell decomposed topology and
 finer Z = 2 spacing, `d = 0.15`, shrinks the physical endpoints to about
 `(-0.6557127550383339, 0.6557127550383339)` bohr and worsens the RHF energy to
@@ -355,8 +375,8 @@ promoted into the active test. The current evidence points first to low-order
 box/basis quality, especially the very compact one-shell physical extent, not a
 failure of the closed-shell density-density scalar convention. The larger-box
 readiness probe now exercises shellification-derived decomposed unit inventory;
-operator materialization and any larger-box RHF baseline remain blocked on the
-shellification-backed operator validation noted above.
+the next larger-box milestone is a complete RHF run through the now-streaming
+one-body and density-density route, not another seed inventory extension.
 
 The He RHF energy is above the He HF reference near `-2.861679995612234`
 Hartree. The acceptance path does not use a full-parent CPB, direct Cartesian

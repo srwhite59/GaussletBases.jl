@@ -52,6 +52,58 @@ function route_global_decomposed_wl_density_density_matrix(
         _white_lindsey_density_density_expansion_coefficients(coulomb_expansion)
     retained_dimension = Int(inventory.retained_dimension)
     matrix = zeros(Float64, retained_dimension, retained_dimension)
+    if inventory.unit_pairs isa CUP.UnitPairIndexTable
+        stream_state = @timeg "decomposed_wl.density_density.local_pair_stream" begin
+            _route_global_density_density_streaming_fill!(
+                matrix,
+                inventory.unit_pairs,
+                axis_counts,
+                pair_factor_terms,
+                coefficients,
+            )
+        end
+        if !isnothing(stream_state.blocker)
+            return _route_global_density_density_result(
+                :blocked_route_global_density_density_interaction_matrix,
+                stream_state.blocker,
+                inventory,
+                nothing,
+                stream_state.placed_block_count;
+                metadata = merge(
+                    NamedTuple(metadata),
+                    (;
+                        blocked_pair_key = stream_state.blocked_pair_key,
+                        materialization_path = stream_state.materialization_path,
+                    ),
+                ),
+            )
+        end
+        return _route_global_density_density_result(
+            :materialized_route_global_density_density_interaction_matrix,
+            nothing,
+            inventory,
+            matrix,
+            stream_state.placed_block_count;
+            gaussian_term_count = length(coefficients),
+            unit_coefficient_cache_entry_count =
+                stream_state.unit_coefficient_cache_entry_count,
+            pair_factor_term_shapes =
+                _white_lindsey_density_density_pair_factor_term_shapes(
+                    pair_factor_terms,
+                ),
+            metadata = merge(
+                NamedTuple(metadata),
+                (;
+                    materialization_path = stream_state.materialization_path,
+                    pair_input_kind = :unit_pair_index_table,
+                    local_pair_blocks_collected = false,
+                    pair_coefficients_batch_materialized = false,
+                    streaming_retained_matrix_insertion = true,
+                ),
+            ),
+        )
+    end
+
     placed_block_count = 0
     pair_coefficients_batch =
         white_lindsey_boundary_stratum_pair_unit_coefficients(inventory.unit_pairs)
@@ -110,6 +162,105 @@ function route_global_decomposed_wl_density_density_matrix(
             _white_lindsey_density_density_pair_factor_term_shapes(pair_factor_terms),
         metadata,
     )
+end
+
+function _route_global_density_density_streaming_fill!(
+    matrix::AbstractMatrix{Float64},
+    unit_pairs::CUP.UnitPairIndexTable,
+    axis_counts::NTuple{3,Int},
+    pair_factor_terms,
+    coefficients::Vector{Float64},
+)
+    cache = Dict{Symbol,Any}()
+    materialized_count = 0
+    skipped_count = 0
+    placed_block_count = 0
+    blocker = nothing
+    blocked_pair_key = nothing
+    dimension = size(matrix, 1)
+    for unit_pair in unit_pairs
+        pair_coefficients = _white_lindsey_pair_unit_coefficients_result(
+            unit_pair,
+            _white_lindsey_unit_coefficients_from_local_cache(
+                cache,
+                unit_pair.left_unit,
+            ),
+            _white_lindsey_unit_coefficients_from_local_cache(
+                cache,
+                unit_pair.right_unit,
+            ),
+            length(cache),
+        )
+        if !_is_ready_white_lindsey_pair_unit_coefficients(pair_coefficients)
+            skipped_count += 1
+            if isnothing(blocker)
+                blocker = pair_coefficients.blocker
+                blocked_pair_key = pair_coefficients.pair_key
+            end
+            continue
+        end
+
+        block = _white_lindsey_density_density_pair_block(
+            pair_coefficients,
+            axis_counts,
+            pair_factor_terms,
+            coefficients,
+        )
+        rows = unit_pair.left_unit.column_range
+        columns = unit_pair.right_unit.column_range
+        placement_blocker =
+            _route_global_density_density_streaming_placement_blocker(
+                block,
+                rows,
+                columns,
+                dimension,
+            )
+        if !isnothing(placement_blocker)
+            skipped_count += 1
+            if isnothing(blocker)
+                blocker = placement_blocker
+                blocked_pair_key = unit_pair.pair_key
+            end
+            continue
+        end
+
+        matrix[rows, columns] .+= block
+        placed_block_count += 1
+        if rows != columns
+            matrix[columns, rows] .+= transpose(block)
+            placed_block_count += 1
+        end
+        materialized_count += 1
+    end
+    return (;
+        materialized_count,
+        skipped_count,
+        placed_block_count,
+        blocker,
+        blocked_pair_key,
+        unit_coefficient_cache_entry_count = length(cache),
+        pair_count = length(unit_pairs),
+        materialization_path =
+            :white_lindsey_decomposed_wl_streaming_density_density_global_assembly,
+    )
+end
+
+function _route_global_density_density_streaming_placement_blocker(
+    block,
+    rows,
+    columns,
+    dimension::Int,
+)
+    block isa AbstractMatrix{<:Real} || return :missing_density_density_pair_block
+    (
+        _one_body_placement_valid_column_range(rows) &&
+        _one_body_placement_valid_column_range(columns)
+    ) || return :missing_column_ranges
+    size(block) == (length(rows), length(columns)) ||
+        return :density_density_pair_block_shape_mismatch
+    _one_body_placement_ranges_inside_global_dimension(rows, columns, dimension) ||
+        return :target_ranges_outside_global_dimension
+    return nothing
 end
 
 function _white_lindsey_density_density_input_blocker(
