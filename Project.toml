@@ -13,5 +13,5 @@ SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
 TOML = "fa267f1f-6049-4f14-aa54-33bafae1ed76"
 
 [compat]
-PrecompileTools = "1.3.4"
+PrecompileTools = "1.2.1"
 julia = "1.10"
