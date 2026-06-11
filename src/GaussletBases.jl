@@ -2,6 +2,7 @@ module GaussletBases
 
 using JLD2
 using LinearAlgebra
+using PrecompileTools: @compile_workload, @setup_workload
 using SHA
 using SparseArrays
 using SpecialFunctions
@@ -653,6 +654,7 @@ include("CartesianContractedParentMetrics.jl")
 include("pqs_source_box_route_driver_helpers.jl")
 include("pqs_source_box_route_driver_skeletons.jl")
 include("white_lindsey_materialized_seed.jl")
+include("precompile_workloads.jl")
 include("cartesian_atom_growth_route_driver_helpers.jl")
 include("pqs_source_box_route_driver_reporting.jl")
 include("ordinary_qw_nested_frontends.jl")
