@@ -12,6 +12,37 @@ using GaussletBases
 include("cartesian_white_lindsey_adapter_fixture_helpers.jl")
 
 const WLHeAcceptanceCPBM = GaussletBases.CartesianPairBlockMaterialization
+const WLHeAcceptanceCPB = GaussletBases.CartesianCPB
+
+function _wl_he_fixture_diagnostics(seed_report, axis_inputs)
+    basis = seed_report.fixture.basis
+    axis_centers = basis.center_data
+    reference_centers = basis.reference_center_data
+    coordinate_steps = diff(axis_centers)
+    return (;
+        axis_count = length(axis_centers),
+        source_side_count = seed_report.inventory.source_side_count,
+        parent_side_count = seed_report.fixture.parent_side_count,
+        reference_coordinate_endpoints =
+            (first(reference_centers), last(reference_centers)),
+        coordinate_endpoints = (first(axis_centers), last(axis_centers)),
+        coordinate_minimum = minimum(axis_centers),
+        coordinate_maximum = maximum(axis_centers),
+        coordinate_tail_extent = maximum(abs, axis_centers),
+        coordinate_spacing_minimum = minimum(coordinate_steps),
+        coordinate_spacing_maximum = maximum(coordinate_steps),
+        fixture_box_status =
+            maximum(abs, axis_centers) < 1.0 ?
+            :compact_z2_seed_box_under_one_bohr :
+            :z2_seed_box_at_least_one_bohr,
+        core_spacing = axis_inputs.core_spacing,
+        mapping_a = axis_inputs.mapping_a,
+        mapping_s = axis_inputs.mapping_s,
+        tail_spacing = axis_inputs.tail_spacing,
+        retained_core_range = seed_report.inventory.retained_ranges.core,
+        retained_shell_range = seed_report.inventory.retained_ranges.shell,
+    )
+end
 
 function _wl_he_parent_axis_inputs(seed_report, expansion)
     doside_source_1d = GaussletBases._mapped_ordinary_gausslet_1d_bundle(
@@ -164,6 +195,74 @@ function _wl_he_restricted_density_density_interaction_energy(
     return direct - exchange
 end
 
+function _wl_he_core_unit(inventory)
+    matches = Tuple(
+        unit for unit in inventory.retained_units
+        if unit.metadata.stratum_kind === :direct_core
+    )
+    length(matches) == 1 || return nothing
+    return only(matches)
+end
+
+function _wl_he_density_diagnostics(density, interaction, inventory, axis_centers)
+    rho = 0.5 .* (Matrix{Float64}(density) .+ transpose(Matrix{Float64}(density)))
+    diagonal = vec(diag(rho))
+    density_trace = sum(diagonal)
+    peak_column = argmax(diagonal)
+    core_unit = _wl_he_core_unit(inventory)
+    direct_core_fraction = :unavailable
+    boundary_fraction = :unavailable
+    direct_core_rms_radius = :unavailable
+    direct_core_peak_coordinate = :unavailable
+    if !isnothing(core_unit)
+        core_range = core_unit.column_range
+        direct_core_weight = sum(diagonal[core_range])
+        direct_core_fraction = direct_core_weight / density_trace
+        boundary_fraction = 1.0 - direct_core_fraction
+        source_cpb = only(core_unit.source_cpbs)
+        intervals = WLHeAcceptanceCPB.intervals(source_cpb)
+        coordinates = NTuple{3,Float64}[]
+        radii2 = Float64[]
+        for ix in intervals[1], iy in intervals[2], iz in intervals[3]
+            coordinate = (
+                axis_centers[ix],
+                axis_centers[iy],
+                axis_centers[iz],
+            )
+            push!(coordinates, coordinate)
+            push!(
+                radii2,
+                coordinate[1]^2 + coordinate[2]^2 + coordinate[3]^2,
+            )
+        end
+        if direct_core_weight > 0.0
+            weights = diagonal[core_range]
+            direct_core_rms_radius = sqrt(dot(weights, radii2) / direct_core_weight)
+        end
+        if peak_column in core_range
+            direct_core_peak_coordinate =
+                coordinates[peak_column - first(core_range) + 1]
+        else
+            direct_core_peak_coordinate = :outside_direct_core
+        end
+    end
+    return (;
+        density_trace,
+        electron_count = 2.0 * density_trace,
+        peak_density_diagonal = maximum(diagonal),
+        peak_density_column = peak_column,
+        direct_core_fraction,
+        boundary_fraction,
+        direct_core_rms_radius,
+        direct_core_peak_coordinate,
+        representative_positive_coulomb_energy =
+            _wl_he_restricted_density_density_interaction_energy(
+                interaction,
+                rho,
+            ),
+    )
+end
+
 function _wl_he_restricted_hartree_fock(
     one_body,
     interaction;
@@ -245,13 +344,18 @@ function _wl_he_restricted_hartree_fock(
     )
 end
 
-function _wl_decomposed_he_atom_acceptance_audit()
+function _wl_decomposed_he_atom_acceptance_audit(;
+    parent_side_count::Int = 7,
+    d::Real = 0.2,
+    tail_spacing::Real = 10.0,
+)
     expansion = coulomb_gaussian_expansion(doacc = false)
     seed_report =
         GaussletBases._white_lindsey_low_order_materialized_seed_report(
+            parent_side_count = parent_side_count,
             Z = 2.0,
-            d = 0.2,
-            tail_spacing = 10.0,
+            d = d,
+            tail_spacing = tail_spacing,
         )
     axis_inputs = _wl_he_parent_axis_inputs(seed_report, expansion)
     center_records = _wl_he_center_records()
@@ -269,6 +373,8 @@ function _wl_decomposed_he_atom_acceptance_audit()
     hamiltonian = nothing
     density_density = nothing
     hartree_fock = nothing
+    density_diagnostics = nothing
+    fixture_diagnostics = _wl_he_fixture_diagnostics(seed_report, axis_inputs)
     density_density_elapsed_seconds = 0.0
     hartree_fock_elapsed_seconds = 0.0
     overlap_diagnostics = nothing
@@ -352,6 +458,27 @@ function _wl_decomposed_he_atom_acceptance_audit()
                 projector_residual = :unavailable,
             )
         end
+        if hartree_fock.status ===
+           :converged_decomposed_wl_he_restricted_hartree_fock
+            density_diagnostics = _wl_he_density_diagnostics(
+                hartree_fock.density,
+                density_density.matrix,
+                decomposed_inventory,
+                seed_report.fixture.basis.center_data,
+            )
+        else
+            density_diagnostics = (;
+                density_trace = :unavailable,
+                electron_count = :unavailable,
+                peak_density_diagonal = :unavailable,
+                peak_density_column = :unavailable,
+                direct_core_fraction = :unavailable,
+                boundary_fraction = :unavailable,
+                direct_core_rms_radius = :unavailable,
+                direct_core_peak_coordinate = :unavailable,
+                representative_positive_coulomb_energy = :unavailable,
+            )
+        end
     end
     two_electron_route_available =
         density_density.status ===
@@ -383,6 +510,20 @@ function _wl_decomposed_he_atom_acceptance_audit()
         mapping_a = axis_inputs.mapping_a,
         mapping_s = axis_inputs.mapping_s,
         tail_spacing = axis_inputs.tail_spacing,
+        axis_count = fixture_diagnostics.axis_count,
+        source_side_count = fixture_diagnostics.source_side_count,
+        parent_side_count = fixture_diagnostics.parent_side_count,
+        reference_coordinate_endpoints =
+            fixture_diagnostics.reference_coordinate_endpoints,
+        coordinate_endpoints = fixture_diagnostics.coordinate_endpoints,
+        coordinate_minimum = fixture_diagnostics.coordinate_minimum,
+        coordinate_maximum = fixture_diagnostics.coordinate_maximum,
+        coordinate_tail_extent = fixture_diagnostics.coordinate_tail_extent,
+        coordinate_spacing_minimum = fixture_diagnostics.coordinate_spacing_minimum,
+        coordinate_spacing_maximum = fixture_diagnostics.coordinate_spacing_maximum,
+        fixture_box_status = fixture_diagnostics.fixture_box_status,
+        retained_core_range = fixture_diagnostics.retained_core_range,
+        retained_shell_range = fixture_diagnostics.retained_shell_range,
         spacing_rule = axis_inputs.spacing_rule,
         spacing_rule_formula = axis_inputs.spacing_rule_formula,
         spacing_rule_status = axis_inputs.spacing_rule_status,
@@ -473,6 +614,19 @@ function _wl_decomposed_he_atom_acceptance_audit()
                 ),
             ) :
             :unavailable,
+        rhf_density_trace = density_diagnostics.density_trace,
+        rhf_density_electron_count = density_diagnostics.electron_count,
+        rhf_peak_density_diagonal = density_diagnostics.peak_density_diagonal,
+        rhf_peak_density_column = density_diagnostics.peak_density_column,
+        rhf_density_direct_core_fraction =
+            density_diagnostics.direct_core_fraction,
+        rhf_density_boundary_fraction = density_diagnostics.boundary_fraction,
+        rhf_density_direct_core_rms_radius =
+            density_diagnostics.direct_core_rms_radius,
+        rhf_density_direct_core_peak_coordinate =
+            density_diagnostics.direct_core_peak_coordinate,
+        converged_density_positive_coulomb_energy =
+            density_diagnostics.representative_positive_coulomb_energy,
         scalar_density_density_convention_status = scalar_convention.status,
         scalar_density_density_convention_energy = scalar_convention.energy,
         scalar_density_density_convention_expected = scalar_convention.expected,
@@ -529,7 +683,25 @@ end
     @test report.center_keys == (:helium_nucleus,)
     @test report.nuclear_charges == (2.0,)
     @test report.core_spacing ≈ 0.2 atol = 1.0e-14 rtol = 0.0
+    @test report.mapping_a ≈ sqrt(report.core_spacing / 2.0) atol =
+          1.0e-14 rtol = 0.0
     @test report.mapping_s ≈ sqrt(report.core_spacing * 2.0) atol = 1.0e-14 rtol = 0.0
+    @test report.axis_count == 7
+    @test report.source_side_count == 7
+    @test report.parent_side_count == 7
+    @test report.parent_axis_counts == (7, 7, 7)
+    @test report.reference_coordinate_endpoints == (-3.0, 3.0)
+    @test report.coordinate_minimum < 0.0
+    @test report.coordinate_maximum > 0.0
+    @test report.coordinate_endpoints[1] ≈ -report.coordinate_endpoints[2] atol =
+          1.0e-12 rtol = 0.0
+    @test report.coordinate_tail_extent ≈ 0.9666200087560217 atol =
+          1.0e-12 rtol = 0.0
+    @test report.fixture_box_status == :compact_z2_seed_box_under_one_bohr
+    @test report.coordinate_spacing_minimum > 0.0
+    @test report.coordinate_spacing_maximum > report.coordinate_spacing_minimum
+    @test report.retained_core_range == 1:125
+    @test report.retained_shell_range == 126:223
     @test report.spacing_rule == :white_lindsey_atomic_mapping
     @test report.spacing_rule_status == :standard_z_dependent_spacing
     @test report.previous_shared_fixture_spacing_rule_status ==
@@ -600,6 +772,16 @@ end
     @test report.rhf_electron_electron_energy ≈ 1.6861351364925603 atol =
           1.0e-10 rtol = 0.0
     @test report.rhf_total_decomposition_error < 1.0e-10
+    @test report.rhf_density_trace ≈ 1.0 atol = 1.0e-8 rtol = 0.0
+    @test report.rhf_density_electron_count ≈ 2.0 atol = 1.0e-8 rtol = 0.0
+    @test report.rhf_peak_density_diagonal > 0.0
+    @test report.rhf_peak_density_column in 1:report.retained_dimension
+    @test report.rhf_density_direct_core_fraction > 0.0
+    @test report.rhf_density_boundary_fraction >= 0.0
+    @test report.rhf_density_direct_core_rms_radius > 0.0
+    @test report.converged_density_positive_coulomb_energy ≈
+          report.rhf_electron_electron_energy atol = 1.0e-10 rtol = 0.0
+    @test report.converged_density_positive_coulomb_energy > 0.0
     @test report.scalar_density_density_convention_status ==
           :passed_closed_shell_density_density_scalar_convention
     @test report.scalar_density_density_convention_energy ≈

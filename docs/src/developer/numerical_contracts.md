@@ -195,6 +195,16 @@ mixed the standard Z = 2 decomposed seed inventory with an H-style shared
 adapter axis source; that violated the Z-dependent spacing contract and is not
 the accepted He baseline.
 
+The corrected active fixture is still a deliberately tiny low-order box. The
+mapped one-dimensional parent has 7 centers with reference endpoints `(-3, 3)`
+and physical endpoints about `(-0.9666200087560217, 0.9666200087560217)` bohr.
+The minimum adjacent physical spacing is about `0.20858672857920835`, the
+maximum adjacent spacing is about `0.4698383534446874`, the direct-core retained
+range is `1:125`, and the shell retained range is `126:223`. The current
+low-order decomposed seed inventory only accepts the one-shell fixture; a
+`parent_side_count = 9` exploratory probe is blocked by the existing
+single-shell inventory contract rather than by the RHF convention.
+
 The corrected decomposed route materializes overlap, kinetic, one separated
 uncharged electron-nuclear by-center matrix, the charge-applied one-electron
 Hamiltonian, and the full retained density-density/IDA electron-electron
@@ -207,11 +217,29 @@ closed-shell one-electron value from the lowest one-electron orbital is
 `-3.7575402050745312` Hartree. The self-consistent RHF one-electron contribution
 is `-3.7316519035708953` Hartree, the electron-electron contribution is
 `1.6861351364925603` Hartree, and the accepted total HF energy is
-`-2.045516767078335` Hartree. This is above the He HF reference near
-`-2.861679995612234` Hartree, as expected for the very small q/ns = 5/5 fixture.
-The acceptance path does not use a full-parent CPB, direct Cartesian fallback,
-`ordinary_cartesian_ida_operators`, a generalized final solve, GTO supplements,
-PQS transforms, exports, or artifacts.
+`-2.045516767078335` Hartree. The converged retained density has trace 1 for
+the occupied spatial orbital, electron count 2 after closed-shell occupation,
+peak retained-column density about `0.016237877162231747` at column 63, direct
+core fraction about `0.7661258457949129`, shell/boundary fraction about
+`0.23387415420508706`, and direct-core RMS radius about `0.544451699989865`
+bohr. The converged-density Coulomb contribution is positive and equals the RHF
+electron-electron contribution, `1.6861351364925603` Hartree, under the current
+full retained two-index density-density convention.
+
+One supported exploratory probe with the same one-shell decomposed topology and
+finer Z = 2 spacing, `d = 0.15`, shrinks the physical endpoints to about
+`(-0.6557127550383339, 0.6557127550383339)` bohr and worsens the RHF energy to
+about `0.0633231599983839` Hartree. That probe took about 79 seconds and is not
+promoted into the active test. The current evidence points first to low-order
+box/basis quality, especially the very compact one-shell physical extent, not a
+failure of the closed-shell density-density scalar convention. A larger-box He
+acceptance fixture needs a reviewed decomposed inventory that supports more than
+one shell before it should replace this baseline.
+
+The He RHF energy is above the He HF reference near `-2.861679995612234`
+Hartree. The acceptance path does not use a full-parent CPB, direct Cartesian
+fallback, `ordinary_cartesian_ida_operators`, a generalized final solve, GTO
+supplements, PQS transforms, exports, or artifacts.
 
 Do not use the existing nested fixed-block operator matrices as the acceptance
 path. They remain useful historical/oracle material, but they bypass the
