@@ -428,7 +428,7 @@ function _white_lindsey_one_body_batch_pair_inputs(records_or_pairs)
     (
         records_or_pairs isa Tuple ||
         records_or_pairs isa AbstractVector ||
-        records_or_pairs isa WhiteLindseyUnitPairIndexTable
+        records_or_pairs isa CUP.UnitPairIndexTable
     ) ||
         throw(
             ArgumentError(

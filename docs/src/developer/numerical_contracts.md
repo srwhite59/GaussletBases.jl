@@ -244,7 +244,7 @@ checkpoint through the same driver-facing helper. The side-13 probe with
 `AsinhMapping(c = 0.1, s = 1.0, tail_spacing = 10.0)` reports source kind
 `:cartesian_shellification_retained_unit_pair_plan`, retained dimension 517, 105
 units, 5,565 upper-triangular unit pairs represented by
-`WhiteLindseyUnitPairIndexTable`, retained column coverage from `1:125` through
+`CartesianUnitPairs.UnitPairIndexTable`, retained column coverage from `1:125` through
 `517:517`, omitted large pair keys/summaries, and no low-order seed,
 full-parent CPB, direct Cartesian, or ordinary IDA fallback. Route-global
 one-electron and density-density operator materialization from that larger
@@ -328,10 +328,11 @@ active He acceptance route to shellification-derived retained units, the He RHF
 energy remained within the same regression window at about
 `-2.045516767078339` Hartree. A representative fresh test run spent about
 `9.0` seconds in shellification retained-unit/lightweight-pair inventory
-construction, about `6.6` seconds in one-electron operator build, about `0.75`
+construction, about `6.6` seconds in one-electron operator build, about `0.70`
 seconds in density-density matrix build, and about `0.78` seconds in the RHF
 solve. The side-13 inventory probe improved from about `77.9` seconds to about
-`43.3` seconds after removing the rich `UnitPairRecord` tuple and duplicate pair
+`45.9` seconds after replacing the stored rich `UnitPairRecord` tuple with the
+module-owned `CartesianUnitPairs.UnitPairIndexTable` and omitting duplicate pair
 summary materialization. A phase probe now attributes the remaining side-13
 inventory time mainly to retained-unit planning, about `28.2` seconds, and CPBM
 retained-range inventory wrapping, about `13.4` seconds.

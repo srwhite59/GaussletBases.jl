@@ -155,9 +155,10 @@ function _white_lindsey_decomposed_unit_pair_inventory_from_shellification_retai
             metadata = metadata_tuple,
         )
     end
-    pairs = WhiteLindseyUnitPairIndexTable(
+    pairs = CUP.unit_pair_index_table(
         materialized_units.retained_units,
-        (; retained_range_source = :shellification_source_cpb_support_order),
+        metadata =
+            (; retained_range_source = :shellification_source_cpb_support_order),
     )
     return _white_lindsey_decomposed_unit_pair_inventory_result(
         :available_white_lindsey_decomposed_unit_pair_inventory,

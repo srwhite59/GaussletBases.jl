@@ -1,74 +1,5 @@
 # Pair-level White--Lindsey unit coefficient preparation.
 
-struct WhiteLindseyUnitPairIndexTable
-    units::Tuple
-    metadata::NamedTuple
-end
-
-Base.length(table::WhiteLindseyUnitPairIndexTable) =
-    div(length(table.units) * (length(table.units) + 1), 2)
-Base.isempty(table::WhiteLindseyUnitPairIndexTable) = isempty(table.units)
-
-function Base.iterate(table::WhiteLindseyUnitPairIndexTable)
-    isempty(table) && return nothing
-    return (
-        _white_lindsey_index_table_pair_record(table, 1, 1, 1),
-        (1, 2, 2),
-    )
-end
-
-function Base.iterate(table::WhiteLindseyUnitPairIndexTable, state)
-    left_index, right_index, pair_index = state
-    unit_count = length(table.units)
-    left_index > unit_count && return nothing
-    pair = _white_lindsey_index_table_pair_record(
-        table,
-        left_index,
-        right_index,
-        pair_index,
-    )
-    next_right = right_index + 1
-    next_left = left_index
-    if next_right > unit_count
-        next_left += 1
-        next_right = next_left
-    end
-    return pair, (next_left, next_right, pair_index + 1)
-end
-
-function _white_lindsey_index_table_pair_record(
-    table::WhiteLindseyUnitPairIndexTable,
-    left_index::Int,
-    right_index::Int,
-    pair_index::Int,
-)
-    left = table.units[left_index]
-    right = table.units[right_index]
-    metadata = merge(
-        table.metadata,
-        (;
-            retained_pair_source = :upper_triangular_unit_index_table,
-            rich_unit_pair_record_stored = false,
-        ),
-    )
-    return CUP.UnitPairRecord(
-        (left.unit_key, right.unit_key),
-        pair_index,
-        Symbol(String(left.unit_kind), "__", String(right.unit_kind)),
-        left,
-        right,
-        left_index,
-        right_index,
-        left.unit_key,
-        right.unit_key,
-        left.unit_kind,
-        right.unit_kind,
-        nothing,
-        false,
-        metadata,
-    )
-end
-
 """
     white_lindsey_boundary_stratum_pair_unit_coefficients(unit_pair)
     white_lindsey_boundary_stratum_pair_unit_coefficients(left_unit, right_unit; ...)
@@ -150,7 +81,7 @@ function white_lindsey_boundary_stratum_pair_unit_coefficients(
 end
 
 function white_lindsey_boundary_stratum_pair_unit_coefficients(
-    unit_pairs::WhiteLindseyUnitPairIndexTable,
+    unit_pairs::CUP.UnitPairIndexTable,
 )
     return _white_lindsey_boundary_stratum_pair_unit_coefficients(unit_pairs)
 end

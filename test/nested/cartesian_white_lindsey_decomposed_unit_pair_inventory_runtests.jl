@@ -187,6 +187,7 @@ end
           :cartesian_shellification_retained_unit_pair_plan
     @test shellification_inventory.metadata.shellification_unit_pair_plan_source ==
           :upper_triangular_unit_index_table
+    @test shellification_inventory.unit_pairs isa WLDInvCUP.UnitPairIndexTable
     @test !shellification_inventory.metadata.rich_unit_pair_records_stored
     @test !shellification_inventory.metadata.route_core_pair_sidecars_duplicated
     @test shellification_inventory.unit_count == 27

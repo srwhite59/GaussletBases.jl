@@ -44,6 +44,108 @@ struct UnitPairRecord
 end
 
 """
+    UnitPairIndexTable
+
+Lightweight upper-triangular view over retained-unit pairs. It stores retained
+units once and computes pair records on iteration for compatibility with older
+pair consumers that still expect `UnitPairRecord`s.
+"""
+struct UnitPairIndexTable
+    units::Tuple
+    metadata::NamedTuple
+end
+
+function unit_pair_index_table(
+    retained_unit_plan::CartesianRetainedUnits.RetainedUnitPlan;
+    metadata = (;),
+)
+    return unit_pair_index_table(
+        CartesianRetainedUnits.units(retained_unit_plan);
+        metadata,
+    )
+end
+
+function unit_pair_index_table(retained_units; metadata = (;))
+    return UnitPairIndexTable(Tuple(retained_units), NamedTuple(metadata))
+end
+
+Base.length(table::UnitPairIndexTable) =
+    div(length(table.units) * (length(table.units) + 1), 2)
+Base.isempty(table::UnitPairIndexTable) = isempty(table.units)
+Base.IteratorSize(::Type{UnitPairIndexTable}) = Base.HasLength()
+Base.eltype(::Type{UnitPairIndexTable}) = UnitPairRecord
+
+function Base.iterate(table::UnitPairIndexTable)
+    isempty(table) && return nothing
+    return _unit_pair_index_table_iterate(table, 1, 1, 1)
+end
+
+function Base.iterate(table::UnitPairIndexTable, state)
+    left_index, right_index, pair_index = state
+    left_index > length(table.units) && return nothing
+    return _unit_pair_index_table_iterate(
+        table,
+        left_index,
+        right_index,
+        pair_index,
+    )
+end
+
+function _unit_pair_index_table_iterate(
+    table::UnitPairIndexTable,
+    left_index::Int,
+    right_index::Int,
+    pair_index::Int,
+)
+    pair = _unit_pair_record_from_index_table(
+        table,
+        left_index,
+        right_index,
+        pair_index,
+    )
+    next_right = right_index + 1
+    next_left = left_index
+    if next_right > length(table.units)
+        next_left += 1
+        next_right = next_left
+    end
+    return pair, (next_left, next_right, pair_index + 1)
+end
+
+function _unit_pair_record_from_index_table(
+    table::UnitPairIndexTable,
+    left_index::Int,
+    right_index::Int,
+    pair_index::Int,
+)
+    left = table.units[left_index]
+    right = table.units[right_index]
+    metadata = merge(
+        table.metadata,
+        (;
+            retained_pair_source = :upper_triangular_unit_index_table,
+            rich_unit_pair_record_stored = false,
+        ),
+    )
+    return UnitPairRecord(
+        (left.unit_key, right.unit_key),
+        pair_index,
+        _pair_family(left, right),
+        left,
+        right,
+        left_index,
+        right_index,
+        left.unit_key,
+        right.unit_key,
+        left.unit_kind,
+        right.unit_kind,
+        nothing,
+        false,
+        metadata,
+    )
+end
+
+"""
     UnitPairPlan
 
 Metadata-only pair inventory for one retained-unit plan.
@@ -58,6 +160,7 @@ struct UnitPairPlan
 end
 
 unit_pairs(plan::UnitPairPlan) = plan.pairs
+unit_pairs(table::UnitPairIndexTable) = table
 summary(plan::UnitPairPlan) = plan.summary
 route_core_pair_inventory(plan::UnitPairPlan) = plan.route_core_pair_inventory
 
