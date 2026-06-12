@@ -51,6 +51,7 @@ using ..CartesianRouteCore
 using ..CartesianPairOperatorPlans
 using ..CartesianRetainedUnitTransformContracts
 using ..CartesianRawProductSources
+using ..CartesianFinalBasisRealization
 using ..TimeG: @timeg
 using LinearAlgebra
 using SparseArrays
@@ -64,7 +65,15 @@ const CRC = CartesianRouteCore
 const CPOP = CartesianPairOperatorPlans
 const CRTC = CartesianRetainedUnitTransformContracts
 const CRPS = CartesianRawProductSources
+const CFBR = CartesianFinalBasisRealization
 const ParentGaussletBases = Base.parentmodule(@__MODULE__)
+
+const pqs_source_shell_realization_final_basis =
+    CFBR.pqs_source_shell_realization_final_basis
+const pqs_source_shell_projected_one_body_matrix =
+    CFBR.pqs_source_shell_projected_one_body_matrix
+const pqs_source_shell_final_one_body_from_boundary_matrix =
+    CFBR.pqs_source_shell_final_one_body_from_boundary_matrix
 
 export PairBlockMaterializationPolicy,
        MetadataOnlyPairBlockMaterialization,
@@ -243,9 +252,8 @@ export PairBlockMaterializationPolicy,
 #     Metadata-only bridge summaries for future PQS shell realization.
 #
 # pqs_source_shell_final_basis.jl
-#     First PQS shell-realization final-basis object. It materializes the
-#     shell projection plus Lowdin final basis and overlap/isometry diagnostics,
-#     but no one-body operators.
+#     CPBM-owned final-basis helpers that still depend on CPBM result types:
+#     by-center nuclear final transfer and one-electron Hamiltonian assembly.
 #
 # pqs_source_final_readiness.jl
 #     Metadata-only readiness summaries for future final PQS pair blocks.
