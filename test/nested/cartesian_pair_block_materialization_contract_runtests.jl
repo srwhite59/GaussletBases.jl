@@ -2048,7 +2048,10 @@ end
     @test size(retained_overlap_result.block) == (26, 54)
     @test retained_overlap_result.block ≈
           pqs_overlap_result.block[left_retained_columns, right_retained_columns]
+    overlap_direct_oracle_maxdiff =
+        maximum(abs.(wrapper_retained_overlap.block .- retained_overlap_result.block))
     @test wrapper_retained_overlap.block ≈ retained_overlap_result.block
+    @test overlap_direct_oracle_maxdiff == 0.0
     @test retained_overlap_result.materialized
     @test retained_overlap_result.source_operator_blocks_materialized
     @test !retained_overlap_result.final_pair_blocks_materialized
@@ -2059,7 +2062,12 @@ end
     @test retained_overlap_result.metadata.source_block_space ==
           :raw_product_source_modes
     @test retained_overlap_result.metadata.source_space_input_used
+    @test wrapper_retained_overlap.metadata.retained_direct_boundary_product_used
+    @test !wrapper_retained_overlap.metadata.source_space_input_used
+    @test !wrapper_retained_overlap.metadata.raw_source_operator_block_materialized
     @test retained_overlap_result.metadata.retained_transform_kind ==
+          :source_mode_column_selector
+    @test wrapper_retained_overlap.metadata.retained_transform_kind ==
           :source_mode_column_selector
     @test retained_overlap_result.metadata.left_retained_count == 26
     @test retained_overlap_result.metadata.right_retained_count == 54
@@ -2362,10 +2370,16 @@ end
     @test size(retained_kinetic_result.block) == (26, 54)
     @test retained_kinetic_result.block ≈
           kinetic_result.block[left_retained_columns, right_retained_columns]
+    kinetic_direct_oracle_maxdiff =
+        maximum(abs.(wrapper_retained_kinetic.block .- retained_kinetic_result.block))
     @test wrapper_retained_kinetic.block ≈ retained_kinetic_result.block
+    @test kinetic_direct_oracle_maxdiff == 0.0
     @test retained_kinetic_result.metadata.block_space == :retained_pqs_source_modes
     @test retained_kinetic_result.metadata.source_block_term == :source_kinetic
     @test retained_kinetic_result.metadata.source_space_input_used
+    @test wrapper_retained_kinetic.metadata.retained_direct_boundary_product_used
+    @test !wrapper_retained_kinetic.metadata.source_space_input_used
+    @test !wrapper_retained_kinetic.metadata.raw_source_operator_block_materialized
     @test retained_kinetic_result.metadata.retained_source_operator_block_materialized
     @test !retained_kinetic_result.metadata.shell_realization_materialized
     @test !retained_kinetic_result.metadata.lowdin_cleanup_used

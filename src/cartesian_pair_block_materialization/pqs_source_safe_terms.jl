@@ -577,37 +577,197 @@ function pqs_source_pair_retained_one_body_block(
     )
 end
 
+function _pqs_source_pair_direct_retained_overlap_block(
+    record::PairBlockMaterializationRecord;
+    overlap_1d,
+)
+    descriptor = _supported_pqs_source_safe_term_descriptor(:overlap)
+    overlap_x, overlap_y, overlap_z = _overlap_1d_tuple(overlap_1d)
+    overlap_axes = (overlap_x, overlap_y, overlap_z)
+    left_dims, right_dims = _pqs_source_pair_dims(record)
+    _assert_pqs_source_axis_sizes(overlap_axes, left_dims, right_dims, "overlap_1d")
+    left_rule = _pqs_source_record_retained_rule(record, :left)
+    right_rule = _pqs_source_record_retained_rule(record, :right)
+    _assert_pqs_source_record_retained_rule(record, left_rule, :left)
+    _assert_pqs_source_record_retained_rule(record, right_rule, :right)
+
+    left_modes = CRPS.retained_mode_indices(left_rule)
+    right_modes = CRPS.retained_mode_indices(right_rule)
+    block = Matrix{Float64}(undef, length(left_modes), length(right_modes))
+    _fill_source_mode_product_block!(
+        block,
+        left_modes,
+        right_modes,
+        overlap_x,
+        overlap_y,
+        overlap_z,
+    )
+
+    return _pqs_source_pair_direct_retained_result(
+        record,
+        descriptor.source_term,
+        block,
+        left_rule,
+        right_rule,
+        left_dims,
+        right_dims,
+        (;),
+    )
+end
+
+function _pqs_source_pair_direct_retained_kinetic_block(
+    record::PairBlockMaterializationRecord;
+    overlap_1d,
+    kinetic_1d,
+)
+    descriptor = _supported_pqs_source_safe_term_descriptor(:kinetic)
+    left_dims, right_dims = _pqs_source_pair_dims(record)
+    overlap_x, overlap_y, overlap_z = _overlap_1d_tuple(overlap_1d)
+    kinetic_x, kinetic_y, kinetic_z =
+        _operator_1d_tuple(kinetic_1d, "kinetic_1d")
+    overlap_axes = (overlap_x, overlap_y, overlap_z)
+    kinetic_axes = (kinetic_x, kinetic_y, kinetic_z)
+    _assert_pqs_source_axis_sizes(overlap_axes, left_dims, right_dims, "overlap_1d")
+    _assert_pqs_source_axis_sizes(kinetic_axes, left_dims, right_dims, "kinetic_1d")
+    left_rule = _pqs_source_record_retained_rule(record, :left)
+    right_rule = _pqs_source_record_retained_rule(record, :right)
+    _assert_pqs_source_record_retained_rule(record, left_rule, :left)
+    _assert_pqs_source_record_retained_rule(record, right_rule, :right)
+
+    left_modes = CRPS.retained_mode_indices(left_rule)
+    right_modes = CRPS.retained_mode_indices(right_rule)
+    block = Matrix{Float64}(undef, length(left_modes), length(right_modes))
+    for (left_index, (ix_left, iy_left, iz_left)) in pairs(left_modes)
+        for (right_index, (ix_right, iy_right, iz_right)) in pairs(right_modes)
+            block[left_index, right_index] =
+                kinetic_x[ix_left, ix_right] *
+                overlap_y[iy_left, iy_right] *
+                overlap_z[iz_left, iz_right] +
+                overlap_x[ix_left, ix_right] *
+                kinetic_y[iy_left, iy_right] *
+                overlap_z[iz_left, iz_right] +
+                overlap_x[ix_left, ix_right] *
+                overlap_y[iy_left, iy_right] *
+                kinetic_z[iz_left, iz_right]
+        end
+    end
+
+    return _pqs_source_pair_direct_retained_result(
+        record,
+        descriptor.source_term,
+        block,
+        left_rule,
+        right_rule,
+        left_dims,
+        right_dims,
+        (; kinetic_factor_form = _pqs_source_kinetic_factor_form()),
+    )
+end
+
+function _pqs_source_pair_direct_retained_result(
+    record::PairBlockMaterializationRecord,
+    source_term::Symbol,
+    block::AbstractMatrix{<:Real},
+    left_rule::CRPS.PQSBoundaryProductModeRetainedRule,
+    right_rule::CRPS.PQSBoundaryProductModeRetainedRule,
+    left_dims::NTuple{3,Int},
+    right_dims::NTuple{3,Int},
+    metadata,
+)
+    ordering = _pqs_source_mode_ordering(record)
+    left_count = _pqs_source_mode_count(record, :left, left_dims)
+    right_count = _pqs_source_mode_count(record, :right, right_dims)
+    left_modes = CRPS.retained_mode_indices(left_rule)
+    right_modes = CRPS.retained_mode_indices(right_rule)
+    retained_block = Matrix{Float64}(block)
+    size(retained_block) == (length(left_modes), length(right_modes)) ||
+        throw(DimensionMismatch("PQS direct retained source block shape mismatch"))
+
+    common_metadata = _pqs_source_pair_common_metadata(
+        record,
+        left_dims,
+        right_dims,
+        left_count,
+        right_count,
+        ordering,
+        metadata,
+    )
+
+    return PairBlockMaterializationResult(
+        _retained_pqs_source_term(source_term),
+        record.pair_key,
+        retained_block,
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        merge(
+            common_metadata,
+            (;
+                source_block_term = source_term,
+                source_block_space = :raw_product_source_modes,
+                block_space = :retained_pqs_source_modes,
+                retained_transform_kind = :source_mode_column_selector,
+                left_retained_rule_kind = left_rule.retained_rule_kind,
+                right_retained_rule_kind = right_rule.retained_rule_kind,
+                left_retained_count = left_rule.retained_count,
+                right_retained_count = right_rule.retained_count,
+                left_retained_column_count =
+                    length(CRPS.retained_column_indices(left_rule)),
+                right_retained_column_count =
+                    length(CRPS.retained_column_indices(right_rule)),
+                retained_source_operator_block_materialized = true,
+                source_space_input_used = false,
+                raw_source_operator_block_materialized = false,
+                retained_direct_boundary_product_used = true,
+                source_operator_blocks_materialized = true,
+                final_pair_blocks_materialized = false,
+                shell_realization_materialized = false,
+                lowdin_cleanup_used = false,
+                operator_blocks_materialized = false,
+                hamiltonian_data_materialized = false,
+                artifacts_materialized = false,
+            ),
+        ),
+    )
+end
+
 """
     pqs_source_pair_retained_overlap_block(record; overlap_1d)
 
-Materialize a raw PQS/PQS source overlap block and contract it to retained
-source modes by the retained source-mode boundary selector.
+Materialize a retained PQS/PQS source overlap block directly from retained
+boundary source-mode tuples and 1D overlap factors. The raw source-space block
+selector path remains available as `pqs_source_pair_retained_one_body_block`
+over an already materialized source result.
 """
 function pqs_source_pair_retained_overlap_block(
     record::PairBlockMaterializationRecord;
     overlap_1d,
 )
-    source_result = pqs_source_pair_overlap_block(record; overlap_1d)
-    return pqs_source_pair_retained_one_body_block(source_result)
+    return _pqs_source_pair_direct_retained_overlap_block(record; overlap_1d)
 end
 
 """
     pqs_source_pair_retained_kinetic_block(record; overlap_1d, kinetic_1d)
 
-Materialize a raw PQS/PQS source kinetic block and contract it to retained
-source modes by the retained source-mode boundary selector.
+Materialize a retained PQS/PQS source kinetic block directly from retained
+boundary source-mode tuples and 1D overlap/kinetic factors. The raw
+source-space block selector path remains available as
+`pqs_source_pair_retained_one_body_block` over an already materialized source
+result.
 """
 function pqs_source_pair_retained_kinetic_block(
     record::PairBlockMaterializationRecord;
     overlap_1d,
     kinetic_1d,
 )
-    source_result = pqs_source_pair_kinetic_block(
+    return _pqs_source_pair_direct_retained_kinetic_block(
         record;
         overlap_1d,
         kinetic_1d,
     )
-    return pqs_source_pair_retained_one_body_block(source_result)
 end
 
 """
@@ -1355,6 +1515,49 @@ function _assert_pqs_source_pair_retained_rule(
     rule.retained_count == length(CRPS.retained_column_indices(rule)) ||
         throw(ArgumentError("PQS retained source rule count does not match columns"))
     return nothing
+end
+
+function _assert_pqs_source_record_retained_rule(
+    record::PairBlockMaterializationRecord,
+    rule::CRPS.PQSBoundaryProductModeRetainedRule,
+    side::Symbol,
+)
+    dims = _pqs_source_mode_dims(record, side)
+    ordering = _pqs_source_mode_ordering(record)
+    source_count = _pqs_source_mode_count(record, side, dims)
+    rule.source_mode_dims == dims ||
+        throw(ArgumentError("PQS retained source rule dims do not match $(side) source"))
+    rule.source_mode_ordering === ordering ||
+        throw(
+            ArgumentError(
+                "PQS retained source rule ordering does not match $(side) source",
+            ),
+        )
+    rule.transform_kind === :source_mode_column_selector ||
+        throw(ArgumentError("PQS retained source rule must use source-mode selector columns"))
+    rule.retained_count == length(CRPS.retained_mode_indices(rule)) ||
+        throw(ArgumentError("PQS retained source rule count does not match retained modes"))
+    rule.retained_count == length(CRPS.retained_column_indices(rule)) ||
+        throw(ArgumentError("PQS retained source rule count does not match columns"))
+    all(column -> 1 <= column <= source_count, CRPS.retained_column_indices(rule)) ||
+        throw(ArgumentError("PQS retained source rule columns are out of source range"))
+    return nothing
+end
+
+function _pqs_source_record_retained_rule(
+    record::PairBlockMaterializationRecord,
+    side::Symbol,
+)
+    key =
+        side === :left ? :left_raw_product_source_retained_rule :
+        side === :right ? :right_raw_product_source_retained_rule :
+        throw(ArgumentError("PQS source record retained-rule side must be :left or :right"))
+    haskey(record.metadata, key) ||
+        throw(ArgumentError("PQS source record is missing $(key)"))
+    rule = getfield(record.metadata, key)
+    rule isa CRPS.PQSBoundaryProductModeRetainedRule ||
+        throw(ArgumentError("PQS source record $(key) is not a boundary product retained rule"))
+    return rule
 end
 
 function _pqs_source_result_retained_rule(

@@ -124,13 +124,21 @@ function pqs_source_pair_retained_one_body_block(
     kinetic_1d = nothing,
 )
     descriptor = _supported_pqs_source_retained_safe_term_descriptor(term)
-    source_result = pqs_source_pair_one_body_block(
-        record,
-        descriptor.requested_term;
-        overlap_1d,
-        kinetic_1d,
-    )
-    return pqs_source_pair_retained_one_body_block(source_result)
+    if descriptor.family === :overlap
+        return pqs_source_pair_retained_overlap_block(record; overlap_1d)
+    end
+
+    if descriptor.family === :kinetic
+        isnothing(kinetic_1d) &&
+            throw(ArgumentError(_pqs_source_required_factor_message(descriptor)))
+        return pqs_source_pair_retained_kinetic_block(
+            record;
+            overlap_1d,
+            kinetic_1d,
+        )
+    end
+
+    throw(ArgumentError("unsupported retained PQS source one-body term: $(term)"))
 end
 
 """
