@@ -390,6 +390,19 @@ seconds, and `mixed_gto_blocks` moved from about `177.2` seconds to about
 should be separated into cold compilation versus warm runtime before another
 algorithmic rewrite.
 
+A warm/cold Be S+P timing audit showed that the remaining long cold timings
+are mostly compilation. The cold route took about `169.9` seconds and the cold
+total about `172.5` seconds. In the same process after one warmup, the measured
+warm route took about `0.523` seconds and the total about `2.40` seconds, with
+RHF itself about `1.88` seconds. The largest warm route phase was
+`mixed_gto_blocks` at about `0.217` seconds; residual moments, overlap,
+gausslet density-density, and final density-density were all below `0.015`
+seconds warm. Therefore no immediate algorithmic rewrite is justified by the
+post-factorized Be data. The next performance action should be a narrow
+production precompile workload extension for the atom+GTO final-basis route,
+using a repo-local or synthetic supplement fixture rather than the user-local
+GaussletModules `BasisSets` tree.
+
 The current coarse timing split for the active tiny-box He RHF acceptance is
 reported by the test as diagnostics, not asserted as performance thresholds.
 Before the electron-nuclear cache and precompile workload, a representative

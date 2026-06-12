@@ -110,7 +110,11 @@ The current live He + GTO question is later in the stack:
   retained-basis path, removing the per-unit provider-local hot loop for Be
   S+P; the Be probe still matches the old nested/QW oracle to about
   `5.5e-14 Ha`, total time is about `174.3` seconds, and `mixed_gto_blocks`
-  is about `9.18` seconds.
+  is about `9.18` seconds;
+- warm/cold attribution after the mixed-GTO replacement shows the remaining
+  long cold Be timings are mostly compilation: cold route is about `169.9`
+  seconds, but same-process warm route is about `0.523` seconds and warm total
+  is about `2.40` seconds, dominated by RHF rather than route construction.
 
 ## Current Cleanup Rule
 
