@@ -510,15 +510,17 @@ should remain a durable-summary/sanitization boundary unless it creates a real
 driver-owned route object. A report-only hook must not set
 `driver_route_materialized = true`.
 
-The current `cartesian_assembly` / `cartesian_report` / `cartesian_materialization`
-spine still lacks that complete core/shell diagnostic route payload. Its
-transient materializer payload carries parent basis and axis-bundle handoff
-objects only, and the low-order report summary still reports pair/operator
-materialization readiness rather than complete core/shell final-basis H1/J
-materialization. Because of that, adding a placeholder assembly/report field
-would be metadata without driver ownership. The next design boundary is a
-small driver-facing complete core/shell diagnostic route object, not RHF, SCF,
-fixture-rule work, or an H1/J report flag alone.
+The `cartesian_assembly` / `cartesian_report` spine now has a compact
+driver-facing complete core/shell H1/J diagnostic payload slot. It can
+materialize through `pqs_multilayer_complete_core_shell_h1_j_payload(...)` when
+the complete route inputs are present, and otherwise reports a precise blocked
+status from assembly. The first active driver report state is still blocked on
+the missing complete core/shell route inputs: region plan, source plan, final
+basis, H1 payload, axis weights, raw pair numerator terms, and Coulomb
+expansion. The report stage exposes only compact status/blocker/value fields;
+`cartesian_materialization` remains unchanged. The next boundary is to feed this
+payload from real shellification/lowering-backed complete core/shell route data,
+not RHF, SCF, fixture-rule work, or an H1/J report flag alone.
 
 ## Validation Policy
 

@@ -10453,12 +10453,193 @@ function _pqs_source_box_route_driver_assembly_stage_low_order_summary(pairs)
     )
 end
 
+function _pqs_source_box_route_driver_complete_core_shell_h1_j_missing_inputs(;
+    region_plan,
+    source_plan,
+    final_basis,
+    h1_payload,
+    axis_weights,
+    raw_pair_factor_terms,
+    coulomb_expansion,
+)
+    missing = Symbol[]
+    isnothing(region_plan) && push!(missing, :pqs_multilayer_shell_region_plan)
+    isnothing(source_plan) && push!(missing, :pqs_multilayer_shell_source_plan)
+    isnothing(final_basis) &&
+        push!(missing, :pqs_multilayer_complete_core_shell_final_basis)
+    isnothing(h1_payload) &&
+        push!(missing, :pqs_multilayer_complete_core_shell_h1_payload)
+    isnothing(axis_weights) && push!(missing, :axis_weights)
+    isnothing(raw_pair_factor_terms) && push!(missing, :raw_pair_factor_terms)
+    isnothing(coulomb_expansion) && push!(missing, :coulomb_expansion)
+    return Tuple(missing)
+end
+
+function _pqs_source_box_route_driver_blocked_complete_core_shell_h1_j_payload(;
+    route_family,
+    status,
+    blocker,
+    missing_inputs,
+    metadata = (;),
+)
+    summary = (;
+        status,
+        blocker,
+        final_dimension = nothing,
+        h1_energy = nothing,
+        self_coulomb = nothing,
+        density_gauge = nothing,
+        missing_inputs,
+        support_density_input_source = :not_materialized,
+        h1_orbital_source = :not_materialized,
+        signed_final_weight_division_used = false,
+        raw_no_division_used = false,
+        density_normalized_pair_terms_used_as_authority = false,
+        driver_route_materialized = false,
+        ida_data_materialized = false,
+        density_density_materialized = false,
+        rhf_materialized = false,
+        gto_materialized = false,
+        exports_materialized = false,
+        artifacts_materialized = false,
+    )
+    return (;
+        object_kind = :pqs_complete_core_shell_h1_j_diagnostic_route_payload,
+        status,
+        blocker,
+        route_family,
+        materialized = false,
+        complete_core_shell_route_payload_available = false,
+        region_plan = nothing,
+        source_plan = nothing,
+        final_basis = nothing,
+        h1_payload = nothing,
+        h1_j_payload = nothing,
+        missing_inputs,
+        summary,
+        metadata = merge(
+            NamedTuple(metadata),
+            (;
+                source =
+                    :pqs_source_box_route_driver_complete_core_shell_h1_j_diagnostic_payload,
+                driver_route_materialized = false,
+                report_placeholder = false,
+            ),
+        ),
+    )
+end
+
+function _pqs_source_box_route_driver_complete_core_shell_h1_j_diagnostic_payload(;
+    route_family,
+    region_plan = nothing,
+    source_plan = nothing,
+    final_basis = nothing,
+    h1_payload = nothing,
+    axis_weights = nothing,
+    raw_pair_factor_terms = nothing,
+    coulomb_expansion = nothing,
+    metadata = (;),
+)
+    if route_family !== :pqs_source_box
+        return _pqs_source_box_route_driver_blocked_complete_core_shell_h1_j_payload(
+            ;
+            route_family,
+            status =
+                :not_applicable_complete_core_shell_h1_j_non_pqs_source_box_route,
+            blocker = nothing,
+            missing_inputs = (),
+            metadata,
+        )
+    end
+
+    missing_inputs =
+        _pqs_source_box_route_driver_complete_core_shell_h1_j_missing_inputs(
+            ;
+            region_plan,
+            source_plan,
+            final_basis,
+            h1_payload,
+            axis_weights,
+            raw_pair_factor_terms,
+            coulomb_expansion,
+        )
+    if !isempty(missing_inputs)
+        return _pqs_source_box_route_driver_blocked_complete_core_shell_h1_j_payload(
+            ;
+            route_family,
+            status = :blocked_missing_complete_core_shell_h1_j_route_inputs,
+            blocker = :missing_complete_core_shell_h1_j_route_inputs,
+            missing_inputs,
+            metadata,
+        )
+    end
+
+    h1_j_payload = pqs_multilayer_complete_core_shell_h1_j_payload(
+        source_plan;
+        final_basis,
+        h1_payload,
+        axis_weights,
+        raw_pair_factor_terms,
+        coulomb_expansion,
+        metadata = merge(
+            NamedTuple(metadata),
+            (;
+                source =
+                    :pqs_source_box_route_driver_complete_core_shell_h1_j_diagnostic_payload,
+            ),
+        ),
+    )
+    h1_j_summary = h1_j_payload.summary
+    summary = merge(
+        h1_j_summary,
+        (;
+            driver_route_materialized =
+                h1_j_summary.status ===
+                :materialized_pqs_multilayer_complete_core_shell_h1_j_payload,
+            report_placeholder = false,
+        ),
+    )
+    return (;
+        object_kind = :pqs_complete_core_shell_h1_j_diagnostic_route_payload,
+        status = summary.status,
+        blocker = summary.blocker,
+        route_family,
+        materialized = summary.driver_route_materialized,
+        complete_core_shell_route_payload_available = true,
+        region_plan,
+        source_plan,
+        final_basis,
+        h1_payload,
+        h1_j_payload,
+        missing_inputs = (),
+        summary,
+        metadata = merge(
+            NamedTuple(metadata),
+            (;
+                source =
+                    :pqs_source_box_route_driver_complete_core_shell_h1_j_diagnostic_payload,
+                driver_route_materialized = summary.driver_route_materialized,
+                report_placeholder = false,
+            ),
+        ),
+    )
+end
+
 function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
     route_skeleton = shells.route_skeleton
     route_facts = _pqs_source_box_route_driver_route_facts(route_skeleton)
     contract = _pqs_source_box_route_driver_contract_metadata(recipe)
     low_order_assembly =
         _pqs_source_box_route_driver_assembly_stage_low_order_summary(pairs)
+    complete_core_shell_h1_j_diagnostic_payload =
+        _pqs_source_box_route_driver_complete_core_shell_h1_j_diagnostic_payload(
+            ;
+            route_family = route_skeleton.route_family,
+            metadata = (;
+                source = :cartesian_assembly,
+                route_kind = recipe.route_kind,
+            ),
+        )
 
     return (;
         object_kind = :cartesian_assembly,
@@ -10474,6 +10655,13 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
         transforms,
         pairs,
         low_order_assembly,
+        complete_core_shell_h1_j_diagnostic_payload,
+        complete_core_shell_h1_j_diagnostic_summary =
+            complete_core_shell_h1_j_diagnostic_payload.summary,
+        complete_core_shell_h1_j_diagnostic_status =
+            complete_core_shell_h1_j_diagnostic_payload.status,
+        complete_core_shell_h1_j_diagnostic_blocker =
+            complete_core_shell_h1_j_diagnostic_payload.blocker,
         terminal_route_state = low_order_assembly.terminal_route_state,
         terminal_route_summary = low_order_assembly.terminal_route_summary,
         low_order_assembly_source = low_order_assembly.assembly_source,
@@ -10660,6 +10848,49 @@ function _pqs_source_box_route_driver_report_stage_lw_complete_shell_summary(
         lw_complete_shell_hamiltonian_data_materialized =
             available &&
             transforms.lw_complete_shell_hamiltonian_data_materialized,
+    )
+end
+
+function _pqs_source_box_route_driver_complete_core_shell_h1_j_summary(payload)
+    isnothing(payload) && return (;
+        status = :not_available_missing_complete_core_shell_h1_j_payload,
+        blocker = :missing_complete_core_shell_h1_j_payload,
+        final_dimension = nothing,
+        h1_energy = nothing,
+        self_coulomb = nothing,
+        density_gauge = nothing,
+        missing_inputs = (:complete_core_shell_h1_j_payload,),
+        signed_final_weight_division_used = false,
+        raw_no_division_used = false,
+        density_normalized_pair_terms_used_as_authority = false,
+        driver_route_materialized = false,
+        rhf_materialized = false,
+        gto_materialized = false,
+        exports_materialized = false,
+        artifacts_materialized = false,
+    )
+    return payload.summary
+end
+
+function _pqs_source_box_route_driver_complete_core_shell_h1_j_report_fields(
+    assembly,
+)
+    payload =
+        hasproperty(assembly, :complete_core_shell_h1_j_diagnostic_payload) ?
+        assembly.complete_core_shell_h1_j_diagnostic_payload :
+        nothing
+    summary =
+        _pqs_source_box_route_driver_complete_core_shell_h1_j_summary(payload)
+    return (;
+        complete_core_shell_h1_j_diagnostic_summary = summary,
+        complete_core_shell_h1_j_diagnostic_status = summary.status,
+        complete_core_shell_h1_j_diagnostic_blocker = summary.blocker,
+        complete_core_shell_h1_j_final_dimension = summary.final_dimension,
+        complete_core_shell_h1_j_h1_energy = summary.h1_energy,
+        complete_core_shell_h1_j_self_coulomb = summary.self_coulomb,
+        complete_core_shell_h1_j_density_gauge = summary.density_gauge,
+        complete_core_shell_h1_j_driver_route_materialized =
+            summary.driver_route_materialized,
     )
 end
 
@@ -11059,12 +11290,17 @@ function cartesian_report(system, parent, assembly, recipe)
         _pqs_source_box_route_driver_report_stage_low_order_route_summary(
             assembly,
         )
+    complete_core_shell_h1_j_report_fields =
+        _pqs_source_box_route_driver_complete_core_shell_h1_j_report_fields(
+            assembly,
+        )
 
-    return _pqs_source_box_route_driver_report(
+    report = _pqs_source_box_route_driver_report(
         standard_setup, parent, parent_axis, route_axis_counts, raw_box,
         system_metadata, recipe_metadata, parent_contract, parent_description,
         route_skeleton, route_facts, contract, diagnostics,
         low_order_route_summary)
+    return merge(report, complete_core_shell_h1_j_report_fields)
 end
 
 function cartesian_materialization(report, materialization_inputs)
