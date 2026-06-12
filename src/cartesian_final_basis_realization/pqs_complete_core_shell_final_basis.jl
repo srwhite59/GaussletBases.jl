@@ -257,3 +257,281 @@ function _pqs_complete_core_shell_overlap_diagnostics(
         full_rank = rank == size(matrix, 1),
     )
 end
+
+"""
+    pqs_complete_core_shell_final_one_body_matrix(final_basis, support_operator; term)
+
+Transform a caller-supplied one-body operator on the combined core/shell support
+rows into the complete final basis. The support row order must match
+`final_basis.support_row_order == :core_then_shell`.
+"""
+function pqs_complete_core_shell_final_one_body_matrix(
+    final_basis::NamedTuple,
+    support_operator;
+    term::Symbol,
+    center_record = nothing,
+    symmetry_atol::Real = 1.0e-8,
+    metadata = (;),
+)
+    _pqs_complete_core_shell_validate_final_basis(final_basis)
+    operator = Matrix{Float64}(support_operator)
+    support_count = final_basis.core_support_count + final_basis.shell_support_count
+    size(operator) == (support_count, support_count) ||
+        throw(DimensionMismatch("complete core/shell support operator shape mismatch"))
+    all(isfinite, operator) ||
+        throw(ArgumentError("complete core/shell support operator contains non-finite entries"))
+    support_symmetry_error = norm(operator - transpose(operator), Inf)
+    support_symmetry_error <= Float64(symmetry_atol) ||
+        throw(ArgumentError("complete core/shell support operator must be symmetric"))
+
+    coefficients = Matrix{Float64}(final_basis.final_coefficients)
+    size(coefficients, 1) == support_count ||
+        throw(DimensionMismatch("complete core/shell final coefficient row mismatch"))
+    final_operator = transpose(coefficients) * operator * coefficients
+    final_symmetry_error = norm(final_operator - transpose(final_operator), Inf)
+    term_metadata = _pqs_complete_core_shell_one_body_metadata(
+        term,
+        center_record,
+        metadata,
+    )
+    return (;
+        object_kind = :pqs_complete_core_shell_final_one_body_matrix,
+        status = :materialized_pqs_complete_core_shell_final_one_body_matrix,
+        blocker = nothing,
+        term,
+        final_basis_object_kind = final_basis.object_kind,
+        final_basis_status = final_basis.status,
+        support_row_order = final_basis.support_row_order,
+        support_operator = operator,
+        support_operator_shape = size(operator),
+        support_operator_symmetry_error = support_symmetry_error,
+        final_operator,
+        final_operator_shape = size(final_operator),
+        final_operator_finite = all(isfinite, final_operator),
+        final_operator_symmetry_error = final_symmetry_error,
+        final_retained_count = final_basis.final_retained_count,
+        route_owned_product_operator_used = true,
+        old_fixed_block_matrix_authority_used = false,
+        current_route_safe_term_matrices_used = false,
+        generalized_overlap_solve_materialized = false,
+        one_body_operator_materialized = true,
+        hamiltonian_data_materialized = false,
+        h1_solve_materialized = false,
+        ida_data_materialized = false,
+        density_density_materialized = false,
+        rhf_materialized = false,
+        driver_route_materialized = false,
+        exports_materialized = false,
+        artifacts_materialized = false,
+        metadata = term_metadata,
+    )
+end
+
+function pqs_complete_core_shell_final_one_electron_hamiltonian(
+    final_kinetic_result::NamedTuple,
+    final_nuclear_by_center_results;
+    symmetry_atol::Real = 1.0e-8,
+)
+    kinetic = _pqs_complete_core_shell_validate_final_one_body(
+        final_kinetic_result,
+        :kinetic;
+        symmetry_atol,
+    )
+    nuclear_results = Tuple(final_nuclear_by_center_results)
+    isempty(nuclear_results) &&
+        throw(ArgumentError("complete core/shell H1 requires at least one nuclear center"))
+
+    dimension = size(kinetic, 1)
+    charged_nuclear_sum = zeros(Float64, dimension, dimension)
+    center_summaries = map(nuclear_results) do result
+        nuclear = _pqs_complete_core_shell_validate_final_one_body(
+            result,
+            :electron_nuclear_by_center;
+            symmetry_atol,
+        )
+        metadata = result.metadata
+        get(metadata, :nuclear_charge_recorded, false) ||
+            throw(ArgumentError("complete core/shell H1 requires recorded nuclear charge"))
+        get(metadata, :nuclear_charge_applied, true) &&
+            throw(ArgumentError("complete core/shell H1 requires uncharged nuclear input"))
+        get(metadata, :centers_summed, true) &&
+            throw(ArgumentError("complete core/shell H1 requires separated nuclear centers"))
+        charge = Float64(metadata.nuclear_charge)
+        charged_nuclear_sum .+= charge .* nuclear
+        (;
+            center_key = get(metadata, :center_key, :unknown),
+            center_index = get(metadata, :center_index, :unknown),
+            center_location = get(metadata, :center_location, nothing),
+            nuclear_charge = charge,
+            nuclear_charge_recorded = true,
+            input_nuclear_charge_applied = false,
+            input_centers_summed = false,
+            uncharged_by_center_convention =
+                get(metadata, :uncharged_by_center_convention, false),
+        )
+    end
+
+    hamiltonian_matrix = kinetic + charged_nuclear_sum
+    hamiltonian_symmetry_error =
+        norm(hamiltonian_matrix - transpose(hamiltonian_matrix), Inf)
+    hamiltonian_symmetry_error <= Float64(symmetry_atol) ||
+        throw(ArgumentError("complete core/shell H1 Hamiltonian must be symmetric"))
+    return (;
+        object_kind = :pqs_complete_core_shell_final_one_electron_hamiltonian,
+        status = :materialized_pqs_complete_core_shell_final_one_electron_hamiltonian,
+        blocker = nothing,
+        final_dimension = dimension,
+        kinetic_matrix = kinetic,
+        charged_nuclear_matrix = charged_nuclear_sum,
+        hamiltonian_matrix,
+        hamiltonian_matrix_shape = size(hamiltonian_matrix),
+        hamiltonian_matrix_finite = all(isfinite, hamiltonian_matrix),
+        hamiltonian_matrix_symmetry_error = hamiltonian_symmetry_error,
+        center_count = length(center_summaries),
+        center_summaries,
+        nuclear_charges_applied = true,
+        centers_summed = true,
+        hamiltonian_data_materialized = true,
+        h1_solve_materialized = false,
+        generalized_overlap_solve_materialized = false,
+        ida_data_materialized = false,
+        density_density_materialized = false,
+        rhf_materialized = false,
+        driver_route_materialized = false,
+        exports_materialized = false,
+        artifacts_materialized = false,
+        metadata = (;
+            source = :pqs_complete_core_shell_final_one_electron_hamiltonian,
+            nuclear_charge_application_stage = :hamiltonian_assembly,
+            center_summation_stage = :hamiltonian_assembly,
+            old_fixed_block_matrix_authority_used = false,
+            current_route_safe_term_matrices_used = false,
+        ),
+    )
+end
+
+function pqs_complete_core_shell_final_h1_solve(
+    hamiltonian_result::NamedTuple;
+    reference_energy::Real = -0.5,
+)
+    get(hamiltonian_result, :object_kind, nothing) ===
+        :pqs_complete_core_shell_final_one_electron_hamiltonian ||
+        throw(ArgumentError("complete core/shell H1 solve requires complete H1 Hamiltonian"))
+    matrix = Matrix{Float64}(hamiltonian_result.hamiltonian_matrix)
+    all(isfinite, matrix) ||
+        throw(ArgumentError("complete core/shell H1 matrix contains non-finite entries"))
+    eigenvalues = eigvals(Symmetric((matrix + transpose(matrix)) ./ 2))
+    energy = first(eigenvalues)
+    return (;
+        object_kind = :pqs_complete_core_shell_final_h1_solve,
+        status = :materialized_pqs_complete_core_shell_final_h1_solve,
+        blocker = nothing,
+        solve_kind = :ordinary_symmetric,
+        final_dimension = size(matrix, 1),
+        lowest_energy = energy,
+        reference_energy = Float64(reference_energy),
+        reference_error = energy - Float64(reference_energy),
+        eigenvalue_min = minimum(eigenvalues),
+        eigenvalue_max = maximum(eigenvalues),
+        h1_solve_materialized = true,
+        generalized_overlap_solve_materialized = false,
+        old_fixed_block_matrix_authority_used = false,
+        current_route_safe_term_matrices_used = false,
+        ida_data_materialized = false,
+        density_density_materialized = false,
+        rhf_materialized = false,
+        driver_route_materialized = false,
+        exports_materialized = false,
+        artifacts_materialized = false,
+        metadata = (;
+            source = :pqs_complete_core_shell_final_h1_solve,
+            ordinary_symmetric_final_solve = true,
+            old_fixed_block_matrix_authority_used = false,
+            current_route_safe_term_matrices_used = false,
+        ),
+    )
+end
+
+function _pqs_complete_core_shell_validate_final_basis(final_basis::NamedTuple)
+    get(final_basis, :object_kind, nothing) === :pqs_complete_core_shell_final_basis ||
+        throw(ArgumentError("complete core/shell one-body transfer requires complete final basis"))
+    get(final_basis, :status, nothing) ===
+        :available_pqs_complete_core_shell_final_basis ||
+        throw(ArgumentError("complete core/shell one-body transfer requires available final basis"))
+    get(final_basis, :final_basis_materialized, false) ||
+        throw(ArgumentError("complete core/shell final basis is not materialized"))
+    get(final_basis, :support_row_order, nothing) === :core_then_shell ||
+        throw(ArgumentError("complete core/shell final basis support row order mismatch"))
+    return nothing
+end
+
+function _pqs_complete_core_shell_validate_final_one_body(
+    result::NamedTuple,
+    term::Symbol;
+    symmetry_atol::Real,
+)
+    get(result, :object_kind, nothing) ===
+        :pqs_complete_core_shell_final_one_body_matrix ||
+        throw(ArgumentError("complete core/shell Hamiltonian requires final one-body input"))
+    get(result, :status, nothing) ===
+        :materialized_pqs_complete_core_shell_final_one_body_matrix ||
+        throw(ArgumentError("complete core/shell Hamiltonian requires materialized one-body input"))
+    get(result, :term, nothing) === term ||
+        throw(ArgumentError("complete core/shell Hamiltonian term mismatch"))
+    matrix = Matrix{Float64}(result.final_operator)
+    all(isfinite, matrix) ||
+        throw(ArgumentError("complete core/shell final one-body matrix contains non-finite entries"))
+    norm(matrix - transpose(matrix), Inf) <= Float64(symmetry_atol) ||
+        throw(ArgumentError("complete core/shell final one-body matrix must be symmetric"))
+    return matrix
+end
+
+function _pqs_complete_core_shell_one_body_metadata(
+    term::Symbol,
+    center_record,
+    metadata,
+)
+    base = merge(
+        NamedTuple(metadata),
+        (;
+            source = :pqs_complete_core_shell_final_one_body_matrix,
+            route_owned_product_operator_used = true,
+            old_fixed_block_matrix_authority_used = false,
+            current_route_safe_term_matrices_used = false,
+        ),
+    )
+    term !== :electron_nuclear_by_center && return base
+    isnothing(center_record) &&
+        throw(ArgumentError("electron-nuclear by-center transfer requires a center record"))
+    charge = _pqs_complete_core_shell_descriptor_property(center_record, :charge)
+    isnothing(charge) &&
+        (charge = _pqs_complete_core_shell_descriptor_property(center_record, :nuclear_charge))
+    location = _pqs_complete_core_shell_descriptor_property(center_record, :location)
+    center_key = _pqs_complete_core_shell_descriptor_property(center_record, :center_key)
+    center_index = _pqs_complete_core_shell_descriptor_property(center_record, :center_index)
+    isnothing(charge) &&
+        throw(ArgumentError("electron-nuclear by-center transfer requires recorded charge"))
+    return merge(
+        base,
+        (;
+            by_center = true,
+            center_key = isnothing(center_key) ? :unknown : center_key,
+            center_index = isnothing(center_index) ? :unknown : center_index,
+            center_location = location,
+            nuclear_charge = Float64(charge),
+            nuclear_charge_recorded = true,
+            nuclear_charge_applied = false,
+            centers_summed = false,
+            center_summation = false,
+            uncharged_by_center_convention = true,
+        ),
+    )
+end
+
+function _pqs_complete_core_shell_descriptor_property(object, name::Symbol)
+    if object isa NamedTuple && haskey(object, name)
+        return getfield(object, name)
+    end
+    hasproperty(object, name) && return getproperty(object, name)
+    return nothing
+end
