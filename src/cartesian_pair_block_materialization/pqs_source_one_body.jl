@@ -114,18 +114,68 @@ end
 
 Materialize one retained PQS source-mode one-body block by delegating through
 the raw source-space one-body selector and then applying the retained
-source-mode boundary selector. Supported terms are currently `:overlap` and
-`:kinetic`.
+source-mode boundary selector. Supported terms are `:overlap`,
+`:position_x/y/z`, `:x2_x/y/z`, and `:kinetic`.
 """
 function pqs_source_pair_retained_one_body_block(
     record::PairBlockMaterializationRecord,
     term::Symbol;
     overlap_1d,
+    position_1d = nothing,
+    x2_1d = nothing,
     kinetic_1d = nothing,
 )
     descriptor = _supported_pqs_source_retained_safe_term_descriptor(term)
     if descriptor.family === :overlap
         return pqs_source_pair_retained_overlap_block(record; overlap_1d)
+    end
+
+    if descriptor.family === :position
+        isnothing(position_1d) &&
+            throw(ArgumentError(_pqs_source_required_factor_message(descriptor)))
+        if descriptor.axis === :x
+            return pqs_source_pair_retained_position_x_block(
+                record;
+                overlap_1d,
+                position_1d,
+            )
+        end
+        if descriptor.axis === :y
+            return pqs_source_pair_retained_position_y_block(
+                record;
+                overlap_1d,
+                position_1d,
+            )
+        end
+        return pqs_source_pair_retained_position_z_block(
+            record;
+            overlap_1d,
+            position_1d,
+        )
+    end
+
+    if descriptor.family === :x2
+        isnothing(x2_1d) &&
+            throw(ArgumentError(_pqs_source_required_factor_message(descriptor)))
+        if descriptor.axis === :x
+            return pqs_source_pair_retained_x2_x_block(
+                record;
+                overlap_1d,
+                x2_1d,
+            )
+        end
+        if descriptor.axis === :y
+            return pqs_source_pair_retained_x2_y_block(
+                record;
+                overlap_1d,
+                x2_1d,
+            )
+        end
+        return pqs_source_pair_retained_x2_z_block(
+            record;
+            overlap_1d,
+            x2_1d,
+        )
     end
 
     if descriptor.family === :kinetic
@@ -145,13 +195,15 @@ end
     pqs_source_pair_retained_one_body_blocks(plan, term; overlap_1d, ...)
 
 Materialize retained PQS source-mode one-body blocks for ready PQS/PQS
-source-pair records in a plan. Supported terms are currently `:overlap` and
-`:kinetic`.
+source-pair records in a plan. Supported terms are `:overlap`,
+`:position_x/y/z`, `:x2_x/y/z`, and `:kinetic`.
 """
 function pqs_source_pair_retained_one_body_blocks(
     plan::PairBlockMaterializationPlan,
     term::Symbol;
     overlap_1d,
+    position_1d = nothing,
+    x2_1d = nothing,
     kinetic_1d = nothing,
 )
     descriptor = _supported_pqs_source_retained_safe_term_descriptor(term)
@@ -160,6 +212,8 @@ function pqs_source_pair_retained_one_body_blocks(
             record,
             descriptor.requested_term;
             overlap_1d,
+            position_1d,
+            x2_1d,
             kinetic_1d,
         ),
         plan,
@@ -175,10 +229,10 @@ end
     pqs_retained_source_one_body_matrix(plan, term; overlap_1d, ...)
 
 Build the first one-unit retained PQS source-mode dense matrix from a retained
-overlap/kinetic batch. This helper only accepts one materialized retained
-self-pair block. It does not perform multi-unit placement, shell realization,
-Lowdin cleanup, IDA, Hamiltonian assembly, driver adoption, exports, or
-artifacts.
+overlap, position, x2, or kinetic batch. This helper only accepts one
+materialized retained self-pair block. It does not perform multi-unit
+placement, shell realization, Lowdin cleanup, IDA, Hamiltonian assembly, driver
+adoption, exports, or artifacts.
 """
 function pqs_retained_source_one_body_matrix(
     batch_result::PairBlockMaterializationBatchResult,
@@ -287,12 +341,16 @@ function pqs_retained_source_one_body_matrix(
     plan::PairBlockMaterializationPlan,
     term::Symbol;
     overlap_1d,
+    position_1d = nothing,
+    x2_1d = nothing,
     kinetic_1d = nothing,
 )
     batch_result = pqs_source_pair_retained_one_body_blocks(
         plan,
         term;
         overlap_1d,
+        position_1d,
+        x2_1d,
         kinetic_1d,
     )
     return pqs_retained_source_one_body_matrix(batch_result)
@@ -308,7 +366,7 @@ end
 
 function _supported_pqs_source_retained_safe_term_descriptor(term::Symbol)
     descriptor = _supported_pqs_source_safe_term_descriptor(term)
-    descriptor.family in (:overlap, :kinetic) ||
+    descriptor.family in (:overlap, :position, :x2, :kinetic) ||
         throw(ArgumentError("unsupported retained PQS source one-body term: $(term)"))
     descriptor.family === :kinetic && isnothing(descriptor.required_factor_name) &&
         throw(ArgumentError("retained PQS kinetic term is missing factor metadata"))
@@ -324,7 +382,16 @@ function _pqs_source_retained_unsupported_record_blocker(descriptor)
 end
 
 function _pqs_retained_source_matrix_supported_term(term::Symbol)
-    return term in (:retained_source_overlap, :retained_source_kinetic)
+    return term in (
+        :retained_source_overlap,
+        :retained_source_position_x,
+        :retained_source_position_y,
+        :retained_source_position_z,
+        :retained_source_x2_x,
+        :retained_source_x2_y,
+        :retained_source_x2_z,
+        :retained_source_kinetic,
+    )
 end
 
 function _pqs_retained_source_skipped_records_allowed(skipped_records)

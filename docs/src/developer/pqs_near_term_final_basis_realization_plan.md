@@ -124,6 +124,9 @@ Direct retained-boundary kernels now exist for overlap, kinetic, position
 moments, x2 moments, and by-center electron-nuclear source blocks. The dense
 raw-source block plus selector path remains a small-fixture oracle/reference,
 not the production scaling shape.
+The generic retained one-body selector accepts the same overlap, kinetic,
+position, and x2 source terms and routes them through the direct retained
+helpers.
 
 For overlap:
 
