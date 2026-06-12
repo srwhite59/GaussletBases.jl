@@ -74,8 +74,14 @@ The current live He + GTO question is later in the stack:
   447-function structure and is within about `0.558 mHa` of the plotted energy,
   which is close enough to stop that reproduction audit for now;
 - the `n_s = 7` He RHF probe is now in the microhartree range against Fig. 8,
-  so the next scientific target is diatomic H2 at the restricted closed-shell
-  HF level.
+  closing the immediate atomic He accuracy check;
+- the H2 `R = 4.0` old nested/QW restricted HF probe reproduced documented
+  S+P molecular rows to roundoff, so the old diatomic route is trusted enough
+  as an oracle for this line;
+- the next scientific target is Be atom S+P GTO residual behavior: old
+  nested/QW should be used as oracle, while the live question is how far the
+  newer decomposed/final-basis route can honestly go and what precise blocker
+  remains before valid Be RHF.
 
 ## Current Cleanup Rule
 
