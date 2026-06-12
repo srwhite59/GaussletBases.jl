@@ -2,7 +2,6 @@ using Test
 using LinearAlgebra
 using GaussletBases
 
-const PQSH1CFBR = GaussletBases.CartesianFinalBasisRealization
 const PQSH1CSH = GaussletBases.CartesianShellification
 const PQSH1CTL = GaussletBases.CartesianTerminalLowering
 
@@ -145,8 +144,15 @@ end
         location = (0.0, 0.0, 0.0),
         charge = 1.0,
     )
-    support_kinetic =
-        GaussletBases.pqs_multilayer_support_kinetic_matrix(fixture.plan)
+    h1_payload = GaussletBases.pqs_multilayer_complete_core_shell_h1_payload(
+        fixture.plan;
+        final_basis = fixture.final_basis,
+        coulomb_expansion = fixture.expansion,
+        center_records = (center,),
+        gaussian_factor_terms_by_center =
+            fixture.bundle7.pgdg_intermediate.gaussian_factor_terms,
+        metadata = (; fixture = :pqs_direct_retained_final_h1_complete_core_shell),
+    )
     support_nuclear_by_center =
         GaussletBases.pqs_multilayer_support_electron_nuclear_by_center_matrices(
             fixture.plan;
@@ -172,30 +178,10 @@ end
     @test support_nuclear_axis_layer.support_operator ≈
           support_nuclear.support_operator atol = 1.0e-12 rtol = 0.0
 
-    final_nuclear = PQSH1CFBR.pqs_complete_core_shell_final_one_body_matrix(
-        fixture.final_basis,
-        support_nuclear.support_operator;
-        term = :electron_nuclear_by_center,
-        center_record = center,
-        metadata = merge(
-            support_nuclear.metadata,
-            (;
-                nuclear_factor_source = :pgdg_intermediate_gaussian_factor_terms,
-                raw_base_layer_gaussian_factor_matrices_used = false,
-            ),
-        ),
-    )
-
-    final_kinetic = PQSH1CFBR.pqs_complete_core_shell_final_one_body_matrix(
-        fixture.final_basis,
-        support_kinetic;
-        term = :kinetic,
-    )
-    final_hamiltonian = PQSH1CFBR.pqs_complete_core_shell_final_one_electron_hamiltonian(
-        final_kinetic,
-        (final_nuclear,),
-    )
-    h1 = PQSH1CFBR.pqs_complete_core_shell_final_h1_solve(final_hamiltonian)
+    final_nuclear = only(h1_payload.final_nuclear_by_center)
+    final_kinetic = h1_payload.final_kinetic
+    final_hamiltonian = h1_payload.final_hamiltonian
+    h1 = h1_payload.h1
     fixed_h1 =
         _pqs_h1_fixed_block_oracle_energy(fixture.bundle7, fixture.expansion)
 
@@ -221,6 +207,10 @@ end
     @test final_hamiltonian.metadata.old_fixed_block_matrix_authority_used == false
     @test final_hamiltonian.metadata.current_route_safe_term_matrices_used == false
     @test h1.generalized_overlap_solve_materialized == false
+    @test h1_payload.summary.h1_solve_materialized
+    @test h1_payload.summary.ida_data_materialized == false
+    @test h1_payload.summary.density_density_materialized == false
+    @test h1_payload.summary.rhf_materialized == false
     @test h1.ida_data_materialized == false
     @test h1.density_density_materialized == false
     @test h1.rhf_materialized == false
