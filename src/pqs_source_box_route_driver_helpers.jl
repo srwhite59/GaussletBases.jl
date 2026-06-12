@@ -11003,43 +11003,92 @@ function _pqs_source_box_route_driver_complete_core_shell_h1_j_diagnostic_payloa
     )
 end
 
+struct _PQSCompleteCoreShellDiagnosticRoutePayload
+    status::Symbol
+    blocker
+    route_family::Symbol
+    source_payload
+    final_basis
+    h1_payload
+    h1_j_payload
+    missing_inputs::Tuple
+    summary
+    metadata
+end
+
+function _pqs_source_box_route_driver_complete_core_shell_diagnostic_route_payload(
+    parent,
+    transforms,
+    recipe,
+    route_skeleton,
+)
+    source_payload =
+        _pqs_source_box_route_driver_complete_core_shell_source_plan_payload(
+            parent,
+            transforms,
+            recipe,
+        )
+    h1_payload =
+        _pqs_source_box_route_driver_complete_core_shell_h1_payload(
+            parent,
+            source_payload,
+            recipe,
+        )
+    h1_j_payload =
+        _pqs_source_box_route_driver_complete_core_shell_h1_j_diagnostic_payload(
+            ;
+            route_family = route_skeleton.route_family,
+            region_plan = source_payload.region_plan,
+            source_plan = source_payload.source_plan,
+            final_basis = h1_payload.final_basis,
+            h1_payload = h1_payload.h1_payload,
+            coulomb_expansion = source_payload.coulomb_expansion,
+            metadata = (;
+                source = :cartesian_assembly,
+                route_kind = recipe.route_kind,
+                complete_core_shell_source_plan_status = source_payload.status,
+                complete_core_shell_h1_payload_status = h1_payload.status,
+            ),
+        )
+    metadata = (;
+        source = :pqs_source_box_route_driver_complete_core_shell_diagnostic_route_payload,
+        route_kind = recipe.route_kind,
+        route_family = route_skeleton.route_family,
+        complete_core_shell_source_plan_status = source_payload.status,
+        complete_core_shell_h1_payload_status = h1_payload.status,
+        complete_core_shell_h1_j_diagnostic_status = h1_j_payload.status,
+        driver_route_materialized = h1_j_payload.summary.driver_route_materialized,
+        report_placeholder = false,
+    )
+    return _PQSCompleteCoreShellDiagnosticRoutePayload(
+        h1_j_payload.status,
+        h1_j_payload.blocker,
+        route_skeleton.route_family,
+        source_payload,
+        h1_payload.final_basis,
+        h1_payload.h1_payload,
+        h1_j_payload,
+        h1_j_payload.missing_inputs,
+        h1_j_payload.summary,
+        metadata,
+    )
+end
+
 function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
     route_skeleton = shells.route_skeleton
     route_facts = _pqs_source_box_route_driver_route_facts(route_skeleton)
     contract = _pqs_source_box_route_driver_contract_metadata(recipe)
     low_order_assembly =
         _pqs_source_box_route_driver_assembly_stage_low_order_summary(pairs)
-    complete_core_shell_source_plan_payload =
-        _pqs_source_box_route_driver_complete_core_shell_source_plan_payload(
+    complete_core_shell_diagnostic_route_payload =
+        _pqs_source_box_route_driver_complete_core_shell_diagnostic_route_payload(
             parent,
             transforms,
             recipe,
-        )
-    complete_core_shell_h1_payload =
-        _pqs_source_box_route_driver_complete_core_shell_h1_payload(
-            parent,
-            complete_core_shell_source_plan_payload,
-            recipe,
+            route_skeleton,
         )
     complete_core_shell_h1_j_diagnostic_payload =
-        _pqs_source_box_route_driver_complete_core_shell_h1_j_diagnostic_payload(
-            ;
-            route_family = route_skeleton.route_family,
-            region_plan = complete_core_shell_source_plan_payload.region_plan,
-            source_plan = complete_core_shell_source_plan_payload.source_plan,
-            final_basis = complete_core_shell_h1_payload.final_basis,
-            h1_payload = complete_core_shell_h1_payload.h1_payload,
-            coulomb_expansion =
-                complete_core_shell_source_plan_payload.coulomb_expansion,
-            metadata = (;
-                source = :cartesian_assembly,
-                route_kind = recipe.route_kind,
-                complete_core_shell_source_plan_status =
-                    complete_core_shell_source_plan_payload.status,
-                complete_core_shell_h1_payload_status =
-                    complete_core_shell_h1_payload.status,
-            ),
-        )
+        complete_core_shell_diagnostic_route_payload.h1_j_payload
 
     return (;
         object_kind = :cartesian_assembly,
@@ -11055,6 +11104,7 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
         transforms,
         pairs,
         low_order_assembly,
+        complete_core_shell_diagnostic_route_payload,
         complete_core_shell_h1_j_diagnostic_payload,
         complete_core_shell_h1_j_diagnostic_summary =
             complete_core_shell_h1_j_diagnostic_payload.summary,
