@@ -97,7 +97,10 @@ The current live He + GTO question is later in the stack:
 - the private decomposed atom+supplement seam now materializes the Be S+P
   final-basis one-electron route with final dimension `636`; the next blocker
   is not old-oracle data, but phase-attributed final density-density/RHF
-  materialization through that seam.
+  materialization through that seam;
+- the Be S+P final-basis RHF route now matches the old nested/QW oracle to
+  about `3.2e-14 Ha`; the measured cost center is `mixed_gto_blocks`, about
+  `188.6` seconds out of a `357.4` second probe.
 
 ## Current Cleanup Rule
 

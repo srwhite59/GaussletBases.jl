@@ -352,9 +352,15 @@ one-electron final-basis route materializes with retained gausslet dimension
 `615`, `21` retained supplement directions, final dimension `636`, final
 overlap identity error about `1.01e-10`, and no full-parent CPB, direct
 Cartesian, ordinary IDA, raw-GTO-final-density, or generalized-final-solve
-fallback. Final density-density/RHF for Be S+P is not yet accepted; the next
-step is a phase-attributed density-density/RHF run through the same seam rather
-than a blind long run.
+fallback. The phase-attributed Be S+P density-density/RHF probe through the
+same seam then materialized final-basis density-density and converged
+closed-shell RHF in 27 iterations. The final-basis RHF components were
+one-electron `-19.066200470580668`, electron-electron `4.4916862260060055`,
+and total `-14.574514244574662` Hartree, matching the old oracle total by
+about `3.2e-14` Hartree. The run took about `357.4` seconds total. The dominant
+phase was `mixed_gto_blocks` at about `188.6` seconds; the next optimization
+target is therefore mixed GTO route-global block materialization, not residual
+MWG, final density assembly, or RHF.
 
 The current coarse timing split for the active tiny-box He RHF acceptance is
 reported by the test as diagnostics, not asserted as performance thresholds.

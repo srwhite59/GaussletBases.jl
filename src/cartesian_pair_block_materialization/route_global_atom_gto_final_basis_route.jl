@@ -19,35 +19,52 @@ function _white_lindsey_decomposed_atom_gto_final_basis_route(
     refinement_levels::Integer = 0,
     build_density_density::Bool = true,
     metadata = (;),
+    phase_timings = nothing,
 )
-    axis_inputs = _white_lindsey_atom_gto_parent_axis_inputs(
-        basis,
-        expansion;
-        gausslet_backend,
-        refinement_levels,
-    )
-    parent = ParentGaussletBases.CartesianParentGaussletBases.CartesianParentGaussletBasis3D(
-        basis,
-    )
-    supplement_representation = ParentGaussletBases.basis_representation(supplement)
-    parent_axes = ntuple(_ -> ParentGaussletBases.centers(basis), 3)
-    inventory_source = white_lindsey_shellification_decomposed_unit_pair_inventory(
-        parent_axes,
-        nuclear_positions;
-        shellification_policy,
-        lowering_policy,
-        metadata = merge(
-            NamedTuple(metadata),
-            (;
-                q,
-                ns,
-                route_seam =
-                    :white_lindsey_decomposed_atom_gto_final_basis_route,
+    axis_setup = _white_lindsey_atom_gto_timed_phase!(
+        phase_timings,
+        :parent_axis_setup,
+    ) do
+        axis_inputs = _white_lindsey_atom_gto_parent_axis_inputs(
+            basis,
+            expansion;
+            gausslet_backend,
+            refinement_levels,
+        )
+        parent =
+            ParentGaussletBases.CartesianParentGaussletBases.CartesianParentGaussletBasis3D(
+                basis,
+            )
+        supplement_representation = ParentGaussletBases.basis_representation(supplement)
+        parent_axes = ntuple(_ -> ParentGaussletBases.centers(basis), 3)
+        return (; axis_inputs, parent, supplement_representation, parent_axes)
+    end
+    axis_inputs = axis_setup.axis_inputs
+    parent = axis_setup.parent
+    supplement_representation = axis_setup.supplement_representation
+    parent_axes = axis_setup.parent_axes
+    inventory_source = _white_lindsey_atom_gto_timed_phase!(
+        phase_timings,
+        :shellification_decomposed_inventory,
+    ) do
+        white_lindsey_shellification_decomposed_unit_pair_inventory(
+            parent_axes,
+            nuclear_positions;
+            shellification_policy,
+            lowering_policy,
+            metadata = merge(
+                NamedTuple(metadata),
+                (;
+                    q,
+                    ns,
+                    route_seam =
+                        :white_lindsey_decomposed_atom_gto_final_basis_route,
+                ),
             ),
-        ),
-        parent_axis_counts = axis_inputs.parent_axis_counts,
-        parent_axis_bundle_object = axis_inputs.parent_axis_bundle_object,
-    )
+            parent_axis_counts = axis_inputs.parent_axis_counts,
+            parent_axis_bundle_object = axis_inputs.parent_axis_bundle_object,
+        )
+    end
     inventory = inventory_source.inventory
     inventory.status === :available_white_lindsey_decomposed_unit_pair_inventory ||
         return _white_lindsey_atom_gto_route_result(
@@ -72,7 +89,12 @@ function _white_lindsey_decomposed_atom_gto_final_basis_route(
             metadata,
         )
 
-    layout = route_global_combined_gto_basis_layout(inventory, supplement_representation)
+    layout = _white_lindsey_atom_gto_timed_phase!(
+        phase_timings,
+        :combined_gto_basis_layout,
+    ) do
+        route_global_combined_gto_basis_layout(inventory, supplement_representation)
+    end
     layout.status === :available_route_global_combined_gto_basis_layout ||
         return _white_lindsey_atom_gto_route_result(
             :blocked_decomposed_atom_gto_final_basis_route,
@@ -96,35 +118,49 @@ function _white_lindsey_decomposed_atom_gto_final_basis_route(
             metadata,
         )
 
-    overlap = route_global_decomposed_wl_overlap_matrix(
-        inventory;
-        parent_axis_counts = axis_inputs.parent_axis_counts,
-        parent_axis_bundle_object = axis_inputs.parent_axis_bundle_object,
-        overlap_1d = axis_inputs.overlap_1d,
-    )
-    kinetic = route_global_decomposed_wl_kinetic_matrix(
-        inventory;
-        parent_axis_counts = axis_inputs.parent_axis_counts,
-        parent_axis_bundle_object = axis_inputs.parent_axis_bundle_object,
-        overlap_1d = axis_inputs.overlap_1d,
-        kinetic_1d = axis_inputs.kinetic_1d,
-    )
-    nuclear = route_global_electron_nuclear_by_center_matrices(
-        inventory;
-        parent_axis_counts = axis_inputs.parent_axis_counts,
-        parent_axis_bundle_object = axis_inputs.parent_axis_bundle_object,
-        coulomb_expansion = expansion,
-        center_records,
-    )
-    mixed = route_global_mixed_gto_blocks_from_decomposed_units(
-        inventory,
-        parent,
-        supplement_representation;
-        expansion,
-        center_records,
-        include_moment_blocks = build_density_density,
-        metadata,
-    )
+    overlap = _white_lindsey_atom_gto_timed_phase!(phase_timings, :overlap) do
+        route_global_decomposed_wl_overlap_matrix(
+            inventory;
+            parent_axis_counts = axis_inputs.parent_axis_counts,
+            parent_axis_bundle_object = axis_inputs.parent_axis_bundle_object,
+            overlap_1d = axis_inputs.overlap_1d,
+        )
+    end
+    kinetic = _white_lindsey_atom_gto_timed_phase!(phase_timings, :kinetic) do
+        route_global_decomposed_wl_kinetic_matrix(
+            inventory;
+            parent_axis_counts = axis_inputs.parent_axis_counts,
+            parent_axis_bundle_object = axis_inputs.parent_axis_bundle_object,
+            overlap_1d = axis_inputs.overlap_1d,
+            kinetic_1d = axis_inputs.kinetic_1d,
+        )
+    end
+    nuclear = _white_lindsey_atom_gto_timed_phase!(
+        phase_timings,
+        :electron_nuclear_by_center,
+    ) do
+        route_global_electron_nuclear_by_center_matrices(
+            inventory;
+            parent_axis_counts = axis_inputs.parent_axis_counts,
+            parent_axis_bundle_object = axis_inputs.parent_axis_bundle_object,
+            coulomb_expansion = expansion,
+            center_records,
+        )
+    end
+    mixed = _white_lindsey_atom_gto_timed_phase!(
+        phase_timings,
+        :mixed_gto_blocks,
+    ) do
+        route_global_mixed_gto_blocks_from_decomposed_units(
+            inventory,
+            parent,
+            supplement_representation;
+            expansion,
+            center_records,
+            include_moment_blocks = build_density_density,
+            metadata,
+        )
+    end
     mixed.status === :materialized_route_global_mixed_gto_blocks ||
         return _white_lindsey_atom_gto_route_result(
             :blocked_decomposed_atom_gto_final_basis_route,
@@ -148,15 +184,20 @@ function _white_lindsey_decomposed_atom_gto_final_basis_route(
             metadata,
         )
 
-    combined = route_global_combined_gto_one_electron_matrices(
-        layout;
-        overlap_result = overlap,
-        kinetic_result = kinetic,
-        electron_nuclear_by_center_results = nuclear,
-        gto_bundle = mixed,
-        mixed_gausslet_row_range = mixed.mixed_gausslet_row_range,
-        metadata,
-    )
+    combined = _white_lindsey_atom_gto_timed_phase!(
+        phase_timings,
+        :combined_one_electron_assembly,
+    ) do
+        route_global_combined_gto_one_electron_matrices(
+            layout;
+            overlap_result = overlap,
+            kinetic_result = kinetic,
+            electron_nuclear_by_center_results = nuclear,
+            gto_bundle = mixed,
+            mixed_gausslet_row_range = mixed.mixed_gausslet_row_range,
+            metadata,
+        )
+    end
     combined.status === :materialized_route_global_combined_gto_one_electron_matrices ||
         return _white_lindsey_atom_gto_route_result(
             :blocked_decomposed_atom_gto_final_basis_route,
@@ -180,7 +221,12 @@ function _white_lindsey_decomposed_atom_gto_final_basis_route(
             metadata,
         )
 
-    projection = route_global_combined_gto_final_basis_projection(combined; metadata)
+    projection = _white_lindsey_atom_gto_timed_phase!(
+        phase_timings,
+        :final_basis_projection,
+    ) do
+        route_global_combined_gto_final_basis_projection(combined; metadata)
+    end
     projection.status === :materialized_route_global_combined_gto_final_basis_projection ||
         return _white_lindsey_atom_gto_route_result(
             :blocked_decomposed_atom_gto_final_basis_route,
@@ -226,54 +272,59 @@ function _white_lindsey_decomposed_atom_gto_final_basis_route(
         metadata,
     )
 
-    position_x = route_global_decomposed_wl_position_x_matrix(
-        inventory;
-        parent_axis_counts = axis_inputs.parent_axis_counts,
-        overlap_1d = axis_inputs.overlap_1d,
-        position_1d = axis_inputs.position_1d,
-    )
-    position_y = route_global_decomposed_wl_position_y_matrix(
-        inventory;
-        parent_axis_counts = axis_inputs.parent_axis_counts,
-        overlap_1d = axis_inputs.overlap_1d,
-        position_1d = axis_inputs.position_1d,
-    )
-    position_z = route_global_decomposed_wl_position_z_matrix(
-        inventory;
-        parent_axis_counts = axis_inputs.parent_axis_counts,
-        overlap_1d = axis_inputs.overlap_1d,
-        position_1d = axis_inputs.position_1d,
-    )
-    x2_x = route_global_decomposed_wl_x2_x_matrix(
-        inventory;
-        parent_axis_counts = axis_inputs.parent_axis_counts,
-        overlap_1d = axis_inputs.overlap_1d,
-        x2_1d = axis_inputs.x2_1d,
-    )
-    x2_y = route_global_decomposed_wl_x2_y_matrix(
-        inventory;
-        parent_axis_counts = axis_inputs.parent_axis_counts,
-        overlap_1d = axis_inputs.overlap_1d,
-        x2_1d = axis_inputs.x2_1d,
-    )
-    x2_z = route_global_decomposed_wl_x2_z_matrix(
-        inventory;
-        parent_axis_counts = axis_inputs.parent_axis_counts,
-        overlap_1d = axis_inputs.overlap_1d,
-        x2_1d = axis_inputs.x2_1d,
-    )
-    moments = route_global_combined_gto_residual_moment_matrices(
-        layout;
-        position_x_result = position_x,
-        position_y_result = position_y,
-        position_z_result = position_z,
-        x2_x_result = x2_x,
-        x2_y_result = x2_y,
-        x2_z_result = x2_z,
-        gto_bundle = mixed,
-        mixed_gausslet_row_range = mixed.mixed_gausslet_row_range,
-        metadata,
-    )
+    moments = _white_lindsey_atom_gto_timed_phase!(
+        phase_timings,
+        :residual_moment_matrices,
+    ) do
+        position_x = route_global_decomposed_wl_position_x_matrix(
+            inventory;
+            parent_axis_counts = axis_inputs.parent_axis_counts,
+            overlap_1d = axis_inputs.overlap_1d,
+            position_1d = axis_inputs.position_1d,
+        )
+        position_y = route_global_decomposed_wl_position_y_matrix(
+            inventory;
+            parent_axis_counts = axis_inputs.parent_axis_counts,
+            overlap_1d = axis_inputs.overlap_1d,
+            position_1d = axis_inputs.position_1d,
+        )
+        position_z = route_global_decomposed_wl_position_z_matrix(
+            inventory;
+            parent_axis_counts = axis_inputs.parent_axis_counts,
+            overlap_1d = axis_inputs.overlap_1d,
+            position_1d = axis_inputs.position_1d,
+        )
+        x2_x = route_global_decomposed_wl_x2_x_matrix(
+            inventory;
+            parent_axis_counts = axis_inputs.parent_axis_counts,
+            overlap_1d = axis_inputs.overlap_1d,
+            x2_1d = axis_inputs.x2_1d,
+        )
+        x2_y = route_global_decomposed_wl_x2_y_matrix(
+            inventory;
+            parent_axis_counts = axis_inputs.parent_axis_counts,
+            overlap_1d = axis_inputs.overlap_1d,
+            x2_1d = axis_inputs.x2_1d,
+        )
+        x2_z = route_global_decomposed_wl_x2_z_matrix(
+            inventory;
+            parent_axis_counts = axis_inputs.parent_axis_counts,
+            overlap_1d = axis_inputs.overlap_1d,
+            x2_1d = axis_inputs.x2_1d,
+        )
+        route_global_combined_gto_residual_moment_matrices(
+            layout;
+            position_x_result = position_x,
+            position_y_result = position_y,
+            position_z_result = position_z,
+            x2_x_result = x2_x,
+            x2_y_result = x2_y,
+            x2_z_result = x2_z,
+            gto_bundle = mixed,
+            mixed_gausslet_row_range = mixed.mixed_gausslet_row_range,
+            metadata,
+        )
+    end
     moments.status === :materialized_route_global_combined_gto_residual_moment_matrices ||
         return _white_lindsey_atom_gto_route_result(
             :materialized_decomposed_atom_gto_final_basis_one_electron_route,
@@ -297,13 +348,18 @@ function _white_lindsey_decomposed_atom_gto_final_basis_route(
             metadata,
         )
 
-    residual_mwg = route_global_residual_gto_mwg_representation(
-        projection,
-        combined,
-        supplement_representation;
-        raw_moment_matrices = moments,
-        metadata,
-    )
+    residual_mwg = _white_lindsey_atom_gto_timed_phase!(
+        phase_timings,
+        :residual_mwg_representation,
+    ) do
+        route_global_residual_gto_mwg_representation(
+            projection,
+            combined,
+            supplement_representation;
+            raw_moment_matrices = moments,
+            metadata,
+        )
+    end
     residual_mwg.status === :materialized_route_global_residual_gto_mwg_representation ||
         return _white_lindsey_atom_gto_route_result(
             :materialized_decomposed_atom_gto_final_basis_one_electron_route,
@@ -327,12 +383,17 @@ function _white_lindsey_decomposed_atom_gto_final_basis_route(
             metadata,
         )
 
-    gausslet_density = route_global_decomposed_wl_density_density_matrix(
-        inventory;
-        parent_axis_counts = axis_inputs.parent_axis_counts,
-        parent_axis_bundle_object = axis_inputs.parent_axis_bundle_object,
-        coulomb_expansion = expansion,
-    )
+    gausslet_density = _white_lindsey_atom_gto_timed_phase!(
+        phase_timings,
+        :gausslet_density_density,
+    ) do
+        route_global_decomposed_wl_density_density_matrix(
+            inventory;
+            parent_axis_counts = axis_inputs.parent_axis_counts,
+            parent_axis_bundle_object = axis_inputs.parent_axis_bundle_object,
+            coulomb_expansion = expansion,
+        )
+    end
     gausslet_density.status === :materialized_route_global_density_density_interaction_matrix ||
         return _white_lindsey_atom_gto_route_result(
             :materialized_decomposed_atom_gto_final_basis_one_electron_route,
@@ -356,17 +417,22 @@ function _white_lindsey_decomposed_atom_gto_final_basis_route(
             metadata,
         )
 
-    final_density = route_global_combined_gto_final_basis_density_density_matrix(
-        combined,
-        projection;
-        gausslet_density_density_result = gausslet_density,
-        residual_mwg_representation = residual_mwg,
-        decomposed_inventory = inventory,
-        parent_axis_counts = axis_inputs.parent_axis_counts,
-        parent_axis_bundle_object = axis_inputs.parent_axis_bundle_object,
-        coulomb_expansion = expansion,
-        metadata,
-    )
+    final_density = _white_lindsey_atom_gto_timed_phase!(
+        phase_timings,
+        :final_basis_density_density,
+    ) do
+        route_global_combined_gto_final_basis_density_density_matrix(
+            combined,
+            projection;
+            gausslet_density_density_result = gausslet_density,
+            residual_mwg_representation = residual_mwg,
+            decomposed_inventory = inventory,
+            parent_axis_counts = axis_inputs.parent_axis_counts,
+            parent_axis_bundle_object = axis_inputs.parent_axis_bundle_object,
+            coulomb_expansion = expansion,
+            metadata,
+        )
+    end
     status =
         final_density.status ===
         :materialized_route_global_combined_gto_final_basis_density_density_matrix ?
@@ -396,6 +462,38 @@ function _white_lindsey_decomposed_atom_gto_final_basis_route(
         nothing;
         metadata,
     )
+end
+
+function _white_lindsey_atom_gto_timed_phase!(f::F, phase_timings, phase::Symbol) where {F}
+    isnothing(phase_timings) && return f()
+    local value
+    elapsed = @elapsed value = f()
+    push!(
+        phase_timings,
+        (;
+            phase,
+            elapsed_seconds = elapsed,
+            status = _white_lindsey_atom_gto_phase_status(value),
+            blocker = _white_lindsey_atom_gto_phase_blocker(value),
+        ),
+    )
+    return value
+end
+
+function _white_lindsey_atom_gto_phase_status(value)
+    hasproperty(value, :status) && return value.status
+    if hasproperty(value, :inventory) && hasproperty(value.inventory, :status)
+        return value.inventory.status
+    end
+    return :completed
+end
+
+function _white_lindsey_atom_gto_phase_blocker(value)
+    hasproperty(value, :blocker) && return value.blocker
+    if hasproperty(value, :inventory) && hasproperty(value.inventory, :blocker)
+        return value.inventory.blocker
+    end
+    return nothing
 end
 
 function _white_lindsey_atom_gto_parent_axis_inputs(
