@@ -418,16 +418,17 @@ specialization pressure in route summaries, retained-unit/factorized sidecars,
 or large staged object shapes rather than making the precompile fixture larger.
 
 A follow-up specialization-shape audit found the first concrete source of
-side-dependent compilation: the hot decomposed WL inventory result stores
-report-style summaries as tuples whose length is part of the concrete type. The
-side-7 synthetic workload compiles `unit_keys::NTuple{27,Symbol}` and
-27-element `unit_summaries`, while side-15 Be needs
-`unit_keys::NTuple{131,Symbol}` and 131-element summaries. The side-7 workload
-also compiles a 378-pair `pair_summaries` tuple that production side-15 omits.
-The production data itself is already vector/table based
-(`Vector{RetainedUnitRecord}` plus `UnitPairIndexTable`), so the next cleanup
-is to move detailed inventory summaries out of the hot result shape or make
-them vector/count based.
+side-dependent compilation: the hot decomposed WL inventory result stored
+report-style summaries as tuples whose length was part of the concrete type.
+That tuple-valued inventory report surface has now been retired from the hot
+result. `unit_keys` is vector-backed, `unit_summaries` is vector-backed, and
+`pair_summaries` is a count/status summary instead of a materialized
+`NTuple{N,...}`. Detailed pair range checks should use `unit_pairs` iteration or
+an explicit audit helper, not the hot result. The production data remains
+`Vector{RetainedUnitRecord}` plus `UnitPairIndexTable`. Remaining cold compile
+pressure is now more likely in large staged route result shapes, parent-axis
+context metadata, residual moment bundles, and factorized sidecar/result
+objects than in inventory-size tuple summaries.
 
 The current coarse timing split for the active tiny-box He RHF acceptance is
 reported by the test as diagnostics, not asserted as performance thresholds.

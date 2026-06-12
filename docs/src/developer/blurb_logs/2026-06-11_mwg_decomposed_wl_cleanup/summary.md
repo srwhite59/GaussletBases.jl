@@ -124,7 +124,11 @@ The current live He + GTO question is later in the stack:
   still encode retained-unit count in the type via tuple-valued `unit_keys` and
   `unit_summaries`; the side-7 precompile workload compiles a 27-unit result,
   while side-15 Be needs a 131-unit result. Small-inventory pair summaries also
-  compile a tuple-heavy shape that production side-15 omits.
+  compile a tuple-heavy shape that production side-15 omits;
+- the hot decomposed WL inventory result now uses vector-backed `unit_keys` and
+  `unit_summaries`, and `pair_summaries` is a compact count/status record
+  rather than an `NTuple{N,...}`. Detailed pair ranges are read from live
+  `unit_pairs` iteration instead of preserved as hot report data.
 
 ## Current Cleanup Rule
 

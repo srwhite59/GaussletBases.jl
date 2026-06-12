@@ -930,7 +930,7 @@ function _white_lindsey_decomposed_inventory_global_dimension(units, blocker)
 end
 
 function _white_lindsey_decomposed_inventory_unit_summaries(units)
-    return Tuple(
+    return [
         (;
             unit_key = unit.unit_key,
             unit_index = unit.unit_index,
@@ -944,35 +944,24 @@ function _white_lindsey_decomposed_inventory_unit_summaries(units)
             column_range_status = unit.column_range_status,
             column_range = unit.column_range,
         ) for unit in units
-    )
+    ]
 end
 
 function _white_lindsey_decomposed_inventory_pair_summaries(pairs, blocker)
-    length(pairs) > _WHITE_LINDSEY_COMPACT_PAIR_SUMMARY_LIMIT &&
-        return :omitted_large_decomposed_wl_pair_inventory
-    return Tuple(
-        (;
-            pair_key = pair.pair_key,
-            pair_index = pair.pair_index,
-            pair_family = pair.pair_family,
-            left_unit_key = pair.left_unit_key,
-            right_unit_key = pair.right_unit_key,
-            left_column_range =
-                isnothing(blocker) ? pair.left_unit.column_range : nothing,
-            right_column_range =
-                isnothing(blocker) ? pair.right_unit.column_range : nothing,
-            left_dimension =
-                isnothing(blocker) ? pair.left_unit.dimension : nothing,
-            right_dimension =
-                isnothing(blocker) ? pair.right_unit.dimension : nothing,
-        ) for pair in pairs
+    return (;
+        status = :omitted_from_hot_decomposed_wl_inventory,
+        pair_count = length(pairs),
+        detailed_pair_summaries_materialized = false,
+        detailed_pair_summaries_source =
+            :iterate_unit_pairs_or_call_explicit_audit_helper,
+        retained_ranges_available = isnothing(blocker),
     )
 end
 
 function _white_lindsey_decomposed_inventory_pair_keys(pairs)
     length(pairs) > _WHITE_LINDSEY_COMPACT_PAIR_SUMMARY_LIMIT &&
         return :omitted_large_decomposed_wl_pair_inventory
-    return Tuple(pair.pair_key for pair in pairs)
+    return [pair.pair_key for pair in pairs]
 end
 
 function _white_lindsey_decomposed_unit_pair_inventory_result(
@@ -1007,7 +996,7 @@ function _white_lindsey_decomposed_unit_pair_inventory_result(
         pair_count = length(pairs),
         retained_units = units,
         unit_pairs = pairs,
-        unit_keys = Tuple(unit.unit_key for unit in units),
+        unit_keys = [unit.unit_key for unit in units],
         pair_keys = _white_lindsey_decomposed_inventory_pair_keys(pairs),
         unit_summaries,
         pair_summaries,

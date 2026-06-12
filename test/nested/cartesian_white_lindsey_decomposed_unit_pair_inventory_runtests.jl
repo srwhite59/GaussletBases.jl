@@ -96,8 +96,16 @@ end
     @test inventory.term_compatibility.overlap
     @test inventory.term_compatibility.kinetic
     @test inventory.term_compatibility.electron_nuclear_by_center
-    @test inventory.pair_summaries[1].left_column_range == 1:3
-    @test inventory.pair_summaries[1].right_column_range == 4:6
+    @test inventory.unit_keys isa Vector{Symbol}
+    @test inventory.unit_keys == [:wld_inventory_left, :wld_inventory_right]
+    @test inventory.unit_summaries isa Vector
+    @test inventory.pair_summaries.status ==
+          :omitted_from_hot_decomposed_wl_inventory
+    @test inventory.pair_summaries.pair_count == 1
+    @test !inventory.pair_summaries.detailed_pair_summaries_materialized
+    first_pair = first(inventory.unit_pairs)
+    @test first_pair.left_unit.column_range == 1:3
+    @test first_pair.right_unit.column_range == 4:6
     @test !inventory.full_parent_window_cpb_used
     @test !inventory.direct_cartesian_product_assembly_used
     @test !inventory.ordinary_cartesian_ida_operators_used
@@ -156,10 +164,16 @@ end
     @test seed_inventory.term_compatibility.kinetic
     @test seed_inventory.term_compatibility.electron_nuclear_by_center
     @test all(summary -> summary.source_cpb_count == 1, seed_inventory.unit_summaries)
+    @test seed_inventory.unit_keys isa Vector{Symbol}
+    @test seed_inventory.unit_summaries isa Vector
+    @test seed_inventory.pair_summaries.status ==
+          :omitted_from_hot_decomposed_wl_inventory
+    @test seed_inventory.pair_summaries.pair_count == seed_inventory.pair_count
+    @test !seed_inventory.pair_summaries.detailed_pair_summaries_materialized
     @test all(
-        summary -> !isnothing(summary.left_column_range) &&
-                   !isnothing(summary.right_column_range),
-        seed_inventory.pair_summaries,
+        pair -> !isnothing(pair.left_unit.column_range) &&
+                !isnothing(pair.right_unit.column_range),
+        seed_inventory.unit_pairs,
     )
     @test seed_inventory.metadata.seed_inventory_source ==
           :white_lindsey_low_order_materialized_seed_inventory
