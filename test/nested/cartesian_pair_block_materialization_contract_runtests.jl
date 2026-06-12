@@ -1538,6 +1538,18 @@ end
           (3, 3, 3)
     @test pqs_cross_record.metadata.right_raw_product_source_summary.source_mode_dims ==
           (5, 4, 3)
+    @test pqs_cross_record.metadata.left_raw_product_source_retained_rule isa
+          CRPSForPairBlocks.PQSBoundaryProductModeRetainedRule
+    @test pqs_cross_record.metadata.right_raw_product_source_retained_rule isa
+          CRPSForPairBlocks.PQSBoundaryProductModeRetainedRule
+    @test pqs_cross_record.metadata.left_raw_product_source_retained_rule.retained_count ==
+          26
+    @test pqs_cross_record.metadata.right_raw_product_source_retained_rule.retained_count ==
+          54
+    @test pqs_cross_record.metadata.left_raw_product_source_retained_rule_summary.retained_count ==
+          26
+    @test pqs_cross_record.metadata.right_raw_product_source_retained_rule_summary.retained_count ==
+          54
     @test !pqs_cross_record.metadata.source_operator_blocks_materialized
     @test !pqs_cross_record.metadata.final_pair_blocks_materialized
     @test !materialization_summary.materialized
@@ -1599,6 +1611,50 @@ end
     @test pqs_overlap_result.metadata.source_operator_blocks_materialized
     @test !pqs_overlap_result.metadata.final_pair_blocks_materialized
     @test !pqs_overlap_result.metadata.shell_realization_materialized
+    @test pqs_overlap_result.metadata.left_raw_product_source_retained_rule ===
+          pqs_cross_record.metadata.left_raw_product_source_retained_rule
+    @test pqs_overlap_result.metadata.right_raw_product_source_retained_rule ===
+          pqs_cross_record.metadata.right_raw_product_source_retained_rule
+
+    left_retained_columns = CRPSForPairBlocks.retained_column_indices(
+        pqs_cross_record.metadata.left_raw_product_source_retained_rule,
+    )
+    right_retained_columns = CRPSForPairBlocks.retained_column_indices(
+        pqs_cross_record.metadata.right_raw_product_source_retained_rule,
+    )
+    retained_overlap_result =
+        CPBM.pqs_source_pair_retained_one_body_block(pqs_overlap_result)
+    wrapper_retained_overlap =
+        CPBM.pqs_source_pair_retained_overlap_block(
+            pqs_cross_record;
+            overlap_1d = (;
+                x = pqs_overlap_x,
+                y = pqs_overlap_y,
+                z = pqs_overlap_z,
+            ),
+        )
+    @test retained_overlap_result.term == :retained_source_overlap
+    @test size(retained_overlap_result.block) == (26, 54)
+    @test retained_overlap_result.block ≈
+          pqs_overlap_result.block[left_retained_columns, right_retained_columns]
+    @test wrapper_retained_overlap.block ≈ retained_overlap_result.block
+    @test retained_overlap_result.materialized
+    @test retained_overlap_result.source_operator_blocks_materialized
+    @test !retained_overlap_result.final_pair_blocks_materialized
+    @test !retained_overlap_result.operator_blocks_materialized
+    @test !retained_overlap_result.hamiltonian_data_materialized
+    @test !retained_overlap_result.artifacts_materialized
+    @test retained_overlap_result.metadata.block_space == :retained_pqs_source_modes
+    @test retained_overlap_result.metadata.source_block_space ==
+          :raw_product_source_modes
+    @test retained_overlap_result.metadata.source_space_input_used
+    @test retained_overlap_result.metadata.retained_transform_kind ==
+          :source_mode_column_selector
+    @test retained_overlap_result.metadata.left_retained_count == 26
+    @test retained_overlap_result.metadata.right_retained_count == 54
+    @test retained_overlap_result.metadata.retained_source_operator_block_materialized
+    @test !retained_overlap_result.metadata.shell_realization_materialized
+    @test !retained_overlap_result.metadata.lowdin_cleanup_used
 
     shell_bridge =
         CPBM.pqs_source_pair_shell_realization_bridge_summary(pqs_overlap_result)
@@ -1878,6 +1934,30 @@ end
     )
     @test kinetic_result.metadata.source_operator_blocks_materialized
     @test !kinetic_result.metadata.final_pair_blocks_materialized
+
+    retained_kinetic_result =
+        CPBM.pqs_source_pair_retained_one_body_block(
+            kinetic_result,
+            pqs_cross_record.metadata.left_raw_product_source_retained_rule,
+            pqs_cross_record.metadata.right_raw_product_source_retained_rule,
+        )
+    wrapper_retained_kinetic =
+        CPBM.pqs_source_pair_retained_kinetic_block(
+            pqs_cross_record;
+            overlap_1d = (; x = pqs_overlap_x, y = pqs_overlap_y, z = pqs_overlap_z),
+            kinetic_1d = (pqs_kinetic_x, pqs_kinetic_y, pqs_kinetic_z),
+        )
+    @test retained_kinetic_result.term == :retained_source_kinetic
+    @test size(retained_kinetic_result.block) == (26, 54)
+    @test retained_kinetic_result.block ≈
+          kinetic_result.block[left_retained_columns, right_retained_columns]
+    @test wrapper_retained_kinetic.block ≈ retained_kinetic_result.block
+    @test retained_kinetic_result.metadata.block_space == :retained_pqs_source_modes
+    @test retained_kinetic_result.metadata.source_block_term == :source_kinetic
+    @test retained_kinetic_result.metadata.source_space_input_used
+    @test retained_kinetic_result.metadata.retained_source_operator_block_materialized
+    @test !retained_kinetic_result.metadata.shell_realization_materialized
+    @test !retained_kinetic_result.metadata.lowdin_cleanup_used
 
     bad_pqs_overlap_x = zeros(Float64, left_source_dims[1] + 1, right_source_dims[1])
     @test_throws ArgumentError CPBM.pqs_source_pair_overlap_block(

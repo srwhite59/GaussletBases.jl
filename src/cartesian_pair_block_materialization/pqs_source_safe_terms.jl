@@ -251,6 +251,120 @@ function pqs_source_pair_kinetic_blocks(
     )
 end
 
+"""
+    pqs_source_pair_retained_one_body_block(source_result, left_rule, right_rule)
+
+Contract a materialized PQS/PQS raw source-space one-body block to retained
+PQS source modes by applying the retained source-mode selector columns:
+`O_retained = O_source[left_columns, right_columns]`.
+
+This is still source-mode retained block construction. It does not materialize
+shell rows, shell projection, Lowdin cleanup, final shell-realized pair
+blocks, IDA data, Hamiltonians, exports, or artifacts.
+"""
+function pqs_source_pair_retained_one_body_block(
+    source_result::PairBlockMaterializationResult,
+    left_rule::CRPS.PQSBoundaryProductModeRetainedRule,
+    right_rule::CRPS.PQSBoundaryProductModeRetainedRule,
+)
+    _assert_pqs_source_pair_retained_source_result(source_result)
+    _assert_pqs_source_pair_retained_rule(
+        source_result,
+        left_rule,
+        :left,
+        size(source_result.block, 1),
+    )
+    _assert_pqs_source_pair_retained_rule(
+        source_result,
+        right_rule,
+        :right,
+        size(source_result.block, 2),
+    )
+
+    left_columns = CRPS.retained_column_indices(left_rule)
+    right_columns = CRPS.retained_column_indices(right_rule)
+    retained_block = Matrix{Float64}(source_result.block[left_columns, right_columns])
+
+    return PairBlockMaterializationResult(
+        _retained_pqs_source_term(source_result.term),
+        source_result.pair_key,
+        retained_block,
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        merge(
+            source_result.metadata,
+            (;
+                source_block_term = source_result.term,
+                source_block_space = source_result.metadata.block_space,
+                block_space = :retained_pqs_source_modes,
+                retained_transform_kind = :source_mode_column_selector,
+                left_retained_rule_kind = left_rule.retained_rule_kind,
+                right_retained_rule_kind = right_rule.retained_rule_kind,
+                left_retained_count = left_rule.retained_count,
+                right_retained_count = right_rule.retained_count,
+                left_retained_column_count = length(left_columns),
+                right_retained_column_count = length(right_columns),
+                retained_source_operator_block_materialized = true,
+                source_space_input_used = true,
+                source_operator_blocks_materialized = true,
+                final_pair_blocks_materialized = false,
+                shell_realization_materialized = false,
+                lowdin_cleanup_used = false,
+                operator_blocks_materialized = false,
+                hamiltonian_data_materialized = false,
+                artifacts_materialized = false,
+            ),
+        ),
+    )
+end
+
+function pqs_source_pair_retained_one_body_block(
+    source_result::PairBlockMaterializationResult,
+)
+    return pqs_source_pair_retained_one_body_block(
+        source_result,
+        _pqs_source_result_retained_rule(source_result, :left),
+        _pqs_source_result_retained_rule(source_result, :right),
+    )
+end
+
+"""
+    pqs_source_pair_retained_overlap_block(record; overlap_1d)
+
+Materialize a raw PQS/PQS source overlap block and contract it to retained
+source modes by the retained source-mode boundary selector.
+"""
+function pqs_source_pair_retained_overlap_block(
+    record::PairBlockMaterializationRecord;
+    overlap_1d,
+)
+    source_result = pqs_source_pair_overlap_block(record; overlap_1d)
+    return pqs_source_pair_retained_one_body_block(source_result)
+end
+
+"""
+    pqs_source_pair_retained_kinetic_block(record; overlap_1d, kinetic_1d)
+
+Materialize a raw PQS/PQS source kinetic block and contract it to retained
+source modes by the retained source-mode boundary selector.
+"""
+function pqs_source_pair_retained_kinetic_block(
+    record::PairBlockMaterializationRecord;
+    overlap_1d,
+    kinetic_1d,
+)
+    source_result = pqs_source_pair_kinetic_block(
+        record;
+        overlap_1d,
+        kinetic_1d,
+    )
+    return pqs_source_pair_retained_one_body_block(source_result)
+end
+
 function _source_position_term(axis)
     return _pqs_source_axis_safe_term_descriptor(:position, axis).source_term
 end
@@ -496,6 +610,8 @@ function _pqs_source_pair_product_result(
                 right_source_mode_dims = right_dims,
                 left_source_mode_count = left_count,
                 right_source_mode_count = right_count,
+                left_source_mode_ordering = ordering,
+                right_source_mode_ordering = ordering,
                 transform_contract_keys =
                     _pqs_source_pair_metadata_value(
                         record,
@@ -507,6 +623,26 @@ function _pqs_source_pair_product_result(
                         record,
                         :source_contract_keys,
                         (; left = nothing, right = nothing),
+                    ),
+                left_raw_product_source_retained_rule =
+                    _pqs_source_pair_metadata_value(
+                        record,
+                        :left_raw_product_source_retained_rule,
+                    ),
+                right_raw_product_source_retained_rule =
+                    _pqs_source_pair_metadata_value(
+                        record,
+                        :right_raw_product_source_retained_rule,
+                    ),
+                left_raw_product_source_retained_rule_summary =
+                    _pqs_source_pair_metadata_value(
+                        record,
+                        :left_raw_product_source_retained_rule_summary,
+                    ),
+                right_raw_product_source_retained_rule_summary =
+                    _pqs_source_pair_metadata_value(
+                        record,
+                        :right_raw_product_source_retained_rule_summary,
                     ),
                 transform_paths = record.transform_path,
                 realization_paths = record.realization_path,
@@ -528,6 +664,80 @@ function _pqs_source_pair_metadata_value(
     default = nothing,
 )
     return haskey(record.metadata, key) ? getfield(record.metadata, key) : default
+end
+
+function _retained_pqs_source_term(term::Symbol)
+    return Symbol("retained_", String(term))
+end
+
+function _assert_pqs_source_pair_retained_source_result(
+    source_result::PairBlockMaterializationResult,
+)
+    source_result.materialized ||
+        throw(ArgumentError("PQS retained source block requires a materialized source result"))
+    source_result.source_operator_blocks_materialized ||
+        throw(
+            ArgumentError(
+                "PQS retained source block requires a source-space operator block input",
+            ),
+        )
+    haskey(source_result.metadata, :block_space) &&
+        source_result.metadata.block_space === :raw_product_source_modes ||
+        throw(
+            ArgumentError(
+                "PQS retained source block requires raw_product_source_modes input",
+            ),
+        )
+    return nothing
+end
+
+function _assert_pqs_source_pair_retained_rule(
+    source_result::PairBlockMaterializationResult,
+    rule::CRPS.PQSBoundaryProductModeRetainedRule,
+    side::Symbol,
+    source_axis_count::Int,
+)
+    dims_key =
+        side === :left ? :left_source_mode_dims :
+        side === :right ? :right_source_mode_dims :
+        throw(ArgumentError("PQS retained source block side must be :left or :right"))
+    ordering_key =
+        side === :left ? :left_source_mode_ordering :
+        side === :right ? :right_source_mode_ordering :
+        throw(ArgumentError("PQS retained source block side must be :left or :right"))
+    haskey(source_result.metadata, dims_key) ||
+        throw(ArgumentError("PQS retained source block is missing $(dims_key)"))
+    haskey(source_result.metadata, ordering_key) ||
+        throw(ArgumentError("PQS retained source block is missing $(ordering_key)"))
+    getfield(source_result.metadata, dims_key) == rule.source_mode_dims ||
+        throw(ArgumentError("PQS retained source rule dims do not match $(side) source"))
+    getfield(source_result.metadata, ordering_key) === rule.source_mode_ordering ||
+        throw(
+            ArgumentError(
+                "PQS retained source rule ordering does not match $(side) source",
+            ),
+        )
+    all(column -> 1 <= column <= source_axis_count, CRPS.retained_column_indices(rule)) ||
+        throw(ArgumentError("PQS retained source rule columns are out of source range"))
+    rule.retained_count == length(CRPS.retained_column_indices(rule)) ||
+        throw(ArgumentError("PQS retained source rule count does not match columns"))
+    return nothing
+end
+
+function _pqs_source_result_retained_rule(
+    source_result::PairBlockMaterializationResult,
+    side::Symbol,
+)
+    key =
+        side === :left ? :left_raw_product_source_retained_rule :
+        side === :right ? :right_raw_product_source_retained_rule :
+        throw(ArgumentError("PQS source result retained-rule side must be :left or :right"))
+    haskey(source_result.metadata, key) ||
+        throw(ArgumentError("PQS source result is missing $(key)"))
+    rule = getfield(source_result.metadata, key)
+    rule isa CRPS.PQSBoundaryProductModeRetainedRule ||
+        throw(ArgumentError("PQS source result has unavailable $(key)"))
+    return rule
 end
 
 function _assert_pqs_source_pair_overlap_record(record::PairBlockMaterializationRecord)

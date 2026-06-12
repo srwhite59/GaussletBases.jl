@@ -17,14 +17,20 @@ function pair_block_materialization_plan(
         _pair_block_materialization_transform_contract_lookup(
             pair_operator_plan.transform_contract_plan,
         )
+    length(unit_pairs) == length(pair_operator_records) ||
+        throw(
+            ArgumentError(
+                "pair-block materialization requires matching pair/operator record counts",
+            ),
+        )
     records = Tuple(
         _pair_block_materialization_record(
             record,
-            unit_pairs[index],
+            unit_pair,
             transform_lookup,
             policy,
         )
-        for (index, record) in pairs(pair_operator_records)
+        for (record, unit_pair) in zip(pair_operator_records, unit_pairs)
     )
     plan_summary =
         _pair_block_materialization_plan_summary(policy, pair_operator_plan, records)
@@ -175,6 +181,14 @@ function _pqs_source_pair_preflight_status(
         :blocked_missing_raw_product_source_plan,
         :missing_right_raw_product_source_plan,
     )
+    _raw_product_source_retained_rule_available(left_contract) || return (
+        :blocked_missing_raw_product_source_retained_rule,
+        :missing_left_raw_product_source_retained_rule,
+    )
+    _raw_product_source_retained_rule_available(right_contract) || return (
+        :blocked_missing_raw_product_source_retained_rule,
+        :missing_right_raw_product_source_retained_rule,
+    )
 
     left_summary.source_mode_ordering == right_summary.source_mode_ordering || return (
         :blocked_incompatible_raw_product_source_ordering,
@@ -212,6 +226,25 @@ function _raw_product_source_facts_complete(summary)
         isnothing(getfield(summary, field)) && return false
     end
     return true
+end
+
+function _raw_product_source_retained_rule(contract)
+    isnothing(contract) && return nothing
+    haskey(contract.metadata, :raw_product_source_retained_rule) ||
+        return nothing
+    return contract.metadata.raw_product_source_retained_rule
+end
+
+function _raw_product_source_retained_rule_summary(contract)
+    isnothing(contract) && return nothing
+    haskey(contract.metadata, :raw_product_source_retained_rule_summary) ||
+        return nothing
+    return contract.metadata.raw_product_source_retained_rule_summary
+end
+
+function _raw_product_source_retained_rule_available(contract)
+    rule = _raw_product_source_retained_rule(contract)
+    return rule isa CRPS.PQSBoundaryProductModeRetainedRule
 end
 
 function _transform_contract_key(contract)
@@ -293,6 +326,14 @@ function _pair_block_materialization_record_metadata(
                 _raw_product_source_plan_status(right_contract),
             left_raw_product_source_summary = left_summary,
             right_raw_product_source_summary = right_summary,
+            left_raw_product_source_retained_rule =
+                _raw_product_source_retained_rule(left_contract),
+            right_raw_product_source_retained_rule =
+                _raw_product_source_retained_rule(right_contract),
+            left_raw_product_source_retained_rule_summary =
+                _raw_product_source_retained_rule_summary(left_contract),
+            right_raw_product_source_retained_rule_summary =
+                _raw_product_source_retained_rule_summary(right_contract),
             left_source_mode_dims =
                 _raw_product_source_facts_complete(left_summary) ?
                 left_summary.source_mode_dims :
