@@ -10483,6 +10483,169 @@ function _pqs_source_box_route_driver_complete_core_shell_h1_j_missing_inputs(;
     return Tuple(missing)
 end
 
+function _pqs_source_box_route_driver_complete_core_shell_source_plan_payload(
+    parent,
+    transforms,
+    recipe,
+)
+    recipe.route_family === :pqs_source_box || return (;
+        status = :not_applicable_complete_core_shell_source_plan_non_pqs_route,
+        blocker = nothing,
+        region_plan = nothing,
+        source_plan = nothing,
+        coulomb_expansion = nothing,
+        missing_inputs = (),
+        summary = (;
+            status = :not_applicable_complete_core_shell_source_plan_non_pqs_route,
+            blocker = nothing,
+            region_plan_status = :not_applicable,
+            source_plan_status = :not_applicable,
+        ),
+    )
+
+    terminal_route_state =
+        hasproperty(transforms, :terminal_route_state) ?
+        transforms.terminal_route_state :
+        nothing
+    shellification_plan =
+        !isnothing(terminal_route_state) &&
+        hasproperty(terminal_route_state, :shellification_plan) ?
+        terminal_route_state.shellification_plan :
+        nothing
+    lowering_plan =
+        !isnothing(terminal_route_state) &&
+        hasproperty(terminal_route_state, :lowering_plan) ?
+        terminal_route_state.lowering_plan :
+        nothing
+    parent_axis_bundle_object =
+        hasproperty(parent, :parent_axis_bundle_object) ?
+        parent.parent_axis_bundle_object :
+        nothing
+
+    missing_inputs = Symbol[]
+    shellification_plan isa CartesianShellification.ShellificationPlan ||
+        push!(missing_inputs, :terminal_shellification_plan)
+    lowering_plan isa CartesianTerminalLowering.TerminalLoweringPlan ||
+        push!(missing_inputs, :terminal_lowering_plan)
+    isnothing(parent_axis_bundle_object) &&
+        push!(missing_inputs, :parent_axis_bundle_object)
+    if !isempty(missing_inputs)
+        status = :blocked_missing_complete_core_shell_source_plan_inputs
+        return (;
+            status,
+            blocker = :missing_complete_core_shell_source_plan_inputs,
+            region_plan = nothing,
+            source_plan = nothing,
+            coulomb_expansion = nothing,
+            missing_inputs = Tuple(missing_inputs),
+            summary = (;
+                status,
+                blocker = :missing_complete_core_shell_source_plan_inputs,
+                region_plan_status = :not_available,
+                source_plan_status = :not_available,
+            ),
+        )
+    end
+
+    expansion = coulomb_gaussian_expansion(doacc = false)
+    bond_axis =
+        hasproperty(parent, :bond_axis) && parent.bond_axis in (:x, :y, :z) ?
+        parent.bond_axis :
+        :z
+    metadata = (;
+        source = :pqs_source_box_route_driver_complete_core_shell_source_plan_payload,
+        route_kind = recipe.route_kind,
+        route_family = recipe.route_family,
+        shellification_backed_geometry = true,
+        explicit_box_bridge = false,
+    )
+    try
+        region_plan = pqs_multilayer_shell_region_plan(
+            shellification_plan,
+            lowering_plan;
+            metadata,
+        )
+        if region_plan.status !== :available_pqs_multilayer_shell_region_plan
+            status = :blocked_complete_core_shell_region_plan
+            return (;
+                status,
+                blocker = region_plan.blocker,
+                region_plan = nothing,
+                source_plan = nothing,
+                coulomb_expansion = expansion,
+                missing_inputs = (:pqs_multilayer_shell_region_plan,),
+                summary = (;
+                    status,
+                    blocker = region_plan.blocker,
+                    region_plan_status = region_plan.status,
+                    source_plan_status = :not_available,
+                ),
+            )
+        end
+
+        source_plan = pqs_multilayer_shell_source_plan(
+            parent_axis_bundle_object,
+            region_plan;
+            bond_axis,
+            term_coefficients = Float64.(expansion.coefficients),
+            metadata,
+        )
+        source_plan.status === :available_pqs_multilayer_shell_source_plan ||
+            return (;
+                status = :blocked_complete_core_shell_source_plan,
+                blocker = source_plan.blocker,
+                region_plan,
+                source_plan = nothing,
+                coulomb_expansion = expansion,
+                missing_inputs = (:pqs_multilayer_shell_source_plan,),
+                summary = (;
+                    status = :blocked_complete_core_shell_source_plan,
+                    blocker = source_plan.blocker,
+                    region_plan_status = region_plan.status,
+                    source_plan_status = source_plan.status,
+                ),
+            )
+
+        return (;
+            status = :available_complete_core_shell_source_plan_payload,
+            blocker = nothing,
+            region_plan,
+            source_plan,
+            coulomb_expansion = expansion,
+            missing_inputs = (),
+            summary = (;
+                status = :available_complete_core_shell_source_plan_payload,
+                blocker = nothing,
+                region_plan_status = region_plan.status,
+                source_plan_status = source_plan.status,
+                source_kind = source_plan.source_kind,
+                layer_count = source_plan.layer_count,
+                core_support_count = length(source_plan.core_support_indices),
+                shell_support_count = length(source_plan.shell_support_indices),
+            ),
+        )
+    catch error
+        error isa ArgumentError || rethrow()
+        status = :blocked_complete_core_shell_source_plan_error
+        return (;
+            status,
+            blocker = :complete_core_shell_source_plan_error,
+            region_plan = nothing,
+            source_plan = nothing,
+            coulomb_expansion = expansion,
+            missing_inputs = (:pqs_multilayer_shell_region_plan,
+                              :pqs_multilayer_shell_source_plan),
+            summary = (;
+                status,
+                blocker = :complete_core_shell_source_plan_error,
+                region_plan_status = :blocked_argument_error,
+                source_plan_status = :blocked_argument_error,
+                error_message = sprint(showerror, error),
+            ),
+        )
+    end
+end
+
 function _pqs_source_box_route_driver_blocked_complete_core_shell_h1_j_payload(;
     route_family,
     status,
@@ -10639,13 +10802,25 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
     contract = _pqs_source_box_route_driver_contract_metadata(recipe)
     low_order_assembly =
         _pqs_source_box_route_driver_assembly_stage_low_order_summary(pairs)
+    complete_core_shell_source_plan_payload =
+        _pqs_source_box_route_driver_complete_core_shell_source_plan_payload(
+            parent,
+            transforms,
+            recipe,
+        )
     complete_core_shell_h1_j_diagnostic_payload =
         _pqs_source_box_route_driver_complete_core_shell_h1_j_diagnostic_payload(
             ;
             route_family = route_skeleton.route_family,
+            region_plan = complete_core_shell_source_plan_payload.region_plan,
+            source_plan = complete_core_shell_source_plan_payload.source_plan,
+            coulomb_expansion =
+                complete_core_shell_source_plan_payload.coulomb_expansion,
             metadata = (;
                 source = :cartesian_assembly,
                 route_kind = recipe.route_kind,
+                complete_core_shell_source_plan_status =
+                    complete_core_shell_source_plan_payload.status,
             ),
         )
 
