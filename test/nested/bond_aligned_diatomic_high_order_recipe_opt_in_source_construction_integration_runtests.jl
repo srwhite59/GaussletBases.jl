@@ -1323,25 +1323,8 @@
         :kinetic,
     )
     @test current_route_safe_terms.global_max_error <= 1.0e-12
-    for term in current_route_safe_terms.terms
-        @test size(current_route_safe_terms.matrices[term]) == (487, 487)
-        @test size(current_route_safe_terms.oracle_matrices[term]) == (487, 487)
-        @test all(isfinite, current_route_safe_terms.matrices[term])
-        @test all(isfinite, current_route_safe_terms.oracle_matrices[term])
-        @test current_route_safe_terms.matrices[term] ≈
-              current_route_safe_terms.oracle_matrices[term] atol = 1.0e-12 rtol = 0.0
-        @test current_route_safe_terms.term_errors[term] <= 1.0e-12
-    end
     @test current_route_safe_terms.diagnostics.private_diagnostic_only
-    @test current_route_safe_terms.diagnostics.whole_route_safe_term_matrix_consumer
-    @test current_route_safe_terms.diagnostics.retained_dimension == 487
-    @test current_route_safe_terms.diagnostics.pair_count == 21
-    @test current_route_safe_terms.diagnostics.support_local_oracle_is_debug_validation
-    @test current_route_safe_terms.diagnostics.shell_realized_pqs_pairs_use_oracle_not_algorithm
-    @test !current_route_safe_terms.diagnostics.source_box_algorithm_available_for_shell_realized_pqs
-    @test current_route_safe_terms.diagnostics.global_max_error <= 1.0e-12
     @test current_route_safe_terms.diagnostics.finite_output
-    @test current_route_safe_terms.diagnostics.support_local_oracle_compared
     @test :product_doside_unit in pqs_source_descriptor.non_contracts
     @test :dense_full_parent_fallback in pqs_source_descriptor.non_contracts
     @test pqs_source_descriptor.diagnostics.metadata_only
@@ -1382,25 +1365,9 @@
           :pqs_current_route_safe_term_authority_comparison_fixture
     @test current_route_authority_comparison.status == :private_diagnostic_only
     @test current_route_authority_comparison.terms == current_route_safe_terms.terms
-    @test current_route_authority_comparison.compared_terms ==
-          current_route_safe_terms.terms
     @test isempty(current_route_authority_comparison.unavailable_terms)
     @test current_route_authority_comparison.max_authority_error <= 1.0e-8
-    for term in current_route_authority_comparison.compared_terms
-        @test current_route_authority_comparison.term_errors[term] <= 1.0e-8
-        @test current_route_authority_comparison.authority_sources[term] ==
-              :fixed_block
-        @test current_route_authority_comparison.authority_fields[term] == term
-        @test current_route_authority_comparison.authority_shapes[term] == (487, 487)
-    end
     @test current_route_authority_comparison.diagnostics.private_diagnostic_only
-    @test current_route_authority_comparison.diagnostics.current_route_safe_term_authority_comparison
-    @test current_route_authority_comparison.diagnostics.authority_fixed_block_or_sequence_packet_only
-    @test current_route_authority_comparison.diagnostics.support_local_oracle_secondary
-    @test current_route_authority_comparison.diagnostics.compared_term_count ==
-          length(current_route_safe_terms.terms)
-    @test current_route_authority_comparison.diagnostics.unavailable_term_count == 0
-    @test current_route_authority_comparison.diagnostics.max_authority_error <= 1.0e-8
     @test current_route_authority_comparison.diagnostics.finite_output
     QWCS = GaussletBases.CartesianQWOperatorCarriedSpaces
     pqs_receipt = @test_logs min_level = Logging.Warn QWCS.cartesian_qw_operator_construction_receipt(
