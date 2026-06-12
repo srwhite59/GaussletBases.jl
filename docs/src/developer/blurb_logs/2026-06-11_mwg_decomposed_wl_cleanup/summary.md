@@ -73,8 +73,9 @@ The current live He + GTO question is later in the stack:
 - the Fig. 8 AHGBS-9 S-only `n_s = 5`, `d = 0.3` reproduction now matches the
   447-function structure and is within about `0.558 mHa` of the plotted energy,
   which is close enough to stop that reproduction audit for now;
-- the next scientific target is `n_s = 7` He RHF accuracy, still using the
-  Fig. 8 AHGBS-9 S-only family.
+- the `n_s = 7` He RHF probe is now in the microhartree range against Fig. 8,
+  so the next scientific target is diatomic H2 at the restricted closed-shell
+  HF level.
 
 ## Current Cleanup Rule
 

@@ -323,10 +323,16 @@ is about `-2.862102144533723` Hartree, while the Fig. 8 table gives
 enough for the current reproduction audit and is much smaller than the earlier
 cc-pVTZ side13 diagnostic discrepancy. The `n_s = 5` Fig. 8 reproduction is
 therefore recorded as structurally matched and scientifically useful, but not a
-permanent acceptance test. The next accuracy target is the Fig. 8 `n_s = 7`
-He RHF family, with `d = 0.15` as the first useful point because the table
-reports energy `-2.8616793497179782` Hartree and signed error about
-`+6.458942607424e-7` Hartree there.
+permanent acceptance test. The follow-up old nested/QW `n_s = 7` He RHF
+diagnostic ran `d = 0.15`, `0.10`, and `0.20` with AHGBS-9 S-only. All three
+were sub-mH relative to their Fig. 8 rows. In this repo probe, `d = 0.10` was
+closest: final dimension 1897, gausslet/residual counts 1869/28, RHF total
+`-2.861673961528321` Hartree, error `+1.716095156645281e-6` Hartree versus the
+Fig. 8 row, and error `+6.034083917860755e-6` Hartree versus the He HF
+reference. This is accurate enough to close the immediate atomic He accuracy
+check. The next physics target is diatomic H2 at restricted closed-shell HF
+level, starting from the documented old nested/QW `R = 4.0` reference line
+before attempting broader decomposed route generalization.
 
 The current coarse timing split for the active tiny-box He RHF acceptance is
 reported by the test as diagnostics, not asserted as performance thresholds.
