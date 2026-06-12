@@ -1,5 +1,6 @@
 using Test
 using GaussletBases
+using LinearAlgebra: I
 
 const CPBM = GaussletBases.CartesianPairBlockMaterialization
 const CPOPForPairBlocks = GaussletBases.CartesianPairOperatorPlans
@@ -3111,6 +3112,61 @@ end
     @test !retained_overlap_matrix.lowdin_cleanup_used
     @test !retained_kinetic_matrix.shell_realization_materialized
     @test !retained_kinetic_matrix.lowdin_cleanup_used
+
+    final_basis_source_box = CPBForPairBlocks.filled_cpb(
+        1:5,
+        1:5,
+        1:5;
+        role = :pqs_final_basis_contract_source,
+    )
+    final_basis_raw_plan = CRPSForPairBlocks.raw_product_box_plan(
+        final_basis_source_box;
+        source_mode_dims = (5, 5, 5),
+        source_key = :pqs_final_basis_contract_source,
+    )
+    final_basis_retained_rule =
+        CRPSForPairBlocks.pqs_boundary_product_mode_retained_rule(
+            final_basis_raw_plan,
+        )
+    final_basis_boundary_count = final_basis_retained_rule.retained_count
+    final_basis_identity = Matrix{Float64}(
+        I,
+        final_basis_boundary_count,
+        final_basis_boundary_count,
+    )
+    final_basis = CPBM.pqs_source_shell_realization_final_basis(
+        final_basis_raw_plan,
+        final_basis_retained_rule;
+        shell_support_indices = collect(1:final_basis_boundary_count),
+        shell_overlap = final_basis_identity,
+        shell_projection = final_basis_identity,
+        lowdin_cleanup = final_basis_identity,
+    )
+    @test final_basis.object_kind == :pqs_source_shell_realization_final_basis
+    @test final_basis.status == :available_pqs_shell_realization_final_basis
+    @test final_basis.blocker === nothing
+    @test final_basis.boundary_source_mode_count == 98
+    @test final_basis.final_retained_count == 98
+    @test size(final_basis.final_shell_coefficients) == (98, 98)
+    @test final_basis.final_shell_coefficients == final_basis_identity
+    @test final_basis.final_overlap == final_basis_identity
+    @test final_basis.projected_boundary_overlap_diagnostics.rank == 98
+    @test final_basis.final_overlap_diagnostics.rank == 98
+    @test final_basis.final_overlap_identity_error == 0.0
+    @test final_basis.final_overlap_is_identity
+    @test final_basis.shell_realization_materialized
+    @test final_basis.lowdin_cleanup_used
+    @test !final_basis.one_body_operator_materialized
+    @test !final_basis.operator_blocks_materialized
+    @test final_basis.one_body_operator_blocker ==
+          :missing_pqs_shell_projected_one_body_operator_materialization
+    @test !final_basis.h1_solve_materialized
+    @test !final_basis.ida_data_materialized
+    @test !final_basis.rhf_materialized
+    @test !final_basis.driver_route_materialized
+    @test !final_basis.artifacts_materialized
+    @test !final_basis.metadata.lowdin_alone_used_as_raw_to_final_transform
+    @test !final_basis.metadata.current_route_safe_term_matrices_used
 
     overlap_bridge_batch =
         CPBM.pqs_source_pair_shell_realization_bridge_summary(selector_batch_overlap)

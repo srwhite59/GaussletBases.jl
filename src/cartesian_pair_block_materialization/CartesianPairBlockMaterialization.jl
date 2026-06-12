@@ -94,6 +94,7 @@ export PairBlockMaterializationPolicy,
        pqs_source_pair_retained_electron_nuclear_by_center_block,
        pqs_source_pair_retained_centered_electron_nuclear_by_center_block,
        pqs_retained_source_one_body_matrix,
+       pqs_source_shell_realization_final_basis,
        pqs_source_pair_one_body_block,
        pqs_source_pair_one_body_blocks,
        pqs_source_pair_shell_realization_bridge_summary,
@@ -238,6 +239,11 @@ export PairBlockMaterializationPolicy,
 # pqs_source_shell_bridge.jl
 #     Metadata-only bridge summaries for future PQS shell realization.
 #
+# pqs_source_shell_final_basis.jl
+#     First PQS shell-realization final-basis object. It materializes the
+#     shell projection plus Lowdin final basis and overlap/isometry diagnostics,
+#     but no one-body operators.
+#
 # pqs_source_final_readiness.jl
 #     Metadata-only readiness summaries for future final PQS pair blocks.
 #
@@ -324,6 +330,7 @@ include("one_body_global_electron_nuclear.jl")
 include("direct_overlap.jl")
 include("pqs_source_axis_transforms.jl")
 include("pqs_source_safe_terms.jl")
+include("pqs_source_shell_final_basis.jl")
 include("pqs_source_shell_bridge.jl")
 include("pqs_source_final_readiness.jl")
 include("white_lindsey_adapter_summary.jl")
