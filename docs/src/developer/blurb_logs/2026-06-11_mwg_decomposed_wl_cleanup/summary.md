@@ -85,7 +85,15 @@ The current live He + GTO question is later in the stack:
 - the first Be S+P attempt correctly stopped because `/Users/srw/BasisSets`
   was absent; the authorized retry should use
   `/Users/srw/Library/CloudStorage/Dropbox/GaussletModules/BasisSets`, which
-  contains Be `cc-pV5Z`.
+  contains Be `cc-pV5Z`;
+- the authorized Be S+P old nested/QW oracle is now clean at q/ns `5 / 5`,
+  with fixed dimension `615`, `21` residual S+P supplement directions, final
+  dimension `636`, and RHF total `-14.574514244574694`;
+- the next replacement-oriented blocker is
+  `:missing_driver_owned_decomposed_be_sp_fixture_wiring`: removing it should
+  turn H/H2+ fixture-local GTO wiring into a reusable decomposed
+  atom+supplement seam and make old nested/QW less necessary as route
+  authority.
 
 ## Current Cleanup Rule
 
