@@ -376,14 +376,12 @@ delegates to `CartesianFinalBasisRealization.pqs_complete_core_shell_final_basis
 It still does not materialize H1, IDA, density-density, RHF, driver wiring,
 exports, artifacts, or an accepted fixture.
 
-The next possible assembly seam is support one-body assembly over the
-multi-layer PQS plan. Support kinetic assembly is safe to promote as a narrow
-helper now because it only needs the plan support states and `plan.metrics`:
-three axis-product terms are summed into one support-space kinetic matrix. A
-reasonable helper would consume `(plan; term = :kinetic)` or a clearly named
-`pqs_multilayer_support_kinetic_matrix(plan)` input and return a support-space
-matrix plus compact provenance; it would not perform final-basis transfer, H1,
-IDA, RHF, driver wiring, exports, or artifact work.
+The next support one-body assembly seam is partly implemented:
+`pqs_multilayer_support_kinetic_matrix(plan)` builds the support-space kinetic
+matrix over the direct core rows followed by the collapsed shell rows. It only
+consumes the plan support states and `plan.metrics`, and it sums the standard
+three axis-product kinetic terms. It does not perform final-basis transfer,
+H1, nuclear assembly, IDA, RHF, driver wiring, exports, or artifact work.
 
 Support electron-nuclear assembly should wait until the by-center convention is
 made explicit in the helper contract. The promoted helper should produce one
@@ -400,11 +398,11 @@ kernels before they become route-owned support assembly. Old fixed-block and
 WL matrices remain oracle comparisons only, not the source of authority for
 the support helper.
 
-If those helpers are implemented, the remaining test-local H1 support assembly
-helpers can shrink: `_pqs_h1_support_kinetic_matrix` and
-`_pqs_h1_support_nuclear_matrix` would be replaced by route-owned support
-operator calls, while the H1 gate would keep only final-basis transfer,
-Hamiltonian assembly, eigensolve, and oracle comparison checks.
+If the nuclear helper is implemented, the remaining test-local H1 support
+nuclear assembly can shrink: `_pqs_h1_support_nuclear_matrix` would be replaced
+by a route-owned support operator call, while the H1 gate would keep only
+final-basis transfer, Hamiltonian assembly, eigensolve, and oracle comparison
+checks.
 
 ## Validation Policy
 

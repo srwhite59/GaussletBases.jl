@@ -326,6 +326,49 @@ function pqs_multilayer_complete_core_shell_final_basis(
     )
 end
 
+"""
+    pqs_multilayer_support_kinetic_matrix(plan)
+
+Build the support-space Cartesian kinetic matrix for a route-owned multi-layer
+PQS shell source plan. The matrix is ordered over the direct core support rows
+followed by the collapsed shell support rows. This helper does not perform
+final-basis transfer, H1 assembly, nuclear assembly, IDA, RHF, driver wiring,
+exports, or artifacts.
+"""
+function pqs_multilayer_support_kinetic_matrix(plan)
+    _pqs_multilayer_property(plan, :object_kind) ===
+        :pqs_multilayer_shell_source_plan ||
+        throw(ArgumentError("PQS multi-layer support kinetic requires a pqs_multilayer_shell_source_plan"))
+    plan.status === :available_pqs_multilayer_shell_source_plan ||
+        throw(ArgumentError("PQS multi-layer support kinetic requires an available source plan"))
+
+    states = vcat(plan.core_support_states, plan.shell_support_states)
+    metrics = plan.metrics
+    return (
+        _pqs_multilayer_support_product_matrix(
+            states,
+            states,
+            metrics.x.kinetic,
+            metrics.y.overlap,
+            metrics.z.overlap,
+        ) +
+        _pqs_multilayer_support_product_matrix(
+            states,
+            states,
+            metrics.x.overlap,
+            metrics.y.kinetic,
+            metrics.z.overlap,
+        ) +
+        _pqs_multilayer_support_product_matrix(
+            states,
+            states,
+            metrics.x.overlap,
+            metrics.y.overlap,
+            metrics.z.kinetic,
+        )
+    )
+end
+
 function _blocked_pqs_multilayer_complete_core_shell_final_basis(
     plan;
     blocker,

@@ -29,32 +29,6 @@ function _pqs_h1_test_bundle(count::Int)
     )
 end
 
-function _pqs_h1_support_kinetic_matrix(states, metrics)
-    return (
-        GaussletBases._pqs_multilayer_support_product_matrix(
-            states,
-            states,
-            metrics.x.kinetic,
-            metrics.y.overlap,
-            metrics.z.overlap,
-        ) +
-        GaussletBases._pqs_multilayer_support_product_matrix(
-            states,
-            states,
-            metrics.x.overlap,
-            metrics.y.kinetic,
-            metrics.z.overlap,
-        ) +
-        GaussletBases._pqs_multilayer_support_product_matrix(
-            states,
-            states,
-            metrics.x.overlap,
-            metrics.y.overlap,
-            metrics.z.kinetic,
-        )
-    )
-end
-
 function _pqs_h1_support_nuclear_matrix(states, gaussian_factor_terms, expansion)
     result = zeros(Float64, length(states), length(states))
     for term_index in eachindex(expansion.coefficients)
@@ -139,7 +113,7 @@ end
         metrics.y.overlap,
         metrics.z.overlap,
     )
-    support_kinetic = _pqs_h1_support_kinetic_matrix(states, metrics)
+    support_kinetic = GaussletBases.pqs_multilayer_support_kinetic_matrix(fixture.plan)
     support_nuclear = _pqs_h1_support_nuclear_matrix(
         states,
         fixture.bundle7.pgdg_intermediate.gaussian_factor_terms,
