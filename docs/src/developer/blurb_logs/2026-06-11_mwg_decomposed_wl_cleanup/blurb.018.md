@@ -37,22 +37,48 @@ Exact task:
    - helper signatures that specialize on full staged object types when only a
      small summary or matrix is needed.
 
-2. Use lightweight evidence, not guesswork. Good options include:
+2. As part of the audit, identify repeated field clouds that are really stable
+   module-owned concepts and should eventually become small structs. Do not
+   start from "replace NamedTuples with structs everywhere." Start from nouns
+   already moving through the route. Likely candidates include:
+   - `AxisTriplet{T}` for recurring Cartesian `x/y/z` bundles;
+   - `ParentAxisContext3D` for parent axis counts, bundles, and 1D operator
+     factors;
+   - `DecomposedWLFactorizedBasis3D` for the retained WL basis represented in
+     parent-product coordinates;
+   - `ResidualMomentMatrices` for position and x2 axis triples;
+   - `AtomGTOFinalBasisMatrices` as the lean compute product consumed by RHF.
+
+   The intended direction is:
+
+   ```text
+   hot compute path:
+       compact structs for stable numerical concepts
+
+   audit/report path:
+       compact NamedTuple summaries built for probes, docs, and debugging
+   ```
+
+   Avoid creating one giant route struct that simply mirrors the current giant
+   nested `NamedTuple`. That would improve neither conceptual clarity nor cold
+   compile pressure.
+
+3. Use lightweight evidence, not guesswork. Good options include:
    - static inspection with `rg` and focused file reads;
    - a small `tmp/work` trace-compile or method-instance probe if useful;
    - comparing side-7 synthetic workload shape versus side-15 Be shape;
    - timing a small alternate synthetic fixture only if it answers a specific
      specialization question.
 
-3. Do not implement a broad refactor in this pass. If you find a tiny obvious
+4. Do not implement a broad refactor in this pass. If you find a tiny obvious
    cleanup, it must be local, behavior-preserving, and justified by the audit.
    Otherwise report the exact specialization source and the smallest proposed
    fix.
 
-4. Do not add tests by default. This is a compile/specialization audit; use
+5. Do not add tests by default. This is a compile/specialization audit; use
    `tmp/work` probes for evidence.
 
-5. Do not broaden `src/precompile_workloads.jl` to side-15 or Be-like
+6. Do not broaden `src/precompile_workloads.jl` to side-15 or Be-like
    acceptance scale in this pass. A larger workload is allowed only after the
    audit shows it is the right answer and earns carrying cost.
 
@@ -84,6 +110,8 @@ Report back:
 - files inspected;
 - any `tmp/work` probes/artifacts created;
 - the top suspected specialization sources, ranked;
+- the stable concepts that should be structs, if any, and which current
+  `NamedTuple`/field-cloud surfaces they would replace;
 - whether any tiny cleanup was made;
 - whether a future precompile workload should change, and why;
 - validation run;
