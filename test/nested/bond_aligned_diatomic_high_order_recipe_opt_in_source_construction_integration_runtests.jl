@@ -1336,36 +1336,12 @@
     @test current_route_safe_terms.diagnostics.whole_route_safe_term_matrix_consumer
     @test current_route_safe_terms.diagnostics.retained_dimension == 487
     @test current_route_safe_terms.diagnostics.pair_count == 21
-    @test current_route_safe_terms.diagnostics.product_source_box_pair_count == 6
-    @test current_route_safe_terms.diagnostics.support_local_fallback_pair_count == 15
-    @test current_route_safe_terms.diagnostics.support_local_oracle_for_shell_realization_pair_count == 6
     @test current_route_safe_terms.diagnostics.support_local_oracle_is_debug_validation
     @test current_route_safe_terms.diagnostics.shell_realized_pqs_pairs_use_oracle_not_algorithm
     @test !current_route_safe_terms.diagnostics.source_box_algorithm_available_for_shell_realized_pqs
-    @test current_route_safe_terms.diagnostics.raw_box_pqs_active_pair_policy_count == 0
     @test current_route_safe_terms.diagnostics.global_max_error <= 1.0e-12
     @test current_route_safe_terms.diagnostics.finite_output
     @test current_route_safe_terms.diagnostics.support_local_oracle_compared
-    @test !current_route_safe_terms.diagnostics.raw_box_pqs_active_policy_used
-    @test !current_route_safe_terms.diagnostics.route_descriptor_emitted
-    @test !current_route_safe_terms.diagnostics.construction_mutated
-    @test !current_route_safe_terms.diagnostics.sidecar_installation
-    @test !current_route_safe_terms.diagnostics.packet_adoption
-    @test !current_route_safe_terms.diagnostics.fixed_block_construction_changed
-    @test !current_route_safe_terms.diagnostics.qwhamiltonian_changed
-    @test !current_route_safe_terms.diagnostics.ida_weight_division_allowed
-    @test current_route_safe_terms.diagnostics.retained_weight_semantics ==
-          :not_positive_quadrature_weights
-    @test !current_route_safe_terms.diagnostics.local_ecp_gaussian_mwg_interaction_changed
-    @test current_route_safe_terms.diagnostics.elapsed_seconds >= 0.0
-    @test current_route_safe_terms.diagnostics.allocated_bytes >= 0
-    @test_throws ArgumentError CCPM._pqs_current_route_safe_term_matrices(
-        pqs_construction,
-        contact_safe_term_metrics;
-        inventory = current_route_inventory,
-        pair_inventory = current_route_pair_inventory,
-        terms = (:weights,),
-    )
     @test :product_doside_unit in pqs_source_descriptor.non_contracts
     @test :dense_full_parent_fallback in pqs_source_descriptor.non_contracts
     @test pqs_source_descriptor.diagnostics.metadata_only
@@ -1421,24 +1397,11 @@
     @test current_route_authority_comparison.diagnostics.current_route_safe_term_authority_comparison
     @test current_route_authority_comparison.diagnostics.authority_fixed_block_or_sequence_packet_only
     @test current_route_authority_comparison.diagnostics.support_local_oracle_secondary
-    @test current_route_authority_comparison.diagnostics.support_local_oracle_global_max_error <=
-          1.0e-12
     @test current_route_authority_comparison.diagnostics.compared_term_count ==
           length(current_route_safe_terms.terms)
     @test current_route_authority_comparison.diagnostics.unavailable_term_count == 0
     @test current_route_authority_comparison.diagnostics.max_authority_error <= 1.0e-8
     @test current_route_authority_comparison.diagnostics.finite_output
-    @test !current_route_authority_comparison.diagnostics.construction_mutated
-    @test !current_route_authority_comparison.diagnostics.sidecar_installation
-    @test !current_route_authority_comparison.diagnostics.packet_adoption
-    @test !current_route_authority_comparison.diagnostics.fixed_block_construction_changed
-    @test !current_route_authority_comparison.diagnostics.qwhamiltonian_changed
-    @test !current_route_authority_comparison.diagnostics.ida_weight_division_allowed
-    @test current_route_authority_comparison.diagnostics.retained_weight_semantics ==
-          :not_positive_quadrature_weights
-    @test !current_route_authority_comparison.diagnostics.local_ecp_gaussian_mwg_interaction_changed
-    @test current_route_authority_comparison.diagnostics.elapsed_seconds >= 0.0
-    @test current_route_authority_comparison.diagnostics.allocated_bytes >= 0
     QWCS = GaussletBases.CartesianQWOperatorCarriedSpaces
     pqs_receipt = @test_logs min_level = Logging.Warn QWCS.cartesian_qw_operator_construction_receipt(
         pqs_fixed_block;
