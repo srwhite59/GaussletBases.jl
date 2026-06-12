@@ -615,6 +615,61 @@ function _pqs_source_pair_direct_retained_overlap_block(
     )
 end
 
+function _pqs_source_pair_direct_retained_axis_product_block(
+    record::PairBlockMaterializationRecord;
+    family::Symbol,
+    axis,
+    overlap_1d,
+    operator_1d,
+    operator_name::AbstractString,
+)
+    descriptor = _pqs_source_axis_safe_term_descriptor(family, axis)
+    left_dims, right_dims = _pqs_source_pair_dims(record)
+    overlap_x, overlap_y, overlap_z = _overlap_1d_tuple(overlap_1d)
+    operator_x, operator_y, operator_z =
+        _operator_1d_tuple(operator_1d, operator_name)
+    overlap_axes = (overlap_x, overlap_y, overlap_z)
+    operator_axes_all = (operator_x, operator_y, operator_z)
+    _assert_pqs_source_axis_sizes(overlap_axes, left_dims, right_dims, "overlap_1d")
+    _assert_pqs_source_axis_sizes(
+        operator_axes_all,
+        left_dims,
+        right_dims,
+        operator_name,
+    )
+    left_rule = _pqs_source_record_retained_rule(record, :left)
+    right_rule = _pqs_source_record_retained_rule(record, :right)
+    _assert_pqs_source_record_retained_rule(record, left_rule, :left)
+    _assert_pqs_source_record_retained_rule(record, right_rule, :right)
+
+    operator_axes =
+        axis === :x ? (operator_x, overlap_y, overlap_z) :
+        axis === :y ? (overlap_x, operator_y, overlap_z) :
+        (overlap_x, overlap_y, operator_z)
+    left_modes = CRPS.retained_mode_indices(left_rule)
+    right_modes = CRPS.retained_mode_indices(right_rule)
+    block = Matrix{Float64}(undef, length(left_modes), length(right_modes))
+    _fill_source_mode_product_block!(
+        block,
+        left_modes,
+        right_modes,
+        operator_axes[1],
+        operator_axes[2],
+        operator_axes[3],
+    )
+
+    return _pqs_source_pair_direct_retained_result(
+        record,
+        descriptor.source_term,
+        block,
+        left_rule,
+        right_rule,
+        left_dims,
+        right_dims,
+        _pqs_source_axis_metadata(descriptor),
+    )
+end
+
 function _pqs_source_pair_direct_retained_kinetic_block(
     record::PairBlockMaterializationRecord;
     overlap_1d,
@@ -843,6 +898,132 @@ function pqs_source_pair_retained_kinetic_block(
         record;
         overlap_1d,
         kinetic_1d,
+    )
+end
+
+"""
+    pqs_source_pair_retained_position_x_block(record; overlap_1d, position_1d)
+
+Materialize a retained PQS/PQS source position-x block directly from retained
+boundary source-mode tuples and 1D overlap/position factors.
+"""
+function pqs_source_pair_retained_position_x_block(
+    record::PairBlockMaterializationRecord;
+    overlap_1d,
+    position_1d,
+)
+    return _pqs_source_pair_direct_retained_axis_product_block(
+        record;
+        family = :position,
+        axis = :x,
+        overlap_1d,
+        operator_1d = position_1d,
+        operator_name = "position_1d",
+    )
+end
+
+"""
+    pqs_source_pair_retained_position_y_block(record; overlap_1d, position_1d)
+
+Materialize a retained PQS/PQS source position-y block directly from retained
+boundary source-mode tuples and 1D overlap/position factors.
+"""
+function pqs_source_pair_retained_position_y_block(
+    record::PairBlockMaterializationRecord;
+    overlap_1d,
+    position_1d,
+)
+    return _pqs_source_pair_direct_retained_axis_product_block(
+        record;
+        family = :position,
+        axis = :y,
+        overlap_1d,
+        operator_1d = position_1d,
+        operator_name = "position_1d",
+    )
+end
+
+"""
+    pqs_source_pair_retained_position_z_block(record; overlap_1d, position_1d)
+
+Materialize a retained PQS/PQS source position-z block directly from retained
+boundary source-mode tuples and 1D overlap/position factors.
+"""
+function pqs_source_pair_retained_position_z_block(
+    record::PairBlockMaterializationRecord;
+    overlap_1d,
+    position_1d,
+)
+    return _pqs_source_pair_direct_retained_axis_product_block(
+        record;
+        family = :position,
+        axis = :z,
+        overlap_1d,
+        operator_1d = position_1d,
+        operator_name = "position_1d",
+    )
+end
+
+"""
+    pqs_source_pair_retained_x2_x_block(record; overlap_1d, x2_1d)
+
+Materialize a retained PQS/PQS source x2-x block directly from retained
+boundary source-mode tuples and 1D overlap/x2 factors.
+"""
+function pqs_source_pair_retained_x2_x_block(
+    record::PairBlockMaterializationRecord;
+    overlap_1d,
+    x2_1d,
+)
+    return _pqs_source_pair_direct_retained_axis_product_block(
+        record;
+        family = :x2,
+        axis = :x,
+        overlap_1d,
+        operator_1d = x2_1d,
+        operator_name = "x2_1d",
+    )
+end
+
+"""
+    pqs_source_pair_retained_x2_y_block(record; overlap_1d, x2_1d)
+
+Materialize a retained PQS/PQS source x2-y block directly from retained
+boundary source-mode tuples and 1D overlap/x2 factors.
+"""
+function pqs_source_pair_retained_x2_y_block(
+    record::PairBlockMaterializationRecord;
+    overlap_1d,
+    x2_1d,
+)
+    return _pqs_source_pair_direct_retained_axis_product_block(
+        record;
+        family = :x2,
+        axis = :y,
+        overlap_1d,
+        operator_1d = x2_1d,
+        operator_name = "x2_1d",
+    )
+end
+
+"""
+    pqs_source_pair_retained_x2_z_block(record; overlap_1d, x2_1d)
+
+Materialize a retained PQS/PQS source x2-z block directly from retained
+boundary source-mode tuples and 1D overlap/x2 factors.
+"""
+function pqs_source_pair_retained_x2_z_block(
+    record::PairBlockMaterializationRecord;
+    overlap_1d,
+    x2_1d,
+)
+    return _pqs_source_pair_direct_retained_axis_product_block(
+        record;
+        family = :x2,
+        axis = :z,
+        overlap_1d,
+        operator_1d = x2_1d,
+        operator_name = "x2_1d",
     )
 end
 

@@ -2283,6 +2283,40 @@ end
         @test position_result.metadata.right_source_mode_dims == right_source_dims
         @test position_result.metadata.source_operator_blocks_materialized
         @test !position_result.metadata.final_pair_blocks_materialized
+        retained_position_result =
+            CPBM.pqs_source_pair_retained_one_body_block(
+                position_result,
+                pqs_cross_record.metadata.left_raw_product_source_retained_rule,
+                pqs_cross_record.metadata.right_raw_product_source_retained_rule,
+            )
+        wrapper_retained_position =
+            axis === :x ? CPBM.pqs_source_pair_retained_position_x_block(
+                pqs_cross_record;
+                overlap_1d = position_overlap_1d,
+                position_1d,
+            ) :
+            axis === :y ? CPBM.pqs_source_pair_retained_position_y_block(
+                pqs_cross_record;
+                overlap_1d = position_overlap_1d,
+                position_1d,
+            ) :
+            CPBM.pqs_source_pair_retained_position_z_block(
+                pqs_cross_record;
+                overlap_1d = position_overlap_1d,
+                position_1d,
+            )
+        @test retained_position_result.term ==
+              Symbol(:retained_source_position_, axis)
+        @test size(wrapper_retained_position.block) == (26, 54)
+        @test wrapper_retained_position.block ≈ retained_position_result.block
+        @test maximum(
+            abs.(wrapper_retained_position.block .- retained_position_result.block),
+        ) == 0.0
+        @test wrapper_retained_position.metadata.block_space ==
+              :retained_pqs_source_modes
+        @test wrapper_retained_position.metadata.retained_direct_boundary_product_used
+        @test !wrapper_retained_position.metadata.source_space_input_used
+        @test !wrapper_retained_position.metadata.raw_source_operator_block_materialized
 
         x2_1d =
             axis === :z ?
@@ -2322,6 +2356,49 @@ end
         @test x2_result.metadata.right_source_mode_dims == right_source_dims
         @test x2_result.metadata.source_operator_blocks_materialized
         @test !x2_result.metadata.final_pair_blocks_materialized
+        retained_x2_result =
+            CPBM.pqs_source_pair_retained_one_body_block(
+                x2_result,
+                pqs_cross_record.metadata.left_raw_product_source_retained_rule,
+                pqs_cross_record.metadata.right_raw_product_source_retained_rule,
+            )
+        wrapper_retained_x2 =
+            axis === :x ? CPBM.pqs_source_pair_retained_x2_x_block(
+                pqs_cross_record;
+                overlap_1d = (;
+                    x = pqs_overlap_x,
+                    y = pqs_overlap_y,
+                    z = pqs_overlap_z,
+                ),
+                x2_1d,
+            ) :
+            axis === :y ? CPBM.pqs_source_pair_retained_x2_y_block(
+                pqs_cross_record;
+                overlap_1d = (;
+                    x = pqs_overlap_x,
+                    y = pqs_overlap_y,
+                    z = pqs_overlap_z,
+                ),
+                x2_1d,
+            ) :
+            CPBM.pqs_source_pair_retained_x2_z_block(
+                pqs_cross_record;
+                overlap_1d = (;
+                    x = pqs_overlap_x,
+                    y = pqs_overlap_y,
+                    z = pqs_overlap_z,
+                ),
+                x2_1d,
+            )
+        @test retained_x2_result.term == Symbol(:retained_source_x2_, axis)
+        @test size(wrapper_retained_x2.block) == (26, 54)
+        @test wrapper_retained_x2.block ≈ retained_x2_result.block
+        @test maximum(abs.(wrapper_retained_x2.block .- retained_x2_result.block)) ==
+              0.0
+        @test wrapper_retained_x2.metadata.block_space == :retained_pqs_source_modes
+        @test wrapper_retained_x2.metadata.retained_direct_boundary_product_used
+        @test !wrapper_retained_x2.metadata.source_space_input_used
+        @test !wrapper_retained_x2.metadata.raw_source_operator_block_materialized
     end
 
     kinetic_result = CPBM.pqs_source_pair_kinetic_block(

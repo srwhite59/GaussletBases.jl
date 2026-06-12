@@ -120,6 +120,11 @@ right retained mode tuples
 -> retained boundary block directly
 ```
 
+Direct retained-boundary kernels now exist for overlap, kinetic, position
+moments, x2 moments, and by-center electron-nuclear source blocks. The dense
+raw-source block plus selector path remains a small-fixture oracle/reference,
+not the production scaling shape.
+
 For overlap:
 
 ```text
@@ -136,12 +141,8 @@ K[a,b] =
   + Sx[ix_a, ix_b] * Sy[iy_a, iy_b] * Kz[iz_a, iz_b]
 ```
 
-The existing dense raw-source block plus selector path should remain a
-small-fixture oracle/reference, not the production scaling shape.
-
-After overlap/kinetic, apply the same direct retained-boundary idea to
-centered Gaussian/electron-nuclear factors. Do not start with density-density
-or RHF.
+Do not extend this optimization into density-density or RHF until the retained
+one-body final-basis route is settled.
 
 ## Shell-Support Operator Policy
 
@@ -326,9 +327,10 @@ with the exact command, reason, and blocker, then stop.
 - Do not redesign result types, add IDA/RHF/density-density, add drivers, or
   grow broad tests.
 
-### Pass 3: Direct Retained-Boundary Overlap/Kinetic
+### Pass 3: Direct Retained-Boundary One-Body Source Blocks
 
-- Add a direct retained-boundary product kernel for PQS overlap and kinetic.
+- Add direct retained-boundary product kernels for PQS overlap, kinetic,
+  position, and x2 source blocks.
 - Compare against existing raw-source block then selector on a tiny synthetic
   fixture.
 - Keep the raw-source selector path as oracle/reference.
