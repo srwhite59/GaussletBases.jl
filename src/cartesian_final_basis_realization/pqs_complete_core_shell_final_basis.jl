@@ -452,6 +452,78 @@ function pqs_complete_core_shell_final_h1_solve(
     )
 end
 
+"""
+    pqs_complete_core_shell_final_ida_weights(final_basis, support_weights)
+
+Project support-row integral weights into the complete core/shell final basis.
+The support row order must match
+`final_basis.support_row_order == :core_then_shell`.
+"""
+function pqs_complete_core_shell_final_ida_weights(
+    final_basis::NamedTuple,
+    support_weights;
+    near_zero_atol::Real = 1.0e-12,
+    metadata = (;),
+)
+    _pqs_complete_core_shell_validate_final_basis(final_basis)
+    weights = Float64[Float64(weight) for weight in support_weights]
+    support_count = final_basis.core_support_count + final_basis.shell_support_count
+    length(weights) == support_count ||
+        throw(DimensionMismatch("complete core/shell support weight length mismatch"))
+    all(isfinite, weights) ||
+        throw(ArgumentError("complete core/shell support weights contain non-finite entries"))
+    coefficients = Matrix{Float64}(final_basis.final_coefficients)
+    size(coefficients, 1) == support_count ||
+        throw(DimensionMismatch("complete core/shell final coefficient row mismatch"))
+    final_weights = vec(transpose(coefficients) * weights)
+    all(isfinite, final_weights) ||
+        throw(ArgumentError("complete core/shell final IDA weights contain non-finite entries"))
+    near_zero_threshold = Float64(near_zero_atol)
+    near_zero_count = count(weight -> abs(weight) <= near_zero_threshold, final_weights)
+    negative_count = count(<(0.0), final_weights)
+    positive_count = count(>(0.0), final_weights)
+    return (;
+        object_kind = :pqs_complete_core_shell_final_ida_weights,
+        status = :materialized_pqs_complete_core_shell_final_ida_weights,
+        blocker = nothing,
+        final_basis_object_kind = final_basis.object_kind,
+        final_basis_status = final_basis.status,
+        support_row_order = final_basis.support_row_order,
+        support_weight_count = length(weights),
+        final_ida_weights = final_weights,
+        final_ida_weight_count = length(final_weights),
+        final_retained_count = final_basis.final_retained_count,
+        weight_min = minimum(final_weights),
+        weight_max = maximum(final_weights),
+        weight_sum = sum(final_weights),
+        support_weight_sum = sum(weights),
+        near_zero_atol = near_zero_threshold,
+        near_zero_count,
+        negative_count,
+        positive_count,
+        all_finite = true,
+        final_ida_weights_materialized = true,
+        old_fixed_block_weight_authority_used = false,
+        raw_source_weights_used_as_final_weights = false,
+        boundary_shell_diagnostic_weights_used_as_final_weights = false,
+        density_density_materialized = false,
+        rhf_materialized = false,
+        driver_route_materialized = false,
+        exports_materialized = false,
+        artifacts_materialized = false,
+        metadata = merge(
+            NamedTuple(metadata),
+            (;
+                source = :pqs_complete_core_shell_final_ida_weights,
+                support_weight_projection =
+                    :transpose_final_coefficients_times_support_weights,
+                support_row_order = final_basis.support_row_order,
+                old_fixed_block_weight_authority_used = false,
+            ),
+        ),
+    )
+end
+
 function _pqs_complete_core_shell_validate_final_basis(final_basis::NamedTuple)
     get(final_basis, :object_kind, nothing) === :pqs_complete_core_shell_final_basis ||
         throw(ArgumentError("complete core/shell one-body transfer requires complete final basis"))
