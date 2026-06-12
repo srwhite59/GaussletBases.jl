@@ -205,6 +205,13 @@ latency. It is not permission to wait silently through a known blocker, and it
 does not override explicit `STOP.md`, `ATTENTION.md`, max-pass completion, or a
 user/manager instruction to stop.
 
+In unattended baton mode, the doer should not request interactive approval or
+sandbox escalation for optional commands, convenience validation, broad tests,
+or environment changes. Use already-approved commands and narrower validation
+instead. If a task truly requires new approval, write `ATTENTION.md` with the
+exact command, reason, and blocker, then stop rather than opening an approval
+prompt that can stall while the user is absent.
+
 The doer should ignore `.tmp` files, should never update manager-owned files
 such as `state.md`, `review.NNN.md`, `ATTENTION.md`, or `STOP.md`, and should
 never self-assign `blurb.NNN+1.md`.
