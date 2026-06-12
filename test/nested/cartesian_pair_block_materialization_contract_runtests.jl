@@ -2401,6 +2401,50 @@ end
     @test !selector_record_kinetic.hamiltonian_data_materialized
     @test !selector_record_kinetic.artifacts_materialized
 
+    retained_selector_record_overlap =
+        CPBM.pqs_source_pair_retained_one_body_block(
+            pqs_record,
+            :overlap;
+            overlap_1d = selector_overlap_1d,
+        )
+    retained_helper_record_overlap =
+        CPBM.pqs_source_pair_retained_overlap_block(
+            pqs_record;
+            overlap_1d = selector_overlap_1d,
+        )
+    retained_selector_record_kinetic =
+        CPBM.pqs_source_pair_retained_one_body_block(
+            pqs_record,
+            :kinetic;
+            overlap_1d = selector_overlap_1d,
+            kinetic_1d = (;
+                x = selector_kinetic_x,
+                y = selector_kinetic_y,
+                z = selector_kinetic_z,
+            ),
+        )
+    retained_helper_record_kinetic =
+        CPBM.pqs_source_pair_retained_kinetic_block(
+            pqs_record;
+            overlap_1d = selector_overlap_1d,
+            kinetic_1d = (
+                selector_kinetic_x,
+                selector_kinetic_y,
+                selector_kinetic_z,
+            ),
+        )
+
+    @test retained_selector_record_overlap.block ≈
+          retained_helper_record_overlap.block
+    @test retained_selector_record_kinetic.block ≈
+          retained_helper_record_kinetic.block
+    @test retained_selector_record_overlap.metadata.block_space ==
+          :retained_pqs_source_modes
+    @test retained_selector_record_kinetic.metadata.block_space ==
+          :retained_pqs_source_modes
+    @test !retained_selector_record_overlap.metadata.shell_realization_materialized
+    @test !retained_selector_record_overlap.metadata.lowdin_cleanup_used
+
     selector_batch_overlap = CPBM.pqs_source_pair_one_body_blocks(
         materialization_plan,
         :overlap;
@@ -2462,6 +2506,49 @@ end
     @test !selector_batch_kinetic.operator_blocks_materialized
     @test !selector_batch_kinetic.hamiltonian_data_materialized
     @test !selector_batch_kinetic.artifacts_materialized
+
+    retained_selector_batch_overlap =
+        CPBM.pqs_source_pair_retained_one_body_blocks(
+            materialization_plan,
+            :overlap;
+            overlap_1d = selector_overlap_1d,
+        )
+    retained_selector_batch_kinetic =
+        CPBM.pqs_source_pair_retained_one_body_blocks(
+            materialization_plan,
+            :kinetic;
+            overlap_1d = selector_overlap_1d,
+            kinetic_1d = (
+                selector_kinetic_x,
+                selector_kinetic_y,
+                selector_kinetic_z,
+            ),
+        )
+    retained_batch_overlap_record = _pair_block_batch_result_for(
+        retained_selector_batch_overlap,
+        :pair_block_selector_pqs_unit,
+        :pair_block_selector_pqs_unit,
+    )
+    retained_batch_kinetic_record = _pair_block_batch_result_for(
+        retained_selector_batch_kinetic,
+        :pair_block_selector_pqs_unit,
+        :pair_block_selector_pqs_unit,
+    )
+
+    @test retained_selector_batch_overlap.materialized_count ==
+          selector_batch_overlap.materialized_count
+    @test retained_selector_batch_overlap.skipped_count ==
+          selector_batch_overlap.skipped_count
+    @test retained_selector_batch_kinetic.materialized_count ==
+          selector_batch_kinetic.materialized_count
+    @test retained_batch_overlap_record.block ≈ retained_selector_record_overlap.block
+    @test retained_batch_kinetic_record.block ≈ retained_selector_record_kinetic.block
+    @test retained_batch_overlap_record.metadata.block_space ==
+          :retained_pqs_source_modes
+    @test retained_batch_kinetic_record.metadata.block_space ==
+          :retained_pqs_source_modes
+    @test !retained_batch_overlap_record.metadata.shell_realization_materialized
+    @test !retained_batch_overlap_record.metadata.lowdin_cleanup_used
 
     overlap_bridge_batch =
         CPBM.pqs_source_pair_shell_realization_bridge_summary(selector_batch_overlap)
