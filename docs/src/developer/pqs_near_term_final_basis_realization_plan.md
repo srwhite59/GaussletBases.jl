@@ -239,6 +239,14 @@ Do not promote q=9 or q=11 as a permanent He RHF gate until the fixture is
 reviewed. The q=11 point remains the stronger exploratory/reference point; q=9
 is the cheaper candidate if a compact gate is later approved.
 
+The next PQS physical probes should be WL-aligned fixture probes rather than
+more q-only scaling points. In WL terms, the fixture must choose the parent box
+radius, central spacing `d`, mapping/distortion `s`, and shell depth together.
+The current complete core/shell PQS helper still uses a projected shell source
+with a one-cell raw boundary around the inner box. A side-13, `d = 0.1`,
+`s = 1.0`, three-surrounding-shell final-basis smoke is therefore blocked on a
+multi-layer PQS shell/source producer before H1 or RHF should be interpreted.
+
 ## Validation Policy
 
 The slow nested harness is not a routine baton-loop validation target. In
