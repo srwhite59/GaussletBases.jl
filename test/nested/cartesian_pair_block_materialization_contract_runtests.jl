@@ -697,6 +697,25 @@ function _pair_block_project_axis_terms(axis_terms, left_transform, right_transf
     return projected
 end
 
+function _pair_block_fixed_a_nested_test_basis(
+    count::Int;
+    a::Float64 = 0.25,
+    xmax::Float64 = 10.0,
+    tail_spacing::Float64 = 10.0,
+)
+    endpoint = (count - 1) / 2
+    s = asinh(xmax / a) / (endpoint - xmax / tail_spacing)
+    basis = build_basis(
+        MappedUniformBasisSpec(
+            :G10;
+            count,
+            mapping = AsinhMapping(; a, s, tail_spacing),
+            reference_spacing = 1.0,
+        ),
+    )
+    return basis, s
+end
+
 function _pair_block_centered_axis_support_terms(
     layer,
     exponents,
@@ -1602,6 +1621,70 @@ end
         :not_white_lindsey_boundary_stratum_adapter_preflight,
     ) == 1
     @test !mixed_batch_summary.final_pair_blocks_materialized
+end
+
+@testset "CartesianPairBlockMaterialization PQS source-axis transform facts" begin
+    expansion = coulomb_gaussian_expansion(doacc = false)
+    basis, _ = _pair_block_fixed_a_nested_test_basis(13)
+    bundle = GaussletBases._mapped_ordinary_gausslet_1d_bundle(
+        basis;
+        exponents = expansion.exponents,
+        backend = :pgdg_localized_experimental,
+        refinement_levels = 0,
+    )
+    interval = 2:(length(basis) - 1)
+    old_plan = GaussletBases._cartesian_source_box_axis_transform_plan(
+        GaussletBases._CartesianNestedAxisBundles3D(bundle, bundle, bundle),
+        (interval, interval, interval),
+        (5, 5, 5);
+        enforce_symmetric_odd = false,
+    )
+    transform_result =
+        CPBM.pqs_source_axis_transform_facts_from_pgdg_axes(
+            (; x = bundle, y = bundle, z = bundle);
+            source_intervals = (interval, interval, interval),
+            source_mode_dims = (5, 5, 5),
+            enforce_symmetric_odd = false,
+        )
+
+    @test transform_result.object_kind == :pqs_source_axis_transform_fact_set
+    @test transform_result.status == :available_pqs_source_axis_transform_facts
+    @test transform_result.transform_source ==
+          :repo_owned_pgdg_doside_source_axis_transform
+    @test transform_result.source_mode_dims_requested == (5, 5, 5)
+    @test transform_result.source_mode_dims == (5, 5, 5)
+    @test !transform_result.source_mode_dims_adjusted
+    @test transform_result.source_mode_count == 125
+    @test transform_result.axis_coefficient_shapes ==
+          ((11, 5), (11, 5), (11, 5))
+    @test transform_result.max_axis_overlap_error < 1.0e-10
+    @test transform_result.source_product_modes_orthogonal
+    @test !transform_result.shell_realization_materialized
+    @test !transform_result.lowdin_cleanup_used
+    @test !transform_result.ida_data_materialized
+    @test !transform_result.hamiltonian_data_materialized
+    @test !transform_result.driver_route_materialized
+    @test !transform_result.artifacts_materialized
+
+    facts = transform_result.axis_transform_facts
+    @test length(facts) == 3
+    for axis in 1:3
+        @test facts[axis] isa CRPSForPairBlocks.AxisSourceTransformFact
+        @test facts[axis].axis == axis
+        @test facts[axis].source_interval == interval
+        @test facts[axis].source_mode_dim == 5
+        @test facts[axis].coefficient_status == :materialized
+        @test size(facts[axis].coefficient_matrix) == (11, 5)
+        @test facts[axis].coefficient_matrix ≈
+              old_plan.axes[axis].local_coefficients
+        @test facts[axis].metadata.transform_source ==
+              :repo_owned_pgdg_doside_source_axis_transform
+        @test facts[axis].metadata.coefficient_overlap_error < 1.0e-10
+        @test !facts[axis].metadata.shell_realization_materialized
+        @test !facts[axis].metadata.lowdin_cleanup_used
+        @test !facts[axis].metadata.ida_data_materialized
+        @test !facts[axis].metadata.hamiltonian_data_materialized
+    end
 end
 
 @testset "CartesianPairBlockMaterialization PQS source-pair preflight" begin

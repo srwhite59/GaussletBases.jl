@@ -78,6 +78,7 @@ export PairBlockMaterializationPolicy,
        pqs_source_pair_position_block,
        pqs_source_pair_x2_block,
        pqs_source_pair_kinetic_block,
+       pqs_source_axis_transform_facts_from_pgdg_axes,
        pqs_source_pair_gaussian_factor_terms_1d,
        pqs_source_pair_centered_gaussian_factor_terms_1d,
        pqs_source_pair_centered_electron_nuclear_by_center_block,
@@ -230,6 +231,10 @@ export PairBlockMaterializationPolicy,
 # pqs_source_safe_terms.jl
 #     PQS/PQS raw source-space safe-term helpers.
 #
+# pqs_source_axis_transforms.jl
+#     Narrow PGDG/doside source-axis transform fact builder for PQS raw-source
+#     plans. CRPS remains metadata-only.
+#
 # pqs_source_shell_bridge.jl
 #     Metadata-only bridge summaries for future PQS shell realization.
 #
@@ -317,6 +322,7 @@ include("one_body_global_position.jl")
 include("one_body_global_x2.jl")
 include("one_body_global_electron_nuclear.jl")
 include("direct_overlap.jl")
+include("pqs_source_axis_transforms.jl")
 include("pqs_source_safe_terms.jl")
 include("pqs_source_shell_bridge.jl")
 include("pqs_source_final_readiness.jl")
