@@ -31,6 +31,35 @@ function summary(plan::RawProductBoxPlan)
 end
 
 """
+    summary(rule::PQSBoundaryProductModeRetainedRule)
+
+Return a compact summary of a PQS retained source-mode boundary rule.
+
+This summary exposes rule kind, retained count, ordering, and materialization
+nonclaims. It does not duplicate retained mode inventories or numerical
+transform data.
+"""
+function summary(rule::PQSBoundaryProductModeRetainedRule)
+    return (;
+        object_kind = :pqs_boundary_product_mode_retained_rule_summary,
+        status = :available_pqs_boundary_product_mode_retained_rule,
+        source_key = rule.source_key,
+        source_mode_dims = rule.source_mode_dims,
+        source_mode_ordering = rule.source_mode_ordering,
+        retained_rule_kind = rule.retained_rule_kind,
+        retained_count = rule.retained_count,
+        transform_kind = rule.transform_kind,
+        shell_realization_materialized = rule.shell_realization_materialized,
+        lowdin_cleanup_used = rule.lowdin_cleanup_used,
+        transforms_materialized = false,
+        coefficient_maps_materialized = false,
+        pair_blocks_materialized = false,
+        hamiltonian_data_materialized = false,
+        artifacts_materialized = false,
+    )
+end
+
+"""
     unavailable_summary(status, blocker = nothing)
 
 Return the compact summary shape used when a raw product source plan is not

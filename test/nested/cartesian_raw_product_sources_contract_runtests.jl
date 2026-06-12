@@ -64,6 +64,57 @@ const CPBForRawSources = GaussletBases.CartesianCPB
     @test compact.artifacts_materialized == false
 end
 
+@testset "CartesianRawProductSources PQS boundary retained source-mode rule" begin
+    rule = CRPS.pqs_boundary_product_mode_retained_rule(
+        (5, 5, 5);
+        source_key = :pqs_boundary_fixture,
+    )
+
+    @test rule isa CRPS.PQSBoundaryProductModeRetainedRule
+    @test rule.source_key == :pqs_boundary_fixture
+    @test rule.source_mode_dims == (5, 5, 5)
+    @test rule.source_mode_ordering == :x_major_y_major_z_fast
+    @test rule.retained_rule_kind == :boundary_comx_product_mode_selection
+    @test rule.transform_kind == :source_mode_column_selector
+    @test rule.retained_count == 98
+    @test !rule.shell_realization_materialized
+    @test !rule.lowdin_cleanup_used
+
+    retained_modes = CRPS.retained_mode_indices(rule)
+    retained_columns = CRPS.retained_column_indices(rule)
+    source_modes = CRPS.source_mode_indices((5, 5, 5))
+    expected_columns = [
+        column
+        for (column, mode) in pairs(source_modes)
+        if any(axis -> mode[axis] == 1 || mode[axis] == 5, 1:3)
+    ]
+
+    @test retained_columns == expected_columns
+    @test retained_modes == collect(source_modes[expected_columns])
+    @test first(retained_modes) == (1, 1, 1)
+    @test retained_modes[5] == (1, 1, 5)
+    @test retained_modes[6] == (1, 2, 1)
+    @test last(retained_modes) == (5, 5, 5)
+    @test all(mode -> any(axis -> mode[axis] in (1, 5), 1:3), retained_modes)
+    @test !any(mode -> all(axis -> 1 < mode[axis] < 5, 1:3), retained_modes)
+
+    compact = CRPS.summary(rule)
+    @test compact.object_kind == :pqs_boundary_product_mode_retained_rule_summary
+    @test compact.status == :available_pqs_boundary_product_mode_retained_rule
+    @test compact.source_key == :pqs_boundary_fixture
+    @test compact.source_mode_dims == (5, 5, 5)
+    @test compact.retained_rule_kind == :boundary_comx_product_mode_selection
+    @test compact.retained_count == 98
+    @test compact.transform_kind == :source_mode_column_selector
+    @test compact.shell_realization_materialized == false
+    @test compact.lowdin_cleanup_used == false
+    @test compact.transforms_materialized == false
+    @test compact.coefficient_maps_materialized == false
+    @test compact.pair_blocks_materialized == false
+    @test compact.hamiltonian_data_materialized == false
+    @test compact.artifacts_materialized == false
+end
+
 @testset "CartesianRawProductSources validation" begin
     source_box = CPBForRawSources.filled_cpb(1:2, 1:2, 1:2)
 

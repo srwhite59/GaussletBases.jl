@@ -52,6 +52,31 @@ struct RawProductBoxPlan
 end
 
 """
+    PQSBoundaryProductModeRetainedRule
+
+Metadata-only retained source-mode rule for the first PQS source-box route.
+
+The rule selects boundary product modes from a raw product source space: a mode
+is retained when at least one local axis mode is the first or last mode on that
+axis. It records deterministic source-mode and column indices only. It does not
+materialize shell rows, shell projection, Lowdin cleanup, coefficient matrices,
+pair blocks, IDA data, Hamiltonians, or artifacts.
+"""
+struct PQSBoundaryProductModeRetainedRule
+    source_key::Symbol
+    source_mode_dims::NTuple{3,Int}
+    source_mode_ordering::Symbol
+    retained_rule_kind::Symbol
+    retained_mode_indices::Vector{NTuple{3,Int}}
+    retained_column_indices::Vector{Int}
+    retained_count::Int
+    transform_kind::Symbol
+    shell_realization_materialized::Bool
+    lowdin_cleanup_used::Bool
+    metadata::NamedTuple
+end
+
+"""
     source_cpb(plan)
 
 Return the coordinate product box used as the raw product source support.
@@ -79,6 +104,22 @@ source_mode_count(plan::RawProductBoxPlan) = plan.source_mode_count
 Return the deterministic source-mode tuples for the plan's ordering.
 """
 source_mode_indices(plan::RawProductBoxPlan) = plan.source_mode_indices
+
+"""
+    retained_mode_indices(rule)
+
+Return deterministic retained source-mode tuples for a retained rule.
+"""
+retained_mode_indices(rule::PQSBoundaryProductModeRetainedRule) =
+    rule.retained_mode_indices
+
+"""
+    retained_column_indices(rule)
+
+Return source-mode column indices retained by a retained rule.
+"""
+retained_column_indices(rule::PQSBoundaryProductModeRetainedRule) =
+    rule.retained_column_indices
 
 """
     axis_transform_facts(plan)
@@ -128,4 +169,74 @@ function raw_product_box_plan(
         false,
         NamedTuple(metadata),
     )
+end
+
+function _is_boundary_product_mode(
+    mode::NTuple{3,Int},
+    dims::NTuple{3,Int},
+)
+    return any(axis -> mode[axis] == 1 || mode[axis] == dims[axis], 1:3)
+end
+
+"""
+    pqs_boundary_product_mode_retained_rule(raw_plan)
+    pqs_boundary_product_mode_retained_rule(source_mode_dims; ...)
+
+Build the metadata-only PQS retained source-mode boundary rule.
+
+The retained columns follow the same deterministic source-mode ordering used by
+`source_mode_indices`. For `(5, 5, 5)`, the rule retains `98` boundary product
+modes.
+"""
+function pqs_boundary_product_mode_retained_rule(
+    source_mode_dims;
+    source_mode_ordering::Symbol = _SUPPORTED_SOURCE_MODE_ORDERING,
+    source_key::Symbol = :pqs_raw_product_source,
+    metadata = (;),
+)
+    normalized_dims = _normalize_source_mode_dims(source_mode_dims)
+    indices = source_mode_indices(
+        normalized_dims;
+        source_mode_ordering,
+    )
+    retained_modes = NTuple{3,Int}[]
+    retained_columns = Int[]
+    for (column_index, mode) in pairs(indices)
+        if _is_boundary_product_mode(mode, normalized_dims)
+            push!(retained_modes, mode)
+            push!(retained_columns, column_index)
+        end
+    end
+    return PQSBoundaryProductModeRetainedRule(
+        source_key,
+        normalized_dims,
+        source_mode_ordering,
+        :boundary_comx_product_mode_selection,
+        retained_modes,
+        retained_columns,
+        length(retained_modes),
+        :source_mode_column_selector,
+        false,
+        false,
+        NamedTuple(metadata),
+    )
+end
+
+function pqs_boundary_product_mode_retained_rule(
+    raw_plan::RawProductBoxPlan;
+    metadata = (;),
+)
+    return pqs_boundary_product_mode_retained_rule(
+        raw_plan.source_mode_dims;
+        source_mode_ordering = raw_plan.source_mode_ordering,
+        source_key = raw_plan.source_key,
+        metadata = _merge_rule_metadata(
+            raw_plan.metadata,
+            NamedTuple(metadata),
+        ),
+    )
+end
+
+function _merge_rule_metadata(left::NamedTuple, right::NamedTuple)
+    return merge(left, right)
 end

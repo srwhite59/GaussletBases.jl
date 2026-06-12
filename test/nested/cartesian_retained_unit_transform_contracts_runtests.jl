@@ -373,6 +373,19 @@ end
           false
     @test pqs_contract.metadata.raw_product_source_summary.artifacts_materialized ==
           false
+    @test pqs_contract.metadata.raw_product_source_retained_rule isa
+          CRPSForTransformContracts.PQSBoundaryProductModeRetainedRule
+    @test pqs_contract.metadata.raw_product_source_retained_rule.source_mode_dims ==
+          (3, 3, 3)
+    @test pqs_contract.metadata.raw_product_source_retained_rule.retained_count == 26
+    @test pqs_contract.metadata.raw_product_source_retained_rule_summary.status ==
+          :available_pqs_boundary_product_mode_retained_rule
+    @test pqs_contract.metadata.raw_product_source_retained_rule_summary.retained_count ==
+          26
+    @test pqs_contract.metadata.raw_product_source_retained_rule_summary.transform_kind ==
+          :source_mode_column_selector
+    @test !pqs_contract.metadata.raw_product_source_retained_rule_summary.shell_realization_materialized
+    @test !pqs_contract.metadata.raw_product_source_retained_rule_summary.lowdin_cleanup_used
     @test all(
         fact -> fact.coefficient_status === :not_materialized,
         CRPSForTransformContracts.axis_transform_facts(
@@ -429,6 +442,14 @@ end
           (5, 4, 3)
     @test explicit_transform_contract.metadata.raw_product_source_summary.source_mode_count ==
           60
+    @test explicit_transform_contract.metadata.raw_product_source_retained_rule.retained_count ==
+          54
+    @test explicit_transform_contract.metadata.raw_product_source_retained_rule_summary.retained_count ==
+          54
+    @test explicit_transform_contract.metadata.raw_product_source_retained_rule_summary.shell_realization_materialized ==
+          false
+    @test explicit_transform_contract.metadata.raw_product_source_retained_rule_summary.lowdin_cleanup_used ==
+          false
 
     missing_source = CPBForTransformContracts.filled_cpb(
         1:3,
@@ -464,6 +485,10 @@ end
           :blocked_missing_source_mode_dims
     @test missing_transform_contract.metadata.raw_product_source_summary.blocker ==
           :missing_pqs_source_mode_dims
+    @test isnothing(missing_transform_contract.metadata.raw_product_source_retained_rule)
+    @test isnothing(
+        missing_transform_contract.metadata.raw_product_source_retained_rule_summary,
+    )
 end
 
 @testset "CartesianRetainedUnitTransformContracts unknown retained unit blocks" begin

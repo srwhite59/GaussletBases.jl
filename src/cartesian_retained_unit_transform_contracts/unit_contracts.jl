@@ -107,6 +107,8 @@ function _raw_product_source_unavailable_metadata(status::Symbol, blocker::Symbo
         raw_product_source_summary =
             CartesianRawProductSources.unavailable_summary(status, blocker),
         raw_product_source_plan_status = status,
+        raw_product_source_retained_rule = nothing,
+        raw_product_source_retained_rule_summary = nothing,
     )
 end
 
@@ -136,10 +138,15 @@ function _raw_product_source_contract_metadata(unit::CartesianRetainedUnits.Reta
         ),
     )
     raw_summary = CartesianRawProductSources.summary(raw_plan)
+    retained_rule =
+        CartesianRawProductSources.pqs_boundary_product_mode_retained_rule(raw_plan)
+    retained_rule_summary = CartesianRawProductSources.summary(retained_rule)
     return (;
         raw_product_source_plan = raw_plan,
         raw_product_source_summary = raw_summary,
         raw_product_source_plan_status = raw_summary.status,
+        raw_product_source_retained_rule = retained_rule,
+        raw_product_source_retained_rule_summary = retained_rule_summary,
     )
 end
 
