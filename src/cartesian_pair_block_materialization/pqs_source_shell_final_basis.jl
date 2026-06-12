@@ -366,3 +366,196 @@ function _pqs_shell_projected_one_body_blocked_result(
         ),
     )
 end
+
+"""
+    pqs_source_shell_final_one_body_from_boundary_matrix(
+        final_basis,
+        retained_boundary_result;
+        term = nothing,
+    )
+
+Transform a proven PQS retained-boundary one-body operator into the
+shell-realized final basis:
+
+```text
+O_final = L' * O_boundary * L
+```
+
+The input must be a `pqs_retained_source_one_body_matrix(...)` result in
+`:retained_pqs_source_modes`. This helper is restricted to overlap and kinetic
+for the first PQS final one-body seam.
+"""
+function pqs_source_shell_final_one_body_from_boundary_matrix(
+    final_basis::NamedTuple,
+    retained_boundary_result::NamedTuple;
+    term = nothing,
+    symmetry_atol::Real = 1.0e-8,
+)
+    _pqs_shell_projected_one_body_validate_basis(final_basis)
+    _pqs_shell_boundary_one_body_validate_input(retained_boundary_result)
+    resolved_term =
+        _pqs_shell_boundary_one_body_resolve_term(retained_boundary_result, term)
+    isnothing(resolved_term) &&
+        return _pqs_shell_boundary_one_body_blocked_result(
+            final_basis,
+            retained_boundary_result,
+            :unsupported_pqs_boundary_one_body_term,
+            term,
+        )
+
+    boundary_operator = Matrix{Float64}(retained_boundary_result.matrix)
+    boundary_count = final_basis.boundary_source_mode_count
+    size(boundary_operator) == (boundary_count, boundary_count) ||
+        throw(DimensionMismatch("PQS boundary one-body matrix shape must match boundary source modes"))
+    all(isfinite, boundary_operator) ||
+        throw(ArgumentError("PQS boundary one-body matrix contains non-finite entries"))
+    boundary_symmetry_error =
+        norm(boundary_operator - transpose(boundary_operator), Inf)
+    boundary_symmetry_error > Float64(symmetry_atol) &&
+        return _pqs_shell_boundary_one_body_blocked_result(
+            final_basis,
+            retained_boundary_result,
+            :boundary_operator_not_symmetric,
+            resolved_term,
+            boundary_operator_shape = size(boundary_operator),
+            boundary_operator_symmetry_error = boundary_symmetry_error,
+        )
+
+    cleanup = final_basis.lowdin_cleanup
+    final_operator = transpose(cleanup) * boundary_operator * cleanup
+    final_symmetry_error = norm(final_operator - transpose(final_operator), Inf)
+    return (;
+        object_kind = :pqs_source_shell_final_one_body_from_boundary_matrix,
+        status = :materialized_pqs_shell_final_one_body_from_boundary_matrix,
+        blocker = nothing,
+        term = resolved_term,
+        input_term = retained_boundary_result.term,
+        input_object_kind = retained_boundary_result.object_kind,
+        input_matrix_space = retained_boundary_result.matrix_space,
+        boundary_operator,
+        boundary_operator_shape = size(boundary_operator),
+        boundary_operator_finite = true,
+        boundary_operator_symmetry_error = boundary_symmetry_error,
+        final_operator,
+        final_operator_shape = size(final_operator),
+        final_operator_finite = all(isfinite, final_operator),
+        final_operator_symmetry_error = final_symmetry_error,
+        final_basis_object_kind = final_basis.object_kind,
+        final_basis_status = final_basis.status,
+        boundary_source_mode_count = final_basis.boundary_source_mode_count,
+        final_retained_count = final_basis.final_retained_count,
+        retained_boundary_operator_input_used = true,
+        raw_source_operator_input_used = false,
+        shell_support_operator_generated = false,
+        shell_realization_materialized = true,
+        lowdin_cleanup_used = true,
+        one_body_operator_materialized = true,
+        electron_nuclear_materialized = false,
+        charge_summing_materialized = false,
+        h1_solve_materialized = false,
+        hamiltonian_data_materialized = false,
+        ida_data_materialized = false,
+        density_density_materialized = false,
+        rhf_materialized = false,
+        driver_route_materialized = false,
+        exports_materialized = false,
+        artifacts_materialized = false,
+        next_blocker = :missing_pqs_shell_boundary_electron_nuclear_operator_source,
+        metadata = (;
+            source = :pqs_source_shell_final_one_body_from_boundary_matrix,
+            boundary_operator_contract =
+                :retained_pqs_source_modes_equal_shell_projected_boundary_operator,
+            current_route_safe_term_matrices_used = false,
+            old_fixed_block_matrix_authority_used = false,
+        ),
+    )
+end
+
+function _pqs_shell_boundary_one_body_validate_input(result::NamedTuple)
+    get(result, :object_kind, nothing) === :pqs_retained_source_one_body_matrix ||
+        throw(ArgumentError("PQS final boundary one-body helper requires a retained-source one-body matrix result"))
+    get(result, :matrix_materialized, false) ||
+        throw(ArgumentError("PQS final boundary one-body helper requires a materialized retained-source matrix"))
+    get(result, :matrix_space, nothing) === :retained_pqs_source_modes ||
+        throw(ArgumentError("PQS final boundary one-body helper requires retained PQS source-mode matrix space"))
+    haskey(result, :matrix) ||
+        throw(ArgumentError("PQS final boundary one-body helper requires a matrix field"))
+    return nothing
+end
+
+function _pqs_shell_boundary_one_body_resolve_term(result::NamedTuple, requested)
+    input_term = get(result, :term, nothing)
+    resolved = _pqs_shell_boundary_one_body_normalize_term(input_term)
+    requested_resolved =
+        isnothing(requested) ? resolved :
+        _pqs_shell_boundary_one_body_normalize_term(Symbol(requested))
+    if isnothing(requested)
+        return resolved
+    end
+    return resolved === requested_resolved ? resolved : nothing
+end
+
+function _pqs_shell_boundary_one_body_normalize_term(term)
+    term === :retained_source_overlap && return :overlap
+    term === :source_overlap && return :overlap
+    term === :overlap && return :overlap
+    term === :retained_source_kinetic && return :kinetic
+    term === :source_kinetic && return :kinetic
+    term === :kinetic && return :kinetic
+    return nothing
+end
+
+function _pqs_shell_boundary_one_body_blocked_result(
+    final_basis,
+    retained_boundary_result,
+    blocker::Symbol,
+    term;
+    boundary_operator_shape = nothing,
+    boundary_operator_symmetry_error = nothing,
+)
+    return (;
+        object_kind = :pqs_source_shell_final_one_body_from_boundary_matrix,
+        status = :blocked_pqs_shell_final_one_body_from_boundary_matrix,
+        blocker,
+        term,
+        input_term = get(retained_boundary_result, :term, nothing),
+        input_object_kind = get(retained_boundary_result, :object_kind, nothing),
+        input_matrix_space = get(retained_boundary_result, :matrix_space, nothing),
+        boundary_operator = nothing,
+        boundary_operator_shape,
+        boundary_operator_finite = nothing,
+        boundary_operator_symmetry_error,
+        final_operator = nothing,
+        final_operator_shape = nothing,
+        final_operator_finite = false,
+        final_operator_symmetry_error = nothing,
+        final_basis_object_kind = final_basis.object_kind,
+        final_basis_status = final_basis.status,
+        boundary_source_mode_count = final_basis.boundary_source_mode_count,
+        final_retained_count = final_basis.final_retained_count,
+        retained_boundary_operator_input_used = false,
+        raw_source_operator_input_used = false,
+        shell_support_operator_generated = false,
+        shell_realization_materialized = true,
+        lowdin_cleanup_used = true,
+        one_body_operator_materialized = false,
+        electron_nuclear_materialized = false,
+        charge_summing_materialized = false,
+        h1_solve_materialized = false,
+        hamiltonian_data_materialized = false,
+        ida_data_materialized = false,
+        density_density_materialized = false,
+        rhf_materialized = false,
+        driver_route_materialized = false,
+        exports_materialized = false,
+        artifacts_materialized = false,
+        next_blocker = :missing_pqs_shell_boundary_electron_nuclear_operator_source,
+        metadata = (;
+            source = :pqs_source_shell_final_one_body_from_boundary_matrix,
+            boundary_operator_contract =
+                :retained_pqs_source_modes_equal_shell_projected_boundary_operator,
+            current_route_safe_term_matrices_used = false,
+            old_fixed_block_matrix_authority_used = false,
+        ),
+    )
+end

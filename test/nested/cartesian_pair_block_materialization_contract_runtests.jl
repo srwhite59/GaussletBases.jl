@@ -3203,6 +3203,56 @@ end
     @test !projected_shell_operator.metadata.current_route_safe_term_matrices_used
     @test !projected_shell_operator.metadata.retained_source_operator_lowdin_transform_used
 
+    boundary_overlap_result = (;
+        object_kind = :pqs_retained_source_one_body_matrix,
+        status = :materialized_pqs_retained_source_one_body_matrix,
+        blocker = nothing,
+        term = :retained_source_overlap,
+        matrix = final_basis_identity,
+        matrix_space = :retained_pqs_source_modes,
+        retained_dimension = final_basis_boundary_count,
+        matrix_materialized = true,
+    )
+    final_overlap_from_boundary =
+        CPBM.pqs_source_shell_final_one_body_from_boundary_matrix(
+            final_basis,
+            boundary_overlap_result,
+        )
+    @test final_overlap_from_boundary.object_kind ==
+          :pqs_source_shell_final_one_body_from_boundary_matrix
+    @test final_overlap_from_boundary.status ==
+          :materialized_pqs_shell_final_one_body_from_boundary_matrix
+    @test final_overlap_from_boundary.blocker === nothing
+    @test final_overlap_from_boundary.term == :overlap
+    @test final_overlap_from_boundary.boundary_operator == final_basis_identity
+    @test final_overlap_from_boundary.final_operator == final_basis_identity
+    @test final_overlap_from_boundary.retained_boundary_operator_input_used
+    @test !final_overlap_from_boundary.raw_source_operator_input_used
+    @test !final_overlap_from_boundary.shell_support_operator_generated
+    @test final_overlap_from_boundary.one_body_operator_materialized
+    @test !final_overlap_from_boundary.electron_nuclear_materialized
+    @test !final_overlap_from_boundary.charge_summing_materialized
+    @test !final_overlap_from_boundary.h1_solve_materialized
+    @test !final_overlap_from_boundary.hamiltonian_data_materialized
+    @test final_overlap_from_boundary.next_blocker ==
+          :missing_pqs_shell_boundary_electron_nuclear_operator_source
+
+    boundary_kinetic_result = merge(
+        boundary_overlap_result,
+        (term = :retained_source_kinetic, matrix = shell_operator),
+    )
+    final_kinetic_from_boundary =
+        CPBM.pqs_source_shell_final_one_body_from_boundary_matrix(
+            final_basis,
+            boundary_kinetic_result;
+            term = :kinetic,
+        )
+    @test final_kinetic_from_boundary.term == :kinetic
+    @test final_kinetic_from_boundary.boundary_operator == shell_operator
+    @test final_kinetic_from_boundary.final_operator == shell_operator
+    @test final_kinetic_from_boundary.boundary_operator_symmetry_error == 0.0
+    @test final_kinetic_from_boundary.final_operator_symmetry_error == 0.0
+
     overlap_bridge_batch =
         CPBM.pqs_source_pair_shell_realization_bridge_summary(selector_batch_overlap)
     @test overlap_bridge_batch.object_kind ==
