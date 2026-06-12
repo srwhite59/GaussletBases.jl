@@ -540,10 +540,13 @@ retained-block assembly. Its current bridge summaries are metadata-only
 records of the later shell-realization handoff, not the realization itself.
 The final PQS pair-block readiness summary consumes those single or batch
 bridge summaries and currently blocks on `:shell_realization_not_materialized`;
-it does not build shell projection, Lowdin, final retained blocks,
-Hamiltonians, exports, artifacts, IDA/MWG data, or Coulomb. Broader PQS final
-blocks, full White--Lindsey route assembly, Coulomb/IDA, and Hamiltonian
-assembly remain future work.
+that blocker is now scoped to the bridge-level source-space summary. The
+explicit PQS one-electron final-basis seam exists separately for retained
+boundary overlap/kinetic and separated by-center nuclear matrices. The bridge
+readiness summary still does not build shell projection, Lowdin, final retained
+blocks, Hamiltonians, exports, artifacts, IDA/MWG data, or Coulomb. Broader
+route-driver adoption, Coulomb/IDA, and many-electron assembly remain future
+work.
 
 For low-order White--Lindsey boundary-stratum retained-unit pairs, pair-block
 materialization now recognizes `:white_lindsey_boundary_stratum_adapter_path`

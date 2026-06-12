@@ -186,10 +186,11 @@ old-oracle equivalence for overlap, kinetic, position_x/y/z, and x2_x/y/z.
 
 The local final-readiness helper
 `pqs_source_pair_final_block_readiness_summary(bridge_summary)` consumes single
-or batch PQS source shell-realization bridge summaries and reports whether a
-future final retained PQS pair block could be attempted. Current summaries are
-blocked by `:shell_realization_not_materialized`, and blocked bridge summaries
-propagate their blockers.
+or batch PQS source shell-realization bridge summaries and reports whether the
+bridge-level source-space block can be promoted directly to a final retained
+PQS pair block. These summaries are still blocked by
+`:shell_realization_not_materialized`, and blocked bridge summaries propagate
+their blockers. The explicit PQS final-basis H1 path is separate.
 
 For White--Lindsey boundary-stratum retained-unit pairs,
 `CartesianPairBlockMaterialization` still recognizes the pair-operator
@@ -417,7 +418,7 @@ The PQS source geometry is “one filled box,” but the actual retained space c
 | **Pair operator block**             | Numerical block for one pair of final retained units and one or more operator terms.                  | Not yet built when report says metadata-only.                    |
 | **PQS source-space block**          | A raw source-mode block for a PQS/PQS safe one-body term, built from caller-supplied 1D source factors. | Not a final shell-realized PQS pair block.                       |
 | **PQS source shell-realization bridge summary** | Metadata-only summary describing how a PQS source-space block or batch can later be consumed by shell realization. | It records keys, source-mode facts, statuses, blockers, paths, and flags; it builds no shell projection, Lowdin, final pair block, Hamiltonian, export, artifact, IDA/MWG data, or Coulomb. |
-| **PQS final pair-block readiness summary** | Metadata-only summary over a single or batch PQS source shell-realization bridge summary. | Reports whether a future final retained PQS pair block could be attempted; currently blocks on `:shell_realization_not_materialized` and builds no shell projection, Lowdin, final block, Hamiltonian, export, artifact, IDA/MWG data, or Coulomb. |
+| **PQS final pair-block readiness summary** | Metadata-only summary over a single or batch PQS source shell-realization bridge summary. | Reports whether that bridge-level source-space block can be promoted directly to a final retained PQS pair block; still blocks on `:shell_realization_not_materialized` for the bridge surface. The explicit final-basis H1 route is separate and consumes retained boundary operators through shell-realization and Hamiltonian-stage helpers. |
 | **LW boundary-stratum adapter preflight** | Pair-block materialization classification for `:white_lindsey_boundary_stratum_adapter_path`. | Uses `:white_lindsey_boundary_stratum_adapter_preflight` as the adapter boundary. Local unit coefficient maps and one-body adapter blocks now exist behind this boundary, but full route/operator assembly, Coulomb, IDA/MWG, Hamiltonian export, and artifacts remain unavailable. |
 | **LW adapter reuse summary** | Internal metadata helper `white_lindsey_boundary_stratum_adapter_summary(record)` over LW adapter preflight records. | Records reuse targets: facet/face -> `_nested_face_product`, edge -> `_nested_edge_product`, corner -> `_nested_corner_piece`, facet/edge side helper -> `_nested_doside_1d`; batch summaries expose reuse metadata counts only, not full route assembly readiness. |
 | **LW unit adapter descriptor** | Internal metadata helper `white_lindsey_boundary_stratum_unit_adapter_descriptor(unit)` over one LW boundary-stratum retained unit. | Records compact source-CPB/kernel-input facts before coefficient materialization. |

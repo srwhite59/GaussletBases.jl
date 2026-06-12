@@ -88,12 +88,15 @@ surface.
 
 `pqs_source_pair_final_block_readiness_summary(bridge_summary)` consumes either
 a single PQS source shell-realization bridge summary or a bridge batch summary.
-It reports whether a future final retained PQS pair block could be attempted.
-At the current checkpoint the expected status remains blocked by
-`:shell_realization_not_materialized`; blocked bridge summaries propagate their
-own blockers. This helper is metadata-only and does not build shell projection,
-Lowdin data, final retained PQS pair blocks, Hamiltonians, exports, artifacts,
-IDA/MWG data, or Coulomb blocks.
+It reports whether that bridge-level source-space block can itself be treated as
+a final retained PQS pair block. These bridge summaries still block with
+`:shell_realization_not_materialized`; that is a bridge-surface limitation, not
+the live final-basis H1 route. The current final-basis route consumes retained
+boundary overlap/kinetic and separated by-center nuclear matrices through the
+explicit shell-realization and Hamiltonian-stage helpers. This readiness helper
+is metadata-only and does not build shell projection, Lowdin data, final
+retained PQS pair blocks, Hamiltonians, exports, artifacts, IDA/MWG data, or
+Coulomb blocks.
 
 For White--Lindsey boundary-stratum pairs,
 `CartesianPairBlockMaterialization` now recognizes pair-operator records whose
@@ -678,13 +681,15 @@ Bridge summaries do not build shell projection, Lowdin data, final retained
 PQS pair blocks, Hamiltonians, exports, artifacts, IDA/MWG data, or Coulomb
 blocks.
 
-The final-block readiness summary is the next metadata-only checkpoint. It
-consumes a single bridge summary or a bridge batch summary and reports whether
-a future final retained PQS pair block could be attempted. Current source
-bridges correctly block with `:shell_realization_not_materialized`, and blocked
-bridge summaries propagate their blockers. The readiness summary builds no
-shell projection, Lowdin data, final retained PQS pair block, Hamiltonian,
-export, artifact, IDA/MWG data, or Coulomb block.
+The final-block readiness summary remains a bridge-level metadata checkpoint.
+It consumes a single bridge summary or a bridge batch summary and reports
+whether that source-space bridge can be promoted directly to a final retained
+PQS pair block. Source bridges correctly block with
+`:shell_realization_not_materialized`, and blocked bridge summaries propagate
+their blockers. The live final-basis H1 path is no longer this bridge summary:
+it is the explicit retained-boundary -> shell-final -> Hamiltonian-stage path.
+The readiness summary builds no shell projection, Lowdin data, final retained
+PQS pair block, Hamiltonian, export, artifact, IDA/MWG data, or Coulomb block.
 
 The current mixed one-body consumer checkpoint remains private to
 `CartesianPairBlockMaterialization`. It accepts a

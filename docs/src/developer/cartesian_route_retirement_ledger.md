@@ -541,6 +541,17 @@ outside this decomposed WL acceptance contract.
   projection/Lowdin, wire route drivers, export artifacts, or assemble a full
   White--Lindsey route.
 
+PQS one-electron update, 2026-06-12:
+
+- The explicit source-box/final-basis H1 probe now succeeds through retained
+  boundary overlap/kinetic, separated by-center nuclear matrices, Hamiltonian
+  stage charge application, and an ordinary final-basis eigensolve.
+- Bridge-level `:shell_realization_not_materialized` checks remain valid only
+  for source-space bridge summaries. They should not be read as the current
+  status of the final-basis one-electron route.
+- `_pqs_current_route_safe_term_matrices(...)` remains oracle/debug vocabulary.
+  It should not be reintroduced as the production PQS final-basis route.
+
 ## CartesianContractedParentMetrics CPB-Layer Retirement Audit
 
 Audit target: `src/CartesianContractedParentMetrics.jl` as of the CPB-local
