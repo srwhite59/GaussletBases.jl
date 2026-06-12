@@ -10646,18 +10646,222 @@ function _pqs_source_box_route_driver_complete_core_shell_source_plan_payload(
     end
 end
 
+function _pqs_source_box_route_driver_descriptor_property(
+    object,
+    key::Symbol,
+    default = nothing,
+)
+    object isa NamedTuple && haskey(object, key) && return getfield(object, key)
+    hasproperty(object, key) && return getproperty(object, key)
+    return default
+end
+
+function _pqs_source_box_route_driver_complete_core_shell_center_records(parent)
+    center_table =
+        hasproperty(parent, :center_table) ? parent.center_table : nothing
+    isnothing(center_table) && return nothing, (:center_table,)
+    centers = Tuple(center_table)
+    isempty(centers) && return nothing, (:center_table,)
+    records = Tuple(
+        (;
+            center_key = center.center_key,
+            center_index = center.center_index,
+            location = center.location,
+            charge = Float64(center.nuclear_charge),
+            nuclear_charge = Float64(center.nuclear_charge),
+        ) for center in centers
+    )
+    return records, ()
+end
+
+function _pqs_source_box_route_driver_complete_core_shell_axis_layers(
+    parent_axis_bundle_object,
+)
+    missing = Symbol[]
+    layers = Dict{Symbol,Any}()
+    for axis in (:x, :y, :z)
+        pgdg = _nested_axis_pgdg(parent_axis_bundle_object, axis)
+        if isnothing(pgdg)
+            push!(missing, Symbol(axis, "_pgdg_intermediate"))
+            continue
+        end
+        layer =
+            _pqs_source_box_route_driver_descriptor_property(
+                pgdg,
+                :auxiliary_layer,
+            )
+        if isnothing(layer)
+            push!(missing, Symbol(axis, "_auxiliary_layer"))
+            continue
+        end
+        layers[axis] = layer
+    end
+    isempty(missing) || return nothing, Tuple(missing)
+    return (x = layers[:x], y = layers[:y], z = layers[:z]), ()
+end
+
+function _pqs_source_box_route_driver_complete_core_shell_h1_payload(
+    parent,
+    source_plan_payload,
+    recipe,
+)
+    source_plan = source_plan_payload.source_plan
+    if isnothing(source_plan)
+        status = :blocked_missing_complete_core_shell_source_plan_for_h1
+        return (;
+            status,
+            blocker = :missing_complete_core_shell_source_plan,
+            final_basis = nothing,
+            h1_payload = nothing,
+            missing_inputs = (:pqs_multilayer_shell_source_plan,),
+            summary = (;
+                status,
+                blocker = :missing_complete_core_shell_source_plan,
+                final_basis_status = :not_available,
+                h1_payload_status = :not_available,
+            ),
+        )
+    end
+
+    center_records, missing_centers =
+        _pqs_source_box_route_driver_complete_core_shell_center_records(parent)
+    axis_layers, missing_axis_layers =
+        _pqs_source_box_route_driver_complete_core_shell_axis_layers(
+            parent.parent_axis_bundle_object,
+        )
+    missing_inputs = (missing_centers..., missing_axis_layers...)
+    if !isempty(missing_inputs)
+        status = :blocked_missing_complete_core_shell_h1_inputs
+        return (;
+            status,
+            blocker = :missing_complete_core_shell_h1_inputs,
+            final_basis = nothing,
+            h1_payload = nothing,
+            missing_inputs,
+            summary = (;
+                status,
+                blocker = :missing_complete_core_shell_h1_inputs,
+                final_basis_status = :not_available,
+                h1_payload_status = :not_available,
+            ),
+        )
+    end
+
+    metadata = (;
+        source = :pqs_source_box_route_driver_complete_core_shell_h1_payload,
+        route_kind = recipe.route_kind,
+        route_family = recipe.route_family,
+        shellification_backed_geometry = true,
+        explicit_box_bridge = false,
+    )
+    try
+        final_basis = pqs_multilayer_complete_core_shell_final_basis(
+            source_plan;
+            metadata,
+        )
+        final_basis_status = get(final_basis, :status, nothing)
+        if final_basis_status !== :available_pqs_complete_core_shell_final_basis
+            status = :blocked_complete_core_shell_final_basis
+            return (;
+                status,
+                blocker = get(final_basis, :blocker, :complete_core_shell_final_basis_blocked),
+                final_basis = nothing,
+                h1_payload = nothing,
+                missing_inputs = (:pqs_multilayer_complete_core_shell_final_basis,),
+                summary = (;
+                    status,
+                    blocker = get(final_basis, :blocker, :complete_core_shell_final_basis_blocked),
+                    final_basis_status,
+                    h1_payload_status = :not_available,
+                ),
+            )
+        end
+
+        h1_payload = pqs_multilayer_complete_core_shell_h1_payload(
+            source_plan;
+            final_basis,
+            coulomb_expansion = source_plan_payload.coulomb_expansion,
+            center_records,
+            axis_layers,
+            metadata,
+        )
+        h1_payload_status = get(h1_payload, :status, nothing)
+        h1_payload_status ===
+        :materialized_pqs_multilayer_complete_core_shell_h1_payload || return (;
+            status = :blocked_complete_core_shell_h1_payload,
+            blocker = get(h1_payload, :blocker, :complete_core_shell_h1_payload_blocked),
+            final_basis,
+            h1_payload = nothing,
+            missing_inputs = (:pqs_multilayer_complete_core_shell_h1_payload,),
+            summary = (;
+                status = :blocked_complete_core_shell_h1_payload,
+                blocker = get(h1_payload, :blocker, :complete_core_shell_h1_payload_blocked),
+                final_basis_status,
+                h1_payload_status,
+            ),
+        )
+
+        return (;
+            status = :available_complete_core_shell_h1_payload,
+            blocker = nothing,
+            final_basis,
+            h1_payload,
+            missing_inputs = (),
+            summary = (;
+                status = :available_complete_core_shell_h1_payload,
+                blocker = nothing,
+                final_basis_status,
+                h1_payload_status,
+                final_dimension = h1_payload.summary.final_dimension,
+                h1_energy = h1_payload.h1.lowest_energy,
+                center_count = length(center_records),
+            ),
+        )
+    catch error
+        error isa ArgumentError || rethrow()
+        status = :blocked_complete_core_shell_h1_payload_error
+        return (;
+            status,
+            blocker = :complete_core_shell_h1_payload_error,
+            final_basis = nothing,
+            h1_payload = nothing,
+            missing_inputs = (:pqs_multilayer_complete_core_shell_final_basis,
+                              :pqs_multilayer_complete_core_shell_h1_payload),
+            summary = (;
+                status,
+                blocker = :complete_core_shell_h1_payload_error,
+                final_basis_status = :blocked_argument_error,
+                h1_payload_status = :blocked_argument_error,
+                error_message = sprint(showerror, error),
+            ),
+        )
+    end
+end
+
 function _pqs_source_box_route_driver_blocked_complete_core_shell_h1_j_payload(;
     route_family,
     status,
     blocker,
     missing_inputs,
+    final_basis = nothing,
+    h1_payload = nothing,
     metadata = (;),
 )
+    final_dimension =
+        !isnothing(h1_payload) && hasproperty(h1_payload, :summary) &&
+        hasproperty(h1_payload.summary, :final_dimension) ?
+        h1_payload.summary.final_dimension :
+        nothing
+    h1_energy =
+        !isnothing(h1_payload) && hasproperty(h1_payload, :h1) &&
+        hasproperty(h1_payload.h1, :lowest_energy) ?
+        h1_payload.h1.lowest_energy :
+        nothing
     summary = (;
         status,
         blocker,
-        final_dimension = nothing,
-        h1_energy = nothing,
+        final_dimension,
+        h1_energy,
         self_coulomb = nothing,
         density_gauge = nothing,
         missing_inputs,
@@ -10680,7 +10884,8 @@ function _pqs_source_box_route_driver_blocked_complete_core_shell_h1_j_payload(;
         blocker,
         route_family,
         materialized = false,
-        complete_core_shell_route_payload_available = false,
+        complete_core_shell_route_payload_available =
+            !isnothing(final_basis) && !isnothing(h1_payload),
         region_plan = nothing,
         source_plan = nothing,
         final_basis = nothing,
@@ -10741,6 +10946,8 @@ function _pqs_source_box_route_driver_complete_core_shell_h1_j_diagnostic_payloa
             status = :blocked_missing_complete_core_shell_h1_j_route_inputs,
             blocker = :missing_complete_core_shell_h1_j_route_inputs,
             missing_inputs,
+            final_basis,
+            h1_payload,
             metadata,
         )
     end
@@ -10808,12 +11015,20 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
             transforms,
             recipe,
         )
+    complete_core_shell_h1_payload =
+        _pqs_source_box_route_driver_complete_core_shell_h1_payload(
+            parent,
+            complete_core_shell_source_plan_payload,
+            recipe,
+        )
     complete_core_shell_h1_j_diagnostic_payload =
         _pqs_source_box_route_driver_complete_core_shell_h1_j_diagnostic_payload(
             ;
             route_family = route_skeleton.route_family,
             region_plan = complete_core_shell_source_plan_payload.region_plan,
             source_plan = complete_core_shell_source_plan_payload.source_plan,
+            final_basis = complete_core_shell_h1_payload.final_basis,
+            h1_payload = complete_core_shell_h1_payload.h1_payload,
             coulomb_expansion =
                 complete_core_shell_source_plan_payload.coulomb_expansion,
             metadata = (;
@@ -10821,6 +11036,8 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
                 route_kind = recipe.route_kind,
                 complete_core_shell_source_plan_status =
                     complete_core_shell_source_plan_payload.status,
+                complete_core_shell_h1_payload_status =
+                    complete_core_shell_h1_payload.status,
             ),
         )
 
