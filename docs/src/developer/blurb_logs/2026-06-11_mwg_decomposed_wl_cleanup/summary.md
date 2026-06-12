@@ -81,7 +81,11 @@ The current live He + GTO question is later in the stack:
 - the next scientific target is Be atom S+P GTO residual behavior: old
   nested/QW should be used as oracle, while the live question is how far the
   newer decomposed/final-basis route can honestly go and what precise blocker
-  remains before valid Be RHF.
+  remains before valid Be RHF;
+- the first Be S+P attempt correctly stopped because `/Users/srw/BasisSets`
+  was absent; the authorized retry should use
+  `/Users/srw/Library/CloudStorage/Dropbox/GaussletModules/BasisSets`, which
+  contains Be `cc-pV5Z`.
 
 ## Current Cleanup Rule
 
