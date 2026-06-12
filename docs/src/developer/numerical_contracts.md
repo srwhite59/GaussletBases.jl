@@ -309,6 +309,25 @@ convergence work should vary `ns`, `s`, and `d` together while keeping an
 adequate box, roughly `R >= 8`, rather than overfitting fixed-`ns = 5` spacing.
 The side-23 result is diagnostic only, not the chosen next fixture.
 
+The Fig. 8 He RHF comparison line is now anchored to the archive-local
+White-Lindsey table and provenance extract under
+`/Users/srw/Library/CloudStorage/Dropbox/chatarchive/references/papers/canonical/`.
+The relevant setup is He RHF with AHGBS-9 S-only supplement (`lmaxadd = 0`),
+`doside = n_s`, `corespacing = d`, `dwidth = 10.0`, and
+`gscalefac = sqrt(2.0)`. A repo old nested/QW MWG reproduction of the
+`n_s = 5`, `d = 0.3` point loads AHGBS-9 from the external
+`GaussletModules/BasisSets` file and matches the expected 447-function
+structure: 419 gausslet functions plus 28 residual S directions. Its RHF energy
+is about `-2.862102144533723` Hartree, while the Fig. 8 table gives
+`-2.861543784624258` Hartree, a difference of about `-0.558 mHa`. This is close
+enough for the current reproduction audit and is much smaller than the earlier
+cc-pVTZ side13 diagnostic discrepancy. The `n_s = 5` Fig. 8 reproduction is
+therefore recorded as structurally matched and scientifically useful, but not a
+permanent acceptance test. The next accuracy target is the Fig. 8 `n_s = 7`
+He RHF family, with `d = 0.15` as the first useful point because the table
+reports energy `-2.8616793497179782` Hartree and signed error about
+`+6.458942607424e-7` Hartree there.
+
 The current coarse timing split for the active tiny-box He RHF acceptance is
 reported by the test as diagnostics, not asserted as performance thresholds.
 Before the electron-nuclear cache and precompile workload, a representative

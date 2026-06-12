@@ -1,128 +1,115 @@
 Purpose:
 
-Audit the remaining mismatch between the repo's 447-function AHGBS-9
-old-QW/MWG reproduction and the White-Lindsey Fig. 8 `n_s = 5`, `d = 0.3`
-legacy result.
+Move on from the `n_s = 5` Fig. 8 reproduction audit and run the first
+`n_s = 7` He HF diagnostic. This should test accuracy at a higher
+White-Lindsey shell order while staying in the same He RHF physics family.
 
 Why now:
 
-The previous pass solved the basis-count problem: AHGBS-9 S-only loads from the
-external GaussletModules basis file and the old nested/QW MWG fixture has final
-dimension `447`, matching the Fig. 8/`He.5.3` count. The energy still does not
-match. The repo reproduction gives `-2.862102144533723`, while the Fig. 8 /
-`He.5.3` target is `-2.861543784624258`, a difference of about
-`-0.558 mHa`. This must stay an audit, not an acceptance test.
+The Fig. 8 `n_s = 5`, `d = 0.3`, AHGBS-9 S-only reproduction is structurally
+good enough for now:
 
-Current known facts:
+- AHGBS-9 S-only loads from the external GaussletModules `BasisSets` file.
+- The old nested/QW MWG fixture reaches the expected 447-function structure:
+  `419` gausslet functions plus `28` residual S directions.
+- The reproduction energy is `-2.862102144533723` versus the Fig. 8 target
+  `-2.861543784624258`, a difference of about `-0.558 mHa`.
+- The manager considers this close enough to stop the `n_s = 5` reproduction
+  audit for now.
 
-- archive Fig. 8 target table:
+The previous side13 cc-pVTZ diagnostic was about `2.7 mHa` below the He HF
+reference, which felt large. The AHGBS-9/Fig. 8 reproduction gets the
+comparison into the sub-mH regime. The next accuracy target should therefore be
+`n_s = 7`, still He RHF, not more `n_s = 5` convention archaeology.
+
+Archive target:
+
+- data table:
   `/Users/srw/Library/CloudStorage/Dropbox/chatarchive/references/papers/canonical/White and Lindsey - 2023 - Nested Gausslet Basis Sets_fig8_heuhf_data.tsv`
 - provenance note:
   `/Users/srw/Library/CloudStorage/Dropbox/chatarchive/references/papers/canonical/White and Lindsey - 2023 - Nested Gausslet Basis Sets_fig8_heuhf_provenance.md`
-- detailed legacy log:
-  `/Users/srw/Library/CloudStorage/Dropbox/Nestedruns/He/He.5.3`
-- target:
-  - `n_s = 5`
-  - `d = 0.3`
-  - `AHGBS-9`
-  - `lmaxadd = 0`
-  - `restrictedHF = true`
-  - final dimension `447`
-  - `uhfen = -2.861543784624258`
-- repo reproduction:
-  - final dimension `447`
-  - gausslet/residual counts `419 / 28`
-  - H1 lowest `-1.9999998632985623`
-  - IDA self-Coulomb `1.2496940228276845`
-  - RHF total `-2.862102144533723`
 
-Legacy log facts to inspect:
+Useful Fig. 8 `n_s = 7` table points:
 
-- `(xmin, xmax, xbasradius, ymax) = (-8.0, 8.0, 8.0, 8.0)`
-- `(doside, dwidth, jflat, wi, gscalefac, polylim, lmaxadd, restrictedHF) =
-  (5, 10.0, 39//2, 6.0, 1.4142135623730951, 9, 0, true)`
-- `doInvsqrt = true`
-- `(rangeg, nlet) = (-8:8, 17)`
-- `norm(O1 - eye(Ntot)) = 4.847810690997331e-11`
-- `Ntot = 447`
-- energy iterations:
-  - iteration 1: `-2.861533876725111`
-  - iteration 2: `-2.8615437773499623`
-  - iteration 3: `-2.861543784624258`
-  - iteration 4: `-2.86154378464922`
-- `uhfen = -2.861543784624258`
+- `d = 0.10`: energy `-2.8616756776234777`, signed error
+  `+4.317988761215e-06 Ha`
+- `d = 0.15`: energy `-2.8616793497179782`, signed error
+  `+6.458942607424e-07 Ha`
+- `d = 0.20`: energy `-2.8616833781331921`, signed error
+  `-3.382520953110e-06 Ha`
 
 Exact task:
 
-Create a `tmp/work` audit probe/report that localizes the remaining mismatch.
-Do not add an acceptance test.
+Create a `tmp/work` developer probe for `n_s = 7` He RHF using the old
+nested/QW MWG path first. This is an accuracy diagnostic and paper-target
+comparison, not a new acceptance test.
 
-Audit in this order:
+Use:
 
-1. Mapping/box convention:
-   - reconstruct, as closely as possible, the legacy `He.5.3` one-dimensional
-     mapping from the log/source data: `xmin/xmax`, `rangeg`, `nlet`,
-     `dwidth`, `jflat`, `wi`, `gscalefac`, `doInvsqrt`;
-   - compare the 1D coordinate grid/backbone coordinates to the repo
-     `white_lindsey_atomic_mapping(Z = 2, d = 0.3, tail_spacing = 10.0)`
-     constructor;
-   - record coordinate endpoint differences and whether any existing repo
-     constructor can match the legacy coordinates without new framework work.
+- He, `Z = 2`
+- AHGBS-9 S-only supplement, `lmax = 0`
+- `restrictedHF = true`
+- `doside = n_s = 7`
+- the same external basis source used in the successful `n_s = 5` reproduction:
+  `/Users/srw/Library/CloudStorage/Dropbox/GaussletModules/BasisSets`
+- `interaction_treatment = :mwg`
+- ordinary final-basis solve; no generalized final solve
 
-2. Operator/component comparison:
-   - compare the repo reproduction's one-body lowest orbital and
-     `ordinary_cartesian_1s2_check` self-Coulomb with the legacy log values if
-     available;
-   - isolate whether the mismatch is mostly in one-body, density-density
-     self-Coulomb, or the RHF update/energy formula;
-   - if useful, compare the first iteration energy using the initial one-body
-     orbital against the legacy iteration-1 energy.
+Try at least:
 
-3. RHF convention:
-   - inspect the legacy log and any available legacy source for how
-     `restrictedHF = true` computes `uhfen`;
-   - compare with the compact probe helper's closed-shell formula
-     `2 tr(rho h) + direct - exchange`;
-   - determine whether the repo helper's twenty-iteration convergence vs the
-     legacy four-iteration report is a harmless damping/update difference or an
-     energy-convention mismatch.
+1. `n_s = 7`, `d = 0.15`, because Fig. 8 reports the smallest positive error
+   in the `n_s = 7` family there.
+2. If runtime is reasonable, also run `d = 0.10` and `d = 0.20` to confirm the
+   local trend around the minimum.
 
-4. Basis/source handling:
-   - confirm again that AHGBS-9 S-only source is the external
-     GaussletModules `BasisSets` block and not the vendored repo basis file;
-   - do not vendor or copy the basis file in this pass;
-   - report whether a future accepted Fig. 8 test would need a curated small
-     basis extract or an explicit external-data requirement.
+For each point, record:
+
+- constructor and mapping parameters used;
+- physical endpoints and any legacy box convention notes;
+- gausslet count;
+- residual S-GTO count;
+- final dimension;
+- final overlap identity error;
+- H1 lowest orbital energy;
+- IDA self-Coulomb diagnostic;
+- RHF one-electron energy;
+- RHF electron-electron energy;
+- RHF total energy;
+- error relative to the Fig. 8 table row for that `n_s,d`;
+- error relative to the He HF reference
+  `-2.861679995612238878775544`;
+- iterations and coarse timing.
 
 Decision rules:
 
-- If the mismatch is explainable by mapping/box convention and an existing repo
-  constructor can match the legacy coordinate grid, run that matched probe and
-  report the new energy.
-- If the mismatch is explainable by RHF energy/update convention, report the
-  exact convention and whether the repo helper should be corrected or merely
-  kept probe-local.
-- If neither is resolved, report the smallest next source artifact needed
-  before further coding.
-- Do not change production code unless a narrow bug is unambiguous.
+- If the `n_s = 7`, `d = 0.15` point is within a few mH of the Fig. 8 table,
+  report it and continue no further unless runtime is cheap.
+- If it is in the sub-mH regime, run the adjacent `d = 0.10` and `d = 0.20`
+  points if practical.
+- If the mismatch is unexpectedly large, stop after the first point and report
+  whether the issue appears to be basis loading, dimension mismatch,
+  mapping/box setup, or RHF/MWG convention.
+- Do not try to fix mapping conventions in this pass unless there is a tiny,
+  unambiguous bug.
 
 Trust boundary:
 
-Use `tmp/work` probes first. Do not add an acceptance test. Do not add public
-driver/export paths. Do not introduce raw GTO density-density final operators,
-full-parent CPB fallback, direct Cartesian product fallback, ordinary Cartesian
-IDA fallback, PQS, or generalized final-basis solve. Do not silently replace
-AHGBS-9 with cc-pVTZ.
+Use `tmp/work` probes only. Do not add an acceptance test. Do not add public
+driver/export paths. Do not change production code unless an unambiguous tiny
+bug blocks the diagnostic. Do not silently replace AHGBS-9 with cc-pVTZ. Do not
+introduce raw GTO density-density final operators, full-parent CPB fallback,
+direct Cartesian product fallback, ordinary Cartesian IDA fallback, PQS, or a
+generalized final-basis solve.
 
 Artifacts:
 
-- `tmp/work/fig8_he_rhf_legacy_convention_audit.jl`
-- `tmp/work/fig8_he_rhf_legacy_convention_audit_summary.txt`
-- optional TSV if multiple mapping/RHF variants are compared
+- `tmp/work/fig8_he_ns7_rhf_probe.jl`
+- `tmp/work/fig8_he_ns7_rhf_summary.txt`
+- `tmp/work/fig8_he_ns7_rhf.tsv` if multiple points are run
 
 Validation:
 
-- run the audit probe;
+- run the probe;
 - run `julia --project=. -e 'using GaussletBases; println("load ok")'`;
 - run `git diff --check`;
 - if production code changes are made for a clear bug, run the most local
@@ -140,9 +127,10 @@ Deletion/shrinkage report required:
 Report back:
 
 - artifact paths;
-- mapping/box comparison result;
-- one-body vs density-density vs RHF-convention attribution;
-- whether an existing repo constructor can reproduce the legacy coordinates;
-- whether the `0.558 mHa` mismatch is resolved, reduced, or still open;
+- points run;
+- final dimensions and residual counts;
+- energies and errors vs Fig. 8 and He HF;
+- timing;
+- whether `n_s = 7` looks accurate enough to become the next comparison target;
 - validation run;
 - deletion/shrinkage report.

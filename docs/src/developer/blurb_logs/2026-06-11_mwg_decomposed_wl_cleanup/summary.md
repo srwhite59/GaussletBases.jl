@@ -70,9 +70,11 @@ The current live He + GTO question is later in the stack:
   operator;
 - residual MWG density-density now matches the old nested fixed-block QW/MWG
   oracle on the side13 He + GTO fixture;
-- the remaining question is the scientific target for acceptance, especially
-  matching the White-Lindsey Fig. 8 AHGBS-9 S-only setup rather than the earlier
-  cc-pVTZ diagnostic.
+- the Fig. 8 AHGBS-9 S-only `n_s = 5`, `d = 0.3` reproduction now matches the
+  447-function structure and is within about `0.558 mHa` of the plotted energy,
+  which is close enough to stop that reproduction audit for now;
+- the next scientific target is `n_s = 7` He RHF accuracy, still using the
+  Fig. 8 AHGBS-9 S-only family.
 
 ## Current Cleanup Rule
 
