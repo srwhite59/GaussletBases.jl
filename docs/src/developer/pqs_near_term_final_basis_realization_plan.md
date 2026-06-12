@@ -465,16 +465,37 @@ by-center nuclear support matrices through
 `CartesianFinalBasisRealization.pqs_complete_core_shell_final_one_body_matrix`,
 build the one-electron Hamiltonian, and solve H1.
 
-The next smallest integration seam should therefore be an H1 assembly payload,
-not another source-plan helper. A narrow candidate is an internal helper that
-consumes the region-backed source plan, the complete core/shell final basis,
-the Coulomb expansion, and center records, then returns final kinetic,
-separated final by-center nuclear records, a one-electron Hamiltonian, the H1
-solve, and a compact nonclaim summary. It should keep the dense support-space
-one-body helpers scoped to this H1 seam and make no IDA, density-density, RHF,
-driver, export, artifact, GTO, or fixture-rule claim. If implemented, the H1
-test can shrink to fixture construction, one payload call, the fixed-block
-oracle comparison, and a few final energy/status checks.
+The H1 assembly seam is now represented by
+`pqs_multilayer_complete_core_shell_h1_payload(...)`. It consumes the
+region-backed source plan, complete core/shell final basis, Coulomb expansion,
+and center records, then returns final kinetic, separated final by-center
+nuclear records, a one-electron Hamiltonian, the H1 solve, and a compact
+nonclaim summary. It keeps the dense support-space one-body helpers scoped to
+this H1 seam and still makes no IDA, density-density, RHF, driver, export,
+artifact, GTO, or fixture-rule claim.
+
+The next H1/J density seam should consume that H1 payload plus the complete
+final basis and route-owned density inputs. The existing corrected density
+helpers expect a raw support-pair numerator matrix and positive support-row
+weights in the same `core_then_shell` order used by the complete final basis.
+The density interaction is formed in the localized pre-final positive-weight
+gauge:
+
+```text
+pre_final_weights = pre_final_coefficients' * support_weights
+weighted_coefficients = pre_final_coefficients ./ pre_final_weights
+pair_matrix = weighted_coefficients' * raw_pair_numerator * weighted_coefficients
+```
+
+That is the reviewed boundary for the current complete core/shell PQS H1/J
+diagnostic. It is not signed-final-weight division and not raw no-division.
+`pqs_complete_core_shell_final_ida_weights(...)` remains useful as a final
+weight diagnostic, but the self-Coulomb diagnostic is owned by
+`pqs_complete_core_shell_pre_final_density_interaction(...)` followed by
+`pqs_complete_core_shell_pre_final_orbital_self_coulomb(...)`. The remaining
+route-owned gap is the producer for support weights, support raw pair numerator,
+and lowest H1 orbital coefficients; current side-13 H1/J probes still build
+those inputs locally.
 
 ## Validation Policy
 
