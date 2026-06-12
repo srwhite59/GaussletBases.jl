@@ -222,6 +222,157 @@ function pqs_multilayer_complete_core_shell_h1_payload(
     )
 end
 
+"""
+    pqs_multilayer_complete_core_shell_h1_j_payload(plan; ...)
+
+Build the narrow complete core/shell PQS H1/J diagnostic payload from an
+available H1 payload and route-owned support-density inputs. This helper uses
+the reviewed pre-final positive-weight density gauge. It does not materialize
+RHF, GTO, driver wiring, exports, artifacts, or fixture-rule policy.
+"""
+function pqs_multilayer_complete_core_shell_h1_j_payload(
+    plan;
+    final_basis,
+    h1_payload,
+    axis_weights,
+    raw_pair_factor_terms,
+    coulomb_expansion,
+    metadata = (;),
+)
+    _pqs_multilayer_property(plan, :object_kind) ===
+        :pqs_multilayer_shell_source_plan ||
+        throw(ArgumentError("PQS multi-layer H1/J payload requires a pqs_multilayer_shell_source_plan"))
+    plan.status === :available_pqs_multilayer_shell_source_plan ||
+        throw(ArgumentError("PQS multi-layer H1/J payload requires an available source plan"))
+    get(final_basis, :status, nothing) === :available_pqs_complete_core_shell_final_basis ||
+        throw(ArgumentError("PQS multi-layer H1/J payload requires an available complete core/shell final basis"))
+    get(h1_payload, :object_kind, nothing) ===
+        :pqs_multilayer_complete_core_shell_h1_payload ||
+        throw(ArgumentError("PQS multi-layer H1/J payload requires a complete core/shell H1 payload"))
+    get(h1_payload, :status, nothing) ===
+        :materialized_pqs_multilayer_complete_core_shell_h1_payload ||
+        throw(ArgumentError("PQS multi-layer H1/J payload requires a materialized H1 payload"))
+
+    support_weights = pqs_multilayer_support_weights(plan; axis_weights)
+    support_pair_raw = pqs_multilayer_support_pair_raw_numerator_matrix(
+        plan;
+        raw_pair_factor_terms,
+        coulomb_expansion,
+    )
+    density_interaction =
+        CartesianFinalBasisRealization.pqs_complete_core_shell_pre_final_density_interaction(
+            final_basis,
+            support_pair_raw,
+            support_weights;
+            metadata = merge(
+                NamedTuple(metadata),
+                (;
+                    source = :pqs_multilayer_complete_core_shell_h1_j_payload,
+                    support_density_input_source =
+                        :pqs_multilayer_support_density_helpers,
+                ),
+            ),
+        )
+    if density_interaction.status !==
+       :materialized_pqs_complete_core_shell_pre_final_density_interaction
+        summary = (;
+            status = :blocked_pqs_multilayer_complete_core_shell_h1_j_payload,
+            blocker = density_interaction.blocker,
+            final_dimension = get(final_basis, :final_retained_count, 0),
+            h1_energy = h1_payload.h1.lowest_energy,
+            density_interaction_status = density_interaction.status,
+            self_coulomb_materialized = false,
+            ida_data_materialized = true,
+            density_density_materialized = true,
+            rhf_materialized = false,
+            gto_materialized = false,
+            driver_route_materialized = false,
+            exports_materialized = false,
+            artifacts_materialized = false,
+        )
+        return (;
+            object_kind = :pqs_multilayer_complete_core_shell_h1_j_payload,
+            status = summary.status,
+            blocker = summary.blocker,
+            density_interaction,
+            self_coulomb = nothing,
+            summary,
+            metadata = merge(
+                NamedTuple(metadata),
+                (;
+                    source = :pqs_multilayer_complete_core_shell_h1_j_payload,
+                    support_density_input_source =
+                        :pqs_multilayer_support_density_helpers,
+                ),
+            ),
+        )
+    end
+
+    hamiltonian = Matrix{Float64}(h1_payload.final_hamiltonian.hamiltonian_matrix)
+    decomposition = eigen(Symmetric((hamiltonian + transpose(hamiltonian)) ./ 2))
+    lowest_energy = first(decomposition.values)
+    lowest_orbital = decomposition.vectors[:, 1]
+    self_coulomb =
+        CartesianFinalBasisRealization.pqs_complete_core_shell_pre_final_orbital_self_coulomb(
+            density_interaction,
+            lowest_orbital;
+            metadata = merge(
+                NamedTuple(metadata),
+                (;
+                    source = :pqs_multilayer_complete_core_shell_h1_j_payload,
+                    h1_orbital_source = :h1_payload_final_hamiltonian_lowest_eigenvector,
+                ),
+            ),
+        )
+    summary = (;
+        status = :materialized_pqs_multilayer_complete_core_shell_h1_j_payload,
+        blocker = nothing,
+        final_dimension = h1_payload.h1.final_dimension,
+        h1_energy = h1_payload.h1.lowest_energy,
+        h1_orbital_energy = lowest_energy,
+        h1_energy_reconstruction_error = abs(lowest_energy - h1_payload.h1.lowest_energy),
+        density_interaction_status = density_interaction.status,
+        density_gauge = density_interaction.density_gauge,
+        pre_final_weights_all_positive =
+            density_interaction.pre_final_weights_all_positive,
+        pre_final_pair_matrix_finite =
+            density_interaction.pre_final_pair_matrix_finite,
+        self_coulomb = self_coulomb.self_coulomb,
+        support_density_input_source = :pqs_multilayer_support_density_helpers,
+        h1_orbital_source = :h1_payload_final_hamiltonian_lowest_eigenvector,
+        signed_final_weight_division_used = false,
+        raw_no_division_used = false,
+        density_normalized_pair_terms_used_as_authority = false,
+        ida_data_materialized = true,
+        density_density_materialized = true,
+        rhf_materialized = false,
+        gto_materialized = false,
+        driver_route_materialized = false,
+        exports_materialized = false,
+        artifacts_materialized = false,
+    )
+    return (;
+        object_kind = :pqs_multilayer_complete_core_shell_h1_j_payload,
+        status = summary.status,
+        blocker = nothing,
+        density_interaction,
+        self_coulomb,
+        summary,
+        metadata = merge(
+            NamedTuple(metadata),
+            (;
+                source = :pqs_multilayer_complete_core_shell_h1_j_payload,
+                support_density_input_source =
+                    :pqs_multilayer_support_density_helpers,
+                density_gauge = :pre_final_localized_positive_weight,
+                signed_final_weight_division_used = false,
+                raw_no_division_used = false,
+                density_normalized_pair_terms_used_as_authority = false,
+            ),
+        ),
+    )
+end
+
 function _blocked_pqs_multilayer_complete_core_shell_final_basis(
     plan;
     blocker,
