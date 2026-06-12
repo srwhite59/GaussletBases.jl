@@ -256,6 +256,16 @@ is therefore a route-owned multi-layer PQS shell source plan that builds and
 combines repeated one-cell shell descriptors; old fixed-block matrices remain
 oracle/reference material only.
 
+That seam is now implemented as `pqs_multilayer_shell_source_plan(...)`. The
+first side-13 final-basis/H1 smoke, using `AsinhMapping(c = 0.1, s = 1.0,
+tail_spacing = 10.0)`, core `(4:10)^3`, and outer box `(1:13)^3`, materialized
+three shell layers, 1,854 shell support rows, 1,206 shell-retained columns, and
+a 1,549-dimensional final basis. The final overlap identity error was about
+`5.51e-13`; the Z = 1 H1 energy was about `-0.494223730383033`, and the Z = 2
+H1 energy was about `-1.975561823201342`. This is a route smoke/probe only, not
+an acceptance gate or RHF fixture. The mapping relation among `Z`, core spacing
+`d`, distortion `s`, radius, and shell depth remains provisional for PQS.
+
 ## Validation Policy
 
 The slow nested harness is not a routine baton-loop validation target. In
