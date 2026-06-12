@@ -422,45 +422,69 @@ function _pqs_multilayer_support_electron_nuclear_matrix(
     return result
 end
 
-"""
-    pqs_multilayer_shell_source_plan(bundles, core_box, outer_box; ...)
+function _pqs_multilayer_explicit_box_layer_specs(
+    core_box::NTuple{3,UnitRange{Int}},
+    outer_box::NTuple{3,UnitRange{Int}},
+)
+    layer_count = _pqs_multilayer_box_depth(outer_box, core_box)
+    specs = Vector{NamedTuple}(undef, layer_count)
+    for layer_index in 1:layer_count
+        inner_box =
+            layer_index == 1 ?
+            core_box :
+            _pqs_multilayer_core_box_at_depth(core_box, layer_index - 1)
+        specs[layer_index] = (;
+            layer_index,
+            current_box = _pqs_multilayer_core_box_at_depth(core_box, layer_index),
+            inner_box,
+            provenance = :explicit_box_bridge,
+        )
+    end
+    return specs
+end
 
-Build a compact route-owned source plan for a direct PQS core plus repeated
-one-cell surrounding shell layers. Each layer is materialized with the existing
-projected-q-shell descriptor and shell-realization plan, then the disjoint shell
-supports and shell isometries are collapsed into one shell sector suitable for
-`CartesianFinalBasisRealization.pqs_complete_core_shell_final_basis`.
+function _pqs_multilayer_region_plan_layer_specs(
+    region_plan::PQSMultilayerShellRegionPlan,
+)
+    return [
+        (;
+            layer_index = layer.layer_index,
+            current_box = layer.current_box,
+            inner_box = layer.inner_box,
+            provenance = :pqs_multilayer_shell_region_plan,
+            terminal_region_key = layer.metadata.terminal_region_key,
+            lowering_kind = layer.metadata.lowering_kind,
+            source_cpb_count = layer.metadata.source_cpb_count,
+        )
+        for layer in region_plan.shell_layers
+    ]
+end
 
-This helper plans shell/source data only. It does not build final-basis overlap,
-one-body operators, H1, IDA, RHF, driver wiring, exports, or artifacts.
-"""
-function pqs_multilayer_shell_source_plan(
+function _pqs_multilayer_realize_shell_source_plan(
     bundles::_CartesianNestedAxisBundles3D,
     core_box::NTuple{3,UnitRange{Int}},
-    outer_box::NTuple{3,UnitRange{Int}};
-    bond_axis::Symbol = :z,
-    term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
-    metadata = (;),
+    outer_box::NTuple{3,UnitRange{Int}},
+    layer_specs::AbstractVector;
+    bond_axis::Symbol,
+    term_coefficients::Union{Nothing,AbstractVector{<:Real}},
+    source_kind::Symbol,
+    metadata,
 )
     dims = _nested_axis_lengths(bundles)
     for axis in 1:3
         first(outer_box[axis]) >= 1 && last(outer_box[axis]) <= dims[axis] ||
             throw(ArgumentError("multi-layer PQS outer box must lie inside parent dimensions"))
     end
-    layer_count = _pqs_multilayer_box_depth(outer_box, core_box)
     metrics = _pqs_multilayer_axis_metrics(bundles)
     core_support_indices =
         _nested_box_support_indices(core_box[1], core_box[2], core_box[3], dims)
     core_support_states =
         [_cartesian_unflat_index(index, dims) for index in core_support_indices]
 
-    shell_records = Vector{NamedTuple}(undef, layer_count)
-    for layer_index in 1:layer_count
-        inner_box =
-            layer_index == 1 ?
-            core_box :
-            _pqs_multilayer_core_box_at_depth(core_box, layer_index - 1)
-        current_box = _pqs_multilayer_core_box_at_depth(core_box, layer_index)
+    shell_records = Vector{NamedTuple}(undef, length(layer_specs))
+    for (record_index, spec) in pairs(layer_specs)
+        inner_box = spec.inner_box
+        current_box = spec.current_box
         q_values = length.(inner_box)
         all(q -> q == q_values[1], q_values) ||
             throw(ArgumentError("multi-layer PQS shell layers currently require cubic raw source dimensions"))
@@ -484,8 +508,8 @@ function pqs_multilayer_shell_source_plan(
             )
         shell_final_coefficients =
             shell_plan.shell_projection_matrix * shell_plan.lowdin_cleanup
-        shell_records[layer_index] = (;
-            layer_index,
+        shell_records[record_index] = (;
+            layer_index = spec.layer_index,
             current_box,
             inner_box,
             raw_source_dims = (q, q, q),
@@ -499,6 +523,7 @@ function pqs_multilayer_shell_source_plan(
             mode_count = descriptor.mode_count,
             retained_count = descriptor.retained_count,
             isometry_error = shell_plan.isometry_error,
+            provenance = get(spec, :provenance, nothing),
         )
     end
 
@@ -528,7 +553,7 @@ function pqs_multilayer_shell_source_plan(
     summary = (;
         status,
         blocker,
-        layer_count,
+        layer_count = length(layer_specs),
         core_support_count = length(core_support_indices),
         shell_support_count = length(shell_support_indices),
         shell_final_retained_count = size(shell_final_coefficients, 2),
@@ -548,13 +573,13 @@ function pqs_multilayer_shell_source_plan(
         object_kind = :pqs_multilayer_shell_source_plan,
         status,
         blocker,
-        source_kind = :repeated_one_cell_projected_q_shell_layers,
+        source_kind,
         bundles,
         metrics,
         core_box,
         outer_box,
         bond_axis,
-        layer_count,
+        layer_count = length(layer_specs),
         shell_records,
         core_support_indices,
         core_support_states,
@@ -573,6 +598,38 @@ function pqs_multilayer_shell_source_plan(
     )
 end
 
+"""
+    pqs_multilayer_shell_source_plan(bundles, core_box, outer_box; ...)
+
+Build a compact route-owned source plan for a direct PQS core plus repeated
+one-cell surrounding shell layers. Each layer is materialized with the existing
+projected-q-shell descriptor and shell-realization plan, then the disjoint shell
+supports and shell isometries are collapsed into one shell sector suitable for
+`CartesianFinalBasisRealization.pqs_complete_core_shell_final_basis`.
+
+This helper plans shell/source data only. It does not build final-basis overlap,
+one-body operators, H1, IDA, RHF, driver wiring, exports, or artifacts.
+"""
+function pqs_multilayer_shell_source_plan(
+    bundles::_CartesianNestedAxisBundles3D,
+    core_box::NTuple{3,UnitRange{Int}},
+    outer_box::NTuple{3,UnitRange{Int}};
+    bond_axis::Symbol = :z,
+    term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
+    metadata = (;),
+)
+    return _pqs_multilayer_realize_shell_source_plan(
+        bundles,
+        core_box,
+        outer_box,
+        _pqs_multilayer_explicit_box_layer_specs(core_box, outer_box);
+        bond_axis,
+        term_coefficients,
+        source_kind = :repeated_one_cell_projected_q_shell_layers,
+        metadata,
+    )
+end
+
 function pqs_multilayer_shell_source_plan(
     bundles::_CartesianNestedAxisBundles3D,
     region_plan::PQSMultilayerShellRegionPlan;
@@ -582,12 +639,14 @@ function pqs_multilayer_shell_source_plan(
 )
     region_plan.status === :available_pqs_multilayer_shell_region_plan ||
         throw(ArgumentError("PQS multi-layer source planning requires an available shell region plan"))
-    source_plan = pqs_multilayer_shell_source_plan(
+    source_plan = _pqs_multilayer_realize_shell_source_plan(
         bundles,
         region_plan.core_box,
-        region_plan.outer_box;
+        region_plan.outer_box,
+        _pqs_multilayer_region_plan_layer_specs(region_plan);
         bond_axis,
         term_coefficients,
+        source_kind = :shellification_backed_repeated_one_cell_projected_q_shell_layers,
         metadata = merge(
             (;
                 shell_region_plan_source = :pqs_multilayer_shell_region_plan,
