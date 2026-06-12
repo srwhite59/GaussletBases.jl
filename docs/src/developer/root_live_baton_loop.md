@@ -120,6 +120,23 @@ The older one-hour timeout is optional in this root live mode. For long-running
 manager/doer sessions, continuing to poll is acceptable until the user stops
 the loop.
 
+## Unattended Escalation And Slow Validation
+
+In unattended baton mode, the doer must not request UI escalation. If a command
+needs permission or sandbox escape, write `.agent_handoffs/ATTENTION.md` with
+the exact command, reason, and blocker, then stop. The manager poll treats
+`ATTENTION.md` as a hard stop for user/design review.
+
+For validation commands, do not let a silent long-running test block the loop
+indefinitely. If a validation command shows no new output for 10 minutes:
+
+- stop waiting;
+- interrupt it if possible;
+- report the last visible output;
+- mark validation as incomplete;
+- continue only if a smaller validation target is clear and does not require a
+  design decision.
+
 ## Commit And Review Rules
 
 Only the manager commits and pushes unless a blurb explicitly delegates that.

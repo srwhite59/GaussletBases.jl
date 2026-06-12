@@ -4,6 +4,9 @@ This note is the framework contract for the projected q-shell (PQS) operator
 lane. It exists to prevent architecture drift across multi-pass work,
 especially after handoffs, reviews, or context compaction.
 
+Near-term post-H1 implementation guidance lives in
+`pqs_near_term_final_basis_realization_plan.md`.
+
 This is not a public API contract and not a claim that the production route
 already consumes this machinery. It is the current design frame for private
 PQS operator work and retained-unit unification.
