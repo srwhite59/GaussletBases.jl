@@ -2550,6 +2550,67 @@ end
     @test !retained_batch_overlap_record.metadata.shell_realization_materialized
     @test !retained_batch_overlap_record.metadata.lowdin_cleanup_used
 
+    symmetric_overlap_axis =
+        [i == j ? 1.0 : 0.0 for i in 1:source_dims[1], j in 1:source_dims[1]]
+    symmetric_overlap_1d =
+        (; x = symmetric_overlap_axis, y = symmetric_overlap_axis, z = symmetric_overlap_axis)
+    symmetric_kinetic_axis =
+        [i == j ? -Float64(i) : 0.01 * (i + j) for i in 1:source_dims[1], j in 1:source_dims[1]]
+    symmetric_retained_batch_overlap =
+        CPBM.pqs_source_pair_retained_one_body_blocks(
+            materialization_plan,
+            :overlap;
+            overlap_1d = symmetric_overlap_1d,
+        )
+    symmetric_retained_batch_kinetic =
+        CPBM.pqs_source_pair_retained_one_body_blocks(
+            materialization_plan,
+            :kinetic;
+            overlap_1d = symmetric_overlap_1d,
+            kinetic_1d = (;
+                x = symmetric_kinetic_axis,
+                y = symmetric_kinetic_axis,
+                z = symmetric_kinetic_axis,
+            ),
+        )
+    symmetric_retained_batch_overlap_record = _pair_block_batch_result_for(
+        symmetric_retained_batch_overlap,
+        :pair_block_selector_pqs_unit,
+        :pair_block_selector_pqs_unit,
+    )
+    symmetric_retained_batch_kinetic_record = _pair_block_batch_result_for(
+        symmetric_retained_batch_kinetic,
+        :pair_block_selector_pqs_unit,
+        :pair_block_selector_pqs_unit,
+    )
+    retained_overlap_matrix =
+        CPBM.pqs_retained_source_one_body_matrix(symmetric_retained_batch_overlap)
+    retained_kinetic_matrix =
+        CPBM.pqs_retained_source_one_body_matrix(symmetric_retained_batch_kinetic)
+
+    @test retained_overlap_matrix.status ==
+          :materialized_pqs_retained_source_one_body_matrix
+    @test retained_kinetic_matrix.status ==
+          :materialized_pqs_retained_source_one_body_matrix
+    @test retained_overlap_matrix.matrix ===
+          symmetric_retained_batch_overlap_record.block
+    @test retained_kinetic_matrix.matrix ===
+          symmetric_retained_batch_kinetic_record.block
+    @test retained_overlap_matrix.retained_dimension ==
+          size(symmetric_retained_batch_overlap_record.block, 1)
+    @test retained_kinetic_matrix.retained_dimension ==
+          size(symmetric_retained_batch_kinetic_record.block, 1)
+    @test retained_overlap_matrix.matrix_space == :retained_pqs_source_modes
+    @test retained_kinetic_matrix.matrix_space == :retained_pqs_source_modes
+    @test all(isfinite, retained_overlap_matrix.matrix)
+    @test all(isfinite, retained_kinetic_matrix.matrix)
+    @test retained_overlap_matrix.matrix ≈ transpose(retained_overlap_matrix.matrix)
+    @test retained_kinetic_matrix.matrix ≈ transpose(retained_kinetic_matrix.matrix)
+    @test !retained_overlap_matrix.shell_realization_materialized
+    @test !retained_overlap_matrix.lowdin_cleanup_used
+    @test !retained_kinetic_matrix.shell_realization_materialized
+    @test !retained_kinetic_matrix.lowdin_cleanup_used
+
     overlap_bridge_batch =
         CPBM.pqs_source_pair_shell_realization_bridge_summary(selector_batch_overlap)
     @test overlap_bridge_batch.object_kind ==

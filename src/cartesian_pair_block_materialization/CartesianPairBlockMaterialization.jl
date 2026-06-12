@@ -85,6 +85,7 @@ export PairBlockMaterializationPolicy,
        pqs_source_pair_retained_one_body_blocks,
        pqs_source_pair_retained_overlap_block,
        pqs_source_pair_retained_kinetic_block,
+       pqs_retained_source_one_body_matrix,
        pqs_source_pair_one_body_block,
        pqs_source_pair_one_body_blocks,
        pqs_source_pair_shell_realization_bridge_summary,
@@ -284,7 +285,8 @@ export PairBlockMaterializationPolicy,
 #     Direct/direct one-body term selector.
 #
 # pqs_source_one_body.jl
-#     PQS/PQS raw source-space one-body term selector.
+#     PQS/PQS raw/retained source-mode one-body term selectors and one-unit
+#     retained source-mode matrix helper.
 include("records.jl")
 include("preflight.jl")
 include("summaries.jl")
