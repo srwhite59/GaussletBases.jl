@@ -129,8 +129,7 @@ the exact command, reason, and blocker, then stop. The manager poll treats
 
 Validation commands may run longer than the one-minute file polling interval.
 If validation progress is unclear for a long time, prefer a status artifact or
-response checkpoint over indefinite waiting. A user may set a shorter temporary
-limit for a specific run, but that does not change the standing baton rule.
+response checkpoint over indefinite waiting.
 
 ## Commit And Review Rules
 

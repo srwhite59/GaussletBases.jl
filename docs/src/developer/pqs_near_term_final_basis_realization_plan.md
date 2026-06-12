@@ -217,9 +217,7 @@ unattended loop if the expected response has not appeared after about one hour.
 
 Validation commands may run longer than one minute. If validation progress is
 unclear for a long time, prefer a response checkpoint with the last visible
-output and validation status over indefinite waiting. A user may set a shorter
-temporary limit for a specific validation run; that should be recorded as a
-run-specific instruction, not promoted to standing baton policy.
+output and validation status over indefinite waiting.
 
 Doer agents must not request UI escalation during unattended baton mode. If a
 command needs permission or sandbox escape, write `.agent_handoffs/ATTENTION.md`
