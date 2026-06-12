@@ -70,18 +70,22 @@ The manager should:
 
 1. Read `AGENTS.md`, this document, `.agent_handoffs/RUN.md`, and
    `.agent_handoffs/state.md` after reentry or compaction.
-2. Publish each blurb as `.agent_handoffs/blurb.NNN.md.tmp`, then rename to
+2. When starting or restarting a live baton session, give the user a concise
+   pasteable startup instruction for the doer. The paste should tell the doer
+   which docs to read, which pass is current, what response file to write, and
+   that it should continue polling after the response.
+3. Publish each blurb as `.agent_handoffs/blurb.NNN.md.tmp`, then rename to
    `.agent_handoffs/blurb.NNN.md`.
-3. Copy the curated blurb to the tracked log when it is important enough to
+4. Copy the curated blurb to the tracked log when it is important enough to
    preserve.
-4. Set `state.md` to `waiting_for_doer` and `next_expected_file:
+5. Set `state.md` to `waiting_for_doer` and `next_expected_file:
    response.NNN.md`.
-5. Poll for `.agent_handoffs/response.NNN.md` or `.agent_handoffs/ATTENTION.md`.
-6. When a response appears, inspect `git status`, read the response, inspect
+6. Poll for `.agent_handoffs/response.NNN.md` or `.agent_handoffs/ATTENTION.md`.
+7. When a response appears, inspect `git status`, read the response, inspect
    actual diffs/artifacts, validate at risk-appropriate scope, commit/push if
    appropriate, write `review.NNN.md`, copy the curated review to the tracked
    log, and publish the next blurb.
-7. Continue polling. Do not wait for a chat `Go`.
+8. Continue polling. Do not wait for a chat `Go`.
 
 If the next step requires design discussion, write `ATTENTION.md` and stop the
 polling loop. If the user stops the loop or the work reaches a clean pause
@@ -104,6 +108,15 @@ The doer should:
 8. Continue polling for `blurb.NNN+1.md`, `STOP.md`, or `ATTENTION.md`.
 
 Publishing one response is not a stop condition.
+
+Avoid ambiguous wording such as "do pass N only" if it could be read as "exit
+after pass N." Prefer:
+
+```text
+Execute only the current blurb; do not self-assign follow-up work.
+After writing response.NNN.md, continue polling for blurb.NNN+1.md,
+ATTENTION.md, or STOP.md.
+```
 
 ## Polling
 

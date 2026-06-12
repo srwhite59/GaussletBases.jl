@@ -50,9 +50,31 @@ CartesianCPB
 
 `CartesianRawProductSources` is the side module for raw product source-box
 facts used by the PQS source pilot. It owns source CPBs, source-mode
-dimensions, source-mode ordering, and metadata-only axis transform facts. It
-does not own retained rules, shell projection, Lowdin cleanup, final retained
-units, or pair blocks.
+dimensions, source-mode ordering, metadata-only axis transform facts, and the
+narrow PQS source-mode boundary selector metadata tied directly to source-mode
+ordering and raw source facts. It does not own general retained-rule policy,
+shell projection, Lowdin cleanup, final retained units, IDA weights, pair
+blocks, Hamiltonians, exports, or artifacts.
+
+## 2026-06-12 PQS Final-Basis H1 Status
+
+The explicit PQS final-basis H1 probe succeeds on the cubic `q=5/L=5` fixture
+against a shell-support oracle. The validated seam is:
+
+```text
+raw source box
+-> PQS boundary source-mode retained rule
+-> retained source-mode overlap / kinetic / by-center nuclear blocks
+-> shell-realization final basis
+-> final overlap / kinetic / by-center nuclear
+-> final one-electron Hamiltonian
+-> ordinary final-basis H1 eigensolve
+```
+
+This is an oracle-backed validated seam, not a fully production-owned PQS
+route. The shell projection and Lowdin cleanup inputs still come from the
+shell-realization/oracle layer. IDA, density-density, RHF, driver adoption,
+exports, and artifacts remain out of scope for this checkpoint.
 
 `CartesianPairOperatorPlans` consumes retained-unit pairs plus
 `CartesianRetainedUnitTransformContracts` for transform and realization paths.
