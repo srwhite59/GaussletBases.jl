@@ -105,7 +105,12 @@ The current live He + GTO question is later in the stack:
   the old oracle to about `3.2e-14 Ha`, while total time is about `342.5`
   seconds and `mixed_gto_blocks` is about `177.2` seconds; subphase timing
   shows the true remaining bottleneck is per-unit mixed CPB/GTO local block
-  construction, about `168.1` seconds over `131` retained units.
+  construction, about `168.1` seconds over `131` retained units;
+- the active one-center atomic mixed-GTO route now has a factorized/projected
+  retained-basis path, removing the per-unit provider-local hot loop for Be
+  S+P; the Be probe still matches the old nested/QW oracle to about
+  `5.5e-14 Ha`, total time is about `174.3` seconds, and `mixed_gto_blocks`
+  is about `9.18` seconds.
 
 ## Current Cleanup Rule
 

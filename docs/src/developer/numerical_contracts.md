@@ -376,6 +376,20 @@ projected mixed-GTO route that reuses axis/cross tables and avoids per-unit
 CPB-local mixed block materialization in the active shellification-backed atom
 plus supplement route.
 
+The factorized/projected mixed-GTO route now replaces that hot path for the
+active one-center origin atomic `UnitPairIndexTable` case. It uses the
+decomposed WL factorized retained-basis sidecar, builds reusable old-QW-shaped
+parent-axis/GTO cross tables once, and projects directly into retained
+gausslet rows. Unsupported shapes still fall back to the provider/local
+per-unit route. On the Be S+P q/ns `5 / 5` probe, the RHF total is
+`-14.574514244574639` Hartree, about `5.5e-14` Hartree from the old nested/QW
+oracle. The full probe moved from about `342.5` seconds to about `174.3`
+seconds, and `mixed_gto_blocks` moved from about `177.2` seconds to about
+`9.18` seconds. The direct factorized projection subphase itself is about
+`0.34` seconds; the remaining run time is now elsewhere in the route and
+should be separated into cold compilation versus warm runtime before another
+algorithmic rewrite.
+
 The current coarse timing split for the active tiny-box He RHF acceptance is
 reported by the test as diagnostics, not asserted as performance thresholds.
 Before the electron-nuclear cache and precompile workload, a representative

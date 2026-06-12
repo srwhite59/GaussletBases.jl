@@ -98,6 +98,91 @@ function route_global_mixed_gto_blocks_from_decomposed_units(
     gto_blocks = gto_self.gto_blocks
     gto_nuclear_blocks = gto_self.gto_nuclear_by_center_blocks
 
+    factorized_blocks = _route_global_mixed_gto_timed_subphase!(
+        subphase_elapsed,
+        subphase_counts,
+        :factorized_projection_total,
+    ) do
+        _route_global_mixed_gto_factorized_blocks(
+            inventory,
+            parent,
+            supplement;
+            expansion,
+            center_records = center_records_tuple,
+            include_moment_blocks,
+        )
+    end
+    if factorized_blocks.status ===
+       :materialized_route_global_mixed_gto_factorized_blocks
+        mixed_overlap .= factorized_blocks.mixed_blocks.overlap
+        mixed_kinetic .= factorized_blocks.mixed_blocks.kinetic
+        if include_moment_blocks
+            mixed_position_x .= factorized_blocks.mixed_blocks.position_x
+            mixed_position_y .= factorized_blocks.mixed_blocks.position_y
+            mixed_position_z .= factorized_blocks.mixed_blocks.position_z
+            mixed_x2_x .= factorized_blocks.mixed_blocks.x2_x
+            mixed_x2_y .= factorized_blocks.mixed_blocks.x2_y
+            mixed_x2_z .= factorized_blocks.mixed_blocks.x2_z
+        end
+        for index in eachindex(mixed_nuclear)
+            mixed_nuclear[index] .=
+                factorized_blocks.mixed_nuclear_by_center_matrices[index]
+        end
+        covered .= true
+        for unit in inventory.retained_units
+            push!(
+                placed_unit_keys,
+                _route_global_combined_gto_property(unit, :unit_key, :unavailable),
+            )
+            stratum_kind = _route_global_combined_gto_nested_property(
+                unit,
+                (:metadata, :stratum_kind),
+                :unavailable,
+            )
+            stratum_kind === :direct_core ?
+                (direct_core_unit_count += 1) :
+                (boundary_unit_count += 1)
+        end
+        _route_global_mixed_gto_flush_subphase_timings!(
+            subphase_timings,
+            subphase_elapsed,
+            subphase_counts,
+        )
+        return _route_global_mixed_gto_blocks_result(
+            :materialized_route_global_mixed_gto_blocks,
+            nothing,
+            inventory,
+            supplement,
+            (;
+                overlap = mixed_overlap,
+                kinetic = mixed_kinetic,
+                position_x = mixed_position_x,
+                position_y = mixed_position_y,
+                position_z = mixed_position_z,
+                x2_x = mixed_x2_x,
+                x2_y = mixed_x2_y,
+                x2_z = mixed_x2_z,
+                moment_blocks_materialized = include_moment_blocks,
+            ),
+            gto_blocks,
+            mixed_nuclear,
+            gto_nuclear_blocks;
+            covered,
+            placed_unit_keys = Tuple(placed_unit_keys),
+            direct_core_unit_count,
+            boundary_unit_count,
+            metadata = merge(
+                NamedTuple(metadata),
+                (;
+                    mixed_gto_materialization_path =
+                        :factorized_retained_basis_projection,
+                    mixed_gto_factorized_projection_status =
+                        factorized_blocks.status,
+                ),
+            ),
+        )
+    end
+
     for unit in inventory.retained_units
         unit_result = _route_global_mixed_gto_timed_subphase!(
             subphase_elapsed,
@@ -283,6 +368,7 @@ function _route_global_mixed_gto_flush_subphase_timings!(
     isnothing(subphase_timings) && return nothing
     for phase in (
         :gto_gto_self_block_construction,
+        :factorized_projection_total,
         :per_unit_total,
         :unit_coefficient_construction,
         :per_unit_provider_local_block_construction,
@@ -303,6 +389,171 @@ function _route_global_mixed_gto_flush_subphase_timings!(
         )
     end
     return nothing
+end
+
+function _route_global_mixed_gto_factorized_blocks(
+    inventory,
+    parent,
+    supplement;
+    expansion,
+    center_records,
+    include_moment_blocks::Bool,
+)
+    blocker = _route_global_mixed_gto_factorized_blocker(
+        inventory,
+        parent,
+        supplement,
+        expansion,
+        center_records,
+    )
+    isnothing(blocker) ||
+        return _route_global_mixed_gto_factorized_blocked(blocker)
+    axis_counts =
+        ParentGaussletBases.CartesianParentGaussletBases.parent_axis_counts(parent)
+    factorized = _white_lindsey_decomposed_factorized_retained_basis(
+        inventory,
+        axis_counts,
+    )
+    factorized.status === :materialized_decomposed_wl_factorized_retained_basis ||
+        return _route_global_mixed_gto_factorized_blocked(factorized.blocker)
+    proxy_layers = _route_global_mixed_gto_proxy_layers(parent, expansion)
+    internal_supplement = _route_global_mixed_gto_internal_supplement(supplement)
+    parent_dimension = prod(axis_counts)
+    cross = ParentGaussletBases._qwrg_cartesian_shell_cross_moment_blocks_3d(
+        proxy_layers,
+        internal_supplement,
+        expansion,
+        parent_dimension;
+        include_factor_terms = true,
+    )
+    coefficient_matrix = factorized.coefficient_matrix
+    mixed_blocks = (;
+        overlap = _route_global_mixed_gto_project_cross(
+            coefficient_matrix,
+            cross.overlap_ga,
+        ),
+        kinetic = _route_global_mixed_gto_project_cross(
+            coefficient_matrix,
+            cross.kinetic_ga,
+        ),
+        position_x =
+            include_moment_blocks ?
+            _route_global_mixed_gto_project_cross(
+                coefficient_matrix,
+                cross.position_x_ga,
+            ) : nothing,
+        position_y =
+            include_moment_blocks ?
+            _route_global_mixed_gto_project_cross(
+                coefficient_matrix,
+                cross.position_y_ga,
+            ) : nothing,
+        position_z =
+            include_moment_blocks ?
+            _route_global_mixed_gto_project_cross(
+                coefficient_matrix,
+                cross.position_z_ga,
+            ) : nothing,
+        x2_x =
+            include_moment_blocks ?
+            _route_global_mixed_gto_project_cross(coefficient_matrix, cross.x2_x_ga) :
+            nothing,
+        x2_y =
+            include_moment_blocks ?
+            _route_global_mixed_gto_project_cross(coefficient_matrix, cross.x2_y_ga) :
+            nothing,
+        x2_z =
+            include_moment_blocks ?
+            _route_global_mixed_gto_project_cross(coefficient_matrix, cross.x2_z_ga) :
+            nothing,
+    )
+    mixed_nuclear = Tuple(
+        _route_global_mixed_gto_project_cross(
+            coefficient_matrix,
+            _route_global_mixed_gto_factorized_nuclear_cross(cross, expansion),
+        ) for _ in center_records
+    )
+    return (;
+        status = :materialized_route_global_mixed_gto_factorized_blocks,
+        blocker = nothing,
+        mixed_blocks,
+        mixed_nuclear_by_center_matrices = mixed_nuclear,
+        factorized_retained_basis_materialized = true,
+        old_fixed_block_matrix_authority_used = false,
+        full_parent_window_cpb_used = false,
+        direct_cartesian_product_assembly_used = false,
+        ordinary_cartesian_ida_operators_used = false,
+    )
+end
+
+function _route_global_mixed_gto_factorized_blocker(
+    inventory,
+    parent,
+    supplement,
+    expansion,
+    center_records,
+)
+    inventory.unit_pairs isa CUP.UnitPairIndexTable ||
+        return :mixed_gto_factorized_requires_unit_pair_index_table
+    isnothing(expansion) && return :missing_mixed_gto_factorized_coulomb_expansion
+    axis_counts =
+        ParentGaussletBases.CartesianParentGaussletBases.parent_axis_counts(parent)
+    all(==(first(axis_counts)), axis_counts) ||
+        return :mixed_gto_factorized_requires_same_axis_parent
+    length(center_records) == 1 ||
+        return :mixed_gto_factorized_currently_one_center_only
+    center = only(center_records).location
+    all(iszero, center) || return :mixed_gto_factorized_requires_origin_center
+    _route_global_combined_gto_has_orbitals(supplement) ||
+        return :missing_gto_supplement_orbitals
+    return nothing
+end
+
+function _route_global_mixed_gto_factorized_blocked(blocker)
+    return (;
+        status = :blocked_route_global_mixed_gto_factorized_blocks,
+        blocker,
+        mixed_blocks = nothing,
+        mixed_nuclear_by_center_matrices = (),
+    )
+end
+
+function _route_global_mixed_gto_internal_supplement(supplement)
+    provider_module = _route_global_mixed_gto_provider_module()
+    helper = getproperty(provider_module, :_cpb_gto_internal_supplement)
+    return helper(supplement)
+end
+
+function _route_global_mixed_gto_proxy_layers(parent, expansion)
+    axes = ParentGaussletBases.CartesianParentGaussletBases.parent_axes(parent)
+    return (;
+        x = _route_global_mixed_gto_proxy_layer(axes.x, expansion),
+        y = _route_global_mixed_gto_proxy_layer(axes.y, expansion),
+        z = _route_global_mixed_gto_proxy_layer(axes.z, expansion),
+    )
+end
+
+function _route_global_mixed_gto_proxy_layer(axis_basis, expansion)
+    bundle = ParentGaussletBases._mapped_ordinary_gausslet_1d_bundle(
+        axis_basis;
+        exponents = expansion.exponents,
+        center = 0.0,
+        backend = :numerical_reference,
+        refinement_levels = 0,
+    )
+    return ParentGaussletBases._qwrg_mapped_supplement_proxy_layer(axis_basis, bundle)
+end
+
+function _route_global_mixed_gto_project_cross(coefficient_matrix, cross)
+    return Matrix{Float64}(transpose(coefficient_matrix) * Matrix{Float64}(cross))
+end
+
+function _route_global_mixed_gto_factorized_nuclear_cross(cross, expansion)
+    nuclear = zeros(Float64, size(cross.overlap_ga))
+    for term in eachindex(expansion.coefficients)
+        nuclear .-= Float64(expansion.coefficients[term]) .* cross.factor_ga[term]
+    end
+    return nuclear
 end
 
 function _route_global_mixed_gto_unit_blocks(
