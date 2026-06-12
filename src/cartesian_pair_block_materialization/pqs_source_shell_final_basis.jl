@@ -559,3 +559,139 @@ function _pqs_shell_boundary_one_body_blocked_result(
         ),
     )
 end
+
+"""
+    pqs_source_shell_final_electron_nuclear_by_center_from_boundary_block(
+        final_basis,
+        retained_boundary_result,
+    )
+
+Transform a proven PQS retained-source electron-nuclear by-center boundary
+block into the shell-realized final basis:
+
+```text
+V_final(center) = L' * V_boundary(center) * L
+```
+
+This is a by-center, uncharged one-body materialization seam only. Nuclear
+charge application and center summation remain Hamiltonian-stage work.
+"""
+function pqs_source_shell_final_electron_nuclear_by_center_from_boundary_block(
+    final_basis::NamedTuple,
+    retained_boundary_result::PairBlockMaterializationResult;
+    symmetry_atol::Real = 1.0e-8,
+)
+    _pqs_shell_projected_one_body_validate_basis(final_basis)
+    nuclear_metadata =
+        _pqs_shell_final_nuclear_validate_input(retained_boundary_result)
+
+    boundary_operator = Matrix{Float64}(retained_boundary_result.block)
+    boundary_count = final_basis.boundary_source_mode_count
+    size(boundary_operator) == (boundary_count, boundary_count) ||
+        throw(DimensionMismatch("PQS boundary electron-nuclear block shape must match boundary source modes"))
+    all(isfinite, boundary_operator) ||
+        throw(ArgumentError("PQS boundary electron-nuclear block contains non-finite entries"))
+    boundary_symmetry_error =
+        norm(boundary_operator - transpose(boundary_operator), Inf)
+    boundary_symmetry_error <= Float64(symmetry_atol) ||
+        throw(ArgumentError("PQS boundary electron-nuclear block must be symmetric"))
+
+    cleanup = final_basis.lowdin_cleanup
+    final_operator = transpose(cleanup) * boundary_operator * cleanup
+    final_symmetry_error = norm(final_operator - transpose(final_operator), Inf)
+
+    return (;
+        object_kind =
+            :pqs_source_shell_final_electron_nuclear_by_center_from_boundary_block,
+        status =
+            :materialized_pqs_shell_final_electron_nuclear_by_center_from_boundary_block,
+        blocker = nothing,
+        term = :electron_nuclear_by_center,
+        input_term = retained_boundary_result.term,
+        input_pair_key = retained_boundary_result.pair_key,
+        input_block_space = nuclear_metadata.block_space,
+        boundary_operator,
+        boundary_operator_shape = size(boundary_operator),
+        boundary_operator_finite = true,
+        boundary_operator_symmetry_error = boundary_symmetry_error,
+        final_operator,
+        final_operator_shape = size(final_operator),
+        final_operator_finite = all(isfinite, final_operator),
+        final_operator_symmetry_error = final_symmetry_error,
+        final_basis_object_kind = final_basis.object_kind,
+        final_basis_status = final_basis.status,
+        boundary_source_mode_count = final_basis.boundary_source_mode_count,
+        final_retained_count = final_basis.final_retained_count,
+        center_key = nuclear_metadata.center_key,
+        center_index = nuclear_metadata.center_index,
+        center_location = nuclear_metadata.center_location,
+        nuclear_charge = nuclear_metadata.nuclear_charge,
+        nuclear_charge_recorded = nuclear_metadata.nuclear_charge_recorded,
+        nuclear_charge_applied = false,
+        centers_summed = false,
+        uncharged_by_center_convention = true,
+        retained_boundary_operator_input_used = true,
+        raw_source_operator_input_used = false,
+        shell_support_operator_generated = false,
+        shell_realization_materialized = true,
+        lowdin_cleanup_used = true,
+        one_body_operator_materialized = true,
+        electron_nuclear_materialized = true,
+        charge_summing_materialized = false,
+        h1_solve_materialized = false,
+        hamiltonian_data_materialized = false,
+        ida_data_materialized = false,
+        density_density_materialized = false,
+        rhf_materialized = false,
+        driver_route_materialized = false,
+        exports_materialized = false,
+        artifacts_materialized = false,
+        next_blocker = :missing_pqs_final_one_electron_hamiltonian_assembly,
+        metadata = (;
+            source =
+                :pqs_source_shell_final_electron_nuclear_by_center_from_boundary_block,
+            boundary_operator_contract =
+                :retained_pqs_source_modes_equal_shell_projected_boundary_operator,
+            by_center = true,
+            nuclear_charge_recorded = nuclear_metadata.nuclear_charge_recorded,
+            nuclear_charge_applied = false,
+            centers_summed = false,
+            uncharged_by_center_convention = true,
+            current_route_safe_term_matrices_used = false,
+            old_fixed_block_matrix_authority_used = false,
+        ),
+    )
+end
+
+function _pqs_shell_final_nuclear_validate_input(
+    result::PairBlockMaterializationResult,
+)
+    result.term === :retained_source_electron_nuclear_by_center ||
+        throw(ArgumentError("PQS final nuclear helper requires a retained-source electron-nuclear by-center result"))
+    result.materialized ||
+        throw(ArgumentError("PQS final nuclear helper requires a materialized retained-source block"))
+    metadata = result.metadata
+    get(metadata, :block_space, nothing) === :retained_pqs_source_modes ||
+        throw(ArgumentError("PQS final nuclear helper requires retained PQS source-mode block space"))
+    get(metadata, :by_center, false) ||
+        throw(ArgumentError("PQS final nuclear helper requires by-center metadata"))
+    get(metadata, :nuclear_charge_recorded, false) ||
+        throw(ArgumentError("PQS final nuclear helper requires recorded nuclear charge metadata"))
+    get(metadata, :nuclear_charge_applied, false) &&
+        throw(ArgumentError("PQS final nuclear helper requires uncharged by-center input"))
+    get(metadata, :centers_summed, false) &&
+        throw(ArgumentError("PQS final nuclear helper requires separated by-center input"))
+    get(metadata, :uncharged_by_center_convention, false) ||
+        throw(ArgumentError("PQS final nuclear helper requires uncharged by-center convention metadata"))
+    return (;
+        block_space = metadata.block_space,
+        center_key = metadata.center_key,
+        center_index = metadata.center_index,
+        center_location = metadata.center_location,
+        nuclear_charge = metadata.nuclear_charge,
+        nuclear_charge_recorded = metadata.nuclear_charge_recorded,
+        nuclear_charge_applied = metadata.nuclear_charge_applied,
+        centers_summed = metadata.centers_summed,
+        uncharged_by_center_convention = metadata.uncharged_by_center_convention,
+    )
+end

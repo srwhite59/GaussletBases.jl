@@ -3253,6 +3253,81 @@ end
     @test final_kinetic_from_boundary.boundary_operator_symmetry_error == 0.0
     @test final_kinetic_from_boundary.final_operator_symmetry_error == 0.0
 
+    nuclear_boundary = copy(final_basis_identity)
+    nuclear_boundary[1, 1] = -2.0
+    nuclear_boundary[2, 2] = -3.0
+    nuclear_boundary[1, 2] = -0.125
+    nuclear_boundary[2, 1] = -0.125
+    retained_nuclear_boundary = CPBM.PairBlockMaterializationResult(
+        :retained_source_electron_nuclear_by_center,
+        (:pqs_source_shell, :pqs_source_shell),
+        nuclear_boundary,
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        (;
+            block_space = :retained_pqs_source_modes,
+            by_center = true,
+            center_key = :synthetic_origin,
+            center_index = 1,
+            center_location = (0.0, 0.0, 0.0),
+            nuclear_charge = 2.0,
+            nuclear_charge_recorded = true,
+            nuclear_charge_applied = false,
+            centers_summed = false,
+            uncharged_by_center_convention = true,
+            retained_source_operator_block_materialized = true,
+            shell_realization_materialized = false,
+            lowdin_cleanup_used = false,
+        ),
+    )
+    final_nuclear_from_boundary =
+        CPBM.pqs_source_shell_final_electron_nuclear_by_center_from_boundary_block(
+            final_basis,
+            retained_nuclear_boundary,
+        )
+    @test final_nuclear_from_boundary.object_kind ==
+          :pqs_source_shell_final_electron_nuclear_by_center_from_boundary_block
+    @test final_nuclear_from_boundary.status ==
+          :materialized_pqs_shell_final_electron_nuclear_by_center_from_boundary_block
+    @test final_nuclear_from_boundary.blocker === nothing
+    @test final_nuclear_from_boundary.term == :electron_nuclear_by_center
+    @test final_nuclear_from_boundary.input_term ==
+          :retained_source_electron_nuclear_by_center
+    @test final_nuclear_from_boundary.input_block_space ==
+          :retained_pqs_source_modes
+    @test final_nuclear_from_boundary.boundary_operator == nuclear_boundary
+    @test final_nuclear_from_boundary.final_operator == nuclear_boundary
+    @test final_nuclear_from_boundary.center_key == :synthetic_origin
+    @test final_nuclear_from_boundary.center_index == 1
+    @test final_nuclear_from_boundary.center_location == (0.0, 0.0, 0.0)
+    @test final_nuclear_from_boundary.nuclear_charge == 2.0
+    @test final_nuclear_from_boundary.nuclear_charge_recorded
+    @test !final_nuclear_from_boundary.nuclear_charge_applied
+    @test !final_nuclear_from_boundary.centers_summed
+    @test final_nuclear_from_boundary.uncharged_by_center_convention
+    @test final_nuclear_from_boundary.retained_boundary_operator_input_used
+    @test !final_nuclear_from_boundary.raw_source_operator_input_used
+    @test !final_nuclear_from_boundary.shell_support_operator_generated
+    @test final_nuclear_from_boundary.one_body_operator_materialized
+    @test final_nuclear_from_boundary.electron_nuclear_materialized
+    @test !final_nuclear_from_boundary.charge_summing_materialized
+    @test !final_nuclear_from_boundary.h1_solve_materialized
+    @test !final_nuclear_from_boundary.hamiltonian_data_materialized
+    @test !final_nuclear_from_boundary.ida_data_materialized
+    @test !final_nuclear_from_boundary.density_density_materialized
+    @test !final_nuclear_from_boundary.rhf_materialized
+    @test !final_nuclear_from_boundary.driver_route_materialized
+    @test !final_nuclear_from_boundary.exports_materialized
+    @test !final_nuclear_from_boundary.artifacts_materialized
+    @test final_nuclear_from_boundary.next_blocker ==
+          :missing_pqs_final_one_electron_hamiltonian_assembly
+    @test !final_nuclear_from_boundary.metadata.current_route_safe_term_matrices_used
+    @test !final_nuclear_from_boundary.metadata.old_fixed_block_matrix_authority_used
+
     overlap_bridge_batch =
         CPBM.pqs_source_pair_shell_realization_bridge_summary(selector_batch_overlap)
     @test overlap_bridge_batch.object_kind ==
