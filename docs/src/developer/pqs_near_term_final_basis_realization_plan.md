@@ -295,6 +295,79 @@ of the `(4:10)^3` direct core split; at fixed parent/mapping it is essentially
 plateaued. The next physical fixture question is therefore the parent/mapping
 rule, not more core/shell repartitioning on the same side-13 box.
 
+## Driver-Spine Integration Audit
+
+The successful PQS source-box/final-basis probes should be mapped back onto the
+canonical Cartesian driver lifecycle, not grown as a private route:
+
+```text
+cartesian_system / cartesian_recipe
+    center records, charges, requested terms, source-box policy, and the
+    provisional fixture inputs. The physical `Z`, `d`, `s`, radius, core-size,
+    and shell-depth rule is not settled here yet.
+
+cartesian_parent
+    mapped parent axes, PGDG/intermediate axis data, center tables, parent
+    support counts, and raw parent/source facts needed by PQS source planning.
+
+cartesian_shells
+    shellification policy plus the intended core/outer box decomposition.
+    The multi-layer shell-source decision belongs here as route policy, but
+    should remain provisional until the fixture rule is reviewed.
+
+cartesian_units
+    direct core support, PQS shell source CPBs, raw product source plans, and
+    retained boundary source-mode rules.
+
+cartesian_transforms
+    shell projection/Lowdin data and transform contracts. The output needed by
+    the next stage is the route-owned equivalent of
+    `pqs_multilayer_shell_source_plan(...)`: support rows, shell final
+    coefficients, retained counts, and disjoint core/shell support facts.
+
+cartesian_pairs
+    retained source one-body blocks and pair/operator inventories. The direct
+    retained overlap, kinetic, position, x2, and by-center nuclear helpers are
+    ready module-owned inputs here. The raw-source selector path remains an
+    oracle/reference path.
+
+cartesian_assembly
+    `CartesianFinalBasisRealization.pqs_complete_core_shell_final_basis`,
+    final one-body transfer, separated by-center H1 assembly, final IDA weights,
+    and the pre-final positive-weight density interaction. This is the first
+    missing driver seam: assembly does not yet consume a route-owned
+    multi-layer PQS source plan and publish a complete core/shell final-basis
+    payload for H1/J/RHF.
+
+cartesian_report / cartesian_materialization
+    compact status, blocker, timing, and nonclaim summaries. The side-13
+    H1/J/RHF scripts remain developer probes until this stage has a route-owned
+    final-basis payload and a reviewed fixture rule.
+```
+
+Objects ready for future driver consumption:
+
+- `pqs_multilayer_shell_source_plan(...)` as a route-owned source plan for
+  repeated one-cell PQS shell layers.
+- `pqs_source_pair_retained_*` one-body blocks and the generic retained
+  selector for overlap, kinetic, position, and x2.
+- `CartesianFinalBasisRealization` complete core/shell final-basis, final
+  one-body/H1, final IDA weight, and pre-final density-interaction helpers.
+
+Surfaces that should remain private/oracle for now:
+
+- `tmp/work` side-13 H1/J/RHF probes and their probe-local support matrix
+  builders.
+- Shell-support projected operator helpers when used as oracle comparisons.
+- Old fixed-block matrices and WL side-13 comparisons; they are reference
+  checks, not route authority.
+
+If the missing assembly seam is implemented, the probe-local support/operator
+assembly code becomes less necessary, and report-stage route-shadow fields that
+only restate private probe status can be shrunk. Do not integrate RHF
+acceptance, exports, artifacts, GTO supplement work, or a permanent side-13
+fixture gate until the physical fixture rule is reviewed.
+
 ## Validation Policy
 
 The slow nested harness is not a routine baton-loop validation target. In
