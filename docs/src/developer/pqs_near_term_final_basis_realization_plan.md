@@ -376,6 +376,36 @@ delegates to `CartesianFinalBasisRealization.pqs_complete_core_shell_final_basis
 It still does not materialize H1, IDA, density-density, RHF, driver wiring,
 exports, artifacts, or an accepted fixture.
 
+The next possible assembly seam is support one-body assembly over the
+multi-layer PQS plan. Support kinetic assembly is safe to promote as a narrow
+helper now because it only needs the plan support states and `plan.metrics`:
+three axis-product terms are summed into one support-space kinetic matrix. A
+reasonable helper would consume `(plan; term = :kinetic)` or a clearly named
+`pqs_multilayer_support_kinetic_matrix(plan)` input and return a support-space
+matrix plus compact provenance; it would not perform final-basis transfer, H1,
+IDA, RHF, driver wiring, exports, or artifact work.
+
+Support electron-nuclear assembly should wait until the by-center convention is
+made explicit in the helper contract. The promoted helper should produce one
+separated by-center support matrix per center, keep it uncharged, and leave
+charge application and center summation to the Hamiltonian assembly stage. The
+operator sign should be the electron-nuclear potential sign, so the uncharged
+matrix represents `-1/r_center` rather than a positive Coulomb kernel; applying
+the nuclear charge later means H1 assembly adds `Z_center * V_center` if
+`V_center` already carries the negative sign. The current H1 gate is only ready
+for the centered/origin case through
+`pgdg_intermediate.gaussian_factor_terms`; off-origin centers need the
+centered Gaussian factor-term source used by the retained by-center PQS
+kernels before they become route-owned support assembly. Old fixed-block and
+WL matrices remain oracle comparisons only, not the source of authority for
+the support helper.
+
+If those helpers are implemented, the remaining test-local H1 support assembly
+helpers can shrink: `_pqs_h1_support_kinetic_matrix` and
+`_pqs_h1_support_nuclear_matrix` would be replaced by route-owned support
+operator calls, while the H1 gate would keep only final-basis transfer,
+Hamiltonian assembly, eigensolve, and oracle comparison checks.
+
 ## Validation Policy
 
 The slow nested harness is not a routine baton-loop validation target. In
