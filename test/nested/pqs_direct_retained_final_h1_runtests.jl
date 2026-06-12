@@ -37,7 +37,7 @@ function _pqs_h1_complete_fixture()
     inner_box = (2:6, 2:6, 2:6)
     bundle7 = _pqs_h1_test_bundle(7)
     bundles = GaussletBases._CartesianNestedAxisBundles3D(bundle7, bundle7, bundle7)
-    plan = GaussletBases.pqs_multilayer_shell_source_plan(
+    explicit_box_plan = GaussletBases.pqs_multilayer_shell_source_plan(
         bundles,
         inner_box,
         current_box;
@@ -64,7 +64,7 @@ function _pqs_h1_complete_fixture()
         lowering;
         metadata = (; fixture = :pqs_direct_retained_final_h1_complete_core_shell),
     )
-    region_source_plan = GaussletBases.pqs_multilayer_shell_source_plan(
+    plan = GaussletBases.pqs_multilayer_shell_source_plan(
         bundles,
         region_plan;
         bond_axis = :z,
@@ -74,12 +74,12 @@ function _pqs_h1_complete_fixture()
             route_authority = :shellification_lowering_region_plan,
         ),
     )
-    region_final_basis = GaussletBases.pqs_multilayer_complete_core_shell_final_basis(
-        region_source_plan;
-        metadata = (; fixture = :pqs_direct_retained_final_h1_complete_core_shell),
-    )
     final_basis = GaussletBases.pqs_multilayer_complete_core_shell_final_basis(
         plan;
+        metadata = (; fixture = :pqs_direct_retained_final_h1_complete_core_shell),
+    )
+    explicit_box_final_basis = GaussletBases.pqs_multilayer_complete_core_shell_final_basis(
+        explicit_box_plan;
         metadata = (; fixture = :pqs_direct_retained_final_h1_complete_core_shell),
     )
     return (;
@@ -90,15 +90,15 @@ function _pqs_h1_complete_fixture()
         inner_box,
         raw_source_dims = (5, 5, 5),
         plan,
+        explicit_box_plan,
         shellification,
         lowering,
         region_plan,
-        region_source_plan,
         core_states = plan.core_support_states,
         shell_states = plan.shell_support_states,
         all_states = vcat(plan.core_support_states, plan.shell_support_states),
         final_basis,
-        region_final_basis,
+        explicit_box_final_basis,
     )
 end
 
@@ -116,23 +116,24 @@ end
     fixture = _pqs_h1_complete_fixture()
     @test fixture.plan.status == :available_pqs_multilayer_shell_source_plan
     @test fixture.region_plan.status == :available_pqs_multilayer_shell_region_plan
-    @test fixture.region_source_plan.status ==
-          :available_pqs_multilayer_shell_source_plan
-    @test fixture.region_source_plan.source_kind ===
+    @test fixture.plan.source_kind ===
           :shellification_backed_repeated_one_cell_projected_q_shell_layers
+    @test fixture.explicit_box_plan.status ==
+          :available_pqs_multilayer_shell_source_plan
     @test fixture.region_plan.core_box == fixture.inner_box
     @test fixture.region_plan.outer_box == fixture.current_box
-    @test fixture.region_plan.summary.shell_layer_count == fixture.plan.layer_count
+    @test fixture.region_plan.summary.shell_layer_count ==
+          fixture.explicit_box_plan.layer_count
     @test fixture.region_plan.summary.outer_support_coverage
-    @test fixture.region_source_plan.summary.core_support_count ==
-          fixture.plan.summary.core_support_count
-    @test fixture.region_source_plan.summary.shell_support_count ==
-          fixture.plan.summary.shell_support_count
-    @test fixture.region_source_plan.summary.shell_final_retained_count ==
-          fixture.plan.summary.shell_final_retained_count
-    @test fixture.region_final_basis.final_retained_count ==
-          fixture.final_basis.final_retained_count
-    @test fixture.region_final_basis.final_overlap_identity_error < 1.0e-10
+    @test fixture.plan.summary.core_support_count ==
+          fixture.explicit_box_plan.summary.core_support_count
+    @test fixture.plan.summary.shell_support_count ==
+          fixture.explicit_box_plan.summary.shell_support_count
+    @test fixture.plan.summary.shell_final_retained_count ==
+          fixture.explicit_box_plan.summary.shell_final_retained_count
+    @test fixture.final_basis.final_retained_count ==
+          fixture.explicit_box_final_basis.final_retained_count
+    @test fixture.final_basis.final_overlap_identity_error < 1.0e-10
     @test fixture.final_basis.source_plan_status ==
           :available_pqs_multilayer_shell_source_plan
     @test fixture.final_basis.source_plan_final_basis_helper ==
