@@ -421,6 +421,26 @@ The tracked H1 gate now uses the explicit origin-factor path, so its former
 test-local `_pqs_h1_support_nuclear_matrix` helper is no longer part of the
 active route pressure.
 
+`pqs_multilayer_shell_source_plan(...)` is still a tactical bridge rather than
+the owner of shellification. Its current explicit `core_box`/`outer_box` input
+and internal box-depth arithmetic duplicate facts that belong to
+`CartesianShellification` and `CartesianTerminalLowering`: the direct core
+owned region, ordered complete-shell regions, one-cell shell source CPBs,
+outer support coverage, and duplicate/disjointness checks. The production
+boundary should be a small shellification/lowering-backed region plan consumed
+by PQS source realization. That object should carry the direct core record,
+ordered shell layer records, source CPBs, owned-support provenance, support
+coverage, and disjointness/duplicate fingerprints. It should not carry PQS
+descriptors, Lowdin matrices, support operator blocks, H1, IDA, or RHF data.
+
+With that boundary in place, the PQS source-planning step should only consume
+the shellification/lowering-owned regions and build the PQS-specific payload:
+projected-q shell descriptors, shell projection/Lowdin cleanup, collapsed shell
+sector coefficients, final retained counts, and the support ordering needed by
+`pqs_multilayer_complete_core_shell_final_basis(...)`. The current bridge can
+then lose its private box-growth, coverage, and duplicate-support authority
+instead of becoming a parallel shellification implementation.
+
 ## Validation Policy
 
 The slow nested harness is not a routine baton-loop validation target. In
