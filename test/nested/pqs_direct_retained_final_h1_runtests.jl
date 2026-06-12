@@ -3,6 +3,8 @@ using LinearAlgebra
 using GaussletBases
 
 const PQSH1CFBR = GaussletBases.CartesianFinalBasisRealization
+const PQSH1CSH = GaussletBases.CartesianShellification
+const PQSH1CTL = GaussletBases.CartesianTerminalLowering
 
 function _pqs_h1_test_bundle(count::Int)
     xmax = 8.0
@@ -45,6 +47,37 @@ function _pqs_h1_complete_fixture()
             fixture = :pqs_direct_retained_final_h1_complete_core_shell,
         ),
     )
+    parent_index_axes = ntuple(_ -> collect(1:7), 3)
+    shellification = PQSH1CSH.shellify(
+        parent_index_axes,
+        (4.0, 4.0, 4.0),
+        PQSH1CSH.OneCenterShellification(core_side = 5, q = 5),
+        metadata = (; fixture = :pqs_direct_retained_final_h1_complete_core_shell),
+    )
+    lowering = PQSH1CTL.lower_terminal_regions(
+        shellification,
+        PQSH1CTL.PQSLowering(q = 5),
+        metadata = (; fixture = :pqs_direct_retained_final_h1_complete_core_shell),
+    )
+    region_plan = GaussletBases.pqs_multilayer_shell_region_plan(
+        shellification,
+        lowering;
+        metadata = (; fixture = :pqs_direct_retained_final_h1_complete_core_shell),
+    )
+    region_source_plan = GaussletBases.pqs_multilayer_shell_source_plan(
+        bundles,
+        region_plan;
+        bond_axis = :z,
+        term_coefficients = Float64.(expansion.coefficients),
+        metadata = (;
+            fixture = :pqs_direct_retained_final_h1_complete_core_shell,
+            route_authority = :shellification_lowering_region_plan,
+        ),
+    )
+    region_final_basis = GaussletBases.pqs_multilayer_complete_core_shell_final_basis(
+        region_source_plan;
+        metadata = (; fixture = :pqs_direct_retained_final_h1_complete_core_shell),
+    )
     final_basis = GaussletBases.pqs_multilayer_complete_core_shell_final_basis(
         plan;
         metadata = (; fixture = :pqs_direct_retained_final_h1_complete_core_shell),
@@ -57,10 +90,15 @@ function _pqs_h1_complete_fixture()
         inner_box,
         raw_source_dims = (5, 5, 5),
         plan,
+        shellification,
+        lowering,
+        region_plan,
+        region_source_plan,
         core_states = plan.core_support_states,
         shell_states = plan.shell_support_states,
         all_states = vcat(plan.core_support_states, plan.shell_support_states),
         final_basis,
+        region_final_basis,
     )
 end
 
@@ -77,6 +115,24 @@ end
 @testset "PQS complete core-shell final H1 gate" begin
     fixture = _pqs_h1_complete_fixture()
     @test fixture.plan.status == :available_pqs_multilayer_shell_source_plan
+    @test fixture.region_plan.status == :available_pqs_multilayer_shell_region_plan
+    @test fixture.region_source_plan.status ==
+          :available_pqs_multilayer_shell_source_plan
+    @test fixture.region_source_plan.source_kind ===
+          :shellification_backed_repeated_one_cell_projected_q_shell_layers
+    @test fixture.region_plan.core_box == fixture.inner_box
+    @test fixture.region_plan.outer_box == fixture.current_box
+    @test fixture.region_plan.summary.shell_layer_count == fixture.plan.layer_count
+    @test fixture.region_plan.summary.outer_support_coverage
+    @test fixture.region_source_plan.summary.core_support_count ==
+          fixture.plan.summary.core_support_count
+    @test fixture.region_source_plan.summary.shell_support_count ==
+          fixture.plan.summary.shell_support_count
+    @test fixture.region_source_plan.summary.shell_final_retained_count ==
+          fixture.plan.summary.shell_final_retained_count
+    @test fixture.region_final_basis.final_retained_count ==
+          fixture.final_basis.final_retained_count
+    @test fixture.region_final_basis.final_overlap_identity_error < 1.0e-10
     @test fixture.final_basis.source_plan_status ==
           :available_pqs_multilayer_shell_source_plan
     @test fixture.final_basis.source_plan_final_basis_helper ==
