@@ -29,22 +29,6 @@ function _pqs_h1_test_bundle(count::Int)
     )
 end
 
-function _pqs_h1_support_nuclear_matrix(states, gaussian_factor_terms, expansion)
-    result = zeros(Float64, length(states), length(states))
-    for term_index in eachindex(expansion.coefficients)
-        result .+=
-            -Float64(expansion.coefficients[term_index]) *
-            GaussletBases._pqs_multilayer_support_product_matrix(
-                states,
-                states,
-                @view(gaussian_factor_terms[term_index, :, :]),
-                @view(gaussian_factor_terms[term_index, :, :]),
-                @view(gaussian_factor_terms[term_index, :, :]),
-            )
-    end
-    return result
-end
-
 function _pqs_h1_complete_fixture()
     expansion = coulomb_gaussian_expansion(doacc = false)
     current_box = (1:7, 1:7, 1:7)
@@ -113,11 +97,45 @@ end
         metrics.y.overlap,
         metrics.z.overlap,
     )
-    support_kinetic = GaussletBases.pqs_multilayer_support_kinetic_matrix(fixture.plan)
-    support_nuclear = _pqs_h1_support_nuclear_matrix(
-        states,
-        fixture.bundle7.pgdg_intermediate.gaussian_factor_terms,
-        fixture.expansion,
+    support_kinetic =
+        GaussletBases.pqs_multilayer_support_kinetic_matrix(fixture.plan)
+    support_nuclear_by_center =
+        GaussletBases.pqs_multilayer_support_electron_nuclear_by_center_matrices(
+            fixture.plan;
+            coulomb_expansion = fixture.expansion,
+            center_records = (center,),
+            gaussian_factor_terms_by_center =
+                fixture.bundle7.pgdg_intermediate.gaussian_factor_terms,
+        )
+    support_nuclear = only(support_nuclear_by_center.records)
+    support_nuclear_axis_layer =
+        only(
+            GaussletBases.pqs_multilayer_support_electron_nuclear_by_center_matrices(
+                fixture.plan;
+                coulomb_expansion = fixture.expansion,
+                center_records = (center,),
+                axis_layers = (
+                    fixture.bundle7.pgdg_intermediate.auxiliary_layer,
+                    fixture.bundle7.pgdg_intermediate.auxiliary_layer,
+                    fixture.bundle7.pgdg_intermediate.auxiliary_layer,
+                ),
+            ).records,
+        )
+    @test support_nuclear_axis_layer.support_operator ≈
+          support_nuclear.support_operator atol = 1.0e-12 rtol = 0.0
+
+    final_nuclear = PQSH1CFBR.pqs_complete_core_shell_final_one_body_matrix(
+        fixture.final_basis,
+        support_nuclear.support_operator;
+        term = :electron_nuclear_by_center,
+        center_record = center,
+        metadata = merge(
+            support_nuclear.metadata,
+            (;
+                nuclear_factor_source = :pgdg_intermediate_gaussian_factor_terms,
+                raw_base_layer_gaussian_factor_matrices_used = false,
+            ),
+        ),
     )
 
     final_overlap = PQSH1CFBR.pqs_complete_core_shell_final_one_body_matrix(
@@ -129,16 +147,6 @@ end
         fixture.final_basis,
         support_kinetic;
         term = :kinetic,
-    )
-    final_nuclear = PQSH1CFBR.pqs_complete_core_shell_final_one_body_matrix(
-        fixture.final_basis,
-        support_nuclear;
-        term = :electron_nuclear_by_center,
-        center_record = center,
-        metadata = (;
-            nuclear_factor_source = :pgdg_intermediate_gaussian_factor_terms,
-            raw_base_layer_gaussian_factor_matrices_used = false,
-        ),
     )
     final_hamiltonian = PQSH1CFBR.pqs_complete_core_shell_final_one_electron_hamiltonian(
         final_kinetic,

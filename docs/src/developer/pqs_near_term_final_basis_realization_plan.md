@@ -383,15 +383,15 @@ consumes the plan support states and `plan.metrics`, and it sums the standard
 three axis-product kinetic terms. It does not perform final-basis transfer,
 H1, nuclear assembly, IDA, RHF, driver wiring, exports, or artifact work.
 
-The next support electron-nuclear helper should be named
+The first support electron-nuclear helper is now implemented as
 `pqs_multilayer_support_electron_nuclear_by_center_matrices(plan;
 coulomb_expansion, center_records, axis_layers = nothing,
-gaussian_factor_terms_by_center = nothing)`. It should require an available
-`pqs_multilayer_shell_source_plan`, consume the plan support ordering
-`core_support_states` followed by `shell_support_states`, and return one
-support-space matrix record per supplied center. Each record should carry the
-center key/index/location, record the nuclear charge, keep
-`nuclear_charge_applied = false`, keep `centers_summed = false`, and make no
+gaussian_factor_terms_by_center = nothing)`. It requires an available
+`pqs_multilayer_shell_source_plan`, consumes the plan support ordering
+`core_support_states` followed by `shell_support_states`, and returns one
+support-space matrix record per supplied center. Each record carries the center
+key/index/location, records the nuclear charge, keeps
+`nuclear_charge_applied = false`, keeps `centers_summed = false`, and makes no
 final-basis transfer, H1, IDA, RHF, driver, export, or artifact claim.
 
 The sign convention should match the retained PQS and decomposed WL by-center
@@ -402,25 +402,24 @@ charge and sums centers by adding `Z_A * V_A` for each separated by-center
 matrix. The helper must not return a positive Coulomb kernel, must not apply
 `Z_A` internally, and must not combine centers before H1 assembly.
 
-Centered/origin support factors may use the existing
+Centered/origin support factors may use explicit
 `pgdg_intermediate.gaussian_factor_terms` only when the center is the same
-origin used to build those factors. Off-origin centers should reuse the
-retained PQS centered factor source convention:
+origin used to build those factors. Off-origin centers use the retained PQS
+centered factor source convention:
 `pqs_source_pair_centered_gaussian_factor_terms_1d(...)` currently builds
 centered 1D Gaussian factors from explicit axis layers, the Coulomb expansion,
 and the center record before composing
 `pqs_source_pair_centered_electron_nuclear_by_center_block(...)` or the direct
-retained sibling. A support-level multi-layer helper should follow that
-centered-factor source, generalized over the complete core/shell support
-states, rather than treating origin `pgdg_intermediate.gaussian_factor_terms`
-as an off-origin authority. Old fixed-block matrices, WL route-global matrices,
-and raw-support H1 probes remain oracle/reference comparisons only.
+retained sibling. The support-level multi-layer helper follows that source by
+using explicit axis layers, expansion exponents, and the center location to
+generate centered Gaussian factors over the complete core/shell support states.
+It must not treat origin `pgdg_intermediate.gaussian_factor_terms` as an
+off-origin authority. Old fixed-block matrices, WL route-global matrices, and
+raw-support H1 probes remain oracle/reference comparisons only.
 
-If the nuclear helper is implemented, the remaining test-local H1 support
-nuclear assembly can shrink: `_pqs_h1_support_nuclear_matrix` would be replaced
-by a route-owned support operator call, while the H1 gate would keep only
-final-basis transfer, Hamiltonian assembly, eigensolve, and oracle comparison
-checks.
+The tracked H1 gate now uses the explicit origin-factor path, so its former
+test-local `_pqs_h1_support_nuclear_matrix` helper is no longer part of the
+active route pressure.
 
 ## Validation Policy
 
