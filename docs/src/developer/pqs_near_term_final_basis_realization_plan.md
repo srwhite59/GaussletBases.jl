@@ -451,6 +451,31 @@ sector coefficients, final retained counts, and the support ordering needed by
 then lose its private box-growth, coverage, and duplicate-support authority
 instead of becoming a parallel shellification implementation.
 
+The H1 gate now maps onto the driver spine as follows. Fixture setup still owns
+the provisional recipe data: center records, charge, Coulomb expansion, and the
+temporary mapped-parent choice. Parent construction builds the PGDG axis bundle
+and 3D nested bundle. Shellification and terminal lowering build the
+shellification/lowering-backed `pqs_multilayer_shell_region_plan(...)`.
+Units/transforms are represented by the region-backed
+`pqs_multilayer_shell_source_plan(bundles, region_plan; ...)` and
+`pqs_multilayer_complete_core_shell_final_basis(plan; ...)`. The current
+pairs/operator step is the H1-only support kinetic and separated by-center
+electron-nuclear helpers. Assembly is still test-local: transfer kinetic and
+by-center nuclear support matrices through
+`CartesianFinalBasisRealization.pqs_complete_core_shell_final_one_body_matrix`,
+build the one-electron Hamiltonian, and solve H1.
+
+The next smallest integration seam should therefore be an H1 assembly payload,
+not another source-plan helper. A narrow candidate is an internal helper that
+consumes the region-backed source plan, the complete core/shell final basis,
+the Coulomb expansion, and center records, then returns final kinetic,
+separated final by-center nuclear records, a one-electron Hamiltonian, the H1
+solve, and a compact nonclaim summary. It should keep the dense support-space
+one-body helpers scoped to this H1 seam and make no IDA, density-density, RHF,
+driver, export, artifact, GTO, or fixture-rule claim. If implemented, the H1
+test can shrink to fixture construction, one payload call, the fixed-block
+oracle comparison, and a few final energy/status checks.
+
 ## Validation Policy
 
 The slow nested harness is not a routine baton-loop validation target. In
