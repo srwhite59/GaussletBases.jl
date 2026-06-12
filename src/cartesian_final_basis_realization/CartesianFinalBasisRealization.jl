@@ -30,4 +30,8 @@ export pqs_source_shell_realization_final_basis,
 #     shell-support oracle projection, and retained-boundary one-body transfer.
 include("pqs_source_shell_final_basis.jl")
 
+# pqs_complete_core_shell_final_basis.jl
+#     Direct-core plus surrounding-shell final-basis realization only.
+include("pqs_complete_core_shell_final_basis.jl")
+
 end # module CartesianFinalBasisRealization
