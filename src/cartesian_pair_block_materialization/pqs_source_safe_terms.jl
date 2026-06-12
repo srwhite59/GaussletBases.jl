@@ -466,6 +466,37 @@ function pqs_source_pair_centered_gaussian_factor_terms_1d(
 end
 
 """
+    pqs_source_pair_centered_electron_nuclear_by_center_block(record;
+        axis_layers, coulomb_expansion, center_record)
+
+Generate centered Gaussian source-mode factors from explicit axis layers and
+compose them with the existing uncharged by-center PQS source electron-nuclear
+block. Nuclear charge is recorded but not applied, centers are not summed, and
+this remains before shell realization, Lowdin cleanup, IDA, and Hamiltonian
+assembly.
+"""
+function pqs_source_pair_centered_electron_nuclear_by_center_block(
+    record::PairBlockMaterializationRecord;
+    axis_layers,
+    coulomb_expansion,
+    center_record,
+)
+    gaussian_factor_terms_1d =
+        pqs_source_pair_centered_gaussian_factor_terms_1d(
+            record;
+            axis_layers,
+            coulomb_expansion,
+            center_record,
+        )
+    return pqs_source_pair_electron_nuclear_by_center_block(
+        record;
+        coulomb_expansion,
+        center_record,
+        gaussian_factor_terms_1d,
+    )
+end
+
+"""
     pqs_source_pair_retained_one_body_block(source_result, left_rule, right_rule)
 
 Contract a materialized PQS/PQS raw source-space one-body block to retained
@@ -597,6 +628,30 @@ function pqs_source_pair_retained_electron_nuclear_by_center_block(
         center_record,
         gaussian_factor_terms_1d,
     )
+    return pqs_source_pair_retained_one_body_block(source_result)
+end
+
+"""
+    pqs_source_pair_retained_centered_electron_nuclear_by_center_block(record; ...)
+
+Compose the centered by-center PQS source electron-nuclear block with the
+existing retained source-mode contraction. This adds no shell realization,
+Lowdin cleanup, IDA data, Hamiltonian assembly, global route, exports, or
+artifacts.
+"""
+function pqs_source_pair_retained_centered_electron_nuclear_by_center_block(
+    record::PairBlockMaterializationRecord;
+    axis_layers,
+    coulomb_expansion,
+    center_record,
+)
+    source_result =
+        pqs_source_pair_centered_electron_nuclear_by_center_block(
+            record;
+            axis_layers,
+            coulomb_expansion,
+            center_record,
+        )
     return pqs_source_pair_retained_one_body_block(source_result)
 end
 

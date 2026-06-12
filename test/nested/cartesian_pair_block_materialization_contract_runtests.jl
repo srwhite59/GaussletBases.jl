@@ -1781,6 +1781,51 @@ end
     @test centered_projected.x ≈ expected_centered.x
     @test centered_projected.y ≈ expected_centered.y
     @test centered_projected.z ≈ expected_centered.z
+    supplied_centered_nuclear =
+        CPBM.pqs_source_pair_electron_nuclear_by_center_block(
+            pqs_cross_record;
+            coulomb_expansion = analytic_expansion,
+            center_record = analytic_center,
+            gaussian_factor_terms_1d = centered_projected,
+        )
+    centered_nuclear =
+        CPBM.pqs_source_pair_centered_electron_nuclear_by_center_block(
+            pqs_cross_record;
+            axis_layers = analytic_layers,
+            coulomb_expansion = analytic_expansion,
+            center_record = analytic_center,
+        )
+    @test centered_nuclear.term == :source_electron_nuclear_by_center
+    @test size(centered_nuclear.block) == (27, 60)
+    @test centered_nuclear.block ≈ supplied_centered_nuclear.block
+    @test centered_nuclear.metadata.by_center
+    @test centered_nuclear.metadata.nuclear_charge_recorded
+    @test !centered_nuclear.metadata.nuclear_charge_applied
+    @test !centered_nuclear.metadata.centers_summed
+    @test centered_nuclear.metadata.uncharged_by_center_convention
+    @test !centered_nuclear.metadata.shell_realization_materialized
+    @test !centered_nuclear.metadata.lowdin_cleanup_used
+    @test !centered_nuclear.metadata.ida_data_materialized
+    @test !centered_nuclear.metadata.hamiltonian_data_materialized
+    centered_retained =
+        CPBM.pqs_source_pair_retained_centered_electron_nuclear_by_center_block(
+            pqs_cross_record;
+            axis_layers = analytic_layers,
+            coulomb_expansion = analytic_expansion,
+            center_record = analytic_center,
+        )
+    expected_centered_retained =
+        CPBM.pqs_source_pair_retained_one_body_block(centered_nuclear)
+    @test centered_retained.term == :retained_source_electron_nuclear_by_center
+    @test size(centered_retained.block) == (26, 54)
+    @test centered_retained.block ≈ expected_centered_retained.block
+    @test centered_retained.metadata.by_center
+    @test centered_retained.metadata.nuclear_charge_recorded
+    @test !centered_retained.metadata.nuclear_charge_applied
+    @test !centered_retained.metadata.centers_summed
+    @test centered_retained.metadata.retained_source_operator_block_materialized
+    @test !centered_retained.metadata.shell_realization_materialized
+    @test !centered_retained.metadata.lowdin_cleanup_used
 
     not_materialized_retained_plan = _pair_block_mixed_pqs_retained_plan()
     not_materialized_unit_pair_plan =
