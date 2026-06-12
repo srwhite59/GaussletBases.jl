@@ -252,6 +252,119 @@ function pqs_source_pair_kinetic_blocks(
 end
 
 """
+    pqs_source_pair_electron_nuclear_by_center_block(record;
+        coulomb_expansion, center_record, gaussian_factor_terms_1d)
+
+Materialize one PQS/PQS raw source-space electron-nuclear by-center block from
+caller-supplied term-first 1D Gaussian factor arrays. This builds the negative
+unit-charge by-center attraction convention:
+`sum_t (-coefficients[t]) * Gx[t] * Gy[t] * Gz[t]`.
+
+The returned block records the nuclear charge but does not apply it, does not
+sum centers, and remains before shell projection, Lowdin cleanup, IDA, and
+Hamiltonian assembly.
+"""
+function pqs_source_pair_electron_nuclear_by_center_block(
+    record::PairBlockMaterializationRecord;
+    coulomb_expansion,
+    center_record,
+    gaussian_factor_terms_1d,
+)
+    _assert_pqs_source_pair_record(record)
+
+    left_dims, right_dims = _pqs_source_pair_dims(record)
+    axis_terms = _pqs_source_gaussian_factor_terms_tuple(
+        gaussian_factor_terms_1d,
+        left_dims,
+        right_dims,
+    )
+    coefficients =
+        _pqs_source_electron_nuclear_coefficients(coulomb_expansion, axis_terms)
+    center_summary = _pqs_source_electron_nuclear_center_summary(center_record)
+    center_summary.status === :available_pqs_source_electron_nuclear_center ||
+        throw(
+            ArgumentError(
+                "PQS source electron-nuclear block requires an available center record",
+            ),
+        )
+
+    left_count = _pqs_source_mode_count(record, :left, left_dims)
+    right_count = _pqs_source_mode_count(record, :right, right_dims)
+    ordering = _pqs_source_mode_ordering(record)
+    left_modes = CRPS.source_mode_indices(left_dims; source_mode_ordering = ordering)
+    right_modes =
+        CRPS.source_mode_indices(right_dims; source_mode_ordering = ordering)
+    length(left_modes) == left_count ||
+        throw(ArgumentError("left source-mode count does not match left source-mode dims"))
+    length(right_modes) == right_count ||
+        throw(ArgumentError("right source-mode count does not match right source-mode dims"))
+
+    block = Matrix{Float64}(undef, left_count, right_count)
+    _fill_pqs_source_electron_nuclear_by_center_block!(
+        block,
+        left_modes,
+        right_modes,
+        axis_terms,
+        coefficients,
+    )
+
+    return PairBlockMaterializationResult(
+        :source_electron_nuclear_by_center,
+        record.pair_key,
+        block,
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        _pqs_source_pair_common_metadata(
+            record,
+            left_dims,
+            right_dims,
+            left_count,
+            right_count,
+            ordering,
+            (;
+                physical_operator = :electron_nuclear_attraction,
+                by_center = true,
+                center_key = center_summary.center_key,
+                center_index = center_summary.center_index,
+                center_location = center_summary.location,
+                nuclear_charge = center_summary.charge,
+                nuclear_charge_recorded = true,
+                nuclear_charge_applied = false,
+                centers_summed = false,
+                center_summation = false,
+                uncharged_by_center_convention = true,
+                charge_application_stage =
+                    :diagnostic_or_hamiltonian_assembly,
+                term_coefficients_source = :coulomb_expansion_coefficients,
+                gaussian_factor_terms_source = :caller_supplied_explicit_data,
+                gaussian_expansion_loop = :inner_source_mode_contraction,
+                gaussian_term_count = length(coefficients),
+                axis_factor_term_shapes = (
+                    x = size(axis_terms[1]),
+                    y = size(axis_terms[2]),
+                    z = size(axis_terms[3]),
+                ),
+                source_operator_blocks_materialized = true,
+                final_pair_blocks_materialized = false,
+                shell_realization_materialized = false,
+                lowdin_cleanup_used = false,
+                ida_data_materialized = false,
+                ida_mwg_semantics_changed = false,
+                operator_blocks_materialized = false,
+                hamiltonian_data_materialized = false,
+                driver_route_materialized = false,
+                artifacts_materialized = false,
+                exports_materialized = false,
+            ),
+        ),
+    )
+end
+
+"""
     pqs_source_pair_retained_one_body_block(source_result, left_rule, right_rule)
 
 Contract a materialized PQS/PQS raw source-space one-body block to retained
@@ -361,6 +474,27 @@ function pqs_source_pair_retained_kinetic_block(
         record;
         overlap_1d,
         kinetic_1d,
+    )
+    return pqs_source_pair_retained_one_body_block(source_result)
+end
+
+"""
+    pqs_source_pair_retained_electron_nuclear_by_center_block(record; ...)
+
+Materialize a raw PQS/PQS source electron-nuclear by-center block and contract
+it to retained source modes by the retained source-mode boundary selector.
+"""
+function pqs_source_pair_retained_electron_nuclear_by_center_block(
+    record::PairBlockMaterializationRecord;
+    coulomb_expansion,
+    center_record,
+    gaussian_factor_terms_1d,
+)
+    source_result = pqs_source_pair_electron_nuclear_by_center_block(
+        record;
+        coulomb_expansion,
+        center_record,
+        gaussian_factor_terms_1d,
     )
     return pqs_source_pair_retained_one_body_block(source_result)
 end
@@ -600,62 +734,230 @@ function _pqs_source_pair_product_result(
         false,
         false,
         false,
-        merge(
-            (;
-                materialization_path = record.materialization_path,
-                readiness_status_before_materialization = record.readiness_status,
-                block_space = :raw_product_source_modes,
-                source_mode_ordering = ordering,
-                left_source_mode_dims = left_dims,
-                right_source_mode_dims = right_dims,
-                left_source_mode_count = left_count,
-                right_source_mode_count = right_count,
-                left_source_mode_ordering = ordering,
-                right_source_mode_ordering = ordering,
-                transform_contract_keys =
-                    _pqs_source_pair_metadata_value(
-                        record,
-                        :transform_contract_keys,
-                        (; left = nothing, right = nothing),
-                    ),
-                source_contract_keys =
-                    _pqs_source_pair_metadata_value(
-                        record,
-                        :source_contract_keys,
-                        (; left = nothing, right = nothing),
-                    ),
-                left_raw_product_source_retained_rule =
-                    _pqs_source_pair_metadata_value(
-                        record,
-                        :left_raw_product_source_retained_rule,
-                    ),
-                right_raw_product_source_retained_rule =
-                    _pqs_source_pair_metadata_value(
-                        record,
-                        :right_raw_product_source_retained_rule,
-                    ),
-                left_raw_product_source_retained_rule_summary =
-                    _pqs_source_pair_metadata_value(
-                        record,
-                        :left_raw_product_source_retained_rule_summary,
-                    ),
-                right_raw_product_source_retained_rule_summary =
-                    _pqs_source_pair_metadata_value(
-                        record,
-                        :right_raw_product_source_retained_rule_summary,
-                    ),
-                transform_paths = record.transform_path,
-                realization_paths = record.realization_path,
-                source_operator_blocks_materialized = true,
-                final_pair_blocks_materialized = false,
-                shell_realization_materialized = false,
-                operator_blocks_materialized = false,
-                hamiltonian_data_materialized = false,
-                artifacts_materialized = false,
-            ),
-            NamedTuple(metadata),
+        _pqs_source_pair_common_metadata(
+            record,
+            left_dims,
+            right_dims,
+            left_count,
+            right_count,
+            ordering,
+            metadata,
         ),
     )
+end
+
+function _pqs_source_pair_common_metadata(
+    record::PairBlockMaterializationRecord,
+    left_dims::NTuple{3,Int},
+    right_dims::NTuple{3,Int},
+    left_count::Int,
+    right_count::Int,
+    ordering::Symbol,
+    metadata,
+)
+    return merge(
+        (;
+            materialization_path = record.materialization_path,
+            readiness_status_before_materialization = record.readiness_status,
+            block_space = :raw_product_source_modes,
+            source_mode_ordering = ordering,
+            left_source_mode_dims = left_dims,
+            right_source_mode_dims = right_dims,
+            left_source_mode_count = left_count,
+            right_source_mode_count = right_count,
+            left_source_mode_ordering = ordering,
+            right_source_mode_ordering = ordering,
+            transform_contract_keys =
+                _pqs_source_pair_metadata_value(
+                    record,
+                    :transform_contract_keys,
+                    (; left = nothing, right = nothing),
+                ),
+            source_contract_keys =
+                _pqs_source_pair_metadata_value(
+                    record,
+                    :source_contract_keys,
+                    (; left = nothing, right = nothing),
+                ),
+            left_raw_product_source_retained_rule =
+                _pqs_source_pair_metadata_value(
+                    record,
+                    :left_raw_product_source_retained_rule,
+                ),
+            right_raw_product_source_retained_rule =
+                _pqs_source_pair_metadata_value(
+                    record,
+                    :right_raw_product_source_retained_rule,
+                ),
+            left_raw_product_source_retained_rule_summary =
+                _pqs_source_pair_metadata_value(
+                    record,
+                    :left_raw_product_source_retained_rule_summary,
+                ),
+            right_raw_product_source_retained_rule_summary =
+                _pqs_source_pair_metadata_value(
+                    record,
+                    :right_raw_product_source_retained_rule_summary,
+                ),
+            transform_paths = record.transform_path,
+            realization_paths = record.realization_path,
+            source_operator_blocks_materialized = true,
+            final_pair_blocks_materialized = false,
+            shell_realization_materialized = false,
+            operator_blocks_materialized = false,
+            hamiltonian_data_materialized = false,
+            artifacts_materialized = false,
+        ),
+        NamedTuple(metadata),
+    )
+end
+
+function _pqs_source_gaussian_factor_terms_tuple(
+    gaussian_factor_terms_1d,
+    left_dims::NTuple{3,Int},
+    right_dims::NTuple{3,Int},
+)
+    axis_terms =
+        _operator_1d_tuple(gaussian_factor_terms_1d, "gaussian_factor_terms_1d")
+    axis_names = (:x, :y, :z)
+    for axis_index in 1:3
+        terms = axis_terms[axis_index]
+        terms isa AbstractArray{<:Real,3} ||
+            throw(
+                ArgumentError(
+                    "gaussian_factor_terms_1d entries must be real term-first 3D arrays",
+                ),
+            )
+        size(terms, 2) == left_dims[axis_index] &&
+            size(terms, 3) == right_dims[axis_index] ||
+            throw(
+                ArgumentError(
+                    "gaussian_factor_terms_1d.$(axis_names[axis_index]) has incompatible source-mode size",
+                ),
+            )
+    end
+    return axis_terms
+end
+
+function _pqs_source_electron_nuclear_coefficients(coulomb_expansion, axis_terms)
+    coefficients = _pqs_source_descriptor_property(
+        coulomb_expansion,
+        :coefficients,
+    )
+    coefficients isa AbstractVector{<:Real} ||
+        throw(
+            ArgumentError(
+                "PQS source electron-nuclear block requires Coulomb expansion coefficients",
+            ),
+        )
+    nterms = length(coefficients)
+    nterms > 0 ||
+        throw(
+            ArgumentError(
+                "PQS source electron-nuclear block requires at least one Gaussian term",
+            ),
+        )
+    for axis_index in 1:3
+        size(axis_terms[axis_index], 1) == nterms ||
+            throw(
+                ArgumentError(
+                    "PQS source electron-nuclear Gaussian term count mismatch",
+                ),
+            )
+    end
+    return Float64[-Float64(value) for value in coefficients]
+end
+
+function _pqs_source_electron_nuclear_center_summary(center_record)
+    isnothing(center_record) && return (;
+        status = :blocked_pqs_source_electron_nuclear_center,
+        blocker = :missing_electron_nuclear_center_record,
+        center_key = :unavailable,
+        center_index = :unavailable,
+        charge = :unavailable,
+        location = :unavailable,
+    )
+    charge = _pqs_source_descriptor_property(center_record, :charge)
+    isnothing(charge) &&
+        (charge = _pqs_source_descriptor_property(center_record, :nuclear_charge))
+    isnothing(charge) && (charge = _pqs_source_descriptor_property(center_record, :Z))
+    location = _pqs_source_descriptor_property(center_record, :location)
+    if isnothing(location)
+        x = _pqs_source_descriptor_property(center_record, :x)
+        y = _pqs_source_descriptor_property(center_record, :y)
+        z = _pqs_source_descriptor_property(center_record, :z)
+        if !isnothing(x) && !isnothing(y) && !isnothing(z)
+            location = (x, y, z)
+        end
+    end
+    location_tuple = _pqs_source_electron_nuclear_location_tuple(location)
+    blocker =
+        isnothing(charge) ?
+        :missing_electron_nuclear_center_charge :
+        (
+            isnothing(location_tuple) ?
+            :missing_electron_nuclear_center_location :
+            nothing
+        )
+    return (;
+        status =
+            isnothing(blocker) ?
+            :available_pqs_source_electron_nuclear_center :
+            :blocked_pqs_source_electron_nuclear_center,
+        blocker,
+        center_key = something(
+            _pqs_source_descriptor_property(center_record, :center_key),
+            :unavailable,
+        ),
+        center_index = something(
+            _pqs_source_descriptor_property(center_record, :center_index),
+            :unavailable,
+        ),
+        charge = isnothing(charge) ? :unavailable : Float64(charge),
+        location = isnothing(location_tuple) ? :unavailable : location_tuple,
+    )
+end
+
+function _pqs_source_electron_nuclear_location_tuple(location)
+    isnothing(location) && return nothing
+    length(location) == 3 || return nothing
+    value = ntuple(index -> Float64(location[index]), 3)
+    all(isfinite, value) || return nothing
+    return value
+end
+
+function _pqs_source_descriptor_property(object, key::Symbol)
+    isnothing(object) && return nothing
+    if object isa NamedTuple
+        return haskey(object, key) ? getfield(object, key) : nothing
+    end
+    return hasproperty(object, key) ? getproperty(object, key) : nothing
+end
+
+function _fill_pqs_source_electron_nuclear_by_center_block!(
+    block::Matrix{Float64},
+    left_modes,
+    right_modes,
+    axis_terms,
+    coefficients::AbstractVector{<:Real},
+)
+    terms_x, terms_y, terms_z = axis_terms
+    @inbounds for (left_index, left_mode) in pairs(left_modes)
+        lx, ly, lz = left_mode
+        for (right_index, right_mode) in pairs(right_modes)
+            rx, ry, rz = right_mode
+            value = 0.0
+            @simd for term in eachindex(coefficients)
+                value +=
+                    coefficients[term] *
+                    terms_x[term, lx, rx] *
+                    terms_y[term, ly, ry] *
+                    terms_z[term, lz, rz]
+            end
+            block[left_index, right_index] = value
+        end
+    end
+    return block
 end
 
 function _pqs_source_pair_metadata_value(

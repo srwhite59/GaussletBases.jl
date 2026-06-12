@@ -21,13 +21,14 @@ parent/axis blocks.
 
 PQS/PQS raw-source pair support currently has metadata preflight plus raw
 source-space safe one-body helpers for overlap, position, x2, kinetic, and a
-selector over those terms. It can also contract a raw source-space result to
-retained PQS source modes by source-mode boundary selector columns. Caller-
-supplied 1D factors own signs and prefactors. It also provides metadata-only
-shell-realization bridge summaries for those source-space blocks and batches,
-plus metadata-only readiness summaries for future final PQS pair blocks. This
-path does not build shell projection, Lowdin realization, or final shell-
-realized PQS pair blocks.
+selector over those terms. It also has a supplied-factor electron-nuclear
+by-center source block that records, but does not apply, nuclear charge. It can
+contract a raw source-space result to retained PQS source modes by source-mode
+boundary selector columns. Caller-supplied 1D factors own signs and prefactors.
+It also provides metadata-only shell-realization bridge summaries for those
+source-space blocks and batches, plus metadata-only readiness summaries for
+future final PQS pair blocks. This path does not build shell projection, Lowdin
+realization, or final shell-realized PQS pair blocks.
 
 The private route-shaped global one-body adapter currently composes existing
 local block collections, placement plans, and global safe one-body matrix pilots
@@ -77,6 +78,7 @@ export PairBlockMaterializationPolicy,
        pqs_source_pair_position_block,
        pqs_source_pair_x2_block,
        pqs_source_pair_kinetic_block,
+       pqs_source_pair_electron_nuclear_by_center_block,
        pqs_source_pair_overlap_blocks,
        pqs_source_pair_position_blocks,
        pqs_source_pair_x2_blocks,
@@ -85,6 +87,7 @@ export PairBlockMaterializationPolicy,
        pqs_source_pair_retained_one_body_blocks,
        pqs_source_pair_retained_overlap_block,
        pqs_source_pair_retained_kinetic_block,
+       pqs_source_pair_retained_electron_nuclear_by_center_block,
        pqs_retained_source_one_body_matrix,
        pqs_source_pair_one_body_block,
        pqs_source_pair_one_body_blocks,

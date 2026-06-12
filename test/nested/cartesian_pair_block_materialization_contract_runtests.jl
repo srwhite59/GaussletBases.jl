@@ -623,6 +623,24 @@ function _pair_block_pqs_source_kinetic_axes(left_dims, right_dims)
     return kinetic_x, kinetic_y, kinetic_z
 end
 
+function _pair_block_pqs_source_gaussian_factor_terms(left_dims, right_dims)
+    gx = Array{Float64,3}(undef, 2, left_dims[1], right_dims[1])
+    gy = Array{Float64,3}(undef, 2, left_dims[2], right_dims[2])
+    gz = Array{Float64,3}(undef, 2, left_dims[3], right_dims[3])
+    for term in 1:2
+        for lx in 1:left_dims[1], rx in 1:right_dims[1]
+            gx[term, lx, rx] = Float64(100 * term + 10 * lx + rx)
+        end
+        for ly in 1:left_dims[2], ry in 1:right_dims[2]
+            gy[term, ly, ry] = Float64(200 * term + 20 * ly + 2 * ry)
+        end
+        for lz in 1:left_dims[3], rz in 1:right_dims[3]
+            gz[term, lz, rz] = Float64(300 * term + 30 * lz + 3 * rz)
+        end
+    end
+    return gx, gy, gz
+end
+
 function _pair_block_expected_source_product(
     left_dims,
     right_dims,
@@ -752,6 +770,35 @@ function _pair_block_expected_source_kinetic(
         overlap_y,
         kinetic_z,
     )
+end
+
+function _pair_block_expected_source_electron_nuclear(
+    left_dims,
+    right_dims,
+    source_mode_ordering,
+    coefficients,
+    gaussian_x,
+    gaussian_y,
+    gaussian_z,
+)
+    left_modes = CRPSForPairBlocks.source_mode_indices(
+        left_dims;
+        source_mode_ordering,
+    )
+    right_modes = CRPSForPairBlocks.source_mode_indices(
+        right_dims;
+        source_mode_ordering,
+    )
+    return [
+        sum(
+            -Float64(coefficients[term]) *
+            gaussian_x[term, left[1], right[1]] *
+            gaussian_y[term, left[2], right[2]] *
+            gaussian_z[term, left[3], right[3]]
+            for term in eachindex(coefficients)
+        )
+        for left in left_modes, right in right_modes
+    ]
 end
 
 function _pair_block_expected_position(
@@ -1958,6 +2005,97 @@ end
     @test retained_kinetic_result.metadata.retained_source_operator_block_materialized
     @test !retained_kinetic_result.metadata.shell_realization_materialized
     @test !retained_kinetic_result.metadata.lowdin_cleanup_used
+
+    gaussian_x, gaussian_y, gaussian_z =
+        _pair_block_pqs_source_gaussian_factor_terms(
+            left_source_dims,
+            right_source_dims,
+        )
+    expansion = CoulombGaussianExpansion(
+        [0.7, 0.2],
+        [0.5, 1.5];
+        del = 0.6,
+        s = 0.5,
+        c = 0.03,
+        maxu = 1.2,
+    )
+    center_record = (;
+        center_key = :synthetic_origin,
+        center_index = 1,
+        charge = 2.0,
+        location = (0.0, 0.0, 0.0),
+    )
+    nuclear_result = CPBM.pqs_source_pair_electron_nuclear_by_center_block(
+        pqs_cross_record;
+        coulomb_expansion = expansion,
+        center_record,
+        gaussian_factor_terms_1d = (;
+            x = gaussian_x,
+            y = gaussian_y,
+            z = gaussian_z,
+        ),
+    )
+    expected_nuclear = _pair_block_expected_source_electron_nuclear(
+        left_source_dims,
+        right_source_dims,
+        pqs_cross_record.metadata.source_mode_ordering,
+        expansion.coefficients,
+        gaussian_x,
+        gaussian_y,
+        gaussian_z,
+    )
+    @test nuclear_result.term == :source_electron_nuclear_by_center
+    @test size(nuclear_result.block) == (27, 60)
+    @test nuclear_result.block ≈ expected_nuclear
+    @test nuclear_result.metadata.block_space == :raw_product_source_modes
+    @test nuclear_result.metadata.by_center
+    @test nuclear_result.metadata.center_key == :synthetic_origin
+    @test nuclear_result.metadata.center_index == 1
+    @test nuclear_result.metadata.center_location == (0.0, 0.0, 0.0)
+    @test nuclear_result.metadata.nuclear_charge == 2.0
+    @test nuclear_result.metadata.nuclear_charge_recorded
+    @test !nuclear_result.metadata.nuclear_charge_applied
+    @test !nuclear_result.metadata.centers_summed
+    @test nuclear_result.metadata.uncharged_by_center_convention
+    @test nuclear_result.metadata.gaussian_term_count == 2
+    @test nuclear_result.metadata.axis_factor_term_shapes ==
+          (x = size(gaussian_x), y = size(gaussian_y), z = size(gaussian_z))
+    @test nuclear_result.source_operator_blocks_materialized
+    @test !nuclear_result.final_pair_blocks_materialized
+    @test !nuclear_result.operator_blocks_materialized
+    @test !nuclear_result.hamiltonian_data_materialized
+    @test !nuclear_result.artifacts_materialized
+    @test !nuclear_result.metadata.shell_realization_materialized
+    @test !nuclear_result.metadata.lowdin_cleanup_used
+    @test !nuclear_result.metadata.ida_data_materialized
+    @test !nuclear_result.metadata.driver_route_materialized
+
+    retained_nuclear_result =
+        CPBM.pqs_source_pair_retained_one_body_block(nuclear_result)
+    wrapper_retained_nuclear =
+        CPBM.pqs_source_pair_retained_electron_nuclear_by_center_block(
+            pqs_cross_record;
+            coulomb_expansion = expansion,
+            center_record,
+            gaussian_factor_terms_1d = (gaussian_x, gaussian_y, gaussian_z),
+        )
+    @test retained_nuclear_result.term ==
+          :retained_source_electron_nuclear_by_center
+    @test size(retained_nuclear_result.block) == (26, 54)
+    @test retained_nuclear_result.block ≈
+          nuclear_result.block[left_retained_columns, right_retained_columns]
+    @test wrapper_retained_nuclear.block ≈ retained_nuclear_result.block
+    @test retained_nuclear_result.metadata.block_space ==
+          :retained_pqs_source_modes
+    @test retained_nuclear_result.metadata.source_block_term ==
+          :source_electron_nuclear_by_center
+    @test retained_nuclear_result.metadata.by_center
+    @test retained_nuclear_result.metadata.nuclear_charge_recorded
+    @test !retained_nuclear_result.metadata.nuclear_charge_applied
+    @test !retained_nuclear_result.metadata.centers_summed
+    @test retained_nuclear_result.metadata.retained_source_operator_block_materialized
+    @test !retained_nuclear_result.metadata.shell_realization_materialized
+    @test !retained_nuclear_result.metadata.lowdin_cleanup_used
 
     bad_pqs_overlap_x = zeros(Float64, left_source_dims[1] + 1, right_source_dims[1])
     @test_throws ArgumentError CPBM.pqs_source_pair_overlap_block(
