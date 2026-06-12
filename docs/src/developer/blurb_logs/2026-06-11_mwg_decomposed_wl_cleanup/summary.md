@@ -119,7 +119,12 @@ The current live He + GTO question is later in the stack:
   route shape without user-local `BasisSets`; it costs about `49s` to rebuild
   package precompile and improves the Be S+P fresh-process route from about
   `169.9s` to `159.0s`, so the next cold-latency target is specialization
-  pressure rather than a larger precompile fixture.
+  pressure rather than a larger precompile fixture;
+- the first specialization audit found that hot decomposed WL inventory results
+  still encode retained-unit count in the type via tuple-valued `unit_keys` and
+  `unit_summaries`; the side-7 precompile workload compiles a 27-unit result,
+  while side-15 Be needs a 131-unit result. Small-inventory pair summaries also
+  compile a tuple-heavy shape that production side-15 omits.
 
 ## Current Cleanup Rule
 

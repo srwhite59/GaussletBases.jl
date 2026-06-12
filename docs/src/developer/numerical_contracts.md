@@ -417,6 +417,18 @@ it does not solve cold latency. Further improvement should target
 specialization pressure in route summaries, retained-unit/factorized sidecars,
 or large staged object shapes rather than making the precompile fixture larger.
 
+A follow-up specialization-shape audit found the first concrete source of
+side-dependent compilation: the hot decomposed WL inventory result stores
+report-style summaries as tuples whose length is part of the concrete type. The
+side-7 synthetic workload compiles `unit_keys::NTuple{27,Symbol}` and
+27-element `unit_summaries`, while side-15 Be needs
+`unit_keys::NTuple{131,Symbol}` and 131-element summaries. The side-7 workload
+also compiles a 378-pair `pair_summaries` tuple that production side-15 omits.
+The production data itself is already vector/table based
+(`Vector{RetainedUnitRecord}` plus `UnitPairIndexTable`), so the next cleanup
+is to move detailed inventory summaries out of the hot result shape or make
+them vector/count based.
+
 The current coarse timing split for the active tiny-box He RHF acceptance is
 reported by the test as diagnostics, not asserted as performance thresholds.
 Before the electron-nuclear cache and precompile workload, a representative
