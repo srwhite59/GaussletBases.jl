@@ -330,9 +330,31 @@ closest: final dimension 1897, gausslet/residual counts 1869/28, RHF total
 `-2.861673961528321` Hartree, error `+1.716095156645281e-6` Hartree versus the
 Fig. 8 row, and error `+6.034083917860755e-6` Hartree versus the He HF
 reference. This is accurate enough to close the immediate atomic He accuracy
-check. The next physics target is diatomic H2 at restricted closed-shell HF
-level, starting from the documented old nested/QW `R = 4.0` reference line
-before attempting broader decomposed route generalization.
+check.
+
+The next atomic supplement target is Be with S+P GTO residuals. The old
+nested/QW Be S+P oracle uses the external GaussletModules `BasisSets` file,
+`legacy_atomic_gaussian_supplement("Be", "cc-pV5Z"; lmax = 1)`, `Z = 4`,
+q/ns `5 / 5`, `interaction_treatment = :mwg`, and
+`residual_keep_policy = :near_null_only`. It gives fixed dimension `615`,
+`21` raw S+P supplement orbitals, `21` retained residual directions, final
+dimension `636`, final overlap identity error about `1.01e-11`, and closed-
+shell RHF total `-14.574514244574694` Hartree. This old route is now an oracle
+comparator, not a target to keep re-proving.
+
+The current decomposed/final-basis route has a private one-center
+atom+supplement seam,
+`_white_lindsey_decomposed_atom_gto_final_basis_route(...)`, that wires mapped
+parent axes, shellification-backed decomposed WL inventory, combined-GTO
+one-electron assembly, final-basis projection, and optional residual-MWG
+density-density materialization. On the Be S+P q/ns `5 / 5` probe, the
+one-electron final-basis route materializes with retained gausslet dimension
+`615`, `21` retained supplement directions, final dimension `636`, final
+overlap identity error about `1.01e-10`, and no full-parent CPB, direct
+Cartesian, ordinary IDA, raw-GTO-final-density, or generalized-final-solve
+fallback. Final density-density/RHF for Be S+P is not yet accepted; the next
+step is a phase-attributed density-density/RHF run through the same seam rather
+than a blind long run.
 
 The current coarse timing split for the active tiny-box He RHF acceptance is
 reported by the test as diagnostics, not asserted as performance thresholds.

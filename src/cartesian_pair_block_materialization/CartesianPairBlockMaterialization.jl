@@ -179,6 +179,12 @@ export PairBlockMaterializationPolicy,
 #     readiness surface. It blocks rather than treating raw GTO density-density
 #     as final MWG data.
 #
+# route_global_atom_gto_final_basis_route.jl
+#     Private one-center atom+GTO construction seam that wires mapped parent
+#     axes, shellification-backed WL inventory, combined-GTO one-electron
+#     assembly, final-basis projection, and residual-MWG density-density
+#     materialization for driver-facing probes.
+#
 # one_body_placement_plan.jl
 #     Metadata-only local one-body placement records for future global retained
 #     operator assembly.
@@ -287,6 +293,7 @@ include("route_global_mixed_gto_blocks.jl")
 include("route_global_combined_gto_matrix_assembly.jl")
 include("route_global_combined_gto_final_basis.jl")
 include("route_global_combined_gto_density_density.jl")
+include("route_global_atom_gto_final_basis_route.jl")
 include("one_body_placement_plan.jl")
 include("one_body_global_matrix_helpers.jl")
 include("one_body_global_overlap.jl")

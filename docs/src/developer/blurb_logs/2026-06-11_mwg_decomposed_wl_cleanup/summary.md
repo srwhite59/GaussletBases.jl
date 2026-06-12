@@ -93,7 +93,11 @@ The current live He + GTO question is later in the stack:
   `:missing_driver_owned_decomposed_be_sp_fixture_wiring`: removing it should
   turn H/H2+ fixture-local GTO wiring into a reusable decomposed
   atom+supplement seam and make old nested/QW less necessary as route
-  authority.
+  authority;
+- the private decomposed atom+supplement seam now materializes the Be S+P
+  final-basis one-electron route with final dimension `636`; the next blocker
+  is not old-oracle data, but phase-attributed final density-density/RHF
+  materialization through that seam.
 
 ## Current Cleanup Rule
 
