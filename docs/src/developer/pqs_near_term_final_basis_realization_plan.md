@@ -492,10 +492,33 @@ diagnostic. It is not signed-final-weight division and not raw no-division.
 `pqs_complete_core_shell_final_ida_weights(...)` remains useful as a final
 weight diagnostic, but the self-Coulomb diagnostic is owned by
 `pqs_complete_core_shell_pre_final_density_interaction(...)` followed by
-`pqs_complete_core_shell_pre_final_orbital_self_coulomb(...)`. The remaining
-route-owned gap is the producer for support weights, support raw pair numerator,
-and lowest H1 orbital coefficients; current side-13 H1/J probes still build
-those inputs locally.
+`pqs_complete_core_shell_pre_final_orbital_self_coulomb(...)`. The route-owned
+H1/J diagnostic seam is now `pqs_multilayer_complete_core_shell_h1_j_payload(...)`.
+It consumes the complete core/shell final basis, the H1 payload, route-owned
+support weights, and route-owned raw support pair numerators; it extracts the
+lowest H1 orbital from the H1 payload rather than treating that eigensolve as a
+separate probe-local input.
+
+Driver-spine audit result: H1/J should enter after `cartesian_assembly` has a
+real complete core/shell diagnostic route payload. That payload needs to carry
+the shellification/lowering-backed region plan, the PQS multilayer source plan,
+the complete core/shell final basis, the H1 payload, and the density inputs
+needed by `pqs_multilayer_complete_core_shell_h1_j_payload(...)`. The report
+stage should then expose only the compact H1/J status, blocker, H1 energy,
+self-Coulomb value, density gauge, and nonclaim flags. `cartesian_materialization`
+should remain a durable-summary/sanitization boundary unless it creates a real
+driver-owned route object. A report-only hook must not set
+`driver_route_materialized = true`.
+
+The current `cartesian_assembly` / `cartesian_report` / `cartesian_materialization`
+spine still lacks that complete core/shell diagnostic route payload. Its
+transient materializer payload carries parent basis and axis-bundle handoff
+objects only, and the low-order report summary still reports pair/operator
+materialization readiness rather than complete core/shell final-basis H1/J
+materialization. Because of that, adding a placeholder assembly/report field
+would be metadata without driver ownership. The next design boundary is a
+small driver-facing complete core/shell diagnostic route object, not RHF, SCF,
+fixture-rule work, or an H1/J report flag alone.
 
 ## Validation Policy
 
