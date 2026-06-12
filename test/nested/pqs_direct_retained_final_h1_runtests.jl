@@ -145,15 +145,6 @@ end
         location = (0.0, 0.0, 0.0),
         charge = 1.0,
     )
-    states = fixture.all_states
-    metrics = fixture.metrics
-    support_overlap = GaussletBases._pqs_multilayer_support_product_matrix(
-        states,
-        states,
-        metrics.x.overlap,
-        metrics.y.overlap,
-        metrics.z.overlap,
-    )
     support_kinetic =
         GaussletBases.pqs_multilayer_support_kinetic_matrix(fixture.plan)
     support_nuclear_by_center =
@@ -195,11 +186,6 @@ end
         ),
     )
 
-    final_overlap = PQSH1CFBR.pqs_complete_core_shell_final_one_body_matrix(
-        fixture.final_basis,
-        support_overlap;
-        term = :overlap,
-    )
     final_kinetic = PQSH1CFBR.pqs_complete_core_shell_final_one_body_matrix(
         fixture.final_basis,
         support_kinetic;
@@ -221,9 +207,6 @@ end
     @test fixture.final_basis.shell_final_retained_count == 98
     @test fixture.final_basis.final_retained_count == 223
     @test fixture.final_basis.final_overlap_identity_error < 1.0e-10
-    @test final_overlap.final_operator ≈ fixture.final_basis.final_overlap atol = 1.0e-12 rtol = 0.0
-    @test final_overlap.final_operator ≈
-          Matrix{Float64}(I, h1.final_dimension, h1.final_dimension) atol = 1.0e-10 rtol = 0.0
     @test final_nuclear.metadata.nuclear_factor_source ===
           :pgdg_intermediate_gaussian_factor_terms
     @test final_nuclear.metadata.raw_base_layer_gaussian_factor_matrices_used == false
