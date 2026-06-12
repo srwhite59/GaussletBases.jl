@@ -669,6 +669,34 @@ function _pair_block_pqs_source_gaussian_factor_terms(left_dims, right_dims)
     return gx, gy, gz
 end
 
+function _pair_block_pqs_source_support_gaussian_factor_terms()
+    gx = Array{Float64,3}(undef, 2, 3, 3)
+    gy = Array{Float64,3}(undef, 2, 3, 3)
+    gz = Array{Float64,3}(undef, 2, 3, 3)
+    for term in 1:2
+        for left in 1:3, right in 1:3
+            gx[term, left, right] = Float64(10 * term + left + right / 10)
+            gy[term, left, right] = Float64(20 * term + 2 * left + right / 7)
+            gz[term, left, right] = Float64(30 * term + 3 * left + right / 5)
+        end
+    end
+    return gx, gy, gz
+end
+
+function _pair_block_project_axis_terms(axis_terms, left_transform, right_transform)
+    projected = Array{Float64,3}(
+        undef,
+        size(axis_terms, 1),
+        size(left_transform, 2),
+        size(right_transform, 2),
+    )
+    for term in axes(axis_terms, 1)
+        projected[term, :, :] .=
+            transpose(left_transform) * axis_terms[term, :, :] * right_transform
+    end
+    return projected
+end
+
 function _pair_block_expected_source_product(
     left_dims,
     right_dims,
@@ -1619,6 +1647,68 @@ end
         size(fact.coefficient_matrix)
         for fact in pqs_cross_record.metadata.right_raw_product_source_axis_transform_facts
     ) == ((3, 5), (3, 4), (3, 3))
+    support_gaussian_x, support_gaussian_y, support_gaussian_z =
+        _pair_block_pqs_source_support_gaussian_factor_terms()
+    projected_gaussian =
+        CPBM.pqs_source_pair_gaussian_factor_terms_1d(
+            pqs_cross_record;
+            gaussian_factor_terms_axis = (;
+                x = support_gaussian_x,
+                y = support_gaussian_y,
+                z = support_gaussian_z,
+            ),
+        )
+    left_facts =
+        pqs_cross_record.metadata.left_raw_product_source_axis_transform_facts
+    right_facts =
+        pqs_cross_record.metadata.right_raw_product_source_axis_transform_facts
+    @test size(projected_gaussian.x) == (2, 3, 5)
+    @test size(projected_gaussian.y) == (2, 3, 4)
+    @test size(projected_gaussian.z) == (2, 3, 3)
+    @test projected_gaussian.x ≈ _pair_block_project_axis_terms(
+        support_gaussian_x,
+        left_facts[1].coefficient_matrix,
+        right_facts[1].coefficient_matrix,
+    )
+    @test projected_gaussian.y ≈ _pair_block_project_axis_terms(
+        support_gaussian_y,
+        left_facts[2].coefficient_matrix,
+        right_facts[2].coefficient_matrix,
+    )
+    @test projected_gaussian.z ≈ _pair_block_project_axis_terms(
+        support_gaussian_z,
+        left_facts[3].coefficient_matrix,
+        right_facts[3].coefficient_matrix,
+    )
+
+    not_materialized_retained_plan = _pair_block_mixed_pqs_retained_plan()
+    not_materialized_unit_pair_plan =
+        CUPForPairBlocks.unit_pair_plan(not_materialized_retained_plan)
+    not_materialized_transform_plan =
+        CRTCForPairBlocks.retained_unit_transform_contract_plan(
+            not_materialized_retained_plan,
+        )
+    not_materialized_pair_operator_plan =
+        CPOPForPairBlocks.pair_operator_plan(
+            not_materialized_unit_pair_plan,
+            not_materialized_transform_plan;
+            route_core_sidecars = false,
+        )
+    not_materialized_plan =
+        CPBM.pair_block_materialization_plan(not_materialized_pair_operator_plan)
+    not_materialized_record = _pair_block_record_for(
+        not_materialized_plan,
+        :pair_block_selector_pqs_unit,
+        :pair_block_selector_pqs_unit,
+    )
+    @test_throws ArgumentError CPBM.pqs_source_pair_gaussian_factor_terms_1d(
+        not_materialized_record;
+        gaussian_factor_terms_axis = (;
+            x = support_gaussian_x,
+            y = support_gaussian_y,
+            z = support_gaussian_z,
+        ),
+    )
     @test pqs_cross_record.metadata.source_mode_ordering ==
           :x_major_y_major_z_fast
     @test pqs_cross_record.metadata.left_source_mode_ordering ==

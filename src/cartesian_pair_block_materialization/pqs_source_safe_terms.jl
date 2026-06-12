@@ -365,6 +365,54 @@ function pqs_source_pair_electron_nuclear_by_center_block(
 end
 
 """
+    pqs_source_pair_gaussian_factor_terms_1d(record; gaussian_factor_terms_axis)
+
+Project supplied term-first source-support Gaussian axis matrices into PQS
+source-mode coordinates with the materialized source-axis transform facts
+carried by a ready PQS/PQS source-pair preflight record:
+
+`G_source[t] = C_left' * G_support[t] * C_right`.
+
+This is projection only. It does not generate analytic Gaussian factors, apply
+nuclear charge, build electron-nuclear blocks, materialize shell realization,
+run Lowdin cleanup, build IDA data, or assemble Hamiltonians.
+"""
+function pqs_source_pair_gaussian_factor_terms_1d(
+    record::PairBlockMaterializationRecord;
+    gaussian_factor_terms_axis,
+)
+    _assert_pqs_source_pair_record(record)
+    left_dims, right_dims = _pqs_source_pair_dims(record)
+    left_facts = _pqs_source_pair_axis_transform_facts(record, :left)
+    right_facts = _pqs_source_pair_axis_transform_facts(record, :right)
+    support_terms = _pqs_source_support_gaussian_factor_terms_tuple(
+        gaussian_factor_terms_axis,
+        left_facts,
+        right_facts,
+    )
+    projected = ntuple(
+        axis -> _pqs_source_project_axis_gaussian_factor_terms(
+            support_terms[axis],
+            _pqs_source_axis_transform_matrix(
+                left_facts[axis],
+                left_dims[axis],
+                axis,
+                :left,
+            ),
+            _pqs_source_axis_transform_matrix(
+                right_facts[axis],
+                right_dims[axis],
+                axis,
+                :right,
+            ),
+            axis,
+        ),
+        3,
+    )
+    return (x = projected[1], y = projected[2], z = projected[3])
+end
+
+"""
     pqs_source_pair_retained_one_body_block(source_result, left_rule, right_rule)
 
 Contract a materialized PQS/PQS raw source-space one-body block to retained
@@ -837,6 +885,120 @@ function _pqs_source_gaussian_factor_terms_tuple(
             )
     end
     return axis_terms
+end
+
+function _pqs_source_support_gaussian_factor_terms_tuple(
+    gaussian_factor_terms_axis,
+    left_facts,
+    right_facts,
+)
+    axis_terms =
+        _operator_1d_tuple(gaussian_factor_terms_axis, "gaussian_factor_terms_axis")
+    axis_names = (:x, :y, :z)
+    nterms = nothing
+    for axis_index in 1:3
+        terms = axis_terms[axis_index]
+        terms isa AbstractArray{<:Real,3} ||
+            throw(
+                ArgumentError(
+                    "gaussian_factor_terms_axis entries must be real term-first 3D arrays",
+                ),
+            )
+        isnothing(nterms) && (nterms = size(terms, 1))
+        size(terms, 1) == nterms ||
+            throw(ArgumentError("gaussian_factor_terms_axis term count mismatch"))
+        size(terms, 2) == length(left_facts[axis_index].source_interval) &&
+            size(terms, 3) == length(right_facts[axis_index].source_interval) ||
+            throw(
+                ArgumentError(
+                    "gaussian_factor_terms_axis.$(axis_names[axis_index]) has incompatible source-support size",
+                ),
+            )
+    end
+    isnothing(nterms) || nterms > 0 ||
+        throw(ArgumentError("gaussian_factor_terms_axis requires at least one term"))
+    return axis_terms
+end
+
+function _pqs_source_pair_axis_transform_facts(
+    record::PairBlockMaterializationRecord,
+    side::Symbol,
+)
+    field =
+        side === :left ?
+        :left_raw_product_source_axis_transform_facts :
+        side === :right ?
+        :right_raw_product_source_axis_transform_facts :
+        throw(ArgumentError("PQS source axis transform side must be :left or :right"))
+    facts = _pqs_source_pair_metadata_value(record, field)
+    facts isa Tuple && length(facts) == 3 ||
+        throw(ArgumentError("PQS source pair requires $(side) axis transform facts"))
+    return facts
+end
+
+function _pqs_source_axis_transform_matrix(
+    fact,
+    source_mode_dim::Int,
+    axis::Int,
+    side::Symbol,
+)
+    fact isa CRPS.AxisSourceTransformFact ||
+        throw(
+            ArgumentError(
+                "PQS source $(side) axis transform fact must be an AxisSourceTransformFact",
+            ),
+        )
+    fact.axis == axis ||
+        throw(ArgumentError("PQS source $(side) axis transform fact axis mismatch"))
+    fact.source_mode_dim == source_mode_dim ||
+        throw(
+            ArgumentError(
+                "PQS source $(side) axis transform fact source-mode dimension mismatch",
+            ),
+        )
+    fact.coefficient_status === :materialized ||
+        throw(
+            ArgumentError(
+                "PQS source $(side) axis transform fact is not materialized",
+            ),
+        )
+    matrix = fact.coefficient_matrix
+    matrix isa AbstractMatrix{<:Real} ||
+        throw(ArgumentError("PQS source $(side) axis transform matrix must be real"))
+    size(matrix, 1) == length(fact.source_interval) &&
+        size(matrix, 2) == source_mode_dim ||
+        throw(
+            ArgumentError(
+                "PQS source $(side) axis transform matrix shape mismatch",
+            ),
+        )
+    return matrix
+end
+
+function _pqs_source_project_axis_gaussian_factor_terms(
+    support_terms::AbstractArray{<:Real,3},
+    left_transform::AbstractMatrix{<:Real},
+    right_transform::AbstractMatrix{<:Real},
+    axis::Int,
+)
+    size(support_terms, 2) == size(left_transform, 1) &&
+        size(support_terms, 3) == size(right_transform, 1) ||
+        throw(
+            ArgumentError(
+                "PQS source Gaussian support term size mismatch on axis $(axis)",
+            ),
+        )
+    projected = Array{Float64,3}(
+        undef,
+        size(support_terms, 1),
+        size(left_transform, 2),
+        size(right_transform, 2),
+    )
+    @views for term in axes(support_terms, 1)
+        projected[term, :, :] .=
+            transpose(left_transform) * support_terms[term, :, :] * right_transform
+    end
+    return projected
 end
 
 function _pqs_source_electron_nuclear_coefficients(coulomb_expansion, axis_terms)
