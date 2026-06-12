@@ -91,6 +91,7 @@ end
 
 function route_global_combined_gto_residual_moment_matrices(
     layout;
+    moment_matrix_set = nothing,
     position_x_result = nothing,
     position_y_result = nothing,
     position_z_result = nothing,
@@ -102,14 +103,16 @@ function route_global_combined_gto_residual_moment_matrices(
     metadata = (;),
 )
     fields = (:position_x, :position_y, :position_z, :x2_x, :x2_y, :x2_z)
-    gg_results = (;
-        position_x = position_x_result,
-        position_y = position_y_result,
-        position_z = position_z_result,
-        x2_x = x2_x_result,
-        x2_y = x2_y_result,
-        x2_z = x2_z_result,
-    )
+    gg_results = isnothing(moment_matrix_set) ?
+                 (;
+                     position_x = position_x_result,
+                     position_y = position_y_result,
+                     position_z = position_z_result,
+                     x2_x = x2_x_result,
+                     x2_y = x2_y_result,
+                     x2_z = x2_z_result,
+                 ) :
+                 moment_matrix_set
     blocker = _route_global_combined_gto_moment_matrix_blocker(
         layout,
         gg_results,
@@ -243,6 +246,7 @@ end
 
 function _route_global_combined_gto_moment_gg_matrix(gg_results, field::Symbol)
     result = getproperty(gg_results, field)
+    result isa AbstractMatrix && return result
     return _route_global_combined_gto_property(result, :matrix, nothing)
 end
 

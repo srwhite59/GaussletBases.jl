@@ -532,6 +532,72 @@ function route_global_decomposed_wl_one_body_matrix(
     end
 end
 
+struct DecomposedWLMomentMatrixSet
+    status::Symbol
+    blocker::Union{Nothing,Symbol}
+    inventory::Any
+    retained_dimension::Union{Nothing,Int}
+    position_x::Union{Nothing,Matrix{Float64}}
+    position_y::Union{Nothing,Matrix{Float64}}
+    position_z::Union{Nothing,Matrix{Float64}}
+    x2_x::Union{Nothing,Matrix{Float64}}
+    x2_y::Union{Nothing,Matrix{Float64}}
+    x2_z::Union{Nothing,Matrix{Float64}}
+    materialization_path::Symbol
+    old_fixed_block_matrix_authority_used::Bool
+    full_parent_window_cpb_used::Bool
+    direct_cartesian_product_assembly_used::Bool
+    ordinary_cartesian_ida_operators_used::Bool
+    metadata::NamedTuple
+end
+
+function route_global_decomposed_wl_moment_matrix_set(
+    source;
+    parent_axis_counts = nothing,
+    parent_axis_bundle_object = nothing,
+    overlap_1d = nothing,
+    position_1d = nothing,
+    x2_1d = nothing,
+    metadata = (;),
+)
+    return @timeg "decomposed_wl.moment_matrix_set.total" begin
+        inventory = _route_global_electron_nuclear_by_center_inventory(
+            source;
+            parent_axis_counts,
+            parent_axis_bundle_object,
+        )
+        if inventory.status !== :available_white_lindsey_decomposed_unit_pair_inventory
+            return _route_global_decomposed_wl_moment_matrix_set_blocked(
+                inventory.blocker,
+                inventory;
+                metadata,
+            )
+        end
+
+        if inventory.unit_pairs isa CUP.UnitPairIndexTable
+            result = _route_global_decomposed_wl_factorized_moment_matrix_set(
+                inventory;
+                parent_axis_counts,
+                overlap_1d,
+                position_1d,
+                x2_1d,
+                metadata,
+            )
+            result.status === :materialized_decomposed_wl_moment_matrix_set &&
+                return result
+        end
+
+        return _route_global_decomposed_wl_moment_matrix_set_from_wrappers(
+            inventory;
+            parent_axis_counts,
+            overlap_1d,
+            position_1d,
+            x2_1d,
+            metadata,
+        )
+    end
+end
+
 function route_global_decomposed_wl_overlap_matrix(source; kwargs...)
     return route_global_decomposed_wl_one_body_matrix(
         source;
@@ -1506,6 +1572,245 @@ function _route_global_decomposed_wl_factorized_one_body_matrix(
             ),
         global_matrix_result,
         metadata = NamedTuple(metadata),
+    )
+end
+
+function _route_global_decomposed_wl_factorized_moment_matrix_set(
+    inventory;
+    parent_axis_counts,
+    overlap_1d,
+    position_1d,
+    x2_1d,
+    metadata = (;),
+)
+    axis_counts = _axis_counts_tuple(parent_axis_counts)
+    overlap_axes = _overlap_1d_tuple(overlap_1d)
+    _assert_overlap_axis_sizes(overlap_axes, axis_counts)
+    position_axes = _operator_1d_tuple(position_1d, "position_1d")
+    _assert_operator_axis_sizes(position_axes, axis_counts, "position_1d")
+    x2_axes = _operator_1d_tuple(x2_1d, "x2_1d")
+    _assert_operator_axis_sizes(x2_axes, axis_counts, "x2_1d")
+
+    factorized =
+        _white_lindsey_decomposed_factorized_retained_basis(
+            inventory,
+            axis_counts,
+        )
+    factorized.status === :materialized_decomposed_wl_factorized_retained_basis ||
+        return _route_global_decomposed_wl_moment_matrix_set_blocked(
+            factorized.blocker,
+            inventory;
+            metadata,
+        )
+
+    matrices = @timeg "decomposed_wl.factorized_retained_basis.moment_set_fill" begin
+        basis = factorized.factorized_basis
+        axis_overlap_x = _white_lindsey_factorized_axis_matrix_table(
+            basis.x_functions,
+            overlap_axes[1],
+        )
+        axis_overlap_y = _white_lindsey_factorized_axis_matrix_table(
+            basis.y_functions,
+            overlap_axes[2],
+        )
+        axis_overlap_z = _white_lindsey_factorized_axis_matrix_table(
+            basis.z_functions,
+            overlap_axes[3],
+        )
+        axis_position_x = _white_lindsey_factorized_axis_matrix_table(
+            basis.x_functions,
+            position_axes[1],
+        )
+        axis_position_y = _white_lindsey_factorized_axis_matrix_table(
+            basis.y_functions,
+            position_axes[2],
+        )
+        axis_position_z = _white_lindsey_factorized_axis_matrix_table(
+            basis.z_functions,
+            position_axes[3],
+        )
+        axis_x2_x = _white_lindsey_factorized_axis_matrix_table(
+            basis.x_functions,
+            x2_axes[1],
+        )
+        axis_x2_y = _white_lindsey_factorized_axis_matrix_table(
+            basis.y_functions,
+            x2_axes[2],
+        )
+        axis_x2_z = _white_lindsey_factorized_axis_matrix_table(
+            basis.z_functions,
+            x2_axes[3],
+        )
+        (;
+            position_x = ParentGaussletBases._nested_factorized_product_matrix(
+                basis,
+                axis_position_x,
+                axis_overlap_y,
+                axis_overlap_z,
+            ),
+            position_y = ParentGaussletBases._nested_factorized_product_matrix(
+                basis,
+                axis_overlap_x,
+                axis_position_y,
+                axis_overlap_z,
+            ),
+            position_z = ParentGaussletBases._nested_factorized_product_matrix(
+                basis,
+                axis_overlap_x,
+                axis_overlap_y,
+                axis_position_z,
+            ),
+            x2_x = ParentGaussletBases._nested_factorized_product_matrix(
+                basis,
+                axis_x2_x,
+                axis_overlap_y,
+                axis_overlap_z,
+            ),
+            x2_y = ParentGaussletBases._nested_factorized_product_matrix(
+                basis,
+                axis_overlap_x,
+                axis_x2_y,
+                axis_overlap_z,
+            ),
+            x2_z = ParentGaussletBases._nested_factorized_product_matrix(
+                basis,
+                axis_overlap_x,
+                axis_overlap_y,
+                axis_x2_z,
+            ),
+        )
+    end
+
+    return DecomposedWLMomentMatrixSet(
+        :materialized_decomposed_wl_moment_matrix_set,
+        nothing,
+        inventory,
+        Int(inventory.retained_dimension),
+        matrices.position_x,
+        matrices.position_y,
+        matrices.position_z,
+        matrices.x2_x,
+        matrices.x2_y,
+        matrices.x2_z,
+        :white_lindsey_decomposed_wl_factorized_moment_matrix_set,
+        false,
+        false,
+        false,
+        false,
+        NamedTuple(metadata),
+    )
+end
+
+function _route_global_decomposed_wl_moment_matrix_set_from_wrappers(
+    inventory;
+    parent_axis_counts,
+    overlap_1d,
+    position_1d,
+    x2_1d,
+    metadata = (;),
+)
+    position_x = route_global_decomposed_wl_position_x_matrix(
+        inventory;
+        parent_axis_counts,
+        overlap_1d,
+        position_1d,
+        metadata,
+    )
+    position_y = route_global_decomposed_wl_position_y_matrix(
+        inventory;
+        parent_axis_counts,
+        overlap_1d,
+        position_1d,
+        metadata,
+    )
+    position_z = route_global_decomposed_wl_position_z_matrix(
+        inventory;
+        parent_axis_counts,
+        overlap_1d,
+        position_1d,
+        metadata,
+    )
+    x2_x = route_global_decomposed_wl_x2_x_matrix(
+        inventory;
+        parent_axis_counts,
+        overlap_1d,
+        x2_1d,
+        metadata,
+    )
+    x2_y = route_global_decomposed_wl_x2_y_matrix(
+        inventory;
+        parent_axis_counts,
+        overlap_1d,
+        x2_1d,
+        metadata,
+    )
+    x2_z = route_global_decomposed_wl_x2_z_matrix(
+        inventory;
+        parent_axis_counts,
+        overlap_1d,
+        x2_1d,
+        metadata,
+    )
+    fields = (position_x, position_y, position_z, x2_x, x2_y, x2_z)
+    all(
+        result -> _route_global_one_body_value(
+            result,
+            :global_one_body_term_matrix_materialized,
+            false,
+        ) === true,
+        fields,
+    ) || return _route_global_decomposed_wl_moment_matrix_set_blocked(
+        :decomposed_wl_moment_matrix_wrapper_materialization_failed,
+        inventory;
+        metadata,
+    )
+    return DecomposedWLMomentMatrixSet(
+        :materialized_decomposed_wl_moment_matrix_set,
+        nothing,
+        inventory,
+        Int(inventory.retained_dimension),
+        position_x.matrix,
+        position_y.matrix,
+        position_z.matrix,
+        x2_x.matrix,
+        x2_y.matrix,
+        x2_z.matrix,
+        :white_lindsey_decomposed_wl_moment_matrix_wrapper_reference_path,
+        false,
+        false,
+        false,
+        false,
+        NamedTuple(metadata),
+    )
+end
+
+function _route_global_decomposed_wl_moment_matrix_set_blocked(
+    blocker,
+    inventory;
+    metadata,
+)
+    retained_dimension = _route_global_one_body_value(
+        inventory,
+        :retained_dimension,
+        nothing,
+    )
+    return DecomposedWLMomentMatrixSet(
+        :blocked_decomposed_wl_moment_matrix_set,
+        blocker isa Symbol ? blocker : :decomposed_wl_moment_matrix_set_blocked,
+        inventory,
+        retained_dimension isa Integer ? Int(retained_dimension) : nothing,
+        nothing,
+        nothing,
+        nothing,
+        nothing,
+        nothing,
+        nothing,
+        :white_lindsey_decomposed_wl_moment_matrix_set_blocked,
+        false,
+        false,
+        false,
+        false,
+        NamedTuple(metadata),
     )
 end
 

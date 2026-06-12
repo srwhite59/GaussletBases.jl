@@ -278,50 +278,17 @@ function _white_lindsey_decomposed_atom_gto_final_basis_route(
         phase_timings,
         :residual_moment_matrices,
     ) do
-        position_x = route_global_decomposed_wl_position_x_matrix(
+        moment_matrix_set = route_global_decomposed_wl_moment_matrix_set(
             inventory;
             parent_axis_counts = axis_inputs.parent_axis_counts,
             overlap_1d = axis_inputs.overlap_1d,
             position_1d = axis_inputs.position_1d,
-        )
-        position_y = route_global_decomposed_wl_position_y_matrix(
-            inventory;
-            parent_axis_counts = axis_inputs.parent_axis_counts,
-            overlap_1d = axis_inputs.overlap_1d,
-            position_1d = axis_inputs.position_1d,
-        )
-        position_z = route_global_decomposed_wl_position_z_matrix(
-            inventory;
-            parent_axis_counts = axis_inputs.parent_axis_counts,
-            overlap_1d = axis_inputs.overlap_1d,
-            position_1d = axis_inputs.position_1d,
-        )
-        x2_x = route_global_decomposed_wl_x2_x_matrix(
-            inventory;
-            parent_axis_counts = axis_inputs.parent_axis_counts,
-            overlap_1d = axis_inputs.overlap_1d,
             x2_1d = axis_inputs.x2_1d,
-        )
-        x2_y = route_global_decomposed_wl_x2_y_matrix(
-            inventory;
-            parent_axis_counts = axis_inputs.parent_axis_counts,
-            overlap_1d = axis_inputs.overlap_1d,
-            x2_1d = axis_inputs.x2_1d,
-        )
-        x2_z = route_global_decomposed_wl_x2_z_matrix(
-            inventory;
-            parent_axis_counts = axis_inputs.parent_axis_counts,
-            overlap_1d = axis_inputs.overlap_1d,
-            x2_1d = axis_inputs.x2_1d,
+            metadata,
         )
         route_global_combined_gto_residual_moment_matrices(
             layout;
-            position_x_result = position_x,
-            position_y_result = position_y,
-            position_z_result = position_z,
-            x2_x_result = x2_x,
-            x2_y_result = x2_y,
-            x2_z_result = x2_z,
+            moment_matrix_set,
             gto_bundle = mixed,
             mixed_gausslet_row_range = mixed.mixed_gausslet_row_range,
             metadata,
