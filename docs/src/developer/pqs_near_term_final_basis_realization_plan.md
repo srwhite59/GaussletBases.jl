@@ -281,6 +281,15 @@ and pre-final density traces were both 1 to roundoff, giving two electrons
 under the restricted closed-shell convention. This remains a non-acceptance
 reference probe and should be reviewed as a future compact gate candidate only
 after the PQS fixture rule is settled.
+A side-13 parent-only ladder then varied direct core size and shell depth while
+holding the physical box and mapping fixed. Core side 5 / 7 / 9 / 11 produced
+final dimensions 1429 / 1549 / 1717 / 1933 and RHF totals approximately
+`-2.836649302053`, `-2.837255646389`, `-2.837326831866`, and
+`-2.837329392142`. H1 and self-Coulomb diagnostics also changed only mildly
+after core side 7. This suggests the side-13 result is not a special artifact
+of the `(4:10)^3` direct core split; at fixed parent/mapping it is essentially
+plateaued. The next physical fixture question is therefore the parent/mapping
+rule, not more core/shell repartitioning on the same side-13 box.
 
 ## Validation Policy
 
