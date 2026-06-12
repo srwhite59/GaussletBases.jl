@@ -413,6 +413,59 @@ function pqs_source_pair_gaussian_factor_terms_1d(
 end
 
 """
+    pqs_source_pair_centered_gaussian_factor_terms_1d(record;
+        axis_layers, coulomb_expansion, center_record)
+
+Generate support-space centered Gaussian factor terms from explicit x/y/z axis
+layers with the low-level `gaussian_factor_matrices(layer; exponents, center)`
+API, slice those terms to the source intervals carried by the axis transform
+facts, and project them to PQS source-mode coordinates.
+
+This is still source-factor construction only. It does not call CCPM wrappers,
+apply nuclear charge, build electron-nuclear blocks, materialize shell
+realization, run Lowdin cleanup, build IDA data, or assemble Hamiltonians.
+"""
+function pqs_source_pair_centered_gaussian_factor_terms_1d(
+    record::PairBlockMaterializationRecord;
+    axis_layers,
+    coulomb_expansion,
+    center_record,
+)
+    _assert_pqs_source_pair_record(record)
+    exponents =
+        _pqs_source_centered_gaussian_exponents(coulomb_expansion)
+    center_summary = _pqs_source_electron_nuclear_center_summary(center_record)
+    center_summary.status === :available_pqs_source_electron_nuclear_center ||
+        throw(
+            ArgumentError(
+                "PQS source centered Gaussian factors require an available center record",
+            ),
+        )
+    layers = _operator_1d_tuple(axis_layers, "axis_layers")
+    left_facts = _pqs_source_pair_axis_transform_facts(record, :left)
+    right_facts = _pqs_source_pair_axis_transform_facts(record, :right)
+    support_terms = ntuple(
+        axis -> _pqs_source_centered_axis_gaussian_support_terms(
+            layers[axis],
+            exponents,
+            center_summary.location[axis],
+            left_facts[axis].source_interval,
+            right_facts[axis].source_interval,
+            axis,
+        ),
+        3,
+    )
+    return pqs_source_pair_gaussian_factor_terms_1d(
+        record;
+        gaussian_factor_terms_axis = (;
+            x = support_terms[1],
+            y = support_terms[2],
+            z = support_terms[3],
+        ),
+    )
+end
+
+"""
     pqs_source_pair_retained_one_body_block(source_result, left_rule, right_rule)
 
 Contract a materialized PQS/PQS raw source-space one-body block to retained
@@ -999,6 +1052,67 @@ function _pqs_source_project_axis_gaussian_factor_terms(
             transpose(left_transform) * support_terms[term, :, :] * right_transform
     end
     return projected
+end
+
+function _pqs_source_centered_gaussian_exponents(coulomb_expansion)
+    exponents = _pqs_source_descriptor_property(coulomb_expansion, :exponents)
+    exponents isa AbstractVector{<:Real} ||
+        throw(
+            ArgumentError(
+                "PQS source centered Gaussian factors require expansion exponents",
+            ),
+        )
+    !isempty(exponents) ||
+        throw(
+            ArgumentError(
+                "PQS source centered Gaussian factors require at least one exponent",
+            ),
+        )
+    return Float64[Float64(exponent) for exponent in exponents]
+end
+
+function _pqs_source_centered_axis_gaussian_support_terms(
+    axis_layer,
+    exponents::AbstractVector{<:Real},
+    center::Real,
+    left_interval::UnitRange{Int},
+    right_interval::UnitRange{Int},
+    axis::Int,
+)
+    matrices = ParentGaussletBases.gaussian_factor_matrices(
+        axis_layer;
+        exponents,
+        center = Float64(center),
+    )
+    length(matrices) == length(exponents) ||
+        throw(
+            ArgumentError(
+                "PQS source centered Gaussian factor matrix count mismatch on axis $(axis)",
+            ),
+        )
+    terms = Array{Float64,3}(
+        undef,
+        length(exponents),
+        length(left_interval),
+        length(right_interval),
+    )
+    for (term, matrix) in pairs(matrices)
+        matrix isa AbstractMatrix{<:Real} ||
+            throw(
+                ArgumentError(
+                    "PQS source centered Gaussian factor matrix must be real on axis $(axis)",
+                ),
+            )
+        size(matrix, 1) >= last(left_interval) &&
+            size(matrix, 2) >= last(right_interval) ||
+            throw(
+                ArgumentError(
+                    "PQS source centered Gaussian factor matrix is too small on axis $(axis)",
+                ),
+            )
+        terms[term, :, :] .= matrix[left_interval, right_interval]
+    end
+    return terms
 end
 
 function _pqs_source_electron_nuclear_coefficients(coulomb_expansion, axis_terms)

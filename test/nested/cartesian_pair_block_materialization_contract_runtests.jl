@@ -697,6 +697,26 @@ function _pair_block_project_axis_terms(axis_terms, left_transform, right_transf
     return projected
 end
 
+function _pair_block_centered_axis_support_terms(
+    layer,
+    exponents,
+    center,
+    left_interval,
+    right_interval,
+)
+    matrices = gaussian_factor_matrices(layer; exponents, center)
+    terms = Array{Float64,3}(
+        undef,
+        length(matrices),
+        length(left_interval),
+        length(right_interval),
+    )
+    for (term, matrix) in pairs(matrices)
+        terms[term, :, :] .= matrix[left_interval, right_interval]
+    end
+    return terms
+end
+
 function _pair_block_expected_source_product(
     left_dims,
     right_dims,
@@ -1680,6 +1700,87 @@ end
         left_facts[3].coefficient_matrix,
         right_facts[3].coefficient_matrix,
     )
+    analytic_layers = (;
+        x = build_basis(
+            UniformBasisSpec(
+                :G10;
+                xmin = 1.0,
+                xmax = 6.0,
+                spacing = 1.0,
+            ),
+        ),
+        y = build_basis(
+            UniformBasisSpec(
+                :G10;
+                xmin = 1.0,
+                xmax = 3.0,
+                spacing = 1.0,
+            ),
+        ),
+        z = build_basis(
+            UniformBasisSpec(
+                :G10;
+                xmin = 1.0,
+                xmax = 3.0,
+                spacing = 1.0,
+            ),
+        ),
+    )
+    analytic_expansion = CoulombGaussianExpansion(
+        [1.25, 0.5],
+        [0.2, 0.7];
+        del = 0.1,
+        s = 1.0,
+        c = 0.25,
+        maxu = 4.0,
+    )
+    analytic_center = (;
+        center_key = :pair_block_pqs_analytic_center,
+        center_index = 1,
+        location = (0.15, -0.2, 0.25),
+        charge = 1.0,
+    )
+    centered_projected =
+        CPBM.pqs_source_pair_centered_gaussian_factor_terms_1d(
+            pqs_cross_record;
+            axis_layers = analytic_layers,
+            coulomb_expansion = analytic_expansion,
+            center_record = analytic_center,
+        )
+    centered_support = (;
+        x = _pair_block_centered_axis_support_terms(
+            analytic_layers.x,
+            analytic_expansion.exponents,
+            analytic_center.location[1],
+            left_facts[1].source_interval,
+            right_facts[1].source_interval,
+        ),
+        y = _pair_block_centered_axis_support_terms(
+            analytic_layers.y,
+            analytic_expansion.exponents,
+            analytic_center.location[2],
+            left_facts[2].source_interval,
+            right_facts[2].source_interval,
+        ),
+        z = _pair_block_centered_axis_support_terms(
+            analytic_layers.z,
+            analytic_expansion.exponents,
+            analytic_center.location[3],
+            left_facts[3].source_interval,
+            right_facts[3].source_interval,
+        ),
+    )
+    expected_centered =
+        CPBM.pqs_source_pair_gaussian_factor_terms_1d(
+            pqs_cross_record;
+            gaussian_factor_terms_axis = centered_support,
+        )
+    @test size(centered_projected.x) == (2, 3, 5)
+    @test size(centered_projected.y) == (2, 3, 4)
+    @test size(centered_projected.z) == (2, 3, 3)
+    @test centered_projected.x ≈ expected_centered.x
+    @test centered_projected.y ≈ expected_centered.y
+    @test centered_projected.z ≈ expected_centered.z
 
     not_materialized_retained_plan = _pair_block_mixed_pqs_retained_plan()
     not_materialized_unit_pair_plan =
