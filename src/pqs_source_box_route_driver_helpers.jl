@@ -6590,15 +6590,17 @@ function _pqs_source_box_route_driver_shell_stage_terminal_shellification(parent
         parent_axes = _pqs_source_box_route_driver_terminal_parent_axes(parent)
         nuclear_positions =
             _pqs_source_box_route_driver_terminal_nuclear_index_positions(parent)
-        bond_axis =
-            parent.system_classification == :bond_aligned_diatomic ?
-            parent.bond_axis :
-            :auto
-        policy = CartesianShellification.AtomOutwardShellification(;
-            core_side = parent.standard_setup.core_cube_side,
-            q = parent.standard_setup.q,
-            bond_axis,
-        )
+        policy =
+            parent.system_classification == :one_center ?
+            CartesianShellification.OneCenterShellification(;
+                core_side = parent.standard_setup.core_cube_side,
+                q = parent.standard_setup.q,
+            ) :
+            CartesianShellification.AtomOutwardShellification(;
+                core_side = parent.standard_setup.core_cube_side,
+                q = parent.standard_setup.q,
+                bond_axis = parent.bond_axis,
+            )
         plan = CartesianShellification.shellify(
             parent_axes,
             nuclear_positions,
@@ -6712,11 +6714,17 @@ function _pqs_source_box_route_driver_shell_stage_low_order_shellization(
         :available_low_order_shellization_policy &&
         policy_resolved == :atom_growth_complete_rectangular
     terminal_shellification_selected =
-        recipe.route_family == :white_lindsey_low_order &&
-        parent.system_classification in (:one_center, :bond_aligned_diatomic) &&
-        policy.low_order_shellization_policy_status ==
-        :available_low_order_shellization_policy &&
-        policy_resolved == :terminal_cartesian_shellification_geometry
+        (
+            recipe.route_family == :white_lindsey_low_order &&
+            parent.system_classification in (:one_center, :bond_aligned_diatomic) &&
+            policy.low_order_shellization_policy_status ==
+            :available_low_order_shellization_policy &&
+            policy_resolved == :terminal_cartesian_shellification_geometry
+        ) ||
+        (
+            recipe.route_family == :pqs_source_box &&
+            parent.system_classification == :one_center
+        )
     legacy_source_selected =
         recipe.route_family == :white_lindsey_low_order &&
         bond_aligned_diatomic &&
