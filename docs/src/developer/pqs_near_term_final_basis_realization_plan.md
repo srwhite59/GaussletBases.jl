@@ -272,6 +272,15 @@ authority. The Z = 2 H1 energy was about `-1.975561823201342`, and the
 self-Coulomb diagnostic was about `1.216926438886032` versus the hydrogenic
 `5Z/8 = 1.25` and the WL side-13 value near `1.215829476773570`. This makes a
 side-13 PQS RHF probe reasonable as the next probe, but still not a gate.
+The follow-up side-13 PQS RHF probe converged in 8 iterations with one-electron
+energy about `-3.846945861201986`, electron-electron energy about
+`1.009690214812516`, and total energy about `-2.837255646389471`. The result is
+about `+0.024424349222768` Hartree above the He HF reference and about
+`-0.000757646688557` Hartree relative to the WL side-13 RHF probe. The final
+and pre-final density traces were both 1 to roundoff, giving two electrons
+under the restricted closed-shell convention. This remains a non-acceptance
+reference probe and should be reviewed as a future compact gate candidate only
+after the PQS fixture rule is settled.
 
 ## Validation Policy
 
