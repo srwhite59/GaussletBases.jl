@@ -192,22 +192,31 @@ a compact FinalBasisRealization module-contract test
 or one compact physics/workflow H1 smoke gate
 ```
 
-If a durable final H1 gate is added, keep only:
+The durable final H1 gate is now the complete one-center core plus surrounding
+shell route, not the earlier boundary-shell-only mechanical fixture:
 
 ```text
-source dims/count: 5 x 5 x 5 / 125
-retained boundary count: 98
-final retained count: 98
+current_box: 1:7 x 1:7 x 1:7
+inner direct core: 2:6 x 2:6 x 2:6
+raw source dims: 5 x 5 x 5
+core support count: 125
+surrounding shell support count: 218
+shell final retained count: 98
+complete final retained count: 223
 final overlap identity
 H finite/symmetric
 ordinary eigensolve, no generalized overlap solve
-H/eigenvalue agreement with shell-support oracle
+H1 ~= -0.48047934800387226
+same-geometry fixed-block oracle H1 ~= -0.48047920531279725
+electron-nuclear factor source: pgdg_intermediate.gaussian_factor_terms
 no _pqs_current_route_safe_term_matrices
 no IDA/RHF/driver/export/artifact claim
 ```
 
-Do not assert every report field, nonclaim flag, timing field, or blocker
-vocabulary.
+The old `98`-function boundary-shell-only H1 path should be treated as
+mechanical/source-box coverage or an oracle aid, not as a physical one-center
+acceptance basis. Do not assert every report field, nonclaim flag, timing
+field, or blocker vocabulary.
 
 ## Validation Policy
 
