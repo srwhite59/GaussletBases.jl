@@ -551,6 +551,99 @@ struct DecomposedWLMomentMatrixSet
     metadata::NamedTuple
 end
 
+struct DecomposedWLElectronNuclearByCenterMatrix
+    center_index::Any
+    center_key::Any
+    center_location::Any
+    nuclear_charge::Any
+    matrix::Matrix{Float64}
+    by_center::Bool
+    centers_summed::Bool
+    nuclear_charge_recorded::Bool
+    nuclear_charge_applied::Bool
+end
+
+struct DecomposedWLOneElectronMatrixSet
+    status::Symbol
+    blocker::Union{Nothing,Symbol}
+    inventory::Any
+    retained_dimension::Union{Nothing,Int}
+    overlap::Union{Nothing,Matrix{Float64}}
+    kinetic::Union{Nothing,Matrix{Float64}}
+    matrix_results::Vector{DecomposedWLElectronNuclearByCenterMatrix}
+    materialization_path::Symbol
+    global_overlap_matrix_materialized::Bool
+    global_kinetic_matrix_materialized::Bool
+    global_electron_nuclear_by_center_matrices_materialized::Bool
+    nuclear_charge_applied::Bool
+    centers_summed::Bool
+    old_fixed_block_matrix_authority_used::Bool
+    full_parent_window_cpb_used::Bool
+    direct_cartesian_product_assembly_used::Bool
+    ordinary_cartesian_ida_operators_used::Bool
+    metadata::NamedTuple
+end
+
+function route_global_decomposed_wl_one_electron_matrix_set(
+    source;
+    parent_axis_counts = nothing,
+    parent_axis_bundle_object = nothing,
+    overlap_1d = nothing,
+    kinetic_1d = nothing,
+    coulomb_expansion = nothing,
+    center_records = (),
+    metadata = (;),
+)
+    return @timeg "decomposed_wl.one_electron_matrix_set.total" begin
+        inventory = _route_global_electron_nuclear_by_center_inventory(
+            source;
+            parent_axis_counts,
+            parent_axis_bundle_object,
+        )
+        if inventory.status !== :available_white_lindsey_decomposed_unit_pair_inventory
+            return _route_global_decomposed_wl_one_electron_matrix_set_blocked(
+                inventory.blocker,
+                inventory;
+                metadata,
+            )
+        end
+
+        center_tuple = _route_global_electron_nuclear_by_center_records(center_records)
+        isempty(center_tuple) &&
+            return _route_global_decomposed_wl_one_electron_matrix_set_blocked(
+                :missing_electron_nuclear_center_records,
+                inventory;
+                metadata,
+            )
+
+        if inventory.unit_pairs isa CUP.UnitPairIndexTable
+            result = _route_global_decomposed_wl_factorized_one_electron_matrix_set(
+                inventory,
+                center_tuple;
+                parent_axis_counts,
+                parent_axis_bundle_object,
+                overlap_1d,
+                kinetic_1d,
+                coulomb_expansion,
+                metadata,
+            )
+            result.status === :materialized_decomposed_wl_one_electron_matrix_set &&
+                return result
+        end
+
+        return _route_global_decomposed_wl_one_electron_matrix_set_from_wrappers(
+            inventory;
+            parent_axis_counts,
+            parent_axis_bundle_object,
+            overlap_1d,
+            kinetic_1d,
+            coulomb_expansion,
+            center_records = center_tuple,
+            metadata,
+        )
+    end
+end
+
 function route_global_decomposed_wl_moment_matrix_set(
     source;
     parent_axis_counts = nothing,
@@ -1572,6 +1665,231 @@ function _route_global_decomposed_wl_factorized_one_body_matrix(
             ),
         global_matrix_result,
         metadata = NamedTuple(metadata),
+    )
+end
+
+function _route_global_decomposed_wl_factorized_one_electron_matrix_set(
+    inventory,
+    center_records;
+    parent_axis_counts,
+    parent_axis_bundle_object,
+    overlap_1d,
+    kinetic_1d,
+    coulomb_expansion,
+    metadata = (;),
+)
+    overlap = _route_global_decomposed_wl_factorized_one_body_matrix(
+        inventory,
+        :overlap;
+        parent_axis_counts,
+        overlap_1d,
+        metadata,
+    )
+    overlap.status === :materialized_decomposed_wl_factorized_one_body_matrix ||
+        return _route_global_decomposed_wl_one_electron_matrix_set_blocked(
+            overlap.blocker,
+            inventory;
+            metadata,
+        )
+
+    kinetic = _route_global_decomposed_wl_factorized_one_body_matrix(
+        inventory,
+        :kinetic;
+        parent_axis_counts,
+        overlap_1d,
+        kinetic_1d,
+        metadata,
+    )
+    kinetic.status === :materialized_decomposed_wl_factorized_one_body_matrix ||
+        return _route_global_decomposed_wl_one_electron_matrix_set_blocked(
+            kinetic.blocker,
+            inventory;
+            metadata,
+        )
+
+    nuclear_results = DecomposedWLElectronNuclearByCenterMatrix[]
+    for center_record in center_records
+        nuclear =
+            _route_global_decomposed_wl_factorized_electron_nuclear_by_center_matrix(
+                inventory;
+                parent_axis_counts,
+                parent_axis_bundle_object,
+                coulomb_expansion,
+                center_record,
+                metadata,
+            )
+        nuclear.status ===
+        :materialized_decomposed_wl_factorized_electron_nuclear_by_center_matrix ||
+            return _route_global_decomposed_wl_one_electron_matrix_set_blocked(
+                nuclear.blocker,
+                inventory;
+                metadata,
+            )
+        push!(
+            nuclear_results,
+            _route_global_decomposed_wl_one_electron_nuclear_record(
+                nuclear.global_matrix_result,
+            ),
+        )
+    end
+
+    return DecomposedWLOneElectronMatrixSet(
+        :materialized_decomposed_wl_one_electron_matrix_set,
+        nothing,
+        inventory,
+        Int(inventory.retained_dimension),
+        overlap.global_matrix_result.matrix,
+        kinetic.global_matrix_result.matrix,
+        nuclear_results,
+        :white_lindsey_decomposed_wl_factorized_one_electron_matrix_set,
+        true,
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        NamedTuple(metadata),
+    )
+end
+
+function _route_global_decomposed_wl_one_electron_matrix_set_from_wrappers(
+    inventory;
+    parent_axis_counts,
+    parent_axis_bundle_object,
+    overlap_1d,
+    kinetic_1d,
+    coulomb_expansion,
+    center_records,
+    metadata = (;),
+)
+    overlap = route_global_decomposed_wl_overlap_matrix(
+        inventory;
+        parent_axis_counts,
+        parent_axis_bundle_object,
+        overlap_1d,
+        metadata,
+    )
+    _route_global_one_body_value(
+        overlap,
+        :global_overlap_matrix_materialized,
+        false,
+    ) === true ||
+        return _route_global_decomposed_wl_one_electron_matrix_set_blocked(
+            :missing_route_global_overlap_matrix,
+            inventory;
+            metadata,
+        )
+
+    kinetic = route_global_decomposed_wl_kinetic_matrix(
+        inventory;
+        parent_axis_counts,
+        parent_axis_bundle_object,
+        overlap_1d,
+        kinetic_1d,
+        metadata,
+    )
+    _route_global_one_body_value(
+        kinetic,
+        :global_kinetic_matrix_materialized,
+        false,
+    ) === true ||
+        return _route_global_decomposed_wl_one_electron_matrix_set_blocked(
+            :missing_route_global_kinetic_matrix,
+            inventory;
+            metadata,
+        )
+
+    nuclear = route_global_electron_nuclear_by_center_matrices(
+        inventory;
+        parent_axis_counts,
+        parent_axis_bundle_object,
+        coulomb_expansion,
+        center_records,
+        metadata,
+    )
+    _route_global_one_body_value(
+        nuclear,
+        :global_electron_nuclear_by_center_matrices_materialized,
+        false,
+    ) === true ||
+        return _route_global_decomposed_wl_one_electron_matrix_set_blocked(
+            :missing_route_global_electron_nuclear_by_center_matrices,
+            inventory;
+            metadata,
+        )
+
+    nuclear_results = DecomposedWLElectronNuclearByCenterMatrix[
+        _route_global_decomposed_wl_one_electron_nuclear_record(result)
+        for result in nuclear.matrix_results
+    ]
+    return DecomposedWLOneElectronMatrixSet(
+        :materialized_decomposed_wl_one_electron_matrix_set,
+        nothing,
+        inventory,
+        Int(inventory.retained_dimension),
+        overlap.matrix,
+        kinetic.matrix,
+        nuclear_results,
+        :white_lindsey_decomposed_wl_one_electron_matrix_wrapper_reference_path,
+        true,
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        NamedTuple(metadata),
+    )
+end
+
+function _route_global_decomposed_wl_one_electron_nuclear_record(result)
+    return DecomposedWLElectronNuclearByCenterMatrix(
+        _route_global_one_body_value(result, :center_index, nothing),
+        _route_global_one_body_value(result, :center_key, nothing),
+        _route_global_one_body_value(result, :center_location, nothing),
+        _route_global_one_body_value(result, :nuclear_charge, nothing),
+        _route_global_one_body_value(result, :matrix, zeros(Float64, 0, 0)),
+        true,
+        _route_global_one_body_value(result, :centers_summed, false),
+        _route_global_one_body_value(result, :nuclear_charge_recorded, false),
+        _route_global_one_body_value(result, :nuclear_charge_applied, false),
+    )
+end
+
+function _route_global_decomposed_wl_one_electron_matrix_set_blocked(
+    blocker,
+    inventory;
+    metadata,
+)
+    retained_dimension = _route_global_one_body_value(
+        inventory,
+        :retained_dimension,
+        nothing,
+    )
+    return DecomposedWLOneElectronMatrixSet(
+        :blocked_decomposed_wl_one_electron_matrix_set,
+        blocker isa Symbol ? blocker : :decomposed_wl_one_electron_matrix_set_blocked,
+        inventory,
+        retained_dimension isa Integer ? Int(retained_dimension) : nothing,
+        nothing,
+        nothing,
+        DecomposedWLElectronNuclearByCenterMatrix[],
+        :white_lindsey_decomposed_wl_one_electron_matrix_set_blocked,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        NamedTuple(metadata),
     )
 end
 

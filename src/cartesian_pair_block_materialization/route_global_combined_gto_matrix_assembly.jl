@@ -8,6 +8,7 @@
 
 function route_global_combined_gto_one_electron_matrices(
     layout;
+    one_electron_matrix_set = nothing,
     overlap_result = nothing,
     kinetic_result = nothing,
     electron_nuclear_by_center_results = nothing,
@@ -17,6 +18,7 @@ function route_global_combined_gto_one_electron_matrices(
 )
     blocker = _route_global_combined_gto_matrix_blocker(
         layout,
+        one_electron_matrix_set,
         overlap_result,
         kinetic_result,
         electron_nuclear_by_center_results,
@@ -39,7 +41,11 @@ function route_global_combined_gto_one_electron_matrices(
 
     overlap_matrix = _route_global_combined_gto_overlap_matrix(
         layout,
-        _route_global_combined_gto_property(overlap_result, :matrix, nothing),
+        _route_global_combined_gto_one_electron_gg_matrix(
+            one_electron_matrix_set,
+            overlap_result,
+            :overlap,
+        ),
         _route_global_combined_gto_nested_property(
             gto_bundle,
             (:mixed_blocks, :overlap, :dense_block),
@@ -53,7 +59,11 @@ function route_global_combined_gto_one_electron_matrices(
     )
     kinetic_matrix = _route_global_combined_gto_overlap_matrix(
         layout,
-        _route_global_combined_gto_property(kinetic_result, :matrix, nothing),
+        _route_global_combined_gto_one_electron_gg_matrix(
+            one_electron_matrix_set,
+            kinetic_result,
+            :kinetic,
+        ),
         _route_global_combined_gto_nested_property(
             gto_bundle,
             (:mixed_blocks, :kinetic, :dense_block),
@@ -68,7 +78,10 @@ function route_global_combined_gto_one_electron_matrices(
     nuclear_matrices =
         _route_global_combined_gto_nuclear_by_center_matrices(
             layout,
-            electron_nuclear_by_center_results,
+            _route_global_combined_gto_one_electron_nuclear_source(
+                one_electron_matrix_set,
+                electron_nuclear_by_center_results,
+            ),
             gto_bundle,
         )
     hamiltonian = Matrix{Float64}(kinetic_matrix)
@@ -335,6 +348,7 @@ end
 
 function _route_global_combined_gto_matrix_blocker(
     layout,
+    one_electron_matrix_set,
     overlap_result,
     kinetic_result,
     electron_nuclear_by_center_results,
@@ -373,20 +387,33 @@ function _route_global_combined_gto_matrix_blocker(
         return :missing_mixed_gto_route_global_row_coverage
     end
 
-    overlap_matrix = _route_global_combined_gto_property(
+    if !isnothing(one_electron_matrix_set)
+        _route_global_combined_gto_property(
+            one_electron_matrix_set,
+            :status,
+            nothing,
+        ) === :materialized_decomposed_wl_one_electron_matrix_set ||
+            return _route_global_combined_gto_property(
+                one_electron_matrix_set,
+                :blocker,
+                :blocked_decomposed_wl_one_electron_matrix_set,
+            )
+    end
+
+    overlap_matrix = _route_global_combined_gto_one_electron_gg_matrix(
+        one_electron_matrix_set,
         overlap_result,
-        :matrix,
-        nothing,
+        :overlap,
     )
     overlap_matrix isa AbstractMatrix ||
         return :missing_route_global_overlap_matrix
     size(overlap_matrix) == (gausslet_dimension, gausslet_dimension) ||
         return :route_global_overlap_matrix_dimension_mismatch
 
-    kinetic_matrix = _route_global_combined_gto_property(
+    kinetic_matrix = _route_global_combined_gto_one_electron_gg_matrix(
+        one_electron_matrix_set,
         kinetic_result,
-        :matrix,
-        nothing,
+        :kinetic,
     )
     kinetic_matrix isa AbstractMatrix ||
         return :missing_route_global_kinetic_matrix
@@ -435,7 +462,10 @@ function _route_global_combined_gto_matrix_blocker(
 
     return _route_global_combined_gto_nuclear_blocker(
         layout,
-        electron_nuclear_by_center_results,
+        _route_global_combined_gto_one_electron_nuclear_source(
+            one_electron_matrix_set,
+            electron_nuclear_by_center_results,
+        ),
         gto_bundle,
     )
 end
@@ -450,7 +480,7 @@ function _route_global_combined_gto_nuclear_blocker(
         :matrix_results,
         nothing,
     )
-    matrix_results isa Tuple ||
+    matrix_results isa Union{Tuple,AbstractVector} ||
         return :missing_route_global_electron_nuclear_by_center_matrices
     mixed_blocks = _route_global_combined_gto_property(
         gto_bundle,
@@ -521,6 +551,30 @@ function _route_global_combined_gto_overlap_matrix(layout, gg_matrix, gG_matrix,
     matrix[gto, gg] .= transpose(gG_matrix)
     matrix[gto, gto] .= GG_matrix
     return matrix
+end
+
+function _route_global_combined_gto_one_electron_gg_matrix(
+    one_electron_matrix_set,
+    fallback_result,
+    field::Symbol,
+)
+    if !isnothing(one_electron_matrix_set)
+        matrix = _route_global_combined_gto_property(
+            one_electron_matrix_set,
+            field,
+            nothing,
+        )
+        matrix isa AbstractMatrix && return matrix
+    end
+    return _route_global_combined_gto_property(fallback_result, :matrix, nothing)
+end
+
+function _route_global_combined_gto_one_electron_nuclear_source(
+    one_electron_matrix_set,
+    fallback_result,
+)
+    isnothing(one_electron_matrix_set) && return fallback_result
+    return one_electron_matrix_set
 end
 
 function _route_global_combined_gto_nuclear_by_center_matrices(

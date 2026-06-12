@@ -119,35 +119,43 @@ function _white_lindsey_decomposed_atom_gto_final_basis_route(
             metadata,
         )
 
-    overlap = _white_lindsey_atom_gto_timed_phase!(phase_timings, :overlap) do
-        route_global_decomposed_wl_overlap_matrix(
-            inventory;
-            parent_axis_counts = axis_inputs.parent_axis_counts,
-            parent_axis_bundle_object = axis_inputs.parent_axis_bundle_object,
-            overlap_1d = axis_inputs.overlap_1d,
-        )
-    end
-    kinetic = _white_lindsey_atom_gto_timed_phase!(phase_timings, :kinetic) do
-        route_global_decomposed_wl_kinetic_matrix(
+    one_electron = _white_lindsey_atom_gto_timed_phase!(
+        phase_timings,
+        :decomposed_wl_one_electron_matrix_set,
+    ) do
+        route_global_decomposed_wl_one_electron_matrix_set(
             inventory;
             parent_axis_counts = axis_inputs.parent_axis_counts,
             parent_axis_bundle_object = axis_inputs.parent_axis_bundle_object,
             overlap_1d = axis_inputs.overlap_1d,
             kinetic_1d = axis_inputs.kinetic_1d,
-        )
-    end
-    nuclear = _white_lindsey_atom_gto_timed_phase!(
-        phase_timings,
-        :electron_nuclear_by_center,
-    ) do
-        route_global_electron_nuclear_by_center_matrices(
-            inventory;
-            parent_axis_counts = axis_inputs.parent_axis_counts,
-            parent_axis_bundle_object = axis_inputs.parent_axis_bundle_object,
             coulomb_expansion = expansion,
             center_records,
+            metadata,
         )
     end
+    one_electron.status === :materialized_decomposed_wl_one_electron_matrix_set ||
+        return _white_lindsey_atom_gto_route_result(
+            :blocked_decomposed_atom_gto_final_basis_route,
+            one_electron.blocker,
+            axis_inputs,
+            parent,
+            supplement_representation,
+            inventory_source,
+            layout,
+            one_electron,
+            one_electron,
+            one_electron,
+            nothing,
+            nothing,
+            nothing,
+            nothing,
+            nothing,
+            nothing,
+            nothing,
+            nothing;
+            metadata,
+        )
     mixed = _white_lindsey_atom_gto_timed_phase!(
         phase_timings,
         :mixed_gto_blocks,
@@ -172,9 +180,9 @@ function _white_lindsey_decomposed_atom_gto_final_basis_route(
             supplement_representation,
             inventory_source,
             layout,
-            overlap,
-            kinetic,
-            nuclear,
+            one_electron,
+            one_electron,
+            one_electron,
             mixed,
             nothing,
             nothing,
@@ -192,9 +200,7 @@ function _white_lindsey_decomposed_atom_gto_final_basis_route(
     ) do
         route_global_combined_gto_one_electron_matrices(
             layout;
-            overlap_result = overlap,
-            kinetic_result = kinetic,
-            electron_nuclear_by_center_results = nuclear,
+            one_electron_matrix_set = one_electron,
             gto_bundle = mixed,
             mixed_gausslet_row_range = mixed.mixed_gausslet_row_range,
             metadata,
@@ -209,9 +215,9 @@ function _white_lindsey_decomposed_atom_gto_final_basis_route(
             supplement_representation,
             inventory_source,
             layout,
-            overlap,
-            kinetic,
-            nuclear,
+            one_electron,
+            one_electron,
+            one_electron,
             mixed,
             combined,
             nothing,
@@ -238,9 +244,9 @@ function _white_lindsey_decomposed_atom_gto_final_basis_route(
             supplement_representation,
             inventory_source,
             layout,
-            overlap,
-            kinetic,
-            nuclear,
+            one_electron,
+            one_electron,
+            one_electron,
             mixed,
             combined,
             projection,
@@ -260,9 +266,9 @@ function _white_lindsey_decomposed_atom_gto_final_basis_route(
         supplement_representation,
         inventory_source,
         layout,
-        overlap,
-        kinetic,
-        nuclear,
+        one_electron,
+        one_electron,
+        one_electron,
         mixed,
         combined,
         projection,
@@ -303,9 +309,9 @@ function _white_lindsey_decomposed_atom_gto_final_basis_route(
             supplement_representation,
             inventory_source,
             layout,
-            overlap,
-            kinetic,
-            nuclear,
+            one_electron,
+            one_electron,
+            one_electron,
             mixed,
             combined,
             projection,
@@ -338,9 +344,9 @@ function _white_lindsey_decomposed_atom_gto_final_basis_route(
             supplement_representation,
             inventory_source,
             layout,
-            overlap,
-            kinetic,
-            nuclear,
+            one_electron,
+            one_electron,
+            one_electron,
             mixed,
             combined,
             projection,
@@ -372,9 +378,9 @@ function _white_lindsey_decomposed_atom_gto_final_basis_route(
             supplement_representation,
             inventory_source,
             layout,
-            overlap,
-            kinetic,
-            nuclear,
+            one_electron,
+            one_electron,
+            one_electron,
             mixed,
             combined,
             projection,
@@ -418,9 +424,9 @@ function _white_lindsey_decomposed_atom_gto_final_basis_route(
         supplement_representation,
         inventory_source,
         layout,
-        overlap,
-        kinetic,
-        nuclear,
+        one_electron,
+        one_electron,
+        one_electron,
         mixed,
         combined,
         projection,
