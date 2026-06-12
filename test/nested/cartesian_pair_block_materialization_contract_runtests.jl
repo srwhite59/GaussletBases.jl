@@ -3168,6 +3168,41 @@ end
     @test !final_basis.metadata.lowdin_alone_used_as_raw_to_final_transform
     @test !final_basis.metadata.current_route_safe_term_matrices_used
 
+    shell_operator = copy(final_basis_identity)
+    shell_operator[1, 1] = 2.0
+    shell_operator[2, 2] = 3.0
+    shell_operator[1, 2] = 0.25
+    shell_operator[2, 1] = 0.25
+    projected_shell_operator =
+        CPBM.pqs_source_shell_projected_one_body_matrix(
+            final_basis,
+            shell_operator;
+            term = :overlap,
+        )
+    @test projected_shell_operator.object_kind ==
+          :pqs_source_shell_projected_one_body_matrix
+    @test projected_shell_operator.status ==
+          :materialized_pqs_shell_projected_one_body_matrix
+    @test projected_shell_operator.blocker === nothing
+    @test projected_shell_operator.term == :overlap
+    @test projected_shell_operator.shell_operator_shape == (98, 98)
+    @test projected_shell_operator.boundary_operator == shell_operator
+    @test projected_shell_operator.final_operator == shell_operator
+    @test projected_shell_operator.final_operator_symmetry_error == 0.0
+    @test projected_shell_operator.lowdin_boundary_crosscheck_error == 0.0
+    @test projected_shell_operator.lowdin_boundary_crosscheck_passed
+    @test projected_shell_operator.one_body_operator_materialized
+    @test !projected_shell_operator.h1_solve_materialized
+    @test !projected_shell_operator.charge_summing_materialized
+    @test !projected_shell_operator.ida_data_materialized
+    @test !projected_shell_operator.density_density_materialized
+    @test !projected_shell_operator.rhf_materialized
+    @test !projected_shell_operator.driver_route_materialized
+    @test !projected_shell_operator.artifacts_materialized
+    @test !projected_shell_operator.metadata.shell_support_operator_generated
+    @test !projected_shell_operator.metadata.current_route_safe_term_matrices_used
+    @test !projected_shell_operator.metadata.retained_source_operator_lowdin_transform_used
+
     overlap_bridge_batch =
         CPBM.pqs_source_pair_shell_realization_bridge_summary(selector_batch_overlap)
     @test overlap_bridge_batch.object_kind ==

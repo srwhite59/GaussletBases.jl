@@ -193,3 +193,176 @@ function _pqs_shell_realization_overlap_diagnostics(
         full_rank = rank == expected_dimension,
     )
 end
+
+"""
+    pqs_source_shell_projected_one_body_matrix(final_basis, shell_operator; term)
+
+Project a caller-supplied shell-support one-body operator into an available PQS
+shell-realized final basis:
+
+```text
+O_boundary = P' * O_shell_support * P
+O_final = R' * O_shell_support * R
+```
+
+where `P` is the shell projection and `R` is the final shell coefficient matrix
+from `pqs_source_shell_realization_final_basis`. This helper does not generate
+the shell-support operator and does not assemble H1 or Hamiltonian data.
+"""
+function pqs_source_shell_projected_one_body_matrix(
+    final_basis::NamedTuple,
+    shell_operator;
+    term::Symbol,
+    symmetric_operator::Bool = true,
+    symmetry_atol::Real = 1.0e-8,
+    crosscheck_atol::Real = 1.0e-8,
+)
+    _pqs_shell_projected_one_body_validate_basis(final_basis)
+    support_count = final_basis.shell_support_count
+    operator = Matrix{Float64}(shell_operator)
+    size(operator) == (support_count, support_count) ||
+        throw(DimensionMismatch("PQS shell one-body operator must be shell support rows x shell support rows"))
+    all(isfinite, operator) ||
+        throw(ArgumentError("PQS shell one-body operator contains non-finite entries"))
+
+    symmetry_error = norm(operator - transpose(operator), Inf)
+    symmetric_operator && symmetry_error > Float64(symmetry_atol) &&
+        return _pqs_shell_projected_one_body_blocked_result(
+            final_basis,
+            term,
+            :shell_operator_not_symmetric,
+            size(operator),
+            symmetry_error,
+            true,
+            symmetric_operator,
+        )
+
+    projection = final_basis.shell_projection
+    cleanup = final_basis.lowdin_cleanup
+    final_coefficients = final_basis.final_shell_coefficients
+    boundary_operator = transpose(projection) * operator * projection
+    final_operator = transpose(final_coefficients) * operator * final_coefficients
+    cleanup_final_operator = transpose(cleanup) * boundary_operator * cleanup
+    cleanup_crosscheck_error =
+        norm(final_operator - cleanup_final_operator, Inf)
+    final_symmetry_error = norm(final_operator - transpose(final_operator), Inf)
+    boundary_symmetry_error =
+        norm(boundary_operator - transpose(boundary_operator), Inf)
+    status = cleanup_crosscheck_error <= Float64(crosscheck_atol) ?
+        :materialized_pqs_shell_projected_one_body_matrix :
+        :blocked_pqs_shell_projected_one_body_matrix
+    blocker = status === :materialized_pqs_shell_projected_one_body_matrix ?
+        nothing : :lowdin_boundary_projection_crosscheck_failed
+
+    return (;
+        object_kind = :pqs_source_shell_projected_one_body_matrix,
+        status,
+        blocker,
+        term,
+        shell_operator_shape = size(operator),
+        shell_support_count = support_count,
+        shell_operator_finite = true,
+        symmetric_operator_expected = symmetric_operator,
+        shell_operator_symmetry_error = symmetry_error,
+        shell_operator_symmetric =
+            !symmetric_operator || symmetry_error <= Float64(symmetry_atol),
+        boundary_operator,
+        boundary_operator_shape = size(boundary_operator),
+        boundary_operator_symmetry_error = boundary_symmetry_error,
+        final_operator,
+        final_operator_shape = size(final_operator),
+        final_operator_symmetry_error = final_symmetry_error,
+        final_operator_finite = all(isfinite, final_operator),
+        lowdin_boundary_crosscheck_operator = cleanup_final_operator,
+        lowdin_boundary_crosscheck_error = cleanup_crosscheck_error,
+        lowdin_boundary_crosscheck_passed =
+            cleanup_crosscheck_error <= Float64(crosscheck_atol),
+        final_basis_object_kind = final_basis.object_kind,
+        final_basis_status = final_basis.status,
+        final_retained_count = final_basis.final_retained_count,
+        shell_realization_materialized = true,
+        lowdin_cleanup_used = true,
+        one_body_operator_materialized =
+            status === :materialized_pqs_shell_projected_one_body_matrix,
+        h1_solve_materialized = false,
+        charge_summing_materialized = false,
+        ida_data_materialized = false,
+        density_density_materialized = false,
+        rhf_materialized = false,
+        hamiltonian_data_materialized = false,
+        driver_route_materialized = false,
+        exports_materialized = false,
+        artifacts_materialized = false,
+        metadata = (;
+            source = :pqs_source_shell_projected_one_body_matrix,
+            shell_operator_source = :caller_supplied_shell_support_matrix,
+            shell_support_operator_generated = false,
+            current_route_safe_term_matrices_used = false,
+            old_fixed_block_matrix_authority_used = false,
+            retained_source_operator_lowdin_transform_used = false,
+        ),
+    )
+end
+
+function _pqs_shell_projected_one_body_validate_basis(final_basis::NamedTuple)
+    get(final_basis, :object_kind, nothing) ===
+        :pqs_source_shell_realization_final_basis ||
+        throw(ArgumentError("PQS shell-projected one-body matrix requires a PQS shell-realization final basis"))
+    get(final_basis, :status, nothing) ===
+        :available_pqs_shell_realization_final_basis ||
+        throw(ArgumentError("PQS shell-projected one-body matrix requires an available final basis"))
+    get(final_basis, :final_basis_materialized, false) ||
+        throw(ArgumentError("PQS shell-projected one-body matrix requires a materialized final basis"))
+    return nothing
+end
+
+function _pqs_shell_projected_one_body_blocked_result(
+    final_basis,
+    term::Symbol,
+    blocker::Symbol,
+    shell_operator_shape,
+    symmetry_error::Real,
+    finite_entries::Bool,
+    symmetric_operator::Bool,
+)
+    return (;
+        object_kind = :pqs_source_shell_projected_one_body_matrix,
+        status = :blocked_pqs_shell_projected_one_body_matrix,
+        blocker,
+        term,
+        shell_operator_shape,
+        shell_support_count = final_basis.shell_support_count,
+        shell_operator_finite = finite_entries,
+        symmetric_operator_expected = symmetric_operator,
+        shell_operator_symmetry_error = Float64(symmetry_error),
+        shell_operator_symmetric = false,
+        boundary_operator = nothing,
+        final_operator = nothing,
+        lowdin_boundary_crosscheck_operator = nothing,
+        lowdin_boundary_crosscheck_error = nothing,
+        lowdin_boundary_crosscheck_passed = false,
+        final_basis_object_kind = final_basis.object_kind,
+        final_basis_status = final_basis.status,
+        final_retained_count = final_basis.final_retained_count,
+        shell_realization_materialized = true,
+        lowdin_cleanup_used = true,
+        one_body_operator_materialized = false,
+        h1_solve_materialized = false,
+        charge_summing_materialized = false,
+        ida_data_materialized = false,
+        density_density_materialized = false,
+        rhf_materialized = false,
+        hamiltonian_data_materialized = false,
+        driver_route_materialized = false,
+        exports_materialized = false,
+        artifacts_materialized = false,
+        metadata = (;
+            source = :pqs_source_shell_projected_one_body_matrix,
+            shell_operator_source = :caller_supplied_shell_support_matrix,
+            shell_support_operator_generated = false,
+            current_route_safe_term_matrices_used = false,
+            old_fixed_block_matrix_authority_used = false,
+            retained_source_operator_lowdin_transform_used = false,
+        ),
+    )
+end
