@@ -265,6 +265,13 @@ a 1,549-dimensional final basis. The final overlap identity error was about
 H1 energy was about `-1.975561823201342`. This is a route smoke/probe only, not
 an acceptance gate or RHF fixture. The mapping relation among `Z`, core spacing
 `d`, distortion `s`, radius, and shell depth remains provisional for PQS.
+The matching pre-RHF density diagnostic materialized the pre-final density
+interaction with positive weights, a finite symmetric `(1549, 1549)` pair
+matrix, and no signed-final-weight, raw-no-division, or fixed-block pair
+authority. The Z = 2 H1 energy was about `-1.975561823201342`, and the
+self-Coulomb diagnostic was about `1.216926438886032` versus the hydrogenic
+`5Z/8 = 1.25` and the WL side-13 value near `1.215829476773570`. This makes a
+side-13 PQS RHF probe reasonable as the next probe, but still not a gate.
 
 ## Validation Policy
 
