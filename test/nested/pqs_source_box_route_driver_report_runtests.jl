@@ -496,6 +496,7 @@ function _pqs_route_driver_check_be2_shellization_request(
 end
 
 function _pqs_route_driver_check_materialization_status(pqs_report, white_lindsey_report)
+    @nospecialize pqs_report white_lindsey_report
     density_expansion = coulomb_gaussian_expansion(doacc = false)
     default_status = GaussletBases._pqs_source_box_route_driver_materialization(
         pqs_report;
