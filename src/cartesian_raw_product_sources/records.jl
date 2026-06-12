@@ -147,6 +147,8 @@ function raw_product_box_plan(
     source_mode_dims,
     source_key::Symbol = :raw_product_source,
     source_mode_ordering::Symbol = :x_major_y_major_z_fast,
+    axis_transform_matrices = nothing,
+    axis_transform_facts = nothing,
     metadata = (;),
 )
     source_box isa CPB.CoordinateProductBox ||
@@ -155,6 +157,12 @@ function raw_product_box_plan(
     indices = source_mode_indices(normalized_dims; source_mode_ordering)
     count = length(indices)
     intervals = CPB.intervals(source_box)
+    transform_facts = _axis_transform_facts(
+        intervals,
+        normalized_dims;
+        axis_transform_matrices,
+        axis_transform_facts,
+    )
     return RawProductBoxPlan(
         source_key,
         source_box,
@@ -165,8 +173,8 @@ function raw_product_box_plan(
         indices,
         Tuple(1:count),
         source_mode_ordering,
-        _default_axis_transform_facts(intervals, normalized_dims),
-        false,
+        transform_facts,
+        any(fact -> fact.coefficient_status === :materialized, transform_facts),
         NamedTuple(metadata),
     )
 end

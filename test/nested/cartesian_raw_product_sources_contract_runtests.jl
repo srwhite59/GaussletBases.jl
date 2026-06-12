@@ -64,6 +64,65 @@ const CPBForRawSources = GaussletBases.CartesianCPB
     @test compact.artifacts_materialized == false
 end
 
+@testset "CartesianRawProductSources materialized source-axis transforms" begin
+    source_box = CPBForRawSources.filled_cpb(
+        10:11,
+        20:22,
+        30:33;
+        role = :raw_product_source_axis_transform_fixture,
+    )
+    transform_x = [1.0 0.1 0.2; 0.3 1.1 0.4]
+    transform_y = [
+        1.2 0.5 0.6 0.7
+        0.8 1.3 0.9 1.0
+        1.1 1.2 1.4 1.5
+    ]
+    transform_z = [
+        1.6 0.2 0.3 0.4 0.5
+        0.6 1.7 0.7 0.8 0.9
+        1.0 1.1 1.8 1.2 1.3
+        1.4 1.5 1.6 1.9 1.7
+    ]
+
+    plan = CRPS.raw_product_box_plan(
+        source_box;
+        source_key = :materialized_axis_transform_fixture,
+        source_mode_dims = (3, 4, 5),
+        axis_transform_matrices = (;
+            x = transform_x,
+            y = transform_y,
+            z = transform_z,
+        ),
+    )
+    facts = CRPS.axis_transform_facts(plan)
+
+    @test Tuple(fact.coefficient_status for fact in facts) ==
+          (:materialized, :materialized, :materialized)
+    @test facts[1].coefficient_matrix == transform_x
+    @test facts[2].coefficient_matrix == transform_y
+    @test facts[3].coefficient_matrix == transform_z
+    @test Tuple(size(fact.coefficient_matrix) for fact in facts) ==
+          ((2, 3), (3, 4), (4, 5))
+    @test all(fact -> fact.metadata.materialized, facts)
+    @test CRPS.summary(plan).axis_transform_statuses ==
+          (:materialized, :materialized, :materialized)
+    @test CRPS.summary(plan).materialized
+
+    fact_plan = CRPS.raw_product_box_plan(
+        source_box;
+        source_key = :materialized_axis_transform_fact_fixture,
+        source_mode_dims = (3, 4, 5),
+        axis_transform_facts = facts,
+    )
+    @test CRPS.axis_transform_facts(fact_plan) === facts
+
+    @test_throws ArgumentError CRPS.raw_product_box_plan(
+        source_box;
+        source_mode_dims = (3, 4, 5),
+        axis_transform_matrices = (transform_x, transform_y, zeros(3, 5)),
+    )
+end
+
 @testset "CartesianRawProductSources PQS boundary retained source-mode rule" begin
     rule = CRPS.pqs_boundary_product_mode_retained_rule(
         (5, 5, 5);

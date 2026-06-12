@@ -131,6 +131,10 @@ function _raw_product_source_contract_metadata(unit::CartesianRetainedUnits.Reta
         source_cpb;
         source_key = unit.unit_key,
         source_mode_dims = dims,
+        axis_transform_matrices =
+            _pqs_source_axis_transform_matrices(unit),
+        axis_transform_facts =
+            _pqs_source_axis_transform_facts(unit),
         metadata = (;
             source = :cartesian_retained_unit_transform_contracts,
             unit_key = unit.unit_key,
@@ -143,10 +147,26 @@ function _raw_product_source_contract_metadata(unit::CartesianRetainedUnits.Reta
     retained_rule_summary = CartesianRawProductSources.summary(retained_rule)
     return (;
         raw_product_source_plan = raw_plan,
+        raw_product_source_axis_transform_facts =
+            CartesianRawProductSources.axis_transform_facts(raw_plan),
         raw_product_source_summary = raw_summary,
         raw_product_source_plan_status = raw_summary.status,
         raw_product_source_retained_rule = retained_rule,
         raw_product_source_retained_rule_summary = retained_rule_summary,
+    )
+end
+
+function _pqs_source_axis_transform_matrices(unit::CartesianRetainedUnits.RetainedUnitRecord)
+    return _metadata_value(
+        unit.metadata,
+        :raw_product_source_axis_transform_matrices,
+    )
+end
+
+function _pqs_source_axis_transform_facts(unit::CartesianRetainedUnits.RetainedUnitRecord)
+    return _metadata_value(
+        unit.metadata,
+        :raw_product_source_axis_transform_facts,
     )
 end
 

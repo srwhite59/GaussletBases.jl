@@ -247,6 +247,17 @@ function _raw_product_source_retained_rule_available(contract)
     return rule isa CRPS.PQSBoundaryProductModeRetainedRule
 end
 
+function _raw_product_source_axis_transform_facts(contract)
+    isnothing(contract) && return nothing
+    haskey(contract.metadata, :raw_product_source_axis_transform_facts) &&
+        return contract.metadata.raw_product_source_axis_transform_facts
+    haskey(contract.metadata, :raw_product_source_plan) ||
+        return nothing
+    plan = contract.metadata.raw_product_source_plan
+    plan isa CRPS.RawProductBoxPlan || return nothing
+    return CRPS.axis_transform_facts(plan)
+end
+
 function _transform_contract_key(contract)
     isnothing(contract) && return nothing
     return contract.unit_key
@@ -330,6 +341,10 @@ function _pair_block_materialization_record_metadata(
                 _raw_product_source_retained_rule(left_contract),
             right_raw_product_source_retained_rule =
                 _raw_product_source_retained_rule(right_contract),
+            left_raw_product_source_axis_transform_facts =
+                _raw_product_source_axis_transform_facts(left_contract),
+            right_raw_product_source_axis_transform_facts =
+                _raw_product_source_axis_transform_facts(right_contract),
             left_raw_product_source_retained_rule_summary =
                 _raw_product_source_retained_rule_summary(left_contract),
             right_raw_product_source_retained_rule_summary =

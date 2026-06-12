@@ -412,11 +412,31 @@ end
         30:33;
         role = :synthetic_explicit_pqs_source_cpb,
     )
+    transform_x = [1.0 0.2 0.3 0.4 0.5; 0.6 1.1 0.7 0.8 0.9]
+    transform_y = [
+        1.2 0.1 0.2 0.3
+        0.4 1.3 0.5 0.6
+        0.7 0.8 1.4 0.9
+    ]
+    transform_z = [
+        1.5 0.2 0.3
+        0.4 1.6 0.5
+        0.6 0.7 1.7
+        0.8 0.9 1.8
+    ]
     explicit_contract = _transform_contract_pqs_contract(
         explicit_source;
         contract_key = :synthetic_explicit_pqs_source,
         terminal_region_key = :synthetic_explicit_pqs,
-        metadata = (; q = 9, source_mode_shape = (5, 4, 3)),
+        metadata = (;
+            q = 9,
+            source_mode_shape = (5, 4, 3),
+            raw_product_source_axis_transform_matrices = (;
+                x = transform_x,
+                y = transform_y,
+                z = transform_z,
+            ),
+        ),
     )
     explicit_lowering_plan = _transform_contract_lowering_plan(
         CTLForTransformContracts.PQSLowering(q = 9),
@@ -442,6 +462,17 @@ end
           (5, 4, 3)
     @test explicit_transform_contract.metadata.raw_product_source_summary.source_mode_count ==
           60
+    explicit_facts =
+        explicit_transform_contract.metadata.raw_product_source_axis_transform_facts
+    @test Tuple(fact.coefficient_status for fact in explicit_facts) ==
+          (:materialized, :materialized, :materialized)
+    @test explicit_facts[1].coefficient_matrix == transform_x
+    @test explicit_facts[2].coefficient_matrix == transform_y
+    @test explicit_facts[3].coefficient_matrix == transform_z
+    @test Tuple(size(fact.coefficient_matrix) for fact in explicit_facts) ==
+          ((2, 5), (3, 4), (4, 3))
+    @test explicit_transform_contract.metadata.raw_product_source_summary.axis_transform_statuses ==
+          (:materialized, :materialized, :materialized)
     @test explicit_transform_contract.metadata.raw_product_source_retained_rule.retained_count ==
           54
     @test explicit_transform_contract.metadata.raw_product_source_retained_rule_summary.retained_count ==

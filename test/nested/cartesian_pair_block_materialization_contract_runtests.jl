@@ -205,7 +205,27 @@ function _pair_block_pqs_retained_plan()
         :pqs_boundary_comx_product_modes,
         :shell_projection_lowdin;
         source_cpbs = (left_source,),
-        metadata = (; q = 3, source_mode_shape = nothing),
+        metadata = (;
+            q = 3,
+            source_mode_shape = nothing,
+            raw_product_source_axis_transform_matrices = (;
+                x = [
+                    1.0 0.0 0.0
+                    0.0 1.0 0.0
+                    0.0 0.0 1.0
+                ],
+                y = [
+                    1.0 0.0 0.0
+                    0.0 1.0 0.0
+                    0.0 0.0 1.0
+                ],
+                z = [
+                    1.0 0.0 0.0
+                    0.0 1.0 0.0
+                    0.0 0.0 1.0
+                ],
+            ),
+        ),
     )
     right_pqs = _pair_block_retained_unit(
         :pair_block_pqs_right_unit,
@@ -215,7 +235,15 @@ function _pair_block_pqs_retained_plan()
         :pqs_boundary_comx_product_modes,
         :shell_projection_lowdin;
         source_cpbs = (right_source,),
-        metadata = (; q = 9, source_mode_shape = (5, 4, 3)),
+        metadata = (;
+            q = 9,
+            source_mode_shape = (5, 4, 3),
+            raw_product_source_axis_transform_matrices = (;
+                x = ones(3, 5),
+                y = ones(3, 4),
+                z = ones(3, 3),
+            ),
+        ),
     )
     units = (left_pqs, right_pqs)
     return CRUForPairBlocks.RetainedUnitPlan(
@@ -1575,6 +1603,22 @@ end
     @test pqs_cross_record.metadata.right_source_mode_dims == (5, 4, 3)
     @test pqs_cross_record.metadata.left_source_mode_count == 27
     @test pqs_cross_record.metadata.right_source_mode_count == 60
+    @test Tuple(
+        fact.coefficient_status
+        for fact in pqs_cross_record.metadata.left_raw_product_source_axis_transform_facts
+    ) == (:materialized, :materialized, :materialized)
+    @test Tuple(
+        fact.coefficient_status
+        for fact in pqs_cross_record.metadata.right_raw_product_source_axis_transform_facts
+    ) == (:materialized, :materialized, :materialized)
+    @test Tuple(
+        size(fact.coefficient_matrix)
+        for fact in pqs_cross_record.metadata.left_raw_product_source_axis_transform_facts
+    ) == ((3, 3), (3, 3), (3, 3))
+    @test Tuple(
+        size(fact.coefficient_matrix)
+        for fact in pqs_cross_record.metadata.right_raw_product_source_axis_transform_facts
+    ) == ((3, 5), (3, 4), (3, 3))
     @test pqs_cross_record.metadata.source_mode_ordering ==
           :x_major_y_major_z_fast
     @test pqs_cross_record.metadata.left_source_mode_ordering ==
