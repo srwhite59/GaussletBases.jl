@@ -29,34 +29,23 @@ function _pqs_h1_test_bundle(count::Int)
     )
 end
 
-function _pqs_h1_support_product_matrix(left_states, right_states, mx, my, mz)
-    result = Matrix{Float64}(undef, length(left_states), length(right_states))
-    for (left_index, (ix, iy, iz)) in pairs(left_states)
-        for (right_index, (jx, jy, jz)) in pairs(right_states)
-            result[left_index, right_index] =
-                mx[ix, jx] * my[iy, jy] * mz[iz, jz]
-        end
-    end
-    return result
-end
-
 function _pqs_h1_support_kinetic_matrix(states, metrics)
     return (
-        _pqs_h1_support_product_matrix(
+        GaussletBases._pqs_multilayer_support_product_matrix(
             states,
             states,
             metrics.x.kinetic,
             metrics.y.overlap,
             metrics.z.overlap,
         ) +
-        _pqs_h1_support_product_matrix(
+        GaussletBases._pqs_multilayer_support_product_matrix(
             states,
             states,
             metrics.x.overlap,
             metrics.y.kinetic,
             metrics.z.overlap,
         ) +
-        _pqs_h1_support_product_matrix(
+        GaussletBases._pqs_multilayer_support_product_matrix(
             states,
             states,
             metrics.x.overlap,
@@ -71,7 +60,7 @@ function _pqs_h1_support_nuclear_matrix(states, gaussian_factor_terms, expansion
     for term_index in eachindex(expansion.coefficients)
         result .+=
             -Float64(expansion.coefficients[term_index]) *
-            _pqs_h1_support_product_matrix(
+            GaussletBases._pqs_multilayer_support_product_matrix(
                 states,
                 states,
                 @view(gaussian_factor_terms[term_index, :, :]),
@@ -143,7 +132,7 @@ end
     )
     states = fixture.all_states
     metrics = fixture.metrics
-    support_overlap = _pqs_h1_support_product_matrix(
+    support_overlap = GaussletBases._pqs_multilayer_support_product_matrix(
         states,
         states,
         metrics.x.overlap,
