@@ -73,13 +73,84 @@ function _precompile_decomposed_wl_one_body_route!(ctx)
     return nothing
 end
 
+function _precompile_atom_gto_synthetic_supplement()
+    orbital = CartesianGaussianShellOrbitalRepresentation3D(
+        "precompile_s",
+        (0, 0, 0),
+        (0.0, 0.0, 0.0),
+        [1.0],
+        [1.0],
+        :axiswise_normalized_cartesian_gaussian,
+    )
+    return CartesianGaussianShellSupplementRepresentation3D(
+        :precompile_synthetic_atomic_cartesian_shell,
+        [orbital],
+        (;
+            source_kind = :precompile_synthetic_atomic_cartesian_shell,
+            atom = "X",
+            basis_name = "synthetic-one-s",
+            basisfile = "repo-local-synthetic",
+            lmax = 0,
+            nuclei = [(0.0, 0.0, 0.0)],
+            uncontracted = false,
+            max_width = nothing,
+        ),
+    )
+end
+
+function _precompile_decomposed_atom_gto_final_basis_context()
+    q = 5
+    ns = 5
+    z = 2.0
+    d = 0.2
+    mapping = white_lindsey_atomic_mapping(Z = z, d = d, tail_spacing = 10.0)
+    basis = build_basis(
+        MappedUniformBasisSpec(
+            :G10;
+            count = 7,
+            mapping,
+            reference_spacing = 1.0,
+        ),
+    )
+    center_record = (;
+        center_key = :precompile_atom_gto_nucleus,
+        center_index = 1,
+        nuclear_charge = z,
+        location = (0.0, 0.0, 0.0),
+    )
+    return (;
+        basis,
+        supplement = _precompile_atom_gto_synthetic_supplement(),
+        center_records = (center_record,),
+        q,
+        ns,
+        expansion = coulomb_gaussian_expansion(doacc = false),
+    )
+end
+
+function _precompile_decomposed_atom_gto_final_basis_route!(ctx)
+    CartesianPairBlockMaterialization._white_lindsey_decomposed_atom_gto_final_basis_route(
+        ctx.basis,
+        ctx.supplement;
+        center_records = ctx.center_records,
+        q = ctx.q,
+        ns = ctx.ns,
+        expansion = ctx.expansion,
+        build_density_density = true,
+        metadata = (; fixture = :precompile_decomposed_atom_gto_final_basis_route),
+    )
+    return nothing
+end
+
 @setup_workload begin
     old_live_timing = timing_live_enabled()
     set_timing_live!(false)
     try
         ctx = _precompile_decomposed_wl_one_body_context()
+        atom_gto_ctx = _precompile_decomposed_atom_gto_final_basis_context()
         @compile_workload begin
             _precompile_decomposed_wl_one_body_route!(ctx)
+            _precompile_decomposed_atom_gto_final_basis_route!(atom_gto_ctx)
         end
     finally
         set_timing_live!(old_live_timing)

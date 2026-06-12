@@ -403,6 +403,20 @@ production precompile workload extension for the atom+GTO final-basis route,
 using a repo-local or synthetic supplement fixture rather than the user-local
 GaussletModules `BasisSets` tree.
 
+The first atom+GTO precompile extension uses a repo-local synthetic one-S
+Gaussian supplement at the origin and calls the private atom+GTO final-basis
+route without RHF or acceptance assertions. It exercises the intended route
+shape without depending on the user-local `BasisSets` tree. After the edit,
+package precompile cost was about `49.0` seconds and cached fresh
+`using GaussletBases` was about `0.65` seconds. The Be S+P fresh-process route
+improved from about `169.9` seconds to about `159.0` seconds, and total
+fresh-process time improved from about `172.5` seconds to about `161.9`
+seconds. Same-process warm route time remained about `0.5` seconds. This
+workload earns limited carrying cost as a small route-shape compile probe, but
+it does not solve cold latency. Further improvement should target
+specialization pressure in route summaries, retained-unit/factorized sidecars,
+or large staged object shapes rather than making the precompile fixture larger.
+
 The current coarse timing split for the active tiny-box He RHF acceptance is
 reported by the test as diagnostics, not asserted as performance thresholds.
 Before the electron-nuclear cache and precompile workload, a representative

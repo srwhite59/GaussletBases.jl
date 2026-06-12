@@ -114,7 +114,12 @@ The current live He + GTO question is later in the stack:
 - warm/cold attribution after the mixed-GTO replacement shows the remaining
   long cold Be timings are mostly compilation: cold route is about `169.9`
   seconds, but same-process warm route is about `0.523` seconds and warm total
-  is about `2.40` seconds, dominated by RHF rather than route construction.
+  is about `2.40` seconds, dominated by RHF rather than route construction;
+- a small synthetic atom+GTO precompile workload now covers the final-basis
+  route shape without user-local `BasisSets`; it costs about `49s` to rebuild
+  package precompile and improves the Be S+P fresh-process route from about
+  `169.9s` to `159.0s`, so the next cold-latency target is specialization
+  pressure rather than a larger precompile fixture.
 
 ## Current Cleanup Rule
 
