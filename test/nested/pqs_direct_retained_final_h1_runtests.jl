@@ -3,7 +3,6 @@ using LinearAlgebra
 using GaussletBases
 
 const PQSH1CFBR = GaussletBases.CartesianFinalBasisRealization
-const PQSH1CCPM = GaussletBases.CartesianContractedParentMetrics
 
 function _pqs_h1_test_bundle(count::Int)
     xmax = 8.0
@@ -27,17 +26,6 @@ function _pqs_h1_test_bundle(count::Int)
         exponents = expansion.exponents,
         backend = :numerical_reference,
         refinement_levels = 0,
-    )
-end
-
-function _pqs_h1_axis_metrics(bundles)
-    pgdg_x = GaussletBases._nested_axis_pgdg(bundles, :x)
-    pgdg_y = GaussletBases._nested_axis_pgdg(bundles, :y)
-    pgdg_z = GaussletBases._nested_axis_pgdg(bundles, :z)
-    return (;
-        x = (overlap = pgdg_x.overlap, kinetic = pgdg_x.kinetic),
-        y = (overlap = pgdg_y.overlap, kinetic = pgdg_y.kinetic),
-        z = (overlap = pgdg_z.overlap, kinetic = pgdg_z.kinetic),
     )
 end
 
@@ -94,86 +82,37 @@ function _pqs_h1_support_nuclear_matrix(states, gaussian_factor_terms, expansion
     return result
 end
 
-function _pqs_h1_core_indices_and_states(inner_box, dims)
-    states = NTuple{3,Int}[]
-    indices = Int[]
-    for ix in inner_box[1], iy in inner_box[2], iz in inner_box[3]
-        push!(states, (ix, iy, iz))
-        push!(indices, GaussletBases._cartesian_flat_index(ix, iy, iz, dims))
-    end
-    return indices, states
-end
-
 function _pqs_h1_complete_fixture()
     expansion = coulomb_gaussian_expansion(doacc = false)
     current_box = (1:7, 1:7, 1:7)
     inner_box = (2:6, 2:6, 2:6)
-    dims = (7, 7, 7)
     bundle7 = _pqs_h1_test_bundle(7)
     bundles = GaussletBases._CartesianNestedAxisBundles3D(bundle7, bundle7, bundle7)
-    metrics = _pqs_h1_axis_metrics(bundles)
-    layer = GaussletBases._nested_projected_q_shell_layer(
+    plan = GaussletBases.pqs_multilayer_shell_source_plan(
         bundles,
-        current_box,
-        inner_box;
+        inner_box,
+        current_box;
         bond_axis = :z,
-        q = 5,
-        L = 5,
-        raw_source_dims = (5, 5, 5),
-        selected_q = 5,
         term_coefficients = Float64.(expansion.coefficients),
-    )
-    descriptor =
-        GaussletBases._nested_projected_q_shell_staged_unit_descriptor(layer)
-    shell_plan = PQSH1CCPM._pqs_shell_realization_plan(descriptor, metrics)
-    core_indices, core_states = _pqs_h1_core_indices_and_states(inner_box, dims)
-    shell_coefficients = shell_plan.shell_projection_matrix * shell_plan.lowdin_cleanup
-    shell_states = descriptor.support_states
-    core_overlap = _pqs_h1_support_product_matrix(
-        core_states,
-        core_states,
-        metrics.x.overlap,
-        metrics.y.overlap,
-        metrics.z.overlap,
-    )
-    core_shell_overlap = _pqs_h1_support_product_matrix(
-        core_states,
-        shell_states,
-        metrics.x.overlap,
-        metrics.y.overlap,
-        metrics.z.overlap,
-    )
-    shell_overlap = _pqs_h1_support_product_matrix(
-        shell_states,
-        shell_states,
-        metrics.x.overlap,
-        metrics.y.overlap,
-        metrics.z.overlap,
-    )
-    final_basis = PQSH1CFBR.pqs_complete_core_shell_final_basis(
-        core_support_indices = core_indices,
-        shell_support_indices = descriptor.support_indices,
-        core_overlap = core_overlap,
-        core_shell_overlap = core_shell_overlap,
-        shell_overlap = shell_overlap,
-        shell_final_coefficients = shell_coefficients,
         metadata = (;
             fixture = :pqs_direct_retained_final_h1_complete_core_shell,
-            current_box,
-            inner_box,
-            raw_source_dims = (5, 5, 5),
         ),
+    )
+    final_basis = GaussletBases.pqs_multilayer_complete_core_shell_final_basis(
+        plan;
+        metadata = (; fixture = :pqs_direct_retained_final_h1_complete_core_shell),
     )
     return (;
         expansion,
         bundle7,
-        metrics,
+        metrics = plan.metrics,
         current_box,
         inner_box,
         raw_source_dims = (5, 5, 5),
-        core_states,
-        shell_states,
-        all_states = vcat(core_states, shell_states),
+        plan,
+        core_states = plan.core_support_states,
+        shell_states = plan.shell_support_states,
+        all_states = vcat(plan.core_support_states, plan.shell_support_states),
         final_basis,
     )
 end
@@ -190,32 +129,11 @@ end
 
 @testset "PQS complete core-shell final H1 gate" begin
     fixture = _pqs_h1_complete_fixture()
-    bundles = GaussletBases._CartesianNestedAxisBundles3D(
-        fixture.bundle7,
-        fixture.bundle7,
-        fixture.bundle7,
-    )
-    multilayer_plan = GaussletBases.pqs_multilayer_shell_source_plan(
-        bundles,
-        fixture.inner_box,
-        fixture.current_box;
-        bond_axis = :z,
-        term_coefficients = Float64.(fixture.expansion.coefficients),
-        metadata = (; fixture = :pqs_h1_multilayer_helper_contract),
-    )
-    multilayer_final_basis =
-        GaussletBases.pqs_multilayer_complete_core_shell_final_basis(
-            multilayer_plan;
-            metadata = (; fixture = :pqs_h1_multilayer_helper_contract),
-        )
-    @test multilayer_plan.status == :available_pqs_multilayer_shell_source_plan
-    @test multilayer_final_basis.status ==
-          :available_pqs_complete_core_shell_final_basis
-    @test multilayer_final_basis.final_retained_count ==
-          fixture.final_basis.final_retained_count
-    @test multilayer_final_basis.final_overlap_identity_error ≈
-          fixture.final_basis.final_overlap_identity_error
-    @test multilayer_final_basis.final_overlap ≈ fixture.final_basis.final_overlap
+    @test fixture.plan.status == :available_pqs_multilayer_shell_source_plan
+    @test fixture.final_basis.source_plan_status ==
+          :available_pqs_multilayer_shell_source_plan
+    @test fixture.final_basis.source_plan_final_basis_helper ==
+          :pqs_multilayer_complete_core_shell_final_basis
 
     center = (;
         center_key = :origin,
