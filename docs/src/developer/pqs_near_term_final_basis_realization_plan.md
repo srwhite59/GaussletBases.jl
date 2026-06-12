@@ -383,20 +383,38 @@ consumes the plan support states and `plan.metrics`, and it sums the standard
 three axis-product kinetic terms. It does not perform final-basis transfer,
 H1, nuclear assembly, IDA, RHF, driver wiring, exports, or artifact work.
 
-Support electron-nuclear assembly should wait until the by-center convention is
-made explicit in the helper contract. The promoted helper should produce one
-separated by-center support matrix per center, keep it uncharged, and leave
-charge application and center summation to the Hamiltonian assembly stage. The
-operator sign should be the electron-nuclear potential sign, so the uncharged
-matrix represents `-1/r_center` rather than a positive Coulomb kernel; applying
-the nuclear charge later means H1 assembly adds `Z_center * V_center` if
-`V_center` already carries the negative sign. The current H1 gate is only ready
-for the centered/origin case through
-`pgdg_intermediate.gaussian_factor_terms`; off-origin centers need the
-centered Gaussian factor-term source used by the retained by-center PQS
-kernels before they become route-owned support assembly. Old fixed-block and
-WL matrices remain oracle comparisons only, not the source of authority for
-the support helper.
+The next support electron-nuclear helper should be named
+`pqs_multilayer_support_electron_nuclear_by_center_matrices(plan;
+coulomb_expansion, center_records, axis_layers = nothing,
+gaussian_factor_terms_by_center = nothing)`. It should require an available
+`pqs_multilayer_shell_source_plan`, consume the plan support ordering
+`core_support_states` followed by `shell_support_states`, and return one
+support-space matrix record per supplied center. Each record should carry the
+center key/index/location, record the nuclear charge, keep
+`nuclear_charge_applied = false`, keep `centers_summed = false`, and make no
+final-basis transfer, H1, IDA, RHF, driver, export, or artifact claim.
+
+The sign convention should match the retained PQS and decomposed WL by-center
+routes: each uncharged center matrix represents the negative unit-charge
+electron-nuclear attraction `-1/r_A`, implemented as
+`sum_t (-c_t) Gx_t Gy_t Gz_t`. Hamiltonian assembly then applies the physical
+charge and sums centers by adding `Z_A * V_A` for each separated by-center
+matrix. The helper must not return a positive Coulomb kernel, must not apply
+`Z_A` internally, and must not combine centers before H1 assembly.
+
+Centered/origin support factors may use the existing
+`pgdg_intermediate.gaussian_factor_terms` only when the center is the same
+origin used to build those factors. Off-origin centers should reuse the
+retained PQS centered factor source convention:
+`pqs_source_pair_centered_gaussian_factor_terms_1d(...)` currently builds
+centered 1D Gaussian factors from explicit axis layers, the Coulomb expansion,
+and the center record before composing
+`pqs_source_pair_centered_electron_nuclear_by_center_block(...)` or the direct
+retained sibling. A support-level multi-layer helper should follow that
+centered-factor source, generalized over the complete core/shell support
+states, rather than treating origin `pgdg_intermediate.gaussian_factor_terms`
+as an off-origin authority. Old fixed-block matrices, WL route-global matrices,
+and raw-support H1 probes remain oracle/reference comparisons only.
 
 If the nuclear helper is implemented, the remaining test-local H1 support
 nuclear assembly can shrink: `_pqs_h1_support_nuclear_matrix` would be replaced
