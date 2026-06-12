@@ -246,6 +246,15 @@ The current complete core/shell PQS helper still uses a projected shell source
 with a one-cell raw boundary around the inner box. A side-13, `d = 0.1`,
 `s = 1.0`, three-surrounding-shell final-basis smoke is therefore blocked on a
 multi-layer PQS shell/source producer before H1 or RHF should be interpreted.
+A follow-up seam audit showed that this does not require immediate
+generalization of the final-basis helper. Three legal one-cell shell descriptors
+for `(3:11)^3/(4:10)^3`, `(2:12)^3/(3:11)^3`, and `(1:13)^3/(2:12)^3` have
+disjoint supports, cover the side-13 parent together with the `(4:10)^3` core,
+and can be collapsed into one block-diagonal shell sector before calling
+`pqs_complete_core_shell_final_basis`. The smallest next implementation target
+is therefore a route-owned multi-layer PQS shell source plan that builds and
+combines repeated one-cell shell descriptors; old fixed-block matrices remain
+oracle/reference material only.
 
 ## Validation Policy
 
