@@ -218,6 +218,27 @@ mechanical/source-box coverage or an oracle aid, not as a physical one-center
 acceptance basis. Do not assert every report field, nonclaim flag, timing
 field, or blocker vocabulary.
 
+Subsequent complete core/shell PQS He RHF probes validated the final/pre-final
+density convention and route scaling, but they are not yet accepted physical
+convergence fixtures. The q ladder used one direct core plus exactly one
+surrounding shell while keeping the mapped box radius near 8 bohr:
+
+```text
+q=5   final dim 223    RHF -2.7213372828531668
+q=7   final dim 561    RHF -2.810068050134403
+q=9   final dim 1115   RHF -2.8499091618019303
+q=11  final dim 1933   RHF -2.8559475204289022
+```
+
+Those values are strong route/scaling evidence, especially for the localized
+pre-final positive-weight density gauge consumed by final-basis orbitals through
+the combined Lowdin cleanup. They do not prove physical convergence because
+increasing q alone does not review the number of shell layers,
+mapping/distortion parameters, central spacing, or box-size policy together.
+Do not promote q=9 or q=11 as a permanent He RHF gate until the fixture is
+reviewed. The q=11 point remains the stronger exploratory/reference point; q=9
+is the cheaper candidate if a compact gate is later approved.
+
 ## Validation Policy
 
 The slow nested harness is not a routine baton-loop validation target. In
