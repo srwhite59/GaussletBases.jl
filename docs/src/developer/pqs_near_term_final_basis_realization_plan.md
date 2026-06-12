@@ -212,16 +212,14 @@ vocabulary.
 ## Validation Policy
 
 The slow nested harness is not a routine baton-loop validation target. In
-unattended baton work:
+unattended baton work, poll baton files about once per minute and stop the
+unattended loop if the expected response has not appeared after about one hour.
 
-```text
-if a validation command shows no output for 10 minutes:
-    stop waiting;
-    interrupt it if possible;
-    report the last visible output;
-    mark validation incomplete;
-    do not keep the loop blocked indefinitely.
-```
+Validation commands may run longer than one minute. If validation progress is
+unclear for a long time, prefer a response checkpoint with the last visible
+output and validation status over indefinite waiting. A user may set a shorter
+temporary limit for a specific validation run; that should be recorded as a
+run-specific instruction, not promoted to standing baton policy.
 
 Doer agents must not request UI escalation during unattended baton mode. If a
 command needs permission or sandbox escape, write `.agent_handoffs/ATTENTION.md`
@@ -234,7 +232,8 @@ with the exact command, reason, and blocker, then stop.
 - Fix the PQS framework wording so `CartesianRawProductSources` owns the narrow
   PQS source-mode boundary selector metadata, not general retained-rule policy.
 - Add/review `review.031.md` for the incomplete slow validation.
-- Record the no-escalation and 10-minute slow-validation baton rules.
+- Record the no-escalation baton rule and the one-hour unattended polling
+  stop/checkpoint rule.
 - Record that the final H1 seam is oracle-backed and validated, not a
   production-owned full PQS route.
 
@@ -282,4 +281,3 @@ add RHF before H1 and self-Coulomb diagnostics are stable
 promote shell-support operator projection to production path
 expand slow integration tests as routine gates
 ```
-

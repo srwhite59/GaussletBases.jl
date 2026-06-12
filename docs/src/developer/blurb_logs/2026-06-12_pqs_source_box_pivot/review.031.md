@@ -2,20 +2,20 @@ Review 031
 
 Accepted as an incomplete validation checkpoint.
 
-The response followed the updated 10-minute slow-validation policy. It tried
-the requested slow nested harness, handled the Juliaup lockfile issue by using
-the concrete Julia binary, then stopped the still-running validation after
-about 11.5 minutes. The edited pass-029 integration file was not reached, so
-there is no evidence of a regression in that file and no full slow-harness
-validation claim.
+The response followed the temporary user instruction for that specific run to
+stop waiting after roughly 10 minutes. It tried the requested slow nested
+harness, handled the Juliaup lockfile issue by using the concrete Julia binary,
+then stopped the still-running validation after about 11.5 minutes. The edited
+pass-029 integration file was not reached, so there is no evidence of a
+regression in that file and no full slow-harness validation claim.
 
 Recorded status:
 
 - pass-029 integration cleanup remains committed but not fully slow-harness
   validated;
 - pass-030 route-driver stack-overflow fix remains focused-test validated;
-- slow nested harness is too broad for unattended baton validation under the
-  current 10-minute silence/wait policy.
+- slow nested harness was too broad for that temporary 10-minute validation
+  limit.
 
 Deletion/shrinkage:
 

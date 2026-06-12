@@ -109,33 +109,28 @@ Publishing one response is not a stop condition.
 
 Default polling:
 
-- poll every 10-30 seconds;
+- poll for baton files about once per minute;
 - do not use process listings or environment diagnostics unless the current
   pass truly needs them;
 - do not request escalation just to poll files;
 - after a long wait, continue polling unless `STOP.md`, `ATTENTION.md`, or a
   user instruction changes the loop state.
 
-The older one-hour timeout is optional in this root live mode. For long-running
-manager/doer sessions, continuing to poll is acceptable until the user stops
-the loop.
+If no expected baton file appears for about one hour, stop the unattended loop
+and report the last known state. Do not silently convert a missing response
+into manager-does-the-work unless the user explicitly asks for recovery.
 
-## Unattended Escalation And Slow Validation
+## Unattended Escalation And Validation
 
 In unattended baton mode, the doer must not request UI escalation. If a command
 needs permission or sandbox escape, write `.agent_handoffs/ATTENTION.md` with
 the exact command, reason, and blocker, then stop. The manager poll treats
 `ATTENTION.md` as a hard stop for user/design review.
 
-For validation commands, do not let a silent long-running test block the loop
-indefinitely. If a validation command shows no new output for 10 minutes:
-
-- stop waiting;
-- interrupt it if possible;
-- report the last visible output;
-- mark validation as incomplete;
-- continue only if a smaller validation target is clear and does not require a
-  design decision.
+Validation commands may run longer than the one-minute file polling interval.
+If validation progress is unclear for a long time, prefer a status artifact or
+response checkpoint over indefinite waiting. A user may set a shorter temporary
+limit for a specific run, but that does not change the standing baton rule.
 
 ## Commit And Review Rules
 
