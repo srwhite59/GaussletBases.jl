@@ -62,14 +62,17 @@ That kind of hole is exactly what the blurb log should preserve, because it
 shows why scientific tests are better long-term guards than helper-vocabulary
 coverage.
 
-The current live He + GTO hole is later in the stack:
+The current live He + GTO question is later in the stack:
 
-- final-basis residual GTO directions must be represented as MWG/effective
+- final-basis residual GTO directions are now represented as MWG/effective
   Gaussian data;
-- raw GTO density-density must not be accepted as the final electron-electron
+- raw GTO density-density is still not accepted as the final electron-electron
   operator;
-- residual MWG density-density kernels are still needed before He + GTO RHF can
-  be a valid accepted result.
+- residual MWG density-density now matches the old nested fixed-block QW/MWG
+  oracle on the side13 He + GTO fixture;
+- the remaining question is the scientific target for acceptance, especially
+  matching the White-Lindsey Fig. 8 AHGBS-9 S-only setup rather than the earlier
+  cc-pVTZ diagnostic.
 
 ## Current Cleanup Rule
 
