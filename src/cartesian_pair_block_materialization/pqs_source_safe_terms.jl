@@ -664,6 +664,82 @@ function _pqs_source_pair_direct_retained_kinetic_block(
     )
 end
 
+function _pqs_source_pair_direct_retained_electron_nuclear_by_center_block(
+    record::PairBlockMaterializationRecord;
+    coulomb_expansion,
+    center_record,
+    gaussian_factor_terms_1d,
+)
+    _assert_pqs_source_pair_record(record)
+    left_dims, right_dims = _pqs_source_pair_dims(record)
+    axis_terms = _pqs_source_gaussian_factor_terms_tuple(
+        gaussian_factor_terms_1d,
+        left_dims,
+        right_dims,
+    )
+    coefficients =
+        _pqs_source_electron_nuclear_coefficients(coulomb_expansion, axis_terms)
+    center_summary = _pqs_source_electron_nuclear_center_summary(center_record)
+    center_summary.status === :available_pqs_source_electron_nuclear_center ||
+        throw(
+            ArgumentError(
+                "PQS retained electron-nuclear block requires an available center record",
+            ),
+        )
+
+    left_rule = _pqs_source_record_retained_rule(record, :left)
+    right_rule = _pqs_source_record_retained_rule(record, :right)
+    _assert_pqs_source_record_retained_rule(record, left_rule, :left)
+    _assert_pqs_source_record_retained_rule(record, right_rule, :right)
+    left_modes = CRPS.retained_mode_indices(left_rule)
+    right_modes = CRPS.retained_mode_indices(right_rule)
+    block = Matrix{Float64}(undef, length(left_modes), length(right_modes))
+    _fill_pqs_source_electron_nuclear_by_center_block!(
+        block,
+        left_modes,
+        right_modes,
+        axis_terms,
+        coefficients,
+    )
+
+    return _pqs_source_pair_direct_retained_result(
+        record,
+        :source_electron_nuclear_by_center,
+        block,
+        left_rule,
+        right_rule,
+        left_dims,
+        right_dims,
+        (;
+            physical_operator = :electron_nuclear_attraction,
+            by_center = true,
+            center_key = center_summary.center_key,
+            center_index = center_summary.center_index,
+            center_location = center_summary.location,
+            nuclear_charge = center_summary.charge,
+            nuclear_charge_recorded = true,
+            nuclear_charge_applied = false,
+            centers_summed = false,
+            center_summation = false,
+            uncharged_by_center_convention = true,
+            charge_application_stage = :diagnostic_or_hamiltonian_assembly,
+            term_coefficients_source = :coulomb_expansion_coefficients,
+            gaussian_factor_terms_source = :caller_supplied_explicit_data,
+            gaussian_expansion_loop = :inner_retained_source_mode_contraction,
+            gaussian_term_count = length(coefficients),
+            axis_factor_term_shapes = (
+                x = size(axis_terms[1]),
+                y = size(axis_terms[2]),
+                z = size(axis_terms[3]),
+            ),
+            ida_data_materialized = false,
+            ida_mwg_semantics_changed = false,
+            driver_route_materialized = false,
+            exports_materialized = false,
+        ),
+    )
+end
+
 function _pqs_source_pair_direct_retained_result(
     record::PairBlockMaterializationRecord,
     source_term::Symbol,
@@ -773,8 +849,11 @@ end
 """
     pqs_source_pair_retained_electron_nuclear_by_center_block(record; ...)
 
-Materialize a raw PQS/PQS source electron-nuclear by-center block and contract
-it to retained source modes by the retained source-mode boundary selector.
+Materialize a retained PQS/PQS source electron-nuclear by-center block directly
+from retained boundary source-mode tuples and supplied Gaussian factor terms.
+The raw source-space block selector path remains available as
+`pqs_source_pair_retained_one_body_block` over an already materialized source
+result.
 """
 function pqs_source_pair_retained_electron_nuclear_by_center_block(
     record::PairBlockMaterializationRecord;
@@ -782,20 +861,19 @@ function pqs_source_pair_retained_electron_nuclear_by_center_block(
     center_record,
     gaussian_factor_terms_1d,
 )
-    source_result = pqs_source_pair_electron_nuclear_by_center_block(
+    return _pqs_source_pair_direct_retained_electron_nuclear_by_center_block(
         record;
         coulomb_expansion,
         center_record,
         gaussian_factor_terms_1d,
     )
-    return pqs_source_pair_retained_one_body_block(source_result)
 end
 
 """
     pqs_source_pair_retained_centered_electron_nuclear_by_center_block(record; ...)
 
-Compose the centered by-center PQS source electron-nuclear block with the
-existing retained source-mode contraction. This adds no shell realization,
+Compose centered Gaussian factor generation with direct retained by-center PQS
+source electron-nuclear block construction. This adds no shell realization,
 Lowdin cleanup, IDA data, Hamiltonian assembly, global route, exports, or
 artifacts.
 """
@@ -805,14 +883,19 @@ function pqs_source_pair_retained_centered_electron_nuclear_by_center_block(
     coulomb_expansion,
     center_record,
 )
-    source_result =
-        pqs_source_pair_centered_electron_nuclear_by_center_block(
+    gaussian_factor_terms_1d =
+        pqs_source_pair_centered_gaussian_factor_terms_1d(
             record;
             axis_layers,
             coulomb_expansion,
             center_record,
         )
-    return pqs_source_pair_retained_one_body_block(source_result)
+    return pqs_source_pair_retained_electron_nuclear_by_center_block(
+        record;
+        coulomb_expansion,
+        center_record,
+        gaussian_factor_terms_1d,
+    )
 end
 
 function _source_position_term(axis)
@@ -1533,6 +1616,8 @@ function _assert_pqs_source_record_retained_rule(
                 "PQS retained source rule ordering does not match $(side) source",
             ),
         )
+    rule.retained_rule_kind === :boundary_comx_product_mode_selection ||
+        throw(ArgumentError("PQS retained source rule must use boundary product mode selection"))
     rule.transform_kind === :source_mode_column_selector ||
         throw(ArgumentError("PQS retained source rule must use source-mode selector columns"))
     rule.retained_count == length(CRPS.retained_mode_indices(rule)) ||

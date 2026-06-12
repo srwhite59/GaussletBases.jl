@@ -1902,11 +1902,17 @@ end
         CPBM.pqs_source_pair_retained_one_body_block(centered_nuclear)
     @test centered_retained.term == :retained_source_electron_nuclear_by_center
     @test size(centered_retained.block) == (26, 54)
+    centered_retained_direct_oracle_maxdiff =
+        maximum(abs.(centered_retained.block .- expected_centered_retained.block))
     @test centered_retained.block ≈ expected_centered_retained.block
+    @test centered_retained_direct_oracle_maxdiff == 0.0
     @test centered_retained.metadata.by_center
     @test centered_retained.metadata.nuclear_charge_recorded
     @test !centered_retained.metadata.nuclear_charge_applied
     @test !centered_retained.metadata.centers_summed
+    @test centered_retained.metadata.retained_direct_boundary_product_used
+    @test !centered_retained.metadata.source_space_input_used
+    @test !centered_retained.metadata.raw_source_operator_block_materialized
     @test centered_retained.metadata.retained_source_operator_block_materialized
     @test !centered_retained.metadata.shell_realization_materialized
     @test !centered_retained.metadata.lowdin_cleanup_used
@@ -2462,7 +2468,10 @@ end
     @test size(retained_nuclear_result.block) == (26, 54)
     @test retained_nuclear_result.block ≈
           nuclear_result.block[left_retained_columns, right_retained_columns]
+    nuclear_direct_oracle_maxdiff =
+        maximum(abs.(wrapper_retained_nuclear.block .- retained_nuclear_result.block))
     @test wrapper_retained_nuclear.block ≈ retained_nuclear_result.block
+    @test nuclear_direct_oracle_maxdiff == 0.0
     @test retained_nuclear_result.metadata.block_space ==
           :retained_pqs_source_modes
     @test retained_nuclear_result.metadata.source_block_term ==
@@ -2471,6 +2480,9 @@ end
     @test retained_nuclear_result.metadata.nuclear_charge_recorded
     @test !retained_nuclear_result.metadata.nuclear_charge_applied
     @test !retained_nuclear_result.metadata.centers_summed
+    @test wrapper_retained_nuclear.metadata.retained_direct_boundary_product_used
+    @test !wrapper_retained_nuclear.metadata.source_space_input_used
+    @test !wrapper_retained_nuclear.metadata.raw_source_operator_block_materialized
     @test retained_nuclear_result.metadata.retained_source_operator_block_materialized
     @test !retained_nuclear_result.metadata.shell_realization_materialized
     @test !retained_nuclear_result.metadata.lowdin_cleanup_used
