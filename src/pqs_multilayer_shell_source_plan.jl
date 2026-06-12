@@ -53,6 +53,29 @@ function _pqs_multilayer_duplicate_count(values)
     return length(values) - length(unique(values))
 end
 
+function _pqs_multilayer_property(plan, key::Symbol, default = nothing)
+    return hasproperty(plan, key) ? getproperty(plan, key) : default
+end
+
+function _pqs_multilayer_support_product_matrix(
+    left_states::AbstractVector{<:NTuple{3,Int}},
+    right_states::AbstractVector{<:NTuple{3,Int}},
+    operator_x::AbstractMatrix{<:Real},
+    operator_y::AbstractMatrix{<:Real},
+    operator_z::AbstractMatrix{<:Real},
+)
+    result = Matrix{Float64}(undef, length(left_states), length(right_states))
+    @inbounds for (left_index, (ix, iy, iz)) in pairs(left_states)
+        for (right_index, (jx, jy, jz)) in pairs(right_states)
+            result[left_index, right_index] =
+                Float64(operator_x[ix, jx]) *
+                Float64(operator_y[iy, jy]) *
+                Float64(operator_z[iz, jz])
+        end
+    end
+    return result
+end
+
 """
     pqs_multilayer_shell_source_plan(bundles, core_box, outer_box; ...)
 
@@ -199,6 +222,145 @@ function pqs_multilayer_shell_source_plan(
                 source = :pqs_multilayer_shell_source_plan,
                 collapsed_shell_sector = true,
                 old_fixed_block_matrix_authority_used = false,
+            ),
+        ),
+    )
+end
+
+"""
+    pqs_multilayer_complete_core_shell_final_basis(plan; metadata = (;), ...)
+
+Build the complete core/shell final-basis realization for a route-owned
+multi-layer PQS shell source plan. This helper performs only the overlap
+assembly needed by `CartesianFinalBasisRealization`; it does not materialize
+one-body operators, H1, IDA, density-density, RHF, driver wiring, exports, or
+artifacts.
+"""
+function pqs_multilayer_complete_core_shell_final_basis(
+    plan;
+    identity_atol::Real = 1.0e-8,
+    rank_atol::Real = 1.0e-10,
+    metadata = (;),
+)
+    _pqs_multilayer_property(plan, :object_kind) ===
+        :pqs_multilayer_shell_source_plan ||
+        throw(ArgumentError("PQS multi-layer final basis requires a pqs_multilayer_shell_source_plan"))
+    if plan.status !== :available_pqs_multilayer_shell_source_plan
+        return _blocked_pqs_multilayer_complete_core_shell_final_basis(
+            plan;
+            blocker = isnothing(plan.blocker) ?
+                :pqs_multilayer_shell_source_plan_not_available :
+                plan.blocker,
+            metadata,
+        )
+    end
+
+    metrics = plan.metrics
+    core_overlap = _pqs_multilayer_support_product_matrix(
+        plan.core_support_states,
+        plan.core_support_states,
+        metrics.x.overlap,
+        metrics.y.overlap,
+        metrics.z.overlap,
+    )
+    core_shell_overlap = _pqs_multilayer_support_product_matrix(
+        plan.core_support_states,
+        plan.shell_support_states,
+        metrics.x.overlap,
+        metrics.y.overlap,
+        metrics.z.overlap,
+    )
+    shell_overlap = _pqs_multilayer_support_product_matrix(
+        plan.shell_support_states,
+        plan.shell_support_states,
+        metrics.x.overlap,
+        metrics.y.overlap,
+        metrics.z.overlap,
+    )
+    merged_metadata = merge(
+        NamedTuple(plan.metadata),
+        NamedTuple(metadata),
+        (;
+            source = :pqs_multilayer_complete_core_shell_final_basis,
+            input_source_plan = :pqs_multilayer_shell_source_plan,
+            overlap_blocks_built_from_plan_support_states = true,
+            h1_materialized = false,
+            ida_data_materialized = false,
+            density_density_materialized = false,
+            rhf_materialized = false,
+            driver_route_materialized = false,
+            exports_materialized = false,
+            artifacts_materialized = false,
+        ),
+    )
+    final_basis =
+        CartesianFinalBasisRealization.pqs_complete_core_shell_final_basis(
+            core_support_indices = plan.core_support_indices,
+            shell_support_indices = plan.shell_support_indices,
+            core_overlap = core_overlap,
+            core_shell_overlap = core_shell_overlap,
+            shell_overlap = shell_overlap,
+            shell_final_coefficients = plan.shell_final_coefficients,
+            identity_atol = identity_atol,
+            rank_atol = rank_atol,
+            metadata = merged_metadata,
+        )
+    return merge(
+        final_basis,
+        (;
+            source_plan_object_kind = plan.object_kind,
+            source_plan_status = plan.status,
+            source_plan_layer_count = plan.layer_count,
+            source_plan_core_support_count = length(plan.core_support_indices),
+            source_plan_shell_support_count = length(plan.shell_support_indices),
+            source_plan_final_basis_helper =
+                :pqs_multilayer_complete_core_shell_final_basis,
+            h1_materialized = false,
+            ida_data_materialized = false,
+            density_density_materialized = false,
+            rhf_materialized = false,
+            driver_route_materialized = false,
+            exports_materialized = false,
+            artifacts_materialized = false,
+        ),
+    )
+end
+
+function _blocked_pqs_multilayer_complete_core_shell_final_basis(
+    plan;
+    blocker,
+    metadata = (;),
+)
+    return (;
+        object_kind = :pqs_multilayer_complete_core_shell_final_basis,
+        status = :blocked_pqs_multilayer_complete_core_shell_final_basis,
+        blocker,
+        source_plan_object_kind = _pqs_multilayer_property(plan, :object_kind),
+        source_plan_status = _pqs_multilayer_property(plan, :status),
+        source_plan_blocker = _pqs_multilayer_property(plan, :blocker),
+        source_plan_layer_count = _pqs_multilayer_property(plan, :layer_count, 0),
+        source_plan_core_support_count =
+            hasproperty(plan, :core_support_indices) ?
+            length(plan.core_support_indices) : 0,
+        source_plan_shell_support_count =
+            hasproperty(plan, :shell_support_indices) ?
+            length(plan.shell_support_indices) : 0,
+        final_basis_materialized = false,
+        one_body_operator_materialized = false,
+        h1_materialized = false,
+        ida_data_materialized = false,
+        density_density_materialized = false,
+        rhf_materialized = false,
+        driver_route_materialized = false,
+        exports_materialized = false,
+        artifacts_materialized = false,
+        metadata = merge(
+            hasproperty(plan, :metadata) ? NamedTuple(plan.metadata) : (;),
+            NamedTuple(metadata),
+            (;
+                source = :pqs_multilayer_complete_core_shell_final_basis,
+                input_source_plan = :pqs_multilayer_shell_source_plan,
+                final_basis_helper = :pqs_complete_core_shell_final_basis,
             ),
         ),
     )

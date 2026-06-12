@@ -190,6 +190,33 @@ end
 
 @testset "PQS complete core-shell final H1 gate" begin
     fixture = _pqs_h1_complete_fixture()
+    bundles = GaussletBases._CartesianNestedAxisBundles3D(
+        fixture.bundle7,
+        fixture.bundle7,
+        fixture.bundle7,
+    )
+    multilayer_plan = GaussletBases.pqs_multilayer_shell_source_plan(
+        bundles,
+        fixture.inner_box,
+        fixture.current_box;
+        bond_axis = :z,
+        term_coefficients = Float64.(fixture.expansion.coefficients),
+        metadata = (; fixture = :pqs_h1_multilayer_helper_contract),
+    )
+    multilayer_final_basis =
+        GaussletBases.pqs_multilayer_complete_core_shell_final_basis(
+            multilayer_plan;
+            metadata = (; fixture = :pqs_h1_multilayer_helper_contract),
+        )
+    @test multilayer_plan.status == :available_pqs_multilayer_shell_source_plan
+    @test multilayer_final_basis.status ==
+          :available_pqs_complete_core_shell_final_basis
+    @test multilayer_final_basis.final_retained_count ==
+          fixture.final_basis.final_retained_count
+    @test multilayer_final_basis.final_overlap_identity_error ≈
+          fixture.final_basis.final_overlap_identity_error
+    @test multilayer_final_basis.final_overlap ≈ fixture.final_basis.final_overlap
+
     center = (;
         center_key = :origin,
         center_index = 1,

@@ -368,6 +368,14 @@ only restate private probe status can be shrunk. Do not integrate RHF
 acceptance, exports, artifacts, GTO supplement work, or a permanent side-13
 fixture gate until the physical fixture rule is reviewed.
 
+The first narrow assembly seam is now implemented as
+`pqs_multilayer_complete_core_shell_final_basis(plan; ...)`. It consumes a
+route-owned `pqs_multilayer_shell_source_plan(...)`, builds the core/core,
+core/shell, and shell/shell overlap blocks from the plan support states, and
+delegates to `CartesianFinalBasisRealization.pqs_complete_core_shell_final_basis`.
+It still does not materialize H1, IDA, density-density, RHF, driver wiring,
+exports, artifacts, or an accepted fixture.
+
 ## Validation Policy
 
 The slow nested harness is not a routine baton-loop validation target. In
