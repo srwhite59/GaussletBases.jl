@@ -362,6 +362,20 @@ phase was `mixed_gto_blocks` at about `188.6` seconds; the next optimization
 target is therefore mixed GTO route-global block materialization, not residual
 MWG, final density assembly, or RHF.
 
+The first mixed-GTO timing pass hoisted reusable GTO/GTO self blocks out of the
+retained-unit loop. This preserved the Be S+P RHF total to about `3.2e-14`
+Hartree against the old nested/QW oracle and reduced the full probe from about
+`357.4` seconds to about `342.5` seconds. The `mixed_gto_blocks` phase moved
+from about `188.6` seconds to about `177.2` seconds. The subphase timing showed
+that GTO/GTO self-block construction is only about `0.82` seconds when built
+once; the remaining dominant cost is per-unit mixed CPB/GTO local block
+construction, about `168.1` seconds over `131` retained units. Support
+coefficient construction, retained contraction, and placement are negligible
+at this fixture size. The next replacement target is therefore a factorized or
+projected mixed-GTO route that reuses axis/cross tables and avoids per-unit
+CPB-local mixed block materialization in the active shellification-backed atom
+plus supplement route.
+
 The current coarse timing split for the active tiny-box He RHF acceptance is
 reported by the test as diagnostics, not asserted as performance thresholds.
 Before the electron-nuclear cache and precompile workload, a representative

@@ -12,8 +12,11 @@ function route_global_mixed_gto_blocks_from_decomposed_units(
     expansion = nothing,
     center_records = (),
     include_moment_blocks::Bool = true,
+    subphase_timings = nothing,
     metadata = (;),
 )
+    subphase_elapsed = Dict{Symbol,Float64}()
+    subphase_counts = Dict{Symbol,Int}()
     blocker = _route_global_mixed_gto_blocks_input_blocker(inventory, supplement)
     if !isnothing(blocker)
         return _route_global_mixed_gto_blocks_result(
@@ -67,19 +70,54 @@ function route_global_mixed_gto_blocks_from_decomposed_units(
     placed_unit_keys = Symbol[]
     direct_core_unit_count = 0
     boundary_unit_count = 0
-    gto_blocks = nothing
-    gto_nuclear_blocks = ()
-
-    for unit in inventory.retained_units
-        unit_result = _route_global_mixed_gto_unit_blocks(
-            unit,
-            parent,
-            supplement,
-            provider_module;
+    gto_self = _route_global_mixed_gto_timed_subphase!(
+        subphase_elapsed,
+        subphase_counts,
+        :gto_gto_self_block_construction,
+    ) do
+        _route_global_mixed_gto_self_blocks(
+            provider_module,
+            supplement;
             expansion,
             center_records = center_records_tuple,
             include_moment_blocks,
         )
+    end
+    gto_self.status === :materialized_route_global_mixed_gto_self_blocks ||
+        return _route_global_mixed_gto_blocks_result(
+            :blocked_route_global_mixed_gto_blocks,
+            gto_self.blocker,
+            inventory,
+            supplement,
+            nothing,
+            nothing,
+            (),
+            nothing;
+            metadata,
+        )
+    gto_blocks = gto_self.gto_blocks
+    gto_nuclear_blocks = gto_self.gto_nuclear_by_center_blocks
+
+    for unit in inventory.retained_units
+        unit_result = _route_global_mixed_gto_timed_subphase!(
+            subphase_elapsed,
+            subphase_counts,
+            :per_unit_total,
+        ) do
+            _route_global_mixed_gto_unit_blocks(
+                unit,
+                parent,
+                supplement,
+                provider_module,
+                subphase_elapsed,
+                subphase_counts;
+                expansion,
+                center_records = center_records_tuple,
+                include_moment_blocks,
+                gto_blocks,
+                gto_nuclear_blocks,
+            )
+        end
         unit_result.status === :materialized_route_global_mixed_gto_unit_blocks ||
             return _route_global_mixed_gto_blocks_result(
                 :blocked_route_global_mixed_gto_blocks,
@@ -99,11 +137,37 @@ function route_global_mixed_gto_blocks_from_decomposed_units(
                 ),
             )
 
-        row_range = unit_result.column_range
-        any(covered[row_range]) &&
+        placement_blocker = _route_global_mixed_gto_timed_subphase!(
+            subphase_elapsed,
+            subphase_counts,
+            :row_placement_coverage,
+        ) do
+            row_range = unit_result.column_range
+            any(covered[row_range]) && return :duplicate_mixed_gto_route_global_row_coverage
+            covered[row_range] .= true
+            mixed_overlap[row_range, :] .= unit_result.mixed_overlap
+            mixed_kinetic[row_range, :] .= unit_result.mixed_kinetic
+            if include_moment_blocks
+                mixed_position_x[row_range, :] .= unit_result.mixed_position_x
+                mixed_position_y[row_range, :] .= unit_result.mixed_position_y
+                mixed_position_z[row_range, :] .= unit_result.mixed_position_z
+                mixed_x2_x[row_range, :] .= unit_result.mixed_x2_x
+                mixed_x2_y[row_range, :] .= unit_result.mixed_x2_y
+                mixed_x2_z[row_range, :] .= unit_result.mixed_x2_z
+            end
+            for index in eachindex(mixed_nuclear)
+                mixed_nuclear[index][row_range, :] .= unit_result.mixed_nuclear[index]
+            end
+            push!(placed_unit_keys, unit_result.unit_key)
+            unit_result.stratum_kind === :direct_core ?
+                (direct_core_unit_count += 1) :
+                (boundary_unit_count += 1)
+            return nothing
+        end
+        isnothing(placement_blocker) ||
             return _route_global_mixed_gto_blocks_result(
                 :blocked_route_global_mixed_gto_blocks,
-                :duplicate_mixed_gto_route_global_row_coverage,
+                placement_blocker,
                 inventory,
                 supplement,
                 nothing,
@@ -112,29 +176,13 @@ function route_global_mixed_gto_blocks_from_decomposed_units(
                 nothing;
                 metadata,
             )
-        covered[row_range] .= true
-        mixed_overlap[row_range, :] .= unit_result.mixed_overlap
-        mixed_kinetic[row_range, :] .= unit_result.mixed_kinetic
-        if include_moment_blocks
-            mixed_position_x[row_range, :] .= unit_result.mixed_position_x
-            mixed_position_y[row_range, :] .= unit_result.mixed_position_y
-            mixed_position_z[row_range, :] .= unit_result.mixed_position_z
-            mixed_x2_x[row_range, :] .= unit_result.mixed_x2_x
-            mixed_x2_y[row_range, :] .= unit_result.mixed_x2_y
-            mixed_x2_z[row_range, :] .= unit_result.mixed_x2_z
-        end
-        for index in eachindex(mixed_nuclear)
-            mixed_nuclear[index][row_range, :] .= unit_result.mixed_nuclear[index]
-        end
-        push!(placed_unit_keys, unit_result.unit_key)
-        unit_result.stratum_kind === :direct_core ?
-            (direct_core_unit_count += 1) :
-            (boundary_unit_count += 1)
-        if isnothing(gto_blocks)
-            gto_blocks = unit_result.gto_blocks
-            gto_nuclear_blocks = unit_result.gto_nuclear_blocks
-        end
     end
+
+    _route_global_mixed_gto_flush_subphase_timings!(
+        subphase_timings,
+        subphase_elapsed,
+        subphase_counts,
+    )
 
     all(covered) ||
         return _route_global_mixed_gto_blocks_result(
@@ -213,14 +261,80 @@ function _route_global_mixed_gto_provider_module()
     return getproperty(parent, :CartesianCPBBlockProviders)
 end
 
+function _route_global_mixed_gto_timed_subphase!(
+    f::F,
+    subphase_elapsed,
+    subphase_counts,
+    phase::Symbol,
+) where {F}
+    isnothing(subphase_elapsed) && return f()
+    local value
+    elapsed = @elapsed value = f()
+    subphase_elapsed[phase] = get(subphase_elapsed, phase, 0.0) + elapsed
+    subphase_counts[phase] = get(subphase_counts, phase, 0) + 1
+    return value
+end
+
+function _route_global_mixed_gto_flush_subphase_timings!(
+    subphase_timings,
+    subphase_elapsed,
+    subphase_counts,
+)
+    isnothing(subphase_timings) && return nothing
+    for phase in (
+        :gto_gto_self_block_construction,
+        :per_unit_total,
+        :unit_coefficient_construction,
+        :per_unit_provider_local_block_construction,
+        :support_coefficient_construction,
+        :retained_contraction,
+        :row_placement_coverage,
+    )
+        haskey(subphase_elapsed, phase) || continue
+        push!(
+            subphase_timings,
+            (;
+                phase,
+                elapsed_seconds = subphase_elapsed[phase],
+                count = subphase_counts[phase],
+                status = :completed,
+                blocker = nothing,
+            ),
+        )
+    end
+    return nothing
+end
+
 function _route_global_mixed_gto_unit_blocks(
     unit,
     parent,
     supplement,
     provider_module;
+    args...,
+)
+    return _route_global_mixed_gto_unit_blocks(
+        unit,
+        parent,
+        supplement,
+        provider_module,
+        nothing,
+        nothing;
+        args...,
+    )
+end
+
+function _route_global_mixed_gto_unit_blocks(
+    unit,
+    parent,
+    supplement,
+    provider_module,
+    subphase_elapsed,
+    subphase_counts;
     expansion,
     center_records,
     include_moment_blocks::Bool = true,
+    gto_blocks = nothing,
+    gto_nuclear_blocks = (),
 )
     column_range = _route_global_combined_gto_property(unit, :column_range, nothing)
     column_range isa AbstractUnitRange{<:Integer} ||
@@ -248,7 +362,13 @@ function _route_global_mixed_gto_unit_blocks(
         )
     source_cpb = only(source_cpbs)
 
-    coefficients = white_lindsey_boundary_stratum_unit_coefficients(unit)
+    coefficients = _route_global_mixed_gto_timed_subphase!(
+        subphase_elapsed,
+        subphase_counts,
+        :unit_coefficient_construction,
+    ) do
+        white_lindsey_boundary_stratum_unit_coefficients(unit)
+    end
     coefficients.status ===
         :blocked_white_lindsey_boundary_stratum_unit_coefficients &&
         return _route_global_mixed_gto_unit_result(
@@ -273,24 +393,23 @@ function _route_global_mixed_gto_unit_blocks(
             nothing,
         )
 
-    local_blocks =
-        include_moment_blocks ?
-        _route_global_mixed_gto_full_local_blocks(
+    local_blocks = _route_global_mixed_gto_timed_subphase!(
+        subphase_elapsed,
+        subphase_counts,
+        :per_unit_provider_local_block_construction,
+    ) do
+        _route_global_mixed_gto_local_blocks(
             provider_module,
             parent,
             source_cpb,
             supplement;
             expansion,
             center_records,
-        ) :
-        _route_global_mixed_gto_one_electron_local_blocks(
-            provider_module,
-            parent,
-            source_cpb,
-            supplement;
-            expansion,
-            center_records,
+            include_moment_blocks,
+            gto_blocks,
+            gto_nuclear_blocks,
         )
+    end
     local_blocks.status === :materialized_route_global_mixed_gto_local_blocks ||
         return _route_global_mixed_gto_unit_result(
             :blocked_route_global_mixed_gto_unit_blocks,
@@ -303,89 +422,121 @@ function _route_global_mixed_gto_unit_blocks(
             nothing,
         )
 
-    support_coefficients = _white_lindsey_support_coefficient_matrix(
-        coefficients.coefficient_matrix,
-        coefficients.support_indices,
-        coefficients.coefficient_space,
-        :mixed_gto,
-    )
-    mixed_overlap = _route_global_mixed_gto_contract_unit_block(
-        support_coefficients,
-        local_blocks.mixed_blocks.overlap.dense_block,
-        column_range,
-        :mixed_gto_overlap_dimension_mismatch,
-        unit,
-    )
-    mixed_kinetic = _route_global_mixed_gto_contract_unit_block(
-        support_coefficients,
-        local_blocks.mixed_blocks.kinetic.dense_block,
-        column_range,
-        :mixed_gto_kinetic_dimension_mismatch,
-        unit,
-    )
-    mixed_position_x =
-        include_moment_blocks ?
-        _route_global_mixed_gto_contract_unit_block(
+    support_coefficients = _route_global_mixed_gto_timed_subphase!(
+        subphase_elapsed,
+        subphase_counts,
+        :support_coefficient_construction,
+    ) do
+        _white_lindsey_support_coefficient_matrix(
+            coefficients.coefficient_matrix,
+            coefficients.support_indices,
+            coefficients.coefficient_space,
+            :mixed_gto,
+        )
+    end
+    contracted = _route_global_mixed_gto_timed_subphase!(
+        subphase_elapsed,
+        subphase_counts,
+        :retained_contraction,
+    ) do
+        mixed_overlap = _route_global_mixed_gto_contract_unit_block(
             support_coefficients,
-            local_blocks.mixed_blocks.position_x.dense_block,
+            local_blocks.mixed_blocks.overlap.dense_block,
             column_range,
-            :mixed_gto_position_x_dimension_mismatch,
+            :mixed_gto_overlap_dimension_mismatch,
             unit,
-        ) : nothing
-    mixed_position_y =
-        include_moment_blocks ?
-        _route_global_mixed_gto_contract_unit_block(
+        )
+        mixed_kinetic = _route_global_mixed_gto_contract_unit_block(
             support_coefficients,
-            local_blocks.mixed_blocks.position_y.dense_block,
+            local_blocks.mixed_blocks.kinetic.dense_block,
             column_range,
-            :mixed_gto_position_y_dimension_mismatch,
+            :mixed_gto_kinetic_dimension_mismatch,
             unit,
-        ) : nothing
-    mixed_position_z =
-        include_moment_blocks ?
-        _route_global_mixed_gto_contract_unit_block(
-            support_coefficients,
-            local_blocks.mixed_blocks.position_z.dense_block,
-            column_range,
-            :mixed_gto_position_z_dimension_mismatch,
-            unit,
-        ) : nothing
-    mixed_x2_x =
-        include_moment_blocks ?
-        _route_global_mixed_gto_contract_unit_block(
-            support_coefficients,
-            local_blocks.mixed_blocks.x2_x.dense_block,
-            column_range,
-            :mixed_gto_x2_x_dimension_mismatch,
-            unit,
-        ) : nothing
-    mixed_x2_y =
-        include_moment_blocks ?
-        _route_global_mixed_gto_contract_unit_block(
-            support_coefficients,
-            local_blocks.mixed_blocks.x2_y.dense_block,
-            column_range,
-            :mixed_gto_x2_y_dimension_mismatch,
-            unit,
-        ) : nothing
-    mixed_x2_z =
-        include_moment_blocks ?
-        _route_global_mixed_gto_contract_unit_block(
-            support_coefficients,
-            local_blocks.mixed_blocks.x2_z.dense_block,
-            column_range,
-            :mixed_gto_x2_z_dimension_mismatch,
-            unit,
-        ) : nothing
-    mixed_nuclear = Tuple(
-        _route_global_mixed_gto_contract_unit_block(
-            support_coefficients,
-            block.dense_block,
-            column_range,
-            :mixed_gto_electron_nuclear_dimension_mismatch,
-            unit,
-        ) for block in local_blocks.mixed_nuclear_by_center_blocks
-    )
+        )
+        mixed_position_x =
+            include_moment_blocks ?
+            _route_global_mixed_gto_contract_unit_block(
+                support_coefficients,
+                local_blocks.mixed_blocks.position_x.dense_block,
+                column_range,
+                :mixed_gto_position_x_dimension_mismatch,
+                unit,
+            ) : nothing
+        mixed_position_y =
+            include_moment_blocks ?
+            _route_global_mixed_gto_contract_unit_block(
+                support_coefficients,
+                local_blocks.mixed_blocks.position_y.dense_block,
+                column_range,
+                :mixed_gto_position_y_dimension_mismatch,
+                unit,
+            ) : nothing
+        mixed_position_z =
+            include_moment_blocks ?
+            _route_global_mixed_gto_contract_unit_block(
+                support_coefficients,
+                local_blocks.mixed_blocks.position_z.dense_block,
+                column_range,
+                :mixed_gto_position_z_dimension_mismatch,
+                unit,
+            ) : nothing
+        mixed_x2_x =
+            include_moment_blocks ?
+            _route_global_mixed_gto_contract_unit_block(
+                support_coefficients,
+                local_blocks.mixed_blocks.x2_x.dense_block,
+                column_range,
+                :mixed_gto_x2_x_dimension_mismatch,
+                unit,
+            ) : nothing
+        mixed_x2_y =
+            include_moment_blocks ?
+            _route_global_mixed_gto_contract_unit_block(
+                support_coefficients,
+                local_blocks.mixed_blocks.x2_y.dense_block,
+                column_range,
+                :mixed_gto_x2_y_dimension_mismatch,
+                unit,
+            ) : nothing
+        mixed_x2_z =
+            include_moment_blocks ?
+            _route_global_mixed_gto_contract_unit_block(
+                support_coefficients,
+                local_blocks.mixed_blocks.x2_z.dense_block,
+                column_range,
+                :mixed_gto_x2_z_dimension_mismatch,
+                unit,
+            ) : nothing
+        mixed_nuclear = Tuple(
+            _route_global_mixed_gto_contract_unit_block(
+                support_coefficients,
+                block.dense_block,
+                column_range,
+                :mixed_gto_electron_nuclear_dimension_mismatch,
+                unit,
+            ) for block in local_blocks.mixed_nuclear_by_center_blocks
+        )
+        return (;
+            mixed_overlap,
+            mixed_kinetic,
+            mixed_position_x,
+            mixed_position_y,
+            mixed_position_z,
+            mixed_x2_x,
+            mixed_x2_y,
+            mixed_x2_z,
+            mixed_nuclear,
+        )
+    end
+    mixed_overlap = contracted.mixed_overlap
+    mixed_kinetic = contracted.mixed_kinetic
+    mixed_position_x = contracted.mixed_position_x
+    mixed_position_y = contracted.mixed_position_y
+    mixed_position_z = contracted.mixed_position_z
+    mixed_x2_x = contracted.mixed_x2_x
+    mixed_x2_y = contracted.mixed_x2_y
+    mixed_x2_z = contracted.mixed_x2_z
+    mixed_nuclear = contracted.mixed_nuclear
     mixed_one_body_blocks = (
         mixed_overlap,
         mixed_kinetic,
@@ -440,45 +591,73 @@ function _route_global_mixed_gto_unit_blocks(
     )
 end
 
-function _route_global_mixed_gto_full_local_blocks(
+function _route_global_mixed_gto_self_blocks(
     provider_module,
-    parent,
-    source_cpb,
     supplement;
     expansion,
     center_records,
+    include_moment_blocks::Bool,
 )
-    bundle = provider_module.cpb_gto_supplement_local_operator_bundle(
-        parent,
-        source_cpb,
-        supplement;
-        expansion,
-        center_records,
+    gto_overlap = provider_module.cpb_gto_overlap_operator_block(supplement)
+    gto_kinetic = provider_module.cpb_gto_kinetic_operator_block(supplement)
+    gto_position_x =
+        include_moment_blocks ?
+        provider_module.cpb_gto_position_operator_block(supplement; axis = :x) :
+        (; dense_block = nothing)
+    gto_position_y =
+        include_moment_blocks ?
+        provider_module.cpb_gto_position_operator_block(supplement; axis = :y) :
+        (; dense_block = nothing)
+    gto_position_z =
+        include_moment_blocks ?
+        provider_module.cpb_gto_position_operator_block(supplement; axis = :z) :
+        (; dense_block = nothing)
+    gto_x2_x =
+        include_moment_blocks ?
+        provider_module.cpb_gto_x2_operator_block(supplement; axis = :x) :
+        (; dense_block = nothing)
+    gto_x2_y =
+        include_moment_blocks ?
+        provider_module.cpb_gto_x2_operator_block(supplement; axis = :y) :
+        (; dense_block = nothing)
+    gto_x2_z =
+        include_moment_blocks ?
+        provider_module.cpb_gto_x2_operator_block(supplement; axis = :z) :
+        (; dense_block = nothing)
+    gto_nuclear = Tuple(
+        provider_module.cpb_gto_nuclear_by_center_block(
+            supplement,
+            expansion,
+            center_record,
+        ) for center_record in center_records
     )
-    bundle_summary = provider_module.summary(bundle)
-    bundle_summary.status ===
-    :materialized_cpb_gto_supplement_local_operator_bundle ||
-        return (;
-            status = :blocked_route_global_mixed_gto_local_blocks,
-            blocker = :mixed_gto_unit_bundle_blocked,
-        )
     return (;
-        status = :materialized_route_global_mixed_gto_local_blocks,
+        status = :materialized_route_global_mixed_gto_self_blocks,
         blocker = nothing,
-        mixed_blocks = bundle.mixed_blocks,
-        gto_blocks = bundle.gto_blocks,
-        mixed_nuclear_by_center_blocks = bundle.mixed_nuclear_by_center_blocks,
-        gto_nuclear_by_center_blocks = bundle.gto_nuclear_by_center_blocks,
+        gto_blocks = (;
+            overlap = gto_overlap,
+            kinetic = gto_kinetic,
+            position_x = gto_position_x,
+            position_y = gto_position_y,
+            position_z = gto_position_z,
+            x2_x = gto_x2_x,
+            x2_y = gto_x2_y,
+            x2_z = gto_x2_z,
+        ),
+        gto_nuclear_by_center_blocks = gto_nuclear,
     )
 end
 
-function _route_global_mixed_gto_one_electron_local_blocks(
+function _route_global_mixed_gto_local_blocks(
     provider_module,
     parent,
     source_cpb,
     supplement;
     expansion,
     center_records,
+    include_moment_blocks::Bool,
+    gto_blocks,
+    gto_nuclear_blocks,
 )
     mixed_overlap = provider_module.cpb_mixed_gto_overlap_block(
         parent,
@@ -490,6 +669,54 @@ function _route_global_mixed_gto_one_electron_local_blocks(
         source_cpb,
         supplement,
     )
+    mixed_position_x =
+        include_moment_blocks ?
+        provider_module.cpb_mixed_gto_position_operator_block(
+            parent,
+            source_cpb,
+            supplement;
+            axis = :x,
+        ) : (; dense_block = nothing)
+    mixed_position_y =
+        include_moment_blocks ?
+        provider_module.cpb_mixed_gto_position_operator_block(
+            parent,
+            source_cpb,
+            supplement;
+            axis = :y,
+        ) : (; dense_block = nothing)
+    mixed_position_z =
+        include_moment_blocks ?
+        provider_module.cpb_mixed_gto_position_operator_block(
+            parent,
+            source_cpb,
+            supplement;
+            axis = :z,
+        ) : (; dense_block = nothing)
+    mixed_x2_x =
+        include_moment_blocks ?
+        provider_module.cpb_mixed_gto_x2_operator_block(
+            parent,
+            source_cpb,
+            supplement;
+            axis = :x,
+        ) : (; dense_block = nothing)
+    mixed_x2_y =
+        include_moment_blocks ?
+        provider_module.cpb_mixed_gto_x2_operator_block(
+            parent,
+            source_cpb,
+            supplement;
+            axis = :y,
+        ) : (; dense_block = nothing)
+    mixed_x2_z =
+        include_moment_blocks ?
+        provider_module.cpb_mixed_gto_x2_operator_block(
+            parent,
+            source_cpb,
+            supplement;
+            axis = :z,
+        ) : (; dense_block = nothing)
     mixed_nuclear = Tuple(
         provider_module.cpb_mixed_gto_nuclear_by_center_block(
             parent,
@@ -499,40 +726,23 @@ function _route_global_mixed_gto_one_electron_local_blocks(
             center_record,
         ) for center_record in center_records
     )
-    gto_overlap = provider_module.cpb_gto_overlap_operator_block(supplement)
-    gto_kinetic = provider_module.cpb_gto_kinetic_operator_block(supplement)
-    gto_nuclear = Tuple(
-        provider_module.cpb_gto_nuclear_by_center_block(
-            supplement,
-            expansion,
-            center_record,
-        ) for center_record in center_records
+    mixed_blocks = (;
+        overlap = mixed_overlap,
+        kinetic = mixed_kinetic,
+        position_x = mixed_position_x,
+        position_y = mixed_position_y,
+        position_z = mixed_position_z,
+        x2_x = mixed_x2_x,
+        x2_y = mixed_x2_y,
+        x2_z = mixed_x2_z,
     )
     return (;
         status = :materialized_route_global_mixed_gto_local_blocks,
         blocker = nothing,
-        mixed_blocks = (;
-            overlap = mixed_overlap,
-            kinetic = mixed_kinetic,
-            position_x = (; dense_block = nothing),
-            position_y = (; dense_block = nothing),
-            position_z = (; dense_block = nothing),
-            x2_x = (; dense_block = nothing),
-            x2_y = (; dense_block = nothing),
-            x2_z = (; dense_block = nothing),
-        ),
-        gto_blocks = (;
-            overlap = gto_overlap,
-            kinetic = gto_kinetic,
-            position_x = (; dense_block = nothing),
-            position_y = (; dense_block = nothing),
-            position_z = (; dense_block = nothing),
-            x2_x = (; dense_block = nothing),
-            x2_y = (; dense_block = nothing),
-            x2_z = (; dense_block = nothing),
-        ),
+        mixed_blocks,
+        gto_blocks,
         mixed_nuclear_by_center_blocks = mixed_nuclear,
-        gto_nuclear_by_center_blocks = gto_nuclear,
+        gto_nuclear_by_center_blocks = gto_nuclear_blocks,
     )
 end
 

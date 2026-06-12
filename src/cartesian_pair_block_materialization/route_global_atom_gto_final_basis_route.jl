@@ -20,6 +20,7 @@ function _white_lindsey_decomposed_atom_gto_final_basis_route(
     build_density_density::Bool = true,
     metadata = (;),
     phase_timings = nothing,
+    mixed_gto_subphase_timings = nothing,
 )
     axis_setup = _white_lindsey_atom_gto_timed_phase!(
         phase_timings,
@@ -158,6 +159,7 @@ function _white_lindsey_decomposed_atom_gto_final_basis_route(
             expansion,
             center_records,
             include_moment_blocks = build_density_density,
+            subphase_timings = mixed_gto_subphase_timings,
             metadata,
         )
     end

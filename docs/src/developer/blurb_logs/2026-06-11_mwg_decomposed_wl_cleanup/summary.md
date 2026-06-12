@@ -100,7 +100,12 @@ The current live He + GTO question is later in the stack:
   materialization through that seam;
 - the Be S+P final-basis RHF route now matches the old nested/QW oracle to
   about `3.2e-14 Ha`; the measured cost center is `mixed_gto_blocks`, about
-  `188.6` seconds out of a `357.4` second probe.
+  `188.6` seconds out of a `357.4` second probe;
+- after hoisting reusable GTO/GTO self blocks, the Be S+P probe still matches
+  the old oracle to about `3.2e-14 Ha`, while total time is about `342.5`
+  seconds and `mixed_gto_blocks` is about `177.2` seconds; subphase timing
+  shows the true remaining bottleneck is per-unit mixed CPB/GTO local block
+  construction, about `168.1` seconds over `131` retained units.
 
 ## Current Cleanup Rule
 
