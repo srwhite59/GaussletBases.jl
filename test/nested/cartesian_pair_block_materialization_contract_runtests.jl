@@ -3328,6 +3328,72 @@ end
     @test !final_nuclear_from_boundary.metadata.current_route_safe_term_matrices_used
     @test !final_nuclear_from_boundary.metadata.old_fixed_block_matrix_authority_used
 
+    second_nuclear_boundary = copy(final_basis_identity)
+    second_nuclear_boundary[1, 1] = -0.5
+    second_nuclear_boundary[3, 3] = -0.25
+    retained_second_nuclear_boundary = CPBM.PairBlockMaterializationResult(
+        :retained_source_electron_nuclear_by_center,
+        (:pqs_source_shell, :pqs_source_shell),
+        second_nuclear_boundary,
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        merge(
+            retained_nuclear_boundary.metadata,
+            (;
+                center_key = :synthetic_shifted,
+                center_index = 2,
+                center_location = (0.25, 0.0, -0.25),
+                nuclear_charge = 3.0,
+            ),
+        ),
+    )
+    final_second_nuclear_from_boundary =
+        CPBM.pqs_source_shell_final_electron_nuclear_by_center_from_boundary_block(
+            final_basis,
+            retained_second_nuclear_boundary,
+        )
+    final_hamiltonian =
+        CPBM.pqs_source_shell_final_one_electron_hamiltonian(
+            final_kinetic_from_boundary,
+            (final_nuclear_from_boundary, final_second_nuclear_from_boundary),
+        )
+    expected_charged_nuclear =
+        2.0 .* nuclear_boundary .+ 3.0 .* second_nuclear_boundary
+    expected_hamiltonian = shell_operator .+ expected_charged_nuclear
+    @test final_hamiltonian.object_kind ==
+          :pqs_source_shell_final_one_electron_hamiltonian
+    @test final_hamiltonian.status ==
+          :materialized_pqs_shell_final_one_electron_hamiltonian
+    @test final_hamiltonian.blocker === nothing
+    @test final_hamiltonian.final_dimension == final_basis.final_retained_count
+    @test final_hamiltonian.kinetic_matrix == shell_operator
+    @test final_hamiltonian.charged_nuclear_matrix == expected_charged_nuclear
+    @test final_hamiltonian.hamiltonian_matrix == expected_hamiltonian
+    @test final_hamiltonian.center_count == 2
+    @test final_hamiltonian.applied_nuclear_charges == (2.0, 3.0)
+    @test final_hamiltonian.centers_summed
+    @test final_hamiltonian.nuclear_charges_applied
+    @test !final_hamiltonian.input_nuclear_charges_applied
+    @test !final_hamiltonian.input_centers_summed
+    @test final_hamiltonian.hamiltonian_data_materialized
+    @test !final_hamiltonian.h1_solve_materialized
+    @test !final_hamiltonian.eigensolve_materialized
+    @test !final_hamiltonian.generalized_overlap_solve_materialized
+    @test !final_hamiltonian.ida_data_materialized
+    @test !final_hamiltonian.density_density_materialized
+    @test !final_hamiltonian.rhf_materialized
+    @test !final_hamiltonian.driver_route_materialized
+    @test !final_hamiltonian.exports_materialized
+    @test !final_hamiltonian.artifacts_materialized
+    @test final_hamiltonian.next_blocker ==
+          :missing_pqs_final_one_electron_solve
+    @test !final_hamiltonian.metadata.current_route_safe_term_matrices_used
+    @test !final_hamiltonian.metadata.old_fixed_block_matrix_authority_used
+
     overlap_bridge_batch =
         CPBM.pqs_source_pair_shell_realization_bridge_summary(selector_batch_overlap)
     @test overlap_bridge_batch.object_kind ==
