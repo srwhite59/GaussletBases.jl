@@ -470,6 +470,7 @@ function _pqs_multilayer_realize_shell_source_plan(
     source_kind::Symbol,
     metadata,
 )
+    metadata_tuple = NamedTuple(metadata)
     dims = _nested_axis_lengths(bundles)
     for axis in 1:3
         first(outer_box[axis]) >= 1 && last(outer_box[axis]) <= dims[axis] ||
@@ -565,6 +566,9 @@ function _pqs_multilayer_realize_shell_source_plan(
         final_basis_helper = :pqs_complete_core_shell_final_basis,
         collapsed_shell_sector = true,
         fixed_block_matrix_authority_used = false,
+        explicit_box_bridge = get(metadata_tuple, :explicit_box_bridge, false),
+        shellification_backed_geometry =
+            get(metadata_tuple, :shellification_backed_geometry, false),
         h1_materialized = false,
         rhf_materialized = false,
     )
@@ -588,7 +592,7 @@ function _pqs_multilayer_realize_shell_source_plan(
         shell_final_coefficients,
         summary,
         metadata = merge(
-            NamedTuple(metadata),
+            metadata_tuple,
             (;
                 source = :pqs_multilayer_shell_source_plan,
                 collapsed_shell_sector = true,
@@ -601,10 +605,14 @@ end
 """
     pqs_multilayer_shell_source_plan(bundles, core_box, outer_box; ...)
 
-Build a compact route-owned source plan for a direct PQS core plus repeated
-one-cell surrounding shell layers. Each layer is materialized with the existing
-projected-q-shell descriptor and shell-realization plan, then the disjoint shell
-supports and shell isometries are collapsed into one shell sector suitable for
+Compatibility/probe bridge for direct explicit-box multi-layer PQS source
+planning. New route work should prefer the shellification/lowering-backed
+`pqs_multilayer_shell_source_plan(bundles, region_plan; ...)` entry point so
+explicit boxes do not become shellification authority.
+
+This bridge materializes each layer with the existing projected-q-shell
+descriptor and shell-realization plan, then collapses the disjoint shell
+supports and shell isometries into one shell sector suitable for
 `CartesianFinalBasisRealization.pqs_complete_core_shell_final_basis`.
 
 This helper plans shell/source data only. It does not build final-basis overlap,
@@ -626,7 +634,13 @@ function pqs_multilayer_shell_source_plan(
         bond_axis,
         term_coefficients,
         source_kind = :repeated_one_cell_projected_q_shell_layers,
-        metadata,
+        metadata = merge(
+            NamedTuple(metadata),
+            (;
+                explicit_box_bridge = true,
+                shellification_backed_geometry = false,
+            ),
+        ),
     )
 end
 

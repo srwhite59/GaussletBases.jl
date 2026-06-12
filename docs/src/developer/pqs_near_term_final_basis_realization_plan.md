@@ -260,8 +260,13 @@ is therefore a route-owned multi-layer PQS shell source plan that builds and
 combines repeated one-cell shell descriptors; old fixed-block matrices remain
 oracle/reference material only.
 
-That seam is now implemented as `pqs_multilayer_shell_source_plan(...)`. The
-first side-13 final-basis/H1 smoke, using `AsinhMapping(c = 0.1, s = 1.0,
+That seam was first prototyped with the explicit-box
+`pqs_multilayer_shell_source_plan(bundles, core_box, outer_box; ...)` bridge.
+The bridge remains compatibility/probe machinery and should not be used as
+shellification authority for new route work. The active H1 fixture now uses the
+shellification/lowering-backed region-plan entry point, while the explicit-box
+entry point remains only a compact comparison bridge. The first side-13
+final-basis/H1 smoke, using `AsinhMapping(c = 0.1, s = 1.0,
 tail_spacing = 10.0)`, core `(4:10)^3`, and outer box `(1:13)^3`, materialized
 three shell layers, 1,854 shell support rows, 1,206 shell-retained columns, and
 a 1,549-dimensional final basis. The final overlap identity error was about
@@ -347,8 +352,10 @@ cartesian_report / cartesian_materialization
 
 Objects ready for future driver consumption:
 
-- `pqs_multilayer_shell_source_plan(...)` as a route-owned source plan for
-  repeated one-cell PQS shell layers.
+- `pqs_multilayer_shell_region_plan(...)` plus the region-plan
+  `pqs_multilayer_shell_source_plan(bundles, region_plan; ...)` entry point as
+  the shellification/lowering-backed source plan for repeated one-cell PQS
+  shell layers.
 - `pqs_source_pair_retained_*` one-body blocks and the generic retained
   selector for overlap, kinetic, position, and x2.
 - `CartesianFinalBasisRealization` complete core/shell final-basis, final
@@ -356,6 +363,9 @@ Objects ready for future driver consumption:
 
 Surfaces that should remain private/oracle for now:
 
+- The explicit-box `pqs_multilayer_shell_source_plan(bundles, core_box,
+  outer_box; ...)` bridge; it is compatibility/probe machinery, not route
+  shellification authority.
 - `tmp/work` side-13 H1/J/RHF probes and their probe-local support matrix
   builders.
 - Shell-support projected operator helpers when used as oracle comparisons.
