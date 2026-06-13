@@ -3344,9 +3344,13 @@ function _pqs_source_box_route_driver_be2_cr2_inspection_bundle_payload(assembly
     h1_matrix = Matrix{Float64}(handoff.one_body_hamiltonian)
     pair_matrix = Matrix{Float64}(handoff.pre_final_pair_matrix)
     coefficients = Matrix{Float64}(handoff.final_to_pre_final_coefficients)
+    final_interaction_matrix =
+        transpose(coefficients) * pair_matrix * coefficients
     support_raw = Matrix{Float64}(handoff.support_pair_raw_numerator)
     h1_symmetry_defect = norm(h1_matrix - h1_matrix')
     two_body_symmetry_defect = norm(pair_matrix - pair_matrix')
+    final_two_body_symmetry_defect =
+        norm(final_interaction_matrix - final_interaction_matrix')
     pqs_fingerprint = (route_label = :pqs_source_box, status = handoff.status,
         blocker = handoff.blocker, final_dimension = size(h1_matrix, 1),
         pre_final_dimension = size(pair_matrix, 1),
@@ -3415,6 +3419,17 @@ function _pqs_source_box_route_driver_be2_cr2_inspection_bundle_payload(assembly
             "routes/pqs_source_box/h1/lowest_energy" => h1_payload.summary.lowest_energy,
             "routes/pqs_source_box/two_body" => (;
                 representation_kind = :pre_final_density_interaction,
+                interaction_matrix = final_interaction_matrix,
+                interaction_matrix_representation_kind =
+                    :final_basis_density_density_matrix,
+                interaction_matrix_derivation =
+                    :final_to_pre_final_density_congruence,
+                interaction_matrix_formula =
+                    :transpose_final_to_pre_final_times_pre_final_pair_times_final_to_pre_final,
+                interaction_matrix_shape = size(final_interaction_matrix),
+                interaction_matrix_symmetry_defect =
+                    final_two_body_symmetry_defect,
+                interaction_matrix_finite = all(isfinite, final_interaction_matrix),
                 pre_final_pair_matrix = pair_matrix,
                 final_to_pre_final_coefficients = coefficients,
                 pre_final_weights = Vector{Float64}(handoff.pre_final_weights),
@@ -3427,8 +3442,10 @@ function _pqs_source_box_route_driver_be2_cr2_inspection_bundle_payload(assembly
             "routes/pqs_source_box/validation" => (;
                 h1_symmetry_defect,
                 two_body_symmetry_defect,
+                final_two_body_symmetry_defect,
                 one_body_finite = pqs_fingerprint.one_body_finite,
                 two_body_finite = pqs_fingerprint.two_body_finite,
+                final_two_body_finite = all(isfinite, final_interaction_matrix),
             ),
             "routes/white_lindsey/route" => (;
                 label = :white_lindsey,

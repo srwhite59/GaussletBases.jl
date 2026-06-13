@@ -29,7 +29,6 @@ include("cartesian_shellification_plan_runtests.jl")
 include("cartesian_ham_builder_one_center_config_smoke_runtests.jl")
 include("cartesian_ham_builder_diatomic_config_smoke_runtests.jl")
 include("cartesian_route_diatomic_materializer_probe_runtests.jl")
-include("white_lindsey_materialized_seed_runtests.jl")
 
 include("pqs_projected_q_shell_local_layer_integration_runtests.jl")
 

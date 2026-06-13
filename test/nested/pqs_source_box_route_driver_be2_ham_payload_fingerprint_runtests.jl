@@ -93,8 +93,36 @@ end
             @test all(route -> route in keys(file["routes"]),
                 ("pqs_source_box", "white_lindsey"))
             @test size(file["routes/pqs_source_box/one_body/hamiltonian"]) == (221, 221)
-            @test size(file["routes/pqs_source_box/two_body/pre_final_pair_matrix"]) ==
-                  (221, 221)
+            two_body_prefix = "routes/pqs_source_box/two_body"
+            pre_final_pair_matrix = file["$two_body_prefix/pre_final_pair_matrix"]
+            coefficients = file["$two_body_prefix/final_to_pre_final_coefficients"]
+            interaction_matrix = file["$two_body_prefix/interaction_matrix"]
+            @test size(pre_final_pair_matrix) == (221, 221)
+            @test size(interaction_matrix) == (221, 221)
+            @test file["$two_body_prefix/interaction_matrix_shape"] == [221, 221]
+            @test String(file["$two_body_prefix/interaction_matrix_representation_kind"]) ==
+                  "final_basis_density_density_matrix"
+            @test String(file["$two_body_prefix/interaction_matrix_derivation"]) ==
+                  "final_to_pre_final_density_congruence"
+            @test String(file["$two_body_prefix/interaction_matrix_formula"]) ==
+                  "transpose_final_to_pre_final_times_pre_final_pair_times_final_to_pre_final"
+            @test Bool(file["$two_body_prefix/interaction_matrix_finite"])
+            @test all(isfinite, interaction_matrix)
+            @test norm(pre_final_pair_matrix - pre_final_pair_matrix') <= 1.0e-8
+            @test norm(interaction_matrix - interaction_matrix') <= 1.0e-8
+            for d_final in (
+                [index == 1 ? 1.0 : 0.0 for index in 1:221],
+                [index == 221 ? 1.0 : 0.0 for index in 1:221],
+                normalize([index <= 4 ? Float64(index) : 0.0 for index in 1:221]),
+            )
+                d_pre = coefficients * d_final
+                @test isapprox(
+                    dot(d_final, interaction_matrix * d_final),
+                    dot(d_pre, pre_final_pair_matrix * d_pre);
+                    atol = 1.0e-8,
+                    rtol = 1.0e-10,
+                )
+            end
             @test length(file["routes/pqs_source_box/two_body/support_weights"]) == 275
             @test Bool(file["routes/pqs_source_box/readiness/cr2_read_only_inspector_ready"])
             @test !Bool(file["routes/pqs_source_box/readiness/cr2_solver_ready"])
