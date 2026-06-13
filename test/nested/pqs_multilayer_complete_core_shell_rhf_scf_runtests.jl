@@ -76,6 +76,7 @@ end
     @test tr(scf.final_density) ≈ payloads.input_contract.electron_count
     @test abs.(scf.occupied_orbital_coefficients) ≈ reshape([1.0, 0.0], 2, 1)
     @test scf.final_one_step_payload.total_energy ≈ -2.0
+    @test scf.final_one_step_payload.final_density ≈ scf.final_density
     @test length(scf.iteration_records) == 1
     @test scf.iteration_records[1].iteration == 1
     @test scf.iteration_records[1].density_change ≈ 0.0
@@ -86,6 +87,11 @@ end
     @test scf.summary.converged_iteration == 1
     @test scf.summary.first_iteration_energy_change_rule ===
           :energy_converged_when_previous_energy_missing
+    @test scf.summary.orbital_metric === :ordinary_orthonormal_final_basis
+    @test scf.summary.final_one_step_recomputed === true
+    @test scf.summary.final_one_step_density_matches_final_density === true
+    @test scf.summary.final_total_energy ≈
+          scf.final_one_step_payload.total_energy
     @test scf.summary.rhf_materialized
     @test scf.summary.rhf_converged
     @test !scf.summary.driver_route_materialized

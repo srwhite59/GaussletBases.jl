@@ -720,6 +720,11 @@ function _pqs_multilayer_complete_core_shell_rhf_scf_blocked_payload(;
         max_iterations,
         density_atol,
         energy_atol,
+        orbital_metric = :ordinary_orthonormal_final_basis,
+        final_one_step_recomputed = false,
+        final_one_step_payload_role =
+            :not_recomputed_or_last_attempted_input_density,
+        final_density_role = :not_materialized_or_last_post_diagonalization_density,
         rhf_materialized = false,
         rhf_converged = false,
         driver_route_materialized = false,
@@ -962,6 +967,41 @@ function _pqs_multilayer_complete_core_shell_rhf_scf_payload(;
         density = next_density
         previous_energy = one_step.total_energy
         if converged
+            converged_iteration_input_total_energy = one_step.total_energy
+            final_one_step_payload =
+                _pqs_multilayer_complete_core_shell_rhf_one_step_payload(
+                    ;
+                    input_contract,
+                    h1_payload,
+                    density_interaction,
+                    final_density = density,
+                    metadata,
+                )
+            if final_one_step_payload.status !==
+               :materialized_pqs_multilayer_complete_core_shell_rhf_one_step_payload
+                return _pqs_multilayer_complete_core_shell_rhf_scf_blocked_payload(
+                    ;
+                    blocker = isnothing(final_one_step_payload.blocker) ?
+                        :missing_density_interaction :
+                        final_one_step_payload.blocker,
+                    input_contract,
+                    h1_payload,
+                    density_interaction,
+                    initial_density_payload,
+                    final_density = density,
+                    occupied_orbital_coefficients,
+                    final_one_step_payload,
+                    iteration_records = Tuple(iteration_records),
+                    max_iterations,
+                    density_atol,
+                    energy_atol,
+                    metadata,
+                )
+            end
+            final_one_step_density_match_error =
+                norm(final_one_step_payload.final_density - density, Inf)
+            final_one_step_density_matches_final_density =
+                final_one_step_density_match_error <= Float64(density_atol)
             summary = (;
                 status =
                     :materialized_pqs_multilayer_complete_core_shell_rhf_scf_payload,
@@ -981,7 +1021,12 @@ function _pqs_multilayer_complete_core_shell_rhf_scf_payload(;
                 energy_atol,
                 first_iteration_energy_change_rule =
                     :energy_converged_when_previous_energy_missing,
-                final_total_energy = one_step.total_energy,
+                orbital_metric = :ordinary_orthonormal_final_basis,
+                final_one_step_recomputed = true,
+                final_one_step_density_matches_final_density,
+                final_one_step_density_match_error,
+                converged_iteration_input_total_energy,
+                final_total_energy = final_one_step_payload.total_energy,
                 final_density_change = density_change,
                 final_energy_change = energy_change,
                 rhf_materialized = true,
