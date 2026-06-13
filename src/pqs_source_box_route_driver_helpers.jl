@@ -10838,6 +10838,151 @@ function _pqs_source_box_route_driver_complete_core_shell_h1_payload(
     end
 end
 
+function _pqs_source_box_route_driver_complete_core_shell_density_inputs(
+    source_plan,
+    coulomb_expansion;
+    metadata = (;),
+)
+    source_plan_kind =
+        isnothing(source_plan) ?
+        nothing :
+        _pqs_source_box_route_driver_descriptor_property(
+            source_plan,
+            :object_kind,
+        )
+    source_plan_status =
+        isnothing(source_plan) ?
+        nothing :
+        _pqs_source_box_route_driver_descriptor_property(
+            source_plan,
+            :status,
+        )
+    source_plan_blocker =
+        isnothing(source_plan) ?
+        nothing :
+        _pqs_source_box_route_driver_descriptor_property(
+            source_plan,
+            :blocker,
+        )
+    bundles =
+        !isnothing(source_plan) && hasproperty(source_plan, :bundles) ?
+        source_plan.bundles :
+        nothing
+
+    missing_inputs = Symbol[]
+    if source_plan_kind !== :pqs_multilayer_shell_source_plan ||
+       source_plan_status !== :available_pqs_multilayer_shell_source_plan
+        push!(missing_inputs, :pqs_multilayer_shell_source_plan)
+    end
+    isnothing(bundles) &&
+        push!(missing_inputs, :pqs_multilayer_shell_source_plan_bundles)
+    isnothing(coulomb_expansion) &&
+        push!(missing_inputs, :coulomb_expansion)
+    if !isnothing(coulomb_expansion) && !hasproperty(coulomb_expansion, :coefficients)
+        push!(missing_inputs, :coulomb_expansion_coefficients)
+    end
+    if !isempty(missing_inputs)
+        status = :blocked_missing_complete_core_shell_density_inputs
+        return (;
+            status,
+            blocker = :missing_complete_core_shell_density_inputs,
+            axis_weights = nothing,
+            raw_pair_factor_terms = nothing,
+            missing_inputs = Tuple(missing_inputs),
+            summary = (;
+                status,
+                blocker = :missing_complete_core_shell_density_inputs,
+                source_plan_status,
+                source_plan_blocker,
+                source_plan_kind,
+                axis_weights_available = false,
+                raw_pair_factor_terms_available = false,
+            ),
+            metadata = merge(
+                NamedTuple(metadata),
+                (;
+                    source =
+                        :pqs_source_box_route_driver_complete_core_shell_density_inputs,
+                    source_plan_status,
+                ),
+            ),
+        )
+    end
+
+    try
+        expected_term_count = length(coulomb_expansion.coefficients)
+        provenance =
+            CartesianContractedParentMetrics._pqs_source_box_ida_factor_provenance(
+                bundles;
+                expected_term_count,
+            )
+        return (;
+            status = :available_complete_core_shell_density_inputs,
+            blocker = nothing,
+            axis_weights = provenance.axis_weights,
+            raw_pair_factor_terms = provenance.raw_axis_pair_factor_terms,
+            missing_inputs = (),
+            summary = (;
+                status = :available_complete_core_shell_density_inputs,
+                blocker = nothing,
+                source_plan_status,
+                source_plan_kind,
+                provenance_status = get(
+                    provenance,
+                    :object_kind,
+                    :pqs_source_box_ida_factor_provenance,
+                ),
+                term_count = provenance.term_count,
+                factor_dimensions = provenance.factor_dimensions,
+                axis_weights_available = true,
+                raw_pair_factor_terms_available = true,
+                private_diagnostic_only = true,
+                retained_pqs_weights_used = false,
+                density_normalized_pair_terms_used_as_authority = false,
+            ),
+            metadata = merge(
+                NamedTuple(metadata),
+                (;
+                    source =
+                        :pqs_source_box_route_driver_complete_core_shell_density_inputs,
+                    provenance_source = :pqs_source_box_ida_factor_provenance,
+                    expected_term_count,
+                    source_plan_status,
+                ),
+            ),
+        )
+    catch error
+        error isa ArgumentError || error isa DimensionMismatch || rethrow()
+        status = :blocked_complete_core_shell_density_inputs_error
+        return (;
+            status,
+            blocker = :complete_core_shell_density_inputs_error,
+            axis_weights = nothing,
+            raw_pair_factor_terms = nothing,
+            missing_inputs = (:axis_weights, :raw_pair_factor_terms),
+            summary = (;
+                status,
+                blocker = :complete_core_shell_density_inputs_error,
+                source_plan_status,
+                source_plan_blocker,
+                source_plan_kind,
+                axis_weights_available = false,
+                raw_pair_factor_terms_available = false,
+                error_message = sprint(showerror, error),
+            ),
+            metadata = merge(
+                NamedTuple(metadata),
+                (;
+                    source =
+                        :pqs_source_box_route_driver_complete_core_shell_density_inputs,
+                    provenance_source = :pqs_source_box_ida_factor_provenance,
+                    source_plan_status,
+                ),
+            ),
+        )
+    end
+end
+
 function _pqs_source_box_route_driver_blocked_complete_core_shell_h1_j_payload(;
     route_family,
     status,
@@ -11034,6 +11179,16 @@ function _pqs_source_box_route_driver_complete_core_shell_diagnostic_route_paylo
             source_payload,
             recipe,
         )
+    density_inputs =
+        _pqs_source_box_route_driver_complete_core_shell_density_inputs(
+            source_payload.source_plan,
+            source_payload.coulomb_expansion;
+            metadata = (;
+                source = :cartesian_assembly,
+                route_kind = recipe.route_kind,
+                complete_core_shell_source_plan_status = source_payload.status,
+            ),
+        )
     h1_j_payload =
         _pqs_source_box_route_driver_complete_core_shell_h1_j_diagnostic_payload(
             ;
@@ -11042,12 +11197,15 @@ function _pqs_source_box_route_driver_complete_core_shell_diagnostic_route_paylo
             source_plan = source_payload.source_plan,
             final_basis = h1_payload.final_basis,
             h1_payload = h1_payload.h1_payload,
+            axis_weights = density_inputs.axis_weights,
+            raw_pair_factor_terms = density_inputs.raw_pair_factor_terms,
             coulomb_expansion = source_payload.coulomb_expansion,
             metadata = (;
                 source = :cartesian_assembly,
                 route_kind = recipe.route_kind,
                 complete_core_shell_source_plan_status = source_payload.status,
                 complete_core_shell_h1_payload_status = h1_payload.status,
+                complete_core_shell_density_inputs_status = density_inputs.status,
             ),
         )
     metadata = (;
@@ -11056,6 +11214,7 @@ function _pqs_source_box_route_driver_complete_core_shell_diagnostic_route_paylo
         route_family = route_skeleton.route_family,
         complete_core_shell_source_plan_status = source_payload.status,
         complete_core_shell_h1_payload_status = h1_payload.status,
+        complete_core_shell_density_inputs_status = density_inputs.status,
         complete_core_shell_h1_j_diagnostic_status = h1_j_payload.status,
         driver_route_materialized = h1_j_payload.summary.driver_route_materialized,
         report_placeholder = false,
