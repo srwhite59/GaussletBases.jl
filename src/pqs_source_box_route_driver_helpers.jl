@@ -11148,6 +11148,363 @@ function _pqs_source_box_route_driver_complete_core_shell_h1_j_diagnostic_payloa
     )
 end
 
+function _pqs_source_box_route_driver_complete_core_shell_ham_missing_blocker(
+    missing_inputs,
+)
+    isempty(missing_inputs) && return nothing
+    length(missing_inputs) > 1 && return :missing_complete_core_shell_ham_inputs
+    only_missing = only(missing_inputs)
+    only_missing === :pqs_multilayer_complete_core_shell_final_basis &&
+        return :missing_complete_core_shell_final_basis
+    only_missing === :pqs_multilayer_complete_core_shell_h1_payload &&
+        return :missing_complete_core_shell_h1_payload
+    only_missing === :pqs_complete_core_shell_final_one_electron_hamiltonian &&
+        return :missing_complete_core_shell_final_hamiltonian
+    only_missing === :complete_core_shell_density_inputs &&
+        return :missing_complete_core_shell_density_inputs
+    only_missing === :complete_core_shell_h1_j_diagnostic_payload &&
+        return :missing_complete_core_shell_h1_j_diagnostic_payload
+    only_missing === :pqs_complete_core_shell_pre_final_density_interaction &&
+        return :missing_complete_core_shell_density_interaction
+    return :missing_complete_core_shell_ham_inputs
+end
+
+function _pqs_source_box_route_driver_blocked_complete_core_shell_ham_payload(;
+    route_family,
+    status,
+    blocker,
+    missing_inputs,
+    source_payload = nothing,
+    final_basis = nothing,
+    h1_payload = nothing,
+    density_inputs = nothing,
+    h1_j_payload = nothing,
+    metadata = (;),
+)
+    final_dimension =
+        !isnothing(final_basis) && hasproperty(final_basis, :final_retained_count) ?
+        final_basis.final_retained_count :
+        nothing
+    summary = (;
+        status,
+        blocker,
+        route_family,
+        final_dimension,
+        electron_electron_representation = :not_materialized,
+        density_gauge = nothing,
+        raw_pair_factor_convention = nothing,
+        support_row_order = nothing,
+        signed_final_weight_division_used = false,
+        raw_no_division_used = false,
+        density_normalized_pair_terms_used_as_authority = false,
+        public_api = false,
+        exports_materialized = false,
+        artifacts_materialized = false,
+        rhf_product_surface = false,
+        serious_hf_claim = false,
+        missing_inputs,
+    )
+    return (;
+        object_kind = :pqs_source_box_complete_core_shell_ham_payload,
+        status,
+        blocker,
+        route_family,
+        source_payload,
+        source_plan_summary =
+            !isnothing(source_payload) && hasproperty(source_payload, :summary) ?
+            source_payload.summary :
+            nothing,
+        final_basis,
+        final_basis_summary = nothing,
+        h1_payload,
+        one_body_hamiltonian = nothing,
+        density_inputs,
+        density_input_summary =
+            !isnothing(density_inputs) && hasproperty(density_inputs, :summary) ?
+            density_inputs.summary :
+            nothing,
+        h1_j_payload,
+        density_interaction = nothing,
+        electron_electron_representation = :not_materialized,
+        coulomb_expansion =
+            !isnothing(source_payload) && hasproperty(source_payload, :coulomb_expansion) ?
+            source_payload.coulomb_expansion :
+            nothing,
+        coulomb_expansion_summary = nothing,
+        dimension_summary = (; final_dimension,),
+        ordering_summary = (; support_row_order = nothing,),
+        convention_labels = (;
+            electron_electron_representation = :not_materialized,
+            density_gauge = nothing,
+            raw_pair_factor_convention = nothing,
+            support_row_order = nothing,
+            signed_final_weight_division_used = false,
+            raw_no_division_used = false,
+            density_normalized_pair_terms_used_as_authority = false,
+            fixed_block_pair_data_authority_used = false,
+        ),
+        missing_inputs,
+        summary,
+        metadata = merge(
+            NamedTuple(metadata),
+            (;
+                source =
+                    :pqs_source_box_route_driver_complete_core_shell_ham_payload,
+                public_api = false,
+                exports_materialized = false,
+                artifacts_materialized = false,
+                rhf_product_surface = false,
+                serious_hf_claim = false,
+            ),
+        ),
+    )
+end
+
+function _pqs_source_box_route_driver_complete_core_shell_ham_payload(;
+    route_family,
+    source_payload = nothing,
+    final_basis = nothing,
+    h1_payload = nothing,
+    density_inputs = nothing,
+    h1_j_payload = nothing,
+    metadata = (;),
+)
+    if route_family !== :pqs_source_box
+        return _pqs_source_box_route_driver_blocked_complete_core_shell_ham_payload(
+            ;
+            route_family,
+            status = :not_applicable_complete_core_shell_ham_non_pqs_source_box_route,
+            blocker = nothing,
+            missing_inputs = (),
+            source_payload,
+            final_basis,
+            h1_payload,
+            density_inputs,
+            h1_j_payload,
+            metadata,
+        )
+    end
+
+    one_body_hamiltonian =
+        _pqs_source_box_route_driver_descriptor_property(
+            h1_payload,
+            :final_hamiltonian,
+        )
+    inner_h1_j_payload =
+        _pqs_source_box_route_driver_descriptor_property(
+            h1_j_payload,
+            :h1_j_payload,
+        )
+    density_interaction =
+        _pqs_source_box_route_driver_descriptor_property(
+            h1_j_payload,
+            :density_interaction,
+        )
+    isnothing(density_interaction) &&
+        (density_interaction =
+            _pqs_source_box_route_driver_descriptor_property(
+                inner_h1_j_payload,
+                :density_interaction,
+            ))
+
+    missing_inputs = Symbol[]
+    (
+        _pqs_source_box_route_driver_descriptor_property(final_basis, :status) ===
+        :available_pqs_complete_core_shell_final_basis
+    ) || push!(
+        missing_inputs,
+        :pqs_multilayer_complete_core_shell_final_basis,
+    )
+    (
+        _pqs_source_box_route_driver_descriptor_property(h1_payload, :status) ===
+        :materialized_pqs_multilayer_complete_core_shell_h1_payload
+    ) || push!(
+        missing_inputs,
+        :pqs_multilayer_complete_core_shell_h1_payload,
+    )
+    (
+        _pqs_source_box_route_driver_descriptor_property(
+            one_body_hamiltonian,
+            :status,
+        ) === :materialized_pqs_complete_core_shell_final_one_electron_hamiltonian
+    ) || push!(
+        missing_inputs,
+        :pqs_complete_core_shell_final_one_electron_hamiltonian,
+    )
+    (
+        _pqs_source_box_route_driver_descriptor_property(density_inputs, :status) ===
+        :available_complete_core_shell_density_inputs
+    ) || push!(missing_inputs, :complete_core_shell_density_inputs)
+    (
+        _pqs_source_box_route_driver_descriptor_property(h1_j_payload, :status) ===
+        :materialized_pqs_multilayer_complete_core_shell_h1_j_payload
+    ) || push!(missing_inputs, :complete_core_shell_h1_j_diagnostic_payload)
+    (
+        _pqs_source_box_route_driver_descriptor_property(
+            density_interaction,
+            :status,
+        ) === :materialized_pqs_complete_core_shell_pre_final_density_interaction
+    ) || push!(
+        missing_inputs,
+        :pqs_complete_core_shell_pre_final_density_interaction,
+    )
+
+    if !isempty(missing_inputs)
+        blocker =
+            _pqs_source_box_route_driver_complete_core_shell_ham_missing_blocker(
+                Tuple(missing_inputs),
+            )
+        return _pqs_source_box_route_driver_blocked_complete_core_shell_ham_payload(
+            ;
+            route_family,
+            status = :blocked_complete_core_shell_ham_payload,
+            blocker,
+            missing_inputs = Tuple(missing_inputs),
+            source_payload,
+            final_basis,
+            h1_payload,
+            density_inputs,
+            h1_j_payload,
+            metadata,
+        )
+    end
+
+    support_row_order = final_basis.support_row_order
+    density_gauge = density_interaction.density_gauge
+    raw_pair_factor_convention =
+        hasproperty(density_interaction, :metadata) &&
+        hasproperty(density_interaction.metadata, :raw_pair_factor_convention) ?
+        density_interaction.metadata.raw_pair_factor_convention :
+        :raw_numerator
+    convention_labels = (;
+        electron_electron_representation = :pre_final_density_interaction,
+        interaction_model = :density_density_pre_final_gauge,
+        density_gauge,
+        raw_pair_factor_convention,
+        support_row_order,
+        weight_application_stage =
+            hasproperty(density_interaction, :metadata) &&
+            hasproperty(density_interaction.metadata, :weight_application_stage) ?
+            density_interaction.metadata.weight_application_stage :
+            :pre_final_density_interaction_boundary,
+        final_orbital_consumption_rule =
+            hasproperty(density_interaction, :metadata) &&
+            hasproperty(density_interaction.metadata, :final_orbital_consumption_rule) ?
+            density_interaction.metadata.final_orbital_consumption_rule :
+            :combined_lowdin_cleanup_times_final_coefficients,
+        signed_final_weight_division_used =
+            density_interaction.signed_final_weight_division_used,
+        raw_no_division_used = density_interaction.raw_no_division_used,
+        density_normalized_pair_terms_used_as_authority = false,
+        fixed_block_pair_data_authority_used =
+            density_interaction.fixed_block_pair_data_authority_used,
+        public_api = false,
+        exports_materialized = false,
+        artifacts_materialized = false,
+        rhf_product_surface = false,
+        serious_hf_claim = false,
+    )
+    final_basis_summary = (;
+        status = final_basis.status,
+        blocker = final_basis.blocker,
+        final_retained_count = final_basis.final_retained_count,
+        core_support_count = final_basis.core_support_count,
+        shell_support_count = final_basis.shell_support_count,
+        shell_final_retained_count = final_basis.shell_final_retained_count,
+        support_row_order,
+        final_overlap_identity_error = final_basis.final_overlap_identity_error,
+        final_overlap_is_identity = final_basis.final_overlap_is_identity,
+    )
+    density_input_summary = density_inputs.summary
+    coulomb_expansion = source_payload.coulomb_expansion
+    coulomb_expansion_summary = (;
+        coefficient_count = length(coulomb_expansion.coefficients),
+        coefficients_positive = all(>(0.0), coulomb_expansion.coefficients),
+    )
+    dimension_summary = (;
+        final_dimension = final_basis.final_retained_count,
+        hamiltonian_shape = one_body_hamiltonian.hamiltonian_matrix_shape,
+        pre_final_dimension = density_interaction.pre_final_weight_count,
+        pre_final_pair_matrix_shape =
+            density_interaction.pre_final_pair_matrix_shape,
+    )
+    ordering_summary = (;
+        final_basis_support_row_order = support_row_order,
+        density_interaction_support_row_order =
+            density_interaction.support_row_order,
+        final_matrix_order = :final_basis_column_order,
+        pre_final_density_order = :pre_final_complete_core_shell_order,
+    )
+    center_summaries =
+        hasproperty(one_body_hamiltonian, :center_summaries) ?
+        one_body_hamiltonian.center_summaries :
+        ()
+    summary = (;
+        status = :materialized_pqs_source_box_complete_core_shell_ham_payload,
+        blocker = nothing,
+        route_family,
+        final_dimension = final_basis.final_retained_count,
+        one_body_hamiltonian_status = one_body_hamiltonian.status,
+        density_interaction_status = density_interaction.status,
+        electron_electron_representation = :pre_final_density_interaction,
+        density_gauge,
+        raw_pair_factor_convention,
+        support_row_order,
+        center_count = length(center_summaries),
+        signed_final_weight_division_used =
+            convention_labels.signed_final_weight_division_used,
+        raw_no_division_used = convention_labels.raw_no_division_used,
+        density_normalized_pair_terms_used_as_authority = false,
+        public_api = false,
+        exports_materialized = false,
+        artifacts_materialized = false,
+        rhf_product_surface = false,
+        serious_hf_claim = false,
+    )
+    return (;
+        object_kind = :pqs_source_box_complete_core_shell_ham_payload,
+        status = summary.status,
+        blocker = nothing,
+        route_family,
+        source_payload,
+        source_plan_summary = source_payload.summary,
+        final_basis,
+        final_basis_summary,
+        h1_payload,
+        one_body_hamiltonian,
+        density_inputs,
+        density_input_summary,
+        h1_j_payload,
+        density_interaction,
+        electron_electron_representation = :pre_final_density_interaction,
+        coulomb_expansion,
+        coulomb_expansion_summary,
+        center_summaries,
+        dimension_summary,
+        ordering_summary,
+        convention_labels,
+        missing_inputs = (),
+        summary,
+        metadata = merge(
+            NamedTuple(metadata),
+            (;
+                source =
+                    :pqs_source_box_route_driver_complete_core_shell_ham_payload,
+                electron_electron_representation =
+                    :pre_final_density_interaction,
+                density_gauge,
+                raw_pair_factor_convention,
+                support_row_order,
+                public_api = false,
+                exports_materialized = false,
+                artifacts_materialized = false,
+                rhf_product_surface = false,
+                serious_hf_claim = false,
+            ),
+        ),
+    )
+end
+
 struct _PQSCompleteCoreShellDiagnosticRoutePayload
     status::Symbol
     blocker
@@ -11157,6 +11514,7 @@ struct _PQSCompleteCoreShellDiagnosticRoutePayload
     h1_payload
     density_inputs
     h1_j_payload
+    complete_core_shell_ham_payload
     missing_inputs::Tuple
     summary
     metadata
@@ -11209,6 +11567,24 @@ function _pqs_source_box_route_driver_complete_core_shell_diagnostic_route_paylo
                 complete_core_shell_density_inputs_status = density_inputs.status,
             ),
         )
+    complete_core_shell_ham_payload =
+        _pqs_source_box_route_driver_complete_core_shell_ham_payload(
+            ;
+            route_family = route_skeleton.route_family,
+            source_payload,
+            final_basis = h1_payload.final_basis,
+            h1_payload = h1_payload.h1_payload,
+            density_inputs,
+            h1_j_payload,
+            metadata = (;
+                source = :cartesian_assembly,
+                route_kind = recipe.route_kind,
+                complete_core_shell_source_plan_status = source_payload.status,
+                complete_core_shell_h1_payload_status = h1_payload.status,
+                complete_core_shell_density_inputs_status = density_inputs.status,
+                complete_core_shell_h1_j_diagnostic_status = h1_j_payload.status,
+            ),
+        )
     metadata = (;
         source = :pqs_source_box_route_driver_complete_core_shell_diagnostic_route_payload,
         route_kind = recipe.route_kind,
@@ -11217,6 +11593,8 @@ function _pqs_source_box_route_driver_complete_core_shell_diagnostic_route_paylo
         complete_core_shell_h1_payload_status = h1_payload.status,
         complete_core_shell_density_inputs_status = density_inputs.status,
         complete_core_shell_h1_j_diagnostic_status = h1_j_payload.status,
+        complete_core_shell_ham_payload_status =
+            complete_core_shell_ham_payload.status,
         driver_route_materialized = h1_j_payload.summary.driver_route_materialized,
         report_placeholder = false,
     )
@@ -11229,6 +11607,7 @@ function _pqs_source_box_route_driver_complete_core_shell_diagnostic_route_paylo
         h1_payload.h1_payload,
         density_inputs,
         h1_j_payload,
+        complete_core_shell_ham_payload,
         h1_j_payload.missing_inputs,
         h1_j_payload.summary,
         metadata,
