@@ -11155,6 +11155,7 @@ struct _PQSCompleteCoreShellDiagnosticRoutePayload
     source_payload
     final_basis
     h1_payload
+    density_inputs
     h1_j_payload
     missing_inputs::Tuple
     summary
@@ -11226,6 +11227,7 @@ function _pqs_source_box_route_driver_complete_core_shell_diagnostic_route_paylo
         source_payload,
         h1_payload.final_basis,
         h1_payload.h1_payload,
+        density_inputs,
         h1_j_payload,
         h1_j_payload.missing_inputs,
         h1_j_payload.summary,
