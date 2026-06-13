@@ -157,20 +157,31 @@ function _be2_white_lindsey_atom_growth_route()
         white_lindsey_Z = 2.0,
     )
 
-    system = GaussletBases.cartesian_system(system_inputs)
-    recipe = GaussletBases.cartesian_recipe(route_inputs)
-    parent = GaussletBases.cartesian_parent(system, spacing_inputs, parent_inputs, recipe)
-    shells = GaussletBases.cartesian_shells(
+    system_elapsed = @elapsed system = GaussletBases.cartesian_system(system_inputs)
+    println("generator.phase.wl.system=", system_elapsed)
+    recipe_elapsed = @elapsed recipe = GaussletBases.cartesian_recipe(route_inputs)
+    println("generator.phase.wl.recipe=", recipe_elapsed)
+    parent_elapsed = @elapsed parent =
+        GaussletBases.cartesian_parent(system, spacing_inputs, parent_inputs, recipe)
+    println("generator.phase.wl.parent=", parent_elapsed)
+    shells_elapsed = @elapsed shells = GaussletBases.cartesian_shells(
         parent,
         spacing_inputs,
         recipe;
         low_order_shellization_policy = :atom_growth_complete_rectangular,
         probe_route_configured_diatomic_atom_growth_materializer = true,
     )
-    units = GaussletBases.cartesian_units(parent, shells, route_probe_inputs, recipe)
-    transforms = GaussletBases.cartesian_transforms(units, recipe)
-    pairs = GaussletBases.cartesian_pair_terms(units, transforms, recipe)
-    assembly = GaussletBases.cartesian_assembly(
+    println("generator.phase.wl.shells=", shells_elapsed)
+    units_elapsed = @elapsed units =
+        GaussletBases.cartesian_units(parent, shells, route_probe_inputs, recipe)
+    println("generator.phase.wl.units=", units_elapsed)
+    transforms_elapsed = @elapsed transforms =
+        GaussletBases.cartesian_transforms(units, recipe)
+    println("generator.phase.wl.transforms=", transforms_elapsed)
+    pairs_elapsed = @elapsed pairs =
+        GaussletBases.cartesian_pair_terms(units, transforms, recipe)
+    println("generator.phase.wl.pairs=", pairs_elapsed)
+    assembly_elapsed = @elapsed assembly = GaussletBases.cartesian_assembly(
         parent,
         shells,
         units,
@@ -178,9 +189,13 @@ function _be2_white_lindsey_atom_growth_route()
         pairs,
         recipe,
     )
-    report = GaussletBases.cartesian_report(system, parent, assembly, recipe)
-    materialization =
+    println("generator.phase.wl.assembly=", assembly_elapsed)
+    report_elapsed = @elapsed report =
+        GaussletBases.cartesian_report(system, parent, assembly, recipe)
+    println("generator.phase.wl.report=", report_elapsed)
+    materialization_elapsed = @elapsed materialization =
         GaussletBases.cartesian_materialization(report, materialization_inputs)
+    println("generator.phase.wl.materialization=", materialization_elapsed)
     return (;
         materialization, system_inputs, spacing_inputs, parent_inputs,
         route_probe_inputs, route_inputs, materialization_inputs,
