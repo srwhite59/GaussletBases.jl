@@ -141,4 +141,40 @@ end
     @test h1_payload.summary.rhf_materialized == false
     @test h1.exports_materialized == false
     @test h1.artifacts_materialized == false
+
+    provenance =
+        GaussletBases.CartesianContractedParentMetrics._pqs_source_box_ida_factor_provenance(
+            fixture.plan.bundles;
+            expected_term_count = length(fixture.expansion.coefficients),
+        )
+    h1_j_payload = GaussletBases.pqs_multilayer_complete_core_shell_h1_j_payload(
+        fixture.plan;
+        final_basis = fixture.final_basis,
+        h1_payload,
+        axis_weights = provenance.axis_weights,
+        raw_pair_factor_terms = provenance.raw_axis_pair_factor_terms,
+        coulomb_expansion = fixture.expansion,
+        metadata = (; fixture = :pqs_fixed_q_he_h1j_gate),
+    )
+    density_interaction = h1_j_payload.density_interaction
+    h1_j_summary = h1_j_payload.summary
+
+    @test provenance.diagnostics.interaction_path === :ida_gausslet_source_box
+    @test h1_j_payload.status ==
+          :materialized_pqs_multilayer_complete_core_shell_h1_j_payload
+    @test h1_j_summary.final_dimension == 419
+    @test h1_j_summary.h1_energy ≈ h1.lowest_energy atol = 1.0e-12 rtol = 0.0
+    @test h1_j_summary.h1_energy_reconstruction_error < 1.0e-10
+    @test density_interaction.status ==
+          :materialized_pqs_complete_core_shell_pre_final_density_interaction
+    @test density_interaction.density_gauge === :pre_final_localized_positive_weight
+    @test density_interaction.pre_final_pair_matrix_finite
+    @test density_interaction.pre_final_weights_all_positive
+    @test isfinite(h1_j_summary.self_coulomb)
+    @test h1_j_summary.self_coulomb > 0.0
+    @test h1_j_summary.rhf_materialized == false
+    @test h1_j_summary.gto_materialized == false
+    @test h1_j_summary.driver_route_materialized == false
+    @test h1_j_summary.exports_materialized == false
+    @test h1_j_summary.artifacts_materialized == false
 end
