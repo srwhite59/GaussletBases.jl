@@ -12,8 +12,8 @@ parent_axis_family = :G10
 core_spacing = 0.5
 xmax_parallel = 6.0
 xmax_transverse = 4.0
-parent_axis_counts = (x = 17, y = 17, z = 25)
-probe_parent_axis_construction = false
+parent_axis_counts = nothing
+probe_parent_axis_construction = true
 probe_raw_product_box_plans = false
 
 q = 5

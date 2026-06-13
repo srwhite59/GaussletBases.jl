@@ -50,6 +50,20 @@ end
             @test !haskey(file, "comparison/wl_rhf_total")
             @test !haskey(file, "comparison/delta_rhf")
 
+            @test file["parent/parent_axis_counts"] == (x = 9, y = 9, z = 15)
+            @test file["parent/parent_axis_counts_source"] ===
+                  :constructed_parent_axis_probe
+            @test file["parent/parent_materialization_blocker"] === nothing
+            @test file["parent/parent_basis_object_available"] == true
+            @test file["parent/parent_qw_basis_object_available"] == true
+            @test file["parent/parent_axis_bundle_object_available"] == true
+            @test file["parent/parent_basis_object_type_label"] ==
+                  "CartesianParentGaussletBasis3D"
+            @test file["parent/parent_qw_basis_object_type_label"] ==
+                  "BondAlignedDiatomicQWBasis3D"
+            @test file["parent/parent_axis_bundle_object_type_label"] ==
+                  "_CartesianNestedAxisBundles3D"
+
             @test file["private_rhf/requested"] == false
             @test file["private_rhf/materialized"] == false
             @test file["route/h1_j_materialized"] == false
@@ -60,9 +74,9 @@ end
             @test file["route/readiness_status"] ===
                   :blocked_diatomic_complete_core_shell_ham_readiness
             @test file["route/readiness_blocker"] ===
-                  :missing_diatomic_complete_core_shell_source_plan_producer
+                  :missing_diatomic_complete_core_shell_final_basis_consumer
             @test file["route/source_plan_status"] ===
-                  :not_materialized_diatomic_complete_core_shell_source_plan
+                  :available_pqs_diatomic_complete_core_shell_source_plan
             @test file["route/final_basis_status"] ===
                   :not_materialized_diatomic_complete_core_shell_final_basis
             @test file["route/h1_status"] ===

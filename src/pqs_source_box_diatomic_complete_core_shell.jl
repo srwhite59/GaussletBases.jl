@@ -1681,6 +1681,10 @@ function _pqs_source_box_route_driver_diatomic_complete_core_shell_final_basis_p
         source_plan.status
     final_basis = nothing
     final_basis_status = :not_materialized_diatomic_complete_core_shell_final_basis
+    final_basis_requested =
+        get(recipe, :run_h1, false) ||
+        get(recipe, :run_h1_j, false) ||
+        get(recipe, :run_private_rhf, false)
     available = Symbol[]
     missing = Symbol[]
 
@@ -1698,6 +1702,11 @@ function _pqs_source_box_route_driver_diatomic_complete_core_shell_final_basis_p
         push!(missing, :pqs_diatomic_complete_core_shell_source_plan)
         !isnothing(source_plan_payload) &&
             append!(missing, source_plan_payload.missing_objects)
+    elseif !final_basis_requested
+        status = :not_requested_diatomic_complete_core_shell_final_basis_payload
+        blocker = nothing
+        push!(available, :pqs_diatomic_complete_core_shell_source_plan)
+        push!(missing, :diatomic_complete_core_shell_final_basis_request)
     else
         metrics = source_plan.metrics
         core_overlap = _pqs_multilayer_support_product_matrix(
