@@ -11670,6 +11670,240 @@ function _pqs_source_box_route_driver_diatomic_route_skeleton_summary(
     )
 end
 
+struct _PQSDiatomicCompleteCoreShellSupportWindowPayload
+    status::Symbol
+    blocker
+    route_family::Symbol
+    system_classification
+    bond_axis
+    parent_dims
+    parent_axis_bundle_object_available::Bool
+    source_box_windows
+    source_mode_dims
+    retained_order::Tuple
+    candidate_core_then_shell_support_order::Tuple
+    retained_to_support_order_permutation_required::Bool
+    support_counts
+    missing_objects::Tuple
+    summary
+    metadata
+end
+
+function _pqs_source_box_route_driver_axis_counts_tuple(axis_counts)
+    isnothing(axis_counts) && return nothing
+    if axis_counts isa NamedTuple
+        return (Int(axis_counts.x), Int(axis_counts.y), Int(axis_counts.z))
+    end
+    axis_counts_tuple = Tuple(axis_counts)
+    length(axis_counts_tuple) == 3 || return nothing
+    return ntuple(axis -> Int(axis_counts_tuple[axis]), 3)
+end
+
+function _pqs_source_box_route_driver_source_box_window(source_box)
+    isnothing(source_box) && return nothing
+    if source_box isa NamedTuple
+        return (source_box.x, source_box.y, source_box.z)
+    end
+    source_box_tuple = Tuple(source_box)
+    length(source_box_tuple) == 3 || return nothing
+    return ntuple(axis -> source_box_tuple[axis], 3)
+end
+
+function _pqs_source_box_route_driver_window_support_count(window)
+    isnothing(window) && return nothing
+    return prod(length(window[axis]) for axis in 1:3)
+end
+
+function _pqs_source_box_route_driver_diatomic_complete_core_shell_support_window_payload(
+    parent,
+    route_skeleton,
+    recipe,
+)
+    route_family =
+        hasproperty(route_skeleton, :route_family) ?
+        route_skeleton.route_family :
+        recipe.route_family
+    system_classification =
+        hasproperty(parent, :system_classification) ?
+        parent.system_classification :
+        nothing
+    bond_axis =
+        hasproperty(parent, :bond_axis) ? parent.bond_axis : nothing
+    parent_axis_bundle_object_available =
+        hasproperty(parent, :parent_axis_bundle_object_available) ?
+        parent.parent_axis_bundle_object_available :
+        (
+            hasproperty(parent, :parent_axis_bundle_object) &&
+            !isnothing(parent.parent_axis_bundle_object)
+        )
+    parent_dims =
+        hasproperty(route_skeleton, :parent_axis_counts) ?
+        _pqs_source_box_route_driver_axis_counts_tuple(
+            route_skeleton.parent_axis_counts,
+        ) :
+        hasproperty(parent, :axis_counts) ?
+        _pqs_source_box_route_driver_axis_counts_tuple(parent.axis_counts) :
+        nothing
+    source_boxes =
+        hasproperty(route_skeleton, :source_boxes) ?
+        route_skeleton.source_boxes :
+        (;)
+    source_dimensions =
+        hasproperty(route_skeleton, :source_dimensions) ?
+        route_skeleton.source_dimensions :
+        (;)
+    retained_units =
+        hasproperty(route_skeleton, :retained_units) ?
+        Tuple(route_skeleton.retained_units) :
+        ()
+    retained_order = Tuple(
+        _pqs_source_box_route_driver_descriptor_property(unit, :unit_key)
+        for unit in retained_units
+    )
+    expected_window_keys = (:pqs_left, :product, :pqs_right)
+    source_box_windows = (;
+        pqs_left =
+            hasproperty(source_boxes, :pqs_left) ?
+            _pqs_source_box_route_driver_source_box_window(source_boxes.pqs_left) :
+            nothing,
+        product =
+            hasproperty(source_boxes, :product) ?
+            _pqs_source_box_route_driver_source_box_window(source_boxes.product) :
+            nothing,
+        pqs_right =
+            hasproperty(source_boxes, :pqs_right) ?
+            _pqs_source_box_route_driver_source_box_window(source_boxes.pqs_right) :
+            nothing,
+    )
+    source_mode_dims = (;
+        pqs_left =
+            hasproperty(source_dimensions, :pqs_left) ?
+            Tuple(source_dimensions.pqs_left) :
+            nothing,
+        product =
+            hasproperty(source_dimensions, :product) ?
+            Tuple(source_dimensions.product) :
+            nothing,
+        pqs_right =
+            hasproperty(source_dimensions, :pqs_right) ?
+            Tuple(source_dimensions.pqs_right) :
+            nothing,
+    )
+    support_counts = (;
+        pqs_left =
+            _pqs_source_box_route_driver_window_support_count(
+                source_box_windows.pqs_left,
+            ),
+        product =
+            _pqs_source_box_route_driver_window_support_count(
+                source_box_windows.product,
+            ),
+        pqs_right =
+            _pqs_source_box_route_driver_window_support_count(
+                source_box_windows.pqs_right,
+            ),
+    )
+    candidate_core_then_shell_support_order = (:product, :pqs_left, :pqs_right)
+    retained_to_support_order_permutation_required =
+        retained_order != candidate_core_then_shell_support_order
+
+    missing_support_inputs = Symbol[]
+    isnothing(parent_dims) && push!(missing_support_inputs, :parent_dims)
+    for key in expected_window_keys
+        isnothing(getproperty(source_box_windows, key)) &&
+            push!(missing_support_inputs, Symbol(key, :_source_box_window))
+        isnothing(getproperty(source_mode_dims, key)) &&
+            push!(missing_support_inputs, Symbol(key, :_source_mode_dims))
+        isnothing(getproperty(support_counts, key)) &&
+            push!(missing_support_inputs, Symbol(key, :_support_count))
+    end
+    isempty(retained_order) && push!(missing_support_inputs, :retained_order)
+
+    materializer_missing_objects = (
+        :raw_product_box_plan_objects,
+        :pqs_axis_local_coefficients,
+        :diatomic_complete_core_shell_source_plan_materializer,
+    )
+    if route_family !== :pqs_source_box
+        status =
+            :not_applicable_diatomic_complete_core_shell_support_windows_non_pqs_route
+        blocker = nothing
+        missing_objects = ()
+    elseif system_classification !== :bond_aligned_diatomic
+        status =
+            :not_applicable_diatomic_complete_core_shell_support_windows_non_diatomic
+        blocker = nothing
+        missing_objects = ()
+    elseif isempty(missing_support_inputs)
+        status = :available_diatomic_complete_core_shell_support_windows
+        blocker = nothing
+        missing_objects = materializer_missing_objects
+    else
+        status = :blocked_diatomic_complete_core_shell_support_windows
+        blocker = first(missing_support_inputs)
+        missing_objects = Tuple((missing_support_inputs..., materializer_missing_objects...))
+    end
+
+    summary = (;
+        status,
+        blocker,
+        route_family,
+        system_classification,
+        bond_axis,
+        parent_dims,
+        parent_axis_bundle_object_available,
+        source_box_keys = expected_window_keys,
+        retained_order,
+        candidate_core_then_shell_support_order,
+        retained_to_support_order_permutation_required,
+        support_counts,
+        missing_objects,
+        support_states_materialized = false,
+        raw_product_box_plans_materialized = false,
+        source_coefficients_materialized = false,
+        source_plan_materialized = false,
+        final_basis_materialized = false,
+        h1_materialized = false,
+        h1_j_materialized = false,
+        ham_payload_materialized = false,
+        route_driver_public_surface = false,
+        exports_materialized = false,
+        artifacts_materialized = false,
+    )
+    metadata = (;
+        source =
+            :pqs_source_box_route_driver_diatomic_complete_core_shell_support_window_payload,
+        route_kind = recipe.route_kind,
+        route_family,
+        source_box_first = true,
+        metadata_only_support_windows = true,
+        support_states_materialized = false,
+        raw_product_box_plans_materialized = false,
+        source_coefficients_materialized = false,
+        raw_product_box_probe_authority = false,
+        shell_support_row_contraction_authority = false,
+        retained_diagnostic_weights_are_ida_weights = false,
+    )
+    return _PQSDiatomicCompleteCoreShellSupportWindowPayload(
+        status,
+        blocker,
+        route_family,
+        system_classification,
+        bond_axis,
+        parent_dims,
+        parent_axis_bundle_object_available,
+        source_box_windows,
+        source_mode_dims,
+        retained_order,
+        candidate_core_then_shell_support_order,
+        retained_to_support_order_permutation_required,
+        support_counts,
+        missing_objects,
+        summary,
+        metadata,
+    )
+end
+
 struct _PQSDiatomicCompleteCoreShellSourcePlanPayload
     status::Symbol
     blocker
@@ -11683,6 +11917,7 @@ struct _PQSDiatomicCompleteCoreShellSourcePlanPayload
     pair_inventory_summary
     center_summary
     coulomb_expansion_summary
+    support_window_payload
     source_plan
     source_plan_status::Symbol
     available_objects::Tuple
@@ -11711,6 +11946,7 @@ function _pqs_source_box_route_driver_diatomic_complete_core_shell_source_plan_p
     parent,
     route_skeleton,
     recipe,
+    support_window_payload = nothing,
 )
     route_family =
         hasproperty(route_skeleton, :route_family) ?
@@ -11746,6 +11982,15 @@ function _pqs_source_box_route_driver_diatomic_complete_core_shell_source_plan_p
         _pqs_source_box_route_driver_diatomic_coulomb_expansion_summary(
             route_family,
         )
+    support_window_payload_value =
+        isnothing(support_window_payload) ?
+        _pqs_source_box_route_driver_diatomic_complete_core_shell_support_window_payload(
+            parent,
+            route_skeleton,
+            recipe,
+        ) :
+        support_window_payload
+    support_window_payload_status = support_window_payload_value.status
 
     source_plan = nothing
     source_plan_status = :not_materialized_diatomic_complete_core_shell_source_plan
@@ -11777,6 +12022,9 @@ function _pqs_source_box_route_driver_diatomic_complete_core_shell_source_plan_p
             :pair_inventory,
             :coulomb_expansion,
         ]
+        support_window_payload_value.status ===
+            :available_diatomic_complete_core_shell_support_windows &&
+            push!(available, :diatomic_complete_core_shell_support_windows)
         parent_axis_bundle_object_available &&
             push!(available, :parent_axis_bundle_object)
         missing = Symbol[
@@ -11800,6 +12048,7 @@ function _pqs_source_box_route_driver_diatomic_complete_core_shell_source_plan_p
         retained_unit_count = retained_unit_summary.retained_unit_count,
         pair_count = pair_inventory_summary.pair_count,
         coulomb_expansion_status = coulomb_expansion_summary.status,
+        support_window_payload_status,
         source_plan_status,
         missing_objects,
         source_plan_materialized = false,
@@ -11816,6 +12065,7 @@ function _pqs_source_box_route_driver_diatomic_complete_core_shell_source_plan_p
             :pqs_source_box_route_driver_diatomic_complete_core_shell_source_plan_payload,
         route_kind = recipe.route_kind,
         route_family,
+        support_window_payload_status,
         source_box_first = true,
         returns_pqs_multilayer_shell_source_plan = false,
         source_plan_materialized = false,
@@ -11835,6 +12085,7 @@ function _pqs_source_box_route_driver_diatomic_complete_core_shell_source_plan_p
         pair_inventory_summary,
         center_summary,
         coulomb_expansion_summary,
+        support_window_payload_value,
         source_plan,
         source_plan_status,
         available_objects,
@@ -12109,11 +12360,18 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
         )
     complete_core_shell_h1_j_diagnostic_payload =
         complete_core_shell_diagnostic_route_payload.h1_j_payload
+    diatomic_complete_core_shell_support_window_payload =
+        _pqs_source_box_route_driver_diatomic_complete_core_shell_support_window_payload(
+            parent,
+            route_skeleton,
+            recipe,
+        )
     diatomic_complete_core_shell_source_plan_payload =
         _pqs_source_box_route_driver_diatomic_complete_core_shell_source_plan_payload(
             parent,
             route_skeleton,
             recipe,
+            diatomic_complete_core_shell_support_window_payload,
         )
     diatomic_complete_core_shell_ham_readiness_payload =
         _pqs_source_box_route_driver_diatomic_complete_core_shell_ham_readiness_payload(
@@ -12138,6 +12396,7 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
         pairs,
         low_order_assembly,
         complete_core_shell_diagnostic_route_payload,
+        diatomic_complete_core_shell_support_window_payload,
         diatomic_complete_core_shell_source_plan_payload,
         diatomic_complete_core_shell_ham_readiness_payload,
         complete_core_shell_h1_j_diagnostic_payload,

@@ -87,10 +87,49 @@ end
     @test assembly.route_skeleton.route_family === :pqs_source_box
 
     payload = assembly.complete_core_shell_diagnostic_route_payload
+    support_window_payload =
+        assembly.diatomic_complete_core_shell_support_window_payload
     source_plan_payload =
         assembly.diatomic_complete_core_shell_source_plan_payload
     readiness = assembly.diatomic_complete_core_shell_ham_readiness_payload
     ham = payload.complete_core_shell_ham_payload
+
+    @test support_window_payload.status ==
+          :available_diatomic_complete_core_shell_support_windows
+    @test support_window_payload.blocker === nothing
+    @test support_window_payload.parent_dims == (9, 7, 9)
+    @test !support_window_payload.parent_axis_bundle_object_available
+    @test support_window_payload.source_box_windows.pqs_left ==
+          (1:5, 1:5, 1:5)
+    @test support_window_payload.source_box_windows.product ==
+          (1:5, 1:5, 5:5)
+    @test support_window_payload.source_box_windows.pqs_right ==
+          (1:5, 1:5, 5:9)
+    @test support_window_payload.source_mode_dims.pqs_left == (5, 5, 5)
+    @test support_window_payload.source_mode_dims.product == (5, 5, 1)
+    @test support_window_payload.source_mode_dims.pqs_right == (5, 5, 5)
+    @test support_window_payload.retained_order ==
+          (:pqs_left, :pqs_right, :product)
+    @test support_window_payload.candidate_core_then_shell_support_order ==
+          (:product, :pqs_left, :pqs_right)
+    @test support_window_payload.retained_to_support_order_permutation_required
+    @test support_window_payload.support_counts ==
+          (pqs_left = 125, product = 25, pqs_right = 125)
+    @test :raw_product_box_plan_objects in support_window_payload.missing_objects
+    @test :pqs_axis_local_coefficients in support_window_payload.missing_objects
+    @test :diatomic_complete_core_shell_source_plan_materializer in
+          support_window_payload.missing_objects
+    @test !support_window_payload.summary.support_states_materialized
+    @test !support_window_payload.summary.raw_product_box_plans_materialized
+    @test !support_window_payload.summary.source_coefficients_materialized
+    @test !support_window_payload.summary.source_plan_materialized
+    @test !support_window_payload.summary.final_basis_materialized
+    @test !support_window_payload.summary.h1_materialized
+    @test !support_window_payload.summary.h1_j_materialized
+    @test !support_window_payload.summary.ham_payload_materialized
+    @test !support_window_payload.summary.route_driver_public_surface
+    @test !support_window_payload.summary.exports_materialized
+    @test !support_window_payload.summary.artifacts_materialized
 
     @test source_plan_payload.status ==
           :blocked_diatomic_complete_core_shell_source_plan
@@ -102,6 +141,9 @@ end
     @test source_plan_payload.source_plan === nothing
     @test source_plan_payload.source_plan_status ==
           :not_materialized_diatomic_complete_core_shell_source_plan
+    @test source_plan_payload.support_window_payload === support_window_payload
+    @test source_plan_payload.summary.support_window_payload_status ==
+          :available_diatomic_complete_core_shell_support_windows
     @test :parent_axis_bundle_object in source_plan_payload.missing_objects
     @test :diatomic_complete_core_shell_source_realization_contract in
           source_plan_payload.missing_objects
@@ -195,10 +237,52 @@ end
     @test assembly.route_skeleton.route_family === :pqs_source_box
 
     readiness = assembly.diatomic_complete_core_shell_ham_readiness_payload
+    support_window_payload =
+        assembly.diatomic_complete_core_shell_support_window_payload
     source_plan_payload =
         assembly.diatomic_complete_core_shell_source_plan_payload
     payload = assembly.complete_core_shell_diagnostic_route_payload
     ham = payload.complete_core_shell_ham_payload
+
+    @test support_window_payload.status ==
+          :available_diatomic_complete_core_shell_support_windows
+    @test support_window_payload.blocker === nothing
+    @test support_window_payload.parent_axis_bundle_object_available
+    @test support_window_payload.parent_dims isa NTuple{3,Int}
+    @test support_window_payload.source_box_windows.pqs_left isa
+          NTuple{3,UnitRange{Int}}
+    @test support_window_payload.source_box_windows.product isa
+          NTuple{3,UnitRange{Int}}
+    @test support_window_payload.source_box_windows.pqs_right isa
+          NTuple{3,UnitRange{Int}}
+    @test length.(support_window_payload.source_box_windows.pqs_left) ==
+          support_window_payload.source_mode_dims.pqs_left
+    @test length.(support_window_payload.source_box_windows.product) ==
+          support_window_payload.source_mode_dims.product
+    @test length.(support_window_payload.source_box_windows.pqs_right) ==
+          support_window_payload.source_mode_dims.pqs_right
+    @test support_window_payload.retained_order ==
+          (:pqs_left, :pqs_right, :product)
+    @test support_window_payload.candidate_core_then_shell_support_order ==
+          (:product, :pqs_left, :pqs_right)
+    @test support_window_payload.retained_to_support_order_permutation_required
+    @test support_window_payload.support_counts ==
+          (pqs_left = 125, product = 25, pqs_right = 125)
+    @test :raw_product_box_plan_objects in support_window_payload.missing_objects
+    @test :pqs_axis_local_coefficients in support_window_payload.missing_objects
+    @test :diatomic_complete_core_shell_source_plan_materializer in
+          support_window_payload.missing_objects
+    @test !support_window_payload.summary.support_states_materialized
+    @test !support_window_payload.summary.raw_product_box_plans_materialized
+    @test !support_window_payload.summary.source_coefficients_materialized
+    @test !support_window_payload.summary.source_plan_materialized
+    @test !support_window_payload.summary.final_basis_materialized
+    @test !support_window_payload.summary.h1_materialized
+    @test !support_window_payload.summary.h1_j_materialized
+    @test !support_window_payload.summary.ham_payload_materialized
+    @test !support_window_payload.summary.route_driver_public_surface
+    @test !support_window_payload.summary.exports_materialized
+    @test !support_window_payload.summary.artifacts_materialized
 
     @test source_plan_payload.status ==
           :blocked_diatomic_complete_core_shell_source_plan
@@ -211,6 +295,11 @@ end
     @test source_plan_payload.source_plan === nothing
     @test source_plan_payload.source_plan_status ==
           :not_materialized_diatomic_complete_core_shell_source_plan
+    @test source_plan_payload.support_window_payload === support_window_payload
+    @test source_plan_payload.summary.support_window_payload_status ==
+          :available_diatomic_complete_core_shell_support_windows
+    @test :diatomic_complete_core_shell_support_windows in
+          source_plan_payload.available_objects
     @test :parent_axis_bundle_object in source_plan_payload.available_objects
     @test !in(:parent_axis_bundle_object, source_plan_payload.missing_objects)
     @test :diatomic_complete_core_shell_source_realization_contract in
