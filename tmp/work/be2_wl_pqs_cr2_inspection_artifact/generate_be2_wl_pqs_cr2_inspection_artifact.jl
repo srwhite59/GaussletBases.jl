@@ -358,15 +358,14 @@ function _be2_populate_white_lindsey_route(payload, wl_route)
             materialization.route_configured_diatomic_atom_growth_materializer_probe.materialization.object_kind,
         low_order_shellization_policy =
             materialization.low_order_shellization_policy_resolved,
-        overlap_convention = :orthonormal_identity_with_diagnostic_matrix,
-        overlap_matrix_stored = true,
+        overlap_convention = :orthonormal_identity_diagnostic_checked_not_stored,
+        overlap_matrix_stored = false,
         overlap_identity_defect,
     )
     payload.jld2_values["routes/white_lindsey/one_body"] = (;
         status,
         blocker = route_blocker,
         representation_kind = :final_basis_one_body_hamiltonian,
-        overlap,
         hamiltonian = one_body,
         kinetic_one_body =
             isnothing(operators.kinetic_one_body) ?
