@@ -487,19 +487,32 @@ end
 
 function main()
     mkpath(OUTPUT_DIR)
-    inputs = _be2_pqs_cr2_inspection_assembly()
-    payload =
-        GaussletBases._pqs_source_box_route_driver_be2_cr2_inspection_bundle_payload(
+    result = nothing
+    payload = nothing
+    total_elapsed = @elapsed begin
+        pqs_route_elapsed = @elapsed inputs = _be2_pqs_cr2_inspection_assembly()
+        println("generator.phase.pqs_route_build=", pqs_route_elapsed)
+        pqs_payload_elapsed = @elapsed payload =
+            GaussletBases._pqs_source_box_route_driver_be2_cr2_inspection_bundle_payload(
             inputs.assembly,
         )
-    _add_generator_provenance!(payload, inputs)
-    wl_route = _be2_white_lindsey_atom_growth_route()
-    payload = _be2_populate_white_lindsey_route(payload, wl_route)
-    result = GaussletBases._pqs_source_box_route_driver_write_be2_cr2_inspection_bundle(
-        BUNDLE_PATH,
-        FINGERPRINT_PATH,
-        payload,
-    )
+        println("generator.phase.pqs_payload=", pqs_payload_elapsed)
+        provenance_elapsed = @elapsed _add_generator_provenance!(payload, inputs)
+        println("generator.phase.provenance=", provenance_elapsed)
+        wl_route_elapsed = @elapsed wl_route = _be2_white_lindsey_atom_growth_route()
+        println("generator.phase.wl_route_build=", wl_route_elapsed)
+        wl_population_elapsed =
+            @elapsed payload = _be2_populate_white_lindsey_route(payload, wl_route)
+        println("generator.phase.wl_population=", wl_population_elapsed)
+        bundle_write_elapsed = @elapsed result =
+            GaussletBases._pqs_source_box_route_driver_write_be2_cr2_inspection_bundle(
+                BUNDLE_PATH,
+                FINGERPRINT_PATH,
+                payload,
+            )
+        println("generator.phase.bundle_write=", bundle_write_elapsed)
+    end
+    println("generator.phase.total=", total_elapsed)
     pqs = payload.rows[1]
     println("bundle_path=", result.jld2_path)
     println("fingerprint_path=", result.tsv_path)
