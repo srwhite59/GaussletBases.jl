@@ -291,6 +291,7 @@ function _be2_populate_white_lindsey_route(payload, wl_route)
         route_available ?
         nothing :
         :route_configured_diatomic_atom_growth_validation_failed
+    pqs_final_dimension = payload.rows[1].final_dimension
 
     wl_fingerprint = (route_label = :white_lindsey, status,
         blocker, final_dimension, pre_final_dimension = nothing,
@@ -327,11 +328,6 @@ function _be2_populate_white_lindsey_route(payload, wl_route)
         cr2_export_ready = false,
         cr2_handoff_blocker =
             route_available ? :missing_hfdmrg_density_density_contract : route_blocker,
-        solver_ready = false,
-        hfdmrg_ready = false,
-        rhf_ready = false,
-        dmrg_ready = false,
-        hamv6_export_ready = false,
     )
     payload.jld2_values["routes/white_lindsey/system"] = (;
         status,
@@ -439,14 +435,12 @@ function _be2_populate_white_lindsey_route(payload, wl_route)
         materialized_report_kind = materialization.materialized_report_kind,
         atom_growth_probe_status =
             materialization.route_configured_diatomic_atom_growth_materializer_probe_status,
-        route_configured_diatomic_atom_growth_probe_consumed =
-            materialization.route_configured_diatomic_atom_growth_materializer_probe_consumed,
-        route_configured_diatomic_atom_growth_shellification_consumed =
-            materialization.route_configured_diatomic_atom_growth_shellification_consumed,
-        route_configured_legacy_diatomic_source_consumed =
-            materialization.route_configured_legacy_diatomic_source_consumed,
         materializer_backend = wl_route.materialization_inputs.materializer_backend,
         materializer_nside = wl_route.materialization_inputs.materializer_nside,
+        white_lindsey_Z = wl_route.materialization_inputs.white_lindsey_Z,
+        nuclear_charge_tuple = wl_route.system_inputs.nuclear_charges,
+        white_lindsey_Z_audit_status = :requires_review,
+        white_lindsey_Z_audit_blocker = :white_lindsey_Z_differs_from_nuclear_charge,
         low_order_shellization_policy_requested =
             materialization.low_order_shellization_policy_requested,
         low_order_shellization_policy_resolved =
@@ -456,12 +450,14 @@ function _be2_populate_white_lindsey_route(payload, wl_route)
         interaction_treatment_requested =
             wl_route.materialization_inputs.route_configured_diatomic_ham_interaction_treatment,
         interaction_treatment_consumed = ham_adapter.interaction_treatment,
-        supplement_residual_gto_status = :unavailable,
-        qiu_white_atom_local_hf_inputs_status = :unavailable,
-        correction_egoi_stationary_cusp_status = :unavailable,
-        mwg_ida_route_configured_diatomic_ham_status =
-            :pending_route_configured_diatomic_mwg_operator_support,
-        old_seed_one_center_promoted = false,
+    )
+    payload.jld2_values["comparison/wl_pqs"] = (;
+        pqs_final_dimension,
+        wl_final_dimension = final_dimension,
+        final_dimension_match = pqs_final_dimension == final_dimension,
+        comparison_ready = false,
+        comparison_blocker = :wl_pqs_final_dimension_mismatch,
+        comparison_role = :separate_route_inspection_not_same_basis_comparison,
     )
     payload.jld2_values["routes/white_lindsey/hf_convention"] = (;
         density_density_hf_convention_status = hf_convention_blocker,
