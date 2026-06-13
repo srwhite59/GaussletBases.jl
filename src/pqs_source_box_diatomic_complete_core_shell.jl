@@ -3347,6 +3347,8 @@ function _pqs_source_box_route_driver_be2_cr2_inspection_bundle_payload(assembly
     final_interaction_matrix =
         transpose(coefficients) * pair_matrix * coefficients
     support_raw = Matrix{Float64}(handoff.support_pair_raw_numerator)
+    hf_convention_blocker =
+        :missing_reviewed_density_density_hf_fock_energy_convention
     h1_symmetry_defect = norm(h1_matrix - h1_matrix')
     two_body_symmetry_defect = norm(pair_matrix - pair_matrix')
     final_two_body_symmetry_defect =
@@ -3402,6 +3404,8 @@ function _pqs_source_box_route_driver_be2_cr2_inspection_bundle_payload(assembly
                 kind = get(assembly, :low_order_assembly_route_kind, :unavailable),
                 status = handoff.status,
                 blocker = handoff.blocker,
+                density_density_hf_convention_status = hf_convention_blocker,
+                density_density_hf_convention_blocker = hf_convention_blocker,
             ),
             "routes/pqs_source_box/readiness" => readiness,
             "routes/pqs_source_box/system" => (;
@@ -3414,6 +3418,9 @@ function _pqs_source_box_route_driver_be2_cr2_inspection_bundle_payload(assembly
             "routes/pqs_source_box/final_basis" => (;
                 final_dimension = size(h1_matrix, 1),
                 order_label = handoff.ordering.final_order,
+                overlap_convention = :orthonormal_identity_by_contract,
+                overlap_matrix_stored = false,
+                overlap_identity_defect = 0.0,
             ),
             "routes/pqs_source_box/one_body/hamiltonian" => h1_matrix,
             "routes/pqs_source_box/h1/lowest_energy" => h1_payload.summary.lowest_energy,
@@ -3439,6 +3446,10 @@ function _pqs_source_box_route_driver_be2_cr2_inspection_bundle_payload(assembly
                 raw_pair_factor_convention =
                     handoff.summary.raw_pair_factor_convention,
             ),
+            "routes/pqs_source_box/hf_convention" => (;
+                density_density_hf_convention_status = hf_convention_blocker,
+                density_density_hf_convention_blocker = hf_convention_blocker,
+            ),
             "routes/pqs_source_box/validation" => (;
                 h1_symmetry_defect,
                 two_body_symmetry_defect,
@@ -3453,6 +3464,8 @@ function _pqs_source_box_route_driver_be2_cr2_inspection_bundle_payload(assembly
                 kind = :not_materialized,
                 status = :unavailable,
                 blocker = :white_lindsey_inspection_not_materialized,
+                density_density_hf_convention_status = hf_convention_blocker,
+                density_density_hf_convention_blocker = hf_convention_blocker,
             ),
             "routes/white_lindsey/readiness" => (;
                 cr2_read_only_inspector_ready = false,
@@ -3482,6 +3495,8 @@ function _pqs_source_box_route_driver_be2_cr2_inspection_bundle_payload(assembly
                 unavailable_wl,
                 (;
                     representation_kind = :not_applicable,
+                    interaction_matrix_representation_kind =
+                        :final_basis_density_density_matrix,
                     pre_final_pair_matrix = Float64[],
                     final_to_pre_final_coefficients = Float64[],
                     pre_final_weights = Float64[],
@@ -3490,6 +3505,10 @@ function _pqs_source_box_route_driver_be2_cr2_inspection_bundle_payload(assembly
                     density_gauge = :not_applicable,
                     raw_pair_factor_convention = :not_applicable,
                 ),
+            ),
+            "routes/white_lindsey/hf_convention" => (;
+                density_density_hf_convention_status = hf_convention_blocker,
+                density_density_hf_convention_blocker = hf_convention_blocker,
             ),
             "routes/white_lindsey/validation" => merge(
                 unavailable_wl,

@@ -256,6 +256,9 @@ function _be2_populate_white_lindsey_route(payload, wl_route)
     two_body_finite = all(isfinite, interaction)
     one_body_symmetry_defect = _be2_wl_symmetry_defect(one_body)
     two_body_symmetry_defect = _be2_wl_symmetry_defect(interaction)
+    hf_convention_blocker =
+        :missing_reviewed_density_density_hf_fock_energy_convention
+    overlap_identity_defect = norm(overlap - I, Inf)
     route_available =
         size(overlap) == expected_shape &&
         size(one_body) == expected_shape &&
@@ -300,6 +303,8 @@ function _be2_populate_white_lindsey_route(payload, wl_route)
         data_authority = :final_basis_ordinary_cartesian_qiu_white,
         source_path = :route_configured_diatomic_atom_growth_materialization,
         route_default_behavior_changed = false,
+        density_density_hf_convention_status = hf_convention_blocker,
+        density_density_hf_convention_blocker = hf_convention_blocker,
     )
     payload.jld2_values["routes/white_lindsey/readiness"] = (;
         cr2_read_only_inspector_ready = route_available,
@@ -353,6 +358,9 @@ function _be2_populate_white_lindsey_route(payload, wl_route)
             materialization.route_configured_diatomic_atom_growth_materializer_probe.materialization.object_kind,
         low_order_shellization_policy =
             materialization.low_order_shellization_policy_resolved,
+        overlap_convention = :orthonormal_identity_with_diagnostic_matrix,
+        overlap_matrix_stored = true,
+        overlap_identity_defect,
     )
     payload.jld2_values["routes/white_lindsey/one_body"] = (;
         status,
@@ -381,6 +389,8 @@ function _be2_populate_white_lindsey_route(payload, wl_route)
         status,
         blocker = route_blocker,
         representation_kind = :final_basis_density_density_matrix,
+        interaction_matrix_representation_kind =
+            :final_basis_density_density_matrix,
         interaction_model = :density_density,
         interaction_treatment = ham_adapter.interaction_treatment,
         interaction_matrix = interaction,
@@ -443,6 +453,10 @@ function _be2_populate_white_lindsey_route(payload, wl_route)
         mwg_ida_route_configured_diatomic_ham_status =
             :pending_route_configured_diatomic_mwg_operator_support,
         old_seed_one_center_promoted = false,
+    )
+    payload.jld2_values["routes/white_lindsey/hf_convention"] = (;
+        density_density_hf_convention_status = hf_convention_blocker,
+        density_density_hf_convention_blocker = hf_convention_blocker,
     )
     return (;
         jld2_values = payload.jld2_values,

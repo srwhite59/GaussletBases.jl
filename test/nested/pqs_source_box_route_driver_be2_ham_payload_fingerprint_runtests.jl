@@ -92,6 +92,11 @@ end
             @test file["schema/version"] == 1
             @test all(route -> route in keys(file["routes"]),
                 ("pqs_source_box", "white_lindsey"))
+            @test String(file["routes/pqs_source_box/final_basis/overlap_convention"]) ==
+                  "orthonormal_identity_by_contract"
+            @test !Bool(file["routes/pqs_source_box/final_basis/overlap_matrix_stored"])
+            @test file["routes/pqs_source_box/final_basis/overlap_identity_defect"] == 0.0
+            @test !haskey(file, "routes/pqs_source_box/one_body/overlap")
             @test size(file["routes/pqs_source_box/one_body/hamiltonian"]) == (221, 221)
             two_body_prefix = "routes/pqs_source_box/two_body"
             pre_final_pair_matrix = file["$two_body_prefix/pre_final_pair_matrix"]
@@ -107,6 +112,8 @@ end
             @test String(file["$two_body_prefix/interaction_matrix_formula"]) ==
                   "transpose_final_to_pre_final_times_pre_final_pair_times_final_to_pre_final"
             @test Bool(file["$two_body_prefix/interaction_matrix_finite"])
+            @test String(file["routes/pqs_source_box/hf_convention/density_density_hf_convention_blocker"]) ==
+                  "missing_reviewed_density_density_hf_fock_energy_convention"
             @test all(isfinite, interaction_matrix)
             @test norm(pre_final_pair_matrix - pre_final_pair_matrix') <= 1.0e-8
             @test norm(interaction_matrix - interaction_matrix') <= 1.0e-8
