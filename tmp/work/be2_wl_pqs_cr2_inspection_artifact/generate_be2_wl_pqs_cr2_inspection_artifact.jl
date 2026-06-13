@@ -367,22 +367,17 @@ function _be2_populate_white_lindsey_route(payload, wl_route)
         blocker = route_blocker,
         representation_kind = :final_basis_one_body_hamiltonian,
         hamiltonian = one_body,
-        kinetic_one_body =
-            isnothing(operators.kinetic_one_body) ?
-            Float64[] :
-            Matrix{Float64}(operators.kinetic_one_body),
         nuclear_term_storage =
             isnothing(operators.nuclear_term_storage) ?
             :unavailable :
             operators.nuclear_term_storage,
+        kinetic_one_body_stored = false,
         nuclear_one_body_by_center_count =
             isnothing(operators.nuclear_one_body_by_center) ?
             0 :
             length(operators.nuclear_one_body_by_center),
-        nuclear_one_body_by_center =
-            isnothing(operators.nuclear_one_body_by_center) ?
-            Matrix{Float64}[] :
-            Matrix{Float64}[Matrix{Float64}(matrix) for matrix in operators.nuclear_one_body_by_center],
+        nuclear_one_body_by_center_stored = false,
+        one_body_split_storage = :not_stored_hf_minimal_handoff,
     )
     payload.jld2_values["routes/white_lindsey/two_body"] = (;
         status,
