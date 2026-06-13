@@ -46,8 +46,10 @@ function _pqs_rhf_one_step_synthetic_payloads()
             :materialized_pqs_complete_core_shell_pre_final_density_interaction,
         blocker = nothing,
         density_gauge = :pre_final_localized_positive_weight,
+        pre_final_weight_count = dimension,
         final_to_pre_final_coefficients =
             Matrix{Float64}(I, dimension, dimension),
+        final_to_pre_final_reconstruction_error = 0.0,
         pre_final_pair_matrix = [2.0 0.5; 0.5 1.0],
     )
     return (; input_contract, h1_payload, density_interaction)
@@ -90,6 +92,33 @@ end
     @test !available.summary.driver_route_materialized
     @test !available.summary.exports_materialized
     @test !available.summary.artifacts_materialized
+
+    occupied_orbital = [1.0, 0.0]
+    one_orbital_density =
+        2.0 .* (occupied_orbital * transpose(occupied_orbital))
+    one_orbital_payload =
+        GaussletBases._pqs_multilayer_complete_core_shell_rhf_one_step_payload(
+            ;
+            payloads...,
+            final_density = one_orbital_density,
+        )
+    final_basis_module = GaussletBases.CartesianFinalBasisRealization
+    self_coulomb =
+        final_basis_module.pqs_complete_core_shell_pre_final_orbital_self_coulomb(
+            payloads.density_interaction,
+            occupied_orbital,
+        )
+    @test one_orbital_payload.status ==
+          :materialized_pqs_multilayer_complete_core_shell_rhf_one_step_payload
+    @test self_coulomb.status ==
+          :materialized_pqs_complete_core_shell_pre_final_orbital_self_coulomb
+    @test one_orbital_payload.two_body_energy ≈ self_coulomb.self_coulomb
+    @test one_orbital_payload.summary.density_convention ===
+          :spin_summed_closed_shell_final_density
+    @test one_orbital_payload.summary.contraction_rule ===
+          :pre_final_restricted_direct_minus_exchange_from_orbital_density
+    @test one_orbital_payload.summary.scf_materialized === false
+    @test one_orbital_payload.summary.rhf_converged === false
 
     compact_payload =
         GaussletBases._pqs_multilayer_complete_core_shell_rhf_one_step_payload(
