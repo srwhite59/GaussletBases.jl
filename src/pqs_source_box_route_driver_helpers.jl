@@ -1216,6 +1216,9 @@ function _pqs_source_box_route_driver_recipe_metadata(
             get(route_recipe, :comparison_reference_label, nothing),
         wl_h1_lowest = get(route_recipe, :wl_h1_lowest, nothing),
         wl_h1_self_coulomb = get(route_recipe, :wl_h1_self_coulomb, nothing),
+        run_private_rhf =
+            get(get(route_recipe, :private_rhf_inputs, (;)), :run_private_rhf, false),
+        wl_rhf_total = get(route_recipe, :wl_rhf_total, nothing),
     )
 
     if route_recipe.route_family == :pqs_source_box
@@ -6300,6 +6303,9 @@ function cartesian_recipe(route_inputs)
                 get(route_inputs, :comparison_reference_label, nothing),
             wl_h1_lowest = get(route_inputs, :wl_h1_lowest, nothing),
             wl_h1_self_coulomb = get(route_inputs, :wl_h1_self_coulomb, nothing),
+            private_rhf_inputs =
+                get(route_inputs, :private_rhf_inputs, (; run_private_rhf = false)),
+            wl_rhf_total = get(route_inputs, :wl_rhf_total, nothing),
         )
     end
 
@@ -11648,6 +11654,71 @@ function _pqs_source_box_route_driver_complete_core_shell_diagnostic_route_paylo
     )
 end
 
+function _pqs_source_box_route_driver_private_rhf_electron_count(parent, requested)
+    !isnothing(requested) && return requested, :explicit
+    if parent.system_classification == :one_center && length(parent.nuclear_charges) == 1
+        charge = only(parent.nuclear_charges)
+        if charge isa Real && isfinite(Float64(charge)) && isinteger(Float64(charge))
+            return Int(charge), :one_center_nuclear_charge
+        end
+        return nothing, :invalid_one_center_nuclear_charge
+    end
+    return nothing, :not_inferred_non_one_center
+end
+
+function _pqs_source_box_route_driver_complete_core_shell_private_rhf_payload(
+    parent,
+    recipe,
+    diagnostic_route_payload,
+)
+    controls = get(recipe, :private_rhf_inputs, (; run_private_rhf = false))
+    get(controls, :run_private_rhf, false) || return nothing
+    electron_count, electron_count_source =
+        _pqs_source_box_route_driver_private_rhf_electron_count(
+            parent,
+            get(controls, :private_rhf_electron_count, nothing),
+        )
+    source_payload = diagnostic_route_payload.source_payload
+    input_contract = _pqs_multilayer_complete_core_shell_rhf_input_contract(
+        ;
+        source_plan = source_payload.source_plan,
+        final_basis = diagnostic_route_payload.final_basis,
+        h1_payload = diagnostic_route_payload.h1_payload,
+        density_inputs = diagnostic_route_payload.density_inputs,
+        coulomb_expansion = source_payload.coulomb_expansion,
+        electron_count,
+        fixture_role = get(controls, :private_rhf_fixture_role, :route_smoke),
+        metadata = (; source = :cartesian_assembly, electron_count_source),
+    )
+    return _pqs_multilayer_complete_core_shell_rhf_scf_payload(
+        ;
+        input_contract,
+        h1_payload = diagnostic_route_payload.h1_payload,
+        h1_j_payload = diagnostic_route_payload.h1_j_payload,
+        density_interaction =
+            diagnostic_route_payload.complete_core_shell_ham_payload.density_interaction,
+        mixing_kind = get(controls, :private_rhf_mixing_kind, :fock_diis),
+        max_iterations = get(controls, :private_rhf_max_iterations, 25),
+        density_atol = get(controls, :private_rhf_density_atol, 1.0e-8),
+        energy_atol = get(controls, :private_rhf_energy_atol, 1.0e-10),
+        residual_atol = get(controls, :private_rhf_residual_atol, 1.0e-8),
+        trace_atol = get(controls, :private_rhf_trace_atol, 1.0e-8),
+        idempotency_atol = get(controls, :private_rhf_idempotency_atol, 1.0e-8),
+        max_history = get(controls, :private_rhf_max_history, nothing),
+        diis_start_iteration =
+            get(controls, :private_rhf_diis_start_iteration, 2),
+        diis_regularization =
+            get(controls, :private_rhf_diis_regularization, 1.0e-12),
+        diis_coefficient_max_abs =
+            get(controls, :private_rhf_diis_coefficient_max_abs, 25.0),
+        metadata = (;
+            source = :cartesian_assembly,
+            electron_count_source,
+            private_diagnostic_only = true,
+        )
+    )
+end
+
 function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
     route_skeleton = shells.route_skeleton
     route_facts = _pqs_source_box_route_driver_route_facts(route_skeleton)
@@ -11663,6 +11734,12 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
         )
     complete_core_shell_h1_j_diagnostic_payload =
         complete_core_shell_diagnostic_route_payload.h1_j_payload
+    complete_core_shell_private_rhf_payload =
+        _pqs_source_box_route_driver_complete_core_shell_private_rhf_payload(
+            parent,
+            recipe,
+            complete_core_shell_diagnostic_route_payload,
+        )
     diatomic_complete_core_shell_support_window_payload =
         _pqs_source_box_route_driver_diatomic_complete_core_shell_support_window_payload(
             parent,
@@ -11773,6 +11850,7 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
         diatomic_complete_core_shell_hamiltonian_consumer_contract_payload,
         diatomic_complete_core_shell_ham_readiness_payload,
         complete_core_shell_h1_j_diagnostic_payload,
+        complete_core_shell_private_rhf_payload,
         complete_core_shell_h1_j_diagnostic_summary =
             complete_core_shell_h1_j_diagnostic_payload.summary,
         complete_core_shell_h1_j_diagnostic_status =
@@ -12033,6 +12111,52 @@ function _pqs_source_box_route_driver_complete_core_shell_h1_j_report_fields(
             isnothing(final_basis) ? nothing : final_basis.final_overlap_identity_error,
         complete_core_shell_raw_pair_factor_convention =
             get(summary, :raw_pair_factor_convention, nothing),
+    )
+end
+
+function _pqs_source_box_route_driver_complete_core_shell_private_rhf_report_fields(
+    assembly,
+    recipe,
+)
+    payload =
+        hasproperty(assembly, :complete_core_shell_private_rhf_payload) ?
+        assembly.complete_core_shell_private_rhf_payload :
+        nothing
+    wl_total = get(recipe, :wl_rhf_total, nothing)
+    if isnothing(payload)
+        return (;
+            private_rhf_requested = false,
+            private_rhf_summary = nothing,
+            private_rhf_status = :not_requested,
+            private_rhf_blocker = nothing,
+            private_rhf_total_energy = nothing,
+            private_rhf_iteration_count = nothing,
+            private_rhf_converged = false,
+            private_rhf_residual = nothing,
+            private_rhf_mixing_kind = nothing,
+            private_rhf_wl_total = wl_total,
+            private_rhf_delta = nothing,
+        )
+    end
+    summary = payload.summary
+    total_energy = get(summary, :final_total_energy, nothing)
+    residual_diagnostics = get(summary, :residual_diagnostics, (;))
+    return (;
+        private_rhf_requested = true,
+        private_rhf_summary = summary,
+        private_rhf_status = get(summary, :status, payload.status),
+        private_rhf_blocker = get(summary, :blocker, payload.blocker),
+        private_rhf_total_energy = total_energy,
+        private_rhf_iteration_count = get(summary, :iteration_count, nothing),
+        private_rhf_converged = get(summary, :rhf_converged, false),
+        private_rhf_residual =
+            get(residual_diagnostics, :commutator_residual, nothing),
+        private_rhf_mixing_kind = get(summary, :mixing_kind, nothing),
+        private_rhf_wl_total = wl_total,
+        private_rhf_delta =
+            isnothing(total_energy) || isnothing(wl_total) ?
+            nothing :
+            total_energy - wl_total,
     )
 end
 
@@ -12436,13 +12560,22 @@ function cartesian_report(system, parent, assembly, recipe)
         _pqs_source_box_route_driver_complete_core_shell_h1_j_report_fields(
             assembly,
         )
+    complete_core_shell_private_rhf_report_fields =
+        _pqs_source_box_route_driver_complete_core_shell_private_rhf_report_fields(
+            assembly,
+            recipe,
+        )
 
     report = _pqs_source_box_route_driver_report(
         standard_setup, parent, parent_axis, route_axis_counts, raw_box,
         system_metadata, recipe_metadata, parent_contract, parent_description,
         route_skeleton, route_facts, contract, diagnostics,
         low_order_route_summary)
-    return merge(report, complete_core_shell_h1_j_report_fields)
+    return merge(
+        report,
+        complete_core_shell_h1_j_report_fields,
+        complete_core_shell_private_rhf_report_fields,
+    )
 end
 
 function cartesian_materialization(report, materialization_inputs)

@@ -413,6 +413,13 @@ function _pqs_source_box_route_driver_write_group!(file, group, values)
     end
 end
 
+function _pqs_source_box_route_driver_write_present_group!(file, group, values)
+    for key in keys(values)
+        value = getproperty(values, key)
+        isnothing(value) || (file[string(group, "/", key)] = value)
+    end
+end
+
 function _pqs_source_box_route_driver_write_pqs_he_artifact!(file, report, input_path)
     hasproperty(report, :complete_core_shell_h1_j_driver_route_materialized) &&
         report.complete_core_shell_h1_j_driver_route_materialized || return nothing
@@ -429,6 +436,29 @@ function _pqs_source_box_route_driver_write_pqs_he_artifact!(file, report, input
         ("comparison", (; reference_label = something(recipe.comparison_reference_label, ""), wl_h1_lowest = wl_h1, wl_h1_self_coulomb = wl_j, delta_h1 = h1 - wl_h1, delta_h1_j = j - wl_j)),
     )
         _pqs_source_box_route_driver_write_group!(file, group, values)
+    end
+    if get(report, :private_rhf_requested, false)
+        _pqs_source_box_route_driver_write_present_group!(
+            file,
+            "private_rhf",
+            (;
+                status = report.private_rhf_status,
+                blocker = report.private_rhf_blocker,
+                total_energy = report.private_rhf_total_energy,
+                iteration_count = report.private_rhf_iteration_count,
+                converged = report.private_rhf_converged,
+                residual = report.private_rhf_residual,
+                mixing_kind = report.private_rhf_mixing_kind,
+            ),
+        )
+        _pqs_source_box_route_driver_write_present_group!(
+            file,
+            "comparison",
+            (;
+                wl_rhf_total = report.private_rhf_wl_total,
+                delta_rhf = report.private_rhf_delta,
+            ),
+        )
     end
     return nothing
 end

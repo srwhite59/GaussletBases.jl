@@ -53,6 +53,21 @@ white_lindsey_expansion = coulomb_gaussian_expansion(doacc = false)
 comparison_reference_label = nothing
 wl_h1_lowest = nothing
 wl_h1_self_coulomb = nothing
+run_private_rhf = false
+private_rhf_electron_count = nothing
+private_rhf_fixture_role = :route_smoke
+private_rhf_mixing_kind = :fock_diis
+private_rhf_max_iterations = 25
+private_rhf_density_atol = 1.0e-8
+private_rhf_energy_atol = 1.0e-10
+private_rhf_residual_atol = 1.0e-8
+private_rhf_trace_atol = private_rhf_density_atol
+private_rhf_idempotency_atol = private_rhf_density_atol
+private_rhf_max_history = nothing
+private_rhf_diis_start_iteration = 2
+private_rhf_diis_regularization = 1.0e-12
+private_rhf_diis_coefficient_max_abs = 25.0
+wl_rhf_total = nothing
 
 save_artifact = false
 save_tsv = false
@@ -98,13 +113,20 @@ parent_inputs = (; probe_parent_axis_construction, parent_axis_probe_backend,
     parent_axis_probe_family, parent_axis_family, parent_mapping_rule,
     parent_mapping_Z, parent_mapping_d, parent_mapping_tail_spacing)
 route_probe_inputs = (; probe_raw_product_box_plans, raw_product_box_probe_backend)
+private_rhf_inputs = (; run_private_rhf, private_rhf_electron_count,
+    private_rhf_fixture_role, private_rhf_mixing_kind, private_rhf_max_iterations,
+    private_rhf_density_atol, private_rhf_energy_atol, private_rhf_residual_atol,
+    private_rhf_trace_atol, private_rhf_idempotency_atol, private_rhf_max_history,
+    private_rhf_diis_start_iteration, private_rhf_diis_regularization,
+    private_rhf_diis_coefficient_max_abs)
 route_inputs = (; route_family, route_kind, route_shape, product_body_rule,
     pqs_retained_rule, product_retained_rule, terms, pair_factor_normalization,
     support_dense_direct_allowed, reference_only_authorities,
     white_lindsey_route_shape, white_lindsey_mapping_rule,
     white_lindsey_nesting_rule, white_lindsey_retained_rule,
     white_lindsey_operator_rule, white_lindsey_benchmark_role,
-    comparison_reference_label, wl_h1_lowest, wl_h1_self_coulomb)
+    comparison_reference_label, wl_h1_lowest, wl_h1_self_coulomb,
+    private_rhf_inputs, wl_rhf_total)
 materialization_inputs = (; materialize_route, probe_route_configured_one_center_materializer,
     private_global_overlap_requested, private_global_overlap_global_dimension,
     private_global_overlap_inputs,
