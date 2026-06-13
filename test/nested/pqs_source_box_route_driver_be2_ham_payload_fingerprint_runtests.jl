@@ -12,7 +12,9 @@ const _PQS_BE2_HAM_PAYLOAD_FINGERPRINT_TERMS = (
     :kinetic,
 )
 
-function _pqs_be2_ham_payload_fingerprint_assembly()
+function _pqs_be2_ham_payload_fingerprint_assembly(;
+    probe_parent_axis_construction = false,
+)
     system_inputs = (;
         atom_symbols = ("Be", "Be"),
         nuclear_charges = (4, 4),
@@ -30,7 +32,7 @@ function _pqs_be2_ham_payload_fingerprint_assembly()
         core_spacing = nothing,
     )
     probe_inputs = (;
-        probe_parent_axis_construction = false,
+        probe_parent_axis_construction,
         parent_axis_probe_backend = :pgdg_localized_experimental,
         parent_axis_probe_family = :G10,
         probe_raw_product_box_plans = false,
@@ -142,6 +144,54 @@ end
           :blocked_missing_complete_core_shell_source_plan_inputs
     @test payload.h1_j_payload.status ==
           :blocked_missing_complete_core_shell_h1_j_route_inputs
+
+    @test ham.object_kind == :pqs_source_box_complete_core_shell_ham_payload
+    @test ham.status == :blocked_complete_core_shell_ham_payload
+    @test ham.blocker == :missing_complete_core_shell_ham_inputs
+    @test ham.missing_inputs == (
+        :pqs_multilayer_complete_core_shell_final_basis,
+        :pqs_multilayer_complete_core_shell_h1_payload,
+        :pqs_complete_core_shell_final_one_electron_hamiltonian,
+        :complete_core_shell_density_inputs,
+        :complete_core_shell_h1_j_diagnostic_payload,
+        :pqs_complete_core_shell_pre_final_density_interaction,
+    )
+    @test !ham.summary.public_api
+    @test !ham.summary.exports_materialized
+    @test !ham.summary.artifacts_materialized
+    @test !ham.summary.rhf_product_surface
+    @test !ham.summary.serious_hf_claim
+end
+
+@testset "Be2 PQS probe-enabled Ham readiness fingerprint" begin
+    assembly = _pqs_be2_ham_payload_fingerprint_assembly(
+        probe_parent_axis_construction = :auto,
+    )
+    @test assembly.object_kind == :cartesian_assembly
+    @test assembly.route_skeleton.route_family === :pqs_source_box
+
+    readiness = assembly.diatomic_complete_core_shell_ham_readiness_payload
+    payload = assembly.complete_core_shell_diagnostic_route_payload
+    ham = payload.complete_core_shell_ham_payload
+
+    @test readiness.status == :blocked_diatomic_complete_core_shell_ham_readiness
+    @test readiness.blocker ==
+          :missing_diatomic_complete_core_shell_source_plan_producer
+    @test readiness.route_family === :pqs_source_box
+    @test readiness.system_classification === :bond_aligned_diatomic
+    @test readiness.bond_axis === :x
+    @test readiness.parent_axis_bundle_object_available
+    @test :parent_axis_bundle_object in readiness.available_objects
+    @test !in(:parent_axis_bundle_object, readiness.missing_objects)
+    @test :diatomic_complete_core_shell_source_plan_producer in
+          readiness.missing_objects
+
+    @test readiness.source_box_summary.source_box_keys ==
+          (:pqs_left, :product, :pqs_right)
+    @test readiness.retained_unit_summary.unit_keys ==
+          (:pqs_left, :pqs_right, :product)
+    @test readiness.pair_inventory_summary.pair_family_counts ==
+          (pqs_pqs = 3, pqs_product = 2, product_pqs = 0, product_product = 1)
 
     @test ham.object_kind == :pqs_source_box_complete_core_shell_ham_payload
     @test ham.status == :blocked_complete_core_shell_ham_payload
