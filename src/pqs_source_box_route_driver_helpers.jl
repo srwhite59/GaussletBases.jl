@@ -1064,6 +1064,8 @@ function _pqs_source_box_route_driver_system_metadata(
         atom_symbols = system_inputs.atom_symbols,
         nuclear_charges = standard_setup.nuclear_charges,
         atom_locations = standard_setup.atom_locations,
+        bond_axis = get(system_inputs, :bond_axis, nothing),
+        bond_length = get(system_inputs, :bond_length, nothing),
         radius = standard_setup.radius,
         manual_parent_axis_counts = system_inputs.parent_axis_counts,
         parent_axis_counts = route_axis_counts.parent_axis_counts,
@@ -1195,6 +1197,8 @@ function _pqs_source_box_route_driver_recipe_metadata(
         tail_spacing = standard_setup.tail_spacing,
         q_to_core_spacing_rule = standard_setup.q_to_core_spacing_rule,
         core_spacing = standard_setup.core_spacing,
+        xmax_parallel = get(spacing_inputs, :xmax_parallel, nothing),
+        xmax_transverse = get(spacing_inputs, :xmax_transverse, nothing),
         core_spacing_source = standard_setup.spacing.core_spacing_source,
         q_to_core_spacing_rule_status =
             standard_setup.spacing.q_to_core_spacing_rule_status,
@@ -1214,8 +1218,13 @@ function _pqs_source_box_route_driver_recipe_metadata(
             get(probe_inputs, :parent_mapping_tail_spacing, nothing),
         comparison_reference_label =
             get(route_recipe, :comparison_reference_label, nothing),
+        comparison_ready = get(route_recipe, :comparison_ready, true),
+        comparison_blocker = get(route_recipe, :comparison_blocker, nothing),
+        supplement_policy = get(route_recipe, :supplement_policy, nothing),
         wl_h1_lowest = get(route_recipe, :wl_h1_lowest, nothing),
         wl_h1_self_coulomb = get(route_recipe, :wl_h1_self_coulomb, nothing),
+        run_h1 = get(route_recipe, :run_h1, true),
+        run_h1_j = get(route_recipe, :run_h1_j, true),
         run_private_rhf =
             get(get(route_recipe, :private_rhf_inputs, (;)), :run_private_rhf, false),
         wl_rhf_total = get(route_recipe, :wl_rhf_total, nothing),
@@ -6301,8 +6310,13 @@ function cartesian_recipe(route_inputs)
             white_lindsey = white_lindsey_recipe,
             comparison_reference_label =
                 get(route_inputs, :comparison_reference_label, nothing),
+            comparison_ready = get(route_inputs, :comparison_ready, true),
+            comparison_blocker = get(route_inputs, :comparison_blocker, nothing),
+            supplement_policy = get(route_inputs, :supplement_policy, nothing),
             wl_h1_lowest = get(route_inputs, :wl_h1_lowest, nothing),
             wl_h1_self_coulomb = get(route_inputs, :wl_h1_self_coulomb, nothing),
+            run_h1 = get(route_inputs, :run_h1, true),
+            run_h1_j = get(route_inputs, :run_h1_j, true),
             private_rhf_inputs =
                 get(route_inputs, :private_rhf_inputs, (; run_private_rhf = false)),
             wl_rhf_total = get(route_inputs, :wl_rhf_total, nothing),
@@ -12160,6 +12174,131 @@ function _pqs_source_box_route_driver_complete_core_shell_private_rhf_report_fie
     )
 end
 
+function _pqs_source_box_route_driver_diatomic_complete_core_shell_report_fields(
+    assembly,
+)
+    readiness =
+        hasproperty(assembly, :diatomic_complete_core_shell_ham_readiness_payload) ?
+        assembly.diatomic_complete_core_shell_ham_readiness_payload :
+        nothing
+    summary =
+        isnothing(readiness) || !hasproperty(readiness, :summary) ?
+        (;
+            status = :not_available_missing_diatomic_complete_core_shell_readiness,
+            blocker = :missing_diatomic_complete_core_shell_readiness,
+            source_plan_status = :not_available,
+            final_basis_status = :not_available,
+            h1_status = :not_available,
+            h1_payload_status = :not_available,
+            ham_input_payload_status = :not_available,
+            hamiltonian_handoff_payload_status = :not_available,
+            hamiltonian_consumer_contract_payload_status = :not_available,
+            final_basis_materialized = false,
+            h1_materialized = false,
+            h1_j_materialized = false,
+            ham_input_materialized = false,
+            hamiltonian_handoff_materialized = false,
+            hamiltonian_consumer_contract_materialized = false,
+            rhf_materialized = false,
+            public_api = false,
+            exports_materialized = false,
+            artifacts_materialized = false,
+            missing_objects = (:diatomic_complete_core_shell_readiness,),
+        ) :
+        readiness.summary
+    final_basis_payload =
+        hasproperty(assembly, :diatomic_complete_core_shell_final_basis_payload) ?
+        assembly.diatomic_complete_core_shell_final_basis_payload :
+        nothing
+    h1_payload =
+        hasproperty(assembly, :diatomic_complete_core_shell_h1_payload) ?
+        assembly.diatomic_complete_core_shell_h1_payload :
+        nothing
+    ham_input_payload =
+        hasproperty(assembly, :diatomic_complete_core_shell_ham_input_payload) ?
+        assembly.diatomic_complete_core_shell_ham_input_payload :
+        nothing
+    handoff_payload =
+        hasproperty(assembly, :diatomic_complete_core_shell_hamiltonian_handoff_payload) ?
+        assembly.diatomic_complete_core_shell_hamiltonian_handoff_payload :
+        nothing
+    return (;
+        diatomic_complete_core_shell_readiness_summary = summary,
+        diatomic_complete_core_shell_readiness_status = summary.status,
+        diatomic_complete_core_shell_readiness_blocker = summary.blocker,
+        diatomic_complete_core_shell_source_plan_status =
+            get(summary, :source_plan_status, :not_available),
+        diatomic_complete_core_shell_final_basis_status =
+            get(summary, :final_basis_status, :not_available),
+        diatomic_complete_core_shell_h1_payload_status =
+            get(summary, :h1_payload_status, :not_available),
+        diatomic_complete_core_shell_h1_status =
+            get(summary, :h1_status, :not_available),
+        diatomic_complete_core_shell_ham_input_status =
+            get(summary, :ham_input_payload_status, :not_available),
+        diatomic_complete_core_shell_hamiltonian_handoff_status =
+            get(summary, :hamiltonian_handoff_payload_status, :not_available),
+        diatomic_complete_core_shell_hamiltonian_consumer_contract_status =
+            get(summary, :hamiltonian_consumer_contract_payload_status, :not_available),
+        diatomic_complete_core_shell_final_dimension =
+            isnothing(final_basis_payload) ||
+            !hasproperty(final_basis_payload, :summary) ?
+            nothing :
+            get(final_basis_payload.summary, :final_dimension, nothing),
+        diatomic_complete_core_shell_final_overlap_identity_error =
+            isnothing(final_basis_payload) ||
+            !hasproperty(final_basis_payload, :final_basis) ||
+            isnothing(final_basis_payload.final_basis) ||
+            !hasproperty(final_basis_payload.final_basis, :final_overlap_identity_error) ?
+            nothing :
+            final_basis_payload.final_basis.final_overlap_identity_error,
+        diatomic_complete_core_shell_h1_lowest_energy =
+            isnothing(h1_payload) || !hasproperty(h1_payload, :summary) ?
+            nothing :
+            get(h1_payload.summary, :lowest_energy, nothing),
+        diatomic_complete_core_shell_density_gauge =
+            isnothing(ham_input_payload) || !hasproperty(ham_input_payload, :summary) ?
+            nothing :
+            get(ham_input_payload.summary, :density_gauge, nothing),
+        diatomic_complete_core_shell_raw_pair_factor_convention =
+            isnothing(ham_input_payload) || !hasproperty(ham_input_payload, :summary) ?
+            nothing :
+            get(ham_input_payload.summary, :raw_pair_factor_convention, nothing),
+        diatomic_complete_core_shell_nuclear_repulsion =
+            isnothing(handoff_payload) || !hasproperty(handoff_payload, :summary) ?
+            nothing :
+            get(handoff_payload.summary, :nuclear_repulsion, nothing),
+        diatomic_complete_core_shell_electron_count =
+            isnothing(handoff_payload) || !hasproperty(handoff_payload, :summary) ?
+            nothing :
+            get(handoff_payload.summary, :electron_count, nothing),
+        diatomic_complete_core_shell_spin_sector =
+            isnothing(handoff_payload) || !hasproperty(handoff_payload, :summary) ?
+            nothing :
+            get(handoff_payload.summary, :spin_sector, nothing),
+        diatomic_complete_core_shell_final_basis_materialized =
+            get(summary, :final_basis_materialized, false),
+        diatomic_complete_core_shell_h1_materialized =
+            get(summary, :h1_materialized, false),
+        diatomic_complete_core_shell_h1_j_materialized =
+            get(summary, :h1_j_materialized, false),
+        diatomic_complete_core_shell_ham_input_materialized =
+            get(summary, :ham_input_materialized, false),
+        diatomic_complete_core_shell_hamiltonian_handoff_materialized =
+            get(summary, :hamiltonian_handoff_materialized, false),
+        diatomic_complete_core_shell_hamiltonian_consumer_contract_materialized =
+            get(summary, :hamiltonian_consumer_contract_materialized, false),
+        diatomic_complete_core_shell_rhf_materialized =
+            get(summary, :rhf_materialized, false),
+        diatomic_complete_core_shell_public_api =
+            get(summary, :public_api, false),
+        diatomic_complete_core_shell_exports_materialized =
+            get(summary, :exports_materialized, false),
+        diatomic_complete_core_shell_artifacts_materialized =
+            get(summary, :artifacts_materialized, false),
+    )
+end
+
 function _pqs_source_box_route_driver_pair_operator_report_count_entries(
     entries,
 )
@@ -12565,6 +12704,10 @@ function cartesian_report(system, parent, assembly, recipe)
             assembly,
             recipe,
         )
+    diatomic_complete_core_shell_report_fields =
+        _pqs_source_box_route_driver_diatomic_complete_core_shell_report_fields(
+            assembly,
+        )
 
     report = _pqs_source_box_route_driver_report(
         standard_setup, parent, parent_axis, route_axis_counts, raw_box,
@@ -12575,6 +12718,7 @@ function cartesian_report(system, parent, assembly, recipe)
         report,
         complete_core_shell_h1_j_report_fields,
         complete_core_shell_private_rhf_report_fields,
+        diatomic_complete_core_shell_report_fields,
     )
 end
 

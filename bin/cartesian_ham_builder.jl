@@ -9,6 +9,8 @@ route_kind = :be2_cartesian_nesting_route_driver_spine
 atom_symbols = ("Be", "Be")
 nuclear_charges = (4, 4)
 atom_locations = ((-2.0, 0.0, 0.0), (2.0, 0.0, 0.0))
+bond_axis = nothing
+bond_length = nothing
 radius = 15.0
 parent_axis_counts = (x = 9, y = 7, z = 9)
 map_backend = :pgdg_localized_experimental
@@ -19,6 +21,8 @@ reference_spacing = 1.0
 tail_spacing = 10.0
 q_to_core_spacing_rule = :standard_pqs_ns_equals_q
 core_spacing = nothing
+xmax_parallel = nothing
+xmax_transverse = nothing
 
 probe_parent_axis_construction = :auto
 parent_axis_family = :G10
@@ -51,8 +55,13 @@ white_lindsey_benchmark_role = :published_cartesian_baseline_for_pqs_comparison
 white_lindsey_Z = 2.0
 white_lindsey_expansion = coulomb_gaussian_expansion(doacc = false)
 comparison_reference_label = nothing
+comparison_ready = true
+comparison_blocker = nothing
+supplement_policy = nothing
 wl_h1_lowest = nothing
 wl_h1_self_coulomb = nothing
+run_h1 = true
+run_h1_j = true
 run_private_rhf = false
 private_rhf_electron_count = nothing
 private_rhf_fixture_role = :route_smoke
@@ -106,9 +115,9 @@ end
 eval.(Meta.parse.(inputs))
 
 system_inputs = (; atom_symbols, nuclear_charges, atom_locations,
-    radius, parent_axis_counts, map_backend)
+    bond_axis, bond_length, radius, parent_axis_counts, map_backend)
 spacing_inputs = (; q, n_s, reference_spacing, tail_spacing,
-    q_to_core_spacing_rule, core_spacing)
+    q_to_core_spacing_rule, core_spacing, xmax_parallel, xmax_transverse)
 parent_inputs = (; probe_parent_axis_construction, parent_axis_probe_backend,
     parent_axis_probe_family, parent_axis_family, parent_mapping_rule,
     parent_mapping_Z, parent_mapping_d, parent_mapping_tail_spacing)
@@ -125,8 +134,9 @@ route_inputs = (; route_family, route_kind, route_shape, product_body_rule,
     white_lindsey_route_shape, white_lindsey_mapping_rule,
     white_lindsey_nesting_rule, white_lindsey_retained_rule,
     white_lindsey_operator_rule, white_lindsey_benchmark_role,
-    comparison_reference_label, wl_h1_lowest, wl_h1_self_coulomb,
-    private_rhf_inputs, wl_rhf_total)
+    comparison_reference_label, comparison_ready, comparison_blocker,
+    supplement_policy, wl_h1_lowest, wl_h1_self_coulomb,
+    run_h1, run_h1_j, private_rhf_inputs, wl_rhf_total)
 materialization_inputs = (; materialize_route, probe_route_configured_one_center_materializer,
     private_global_overlap_requested, private_global_overlap_global_dimension,
     private_global_overlap_inputs,

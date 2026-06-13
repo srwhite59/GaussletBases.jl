@@ -1,0 +1,72 @@
+using Test
+using JLD2
+
+const _H2_PQS_DRIVER =
+    normpath(joinpath(@__DIR__, "..", "..", "bin", "cartesian_ham_builder.jl"))
+const _H2_PQS_INPUT =
+    normpath(joinpath(@__DIR__, "..", "driver_inputs", "h2_pqs_q5_gausslet_only_r4.jl"))
+
+function _h2_tuple_locations(value)
+    return Tuple(Tuple(Float64(component) for component in location) for location in value)
+end
+
+@testset "cartesian_ham_builder_h2_pqs_q5_gausslet_only_r4 readiness artifact" begin
+    mktempdir() do dir
+        outfile = joinpath(dir, "h2_pqs_q5_gausslet_only_r4.jld2")
+        tsvfile = joinpath(dir, "h2_pqs_q5_gausslet_only_r4.tsv")
+        println("h2_readiness_artifact_path=", outfile)
+        saved_args = copy(ARGS)
+        empty!(ARGS)
+        append!(ARGS, [_H2_PQS_INPUT, "outfile=$(repr(outfile))", "tsvfile=$(repr(tsvfile))"])
+        try
+            include(_H2_PQS_DRIVER)
+        finally
+            empty!(ARGS)
+            append!(ARGS, saved_args)
+        end
+
+        @test isfile(outfile)
+        jldopen(outfile, "r") do file
+            @test Tuple(file["system/atom_symbols"]) == ("H", "H")
+            @test Tuple(file["system/nuclear_charges"]) == (1, 1)
+            @test _h2_tuple_locations(file["system/atom_locations"]) ==
+                  ((0.0, 0.0, -2.0), (0.0, 0.0, 2.0))
+            @test file["system/bond_axis"] === :z
+            @test file["system/bond_length"] ≈ 4.0 atol = 0.0 rtol = 0.0
+
+            @test file["config/route_family"] === :pqs_source_box
+            @test file["config/route_kind"] ===
+                  :bond_aligned_diatomic_fixed_q_complete_core_shell
+            @test file["config/q"] == 5
+            @test file["config/n_s"] == 5
+            @test file["config/supplement_policy"] === :none
+            @test file["config/comparison_ready"] == false
+
+            @test file["comparison/ready"] == false
+            @test file["comparison/blocker"] ===
+                  :supplemented_reference_not_comparable_to_gausslet_only
+            @test file["comparison/reference_label"] ==
+                  "WL/QW H2 R=4 supplemented reference not used"
+            @test !haskey(file, "comparison/wl_rhf_total")
+            @test !haskey(file, "comparison/delta_rhf")
+
+            @test file["private_rhf/requested"] == false
+            @test file["private_rhf/materialized"] == false
+            @test file["route/h1_j_materialized"] == false
+            @test file["route/private_rhf_materialized"] == false
+            @test file["route/public_api"] == false
+            @test file["route/exports_materialized"] == false
+            @test file["route/artifacts_materialized"] == false
+            @test file["route/readiness_status"] ===
+                  :blocked_diatomic_complete_core_shell_ham_readiness
+            @test file["route/readiness_blocker"] ===
+                  :missing_diatomic_complete_core_shell_source_plan_producer
+            @test file["route/source_plan_status"] ===
+                  :not_materialized_diatomic_complete_core_shell_source_plan
+            @test file["route/final_basis_status"] ===
+                  :not_materialized_diatomic_complete_core_shell_final_basis
+            @test file["route/h1_status"] ===
+                  :not_materialized_diatomic_complete_core_shell_h1
+        end
+    end
+end

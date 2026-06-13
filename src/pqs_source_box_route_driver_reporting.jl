@@ -463,6 +463,80 @@ function _pqs_source_box_route_driver_write_pqs_he_artifact!(file, report, input
     return nothing
 end
 
+function _pqs_source_box_route_driver_bond_length(atom_locations)
+    length(atom_locations) == 2 || return nothing
+    a = atom_locations[1]
+    b = atom_locations[2]
+    length(a) == 3 && length(b) == 3 || return nothing
+    return sqrt(sum((Float64(a[axis]) - Float64(b[axis]))^2 for axis in 1:3))
+end
+
+function _pqs_source_box_route_driver_write_pqs_diatomic_readiness_artifact!(
+    file,
+    report,
+    input_path,
+)
+    recipe = report.recipe_metadata
+    system = report.system_metadata
+    recipe.route_family === :pqs_source_box || return nothing
+    length(system.atom_symbols) == 2 || return nothing
+    get(recipe, :supplement_policy, nothing) === :none || return nothing
+
+    atom_locations = Tuple(Tuple(location) for location in system.atom_locations)
+    bond_axis =
+        !isnothing(get(system, :bond_axis, nothing)) ?
+        system.bond_axis :
+        get(report.parent_contract, :bond_axis, nothing)
+    bond_length =
+        !isnothing(get(system, :bond_length, nothing)) ?
+        system.bond_length :
+        _pqs_source_box_route_driver_bond_length(atom_locations)
+    comparison_ready = get(recipe, :comparison_ready, false)
+    comparison_blocker =
+        get(recipe, :comparison_blocker, nothing)
+
+    for (group, values) in (
+        ("system", (; atom_symbols = system.atom_symbols, nuclear_charges = system.nuclear_charges, atom_locations, bond_axis, bond_length)),
+        ("config", (; input_path = isnothing(input_path) ? "" : String(input_path), route_family = recipe.route_family, route_kind = recipe.route_kind, q = recipe.q, n_s = recipe.n_s, core_spacing = recipe.core_spacing, xmax_parallel = get(recipe, :xmax_parallel, nothing), xmax_transverse = get(recipe, :xmax_transverse, nothing), supplement_policy = recipe.supplement_policy, comparison_ready)),
+        ("comparison", (; ready = comparison_ready, blocker = comparison_blocker, reference_label = something(recipe.comparison_reference_label, ""))),
+        ("route", (; readiness_status = report.diatomic_complete_core_shell_readiness_status, readiness_blocker = report.diatomic_complete_core_shell_readiness_blocker, source_plan_status = report.diatomic_complete_core_shell_source_plan_status, final_basis_status = report.diatomic_complete_core_shell_final_basis_status, h1_status = report.diatomic_complete_core_shell_h1_status, h1_materialized = report.diatomic_complete_core_shell_h1_materialized, h1_j_materialized = report.diatomic_complete_core_shell_h1_j_materialized, ham_input_status = report.diatomic_complete_core_shell_ham_input_status, hamiltonian_handoff_status = report.diatomic_complete_core_shell_hamiltonian_handoff_status, private_rhf_materialized = report.diatomic_complete_core_shell_rhf_materialized, public_api = report.diatomic_complete_core_shell_public_api, exports_materialized = report.diatomic_complete_core_shell_exports_materialized, artifacts_materialized = report.diatomic_complete_core_shell_artifacts_materialized)),
+    )
+        _pqs_source_box_route_driver_write_group!(file, group, values)
+    end
+    _pqs_source_box_route_driver_write_present_group!(
+        file,
+        "basis",
+        (;
+            final_dimension = report.diatomic_complete_core_shell_final_dimension,
+            final_overlap_identity_error =
+                report.diatomic_complete_core_shell_final_overlap_identity_error,
+        ),
+    )
+    _pqs_source_box_route_driver_write_present_group!(
+        file,
+        "physics",
+        (h1_lowest = report.diatomic_complete_core_shell_h1_lowest_energy,),
+    )
+    _pqs_source_box_route_driver_write_present_group!(
+        file,
+        "density_interaction",
+        (;
+            density_gauge = report.diatomic_complete_core_shell_density_gauge,
+            raw_pair_factor_convention =
+                report.diatomic_complete_core_shell_raw_pair_factor_convention,
+        ),
+    )
+    _pqs_source_box_route_driver_write_group!(
+        file,
+        "private_rhf",
+        (;
+            requested = get(recipe, :run_private_rhf, false),
+            materialized = report.diatomic_complete_core_shell_rhf_materialized,
+        ),
+    )
+    return nothing
+end
+
 function _pqs_source_box_route_driver_save(
     report;
     save_artifact, save_tsv, outfile, tsvfile, materialization = nothing,
@@ -479,6 +553,11 @@ function _pqs_source_box_route_driver_save(
             isnothing(durable_materialization) ||
                 (file["materialization"] = durable_materialization)
             _pqs_source_box_route_driver_write_pqs_he_artifact!(
+                file,
+                durable_report,
+                input_path,
+            )
+            _pqs_source_box_route_driver_write_pqs_diatomic_readiness_artifact!(
                 file,
                 durable_report,
                 input_path,
