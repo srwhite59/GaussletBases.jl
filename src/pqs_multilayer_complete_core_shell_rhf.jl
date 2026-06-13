@@ -651,6 +651,395 @@ function _pqs_multilayer_complete_core_shell_rhf_initial_density_payload(;
     )
 end
 
+function _pqs_multilayer_complete_core_shell_rhf_scf_controls_blocker(
+    max_iterations,
+    density_atol,
+    energy_atol,
+)
+    if !(max_iterations isa Integer) ||
+       max_iterations isa Bool ||
+       max_iterations <= 0
+        return :invalid_scf_controls
+    end
+    if !(density_atol isa Real) ||
+       !isfinite(density_atol) ||
+       density_atol <= 0
+        return :invalid_scf_controls
+    end
+    if !(energy_atol isa Real) ||
+       !isfinite(energy_atol) ||
+       energy_atol <= 0
+        return :invalid_scf_controls
+    end
+    return nothing
+end
+
+function _pqs_multilayer_complete_core_shell_rhf_scf_blocked_payload(;
+    blocker,
+    missing_inputs = (),
+    input_contract = nothing,
+    h1_payload = nothing,
+    density_interaction = nothing,
+    initial_density_payload = nothing,
+    final_density = nothing,
+    occupied_orbital_coefficients = nothing,
+    final_one_step_payload = nothing,
+    iteration_records = (),
+    max_iterations = nothing,
+    density_atol = nothing,
+    energy_atol = nothing,
+    metadata = (;),
+)
+    contract_summary =
+        _pqs_multilayer_rhf_contract_property(input_contract, :summary, (;))
+    final_dimension =
+        _pqs_multilayer_rhf_contract_property(contract_summary, :final_dimension)
+    electron_count =
+        _pqs_multilayer_rhf_contract_property(input_contract, :electron_count)
+    fixture_role =
+        _pqs_multilayer_rhf_contract_property(input_contract, :fixture_role)
+    summary = (;
+        status = :blocked_pqs_multilayer_complete_core_shell_rhf_scf_payload,
+        blocker,
+        missing_inputs,
+        input_contract_status =
+            _pqs_multilayer_rhf_contract_property(input_contract, :status),
+        h1_payload_status =
+            _pqs_multilayer_rhf_contract_property(h1_payload, :status),
+        density_interaction_status =
+            _pqs_multilayer_rhf_contract_property(density_interaction, :status),
+        initial_density_status =
+            _pqs_multilayer_rhf_contract_property(
+                initial_density_payload,
+                :status,
+            ),
+        final_dimension,
+        electron_count,
+        fixture_role,
+        iteration_count = length(iteration_records),
+        max_iterations,
+        density_atol,
+        energy_atol,
+        rhf_materialized = false,
+        rhf_converged = false,
+        driver_route_materialized = false,
+        route_report_materialized = false,
+        exports_materialized = false,
+        artifacts_materialized = false,
+        public_api = false,
+        private_diagnostic_only = true,
+    )
+    return (;
+        object_kind = :pqs_multilayer_complete_core_shell_rhf_scf_payload,
+        status = summary.status,
+        blocker,
+        missing_inputs,
+        final_density,
+        occupied_orbital_coefficients,
+        final_one_step_payload,
+        iteration_records,
+        summary,
+        metadata = merge(
+            NamedTuple(metadata),
+            (;
+                source = :pqs_multilayer_complete_core_shell_rhf_scf_payload,
+                blocker,
+                rhf_materialized = false,
+                rhf_converged = false,
+                driver_route_materialized = false,
+                route_report_materialized = false,
+                exports_materialized = false,
+                artifacts_materialized = false,
+                public_api = false,
+            ),
+        ),
+    )
+end
+
+function _pqs_multilayer_complete_core_shell_rhf_scf_payload(;
+    input_contract = nothing,
+    h1_payload = nothing,
+    h1_j_payload = nothing,
+    density_interaction = nothing,
+    initial_density_payload = nothing,
+    max_iterations::Integer = 25,
+    density_atol::Real = 1.0e-8,
+    energy_atol::Real = 1.0e-10,
+    metadata = (;),
+)
+    controls_blocker =
+        _pqs_multilayer_complete_core_shell_rhf_scf_controls_blocker(
+            max_iterations,
+            density_atol,
+            energy_atol,
+        )
+    if !isnothing(controls_blocker)
+        return _pqs_multilayer_complete_core_shell_rhf_scf_blocked_payload(
+            ;
+            blocker = controls_blocker,
+            max_iterations,
+            density_atol,
+            energy_atol,
+            metadata,
+        )
+    end
+
+    h1_payload =
+        _pqs_multilayer_complete_core_shell_rhf_h1_payload(
+            h1_payload,
+            h1_j_payload,
+        )
+    density_interaction =
+        _pqs_multilayer_complete_core_shell_rhf_density_interaction_payload(
+            density_interaction,
+            h1_j_payload,
+        )
+    missing_inputs = Symbol[]
+    input_contract_status =
+        _pqs_multilayer_rhf_contract_property(input_contract, :status)
+    input_contract_kind =
+        _pqs_multilayer_rhf_contract_property(input_contract, :object_kind)
+    if input_contract_kind !==
+       :pqs_multilayer_complete_core_shell_rhf_input_contract ||
+       input_contract_status !==
+       :available_pqs_multilayer_complete_core_shell_rhf_input_contract
+        push!(missing_inputs, :rhf_input_contract)
+    end
+    h1_payload_status =
+        _pqs_multilayer_rhf_contract_property(h1_payload, :status)
+    h1_payload_kind =
+        _pqs_multilayer_rhf_contract_property(h1_payload, :object_kind)
+    if h1_payload_kind !== :pqs_multilayer_complete_core_shell_h1_payload ||
+       h1_payload_status !==
+       :materialized_pqs_multilayer_complete_core_shell_h1_payload
+        push!(missing_inputs, :h1_payload)
+    end
+    density_status =
+        _pqs_multilayer_rhf_contract_property(density_interaction, :status)
+    density_kind =
+        _pqs_multilayer_rhf_contract_property(density_interaction, :object_kind)
+    if density_kind !== :pqs_complete_core_shell_pre_final_density_interaction ||
+       density_status !==
+       :materialized_pqs_complete_core_shell_pre_final_density_interaction
+        push!(missing_inputs, :density_interaction)
+    end
+    if !isempty(missing_inputs)
+        blocker =
+            length(missing_inputs) == 1 && only(missing_inputs) ===
+            :rhf_input_contract ? :missing_rhf_input_contract :
+            length(missing_inputs) == 1 && only(missing_inputs) ===
+            :h1_payload ? :missing_h1_payload :
+            length(missing_inputs) == 1 && only(missing_inputs) ===
+            :density_interaction ? :missing_density_interaction :
+            :missing_rhf_scf_inputs
+        return _pqs_multilayer_complete_core_shell_rhf_scf_blocked_payload(
+            ;
+            blocker,
+            missing_inputs = Tuple(missing_inputs),
+            input_contract,
+            h1_payload,
+            density_interaction,
+            max_iterations,
+            density_atol,
+            energy_atol,
+            metadata,
+        )
+    end
+
+    if isnothing(initial_density_payload)
+        initial_density_payload =
+            _pqs_multilayer_complete_core_shell_rhf_initial_density_payload(
+                ;
+                input_contract,
+                h1_payload,
+                metadata,
+            )
+    end
+    if _pqs_multilayer_rhf_contract_property(
+        initial_density_payload,
+        :status,
+    ) !==
+       :materialized_pqs_multilayer_complete_core_shell_rhf_initial_density_payload
+        blocker =
+            _pqs_multilayer_rhf_contract_property(
+                initial_density_payload,
+                :blocker,
+                :missing_initial_density,
+            )
+        return _pqs_multilayer_complete_core_shell_rhf_scf_blocked_payload(
+            ;
+            blocker,
+            missing_inputs = (:initial_density,),
+            input_contract,
+            h1_payload,
+            density_interaction,
+            initial_density_payload,
+            max_iterations,
+            density_atol,
+            energy_atol,
+            metadata,
+        )
+    end
+
+    density = Matrix{Float64}(initial_density_payload.final_density)
+    occupation = input_contract.occupation
+    nocc = occupation.nocc
+    occupancy = occupation.occupancy
+    final_dimension = input_contract.summary.final_dimension
+    previous_energy = nothing
+    iteration_records = NamedTuple[]
+    final_one_step_payload = nothing
+    occupied_orbital_coefficients =
+        initial_density_payload.occupied_orbital_coefficients
+
+    for iteration in 1:max_iterations
+        one_step =
+            _pqs_multilayer_complete_core_shell_rhf_one_step_payload(
+                ;
+                input_contract,
+                h1_payload,
+                density_interaction,
+                final_density = density,
+                metadata,
+            )
+        if one_step.status !==
+           :materialized_pqs_multilayer_complete_core_shell_rhf_one_step_payload
+            return _pqs_multilayer_complete_core_shell_rhf_scf_blocked_payload(
+                ;
+                blocker = isnothing(one_step.blocker) ?
+                    :missing_density_interaction : one_step.blocker,
+                input_contract,
+                h1_payload,
+                density_interaction,
+                initial_density_payload,
+                final_density = density,
+                occupied_orbital_coefficients,
+                final_one_step_payload = one_step,
+                iteration_records = Tuple(iteration_records),
+                max_iterations,
+                density_atol,
+                energy_atol,
+                metadata,
+            )
+        end
+
+        fock_matrix =
+            0.5 .* (
+                one_step.effective_fock_matrix .+
+                transpose(one_step.effective_fock_matrix)
+            )
+        eig = eigen(Symmetric(fock_matrix))
+        occupied_orbital_coefficients = Matrix(eig.vectors[:, 1:nocc])
+        next_density =
+            Float64(occupancy) .*
+            (
+                occupied_orbital_coefficients *
+                transpose(occupied_orbital_coefficients)
+            )
+        next_density = 0.5 .* (next_density .+ transpose(next_density))
+        density_change = norm(next_density - density, Inf)
+        energy_change =
+            isnothing(previous_energy) ? nothing :
+            abs(one_step.total_energy - previous_energy)
+        density_converged = density_change <= Float64(density_atol)
+        energy_converged =
+            isnothing(energy_change) || energy_change <= Float64(energy_atol)
+        converged = density_converged && energy_converged
+        push!(
+            iteration_records,
+            (;
+                iteration,
+                total_energy = one_step.total_energy,
+                density_change,
+                energy_change,
+                density_converged,
+                energy_converged,
+                converged,
+            ),
+        )
+
+        final_one_step_payload = one_step
+        density = next_density
+        previous_energy = one_step.total_energy
+        if converged
+            summary = (;
+                status =
+                    :materialized_pqs_multilayer_complete_core_shell_rhf_scf_payload,
+                blocker = nothing,
+                input_contract_status = input_contract.status,
+                h1_payload_status = h1_payload.status,
+                density_interaction_status = density_interaction.status,
+                initial_density_status = initial_density_payload.status,
+                final_dimension,
+                electron_count = input_contract.electron_count,
+                electron_trace = tr(density),
+                fixture_role = input_contract.fixture_role,
+                iteration_count = length(iteration_records),
+                converged_iteration = iteration,
+                max_iterations,
+                density_atol,
+                energy_atol,
+                first_iteration_energy_change_rule =
+                    :energy_converged_when_previous_energy_missing,
+                final_total_energy = one_step.total_energy,
+                final_density_change = density_change,
+                final_energy_change = energy_change,
+                rhf_materialized = true,
+                rhf_converged = true,
+                driver_route_materialized = false,
+                route_report_materialized = false,
+                exports_materialized = false,
+                artifacts_materialized = false,
+                public_api = false,
+                private_diagnostic_only = true,
+            )
+            return (;
+                object_kind =
+                    :pqs_multilayer_complete_core_shell_rhf_scf_payload,
+                status = summary.status,
+                blocker = nothing,
+                missing_inputs = (),
+                final_density = density,
+                occupied_orbital_coefficients,
+                final_one_step_payload,
+                iteration_records = Tuple(iteration_records),
+                summary,
+                metadata = merge(
+                    NamedTuple(metadata),
+                    (;
+                        source =
+                            :pqs_multilayer_complete_core_shell_rhf_scf_payload,
+                        rhf_materialized = true,
+                        rhf_converged = true,
+                        driver_route_materialized = false,
+                        route_report_materialized = false,
+                        exports_materialized = false,
+                        artifacts_materialized = false,
+                        public_api = false,
+                    ),
+                ),
+            )
+        end
+    end
+
+    return _pqs_multilayer_complete_core_shell_rhf_scf_blocked_payload(
+        ;
+        blocker = :scf_not_converged,
+        input_contract,
+        h1_payload,
+        density_interaction,
+        initial_density_payload,
+        final_density = density,
+        occupied_orbital_coefficients,
+        final_one_step_payload,
+        iteration_records = Tuple(iteration_records),
+        max_iterations,
+        density_atol,
+        energy_atol,
+        metadata,
+    )
+end
+
 function _pqs_multilayer_complete_core_shell_rhf_one_step_payload(;
     input_contract = nothing,
     h1_payload = nothing,
