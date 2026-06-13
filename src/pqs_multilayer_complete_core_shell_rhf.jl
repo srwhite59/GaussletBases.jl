@@ -424,6 +424,233 @@ function _pqs_multilayer_complete_core_shell_rhf_h1_payload(
     return _pqs_multilayer_rhf_contract_property(nested, :h1_payload)
 end
 
+function _pqs_multilayer_complete_core_shell_rhf_initial_density_blocked_payload(;
+    blocker,
+    missing_inputs = (),
+    input_contract = nothing,
+    h1_payload = nothing,
+    metadata = (;),
+)
+    contract_summary =
+        _pqs_multilayer_rhf_contract_property(input_contract, :summary, (;))
+    final_dimension =
+        _pqs_multilayer_rhf_contract_property(contract_summary, :final_dimension)
+    electron_count =
+        _pqs_multilayer_rhf_contract_property(input_contract, :electron_count)
+    fixture_role =
+        _pqs_multilayer_rhf_contract_property(input_contract, :fixture_role)
+    summary = (;
+        status =
+            :blocked_pqs_multilayer_complete_core_shell_rhf_initial_density_payload,
+        blocker,
+        missing_inputs,
+        input_contract_status =
+            _pqs_multilayer_rhf_contract_property(input_contract, :status),
+        h1_payload_status =
+            _pqs_multilayer_rhf_contract_property(h1_payload, :status),
+        final_dimension,
+        electron_count,
+        fixture_role,
+        initial_density_source = :h1_aufbau,
+        initial_density_materialized = false,
+        scf_materialized = false,
+        rhf_converged = false,
+        rhf_energy_materialized = false,
+        driver_route_materialized = false,
+        exports_materialized = false,
+        artifacts_materialized = false,
+        private_diagnostic_only = true,
+    )
+    return (;
+        object_kind =
+            :pqs_multilayer_complete_core_shell_rhf_initial_density_payload,
+        status = summary.status,
+        blocker,
+        missing_inputs,
+        occupied_orbital_coefficients = nothing,
+        final_density = nothing,
+        eigenvalues = nothing,
+        occupied_eigenvalues = nothing,
+        electron_trace = nothing,
+        summary,
+        metadata = merge(
+            NamedTuple(metadata),
+            (;
+                source =
+                    :pqs_multilayer_complete_core_shell_rhf_initial_density_payload,
+                blocker,
+                initial_density_source = :h1_aufbau,
+                initial_density_materialized = false,
+                scf_materialized = false,
+                rhf_converged = false,
+                rhf_energy_materialized = false,
+                driver_route_materialized = false,
+                exports_materialized = false,
+                artifacts_materialized = false,
+            ),
+        ),
+    )
+end
+
+function _pqs_multilayer_complete_core_shell_rhf_initial_density_payload(;
+    input_contract = nothing,
+    h1_payload = nothing,
+    h1_j_payload = nothing,
+    metadata = (;),
+)
+    h1_payload =
+        _pqs_multilayer_complete_core_shell_rhf_h1_payload(
+            h1_payload,
+            h1_j_payload,
+        )
+    missing_inputs = Symbol[]
+    contract_kind =
+        _pqs_multilayer_rhf_contract_property(input_contract, :object_kind)
+    contract_status =
+        _pqs_multilayer_rhf_contract_property(input_contract, :status)
+    if contract_kind !==
+       :pqs_multilayer_complete_core_shell_rhf_input_contract ||
+       contract_status !==
+       :available_pqs_multilayer_complete_core_shell_rhf_input_contract
+        push!(missing_inputs, :rhf_input_contract)
+    end
+
+    h1_payload_kind =
+        _pqs_multilayer_rhf_contract_property(h1_payload, :object_kind)
+    h1_payload_status =
+        _pqs_multilayer_rhf_contract_property(h1_payload, :status)
+    final_hamiltonian =
+        _pqs_multilayer_rhf_contract_property(h1_payload, :final_hamiltonian)
+    h1_matrix =
+        _pqs_multilayer_rhf_contract_property(
+            final_hamiltonian,
+            :hamiltonian_matrix,
+        )
+    if h1_payload_kind !== :pqs_multilayer_complete_core_shell_h1_payload ||
+       h1_payload_status !==
+       :materialized_pqs_multilayer_complete_core_shell_h1_payload ||
+       isnothing(h1_matrix)
+        push!(missing_inputs, :h1_payload)
+    end
+    if !isempty(missing_inputs)
+        blocker =
+            length(missing_inputs) == 1 && only(missing_inputs) ===
+            :rhf_input_contract ? :missing_rhf_input_contract :
+            length(missing_inputs) == 1 && only(missing_inputs) ===
+            :h1_payload ? :missing_h1_payload :
+            :missing_rhf_initial_density_inputs
+        return _pqs_multilayer_complete_core_shell_rhf_initial_density_blocked_payload(
+            ;
+            blocker,
+            missing_inputs = Tuple(missing_inputs),
+            input_contract,
+            h1_payload,
+            metadata,
+        )
+    end
+
+    final_dimension = input_contract.summary.final_dimension
+    matrix = Matrix{Float64}(h1_matrix)
+    if size(matrix, 1) != size(matrix, 2) ||
+       size(matrix, 1) != final_dimension
+        return _pqs_multilayer_complete_core_shell_rhf_initial_density_blocked_payload(
+            ;
+            blocker = :h1_dimension_mismatch,
+            input_contract,
+            h1_payload,
+            metadata,
+        )
+    end
+    if !all(isfinite, matrix)
+        return _pqs_multilayer_complete_core_shell_rhf_initial_density_blocked_payload(
+            ;
+            blocker = :nonfinite_h1_matrix,
+            input_contract,
+            h1_payload,
+            metadata,
+        )
+    end
+
+    occupation = input_contract.occupation
+    nocc = occupation.nocc
+    occupancy = occupation.occupancy
+    if nocc > final_dimension
+        return _pqs_multilayer_complete_core_shell_rhf_initial_density_blocked_payload(
+            ;
+            blocker = :insufficient_final_dimension_for_occupation,
+            input_contract,
+            h1_payload,
+            metadata,
+        )
+    end
+
+    symmetric_h1 = 0.5 .* (matrix .+ transpose(matrix))
+    eig = eigen(Symmetric(symmetric_h1))
+    occupied_orbital_coefficients = Matrix(eig.vectors[:, 1:nocc])
+    final_density =
+        Float64(occupancy) .*
+        (occupied_orbital_coefficients * transpose(occupied_orbital_coefficients))
+    final_density = 0.5 .* (final_density .+ transpose(final_density))
+    eigenvalues = Vector{Float64}(eig.values)
+    occupied_eigenvalues = eigenvalues[1:nocc]
+    electron_trace = tr(final_density)
+
+    summary = (;
+        status =
+            :materialized_pqs_multilayer_complete_core_shell_rhf_initial_density_payload,
+        blocker = nothing,
+        input_contract_status = input_contract.status,
+        h1_payload_status = h1_payload.status,
+        final_dimension,
+        electron_count = input_contract.electron_count,
+        nocc,
+        occupancy,
+        electron_trace,
+        fixture_role = input_contract.fixture_role,
+        initial_density_source = :h1_aufbau,
+        lowest_eigenvalue = first(eigenvalues),
+        highest_eigenvalue = last(eigenvalues),
+        lowest_occupied_eigenvalue = first(occupied_eigenvalues),
+        highest_occupied_eigenvalue = last(occupied_eigenvalues),
+        initial_density_materialized = true,
+        scf_materialized = false,
+        rhf_converged = false,
+        rhf_energy_materialized = false,
+        driver_route_materialized = false,
+        exports_materialized = false,
+        artifacts_materialized = false,
+        private_diagnostic_only = true,
+    )
+    return (;
+        object_kind =
+            :pqs_multilayer_complete_core_shell_rhf_initial_density_payload,
+        status = summary.status,
+        blocker = nothing,
+        missing_inputs = (),
+        occupied_orbital_coefficients,
+        final_density,
+        eigenvalues,
+        occupied_eigenvalues,
+        electron_trace,
+        summary,
+        metadata = merge(
+            NamedTuple(metadata),
+            (;
+                source =
+                    :pqs_multilayer_complete_core_shell_rhf_initial_density_payload,
+                initial_density_source = :h1_aufbau,
+                initial_density_materialized = true,
+                scf_materialized = false,
+                rhf_converged = false,
+                rhf_energy_materialized = false,
+                driver_route_materialized = false,
+                exports_materialized = false,
+                artifacts_materialized = false,
+            ),
+        ),
+    )
+end
+
 function _pqs_multilayer_complete_core_shell_rhf_one_step_payload(;
     input_contract = nothing,
     h1_payload = nothing,
