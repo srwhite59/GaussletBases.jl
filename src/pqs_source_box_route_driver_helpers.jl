@@ -189,6 +189,27 @@ function _cartesian_parent_system_classification(center_table, axis_metadata)
     )
 end
 
+function _cartesian_one_center_parent_mapping(center, standard_setup, parent_inputs)
+    rule = get(parent_inputs, :parent_mapping_rule, :identity_mapping)
+    rule === :identity_mapping && return IdentityMapping(), :IdentityMapping
+    rule === :white_lindsey_atomic_mapping || throw(
+        ArgumentError("unsupported one-center parent_mapping_rule $(repr(rule))"),
+    )
+    d = get(parent_inputs, :parent_mapping_d, nothing)
+    isnothing(d) && throw(
+        ArgumentError("white_lindsey_atomic_mapping parent mapping requires parent_mapping_d"),
+    )
+    Z = something(get(parent_inputs, :parent_mapping_Z, nothing), center.nuclear_charge)
+    tail_spacing =
+        something(get(parent_inputs, :parent_mapping_tail_spacing, nothing),
+            standard_setup.tail_spacing)
+    return white_lindsey_atomic_mapping(;
+        Z = Float64(Z),
+        d = Float64(d),
+        tail_spacing = Float64(tail_spacing),
+    ), :white_lindsey_atomic_mapping
+end
+
 function _cartesian_one_center_parent_basis_object(
     center_table,
     classification,
@@ -223,10 +244,10 @@ function _cartesian_one_center_parent_basis_object(
         pending_facts = (:origin_centered_one_center_parent_or_translated_mapping,),
     )
 
-    family =
-        hasproperty(parent_inputs, :parent_axis_probe_family) ?
-        parent_inputs.parent_axis_probe_family :
-        :G10
+    family = get(parent_inputs, :parent_axis_family,
+        get(parent_inputs, :parent_axis_probe_family, :G10))
+    mapping, mapping_label =
+        _cartesian_one_center_parent_mapping(center, standard_setup, parent_inputs)
     axis_cache = Dict{Int, Any}()
     function _axis_for_count(count)
         axis_count = Int(count)
@@ -234,7 +255,7 @@ function _cartesian_one_center_parent_basis_object(
             build_basis(MappedUniformBasisSpec(
                 family;
                 count = axis_count,
-                mapping = IdentityMapping(),
+                mapping,
                 reference_spacing = standard_setup.reference_spacing,
             ))
         end
@@ -251,7 +272,7 @@ function _cartesian_one_center_parent_basis_object(
                 basis_family = :one_center_mapped_uniform_cartesian_product,
                 axis_basis_helper = :_cartesian_one_center_parent_basis_object,
                 axis_family = Symbol(family),
-                mapping = :IdentityMapping,
+                mapping = mapping_label,
                 reference_spacing = standard_setup.reference_spacing,
                 atom_symbol = center.atom_symbol,
                 nuclear_charge = center.nuclear_charge,
@@ -1186,6 +1207,15 @@ function _pqs_source_box_route_driver_recipe_metadata(
         raw_product_box_probe_backend = probe_inputs.raw_product_box_probe_backend,
         terms = route_recipe.terms,
         pair_factor_normalization = route_recipe.pair_factor_normalization,
+        parent_mapping_rule = get(probe_inputs, :parent_mapping_rule, :identity_mapping),
+        parent_mapping_Z = get(probe_inputs, :parent_mapping_Z, nothing),
+        parent_mapping_d = get(probe_inputs, :parent_mapping_d, nothing),
+        parent_mapping_tail_spacing =
+            get(probe_inputs, :parent_mapping_tail_spacing, nothing),
+        comparison_reference_label =
+            get(route_recipe, :comparison_reference_label, nothing),
+        wl_h1_lowest = get(route_recipe, :wl_h1_lowest, nothing),
+        wl_h1_self_coulomb = get(route_recipe, :wl_h1_self_coulomb, nothing),
     )
 
     if route_recipe.route_family == :pqs_source_box
@@ -6266,6 +6296,10 @@ function cartesian_recipe(route_inputs)
             pair_factor_normalization = route_inputs.pair_factor_normalization,
             source_box = source_box_recipe,
             white_lindsey = white_lindsey_recipe,
+            comparison_reference_label =
+                get(route_inputs, :comparison_reference_label, nothing),
+            wl_h1_lowest = get(route_inputs, :wl_h1_lowest, nothing),
+            wl_h1_self_coulomb = get(route_inputs, :wl_h1_self_coulomb, nothing),
         )
     end
 
@@ -11964,6 +11998,18 @@ function _pqs_source_box_route_driver_complete_core_shell_h1_j_report_fields(
         nothing
     summary =
         _pqs_source_box_route_driver_complete_core_shell_h1_j_summary(payload)
+    final_basis =
+        isnothing(payload) || !hasproperty(payload, :final_basis) ?
+        nothing :
+        payload.final_basis
+    source_plan =
+        isnothing(payload) || !hasproperty(payload, :source_plan) ?
+        nothing :
+        payload.source_plan
+    shell_records =
+        isnothing(source_plan) || !hasproperty(source_plan, :shell_records) ?
+        () :
+        source_plan.shell_records
     return (;
         complete_core_shell_h1_j_diagnostic_summary = summary,
         complete_core_shell_h1_j_diagnostic_status = summary.status,
@@ -11974,6 +12020,19 @@ function _pqs_source_box_route_driver_complete_core_shell_h1_j_report_fields(
         complete_core_shell_h1_j_density_gauge = summary.density_gauge,
         complete_core_shell_h1_j_driver_route_materialized =
             summary.driver_route_materialized,
+        complete_core_shell_core_support_count =
+            isnothing(final_basis) ? nothing : final_basis.core_support_count,
+        complete_core_shell_shell_support_count =
+            isnothing(final_basis) ? nothing : final_basis.shell_support_count,
+        complete_core_shell_shell_layer_count = length(shell_records),
+        complete_core_shell_retained_per_shell =
+            Tuple(record.retained_count for record in shell_records),
+        complete_core_shell_shell_final_retained_count =
+            isnothing(final_basis) ? nothing : final_basis.shell_final_retained_count,
+        complete_core_shell_final_overlap_identity_error =
+            isnothing(final_basis) ? nothing : final_basis.final_overlap_identity_error,
+        complete_core_shell_raw_pair_factor_convention =
+            get(summary, :raw_pair_factor_convention, nothing),
     )
 end
 

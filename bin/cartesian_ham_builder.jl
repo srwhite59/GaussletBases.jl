@@ -21,8 +21,13 @@ q_to_core_spacing_rule = :standard_pqs_ns_equals_q
 core_spacing = nothing
 
 probe_parent_axis_construction = :auto
+parent_axis_family = :G10
 parent_axis_probe_backend = :pgdg_localized_experimental
-parent_axis_probe_family = :G10
+parent_axis_probe_family = parent_axis_family
+parent_mapping_rule = :identity_mapping
+parent_mapping_Z = nothing
+parent_mapping_d = nothing
+parent_mapping_tail_spacing = tail_spacing
 probe_raw_product_box_plans = :auto
 raw_product_box_probe_backend = :pgdg_localized_experimental
 
@@ -45,6 +50,9 @@ white_lindsey_operator_rule = :low_order_unit_operator_blocks
 white_lindsey_benchmark_role = :published_cartesian_baseline_for_pqs_comparison
 white_lindsey_Z = 2.0
 white_lindsey_expansion = coulomb_gaussian_expansion(doacc = false)
+comparison_reference_label = nothing
+wl_h1_lowest = nothing
+wl_h1_self_coulomb = nothing
 
 save_artifact = false
 save_tsv = false
@@ -66,6 +74,7 @@ outfile = "cartesian_ham_builder_report.jld2"
 tsvfile = "cartesian_ham_builder_report.tsv"
 basisfile = "cartesian_nesting_route_driver_basis_bundle.jld2"
 hamfile = "cartesian_nesting_route_driver_ham_bundle.jld2"
+driver_input_path = nothing
 
 inputs = String[]
 if length(ARGS) > 0
@@ -73,6 +82,7 @@ if length(ARGS) > 0
         inputs = ARGS
     else
         fullpath = isabspath(ARGS[1]) ? ARGS[1] : joinpath(pwd(), ARGS[1])
+        driver_input_path = fullpath
         println("including ", fullpath)
         include(fullpath)
         length(ARGS) > 1 && (inputs = ARGS[2:end])
@@ -85,14 +95,16 @@ system_inputs = (; atom_symbols, nuclear_charges, atom_locations,
 spacing_inputs = (; q, n_s, reference_spacing, tail_spacing,
     q_to_core_spacing_rule, core_spacing)
 parent_inputs = (; probe_parent_axis_construction, parent_axis_probe_backend,
-    parent_axis_probe_family)
+    parent_axis_probe_family, parent_axis_family, parent_mapping_rule,
+    parent_mapping_Z, parent_mapping_d, parent_mapping_tail_spacing)
 route_probe_inputs = (; probe_raw_product_box_plans, raw_product_box_probe_backend)
 route_inputs = (; route_family, route_kind, route_shape, product_body_rule,
     pqs_retained_rule, product_retained_rule, terms, pair_factor_normalization,
     support_dense_direct_allowed, reference_only_authorities,
     white_lindsey_route_shape, white_lindsey_mapping_rule,
     white_lindsey_nesting_rule, white_lindsey_retained_rule,
-    white_lindsey_operator_rule, white_lindsey_benchmark_role)
+    white_lindsey_operator_rule, white_lindsey_benchmark_role,
+    comparison_reference_label, wl_h1_lowest, wl_h1_self_coulomb)
 materialization_inputs = (; materialize_route, probe_route_configured_one_center_materializer,
     private_global_overlap_requested, private_global_overlap_global_dimension,
     private_global_overlap_inputs,
@@ -102,7 +114,8 @@ materialization_inputs = (; materialize_route, probe_route_configured_one_center
     materializer_backend, materializer_nside,
     route_configured_diatomic_ham_interaction_treatment,
     white_lindsey_expansion, white_lindsey_Z)
-save_inputs = (; save_artifact, save_tsv, outfile, tsvfile)
+save_inputs = (; save_artifact, save_tsv, outfile, tsvfile,
+    input_path = driver_input_path)
 
 
 # Begin actual construction

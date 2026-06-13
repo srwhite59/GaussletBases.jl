@@ -407,9 +407,36 @@ function _pqs_source_box_route_driver_durable_materialization(materialization)
     )
 end
 
+function _pqs_source_box_route_driver_write_group!(file, group, values)
+    for key in keys(values)
+        file[string(group, "/", key)] = getproperty(values, key)
+    end
+end
+
+function _pqs_source_box_route_driver_write_pqs_he_artifact!(file, report, input_path)
+    hasproperty(report, :complete_core_shell_h1_j_driver_route_materialized) &&
+        report.complete_core_shell_h1_j_driver_route_materialized || return nothing
+    recipe = report.recipe_metadata
+    h1 = report.complete_core_shell_h1_j_h1_energy
+    j = report.complete_core_shell_h1_j_self_coulomb
+    wl_h1 = recipe.wl_h1_lowest
+    wl_j = recipe.wl_h1_self_coulomb
+    for (group, values) in (
+        ("config", (; input_path = isnothing(input_path) ? "" : String(input_path), route_family = recipe.route_family, route_kind = recipe.route_kind, parent_mapping_rule = recipe.parent_mapping_rule, parent_mapping_Z = recipe.parent_mapping_Z, parent_mapping_d = recipe.parent_mapping_d, tail_spacing = recipe.tail_spacing, q = recipe.q, n_s = recipe.n_s)),
+        ("basis", (; final_dimension = report.complete_core_shell_h1_j_final_dimension, core_support_count = report.complete_core_shell_core_support_count, shell_support_count = report.complete_core_shell_shell_support_count, shell_layer_count = report.complete_core_shell_shell_layer_count, retained_per_shell = report.complete_core_shell_retained_per_shell, shell_final_retained_count = report.complete_core_shell_shell_final_retained_count, final_overlap_identity_error = report.complete_core_shell_final_overlap_identity_error)),
+        ("physics", (; h1_lowest = h1, h1_j_self_coulomb = j)),
+        ("density_interaction", (; status = report.complete_core_shell_h1_j_diagnostic_status, density_gauge = report.complete_core_shell_h1_j_density_gauge, raw_pair_factor_convention = report.complete_core_shell_raw_pair_factor_convention)),
+        ("comparison", (; reference_label = something(recipe.comparison_reference_label, ""), wl_h1_lowest = wl_h1, wl_h1_self_coulomb = wl_j, delta_h1 = h1 - wl_h1, delta_h1_j = j - wl_j)),
+    )
+        _pqs_source_box_route_driver_write_group!(file, group, values)
+    end
+    return nothing
+end
+
 function _pqs_source_box_route_driver_save(
     report;
     save_artifact, save_tsv, outfile, tsvfile, materialization = nothing,
+    input_path = nothing,
 )
     durable_report = _pqs_source_box_route_driver_durable_report(report)
     durable_materialization =
@@ -417,10 +444,15 @@ function _pqs_source_box_route_driver_save(
 
     if save_artifact
         println("saving JLD2 report ", outfile)
-        if isnothing(durable_materialization)
-            jldsave(outfile; report = durable_report)
-        else
-            jldsave(outfile; report = durable_report, materialization = durable_materialization)
+        jldopen(outfile, "w") do file
+            file["report"] = durable_report
+            isnothing(durable_materialization) ||
+                (file["materialization"] = durable_materialization)
+            _pqs_source_box_route_driver_write_pqs_he_artifact!(
+                file,
+                durable_report,
+                input_path,
+            )
         end
     end
 
