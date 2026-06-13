@@ -85,7 +85,47 @@ end
     @test assembly.route_skeleton.route_family === :pqs_source_box
 
     payload = assembly.complete_core_shell_diagnostic_route_payload
+    readiness = assembly.diatomic_complete_core_shell_ham_readiness_payload
     ham = payload.complete_core_shell_ham_payload
+
+    @test readiness.status == :blocked_diatomic_complete_core_shell_ham_readiness
+    @test readiness.blocker ==
+          :missing_diatomic_complete_core_shell_source_plan_producer
+    @test readiness.route_family === :pqs_source_box
+    @test readiness.system_classification === :bond_aligned_diatomic
+    @test readiness.bond_axis === :x
+    @test !readiness.parent_axis_bundle_object_available
+
+    @test readiness.center_summary.center_count == 2
+    @test readiness.center_summary.nuclear_charges == (4, 4)
+    @test readiness.source_box_summary.source_box_count == 3
+    @test readiness.source_box_summary.source_box_keys ==
+          (:pqs_left, :product, :pqs_right)
+    @test readiness.retained_unit_summary.retained_unit_count == 3
+    @test readiness.retained_unit_summary.unit_keys ==
+          (:pqs_left, :pqs_right, :product)
+    @test readiness.retained_unit_summary.retained_unit_kinds ==
+          (:pqs, :pqs, :product_doside)
+    @test readiness.pair_inventory_summary.pair_count == 6
+    @test readiness.pair_inventory_summary.pair_family_counts ==
+          (pqs_pqs = 3, pqs_product = 2, product_pqs = 0, product_product = 1)
+    @test readiness.pair_inventory_summary.source_box_algorithmic_path_for_all_pairs
+
+    @test :route_skeleton in readiness.available_objects
+    @test :source_boxes in readiness.available_objects
+    @test :retained_units in readiness.available_objects
+    @test :pair_inventory in readiness.available_objects
+    @test :diatomic_complete_core_shell_source_plan_producer in
+          readiness.missing_objects
+    @test :parent_axis_bundle_object in readiness.missing_objects
+    @test !readiness.summary.public_api
+    @test !readiness.summary.final_basis_materialized
+    @test !readiness.summary.h1_materialized
+    @test !readiness.summary.h1_j_materialized
+    @test !readiness.summary.ham_payload_materialized
+    @test !readiness.summary.rhf_materialized
+    @test !readiness.summary.exports_materialized
+    @test !readiness.summary.artifacts_materialized
 
     @test payload.status == :blocked_missing_complete_core_shell_h1_j_route_inputs
     @test payload.blocker == :missing_complete_core_shell_h1_j_route_inputs
