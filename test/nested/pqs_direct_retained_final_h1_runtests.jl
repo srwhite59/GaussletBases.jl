@@ -67,6 +67,8 @@ function _pqs_h1_complete_fixture()
         metadata = (; fixture = :pqs_direct_retained_final_h1_complete_core_shell),
     )
     return (;
+        expansion,
+        bundle = bundle11,
         current_box,
         inner_box,
         raw_source_dims = (5, 5, 5),
@@ -106,4 +108,37 @@ end
     @test fixture.final_basis.final_overlap_identity_error < 1.0e-10
     @test fixture.final_basis.source_plan_status ==
           :available_pqs_multilayer_shell_source_plan
+
+    center = (;
+        center_key = :origin,
+        center_index = 1,
+        location = (0.0, 0.0, 0.0),
+        charge = 2.0,
+    )
+    h1_payload = GaussletBases.pqs_multilayer_complete_core_shell_h1_payload(
+        fixture.plan;
+        final_basis = fixture.final_basis,
+        coulomb_expansion = fixture.expansion,
+        center_records = (center,),
+        gaussian_factor_terms_by_center =
+            fixture.bundle.pgdg_intermediate.gaussian_factor_terms,
+        metadata = (; fixture = :pqs_fixed_q_he_h1_gate),
+    )
+    hamiltonian = h1_payload.final_hamiltonian.hamiltonian_matrix
+    h1 = h1_payload.h1
+
+    @test h1_payload.status ==
+          :materialized_pqs_multilayer_complete_core_shell_h1_payload
+    @test all(isfinite, hamiltonian)
+    @test hamiltonian ≈ transpose(hamiltonian) atol = 1.0e-10 rtol = 0.0
+    @test h1.final_dimension == 419
+    @test h1.solve_kind === :ordinary_symmetric
+    @test isfinite(h1.lowest_energy)
+    @test h1.lowest_energy < -1.0
+    @test h1.generalized_overlap_solve_materialized == false
+    @test h1_payload.summary.h1_solve_materialized
+    @test h1_payload.summary.density_density_materialized == false
+    @test h1_payload.summary.rhf_materialized == false
+    @test h1.exports_materialized == false
+    @test h1.artifacts_materialized == false
 end
