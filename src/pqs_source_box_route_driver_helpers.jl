@@ -12222,80 +12222,47 @@ function _pqs_source_box_route_driver_diatomic_complete_core_shell_report_fields
         hasproperty(assembly, :diatomic_complete_core_shell_hamiltonian_handoff_payload) ?
         assembly.diatomic_complete_core_shell_hamiltonian_handoff_payload :
         nothing
-    return (;
-        diatomic_complete_core_shell_readiness_summary = summary,
-        diatomic_complete_core_shell_readiness_status = summary.status,
-        diatomic_complete_core_shell_readiness_blocker = summary.blocker,
-        diatomic_complete_core_shell_source_plan_status =
-            get(summary, :source_plan_status, :not_available),
-        diatomic_complete_core_shell_final_basis_status =
-            get(summary, :final_basis_status, :not_available),
-        diatomic_complete_core_shell_h1_payload_status =
-            get(summary, :h1_payload_status, :not_available),
-        diatomic_complete_core_shell_h1_status =
-            get(summary, :h1_status, :not_available),
-        diatomic_complete_core_shell_ham_input_status =
-            get(summary, :ham_input_payload_status, :not_available),
-        diatomic_complete_core_shell_hamiltonian_handoff_status =
-            get(summary, :hamiltonian_handoff_payload_status, :not_available),
-        diatomic_complete_core_shell_hamiltonian_consumer_contract_status =
-            get(summary, :hamiltonian_consumer_contract_payload_status, :not_available),
-        diatomic_complete_core_shell_final_dimension =
+    diagnostic_summary = (;
+        final_dimension =
             isnothing(final_basis_payload) ||
             !hasproperty(final_basis_payload, :summary) ?
             nothing :
             get(final_basis_payload.summary, :final_dimension, nothing),
-        diatomic_complete_core_shell_final_overlap_identity_error =
+        final_overlap_identity_error =
             isnothing(final_basis_payload) ||
             !hasproperty(final_basis_payload, :final_basis) ||
             isnothing(final_basis_payload.final_basis) ||
             !hasproperty(final_basis_payload.final_basis, :final_overlap_identity_error) ?
             nothing :
             final_basis_payload.final_basis.final_overlap_identity_error,
-        diatomic_complete_core_shell_h1_lowest_energy =
+        h1_lowest_energy =
             isnothing(h1_payload) || !hasproperty(h1_payload, :summary) ?
             nothing :
             get(h1_payload.summary, :lowest_energy, nothing),
-        diatomic_complete_core_shell_density_gauge =
+        density_gauge =
             isnothing(ham_input_payload) || !hasproperty(ham_input_payload, :summary) ?
             nothing :
             get(ham_input_payload.summary, :density_gauge, nothing),
-        diatomic_complete_core_shell_raw_pair_factor_convention =
+        raw_pair_factor_convention =
             isnothing(ham_input_payload) || !hasproperty(ham_input_payload, :summary) ?
             nothing :
             get(ham_input_payload.summary, :raw_pair_factor_convention, nothing),
-        diatomic_complete_core_shell_nuclear_repulsion =
+        nuclear_repulsion =
             isnothing(handoff_payload) || !hasproperty(handoff_payload, :summary) ?
             nothing :
             get(handoff_payload.summary, :nuclear_repulsion, nothing),
-        diatomic_complete_core_shell_electron_count =
+        electron_count =
             isnothing(handoff_payload) || !hasproperty(handoff_payload, :summary) ?
             nothing :
             get(handoff_payload.summary, :electron_count, nothing),
-        diatomic_complete_core_shell_spin_sector =
+        spin_sector =
             isnothing(handoff_payload) || !hasproperty(handoff_payload, :summary) ?
             nothing :
             get(handoff_payload.summary, :spin_sector, nothing),
-        diatomic_complete_core_shell_final_basis_materialized =
-            get(summary, :final_basis_materialized, false),
-        diatomic_complete_core_shell_h1_materialized =
-            get(summary, :h1_materialized, false),
-        diatomic_complete_core_shell_h1_j_materialized =
-            get(summary, :h1_j_materialized, false),
-        diatomic_complete_core_shell_ham_input_materialized =
-            get(summary, :ham_input_materialized, false),
-        diatomic_complete_core_shell_hamiltonian_handoff_materialized =
-            get(summary, :hamiltonian_handoff_materialized, false),
-        diatomic_complete_core_shell_hamiltonian_consumer_contract_materialized =
-            get(summary, :hamiltonian_consumer_contract_materialized, false),
-        diatomic_complete_core_shell_rhf_materialized =
-            get(summary, :rhf_materialized, false),
-        diatomic_complete_core_shell_public_api =
-            get(summary, :public_api, false),
-        diatomic_complete_core_shell_exports_materialized =
-            get(summary, :exports_materialized, false),
-        diatomic_complete_core_shell_artifacts_materialized =
-            get(summary, :artifacts_materialized, false),
+    )
+    return (;
+        diatomic_complete_core_shell_readiness_summary =
+            merge(summary, diagnostic_summary),
     )
 end
 

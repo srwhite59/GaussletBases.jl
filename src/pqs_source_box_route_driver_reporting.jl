@@ -494,12 +494,20 @@ function _pqs_source_box_route_driver_write_pqs_diatomic_readiness_artifact!(
     comparison_ready = get(recipe, :comparison_ready, false)
     comparison_blocker =
         get(recipe, :comparison_blocker, nothing)
+    readiness = get(
+        report,
+        :diatomic_complete_core_shell_readiness_summary,
+        (;
+            status = :not_available_missing_diatomic_complete_core_shell_readiness,
+            blocker = :missing_diatomic_complete_core_shell_readiness,
+        ),
+    )
 
     for (group, values) in (
         ("system", (; atom_symbols = system.atom_symbols, nuclear_charges = system.nuclear_charges, atom_locations, bond_axis, bond_length)),
         ("config", (; input_path = isnothing(input_path) ? "" : String(input_path), route_family = recipe.route_family, route_kind = recipe.route_kind, q = recipe.q, n_s = recipe.n_s, core_spacing = recipe.core_spacing, xmax_parallel = get(recipe, :xmax_parallel, nothing), xmax_transverse = get(recipe, :xmax_transverse, nothing), supplement_policy = recipe.supplement_policy, comparison_ready)),
         ("comparison", (; ready = comparison_ready, blocker = comparison_blocker, reference_label = something(recipe.comparison_reference_label, ""))),
-        ("route", (; readiness_status = report.diatomic_complete_core_shell_readiness_status, readiness_blocker = report.diatomic_complete_core_shell_readiness_blocker, source_plan_status = report.diatomic_complete_core_shell_source_plan_status, final_basis_status = report.diatomic_complete_core_shell_final_basis_status, h1_status = report.diatomic_complete_core_shell_h1_status, h1_materialized = report.diatomic_complete_core_shell_h1_materialized, h1_j_materialized = report.diatomic_complete_core_shell_h1_j_materialized, ham_input_status = report.diatomic_complete_core_shell_ham_input_status, hamiltonian_handoff_status = report.diatomic_complete_core_shell_hamiltonian_handoff_status, private_rhf_materialized = report.diatomic_complete_core_shell_rhf_materialized, public_api = report.diatomic_complete_core_shell_public_api, exports_materialized = report.diatomic_complete_core_shell_exports_materialized, artifacts_materialized = report.diatomic_complete_core_shell_artifacts_materialized)),
+        ("route", (; readiness_status = get(readiness, :status, :not_available), readiness_blocker = get(readiness, :blocker, nothing), source_plan_status = get(readiness, :source_plan_status, :not_available), final_basis_status = get(readiness, :final_basis_status, :not_available), h1_status = get(readiness, :h1_status, :not_available), h1_materialized = get(readiness, :h1_materialized, false), h1_j_materialized = get(readiness, :h1_j_materialized, false), ham_input_status = get(readiness, :ham_input_payload_status, :not_available), hamiltonian_handoff_status = get(readiness, :hamiltonian_handoff_payload_status, :not_available), private_rhf_materialized = get(readiness, :rhf_materialized, false), public_api = get(readiness, :public_api, false), exports_materialized = get(readiness, :exports_materialized, false), artifacts_materialized = get(readiness, :artifacts_materialized, false))),
     )
         _pqs_source_box_route_driver_write_group!(file, group, values)
     end
@@ -507,23 +515,23 @@ function _pqs_source_box_route_driver_write_pqs_diatomic_readiness_artifact!(
         file,
         "basis",
         (;
-            final_dimension = report.diatomic_complete_core_shell_final_dimension,
+            final_dimension = get(readiness, :final_dimension, nothing),
             final_overlap_identity_error =
-                report.diatomic_complete_core_shell_final_overlap_identity_error,
+                get(readiness, :final_overlap_identity_error, nothing),
         ),
     )
     _pqs_source_box_route_driver_write_present_group!(
         file,
         "physics",
-        (h1_lowest = report.diatomic_complete_core_shell_h1_lowest_energy,),
+        (h1_lowest = get(readiness, :h1_lowest_energy, nothing),),
     )
     _pqs_source_box_route_driver_write_present_group!(
         file,
         "density_interaction",
         (;
-            density_gauge = report.diatomic_complete_core_shell_density_gauge,
+            density_gauge = get(readiness, :density_gauge, nothing),
             raw_pair_factor_convention =
-                report.diatomic_complete_core_shell_raw_pair_factor_convention,
+                get(readiness, :raw_pair_factor_convention, nothing),
         ),
     )
     _pqs_source_box_route_driver_write_group!(
@@ -531,7 +539,7 @@ function _pqs_source_box_route_driver_write_pqs_diatomic_readiness_artifact!(
         "private_rhf",
         (;
             requested = get(recipe, :run_private_rhf, false),
-            materialized = report.diatomic_complete_core_shell_rhf_materialized,
+            materialized = get(readiness, :rhf_materialized, false),
         ),
     )
     return nothing
