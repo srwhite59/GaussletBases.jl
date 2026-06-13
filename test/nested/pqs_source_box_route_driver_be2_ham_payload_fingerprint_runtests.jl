@@ -491,14 +491,60 @@ end
     @test source_plan_payload.status ==
           :blocked_diatomic_complete_core_shell_source_plan
     @test source_plan_payload.blocker ==
-          :missing_pqs_multilayer_shell_source_plan_adapter_contract
+          :missing_diatomic_complete_core_shell_final_basis_consumer
     @test source_plan_payload.route_family === :pqs_source_box
     @test source_plan_payload.system_classification === :bond_aligned_diatomic
     @test source_plan_payload.bond_axis === :x
     @test source_plan_payload.parent_axis_bundle_object_available
-    @test source_plan_payload.source_plan === nothing
+    source_plan = source_plan_payload.source_plan
+    @test source_plan !== nothing
+    @test source_plan.object_kind ==
+          :pqs_diatomic_complete_core_shell_source_plan
+    @test source_plan.object_kind !== :pqs_multilayer_shell_source_plan
+    @test source_plan.status ==
+          :available_pqs_diatomic_complete_core_shell_source_plan
+    @test source_plan.blocker === nothing
+    @test source_plan.bundles !== nothing
+    @test source_plan.metrics !== nothing
+    @test source_plan.core_unit_key == :product
+    @test source_plan.shell_unit_keys == (:pqs_left, :pqs_right)
+    @test length(source_plan.core_support_indices) == 25
+    @test length(source_plan.core_support_states) == 25
+    @test length(source_plan.shell_support_indices) == 250
+    @test length(source_plan.shell_support_states) == 250
+    @test isempty(
+        intersect(
+            source_plan.core_support_indices,
+            source_plan.shell_support_indices,
+        ),
+    )
+    @test length(unique(source_plan.shell_support_indices)) == 250
+    @test size(source_plan.shell_final_coefficients) == (250, 196)
+    @test all(isfinite, source_plan.shell_final_coefficients)
+    @test source_plan.support_order == (:product, :pqs_left, :pqs_right)
+    @test source_plan.route_retained_order ==
+          (:pqs_left, :pqs_right, :product)
+    @test source_plan.retained_pre_final_map.precleanup_ranges ==
+          (product = 1:25, pqs_left = 26:123, pqs_right = 124:221)
+    @test source_plan.convention_labels.old_source_plan_object_kind == false
+    @test source_plan.summary.old_source_plan_object_kind == false
+    @test source_plan.summary.core_support_count == 25
+    @test source_plan.summary.shell_support_count == 250
+    @test source_plan.summary.shell_retained_count == 196
+    @test source_plan.summary.precleanup_retained_dimension == 221
+    @test source_plan.summary.shell_final_coefficients_shape == (250, 196)
+    @test source_plan.summary.shell_coefficient_block_structure ==
+          :block_diagonal_left_right_pqs
+    @test source_plan.summary.source_plan_materialized
+    @test !source_plan.summary.final_basis_materialized
+    @test !source_plan.summary.h1_materialized
+    @test !source_plan.summary.h1_j_materialized
+    @test !source_plan.summary.ham_payload_materialized
+    @test !source_plan.summary.route_driver_public_surface
+    @test !source_plan.summary.exports_materialized
+    @test !source_plan.summary.artifacts_materialized
     @test source_plan_payload.source_plan_status ==
-          :not_materialized_diatomic_complete_core_shell_source_plan
+          :available_pqs_diatomic_complete_core_shell_source_plan
     @test source_plan_payload.support_window_payload === support_window_payload
     @test source_plan_payload.source_realization_payload ===
           source_realization_payload
@@ -513,11 +559,13 @@ end
     @test :diatomic_raw_box_route_payload in source_plan_payload.available_objects
     @test :diatomic_complete_core_shell_source_realization in
           source_plan_payload.available_objects
+    @test :pqs_diatomic_complete_core_shell_source_plan in
+          source_plan_payload.available_objects
     @test :parent_axis_bundle_object in source_plan_payload.available_objects
     @test !in(:parent_axis_bundle_object, source_plan_payload.missing_objects)
-    @test :pqs_multilayer_shell_source_plan_adapter_contract in
+    @test :diatomic_complete_core_shell_final_basis_consumer in
           source_plan_payload.missing_objects
-    @test !source_plan_payload.summary.source_plan_materialized
+    @test source_plan_payload.summary.source_plan_materialized
     @test !source_plan_payload.summary.final_basis_materialized
     @test !source_plan_payload.summary.h1_materialized
     @test !source_plan_payload.summary.h1_j_materialized
