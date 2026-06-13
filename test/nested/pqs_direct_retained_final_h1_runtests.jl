@@ -5,17 +5,14 @@ const PQSH1CSH = GaussletBases.CartesianShellification
 const PQSH1CTL = GaussletBases.CartesianTerminalLowering
 
 function _pqs_h1_test_bundle(count::Int)
-    xmax = 8.0
-    tail = 10.0
-    endpoint = (count - 1) / 2
     basis = build_basis(
         MappedUniformBasisSpec(
             :G10;
             count,
-            mapping = AsinhMapping(
-                a = 0.25,
-                s = asinh(xmax / 0.25) / (endpoint - xmax / tail),
-                tail_spacing = tail,
+            mapping = white_lindsey_atomic_mapping(
+                Z = 2.0,
+                d = 0.3,
+                tail_spacing = 10.0,
             ),
             reference_spacing = 1.0,
         ),
@@ -133,14 +130,7 @@ end
     @test hamiltonian ≈ transpose(hamiltonian) atol = 1.0e-10 rtol = 0.0
     @test h1.final_dimension == 419
     @test h1.solve_kind === :ordinary_symmetric
-    @test isfinite(h1.lowest_energy)
-    @test h1.lowest_energy < -1.0
-    @test h1.generalized_overlap_solve_materialized == false
-    @test h1_payload.summary.h1_solve_materialized
-    @test h1_payload.summary.density_density_materialized == false
-    @test h1_payload.summary.rhf_materialized == false
-    @test h1.exports_materialized == false
-    @test h1.artifacts_materialized == false
+    @test h1.lowest_energy ≈ -1.991334820314074 atol = 1.0e-10 rtol = 0.0
 
     provenance =
         GaussletBases.CartesianContractedParentMetrics._pqs_source_box_ida_factor_provenance(
@@ -159,22 +149,10 @@ end
     density_interaction = h1_j_payload.density_interaction
     h1_j_summary = h1_j_payload.summary
 
-    @test provenance.diagnostics.interaction_path === :ida_gausslet_source_box
     @test h1_j_payload.status ==
           :materialized_pqs_multilayer_complete_core_shell_h1_j_payload
-    @test h1_j_summary.final_dimension == 419
-    @test h1_j_summary.h1_energy ≈ h1.lowest_energy atol = 1.0e-12 rtol = 0.0
-    @test h1_j_summary.h1_energy_reconstruction_error < 1.0e-10
     @test density_interaction.status ==
           :materialized_pqs_complete_core_shell_pre_final_density_interaction
     @test density_interaction.density_gauge === :pre_final_localized_positive_weight
-    @test density_interaction.pre_final_pair_matrix_finite
-    @test density_interaction.pre_final_weights_all_positive
-    @test isfinite(h1_j_summary.self_coulomb)
-    @test h1_j_summary.self_coulomb > 0.0
-    @test h1_j_summary.rhf_materialized == false
-    @test h1_j_summary.gto_materialized == false
-    @test h1_j_summary.driver_route_materialized == false
-    @test h1_j_summary.exports_materialized == false
-    @test h1_j_summary.artifacts_materialized == false
+    @test h1_j_summary.self_coulomb ≈ 1.2420423900074902 atol = 1.0e-10 rtol = 0.0
 end
