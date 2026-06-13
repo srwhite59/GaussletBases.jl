@@ -2698,15 +2698,6 @@ function _pqs_source_box_route_driver_diatomic_complete_core_shell_ham_input_pay
             nothing,
         ham_input_materialized =
             status === :available_diatomic_complete_core_shell_ham_input_payload,
-        h1_j_materialized = false,
-        ham_payload_materialized = false,
-        rhf_materialized = false,
-        route_driver_public_surface = false,
-        public_api = false,
-        exports_materialized = false,
-        artifacts_materialized = false,
-        density_normalized_pair_terms_used_as_authority = false,
-        retained_diagnostic_weights_are_ida_weights = false,
         available_objects,
         missing_objects,
     )
@@ -2729,14 +2720,6 @@ function _pqs_source_box_route_driver_diatomic_complete_core_shell_ham_input_pay
         source_box_first = true,
         old_source_plan_object_kind = false,
         ham_input_materialized = summary.ham_input_materialized,
-        h1_j_materialized = false,
-        ham_payload_materialized = false,
-        rhf_materialized = false,
-        route_driver_public_surface = false,
-        public_api = false,
-        exports_materialized = false,
-        artifacts_materialized = false,
-        retained_diagnostic_weights_are_ida_weights = false,
     )
     return _PQSDiatomicCompleteCoreShellHamInputPayload(
         status,
@@ -3346,6 +3329,183 @@ function _pqs_source_box_route_driver_diatomic_complete_core_shell_hamiltonian_c
         summary,
         metadata,
     )
+end
+
+function _pqs_source_box_route_driver_tsv_cell(value)
+    value === nothing && return ""
+    return replace(string(value), '\t' => ' ', '\n' => ' ')
+end
+
+function _pqs_source_box_route_driver_be2_cr2_inspection_bundle_payload(assembly)
+    handoff = assembly.diatomic_complete_core_shell_hamiltonian_handoff_payload
+    readiness =
+        assembly.diatomic_complete_core_shell_hamiltonian_consumer_contract_payload.readiness
+    h1_payload = assembly.diatomic_complete_core_shell_h1_payload
+    h1_matrix = Matrix{Float64}(handoff.one_body_hamiltonian)
+    pair_matrix = Matrix{Float64}(handoff.pre_final_pair_matrix)
+    coefficients = Matrix{Float64}(handoff.final_to_pre_final_coefficients)
+    support_raw = Matrix{Float64}(handoff.support_pair_raw_numerator)
+    h1_symmetry_defect = norm(h1_matrix - h1_matrix')
+    two_body_symmetry_defect = norm(pair_matrix - pair_matrix')
+    pqs_fingerprint = (route_label = :pqs_source_box, status = handoff.status,
+        blocker = handoff.blocker, final_dimension = size(h1_matrix, 1),
+        pre_final_dimension = size(pair_matrix, 1),
+        support_weight_count = length(handoff.support_weights),
+        one_body_shape = size(h1_matrix), two_body_shape = size(pair_matrix),
+        h1_lowest = h1_payload.summary.lowest_energy, h1_symmetry_defect,
+        one_body_finite = all(isfinite, h1_matrix),
+        two_body_finite = all(isfinite, pair_matrix),
+        density_gauge = handoff.summary.density_gauge,
+        raw_pair_factor_convention = handoff.summary.raw_pair_factor_convention,
+        cr2_read_only_inspector_ready = readiness.cr2_read_only_inspector_ready,
+        cr2_solver_ready = readiness.cr2_solver_ready,
+        cr2_export_ready = readiness.cr2_export_ready,
+        cr2_handoff_blocker = readiness.cr2_handoff_blocker,
+        nuclear_repulsion = handoff.nuclear_repulsion,
+        electron_count = handoff.electron_count, spin_sector = handoff.spin_sector)
+    wl_fingerprint = (route_label = :white_lindsey, status = :unavailable,
+        blocker = :white_lindsey_inspection_not_materialized,
+        final_dimension = nothing, pre_final_dimension = nothing,
+        support_weight_count = nothing, one_body_shape = nothing,
+        two_body_shape = nothing, h1_lowest = nothing,
+        h1_symmetry_defect = nothing, one_body_finite = false,
+        two_body_finite = false, density_gauge = :not_applicable,
+        raw_pair_factor_convention = :not_applicable,
+        cr2_read_only_inspector_ready = false, cr2_solver_ready = false,
+        cr2_export_ready = false,
+        cr2_handoff_blocker = :white_lindsey_inspection_not_materialized,
+        nuclear_repulsion = handoff.nuclear_repulsion,
+        electron_count = handoff.electron_count, spin_sector = handoff.spin_sector)
+    coordinates = reduce(
+        vcat,
+        (permutedims(collect(coord)) for coord in handoff.summary.nuclear_coordinates),
+    )
+    unavailable_wl = (status = :unavailable, blocker = :white_lindsey_inspection_not_materialized)
+    return (;
+        jld2_values = Dict{String,Any}(
+            "schema/name" => "be2_wl_pqs_handoff_inspection_bundle",
+            "schema/version" => 1,
+            "bundle/purpose" => "cr2_read_only_hamiltonian_inspection",
+            "producer" => (;
+                package = "GaussletBases",
+                repo_commit = :unavailable,
+                dirty = :unavailable,
+                generated_at = :unavailable,
+            ),
+            "routes/pqs_source_box/route" => (;
+                label = :pqs_source_box,
+                family = handoff.route_family,
+                kind = get(assembly, :low_order_assembly_route_kind, :unavailable),
+                status = handoff.status,
+                blocker = handoff.blocker,
+            ),
+            "routes/pqs_source_box/readiness" => readiness,
+            "routes/pqs_source_box/system" => (;
+                nuclear_charges = collect(handoff.summary.nuclear_charges),
+                nuclear_coordinates = coordinates,
+                nuclear_repulsion = handoff.nuclear_repulsion,
+                electron_count = handoff.electron_count,
+                spin_sector = handoff.spin_sector,
+            ),
+            "routes/pqs_source_box/final_basis" => (;
+                final_dimension = size(h1_matrix, 1),
+                order_label = handoff.ordering.final_order,
+            ),
+            "routes/pqs_source_box/one_body/hamiltonian" => h1_matrix,
+            "routes/pqs_source_box/h1/lowest_energy" => h1_payload.summary.lowest_energy,
+            "routes/pqs_source_box/two_body" => (;
+                representation_kind = :pre_final_density_interaction,
+                pre_final_pair_matrix = pair_matrix,
+                final_to_pre_final_coefficients = coefficients,
+                pre_final_weights = Vector{Float64}(handoff.pre_final_weights),
+                support_weights = Vector{Float64}(handoff.support_weights),
+                support_raw_pair_numerator = support_raw,
+                density_gauge = handoff.summary.density_gauge,
+                raw_pair_factor_convention =
+                    handoff.summary.raw_pair_factor_convention,
+            ),
+            "routes/pqs_source_box/validation" => (;
+                h1_symmetry_defect,
+                two_body_symmetry_defect,
+                one_body_finite = pqs_fingerprint.one_body_finite,
+                two_body_finite = pqs_fingerprint.two_body_finite,
+            ),
+            "routes/white_lindsey/route" => (;
+                label = :white_lindsey,
+                family = :white_lindsey_low_order,
+                kind = :not_materialized,
+                status = :unavailable,
+                blocker = :white_lindsey_inspection_not_materialized,
+            ),
+            "routes/white_lindsey/readiness" => (;
+                cr2_read_only_inspector_ready = false,
+                cr2_solver_ready = false,
+                cr2_export_ready = false,
+                cr2_handoff_blocker = :white_lindsey_inspection_not_materialized,
+            ),
+            "routes/white_lindsey/system" => merge(
+                unavailable_wl,
+                (;
+                    nuclear_charges = collect(handoff.summary.nuclear_charges),
+                    nuclear_coordinates = coordinates,
+                    nuclear_repulsion = handoff.nuclear_repulsion,
+                    electron_count = handoff.electron_count,
+                    spin_sector = handoff.spin_sector,
+                ),
+            ),
+            "routes/white_lindsey/final_basis" => merge(
+                unavailable_wl,
+                (final_dimension = nothing, order_label = :not_applicable),
+            ),
+            "routes/white_lindsey/one_body" => merge(
+                unavailable_wl,
+                (hamiltonian = Float64[], representation_kind = :not_materialized),
+            ),
+            "routes/white_lindsey/two_body" => merge(
+                unavailable_wl,
+                (;
+                    representation_kind = :not_applicable,
+                    pre_final_pair_matrix = Float64[],
+                    final_to_pre_final_coefficients = Float64[],
+                    pre_final_weights = Float64[],
+                    support_weights = Float64[],
+                    support_raw_pair_numerator = Float64[],
+                    density_gauge = :not_applicable,
+                    raw_pair_factor_convention = :not_applicable,
+                ),
+            ),
+            "routes/white_lindsey/validation" => merge(
+                unavailable_wl,
+                (;
+                    h1_symmetry_defect = nothing,
+                    two_body_symmetry_defect = nothing,
+                    one_body_finite = false,
+                    two_body_finite = false,
+                ),
+            ),
+        ),
+        rows = (pqs_fingerprint, wl_fingerprint),
+        fingerprint_columns = propertynames(pqs_fingerprint),
+    )
+end
+
+function _pqs_source_box_route_driver_write_be2_cr2_inspection_bundle(
+    jld2_path, tsv_path, payload)
+    jldopen(jld2_path, "w") do file
+        for (key, value) in payload.jld2_values
+            _cartesian_write_value!(file, key, value)
+        end
+    end
+    open(tsv_path, "w") do io
+        columns = payload.fingerprint_columns
+        println(io, join(String.(columns), '\t'))
+        for row in payload.rows
+            println(io, join((
+                _pqs_source_box_route_driver_tsv_cell(getproperty(row, col)) for
+                col in columns), '\t'))
+        end
+    end
+    return (jld2_path = jld2_path, tsv_path = tsv_path)
 end
 
 function _pqs_source_box_route_driver_diatomic_complete_core_shell_ham_readiness_payload(
