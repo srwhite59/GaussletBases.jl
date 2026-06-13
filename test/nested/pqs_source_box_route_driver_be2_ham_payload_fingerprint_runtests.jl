@@ -108,6 +108,8 @@ end
     support_window_payload =
         assembly.diatomic_complete_core_shell_support_window_payload
     raw_box_route_payload = assembly.diatomic_raw_box_route_payload
+    source_realization_payload =
+        assembly.diatomic_complete_core_shell_source_realization_payload
     source_plan_payload =
         assembly.diatomic_complete_core_shell_source_plan_payload
     readiness = assembly.diatomic_complete_core_shell_ham_readiness_payload
@@ -174,6 +176,49 @@ end
     @test !raw_box_route_payload.summary.exports_materialized
     @test !raw_box_route_payload.summary.artifacts_materialized
 
+    @test source_realization_payload.status ==
+          :blocked_diatomic_complete_core_shell_source_realization
+    @test source_realization_payload.blocker == :missing_parent_axis_bundle_object
+    @test source_realization_payload.route_family === :pqs_source_box
+    @test source_realization_payload.system_classification === :bond_aligned_diatomic
+    @test source_realization_payload.bond_axis === :x
+    @test !source_realization_payload.parent_axis_bundle_object_available
+    @test source_realization_payload.support_window_payload_status ==
+          :available_diatomic_complete_core_shell_support_windows
+    @test source_realization_payload.raw_box_route_payload_status ==
+          :blocked_diatomic_raw_box_route_payload
+    @test source_realization_payload.core_unit_key == :product
+    @test source_realization_payload.shell_unit_keys == (:pqs_left, :pqs_right)
+    @test source_realization_payload.retained_order ==
+          (:pqs_left, :pqs_right, :product)
+    @test source_realization_payload.support_order ==
+          (:product, :pqs_left, :pqs_right)
+    @test source_realization_payload.retained_to_support_order_permutation_required
+    @test source_realization_payload.core_support_count == 25
+    @test source_realization_payload.shell_support_counts ==
+          (pqs_left = 125, pqs_right = 125)
+    @test source_realization_payload.shell_support_count == 250
+    @test source_realization_payload.shell_retained_counts ==
+          (pqs_left = nothing, pqs_right = nothing)
+    @test source_realization_payload.shell_retained_count === nothing
+    @test source_realization_payload.precleanup_retained_dimension === nothing
+    @test source_realization_payload.shell_final_coefficients_shape === nothing
+    @test source_realization_payload.shell_coefficient_block_structure ==
+          :block_diagonal_left_right_pqs
+    @test source_realization_payload.bundles_role == :parent_axis_bundle
+    @test source_realization_payload.object_kind_claim ==
+          :not_pqs_multilayer_shell_source_plan
+    @test :parent_axis_bundle_object in source_realization_payload.missing_objects
+    @test !source_realization_payload.summary.source_plan_materialized
+    @test !source_realization_payload.summary.returns_pqs_multilayer_shell_source_plan
+    @test !source_realization_payload.summary.final_basis_materialized
+    @test !source_realization_payload.summary.h1_materialized
+    @test !source_realization_payload.summary.h1_j_materialized
+    @test !source_realization_payload.summary.ham_payload_materialized
+    @test !source_realization_payload.summary.route_driver_public_surface
+    @test !source_realization_payload.summary.exports_materialized
+    @test !source_realization_payload.summary.artifacts_materialized
+
     @test source_plan_payload.status ==
           :blocked_diatomic_complete_core_shell_source_plan
     @test source_plan_payload.blocker == :missing_parent_axis_bundle_object
@@ -185,12 +230,16 @@ end
     @test source_plan_payload.source_plan_status ==
           :not_materialized_diatomic_complete_core_shell_source_plan
     @test source_plan_payload.support_window_payload === support_window_payload
+    @test source_plan_payload.source_realization_payload ===
+          source_realization_payload
     @test source_plan_payload.summary.support_window_payload_status ==
           :available_diatomic_complete_core_shell_support_windows
     @test source_plan_payload.summary.raw_box_route_payload_status ==
           :blocked_diatomic_raw_box_route_payload
+    @test source_plan_payload.summary.source_realization_payload_status ==
+          :blocked_diatomic_complete_core_shell_source_realization
     @test :parent_axis_bundle_object in source_plan_payload.missing_objects
-    @test :diatomic_complete_core_shell_source_realization_contract in
+    @test :diatomic_complete_core_shell_source_realization_payload in
           source_plan_payload.missing_objects
     @test !source_plan_payload.summary.source_plan_materialized
     @test !source_plan_payload.summary.final_basis_materialized
@@ -285,6 +334,8 @@ end
     support_window_payload =
         assembly.diatomic_complete_core_shell_support_window_payload
     raw_box_route_payload = assembly.diatomic_raw_box_route_payload
+    source_realization_payload =
+        assembly.diatomic_complete_core_shell_source_realization_payload
     source_plan_payload =
         assembly.diatomic_complete_core_shell_source_plan_payload
     payload = assembly.complete_core_shell_diagnostic_route_payload
@@ -387,10 +438,60 @@ end
     @test !raw_box_route_payload.summary.exports_materialized
     @test !raw_box_route_payload.summary.artifacts_materialized
 
+    @test source_realization_payload.status ==
+          :available_diatomic_complete_core_shell_source_realization
+    @test source_realization_payload.blocker === nothing
+    @test source_realization_payload.route_family === :pqs_source_box
+    @test source_realization_payload.system_classification === :bond_aligned_diatomic
+    @test source_realization_payload.bond_axis === :x
+    @test source_realization_payload.parent_axis_bundle_object_available
+    @test source_realization_payload.support_window_payload_status ==
+          :available_diatomic_complete_core_shell_support_windows
+    @test source_realization_payload.raw_box_route_payload_status ==
+          :available_diatomic_raw_box_route_payload
+    @test source_realization_payload.core_unit_key == :product
+    @test source_realization_payload.shell_unit_keys == (:pqs_left, :pqs_right)
+    @test source_realization_payload.retained_order ==
+          (:pqs_left, :pqs_right, :product)
+    @test source_realization_payload.support_order ==
+          (:product, :pqs_left, :pqs_right)
+    @test source_realization_payload.retained_to_support_order_permutation_required
+    @test source_realization_payload.route_retained_ranges ==
+          raw_box_route_payload.producer.descriptor.expected_ranges
+    @test source_realization_payload.source_plan_precleanup_ranges ==
+          (product = 1:25, pqs_left = 26:123, pqs_right = 124:221)
+    @test source_realization_payload.core_support_count == 25
+    @test source_realization_payload.shell_support_counts ==
+          (pqs_left = 125, pqs_right = 125)
+    @test source_realization_payload.shell_support_count == 250
+    @test source_realization_payload.shell_retained_counts ==
+          (pqs_left = 98, pqs_right = 98)
+    @test source_realization_payload.shell_retained_count == 196
+    @test source_realization_payload.precleanup_retained_dimension == 221
+    @test source_realization_payload.shell_final_coefficients_shape == (250, 196)
+    @test source_realization_payload.shell_coefficient_block_structure ==
+          :block_diagonal_left_right_pqs
+    @test source_realization_payload.bundles_role == :parent_axis_bundle
+    @test source_realization_payload.object_kind_claim ==
+          :not_pqs_multilayer_shell_source_plan
+    @test :diatomic_complete_core_shell_source_realization in
+          source_realization_payload.available_objects
+    @test :pqs_multilayer_shell_source_plan_adapter_contract in
+          source_realization_payload.missing_objects
+    @test !source_realization_payload.summary.source_plan_materialized
+    @test !source_realization_payload.summary.returns_pqs_multilayer_shell_source_plan
+    @test !source_realization_payload.summary.final_basis_materialized
+    @test !source_realization_payload.summary.h1_materialized
+    @test !source_realization_payload.summary.h1_j_materialized
+    @test !source_realization_payload.summary.ham_payload_materialized
+    @test !source_realization_payload.summary.route_driver_public_surface
+    @test !source_realization_payload.summary.exports_materialized
+    @test !source_realization_payload.summary.artifacts_materialized
+
     @test source_plan_payload.status ==
           :blocked_diatomic_complete_core_shell_source_plan
     @test source_plan_payload.blocker ==
-          :missing_diatomic_complete_core_shell_source_realization_contract
+          :missing_pqs_multilayer_shell_source_plan_adapter_contract
     @test source_plan_payload.route_family === :pqs_source_box
     @test source_plan_payload.system_classification === :bond_aligned_diatomic
     @test source_plan_payload.bond_axis === :x
@@ -399,16 +500,22 @@ end
     @test source_plan_payload.source_plan_status ==
           :not_materialized_diatomic_complete_core_shell_source_plan
     @test source_plan_payload.support_window_payload === support_window_payload
+    @test source_plan_payload.source_realization_payload ===
+          source_realization_payload
     @test source_plan_payload.summary.support_window_payload_status ==
           :available_diatomic_complete_core_shell_support_windows
     @test source_plan_payload.summary.raw_box_route_payload_status ==
           :available_diatomic_raw_box_route_payload
+    @test source_plan_payload.summary.source_realization_payload_status ==
+          :available_diatomic_complete_core_shell_source_realization
     @test :diatomic_complete_core_shell_support_windows in
           source_plan_payload.available_objects
     @test :diatomic_raw_box_route_payload in source_plan_payload.available_objects
+    @test :diatomic_complete_core_shell_source_realization in
+          source_plan_payload.available_objects
     @test :parent_axis_bundle_object in source_plan_payload.available_objects
     @test !in(:parent_axis_bundle_object, source_plan_payload.missing_objects)
-    @test :diatomic_complete_core_shell_source_realization_contract in
+    @test :pqs_multilayer_shell_source_plan_adapter_contract in
           source_plan_payload.missing_objects
     @test !source_plan_payload.summary.source_plan_materialized
     @test !source_plan_payload.summary.final_basis_materialized
