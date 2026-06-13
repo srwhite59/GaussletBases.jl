@@ -11800,6 +11800,32 @@ struct _PQSDiatomicCompleteCoreShellH1Payload
     metadata
 end
 
+struct _PQSDiatomicCompleteCoreShellHamInputPayload
+    status::Symbol
+    blocker
+    route_family::Symbol
+    source_plan
+    source_plan_status::Symbol
+    final_basis
+    final_basis_status::Symbol
+    h1_payload
+    h1_payload_status::Symbol
+    density_provenance
+    density_provenance_status::Symbol
+    support_weights
+    support_weights_status::Symbol
+    raw_pair_factor_terms
+    raw_pair_factor_status::Symbol
+    support_pair_raw_numerator
+    support_pair_raw_numerator_status::Symbol
+    density_interaction
+    density_interaction_status::Symbol
+    available_objects::Tuple
+    missing_objects::Tuple
+    summary
+    metadata
+end
+
 function _pqs_source_box_route_driver_axis_counts_tuple(axis_counts)
     isnothing(axis_counts) && return nothing
     if axis_counts isa NamedTuple
@@ -13756,6 +13782,445 @@ function _pqs_source_box_route_driver_diatomic_complete_core_shell_h1_payload(
     )
 end
 
+function _pqs_source_box_route_driver_diatomic_support_states(source_plan)
+    return vcat(source_plan.core_support_states, source_plan.shell_support_states)
+end
+
+function _pqs_source_box_route_driver_diatomic_support_weights(
+    source_plan;
+    axis_weights,
+)
+    states = _pqs_source_box_route_driver_diatomic_support_states(source_plan)
+    weights_x, weights_y, weights_z =
+        _pqs_multilayer_common_or_axis_tuple(axis_weights, "axis_weights")
+    weights = Vector{Float64}(undef, length(states))
+    @inbounds for (index, (ix, iy, iz)) in pairs(states)
+        weights[index] =
+            Float64(weights_x[ix]) * Float64(weights_y[iy]) * Float64(weights_z[iz])
+    end
+    return (;
+        object_kind = :pqs_diatomic_complete_core_shell_support_weights,
+        status = :materialized_diatomic_complete_core_shell_support_weights,
+        blocker = nothing,
+        support_weights = weights,
+        support_weight_count = length(weights),
+        support_weights_all_finite = all(isfinite, weights),
+        support_weights_all_positive = all(>(0.0), weights),
+        support_weight_min = minimum(weights),
+        support_weight_max = maximum(weights),
+        support_weight_sum = sum(weights),
+        support_state_count = length(states),
+        support_ordering = :core_product_then_shell_left_right_pqs,
+        final_basis_transfer_materialized = false,
+        h1_j_materialized = false,
+        density_density_materialized = false,
+        rhf_materialized = false,
+        route_driver_public_surface = false,
+        exports_materialized = false,
+        artifacts_materialized = false,
+        metadata = (;
+            source = :pqs_source_box_route_driver_diatomic_support_weights,
+            input_source_plan = :pqs_diatomic_complete_core_shell_source_plan,
+            support_row_order = :core_product_then_shell_left_right_pqs,
+            old_source_plan_object_kind = false,
+            retained_diagnostic_weights_are_ida_weights = false,
+        ),
+    )
+end
+
+function _pqs_source_box_route_driver_diatomic_support_pair_raw_numerator_matrix(
+    source_plan;
+    raw_pair_factor_terms,
+    coulomb_expansion,
+)
+    states = _pqs_source_box_route_driver_diatomic_support_states(source_plan)
+    coefficients = Float64.(coulomb_expansion.coefficients)
+    all(>(0.0), coefficients) ||
+        throw(ArgumentError("diatomic support raw pair numerator requires positive Coulomb expansion coefficients"))
+    axis_terms =
+        _pqs_multilayer_validate_raw_pair_factor_terms(
+            _pqs_multilayer_raw_pair_factor_terms(raw_pair_factor_terms),
+            length(coefficients),
+        )
+    support_pair_raw_numerator = zeros(Float64, length(states), length(states))
+    for term_index in eachindex(coefficients)
+        support_pair_raw_numerator .+=
+            coefficients[term_index] *
+            _pqs_multilayer_support_product_matrix(
+                states,
+                states,
+                @view(axis_terms[1][term_index, :, :]),
+                @view(axis_terms[2][term_index, :, :]),
+                @view(axis_terms[3][term_index, :, :]),
+            )
+    end
+    symmetry_error =
+        norm(support_pair_raw_numerator - transpose(support_pair_raw_numerator), Inf)
+    return (;
+        object_kind =
+            :pqs_diatomic_complete_core_shell_support_raw_pair_numerator_matrix,
+        status =
+            :materialized_diatomic_complete_core_shell_support_raw_pair_numerator_matrix,
+        blocker = nothing,
+        support_pair_raw_numerator,
+        support_pair_raw_numerator_shape = size(support_pair_raw_numerator),
+        support_pair_raw_numerator_finite = all(isfinite, support_pair_raw_numerator),
+        support_pair_raw_numerator_symmetry_error = symmetry_error,
+        support_state_count = length(states),
+        support_ordering = :core_product_then_shell_left_right_pqs,
+        raw_pair_factor_convention = :raw_numerator,
+        density_normalized_pair_terms_used_as_authority = false,
+        h1_j_materialized = false,
+        density_density_materialized = false,
+        rhf_materialized = false,
+        route_driver_public_surface = false,
+        exports_materialized = false,
+        artifacts_materialized = false,
+        metadata = (;
+            source =
+                :pqs_source_box_route_driver_diatomic_support_pair_raw_numerator_matrix,
+            input_source_plan = :pqs_diatomic_complete_core_shell_source_plan,
+            raw_pair_factor_convention = :raw_numerator,
+            support_row_order = :core_product_then_shell_left_right_pqs,
+            old_source_plan_object_kind = false,
+            density_normalized_pair_terms_used_as_authority = false,
+        ),
+    )
+end
+
+function _pqs_source_box_route_driver_diatomic_density_provenance(
+    source_plan,
+    coulomb_expansion,
+)
+    expected_term_count = length(coulomb_expansion.coefficients)
+    provenance =
+        CartesianContractedParentMetrics._pqs_source_box_ida_factor_provenance(
+            source_plan.bundles;
+            expected_term_count,
+        )
+    hasproperty(provenance, :axis_weights) ||
+        throw(ArgumentError("diatomic support density provenance missing axis weights"))
+    hasproperty(provenance, :raw_axis_pair_factor_terms) ||
+        throw(ArgumentError("diatomic support density provenance missing raw pair factor terms"))
+    return (;
+        object_kind = :pqs_diatomic_complete_core_shell_density_provenance,
+        status = :available_diatomic_complete_core_shell_density_provenance,
+        blocker = nothing,
+        provenance,
+        axis_weights = provenance.axis_weights,
+        raw_pair_factor_terms = provenance.raw_axis_pair_factor_terms,
+        term_count = provenance.term_count,
+        factor_dimensions = provenance.factor_dimensions,
+        axis_weights_available = true,
+        raw_pair_factor_terms_available = true,
+        private_diagnostic_only = true,
+        retained_pqs_weights_used = false,
+        density_normalized_pair_terms_used_as_authority = false,
+        metadata = (;
+            source = :pqs_source_box_route_driver_diatomic_density_provenance,
+            provenance_source = :pqs_source_box_ida_factor_provenance,
+            input_source_plan = :pqs_diatomic_complete_core_shell_source_plan,
+            expected_term_count,
+            retained_diagnostic_weights_are_ida_weights = false,
+        ),
+    )
+end
+
+function _pqs_source_box_route_driver_diatomic_complete_core_shell_ham_input_payload(
+    route_skeleton,
+    recipe,
+    source_plan_payload = nothing,
+    final_basis_payload = nothing,
+    h1_payload = nothing,
+)
+    route_family =
+        hasproperty(route_skeleton, :route_family) ?
+        route_skeleton.route_family :
+        recipe.route_family
+    source_plan =
+        !isnothing(source_plan_payload) && hasproperty(source_plan_payload, :source_plan) ?
+        source_plan_payload.source_plan :
+        nothing
+    source_plan_status =
+        isnothing(source_plan) ? :not_available : source_plan.status
+    final_basis =
+        !isnothing(final_basis_payload) && hasproperty(final_basis_payload, :final_basis) ?
+        final_basis_payload.final_basis :
+        nothing
+    final_basis_status =
+        isnothing(final_basis) ? :not_available : final_basis.status
+    h1_payload_status =
+        isnothing(h1_payload) ? :not_available : h1_payload.status
+
+    density_provenance = nothing
+    support_weights = nothing
+    raw_pair_factor_terms = nothing
+    support_pair_raw_numerator = nothing
+    density_interaction = nothing
+    density_provenance_status =
+        :not_materialized_diatomic_complete_core_shell_density_provenance
+    support_weights_status =
+        :not_materialized_diatomic_complete_core_shell_support_weights
+    raw_pair_factor_status = :not_materialized_diatomic_raw_pair_factor_terms
+    support_pair_raw_numerator_status =
+        :not_materialized_diatomic_support_raw_pair_numerator_matrix
+    density_interaction_status =
+        :not_materialized_diatomic_pre_final_density_interaction
+    available = Symbol[]
+    missing = Symbol[]
+
+    if route_family !== :pqs_source_box
+        status =
+            :not_applicable_diatomic_complete_core_shell_ham_input_non_pqs_route
+        blocker = nothing
+    elseif isnothing(source_plan) ||
+           source_plan_status !==
+           :available_pqs_diatomic_complete_core_shell_source_plan
+        status = :blocked_diatomic_complete_core_shell_ham_input_payload
+        blocker = :missing_diatomic_complete_core_shell_source_plan
+        push!(missing, :pqs_diatomic_complete_core_shell_source_plan)
+    elseif isnothing(final_basis) ||
+           final_basis_status !== :available_pqs_complete_core_shell_final_basis
+        status = :blocked_diatomic_complete_core_shell_ham_input_payload
+        blocker = :missing_diatomic_complete_core_shell_final_basis
+        push!(available, :pqs_diatomic_complete_core_shell_source_plan)
+        push!(missing, :diatomic_complete_core_shell_final_basis)
+    elseif isnothing(h1_payload) ||
+           h1_payload_status !== :available_diatomic_complete_core_shell_h1_payload
+        status = :blocked_diatomic_complete_core_shell_ham_input_payload
+        blocker = :missing_diatomic_complete_core_shell_h1_payload
+        append!(
+            available,
+            (
+                :pqs_diatomic_complete_core_shell_source_plan,
+                :diatomic_complete_core_shell_final_basis,
+            ),
+        )
+        push!(missing, :diatomic_complete_core_shell_h1_payload)
+    elseif get(final_basis, :support_row_order, nothing) !== :core_then_shell
+        status = :blocked_diatomic_complete_core_shell_ham_input_payload
+        blocker = :diatomic_complete_core_shell_final_basis_support_order_mismatch
+        push!(missing, :diatomic_complete_core_shell_final_basis_support_order)
+    elseif get(source_plan.convention_labels, :support_row_order, nothing) !==
+           :core_product_then_shell_left_right_pqs
+        status = :blocked_diatomic_complete_core_shell_ham_input_payload
+        blocker = :unexpected_diatomic_complete_core_shell_support_row_order
+        push!(missing, :diatomic_complete_core_shell_support_row_order)
+    else
+        append!(
+            available,
+            (
+                :pqs_diatomic_complete_core_shell_source_plan,
+                :diatomic_complete_core_shell_final_basis,
+                :diatomic_complete_core_shell_h1_payload,
+            ),
+        )
+        coulomb_expansion = coulomb_gaussian_expansion(doacc = false)
+        try
+            density_provenance =
+                _pqs_source_box_route_driver_diatomic_density_provenance(
+                    source_plan,
+                    coulomb_expansion,
+                )
+            density_provenance_status = density_provenance.status
+            push!(available, :diatomic_complete_core_shell_density_provenance)
+            raw_pair_factor_terms = density_provenance.raw_pair_factor_terms
+            raw_pair_factor_status = :available_diatomic_raw_pair_factor_terms
+            support_weights =
+                _pqs_source_box_route_driver_diatomic_support_weights(
+                    source_plan;
+                    axis_weights = density_provenance.axis_weights,
+                )
+            support_weights_status = support_weights.status
+            push!(available, :diatomic_complete_core_shell_support_weights)
+            support_pair_raw_numerator =
+                _pqs_source_box_route_driver_diatomic_support_pair_raw_numerator_matrix(
+                    source_plan;
+                    raw_pair_factor_terms,
+                    coulomb_expansion,
+                )
+            support_pair_raw_numerator_status =
+                support_pair_raw_numerator.status
+            push!(
+                available,
+                :diatomic_complete_core_shell_support_raw_pair_numerator,
+            )
+            density_interaction =
+                CartesianFinalBasisRealization.pqs_complete_core_shell_pre_final_density_interaction(
+                    final_basis,
+                    support_pair_raw_numerator.support_pair_raw_numerator,
+                    support_weights.support_weights;
+                    metadata = (;
+                        source =
+                            :pqs_source_box_route_driver_diatomic_complete_core_shell_ham_input_payload,
+                        input_source_plan =
+                            :pqs_diatomic_complete_core_shell_source_plan,
+                        support_density_input_source =
+                            :pqs_source_box_route_driver_diatomic_density_provenance,
+                        raw_pair_factor_convention = :raw_numerator,
+                        old_source_plan_object_kind = false,
+                        source_box_first = true,
+                        retained_diagnostic_weights_are_ida_weights = false,
+                    ),
+                )
+            density_interaction_status = density_interaction.status
+            if density_interaction_status ===
+               :materialized_pqs_complete_core_shell_pre_final_density_interaction
+                status =
+                    :available_diatomic_complete_core_shell_ham_input_payload
+                blocker = nothing
+                push!(
+                    available,
+                    :diatomic_complete_core_shell_ham_input_payload,
+                    :diatomic_complete_core_shell_pre_final_density_interaction,
+                )
+            else
+                status = :blocked_diatomic_complete_core_shell_ham_input_payload
+                blocker = :blocked_diatomic_pre_final_density_interaction
+                push!(missing, :diatomic_complete_core_shell_pre_final_density_interaction)
+            end
+        catch error
+            error isa ArgumentError || error isa DimensionMismatch || rethrow()
+            status = :blocked_diatomic_complete_core_shell_ham_input_payload
+            message = sprint(showerror, error)
+            if occursin("axis weights", message)
+                blocker = :missing_diatomic_support_weights
+                push!(missing, :diatomic_complete_core_shell_support_weights)
+            elseif occursin("raw pair factor", message)
+                blocker = :missing_diatomic_raw_pair_factor_terms
+                push!(missing, :diatomic_raw_pair_factor_terms)
+            else
+                blocker = :missing_diatomic_support_density_provenance
+                push!(missing, :diatomic_complete_core_shell_density_provenance)
+            end
+        end
+    end
+
+    available_objects = Tuple(unique(available))
+    missing_objects = Tuple(unique(missing))
+    final_dimension =
+        !isnothing(final_basis) && hasproperty(final_basis, :final_retained_count) ?
+        final_basis.final_retained_count :
+        nothing
+    pre_final_dimension =
+        !isnothing(density_interaction) &&
+        hasproperty(density_interaction, :pre_final_weight_count) ?
+        density_interaction.pre_final_weight_count :
+        nothing
+    density_gauge =
+        !isnothing(density_interaction) &&
+        hasproperty(density_interaction, :density_gauge) ?
+        density_interaction.density_gauge :
+        nothing
+    raw_pair_factor_convention =
+        !isnothing(support_pair_raw_numerator) ?
+        support_pair_raw_numerator.raw_pair_factor_convention :
+        nothing
+    summary = (;
+        status,
+        blocker,
+        route_family,
+        source_plan_status,
+        final_basis_status,
+        h1_payload_status,
+        density_provenance_status,
+        support_weights_status,
+        raw_pair_factor_status,
+        support_pair_raw_numerator_status,
+        density_interaction_status,
+        density_gauge,
+        raw_pair_factor_convention,
+        final_dimension,
+        pre_final_dimension,
+        support_row_order =
+            !isnothing(final_basis) && hasproperty(final_basis, :support_row_order) ?
+            final_basis.support_row_order :
+            nothing,
+        source_plan_support_row_order =
+            !isnothing(source_plan) &&
+            hasproperty(source_plan, :convention_labels) ?
+            get(source_plan.convention_labels, :support_row_order, nothing) :
+            nothing,
+        pre_final_pair_matrix_shape =
+            !isnothing(density_interaction) &&
+            hasproperty(density_interaction, :pre_final_pair_matrix_shape) ?
+            density_interaction.pre_final_pair_matrix_shape :
+            nothing,
+        support_weight_count =
+            !isnothing(support_weights) ? support_weights.support_weight_count : nothing,
+        support_raw_pair_shape =
+            !isnothing(support_pair_raw_numerator) ?
+            support_pair_raw_numerator.support_pair_raw_numerator_shape :
+            nothing,
+        ham_input_materialized =
+            status === :available_diatomic_complete_core_shell_ham_input_payload,
+        h1_j_materialized = false,
+        ham_payload_materialized = false,
+        rhf_materialized = false,
+        route_driver_public_surface = false,
+        public_api = false,
+        exports_materialized = false,
+        artifacts_materialized = false,
+        density_normalized_pair_terms_used_as_authority = false,
+        retained_diagnostic_weights_are_ida_weights = false,
+        available_objects,
+        missing_objects,
+    )
+    metadata = (;
+        source =
+            :pqs_source_box_route_driver_diatomic_complete_core_shell_ham_input_payload,
+        route_kind = recipe.route_kind,
+        route_family,
+        source_plan_status,
+        final_basis_status,
+        h1_payload_status,
+        density_provenance_status,
+        support_weights_status,
+        raw_pair_factor_status,
+        support_pair_raw_numerator_status,
+        density_interaction_status,
+        electron_electron_representation = :pre_final_density_interaction,
+        density_gauge,
+        raw_pair_factor_convention,
+        source_box_first = true,
+        old_source_plan_object_kind = false,
+        ham_input_materialized = summary.ham_input_materialized,
+        h1_j_materialized = false,
+        ham_payload_materialized = false,
+        rhf_materialized = false,
+        route_driver_public_surface = false,
+        public_api = false,
+        exports_materialized = false,
+        artifacts_materialized = false,
+        retained_diagnostic_weights_are_ida_weights = false,
+    )
+    return _PQSDiatomicCompleteCoreShellHamInputPayload(
+        status,
+        blocker,
+        route_family,
+        source_plan,
+        source_plan_status,
+        final_basis,
+        final_basis_status,
+        h1_payload,
+        h1_payload_status,
+        density_provenance,
+        density_provenance_status,
+        support_weights,
+        support_weights_status,
+        raw_pair_factor_terms,
+        raw_pair_factor_status,
+        support_pair_raw_numerator,
+        support_pair_raw_numerator_status,
+        density_interaction,
+        density_interaction_status,
+        available_objects,
+        missing_objects,
+        summary,
+        metadata,
+    )
+end
+
 function _pqs_source_box_route_driver_diatomic_complete_core_shell_ham_readiness_payload(
     parent,
     route_skeleton,
@@ -13763,6 +14228,7 @@ function _pqs_source_box_route_driver_diatomic_complete_core_shell_ham_readiness
     source_plan_payload = nothing,
     final_basis_payload = nothing,
     h1_payload = nothing,
+    ham_input_payload = nothing,
 )
     route_family =
         hasproperty(route_skeleton, :route_family) ?
@@ -13827,6 +14293,11 @@ function _pqs_source_box_route_driver_diatomic_complete_core_shell_ham_readiness
         :not_available
     h1_available =
         h1_payload_status === :available_diatomic_complete_core_shell_h1_payload
+    ham_input_payload_status =
+        isnothing(ham_input_payload) ? :not_available : ham_input_payload.status
+    ham_input_available =
+        ham_input_payload_status ===
+        :available_diatomic_complete_core_shell_ham_input_payload
 
     if route_family !== :pqs_source_box
         status =
@@ -13843,8 +14314,10 @@ function _pqs_source_box_route_driver_diatomic_complete_core_shell_ham_readiness
     else
         status = :blocked_diatomic_complete_core_shell_ham_readiness
         blocker =
+            ham_input_available ?
+            :missing_diatomic_ham_consumer_contract :
             h1_available ?
-            :missing_diatomic_complete_core_shell_h1_j_consumer :
+            :missing_diatomic_complete_core_shell_ham_input_payload :
             final_basis_status ===
             :available_pqs_complete_core_shell_final_basis ?
             :missing_diatomic_complete_core_shell_h1_consumer :
@@ -13866,11 +14339,15 @@ function _pqs_source_box_route_driver_diatomic_complete_core_shell_ham_readiness
             push!(available, :diatomic_complete_core_shell_final_basis)
         h1_available &&
             push!(available, :diatomic_complete_core_shell_h1_payload)
+        ham_input_available &&
+            push!(available, :diatomic_complete_core_shell_ham_input_payload)
         parent_axis_bundle_object_available &&
             push!(available, :parent_axis_bundle_object)
         missing =
+            ham_input_available ?
+            Symbol[:diatomic_ham_consumer_contract] :
             h1_available ?
-            Symbol[:diatomic_complete_core_shell_h1_j_consumer] :
+            Symbol[:diatomic_complete_core_shell_ham_input_payload] :
             final_basis_status ===
             :available_pqs_complete_core_shell_final_basis ?
             Symbol[
@@ -13913,12 +14390,14 @@ function _pqs_source_box_route_driver_diatomic_complete_core_shell_ham_readiness
         final_basis_status,
         h1_payload_status,
         h1_status,
+        ham_input_payload_status,
         missing_objects,
         private_internal_only = true,
         public_api = false,
         final_basis_materialized =
             final_basis_status === :available_pqs_complete_core_shell_final_basis,
         h1_materialized = h1_available,
+        ham_input_materialized = ham_input_available,
         h1_j_materialized = false,
         ham_payload_materialized = false,
         rhf_materialized = false,
@@ -13933,6 +14412,7 @@ function _pqs_source_box_route_driver_diatomic_complete_core_shell_ham_readiness
         source_plan_payload_status,
         final_basis_payload_status,
         h1_payload_status,
+        ham_input_payload_status,
         source_box_first = true,
         shell_support_row_contraction_authority = false,
         retained_diagnostic_weights_are_ida_weights = false,
@@ -14127,6 +14607,14 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
             diatomic_complete_core_shell_source_plan_payload,
             diatomic_complete_core_shell_final_basis_payload,
         )
+    diatomic_complete_core_shell_ham_input_payload =
+        _pqs_source_box_route_driver_diatomic_complete_core_shell_ham_input_payload(
+            route_skeleton,
+            recipe,
+            diatomic_complete_core_shell_source_plan_payload,
+            diatomic_complete_core_shell_final_basis_payload,
+            diatomic_complete_core_shell_h1_payload,
+        )
     diatomic_complete_core_shell_ham_readiness_payload =
         _pqs_source_box_route_driver_diatomic_complete_core_shell_ham_readiness_payload(
             parent,
@@ -14135,6 +14623,7 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
             diatomic_complete_core_shell_source_plan_payload,
             diatomic_complete_core_shell_final_basis_payload,
             diatomic_complete_core_shell_h1_payload,
+            diatomic_complete_core_shell_ham_input_payload,
         )
 
     return (;
@@ -14158,6 +14647,7 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
         diatomic_complete_core_shell_source_plan_payload,
         diatomic_complete_core_shell_final_basis_payload,
         diatomic_complete_core_shell_h1_payload,
+        diatomic_complete_core_shell_ham_input_payload,
         diatomic_complete_core_shell_ham_readiness_payload,
         complete_core_shell_h1_j_diagnostic_payload,
         complete_core_shell_h1_j_diagnostic_summary =

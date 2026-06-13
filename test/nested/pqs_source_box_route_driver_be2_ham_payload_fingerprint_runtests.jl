@@ -115,6 +115,7 @@ end
     final_basis_payload =
         assembly.diatomic_complete_core_shell_final_basis_payload
     h1_payload = assembly.diatomic_complete_core_shell_h1_payload
+    ham_input_payload = assembly.diatomic_complete_core_shell_ham_input_payload
     readiness = assembly.diatomic_complete_core_shell_ham_readiness_payload
     ham = payload.complete_core_shell_ham_payload
 
@@ -294,6 +295,35 @@ end
     @test !h1_payload.summary.exports_materialized
     @test !h1_payload.summary.artifacts_materialized
 
+    @test ham_input_payload.status ==
+          :blocked_diatomic_complete_core_shell_ham_input_payload
+    @test ham_input_payload.blocker ==
+          :missing_diatomic_complete_core_shell_source_plan
+    @test ham_input_payload.source_plan === nothing
+    @test ham_input_payload.source_plan_status == :not_available
+    @test ham_input_payload.final_basis === nothing
+    @test ham_input_payload.final_basis_status == :not_available
+    @test ham_input_payload.h1_payload === h1_payload
+    @test ham_input_payload.h1_payload_status ==
+          :blocked_diatomic_complete_core_shell_h1_payload
+    @test ham_input_payload.density_provenance_status ==
+          :not_materialized_diatomic_complete_core_shell_density_provenance
+    @test ham_input_payload.support_weights_status ==
+          :not_materialized_diatomic_complete_core_shell_support_weights
+    @test ham_input_payload.raw_pair_factor_status ==
+          :not_materialized_diatomic_raw_pair_factor_terms
+    @test ham_input_payload.support_pair_raw_numerator_status ==
+          :not_materialized_diatomic_support_raw_pair_numerator_matrix
+    @test ham_input_payload.density_interaction_status ==
+          :not_materialized_diatomic_pre_final_density_interaction
+    @test !ham_input_payload.summary.ham_input_materialized
+    @test !ham_input_payload.summary.h1_j_materialized
+    @test !ham_input_payload.summary.ham_payload_materialized
+    @test !ham_input_payload.summary.rhf_materialized
+    @test !ham_input_payload.summary.public_api
+    @test !ham_input_payload.summary.exports_materialized
+    @test !ham_input_payload.summary.artifacts_materialized
+
     @test readiness.status == :blocked_diatomic_complete_core_shell_ham_readiness
     @test readiness.blocker ==
           :missing_diatomic_complete_core_shell_source_plan_producer
@@ -385,6 +415,7 @@ end
     final_basis_payload =
         assembly.diatomic_complete_core_shell_final_basis_payload
     h1_payload = assembly.diatomic_complete_core_shell_h1_payload
+    ham_input_payload = assembly.diatomic_complete_core_shell_ham_input_payload
     payload = assembly.complete_core_shell_diagnostic_route_payload
     ham = payload.complete_core_shell_ham_payload
 
@@ -695,9 +726,56 @@ end
           h1_payload.available_objects
     @test isempty(h1_payload.missing_objects)
 
+    @test ham_input_payload.status ==
+          :available_diatomic_complete_core_shell_ham_input_payload
+    @test ham_input_payload.blocker === nothing
+    @test ham_input_payload.source_plan === source_plan
+    @test ham_input_payload.source_plan_status ==
+          :available_pqs_diatomic_complete_core_shell_source_plan
+    @test ham_input_payload.final_basis === final_basis
+    @test ham_input_payload.final_basis_status ==
+          :available_pqs_complete_core_shell_final_basis
+    @test ham_input_payload.h1_payload === h1_payload
+    @test ham_input_payload.h1_payload_status ==
+          :available_diatomic_complete_core_shell_h1_payload
+    @test ham_input_payload.density_provenance_status ==
+          :available_diatomic_complete_core_shell_density_provenance
+    @test ham_input_payload.support_weights_status ==
+          :materialized_diatomic_complete_core_shell_support_weights
+    @test ham_input_payload.raw_pair_factor_status ==
+          :available_diatomic_raw_pair_factor_terms
+    @test ham_input_payload.support_pair_raw_numerator_status ==
+          :materialized_diatomic_complete_core_shell_support_raw_pair_numerator_matrix
+    @test ham_input_payload.density_interaction_status ==
+          :materialized_pqs_complete_core_shell_pre_final_density_interaction
+    @test ham_input_payload.summary.final_dimension == 221
+    @test ham_input_payload.summary.pre_final_dimension == 221
+    @test ham_input_payload.summary.density_gauge ==
+          :pre_final_localized_positive_weight
+    @test ham_input_payload.summary.raw_pair_factor_convention == :raw_numerator
+    @test ham_input_payload.summary.support_row_order == :core_then_shell
+    @test ham_input_payload.summary.source_plan_support_row_order ==
+          :core_product_then_shell_left_right_pqs
+    @test ham_input_payload.summary.support_weight_count == 275
+    @test ham_input_payload.summary.support_raw_pair_shape == (275, 275)
+    @test ham_input_payload.summary.pre_final_pair_matrix_shape == (221, 221)
+    @test ham_input_payload.summary.ham_input_materialized
+    @test !ham_input_payload.summary.h1_j_materialized
+    @test !ham_input_payload.summary.ham_payload_materialized
+    @test !ham_input_payload.summary.rhf_materialized
+    @test !ham_input_payload.summary.public_api
+    @test !ham_input_payload.summary.exports_materialized
+    @test !ham_input_payload.summary.artifacts_materialized
+    @test !ham_input_payload.summary.density_normalized_pair_terms_used_as_authority
+    @test !ham_input_payload.summary.retained_diagnostic_weights_are_ida_weights
+    @test :diatomic_complete_core_shell_ham_input_payload in
+          ham_input_payload.available_objects
+    @test :diatomic_complete_core_shell_pre_final_density_interaction in
+          ham_input_payload.available_objects
+    @test isempty(ham_input_payload.missing_objects)
+
     @test readiness.status == :blocked_diatomic_complete_core_shell_ham_readiness
-    @test readiness.blocker ==
-          :missing_diatomic_complete_core_shell_h1_j_consumer
+    @test readiness.blocker == :missing_diatomic_ham_consumer_contract
     @test readiness.route_family === :pqs_source_box
     @test readiness.system_classification === :bond_aligned_diatomic
     @test readiness.bond_axis === :x
@@ -707,16 +785,19 @@ end
           readiness.available_objects
     @test :diatomic_complete_core_shell_final_basis in readiness.available_objects
     @test :diatomic_complete_core_shell_h1_payload in readiness.available_objects
+    @test :diatomic_complete_core_shell_ham_input_payload in
+          readiness.available_objects
     @test !in(:parent_axis_bundle_object, readiness.missing_objects)
     @test !in(:diatomic_complete_core_shell_h1_consumer, readiness.missing_objects)
-    @test :diatomic_complete_core_shell_h1_j_consumer in
-          readiness.missing_objects
+    @test !in(:diatomic_complete_core_shell_h1_j_consumer, readiness.missing_objects)
+    @test :diatomic_ham_consumer_contract in readiness.missing_objects
     @test !in(
         :diatomic_complete_core_shell_final_basis_consumer,
         readiness.missing_objects,
     )
     @test readiness.summary.final_basis_materialized
     @test readiness.summary.h1_materialized
+    @test readiness.summary.ham_input_materialized
     @test !readiness.summary.h1_j_materialized
     @test !readiness.summary.ham_payload_materialized
     @test !readiness.summary.rhf_materialized
