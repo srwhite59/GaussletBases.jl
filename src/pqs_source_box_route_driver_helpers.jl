@@ -11774,6 +11774,32 @@ struct _PQSDiatomicCompleteCoreShellFinalBasisPayload
     metadata
 end
 
+struct _PQSDiatomicCompleteCoreShellH1Payload
+    status::Symbol
+    blocker
+    route_family::Symbol
+    source_plan
+    source_plan_status::Symbol
+    final_basis
+    final_basis_status::Symbol
+    support_kinetic
+    support_kinetic_status::Symbol
+    support_electron_nuclear_by_center
+    support_electron_nuclear_status::Symbol
+    final_kinetic
+    final_kinetic_status::Symbol
+    final_electron_nuclear_by_center
+    final_electron_nuclear_status::Symbol
+    final_hamiltonian
+    final_hamiltonian_status::Symbol
+    h1
+    h1_status::Symbol
+    available_objects::Tuple
+    missing_objects::Tuple
+    summary
+    metadata
+end
+
 function _pqs_source_box_route_driver_axis_counts_tuple(axis_counts)
     isnothing(axis_counts) && return nothing
     if axis_counts isa NamedTuple
@@ -13267,12 +13293,476 @@ function _pqs_source_box_route_driver_diatomic_complete_core_shell_final_basis_p
     )
 end
 
+function _pqs_source_box_route_driver_diatomic_support_kinetic_matrix(source_plan)
+    states = vcat(source_plan.core_support_states, source_plan.shell_support_states)
+    metrics = source_plan.metrics
+    support_operator =
+        _pqs_multilayer_support_product_matrix(
+            states,
+            states,
+            metrics.x.kinetic,
+            metrics.y.overlap,
+            metrics.z.overlap,
+        ) +
+        _pqs_multilayer_support_product_matrix(
+            states,
+            states,
+            metrics.x.overlap,
+            metrics.y.kinetic,
+            metrics.z.overlap,
+        ) +
+        _pqs_multilayer_support_product_matrix(
+            states,
+            states,
+            metrics.x.overlap,
+            metrics.y.overlap,
+            metrics.z.kinetic,
+        )
+    return (;
+        object_kind = :pqs_diatomic_complete_core_shell_support_kinetic_matrix,
+        status = :materialized_diatomic_complete_core_shell_support_kinetic_matrix,
+        blocker = nothing,
+        term = :kinetic,
+        support_operator,
+        support_operator_shape = size(support_operator),
+        support_operator_finite = all(isfinite, support_operator),
+        support_state_count = length(states),
+        support_ordering = :core_product_then_shell_left_right_pqs,
+        final_basis_transfer_materialized = false,
+        h1_materialized = false,
+        h1_j_materialized = false,
+        density_density_materialized = false,
+        rhf_materialized = false,
+        route_driver_public_surface = false,
+        exports_materialized = false,
+        artifacts_materialized = false,
+        metadata = (;
+            source = :pqs_source_box_route_driver_diatomic_support_kinetic_matrix,
+            input_source_plan = :pqs_diatomic_complete_core_shell_source_plan,
+            support_row_order = :core_product_then_shell_left_right_pqs,
+            old_source_plan_object_kind = false,
+            shell_support_row_contraction_authority = false,
+        ),
+    )
+end
+
+function _pqs_source_box_route_driver_diatomic_support_electron_nuclear_by_center_matrices(
+    source_plan;
+    coulomb_expansion,
+    center_records,
+    axis_layers,
+)
+    centers = _pqs_multilayer_center_records(center_records)
+    isempty(centers) &&
+        throw(ArgumentError("diatomic complete core/shell H1 requires nuclear centers"))
+    coefficients = Float64.(coulomb_expansion.coefficients)
+    states = vcat(source_plan.core_support_states, source_plan.shell_support_states)
+    records = map(enumerate(centers)) do (center_index, center_record)
+        center = _pqs_multilayer_center_summary(center_record)
+        factor_x, factor_y, factor_z, factor_source =
+            _pqs_multilayer_centered_factor_terms(
+                axis_layers,
+                coulomb_expansion,
+                center,
+            )
+        axis_terms =
+            _pqs_multilayer_validate_factor_terms(
+                (factor_x, factor_y, factor_z),
+                length(coefficients),
+            )
+        support_operator =
+            _pqs_multilayer_support_electron_nuclear_matrix(
+                states,
+                axis_terms,
+                coefficients,
+            )
+        (;
+            object_kind =
+                :pqs_diatomic_complete_core_shell_support_electron_nuclear_by_center_matrix,
+            status =
+                :materialized_diatomic_complete_core_shell_support_electron_nuclear_by_center_matrix,
+            blocker = nothing,
+            term = :electron_nuclear_by_center,
+            support_operator,
+            support_operator_shape = size(support_operator),
+            support_operator_finite = all(isfinite, support_operator),
+            support_state_count = length(states),
+            support_ordering = :core_product_then_shell_left_right_pqs,
+            by_center = true,
+            center_key = center.center_key,
+            center_index = center.center_index,
+            center_location = center.location,
+            location = center.location,
+            charge = center.nuclear_charge,
+            nuclear_charge = center.nuclear_charge,
+            nuclear_charge_recorded = true,
+            nuclear_charge_applied = false,
+            centers_summed = false,
+            center_summation = false,
+            uncharged_by_center_convention = true,
+            gaussian_factor_terms_source = factor_source,
+            gaussian_term_count = length(coefficients),
+            final_basis_transfer_materialized = false,
+            h1_materialized = false,
+            h1_j_materialized = false,
+            density_density_materialized = false,
+            rhf_materialized = false,
+            route_driver_public_surface = false,
+            exports_materialized = false,
+            artifacts_materialized = false,
+            metadata = (;
+                source =
+                    :pqs_source_box_route_driver_diatomic_support_electron_nuclear_by_center_matrices,
+                input_source_plan =
+                    :pqs_diatomic_complete_core_shell_source_plan,
+                physical_operator = :electron_nuclear_attraction,
+                negative_unit_charge_attraction = true,
+                nuclear_charge_recorded = true,
+                nuclear_charge_applied = false,
+                centers_summed = false,
+                uncharged_by_center_convention = true,
+                charge_application_stage = :hamiltonian_assembly,
+                gaussian_factor_terms_source = factor_source,
+                old_source_plan_object_kind = false,
+                shell_support_row_contraction_authority = false,
+                wl_matrix_authority_used = false,
+                center_key = center.center_key,
+                center_index = center.center_index,
+                center_location = center.location,
+                nuclear_charge = center.nuclear_charge,
+            ),
+        )
+    end
+    return (;
+        object_kind =
+            :pqs_diatomic_complete_core_shell_support_electron_nuclear_by_center_matrix_set,
+        status =
+            :materialized_diatomic_complete_core_shell_support_electron_nuclear_by_center_matrix_set,
+        blocker = nothing,
+        term = :electron_nuclear_by_center,
+        records,
+        center_count = length(records),
+        support_state_count = length(states),
+        support_ordering = :core_product_then_shell_left_right_pqs,
+        by_center = true,
+        nuclear_charge_recorded =
+            all(record -> record.nuclear_charge_recorded, records),
+        nuclear_charge_applied = false,
+        centers_summed = false,
+        uncharged_by_center_convention = true,
+        final_basis_transfer_materialized = false,
+        h1_materialized = false,
+        h1_j_materialized = false,
+        density_density_materialized = false,
+        rhf_materialized = false,
+        route_driver_public_surface = false,
+        exports_materialized = false,
+        artifacts_materialized = false,
+    )
+end
+
+function _pqs_source_box_route_driver_diatomic_complete_core_shell_h1_payload(
+    parent,
+    route_skeleton,
+    recipe,
+    source_plan_payload = nothing,
+    final_basis_payload = nothing,
+)
+    route_family =
+        hasproperty(route_skeleton, :route_family) ?
+        route_skeleton.route_family :
+        recipe.route_family
+    source_plan =
+        !isnothing(source_plan_payload) && hasproperty(source_plan_payload, :source_plan) ?
+        source_plan_payload.source_plan :
+        nothing
+    source_plan_status =
+        isnothing(source_plan) ?
+        :not_available :
+        source_plan.status
+    final_basis =
+        !isnothing(final_basis_payload) && hasproperty(final_basis_payload, :final_basis) ?
+        final_basis_payload.final_basis :
+        nothing
+    final_basis_status =
+        isnothing(final_basis) ?
+        :not_available :
+        final_basis.status
+
+    support_kinetic = nothing
+    support_electron_nuclear_by_center = nothing
+    final_kinetic = nothing
+    final_electron_nuclear_by_center = nothing
+    final_hamiltonian = nothing
+    h1 = nothing
+    support_kinetic_status = :not_materialized_diatomic_support_kinetic_matrix
+    support_electron_nuclear_status =
+        :not_materialized_diatomic_support_electron_nuclear_by_center
+    final_kinetic_status = :not_materialized_diatomic_final_kinetic
+    final_electron_nuclear_status =
+        :not_materialized_diatomic_final_electron_nuclear_by_center
+    final_hamiltonian_status = :not_materialized_diatomic_final_h1_hamiltonian
+    h1_status = :not_materialized_diatomic_complete_core_shell_h1
+    available = Symbol[]
+    missing = Symbol[]
+
+    if route_family !== :pqs_source_box
+        status = :not_applicable_diatomic_complete_core_shell_h1_non_pqs_route
+        blocker = nothing
+    elseif isnothing(source_plan) ||
+           source_plan_status !==
+           :available_pqs_diatomic_complete_core_shell_source_plan
+        status = :blocked_diatomic_complete_core_shell_h1_payload
+        blocker = :missing_pqs_diatomic_complete_core_shell_source_plan
+        push!(missing, :pqs_diatomic_complete_core_shell_source_plan)
+    elseif source_plan.object_kind !== :pqs_diatomic_complete_core_shell_source_plan
+        status = :blocked_diatomic_complete_core_shell_h1_payload
+        blocker = :unexpected_diatomic_complete_core_shell_source_plan_object_kind
+        push!(missing, :pqs_diatomic_complete_core_shell_source_plan)
+    elseif source_plan.support_order !== (:product, :pqs_left, :pqs_right)
+        status = :blocked_diatomic_complete_core_shell_h1_payload
+        blocker = :unexpected_diatomic_complete_core_shell_support_order
+        push!(missing, :diatomic_complete_core_shell_support_order)
+    elseif get(source_plan.convention_labels, :support_row_order, nothing) !==
+           :core_product_then_shell_left_right_pqs
+        status = :blocked_diatomic_complete_core_shell_h1_payload
+        blocker = :unexpected_diatomic_complete_core_shell_support_row_order
+        push!(missing, :diatomic_complete_core_shell_support_row_order)
+    elseif isnothing(final_basis) ||
+           final_basis_status !== :available_pqs_complete_core_shell_final_basis
+        status = :blocked_diatomic_complete_core_shell_h1_payload
+        blocker = :missing_diatomic_complete_core_shell_final_basis
+        push!(available, :pqs_diatomic_complete_core_shell_source_plan)
+        push!(missing, :diatomic_complete_core_shell_final_basis)
+    elseif get(final_basis, :support_row_order, nothing) !== :core_then_shell
+        status = :blocked_diatomic_complete_core_shell_h1_payload
+        blocker = :diatomic_complete_core_shell_final_basis_support_order_mismatch
+        push!(available, :pqs_diatomic_complete_core_shell_source_plan)
+        push!(missing, :diatomic_complete_core_shell_final_basis_support_order)
+    else
+        push!(
+            available,
+            :pqs_diatomic_complete_core_shell_source_plan,
+            :diatomic_complete_core_shell_final_basis,
+        )
+        center_records, missing_centers =
+            _pqs_source_box_route_driver_complete_core_shell_center_records(parent)
+        axis_layers, missing_axis_layers =
+            _pqs_source_box_route_driver_complete_core_shell_axis_layers(
+                source_plan.bundles,
+            )
+        missing_inputs = (missing_centers..., missing_axis_layers...)
+        if !isempty(missing_inputs)
+            status = :blocked_diatomic_complete_core_shell_h1_payload
+            blocker = :missing_diatomic_complete_core_shell_h1_inputs
+            append!(missing, missing_inputs)
+        else
+            coulomb_expansion = coulomb_gaussian_expansion(doacc = false)
+            metadata = (;
+                source =
+                    :pqs_source_box_route_driver_diatomic_complete_core_shell_h1_payload,
+                route_kind = recipe.route_kind,
+                route_family,
+                input_source_plan =
+                    :pqs_diatomic_complete_core_shell_source_plan,
+                old_source_plan_object_kind = false,
+                source_box_first = true,
+                shell_support_row_contraction_authority = false,
+                retained_diagnostic_weights_are_ida_weights = false,
+            )
+            try
+                support_kinetic =
+                    _pqs_source_box_route_driver_diatomic_support_kinetic_matrix(
+                        source_plan,
+                    )
+                support_kinetic_status = support_kinetic.status
+                support_electron_nuclear_by_center =
+                    _pqs_source_box_route_driver_diatomic_support_electron_nuclear_by_center_matrices(
+                        source_plan;
+                        coulomb_expansion,
+                        center_records,
+                        axis_layers,
+                    )
+                support_electron_nuclear_status =
+                    support_electron_nuclear_by_center.status
+                final_kinetic =
+                    CartesianFinalBasisRealization.pqs_complete_core_shell_final_one_body_matrix(
+                        final_basis,
+                        support_kinetic.support_operator;
+                        term = :kinetic,
+                        metadata,
+                    )
+                final_kinetic_status = final_kinetic.status
+                final_electron_nuclear_by_center =
+                    map(support_electron_nuclear_by_center.records) do record
+                        CartesianFinalBasisRealization.pqs_complete_core_shell_final_one_body_matrix(
+                            final_basis,
+                            record.support_operator;
+                            term = :electron_nuclear_by_center,
+                            center_record = record,
+                            metadata = merge(
+                                record.metadata,
+                                (;
+                                    nuclear_factor_source =
+                                        :centered_axis_layer_gaussian_factor_terms,
+                                    support_gaussian_factor_terms_source =
+                                        record.gaussian_factor_terms_source,
+                                    input_source_plan =
+                                        :pqs_diatomic_complete_core_shell_source_plan,
+                                    old_source_plan_object_kind = false,
+                                ),
+                            ),
+                        )
+                    end
+                final_electron_nuclear_status =
+                    all(
+                        result ->
+                            result.status ===
+                            :materialized_pqs_complete_core_shell_final_one_body_matrix,
+                        final_electron_nuclear_by_center,
+                    ) ?
+                    :materialized_diatomic_final_electron_nuclear_by_center :
+                    :blocked_diatomic_final_electron_nuclear_by_center
+                final_hamiltonian =
+                    CartesianFinalBasisRealization.pqs_complete_core_shell_final_one_electron_hamiltonian(
+                        final_kinetic,
+                        final_electron_nuclear_by_center,
+                    )
+                final_hamiltonian_status = final_hamiltonian.status
+                h1 =
+                    CartesianFinalBasisRealization.pqs_complete_core_shell_final_h1_solve(
+                        final_hamiltonian,
+                    )
+                h1_status = h1.status
+                status = :available_diatomic_complete_core_shell_h1_payload
+                blocker = nothing
+                push!(available, :diatomic_complete_core_shell_h1_payload)
+            catch error
+                error isa ArgumentError || error isa DimensionMismatch || rethrow()
+                status = :blocked_diatomic_complete_core_shell_h1_payload
+                blocker = :diatomic_complete_core_shell_h1_payload_error
+                push!(missing, :diatomic_complete_core_shell_h1_payload)
+                h1_status = :blocked_argument_error
+                metadata = merge(
+                    metadata,
+                    (error_message = sprint(showerror, error),),
+                )
+            end
+        end
+    end
+
+    available_objects = Tuple(unique(available))
+    missing_objects = Tuple(unique(missing))
+    final_dimension =
+        !isnothing(h1) && hasproperty(h1, :final_dimension) ?
+        h1.final_dimension :
+        !isnothing(final_basis) && hasproperty(final_basis, :final_retained_count) ?
+        final_basis.final_retained_count :
+        nothing
+    lowest_energy =
+        !isnothing(h1) && hasproperty(h1, :lowest_energy) ? h1.lowest_energy : nothing
+    summary = (;
+        status,
+        blocker,
+        route_family,
+        source_plan_status,
+        final_basis_status,
+        support_kinetic_status,
+        support_electron_nuclear_status,
+        final_kinetic_status,
+        final_electron_nuclear_status,
+        final_hamiltonian_status,
+        h1_status,
+        final_dimension,
+        lowest_energy,
+        center_count =
+            !isnothing(support_electron_nuclear_by_center) ?
+            support_electron_nuclear_by_center.center_count :
+            nothing,
+        support_row_order =
+            !isnothing(final_basis) && hasproperty(final_basis, :support_row_order) ?
+            final_basis.support_row_order :
+            nothing,
+        source_plan_support_row_order =
+            !isnothing(source_plan) &&
+            hasproperty(source_plan, :convention_labels) ?
+            get(source_plan.convention_labels, :support_row_order, nothing) :
+            nothing,
+        old_source_plan_object_kind = false,
+        h1_materialized =
+            status === :available_diatomic_complete_core_shell_h1_payload,
+        h1_j_materialized = false,
+        density_density_materialized = false,
+        ham_payload_materialized = false,
+        rhf_materialized = false,
+        route_driver_public_surface = false,
+        public_api = false,
+        exports_materialized = false,
+        artifacts_materialized = false,
+        available_objects,
+        missing_objects,
+    )
+    metadata = (;
+        source =
+            :pqs_source_box_route_driver_diatomic_complete_core_shell_h1_payload,
+        route_kind = recipe.route_kind,
+        route_family,
+        source_plan_status,
+        final_basis_status,
+        support_kinetic_status,
+        support_electron_nuclear_status,
+        final_kinetic_status,
+        final_electron_nuclear_status,
+        final_hamiltonian_status,
+        h1_status,
+        source_box_first = true,
+        old_source_plan_object_kind = false,
+        h1_materialized = summary.h1_materialized,
+        h1_j_materialized = false,
+        density_density_materialized = false,
+        ham_payload_materialized = false,
+        rhf_materialized = false,
+        route_driver_public_surface = false,
+        public_api = false,
+        exports_materialized = false,
+        artifacts_materialized = false,
+        shell_support_row_contraction_authority = false,
+        retained_diagnostic_weights_are_ida_weights = false,
+    )
+    return _PQSDiatomicCompleteCoreShellH1Payload(
+        status,
+        blocker,
+        route_family,
+        source_plan,
+        source_plan_status,
+        final_basis,
+        final_basis_status,
+        support_kinetic,
+        support_kinetic_status,
+        support_electron_nuclear_by_center,
+        support_electron_nuclear_status,
+        final_kinetic,
+        final_kinetic_status,
+        final_electron_nuclear_by_center,
+        final_electron_nuclear_status,
+        final_hamiltonian,
+        final_hamiltonian_status,
+        h1,
+        h1_status,
+        available_objects,
+        missing_objects,
+        summary,
+        metadata,
+    )
+end
+
 function _pqs_source_box_route_driver_diatomic_complete_core_shell_ham_readiness_payload(
     parent,
     route_skeleton,
     recipe,
     source_plan_payload = nothing,
     final_basis_payload = nothing,
+    h1_payload = nothing,
 )
     route_family =
         hasproperty(route_skeleton, :route_family) ?
@@ -13329,6 +13819,14 @@ function _pqs_source_box_route_driver_diatomic_complete_core_shell_ham_readiness
         hasproperty(final_basis_payload, :final_basis_status) ?
         final_basis_payload.final_basis_status :
         :not_available
+    h1_payload_status =
+        isnothing(h1_payload) ? :not_available : h1_payload.status
+    h1_status =
+        !isnothing(h1_payload) && hasproperty(h1_payload, :h1_status) ?
+        h1_payload.h1_status :
+        :not_available
+    h1_available =
+        h1_payload_status === :available_diatomic_complete_core_shell_h1_payload
 
     if route_family !== :pqs_source_box
         status =
@@ -13345,6 +13843,8 @@ function _pqs_source_box_route_driver_diatomic_complete_core_shell_ham_readiness
     else
         status = :blocked_diatomic_complete_core_shell_ham_readiness
         blocker =
+            h1_available ?
+            :missing_diatomic_complete_core_shell_h1_j_consumer :
             final_basis_status ===
             :available_pqs_complete_core_shell_final_basis ?
             :missing_diatomic_complete_core_shell_h1_consumer :
@@ -13364,9 +13864,13 @@ function _pqs_source_box_route_driver_diatomic_complete_core_shell_ham_readiness
             push!(available, :pqs_diatomic_complete_core_shell_source_plan)
         final_basis_status === :available_pqs_complete_core_shell_final_basis &&
             push!(available, :diatomic_complete_core_shell_final_basis)
+        h1_available &&
+            push!(available, :diatomic_complete_core_shell_h1_payload)
         parent_axis_bundle_object_available &&
             push!(available, :parent_axis_bundle_object)
         missing =
+            h1_available ?
+            Symbol[:diatomic_complete_core_shell_h1_j_consumer] :
             final_basis_status ===
             :available_pqs_complete_core_shell_final_basis ?
             Symbol[
@@ -13407,11 +13911,14 @@ function _pqs_source_box_route_driver_diatomic_complete_core_shell_ham_readiness
         source_plan_status,
         final_basis_payload_status,
         final_basis_status,
+        h1_payload_status,
+        h1_status,
         missing_objects,
         private_internal_only = true,
         public_api = false,
-        final_basis_materialized = false,
-        h1_materialized = false,
+        final_basis_materialized =
+            final_basis_status === :available_pqs_complete_core_shell_final_basis,
+        h1_materialized = h1_available,
         h1_j_materialized = false,
         ham_payload_materialized = false,
         rhf_materialized = false,
@@ -13424,6 +13931,8 @@ function _pqs_source_box_route_driver_diatomic_complete_core_shell_ham_readiness
         route_kind = recipe.route_kind,
         route_family,
         source_plan_payload_status,
+        final_basis_payload_status,
+        h1_payload_status,
         source_box_first = true,
         shell_support_row_contraction_authority = false,
         retained_diagnostic_weights_are_ida_weights = false,
@@ -13610,6 +14119,14 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
             diatomic_complete_core_shell_source_realization_payload,
             diatomic_complete_core_shell_source_plan_payload,
         )
+    diatomic_complete_core_shell_h1_payload =
+        _pqs_source_box_route_driver_diatomic_complete_core_shell_h1_payload(
+            parent,
+            route_skeleton,
+            recipe,
+            diatomic_complete_core_shell_source_plan_payload,
+            diatomic_complete_core_shell_final_basis_payload,
+        )
     diatomic_complete_core_shell_ham_readiness_payload =
         _pqs_source_box_route_driver_diatomic_complete_core_shell_ham_readiness_payload(
             parent,
@@ -13617,6 +14134,7 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
             recipe,
             diatomic_complete_core_shell_source_plan_payload,
             diatomic_complete_core_shell_final_basis_payload,
+            diatomic_complete_core_shell_h1_payload,
         )
 
     return (;
@@ -13639,6 +14157,7 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
         diatomic_complete_core_shell_source_realization_payload,
         diatomic_complete_core_shell_source_plan_payload,
         diatomic_complete_core_shell_final_basis_payload,
+        diatomic_complete_core_shell_h1_payload,
         diatomic_complete_core_shell_ham_readiness_payload,
         complete_core_shell_h1_j_diagnostic_payload,
         complete_core_shell_h1_j_diagnostic_summary =

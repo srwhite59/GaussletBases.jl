@@ -114,6 +114,7 @@ end
         assembly.diatomic_complete_core_shell_source_plan_payload
     final_basis_payload =
         assembly.diatomic_complete_core_shell_final_basis_payload
+    h1_payload = assembly.diatomic_complete_core_shell_h1_payload
     readiness = assembly.diatomic_complete_core_shell_ham_readiness_payload
     ham = payload.complete_core_shell_ham_payload
 
@@ -271,6 +272,28 @@ end
     @test !final_basis_payload.summary.exports_materialized
     @test !final_basis_payload.summary.artifacts_materialized
 
+    @test h1_payload.status == :blocked_diatomic_complete_core_shell_h1_payload
+    @test h1_payload.blocker ==
+          :missing_pqs_diatomic_complete_core_shell_source_plan
+    @test h1_payload.source_plan === nothing
+    @test h1_payload.source_plan_status == :not_available
+    @test h1_payload.final_basis === nothing
+    @test h1_payload.final_basis_status == :not_available
+    @test h1_payload.support_kinetic_status ==
+          :not_materialized_diatomic_support_kinetic_matrix
+    @test h1_payload.support_electron_nuclear_status ==
+          :not_materialized_diatomic_support_electron_nuclear_by_center
+    @test h1_payload.h1_status ==
+          :not_materialized_diatomic_complete_core_shell_h1
+    @test !h1_payload.summary.h1_materialized
+    @test !h1_payload.summary.h1_j_materialized
+    @test !h1_payload.summary.density_density_materialized
+    @test !h1_payload.summary.ham_payload_materialized
+    @test !h1_payload.summary.rhf_materialized
+    @test !h1_payload.summary.public_api
+    @test !h1_payload.summary.exports_materialized
+    @test !h1_payload.summary.artifacts_materialized
+
     @test readiness.status == :blocked_diatomic_complete_core_shell_ham_readiness
     @test readiness.blocker ==
           :missing_diatomic_complete_core_shell_source_plan_producer
@@ -361,6 +384,7 @@ end
         assembly.diatomic_complete_core_shell_source_plan_payload
     final_basis_payload =
         assembly.diatomic_complete_core_shell_final_basis_payload
+    h1_payload = assembly.diatomic_complete_core_shell_h1_payload
     payload = assembly.complete_core_shell_diagnostic_route_payload
     ham = payload.complete_core_shell_ham_payload
 
@@ -632,9 +656,48 @@ end
     @test :diatomic_complete_core_shell_h1_consumer in
           final_basis_payload.missing_objects
 
+    @test h1_payload.status == :available_diatomic_complete_core_shell_h1_payload
+    @test h1_payload.blocker === nothing
+    @test h1_payload.source_plan === source_plan
+    @test h1_payload.source_plan_status ==
+          :available_pqs_diatomic_complete_core_shell_source_plan
+    @test h1_payload.final_basis === final_basis
+    @test h1_payload.final_basis_status ==
+          :available_pqs_complete_core_shell_final_basis
+    @test h1_payload.support_kinetic_status ==
+          :materialized_diatomic_complete_core_shell_support_kinetic_matrix
+    @test h1_payload.support_electron_nuclear_status ==
+          :materialized_diatomic_complete_core_shell_support_electron_nuclear_by_center_matrix_set
+    @test h1_payload.final_kinetic_status ==
+          :materialized_pqs_complete_core_shell_final_one_body_matrix
+    @test h1_payload.final_electron_nuclear_status ==
+          :materialized_diatomic_final_electron_nuclear_by_center
+    @test h1_payload.final_hamiltonian_status ==
+          :materialized_pqs_complete_core_shell_final_one_electron_hamiltonian
+    @test h1_payload.h1_status ==
+          :materialized_pqs_complete_core_shell_final_h1_solve
+    @test h1_payload.summary.final_dimension == 221
+    @test isfinite(h1_payload.summary.lowest_energy)
+    @test h1_payload.h1.final_dimension == 221
+    @test h1_payload.summary.center_count == 2
+    @test h1_payload.summary.support_row_order == :core_then_shell
+    @test h1_payload.summary.source_plan_support_row_order ==
+          :core_product_then_shell_left_right_pqs
+    @test h1_payload.summary.h1_materialized
+    @test !h1_payload.summary.h1_j_materialized
+    @test !h1_payload.summary.density_density_materialized
+    @test !h1_payload.summary.ham_payload_materialized
+    @test !h1_payload.summary.rhf_materialized
+    @test !h1_payload.summary.public_api
+    @test !h1_payload.summary.exports_materialized
+    @test !h1_payload.summary.artifacts_materialized
+    @test :diatomic_complete_core_shell_h1_payload in
+          h1_payload.available_objects
+    @test isempty(h1_payload.missing_objects)
+
     @test readiness.status == :blocked_diatomic_complete_core_shell_ham_readiness
     @test readiness.blocker ==
-          :missing_diatomic_complete_core_shell_h1_consumer
+          :missing_diatomic_complete_core_shell_h1_j_consumer
     @test readiness.route_family === :pqs_source_box
     @test readiness.system_classification === :bond_aligned_diatomic
     @test readiness.bond_axis === :x
@@ -643,13 +706,23 @@ end
     @test :pqs_diatomic_complete_core_shell_source_plan in
           readiness.available_objects
     @test :diatomic_complete_core_shell_final_basis in readiness.available_objects
+    @test :diatomic_complete_core_shell_h1_payload in readiness.available_objects
     @test !in(:parent_axis_bundle_object, readiness.missing_objects)
-    @test :diatomic_complete_core_shell_h1_consumer in
+    @test !in(:diatomic_complete_core_shell_h1_consumer, readiness.missing_objects)
+    @test :diatomic_complete_core_shell_h1_j_consumer in
           readiness.missing_objects
     @test !in(
         :diatomic_complete_core_shell_final_basis_consumer,
         readiness.missing_objects,
     )
+    @test readiness.summary.final_basis_materialized
+    @test readiness.summary.h1_materialized
+    @test !readiness.summary.h1_j_materialized
+    @test !readiness.summary.ham_payload_materialized
+    @test !readiness.summary.rhf_materialized
+    @test !readiness.summary.public_api
+    @test !readiness.summary.exports_materialized
+    @test !readiness.summary.artifacts_materialized
 
     @test readiness.source_box_summary.source_box_keys ==
           (:pqs_left, :product, :pqs_right)
