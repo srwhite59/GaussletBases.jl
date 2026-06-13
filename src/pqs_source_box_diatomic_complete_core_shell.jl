@@ -363,21 +363,6 @@ struct _PQSDiatomicCompleteCoreShellHamiltonianConsumerContractPayload
     route_family::Symbol
     source_handoff
     source_handoff_status::Symbol
-    final_dimension
-    one_body_hamiltonian
-    one_body_hamiltonian_status::Symbol
-    two_body_representation_kind::Symbol
-    two_body_representation_status::Symbol
-    density_gauge
-    raw_pair_factor_convention
-    support_weight_count
-    pre_final_pair_matrix_shape
-    final_to_pre_final_coefficient_shape
-    nuclear_charges::Tuple
-    nuclear_coordinates::Tuple
-    nuclear_repulsion
-    electron_count
-    spin_sector
     readiness
     available_objects::Tuple
     missing_objects::Tuple
@@ -3256,6 +3241,24 @@ function _pqs_source_box_route_driver_diatomic_complete_core_shell_hamiltonian_h
     )
 end
 
+function _pqs_source_box_route_driver_diatomic_downstream_ham_nonclaims()
+    return (;
+        hfdmrg_density_density_ready = false,
+        hfdmrg_sliced_ready = false,
+        hamv6_export_ready = false,
+        cr2_ready = false,
+        public_api = false,
+        exports_materialized = false,
+        artifacts_materialized = false,
+        downstream_missing_objects = (
+            :hfdmrg_density_density_contract,
+            :hfdmrg_sliced_integrals,
+            :hamv6_export_contract,
+            :cr2_handoff_format,
+        ),
+    )
+end
+
 function _pqs_source_box_route_driver_diatomic_complete_core_shell_hamiltonian_consumer_contract_payload(
     route_skeleton,
     recipe,
@@ -3272,6 +3275,7 @@ function _pqs_source_box_route_driver_diatomic_complete_core_shell_hamiltonian_c
     source_handoff_available =
         source_handoff_status ===
         :available_diatomic_complete_core_shell_hamiltonian_handoff_payload
+    nonclaims = _pqs_source_box_route_driver_diatomic_downstream_ham_nonclaims()
     available = Symbol[]
 
     if route_family !== :pqs_source_box
@@ -3288,12 +3292,7 @@ function _pqs_source_box_route_driver_diatomic_complete_core_shell_hamiltonian_c
             :diatomic_complete_core_shell_hamiltonian_handoff_payload,
             :diatomic_hamiltonian_consumer_contract,
         )
-        missing_objects = (
-            :hfdmrg_density_density_contract,
-            :hfdmrg_sliced_integrals,
-            :hamv6_export_contract,
-            :cr2_handoff_format,
-        )
+        missing_objects = nonclaims.downstream_missing_objects
     else
         status =
             :blocked_diatomic_complete_core_shell_hamiltonian_consumer_contract_payload
@@ -3301,109 +3300,35 @@ function _pqs_source_box_route_driver_diatomic_complete_core_shell_hamiltonian_c
         missing_objects = (:diatomic_complete_core_shell_hamiltonian_handoff_payload,)
     end
 
-    final_dimension =
-        source_handoff_available ?
-        hamiltonian_handoff_payload.summary.final_dimension :
-        nothing
-    one_body_hamiltonian =
-        source_handoff_available ?
-        hamiltonian_handoff_payload.one_body_hamiltonian :
-        nothing
-    one_body_hamiltonian_status =
-        source_handoff_available ?
-        hamiltonian_handoff_payload.one_body_hamiltonian_status :
-        :not_available_diatomic_one_body_hamiltonian
-    two_body_representation_kind = :pre_final_density_interaction
-    two_body_representation_status =
-        source_handoff_available ?
-        hamiltonian_handoff_payload.density_interaction_status :
-        :not_available_diatomic_pre_final_density_interaction
-    density_gauge =
-        source_handoff_available ?
-        hamiltonian_handoff_payload.summary.density_gauge :
-        nothing
-    raw_pair_factor_convention =
-        source_handoff_available ?
-        hamiltonian_handoff_payload.summary.raw_pair_factor_convention :
-        nothing
-    support_weight_count =
-        source_handoff_available ?
-        hamiltonian_handoff_payload.summary.support_weight_count :
-        nothing
-    pre_final_pair_matrix_shape =
-        source_handoff_available ?
-        hamiltonian_handoff_payload.summary.pre_final_pair_matrix_shape :
-        nothing
-    final_to_pre_final_coefficient_shape =
-        source_handoff_available ?
-        hamiltonian_handoff_payload.summary.final_to_pre_final_coefficient_shape :
-        nothing
-    nuclear_charges =
-        source_handoff_available ?
-        hamiltonian_handoff_payload.summary.nuclear_charges :
-        ()
-    nuclear_coordinates =
-        source_handoff_available ?
-        hamiltonian_handoff_payload.summary.nuclear_coordinates :
-        ()
-    nuclear_repulsion =
-        source_handoff_available ?
-        hamiltonian_handoff_payload.nuclear_repulsion :
-        nothing
-    electron_count =
-        source_handoff_available ?
-        hamiltonian_handoff_payload.electron_count :
-        nothing
-    spin_sector =
-        source_handoff_available ?
-        hamiltonian_handoff_payload.spin_sector :
-        nothing
+    available_objects = Tuple(unique(available))
     private_inspector_ready =
         status ===
         :available_diatomic_complete_core_shell_hamiltonian_consumer_contract_payload
+    nonclaim_flags = (;
+        hfdmrg_density_density_ready = nonclaims.hfdmrg_density_density_ready,
+        hfdmrg_sliced_ready = nonclaims.hfdmrg_sliced_ready,
+        hamv6_export_ready = nonclaims.hamv6_export_ready,
+        cr2_ready = nonclaims.cr2_ready,
+        public_api = nonclaims.public_api,
+        exports_materialized = nonclaims.exports_materialized,
+        artifacts_materialized = nonclaims.artifacts_materialized,
+    )
     readiness = (;
         private_inspector_ready,
-        hfdmrg_density_density_ready = false,
-        hfdmrg_sliced_ready = false,
-        hamv6_export_ready = false,
-        cr2_ready = false,
-        public_api = false,
-        exports_materialized = false,
-        artifacts_materialized = false,
+        nonclaim_flags...,
         downstream_blocker =
             private_inspector_ready ?
             :missing_hfdmrg_density_density_contract :
             blocker,
         missing_objects,
     )
-    available_objects = Tuple(unique(available))
     summary = (;
         status,
         blocker,
         route_family,
         source_handoff_status,
-        final_dimension,
-        one_body_hamiltonian_status,
-        two_body_representation_kind,
-        two_body_representation_status,
-        density_gauge,
-        raw_pair_factor_convention,
-        support_weight_count,
-        pre_final_pair_matrix_shape,
-        final_to_pre_final_coefficient_shape,
-        nuclear_charges,
-        nuclear_coordinates,
-        nuclear_repulsion,
-        electron_count,
-        spin_sector,
         private_inspector_ready,
-        hfdmrg_density_density_ready = false,
-        hfdmrg_sliced_ready = false,
-        hamv6_export_ready = false,
-        cr2_ready = false,
-        public_api = false,
-        exports_materialized = false,
-        artifacts_materialized = false,
+        nonclaim_flags...,
         available_objects,
         missing_objects,
     )
@@ -3419,13 +3344,7 @@ function _pqs_source_box_route_driver_diatomic_complete_core_shell_hamiltonian_c
             :replace_when_real_downstream_hamiltonian_consumer_contract_is_chosen,
         shell_support_row_contraction_authority = false,
         retained_diagnostic_weights_are_ida_weights = false,
-        hfdmrg_density_density_ready = false,
-        hfdmrg_sliced_ready = false,
-        hamv6_export_ready = false,
-        cr2_ready = false,
-        public_api = false,
-        exports_materialized = false,
-        artifacts_materialized = false,
+        nonclaim_flags...,
     )
     return _PQSDiatomicCompleteCoreShellHamiltonianConsumerContractPayload(
         status,
@@ -3433,21 +3352,6 @@ function _pqs_source_box_route_driver_diatomic_complete_core_shell_hamiltonian_c
         route_family,
         hamiltonian_handoff_payload,
         source_handoff_status,
-        final_dimension,
-        one_body_hamiltonian,
-        one_body_hamiltonian_status,
-        two_body_representation_kind,
-        two_body_representation_status,
-        density_gauge,
-        raw_pair_factor_convention,
-        support_weight_count,
-        pre_final_pair_matrix_shape,
-        final_to_pre_final_coefficient_shape,
-        nuclear_charges,
-        nuclear_coordinates,
-        nuclear_repulsion,
-        electron_count,
-        spin_sector,
         readiness,
         available_objects,
         missing_objects,
@@ -3549,6 +3453,16 @@ function _pqs_source_box_route_driver_diatomic_complete_core_shell_ham_readiness
     hamiltonian_consumer_contract_available =
         hamiltonian_consumer_contract_payload_status ===
         :available_diatomic_complete_core_shell_hamiltonian_consumer_contract_payload
+    nonclaims = _pqs_source_box_route_driver_diatomic_downstream_ham_nonclaims()
+    nonclaim_flags = (;
+        hfdmrg_density_density_ready = nonclaims.hfdmrg_density_density_ready,
+        hfdmrg_sliced_ready = nonclaims.hfdmrg_sliced_ready,
+        hamv6_export_ready = nonclaims.hamv6_export_ready,
+        cr2_ready = nonclaims.cr2_ready,
+        public_api = nonclaims.public_api,
+        exports_materialized = nonclaims.exports_materialized,
+        artifacts_materialized = nonclaims.artifacts_materialized,
+    )
 
     if route_family !== :pqs_source_box
         status =
@@ -3607,12 +3521,7 @@ function _pqs_source_box_route_driver_diatomic_complete_core_shell_ham_readiness
             push!(available, :parent_axis_bundle_object)
         missing =
             hamiltonian_consumer_contract_available ?
-            Symbol[
-                :hfdmrg_density_density_contract,
-                :hfdmrg_sliced_integrals,
-                :hamv6_export_contract,
-                :cr2_handoff_format,
-            ] :
+            Symbol[nonclaims.downstream_missing_objects...] :
             hamiltonian_handoff_available ?
             Symbol[:diatomic_hamiltonian_consumer_contract] :
             ham_input_available ?
@@ -3666,7 +3575,6 @@ function _pqs_source_box_route_driver_diatomic_complete_core_shell_ham_readiness
         hamiltonian_consumer_contract_payload_status,
         missing_objects,
         private_internal_only = true,
-        public_api = false,
         final_basis_materialized =
             final_basis_status === :available_pqs_complete_core_shell_final_basis,
         h1_materialized = h1_available,
@@ -3674,15 +3582,10 @@ function _pqs_source_box_route_driver_diatomic_complete_core_shell_ham_readiness
         hamiltonian_handoff_materialized = hamiltonian_handoff_available,
         hamiltonian_consumer_contract_materialized =
             hamiltonian_consumer_contract_available,
-        hfdmrg_density_density_ready = false,
-        hfdmrg_sliced_ready = false,
-        hamv6_export_ready = false,
-        cr2_ready = false,
+        nonclaim_flags...,
         h1_j_materialized = false,
         ham_payload_materialized = false,
         rhf_materialized = false,
-        exports_materialized = false,
-        artifacts_materialized = false,
     )
     metadata = (;
         source =

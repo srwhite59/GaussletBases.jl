@@ -194,20 +194,17 @@ end
     @test consumer_contract_payload.status ==
           :available_diatomic_complete_core_shell_hamiltonian_consumer_contract_payload
     @test consumer_contract_payload.summary.private_inspector_ready
-    @test consumer_contract_payload.summary.final_dimension == 221
     @test consumer_contract_payload.source_handoff ===
           hamiltonian_handoff_payload
-    @test consumer_contract_payload.one_body_hamiltonian === h1_matrix
-    @test consumer_contract_payload.summary.two_body_representation_kind ==
-          :pre_final_density_interaction
-    @test consumer_contract_payload.summary.density_gauge ==
-          hamiltonian_handoff_payload.summary.density_gauge
-    @test consumer_contract_payload.summary.raw_pair_factor_convention ==
-          hamiltonian_handoff_payload.summary.raw_pair_factor_convention
-    @test !consumer_contract_payload.summary.hfdmrg_density_density_ready
-    @test !consumer_contract_payload.summary.hfdmrg_sliced_ready
-    @test !consumer_contract_payload.summary.hamv6_export_ready
-    @test !consumer_contract_payload.summary.cr2_ready
+    @test all(
+        flag -> !getproperty(consumer_contract_payload.readiness, flag),
+        (
+            :hfdmrg_density_density_ready,
+            :hfdmrg_sliced_ready,
+            :hamv6_export_ready,
+            :cr2_ready,
+        ),
+    )
 
     @test readiness.status == :blocked_diatomic_complete_core_shell_ham_readiness
     @test readiness.blocker == :missing_hfdmrg_density_density_contract
