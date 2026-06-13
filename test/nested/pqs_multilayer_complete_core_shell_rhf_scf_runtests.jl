@@ -87,7 +87,27 @@ end
     @test scf.summary.converged_iteration == 1
     @test scf.summary.first_iteration_energy_change_rule ===
           :energy_converged_when_previous_energy_missing
+    @test scf.summary.density_change_rule ===
+          :fixed_point_spin_summed_density_inf_norm
+    @test scf.summary.residual_metric ===
+          :ordinary_final_basis_commutator_inf_norm
+    @test scf.summary.idempotency_rule ===
+          :closed_shell_spatial_density_idempotency
     @test scf.summary.orbital_metric === :ordinary_orthonormal_final_basis
+    @test scf.summary.residual_diagnostics.status ===
+          :materialized_pqs_multilayer_complete_core_shell_rhf_scf_residual_diagnostics
+    @test scf.summary.residual_diagnostics.density_trace_error ≈ 0.0
+    @test scf.summary.residual_diagnostics.closed_shell_idempotency_error ≈ 0.0
+    @test scf.summary.residual_diagnostics.commutator_residual ≈ 0.0
+    @test scf.summary.residual_diagnostics.spatial_commutator_residual ≈ 0.0
+    @test scf.summary.residual_diagnostics.density_change_rule ===
+          scf.summary.density_change_rule
+    @test scf.summary.residual_diagnostics.residual_metric ===
+          scf.summary.residual_metric
+    @test scf.summary.residual_diagnostics.idempotency_rule ===
+          scf.summary.idempotency_rule
+    @test scf.summary.residual_diagnostics.orbital_metric ===
+          scf.summary.orbital_metric
     @test scf.summary.final_one_step_recomputed === true
     @test scf.summary.final_one_step_density_matches_final_density === true
     @test scf.summary.final_total_energy ≈
@@ -110,6 +130,18 @@ end
           :blocked_pqs_multilayer_complete_core_shell_rhf_scf_payload
     @test missing_contract.blocker == :missing_rhf_input_contract
     @test missing_contract.missing_inputs == (:rhf_input_contract,)
+    @test missing_contract.summary.density_change_rule ===
+          :fixed_point_spin_summed_density_inf_norm
+    @test missing_contract.summary.residual_metric ===
+          :ordinary_final_basis_commutator_inf_norm
+    @test missing_contract.summary.idempotency_rule ===
+          :closed_shell_spatial_density_idempotency
+    @test missing_contract.summary.orbital_metric ===
+          :ordinary_orthonormal_final_basis
+    @test missing_contract.summary.residual_diagnostics.status ===
+          :blocked_pqs_multilayer_complete_core_shell_rhf_scf_residual_diagnostics
+    @test missing_contract.summary.residual_diagnostics.blocker ===
+          :missing_final_density
 
     missing_density_interaction =
         GaussletBases._pqs_multilayer_complete_core_shell_rhf_scf_payload(
