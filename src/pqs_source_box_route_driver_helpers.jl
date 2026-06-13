@@ -11694,6 +11694,12 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
             diatomic_complete_core_shell_h1_payload,
             diatomic_complete_core_shell_ham_input_payload,
         )
+    diatomic_complete_core_shell_hamiltonian_consumer_contract_payload =
+        _pqs_source_box_route_driver_diatomic_complete_core_shell_hamiltonian_consumer_contract_payload(
+            route_skeleton,
+            recipe,
+            diatomic_complete_core_shell_hamiltonian_handoff_payload,
+        )
     diatomic_complete_core_shell_ham_readiness_payload =
         _pqs_source_box_route_driver_diatomic_complete_core_shell_ham_readiness_payload(
             parent,
@@ -11704,6 +11710,7 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
             diatomic_complete_core_shell_h1_payload,
             diatomic_complete_core_shell_ham_input_payload,
             diatomic_complete_core_shell_hamiltonian_handoff_payload,
+            diatomic_complete_core_shell_hamiltonian_consumer_contract_payload,
         )
 
     return (;
@@ -11729,6 +11736,7 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
         diatomic_complete_core_shell_h1_payload,
         diatomic_complete_core_shell_ham_input_payload,
         diatomic_complete_core_shell_hamiltonian_handoff_payload,
+        diatomic_complete_core_shell_hamiltonian_consumer_contract_payload,
         diatomic_complete_core_shell_ham_readiness_payload,
         complete_core_shell_h1_j_diagnostic_payload,
         complete_core_shell_h1_j_diagnostic_summary =
