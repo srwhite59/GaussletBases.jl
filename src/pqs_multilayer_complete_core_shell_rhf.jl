@@ -674,6 +674,114 @@ function _pqs_multilayer_complete_core_shell_rhf_scf_controls_blocker(
     return nothing
 end
 
+function _pqs_multilayer_complete_core_shell_rhf_scf_control_payload(;
+    mixing_kind = :fixed_point,
+    max_iterations = 25,
+    density_atol = 1.0e-8,
+    energy_atol = 1.0e-10,
+    residual_atol = 1.0e-8,
+    trace_atol = density_atol,
+    idempotency_atol = density_atol,
+    max_history = nothing,
+    diis_start_iteration = 2,
+    diis_regularization = 1.0e-12,
+    diis_coefficient_max_abs = 25.0,
+    metadata = (;),
+)
+    object_kind = :pqs_multilayer_complete_core_shell_rhf_scf_control_payload
+    density_change_rule = :fixed_point_spin_summed_density_inf_norm
+    residual_metric = :ordinary_final_basis_commutator_inf_norm
+    idempotency_rule = :closed_shell_spatial_density_idempotency
+    orbital_metric = :ordinary_orthonormal_final_basis
+
+    supported_mixing_kind = mixing_kind in (:fixed_point, :fock_diis)
+    resolved_max_history =
+        isnothing(max_history) ? (mixing_kind === :fock_diis ? 6 : 0) :
+        max_history
+    controls_blocker =
+        _pqs_multilayer_complete_core_shell_rhf_scf_controls_blocker(
+            max_iterations,
+            density_atol,
+            energy_atol,
+        )
+    blocker =
+        !supported_mixing_kind ? :unsupported_scf_mixing_kind :
+        !isnothing(controls_blocker) ? controls_blocker :
+        !(residual_atol isa Real) || !isfinite(residual_atol) ||
+        residual_atol <= 0 ? :invalid_scf_controls :
+        !(trace_atol isa Real) || !isfinite(trace_atol) ||
+        trace_atol <= 0 ? :invalid_scf_controls :
+        !(idempotency_atol isa Real) || !isfinite(idempotency_atol) ||
+        idempotency_atol <= 0 ? :invalid_scf_controls :
+        !(resolved_max_history isa Integer) ||
+        resolved_max_history isa Bool ||
+        resolved_max_history < 0 ? :invalid_scf_controls :
+        mixing_kind === :fock_diis && resolved_max_history < 2 ?
+        :invalid_scf_controls :
+        !(diis_start_iteration isa Integer) ||
+        diis_start_iteration isa Bool ||
+        diis_start_iteration <= 0 ? :invalid_scf_controls :
+        !(diis_regularization isa Real) || !isfinite(diis_regularization) ||
+        diis_regularization < 0 ? :invalid_scf_controls :
+        !(diis_coefficient_max_abs isa Real) ||
+        !isfinite(diis_coefficient_max_abs) ||
+        diis_coefficient_max_abs <= 0 ? :invalid_scf_controls :
+        nothing
+    status =
+        isnothing(blocker) ?
+        :available_pqs_multilayer_complete_core_shell_rhf_scf_control_payload :
+        :blocked_pqs_multilayer_complete_core_shell_rhf_scf_control_payload
+    summary = (;
+        status,
+        blocker,
+        mixing_kind,
+        max_iterations,
+        density_atol,
+        energy_atol,
+        residual_atol,
+        trace_atol,
+        idempotency_atol,
+        max_history = resolved_max_history,
+        diis_start_iteration,
+        diis_regularization,
+        diis_coefficient_max_abs,
+        density_change_rule,
+        residual_metric,
+        idempotency_rule,
+        orbital_metric,
+        private_diagnostic_only = true,
+    )
+    return (;
+        object_kind,
+        status,
+        blocker,
+        mixing_kind,
+        max_iterations,
+        density_atol,
+        energy_atol,
+        residual_atol,
+        trace_atol,
+        idempotency_atol,
+        max_history = resolved_max_history,
+        diis_start_iteration,
+        diis_regularization,
+        diis_coefficient_max_abs,
+        density_change_rule,
+        residual_metric,
+        idempotency_rule,
+        orbital_metric,
+        summary,
+        metadata = merge(
+            NamedTuple(metadata),
+            (;
+                source =
+                    :pqs_multilayer_complete_core_shell_rhf_scf_control_payload,
+                private_diagnostic_only = true,
+            ),
+        ),
+    )
+end
+
 function _pqs_multilayer_complete_core_shell_rhf_scf_residual_diagnostics(;
     final_density = nothing,
     effective_fock_matrix = nothing,
@@ -739,6 +847,67 @@ function _pqs_multilayer_complete_core_shell_rhf_scf_residual_diagnostics(;
     )
 end
 
+function _pqs_multilayer_complete_core_shell_rhf_density_from_fock(
+    fock_matrix,
+    input_contract,
+)
+    eig = eigen(Symmetric(fock_matrix))
+    nocc = input_contract.occupation.nocc
+    occupancy = input_contract.occupation.occupancy
+    occupied_orbital_coefficients = Matrix(eig.vectors[:, 1:nocc])
+    density =
+        Float64(occupancy) .*
+        (occupied_orbital_coefficients * transpose(occupied_orbital_coefficients))
+    density = 0.5 .* (density .+ transpose(density))
+    return density, occupied_orbital_coefficients
+end
+
+function _pqs_multilayer_complete_core_shell_rhf_diis_error_vector(
+    fock_matrix,
+    density,
+    occupancy,
+)
+    spatial_density = density ./ Float64(occupancy)
+    error_matrix =
+        fock_matrix * spatial_density - spatial_density * fock_matrix
+    return vec(Matrix(error_matrix))
+end
+
+function _pqs_multilayer_complete_core_shell_rhf_diis_coefficients(
+    error_history,
+    regularization,
+)
+    history_count = length(error_history)
+    gram = zeros(Float64, history_count, history_count)
+    for i in 1:history_count
+        for j in 1:history_count
+            gram[i, j] = dot(error_history[i], error_history[j])
+        end
+    end
+    for index in 1:history_count
+        gram[index, index] += Float64(regularization)
+    end
+    system = zeros(Float64, history_count + 1, history_count + 1)
+    system[1:history_count, 1:history_count] .= gram
+    system[1:history_count, end] .= 1.0
+    system[end, 1:history_count] .= 1.0
+    rhs = zeros(Float64, history_count + 1)
+    rhs[end] = 1.0
+    solution = system \ rhs
+    return solution[1:history_count]
+end
+
+function _pqs_multilayer_complete_core_shell_rhf_mixed_fock(
+    fock_history,
+    coefficients,
+)
+    mixed_fock = zeros(Float64, size(first(fock_history)))
+    for (coefficient, fock_matrix) in zip(coefficients, fock_history)
+        mixed_fock .+= coefficient .* fock_matrix
+    end
+    return 0.5 .* (mixed_fock .+ transpose(mixed_fock))
+end
+
 function _pqs_multilayer_complete_core_shell_rhf_scf_blocked_payload(;
     blocker,
     missing_inputs = (),
@@ -754,6 +923,14 @@ function _pqs_multilayer_complete_core_shell_rhf_scf_blocked_payload(;
     density_atol = nothing,
     energy_atol = nothing,
     final_one_step_recomputed = false,
+    mixing_kind = nothing,
+    residual_atol = nothing,
+    trace_atol = nothing,
+    idempotency_atol = nothing,
+    diis_used_count = 0,
+    diis_fallback_count = 0,
+    diis_solve_failure_count = 0,
+    diis_coefficient_pathology_count = 0,
     metadata = (;),
 )
     contract_summary =
@@ -802,11 +979,19 @@ function _pqs_multilayer_complete_core_shell_rhf_scf_blocked_payload(;
         max_iterations,
         density_atol,
         energy_atol,
+        residual_atol,
+        trace_atol,
+        idempotency_atol,
+        mixing_kind,
         density_change_rule = residual_diagnostics.density_change_rule,
         residual_metric = residual_diagnostics.residual_metric,
         idempotency_rule = residual_diagnostics.idempotency_rule,
         orbital_metric = residual_diagnostics.orbital_metric,
         residual_diagnostics,
+        diis_used_count,
+        diis_fallback_count,
+        diis_solve_failure_count,
+        diis_coefficient_pathology_count,
         final_one_step_recomputed,
         final_one_step_payload_role =
             final_one_step_recomputed ? :recomputed_final_density_diagnostic :
@@ -854,27 +1039,80 @@ function _pqs_multilayer_complete_core_shell_rhf_scf_payload(;
     h1_j_payload = nothing,
     density_interaction = nothing,
     initial_density_payload = nothing,
+    scf_control_payload = nothing,
+    mixing_kind = :fixed_point,
     max_iterations::Integer = 25,
     density_atol::Real = 1.0e-8,
     energy_atol::Real = 1.0e-10,
+    residual_atol::Real = 1.0e-8,
+    trace_atol::Real = density_atol,
+    idempotency_atol::Real = density_atol,
+    max_history = nothing,
+    diis_start_iteration::Integer = 2,
+    diis_regularization::Real = 1.0e-12,
+    diis_coefficient_max_abs::Real = 25.0,
     metadata = (;),
 )
-    controls_blocker =
-        _pqs_multilayer_complete_core_shell_rhf_scf_controls_blocker(
+    control_payload =
+        isnothing(scf_control_payload) ?
+        _pqs_multilayer_complete_core_shell_rhf_scf_control_payload(
+            ;
+            mixing_kind,
             max_iterations,
             density_atol,
             energy_atol,
-        )
-    if !isnothing(controls_blocker)
+            residual_atol,
+            trace_atol,
+            idempotency_atol,
+            max_history,
+            diis_start_iteration,
+            diis_regularization,
+            diis_coefficient_max_abs,
+            metadata,
+        ) : scf_control_payload
+    if _pqs_multilayer_rhf_contract_property(
+        control_payload,
+        :object_kind,
+    ) !== :pqs_multilayer_complete_core_shell_rhf_scf_control_payload ||
+       _pqs_multilayer_rhf_contract_property(control_payload, :status) !==
+       :available_pqs_multilayer_complete_core_shell_rhf_scf_control_payload
+        blocker =
+            _pqs_multilayer_rhf_contract_property(
+                control_payload,
+                :blocker,
+                :invalid_scf_controls,
+            )
         return _pqs_multilayer_complete_core_shell_rhf_scf_blocked_payload(
             ;
-            blocker = controls_blocker,
-            max_iterations,
-            density_atol,
-            energy_atol,
+            blocker,
+            max_iterations =
+                _pqs_multilayer_rhf_contract_property(
+                    control_payload,
+                    :max_iterations,
+                    max_iterations,
+                ),
+            density_atol =
+                _pqs_multilayer_rhf_contract_property(
+                    control_payload,
+                    :density_atol,
+                    density_atol,
+                ),
+            energy_atol =
+                _pqs_multilayer_rhf_contract_property(
+                    control_payload,
+                    :energy_atol,
+                    energy_atol,
+                ),
             metadata,
         )
     end
+    max_iterations = control_payload.max_iterations
+    density_atol = control_payload.density_atol
+    energy_atol = control_payload.energy_atol
+    residual_atol = control_payload.residual_atol
+    trace_atol = control_payload.trace_atol
+    idempotency_atol = control_payload.idempotency_atol
+    mixing_kind = control_payload.mixing_kind
 
     h1_payload =
         _pqs_multilayer_complete_core_shell_rhf_h1_payload(
@@ -975,7 +1213,6 @@ function _pqs_multilayer_complete_core_shell_rhf_scf_payload(;
 
     density = Matrix{Float64}(initial_density_payload.final_density)
     occupation = input_contract.occupation
-    nocc = occupation.nocc
     occupancy = occupation.occupancy
     final_dimension = input_contract.summary.final_dimension
     previous_energy = nothing
@@ -983,6 +1220,12 @@ function _pqs_multilayer_complete_core_shell_rhf_scf_payload(;
     final_one_step_payload = nothing
     occupied_orbital_coefficients =
         initial_density_payload.occupied_orbital_coefficients
+    fock_history = Matrix{Float64}[]
+    diis_error_history = Vector{Float64}[]
+    diis_used_count = 0
+    diis_fallback_count = 0
+    diis_solve_failure_count = 0
+    diis_coefficient_pathology_count = 0
 
     for iteration in 1:max_iterations
         one_step =
@@ -1020,32 +1263,124 @@ function _pqs_multilayer_complete_core_shell_rhf_scf_payload(;
                 one_step.effective_fock_matrix .+
                 transpose(one_step.effective_fock_matrix)
             )
-        eig = eigen(Symmetric(fock_matrix))
-        occupied_orbital_coefficients = Matrix(eig.vectors[:, 1:nocc])
-        next_density =
-            Float64(occupancy) .*
-            (
-                occupied_orbital_coefficients *
-                transpose(occupied_orbital_coefficients)
+        residual_diagnostics =
+            _pqs_multilayer_complete_core_shell_rhf_scf_residual_diagnostics(
+                ;
+                final_density = density,
+                effective_fock_matrix = fock_matrix,
+                electron_count = input_contract.electron_count,
+                occupancy,
             )
-        next_density = 0.5 .* (next_density .+ transpose(next_density))
-        density_change = norm(next_density - density, Inf)
+        fixed_point_density, _ =
+            _pqs_multilayer_complete_core_shell_rhf_density_from_fock(
+                fock_matrix,
+                input_contract,
+            )
+
+        selected_fock_matrix = fock_matrix
+        diis_used = false
+        diis_fallback = false
+        diis_fallback_reason = nothing
+        if mixing_kind === :fock_diis
+            push!(fock_history, fock_matrix)
+            push!(
+                diis_error_history,
+                _pqs_multilayer_complete_core_shell_rhf_diis_error_vector(
+                    fock_matrix,
+                    density,
+                    occupancy,
+                ),
+            )
+            if length(fock_history) > control_payload.max_history
+                popfirst!(fock_history)
+                popfirst!(diis_error_history)
+            end
+            if iteration >= control_payload.diis_start_iteration &&
+               length(fock_history) >= 2
+                try
+                    coefficients =
+                        _pqs_multilayer_complete_core_shell_rhf_diis_coefficients(
+                            diis_error_history,
+                            control_payload.diis_regularization,
+                        )
+                    if all(isfinite, coefficients) &&
+                       maximum(abs.(coefficients)) <=
+                       control_payload.diis_coefficient_max_abs
+                        selected_fock_matrix =
+                            _pqs_multilayer_complete_core_shell_rhf_mixed_fock(
+                                fock_history,
+                                coefficients,
+                            )
+                        diis_used = true
+                        diis_used_count += 1
+                    else
+                        diis_fallback = true
+                        diis_fallback_reason = :diis_coefficient_pathology
+                        diis_fallback_count += 1
+                        diis_coefficient_pathology_count += 1
+                    end
+                catch
+                    diis_fallback = true
+                    diis_fallback_reason = :diis_solve_failure
+                    diis_fallback_count += 1
+                    diis_solve_failure_count += 1
+                end
+            end
+        end
+        next_density, occupied_orbital_coefficients =
+            _pqs_multilayer_complete_core_shell_rhf_density_from_fock(
+                selected_fock_matrix,
+                input_contract,
+            )
+        density_change = norm(fixed_point_density - density, Inf)
+        update_density_change = norm(next_density - density, Inf)
         energy_change =
             isnothing(previous_energy) ? nothing :
             abs(one_step.total_energy - previous_energy)
         density_converged = density_change <= Float64(density_atol)
         energy_converged =
             isnothing(energy_change) || energy_change <= Float64(energy_atol)
-        converged = density_converged && energy_converged
+        residual_converged =
+            residual_diagnostics.status ===
+            :materialized_pqs_multilayer_complete_core_shell_rhf_scf_residual_diagnostics &&
+            residual_diagnostics.commutator_residual <= Float64(residual_atol)
+        trace_converged =
+            residual_diagnostics.status ===
+            :materialized_pqs_multilayer_complete_core_shell_rhf_scf_residual_diagnostics &&
+            residual_diagnostics.density_trace_error <= Float64(trace_atol)
+        idempotency_converged =
+            residual_diagnostics.status ===
+            :materialized_pqs_multilayer_complete_core_shell_rhf_scf_residual_diagnostics &&
+            residual_diagnostics.closed_shell_idempotency_error <=
+            Float64(idempotency_atol)
+        converged =
+            density_converged &&
+            energy_converged &&
+            residual_converged &&
+            trace_converged &&
+            idempotency_converged
         push!(
             iteration_records,
             (;
                 iteration,
                 total_energy = one_step.total_energy,
                 density_change,
+                update_density_change,
                 energy_change,
+                mixing_kind,
+                diis_used,
+                diis_fallback,
+                diis_fallback_reason,
+                commutator_residual =
+                    residual_diagnostics.commutator_residual,
+                trace_error = residual_diagnostics.density_trace_error,
+                idempotency_error =
+                    residual_diagnostics.closed_shell_idempotency_error,
                 density_converged,
                 energy_converged,
+                residual_converged,
+                trace_converged,
+                idempotency_converged,
                 converged,
             ),
         )
@@ -1098,6 +1433,51 @@ function _pqs_multilayer_complete_core_shell_rhf_scf_payload(;
                     electron_count = input_contract.electron_count,
                     occupancy,
                 )
+            final_residual_converged =
+                residual_diagnostics.status ===
+                :materialized_pqs_multilayer_complete_core_shell_rhf_scf_residual_diagnostics &&
+                residual_diagnostics.commutator_residual <= Float64(residual_atol)
+            final_trace_converged =
+                residual_diagnostics.status ===
+                :materialized_pqs_multilayer_complete_core_shell_rhf_scf_residual_diagnostics &&
+                residual_diagnostics.density_trace_error <= Float64(trace_atol)
+            final_idempotency_converged =
+                residual_diagnostics.status ===
+                :materialized_pqs_multilayer_complete_core_shell_rhf_scf_residual_diagnostics &&
+                residual_diagnostics.closed_shell_idempotency_error <=
+                Float64(idempotency_atol)
+            if !(
+                final_one_step_density_matches_final_density &&
+                final_residual_converged &&
+                final_trace_converged &&
+                final_idempotency_converged
+            )
+                return _pqs_multilayer_complete_core_shell_rhf_scf_blocked_payload(
+                    ;
+                    blocker = :scf_not_converged,
+                    input_contract,
+                    h1_payload,
+                    density_interaction,
+                    initial_density_payload,
+                    final_density = density,
+                    occupied_orbital_coefficients,
+                    final_one_step_payload,
+                    iteration_records = Tuple(iteration_records),
+                    max_iterations,
+                    density_atol,
+                    energy_atol,
+                    final_one_step_recomputed = true,
+                    mixing_kind,
+                    residual_atol,
+                    trace_atol,
+                    idempotency_atol,
+                    diis_used_count,
+                    diis_fallback_count,
+                    diis_solve_failure_count,
+                    diis_coefficient_pathology_count,
+                    metadata,
+                )
+            end
             summary = (;
                 status =
                     :materialized_pqs_multilayer_complete_core_shell_rhf_scf_payload,
@@ -1115,13 +1495,28 @@ function _pqs_multilayer_complete_core_shell_rhf_scf_payload(;
                 max_iterations,
                 density_atol,
                 energy_atol,
+                residual_atol,
+                trace_atol,
+                idempotency_atol,
                 first_iteration_energy_change_rule =
                     :energy_converged_when_previous_energy_missing,
+                mixing_kind,
                 density_change_rule = residual_diagnostics.density_change_rule,
                 residual_metric = residual_diagnostics.residual_metric,
                 idempotency_rule = residual_diagnostics.idempotency_rule,
                 orbital_metric = residual_diagnostics.orbital_metric,
                 residual_diagnostics,
+                convergence_diagnostics = (;
+                    density_converged = true,
+                    energy_converged = true,
+                    residual_converged = final_residual_converged,
+                    trace_converged = final_trace_converged,
+                    idempotency_converged = final_idempotency_converged,
+                ),
+                diis_used_count,
+                diis_fallback_count,
+                diis_solve_failure_count,
+                diis_coefficient_pathology_count,
                 final_one_step_recomputed = true,
                 final_one_step_density_matches_final_density,
                 final_one_step_density_match_error,
@@ -1200,6 +1595,14 @@ function _pqs_multilayer_complete_core_shell_rhf_scf_payload(;
         density_atol,
         energy_atol,
         final_one_step_recomputed,
+        mixing_kind,
+        residual_atol,
+        trace_atol,
+        idempotency_atol,
+        diis_used_count,
+        diis_fallback_count,
+        diis_solve_failure_count,
+        diis_coefficient_pathology_count,
         metadata,
     )
 end

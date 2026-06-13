@@ -57,6 +57,39 @@ end
 
 @testset "PQS complete core-shell RHF SCF payload" begin
     payloads = _pqs_rhf_scf_synthetic_payloads()
+    fixed_point_control =
+        GaussletBases._pqs_multilayer_complete_core_shell_rhf_scf_control_payload()
+    @test fixed_point_control.object_kind ===
+          :pqs_multilayer_complete_core_shell_rhf_scf_control_payload
+    @test fixed_point_control.status ===
+          :available_pqs_multilayer_complete_core_shell_rhf_scf_control_payload
+    @test fixed_point_control.blocker === nothing
+    @test fixed_point_control.mixing_kind === :fixed_point
+    @test fixed_point_control.max_history == 0
+    @test fixed_point_control.residual_metric ===
+          :ordinary_final_basis_commutator_inf_norm
+
+    fock_diis_control =
+        GaussletBases._pqs_multilayer_complete_core_shell_rhf_scf_control_payload(
+            ;
+            mixing_kind = :fock_diis,
+        )
+    @test fock_diis_control.status === fixed_point_control.status
+    @test fock_diis_control.mixing_kind === :fock_diis
+    @test fock_diis_control.max_history == 6
+    @test fock_diis_control.diis_start_iteration == 2
+    @test fock_diis_control.diis_regularization ≈ 1.0e-12
+    @test fock_diis_control.diis_coefficient_max_abs ≈ 25.0
+
+    unsupported_control =
+        GaussletBases._pqs_multilayer_complete_core_shell_rhf_scf_control_payload(
+            ;
+            mixing_kind = :scalar_density_damping,
+        )
+    @test unsupported_control.status ===
+          :blocked_pqs_multilayer_complete_core_shell_rhf_scf_control_payload
+    @test unsupported_control.blocker === :unsupported_scf_mixing_kind
+
     scf = GaussletBases._pqs_multilayer_complete_core_shell_rhf_scf_payload(
         ;
         payloads...,
@@ -87,6 +120,7 @@ end
     @test scf.summary.converged_iteration == 1
     @test scf.summary.first_iteration_energy_change_rule ===
           :energy_converged_when_previous_energy_missing
+    @test scf.summary.mixing_kind === :fixed_point
     @test scf.summary.density_change_rule ===
           :fixed_point_spin_summed_density_inf_norm
     @test scf.summary.residual_metric ===
@@ -108,6 +142,21 @@ end
           scf.summary.idempotency_rule
     @test scf.summary.residual_diagnostics.orbital_metric ===
           scf.summary.orbital_metric
+    @test scf.summary.convergence_diagnostics.density_converged
+    @test scf.summary.convergence_diagnostics.energy_converged
+    @test scf.summary.convergence_diagnostics.residual_converged
+    @test scf.summary.convergence_diagnostics.trace_converged
+    @test scf.summary.convergence_diagnostics.idempotency_converged
+    @test scf.summary.residual_diagnostics.commutator_residual <=
+          scf.summary.residual_atol
+    @test scf.summary.residual_diagnostics.density_trace_error <=
+          scf.summary.trace_atol
+    @test scf.summary.residual_diagnostics.closed_shell_idempotency_error <=
+          scf.summary.idempotency_atol
+    @test scf.summary.diis_used_count == 0
+    @test scf.summary.diis_fallback_count == 0
+    @test scf.summary.diis_solve_failure_count == 0
+    @test scf.summary.diis_coefficient_pathology_count == 0
     @test scf.summary.final_one_step_recomputed === true
     @test scf.summary.final_one_step_density_matches_final_density === true
     @test scf.summary.final_total_energy ≈
@@ -119,6 +168,26 @@ end
     @test !scf.summary.exports_materialized
     @test !scf.summary.artifacts_materialized
     @test scf.summary.public_api === false
+
+    fock_diis_scf =
+        GaussletBases._pqs_multilayer_complete_core_shell_rhf_scf_payload(
+            ;
+            payloads...,
+            scf_control_payload = fock_diis_control,
+            metadata = (; fixture = :synthetic_rhf_scf_fock_diis),
+        )
+    @test fock_diis_scf.status === scf.status
+    @test fock_diis_scf.summary.mixing_kind === :fock_diis
+    @test fock_diis_scf.summary.rhf_converged
+    @test fock_diis_scf.summary.residual_diagnostics.commutator_residual ≈ 0.0
+    @test fock_diis_scf.summary.residual_diagnostics.density_trace_error ≈ 0.0
+    @test fock_diis_scf.summary.residual_diagnostics.closed_shell_idempotency_error ≈
+          0.0
+    @test !fock_diis_scf.summary.driver_route_materialized
+    @test !fock_diis_scf.summary.route_report_materialized
+    @test !fock_diis_scf.summary.exports_materialized
+    @test !fock_diis_scf.summary.artifacts_materialized
+    @test fock_diis_scf.summary.public_api === false
 
     missing_contract =
         GaussletBases._pqs_multilayer_complete_core_shell_rhf_scf_payload(
