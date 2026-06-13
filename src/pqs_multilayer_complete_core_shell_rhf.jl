@@ -696,7 +696,7 @@ function _pqs_multilayer_complete_core_shell_rhf_scf_control_payload(;
 
     supported_mixing_kind = mixing_kind in (:fixed_point, :fock_diis)
     resolved_max_history =
-        isnothing(max_history) ? (mixing_kind === :fock_diis ? 6 : 0) :
+        isnothing(max_history) ? (mixing_kind === :fock_diis ? 8 : 0) :
         max_history
     controls_blocker =
         _pqs_multilayer_complete_core_shell_rhf_scf_controls_blocker(

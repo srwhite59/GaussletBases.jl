@@ -76,7 +76,7 @@ end
         )
     @test fock_diis_control.status === fixed_point_control.status
     @test fock_diis_control.mixing_kind === :fock_diis
-    @test fock_diis_control.max_history == 6
+    @test fock_diis_control.max_history == 8
     @test fock_diis_control.diis_start_iteration == 2
     @test fock_diis_control.diis_regularization ≈ 1.0e-12
     @test fock_diis_control.diis_coefficient_max_abs ≈ 25.0
