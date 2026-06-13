@@ -116,6 +116,8 @@ end
         assembly.diatomic_complete_core_shell_final_basis_payload
     h1_payload = assembly.diatomic_complete_core_shell_h1_payload
     ham_input_payload = assembly.diatomic_complete_core_shell_ham_input_payload
+    hamiltonian_handoff_payload =
+        assembly.diatomic_complete_core_shell_hamiltonian_handoff_payload
     readiness = assembly.diatomic_complete_core_shell_ham_readiness_payload
     ham = payload.complete_core_shell_ham_payload
 
@@ -324,6 +326,34 @@ end
     @test !ham_input_payload.summary.exports_materialized
     @test !ham_input_payload.summary.artifacts_materialized
 
+    @test hamiltonian_handoff_payload.status ==
+          :blocked_diatomic_complete_core_shell_hamiltonian_handoff_payload
+    @test hamiltonian_handoff_payload.blocker ==
+          :missing_diatomic_complete_core_shell_source_plan
+    @test hamiltonian_handoff_payload.source_plan === nothing
+    @test hamiltonian_handoff_payload.source_plan_status == :not_available
+    @test hamiltonian_handoff_payload.final_basis === nothing
+    @test hamiltonian_handoff_payload.final_basis_status == :not_available
+    @test hamiltonian_handoff_payload.h1_payload === h1_payload
+    @test hamiltonian_handoff_payload.h1_payload_status ==
+          :blocked_diatomic_complete_core_shell_h1_payload
+    @test hamiltonian_handoff_payload.ham_input_payload === ham_input_payload
+    @test hamiltonian_handoff_payload.ham_input_payload_status ==
+          :blocked_diatomic_complete_core_shell_ham_input_payload
+    @test hamiltonian_handoff_payload.one_body_hamiltonian === nothing
+    @test hamiltonian_handoff_payload.density_interaction === nothing
+    @test !hamiltonian_handoff_payload.summary.hamiltonian_handoff_materialized
+    @test hamiltonian_handoff_payload.summary.private_inspect_only
+    @test !hamiltonian_handoff_payload.summary.dense_vee_materialized
+    @test !hamiltonian_handoff_payload.summary.h1_j_materialized
+    @test !hamiltonian_handoff_payload.summary.rhf_materialized
+    @test !hamiltonian_handoff_payload.summary.public_api
+    @test !hamiltonian_handoff_payload.summary.exports_materialized
+    @test !hamiltonian_handoff_payload.summary.artifacts_materialized
+    @test !hamiltonian_handoff_payload.summary.hamv6_materialized
+    @test !hamiltonian_handoff_payload.summary.cr2_ready
+    @test !hamiltonian_handoff_payload.summary.hfdmrg_ready
+
     @test readiness.status == :blocked_diatomic_complete_core_shell_ham_readiness
     @test readiness.blocker ==
           :missing_diatomic_complete_core_shell_source_plan_producer
@@ -416,6 +446,8 @@ end
         assembly.diatomic_complete_core_shell_final_basis_payload
     h1_payload = assembly.diatomic_complete_core_shell_h1_payload
     ham_input_payload = assembly.diatomic_complete_core_shell_ham_input_payload
+    hamiltonian_handoff_payload =
+        assembly.diatomic_complete_core_shell_hamiltonian_handoff_payload
     payload = assembly.complete_core_shell_diagnostic_route_payload
     ham = payload.complete_core_shell_ham_payload
 
@@ -774,8 +806,88 @@ end
           ham_input_payload.available_objects
     @test isempty(ham_input_payload.missing_objects)
 
+    @test hamiltonian_handoff_payload.status ==
+          :available_diatomic_complete_core_shell_hamiltonian_handoff_payload
+    @test hamiltonian_handoff_payload.blocker === nothing
+    @test hamiltonian_handoff_payload.source_plan === source_plan
+    @test hamiltonian_handoff_payload.source_plan_status ==
+          :available_pqs_diatomic_complete_core_shell_source_plan
+    @test hamiltonian_handoff_payload.final_basis === final_basis
+    @test hamiltonian_handoff_payload.final_basis_status ==
+          :available_pqs_complete_core_shell_final_basis
+    @test hamiltonian_handoff_payload.h1_payload === h1_payload
+    @test hamiltonian_handoff_payload.h1_payload_status ==
+          :available_diatomic_complete_core_shell_h1_payload
+    @test hamiltonian_handoff_payload.ham_input_payload === ham_input_payload
+    @test hamiltonian_handoff_payload.ham_input_payload_status ==
+          :available_diatomic_complete_core_shell_ham_input_payload
+    @test hamiltonian_handoff_payload.one_body_hamiltonian ===
+          h1_payload.final_hamiltonian.hamiltonian_matrix
+    @test hamiltonian_handoff_payload.one_body_hamiltonian_status ==
+          :available_diatomic_one_body_hamiltonian_reference
+    @test hamiltonian_handoff_payload.density_interaction ===
+          ham_input_payload.density_interaction
+    @test hamiltonian_handoff_payload.density_interaction_status ==
+          :materialized_pqs_complete_core_shell_pre_final_density_interaction
+    @test hamiltonian_handoff_payload.pre_final_pair_matrix ===
+          ham_input_payload.density_interaction.pre_final_pair_matrix
+    @test hamiltonian_handoff_payload.final_to_pre_final_coefficients ===
+          ham_input_payload.density_interaction.final_to_pre_final_coefficients
+    @test hamiltonian_handoff_payload.pre_final_weights ===
+          ham_input_payload.density_interaction.pre_final_weights
+    @test hamiltonian_handoff_payload.support_weights ===
+          ham_input_payload.support_weights.support_weights
+    @test hamiltonian_handoff_payload.support_pair_raw_numerator ===
+          ham_input_payload.support_pair_raw_numerator.support_pair_raw_numerator
+    @test hamiltonian_handoff_payload.raw_pair_factor_terms ===
+          ham_input_payload.raw_pair_factor_terms
+    @test hamiltonian_handoff_payload.summary.final_dimension == 221
+    @test hamiltonian_handoff_payload.summary.pre_final_dimension == 221
+    @test hamiltonian_handoff_payload.summary.support_weight_count == 275
+    @test hamiltonian_handoff_payload.summary.pre_final_pair_matrix_shape ==
+          (221, 221)
+    @test hamiltonian_handoff_payload.summary.final_to_pre_final_coefficient_shape ==
+          (221, 221)
+    @test hamiltonian_handoff_payload.summary.density_gauge ==
+          :pre_final_localized_positive_weight
+    @test hamiltonian_handoff_payload.summary.raw_pair_factor_convention ==
+          :raw_numerator
+    @test hamiltonian_handoff_payload.summary.support_row_order ==
+          :core_then_shell
+    @test hamiltonian_handoff_payload.summary.source_plan_support_row_order ==
+          :core_product_then_shell_left_right_pqs
+    @test hamiltonian_handoff_payload.summary.center_count == 2
+    @test hamiltonian_handoff_payload.summary.nuclear_charges == (4.0, 4.0)
+    @test hamiltonian_handoff_payload.summary.nuclear_coordinates ==
+          ((-2.0, 0.0, 0.0), (2.0, 0.0, 0.0))
+    @test hamiltonian_handoff_payload.summary.nuclear_repulsion_status ==
+          :available_diatomic_nuclear_repulsion
+    @test hamiltonian_handoff_payload.summary.nuclear_repulsion == 4.0
+    @test hamiltonian_handoff_payload.summary.electron_count_status ==
+          :available_diatomic_electron_count_convention
+    @test hamiltonian_handoff_payload.summary.electron_count == 8
+    @test hamiltonian_handoff_payload.summary.spin_sector_status ==
+          :available_diatomic_spin_sector_convention
+    @test hamiltonian_handoff_payload.summary.spin_sector ==
+          :closed_shell_singlet
+    @test hamiltonian_handoff_payload.summary.private_inspect_only
+    @test hamiltonian_handoff_payload.summary.hamiltonian_handoff_materialized
+    @test !hamiltonian_handoff_payload.summary.dense_vee_materialized
+    @test !hamiltonian_handoff_payload.summary.h1_j_materialized
+    @test !hamiltonian_handoff_payload.summary.rhf_materialized
+    @test !hamiltonian_handoff_payload.summary.public_api
+    @test !hamiltonian_handoff_payload.summary.exports_materialized
+    @test !hamiltonian_handoff_payload.summary.artifacts_materialized
+    @test !hamiltonian_handoff_payload.summary.hamv6_materialized
+    @test !hamiltonian_handoff_payload.summary.cr2_ready
+    @test !hamiltonian_handoff_payload.summary.hfdmrg_ready
+    @test :diatomic_complete_core_shell_hamiltonian_handoff_payload in
+          hamiltonian_handoff_payload.available_objects
+    @test isempty(hamiltonian_handoff_payload.missing_objects)
+
     @test readiness.status == :blocked_diatomic_complete_core_shell_ham_readiness
-    @test readiness.blocker == :missing_diatomic_ham_consumer_contract
+    @test readiness.blocker ==
+          :missing_diatomic_hamiltonian_consumer_contract
     @test readiness.route_family === :pqs_source_box
     @test readiness.system_classification === :bond_aligned_diatomic
     @test readiness.bond_axis === :x
@@ -787,10 +899,13 @@ end
     @test :diatomic_complete_core_shell_h1_payload in readiness.available_objects
     @test :diatomic_complete_core_shell_ham_input_payload in
           readiness.available_objects
+    @test :diatomic_complete_core_shell_hamiltonian_handoff_payload in
+          readiness.available_objects
     @test !in(:parent_axis_bundle_object, readiness.missing_objects)
     @test !in(:diatomic_complete_core_shell_h1_consumer, readiness.missing_objects)
     @test !in(:diatomic_complete_core_shell_h1_j_consumer, readiness.missing_objects)
-    @test :diatomic_ham_consumer_contract in readiness.missing_objects
+    @test !in(:diatomic_ham_consumer_contract, readiness.missing_objects)
+    @test :diatomic_hamiltonian_consumer_contract in readiness.missing_objects
     @test !in(
         :diatomic_complete_core_shell_final_basis_consumer,
         readiness.missing_objects,
@@ -798,6 +913,7 @@ end
     @test readiness.summary.final_basis_materialized
     @test readiness.summary.h1_materialized
     @test readiness.summary.ham_input_materialized
+    @test readiness.summary.hamiltonian_handoff_materialized
     @test !readiness.summary.h1_j_materialized
     @test !readiness.summary.ham_payload_materialized
     @test !readiness.summary.rhf_materialized

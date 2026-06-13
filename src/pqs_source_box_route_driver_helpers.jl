@@ -11826,6 +11826,44 @@ struct _PQSDiatomicCompleteCoreShellHamInputPayload
     metadata
 end
 
+struct _PQSDiatomicCompleteCoreShellHamiltonianHandoffPayload
+    status::Symbol
+    blocker
+    route_family::Symbol
+    source_plan
+    source_plan_status::Symbol
+    final_basis
+    final_basis_status::Symbol
+    h1_payload
+    h1_payload_status::Symbol
+    ham_input_payload
+    ham_input_payload_status::Symbol
+    one_body_hamiltonian
+    one_body_hamiltonian_status::Symbol
+    density_interaction
+    density_interaction_status::Symbol
+    pre_final_pair_matrix
+    final_to_pre_final_coefficients
+    pre_final_weights
+    support_weights
+    support_pair_raw_numerator
+    raw_pair_factor_terms
+    center_records
+    center_metadata
+    nuclear_repulsion_status::Symbol
+    nuclear_repulsion
+    electron_count_status::Symbol
+    electron_count
+    spin_sector_status::Symbol
+    spin_sector
+    ordering
+    conventions
+    available_objects::Tuple
+    missing_objects::Tuple
+    summary
+    metadata
+end
+
 function _pqs_source_box_route_driver_axis_counts_tuple(axis_counts)
     isnothing(axis_counts) && return nothing
     if axis_counts isa NamedTuple
@@ -14221,6 +14259,482 @@ function _pqs_source_box_route_driver_diatomic_complete_core_shell_ham_input_pay
     )
 end
 
+function _pqs_source_box_route_driver_diatomic_handoff_center_metadata(parent)
+    center_records, missing_centers =
+        _pqs_source_box_route_driver_complete_core_shell_center_records(parent)
+    if !isempty(missing_centers) || isnothing(center_records)
+        return (;
+            status = :blocked_diatomic_handoff_center_metadata,
+            blocker = :missing_diatomic_center_records,
+            center_records = nothing,
+            center_count = 0,
+            nuclear_charges = (),
+            nuclear_coordinates = (),
+            nuclear_repulsion_status = :missing_diatomic_nuclear_repulsion,
+            nuclear_repulsion = nothing,
+            nuclear_repulsion_source = nothing,
+            electron_count_status = :missing_diatomic_electron_count_convention,
+            electron_count = nothing,
+            electron_count_source = nothing,
+            spin_sector_status = :missing_diatomic_spin_sector_convention,
+            spin_sector = nothing,
+            spin_sector_source = nothing,
+            missing_objects = (
+                :diatomic_center_records,
+                :diatomic_nuclear_repulsion,
+                :diatomic_electron_count_convention,
+                :diatomic_spin_sector_convention,
+            ),
+        )
+    end
+
+    records = Tuple(center_records)
+    nuclear_charges = Tuple(Float64(record.nuclear_charge) for record in records)
+    nuclear_coordinates = Tuple(
+        ntuple(axis -> Float64(record.location[axis]), 3) for record in records
+    )
+    missing = Symbol[]
+    nuclear_repulsion_status = :missing_diatomic_nuclear_repulsion
+    nuclear_repulsion = nothing
+    nuclear_repulsion_source = nothing
+    if length(records) == 2
+        distance = sqrt(
+            sum(
+                (
+                    nuclear_coordinates[1][axis] -
+                    nuclear_coordinates[2][axis]
+                )^2 for axis in 1:3
+            ),
+        )
+        if isfinite(distance) && distance > 0.0
+            nuclear_repulsion =
+                nuclear_charges[1] * nuclear_charges[2] / distance
+            nuclear_repulsion_status =
+                :available_diatomic_nuclear_repulsion
+            nuclear_repulsion_source = :center_record_charge_distance
+        else
+            push!(missing, :diatomic_nuclear_repulsion)
+        end
+    else
+        push!(missing, :diatomic_nuclear_repulsion)
+    end
+
+    electron_count_status = :missing_diatomic_electron_count_convention
+    electron_count = nothing
+    electron_count_source = nothing
+    spin_sector_status = :missing_diatomic_spin_sector_convention
+    spin_sector = nothing
+    spin_sector_source = nothing
+    if length(records) == 2 && nuclear_charges == (4.0, 4.0)
+        electron_count = 8
+        electron_count_status = :available_diatomic_electron_count_convention
+        electron_count_source = :neutral_sum_nuclear_charges_private_route_smoke
+        spin_sector = :closed_shell_singlet
+        spin_sector_status = :available_diatomic_spin_sector_convention
+        spin_sector_source = :private_be2_route_smoke_default
+    else
+        push!(missing, :diatomic_electron_count_convention)
+        push!(missing, :diatomic_spin_sector_convention)
+    end
+
+    status =
+        isempty(missing) &&
+        nuclear_repulsion_status === :available_diatomic_nuclear_repulsion &&
+        electron_count_status ===
+        :available_diatomic_electron_count_convention &&
+        spin_sector_status === :available_diatomic_spin_sector_convention ?
+        :available_diatomic_handoff_center_metadata :
+        :blocked_diatomic_handoff_center_metadata
+    blocker =
+        status === :available_diatomic_handoff_center_metadata ?
+        nothing :
+        first(missing)
+    return (;
+        status,
+        blocker,
+        center_records = records,
+        center_count = length(records),
+        nuclear_charges,
+        nuclear_coordinates,
+        nuclear_repulsion_status,
+        nuclear_repulsion,
+        nuclear_repulsion_source,
+        electron_count_status,
+        electron_count,
+        electron_count_source,
+        spin_sector_status,
+        spin_sector,
+        spin_sector_source,
+        missing_objects = Tuple(unique(missing)),
+    )
+end
+
+function _pqs_source_box_route_driver_diatomic_complete_core_shell_hamiltonian_handoff_payload(
+    parent,
+    route_skeleton,
+    recipe,
+    source_plan_payload = nothing,
+    final_basis_payload = nothing,
+    h1_payload = nothing,
+    ham_input_payload = nothing,
+)
+    route_family =
+        hasproperty(route_skeleton, :route_family) ?
+        route_skeleton.route_family :
+        recipe.route_family
+    source_plan =
+        !isnothing(source_plan_payload) && hasproperty(source_plan_payload, :source_plan) ?
+        source_plan_payload.source_plan :
+        nothing
+    source_plan_status =
+        isnothing(source_plan) ? :not_available : source_plan.status
+    final_basis =
+        !isnothing(final_basis_payload) && hasproperty(final_basis_payload, :final_basis) ?
+        final_basis_payload.final_basis :
+        nothing
+    final_basis_status =
+        isnothing(final_basis) ? :not_available : final_basis.status
+    h1_payload_status =
+        isnothing(h1_payload) ? :not_available : h1_payload.status
+    ham_input_payload_status =
+        isnothing(ham_input_payload) ? :not_available : ham_input_payload.status
+
+    one_body_hamiltonian = nothing
+    one_body_hamiltonian_status = :not_available_diatomic_one_body_hamiltonian
+    density_interaction = nothing
+    density_interaction_status = :not_available_diatomic_density_interaction
+    pre_final_pair_matrix = nothing
+    final_to_pre_final_coefficients = nothing
+    pre_final_weights = nothing
+    support_weights = nothing
+    support_pair_raw_numerator = nothing
+    raw_pair_factor_terms = nothing
+    center_records = nothing
+    center_metadata = nothing
+    nuclear_repulsion_status = :missing_diatomic_nuclear_repulsion
+    nuclear_repulsion = nothing
+    electron_count_status = :missing_diatomic_electron_count_convention
+    electron_count = nothing
+    spin_sector_status = :missing_diatomic_spin_sector_convention
+    spin_sector = nothing
+    available = Symbol[]
+    missing = Symbol[]
+
+    if route_family !== :pqs_source_box
+        status =
+            :not_applicable_diatomic_complete_core_shell_hamiltonian_handoff_non_pqs_route
+        blocker = nothing
+    elseif isnothing(source_plan) ||
+           source_plan_status !==
+           :available_pqs_diatomic_complete_core_shell_source_plan
+        status =
+            :blocked_diatomic_complete_core_shell_hamiltonian_handoff_payload
+        blocker = :missing_diatomic_complete_core_shell_source_plan
+        push!(missing, :pqs_diatomic_complete_core_shell_source_plan)
+    elseif isnothing(final_basis) ||
+           final_basis_status !== :available_pqs_complete_core_shell_final_basis
+        status =
+            :blocked_diatomic_complete_core_shell_hamiltonian_handoff_payload
+        blocker = :missing_diatomic_complete_core_shell_final_basis
+        push!(available, :pqs_diatomic_complete_core_shell_source_plan)
+        push!(missing, :diatomic_complete_core_shell_final_basis)
+    elseif isnothing(h1_payload) ||
+           h1_payload_status !== :available_diatomic_complete_core_shell_h1_payload
+        status =
+            :blocked_diatomic_complete_core_shell_hamiltonian_handoff_payload
+        blocker = :missing_diatomic_complete_core_shell_h1_payload
+        append!(
+            available,
+            (
+                :pqs_diatomic_complete_core_shell_source_plan,
+                :diatomic_complete_core_shell_final_basis,
+            ),
+        )
+        push!(missing, :diatomic_complete_core_shell_h1_payload)
+    elseif isnothing(ham_input_payload) ||
+           ham_input_payload_status !==
+           :available_diatomic_complete_core_shell_ham_input_payload
+        status =
+            :blocked_diatomic_complete_core_shell_hamiltonian_handoff_payload
+        blocker = :missing_diatomic_complete_core_shell_ham_input_payload
+        append!(
+            available,
+            (
+                :pqs_diatomic_complete_core_shell_source_plan,
+                :diatomic_complete_core_shell_final_basis,
+                :diatomic_complete_core_shell_h1_payload,
+            ),
+        )
+        push!(missing, :diatomic_complete_core_shell_ham_input_payload)
+    else
+        append!(
+            available,
+            (
+                :pqs_diatomic_complete_core_shell_source_plan,
+                :diatomic_complete_core_shell_final_basis,
+                :diatomic_complete_core_shell_h1_payload,
+                :diatomic_complete_core_shell_ham_input_payload,
+            ),
+        )
+        one_body_hamiltonian =
+            !isnothing(h1_payload.final_hamiltonian) &&
+            hasproperty(h1_payload.final_hamiltonian, :hamiltonian_matrix) ?
+            h1_payload.final_hamiltonian.hamiltonian_matrix :
+            nothing
+        if isnothing(one_body_hamiltonian)
+            one_body_hamiltonian_status =
+                :missing_diatomic_one_body_hamiltonian_reference
+            push!(missing, :diatomic_one_body_hamiltonian_reference)
+        else
+            one_body_hamiltonian_status =
+                :available_diatomic_one_body_hamiltonian_reference
+            push!(available, :diatomic_one_body_hamiltonian_reference)
+        end
+
+        density_interaction = ham_input_payload.density_interaction
+        density_interaction_status = ham_input_payload.density_interaction_status
+        if density_interaction_status !==
+           :materialized_pqs_complete_core_shell_pre_final_density_interaction
+            push!(missing, :diatomic_pre_final_density_interaction)
+        else
+            push!(available, :diatomic_pre_final_density_interaction)
+            pre_final_pair_matrix =
+                hasproperty(density_interaction, :pre_final_pair_matrix) ?
+                density_interaction.pre_final_pair_matrix :
+                nothing
+            final_to_pre_final_coefficients =
+                hasproperty(density_interaction, :final_to_pre_final_coefficients) ?
+                density_interaction.final_to_pre_final_coefficients :
+                nothing
+            pre_final_weights =
+                hasproperty(density_interaction, :pre_final_weights) ?
+                density_interaction.pre_final_weights :
+                nothing
+        end
+        support_weights =
+            !isnothing(ham_input_payload.support_weights) &&
+            hasproperty(ham_input_payload.support_weights, :support_weights) ?
+            ham_input_payload.support_weights.support_weights :
+            nothing
+        support_pair_raw_numerator =
+            !isnothing(ham_input_payload.support_pair_raw_numerator) &&
+            hasproperty(
+                ham_input_payload.support_pair_raw_numerator,
+                :support_pair_raw_numerator,
+            ) ?
+            ham_input_payload.support_pair_raw_numerator.support_pair_raw_numerator :
+            nothing
+        raw_pair_factor_terms = ham_input_payload.raw_pair_factor_terms
+
+        center_metadata =
+            _pqs_source_box_route_driver_diatomic_handoff_center_metadata(parent)
+        center_records = center_metadata.center_records
+        nuclear_repulsion_status = center_metadata.nuclear_repulsion_status
+        nuclear_repulsion = center_metadata.nuclear_repulsion
+        electron_count_status = center_metadata.electron_count_status
+        electron_count = center_metadata.electron_count
+        spin_sector_status = center_metadata.spin_sector_status
+        spin_sector = center_metadata.spin_sector
+        if center_metadata.status === :available_diatomic_handoff_center_metadata
+            push!(available, :diatomic_handoff_center_metadata)
+        else
+            append!(missing, center_metadata.missing_objects)
+        end
+
+        if isempty(missing)
+            status =
+                :available_diatomic_complete_core_shell_hamiltonian_handoff_payload
+            blocker = nothing
+            push!(
+                available,
+                :diatomic_complete_core_shell_hamiltonian_handoff_payload,
+            )
+        else
+            status =
+                :blocked_diatomic_complete_core_shell_hamiltonian_handoff_payload
+            blocker = first(missing)
+        end
+    end
+
+    available_objects = Tuple(unique(available))
+    missing_objects = Tuple(unique(missing))
+    final_dimension =
+        !isnothing(final_basis) && hasproperty(final_basis, :final_retained_count) ?
+        final_basis.final_retained_count :
+        nothing
+    pre_final_dimension =
+        !isnothing(density_interaction) &&
+        hasproperty(density_interaction, :pre_final_weight_count) ?
+        density_interaction.pre_final_weight_count :
+        nothing
+    density_gauge =
+        !isnothing(density_interaction) &&
+        hasproperty(density_interaction, :density_gauge) ?
+        density_interaction.density_gauge :
+        nothing
+    raw_pair_factor_convention =
+        !isnothing(ham_input_payload) &&
+        hasproperty(ham_input_payload.summary, :raw_pair_factor_convention) ?
+        ham_input_payload.summary.raw_pair_factor_convention :
+        nothing
+    ordering = (;
+        support_row_order =
+            !isnothing(final_basis) && hasproperty(final_basis, :support_row_order) ?
+            final_basis.support_row_order :
+            nothing,
+        source_plan_support_row_order =
+            !isnothing(source_plan) &&
+            hasproperty(source_plan, :convention_labels) ?
+            get(source_plan.convention_labels, :support_row_order, nothing) :
+            nothing,
+        source_plan_support_order =
+            !isnothing(source_plan) && hasproperty(source_plan, :support_order) ?
+            source_plan.support_order :
+            nothing,
+        route_retained_order =
+            !isnothing(source_plan) && hasproperty(source_plan, :route_retained_order) ?
+            source_plan.route_retained_order :
+            nothing,
+        pre_final_order = :pqs_complete_core_shell_pre_final_density_order,
+        final_order = :pqs_complete_core_shell_final_basis_order,
+    )
+    conventions = (;
+        density_gauge,
+        raw_pair_factor_convention,
+        electron_count_source =
+            isnothing(center_metadata) ? nothing : center_metadata.electron_count_source,
+        spin_sector_source =
+            isnothing(center_metadata) ? nothing : center_metadata.spin_sector_source,
+        nuclear_repulsion_source =
+            isnothing(center_metadata) ? nothing : center_metadata.nuclear_repulsion_source,
+        private_inspect_only = true,
+        dense_vee_materialized = false,
+        hamv6_materialized = false,
+        cr2_ready = false,
+        hfdmrg_ready = false,
+    )
+    summary = (;
+        status,
+        blocker,
+        route_family,
+        source_plan_status,
+        final_basis_status,
+        h1_payload_status,
+        ham_input_payload_status,
+        one_body_hamiltonian_status,
+        density_interaction_status,
+        final_dimension,
+        pre_final_dimension,
+        support_weight_count =
+            !isnothing(ham_input_payload) &&
+            hasproperty(ham_input_payload.summary, :support_weight_count) ?
+            ham_input_payload.summary.support_weight_count :
+            nothing,
+        pre_final_pair_matrix_shape =
+            !isnothing(density_interaction) &&
+            hasproperty(density_interaction, :pre_final_pair_matrix_shape) ?
+            density_interaction.pre_final_pair_matrix_shape :
+            nothing,
+        final_to_pre_final_coefficient_shape =
+            isnothing(final_to_pre_final_coefficients) ?
+            nothing :
+            size(final_to_pre_final_coefficients),
+        density_gauge,
+        raw_pair_factor_convention,
+        support_row_order = ordering.support_row_order,
+        source_plan_support_row_order = ordering.source_plan_support_row_order,
+        pre_final_order = ordering.pre_final_order,
+        final_order = ordering.final_order,
+        center_count =
+            isnothing(center_metadata) ? nothing : center_metadata.center_count,
+        nuclear_charges =
+            isnothing(center_metadata) ? () : center_metadata.nuclear_charges,
+        nuclear_coordinates =
+            isnothing(center_metadata) ? () : center_metadata.nuclear_coordinates,
+        nuclear_repulsion_status,
+        nuclear_repulsion,
+        electron_count_status,
+        electron_count,
+        spin_sector_status,
+        spin_sector,
+        private_inspect_only = true,
+        hamiltonian_handoff_materialized =
+            status ===
+            :available_diatomic_complete_core_shell_hamiltonian_handoff_payload,
+        dense_vee_materialized = false,
+        h1_j_materialized = false,
+        rhf_materialized = false,
+        public_api = false,
+        exports_materialized = false,
+        artifacts_materialized = false,
+        hamv6_materialized = false,
+        cr2_ready = false,
+        hfdmrg_ready = false,
+        available_objects,
+        missing_objects,
+    )
+    metadata = (;
+        source =
+            :pqs_source_box_route_driver_diatomic_complete_core_shell_hamiltonian_handoff_payload,
+        route_kind = recipe.route_kind,
+        route_family,
+        source_plan_status,
+        final_basis_status,
+        h1_payload_status,
+        ham_input_payload_status,
+        source_box_first = true,
+        private_inspect_only = true,
+        dense_vee_materialized = false,
+        public_api = false,
+        exports_materialized = false,
+        artifacts_materialized = false,
+        hamv6_materialized = false,
+        cr2_ready = false,
+        hfdmrg_ready = false,
+        rhf_materialized = false,
+        h1_j_materialized = false,
+        shell_support_row_contraction_authority = false,
+        retained_diagnostic_weights_are_ida_weights = false,
+    )
+    return _PQSDiatomicCompleteCoreShellHamiltonianHandoffPayload(
+        status,
+        blocker,
+        route_family,
+        source_plan,
+        source_plan_status,
+        final_basis,
+        final_basis_status,
+        h1_payload,
+        h1_payload_status,
+        ham_input_payload,
+        ham_input_payload_status,
+        one_body_hamiltonian,
+        one_body_hamiltonian_status,
+        density_interaction,
+        density_interaction_status,
+        pre_final_pair_matrix,
+        final_to_pre_final_coefficients,
+        pre_final_weights,
+        support_weights,
+        support_pair_raw_numerator,
+        raw_pair_factor_terms,
+        center_records,
+        center_metadata,
+        nuclear_repulsion_status,
+        nuclear_repulsion,
+        electron_count_status,
+        electron_count,
+        spin_sector_status,
+        spin_sector,
+        ordering,
+        conventions,
+        available_objects,
+        missing_objects,
+        summary,
+        metadata,
+    )
+end
+
 function _pqs_source_box_route_driver_diatomic_complete_core_shell_ham_readiness_payload(
     parent,
     route_skeleton,
@@ -14229,6 +14743,7 @@ function _pqs_source_box_route_driver_diatomic_complete_core_shell_ham_readiness
     final_basis_payload = nothing,
     h1_payload = nothing,
     ham_input_payload = nothing,
+    hamiltonian_handoff_payload = nothing,
 )
     route_family =
         hasproperty(route_skeleton, :route_family) ?
@@ -14298,6 +14813,13 @@ function _pqs_source_box_route_driver_diatomic_complete_core_shell_ham_readiness
     ham_input_available =
         ham_input_payload_status ===
         :available_diatomic_complete_core_shell_ham_input_payload
+    hamiltonian_handoff_payload_status =
+        isnothing(hamiltonian_handoff_payload) ?
+        :not_available :
+        hamiltonian_handoff_payload.status
+    hamiltonian_handoff_available =
+        hamiltonian_handoff_payload_status ===
+        :available_diatomic_complete_core_shell_hamiltonian_handoff_payload
 
     if route_family !== :pqs_source_box
         status =
@@ -14314,8 +14836,10 @@ function _pqs_source_box_route_driver_diatomic_complete_core_shell_ham_readiness
     else
         status = :blocked_diatomic_complete_core_shell_ham_readiness
         blocker =
+            hamiltonian_handoff_available ?
+            :missing_diatomic_hamiltonian_consumer_contract :
             ham_input_available ?
-            :missing_diatomic_ham_consumer_contract :
+            :missing_diatomic_complete_core_shell_hamiltonian_handoff_payload :
             h1_available ?
             :missing_diatomic_complete_core_shell_ham_input_payload :
             final_basis_status ===
@@ -14341,11 +14865,18 @@ function _pqs_source_box_route_driver_diatomic_complete_core_shell_ham_readiness
             push!(available, :diatomic_complete_core_shell_h1_payload)
         ham_input_available &&
             push!(available, :diatomic_complete_core_shell_ham_input_payload)
+        hamiltonian_handoff_available &&
+            push!(
+                available,
+                :diatomic_complete_core_shell_hamiltonian_handoff_payload,
+            )
         parent_axis_bundle_object_available &&
             push!(available, :parent_axis_bundle_object)
         missing =
+            hamiltonian_handoff_available ?
+            Symbol[:diatomic_hamiltonian_consumer_contract] :
             ham_input_available ?
-            Symbol[:diatomic_ham_consumer_contract] :
+            Symbol[:diatomic_complete_core_shell_hamiltonian_handoff_payload] :
             h1_available ?
             Symbol[:diatomic_complete_core_shell_ham_input_payload] :
             final_basis_status ===
@@ -14391,6 +14922,7 @@ function _pqs_source_box_route_driver_diatomic_complete_core_shell_ham_readiness
         h1_payload_status,
         h1_status,
         ham_input_payload_status,
+        hamiltonian_handoff_payload_status,
         missing_objects,
         private_internal_only = true,
         public_api = false,
@@ -14398,6 +14930,7 @@ function _pqs_source_box_route_driver_diatomic_complete_core_shell_ham_readiness
             final_basis_status === :available_pqs_complete_core_shell_final_basis,
         h1_materialized = h1_available,
         ham_input_materialized = ham_input_available,
+        hamiltonian_handoff_materialized = hamiltonian_handoff_available,
         h1_j_materialized = false,
         ham_payload_materialized = false,
         rhf_materialized = false,
@@ -14413,6 +14946,7 @@ function _pqs_source_box_route_driver_diatomic_complete_core_shell_ham_readiness
         final_basis_payload_status,
         h1_payload_status,
         ham_input_payload_status,
+        hamiltonian_handoff_payload_status,
         source_box_first = true,
         shell_support_row_contraction_authority = false,
         retained_diagnostic_weights_are_ida_weights = false,
@@ -14615,6 +15149,16 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
             diatomic_complete_core_shell_final_basis_payload,
             diatomic_complete_core_shell_h1_payload,
         )
+    diatomic_complete_core_shell_hamiltonian_handoff_payload =
+        _pqs_source_box_route_driver_diatomic_complete_core_shell_hamiltonian_handoff_payload(
+            parent,
+            route_skeleton,
+            recipe,
+            diatomic_complete_core_shell_source_plan_payload,
+            diatomic_complete_core_shell_final_basis_payload,
+            diatomic_complete_core_shell_h1_payload,
+            diatomic_complete_core_shell_ham_input_payload,
+        )
     diatomic_complete_core_shell_ham_readiness_payload =
         _pqs_source_box_route_driver_diatomic_complete_core_shell_ham_readiness_payload(
             parent,
@@ -14624,6 +15168,7 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
             diatomic_complete_core_shell_final_basis_payload,
             diatomic_complete_core_shell_h1_payload,
             diatomic_complete_core_shell_ham_input_payload,
+            diatomic_complete_core_shell_hamiltonian_handoff_payload,
         )
 
     return (;
@@ -14648,6 +15193,7 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
         diatomic_complete_core_shell_final_basis_payload,
         diatomic_complete_core_shell_h1_payload,
         diatomic_complete_core_shell_ham_input_payload,
+        diatomic_complete_core_shell_hamiltonian_handoff_payload,
         diatomic_complete_core_shell_ham_readiness_payload,
         complete_core_shell_h1_j_diagnostic_payload,
         complete_core_shell_h1_j_diagnostic_summary =
