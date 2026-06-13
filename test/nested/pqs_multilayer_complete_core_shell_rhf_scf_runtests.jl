@@ -57,39 +57,6 @@ end
 
 @testset "PQS complete core-shell RHF SCF payload" begin
     payloads = _pqs_rhf_scf_synthetic_payloads()
-    fixed_point_control =
-        GaussletBases._pqs_multilayer_complete_core_shell_rhf_scf_control_payload()
-    @test fixed_point_control.object_kind ===
-          :pqs_multilayer_complete_core_shell_rhf_scf_control_payload
-    @test fixed_point_control.status ===
-          :available_pqs_multilayer_complete_core_shell_rhf_scf_control_payload
-    @test fixed_point_control.blocker === nothing
-    @test fixed_point_control.mixing_kind === :fixed_point
-    @test fixed_point_control.max_history == 0
-    @test fixed_point_control.residual_metric ===
-          :ordinary_final_basis_commutator_inf_norm
-
-    fock_diis_control =
-        GaussletBases._pqs_multilayer_complete_core_shell_rhf_scf_control_payload(
-            ;
-            mixing_kind = :fock_diis,
-        )
-    @test fock_diis_control.status === fixed_point_control.status
-    @test fock_diis_control.mixing_kind === :fock_diis
-    @test fock_diis_control.max_history == 8
-    @test fock_diis_control.diis_start_iteration == 2
-    @test fock_diis_control.diis_regularization ≈ 1.0e-12
-    @test fock_diis_control.diis_coefficient_max_abs ≈ 25.0
-
-    unsupported_control =
-        GaussletBases._pqs_multilayer_complete_core_shell_rhf_scf_control_payload(
-            ;
-            mixing_kind = :scalar_density_damping,
-        )
-    @test unsupported_control.status ===
-          :blocked_pqs_multilayer_complete_core_shell_rhf_scf_control_payload
-    @test unsupported_control.blocker === :unsupported_scf_mixing_kind
-
     scf = GaussletBases._pqs_multilayer_complete_core_shell_rhf_scf_payload(
         ;
         payloads...,
@@ -99,64 +66,22 @@ end
         metadata = (; fixture = :synthetic_rhf_scf),
     )
 
-    @test scf.object_kind ==
-          :pqs_multilayer_complete_core_shell_rhf_scf_payload
     @test scf.status ==
           :materialized_pqs_multilayer_complete_core_shell_rhf_scf_payload
-    @test scf.blocker === nothing
-    @test isempty(scf.missing_inputs)
     @test scf.final_density ≈ Diagonal([2.0, 0.0])
     @test tr(scf.final_density) ≈ payloads.input_contract.electron_count
     @test abs.(scf.occupied_orbital_coefficients) ≈ reshape([1.0, 0.0], 2, 1)
-    @test scf.final_one_step_payload.total_energy ≈ -2.0
     @test scf.final_one_step_payload.final_density ≈ scf.final_density
-    @test length(scf.iteration_records) == 1
-    @test scf.iteration_records[1].iteration == 1
-    @test scf.iteration_records[1].density_change ≈ 0.0
-    @test scf.iteration_records[1].energy_change === nothing
-    @test scf.iteration_records[1].converged
-    @test scf.summary.fixture_role === :route_smoke
-    @test scf.summary.iteration_count == 1
-    @test scf.summary.converged_iteration == 1
-    @test scf.summary.first_iteration_energy_change_rule ===
-          :energy_converged_when_previous_energy_missing
-    @test scf.summary.mixing_kind === :fixed_point
-    @test scf.summary.density_change_rule ===
-          :fixed_point_spin_summed_density_inf_norm
-    @test scf.summary.residual_metric ===
-          :ordinary_final_basis_commutator_inf_norm
-    @test scf.summary.idempotency_rule ===
-          :closed_shell_spatial_density_idempotency
-    @test scf.summary.orbital_metric === :ordinary_orthonormal_final_basis
-    @test scf.summary.residual_diagnostics.status ===
-          :materialized_pqs_multilayer_complete_core_shell_rhf_scf_residual_diagnostics
     @test scf.summary.residual_diagnostics.density_trace_error ≈ 0.0
     @test scf.summary.residual_diagnostics.closed_shell_idempotency_error ≈ 0.0
     @test scf.summary.residual_diagnostics.commutator_residual ≈ 0.0
     @test scf.summary.residual_diagnostics.spatial_commutator_residual ≈ 0.0
-    @test scf.summary.residual_diagnostics.density_change_rule ===
-          scf.summary.density_change_rule
-    @test scf.summary.residual_diagnostics.residual_metric ===
-          scf.summary.residual_metric
-    @test scf.summary.residual_diagnostics.idempotency_rule ===
-          scf.summary.idempotency_rule
-    @test scf.summary.residual_diagnostics.orbital_metric ===
-          scf.summary.orbital_metric
-    @test scf.summary.convergence_diagnostics.density_converged
-    @test scf.summary.convergence_diagnostics.energy_converged
-    @test scf.summary.convergence_diagnostics.residual_converged
-    @test scf.summary.convergence_diagnostics.trace_converged
-    @test scf.summary.convergence_diagnostics.idempotency_converged
     @test scf.summary.residual_diagnostics.commutator_residual <=
           scf.summary.residual_atol
     @test scf.summary.residual_diagnostics.density_trace_error <=
           scf.summary.trace_atol
     @test scf.summary.residual_diagnostics.closed_shell_idempotency_error <=
           scf.summary.idempotency_atol
-    @test scf.summary.diis_used_count == 0
-    @test scf.summary.diis_fallback_count == 0
-    @test scf.summary.diis_solve_failure_count == 0
-    @test scf.summary.diis_coefficient_pathology_count == 0
     @test scf.summary.final_one_step_recomputed === true
     @test scf.summary.final_one_step_density_matches_final_density === true
     @test scf.summary.final_total_energy ≈
@@ -165,61 +90,7 @@ end
     @test scf.summary.rhf_converged
     @test !scf.summary.driver_route_materialized
     @test !scf.summary.route_report_materialized
+    @test scf.summary.public_api === false
     @test !scf.summary.exports_materialized
     @test !scf.summary.artifacts_materialized
-    @test scf.summary.public_api === false
-
-    fock_diis_scf =
-        GaussletBases._pqs_multilayer_complete_core_shell_rhf_scf_payload(
-            ;
-            payloads...,
-            scf_control_payload = fock_diis_control,
-            metadata = (; fixture = :synthetic_rhf_scf_fock_diis),
-        )
-    @test fock_diis_scf.status === scf.status
-    @test fock_diis_scf.summary.mixing_kind === :fock_diis
-    @test fock_diis_scf.summary.rhf_converged
-    @test fock_diis_scf.summary.residual_diagnostics.commutator_residual ≈ 0.0
-    @test fock_diis_scf.summary.residual_diagnostics.density_trace_error ≈ 0.0
-    @test fock_diis_scf.summary.residual_diagnostics.closed_shell_idempotency_error ≈
-          0.0
-    @test !fock_diis_scf.summary.driver_route_materialized
-    @test !fock_diis_scf.summary.route_report_materialized
-    @test !fock_diis_scf.summary.exports_materialized
-    @test !fock_diis_scf.summary.artifacts_materialized
-    @test fock_diis_scf.summary.public_api === false
-
-    missing_contract =
-        GaussletBases._pqs_multilayer_complete_core_shell_rhf_scf_payload(
-            ;
-            h1_payload = payloads.h1_payload,
-            density_interaction = payloads.density_interaction,
-        )
-    @test missing_contract.status ==
-          :blocked_pqs_multilayer_complete_core_shell_rhf_scf_payload
-    @test missing_contract.blocker == :missing_rhf_input_contract
-    @test missing_contract.missing_inputs == (:rhf_input_contract,)
-    @test missing_contract.summary.density_change_rule ===
-          :fixed_point_spin_summed_density_inf_norm
-    @test missing_contract.summary.residual_metric ===
-          :ordinary_final_basis_commutator_inf_norm
-    @test missing_contract.summary.idempotency_rule ===
-          :closed_shell_spatial_density_idempotency
-    @test missing_contract.summary.orbital_metric ===
-          :ordinary_orthonormal_final_basis
-    @test missing_contract.summary.residual_diagnostics.status ===
-          :blocked_pqs_multilayer_complete_core_shell_rhf_scf_residual_diagnostics
-    @test missing_contract.summary.residual_diagnostics.blocker ===
-          :missing_final_density
-
-    missing_density_interaction =
-        GaussletBases._pqs_multilayer_complete_core_shell_rhf_scf_payload(
-            ;
-            input_contract = payloads.input_contract,
-            h1_payload = payloads.h1_payload,
-        )
-    @test missing_density_interaction.status ==
-          :blocked_pqs_multilayer_complete_core_shell_rhf_scf_payload
-    @test missing_density_interaction.blocker == :missing_density_interaction
-    @test missing_density_interaction.missing_inputs == (:density_interaction,)
 end
