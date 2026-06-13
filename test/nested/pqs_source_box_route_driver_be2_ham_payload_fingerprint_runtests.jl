@@ -87,8 +87,32 @@ end
     @test assembly.route_skeleton.route_family === :pqs_source_box
 
     payload = assembly.complete_core_shell_diagnostic_route_payload
+    source_plan_payload =
+        assembly.diatomic_complete_core_shell_source_plan_payload
     readiness = assembly.diatomic_complete_core_shell_ham_readiness_payload
     ham = payload.complete_core_shell_ham_payload
+
+    @test source_plan_payload.status ==
+          :blocked_diatomic_complete_core_shell_source_plan
+    @test source_plan_payload.blocker == :missing_parent_axis_bundle_object
+    @test source_plan_payload.route_family === :pqs_source_box
+    @test source_plan_payload.system_classification === :bond_aligned_diatomic
+    @test source_plan_payload.bond_axis === :x
+    @test !source_plan_payload.parent_axis_bundle_object_available
+    @test source_plan_payload.source_plan === nothing
+    @test source_plan_payload.source_plan_status ==
+          :not_materialized_diatomic_complete_core_shell_source_plan
+    @test :parent_axis_bundle_object in source_plan_payload.missing_objects
+    @test :diatomic_complete_core_shell_source_realization_contract in
+          source_plan_payload.missing_objects
+    @test !source_plan_payload.summary.source_plan_materialized
+    @test !source_plan_payload.summary.final_basis_materialized
+    @test !source_plan_payload.summary.h1_materialized
+    @test !source_plan_payload.summary.h1_j_materialized
+    @test !source_plan_payload.summary.ham_payload_materialized
+    @test !source_plan_payload.summary.route_driver_public_surface
+    @test !source_plan_payload.summary.exports_materialized
+    @test !source_plan_payload.summary.artifacts_materialized
 
     @test readiness.status == :blocked_diatomic_complete_core_shell_ham_readiness
     @test readiness.blocker ==
@@ -171,8 +195,34 @@ end
     @test assembly.route_skeleton.route_family === :pqs_source_box
 
     readiness = assembly.diatomic_complete_core_shell_ham_readiness_payload
+    source_plan_payload =
+        assembly.diatomic_complete_core_shell_source_plan_payload
     payload = assembly.complete_core_shell_diagnostic_route_payload
     ham = payload.complete_core_shell_ham_payload
+
+    @test source_plan_payload.status ==
+          :blocked_diatomic_complete_core_shell_source_plan
+    @test source_plan_payload.blocker ==
+          :missing_diatomic_complete_core_shell_source_realization_contract
+    @test source_plan_payload.route_family === :pqs_source_box
+    @test source_plan_payload.system_classification === :bond_aligned_diatomic
+    @test source_plan_payload.bond_axis === :x
+    @test source_plan_payload.parent_axis_bundle_object_available
+    @test source_plan_payload.source_plan === nothing
+    @test source_plan_payload.source_plan_status ==
+          :not_materialized_diatomic_complete_core_shell_source_plan
+    @test :parent_axis_bundle_object in source_plan_payload.available_objects
+    @test !in(:parent_axis_bundle_object, source_plan_payload.missing_objects)
+    @test :diatomic_complete_core_shell_source_realization_contract in
+          source_plan_payload.missing_objects
+    @test !source_plan_payload.summary.source_plan_materialized
+    @test !source_plan_payload.summary.final_basis_materialized
+    @test !source_plan_payload.summary.h1_materialized
+    @test !source_plan_payload.summary.h1_j_materialized
+    @test !source_plan_payload.summary.ham_payload_materialized
+    @test !source_plan_payload.summary.route_driver_public_surface
+    @test !source_plan_payload.summary.exports_materialized
+    @test !source_plan_payload.summary.artifacts_materialized
 
     @test readiness.status == :blocked_diatomic_complete_core_shell_ham_readiness
     @test readiness.blocker ==
