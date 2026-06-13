@@ -29,6 +29,7 @@ function _pqs_multilayer_region_plan_layer_specs(
             layer_index = layer.layer_index,
             current_box = layer.current_box,
             inner_box = layer.inner_box,
+            source_mode_shape = layer.source_mode_shape,
             provenance = :pqs_multilayer_shell_region_plan,
             terminal_region_key = layer.metadata.terminal_region_key,
             lowering_kind = layer.metadata.lowering_kind,
@@ -64,10 +65,17 @@ function _pqs_multilayer_realize_shell_source_plan(
     for (record_index, spec) in pairs(layer_specs)
         inner_box = spec.inner_box
         current_box = spec.current_box
-        q_values = length.(inner_box)
-        all(q -> q == q_values[1], q_values) ||
+        source_mode_shape = get(spec, :source_mode_shape, nothing)
+        raw_source_dims = isnothing(source_mode_shape) ?
+                          length.(inner_box) :
+                          Tuple(Int(dim) for dim in source_mode_shape)
+        all(dim -> dim == raw_source_dims[1], raw_source_dims) ||
             throw(ArgumentError("multi-layer PQS shell layers currently require cubic raw source dimensions"))
-        q = q_values[1]
+        q = raw_source_dims[1]
+        source_mode_shape_source = isnothing(source_mode_shape) ?
+                                   :inner_box_length :
+                                   :terminal_lowering_contract
+        fixed_source_mode_shape_used = !isnothing(source_mode_shape)
         layer = _nested_projected_q_shell_layer(
             bundles,
             current_box,
@@ -75,7 +83,7 @@ function _pqs_multilayer_realize_shell_source_plan(
             bond_axis,
             q,
             L = q,
-            raw_source_dims = (q, q, q),
+            raw_source_dims,
             selected_q = q,
             term_coefficients,
         )
@@ -91,8 +99,10 @@ function _pqs_multilayer_realize_shell_source_plan(
             layer_index = spec.layer_index,
             current_box,
             inner_box,
-            raw_source_dims = (q, q, q),
+            raw_source_dims,
             q,
+            source_mode_shape_source,
+            fixed_source_mode_shape_used,
             descriptor,
             shell_plan,
             shell_support_indices = descriptor.support_indices,
@@ -128,6 +138,10 @@ function _pqs_multilayer_realize_shell_source_plan(
     status = isnothing(blocker) ?
         :available_pqs_multilayer_shell_source_plan :
         :blocked_pqs_multilayer_shell_source_plan
+    source_mode_shape_sources =
+        Tuple(unique(record.source_mode_shape_source for record in shell_records))
+    fixed_source_mode_shape_used =
+        any(record -> record.fixed_source_mode_shape_used, shell_records)
 
     summary = (;
         status,
@@ -147,6 +161,8 @@ function _pqs_multilayer_realize_shell_source_plan(
         explicit_box_bridge = get(metadata_tuple, :explicit_box_bridge, false),
         shellification_backed_geometry =
             get(metadata_tuple, :shellification_backed_geometry, false),
+        source_mode_shape_sources,
+        fixed_source_mode_shape_used,
         h1_materialized = false,
         rhf_materialized = false,
     )

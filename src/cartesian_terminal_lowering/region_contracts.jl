@@ -102,7 +102,8 @@ function _pqs_complete_shell_contract(region, policy::PQSLowering)
         final_unit_granularity = :one_terminal_region,
         metadata = (;
             q = policy.q,
-            source_mode_shape = CartesianCPB.shape(source),
+            source_mode_shape = ntuple(_ -> policy.q, 3),
+            source_box_shape = CartesianCPB.shape(source),
             face_edge_corner_decomposition_required = false,
         ),
     )
