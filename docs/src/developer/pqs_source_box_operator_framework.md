@@ -6,6 +6,8 @@ especially after handoffs, reviews, or context compaction.
 
 Near-term post-H1 implementation guidance lives in
 `pqs_near_term_final_basis_realization_plan.md`.
+Fixture-role policy for route smoke, convention diagnostics, oracle/debug
+checks, and physics endpoints lives in `pqs_source_box_fixture_policy.md`.
 
 This is not a public API contract and not a claim that the production route
 already consumes this machinery. It is the current design frame for private
