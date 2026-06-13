@@ -3114,10 +3114,6 @@ function _pqs_source_box_route_driver_diatomic_complete_core_shell_hamiltonian_h
         nuclear_repulsion_source =
             isnothing(center_metadata) ? nothing : center_metadata.nuclear_repulsion_source,
         private_inspect_only = true,
-        dense_vee_materialized = false,
-        hamv6_materialized = false,
-        cr2_ready = false,
-        hfdmrg_ready = false,
     )
     summary = (;
         status,
@@ -3163,19 +3159,6 @@ function _pqs_source_box_route_driver_diatomic_complete_core_shell_hamiltonian_h
         electron_count,
         spin_sector_status,
         spin_sector,
-        private_inspect_only = true,
-        hamiltonian_handoff_materialized =
-            status ===
-            :available_diatomic_complete_core_shell_hamiltonian_handoff_payload,
-        dense_vee_materialized = false,
-        h1_j_materialized = false,
-        rhf_materialized = false,
-        public_api = false,
-        exports_materialized = false,
-        artifacts_materialized = false,
-        hamv6_materialized = false,
-        cr2_ready = false,
-        hfdmrg_ready = false,
         available_objects,
         missing_objects,
     )
@@ -3189,16 +3172,6 @@ function _pqs_source_box_route_driver_diatomic_complete_core_shell_hamiltonian_h
         h1_payload_status,
         ham_input_payload_status,
         source_box_first = true,
-        private_inspect_only = true,
-        dense_vee_materialized = false,
-        public_api = false,
-        exports_materialized = false,
-        artifacts_materialized = false,
-        hamv6_materialized = false,
-        cr2_ready = false,
-        hfdmrg_ready = false,
-        rhf_materialized = false,
-        h1_j_materialized = false,
         shell_support_row_contraction_authority = false,
         retained_diagnostic_weights_are_ida_weights = false,
     )
@@ -3313,9 +3286,24 @@ function _pqs_source_box_route_driver_diatomic_complete_core_shell_hamiltonian_c
         exports_materialized = nonclaims.exports_materialized,
         artifacts_materialized = nonclaims.artifacts_materialized,
     )
+    handoff_summary =
+        source_handoff_available ? hamiltonian_handoff_payload.summary : nothing
+    cr2_inspection = (;
+        cr2_read_only_inspector_ready = private_inspector_ready,
+        cr2_solver_ready = false,
+        cr2_export_ready = false,
+        cr2_handoff_blocker =
+            private_inspector_ready ? :missing_cr2_solver_handoff_format : blocker,
+        two_body_representation_kind =
+            private_inspector_ready ? :pre_final_density_interaction : nothing,
+        density_gauge = isnothing(handoff_summary) ? nothing : handoff_summary.density_gauge,
+        raw_pair_factor_convention =
+            isnothing(handoff_summary) ? nothing : handoff_summary.raw_pair_factor_convention,
+    )
     readiness = (;
         private_inspector_ready,
         nonclaim_flags...,
+        cr2_inspection...,
         downstream_blocker =
             private_inspector_ready ?
             :missing_hfdmrg_density_density_contract :

@@ -174,12 +174,9 @@ end
     @test ham_input_payload.summary.raw_pair_factor_convention == :raw_numerator
     @test ham_input_payload.summary.support_weight_count == 275
     @test ham_input_payload.summary.pre_final_pair_matrix_shape == (221, 221)
-    @test ham_input_payload.summary.ham_input_materialized
 
     @test hamiltonian_handoff_payload.status ==
           :available_diatomic_complete_core_shell_hamiltonian_handoff_payload
-    @test hamiltonian_handoff_payload.summary.private_inspect_only
-    @test hamiltonian_handoff_payload.summary.hamiltonian_handoff_materialized
     @test hamiltonian_handoff_payload.one_body_hamiltonian === h1_matrix
     @test hamiltonian_handoff_payload.density_interaction ===
           ham_input_payload.density_interaction
@@ -193,7 +190,6 @@ end
 
     @test consumer_contract_payload.status ==
           :available_diatomic_complete_core_shell_hamiltonian_consumer_contract_payload
-    @test consumer_contract_payload.summary.private_inspector_ready
     @test consumer_contract_payload.source_handoff ===
           hamiltonian_handoff_payload
     @test all(
@@ -205,6 +201,14 @@ end
             :cr2_ready,
         ),
     )
+    cr2_view = consumer_contract_payload.readiness
+    @test cr2_view.cr2_read_only_inspector_ready
+    @test !cr2_view.cr2_solver_ready
+    @test !cr2_view.cr2_export_ready
+    @test cr2_view.cr2_handoff_blocker == :missing_cr2_solver_handoff_format
+    @test cr2_view.two_body_representation_kind == :pre_final_density_interaction
+    @test cr2_view.density_gauge == :pre_final_localized_positive_weight
+    @test cr2_view.raw_pair_factor_convention == :raw_numerator
 
     @test readiness.status == :blocked_diatomic_complete_core_shell_ham_readiness
     @test readiness.blocker == :missing_hfdmrg_density_density_contract
