@@ -4,7 +4,7 @@ using JLD2
 const _HE_PQS_DRIVER = normpath(joinpath(@__DIR__, "..", "..", "bin", "cartesian_ham_builder.jl"))
 const _HE_PQS_INPUT = normpath(joinpath(@__DIR__, "..", "driver_inputs", "he_pqs_q5_wlmap.jl"))
 
-@testset "cartesian_ham_builder He PQS q5 WL-map artifact" begin
+@testset "cartesian_ham_builder_he_pqs_q5_wlmap artifact" begin
     mktempdir() do dir
         outfile = joinpath(dir, "he_pqs_q5_wlmap.jld2")
         tsvfile = joinpath(dir, "he_pqs_q5_wlmap.tsv")
