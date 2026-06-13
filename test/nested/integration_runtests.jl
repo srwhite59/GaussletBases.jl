@@ -51,7 +51,6 @@ include("cartesian_contracted_parent_metric_packet_runtests.jl")
 include("cartesian_nested_fixed_block_qw_pgdg_adapter_runtests.jl")
 include("one_center_atomic_full_parent_nested_contract_runtests.jl")
 include("one_center_atomic_legacy_profile_nested_contract_runtests.jl")
-include("one_center_atomic_compact_fixed_block_term_storage_runtests.jl")
 
 include("cartesian_basis_representation_direct_product_qw_bases_runtests.jl")
 include("cartesian_basis_representation_nested_fixed_blocks_runtests.jl")

@@ -131,6 +131,8 @@ end
     @test h1.final_dimension == 419
     @test h1.solve_kind === :ordinary_symmetric
     @test h1.lowest_energy ≈ -1.991334820314074 atol = 1.0e-10 rtol = 0.0
+    wl_h1_lowest = -1.991344469963435
+    @test h1.lowest_energy - wl_h1_lowest ≈ 9.649649361120893e-6 atol = 1.0e-10 rtol = 0.0
 
     provenance =
         GaussletBases.CartesianContractedParentMetrics._pqs_source_box_ida_factor_provenance(
@@ -155,4 +157,7 @@ end
           :materialized_pqs_complete_core_shell_pre_final_density_interaction
     @test density_interaction.density_gauge === :pre_final_localized_positive_weight
     @test h1_j_summary.self_coulomb ≈ 1.2420423900074902 atol = 1.0e-10 rtol = 0.0
+    wl_h1_self_coulomb = 1.2420473874925473
+    wl_h1_j_delta = h1_j_summary.self_coulomb - wl_h1_self_coulomb
+    @test wl_h1_j_delta ≈ -4.997485057112172e-6 atol = 1.0e-10 rtol = 0.0
 end
