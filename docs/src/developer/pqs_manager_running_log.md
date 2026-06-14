@@ -12,6 +12,48 @@ accepted work:
 
 Keep entries short. Use the detailed pass response for implementation detail.
 
+## Initiation Snapshot
+
+GaussletBases has several development lines, and they should not all be treated
+as equally unsettled. The radial and angular basis work is comparatively stable
+and well developed: those lines contain working basis constructions, atomic
+operator machinery, radial/angular tests, and export paths that are not the main
+source of current architectural uncertainty. The active management focus is the
+Cartesian/high-order line. That line is where the repo is being pushed toward
+consumer-ready Hamiltonian generation, CR2/HFDMRG/DMRG handoff, public driver
+documentation, efficient operator construction, and a unified treatment of WL,
+PQS, high-order slab/endcap/panel variants, MWG residual-Gaussian supplements,
+and EGOI-type corrections.
+
+The Cartesian code currently contains multiple generations of machinery. Older
+ordinary/QW/WL, nested fixed-source, high-order doside, and residual-Gaussian
+paths may mostly work and remain valuable as references, oracles, diagnostics,
+and regression tests. But they are not the desired long-term architecture. The
+desired direction is the newer layered Cartesian route spine: shellification
+owns disjoint parent support; lowering chooses recipe-specific coordinate
+product boxes; construction produces intermediate and final retained spaces;
+pair planning starts from final retained units; pair-block materialization builds
+operator blocks; and the driver/artifact layer exposes stable consumer
+contracts. Future work should therefore avoid propagating old flat route/report
+surfaces as the final design. Supplant them gradually with typed, modular,
+route-authority-explicit construction while preserving old paths only where they
+serve clear reference or migration purposes.
+
+For PQS in particular, the important distinction is between the intended
+source-box algorithm and compatibility/oracle paths. PQS should be built from
+filled source boxes, one-dimensional source transforms, boundary product-mode
+retained rules, source-space operator blocks, and final shell realization where
+needed. Shell-row projection, dense parent construction, and old fixed-source
+WL/QW retained transforms may be useful for checks, but they must not be
+mistaken for PQS route authority. The H2 463 fake-PQS episode is the current
+warning example: a useful source-backed WL/QW reproduction was almost allowed to
+propagate as a PQS physics endpoint. The manager log begins after that route has
+been quarantined as fake-PQS. The next Cartesian/PQS work should recover an
+independent H2 PQS route, keep fake/source-backed paths temporary, stage
+supplements only after retained-transform authority is clear, and continue
+reducing bloat while moving the Cartesian driver line toward public, efficient,
+documented use.
+
 ## Long-Term Goals
 
 LT1. Reliable Hamiltonian construction and driver workflow.
