@@ -39,6 +39,15 @@ surfaces as the final design. Supplant them gradually with typed, modular,
 route-authority-explicit construction while preserving old paths only where they
 serve clear reference or migration purposes.
 
+Recent cleanup confirms that this is not only architectural rhetoric: the
+current Cartesian/PQS lane has already removed thousands of source/test/bin
+lines while adding driver-owned H2 route checks, fake-PQS guard fields, and
+supplement request/representation boundaries. Future work should preserve this
+direction. New scaffolding should usually pay for itself by deleting stale
+probes, duplicate report-key assertions, or obsolete route-shadow surfaces;
+line count is not the only metric, but persistent line growth is a warning
+sign.
+
 For PQS in particular, the important distinction is between the intended
 source-box algorithm and compatibility/oracle paths. PQS should be built from
 filled source boxes, one-dimensional source transforms, boundary product-mode
@@ -112,6 +121,10 @@ it is explicitly labeled diagnostic.
 
 AG6. Do not keep stale tests merely because they once caught something.
 
+AG7. Do not let old flat Cartesian paths become the public architecture merely
+because they still work. Preserve them only as references, oracles,
+diagnostics, or migration scaffolds until typed route-owned replacements exist.
+
 ## Current Medium-Term Goals: PQS H2 Recovery And Supplement Staging
 
 MT1. Quarantine fake-PQS H2 463.
@@ -135,6 +148,12 @@ MT5. Keep cleanup pressure.
 Any added scaffolding should be paid for by deleting stale probes, route-shadow
 assertions, or duplicate metadata unless a safety-critical exception is
 recorded.
+
+MT6. Audit and classify old Cartesian flat paths.
+Classify old ordinary/QW/WL, high-order doside, fixed-source, route-global, and
+supplement paths as one of: reference/oracle, temporary migration scaffold,
+active route-owned implementation, or deletion candidate. Do not promote a flat
+path to public driver architecture without an explicit review.
 
 ## Entry Template
 
