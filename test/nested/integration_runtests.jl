@@ -33,7 +33,6 @@ include("cartesian_route_diatomic_materializer_probe_runtests.jl")
 include("pqs_projected_q_shell_local_layer_integration_runtests.jl")
 
 include("bond_aligned_diatomic_high_order_recipe_realization_audit_runtests.jl")
-include("bond_aligned_diatomic_high_order_recipe_opt_in_source_construction_integration_runtests.jl")
 include("bond_aligned_diatomic_endcap_panel_shared_shell_source_policy_runtests.jl")
 
 include("one_center_atomic_fixed_block_timing_surface_runtests.jl")

@@ -7612,6 +7612,12 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
             diatomic_physical_gausslet_target_payload,
             diatomic_physical_gausslet_source_plan_candidate_payload,
         )
+    diatomic_physical_gausslet_final_basis_payload =
+        _pqs_source_box_route_driver_diatomic_physical_gausslet_final_basis_payload(
+            route_skeleton,
+            recipe,
+            diatomic_physical_gausslet_source_plan_payload,
+        )
     complete_core_shell_diagnostic_route_payload =
         _pqs_source_box_route_driver_complete_core_shell_diagnostic_route_payload(
             parent,
@@ -7728,6 +7734,7 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
         diatomic_physical_gausslet_target_payload,
         diatomic_physical_gausslet_source_plan_candidate_payload,
         diatomic_physical_gausslet_source_plan_payload,
+        diatomic_physical_gausslet_final_basis_payload,
         complete_core_shell_diagnostic_route_payload,
         diatomic_complete_core_shell_support_window_payload,
         diatomic_raw_box_route_payload,
@@ -8165,6 +8172,10 @@ function _pqs_source_box_route_driver_physical_gausslet_target_report_fields(
         hasproperty(assembly, :diatomic_physical_gausslet_source_plan_payload) ?
         assembly.diatomic_physical_gausslet_source_plan_payload :
         nothing
+    final_basis_payload =
+        hasproperty(assembly, :diatomic_physical_gausslet_final_basis_payload) ?
+        assembly.diatomic_physical_gausslet_final_basis_payload :
+        nothing
     summary =
         isnothing(payload) ?
         (;
@@ -8196,6 +8207,22 @@ function _pqs_source_box_route_driver_physical_gausslet_target_report_fields(
                     source_plan_payload.summary.source_plan_candidate_counts_match,
                 source_plan_authority_status =
                     source_plan_payload.summary.source_plan_authority_status,
+            ),
+        )
+    end
+    if !isnothing(final_basis_payload)
+        summary = merge(
+            summary,
+            (;
+                final_basis_status = final_basis_payload.final_basis_status,
+                final_basis_blocker = final_basis_payload.blocker,
+                final_basis_materialized =
+                    final_basis_payload.summary.final_basis_materialized,
+                final_dimension = final_basis_payload.summary.final_dimension,
+                final_overlap_identity_error =
+                    final_basis_payload.summary.final_overlap_identity_error,
+                physics_endpoint_blocker =
+                    final_basis_payload.summary.endpoint_blocker,
             ),
         )
     end

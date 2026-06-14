@@ -402,6 +402,20 @@ struct _PQSDiatomicPhysicalGaussletCoreShellSourcePlanPayload
     metadata
 end
 
+struct _PQSDiatomicPhysicalGaussletFinalBasisPayload
+    status::Symbol
+    blocker
+    route_family::Symbol
+    source_plan
+    source_plan_status::Symbol
+    final_basis
+    final_basis_status::Symbol
+    available_objects::Tuple
+    missing_objects::Tuple
+    summary
+    metadata
+end
+
 struct _PQSDiatomicPhysicalGaussletSourcePlanCandidatePayload
     status::Symbol
     blocker
@@ -731,7 +745,7 @@ function _pqs_source_box_route_driver_physical_gausslet_source_plan_from_candida
     support_order = (:atom_contact_core, :shared_shell_1, :shared_shell_2)
     retained_order = support_order
     support_counts = (
-        length(source.child_sequences[1].support_indices),
+        length(source.sequence.core_indices),
         length(shared_shell_support_indices[1]),
         length(shared_shell_support_indices[2]),
     )
@@ -775,8 +789,8 @@ function _pqs_source_box_route_driver_physical_gausslet_source_plan_from_candida
         :available_pqs_diatomic_physical_gausslet_core_shell_source_plan,
         source.basis,
         source.axis_bundles,
-        Vector{Int}(source.child_sequences[1].support_indices),
-        source.child_sequences[1].support_states,
+        Vector{Int}(source.sequence.core_indices),
+        source.sequence.core_states,
         shared_shell_support_indices,
         shared_shell_support_states,
         core_coefficient_matrix,
@@ -815,13 +829,13 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_pay
         source_plan.status
     blocker =
         !isnothing(source_plan) ?
-        :missing_physical_gausslet_final_basis_builder :
+        nothing :
         target_available ?
         :missing_atom_contact_core_support_rows :
         :missing_physical_gausslet_target_inventory
     missing_objects =
         !isnothing(source_plan) ?
-        (:physical_gausslet_final_basis_builder,) :
+        () :
         target_available ?
         (
             :atom_contact_core_support_rows,
@@ -878,6 +892,391 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_pay
         isnothing(target_payload) ? :not_available : target_payload.route_family,
         source_plan,
         (),
+        missing_objects,
+        summary,
+        metadata,
+    )
+end
+
+function _pqs_source_box_route_driver_physical_gausslet_axis_metrics(axis_bundles)
+    isnothing(axis_bundles) && return nothing
+    pgdg_x = _nested_axis_pgdg(axis_bundles, :x)
+    pgdg_y = _nested_axis_pgdg(axis_bundles, :y)
+    pgdg_z = _nested_axis_pgdg(axis_bundles, :z)
+    return (;
+        x = (; overlap = pgdg_x.overlap, source = :nested_pgdg_axis),
+        y = (; overlap = pgdg_y.overlap, source = :nested_pgdg_axis),
+        z = (; overlap = pgdg_z.overlap, source = :nested_pgdg_axis),
+    )
+end
+
+function _pqs_source_box_route_driver_physical_gausslet_local_coefficients(
+    coefficient_matrix,
+    support_indices,
+    retained_count::Int,
+    blocker::Symbol,
+)
+    coefficients = Matrix{Float64}(coefficient_matrix)
+    support = Vector{Int}(support_indices)
+    shape = (length(support), retained_count)
+    size(coefficients, 2) == retained_count || return (; blocker, coefficients = nothing)
+    isempty(support) && return (; blocker, coefficients = nothing)
+    maximum(support) <= size(coefficients, 1) || return (; blocker, coefficients = nothing)
+    local_coefficients = coefficients[support, :]
+    size(local_coefficients) == shape || return (; blocker, coefficients = nothing)
+    all(isfinite, local_coefficients) || return (;
+        blocker = :physical_gausslet_coefficient_nonfinite,
+        coefficients = nothing,
+    )
+    return (; blocker = nothing, coefficients = local_coefficients)
+end
+
+function _pqs_source_box_route_driver_physical_gausslet_overlap_diagnostics(
+    overlap::AbstractMatrix{<:Real};
+    identity_atol::Real,
+    rank_atol::Real,
+)
+    matrix = Matrix{Float64}(overlap)
+    size(matrix, 1) == size(matrix, 2) || return (;
+        blocker = :physical_gausslet_final_overlap_not_square,
+        summary = (;),
+        cleanup = nothing,
+        final_overlap = nothing,
+        final_identity_error = nothing,
+    )
+    symmetric_matrix = Symmetric((matrix + transpose(matrix)) ./ 2)
+    symmetry_error = norm(matrix - transpose(matrix), Inf)
+    decomposition = eigen(symmetric_matrix)
+    eigenvalues = decomposition.values
+    threshold = max(Float64(rank_atol), eps(Float64) * max(size(matrix, 1), 1))
+    rank = count(value -> value > threshold, eigenvalues)
+    summary = (;
+        shape = size(matrix),
+        symmetry_error,
+        eigenvalue_min = minimum(eigenvalues),
+        eigenvalue_max = maximum(eigenvalues),
+        rank,
+        expected_dimension = size(matrix, 1),
+        rank_atol = Float64(rank_atol),
+        identity_atol = Float64(identity_atol),
+        full_rank = rank == size(matrix, 1),
+    )
+    rank == size(matrix, 1) || return (;
+        blocker = :physical_gausslet_final_overlap_rank_deficient,
+        summary,
+        cleanup = nothing,
+        final_overlap = nothing,
+        final_identity_error = nothing,
+    )
+    cleanup =
+        decomposition.vectors * Diagonal(1.0 ./ sqrt.(decomposition.values))
+    final_overlap = transpose(cleanup) * matrix * cleanup
+    final_identity_error = norm(
+        final_overlap -
+        Matrix{Float64}(I, size(final_overlap, 1), size(final_overlap, 2)),
+        Inf,
+    )
+    blocker =
+        final_identity_error <= Float64(identity_atol) ?
+        nothing :
+        :physical_gausslet_final_overlap_not_identity
+    return (; blocker, summary, cleanup, final_overlap, final_identity_error)
+end
+
+function _pqs_source_box_route_driver_physical_gausslet_final_basis(
+    source_plan;
+    identity_atol::Real = 1.0e-8,
+    rank_atol::Real = 1.0e-10,
+)
+    support_order = (:atom_contact_core, :shared_shell_1, :shared_shell_2)
+    source_plan.support_order == support_order ||
+        return (; status = :blocked_pqs_physical_gausslet_final_basis,
+            blocker = :physical_gausslet_support_order_mismatch)
+    source_plan.retained_order == support_order ||
+        return (; status = :blocked_pqs_physical_gausslet_final_basis,
+            blocker = :physical_gausslet_retained_order_mismatch)
+
+    support_indices = (
+        source_plan.atom_contact_core_support_indices,
+        source_plan.shared_shell_support_indices[1],
+        source_plan.shared_shell_support_indices[2],
+    )
+    support_states = (
+        source_plan.atom_contact_core_support_states,
+        source_plan.shared_shell_support_states[1],
+        source_plan.shared_shell_support_states[2],
+    )
+    coefficient_matrices = (
+        source_plan.core_coefficient_matrix,
+        source_plan.shared_shell_coefficient_matrices[1],
+        source_plan.shared_shell_coefficient_matrices[2],
+    )
+    retained_counts = (
+        length(source_plan.retained_ranges.atom_contact_core),
+        length(source_plan.retained_ranges.shared_shell_1),
+        length(source_plan.retained_ranges.shared_shell_2),
+    )
+    support_counts = map(length, support_indices)
+    support_counts == (275, 578, 362) ||
+        return (; status = :blocked_pqs_physical_gausslet_final_basis,
+            blocker = :physical_gausslet_support_count_mismatch)
+    retained_counts == (251, 98, 114) ||
+        return (; status = :blocked_pqs_physical_gausslet_final_basis,
+            blocker = :physical_gausslet_retained_count_mismatch)
+
+    local_blocks = Matrix{Float64}[]
+    for (index, matrix) in pairs(coefficient_matrices)
+        blocker =
+            index == 1 ?
+            :physical_gausslet_core_coefficient_shape_mismatch :
+            :physical_gausslet_shared_shell_coefficient_shape_mismatch
+        local_coefficients =
+            _pqs_source_box_route_driver_physical_gausslet_local_coefficients(
+                matrix,
+                support_indices[index],
+                retained_counts[index],
+                blocker,
+            )
+        isnothing(local_coefficients.blocker) || return (;
+            status = :blocked_pqs_physical_gausslet_final_basis,
+            blocker = local_coefficients.blocker,
+        )
+        push!(local_blocks, local_coefficients.coefficients)
+    end
+
+    metrics =
+        _pqs_source_box_route_driver_physical_gausslet_axis_metrics(
+            source_plan.axis_bundles,
+        )
+    isnothing(metrics) && return (;
+        status = :blocked_pqs_physical_gausslet_final_basis,
+        blocker = :missing_physical_gausslet_support_overlap,
+    )
+
+    combined_support_states = vcat(
+        Vector{NTuple{3,Int}}(support_states[1]),
+        Vector{NTuple{3,Int}}(support_states[2]),
+        Vector{NTuple{3,Int}}(support_states[3]),
+    )
+    support_overlap = _pqs_multilayer_support_product_matrix(
+        combined_support_states,
+        combined_support_states,
+        metrics.x.overlap,
+        metrics.y.overlap,
+        metrics.z.overlap,
+    )
+    total_support_count = sum(support_counts)
+    final_dimension = sum(retained_counts)
+    pre_final_coefficients = zeros(Float64, total_support_count, final_dimension)
+    support_row_ranges = (
+        atom_contact_core = 1:support_counts[1],
+        shared_shell_1 = (support_counts[1] + 1):(support_counts[1] + support_counts[2]),
+        shared_shell_2 =
+            (support_counts[1] + support_counts[2] + 1):total_support_count,
+    )
+    retained_ranges = (
+        atom_contact_core = 1:retained_counts[1],
+        shared_shell_1 = (retained_counts[1] + 1):(retained_counts[1] + retained_counts[2]),
+        shared_shell_2 =
+            (retained_counts[1] + retained_counts[2] + 1):final_dimension,
+    )
+    pre_final_coefficients[support_row_ranges.atom_contact_core, retained_ranges.atom_contact_core] .=
+        local_blocks[1]
+    pre_final_coefficients[support_row_ranges.shared_shell_1, retained_ranges.shared_shell_1] .=
+        local_blocks[2]
+    pre_final_coefficients[support_row_ranges.shared_shell_2, retained_ranges.shared_shell_2] .=
+        local_blocks[3]
+    pre_final_overlap =
+        transpose(pre_final_coefficients) * support_overlap * pre_final_coefficients
+    pre_final_identity_error = norm(
+        pre_final_overlap -
+        Matrix{Float64}(I, final_dimension, final_dimension),
+        Inf,
+    )
+    diagnostics =
+        _pqs_source_box_route_driver_physical_gausslet_overlap_diagnostics(
+            pre_final_overlap;
+            identity_atol,
+            rank_atol,
+        )
+    isnothing(diagnostics.blocker) || return (;
+        object_kind = :pqs_physical_gausslet_final_basis,
+        status = :blocked_pqs_physical_gausslet_final_basis,
+        blocker = diagnostics.blocker,
+        final_retained_count = final_dimension,
+        final_overlap_identity_error = diagnostics.final_identity_error,
+        pre_final_overlap_identity_error = pre_final_identity_error,
+        support_counts,
+        retained_counts,
+        overlap_diagnostics = diagnostics.summary,
+    )
+    final_coefficients = pre_final_coefficients * diagnostics.cleanup
+    return (;
+        object_kind = :pqs_physical_gausslet_final_basis,
+        status = :available_pqs_physical_gausslet_final_basis,
+        blocker = nothing,
+        source_plan_object_kind = source_plan.object_kind,
+        support_order,
+        retained_order = support_order,
+        support_counts,
+        retained_counts,
+        support_row_ranges,
+        retained_ranges,
+        final_retained_count = final_dimension,
+        final_dimension,
+        pre_final_coefficients,
+        combined_lowdin_cleanup = diagnostics.cleanup,
+        final_coefficients,
+        pre_final_overlap_identity_error = pre_final_identity_error,
+        final_overlap_identity_error = diagnostics.final_identity_error,
+        final_overlap_is_identity = true,
+        overlap_diagnostics = diagnostics.summary,
+        transform_source_plan_provenance = source_plan.convention_labels,
+        final_basis_materialized = true,
+        h1_materialized = false,
+        h1_j_materialized = false,
+        density_interaction_materialized = false,
+        rhf_materialized = false,
+        exports_materialized = false,
+        public_api = false,
+        metadata = (;
+            source = :pqs_source_box_route_driver_physical_gausslet_final_basis,
+            support_decomposition = :shared_physical_gausslet_core_shell,
+            source_backed_adapter = true,
+            route_owned_authority = true,
+            self_overlap_stored_for_downstream = false,
+        ),
+    )
+end
+
+function _pqs_source_box_route_driver_diatomic_physical_gausslet_final_basis_payload(
+    route_skeleton,
+    recipe,
+    source_plan_payload = nothing,
+)
+    route_family =
+        hasproperty(route_skeleton, :route_family) ?
+        route_skeleton.route_family :
+        recipe.route_family
+    source_plan =
+        !isnothing(source_plan_payload) && hasproperty(source_plan_payload, :source_plan) ?
+        source_plan_payload.source_plan :
+        nothing
+    source_plan_status =
+        isnothing(source_plan) ? :not_available : source_plan.status
+    final_basis_requested =
+        get(recipe, :run_final_basis, false) ||
+        get(recipe, :run_h1, false) ||
+        get(recipe, :run_h1_j, false) ||
+        get(get(recipe, :private_rhf_inputs, (;)), :run_private_rhf, false)
+    final_basis = nothing
+    final_basis_status = :not_materialized_pqs_physical_gausslet_final_basis
+    available = Symbol[]
+    missing = Symbol[]
+
+    if route_family !== :pqs_source_box
+        status = :not_applicable_pqs_physical_gausslet_final_basis_non_pqs_route
+        blocker = nothing
+    elseif source_plan_status !==
+           :available_pqs_diatomic_physical_gausslet_core_shell_source_plan
+        status = :blocked_pqs_physical_gausslet_final_basis_payload
+        blocker = :missing_pqs_diatomic_physical_gausslet_source_plan
+        push!(missing, :pqs_diatomic_physical_gausslet_source_plan)
+    elseif !final_basis_requested
+        status = :not_requested_pqs_physical_gausslet_final_basis_payload
+        blocker = :physical_gausslet_final_basis_request_not_enabled
+        push!(available, :pqs_diatomic_physical_gausslet_source_plan)
+        push!(missing, :physical_gausslet_final_basis_request)
+    else
+        final_basis =
+            _pqs_source_box_route_driver_physical_gausslet_final_basis(
+                source_plan,
+            )
+        final_basis_status = final_basis.status
+        push!(available, :pqs_diatomic_physical_gausslet_source_plan)
+        if final_basis_status === :available_pqs_physical_gausslet_final_basis
+            status = :available_pqs_physical_gausslet_final_basis_payload
+            blocker = nothing
+            push!(available, :pqs_physical_gausslet_final_basis)
+            push!(missing, :physical_gausslet_h1_builder)
+        else
+            status = :blocked_pqs_physical_gausslet_final_basis_payload
+            blocker =
+                isnothing(final_basis.blocker) ?
+                :physical_gausslet_final_basis_blocked :
+                final_basis.blocker
+            push!(missing, :pqs_physical_gausslet_final_basis)
+        end
+    end
+
+    available_objects = Tuple(unique(available))
+    missing_objects = Tuple(unique(missing))
+    support_counts =
+        isnothing(source_plan) ? nothing : source_plan.summary.support_counts
+    retained_counts =
+        isnothing(source_plan) ? nothing : source_plan.summary.retained_counts
+    final_dimension =
+        !isnothing(final_basis) && hasproperty(final_basis, :final_dimension) ?
+        final_basis.final_dimension :
+        isnothing(source_plan) ? nothing : source_plan.final_dimension
+    final_overlap_identity_error =
+        !isnothing(final_basis) &&
+        hasproperty(final_basis, :final_overlap_identity_error) ?
+        final_basis.final_overlap_identity_error :
+        nothing
+    summary = (;
+        status,
+        blocker,
+        route_family,
+        source_plan_status,
+        final_basis_status,
+        support_order =
+            isnothing(source_plan) ? () : source_plan.support_order,
+        retained_order =
+            isnothing(source_plan) ? () : source_plan.retained_order,
+        support_counts,
+        retained_counts,
+        final_dimension,
+        final_overlap_identity_error,
+        pre_final_overlap_identity_error =
+            !isnothing(final_basis) &&
+            hasproperty(final_basis, :pre_final_overlap_identity_error) ?
+            final_basis.pre_final_overlap_identity_error :
+            nothing,
+        final_basis_materialized =
+            final_basis_status === :available_pqs_physical_gausslet_final_basis,
+        endpoint_blocker =
+            final_basis_status === :available_pqs_physical_gausslet_final_basis ?
+            :missing_physical_gausslet_h1_builder :
+            blocker,
+        h1_materialized = false,
+        h1_j_materialized = false,
+        density_interaction_materialized = false,
+        rhf_materialized = false,
+        exports_materialized = false,
+        public_api = false,
+        available_objects,
+        missing_objects,
+    )
+    metadata = (;
+        source =
+            :pqs_source_box_route_driver_diatomic_physical_gausslet_final_basis_payload,
+        route_kind = recipe.route_kind,
+        route_family,
+        source_plan_status,
+        final_basis_status,
+        support_decomposition = :shared_physical_gausslet_core_shell,
+        h2_221_diagnostic_source_plan_reused = false,
+    )
+    return _PQSDiatomicPhysicalGaussletFinalBasisPayload(
+        status,
+        blocker,
+        route_family,
+        source_plan,
+        source_plan_status,
+        final_basis,
+        final_basis_status,
+        available_objects,
         missing_objects,
         summary,
         metadata,

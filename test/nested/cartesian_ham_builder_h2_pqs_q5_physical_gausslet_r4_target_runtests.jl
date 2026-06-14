@@ -26,7 +26,7 @@ const _H2_PHYSICAL_PQS_INPUT =
                   :bond_aligned_diatomic_physical_gausslet_core_shell_pqs
             @test file["config/supplement_policy"] === :none
             @test file["config/comparison_ready"] == false
-            @test file["config/run_final_basis"] == false
+            @test file["config/run_final_basis"] == true
 
             @test file["parent/parent_axis_counts"] == (x = 9, y = 9, z = 15)
 
@@ -47,8 +47,7 @@ const _H2_PHYSICAL_PQS_INPUT =
                   :atom_contact_core_plus_pqs_shared_shells
             @test file["target/source_plan_status"] ===
                   :available_pqs_diatomic_physical_gausslet_core_shell_source_plan
-            @test file["target/source_plan_blocker"] ===
-                  :missing_physical_gausslet_final_basis_builder
+            @test file["target/source_plan_blocker"] === nothing
             @test file["target/source_plan_candidate_status"] ===
                   :available_physical_gausslet_source_plan_candidate
             @test file["target/source_plan_candidate_source"] ===
@@ -62,8 +61,8 @@ const _H2_PHYSICAL_PQS_INPUT =
                   :physical_gausslet_endpoint_target
             @test file["route/source_plan_status"] ===
                   :available_pqs_diatomic_physical_gausslet_core_shell_source_plan
-            @test file["route/final_basis_status"] !==
-                  :available_pqs_complete_core_shell_final_basis
+            @test file["route/final_basis_status"] ===
+                  :available_pqs_physical_gausslet_final_basis
             @test file["route/h1_status"] !==
                   :materialized_pqs_complete_core_shell_final_h1_solve
             @test file["route/h1_materialized"] == false
@@ -73,12 +72,12 @@ const _H2_PHYSICAL_PQS_INPUT =
             @test file["basis/retained_atom_core_interiors"] == true
             @test file["basis/source_plan_role"] ===
                   :atom_contact_core_plus_pqs_shared_shells
-            @test !haskey(file, "basis/final_dimension")
-            @test !haskey(file, "basis/final_overlap_identity_error")
+            @test file["basis/final_dimension"] == 463
+            @test file["basis/final_overlap_identity_error"] < 1e-10
 
             @test file["physics/endpoint_ready"] == false
             @test file["physics/endpoint_blocker"] ===
-                  :missing_physical_gausslet_final_basis_builder
+                  :missing_physical_gausslet_h1_builder
             @test !haskey(file, "physics/h1_lowest")
             @test file["comparison/ready"] == false
             @test file["private_rhf/requested"] == false
