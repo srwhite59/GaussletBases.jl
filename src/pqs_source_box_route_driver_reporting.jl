@@ -798,14 +798,18 @@ function _pqs_source_box_route_driver_write_pqs_diatomic_readiness_artifact!(
             source_plan_role = get(target, :source_plan_role, nothing),
             source_plan_status = get(target, :source_plan_status, nothing),
             source_plan_blocker = get(target, :source_plan_blocker, nothing),
-            source_plan_candidate_status =
-                get(target, :source_plan_candidate_status, nothing),
-            source_plan_candidate_source =
-                get(target, :source_plan_candidate_source, nothing),
-            source_plan_candidate_counts_match =
-                get(target, :source_plan_candidate_counts_match, nothing),
             source_plan_authority_status =
                 get(target, :source_plan_authority_status, nothing),
+            support_plan_status =
+                get(get(target, :support_plan, (;)), :status, nothing),
+            support_plan_blocker =
+                get(get(target, :support_plan, (;)), :blocker, nothing),
+            support_plan_authority =
+                get(get(target, :support_plan, (;)), :authority, nothing),
+            support_counts_generated =
+                get(get(target, :support_plan, (;)), :counts_generated, nothing),
+            support_counts_source =
+                get(get(target, :support_plan, (;)), :counts_source, nothing),
             source_backed_fixed_source_oracle_used =
                 get(target, :source_backed_fixed_source_oracle_used, nothing),
             retained_transform_authority =

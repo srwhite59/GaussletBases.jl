@@ -8378,14 +8378,6 @@ function _pqs_source_box_route_driver_physical_gausslet_target_report_fields(
             (;
                 source_plan_status = source_plan_payload.status,
                 source_plan_blocker = source_plan_payload.blocker,
-                source_plan_object_kind = source_plan_payload.summary.object_kind,
-                source_plan_missing_objects = source_plan_payload.missing_objects,
-                source_plan_candidate_status =
-                    source_plan_payload.summary.source_plan_candidate_status,
-                source_plan_candidate_source =
-                    source_plan_payload.summary.source_plan_candidate_source,
-                source_plan_candidate_counts_match =
-                    source_plan_payload.summary.source_plan_candidate_counts_match,
                 source_plan_authority_status =
                     source_plan_payload.summary.source_plan_authority_status,
             ),

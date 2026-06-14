@@ -745,6 +745,8 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_target_payload(
         isnothing(inventory) ? nothing : get(inventory, :secondary_blocker, nothing)
     source_plan_blocker =
         isnothing(inventory) ? nothing : get(inventory, :source_plan_blocker, nothing)
+    support_plan =
+        isnothing(inventory) ? nothing : get(inventory, :support_plan, nothing)
     supplement_policy =
         isnothing(inventory) ?
         :not_available :
@@ -784,6 +786,7 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_target_payload(
         primary_blocker,
         secondary_blocker,
         independent_source_plan_blocker = source_plan_blocker,
+        support_plan,
         final_basis_materialized = false,
         h1_materialized = false,
         h1_j_materialized = false,
@@ -1660,16 +1663,6 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_pay
         supplement_policy =
             isnothing(target_payload) ? :not_available : target_payload.supplement_policy,
         source_plan_materialized = !isnothing(source_plan),
-        private_route_owned = true,
-        supplemented = false,
-        rhf = false,
-        public_api = false,
-        source_plan_candidate_status =
-            isnothing(candidate_payload) ? :not_available : candidate_payload.status,
-        source_plan_candidate_source =
-            isnothing(candidate_payload) ? :not_available : candidate_payload.candidate_source,
-        source_plan_candidate_counts_match =
-            !isnothing(candidate_payload) && candidate_payload.counts_match,
         source_plan_authority_status =
             isnothing(source_plan) ?
             independent_target ?

@@ -384,3 +384,48 @@ Line-count / complexity note:
   added/deleted `154/166`, plus the 11-line new driver input, for net `-1`.
   This is acceptable but leaves little margin; pass 232 should continue deleting
   redundant readiness/report scaffold in the same surface.
+
+## Pass 232 - Independent H2 PQS Support-Plan Blocker
+
+Commit(s):
+- this commit - Accept independent H2 PQS support-plan blocker
+
+Summary:
+- Added a compact `support_plan` fingerprint to the independent H2 PQS target.
+  The pass intentionally did not generate support regions; it records
+  `support_plan_status = :blocked_independent_pqs_support_region_plan` and
+  `support_plan_blocker = :missing_independent_pqs_support_region_materializer`.
+- The support counts `(275, 578, 362)` remain target constants with
+  `support_counts_generated = false` and
+  `support_counts_source = :target_constants_pending_support_region_materializer`.
+- The pass removed stale source-plan-candidate aliases from the visible blocked
+  target report rather than adding another field cloud.
+
+Validation:
+- Doer: focused independent-input artifact/readiness check passed in about
+  `67.6s`; package load passed; `git diff --check` passed.
+- Manager: reviewed the diff, ran `git diff --check`, and ran package load in
+  about `0.66s`. Manager did not rerun the focused driver check.
+
+Goal advancement:
+- MT2: refined the next blocker from retained-rule work to the missing
+  support-region materializer.
+- MT3: preserved the common H2 support vocabulary while refusing to call target
+  constants generated support.
+- LT2: kept line pressure by deleting stale source-plan-candidate report aliases.
+
+Medium-goal update:
+- none.
+
+Risk / guardrail:
+- Do not treat `(275, 578, 362)` as route-generated until a materializer derives
+  actual support regions from geometry/shellification/lowering.
+
+Remaining blocker / next:
+- Audit the support-region materializer seam. The next pass should identify
+  whether existing shellification/lowering/PQS multilayer machinery can generate
+  atom-contact core and shared-shell support rows without WL/QW coefficient
+  matrices.
+
+Line-count / complexity note:
+- Scoped `src + test + bin` diff was `23` added / `24` deleted, net `-1`.
