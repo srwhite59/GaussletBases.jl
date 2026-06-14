@@ -57,6 +57,11 @@ white_lindsey_expansion = coulomb_gaussian_expansion(doacc = false)
 comparison_reference_label = nothing
 comparison_ready = true
 comparison_blocker = nothing
+artifact_role = nothing
+physics_endpoint_ready = nothing
+physics_endpoint_blocker = nothing
+retained_atom_core_interiors = nothing
+source_plan_role = nothing
 supplement_policy = nothing
 wl_h1_lowest = nothing
 wl_h1_self_coulomb = nothing
@@ -136,6 +141,8 @@ route_inputs = (; route_family, route_kind, route_shape, product_body_rule,
     white_lindsey_nesting_rule, white_lindsey_retained_rule,
     white_lindsey_operator_rule, white_lindsey_benchmark_role,
     comparison_reference_label, comparison_ready, comparison_blocker,
+    artifact_role, physics_endpoint_ready, physics_endpoint_blocker,
+    retained_atom_core_interiors, source_plan_role,
     supplement_policy, wl_h1_lowest, wl_h1_self_coulomb,
     run_final_basis, run_h1, run_h1_j, private_rhf_inputs, wl_rhf_total)
 materialization_inputs = (; materialize_route, probe_route_configured_one_center_materializer,

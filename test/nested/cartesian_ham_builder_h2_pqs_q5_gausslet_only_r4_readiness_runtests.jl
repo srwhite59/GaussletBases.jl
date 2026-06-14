@@ -50,6 +50,7 @@ end
                   "WL/QW H2 R=4 supplemented reference not used"
             @test !haskey(file, "comparison/wl_rhf_total")
             @test !haskey(file, "comparison/delta_rhf")
+            @test file["route/artifact_role"] === :source_box_diagnostic
 
             @test file["parent/parent_axis_counts"] == (x = 9, y = 9, z = 15)
             @test file["parent/parent_axis_counts_source"] ===
@@ -84,8 +85,14 @@ end
             @test file["route/h1_status"] ===
                   :materialized_pqs_complete_core_shell_final_h1_solve
             @test file["basis/final_dimension"] == 221
+            @test file["basis/retained_atom_core_interiors"] == false
+            @test file["basis/source_plan_role"] ===
+                  :boundary_source_box_diagnostic
             @test isfinite(file["basis/final_overlap_identity_error"])
             @test file["basis/final_overlap_identity_error"] < 1e-10
+            @test file["physics/endpoint_ready"] == false
+            @test file["physics/endpoint_blocker"] ===
+                  :retained_atom_core_interiors_missing
             @test isfinite(file["physics/h1_lowest"])
             @test file["physics/h1_hamiltonian_matrix_finite"] == true
             @test isfinite(file["physics/h1_hamiltonian_symmetry_error"])

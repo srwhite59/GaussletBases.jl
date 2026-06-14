@@ -24,6 +24,11 @@ supplement_policy = :none
 comparison_ready = false
 comparison_blocker = :supplemented_reference_not_comparable_to_gausslet_only
 comparison_reference_label = "WL/QW H2 R=4 supplemented reference not used"
+artifact_role = :source_box_diagnostic
+physics_endpoint_ready = false
+physics_endpoint_blocker = :retained_atom_core_interiors_missing
+retained_atom_core_interiors = false
+source_plan_role = :boundary_source_box_diagnostic
 
 run_final_basis = true
 run_h1 = true

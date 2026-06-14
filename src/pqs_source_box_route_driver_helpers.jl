@@ -1220,6 +1220,14 @@ function _pqs_source_box_route_driver_recipe_metadata(
             get(route_recipe, :comparison_reference_label, nothing),
         comparison_ready = get(route_recipe, :comparison_ready, true),
         comparison_blocker = get(route_recipe, :comparison_blocker, nothing),
+        artifact_role = get(route_recipe, :artifact_role, nothing),
+        physics_endpoint_ready =
+            get(route_recipe, :physics_endpoint_ready, nothing),
+        physics_endpoint_blocker =
+            get(route_recipe, :physics_endpoint_blocker, nothing),
+        retained_atom_core_interiors =
+            get(route_recipe, :retained_atom_core_interiors, nothing),
+        source_plan_role = get(route_recipe, :source_plan_role, nothing),
         supplement_policy = get(route_recipe, :supplement_policy, nothing),
         wl_h1_lowest = get(route_recipe, :wl_h1_lowest, nothing),
         wl_h1_self_coulomb = get(route_recipe, :wl_h1_self_coulomb, nothing),
@@ -6319,6 +6327,14 @@ function cartesian_recipe(route_inputs)
                 get(route_inputs, :comparison_reference_label, nothing),
             comparison_ready = get(route_inputs, :comparison_ready, true),
             comparison_blocker = get(route_inputs, :comparison_blocker, nothing),
+            artifact_role = get(route_inputs, :artifact_role, nothing),
+            physics_endpoint_ready =
+                get(route_inputs, :physics_endpoint_ready, nothing),
+            physics_endpoint_blocker =
+                get(route_inputs, :physics_endpoint_blocker, nothing),
+            retained_atom_core_interiors =
+                get(route_inputs, :retained_atom_core_interiors, nothing),
+            source_plan_role = get(route_inputs, :source_plan_role, nothing),
             supplement_policy = get(route_inputs, :supplement_policy, nothing),
             wl_h1_lowest = get(route_inputs, :wl_h1_lowest, nothing),
             wl_h1_self_coulomb = get(route_inputs, :wl_h1_self_coulomb, nothing),
