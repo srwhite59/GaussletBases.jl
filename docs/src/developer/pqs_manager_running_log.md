@@ -629,3 +629,48 @@ Remaining blocker / next:
 
 Line-count / complexity note:
 - No source/test/bin changes in this audit.
+
+## Pass 237 - Independent H2 PQS Retained-Rule Readiness
+
+Commit(s):
+- this commit - Add independent H2 PQS retained-rule readiness
+
+Summary:
+- Added a compact private retained-rule readiness plan for the independent H2
+  PQS route. The route now reports generated support counts `(275, 578, 362)`,
+  retained counts `(275, 98, 98)`, and expected readiness dimension `471`.
+- Per-unit authority is explicit: `:atom_contact_core` uses direct source modes,
+  while both shared shells use q=5 PQS boundary COMX product-mode retained
+  rules.
+- The remaining endpoint/source-plan blocker is now the single blocker
+  `:missing_independent_pqs_physical_source_plan_materializer`.
+
+Validation:
+- Doer: package load passed; focused independent-input artifact/readiness check
+  passed in about `82.2s`; `git diff --check` passed.
+- Manager: reviewed the diff, ran `git diff --check`, and ran package load in
+  about `0.65s`. Manager did not rerun the focused artifact check.
+
+Goal advancement:
+- MT2: moved independent H2 PQS from retained-rule audit to retained-rule
+  readiness metadata.
+- MT3: preserved common support vocabulary while using independent PQS retained
+  counts where WL/fake values are not route authority.
+- LT2/MT5: deleted stale route-skeleton and axis-count scaffold tests while
+  adding the new readiness plan.
+- LT5: kept fake-PQS/WL fixed-source coefficients out of the independent route.
+
+Medium-goal update:
+- none.
+
+Risk / guardrail:
+- This is still metadata/readiness only. Do not treat `471` as a final basis or
+  H1-ready endpoint; the source-plan materializer remains missing.
+
+Remaining blocker / next:
+- Audit the source-plan materializer seam before implementation, including the
+  atom-contact-core direct source-mode representation and the shared-shell q=5
+  source-box retained-rule descriptors.
+
+Line-count / complexity note:
+- Scoped `src + test + bin` diff was `173` added / `248` deleted, net `-75`.

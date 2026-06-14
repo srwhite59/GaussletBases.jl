@@ -588,7 +588,11 @@ function _pqs_source_box_route_driver_write_pqs_diatomic_readiness_artifact!(
         fake_pqs_artifact ?
         :fake_pqs_source_backed_wl_reproduction_not_independent_pqs :
         independent_pqs_artifact ?
-        :missing_independent_pqs_atom_contact_core_retained_rule :
+        get(
+            target,
+            :independent_source_plan_blocker,
+            :missing_independent_pqs_physical_source_plan_materializer,
+        ) :
         physical_target_artifact && physics_endpoint_ready === true ?
         nothing :
         physical_target_artifact ?
@@ -818,6 +822,28 @@ function _pqs_source_box_route_driver_write_pqs_diatomic_readiness_artifact!(
                 get(get(target, :support_plan, (;)), :missing_count, nothing),
             support_plan_outside_count =
                 get(get(target, :support_plan, (;)), :outside_count, nothing),
+            retained_rule_plan_status =
+                get(get(target, :retained_rule_plan, (;)), :status, nothing),
+            retained_rule_plan_blocker =
+                get(get(target, :retained_rule_plan, (;)), :blocker, nothing),
+            retained_rule_plan_authority =
+                get(get(target, :retained_rule_plan, (;)), :authority, nothing),
+            retained_counts_generated =
+                get(get(target, :retained_rule_plan, (;)), :retained_counts_generated, nothing),
+            retained_counts_source =
+                get(get(target, :retained_rule_plan, (;)), :retained_counts_source, nothing),
+            retained_rule_expected_final_dimension =
+                get(get(target, :retained_rule_plan, (;)), :expected_final_dimension, nothing),
+            retained_rule_authorities =
+                _pqs_source_box_route_driver_ordered_target_counts(
+                    get(get(target, :retained_rule_plan, (;)), :per_unit_authority, nothing),
+                    get(get(target, :retained_rule_plan, (;)), :retained_order, ()),
+                ),
+            retained_rule_transform_kinds =
+                _pqs_source_box_route_driver_ordered_target_counts(
+                    get(get(target, :retained_rule_plan, (;)), :per_unit_transform_kind, nothing),
+                    get(get(target, :retained_rule_plan, (;)), :retained_order, ()),
+                ),
             source_backed_fixed_source_oracle_used =
                 get(target, :source_backed_fixed_source_oracle_used, nothing),
             retained_transform_authority =

@@ -488,6 +488,87 @@ function _pqs_source_box_route_driver_independent_h2_support_region_plan(
     )
 end
 
+function _pqs_source_box_route_driver_independent_h2_retained_rule_plan(
+    support_plan,
+)
+    support_order = (:atom_contact_core, :shared_shell_1, :shared_shell_2)
+    blocked(blocker) = (;
+        object_kind = :pqs_independent_h2_core_shell_retained_rule_plan,
+        status = :blocked_independent_pqs_retained_rule_readiness_plan,
+        blocker,
+        authority = :independent_pqs_route_owned_retained_rule_readiness,
+        support_order,
+        support_counts = (;),
+        retained_order = (),
+        retained_counts = (;),
+        expected_final_dimension = nothing,
+        retained_counts_generated = false,
+        retained_counts_source = :retained_rule_plan_blocked,
+        per_unit_authority = (;),
+        missing_objects = (blocker,),
+    )
+    isnothing(support_plan) &&
+        return blocked(:missing_independent_pqs_support_region_plan)
+    support_plan.status === :available_independent_pqs_support_region_plan ||
+        return blocked(support_plan.blocker)
+    support_plan.support_order == support_order ||
+        return blocked(:independent_pqs_support_order_mismatch)
+    support_counts = support_plan.support_counts
+    Tuple(values(support_counts)) == (275, 578, 362) ||
+        return blocked(:independent_pqs_support_count_mismatch)
+
+    shared_shell_rule =
+        CartesianRawProductSources.pqs_boundary_product_mode_retained_rule(
+            (5, 5, 5);
+            source_key = :independent_h2_shared_shell_q5_source,
+            metadata = (;
+                route_unit_role = :shared_molecular_shell,
+                source = :independent_h2_retained_rule_readiness,
+            ),
+        )
+    retained_counts = (;
+        atom_contact_core = support_counts.atom_contact_core,
+        shared_shell_1 = shared_shell_rule.retained_count,
+        shared_shell_2 = shared_shell_rule.retained_count,
+    )
+    counts_match = Tuple(values(retained_counts)) == (275, 98, 98)
+    status =
+        counts_match ?
+        :available_independent_pqs_retained_rule_readiness_plan :
+        :blocked_independent_pqs_retained_rule_readiness_plan
+    blocker =
+        counts_match ? nothing : :independent_pqs_retained_rule_count_mismatch
+    return (;
+        object_kind = :pqs_independent_h2_core_shell_retained_rule_plan,
+        status,
+        blocker,
+        authority = :independent_pqs_route_owned_retained_rule_readiness,
+        support_order,
+        support_counts,
+        retained_order = support_order,
+        retained_counts,
+        expected_final_dimension = sum(values(retained_counts)),
+        retained_counts_generated = counts_match,
+        retained_counts_source = :route_owned_retained_rule_plan,
+        per_unit_authority = (;
+            atom_contact_core = :direct_source_modes,
+            shared_shell_1 = :pqs_boundary_comx_product_modes,
+            shared_shell_2 = :pqs_boundary_comx_product_modes,
+        ),
+        per_unit_transform_kind = (;
+            atom_contact_core = :identity_source_modes,
+            shared_shell_1 = shared_shell_rule.transform_kind,
+            shared_shell_2 = shared_shell_rule.transform_kind,
+        ),
+        shared_shell_source_mode_dims = shared_shell_rule.source_mode_dims,
+        shared_shell_retained_rule_kind = shared_shell_rule.retained_rule_kind,
+        missing_objects =
+            status === :available_independent_pqs_retained_rule_readiness_plan ?
+            (:independent_pqs_physical_source_plan_materializer,) :
+            (blocker,),
+    )
+end
+
 struct _PQSDiatomicPhysicalGaussletSupplementRequestPayload
     status::Symbol
     blocker
@@ -827,33 +908,60 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_target_payload(
     generated_support_available =
         !isnothing(generated_support_plan) &&
         generated_support_plan.status === :available_independent_pqs_support_region_plan
+    retained_rule_plan =
+        independent_target ?
+        _pqs_source_box_route_driver_independent_h2_retained_rule_plan(
+            generated_support_plan,
+        ) :
+        nothing
+    retained_rule_plan_available =
+        !isnothing(retained_rule_plan) &&
+        retained_rule_plan.status ===
+        :available_independent_pqs_retained_rule_readiness_plan
+    if independent_target && retained_rule_plan_available
+        status = :available_physical_gausslet_core_shell_target_inventory
+        blocker = nothing
+    end
     support_counts =
         generated_support_available ? generated_support_plan.support_counts :
         isnothing(inventory) ? (;) : inventory.support_counts
+    retained_units =
+        retained_rule_plan_available ? retained_rule_plan.retained_order :
+        retained_units
     retained_counts =
+        retained_rule_plan_available ? retained_rule_plan.retained_counts :
         isnothing(inventory) ? (;) : inventory.retained_counts
     retained_order =
+        retained_rule_plan_available ? retained_rule_plan.retained_order :
         isnothing(inventory) ? () : Tuple(inventory.retained_order)
     expected_final_dimension =
+        retained_rule_plan_available ? retained_rule_plan.expected_final_dimension :
         isnothing(inventory) ? nothing : inventory.expected_final_dimension
     retained_atom_core_interiors =
-        !isnothing(inventory) && inventory.retained_atom_core_interiors
+        retained_rule_plan_available ||
+        (!isnothing(inventory) && inventory.retained_atom_core_interiors)
     source_plan_role =
         isnothing(inventory) ?
         :not_available :
         inventory.source_plan_role
     source_backed_fixed_source_oracle_used =
         !isnothing(inventory) && get(inventory, :source_backed_fixed_source_oracle_used, false)
+    source_plan_blocker =
+        isnothing(inventory) ? nothing : get(inventory, :source_plan_blocker, nothing)
     retained_transform_authority =
+        retained_rule_plan_available ?
+        retained_rule_plan.authority :
         isnothing(inventory) ?
         :not_available :
         get(inventory, :retained_transform_authority, :not_available)
     primary_blocker =
+        retained_rule_plan_available ?
+        source_plan_blocker :
         isnothing(inventory) ? nothing : get(inventory, :primary_blocker, blocker)
     secondary_blocker =
+        retained_rule_plan_available ?
+        nothing :
         isnothing(inventory) ? nothing : get(inventory, :secondary_blocker, nothing)
-    source_plan_blocker =
-        isnothing(inventory) ? nothing : get(inventory, :source_plan_blocker, nothing)
     support_plan =
         !isnothing(generated_support_plan) ? generated_support_plan :
         isnothing(inventory) ? nothing : get(inventory, :support_plan, nothing)
@@ -866,6 +974,8 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_target_payload(
         (:physical_gausslet_core_shell_target_inventory,) :
         ()
     missing_objects =
+        independent_target && retained_rule_plan_available ?
+        retained_rule_plan.missing_objects :
         status === :available_physical_gausslet_core_shell_target_inventory ?
         (
             :physical_gausslet_source_plan_producer,
@@ -897,6 +1007,17 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_target_payload(
         secondary_blocker,
         independent_source_plan_blocker = source_plan_blocker,
         support_plan,
+        retained_rule_plan,
+        retained_rule_plan_status =
+            isnothing(retained_rule_plan) ? :not_available : retained_rule_plan.status,
+        retained_rule_plan_blocker =
+            isnothing(retained_rule_plan) ? nothing : retained_rule_plan.blocker,
+        retained_counts_generated =
+            !isnothing(retained_rule_plan) && retained_rule_plan.retained_counts_generated,
+        retained_counts_source =
+            isnothing(retained_rule_plan) ?
+            :not_available :
+            retained_rule_plan.retained_counts_source,
         final_basis_materialized = false,
         h1_materialized = false,
         h1_j_materialized = false,
@@ -1726,6 +1847,14 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_pay
             candidate_payload,
         ) :
         nothing
+    independent_source_plan_blocker =
+        !isnothing(target_payload) ?
+        get(
+            target_payload.summary,
+            :independent_source_plan_blocker,
+            :missing_independent_pqs_physical_source_plan_materializer,
+        ) :
+        :missing_independent_pqs_physical_source_plan_materializer
     status =
         isnothing(source_plan) ?
         :blocked_pqs_diatomic_physical_gausslet_core_shell_source_plan :
@@ -1734,7 +1863,7 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_pay
         !isnothing(source_plan) ?
         nothing :
         independent_target ?
-        :missing_independent_pqs_atom_contact_core_retained_rule :
+        independent_source_plan_blocker :
         target_available ?
         :missing_atom_contact_core_support_rows :
         :missing_physical_gausslet_target_inventory
@@ -1742,11 +1871,7 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_pay
         !isnothing(source_plan) ?
         () :
         independent_target ?
-        (
-            :independent_pqs_atom_contact_core_retained_rule,
-            :independent_pqs_shared_shell_2_retained_rule,
-            :independent_pqs_physical_source_plan_materializer,
-        ) :
+        (independent_source_plan_blocker,) :
         target_available ?
         (
             :atom_contact_core_support_rows,

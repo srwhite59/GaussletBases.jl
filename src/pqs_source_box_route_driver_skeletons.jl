@@ -112,7 +112,7 @@ function _pqs_source_box_route_driver_physical_gausslet_core_shell_skeleton(
         :available_physical_gausslet_core_shell_target_inventory
     target_blocker =
         independent_target ?
-        :missing_independent_pqs_atom_contact_core_retained_rule :
+        :missing_independent_pqs_physical_source_plan_materializer :
         nothing
     target_inventory = (;
         status = target_status,
@@ -137,8 +137,6 @@ function _pqs_source_box_route_driver_physical_gausslet_core_shell_skeleton(
         retained_transform_authority = :pqs_source_box_construction,
         primary_blocker = target_blocker,
         secondary_blocker =
-            independent_target ?
-            :missing_independent_pqs_shared_shell_2_retained_rule :
             nothing,
         source_plan_blocker =
             independent_target ?
@@ -150,17 +148,14 @@ function _pqs_source_box_route_driver_physical_gausslet_core_shell_skeleton(
         independent_target ?
         (independent_pqs_target_readiness = 0,) :
         (physical_gausslet_target = 0,)
-    pending_facts = (
+    pending_facts =
         independent_target ?
-        :independent_pqs_atom_contact_core_retained_rule :
-        :physical_gausslet_source_plan_producer,
-        independent_target ?
-        :independent_pqs_shared_shell_2_retained_rule :
-        :physical_gausslet_final_basis_builder,
-        independent_target ?
-        :independent_pqs_physical_source_plan_materializer :
-        :physical_gausslet_h1_builder,
-    )
+        (:independent_pqs_physical_source_plan_materializer,) :
+        (
+            :physical_gausslet_source_plan_producer,
+            :physical_gausslet_final_basis_builder,
+            :physical_gausslet_h1_builder,
+        )
 
     return (;
         object_kind =
@@ -201,10 +196,10 @@ function _pqs_source_box_route_driver_physical_gausslet_core_shell_skeleton(
             h1_materialized = false,
             h1_j_materialized = false,
             rhf_materialized = false,
-            retained_atom_core_interiors = !independent_target,
+            retained_atom_core_interiors = true,
             supplement_policy = :none,
             expected_final_dimension =
-                independent_target ? nothing : unit_inventory.retained_dimension,
+                independent_target ? 471 : unit_inventory.retained_dimension,
             source_backed_fixed_source_oracle_used = false,
             retained_transform_authority = :pqs_source_box_construction,
         ),
