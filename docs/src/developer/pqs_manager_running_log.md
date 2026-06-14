@@ -779,3 +779,45 @@ Line-count / complexity note:
   route-shadow/test surfaces and more than paid for new readiness descriptors.
 - MT6 Audit/classify old Cartesian flat paths: active. Classified flat/source-
   backed paths are being gated, quarantined, or deleted rather than promoted.
+
+## Pass 240 - Numerical Source-Plan Audit
+
+Commit(s):
+- this commit - Record independent H2 PQS numerical source-plan audit
+
+Summary:
+- No-edit audit recommended the next numerical object: shared-shell realization
+  coefficients for `:shared_shell_1` and `:shared_shell_2`, not a full combined
+  source plan or final basis.
+- The audit keeps `:atom_contact_core` as a direct identity-like descriptor for
+  now, avoiding a dense identity matrix before final-basis assembly.
+- Recommended the next blocker
+  `:missing_independent_pqs_shared_shell_realization_coefficients`, followed by
+  complete-core/shell source-plan assembly after the shared-shell payload exists.
+
+Validation:
+- Doer: read-only inspection only; no Julia commands or tests.
+- Manager: reviewed the audit and confirmed the worktree was clean except for
+  the tracked response file.
+
+Goal advancement:
+- MT2: identified the next numerical seam for independent H2 PQS.
+- LT5: kept old projected-shell machinery demoted to possible internal math
+  adapter, not route authority.
+- LT7: preserved staged validation rather than jumping to final basis/H1.
+
+Medium-goal update:
+- none.
+
+Risk / guardrail:
+- If `_nested_projected_q_shell_layer(...)` is reused, it must be fed by
+  route-owned independent support/source boxes and must not import fake/WL
+  fixed-source data.
+
+Remaining blocker / next:
+- Implement the shared-shell realization payload only. Keep complete source-plan
+  assembly, final basis, H1, H1-J, RHF, supplements, CR2, export, and public API
+  blocked.
+
+Line-count / complexity note:
+- No source/test/bin changes in this audit.
