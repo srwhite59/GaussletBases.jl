@@ -496,7 +496,8 @@ function _pqs_source_box_route_driver_write_pqs_diatomic_readiness_artifact!(
     system = report.system_metadata
     recipe.route_family === :pqs_source_box || return nothing
     length(system.atom_symbols) == 2 || return nothing
-    get(recipe, :supplement_policy, nothing) === :none || return nothing
+    supplement_policy = get(recipe, :supplement_policy, nothing)
+    supplement_policy in (:none, :mwg_residual_gto) || return nothing
 
     atom_locations = Tuple(Tuple(location) for location in system.atom_locations)
     bond_axis =
@@ -590,6 +591,17 @@ function _pqs_source_box_route_driver_write_pqs_diatomic_readiness_artifact!(
             private_rhf_final_density_one_step_consistency_status = nothing,
             physics_endpoint_blocker = nothing,
             supplement_policy = nothing,
+            supplement_preflight_status = :not_available,
+            supplement_preflight_blocker =
+                :missing_physical_gausslet_supplement_preflight_payload,
+            supplement_preflight_fixture_label = nothing,
+            supplement_preflight_retained_transform_kind = nothing,
+            supplement_preflight_gausslet_final_dimension = nothing,
+            supplement_preflight_required_fact_labels = (),
+            supplement_preflight_available_fact_labels = (),
+            supplement_preflight_missing_fact_labels = (),
+            supplement_preflight_matrices_materialized = false,
+            supplement_preflight_supplemented_values_materialized = false,
         ),
     )
     wl_reference_candidate_status =
@@ -700,10 +712,49 @@ function _pqs_source_box_route_driver_write_pqs_diatomic_readiness_artifact!(
         ("config", (; input_path = isnothing(input_path) ? "" : String(input_path), route_family = recipe.route_family, route_kind = recipe.route_kind, q = recipe.q, n_s = recipe.n_s, core_spacing = recipe.core_spacing, xmax_parallel = get(recipe, :xmax_parallel, nothing), xmax_transverse = get(recipe, :xmax_transverse, nothing), supplement_policy = recipe.supplement_policy, comparison_ready, run_final_basis = get(recipe, :run_final_basis, false))),
         ("comparison", (; ready = comparison_ready, blocker = comparison_blocker, reference_label = something(recipe.comparison_reference_label, ""), wl_reference_candidate_status, wl_reference_candidate_blocker = get(target, :wl_reference_candidate_blocker, nothing), wl_reference_final_dimension = get(target, :wl_reference_final_dimension, nothing), wl_reference_retained_transform_kind = get(target, :wl_reference_retained_transform_kind, nothing), wl_reference_supplement_policy = get(target, :wl_reference_supplement_policy, nothing), wl_reference_label = get(target, :wl_reference_label, ""), old_supplemented_wl_qw_scalar_references_blocked = get(target, :old_supplemented_wl_qw_scalar_references_blocked, nothing))),
         ("parent", (; parent_axis_counts = report.parent_contract.parent_axis_counts, parent_axis_counts_source = report.parent_contract.parent_axis_counts_source, parent_materialization_blocker = report.parent_contract.parent_materialization_blocker, parent_basis_object_available = report.parent_contract.parent_basis_object_available, parent_qw_basis_object_available = report.parent_contract.parent_qw_basis_object_available, parent_axis_bundle_object_available = report.parent_contract.parent_axis_bundle_object_available, parent_basis_object_type_label = report.parent_contract.parent_basis_object_type_label, parent_qw_basis_object_type_label = report.parent_contract.parent_qw_basis_object_type_label, parent_axis_bundle_object_type_label = report.parent_contract.parent_axis_bundle_object_type_label)),
-        ("route", (; artifact_role = get(recipe, :artifact_role, nothing), readiness_status = get(readiness, :status, :not_available), readiness_blocker = get(readiness, :blocker, nothing), source_plan_status = route_source_plan_status, final_basis_status = route_final_basis_status, h1_status = route_h1_status, h1_materialized = route_h1_materialized, h1_j_status = route_h1_j_status, h1_j_materialized = route_h1_j_materialized, private_rhf_input_contract_status = route_private_rhf_input_contract_status, private_rhf_execution_status = route_private_rhf_execution_status, ham_input_status = get(readiness, :ham_input_payload_status, :not_available), hamiltonian_handoff_status = get(readiness, :hamiltonian_handoff_payload_status, :not_available), private_rhf_materialized = get(target, :private_rhf_materialized, get(readiness, :rhf_materialized, false)), public_api = get(readiness, :public_api, false), exports_materialized = get(readiness, :exports_materialized, false), artifacts_materialized = get(readiness, :artifacts_materialized, false))),
+        ("route", (; artifact_role = get(recipe, :artifact_role, nothing), readiness_status = get(readiness, :status, :not_available), readiness_blocker = get(readiness, :blocker, nothing), source_plan_status = route_source_plan_status, final_basis_status = route_final_basis_status, h1_status = route_h1_status, h1_materialized = route_h1_materialized, h1_j_status = route_h1_j_status, h1_j_materialized = route_h1_j_materialized, private_rhf_input_contract_status = route_private_rhf_input_contract_status, private_rhf_execution_status = route_private_rhf_execution_status, supplement_preflight_status = get(target, :supplement_preflight_status, :not_available), supplement_preflight_blocker = get(target, :supplement_preflight_blocker, nothing), ham_input_status = get(readiness, :ham_input_payload_status, :not_available), hamiltonian_handoff_status = get(readiness, :hamiltonian_handoff_payload_status, :not_available), private_rhf_materialized = get(target, :private_rhf_materialized, get(readiness, :rhf_materialized, false)), public_api = get(readiness, :public_api, false), exports_materialized = get(readiness, :exports_materialized, false), artifacts_materialized = get(readiness, :artifacts_materialized, false))),
     )
         _pqs_source_box_route_driver_write_group!(file, group, values)
     end
+    _pqs_source_box_route_driver_write_group!(
+        file,
+        "supplement_preflight",
+        (;
+            status = get(target, :supplement_preflight_status, nothing),
+            blocker = get(target, :supplement_preflight_blocker, nothing),
+            fixture_label = get(target, :supplement_preflight_fixture_label, nothing),
+            support_counts =
+                _pqs_source_box_route_driver_ordered_target_counts(
+                    get(target, :support_counts, nothing),
+                    get(target, :support_units, ()),
+                ),
+            retained_counts =
+                _pqs_source_box_route_driver_ordered_target_counts(
+                    get(target, :retained_counts, nothing),
+                    get(target, :retained_order, ()),
+                ),
+            retained_order = get(target, :retained_order, ()),
+            retained_transform_kind =
+                get(target, :supplement_preflight_retained_transform_kind, nothing),
+            gausslet_final_dimension =
+                get(target, :supplement_preflight_gausslet_final_dimension, nothing),
+            supplement_policy = get(target, :supplement_policy, nothing),
+            required_fact_labels =
+                get(target, :supplement_preflight_required_fact_labels, ()),
+            available_fact_labels =
+                get(target, :supplement_preflight_available_fact_labels, ()),
+            missing_fact_labels =
+                get(target, :supplement_preflight_missing_fact_labels, ()),
+            matrices_materialized =
+                get(target, :supplement_preflight_matrices_materialized, false),
+            supplemented_values_materialized =
+                get(
+                    target,
+                    :supplement_preflight_supplemented_values_materialized,
+                    false,
+                ),
+        ),
+    )
     _pqs_source_box_route_driver_write_present_group!(file, "comparison", (; wl_h1_lowest, delta_h1 = _pqs_source_box_route_driver_optional_difference(h1_lowest_energy, wl_h1_lowest), wl_h1_self_coulomb, delta_h1_j = _pqs_source_box_route_driver_optional_difference(h1_j_self_coulomb, wl_h1_self_coulomb), wl_rhf_electronic_energy, delta_rhf_electronic_energy = _pqs_source_box_route_driver_optional_difference(pqs_rhf_electronic_energy, wl_rhf_electronic_energy), wl_rhf_nuclear_repulsion, pqs_rhf_total_with_nuclear_repulsion, wl_rhf_total_with_nuclear_repulsion, delta_rhf_total_with_nuclear_repulsion = _pqs_source_box_route_driver_optional_difference(pqs_rhf_total_with_nuclear_repulsion, wl_rhf_total_with_nuclear_repulsion)))
     _pqs_source_box_route_driver_write_present_group!(
         file,

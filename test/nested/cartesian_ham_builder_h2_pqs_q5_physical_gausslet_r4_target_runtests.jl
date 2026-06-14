@@ -27,6 +27,15 @@ const _H2_PHYSICAL_PQS_INPUT =
             @test file["config/supplement_policy"] === :none
             @test file["config/comparison_ready"] == true
             @test file["config/run_final_basis"] == true
+            @test file["supplement_preflight/status"] === :not_requested
+            @test file["supplement_preflight/blocker"] === nothing
+            @test file["supplement_preflight/retained_transform_kind"] === :pqs
+            @test file["supplement_preflight/gausslet_final_dimension"] == 463
+            @test file["supplement_preflight/supplement_policy"] === :none
+            @test Tuple(file["supplement_preflight/required_fact_labels"]) == ()
+            @test Tuple(file["supplement_preflight/missing_fact_labels"]) == ()
+            @test file["supplement_preflight/matrices_materialized"] == false
+            @test file["supplement_preflight/supplemented_values_materialized"] == false
             @test file["comparison/ready"] == true
             @test file["comparison/blocker"] === nothing
             @test file["comparison/reference_label"] ==
@@ -162,6 +171,86 @@ const _H2_PHYSICAL_PQS_INPUT =
                       isfinite(file["private_rhf/total_energy"])
             end
             @test file["private_rhf/requested"] == true
+        end
+    end
+
+    mktempdir() do dir
+        outfile = joinpath(dir, "h2_pqs_q5_physical_gausslet_r4_mwg_preflight.jld2")
+        saved_args = copy(ARGS)
+        empty!(ARGS)
+        append!(
+            ARGS,
+            [
+                _H2_PHYSICAL_PQS_INPUT,
+                "outfile=$(repr(outfile))",
+                "save_tsv=false",
+                "supplement_policy=:mwg_residual_gto",
+                "comparison_ready=false",
+                "comparison_blocker=:mwg_residual_gto_preflight_only",
+                "run_final_basis=false",
+                "run_h1=false",
+                "run_h1_j=false",
+                "run_private_rhf=false",
+            ],
+        )
+        try
+            include(_H2_PHYSICAL_PQS_DRIVER)
+        finally
+            empty!(ARGS)
+            append!(ARGS, saved_args)
+        end
+
+        @test isfile(outfile)
+        jldopen(outfile, "r") do file
+            @test file["config/supplement_policy"] === :mwg_residual_gto
+            @test file["route/supplement_preflight_status"] ===
+                  :blocked_pqs_physical_gausslet_mwg_residual_gto_preflight
+            @test file["route/supplement_preflight_blocker"] ===
+                  :missing_provider_gto_supplement_blocks
+            @test file["supplement_preflight/status"] ===
+                  :blocked_pqs_physical_gausslet_mwg_residual_gto_preflight
+            @test file["supplement_preflight/blocker"] ===
+                  :missing_provider_gto_supplement_blocks
+            @test file["supplement_preflight/fixture_label"] ===
+                  :h2_r4_physical_gausslet_q5
+            @test Tuple(file["supplement_preflight/support_counts"]) ==
+                  (275, 578, 362)
+            @test Tuple(file["supplement_preflight/retained_counts"]) ==
+                  (251, 98, 114)
+            @test Tuple(file["supplement_preflight/retained_order"]) ==
+                  (:atom_contact_core, :shared_shell_1, :shared_shell_2)
+            @test file["supplement_preflight/retained_transform_kind"] === :pqs
+            @test file["supplement_preflight/gausslet_final_dimension"] == 463
+            @test file["supplement_preflight/supplement_policy"] ===
+                  :mwg_residual_gto
+            @test Tuple(file["supplement_preflight/available_fact_labels"]) ==
+                  (
+                      :physical_gausslet_core_shell_target_inventory,
+                      :pqs_retained_transform_kind,
+                      :gausslet_only_final_dimension,
+                  )
+            @test Tuple(file["supplement_preflight/required_fact_labels"]) ==
+                  (
+                      :provider_gto_supplement_blocks,
+                      :mixed_gausslet_gto_blocks,
+                      :gto_gto_blocks,
+                      :combined_raw_moment_matrices,
+                      :residual_mwg_representation,
+                      :combined_density_density_readiness,
+                  )
+            @test Tuple(file["supplement_preflight/missing_fact_labels"]) ==
+                  (
+                      :missing_provider_gto_supplement_blocks,
+                      :missing_mixed_gausslet_gto_blocks,
+                      :missing_gto_gto_blocks,
+                      :missing_combined_raw_moment_matrices,
+                      :missing_residual_mwg_representation,
+                      :missing_combined_density_density_readiness,
+                  )
+            @test file["supplement_preflight/matrices_materialized"] == false
+            @test file["supplement_preflight/supplemented_values_materialized"] == false
+            @test file["route/source_plan_status"] ===
+                  :blocked_pqs_diatomic_physical_gausslet_core_shell_source_plan
         end
     end
 end

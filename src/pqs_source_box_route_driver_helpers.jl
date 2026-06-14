@@ -7620,6 +7620,10 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
             route_skeleton,
             recipe,
         )
+    diatomic_physical_gausslet_supplement_preflight_payload =
+        _pqs_source_box_route_driver_diatomic_physical_gausslet_supplement_preflight_payload(
+            diatomic_physical_gausslet_target_payload,
+        )
     diatomic_physical_gausslet_source_plan_candidate_payload =
         _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_candidate_payload(
             parent,
@@ -7792,6 +7796,7 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
         pairs,
         low_order_assembly,
         diatomic_physical_gausslet_target_payload,
+        diatomic_physical_gausslet_supplement_preflight_payload,
         diatomic_physical_gausslet_source_plan_candidate_payload,
         diatomic_physical_gausslet_source_plan_payload,
         diatomic_physical_gausslet_final_basis_payload,
@@ -8233,6 +8238,10 @@ function _pqs_source_box_route_driver_physical_gausslet_target_report_fields(
         hasproperty(assembly, :diatomic_physical_gausslet_target_payload) ?
         assembly.diatomic_physical_gausslet_target_payload :
         nothing
+    supplement_preflight_payload =
+        hasproperty(assembly, :diatomic_physical_gausslet_supplement_preflight_payload) ?
+        assembly.diatomic_physical_gausslet_supplement_preflight_payload :
+        nothing
     source_plan_payload =
         hasproperty(assembly, :diatomic_physical_gausslet_source_plan_payload) ?
         assembly.diatomic_physical_gausslet_source_plan_payload :
@@ -8274,8 +8283,38 @@ function _pqs_source_box_route_driver_physical_gausslet_target_report_fields(
             h1_materialized = false,
             h1_j_materialized = false,
             rhf_materialized = false,
+            supplement_preflight_status = :not_available,
+            supplement_preflight_blocker = :missing_physical_gausslet_supplement_preflight_payload,
+            supplement_preflight_required_fact_labels = (),
+            supplement_preflight_available_fact_labels = (),
+            supplement_preflight_missing_fact_labels = (),
         ) :
         payload.summary
+    if !isnothing(supplement_preflight_payload)
+        preflight_summary = supplement_preflight_payload.summary
+        summary = merge(
+            summary,
+            (;
+                supplement_preflight_status = preflight_summary.status,
+                supplement_preflight_blocker = preflight_summary.blocker,
+                supplement_preflight_fixture_label = preflight_summary.fixture_label,
+                supplement_preflight_retained_transform_kind =
+                    preflight_summary.retained_transform_kind,
+                supplement_preflight_gausslet_final_dimension =
+                    preflight_summary.gausslet_final_dimension,
+                supplement_preflight_required_fact_labels =
+                    preflight_summary.required_fact_labels,
+                supplement_preflight_available_fact_labels =
+                    preflight_summary.available_fact_labels,
+                supplement_preflight_missing_fact_labels =
+                    preflight_summary.missing_fact_labels,
+                supplement_preflight_matrices_materialized =
+                    preflight_summary.matrices_materialized,
+                supplement_preflight_supplemented_values_materialized =
+                    preflight_summary.supplemented_values_materialized,
+            ),
+        )
+    end
     if !isnothing(source_plan_payload)
         summary = merge(
             summary,

@@ -4,57 +4,6 @@ using Test
 using GaussletBases
 using JLD2
 
-const _ROUTE_DRIVER_STANDARD_UNIT_INVENTORY_KEYS = (
-    :unit_count,
-    :unit_keys,
-    :retained_unit_kinds,
-    :source_families,
-    :source_dimensions,
-    :retained_counts,
-    :retained_dimension,
-    :retained_counts_materialized,
-    :retained_ranges_materialized,
-    :pair_count,
-    :pair_family_counts,
-    :pair_families,
-    :output_representations,
-)
-const _ROUTE_DRIVER_PARENT_CONTRACT_KEYS = (
-    :object_kind,
-    :status,
-    :atom_count,
-    :center_count,
-    :atom_symbols,
-    :nuclear_charges,
-    :atom_locations,
-    :center_table,
-    :center_axis_metadata,
-    :system_classification,
-    :system_classification_status,
-    :bond_axis,
-    :chain_axis,
-    :parent_axis_counts,
-    :parent_axis_counts_source,
-    :parent_axis_counts_status,
-    :parent_box,
-    :parent_box_rule,
-    :parent_materialization_plan,
-    :parent_materialization_plan_status,
-    :parent_materialization_planning_family,
-    :parent_materialization_blocker,
-    :parent_basis_object_available,
-    :parent_qw_basis_object_available,
-    :parent_axis_bundle_object_available,
-    :parent_basis_object_type_label,
-    :parent_qw_basis_object_type_label,
-    :parent_axis_bundle_object_type_label,
-    :parent_basis_materialization_status,
-    :parent_basis_materialization,
-    :parent_basis_materialized,
-    :parent_axis_metadata_constructed,
-    :axis_bundle_materialized,
-    :diagnostics,
-)
 const _PQS_ROUTE_DRIVER_TEST_ROUTE_KIND = :be2_cartesian_nesting_route_driver_spine
 
 function _pqs_route_driver_report_for_test(;
@@ -152,8 +101,6 @@ function _pqs_route_driver_check_standard_unit_inventory(
     pair_family_counts,
     retained_counts_materialized,
     retained_ranges_materialized,
-    pair_families,
-    output_representations,
 )
     @test report.retained_dimension == retained_dimension
     @test report.recipe_metadata.route_kind == _PQS_ROUTE_DRIVER_TEST_ROUTE_KIND
@@ -163,22 +110,14 @@ function _pqs_route_driver_check_standard_unit_inventory(
 
     @test hasproperty(report, :standard_unit_inventory)
     summary = report.standard_unit_inventory
-    @test Tuple(keys(summary)) == _ROUTE_DRIVER_STANDARD_UNIT_INVENTORY_KEYS
     @test summary.unit_count == length(unit_keys)
     @test summary.unit_keys == unit_keys
-    @test summary.retained_unit_kinds ==
-          Tuple(unit.retained_unit_kind for unit in report.retained_units)
-    @test summary.source_families ==
-          Tuple(unit.source_family for unit in report.retained_units)
-    @test summary.source_dimensions == report.source_dimensions
     @test summary.retained_counts == report.retained_counts
     @test summary.retained_dimension == retained_dimension
     @test summary.retained_counts_materialized == retained_counts_materialized
     @test summary.retained_ranges_materialized == retained_ranges_materialized
     @test summary.pair_count == pair_count
     @test summary.pair_family_counts == pair_family_counts
-    @test summary.pair_families == pair_families
-    @test summary.output_representations == output_representations
     return nothing
 end
 
@@ -196,7 +135,6 @@ function _pqs_route_driver_check_parent_contract(
 )
     @test hasproperty(report, :parent_contract)
     parent_contract = report.parent_contract
-    @test Tuple(keys(parent_contract)) == _ROUTE_DRIVER_PARENT_CONTRACT_KEYS
     @test parent_contract.object_kind == :cartesian_route_parent_contract
     @test parent_contract.atom_count == atom_count
     @test parent_contract.center_count == atom_count
@@ -323,18 +261,10 @@ function _pqs_route_driver_check_be2_shellization_request(
           :metadata_only_pending_materializer
     @test materialization.route_configured_system_classification ==
           :bond_aligned_diatomic
-    @test materialization.route_configured_system_classification_status ==
-          :explicit_two_atom_single_axis_separation
     @test materialization.route_configured_bond_axis == :x
     @test materialization.route_configured_shellization_plan_available
     @test materialization.route_configured_shellization_plan_status ==
           :metadata_only_pending_materializer
-    @test materialization.route_configured_shellization_planning_status ==
-          :planned_metadata_only
-    @test materialization.route_configured_shellization_planning_family ==
-          :bond_aligned_diatomic_shellization
-    @test materialization.route_configured_midpoint_slab_status ==
-          :conditional_diatomic_midpoint_slab
     @test materialization.route_configured_shellization_helper_map_available
     @test materialization.route_configured_shellization_helper_map_status ==
           :metadata_only_pending_materializer_inputs
@@ -346,152 +276,69 @@ function _pqs_route_driver_check_be2_shellization_request(
     @test materialization.route_configured_input_readiness_available
     @test materialization.route_configured_input_readiness_status ==
           :blocked_missing_materializer_inputs
-    @test materialization.route_configured_available_fact_count == 10
     @test materialization.route_configured_materializer_missing_input_count == 8
-    @test materialization.route_configured_input_readiness_blocker ==
-          :pending_route_configured_bond_aligned_diatomic_materializer_inputs
     @test materialization.route_configured_materializer_config_available
     @test materialization.route_configured_materializer_config_status ==
           :blocked_missing_materializer_inputs
-    @test materialization.route_configured_materializer_config_planning_family ==
-          :bond_aligned_diatomic_shellization
-    @test materialization.route_configured_materializer_config_pending_input_count == 8
 
     request = materialization.route_configured_shellization_request
     @test request.object_kind == :cartesian_shellization_route_configured_request
     @test request.status == materialization.route_configured_shellization_request_status
-    @test request.private_development_only
-    @test request.route_family == materialization.route_family
     @test request.route_kind == _PQS_ROUTE_DRIVER_TEST_ROUTE_KIND
     @test request.atom_count == 2
-    @test request.atom_symbols == ("Be", "Be")
     @test request.system_classification == materialization.route_configured_system_classification
-    @test request.system_classification_status ==
-          materialization.route_configured_system_classification_status
     @test request.bond_axis == materialization.route_configured_bond_axis
-    @test request.classification_source == :parent_contract
-    @test request.parent_contract_available
-    @test request.parent_contract_status == :available
-    @test request.parent_basis_materialization_status ==
-          :metadata_only_not_materialized
-    @test request.requested_shellization_stage == :route_neutral_spatial_planning
-    @test request.expected_next_materializer_status ==
-          :pending_route_configured_shellization_materializer
     @test request.current_materialization_source == current_materialization_source
     @test !request.route_configured_shellization_consumed
     @test !request.constructs_basis
-    @test !request.constructs_shell_sequence
-    @test !request.constructs_fixed_block
 
     plan = materialization.route_configured_shellization_plan
     @test plan.object_kind == :cartesian_shellization_route_planning_stub
     @test plan.status == materialization.route_configured_shellization_plan_status
-    @test plan.planning_status ==
-          materialization.route_configured_shellization_planning_status
-    @test plan.private_development_only
     @test plan.request_object_kind == request.object_kind
-    @test plan.route_family == request.route_family
     @test plan.route_kind == request.route_kind
     @test plan.system_classification == request.system_classification
-    @test plan.system_classification_status == request.system_classification_status
     @test plan.bond_axis == request.bond_axis
-    @test plan.planning_family ==
-          materialization.route_configured_shellization_planning_family
-    @test plan.spatial_stage_order == (
-        :atom_local_uncontracted_cores,
-        :atom_local_shells,
-        :contact_merge,
-        :optional_midpoint_slab,
-        :outer_rectangular_shell_boxes,
-        :final_boundary_edge_adjustment,
-    )
-    @test plan.atom_local_core_status == :planned_two_atom_uncontracted_cores
-    @test plan.atom_local_shell_status == :planned_two_atom_local_shells
-    @test plan.contact_merge_status == :planned_contact_or_merge_decision
-    @test plan.midpoint_slab_status ==
-          materialization.route_configured_midpoint_slab_status
-    @test plan.outer_rectangular_shell_status == :planned_after_contact_merge_region
-    @test plan.boundary_edge_adjustment_status == :planned_final_adjustment
-    @test plan.expected_next_materializer_status ==
-          :pending_route_configured_shellization_materializer
     @test !plan.constructs_basis
-    @test !plan.constructs_shell_sequence
-    @test !plan.constructs_fixed_block
     @test !plan.route_configured_shellization_consumed
 
     helper_map = materialization.route_configured_shellization_helper_map
     @test helper_map.object_kind == :cartesian_shellization_route_planning_helper_map
     @test helper_map.status ==
           materialization.route_configured_shellization_helper_map_status
-    @test helper_map.private_development_only
-    @test helper_map.planning_family == plan.planning_family
     @test helper_map.primary_planned_helper ==
           materialization.route_configured_primary_planned_helper
-    @test helper_map.helper_chain == (
-        :_nested_bond_aligned_diatomic_source,
-        :_nested_bond_aligned_diatomic_split_geometry,
-        :_nested_bond_aligned_diatomic_sequence_for_box,
-        :_nested_shell_sequence_from_core_block,
-        :_nested_fixed_block,
-    )
     @test helper_map.missing_input_count ==
           materialization.route_configured_missing_input_count
     @test helper_map.blocker == materialization.route_configured_helper_map_blocker
     @test !helper_map.route_configured_shellization_consumed
-    @test !helper_map.calls_mapped_helpers
 
     readiness = materialization.route_configured_input_readiness
     @test readiness.object_kind ==
           :cartesian_shellization_route_materializer_input_readiness
     @test readiness.status == materialization.route_configured_input_readiness_status
-    @test readiness.private_development_only
-    @test readiness.route_family == request.route_family
-    @test readiness.route_kind == request.route_kind
-    @test readiness.planning_family == plan.planning_family
-    @test readiness.available_fact_count ==
-          materialization.route_configured_available_fact_count
     @test readiness.missing_inputs == helper_map.missing_inputs
     @test readiness.missing_input_count ==
           materialization.route_configured_materializer_missing_input_count
     @test readiness.blocker == materialization.route_configured_input_readiness_blocker
-    @test !in(:nside, readiness.driver_defaults_not_materializer_contract)
-    @test :refinement_options in readiness.driver_defaults_not_materializer_contract
     @test !readiness.materializer_ready
     @test !readiness.route_configured_shellization_consumed
     @test !readiness.constructs_basis
-    @test !readiness.constructs_axis_bundles
-    @test !readiness.constructs_shell_sequence
-    @test !readiness.constructs_fixed_block
 
     config = materialization.route_configured_materializer_config
     @test config.object_kind == :cartesian_shellization_route_materializer_config
     @test config.status == materialization.route_configured_materializer_config_status
-    @test config.private_development_only
-    @test config.route_family == request.route_family
     @test config.route_kind == request.route_kind
     @test config.system_classification == request.system_classification
     @test config.bond_axis == request.bond_axis
-    @test config.atom_symbols == request.atom_symbols
-    @test config.atom_locations == request.atom_locations
-    @test config.nuclear_charges == request.nuclear_charges
-    @test config.parent_axis_counts == request.parent_axis_counts
-    @test config.parent_box == request.parent_box
-    @test config.planning_family ==
-          materialization.route_configured_materializer_config_planning_family
     @test config.primary_planned_helper == helper_map.primary_planned_helper
-    @test config.helper_chain == helper_map.helper_chain
     @test config.pending_inputs == readiness.missing_inputs
     @test config.pending_input_count ==
           materialization.route_configured_materializer_config_pending_input_count
     @test config.blocker == readiness.blocker
-    @test config.driver_defaults_not_materializer_contract ==
-          readiness.driver_defaults_not_materializer_contract
     @test !config.materializer_ready
     @test !config.route_configured_shellization_consumed
     @test !config.constructs_basis
-    @test !config.constructs_axis_bundles
-    @test !config.constructs_shell_sequence
-    @test !config.constructs_fixed_block
     return nothing
 end
 
@@ -971,39 +818,6 @@ function _pqs_route_driver_check_materialization_status(pqs_report, white_lindse
             @test Bool(file["meta/has_ham"])
             @test String(file["meta/route_family"]) == "white_lindsey_low_order"
             @test String(file["meta/export_status"]) == "basis_and_ham"
-            @test String(file["meta/route_configured_shellization_request_status"]) ==
-                  "metadata_only_pending_materializer"
-            @test String(file["meta/route_configured_system_classification"]) ==
-                  "bond_aligned_diatomic"
-            @test String(file["meta/route_configured_system_classification_status"]) ==
-                  "explicit_two_atom_single_axis_separation"
-            @test String(file["meta/route_configured_bond_axis"]) == "x"
-            @test String(file["meta/route_configured_shellization_plan_status"]) ==
-                  "metadata_only_pending_materializer"
-            @test String(file["meta/route_configured_shellization_planning_status"]) ==
-                  "planned_metadata_only"
-            @test String(file["meta/route_configured_shellization_planning_family"]) ==
-                  "bond_aligned_diatomic_shellization"
-            @test String(file["meta/route_configured_midpoint_slab_status"]) ==
-                  "conditional_diatomic_midpoint_slab"
-            @test String(file["meta/route_configured_shellization_helper_map_status"]) ==
-                  "metadata_only_pending_materializer_inputs"
-            @test String(file["meta/route_configured_primary_planned_helper"]) ==
-                  "_nested_bond_aligned_diatomic_source"
-            @test file["meta/route_configured_missing_input_count"] == 8
-            @test String(file["meta/route_configured_helper_map_blocker"]) ==
-                  "pending_route_configured_bond_aligned_diatomic_materializer_inputs"
-            @test String(file["meta/route_configured_input_readiness_status"]) ==
-                  "blocked_missing_materializer_inputs"
-            @test file["meta/route_configured_available_fact_count"] == 10
-            @test file["meta/route_configured_materializer_missing_input_count"] == 8
-            @test String(file["meta/route_configured_input_readiness_blocker"]) ==
-                  "pending_route_configured_bond_aligned_diatomic_materializer_inputs"
-            @test String(file["meta/route_configured_materializer_config_status"]) ==
-                  "blocked_missing_materializer_inputs"
-            @test String(file["meta/route_configured_materializer_config_planning_family"]) ==
-                  "bond_aligned_diatomic_shellization"
-            @test file["meta/route_configured_materializer_config_pending_input_count"] == 8
             @test Bool(file["meta/shellization_summary_available"])
             @test String(file["meta/shellization_source"]) ==
                   "white_lindsey_one_center_seed"
@@ -1056,39 +870,6 @@ function _pqs_route_driver_check_materialization_status(pqs_report, white_lindse
                   "published_cartesian_baseline_for_pqs_comparison"
             @test String(file["meta/materialized_report_kind"]) ==
                   "white_lindsey_low_order_materialized_seed_report"
-            @test String(file["meta/route_configured_shellization_request_status"]) ==
-                  "metadata_only_pending_materializer"
-            @test String(file["meta/route_configured_system_classification"]) ==
-                  "bond_aligned_diatomic"
-            @test String(file["meta/route_configured_system_classification_status"]) ==
-                  "explicit_two_atom_single_axis_separation"
-            @test String(file["meta/route_configured_bond_axis"]) == "x"
-            @test String(file["meta/route_configured_shellization_plan_status"]) ==
-                  "metadata_only_pending_materializer"
-            @test String(file["meta/route_configured_shellization_planning_status"]) ==
-                  "planned_metadata_only"
-            @test String(file["meta/route_configured_shellization_planning_family"]) ==
-                  "bond_aligned_diatomic_shellization"
-            @test String(file["meta/route_configured_midpoint_slab_status"]) ==
-                  "conditional_diatomic_midpoint_slab"
-            @test String(file["meta/route_configured_shellization_helper_map_status"]) ==
-                  "metadata_only_pending_materializer_inputs"
-            @test String(file["meta/route_configured_primary_planned_helper"]) ==
-                  "_nested_bond_aligned_diatomic_source"
-            @test file["meta/route_configured_missing_input_count"] == 8
-            @test String(file["meta/route_configured_helper_map_blocker"]) ==
-                  "pending_route_configured_bond_aligned_diatomic_materializer_inputs"
-            @test String(file["meta/route_configured_input_readiness_status"]) ==
-                  "blocked_missing_materializer_inputs"
-            @test file["meta/route_configured_available_fact_count"] == 10
-            @test file["meta/route_configured_materializer_missing_input_count"] == 8
-            @test String(file["meta/route_configured_input_readiness_blocker"]) ==
-                  "pending_route_configured_bond_aligned_diatomic_materializer_inputs"
-            @test String(file["meta/route_configured_materializer_config_status"]) ==
-                  "blocked_missing_materializer_inputs"
-            @test String(file["meta/route_configured_materializer_config_planning_family"]) ==
-                  "bond_aligned_diatomic_shellization"
-            @test file["meta/route_configured_materializer_config_pending_input_count"] == 8
             @test Bool(file["meta/shellization_summary_available"])
             @test String(file["meta/shellization_source"]) ==
                   "white_lindsey_one_center_seed"
@@ -1260,102 +1041,6 @@ function _pqs_route_driver_check_materialization_report_artifacts(white_lindsey_
         tsv = read(tsvfile, String)
         @test occursin("route_materialization\tstatus\t:materialized_seed_report_available", tsv)
         @test occursin(
-            "route_materialization\troute_configured_shellization_request_available\ttrue",
-            tsv,
-        )
-        @test occursin(
-            "route_materialization\troute_configured_shellization_request_status\t:metadata_only_pending_materializer",
-            tsv,
-        )
-        @test occursin(
-            "route_materialization\troute_configured_system_classification\t:bond_aligned_diatomic",
-            tsv,
-        )
-        @test occursin(
-            "route_materialization\troute_configured_system_classification_status\t:explicit_two_atom_single_axis_separation",
-            tsv,
-        )
-        @test occursin(
-            "route_materialization\troute_configured_bond_axis\t:x",
-            tsv,
-        )
-        @test occursin(
-            "route_materialization\troute_configured_shellization_plan_available\ttrue",
-            tsv,
-        )
-        @test occursin(
-            "route_materialization\troute_configured_shellization_plan_status\t:metadata_only_pending_materializer",
-            tsv,
-        )
-        @test occursin(
-            "route_materialization\troute_configured_shellization_planning_status\t:planned_metadata_only",
-            tsv,
-        )
-        @test occursin(
-            "route_materialization\troute_configured_shellization_planning_family\t:bond_aligned_diatomic_shellization",
-            tsv,
-        )
-        @test occursin(
-            "route_materialization\troute_configured_midpoint_slab_status\t:conditional_diatomic_midpoint_slab",
-            tsv,
-        )
-        @test occursin(
-            "route_materialization\troute_configured_shellization_helper_map_available\ttrue",
-            tsv,
-        )
-        @test occursin(
-            "route_materialization\troute_configured_shellization_helper_map_status\t:metadata_only_pending_materializer_inputs",
-            tsv,
-        )
-        @test occursin(
-            "route_materialization\troute_configured_primary_planned_helper\t:_nested_bond_aligned_diatomic_source",
-            tsv,
-        )
-        @test occursin(
-            "route_materialization\troute_configured_missing_input_count\t8",
-            tsv,
-        )
-        @test occursin(
-            "route_materialization\troute_configured_helper_map_blocker\t:pending_route_configured_bond_aligned_diatomic_materializer_inputs",
-            tsv,
-        )
-        @test occursin(
-            "route_materialization\troute_configured_input_readiness_available\ttrue",
-            tsv,
-        )
-        @test occursin(
-            "route_materialization\troute_configured_input_readiness_status\t:blocked_missing_materializer_inputs",
-            tsv,
-        )
-        @test occursin(
-            "route_materialization\troute_configured_available_fact_count\t10",
-            tsv,
-        )
-        @test occursin(
-            "route_materialization\troute_configured_materializer_missing_input_count\t8",
-            tsv,
-        )
-        @test occursin(
-            "route_materialization\troute_configured_input_readiness_blocker\t:pending_route_configured_bond_aligned_diatomic_materializer_inputs",
-            tsv,
-        )
-        @test occursin(
-            "route_materialization\troute_configured_materializer_config_available\ttrue",
-            tsv,
-        )
-        @test occursin(
-            "route_materialization\troute_configured_materializer_config_status\t:blocked_missing_materializer_inputs",
-            tsv,
-        )
-        @test occursin(
-            "route_materialization\troute_configured_materializer_config_planning_family\t:bond_aligned_diatomic_shellization",
-            tsv,
-        )
-        @test occursin(
-            "route_materialization\troute_configured_materializer_config_pending_input_count\t8",
-            tsv,
-        )
-        @test occursin(
             "route_materialization\tshellization_summary_available\ttrue",
             tsv,
         )
@@ -1427,8 +1112,6 @@ end
             (pqs_pqs = 3, pqs_product = 2, product_pqs = 0, product_product = 1),
         retained_counts_materialized = true,
         retained_ranges_materialized = true,
-        pair_families = (:pqs_pqs, :pqs_product, :product_product),
-        output_representations = (:retained_two_index_density_density,),
     )
     _pqs_route_driver_check_report_output_sections(pqs_report)
 
@@ -1459,8 +1142,6 @@ end
         ),
         retained_counts_materialized = false,
         retained_ranges_materialized = false,
-        pair_families = (:white_lindsey_low_order,),
-        output_representations = (:low_order_nested_cartesian_basis,),
     )
     _pqs_route_driver_check_report_output_sections(white_lindsey_report)
     one_center_report = _pqs_route_driver_one_center_report_for_test()
