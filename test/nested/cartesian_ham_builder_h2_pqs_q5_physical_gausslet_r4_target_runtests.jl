@@ -66,7 +66,9 @@ const _H2_PHYSICAL_PQS_INPUT =
             @test file["route/h1_status"] ===
                   :materialized_pqs_physical_gausslet_h1_solve
             @test file["route/h1_materialized"] == true
-            @test file["route/h1_j_materialized"] == false
+            @test file["route/h1_j_status"] ===
+                  :materialized_pqs_physical_gausslet_h1_j_payload
+            @test file["route/h1_j_materialized"] == true
             @test file["route/private_rhf_materialized"] == false
 
             @test file["basis/retained_atom_core_interiors"] == true
@@ -77,11 +79,25 @@ const _H2_PHYSICAL_PQS_INPUT =
 
             @test file["physics/endpoint_ready"] == false
             @test file["physics/endpoint_blocker"] ===
-                  :missing_physical_gausslet_h1_j_builder
+                  :missing_physical_gausslet_rhf_or_solver_contract
             @test isfinite(file["physics/h1_lowest"])
             @test file["physics/h1_lowest"] < 0
             @test file["physics/h1_hamiltonian_matrix_finite"] == true
             @test file["physics/h1_hamiltonian_symmetry_error"] < 1e-8
+            @test file["density_interaction/status"] ===
+                  :materialized_pqs_physical_gausslet_pre_final_density_interaction
+            @test file["density_interaction/density_gauge"] ===
+                  :pre_final_localized_positive_weight
+            @test file["density_interaction/raw_pair_factor_convention"] ===
+                  :raw_numerator
+            @test file["density_interaction/support_weight_count"] == 1215
+            @test file["density_interaction/support_weights_all_positive"] == true
+            @test file["density_interaction/support_raw_pair_shape"] == (1215, 1215)
+            @test file["density_interaction/support_raw_pair_finite"] == true
+            @test file["density_interaction/pre_final_pair_matrix_shape"] == (463, 463)
+            @test file["density_interaction/pre_final_pair_matrix_finite"] == true
+            @test file["density_interaction/pre_final_pair_matrix_symmetry_error"] < 1e-8
+            @test isfinite(file["density_interaction/h1_j_self_coulomb"])
             @test file["comparison/ready"] == false
             @test file["private_rhf/requested"] == false
             @test file["private_rhf/materialized"] == false

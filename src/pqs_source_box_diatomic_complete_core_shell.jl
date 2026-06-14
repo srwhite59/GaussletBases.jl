@@ -442,6 +442,34 @@ struct _PQSDiatomicPhysicalGaussletH1Payload
     metadata
 end
 
+struct _PQSDiatomicPhysicalGaussletH1JPayload
+    status::Symbol
+    blocker
+    route_family::Symbol
+    source_plan
+    source_plan_status::Symbol
+    final_basis
+    final_basis_status::Symbol
+    h1_payload
+    h1_payload_status::Symbol
+    density_provenance
+    density_provenance_status::Symbol
+    support_weights
+    support_weights_status::Symbol
+    raw_pair_factor_terms
+    raw_pair_factor_status::Symbol
+    support_pair_raw_numerator
+    support_pair_raw_numerator_status::Symbol
+    density_interaction
+    density_interaction_status::Symbol
+    h1_j_diagnostic
+    h1_j_status::Symbol
+    available_objects::Tuple
+    missing_objects::Tuple
+    summary
+    metadata
+end
+
 struct _PQSDiatomicPhysicalGaussletSourcePlanCandidatePayload
     status::Symbol
     blocker
@@ -1537,7 +1565,8 @@ function _pqs_source_box_route_driver_physical_gausslet_h1_solve(final_hamiltoni
     matrix = Matrix{Float64}(final_hamiltonian.hamiltonian_matrix)
     all(isfinite, matrix) ||
         throw(ArgumentError("physical gausslet H1 matrix contains non-finite entries"))
-    eigenvalues = eigvals(Symmetric((matrix + transpose(matrix)) ./ 2))
+    solution = eigen(Symmetric((matrix + transpose(matrix)) ./ 2))
+    eigenvalues = solution.values
     energy = first(eigenvalues)
     return (;
         object_kind = :pqs_physical_gausslet_h1_solve,
@@ -1546,6 +1575,7 @@ function _pqs_source_box_route_driver_physical_gausslet_h1_solve(final_hamiltoni
         solve_kind = :ordinary_symmetric,
         final_dimension = size(matrix, 1),
         lowest_energy = energy,
+        lowest_orbital_coefficients = Vector{Float64}(solution.vectors[:, 1]),
         eigenvalue_min = minimum(eigenvalues),
         eigenvalue_max = maximum(eigenvalues),
         h1_solve_materialized = true,
@@ -1747,6 +1777,539 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_h1_payload(
         final_hamiltonian_status,
         h1,
         h1_status,
+        available_objects,
+        missing_objects,
+        summary,
+        metadata,
+    )
+end
+
+function _pqs_source_box_route_driver_physical_gausslet_density_provenance(
+    source_plan,
+    coulomb_expansion,
+)
+    expected_term_count = length(coulomb_expansion.coefficients)
+    provenance =
+        CartesianContractedParentMetrics._pqs_source_box_ida_factor_provenance(
+            source_plan.axis_bundles;
+            expected_term_count,
+        )
+    hasproperty(provenance, :axis_weights) ||
+        throw(ArgumentError("physical gausslet density provenance missing axis weights"))
+    hasproperty(provenance, :raw_axis_pair_factor_terms) ||
+        throw(ArgumentError("physical gausslet density provenance missing raw pair factor terms"))
+    return (;
+        object_kind = :pqs_physical_gausslet_density_provenance,
+        status = :available_pqs_physical_gausslet_density_provenance,
+        blocker = nothing,
+        provenance,
+        axis_weights = provenance.axis_weights,
+        raw_pair_factor_terms = provenance.raw_axis_pair_factor_terms,
+        term_count = provenance.term_count,
+        factor_dimensions = provenance.factor_dimensions,
+        metadata = (;
+            source =
+                :pqs_source_box_route_driver_physical_gausslet_density_provenance,
+            provenance_source = :pqs_source_box_ida_factor_provenance,
+            expected_term_count,
+            retained_diagnostic_weights_are_ida_weights = false,
+        ),
+    )
+end
+
+function _pqs_source_box_route_driver_physical_gausslet_support_weights(
+    source_plan;
+    axis_weights,
+)
+    states = _pqs_source_box_route_driver_physical_gausslet_support_states(source_plan)
+    weights_x, weights_y, weights_z =
+        _pqs_multilayer_common_or_axis_tuple(axis_weights, "axis_weights")
+    weights = Vector{Float64}(undef, length(states))
+    @inbounds for (index, (ix, iy, iz)) in pairs(states)
+        weights[index] =
+            Float64(weights_x[ix]) * Float64(weights_y[iy]) * Float64(weights_z[iz])
+    end
+    return (;
+        object_kind = :pqs_physical_gausslet_support_weights,
+        status = :materialized_pqs_physical_gausslet_support_weights,
+        blocker = nothing,
+        support_weights = weights,
+        support_weight_count = length(weights),
+        support_weights_all_finite = all(isfinite, weights),
+        support_weights_all_positive = all(>(0.0), weights),
+        support_weight_min = minimum(weights),
+        support_weight_max = maximum(weights),
+        support_weight_sum = sum(weights),
+        support_order = source_plan.support_order,
+        metadata = (;
+            source =
+                :pqs_source_box_route_driver_physical_gausslet_support_weights,
+            support_order = source_plan.support_order,
+            density_gauge = :pre_final_localized_positive_weight,
+        ),
+    )
+end
+
+function _pqs_source_box_route_driver_physical_gausslet_support_pair_raw_numerator_matrix(
+    source_plan;
+    raw_pair_factor_terms,
+    coulomb_expansion,
+)
+    states = _pqs_source_box_route_driver_physical_gausslet_support_states(source_plan)
+    coefficients = Float64.(coulomb_expansion.coefficients)
+    all(>(0.0), coefficients) ||
+        throw(ArgumentError("physical gausslet raw pair numerator requires positive Coulomb expansion coefficients"))
+    axis_terms =
+        _pqs_multilayer_validate_raw_pair_factor_terms(
+            _pqs_multilayer_raw_pair_factor_terms(raw_pair_factor_terms),
+            length(coefficients),
+        )
+    support_pair_raw_numerator = zeros(Float64, length(states), length(states))
+    for term_index in eachindex(coefficients)
+        support_pair_raw_numerator .+=
+            coefficients[term_index] *
+            _pqs_multilayer_support_product_matrix(
+                states,
+                states,
+                @view(axis_terms[1][term_index, :, :]),
+                @view(axis_terms[2][term_index, :, :]),
+                @view(axis_terms[3][term_index, :, :]),
+            )
+    end
+    symmetry_error =
+        norm(support_pair_raw_numerator - transpose(support_pair_raw_numerator), Inf)
+    return (;
+        object_kind = :pqs_physical_gausslet_support_raw_pair_numerator_matrix,
+        status =
+            :materialized_pqs_physical_gausslet_support_raw_pair_numerator_matrix,
+        blocker = nothing,
+        support_pair_raw_numerator,
+        support_pair_raw_numerator_shape = size(support_pair_raw_numerator),
+        support_pair_raw_numerator_finite = all(isfinite, support_pair_raw_numerator),
+        support_pair_raw_numerator_symmetry_error = symmetry_error,
+        support_order = source_plan.support_order,
+        raw_pair_factor_convention = :raw_numerator,
+        metadata = (;
+            source =
+                :pqs_source_box_route_driver_physical_gausslet_support_pair_raw_numerator_matrix,
+            raw_pair_factor_convention = :raw_numerator,
+        ),
+    )
+end
+
+function _pqs_source_box_route_driver_physical_gausslet_pre_final_density_interaction(
+    final_basis,
+    support_pair_raw_numerator,
+    support_weights;
+    near_zero_atol::Real = 1.0e-12,
+    symmetry_atol::Real = 1.0e-8,
+    metadata = (;),
+)
+    get(final_basis, :object_kind, nothing) === :pqs_physical_gausslet_final_basis ||
+        throw(ArgumentError("physical gausslet density interaction requires physical final basis"))
+    get(final_basis, :status, nothing) === :available_pqs_physical_gausslet_final_basis ||
+        throw(ArgumentError("physical gausslet density interaction requires available final basis"))
+    get(final_basis, :final_basis_materialized, false) ||
+        throw(ArgumentError("physical gausslet final basis is not materialized"))
+    support_count = sum(final_basis.support_counts)
+    raw_pair = Matrix{Float64}(support_pair_raw_numerator)
+    size(raw_pair) == (support_count, support_count) ||
+        throw(DimensionMismatch("physical gausslet raw pair numerator shape mismatch"))
+    all(isfinite, raw_pair) ||
+        throw(ArgumentError("physical gausslet raw pair numerator contains non-finite entries"))
+    raw_pair_symmetry_error = norm(raw_pair - transpose(raw_pair), Inf)
+    raw_pair_symmetry_error <= Float64(symmetry_atol) ||
+        throw(ArgumentError("physical gausslet raw pair numerator must be symmetric"))
+
+    weights = Float64[Float64(weight) for weight in support_weights]
+    length(weights) == support_count ||
+        throw(DimensionMismatch("physical gausslet support weight length mismatch"))
+    all(isfinite, weights) ||
+        throw(ArgumentError("physical gausslet support weights contain non-finite entries"))
+
+    pre_final_coefficients = Matrix{Float64}(final_basis.pre_final_coefficients)
+    final_coefficients = Matrix{Float64}(final_basis.final_coefficients)
+    cleanup = Matrix{Float64}(final_basis.combined_lowdin_cleanup)
+    size(pre_final_coefficients, 1) == support_count ||
+        throw(DimensionMismatch("physical gausslet pre-final coefficient row mismatch"))
+    size(pre_final_coefficients, 2) == final_basis.final_retained_count ||
+        throw(DimensionMismatch("physical gausslet pre-final coefficient column mismatch"))
+
+    pre_final_weights = vec(transpose(pre_final_coefficients) * weights)
+    near_zero_threshold = Float64(near_zero_atol)
+    near_zero_count = count(weight -> abs(weight) <= near_zero_threshold, pre_final_weights)
+    negative_count = count(<(0.0), pre_final_weights)
+    positive_count = count(>(0.0), pre_final_weights)
+    all_finite = all(isfinite, pre_final_weights)
+    positive_weight_gauge =
+        all_finite && near_zero_count == 0 && negative_count == 0 &&
+        positive_count == length(pre_final_weights)
+    reconstruction_error =
+        norm(pre_final_coefficients * cleanup - final_coefficients, Inf)
+
+    if !positive_weight_gauge
+        return (;
+            object_kind = :pqs_physical_gausslet_pre_final_density_interaction,
+            status =
+                :blocked_pqs_physical_gausslet_pre_final_density_interaction,
+            blocker = :physical_gausslet_pre_final_density_weights_not_positive,
+            final_basis_object_kind = final_basis.object_kind,
+            final_basis_status = final_basis.status,
+            support_order = final_basis.support_order,
+            density_gauge = :pre_final_localized_positive_weight,
+            support_weight_count = length(weights),
+            pre_final_weight_count = length(pre_final_weights),
+            pre_final_weights,
+            pre_final_weight_min = minimum(pre_final_weights),
+            pre_final_weight_max = maximum(pre_final_weights),
+            pre_final_weight_sum = sum(pre_final_weights),
+            pre_final_weight_positive_count = positive_count,
+            pre_final_weight_negative_count = negative_count,
+            pre_final_weight_near_zero_count = near_zero_count,
+            pre_final_weights_all_finite = all_finite,
+            pre_final_weights_all_positive = false,
+            final_to_pre_final_coefficients = cleanup,
+            final_to_pre_final_reconstruction_error = reconstruction_error,
+            raw_pair_numerator_shape = size(raw_pair),
+            raw_pair_numerator_symmetry_error = raw_pair_symmetry_error,
+            pre_final_pair_matrix = nothing,
+            pre_final_pair_matrix_shape = nothing,
+            pre_final_pair_matrix_finite = false,
+            pre_final_pair_matrix_symmetry_error = nothing,
+            metadata = merge(NamedTuple(metadata), (;
+                source =
+                    :pqs_source_box_route_driver_physical_gausslet_pre_final_density_interaction,
+                raw_pair_factor_convention = :raw_numerator,
+            )),
+        )
+    end
+
+    weighted_coefficients =
+        pre_final_coefficients .* reshape(1.0 ./ pre_final_weights, 1, :)
+    pre_final_pair_matrix =
+        transpose(weighted_coefficients) * raw_pair * weighted_coefficients
+    pre_final_symmetry_error =
+        norm(pre_final_pair_matrix - transpose(pre_final_pair_matrix), Inf)
+    return (;
+        object_kind = :pqs_physical_gausslet_pre_final_density_interaction,
+        status = :materialized_pqs_physical_gausslet_pre_final_density_interaction,
+        blocker = nothing,
+        final_basis_object_kind = final_basis.object_kind,
+        final_basis_status = final_basis.status,
+        support_order = final_basis.support_order,
+        density_gauge = :pre_final_localized_positive_weight,
+        support_weight_count = length(weights),
+        pre_final_weight_count = length(pre_final_weights),
+        pre_final_weights,
+        pre_final_weight_min = minimum(pre_final_weights),
+        pre_final_weight_max = maximum(pre_final_weights),
+        pre_final_weight_sum = sum(pre_final_weights),
+        pre_final_weight_positive_count = positive_count,
+        pre_final_weight_negative_count = negative_count,
+        pre_final_weight_near_zero_count = near_zero_count,
+        pre_final_weights_all_finite = all_finite,
+        pre_final_weights_all_positive = true,
+        final_to_pre_final_coefficients = cleanup,
+        final_to_pre_final_reconstruction_error = reconstruction_error,
+        raw_pair_numerator_shape = size(raw_pair),
+        raw_pair_numerator_symmetry_error = raw_pair_symmetry_error,
+        pre_final_pair_matrix,
+        pre_final_pair_matrix_shape = size(pre_final_pair_matrix),
+        pre_final_pair_matrix_finite = all(isfinite, pre_final_pair_matrix),
+        pre_final_pair_matrix_symmetry_error = pre_final_symmetry_error,
+        pre_final_weight_division_applied = true,
+        signed_final_weight_division_used = false,
+        raw_no_division_used = false,
+        fixed_block_pair_data_authority_used = false,
+        density_density_materialized = true,
+        metadata = merge(NamedTuple(metadata), (;
+            source =
+                :pqs_source_box_route_driver_physical_gausslet_pre_final_density_interaction,
+            raw_pair_factor_convention = :raw_numerator,
+            weight_application_stage = :pre_final_density_interaction_boundary,
+            final_orbital_consumption_rule =
+                :combined_lowdin_cleanup_times_final_coefficients,
+        )),
+    )
+end
+
+function _pqs_source_box_route_driver_physical_gausslet_h1_j_diagnostic(
+    density_interaction,
+    final_orbital_coefficients,
+)
+    get(density_interaction, :status, nothing) ===
+        :materialized_pqs_physical_gausslet_pre_final_density_interaction ||
+        throw(ArgumentError("physical gausslet H1-J diagnostic requires materialized density interaction"))
+    coefficients = Float64[Float64(value) for value in final_orbital_coefficients]
+    length(coefficients) == size(density_interaction.final_to_pre_final_coefficients, 2) ||
+        throw(DimensionMismatch("physical gausslet H1 orbital coefficient length mismatch"))
+    final_to_pre_final =
+        Matrix{Float64}(density_interaction.final_to_pre_final_coefficients)
+    orbital = final_to_pre_final * coefficients
+    pair_matrix = Matrix{Float64}(density_interaction.pre_final_pair_matrix)
+    density = orbital * transpose(orbital)
+    rho = 0.5 .* (density .+ transpose(density))
+    v = 0.5 .* (pair_matrix .+ transpose(pair_matrix))
+    occupations = vec(diag(rho))
+    direct = 2.0 * dot(occupations, v * occupations)
+    exchange = dot(vec(rho), vec(v .* rho))
+    self_coulomb = direct - exchange
+    return (;
+        object_kind = :pqs_physical_gausslet_h1_j_diagnostic,
+        status = :materialized_pqs_physical_gausslet_h1_j_diagnostic,
+        blocker = nothing,
+        density_gauge = density_interaction.density_gauge,
+        raw_pair_factor_convention = :raw_numerator,
+        self_coulomb,
+        h1_j_self_coulomb = self_coulomb,
+        final_orbital_coefficient_count = length(coefficients),
+        pre_final_orbital_coefficient_count = length(orbital),
+        h1_self_coulomb_contraction =
+            :restricted_one_orbital_direct_minus_exchange,
+    )
+end
+
+function _pqs_source_box_route_driver_diatomic_physical_gausslet_h1_j_payload(
+    route_skeleton,
+    recipe,
+    source_plan_payload = nothing,
+    final_basis_payload = nothing,
+    h1_payload = nothing,
+)
+    route_family =
+        hasproperty(route_skeleton, :route_family) ?
+        route_skeleton.route_family :
+        recipe.route_family
+    source_plan =
+        !isnothing(source_plan_payload) && hasproperty(source_plan_payload, :source_plan) ?
+        source_plan_payload.source_plan :
+        nothing
+    final_basis =
+        !isnothing(final_basis_payload) && hasproperty(final_basis_payload, :final_basis) ?
+        final_basis_payload.final_basis :
+        nothing
+    source_plan_status = isnothing(source_plan) ? :not_available : source_plan.status
+    final_basis_status = isnothing(final_basis) ? :not_available : final_basis.status
+    h1_payload_status = isnothing(h1_payload) ? :not_available : h1_payload.status
+    h1_j_requested =
+        get(recipe, :run_h1_j, false) ||
+        get(get(recipe, :private_rhf_inputs, (;)), :run_private_rhf, false)
+    density_provenance = support_weights = raw_pair_factor_terms = nothing
+    support_pair_raw_numerator = density_interaction = h1_j_diagnostic = nothing
+    density_provenance_status =
+        :not_materialized_pqs_physical_gausslet_density_provenance
+    support_weights_status =
+        :not_materialized_pqs_physical_gausslet_support_weights
+    raw_pair_factor_status =
+        :not_materialized_pqs_physical_gausslet_raw_pair_factor_terms
+    support_pair_raw_numerator_status =
+        :not_materialized_pqs_physical_gausslet_support_raw_pair_numerator_matrix
+    density_interaction_status =
+        :not_materialized_pqs_physical_gausslet_pre_final_density_interaction
+    h1_j_status = :not_materialized_pqs_physical_gausslet_h1_j_payload
+    available = Symbol[]
+    missing = Symbol[]
+
+    if route_family !== :pqs_source_box
+        status = :not_applicable_pqs_physical_gausslet_h1_j_non_pqs_route
+        blocker = nothing
+    elseif source_plan_status !==
+           :available_pqs_diatomic_physical_gausslet_core_shell_source_plan
+        status = :blocked_pqs_physical_gausslet_h1_j_payload
+        blocker = :missing_pqs_diatomic_physical_gausslet_source_plan
+        push!(missing, :pqs_diatomic_physical_gausslet_source_plan)
+    elseif final_basis_status !== :available_pqs_physical_gausslet_final_basis
+        status = :blocked_pqs_physical_gausslet_h1_j_payload
+        blocker = :missing_pqs_physical_gausslet_final_basis
+        push!(missing, :pqs_physical_gausslet_final_basis)
+    elseif h1_payload_status !== :available_pqs_physical_gausslet_h1_payload
+        status = :blocked_pqs_physical_gausslet_h1_j_payload
+        blocker = :missing_pqs_physical_gausslet_h1_payload
+        push!(missing, :pqs_physical_gausslet_h1_payload)
+    elseif !h1_j_requested
+        status = :not_requested_pqs_physical_gausslet_h1_j_payload
+        blocker = :physical_gausslet_h1_j_request_not_enabled
+        append!(
+            available,
+            (
+                :pqs_diatomic_physical_gausslet_source_plan,
+                :pqs_physical_gausslet_final_basis,
+                :pqs_physical_gausslet_h1_payload,
+            ),
+        )
+        push!(missing, :physical_gausslet_h1_j_request)
+    else
+        append!(
+            available,
+            (
+                :pqs_diatomic_physical_gausslet_source_plan,
+                :pqs_physical_gausslet_final_basis,
+                :pqs_physical_gausslet_h1_payload,
+            ),
+        )
+        coulomb_expansion = coulomb_gaussian_expansion(doacc = false)
+        try
+            density_provenance =
+                _pqs_source_box_route_driver_physical_gausslet_density_provenance(
+                    source_plan,
+                    coulomb_expansion,
+                )
+            density_provenance_status = density_provenance.status
+            raw_pair_factor_terms = density_provenance.raw_pair_factor_terms
+            raw_pair_factor_status =
+                :available_pqs_physical_gausslet_raw_pair_factor_terms
+            support_weights =
+                _pqs_source_box_route_driver_physical_gausslet_support_weights(
+                    source_plan;
+                    axis_weights = density_provenance.axis_weights,
+                )
+            support_weights_status = support_weights.status
+            support_weights.support_weights_all_positive ||
+                throw(ArgumentError("physical gausslet support weights must be positive"))
+            support_pair_raw_numerator =
+                _pqs_source_box_route_driver_physical_gausslet_support_pair_raw_numerator_matrix(
+                    source_plan;
+                    raw_pair_factor_terms,
+                    coulomb_expansion,
+                )
+            support_pair_raw_numerator_status =
+                support_pair_raw_numerator.status
+            density_interaction =
+                _pqs_source_box_route_driver_physical_gausslet_pre_final_density_interaction(
+                    final_basis,
+                    support_pair_raw_numerator.support_pair_raw_numerator,
+                    support_weights.support_weights;
+                    metadata = (;
+                        source =
+                            :pqs_source_box_route_driver_diatomic_physical_gausslet_h1_j_payload,
+                        raw_pair_factor_convention = :raw_numerator,
+                    ),
+                )
+            density_interaction_status = density_interaction.status
+            if density_interaction_status !==
+               :materialized_pqs_physical_gausslet_pre_final_density_interaction
+                status = :blocked_pqs_physical_gausslet_h1_j_payload
+                blocker = :physical_gausslet_pre_final_density_interaction_blocked
+                push!(missing, :pqs_physical_gausslet_pre_final_density_interaction)
+            else
+                h1_j_diagnostic =
+                    _pqs_source_box_route_driver_physical_gausslet_h1_j_diagnostic(
+                        density_interaction,
+                        h1_payload.h1.lowest_orbital_coefficients,
+                    )
+                h1_j_status = :materialized_pqs_physical_gausslet_h1_j_payload
+                status = h1_j_status
+                blocker = nothing
+                push!(available, :pqs_physical_gausslet_h1_j_payload)
+                push!(missing, :physical_gausslet_rhf_or_solver_contract)
+            end
+        catch error
+            error isa ArgumentError || error isa DimensionMismatch || rethrow()
+            status = :blocked_pqs_physical_gausslet_h1_j_payload
+            message = sprint(showerror, error)
+            if occursin("axis weights", message)
+                blocker = :missing_physical_gausslet_axis_weights
+            elseif occursin("raw pair", message)
+                blocker = :missing_physical_gausslet_raw_pair_factor_terms
+            elseif occursin("support weights", message)
+                blocker = :physical_gausslet_support_weight_nonpositive
+            else
+                blocker = :physical_gausslet_pre_final_density_interaction_blocked
+            end
+            push!(missing, blocker)
+        end
+    end
+
+    available_objects = Tuple(unique(available))
+    missing_objects = Tuple(unique(missing))
+    h1_j_materialized =
+        status === :materialized_pqs_physical_gausslet_h1_j_payload
+    density_interaction_materialized =
+        density_interaction_status ===
+        :materialized_pqs_physical_gausslet_pre_final_density_interaction
+    summary = (;
+        status,
+        blocker,
+        route_family,
+        source_plan_status,
+        final_basis_status,
+        h1_payload_status,
+        density_provenance_status,
+        support_weights_status,
+        raw_pair_factor_status,
+        support_pair_raw_numerator_status,
+        density_interaction_status,
+        h1_j_status,
+        density_gauge =
+            isnothing(density_interaction) ? nothing : density_interaction.density_gauge,
+        raw_pair_factor_convention =
+            isnothing(support_pair_raw_numerator) ? nothing :
+            support_pair_raw_numerator.raw_pair_factor_convention,
+        support_weight_count =
+            isnothing(support_weights) ? nothing : support_weights.support_weight_count,
+        support_weights_all_positive =
+            isnothing(support_weights) ? nothing :
+            support_weights.support_weights_all_positive,
+        support_raw_pair_shape =
+            isnothing(support_pair_raw_numerator) ? nothing :
+            support_pair_raw_numerator.support_pair_raw_numerator_shape,
+        support_raw_pair_finite =
+            isnothing(support_pair_raw_numerator) ? nothing :
+            support_pair_raw_numerator.support_pair_raw_numerator_finite,
+        pre_final_pair_matrix_shape =
+            isnothing(density_interaction) ? nothing :
+            density_interaction.pre_final_pair_matrix_shape,
+        pre_final_pair_matrix_finite =
+            isnothing(density_interaction) ? nothing :
+            density_interaction.pre_final_pair_matrix_finite,
+        pre_final_pair_matrix_symmetry_error =
+            isnothing(density_interaction) ? nothing :
+            density_interaction.pre_final_pair_matrix_symmetry_error,
+        self_coulomb =
+            isnothing(h1_j_diagnostic) ? nothing : h1_j_diagnostic.self_coulomb,
+        h1_j_materialized,
+        density_interaction_materialized,
+        endpoint_blocker =
+            h1_j_materialized ?
+            :missing_physical_gausslet_rhf_or_solver_contract :
+            blocker,
+        rhf_materialized = false,
+        exports_materialized = false,
+        public_api = false,
+        available_objects,
+        missing_objects,
+    )
+    metadata = (;
+        source =
+            :pqs_source_box_route_driver_diatomic_physical_gausslet_h1_j_payload,
+        route_kind = recipe.route_kind,
+        physical_final_basis = true,
+        density_gauge = summary.density_gauge,
+        raw_pair_factor_convention = summary.raw_pair_factor_convention,
+        h2_221_diagnostic_source_plan_reused = false,
+    )
+    return _PQSDiatomicPhysicalGaussletH1JPayload(
+        status,
+        blocker,
+        route_family,
+        source_plan,
+        source_plan_status,
+        final_basis,
+        final_basis_status,
+        h1_payload,
+        h1_payload_status,
+        density_provenance,
+        density_provenance_status,
+        support_weights,
+        support_weights_status,
+        raw_pair_factor_terms,
+        raw_pair_factor_status,
+        support_pair_raw_numerator,
+        support_pair_raw_numerator_status,
+        density_interaction,
+        density_interaction_status,
+        h1_j_diagnostic,
+        h1_j_status,
         available_objects,
         missing_objects,
         summary,

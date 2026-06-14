@@ -7626,6 +7626,14 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
             diatomic_physical_gausslet_source_plan_payload,
             diatomic_physical_gausslet_final_basis_payload,
         )
+    diatomic_physical_gausslet_h1_j_payload =
+        _pqs_source_box_route_driver_diatomic_physical_gausslet_h1_j_payload(
+            route_skeleton,
+            recipe,
+            diatomic_physical_gausslet_source_plan_payload,
+            diatomic_physical_gausslet_final_basis_payload,
+            diatomic_physical_gausslet_h1_payload,
+        )
     complete_core_shell_diagnostic_route_payload =
         _pqs_source_box_route_driver_complete_core_shell_diagnostic_route_payload(
             parent,
@@ -7744,6 +7752,7 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
         diatomic_physical_gausslet_source_plan_payload,
         diatomic_physical_gausslet_final_basis_payload,
         diatomic_physical_gausslet_h1_payload,
+        diatomic_physical_gausslet_h1_j_payload,
         complete_core_shell_diagnostic_route_payload,
         diatomic_complete_core_shell_support_window_payload,
         diatomic_raw_box_route_payload,
@@ -8189,6 +8198,10 @@ function _pqs_source_box_route_driver_physical_gausslet_target_report_fields(
         hasproperty(assembly, :diatomic_physical_gausslet_h1_payload) ?
         assembly.diatomic_physical_gausslet_h1_payload :
         nothing
+    h1_j_payload =
+        hasproperty(assembly, :diatomic_physical_gausslet_h1_j_payload) ?
+        assembly.diatomic_physical_gausslet_h1_j_payload :
+        nothing
     summary =
         isnothing(payload) ?
         (;
@@ -8258,6 +8271,38 @@ function _pqs_source_box_route_driver_physical_gausslet_target_report_fields(
                 final_electron_nuclear_status =
                     h1_payload.final_electron_nuclear_status,
                 physics_endpoint_blocker = h1_payload.summary.endpoint_blocker,
+            ),
+        )
+    end
+    if !isnothing(h1_j_payload)
+        summary = merge(
+            summary,
+            (;
+                h1_j_status = h1_j_payload.h1_j_status,
+                h1_j_blocker = h1_j_payload.blocker,
+                h1_j_materialized = h1_j_payload.summary.h1_j_materialized,
+                density_interaction_materialized =
+                    h1_j_payload.summary.density_interaction_materialized,
+                density_interaction_status =
+                    h1_j_payload.summary.density_interaction_status,
+                density_gauge = h1_j_payload.summary.density_gauge,
+                raw_pair_factor_convention =
+                    h1_j_payload.summary.raw_pair_factor_convention,
+                support_weight_count = h1_j_payload.summary.support_weight_count,
+                support_weights_all_positive =
+                    h1_j_payload.summary.support_weights_all_positive,
+                support_raw_pair_shape =
+                    h1_j_payload.summary.support_raw_pair_shape,
+                support_raw_pair_finite =
+                    h1_j_payload.summary.support_raw_pair_finite,
+                pre_final_pair_matrix_shape =
+                    h1_j_payload.summary.pre_final_pair_matrix_shape,
+                pre_final_pair_matrix_finite =
+                    h1_j_payload.summary.pre_final_pair_matrix_finite,
+                pre_final_pair_matrix_symmetry_error =
+                    h1_j_payload.summary.pre_final_pair_matrix_symmetry_error,
+                h1_j_self_coulomb = h1_j_payload.summary.self_coulomb,
+                physics_endpoint_blocker = h1_j_payload.summary.endpoint_blocker,
             ),
         )
     end

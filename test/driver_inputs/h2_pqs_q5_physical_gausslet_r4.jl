@@ -27,13 +27,13 @@ comparison_blocker = :gausslet_only_reference_not_selected
 comparison_reference_label = "WL/QW H2 R=4 gausslet-only target inventory only"
 artifact_role = :physical_gausslet_endpoint_target
 physics_endpoint_ready = false
-physics_endpoint_blocker = :missing_physical_gausslet_h1_j_builder
+physics_endpoint_blocker = :missing_physical_gausslet_rhf_or_solver_contract
 retained_atom_core_interiors = true
 source_plan_role = :atom_contact_core_plus_pqs_shared_shells
 
 run_final_basis = true
 run_h1 = true
-run_h1_j = false
+run_h1_j = true
 run_private_rhf = false
 save_artifact = true
 save_tsv = true
