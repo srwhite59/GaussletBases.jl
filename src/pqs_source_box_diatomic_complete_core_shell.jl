@@ -684,14 +684,18 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_target_payload(
         hasproperty(route_skeleton, :physical_target_inventory) ?
         route_skeleton.physical_target_inventory :
         nothing
-    expected_route_kind =
-        :bond_aligned_diatomic_physical_gausslet_core_shell_pqs
+    independent_target = route_kind ===
+                         :bond_aligned_diatomic_independent_pqs_source_box_core_shell
+    expected_route_kinds = (
+        :bond_aligned_diatomic_physical_gausslet_core_shell_pqs,
+        :bond_aligned_diatomic_independent_pqs_source_box_core_shell,
+    )
     expected_parent_axis_counts = (9, 9, 15)
 
     if route_family !== :pqs_source_box
         status = :not_applicable_physical_gausslet_target_non_pqs_route
         blocker = nothing
-    elseif route_kind !== expected_route_kind
+    elseif !(route_kind in expected_route_kinds)
         status = :not_applicable_physical_gausslet_target_route_kind
         blocker = nothing
     elseif system_classification !== :bond_aligned_diatomic
@@ -703,6 +707,9 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_target_payload(
     elseif parent_axis_count_tuple != expected_parent_axis_counts
         status = :blocked_physical_gausslet_target_inventory
         blocker = :unexpected_physical_gausslet_parent_axis_counts
+    elseif independent_target
+        status = inventory.status
+        blocker = inventory.blocker
     else
         status = :available_physical_gausslet_core_shell_target_inventory
         blocker = nothing
@@ -726,6 +733,18 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_target_payload(
         isnothing(inventory) ?
         :not_available :
         inventory.source_plan_role
+    source_backed_fixed_source_oracle_used =
+        !isnothing(inventory) && get(inventory, :source_backed_fixed_source_oracle_used, false)
+    retained_transform_authority =
+        isnothing(inventory) ?
+        :not_available :
+        get(inventory, :retained_transform_authority, :not_available)
+    primary_blocker =
+        isnothing(inventory) ? nothing : get(inventory, :primary_blocker, blocker)
+    secondary_blocker =
+        isnothing(inventory) ? nothing : get(inventory, :secondary_blocker, nothing)
+    source_plan_blocker =
+        isnothing(inventory) ? nothing : get(inventory, :source_plan_blocker, nothing)
     supplement_policy =
         isnothing(inventory) ?
         :not_available :
@@ -760,6 +779,11 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_target_payload(
         target_inventory_available =
             status === :available_physical_gausslet_core_shell_target_inventory,
         source_plan_materialized = false,
+        source_backed_fixed_source_oracle_used,
+        retained_transform_authority,
+        primary_blocker,
+        secondary_blocker,
+        independent_source_plan_blocker = source_plan_blocker,
         final_basis_materialized = false,
         h1_materialized = false,
         h1_j_materialized = false,
@@ -772,9 +796,9 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_target_payload(
         route_kind,
         provenance =
             isnothing(inventory) ? :missing_inventory : inventory.provenance,
-        target_inventory_hard_coded_from_reviewed_contract = true,
-        reviewed_contract_pass = 200,
-        old_wl_qw_fixed_block_size = (1215, 463),
+        target_inventory_hard_coded_from_reviewed_contract = !independent_target,
+        reviewed_contract_pass = independent_target ? nothing : 200,
+        old_wl_qw_fixed_block_size = independent_target ? nothing : (1215, 463),
         source_plan_role,
     )
 
@@ -1579,6 +1603,9 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_pay
     target_available =
         !isnothing(target_payload) &&
         target_payload.status === :available_physical_gausslet_core_shell_target_inventory
+    independent_target =
+        !isnothing(target_payload) &&
+        target_payload.source_plan_role === :independent_pqs_source_box_construction
     source_plan =
         !isnothing(candidate_payload) &&
         candidate_payload.status === :available_physical_gausslet_source_plan_candidate ?
@@ -1593,12 +1620,20 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_pay
     blocker =
         !isnothing(source_plan) ?
         nothing :
+        independent_target ?
+        :missing_independent_pqs_atom_contact_core_retained_rule :
         target_available ?
         :missing_atom_contact_core_support_rows :
         :missing_physical_gausslet_target_inventory
     missing_objects =
         !isnothing(source_plan) ?
         () :
+        independent_target ?
+        (
+            :independent_pqs_atom_contact_core_retained_rule,
+            :independent_pqs_shared_shell_2_retained_rule,
+            :independent_pqs_physical_source_plan_materializer,
+        ) :
         target_available ?
         (
             :atom_contact_core_support_rows,
@@ -1637,8 +1672,23 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_pay
             !isnothing(candidate_payload) && candidate_payload.counts_match,
         source_plan_authority_status =
             isnothing(source_plan) ?
+            independent_target ?
+            :blocked_pqs_source_box_construction_authority :
             isnothing(candidate_payload) ? :not_available : candidate_payload.authority_status :
             :fake_pqs_private_source_backed_adapter_authority,
+        source_backed_fixed_source_oracle_used =
+            !isnothing(target_payload) &&
+            get(target_payload.summary, :source_backed_fixed_source_oracle_used, false),
+        retained_transform_authority =
+            isnothing(target_payload) ?
+            :not_available :
+            get(target_payload.summary, :retained_transform_authority, :not_available),
+        secondary_blocker =
+            isnothing(target_payload) ? nothing : get(target_payload.summary, :secondary_blocker, nothing),
+        independent_source_plan_blocker =
+            isnothing(target_payload) ?
+            nothing :
+            get(target_payload.summary, :independent_source_plan_blocker, nothing),
         missing_objects,
     )
     metadata = (;

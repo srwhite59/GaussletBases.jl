@@ -20,8 +20,10 @@ function _pqs_source_box_route_driver_route_skeleton(
         return _pqs_source_box_route_driver_white_lindsey_low_order_skeleton(
             route_axis_counts, spacing_inputs, route_recipe)
     end
-    if route_recipe.route_kind ===
-       :bond_aligned_diatomic_physical_gausslet_core_shell_pqs
+    if route_recipe.route_kind in (
+        :bond_aligned_diatomic_physical_gausslet_core_shell_pqs,
+        :bond_aligned_diatomic_independent_pqs_source_box_core_shell,
+    )
         return _pqs_source_box_route_driver_physical_gausslet_core_shell_skeleton(
             route_axis_counts, spacing_inputs, route_recipe)
     end
@@ -45,8 +47,18 @@ function _pqs_source_box_route_driver_physical_gausslet_core_shell_skeleton(
     spacing_inputs,
     route_recipe,
 )
-    retained_units = (
-        _pqs_source_box_route_driver_unit_record(
+    independent_target = route_recipe.route_kind ===
+                         :bond_aligned_diatomic_independent_pqs_source_box_core_shell
+    support_units = (:atom_contact_core, :shared_shell_1, :shared_shell_2)
+    support_counts = (;
+        atom_contact_core = 275,
+        shared_shell_1 = 578,
+        shared_shell_2 = 362,
+    )
+    retained_units =
+        independent_target ? () :
+        (
+            _pqs_source_box_route_driver_unit_record(
             unit_key = :atom_contact_core,
             unit_role = :full_atom_contact_core_interiors,
             retained_unit_kind = :atom_contact_core,
@@ -93,38 +105,69 @@ function _pqs_source_box_route_driver_physical_gausslet_core_shell_skeleton(
         ),
     )
     unit_inventory = _pqs_source_box_route_driver_unit_inventory(retained_units)
-    support_units = (:atom_contact_core, :shared_shell_1, :shared_shell_2)
-    support_counts = (;
-        atom_contact_core = 275,
-        shared_shell_1 = 578,
-        shared_shell_2 = 362,
-    )
     retained_counts = unit_inventory.retained_counts
+    target_status =
+        independent_target ?
+        :blocked_independent_pqs_source_box_target_readiness :
+        :available_physical_gausslet_core_shell_target_inventory
+    target_blocker =
+        independent_target ?
+        :missing_independent_pqs_atom_contact_core_retained_rule :
+        nothing
     target_inventory = (;
-        status = :available_physical_gausslet_core_shell_target_inventory,
-        blocker = nothing,
+        status = target_status,
+        blocker = target_blocker,
         support_units,
         support_counts,
-        retained_units = support_units,
+        retained_units = independent_target ? () : support_units,
         retained_counts,
-        retained_order = support_units,
-        expected_final_dimension = unit_inventory.retained_dimension,
-        retained_atom_core_interiors = true,
-        source_plan_role = :atom_contact_core_plus_pqs_shared_shells,
+        retained_order = independent_target ? () : support_units,
+        expected_final_dimension = independent_target ? nothing : unit_inventory.retained_dimension,
+        retained_atom_core_interiors = !independent_target,
+        source_plan_role =
+            independent_target ?
+            :independent_pqs_source_box_construction :
+            :atom_contact_core_plus_pqs_shared_shells,
         supplement_policy = :none,
-        provenance = :pass_200_reviewed_wl_qw_inventory,
+        provenance =
+            independent_target ?
+            :pass_230_independent_pqs_recovery_audit :
+            :pass_200_reviewed_wl_qw_inventory,
+        source_backed_fixed_source_oracle_used = false,
+        retained_transform_authority = :pqs_source_box_construction,
+        primary_blocker = target_blocker,
+        secondary_blocker =
+            independent_target ?
+            :missing_independent_pqs_shared_shell_2_retained_rule :
+            nothing,
+        source_plan_blocker =
+            independent_target ?
+            :missing_independent_pqs_physical_source_plan_materializer :
+            nothing,
     )
     pair_entries = ()
-    pair_family_counts = (physical_gausslet_target = 0,)
+    pair_family_counts =
+        independent_target ?
+        (independent_pqs_target_readiness = 0,) :
+        (physical_gausslet_target = 0,)
     pending_facts = (
+        independent_target ?
+        :independent_pqs_atom_contact_core_retained_rule :
         :physical_gausslet_source_plan_producer,
+        independent_target ?
+        :independent_pqs_shared_shell_2_retained_rule :
         :physical_gausslet_final_basis_builder,
+        independent_target ?
+        :independent_pqs_physical_source_plan_materializer :
         :physical_gausslet_h1_builder,
     )
 
     return (;
-        object_kind = :pqs_diatomic_physical_gausslet_core_shell_target_skeleton,
-        status = :available_physical_gausslet_core_shell_target_inventory,
+        object_kind =
+            independent_target ?
+            :pqs_diatomic_independent_source_box_core_shell_target_skeleton :
+            :pqs_diatomic_physical_gausslet_core_shell_target_skeleton,
+        status = target_status,
         route_family = route_recipe.route_family,
         route_kind = route_recipe.route_kind,
         route_shape = support_units,
@@ -140,6 +183,8 @@ function _pqs_source_box_route_driver_physical_gausslet_core_shell_skeleton(
         pair_entries,
         pair_family_counts,
         helper_by_pair_family =
+            independent_target ?
+            (independent_pqs_target_readiness = :target_readiness_only_not_materialized,) :
             (physical_gausslet_target = :target_inventory_only_not_materialized,),
         physical_target_inventory = target_inventory,
         pending_facts,
@@ -156,9 +201,12 @@ function _pqs_source_box_route_driver_physical_gausslet_core_shell_skeleton(
             h1_materialized = false,
             h1_j_materialized = false,
             rhf_materialized = false,
-            retained_atom_core_interiors = true,
+            retained_atom_core_interiors = !independent_target,
             supplement_policy = :none,
-            expected_final_dimension = unit_inventory.retained_dimension,
+            expected_final_dimension =
+                independent_target ? nothing : unit_inventory.retained_dimension,
+            source_backed_fixed_source_oracle_used = false,
+            retained_transform_authority = :pqs_source_box_construction,
         ),
     )
 end

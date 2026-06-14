@@ -8296,37 +8296,6 @@ function _pqs_source_box_route_driver_physical_gausslet_target_report_fields(
         (;
             status = :not_available_missing_physical_gausslet_target_payload,
             blocker = :missing_physical_gausslet_target_payload,
-            target_inventory_available = false,
-            source_plan_status = :not_available_missing_physical_gausslet_source_plan_payload,
-            source_plan_blocker = :missing_physical_gausslet_source_plan_payload,
-            source_plan_materialized = false,
-            final_basis_materialized = false,
-            h1_materialized = false,
-            h1_j_materialized = false,
-            rhf_materialized = false,
-            supplement_preflight_status = :not_available,
-            supplement_preflight_blocker = :missing_physical_gausslet_supplement_preflight_payload,
-            supplement_preflight_required_fact_labels = (),
-            supplement_preflight_available_fact_labels = (),
-            supplement_preflight_missing_fact_labels = (),
-            supplement_request_status = :not_available,
-            supplement_request_blocker =
-                :missing_physical_gausslet_supplement_request_payload,
-            supplement_request_basis_name = nothing,
-            supplement_request_lmax = nothing,
-            supplement_request_required_provider_blocks = (),
-            supplement_request_missing_fact_labels = (),
-            supplement_representation_status = :not_available,
-            supplement_representation_blocker =
-                :missing_physical_gausslet_supplement_representation_payload,
-            supplement_representation_object_kind = :not_available,
-            supplement_representation_basis_name = nothing,
-            supplement_representation_lmax = nothing,
-            supplement_representation_atom_symbols = (),
-            supplement_representation_center_count = 0,
-            supplement_representation_orbital_count = 0,
-            supplement_representation_matrices_materialized = false,
-            supplement_representation_provider_blocks_materialized = false,
         ) :
         payload.summary
     if !isnothing(supplement_request_payload)

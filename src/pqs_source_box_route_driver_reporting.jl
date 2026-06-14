@@ -525,108 +525,6 @@ function _pqs_source_box_route_driver_write_pqs_diatomic_readiness_artifact!(
         (;
             status = :not_available_missing_physical_gausslet_target_payload,
             blocker = :missing_physical_gausslet_target_payload,
-            support_units = (),
-            retained_units = (),
-            retained_order = (),
-            support_counts = nothing,
-            retained_counts = nothing,
-            expected_final_dimension = nothing,
-            retained_atom_core_interiors = nothing,
-            source_plan_role = nothing,
-            source_plan_status = :not_available,
-            source_plan_blocker = nothing,
-            source_plan_candidate_status = :not_available,
-            source_plan_candidate_source = :not_available,
-            source_plan_candidate_counts_match = false,
-            source_plan_authority_status = :not_available,
-            final_basis_status = :not_available,
-            final_basis_blocker = nothing,
-            final_dimension = nothing,
-            final_overlap_identity_error = nothing,
-            h1_status = :not_available,
-            h1_materialized = false,
-            h1_lowest_energy = nothing,
-            h1_hamiltonian_matrix_finite = nothing,
-            h1_hamiltonian_symmetry_error = nothing,
-            h1_j_status = :not_available,
-            h1_j_materialized = false,
-            density_interaction_status = :not_available,
-            density_gauge = nothing,
-            raw_pair_factor_convention = nothing,
-            support_weight_count = nothing,
-            support_weights_all_positive = nothing,
-            support_raw_pair_shape = nothing,
-            support_raw_pair_finite = nothing,
-            pre_final_pair_matrix_shape = nothing,
-            pre_final_pair_matrix_finite = nothing,
-            pre_final_pair_matrix_symmetry_error = nothing,
-            h1_j_self_coulomb = nothing,
-            private_rhf_input_contract_status = :not_available,
-            private_rhf_input_contract_blocker = nothing,
-            private_rhf_input_contract_available = false,
-            private_rhf_electron_count = nothing,
-            private_rhf_occupation_policy = nothing,
-            private_rhf_occupation_nocc = nothing,
-            private_rhf_h1_matrix_available = false,
-            private_rhf_h1_matrix_finite = nothing,
-            private_rhf_h1_matrix_symmetry_error = nothing,
-            private_rhf_density_interaction_available = false,
-            private_rhf_final_to_pre_final_transform_available = false,
-            private_rhf_pre_final_pair_matrix_available = false,
-            private_rhf_pre_final_pair_matrix_finite = nothing,
-            private_rhf_pre_final_pair_matrix_symmetry_error = nothing,
-            private_rhf_execution_status = :not_available,
-            private_rhf_execution_blocker = nothing,
-            private_rhf_executed = false,
-            private_rhf_materialized = false,
-            private_rhf_converged = false,
-            private_rhf_total_energy = nothing,
-            private_rhf_one_body_energy = nothing,
-            private_rhf_two_body_energy = nothing,
-            private_rhf_iteration_count = nothing,
-            private_rhf_density_trace = nothing,
-            private_rhf_idempotency_residual = nothing,
-            private_rhf_commutator_residual = nothing,
-            private_rhf_energy_delta = nothing,
-            private_rhf_final_density_one_step_consistency_status = nothing,
-            physics_endpoint_blocker = nothing,
-            supplement_policy = nothing,
-            supplement_preflight_status = :not_available,
-            supplement_preflight_blocker =
-                :missing_physical_gausslet_supplement_preflight_payload,
-            supplement_preflight_fixture_label = nothing,
-            supplement_preflight_retained_transform_kind = nothing,
-            supplement_preflight_gausslet_final_dimension = nothing,
-            supplement_preflight_required_fact_labels = (),
-            supplement_preflight_available_fact_labels = (),
-            supplement_preflight_missing_fact_labels = (),
-            supplement_preflight_matrices_materialized = false,
-            supplement_preflight_supplemented_values_materialized = false,
-            supplement_request_status = :not_available,
-            supplement_request_blocker =
-                :missing_physical_gausslet_supplement_request_payload,
-            supplement_request_fixture_label = nothing,
-            supplement_request_basis_name = nothing,
-            supplement_request_lmax = nothing,
-            supplement_request_uncontracted = nothing,
-            supplement_request_atom_symbols = (),
-            supplement_request_nuclear_charges = (),
-            supplement_request_bond_axis = nothing,
-            supplement_request_bond_length = nothing,
-            supplement_request_required_provider_blocks = (),
-            supplement_request_missing_fact_labels = (),
-            supplement_request_matrices_materialized = false,
-            supplement_representation_status = :not_available,
-            supplement_representation_blocker =
-                :missing_physical_gausslet_supplement_representation_payload,
-            supplement_representation_object_kind = :not_available,
-            supplement_representation_basis_name = nothing,
-            supplement_representation_lmax = nothing,
-            supplement_representation_atom_symbols = (),
-            supplement_representation_center_count = 0,
-            supplement_representation_orbital_count = 0,
-            supplement_representation_matrices_materialized = false,
-            supplement_representation_provider_blocks_materialized = false,
         ),
     )
     wl_reference_candidate_status =
@@ -640,9 +538,12 @@ function _pqs_source_box_route_driver_write_pqs_diatomic_readiness_artifact!(
     artifact_role = get(recipe, :artifact_role, nothing)
     fake_pqs_artifact =
         artifact_role === :fake_pqs_source_backed_wl_reproduction
+    independent_pqs_artifact =
+        artifact_role === :independent_h2_pqs_source_box_target_readiness
     physical_target_artifact =
         artifact_role === :physical_gausslet_endpoint_target ||
-        fake_pqs_artifact
+        fake_pqs_artifact ||
+        independent_pqs_artifact
     route_source_plan_status =
         physical_target_artifact ?
         get(target, :source_plan_status, get(readiness, :source_plan_status, :not_available)) :
@@ -680,10 +581,14 @@ function _pqs_source_box_route_driver_write_pqs_diatomic_readiness_artifact!(
         get(target, :private_rhf_execution_status, :not_available) :
         :not_available
     physics_endpoint_ready =
-        fake_pqs_artifact ? false : get(recipe, :physics_endpoint_ready, nothing)
+        (fake_pqs_artifact || independent_pqs_artifact) ?
+        false :
+        get(recipe, :physics_endpoint_ready, nothing)
     physics_endpoint_blocker =
         fake_pqs_artifact ?
         :fake_pqs_source_backed_wl_reproduction_not_independent_pqs :
+        independent_pqs_artifact ?
+        :missing_independent_pqs_atom_contact_core_retained_rule :
         physical_target_artifact && physics_endpoint_ready === true ?
         nothing :
         physical_target_artifact ?
@@ -744,7 +649,7 @@ function _pqs_source_box_route_driver_write_pqs_diatomic_readiness_artifact!(
         ("config", (; input_path = isnothing(input_path) ? "" : String(input_path), route_family = recipe.route_family, route_kind = recipe.route_kind, q = recipe.q, n_s = recipe.n_s, core_spacing = recipe.core_spacing, xmax_parallel = get(recipe, :xmax_parallel, nothing), xmax_transverse = get(recipe, :xmax_transverse, nothing), supplement_policy = recipe.supplement_policy, comparison_ready, run_final_basis = get(recipe, :run_final_basis, false))),
         ("comparison", (; ready = comparison_ready, role = fake_pqs_artifact ? :fake_pqs_wl_reproduction : nothing, blocker = comparison_blocker, reference_label = something(recipe.comparison_reference_label, ""), wl_reference_candidate_status, wl_reference_candidate_blocker = get(target, :wl_reference_candidate_blocker, nothing), wl_reference_final_dimension = get(target, :wl_reference_final_dimension, nothing), wl_reference_retained_transform_kind = get(target, :wl_reference_retained_transform_kind, nothing), wl_reference_supplement_policy = get(target, :wl_reference_supplement_policy, nothing), wl_reference_label = get(target, :wl_reference_label, ""), old_supplemented_wl_qw_scalar_references_blocked = get(target, :old_supplemented_wl_qw_scalar_references_blocked, nothing))),
         ("parent", (; parent_axis_counts = report.parent_contract.parent_axis_counts, parent_axis_counts_source = report.parent_contract.parent_axis_counts_source, parent_materialization_blocker = report.parent_contract.parent_materialization_blocker, parent_basis_object_available = report.parent_contract.parent_basis_object_available, parent_qw_basis_object_available = report.parent_contract.parent_qw_basis_object_available, parent_axis_bundle_object_available = report.parent_contract.parent_axis_bundle_object_available, parent_basis_object_type_label = report.parent_contract.parent_basis_object_type_label, parent_qw_basis_object_type_label = report.parent_contract.parent_qw_basis_object_type_label, parent_axis_bundle_object_type_label = report.parent_contract.parent_axis_bundle_object_type_label)),
-        ("route", (; artifact_role, fake_pqs_enabled = fake_pqs_artifact, comparison_role = fake_pqs_artifact ? :fake_pqs_wl_reproduction : nothing, independent_pqs_transform = fake_pqs_artifact ? false : nothing, source = fake_pqs_artifact ? :source_backed_fixed_source_oracle : nothing, warning = fake_pqs_artifact ? :retained_transform_imported_from_wl_qw_fixed_source_oracle : nothing, readiness_status = get(readiness, :status, :not_available), readiness_blocker = get(readiness, :blocker, nothing), source_plan_status = route_source_plan_status, final_basis_status = route_final_basis_status, h1_status = route_h1_status, h1_materialized = route_h1_materialized, h1_j_status = route_h1_j_status, h1_j_materialized = route_h1_j_materialized, private_rhf_input_contract_status = route_private_rhf_input_contract_status, private_rhf_execution_status = route_private_rhf_execution_status, supplement_preflight_status = get(target, :supplement_preflight_status, :not_available), supplement_preflight_blocker = get(target, :supplement_preflight_blocker, nothing), ham_input_status = get(readiness, :ham_input_payload_status, :not_available), hamiltonian_handoff_status = get(readiness, :hamiltonian_handoff_payload_status, :not_available), private_rhf_materialized = get(target, :private_rhf_materialized, get(readiness, :rhf_materialized, false)), public_api = get(readiness, :public_api, false), exports_materialized = get(readiness, :exports_materialized, false), artifacts_materialized = get(readiness, :artifacts_materialized, false))),
+        ("route", (; artifact_role, fake_pqs_enabled = fake_pqs_artifact, comparison_role = fake_pqs_artifact ? :fake_pqs_wl_reproduction : nothing, independent_pqs_transform = fake_pqs_artifact ? false : nothing, source = fake_pqs_artifact ? :source_backed_fixed_source_oracle : independent_pqs_artifact ? :pqs_source_box_construction : nothing, source_backed_fixed_source_oracle_used = fake_pqs_artifact ? true : independent_pqs_artifact ? false : nothing, retained_transform_authority = independent_pqs_artifact ? :pqs_source_box_construction : nothing, warning = fake_pqs_artifact ? :retained_transform_imported_from_wl_qw_fixed_source_oracle : nothing, readiness_status = get(readiness, :status, :not_available), readiness_blocker = get(readiness, :blocker, nothing), source_plan_status = route_source_plan_status, final_basis_status = route_final_basis_status, h1_status = route_h1_status, h1_materialized = route_h1_materialized, h1_j_status = route_h1_j_status, h1_j_materialized = route_h1_j_materialized, private_rhf_input_contract_status = route_private_rhf_input_contract_status, private_rhf_execution_status = route_private_rhf_execution_status, supplement_preflight_status = get(target, :supplement_preflight_status, :not_available), supplement_preflight_blocker = get(target, :supplement_preflight_blocker, nothing), ham_input_status = get(readiness, :ham_input_payload_status, :not_available), hamiltonian_handoff_status = get(readiness, :hamiltonian_handoff_payload_status, :not_available), private_rhf_materialized = get(target, :private_rhf_materialized, get(readiness, :rhf_materialized, false)), public_api = get(readiness, :public_api, false), exports_materialized = get(readiness, :exports_materialized, false), artifacts_materialized = get(readiness, :artifacts_materialized, false))),
     )
         _pqs_source_box_route_driver_write_group!(file, group, values)
     end
@@ -901,6 +806,14 @@ function _pqs_source_box_route_driver_write_pqs_diatomic_readiness_artifact!(
                 get(target, :source_plan_candidate_counts_match, nothing),
             source_plan_authority_status =
                 get(target, :source_plan_authority_status, nothing),
+            source_backed_fixed_source_oracle_used =
+                get(target, :source_backed_fixed_source_oracle_used, nothing),
+            retained_transform_authority =
+                get(target, :retained_transform_authority, nothing),
+            primary_blocker = get(target, :primary_blocker, nothing),
+            secondary_blocker = get(target, :secondary_blocker, nothing),
+            independent_source_plan_blocker =
+                get(target, :independent_source_plan_blocker, nothing),
             supplement_policy = get(target, :supplement_policy, nothing),
         ),
     )
@@ -909,9 +822,17 @@ function _pqs_source_box_route_driver_write_pqs_diatomic_readiness_artifact!(
         "physics",
         (;
             endpoint_role =
-                fake_pqs_artifact ? :fake_pqs_wl_reproduction : nothing,
+                fake_pqs_artifact ?
+                :fake_pqs_wl_reproduction :
+                independent_pqs_artifact ?
+                :independent_h2_pqs_target_readiness :
+                nothing,
             independent_pqs_transform =
                 fake_pqs_artifact ? false : nothing,
+            source_backed_fixed_source_oracle_used =
+                fake_pqs_artifact ? true : independent_pqs_artifact ? false : nothing,
+            retained_transform_authority =
+                independent_pqs_artifact ? :pqs_source_box_construction : nothing,
             endpoint_ready = physics_endpoint_ready,
             endpoint_blocker = physics_endpoint_blocker,
             h1_lowest = h1_lowest_energy,
