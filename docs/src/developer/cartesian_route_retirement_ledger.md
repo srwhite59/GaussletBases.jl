@@ -127,16 +127,11 @@ outside this decomposed WL acceptance contract.
   blocks with `:missing_pair_block_materialization_plan` when no structured
   pair-block materialization plan is present. It is not production driver
   wiring and does not retire the old route by itself.
-- A private opt-in overlap driver option,
-  `private_global_overlap_requested`, carries
-  `private_global_overlap_result` plus `private_global_overlap_summary` from the
-  materialization stage. It returns the structured overlap result when enough
-  structured state, global dimension, and overlap inputs are present, or a
-  compact blocked summary otherwise. This remains nonproduction and off by
-  default; it is not old-route retirement. The override example
-  `examples/private_global_overlap_option.jl` documents option shape only, and
-  focused tests validate that option plumbing without running the full builder
-  route.
+- The private opt-in driver overlap option and its option-shape example were
+  retired in pass 202. Route-global one-body overlap work now belongs below the
+  driver helper, through the route-global one-body materialization layer and
+  focused oracle/reference tests, not through default-off driver report
+  plumbing.
 - Private overlap input facts now label the 1D factor space and convention
   explicitly, following the legacy PGDG lesson that overlap factors are
   axis-space objects with a specific contraction convention.

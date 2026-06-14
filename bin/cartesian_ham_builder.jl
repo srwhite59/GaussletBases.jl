@@ -87,9 +87,6 @@ wl_rhf_total = nothing
 save_artifact = false
 save_tsv = false
 materialize_route = false
-private_global_overlap_requested = false
-private_global_overlap_global_dimension = nothing
-private_global_overlap_inputs = (;)
 probe_route_configured_one_center_materializer = false
 probe_route_configured_diatomic_atom_growth_materializer = false
 low_order_shellization_policy = nothing
@@ -146,8 +143,6 @@ route_inputs = (; route_family, route_kind, route_shape, product_body_rule,
     supplement_policy, wl_h1_lowest, wl_h1_self_coulomb,
     run_final_basis, run_h1, run_h1_j, private_rhf_inputs, wl_rhf_total)
 materialization_inputs = (; materialize_route, probe_route_configured_one_center_materializer,
-    private_global_overlap_requested, private_global_overlap_global_dimension,
-    private_global_overlap_inputs,
     probe_route_configured_diatomic_atom_growth_materializer,
     low_order_shellization_policy,
     save_basis_artifact, save_ham_artifact, basisfile, hamfile,

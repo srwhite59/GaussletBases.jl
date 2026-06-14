@@ -6,15 +6,17 @@ This note records a proposed architectural direction for Cartesian parent
 operator data, coordinate-product-box local blocks, and the staged PQS /
 White-Lindsey route. It is a design note, not an implementation contract yet.
 
-The immediate motivation is the private global-overlap input-facts work. Recent
-tests show two different real dry-run report states:
+The immediate motivation was the private global-overlap input-facts work. That
+driver-helper bridge was retired in pass 202; the parent-factor and CPB-provider
+direction below remains the intended replacement pressure. Earlier tests showed
+two different real dry-run report states:
 
 - a manual-count dry report can carry parent axis counts, but has no parent
   axis-bundle factors and correctly blocks on
   `:missing_parent_axis_bundle_overlap_factors`;
 - a probe-enabled dry report shows that the structured axis-bundle object
   already exists under `route_materializer_payload.parent_axis_bundle_object`.
-  The private overlap facts helper can read those 1D overlap factors through a
+  the retired private helper could read those 1D overlap factors through a
   narrow structured source path, but the route materializer payload should not
   become the long-term owner of universal parent-axis data.
 
@@ -1562,7 +1564,7 @@ state is:
 local collection available
 global overlap blocked
 blocker = :missing_placement_or_retained_transform
-private_global_overlap_input_facts_available = false
+private driver overlap input facts available = false
 route_global_overlap_stage_source = false
 global_matrix_materialized = false
 route_driver_wiring = false
@@ -1609,9 +1611,9 @@ Support-row or shell-row contractions remain oracle/debug surfaces unless a
 reviewed framework decision promotes them. The CPB block-provider layer should
 not make support-row contraction the PQS algorithm.
 
-## Relation to Current Private Overlap Facts
+## Retired Private Overlap Bridge
 
-Current private overlap input facts are a bridge:
+The retired private overlap input-facts path was a bridge:
 
 ```text
 driver report fields
@@ -1619,12 +1621,11 @@ driver report fields
 -> route-global overlap adapter
 ```
 
-The real-report fingerprints show why this bridge is temporary. A probe-enabled
+The real-report fingerprints showed why this bridge was temporary. A probe-enabled
 dry report shows that a structured axis-bundle object may exist under
-`route_materializer_payload.parent_axis_bundle_object`, and the current private
-helper can read that object through a narrow compatibility source path. That is
-useful as a fingerprint. It should not make the route materializer payload the
-natural authority for universal parent-axis factors.
+`route_materializer_payload.parent_axis_bundle_object`, but that should not make
+the route materializer payload the natural authority for universal parent-axis
+factors.
 
 The intended replacement direction is:
 
@@ -1638,9 +1639,8 @@ parent basis
 -> optional route/global placement
 ```
 
-The private overlap facts helper should eventually become a compatibility
-adapter or disappear. It should not expand into a broad scalar report-field
-interface for every operator term.
+The private bridge has now disappeared. It should not reappear as a broad scalar
+report-field interface for every operator term.
 
 The current overlap-only implementation already has a local CPB product-space
 path:
@@ -1700,9 +1700,10 @@ The migration should be incremental:
    facts. Keep it tied to `CartesianParentGaussletBasis3D`.
 3. Add CPB interval-pair helpers that return parent-axis slice ranges for CPB
    pairs without operator semantics.
-4. Add a private overlap CPB axis-block provider over the parent factor packet.
-5. Repoint the private overlap input-facts path toward the parent factor packet
-   or CPB provider, while preserving current real-report fingerprint tests.
+4. Keep overlap CPB axis-block providers under the parent/CPB layers, not the
+   route-driver helper.
+5. Preserve only focused parent/CPB provider and route-global one-body tests;
+   do not restore the retired private driver fingerprint bridge.
 6. Extend one-body factors to kinetic, position, and x2 only after overlap has
    a clean parent-factor and CPB-provider contract.
 7. Treat electron-nuclear and electron-electron factor packets as a later
