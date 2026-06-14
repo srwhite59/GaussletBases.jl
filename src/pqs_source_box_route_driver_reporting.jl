@@ -524,7 +524,13 @@ function _pqs_source_box_route_driver_write_pqs_diatomic_readiness_artifact!(
     _pqs_source_box_route_driver_write_present_group!(
         file,
         "physics",
-        (h1_lowest = get(readiness, :h1_lowest_energy, nothing),),
+        (;
+            h1_lowest = get(readiness, :h1_lowest_energy, nothing),
+            h1_hamiltonian_matrix_finite =
+                get(readiness, :h1_hamiltonian_matrix_finite, nothing),
+            h1_hamiltonian_symmetry_error =
+                get(readiness, :h1_hamiltonian_symmetry_error, nothing),
+        ),
     )
     _pqs_source_box_route_driver_write_present_group!(
         file,

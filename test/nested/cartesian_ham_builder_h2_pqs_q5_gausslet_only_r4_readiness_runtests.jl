@@ -68,6 +68,7 @@ end
             @test file["private_rhf/requested"] == false
             @test file["private_rhf/materialized"] == false
             @test file["route/h1_j_materialized"] == false
+            @test file["route/h1_materialized"] == true
             @test file["route/private_rhf_materialized"] == false
             @test file["route/public_api"] == false
             @test file["route/exports_materialized"] == false
@@ -75,15 +76,20 @@ end
             @test file["route/readiness_status"] ===
                   :blocked_diatomic_complete_core_shell_ham_readiness
             @test file["route/readiness_blocker"] ===
-                  :missing_diatomic_complete_core_shell_h1_consumer
+                  :missing_diatomic_complete_core_shell_hamiltonian_handoff_payload
             @test file["route/source_plan_status"] ===
                   :available_pqs_diatomic_complete_core_shell_source_plan
             @test file["route/final_basis_status"] ===
                   :available_pqs_complete_core_shell_final_basis
             @test file["route/h1_status"] ===
-                  :not_materialized_diatomic_complete_core_shell_h1
-            @test file["basis/final_dimension"] > 0
+                  :materialized_pqs_complete_core_shell_final_h1_solve
+            @test file["basis/final_dimension"] == 221
             @test isfinite(file["basis/final_overlap_identity_error"])
+            @test file["basis/final_overlap_identity_error"] < 1e-10
+            @test isfinite(file["physics/h1_lowest"])
+            @test file["physics/h1_hamiltonian_matrix_finite"] == true
+            @test isfinite(file["physics/h1_hamiltonian_symmetry_error"])
+            @test file["physics/h1_hamiltonian_symmetry_error"] < 1e-10
         end
     end
 end

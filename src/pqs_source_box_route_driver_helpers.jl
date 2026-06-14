@@ -12224,6 +12224,10 @@ function _pqs_source_box_route_driver_diatomic_complete_core_shell_report_fields
         hasproperty(assembly, :diatomic_complete_core_shell_h1_payload) ?
         assembly.diatomic_complete_core_shell_h1_payload :
         nothing
+    h1_hamiltonian =
+        isnothing(h1_payload) || !hasproperty(h1_payload, :final_hamiltonian) ?
+        nothing :
+        h1_payload.final_hamiltonian
     ham_input_payload =
         hasproperty(assembly, :diatomic_complete_core_shell_ham_input_payload) ?
         assembly.diatomic_complete_core_shell_ham_input_payload :
@@ -12249,6 +12253,14 @@ function _pqs_source_box_route_driver_diatomic_complete_core_shell_report_fields
             isnothing(h1_payload) || !hasproperty(h1_payload, :summary) ?
             nothing :
             get(h1_payload.summary, :lowest_energy, nothing),
+        h1_hamiltonian_matrix_finite =
+            isnothing(h1_hamiltonian) ?
+            nothing :
+            get(h1_hamiltonian, :hamiltonian_matrix_finite, nothing),
+        h1_hamiltonian_symmetry_error =
+            isnothing(h1_hamiltonian) ?
+            nothing :
+            get(h1_hamiltonian, :hamiltonian_matrix_symmetry_error, nothing),
         density_gauge =
             isnothing(ham_input_payload) || !hasproperty(ham_input_payload, :summary) ?
             nothing :
