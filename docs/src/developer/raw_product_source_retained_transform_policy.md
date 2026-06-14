@@ -688,10 +688,11 @@ metadata from two retained-unit plans, records 1D cross factors, and keeps
 existing product-staged helpers authoritative. `_product_doside_source_box_reference_block(...)`
 supports overlap, position, `x2`, and kinetic; it compares each retained block
 against `_product_doside_retained_low_order_block(...)` or
-`_product_doside_retained_kinetic_block(...)`. `_product_doside_source_box_shadow_blocks(...)`
-builds a small two-block product/product shadow layout from those reference
-blocks and checks transpose consistency for symmetric real terms. The shared
-separable term descriptor is now
+`_product_doside_retained_kinetic_block(...)`. The old
+`_product_doside_source_box_shadow_blocks(...)` aggregate smoke helper has
+been retired; product/doside one-body block checks should use the direct
+reference helpers or CPB provider tests.
+The shared separable term descriptor is now
 `_source_box_separable_term_factor_kinds(...)`, used by both product/product
 and PQS/product source-box blocks. Existing product-staged helpers remain the
 numerical authority; this checkpoint does not adopt packet construction,

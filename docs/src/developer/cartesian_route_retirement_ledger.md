@@ -575,7 +575,7 @@ Classified regions by line/function family:
 | `65-313` | `CartesianContractedParentMetricPacket3D`, `_AxisMetricData1D`, coefficient-entry helpers, `_contract_pair_matrix`, `_contract_linear_vector`, `_contracted_first_moments` | `KEEP_CORE_METRICS` | This is the retained metric packet core for overlap, weights, centers, and position moments. |
 | `315-655` | `_metric_dispatch_*`, `_pqs_product_mixed_block_policy`, `_contracted_parent_metric_dispatch_shadow_plan` | `MOVE_TO_ROUTE_DIAGNOSTICS`; `RETIRE_OR_QUARANTINE` for the shadow wrapper | These are readiness/dispatch diagnostics, not CPB kernels. |
 | `657-809` | staged-axis interval/count/projection helpers and `_product_doside_retained_unit_plan` | `KEEP_AS_ORACLE_REFERENCE` | Useful retained transform/range facts for old product/doside units; do not make them new provider authority. |
-| `811-1221` | product/doside source-box pair plans, safe one-body factor blocks, reference blocks, and `_product_doside_source_box_shadow_blocks` | `MOVE_TO_CPB_PROVIDER`; `RETIRE_OR_QUARANTINE` for shadow layout | Safe one-body local block math maps to CPB axis-product and sum-of-axis-products blocks. |
+| `811-1221` | product/doside source-box pair plans, safe one-body factor blocks, and reference blocks; retired `_product_doside_source_box_shadow_blocks` aggregate helper | `MOVE_TO_CPB_PROVIDER`; shadow aggregate retired | Safe one-body local block math maps to CPB axis-product and sum-of-axis-products blocks. |
 | `1222-1705` | local Gaussian-sum and density-density product/doside source-box helpers | `MOVE_TO_CPB_PROVIDER` | CPB-local Coulomb-family kernels or precursors. |
 | `1716-2026` | IDA pair-factor provenance and raw-weight to density-normalized conversion | `KEEP_AS_ORACLE_REFERENCE` / future CPB source adapter | Keep as convention oracle until CPB source summaries carry the same facts. |
 | `2028-2177` | centered local Gaussian term-table construction | `MOVE_TO_CPB_PROVIDER` | Belongs with CPB-local electron-nuclear/electron-electron Gaussian-sum kernels. |
@@ -621,9 +621,10 @@ provider layer already owns active coverage for overlap, kinetic, position,
 x2, axis-product, and sum-of-axis-products blocks. The old
 `_product_doside_source_box_pair_plan(...)`,
 `_product_doside_source_box_block_from_factors(...)`,
-`_product_doside_source_box_reference_block(...)`, and
-`_product_doside_source_box_shadow_blocks(...)` family should remain only a
-private oracle / route-shadow bridge until the route diagnostics are retired.
+and `_product_doside_source_box_reference_block(...)` family should remain only
+a private oracle / route-shadow bridge until the route diagnostics are retired.
+The aggregate `_product_doside_source_box_shadow_blocks(...)` helper has been
+retired.
 Do not add new routine tests that preserve every old diagnostic flag.
 
 First retirement cut:
@@ -631,9 +632,10 @@ First retirement cut:
 - The exhaustive product/product source-box pair-plan assertions and
   shadow-component oracle comparisons were removed from
   `test/nested/pqs_projected_q_shell_local_layer_integration_runtests.jl`.
-  The slow integration file now keeps only a small legacy smoke that
-  `_product_doside_source_box_shadow_blocks(...)` returns finite blocks with
-  expected terms, ranges, and shapes while route diagnostics still call it.
+  The later cleanup removed the final slow-test caller and retired the aggregate
+  `_product_doside_source_box_shadow_blocks(...)` helper itself. Product/doside
+  one-body block coverage now belongs to direct reference helpers and CPB
+  provider tests.
 - Detailed safe one-body correctness is intentionally left to focused CPB
   provider tests for axis-product, sum-of-axis-products, overlap, kinetic,
   position, and x2 blocks.
@@ -641,13 +643,12 @@ First retirement cut:
   source-box family as a private oracle and route-shadow bridge. New safe
   one-body product-box checks should use CPB provider axis-product or
   sum-of-axis-products blocks directly.
-- Deletion is still blocked by route-shadow and diagnostics paths in
-  `CartesianContractedParentMetrics.jl` that call
-  `_product_doside_source_box_reference_block(...)` internally, especially
-  `_product_doside_source_box_shadow_blocks(...)` and downstream current-route
+- Deletion of the aggregate shadow helper is complete. Remaining product/doside
+  source-box reference helpers are still blocked by route-shadow and diagnostics
+  paths in `CartesianContractedParentMetrics.jl` and downstream current-route
   inventory/oracle comparisons. The next deletion-oriented cut should replace
-  those route-shadow component calls with CPB provider blocks or quarantine the
-  whole shadow route as oracle-only.
+  those component calls with CPB provider blocks or quarantine the whole shadow
+  route as oracle-only.
 
 Second deletion pass:
 
