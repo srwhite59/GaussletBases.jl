@@ -284,3 +284,51 @@ Line-count / complexity note:
   Stable fake-PQS guard fields were safety-critical, so the normal line-reduction
   rule was temporarily ignored for that correction. The rule resumes after this
   documented exception.
+
+## Pass 230 - Independent H2 PQS Recovery Audit
+
+Commit(s):
+- `bc61a46b` - Publish independent H2 PQS audit blurb
+- this commit - Accept independent H2 PQS audit
+
+Summary:
+- Doer performed a no-edit audit of the independent H2 PQS source-box surfaces.
+  The audit found useful lower-level PQS machinery, including raw product
+  source-box facts and q=5 boundary retained rules, but no independent route
+  authority for the H2 463 retained transform.
+- The fake-PQS H2 463 path still imports its retained transform from the WL/QW
+  fixed-source oracle. The retained counts `atom_contact_core = 251` and
+  `shared_shell_2 = 114` are not currently explained by independent PQS
+  retained rules.
+
+Validation:
+- Doer: read-only inspection only; no Julia commands or tests.
+- Manager: confirmed response files match, checked the named live source
+  surfaces exist, and verified the current H2 PQS driver input/test surface is
+  the fake-PQS route rather than an independent route.
+
+Goal advancement:
+- LT5: clarified retained-transform authority and prevented WL/QW fixed-source
+  data from being normalized as PQS route authority.
+- MT2: refined the independent H2 PQS blocker to missing atom-contact-core and
+  shared-shell retained rules.
+- MT3: preserved the common H2 support vocabulary while separating support
+  metadata from retained-transform authority.
+
+Medium-goal update:
+- none. MT2 remains active, and MT1 remains a maintained guardrail.
+
+Risk / guardrail:
+- Do not treat `251`, `98`, `114` as independent PQS retained counts merely
+  because they are useful fake-PQS/WL reference values. Only `shared_shell_1`
+  has a plausible current q=5 PQS boundary-count explanation.
+
+Remaining blocker / next:
+- Add a separate `fake_pqs=false` H2 PQS target/readiness surface that blocks on
+  `:missing_independent_pqs_atom_contact_core_retained_rule` before source-plan,
+  final-basis, H1, H1-J, RHF, supplement, or CR2 work.
+
+Line-count / complexity note:
+- No source/test/bin changes in this audit. The next implementation pass should
+  pay for new target/readiness scaffolding by deleting stale scaffold pressure
+  or stop with `ATTENTION.md`.
