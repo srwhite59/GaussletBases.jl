@@ -470,6 +470,26 @@ struct _PQSDiatomicPhysicalGaussletH1JPayload
     metadata
 end
 
+struct _PQSDiatomicPhysicalGaussletRHFInputContractPayload
+    status::Symbol
+    blocker
+    route_family::Symbol
+    source_plan
+    source_plan_status::Symbol
+    final_basis
+    final_basis_status::Symbol
+    h1_payload
+    h1_payload_status::Symbol
+    h1_j_payload
+    h1_j_payload_status::Symbol
+    electron_count
+    occupation
+    available_objects::Tuple
+    missing_objects::Tuple
+    summary
+    metadata
+end
+
 struct _PQSDiatomicPhysicalGaussletSourcePlanCandidatePayload
     status::Symbol
     blocker
@@ -2310,6 +2330,241 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_h1_j_payload(
         density_interaction_status,
         h1_j_diagnostic,
         h1_j_status,
+        available_objects,
+        missing_objects,
+        summary,
+        metadata,
+    )
+end
+
+function _pqs_source_box_route_driver_diatomic_physical_gausslet_rhf_input_contract(
+    parent,
+    route_skeleton,
+    recipe,
+    source_plan_payload = nothing,
+    final_basis_payload = nothing,
+    h1_payload = nothing,
+    h1_j_payload = nothing,
+)
+    route_family =
+        hasproperty(route_skeleton, :route_family) ?
+        route_skeleton.route_family :
+        recipe.route_family
+    route_kind =
+        hasproperty(route_skeleton, :route_kind) ?
+        route_skeleton.route_kind :
+        recipe.route_kind
+    fixture_role = get(recipe, :artifact_role, nothing)
+    source_plan =
+        !isnothing(source_plan_payload) && hasproperty(source_plan_payload, :source_plan) ?
+        source_plan_payload.source_plan :
+        nothing
+    final_basis =
+        !isnothing(final_basis_payload) && hasproperty(final_basis_payload, :final_basis) ?
+        final_basis_payload.final_basis :
+        nothing
+    source_plan_status = isnothing(source_plan) ? :not_available : source_plan.status
+    final_basis_status = isnothing(final_basis) ? :not_available : final_basis.status
+    h1_payload_status = isnothing(h1_payload) ? :not_available : h1_payload.status
+    h1_j_payload_status =
+        isnothing(h1_j_payload) ? :not_available : h1_j_payload.status
+    private_rhf_inputs = get(recipe, :private_rhf_inputs, (;))
+    electron_count =
+        get(private_rhf_inputs, :private_rhf_electron_count, nothing)
+    occupation =
+        electron_count === 2 ?
+        (; policy = :closed_shell_rhf, nocc = 1, occupancy = 2.0) :
+        nothing
+    h1_matrix =
+        !isnothing(h1_payload) &&
+        hasproperty(h1_payload, :final_hamiltonian) &&
+        !isnothing(h1_payload.final_hamiltonian) ?
+        h1_payload.final_hamiltonian.hamiltonian_matrix :
+        nothing
+    density_interaction =
+        !isnothing(h1_j_payload) && hasproperty(h1_j_payload, :density_interaction) ?
+        h1_j_payload.density_interaction :
+        nothing
+    final_to_pre_final =
+        !isnothing(density_interaction) &&
+        hasproperty(density_interaction, :final_to_pre_final_coefficients) ?
+        density_interaction.final_to_pre_final_coefficients :
+        nothing
+    pre_final_pair_matrix =
+        !isnothing(density_interaction) &&
+        hasproperty(density_interaction, :pre_final_pair_matrix) ?
+        density_interaction.pre_final_pair_matrix :
+        nothing
+    available = Symbol[]
+    missing = Symbol[]
+
+    if route_family !== :pqs_source_box
+        status = :not_applicable_pqs_physical_gausslet_rhf_input_contract
+        blocker = nothing
+    elseif route_kind !== :bond_aligned_diatomic_physical_gausslet_core_shell_pqs ||
+           fixture_role !== :physical_gausslet_endpoint_target
+        status = :blocked_pqs_physical_gausslet_rhf_input_contract
+        blocker = :unsupported_physical_gausslet_fixture_role
+        push!(missing, :physical_gausslet_fixture_role)
+    elseif source_plan_status !==
+           :available_pqs_diatomic_physical_gausslet_core_shell_source_plan
+        status = :blocked_pqs_physical_gausslet_rhf_input_contract
+        blocker = :missing_pqs_diatomic_physical_gausslet_source_plan
+        push!(missing, :pqs_diatomic_physical_gausslet_source_plan)
+    elseif final_basis_status !== :available_pqs_physical_gausslet_final_basis
+        status = :blocked_pqs_physical_gausslet_rhf_input_contract
+        blocker = :missing_pqs_physical_gausslet_final_basis
+        push!(missing, :pqs_physical_gausslet_final_basis)
+    elseif h1_payload_status !== :available_pqs_physical_gausslet_h1_payload ||
+           isnothing(h1_matrix)
+        status = :blocked_pqs_physical_gausslet_rhf_input_contract
+        blocker = :missing_physical_gausslet_h1_payload
+        push!(missing, :pqs_physical_gausslet_h1_payload)
+    elseif h1_j_payload_status !== :materialized_pqs_physical_gausslet_h1_j_payload ||
+           isnothing(density_interaction)
+        status = :blocked_pqs_physical_gausslet_rhf_input_contract
+        blocker = :missing_physical_gausslet_density_interaction
+        push!(missing, :pqs_physical_gausslet_density_interaction)
+    elseif isnothing(final_to_pre_final)
+        status = :blocked_pqs_physical_gausslet_rhf_input_contract
+        blocker = :missing_physical_gausslet_final_to_pre_final_transform
+        push!(missing, :physical_gausslet_final_to_pre_final_transform)
+    elseif isnothing(pre_final_pair_matrix)
+        status = :blocked_pqs_physical_gausslet_rhf_input_contract
+        blocker = :missing_physical_gausslet_pre_final_pair_matrix
+        push!(missing, :physical_gausslet_pre_final_pair_matrix)
+    elseif isnothing(electron_count)
+        status = :blocked_pqs_physical_gausslet_rhf_input_contract
+        blocker = :missing_physical_gausslet_electron_count
+        push!(missing, :physical_gausslet_electron_count)
+    elseif electron_count !== 2 || isnothing(occupation)
+        status = :blocked_pqs_physical_gausslet_rhf_input_contract
+        blocker = :unsupported_physical_gausslet_electron_count
+        push!(missing, :physical_gausslet_electron_count)
+    else
+        h1 = Matrix{Float64}(h1_matrix)
+        pair = Matrix{Float64}(pre_final_pair_matrix)
+        transform = Matrix{Float64}(final_to_pre_final)
+        h1_symmetry_error = norm(h1 - transpose(h1), Inf)
+        pair_symmetry_error = norm(pair - transpose(pair), Inf)
+        if size(h1) != (final_basis.final_dimension, final_basis.final_dimension) ||
+           !all(isfinite, h1) ||
+           h1_symmetry_error > 1.0e-8
+            status = :blocked_pqs_physical_gausslet_rhf_input_contract
+            blocker = :missing_physical_gausslet_h1_payload
+            push!(missing, :physical_gausslet_h1_matrix)
+        elseif get(density_interaction, :density_gauge, nothing) !==
+               :pre_final_localized_positive_weight
+            status = :blocked_pqs_physical_gausslet_rhf_input_contract
+            blocker = :physical_gausslet_rhf_input_contract_unreviewed
+            push!(missing, :physical_gausslet_density_gauge)
+        elseif get(density_interaction.metadata, :raw_pair_factor_convention, nothing) !==
+               :raw_numerator
+            status = :blocked_pqs_physical_gausslet_rhf_input_contract
+            blocker = :physical_gausslet_rhf_input_contract_unreviewed
+            push!(missing, :physical_gausslet_raw_pair_factor_convention)
+        elseif size(pair, 1) != size(pair, 2) ||
+               size(transform, 1) != size(pair, 1) ||
+               size(transform, 2) != size(h1, 1) ||
+               !all(isfinite, pair) ||
+               pair_symmetry_error > 1.0e-8
+            status = :blocked_pqs_physical_gausslet_rhf_input_contract
+            blocker = :missing_physical_gausslet_pre_final_pair_matrix
+            push!(missing, :physical_gausslet_pre_final_pair_matrix)
+        else
+            status = :available_pqs_physical_gausslet_rhf_input_contract
+            blocker = nothing
+            append!(
+                available,
+                (
+                    :pqs_diatomic_physical_gausslet_source_plan,
+                    :pqs_physical_gausslet_final_basis,
+                    :pqs_physical_gausslet_h1_payload,
+                    :pqs_physical_gausslet_h1_j_payload,
+                    :pqs_physical_gausslet_rhf_input_contract,
+                ),
+            )
+        end
+    end
+
+    available_objects = Tuple(unique(available))
+    missing_objects = Tuple(unique(missing))
+    contract_available =
+        status === :available_pqs_physical_gausslet_rhf_input_contract
+    h1_matrix_finite =
+        isnothing(h1_matrix) ? nothing : all(isfinite, Matrix{Float64}(h1_matrix))
+    h1_matrix_symmetry_error =
+        isnothing(h1_matrix) ? nothing :
+        norm(Matrix{Float64}(h1_matrix) - transpose(Matrix{Float64}(h1_matrix)), Inf)
+    pre_final_pair_matrix_finite =
+        isnothing(pre_final_pair_matrix) ? nothing :
+        all(isfinite, Matrix{Float64}(pre_final_pair_matrix))
+    pre_final_pair_matrix_symmetry_error =
+        isnothing(pre_final_pair_matrix) ? nothing :
+        norm(
+            Matrix{Float64}(pre_final_pair_matrix) -
+            transpose(Matrix{Float64}(pre_final_pair_matrix)),
+            Inf,
+        )
+    summary = (;
+        status,
+        blocker,
+        route_family,
+        route_kind,
+        fixture_role,
+        source_plan_status,
+        final_basis_status,
+        h1_payload_status,
+        h1_j_payload_status,
+        input_contract_available = contract_available,
+        electron_count,
+        occupation_policy = isnothing(occupation) ? nothing : occupation.policy,
+        occupation_nocc = isnothing(occupation) ? nothing : occupation.nocc,
+        final_dimension =
+            isnothing(final_basis) ? nothing : final_basis.final_dimension,
+        h1_matrix_available = !isnothing(h1_matrix),
+        h1_matrix_finite,
+        h1_matrix_symmetry_error,
+        density_interaction_available = !isnothing(density_interaction),
+        density_gauge =
+            isnothing(density_interaction) ? nothing : density_interaction.density_gauge,
+        raw_pair_factor_convention =
+            isnothing(density_interaction) ? nothing :
+            get(density_interaction.metadata, :raw_pair_factor_convention, nothing),
+        final_to_pre_final_transform_available = !isnothing(final_to_pre_final),
+        pre_final_pair_matrix_available = !isnothing(pre_final_pair_matrix),
+        pre_final_pair_matrix_finite,
+        pre_final_pair_matrix_symmetry_error,
+        private_diagnostic_only = true,
+        private_rhf_materialized = false,
+        endpoint_blocker =
+            contract_available ?
+            :missing_physical_gausslet_private_rhf_execution :
+            blocker,
+        available_objects,
+        missing_objects,
+    )
+    metadata = (;
+        source =
+            :pqs_source_box_route_driver_diatomic_physical_gausslet_rhf_input_contract,
+        existing_complete_core_shell_rhf_helpers_adapted = false,
+        scf_executed = false,
+        private_diagnostic_only = true,
+    )
+    return _PQSDiatomicPhysicalGaussletRHFInputContractPayload(
+        status,
+        blocker,
+        route_family,
+        source_plan,
+        source_plan_status,
+        final_basis,
+        final_basis_status,
+        h1_payload,
+        h1_payload_status,
+        h1_j_payload,
+        h1_j_payload_status,
+        electron_count,
+        occupation,
         available_objects,
         missing_objects,
         summary,

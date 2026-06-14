@@ -69,6 +69,8 @@ const _H2_PHYSICAL_PQS_INPUT =
             @test file["route/h1_j_status"] ===
                   :materialized_pqs_physical_gausslet_h1_j_payload
             @test file["route/h1_j_materialized"] == true
+            @test file["route/private_rhf_input_contract_status"] ===
+                  :available_pqs_physical_gausslet_rhf_input_contract
             @test file["route/private_rhf_materialized"] == false
 
             @test file["basis/retained_atom_core_interiors"] == true
@@ -79,7 +81,7 @@ const _H2_PHYSICAL_PQS_INPUT =
 
             @test file["physics/endpoint_ready"] == false
             @test file["physics/endpoint_blocker"] ===
-                  :missing_physical_gausslet_rhf_or_solver_contract
+                  :missing_physical_gausslet_private_rhf_execution
             @test isfinite(file["physics/h1_lowest"])
             @test file["physics/h1_lowest"] < 0
             @test file["physics/h1_hamiltonian_matrix_finite"] == true
@@ -98,6 +100,21 @@ const _H2_PHYSICAL_PQS_INPUT =
             @test file["density_interaction/pre_final_pair_matrix_finite"] == true
             @test file["density_interaction/pre_final_pair_matrix_symmetry_error"] < 1e-8
             @test isfinite(file["density_interaction/h1_j_self_coulomb"])
+            @test file["private_rhf/input_contract_status"] ===
+                  :available_pqs_physical_gausslet_rhf_input_contract
+            @test file["private_rhf/input_contract_blocker"] === nothing
+            @test file["private_rhf/input_contract_available"] == true
+            @test file["private_rhf/electron_count"] == 2
+            @test file["private_rhf/occupation_policy"] === :closed_shell_rhf
+            @test file["private_rhf/occupation_nocc"] == 1
+            @test file["private_rhf/h1_matrix_available"] == true
+            @test file["private_rhf/h1_matrix_finite"] == true
+            @test file["private_rhf/h1_matrix_symmetry_error"] < 1e-8
+            @test file["private_rhf/density_interaction_available"] == true
+            @test file["private_rhf/final_to_pre_final_transform_available"] == true
+            @test file["private_rhf/pre_final_pair_matrix_available"] == true
+            @test file["private_rhf/pre_final_pair_matrix_finite"] == true
+            @test file["private_rhf/pre_final_pair_matrix_symmetry_error"] < 1e-8
             @test file["comparison/ready"] == false
             @test file["private_rhf/requested"] == false
             @test file["private_rhf/materialized"] == false

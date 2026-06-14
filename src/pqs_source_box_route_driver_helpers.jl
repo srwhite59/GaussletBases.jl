@@ -7634,6 +7634,16 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
             diatomic_physical_gausslet_final_basis_payload,
             diatomic_physical_gausslet_h1_payload,
         )
+    diatomic_physical_gausslet_rhf_input_contract =
+        _pqs_source_box_route_driver_diatomic_physical_gausslet_rhf_input_contract(
+            parent,
+            route_skeleton,
+            recipe,
+            diatomic_physical_gausslet_source_plan_payload,
+            diatomic_physical_gausslet_final_basis_payload,
+            diatomic_physical_gausslet_h1_payload,
+            diatomic_physical_gausslet_h1_j_payload,
+        )
     complete_core_shell_diagnostic_route_payload =
         _pqs_source_box_route_driver_complete_core_shell_diagnostic_route_payload(
             parent,
@@ -7753,6 +7763,7 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
         diatomic_physical_gausslet_final_basis_payload,
         diatomic_physical_gausslet_h1_payload,
         diatomic_physical_gausslet_h1_j_payload,
+        diatomic_physical_gausslet_rhf_input_contract,
         complete_core_shell_diagnostic_route_payload,
         diatomic_complete_core_shell_support_window_payload,
         diatomic_raw_box_route_payload,
@@ -8202,6 +8213,10 @@ function _pqs_source_box_route_driver_physical_gausslet_target_report_fields(
         hasproperty(assembly, :diatomic_physical_gausslet_h1_j_payload) ?
         assembly.diatomic_physical_gausslet_h1_j_payload :
         nothing
+    rhf_input_contract =
+        hasproperty(assembly, :diatomic_physical_gausslet_rhf_input_contract) ?
+        assembly.diatomic_physical_gausslet_rhf_input_contract :
+        nothing
     summary =
         isnothing(payload) ?
         (;
@@ -8303,6 +8318,41 @@ function _pqs_source_box_route_driver_physical_gausslet_target_report_fields(
                     h1_j_payload.summary.pre_final_pair_matrix_symmetry_error,
                 h1_j_self_coulomb = h1_j_payload.summary.self_coulomb,
                 physics_endpoint_blocker = h1_j_payload.summary.endpoint_blocker,
+            ),
+        )
+    end
+    if !isnothing(rhf_input_contract)
+        contract_summary = rhf_input_contract.summary
+        summary = merge(
+            summary,
+            (;
+                private_rhf_input_contract_status = contract_summary.status,
+                private_rhf_input_contract_blocker = contract_summary.blocker,
+                private_rhf_input_contract_available =
+                    contract_summary.input_contract_available,
+                private_rhf_electron_count = contract_summary.electron_count,
+                private_rhf_occupation_policy =
+                    contract_summary.occupation_policy,
+                private_rhf_occupation_nocc = contract_summary.occupation_nocc,
+                private_rhf_h1_matrix_available =
+                    contract_summary.h1_matrix_available,
+                private_rhf_h1_matrix_finite =
+                    contract_summary.h1_matrix_finite,
+                private_rhf_h1_matrix_symmetry_error =
+                    contract_summary.h1_matrix_symmetry_error,
+                private_rhf_density_interaction_available =
+                    contract_summary.density_interaction_available,
+                private_rhf_final_to_pre_final_transform_available =
+                    contract_summary.final_to_pre_final_transform_available,
+                private_rhf_pre_final_pair_matrix_available =
+                    contract_summary.pre_final_pair_matrix_available,
+                private_rhf_pre_final_pair_matrix_finite =
+                    contract_summary.pre_final_pair_matrix_finite,
+                private_rhf_pre_final_pair_matrix_symmetry_error =
+                    contract_summary.pre_final_pair_matrix_symmetry_error,
+                private_rhf_materialized =
+                    contract_summary.private_rhf_materialized,
+                physics_endpoint_blocker = contract_summary.endpoint_blocker,
             ),
         )
     end
