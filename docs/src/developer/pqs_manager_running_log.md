@@ -674,3 +674,45 @@ Remaining blocker / next:
 
 Line-count / complexity note:
 - Scoped `src + test + bin` diff was `173` added / `248` deleted, net `-75`.
+
+## Pass 238 - Source-Plan Materializer Audit
+
+Commit(s):
+- this commit - Record independent H2 PQS source-plan audit
+
+Summary:
+- No-edit audit identified the next source-plan seam: add a descriptor-only
+  independent H2 PQS source-plan payload, not coefficient or final-basis
+  materialization.
+- The audit found the key hazard in the current assembly path: the generic
+  source-plan candidate calls `bond_aligned_diatomic_nested_fixed_source(...)`,
+  which is source-backed WL/QW data and must be gated away from the independent
+  route.
+- Recommended descriptor contents are compact per-unit source/retained-rule
+  facts for `:atom_contact_core`, `:shared_shell_1`, and `:shared_shell_2`,
+  while keeping coefficient materialization blocked.
+
+Validation:
+- Doer: read-only inspection only; no Julia commands or tests.
+- Manager: reviewed the audit and confirmed the worktree was clean except for
+  the tracked response file.
+
+Goal advancement:
+- MT2: defined the next implementation seam for independent H2 PQS.
+- LT5: separated independent source-plan authority from the fake/source-backed
+  WL/QW candidate path.
+- MT5/MT6: identified same-surface cleanup candidates for the descriptor pass.
+
+Medium-goal update:
+- none.
+
+Risk / guardrail:
+- Do not let the independent route call `bond_aligned_diatomic_nested_fixed_source(...)`.
+  That path belongs to fake-PQS/WL reproduction only.
+
+Remaining blocker / next:
+- Implement the descriptor-only source-plan payload, gate out the source-backed
+  candidate, and leave the next numerical blocker explicit.
+
+Line-count / complexity note:
+- No source/test/bin changes in this audit.
