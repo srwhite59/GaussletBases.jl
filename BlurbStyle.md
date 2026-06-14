@@ -117,6 +117,19 @@ Weak targets:
 
 If the target is weak, stop and ask whether the pass should happen.
 
+## Use The Manager Running Log For Cartesian/PQS Work
+
+For Cartesian/PQS work, repo-manager should read
+`docs/src/developer/pqs_manager_running_log.md` before drafting a blurb.
+
+Each blurb should be consistent with the long-term goals, anti-goals, and
+current medium-term goals in that log. If a proposed pass changes the
+medium-term goals, the blurb should say so explicitly and the manager should
+update the running log after acceptance.
+
+Do not ask the doer to rediscover the strategic state from old pass logs when
+the running log already records it.
+
 ## Respect Carrying Cost
 
 Every line of source, test, documentation, compatibility glue, metadata, and

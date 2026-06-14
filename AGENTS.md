@@ -117,6 +117,36 @@ should include exact known code surfaces, explicit exclusions, decision rules,
 and reporting requirements rather than expecting the doer to reconstruct the
 manager's searches or reasoning.
 
+## Manager running log
+
+For Cartesian/PQS manager-led work, read:
+
+- `docs/src/developer/pqs_manager_running_log.md`
+
+before drafting a blurb, accepting a pass, or resuming after compaction.
+
+The running log is a manager-level decision ledger. It records strategic
+interpretation, long-term goals, current medium-term goals, guardrails, and
+remaining blockers. It does not replace per-pass doer responses, baton reviews,
+or `state.md`.
+
+After each accepted manager-reviewed pass, append a compact entry to the
+running log unless the pass is purely mechanical and the manager explicitly
+records why no entry is needed. The entry should include:
+
+- pass number/title;
+- accepted commit(s);
+- short summary;
+- validation actually used by doer and manager;
+- goal advancement using LT/MT labels;
+- medium-goal update, if any;
+- risk or guardrail;
+- remaining blocker or next step;
+- line-count/complexity note when relevant.
+
+Do not duplicate the doer response. Use the running log to preserve strategic
+interpretation and prevent drift.
+
 ## Structured state, staged metadata, and test runtime rules
 
 Short commandment:

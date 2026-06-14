@@ -155,6 +155,22 @@ supplement paths as one of: reference/oracle, temporary migration scaffold,
 active route-owned implementation, or deletion candidate. Do not promote a flat
 path to public driver architecture without an explicit review.
 
+## Medium-Term Goal Maintenance
+
+Medium-term goals are current-lane goals, not permanent project goals. The
+manager should review them after major milestones, strategic corrections, or
+lane changes, and at least every several passes in a long loop.
+
+When a pass completes, invalidates, or materially changes a medium-term goal,
+the manager should update this section in the same commit as the running-log
+entry or in a small follow-up commit. The entry should say that the
+medium-term goals were updated and why.
+
+Do not churn medium-term goals for every small pass. Prefer stable goals over
+pass-local task lists. Ask the user before changing the broad direction of the
+lane, but do not ask for permission merely to mark a completed goal as done or
+to clarify a blocker already established by review.
+
 ## Entry Template
 
 ```markdown
@@ -173,6 +189,9 @@ Validation:
 Goal advancement:
 - LT#: ...
 - MT#: ...
+
+Medium-goal update:
+- none / updated MT# because ...
 
 Risk / guardrail:
 - ...
