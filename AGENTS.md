@@ -224,6 +224,10 @@ During cleanup or retirement work:
   justified only when it replaces more stale code than it adds.
 - Do not add tests that mainly preserve old helper names, route-shadow
   vocabulary, all-pairs inventory details, or transitional metadata flags.
+- Do not require slow old tests to pass merely because they used to protect the
+  stale path being deleted. For deletion work, prefer validating active callers,
+  replacement endpoints, package load/import, and the smallest surviving
+  contract smoke over reviving obsolete test shape.
 
 Stable code that is not expected to change soon usually needs only a small smoke
 or endpoint check, not all development-era blocked-path and internal-vocabulary
