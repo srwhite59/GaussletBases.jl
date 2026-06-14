@@ -82,6 +82,8 @@ const _H2_FAKE_PQS_INPUT =
                 h1 = file["route/h1_status"],
                 h1j = file["route/h1_j_status"],
                 rhf_input = file["route/private_rhf_input_contract_status"],
+                fake = file["route/fake_pqs_enabled"],
+                independent = file["route/independent_pqs_transform"],
             )
             @test route_fingerprint == (;
                 role = :fake_pqs_source_backed_wl_reproduction,
@@ -90,7 +92,13 @@ const _H2_FAKE_PQS_INPUT =
                 h1 = :materialized_pqs_physical_gausslet_h1_solve,
                 h1j = :materialized_pqs_physical_gausslet_h1_j_payload,
                 rhf_input = :available_pqs_physical_gausslet_rhf_input_contract,
+                fake = true,
+                independent = false,
             )
+            @test file["route/comparison_role"] === :fake_pqs_wl_reproduction
+            @test file["route/source"] === :source_backed_fixed_source_oracle
+            @test file["route/warning"] ===
+                  :retained_transform_imported_from_wl_qw_fixed_source_oracle
 
             @test file["basis/retained_atom_core_interiors"] == true
             @test file["basis/source_plan_role"] ===
@@ -98,7 +106,11 @@ const _H2_FAKE_PQS_INPUT =
             @test file["basis/final_dimension"] == 463
             @test file["basis/final_overlap_identity_error"] < 1e-10
 
-            @test file["physics/endpoint_ready"] == true
+            @test file["physics/endpoint_role"] === :fake_pqs_wl_reproduction
+            @test file["physics/independent_pqs_transform"] == false
+            @test file["physics/endpoint_ready"] == false
+            @test file["physics/endpoint_blocker"] ===
+                  :fake_pqs_source_backed_wl_reproduction_not_independent_pqs
             @test isfinite(file["physics/h1_lowest"])
             @test file["physics/h1_lowest"] < 0
             @test file["physics/h1_hamiltonian_matrix_finite"] == true
