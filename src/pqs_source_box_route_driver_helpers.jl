@@ -8314,7 +8314,6 @@ function _pqs_source_box_route_driver_physical_gausslet_target_report_fields(
                 :missing_physical_gausslet_supplement_request_payload,
             supplement_request_basis_name = nothing,
             supplement_request_lmax = nothing,
-            supplement_request_representation_status = :not_available,
             supplement_request_required_provider_blocks = (),
             supplement_request_missing_fact_labels = (),
             supplement_representation_status = :not_available,
@@ -8345,10 +8344,6 @@ function _pqs_source_box_route_driver_physical_gausslet_target_report_fields(
                 supplement_request_nuclear_charges = request_summary.nuclear_charges,
                 supplement_request_bond_axis = request_summary.bond_axis,
                 supplement_request_bond_length = request_summary.bond_length,
-                supplement_request_representation_status =
-                    request_summary.representation_status,
-                supplement_request_representation_object_kind =
-                    request_summary.representation_object_kind,
                 supplement_request_required_provider_blocks =
                     request_summary.required_provider_blocks,
                 supplement_request_missing_fact_labels =

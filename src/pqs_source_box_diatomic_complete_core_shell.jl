@@ -408,8 +408,6 @@ struct _PQSDiatomicPhysicalGaussletSupplementRequestPayload
     uncontracted
     residual_keep_policy::Symbol
     residual_drop_tolerance
-    representation_status::Symbol
-    representation_object_kind::Symbol
     required_provider_blocks::Tuple
     available_fact_labels::Tuple
     missing_fact_labels::Tuple
@@ -882,24 +880,16 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_supplement_requ
     if !target_available
         status = :blocked_pqs_physical_gausslet_supplement_request
         blocker = :missing_physical_gausslet_target_inventory
-        representation_status = :not_available
-        representation_object_kind = :not_available
         available_fact_labels = ()
         missing_fact_labels = (blocker,)
     elseif supplement_policy === :none
         status = :not_requested
         blocker = nothing
-        representation_status = :not_requested
-        representation_object_kind = :not_requested
         available_fact_labels = ()
         missing_fact_labels = ()
     elseif supplement_policy === :mwg_residual_gto
         status = :available_pqs_physical_gausslet_supplement_request
         blocker = nothing
-        representation_status =
-            :available_pqs_physical_gausslet_gto_supplement_representation
-        representation_object_kind =
-            :cartesian_gaussian_shell_supplement_representation
         available_fact_labels = (
             :physical_gausslet_core_shell_target_inventory,
             :route_owned_gto_supplement_request,
@@ -913,8 +903,6 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_supplement_requ
     else
         status = :blocked_pqs_physical_gausslet_supplement_request
         blocker = :unsupported_physical_gausslet_supplement_policy
-        representation_status = :not_available
-        representation_object_kind = :not_available
         available_fact_labels = ()
         missing_fact_labels = (blocker,)
     end
@@ -936,8 +924,6 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_supplement_requ
         uncontracted,
         residual_keep_policy,
         residual_drop_tolerance,
-        representation_status,
-        representation_object_kind,
         required_provider_blocks,
         available_fact_labels,
         missing_fact_labels,
@@ -950,9 +936,6 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_supplement_requ
             :pqs_source_box_route_driver_diatomic_physical_gausslet_supplement_request_payload,
         boundary = :request_metadata_only,
         route_private = true,
-        representation_materialized =
-            representation_status ===
-            :available_pqs_physical_gausslet_gto_supplement_representation,
         provider_blocks_materialized = false,
         gto_mwg_materialization = false,
     )
@@ -973,8 +956,6 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_supplement_requ
         uncontracted,
         residual_keep_policy,
         residual_drop_tolerance,
-        representation_status,
-        representation_object_kind,
         required_provider_blocks,
         available_fact_labels,
         missing_fact_labels,

@@ -205,16 +205,12 @@ const _H2_PHYSICAL_PQS_INPUT =
                 status = file["supplement_request/status"],
                 blocker = file["supplement_request/blocker"],
                 policy = file["supplement_request/supplement_policy"],
-                representation_status =
-                    file["supplement_request/representation_status"],
                 missing = Tuple(file["supplement_request/missing_fact_labels"]),
             )
             @test request_fingerprint == (;
                 status = :available_pqs_physical_gausslet_supplement_request,
                 blocker = nothing,
                 policy = :mwg_residual_gto,
-                representation_status =
-                    :available_pqs_physical_gausslet_gto_supplement_representation,
                 missing = (:missing_provider_gto_supplement_blocks,),
             )
             @test (

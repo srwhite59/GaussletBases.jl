@@ -613,8 +613,6 @@ function _pqs_source_box_route_driver_write_pqs_diatomic_readiness_artifact!(
             supplement_request_nuclear_charges = (),
             supplement_request_bond_axis = nothing,
             supplement_request_bond_length = nothing,
-            supplement_request_representation_status = :not_available,
-            supplement_request_representation_object_kind = :not_available,
             supplement_request_required_provider_blocks = (),
             supplement_request_missing_fact_labels = (),
             supplement_request_matrices_materialized = false,
@@ -757,8 +755,6 @@ function _pqs_source_box_route_driver_write_pqs_diatomic_readiness_artifact!(
             nuclear_charges = get(target, :supplement_request_nuclear_charges, ()),
             bond_axis = get(target, :supplement_request_bond_axis, nothing),
             bond_length = get(target, :supplement_request_bond_length, nothing),
-            representation_status =
-                get(target, :supplement_request_representation_status, nothing),
             required_provider_blocks =
                 get(target, :supplement_request_required_provider_blocks, ()),
             missing_fact_labels =
