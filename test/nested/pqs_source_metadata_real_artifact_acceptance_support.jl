@@ -207,17 +207,12 @@ end
 function _pqs_source_metadata_acceptance_table_records(
     writer,
     source_inventory;
-    path = nothing,
 )
-    if isnothing(path)
-        io = IOBuffer()
-        writer(io, source_inventory)
-        return _pqs_source_metadata_acceptance_tsv_records(
-            String(take!(io)),
-        )
-    end
-    writer(path, source_inventory)
-    return _pqs_source_metadata_acceptance_tsv_records(read(path, String))
+    io = IOBuffer()
+    writer(io, source_inventory)
+    return _pqs_source_metadata_acceptance_tsv_records(
+        String(take!(io)),
+    )
 end
 
 function _pqs_source_metadata_acceptance_all_records_equal(
@@ -312,11 +307,7 @@ function _pqs_source_metadata_acceptance_explicit_parent_lattice_statuses(
     end
 end
 
-function _be2_pqs_q5_source_metadata_acceptance(
-    artifact_dir::AbstractString;
-    source_shells_table_path = nothing,
-    source_modes_table_path = nothing,
-)
+function _be2_pqs_q5_source_metadata_acceptance(artifact_dir::AbstractString)
     checks = _PQSSourceMetadataAcceptanceChecks()
     _pqs_source_metadata_acceptance_record!(
         checks,
@@ -358,35 +349,21 @@ function _be2_pqs_q5_source_metadata_acceptance(
                         :be2_pqs_q5_source_metadata_real_artifact_acceptance,
                 ),
             )
-        relation_inventory =
-            metrics_module._pqs_current_route_fixed_column_source_relation_inventory(
-                retained_inventory;
-                provenance = (
-                    source =
-                        :be2_pqs_q5_source_metadata_real_artifact_acceptance,
-                ),
-            )
         contract = metrics_module._pqs_source_metadata_export_contract()
         source_shell_header, source_shell_records =
             _pqs_source_metadata_acceptance_table_records(
                 metrics_module._write_pqs_source_shells_table,
                 source_inventory;
-                path = source_shells_table_path,
             )
         source_mode_header, source_mode_records =
             _pqs_source_metadata_acceptance_table_records(
                 metrics_module._write_pqs_source_modes_table,
                 source_inventory;
-                path = source_modes_table_path,
             )
 
         record = _pqs_source_metadata_acceptance_record!
         require = _pqs_source_metadata_acceptance_require!
-        record(checks, "operator_assembly_run", false)
-        record(checks, "qw_hamiltonian_construction_run", false)
-        record(checks, "full_postprocess_export_run", false)
         require(checks, "fixed_dimension_is_1483", source_inventory.fixed_dimension == 1483)
-        require(checks, "relation_fixed_dimension_is_1483", relation_inventory.fixed_dimension == 1483)
         require(checks, "source_shells_table_present", !isempty(source_shell_records))
         require(checks, "source_modes_table_present", !isempty(source_mode_records))
         require(checks, "source_shell_header_matches_contract", source_shell_header == collect(contract.source_shells_header))
@@ -441,88 +418,20 @@ function _be2_pqs_q5_source_metadata_acceptance(
         require(checks, "source_mode_table_shell_statuses_unavailable", _pqs_source_metadata_acceptance_all_records_equal(source_mode_records, "shell_label_status", "unavailable"))
         require(checks, "source_mode_table_ray_statuses_unavailable", _pqs_source_metadata_acceptance_all_records_equal(source_mode_records, "ray_label_status", "unavailable"))
         require(checks, "source_mode_table_radial_statuses_unavailable", _pqs_source_metadata_acceptance_all_records_equal(source_mode_records, "radial_order_status", "unavailable"))
-        require(checks, "product_doside_relations_status", relation_inventory.status == :product_doside_axis_tuple_relations_only)
-        require(checks, "product_doside_relation_rows_is_531", relation_inventory.row_count == 531)
-        require(checks, "product_doside_relation_kinds_only", all(==(:product_axis_tuple), relation_inventory.relation_kinds))
-        require(checks, "product_axis_tuples_not_rays", relation_inventory.absences_by_contract.product_axis_tuples_not_interpreted_as_ray_labels)
-        require(checks, "product_axis_tuples_are_not_ray_labels", !relation_inventory.diagnostics.product_axis_tuples_are_ray_labels)
-        require(checks, "fixed_column_source_relations_product_doside_only", relation_inventory.diagnostics.product_doside_row_count == 531)
-        require(checks, "support_dense_relation_unavailable_columns_is_642", relation_inventory.diagnostics.support_dense_unavailable_column_count == 642)
-        require(checks, "shell_realized_relation_unavailable_columns_is_310", relation_inventory.diagnostics.shell_realized_pqs_unavailable_column_count == 310)
-        require(checks, "fixed_column_source_relations_no_center_inference", !relation_inventory.diagnostics.inferred_from_centers)
-        require(checks, "fixed_column_source_relations_no_nearest_grid_inference", !relation_inventory.diagnostics.inferred_from_nearest_grid)
-        require(checks, "fixed_column_source_relations_no_support_order_inference", !relation_inventory.diagnostics.inferred_from_support_order)
-        require(checks, "fixed_column_source_relations_no_support_index_inference", !relation_inventory.diagnostics.inferred_from_support_indices)
-        require(checks, "fixed_column_source_relations_no_raw_to_final_inference", !relation_inventory.diagnostics.inferred_from_raw_to_final_support)
-        require(checks, "no_retained_weight_or_ida_division", !source_inventory.diagnostics.retained_weight_or_ida_division && !relation_inventory.diagnostics.retained_weight_or_ida_division)
-        require(checks, "no_route_construction_change", !source_inventory.diagnostics.route_construction_changed && !relation_inventory.diagnostics.route_construction_changed)
-        require(checks, "no_packet_adoption", !source_inventory.diagnostics.packet_adoption && !relation_inventory.diagnostics.packet_adoption)
-        require(checks, "no_qw_hamiltonian_change", !source_inventory.diagnostics.qwhamiltonian_changed && !relation_inventory.diagnostics.qwhamiltonian_changed)
-        require(checks, "no_public_default_consumes", !source_inventory.diagnostics.public_default_consumes && !relation_inventory.diagnostics.public_default_consumes)
+        require(checks, "no_retained_weight_or_ida_division", !source_inventory.diagnostics.retained_weight_or_ida_division)
+        require(checks, "no_route_construction_change", !source_inventory.diagnostics.route_construction_changed)
+        require(checks, "no_packet_adoption", !source_inventory.diagnostics.packet_adoption)
+        require(checks, "no_qw_hamiltonian_change", !source_inventory.diagnostics.qwhamiltonian_changed)
+        require(checks, "no_public_default_consumes", !source_inventory.diagnostics.public_default_consumes)
     end
     _pqs_source_metadata_acceptance_record!(
         checks,
         "elapsed_seconds",
         elapsed,
     )
-    if !isnothing(source_shells_table_path)
-        _pqs_source_metadata_acceptance_record!(
-            checks,
-            "source_shells_table",
-            source_shells_table_path,
-        )
-    end
-    if !isnothing(source_modes_table_path)
-        _pqs_source_metadata_acceptance_record!(
-            checks,
-            "source_modes_table",
-            source_modes_table_path,
-        )
-    end
     return (
         rows = copy(checks.rows),
         row_dict = Dict(checks.rows),
         failures = copy(checks.failures),
-    )
-end
-
-function _be2_pqs_q5_source_metadata_export_tables(
-    artifact_dir::AbstractString,
-    output_dir::AbstractString;
-    table_prefix::AbstractString = "be2_strict_pqs_q5",
-)
-    artifact_dir_text = strip(String(artifact_dir))
-    output_dir_text = strip(String(output_dir))
-    table_prefix_text = strip(String(table_prefix))
-    isempty(artifact_dir_text) && throw(
-        ArgumentError("source metadata export wrapper requires an explicit artifact_dir"),
-    )
-    isempty(output_dir_text) && throw(
-        ArgumentError("source metadata export wrapper requires an explicit output_dir"),
-    )
-    isempty(table_prefix_text) && throw(
-        ArgumentError("source metadata export wrapper requires a nonempty table_prefix"),
-    )
-
-    output_dir_abs = abspath(output_dir_text)
-    mkpath(output_dir_abs)
-    source_shells_table_path =
-        joinpath(output_dir_abs, "$(table_prefix_text)_source_shells.tsv")
-    source_modes_table_path =
-        joinpath(output_dir_abs, "$(table_prefix_text)_source_modes.tsv")
-    acceptance = _be2_pqs_q5_source_metadata_acceptance(
-        artifact_dir_text;
-        source_shells_table_path,
-        source_modes_table_path,
-    )
-    return (
-        artifact_dir = abspath(artifact_dir_text),
-        output_dir = output_dir_abs,
-        source_shells_table_path = source_shells_table_path,
-        source_modes_table_path = source_modes_table_path,
-        rows = acceptance.rows,
-        row_dict = acceptance.row_dict,
-        failures = acceptance.failures,
-        acceptance = acceptance,
     )
 end

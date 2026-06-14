@@ -868,3 +868,49 @@ Line-count / complexity note:
 - Scoped `src + test + bin` diff was `280` added / `2` deleted, net `+278`.
   This exception was explicitly granted and recorded in pass-241 exception
   files. A subagent was dispatched to prepare the next cleanup target.
+
+## Pass 242 - Source Metadata Acceptance Shrink
+
+Commit(s):
+- this commit - Shrink PQS source metadata acceptance scaffold
+
+Summary:
+- Deleted the stale explicit missing-artifact export wrapper, path-writing
+  branch, path/privacy assertions, fixed-column source-relation inventory
+  checks, and no-op operator/Hamiltonian/postprocess rows from the Be2 PQS
+  source metadata acceptance scaffold.
+- Preserved the live private source-shell/source-mode metadata acceptance
+  checks: TSV presence/headers, source-local axis labels, explicit parent-axis
+  fields, unavailable ray/shell/radial labels, and no route/Hamiltonian/public
+  consumption changes.
+
+Validation:
+- Doer: ran the focused opt-in source-metadata test without
+  `BE2_PQS_Q5_ARTIFACT_DIR`; it skipped cleanly with one broken/skipped test in
+  `0.0s`; ran `git diff --check`.
+- Manager: reviewed the test-only diff and reran `git diff --check`.
+
+Goal advancement:
+- MT5/LT2: paid down part of the pass-241 line-budget exception by deleting
+  obsolete acceptance scaffolding instead of broadening the independent H2 PQS
+  implementation pass.
+- LT7: reinforced the rule that stale scaffold tests should not be kept alive
+  merely to prove obsolete branches still run.
+- MT6: classified this metadata export wrapper/source-relation cloud as
+  migration-era test pressure, while leaving the live metadata contract intact.
+
+Medium-goal update:
+- none.
+
+Risk / guardrail:
+- Do not delete the remaining source-shell/source-mode acceptance contract until
+  there is a separate decision on which source count/category assertions are
+  migration detail versus live acceptance.
+
+Remaining blocker / next:
+- Continue using the deletion-candidate audit queue for near-term cleanup, or
+  return to independent H2 PQS complete source-plan assembly after enough
+  cleanup paydown.
+
+Line-count / complexity note:
+- Scoped `src + test + bin` diff was `11` added / `143` deleted, net `-132`.
