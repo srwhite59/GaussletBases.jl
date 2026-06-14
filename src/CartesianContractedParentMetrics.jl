@@ -1,8 +1,6 @@
 module CartesianContractedParentMetrics
-
 import LinearAlgebra
 import SparseArrays
-
 import ..GaussletBases: CoulombGaussianExpansion,
                          _NestedFixedBlock3D,
                          _BondAlignedDiatomicHighOrderRecipeSourceConstruction3D,
@@ -61,9 +59,10 @@ export CartesianContractedParentMetricPacket3D,
        contracted_parent_metric_packet_weights,
        contracted_parent_metric_packet_centers,
        contracted_parent_metric_packet_diagnostics
-
 include("cartesian_contracted_parent_metrics/core.jl")
-include("cartesian_contracted_parent_metrics/source_box_route_shadow.jl")
+include("cartesian_contracted_parent_metrics/product_staged_metric_fallbacks.jl")
+include("cartesian_contracted_parent_metrics/source_box_pair_shadow.jl")
+include("cartesian_contracted_parent_metrics/legacy_source_box_fixtures.jl")
 include("cartesian_contracted_parent_metrics/current_route_metadata_export.jl")
 include("cartesian_contracted_parent_metrics/component_smoke_sidecars.jl")
 end
