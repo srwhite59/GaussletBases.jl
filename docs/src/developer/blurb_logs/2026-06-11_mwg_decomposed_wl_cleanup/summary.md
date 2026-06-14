@@ -62,73 +62,23 @@ That kind of hole is exactly what the blurb log should preserve, because it
 shows why scientific tests are better long-term guards than helper-vocabulary
 coverage.
 
-The current live He + GTO question is later in the stack:
+The He + GTO and Be S+P work later in the stack established three durable
+lessons. First, final-basis residual GTO directions should be represented as
+MWG/effective Gaussian data; raw GTO density-density must not be accepted as the
+final electron-electron operator. Second, old nested/QW can be trusted as an
+oracle when it reproduces known He/H2 rows or Be S+P values, but it should not
+be treated as the target architecture. Third, the newer decomposed/final-basis
+route became scientifically credible only after matching the old Be S+P oracle
+to roundoff and replacing per-unit mixed CPB/GTO local construction with a
+factorized retained-basis path.
 
-- final-basis residual GTO directions are now represented as MWG/effective
-  Gaussian data;
-- raw GTO density-density is still not accepted as the final electron-electron
-  operator;
-- residual MWG density-density now matches the old nested fixed-block QW/MWG
-  oracle on the side13 He + GTO fixture;
-- the Fig. 8 AHGBS-9 S-only `n_s = 5`, `d = 0.3` reproduction now matches the
-  447-function structure and is within about `0.558 mHa` of the plotted energy,
-  which is close enough to stop that reproduction audit for now;
-- the `n_s = 7` He RHF probe is now in the microhartree range against Fig. 8,
-  closing the immediate atomic He accuracy check;
-- the H2 `R = 4.0` old nested/QW restricted HF probe reproduced documented
-  S+P molecular rows to roundoff, so the old diatomic route is trusted enough
-  as an oracle for this line;
-- the next scientific target is Be atom S+P GTO residual behavior: old
-  nested/QW should be used as oracle, while the live question is how far the
-  newer decomposed/final-basis route can honestly go and what precise blocker
-  remains before valid Be RHF;
-- the first Be S+P attempt correctly stopped because `/Users/srw/BasisSets`
-  was absent; the authorized retry should use
-  `/Users/srw/Library/CloudStorage/Dropbox/GaussletModules/BasisSets`, which
-  contains Be `cc-pV5Z`;
-- the authorized Be S+P old nested/QW oracle is now clean at q/ns `5 / 5`,
-  with fixed dimension `615`, `21` residual S+P supplement directions, final
-  dimension `636`, and RHF total `-14.574514244574694`;
-- the next replacement-oriented blocker is
-  `:missing_driver_owned_decomposed_be_sp_fixture_wiring`: removing it should
-  turn H/H2+ fixture-local GTO wiring into a reusable decomposed
-  atom+supplement seam and make old nested/QW less necessary as route
-  authority;
-- the private decomposed atom+supplement seam now materializes the Be S+P
-  final-basis one-electron route with final dimension `636`; the next blocker
-  is not old-oracle data, but phase-attributed final density-density/RHF
-  materialization through that seam;
-- the Be S+P final-basis RHF route now matches the old nested/QW oracle to
-  about `3.2e-14 Ha`; the measured cost center is `mixed_gto_blocks`, about
-  `188.6` seconds out of a `357.4` second probe;
-- after hoisting reusable GTO/GTO self blocks, the Be S+P probe still matches
-  the old oracle to about `3.2e-14 Ha`, while total time is about `342.5`
-  seconds and `mixed_gto_blocks` is about `177.2` seconds; subphase timing
-  shows the true remaining bottleneck is per-unit mixed CPB/GTO local block
-  construction, about `168.1` seconds over `131` retained units;
-- the active one-center atomic mixed-GTO route now has a factorized/projected
-  retained-basis path, removing the per-unit provider-local hot loop for Be
-  S+P; the Be probe still matches the old nested/QW oracle to about
-  `5.5e-14 Ha`, total time is about `174.3` seconds, and `mixed_gto_blocks`
-  is about `9.18` seconds;
-- warm/cold attribution after the mixed-GTO replacement shows the remaining
-  long cold Be timings are mostly compilation: cold route is about `169.9`
-  seconds, but same-process warm route is about `0.523` seconds and warm total
-  is about `2.40` seconds, dominated by RHF rather than route construction;
-- a small synthetic atom+GTO precompile workload now covers the final-basis
-  route shape without user-local `BasisSets`; it costs about `49s` to rebuild
-  package precompile and improves the Be S+P fresh-process route from about
-  `169.9s` to `159.0s`, so the next cold-latency target is specialization
-  pressure rather than a larger precompile fixture;
-- the first specialization audit found that hot decomposed WL inventory results
-  still encode retained-unit count in the type via tuple-valued `unit_keys` and
-  `unit_summaries`; the side-7 precompile workload compiles a 27-unit result,
-  while side-15 Be needs a 131-unit result. Small-inventory pair summaries also
-  compile a tuple-heavy shape that production side-15 omits;
-- the hot decomposed WL inventory result now uses vector-backed `unit_keys` and
-  `unit_summaries`, and `pair_summaries` is a compact count/status record
-  rather than an `NTuple{N,...}`. Detailed pair ranges are read from live
-  `unit_pairs` iteration instead of preserved as hot report data.
+The final state of this loop is performance debt, not physics uncertainty. Be
+S+P with `q/ns = 5 / 5` has fixed gausslet dimension `615`, `21` residual S+P
+supplement directions, final dimension `636`, and RHF total
+`-14.574514244574694` from the old oracle. The decomposed/final-basis route
+matches that oracle to roundoff; warm route construction is subsecond, but cold
+fresh-process latency still reflects compilation and specialization pressure,
+especially moment-capable mixed GTO payloads and density prerequisites.
 
 ## Current Cleanup Rule
 
@@ -136,3 +86,67 @@ Every nontrivial implementation blurb should ask what old code, test, metadata,
 or compatibility path became unnecessary. If nothing was removed, the response
 should say why no existing surface was made obsolete and identify any remaining
 stale or duplicate surface to retire next.
+
+## Consolidated Pass Summary: 001-025
+
+Passes 001-025 moved the MWG/decomposed-WL line from residual-GTO plumbing into
+a validated Be S+P atom route, then paused after compile-attribution work. The
+early passes added combined GTO residual moment matrices and final-basis
+residual MWG density-density blocks while preserving the trust boundary: raw
+GTO density-density was not accepted as the final electron-electron operator.
+Side13 He + GTO RHF improved over gausslet-only He but sat about `2.7 mHa`
+below the exact He HF reference, so it stayed diagnostic until matched old
+nested/QW MWG comparison showed roundoff agreement with the decomposed route.
+That established the issue as Hamiltonian/fixture semantics, not a decomposed
+route bug.
+
+The loop then used old nested/QW as oracle rather than route authority. The
+Fig. 8 AHGBS-9 He audit recovered the `n_s = 5`, `d = 0.3`, 447-function
+structure but remained `0.558 mHa` below the plotted energy, while the `n_s = 7`
+He points reached microhartree-to-tens-of-microhartree agreement, enough to stop
+the atomic-He reproduction audit. H2 `R = 4.0` old nested/QW restricted HF
+reproduced documented S+P molecular rows to roundoff, making the old diatomic
+route trustworthy as an oracle. The first Be S+P attempt correctly blocked on a
+missing `/Users/srw/BasisSets`; the authorized GaussletModules basis retry
+produced the old nested/QW oracle with final dimension `636` and RHF total
+`-14.574514244574694`.
+
+Passes 012-015 removed the key replacement blocker,
+`:missing_driver_owned_decomposed_be_sp_fixture_wiring`, by adding a private
+decomposed atom+GTO final-basis seam. The one-electron Be S+P route materialized
+with retained gausslet dimension `615`, `21` supplement directions, final
+dimension `636`, and clean final overlap/Hamiltonian checks. The full
+final-basis density-density/RHF route then matched the old nested/QW oracle to
+roundoff, with RHF total near `-14.57451424457464`. Phase timing identified
+`mixed_gto_blocks` as the real cost center; hoisting GTO/GTO self blocks helped
+only modestly, and the decisive fix was a factorized retained-basis mixed-GTO
+path for the one-center atomic case, reducing `mixed_gto_blocks` from about
+`177s` to about `9.18s` while preserving oracle agreement.
+
+Passes 016-022 separated algorithmic runtime from cold compilation. Warm/cold
+attribution showed the post-mixed-GTO Be route was about `170s` cold but only
+about `0.52s` warm, with total warm time dominated by RHF rather than operator
+construction. A small synthetic atom+GTO precompile workload was added, but its
+benefit was limited, so the loop turned to specialization shape instead of
+enlarging precompile. The hot decomposed-WL inventory result was changed from
+tuple-sized summaries to vector-backed `unit_keys` / `unit_summaries` and
+compact `pair_summaries`, cutting Be fresh-process route time from about `159s`
+to about `31s`. Narrow matrix-set compute objects then replaced report-shaped
+residual moment and one-electron staging, improving residual-moment cold phase
+from about `6.91s` to `1.07s` and cold route time to about `25.5s`, with
+physics still pinned to the Be oracle.
+
+Passes 023-025 deliberately stopped short of speculative refactoring. Direct
+one-electron helper timing did not justify rewriting inner factorized helpers;
+full-route attribution showed timing sinks and metadata were not the cause, and
+density-density-enabled work accounted for about `13.5s` of the remaining cold
+route gap. The final density result constructor and old residual-MWG kernel
+were not bottlenecks; remaining pressure was traced to density prerequisites,
+especially moment-capable mixed GTO block payload shape, residual moment
+prerequisites, and gausslet density construction. The recommended state after
+pass 025 was to record this as known GTO compile debt, avoid further polish
+unless it blocks the next physics target, and pivot to the PQS source-box-first
+plan with the baton-loop mechanics in place.
+
+The detailed per-pass files for passes 001-025 were removed after this
+consolidation to keep the curated log from accumulating obsolete scaffolding.
