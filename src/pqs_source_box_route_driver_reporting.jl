@@ -810,6 +810,14 @@ function _pqs_source_box_route_driver_write_pqs_diatomic_readiness_artifact!(
                 get(get(target, :support_plan, (;)), :counts_generated, nothing),
             support_counts_source =
                 get(get(target, :support_plan, (;)), :counts_source, nothing),
+            support_plan_coverage_complete =
+                get(get(target, :support_plan, (;)), :coverage_complete, nothing),
+            support_plan_duplicate_count =
+                get(get(target, :support_plan, (;)), :duplicate_count, nothing),
+            support_plan_missing_count =
+                get(get(target, :support_plan, (;)), :missing_count, nothing),
+            support_plan_outside_count =
+                get(get(target, :support_plan, (;)), :outside_count, nothing),
             source_backed_fixed_source_oracle_used =
                 get(target, :source_backed_fixed_source_oracle_used, nothing),
             retained_transform_authority =

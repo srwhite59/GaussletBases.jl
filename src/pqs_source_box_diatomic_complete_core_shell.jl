@@ -391,6 +391,103 @@ struct _PQSDiatomicPhysicalGaussletCoreShellTargetPayload
     metadata
 end
 
+function _pqs_source_box_route_driver_independent_h2_support_region_plan(
+    parent,
+    route_skeleton,
+    recipe,
+)
+    route_kind =
+        hasproperty(route_skeleton, :route_kind) ?
+        route_skeleton.route_kind :
+        recipe.route_kind
+    route_kind === :bond_aligned_diatomic_independent_pqs_source_box_core_shell ||
+        return nothing
+    blocked(blocker) = (;
+        status = :blocked_independent_pqs_support_region_plan,
+        blocker,
+        authority = :cartesian_shellification_route_geometry,
+        support_order = (:atom_contact_core, :shared_shell_1, :shared_shell_2),
+        support_counts = (;),
+        counts_generated = false,
+        counts_source = :support_region_materializer_blocked,
+        coverage_complete = false,
+        duplicate_count = nothing,
+        missing_count = nothing,
+        outside_count = nothing,
+    )
+    parent_axis_counts =
+        hasproperty(route_skeleton, :parent_axis_counts) ?
+        route_skeleton.parent_axis_counts :
+        hasproperty(parent, :axis_counts) ? parent.axis_counts : nothing
+    axis_count_tuple =
+        _pqs_source_box_route_driver_axis_counts_tuple(parent_axis_counts)
+    axis_count_tuple == (9, 9, 15) ||
+        return blocked(:unexpected_independent_h2_parent_axis_counts)
+    bundles =
+        hasproperty(parent, :parent_axis_bundle_object) ?
+        parent.parent_axis_bundle_object :
+        nothing
+    isnothing(bundles) && return blocked(:missing_parent_axis_bundle_object)
+    axes = Tuple(collect(_nested_axis_pgdg(bundles, axis).centers)
+                 for axis in (:x, :y, :z))
+    locations =
+        hasproperty(parent, :atom_locations) ? Tuple(parent.atom_locations) : ()
+    length(locations) == 2 || return blocked(:missing_diatomic_atom_locations)
+    bond_axis = hasproperty(parent, :bond_axis) ? parent.bond_axis : :z
+    raw = CartesianShellification.raw_terminal_geometry(
+        axes,
+        Tuple(Tuple(Float64(value) for value in location) for location in locations);
+        core_side = 5,
+        q = 5,
+        bond_axis,
+    )
+    regions = raw.regions
+    atom_regions = Tuple(region for region in regions if region.role == :atom_local_core)
+    midpoint_regions = Tuple(region for region in regions if region.role == :midpoint_slab)
+    shared_regions = sort(
+        collect(region for region in regions if region.role == :shared_molecular_shell);
+        by = region -> prod(length.(region.outer_box)),
+        rev = true,
+    )
+    length(atom_regions) == 2 && length(midpoint_regions) == 1 &&
+        length(shared_regions) == 2 ||
+        return blocked(:unexpected_independent_h2_terminal_region_shape)
+    support_order = (:atom_contact_core, :shared_shell_1, :shared_shell_2)
+    support_counts = (;
+        atom_contact_core =
+            sum(region.support_count for region in (atom_regions..., midpoint_regions...)),
+        shared_shell_1 = shared_regions[1].support_count,
+        shared_shell_2 = shared_regions[2].support_count,
+    )
+    coverage = raw.coverage
+    counts_match =
+        Tuple(values(support_counts)) == (275, 578, 362)
+    status =
+        coverage.coverage_complete && counts_match ?
+        :available_independent_pqs_support_region_plan :
+        :blocked_independent_pqs_support_region_plan
+    blocker =
+        status === :available_independent_pqs_support_region_plan ?
+        nothing :
+        !counts_match ? :independent_h2_support_count_mismatch :
+        :independent_h2_support_coverage_mismatch
+    return (;
+        status,
+        blocker,
+        authority = :cartesian_shellification_route_geometry,
+        support_order,
+        support_counts,
+        counts_generated = status === :available_independent_pqs_support_region_plan,
+        counts_source = :cartesian_shellification_route_geometry,
+        coverage_complete = coverage.coverage_complete,
+        duplicate_count = coverage.duplicate_site_count,
+        missing_count = coverage.missing_site_count,
+        outside_count = 0,
+        nuclear_indices = raw.nuclear_indices,
+        bond_axis = raw.bond_axis,
+    )
+end
+
 struct _PQSDiatomicPhysicalGaussletSupplementRequestPayload
     status::Symbol
     blocker
@@ -719,7 +816,19 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_target_payload(
         isnothing(inventory) ? () : Tuple(inventory.support_units)
     retained_units =
         isnothing(inventory) ? () : Tuple(inventory.retained_units)
+    generated_support_plan =
+        independent_target ?
+        _pqs_source_box_route_driver_independent_h2_support_region_plan(
+            parent,
+            route_skeleton,
+            recipe,
+        ) :
+        nothing
+    generated_support_available =
+        !isnothing(generated_support_plan) &&
+        generated_support_plan.status === :available_independent_pqs_support_region_plan
     support_counts =
+        generated_support_available ? generated_support_plan.support_counts :
         isnothing(inventory) ? (;) : inventory.support_counts
     retained_counts =
         isnothing(inventory) ? (;) : inventory.retained_counts
@@ -746,6 +855,7 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_target_payload(
     source_plan_blocker =
         isnothing(inventory) ? nothing : get(inventory, :source_plan_blocker, nothing)
     support_plan =
+        !isnothing(generated_support_plan) ? generated_support_plan :
         isnothing(inventory) ? nothing : get(inventory, :support_plan, nothing)
     supplement_policy =
         isnothing(inventory) ?

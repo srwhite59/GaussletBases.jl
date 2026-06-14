@@ -477,3 +477,67 @@ Line-count / complexity note:
 - No source/test/bin changes in this audit. The implementation pass should
   delete the pass-232 hard-coded blocked support-plan field cloud once generated
   support-plan authority exists.
+
+## Pass 234 - Independent H2 PQS Support-Region Plan
+
+Commit(s):
+- `433d684e` - Authorize H2 PQS support-plan line exception
+- this commit - Accept independent H2 PQS support-region plan
+
+Summary:
+- Implemented the independent H2 PQS support-region materializer/fingerprint
+  under the pass-234 line-budget exception. The support plan now derives its
+  counts from `CartesianShellification.raw_terminal_geometry(...)`, not from
+  fake-PQS/WL coefficient matrices.
+- Generated support units match the intended route order and counts:
+  `:atom_contact_core = 275`, `:shared_shell_1 = 578`, and
+  `:shared_shell_2 = 362`. Shared shells are ordered outside-in.
+- Artifact fields now report generated support authority:
+  `support_plan_status = :available_independent_pqs_support_region_plan`,
+  `support_plan_authority = :cartesian_shellification_route_geometry`, and
+  `support_counts_generated = true`.
+
+Validation:
+- Doer: package load passed; focused independent-input artifact check passed in
+  about `66.6s`; `git diff --check` passed.
+- Manager: reviewed the diff, ran `git diff --check`, and ran package load in
+  about `0.65s`. Manager did not rerun the long focused driver check.
+
+Goal advancement:
+- MT2: advanced independent H2 PQS from target constants to generated
+  support-region authority.
+- MT3: preserved common physical support vocabulary while keeping retained
+  transforms blocked.
+- LT5: kept construction authority explicit and fake-free.
+
+Medium-goal update:
+- none.
+
+Risk / guardrail:
+- This is support-region authority only. Source plan, retained rules, final
+  basis, H1, H1-J, RHF, supplements, CR2, export, and public API remain blocked.
+
+Remaining blocker / next:
+- Pay down the pass-234 line-budget exception using the old-flat-path deletion
+  audit. Then return to independent PQS retained-rule/source-plan work.
+
+Line-count / complexity note:
+- Pass 234 used the approved exception: `118` added / `10` deleted, net `+108`
+  in `src + test + bin`.
+
+## Medium-Term Goal Checkpoint - Passes 230-234
+
+- MT1 Fake-PQS quarantine: active/maintained. Fake-PQS remains a golden
+  regression only and was not mutated in passes 230-234.
+- MT2 Independent H2 PQS recovery: active. The route now has a fake-free
+  target and generated support-region authority; retained rules/source-plan
+  remain blocked.
+- MT3 Common physical support vocabulary: active. The H2 support vocabulary is
+  now generated from shellification geometry, not just copied as constants.
+- MT4 Supplement staging after authority: active/blocked. Supplement work
+  remains intentionally deferred until retained-transform authority exists.
+- MT5 Cleanup pressure: active with one recorded exception. Pass 234 incurred
+  net `+108`; pass 235 should pay this down.
+- MT6 Audit/classify old Cartesian flat paths: active. A read-only old-flat-path
+  retirement audit identified route-shadow density-density fixture pressure as
+  the best near-term deletion target.

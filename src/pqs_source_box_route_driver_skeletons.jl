@@ -144,16 +144,6 @@ function _pqs_source_box_route_driver_physical_gausslet_core_shell_skeleton(
             independent_target ?
             :missing_independent_pqs_physical_source_plan_materializer :
             nothing,
-        support_plan =
-            independent_target ?
-            (;
-                status = :blocked_independent_pqs_support_region_plan,
-                blocker = :missing_independent_pqs_support_region_materializer,
-                authority = :pqs_source_box_route_geometry_pending_materializer,
-                counts_generated = false,
-                counts_source = :target_constants_pending_support_region_materializer,
-            ) :
-            nothing,
     )
     pair_entries = ()
     pair_family_counts =
