@@ -7618,6 +7618,14 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
             recipe,
             diatomic_physical_gausslet_source_plan_payload,
         )
+    diatomic_physical_gausslet_h1_payload =
+        _pqs_source_box_route_driver_diatomic_physical_gausslet_h1_payload(
+            parent,
+            route_skeleton,
+            recipe,
+            diatomic_physical_gausslet_source_plan_payload,
+            diatomic_physical_gausslet_final_basis_payload,
+        )
     complete_core_shell_diagnostic_route_payload =
         _pqs_source_box_route_driver_complete_core_shell_diagnostic_route_payload(
             parent,
@@ -7735,6 +7743,7 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
         diatomic_physical_gausslet_source_plan_candidate_payload,
         diatomic_physical_gausslet_source_plan_payload,
         diatomic_physical_gausslet_final_basis_payload,
+        diatomic_physical_gausslet_h1_payload,
         complete_core_shell_diagnostic_route_payload,
         diatomic_complete_core_shell_support_window_payload,
         diatomic_raw_box_route_payload,
@@ -8176,6 +8185,10 @@ function _pqs_source_box_route_driver_physical_gausslet_target_report_fields(
         hasproperty(assembly, :diatomic_physical_gausslet_final_basis_payload) ?
         assembly.diatomic_physical_gausslet_final_basis_payload :
         nothing
+    h1_payload =
+        hasproperty(assembly, :diatomic_physical_gausslet_h1_payload) ?
+        assembly.diatomic_physical_gausslet_h1_payload :
+        nothing
     summary =
         isnothing(payload) ?
         (;
@@ -8223,6 +8236,28 @@ function _pqs_source_box_route_driver_physical_gausslet_target_report_fields(
                     final_basis_payload.summary.final_overlap_identity_error,
                 physics_endpoint_blocker =
                     final_basis_payload.summary.endpoint_blocker,
+            ),
+        )
+    end
+    if !isnothing(h1_payload)
+        summary = merge(
+            summary,
+            (;
+                h1_status = h1_payload.h1_status,
+                h1_blocker = h1_payload.blocker,
+                h1_materialized = h1_payload.summary.h1_materialized,
+                h1_lowest_energy = h1_payload.summary.lowest_energy,
+                h1_hamiltonian_matrix_finite =
+                    h1_payload.summary.h1_hamiltonian_matrix_finite,
+                h1_hamiltonian_symmetry_error =
+                    h1_payload.summary.h1_hamiltonian_symmetry_error,
+                support_kinetic_status = h1_payload.support_kinetic_status,
+                support_electron_nuclear_status =
+                    h1_payload.support_electron_nuclear_status,
+                final_kinetic_status = h1_payload.final_kinetic_status,
+                final_electron_nuclear_status =
+                    h1_payload.final_electron_nuclear_status,
+                physics_endpoint_blocker = h1_payload.summary.endpoint_blocker,
             ),
         )
     end

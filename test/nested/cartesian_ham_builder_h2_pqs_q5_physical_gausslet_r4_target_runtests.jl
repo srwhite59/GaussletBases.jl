@@ -63,9 +63,9 @@ const _H2_PHYSICAL_PQS_INPUT =
                   :available_pqs_diatomic_physical_gausslet_core_shell_source_plan
             @test file["route/final_basis_status"] ===
                   :available_pqs_physical_gausslet_final_basis
-            @test file["route/h1_status"] !==
-                  :materialized_pqs_complete_core_shell_final_h1_solve
-            @test file["route/h1_materialized"] == false
+            @test file["route/h1_status"] ===
+                  :materialized_pqs_physical_gausslet_h1_solve
+            @test file["route/h1_materialized"] == true
             @test file["route/h1_j_materialized"] == false
             @test file["route/private_rhf_materialized"] == false
 
@@ -77,8 +77,11 @@ const _H2_PHYSICAL_PQS_INPUT =
 
             @test file["physics/endpoint_ready"] == false
             @test file["physics/endpoint_blocker"] ===
-                  :missing_physical_gausslet_h1_builder
-            @test !haskey(file, "physics/h1_lowest")
+                  :missing_physical_gausslet_h1_j_builder
+            @test isfinite(file["physics/h1_lowest"])
+            @test file["physics/h1_lowest"] < 0
+            @test file["physics/h1_hamiltonian_matrix_finite"] == true
+            @test file["physics/h1_hamiltonian_symmetry_error"] < 1e-8
             @test file["comparison/ready"] == false
             @test file["private_rhf/requested"] == false
             @test file["private_rhf/materialized"] == false

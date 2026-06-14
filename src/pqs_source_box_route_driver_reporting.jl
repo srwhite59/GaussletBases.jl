@@ -532,6 +532,11 @@ function _pqs_source_box_route_driver_write_pqs_diatomic_readiness_artifact!(
             final_basis_blocker = nothing,
             final_dimension = nothing,
             final_overlap_identity_error = nothing,
+            h1_status = :not_available,
+            h1_materialized = false,
+            h1_lowest_energy = nothing,
+            h1_hamiltonian_matrix_finite = nothing,
+            h1_hamiltonian_symmetry_error = nothing,
             physics_endpoint_blocker = nothing,
             supplement_policy = nothing,
         ),
@@ -546,6 +551,14 @@ function _pqs_source_box_route_driver_write_pqs_diatomic_readiness_artifact!(
         physical_target_artifact ?
         get(target, :final_basis_status, get(readiness, :final_basis_status, :not_available)) :
         get(readiness, :final_basis_status, :not_available)
+    route_h1_status =
+        physical_target_artifact ?
+        get(target, :h1_status, get(readiness, :h1_status, :not_available)) :
+        get(readiness, :h1_status, :not_available)
+    route_h1_materialized =
+        physical_target_artifact ?
+        get(target, :h1_materialized, get(readiness, :h1_materialized, false)) :
+        get(readiness, :h1_materialized, false)
     physics_endpoint_blocker =
         physical_target_artifact ?
         get(
@@ -566,13 +579,33 @@ function _pqs_source_box_route_driver_write_pqs_diatomic_readiness_artifact!(
             get(readiness, :final_overlap_identity_error, nothing),
         ) :
         get(readiness, :final_overlap_identity_error, nothing)
+    h1_lowest_energy =
+        physical_target_artifact ?
+        get(target, :h1_lowest_energy, get(readiness, :h1_lowest_energy, nothing)) :
+        get(readiness, :h1_lowest_energy, nothing)
+    h1_hamiltonian_matrix_finite =
+        physical_target_artifact ?
+        get(
+            target,
+            :h1_hamiltonian_matrix_finite,
+            get(readiness, :h1_hamiltonian_matrix_finite, nothing),
+        ) :
+        get(readiness, :h1_hamiltonian_matrix_finite, nothing)
+    h1_hamiltonian_symmetry_error =
+        physical_target_artifact ?
+        get(
+            target,
+            :h1_hamiltonian_symmetry_error,
+            get(readiness, :h1_hamiltonian_symmetry_error, nothing),
+        ) :
+        get(readiness, :h1_hamiltonian_symmetry_error, nothing)
 
     for (group, values) in (
         ("system", (; atom_symbols = system.atom_symbols, nuclear_charges = system.nuclear_charges, atom_locations, bond_axis, bond_length)),
         ("config", (; input_path = isnothing(input_path) ? "" : String(input_path), route_family = recipe.route_family, route_kind = recipe.route_kind, q = recipe.q, n_s = recipe.n_s, core_spacing = recipe.core_spacing, xmax_parallel = get(recipe, :xmax_parallel, nothing), xmax_transverse = get(recipe, :xmax_transverse, nothing), supplement_policy = recipe.supplement_policy, comparison_ready, run_final_basis = get(recipe, :run_final_basis, false))),
         ("comparison", (; ready = comparison_ready, blocker = comparison_blocker, reference_label = something(recipe.comparison_reference_label, ""))),
         ("parent", (; parent_axis_counts = report.parent_contract.parent_axis_counts, parent_axis_counts_source = report.parent_contract.parent_axis_counts_source, parent_materialization_blocker = report.parent_contract.parent_materialization_blocker, parent_basis_object_available = report.parent_contract.parent_basis_object_available, parent_qw_basis_object_available = report.parent_contract.parent_qw_basis_object_available, parent_axis_bundle_object_available = report.parent_contract.parent_axis_bundle_object_available, parent_basis_object_type_label = report.parent_contract.parent_basis_object_type_label, parent_qw_basis_object_type_label = report.parent_contract.parent_qw_basis_object_type_label, parent_axis_bundle_object_type_label = report.parent_contract.parent_axis_bundle_object_type_label)),
-        ("route", (; artifact_role = get(recipe, :artifact_role, nothing), readiness_status = get(readiness, :status, :not_available), readiness_blocker = get(readiness, :blocker, nothing), source_plan_status = route_source_plan_status, final_basis_status = route_final_basis_status, h1_status = get(readiness, :h1_status, :not_available), h1_materialized = get(readiness, :h1_materialized, false), h1_j_materialized = get(readiness, :h1_j_materialized, false), ham_input_status = get(readiness, :ham_input_payload_status, :not_available), hamiltonian_handoff_status = get(readiness, :hamiltonian_handoff_payload_status, :not_available), private_rhf_materialized = get(readiness, :rhf_materialized, false), public_api = get(readiness, :public_api, false), exports_materialized = get(readiness, :exports_materialized, false), artifacts_materialized = get(readiness, :artifacts_materialized, false))),
+        ("route", (; artifact_role = get(recipe, :artifact_role, nothing), readiness_status = get(readiness, :status, :not_available), readiness_blocker = get(readiness, :blocker, nothing), source_plan_status = route_source_plan_status, final_basis_status = route_final_basis_status, h1_status = route_h1_status, h1_materialized = route_h1_materialized, h1_j_materialized = get(readiness, :h1_j_materialized, false), ham_input_status = get(readiness, :ham_input_payload_status, :not_available), hamiltonian_handoff_status = get(readiness, :hamiltonian_handoff_payload_status, :not_available), private_rhf_materialized = get(readiness, :rhf_materialized, false), public_api = get(readiness, :public_api, false), exports_materialized = get(readiness, :exports_materialized, false), artifacts_materialized = get(readiness, :artifacts_materialized, false))),
     )
         _pqs_source_box_route_driver_write_group!(file, group, values)
     end
@@ -630,11 +663,9 @@ function _pqs_source_box_route_driver_write_pqs_diatomic_readiness_artifact!(
         (;
             endpoint_ready = get(recipe, :physics_endpoint_ready, nothing),
             endpoint_blocker = physics_endpoint_blocker,
-            h1_lowest = get(readiness, :h1_lowest_energy, nothing),
-            h1_hamiltonian_matrix_finite =
-                get(readiness, :h1_hamiltonian_matrix_finite, nothing),
-            h1_hamiltonian_symmetry_error =
-                get(readiness, :h1_hamiltonian_symmetry_error, nothing),
+            h1_lowest = h1_lowest_energy,
+            h1_hamiltonian_matrix_finite,
+            h1_hamiltonian_symmetry_error,
         ),
     )
     _pqs_source_box_route_driver_write_present_group!(
