@@ -7600,9 +7600,17 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
             route_skeleton,
             recipe,
         )
+    diatomic_physical_gausslet_source_plan_candidate_payload =
+        _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_candidate_payload(
+            parent,
+            route_skeleton,
+            recipe,
+            diatomic_physical_gausslet_target_payload,
+        )
     diatomic_physical_gausslet_source_plan_payload =
         _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_payload(
             diatomic_physical_gausslet_target_payload,
+            diatomic_physical_gausslet_source_plan_candidate_payload,
         )
     complete_core_shell_diagnostic_route_payload =
         _pqs_source_box_route_driver_complete_core_shell_diagnostic_route_payload(
@@ -7718,6 +7726,7 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
         pairs,
         low_order_assembly,
         diatomic_physical_gausslet_target_payload,
+        diatomic_physical_gausslet_source_plan_candidate_payload,
         diatomic_physical_gausslet_source_plan_payload,
         complete_core_shell_diagnostic_route_payload,
         diatomic_complete_core_shell_support_window_payload,
@@ -8179,6 +8188,14 @@ function _pqs_source_box_route_driver_physical_gausslet_target_report_fields(
                 source_plan_blocker = source_plan_payload.blocker,
                 source_plan_object_kind = source_plan_payload.summary.object_kind,
                 source_plan_missing_objects = source_plan_payload.missing_objects,
+                source_plan_candidate_status =
+                    source_plan_payload.summary.source_plan_candidate_status,
+                source_plan_candidate_source =
+                    source_plan_payload.summary.source_plan_candidate_source,
+                source_plan_candidate_counts_match =
+                    source_plan_payload.summary.source_plan_candidate_counts_match,
+                source_plan_authority_status =
+                    source_plan_payload.summary.source_plan_authority_status,
             ),
         )
     end

@@ -524,6 +524,10 @@ function _pqs_source_box_route_driver_write_pqs_diatomic_readiness_artifact!(
             source_plan_role = nothing,
             source_plan_status = :not_available,
             source_plan_blocker = nothing,
+            source_plan_candidate_status = :not_available,
+            source_plan_candidate_source = :not_available,
+            source_plan_candidate_counts_match = false,
+            source_plan_authority_status = :not_available,
             supplement_policy = nothing,
         ),
     )
@@ -585,6 +589,14 @@ function _pqs_source_box_route_driver_write_pqs_diatomic_readiness_artifact!(
             source_plan_role = get(target, :source_plan_role, nothing),
             source_plan_status = get(target, :source_plan_status, nothing),
             source_plan_blocker = get(target, :source_plan_blocker, nothing),
+            source_plan_candidate_status =
+                get(target, :source_plan_candidate_status, nothing),
+            source_plan_candidate_source =
+                get(target, :source_plan_candidate_source, nothing),
+            source_plan_candidate_counts_match =
+                get(target, :source_plan_candidate_counts_match, nothing),
+            source_plan_authority_status =
+                get(target, :source_plan_authority_status, nothing),
             supplement_policy = get(target, :supplement_policy, nothing),
         ),
     )

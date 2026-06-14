@@ -27,7 +27,7 @@ comparison_blocker = :gausslet_only_reference_not_selected
 comparison_reference_label = "WL/QW H2 R=4 gausslet-only target inventory only"
 artifact_role = :physical_gausslet_endpoint_target
 physics_endpoint_ready = false
-physics_endpoint_blocker = :missing_atom_contact_core_support_rows
+physics_endpoint_blocker = :source_plan_candidate_not_route_authority
 retained_atom_core_interiors = true
 source_plan_role = :atom_contact_core_plus_pqs_shared_shells
 

@@ -48,7 +48,14 @@ const _H2_PHYSICAL_PQS_INPUT =
             @test file["target/source_plan_status"] ===
                   :blocked_pqs_diatomic_physical_gausslet_core_shell_source_plan
             @test file["target/source_plan_blocker"] ===
-                  :missing_atom_contact_core_support_rows
+                  :source_plan_candidate_not_route_authority
+            @test file["target/source_plan_candidate_status"] ===
+                  :available_physical_gausslet_source_plan_candidate
+            @test file["target/source_plan_candidate_source"] ===
+                  :source_backed_fixed_source_oracle
+            @test file["target/source_plan_candidate_counts_match"] == true
+            @test file["target/source_plan_authority_status"] ===
+                  :candidate_not_route_authority
             @test file["target/supplement_policy"] === :none
 
             @test file["route/artifact_role"] ===
@@ -71,7 +78,7 @@ const _H2_PHYSICAL_PQS_INPUT =
 
             @test file["physics/endpoint_ready"] == false
             @test file["physics/endpoint_blocker"] ===
-                  :missing_atom_contact_core_support_rows
+                  :source_plan_candidate_not_route_authority
             @test !haskey(file, "physics/h1_lowest")
             @test file["comparison/ready"] == false
             @test file["private_rhf/requested"] == false
