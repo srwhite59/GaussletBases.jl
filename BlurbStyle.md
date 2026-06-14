@@ -127,6 +127,17 @@ current medium-term goals in that log. If a proposed pass changes the
 medium-term goals, the blurb should say so explicitly and the manager should
 update the running log after acceptance.
 
+Running-log updates should be compact but substantive for accepted strategic
+passes: usually 100-250 words or a short bullet list, not a two-sentence tick.
+They should preserve goal advancement, provenance/authority interpretation,
+guardrails, and the next blocker. Purely mechanical passes may use a 1-3
+sentence tick only when the entry explicitly says there was no strategic change.
+
+Every 5 accepted Cartesian/PQS passes, repo-manager should add a medium-term
+goal checkpoint. Every 10-20 accepted passes, or after a major correction,
+repo-manager should add a strategic compression entry. Blurbs that initiate a
+checkpoint or compression pass should say so explicitly.
+
 Do not ask the doer to rediscover the strategic state from old pass logs when
 the running log already records it.
 

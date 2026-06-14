@@ -10,7 +10,8 @@ accepted work:
 - what remains blocked;
 - what future agents should not misunderstand.
 
-Keep entries short. Use the detailed pass response for implementation detail.
+Keep entries compact but substantive. Use the detailed pass response for
+implementation detail.
 
 ## Initiation Snapshot
 
@@ -159,17 +160,39 @@ path to public driver architecture without an explicit review.
 
 Medium-term goals are current-lane goals, not permanent project goals. The
 manager should review them after major milestones, strategic corrections, or
-lane changes, and at least every several passes in a long loop.
+lane changes, and every 5 accepted Cartesian/PQS passes in a long loop.
 
 When a pass completes, invalidates, or materially changes a medium-term goal,
 the manager should update this section in the same commit as the running-log
 entry or in a small follow-up commit. The entry should say that the
 medium-term goals were updated and why.
 
+Every 5 accepted Cartesian/PQS passes, add a medium-term goal checkpoint entry.
+Classify each current MT goal as active, completed, blocked, stale, or needing
+refinement. Update MT wording only when evidence warrants it.
+
 Do not churn medium-term goals for every small pass. Prefer stable goals over
 pass-local task lists. Ask the user before changing the broad direction of the
 lane, but do not ask for permission merely to mark a completed goal as done or
 to clarify a blocker already established by review.
+
+## Entry Policy
+
+Every accepted substantive Cartesian/PQS pass should get a compact but real
+running-log entry, usually 100-250 words or a short bullet list using the
+template below. The entry should not duplicate the doer response, but it must
+preserve strategic interpretation: what changed, which LT/MT goals advanced,
+what future agents should not misread, and the next blocker.
+
+For purely mechanical passes with no strategic change, a 1-3 sentence tick is
+allowed. The tick should explicitly say "no strategic change" and name the
+current goal or guardrail it leaves unchanged.
+
+Every 10-20 accepted passes, or after a major correction, add a strategic
+compression entry. Summarize durable decisions, stale stories, false starts,
+updated MT goals, and next lane direction. Do not prune prior running-log
+entries by default; prefer append-only compression unless the user asks for
+archival reorganization.
 
 ## Entry Template
 

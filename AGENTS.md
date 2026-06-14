@@ -130,9 +130,10 @@ interpretation, long-term goals, current medium-term goals, guardrails, and
 remaining blockers. It does not replace per-pass doer responses, baton reviews,
 or `state.md`.
 
-After each accepted manager-reviewed pass, append a compact entry to the
-running log unless the pass is purely mechanical and the manager explicitly
-records why no entry is needed. The entry should include:
+After each accepted substantive manager-reviewed pass, append a compact but real
+entry to the running log. The default is not a two-sentence tick; use roughly
+100-250 words or a short bullet list that preserves strategic interpretation.
+The entry should include:
 
 - pass number/title;
 - accepted commit(s);
@@ -143,6 +144,20 @@ records why no entry is needed. The entry should include:
 - risk or guardrail;
 - remaining blocker or next step;
 - line-count/complexity note when relevant.
+
+For purely mechanical passes with no strategic change, a 1-3 sentence tick is
+allowed, but it should explicitly say "no strategic change" and name the
+current goal or guardrail it leaves unchanged.
+
+Every 5 accepted Cartesian/PQS passes, add a medium-term goal checkpoint. The
+checkpoint should classify current MT goals as active, completed, blocked,
+stale, or needing refinement, and update MT wording when evidence warrants it.
+
+Every 10-20 accepted passes, or after a major correction, add a strategic
+compression entry summarizing durable decisions, stale stories, false starts,
+and next lane direction. Do not prune prior running-log entries by default;
+prefer append-only compression unless the user asks for archival
+reorganization.
 
 Do not duplicate the doer response. Use the running log to preserve strategic
 interpretation and prevent drift.
