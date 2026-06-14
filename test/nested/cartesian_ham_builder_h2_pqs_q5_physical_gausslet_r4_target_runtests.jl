@@ -27,15 +27,14 @@ const _H2_PHYSICAL_PQS_INPUT =
             @test file["config/supplement_policy"] === :none
             @test file["config/comparison_ready"] == true
             @test file["config/run_final_basis"] == true
+            @test file["supplement_request/status"] === :not_requested
+            @test file["supplement_request/blocker"] === nothing
+            @test file["supplement_request/supplement_policy"] === :none
+            @test file["supplement_request/matrices_materialized"] == false
             @test file["supplement_preflight/status"] === :not_requested
             @test file["supplement_preflight/blocker"] === nothing
-            @test file["supplement_preflight/retained_transform_kind"] === :pqs
-            @test file["supplement_preflight/gausslet_final_dimension"] == 463
-            @test file["supplement_preflight/supplement_policy"] === :none
-            @test Tuple(file["supplement_preflight/required_fact_labels"]) == ()
             @test Tuple(file["supplement_preflight/missing_fact_labels"]) == ()
             @test file["supplement_preflight/matrices_materialized"] == false
-            @test file["supplement_preflight/supplemented_values_materialized"] == false
             @test file["comparison/ready"] == true
             @test file["comparison/blocker"] === nothing
             @test file["comparison/reference_label"] ==
@@ -67,18 +66,12 @@ const _H2_PHYSICAL_PQS_INPUT =
             @test file["target/status"] ===
                   :available_physical_gausslet_core_shell_target_inventory
             @test file["target/blocker"] === nothing
-            @test Tuple(file["target/support_units"]) ==
-                  (:atom_contact_core, :shared_shell_1, :shared_shell_2)
             @test Tuple(file["target/support_counts"]) == (275, 578, 362)
-            @test Tuple(file["target/retained_units"]) ==
-                  (:atom_contact_core, :shared_shell_1, :shared_shell_2)
             @test Tuple(file["target/retained_counts"]) == (251, 98, 114)
             @test Tuple(file["target/retained_order"]) ==
                   (:atom_contact_core, :shared_shell_1, :shared_shell_2)
             @test file["target/expected_final_dimension"] == 463
             @test file["target/retained_atom_core_interiors"] == true
-            @test file["target/source_plan_role"] ===
-                  :atom_contact_core_plus_pqs_shared_shells
             @test file["target/source_plan_status"] ===
                   :available_pqs_diatomic_physical_gausslet_core_shell_source_plan
 
@@ -90,10 +83,8 @@ const _H2_PHYSICAL_PQS_INPUT =
                   :available_pqs_physical_gausslet_final_basis
             @test file["route/h1_status"] ===
                   :materialized_pqs_physical_gausslet_h1_solve
-            @test file["route/h1_materialized"] == true
             @test file["route/h1_j_status"] ===
                   :materialized_pqs_physical_gausslet_h1_j_payload
-            @test file["route/h1_j_materialized"] == true
             @test file["route/private_rhf_input_contract_status"] ===
                   :available_pqs_physical_gausslet_rhf_input_contract
 
@@ -206,31 +197,49 @@ const _H2_PHYSICAL_PQS_INPUT =
             @test file["route/supplement_preflight_status"] ===
                   :blocked_pqs_physical_gausslet_mwg_residual_gto_preflight
             @test file["route/supplement_preflight_blocker"] ===
-                  :missing_provider_gto_supplement_blocks
+                  :missing_gto_supplement_representation
+            @test file["supplement_request/status"] ===
+                  :blocked_pqs_physical_gausslet_mwg_residual_gto_request
+            @test file["supplement_request/blocker"] ===
+                  :missing_gto_supplement_representation
+            @test file["supplement_request/fixture_label"] ===
+                  :h2_r4_physical_gausslet_q5
+            @test file["supplement_request/supplement_policy"] ===
+                  :mwg_residual_gto
+            @test file["supplement_request/basis_name"] == "H/cc-pVTZ"
+            @test file["supplement_request/lmax"] == 1
+            @test Tuple(file["supplement_request/atom_symbols"]) == ("H", "H")
+            @test Tuple(file["supplement_request/nuclear_charges"]) == (1, 1)
+            @test file["supplement_request/bond_axis"] === :z
+            @test file["supplement_request/bond_length"] ≈ 4.0
+            @test file["supplement_request/representation_status"] ===
+                  :not_materialized_pqs_physical_gausslet_gto_supplement_representation
+            @test Tuple(file["supplement_request/required_provider_blocks"]) ==
+                  (
+                      :mixed_gausslet_gto_blocks,
+                      :gto_gto_blocks,
+                      :combined_raw_moment_matrices,
+                      :residual_mwg_representation,
+                      :combined_density_density_readiness,
+                  )
+            @test Tuple(file["supplement_request/missing_fact_labels"]) ==
+                  (
+                      :missing_gto_supplement_representation,
+                      :missing_provider_gto_supplement_blocks,
+                  )
+            @test file["supplement_request/matrices_materialized"] == false
             @test file["supplement_preflight/status"] ===
                   :blocked_pqs_physical_gausslet_mwg_residual_gto_preflight
             @test file["supplement_preflight/blocker"] ===
-                  :missing_provider_gto_supplement_blocks
-            @test file["supplement_preflight/fixture_label"] ===
-                  :h2_r4_physical_gausslet_q5
+                  :missing_gto_supplement_representation
             @test Tuple(file["supplement_preflight/support_counts"]) ==
                   (275, 578, 362)
             @test Tuple(file["supplement_preflight/retained_counts"]) ==
                   (251, 98, 114)
-            @test Tuple(file["supplement_preflight/retained_order"]) ==
-                  (:atom_contact_core, :shared_shell_1, :shared_shell_2)
-            @test file["supplement_preflight/retained_transform_kind"] === :pqs
             @test file["supplement_preflight/gausslet_final_dimension"] == 463
-            @test file["supplement_preflight/supplement_policy"] ===
-                  :mwg_residual_gto
-            @test Tuple(file["supplement_preflight/available_fact_labels"]) ==
-                  (
-                      :physical_gausslet_core_shell_target_inventory,
-                      :pqs_retained_transform_kind,
-                      :gausslet_only_final_dimension,
-                  )
             @test Tuple(file["supplement_preflight/required_fact_labels"]) ==
                   (
+                      :gto_supplement_representation,
                       :provider_gto_supplement_blocks,
                       :mixed_gausslet_gto_blocks,
                       :gto_gto_blocks,
@@ -240,6 +249,7 @@ const _H2_PHYSICAL_PQS_INPUT =
                   )
             @test Tuple(file["supplement_preflight/missing_fact_labels"]) ==
                   (
+                      :missing_gto_supplement_representation,
                       :missing_provider_gto_supplement_blocks,
                       :missing_mixed_gausslet_gto_blocks,
                       :missing_gto_gto_blocks,
@@ -248,7 +258,6 @@ const _H2_PHYSICAL_PQS_INPUT =
                       :missing_combined_density_density_readiness,
                   )
             @test file["supplement_preflight/matrices_materialized"] == false
-            @test file["supplement_preflight/supplemented_values_materialized"] == false
             @test file["route/source_plan_status"] ===
                   :blocked_pqs_diatomic_physical_gausslet_core_shell_source_plan
         end

@@ -602,6 +602,22 @@ function _pqs_source_box_route_driver_write_pqs_diatomic_readiness_artifact!(
             supplement_preflight_missing_fact_labels = (),
             supplement_preflight_matrices_materialized = false,
             supplement_preflight_supplemented_values_materialized = false,
+            supplement_request_status = :not_available,
+            supplement_request_blocker =
+                :missing_physical_gausslet_supplement_request_payload,
+            supplement_request_fixture_label = nothing,
+            supplement_request_basis_name = nothing,
+            supplement_request_lmax = nothing,
+            supplement_request_uncontracted = nothing,
+            supplement_request_atom_symbols = (),
+            supplement_request_nuclear_charges = (),
+            supplement_request_bond_axis = nothing,
+            supplement_request_bond_length = nothing,
+            supplement_request_representation_status = :not_available,
+            supplement_request_representation_object_kind = :not_available,
+            supplement_request_required_provider_blocks = (),
+            supplement_request_missing_fact_labels = (),
+            supplement_request_matrices_materialized = false,
         ),
     )
     wl_reference_candidate_status =
@@ -716,6 +732,30 @@ function _pqs_source_box_route_driver_write_pqs_diatomic_readiness_artifact!(
     )
         _pqs_source_box_route_driver_write_group!(file, group, values)
     end
+    _pqs_source_box_route_driver_write_group!(
+        file,
+        "supplement_request",
+        (;
+            status = get(target, :supplement_request_status, nothing),
+            blocker = get(target, :supplement_request_blocker, nothing),
+            fixture_label = get(target, :supplement_request_fixture_label, nothing),
+            supplement_policy = get(target, :supplement_policy, nothing),
+            basis_name = get(target, :supplement_request_basis_name, nothing),
+            lmax = get(target, :supplement_request_lmax, nothing),
+            atom_symbols = get(target, :supplement_request_atom_symbols, ()),
+            nuclear_charges = get(target, :supplement_request_nuclear_charges, ()),
+            bond_axis = get(target, :supplement_request_bond_axis, nothing),
+            bond_length = get(target, :supplement_request_bond_length, nothing),
+            representation_status =
+                get(target, :supplement_request_representation_status, nothing),
+            required_provider_blocks =
+                get(target, :supplement_request_required_provider_blocks, ()),
+            missing_fact_labels =
+                get(target, :supplement_request_missing_fact_labels, ()),
+            matrices_materialized =
+                get(target, :supplement_request_matrices_materialized, false),
+        ),
+    )
     _pqs_source_box_route_driver_write_group!(
         file,
         "supplement_preflight",

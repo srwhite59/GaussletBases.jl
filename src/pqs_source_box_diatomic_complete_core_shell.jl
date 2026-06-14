@@ -391,6 +391,32 @@ struct _PQSDiatomicPhysicalGaussletCoreShellTargetPayload
     metadata
 end
 
+struct _PQSDiatomicPhysicalGaussletSupplementRequestPayload
+    status::Symbol
+    blocker
+    route_family::Symbol
+    route_kind::Symbol
+    fixture_label::Symbol
+    supplement_policy::Symbol
+    atom_symbols::Tuple
+    nuclear_charges::Tuple
+    atom_locations::Tuple
+    bond_axis
+    bond_length
+    basis_name
+    lmax
+    uncontracted
+    residual_keep_policy::Symbol
+    residual_drop_tolerance
+    representation_status::Symbol
+    representation_object_kind::Symbol
+    required_provider_blocks::Tuple
+    available_fact_labels::Tuple
+    missing_fact_labels::Tuple
+    summary
+    metadata
+end
+
 struct _PQSDiatomicPhysicalGaussletSupplementPreflightPayload
     status::Symbol
     blocker
@@ -756,8 +782,182 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_target_payload(
     )
 end
 
+function _pqs_source_box_route_driver_diatomic_bond_length(atom_locations)
+    length(atom_locations) == 2 || return nothing
+    a = atom_locations[1]
+    b = atom_locations[2]
+    length(a) == 3 && length(b) == 3 || return nothing
+    return sqrt(sum((Float64(a[axis]) - Float64(b[axis]))^2 for axis in 1:3))
+end
+
+function _pqs_source_box_route_driver_diatomic_physical_gausslet_supplement_request_payload(
+    parent,
+    target_payload,
+)
+    target_available =
+        !isnothing(target_payload) &&
+        target_payload.status === :available_physical_gausslet_core_shell_target_inventory
+    center_table =
+        hasproperty(parent, :center_table) ? Tuple(parent.center_table) : ()
+    atom_symbols =
+        Tuple(
+            _pqs_source_box_route_driver_descriptor_property(
+                center,
+                :atom_symbol,
+                :unknown,
+            ) for center in center_table
+        )
+    nuclear_charges =
+        Tuple(
+            _pqs_source_box_route_driver_descriptor_property(
+                center,
+                :nuclear_charge,
+                nothing,
+            ) for center in center_table
+        )
+    atom_locations =
+        Tuple(
+            _pqs_source_box_route_driver_location_tuple(
+                _pqs_source_box_route_driver_descriptor_property(
+                    center,
+                    :location,
+                    nothing,
+                ),
+            ) for center in center_table
+        )
+    bond_axis = hasproperty(parent, :bond_axis) ? parent.bond_axis : nothing
+    bond_length = _pqs_source_box_route_driver_diatomic_bond_length(atom_locations)
+    fixture_label = :h2_r4_physical_gausslet_q5
+    supplement_policy =
+        target_available ? target_payload.supplement_policy : :not_available
+    route_family = target_available ? target_payload.route_family : :not_available
+    route_kind = target_available ? target_payload.route_kind : :not_available
+    basis_name =
+        supplement_policy === :mwg_residual_gto ? "H/cc-pVTZ" : nothing
+    lmax = supplement_policy === :mwg_residual_gto ? 1 : nothing
+    uncontracted = supplement_policy === :mwg_residual_gto ? false : nothing
+    residual_keep_policy =
+        supplement_policy === :mwg_residual_gto ?
+        :route_private_mwg_residual_gto_preflight_only :
+        :not_applicable
+    residual_drop_tolerance =
+        supplement_policy === :mwg_residual_gto ? 1.0e-10 : nothing
+    required_provider_blocks =
+        supplement_policy === :mwg_residual_gto ?
+        (
+            :mixed_gausslet_gto_blocks,
+            :gto_gto_blocks,
+            :combined_raw_moment_matrices,
+            :residual_mwg_representation,
+            :combined_density_density_readiness,
+        ) :
+        ()
+
+    if !target_available
+        status = :blocked_pqs_physical_gausslet_supplement_request
+        blocker = :missing_physical_gausslet_target_inventory
+        representation_status = :not_available
+        representation_object_kind = :not_available
+        available_fact_labels = ()
+        missing_fact_labels = (blocker,)
+    elseif supplement_policy === :none
+        status = :not_requested
+        blocker = nothing
+        representation_status = :not_requested
+        representation_object_kind = :not_requested
+        available_fact_labels = ()
+        missing_fact_labels = ()
+    elseif supplement_policy === :mwg_residual_gto
+        status = :blocked_pqs_physical_gausslet_mwg_residual_gto_request
+        blocker = :missing_gto_supplement_representation
+        representation_status =
+            :not_materialized_pqs_physical_gausslet_gto_supplement_representation
+        representation_object_kind =
+            :cartesian_gaussian_shell_supplement_representation
+        available_fact_labels = (
+            :physical_gausslet_core_shell_target_inventory,
+            :route_owned_gto_supplement_request,
+            :h2_r4_geometry,
+            :h_cc_pvtz_lmax1_supplement_identity,
+        )
+        missing_fact_labels = (
+            :missing_gto_supplement_representation,
+            :missing_provider_gto_supplement_blocks,
+        )
+    else
+        status = :blocked_pqs_physical_gausslet_supplement_request
+        blocker = :unsupported_physical_gausslet_supplement_policy
+        representation_status = :not_available
+        representation_object_kind = :not_available
+        available_fact_labels = ()
+        missing_fact_labels = (blocker,)
+    end
+
+    summary = (;
+        status,
+        blocker,
+        route_family,
+        route_kind,
+        fixture_label,
+        supplement_policy,
+        atom_symbols,
+        nuclear_charges,
+        atom_locations,
+        bond_axis,
+        bond_length,
+        basis_name,
+        lmax,
+        uncontracted,
+        residual_keep_policy,
+        residual_drop_tolerance,
+        representation_status,
+        representation_object_kind,
+        required_provider_blocks,
+        available_fact_labels,
+        missing_fact_labels,
+        matrices_materialized = false,
+        supplemented_values_materialized = false,
+        public_api = false,
+    )
+    metadata = (;
+        source =
+            :pqs_source_box_route_driver_diatomic_physical_gausslet_supplement_request_payload,
+        boundary = :request_metadata_only,
+        route_private = true,
+        representation_materialized = false,
+        provider_blocks_materialized = false,
+        gto_mwg_materialization = false,
+    )
+    return _PQSDiatomicPhysicalGaussletSupplementRequestPayload(
+        status,
+        blocker,
+        route_family,
+        route_kind,
+        fixture_label,
+        supplement_policy,
+        atom_symbols,
+        nuclear_charges,
+        atom_locations,
+        bond_axis,
+        bond_length,
+        basis_name,
+        lmax,
+        uncontracted,
+        residual_keep_policy,
+        residual_drop_tolerance,
+        representation_status,
+        representation_object_kind,
+        required_provider_blocks,
+        available_fact_labels,
+        missing_fact_labels,
+        summary,
+        metadata,
+    )
+end
+
 function _pqs_source_box_route_driver_diatomic_physical_gausslet_supplement_preflight_payload(
     target_payload,
+    request_payload = nothing,
 )
     target_available =
         !isnothing(target_payload) &&
@@ -767,6 +967,7 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_supplement_pref
     required_fact_labels =
         target_available && target_payload.supplement_policy === :mwg_residual_gto ?
         (
+            :gto_supplement_representation,
             :provider_gto_supplement_blocks,
             :mixed_gausslet_gto_blocks,
             :gto_gto_blocks,
@@ -793,8 +994,17 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_supplement_pref
         missing_fact_labels = ()
     elseif target_payload.supplement_policy === :mwg_residual_gto
         status = :blocked_pqs_physical_gausslet_mwg_residual_gto_preflight
-        blocker = :missing_provider_gto_supplement_blocks
+        request_blocker =
+            !isnothing(request_payload) &&
+            request_payload.status !== :available_pqs_physical_gausslet_supplement_request ?
+            request_payload.blocker :
+            nothing
+        blocker =
+            isnothing(request_blocker) ?
+            :missing_provider_gto_supplement_blocks :
+            request_blocker
         missing_fact_labels = (
+            :missing_gto_supplement_representation,
             :missing_provider_gto_supplement_blocks,
             :missing_mixed_gausslet_gto_blocks,
             :missing_gto_gto_blocks,

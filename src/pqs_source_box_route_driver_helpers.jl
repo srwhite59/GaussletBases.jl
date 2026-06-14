@@ -7620,9 +7620,15 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
             route_skeleton,
             recipe,
         )
+    diatomic_physical_gausslet_supplement_request_payload =
+        _pqs_source_box_route_driver_diatomic_physical_gausslet_supplement_request_payload(
+            parent,
+            diatomic_physical_gausslet_target_payload,
+        )
     diatomic_physical_gausslet_supplement_preflight_payload =
         _pqs_source_box_route_driver_diatomic_physical_gausslet_supplement_preflight_payload(
             diatomic_physical_gausslet_target_payload,
+            diatomic_physical_gausslet_supplement_request_payload,
         )
     diatomic_physical_gausslet_source_plan_candidate_payload =
         _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_candidate_payload(
@@ -7796,6 +7802,7 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
         pairs,
         low_order_assembly,
         diatomic_physical_gausslet_target_payload,
+        diatomic_physical_gausslet_supplement_request_payload,
         diatomic_physical_gausslet_supplement_preflight_payload,
         diatomic_physical_gausslet_source_plan_candidate_payload,
         diatomic_physical_gausslet_source_plan_payload,
@@ -8242,6 +8249,10 @@ function _pqs_source_box_route_driver_physical_gausslet_target_report_fields(
         hasproperty(assembly, :diatomic_physical_gausslet_supplement_preflight_payload) ?
         assembly.diatomic_physical_gausslet_supplement_preflight_payload :
         nothing
+    supplement_request_payload =
+        hasproperty(assembly, :diatomic_physical_gausslet_supplement_request_payload) ?
+        assembly.diatomic_physical_gausslet_supplement_request_payload :
+        nothing
     source_plan_payload =
         hasproperty(assembly, :diatomic_physical_gausslet_source_plan_payload) ?
         assembly.diatomic_physical_gausslet_source_plan_payload :
@@ -8288,8 +8299,44 @@ function _pqs_source_box_route_driver_physical_gausslet_target_report_fields(
             supplement_preflight_required_fact_labels = (),
             supplement_preflight_available_fact_labels = (),
             supplement_preflight_missing_fact_labels = (),
+            supplement_request_status = :not_available,
+            supplement_request_blocker =
+                :missing_physical_gausslet_supplement_request_payload,
+            supplement_request_basis_name = nothing,
+            supplement_request_lmax = nothing,
+            supplement_request_representation_status = :not_available,
+            supplement_request_required_provider_blocks = (),
+            supplement_request_missing_fact_labels = (),
         ) :
         payload.summary
+    if !isnothing(supplement_request_payload)
+        request_summary = supplement_request_payload.summary
+        summary = merge(
+            summary,
+            (;
+                supplement_request_status = request_summary.status,
+                supplement_request_blocker = request_summary.blocker,
+                supplement_request_fixture_label = request_summary.fixture_label,
+                supplement_request_basis_name = request_summary.basis_name,
+                supplement_request_lmax = request_summary.lmax,
+                supplement_request_uncontracted = request_summary.uncontracted,
+                supplement_request_atom_symbols = request_summary.atom_symbols,
+                supplement_request_nuclear_charges = request_summary.nuclear_charges,
+                supplement_request_bond_axis = request_summary.bond_axis,
+                supplement_request_bond_length = request_summary.bond_length,
+                supplement_request_representation_status =
+                    request_summary.representation_status,
+                supplement_request_representation_object_kind =
+                    request_summary.representation_object_kind,
+                supplement_request_required_provider_blocks =
+                    request_summary.required_provider_blocks,
+                supplement_request_missing_fact_labels =
+                    request_summary.missing_fact_labels,
+                supplement_request_matrices_materialized =
+                    request_summary.matrices_materialized,
+            ),
+        )
+    end
     if !isnothing(supplement_preflight_payload)
         preflight_summary = supplement_preflight_payload.summary
         summary = merge(
