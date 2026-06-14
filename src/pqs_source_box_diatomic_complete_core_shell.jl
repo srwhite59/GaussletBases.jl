@@ -2604,6 +2604,7 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_rhf_execution_p
         isnothing(input_contract) ? :unknown : input_contract.route_family
     electron_count = get(contract_summary, :electron_count, nothing)
     occupation_nocc = get(contract_summary, :occupation_nocc, nothing)
+    scf_payload = nothing
     if input_contract_status !==
        :available_pqs_physical_gausslet_rhf_input_contract
         status = :blocked_pqs_physical_gausslet_private_rhf_execution
@@ -2611,9 +2612,75 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_rhf_execution_p
             isnothing(input_contract) ?
             :missing_physical_gausslet_rhf_input_contract :
             input_contract.blocker
+        executed = false
+        materialized = false
+        converged = false
+        total_energy = nothing
+        one_body_energy = nothing
+        two_body_energy = nothing
+        iteration_count = 0
+        density_trace = nothing
+        idempotency_residual = nothing
+        commutator_residual = nothing
+        energy_delta = nothing
+        consistency_status =
+            :not_evaluated_missing_physical_gausslet_rhf_input_contract
+        endpoint_blocker = blocker
     else
-        status = :blocked_pqs_physical_gausslet_private_rhf_execution
-        blocker = :missing_physical_gausslet_rhf_execution_adapter
+        scf_payload = _pqs_multilayer_complete_core_shell_rhf_scf_payload(
+            ;
+            input_contract,
+            h1_payload,
+            h1_j_payload,
+            mixing_kind = :fock_diis,
+            max_iterations = 25,
+            density_atol = 1.0e-8,
+            energy_atol = 1.0e-10,
+            residual_atol = 1.0e-8,
+            trace_atol = 1.0e-8,
+            idempotency_atol = 1.0e-8,
+            metadata = (;
+                source =
+                    :pqs_source_box_route_driver_diatomic_physical_gausslet_rhf_execution_payload,
+                private_diagnostic_only = true,
+            ),
+        )
+        scf_summary = scf_payload.summary
+        residual_diagnostics = get(scf_summary, :residual_diagnostics, (;))
+        final_one_step = scf_payload.final_one_step_payload
+        converged =
+            scf_payload.status ===
+            :materialized_pqs_multilayer_complete_core_shell_rhf_scf_payload
+        materialized = converged
+        executed = true
+        status =
+            converged ?
+            :materialized_pqs_physical_gausslet_private_rhf_execution :
+            :blocked_pqs_physical_gausslet_private_rhf_execution
+        blocker =
+            converged ? nothing :
+            scf_payload.blocker === :scf_not_converged ?
+            :physical_gausslet_private_rhf_not_converged :
+            scf_payload.blocker
+        total_energy =
+            isnothing(final_one_step) ? nothing : final_one_step.total_energy
+        one_body_energy =
+            isnothing(final_one_step) ? nothing : final_one_step.one_body_energy
+        two_body_energy =
+            isnothing(final_one_step) ? nothing : final_one_step.two_body_energy
+        iteration_count = get(scf_summary, :iteration_count, 0)
+        density_trace = get(residual_diagnostics, :density_trace, nothing)
+        idempotency_residual =
+            get(residual_diagnostics, :closed_shell_idempotency_error, nothing)
+        commutator_residual =
+            get(residual_diagnostics, :commutator_residual, nothing)
+        energy_delta = get(scf_summary, :final_energy_change, nothing)
+        consistency_status =
+            get(scf_summary, :final_one_step_recomputed, false) ?
+            :reviewed_recomputed :
+            :not_evaluated_missing_recomputed_final_one_step
+        endpoint_blocker =
+            converged ? :missing_h2_gausslet_only_reference_comparison : blocker
     end
     summary = (;
         status,
@@ -2624,31 +2691,33 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_rhf_execution_p
         input_contract_available =
             input_contract_status ===
             :available_pqs_physical_gausslet_rhf_input_contract,
-        executed = false,
-        materialized = false,
-        converged = false,
+        executed,
+        materialized,
+        converged,
         electron_count,
         electron_count_source = :explicit_private_rhf_electron_count,
         occupation_policy = get(contract_summary, :occupation_policy, nothing),
         occupation_nocc,
-        total_energy = nothing,
-        one_body_energy = nothing,
-        two_body_energy = nothing,
-        iteration_count = 0,
-        density_trace = nothing,
-        idempotency_residual = nothing,
-        commutator_residual = nothing,
-        energy_delta = nothing,
-        final_density_one_step_consistency_status =
-            :not_evaluated_missing_physical_gausslet_rhf_execution_adapter,
-        endpoint_blocker = blocker,
+        total_energy,
+        one_body_energy,
+        two_body_energy,
+        iteration_count,
+        density_trace,
+        idempotency_residual,
+        commutator_residual,
+        energy_delta,
+        final_density_one_step_consistency_status = consistency_status,
+        endpoint_blocker,
         private_diagnostic_only = true,
     )
     metadata = (;
         source =
             :pqs_source_box_route_driver_diatomic_physical_gausslet_rhf_execution_payload,
-        existing_complete_core_shell_rhf_helpers_adapted = false,
-        execution_attempted = false,
+        existing_complete_core_shell_rhf_helpers_adapted = true,
+        execution_attempted = summary.executed,
+        scf_payload_status = isnothing(scf_payload) ? nothing : scf_payload.status,
+        scf_payload_blocker =
+            isnothing(scf_payload) ? nothing : scf_payload.blocker,
         private_diagnostic_only = true,
     )
     return _PQSDiatomicPhysicalGaussletRHFExecutionPayload(

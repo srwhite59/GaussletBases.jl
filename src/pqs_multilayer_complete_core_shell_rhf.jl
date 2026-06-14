@@ -19,6 +19,90 @@ function _pqs_multilayer_rhf_contract_summary_property(
     return _pqs_multilayer_rhf_contract_property(summary, key, default)
 end
 
+function _pqs_multilayer_complete_core_shell_rhf_available_input_contract(
+    input_contract,
+)
+    status = _pqs_multilayer_rhf_contract_property(input_contract, :status)
+    kind = _pqs_multilayer_rhf_contract_property(input_contract, :object_kind)
+    if kind === :pqs_multilayer_complete_core_shell_rhf_input_contract &&
+       status === :available_pqs_multilayer_complete_core_shell_rhf_input_contract
+        return true
+    end
+    summary = _pqs_multilayer_rhf_contract_property(input_contract, :summary)
+    return isnothing(kind) &&
+           status === :available_pqs_physical_gausslet_rhf_input_contract &&
+           _pqs_multilayer_rhf_contract_property(input_contract, :route_family) ===
+           :pqs_source_box &&
+           _pqs_multilayer_rhf_contract_property(
+               summary,
+               :route_kind,
+           ) === :bond_aligned_diatomic_physical_gausslet_core_shell_pqs
+end
+
+function _pqs_multilayer_complete_core_shell_rhf_materialized_h1_payload(
+    h1_payload,
+)
+    status = _pqs_multilayer_rhf_contract_property(h1_payload, :status)
+    kind = _pqs_multilayer_rhf_contract_property(h1_payload, :object_kind)
+    final_hamiltonian =
+        _pqs_multilayer_rhf_contract_property(h1_payload, :final_hamiltonian)
+    final_h1_matrix =
+        _pqs_multilayer_rhf_contract_property(
+            final_hamiltonian,
+            :hamiltonian_matrix,
+        )
+    if isnothing(final_h1_matrix)
+        return false
+    end
+    return (
+        kind === :pqs_multilayer_complete_core_shell_h1_payload &&
+        status === :materialized_pqs_multilayer_complete_core_shell_h1_payload
+    ) || (
+        isnothing(kind) &&
+        status === :available_pqs_physical_gausslet_h1_payload
+    )
+end
+
+function _pqs_multilayer_complete_core_shell_rhf_materialized_density_interaction(
+    density_interaction,
+)
+    status = _pqs_multilayer_rhf_contract_property(density_interaction, :status)
+    kind =
+        _pqs_multilayer_rhf_contract_property(density_interaction, :object_kind)
+    pair_matrix =
+        _pqs_multilayer_rhf_contract_property(
+            density_interaction,
+            :pre_final_pair_matrix,
+        )
+    final_to_pre_final =
+        _pqs_multilayer_rhf_contract_property(
+            density_interaction,
+            :final_to_pre_final_coefficients,
+        )
+    if isnothing(pair_matrix) || isnothing(final_to_pre_final)
+        return false
+    end
+    return (
+        kind === :pqs_complete_core_shell_pre_final_density_interaction &&
+        status ===
+        :materialized_pqs_complete_core_shell_pre_final_density_interaction
+    ) || (
+        kind === :pqs_physical_gausslet_pre_final_density_interaction &&
+        status ===
+        :materialized_pqs_physical_gausslet_pre_final_density_interaction
+    )
+end
+
+function _pqs_multilayer_complete_core_shell_rhf_fixture_role(input_contract)
+    fixture_role =
+        _pqs_multilayer_rhf_contract_property(input_contract, :fixture_role)
+    !isnothing(fixture_role) && return fixture_role
+    return _pqs_multilayer_rhf_contract_summary_property(
+        input_contract,
+        :fixture_role,
+    )
+end
+
 function _pqs_multilayer_complete_core_shell_rhf_occupation(electron_count)
     if isnothing(electron_count)
         return nothing, :missing_electron_count
@@ -248,54 +332,21 @@ function _pqs_multilayer_complete_core_shell_rhf_one_step_missing_inputs(;
     final_density,
 )
     missing = Symbol[]
-    contract_status =
-        _pqs_multilayer_rhf_contract_property(input_contract, :status)
-    contract_kind =
-        _pqs_multilayer_rhf_contract_property(input_contract, :object_kind)
-    if contract_kind !==
-       :pqs_multilayer_complete_core_shell_rhf_input_contract ||
-       contract_status !==
-       :available_pqs_multilayer_complete_core_shell_rhf_input_contract
+    if !_pqs_multilayer_complete_core_shell_rhf_available_input_contract(
+        input_contract,
+    )
         push!(missing, :rhf_input_contract)
     end
 
-    h1_payload_status =
-        _pqs_multilayer_rhf_contract_property(h1_payload, :status)
-    h1_payload_kind =
-        _pqs_multilayer_rhf_contract_property(h1_payload, :object_kind)
-    final_hamiltonian =
-        _pqs_multilayer_rhf_contract_property(h1_payload, :final_hamiltonian)
-    final_h1_matrix =
-        _pqs_multilayer_rhf_contract_property(
-            final_hamiltonian,
-            :hamiltonian_matrix,
-        )
-    if h1_payload_kind !== :pqs_multilayer_complete_core_shell_h1_payload ||
-       h1_payload_status !==
-       :materialized_pqs_multilayer_complete_core_shell_h1_payload ||
-       isnothing(final_h1_matrix)
+    if !_pqs_multilayer_complete_core_shell_rhf_materialized_h1_payload(
+        h1_payload,
+    )
         push!(missing, :h1_payload)
     end
 
-    density_status =
-        _pqs_multilayer_rhf_contract_property(density_interaction, :status)
-    density_kind =
-        _pqs_multilayer_rhf_contract_property(density_interaction, :object_kind)
-    pair_matrix =
-        _pqs_multilayer_rhf_contract_property(
-            density_interaction,
-            :pre_final_pair_matrix,
-        )
-    final_to_pre_final =
-        _pqs_multilayer_rhf_contract_property(
-            density_interaction,
-            :final_to_pre_final_coefficients,
-        )
-    if density_kind !== :pqs_complete_core_shell_pre_final_density_interaction ||
-       density_status !==
-       :materialized_pqs_complete_core_shell_pre_final_density_interaction ||
-       isnothing(pair_matrix) ||
-       isnothing(final_to_pre_final)
+    if !_pqs_multilayer_complete_core_shell_rhf_materialized_density_interaction(
+        density_interaction,
+    )
         push!(missing, :density_interaction)
     end
 
@@ -334,7 +385,7 @@ function _pqs_multilayer_complete_core_shell_rhf_one_step_blocked_payload(;
     electron_count =
         _pqs_multilayer_rhf_contract_property(input_contract, :electron_count)
     fixture_role =
-        _pqs_multilayer_rhf_contract_property(input_contract, :fixture_role)
+        _pqs_multilayer_complete_core_shell_rhf_fixture_role(input_contract)
     summary = (;
         status = :blocked_pqs_multilayer_complete_core_shell_rhf_one_step_payload,
         blocker,
@@ -504,21 +555,12 @@ function _pqs_multilayer_complete_core_shell_rhf_initial_density_payload(;
             h1_j_payload,
         )
     missing_inputs = Symbol[]
-    contract_kind =
-        _pqs_multilayer_rhf_contract_property(input_contract, :object_kind)
-    contract_status =
-        _pqs_multilayer_rhf_contract_property(input_contract, :status)
-    if contract_kind !==
-       :pqs_multilayer_complete_core_shell_rhf_input_contract ||
-       contract_status !==
-       :available_pqs_multilayer_complete_core_shell_rhf_input_contract
+    if !_pqs_multilayer_complete_core_shell_rhf_available_input_contract(
+        input_contract,
+    )
         push!(missing_inputs, :rhf_input_contract)
     end
 
-    h1_payload_kind =
-        _pqs_multilayer_rhf_contract_property(h1_payload, :object_kind)
-    h1_payload_status =
-        _pqs_multilayer_rhf_contract_property(h1_payload, :status)
     final_hamiltonian =
         _pqs_multilayer_rhf_contract_property(h1_payload, :final_hamiltonian)
     h1_matrix =
@@ -526,10 +568,9 @@ function _pqs_multilayer_complete_core_shell_rhf_initial_density_payload(;
             final_hamiltonian,
             :hamiltonian_matrix,
         )
-    if h1_payload_kind !== :pqs_multilayer_complete_core_shell_h1_payload ||
-       h1_payload_status !==
-       :materialized_pqs_multilayer_complete_core_shell_h1_payload ||
-       isnothing(h1_matrix)
+    if !_pqs_multilayer_complete_core_shell_rhf_materialized_h1_payload(
+        h1_payload,
+    )
         push!(missing_inputs, :h1_payload)
     end
     if !isempty(missing_inputs)
@@ -606,7 +647,8 @@ function _pqs_multilayer_complete_core_shell_rhf_initial_density_payload(;
         nocc,
         occupancy,
         electron_trace,
-        fixture_role = input_contract.fixture_role,
+        fixture_role =
+            _pqs_multilayer_complete_core_shell_rhf_fixture_role(input_contract),
         initial_density_source = :h1_aufbau,
         lowest_eigenvalue = first(eigenvalues),
         highest_eigenvalue = last(eigenvalues),
@@ -1125,32 +1167,19 @@ function _pqs_multilayer_complete_core_shell_rhf_scf_payload(;
             h1_j_payload,
         )
     missing_inputs = Symbol[]
-    input_contract_status =
-        _pqs_multilayer_rhf_contract_property(input_contract, :status)
-    input_contract_kind =
-        _pqs_multilayer_rhf_contract_property(input_contract, :object_kind)
-    if input_contract_kind !==
-       :pqs_multilayer_complete_core_shell_rhf_input_contract ||
-       input_contract_status !==
-       :available_pqs_multilayer_complete_core_shell_rhf_input_contract
+    if !_pqs_multilayer_complete_core_shell_rhf_available_input_contract(
+        input_contract,
+    )
         push!(missing_inputs, :rhf_input_contract)
     end
-    h1_payload_status =
-        _pqs_multilayer_rhf_contract_property(h1_payload, :status)
-    h1_payload_kind =
-        _pqs_multilayer_rhf_contract_property(h1_payload, :object_kind)
-    if h1_payload_kind !== :pqs_multilayer_complete_core_shell_h1_payload ||
-       h1_payload_status !==
-       :materialized_pqs_multilayer_complete_core_shell_h1_payload
+    if !_pqs_multilayer_complete_core_shell_rhf_materialized_h1_payload(
+        h1_payload,
+    )
         push!(missing_inputs, :h1_payload)
     end
-    density_status =
-        _pqs_multilayer_rhf_contract_property(density_interaction, :status)
-    density_kind =
-        _pqs_multilayer_rhf_contract_property(density_interaction, :object_kind)
-    if density_kind !== :pqs_complete_core_shell_pre_final_density_interaction ||
-       density_status !==
-       :materialized_pqs_complete_core_shell_pre_final_density_interaction
+    if !_pqs_multilayer_complete_core_shell_rhf_materialized_density_interaction(
+        density_interaction,
+    )
         push!(missing_inputs, :density_interaction)
     end
     if !isempty(missing_inputs)
@@ -1489,7 +1518,10 @@ function _pqs_multilayer_complete_core_shell_rhf_scf_payload(;
                 final_dimension,
                 electron_count = input_contract.electron_count,
                 electron_trace = tr(density),
-                fixture_role = input_contract.fixture_role,
+                fixture_role =
+                    _pqs_multilayer_complete_core_shell_rhf_fixture_role(
+                        input_contract,
+                    ),
                 iteration_count = length(iteration_records),
                 converged_iteration = iteration,
                 max_iterations,
@@ -1816,7 +1848,8 @@ function _pqs_multilayer_complete_core_shell_rhf_one_step_payload(;
         electron_count,
         density_trace,
         final_density_symmetry_error = density_symmetry_error,
-        fixture_role = input_contract.fixture_role,
+        fixture_role =
+            _pqs_multilayer_complete_core_shell_rhf_fixture_role(input_contract),
         density_convention = :spin_summed_closed_shell_final_density,
         contraction_rule =
             :pre_final_restricted_direct_minus_exchange_from_orbital_density,
