@@ -1231,6 +1231,16 @@ function _pqs_source_box_route_driver_recipe_metadata(
         supplement_policy = get(route_recipe, :supplement_policy, nothing),
         wl_h1_lowest = get(route_recipe, :wl_h1_lowest, nothing),
         wl_h1_self_coulomb = get(route_recipe, :wl_h1_self_coulomb, nothing),
+        wl_rhf_one_electron_energy =
+            get(route_recipe, :wl_rhf_one_electron_energy, nothing),
+        wl_rhf_electron_electron_energy =
+            get(route_recipe, :wl_rhf_electron_electron_energy, nothing),
+        wl_rhf_electronic_energy =
+            get(route_recipe, :wl_rhf_electronic_energy, nothing),
+        wl_rhf_nuclear_repulsion =
+            get(route_recipe, :wl_rhf_nuclear_repulsion, nothing),
+        wl_rhf_total_with_nuclear_repulsion =
+            get(route_recipe, :wl_rhf_total_with_nuclear_repulsion, nothing),
         run_final_basis = get(route_recipe, :run_final_basis, true),
         run_h1 = get(route_recipe, :run_h1, true),
         run_h1_j = get(route_recipe, :run_h1_j, true),
@@ -2167,6 +2177,16 @@ function cartesian_recipe(route_inputs)
             supplement_policy = get(route_inputs, :supplement_policy, nothing),
             wl_h1_lowest = get(route_inputs, :wl_h1_lowest, nothing),
             wl_h1_self_coulomb = get(route_inputs, :wl_h1_self_coulomb, nothing),
+            wl_rhf_one_electron_energy =
+                get(route_inputs, :wl_rhf_one_electron_energy, nothing),
+            wl_rhf_electron_electron_energy =
+                get(route_inputs, :wl_rhf_electron_electron_energy, nothing),
+            wl_rhf_electronic_energy =
+                get(route_inputs, :wl_rhf_electronic_energy, nothing),
+            wl_rhf_nuclear_repulsion =
+                get(route_inputs, :wl_rhf_nuclear_repulsion, nothing),
+            wl_rhf_total_with_nuclear_repulsion =
+                get(route_inputs, :wl_rhf_total_with_nuclear_repulsion, nothing),
             run_final_basis =
                 isnothing(run_final_basis) ?
                 (run_h1 || run_h1_j || run_private_rhf) :

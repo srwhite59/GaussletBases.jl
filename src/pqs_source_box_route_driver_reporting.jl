@@ -477,6 +477,16 @@ function _pqs_source_box_route_driver_bond_length(atom_locations)
     return sqrt(sum((Float64(a[axis]) - Float64(b[axis]))^2 for axis in 1:3))
 end
 
+function _pqs_source_box_route_driver_optional_difference(lhs, rhs)
+    (isnothing(lhs) || isnothing(rhs)) && return nothing
+    return lhs - rhs
+end
+
+function _pqs_source_box_route_driver_optional_sum(lhs, rhs)
+    (isnothing(lhs) || isnothing(rhs)) && return nothing
+    return lhs + rhs
+end
+
 function _pqs_source_box_route_driver_write_pqs_diatomic_readiness_artifact!(
     file,
     report,
@@ -585,6 +595,7 @@ function _pqs_source_box_route_driver_write_pqs_diatomic_readiness_artifact!(
     wl_reference_candidate_status =
         get(target, :wl_reference_candidate_status, :not_available)
     comparison_blocker =
+        comparison_ready ? nothing :
         wl_reference_candidate_status ===
         :available_wl_h2_gausslet_only_reference_candidate ?
         :missing_wl_h2_gausslet_only_reference_values :
@@ -627,7 +638,10 @@ function _pqs_source_box_route_driver_write_pqs_diatomic_readiness_artifact!(
         physical_target_artifact ?
         get(target, :private_rhf_execution_status, :not_available) :
         :not_available
+    physics_endpoint_ready = get(recipe, :physics_endpoint_ready, nothing)
     physics_endpoint_blocker =
+        physical_target_artifact && physics_endpoint_ready === true ?
+        nothing :
         physical_target_artifact ?
         get(
             target,
@@ -667,6 +681,19 @@ function _pqs_source_box_route_driver_write_pqs_diatomic_readiness_artifact!(
             get(readiness, :h1_hamiltonian_symmetry_error, nothing),
         ) :
         get(readiness, :h1_hamiltonian_symmetry_error, nothing)
+    h1_j_self_coulomb = get(target, :h1_j_self_coulomb, nothing)
+    wl_h1_lowest = get(recipe, :wl_h1_lowest, nothing)
+    wl_h1_self_coulomb = get(recipe, :wl_h1_self_coulomb, nothing)
+    wl_rhf_electronic_energy = get(recipe, :wl_rhf_electronic_energy, nothing)
+    wl_rhf_nuclear_repulsion = get(recipe, :wl_rhf_nuclear_repulsion, nothing)
+    wl_rhf_total_with_nuclear_repulsion =
+        get(recipe, :wl_rhf_total_with_nuclear_repulsion, nothing)
+    pqs_rhf_electronic_energy = get(target, :private_rhf_total_energy, nothing)
+    pqs_rhf_total_with_nuclear_repulsion =
+        _pqs_source_box_route_driver_optional_sum(
+            pqs_rhf_electronic_energy,
+            wl_rhf_nuclear_repulsion,
+        )
 
     for (group, values) in (
         ("system", (; atom_symbols = system.atom_symbols, nuclear_charges = system.nuclear_charges, atom_locations, bond_axis, bond_length)),
@@ -677,6 +704,7 @@ function _pqs_source_box_route_driver_write_pqs_diatomic_readiness_artifact!(
     )
         _pqs_source_box_route_driver_write_group!(file, group, values)
     end
+    _pqs_source_box_route_driver_write_present_group!(file, "comparison", (; wl_h1_lowest, delta_h1 = _pqs_source_box_route_driver_optional_difference(h1_lowest_energy, wl_h1_lowest), wl_h1_self_coulomb, delta_h1_j = _pqs_source_box_route_driver_optional_difference(h1_j_self_coulomb, wl_h1_self_coulomb), wl_rhf_electronic_energy, delta_rhf_electronic_energy = _pqs_source_box_route_driver_optional_difference(pqs_rhf_electronic_energy, wl_rhf_electronic_energy), wl_rhf_nuclear_repulsion, pqs_rhf_total_with_nuclear_repulsion, wl_rhf_total_with_nuclear_repulsion, delta_rhf_total_with_nuclear_repulsion = _pqs_source_box_route_driver_optional_difference(pqs_rhf_total_with_nuclear_repulsion, wl_rhf_total_with_nuclear_repulsion)))
     _pqs_source_box_route_driver_write_present_group!(
         file,
         "basis",
@@ -725,11 +753,11 @@ function _pqs_source_box_route_driver_write_pqs_diatomic_readiness_artifact!(
             supplement_policy = get(target, :supplement_policy, nothing),
         ),
     )
-    _pqs_source_box_route_driver_write_present_group!(
+    _pqs_source_box_route_driver_write_group!(
         file,
         "physics",
         (;
-            endpoint_ready = get(recipe, :physics_endpoint_ready, nothing),
+            endpoint_ready = physics_endpoint_ready,
             endpoint_blocker = physics_endpoint_blocker,
             h1_lowest = h1_lowest_energy,
             h1_hamiltonian_matrix_finite,
@@ -760,7 +788,7 @@ function _pqs_source_box_route_driver_write_pqs_diatomic_readiness_artifact!(
                 get(target, :support_weights_all_positive, nothing),
             support_raw_pair_shape = get(target, :support_raw_pair_shape, nothing),
             support_raw_pair_finite = get(target, :support_raw_pair_finite, nothing),
-            h1_j_self_coulomb = get(target, :h1_j_self_coulomb, nothing),
+            h1_j_self_coulomb,
         ),
     )
     _pqs_source_box_route_driver_write_group!(

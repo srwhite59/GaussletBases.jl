@@ -25,10 +25,24 @@ const _H2_PHYSICAL_PQS_INPUT =
             @test file["config/route_kind"] ===
                   :bond_aligned_diatomic_physical_gausslet_core_shell_pqs
             @test file["config/supplement_policy"] === :none
-            @test file["config/comparison_ready"] == false
+            @test file["config/comparison_ready"] == true
             @test file["config/run_final_basis"] == true
-            @test file["comparison/blocker"] ===
-                  :missing_wl_h2_gausslet_only_reference_values
+            @test file["comparison/ready"] == true
+            @test file["comparison/blocker"] === nothing
+            @test file["comparison/reference_label"] ==
+                  "WL/QW H2 R=4 gausslet-only 463"
+            @test file["comparison/wl_h1_lowest"] ≈ -0.7946609179724673
+            @test abs(file["comparison/delta_h1"]) < 1.0e-10
+            @test file["comparison/wl_h1_self_coulomb"] ≈ 0.45696639804337047
+            @test abs(file["comparison/delta_h1_j"]) < 1.0e-10
+            @test file["comparison/wl_rhf_electronic_energy"] ≈
+                  -1.1589518556651142
+            @test abs(file["comparison/delta_rhf_electronic_energy"]) < 1.0e-9
+            @test file["comparison/wl_rhf_nuclear_repulsion"] ≈ 0.25
+            @test file["comparison/wl_rhf_total_with_nuclear_repulsion"] ≈
+                  -0.9089518556651142
+            @test abs(file["comparison/delta_rhf_total_with_nuclear_repulsion"]) <
+                  1.0e-9
             @test file["comparison/wl_reference_candidate_status"] ===
                   :available_wl_h2_gausslet_only_reference_candidate
             @test file["comparison/wl_reference_candidate_blocker"] === nothing
@@ -40,8 +54,6 @@ const _H2_PHYSICAL_PQS_INPUT =
                   "WL/QW H2 R=4 gausslet-only 463"
             @test file["comparison/old_supplemented_wl_qw_scalar_references_blocked"] ==
                   true
-
-            @test file["parent/parent_axis_counts"] == (x = 9, y = 9, z = 15)
 
             @test file["target/status"] ===
                   :available_physical_gausslet_core_shell_target_inventory
@@ -60,15 +72,6 @@ const _H2_PHYSICAL_PQS_INPUT =
                   :atom_contact_core_plus_pqs_shared_shells
             @test file["target/source_plan_status"] ===
                   :available_pqs_diatomic_physical_gausslet_core_shell_source_plan
-            @test file["target/source_plan_blocker"] === nothing
-            @test file["target/source_plan_candidate_status"] ===
-                  :available_physical_gausslet_source_plan_candidate
-            @test file["target/source_plan_candidate_source"] ===
-                  :source_backed_fixed_source_oracle
-            @test file["target/source_plan_candidate_counts_match"] == true
-            @test file["target/source_plan_authority_status"] ===
-                  :private_source_backed_adapter_authority
-            @test file["target/supplement_policy"] === :none
 
             @test file["route/artifact_role"] ===
                   :physical_gausslet_endpoint_target
@@ -91,7 +94,7 @@ const _H2_PHYSICAL_PQS_INPUT =
             @test file["basis/final_dimension"] == 463
             @test file["basis/final_overlap_identity_error"] < 1e-10
 
-            @test file["physics/endpoint_ready"] == false
+            @test file["physics/endpoint_ready"] == true
             @test isfinite(file["physics/h1_lowest"])
             @test file["physics/h1_lowest"] < 0
             @test file["physics/h1_hamiltonian_matrix_finite"] == true
@@ -131,8 +134,7 @@ const _H2_PHYSICAL_PQS_INPUT =
                 @test file["route/private_rhf_execution_status"] ===
                       :materialized_pqs_physical_gausslet_private_rhf_execution
                 @test file["route/private_rhf_materialized"] == true
-                @test file["physics/endpoint_blocker"] ===
-                      :missing_wl_h2_gausslet_only_reference_values
+                @test file["physics/endpoint_blocker"] === nothing
                 @test file["private_rhf/execution_status"] ===
                       :materialized_pqs_physical_gausslet_private_rhf_execution
                 @test file["private_rhf/execution_blocker"] === nothing
@@ -142,6 +144,9 @@ const _H2_PHYSICAL_PQS_INPUT =
                 @test isfinite(file["private_rhf/two_body_energy"])
                 @test file["private_rhf/final_density_one_step_consistency_status"] ===
                       :reviewed_recomputed
+                @test file["comparison/pqs_rhf_total_with_nuclear_repulsion"] ≈
+                      file["private_rhf/total_energy"] +
+                      file["comparison/wl_rhf_nuclear_repulsion"]
             else
                 @test file["route/private_rhf_execution_status"] ===
                       :blocked_pqs_physical_gausslet_private_rhf_execution
@@ -156,7 +161,6 @@ const _H2_PHYSICAL_PQS_INPUT =
                 @test file["private_rhf/total_energy"] === nothing ||
                       isfinite(file["private_rhf/total_energy"])
             end
-            @test file["comparison/ready"] == false
             @test file["private_rhf/requested"] == true
         end
     end

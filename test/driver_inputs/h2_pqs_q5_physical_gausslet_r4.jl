@@ -22,14 +22,22 @@ n_s = 5
 fixed_source_mode_shape = true
 
 supplement_policy = :none
-comparison_ready = false
-comparison_blocker = :gausslet_only_reference_not_selected
-comparison_reference_label = "WL/QW H2 R=4 gausslet-only target inventory only"
+comparison_ready = true
+comparison_blocker = nothing
+comparison_reference_label = "WL/QW H2 R=4 gausslet-only 463"
 artifact_role = :physical_gausslet_endpoint_target
-physics_endpoint_ready = false
-physics_endpoint_blocker = :missing_h2_gausslet_only_reference_comparison
+physics_endpoint_ready = true
+physics_endpoint_blocker = nothing
 retained_atom_core_interiors = true
 source_plan_role = :atom_contact_core_plus_pqs_shared_shells
+
+wl_h1_lowest = -0.7946609179724673
+wl_h1_self_coulomb = 0.45696639804337047
+wl_rhf_one_electron_energy = -1.5611571934181985
+wl_rhf_electron_electron_energy = 0.40220533775308426
+wl_rhf_electronic_energy = -1.1589518556651142
+wl_rhf_nuclear_repulsion = 0.25
+wl_rhf_total_with_nuclear_repulsion = -0.9089518556651142
 
 run_final_basis = true
 run_h1 = true

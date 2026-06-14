@@ -65,6 +65,11 @@ source_plan_role = nothing
 supplement_policy = nothing
 wl_h1_lowest = nothing
 wl_h1_self_coulomb = nothing
+wl_rhf_one_electron_energy = nothing
+wl_rhf_electron_electron_energy = nothing
+wl_rhf_electronic_energy = nothing
+wl_rhf_nuclear_repulsion = nothing
+wl_rhf_total_with_nuclear_repulsion = nothing
 run_final_basis = nothing
 run_h1 = true
 run_h1_j = true
@@ -141,7 +146,10 @@ route_inputs = (; route_family, route_kind, route_shape, product_body_rule,
     artifact_role, physics_endpoint_ready, physics_endpoint_blocker,
     retained_atom_core_interiors, source_plan_role,
     supplement_policy, wl_h1_lowest, wl_h1_self_coulomb,
-    run_final_basis, run_h1, run_h1_j, private_rhf_inputs, wl_rhf_total)
+    wl_rhf_one_electron_energy, wl_rhf_electron_electron_energy,
+    wl_rhf_electronic_energy, wl_rhf_nuclear_repulsion,
+    wl_rhf_total_with_nuclear_repulsion, run_final_basis, run_h1, run_h1_j,
+    private_rhf_inputs, wl_rhf_total)
 materialization_inputs = (; materialize_route, probe_route_configured_one_center_materializer,
     probe_route_configured_diatomic_atom_growth_materializer,
     low_order_shellization_policy,
