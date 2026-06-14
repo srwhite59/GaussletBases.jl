@@ -541,3 +541,48 @@ Line-count / complexity note:
 - MT6 Audit/classify old Cartesian flat paths: active. A read-only old-flat-path
   retirement audit identified route-shadow density-density fixture pressure as
   the best near-term deletion target.
+
+## Pass 235 - Route-Shadow Density-Density Cleanup
+
+Commit(s):
+- this commit - Delete route-shadow density-density fixture pressure
+
+Summary:
+- Deleted the old PQS/PQS/product route-shaped density-density producer/consumer
+  fixture path from `current_route_metadata_export.jl` and removed its slow
+  integration-test call sites.
+- Preserved compact lower-level math checks for boundary retained counts,
+  density-normalized versus raw-weighted pair conventions, and nuclear
+  charge/sign conventions.
+- Independent H2 PQS support-plan code, fake-PQS guard fields, and the fake-PQS
+  golden regression were untouched.
+
+Validation:
+- Doer: package load passed after precompile; focused integration check passed
+  `3820/3820`, with test-reported time `6m04.6s` and Julia elapsed
+  `845.4s`; `git diff --check` passed.
+- Manager: reviewed the diff, reran deleted-name caller search with no matches,
+  ran `git diff --check`, and ran package load in about `0.65s`. Manager did
+  not rerun the long integration test.
+
+Goal advancement:
+- LT2: removed a large route-shadow fixture surface and old metadata pressure.
+- MT5: paid down the pass-234 line-budget exception.
+- MT6: used the old-flat-path audit to retire a classified deletion candidate.
+
+Medium-goal update:
+- none.
+
+Risk / guardrail:
+- Do not reintroduce the route-shaped density-density producer/consumer just to
+  satisfy helper-name or private metadata tests. If a convention is needed,
+  preserve it in compact lower-level tests.
+
+Remaining blocker / next:
+- Return to independent H2 PQS retained-rule/source-plan authority. The next
+  step should audit `atom_contact_core`, `shared_shell_1`, and
+  `shared_shell_2` retained-rule ownership before implementation.
+
+Line-count / complexity note:
+- Scoped `src + test + bin` diff was `19` added / `1587` deleted, net `-1568`,
+  more than paying down the pass-234 `+108` exception.
