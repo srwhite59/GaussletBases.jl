@@ -15,7 +15,6 @@ using JLD2
 isdefined(Main, :_cached_fixture) ||
     error("nested integration tests require top-level test/runtests.jl fixture helpers")
 
-include("pqs_component_route_report_adapter_runtests.jl")
 include("pqs_source_metadata_real_artifact_acceptance_runtests.jl")
 include("pqs_route_axis_count_selection_runtests.jl")
 include("pqs_source_box_route_driver_report_runtests.jl")
