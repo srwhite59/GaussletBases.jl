@@ -1,5 +1,4 @@
-# Runtime role: tiny smoke / private route-state global safe-term adapter test.
-#
+# Runtime role: private route-state global safe-term adapter smoke.
 # This verifies overlap, kinetic, position, and x2 route-state adapters over structured
 # pair-block materialization state. It does not cover Hamiltonians, Coulomb,
 # IDA/MWG, PQS Lowdin/projection, exports, route-driver wiring, or
@@ -67,16 +66,8 @@ function _route_state_safe_terms_record(; metadata = (;))
         (; left = :synthetic_left_transform, right = :synthetic_right_transform),
         (; left = :synthetic_left_realization, right = :synthetic_right_realization),
         :synthetic_final_block_path,
-        (
-            :overlap,
-            :kinetic,
-            :position_x,
-            :position_y,
-            :position_z,
-            :x2_x,
-            :x2_y,
-            :x2_z,
-        ),
+        (:overlap, :kinetic, :position_x, :position_y, :position_z,
+            :x2_x, :x2_y, :x2_z),
         :direct_direct_pair_block_materialization_pilot,
         :ready_metadata_only_not_materialized,
         nothing,
@@ -137,357 +128,150 @@ function _route_state_safe_terms_inputs()
     )
 end
 
-function _route_state_position_global_matrix(term::Symbol, source; kwargs...)
-    term === :position_x &&
-        return CPBMRouteStateSafeTerms.route_global_position_x_matrix(
-            source;
-            kwargs...,
-        )
-    term === :position_y &&
-        return CPBMRouteStateSafeTerms.route_global_position_y_matrix(
-            source;
-            kwargs...,
-        )
-    term === :position_z &&
-        return CPBMRouteStateSafeTerms.route_global_position_z_matrix(
-            source;
-            kwargs...,
-        )
-    throw(ArgumentError("expected route-state position term"))
-end
-
-function _route_state_position_adapter(term::Symbol, source; kwargs...)
-    term === :position_x &&
-        return CPBMRouteStateSafeTerms.route_state_global_position_x_matrix(
-            source;
-            kwargs...,
-        )
-    term === :position_y &&
-        return CPBMRouteStateSafeTerms.route_state_global_position_y_matrix(
-            source;
-            kwargs...,
-        )
-    term === :position_z &&
-        return CPBMRouteStateSafeTerms.route_state_global_position_z_matrix(
-            source;
-            kwargs...,
-        )
-    throw(ArgumentError("expected route-state position term"))
-end
-
-function _route_state_x2_global_matrix(term::Symbol, source; kwargs...)
-    term === :x2_x &&
-        return CPBMRouteStateSafeTerms.route_global_x2_x_matrix(source; kwargs...)
-    term === :x2_y &&
-        return CPBMRouteStateSafeTerms.route_global_x2_y_matrix(source; kwargs...)
-    term === :x2_z &&
-        return CPBMRouteStateSafeTerms.route_global_x2_z_matrix(source; kwargs...)
-    throw(ArgumentError("expected route-state x2 term"))
-end
-
-function _route_state_x2_adapter(term::Symbol, source; kwargs...)
-    term === :x2_x &&
-        return CPBMRouteStateSafeTerms.route_state_global_x2_x_matrix(
-            source;
-            kwargs...,
-        )
-    term === :x2_y &&
-        return CPBMRouteStateSafeTerms.route_state_global_x2_y_matrix(
-            source;
-            kwargs...,
-        )
-    term === :x2_z &&
-        return CPBMRouteStateSafeTerms.route_state_global_x2_z_matrix(
-            source;
-            kwargs...,
-        )
-    throw(ArgumentError("expected route-state x2 term"))
+function _route_state_matrix_function(prefix::Symbol, term::Symbol)
+    return getproperty(
+        CPBMRouteStateSafeTerms,
+        Symbol(String(prefix), "_", String(term), "_matrix"),
+    )
 end
 
 function _test_route_state_nonclaim_flags(result)
-    @test !result.route_driver_wiring
-    @test !result.hamiltonian_data_materialized
-    @test !result.global_hamiltonian_data_materialized
-    @test !result.coulomb_materialized
-    @test !result.ida_mwg_data_materialized
-    @test !result.pqs_lowdin_materialized
-    @test !result.pqs_shell_projection_materialized
-    @test !result.artifacts_materialized
-    @test !result.exports_materialized
+    for field in (
+        :route_driver_wiring,
+        :hamiltonian_data_materialized,
+        :global_hamiltonian_data_materialized,
+        :coulomb_materialized,
+        :ida_mwg_data_materialized,
+        :pqs_lowdin_materialized,
+        :pqs_shell_projection_materialized,
+        :artifacts_materialized,
+        :exports_materialized,
+    )
+        @test !getproperty(result, field)
+    end
+end
+
+function _test_route_state_scalar_adapter(
+    expected_builder,
+    adapter_builder;
+    materialized_status,
+    blocked_status,
+    materialized_flag,
+)
+    plan = _route_state_safe_terms_plan()
+    inputs = _route_state_safe_terms_inputs()
+    expected = expected_builder(plan; global_dimension = 2, inputs)
+    direct = adapter_builder(plan; global_dimension = 2, inputs)
+
+    @test direct.status === materialized_status
+    @test getproperty(direct, materialized_flag)
+    @test direct.global_matrix_result.matrix ≈ expected.global_matrix_result.matrix
+    @test direct.pair_block_materialization_plan === plan
+
+    missing_plan = adapter_builder(
+        (; route_state = :missing_pair_block_plan);
+        global_dimension = 2,
+        inputs,
+    )
+    @test missing_plan.status === blocked_status
+    @test missing_plan.blocker === :missing_pair_block_materialization_plan
+    @test !missing_plan.global_one_body_term_matrix_materialized
+    @test !getproperty(missing_plan, materialized_flag)
+
+    missing_dimension = adapter_builder(
+        (; pair_block_materialization_plan = plan);
+        inputs,
+    )
+    @test missing_dimension.status === blocked_status
+    @test missing_dimension.blocker === :missing_global_dimension
+    @test !missing_dimension.global_one_body_term_matrix_materialized
+    _test_route_state_nonclaim_flags(direct)
+end
+
+function _test_route_state_axis_family(
+    axis_adapter,
+    axis_expected,
+    terms,
+)
+    plan = _route_state_safe_terms_plan()
+    inputs = _route_state_safe_terms_inputs()
+    axis_result = axis_adapter(plan; axis = :x, global_dimension = 2, inputs)
+    expected_axis = axis_expected(plan; global_dimension = 2, inputs)
+    @test axis_result.global_matrix_result.matrix ≈
+          expected_axis.global_matrix_result.matrix
+
+    for term in terms
+        expected =
+            _route_state_matrix_function(:route_global, term)(
+                plan;
+                global_dimension = 2,
+                inputs,
+            )
+        direct =
+            _route_state_matrix_function(:route_state_global, term)(
+                plan;
+                global_dimension = 2,
+                inputs,
+            )
+        @test direct.status ===
+              Symbol("materialized_route_global_", String(term), "_matrix")
+        @test getproperty(
+            direct,
+            Symbol("global_", String(term), "_matrix_materialized"),
+        )
+        @test direct.global_matrix_result.matrix ≈
+              expected.global_matrix_result.matrix
+        @test direct.pair_block_materialization_plan === plan
+        _test_route_state_nonclaim_flags(direct)
+    end
+
+    wrapped = _route_state_matrix_function(:route_state_global, terms[2])(
+        (; pair_block_materialization_plan = plan);
+        global_dimension = 2,
+        factors = inputs,
+    )
+    wrapped_expected =
+        _route_state_matrix_function(:route_global, terms[2])(
+            plan;
+            global_dimension = 2,
+            inputs,
+        )
+    @test wrapped.global_matrix_result.matrix ≈
+          wrapped_expected.global_matrix_result.matrix
 end
 
 @testset "CartesianPairBlockMaterialization route-state global overlap adapter" begin
-    plan = _route_state_safe_terms_plan()
-    expected = CPBMRouteStateSafeTerms.route_global_overlap_matrix(
-        plan;
-        global_dimension = 2,
-        inputs = _route_state_safe_terms_inputs(),
+    _test_route_state_scalar_adapter(
+        CPBMRouteStateSafeTerms.route_global_overlap_matrix,
+        CPBMRouteStateSafeTerms.route_state_global_overlap_matrix;
+        materialized_status = :materialized_route_global_overlap_matrix,
+        blocked_status = :blocked_route_global_overlap_matrix,
+        materialized_flag = :global_overlap_matrix_materialized,
     )
-    direct = CPBMRouteStateSafeTerms.route_state_global_overlap_matrix(
-        plan;
-        global_dimension = 2,
-        inputs = _route_state_safe_terms_inputs(),
-    )
-    wrapped = CPBMRouteStateSafeTerms.route_state_global_overlap_matrix(
-        (; pair_block_materialization_plan = plan);
-        global_dimension = 2,
-        factors = _route_state_safe_terms_inputs(),
-    )
-    route_state = CPBMRouteStateSafeTerms.route_state_global_overlap_matrix(
-        (; terminal_route_state = (; pair_block_materialization_plan = plan));
-        global_dimension = 2,
-        inputs = _route_state_safe_terms_inputs(),
-    )
-
-    @test direct.status === :materialized_route_global_overlap_matrix
-    @test direct.global_overlap_matrix_materialized
-    @test direct.global_matrix_result.matrix ≈ expected.global_matrix_result.matrix
-    @test wrapped.global_matrix_result.matrix ≈ expected.global_matrix_result.matrix
-    @test route_state.global_matrix_result.matrix ≈
-          expected.global_matrix_result.matrix
-    @test direct.pair_block_materialization_plan === plan
-
-    missing_plan = CPBMRouteStateSafeTerms.route_state_global_overlap_matrix(
-        (; route_state = :missing_pair_block_plan);
-        global_dimension = 2,
-        inputs = _route_state_safe_terms_inputs(),
-    )
-    @test missing_plan.status === :blocked_route_global_overlap_matrix
-    @test missing_plan.blocker === :missing_pair_block_materialization_plan
-    @test !missing_plan.global_one_body_term_matrix_materialized
-    @test !missing_plan.global_overlap_matrix_materialized
-
-    missing_dimension =
-        CPBMRouteStateSafeTerms.route_state_global_overlap_matrix(
-            (; pair_block_materialization_plan = plan);
-            inputs = _route_state_safe_terms_inputs(),
-        )
-    @test missing_dimension.status === :blocked_route_global_overlap_matrix
-    @test missing_dimension.blocker === :missing_global_dimension
-    @test !missing_dimension.global_one_body_term_matrix_materialized
-
-    _test_route_state_nonclaim_flags(direct)
 end
 
 @testset "CartesianPairBlockMaterialization route-state global kinetic adapter" begin
-    plan = _route_state_safe_terms_plan()
-    expected = CPBMRouteStateSafeTerms.route_global_kinetic_matrix(
-        plan;
-        global_dimension = 2,
-        inputs = _route_state_safe_terms_inputs(),
+    _test_route_state_scalar_adapter(
+        CPBMRouteStateSafeTerms.route_global_kinetic_matrix,
+        CPBMRouteStateSafeTerms.route_state_global_kinetic_matrix;
+        materialized_status = :materialized_route_global_kinetic_matrix,
+        blocked_status = :blocked_route_global_kinetic_matrix,
+        materialized_flag = :global_kinetic_matrix_materialized,
     )
-    direct = CPBMRouteStateSafeTerms.route_state_global_kinetic_matrix(
-        plan;
-        global_dimension = 2,
-        inputs = _route_state_safe_terms_inputs(),
-    )
-    wrapped = CPBMRouteStateSafeTerms.route_state_global_kinetic_matrix(
-        (; pair_block_materialization_plan = plan);
-        global_dimension = 2,
-        factors = _route_state_safe_terms_inputs(),
-    )
-    route_state = CPBMRouteStateSafeTerms.route_state_global_kinetic_matrix(
-        (; terminal_route_state = (; pair_block_materialization_plan = plan));
-        global_dimension = 2,
-        inputs = _route_state_safe_terms_inputs(),
-    )
-
-    @test direct.status === :materialized_route_global_kinetic_matrix
-    @test direct.global_kinetic_matrix_materialized
-    @test direct.global_matrix_result.matrix ≈ expected.global_matrix_result.matrix
-    @test wrapped.global_matrix_result.matrix ≈ expected.global_matrix_result.matrix
-    @test route_state.global_matrix_result.matrix ≈
-          expected.global_matrix_result.matrix
-    @test direct.pair_block_materialization_plan === plan
-
-    missing_plan = CPBMRouteStateSafeTerms.route_state_global_kinetic_matrix(
-        (; route_state = :missing_pair_block_plan);
-        global_dimension = 2,
-        inputs = _route_state_safe_terms_inputs(),
-    )
-    @test missing_plan.status === :blocked_route_global_kinetic_matrix
-    @test missing_plan.blocker === :missing_pair_block_materialization_plan
-    @test !missing_plan.global_one_body_term_matrix_materialized
-    @test !missing_plan.global_kinetic_matrix_materialized
-
-    missing_dimension =
-        CPBMRouteStateSafeTerms.route_state_global_kinetic_matrix(
-            (; pair_block_materialization_plan = plan);
-            inputs = _route_state_safe_terms_inputs(),
-        )
-    @test missing_dimension.status === :blocked_route_global_kinetic_matrix
-    @test missing_dimension.blocker === :missing_global_dimension
-    @test !missing_dimension.global_one_body_term_matrix_materialized
-
-    _test_route_state_nonclaim_flags(direct)
 end
 
 @testset "CartesianPairBlockMaterialization route-state global position adapter" begin
-    plan = _route_state_safe_terms_plan()
-
-    axis_adapter = CPBMRouteStateSafeTerms.route_state_global_position_matrix(
-        plan;
-        axis = :x,
-        global_dimension = 2,
-        inputs = _route_state_safe_terms_inputs(),
+    _test_route_state_axis_family(
+        CPBMRouteStateSafeTerms.route_state_global_position_matrix,
+        CPBMRouteStateSafeTerms.route_global_position_x_matrix,
+        (:position_x, :position_y, :position_z),
     )
-    axis_expected = CPBMRouteStateSafeTerms.route_global_position_x_matrix(
-        plan;
-        global_dimension = 2,
-        inputs = _route_state_safe_terms_inputs(),
-    )
-    @test axis_adapter.global_matrix_result.matrix ≈
-          axis_expected.global_matrix_result.matrix
-
-    for term in (:position_x, :position_y, :position_z)
-        expected = _route_state_position_global_matrix(
-            term,
-            plan;
-            global_dimension = 2,
-            inputs = _route_state_safe_terms_inputs(),
-        )
-        direct = _route_state_position_adapter(
-            term,
-            plan;
-            global_dimension = 2,
-            inputs = _route_state_safe_terms_inputs(),
-        )
-        @test direct.status ===
-              Symbol("materialized_route_global_", String(term), "_matrix")
-        @test getproperty(
-            direct,
-            Symbol("global_", String(term), "_matrix_materialized"),
-        )
-        @test direct.global_matrix_result.matrix ≈
-              expected.global_matrix_result.matrix
-        @test direct.pair_block_materialization_plan === plan
-        _test_route_state_nonclaim_flags(direct)
-    end
-
-    wrapped = CPBMRouteStateSafeTerms.route_state_global_position_y_matrix(
-        (; pair_block_materialization_plan = plan);
-        global_dimension = 2,
-        factors = _route_state_safe_terms_inputs(),
-    )
-    wrapped_expected = CPBMRouteStateSafeTerms.route_global_position_y_matrix(
-        plan;
-        global_dimension = 2,
-        inputs = _route_state_safe_terms_inputs(),
-    )
-    @test wrapped.global_matrix_result.matrix ≈
-          wrapped_expected.global_matrix_result.matrix
-
-    route_state = CPBMRouteStateSafeTerms.route_state_global_position_z_matrix(
-        (; terminal_route_state = (; pair_block_materialization_plan = plan));
-        global_dimension = 2,
-        inputs = _route_state_safe_terms_inputs(),
-    )
-    route_state_expected =
-        CPBMRouteStateSafeTerms.route_global_position_z_matrix(
-            plan;
-            global_dimension = 2,
-            inputs = _route_state_safe_terms_inputs(),
-        )
-    @test route_state.global_matrix_result.matrix ≈
-          route_state_expected.global_matrix_result.matrix
-
-    missing_plan = CPBMRouteStateSafeTerms.route_state_global_position_x_matrix(
-        (; route_state = :missing_pair_block_plan);
-        global_dimension = 2,
-        inputs = _route_state_safe_terms_inputs(),
-    )
-    @test missing_plan.status === :blocked_route_global_position_x_matrix
-    @test missing_plan.blocker === :missing_pair_block_materialization_plan
-
-    missing_dimension =
-        CPBMRouteStateSafeTerms.route_state_global_position_x_matrix(
-            (; pair_block_materialization_plan = plan);
-            inputs = _route_state_safe_terms_inputs(),
-        )
-    @test missing_dimension.status === :blocked_route_global_position_x_matrix
-    @test missing_dimension.blocker === :missing_global_dimension
 end
 
 @testset "CartesianPairBlockMaterialization route-state global x2 adapter" begin
-    plan = _route_state_safe_terms_plan()
-
-    axis_adapter = CPBMRouteStateSafeTerms.route_state_global_x2_matrix(
-        plan;
-        axis = :x,
-        global_dimension = 2,
-        inputs = _route_state_safe_terms_inputs(),
+    _test_route_state_axis_family(
+        CPBMRouteStateSafeTerms.route_state_global_x2_matrix,
+        CPBMRouteStateSafeTerms.route_global_x2_x_matrix,
+        (:x2_x, :x2_y, :x2_z),
     )
-    axis_expected = CPBMRouteStateSafeTerms.route_global_x2_x_matrix(
-        plan;
-        global_dimension = 2,
-        inputs = _route_state_safe_terms_inputs(),
-    )
-    @test axis_adapter.global_matrix_result.matrix ≈
-          axis_expected.global_matrix_result.matrix
-
-    for term in (:x2_x, :x2_y, :x2_z)
-        expected = _route_state_x2_global_matrix(
-            term,
-            plan;
-            global_dimension = 2,
-            inputs = _route_state_safe_terms_inputs(),
-        )
-        direct = _route_state_x2_adapter(
-            term,
-            plan;
-            global_dimension = 2,
-            inputs = _route_state_safe_terms_inputs(),
-        )
-        @test direct.status ===
-              Symbol("materialized_route_global_", String(term), "_matrix")
-        @test getproperty(
-            direct,
-            Symbol("global_", String(term), "_matrix_materialized"),
-        )
-        @test direct.global_matrix_result.matrix ≈
-              expected.global_matrix_result.matrix
-        @test direct.pair_block_materialization_plan === plan
-        _test_route_state_nonclaim_flags(direct)
-    end
-
-    wrapped = CPBMRouteStateSafeTerms.route_state_global_x2_y_matrix(
-        (; pair_block_materialization_plan = plan);
-        global_dimension = 2,
-        factors = _route_state_safe_terms_inputs(),
-    )
-    wrapped_expected = CPBMRouteStateSafeTerms.route_global_x2_y_matrix(
-        plan;
-        global_dimension = 2,
-        inputs = _route_state_safe_terms_inputs(),
-    )
-    @test wrapped.global_matrix_result.matrix ≈
-          wrapped_expected.global_matrix_result.matrix
-
-    route_state = CPBMRouteStateSafeTerms.route_state_global_x2_z_matrix(
-        (; terminal_route_state = (; pair_block_materialization_plan = plan));
-        global_dimension = 2,
-        inputs = _route_state_safe_terms_inputs(),
-    )
-    route_state_expected = CPBMRouteStateSafeTerms.route_global_x2_z_matrix(
-        plan;
-        global_dimension = 2,
-        inputs = _route_state_safe_terms_inputs(),
-    )
-    @test route_state.global_matrix_result.matrix ≈
-          route_state_expected.global_matrix_result.matrix
-
-    missing_plan = CPBMRouteStateSafeTerms.route_state_global_x2_x_matrix(
-        (; route_state = :missing_pair_block_plan);
-        global_dimension = 2,
-        inputs = _route_state_safe_terms_inputs(),
-    )
-    @test missing_plan.status === :blocked_route_global_x2_x_matrix
-    @test missing_plan.blocker === :missing_pair_block_materialization_plan
-
-    missing_dimension = CPBMRouteStateSafeTerms.route_state_global_x2_x_matrix(
-        (; pair_block_materialization_plan = plan);
-        inputs = _route_state_safe_terms_inputs(),
-    )
-    @test missing_dimension.status === :blocked_route_global_x2_x_matrix
-    @test missing_dimension.blocker === :missing_global_dimension
 end

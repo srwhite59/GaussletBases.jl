@@ -27,6 +27,19 @@ const _H2_PHYSICAL_PQS_INPUT =
             @test file["config/supplement_policy"] === :none
             @test file["config/comparison_ready"] == false
             @test file["config/run_final_basis"] == true
+            @test file["comparison/blocker"] ===
+                  :missing_wl_h2_gausslet_only_reference_values
+            @test file["comparison/wl_reference_candidate_status"] ===
+                  :available_wl_h2_gausslet_only_reference_candidate
+            @test file["comparison/wl_reference_candidate_blocker"] === nothing
+            @test file["comparison/wl_reference_final_dimension"] == 463
+            @test file["comparison/wl_reference_retained_transform_kind"] ===
+                  :white_lindsey_old_qw_gausslet_retained_transform
+            @test file["comparison/wl_reference_supplement_policy"] === :none
+            @test file["comparison/wl_reference_label"] ==
+                  "WL/QW H2 R=4 gausslet-only 463"
+            @test file["comparison/old_supplemented_wl_qw_scalar_references_blocked"] ==
+                  true
 
             @test file["parent/parent_axis_counts"] == (x = 9, y = 9, z = 15)
 
@@ -119,7 +132,7 @@ const _H2_PHYSICAL_PQS_INPUT =
                       :materialized_pqs_physical_gausslet_private_rhf_execution
                 @test file["route/private_rhf_materialized"] == true
                 @test file["physics/endpoint_blocker"] ===
-                      :missing_h2_gausslet_only_reference_comparison
+                      :missing_wl_h2_gausslet_only_reference_values
                 @test file["private_rhf/execution_status"] ===
                       :materialized_pqs_physical_gausslet_private_rhf_execution
                 @test file["private_rhf/execution_blocker"] === nothing

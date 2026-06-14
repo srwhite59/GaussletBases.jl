@@ -391,6 +391,20 @@ struct _PQSDiatomicPhysicalGaussletCoreShellTargetPayload
     metadata
 end
 
+struct _PQSH2WLGaussletOnlyReferenceCandidatePayload
+    status::Symbol
+    blocker
+    route_family::Symbol
+    route_kind::Symbol
+    label::String
+    retained_transform_kind::Symbol
+    supplement_policy::Symbol
+    final_dimension
+    conditions
+    summary
+    metadata
+end
+
 struct _PQSDiatomicPhysicalGaussletCoreShellSourcePlanPayload
     status::Symbol
     blocker
@@ -547,6 +561,37 @@ function _pqs_source_box_route_driver_axis_counts_tuple(axis_counts)
     return ntuple(axis -> Int(axis_counts_tuple[axis]), 3)
 end
 
+function _pqs_source_box_route_driver_ordered_count_tuple(counts, order)
+    isnothing(counts) && return nothing
+    isempty(order) && return ()
+    counts isa NamedTuple || return nothing
+    all(hasproperty(counts, key) for key in order) || return nothing
+    return Tuple(Int(getproperty(counts, key)) for key in order)
+end
+
+function _pqs_source_box_route_driver_location_tuple(location)
+    isnothing(location) && return nothing
+    location_tuple = Tuple(location)
+    length(location_tuple) == 3 || return nothing
+    return ntuple(axis -> Float64(location_tuple[axis]), 3)
+end
+
+function _pqs_source_box_route_driver_h2_r4_center_match(parent)
+    summary = _pqs_source_box_route_driver_diatomic_center_summary(parent)
+    summary.center_count == 2 || return false
+    all(charge -> isapprox(Float64(charge), 1.0; atol = 1.0e-12),
+        summary.nuclear_charges) || return false
+    locations =
+        _pqs_source_box_route_driver_location_tuple.(summary.locations)
+    all(!isnothing, locations) || return false
+    ordered = sort(collect(locations); by = location -> location[3])
+    expected = ((0.0, 0.0, -2.0), (0.0, 0.0, 2.0))
+    return all(
+        isapprox(ordered[index][axis], expected[index][axis]; atol = 1.0e-12)
+        for index in 1:2 for axis in 1:3
+    )
+end
+
 function _pqs_source_box_route_driver_diatomic_physical_gausslet_target_payload(
     parent,
     route_skeleton,
@@ -687,6 +732,117 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_target_payload(
         supplement_policy,
         available_objects,
         missing_objects,
+        summary,
+        metadata,
+    )
+end
+
+function _pqs_source_box_route_driver_h2_wl_gausslet_only_reference_candidate(
+    parent,
+    route_skeleton,
+    recipe,
+    target_payload,
+    final_basis_payload = nothing,
+)
+    route_family =
+        hasproperty(route_skeleton, :route_family) ?
+        route_skeleton.route_family :
+        recipe.route_family
+    route_kind =
+        hasproperty(route_skeleton, :route_kind) ?
+        route_skeleton.route_kind :
+        recipe.route_kind
+    final_basis_summary =
+        isnothing(final_basis_payload) || !hasproperty(final_basis_payload, :summary) ?
+        (;) :
+        final_basis_payload.summary
+    actual_final_dimension = get(final_basis_summary, :final_dimension, nothing)
+    reference_label = "WL/QW H2 R=4 gausslet-only 463"
+    retained_transform_kind = :white_lindsey_old_qw_gausslet_retained_transform
+    expected_order = (:atom_contact_core, :shared_shell_1, :shared_shell_2)
+    support_counts =
+        _pqs_source_box_route_driver_ordered_count_tuple(
+            target_payload.support_counts,
+            expected_order,
+        )
+    retained_counts =
+        _pqs_source_box_route_driver_ordered_count_tuple(
+            target_payload.retained_counts,
+            expected_order,
+        )
+    final_dimension =
+        isnothing(actual_final_dimension) ?
+        target_payload.expected_final_dimension :
+        actual_final_dimension
+    conditions = (;
+        route_kind =
+            route_family === :pqs_source_box &&
+            route_kind === :bond_aligned_diatomic_physical_gausslet_core_shell_pqs,
+        geometry = _pqs_source_box_route_driver_h2_r4_center_match(parent),
+        parent_axis_counts =
+            _pqs_source_box_route_driver_axis_counts_tuple(
+                target_payload.parent_axis_counts,
+            ) == (9, 9, 15),
+        support_counts = support_counts == (275, 578, 362),
+        retained_counts = retained_counts == (251, 98, 114),
+        retained_order = target_payload.retained_order == expected_order,
+        supplement_policy = target_payload.supplement_policy === :none,
+        final_dimension =
+            target_payload.expected_final_dimension == 463 &&
+            (isnothing(actual_final_dimension) || actual_final_dimension == 463),
+        retained_transform_kind =
+            retained_transform_kind ===
+            :white_lindsey_old_qw_gausslet_retained_transform,
+        reference_label = reference_label == "WL/QW H2 R=4 gausslet-only 463",
+    )
+    mismatches = Tuple(key for key in keys(conditions) if !getproperty(conditions, key))
+    status =
+        isempty(mismatches) ?
+        :available_wl_h2_gausslet_only_reference_candidate :
+        :blocked_wl_h2_gausslet_only_reference_candidate
+    blocker =
+        isempty(mismatches) ?
+        nothing :
+        :wl_h2_gausslet_only_reference_candidate_mismatch
+    summary = (;
+        status,
+        blocker,
+        route_family,
+        route_kind,
+        geometry_label = :h2_r4,
+        parent_axis_counts =
+            _pqs_source_box_route_driver_axis_counts_tuple(
+                target_payload.parent_axis_counts,
+            ),
+        support_counts,
+        retained_counts,
+        retained_order = target_payload.retained_order,
+        supplement_policy = target_payload.supplement_policy,
+        final_dimension,
+        retained_transform_kind,
+        label = reference_label,
+        old_supplemented_scalar_references_blocked = true,
+        conditions,
+        mismatches,
+    )
+    metadata = (;
+        source =
+            :pqs_source_box_route_driver_h2_wl_gausslet_only_reference_candidate,
+        old_wl_qw_fixed_block_size = (1215, 463),
+        reviewed_contract_pass = 218,
+        matrix_materialized = false,
+        scalar_reference_materialized = false,
+    )
+    return _PQSH2WLGaussletOnlyReferenceCandidatePayload(
+        status,
+        blocker,
+        route_family,
+        route_kind,
+        reference_label,
+        retained_transform_kind,
+        target_payload.supplement_policy,
+        final_dimension,
+        conditions,
         summary,
         metadata,
     )

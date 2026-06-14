@@ -7650,6 +7650,14 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
             diatomic_physical_gausslet_h1_payload,
             diatomic_physical_gausslet_h1_j_payload,
         )
+    h2_wl_gausslet_only_reference_candidate =
+        _pqs_source_box_route_driver_h2_wl_gausslet_only_reference_candidate(
+            parent,
+            route_skeleton,
+            recipe,
+            diatomic_physical_gausslet_target_payload,
+            diatomic_physical_gausslet_final_basis_payload,
+        )
     complete_core_shell_diagnostic_route_payload =
         _pqs_source_box_route_driver_complete_core_shell_diagnostic_route_payload(
             parent,
@@ -7771,6 +7779,7 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
         diatomic_physical_gausslet_h1_j_payload,
         diatomic_physical_gausslet_rhf_input_contract,
         diatomic_physical_gausslet_rhf_execution_payload,
+        h2_wl_gausslet_only_reference_candidate,
         complete_core_shell_diagnostic_route_payload,
         diatomic_complete_core_shell_support_window_payload,
         diatomic_raw_box_route_payload,
@@ -8228,6 +8237,10 @@ function _pqs_source_box_route_driver_physical_gausslet_target_report_fields(
         hasproperty(assembly, :diatomic_physical_gausslet_rhf_execution_payload) ?
         assembly.diatomic_physical_gausslet_rhf_execution_payload :
         nothing
+    wl_reference_candidate =
+        hasproperty(assembly, :h2_wl_gausslet_only_reference_candidate) ?
+        assembly.h2_wl_gausslet_only_reference_candidate :
+        nothing
     summary =
         isnothing(payload) ?
         (;
@@ -8390,6 +8403,32 @@ function _pqs_source_box_route_driver_physical_gausslet_target_report_fields(
                 private_rhf_final_density_one_step_consistency_status =
                     execution_summary.final_density_one_step_consistency_status,
                 physics_endpoint_blocker = execution_summary.endpoint_blocker,
+            ),
+        )
+    end
+    if !isnothing(wl_reference_candidate)
+        candidate_summary = wl_reference_candidate.summary
+        endpoint_blocker =
+            candidate_summary.status ===
+            :available_wl_h2_gausslet_only_reference_candidate &&
+            get(summary, :private_rhf_materialized, false) ?
+            :missing_wl_h2_gausslet_only_reference_values :
+            get(summary, :physics_endpoint_blocker, candidate_summary.blocker)
+        summary = merge(
+            summary,
+            (;
+                wl_reference_candidate_status = candidate_summary.status,
+                wl_reference_candidate_blocker = candidate_summary.blocker,
+                wl_reference_final_dimension = candidate_summary.final_dimension,
+                wl_reference_retained_transform_kind =
+                    candidate_summary.retained_transform_kind,
+                wl_reference_supplement_policy =
+                    candidate_summary.supplement_policy,
+                wl_reference_label = candidate_summary.label,
+                wl_reference_mismatches = candidate_summary.mismatches,
+                old_supplemented_wl_qw_scalar_references_blocked =
+                    candidate_summary.old_supplemented_scalar_references_blocked,
+                physics_endpoint_blocker = endpoint_blocker,
             ),
         )
     end
