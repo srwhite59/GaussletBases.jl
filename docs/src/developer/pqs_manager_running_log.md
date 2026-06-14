@@ -429,3 +429,51 @@ Remaining blocker / next:
 
 Line-count / complexity note:
 - Scoped `src + test + bin` diff was `23` added / `24` deleted, net `-1`.
+
+## Pass 233 - Support-Region Materializer Audit
+
+Commit(s):
+- this commit - Record independent H2 PQS support-region audit
+
+Summary:
+- No-edit audit identified a geometry-owned path for the independent H2 PQS
+  support plan. Existing terminal shellification can emit atom-local cores,
+  midpoint slabs, and shared molecular shells without WL/QW coefficient
+  matrices.
+- The audit derived the target support counts geometrically:
+  `atom_contact_core = 125 + 125 + 25 = 275`, inner shared shell
+  `7*7*13 - 5*5*11 = 362`, and outer shared shell
+  `9*9*15 - 7*7*13 = 578`.
+- It also identified the ordering issue: raw terminal geometry may emit shared
+  shells inside-out, but the H2 target vocabulary wants outside-in order
+  `578, 362`.
+
+Validation:
+- Doer: read-only inspection only; no Julia commands or tests.
+- Manager: reviewed the audit and confirmed the worktree stayed clean.
+
+Goal advancement:
+- MT2: located the next implementation seam for independent H2 PQS.
+- MT3: made the common support vocabulary concrete without importing retained
+  transforms.
+- LT5: reinforced that fixed-source coefficients and fake-PQS adapters are not
+  support authority.
+
+Medium-goal update:
+- none.
+
+Risk / guardrail:
+- Do not use `bond_aligned_diatomic_nested_fixed_source(...)`,
+  fake-PQS `source.sequence.coefficient_matrix`, or WL/QW retained-transform
+  data as independent support authority.
+
+Remaining blocker / next:
+- Implement a compact private support-region plan materializer that groups
+  shellification-owned primitive support into `:atom_contact_core`,
+  `:shared_shell_1`, and `:shared_shell_2`, while keeping retained transforms
+  and physics blocked.
+
+Line-count / complexity note:
+- No source/test/bin changes in this audit. The implementation pass should
+  delete the pass-232 hard-coded blocked support-plan field cloud once generated
+  support-plan authority exists.
