@@ -11765,6 +11765,12 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
     contract = _pqs_source_box_route_driver_contract_metadata(recipe)
     low_order_assembly =
         _pqs_source_box_route_driver_assembly_stage_low_order_summary(pairs)
+    diatomic_physical_gausslet_target_payload =
+        _pqs_source_box_route_driver_diatomic_physical_gausslet_target_payload(
+            parent,
+            route_skeleton,
+            recipe,
+        )
     complete_core_shell_diagnostic_route_payload =
         _pqs_source_box_route_driver_complete_core_shell_diagnostic_route_payload(
             parent,
@@ -11878,6 +11884,7 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
         transforms,
         pairs,
         low_order_assembly,
+        diatomic_physical_gausslet_target_payload,
         complete_core_shell_diagnostic_route_payload,
         diatomic_complete_core_shell_support_window_payload,
         diatomic_raw_box_route_payload,
@@ -12304,6 +12311,33 @@ function _pqs_source_box_route_driver_diatomic_complete_core_shell_report_fields
     )
 end
 
+function _pqs_source_box_route_driver_physical_gausslet_target_report_fields(
+    assembly,
+)
+    payload =
+        hasproperty(assembly, :diatomic_physical_gausslet_target_payload) ?
+        assembly.diatomic_physical_gausslet_target_payload :
+        nothing
+    summary =
+        isnothing(payload) ?
+        (;
+            status = :not_available_missing_physical_gausslet_target_payload,
+            blocker = :missing_physical_gausslet_target_payload,
+            target_inventory_available = false,
+            source_plan_materialized = false,
+            final_basis_materialized = false,
+            h1_materialized = false,
+            h1_j_materialized = false,
+            rhf_materialized = false,
+        ) :
+        payload.summary
+    return (;
+        physical_gausslet_target_summary = summary,
+        physical_gausslet_target_status = summary.status,
+        physical_gausslet_target_blocker = summary.blocker,
+    )
+end
+
 function _pqs_source_box_route_driver_pair_operator_report_count_entries(
     entries,
 )
@@ -12713,6 +12747,10 @@ function cartesian_report(system, parent, assembly, recipe)
         _pqs_source_box_route_driver_diatomic_complete_core_shell_report_fields(
             assembly,
         )
+    physical_gausslet_target_report_fields =
+        _pqs_source_box_route_driver_physical_gausslet_target_report_fields(
+            assembly,
+        )
 
     report = _pqs_source_box_route_driver_report(
         standard_setup, parent, parent_axis, route_axis_counts, raw_box,
@@ -12724,6 +12762,7 @@ function cartesian_report(system, parent, assembly, recipe)
         complete_core_shell_h1_j_report_fields,
         complete_core_shell_private_rhf_report_fields,
         diatomic_complete_core_shell_report_fields,
+        physical_gausslet_target_report_fields,
     )
 end
 

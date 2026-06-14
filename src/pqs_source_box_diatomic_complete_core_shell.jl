@@ -370,6 +370,27 @@ struct _PQSDiatomicCompleteCoreShellHamiltonianConsumerContractPayload
     metadata
 end
 
+struct _PQSDiatomicPhysicalGaussletCoreShellTargetPayload
+    status::Symbol
+    blocker
+    route_family::Symbol
+    route_kind::Symbol
+    parent_axis_counts
+    support_units::Tuple
+    retained_units::Tuple
+    support_counts
+    retained_counts
+    retained_order::Tuple
+    expected_final_dimension
+    retained_atom_core_interiors::Bool
+    source_plan_role::Symbol
+    supplement_policy::Symbol
+    available_objects::Tuple
+    missing_objects::Tuple
+    summary
+    metadata
+end
+
 function _pqs_source_box_route_driver_axis_counts_tuple(axis_counts)
     isnothing(axis_counts) && return nothing
     if axis_counts isa NamedTuple
@@ -378,6 +399,156 @@ function _pqs_source_box_route_driver_axis_counts_tuple(axis_counts)
     axis_counts_tuple = Tuple(axis_counts)
     length(axis_counts_tuple) == 3 || return nothing
     return ntuple(axis -> Int(axis_counts_tuple[axis]), 3)
+end
+
+function _pqs_source_box_route_driver_diatomic_physical_gausslet_target_payload(
+    parent,
+    route_skeleton,
+    recipe,
+)
+    route_family =
+        hasproperty(route_skeleton, :route_family) ?
+        route_skeleton.route_family :
+        recipe.route_family
+    route_kind =
+        hasproperty(route_skeleton, :route_kind) ?
+        route_skeleton.route_kind :
+        recipe.route_kind
+    system_classification =
+        hasproperty(parent, :system_classification) ?
+        parent.system_classification :
+        nothing
+    parent_axis_counts =
+        hasproperty(route_skeleton, :parent_axis_counts) ?
+        route_skeleton.parent_axis_counts :
+        hasproperty(parent, :axis_counts) ?
+        parent.axis_counts :
+        nothing
+    parent_axis_count_tuple =
+        _pqs_source_box_route_driver_axis_counts_tuple(parent_axis_counts)
+    inventory =
+        hasproperty(route_skeleton, :physical_target_inventory) ?
+        route_skeleton.physical_target_inventory :
+        nothing
+    expected_route_kind =
+        :bond_aligned_diatomic_physical_gausslet_core_shell_pqs
+    expected_parent_axis_counts = (9, 9, 15)
+
+    if route_family !== :pqs_source_box
+        status = :not_applicable_physical_gausslet_target_non_pqs_route
+        blocker = nothing
+    elseif route_kind !== expected_route_kind
+        status = :not_applicable_physical_gausslet_target_route_kind
+        blocker = nothing
+    elseif system_classification !== :bond_aligned_diatomic
+        status = :blocked_physical_gausslet_target_inventory
+        blocker = :not_bond_aligned_diatomic
+    elseif isnothing(inventory)
+        status = :blocked_physical_gausslet_target_inventory
+        blocker = :missing_physical_gausslet_target_inventory
+    elseif parent_axis_count_tuple != expected_parent_axis_counts
+        status = :blocked_physical_gausslet_target_inventory
+        blocker = :unexpected_physical_gausslet_parent_axis_counts
+    else
+        status = :available_physical_gausslet_core_shell_target_inventory
+        blocker = nothing
+    end
+
+    support_units =
+        isnothing(inventory) ? () : Tuple(inventory.support_units)
+    retained_units =
+        isnothing(inventory) ? () : Tuple(inventory.retained_units)
+    support_counts =
+        isnothing(inventory) ? (;) : inventory.support_counts
+    retained_counts =
+        isnothing(inventory) ? (;) : inventory.retained_counts
+    retained_order =
+        isnothing(inventory) ? () : Tuple(inventory.retained_order)
+    expected_final_dimension =
+        isnothing(inventory) ? nothing : inventory.expected_final_dimension
+    retained_atom_core_interiors =
+        !isnothing(inventory) && inventory.retained_atom_core_interiors
+    source_plan_role =
+        isnothing(inventory) ?
+        :not_available :
+        inventory.source_plan_role
+    supplement_policy =
+        isnothing(inventory) ?
+        :not_available :
+        inventory.supplement_policy
+    available_objects =
+        status === :available_physical_gausslet_core_shell_target_inventory ?
+        (:physical_gausslet_core_shell_target_inventory,) :
+        ()
+    missing_objects =
+        status === :available_physical_gausslet_core_shell_target_inventory ?
+        (
+            :physical_gausslet_source_plan_producer,
+            :physical_gausslet_final_basis_builder,
+            :physical_gausslet_h1_builder,
+        ) :
+        isnothing(blocker) ? () : (blocker,)
+    summary = (;
+        status,
+        blocker,
+        route_family,
+        route_kind,
+        parent_axis_counts,
+        support_units,
+        support_counts,
+        retained_units,
+        retained_counts,
+        retained_order,
+        expected_final_dimension,
+        retained_atom_core_interiors,
+        source_plan_role,
+        supplement_policy,
+        target_inventory_available =
+            status === :available_physical_gausslet_core_shell_target_inventory,
+        source_plan_materialized = false,
+        final_basis_materialized = false,
+        h1_materialized = false,
+        h1_j_materialized = false,
+        rhf_materialized = false,
+        missing_objects,
+    )
+    metadata = (;
+        source =
+            :pqs_source_box_route_driver_diatomic_physical_gausslet_target_payload,
+        route_kind,
+        provenance =
+            isnothing(inventory) ? :missing_inventory : inventory.provenance,
+        target_inventory_hard_coded_from_reviewed_contract = true,
+        reviewed_contract_pass = 200,
+        old_wl_qw_fixed_block_size = (1215, 463),
+        source_plan_role,
+        no_source_plan_construction = true,
+        no_final_basis_construction = true,
+        no_h1_construction = true,
+        no_h1_j_construction = true,
+        no_rhf_construction = true,
+    )
+
+    return _PQSDiatomicPhysicalGaussletCoreShellTargetPayload(
+        status,
+        blocker,
+        route_family,
+        route_kind,
+        parent_axis_counts,
+        support_units,
+        retained_units,
+        support_counts,
+        retained_counts,
+        retained_order,
+        expected_final_dimension,
+        retained_atom_core_interiors,
+        source_plan_role,
+        supplement_policy,
+        available_objects,
+        missing_objects,
+        summary,
+        metadata,
+    )
 end
 
 function _pqs_source_box_route_driver_source_box_window(source_box)

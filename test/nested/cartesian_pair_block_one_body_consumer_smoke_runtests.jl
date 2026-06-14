@@ -2,10 +2,7 @@
 #
 # This is the preferred mixed one-body consumer gate for small status/count
 # edits. It uses synthetic metadata only and checks the essential direct/PQS/LW
-# dispatch path plus one compact block-set summary/view. Broader accessor and
-# local block collection coverage lives in:
-#
-#     test/nested/cartesian_pair_block_one_body_accessors_contract_runtests.jl
+# dispatch path plus one compact block-set summary/view.
 
 using Test
 using GaussletBases

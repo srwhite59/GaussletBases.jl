@@ -420,6 +420,12 @@ function _pqs_source_box_route_driver_write_present_group!(file, group, values)
     end
 end
 
+function _pqs_source_box_route_driver_ordered_target_counts(counts, order)
+    isnothing(counts) && return nothing
+    isempty(order) && return ()
+    return Tuple(getproperty(counts, key) for key in order)
+end
+
 function _pqs_source_box_route_driver_write_pqs_he_artifact!(file, report, input_path)
     hasproperty(report, :complete_core_shell_h1_j_driver_route_materialized) &&
         report.complete_core_shell_h1_j_driver_route_materialized || return nothing
@@ -502,6 +508,23 @@ function _pqs_source_box_route_driver_write_pqs_diatomic_readiness_artifact!(
             blocker = :missing_diatomic_complete_core_shell_readiness,
         ),
     )
+    target = get(
+        report,
+        :physical_gausslet_target_summary,
+        (;
+            status = :not_available_missing_physical_gausslet_target_payload,
+            blocker = :missing_physical_gausslet_target_payload,
+            support_units = (),
+            retained_units = (),
+            retained_order = (),
+            support_counts = nothing,
+            retained_counts = nothing,
+            expected_final_dimension = nothing,
+            retained_atom_core_interiors = nothing,
+            source_plan_role = nothing,
+            supplement_policy = nothing,
+        ),
+    )
 
     for (group, values) in (
         ("system", (; atom_symbols = system.atom_symbols, nuclear_charges = system.nuclear_charges, atom_locations, bond_axis, bond_length)),
@@ -522,6 +545,33 @@ function _pqs_source_box_route_driver_write_pqs_diatomic_readiness_artifact!(
             retained_atom_core_interiors =
                 get(recipe, :retained_atom_core_interiors, nothing),
             source_plan_role = get(recipe, :source_plan_role, nothing),
+        ),
+    )
+    _pqs_source_box_route_driver_write_group!(
+        file,
+        "target",
+        (;
+            status = get(target, :status, nothing),
+            blocker = get(target, :blocker, nothing),
+            support_units = get(target, :support_units, ()),
+            support_counts =
+                _pqs_source_box_route_driver_ordered_target_counts(
+                    get(target, :support_counts, nothing),
+                    get(target, :support_units, ()),
+                ),
+            retained_units = get(target, :retained_units, ()),
+            retained_counts =
+                _pqs_source_box_route_driver_ordered_target_counts(
+                    get(target, :retained_counts, nothing),
+                    get(target, :retained_order, ()),
+                ),
+            retained_order = get(target, :retained_order, ()),
+            expected_final_dimension =
+                get(target, :expected_final_dimension, nothing),
+            retained_atom_core_interiors =
+                get(target, :retained_atom_core_interiors, nothing),
+            source_plan_role = get(target, :source_plan_role, nothing),
+            supplement_policy = get(target, :supplement_policy, nothing),
         ),
     )
     _pqs_source_box_route_driver_write_present_group!(

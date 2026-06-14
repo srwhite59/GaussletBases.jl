@@ -20,6 +20,11 @@ function _pqs_source_box_route_driver_route_skeleton(
         return _pqs_source_box_route_driver_white_lindsey_low_order_skeleton(
             route_axis_counts, spacing_inputs, route_recipe)
     end
+    if route_recipe.route_kind ===
+       :bond_aligned_diatomic_physical_gausslet_core_shell_pqs
+        return _pqs_source_box_route_driver_physical_gausslet_core_shell_skeleton(
+            route_axis_counts, spacing_inputs, route_recipe)
+    end
 
     source_box_recipe = route_recipe.source_box
     skeleton = metrics._pqs_pqs_product_source_box_route_skeleton(
@@ -33,6 +38,129 @@ function _pqs_source_box_route_driver_route_skeleton(
         pair_factor_normalization = route_recipe.pair_factor_normalization,
     )
     return merge(skeleton, (; route_family = route_recipe.route_family))
+end
+
+function _pqs_source_box_route_driver_physical_gausslet_core_shell_skeleton(
+    route_axis_counts,
+    spacing_inputs,
+    route_recipe,
+)
+    retained_units = (
+        _pqs_source_box_route_driver_unit_record(
+            unit_key = :atom_contact_core,
+            unit_role = :full_atom_contact_core_interiors,
+            retained_unit_kind = :atom_contact_core,
+            source_family = :reviewed_wl_qw_atom_contact_core_inventory,
+            source_box = nothing,
+            source_dimensions = nothing,
+            source_dimension = 275,
+            retained_rule_kind = :full_atom_contact_core_interiors,
+            retained_rule_derivation = :pass_200_reviewed_wl_qw_inventory,
+            retained_range = 1:251,
+            retained_count = 251,
+            provenance_label = :wl_qw_h2_r4_gausslet_only_core_inventory,
+            weight_semantics = :not_ida_weights,
+        ),
+        _pqs_source_box_route_driver_unit_record(
+            unit_key = :shared_shell_1,
+            unit_role = :first_shared_molecular_shell,
+            retained_unit_kind = :pqs_shared_shell_layer,
+            source_family = :pqs_shared_molecular_shell_target,
+            source_box = nothing,
+            source_dimensions = nothing,
+            source_dimension = 578,
+            retained_rule_kind = :pqs_shared_shell_boundary_target,
+            retained_rule_derivation = :pass_200_reviewed_wl_qw_inventory,
+            retained_range = 252:349,
+            retained_count = 98,
+            provenance_label = :wl_qw_h2_r4_gausslet_only_shared_shell_1,
+            weight_semantics = :not_ida_weights,
+        ),
+        _pqs_source_box_route_driver_unit_record(
+            unit_key = :shared_shell_2,
+            unit_role = :second_shared_molecular_shell,
+            retained_unit_kind = :pqs_shared_shell_layer,
+            source_family = :pqs_shared_molecular_shell_target,
+            source_box = nothing,
+            source_dimensions = nothing,
+            source_dimension = 362,
+            retained_rule_kind = :pqs_shared_shell_boundary_target,
+            retained_rule_derivation = :pass_200_reviewed_wl_qw_inventory,
+            retained_range = 350:463,
+            retained_count = 114,
+            provenance_label = :wl_qw_h2_r4_gausslet_only_shared_shell_2,
+            weight_semantics = :not_ida_weights,
+        ),
+    )
+    unit_inventory = _pqs_source_box_route_driver_unit_inventory(retained_units)
+    support_units = (:atom_contact_core, :shared_shell_1, :shared_shell_2)
+    support_counts = (;
+        atom_contact_core = 275,
+        shared_shell_1 = 578,
+        shared_shell_2 = 362,
+    )
+    retained_counts = unit_inventory.retained_counts
+    target_inventory = (;
+        status = :available_physical_gausslet_core_shell_target_inventory,
+        blocker = nothing,
+        support_units,
+        support_counts,
+        retained_units = support_units,
+        retained_counts,
+        retained_order = support_units,
+        expected_final_dimension = unit_inventory.retained_dimension,
+        retained_atom_core_interiors = true,
+        source_plan_role = :atom_contact_core_plus_pqs_shared_shells,
+        supplement_policy = :none,
+        provenance = :pass_200_reviewed_wl_qw_inventory,
+    )
+    pair_entries = ()
+    pair_family_counts = (physical_gausslet_target = 0,)
+    pending_facts = (
+        :physical_gausslet_source_plan_producer,
+        :physical_gausslet_final_basis_builder,
+        :physical_gausslet_h1_builder,
+    )
+
+    return (;
+        object_kind = :pqs_diatomic_physical_gausslet_core_shell_target_skeleton,
+        status = :available_physical_gausslet_core_shell_target_inventory,
+        route_family = route_recipe.route_family,
+        route_kind = route_recipe.route_kind,
+        route_shape = support_units,
+        retained_unit_order = support_units,
+        q = spacing_inputs.q,
+        parent_axis_counts = route_axis_counts.parent_axis_counts,
+        source_boxes = unit_inventory.source_boxes,
+        source_dimensions = unit_inventory.source_dimensions,
+        retained_units,
+        retained_counts,
+        ranges = unit_inventory.ranges,
+        retained_dimension = unit_inventory.retained_dimension,
+        pair_entries,
+        pair_family_counts,
+        helper_by_pair_family =
+            (physical_gausslet_target = :target_inventory_only_not_materialized,),
+        physical_target_inventory = target_inventory,
+        pending_facts,
+        diagnostics = (
+            source = :pqs_source_box_route_driver_physical_gausslet_core_shell_skeleton,
+            route_family = route_recipe.route_family,
+            route_kind = route_recipe.route_kind,
+            private_development_only = true,
+            production_route = false,
+            source_box_first = true,
+            target_inventory_only = true,
+            source_plan_materialized = false,
+            final_basis_materialized = false,
+            h1_materialized = false,
+            h1_j_materialized = false,
+            rhf_materialized = false,
+            retained_atom_core_interiors = true,
+            supplement_policy = :none,
+            expected_final_dimension = unit_inventory.retained_dimension,
+        ),
+    )
 end
 
 function _pqs_source_box_route_driver_white_lindsey_low_order_skeleton(
