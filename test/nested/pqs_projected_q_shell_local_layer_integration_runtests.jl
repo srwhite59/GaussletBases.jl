@@ -339,6 +339,7 @@
         metrics;
         expected_source_mode_dims,
         expected_retained_count,
+        shared_raw_product_box_plan = nothing,
     )
         pair_plan = metrics_module._pqs_product_source_box_pair_plan(
             pqs_plan,
@@ -351,7 +352,6 @@
         @test pair_plan.right_retained_count == length(product_unit.column_range)
         @test size(pair_plan.one_dimensional_cross_factors.x.overlap) ==
               (expected_source_mode_dims[1], 2)
-        @test pair_plan.diagnostics.private_shadow_only
 
         terms = (
             :overlap,
@@ -471,7 +471,6 @@
         @test shadow.diagnostics.path == :pqs_source_box_gto_cross_overlap_shadow
         @test shadow.diagnostics.raw_plan_first_path
         @test !shadow.diagnostics.descriptor_adapter
-        @test shadow.diagnostics.private_shadow_only
         @test shadow.diagnostics.pqs_representation ==
               :mode_selected_raw_product_box
         @test shadow.diagnostics.raw_product_box_plan_used
@@ -502,10 +501,6 @@
         @test !shadow.diagnostics.retained_pqs_weights_used
         @test !shadow.diagnostics.retained_pqs_weights_positive_checked
         @test !shadow.diagnostics.ida_weight_division_allowed
-        @test !shadow.diagnostics.packet_adoption
-        @test !shadow.diagnostics.fixed_block_routing
-        @test !shadow.diagnostics.qwhamiltonian_consumes
-        @test !shadow.diagnostics.public_default_consumes
         @test !shadow.diagnostics.cr2_science_status_changed
         @test !shadow.diagnostics.local_ecp_gaussian_mwg_implemented
         @test !shadow.diagnostics.generic_retained_unit_framework
@@ -658,7 +653,6 @@
               (expected_retained_count, expected_retained_count)
         @test plan.shell_realization_plan.isometry_error < 1.0e-10
         @test plan.shell_realization_plan.isometric
-        @test plan.diagnostics.private_shadow_only
         @test !plan.diagnostics.raw_product_box_stage_lowdin_cleanup_used
         @test plan.diagnostics.raw_product_box_operators_use_1d_factors
         @test !plan.diagnostics.shell_projection_used_for_raw_box_operators
@@ -670,10 +664,7 @@
         @test plan.diagnostics.retained_weight_semantics ==
               :not_positive_quadrature_weights
         @test !plan.diagnostics.ida_weight_division_allowed
-        @test !plan.diagnostics.packet_adoption
         @test !plan.diagnostics.fixed_block_sidecar_installation
-        @test !plan.diagnostics.qwhamiltonian_consumes
-        @test !plan.diagnostics.public_default_consumes
         @test !plan.diagnostics.cr2_science_status_changed
         @test !plan.diagnostics.generic_retained_unit_framework
 
@@ -725,8 +716,6 @@
             @test raw_box_block.raw_product_box_plan.retained_rule_kind ==
                   :boundary_comx_product_mode_selection
             @test raw_box_block.raw_product_box_plan.retained_rule_algorithmic
-            @test raw_box_block.diagnostics.private_shadow_only
-            @test !raw_box_block.diagnostics.production_supported
             @test !raw_box_block.diagnostics.row_projected_shell_support
             @test !raw_box_block.diagnostics.shell_row_projection_used
             @test !raw_box_block.diagnostics.lowdin_cleanup_used
@@ -759,10 +748,7 @@
             @test !raw_box_block.diagnostics.retained_pqs_weights_used
             @test !raw_box_block.diagnostics.retained_pqs_weights_positive_checked
             @test !raw_box_block.diagnostics.ida_weight_division_allowed
-            @test !raw_box_block.diagnostics.packet_adoption
             @test !raw_box_block.diagnostics.fixed_block_sidecar_installation
-            @test !raw_box_block.diagnostics.qwhamiltonian_consumes
-            @test !raw_box_block.diagnostics.public_default_consumes
             @test !raw_box_block.diagnostics.cr2_science_status_changed
             @test !raw_box_block.diagnostics.local_ecp_gaussian_mwg_implemented
             @test !raw_box_block.diagnostics.generic_retained_unit_framework
@@ -852,7 +838,6 @@
               :boundary_comx_product_mode_selection
         @test pair_plan.diagnostics.right_retained_rule_kind ==
               :boundary_comx_product_mode_selection
-        @test pair_plan.diagnostics.private_shadow_only
         @test pair_plan.diagnostics.self_same_plan_only
         @test !pair_plan.diagnostics.cross_pqs_inputs_supported
         @test pair_plan.diagnostics.same_raw_product_box_plan
@@ -873,10 +858,6 @@
         @test pair_plan.diagnostics.retained_weight_semantics ==
               :not_positive_quadrature_weights
         @test !pair_plan.diagnostics.ida_weight_division_allowed
-        @test !pair_plan.diagnostics.packet_adoption
-        @test !pair_plan.diagnostics.fixed_block_routing
-        @test !pair_plan.diagnostics.qwhamiltonian_consumes
-        @test !pair_plan.diagnostics.public_default_consumes
         @test !pair_plan.diagnostics.cr2_science_status_changed
         @test !pair_plan.diagnostics.local_ecp_gaussian_mwg_implemented
         @test !pair_plan.diagnostics.generic_retained_unit_framework
@@ -1031,7 +1012,6 @@
               :boundary_comx_product_mode_selection
         @test pair_plan.diagnostics.right_retained_rule_kind ==
               :boundary_comx_product_mode_selection
-        @test pair_plan.diagnostics.private_shadow_only
         @test !pair_plan.diagnostics.self_same_plan_only
         @test pair_plan.diagnostics.cross_pqs_inputs_supported
         @test !pair_plan.diagnostics.same_raw_product_box_plan
@@ -1052,10 +1032,6 @@
         @test pair_plan.diagnostics.retained_weight_semantics ==
               :not_positive_quadrature_weights
         @test !pair_plan.diagnostics.ida_weight_division_allowed
-        @test !pair_plan.diagnostics.packet_adoption
-        @test !pair_plan.diagnostics.fixed_block_routing
-        @test !pair_plan.diagnostics.qwhamiltonian_consumes
-        @test !pair_plan.diagnostics.public_default_consumes
         @test !pair_plan.diagnostics.cr2_science_status_changed
         @test !pair_plan.diagnostics.local_ecp_gaussian_mwg_implemented
         @test !pair_plan.diagnostics.generic_retained_unit_framework
@@ -1741,25 +1717,8 @@
               :raw_weighted
         @test !component.diagnostics.hamiltonian_matrix_built
         @test !raw_component.diagnostics.hamiltonian_matrix_built
-        @test !component.diagnostics.packet_adoption
-        @test !raw_component.diagnostics.packet_adoption
-        @test !component.diagnostics.fixed_block_routing
-        @test !raw_component.diagnostics.fixed_block_routing
-        @test !component.diagnostics.qwhamiltonian_consumes
-        @test !raw_component.diagnostics.qwhamiltonian_consumes
-        @test !component.diagnostics.public_default_consumes
-        @test !raw_component.diagnostics.public_default_consumes
         for summary in (component_summary, raw_component_summary)
-            @test !summary.no_go_diagnostics.packet_adoption
-            @test !summary.no_go_diagnostics.fixed_block_routing
-            @test !summary.no_go_diagnostics.qwhamiltonian_consumes
-            @test !summary.no_go_diagnostics.hamiltonian_matrix_built
-            @test !summary.no_go_diagnostics.public_default_consumes
             @test summary.diagnostics.private_component_route_smoke_summary
-            @test !summary.diagnostics.packet_adoption
-            @test !summary.diagnostics.fixed_block_routing
-            @test !summary.diagnostics.qwhamiltonian_consumes
-            @test !summary.diagnostics.public_default_consumes
         end
     end
 
@@ -2197,8 +2156,6 @@
         entry -> (entry.ix, entry.iy, entry.iz) in cubic_pqs_payload.support_states,
         Iterators.flatten(cubic_pqs_entries),
     )
-    @test cubic_pqs_payload.diagnostics.fixture_only
-    @test !cubic_pqs_payload.diagnostics.production_supported
     @test cubic_pqs_payload.diagnostics.coefficient_scope == :support_local_boundary_rows
     @test !cubic_pqs_payload.diagnostics.parent_dimension_coefficient_map
     @test cubic_pqs_payload.diagnostics.support_coefficient_shape == (98, 98)
@@ -2209,7 +2166,6 @@
     @test !cubic_pqs_payload.diagnostics.retained_weights_used_for_ida_division
     @test !cubic_pqs_payload.diagnostics.ida_weight_division_allowed
     @test !cubic_pqs_payload.diagnostics.quadrature_weight_semantics_claimed
-    @test cubic_pqs_payload.diagnostics.active_interaction_path == :none_fixture_only
     @test !cubic_pqs_payload.diagnostics.fixed_block_sidecar_installed
     @test !cubic_pqs_payload.diagnostics.default_builder_consumes
     @test !cubic_pqs_payload.diagnostics.pqs_product_optimized_path_ready
@@ -2222,8 +2178,6 @@
     @test length(cubic_pqs_sidecar.payloads) == 1
     @test only(cubic_pqs_sidecar.payloads).support_coefficient_matrix ==
           cubic_pqs_payload.support_coefficient_matrix
-    @test cubic_pqs_sidecar.diagnostics.fixture_only
-    @test !cubic_pqs_sidecar.diagnostics.production_supported
     @test !cubic_pqs_sidecar.diagnostics.fixed_block_sidecar_installed
     @test !cubic_pqs_sidecar.diagnostics.default_builder_consumes
     @test !cubic_pqs_sidecar.diagnostics.qw_consumes
@@ -2260,8 +2214,6 @@
     @test !cubic_pqs_resolved.diagnostics.retained_weights_used_for_ida_division
     @test !cubic_pqs_resolved.diagnostics.ida_weight_division_allowed
     @test !cubic_pqs_resolved.diagnostics.quadrature_weight_semantics_claimed
-    @test cubic_pqs_resolved.diagnostics.active_interaction_path == :none_fixture_only
-    @test !cubic_pqs_resolved.diagnostics.production_supported
     @test !cubic_pqs_resolved.diagnostics.fixed_block_sidecar_installed
     pqs_self_dispatch = CCPM._metric_dispatch_plan_from_resolved_payloads(
         [cubic_pqs_resolved],
@@ -2466,9 +2418,7 @@
             cubic_metrics;
             mixed_payloads = (support_dense_resolved,),
         )
-    @test sidecar_metric_reference.diagnostics.fixture_only
     @test sidecar_metric_reference.diagnostics.reference_scoped
-    @test !sidecar_metric_reference.diagnostics.production_supported
     @test sidecar_metric_reference.diagnostics.support_local_reference_only
     @test !sidecar_metric_reference.diagnostics.fixed_block_sidecar_installed
     @test !sidecar_metric_reference.diagnostics.default_builder_consumes
@@ -2514,13 +2464,11 @@
           :staged_by_center_sidecar_fixture_only
     @test installed_pqs_sidecar.diagnostics.source ==
           :projected_q_shell_fixed_block_sidecar_fixture
-    @test installed_pqs_sidecar.diagnostics.fixture_only
     @test installed_pqs_sidecar.diagnostics.fixed_block_sidecar_installed
     @test !installed_pqs_sidecar.diagnostics.by_center_consumes
     @test !installed_pqs_sidecar.diagnostics.default_builder_consumes
     @test !installed_pqs_sidecar.diagnostics.qw_consumes
     @test !installed_pqs_sidecar.diagnostics.hamiltonian_consumes
-    @test !installed_pqs_sidecar.diagnostics.production_supported
     @test installed_pqs_sidecar.diagnostics.metric_capability ==
           :pqs_low_order_support_local_reference
     @test_throws ArgumentError GaussletBases._nested_staged_by_center_sidecar(
@@ -2533,8 +2481,6 @@
     )
     @test length(installed_pqs_resolved) == 1
     @test only(installed_pqs_resolved).ready_for_metric_execution
-    @test only(installed_pqs_resolved).diagnostics.fixture_only
-    @test !only(installed_pqs_resolved).diagnostics.production_supported
     @test only(installed_pqs_resolved).diagnostics.fixed_block_sidecar_installed
     @test only(installed_pqs_resolved).diagnostics.block_role == :pqs
     installed_metric_reference =
@@ -2705,8 +2651,6 @@
     @test !pqs_pair_plan.diagnostics.raw_operator_matrices_built
     @test !pqs_pair_plan.diagnostics.retained_operator_blocks_built
     @test !pqs_pair_plan.diagnostics.metric_execution_changed
-    @test !pqs_pair_plan.diagnostics.qwhamiltonian_consumes
-    @test !pqs_pair_plan.diagnostics.public_default_consumes
     @test !pqs_pair_plan.diagnostics.backend_policy_changed
     @test !pqs_pair_plan.diagnostics.quadrature_policy_changed
     @test !pqs_pair_plan.diagnostics.cr2_science_status_changed
@@ -2757,8 +2701,6 @@
     @test !pqs_raw_overlap_packet.diagnostics.retained_transform_applied
     @test !pqs_raw_overlap_packet.diagnostics.all_pair_matrices_built
     @test !pqs_raw_overlap_packet.diagnostics.metric_execution_changed
-    @test !pqs_raw_overlap_packet.diagnostics.qwhamiltonian_consumes
-    @test !pqs_raw_overlap_packet.diagnostics.public_default_consumes
     @test !pqs_raw_overlap_packet.diagnostics.backend_policy_changed
     @test !pqs_raw_overlap_packet.diagnostics.quadrature_policy_changed
     @test !pqs_raw_overlap_packet.diagnostics.cr2_science_status_changed
@@ -2775,8 +2717,6 @@
     @test !pqs_plan_audit.diagnostics.raw_operator_matrices_built
     @test !pqs_plan_audit.diagnostics.retained_operator_blocks_built
     @test !pqs_plan_audit.diagnostics.metric_execution_changed
-    @test !pqs_plan_audit.diagnostics.qwhamiltonian_consumes
-    @test !pqs_plan_audit.diagnostics.public_default_consumes
     @test !pqs_plan_audit.diagnostics.backend_policy_changed
     @test !pqs_plan_audit.diagnostics.quadrature_policy_changed
     @test !pqs_plan_audit.diagnostics.cr2_science_status_changed
@@ -2934,7 +2874,6 @@
         provenance = (source = :route_shaped_safe_term_consumer_test_fixture,),
     )
     @test produced_route.object_kind == :pqs_pqs_product_raw_box_route_producer
-    @test produced_route.status == :private_shadow_only
     @test produced_route.descriptor.object_kind ==
           :pqs_pqs_product_safe_term_route_descriptor
     @test produced_route.descriptor.expected_ranges == route_units.expected_ranges
@@ -2965,8 +2904,6 @@
     @test produced_route.diagnostics.retained_weight_semantics ==
           :not_positive_quadrature_weights
     @test !produced_route.diagnostics.ida_weight_division_allowed
-    @test !produced_route.diagnostics.packet_adoption
-    @test !produced_route.diagnostics.qwhamiltonian_consumes
     route_geometry_facts =
         CCPM._pqs_pqs_product_raw_box_homonuclear_geometry_facts(
             parent_dims = route_dims,
@@ -3001,7 +2938,6 @@
     @test !route_geometry_facts.diagnostics.support_coefficient_matrix_used
     @test !route_geometry_facts.diagnostics.retained_pqs_weights_used
     @test !route_geometry_facts.diagnostics.ida_weight_division_allowed
-    @test !route_geometry_facts.diagnostics.packet_adoption
     geometry_route = CCPM._pqs_pqs_product_raw_box_route_from_geometry_facts(
         route_bundles,
         route_geometry_facts,
@@ -3037,7 +2973,6 @@
     @test !geometry_route.diagnostics.support_coefficient_matrix_used
     @test !geometry_route.diagnostics.retained_pqs_weights_used
     @test !geometry_route.diagnostics.ida_weight_division_allowed
-    @test !geometry_route.diagnostics.packet_adoption
     @test_throws ArgumentError CCPM._pqs_pqs_product_raw_box_homonuclear_geometry_facts(
         parent_dims = route_dims,
         bond_axis = :z,
@@ -3169,7 +3104,7 @@
         source_mode_dims = (5, 5, 5),
         parent_dims = route_dims,
         bond_axis = :z,
-        ida_term_coefficients = term_coefficients,
+        ida_term_coefficients = Float64.(expansion.coefficients),
         ida_dense_parent_matrix = GaussletBases._qwrg_diatomic_interaction_matrix(
             route_bundles.bundle_x,
             route_bundles.bundle_y,
@@ -3187,7 +3122,7 @@
         source_mode_dims = (5, 5, 5),
         parent_dims = route_dims,
         bond_axis = :z,
-        term_coefficients,
+        term_coefficients = Float64.(expansion.coefficients),
         ida_dense_parent_matrix = GaussletBases._qwrg_diatomic_interaction_matrix(
             route_bundles.bundle_x,
             route_bundles.bundle_y,
@@ -3422,7 +3357,6 @@
     @test route_fact_diagnostic.diagnostics.product_doside_unit_count == 1
     @test route_fact_diagnostic.diagnostics.direct_or_support_body_piece_count == 0
     @test route_fact_diagnostic.diagnostics.descriptor_emitted
-    @test !route_fact_diagnostic.diagnostics.packet_adoption
     @test !route_fact_diagnostic.diagnostics.fixed_block_construction_changed
     @test !route_fact_diagnostic.diagnostics.qwhamiltonian_changed
     @test !route_fact_diagnostic.diagnostics.shell_projection_used
@@ -3597,11 +3531,7 @@
         @test pqs_product_block.coefficient_error < 1.0e-12
         @test pqs_product_block.block_error < 1.0e-12
         @test pqs_product_block.diagnostics.fixture_reference_only
-        @test !pqs_product_block.diagnostics.production_supported
-        @test !pqs_product_block.diagnostics.packet_adoption
         @test !pqs_product_block.diagnostics.fixed_block_sidecar_installation
-        @test !pqs_product_block.diagnostics.qwhamiltonian_consumes
-        @test !pqs_product_block.diagnostics.public_default_consumes
         @test !pqs_product_block.diagnostics.cr2_science_status_changed
         @test !pqs_product_block.diagnostics.ida_weight_division_allowed
         @test pqs_product_block.diagnostics.retained_pqs_weights_role ==
@@ -3649,7 +3579,6 @@
     @test pqs_product_kinetic_block.coefficient_error < 1.0e-12
     @test pqs_product_kinetic_block.block_error < 1.0e-12
     @test pqs_product_kinetic_block.diagnostics.fixture_reference_only
-    @test !pqs_product_kinetic_block.diagnostics.production_supported
     @test pqs_product_kinetic_block.diagnostics.signed_operator_reference
     @test pqs_product_kinetic_block.diagnostics.retained_weight_semantics == :not_used
     @test pqs_product_kinetic_block.diagnostics.retained_pqs_weights_role ==
@@ -3658,10 +3587,7 @@
     @test !pqs_product_kinetic_block.diagnostics.retained_pqs_weights_positive_checked
     @test !pqs_product_kinetic_block.diagnostics.ida_weight_division_allowed
     @test !pqs_product_kinetic_block.diagnostics.quadrature_weight_semantics_claimed
-    @test !pqs_product_kinetic_block.diagnostics.packet_adoption
     @test !pqs_product_kinetic_block.diagnostics.fixed_block_sidecar_installation
-    @test !pqs_product_kinetic_block.diagnostics.qwhamiltonian_consumes
-    @test !pqs_product_kinetic_block.diagnostics.public_default_consumes
     @test !pqs_product_kinetic_block.diagnostics.cr2_science_status_changed
     @test pqs_product_kinetic_block.diagnostics.factored_pqs_transform_used
     @test pqs_product_kinetic_block.diagnostics.seed_reconstructed_from_descriptor
@@ -4085,8 +4011,6 @@
     @test !factorized_product_overlap_packet.diagnostics.support_row_reference_used
     @test factorized_product_overlap_packet.diagnostics.raw_basis_scope ==
           :raw_product_source_rows
-    @test factorized_product_overlap_packet.diagnostics.fixture_only
-    @test !factorized_product_overlap_packet.diagnostics.production_supported
     @test !factorized_product_overlap_packet.diagnostics.dense_parent_matrix_used
     @test !factorized_product_overlap_packet.diagnostics.metric_execution_changed
     @test !factorized_product_overlap_packet.diagnostics.retained_positive_weight_claim
@@ -4118,28 +4042,6 @@
     @test factorized_cross_retained_overlap.retained_dimensions == (4, 2)
     @test factorized_cross_retained_overlap.retained_operator_matrix ≈
           cross_overlap_reference * nonidentity_transform atol = 1.0e-14 rtol = 1.0e-14
-    # Legacy smoke only: CPB provider tests own detailed one-body product math.
-    product_source_box_shadow = CCPM._product_doside_source_box_shadow_blocks(
-        nonidentity_axis_product_unit,
-        product_unit,
-        physical_axis_metrics;
-        terms = (:overlap, :position_x, :x2_x, :kinetic),
-    )
-    @test product_source_box_shadow.path ==
-          :product_doside_source_box_shadow_blocks
-    @test product_source_box_shadow.terms ==
-          (:overlap, :position_x, :x2_x, :kinetic)
-    @test product_source_box_shadow.retained_dimension == 8
-    @test product_source_box_shadow.ranges.left == 1:4
-    @test product_source_box_shadow.ranges.right == 5:8
-    @test product_source_box_shadow.diagnostics.source_box_shadow_only
-    @test product_source_box_shadow.diagnostics.private_shadow_only
-    @test product_source_box_shadow.diagnostics.output_finite
-    for term in product_source_box_shadow.terms
-        block = product_source_box_shadow.blocks[term]
-        @test all(isfinite, block)
-        @test size(block) == (8, 8)
-    end
     density_density_term_coefficients = [0.6, 0.25]
     function _test_pair_term_tensor(first_term, second_term)
         first_matrix = Matrix{Float64}(first_term)
@@ -4253,10 +4155,6 @@
     @test !product_density_density.diagnostics.retained_weight_division_allowed
     @test !product_density_density.diagnostics.retained_pqs_weight_division_allowed
     @test !product_density_density.diagnostics.ida_weight_division_allowed
-    @test !product_density_density.diagnostics.packet_adoption
-    @test !product_density_density.diagnostics.fixed_block_routing
-    @test !product_density_density.diagnostics.qwhamiltonian_consumes
-    @test !product_density_density.diagnostics.public_default_consumes
     @test !product_density_density.diagnostics.mwg_ida_semantics_changed
     @test !product_density_density.diagnostics.numerical_reference_fallback
     @test product_density_density.diagnostics.electron_electron_terms_implemented
@@ -4328,8 +4226,6 @@
     @test !raw_weighted_density_density.diagnostics.retained_pqs_weight_division_allowed
     @test !raw_weighted_density_density.diagnostics.ida_weight_division_allowed
     @test !raw_weighted_density_density.diagnostics.mwg_ida_semantics_changed
-    @test !raw_weighted_density_density.diagnostics.packet_adoption
-    @test !raw_weighted_density_density.diagnostics.qwhamiltonian_consumes
     @test !raw_weighted_density_density.diagnostics.numerical_reference_fallback
     @test_throws ArgumentError CCPM._product_doside_source_box_raw_weighted_density_density_interaction_block(
         product_unit,
@@ -4360,12 +4256,6 @@
         axis_pair_factor_terms = density_normalized_pair_terms,
         axis_weights = density_source_weights,
     )
-    @test_throws ArgumentError CCPM._product_doside_source_box_shadow_blocks(
-        product_unit,
-        product_unit,
-        physical_axis_metrics;
-        terms = (:weights,),
-    )
     @test_throws ArgumentError CCPM._product_doside_source_box_reference_block(
         product_unit,
         product_unit,
@@ -4379,8 +4269,6 @@
     )
     @test product_staged_self_blocks.helper_path == :fill_product_staged_metric_blocks
     @test product_staged_self_blocks.fixture_scope == :private_test_only
-    @test size(product_direct_self_overlap) == (4, 4)
-    @test product_direct_self_overlap ≈ product_staged_self_blocks.overlap atol = 1.0e-14 rtol = 1.0e-14
     @test factorized_product_retained_overlap.retained_operator_matrix ≈
           product_staged_self_blocks.overlap atol = 1.0e-14 rtol = 1.0e-14
     @test_throws ArgumentError CCPM._product_doside_retained_low_order_block(
@@ -4648,36 +4536,12 @@
         @test !cross_packet.diagnostics.dense_parent_matrix_used
         @test !factorized_packet.diagnostics.dense_parent_matrix_used
         @test !factorized_cross_packet.diagnostics.dense_parent_matrix_used
-        @test packet.diagnostics.fixture_only
-        @test generic_packet.diagnostics.fixture_only
-        @test nonidentity_packet.diagnostics.fixture_only
-        @test cross_packet.diagnostics.fixture_only
-        @test factorized_packet.diagnostics.fixture_only
-        @test factorized_cross_packet.diagnostics.fixture_only
-        @test !packet.diagnostics.production_supported
-        @test !generic_packet.diagnostics.production_supported
-        @test !nonidentity_packet.diagnostics.production_supported
-        @test !cross_packet.diagnostics.production_supported
-        @test !factorized_packet.diagnostics.production_supported
-        @test !factorized_cross_packet.diagnostics.production_supported
         @test !packet.diagnostics.metric_execution_changed
         @test !generic_packet.diagnostics.metric_execution_changed
         @test !nonidentity_packet.diagnostics.metric_execution_changed
         @test !cross_packet.diagnostics.metric_execution_changed
         @test !factorized_packet.diagnostics.metric_execution_changed
         @test !factorized_cross_packet.diagnostics.metric_execution_changed
-        @test !packet.diagnostics.qwhamiltonian_consumes
-        @test !generic_packet.diagnostics.qwhamiltonian_consumes
-        @test !nonidentity_packet.diagnostics.qwhamiltonian_consumes
-        @test !cross_packet.diagnostics.qwhamiltonian_consumes
-        @test !factorized_packet.diagnostics.qwhamiltonian_consumes
-        @test !factorized_cross_packet.diagnostics.qwhamiltonian_consumes
-        @test !packet.diagnostics.public_default_consumes
-        @test !generic_packet.diagnostics.public_default_consumes
-        @test !nonidentity_packet.diagnostics.public_default_consumes
-        @test !cross_packet.diagnostics.public_default_consumes
-        @test !factorized_packet.diagnostics.public_default_consumes
-        @test !factorized_cross_packet.diagnostics.public_default_consumes
         @test !packet.diagnostics.backend_policy_changed
         @test !generic_packet.diagnostics.backend_policy_changed
         @test !nonidentity_packet.diagnostics.backend_policy_changed
@@ -4762,8 +4626,6 @@
     @test product_retained_overlap.diagnostics.retained_operator_block_built
     @test !product_retained_overlap.diagnostics.all_pair_matrices_built
     @test !product_retained_overlap.diagnostics.metric_execution_changed
-    @test !product_retained_overlap.diagnostics.qwhamiltonian_consumes
-    @test !product_retained_overlap.diagnostics.public_default_consumes
     @test !product_retained_overlap.diagnostics.backend_policy_changed
     @test !product_retained_overlap.diagnostics.quadrature_policy_changed
     @test !product_retained_overlap.diagnostics.cr2_science_status_changed
@@ -4789,8 +4651,6 @@
           :explicit_materialized_transform
     @test !product_retained_axis_index_x.diagnostics.all_pair_matrices_built
     @test !product_retained_axis_index_x.diagnostics.metric_execution_changed
-    @test !product_retained_axis_index_x.diagnostics.qwhamiltonian_consumes
-    @test !product_retained_axis_index_x.diagnostics.public_default_consumes
     @test !product_retained_axis_index_x.diagnostics.backend_policy_changed
     @test !product_retained_axis_index_x.diagnostics.quadrature_policy_changed
     @test !product_retained_axis_index_x.diagnostics.cr2_science_status_changed
@@ -4954,18 +4814,6 @@
         @test !cross_retained.diagnostics.metric_execution_changed
         @test !factorized_retained.diagnostics.metric_execution_changed
         @test !factorized_cross_retained.diagnostics.metric_execution_changed
-        @test !retained.diagnostics.qwhamiltonian_consumes
-        @test !generic_retained.diagnostics.qwhamiltonian_consumes
-        @test !nonidentity_retained.diagnostics.qwhamiltonian_consumes
-        @test !cross_retained.diagnostics.qwhamiltonian_consumes
-        @test !factorized_retained.diagnostics.qwhamiltonian_consumes
-        @test !factorized_cross_retained.diagnostics.qwhamiltonian_consumes
-        @test !retained.diagnostics.public_default_consumes
-        @test !generic_retained.diagnostics.public_default_consumes
-        @test !nonidentity_retained.diagnostics.public_default_consumes
-        @test !cross_retained.diagnostics.public_default_consumes
-        @test !factorized_retained.diagnostics.public_default_consumes
-        @test !factorized_cross_retained.diagnostics.public_default_consumes
         @test !retained.diagnostics.backend_policy_changed
         @test !generic_retained.diagnostics.backend_policy_changed
         @test !nonidentity_retained.diagnostics.backend_policy_changed
@@ -5212,11 +5060,8 @@
     @test distinct_overlap_packet.diagnostics.raw_basis_scope ==
           :raw_product_source_rows
     @test !distinct_overlap_packet.diagnostics.support_row_reference_used
-    @test distinct_overlap_packet.diagnostics.fixture_only
-    @test !distinct_overlap_packet.diagnostics.production_supported
     @test !distinct_overlap_packet.diagnostics.dense_parent_matrix_used
     @test !distinct_overlap_packet.diagnostics.metric_execution_changed
-    @test !distinct_overlap_packet.diagnostics.qwhamiltonian_consumes
     @test !distinct_overlap_packet.diagnostics.backend_policy_changed
     @test !distinct_overlap_packet.diagnostics.quadrature_policy_changed
     @test !distinct_overlap_packet.diagnostics.cr2_science_status_changed
@@ -5354,19 +5199,14 @@
         @test !distinct_factorized_packet.diagnostics.support_row_reference_used
         @test distinct_factorized_packet.diagnostics.raw_basis_scope ==
               :raw_product_source_rows
-        @test distinct_factorized_packet.diagnostics.fixture_only
-        @test !distinct_factorized_packet.diagnostics.production_supported
         @test !distinct_factorized_packet.diagnostics.dense_parent_matrix_used
         @test !distinct_factorized_packet.diagnostics.metric_execution_changed
         @test distinct_packet.diagnostics.cross_pair
         @test distinct_packet.diagnostics.left_source_dimension == 4
         @test distinct_packet.diagnostics.right_source_dimension == 4
         @test distinct_packet.diagnostics.raw_basis_scope == :raw_product_source_rows
-        @test distinct_packet.diagnostics.fixture_only
-        @test !distinct_packet.diagnostics.production_supported
         @test !distinct_packet.diagnostics.dense_parent_matrix_used
         @test !distinct_packet.diagnostics.metric_execution_changed
-        @test !distinct_packet.diagnostics.qwhamiltonian_consumes
         @test !distinct_packet.diagnostics.backend_policy_changed
         @test !distinct_packet.diagnostics.quadrature_policy_changed
         @test !distinct_packet.diagnostics.cr2_science_status_changed
@@ -5380,8 +5220,6 @@
         @test distinct_retained.diagnostics.retained_operator_block_built
         @test !distinct_retained.diagnostics.all_pair_matrices_built
         @test !distinct_retained.diagnostics.metric_execution_changed
-        @test !distinct_retained.diagnostics.qwhamiltonian_consumes
-        @test !distinct_retained.diagnostics.public_default_consumes
         @test !distinct_retained.diagnostics.backend_policy_changed
         @test !distinct_retained.diagnostics.quadrature_policy_changed
         @test !distinct_retained.diagnostics.cr2_science_status_changed
@@ -5629,12 +5467,8 @@
               _product_staged_comparison_block_for_term(consistent_product_staged_blocks, term) atol = 1.0e-14 rtol = 1.0e-14
         @test packet.diagnostics.factorized_axis_path_used
         @test !packet.diagnostics.support_row_reference_used
-        @test packet.diagnostics.fixture_only
-        @test !packet.diagnostics.production_supported
         @test !packet.diagnostics.metric_execution_changed
         @test !retained.diagnostics.metric_execution_changed
-        @test !retained.diagnostics.qwhamiltonian_consumes
-        @test !retained.diagnostics.public_default_consumes
         @test !retained.diagnostics.backend_policy_changed
         @test !retained.diagnostics.quadrature_policy_changed
         @test !retained.diagnostics.cr2_science_status_changed
@@ -5674,8 +5508,6 @@
     @test !mixed_plan_audit.diagnostics.raw_operator_matrices_built
     @test !mixed_plan_audit.diagnostics.retained_operator_blocks_built
     @test !mixed_plan_audit.diagnostics.metric_execution_changed
-    @test !mixed_plan_audit.diagnostics.qwhamiltonian_consumes
-    @test !mixed_plan_audit.diagnostics.public_default_consumes
     @test !mixed_plan_audit.diagnostics.backend_policy_changed
     @test !mixed_plan_audit.diagnostics.quadrature_policy_changed
     @test !mixed_plan_audit.diagnostics.cr2_science_status_changed
@@ -5686,8 +5518,6 @@
     @test !pqs_product_policy.support_local_reference_allowed
     @test pqs_product_policy.support_local_reference_path ==
           :not_available_without_explicit_request
-    @test pqs_product_policy.fixture_only
-    @test !pqs_product_policy.production_supported
     @test pqs_product_policy.reason == :pqs_product_optimized_metric_not_implemented
     pqs_product_reference_policy = CCPM._pqs_product_mixed_block_policy(
         explicit_reference_requested = true,
@@ -5890,9 +5720,24 @@
         expected_retained_count = 130,
     )
     nuclear_axis_layers = (
-        x = bundle5.basis,
-        y = bundle5.basis,
-        z = bundle7.basis,
+        x = build_basis(UniformBasisSpec(
+            :G10;
+            xmin = -2.0,
+            xmax = 2.0,
+            spacing = 1.0,
+        )),
+        y = build_basis(UniformBasisSpec(
+            :G10;
+            xmin = -2.0,
+            xmax = 2.0,
+            spacing = 1.0,
+        )),
+        z = build_basis(UniformBasisSpec(
+            :G10;
+            xmin = -3.0,
+            xmax = 3.0,
+            spacing = 1.0,
+        )),
     )
     nuclear_probe_expansion = CoulombGaussianExpansion(
         [0.65, 0.18],
@@ -5939,10 +5784,6 @@
             @test contribution.diagnostics.center_contributions_preserved
             @test contribution.diagnostics.counterpoise_center_identity_preserved
             @test !contribution.diagnostics.ecp
-            @test !contribution.diagnostics.packet_adoption
-            @test !contribution.diagnostics.fixed_block_routing
-            @test !contribution.diagnostics.qwhamiltonian_consumes
-            @test !contribution.diagnostics.public_default_consumes
             @test !contribution.diagnostics.cr2_science_status_changed
             expected_total .+= contribution.block
         end
@@ -5973,10 +5814,6 @@
         @test !result.diagnostics.ida_weight_division_allowed
         @test !result.diagnostics.numerical_reference_fallback
         @test !result.diagnostics.shell_row_algorithm
-        @test !result.diagnostics.packet_adoption
-        @test !result.diagnostics.fixed_block_routing
-        @test !result.diagnostics.qwhamiltonian_consumes
-        @test !result.diagnostics.public_default_consumes
         @test !result.diagnostics.cr2_science_status_changed
         @test result.diagnostics.output_finite
     end
@@ -6101,8 +5938,6 @@
     @test !pqs_product_density.diagnostics.lowdin_cleanup_used
     @test !pqs_product_density.diagnostics.support_coefficient_matrix_used
     @test !pqs_product_density.diagnostics.support_local_pqs_oracle_used
-    @test !pqs_product_density.diagnostics.packet_adoption
-    @test !pqs_product_density.diagnostics.qwhamiltonian_consumes
     @test !pqs_product_density.diagnostics.mwg_ida_semantics_changed
     @test !pqs_product_density.diagnostics.numerical_reference_fallback
     @test pqs_product_density.diagnostics.electron_electron_terms_implemented
@@ -6152,8 +5987,6 @@
     @test !pqs_product_raw_weighted_density.diagnostics.retained_weight_division_allowed
     @test !pqs_product_raw_weighted_density.diagnostics.retained_pqs_weight_division_allowed
     @test !pqs_product_raw_weighted_density.diagnostics.ida_weight_division_allowed
-    @test !pqs_product_raw_weighted_density.diagnostics.packet_adoption
-    @test !pqs_product_raw_weighted_density.diagnostics.qwhamiltonian_consumes
     @test !pqs_product_raw_weighted_density.diagnostics.mwg_ida_semantics_changed
     @test !pqs_product_raw_weighted_density.diagnostics.numerical_reference_fallback
     @test_throws ArgumentError CCPM._pqs_product_source_box_density_density_interaction_block(
@@ -6252,8 +6085,6 @@
     @test !pqs_pqs_density.diagnostics.lowdin_cleanup_used
     @test !pqs_pqs_density.diagnostics.support_coefficient_matrix_used
     @test !pqs_pqs_density.diagnostics.support_local_pqs_oracle_used
-    @test !pqs_pqs_density.diagnostics.packet_adoption
-    @test !pqs_pqs_density.diagnostics.qwhamiltonian_consumes
     @test !pqs_pqs_density.diagnostics.mwg_ida_semantics_changed
     @test !pqs_pqs_density.diagnostics.numerical_reference_fallback
     @test pqs_pqs_density.diagnostics.electron_electron_terms_implemented
@@ -6296,8 +6127,6 @@
     @test !pqs_pqs_raw_weighted_density.diagnostics.shell_projection_used
     @test !pqs_pqs_raw_weighted_density.diagnostics.lowdin_cleanup_used
     @test !pqs_pqs_raw_weighted_density.diagnostics.support_coefficient_matrix_used
-    @test !pqs_pqs_raw_weighted_density.diagnostics.packet_adoption
-    @test !pqs_pqs_raw_weighted_density.diagnostics.qwhamiltonian_consumes
     @test !pqs_pqs_raw_weighted_density.diagnostics.mwg_ida_semantics_changed
     @test !pqs_pqs_raw_weighted_density.diagnostics.numerical_reference_fallback
     @test_throws ArgumentError CCPM._pqs_pqs_source_box_density_density_interaction_block(
