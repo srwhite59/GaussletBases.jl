@@ -716,3 +716,66 @@ Remaining blocker / next:
 
 Line-count / complexity note:
 - No source/test/bin changes in this audit.
+
+## Pass 239 - Independent H2 PQS Source-Plan Descriptor
+
+Commit(s):
+- this commit - Add independent H2 PQS source-plan descriptor
+
+Summary:
+- Added a descriptor-only independent H2 PQS physical source-plan payload. The
+  descriptor records support counts `(275, 578, 362)`, retained counts
+  `(275, 98, 98)`, expected dimension `471`, and compact per-unit source/retained
+  rule facts.
+- Gated the source-backed WL/QW candidate away from the independent route, so
+  `bond_aligned_diatomic_nested_fixed_source(...)` is no longer invoked for
+  `:bond_aligned_diatomic_independent_pqs_source_box_core_shell`.
+- Advanced the blocker to
+  `:missing_independent_pqs_source_plan_numerical_materialization` while keeping
+  `source_coefficients_materialized = false`.
+
+Validation:
+- Doer: package load passed; focused independent artifact/readiness check
+  passed in about `128.9s`; `git diff --check` passed.
+- Manager: reviewed the diff, ran `git diff --check`, and ran package load.
+  Manager package load passed after precompile in about `58.7s`.
+
+Goal advancement:
+- MT2: created the first independent source-plan descriptor without fake/WL
+  retained transforms.
+- LT5: strengthened route authority by gating out the source-backed candidate.
+- MT5/MT6/LT2: deleted the obsolete projected-q-shell integration file and its
+  include, removing a large route-shadow test surface.
+
+Medium-goal update:
+- none.
+
+Risk / guardrail:
+- Descriptor availability is not numerical source-plan materialization. Do not
+  treat the route as final-basis, H1, H1-J, RHF, supplement, or CR2 ready.
+
+Remaining blocker / next:
+- Audit the numerical materialization seam before implementation. The next
+  decision is whether to materialize atom-contact direct identity facts,
+  shared-shell source transforms, shared-shell realization coefficients, or a
+  narrower blocked numerical payload.
+
+Line-count / complexity note:
+- Scoped `src + test + bin` diff was `185` added / `5671` deleted, net `-5486`.
+
+## Medium-Term Goal Checkpoint - Passes 235-239
+
+- MT1 Fake-PQS quarantine: active/maintained. Fake-PQS remains separate and was
+  not used as independent route authority.
+- MT2 Independent H2 PQS recovery: active. The route now has support authority,
+  retained-rule readiness, and a descriptor-only source-plan payload. Numerical
+  materialization remains blocked.
+- MT3 Common physical support vocabulary: active. Support vocabulary remains
+  common, while independent PQS retained counts differ from fake/WL where route
+  authority differs.
+- MT4 Supplement staging after authority: active/blocked. Supplement work
+  remains intentionally deferred.
+- MT5 Cleanup pressure: active. Passes 235 and 239 removed large stale
+  route-shadow/test surfaces and more than paid for new readiness descriptors.
+- MT6 Audit/classify old Cartesian flat paths: active. Classified flat/source-
+  backed paths are being gated, quarantined, or deleted rather than promoted.

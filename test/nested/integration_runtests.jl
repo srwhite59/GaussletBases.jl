@@ -23,7 +23,6 @@ include("cartesian_route_core_selected_terminal_lowering_sidecar_runtests.jl")
 include("cartesian_terminal_shellification_geometry_runtests.jl")
 include("cartesian_shellification_plan_runtests.jl")
 include("cartesian_ham_builder_one_center_config_smoke_runtests.jl")
-include("pqs_projected_q_shell_local_layer_integration_runtests.jl")
 
 include("bond_aligned_diatomic_high_order_recipe_realization_audit_runtests.jl")
 

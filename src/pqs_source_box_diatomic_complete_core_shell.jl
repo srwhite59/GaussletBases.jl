@@ -1830,6 +1830,122 @@ function _pqs_source_box_route_driver_physical_gausslet_source_plan_from_candida
     )
 end
 
+function _pqs_source_box_route_driver_independent_h2_physical_source_plan_descriptor(
+    target_payload,
+)
+    descriptor_blocker = :missing_independent_pqs_source_plan_numerical_materialization
+    blocked(blocker) = (;
+        object_kind = :pqs_independent_h2_physical_source_plan_descriptor,
+        status = :blocked_independent_pqs_physical_source_plan_descriptor,
+        blocker,
+        source_plan_family = :independent_pqs_physical_source_box_descriptor,
+        source_plan_authority_status =
+            :blocked_independent_pqs_route_owned_source_plan_descriptor,
+        source_coefficients_materialized = false,
+        final_basis_materialized = false,
+        source_backed_fixed_source_oracle_used = false,
+        fake_pqs_enabled = false,
+        missing_objects = (blocker,),
+    )
+    isnothing(target_payload) &&
+        return blocked(:missing_independent_pqs_target_payload)
+    target_payload.source_plan_role === :independent_pqs_source_box_construction ||
+        return blocked(:not_independent_pqs_source_box_construction)
+    target_payload.status === :available_physical_gausslet_core_shell_target_inventory ||
+        return blocked(target_payload.blocker)
+    support_plan = get(target_payload.summary, :support_plan, nothing)
+    retained_rule_plan = get(target_payload.summary, :retained_rule_plan, nothing)
+    isnothing(support_plan) &&
+        return blocked(:missing_independent_pqs_support_region_plan)
+    isnothing(retained_rule_plan) &&
+        return blocked(:missing_independent_pqs_retained_rule_plan)
+    support_counts = target_payload.support_counts
+    retained_counts = target_payload.retained_counts
+    Tuple(values(support_counts)) == (275, 578, 362) ||
+        return blocked(:independent_pqs_source_plan_support_count_mismatch)
+    Tuple(values(retained_counts)) == (275, 98, 98) ||
+        return blocked(:independent_pqs_source_plan_retained_count_mismatch)
+
+    shared_source(role) = (;
+        source_family = :pqs_filled_source_cpb,
+        source_mode_dims = retained_rule_plan.shared_shell_source_mode_dims,
+        source_mode_count = prod(retained_rule_plan.shared_shell_source_mode_dims),
+        support_count = getproperty(support_counts, role),
+        transform_kind = getproperty(retained_rule_plan.per_unit_transform_kind, role),
+        coefficient_matrix_materialized = false,
+    )
+    retained_rule(role, rule, materialized) = (;
+        retained_rule = rule,
+        retained_count = getproperty(retained_counts, role),
+        retained_column_selector_materialized = materialized,
+    )
+    descriptor_summary = (;
+        source_plan_family = :independent_pqs_physical_source_box_descriptor,
+        source_plan_authority_status =
+            :independent_pqs_route_owned_source_plan_descriptor,
+        support_counts,
+        retained_counts,
+        final_dimension = target_payload.expected_final_dimension,
+        source_coefficients_materialized = false,
+        final_basis_materialized = false,
+    )
+    return (;
+        object_kind = :pqs_independent_h2_physical_source_plan_descriptor,
+        status = :available_independent_pqs_physical_source_plan_descriptor,
+        blocker = nothing,
+        source_plan_family = :independent_pqs_physical_source_box_descriptor,
+        source_plan_authority_status =
+            :independent_pqs_route_owned_source_plan_descriptor,
+        support_order = target_payload.support_units,
+        retained_order = target_payload.retained_order,
+        support_counts,
+        retained_counts,
+        final_dimension = target_payload.expected_final_dimension,
+        expected_final_dimension = target_payload.expected_final_dimension,
+        unit_source_descriptors = (;
+            atom_contact_core = (;
+                source_family = :direct_terminal_source_modes,
+                source_region_roles =
+                    (:atom_local_core, :atom_local_core, :midpoint_slab),
+                support_count = support_counts.atom_contact_core,
+                source_mode_count = support_counts.atom_contact_core,
+                transform_kind = :identity_source_modes,
+                coefficient_matrix_materialized = false,
+            ),
+            shared_shell_1 = shared_source(:shared_shell_1),
+            shared_shell_2 = shared_source(:shared_shell_2),
+        ),
+        unit_retained_rule_descriptors = (;
+            atom_contact_core =
+                retained_rule(:atom_contact_core, :direct_source_modes, false),
+            shared_shell_1 = retained_rule(
+                :shared_shell_1,
+                retained_rule_plan.shared_shell_retained_rule_kind,
+                true,
+            ),
+            shared_shell_2 = retained_rule(
+                :shared_shell_2,
+                retained_rule_plan.shared_shell_retained_rule_kind,
+                true,
+            ),
+        ),
+        source_coefficients_materialized = false,
+        final_basis_materialized = false,
+        source_backed_fixed_source_oracle_used = false,
+        fake_pqs_enabled = false,
+        next_blocker = descriptor_blocker,
+        support_plan,
+        retained_rule_plan,
+        missing_objects = (descriptor_blocker,),
+        summary = descriptor_summary,
+        metadata = (;
+            source =
+                :pqs_source_box_route_driver_independent_h2_physical_source_plan_descriptor,
+            descriptor_only = true,
+        ),
+    )
+end
+
 function _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_payload(
     target_payload,
     candidate_payload = nothing,
@@ -1847,6 +1963,16 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_pay
             candidate_payload,
         ) :
         nothing
+    descriptor =
+        independent_target ?
+        _pqs_source_box_route_driver_independent_h2_physical_source_plan_descriptor(
+            target_payload,
+        ) :
+        nothing
+    descriptor_available =
+        !isnothing(descriptor) &&
+        descriptor.status === :available_independent_pqs_physical_source_plan_descriptor
+    source_plan = descriptor_available ? descriptor : source_plan
     independent_source_plan_blocker =
         !isnothing(target_payload) ?
         get(
@@ -1856,10 +1982,14 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_pay
         ) :
         :missing_independent_pqs_physical_source_plan_materializer
     status =
+        descriptor_available ?
+        :blocked_pqs_diatomic_physical_gausslet_core_shell_source_plan :
         isnothing(source_plan) ?
         :blocked_pqs_diatomic_physical_gausslet_core_shell_source_plan :
         source_plan.status
     blocker =
+        descriptor_available ?
+        descriptor.next_blocker :
         !isnothing(source_plan) ?
         nothing :
         independent_target ?
@@ -1868,6 +1998,8 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_pay
         :missing_atom_contact_core_support_rows :
         :missing_physical_gausslet_target_inventory
     missing_objects =
+        descriptor_available ?
+        descriptor.missing_objects :
         !isnothing(source_plan) ?
         () :
         independent_target ?
@@ -1898,7 +2030,20 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_pay
         supplement_policy =
             isnothing(target_payload) ? :not_available : target_payload.supplement_policy,
         source_plan_materialized = !isnothing(source_plan),
+        source_plan_descriptor_status =
+            isnothing(descriptor) ? :not_available : descriptor.status,
+        source_plan_descriptor_blocker =
+            isnothing(descriptor) ? nothing : descriptor.blocker,
+        source_plan_descriptor_available = descriptor_available,
+        source_plan_family =
+            isnothing(source_plan) ?
+            :not_available :
+            hasproperty(source_plan, :source_plan_family) ?
+            source_plan.source_plan_family :
+            :not_available,
         source_plan_authority_status =
+            descriptor_available ?
+            descriptor.source_plan_authority_status :
             isnothing(source_plan) ?
             independent_target ?
             :blocked_pqs_source_box_construction_authority :

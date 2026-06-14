@@ -7635,7 +7635,12 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
             diatomic_physical_gausslet_supplement_request_payload,
             diatomic_physical_gausslet_supplement_representation_payload,
         )
+    independent_physical_source_plan_route =
+        recipe.route_kind ===
+        :bond_aligned_diatomic_independent_pqs_source_box_core_shell
     diatomic_physical_gausslet_source_plan_candidate_payload =
+        independent_physical_source_plan_route ?
+        nothing :
         _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_candidate_payload(
             parent,
             route_skeleton,
@@ -8373,6 +8378,9 @@ function _pqs_source_box_route_driver_physical_gausslet_target_report_fields(
         )
     end
     if !isnothing(source_plan_payload)
+        independent_source_plan =
+            get(summary, :source_plan_role, nothing) ===
+            :independent_pqs_source_box_construction
         summary = merge(
             summary,
             (;
@@ -8380,6 +8388,30 @@ function _pqs_source_box_route_driver_physical_gausslet_target_report_fields(
                 source_plan_blocker = source_plan_payload.blocker,
                 source_plan_authority_status =
                     source_plan_payload.summary.source_plan_authority_status,
+                source_plan_descriptor_status =
+                    get(
+                        source_plan_payload.summary,
+                        :source_plan_descriptor_status,
+                        :not_available,
+                    ),
+                source_plan_descriptor_blocker =
+                    get(
+                        source_plan_payload.summary,
+                        :source_plan_descriptor_blocker,
+                        nothing,
+                    ),
+                source_plan_family =
+                    get(source_plan_payload.summary, :source_plan_family, :not_available),
+                source_coefficients_materialized =
+                    get(
+                        source_plan_payload.summary,
+                        :source_coefficients_materialized,
+                        false,
+                    ),
+                independent_source_plan_blocker =
+                    independent_source_plan ?
+                    source_plan_payload.blocker :
+                    get(summary, :independent_source_plan_blocker, nothing),
             ),
         )
     end

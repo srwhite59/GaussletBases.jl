@@ -804,6 +804,14 @@ function _pqs_source_box_route_driver_write_pqs_diatomic_readiness_artifact!(
             source_plan_blocker = get(target, :source_plan_blocker, nothing),
             source_plan_authority_status =
                 get(target, :source_plan_authority_status, nothing),
+            source_plan_descriptor_status =
+                get(target, :source_plan_descriptor_status, nothing),
+            source_plan_descriptor_blocker =
+                get(target, :source_plan_descriptor_blocker, nothing),
+            source_plan_family =
+                get(target, :source_plan_family, nothing),
+            source_coefficients_materialized =
+                get(target, :source_coefficients_materialized, nothing),
             support_plan_status =
                 get(get(target, :support_plan, (;)), :status, nothing),
             support_plan_blocker =
