@@ -25,6 +25,7 @@ comparison_ready = false
 comparison_blocker = :supplemented_reference_not_comparable_to_gausslet_only
 comparison_reference_label = "WL/QW H2 R=4 supplemented reference not used"
 
+run_final_basis = true
 run_h1 = false
 run_h1_j = false
 run_private_rhf = false

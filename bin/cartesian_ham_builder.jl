@@ -60,6 +60,7 @@ comparison_blocker = nothing
 supplement_policy = nothing
 wl_h1_lowest = nothing
 wl_h1_self_coulomb = nothing
+run_final_basis = nothing
 run_h1 = true
 run_h1_j = true
 run_private_rhf = false
@@ -136,7 +137,7 @@ route_inputs = (; route_family, route_kind, route_shape, product_body_rule,
     white_lindsey_operator_rule, white_lindsey_benchmark_role,
     comparison_reference_label, comparison_ready, comparison_blocker,
     supplement_policy, wl_h1_lowest, wl_h1_self_coulomb,
-    run_h1, run_h1_j, private_rhf_inputs, wl_rhf_total)
+    run_final_basis, run_h1, run_h1_j, private_rhf_inputs, wl_rhf_total)
 materialization_inputs = (; materialize_route, probe_route_configured_one_center_materializer,
     private_global_overlap_requested, private_global_overlap_global_dimension,
     private_global_overlap_inputs,

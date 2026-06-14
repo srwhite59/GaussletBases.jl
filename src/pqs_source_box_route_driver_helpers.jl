@@ -1223,6 +1223,7 @@ function _pqs_source_box_route_driver_recipe_metadata(
         supplement_policy = get(route_recipe, :supplement_policy, nothing),
         wl_h1_lowest = get(route_recipe, :wl_h1_lowest, nothing),
         wl_h1_self_coulomb = get(route_recipe, :wl_h1_self_coulomb, nothing),
+        run_final_basis = get(route_recipe, :run_final_basis, true),
         run_h1 = get(route_recipe, :run_h1, true),
         run_h1_j = get(route_recipe, :run_h1_j, true),
         run_private_rhf =
@@ -6285,6 +6286,12 @@ function cartesian_recipe(route_inputs)
        hasproperty(route_inputs, :white_lindsey)
         route_recipe = route_inputs
     else
+        run_h1 = get(route_inputs, :run_h1, true)
+        run_h1_j = get(route_inputs, :run_h1_j, true)
+        private_rhf_inputs =
+            get(route_inputs, :private_rhf_inputs, (; run_private_rhf = false))
+        run_private_rhf = get(private_rhf_inputs, :run_private_rhf, false)
+        run_final_basis = get(route_inputs, :run_final_basis, nothing)
         source_box_recipe = (;
             route_shape = route_inputs.route_shape,
             product_body_rule = route_inputs.product_body_rule,
@@ -6315,10 +6322,13 @@ function cartesian_recipe(route_inputs)
             supplement_policy = get(route_inputs, :supplement_policy, nothing),
             wl_h1_lowest = get(route_inputs, :wl_h1_lowest, nothing),
             wl_h1_self_coulomb = get(route_inputs, :wl_h1_self_coulomb, nothing),
-            run_h1 = get(route_inputs, :run_h1, true),
-            run_h1_j = get(route_inputs, :run_h1_j, true),
-            private_rhf_inputs =
-                get(route_inputs, :private_rhf_inputs, (; run_private_rhf = false)),
+            run_final_basis =
+                isnothing(run_final_basis) ?
+                (run_h1 || run_h1_j || run_private_rhf) :
+                run_final_basis,
+            run_h1,
+            run_h1_j,
+            private_rhf_inputs,
             wl_rhf_total = get(route_inputs, :wl_rhf_total, nothing),
         )
     end

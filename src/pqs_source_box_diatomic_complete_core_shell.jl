@@ -1682,9 +1682,10 @@ function _pqs_source_box_route_driver_diatomic_complete_core_shell_final_basis_p
     final_basis = nothing
     final_basis_status = :not_materialized_diatomic_complete_core_shell_final_basis
     final_basis_requested =
+        get(recipe, :run_final_basis, false) ||
         get(recipe, :run_h1, false) ||
         get(recipe, :run_h1_j, false) ||
-        get(recipe, :run_private_rhf, false)
+        get(get(recipe, :private_rhf_inputs, (;)), :run_private_rhf, false)
     available = Symbol[]
     missing = Symbol[]
 
@@ -2082,6 +2083,10 @@ function _pqs_source_box_route_driver_diatomic_complete_core_shell_h1_payload(
         :not_materialized_diatomic_final_electron_nuclear_by_center
     final_hamiltonian_status = :not_materialized_diatomic_final_h1_hamiltonian
     h1_status = :not_materialized_diatomic_complete_core_shell_h1
+    h1_requested =
+        get(recipe, :run_h1, false) ||
+        get(recipe, :run_h1_j, false) ||
+        get(get(recipe, :private_rhf_inputs, (;)), :run_private_rhf, false)
     available = Symbol[]
     missing = Symbol[]
 
@@ -2113,6 +2118,12 @@ function _pqs_source_box_route_driver_diatomic_complete_core_shell_h1_payload(
         blocker = :missing_diatomic_complete_core_shell_final_basis
         push!(available, :pqs_diatomic_complete_core_shell_source_plan)
         push!(missing, :diatomic_complete_core_shell_final_basis)
+    elseif !h1_requested
+        status = :not_requested_diatomic_complete_core_shell_h1_payload
+        blocker = nothing
+        push!(available, :pqs_diatomic_complete_core_shell_source_plan)
+        push!(available, :diatomic_complete_core_shell_final_basis)
+        push!(missing, :diatomic_complete_core_shell_h1_request)
     elseif get(final_basis, :support_row_order, nothing) !== :core_then_shell
         status = :blocked_diatomic_complete_core_shell_h1_payload
         blocker = :diatomic_complete_core_shell_final_basis_support_order_mismatch

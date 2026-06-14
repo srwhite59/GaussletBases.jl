@@ -41,6 +41,7 @@ end
             @test file["config/n_s"] == 5
             @test file["config/supplement_policy"] === :none
             @test file["config/comparison_ready"] == false
+            @test file["config/run_final_basis"] == true
 
             @test file["comparison/ready"] == false
             @test file["comparison/blocker"] ===
@@ -74,13 +75,15 @@ end
             @test file["route/readiness_status"] ===
                   :blocked_diatomic_complete_core_shell_ham_readiness
             @test file["route/readiness_blocker"] ===
-                  :missing_diatomic_complete_core_shell_final_basis_consumer
+                  :missing_diatomic_complete_core_shell_h1_consumer
             @test file["route/source_plan_status"] ===
                   :available_pqs_diatomic_complete_core_shell_source_plan
             @test file["route/final_basis_status"] ===
-                  :not_materialized_diatomic_complete_core_shell_final_basis
+                  :available_pqs_complete_core_shell_final_basis
             @test file["route/h1_status"] ===
                   :not_materialized_diatomic_complete_core_shell_h1
+            @test file["basis/final_dimension"] > 0
+            @test isfinite(file["basis/final_overlap_identity_error"])
         end
     end
 end
