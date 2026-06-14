@@ -914,3 +914,54 @@ Remaining blocker / next:
 
 Line-count / complexity note:
 - Scoped `src + test + bin` diff was `11` added / `143` deleted, net `-132`.
+
+## Pass 243 - Retire Legacy Source-Box Comparison Oracles
+
+Commit(s):
+- this commit - Delete uncalled PQS route-shadow comparison oracles
+
+Summary:
+- Deleted three uncalled safe-term/operator comparison wrapper families from
+  `legacy_source_box_fixtures.jl`: contact-cap, outer-mismatch, and atom-box.
+- Preserved the live retained-unit fixture builders used by
+  `current_route_metadata_export.jl`:
+  `_pqs_contact_cap_product_doside_unit`,
+  `_pqs_outer_mismatch_product_doside_units`, and
+  `_pqs_atom_box_support_dense_units`.
+- Updated developer docs to say the old comparison wrappers are retired and
+  that current authority is the retained-unit builders plus active route
+  metadata, CPB, and source-box contracts.
+
+Validation:
+- Doer: package load passed and printed `load ok`; `git diff --check` passed;
+  no non-slow metadata/report smoke was available without a Be2 artifact, so
+  doer used the active-caller audit allowed by the blurb.
+- Manager: reviewed source/doc diff, reran deleted-symbol search, and reran
+  `git diff --check`.
+
+Goal advancement:
+- MT5/LT2: removed a large block of route-shadow oracle code instead of adding
+  new scaffolding around independent H2 PQS.
+- MT6/AG7: classified these old flat/source-box comparison paths as retired,
+  while preserving the live migration builders that current-route metadata
+  still uses.
+- LT5: kept route authority clearer by removing wrappers that compared old
+  product/support oracles without serving active route ownership.
+
+Medium-goal update:
+- none.
+
+Risk / guardrail:
+- Do not delete the retained-unit fixture builders until
+  `current_route_metadata_export.jl` no longer calls them or a replacement
+  inventory authority exists.
+
+Remaining blocker / next:
+- Additional cleanup candidates remain queued from sidecar audits. Good next
+  candidates are report-stage low-order alias/test shrink or legacy-default
+  low-order policy vocabulary shrink.
+
+Line-count / complexity note:
+- Total diff was `39` added / `850` deleted, net `-811`.
+- Scoped source deletion was `0` added / `749` deleted in
+  `legacy_source_box_fixtures.jl`.
