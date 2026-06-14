@@ -1512,9 +1512,14 @@ function _pqs_source_box_route_driver_physical_gausslet_source_plan_from_candida
     )
     final_dimension = size(source.sequence.coefficient_matrix, 2)
     convention_labels = (;
-        source_plan_family = :physical_gausslet_core_shell_source_plan,
+        source_plan_family = :fake_pqs_source_backed_fixed_source_adapter,
         source_backed_adapter = true,
         source_backed_candidate_source = candidate_payload.candidate_source,
+        retained_transform_kind = :wl_qw_source_backed_retained_transform,
+        independent_pqs_transform = false,
+        fake_pqs_source = :source_backed_fixed_source_oracle,
+        fake_pqs_warning =
+            :retained_transform_imported_from_wl_qw_fixed_source_oracle,
         route_owned_authority = true,
         supplement_policy = :none,
         h2_221_diagnostic_source_plan_reused = false,
@@ -1534,9 +1539,11 @@ function _pqs_source_box_route_driver_physical_gausslet_source_plan_from_candida
         retained_counts,
         final_dimension,
         retained_ranges,
-        source_plan_authority_status = :private_source_backed_adapter_authority,
+        source_plan_authority_status = :fake_pqs_private_source_backed_adapter_authority,
         source_backed_candidate_source = candidate_payload.candidate_source,
         source_backed_adapter = true,
+        retained_transform_kind = :wl_qw_source_backed_retained_transform,
+        independent_pqs_transform = false,
         route_owned_authority = true,
         supplement_policy = :none,
     )
@@ -1631,7 +1638,7 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_pay
         source_plan_authority_status =
             isnothing(source_plan) ?
             isnothing(candidate_payload) ? :not_available : candidate_payload.authority_status :
-            :private_source_backed_adapter_authority,
+            :fake_pqs_private_source_backed_adapter_authority,
         missing_objects,
     )
     metadata = (;
@@ -3084,7 +3091,10 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_rhf_input_contr
         status = :not_applicable_pqs_physical_gausslet_rhf_input_contract
         blocker = nothing
     elseif route_kind !== :bond_aligned_diatomic_physical_gausslet_core_shell_pqs ||
-           fixture_role !== :physical_gausslet_endpoint_target
+           !(fixture_role in (
+               :physical_gausslet_endpoint_target,
+               :fake_pqs_source_backed_wl_reproduction,
+           ))
         status = :blocked_pqs_physical_gausslet_rhf_input_contract
         blocker = :unsupported_physical_gausslet_fixture_role
         push!(missing, :physical_gausslet_fixture_role)

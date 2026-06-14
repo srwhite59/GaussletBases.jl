@@ -24,12 +24,12 @@ fixed_source_mode_shape = true
 supplement_policy = :none
 comparison_ready = true
 comparison_blocker = nothing
-comparison_reference_label = "WL/QW H2 R=4 gausslet-only 463"
-artifact_role = :physical_gausslet_endpoint_target
+comparison_reference_label = "WL/QW H2 R=4 gausslet-only 463 reproduction"
+artifact_role = :fake_pqs_source_backed_wl_reproduction
 physics_endpoint_ready = true
 physics_endpoint_blocker = nothing
 retained_atom_core_interiors = true
-source_plan_role = :atom_contact_core_plus_pqs_shared_shells
+source_plan_role = :fake_pqs_source_backed_fixed_source_adapter
 
 wl_h1_lowest = -0.7946609179724673
 wl_h1_self_coulomb = 0.45696639804337047
