@@ -391,6 +391,17 @@ struct _PQSDiatomicPhysicalGaussletCoreShellTargetPayload
     metadata
 end
 
+struct _PQSDiatomicPhysicalGaussletCoreShellSourcePlanPayload
+    status::Symbol
+    blocker
+    route_family::Symbol
+    source_plan
+    available_objects::Tuple
+    missing_objects::Tuple
+    summary
+    metadata
+end
+
 function _pqs_source_box_route_driver_axis_counts_tuple(axis_counts)
     isnothing(axis_counts) && return nothing
     if axis_counts isa NamedTuple
@@ -522,11 +533,6 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_target_payload(
         reviewed_contract_pass = 200,
         old_wl_qw_fixed_block_size = (1215, 463),
         source_plan_role,
-        no_source_plan_construction = true,
-        no_final_basis_construction = true,
-        no_h1_construction = true,
-        no_h1_j_construction = true,
-        no_rhf_construction = true,
     )
 
     return _PQSDiatomicPhysicalGaussletCoreShellTargetPayload(
@@ -545,6 +551,70 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_target_payload(
         source_plan_role,
         supplement_policy,
         available_objects,
+        missing_objects,
+        summary,
+        metadata,
+    )
+end
+
+function _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_payload(
+    target_payload,
+)
+    target_available =
+        !isnothing(target_payload) &&
+        target_payload.status === :available_physical_gausslet_core_shell_target_inventory
+    status = :blocked_pqs_diatomic_physical_gausslet_core_shell_source_plan
+    blocker =
+        target_available ?
+        :missing_atom_contact_core_support_rows :
+        :missing_physical_gausslet_target_inventory
+    missing_objects =
+        target_available ?
+        (
+            :atom_contact_core_support_rows,
+            :shared_shell_1_coefficients,
+            :shared_shell_2_coefficients,
+        ) :
+        (blocker,)
+    summary = (;
+        object_kind = :pqs_diatomic_physical_gausslet_core_shell_source_plan,
+        status,
+        blocker,
+        target_status = isnothing(target_payload) ? :not_available : target_payload.status,
+        parent_axis_counts = isnothing(target_payload) ? nothing : target_payload.parent_axis_counts,
+        support_order = isnothing(target_payload) ? () : target_payload.support_units,
+        retained_order = isnothing(target_payload) ? () : target_payload.retained_order,
+        support_counts = isnothing(target_payload) ? (;) : target_payload.support_counts,
+        retained_counts = isnothing(target_payload) ? (;) : target_payload.retained_counts,
+        expected_final_dimension =
+            isnothing(target_payload) ? nothing : target_payload.expected_final_dimension,
+        retained_atom_core_interiors =
+            !isnothing(target_payload) && target_payload.retained_atom_core_interiors,
+        source_plan_role =
+            isnothing(target_payload) ? :not_available : target_payload.source_plan_role,
+        supplement_policy =
+            isnothing(target_payload) ? :not_available : target_payload.supplement_policy,
+        source_plan_materialized = false,
+        private_route_owned = true,
+        supplemented = false,
+        rhf = false,
+        public_api = false,
+        missing_objects,
+    )
+    metadata = (;
+        source =
+            :pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_payload,
+        route_owned = true,
+        diagnostic_221_source_plan_reused = false,
+        placeholders_synthesized = false,
+    )
+
+    return _PQSDiatomicPhysicalGaussletCoreShellSourcePlanPayload(
+        status,
+        blocker,
+        isnothing(target_payload) ? :not_available : target_payload.route_family,
+        nothing,
+        (),
         missing_objects,
         summary,
         metadata,

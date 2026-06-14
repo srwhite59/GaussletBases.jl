@@ -7600,6 +7600,10 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
             route_skeleton,
             recipe,
         )
+    diatomic_physical_gausslet_source_plan_payload =
+        _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_payload(
+            diatomic_physical_gausslet_target_payload,
+        )
     complete_core_shell_diagnostic_route_payload =
         _pqs_source_box_route_driver_complete_core_shell_diagnostic_route_payload(
             parent,
@@ -7714,6 +7718,7 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
         pairs,
         low_order_assembly,
         diatomic_physical_gausslet_target_payload,
+        diatomic_physical_gausslet_source_plan_payload,
         complete_core_shell_diagnostic_route_payload,
         diatomic_complete_core_shell_support_window_payload,
         diatomic_raw_box_route_payload,
@@ -8147,12 +8152,18 @@ function _pqs_source_box_route_driver_physical_gausslet_target_report_fields(
         hasproperty(assembly, :diatomic_physical_gausslet_target_payload) ?
         assembly.diatomic_physical_gausslet_target_payload :
         nothing
+    source_plan_payload =
+        hasproperty(assembly, :diatomic_physical_gausslet_source_plan_payload) ?
+        assembly.diatomic_physical_gausslet_source_plan_payload :
+        nothing
     summary =
         isnothing(payload) ?
         (;
             status = :not_available_missing_physical_gausslet_target_payload,
             blocker = :missing_physical_gausslet_target_payload,
             target_inventory_available = false,
+            source_plan_status = :not_available_missing_physical_gausslet_source_plan_payload,
+            source_plan_blocker = :missing_physical_gausslet_source_plan_payload,
             source_plan_materialized = false,
             final_basis_materialized = false,
             h1_materialized = false,
@@ -8160,6 +8171,17 @@ function _pqs_source_box_route_driver_physical_gausslet_target_report_fields(
             rhf_materialized = false,
         ) :
         payload.summary
+    if !isnothing(source_plan_payload)
+        summary = merge(
+            summary,
+            (;
+                source_plan_status = source_plan_payload.status,
+                source_plan_blocker = source_plan_payload.blocker,
+                source_plan_object_kind = source_plan_payload.summary.object_kind,
+                source_plan_missing_objects = source_plan_payload.missing_objects,
+            ),
+        )
+    end
     return (;
         physical_gausslet_target_summary = summary,
         physical_gausslet_target_status = summary.status,

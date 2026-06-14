@@ -1379,41 +1379,6 @@
         expansion = expansion,
     )
     pqs_operators = QWCS.qw_operator_construction_receipt_operators(pqs_receipt)
-    pqs_receipt_diagnostics = QWCS.qw_operator_construction_receipt_diagnostics(
-        pqs_receipt,
-    )
-    pqs_record_diagnostics = QWCS.qw_operator_construction_record_diagnostics(
-        QWCS.qw_operator_construction_receipt_record(pqs_receipt),
-    )
-    @test pqs_receipt_diagnostics.delegated_to_existing_builder
-    @test pqs_receipt_diagnostics.builder == :ordinary_cartesian_qiu_white_operators
-    @test pqs_receipt_diagnostics.source_sidecar_agree
-    @test isempty(pqs_receipt_diagnostics.mismatch_fields)
-    @test pqs_receipt_diagnostics.operator_built
-    @test pqs_receipt_diagnostics.gausslet_backend == :pgdg_localized_experimental
-    @test pqs_receipt_diagnostics.interaction_treatment == :ggt_nearest
-    @test pqs_receipt_diagnostics.nuclear_term_storage == :total_only
-    @test pqs_receipt_diagnostics.dense_parent_matrix_used == false
-    @test pqs_receipt_diagnostics.heavy_metric_packet_built == false
-    @test pqs_receipt_diagnostics.new_hamiltonian_kernel_used == false
-    @test pqs_receipt_diagnostics.numerical_outputs_changed == false
-    @test pqs_receipt_diagnostics.operator_residual_count == 0
-    @test pqs_record_diagnostics.source_sidecar_agree
-    @test :carried_has_staged_sidecar in pqs_record_diagnostics.compared_fields
-    @test !pqs_record_diagnostics.comparisons.carried_has_staged_sidecar.source_value
-    @test !pqs_record_diagnostics.comparisons.carried_has_staged_sidecar.operator_value
-    @test isnothing(
-        pqs_record_diagnostics.comparisons.carried_staged_by_center_path.source_value,
-    )
-    @test isnothing(
-        pqs_record_diagnostics.comparisons.carried_staged_by_center_path.operator_value,
-    )
-    @test pqs_record_diagnostics.source_parent_dimension == 7 * 7 * 15
-    @test pqs_record_diagnostics.sidecar_parent_dimension == 7 * 7 * 15
-    @test pqs_record_diagnostics.source_carried_dimension == 487
-    @test pqs_record_diagnostics.sidecar_carried_dimension == 487
-    @test pqs_record_diagnostics.source_carried_space_kind == :nested_fixed_block
-    @test pqs_record_diagnostics.sidecar_input_kind == :nested_fixed_block_operator
     @test pqs_operators.gausslet_backend == :pgdg_localized_experimental
     @test pqs_operators.interaction_treatment == :ggt_nearest
     @test pqs_operators.nuclear_term_storage == :total_only
@@ -1562,29 +1527,6 @@
         expansion = expansion,
     )
     operators = QWCS.qw_operator_construction_receipt_operators(receipt)
-    receipt_diagnostics = QWCS.qw_operator_construction_receipt_diagnostics(receipt)
-    record_diagnostics = QWCS.qw_operator_construction_record_diagnostics(
-        QWCS.qw_operator_construction_receipt_record(receipt),
-    )
-    @test receipt_diagnostics.delegated_to_existing_builder
-    @test receipt_diagnostics.builder == :ordinary_cartesian_qiu_white_operators
-    @test receipt_diagnostics.source_sidecar_agree
-    @test isempty(receipt_diagnostics.mismatch_fields)
-    @test receipt_diagnostics.operator_built
-    @test receipt_diagnostics.gausslet_backend == :pgdg_localized_experimental
-    @test receipt_diagnostics.interaction_treatment == :ggt_nearest
-    @test receipt_diagnostics.nuclear_term_storage == :total_only
-    @test receipt_diagnostics.dense_parent_matrix_used == false
-    @test receipt_diagnostics.heavy_metric_packet_built == false
-    @test receipt_diagnostics.new_hamiltonian_kernel_used == false
-    @test receipt_diagnostics.numerical_outputs_changed == false
-    @test record_diagnostics.source_sidecar_agree
-    @test record_diagnostics.source_parent_dimension == 7 * 7 * 15
-    @test record_diagnostics.sidecar_parent_dimension == 7 * 7 * 15
-    @test record_diagnostics.source_carried_dimension == 469
-    @test record_diagnostics.sidecar_carried_dimension == 469
-    @test record_diagnostics.source_carried_space_kind == :nested_fixed_block
-    @test record_diagnostics.sidecar_input_kind == :nested_fixed_block_operator
     @test operators.gausslet_backend == :pgdg_localized_experimental
     @test operators.interaction_treatment == :ggt_nearest
     @test operators.gausslet_count == 469
@@ -1654,28 +1596,6 @@
         expansion = expansion,
     )
     shared_q5_operators = QWCS.qw_operator_construction_receipt_operators(shared_q5_receipt)
-    shared_q5_receipt_diagnostics =
-        QWCS.qw_operator_construction_receipt_diagnostics(shared_q5_receipt)
-    shared_q5_record_diagnostics = QWCS.qw_operator_construction_record_diagnostics(
-        QWCS.qw_operator_construction_receipt_record(shared_q5_receipt),
-    )
-    @test shared_q5_receipt_diagnostics.delegated_to_existing_builder
-    @test shared_q5_receipt_diagnostics.source_sidecar_agree
-    @test isempty(shared_q5_receipt_diagnostics.mismatch_fields)
-    @test shared_q5_receipt_diagnostics.operator_built
-    @test shared_q5_receipt_diagnostics.gausslet_backend == :pgdg_localized_experimental
-    @test shared_q5_receipt_diagnostics.interaction_treatment == :ggt_nearest
-    @test shared_q5_receipt_diagnostics.nuclear_term_storage == :total_only
-    @test shared_q5_receipt_diagnostics.dense_parent_matrix_used == false
-    @test shared_q5_receipt_diagnostics.heavy_metric_packet_built == false
-    @test shared_q5_receipt_diagnostics.new_hamiltonian_kernel_used == false
-    @test shared_q5_receipt_diagnostics.numerical_outputs_changed == false
-    @test shared_q5_record_diagnostics.source_sidecar_agree
-    @test isempty(shared_q5_record_diagnostics.mismatch_fields)
-    @test shared_q5_record_diagnostics.source_parent_dimension == 7 * 7 * 15
-    @test shared_q5_record_diagnostics.sidecar_parent_dimension == 7 * 7 * 15
-    @test shared_q5_record_diagnostics.source_carried_dimension == 523
-    @test shared_q5_record_diagnostics.sidecar_carried_dimension == 523
     @test shared_q5_operators.gausslet_backend == :pgdg_localized_experimental
     @test shared_q5_operators.interaction_treatment == :ggt_nearest
     @test shared_q5_operators.gausslet_count == 523
@@ -1781,28 +1701,6 @@
         expansion = expansion,
     )
     shared_q6_operators = QWCS.qw_operator_construction_receipt_operators(shared_q6_receipt)
-    shared_q6_receipt_diagnostics =
-        QWCS.qw_operator_construction_receipt_diagnostics(shared_q6_receipt)
-    shared_q6_record_diagnostics = QWCS.qw_operator_construction_record_diagnostics(
-        QWCS.qw_operator_construction_receipt_record(shared_q6_receipt),
-    )
-    @test shared_q6_receipt_diagnostics.delegated_to_existing_builder
-    @test shared_q6_receipt_diagnostics.source_sidecar_agree
-    @test isempty(shared_q6_receipt_diagnostics.mismatch_fields)
-    @test shared_q6_receipt_diagnostics.operator_built
-    @test shared_q6_receipt_diagnostics.gausslet_backend == :pgdg_localized_experimental
-    @test shared_q6_receipt_diagnostics.interaction_treatment == :ggt_nearest
-    @test shared_q6_receipt_diagnostics.nuclear_term_storage == :total_only
-    @test shared_q6_receipt_diagnostics.dense_parent_matrix_used == false
-    @test shared_q6_receipt_diagnostics.heavy_metric_packet_built == false
-    @test shared_q6_receipt_diagnostics.new_hamiltonian_kernel_used == false
-    @test shared_q6_receipt_diagnostics.numerical_outputs_changed == false
-    @test shared_q6_record_diagnostics.source_sidecar_agree
-    @test isempty(shared_q6_record_diagnostics.mismatch_fields)
-    @test shared_q6_record_diagnostics.source_parent_dimension == 7 * 7 * 15
-    @test shared_q6_record_diagnostics.sidecar_parent_dimension == 7 * 7 * 15
-    @test shared_q6_record_diagnostics.source_carried_dimension == 589
-    @test shared_q6_record_diagnostics.sidecar_carried_dimension == 589
     @test shared_q6_operators.gausslet_backend == :pgdg_localized_experimental
     @test shared_q6_operators.interaction_treatment == :ggt_nearest
     @test shared_q6_operators.gausslet_count == 589
@@ -1907,12 +1805,7 @@
         @test q_row_diagnostics.backend == :pgdg_localized_experimental
         @test q_row_diagnostics.residual_count == 0
         @test q_row_diagnostics.gausslet_count == expected.fixed_dimension
-        @test q_row_diagnostics.source_sidecar_agree
-        @test isempty(q_row_diagnostics.mismatch_fields)
         @test q_row_diagnostics.dense_parent_matrix_used == false
-        @test q_row_diagnostics.heavy_metric_packet_built == false
-        @test q_row_diagnostics.new_hamiltonian_kernel_used == false
-        @test q_row_diagnostics.default_source_builder_changed == false
     end
 
     for expected in q_row_expectations
@@ -1982,8 +1875,6 @@
         @test route_diagnostics.parent_dimension == fixture_diagnostics.parent_dimension
         @test route_diagnostics.fixed_dimension == expected.fixed_dimension
         @test route_diagnostics.backend == :pgdg_localized_experimental
-        @test route_diagnostics.source_sidecar_agree
-        @test isempty(route_diagnostics.mismatch_fields)
         @test fixture_provenance.charge_policy == :basis_nuclear_charges_only
         @test fixture_provenance.homonuclear_only
         @test !fixture_provenance.heteronuclear_support

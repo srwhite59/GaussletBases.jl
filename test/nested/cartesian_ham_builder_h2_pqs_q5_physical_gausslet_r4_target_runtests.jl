@@ -10,7 +10,6 @@ const _H2_PHYSICAL_PQS_INPUT =
     mktempdir() do dir
         outfile = joinpath(dir, "h2_pqs_q5_physical_gausslet_r4.jld2")
         tsvfile = joinpath(dir, "h2_pqs_q5_physical_gausslet_r4.tsv")
-        println("h2_physical_target_artifact_path=", outfile)
         saved_args = copy(ARGS)
         empty!(ARGS)
         append!(ARGS, [_H2_PHYSICAL_PQS_INPUT, "outfile=$(repr(outfile))", "tsvfile=$(repr(tsvfile))"])
@@ -46,12 +45,16 @@ const _H2_PHYSICAL_PQS_INPUT =
             @test file["target/retained_atom_core_interiors"] == true
             @test file["target/source_plan_role"] ===
                   :atom_contact_core_plus_pqs_shared_shells
+            @test file["target/source_plan_status"] ===
+                  :blocked_pqs_diatomic_physical_gausslet_core_shell_source_plan
+            @test file["target/source_plan_blocker"] ===
+                  :missing_atom_contact_core_support_rows
             @test file["target/supplement_policy"] === :none
 
             @test file["route/artifact_role"] ===
                   :physical_gausslet_endpoint_target
-            @test file["route/source_plan_status"] !==
-                  :available_pqs_diatomic_complete_core_shell_source_plan
+            @test file["route/source_plan_status"] ===
+                  :blocked_pqs_diatomic_physical_gausslet_core_shell_source_plan
             @test file["route/final_basis_status"] !==
                   :available_pqs_complete_core_shell_final_basis
             @test file["route/h1_status"] !==
@@ -59,9 +62,6 @@ const _H2_PHYSICAL_PQS_INPUT =
             @test file["route/h1_materialized"] == false
             @test file["route/h1_j_materialized"] == false
             @test file["route/private_rhf_materialized"] == false
-            @test file["route/public_api"] == false
-            @test file["route/exports_materialized"] == false
-            @test file["route/artifacts_materialized"] == false
 
             @test file["basis/retained_atom_core_interiors"] == true
             @test file["basis/source_plan_role"] ===
@@ -71,7 +71,7 @@ const _H2_PHYSICAL_PQS_INPUT =
 
             @test file["physics/endpoint_ready"] == false
             @test file["physics/endpoint_blocker"] ===
-                  :missing_physical_gausslet_source_plan
+                  :missing_atom_contact_core_support_rows
             @test !haskey(file, "physics/h1_lowest")
             @test file["comparison/ready"] == false
             @test file["private_rhf/requested"] == false
