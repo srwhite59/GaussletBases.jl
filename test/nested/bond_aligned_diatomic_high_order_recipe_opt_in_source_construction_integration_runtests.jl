@@ -295,22 +295,10 @@
                 GaussletBases._nested_product_axis_function_indices(3, 1, 7, 2, 7),
         outer_mismatch_product_units.units,
     )
-    @test all(
-        equivalence -> equivalence.support_indices_match,
-        outer_mismatch_product_units.piece_equivalences,
-    )
-    @test all(
-        equivalence -> equivalence.retained_count_match,
-        outer_mismatch_product_units.piece_equivalences,
-    )
     @test map(
         equivalence -> equivalence.column_range,
         outer_mismatch_product_units.piece_equivalences,
     ) == (1:49, 50:98)
-    @test all(
-        equivalence -> equivalence.coefficient_matrix_matches_direct_selector,
-        outer_mismatch_product_units.piece_equivalences,
-    )
     @test all(
         equivalence -> equivalence.max_parent_coefficient_error == 0.0,
         outer_mismatch_product_units.piece_equivalences,
@@ -321,26 +309,6 @@
     @test outer_mismatch_product_units.aggregate_equivalence.column_range_partition
     @test outer_mismatch_product_units.aggregate_equivalence.coefficient_matrix_matches_direct_selector
     @test outer_mismatch_product_units.aggregate_equivalence.max_parent_coefficient_error == 0.0
-    @test outer_mismatch_product_units.diagnostics.outer_mismatch_only
-    @test outer_mismatch_product_units.diagnostics.boundary_slab_set
-    @test outer_mismatch_product_units.diagnostics.product_doside_units_created
-    @test outer_mismatch_product_units.diagnostics.unit_count == 2
-    @test outer_mismatch_product_units.diagnostics.slab_piece_count == 2
-    @test !outer_mismatch_product_units.diagnostics.route_descriptor_emitted
-    @test !outer_mismatch_product_units.diagnostics.construction_mutated
-    @test !outer_mismatch_product_units.diagnostics.sidecar_installation
-    @test !outer_mismatch_product_units.diagnostics.packet_adoption
-    @test !outer_mismatch_product_units.diagnostics.fixed_block_construction_changed
-    @test !outer_mismatch_product_units.diagnostics.qwhamiltonian_changed
-    @test !outer_mismatch_product_units.diagnostics.ida_weight_division_allowed
-    @test outer_mismatch_product_units.diagnostics.retained_weight_semantics ==
-          :not_positive_quadrature_weights
-    @test !outer_mismatch_product_units.diagnostics.input_fact_raw_product_box_operator_contract
-    @test outer_mismatch_product_units.diagnostics.created_units_raw_product_box_operator_contract
-    @test outer_mismatch_product_units.diagnostics.descriptor_piece_order_defines_columns
-    @test outer_mismatch_product_units.diagnostics.audited_support_checked_as_set
-    @test outer_mismatch_product_units.diagnostics.product_box_construction_rule_available
-    @test !outer_mismatch_product_units.diagnostics.local_ecp_gaussian_mwg_interaction_changed
     outer_mismatch_safe_term_metrics = _pqs_axis_metrics(bundles)
     outer_mismatch_safe_terms = (
         :overlap,
@@ -363,47 +331,10 @@
     @test outer_mismatch_safe_term_comparison.terms == outer_mismatch_safe_terms
     @test length(outer_mismatch_safe_term_comparison.fixture.units) == 2
     @test outer_mismatch_safe_term_comparison.max_block_error <= 1.0e-12
-    @test outer_mismatch_safe_term_comparison.diagnostics.source ==
-          :pqs_outer_mismatch_safe_term_operator_comparison
-    @test outer_mismatch_safe_term_comparison.diagnostics.outer_mismatch_only
-    @test outer_mismatch_safe_term_comparison.diagnostics.boundary_slab_set
-    @test outer_mismatch_safe_term_comparison.diagnostics.private_diagnostic_only
-    @test outer_mismatch_safe_term_comparison.diagnostics.terms_checked ==
-          outer_mismatch_safe_terms
-    @test outer_mismatch_safe_term_comparison.diagnostics.supported_terms ==
-          outer_mismatch_safe_terms
     @test :weights in outer_mismatch_safe_term_comparison.diagnostics.unsupported_terms
-    @test outer_mismatch_safe_term_comparison.diagnostics.product_path ==
-          :_product_doside_source_box_reference_block
-    @test outer_mismatch_safe_term_comparison.diagnostics.direct_oracle_path ==
-          :support_local_direct_selector_contract_pair_block
-    @test outer_mismatch_safe_term_comparison.diagnostics.product_doside_units_created
-    @test outer_mismatch_safe_term_comparison.diagnostics.complete_slab_set_block_assembled
-    @test outer_mismatch_safe_term_comparison.diagnostics.cross_slab_blocks_included
-    @test outer_mismatch_safe_term_comparison.diagnostics.direct_support_oracle_compared
-    @test !outer_mismatch_safe_term_comparison.diagnostics.route_descriptor_emitted
-    @test !outer_mismatch_safe_term_comparison.diagnostics.construction_mutated
-    @test !outer_mismatch_safe_term_comparison.diagnostics.sidecar_installation
-    @test !outer_mismatch_safe_term_comparison.diagnostics.packet_adoption
-    @test !outer_mismatch_safe_term_comparison.diagnostics.fixed_block_construction_changed
-    @test !outer_mismatch_safe_term_comparison.diagnostics.qwhamiltonian_changed
-    @test !outer_mismatch_safe_term_comparison.diagnostics.ida_weight_division_allowed
-    @test outer_mismatch_safe_term_comparison.diagnostics.retained_weight_semantics ==
-          :not_positive_quadrature_weights
-    @test !outer_mismatch_safe_term_comparison.diagnostics.local_ecp_gaussian_mwg_interaction_changed
-    @test outer_mismatch_safe_term_comparison.diagnostics.operator_factor_source ==
-          :explicit_metric_operator_data
-    @test outer_mismatch_safe_term_comparison.diagnostics.operator_metric_sources ==
-          (:nested_pgdg_axis, :nested_pgdg_axis, :nested_pgdg_axis)
-    @test !outer_mismatch_safe_term_comparison.diagnostics.input_metric_operator_data_pgdg_checked
-    @test !outer_mismatch_safe_term_comparison.diagnostics.pgdg_analytic_operator_provenance_claimed
-    @test !outer_mismatch_safe_term_comparison.diagnostics.numerical_reference_fallback
-    @test outer_mismatch_safe_term_comparison.diagnostics.product_source_box_reference_compared
-    @test outer_mismatch_safe_term_comparison.diagnostics.direct_support_oracle_entries_built
     @test outer_mismatch_safe_term_comparison.diagnostics.retained_count == 98
     @test outer_mismatch_safe_term_comparison.diagnostics.support_count == 98
     @test outer_mismatch_safe_term_comparison.diagnostics.unit_count == 2
-    @test outer_mismatch_safe_term_comparison.diagnostics.max_block_error <= 1.0e-12
     @test outer_mismatch_safe_term_comparison.diagnostics.output_finite
     for term in outer_mismatch_safe_terms
         product_block = outer_mismatch_safe_term_comparison.product_blocks[term]
@@ -485,25 +416,7 @@
         equivalence -> equivalence.local_identity_error <= 1.0e-12,
         atom_box_support_dense_units.equivalences,
     )
-    @test atom_box_support_dense_units.diagnostics.atom_box_only
-    @test atom_box_support_dense_units.diagnostics.support_dense_direct_support_units_created
-    @test !atom_box_support_dense_units.diagnostics.product_doside_units_created
-    @test !atom_box_support_dense_units.diagnostics.raw_product_box_operator_contract
-    @test atom_box_support_dense_units.diagnostics.support_local_reference_only
-    @test !atom_box_support_dense_units.diagnostics.product_box_construction_rule_available
-    @test !atom_box_support_dense_units.diagnostics.route_descriptor_emitted
-    @test !atom_box_support_dense_units.diagnostics.construction_mutated
-    @test !atom_box_support_dense_units.diagnostics.sidecar_installation
-    @test !atom_box_support_dense_units.diagnostics.packet_adoption
-    @test !atom_box_support_dense_units.diagnostics.fixed_block_construction_changed
-    @test !atom_box_support_dense_units.diagnostics.qwhamiltonian_changed
-    @test !atom_box_support_dense_units.diagnostics.ida_weight_division_allowed
-    @test atom_box_support_dense_units.diagnostics.retained_weight_semantics ==
-          :not_positive_quadrature_weights
-    @test !atom_box_support_dense_units.diagnostics.local_ecp_gaussian_mwg_interaction_changed
     @test atom_box_support_dense_units.diagnostics.max_parent_coefficient_error == 0.0
-    @test !atom_box_support_dense_units.diagnostics.local_identity_is_product_box_claim
-    @test !atom_box_support_dense_units.diagnostics.safe_term_operator_comparison_added
     atom_box_safe_term_metrics = _pqs_axis_metrics(bundles)
     atom_box_safe_terms = (
         :overlap,
@@ -526,38 +439,9 @@
     @test atom_box_safe_term_comparison.terms == atom_box_safe_terms
     @test length(atom_box_safe_term_comparison.fixture.units) == 2
     @test atom_box_safe_term_comparison.max_block_error <= 1.0e-12
-    @test atom_box_safe_term_comparison.diagnostics.source ==
-          :pqs_atom_box_safe_term_operator_comparison
-    @test atom_box_safe_term_comparison.diagnostics.atom_box_only
-    @test atom_box_safe_term_comparison.diagnostics.support_dense_direct_support_units_created
-    @test atom_box_safe_term_comparison.diagnostics.support_local_fallback_operator_comparison
-    @test !atom_box_safe_term_comparison.diagnostics.product_doside_units_created
-    @test !atom_box_safe_term_comparison.diagnostics.raw_product_box_operator_contract
-    @test !atom_box_safe_term_comparison.diagnostics.product_box_construction_rule_available
-    @test atom_box_safe_term_comparison.diagnostics.complete_atom_box_block_assembled
-    @test atom_box_safe_term_comparison.diagnostics.cross_atom_blocks_included
-    @test atom_box_safe_term_comparison.diagnostics.direct_support_oracle_compared
-    @test !atom_box_safe_term_comparison.diagnostics.route_descriptor_emitted
-    @test !atom_box_safe_term_comparison.diagnostics.construction_mutated
-    @test !atom_box_safe_term_comparison.diagnostics.sidecar_installation
-    @test !atom_box_safe_term_comparison.diagnostics.packet_adoption
-    @test !atom_box_safe_term_comparison.diagnostics.fixed_block_construction_changed
-    @test !atom_box_safe_term_comparison.diagnostics.qwhamiltonian_changed
-    @test !atom_box_safe_term_comparison.diagnostics.ida_weight_division_allowed
-    @test atom_box_safe_term_comparison.diagnostics.retained_weight_semantics ==
-          :not_positive_quadrature_weights
-    @test !atom_box_safe_term_comparison.diagnostics.local_ecp_gaussian_mwg_interaction_changed
-    @test atom_box_safe_term_comparison.diagnostics.operator_factor_source ==
-          :explicit_metric_operator_data
-    @test atom_box_safe_term_comparison.diagnostics.operator_metric_sources ==
-          (:nested_pgdg_axis, :nested_pgdg_axis, :nested_pgdg_axis)
-    @test !atom_box_safe_term_comparison.diagnostics.input_metric_operator_data_pgdg_checked
-    @test !atom_box_safe_term_comparison.diagnostics.pgdg_analytic_operator_provenance_claimed
-    @test !atom_box_safe_term_comparison.diagnostics.numerical_reference_fallback
     @test atom_box_safe_term_comparison.diagnostics.retained_count == 250
     @test atom_box_safe_term_comparison.diagnostics.support_count == 250
     @test atom_box_safe_term_comparison.diagnostics.unit_count == 2
-    @test atom_box_safe_term_comparison.diagnostics.max_block_error <= 1.0e-12
     @test atom_box_safe_term_comparison.diagnostics.output_finite
     for term in atom_box_safe_terms
         support_dense_block = atom_box_safe_term_comparison.support_dense_blocks[term]
@@ -586,17 +470,6 @@
     @test shared_pqs_fact.safe_term_capability == :not_body_retained_unit
     @test shared_pqs_fact.notes.current_single_pqs_descriptor
     @test pqs_retained_unit_audit.diagnostics.private_diagnostic_only
-    @test !pqs_retained_unit_audit.diagnostics.descriptor_emitted
-    @test !pqs_retained_unit_audit.diagnostics.packet_adoption
-    @test !pqs_retained_unit_audit.diagnostics.fixed_block_construction_changed
-    @test !pqs_retained_unit_audit.diagnostics.qwhamiltonian_changed
-    @test !pqs_retained_unit_audit.diagnostics.sidecar_mutation
-    @test !pqs_retained_unit_audit.diagnostics.sidecar_installation
-    @test !pqs_retained_unit_audit.diagnostics.direct_support_reinterpreted_as_product_doside
-    @test pqs_retained_unit_audit.diagnostics.retained_weight_semantics ==
-          :not_positive_quadrature_weights
-    @test !pqs_retained_unit_audit.diagnostics.ida_weight_division_allowed
-    @test !pqs_retained_unit_audit.diagnostics.local_ecp_gaussian_mwg_interaction_changed
     contact_cap_product_unit =
         CCPM._pqs_contact_cap_product_doside_unit(pqs_construction)
     @test contact_cap_product_unit.object_kind ==

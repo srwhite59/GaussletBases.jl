@@ -406,10 +406,31 @@ struct _PQSDiatomicPhysicalGaussletSourcePlanCandidatePayload
     status::Symbol
     blocker
     candidate_source::Symbol
+    candidate
     counts_match::Bool
     authority_status::Symbol
     available_objects::Tuple
     missing_objects::Tuple
+    summary
+    metadata
+end
+
+struct _PQSDiatomicPhysicalGaussletCoreShellSourcePlan
+    object_kind::Symbol
+    status::Symbol
+    parent_basis
+    axis_bundles
+    atom_contact_core_support_indices::Vector{Int}
+    atom_contact_core_support_states
+    shared_shell_support_indices::Tuple
+    shared_shell_support_states::Tuple
+    core_coefficient_matrix
+    shared_shell_coefficient_matrices::Tuple
+    support_order::Tuple
+    retained_order::Tuple
+    retained_ranges
+    final_dimension::Int
+    convention_labels
     summary
     metadata
 end
@@ -602,6 +623,7 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_can
             :not_available_physical_gausslet_source_plan_candidate,
             blocker,
             :not_available,
+            nothing,
             false,
             :not_available,
             (),
@@ -670,6 +692,7 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_can
         status,
         blocker,
         :source_backed_fixed_source_oracle,
+        source,
         counts_match,
         authority_status,
         (:source_backed_fixed_source_oracle,),
@@ -686,6 +709,92 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_can
     )
 end
 
+function _pqs_source_box_route_driver_physical_gausslet_source_plan_from_candidate(
+    candidate_payload,
+)
+    source = candidate_payload.candidate
+    shared_shell_support_indices =
+        Tuple(Vector{Int}(layer.support_indices) for layer in source.shared_shell_layers)
+    shared_shell_support_states =
+        Tuple(layer.support_states for layer in source.shared_shell_layers)
+    retained_ranges = (
+        atom_contact_core = source.sequence.core_column_range,
+        shared_shell_1 = source.sequence.layer_column_ranges[1],
+        shared_shell_2 = source.sequence.layer_column_ranges[2],
+    )
+    core_coefficient_matrix =
+        source.sequence.coefficient_matrix[:, retained_ranges.atom_contact_core]
+    shared_shell_coefficient_matrices = (
+        source.sequence.coefficient_matrix[:, retained_ranges.shared_shell_1],
+        source.sequence.coefficient_matrix[:, retained_ranges.shared_shell_2],
+    )
+    support_order = (:atom_contact_core, :shared_shell_1, :shared_shell_2)
+    retained_order = support_order
+    support_counts = (
+        length(source.child_sequences[1].support_indices),
+        length(shared_shell_support_indices[1]),
+        length(shared_shell_support_indices[2]),
+    )
+    retained_counts = (
+        length(retained_ranges.atom_contact_core),
+        length(retained_ranges.shared_shell_1),
+        length(retained_ranges.shared_shell_2),
+    )
+    final_dimension = size(source.sequence.coefficient_matrix, 2)
+    convention_labels = (;
+        source_plan_family = :physical_gausslet_core_shell_source_plan,
+        source_backed_adapter = true,
+        source_backed_candidate_source = candidate_payload.candidate_source,
+        route_owned_authority = true,
+        supplement_policy = :none,
+        h2_221_diagnostic_source_plan_reused = false,
+        final_basis_materialized = false,
+        h1_materialized = false,
+        h1_j_materialized = false,
+        rhf_materialized = false,
+        exports_materialized = false,
+        public_api = false,
+    )
+    summary = (;
+        object_kind = :pqs_diatomic_physical_gausslet_core_shell_source_plan,
+        status = :available_pqs_diatomic_physical_gausslet_core_shell_source_plan,
+        support_order,
+        retained_order,
+        support_counts,
+        retained_counts,
+        final_dimension,
+        retained_ranges,
+        source_plan_authority_status = :private_source_backed_adapter_authority,
+        source_backed_candidate_source = candidate_payload.candidate_source,
+        source_backed_adapter = true,
+        route_owned_authority = true,
+        supplement_policy = :none,
+    )
+    return _PQSDiatomicPhysicalGaussletCoreShellSourcePlan(
+        :pqs_diatomic_physical_gausslet_core_shell_source_plan,
+        :available_pqs_diatomic_physical_gausslet_core_shell_source_plan,
+        source.basis,
+        source.axis_bundles,
+        Vector{Int}(source.child_sequences[1].support_indices),
+        source.child_sequences[1].support_states,
+        shared_shell_support_indices,
+        shared_shell_support_states,
+        core_coefficient_matrix,
+        shared_shell_coefficient_matrices,
+        support_order,
+        retained_order,
+        retained_ranges,
+        final_dimension,
+        convention_labels,
+        summary,
+        (;
+            source =
+                :pqs_source_box_route_driver_physical_gausslet_source_plan_from_candidate,
+            source_backed_adapter = true,
+        ),
+    )
+end
+
 function _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_payload(
     target_payload,
     candidate_payload = nothing,
@@ -693,17 +802,26 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_pay
     target_available =
         !isnothing(target_payload) &&
         target_payload.status === :available_physical_gausslet_core_shell_target_inventory
-    status = :blocked_pqs_diatomic_physical_gausslet_core_shell_source_plan
-    blocker =
+    source_plan =
         !isnothing(candidate_payload) &&
         candidate_payload.status === :available_physical_gausslet_source_plan_candidate ?
-        :source_plan_candidate_not_route_authority :
+        _pqs_source_box_route_driver_physical_gausslet_source_plan_from_candidate(
+            candidate_payload,
+        ) :
+        nothing
+    status =
+        isnothing(source_plan) ?
+        :blocked_pqs_diatomic_physical_gausslet_core_shell_source_plan :
+        source_plan.status
+    blocker =
+        !isnothing(source_plan) ?
+        :missing_physical_gausslet_final_basis_builder :
         target_available ?
         :missing_atom_contact_core_support_rows :
         :missing_physical_gausslet_target_inventory
     missing_objects =
-        blocker === :source_plan_candidate_not_route_authority ?
-        (:physical_gausslet_source_plan_route_authority,) :
+        !isnothing(source_plan) ?
+        (:physical_gausslet_final_basis_builder,) :
         target_available ?
         (
             :atom_contact_core_support_rows,
@@ -729,7 +847,7 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_pay
             isnothing(target_payload) ? :not_available : target_payload.source_plan_role,
         supplement_policy =
             isnothing(target_payload) ? :not_available : target_payload.supplement_policy,
-        source_plan_materialized = false,
+        source_plan_materialized = !isnothing(source_plan),
         private_route_owned = true,
         supplemented = false,
         rhf = false,
@@ -741,7 +859,9 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_pay
         source_plan_candidate_counts_match =
             !isnothing(candidate_payload) && candidate_payload.counts_match,
         source_plan_authority_status =
-            isnothing(candidate_payload) ? :not_available : candidate_payload.authority_status,
+            isnothing(source_plan) ?
+            isnothing(candidate_payload) ? :not_available : candidate_payload.authority_status :
+            :private_source_backed_adapter_authority,
         missing_objects,
     )
     metadata = (;
@@ -756,7 +876,7 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_pay
         status,
         blocker,
         isnothing(target_payload) ? :not_available : target_payload.route_family,
-        nothing,
+        source_plan,
         (),
         missing_objects,
         summary,
