@@ -490,6 +490,20 @@ struct _PQSDiatomicPhysicalGaussletRHFInputContractPayload
     metadata
 end
 
+struct _PQSDiatomicPhysicalGaussletRHFExecutionPayload
+    status::Symbol
+    blocker
+    route_family::Symbol
+    input_contract
+    input_contract_status::Symbol
+    h1_payload
+    h1_payload_status::Symbol
+    h1_j_payload
+    h1_j_payload_status::Symbol
+    summary
+    metadata
+end
+
 struct _PQSDiatomicPhysicalGaussletSourcePlanCandidatePayload
     status::Symbol
     blocker
@@ -2567,6 +2581,86 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_rhf_input_contr
         occupation,
         available_objects,
         missing_objects,
+        summary,
+        metadata,
+    )
+end
+
+function _pqs_source_box_route_driver_diatomic_physical_gausslet_rhf_execution_payload(
+    input_contract = nothing,
+    h1_payload = nothing,
+    h1_j_payload = nothing,
+)
+    input_contract_status =
+        isnothing(input_contract) ? :not_available : input_contract.status
+    h1_payload_status = isnothing(h1_payload) ? :not_available : h1_payload.status
+    h1_j_payload_status =
+        isnothing(h1_j_payload) ? :not_available : h1_j_payload.status
+    contract_summary =
+        isnothing(input_contract) || !hasproperty(input_contract, :summary) ?
+        (;) :
+        input_contract.summary
+    route_family =
+        isnothing(input_contract) ? :unknown : input_contract.route_family
+    electron_count = get(contract_summary, :electron_count, nothing)
+    occupation_nocc = get(contract_summary, :occupation_nocc, nothing)
+    if input_contract_status !==
+       :available_pqs_physical_gausslet_rhf_input_contract
+        status = :blocked_pqs_physical_gausslet_private_rhf_execution
+        blocker =
+            isnothing(input_contract) ?
+            :missing_physical_gausslet_rhf_input_contract :
+            input_contract.blocker
+    else
+        status = :blocked_pqs_physical_gausslet_private_rhf_execution
+        blocker = :missing_physical_gausslet_rhf_execution_adapter
+    end
+    summary = (;
+        status,
+        blocker,
+        input_contract_status,
+        h1_payload_status,
+        h1_j_payload_status,
+        input_contract_available =
+            input_contract_status ===
+            :available_pqs_physical_gausslet_rhf_input_contract,
+        executed = false,
+        materialized = false,
+        converged = false,
+        electron_count,
+        electron_count_source = :explicit_private_rhf_electron_count,
+        occupation_policy = get(contract_summary, :occupation_policy, nothing),
+        occupation_nocc,
+        total_energy = nothing,
+        one_body_energy = nothing,
+        two_body_energy = nothing,
+        iteration_count = 0,
+        density_trace = nothing,
+        idempotency_residual = nothing,
+        commutator_residual = nothing,
+        energy_delta = nothing,
+        final_density_one_step_consistency_status =
+            :not_evaluated_missing_physical_gausslet_rhf_execution_adapter,
+        endpoint_blocker = blocker,
+        private_diagnostic_only = true,
+    )
+    metadata = (;
+        source =
+            :pqs_source_box_route_driver_diatomic_physical_gausslet_rhf_execution_payload,
+        existing_complete_core_shell_rhf_helpers_adapted = false,
+        execution_attempted = false,
+        private_diagnostic_only = true,
+    )
+    return _PQSDiatomicPhysicalGaussletRHFExecutionPayload(
+        status,
+        blocker,
+        route_family,
+        input_contract,
+        input_contract_status,
+        h1_payload,
+        h1_payload_status,
+        h1_j_payload,
+        h1_j_payload_status,
         summary,
         metadata,
     )

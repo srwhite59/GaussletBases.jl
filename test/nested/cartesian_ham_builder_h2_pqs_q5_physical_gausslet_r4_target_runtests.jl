@@ -71,6 +71,8 @@ const _H2_PHYSICAL_PQS_INPUT =
             @test file["route/h1_j_materialized"] == true
             @test file["route/private_rhf_input_contract_status"] ===
                   :available_pqs_physical_gausslet_rhf_input_contract
+            @test file["route/private_rhf_execution_status"] ===
+                  :blocked_pqs_physical_gausslet_private_rhf_execution
             @test file["route/private_rhf_materialized"] == false
 
             @test file["basis/retained_atom_core_interiors"] == true
@@ -81,7 +83,7 @@ const _H2_PHYSICAL_PQS_INPUT =
 
             @test file["physics/endpoint_ready"] == false
             @test file["physics/endpoint_blocker"] ===
-                  :missing_physical_gausslet_private_rhf_execution
+                  :missing_physical_gausslet_rhf_execution_adapter
             @test isfinite(file["physics/h1_lowest"])
             @test file["physics/h1_lowest"] < 0
             @test file["physics/h1_hamiltonian_matrix_finite"] == true
@@ -115,6 +117,16 @@ const _H2_PHYSICAL_PQS_INPUT =
             @test file["private_rhf/pre_final_pair_matrix_available"] == true
             @test file["private_rhf/pre_final_pair_matrix_finite"] == true
             @test file["private_rhf/pre_final_pair_matrix_symmetry_error"] < 1e-8
+            @test file["private_rhf/executed"] == false
+            @test file["private_rhf/execution_status"] ===
+                  :blocked_pqs_physical_gausslet_private_rhf_execution
+            @test file["private_rhf/execution_blocker"] ===
+                  :missing_physical_gausslet_rhf_execution_adapter
+            @test file["private_rhf/converged"] == false
+            @test file["private_rhf/total_energy"] === nothing
+            @test file["private_rhf/iteration_count"] == 0
+            @test file["private_rhf/final_density_one_step_consistency_status"] ===
+                  :not_evaluated_missing_physical_gausslet_rhf_execution_adapter
             @test file["comparison/ready"] == false
             @test file["private_rhf/requested"] == false
             @test file["private_rhf/materialized"] == false

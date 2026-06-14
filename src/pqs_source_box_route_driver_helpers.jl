@@ -7644,6 +7644,12 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
             diatomic_physical_gausslet_h1_payload,
             diatomic_physical_gausslet_h1_j_payload,
         )
+    diatomic_physical_gausslet_rhf_execution_payload =
+        _pqs_source_box_route_driver_diatomic_physical_gausslet_rhf_execution_payload(
+            diatomic_physical_gausslet_rhf_input_contract,
+            diatomic_physical_gausslet_h1_payload,
+            diatomic_physical_gausslet_h1_j_payload,
+        )
     complete_core_shell_diagnostic_route_payload =
         _pqs_source_box_route_driver_complete_core_shell_diagnostic_route_payload(
             parent,
@@ -7764,6 +7770,7 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
         diatomic_physical_gausslet_h1_payload,
         diatomic_physical_gausslet_h1_j_payload,
         diatomic_physical_gausslet_rhf_input_contract,
+        diatomic_physical_gausslet_rhf_execution_payload,
         complete_core_shell_diagnostic_route_payload,
         diatomic_complete_core_shell_support_window_payload,
         diatomic_raw_box_route_payload,
@@ -8217,6 +8224,10 @@ function _pqs_source_box_route_driver_physical_gausslet_target_report_fields(
         hasproperty(assembly, :diatomic_physical_gausslet_rhf_input_contract) ?
         assembly.diatomic_physical_gausslet_rhf_input_contract :
         nothing
+    rhf_execution_payload =
+        hasproperty(assembly, :diatomic_physical_gausslet_rhf_execution_payload) ?
+        assembly.diatomic_physical_gausslet_rhf_execution_payload :
+        nothing
     summary =
         isnothing(payload) ?
         (;
@@ -8353,6 +8364,32 @@ function _pqs_source_box_route_driver_physical_gausslet_target_report_fields(
                 private_rhf_materialized =
                     contract_summary.private_rhf_materialized,
                 physics_endpoint_blocker = contract_summary.endpoint_blocker,
+            ),
+        )
+    end
+    if !isnothing(rhf_execution_payload)
+        execution_summary = rhf_execution_payload.summary
+        summary = merge(
+            summary,
+            (;
+                private_rhf_execution_status = execution_summary.status,
+                private_rhf_execution_blocker = execution_summary.blocker,
+                private_rhf_executed = execution_summary.executed,
+                private_rhf_materialized = execution_summary.materialized,
+                private_rhf_converged = execution_summary.converged,
+                private_rhf_total_energy = execution_summary.total_energy,
+                private_rhf_one_body_energy = execution_summary.one_body_energy,
+                private_rhf_two_body_energy = execution_summary.two_body_energy,
+                private_rhf_iteration_count = execution_summary.iteration_count,
+                private_rhf_density_trace = execution_summary.density_trace,
+                private_rhf_idempotency_residual =
+                    execution_summary.idempotency_residual,
+                private_rhf_commutator_residual =
+                    execution_summary.commutator_residual,
+                private_rhf_energy_delta = execution_summary.energy_delta,
+                private_rhf_final_density_one_step_consistency_status =
+                    execution_summary.final_density_one_step_consistency_status,
+                physics_endpoint_blocker = execution_summary.endpoint_blocker,
             ),
         )
     end

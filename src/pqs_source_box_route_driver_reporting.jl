@@ -564,7 +564,20 @@ function _pqs_source_box_route_driver_write_pqs_diatomic_readiness_artifact!(
             private_rhf_pre_final_pair_matrix_available = false,
             private_rhf_pre_final_pair_matrix_finite = nothing,
             private_rhf_pre_final_pair_matrix_symmetry_error = nothing,
+            private_rhf_execution_status = :not_available,
+            private_rhf_execution_blocker = nothing,
+            private_rhf_executed = false,
             private_rhf_materialized = false,
+            private_rhf_converged = false,
+            private_rhf_total_energy = nothing,
+            private_rhf_one_body_energy = nothing,
+            private_rhf_two_body_energy = nothing,
+            private_rhf_iteration_count = nothing,
+            private_rhf_density_trace = nothing,
+            private_rhf_idempotency_residual = nothing,
+            private_rhf_commutator_residual = nothing,
+            private_rhf_energy_delta = nothing,
+            private_rhf_final_density_one_step_consistency_status = nothing,
             physics_endpoint_blocker = nothing,
             supplement_policy = nothing,
         ),
@@ -602,6 +615,10 @@ function _pqs_source_box_route_driver_write_pqs_diatomic_readiness_artifact!(
             :private_rhf_input_contract_status,
             :not_available,
         ) :
+        :not_available
+    route_private_rhf_execution_status =
+        physical_target_artifact ?
+        get(target, :private_rhf_execution_status, :not_available) :
         :not_available
     physics_endpoint_blocker =
         physical_target_artifact ?
@@ -649,7 +666,7 @@ function _pqs_source_box_route_driver_write_pqs_diatomic_readiness_artifact!(
         ("config", (; input_path = isnothing(input_path) ? "" : String(input_path), route_family = recipe.route_family, route_kind = recipe.route_kind, q = recipe.q, n_s = recipe.n_s, core_spacing = recipe.core_spacing, xmax_parallel = get(recipe, :xmax_parallel, nothing), xmax_transverse = get(recipe, :xmax_transverse, nothing), supplement_policy = recipe.supplement_policy, comparison_ready, run_final_basis = get(recipe, :run_final_basis, false))),
         ("comparison", (; ready = comparison_ready, blocker = comparison_blocker, reference_label = something(recipe.comparison_reference_label, ""))),
         ("parent", (; parent_axis_counts = report.parent_contract.parent_axis_counts, parent_axis_counts_source = report.parent_contract.parent_axis_counts_source, parent_materialization_blocker = report.parent_contract.parent_materialization_blocker, parent_basis_object_available = report.parent_contract.parent_basis_object_available, parent_qw_basis_object_available = report.parent_contract.parent_qw_basis_object_available, parent_axis_bundle_object_available = report.parent_contract.parent_axis_bundle_object_available, parent_basis_object_type_label = report.parent_contract.parent_basis_object_type_label, parent_qw_basis_object_type_label = report.parent_contract.parent_qw_basis_object_type_label, parent_axis_bundle_object_type_label = report.parent_contract.parent_axis_bundle_object_type_label)),
-        ("route", (; artifact_role = get(recipe, :artifact_role, nothing), readiness_status = get(readiness, :status, :not_available), readiness_blocker = get(readiness, :blocker, nothing), source_plan_status = route_source_plan_status, final_basis_status = route_final_basis_status, h1_status = route_h1_status, h1_materialized = route_h1_materialized, h1_j_status = route_h1_j_status, h1_j_materialized = route_h1_j_materialized, private_rhf_input_contract_status = route_private_rhf_input_contract_status, ham_input_status = get(readiness, :ham_input_payload_status, :not_available), hamiltonian_handoff_status = get(readiness, :hamiltonian_handoff_payload_status, :not_available), private_rhf_materialized = get(target, :private_rhf_materialized, get(readiness, :rhf_materialized, false)), public_api = get(readiness, :public_api, false), exports_materialized = get(readiness, :exports_materialized, false), artifacts_materialized = get(readiness, :artifacts_materialized, false))),
+        ("route", (; artifact_role = get(recipe, :artifact_role, nothing), readiness_status = get(readiness, :status, :not_available), readiness_blocker = get(readiness, :blocker, nothing), source_plan_status = route_source_plan_status, final_basis_status = route_final_basis_status, h1_status = route_h1_status, h1_materialized = route_h1_materialized, h1_j_status = route_h1_j_status, h1_j_materialized = route_h1_j_materialized, private_rhf_input_contract_status = route_private_rhf_input_contract_status, private_rhf_execution_status = route_private_rhf_execution_status, ham_input_status = get(readiness, :ham_input_payload_status, :not_available), hamiltonian_handoff_status = get(readiness, :hamiltonian_handoff_payload_status, :not_available), private_rhf_materialized = get(target, :private_rhf_materialized, get(readiness, :rhf_materialized, false)), public_api = get(readiness, :public_api, false), exports_materialized = get(readiness, :exports_materialized, false), artifacts_materialized = get(readiness, :artifacts_materialized, false))),
     )
         _pqs_source_box_route_driver_write_group!(file, group, values)
     end
@@ -744,7 +761,11 @@ function _pqs_source_box_route_driver_write_pqs_diatomic_readiness_artifact!(
         "private_rhf",
         (;
             requested = get(recipe, :run_private_rhf, false),
+            executed = get(target, :private_rhf_executed, false),
             materialized = get(target, :private_rhf_materialized, false),
+            converged = get(target, :private_rhf_converged, false),
+            execution_status = get(target, :private_rhf_execution_status, nothing),
+            execution_blocker = get(target, :private_rhf_execution_blocker, nothing),
             input_contract_status =
                 get(target, :private_rhf_input_contract_status, nothing),
             input_contract_blocker =
@@ -777,6 +798,22 @@ function _pqs_source_box_route_driver_write_pqs_diatomic_readiness_artifact!(
                 get(
                     target,
                     :private_rhf_pre_final_pair_matrix_symmetry_error,
+                    nothing,
+                ),
+            total_energy = get(target, :private_rhf_total_energy, nothing),
+            one_body_energy = get(target, :private_rhf_one_body_energy, nothing),
+            two_body_energy = get(target, :private_rhf_two_body_energy, nothing),
+            iteration_count = get(target, :private_rhf_iteration_count, nothing),
+            density_trace = get(target, :private_rhf_density_trace, nothing),
+            idempotency_residual =
+                get(target, :private_rhf_idempotency_residual, nothing),
+            commutator_residual =
+                get(target, :private_rhf_commutator_residual, nothing),
+            energy_delta = get(target, :private_rhf_energy_delta, nothing),
+            final_density_one_step_consistency_status =
+                get(
+                    target,
+                    :private_rhf_final_density_one_step_consistency_status,
                     nothing,
                 ),
         ),
