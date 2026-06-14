@@ -586,3 +586,46 @@ Remaining blocker / next:
 Line-count / complexity note:
 - Scoped `src + test + bin` diff was `19` added / `1587` deleted, net `-1568`,
   more than paying down the pass-234 `+108` exception.
+
+## Pass 236 - Independent H2 PQS Retained-Rule Audit
+
+Commit(s):
+- this commit - Record independent H2 PQS retained-rule audit
+
+Summary:
+- No-edit audit found that the fake/WL retained counts `(251, 98, 114)` are not
+  independent PQS authority. Existing route-owned authority supports
+  `:atom_contact_core => 275` via direct source modes and q=5 boundary product
+  mode counts `98` for each shared shell.
+- The resulting independent-PQS readiness target is retained counts
+  `(275, 98, 98)` and final target dimension `471`, not the fake-PQS/WL `463`.
+- The audit recommends a compact private retained-rule/readiness plan before
+  any coefficient/source-plan materialization.
+
+Validation:
+- Doer: read-only inspection only; no Julia commands or tests.
+- Manager: reviewed the audit and accepted `(275, 98, 98)` as the next
+  readiness target.
+
+Goal advancement:
+- MT2: clarified the next independent-PQS seam and rejected fake/WL retained
+  counts as route authority.
+- MT3: kept common support vocabulary but allowed PQS retained counts to differ
+  from WL/fake counts where independent rules differ.
+- LT5: strengthened construction provenance by separating support authority,
+  retained-rule authority, and fake/WL reference values.
+
+Medium-goal update:
+- none.
+
+Risk / guardrail:
+- Do not reintroduce `251` or `114` as independent-PQS expectations unless a
+  real PQS retained rule is introduced and reviewed.
+
+Remaining blocker / next:
+- Add retained-rule/readiness metadata for `(275, 98, 98)` and final target
+  dimension `471`. Do not materialize source coefficients, final basis, H1,
+  H1-J, RHF, supplements, CR2, export, or public API.
+
+Line-count / complexity note:
+- No source/test/bin changes in this audit.
