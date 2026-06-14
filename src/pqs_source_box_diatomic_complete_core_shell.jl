@@ -459,6 +459,11 @@ function _pqs_source_box_route_driver_independent_h2_support_region_plan(
         shared_shell_1 = shared_regions[1].support_count,
         shared_shell_2 = shared_regions[2].support_count,
     )
+    shared_shell_descriptors =
+        _pqs_source_box_route_driver_independent_h2_shared_shell_region_descriptors(
+            shared_regions,
+            axis_count_tuple,
+        )
     coverage = raw.coverage
     counts_match =
         Tuple(values(support_counts)) == (275, 578, 362)
@@ -485,6 +490,58 @@ function _pqs_source_box_route_driver_independent_h2_support_region_plan(
         outside_count = 0,
         nuclear_indices = raw.nuclear_indices,
         bond_axis = raw.bond_axis,
+        shared_shell_descriptors,
+    )
+end
+
+function _pqs_source_box_route_driver_independent_h2_shared_shell_region_descriptors(
+    shared_regions,
+    parent_dims::NTuple{3,Int},
+)
+    length(shared_regions) == 2 ||
+        throw(ArgumentError("independent H2 PQS requires exactly two shared shell regions"))
+    descriptor(role, region) = begin
+        raw = hasproperty(region, :raw_region) ? region.raw_region : region
+        region_key = hasproperty(region, :key) ? region.key : role
+        isnothing(raw.inner_exclusion_box) &&
+            throw(ArgumentError("independent H2 PQS shared shell requires inner exclusion box"))
+        outer_indices =
+            _nested_box_support_indices(raw.outer_box[1], raw.outer_box[2], raw.outer_box[3], parent_dims)
+        inner = Set(
+            _nested_box_support_indices(
+                raw.inner_exclusion_box[1],
+                raw.inner_exclusion_box[2],
+                raw.inner_exclusion_box[3],
+                parent_dims,
+            ),
+        )
+        support_indices = Int[index for index in outer_indices if !(index in inner)]
+        support_states = NTuple{3,Int}[
+            _cartesian_unflat_index(index, parent_dims) for index in support_indices
+        ]
+        source_cpb = CartesianCPB.filled_cpb(
+            raw.outer_box...;
+            role = Symbol(role, "_pqs_filled_source_cpb"),
+            metadata = (;
+                terminal_region_key = region_key,
+                route_unit_role = role,
+                source = :independent_h2_pqs_shared_shell_region_descriptor,
+            ),
+        )
+        (;
+            role,
+            terminal_region_key = region_key,
+            current_box = raw.outer_box,
+            inner_box = raw.inner_exclusion_box,
+            source_cpb,
+            support_indices,
+            support_states,
+            support_count = length(support_indices),
+        )
+    end
+    return (;
+        shared_shell_1 = descriptor(:shared_shell_1, shared_regions[1]),
+        shared_shell_2 = descriptor(:shared_shell_2, shared_regions[2]),
     )
 end
 
@@ -1946,7 +2003,168 @@ function _pqs_source_box_route_driver_independent_h2_physical_source_plan_descri
     )
 end
 
+function _pqs_source_box_route_driver_independent_h2_shared_shell_realization_payload(
+    parent,
+    target_payload,
+    descriptor,
+)
+    blocked(blocker) = (;
+        object_kind = :pqs_independent_h2_shared_shell_realization_payload,
+        status = :blocked_independent_pqs_shared_shell_realization_payload,
+        blocker,
+        shared_shell_realization_counts = (),
+        shared_shell_realization_identity_errors = (),
+        shared_shell_realization_materialized = false,
+        source_backed_fixed_source_oracle_used = false,
+        fake_pqs_enabled = false,
+        shared_shells = (;),
+        summary = (;
+            status = :blocked_independent_pqs_shared_shell_realization_payload,
+            blocker,
+            shared_shell_realization_counts = (),
+            shared_shell_realization_identity_errors = (),
+            shared_shell_realization_materialized = false,
+        ),
+    )
+    isnothing(descriptor) &&
+        return blocked(:missing_independent_pqs_source_plan_descriptor)
+    descriptor.status === :available_independent_pqs_physical_source_plan_descriptor ||
+        return blocked(descriptor.blocker)
+    support_plan = get(target_payload.summary, :support_plan, nothing)
+    retained_rule_plan = get(target_payload.summary, :retained_rule_plan, nothing)
+    isnothing(support_plan) &&
+        return blocked(:missing_independent_pqs_support_region_plan)
+    isnothing(retained_rule_plan) &&
+        return blocked(:missing_independent_pqs_retained_rule_plan)
+    hasproperty(support_plan, :shared_shell_descriptors) ||
+        return blocked(:missing_independent_pqs_shared_shell_support_descriptors)
+    bundles =
+        hasproperty(parent, :parent_axis_bundle_object) ?
+        parent.parent_axis_bundle_object :
+        nothing
+    isnothing(bundles) && return blocked(:missing_parent_axis_bundle_object)
+    metrics = _pqs_multilayer_axis_metrics(bundles)
+    source_mode_dims = retained_rule_plan.shared_shell_source_mode_dims
+    shells = map(
+        role -> _pqs_source_box_route_driver_independent_h2_shared_shell_realization(
+            role,
+            getproperty(support_plan.shared_shell_descriptors, role),
+            bundles,
+            metrics,
+            source_mode_dims,
+            support_plan.bond_axis,
+        ),
+        (:shared_shell_1, :shared_shell_2),
+    )
+    blocker = findfirst(shell -> shell.status !==
+                                 :available_independent_pqs_shared_shell_realization,
+                        shells)
+    isnothing(blocker) || return blocked(shells[blocker].blocker)
+    counts = Tuple(shell.retained_count for shell in shells)
+    identity_errors = Tuple(shell.realized_overlap_identity_error for shell in shells)
+    summary = (;
+        status = :available_independent_pqs_shared_shell_realization_payload,
+        blocker = nothing,
+        shared_shell_realization_counts = counts,
+        shared_shell_realization_identity_errors = identity_errors,
+        coefficient_shapes = Tuple(shell.coefficient_shape for shell in shells),
+        shell_projection_materialized = true,
+        lowdin_cleanup_materialized = true,
+        shared_shell_realization_materialized = true,
+        source_backed_fixed_source_oracle_used = false,
+        fake_pqs_enabled = false,
+    )
+    return (;
+        object_kind = :pqs_independent_h2_shared_shell_realization_payload,
+        status = summary.status,
+        blocker = nothing,
+        shared_shell_realization_counts = counts,
+        shared_shell_realization_identity_errors = identity_errors,
+        shared_shell_realization_materialized = true,
+        source_backed_fixed_source_oracle_used = false,
+        fake_pqs_enabled = false,
+        shared_shells = (; shared_shell_1 = shells[1], shared_shell_2 = shells[2]),
+        summary,
+    )
+end
+
+function _pqs_source_box_route_driver_independent_h2_shared_shell_realization(
+    role::Symbol,
+    shell_descriptor,
+    bundles,
+    metrics,
+    source_mode_dims::NTuple{3,Int},
+    bond_axis::Symbol,
+)
+    blocked(blocker) = (;
+        role,
+        status = :blocked_independent_pqs_shared_shell_realization,
+        blocker,
+        retained_count = nothing,
+        coefficient_shape = nothing,
+        realized_overlap_identity_error = nothing,
+    )
+    try
+        raw_plan = CartesianRawProductSources.raw_product_box_plan(
+            shell_descriptor.source_cpb;
+            source_mode_dims,
+            source_key = Symbol("independent_h2_", role, "_q5_source"),
+            metadata = (; route_unit_role = role),
+        )
+        retained_rule =
+            CartesianRawProductSources.pqs_boundary_product_mode_retained_rule(
+                raw_plan;
+                metadata = (; route_unit_role = role),
+            )
+        retained_rule.retained_count == 98 ||
+            return blocked(:independent_pqs_shared_shell_retained_count_mismatch)
+        layer = _nested_projected_q_shell_layer(
+            bundles,
+            shell_descriptor.current_box,
+            shell_descriptor.inner_box;
+            bond_axis,
+            q = source_mode_dims[1],
+            L = source_mode_dims[1],
+            raw_source_dims = source_mode_dims,
+            selected_q = source_mode_dims[1],
+        )
+        projected_descriptor = _nested_projected_q_shell_staged_unit_descriptor(layer)
+        projected_descriptor.support_count == shell_descriptor.support_count ||
+            return blocked(:independent_pqs_shared_shell_support_count_mismatch)
+        shell_plan =
+            CartesianContractedParentMetrics._pqs_shell_realization_plan(
+                projected_descriptor,
+                metrics,
+            )
+        coefficients = shell_plan.shell_projection_matrix * shell_plan.lowdin_cleanup
+        size(coefficients) == (shell_descriptor.support_count, 98) ||
+            return blocked(:independent_pqs_shared_shell_coefficient_shape_mismatch)
+        return (;
+            role,
+            status = :available_independent_pqs_shared_shell_realization,
+            blocker = nothing,
+            raw_source_plan = raw_plan,
+            retained_rule,
+            support_indices = shell_descriptor.support_indices,
+            support_states = shell_descriptor.support_states,
+            shell_projection = shell_plan.shell_projection_matrix,
+            lowdin_cleanup = shell_plan.lowdin_cleanup,
+            shell_final_coefficients = coefficients,
+            retained_count = size(coefficients, 2),
+            coefficient_shape = size(coefficients),
+            realized_overlap_identity_error = shell_plan.isometry_error,
+            shell_projection_materialized = true,
+            lowdin_cleanup_materialized = true,
+            source_backed_fixed_source_oracle_used = false,
+            fake_pqs_enabled = false,
+        )
+    catch err
+        return blocked(Symbol(:independent_pqs_shared_shell_realization_error))
+    end
+end
+
 function _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_payload(
+    parent,
     target_payload,
     candidate_payload = nothing,
 )
@@ -1972,6 +2190,18 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_pay
     descriptor_available =
         !isnothing(descriptor) &&
         descriptor.status === :available_independent_pqs_physical_source_plan_descriptor
+    shared_shell_realization =
+        descriptor_available ?
+        _pqs_source_box_route_driver_independent_h2_shared_shell_realization_payload(
+            parent,
+            target_payload,
+            descriptor,
+        ) :
+        nothing
+    shared_shell_realization_available =
+        !isnothing(shared_shell_realization) &&
+        shared_shell_realization.status ===
+        :available_independent_pqs_shared_shell_realization_payload
     source_plan = descriptor_available ? descriptor : source_plan
     independent_source_plan_blocker =
         !isnothing(target_payload) ?
@@ -1989,7 +2219,9 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_pay
         source_plan.status
     blocker =
         descriptor_available ?
-        descriptor.next_blocker :
+        shared_shell_realization_available ?
+        :missing_independent_pqs_complete_core_shell_source_plan_assembly :
+        shared_shell_realization.blocker :
         !isnothing(source_plan) ?
         nothing :
         independent_target ?
@@ -1999,7 +2231,7 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_pay
         :missing_physical_gausslet_target_inventory
     missing_objects =
         descriptor_available ?
-        descriptor.missing_objects :
+        (blocker,) :
         !isnothing(source_plan) ?
         () :
         independent_target ?
@@ -2034,6 +2266,23 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_pay
             isnothing(descriptor) ? :not_available : descriptor.status,
         source_plan_descriptor_blocker =
             isnothing(descriptor) ? nothing : descriptor.blocker,
+        shared_shell_realization_status =
+            isnothing(shared_shell_realization) ?
+            :not_available :
+            shared_shell_realization.status,
+        shared_shell_realization_blocker =
+            isnothing(shared_shell_realization) ?
+            nothing :
+            shared_shell_realization.blocker,
+        shared_shell_realization_counts =
+            isnothing(shared_shell_realization) ?
+            () :
+            shared_shell_realization.shared_shell_realization_counts,
+        shared_shell_realization_identity_errors =
+            isnothing(shared_shell_realization) ?
+            () :
+            shared_shell_realization.shared_shell_realization_identity_errors,
+        shared_shell_realization_materialized = shared_shell_realization_available,
         source_plan_descriptor_available = descriptor_available,
         source_plan_family =
             isnothing(source_plan) ?

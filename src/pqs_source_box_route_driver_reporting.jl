@@ -810,6 +810,14 @@ function _pqs_source_box_route_driver_write_pqs_diatomic_readiness_artifact!(
                 get(target, :source_plan_descriptor_blocker, nothing),
             source_plan_family =
                 get(target, :source_plan_family, nothing),
+            shared_shell_realization_status =
+                get(target, :shared_shell_realization_status, nothing),
+            shared_shell_realization_blocker =
+                get(target, :shared_shell_realization_blocker, nothing),
+            shared_shell_realization_counts =
+                get(target, :shared_shell_realization_counts, nothing),
+            shared_shell_realization_identity_errors =
+                get(target, :shared_shell_realization_identity_errors, nothing),
             source_coefficients_materialized =
                 get(target, :source_coefficients_materialized, nothing),
             support_plan_status =

@@ -821,3 +821,50 @@ Remaining blocker / next:
 
 Line-count / complexity note:
 - No source/test/bin changes in this audit.
+
+## Pass 241 - Shared-Shell Realization Payload
+
+Commit(s):
+- `4f3f2a66` - Authorize pass 241 line-budget exception
+- this commit - Add independent H2 PQS shared-shell realization
+
+Summary:
+- Added the narrow shared-shell realization payload for independent H2 PQS.
+  The route now materializes realization coefficients for `:shared_shell_1` and
+  `:shared_shell_2`, each with retained count `98`.
+- The atom-contact core remains descriptor/identity-like; no dense core identity
+  matrix was materialized.
+- The complete source plan remains blocked at
+  `:missing_independent_pqs_complete_core_shell_source_plan_assembly`. Final
+  basis, H1, H1-J, RHF, supplements, CR2, export, and public API remain blocked.
+
+Validation:
+- Doer: package load passed; focused independent artifact/readiness check
+  passed in `78.1625405s`; `git diff --check` passed.
+- Manager: reviewed the diff, ran `git diff --check`, and ran package load.
+  Manager package load passed in `0.645702292s`.
+
+Goal advancement:
+- MT2: advanced independent H2 PQS from descriptor-only source-plan readiness
+  to shared-shell numerical realization.
+- LT5: kept fake/WL fixed-source data out of the independent route.
+- LT7: preserved the staged validation line by keeping final basis and physics
+  blocked.
+
+Medium-goal update:
+- none.
+
+Risk / guardrail:
+- The pass used old projected-shell machinery only as an internal mathematical
+  adapter fed by independent route-owned support/source boxes. Do not promote
+  that old machinery as route authority.
+
+Remaining blocker / next:
+- Assemble or audit the complete core/shell source plan only after the cleanup
+  exception is paid down. The immediate next pass should return to targeted
+  cleanup/shrink pressure.
+
+Line-count / complexity note:
+- Scoped `src + test + bin` diff was `280` added / `2` deleted, net `+278`.
+  This exception was explicitly granted and recorded in pass-241 exception
+  files. A subagent was dispatched to prepare the next cleanup target.

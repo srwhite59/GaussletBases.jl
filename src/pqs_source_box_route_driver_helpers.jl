@@ -7649,6 +7649,7 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
         )
     diatomic_physical_gausslet_source_plan_payload =
         _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_payload(
+            parent,
             diatomic_physical_gausslet_target_payload,
             diatomic_physical_gausslet_source_plan_candidate_payload,
         )
@@ -8402,6 +8403,26 @@ function _pqs_source_box_route_driver_physical_gausslet_target_report_fields(
                     ),
                 source_plan_family =
                     get(source_plan_payload.summary, :source_plan_family, :not_available),
+                shared_shell_realization_status =
+                    get(
+                        source_plan_payload.summary,
+                        :shared_shell_realization_status,
+                        :not_available,
+                    ),
+                shared_shell_realization_blocker =
+                    get(
+                        source_plan_payload.summary,
+                        :shared_shell_realization_blocker,
+                        nothing,
+                    ),
+                shared_shell_realization_counts =
+                    get(source_plan_payload.summary, :shared_shell_realization_counts, ()),
+                shared_shell_realization_identity_errors =
+                    get(
+                        source_plan_payload.summary,
+                        :shared_shell_realization_identity_errors,
+                        (),
+                    ),
                 source_coefficients_materialized =
                     get(
                         source_plan_payload.summary,
