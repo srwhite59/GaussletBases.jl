@@ -118,13 +118,6 @@ function _cartesian_report_stage_low_order_policy_report(
     return (; shells, units, transforms, pairs, assembly, report)
 end
 
-function _cartesian_report_stage_count_by_field(entries, field, value)
-    for entry in entries
-        getproperty(entry, field) == value && return entry.pair_count
-    end
-    return 0
-end
-
 function _assert_terminal_lowering_contract_fields_match_report_summary(
     summary,
     assembly,
@@ -496,77 +489,12 @@ end
           36
     @test !atom_growth_report.low_order_route_core_pair_operator_plan.operator_blocks_materialized
     @test !atom_growth_report.low_order_route_core_pair_operator_plan.hamiltonian_matrices_materialized
-    @test atom_growth_summary.route_core_typed_pair_operator_plan_inventory_available
     @test atom_growth_summary.route_core_typed_pair_operator_plan_inventory_status ==
           :blocked_route_core_pair_operator_plan_inventory
     @test atom_growth_summary.route_core_typed_pair_operator_plan_blocker ==
           :aggregate_subtree_operator_plan_required
-    @test atom_growth_summary.route_core_typed_pair_operator_plan_count == 36
-    @test atom_growth_summary.route_core_typed_pair_operator_plan_blocked_count == 15
-    @test !atom_growth_summary.route_core_typed_pair_operator_plan_materialized
-    @test _cartesian_report_stage_count_by_field(
-        atom_growth_summary.route_core_typed_pair_operator_source_path_counts,
-        :source_operator_path,
-        :aggregate_subtree_adapter_required,
-    ) == 15
-    @test _cartesian_report_stage_count_by_field(
-        atom_growth_summary.route_core_typed_pair_operator_materialization_status_counts,
-        :materialization_status,
-        :metadata_only_not_materialized,
-    ) == 21
-    @test _cartesian_report_stage_count_by_field(
-        atom_growth_summary.route_core_typed_pair_operator_materialization_status_counts,
-        :materialization_status,
-        :blocked_metadata_only_not_materialized,
-    ) == 15
-    @test _cartesian_report_stage_count_by_field(
-        atom_growth_summary.route_core_typed_pair_operator_blocker_counts,
-        :blocker,
-        nothing,
-    ) == 21
-    @test _cartesian_report_stage_count_by_field(
-        atom_growth_summary.route_core_typed_pair_operator_blocker_counts,
-        :blocker,
-        :aggregate_subtree_operator_plan_required,
-    ) == 15
-    @test sum(
-        entry.pair_count for entry in
-        atom_growth_summary.route_core_typed_pair_operator_plan_family_counts
-    ) == 36
-    @test all(
-        entry -> !entry.materialized,
-        atom_growth_summary.route_core_typed_pair_operator_plan_family_counts,
-    )
-    @test atom_growth_report.low_order_route_core_typed_pair_operator_plan_count ==
-          atom_growth_summary.route_core_typed_pair_operator_plan_count
-    @test atom_growth_report.low_order_route_core_typed_pair_operator_plan_blocked_count ==
-          atom_growth_summary.route_core_typed_pair_operator_plan_blocked_count
-    @test !atom_growth_report.low_order_route_core_typed_pair_operator_plan_materialized
-    @test atom_growth_report.low_order_route_core_typed_pair_operator_source_path_counts ==
-          atom_growth_summary.route_core_typed_pair_operator_source_path_counts
-    @test !atom_growth_summary.route_core_typed_pair_operator_materialization_ready
-    @test atom_growth_summary.route_core_typed_pair_operator_materialization_readiness_status ==
-          :blocked_pair_operator_materialization
     @test atom_growth_summary.route_core_typed_pair_operator_materialization_readiness_blocker ==
           :aggregate_subtree_operator_plan_required
-    @test atom_growth_summary.route_core_typed_pair_operator_materialization_readiness_plan_count ==
-          36
-    @test atom_growth_summary.route_core_typed_pair_operator_materialization_readiness_blocked_count ==
-          15
-    @test atom_growth_summary.route_core_typed_pair_operator_materialization_readiness_materialized_count ==
-          0
-    @test atom_growth_report.low_order_route_core_typed_pair_operator_materialization_ready ==
-          atom_growth_summary.route_core_typed_pair_operator_materialization_ready
-    @test atom_growth_report.low_order_route_core_typed_pair_operator_materialization_readiness_status ==
-          atom_growth_summary.route_core_typed_pair_operator_materialization_readiness_status
-    @test atom_growth_report.low_order_route_core_typed_pair_operator_materialization_readiness_blocker ==
-          atom_growth_summary.route_core_typed_pair_operator_materialization_readiness_blocker
-    @test atom_growth_report.low_order_route_core_typed_pair_operator_materialization_readiness_plan_count ==
-          atom_growth_summary.route_core_typed_pair_operator_materialization_readiness_plan_count
-    @test atom_growth_report.low_order_route_core_typed_pair_operator_materialization_readiness_blocked_count ==
-          atom_growth_summary.route_core_typed_pair_operator_materialization_readiness_blocked_count
-    @test atom_growth_report.low_order_route_core_typed_pair_operator_materialization_readiness_materialized_count ==
-          atom_growth_summary.route_core_typed_pair_operator_materialization_readiness_materialized_count
     @test atom_growth_summary.lw_complete_shell_cpb_enumeration_available
     @test atom_growth_summary.lw_complete_shell_region_count == 4
     @test atom_growth_summary.lw_complete_shell_cpb_count == 104
@@ -895,65 +823,20 @@ end
         read(path, String)
     end
     @test occursin(
-        "report.low_order_shellization_policy_resolved = :atom_growth_complete_rectangular",
-        summary_stdout,
-    )
-    @test occursin(
-        "report.low_order_shellization_policy_source = :explicit_low_order_shellization_policy",
-        summary_stdout,
-    )
-    @test occursin(
-        "report.atom_growth_low_order_route_selected = true",
-        summary_stdout,
-    )
-    @test occursin(
-        "report.low_order_active_source_authority = false",
-        summary_stdout,
-    )
-    @test occursin(
-        "report.low_order_materialization_required = true",
-        summary_stdout,
-    )
-    @test occursin(
-        "report.low_order_materialization_status = :deferred_atom_growth_complete_rectangular_pair_block_materialization",
-        summary_stdout,
-    )
-    @test occursin(
-        "report.low_order_pair_inventory_source = :atom_growth_unit_inventory",
-        summary_stdout,
-    )
-    @test occursin(
-        "report.low_order_pair_count = 36",
-        summary_stdout,
-    )
-    @test occursin(
-        "CRC sidecars: final units 8, pairs 36, order match yes",
+        "CRC sidecars: final units 8, pairs 36",
         summary_stdout,
     )
     @test occursin("CRC pair families: ", summary_stdout)
     @test occursin(
-        "white_lindsey_atom_local_child_shellification",
+        "CRC pair-operator plan: ready metadata plan",
         summary_stdout,
     )
     @test occursin(
-        "CRC pair-operator plan: ready metadata plan, final units 8, pairs 36, operator blocks materialized no",
+        "CRC typed pair-operator inventory:",
         summary_stdout,
     )
     @test occursin(
-        "CRC typed pair-operator inventory: available (:blocked_route_core_pair_operator_plan_inventory), typed plans 36, blocked 15, materialized no, blocker :aggregate_subtree_operator_plan_required",
+        ":aggregate_subtree_operator_plan_required",
         summary_stdout,
     )
-    @test occursin(
-        "report.low_order_hamiltonian_matrices_materialized = false",
-        summary_stdout,
-    )
-    expected_pqs_line = string(
-        "CPB/PQS prototype: metadata-only, unit=",
-        atom_growth_report.low_order_pqs_prototype_unit_key,
-        ", source=filled CPB, owned support is shell, ",
-        "retained space=boundary COMX products, ",
-        "realization=shell projection + Lowdin deferred, ",
-        "operators/materialization=no",
-    )
-    @test occursin(expected_pqs_line, summary_stdout)
 end

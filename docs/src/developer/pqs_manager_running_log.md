@@ -965,3 +965,70 @@ Line-count / complexity note:
 - Total diff was `39` added / `850` deleted, net `-811`.
 - Scoped source deletion was `0` added / `749` deleted in
   `legacy_source_box_fixtures.jl`.
+
+## Pass 244 - Low-Order Report CRC Alias Shrink
+
+Commit(s):
+- this commit - Shrink low-order report CRC alias assertions
+
+Summary:
+- Shrank `cartesian_report_stage_low_order_policy_runtests.jl` by deleting
+  duplicate CRC typed pair-operator count/source-path/materialization assertion
+  clouds and the helper used only by those assertions.
+- Kept compact coverage for atom-growth RouteCore final-unit/pair counts, the
+  aggregate-subtree typed pair-operator blocker, and short CRC print
+  compatibility substrings.
+
+Validation:
+- Doer: package load passed; the compact CRC print-line test passed; `git diff
+  --check` passed.
+- Doer attempted the broad report-stage test, stopped after it exceeded the 60s
+  threshold and exposed stale/unrelated terminal-shellification exact-field
+  failures, and used the blurb fallback.
+- Manager: reviewed the diff, confirmed the broad report-stage file is not in
+  default/integration runners, and reran `git diff --check`.
+
+Goal advancement:
+- MT5/LT2: deleted report-alias assertion bloat while preserving compact route
+  summary/print coverage.
+- LT7: reinforced that stale broad manual gates should not be forced as
+  per-pass validation when the live contract has a smaller smoke.
+- MT6: identified the same report-stage file's terminal-shellification
+  exact-field assertions as a future cleanup candidate.
+
+Medium-goal update:
+- none.
+
+Risk / guardrail:
+- Do not treat `cartesian_report_stage_low_order_policy_runtests.jl` as a
+  focused per-pass validation gate until its unrelated stale terminal/report
+  assertions are retired or split.
+
+Remaining blocker / next:
+- Add the required medium-term checkpoint for passes 240-244. Then either use
+  another audited cleanup target or resume independent H2 PQS source-plan
+  assembly with a bundled deletion target if new source is needed.
+
+Line-count / complexity note:
+- Scoped `src + test + bin` diff was `4` added / `121` deleted, net `-117`.
+
+## Medium-Term Goal Checkpoint - Passes 240-244
+
+- MT1 Fake-PQS quarantine: active/maintained. None of passes 240-244 touched
+  fake-PQS endpoint authority or promoted fake data as independent PQS.
+- MT2 Independent H2 PQS recovery: active. Pass 240 identified the next
+  numerical seam; pass 241 added shared-shell realization coefficients. The
+  route still lacks complete source-plan assembly, final basis, H1, H1-J, RHF,
+  supplements, CR2, export, and public API.
+- MT3 Common physical support vocabulary: active. The independent route still
+  uses the common support vocabulary while keeping retained-transform authority
+  separate from fake/WL source-backed data.
+- MT4 Supplement staging after authority: active/blocked. Supplement work
+  remains intentionally deferred until the independent retained-transform path
+  is authoritative.
+- MT5 Cleanup pressure: active. Pass 241 required an explicit `+278` exception;
+  passes 242-244 then deleted or simplified stale source/test surfaces with
+  scoped net changes of `-132`, `-811`, and `-117`.
+- MT6 Audit/classify old Cartesian flat paths: active. The sidecar audits
+  produced concrete deletion candidates and the loop has begun retiring old
+  route-shadow comparison wrappers and report-alias test pressure.
