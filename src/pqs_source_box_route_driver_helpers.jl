@@ -7625,10 +7625,15 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
             parent,
             diatomic_physical_gausslet_target_payload,
         )
+    diatomic_physical_gausslet_supplement_representation_payload =
+        _pqs_source_box_route_driver_diatomic_physical_gausslet_supplement_representation_payload(
+            diatomic_physical_gausslet_supplement_request_payload,
+        )
     diatomic_physical_gausslet_supplement_preflight_payload =
         _pqs_source_box_route_driver_diatomic_physical_gausslet_supplement_preflight_payload(
             diatomic_physical_gausslet_target_payload,
             diatomic_physical_gausslet_supplement_request_payload,
+            diatomic_physical_gausslet_supplement_representation_payload,
         )
     diatomic_physical_gausslet_source_plan_candidate_payload =
         _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_candidate_payload(
@@ -7803,6 +7808,7 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
         low_order_assembly,
         diatomic_physical_gausslet_target_payload,
         diatomic_physical_gausslet_supplement_request_payload,
+        diatomic_physical_gausslet_supplement_representation_payload,
         diatomic_physical_gausslet_supplement_preflight_payload,
         diatomic_physical_gausslet_source_plan_candidate_payload,
         diatomic_physical_gausslet_source_plan_payload,
@@ -8253,6 +8259,10 @@ function _pqs_source_box_route_driver_physical_gausslet_target_report_fields(
         hasproperty(assembly, :diatomic_physical_gausslet_supplement_request_payload) ?
         assembly.diatomic_physical_gausslet_supplement_request_payload :
         nothing
+    supplement_representation_payload =
+        hasproperty(assembly, :diatomic_physical_gausslet_supplement_representation_payload) ?
+        assembly.diatomic_physical_gausslet_supplement_representation_payload :
+        nothing
     source_plan_payload =
         hasproperty(assembly, :diatomic_physical_gausslet_source_plan_payload) ?
         assembly.diatomic_physical_gausslet_source_plan_payload :
@@ -8307,6 +8317,17 @@ function _pqs_source_box_route_driver_physical_gausslet_target_report_fields(
             supplement_request_representation_status = :not_available,
             supplement_request_required_provider_blocks = (),
             supplement_request_missing_fact_labels = (),
+            supplement_representation_status = :not_available,
+            supplement_representation_blocker =
+                :missing_physical_gausslet_supplement_representation_payload,
+            supplement_representation_object_kind = :not_available,
+            supplement_representation_basis_name = nothing,
+            supplement_representation_lmax = nothing,
+            supplement_representation_atom_symbols = (),
+            supplement_representation_center_count = 0,
+            supplement_representation_orbital_count = 0,
+            supplement_representation_matrices_materialized = false,
+            supplement_representation_provider_blocks_materialized = false,
         ) :
         payload.summary
     if !isnothing(supplement_request_payload)
@@ -8334,6 +8355,31 @@ function _pqs_source_box_route_driver_physical_gausslet_target_report_fields(
                     request_summary.missing_fact_labels,
                 supplement_request_matrices_materialized =
                     request_summary.matrices_materialized,
+            ),
+        )
+    end
+    if !isnothing(supplement_representation_payload)
+        representation_summary = supplement_representation_payload.summary
+        summary = merge(
+            summary,
+            (;
+                supplement_representation_status = representation_summary.status,
+                supplement_representation_blocker = representation_summary.blocker,
+                supplement_representation_object_kind =
+                    representation_summary.object_kind,
+                supplement_representation_basis_name =
+                    representation_summary.basis_name,
+                supplement_representation_lmax = representation_summary.lmax,
+                supplement_representation_atom_symbols =
+                    representation_summary.atom_symbols,
+                supplement_representation_center_count =
+                    representation_summary.center_count,
+                supplement_representation_orbital_count =
+                    representation_summary.orbital_count,
+                supplement_representation_matrices_materialized =
+                    representation_summary.matrices_materialized,
+                supplement_representation_provider_blocks_materialized =
+                    representation_summary.provider_blocks_materialized,
             ),
         )
     end

@@ -31,6 +31,9 @@ const _H2_PHYSICAL_PQS_INPUT =
             @test file["supplement_request/blocker"] === nothing
             @test file["supplement_request/supplement_policy"] === :none
             @test file["supplement_request/matrices_materialized"] == false
+            @test file["supplement_representation/status"] === :not_requested
+            @test file["supplement_representation/blocker"] === nothing
+            @test file["supplement_representation/orbital_count"] == 0
             @test file["supplement_preflight/status"] === :not_requested
             @test file["supplement_preflight/blocker"] === nothing
             @test Tuple(file["supplement_preflight/missing_fact_labels"]) == ()
@@ -197,41 +200,67 @@ const _H2_PHYSICAL_PQS_INPUT =
             @test file["route/supplement_preflight_status"] ===
                   :blocked_pqs_physical_gausslet_mwg_residual_gto_preflight
             @test file["route/supplement_preflight_blocker"] ===
-                  :missing_gto_supplement_representation
-            @test file["supplement_request/status"] ===
-                  :blocked_pqs_physical_gausslet_mwg_residual_gto_request
-            @test file["supplement_request/blocker"] ===
-                  :missing_gto_supplement_representation
-            @test file["supplement_request/fixture_label"] ===
-                  :h2_r4_physical_gausslet_q5
-            @test file["supplement_request/supplement_policy"] ===
-                  :mwg_residual_gto
-            @test file["supplement_request/basis_name"] == "H/cc-pVTZ"
-            @test file["supplement_request/lmax"] == 1
-            @test Tuple(file["supplement_request/atom_symbols"]) == ("H", "H")
-            @test Tuple(file["supplement_request/nuclear_charges"]) == (1, 1)
-            @test file["supplement_request/bond_axis"] === :z
+                  :missing_provider_gto_supplement_blocks
+            request_fingerprint = (;
+                status = file["supplement_request/status"],
+                blocker = file["supplement_request/blocker"],
+                policy = file["supplement_request/supplement_policy"],
+                representation_status =
+                    file["supplement_request/representation_status"],
+                missing = Tuple(file["supplement_request/missing_fact_labels"]),
+            )
+            @test request_fingerprint == (;
+                status = :available_pqs_physical_gausslet_supplement_request,
+                blocker = nothing,
+                policy = :mwg_residual_gto,
+                representation_status =
+                    :available_pqs_physical_gausslet_gto_supplement_representation,
+                missing = (:missing_provider_gto_supplement_blocks,),
+            )
+            @test (
+                file["supplement_request/fixture_label"],
+                file["supplement_request/basis_name"],
+                file["supplement_request/lmax"],
+                Tuple(file["supplement_request/atom_symbols"]),
+                Tuple(file["supplement_request/nuclear_charges"]),
+                file["supplement_request/bond_axis"],
+            ) == (
+                :h2_r4_physical_gausslet_q5,
+                "H/cc-pVTZ",
+                1,
+                ("H", "H"),
+                (1, 1),
+                :z,
+            )
             @test file["supplement_request/bond_length"] ≈ 4.0
-            @test file["supplement_request/representation_status"] ===
-                  :not_materialized_pqs_physical_gausslet_gto_supplement_representation
-            @test Tuple(file["supplement_request/required_provider_blocks"]) ==
-                  (
-                      :mixed_gausslet_gto_blocks,
-                      :gto_gto_blocks,
-                      :combined_raw_moment_matrices,
-                      :residual_mwg_representation,
-                      :combined_density_density_readiness,
-                  )
-            @test Tuple(file["supplement_request/missing_fact_labels"]) ==
-                  (
-                      :missing_gto_supplement_representation,
-                      :missing_provider_gto_supplement_blocks,
-                  )
             @test file["supplement_request/matrices_materialized"] == false
+            @test (
+                file["supplement_representation/status"],
+                file["supplement_representation/blocker"],
+                file["supplement_representation/object_kind"],
+                file["supplement_representation/basis_name"],
+                file["supplement_representation/lmax"],
+                Tuple(file["supplement_representation/atom_symbols"]),
+                file["supplement_representation/center_count"],
+                file["supplement_representation/orbital_count"],
+                file["supplement_representation/matrices_materialized"],
+                file["supplement_representation/provider_blocks_materialized"],
+            ) == (
+                :available_pqs_physical_gausslet_gto_supplement_representation,
+                nothing,
+                :cartesian_gaussian_shell_supplement_representation,
+                "H/cc-pVTZ",
+                1,
+                ("H", "H"),
+                2,
+                18,
+                false,
+                false,
+            )
             @test file["supplement_preflight/status"] ===
                   :blocked_pqs_physical_gausslet_mwg_residual_gto_preflight
             @test file["supplement_preflight/blocker"] ===
-                  :missing_gto_supplement_representation
+                  :missing_provider_gto_supplement_blocks
             @test Tuple(file["supplement_preflight/support_counts"]) ==
                   (275, 578, 362)
             @test Tuple(file["supplement_preflight/retained_counts"]) ==
@@ -249,7 +278,6 @@ const _H2_PHYSICAL_PQS_INPUT =
                   )
             @test Tuple(file["supplement_preflight/missing_fact_labels"]) ==
                   (
-                      :missing_gto_supplement_representation,
                       :missing_provider_gto_supplement_blocks,
                       :missing_mixed_gausslet_gto_blocks,
                       :missing_gto_gto_blocks,

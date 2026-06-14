@@ -618,6 +618,17 @@ function _pqs_source_box_route_driver_write_pqs_diatomic_readiness_artifact!(
             supplement_request_required_provider_blocks = (),
             supplement_request_missing_fact_labels = (),
             supplement_request_matrices_materialized = false,
+            supplement_representation_status = :not_available,
+            supplement_representation_blocker =
+                :missing_physical_gausslet_supplement_representation_payload,
+            supplement_representation_object_kind = :not_available,
+            supplement_representation_basis_name = nothing,
+            supplement_representation_lmax = nothing,
+            supplement_representation_atom_symbols = (),
+            supplement_representation_center_count = 0,
+            supplement_representation_orbital_count = 0,
+            supplement_representation_matrices_materialized = false,
+            supplement_representation_provider_blocks_materialized = false,
         ),
     )
     wl_reference_candidate_status =
@@ -754,6 +765,32 @@ function _pqs_source_box_route_driver_write_pqs_diatomic_readiness_artifact!(
                 get(target, :supplement_request_missing_fact_labels, ()),
             matrices_materialized =
                 get(target, :supplement_request_matrices_materialized, false),
+        ),
+    )
+    _pqs_source_box_route_driver_write_group!(
+        file,
+        "supplement_representation",
+        (;
+            status = get(target, :supplement_representation_status, nothing),
+            blocker = get(target, :supplement_representation_blocker, nothing),
+            object_kind =
+                get(target, :supplement_representation_object_kind, nothing),
+            basis_name = get(target, :supplement_representation_basis_name, nothing),
+            lmax = get(target, :supplement_representation_lmax, nothing),
+            atom_symbols =
+                get(target, :supplement_representation_atom_symbols, ()),
+            center_count =
+                get(target, :supplement_representation_center_count, 0),
+            orbital_count =
+                get(target, :supplement_representation_orbital_count, 0),
+            matrices_materialized =
+                get(target, :supplement_representation_matrices_materialized, false),
+            provider_blocks_materialized =
+                get(
+                    target,
+                    :supplement_representation_provider_blocks_materialized,
+                    false,
+                ),
         ),
     )
     _pqs_source_box_route_driver_write_group!(
