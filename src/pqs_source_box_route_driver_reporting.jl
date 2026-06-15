@@ -67,11 +67,16 @@ end
 function _pqs_source_box_route_driver_durable_report(report)
     return (;
         (
-            field => field in (:parent_basis_object, :parent_axis_bundle_object) ?
+            field =>
+                field in (
+                    :parent_basis_object,
+                    :parent_axis_bundle_object,
+                    :pqs_gto_sidecar_inputs,
+                ) ?
                      nothing :
                      getproperty(report, field) for field in keys(report)
         )...,
-        parent_objects_elided_for_durable_report = true,
+        heavy_objects_elided_for_durable_report = true,
     )
 end
 

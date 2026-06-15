@@ -65,6 +65,11 @@ const CARTESIAN_LINE_CASES = Dict(
             input =
                 "test/driver_inputs/h2_pqs_q5_independent_source_box_r4_supplement_preflight.jl",
         ),
+        (;
+            name = "h2_pqs_q5_independent_source_box_r4_gto_materialized",
+            input =
+                "test/driver_inputs/h2_pqs_q5_independent_source_box_r4_supplement_materialized.jl",
+        ),
     ],
 )
 
