@@ -1529,86 +1529,6 @@ function _pqs_source_box_route_driver_standard_unit_inventory_summary(route_fact
     )
 end
 
-function _pqs_source_box_route_driver_report_terminal_route_aliases(
-    low_order_route_summary,
-)
-    return (;
-        low_order_terminal_shellification_selected =
-            low_order_route_summary.terminal_shellification_selected,
-        low_order_terminal_shellification_summary_available =
-            low_order_route_summary.terminal_shellification_summary_available,
-        low_order_terminal_shellification_scaffold_available =
-            low_order_route_summary.terminal_shellification_scaffold_available,
-        low_order_terminal_shellification_scaffold =
-            low_order_route_summary.terminal_shellification_scaffold,
-        low_order_terminal_shellification_region_count =
-            low_order_route_summary.terminal_shellification_region_count,
-        low_order_terminal_shellification_unit_inventory_available =
-            low_order_route_summary.terminal_shellification_unit_inventory_available,
-        low_order_terminal_shellification_unit_inventory =
-            low_order_route_summary.terminal_shellification_unit_inventory,
-        low_order_terminal_shellification_unit_count =
-            low_order_route_summary.terminal_shellification_unit_count,
-        low_order_terminal_shellification_unit_keys =
-            low_order_route_summary.terminal_shellification_unit_keys,
-        low_order_terminal_shellification_unit_roles =
-            low_order_route_summary.terminal_shellification_unit_roles,
-        low_order_terminal_shellification_unit_kinds =
-            low_order_route_summary.terminal_shellification_unit_kinds,
-        low_order_terminal_shellification_unit_support_counts =
-            low_order_route_summary.terminal_shellification_unit_support_counts,
-        low_order_terminal_shellification_lowering_contract_inventory_available =
-            low_order_route_summary.terminal_shellification_lowering_contract_inventory_available,
-        low_order_terminal_shellification_lowering_contract_inventory_status =
-            low_order_route_summary.terminal_shellification_lowering_contract_inventory_status,
-        low_order_terminal_shellification_lowering_contract_inventory =
-            low_order_route_summary.terminal_shellification_lowering_contract_inventory,
-        low_order_terminal_shellification_lowering_plan_available =
-            low_order_route_summary.terminal_shellification_lowering_plan_available,
-        low_order_terminal_shellification_lowering_plan_status =
-            low_order_route_summary.terminal_shellification_lowering_plan_status,
-        low_order_terminal_shellification_lowering_plan =
-            low_order_route_summary.terminal_shellification_lowering_plan,
-        low_order_terminal_shellification_lowering_summary =
-            low_order_route_summary.terminal_shellification_lowering_summary,
-        low_order_terminal_shellification_lowering_contract_count =
-            low_order_route_summary.terminal_shellification_lowering_contract_count,
-        low_order_terminal_shellification_lowering_contract_kinds =
-            low_order_route_summary.terminal_shellification_lowering_contract_kinds,
-        low_order_terminal_shellification_lowering_contract_kind_counts =
-            low_order_route_summary.terminal_shellification_lowering_contract_kind_counts,
-        low_order_terminal_shellification_contract_counts_by_unit =
-            low_order_route_summary.terminal_shellification_contract_counts_by_unit,
-        _pqs_source_box_route_driver_report_selected_terminal_lowering_fields(
-            low_order_route_summary,
-        )...,
-        low_order_terminal_shellification_lw_complete_shell_cpb_count =
-            low_order_route_summary.terminal_shellification_lw_complete_shell_cpb_count,
-        low_order_terminal_shellification_lw_complete_shell_cpb_family_counts =
-            low_order_route_summary.terminal_shellification_lw_complete_shell_cpb_family_counts,
-        low_order_terminal_shellification_final_retained_unit_inventory_available =
-            low_order_route_summary.terminal_shellification_final_retained_unit_inventory_available,
-        low_order_terminal_shellification_transform_contracts_available =
-            low_order_route_summary.terminal_shellification_transform_contracts_available,
-        low_order_terminal_shellification_pair_inventory_available =
-            low_order_route_summary.terminal_shellification_pair_inventory_available,
-        low_order_terminal_shellification_pair_inventory_status =
-            low_order_route_summary.terminal_shellification_pair_inventory_status,
-        low_order_terminal_shellification_pair_materialization_status =
-            low_order_route_summary.terminal_shellification_pair_materialization_status,
-        low_order_terminal_shellification_assembly_materialization_status =
-            low_order_route_summary.terminal_shellification_assembly_materialization_status,
-        low_order_terminal_shellification_central_gap_region_count =
-            low_order_route_summary.terminal_shellification_central_gap_region_count,
-        low_order_terminal_shellification_central_midpoint_slab_count =
-            low_order_route_summary.terminal_shellification_central_midpoint_slab_count,
-        low_order_terminal_shellification_central_distorted_product_box_count =
-            low_order_route_summary.terminal_shellification_central_distorted_product_box_count,
-        low_order_terminal_shellification_central_distorted_product_box_metadata =
-            low_order_route_summary.terminal_shellification_central_distorted_product_box_metadata,
-    )
-end
-
 function _pqs_source_box_route_driver_route_facts(route_skeleton)
     unit_inventory =
         _pqs_source_box_route_driver_unit_inventory(route_skeleton.retained_units)
@@ -1921,9 +1841,6 @@ function _pqs_source_box_route_driver_report(
         low_order_assembly_kind = low_order_route_summary.assembly_kind,
         atom_growth_low_order_route_selected =
             low_order_route_summary.atom_growth_selected,
-        _pqs_source_box_route_driver_report_terminal_route_aliases(
-            low_order_route_summary,
-        )...,
         legacy_source_low_order_route_selected =
             low_order_route_summary.legacy_source_selected,
         low_order_plan_authority = low_order_route_summary.plan_authority,
@@ -1991,42 +1908,6 @@ function _pqs_source_box_route_driver_report(
             low_order_route_summary.route_core_pair_operator_plan,
         low_order_route_core_pair_operator_plan_blocker =
             low_order_route_summary.route_core_pair_operator_plan_blocker,
-        low_order_route_core_typed_pair_operator_plan_inventory_available =
-            low_order_route_summary.route_core_typed_pair_operator_plan_inventory_available,
-        low_order_route_core_typed_pair_operator_plan_inventory_status =
-            low_order_route_summary.route_core_typed_pair_operator_plan_inventory_status,
-        low_order_route_core_typed_pair_operator_plan_blocker =
-            low_order_route_summary.route_core_typed_pair_operator_plan_blocker,
-        low_order_route_core_typed_pair_operator_plan_count =
-            low_order_route_summary.route_core_typed_pair_operator_plan_count,
-        low_order_route_core_typed_pair_operator_plan_blocked_count =
-            low_order_route_summary.route_core_typed_pair_operator_plan_blocked_count,
-        low_order_route_core_typed_pair_operator_plan_materialized =
-            low_order_route_summary.route_core_typed_pair_operator_plan_materialized,
-        low_order_route_core_typed_pair_operator_source_path_counts =
-            low_order_route_summary.route_core_typed_pair_operator_source_path_counts,
-        low_order_route_core_typed_pair_operator_final_block_path_counts =
-            low_order_route_summary.route_core_typed_pair_operator_final_block_path_counts,
-        low_order_route_core_typed_pair_operator_materialization_status_counts =
-            low_order_route_summary.route_core_typed_pair_operator_materialization_status_counts,
-        low_order_route_core_typed_pair_operator_blocker_counts =
-            low_order_route_summary.route_core_typed_pair_operator_blocker_counts,
-        low_order_route_core_typed_pair_operator_plan_family_counts =
-            low_order_route_summary.route_core_typed_pair_operator_plan_family_counts,
-        low_order_route_core_typed_pair_operator_materialization_ready =
-            low_order_route_summary.route_core_typed_pair_operator_materialization_ready,
-        low_order_route_core_typed_pair_operator_materialization_readiness_status =
-            low_order_route_summary.route_core_typed_pair_operator_materialization_readiness_status,
-        low_order_route_core_typed_pair_operator_materialization_readiness_blocker =
-            low_order_route_summary.route_core_typed_pair_operator_materialization_readiness_blocker,
-        low_order_route_core_typed_pair_operator_materialization_readiness_requirements =
-            low_order_route_summary.route_core_typed_pair_operator_materialization_readiness_requirements,
-        low_order_route_core_typed_pair_operator_materialization_readiness_plan_count =
-            low_order_route_summary.route_core_typed_pair_operator_materialization_readiness_plan_count,
-        low_order_route_core_typed_pair_operator_materialization_readiness_blocked_count =
-            low_order_route_summary.route_core_typed_pair_operator_materialization_readiness_blocked_count,
-        low_order_route_core_typed_pair_operator_materialization_readiness_materialized_count =
-            low_order_route_summary.route_core_typed_pair_operator_materialization_readiness_materialized_count,
         low_order_lw_complete_shell_cpb_enumeration_available =
             low_order_route_summary.lw_complete_shell_cpb_enumeration_available,
         low_order_lw_complete_shell_region_count =
@@ -3658,35 +3539,6 @@ function _pqs_source_box_route_driver_selected_terminal_lowering_fields(
     )
 end
 
-function _pqs_source_box_route_driver_report_selected_terminal_lowering_fields(
-    low_order_route_summary,
-)
-    return (;
-        low_order_terminal_shellification_selected_lowering_contract_inventory_available =
-            low_order_route_summary.terminal_shellification_selected_lowering_contract_inventory_available,
-        low_order_terminal_shellification_selected_lowering_contract_inventory_status =
-            low_order_route_summary.terminal_shellification_selected_lowering_contract_inventory_status,
-        low_order_terminal_shellification_selected_lowering_contract_inventory =
-            low_order_route_summary.terminal_shellification_selected_lowering_contract_inventory,
-        low_order_terminal_shellification_selected_lowering_family =
-            low_order_route_summary.terminal_shellification_selected_lowering_family,
-        low_order_terminal_shellification_selected_contract_count =
-            low_order_route_summary.terminal_shellification_selected_contract_count,
-        low_order_terminal_shellification_selected_contract_kinds =
-            low_order_route_summary.terminal_shellification_selected_contract_kinds,
-        low_order_terminal_shellification_selected_contract_kind_counts =
-            low_order_route_summary.terminal_shellification_selected_contract_kind_counts,
-        low_order_terminal_shellification_selected_contract_counts_by_unit =
-            low_order_route_summary.terminal_shellification_selected_contract_counts_by_unit,
-        low_order_terminal_shellification_all_units_have_exactly_one_selected_contract =
-            low_order_route_summary.terminal_shellification_all_units_have_exactly_one_selected_contract,
-        low_order_terminal_shellification_unselected_contract_count =
-            low_order_route_summary.terminal_shellification_unselected_contract_count,
-        low_order_terminal_shellification_unselected_contract_kinds =
-            low_order_route_summary.terminal_shellification_unselected_contract_kinds,
-    )
-end
-
 function _pqs_source_box_route_driver_selected_terminal_crc_sidecar_summary(
     selected_terminal_lowering_contract_inventory,
 )
@@ -3723,135 +3575,6 @@ function _pqs_source_box_route_driver_selected_terminal_crc_sidecar_summary(
         hamiltonian_data_materialized =
             sidecar_inventory.hamiltonian_data_materialized,
         artifacts_materialized = sidecar_inventory.artifacts_materialized,
-    )
-end
-
-function _pqs_source_box_route_driver_source_selected_crc_sidecar_summary(
-    source,
-    selected::Bool,
-)
-    !selected &&
-        return _pqs_source_box_route_driver_selected_terminal_crc_sidecar_summary(nothing)
-    if hasproperty(source, :terminal_shellification_selected_crc_sidecar_summary)
-        return source.terminal_shellification_selected_crc_sidecar_summary
-    end
-    if hasproperty(source, :terminal_route_state) &&
-       hasproperty(source.terminal_route_state, :selected_crc_sidecar_summary)
-        return source.terminal_route_state.selected_crc_sidecar_summary
-    end
-    return _pqs_source_box_route_driver_selected_terminal_crc_sidecar_summary(nothing)
-end
-
-function _pqs_source_box_route_driver_terminal_shellification_alias_fields(
-    source,
-    selected::Bool;
-    selected_status = :not_selected,
-    include_crc_sidecar_summary::Bool = true,
-)
-    selected_fields =
-        _pqs_source_box_route_driver_selected_terminal_lowering_fields(
-            selected ?
-            source.terminal_shellification_selected_lowering_contract_inventory :
-            nothing,
-            selected ?
-            source.terminal_shellification_selected_lowering_contract_inventory_status :
-            selected_status,
-            selected ?
-            source.terminal_shellification_selected_lowering_family :
-            nothing,
-        )
-    crc_sidecar_fields =
-        include_crc_sidecar_summary ?
-        (;
-            terminal_shellification_selected_crc_sidecar_summary =
-                _pqs_source_box_route_driver_source_selected_crc_sidecar_summary(
-                    source,
-                    selected,
-                ),
-        ) :
-        (;)
-
-    return merge(
-        (;
-            terminal_shellification_scaffold_available =
-                selected && source.terminal_shellification_scaffold_available,
-            terminal_shellification_scaffold =
-                selected ? source.terminal_shellification_scaffold : nothing,
-            terminal_shellification_region_count =
-                selected ? source.terminal_shellification_region_count : 0,
-            terminal_shellification_unit_inventory_available =
-                selected && source.terminal_shellification_unit_inventory_available,
-            terminal_shellification_unit_inventory =
-                selected ? source.terminal_shellification_unit_inventory : nothing,
-            terminal_shellification_unit_count =
-                selected ? source.terminal_shellification_unit_count : 0,
-            terminal_shellification_unit_keys =
-                selected ? source.terminal_shellification_unit_keys : (),
-            terminal_shellification_unit_roles =
-                selected ? source.terminal_shellification_unit_roles : (),
-            terminal_shellification_unit_kinds =
-                selected ? source.terminal_shellification_unit_kinds : (),
-            terminal_shellification_unit_support_counts =
-                selected ? source.terminal_shellification_unit_support_counts : (),
-            terminal_shellification_lowering_contract_inventory_available =
-                selected &&
-                source.terminal_shellification_lowering_contract_inventory_available,
-            terminal_shellification_lowering_contract_inventory_status =
-                selected ?
-                source.terminal_shellification_lowering_contract_inventory_status :
-                :not_selected,
-            terminal_shellification_lowering_contract_inventory =
-                selected ?
-                source.terminal_shellification_lowering_contract_inventory :
-                nothing,
-            terminal_shellification_lowering_contract_count =
-                selected ?
-                source.terminal_shellification_lowering_contract_count :
-                0,
-            terminal_shellification_lowering_contract_kinds =
-                selected ?
-                source.terminal_shellification_lowering_contract_kinds :
-                (),
-            terminal_shellification_lowering_contract_kind_counts =
-                selected ?
-                source.terminal_shellification_lowering_contract_kind_counts :
-                _pqs_source_box_route_driver_empty_terminal_lowering_contract_kind_counts(),
-        ),
-        selected_fields,
-        crc_sidecar_fields,
-        (;
-            terminal_shellification_contract_counts_by_unit =
-                selected ?
-                source.terminal_shellification_contract_counts_by_unit :
-                (),
-            terminal_shellification_lw_complete_shell_cpb_count =
-                selected ?
-                source.terminal_shellification_lw_complete_shell_cpb_count :
-                0,
-            terminal_shellification_lw_complete_shell_cpb_family_counts =
-                selected ?
-                source.terminal_shellification_lw_complete_shell_cpb_family_counts :
-                (facet_cpb = 0, edge_cpb = 0, corner_cpb = 0),
-            terminal_shellification_final_retained_unit_inventory_available =
-                selected &&
-                source.terminal_shellification_final_retained_unit_inventory_available,
-            terminal_shellification_central_gap_region_count =
-                selected ?
-                source.terminal_shellification_central_gap_region_count :
-                0,
-            terminal_shellification_central_midpoint_slab_count =
-                selected ?
-                source.terminal_shellification_central_midpoint_slab_count :
-                0,
-            terminal_shellification_central_distorted_product_box_count =
-                selected ?
-                source.terminal_shellification_central_distorted_product_box_count :
-                0,
-            terminal_shellification_central_distorted_product_box_metadata =
-                selected ?
-                source.terminal_shellification_central_distorted_product_box_metadata :
-                (),
-        ),
     )
 end
 
@@ -4974,11 +4697,6 @@ function _pqs_source_box_route_driver_transform_stage_low_order_summary(units)
         terminal_shellification_transforms_selected,
         legacy_source_transforms_selected,
         terminal_shellification_transform_summary_available,
-        _pqs_source_box_route_driver_terminal_shellification_alias_fields(
-            low_order_units,
-            terminal_shellification_transforms_selected;
-            include_crc_sidecar_summary = false,
-        )...,
         terminal_shellification_transform_contracts_available = false,
         terminal_shellification_transform_materialization_status,
         coefficient_transforms_materialized = false,
@@ -5169,106 +4887,6 @@ function _pqs_source_box_route_driver_route_core_pair_family_counts(
             pair_count = count(==(pair_family), family_keys),
             pair_family_source = :crc_final_unit_lowering_recipes,
         ) for pair_family in unique_family_keys
-    )
-end
-
-function _pqs_source_box_route_driver_route_core_typed_pair_operator_plan_unavailable_metadata(
-    status,
-    blocker,
-)
-    return (;
-        route_core_typed_pair_operator_plan_inventory_available = false,
-        route_core_typed_pair_operator_plan_inventory_status = status,
-        route_core_typed_pair_operator_plan_blocker = blocker,
-        route_core_typed_pair_operator_plan_count = 0,
-        route_core_typed_pair_operator_plan_blocked_count = 0,
-        route_core_typed_pair_operator_plan_materialized = false,
-        route_core_typed_pair_operator_source_path_counts = (),
-        route_core_typed_pair_operator_final_block_path_counts = (),
-        route_core_typed_pair_operator_materialization_status_counts = (),
-        route_core_typed_pair_operator_blocker_counts = (),
-        route_core_typed_pair_operator_plan_family_counts = (),
-        route_core_typed_pair_operator_materialization_ready = false,
-        route_core_typed_pair_operator_materialization_readiness_status =
-            status,
-        route_core_typed_pair_operator_materialization_readiness_blocker =
-            blocker,
-        route_core_typed_pair_operator_materialization_readiness_requirements =
-            CartesianRouteCore.pair_operator_materialization_readiness_requirements(),
-        route_core_typed_pair_operator_materialization_readiness_plan_count = 0,
-        route_core_typed_pair_operator_materialization_readiness_blocked_count = 0,
-        route_core_typed_pair_operator_materialization_readiness_materialized_count = 0,
-    )
-end
-
-function _pqs_source_box_route_driver_route_core_typed_pair_operator_plan_metadata(
-    route_core_sidecar_inventory,
-)
-    if isnothing(route_core_sidecar_inventory) ||
-       !hasproperty(
-           route_core_sidecar_inventory,
-           :crc_pair_operator_plan_inventory_available,
-       )
-        return _pqs_source_box_route_driver_route_core_typed_pair_operator_plan_unavailable_metadata(
-            :blocked_missing_route_core_sidecar_inventory,
-            :missing_route_core_sidecar_inventory,
-        )
-    end
-
-    if !route_core_sidecar_inventory.crc_pair_operator_plan_inventory_available
-        return _pqs_source_box_route_driver_route_core_typed_pair_operator_plan_unavailable_metadata(
-            route_core_sidecar_inventory.crc_pair_operator_plan_inventory_status,
-            route_core_sidecar_inventory.crc_pair_operator_plan_blocker,
-        )
-    end
-
-    plan_inventory =
-        route_core_sidecar_inventory.crc_pair_operator_plan_inventory
-    if isnothing(plan_inventory)
-        return _pqs_source_box_route_driver_route_core_typed_pair_operator_plan_unavailable_metadata(
-            :blocked_missing_route_core_typed_pair_operator_plan_inventory,
-            :missing_route_core_typed_pair_operator_plan_inventory,
-        )
-    end
-
-    return (;
-        route_core_typed_pair_operator_plan_inventory_available = true,
-        route_core_typed_pair_operator_plan_inventory_status =
-            route_core_sidecar_inventory.crc_pair_operator_plan_inventory_status,
-        route_core_typed_pair_operator_plan_blocker =
-            route_core_sidecar_inventory.crc_pair_operator_plan_blocker,
-        route_core_typed_pair_operator_plan_count =
-            route_core_sidecar_inventory.crc_pair_operator_plan_count,
-        route_core_typed_pair_operator_plan_blocked_count =
-            route_core_sidecar_inventory.crc_pair_operator_plan_blocked_count,
-        route_core_typed_pair_operator_plan_materialized =
-            route_core_sidecar_inventory.crc_pair_operator_plan_materialized,
-        route_core_typed_pair_operator_source_path_counts =
-            CartesianRouteCore.pair_operator_source_path_counts(plan_inventory),
-        route_core_typed_pair_operator_final_block_path_counts =
-            CartesianRouteCore.pair_operator_final_block_path_counts(plan_inventory),
-        route_core_typed_pair_operator_materialization_status_counts =
-            CartesianRouteCore.pair_operator_materialization_status_counts(
-                plan_inventory,
-            ),
-        route_core_typed_pair_operator_blocker_counts =
-            CartesianRouteCore.pair_operator_blocker_counts(plan_inventory),
-        route_core_typed_pair_operator_plan_family_counts =
-            CartesianRouteCore.pair_operator_plan_family_counts(plan_inventory),
-        route_core_typed_pair_operator_materialization_ready =
-            route_core_sidecar_inventory.crc_pair_operator_materialization_ready,
-        route_core_typed_pair_operator_materialization_readiness_status =
-            route_core_sidecar_inventory.crc_pair_operator_materialization_readiness_status,
-        route_core_typed_pair_operator_materialization_readiness_blocker =
-            route_core_sidecar_inventory.crc_pair_operator_materialization_readiness_blocker,
-        route_core_typed_pair_operator_materialization_readiness_requirements =
-            route_core_sidecar_inventory.crc_pair_operator_materialization_readiness_requirements,
-        route_core_typed_pair_operator_materialization_readiness_plan_count =
-            route_core_sidecar_inventory.crc_pair_operator_materialization_readiness_plan_count,
-        route_core_typed_pair_operator_materialization_readiness_blocked_count =
-            route_core_sidecar_inventory.crc_pair_operator_materialization_readiness_blocked_count,
-        route_core_typed_pair_operator_materialization_readiness_materialized_count =
-            route_core_sidecar_inventory.crc_pair_operator_materialization_readiness_materialized_count,
     )
 end
 
@@ -5553,17 +5171,9 @@ function _pqs_source_box_route_driver_route_core_pair_stage_metadata(
                 :missing_route_core_sidecar_inventory,
             route_core_pair_operator_readiness_requirements =
                 _pqs_source_box_route_driver_route_core_readiness_requirements(),
-            _pqs_source_box_route_driver_route_core_typed_pair_operator_plan_unavailable_metadata(
-                :blocked_missing_route_core_sidecar_inventory,
-                :missing_route_core_sidecar_inventory,
-            )...,
         )
     end
 
-    route_core_typed_pair_operator_plan_metadata =
-        _pqs_source_box_route_driver_route_core_typed_pair_operator_plan_metadata(
-            route_core_sidecar_inventory,
-        )
     comparison = _pqs_source_box_route_driver_route_core_pair_comparison(
         route_core_sidecar_inventory,
         atom_growth_pair_inventory,
@@ -5629,7 +5239,6 @@ function _pqs_source_box_route_driver_route_core_pair_stage_metadata(
             :available_route_core_unit_pair_summary :
             route_core_sidecar_inventory.crc_pair_inventory_status,
         route_core_pair_operator_readiness...,
-        route_core_typed_pair_operator_plan_metadata...,
     )
 end
 
@@ -5663,10 +5272,6 @@ function _pqs_source_box_route_driver_pair_stage_low_order_summary(
         route_core_pair_operator_plan_status = :not_available,
         route_core_pair_operator_plan = nothing,
         route_core_pair_operator_plan_blocker = :not_available,
-        _pqs_source_box_route_driver_route_core_typed_pair_operator_plan_unavailable_metadata(
-            :not_available,
-            :not_available,
-        )...,
     )
     low_order_transforms =
         hasproperty(transforms, :low_order_transforms) ?
@@ -5827,10 +5432,6 @@ function _pqs_source_box_route_driver_pair_stage_low_order_summary(
                     :deferred_terminal_shellification_pair_inventory,
                 route_core_pair_operator_blocker =
                     :deferred_terminal_shellification_pair_inventory,
-                _pqs_source_box_route_driver_route_core_typed_pair_operator_plan_unavailable_metadata(
-                    :deferred_terminal_shellification_typed_pair_operator_plan_inventory,
-                    :deferred_terminal_shellification_pair_inventory,
-                )...,
             ),
         ) :
         merge(
@@ -5844,10 +5445,6 @@ function _pqs_source_box_route_driver_pair_stage_low_order_summary(
                 route_core_pair_operator_readiness_status =
                     :not_selected_legacy_source_pairs,
                 route_core_pair_operator_blocker =
-                    :not_selected_legacy_source_pairs,
-                route_core_typed_pair_operator_plan_inventory_status =
-                    :not_selected_legacy_source_pairs,
-                route_core_typed_pair_operator_plan_blocker =
                     :not_selected_legacy_source_pairs,
             ),
         )
@@ -5946,11 +5543,6 @@ function _pqs_source_box_route_driver_pair_stage_low_order_summary(
         terminal_shellification_pairs_selected,
         legacy_source_pairs_selected,
         terminal_shellification_pair_summary_available,
-        _pqs_source_box_route_driver_terminal_shellification_alias_fields(
-            low_order_transforms,
-            terminal_shellification_pairs_selected;
-            include_crc_sidecar_summary = false,
-        )...,
         terminal_shellification_transform_contracts_available =
             terminal_shellification_pairs_selected &&
             low_order_transforms.terminal_shellification_transform_contracts_available,
@@ -6151,10 +5743,6 @@ function _pqs_source_box_route_driver_assembly_stage_low_order_summary(pairs)
             route_core_pair_operator_plan_status = :not_available,
             route_core_pair_operator_plan = nothing,
             route_core_pair_operator_plan_blocker = :not_available,
-            _pqs_source_box_route_driver_route_core_typed_pair_operator_plan_unavailable_metadata(
-                :not_available,
-                :not_available,
-            )...,
             helper_by_pair_family = nothing,
             pair_operator_helper_by_family = nothing,
             pair_helper_status_by_family = nothing,
@@ -6270,11 +5858,6 @@ function _pqs_source_box_route_driver_assembly_stage_low_order_summary(pairs)
         terminal_shellification_assembly_selected,
         legacy_source_assembly_selected,
         terminal_shellification_assembly_summary_available,
-        _pqs_source_box_route_driver_terminal_shellification_alias_fields(
-            low_order_pairs,
-            terminal_shellification_assembly_selected;
-            include_crc_sidecar_summary = false,
-        )...,
         terminal_shellification_transform_contracts_available =
             terminal_shellification_assembly_selected &&
             low_order_pairs.terminal_shellification_transform_contracts_available,
@@ -6338,42 +5921,6 @@ function _pqs_source_box_route_driver_assembly_stage_low_order_summary(pairs)
             low_order_pairs.route_core_pair_operator_plan,
         route_core_pair_operator_plan_blocker =
             low_order_pairs.route_core_pair_operator_plan_blocker,
-        route_core_typed_pair_operator_plan_inventory_available =
-            low_order_pairs.route_core_typed_pair_operator_plan_inventory_available,
-        route_core_typed_pair_operator_plan_inventory_status =
-            low_order_pairs.route_core_typed_pair_operator_plan_inventory_status,
-        route_core_typed_pair_operator_plan_blocker =
-            low_order_pairs.route_core_typed_pair_operator_plan_blocker,
-        route_core_typed_pair_operator_plan_count =
-            low_order_pairs.route_core_typed_pair_operator_plan_count,
-        route_core_typed_pair_operator_plan_blocked_count =
-            low_order_pairs.route_core_typed_pair_operator_plan_blocked_count,
-        route_core_typed_pair_operator_plan_materialized =
-            low_order_pairs.route_core_typed_pair_operator_plan_materialized,
-        route_core_typed_pair_operator_source_path_counts =
-            low_order_pairs.route_core_typed_pair_operator_source_path_counts,
-        route_core_typed_pair_operator_final_block_path_counts =
-            low_order_pairs.route_core_typed_pair_operator_final_block_path_counts,
-        route_core_typed_pair_operator_materialization_status_counts =
-            low_order_pairs.route_core_typed_pair_operator_materialization_status_counts,
-        route_core_typed_pair_operator_blocker_counts =
-            low_order_pairs.route_core_typed_pair_operator_blocker_counts,
-        route_core_typed_pair_operator_plan_family_counts =
-            low_order_pairs.route_core_typed_pair_operator_plan_family_counts,
-        route_core_typed_pair_operator_materialization_ready =
-            low_order_pairs.route_core_typed_pair_operator_materialization_ready,
-        route_core_typed_pair_operator_materialization_readiness_status =
-            low_order_pairs.route_core_typed_pair_operator_materialization_readiness_status,
-        route_core_typed_pair_operator_materialization_readiness_blocker =
-            low_order_pairs.route_core_typed_pair_operator_materialization_readiness_blocker,
-        route_core_typed_pair_operator_materialization_readiness_requirements =
-            low_order_pairs.route_core_typed_pair_operator_materialization_readiness_requirements,
-        route_core_typed_pair_operator_materialization_readiness_plan_count =
-            low_order_pairs.route_core_typed_pair_operator_materialization_readiness_plan_count,
-        route_core_typed_pair_operator_materialization_readiness_blocked_count =
-            low_order_pairs.route_core_typed_pair_operator_materialization_readiness_blocked_count,
-        route_core_typed_pair_operator_materialization_readiness_materialized_count =
-            low_order_pairs.route_core_typed_pair_operator_materialization_readiness_materialized_count,
         helper_by_pair_family = low_order_pairs.helper_by_pair_family,
         pair_operator_helper_by_family =
             low_order_pairs.pair_operator_helper_by_family,
@@ -8654,94 +8201,6 @@ function _pqs_source_box_route_driver_physical_gausslet_target_report_fields(
     )
 end
 
-function _pqs_source_box_route_driver_pair_operator_report_count_entries(
-    entries,
-)
-    isnothing(entries) && return ()
-    return Tuple(
-        _pqs_source_box_route_driver_pair_operator_report_count_entry(entry)
-        for entry in entries
-    )
-end
-
-function _pqs_source_box_route_driver_pair_operator_report_count_entry(entry)
-    names = propertynames(entry)
-    (:pair_count in names || !(:count in names)) && return entry
-    value_names = Tuple(name for name in names if name != :count)
-    values = Tuple(getproperty(entry, name) for name in value_names)
-    return merge(
-        NamedTuple{value_names}(values),
-        (; pair_count = getproperty(entry, :count)),
-    )
-end
-
-function _pqs_source_box_route_driver_pair_operator_report_aliases(
-    terminal_route_state,
-    fallback_source,
-)
-    summary =
-        !isnothing(terminal_route_state) &&
-        hasproperty(terminal_route_state, :pair_operator_summary) ?
-        terminal_route_state.pair_operator_summary :
-        nothing
-    if !isnothing(summary) &&
-       hasproperty(summary, :route_core_pair_operator_plan_inventory_available)
-        return (;
-            route_core_typed_pair_operator_plan_inventory_available =
-                summary.route_core_pair_operator_plan_inventory_available,
-            route_core_typed_pair_operator_plan_inventory_status =
-                fallback_source.route_core_typed_pair_operator_plan_inventory_status,
-            route_core_typed_pair_operator_plan_blocker =
-                fallback_source.route_core_typed_pair_operator_plan_blocker,
-            route_core_typed_pair_operator_plan_count =
-                summary.route_core_pair_operator_plan_count,
-            route_core_typed_pair_operator_plan_blocked_count =
-                summary.route_core_pair_operator_plan_blocked_count,
-            route_core_typed_pair_operator_plan_materialized =
-                summary.materialized,
-            route_core_typed_pair_operator_source_path_counts =
-                _pqs_source_box_route_driver_pair_operator_report_count_entries(
-                    summary.source_operator_path_counts,
-                ),
-            route_core_typed_pair_operator_final_block_path_counts =
-                _pqs_source_box_route_driver_pair_operator_report_count_entries(
-                    summary.final_block_path_counts,
-                ),
-            route_core_typed_pair_operator_materialization_status_counts =
-                _pqs_source_box_route_driver_pair_operator_report_count_entries(
-                    summary.materialization_status_counts,
-                ),
-            route_core_typed_pair_operator_blocker_counts =
-                _pqs_source_box_route_driver_pair_operator_report_count_entries(
-                    summary.blocker_counts,
-                ),
-        )
-    end
-
-    return (;
-        route_core_typed_pair_operator_plan_inventory_available =
-            fallback_source.route_core_typed_pair_operator_plan_inventory_available,
-        route_core_typed_pair_operator_plan_inventory_status =
-            fallback_source.route_core_typed_pair_operator_plan_inventory_status,
-        route_core_typed_pair_operator_plan_blocker =
-            fallback_source.route_core_typed_pair_operator_plan_blocker,
-        route_core_typed_pair_operator_plan_count =
-            fallback_source.route_core_typed_pair_operator_plan_count,
-        route_core_typed_pair_operator_plan_blocked_count =
-            fallback_source.route_core_typed_pair_operator_plan_blocked_count,
-        route_core_typed_pair_operator_plan_materialized =
-            fallback_source.route_core_typed_pair_operator_plan_materialized,
-        route_core_typed_pair_operator_source_path_counts =
-            fallback_source.route_core_typed_pair_operator_source_path_counts,
-        route_core_typed_pair_operator_final_block_path_counts =
-            fallback_source.route_core_typed_pair_operator_final_block_path_counts,
-        route_core_typed_pair_operator_materialization_status_counts =
-            fallback_source.route_core_typed_pair_operator_materialization_status_counts,
-        route_core_typed_pair_operator_blocker_counts =
-            fallback_source.route_core_typed_pair_operator_blocker_counts,
-    )
-end
-
 function _pqs_source_box_route_driver_report_stage_low_order_route_summary(
     assembly,
 )
@@ -8863,10 +8322,6 @@ function _pqs_source_box_route_driver_report_stage_low_order_route_summary(
             route_core_pair_operator_plan_status = :not_available,
             route_core_pair_operator_plan = nothing,
             route_core_pair_operator_plan_blocker = :not_available,
-            _pqs_source_box_route_driver_route_core_typed_pair_operator_plan_unavailable_metadata(
-                :not_available,
-                :not_available,
-            )...,
             plan_authority = false,
             active_source_authority = false,
             legacy_source_authority = false,
@@ -8876,12 +8331,6 @@ function _pqs_source_box_route_driver_report_stage_low_order_route_summary(
             summary_only = true,
         )
     end
-
-    pair_operator_report_aliases =
-        _pqs_source_box_route_driver_pair_operator_report_aliases(
-            low_order_assembly.terminal_route_state,
-            low_order_assembly,
-        )
 
     return (;
         object_kind = :cartesian_report_stage_low_order_route_summary,
@@ -8923,11 +8372,6 @@ function _pqs_source_box_route_driver_report_stage_low_order_route_summary(
             low_order_assembly.terminal_route_state.lowering_plan,
         terminal_shellification_lowering_summary =
             low_order_assembly.terminal_route_state.lowering_summary,
-        _pqs_source_box_route_driver_terminal_shellification_alias_fields(
-            low_order_assembly,
-            low_order_assembly.terminal_shellification_assembly_selected;
-            include_crc_sidecar_summary = false,
-        )...,
         terminal_shellification_transform_contracts_available =
             low_order_assembly.terminal_shellification_transform_contracts_available,
         terminal_shellification_pair_inventory_available =
@@ -8993,23 +8437,6 @@ function _pqs_source_box_route_driver_report_stage_low_order_route_summary(
             low_order_assembly.route_core_pair_operator_plan,
         route_core_pair_operator_plan_blocker =
             low_order_assembly.route_core_pair_operator_plan_blocker,
-        pair_operator_report_aliases...,
-        route_core_typed_pair_operator_plan_family_counts =
-            low_order_assembly.route_core_typed_pair_operator_plan_family_counts,
-        route_core_typed_pair_operator_materialization_ready =
-            low_order_assembly.route_core_typed_pair_operator_materialization_ready,
-        route_core_typed_pair_operator_materialization_readiness_status =
-            low_order_assembly.route_core_typed_pair_operator_materialization_readiness_status,
-        route_core_typed_pair_operator_materialization_readiness_blocker =
-            low_order_assembly.route_core_typed_pair_operator_materialization_readiness_blocker,
-        route_core_typed_pair_operator_materialization_readiness_requirements =
-            low_order_assembly.route_core_typed_pair_operator_materialization_readiness_requirements,
-        route_core_typed_pair_operator_materialization_readiness_plan_count =
-            low_order_assembly.route_core_typed_pair_operator_materialization_readiness_plan_count,
-        route_core_typed_pair_operator_materialization_readiness_blocked_count =
-            low_order_assembly.route_core_typed_pair_operator_materialization_readiness_blocked_count,
-        route_core_typed_pair_operator_materialization_readiness_materialized_count =
-            low_order_assembly.route_core_typed_pair_operator_materialization_readiness_materialized_count,
         plan_authority = low_order_assembly.plan_authority,
         active_source_authority = low_order_assembly.active_source_authority,
         legacy_source_authority = low_order_assembly.legacy_source_authority,
@@ -9089,215 +8516,6 @@ function cartesian_materialization(report, materialization_inputs)
     )
 end
 
-function _pqs_source_box_route_driver_pqs_prototype_print_line(report)
-    hasproperty(report, :low_order_pqs_transform_prototype_available) ||
-        return nothing
-    report.low_order_pqs_transform_prototype_available || return nothing
-    source =
-        report.low_order_pqs_prototype_source_cpb_kind == :filled_source_cpb ?
-        "filled CPB" :
-        string(report.low_order_pqs_prototype_source_cpb_kind)
-    owned_support =
-        report.low_order_pqs_prototype_owned_support_is_cpb ? "CPB" : "shell"
-    retained_space =
-        report.low_order_pqs_prototype_intermediate_retained_space ==
-        :boundary_comx_product_mode_selection ?
-        "boundary COMX products" :
-        string(report.low_order_pqs_prototype_intermediate_retained_space)
-    realization =
-        report.low_order_pqs_prototype_shell_realization ==
-        :shell_projection_lowdin_deferred ?
-        "shell projection + Lowdin deferred" :
-        string(report.low_order_pqs_prototype_shell_realization)
-    materialized =
-        report.low_order_pqs_prototype_source_operator_blocks_materialized ||
-        report.low_order_pqs_prototype_operator_blocks_materialized ||
-        report.low_order_pqs_prototype_pair_operator_blocks_materialized ||
-        report.low_order_pqs_prototype_hamiltonian_data_materialized ||
-        report.low_order_pqs_prototype_artifacts_materialized
-    return string(
-        "CPB/PQS prototype: metadata-only, unit=",
-        report.low_order_pqs_prototype_unit_key,
-        ", source=",
-        source,
-        ", owned support is ",
-        owned_support,
-        ", retained space=",
-        retained_space,
-        ", realization=",
-        realization,
-        ", operators/materialization=",
-        materialized ? "yes" : "no",
-    )
-end
-
-function _pqs_source_box_route_driver_print_pqs_prototype_summary(report)
-    line = _pqs_source_box_route_driver_pqs_prototype_print_line(report)
-    isnothing(line) || println(line)
-    return nothing
-end
-
-function _pqs_source_box_route_driver_terminal_shellification_print_line(report)
-    hasproperty(report, :low_order_terminal_shellification_selected) ||
-        return nothing
-    report.low_order_terminal_shellification_selected || return nothing
-    materialized =
-        report.low_order_operator_matrices_materialized ||
-        report.low_order_pair_operator_blocks_materialized ||
-        report.low_order_hamiltonian_matrices_materialized
-    return string(
-        "Terminal shellification: selected, regions ",
-        report.low_order_terminal_shellification_region_count,
-        ", central gaps ",
-        report.low_order_terminal_shellification_central_gap_region_count,
-        ", midpoint slabs ",
-        report.low_order_terminal_shellification_central_midpoint_slab_count,
-        ", central distorted product boxes ",
-        report.low_order_terminal_shellification_central_distorted_product_box_count,
-        ", pair inventory ",
-        repr(report.low_order_terminal_shellification_pair_inventory_status),
-        ", assembly/materialization ",
-        repr(
-            report.low_order_terminal_shellification_assembly_materialization_status,
-        ),
-        ", operators/materialization=",
-        materialized ? "yes" : "no",
-    )
-end
-
-function _pqs_source_box_route_driver_print_terminal_shellification_summary(report)
-    line =
-        _pqs_source_box_route_driver_terminal_shellification_print_line(report)
-    isnothing(line) || println(line)
-    return nothing
-end
-
-function _pqs_source_box_route_driver_crc_pair_family_label(pair_family)
-    length(pair_family) == 2 || return string(pair_family)
-    return string(pair_family[1], " / ", pair_family[2])
-end
-
-function _pqs_source_box_route_driver_crc_pair_family_print_line(report)
-    hasproperty(report, :low_order_route_core_pair_family_counts) ||
-        return nothing
-    families = report.low_order_route_core_pair_family_counts
-    isempty(families) && return nothing
-    return string(
-        "CRC pair families: ",
-        join(
-            (
-                string(
-                    _pqs_source_box_route_driver_crc_pair_family_label(
-                        family.pair_family,
-                    ),
-                    "=",
-                    family.pair_count,
-                ) for family in families
-            ),
-            ", ",
-        ),
-    )
-end
-
-function _pqs_source_box_route_driver_crc_sidecar_print_line(report)
-    hasproperty(report, :low_order_route_core_summary_status) || return nothing
-    report.low_order_route_core_pair_inventory_available || return string(
-        "CRC sidecars: ",
-        report.low_order_route_core_summary_status,
-    )
-    order_match =
-        report.low_order_route_core_pair_order_matches_staged ? "yes" : "no"
-    return string(
-        "CRC sidecars: final units ",
-        report.low_order_route_core_final_unit_count,
-        ", pairs ",
-        report.low_order_route_core_pair_count,
-        ", order match ",
-        order_match,
-    )
-end
-
-function _pqs_source_box_route_driver_print_crc_sidecar_summary(report)
-    line = _pqs_source_box_route_driver_crc_sidecar_print_line(report)
-    isnothing(line) || println(line)
-    family_line = _pqs_source_box_route_driver_crc_pair_family_print_line(report)
-    isnothing(family_line) || println(family_line)
-    return nothing
-end
-
-function _pqs_source_box_route_driver_crc_operator_plan_print_line(report)
-    hasproperty(report, :low_order_route_core_pair_operator_plan_status) ||
-        return nothing
-    status = report.low_order_route_core_pair_operator_plan_status
-    if status == :ready_route_core_pair_operator_plan
-        return string(
-            "CRC pair-operator plan: ready metadata plan, final units ",
-            report.low_order_route_core_pair_operator_plan.route_core_final_unit_count,
-            ", pairs ",
-            report.low_order_route_core_pair_operator_plan.route_core_pair_count,
-            ", operator blocks materialized no",
-        )
-    end
-    if status == :blocked_route_core_pair_operator_plan
-        return string(
-            "CRC pair-operator plan: blocked metadata plan, blocker ",
-            report.low_order_route_core_pair_operator_plan_blocker,
-            ", operator blocks materialized no",
-        )
-    end
-    return string("CRC pair-operator plan: ", status)
-end
-
-function _pqs_source_box_route_driver_print_crc_operator_plan_summary(report)
-    line = _pqs_source_box_route_driver_crc_operator_plan_print_line(report)
-    isnothing(line) || println(line)
-    return nothing
-end
-
-function _pqs_source_box_route_driver_crc_typed_pair_operator_plan_print_line(
-    report,
-)
-    hasproperty(
-        report,
-        :low_order_route_core_typed_pair_operator_plan_inventory_available,
-    ) || return nothing
-    availability =
-        report.low_order_route_core_typed_pair_operator_plan_inventory_available ?
-        "available" :
-        "unavailable"
-    materialized =
-        report.low_order_route_core_typed_pair_operator_plan_materialized ?
-        "yes" :
-        "no"
-    return string(
-        "CRC typed pair-operator inventory: ",
-        availability,
-        " (",
-        repr(
-            report.low_order_route_core_typed_pair_operator_plan_inventory_status,
-        ),
-        "), typed plans ",
-        report.low_order_route_core_typed_pair_operator_plan_count,
-        ", blocked ",
-        report.low_order_route_core_typed_pair_operator_plan_blocked_count,
-        ", materialized ",
-        materialized,
-        ", blocker ",
-        repr(report.low_order_route_core_typed_pair_operator_plan_blocker),
-    )
-end
-
-function _pqs_source_box_route_driver_print_crc_typed_pair_operator_plan_summary(
-    report,
-)
-    line =
-        _pqs_source_box_route_driver_crc_typed_pair_operator_plan_print_line(
-            report,
-        )
-    isnothing(line) || println(line)
-    return nothing
-end
-
 function cartesian_print_summary(report, materialization)
     recipe = report.recipe_metadata
     setup = report.standard_setup
@@ -9341,52 +8559,13 @@ function cartesian_print_summary(report, materialization)
     @show report.low_order_materialization_status
     @show report.low_order_pair_inventory_source
     @show report.low_order_pair_count
-    _pqs_source_box_route_driver_print_terminal_shellification_summary(report)
-    _pqs_source_box_route_driver_print_crc_sidecar_summary(report)
-    _pqs_source_box_route_driver_print_crc_operator_plan_summary(report)
-    _pqs_source_box_route_driver_print_crc_typed_pair_operator_plan_summary(
-        report,
-    )
     @show report.low_order_hamiltonian_matrices_materialized
-    _pqs_source_box_route_driver_print_pqs_prototype_summary(report)
     @show materialization.basis_artifact_status materialization.basis_artifact_written
     @show materialization.status materialization.ham_bundle_export_status
     @show materialization.materialized_report_kind
-    @show materialization.route_configured_system_classification
-    @show materialization.route_configured_shellization_request_status
-    @show materialization.route_configured_shellization_planning_family
-    @show materialization.route_configured_midpoint_slab_status
-    @show materialization.route_configured_primary_planned_helper
-    @show materialization.route_configured_missing_input_count
-    @show materialization.route_configured_input_readiness_status
-    @show materialization.route_configured_available_fact_count
-    @show materialization.route_configured_materializer_config_status
-    @show materialization.route_configured_materializer_config_pending_input_count
-    @show materialization.route_configured_materializer_backend_requested
-    @show materialization.route_configured_materializer_backend_consumed
-    @show materialization.route_configured_materializer_d_requested
-    @show materialization.route_configured_materializer_d_consumed
-    @show materialization.route_configured_materializer_nside_requested
-    @show materialization.route_configured_materializer_nside_consumed
     @show materialization.low_order_shellization_policy_requested
     @show materialization.low_order_shellization_policy_resolved
-    @show materialization.low_order_shellization_policy_source
     @show materialization.low_order_shellization_policy_status
-    @show materialization.route_configured_one_center_materializer_probe_requested
-    @show materialization.route_configured_one_center_materializer_probe_status
-    @show materialization.route_configured_one_center_materializer_probe_blocker
-    @show materialization.route_configured_diatomic_materializer_probe_requested
-    @show materialization.route_configured_diatomic_materializer_probe_status
-    @show materialization.route_configured_diatomic_materializer_probe_blocker
-    @show materialization.route_configured_diatomic_atom_growth_materializer_probe_requested
-    @show materialization.route_configured_diatomic_atom_growth_materializer_probe_status
-    @show materialization.route_configured_diatomic_atom_growth_materializer_probe_consumed
-    @show materialization.route_configured_diatomic_atom_growth_shellification_consumed
-    @show materialization.route_configured_diatomic_atom_growth_basis_adapter_status
-    @show materialization.route_configured_diatomic_atom_growth_final_integral_weights_status
-    @show materialization.route_configured_diatomic_atom_growth_ham_adapter_status
-    @show materialization.route_configured_legacy_diatomic_source_consumed
-    @show materialization.shellization_source materialization.route_configured_shellization_consumed
     @show materialization.ham_artifact_status materialization.ham_artifact_written
     return nothing
 end

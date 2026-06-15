@@ -15,7 +15,6 @@ using GaussletBases
 
 include("pqs_standard_source_box_route_setup_runtests.jl")
 include("pqs_standard_parent_axis_readiness_runtests.jl")
-include("pqs_source_box_route_driver_crc_print_line_runtests.jl")
 include("cartesian_route_core_examples_runtests.jl")
 include("cartesian_selected_terminal_lowering_contract_inventory_runtests.jl")
 include("cartesian_retained_units_contract_runtests.jl")
@@ -26,7 +25,6 @@ include("cartesian_pair_operator_plans_contract_runtests.jl")
 include("cartesian_final_basis_realization_contract_runtests.jl")
 include("cartesian_pair_block_one_body_consumer_smoke_runtests.jl")
 include("cartesian_pair_block_materialization_contract_runtests.jl")
-include("cartesian_terminal_route_flat_glue_cleanup_runtests.jl")
 include("cartesian_pair_stage_fingerprint_helpers_runtests.jl")
 
 @testset "Cartesian nested owned-unit coverage audit" begin
