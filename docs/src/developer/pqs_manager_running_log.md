@@ -1518,3 +1518,42 @@ Line-count / complexity note:
 - MT6 Audit/classify old Cartesian flat paths: active. These passes continued
   retiring stale selected-terminal, RouteCore, and report-stage flat alias
   assertions while preserving compact active smoke checks.
+
+## Pass 255 - Atom-Growth Report-Stage RouteCore Mirror Cleanup
+
+Commit(s):
+- this commit - Shrink atom-growth report-stage RouteCore mirrors
+
+Summary:
+- Deleted stale atom-growth report-stage RouteCore mirror assertions from
+  `test/nested/cartesian_report_stage_low_order_policy_runtests.jl`.
+- Removed nested preflight/plan object field mirrors and one flat
+  report-to-summary family-count mirror.
+- Preserved compact checks for atom-growth route selection, materialization
+  deferral, pair inventory/count, RouteCore inventory/status, pair-operator
+  readiness, preflight/plan status, and LW complete-shell enumeration.
+
+Validation:
+- Doer: Julia parse smoke passed; `git diff --check` passed.
+- Manager: reviewed the deletion-only diff and reran the Julia parse smoke. It
+  passed. The broad report-stage test was intentionally not used as a per-pass
+  gate.
+
+Goal advancement:
+- MT5/LT2: removed another 13 lines of stale report-stage mirror pressure.
+- MT6/AG7: classified nested RouteCore preflight/plan object-shape assertions
+  as old flat scaffolding, not public route authority.
+
+Medium-goal update:
+- none.
+
+Risk / guardrail:
+- Do not reintroduce nested preflight/plan object-shape assertions as a
+  substitute for compact readiness facts.
+
+Remaining blocker / next:
+- Continue old-flat cleanup from mature candidates or deliberately decide when
+  to open independent-PQS supplement staging.
+
+Line-count / complexity note:
+- Scoped `src + test + bin` diff was `0` added / `13` deleted, net `-13`.
