@@ -2553,309 +2553,26 @@ function cartesian_units(parent, shells, route_inputs, recipe)
 end
 
 function _pqs_source_box_route_driver_transform_stage_low_order_summary(units)
-    low_order_units =
-        hasproperty(units, :low_order_units) ?
-        units.low_order_units :
-        nothing
-    if isnothing(low_order_units)
-        terminal_route_state =
-            _pqs_source_box_route_driver_terminal_route_state_unavailable(
-                :not_available_missing_unit_stage_summary,
-                :missing_unit_stage_low_order_summary,
-            )
-        return (;
-            object_kind = :cartesian_transform_stage_low_order_summary,
-            status = :not_available_missing_unit_stage_summary,
-            terminal_route_state,
-            terminal_route_summary = terminal_route_state.summary,
-            low_order_shellization_policy_requested = nothing,
-            low_order_shellization_policy_resolved = :not_available,
-            low_order_shellization_policy_source = :not_available,
-            low_order_shellization_policy_status =
-                :not_available_missing_unit_stage_summary,
-            low_order_shellization_policy_blocker =
-                :missing_unit_stage_low_order_summary,
-            shellization_source = :not_available,
-            shellization_kind = :not_available,
-            unit_route_kind = :not_available,
-            transform_route_kind = :not_available,
-            atom_growth_transforms_selected = false,
-            terminal_shellification_transforms_selected = false,
-            legacy_source_transforms_selected = false,
-            terminal_shellification_transform_summary_available = false,
-            terminal_shellification_scaffold_available = false,
-            terminal_shellification_scaffold = nothing,
-            terminal_shellification_region_count = 0,
-            terminal_shellification_unit_inventory_available = false,
-            terminal_shellification_unit_inventory = nothing,
-            terminal_shellification_unit_count = 0,
-            terminal_shellification_unit_keys = (),
-            terminal_shellification_unit_roles = (),
-            terminal_shellification_unit_kinds = (),
-            terminal_shellification_unit_support_counts = (),
-            terminal_shellification_lowering_contract_inventory_available = false,
-            terminal_shellification_lowering_contract_inventory_status =
-                :not_available,
-            terminal_shellification_lowering_contract_inventory = nothing,
-            terminal_shellification_lowering_contract_count = 0,
-            terminal_shellification_lowering_contract_kinds = (),
-            terminal_shellification_lowering_contract_kind_counts =
-                (
-                    direct_core_identity_cpb_count = 0,
-                    direct_slab_identity_cpb_count = 0,
-                    direct_boundary_slab_identity_cpb_count = 0,
-                    white_lindsey_boundary_strata_count = 0,
-                    pqs_filled_source_cpb_count = 0,
-                    distorted_product_box_comx_count = 0,
-                ),
-            _pqs_source_box_route_driver_selected_terminal_lowering_fields(
-                nothing,
-                :not_available,
-                nothing,
-            )...,
-            terminal_shellification_contract_counts_by_unit = (),
-            terminal_shellification_lw_complete_shell_cpb_count = 0,
-            terminal_shellification_lw_complete_shell_cpb_family_counts =
-                (facet_cpb = 0, edge_cpb = 0, corner_cpb = 0),
-            terminal_shellification_final_retained_unit_inventory_available = false,
-            terminal_shellification_transform_contracts_available = false,
-            terminal_shellification_transform_materialization_status =
-                :not_available,
-            terminal_shellification_central_gap_region_count = 0,
-            terminal_shellification_central_midpoint_slab_count = 0,
-            terminal_shellification_central_distorted_product_box_count = 0,
-            terminal_shellification_central_distorted_product_box_metadata = (),
-            coefficient_transforms_materialized = false,
-            coefficient_maps_materialized = false,
-            transform_materialization_status = :not_available,
-            retained_unit_dimensions_known = false,
-            retained_unit_ranges_known = false,
-            retained_dimension_known = false,
-            retained_dimension = nothing,
-            plan_authority = false,
-            active_source_authority = false,
-            legacy_source_authority = false,
-            transform_contract_source = :not_available,
-            transform_contract_status = :not_available,
-            atom_growth_transform_contracts_available = false,
-            transform_contract_inventory_available = false,
-            transform_contract_inventory = nothing,
-            lw_complete_shell_cpb_enumeration_available = false,
-            lw_complete_shell_region_count = 0,
-            lw_complete_shell_cpb_count = 0,
-            lw_complete_shell_cpb_family_counts =
-                (facet_cpb = 0, edge_cpb = 0, corner_cpb = 0),
-            lw_complete_shell_enumeration_policy = nothing,
-            lw_complete_shell_coefficient_maps_materialized = false,
-            lw_complete_shell_operator_blocks_materialized = false,
-            lw_complete_shell_pair_operator_blocks_materialized = false,
-            lw_complete_shell_hamiltonian_data_materialized = false,
-            pqs_transform_prototype_available = false,
-            pqs_transform_prototype = nothing,
-            source_lowering_prototype_unit_key = nothing,
-            transform_contract_count = 0,
-            transform_contract_unit_keys = (),
-            transform_contract_unit_roles = (),
-            transform_contract_names = (),
-            source_backed_contract_count = 0,
-            cpb_contract_stage = :not_available,
-            transform_contracts_derive_from_lowering = false,
-            final_retained_units_are_pair_planning_inputs = false,
-            transform_fields_preserved = false,
-            route_skeleton_transform_inventory_source = :not_available,
-            summary_only = true,
-        )
-    end
+    low_order_units = get(units, :low_order_units, nothing)
+    isnothing(low_order_units) && return nothing
 
-    atom_growth_transforms_selected = low_order_units.atom_growth_units_selected
-    terminal_shellification_transforms_selected =
-        low_order_units.terminal_shellification_units_selected
-    legacy_source_transforms_selected = low_order_units.legacy_source_units_selected
-    transform_route_kind =
-        atom_growth_transforms_selected ?
-        :atom_growth_complete_rectangular_low_order_transforms :
-        terminal_shellification_transforms_selected ?
-        :terminal_shellification_low_order_transforms :
-        legacy_source_transforms_selected ?
-        :legacy_diatomic_source_low_order_transforms :
-        :not_selected
-    terminal_shellification_scaffold_available =
-        terminal_shellification_transforms_selected &&
-        low_order_units.terminal_shellification_scaffold_available
-    terminal_shellification_transform_summary_available =
-        terminal_shellification_transforms_selected
-    terminal_shellification_transform_materialization_status =
-        terminal_shellification_transforms_selected ?
-        :deferred_terminal_shellification_transform_contracts :
-        :not_selected
-    transform_contract_inventory = nothing
-    transform_contract_inventory_available =
-        !isnothing(transform_contract_inventory) &&
-        transform_contract_inventory.status ==
-        :available_atom_growth_transform_contract_inventory
-    transform_contract_source =
-        transform_contract_inventory_available ?
-        transform_contract_inventory.transform_contract_source :
-        atom_growth_transforms_selected ?
-        :blocked_atom_growth_plan_unit_inventory :
-        terminal_shellification_transforms_selected ?
-        :terminal_shellification_scaffold :
-        legacy_source_transforms_selected ?
-        :legacy_diatomic_source_summary :
-        :route_skeleton_compatibility_fields
-    transform_contract_status =
-        terminal_shellification_transforms_selected ?
-        terminal_shellification_transform_materialization_status :
-        isnothing(transform_contract_inventory) ?
-            transform_contract_source :
-            transform_contract_inventory.status
-    source_backed_contract_count =
-        isnothing(transform_contract_inventory) ?
-        0 :
-        transform_contract_inventory.source_backed_contract_count
-    transform_contracts_derive_from_lowering =
-        transform_contract_inventory_available &&
-        all(
-            contract -> contract.final_unit_downstream_of_lowering,
-            transform_contract_inventory.transform_contracts,
-        )
-    final_retained_units_are_pair_planning_inputs =
-        transform_contract_inventory_available &&
-        all(
-            contract -> contract.final_retained_unit.pair_planning_input,
-            transform_contract_inventory.transform_contracts,
-        )
-    status =
-        transform_contract_inventory_available ?
-        :available_transform_stage_low_order_summary :
-        terminal_shellification_transforms_selected &&
-        terminal_shellification_scaffold_available ?
-        :deferred_terminal_shellification_transform_contracts :
-        !isnothing(transform_contract_inventory) ?
-        transform_contract_inventory.status :
-        low_order_units.status == :available_unit_stage_low_order_summary ?
-        :available_transform_stage_low_order_summary :
-        low_order_units.status
-
+    retained_units = get(low_order_units, :retained_units, ())
     return (;
-        object_kind = :cartesian_transform_stage_low_order_summary,
-        status,
-        terminal_route_state = low_order_units.terminal_route_state,
-        terminal_route_summary = low_order_units.terminal_route_summary,
-        low_order_shellization_policy_requested =
-            low_order_units.low_order_shellization_policy_requested,
-        low_order_shellization_policy_resolved =
-            low_order_units.low_order_shellization_policy_resolved,
-        low_order_shellization_policy_source =
-            low_order_units.low_order_shellization_policy_source,
-        low_order_shellization_policy_status =
-            low_order_units.low_order_shellization_policy_status,
-        low_order_shellization_policy_blocker =
-            low_order_units.low_order_shellization_policy_blocker,
-        shellization_source = low_order_units.shellization_source,
-        shellization_kind = low_order_units.shellization_kind,
-        unit_route_kind = low_order_units.unit_route_kind,
-        transform_route_kind,
-        atom_growth_transforms_selected,
-        terminal_shellification_transforms_selected,
-        legacy_source_transforms_selected,
-        terminal_shellification_transform_summary_available,
-        terminal_shellification_transform_contracts_available = false,
-        terminal_shellification_transform_materialization_status,
-        coefficient_transforms_materialized = false,
-        coefficient_maps_materialized = false,
-        transform_materialization_status =
-            atom_growth_transforms_selected ?
-            :deferred_atom_growth_complete_rectangular_transform_materialization :
-            terminal_shellification_transforms_selected ?
-            terminal_shellification_transform_materialization_status :
-            legacy_source_transforms_selected ?
-            :deferred_legacy_diatomic_source_transform_materialization :
-            low_order_units.materialization_status,
-        retained_unit_dimensions_known = low_order_units.retained_unit_dimensions_known,
-        retained_unit_ranges_known = low_order_units.retained_unit_ranges_known,
-        retained_dimension_known = low_order_units.retained_dimension_known,
-        retained_dimension = low_order_units.retained_dimension,
-        plan_authority = low_order_units.plan_authority,
-        active_source_authority = low_order_units.active_source_authority,
-        legacy_source_authority = low_order_units.legacy_source_authority,
-        transform_contract_source,
-        transform_contract_status,
-        atom_growth_transform_contracts_available =
-            transform_contract_inventory_available,
-        transform_contract_inventory_available,
-        transform_contract_inventory,
-        lw_complete_shell_cpb_enumeration_available =
-            transform_contract_inventory_available &&
-            transform_contract_inventory.lw_complete_shell_cpb_enumeration_available,
-        lw_complete_shell_region_count =
-            transform_contract_inventory_available ?
-            transform_contract_inventory.lw_complete_shell_region_count :
-            0,
-        lw_complete_shell_cpb_count =
-            transform_contract_inventory_available ?
-            transform_contract_inventory.lw_complete_shell_cpb_count :
-            0,
-        lw_complete_shell_cpb_family_counts =
-            transform_contract_inventory_available ?
-            transform_contract_inventory.lw_complete_shell_cpb_family_counts :
-            (facet_cpb = 0, edge_cpb = 0, corner_cpb = 0),
-        lw_complete_shell_enumeration_policy =
-            transform_contract_inventory_available ?
-            transform_contract_inventory.lw_complete_shell_enumeration_policy :
-            nothing,
-        lw_complete_shell_coefficient_maps_materialized =
-            transform_contract_inventory_available &&
-            transform_contract_inventory.lw_complete_shell_coefficient_maps_materialized,
-        lw_complete_shell_operator_blocks_materialized =
-            transform_contract_inventory_available &&
-            transform_contract_inventory.lw_complete_shell_operator_blocks_materialized,
-        lw_complete_shell_pair_operator_blocks_materialized =
-            transform_contract_inventory_available &&
-            transform_contract_inventory.lw_complete_shell_pair_operator_blocks_materialized,
-        lw_complete_shell_hamiltonian_data_materialized =
-            transform_contract_inventory_available &&
-            transform_contract_inventory.lw_complete_shell_hamiltonian_data_materialized,
-        pqs_transform_prototype_available =
-            transform_contract_inventory_available &&
-            transform_contract_inventory.pqs_transform_prototype_available,
-        pqs_transform_prototype =
-            transform_contract_inventory_available ?
-            transform_contract_inventory.pqs_transform_prototype :
-            nothing,
-        source_lowering_prototype_unit_key =
-            transform_contract_inventory_available ?
-            transform_contract_inventory.source_lowering_prototype_unit_key :
-            nothing,
-        transform_contract_count =
-            transform_contract_inventory_available ?
-            transform_contract_inventory.contract_count :
-            0,
-        transform_contract_unit_keys =
-            transform_contract_inventory_available ?
-            transform_contract_inventory.unit_keys :
-            (),
-        transform_contract_unit_roles =
-            transform_contract_inventory_available ?
-            transform_contract_inventory.unit_roles :
-            (),
-        transform_contract_names =
-            transform_contract_inventory_available ?
-            transform_contract_inventory.contract_names :
-            (),
-        source_backed_contract_count,
-        cpb_contract_stage =
-            transform_contract_inventory_available ?
-            :construction_transform_contract :
-            :not_available,
-        transform_contracts_derive_from_lowering,
-        final_retained_units_are_pair_planning_inputs,
-        transform_fields_preserved = true,
-        route_skeleton_transform_inventory_source =
-            :route_skeleton_compatibility_fields,
-        summary_only =
-            terminal_shellification_transforms_selected ||
-            !transform_contract_inventory_available,
+        shellification_kind = low_order_units.shellification_kind,
+        shellification_plan = low_order_units.shellification_plan,
+        shellification_scaffold = low_order_units.shellification_scaffold,
+        unit_inventory = low_order_units.unit_inventory,
+        route_lowering_family = low_order_units.route_lowering_family,
+        lowering_plan = low_order_units.lowering_plan,
+        lowering_contract_inventory = low_order_units.lowering_contract_inventory,
+        retained_units,
+        retained_counts =
+            _pqs_source_box_route_driver_named_tuple_from_units(
+                retained_units, :retained_count),
+        ranges =
+            _pqs_source_box_route_driver_named_tuple_from_units(
+                retained_units, :retained_range),
+        retained_dimension = get(low_order_units, :retained_dimension, nothing),
     )
 end
 
@@ -2864,62 +2581,17 @@ function cartesian_transforms(units, recipe)
     low_order_transforms =
         _pqs_source_box_route_driver_transform_stage_low_order_summary(units)
     return (;
-        object_kind = :cartesian_transforms,
-        status = units.status,
         route_family = recipe.route_family,
+        route_kind = recipe.route_kind,
         retained_units,
         low_order_transforms,
-        terminal_route_state = low_order_transforms.terminal_route_state,
-        terminal_route_summary = low_order_transforms.terminal_route_summary,
-        low_order_transform_route_kind =
-            low_order_transforms.transform_route_kind,
-        atom_growth_transforms_selected =
-            low_order_transforms.atom_growth_transforms_selected,
-        coefficient_transforms_materialized =
-            low_order_transforms.coefficient_transforms_materialized,
-        coefficient_maps_materialized =
-            low_order_transforms.coefficient_maps_materialized,
-        atom_growth_transform_contracts_available =
-            low_order_transforms.atom_growth_transform_contracts_available,
-        transform_contract_inventory_available =
-            low_order_transforms.transform_contract_inventory_available,
-        transform_contract_inventory =
-            low_order_transforms.transform_contract_inventory,
-        lw_complete_shell_cpb_enumeration_available =
-            low_order_transforms.lw_complete_shell_cpb_enumeration_available,
-        lw_complete_shell_region_count =
-            low_order_transforms.lw_complete_shell_region_count,
-        lw_complete_shell_cpb_count =
-            low_order_transforms.lw_complete_shell_cpb_count,
-        lw_complete_shell_cpb_family_counts =
-            low_order_transforms.lw_complete_shell_cpb_family_counts,
-        lw_complete_shell_enumeration_policy =
-            low_order_transforms.lw_complete_shell_enumeration_policy,
-        lw_complete_shell_coefficient_maps_materialized =
-            low_order_transforms.lw_complete_shell_coefficient_maps_materialized,
-        lw_complete_shell_operator_blocks_materialized =
-            low_order_transforms.lw_complete_shell_operator_blocks_materialized,
-        lw_complete_shell_pair_operator_blocks_materialized =
-            low_order_transforms.lw_complete_shell_pair_operator_blocks_materialized,
-        lw_complete_shell_hamiltonian_data_materialized =
-            low_order_transforms.lw_complete_shell_hamiltonian_data_materialized,
-        pqs_transform_prototype_available =
-            low_order_transforms.pqs_transform_prototype_available,
-        pqs_transform_prototype =
-            low_order_transforms.pqs_transform_prototype,
-        source_lowering_prototype_unit_key =
-            low_order_transforms.source_lowering_prototype_unit_key,
-        transform_contract_source =
-            low_order_transforms.transform_contract_source,
-        transform_contract_status =
-            low_order_transforms.transform_contract_status,
-        cpb_contract_stage = low_order_transforms.cpb_contract_stage,
-        transform_contracts_derive_from_lowering =
-            low_order_transforms.transform_contracts_derive_from_lowering,
-        final_retained_units_are_pair_planning_inputs =
-            low_order_transforms.final_retained_units_are_pair_planning_inputs,
-        summary_only = low_order_transforms.summary_only,
-        active_source_authority = low_order_transforms.active_source_authority,
+        shellification_plan = units.shellification_plan,
+        shellification_scaffold = units.shellification_scaffold,
+        shellification_kind = units.shellification_kind,
+        route_skeleton = units.route_skeleton,
+        pair_entries = units.pair_entries,
+        pair_family_counts = units.pair_family_counts,
+        helper_by_pair_family = units.helper_by_pair_family,
         retained_counts =
             _pqs_source_box_route_driver_named_tuple_from_units(
                 retained_units, :retained_count),
@@ -2928,7 +2600,6 @@ function cartesian_transforms(units, recipe)
                 retained_units, :retained_range),
         retained_dimension =
             _pqs_source_box_route_driver_inventory_retained_dimension(retained_units),
-        transform_stage = :unit_retained_transforms_described,
     )
 end
 
