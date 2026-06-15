@@ -78,8 +78,9 @@ The highest-priority donor features are:
    narrow one-body-only provider-block artifact completed; density/pair/H1-J
    provider blocks and supplemented values remain.
 2. P1 Ham/JLD2 artifact contract and basis transfer/roundtrip: H2 PQS
-   Ham/Basis plus residual-GTO sidecar artifacts write/reload; downstream
-   consumer roundtrip remains.
+   Ham/Basis plus residual-GTO sidecar artifacts, including the one-body-only
+   provider-block fields, write and roundtrip; broader downstream consumer
+   coverage and density/pair/H1-J provider-block artifact coverage remain.
 3. P2 hydrogenic-core / ESOI corrections.
 4. P2 EGOI / density-density correction.
 5. P3 branch / fragment Hamiltonian workflow.
