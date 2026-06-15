@@ -312,9 +312,32 @@ end
     return (:x, :y, :z)[index]
 end
 
+function _pqs_source_box_route_driver_gto_primitive_arrays(orbital)
+    if hasproperty(orbital, :primitive_normalization)
+        orbital.primitive_normalization == :axiswise_normalized_cartesian_gaussian ||
+            throw(ArgumentError("unsupported GTO primitive normalization"))
+    end
+    # Axis-last layout keeps the axis-wise primitive views contiguous:
+    # centers[:, axis_index] and angular_powers[:, axis_index].
+    nprimitive = length(orbital.exponents)
+    centers = zeros(Float64, nprimitive, 3)
+    angular_powers = zeros(Int, nprimitive, 3)
+    for primitive in 1:nprimitive, axis_index in 1:3
+        centers[primitive, axis_index] = Float64(orbital.center[axis_index])
+        angular_powers[primitive, axis_index] =
+            Int(orbital.angular_powers[axis_index])
+    end
+    return (;
+        exponents = Float64.(orbital.exponents),
+        coefficients = Float64.(orbital.coefficients),
+        centers,
+        angular_powers,
+    )
+end
+
 function _pqs_source_box_route_driver_gto_axis_cross(
     basis::BasisRepresentation1D,
-    orbital,
+    orbital_arrays,
     axis::Symbol,
     term::Symbol;
     factor_center::Union{Nothing,Real} = nothing,
@@ -327,13 +350,19 @@ function _pqs_source_box_route_driver_gto_axis_cross(
         ),
     )
     axis_index = _pqs_source_box_route_driver_axis_index(axis)
-    center_value = orbital.center[axis_index]
-    power = orbital.angular_powers[axis_index]
-    primitive_cross = zeros(Float64, length(basis_primitives), length(orbital.exponents))
+    centers_axis = @view orbital_arrays.centers[:, axis_index]
+    powers_axis = @view orbital_arrays.angular_powers[:, axis_index]
+    primitive_cross = zeros(
+        Float64,
+        length(basis_primitives),
+        length(orbital_arrays.exponents),
+    )
     for (row, primitive) in pairs(basis_primitives)
         alpha_basis = _qwrg_gaussian_exponent(primitive::Gaussian)
-        for column in eachindex(orbital.exponents)
-            exponent = Float64(orbital.exponents[column])
+        for column in eachindex(orbital_arrays.exponents)
+            exponent = orbital_arrays.exponents[column]
+            center_value = centers_axis[column]
+            power = powers_axis[column]
             prefactor = _qwrg_atomic_shell_prefactor(exponent, power)
             primitive_cross[row, column] =
                 term === :overlap ?
@@ -379,7 +408,7 @@ end
 
 function _pqs_source_box_route_driver_gto_axis_cross_tables(
     axes,
-    orbital,
+    orbital_arrays,
     term::Symbol;
     factor_center = nothing,
     factor_exponent = nothing,
@@ -388,7 +417,7 @@ function _pqs_source_box_route_driver_gto_axis_cross_tables(
         axis = _pqs_source_box_route_driver_axis_symbol(index)
         _pqs_source_box_route_driver_gto_axis_cross(
             getproperty(axes, axis),
-            orbital,
+            orbital_arrays,
             axis,
             term;
             factor_center =
@@ -399,28 +428,32 @@ function _pqs_source_box_route_driver_gto_axis_cross_tables(
 end
 
 function _pqs_source_box_route_driver_gto_axis_self(
-    left,
-    right,
+    left_arrays,
+    right_arrays,
     axis::Symbol,
     term::Symbol;
     factor_center::Union{Nothing,Real} = nothing,
     factor_exponent::Union{Nothing,Real} = nothing,
 )
-    left.primitive_normalization == :axiswise_normalized_cartesian_gaussian ||
-        throw(ArgumentError("unsupported left GTO primitive normalization"))
-    right.primitive_normalization == :axiswise_normalized_cartesian_gaussian ||
-        throw(ArgumentError("unsupported right GTO primitive normalization"))
     axis_index = _pqs_source_box_route_driver_axis_index(axis)
-    center_left = left.center[axis_index]
-    center_right = right.center[axis_index]
-    power_left = left.angular_powers[axis_index]
-    power_right = right.angular_powers[axis_index]
-    matrix = zeros(Float64, length(left.exponents), length(right.exponents))
-    for j in eachindex(right.exponents)
-        exponent_right = Float64(right.exponents[j])
+    center_left_axis = @view left_arrays.centers[:, axis_index]
+    center_right_axis = @view right_arrays.centers[:, axis_index]
+    power_left_axis = @view left_arrays.angular_powers[:, axis_index]
+    power_right_axis = @view right_arrays.angular_powers[:, axis_index]
+    matrix = zeros(
+        Float64,
+        length(left_arrays.exponents),
+        length(right_arrays.exponents),
+    )
+    for j in eachindex(right_arrays.exponents)
+        exponent_right = right_arrays.exponents[j]
+        center_right = center_right_axis[j]
+        power_right = power_right_axis[j]
         prefactor_right = _qwrg_atomic_shell_prefactor(exponent_right, power_right)
-        for i in eachindex(left.exponents)
-            exponent_left = Float64(left.exponents[i])
+        for i in eachindex(left_arrays.exponents)
+            exponent_left = left_arrays.exponents[i]
+            center_left = center_left_axis[i]
+            power_left = power_left_axis[i]
             prefactor_left = _qwrg_atomic_shell_prefactor(exponent_left, power_left)
             matrix[i, j] =
                 term === :overlap ?
@@ -465,8 +498,8 @@ function _pqs_source_box_route_driver_gto_axis_self(
 end
 
 function _pqs_source_box_route_driver_gto_axis_self_tables(
-    left,
-    right,
+    left_arrays,
+    right_arrays,
     term::Symbol;
     factor_center = nothing,
     factor_exponent = nothing,
@@ -474,8 +507,8 @@ function _pqs_source_box_route_driver_gto_axis_self_tables(
     return ntuple(3) do index
         axis = _pqs_source_box_route_driver_axis_symbol(index)
         _pqs_source_box_route_driver_gto_axis_self(
-            left,
-            right,
+            left_arrays,
+            right_arrays,
             axis,
             term;
             factor_center =
@@ -488,15 +521,15 @@ end
 function _pqs_source_box_route_driver_gto_support_column!(
     destination::AbstractVector{<:Real},
     states,
-    orbital,
+    coefficients::AbstractVector{<:Real},
     axis_tables,
 )
     fill!(destination, 0.0)
     @inbounds for (row, (ix, iy, iz)) in pairs(states)
         value = 0.0
-        for primitive in eachindex(orbital.coefficients)
+        for primitive in eachindex(coefficients)
             value +=
-                Float64(orbital.coefficients[primitive]) *
+                coefficients[primitive] *
                 axis_tables[1][ix, primitive] *
                 axis_tables[2][iy, primitive] *
                 axis_tables[3][iz, primitive]
@@ -536,16 +569,17 @@ function _pqs_source_box_route_driver_pqs_gto_support_one_body(
     scratch = zeros(Float64, length(states))
 
     for (column, orbital) in pairs(supplement.orbitals)
+        orbital_arrays = _pqs_source_box_route_driver_gto_primitive_arrays(orbital)
         overlap_tables =
             _pqs_source_box_route_driver_gto_axis_cross_tables(
                 axes,
-                orbital,
+                orbital_arrays,
                 :overlap,
             )
         kinetic_tables =
             _pqs_source_box_route_driver_gto_axis_cross_tables(
                 axes,
-                orbital,
+                orbital_arrays,
                 :kinetic,
             )
         for kinetic_axis in 1:3
@@ -558,7 +592,7 @@ function _pqs_source_box_route_driver_pqs_gto_support_one_body(
             _pqs_source_box_route_driver_gto_support_column!(
                 scratch,
                 states,
-                orbital,
+                orbital_arrays.coefficients,
                 axis_tables,
             )
             support_gto_kinetic[:, column] .+= scratch
@@ -569,7 +603,7 @@ function _pqs_source_box_route_driver_pqs_gto_support_one_body(
                 factor_tables =
                     _pqs_source_box_route_driver_gto_axis_cross_tables(
                         axes,
-                        orbital,
+                        orbital_arrays,
                         :factor;
                         factor_center = location,
                         factor_exponent = exponents[term_index],
@@ -577,7 +611,7 @@ function _pqs_source_box_route_driver_pqs_gto_support_one_body(
                 _pqs_source_box_route_driver_gto_support_column!(
                     scratch,
                     states,
-                    orbital,
+                    orbital_arrays.coefficients,
                     factor_tables,
                 )
                 support_gto_charged_nuclear[:, column] .-=
@@ -608,17 +642,23 @@ function _pqs_source_box_route_driver_pqs_gto_self_one_body(inputs)
     norbital = length(supplement.orbitals)
     h_gg_kinetic = zeros(Float64, norbital, norbital)
     h_gg_charged_nuclear = zeros(Float64, norbital, norbital)
-    for (row, left) in pairs(supplement.orbitals), (column, right) in pairs(supplement.orbitals)
+    orbital_arrays = map(
+        _pqs_source_box_route_driver_gto_primitive_arrays,
+        supplement.orbitals,
+    )
+    for row in eachindex(orbital_arrays), column in eachindex(orbital_arrays)
+        left_arrays = orbital_arrays[row]
+        right_arrays = orbital_arrays[column]
         overlap_tables =
             _pqs_source_box_route_driver_gto_axis_self_tables(
-                left,
-                right,
+                left_arrays,
+                right_arrays,
                 :overlap,
             )
         kinetic_tables =
             _pqs_source_box_route_driver_gto_axis_self_tables(
-                left,
-                right,
+                left_arrays,
+                right_arrays,
                 :kinetic,
             )
         for kinetic_axis in 1:3
@@ -630,11 +670,11 @@ function _pqs_source_box_route_driver_pqs_gto_self_one_body(inputs)
             )
             h_gg_kinetic[row, column] +=
                 _pqs_source_box_route_driver_gto_weighted_hadamard(
-                    left.coefficients,
+                    left_arrays.coefficients,
                     axis_tables[1],
                     axis_tables[2],
                     axis_tables[3],
-                    right.coefficients,
+                    right_arrays.coefficients,
                 )
         end
         for (center_index, location) in pairs(atom_locations)
@@ -642,8 +682,8 @@ function _pqs_source_box_route_driver_pqs_gto_self_one_body(inputs)
             for term_index in eachindex(coefficients)
                 factor_tables =
                     _pqs_source_box_route_driver_gto_axis_self_tables(
-                        left,
-                        right,
+                        left_arrays,
+                        right_arrays,
                         :factor;
                         factor_center = location,
                         factor_exponent = exponents[term_index],
@@ -652,11 +692,11 @@ function _pqs_source_box_route_driver_pqs_gto_self_one_body(inputs)
                     charge *
                     coefficients[term_index] *
                     _pqs_source_box_route_driver_gto_weighted_hadamard(
-                        left.coefficients,
+                        left_arrays.coefficients,
                         factor_tables[1],
                         factor_tables[2],
                         factor_tables[3],
-                        right.coefficients,
+                        right_arrays.coefficients,
                     )
             end
         end
