@@ -1,5 +1,38 @@
 # PQS Thin Route Demolition Status
 
+## Promoted Thin Route and Temporary Line Ladders
+
+The thin Cartesian/PQS route has been promoted to `main`. The demolition branch
+name was retired after the fast-forward promotion.
+
+Cartesian validation during the remaining migration should use temporary
+driver line ladders, not the deleted helper/schema/status tests. A line ladder
+answers one migration question: can this surviving Cartesian sub-line still run
+the driver far enough to prove it exists?
+
+Current line ladders are run with:
+
+```text
+julia --project=. tools/run_cartesian_line_ladder.jl --line=wl_atomic
+julia --project=. tools/run_cartesian_line_ladder.jl --line=wl_diatomic
+julia --project=. tools/run_cartesian_line_ladder.jl --line=pqs_atomic
+julia --project=. tools/run_cartesian_line_ladder.jl --line=pqs_diatomic
+```
+
+The full 2x2x2 matrix remains:
+
+```text
+julia --project=. tools/run_cartesian_driver_ladder.jl
+```
+
+These ladders are migration scaffolding, not permanent architecture. When a
+line is merged into the common driver route, its temporary ladder should be
+deleted or folded into the main matrix. Do not reintroduce standalone
+Cartesian nested helper tests, exact print-string tests, route payload schema
+tests, or `status`/`available`/`blocker`/`readiness` field-cloud tests.
+
+## Demolition History
+
 This note tracks the non-adabatic thinning branch
 `demolition/pqs-thin-route`. The branch is allowed to break package load and
 tests while report/status/test scaffolding is removed. Do not treat this as a
