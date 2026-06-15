@@ -5,7 +5,6 @@ parent_axis_family = :G10; core_spacing = 0.5; xmax_parallel = 6.0; xmax_transve
 parent_axis_counts = nothing; probe_parent_axis_construction = true; probe_raw_product_box_plans = false
 q = 5; n_s = 5; fixed_source_mode_shape = true
 supplement_policy = :none; comparison_ready = false; comparison_blocker = :independent_pqs_target_readiness_no_wl_comparison
-artifact_role = :independent_h2_pqs_source_box_target_readiness
 physics_endpoint_ready = false; physics_endpoint_blocker = :missing_independent_pqs_physical_source_plan_materializer
-retained_atom_core_interiors = true; source_plan_role = :independent_pqs_source_box_construction
+retained_atom_core_interiors = true
 run_final_basis = false; run_h1 = false; run_h1_j = false; run_private_rhf = false; save_artifact = true; save_tsv = false

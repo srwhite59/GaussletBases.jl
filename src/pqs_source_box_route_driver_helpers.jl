@@ -1463,37 +1463,14 @@ function _pqs_source_box_route_driver_recipe_metadata(
         parent_mapping_d = get(probe_inputs, :parent_mapping_d, nothing),
         parent_mapping_tail_spacing =
             get(probe_inputs, :parent_mapping_tail_spacing, nothing),
-        comparison_reference_label =
-            get(route_recipe, :comparison_reference_label, nothing),
-        comparison_ready = get(route_recipe, :comparison_ready, true),
-        comparison_blocker = get(route_recipe, :comparison_blocker, nothing),
-        artifact_role = get(route_recipe, :artifact_role, nothing),
-        physics_endpoint_ready =
-            get(route_recipe, :physics_endpoint_ready, nothing),
-        physics_endpoint_blocker =
-            get(route_recipe, :physics_endpoint_blocker, nothing),
         retained_atom_core_interiors =
             get(route_recipe, :retained_atom_core_interiors, nothing),
-        source_plan_role = get(route_recipe, :source_plan_role, nothing),
         supplement_policy = get(route_recipe, :supplement_policy, nothing),
-        wl_h1_lowest = get(route_recipe, :wl_h1_lowest, nothing),
-        wl_h1_self_coulomb = get(route_recipe, :wl_h1_self_coulomb, nothing),
-        wl_rhf_one_electron_energy =
-            get(route_recipe, :wl_rhf_one_electron_energy, nothing),
-        wl_rhf_electron_electron_energy =
-            get(route_recipe, :wl_rhf_electron_electron_energy, nothing),
-        wl_rhf_electronic_energy =
-            get(route_recipe, :wl_rhf_electronic_energy, nothing),
-        wl_rhf_nuclear_repulsion =
-            get(route_recipe, :wl_rhf_nuclear_repulsion, nothing),
-        wl_rhf_total_with_nuclear_repulsion =
-            get(route_recipe, :wl_rhf_total_with_nuclear_repulsion, nothing),
         run_final_basis = get(route_recipe, :run_final_basis, true),
         run_h1 = get(route_recipe, :run_h1, true),
         run_h1_j = get(route_recipe, :run_h1_j, true),
         run_private_rhf =
             get(get(route_recipe, :private_rhf_inputs, (;)), :run_private_rhf, false),
-        wl_rhf_total = get(route_recipe, :wl_rhf_total, nothing),
     )
 
     if route_recipe.route_family == :pqs_source_box
@@ -2152,31 +2129,9 @@ function cartesian_recipe(route_inputs)
             pair_factor_normalization = route_inputs.pair_factor_normalization,
             source_box = source_box_recipe,
             white_lindsey = white_lindsey_recipe,
-            comparison_reference_label =
-                get(route_inputs, :comparison_reference_label, nothing),
-            comparison_ready = get(route_inputs, :comparison_ready, true),
-            comparison_blocker = get(route_inputs, :comparison_blocker, nothing),
-            artifact_role = get(route_inputs, :artifact_role, nothing),
-            physics_endpoint_ready =
-                get(route_inputs, :physics_endpoint_ready, nothing),
-            physics_endpoint_blocker =
-                get(route_inputs, :physics_endpoint_blocker, nothing),
             retained_atom_core_interiors =
                 get(route_inputs, :retained_atom_core_interiors, nothing),
-            source_plan_role = get(route_inputs, :source_plan_role, nothing),
             supplement_policy = get(route_inputs, :supplement_policy, nothing),
-            wl_h1_lowest = get(route_inputs, :wl_h1_lowest, nothing),
-            wl_h1_self_coulomb = get(route_inputs, :wl_h1_self_coulomb, nothing),
-            wl_rhf_one_electron_energy =
-                get(route_inputs, :wl_rhf_one_electron_energy, nothing),
-            wl_rhf_electron_electron_energy =
-                get(route_inputs, :wl_rhf_electron_electron_energy, nothing),
-            wl_rhf_electronic_energy =
-                get(route_inputs, :wl_rhf_electronic_energy, nothing),
-            wl_rhf_nuclear_repulsion =
-                get(route_inputs, :wl_rhf_nuclear_repulsion, nothing),
-            wl_rhf_total_with_nuclear_repulsion =
-                get(route_inputs, :wl_rhf_total_with_nuclear_repulsion, nothing),
             run_final_basis =
                 isnothing(run_final_basis) ?
                 (run_h1 || run_h1_j || run_private_rhf) :
@@ -2184,7 +2139,6 @@ function cartesian_recipe(route_inputs)
             run_h1,
             run_h1_j,
             private_rhf_inputs,
-            wl_rhf_total = get(route_inputs, :wl_rhf_total, nothing),
         )
     end
 
@@ -7436,19 +7390,6 @@ function _pqs_source_box_route_driver_report_stage_low_order_route_summary(assem
     )
 end
 
-function _pqs_source_box_route_driver_independent_h2_pqs_artifact_role(
-    artifact_role,
-)
-    return artifact_role in (
-        :independent_h2_pqs_source_box_target_readiness,
-        :independent_h2_pqs_final_basis_diagnostic,
-        :independent_h2_pqs_h1_diagnostic,
-        :independent_h2_pqs_h1_j_density_diagnostic,
-        :independent_h2_pqs_private_rhf_diagnostic,
-        :independent_h2_pqs_supplement_preflight_diagnostic,
-    )
-end
-
 _pqs_source_box_route_driver_payload_summary(payload) =
     isnothing(payload) ? nothing :
     hasproperty(payload, :summary) ? payload.summary :
@@ -7487,7 +7428,6 @@ function _pqs_source_box_route_driver_complete_core_shell_private_rhf_report_fie
             isnothing(summary) ? :not_requested : get(summary, :status, :available),
         private_rhf_blocker =
             isnothing(summary) ? nothing : get(summary, :blocker, nothing),
-        private_rhf_wl_total = get(recipe, :wl_rhf_total, nothing),
     )
 end
 

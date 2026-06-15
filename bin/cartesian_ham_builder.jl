@@ -54,22 +54,8 @@ white_lindsey_operator_rule = :low_order_unit_operator_blocks
 white_lindsey_benchmark_role = :published_cartesian_baseline_for_pqs_comparison
 white_lindsey_Z = 2.0
 white_lindsey_expansion = coulomb_gaussian_expansion(doacc = false)
-comparison_reference_label = nothing
-comparison_ready = true
-comparison_blocker = nothing
-artifact_role = nothing
-physics_endpoint_ready = nothing
-physics_endpoint_blocker = nothing
 retained_atom_core_interiors = nothing
-source_plan_role = nothing
 supplement_policy = nothing
-wl_h1_lowest = nothing
-wl_h1_self_coulomb = nothing
-wl_rhf_one_electron_energy = nothing
-wl_rhf_electron_electron_energy = nothing
-wl_rhf_electronic_energy = nothing
-wl_rhf_nuclear_repulsion = nothing
-wl_rhf_total_with_nuclear_repulsion = nothing
 run_final_basis = nothing
 run_h1 = true
 run_h1_j = true
@@ -87,7 +73,6 @@ private_rhf_max_history = nothing
 private_rhf_diis_start_iteration = 2
 private_rhf_diis_regularization = 1.0e-12
 private_rhf_diis_coefficient_max_abs = 25.0
-wl_rhf_total = nothing
 
 save_artifact = false
 save_tsv = false
@@ -143,14 +128,8 @@ route_inputs = (; route_family, route_kind, route_shape, product_body_rule,
     white_lindsey_route_shape, white_lindsey_mapping_rule,
     white_lindsey_nesting_rule, white_lindsey_retained_rule,
     white_lindsey_operator_rule, white_lindsey_benchmark_role,
-    comparison_reference_label, comparison_ready, comparison_blocker,
-    artifact_role, physics_endpoint_ready, physics_endpoint_blocker,
-    retained_atom_core_interiors, source_plan_role,
-    supplement_policy, wl_h1_lowest, wl_h1_self_coulomb,
-    wl_rhf_one_electron_energy, wl_rhf_electron_electron_energy,
-    wl_rhf_electronic_energy, wl_rhf_nuclear_repulsion,
-    wl_rhf_total_with_nuclear_repulsion, run_final_basis, run_h1, run_h1_j,
-    private_rhf_inputs, wl_rhf_total)
+    retained_atom_core_interiors, supplement_policy, run_final_basis, run_h1,
+    run_h1_j, private_rhf_inputs)
 materialization_inputs = (; materialize_route, probe_route_configured_one_center_materializer,
     probe_route_configured_diatomic_atom_growth_materializer,
     low_order_shellization_policy,

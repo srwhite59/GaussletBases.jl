@@ -1,6 +1,5 @@
 include("h2_pqs_q5_independent_source_box_r4_h1_j.jl")
 
-artifact_role = :independent_h2_pqs_supplement_preflight_diagnostic
 supplement_policy = :mwg_residual_gto
 comparison_ready = false
 comparison_blocker = :independent_pqs_supplement_preflight_only

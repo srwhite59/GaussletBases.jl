@@ -25,11 +25,9 @@ supplement_policy = :none
 comparison_ready = true
 comparison_blocker = nothing
 comparison_reference_label = "WL/QW H2 R=4 gausslet-only 463 reproduction"
-artifact_role = :fake_pqs_source_backed_wl_reproduction
 physics_endpoint_ready = false
 physics_endpoint_blocker = :fake_pqs_source_backed_wl_reproduction_not_independent_pqs
 retained_atom_core_interiors = true
-source_plan_role = :fake_pqs_source_backed_fixed_source_adapter
 
 wl_h1_lowest = -0.7946609179724673
 wl_h1_self_coulomb = 0.45696639804337047

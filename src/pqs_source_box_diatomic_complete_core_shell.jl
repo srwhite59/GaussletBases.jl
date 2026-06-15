@@ -1184,7 +1184,7 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_target_payload(
         (!isnothing(inventory) && inventory.retained_atom_core_interiors)
     source_plan_role =
         independent_target ?
-        get(recipe, :source_plan_role, :independent_pqs_source_box_construction) :
+        :independent_pqs_source_box_construction :
         isnothing(inventory) ?
         :not_available :
         inventory.source_plan_role
@@ -2095,8 +2095,9 @@ function _pqs_source_box_route_driver_independent_h2_physical_source_plan_descri
     )
     isnothing(target_payload) &&
         return blocked(:missing_independent_pqs_target_payload)
-    target_payload.source_plan_role === :independent_pqs_source_box_construction ||
-        return blocked(:not_independent_pqs_source_box_construction)
+    target_payload.route_kind ===
+        :bond_aligned_diatomic_independent_pqs_source_box_core_shell ||
+        return blocked(:not_independent_pqs_route_kind)
     target_payload.status === :available_physical_gausslet_core_shell_target_inventory ||
         return blocked(target_payload.blocker)
     support_plan = get(target_payload.summary, :support_plan, nothing)
@@ -2541,7 +2542,8 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_pay
         target_payload.status === :available_physical_gausslet_core_shell_target_inventory
     independent_target =
         !isnothing(target_payload) &&
-        target_payload.source_plan_role === :independent_pqs_source_box_construction
+        target_payload.route_kind ===
+        :bond_aligned_diatomic_independent_pqs_source_box_core_shell
     source_plan =
         !isnothing(candidate_payload) &&
         candidate_payload.status === :available_physical_gausslet_source_plan_candidate ?
@@ -4417,7 +4419,6 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_rhf_input_contr
         hasproperty(route_skeleton, :route_kind) ?
         route_skeleton.route_kind :
         recipe.route_kind
-    fixture_role = get(recipe, :artifact_role, nothing)
     source_plan =
         !isnothing(source_plan_payload) && hasproperty(source_plan_payload, :source_plan) ?
         source_plan_payload.source_plan :
@@ -4464,20 +4465,13 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_rhf_input_contr
     if route_family !== :pqs_source_box
         status = :not_applicable_pqs_physical_gausslet_rhf_input_contract
         blocker = nothing
-    elseif !(
-        route_kind === :bond_aligned_diatomic_physical_gausslet_core_shell_pqs &&
-        fixture_role in (
-            :physical_gausslet_endpoint_target,
-            :fake_pqs_source_backed_wl_reproduction,
-        ) ||
-        route_kind === :bond_aligned_diatomic_independent_pqs_source_box_core_shell &&
-        _pqs_source_box_route_driver_independent_h2_pqs_artifact_role(
-            fixture_role,
-        )
+    elseif route_kind ∉ (
+        :bond_aligned_diatomic_physical_gausslet_core_shell_pqs,
+        :bond_aligned_diatomic_independent_pqs_source_box_core_shell,
     )
         status = :blocked_pqs_physical_gausslet_rhf_input_contract
-        blocker = :unsupported_physical_gausslet_fixture_role
-        push!(missing, :physical_gausslet_fixture_role)
+        blocker = :unsupported_physical_gausslet_route_kind
+        push!(missing, :physical_gausslet_route_kind)
     elseif source_plan_status !==
            :available_pqs_diatomic_physical_gausslet_core_shell_source_plan
         status = :blocked_pqs_physical_gausslet_rhf_input_contract

@@ -1,6 +1,5 @@
 include("h2_pqs_q5_independent_source_box_r4_h1_j.jl")
 
-artifact_role = :independent_h2_pqs_private_rhf_diagnostic
 physics_endpoint_ready = false
 physics_endpoint_blocker = :private_rhf_diagnostic_not_public_solver_contract
 run_final_basis = true
