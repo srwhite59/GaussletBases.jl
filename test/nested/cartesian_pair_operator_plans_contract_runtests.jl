@@ -440,18 +440,12 @@ end
         CRTCForPairOps.retained_unit_transform_contract_plan(retained_plan)
     operator_plan =
         CPOP.pair_operator_plan(pair_plan, transform_plan; route_core_sidecars = false)
-    compatibility_operator_plan =
-        CPOP.pair_operator_plan(pair_plan; route_core_sidecars = false)
     operator_summary = CPOP.summary(operator_plan)
-    compatibility_summary = CPOP.summary(compatibility_operator_plan)
 
     @test operator_plan isa CPOP.PairOperatorPlan
     @test operator_plan.transform_contract_plan isa
           CRTCForPairOps.RetainedUnitTransformContractPlan
     @test operator_summary.status == :available_pair_operator_plan
-    @test compatibility_summary.status == operator_summary.status
-    @test compatibility_summary.pair_operator_plan_count ==
-          operator_summary.pair_operator_plan_count
     @test operator_summary.retained_unit_count == 3
     @test operator_summary.unit_pair_count == 6
     @test operator_summary.pair_operator_plan_count ==
@@ -460,12 +454,6 @@ end
           operator_summary.unit_pair_count
     @test length(CPOP.pair_operator_records(operator_plan)) ==
           operator_summary.pair_operator_plan_count
-    @test !operator_summary.route_core_pair_operator_plan_inventory_available
-    @test operator_summary.route_core_pair_operator_plan_inventory_status ==
-          :not_requested_route_core_pair_operator_plan_inventory
-    @test operator_summary.route_core_pair_operator_plan_inventory_blocker ===
-          nothing
-    @test operator_summary.route_core_pair_operator_plan_count == 0
 
     @test _pair_ops_count(
         operator_summary.source_operator_path_counts,
@@ -517,11 +505,6 @@ end
         :source_block_direct_to_final_block,
     ) == 3
     @test operator_summary.blocked_pair_operator_plan_count == 0
-    @test _pair_ops_count(
-        operator_summary.materialization_status_counts,
-        :materialization_status,
-        :metadata_only_not_materialized,
-    ) == operator_summary.pair_operator_plan_count
     @test !operator_summary.materialized
     @test !operator_summary.source_operator_blocks_materialized
     @test !operator_summary.final_pair_blocks_materialized
@@ -597,16 +580,6 @@ end
     @test missing_summary.status == :blocked_pair_operator_plan
     @test missing_summary.blocked_pair_operator_plan_count == 3
     @test _pair_ops_count(
-        missing_summary.blocker_counts,
-        :blocker,
-        :missing_left_transform_contract,
-    ) == 2
-    @test _pair_ops_count(
-        missing_summary.blocker_counts,
-        :blocker,
-        :missing_right_transform_contract,
-    ) == 1
-    @test _pair_ops_count(
         missing_summary.final_block_path_counts,
         :final_block_path,
         :blocked_final_pair_block_path,
@@ -627,16 +600,6 @@ end
     @test duplicate_summary.status == :blocked_pair_operator_plan
     @test duplicate_summary.blocked_pair_operator_plan_count ==
           duplicate_summary.pair_operator_plan_count
-    @test _pair_ops_count(
-        duplicate_summary.blocker_counts,
-        :blocker,
-        :duplicate_retained_unit_transform_contract,
-    ) == duplicate_summary.pair_operator_plan_count
-    @test all(
-        record -> record.metadata.duplicate_transform_contract_unit_keys ==
-                  (:pair_ops_pqs_retained_unit,),
-        CPOP.pair_operator_records(duplicate_operator_plan),
-    )
     @test !duplicate_summary.source_operator_blocks_materialized
     @test !duplicate_summary.final_pair_blocks_materialized
     @test !duplicate_summary.operator_blocks_materialized

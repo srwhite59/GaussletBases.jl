@@ -1032,3 +1032,44 @@ Line-count / complexity note:
 - MT6 Audit/classify old Cartesian flat paths: active. The sidecar audits
   produced concrete deletion candidates and the loop has begun retiring old
   route-shadow comparison wrappers and report-alias test pressure.
+
+## Pass 245 - Synthetic RouteCore Sidecar Blocker Test Shrink
+
+Commit(s):
+- this commit - Shrink synthetic RouteCore sidecar blocker tests
+
+Summary:
+- Deleted the synthetic missing-RouteCore-sidecar unit-pair helper/testset and
+  collapsed pair-operator assertions that only preserved private
+  metadata-only/blocker-count vocabulary.
+- Preserved active unit-pair shape/order/family checks and pair-operator
+  shape/path/transform matching checks.
+
+Validation:
+- Doer: `cartesian_unit_pairs_contract_runtests.jl` passed;
+  `cartesian_pair_operator_plans_contract_runtests.jl` passed; `git diff
+  --check` passed.
+- Manager: reviewed the two focused diffs and accepted the doer validation.
+
+Goal advancement:
+- MT5/LT2: removed another 100 lines of stale contract-test pressure.
+- LT7: kept focused module-contract tests on active behavior instead of
+  synthetic obsolete blocker vocabularies.
+- MT6: further retired old RouteCore sidecar transition scaffolding while
+  preserving active module contracts.
+
+Medium-goal update:
+- none.
+
+Risk / guardrail:
+- Do not delete `_pair_ops_count(...)` while active path/final-block summary
+  assertions still use it.
+
+Remaining blocker / next:
+- Cleanup candidates remain available, especially legacy-default low-order
+  policy test vocabulary and broader flat report/status alias surfaces. The
+  independent H2 PQS source-plan line can resume once manager chooses to spend
+  the accumulated deletion budget.
+
+Line-count / complexity note:
+- Scoped `src + test + bin` diff was `0` added / `100` deleted, net `-100`.

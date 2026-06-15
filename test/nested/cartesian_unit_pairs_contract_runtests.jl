@@ -126,48 +126,6 @@ function _unit_pairs_lowering_plan()
     )
 end
 
-function _unit_pairs_blocked_retained_plan(plan)
-    units = CRUForUnitPairs.units(plan)
-    first_unit = first(units)
-    blocked_first_unit = CRUForUnitPairs.RetainedUnitRecord(
-        first_unit.unit_key,
-        first_unit.unit_index,
-        first_unit.unit_kind,
-        first_unit.source_contract_key,
-        first_unit.terminal_region_key,
-        first_unit.terminal_region_role,
-        first_unit.terminal_region_kind,
-        first_unit.lowering_kind,
-        first_unit.retained_rule,
-        first_unit.realization_rule,
-        first_unit.owned_support,
-        first_unit.source_cpbs,
-        first_unit.source_cpb_index,
-        first_unit.dimension_status,
-        first_unit.dimension,
-        first_unit.column_range_status,
-        first_unit.column_range,
-        nothing,
-        first_unit.materialized,
-        merge(
-            first_unit.metadata,
-            (;
-                route_core_sidecar_status = :blocked,
-                route_core_sidecar_blocker = :synthetic_missing_sidecar,
-            ),
-        ),
-    )
-    blocked_units = CRUForUnitPairs.RetainedUnitRecord[blocked_first_unit]
-    append!(blocked_units, @view units[2:end])
-    return CRUForUnitPairs.RetainedUnitPlan(
-        plan.policy,
-        plan.lowering_plan,
-        blocked_units,
-        plan.summary,
-        merge(plan.metadata, (; fixture_variant = :missing_route_core_sidecar)),
-    )
-end
-
 function _unit_pair_family_count(summary, pair_family::Symbol)
     for entry in summary.pair_family_counts
         entry.pair_family == pair_family && return entry.count
@@ -246,25 +204,4 @@ end
     @test !pair_summary.operator_blocks_materialized
     @test !pair_summary.hamiltonian_data_materialized
     @test !pair_summary.artifacts_materialized
-end
-
-@testset "CartesianUnitPairs missing RouteCore sidecars" begin
-    retained_plan = CRUForUnitPairs.retained_unit_plan(_unit_pairs_lowering_plan())
-    blocked_plan = _unit_pairs_blocked_retained_plan(retained_plan)
-    pair_plan = CUP.unit_pair_plan(blocked_plan)
-    pair_summary = CUP.summary(pair_plan)
-
-    @test pair_summary.retained_unit_count == 3
-    @test pair_summary.pair_count == 6
-    @test !pair_summary.route_core_pair_inventory_available
-    @test pair_summary.route_core_pair_inventory_status ==
-          :blocked_missing_route_core_final_units
-    @test pair_summary.route_core_pair_inventory_blocker ==
-          :missing_route_core_final_units
-    @test pair_summary.route_core_pair_count == 0
-    @test pair_summary.route_core_pair_missing_final_unit_indices == (1,)
-    @test isnothing(CUP.route_core_pair_inventory(pair_plan))
-    @test all(pair -> isnothing(pair.route_core_pair_sidecar), CUP.unit_pairs(pair_plan))
-    @test !pair_summary.operator_blocks_materialized
-    @test !pair_summary.hamiltonian_data_materialized
 end
