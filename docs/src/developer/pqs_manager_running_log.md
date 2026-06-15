@@ -1276,3 +1276,47 @@ Line-count / complexity note:
 - MT6 Audit/classify old Cartesian flat paths: active. These passes continued
   retiring stale staged-test mirror assertions and old flat vocabulary while
   preserving compact active route smoke.
+
+## Pass 250 - Independent H2 PQS H1-J Diagnostic
+
+Commit(s):
+- this commit - Validate independent H2 PQS H1-J diagnostic
+
+Summary:
+- The existing H1-J/density diagnostic path materialized for the independent H2
+  PQS basis without source edits.
+- The focused route reports density gauge
+  `:pre_final_localized_positive_weight`, raw pair convention `:raw_numerator`,
+  positive support weights, finite/symmetric `(471, 471)` pre-final pair matrix,
+  and H1-J self-Coulomb `0.4569117646737236`.
+- This remains diagnostic only. RHF/private RHF, supplements, CR2, export, and
+  public API remain off.
+
+Validation:
+- Doer: package load passed; focused independent H2 PQS H1-J driver/artifact
+  check passed in about 79 seconds; `git diff --check` passed.
+- Manager: reviewed the deletion-only diff and accepted doer validation without
+  duplicating the slow route run.
+
+Goal advancement:
+- MT2/LT5: advanced independent H2 PQS from H1 readiness to a coherent H1-J
+  density diagnostic while preserving fake/source-backed guardrails.
+- LT6: confirmed the artifact already exposes the key density/H1-J convention
+  facts needed for consumer review.
+- MT5/LT2: deleted another stale selected-terminal-sidecar mirror block.
+
+Medium-goal update:
+- none.
+
+Risk / guardrail:
+- H1-J is not solver readiness. Do not promote RHF/export/public readiness
+  until a private RHF/solver-contract pass explicitly reviews the density/Fock
+  convention.
+
+Remaining blocker / next:
+- Choose the next lane deliberately: either private RHF diagnostic contract for
+  this independent H2 PQS basis, or cleanup of driver input naming so
+  readiness/final-basis/H1/H1-J variants are not confused.
+
+Line-count / complexity note:
+- Scoped `src + test + bin` diff was `0` added / `12` deleted, net `-12`.

@@ -406,12 +406,6 @@ end
           :cartesian_unit_stage_selected_terminal_lowering_crc_sidecar_summary
     @test transform_selected_crc_sidecars.selected_contract_count ==
           unit_selected_crc_sidecars.selected_contract_count
-    @test !transform_selected_crc_sidecars.final_retained_unit_inventory_available
-    @test !transform_selected_crc_sidecars.pair_inventory_available
-    @test !transform_selected_crc_sidecars.operator_blocks_materialized
-    @test !transform_selected_crc_sidecars.pair_operator_blocks_materialized
-    @test !transform_selected_crc_sidecars.hamiltonian_data_materialized
-    @test !transform_selected_crc_sidecars.artifacts_materialized
     @test terminal_transforms.terminal_shellification_lw_complete_shell_cpb_count ==
           terminal_units.terminal_shellification_lw_complete_shell_cpb_count
     @test terminal_transforms.terminal_shellification_lw_complete_shell_cpb_family_counts ==
@@ -502,12 +496,6 @@ end
         terminal_summary.terminal_shellification_selected_crc_sidecar_summary
     @test summary_selected_crc_sidecars.selected_contract_count ==
           transform_selected_crc_sidecars.selected_contract_count
-    @test !summary_selected_crc_sidecars.final_retained_unit_inventory_available
-    @test !summary_selected_crc_sidecars.pair_inventory_available
-    @test !summary_selected_crc_sidecars.operator_blocks_materialized
-    @test !summary_selected_crc_sidecars.pair_operator_blocks_materialized
-    @test !summary_selected_crc_sidecars.hamiltonian_data_materialized
-    @test !summary_selected_crc_sidecars.artifacts_materialized
     @test terminal_summary.terminal_shellification_lw_complete_shell_cpb_count ==
           terminal_units.terminal_shellification_lw_complete_shell_cpb_count
     @test terminal_summary.terminal_shellification_lw_complete_shell_cpb_family_counts ==
