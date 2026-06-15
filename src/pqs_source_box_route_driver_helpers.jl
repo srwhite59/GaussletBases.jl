@@ -8591,7 +8591,6 @@ function cartesian_print_summary(report, materialization)
 end
 
 function cartesian_print_details(report, materialization)
-    _pqs_source_box_route_driver_print_details(report)
     _pqs_source_box_route_driver_print_materialization(materialization)
     return nothing
 end

@@ -319,3 +319,40 @@ Recommended next cut:
   `pqs_source_box_route_driver_helpers.jl`.
 - Re-run compact driver smokes for final-basis/H1 stages only after the next
   source-side thinning pass, not as broad test gates.
+
+## Checkpoint 7 - Detailed Driver Print Cut
+
+Status:
+
+- uncommitted demolition cut for review.
+
+Deleted/simplified:
+
+- Removed the large detailed print helper that dumped system, parent, unit,
+  pair, and diagnostics field clouds.
+- Kept the compact driver summary and the compact materialization print block.
+
+Validation:
+
+- `git diff --check` passed.
+- Package load passed.
+- The protected H2 independent PQS readiness driver smoke completed with
+  saving disabled.
+
+Line-count impact:
+
+- 150 deleted lines in the uncommitted seventh cut.
+- Current total branch pressure relative to `main`: 438 insertions and 45,319
+  deletions.
+
+Current breakage assessment:
+
+- Package load and the readiness driver smoke remain green.
+- Detailed text observability is intentionally reduced; future checks should
+  use compact driver facts rather than print-line content.
+
+Recommended next cut:
+
+- Continue source-side thinning in `pqs_source_box_route_driver_helpers.jl`,
+  focusing on report/status-only fields that are not needed for driver
+  construction.
