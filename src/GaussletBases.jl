@@ -39,10 +39,6 @@ export AbstractFunction1D,
        gto_occupancy_matrix,
        basis_projector,
        transfer_orbitals,
-       cartesian_basis_bundle_payload,
-       read_cartesian_basis_bundle,
-       load_cartesian_basis_representation,
-       write_cartesian_basis_bundle_jld2,
        gaussian_coulomb_pair_index,
        gaussian_coulomb_pair_matrix,
        EGOIDensityDensityCorrectionResult,
@@ -409,10 +405,6 @@ function gto_overlap_matrix end
 function gto_occupancy_matrix end
 function basis_projector end
 function transfer_orbitals end
-function cartesian_basis_bundle_payload end
-function read_cartesian_basis_bundle end
-function load_cartesian_basis_representation end
-function write_cartesian_basis_bundle_jld2 end
 function basis_partition end
 function hierarchical_partition end
 function build_leaf_pgdg end
@@ -661,8 +653,6 @@ include("pqs_source_box_route_driver_helpers.jl")
 include("pqs_source_box_low_order_materialization.jl")
 include("pqs_source_box_diatomic_complete_core_shell.jl")
 include("pqs_source_box_route_driver_skeletons.jl")
-include("white_lindsey_materialized_seed.jl")
-include("cartesian_atom_growth_route_driver_helpers.jl")
 include("pqs_source_box_route_driver_reporting.jl")
 include("ordinary_qw_nested_frontends.jl")
 include("ordinary_qw_residuals.jl")
@@ -707,7 +697,5 @@ include("fullida_dense_export.jl")
 include("angular_sequence_export.jl")
 include("experimental_chain_export.jl")
 include("sliced_ham_export.jl")
-include("cartesian_bundle_export.jl")
-include("cartesian_bundle_io.jl")
 
 end

@@ -36,7 +36,6 @@ include("cartesian_basis_representation_cross_overlap_runtests.jl")
 include("cartesian_basis_projector_orbital_transfer_runtests.jl")
 
 include("atomic_direct_product_he_extent_change_runtests.jl")
-include("atomic_hybrid_he_orbital_transfer_runtests.jl")
 include("mapped_ordinary_cartesian_1d_working_representation_runtests.jl")
 include("one_center_atomic_factorized_direct_packet_kernel_runtests.jl")
 include("one_center_atomic_legacy_profile_residual_completion_runtests.jl")

@@ -483,3 +483,98 @@ Recommended next cut:
 - Continue using the driver as the survival test mechanism; avoid restoring old
   JLD2 manifest and export-key tests unless a public artifact contract is
   deliberately rebuilt.
+
+## Checkpoint 11 - Legacy WL Seed and Atom-Growth Helper Cut
+
+Status:
+
+- uncommitted demolition cut for review.
+
+Deleted/simplified:
+
+- Deleted `src/white_lindsey_materialized_seed.jl`.
+- Deleted `src/cartesian_atom_growth_route_driver_helpers.jl`.
+- Removed both files from `src/GaussletBases.jl`.
+
+Expected old-path fallout:
+
+- Remaining source callers after deletion:
+  - `src/cartesian_shellization_route.jl` still references
+    `_white_lindsey_low_order_materialized_seed_inventory`.
+  - `src/pqs_source_box_route_driver_helpers.jl` still references three
+    `_pqs_source_box_route_driver_atom_growth_*` helper families from old
+    low-order branches.
+- These are old WL/atom-growth low-order scaffolding callers, not the protected
+  independent H2 PQS readiness driver path. They should be cut or quarantined
+  in a later repair/delete pass rather than restored.
+
+Validation:
+
+- `git diff --check` passed.
+- Caller grep found the expected old-path source fallout listed above.
+- Package load was attempted and failed first in `cartesian_bundle_export.jl`
+  because the old export layer typed against the deleted
+  `_WhiteLindseyLowOrderHamBundleAdapter`.
+
+Line-count impact:
+
+- 2,452 source lines deleted before validation.
+
+Current breakage assessment:
+
+- This cut intentionally breaks old WL seed and atom-growth low-order paths if
+  those branches are invoked.
+- The protected driver entry point and driver inputs remain present.
+- The first load failure is old Cartesian bundle export scaffolding, not the H2
+  survival route.
+
+Recommended next cut:
+
+- Remove or block the four remaining old-path callers listed above instead of
+  restoring the deleted helper files.
+
+## Checkpoint 12 - Cartesian Bundle Export Layer Cut
+
+Status:
+
+- uncommitted demolition cut for review.
+
+Deleted/simplified:
+
+- Deleted `src/cartesian_bundle_export.jl` and `src/cartesian_bundle_io.jl`.
+- Removed the corresponding public exports, empty generic declarations, and
+  includes from `src/GaussletBases.jl`.
+- Deleted the nested hybrid orbital-transfer test that depended on writing and
+  reading Cartesian basis bundles.
+- Removed that test from the slow integration runner.
+
+Expected old-path fallout:
+
+- `test/ordinary/runtests.jl` still calls `cartesian_basis_bundle_payload`.
+  That is old export API pressure and should not be repaired in this demolition
+  branch unless the public artifact contract is explicitly rebuilt.
+
+Validation:
+
+- `git diff --check` passed.
+- Caller grep found only the expected old export/test fallout and the four
+  old low-order source caller fallouts.
+- Package load passed after this cut.
+- The protected H2 independent PQS readiness driver smoke completed with
+  saving disabled.
+
+Line-count impact:
+
+- 1,815 source/test lines deleted before validation.
+
+Current breakage assessment:
+
+- This cut intentionally removes the old Cartesian basis/Hamiltonian bundle
+  export API from the demolition branch.
+- The protected driver entry point and driver inputs remain present.
+- Package load and the protected readiness driver smoke are green.
+
+Recommended next cut:
+
+- If package load returns green, continue removing old-path callers such as the
+  ordinary-test bundle assertion and the four low-order source caller fallouts.
