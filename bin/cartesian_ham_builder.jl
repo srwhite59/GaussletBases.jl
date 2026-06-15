@@ -75,6 +75,7 @@ stop_after_stage = nothing
 # backend from map/probe backend, nside from n_s.
 materializer_backend = nothing
 materializer_nside = nothing
+residual_gto_provider_blocks = :none
 outfile = "cartesian_ham_builder_report.jld2"
 tsvfile = "cartesian_ham_builder_report.tsv"
 basisfile = "cartesian_nesting_route_driver_basis_bundle.jld2"
@@ -118,7 +119,7 @@ route_inputs = (; route_family, route_kind, route_shape, product_body_rule,
 materialization_inputs = (; materialize_route,
     save_basis_artifact, save_ham_artifact, basisfile, hamfile,
     materializer_backend, materializer_nside,
-    white_lindsey_expansion, white_lindsey_Z)
+    white_lindsey_expansion, white_lindsey_Z, residual_gto_provider_blocks)
 save_inputs = (; save_artifact, save_tsv, outfile, tsvfile,
     input_path = driver_input_path)
 

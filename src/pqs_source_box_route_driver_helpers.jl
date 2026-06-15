@@ -800,13 +800,6 @@ function _pqs_source_box_route_driver_terminal_parent_axes(parent)
     return (collect(1:counts[1]), collect(1:counts[2]), collect(1:counts[3]))
 end
 
-function _pqs_source_box_route_driver_axis_index(axis::Symbol)
-    axis == :x && return 1
-    axis == :y && return 2
-    axis == :z && return 3
-    throw(ArgumentError("terminal shellification requires bond_axis = :x, :y, or :z"))
-end
-
 function _pqs_source_box_route_driver_terminal_center_index(count::Int)
     count > 0 || throw(ArgumentError("terminal shellification axis count must be positive"))
     return cld(count, 2)

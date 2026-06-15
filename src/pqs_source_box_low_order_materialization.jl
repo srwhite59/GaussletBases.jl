@@ -246,9 +246,476 @@ function _pqs_source_box_route_driver_pqs_gto_sidecar(inputs)
     )
     return (;
         final_gto_cross_overlap,
+        support_gto_cross,
+        support_states,
+        axis_representations,
         gto_self_overlap,
         gto_residual_overlap,
         diagnostics,
+    )
+end
+
+function _pqs_source_box_route_driver_pqs_gto_residual_transform(
+    sidecar;
+    residual_overlap_cutoff::Real = 1.0e-10,
+)
+    residual_overlap = Matrix{Float64}(sidecar.gto_residual_overlap)
+    residual_overlap_sym =
+        Matrix{Float64}(0.5 .* (residual_overlap .+ transpose(residual_overlap)))
+    decomposition = eigen(Symmetric(residual_overlap_sym))
+    eigenvalues = Float64[decomposition.values...]
+    cutoff = Float64(residual_overlap_cutoff)
+    any(<(-cutoff), eigenvalues) && throw(
+        ArgumentError(
+            "H2 PQS residual-GTO overlap has eigenvalues below -$(cutoff)",
+        ),
+    )
+    keep = findall(>(cutoff), eigenvalues)
+    residual_rank = length(keep)
+    residual_transform =
+        isempty(keep) ?
+        zeros(Float64, size(residual_overlap, 1), 0) :
+        Matrix{Float64}(
+            decomposition.vectors[:, keep] *
+            Diagonal(1.0 ./ sqrt.(eigenvalues[keep])),
+        )
+    residual_identity =
+        transpose(residual_transform) *
+        residual_overlap_sym *
+        residual_transform
+    residual_overlap_identity_error =
+        residual_rank == 0 ?
+        0.0 :
+        norm(residual_identity - Matrix{Float64}(I, residual_rank, residual_rank), Inf)
+    return (;
+        residual_transform,
+        residual_rank,
+        residual_overlap_eigenvalues = eigenvalues,
+        residual_overlap_identity_error,
+        residual_overlap_eigenvalue_min =
+            isempty(eigenvalues) ? nothing : minimum(eigenvalues),
+        residual_overlap_eigenvalue_max =
+            isempty(eigenvalues) ? nothing : maximum(eigenvalues),
+        residual_overlap_cutoff = cutoff,
+    )
+end
+
+@inline function _pqs_source_box_route_driver_axis_index(axis::Symbol)
+    axis === :x && return 1
+    axis === :y && return 2
+    axis === :z && return 3
+    throw(ArgumentError("axis must be :x, :y, or :z"))
+end
+
+@inline function _pqs_source_box_route_driver_axis_symbol(index::Int)
+    1 <= index <= 3 || throw(ArgumentError("axis index must be 1, 2, or 3"))
+    return (:x, :y, :z)[index]
+end
+
+function _pqs_source_box_route_driver_gto_axis_cross(
+    basis::BasisRepresentation1D,
+    orbital,
+    axis::Symbol,
+    term::Symbol;
+    factor_center::Union{Nothing,Real} = nothing,
+    factor_exponent::Union{Nothing,Real} = nothing,
+)
+    basis_primitives = collect(primitives(primitive_set(basis)))
+    all(primitive -> primitive isa Gaussian, basis_primitives) || throw(
+        ArgumentError(
+            "PQS/GTO one-body provider blocks require Gaussian 1D primitives on the Cartesian axis representation",
+        ),
+    )
+    axis_index = _pqs_source_box_route_driver_axis_index(axis)
+    center_value = orbital.center[axis_index]
+    power = orbital.angular_powers[axis_index]
+    primitive_cross = zeros(Float64, length(basis_primitives), length(orbital.exponents))
+    for (row, primitive) in pairs(basis_primitives)
+        alpha_basis = _qwrg_gaussian_exponent(primitive::Gaussian)
+        for column in eachindex(orbital.exponents)
+            exponent = Float64(orbital.exponents[column])
+            prefactor = _qwrg_atomic_shell_prefactor(exponent, power)
+            primitive_cross[row, column] =
+                term === :overlap ?
+                _qwrg_atomic_basic_integral(
+                    alpha_basis,
+                    primitive.center_value,
+                    0,
+                    1.0,
+                    exponent,
+                    center_value,
+                    power,
+                    prefactor,
+                ) :
+                term === :kinetic ?
+                _qwrg_atomic_kinetic_integral(
+                    alpha_basis,
+                    primitive.center_value,
+                    0,
+                    1.0,
+                    exponent,
+                    center_value,
+                    power,
+                    prefactor,
+                ) :
+                term === :factor ?
+                _qwrg_atomic_basic_integral(
+                    alpha_basis,
+                    primitive.center_value,
+                    0,
+                    1.0,
+                    exponent,
+                    center_value,
+                    power,
+                    prefactor;
+                    extra_exponent = Float64(factor_exponent),
+                    extra_center = Float64(factor_center),
+                ) :
+                throw(ArgumentError("unsupported PQS/GTO axis cross term :$(term)"))
+        end
+    end
+    return Matrix{Float64}(transpose(basis.coefficient_matrix) * primitive_cross)
+end
+
+function _pqs_source_box_route_driver_gto_axis_cross_tables(
+    axes,
+    orbital,
+    term::Symbol;
+    factor_center = nothing,
+    factor_exponent = nothing,
+)
+    return ntuple(3) do index
+        axis = _pqs_source_box_route_driver_axis_symbol(index)
+        _pqs_source_box_route_driver_gto_axis_cross(
+            getproperty(axes, axis),
+            orbital,
+            axis,
+            term;
+            factor_center =
+                isnothing(factor_center) ? nothing : factor_center[index],
+            factor_exponent,
+        )
+    end
+end
+
+function _pqs_source_box_route_driver_gto_axis_self(
+    left,
+    right,
+    axis::Symbol,
+    term::Symbol;
+    factor_center::Union{Nothing,Real} = nothing,
+    factor_exponent::Union{Nothing,Real} = nothing,
+)
+    left.primitive_normalization == :axiswise_normalized_cartesian_gaussian ||
+        throw(ArgumentError("unsupported left GTO primitive normalization"))
+    right.primitive_normalization == :axiswise_normalized_cartesian_gaussian ||
+        throw(ArgumentError("unsupported right GTO primitive normalization"))
+    axis_index = _pqs_source_box_route_driver_axis_index(axis)
+    center_left = left.center[axis_index]
+    center_right = right.center[axis_index]
+    power_left = left.angular_powers[axis_index]
+    power_right = right.angular_powers[axis_index]
+    matrix = zeros(Float64, length(left.exponents), length(right.exponents))
+    for j in eachindex(right.exponents)
+        exponent_right = Float64(right.exponents[j])
+        prefactor_right = _qwrg_atomic_shell_prefactor(exponent_right, power_right)
+        for i in eachindex(left.exponents)
+            exponent_left = Float64(left.exponents[i])
+            prefactor_left = _qwrg_atomic_shell_prefactor(exponent_left, power_left)
+            matrix[i, j] =
+                term === :overlap ?
+                _qwrg_atomic_basic_integral(
+                    exponent_left,
+                    center_left,
+                    power_left,
+                    prefactor_left,
+                    exponent_right,
+                    center_right,
+                    power_right,
+                    prefactor_right,
+                ) :
+                term === :kinetic ?
+                _qwrg_atomic_kinetic_integral(
+                    exponent_left,
+                    center_left,
+                    power_left,
+                    prefactor_left,
+                    exponent_right,
+                    center_right,
+                    power_right,
+                    prefactor_right,
+                ) :
+                term === :factor ?
+                _qwrg_atomic_basic_integral(
+                    exponent_left,
+                    center_left,
+                    power_left,
+                    prefactor_left,
+                    exponent_right,
+                    center_right,
+                    power_right,
+                    prefactor_right;
+                    extra_exponent = Float64(factor_exponent),
+                    extra_center = Float64(factor_center),
+                ) :
+                throw(ArgumentError("unsupported GTO/GTO axis term :$(term)"))
+        end
+    end
+    return matrix
+end
+
+function _pqs_source_box_route_driver_gto_axis_self_tables(
+    left,
+    right,
+    term::Symbol;
+    factor_center = nothing,
+    factor_exponent = nothing,
+)
+    return ntuple(3) do index
+        axis = _pqs_source_box_route_driver_axis_symbol(index)
+        _pqs_source_box_route_driver_gto_axis_self(
+            left,
+            right,
+            axis,
+            term;
+            factor_center =
+                isnothing(factor_center) ? nothing : factor_center[index],
+            factor_exponent,
+        )
+    end
+end
+
+function _pqs_source_box_route_driver_gto_support_column!(
+    destination::AbstractVector{<:Real},
+    states,
+    orbital,
+    axis_tables,
+)
+    fill!(destination, 0.0)
+    @inbounds for (row, (ix, iy, iz)) in pairs(states)
+        value = 0.0
+        for primitive in eachindex(orbital.coefficients)
+            value +=
+                Float64(orbital.coefficients[primitive]) *
+                axis_tables[1][ix, primitive] *
+                axis_tables[2][iy, primitive] *
+                axis_tables[3][iz, primitive]
+        end
+        destination[row] = value
+    end
+    return destination
+end
+
+function _pqs_source_box_route_driver_gto_weighted_hadamard(
+    left_coefficients::AbstractVector{<:Real},
+    x::AbstractMatrix{<:Real},
+    y::AbstractMatrix{<:Real},
+    z::AbstractMatrix{<:Real},
+    right_coefficients::AbstractVector{<:Real},
+)
+    matrix = Matrix{Float64}(x) .* Matrix{Float64}(y) .* Matrix{Float64}(z)
+    return Float64(dot(left_coefficients, matrix * right_coefficients))
+end
+
+function _pqs_source_box_route_driver_pqs_gto_support_one_body(
+    inputs,
+    sidecar,
+)
+    source_plan = inputs.source_plan
+    supplement = inputs.supplement_representation
+    states = sidecar.support_states
+    axes = sidecar.axis_representations
+    coefficients = Float64.(coulomb_gaussian_expansion(doacc = false).coefficients)
+    exponents = Float64.(coulomb_gaussian_expansion(doacc = false).exponents)
+    route_metadata = inputs.route_metadata
+    nuclear_charges = Float64.(route_metadata.nuclear_charges)
+    atom_locations = route_metadata.atom_locations
+    support_gto_kinetic = zeros(Float64, length(states), length(supplement.orbitals))
+    support_gto_charged_nuclear =
+        zeros(Float64, length(states), length(supplement.orbitals))
+    scratch = zeros(Float64, length(states))
+
+    for (column, orbital) in pairs(supplement.orbitals)
+        overlap_tables =
+            _pqs_source_box_route_driver_gto_axis_cross_tables(
+                axes,
+                orbital,
+                :overlap,
+            )
+        kinetic_tables =
+            _pqs_source_box_route_driver_gto_axis_cross_tables(
+                axes,
+                orbital,
+                :kinetic,
+            )
+        for kinetic_axis in 1:3
+            axis_tables = ntuple(
+                axis -> axis == kinetic_axis ?
+                    kinetic_tables[axis] :
+                    overlap_tables[axis],
+                3,
+            )
+            _pqs_source_box_route_driver_gto_support_column!(
+                scratch,
+                states,
+                orbital,
+                axis_tables,
+            )
+            support_gto_kinetic[:, column] .+= scratch
+        end
+        for (center_index, location) in pairs(atom_locations)
+            charge = nuclear_charges[center_index]
+            for term_index in eachindex(coefficients)
+                factor_tables =
+                    _pqs_source_box_route_driver_gto_axis_cross_tables(
+                        axes,
+                        orbital,
+                        :factor;
+                        factor_center = location,
+                        factor_exponent = exponents[term_index],
+                    )
+                _pqs_source_box_route_driver_gto_support_column!(
+                    scratch,
+                    states,
+                    orbital,
+                    factor_tables,
+                )
+                support_gto_charged_nuclear[:, column] .-=
+                    charge * coefficients[term_index] .* scratch
+            end
+        end
+    end
+
+    final_coefficients = Matrix{Float64}(inputs.final_basis.final_coefficients)
+    h_fg_kinetic = Matrix{Float64}(transpose(final_coefficients) * support_gto_kinetic)
+    h_fg_charged_nuclear =
+        Matrix{Float64}(transpose(final_coefficients) * support_gto_charged_nuclear)
+    return (;
+        h_fg_kinetic,
+        h_fg_charged_nuclear,
+        h_fg_one_body = h_fg_kinetic + h_fg_charged_nuclear,
+    )
+end
+
+function _pqs_source_box_route_driver_pqs_gto_self_one_body(inputs)
+    supplement = inputs.supplement_representation
+    expansion = coulomb_gaussian_expansion(doacc = false)
+    coefficients = Float64.(expansion.coefficients)
+    exponents = Float64.(expansion.exponents)
+    route_metadata = inputs.route_metadata
+    nuclear_charges = Float64.(route_metadata.nuclear_charges)
+    atom_locations = route_metadata.atom_locations
+    norbital = length(supplement.orbitals)
+    h_gg_kinetic = zeros(Float64, norbital, norbital)
+    h_gg_charged_nuclear = zeros(Float64, norbital, norbital)
+    for (row, left) in pairs(supplement.orbitals), (column, right) in pairs(supplement.orbitals)
+        overlap_tables =
+            _pqs_source_box_route_driver_gto_axis_self_tables(
+                left,
+                right,
+                :overlap,
+            )
+        kinetic_tables =
+            _pqs_source_box_route_driver_gto_axis_self_tables(
+                left,
+                right,
+                :kinetic,
+            )
+        for kinetic_axis in 1:3
+            axis_tables = ntuple(
+                axis -> axis == kinetic_axis ?
+                    kinetic_tables[axis] :
+                    overlap_tables[axis],
+                3,
+            )
+            h_gg_kinetic[row, column] +=
+                _pqs_source_box_route_driver_gto_weighted_hadamard(
+                    left.coefficients,
+                    axis_tables[1],
+                    axis_tables[2],
+                    axis_tables[3],
+                    right.coefficients,
+                )
+        end
+        for (center_index, location) in pairs(atom_locations)
+            charge = nuclear_charges[center_index]
+            for term_index in eachindex(coefficients)
+                factor_tables =
+                    _pqs_source_box_route_driver_gto_axis_self_tables(
+                        left,
+                        right,
+                        :factor;
+                        factor_center = location,
+                        factor_exponent = exponents[term_index],
+                    )
+                h_gg_charged_nuclear[row, column] -=
+                    charge *
+                    coefficients[term_index] *
+                    _pqs_source_box_route_driver_gto_weighted_hadamard(
+                        left.coefficients,
+                        factor_tables[1],
+                        factor_tables[2],
+                        factor_tables[3],
+                        right.coefficients,
+                    )
+            end
+        end
+    end
+    h_gg_kinetic = Matrix{Float64}(0.5 .* (h_gg_kinetic .+ transpose(h_gg_kinetic)))
+    h_gg_charged_nuclear =
+        Matrix{Float64}(0.5 .* (h_gg_charged_nuclear .+ transpose(h_gg_charged_nuclear)))
+    return (;
+        h_gg_kinetic,
+        h_gg_charged_nuclear,
+        h_gg_one_body = h_gg_kinetic + h_gg_charged_nuclear,
+    )
+end
+
+function _pqs_source_box_route_driver_pqs_gto_one_body_blocks(
+    inputs,
+    sidecar,
+    residual,
+)
+    h_ff = Matrix{Float64}(inputs.h1_hamiltonian.hamiltonian_matrix)
+    s_fg = Matrix{Float64}(sidecar.final_gto_cross_overlap)
+    l = Matrix{Float64}(residual.residual_transform)
+    mixed = _pqs_source_box_route_driver_pqs_gto_support_one_body(inputs, sidecar)
+    self = _pqs_source_box_route_driver_pqs_gto_self_one_body(inputs)
+    h_fg = Matrix{Float64}(mixed.h_fg_one_body)
+    h_gg = Matrix{Float64}(self.h_gg_one_body)
+    h_fr = Matrix{Float64}((h_fg - h_ff * s_fg) * l)
+    residual_core = Matrix{Float64}(
+        h_gg -
+        transpose(s_fg) * h_fg -
+        transpose(h_fg) * s_fg +
+        transpose(s_fg) * h_ff * s_fg,
+    )
+    h_rr = Matrix{Float64}(transpose(l) * residual_core * l)
+    h_rr = Matrix{Float64}(0.5 .* (h_rr .+ transpose(h_rr)))
+    augmented_one_body_hamiltonian = [
+        h_ff h_fr
+        transpose(h_fr) h_rr
+    ]
+    augmented_symmetry_error =
+        norm(augmented_one_body_hamiltonian - transpose(augmented_one_body_hamiltonian), Inf)
+    augmented_h1_lowest =
+        minimum(eigvals(Symmetric(0.5 .* (
+            augmented_one_body_hamiltonian + transpose(augmented_one_body_hamiltonian)
+        ))))
+    return (;
+        h_fg_kinetic = mixed.h_fg_kinetic,
+        h_fg_charged_nuclear = mixed.h_fg_charged_nuclear,
+        h_gg_kinetic = self.h_gg_kinetic,
+        h_gg_charged_nuclear = self.h_gg_charged_nuclear,
+        h_fg_one_body = h_fg,
+        h_gg_one_body = h_gg,
+        h_fr_one_body = h_fr,
+        h_rr_one_body = h_rr,
+        augmented_one_body_hamiltonian,
+        augmented_dimension = size(augmented_one_body_hamiltonian, 1),
+        augmented_h1_lowest,
+        augmented_h1_symmetry_error = augmented_symmetry_error,
+        nuclear_mixed_block_convention = :charged_nuclear,
     )
 end
 
@@ -276,7 +743,10 @@ function _pqs_source_box_route_driver_pqs_h2_route_metadata(report, inputs)
         retained_ranges = final_basis.retained_ranges,
         final_dimension = final_basis.final_dimension,
         artifact_scope = :pqs_ham_basis_plus_residual_gto_sidecar,
-        provider_blocks_included = false,
+        provider_blocks_included =
+            hasproperty(inputs, :provider_blocks_included) ?
+            inputs.provider_blocks_included :
+            false,
     )
 end
 
@@ -317,6 +787,7 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                 :final_gto_cross_overlap,
                 :gto_self_overlap,
                 :gto_residual_overlap,
+                :provider_blocks_included,
             ),
         )
         artifact_kind = file["artifact_kind"]
@@ -327,6 +798,7 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
         final_gto_cross_overlap = file["final_gto_cross_overlap"]
         gto_self_overlap = file["gto_self_overlap"]
         gto_residual_overlap = file["gto_residual_overlap"]
+        provider_blocks_included = file["provider_blocks_included"]
         size(final_coefficients, 2) == final_dimension ||
             throw(ArgumentError("basis final_coefficients column count must equal final_dimension"))
         size(final_gto_cross_overlap, 1) == final_dimension ||
@@ -343,15 +815,57 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
             norm(gto_residual_overlap - transpose(gto_residual_overlap), Inf)
         residual_symmetry_error <= Float64(symmetry_atol) ||
             throw(ArgumentError("basis gto_residual_overlap is not symmetric"))
+        residual_facts =
+            if provider_blocks_included === :one_body_only
+                _pqs_source_box_route_driver_require_jld2_keys(
+                    file,
+                    (
+                        :residual_transform,
+                        :residual_rank,
+                        :residual_overlap_eigenvalues,
+                        :residual_overlap_identity_error,
+                        :residual_overlap_cutoff,
+                    ),
+                )
+                residual_transform = file["residual_transform"]
+                residual_rank = Int(file["residual_rank"])
+                residual_overlap_identity_error =
+                    Float64(file["residual_overlap_identity_error"])
+                residual_rank > 0 ||
+                    throw(ArgumentError("one-body provider artifact requires positive residual_rank"))
+                size(residual_transform) == (size(gto_self_overlap, 1), residual_rank) ||
+                    throw(ArgumentError("residual_transform shape must be gto_dimension x residual_rank"))
+                isfinite(residual_overlap_identity_error) ||
+                    throw(ArgumentError("residual_overlap_identity_error must be finite"))
+                residual_overlap_identity_error <= Float64(symmetry_atol) ||
+                    throw(ArgumentError("residual overlap identity error is too large"))
+                (;
+                    residual_transform_size = size(residual_transform),
+                    residual_rank,
+                    residual_overlap_identity_error,
+                    residual_overlap_cutoff = Float64(file["residual_overlap_cutoff"]),
+                    provider_blocks_included,
+                )
+            else
+                (;
+                    residual_transform_size = nothing,
+                    residual_rank = nothing,
+                    residual_overlap_identity_error = nothing,
+                    residual_overlap_cutoff = nothing,
+                    provider_blocks_included,
+                )
+            end
         return (;
             basis_artifact_kind = artifact_kind,
             final_dimension,
+            provider_blocks_included,
             final_coefficients_size = size(final_coefficients),
             final_gto_cross_overlap_size = size(final_gto_cross_overlap),
             gto_self_overlap_size = size(gto_self_overlap),
             gto_residual_overlap_size = size(gto_residual_overlap),
             gto_residual_overlap_finite = true,
             gto_residual_overlap_symmetry_error = residual_symmetry_error,
+            residual_facts...,
         )
     end
 
@@ -368,6 +882,7 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                 :final_gto_cross_overlap,
                 :gto_self_overlap,
                 :gto_residual_overlap,
+                :provider_blocks_included,
             ),
         )
         artifact_kind = file["artifact_kind"]
@@ -383,6 +898,9 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
         final_gto_cross_overlap = file["final_gto_cross_overlap"]
         gto_self_overlap = file["gto_self_overlap"]
         gto_residual_overlap = file["gto_residual_overlap"]
+        provider_blocks_included = file["provider_blocks_included"]
+        provider_blocks_included == basis_facts.provider_blocks_included ||
+            throw(ArgumentError("basis and ham provider block modes differ"))
         size(one_body_hamiltonian) == (final_dimension, final_dimension) ||
             throw(ArgumentError("one_body_hamiltonian shape must be final_dimension x final_dimension"))
         all(isfinite, one_body_hamiltonian) ||
@@ -413,8 +931,74 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
             norm(gto_residual_overlap - transpose(gto_residual_overlap), Inf)
         residual_symmetry_error <= Float64(symmetry_atol) ||
             throw(ArgumentError("ham gto_residual_overlap is not symmetric"))
+        augmented_facts =
+            if provider_blocks_included === :one_body_only
+                _pqs_source_box_route_driver_require_jld2_keys(
+                    file,
+                    (
+                        :augmented_dimension,
+                        :augmented_one_body_hamiltonian,
+                        :augmented_h1_lowest,
+                        :augmented_h1_symmetry_error,
+                        :h_fg_kinetic,
+                        :h_fg_charged_nuclear,
+                        :h_gg_kinetic,
+                        :h_gg_charged_nuclear,
+                    ),
+                )
+                residual_rank = basis_facts.residual_rank
+                augmented_dimension = Int(file["augmented_dimension"])
+                augmented_dimension == final_dimension + residual_rank ||
+                    throw(ArgumentError("augmented_dimension must equal final_dimension + residual_rank"))
+                augmented_one_body_hamiltonian =
+                    file["augmented_one_body_hamiltonian"]
+                size(augmented_one_body_hamiltonian) ==
+                    (augmented_dimension, augmented_dimension) ||
+                    throw(ArgumentError("augmented one-body Hamiltonian shape mismatch"))
+                all(isfinite, augmented_one_body_hamiltonian) ||
+                    throw(ArgumentError("augmented one-body Hamiltonian contains non-finite entries"))
+                augmented_h1_symmetry_error =
+                    norm(
+                        augmented_one_body_hamiltonian -
+                        transpose(augmented_one_body_hamiltonian),
+                        Inf,
+                    )
+                augmented_h1_symmetry_error <= Float64(symmetry_atol) ||
+                    throw(ArgumentError("augmented one-body Hamiltonian is not symmetric"))
+                augmented_h1_lowest = Float64(file["augmented_h1_lowest"])
+                isfinite(augmented_h1_lowest) ||
+                    throw(ArgumentError("augmented_h1_lowest must be finite"))
+                size(file["h_fg_kinetic"]) == (final_dimension, size(gto_self_overlap, 1)) ||
+                    throw(ArgumentError("h_fg_kinetic shape mismatch"))
+                size(file["h_fg_charged_nuclear"]) ==
+                    (final_dimension, size(gto_self_overlap, 1)) ||
+                    throw(ArgumentError("h_fg_charged_nuclear shape mismatch"))
+                _pqs_source_box_route_driver_square_matrix(
+                    "h_gg_kinetic",
+                    file["h_gg_kinetic"],
+                )
+                _pqs_source_box_route_driver_square_matrix(
+                    "h_gg_charged_nuclear",
+                    file["h_gg_charged_nuclear"],
+                )
+                (;
+                    augmented_dimension,
+                    augmented_one_body_hamiltonian_size =
+                        size(augmented_one_body_hamiltonian),
+                    augmented_h1_lowest,
+                    augmented_h1_symmetry_error,
+                )
+            else
+                (;
+                    augmented_dimension = nothing,
+                    augmented_one_body_hamiltonian_size = nothing,
+                    augmented_h1_lowest = nothing,
+                    augmented_h1_symmetry_error = nothing,
+                )
+            end
         return (;
             ham_artifact_kind = artifact_kind,
+            provider_blocks_included,
             one_body_hamiltonian_size = size(one_body_hamiltonian),
             h1_finite = true,
             h1_symmetry_error,
@@ -427,6 +1011,7 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
             gto_residual_overlap_size = size(gto_residual_overlap),
             gto_residual_overlap_finite = true,
             gto_residual_overlap_symmetry_error = residual_symmetry_error,
+            augmented_facts...,
         )
     end
 
@@ -436,6 +1021,7 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
         final_dimension = basis_facts.final_dimension,
         basis_artifact_kind = basis_facts.basis_artifact_kind,
         ham_artifact_kind = ham_facts.ham_artifact_kind,
+        provider_blocks_included = basis_facts.provider_blocks_included,
         final_coefficients_size = basis_facts.final_coefficients_size,
         final_gto_cross_overlap_size = basis_facts.final_gto_cross_overlap_size,
         gto_self_overlap_size = basis_facts.gto_self_overlap_size,
@@ -445,6 +1031,14 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
         h1_lowest = ham_facts.h1_lowest,
         h1_j_self_coulomb = ham_facts.h1_j_self_coulomb,
         h1_j_self_coulomb_positive = ham_facts.h1_j_self_coulomb_positive,
+        residual_rank = basis_facts.residual_rank,
+        residual_overlap_identity_error =
+            basis_facts.residual_overlap_identity_error,
+        augmented_dimension = ham_facts.augmented_dimension,
+        augmented_one_body_hamiltonian_size =
+            ham_facts.augmented_one_body_hamiltonian_size,
+        augmented_h1_lowest = ham_facts.augmented_h1_lowest,
+        augmented_h1_symmetry_error = ham_facts.augmented_h1_symmetry_error,
         gto_residual_overlap_finite =
             basis_facts.gto_residual_overlap_finite &&
             ham_facts.gto_residual_overlap_finite,
@@ -461,6 +1055,7 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
     save_ham_artifact::Bool,
     basisfile,
     hamfile,
+    residual_gto_provider_blocks::Symbol = :none,
 )
     report.route_family === :pqs_source_box || return nothing
     report.route_kind === :bond_aligned_diatomic_independent_pqs_source_box_core_shell ||
@@ -477,9 +1072,31 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
         ),
     )
 
+    residual_gto_provider_blocks in (:none, :one_body_only) || throw(
+        ArgumentError(
+            "residual_gto_provider_blocks must be :none or :one_body_only",
+        ),
+    )
+    provider_blocks_included =
+        residual_gto_provider_blocks === :one_body_only ? :one_body_only : false
     sidecar = _pqs_source_box_route_driver_pqs_gto_sidecar(inputs)
-    route_metadata =
-        _pqs_source_box_route_driver_pqs_h2_route_metadata(report, inputs)
+    route_metadata = _pqs_source_box_route_driver_pqs_h2_route_metadata(
+        report,
+        merge(inputs, (; provider_blocks_included,)),
+    )
+    inputs = merge(inputs, (; route_metadata, provider_blocks_included,))
+    residual =
+        residual_gto_provider_blocks === :one_body_only ?
+        _pqs_source_box_route_driver_pqs_gto_residual_transform(sidecar) :
+        nothing
+    one_body_blocks =
+        residual_gto_provider_blocks === :one_body_only ?
+        _pqs_source_box_route_driver_pqs_gto_one_body_blocks(
+            inputs,
+            sidecar,
+            residual,
+        ) :
+        nothing
     final_basis = inputs.final_basis
     h1_hamiltonian = inputs.h1_hamiltonian
     h1 = inputs.h1
@@ -492,6 +1109,13 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
     final_gto_cross_overlap_size = size(sidecar.final_gto_cross_overlap)
     gto_self_overlap_size = size(sidecar.gto_self_overlap)
     gto_residual_overlap_size = size(sidecar.gto_residual_overlap)
+    augmented_dimension =
+        isnothing(one_body_blocks) ? nothing : one_body_blocks.augmented_dimension
+    augmented_h1_lowest =
+        isnothing(one_body_blocks) ? nothing : one_body_blocks.augmented_h1_lowest
+    augmented_h1_symmetry_error =
+        isnothing(one_body_blocks) ? nothing :
+        one_body_blocks.augmented_h1_symmetry_error
     summary = (;
         route_family = report.route_family,
         route_kind = report.route_kind,
@@ -513,7 +1137,31 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
             sidecar.diagnostics.gto_residual_overlap_eigenvalue_min,
         gto_residual_overlap_eigenvalue_max =
             sidecar.diagnostics.gto_residual_overlap_eigenvalue_max,
-        provider_blocks_included = false,
+        provider_blocks_included,
+        residual_rank = isnothing(residual) ? nothing : residual.residual_rank,
+        residual_overlap_identity_error =
+            isnothing(residual) ? nothing : residual.residual_overlap_identity_error,
+        residual_overlap_cutoff =
+            isnothing(residual) ? nothing : residual.residual_overlap_cutoff,
+        augmented_dimension,
+        augmented_h1_lowest,
+        augmented_h1_symmetry_error,
+        nuclear_mixed_block_convention =
+            isnothing(one_body_blocks) ?
+            nothing :
+            one_body_blocks.nuclear_mixed_block_convention,
+        h_fg_kinetic_size =
+            isnothing(one_body_blocks) ? nothing : size(one_body_blocks.h_fg_kinetic),
+        h_fg_charged_nuclear_size =
+            isnothing(one_body_blocks) ?
+            nothing :
+            size(one_body_blocks.h_fg_charged_nuclear),
+        h_gg_kinetic_size =
+            isnothing(one_body_blocks) ? nothing : size(one_body_blocks.h_gg_kinetic),
+        h_gg_charged_nuclear_size =
+            isnothing(one_body_blocks) ?
+            nothing :
+            size(one_body_blocks.h_gg_charged_nuclear),
     )
 
     basis_artifact_path = nothing
@@ -537,6 +1185,21 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
             file["gto_self_overlap"] = sidecar.gto_self_overlap
             file["gto_residual_overlap"] = sidecar.gto_residual_overlap
             file["gto_sidecar_diagnostics"] = sidecar.diagnostics
+            file["provider_blocks_included"] = provider_blocks_included
+            if !isnothing(residual)
+                file["residual_transform"] = residual.residual_transform
+                file["residual_rank"] = residual.residual_rank
+                file["residual_overlap_eigenvalues"] =
+                    residual.residual_overlap_eigenvalues
+                file["residual_overlap_identity_error"] =
+                    residual.residual_overlap_identity_error
+                file["residual_overlap_eigenvalue_min"] =
+                    residual.residual_overlap_eigenvalue_min
+                file["residual_overlap_eigenvalue_max"] =
+                    residual.residual_overlap_eigenvalue_max
+                file["residual_overlap_cutoff"] =
+                    residual.residual_overlap_cutoff
+            end
         end
     end
 
@@ -563,6 +1226,41 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
             file["gto_self_overlap"] = sidecar.gto_self_overlap
             file["gto_residual_overlap"] = sidecar.gto_residual_overlap
             file["gto_sidecar_diagnostics"] = sidecar.diagnostics
+            file["provider_blocks_included"] = provider_blocks_included
+            if !isnothing(residual)
+                file["residual_transform"] = residual.residual_transform
+                file["residual_rank"] = residual.residual_rank
+                file["residual_overlap_eigenvalues"] =
+                    residual.residual_overlap_eigenvalues
+                file["residual_overlap_identity_error"] =
+                    residual.residual_overlap_identity_error
+                file["residual_overlap_eigenvalue_min"] =
+                    residual.residual_overlap_eigenvalue_min
+                file["residual_overlap_eigenvalue_max"] =
+                    residual.residual_overlap_eigenvalue_max
+                file["residual_overlap_cutoff"] =
+                    residual.residual_overlap_cutoff
+            end
+            if !isnothing(one_body_blocks)
+                file["augmented_dimension"] = one_body_blocks.augmented_dimension
+                file["h_fg_kinetic"] = one_body_blocks.h_fg_kinetic
+                file["h_fg_charged_nuclear"] =
+                    one_body_blocks.h_fg_charged_nuclear
+                file["h_gg_kinetic"] = one_body_blocks.h_gg_kinetic
+                file["h_gg_charged_nuclear"] =
+                    one_body_blocks.h_gg_charged_nuclear
+                file["h_fg_one_body"] = one_body_blocks.h_fg_one_body
+                file["h_gg_one_body"] = one_body_blocks.h_gg_one_body
+                file["h_fr_one_body"] = one_body_blocks.h_fr_one_body
+                file["h_rr_one_body"] = one_body_blocks.h_rr_one_body
+                file["augmented_one_body_hamiltonian"] =
+                    one_body_blocks.augmented_one_body_hamiltonian
+                file["augmented_h1_lowest"] = one_body_blocks.augmented_h1_lowest
+                file["augmented_h1_symmetry_error"] =
+                    one_body_blocks.augmented_h1_symmetry_error
+                file["nuclear_mixed_block_convention"] =
+                    one_body_blocks.nuclear_mixed_block_convention
+            end
         end
     end
 
@@ -600,7 +1298,13 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
             sidecar.diagnostics.gto_residual_overlap_eigenvalue_min,
         gto_residual_overlap_eigenvalue_max =
             sidecar.diagnostics.gto_residual_overlap_eigenvalue_max,
-        provider_blocks_included = false,
+        provider_blocks_included,
+        residual_rank = isnothing(residual) ? nothing : residual.residual_rank,
+        residual_overlap_identity_error =
+            isnothing(residual) ? nothing : residual.residual_overlap_identity_error,
+        augmented_dimension,
+        augmented_h1_lowest,
+        augmented_h1_symmetry_error,
         save_basis_artifact_requested = save_basis_artifact,
         save_ham_artifact_requested = save_ham_artifact,
         basisfile = basis_artifact_path,
@@ -624,6 +1328,7 @@ function _pqs_source_box_route_driver_materialization(
     materializer_nside = nothing,
     white_lindsey_expansion = nothing,
     white_lindsey_Z = nothing,
+    residual_gto_provider_blocks::Symbol = :none,
 )
     requested = materialize_route || save_basis_artifact || save_ham_artifact
     retained_dimension =
@@ -653,6 +1358,7 @@ function _pqs_source_box_route_driver_materialization(
                 save_ham_artifact,
                 basisfile,
                 hamfile,
+                residual_gto_provider_blocks,
             )
         !isnothing(pqs_materialization) && return pqs_materialization
     end
