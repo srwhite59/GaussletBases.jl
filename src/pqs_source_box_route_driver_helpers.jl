@@ -91,7 +91,6 @@ function _pqs_source_box_route_driver_standard_setup(system_inputs, spacing_inpu
         xmax_parallel = get(spacing_inputs, :xmax_parallel, nothing),
         xmax_transverse = get(spacing_inputs, :xmax_transverse, nothing),
         n_s,
-        n_s_source = :input_or_driver_default,
         core_cube_side,
         core_cube_side_rule = :two_n_s_plus_one,
         parent_box_rule = :radius_index_box,
@@ -443,7 +442,6 @@ function _cartesian_parent_object_carry(
 
     return (;
         parent_basis_object,
-        parent_qw_basis_object = nothing,
         parent_axis_bundle_object = axis_bundle_object,
         parent_axis_counts =
             _pqs_route_driver_axis_counts(
@@ -458,29 +456,20 @@ function _pqs_source_box_route_driver_parent_axis(
     standard_setup,
     system_inputs,
 )
-    manual_counts = _pqs_route_driver_axis_counts(system_inputs.parent_axis_counts)
-    derived_counts = isnothing(manual_counts) ? (;
+    requested_counts = _pqs_route_driver_axis_counts(system_inputs.parent_axis_counts)
+    axis_counts = isnothing(requested_counts) ? (;
         x = length(standard_setup.parent_box.x),
         y = length(standard_setup.parent_box.y),
         z = length(standard_setup.parent_box.z),
-    ) : manual_counts
-    atom_count = length(standard_setup.nuclear_charges)
-    homonuclear =
-        atom_count > 0 &&
-        all(charge == first(standard_setup.nuclear_charges) for charge in standard_setup.nuclear_charges)
+    ) : requested_counts
     geometry = (;
-        existing_bond_aligned_api_geometry_ready =
-            atom_count == 2 && hasproperty(system_inputs, :bond_axis),
         bond_axis = hasproperty(system_inputs, :bond_axis) ? system_inputs.bond_axis : nothing,
         bond_length =
             hasproperty(system_inputs, :bond_length) ? system_inputs.bond_length : nothing,
     )
 
     return (;
-        parent_axis_counts = derived_counts,
-        parent_axis_counts_manual_fixture = !isnothing(manual_counts),
-        parent_axis_counts_derived = isnothing(manual_counts),
-        homonuclear,
+        parent_axis_counts = axis_counts,
         geometry,
     )
 end
@@ -491,56 +480,15 @@ end
 function _pqs_source_box_route_driver_route_axis_counts(
     standard_setup,
     parent_axis,
-    system_inputs,
-    route_recipe,
 )
-    if route_recipe.route_family == :pqs_source_box
-        counts = parent_axis.parent_axis_counts
-        manual = parent_axis.parent_axis_counts_manual_fixture
-        return (;
-            parent_axis_counts = counts,
-            parent_axis_counts_source =
-                manual ? :manual_fixture : :local_standard_setup_parent_box,
-            parent_axis_counts_derived = !manual,
-            parent_axis_counts_manual_fixture = manual,
-            q = standard_setup.q,
-            q_minimum_satisfied =
-                counts.x >= standard_setup.q &&
-                counts.y >= standard_setup.q &&
-                counts.z >= standard_setup.q,
-        )
-    end
-
     counts = parent_axis.parent_axis_counts
-    manual = parent_axis.parent_axis_counts_manual_fixture
+    counts.x >= standard_setup.q &&
+        counts.y >= standard_setup.q &&
+        counts.z >= standard_setup.q ||
+        throw(ArgumentError("parent axis counts must be at least q on every axis"))
 
     return (;
         parent_axis_counts = counts,
-        parent_axis_counts_source =
-            manual ? :manual_fixture : :local_standard_setup_parent_box,
-        parent_axis_counts_derived = !manual,
-        parent_axis_counts_manual_fixture = manual,
-        q = standard_setup.q,
-        q_minimum_satisfied =
-            counts.x >= standard_setup.q &&
-            counts.y >= standard_setup.q &&
-            counts.z >= standard_setup.q,
-    )
-end
-
-
-# Compatibility route-axis count helper for older source-box-only callers.
-
-function _pqs_source_box_route_driver_route_axis_counts(
-    standard_setup,
-    parent_axis,
-    system_inputs,
-)
-    return _pqs_source_box_route_driver_route_axis_counts(
-        standard_setup,
-        parent_axis,
-        system_inputs,
-        (; route_family = :pqs_source_box),
     )
 end
 
@@ -1397,7 +1345,7 @@ function cartesian_parent(system, spacing_inputs, parent_inputs, recipe)
             standard_setup, system)
     route_axis_counts =
         _pqs_source_box_route_driver_route_axis_counts(
-            standard_setup, parent_axis, system, recipe)
+            standard_setup, parent_axis)
     object_carry = _cartesian_parent_object_carry(
         center_table, classification, standard_setup,
         parent_axis, route_axis_counts, parent_inputs)
@@ -1405,16 +1353,6 @@ function cartesian_parent(system, spacing_inputs, parent_inputs, recipe)
         isnothing(object_carry.parent_axis_counts) ?
         route_axis_counts.parent_axis_counts :
         object_carry.parent_axis_counts
-    effective_route_axis_counts = merge(
-        route_axis_counts,
-        (;
-            parent_axis_counts,
-            parent_axis_counts_source =
-                isnothing(object_carry.parent_axis_counts) ?
-                route_axis_counts.parent_axis_counts_source :
-                :constructed_parent_basis_object,
-        ),
-    )
 
     return (;
         system,
@@ -1422,7 +1360,7 @@ function cartesian_parent(system, spacing_inputs, parent_inputs, recipe)
         parent_inputs,
         standard_setup,
         parent_axis,
-        route_axis_counts = effective_route_axis_counts,
+        route_axis_counts = (; parent_axis_counts),
         atom_count = length(center_table),
         atom_symbols = Tuple(center.atom_symbol for center in center_table),
         nuclear_charges = Tuple(center.nuclear_charge for center in center_table),
@@ -1434,12 +1372,9 @@ function cartesian_parent(system, spacing_inputs, parent_inputs, recipe)
         bond_axis = classification.bond_axis,
         chain_axis = classification.chain_axis,
         axis_counts = parent_axis_counts,
-        axis_counts_source = effective_route_axis_counts.parent_axis_counts_source,
         physical_box = standard_setup.parent_box,
         physical_box_rule = standard_setup.parent_box_rule,
-        parent_object_carry = object_carry,
         parent_basis_object = object_carry.parent_basis_object,
-        parent_qw_basis_object = object_carry.parent_qw_basis_object,
         parent_axis_bundle_object = object_carry.parent_axis_bundle_object,
     )
 end
