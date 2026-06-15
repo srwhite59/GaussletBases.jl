@@ -62,10 +62,24 @@ const DRIVER_ARGS = [
     "save_tsv=false",
 ]
 
+function _argument_value(prefix)
+    for argument in ARGS
+        startswith(argument, prefix) || continue
+        return argument[length(prefix) + 1:end]
+    end
+    return nothing
+end
+
+const STOP_AFTER_STAGE = _argument_value("--stop-after=")
+
 function _driver_command(input)
+    driver_args = copy(DRIVER_ARGS)
+    if !isnothing(STOP_AFTER_STAGE)
+        push!(driver_args, "stop_after_stage=$(repr(Symbol(STOP_AFTER_STAGE)))")
+    end
     expression = """
         empty!(ARGS)
-        append!(ARGS, $(repr(vcat([input], DRIVER_ARGS))))
+        append!(ARGS, $(repr(vcat([input], driver_args))))
         include("bin/cartesian_ham_builder.jl")
         """
     return Cmd(vcat(Base.julia_cmd().exec, ["--project=$(REPO_ROOT)", "-e", expression]))
@@ -179,6 +193,7 @@ function run_ladder(; dry_run::Bool = false)
     println("Cartesian driver 2x2x2 matrix")
     println("started = ", Dates.now())
     println("repo = ", REPO_ROOT)
+    println("stop_after_stage = ", isnothing(STOP_AFTER_STAGE) ? "none" : STOP_AFTER_STAGE)
     println()
 
     results = NamedTuple[]

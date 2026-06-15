@@ -2115,13 +2115,7 @@ end
 # High-level driver facade.
 
 function cartesian_system(system_inputs)
-    return merge(
-        (;
-            object_kind = :cartesian_route_system,
-            status = :initialized_driver_system,
-        ),
-        system_inputs,
-    )
+    return system_inputs
 end
 
 function cartesian_recipe(route_inputs)

@@ -97,6 +97,7 @@ probe_route_configured_diatomic_atom_growth_materializer = false
 low_order_shellization_policy = nothing
 save_basis_artifact = false
 save_ham_artifact = false
+stop_after_stage = nothing
 # `nothing` means the helper derives these from route metadata:
 # backend from map/probe backend, nside from n_s.
 materializer_backend = nothing
@@ -167,12 +168,21 @@ function _cartesian_driver_stage(name)
     println("[driver stage] ", name)
 end
 
+function _cartesian_driver_stop_after(name)
+    stop_after_stage === name || return nothing
+    println("[driver stop] after ", name)
+    exit(0)
+end
+
 _cartesian_driver_stage(:cartesian_system)
 system = GaussletBases.cartesian_system(system_inputs)
+_cartesian_driver_stop_after(:cartesian_system)
 _cartesian_driver_stage(:cartesian_recipe)
 recipe = GaussletBases.cartesian_recipe(route_inputs)
+_cartesian_driver_stop_after(:cartesian_recipe)
 _cartesian_driver_stage(:cartesian_parent)
 parent = GaussletBases.cartesian_parent(system, spacing_inputs, parent_inputs, recipe)
+_cartesian_driver_stop_after(:cartesian_parent)
 _cartesian_driver_stage(:cartesian_shells)
 shells = GaussletBases.cartesian_shells(
     parent,
@@ -181,22 +191,30 @@ shells = GaussletBases.cartesian_shells(
     low_order_shellization_policy,
     probe_route_configured_diatomic_atom_growth_materializer,
 )
+_cartesian_driver_stop_after(:cartesian_shells)
 _cartesian_driver_stage(:cartesian_units)
 units = GaussletBases.cartesian_units(parent, shells, route_probe_inputs, recipe)
+_cartesian_driver_stop_after(:cartesian_units)
 _cartesian_driver_stage(:cartesian_transforms)
 @time "Transforming: " transforms = GaussletBases.cartesian_transforms(units, recipe)
+_cartesian_driver_stop_after(:cartesian_transforms)
 _cartesian_driver_stage(:cartesian_pair_terms)
 @time "Pair terms: " pairs = GaussletBases.cartesian_pair_terms(units, transforms, recipe)
+_cartesian_driver_stop_after(:cartesian_pair_terms)
 _cartesian_driver_stage(:cartesian_assembly)
 @time "Assembly: " assembly = GaussletBases.cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
+_cartesian_driver_stop_after(:cartesian_assembly)
 _cartesian_driver_stage(:cartesian_report)
 report = GaussletBases.cartesian_report(system, parent, assembly, recipe)
+_cartesian_driver_stop_after(:cartesian_report)
 _cartesian_driver_stage(:cartesian_materialization)
 materialization = GaussletBases.cartesian_materialization(report, materialization_inputs)
+_cartesian_driver_stop_after(:cartesian_materialization)
 
 _cartesian_driver_stage(Symbol("cartesian_print/save"))
 GaussletBases.cartesian_print_summary(report, materialization)
 GaussletBases.cartesian_print_details(report, materialization)
 GaussletBases.cartesian_save(report, save_inputs, materialization)
+_cartesian_driver_stop_after(Symbol("cartesian_print/save"))
 
 println("driver complete")
