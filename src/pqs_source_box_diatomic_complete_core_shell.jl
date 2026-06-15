@@ -35,10 +35,7 @@ struct _PQSDiatomicPhysicalGaussletCoreShellTargetPayload
     retained_order::Tuple
     expected_final_dimension
     retained_atom_core_interiors::Bool
-    source_plan_role::Symbol
     supplement_policy::Symbol
-    available_objects::Tuple
-    missing_objects::Tuple
     summary
     metadata
 end
@@ -485,8 +482,6 @@ struct _PQSDiatomicPhysicalGaussletSupplementRequestPayload
     residual_keep_policy::Symbol
     residual_drop_tolerance
     required_provider_blocks::Tuple
-    available_fact_labels::Tuple
-    missing_fact_labels::Tuple
     summary
     metadata
 end
@@ -523,9 +518,6 @@ struct _PQSDiatomicPhysicalGaussletSupplementPreflightPayload
     retained_transform_kind::Symbol
     gausslet_final_dimension
     supplement_policy::Symbol
-    required_fact_labels::Tuple
-    available_fact_labels::Tuple
-    missing_fact_labels::Tuple
     summary
     metadata
 end
@@ -549,8 +541,6 @@ struct _PQSDiatomicPhysicalGaussletCoreShellSourcePlanPayload
     blocker
     route_family::Symbol
     source_plan
-    available_objects::Tuple
-    missing_objects::Tuple
     summary
     metadata
 end
@@ -563,8 +553,6 @@ struct _PQSDiatomicPhysicalGaussletFinalBasisPayload
     source_plan_status::Symbol
     final_basis
     final_basis_status::Symbol
-    available_objects::Tuple
-    missing_objects::Tuple
     summary
     metadata
 end
@@ -589,8 +577,6 @@ struct _PQSDiatomicPhysicalGaussletH1Payload
     final_hamiltonian_status::Symbol
     h1
     h1_status::Symbol
-    available_objects::Tuple
-    missing_objects::Tuple
     summary
     metadata
 end
@@ -617,8 +603,6 @@ struct _PQSDiatomicPhysicalGaussletH1JPayload
     density_interaction_status::Symbol
     h1_j_diagnostic
     h1_j_status::Symbol
-    available_objects::Tuple
-    missing_objects::Tuple
     summary
     metadata
 end
@@ -637,8 +621,6 @@ struct _PQSDiatomicPhysicalGaussletRHFInputContractPayload
     h1_j_payload_status::Symbol
     electron_count
     occupation
-    available_objects::Tuple
-    missing_objects::Tuple
     summary
     metadata
 end
@@ -664,8 +646,6 @@ struct _PQSDiatomicPhysicalGaussletSourcePlanCandidatePayload
     candidate
     counts_match::Bool
     authority_status::Symbol
-    available_objects::Tuple
-    missing_objects::Tuple
     summary
     metadata
 end
@@ -831,12 +811,6 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_target_payload(
     retained_atom_core_interiors =
         retained_rule_plan_available ||
         (!isnothing(inventory) && inventory.retained_atom_core_interiors)
-    source_plan_role =
-        independent_target ?
-        :independent_pqs_source_box_construction :
-        isnothing(inventory) ?
-        :not_available :
-        :atom_contact_core_plus_pqs_shared_shells
     source_backed_fixed_source_oracle_used =
         false
     source_plan_blocker = nothing
@@ -863,20 +837,6 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_target_payload(
         isnothing(inventory) ?
         :not_available :
         something(get(recipe, :supplement_policy, nothing), inventory.supplement_policy)
-    available_objects =
-        status === :available_physical_gausslet_core_shell_target_inventory ?
-        (:physical_gausslet_core_shell_target_inventory,) :
-        ()
-    missing_objects =
-        independent_target && retained_rule_plan_available ?
-        retained_rule_plan.missing_objects :
-        status === :available_physical_gausslet_core_shell_target_inventory ?
-        (
-            :physical_gausslet_source_plan_producer,
-            :physical_gausslet_final_basis_builder,
-            :physical_gausslet_h1_builder,
-        ) :
-        isnothing(blocker) ? () : (blocker,)
     summary = (;
         status,
         blocker,
@@ -890,7 +850,6 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_target_payload(
         retained_order,
         expected_final_dimension,
         retained_atom_core_interiors,
-        source_plan_role,
         supplement_policy,
         target_inventory_available =
             status === :available_physical_gausslet_core_shell_target_inventory,
@@ -912,11 +871,6 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_target_payload(
             isnothing(retained_rule_plan) ?
             :not_available :
             retained_rule_plan.retained_counts_source,
-        final_basis_materialized = false,
-        h1_materialized = false,
-        h1_j_materialized = false,
-        rhf_materialized = false,
-        missing_objects,
     )
     metadata = (;
         source =
@@ -927,7 +881,6 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_target_payload(
         target_inventory_hard_coded_from_reviewed_contract = !independent_target,
         reviewed_contract_pass = independent_target ? nothing : 200,
         old_wl_qw_fixed_block_size = independent_target ? nothing : (1215, 463),
-        source_plan_role,
     )
 
     return _PQSDiatomicPhysicalGaussletCoreShellTargetPayload(
@@ -943,10 +896,7 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_target_payload(
         retained_order,
         expected_final_dimension,
         retained_atom_core_interiors,
-        source_plan_role,
         supplement_policy,
-        available_objects,
-        missing_objects,
         summary,
         metadata,
     )
@@ -1032,31 +982,15 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_supplement_requ
     if !target_available
         status = :blocked_pqs_physical_gausslet_supplement_request
         blocker = :missing_physical_gausslet_target_inventory
-        available_fact_labels = ()
-        missing_fact_labels = (blocker,)
     elseif supplement_policy === :none
         status = :not_requested
         blocker = nothing
-        available_fact_labels = ()
-        missing_fact_labels = ()
     elseif supplement_policy === :mwg_residual_gto
         status = :available_pqs_physical_gausslet_supplement_request
         blocker = nothing
-        available_fact_labels = (
-            :physical_gausslet_core_shell_target_inventory,
-            :route_owned_gto_supplement_request,
-            :h2_r4_geometry,
-            :h_cc_pvtz_lmax1_supplement_identity,
-            :gto_supplement_representation,
-        )
-        missing_fact_labels = (
-            :missing_provider_gto_supplement_blocks,
-        )
     else
         status = :blocked_pqs_physical_gausslet_supplement_request
         blocker = :unsupported_physical_gausslet_supplement_policy
-        available_fact_labels = ()
-        missing_fact_labels = (blocker,)
     end
 
     summary = (;
@@ -1077,18 +1011,12 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_supplement_requ
         residual_keep_policy,
         residual_drop_tolerance,
         required_provider_blocks,
-        available_fact_labels,
-        missing_fact_labels,
-        matrices_materialized = false,
-        supplemented_values_materialized = false,
-        public_api = false,
     )
     metadata = (;
         source =
             :pqs_source_box_route_driver_diatomic_physical_gausslet_supplement_request_payload,
         boundary = :request_metadata_only,
         route_private = true,
-        provider_blocks_materialized = false,
         gto_mwg_materialization = false,
     )
     return _PQSDiatomicPhysicalGaussletSupplementRequestPayload(
@@ -1109,8 +1037,6 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_supplement_requ
         residual_keep_policy,
         residual_drop_tolerance,
         required_provider_blocks,
-        available_fact_labels,
-        missing_fact_labels,
         summary,
         metadata,
     )
@@ -1209,19 +1135,11 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_supplement_repr
         atom_symbols,
         center_count,
         orbital_count,
-        matrices_materialized = false,
-        provider_blocks_materialized = false,
-        public_api = false,
     )
     metadata = (;
         source =
             :pqs_source_box_route_driver_diatomic_physical_gausslet_supplement_representation_payload,
         boundary = :route_private_matrix_free_representation,
-        representation_materialized =
-            status ===
-            :available_pqs_physical_gausslet_gto_supplement_representation,
-        provider_blocks_materialized = false,
-        matrices_materialized = false,
     )
     return _PQSDiatomicPhysicalGaussletSupplementRepresentationPayload(
         status,
@@ -1254,41 +1172,12 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_supplement_pref
         target_payload.status === :available_physical_gausslet_core_shell_target_inventory
     fixture_label = :h2_r4_physical_gausslet_q5
     retained_transform_kind = :pqs
-    required_fact_labels =
-        target_available && target_payload.supplement_policy === :mwg_residual_gto ?
-        (
-            :gto_supplement_representation,
-            :provider_gto_supplement_blocks,
-            :mixed_gausslet_gto_blocks,
-            :gto_gto_blocks,
-            :combined_raw_moment_matrices,
-            :residual_mwg_representation,
-            :combined_density_density_readiness,
-        ) :
-        ()
-    available_fact_labels =
-        target_available ?
-        (
-            :physical_gausslet_core_shell_target_inventory,
-            :pqs_retained_transform_kind,
-            :gausslet_only_final_dimension,
-            (
-                !isnothing(representation_payload) &&
-                representation_payload.status ===
-                :available_pqs_physical_gausslet_gto_supplement_representation
-            ) ? :gto_supplement_representation : nothing,
-        ) :
-        ()
-    available_fact_labels =
-        Tuple(label for label in available_fact_labels if !isnothing(label))
     if !target_available
         status = :blocked_pqs_physical_gausslet_supplement_preflight
         blocker = :missing_physical_gausslet_target_inventory
-        missing_fact_labels = (blocker,)
     elseif target_payload.supplement_policy === :none
         status = :not_requested
         blocker = nothing
-        missing_fact_labels = ()
     elseif target_payload.supplement_policy === :mwg_residual_gto
         status = :blocked_pqs_physical_gausslet_mwg_residual_gto_preflight
         request_blocker =
@@ -1311,29 +1200,9 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_supplement_pref
             !isnothing(representation_blocker) ?
             representation_blocker :
             :missing_provider_gto_supplement_blocks
-        missing_fact_labels =
-            !isnothing(representation_blocker) ?
-            (
-                :missing_gto_supplement_representation,
-                :missing_provider_gto_supplement_blocks,
-                :missing_mixed_gausslet_gto_blocks,
-                :missing_gto_gto_blocks,
-                :missing_combined_raw_moment_matrices,
-                :missing_residual_mwg_representation,
-                :missing_combined_density_density_readiness,
-            ) :
-            (
-                :missing_provider_gto_supplement_blocks,
-                :missing_mixed_gausslet_gto_blocks,
-                :missing_gto_gto_blocks,
-                :missing_combined_raw_moment_matrices,
-                :missing_residual_mwg_representation,
-                :missing_combined_density_density_readiness,
-            )
     else
         status = :blocked_pqs_physical_gausslet_supplement_preflight
         blocker = :unsupported_physical_gausslet_supplement_policy
-        missing_fact_labels = (blocker,)
     end
     support_counts =
         target_available ?
@@ -1368,12 +1237,6 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_supplement_pref
         retained_transform_kind,
         gausslet_final_dimension,
         supplement_policy,
-        required_fact_labels,
-        available_fact_labels,
-        missing_fact_labels,
-        matrices_materialized = false,
-        supplemented_values_materialized = false,
-        public_api = false,
     )
     metadata = (;
         source =
@@ -1393,9 +1256,6 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_supplement_pref
         retained_transform_kind,
         gausslet_final_dimension,
         supplement_policy,
-        required_fact_labels,
-        available_fact_labels,
-        missing_fact_labels,
         summary,
         metadata,
     )
@@ -1548,8 +1408,6 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_can
             nothing,
             false,
             :not_available,
-            (),
-            (blocker,),
             summary,
             (; source = :pqs_diatomic_physical_gausslet_source_plan_candidate),
         )
@@ -1614,10 +1472,6 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_can
         source,
         counts_match,
         authority_status,
-        (:source_backed_fixed_source_oracle,),
-        status === :available_physical_gausslet_source_plan_candidate ?
-        (:physical_gausslet_source_plan_route_authority,) :
-        (:physical_gausslet_source_plan_count_contract,),
         summary,
         (;
             source =
@@ -1677,7 +1531,6 @@ function _pqs_source_box_route_driver_physical_gausslet_source_plan_from_candida
         h1_j_materialized = false,
         rhf_materialized = false,
         exports_materialized = false,
-        public_api = false,
     )
     summary = (;
         object_kind = :pqs_diatomic_physical_gausslet_core_shell_source_plan,
@@ -2118,7 +1971,6 @@ function _pqs_source_box_route_driver_independent_h2_complete_core_shell_source_
         h1_j_materialized = false,
         rhf_materialized = false,
         exports_materialized = false,
-        public_api = false,
     )
     summary = (;
         object_kind = :pqs_diatomic_physical_gausslet_core_shell_source_plan,
@@ -2264,22 +2116,6 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_pay
         target_available ?
         :missing_atom_contact_core_support_rows :
         :missing_physical_gausslet_target_inventory
-    missing_objects =
-        independent_source_plan_available ?
-        () :
-        descriptor_available ?
-        (blocker,) :
-        !isnothing(source_plan) ?
-        () :
-        independent_target ?
-        (independent_source_plan_blocker,) :
-        target_available ?
-        (
-            :atom_contact_core_support_rows,
-            :shared_shell_1_coefficients,
-            :shared_shell_2_coefficients,
-        ) :
-        (blocker,)
     summary = (;
         object_kind = :pqs_diatomic_physical_gausslet_core_shell_source_plan,
         status,
@@ -2294,8 +2130,6 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_pay
             isnothing(target_payload) ? nothing : target_payload.expected_final_dimension,
         retained_atom_core_interiors =
             !isnothing(target_payload) && target_payload.retained_atom_core_interiors,
-        source_plan_role =
-            isnothing(target_payload) ? :not_available : target_payload.source_plan_role,
         supplement_policy =
             isnothing(target_payload) ? :not_available : target_payload.supplement_policy,
         source_plan_materialized = !isnothing(source_plan),
@@ -2356,7 +2190,6 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_pay
             isnothing(target_payload) ?
             nothing :
             get(target_payload.summary, :independent_source_plan_blocker, nothing),
-        missing_objects,
     )
     metadata = (;
         source =
@@ -2371,8 +2204,6 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_pay
         blocker,
         isnothing(target_payload) ? :not_available : target_payload.route_family,
         source_plan,
-        (),
-        missing_objects,
         summary,
         metadata,
     )
@@ -2516,8 +2347,6 @@ function _pqs_source_box_route_driver_independent_h2_pqs_supplement_support_part
         (;
             source =
                 :pqs_source_box_route_driver_independent_h2_pqs_supplement_support_partition_payload,
-            provider_blocks_materialized = false,
-            route_global_matrix_materialized = false,
         ),
     )
     isnothing(target_payload) && return blocked(:missing_independent_h2_target_payload)
@@ -2603,8 +2432,6 @@ function _pqs_source_box_route_driver_independent_h2_pqs_supplement_support_part
         source_backed_fixed_source_oracle_used = false,
         fake_pqs_enabled = false,
         retained_transform_authority = :pqs_source_box_construction,
-        provider_blocks_materialized = false,
-        route_global_matrix_materialized = false,
     )
     return _PQSIndependentH2PQSSupplementSupportPartitionPayload(
         status,
@@ -2630,8 +2457,6 @@ function _pqs_source_box_route_driver_independent_h2_pqs_supplement_support_part
         (;
             source =
                 :pqs_source_box_route_driver_independent_h2_pqs_supplement_support_partition_payload,
-            provider_blocks_materialized = false,
-            route_global_matrix_materialized = false,
         ),
     )
 end
@@ -2895,7 +2720,6 @@ function _pqs_source_box_route_driver_physical_gausslet_final_basis(
         density_interaction_materialized = false,
         rhf_materialized = false,
         exports_materialized = false,
-        public_api = false,
         metadata = (;
             source = :pqs_source_box_route_driver_physical_gausslet_final_basis,
             support_decomposition = :shared_physical_gausslet_core_shell,
@@ -2930,8 +2754,6 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_final_basis_pay
         get(get(recipe, :private_rhf_inputs, (;)), :run_private_rhf, false)
     final_basis = nothing
     final_basis_status = :not_materialized_pqs_physical_gausslet_final_basis
-    available = Symbol[]
-    missing = Symbol[]
 
     if route_family !== :pqs_source_box
         status = :not_applicable_pqs_physical_gausslet_final_basis_non_pqs_route
@@ -2940,36 +2762,27 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_final_basis_pay
            :available_pqs_diatomic_physical_gausslet_core_shell_source_plan
         status = :blocked_pqs_physical_gausslet_final_basis_payload
         blocker = :missing_pqs_diatomic_physical_gausslet_source_plan
-        push!(missing, :pqs_diatomic_physical_gausslet_source_plan)
     elseif !final_basis_requested
         status = :not_requested_pqs_physical_gausslet_final_basis_payload
         blocker = :physical_gausslet_final_basis_request_not_enabled
-        push!(available, :pqs_diatomic_physical_gausslet_source_plan)
-        push!(missing, :physical_gausslet_final_basis_request)
     else
         final_basis =
             _pqs_source_box_route_driver_physical_gausslet_final_basis(
                 source_plan,
             )
         final_basis_status = final_basis.status
-        push!(available, :pqs_diatomic_physical_gausslet_source_plan)
         if final_basis_status === :available_pqs_physical_gausslet_final_basis
             status = :available_pqs_physical_gausslet_final_basis_payload
             blocker = nothing
-            push!(available, :pqs_physical_gausslet_final_basis)
-            push!(missing, :physical_gausslet_h1_builder)
         else
             status = :blocked_pqs_physical_gausslet_final_basis_payload
             blocker =
                 isnothing(final_basis.blocker) ?
                 :physical_gausslet_final_basis_blocked :
                 final_basis.blocker
-            push!(missing, :pqs_physical_gausslet_final_basis)
         end
     end
 
-    available_objects = Tuple(unique(available))
-    missing_objects = Tuple(unique(missing))
     support_counts =
         isnothing(source_plan) ? nothing : source_plan.summary.support_counts
     retained_counts =
@@ -3041,9 +2854,6 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_final_basis_pay
         density_interaction_materialized = false,
         rhf_materialized = false,
         exports_materialized = false,
-        public_api = false,
-        available_objects,
-        missing_objects,
     )
     metadata = (;
         source =
@@ -3063,8 +2873,6 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_final_basis_pay
         source_plan_status,
         final_basis,
         final_basis_status,
-        available_objects,
-        missing_objects,
         summary,
         metadata,
     )
@@ -3345,8 +3153,6 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_h1_payload(
     final_nuclear_status = :not_materialized_pqs_physical_gausslet_final_electron_nuclear
     final_hamiltonian_status = :not_materialized_pqs_physical_gausslet_h1_hamiltonian
     h1_status = :not_materialized_pqs_physical_gausslet_h1_solve
-    available = Symbol[]
-    missing = Symbol[]
 
     if route_family !== :pqs_source_box
         status = :not_applicable_pqs_physical_gausslet_h1_non_pqs_route
@@ -3355,21 +3161,13 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_h1_payload(
            :available_pqs_diatomic_physical_gausslet_core_shell_source_plan
         status = :blocked_pqs_physical_gausslet_h1_payload
         blocker = :missing_pqs_diatomic_physical_gausslet_source_plan
-        push!(missing, :pqs_diatomic_physical_gausslet_source_plan)
     elseif final_basis_status !== :available_pqs_physical_gausslet_final_basis
         status = :blocked_pqs_physical_gausslet_h1_payload
         blocker = :missing_pqs_physical_gausslet_final_basis
-        push!(available, :pqs_diatomic_physical_gausslet_source_plan)
-        push!(missing, :pqs_physical_gausslet_final_basis)
     elseif !h1_requested
         status = :not_requested_pqs_physical_gausslet_h1_payload
         blocker = :physical_gausslet_h1_request_not_enabled
-        push!(available, :pqs_diatomic_physical_gausslet_source_plan)
-        push!(available, :pqs_physical_gausslet_final_basis)
-        push!(missing, :physical_gausslet_h1_request)
     else
-        push!(available, :pqs_diatomic_physical_gausslet_source_plan)
-        push!(available, :pqs_physical_gausslet_final_basis)
         center_records, missing_centers =
             _pqs_source_box_route_driver_complete_core_shell_center_records(parent)
         axis_layers, missing_axis_layers =
@@ -3379,7 +3177,6 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_h1_payload(
         if !isempty((missing_centers..., missing_axis_layers...))
             status = :blocked_pqs_physical_gausslet_h1_payload
             blocker = :missing_physical_gausslet_h1_inputs
-            append!(missing, (missing_centers..., missing_axis_layers...))
         else
             try
                 coulomb_expansion = coulomb_gaussian_expansion(doacc = false)
@@ -3426,25 +3223,19 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_h1_payload(
                 if !(isfinite(h1.lowest_energy) && h1.lowest_energy < 0)
                     status = :blocked_pqs_physical_gausslet_h1_payload
                     blocker = :physical_gausslet_h1_lowest_energy_nonnegative
-                    push!(missing, :physical_gausslet_h1_sanity)
                 else
                     status = :available_pqs_physical_gausslet_h1_payload
                     blocker = nothing
-                    push!(available, :pqs_physical_gausslet_h1_payload)
-                    push!(missing, :physical_gausslet_h1_j_builder)
                 end
             catch error
                 error isa ArgumentError || error isa DimensionMismatch || rethrow()
                 status = :blocked_pqs_physical_gausslet_h1_payload
                 blocker = :physical_gausslet_h1_builder_error
                 h1_status = :blocked_pqs_physical_gausslet_h1_solve
-                push!(missing, :pqs_physical_gausslet_h1_payload)
             end
         end
     end
 
-    available_objects = Tuple(unique(available))
-    missing_objects = Tuple(unique(missing))
     h1_materialized = status === :available_pqs_physical_gausslet_h1_payload
     summary = (;
         status,
@@ -3476,9 +3267,6 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_h1_payload(
         density_interaction_materialized = false,
         rhf_materialized = false,
         exports_materialized = false,
-        public_api = false,
-        available_objects,
-        missing_objects,
     )
     metadata = (;
         source =
@@ -3507,8 +3295,6 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_h1_payload(
         final_hamiltonian_status,
         h1,
         h1_status,
-        available_objects,
-        missing_objects,
         summary,
         metadata,
     )
@@ -3837,8 +3623,6 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_h1_j_payload(
     density_interaction_status =
         :not_materialized_pqs_physical_gausslet_pre_final_density_interaction
     h1_j_status = :not_materialized_pqs_physical_gausslet_h1_j_payload
-    available = Symbol[]
-    missing = Symbol[]
 
     if route_family !== :pqs_source_box
         status = :not_applicable_pqs_physical_gausslet_h1_j_non_pqs_route
@@ -3847,36 +3631,16 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_h1_j_payload(
            :available_pqs_diatomic_physical_gausslet_core_shell_source_plan
         status = :blocked_pqs_physical_gausslet_h1_j_payload
         blocker = :missing_pqs_diatomic_physical_gausslet_source_plan
-        push!(missing, :pqs_diatomic_physical_gausslet_source_plan)
     elseif final_basis_status !== :available_pqs_physical_gausslet_final_basis
         status = :blocked_pqs_physical_gausslet_h1_j_payload
         blocker = :missing_pqs_physical_gausslet_final_basis
-        push!(missing, :pqs_physical_gausslet_final_basis)
     elseif h1_payload_status !== :available_pqs_physical_gausslet_h1_payload
         status = :blocked_pqs_physical_gausslet_h1_j_payload
         blocker = :missing_pqs_physical_gausslet_h1_payload
-        push!(missing, :pqs_physical_gausslet_h1_payload)
     elseif !h1_j_requested
         status = :not_requested_pqs_physical_gausslet_h1_j_payload
         blocker = :physical_gausslet_h1_j_request_not_enabled
-        append!(
-            available,
-            (
-                :pqs_diatomic_physical_gausslet_source_plan,
-                :pqs_physical_gausslet_final_basis,
-                :pqs_physical_gausslet_h1_payload,
-            ),
-        )
-        push!(missing, :physical_gausslet_h1_j_request)
     else
-        append!(
-            available,
-            (
-                :pqs_diatomic_physical_gausslet_source_plan,
-                :pqs_physical_gausslet_final_basis,
-                :pqs_physical_gausslet_h1_payload,
-            ),
-        )
         coulomb_expansion = coulomb_gaussian_expansion(doacc = false)
         try
             density_provenance =
@@ -3920,7 +3684,6 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_h1_j_payload(
                :materialized_pqs_physical_gausslet_pre_final_density_interaction
                 status = :blocked_pqs_physical_gausslet_h1_j_payload
                 blocker = :physical_gausslet_pre_final_density_interaction_blocked
-                push!(missing, :pqs_physical_gausslet_pre_final_density_interaction)
             else
                 h1_j_diagnostic =
                     _pqs_source_box_route_driver_physical_gausslet_h1_j_diagnostic(
@@ -3930,8 +3693,6 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_h1_j_payload(
                 h1_j_status = :materialized_pqs_physical_gausslet_h1_j_payload
                 status = h1_j_status
                 blocker = nothing
-                push!(available, :pqs_physical_gausslet_h1_j_payload)
-                push!(missing, :physical_gausslet_rhf_or_solver_contract)
             end
         catch error
             error isa ArgumentError || error isa DimensionMismatch || rethrow()
@@ -3946,12 +3707,9 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_h1_j_payload(
             else
                 blocker = :physical_gausslet_pre_final_density_interaction_blocked
             end
-            push!(missing, blocker)
         end
     end
 
-    available_objects = Tuple(unique(available))
-    missing_objects = Tuple(unique(missing))
     h1_j_materialized =
         status === :materialized_pqs_physical_gausslet_h1_j_payload
     density_interaction_materialized =
@@ -4005,9 +3763,6 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_h1_j_payload(
             blocker,
         rhf_materialized = false,
         exports_materialized = false,
-        public_api = false,
-        available_objects,
-        missing_objects,
     )
     metadata = (;
         source =
@@ -4040,8 +3795,6 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_h1_j_payload(
         density_interaction_status,
         h1_j_diagnostic,
         h1_j_status,
-        available_objects,
-        missing_objects,
         summary,
         metadata,
     )
@@ -4105,9 +3858,6 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_rhf_input_contr
         hasproperty(density_interaction, :pre_final_pair_matrix) ?
         density_interaction.pre_final_pair_matrix :
         nothing
-    available = Symbol[]
-    missing = Symbol[]
-
     if route_family !== :pqs_source_box
         status = :not_applicable_pqs_physical_gausslet_rhf_input_contract
         blocker = nothing
@@ -4117,42 +3867,33 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_rhf_input_contr
     )
         status = :blocked_pqs_physical_gausslet_rhf_input_contract
         blocker = :unsupported_physical_gausslet_route_kind
-        push!(missing, :physical_gausslet_route_kind)
     elseif source_plan_status !==
            :available_pqs_diatomic_physical_gausslet_core_shell_source_plan
         status = :blocked_pqs_physical_gausslet_rhf_input_contract
         blocker = :missing_pqs_diatomic_physical_gausslet_source_plan
-        push!(missing, :pqs_diatomic_physical_gausslet_source_plan)
     elseif final_basis_status !== :available_pqs_physical_gausslet_final_basis
         status = :blocked_pqs_physical_gausslet_rhf_input_contract
         blocker = :missing_pqs_physical_gausslet_final_basis
-        push!(missing, :pqs_physical_gausslet_final_basis)
     elseif h1_payload_status !== :available_pqs_physical_gausslet_h1_payload ||
            isnothing(h1_matrix)
         status = :blocked_pqs_physical_gausslet_rhf_input_contract
         blocker = :missing_physical_gausslet_h1_payload
-        push!(missing, :pqs_physical_gausslet_h1_payload)
     elseif h1_j_payload_status !== :materialized_pqs_physical_gausslet_h1_j_payload ||
            isnothing(density_interaction)
         status = :blocked_pqs_physical_gausslet_rhf_input_contract
         blocker = :missing_physical_gausslet_density_interaction
-        push!(missing, :pqs_physical_gausslet_density_interaction)
     elseif isnothing(final_to_pre_final)
         status = :blocked_pqs_physical_gausslet_rhf_input_contract
         blocker = :missing_physical_gausslet_final_to_pre_final_transform
-        push!(missing, :physical_gausslet_final_to_pre_final_transform)
     elseif isnothing(pre_final_pair_matrix)
         status = :blocked_pqs_physical_gausslet_rhf_input_contract
         blocker = :missing_physical_gausslet_pre_final_pair_matrix
-        push!(missing, :physical_gausslet_pre_final_pair_matrix)
     elseif isnothing(electron_count)
         status = :blocked_pqs_physical_gausslet_rhf_input_contract
         blocker = :missing_physical_gausslet_electron_count
-        push!(missing, :physical_gausslet_electron_count)
     elseif electron_count !== 2 || isnothing(occupation)
         status = :blocked_pqs_physical_gausslet_rhf_input_contract
         blocker = :unsupported_physical_gausslet_electron_count
-        push!(missing, :physical_gausslet_electron_count)
     else
         h1 = Matrix{Float64}(h1_matrix)
         pair = Matrix{Float64}(pre_final_pair_matrix)
@@ -4164,17 +3905,14 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_rhf_input_contr
            h1_symmetry_error > 1.0e-8
             status = :blocked_pqs_physical_gausslet_rhf_input_contract
             blocker = :missing_physical_gausslet_h1_payload
-            push!(missing, :physical_gausslet_h1_matrix)
         elseif get(density_interaction, :density_gauge, nothing) !==
                :pre_final_localized_positive_weight
             status = :blocked_pqs_physical_gausslet_rhf_input_contract
             blocker = :physical_gausslet_rhf_input_contract_unreviewed
-            push!(missing, :physical_gausslet_density_gauge)
         elseif get(density_interaction.metadata, :raw_pair_factor_convention, nothing) !==
                :raw_numerator
             status = :blocked_pqs_physical_gausslet_rhf_input_contract
             blocker = :physical_gausslet_rhf_input_contract_unreviewed
-            push!(missing, :physical_gausslet_raw_pair_factor_convention)
         elseif size(pair, 1) != size(pair, 2) ||
                size(transform, 1) != size(pair, 1) ||
                size(transform, 2) != size(h1, 1) ||
@@ -4182,25 +3920,12 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_rhf_input_contr
                pair_symmetry_error > 1.0e-8
             status = :blocked_pqs_physical_gausslet_rhf_input_contract
             blocker = :missing_physical_gausslet_pre_final_pair_matrix
-            push!(missing, :physical_gausslet_pre_final_pair_matrix)
         else
             status = :available_pqs_physical_gausslet_rhf_input_contract
             blocker = nothing
-            append!(
-                available,
-                (
-                    :pqs_diatomic_physical_gausslet_source_plan,
-                    :pqs_physical_gausslet_final_basis,
-                    :pqs_physical_gausslet_h1_payload,
-                    :pqs_physical_gausslet_h1_j_payload,
-                    :pqs_physical_gausslet_rhf_input_contract,
-                ),
-            )
         end
     end
 
-    available_objects = Tuple(unique(available))
-    missing_objects = Tuple(unique(missing))
     contract_available =
         status === :available_pqs_physical_gausslet_rhf_input_contract
     h1_matrix_finite =
@@ -4253,8 +3978,6 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_rhf_input_contr
             contract_available ?
             :missing_physical_gausslet_private_rhf_execution :
             blocker,
-        available_objects,
-        missing_objects,
     )
     metadata = (;
         source =
@@ -4277,8 +4000,6 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_rhf_input_contr
         h1_j_payload_status,
         electron_count,
         occupation,
-        available_objects,
-        missing_objects,
         summary,
         metadata,
     )

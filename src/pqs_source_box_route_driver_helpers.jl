@@ -1223,7 +1223,6 @@ function _pqs_source_box_route_driver_terminal_lowering_contract_record(
             _pqs_source_box_route_driver_terminal_lowering_source_family_counts(
                 contract,
             ),
-        source_cpbs_materialized = false,
         identity_like_source_contract = identity_like,
         retained_rule =
             _pqs_source_box_route_driver_terminal_lowering_retained_rule(
@@ -1258,15 +1257,6 @@ function _pqs_source_box_route_driver_terminal_lowering_contract_record(
             ),
         face_edge_corner_decomposition_required =
             lowering_kind == :white_lindsey_boundary_strata,
-        coefficient_maps_materialized = false,
-        transform_contracts_materialized = false,
-        retained_spaces_materialized = false,
-        operator_blocks_materialized = false,
-        pair_operator_blocks_materialized = false,
-        hamiltonian_data_materialized = false,
-        artifacts_materialized = false,
-        final_retained_unit_status = :not_materialized,
-        final_retained_unit_records_materialized = false,
         final_unit_count_planned =
             lowering_kind == :white_lindsey_boundary_strata ? source_cpb_count : 1,
         final_unit_granularity =
@@ -1342,11 +1332,6 @@ function _pqs_source_box_route_driver_terminal_lowering_contract_inventory_from_
     )
 
     return (;
-        object_kind = :cartesian_terminal_region_lowering_contract_inventory,
-        status = :available_terminal_region_lowering_contract_inventory,
-        inventory_source = :terminal_lowering_plan_compatibility_adapter,
-        source_object_kind = :cartesian_terminal_lowering_plan,
-        private_development_only = true,
         terminal_region_unit_count = unit_inventory.unit_count,
         lowering_contract_count = length(lowering_contracts),
         lowering_contracts,
@@ -1390,35 +1375,8 @@ function _pqs_source_box_route_driver_terminal_lowering_contract_inventory_from_
                         init = 0,
                     ),
             ),
-        final_retained_unit_inventory_available = false,
-        pair_inventory_available = false,
-        pair_inventory_status = :not_available_lowering_contract_metadata_only,
-        coefficient_maps_materialized = false,
-        transform_contracts_materialized = false,
-        retained_spaces_materialized = false,
-        operator_blocks_materialized = false,
-        pair_operator_blocks_materialized = false,
-        hamiltonian_data_materialized = false,
-        artifacts_materialized = false,
-        diagnostics = (;
-            source = :terminal_lowering_plan_compatibility_adapter,
-            private_development_only = true,
-            terminal_region_metadata_only = true,
-            lowering_contracts_metadata_only = true,
-            all_units_have_lowering_contracts =
-                all(entry -> entry.lowering_contract_count >= 1, contract_counts_by_unit),
-            final_retained_unit_inventory_available = false,
-            pair_inventory_available = false,
-            coefficient_maps_materialized = false,
-            transform_contracts_materialized = false,
-            retained_spaces_materialized = false,
-            operator_blocks_materialized = false,
-            pair_operator_blocks_materialized = false,
-            hamiltonian_data_materialized = false,
-            artifacts_materialized = false,
-            materialization_behavior_changed = false,
-            public_default_behavior_changed = false,
-        ),
+        all_units_have_lowering_contracts =
+            all(entry -> entry.lowering_contract_count >= 1, contract_counts_by_unit),
     )
 end
 
