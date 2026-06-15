@@ -15,8 +15,6 @@ using JLD2
 isdefined(Main, :_cached_fixture) ||
     error("nested integration tests require top-level test/runtests.jl fixture helpers")
 
-include("cartesian_terminal_shellification_geometry_runtests.jl")
-
 # Fixture-bound bundle/projector and nested fixed-block tests.
 include("cartesian_nested_face_first_primitive_runtests.jl")
 include("cartesian_endcap_panel_owned_shell_producer_runtests.jl")

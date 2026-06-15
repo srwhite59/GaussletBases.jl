@@ -401,3 +401,43 @@ Recommended next cut:
 - If load and the readiness driver smoke remain green, continue auditing the
   remaining terminal-route state bookkeeping for construction use versus
   report-only use.
+
+## Checkpoint 9 - Terminal Shellification Private Test Cut
+
+Status:
+
+- uncommitted demolition cut for review.
+
+Deleted/simplified:
+
+- Deleted `test/nested/cartesian_terminal_shellification_geometry_runtests.jl`.
+  The test directly asserted private terminal-shellification helper names,
+  scaffold object kinds, metadata/status vocabulary, and error strings.
+- Removed that file from the slow integration runner.
+- Kept `src/cartesian_terminal_shellification_geometry.jl` and the
+  `CartesianShellification.raw_terminal_geometry` implementation because the
+  driver still uses those helpers during construction.
+
+Validation:
+
+- `git diff --check` passed.
+- Caller grep for the deleted test include found no active source/bin/test
+  callers. The only remaining mention is this demolition note.
+- Package load passed.
+- The protected H2 independent PQS readiness driver smoke completed with
+  saving disabled.
+
+Line-count impact:
+
+- About 858 test lines deleted before validation.
+
+Current breakage assessment:
+
+- This cut removes private helper/status test pressure only. It does not remove
+  source geometry construction or driver inputs.
+- Package load and the protected readiness driver smoke remain green.
+
+Recommended next cut:
+
+- Continue deleting private test pressure around old route/report scaffolding
+  before attempting to simplify the terminal-route state source family.
