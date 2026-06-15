@@ -163,9 +163,17 @@ save_inputs = (; save_artifact, save_tsv, outfile, tsvfile,
 
 # Begin actual construction
 
+function _cartesian_driver_stage(name)
+    println("[driver stage] ", name)
+end
+
+_cartesian_driver_stage(:cartesian_system)
 system = GaussletBases.cartesian_system(system_inputs)
+_cartesian_driver_stage(:cartesian_recipe)
 recipe = GaussletBases.cartesian_recipe(route_inputs)
+_cartesian_driver_stage(:cartesian_parent)
 parent = GaussletBases.cartesian_parent(system, spacing_inputs, parent_inputs, recipe)
+_cartesian_driver_stage(:cartesian_shells)
 shells = GaussletBases.cartesian_shells(
     parent,
     spacing_inputs,
@@ -173,13 +181,20 @@ shells = GaussletBases.cartesian_shells(
     low_order_shellization_policy,
     probe_route_configured_diatomic_atom_growth_materializer,
 )
+_cartesian_driver_stage(:cartesian_units)
 units = GaussletBases.cartesian_units(parent, shells, route_probe_inputs, recipe)
+_cartesian_driver_stage(:cartesian_transforms)
 @time "Transforming: " transforms = GaussletBases.cartesian_transforms(units, recipe)
+_cartesian_driver_stage(:cartesian_pair_terms)
 @time "Pair terms: " pairs = GaussletBases.cartesian_pair_terms(units, transforms, recipe)
+_cartesian_driver_stage(:cartesian_assembly)
 @time "Assembly: " assembly = GaussletBases.cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
+_cartesian_driver_stage(:cartesian_report)
 report = GaussletBases.cartesian_report(system, parent, assembly, recipe)
+_cartesian_driver_stage(:cartesian_materialization)
 materialization = GaussletBases.cartesian_materialization(report, materialization_inputs)
 
+_cartesian_driver_stage(Symbol("cartesian_print/save"))
 GaussletBases.cartesian_print_summary(report, materialization)
 GaussletBases.cartesian_print_details(report, materialization)
 GaussletBases.cartesian_save(report, save_inputs, materialization)
