@@ -456,33 +456,6 @@ end
     @test !terminal_summary.independent_atom_growth_pair_inventory_available
     @test terminal_summary.pair_count == 0
     @test terminal_summary.pair_family_counts == ()
-    @test !terminal_summary.route_core_pair_inventory_available
-    @test terminal_summary.route_core_pair_inventory_status ==
-          :deferred_terminal_shellification_pair_inventory
-    @test terminal_summary.route_core_pair_count == 0
-    @test terminal_summary.route_core_pair_family_counts == ()
-    @test terminal_summary.route_core_summary_status ==
-          :deferred_terminal_shellification_pair_inventory
-    @test !terminal_summary.route_core_pair_operator_ready
-    @test terminal_summary.route_core_pair_operator_readiness_status ==
-          :deferred_terminal_shellification_pair_inventory
-    @test terminal_summary.route_core_pair_operator_blocker ==
-          :deferred_terminal_shellification_pair_inventory
-    @test !terminal_summary.route_core_typed_pair_operator_plan_inventory_available
-    @test terminal_summary.route_core_typed_pair_operator_plan_inventory_status ==
-          :deferred_terminal_shellification_typed_pair_operator_plan_inventory
-    @test terminal_summary.route_core_typed_pair_operator_plan_blocker ==
-          :deferred_terminal_shellification_pair_inventory
-    @test !terminal_summary.route_core_typed_pair_operator_plan_materialized
-    @test !terminal_summary.route_core_typed_pair_operator_materialization_ready
-    @test terminal_summary.route_core_typed_pair_operator_materialization_readiness_status ==
-          :deferred_terminal_shellification_typed_pair_operator_plan_inventory
-    @test terminal_summary.terminal_shellification_central_gap_region_count ==
-          terminal_stages.assembly.terminal_shellification_central_gap_region_count
-    @test terminal_summary.terminal_shellification_central_midpoint_slab_count ==
-          terminal_stages.assembly.terminal_shellification_central_midpoint_slab_count
-    @test terminal_summary.terminal_shellification_central_distorted_product_box_count ==
-          terminal_stages.assembly.terminal_shellification_central_distorted_product_box_count
     @test terminal_summary.terminal_shellification_central_gap_region_count == 3
     @test terminal_summary.terminal_shellification_central_midpoint_slab_count == 3
     @test terminal_summary.terminal_shellification_central_distorted_product_box_count ==

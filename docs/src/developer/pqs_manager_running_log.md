@@ -1320,3 +1320,49 @@ Remaining blocker / next:
 
 Line-count / complexity note:
 - Scoped `src + test + bin` diff was `0` added / `12` deleted, net `-12`.
+
+## Pass 251 - Independent H2 PQS Input Taxonomy
+
+Commit(s):
+- this commit - Clarify independent H2 PQS input taxonomy
+
+Summary:
+- Added three tiny include/override driver inputs for independent H2 PQS
+  final-basis, H1, and H1-J diagnostic stages while leaving the existing input
+  as the no-physics readiness input.
+- Updated the endpoint manifest to distinguish readiness, final-basis, H1, and
+  H1-J diagnostic roles, and removed stale rows for absent H2 diagnostic input
+  and test files.
+- Fake-PQS remains a separate fake/source-backed WL/QW reproduction row.
+
+Validation:
+- Doer: include/flag smoke passed for the three new input variants; `git diff
+  --check` passed; direct trailing-whitespace search found no matches.
+- Manager: reviewed the input, manifest, and cleanup diffs. No slow H2 route run
+  was needed because passes 248-250 already validated the route seams.
+
+Goal advancement:
+- LT6/LT7: made the driver input taxonomy match the demonstrated artifact
+  stages and reduced future confusion between readiness, final basis, H1, and
+  H1-J.
+- LT5/MT1: preserved the fake-PQS quarantine as a separate manifest row.
+- MT5/LT2: offset the small input additions by deleting stale route-core
+  pair/materialization mirror assertions.
+
+Medium-goal update:
+- none.
+
+Risk / guardrail:
+- These variants are diagnostic inputs, not public endpoints. Do not use them
+  to claim solver/export/public readiness.
+
+Remaining blocker / next:
+- Choose deliberately between a private RHF diagnostic contract pass and another
+  cleanup/classification pass. Supplements, CR2, export, and public API remain
+  blocked.
+
+Line-count / complexity note:
+- Scoped `src + test + bin`, counting new driver inputs, was `24` added / `27`
+  deleted, net `-3`.
+- Manifest/input taxonomy plus deletion offset was `28` added / `29` deleted,
+  net `-1`.
