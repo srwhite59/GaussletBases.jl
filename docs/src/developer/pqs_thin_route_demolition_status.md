@@ -441,3 +441,45 @@ Recommended next cut:
 
 - Continue deleting private test pressure around old route/report scaffolding
   before attempting to simplify the terminal-route state source family.
+
+## Checkpoint 10 - Old Cartesian Export/Metadata Test Cut
+
+Status:
+
+- uncommitted demolition cut for review.
+
+Deleted/simplified:
+
+- Deleted the old Cartesian basis-bundle export test and overlap-projector
+  bundle test. These preserved JLD2 key manifests and legacy artifact/export
+  contracts rather than the protected driver mechanism.
+- Deleted the unreferenced metadata-only parent Coulomb source summary test.
+- Removed the deleted export tests from the slow integration runner.
+- Kept compact module-contract tests such as the contracted-parent scaffold
+  test because they exercise active constructors/audits rather than old driver
+  report fields.
+
+Validation:
+
+- `git diff --check` passed.
+- Caller grep for the deleted export/metadata test names found no active
+  source/bin/test/docs callers.
+- Package load passed.
+- The protected H2 independent PQS readiness driver smoke completed with
+  saving disabled.
+
+Line-count impact:
+
+- About 776 test lines deleted before validation.
+
+Current breakage assessment:
+
+- This cut removes old artifact/export/metadata test pressure. It does not
+  remove driver inputs, the driver entry point, or numerical kernels.
+- Package load and the protected readiness driver smoke remain green.
+
+Recommended next cut:
+
+- Continue using the driver as the survival test mechanism; avoid restoring old
+  JLD2 manifest and export-key tests unless a public artifact contract is
+  deliberately rebuilt.

@@ -34,8 +34,6 @@ include("nested_coefficient_maps_sparse_storage_runtests.jl")
 include("cartesian_basis_representation_atomic_qw_residual_bases_runtests.jl")
 include("cartesian_basis_representation_cross_overlap_runtests.jl")
 include("cartesian_basis_projector_orbital_transfer_runtests.jl")
-include("cartesian_basis_bundle_export_runtests.jl")
-include("cartesian_basis_bundle_overlap_projector_runtests.jl")
 
 include("atomic_direct_product_he_extent_change_runtests.jl")
 include("atomic_hybrid_he_orbital_transfer_runtests.jl")
