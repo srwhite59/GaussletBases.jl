@@ -336,6 +336,178 @@ function _pqs_source_box_route_driver_h2_pqs_ham_artifact_reload_ok(
     end
 end
 
+function _pqs_source_box_route_driver_require_jld2_keys(file, keys)
+    missing = Symbol[key for key in keys if !haskey(file, String(key))]
+    isempty(missing) || throw(ArgumentError("H2 PQS sidecar artifact missing keys $(missing)"))
+    return nothing
+end
+
+function _pqs_source_box_route_driver_square_matrix(name::AbstractString, matrix)
+    size(matrix, 1) == size(matrix, 2) ||
+        throw(ArgumentError("$name must be square; got $(size(matrix))"))
+    return nothing
+end
+
+"""
+    pqs_h2_residual_gto_sidecar_artifact_roundtrip(basisfile, hamfile)
+
+Read the narrow H2 independent-PQS Ham/Basis plus residual-GTO sidecar
+artifacts and return compact consumer facts. This is intentionally specific to
+the current P1 artifact; it is not a general artifact registry.
+"""
+function pqs_h2_residual_gto_sidecar_artifact_roundtrip(
+    basisfile,
+    hamfile;
+    symmetry_atol::Real = 1.0e-8,
+)
+    basis_facts = jldopen(String(basisfile), "r") do file
+        _pqs_source_box_route_driver_require_jld2_keys(
+            file,
+            (
+                :artifact_kind,
+                :final_dimension,
+                :final_coefficients,
+                :final_gto_cross_overlap,
+                :gto_self_overlap,
+                :gto_residual_overlap,
+            ),
+        )
+        artifact_kind = file["artifact_kind"]
+        artifact_kind === :pqs_h2_residual_gto_sidecar_basis_bundle ||
+            throw(ArgumentError("unexpected H2 PQS sidecar basis artifact kind $(artifact_kind)"))
+        final_dimension = Int(file["final_dimension"])
+        final_coefficients = file["final_coefficients"]
+        final_gto_cross_overlap = file["final_gto_cross_overlap"]
+        gto_self_overlap = file["gto_self_overlap"]
+        gto_residual_overlap = file["gto_residual_overlap"]
+        size(final_coefficients, 2) == final_dimension ||
+            throw(ArgumentError("basis final_coefficients column count must equal final_dimension"))
+        size(final_gto_cross_overlap, 1) == final_dimension ||
+            throw(ArgumentError("basis final_gto_cross_overlap row count must equal final_dimension"))
+        _pqs_source_box_route_driver_square_matrix(
+            "basis gto_self_overlap",
+            gto_self_overlap,
+        )
+        size(gto_residual_overlap) == size(gto_self_overlap) ||
+            throw(ArgumentError("basis gto_residual_overlap shape must match gto_self_overlap"))
+        all(isfinite, gto_residual_overlap) ||
+            throw(ArgumentError("basis gto_residual_overlap contains non-finite entries"))
+        residual_symmetry_error =
+            norm(gto_residual_overlap - transpose(gto_residual_overlap), Inf)
+        residual_symmetry_error <= Float64(symmetry_atol) ||
+            throw(ArgumentError("basis gto_residual_overlap is not symmetric"))
+        return (;
+            basis_artifact_kind = artifact_kind,
+            final_dimension,
+            final_coefficients_size = size(final_coefficients),
+            final_gto_cross_overlap_size = size(final_gto_cross_overlap),
+            gto_self_overlap_size = size(gto_self_overlap),
+            gto_residual_overlap_size = size(gto_residual_overlap),
+            gto_residual_overlap_finite = true,
+            gto_residual_overlap_symmetry_error = residual_symmetry_error,
+        )
+    end
+
+    ham_facts = jldopen(String(hamfile), "r") do file
+        _pqs_source_box_route_driver_require_jld2_keys(
+            file,
+            (
+                :artifact_kind,
+                :final_dimension,
+                :one_body_hamiltonian,
+                :pre_final_pair_matrix,
+                :h1_lowest,
+                :h1_j_self_coulomb,
+                :final_gto_cross_overlap,
+                :gto_self_overlap,
+                :gto_residual_overlap,
+            ),
+        )
+        artifact_kind = file["artifact_kind"]
+        artifact_kind === :pqs_h2_residual_gto_sidecar_ham_bundle ||
+            throw(ArgumentError("unexpected H2 PQS sidecar ham artifact kind $(artifact_kind)"))
+        final_dimension = Int(file["final_dimension"])
+        final_dimension == basis_facts.final_dimension ||
+            throw(ArgumentError("basis and ham final dimensions differ"))
+        one_body_hamiltonian = file["one_body_hamiltonian"]
+        pre_final_pair_matrix = file["pre_final_pair_matrix"]
+        h1_lowest = Float64(file["h1_lowest"])
+        h1_j_self_coulomb = Float64(file["h1_j_self_coulomb"])
+        final_gto_cross_overlap = file["final_gto_cross_overlap"]
+        gto_self_overlap = file["gto_self_overlap"]
+        gto_residual_overlap = file["gto_residual_overlap"]
+        size(one_body_hamiltonian) == (final_dimension, final_dimension) ||
+            throw(ArgumentError("one_body_hamiltonian shape must be final_dimension x final_dimension"))
+        all(isfinite, one_body_hamiltonian) ||
+            throw(ArgumentError("one_body_hamiltonian contains non-finite entries"))
+        h1_symmetry_error =
+            norm(one_body_hamiltonian - transpose(one_body_hamiltonian), Inf)
+        h1_symmetry_error <= Float64(symmetry_atol) ||
+            throw(ArgumentError("one_body_hamiltonian is not symmetric"))
+        isfinite(h1_lowest) ||
+            throw(ArgumentError("h1_lowest must be finite"))
+        _pqs_source_box_route_driver_square_matrix(
+            "pre_final_pair_matrix",
+            pre_final_pair_matrix,
+        )
+        isfinite(h1_j_self_coulomb) && h1_j_self_coulomb > 0 ||
+            throw(ArgumentError("h1_j_self_coulomb must be finite and positive"))
+        size(final_gto_cross_overlap, 1) == final_dimension ||
+            throw(ArgumentError("ham final_gto_cross_overlap row count must equal final_dimension"))
+        _pqs_source_box_route_driver_square_matrix(
+            "ham gto_self_overlap",
+            gto_self_overlap,
+        )
+        size(gto_residual_overlap) == size(gto_self_overlap) ||
+            throw(ArgumentError("ham gto_residual_overlap shape must match gto_self_overlap"))
+        all(isfinite, gto_residual_overlap) ||
+            throw(ArgumentError("ham gto_residual_overlap contains non-finite entries"))
+        residual_symmetry_error =
+            norm(gto_residual_overlap - transpose(gto_residual_overlap), Inf)
+        residual_symmetry_error <= Float64(symmetry_atol) ||
+            throw(ArgumentError("ham gto_residual_overlap is not symmetric"))
+        return (;
+            ham_artifact_kind = artifact_kind,
+            one_body_hamiltonian_size = size(one_body_hamiltonian),
+            h1_finite = true,
+            h1_symmetry_error,
+            h1_lowest,
+            pre_final_pair_matrix_size = size(pre_final_pair_matrix),
+            h1_j_self_coulomb,
+            h1_j_self_coulomb_positive = true,
+            final_gto_cross_overlap_size = size(final_gto_cross_overlap),
+            gto_self_overlap_size = size(gto_self_overlap),
+            gto_residual_overlap_size = size(gto_residual_overlap),
+            gto_residual_overlap_finite = true,
+            gto_residual_overlap_symmetry_error = residual_symmetry_error,
+        )
+    end
+
+    return (;
+        basisfile = String(basisfile),
+        hamfile = String(hamfile),
+        final_dimension = basis_facts.final_dimension,
+        basis_artifact_kind = basis_facts.basis_artifact_kind,
+        ham_artifact_kind = ham_facts.ham_artifact_kind,
+        final_coefficients_size = basis_facts.final_coefficients_size,
+        final_gto_cross_overlap_size = basis_facts.final_gto_cross_overlap_size,
+        gto_self_overlap_size = basis_facts.gto_self_overlap_size,
+        gto_residual_overlap_size = basis_facts.gto_residual_overlap_size,
+        h1_finite = ham_facts.h1_finite,
+        h1_symmetry_error = ham_facts.h1_symmetry_error,
+        h1_lowest = ham_facts.h1_lowest,
+        h1_j_self_coulomb = ham_facts.h1_j_self_coulomb,
+        h1_j_self_coulomb_positive = ham_facts.h1_j_self_coulomb_positive,
+        gto_residual_overlap_finite =
+            basis_facts.gto_residual_overlap_finite &&
+            ham_facts.gto_residual_overlap_finite,
+        basis_gto_residual_overlap_symmetry_error =
+            basis_facts.gto_residual_overlap_symmetry_error,
+        ham_gto_residual_overlap_symmetry_error =
+            ham_facts.gto_residual_overlap_symmetry_error,
+    )
+end
+
 function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
     report;
     save_basis_artifact::Bool,
@@ -434,6 +606,7 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
             file["artifact_kind"] = :pqs_h2_residual_gto_sidecar_ham_bundle
             file["summary"] = summary
             file["route_metadata"] = route_metadata
+            file["final_dimension"] = final_basis.final_dimension
             file["one_body_hamiltonian"] = h1_hamiltonian.hamiltonian_matrix
             file["kinetic"] = h1_hamiltonian.kinetic_matrix
             file["charged_nuclear"] = h1_hamiltonian.charged_nuclear_matrix
@@ -456,6 +629,14 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
                 final_basis.final_dimension,
             )
     end
+
+    artifact_roundtrip =
+        save_basis_artifact && save_ham_artifact ?
+        pqs_h2_residual_gto_sidecar_artifact_roundtrip(
+            basis_artifact_path,
+            ham_artifact_path,
+        ) :
+        nothing
 
     return (;
         route_family = report.route_family,
@@ -490,6 +671,7 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
         ham_artifact_written = save_ham_artifact,
         basis_artifact_reloaded,
         ham_artifact_reloaded,
+        artifact_roundtrip,
     )
 end
 
