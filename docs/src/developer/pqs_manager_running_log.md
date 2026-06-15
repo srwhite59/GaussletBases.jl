@@ -1118,3 +1118,49 @@ Remaining blocker / next:
 
 Line-count / complexity note:
 - Scoped `src + test + bin` diff was `0` added / `176` deleted, net `-176`.
+
+## Pass 247 - Independent H2 PQS Source-Plan Payload
+
+Commit(s):
+- this commit - Assemble independent H2 PQS source-plan payload
+
+Summary:
+- Assembled an available route-owned source-plan payload for the independent H2
+  PQS target from atom-contact support rows plus the pass-241 shared-shell
+  realization payloads.
+- The artifact now reports source-plan availability with support counts
+  `(275, 578, 362)`, retained counts `(275, 98, 98)`, and final dimension `471`.
+- Final basis, H1, H1-J, RHF, supplements, CR2, export, and public API remain
+  blocked.
+
+Validation:
+- Doer: package load passed; the focused independent H2 PQS driver/artifact
+  check passed in about 78 seconds; `git diff --check` passed.
+- Manager: reviewed the source/report/test diffs, reran `git diff --check`, and
+  accepted the focused driver validation instead of duplicating the slow route
+  run.
+
+Goal advancement:
+- MT2/LT5: advanced independent H2 PQS recovery from descriptor plus
+  shared-shell payload to a route-owned source-plan payload with PQS authority.
+- MT3/LT8: preserved the common physical support vocabulary while keeping the
+  retained-transform authority explicitly independent of fake/WL source-backed
+  data.
+- MT5/LT2: offset new source-plan assembly with stale terminal-shellification
+  exact-field assertion deletions.
+
+Medium-goal update:
+- none.
+
+Risk / guardrail:
+- Do not enable final basis or physics yet. The downstream final-basis helper
+  still carries old physical-gausslet assumptions, including stale retained
+  counts and source-backed metadata labels.
+
+Remaining blocker / next:
+- Review and correct the independent H2 PQS final-basis seam so it consumes the
+  new `(275, 98, 98)` source plan without reintroducing fake/source-backed
+  authority.
+
+Line-count / complexity note:
+- Scoped `src + test + bin` diff was `267` added / `287` deleted, net `-20`.

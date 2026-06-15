@@ -590,8 +590,12 @@ function _pqs_source_box_route_driver_write_pqs_diatomic_readiness_artifact!(
         independent_pqs_artifact ?
         get(
             target,
-            :independent_source_plan_blocker,
-            :missing_independent_pqs_physical_source_plan_materializer,
+            :physics_endpoint_blocker,
+            get(
+                target,
+                :independent_source_plan_blocker,
+                :missing_independent_pqs_physical_source_plan_materializer,
+            ),
         ) :
         physical_target_artifact && physics_endpoint_ready === true ?
         nothing :

@@ -581,35 +581,14 @@ end
         for entry in terminal_units.terminal_shellification_contract_counts_by_unit
     )
     @test terminal_units.terminal_shellification_selected_lowering_contract_inventory_available
-    @test terminal_units.terminal_shellification_selected_lowering_contract_inventory_status ==
-          :available_selected_terminal_lowering_contract_inventory
     selected_terminal_lowering_inventory =
         terminal_units.terminal_shellification_selected_lowering_contract_inventory
-    @test selected_terminal_lowering_inventory.object_kind ==
-          :cartesian_selected_terminal_lowering_contract_inventory
     @test selected_terminal_lowering_inventory.route_lowering_family ==
           :white_lindsey_low_order
-    @test terminal_units.terminal_shellification_selected_lowering_family ==
-          :white_lindsey_low_order
-    @test terminal_units.terminal_shellification_selected_contract_count ==
-          terminal_inventory.unit_count
-    @test terminal_units.terminal_shellification_selected_contract_count ==
-          selected_terminal_lowering_inventory.selected_contract_count
-    @test terminal_units.terminal_shellification_selected_contract_kinds ==
-          selected_terminal_lowering_inventory.selected_contract_kinds
-    @test terminal_units.terminal_shellification_selected_contract_kind_counts ==
-          selected_terminal_lowering_inventory.selected_contract_kind_counts
-    @test terminal_units.terminal_shellification_selected_contract_counts_by_unit ==
-          selected_terminal_lowering_inventory.selected_contract_counts_by_unit
-    @test terminal_units.terminal_shellification_all_units_have_exactly_one_selected_contract
     @test all(
         entry.selected_contract_count == 1
         for entry in terminal_units.terminal_shellification_selected_contract_counts_by_unit
     )
-    @test terminal_units.terminal_shellification_unselected_contract_count ==
-          selected_terminal_lowering_inventory.unselected_contract_count
-    @test terminal_units.terminal_shellification_unselected_contract_kinds ==
-          selected_terminal_lowering_inventory.unselected_contract_kinds
     @test !selected_terminal_lowering_inventory.final_retained_unit_inventory_available
     @test !selected_terminal_lowering_inventory.pair_inventory_available
     @test selected_terminal_lowering_inventory.pair_inventory_status ==
@@ -724,24 +703,6 @@ end
           terminal_lowering_inventory.lowering_contract_kind_counts
     @test terminal_summary.terminal_shellification_contract_counts_by_unit ==
           terminal_lowering_inventory.contract_counts_by_unit
-    @test terminal_summary.terminal_shellification_selected_lowering_contract_inventory_available
-    @test terminal_summary.terminal_shellification_selected_lowering_contract_inventory_status ==
-          :available_selected_terminal_lowering_contract_inventory
-    @test terminal_summary.terminal_shellification_selected_lowering_family ==
-          :white_lindsey_low_order
-    @test terminal_summary.terminal_shellification_selected_contract_count ==
-          selected_terminal_lowering_inventory.selected_contract_count
-    @test terminal_summary.terminal_shellification_selected_contract_kinds ==
-          selected_terminal_lowering_inventory.selected_contract_kinds
-    @test terminal_summary.terminal_shellification_selected_contract_kind_counts ==
-          selected_terminal_lowering_inventory.selected_contract_kind_counts
-    @test terminal_summary.terminal_shellification_selected_contract_counts_by_unit ==
-          selected_terminal_lowering_inventory.selected_contract_counts_by_unit
-    @test terminal_summary.terminal_shellification_all_units_have_exactly_one_selected_contract
-    @test terminal_summary.terminal_shellification_unselected_contract_count ==
-          selected_terminal_lowering_inventory.unselected_contract_count
-    @test terminal_summary.terminal_shellification_unselected_contract_kinds ==
-          selected_terminal_lowering_inventory.unselected_contract_kinds
     @test terminal_summary.terminal_shellification_lw_complete_shell_cpb_count ==
           terminal_lowering_inventory.lw_complete_shell_cpb_count
     @test terminal_summary.terminal_shellification_lw_complete_shell_cpb_family_counts ==

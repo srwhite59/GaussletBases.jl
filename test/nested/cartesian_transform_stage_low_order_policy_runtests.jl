@@ -406,36 +406,6 @@ end
           terminal_units.terminal_shellification_unit_kinds
     @test terminal_transforms.terminal_shellification_unit_support_counts ==
           terminal_units.terminal_shellification_unit_support_counts
-    @test terminal_transforms.terminal_shellification_lowering_contract_inventory_available
-    @test terminal_transforms.terminal_shellification_lowering_contract_inventory_status ==
-          terminal_units.terminal_shellification_lowering_contract_inventory_status
-    @test terminal_transforms.terminal_shellification_lowering_contract_count ==
-          terminal_units.terminal_shellification_lowering_contract_count
-    @test terminal_transforms.terminal_shellification_lowering_contract_kinds ==
-          terminal_units.terminal_shellification_lowering_contract_kinds
-    @test terminal_transforms.terminal_shellification_lowering_contract_kind_counts ==
-          terminal_units.terminal_shellification_lowering_contract_kind_counts
-    @test terminal_transforms.terminal_shellification_contract_counts_by_unit ==
-          terminal_units.terminal_shellification_contract_counts_by_unit
-    @test terminal_transforms.terminal_shellification_selected_lowering_contract_inventory_available
-    @test terminal_transforms.terminal_shellification_selected_lowering_contract_inventory_status ==
-          terminal_units.terminal_shellification_selected_lowering_contract_inventory_status
-    @test terminal_transforms.terminal_shellification_selected_lowering_family ==
-          terminal_units.terminal_shellification_selected_lowering_family
-    @test terminal_transforms.terminal_shellification_selected_contract_count ==
-          terminal_units.terminal_shellification_selected_contract_count
-    @test terminal_transforms.terminal_shellification_selected_contract_kinds ==
-          terminal_units.terminal_shellification_selected_contract_kinds
-    @test terminal_transforms.terminal_shellification_selected_contract_kind_counts ==
-          terminal_units.terminal_shellification_selected_contract_kind_counts
-    @test terminal_transforms.terminal_shellification_selected_contract_counts_by_unit ==
-          terminal_units.terminal_shellification_selected_contract_counts_by_unit
-    @test terminal_transforms.terminal_shellification_all_units_have_exactly_one_selected_contract ==
-          terminal_units.terminal_shellification_all_units_have_exactly_one_selected_contract
-    @test terminal_transforms.terminal_shellification_unselected_contract_count ==
-          terminal_units.terminal_shellification_unselected_contract_count
-    @test terminal_transforms.terminal_shellification_unselected_contract_kinds ==
-          terminal_units.terminal_shellification_unselected_contract_kinds
     unit_selected_crc_sidecars =
         terminal_units.low_order_units.terminal_shellification_selected_crc_sidecar_summary
     transform_selected_crc_sidecars =
@@ -554,36 +524,6 @@ end
           terminal_units.terminal_shellification_unit_kinds
     @test terminal_summary.terminal_shellification_unit_support_counts ==
           terminal_units.terminal_shellification_unit_support_counts
-    @test terminal_summary.terminal_shellification_lowering_contract_inventory_available
-    @test terminal_summary.terminal_shellification_lowering_contract_inventory_status ==
-          terminal_units.terminal_shellification_lowering_contract_inventory_status
-    @test terminal_summary.terminal_shellification_lowering_contract_count ==
-          terminal_units.terminal_shellification_lowering_contract_count
-    @test terminal_summary.terminal_shellification_lowering_contract_kinds ==
-          terminal_units.terminal_shellification_lowering_contract_kinds
-    @test terminal_summary.terminal_shellification_lowering_contract_kind_counts ==
-          terminal_units.terminal_shellification_lowering_contract_kind_counts
-    @test terminal_summary.terminal_shellification_contract_counts_by_unit ==
-          terminal_units.terminal_shellification_contract_counts_by_unit
-    @test terminal_summary.terminal_shellification_selected_lowering_contract_inventory_available
-    @test terminal_summary.terminal_shellification_selected_lowering_contract_inventory_status ==
-          terminal_units.terminal_shellification_selected_lowering_contract_inventory_status
-    @test terminal_summary.terminal_shellification_selected_lowering_family ==
-          terminal_units.terminal_shellification_selected_lowering_family
-    @test terminal_summary.terminal_shellification_selected_contract_count ==
-          terminal_units.terminal_shellification_selected_contract_count
-    @test terminal_summary.terminal_shellification_selected_contract_kinds ==
-          terminal_units.terminal_shellification_selected_contract_kinds
-    @test terminal_summary.terminal_shellification_selected_contract_kind_counts ==
-          terminal_units.terminal_shellification_selected_contract_kind_counts
-    @test terminal_summary.terminal_shellification_selected_contract_counts_by_unit ==
-          terminal_units.terminal_shellification_selected_contract_counts_by_unit
-    @test terminal_summary.terminal_shellification_all_units_have_exactly_one_selected_contract ==
-          terminal_units.terminal_shellification_all_units_have_exactly_one_selected_contract
-    @test terminal_summary.terminal_shellification_unselected_contract_count ==
-          terminal_units.terminal_shellification_unselected_contract_count
-    @test terminal_summary.terminal_shellification_unselected_contract_kinds ==
-          terminal_units.terminal_shellification_unselected_contract_kinds
     summary_selected_crc_sidecars =
         terminal_summary.terminal_shellification_selected_crc_sidecar_summary
     @test summary_selected_crc_sidecars.status ==

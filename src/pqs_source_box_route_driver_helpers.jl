@@ -8250,6 +8250,14 @@ function _pqs_source_box_route_driver_diatomic_complete_core_shell_report_fields
     )
 end
 
+function _pqs_source_box_route_driver_endpoint_blocker_update(summary, blocker)
+    current = get(summary, :physics_endpoint_blocker, nothing)
+    blocker === :unsupported_physical_gausslet_fixture_role &&
+        !isnothing(current) &&
+        return current
+    return blocker
+end
+
 function _pqs_source_box_route_driver_physical_gausslet_target_report_fields(
     assembly,
 )
@@ -8430,8 +8438,6 @@ function _pqs_source_box_route_driver_physical_gausslet_target_report_fields(
                         false,
                     ),
                 independent_source_plan_blocker =
-                    independent_source_plan ?
-                    source_plan_payload.blocker :
                     get(summary, :independent_source_plan_blocker, nothing),
             ),
         )
@@ -8470,7 +8476,11 @@ function _pqs_source_box_route_driver_physical_gausslet_target_report_fields(
                 final_kinetic_status = h1_payload.final_kinetic_status,
                 final_electron_nuclear_status =
                     h1_payload.final_electron_nuclear_status,
-                physics_endpoint_blocker = h1_payload.summary.endpoint_blocker,
+                physics_endpoint_blocker =
+                    _pqs_source_box_route_driver_endpoint_blocker_update(
+                        summary,
+                        h1_payload.summary.endpoint_blocker,
+                    ),
             ),
         )
     end
@@ -8502,7 +8512,11 @@ function _pqs_source_box_route_driver_physical_gausslet_target_report_fields(
                 pre_final_pair_matrix_symmetry_error =
                     h1_j_payload.summary.pre_final_pair_matrix_symmetry_error,
                 h1_j_self_coulomb = h1_j_payload.summary.self_coulomb,
-                physics_endpoint_blocker = h1_j_payload.summary.endpoint_blocker,
+                physics_endpoint_blocker =
+                    _pqs_source_box_route_driver_endpoint_blocker_update(
+                        summary,
+                        h1_j_payload.summary.endpoint_blocker,
+                    ),
             ),
         )
     end
@@ -8537,7 +8551,11 @@ function _pqs_source_box_route_driver_physical_gausslet_target_report_fields(
                     contract_summary.pre_final_pair_matrix_symmetry_error,
                 private_rhf_materialized =
                     contract_summary.private_rhf_materialized,
-                physics_endpoint_blocker = contract_summary.endpoint_blocker,
+                physics_endpoint_blocker =
+                    _pqs_source_box_route_driver_endpoint_blocker_update(
+                        summary,
+                        contract_summary.endpoint_blocker,
+                    ),
             ),
         )
     end
@@ -8563,7 +8581,11 @@ function _pqs_source_box_route_driver_physical_gausslet_target_report_fields(
                 private_rhf_energy_delta = execution_summary.energy_delta,
                 private_rhf_final_density_one_step_consistency_status =
                     execution_summary.final_density_one_step_consistency_status,
-                physics_endpoint_blocker = execution_summary.endpoint_blocker,
+                physics_endpoint_blocker =
+                    _pqs_source_box_route_driver_endpoint_blocker_update(
+                        summary,
+                        execution_summary.endpoint_blocker,
+                    ),
             ),
         )
     end

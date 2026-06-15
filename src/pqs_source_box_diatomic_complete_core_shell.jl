@@ -459,6 +459,20 @@ function _pqs_source_box_route_driver_independent_h2_support_region_plan(
         shared_shell_1 = shared_regions[1].support_count,
         shared_shell_2 = shared_regions[2].support_count,
     )
+    atom_contact_regions = (atom_regions..., midpoint_regions...)
+    atom_contact_support(region) =
+        _nested_box_support_indices(
+            region.box[1],
+            region.box[2],
+            region.box[3],
+            axis_count_tuple,
+        )
+    atom_contact_core_support_indices =
+        reduce(vcat, (atom_contact_support(region) for region in atom_contact_regions))
+    atom_contact_core_support_states = NTuple{3,Int}[
+        _cartesian_unflat_index(index, axis_count_tuple) for
+        index in atom_contact_core_support_indices
+    ]
     shared_shell_descriptors =
         _pqs_source_box_route_driver_independent_h2_shared_shell_region_descriptors(
             shared_regions,
@@ -490,6 +504,14 @@ function _pqs_source_box_route_driver_independent_h2_support_region_plan(
         outside_count = 0,
         nuclear_indices = raw.nuclear_indices,
         bond_axis = raw.bond_axis,
+        atom_contact_core_descriptor = (;
+            role = :atom_contact_core,
+            source_region_roles = Tuple(region.role for region in atom_contact_regions),
+            support_indices = atom_contact_core_support_indices,
+            support_states = atom_contact_core_support_states,
+            support_count = length(atom_contact_core_support_indices),
+            coefficient_representation = :sparse_parent_row_direct_selector,
+        ),
         shared_shell_descriptors,
     )
 end
@@ -2163,6 +2185,185 @@ function _pqs_source_box_route_driver_independent_h2_shared_shell_realization(
     end
 end
 
+function _pqs_source_box_route_driver_parent_row_sparse_coefficients(
+    support_indices::AbstractVector{Int},
+    local_coefficients::AbstractMatrix{<:Real},
+    parent_count::Int,
+)
+    row_indices = Int[]
+    col_indices = Int[]
+    values = Float64[]
+    for column in axes(local_coefficients, 2)
+        for (local_row, parent_row) in pairs(support_indices)
+            value = local_coefficients[local_row, column]
+            iszero(value) && continue
+            push!(row_indices, Int(parent_row))
+            push!(col_indices, Int(column))
+            push!(values, Float64(value))
+        end
+    end
+    return _nested_sparse_coefficient_map(
+        row_indices,
+        col_indices,
+        values,
+        parent_count,
+        size(local_coefficients, 2),
+    )
+end
+
+function _pqs_source_box_route_driver_independent_h2_complete_core_shell_source_plan(
+    parent,
+    target_payload,
+    descriptor,
+    shared_shell_realization,
+)
+    blocked(blocker) = (;
+        status = :blocked_pqs_diatomic_physical_gausslet_core_shell_source_plan,
+        blocker,
+        source_plan = nothing,
+    )
+    isnothing(target_payload) && return blocked(:missing_independent_pqs_target_payload)
+    descriptor.status === :available_independent_pqs_physical_source_plan_descriptor ||
+        return blocked(descriptor.blocker)
+    shared_shell_realization.status ===
+        :available_independent_pqs_shared_shell_realization_payload ||
+        return blocked(shared_shell_realization.blocker)
+    support_plan = get(target_payload.summary, :support_plan, nothing)
+    isnothing(support_plan) &&
+        return blocked(:missing_independent_pqs_support_region_plan)
+    hasproperty(support_plan, :atom_contact_core_descriptor) ||
+        return blocked(:missing_independent_pqs_atom_contact_core_descriptor)
+    bundles =
+        hasproperty(parent, :parent_axis_bundle_object) ?
+        parent.parent_axis_bundle_object :
+        nothing
+    isnothing(bundles) && return blocked(:missing_parent_axis_bundle_object)
+
+    support_order = (:atom_contact_core, :shared_shell_1, :shared_shell_2)
+    retained_order = support_order
+    support_counts = (275, 578, 362)
+    retained_counts = (275, 98, 98)
+    target_payload.support_units == support_order ||
+        return blocked(:independent_pqs_source_plan_support_order_mismatch)
+    target_payload.retained_order == retained_order ||
+        return blocked(:independent_pqs_source_plan_retained_order_mismatch)
+    Tuple(values(target_payload.support_counts)) == support_counts ||
+        return blocked(:independent_pqs_source_plan_support_count_mismatch)
+    Tuple(values(target_payload.retained_counts)) == retained_counts ||
+        return blocked(:independent_pqs_source_plan_retained_count_mismatch)
+
+    core = support_plan.atom_contact_core_descriptor
+    core.support_count == retained_counts[1] ||
+        return blocked(:independent_pqs_atom_contact_core_count_mismatch)
+    shell_1 = shared_shell_realization.shared_shells.shared_shell_1
+    shell_2 = shared_shell_realization.shared_shells.shared_shell_2
+    parent_dims = _pqs_source_box_route_driver_axis_counts_tuple(
+        target_payload.parent_axis_counts,
+    )
+    isnothing(parent_dims) &&
+        return blocked(:missing_independent_pqs_parent_axis_counts)
+    parent_count = prod(parent_dims)
+    core_indices = Vector{Int}(core.support_indices)
+    core_coefficient_matrix = _nested_sparse_coefficient_map(
+        core_indices,
+        collect(1:length(core_indices)),
+        ones(Float64, length(core_indices)),
+        parent_count,
+        length(core_indices),
+    )
+    shared_shell_coefficient_matrices = (
+        _pqs_source_box_route_driver_parent_row_sparse_coefficients(
+            shell_1.support_indices,
+            shell_1.shell_final_coefficients,
+            parent_count,
+        ),
+        _pqs_source_box_route_driver_parent_row_sparse_coefficients(
+            shell_2.support_indices,
+            shell_2.shell_final_coefficients,
+            parent_count,
+        ),
+    )
+    retained_ranges = (;
+        atom_contact_core = 1:retained_counts[1],
+        shared_shell_1 = (retained_counts[1] + 1):sum(retained_counts[1:2]),
+        shared_shell_2 = (sum(retained_counts[1:2]) + 1):sum(retained_counts),
+    )
+    convention_labels = (;
+        source_plan_family = :independent_pqs_physical_source_box_core_shell,
+        source_backed_adapter = false,
+        source_backed_fixed_source_oracle_used = false,
+        retained_transform_kind = :pqs_source_box_retained_transform,
+        independent_pqs_transform = true,
+        fake_pqs_enabled = false,
+        retained_transform_authority = :pqs_source_box_construction,
+        source_plan_authority_status = :independent_pqs_route_owned_source_plan,
+        route_owned_authority = true,
+        core_coefficient_representation = :sparse_parent_row_direct_selector,
+        shared_shell_coefficient_representation = :sparse_parent_row_realization,
+        final_basis_materialized = false,
+        h1_materialized = false,
+        h1_j_materialized = false,
+        rhf_materialized = false,
+        exports_materialized = false,
+        public_api = false,
+    )
+    summary = (;
+        object_kind = :pqs_diatomic_physical_gausslet_core_shell_source_plan,
+        status = :available_pqs_diatomic_physical_gausslet_core_shell_source_plan,
+        blocker = nothing,
+        support_order,
+        retained_order,
+        support_counts,
+        retained_counts,
+        final_dimension = sum(retained_counts),
+        retained_ranges,
+        source_plan_family = :independent_pqs_physical_source_box_core_shell,
+        source_plan_authority_status = :independent_pqs_route_owned_source_plan,
+        source_backed_fixed_source_oracle_used = false,
+        fake_pqs_enabled = false,
+        retained_transform_authority = :pqs_source_box_construction,
+        source_coefficients_materialized = true,
+        final_basis_materialized = false,
+        shared_shell_realization_counts =
+            shared_shell_realization.shared_shell_realization_counts,
+        shared_shell_realization_identity_errors =
+            shared_shell_realization.shared_shell_realization_identity_errors,
+    )
+    parent_basis =
+        hasproperty(parent, :parent_qw_basis_object) ? parent.parent_qw_basis_object :
+        hasproperty(parent, :parent_basis_object) ? parent.parent_basis_object :
+        nothing
+    source_plan = _PQSDiatomicPhysicalGaussletCoreShellSourcePlan(
+        :pqs_diatomic_physical_gausslet_core_shell_source_plan,
+        :available_pqs_diatomic_physical_gausslet_core_shell_source_plan,
+        parent_basis,
+        bundles,
+        core_indices,
+        core.support_states,
+        (Vector{Int}(shell_1.support_indices), Vector{Int}(shell_2.support_indices)),
+        (shell_1.support_states, shell_2.support_states),
+        core_coefficient_matrix,
+        shared_shell_coefficient_matrices,
+        support_order,
+        retained_order,
+        retained_ranges,
+        sum(retained_counts),
+        convention_labels,
+        summary,
+        (;
+            source =
+                :pqs_source_box_route_driver_independent_h2_complete_core_shell_source_plan,
+            route_owned = true,
+            source_backed_adapter = false,
+        ),
+    )
+    return (;
+        status = source_plan.status,
+        blocker = nothing,
+        source_plan,
+    )
+end
+
 function _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_payload(
     parent,
     target_payload,
@@ -2202,7 +2403,23 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_pay
         !isnothing(shared_shell_realization) &&
         shared_shell_realization.status ===
         :available_independent_pqs_shared_shell_realization_payload
-    source_plan = descriptor_available ? descriptor : source_plan
+    independent_source_plan =
+        shared_shell_realization_available ?
+        _pqs_source_box_route_driver_independent_h2_complete_core_shell_source_plan(
+            parent,
+            target_payload,
+            descriptor,
+            shared_shell_realization,
+        ) :
+        nothing
+    independent_source_plan_available =
+        !isnothing(independent_source_plan) &&
+        independent_source_plan.status ===
+        :available_pqs_diatomic_physical_gausslet_core_shell_source_plan
+    source_plan =
+        independent_source_plan_available ?
+        independent_source_plan.source_plan :
+        descriptor_available ? nothing : source_plan
     independent_source_plan_blocker =
         !isnothing(target_payload) ?
         get(
@@ -2212,15 +2429,19 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_pay
         ) :
         :missing_independent_pqs_physical_source_plan_materializer
     status =
+        independent_source_plan_available ?
+        source_plan.status :
         descriptor_available ?
         :blocked_pqs_diatomic_physical_gausslet_core_shell_source_plan :
         isnothing(source_plan) ?
         :blocked_pqs_diatomic_physical_gausslet_core_shell_source_plan :
         source_plan.status
     blocker =
+        independent_source_plan_available ?
+        nothing :
         descriptor_available ?
         shared_shell_realization_available ?
-        :missing_independent_pqs_complete_core_shell_source_plan_assembly :
+        independent_source_plan.blocker :
         shared_shell_realization.blocker :
         !isnothing(source_plan) ?
         nothing :
@@ -2230,6 +2451,8 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_pay
         :missing_atom_contact_core_support_rows :
         :missing_physical_gausslet_target_inventory
     missing_objects =
+        independent_source_plan_available ?
+        () :
         descriptor_available ?
         (blocker,) :
         !isnothing(source_plan) ?
@@ -2285,12 +2508,16 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_pay
         shared_shell_realization_materialized = shared_shell_realization_available,
         source_plan_descriptor_available = descriptor_available,
         source_plan_family =
+            independent_source_plan_available ?
+            source_plan.summary.source_plan_family :
             isnothing(source_plan) ?
             :not_available :
             hasproperty(source_plan, :source_plan_family) ?
             source_plan.source_plan_family :
             :not_available,
         source_plan_authority_status =
+            independent_source_plan_available ?
+            source_plan.summary.source_plan_authority_status :
             descriptor_available ?
             descriptor.source_plan_authority_status :
             isnothing(source_plan) ?
@@ -2302,9 +2529,13 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_pay
             !isnothing(target_payload) &&
             get(target_payload.summary, :source_backed_fixed_source_oracle_used, false),
         retained_transform_authority =
+            independent_source_plan_available ?
+            source_plan.summary.retained_transform_authority :
             isnothing(target_payload) ?
             :not_available :
             get(target_payload.summary, :retained_transform_authority, :not_available),
+        source_coefficients_materialized =
+            independent_source_plan_available,
         secondary_blocker =
             isnothing(target_payload) ? nothing : get(target_payload.summary, :secondary_blocker, nothing),
         independent_source_plan_blocker =

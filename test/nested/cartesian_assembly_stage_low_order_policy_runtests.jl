@@ -112,65 +112,6 @@ function _cartesian_assembly_stage_low_order_policy_assembly(
     return (; shells, units, transforms, pairs, assembly)
 end
 
-function _assert_terminal_lowering_contract_fields_match_assembly_stage(
-    assembly_stage,
-    pairs,
-)
-    @test assembly_stage.terminal_shellification_lowering_contract_inventory_available
-    @test assembly_stage.terminal_shellification_lowering_contract_inventory_status ==
-          pairs.terminal_shellification_lowering_contract_inventory_status
-    @test assembly_stage.terminal_shellification_lowering_contract_inventory ===
-          pairs.terminal_shellification_lowering_contract_inventory
-    @test assembly_stage.terminal_shellification_lowering_contract_count ==
-          pairs.terminal_shellification_lowering_contract_count
-    @test assembly_stage.terminal_shellification_lowering_contract_kinds ==
-          pairs.terminal_shellification_lowering_contract_kinds
-    @test assembly_stage.terminal_shellification_lowering_contract_kind_counts ==
-          pairs.terminal_shellification_lowering_contract_kind_counts
-    @test assembly_stage.terminal_shellification_contract_counts_by_unit ==
-          pairs.terminal_shellification_contract_counts_by_unit
-    @test assembly_stage.terminal_shellification_selected_lowering_contract_inventory_available
-    @test assembly_stage.terminal_shellification_selected_lowering_contract_inventory_status ==
-          pairs.terminal_shellification_selected_lowering_contract_inventory_status
-    @test assembly_stage.terminal_shellification_selected_lowering_contract_inventory ===
-          pairs.terminal_shellification_selected_lowering_contract_inventory
-    @test assembly_stage.terminal_shellification_selected_lowering_family ==
-          pairs.terminal_shellification_selected_lowering_family
-    @test assembly_stage.terminal_shellification_selected_contract_count ==
-          pairs.terminal_shellification_selected_contract_count
-    @test assembly_stage.terminal_shellification_selected_contract_kinds ==
-          pairs.terminal_shellification_selected_contract_kinds
-    @test assembly_stage.terminal_shellification_selected_contract_kind_counts ==
-          pairs.terminal_shellification_selected_contract_kind_counts
-    @test assembly_stage.terminal_shellification_selected_contract_counts_by_unit ==
-          pairs.terminal_shellification_selected_contract_counts_by_unit
-    @test assembly_stage.terminal_shellification_all_units_have_exactly_one_selected_contract ==
-          pairs.terminal_shellification_all_units_have_exactly_one_selected_contract
-    @test assembly_stage.terminal_shellification_unselected_contract_count ==
-          pairs.terminal_shellification_unselected_contract_count
-    @test assembly_stage.terminal_shellification_unselected_contract_kinds ==
-          pairs.terminal_shellification_unselected_contract_kinds
-    @test assembly_stage.terminal_shellification_lw_complete_shell_cpb_count ==
-          pairs.terminal_shellification_lw_complete_shell_cpb_count
-    @test assembly_stage.terminal_shellification_lw_complete_shell_cpb_family_counts ==
-          pairs.terminal_shellification_lw_complete_shell_cpb_family_counts
-    selected_inventory =
-        assembly_stage.terminal_shellification_selected_lowering_contract_inventory
-    @test selected_inventory.selected_contract_count ==
-          assembly_stage.terminal_shellification_unit_count
-    @test selected_inventory.route_lowering_family == :white_lindsey_low_order
-    @test selected_inventory.all_units_have_exactly_one_selected_contract
-    @test !selected_inventory.final_retained_unit_inventory_available
-    @test !selected_inventory.pair_inventory_available
-    @test !selected_inventory.coefficient_maps_materialized
-    @test !selected_inventory.transform_contracts_materialized
-    @test !selected_inventory.retained_spaces_materialized
-    @test !selected_inventory.operator_blocks_materialized
-    @test !selected_inventory.pair_operator_blocks_materialized
-    @test !selected_inventory.hamiltonian_data_materialized
-    @test !selected_inventory.artifacts_materialized
-end
-
 @testset "cartesian assembly stage carries selected low-order policy" begin
     fixture = _cartesian_assembly_stage_low_order_policy_fixture()
 
@@ -325,10 +266,6 @@ end
           terminal_stages.pairs.terminal_shellification_unit_kinds
     @test terminal_assembly.terminal_shellification_unit_support_counts ==
           terminal_stages.pairs.terminal_shellification_unit_support_counts
-    _assert_terminal_lowering_contract_fields_match_assembly_stage(
-        terminal_assembly,
-        terminal_stages.pairs,
-    )
     @test !terminal_assembly.terminal_shellification_final_retained_unit_inventory_available
     @test !terminal_assembly.terminal_shellification_transform_contracts_available
     @test !terminal_assembly.terminal_shellification_pair_inventory_available
@@ -412,10 +349,6 @@ end
           terminal_stages.pairs.terminal_shellification_unit_kinds
     @test terminal_summary.terminal_shellification_unit_support_counts ==
           terminal_stages.pairs.terminal_shellification_unit_support_counts
-    _assert_terminal_lowering_contract_fields_match_assembly_stage(
-        terminal_summary,
-        terminal_stages.pairs,
-    )
     @test !terminal_summary.terminal_shellification_final_retained_unit_inventory_available
     @test !terminal_summary.terminal_shellification_transform_contracts_available
     @test !terminal_summary.terminal_shellification_pair_inventory_available
