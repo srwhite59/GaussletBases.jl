@@ -77,31 +77,9 @@ function _pqs_source_box_route_driver_standard_setup(system_inputs, spacing_inpu
     n_s = Int(spacing_inputs.n_s)
     core_cube_side = 2 * n_s + 1
     core_spacing = spacing_inputs.core_spacing
-    spacing_status =
-        isnothing(core_spacing) ?
-        :blocked_missing_core_spacing :
-        :available_core_spacing
-    spacing_source =
-        isnothing(core_spacing) ? :missing : :input_or_driver_default
     parent_radius = max(Int(ceil(Float64(system_inputs.radius))), n_s)
     parent_axis = -parent_radius:parent_radius
-    spacing = (;
-        q_to_core_spacing_rule_status = spacing_status,
-        provenance = :local_route_driver_setup_after_scaffold_demolition,
-        core_spacing_source = spacing_source,
-        core_spacing_default_formula = :not_reconstructed,
-        non_optimality_claim = :not_evaluated,
-    )
-    diagnostics = (;
-        q_to_core_spacing_rule_status = spacing_status,
-        q_to_core_spacing_provenance = spacing.provenance,
-        core_spacing_source = spacing.core_spacing_source,
-        core_spacing_default_formula = spacing.core_spacing_default_formula,
-        q_to_core_spacing_non_optimality_claim = spacing.non_optimality_claim,
-    )
     return (;
-        object_kind = :local_cartesian_route_driver_standard_setup,
-        status = spacing_status,
         nuclear_charges = Tuple(system_inputs.nuclear_charges),
         atom_locations = Tuple(system_inputs.atom_locations),
         q,
@@ -120,8 +98,6 @@ function _pqs_source_box_route_driver_standard_setup(system_inputs, spacing_inpu
         parent_box = (x = parent_axis, y = parent_axis, z = parent_axis),
         mapping_s = core_spacing,
         mapping_s_by_atom = ntuple(_ -> core_spacing, length(system_inputs.nuclear_charges)),
-        spacing,
-        diagnostics,
     )
 end
 
@@ -189,7 +165,7 @@ function _cartesian_center_list_parent_axis(
         reference_spacing = standard_setup.reference_spacing,
     )
     family = get(parent_inputs, :parent_axis_family,
-        get(parent_inputs, :parent_axis_probe_family, :G10))
+        :G10)
     axis = build_basis(MappedUniformBasisSpec(
         family;
         count,
@@ -310,11 +286,6 @@ function _cartesian_parent_axis_metadata(center_table; atol::Float64 = 1.0e-12)
         Tuple(center.location[getproperty(axis_index_by_symbol, chain_axis)] for center in center_table)
 
     return (
-        object_kind = :cartesian_parent_axis_metadata,
-        status =
-            axis_aligned ?
-            :axis_aligned_or_one_center :
-            :not_axis_aligned,
         active_axes,
         axis_aligned,
         bond_axis = length(center_table) == 2 ? chain_axis : nothing,
@@ -331,35 +302,30 @@ function _cartesian_parent_system_classification(center_table, axis_metadata)
     if atom_count == 1
         return (
             system_classification = :one_center,
-            system_classification_status = :explicit_atom_count_one,
             bond_axis = nothing,
             chain_axis = nothing,
         )
     elseif atom_count == 2 && !isnothing(axis_metadata.bond_axis)
         return (
             system_classification = :bond_aligned_diatomic,
-            system_classification_status = :explicit_two_atom_single_axis_separation,
             bond_axis = axis_metadata.bond_axis,
             chain_axis = axis_metadata.chain_axis,
         )
     elseif atom_count == 2
         return (
-            system_classification = :pending_system_classification,
-            system_classification_status = :diatomic_not_axis_aligned_by_metadata,
+            system_classification = :non_axis_aligned_diatomic,
             bond_axis = nothing,
             chain_axis = nothing,
         )
     elseif !isnothing(axis_metadata.chain_axis)
         return (
             system_classification = :axis_aligned_chain_metadata_only,
-            system_classification_status = :multi_center_single_axis_chain_not_materialized,
             bond_axis = nothing,
             chain_axis = axis_metadata.chain_axis,
         )
     end
     return (
         system_classification = :unsupported_general_multi_atom,
-        system_classification_status = :general_multi_atom_parent_materializer_not_planned,
         bond_axis = nothing,
         chain_axis = nothing,
     )
@@ -405,8 +371,7 @@ function _cartesian_one_center_parent_basis_object(
         ArgumentError("one-center Cartesian parent construction expects an origin-centered atom"),
     )
 
-    family = get(parent_inputs, :parent_axis_family,
-        get(parent_inputs, :parent_axis_probe_family, :G10))
+    family = get(parent_inputs, :parent_axis_family, :G10)
     mapping, mapping_label =
         _cartesian_one_center_parent_mapping(center, standard_setup, parent_inputs)
     axis_cache = Dict{Int, Any}()
@@ -487,71 +452,11 @@ function _cartesian_parent_object_carry(
     )
 end
 
-function _cartesian_parent_axis_probe_report_summary(parent_axis_probe)
-    isnothing(parent_axis_probe) && return nothing
-    carry_objects_requested =
-        hasproperty(parent_axis_probe, :carry_objects_requested) &&
-        parent_axis_probe.carry_objects_requested
-    basis_object_available =
-        hasproperty(parent_axis_probe, :basis_object_available) &&
-        parent_axis_probe.basis_object_available
-    axis_bundle_object_available =
-        hasproperty(parent_axis_probe, :axis_bundle_object_available) &&
-        parent_axis_probe.axis_bundle_object_available
-    basis_object_type_label =
-        hasproperty(parent_axis_probe, :basis_object_type_label) ?
-        parent_axis_probe.basis_object_type_label :
-        "unavailable"
-    axis_bundle_object_type_label =
-        hasproperty(parent_axis_probe, :axis_bundle_object_type_label) ?
-        parent_axis_probe.axis_bundle_object_type_label :
-        "unavailable"
-
-    return (
-        object_kind = parent_axis_probe.object_kind,
-        status = parent_axis_probe.status,
-        readiness = parent_axis_probe.readiness,
-        basis_metadata = parent_axis_probe.basis_metadata,
-        axis_bundle_metadata = parent_axis_probe.axis_bundle_metadata,
-        axis_lengths = parent_axis_probe.axis_lengths,
-        physical_extent_inputs = parent_axis_probe.physical_extent_inputs,
-        core_spacing = parent_axis_probe.core_spacing,
-        reference_spacing = parent_axis_probe.reference_spacing,
-        tail_spacing = parent_axis_probe.tail_spacing,
-        gausslet_backend = parent_axis_probe.gausslet_backend,
-        gausslet_backend_role = parent_axis_probe.gausslet_backend_role,
-        expansion_source = parent_axis_probe.expansion_source,
-        explicit_spacing_probe_only = parent_axis_probe.explicit_spacing_probe_only,
-        default_standard_rule = parent_axis_probe.default_standard_rule,
-        core_spacing_source = parent_axis_probe.core_spacing_source,
-        parent_axis_metadata_constructed =
-            parent_axis_probe.parent_axis_metadata_constructed,
-        carry_objects_requested,
-        basis_object_available,
-        axis_bundle_object_available,
-        basis_object_type_label,
-        axis_bundle_object_type_label,
-        heavy_objects_sanitized = true,
-        pending_facts = parent_axis_probe.pending_facts,
-        diagnostics = merge(
-            parent_axis_probe.diagnostics,
-            (
-                carry_objects_requested = carry_objects_requested,
-                basis_object_available = basis_object_available,
-                axis_bundle_object_available = axis_bundle_object_available,
-                heavy_objects_sanitized = true,
-            ),
-        ),
-    )
-end
-
-
-# Parent-axis readiness/probe.
+# Parent-axis construction.
 
 function _pqs_source_box_route_driver_parent_axis(
     standard_setup,
     system_inputs,
-    probe_inputs,
 )
     manual_counts = _pqs_route_driver_axis_counts(system_inputs.parent_axis_counts)
     derived_counts = isnothing(manual_counts) ? (;
@@ -593,24 +498,16 @@ function _pqs_source_box_route_driver_route_axis_counts(
         counts = parent_axis.parent_axis_counts
         manual = parent_axis.parent_axis_counts_manual_fixture
         return (;
-            object_kind = :cartesian_nesting_route_parent_axis_counts_for_skeleton,
-            status = :available,
             parent_axis_counts = counts,
             parent_axis_counts_source =
                 manual ? :manual_fixture : :local_standard_setup_parent_box,
             parent_axis_counts_derived = !manual,
             parent_axis_counts_manual_fixture = manual,
-            setup_object_kind = standard_setup.object_kind,
             q = standard_setup.q,
             q_minimum_satisfied =
                 counts.x >= standard_setup.q &&
                 counts.y >= standard_setup.q &&
                 counts.z >= standard_setup.q,
-            pending_facts = (),
-            diagnostics = (;
-                source = :local_route_driver_axis_counts_after_scaffold_demolition,
-                route_family = route_recipe.route_family,
-            ),
         )
     end
 
@@ -618,47 +515,16 @@ function _pqs_source_box_route_driver_route_axis_counts(
     manual = parent_axis.parent_axis_counts_manual_fixture
 
     return (;
-        object_kind = :cartesian_nesting_route_parent_axis_counts_for_skeleton,
-        status = :available,
         parent_axis_counts = counts,
         parent_axis_counts_source =
             manual ? :manual_fixture : :local_standard_setup_parent_box,
         parent_axis_counts_derived = !manual,
         parent_axis_counts_manual_fixture = manual,
-        setup_object_kind = standard_setup.object_kind,
         q = standard_setup.q,
         q_minimum_satisfied =
             counts.x >= standard_setup.q &&
             counts.y >= standard_setup.q &&
             counts.z >= standard_setup.q,
-        pending_facts = (),
-        diagnostics = (
-            source = :cartesian_nesting_route_parent_axis_counts_for_skeleton,
-            route_family = route_recipe.route_family,
-            private_development_only = true,
-            production_route = false,
-            parent_axis_counts_source =
-                manual ? :manual_fixture : :local_standard_setup_parent_box,
-            parent_axis_counts_derived = !manual,
-            parent_axis_counts_manual_fixture = manual,
-            published_benchmark_route = true,
-            source_box_route = false,
-            public_default_consumes = false,
-            packet_adoption = false,
-            fixed_block_routing = false,
-            qwhamiltonian_consumes = false,
-            hamiltonian_matrix_built = false,
-            shell_projection_used = false,
-            lowdin_cleanup_used = false,
-            support_local_shell_row_algorithm = false,
-            support_coefficient_matrix_used = false,
-            retained_pqs_weights_used = false,
-            retained_weight_division_allowed = false,
-            repo_side_ray_id = false,
-            mwg_ida_semantics_changed = false,
-            ecp_terms_implemented = false,
-            cr2_science_status_changed = false,
-        ),
     )
 end
 
@@ -902,9 +768,6 @@ function _pqs_source_box_route_driver_parent_description(
         status = :described_not_constructed,
         route_family = route_skeleton.route_family,
         standard_setup,
-        parent_axis_readiness = parent_axis.parent_axis_readiness,
-        parent_axis_probe =
-            _cartesian_parent_axis_probe_report_summary(parent_axis.parent_axis_probe),
         route_axis_counts,
         parent_contract_status = parent_contract.status,
         parent_contract_object_kind = parent_contract.object_kind,
@@ -1394,9 +1257,6 @@ function _pqs_source_box_route_driver_report(
         generated_at = Base.Libc.strftime("%Y-%m-%dT%H:%M:%S", time()),
         route_family = route_skeleton.route_family,
         standard_setup,
-        parent_axis_readiness = parent_axis.parent_axis_readiness,
-        parent_axis_probe =
-            _cartesian_parent_axis_probe_report_summary(parent_axis.parent_axis_probe),
         route_axis_counts,
         raw_product_box_probe = raw_box.raw_product_box_probe,
         system_metadata,
@@ -1534,7 +1394,7 @@ function cartesian_parent(system, spacing_inputs, parent_inputs, recipe)
         _cartesian_parent_system_classification(center_table, center_axis_metadata)
     parent_axis =
         _pqs_source_box_route_driver_parent_axis(
-            standard_setup, system, parent_inputs)
+            standard_setup, system)
     route_axis_counts =
         _pqs_source_box_route_driver_route_axis_counts(
             standard_setup, parent_axis, system, recipe)
@@ -1571,7 +1431,6 @@ function cartesian_parent(system, spacing_inputs, parent_inputs, recipe)
         center_count = length(center_table),
         center_axis_metadata,
         system_classification = classification.system_classification,
-        system_classification_status = classification.system_classification_status,
         bond_axis = classification.bond_axis,
         chain_axis = classification.chain_axis,
         axis_counts = parent_axis_counts,
@@ -2079,7 +1938,6 @@ function _pqs_source_box_route_driver_shell_stage_low_order_shellization(
         materialized_sequence_available = false,
         materialized_operator_matrices_available = false,
         system_classification = parent.system_classification,
-        system_classification_status = parent.system_classification_status,
         bond_axis = parent.bond_axis,
         private_development_only = true,
         full_plan_stored =
