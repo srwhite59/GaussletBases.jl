@@ -1996,3 +1996,42 @@ Line-count / complexity note:
 - MT6 Audit/classify old Cartesian flat paths: active. Passes 263-264 retired
   old current-route metadata export and legacy retained-unit fixture-builder
   scaffolding after caller audits.
+
+## Docs-History Compression - PQS Passes 101-229
+
+Commit(s):
+- this commit - Compress PQS blurb logs 101-229
+
+Summary:
+- Consolidated raw PQS blurb/response/review logs for passes 101-229 into
+  `docs/src/developer/blurb_logs/2026-06-12_pqs_source_box_pivot/summary.md`.
+- Kept durable decisions, authority changes, validation landmarks, cleanup
+  milestones, and fake-PQS guardrails for the three windows 101-150, 151-200,
+  and 201-229.
+- Deleted the corresponding tracked raw `blurb.NNN.md`, `response.NNN.md`, and
+  `review.NNN.md` files. The active 230-current tail remains intact.
+
+Validation:
+- Manager: verified no tracked raw blurb/response/review files remain in the
+  101-229 range; `git diff --cached --check` passed.
+
+Goal advancement:
+- LT2/MT5: removed historical log bulk while preserving strategic content.
+- MT6/AG7: kept the old flat-path/fake-PQS interpretation in curated summaries
+  rather than requiring agents to reread obsolete raw handoffs.
+
+Medium-goal update:
+- none.
+
+Risk / guardrail:
+- Do not delete the active 230-current raw logs until their decisions have aged
+  enough to compress safely.
+
+Remaining blocker / next:
+- Continue normal independent-H2-PQS/supplement-staging work. Future docs-log
+  compression should start from 230-current only after a newer active tail
+  exists.
+
+Line-count / complexity note:
+- Added 197 summary lines and deleted 38,867 raw markdown lines, net
+  `-38,670` tracked docs lines.
