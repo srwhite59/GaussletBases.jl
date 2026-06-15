@@ -10,12 +10,241 @@
 # The default PQS/source-box skeleton delegates to the source-box route helper.
 # The White-Lindsey route remains a low-order benchmark metadata skeleton.
 
+_pqs_source_box_route_driver_skeleton_source_dimension(box) =
+    prod(length(getproperty(box, axis)) for axis in (:x, :y, :z))
+
+_pqs_source_box_route_driver_skeleton_range(offset::Int, count::Int) =
+    (offset + 1):(offset + count)
+
+function _pqs_source_box_route_driver_skeleton_pair_family(left_kind::Symbol, right_kind::Symbol)
+    left_kind == :pqs && right_kind == :pqs && return :pqs_pqs
+    left_kind == :pqs && right_kind == :product_doside && return :pqs_product
+    left_kind == :product_doside && right_kind == :pqs && return :product_pqs
+    left_kind == :product_doside && right_kind == :product_doside && return :product_product
+    throw(ArgumentError("unsupported source-box route unit pair $(left_kind), $(right_kind)"))
+end
+
+function _pqs_source_box_route_driver_skeleton_density_density_helper(
+    pair_family::Symbol,
+    pair_factor_normalization::Symbol,
+)
+    raw = pair_factor_normalization == :raw_weighted
+    pair_family == :pqs_pqs && return raw ?
+        :_pqs_pqs_source_box_raw_weighted_density_density_interaction_block :
+        :_pqs_pqs_source_box_density_density_interaction_block
+    pair_family in (:pqs_product, :product_pqs) && return raw ?
+        :_pqs_product_source_box_raw_weighted_density_density_interaction_block :
+        :_pqs_product_source_box_density_density_interaction_block
+    pair_family == :product_product && return raw ?
+        :_product_doside_source_box_raw_weighted_density_density_interaction_block :
+        :_product_doside_source_box_density_density_interaction_block
+    throw(ArgumentError("unsupported density-density pair family $(pair_family)"))
+end
+
+function _pqs_source_box_route_driver_skeleton_unit(;
+    unit_key,
+    unit_role,
+    retained_unit_kind,
+    source_family,
+    source_box,
+    source_dimensions,
+    retained_rule_kind,
+    retained_rule_derivation,
+    retained_range,
+    retained_count,
+    provenance_label,
+    weight_semantics,
+)
+    return _pqs_source_box_route_driver_unit_record(
+        ;
+        unit_key,
+        unit_role,
+        retained_unit_kind,
+        source_family,
+        source_box,
+        source_dimensions,
+        source_dimension =
+            _pqs_source_box_route_driver_skeleton_source_dimension(source_box),
+        retained_rule_kind,
+        retained_rule_derivation,
+        retained_range,
+        retained_count,
+        provenance_label,
+        weight_semantics,
+    )
+end
+
+function _pqs_source_box_route_driver_generic_source_box_skeleton(
+    route_axis_counts,
+    spacing_inputs,
+    route_recipe,
+)
+    source_box_recipe = route_recipe.source_box
+    q = Int(spacing_inputs.q)
+    q >= 2 || throw(ArgumentError("PQS source-box route skeleton requires q >= 2"))
+    route_shape = source_box_recipe.route_shape
+    route_shape == (:pqs_left, :product, :pqs_right) ||
+        throw(ArgumentError("generic PQS source-box skeleton only supports (:pqs_left, :product, :pqs_right)"))
+    source_box_recipe.pqs_retained_rule == :boundary_comx_product_mode_selection ||
+        throw(ArgumentError("generic PQS source-box skeleton requires boundary COMX product-mode selection"))
+    source_box_recipe.product_retained_rule == :product_doside_retained_unit ||
+        throw(ArgumentError("generic PQS source-box skeleton requires product/doside retained units"))
+    route_recipe.pair_factor_normalization in (:density_normalized, :raw_weighted) ||
+        throw(ArgumentError("generic PQS source-box skeleton requires a reviewed pair-factor normalization"))
+
+    raw_counts = route_axis_counts.parent_axis_counts
+    counts = (; x = Int(raw_counts.x), y = Int(raw_counts.y), z = Int(raw_counts.z))
+    counts.x >= q && counts.y >= q && counts.z >= q ||
+        throw(ArgumentError("PQS source-box route skeleton parent axis counts must be >= q"))
+    source_box_recipe.product_body_rule == :centered_single_z_slab ||
+        throw(ArgumentError("generic PQS source-box skeleton only keeps centered single-slab metadata"))
+
+    product_z = div(counts.z - 1, 2) + 1
+    source_boxes = (;
+        pqs_left = (x = 1:q, y = 1:q, z = 1:q),
+        pqs_right = (x = 1:q, y = 1:q, z = (counts.z - q + 1):counts.z),
+        product = (x = 1:q, y = 1:q, z = product_z:product_z),
+    )
+    source_dimensions = (; pqs_left = (q, q, q), pqs_right = (q, q, q), product = (q, q, 1))
+    retained_counts = (; pqs_left = q^3 - (q - 2)^3, pqs_right = q^3 - (q - 2)^3, product = q^2)
+    ranges = (;
+        pqs_left =
+            _pqs_source_box_route_driver_skeleton_range(0, retained_counts.pqs_left),
+        pqs_right =
+            _pqs_source_box_route_driver_skeleton_range(retained_counts.pqs_left, retained_counts.pqs_right),
+        product =
+            _pqs_source_box_route_driver_skeleton_range(
+                retained_counts.pqs_left + retained_counts.pqs_right,
+                retained_counts.product,
+            ),
+    )
+    retained_units = (
+        _pqs_source_box_route_driver_skeleton_unit(
+            unit_key = :pqs_left,
+            unit_role = :left_mode_selected_raw_box_pqs_unit,
+            retained_unit_kind = :pqs,
+            source_family = :mode_selected_raw_product_box,
+            source_box = source_boxes.pqs_left,
+            source_dimensions = source_dimensions.pqs_left,
+            retained_rule_kind = source_box_recipe.pqs_retained_rule,
+            retained_rule_derivation = :boundary_comx_product_mode_selector,
+            retained_range = ranges.pqs_left,
+            retained_count = retained_counts.pqs_left,
+            provenance_label = :pqs_left_source_modes,
+            weight_semantics = :retained_columns_not_positive_quadrature_weights,
+        ),
+        _pqs_source_box_route_driver_skeleton_unit(
+            unit_key = :pqs_right,
+            unit_role = :right_mode_selected_raw_box_pqs_unit,
+            retained_unit_kind = :pqs,
+            source_family = :mode_selected_raw_product_box,
+            source_box = source_boxes.pqs_right,
+            source_dimensions = source_dimensions.pqs_right,
+            retained_rule_kind = source_box_recipe.pqs_retained_rule,
+            retained_rule_derivation = :boundary_comx_product_mode_selector,
+            retained_range = ranges.pqs_right,
+            retained_count = retained_counts.pqs_right,
+            provenance_label = :pqs_right_source_modes,
+            weight_semantics = :retained_columns_not_positive_quadrature_weights,
+        ),
+        _pqs_source_box_route_driver_skeleton_unit(
+            unit_key = :product,
+            unit_role = :middle_product_doside_slab_unit,
+            retained_unit_kind = :product_doside,
+            source_family = :product_doside,
+            source_box = source_boxes.product,
+            source_dimensions = source_dimensions.product,
+            retained_rule_kind = source_box_recipe.product_retained_rule,
+            retained_rule_derivation = :product_source_dimension,
+            retained_range = ranges.product,
+            retained_count = retained_counts.product,
+            provenance_label = :product_doside_source_modes,
+            weight_semantics = :product_source_weights_owned_by_source_box_helpers,
+        ),
+    )
+    retained_unit_order = (:pqs_left, :pqs_right, :product)
+    unit_by_key = Dict(unit.unit_key => unit for unit in retained_units)
+    pair_entries = Tuple(begin
+        left_key = retained_unit_order[i]
+        right_key = retained_unit_order[j]
+        pair_family = _pqs_source_box_route_driver_skeleton_pair_family(
+            unit_by_key[left_key].retained_unit_kind,
+            unit_by_key[right_key].retained_unit_kind,
+        )
+        (;
+            pair_key = (left_key, right_key),
+            pair_family,
+            pair_kind =
+                pair_family == :pqs_pqs ?
+                :pqs_pqs_source_box_density_density_pair :
+                pair_family == :pqs_product ?
+                :pqs_product_source_box_density_density_pair :
+                :product_doside_source_box_density_density_pair,
+            density_density_helper =
+                _pqs_source_box_route_driver_skeleton_density_density_helper(
+                    pair_family,
+                    route_recipe.pair_factor_normalization,
+                ),
+            source_box_algorithmic_path = true,
+            fallback_oracle_path = false,
+            transpose_policy = left_key == right_key ? :none :
+                :lower_block_uses_transpose_when_pair_factors_are_symmetric,
+            output_representation = :retained_two_index_density_density,
+        )
+    end for i in eachindex(retained_unit_order) for j in i:length(retained_unit_order))
+    pair_inventory = _pqs_source_box_route_driver_pair_inventory(
+        pair_entries;
+        expected_families = (:pqs_pqs, :pqs_product, :product_pqs, :product_product),
+    )
+    unit_inventory = _pqs_source_box_route_driver_unit_inventory(retained_units)
+    helper_by_pair_family = (;
+        pqs_pqs =
+            _pqs_source_box_route_driver_skeleton_density_density_helper(
+                :pqs_pqs, route_recipe.pair_factor_normalization),
+        pqs_product =
+            _pqs_source_box_route_driver_skeleton_density_density_helper(
+                :pqs_product, route_recipe.pair_factor_normalization),
+        product_pqs = :transpose_of_pqs_product_helper_for_lower_blocks_only,
+        product_product =
+            _pqs_source_box_route_driver_skeleton_density_density_helper(
+                :product_product, route_recipe.pair_factor_normalization),
+    )
+    return (;
+        object_kind = :pqs_pqs_product_source_box_route_skeleton,
+        status = :compact_driver_skeleton,
+        route_family = route_recipe.route_family,
+        route_kind = route_recipe.route_kind,
+        route_shape,
+        retained_unit_order,
+        q,
+        parent_axis_counts = counts,
+        source_boxes = unit_inventory.source_boxes,
+        source_dimensions = unit_inventory.source_dimensions,
+        retained_units,
+        retained_counts = unit_inventory.retained_counts,
+        ranges = unit_inventory.ranges,
+        retained_dimension = unit_inventory.retained_dimension,
+        pair_entries = pair_inventory.pair_entries,
+        pair_family_counts = pair_inventory.pair_family_counts,
+        helper_by_pair_family,
+        pending_facts = (:materialized_retained_operator_blocks,),
+        diagnostics = (;
+            source = :pqs_source_box_route_driver_generic_source_box_skeleton,
+            source_box_first = true,
+            pqs_boundary_column_count = retained_counts.pqs_left,
+            pair_count = length(pair_entries),
+            pair_family_counts = pair_inventory.pair_family_counts,
+            retained_dimension = unit_inventory.retained_dimension,
+            output_representation = :retained_two_index_density_density,
+        ),
+    )
+end
+
 function _pqs_source_box_route_driver_route_skeleton(
     route_axis_counts,
     spacing_inputs,
     route_recipe,
 )
-    metrics = CartesianContractedParentMetrics
     if route_recipe.route_family == :white_lindsey_low_order
         return _pqs_source_box_route_driver_white_lindsey_low_order_skeleton(
             route_axis_counts, spacing_inputs, route_recipe)
@@ -28,18 +257,8 @@ function _pqs_source_box_route_driver_route_skeleton(
             route_axis_counts, spacing_inputs, route_recipe)
     end
 
-    source_box_recipe = route_recipe.source_box
-    skeleton = metrics._pqs_pqs_product_source_box_route_skeleton(
-        ;
-        q = spacing_inputs.q,
-        parent_axis_counts = route_axis_counts.parent_axis_counts,
-        route_shape = source_box_recipe.route_shape,
-        product_body_rule = source_box_recipe.product_body_rule,
-        pqs_retained_rule = source_box_recipe.pqs_retained_rule,
-        product_retained_rule = source_box_recipe.product_retained_rule,
-        pair_factor_normalization = route_recipe.pair_factor_normalization,
-    )
-    return merge(skeleton, (; route_family = route_recipe.route_family))
+    return _pqs_source_box_route_driver_generic_source_box_skeleton(
+        route_axis_counts, spacing_inputs, route_recipe)
 end
 
 function _pqs_source_box_route_driver_physical_gausslet_core_shell_skeleton(

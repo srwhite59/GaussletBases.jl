@@ -1761,7 +1761,7 @@ function _pqs_source_box_route_driver_diagnostics(
     source_box_route = route_skeleton.route_family == :pqs_source_box
     route_skeleton_helper =
         source_box_route ?
-        :_pqs_pqs_product_source_box_route_skeleton :
+        :_pqs_source_box_route_driver_generic_source_box_skeleton :
         :_pqs_source_box_route_driver_white_lindsey_low_order_skeleton
     route_axis_counts_helper =
         source_box_route ?
@@ -4201,11 +4201,7 @@ function _pqs_source_box_route_driver_unit_stage_low_order_summary(shells)
             atom_growth_plan_unit_inventory_available ?
             atom_growth_plan_unit_inventory.pqs_lowering_prototype_unit_key :
             nothing,
-        route_core_sidecar_inventory_available =
-            route_core_sidecar_inventory.status in (
-                :available_route_core_sidecar_inventory,
-                :blocked_incomplete_route_core_sidecar_inventory,
-            ),
+        route_core_sidecar_inventory_available = false,
         route_core_sidecar_inventory,
         route_skeleton_unit_fields_preserved = true,
         route_skeleton_unit_inventory_source =
