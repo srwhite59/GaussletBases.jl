@@ -1888,3 +1888,50 @@ Remaining blocker / next:
 
 Line-count / complexity note:
 - Scoped `src + test + bin` was `6` added / `51` deleted, net `-45`.
+
+## Pass 263 - Current-Route Metadata Export Retirement
+
+Commit(s):
+- this commit - Retire current-route metadata export stack
+
+Summary:
+- Deleted the old current-route metadata export stack:
+  `src/cartesian_contracted_parent_metrics/current_route_metadata_export.jl`.
+- Removed its include from `CartesianContractedParentMetrics`, deleted the old
+  Be2 source-metadata acceptance support/test files, and removed that test from
+  the slow nested integration runner.
+- Caller audit found no remaining `src/test/bin` users of `_pqs_current_route_*`,
+  `_be2_pqs_q5_source_metadata_*`,
+  `pqs_source_metadata_real_artifact_acceptance_*`, or
+  `current_route_metadata_export`.
+
+Validation:
+- Doer: package load, integration-runner parse, caller-proof `rg` checks, and
+  `git diff --check` passed.
+- Manager: reran the same checks; all passed. The slow integration runner was
+  intentionally not executed.
+
+Goal advancement:
+- LT2/MT5: removed 5,981 scoped lines, more than paying down the pass-261
+  support-partition implementation exception.
+- MT6/AG7: retired old flat Cartesian/PQS migration scaffolding instead of
+  preserving it as public architecture.
+- LT5: removed a stale source-metadata route-authority surface that was not the
+  independent H2 PQS route.
+
+Medium-goal update:
+- none.
+
+Risk / guardrail:
+- Historical docs and old pass logs still mention the retired helpers as
+  history. Do not revive them through compatibility wrappers; if a needed fact
+  reappears, route it through current typed route-owned objects.
+
+Remaining blocker / next:
+- Re-audit `legacy_source_box_fixtures.jl` and `source_box_pair_shadow.jl`
+  pockets that were previously kept alive by current-route metadata callers, or
+  resume supplement provider-block staging against the new support-partition
+  payload.
+
+Line-count / complexity note:
+- Scoped `src + test + bin` was `0` added / `5,981` deleted, net `-5,981`.
