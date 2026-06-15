@@ -30,15 +30,6 @@ source-space blocks and batches, plus metadata-only readiness summaries for
 future final PQS pair blocks. This path does not build shell projection, Lowdin
 realization, or final shell-realized PQS pair blocks.
 
-The private route-shaped global one-body adapter currently composes existing
-local block collections, placement plans, and global safe one-body matrix pilots
-for the term-separated safe one-body terms overlap, kinetic, position_x/y/z,
-x2_x/y/z, plus uncharged by-center electron-nuclear matrices over decomposed
-White--Lindsey unit-pair inventories. The module also exposes the narrow
-shellification -> lowering -> retained-unit -> unit-pair source constructor
-needed by those inventories. It still does not assemble Hamiltonians, Ham
-bundles, exports, artifacts, final retained PQS pair blocks, or complete
-White--Lindsey route drivers.
 """
 module CartesianPairBlockMaterialization
 
@@ -111,9 +102,6 @@ export PairBlockMaterializationPolicy,
        pqs_source_pair_one_body_blocks,
        pqs_source_pair_shell_realization_bridge_summary,
        pqs_source_pair_final_block_readiness_summary,
-       white_lindsey_boundary_stratum_adapter_summary,
-       white_lindsey_boundary_stratum_unit_adapter_descriptor,
-       white_lindsey_boundary_stratum_pair_adapter_descriptor,
        white_lindsey_materialized_seed_oracle_summary,
        white_lindsey_boundary_stratum_unit_coefficients,
        white_lindsey_boundary_stratum_unit_coefficient_context,
@@ -125,7 +113,6 @@ export PairBlockMaterializationPolicy,
        white_lindsey_boundary_stratum_x2_block,
        white_lindsey_boundary_stratum_kinetic_block,
        white_lindsey_boundary_stratum_electron_nuclear_by_center_block,
-       route_global_decomposed_wl_density_density_matrix,
        white_lindsey_boundary_stratum_one_body_block,
        white_lindsey_boundary_stratum_one_body_blocks,
        white_lindsey_boundary_stratum_one_body_adapter_summary,
@@ -175,14 +162,6 @@ export PairBlockMaterializationPolicy,
 #
 # one_body_block_collection.jl
 #     Private local one-body block collection entry vocabulary.
-#
-# route_one_body_adapter.jl
-#     Private route-shaped adapter from pair-block plans to local one-body
-#     block collections.
-#
-# route_global_one_body_adapter.jl
-#     Private route-shaped adapter from pair-block plans to one global retained
-#     one-body term matrix for the safe one-body terms only.
 #
 # route_global_combined_gto_basis_layout.jl
 #     Metadata-only layout for appending a small GTO supplement sector to the
@@ -258,10 +237,6 @@ export PairBlockMaterializationPolicy,
 # pqs_source_final_readiness.jl
 #     Metadata-only readiness summaries for future final PQS pair blocks.
 #
-# white_lindsey_adapter_summary.jl
-#     Metadata-only old-kernel reuse guidance and unit descriptors for future
-#     LW adapters.
-#
 # white_lindsey_seed_oracle_summary.jl
 #     Compact old-seed oracle summary for LW adapter validation.
 #
@@ -323,8 +298,6 @@ include("one_body_terms.jl")
 include("one_body_factor_inputs.jl")
 include("one_body_dispatch.jl")
 include("one_body_block_collection.jl")
-include("route_one_body_adapter.jl")
-include("route_global_one_body_adapter.jl")
 include("route_global_combined_gto_basis_layout.jl")
 include("route_global_mixed_gto_blocks.jl")
 include("route_global_combined_gto_matrix_assembly.jl")
@@ -344,7 +317,6 @@ include("pqs_source_safe_terms.jl")
 include("pqs_source_shell_final_basis.jl")
 include("pqs_source_shell_bridge.jl")
 include("pqs_source_final_readiness.jl")
-include("white_lindsey_adapter_summary.jl")
 include("white_lindsey_seed_oracle_summary.jl")
 include("white_lindsey_unit_coefficients.jl")
 include("white_lindsey_pair_unit_coefficients.jl")

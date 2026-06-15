@@ -62,5 +62,4 @@ export CartesianContractedParentMetricPacket3D,
 include("cartesian_contracted_parent_metrics/core.jl")
 include("cartesian_contracted_parent_metrics/product_staged_metric_fallbacks.jl")
 include("cartesian_contracted_parent_metrics/source_box_pair_shadow.jl")
-include("cartesian_contracted_parent_metrics/legacy_source_box_fixtures.jl")
 end

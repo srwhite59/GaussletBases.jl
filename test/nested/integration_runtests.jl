@@ -15,9 +15,7 @@ using JLD2
 isdefined(Main, :_cached_fixture) ||
     error("nested integration tests require top-level test/runtests.jl fixture helpers")
 
-include("pqs_source_box_route_driver_report_runtests.jl")
 include("cartesian_shellification_module_runtests.jl")
-include("cartesian_route_core_selected_terminal_lowering_sidecar_runtests.jl")
 include("cartesian_terminal_shellification_geometry_runtests.jl")
 include("cartesian_shellification_plan_runtests.jl")
 include("cartesian_ham_builder_one_center_config_smoke_runtests.jl")

@@ -19,13 +19,11 @@ include("cartesian_route_core_examples_runtests.jl")
 include("cartesian_selected_terminal_lowering_contract_inventory_runtests.jl")
 include("cartesian_retained_units_contract_runtests.jl")
 include("cartesian_retained_unit_transform_contracts_runtests.jl")
-include("cartesian_terminal_route_retained_units_fingerprint_runtests.jl")
 include("cartesian_unit_pairs_contract_runtests.jl")
 include("cartesian_pair_operator_plans_contract_runtests.jl")
 include("cartesian_final_basis_realization_contract_runtests.jl")
 include("cartesian_pair_block_one_body_consumer_smoke_runtests.jl")
 include("cartesian_pair_block_materialization_contract_runtests.jl")
-include("cartesian_pair_stage_fingerprint_helpers_runtests.jl")
 
 @testset "Cartesian nested owned-unit coverage audit" begin
     dense_unit = GaussletBases._CartesianNestedOwnedUnit3D(
@@ -83,7 +81,6 @@ include("cartesian_pair_stage_fingerprint_helpers_runtests.jl")
     @test_throws ArgumentError GaussletBases._nested_owned_unit_coverage_audit([dense_unit], [1, 1, 2])
 end
 
-include("bond_aligned_diatomic_high_order_recipe_policy_metadata_runtests.jl")
 include("global_timing_macro_surface_runtests.jl")
 
 include("cartesian_parent_gausslet_basis_identity_runtests.jl")
