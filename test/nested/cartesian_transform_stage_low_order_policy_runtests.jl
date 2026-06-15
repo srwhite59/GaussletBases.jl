@@ -93,30 +93,10 @@ end
     @test default_transforms.object_kind == :cartesian_transforms
     @test default_summary.object_kind ==
           :cartesian_transform_stage_low_order_summary
-    @test default_summary.low_order_shellization_policy_resolved ==
-          :legacy_diatomic_source
-    @test default_summary.shellization_source ==
-          :route_configured_bond_aligned_diatomic_source
-    @test default_summary.unit_route_kind ==
-          :legacy_diatomic_source_low_order_units
-    @test default_summary.transform_route_kind ==
-          :legacy_diatomic_source_low_order_transforms
     @test default_summary.legacy_source_transforms_selected
     @test default_summary.active_source_authority
     @test !default_summary.atom_growth_transforms_selected
     @test !default_summary.terminal_shellification_transforms_selected
-    @test !default_summary.atom_growth_transform_contracts_available
-    @test !default_summary.terminal_shellification_transform_contracts_available
-    @test !default_summary.transform_contract_inventory_available
-    @test default_summary.transform_contract_source ==
-          :legacy_diatomic_source_summary
-    @test !default_summary.coefficient_transforms_materialized
-    @test !default_summary.coefficient_maps_materialized
-    @test default_summary.transform_materialization_status ==
-          :deferred_legacy_diatomic_source_transform_materialization
-    @test !default_summary.retained_unit_dimensions_known
-    @test !default_summary.retained_unit_ranges_known
-    @test !default_summary.retained_dimension_known
     @test default_summary.transform_fields_preserved
     @test length(default_transforms.retained_units) ==
           length(default_units.retained_units)

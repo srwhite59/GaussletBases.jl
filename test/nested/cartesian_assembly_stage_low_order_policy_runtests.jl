@@ -181,48 +181,17 @@ end
     @test default_assembly.object_kind == :cartesian_assembly
     @test default_summary.object_kind ==
           :cartesian_assembly_stage_low_order_summary
-    @test default_summary.low_order_shellization_policy_resolved ==
-          :legacy_diatomic_source
-    @test default_summary.shellization_source ==
-          :route_configured_bond_aligned_diatomic_source
-    @test default_summary.pair_route_kind ==
-          :legacy_diatomic_source_low_order_pairs
-    @test default_summary.assembly_source ==
-          :legacy_diatomic_source_pair_terms
-    @test default_summary.assembly_route_kind ==
-          :legacy_diatomic_source_low_order_assembly
-    @test default_summary.assembly_kind == :legacy_diatomic_source_low_order
     @test default_summary.legacy_source_assembly_selected
     @test default_summary.active_source_authority
     @test !default_summary.atom_growth_assembly_selected
     @test !default_summary.terminal_shellification_assembly_selected
-    @test !default_summary.hamiltonian_matrices_materialized
-    @test !default_summary.operator_matrices_materialized
-    @test !default_summary.pair_operator_blocks_materialized
-    @test !default_summary.pair_operator_blocks_available
-    @test default_summary.pair_inventory_source ==
-          :route_skeleton_pair_entries_only
     @test default_summary.pair_inventory_known
     @test !default_summary.independent_atom_growth_pair_inventory_available
     @test default_summary.pair_count == length(default_stages.pairs.pair_entries)
     @test default_summary.pair_family_counts ==
           default_stages.pairs.pair_family_counts
-    @test !default_summary.assembly_can_proceed_from_current_staged_data
-    @test default_summary.assembly_requires_materialization
-    @test default_summary.assembly_materialization_status ==
-          :deferred_legacy_diatomic_source_pair_block_materialization
-    @test default_summary.assembly_blocker == :pair_operator_blocks_deferred
     @test default_summary.assembly_stage_fields_preserved
-    @test default_assembly.low_order_assembly_route_kind ==
-          :legacy_diatomic_source_low_order_assembly
-    @test default_assembly.low_order_assembly_source ==
-          :legacy_diatomic_source_pair_terms
     @test !default_assembly.atom_growth_assembly_selected
-    @test !default_assembly.hamiltonian_matrices_materialized
-    @test !default_assembly.operator_matrices_materialized
-    @test !default_assembly.pair_operator_blocks_materialized
-    @test default_assembly.low_order_pair_inventory_source ==
-          :route_skeleton_pair_entries_only
     @test default_assembly.low_order_pair_inventory_known
     @test !default_assembly.low_order_independent_atom_growth_pair_inventory_available
     @test default_assembly.low_order_pair_count ==

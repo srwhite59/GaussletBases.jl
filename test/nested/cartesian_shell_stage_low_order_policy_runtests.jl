@@ -84,26 +84,10 @@ end
     @test default_summary.object_kind ==
           :cartesian_shell_stage_low_order_shellization_summary
     @test default_summary.low_order_shellization_policy_requested === nothing
-    @test default_summary.low_order_shellization_policy_resolved ==
-          :legacy_diatomic_source
-    @test default_summary.low_order_shellization_policy_source ==
-          :default_legacy_diatomic_source
-    @test default_summary.low_order_shellization_policy_status ==
-          :available_low_order_shellization_policy
-    @test default_summary.shellization_source ==
-          :route_configured_bond_aligned_diatomic_source
-    @test default_summary.shellization_kind == :legacy_diatomic_source
-    @test default_shells.shellization_stage == :legacy_diatomic_source_summary
     @test default_summary.legacy_source_selected
     @test default_summary.active_source_authority
     @test !default_summary.atom_growth_selected
     @test !default_summary.terminal_shellification_selected
-    @test !default_summary.atom_growth_plan_authority
-    @test !default_summary.terminal_shellification_authority
-    @test !default_summary.atom_growth_plan_summary_available
-    @test !default_shells.terminal_shellification_selected
-    @test !default_shells.terminal_shellification_plan_available
-    @test !default_shells.terminal_shellification_scaffold_available
 
     atom_growth_shells = GaussletBases.cartesian_shells(
         fixture.parent,

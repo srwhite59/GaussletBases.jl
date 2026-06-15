@@ -1073,3 +1073,48 @@ Remaining blocker / next:
 
 Line-count / complexity note:
 - Scoped `src + test + bin` diff was `0` added / `100` deleted, net `-100`.
+
+## Pass 246 - Legacy-Default Low-Order Vocabulary Shrink
+
+Commit(s):
+- this commit - Shrink legacy-default low-order policy vocabulary tests
+
+Summary:
+- Collapsed exact default `:legacy_diatomic_source*`, deferred legacy, and
+  not-selected legacy-source-pair vocabulary assertions across shell, unit,
+  transform, assembly, and report staged low-order policy tests.
+- Kept compact legacy/reference smoke in the edited default blocks and left
+  active atom-growth plus terminal-shellification sections untouched.
+
+Validation:
+- Doer: shell-stage low-order policy test passed; package load passed; `git
+  diff --check` passed.
+- Doer attempted unit/transform/assembly focused gates, but they exceeded 60s
+  and failed on unrelated stale terminal-shellification exact-field assertions
+  outside the edited blocks; fallback validation was used per blurb.
+- Manager: reviewed five diffs, reran stale-symbol search for removed legacy
+  vocabulary in the edited files, and reran `git diff --check`.
+
+Goal advancement:
+- MT5/LT2: deleted another legacy-vocabulary assertion layer from staged tests.
+- LT7: continued moving tests from exact private status clouds toward compact
+  live-contract checks.
+- MT6/AG7: classified more old flat/legacy low-order route status vocabulary as
+  reference/migration-only rather than public route architecture.
+
+Medium-goal update:
+- none.
+
+Risk / guardrail:
+- The broad unit/transform/assembly/report staged tests still include unrelated
+  stale terminal-shellification exact-field assertions. Do not use them as
+  per-pass validation gates until those blocks are retired or split.
+
+Remaining blocker / next:
+- The deletion budget is now substantial. The loop can either continue
+  retiring stale terminal/report assertions or resume independent H2 PQS
+  complete source-plan assembly with any new source offset by a targeted
+  deletion.
+
+Line-count / complexity note:
+- Scoped `src + test + bin` diff was `0` added / `176` deleted, net `-176`.

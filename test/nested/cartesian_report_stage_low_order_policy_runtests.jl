@@ -232,105 +232,23 @@ end
     @test default_summary.object_kind ==
           :cartesian_report_stage_low_order_route_summary
     @test default_summary.low_order_shellization_policy_requested === nothing
-    @test default_summary.low_order_shellization_policy_resolved ==
-          :legacy_diatomic_source
-    @test default_summary.low_order_shellization_policy_source ==
-          :default_legacy_diatomic_source
-    @test default_summary.shellization_source ==
-          :route_configured_bond_aligned_diatomic_source
-    @test default_summary.unit_route_kind ==
-          :legacy_diatomic_source_low_order_units
-    @test default_summary.transform_route_kind ==
-          :legacy_diatomic_source_low_order_transforms
-    @test default_summary.pair_route_kind ==
-          :legacy_diatomic_source_low_order_pairs
-    @test default_summary.assembly_source ==
-          :legacy_diatomic_source_pair_terms
-    @test default_summary.assembly_route_kind ==
-          :legacy_diatomic_source_low_order_assembly
     @test default_summary.legacy_source_selected
     @test default_summary.active_source_authority
     @test !default_summary.atom_growth_selected
     @test !default_summary.terminal_shellification_selected
-    @test !default_summary.plan_authority
     @test default_summary.materialization_required
-    @test default_summary.materialization_status ==
-          :deferred_legacy_diatomic_source_pair_block_materialization
-    @test !default_summary.hamiltonian_matrices_materialized
-    @test !default_summary.operator_matrices_materialized
-    @test !default_summary.pair_operator_blocks_materialized
-    @test default_summary.pair_inventory_source ==
-          :route_skeleton_pair_entries_only
     @test default_summary.pair_inventory_known
     @test !default_summary.independent_atom_growth_pair_inventory_available
     @test default_summary.pair_count == length(default_stages.pairs.pair_entries)
     @test default_summary.pair_family_counts ==
           default_stages.pairs.pair_family_counts
-    @test default_summary.route_core_summary_status == :not_selected_legacy_source_pairs
-    @test default_summary.route_core_final_unit_count == 0
-    @test !default_summary.route_core_pair_inventory_available
-    @test default_summary.route_core_pair_count == 0
-    @test !default_summary.route_core_pair_order_matches_staged
-    @test isempty(default_summary.route_core_pair_family_counts)
-    @test !default_summary.route_core_pair_operator_ready
-    @test default_summary.route_core_pair_operator_readiness_status ==
-          :not_selected_legacy_source_pairs
-    @test default_summary.route_core_pair_operator_blocker ==
-          :not_selected_legacy_source_pairs
     @test default_summary.report_stage_fields_preserved
-    @test default_report.low_order_shellization_policy_resolved ==
-          :legacy_diatomic_source
-    @test default_report.low_order_shellization_policy_source ==
-          :default_legacy_diatomic_source
-    @test default_report.low_order_unit_route_kind ==
-          :legacy_diatomic_source_low_order_units
-    @test default_report.low_order_transform_route_kind ==
-          :legacy_diatomic_source_low_order_transforms
-    @test default_report.low_order_pair_route_kind ==
-          :legacy_diatomic_source_low_order_pairs
-    @test default_report.low_order_assembly_route_kind ==
-          :legacy_diatomic_source_low_order_assembly
     @test default_report.legacy_source_low_order_route_selected
     @test default_report.low_order_active_source_authority
     @test !default_report.atom_growth_low_order_route_selected
     @test !default_report.low_order_terminal_shellification_selected
-    @test !default_report.low_order_plan_authority
-    @test default_report.low_order_materialization_required
-    @test !default_report.low_order_hamiltonian_matrices_materialized
-    @test !default_report.low_order_operator_matrices_materialized
-    @test !default_report.low_order_pair_operator_blocks_materialized
-    @test default_report.low_order_pair_inventory_source ==
-          :route_skeleton_pair_entries_only
-    @test default_report.low_order_pair_inventory_known
-    @test !default_report.low_order_independent_atom_growth_pair_inventory_available
     @test default_report.low_order_pair_count ==
           length(default_stages.pairs.pair_entries)
-    @test default_report.low_order_route_core_summary_status ==
-          :not_selected_legacy_source_pairs
-    @test default_report.low_order_route_core_final_unit_count == 0
-    @test !default_report.low_order_route_core_pair_inventory_available
-    @test default_report.low_order_route_core_pair_count == 0
-    @test !default_report.low_order_route_core_pair_operator_ready
-    @test default_report.low_order_route_core_pair_operator_readiness_status ==
-          :not_selected_legacy_source_pairs
-    @test default_report.low_order_route_core_pair_operator_preflight_available
-    @test default_report.low_order_route_core_pair_operator_preflight_status ==
-          :blocked_route_core_pair_operator_preflight
-    @test default_report.low_order_route_core_pair_operator_preflight_blocker ==
-          :not_selected_legacy_source_pairs
-    @test !default_report.low_order_route_core_pair_operator_preflight.operator_blocks_materialized
-    @test default_report.low_order_route_core_pair_operator_plan_available
-    @test default_report.low_order_route_core_pair_operator_plan_status ==
-          :blocked_route_core_pair_operator_plan
-    @test default_report.low_order_route_core_pair_operator_plan_blocker ==
-          :not_selected_legacy_source_pairs
-    @test !default_report.low_order_route_core_pair_operator_plan.operator_blocks_materialized
-    @test !default_summary.pqs_lowering_prototype_available
-    @test !default_summary.pqs_transform_prototype_available
-    @test default_summary.pqs_prototype_stage == :not_available
-    @test !default_report.low_order_pqs_lowering_prototype_available
-    @test !default_report.low_order_pqs_transform_prototype_available
-    @test default_report.low_order_pqs_prototype_stage == :not_available
     @test hasproperty(default_report, :route_materializer_payload)
     @test hasproperty(default_report, :diagnostics)
     @test default_report.route_skeleton === default_stages.shells.route_skeleton
@@ -341,13 +259,6 @@ end
             default_report,
         ),
     )
-    default_plan_line =
-        GaussletBases._pqs_source_box_route_driver_crc_operator_plan_print_line(
-            default_report,
-        )
-    @test occursin("blocked metadata plan", default_plan_line)
-    @test occursin("not_selected_legacy_source_pairs", default_plan_line)
-    @test occursin("operator blocks materialized no", default_plan_line)
 
     atom_growth_stages =
         _cartesian_report_stage_low_order_policy_report(

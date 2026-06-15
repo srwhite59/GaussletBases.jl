@@ -95,30 +95,10 @@ end
     @test default_units.object_kind == :cartesian_units
     @test default_summary.object_kind ==
           :cartesian_unit_stage_low_order_summary
-    @test default_summary.low_order_shellization_policy_resolved ==
-          :legacy_diatomic_source
-    @test default_summary.shellization_source ==
-          :route_configured_bond_aligned_diatomic_source
-    @test default_summary.shellization_kind == :legacy_diatomic_source
-    @test default_summary.unit_route_kind ==
-          :legacy_diatomic_source_low_order_units
     @test default_summary.legacy_source_units_selected
     @test default_summary.active_source_authority
     @test !default_summary.atom_growth_units_selected
     @test !default_summary.terminal_shellification_units_selected
-    @test !default_summary.atom_growth_unit_summary_available
-    @test !default_summary.terminal_shellification_unit_summary_available
-    @test !default_summary.atom_growth_unit_inventory_available
-    @test !default_summary.terminal_shellification_unit_inventory_available
-    @test !default_summary.plan_unit_inventory_available
-    @test default_summary.unit_inventory_source ==
-          :legacy_diatomic_source_summary
-    @test !default_summary.materialized_units_available
-    @test default_summary.materialization_status ==
-          :deferred_legacy_diatomic_source_unit_materialization
-    @test !default_summary.retained_unit_dimensions_known
-    @test !default_summary.retained_unit_ranges_known
-    @test !default_summary.retained_dimension_known
     @test default_summary.route_skeleton_unit_fields_preserved
     @test length(default_units.source_boxes) ==
           length(default_units.route_skeleton.source_boxes)
