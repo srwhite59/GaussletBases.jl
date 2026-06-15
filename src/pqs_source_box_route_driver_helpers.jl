@@ -1890,144 +1890,6 @@ function _pqs_source_box_route_driver_report(
         stage_table = contract.stage_table,
         dry_run_validation = contract.dry_run_validation,
         low_order_route_summary,
-        low_order_shellization_policy_requested =
-            low_order_route_summary.low_order_shellization_policy_requested,
-        low_order_shellization_policy_resolved =
-            low_order_route_summary.low_order_shellization_policy_resolved,
-        low_order_shellization_policy_source =
-            low_order_route_summary.low_order_shellization_policy_source,
-        low_order_shellization_policy_status =
-            low_order_route_summary.low_order_shellization_policy_status,
-        low_order_shellization_policy_blocker =
-            low_order_route_summary.low_order_shellization_policy_blocker,
-        low_order_shellization_source =
-            low_order_route_summary.shellization_source,
-        low_order_shellization_kind = low_order_route_summary.shellization_kind,
-        low_order_unit_route_kind = low_order_route_summary.unit_route_kind,
-        low_order_transform_route_kind =
-            low_order_route_summary.transform_route_kind,
-        low_order_pair_route_kind = low_order_route_summary.pair_route_kind,
-        low_order_assembly_source = low_order_route_summary.assembly_source,
-        low_order_assembly_route_kind =
-            low_order_route_summary.assembly_route_kind,
-        low_order_assembly_kind = low_order_route_summary.assembly_kind,
-        atom_growth_low_order_route_selected =
-            low_order_route_summary.atom_growth_selected,
-        legacy_source_low_order_route_selected =
-            low_order_route_summary.legacy_source_selected,
-        low_order_plan_authority = low_order_route_summary.plan_authority,
-        low_order_active_source_authority =
-            low_order_route_summary.active_source_authority,
-        low_order_legacy_source_authority =
-            low_order_route_summary.legacy_source_authority,
-        low_order_materialization_required =
-            low_order_route_summary.materialization_required,
-        low_order_materialization_status =
-            low_order_route_summary.materialization_status,
-        low_order_materialization_blocker =
-            low_order_route_summary.materialization_blocker,
-        low_order_hamiltonian_matrices_materialized =
-            low_order_route_summary.hamiltonian_matrices_materialized,
-        low_order_operator_matrices_materialized =
-            low_order_route_summary.operator_matrices_materialized,
-        low_order_pair_operator_blocks_materialized =
-            low_order_route_summary.pair_operator_blocks_materialized,
-        low_order_pair_inventory_source =
-            low_order_route_summary.pair_inventory_source,
-        low_order_pair_inventory_known =
-            low_order_route_summary.pair_inventory_known,
-        low_order_independent_atom_growth_pair_inventory_available =
-            low_order_route_summary.independent_atom_growth_pair_inventory_available,
-        low_order_pair_count = low_order_route_summary.pair_count,
-        low_order_pair_family_counts = low_order_route_summary.pair_family_counts,
-        low_order_route_core_final_unit_count =
-            low_order_route_summary.route_core_final_unit_count,
-        low_order_route_core_pair_inventory_available =
-            low_order_route_summary.route_core_pair_inventory_available,
-        low_order_route_core_pair_inventory_status =
-            low_order_route_summary.route_core_pair_inventory_status,
-        low_order_route_core_pair_count =
-            low_order_route_summary.route_core_pair_count,
-        low_order_route_core_pair_order_matches_staged =
-            low_order_route_summary.route_core_pair_order_matches_staged,
-        low_order_route_core_pair_order_comparison_source =
-            low_order_route_summary.route_core_pair_order_comparison_source,
-        low_order_route_core_pair_family_counts =
-            low_order_route_summary.route_core_pair_family_counts,
-        low_order_route_core_summary_status =
-            low_order_route_summary.route_core_summary_status,
-        low_order_route_core_pair_operator_ready =
-            low_order_route_summary.route_core_pair_operator_ready,
-        low_order_route_core_pair_operator_readiness_status =
-            low_order_route_summary.route_core_pair_operator_readiness_status,
-        low_order_route_core_pair_operator_blocker =
-            low_order_route_summary.route_core_pair_operator_blocker,
-        low_order_route_core_pair_operator_readiness_requirements =
-            low_order_route_summary.route_core_pair_operator_readiness_requirements,
-        low_order_route_core_pair_operator_preflight_available =
-            low_order_route_summary.route_core_pair_operator_preflight_available,
-        low_order_route_core_pair_operator_preflight_status =
-            low_order_route_summary.route_core_pair_operator_preflight_status,
-        low_order_route_core_pair_operator_preflight =
-            low_order_route_summary.route_core_pair_operator_preflight,
-        low_order_route_core_pair_operator_preflight_blocker =
-            low_order_route_summary.route_core_pair_operator_preflight_blocker,
-        low_order_route_core_pair_operator_plan_available =
-            low_order_route_summary.route_core_pair_operator_plan_available,
-        low_order_route_core_pair_operator_plan_status =
-            low_order_route_summary.route_core_pair_operator_plan_status,
-        low_order_route_core_pair_operator_plan =
-            low_order_route_summary.route_core_pair_operator_plan,
-        low_order_route_core_pair_operator_plan_blocker =
-            low_order_route_summary.route_core_pair_operator_plan_blocker,
-        low_order_lw_complete_shell_cpb_enumeration_available =
-            low_order_route_summary.lw_complete_shell_cpb_enumeration_available,
-        low_order_lw_complete_shell_region_count =
-            low_order_route_summary.lw_complete_shell_region_count,
-        low_order_lw_complete_shell_cpb_count =
-            low_order_route_summary.lw_complete_shell_cpb_count,
-        low_order_lw_complete_shell_cpb_family_counts =
-            low_order_route_summary.lw_complete_shell_cpb_family_counts,
-        low_order_lw_complete_shell_enumeration_policy =
-            low_order_route_summary.lw_complete_shell_enumeration_policy,
-        low_order_lw_complete_shell_coefficient_maps_materialized =
-            low_order_route_summary.lw_complete_shell_coefficient_maps_materialized,
-        low_order_lw_complete_shell_operator_blocks_materialized =
-            low_order_route_summary.lw_complete_shell_operator_blocks_materialized,
-        low_order_lw_complete_shell_pair_operator_blocks_materialized =
-            low_order_route_summary.lw_complete_shell_pair_operator_blocks_materialized,
-        low_order_lw_complete_shell_hamiltonian_data_materialized =
-            low_order_route_summary.lw_complete_shell_hamiltonian_data_materialized,
-        low_order_pqs_lowering_prototype_available =
-            low_order_route_summary.pqs_lowering_prototype_available,
-        low_order_pqs_transform_prototype_available =
-            low_order_route_summary.pqs_transform_prototype_available,
-        low_order_pqs_prototype_unit_key =
-            low_order_route_summary.pqs_prototype_unit_key,
-        low_order_pqs_prototype_stage =
-            low_order_route_summary.pqs_prototype_stage,
-        low_order_pqs_prototype_source_cpb_kind =
-            low_order_route_summary.pqs_prototype_source_cpb_kind,
-        low_order_pqs_prototype_owned_support_is_cpb =
-            low_order_route_summary.pqs_prototype_owned_support_is_cpb,
-        low_order_pqs_prototype_intermediate_retained_space =
-            low_order_route_summary.pqs_prototype_intermediate_retained_space,
-        low_order_pqs_prototype_shell_realization =
-            low_order_route_summary.pqs_prototype_shell_realization,
-        low_order_pqs_prototype_source_count_distinct_from_owned_support_count =
-            low_order_route_summary.pqs_prototype_source_count_distinct_from_owned_support_count,
-        low_order_pqs_prototype_coefficient_maps_materialized =
-            low_order_route_summary.pqs_prototype_coefficient_maps_materialized,
-        low_order_pqs_prototype_source_operator_blocks_materialized =
-            low_order_route_summary.pqs_prototype_source_operator_blocks_materialized,
-        low_order_pqs_prototype_operator_blocks_materialized =
-            low_order_route_summary.pqs_prototype_operator_blocks_materialized,
-        low_order_pqs_prototype_pair_operator_blocks_materialized =
-            low_order_route_summary.pqs_prototype_pair_operator_blocks_materialized,
-        low_order_pqs_prototype_hamiltonian_data_materialized =
-            low_order_route_summary.pqs_prototype_hamiltonian_data_materialized,
-        low_order_pqs_prototype_artifacts_materialized =
-            low_order_route_summary.pqs_prototype_artifacts_materialized,
         diagnostics,
         route_materializer_payload,
     )
@@ -7477,374 +7339,31 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
     )
 end
 
-function _pqs_source_box_route_driver_report_stage_pqs_prototype_summary(
-    assembly,
-)
-    units = hasproperty(assembly, :units) ? assembly.units : nothing
-    transforms =
-        hasproperty(assembly, :transforms) ? assembly.transforms : nothing
-    lowering_available =
-        !isnothing(units) &&
-        hasproperty(units, :pqs_lowering_prototype_available) &&
-        units.pqs_lowering_prototype_available
-    transform_available =
-        !isnothing(transforms) &&
-        hasproperty(transforms, :pqs_transform_prototype_available) &&
-        transforms.pqs_transform_prototype_available
-    lowering_prototype =
-        lowering_available ? units.pqs_lowering_prototype : nothing
-    transform_prototype =
-        transform_available ? transforms.pqs_transform_prototype : nothing
-    prototype =
-        transform_available ?
-        transform_prototype :
-        lowering_available ?
-        lowering_prototype :
+function _pqs_source_box_route_driver_report_stage_low_order_route_summary(assembly)
+    low_order_assembly =
+        hasproperty(assembly, :low_order_assembly) ?
+        assembly.low_order_assembly :
         nothing
-    source_cpb =
-        isnothing(prototype) || !hasproperty(prototype, :source_cpb) ?
-        nothing :
-        prototype.source_cpb
-    source_cpb_support_count =
-        isnothing(prototype) ||
-        !hasproperty(prototype, :source_cpb_support_count) ?
-        nothing :
-        prototype.source_cpb_support_count
-    owned_support_count =
-        isnothing(prototype) ||
-        !hasproperty(prototype, :owned_support_count) ?
-        nothing :
-        prototype.owned_support_count
-    intermediate_retained_space =
-        isnothing(prototype) ||
-        !hasproperty(prototype, :intermediate_retained_space) ?
-        nothing :
-        prototype.intermediate_retained_space
-
-    return (;
-        pqs_lowering_prototype_available = lowering_available,
-        pqs_transform_prototype_available = transform_available,
-        pqs_lowering_prototype = lowering_prototype,
-        pqs_transform_prototype = transform_prototype,
-        pqs_prototype_unit_key =
-            isnothing(prototype) ? nothing : prototype.unit_key,
-        pqs_prototype_stage =
-            isnothing(prototype) ? :not_available : :metadata_only,
-        pqs_prototype_source =
-            transform_available ?
-            :transform_stage_pqs_transform_prototype :
-            lowering_available ?
-            :unit_stage_pqs_lowering_prototype :
-            :not_available,
-        pqs_prototype_source_cpb_kind =
-            isnothing(source_cpb) ? nothing : source_cpb.cpb_family,
-        pqs_prototype_source_cpb_support_count =
-            source_cpb_support_count,
-        pqs_prototype_source_cpb_support_count_source =
-            isnothing(prototype) ||
-            !hasproperty(prototype, :source_cpb_support_count_source) ?
-            nothing :
-            prototype.source_cpb_support_count_source,
-        pqs_prototype_owned_support_count = owned_support_count,
-        pqs_prototype_owned_support_count_source =
-            isnothing(prototype) ||
-            !hasproperty(prototype, :owned_support_count_source) ?
-            nothing :
-            prototype.owned_support_count_source,
-        pqs_prototype_source_count_distinct_from_owned_support_count =
-            !isnothing(source_cpb_support_count) &&
-            !isnothing(owned_support_count) &&
-            source_cpb_support_count != owned_support_count,
-        pqs_prototype_owned_support_is_cpb =
-            isnothing(prototype) ||
-            !hasproperty(prototype, :owned_support) ?
-            false :
-            prototype.owned_support.owned_support_is_cpb,
-        pqs_prototype_intermediate_retained_space =
-            isnothing(intermediate_retained_space) ?
-            nothing :
-            intermediate_retained_space.retained_rule,
-        pqs_prototype_shell_realization =
-            transform_available ?
-            :shell_projection_lowdin_deferred :
-            lowering_available ?
-            :shell_projection_lowdin_deferred :
-            nothing,
-        pqs_prototype_coefficient_maps_materialized = false,
-        pqs_prototype_coefficient_transform_materialized = false,
-        pqs_prototype_numerical_transform_materialized = false,
-        pqs_prototype_source_operator_blocks_materialized = false,
-        pqs_prototype_operator_blocks_materialized = false,
-        pqs_prototype_pair_operator_blocks_materialized = false,
-        pqs_prototype_hamiltonian_data_materialized = false,
-        pqs_prototype_artifacts_materialized = false,
-    )
-end
-
-function _pqs_source_box_route_driver_report_stage_lw_complete_shell_summary(
-    assembly,
-)
-    transforms =
-        hasproperty(assembly, :transforms) ? assembly.transforms : nothing
-    available =
-        !isnothing(transforms) &&
-        hasproperty(transforms, :lw_complete_shell_cpb_enumeration_available) &&
-        transforms.lw_complete_shell_cpb_enumeration_available
-
-    return (;
-        lw_complete_shell_cpb_enumeration_available = available,
-        lw_complete_shell_region_count =
-            available ? transforms.lw_complete_shell_region_count : 0,
-        lw_complete_shell_cpb_count =
-            available ? transforms.lw_complete_shell_cpb_count : 0,
-        lw_complete_shell_cpb_family_counts =
-            available ?
-            transforms.lw_complete_shell_cpb_family_counts :
-            (facet_cpb = 0, edge_cpb = 0, corner_cpb = 0),
-        lw_complete_shell_enumeration_policy =
-            available ? transforms.lw_complete_shell_enumeration_policy : nothing,
-        lw_complete_shell_coefficient_maps_materialized =
-            available &&
-            transforms.lw_complete_shell_coefficient_maps_materialized,
-        lw_complete_shell_operator_blocks_materialized =
-            available &&
-            transforms.lw_complete_shell_operator_blocks_materialized,
-        lw_complete_shell_pair_operator_blocks_materialized =
-            available &&
-            transforms.lw_complete_shell_pair_operator_blocks_materialized,
-        lw_complete_shell_hamiltonian_data_materialized =
-            available &&
-            transforms.lw_complete_shell_hamiltonian_data_materialized,
-    )
-end
-
-function _pqs_source_box_route_driver_complete_core_shell_h1_j_summary(payload)
-    isnothing(payload) && return (;
-        status = :not_available_missing_complete_core_shell_h1_j_payload,
-        blocker = :missing_complete_core_shell_h1_j_payload,
-        final_dimension = nothing,
-        h1_energy = nothing,
-        self_coulomb = nothing,
-        density_gauge = nothing,
-        missing_inputs = (:complete_core_shell_h1_j_payload,),
-        signed_final_weight_division_used = false,
-        raw_no_division_used = false,
-        density_normalized_pair_terms_used_as_authority = false,
-        driver_route_materialized = false,
-        rhf_materialized = false,
-        gto_materialized = false,
-        exports_materialized = false,
-        artifacts_materialized = false,
-    )
-    return payload.summary
-end
-
-function _pqs_source_box_route_driver_complete_core_shell_h1_j_report_fields(
-    assembly,
-)
-    payload =
-        hasproperty(assembly, :complete_core_shell_h1_j_diagnostic_payload) ?
-        assembly.complete_core_shell_h1_j_diagnostic_payload :
-        nothing
-    summary =
-        _pqs_source_box_route_driver_complete_core_shell_h1_j_summary(payload)
-    final_basis =
-        isnothing(payload) || !hasproperty(payload, :final_basis) ?
-        nothing :
-        payload.final_basis
-    source_plan =
-        isnothing(payload) || !hasproperty(payload, :source_plan) ?
-        nothing :
-        payload.source_plan
-    shell_records =
-        isnothing(source_plan) || !hasproperty(source_plan, :shell_records) ?
-        () :
-        source_plan.shell_records
-    return (;
-        complete_core_shell_h1_j_diagnostic_summary = summary,
-        complete_core_shell_h1_j_diagnostic_status = summary.status,
-        complete_core_shell_h1_j_diagnostic_blocker = summary.blocker,
-        complete_core_shell_h1_j_final_dimension = summary.final_dimension,
-        complete_core_shell_h1_j_h1_energy = summary.h1_energy,
-        complete_core_shell_h1_j_self_coulomb = summary.self_coulomb,
-        complete_core_shell_h1_j_density_gauge = summary.density_gauge,
-        complete_core_shell_h1_j_driver_route_materialized =
-            summary.driver_route_materialized,
-        complete_core_shell_core_support_count =
-            isnothing(final_basis) ? nothing : final_basis.core_support_count,
-        complete_core_shell_shell_support_count =
-            isnothing(final_basis) ? nothing : final_basis.shell_support_count,
-        complete_core_shell_shell_layer_count = length(shell_records),
-        complete_core_shell_retained_per_shell =
-            Tuple(record.retained_count for record in shell_records),
-        complete_core_shell_shell_final_retained_count =
-            isnothing(final_basis) ? nothing : final_basis.shell_final_retained_count,
-        complete_core_shell_final_overlap_identity_error =
-            isnothing(final_basis) ? nothing : final_basis.final_overlap_identity_error,
-        complete_core_shell_raw_pair_factor_convention =
-            get(summary, :raw_pair_factor_convention, nothing),
-    )
-end
-
-function _pqs_source_box_route_driver_complete_core_shell_private_rhf_report_fields(
-    assembly,
-    recipe,
-)
-    payload =
-        hasproperty(assembly, :complete_core_shell_private_rhf_payload) ?
-        assembly.complete_core_shell_private_rhf_payload :
-        nothing
-    wl_total = get(recipe, :wl_rhf_total, nothing)
-    if isnothing(payload)
-        return (;
-            private_rhf_requested = false,
-            private_rhf_summary = nothing,
-            private_rhf_status = :not_requested,
-            private_rhf_blocker = nothing,
-            private_rhf_total_energy = nothing,
-            private_rhf_iteration_count = nothing,
-            private_rhf_converged = false,
-            private_rhf_residual = nothing,
-            private_rhf_mixing_kind = nothing,
-            private_rhf_wl_total = wl_total,
-            private_rhf_delta = nothing,
-        )
-    end
-    summary = payload.summary
-    total_energy = get(summary, :final_total_energy, nothing)
-    residual_diagnostics = get(summary, :residual_diagnostics, (;))
-    return (;
-        private_rhf_requested = true,
-        private_rhf_summary = summary,
-        private_rhf_status = get(summary, :status, payload.status),
-        private_rhf_blocker = get(summary, :blocker, payload.blocker),
-        private_rhf_total_energy = total_energy,
-        private_rhf_iteration_count = get(summary, :iteration_count, nothing),
-        private_rhf_converged = get(summary, :rhf_converged, false),
-        private_rhf_residual =
-            get(residual_diagnostics, :commutator_residual, nothing),
-        private_rhf_mixing_kind = get(summary, :mixing_kind, nothing),
-        private_rhf_wl_total = wl_total,
-        private_rhf_delta =
-            isnothing(total_energy) || isnothing(wl_total) ?
-            nothing :
-            total_energy - wl_total,
-    )
-end
-
-function _pqs_source_box_route_driver_diatomic_complete_core_shell_report_fields(
-    assembly,
-)
-    readiness =
-        hasproperty(assembly, :diatomic_complete_core_shell_ham_readiness_payload) ?
-        assembly.diatomic_complete_core_shell_ham_readiness_payload :
-        nothing
-    summary =
-        isnothing(readiness) || !hasproperty(readiness, :summary) ?
-        (;
-            status = :not_available_missing_diatomic_complete_core_shell_readiness,
-            blocker = :missing_diatomic_complete_core_shell_readiness,
-            source_plan_status = :not_available,
-            final_basis_status = :not_available,
-            h1_status = :not_available,
-            h1_payload_status = :not_available,
-            ham_input_payload_status = :not_available,
-            hamiltonian_handoff_payload_status = :not_available,
-            hamiltonian_consumer_contract_payload_status = :not_available,
-            final_basis_materialized = false,
-            h1_materialized = false,
-            h1_j_materialized = false,
-            ham_input_materialized = false,
-            hamiltonian_handoff_materialized = false,
-            hamiltonian_consumer_contract_materialized = false,
-            rhf_materialized = false,
-            public_api = false,
-            exports_materialized = false,
-            artifacts_materialized = false,
-            missing_objects = (:diatomic_complete_core_shell_readiness,),
-        ) :
-        readiness.summary
-    final_basis_payload =
-        hasproperty(assembly, :diatomic_complete_core_shell_final_basis_payload) ?
-        assembly.diatomic_complete_core_shell_final_basis_payload :
-        nothing
-    h1_payload =
-        hasproperty(assembly, :diatomic_complete_core_shell_h1_payload) ?
-        assembly.diatomic_complete_core_shell_h1_payload :
-        nothing
-    h1_hamiltonian =
-        isnothing(h1_payload) || !hasproperty(h1_payload, :final_hamiltonian) ?
-        nothing :
-        h1_payload.final_hamiltonian
-    ham_input_payload =
-        hasproperty(assembly, :diatomic_complete_core_shell_ham_input_payload) ?
-        assembly.diatomic_complete_core_shell_ham_input_payload :
-        nothing
-    handoff_payload =
-        hasproperty(assembly, :diatomic_complete_core_shell_hamiltonian_handoff_payload) ?
-        assembly.diatomic_complete_core_shell_hamiltonian_handoff_payload :
-        nothing
-    diagnostic_summary = (;
-        final_dimension =
-            isnothing(final_basis_payload) ||
-            !hasproperty(final_basis_payload, :summary) ?
-            nothing :
-            get(final_basis_payload.summary, :final_dimension, nothing),
-        final_overlap_identity_error =
-            isnothing(final_basis_payload) ||
-            !hasproperty(final_basis_payload, :final_basis) ||
-            isnothing(final_basis_payload.final_basis) ||
-            !hasproperty(final_basis_payload.final_basis, :final_overlap_identity_error) ?
-            nothing :
-            final_basis_payload.final_basis.final_overlap_identity_error,
-        h1_lowest_energy =
-            isnothing(h1_payload) || !hasproperty(h1_payload, :summary) ?
-            nothing :
-            get(h1_payload.summary, :lowest_energy, nothing),
-        h1_hamiltonian_matrix_finite =
-            isnothing(h1_hamiltonian) ?
-            nothing :
-            get(h1_hamiltonian, :hamiltonian_matrix_finite, nothing),
-        h1_hamiltonian_symmetry_error =
-            isnothing(h1_hamiltonian) ?
-            nothing :
-            get(h1_hamiltonian, :hamiltonian_matrix_symmetry_error, nothing),
-        density_gauge =
-            isnothing(ham_input_payload) || !hasproperty(ham_input_payload, :summary) ?
-            nothing :
-            get(ham_input_payload.summary, :density_gauge, nothing),
-        raw_pair_factor_convention =
-            isnothing(ham_input_payload) || !hasproperty(ham_input_payload, :summary) ?
-            nothing :
-            get(ham_input_payload.summary, :raw_pair_factor_convention, nothing),
-        nuclear_repulsion =
-            isnothing(handoff_payload) || !hasproperty(handoff_payload, :summary) ?
-            nothing :
-            get(handoff_payload.summary, :nuclear_repulsion, nothing),
-        electron_count =
-            isnothing(handoff_payload) || !hasproperty(handoff_payload, :summary) ?
-            nothing :
-            get(handoff_payload.summary, :electron_count, nothing),
-        spin_sector =
-            isnothing(handoff_payload) || !hasproperty(handoff_payload, :summary) ?
-            nothing :
-            get(handoff_payload.summary, :spin_sector, nothing),
+    isnothing(low_order_assembly) && return (;
+        object_kind = :cartesian_report_stage_low_order_route_summary,
+        status = :not_available_missing_assembly_stage_summary,
+        materialization_status = :blocked_missing_assembly_stage_summary,
+        materialization_blocker = :missing_assembly_stage_low_order_summary,
+        plan_authority = false,
+        active_source_authority = false,
+        legacy_source_authority = false,
+        summary_only = true,
     )
     return (;
-        diatomic_complete_core_shell_readiness_summary =
-            merge(summary, diagnostic_summary),
+        object_kind = :cartesian_report_stage_low_order_route_summary,
+        status = get(low_order_assembly, :status, :available_report_stage_low_order_route_summary),
+        materialization_status = get(low_order_assembly, :assembly_materialization_status, :not_available),
+        materialization_blocker = get(low_order_assembly, :assembly_blocker, nothing),
+        plan_authority = get(low_order_assembly, :plan_authority, false),
+        active_source_authority = get(low_order_assembly, :active_source_authority, false),
+        legacy_source_authority = get(low_order_assembly, :legacy_source_authority, false),
+        summary_only = true,
     )
-end
-
-function _pqs_source_box_route_driver_endpoint_blocker_update(summary, blocker)
-    current = get(summary, :physics_endpoint_blocker, nothing)
-    blocker === :unsupported_physical_gausslet_fixture_role &&
-        !isnothing(current) &&
-        return current
-    blocker === :physical_gausslet_h1_j_request_not_enabled &&
-        !isnothing(current) &&
-        return current
-    return blocker
 end
 
 function _pqs_source_box_route_driver_independent_h2_pqs_artifact_role(
@@ -7860,623 +7379,113 @@ function _pqs_source_box_route_driver_independent_h2_pqs_artifact_role(
     )
 end
 
-function _pqs_source_box_route_driver_physical_gausslet_target_report_fields(
+_pqs_source_box_route_driver_payload_summary(payload) =
+    isnothing(payload) ? nothing :
+    hasproperty(payload, :summary) ? payload.summary :
+    payload
+
+function _pqs_source_box_route_driver_complete_core_shell_h1_j_report_fields(
     assembly,
 )
     payload =
-        hasproperty(assembly, :diatomic_physical_gausslet_target_payload) ?
-        assembly.diatomic_physical_gausslet_target_payload :
+        hasproperty(assembly, :complete_core_shell_h1_j_diagnostic_payload) ?
+        assembly.complete_core_shell_h1_j_diagnostic_payload :
         nothing
-    supplement_preflight_payload =
-        hasproperty(assembly, :diatomic_physical_gausslet_supplement_preflight_payload) ?
-        assembly.diatomic_physical_gausslet_supplement_preflight_payload :
-        nothing
-    supplement_request_payload =
-        hasproperty(assembly, :diatomic_physical_gausslet_supplement_request_payload) ?
-        assembly.diatomic_physical_gausslet_supplement_request_payload :
-        nothing
-    supplement_representation_payload =
-        hasproperty(assembly, :diatomic_physical_gausslet_supplement_representation_payload) ?
-        assembly.diatomic_physical_gausslet_supplement_representation_payload :
-        nothing
-    source_plan_payload =
-        hasproperty(assembly, :diatomic_physical_gausslet_source_plan_payload) ?
-        assembly.diatomic_physical_gausslet_source_plan_payload :
-        nothing
-    final_basis_payload =
-        hasproperty(assembly, :diatomic_physical_gausslet_final_basis_payload) ?
-        assembly.diatomic_physical_gausslet_final_basis_payload :
-        nothing
-    h1_payload =
-        hasproperty(assembly, :diatomic_physical_gausslet_h1_payload) ?
-        assembly.diatomic_physical_gausslet_h1_payload :
-        nothing
-    h1_j_payload =
-        hasproperty(assembly, :diatomic_physical_gausslet_h1_j_payload) ?
-        assembly.diatomic_physical_gausslet_h1_j_payload :
-        nothing
-    rhf_input_contract =
-        hasproperty(assembly, :diatomic_physical_gausslet_rhf_input_contract) ?
-        assembly.diatomic_physical_gausslet_rhf_input_contract :
-        nothing
-    rhf_execution_payload =
-        hasproperty(assembly, :diatomic_physical_gausslet_rhf_execution_payload) ?
-        assembly.diatomic_physical_gausslet_rhf_execution_payload :
-        nothing
-    wl_reference_candidate =
-        hasproperty(assembly, :h2_wl_gausslet_only_reference_candidate) ?
-        assembly.h2_wl_gausslet_only_reference_candidate :
-        nothing
-    summary =
-        isnothing(payload) ?
-        (;
-            status = :not_available_missing_physical_gausslet_target_payload,
-            blocker = :missing_physical_gausslet_target_payload,
-        ) :
-        payload.summary
-    if !isnothing(supplement_request_payload)
-        request_summary = supplement_request_payload.summary
-        summary = merge(
-            summary,
-            (;
-                supplement_request_status = request_summary.status,
-                supplement_request_blocker = request_summary.blocker,
-                supplement_request_fixture_label = request_summary.fixture_label,
-                supplement_request_basis_name = request_summary.basis_name,
-                supplement_request_lmax = request_summary.lmax,
-                supplement_request_uncontracted = request_summary.uncontracted,
-                supplement_request_atom_symbols = request_summary.atom_symbols,
-                supplement_request_nuclear_charges = request_summary.nuclear_charges,
-                supplement_request_bond_axis = request_summary.bond_axis,
-                supplement_request_bond_length = request_summary.bond_length,
-                supplement_request_required_provider_blocks =
-                    request_summary.required_provider_blocks,
-                supplement_request_missing_fact_labels =
-                    request_summary.missing_fact_labels,
-                supplement_request_matrices_materialized =
-                    request_summary.matrices_materialized,
-            ),
-        )
-    end
-    if !isnothing(supplement_representation_payload)
-        representation_summary = supplement_representation_payload.summary
-        summary = merge(
-            summary,
-            (;
-                supplement_representation_status = representation_summary.status,
-                supplement_representation_blocker = representation_summary.blocker,
-                supplement_representation_object_kind =
-                    representation_summary.object_kind,
-                supplement_representation_basis_name =
-                    representation_summary.basis_name,
-                supplement_representation_lmax = representation_summary.lmax,
-                supplement_representation_atom_symbols =
-                    representation_summary.atom_symbols,
-                supplement_representation_center_count =
-                    representation_summary.center_count,
-                supplement_representation_orbital_count =
-                    representation_summary.orbital_count,
-                supplement_representation_matrices_materialized =
-                    representation_summary.matrices_materialized,
-                supplement_representation_provider_blocks_materialized =
-                    representation_summary.provider_blocks_materialized,
-            ),
-        )
-    end
-    if !isnothing(supplement_preflight_payload)
-        preflight_summary = supplement_preflight_payload.summary
-        summary = merge(
-            summary,
-            (;
-                supplement_preflight_status = preflight_summary.status,
-                supplement_preflight_blocker = preflight_summary.blocker,
-                supplement_preflight_fixture_label = preflight_summary.fixture_label,
-                supplement_preflight_retained_transform_kind =
-                    preflight_summary.retained_transform_kind,
-                supplement_preflight_gausslet_final_dimension =
-                    preflight_summary.gausslet_final_dimension,
-                supplement_preflight_required_fact_labels =
-                    preflight_summary.required_fact_labels,
-                supplement_preflight_available_fact_labels =
-                    preflight_summary.available_fact_labels,
-                supplement_preflight_missing_fact_labels =
-                    preflight_summary.missing_fact_labels,
-                supplement_preflight_matrices_materialized =
-                    preflight_summary.matrices_materialized,
-                supplement_preflight_supplemented_values_materialized =
-                    preflight_summary.supplemented_values_materialized,
-            ),
-        )
-    end
-    if !isnothing(source_plan_payload)
-        independent_source_plan =
-            get(summary, :source_plan_role, nothing) ===
-            :independent_pqs_source_box_construction
-        summary = merge(
-            summary,
-            (;
-                source_plan_status = source_plan_payload.status,
-                source_plan_blocker = source_plan_payload.blocker,
-                source_plan_authority_status =
-                    source_plan_payload.summary.source_plan_authority_status,
-                source_plan_descriptor_status =
-                    get(
-                        source_plan_payload.summary,
-                        :source_plan_descriptor_status,
-                        :not_available,
-                    ),
-                source_plan_descriptor_blocker =
-                    get(
-                        source_plan_payload.summary,
-                        :source_plan_descriptor_blocker,
-                        nothing,
-                    ),
-                source_plan_family =
-                    get(source_plan_payload.summary, :source_plan_family, :not_available),
-                shared_shell_realization_status =
-                    get(
-                        source_plan_payload.summary,
-                        :shared_shell_realization_status,
-                        :not_available,
-                    ),
-                shared_shell_realization_blocker =
-                    get(
-                        source_plan_payload.summary,
-                        :shared_shell_realization_blocker,
-                        nothing,
-                    ),
-                shared_shell_realization_counts =
-                    get(source_plan_payload.summary, :shared_shell_realization_counts, ()),
-                shared_shell_realization_identity_errors =
-                    get(
-                        source_plan_payload.summary,
-                        :shared_shell_realization_identity_errors,
-                        (),
-                    ),
-                source_coefficients_materialized =
-                    get(
-                        source_plan_payload.summary,
-                        :source_coefficients_materialized,
-                        false,
-                    ),
-                independent_source_plan_blocker =
-                    get(summary, :independent_source_plan_blocker, nothing),
-            ),
-        )
-    end
-    if !isnothing(final_basis_payload)
-        summary = merge(
-            summary,
-            (;
-                final_basis_status = final_basis_payload.final_basis_status,
-                final_basis_blocker = final_basis_payload.blocker,
-                final_basis_materialized =
-                    final_basis_payload.summary.final_basis_materialized,
-                final_dimension = final_basis_payload.summary.final_dimension,
-                final_overlap_identity_error =
-                    final_basis_payload.summary.final_overlap_identity_error,
-                pre_final_overlap_identity_error =
-                    final_basis_payload.summary.pre_final_overlap_identity_error,
-                final_overlap_rank =
-                    final_basis_payload.summary.final_overlap_rank,
-                final_overlap_full_rank =
-                    final_basis_payload.summary.final_overlap_full_rank,
-                final_overlap_eigenvalue_min =
-                    final_basis_payload.summary.final_overlap_eigenvalue_min,
-                final_overlap_eigenvalue_max =
-                    final_basis_payload.summary.final_overlap_eigenvalue_max,
-                physics_endpoint_blocker =
-                    final_basis_payload.summary.endpoint_blocker,
-            ),
-        )
-    end
-    if !isnothing(h1_payload)
-        summary = merge(
-            summary,
-            (;
-                h1_status = h1_payload.h1_status,
-                h1_blocker = h1_payload.blocker,
-                h1_materialized = h1_payload.summary.h1_materialized,
-                h1_lowest_energy = h1_payload.summary.lowest_energy,
-                h1_hamiltonian_matrix_finite =
-                    h1_payload.summary.h1_hamiltonian_matrix_finite,
-                h1_hamiltonian_symmetry_error =
-                    h1_payload.summary.h1_hamiltonian_symmetry_error,
-                support_kinetic_status = h1_payload.support_kinetic_status,
-                support_electron_nuclear_status =
-                    h1_payload.support_electron_nuclear_status,
-                final_kinetic_status = h1_payload.final_kinetic_status,
-                final_electron_nuclear_status =
-                    h1_payload.final_electron_nuclear_status,
-                physics_endpoint_blocker =
-                    _pqs_source_box_route_driver_endpoint_blocker_update(
-                        summary,
-                        h1_payload.summary.endpoint_blocker,
-                    ),
-            ),
-        )
-    end
-    if !isnothing(h1_j_payload)
-        summary = merge(
-            summary,
-            (;
-                h1_j_status = h1_j_payload.h1_j_status,
-                h1_j_blocker = h1_j_payload.blocker,
-                h1_j_materialized = h1_j_payload.summary.h1_j_materialized,
-                density_interaction_materialized =
-                    h1_j_payload.summary.density_interaction_materialized,
-                density_interaction_status =
-                    h1_j_payload.summary.density_interaction_status,
-                density_gauge = h1_j_payload.summary.density_gauge,
-                raw_pair_factor_convention =
-                    h1_j_payload.summary.raw_pair_factor_convention,
-                support_weight_count = h1_j_payload.summary.support_weight_count,
-                support_weights_all_positive =
-                    h1_j_payload.summary.support_weights_all_positive,
-                support_raw_pair_shape =
-                    h1_j_payload.summary.support_raw_pair_shape,
-                support_raw_pair_finite =
-                    h1_j_payload.summary.support_raw_pair_finite,
-                pre_final_pair_matrix_shape =
-                    h1_j_payload.summary.pre_final_pair_matrix_shape,
-                pre_final_pair_matrix_finite =
-                    h1_j_payload.summary.pre_final_pair_matrix_finite,
-                pre_final_pair_matrix_symmetry_error =
-                    h1_j_payload.summary.pre_final_pair_matrix_symmetry_error,
-                h1_j_self_coulomb = h1_j_payload.summary.self_coulomb,
-                physics_endpoint_blocker =
-                    _pqs_source_box_route_driver_endpoint_blocker_update(
-                        summary,
-                        h1_j_payload.summary.endpoint_blocker,
-                    ),
-            ),
-        )
-    end
-    if !isnothing(rhf_input_contract)
-        contract_summary = rhf_input_contract.summary
-        summary = merge(
-            summary,
-            (;
-                private_rhf_input_contract_status = contract_summary.status,
-                private_rhf_input_contract_blocker = contract_summary.blocker,
-                private_rhf_input_contract_available =
-                    contract_summary.input_contract_available,
-                private_rhf_electron_count = contract_summary.electron_count,
-                private_rhf_occupation_policy =
-                    contract_summary.occupation_policy,
-                private_rhf_occupation_nocc = contract_summary.occupation_nocc,
-                private_rhf_h1_matrix_available =
-                    contract_summary.h1_matrix_available,
-                private_rhf_h1_matrix_finite =
-                    contract_summary.h1_matrix_finite,
-                private_rhf_h1_matrix_symmetry_error =
-                    contract_summary.h1_matrix_symmetry_error,
-                private_rhf_density_interaction_available =
-                    contract_summary.density_interaction_available,
-                private_rhf_final_to_pre_final_transform_available =
-                    contract_summary.final_to_pre_final_transform_available,
-                private_rhf_pre_final_pair_matrix_available =
-                    contract_summary.pre_final_pair_matrix_available,
-                private_rhf_pre_final_pair_matrix_finite =
-                    contract_summary.pre_final_pair_matrix_finite,
-                private_rhf_pre_final_pair_matrix_symmetry_error =
-                    contract_summary.pre_final_pair_matrix_symmetry_error,
-                private_rhf_materialized =
-                    contract_summary.private_rhf_materialized,
-                physics_endpoint_blocker =
-                    _pqs_source_box_route_driver_endpoint_blocker_update(
-                        summary,
-                        contract_summary.endpoint_blocker,
-                    ),
-            ),
-        )
-    end
-    if !isnothing(rhf_execution_payload)
-        execution_summary = rhf_execution_payload.summary
-        summary = merge(
-            summary,
-            (;
-                private_rhf_execution_status = execution_summary.status,
-                private_rhf_execution_blocker = execution_summary.blocker,
-                private_rhf_executed = execution_summary.executed,
-                private_rhf_materialized = execution_summary.materialized,
-                private_rhf_converged = execution_summary.converged,
-                private_rhf_total_energy = execution_summary.total_energy,
-                private_rhf_one_body_energy = execution_summary.one_body_energy,
-                private_rhf_two_body_energy = execution_summary.two_body_energy,
-                private_rhf_iteration_count = execution_summary.iteration_count,
-                private_rhf_density_trace = execution_summary.density_trace,
-                private_rhf_idempotency_residual =
-                    execution_summary.idempotency_residual,
-                private_rhf_commutator_residual =
-                    execution_summary.commutator_residual,
-                private_rhf_energy_delta = execution_summary.energy_delta,
-                private_rhf_final_density_one_step_consistency_status =
-                    execution_summary.final_density_one_step_consistency_status,
-                physics_endpoint_blocker =
-                    _pqs_source_box_route_driver_endpoint_blocker_update(
-                        summary,
-                        execution_summary.endpoint_blocker,
-                    ),
-            ),
-        )
-    end
-    if !isnothing(wl_reference_candidate)
-        candidate_summary = wl_reference_candidate.summary
-        endpoint_blocker =
-            candidate_summary.status ===
-            :available_wl_h2_gausslet_only_reference_candidate &&
-            get(summary, :private_rhf_materialized, false) ?
-            :missing_wl_h2_gausslet_only_reference_values :
-            get(summary, :physics_endpoint_blocker, candidate_summary.blocker)
-        summary = merge(
-            summary,
-            (;
-                wl_reference_candidate_status = candidate_summary.status,
-                wl_reference_candidate_blocker = candidate_summary.blocker,
-                wl_reference_final_dimension = candidate_summary.final_dimension,
-                wl_reference_retained_transform_kind =
-                    candidate_summary.retained_transform_kind,
-                wl_reference_supplement_policy =
-                    candidate_summary.supplement_policy,
-                wl_reference_label = candidate_summary.label,
-                wl_reference_mismatches = candidate_summary.mismatches,
-                old_supplemented_wl_qw_scalar_references_blocked =
-                    candidate_summary.old_supplemented_scalar_references_blocked,
-                physics_endpoint_blocker = endpoint_blocker,
-            ),
-        )
-    end
+    summary = _pqs_source_box_route_driver_payload_summary(payload)
     return (;
-        physical_gausslet_target_summary = summary,
-        physical_gausslet_target_status = summary.status,
-        physical_gausslet_target_blocker = summary.blocker,
+        complete_core_shell_h1_j_diagnostic_summary = summary,
+        complete_core_shell_h1_j_diagnostic_status =
+            isnothing(summary) ? :not_available : get(summary, :status, :available),
+        complete_core_shell_h1_j_diagnostic_blocker =
+            isnothing(summary) ? :missing_complete_core_shell_h1_j_payload :
+            get(summary, :blocker, nothing),
     )
 end
 
-function _pqs_source_box_route_driver_report_stage_low_order_route_summary(
+function _pqs_source_box_route_driver_complete_core_shell_private_rhf_report_fields(
+    assembly,
+    recipe,
+)
+    payload =
+        hasproperty(assembly, :complete_core_shell_private_rhf_payload) ?
+        assembly.complete_core_shell_private_rhf_payload :
+        nothing
+    summary = _pqs_source_box_route_driver_payload_summary(payload)
+    return (;
+        private_rhf_summary = summary,
+        private_rhf_status =
+            isnothing(summary) ? :not_requested : get(summary, :status, :available),
+        private_rhf_blocker =
+            isnothing(summary) ? nothing : get(summary, :blocker, nothing),
+        private_rhf_wl_total = get(recipe, :wl_rhf_total, nothing),
+    )
+end
+
+function _pqs_source_box_route_driver_diatomic_complete_core_shell_report_fields(
     assembly,
 )
-    low_order_assembly =
-        hasproperty(assembly, :low_order_assembly) ?
-        assembly.low_order_assembly :
+    readiness =
+        hasproperty(assembly, :diatomic_complete_core_shell_ham_readiness_payload) ?
+        assembly.diatomic_complete_core_shell_ham_readiness_payload :
         nothing
-    pqs_prototype_summary =
-        _pqs_source_box_route_driver_report_stage_pqs_prototype_summary(
-            assembly,
-        )
-    lw_complete_shell_summary =
-        _pqs_source_box_route_driver_report_stage_lw_complete_shell_summary(
-            assembly,
-        )
-    if isnothing(low_order_assembly)
-        return (;
-            object_kind = :cartesian_report_stage_low_order_route_summary,
-            status = :not_available_missing_assembly_stage_summary,
-            low_order_shellization_policy_requested = nothing,
-            low_order_shellization_policy_resolved = :not_available,
-            low_order_shellization_policy_source = :not_available,
-            low_order_shellization_policy_status =
-                :not_available_missing_assembly_stage_summary,
-            low_order_shellization_policy_blocker =
-                :missing_assembly_stage_low_order_summary,
-            shellization_source = :not_available,
-            shellization_kind = :not_available,
-            unit_route_kind = :not_available,
-            transform_route_kind = :not_available,
-            pair_route_kind = :not_available,
-            assembly_source = :not_available,
-            assembly_route_kind = :not_available,
-            assembly_kind = :not_available,
-            atom_growth_selected = false,
-            terminal_shellification_selected = false,
-            legacy_source_selected = false,
-            terminal_shellification_summary_available = false,
-            terminal_shellification_scaffold_available = false,
-            terminal_shellification_scaffold = nothing,
-            terminal_shellification_region_count = 0,
-            terminal_shellification_unit_inventory_available = false,
-            terminal_shellification_unit_inventory = nothing,
-            terminal_shellification_unit_count = 0,
-            terminal_shellification_unit_keys = (),
-            terminal_shellification_unit_roles = (),
-            terminal_shellification_unit_kinds = (),
-            terminal_shellification_unit_support_counts = (),
-            terminal_shellification_lowering_contract_inventory_available = false,
-            terminal_shellification_lowering_contract_inventory_status =
-                :not_available,
-            terminal_shellification_lowering_contract_inventory = nothing,
-            terminal_shellification_lowering_plan_available = false,
-            terminal_shellification_lowering_plan_status = :not_available,
-            terminal_shellification_lowering_plan = nothing,
-            terminal_shellification_lowering_summary = nothing,
-            terminal_shellification_lowering_contract_count = 0,
-            terminal_shellification_lowering_contract_kinds = (),
-            terminal_shellification_lowering_contract_kind_counts =
-                (
-                    direct_core_identity_cpb_count = 0,
-                    direct_slab_identity_cpb_count = 0,
-                    direct_boundary_slab_identity_cpb_count = 0,
-                    white_lindsey_boundary_strata_count = 0,
-                    pqs_filled_source_cpb_count = 0,
-                    distorted_product_box_comx_count = 0,
-                ),
-            _pqs_source_box_route_driver_selected_terminal_lowering_fields(
-                nothing,
-                :not_available,
-                nothing,
-            )...,
-            terminal_shellification_contract_counts_by_unit = (),
-            terminal_shellification_lw_complete_shell_cpb_count = 0,
-            terminal_shellification_lw_complete_shell_cpb_family_counts =
-                (facet_cpb = 0, edge_cpb = 0, corner_cpb = 0),
-            terminal_shellification_final_retained_unit_inventory_available = false,
-            terminal_shellification_transform_contracts_available = false,
-            terminal_shellification_pair_inventory_available = false,
-            terminal_shellification_pair_inventory_status = :not_available,
-            terminal_shellification_pair_materialization_status = :not_available,
-            terminal_shellification_assembly_materialization_status =
-                :not_available,
-            terminal_shellification_central_gap_region_count = 0,
-            terminal_shellification_central_midpoint_slab_count = 0,
-            terminal_shellification_central_distorted_product_box_count = 0,
-            terminal_shellification_central_distorted_product_box_metadata = (),
-            materialization_required = true,
-            materialization_status =
-                :blocked_missing_assembly_stage_summary,
-            materialization_blocker =
-                :missing_assembly_stage_low_order_summary,
-            hamiltonian_matrices_materialized = false,
-            operator_matrices_materialized = false,
-            pair_operator_blocks_materialized = false,
-            pair_inventory_source = :not_available,
-            pair_inventory_known = false,
-            independent_atom_growth_pair_inventory_available = false,
-            pair_count = 0,
-            pair_family_counts = nothing,
-            route_core_final_unit_count = 0,
-            route_core_pair_inventory_available = false,
-            route_core_pair_inventory_status = :not_available,
-            route_core_pair_count = 0,
-            route_core_pair_order_matches_staged = false,
-            route_core_pair_order_comparison_source = :not_available,
-            route_core_pair_family_counts = (),
-            route_core_summary_status = :not_available,
-            route_core_pair_operator_ready = false,
-            route_core_pair_operator_readiness_status = :not_available,
-            route_core_pair_operator_blocker = :not_available,
-            route_core_pair_operator_readiness_requirements =
-                _pqs_source_box_route_driver_route_core_readiness_requirements(),
-            route_core_pair_operator_preflight_available = false,
-            route_core_pair_operator_preflight_status = :not_available,
-            route_core_pair_operator_preflight = nothing,
-            route_core_pair_operator_preflight_blocker = :not_available,
-            route_core_pair_operator_plan_available = false,
-            route_core_pair_operator_plan_status = :not_available,
-            route_core_pair_operator_plan = nothing,
-            route_core_pair_operator_plan_blocker = :not_available,
-            plan_authority = false,
-            active_source_authority = false,
-            legacy_source_authority = false,
-            pqs_prototype_summary...,
-            lw_complete_shell_summary...,
-            report_stage_fields_preserved = false,
-            summary_only = true,
-        )
-    end
-
+    summary = _pqs_source_box_route_driver_payload_summary(readiness)
     return (;
-        object_kind = :cartesian_report_stage_low_order_route_summary,
-        status =
-            low_order_assembly.status ==
-            :available_assembly_stage_low_order_summary ?
-            :available_report_stage_low_order_route_summary :
-            low_order_assembly.status,
-        low_order_shellization_policy_requested =
-            low_order_assembly.low_order_shellization_policy_requested,
-        low_order_shellization_policy_resolved =
-            low_order_assembly.low_order_shellization_policy_resolved,
-        low_order_shellization_policy_source =
-            low_order_assembly.low_order_shellization_policy_source,
-        low_order_shellization_policy_status =
-            low_order_assembly.low_order_shellization_policy_status,
-        low_order_shellization_policy_blocker =
-            low_order_assembly.low_order_shellization_policy_blocker,
-        shellization_source = low_order_assembly.shellization_source,
-        shellization_kind = low_order_assembly.shellization_kind,
-        unit_route_kind = low_order_assembly.unit_route_kind,
-        transform_route_kind = low_order_assembly.transform_route_kind,
-        pair_route_kind = low_order_assembly.pair_route_kind,
-        assembly_source = low_order_assembly.assembly_source,
-        assembly_route_kind = low_order_assembly.assembly_route_kind,
-        assembly_kind = low_order_assembly.assembly_kind,
-        atom_growth_selected = low_order_assembly.atom_growth_assembly_selected,
-        terminal_shellification_selected =
-            low_order_assembly.terminal_shellification_assembly_selected,
-        legacy_source_selected =
-            low_order_assembly.legacy_source_assembly_selected,
-        terminal_shellification_summary_available =
-            low_order_assembly.terminal_shellification_assembly_summary_available,
-        terminal_shellification_lowering_plan_available =
-            low_order_assembly.terminal_route_summary.lowering_plan_available,
-        terminal_shellification_lowering_plan_status =
-            low_order_assembly.terminal_route_summary.lowering_plan_status,
-        terminal_shellification_lowering_plan =
-            low_order_assembly.terminal_route_state.lowering_plan,
-        terminal_shellification_lowering_summary =
-            low_order_assembly.terminal_route_state.lowering_summary,
-        terminal_shellification_transform_contracts_available =
-            low_order_assembly.terminal_shellification_transform_contracts_available,
-        terminal_shellification_pair_inventory_available =
-            low_order_assembly.terminal_shellification_pair_inventory_available,
-        terminal_shellification_pair_inventory_status =
-            low_order_assembly.terminal_shellification_pair_inventory_status,
-        terminal_shellification_pair_materialization_status =
-            low_order_assembly.terminal_shellification_pair_materialization_status,
-        terminal_shellification_assembly_materialization_status =
-            low_order_assembly.terminal_shellification_assembly_materialization_status,
-        materialization_required =
-            low_order_assembly.assembly_requires_materialization,
-        materialization_status =
-            low_order_assembly.assembly_materialization_status,
-        materialization_blocker = low_order_assembly.assembly_blocker,
-        hamiltonian_matrices_materialized =
-            low_order_assembly.hamiltonian_matrices_materialized,
-        operator_matrices_materialized =
-            low_order_assembly.operator_matrices_materialized,
-        pair_operator_blocks_materialized =
-            low_order_assembly.pair_operator_blocks_materialized,
-        pair_inventory_source = low_order_assembly.pair_inventory_source,
-        pair_inventory_known = low_order_assembly.pair_inventory_known,
-        independent_atom_growth_pair_inventory_available =
-            low_order_assembly.independent_atom_growth_pair_inventory_available,
-        pair_count = low_order_assembly.pair_count,
-        pair_family_counts = low_order_assembly.pair_family_counts,
-        route_core_final_unit_count =
-            low_order_assembly.route_core_final_unit_count,
-        route_core_pair_inventory_available =
-            low_order_assembly.route_core_pair_inventory_available,
-        route_core_pair_inventory_status =
-            low_order_assembly.route_core_pair_inventory_status,
-        route_core_pair_count = low_order_assembly.route_core_pair_count,
-        route_core_pair_order_matches_staged =
-            low_order_assembly.route_core_pair_order_matches_staged,
-        route_core_pair_order_comparison_source =
-            low_order_assembly.route_core_pair_order_comparison_source,
-        route_core_pair_family_counts =
-            low_order_assembly.route_core_pair_family_counts,
-        route_core_summary_status = low_order_assembly.route_core_summary_status,
-        route_core_pair_operator_ready =
-            low_order_assembly.route_core_pair_operator_ready,
-        route_core_pair_operator_readiness_status =
-            low_order_assembly.route_core_pair_operator_readiness_status,
-        route_core_pair_operator_blocker =
-            low_order_assembly.route_core_pair_operator_blocker,
-        route_core_pair_operator_readiness_requirements =
-            low_order_assembly.route_core_pair_operator_readiness_requirements,
-        route_core_pair_operator_preflight_available =
-            low_order_assembly.route_core_pair_operator_preflight_available,
-        route_core_pair_operator_preflight_status =
-            low_order_assembly.route_core_pair_operator_preflight_status,
-        route_core_pair_operator_preflight =
-            low_order_assembly.route_core_pair_operator_preflight,
-        route_core_pair_operator_preflight_blocker =
-            low_order_assembly.route_core_pair_operator_preflight_blocker,
-        route_core_pair_operator_plan_available =
-            low_order_assembly.route_core_pair_operator_plan_available,
-        route_core_pair_operator_plan_status =
-            low_order_assembly.route_core_pair_operator_plan_status,
-        route_core_pair_operator_plan =
-            low_order_assembly.route_core_pair_operator_plan,
-        route_core_pair_operator_plan_blocker =
-            low_order_assembly.route_core_pair_operator_plan_blocker,
-        plan_authority = low_order_assembly.plan_authority,
-        active_source_authority = low_order_assembly.active_source_authority,
-        legacy_source_authority = low_order_assembly.legacy_source_authority,
-        pqs_prototype_summary...,
-        lw_complete_shell_summary...,
-        report_stage_fields_preserved = true,
-        summary_only = true,
+        diatomic_complete_core_shell_readiness_summary = summary,
+    )
+end
+
+function _pqs_source_box_route_driver_physical_gausslet_target_report_fields(
+    assembly,
+)
+    target =
+        hasproperty(assembly, :diatomic_physical_gausslet_target_payload) ?
+        assembly.diatomic_physical_gausslet_target_payload :
+        nothing
+    source_plan =
+        hasproperty(assembly, :diatomic_physical_gausslet_source_plan_payload) ?
+        assembly.diatomic_physical_gausslet_source_plan_payload :
+        nothing
+    final_basis =
+        hasproperty(assembly, :diatomic_physical_gausslet_final_basis_payload) ?
+        assembly.diatomic_physical_gausslet_final_basis_payload :
+        nothing
+    h1 =
+        hasproperty(assembly, :diatomic_physical_gausslet_h1_payload) ?
+        assembly.diatomic_physical_gausslet_h1_payload :
+        nothing
+    h1_j =
+        hasproperty(assembly, :diatomic_physical_gausslet_h1_j_payload) ?
+        assembly.diatomic_physical_gausslet_h1_j_payload :
+        nothing
+    rhf =
+        hasproperty(assembly, :diatomic_physical_gausslet_rhf_execution_payload) ?
+        assembly.diatomic_physical_gausslet_rhf_execution_payload :
+        nothing
+    supplement =
+        hasproperty(assembly, :diatomic_physical_gausslet_supplement_preflight_payload) ?
+        assembly.diatomic_physical_gausslet_supplement_preflight_payload :
+        nothing
+    target_summary = _pqs_source_box_route_driver_payload_summary(target)
+    return (;
+        physical_gausslet_target_summary = target_summary,
+        physical_gausslet_target_status =
+            isnothing(target_summary) ? :not_available :
+            get(target_summary, :status, :available),
+        physical_gausslet_target_blocker =
+            isnothing(target_summary) ? :missing_physical_gausslet_target :
+            get(target_summary, :blocker, nothing),
+        physical_gausslet_source_plan_summary =
+            _pqs_source_box_route_driver_payload_summary(source_plan),
+        physical_gausslet_final_basis_summary =
+            _pqs_source_box_route_driver_payload_summary(final_basis),
+        physical_gausslet_h1_summary =
+            _pqs_source_box_route_driver_payload_summary(h1),
+        physical_gausslet_h1_j_summary =
+            _pqs_source_box_route_driver_payload_summary(h1_j),
+        physical_gausslet_private_rhf_summary =
+            _pqs_source_box_route_driver_payload_summary(rhf),
+        physical_gausslet_supplement_preflight_summary =
+            _pqs_source_box_route_driver_payload_summary(supplement),
     )
 end
 
@@ -8584,7 +7593,7 @@ function cartesian_print_summary(report, materialization)
     @show diagnostics.parent_axis_probe_requested diagnostics.parent_axis_probe_status
     @show diagnostics.raw_product_box_probe_requested diagnostics.raw_product_box_probe_status
     @show retained_counts retained_dimension
-    @show get(report, :low_order_materialization_status, nothing)
+    @show get(report.low_order_route_summary, :materialization_status, nothing)
     @show materialization.status materialization.pqs_materialization_status
     @show materialization.materialized_report_kind
     return nothing

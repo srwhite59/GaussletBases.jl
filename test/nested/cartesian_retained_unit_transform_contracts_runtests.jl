@@ -4,8 +4,6 @@ using GaussletBases
 const CTLForTransformContracts = GaussletBases.CartesianTerminalLowering
 const CRUForTransformContracts = GaussletBases.CartesianRetainedUnits
 const CRTC = GaussletBases.CartesianRetainedUnitTransformContracts
-const CUPForTransformContracts = GaussletBases.CartesianUnitPairs
-const CPOPForTransformContracts = GaussletBases.CartesianPairOperatorPlans
 const CRCForTransformContracts = GaussletBases.CartesianRouteCore
 const CPBForTransformContracts = GaussletBases.CartesianCPB
 const CRPSForTransformContracts = GaussletBases.CartesianRawProductSources
@@ -540,58 +538,4 @@ end
           :pending_retained_unit_transform_contract
     @test unknown_contract.blocker ==
           :unclassified_retained_unit_transform_contract
-end
-
-@testset "terminal route state carries retained-unit transform contracts" begin
-    lowering_summary = CTLForTransformContracts.summary(_TRANSFORM_PQS_LOWERING_PLAN)
-    retained_summary =
-        CRUForTransformContracts.summary(_TRANSFORM_PQS_RETAINED_PLAN)
-    unit_pair_summary =
-        CUPForTransformContracts.unavailable_summary(:not_tested, :test_fixture)
-    pair_operator_summary =
-        CPOPForTransformContracts.unavailable_summary(:not_tested, :test_fixture)
-    terminal_route_state =
-        GaussletBases._pqs_source_box_route_driver_terminal_route_state(;
-            status = lowering_summary.status,
-            selected = true,
-            route_lowering_family = :pqs_transform_contract_test,
-            lowering_plan = _TRANSFORM_PQS_LOWERING_PLAN,
-            lowering_summary,
-            retained_unit_plan = _TRANSFORM_PQS_RETAINED_PLAN,
-            retained_unit_summary = retained_summary,
-            unit_pair_plan = :not_tested,
-            unit_pair_summary,
-            pair_operator_plan = :not_tested,
-            pair_operator_summary,
-        )
-    terminal_summary = terminal_route_state.summary
-    transform_summary =
-        terminal_route_state.retained_unit_transform_contract_summary
-
-    @test terminal_route_state.retained_unit_transform_contract_plan isa
-          CRTC.RetainedUnitTransformContractPlan
-    @test transform_summary.status ==
-          :available_retained_unit_transform_contract_plan
-    @test terminal_summary.retained_unit_transform_contract_summary.status ==
-          transform_summary.status
-    @test transform_summary.transform_contract_count ==
-          terminal_route_state.retained_unit_summary.retained_unit_count
-    @test !transform_summary.transforms_materialized
-    @test !transform_summary.coefficient_maps_materialized
-
-    unselected_state =
-        GaussletBases._pqs_source_box_route_driver_terminal_route_state(;
-            status = lowering_summary.status,
-            selected = false,
-            route_lowering_family = :pqs_transform_contract_test,
-            lowering_plan = _TRANSFORM_PQS_LOWERING_PLAN,
-            lowering_summary,
-        )
-    unselected_transform_summary =
-        unselected_state.summary.retained_unit_transform_contract_summary
-
-    @test unselected_state.retained_unit_transform_contract_plan === nothing
-    @test unselected_state.retained_unit_transform_contract_summary.status == :not_selected
-    @test unselected_transform_summary.transform_contract_count == 0
-    @test !unselected_transform_summary.transforms_materialized
 end

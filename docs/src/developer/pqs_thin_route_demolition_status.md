@@ -356,3 +356,48 @@ Recommended next cut:
 - Continue source-side thinning in `pqs_source_box_route_driver_helpers.jl`,
   focusing on report/status-only fields that are not needed for driver
   construction.
+
+## Checkpoint 8 - Low-Order Report Field Cloud Cut
+
+Status:
+
+- uncommitted demolition cut for review.
+
+Deleted/simplified:
+
+- Removed the flat `low_order_*`, `route_core_*`, `pqs_prototype_*`, and
+  `lw_complete_shell_*` report-field expansion from the driver report.
+- Replaced the report-stage low-order summary with a compact status snapshot:
+  status, materialization status/blocker, and broad authority booleans.
+- Removed the report-stage PQS prototype and LW complete-shell report summary
+  helpers that existed only to preserve detailed driver/report observability.
+- Removed the retained-unit transform test block that directly asserted the
+  private driver terminal-route wrapper. The remaining file still tests the
+  retained-unit transform module contract directly.
+
+Validation:
+
+- `git diff --check` passed.
+- Caller grep for the deleted report-stage helper/field names found no active
+  source/bin/test/docs callers.
+- Package load passed.
+- The protected H2 independent PQS readiness driver smoke completed with
+  saving disabled.
+
+Line-count impact:
+
+- 1,126 deleted lines in the uncommitted eighth cut after restoring compact
+  driver survival summaries.
+
+Current breakage assessment:
+
+- This cut intentionally breaks consumers that key on deleted low-order flat
+  report fields. That is report/status scaffolding, not the H2 survival route.
+- The protected driver entry point and driver inputs remain present.
+- Package load and the protected readiness driver smoke remain green.
+
+Recommended next cut:
+
+- If load and the readiness driver smoke remain green, continue auditing the
+  remaining terminal-route state bookkeeping for construction use versus
+  report-only use.
