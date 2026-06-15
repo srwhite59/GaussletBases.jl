@@ -853,6 +853,20 @@ function _pqs_source_box_route_driver_write_pqs_diatomic_readiness_artifact!(
             final_overlap_rank = get(target, :final_overlap_rank, nothing),
             final_overlap_full_rank =
                 get(target, :final_overlap_full_rank, nothing),
+            h1_status = get(target, :h1_status, nothing),
+            h1_blocker = get(target, :h1_blocker, nothing),
+            h1_materialized = get(target, :h1_materialized, nothing),
+            h1_lowest_energy = get(target, :h1_lowest_energy, nothing),
+            h1_hamiltonian_matrix_finite =
+                get(target, :h1_hamiltonian_matrix_finite, nothing),
+            h1_hamiltonian_symmetry_error =
+                get(target, :h1_hamiltonian_symmetry_error, nothing),
+            support_kinetic_status = get(target, :support_kinetic_status, nothing),
+            support_electron_nuclear_status =
+                get(target, :support_electron_nuclear_status, nothing),
+            final_kinetic_status = get(target, :final_kinetic_status, nothing),
+            final_electron_nuclear_status =
+                get(target, :final_electron_nuclear_status, nothing),
             support_plan_status =
                 get(get(target, :support_plan, (;)), :status, nothing),
             support_plan_blocker =

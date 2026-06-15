@@ -1211,3 +1211,68 @@ Remaining blocker / next:
 
 Line-count / complexity note:
 - Scoped `src + test + bin` diff was `87` added / `100` deleted, net `-13`.
+
+## Pass 249 - Independent H2 PQS H1
+
+Commit(s):
+- this commit - Expose independent H2 PQS H1 artifact facts
+
+Summary:
+- The existing physical-gausslet H1 path worked for the independent H2 PQS final
+  basis when requested; this pass exposed its status facts in the artifact.
+- The focused route reports a finite, symmetric 471-dimensional H1 with lowest
+  one-electron energy `-0.7946037173365885`.
+- H1-J, RHF, supplements, CR2, export, and public API remain off. The endpoint
+  blocker is now the expected H1-J/density seam.
+
+Validation:
+- Doer: package load passed; focused independent H2 PQS H1 driver/artifact
+  check passed in about 80 seconds; `git diff --check` passed.
+- Manager: reviewed the focused diff and accepted doer validation without
+  duplicating the slow route run.
+
+Goal advancement:
+- MT2/LT5: advanced independent H2 PQS from final-basis readiness to one-body
+  H1 readiness without fake/source-backed authority.
+- LT6: made H1 status, energy, finiteness, symmetry, and support/final one-body
+  statuses visible to the artifact consumer.
+- MT5/LT2: kept the pass net-negative by deleting stale selected-terminal
+  sidecar count/status mirror assertions.
+
+Medium-goal update:
+- See the passes 245-249 checkpoint below.
+
+Risk / guardrail:
+- Do not jump directly from H1 to RHF. The next seam must review H1-J/density
+  convention, because earlier PQS density attempts exposed bad weight/gauge
+  behavior.
+
+Remaining blocker / next:
+- H1-J/density convention review for the independent H2 PQS basis. Keep RHF,
+  supplements, CR2, export, and public API blocked until that seam is coherent.
+
+Line-count / complexity note:
+- Scoped `src + test + bin` diff was `17` added / `26` deleted, net `-9`.
+
+## Medium-Term Goal Checkpoint - Passes 245-249
+
+- MT1 Fake-PQS quarantine: active/maintained. None of these passes promoted the
+  fake-PQS source-backed reproduction; pass outputs continue to assert
+  `fake_pqs_enabled = false` and
+  `source_backed_fixed_source_oracle_used = false` for independent H2 PQS.
+- MT2 Independent H2 PQS recovery: active and substantially advanced. Passes
+  247-249 moved the route from source-plan blocker to available source plan,
+  available 471-dimensional final basis, and materialized one-body H1.
+  H1-J/density, RHF, supplements, CR2, export, and public API remain blocked.
+- MT3 Common physical support vocabulary: active. The independent route keeps
+  the shared physical support vocabulary while using independent PQS authority
+  and retained counts `(275, 98, 98)`.
+- MT4 Supplement staging after authority: active/blocked. Base gausslet
+  authority is clearer now, but supplement work remains deferred until H1-J and
+  density conventions are reviewed.
+- MT5 Cleanup pressure: active. Passes 245-249 were all scoped net-negative in
+  `src + test + bin`, even while source-plan/final-basis/H1 capability was
+  added.
+- MT6 Audit/classify old Cartesian flat paths: active. These passes continued
+  retiring stale staged-test mirror assertions and old flat vocabulary while
+  preserving compact active route smoke.

@@ -8255,6 +8255,9 @@ function _pqs_source_box_route_driver_endpoint_blocker_update(summary, blocker)
     blocker === :unsupported_physical_gausslet_fixture_role &&
         !isnothing(current) &&
         return current
+    blocker === :physical_gausslet_h1_j_request_not_enabled &&
+        !isnothing(current) &&
+        return current
     return blocker
 end
 

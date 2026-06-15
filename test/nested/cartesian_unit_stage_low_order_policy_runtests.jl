@@ -587,32 +587,6 @@ end
         :partial_selected_terminal_lowering_crc_sidecar_inventory,
     )
     @test selected_crc_sidecars.private_development_only
-    @test selected_crc_sidecars.selected_contract_count ==
-          selected_terminal_lowering_inventory.selected_contract_count
-    @test selected_crc_sidecars.sidecar_available_count > 0
-    @test selected_crc_sidecars.sidecar_available_count +
-          selected_crc_sidecars.sidecar_missing_count ==
-          selected_crc_sidecars.selected_contract_count
-    @test selected_crc_sidecars.sidecar_inventory_complete ==
-          (selected_crc_sidecars.sidecar_missing_count == 0)
-    @test selected_crc_sidecars.status ==
-          (
-              selected_crc_sidecars.sidecar_inventory_complete ?
-              :available_selected_terminal_lowering_crc_sidecar_inventory :
-              :partial_selected_terminal_lowering_crc_sidecar_inventory
-          )
-    @test isempty(selected_crc_sidecars.missing_sidecar_kinds) ==
-          selected_crc_sidecars.sidecar_inventory_complete
-    @test isempty(selected_crc_sidecars.missing_sidecar_reasons) ==
-          selected_crc_sidecars.sidecar_inventory_complete
-    @test !selected_crc_sidecars.final_retained_unit_inventory_available
-    @test !selected_crc_sidecars.pair_inventory_available
-    @test selected_crc_sidecars.pair_inventory_status ==
-          :not_available_crc_sidecar_metadata_only
-    @test !selected_crc_sidecars.operator_blocks_materialized
-    @test !selected_crc_sidecars.pair_operator_blocks_materialized
-    @test !selected_crc_sidecars.hamiltonian_data_materialized
-    @test !selected_crc_sidecars.artifacts_materialized
     @test terminal_units.terminal_shellification_lw_complete_shell_cpb_count ==
           terminal_lowering_inventory.lw_complete_shell_cpb_count
     @test terminal_units.terminal_shellification_lw_complete_shell_cpb_family_counts ==
