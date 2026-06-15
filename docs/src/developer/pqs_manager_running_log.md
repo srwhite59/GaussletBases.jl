@@ -1935,3 +1935,64 @@ Remaining blocker / next:
 
 Line-count / complexity note:
 - Scoped `src + test + bin` was `0` added / `5,981` deleted, net `-5,981`.
+
+## Pass 264 - Legacy Source-Box Fixture Builder Retirement
+
+Commit(s):
+- this commit - Retire legacy source-box fixture builders
+
+Summary:
+- Deleted the now-unblocked legacy retained-unit fixture builder tail from
+  `src/cartesian_contracted_parent_metrics/legacy_source_box_fixtures.jl`.
+- Removed the old contact-cap, outer-mismatch, atom-box support-dense fixture
+  builders and their private route-fact audit/helper scaffolding.
+- The deletion was enabled by pass 263, which removed the only old metadata
+  export path that had kept these helpers alive.
+
+Validation:
+- Doer: package load, caller-proof `rg`, and `git diff --check` passed.
+- Manager: reran package load, caller-proof `rg`, and `git diff --check`; all
+  passed.
+
+Goal advancement:
+- LT2/MT5: deleted another 999 scoped lines from old migration scaffolding.
+- MT6/AG7: classified these fixture builders as old flat Cartesian route-shadow
+  scaffolding, not active route-owned implementation.
+- LT5: kept independent H2 PQS route authority untouched while removing stale
+  alternate fixture authority.
+
+Medium-goal update:
+- Added the required checkpoint below for passes 260-264.
+
+Risk / guardrail:
+- Active product/doside source-box pair-plan, density-density, nuclear/local
+  Gaussian, and raw-plan diagnostics remain in place. Do not delete them without
+  a fresh caller audit and replacement-authority review.
+
+Remaining blocker / next:
+- The pass-261 implementation exception is now fully paid down. The next cleanup
+  candidate can be either remaining legacy source-box pockets or tracked
+  docs-history compression for old PQS blurb logs.
+
+Line-count / complexity note:
+- Scoped `src + test + bin` was `0` added / `999` deleted, net `-999`.
+
+## Medium-Term Goal Checkpoint - Passes 260-264
+
+- MT1 Fake-PQS quarantine: active/maintained. None of passes 260-264 promoted
+  fake-PQS or source-backed WL/QW data as independent PQS evidence.
+- MT2 Independent H2 PQS recovery: active. The base independent route remains
+  available through final-basis, H1, H1-J, and private RHF diagnostics; these
+  passes did not alter those endpoint seams.
+- MT3 Common physical support vocabulary: active. Passes 260-261 clarified and
+  materialized support tiling/row ownership for the independent H2 supplement
+  lane.
+- MT4 Supplement staging after authority: active. The lane advanced only to
+  support-partition pre-provider infrastructure; provider blocks and
+  supplemented values remain blocked.
+- MT5 Cleanup pressure: active and strong. Pass 261 took a `+435` implementation
+  exception; passes 262-264 deleted 7,025 scoped lines combined, more than
+  paying it down.
+- MT6 Audit/classify old Cartesian flat paths: active. Passes 263-264 retired
+  old current-route metadata export and legacy retained-unit fixture-builder
+  scaffolding after caller audits.
