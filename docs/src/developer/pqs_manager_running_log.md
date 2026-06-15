@@ -1751,3 +1751,48 @@ Line-count / complexity note:
 - MT6 Audit/classify old Cartesian flat paths: active. Cleanup continued for
   old report-stage RouteCore mirrors, and the supplement audit classified
   fake-PQS supplement preflight as schema/history only.
+
+## Pass 260 - Independent H2 PQS Supplement Support-Tiling Audit
+
+Commit(s):
+- this commit - Record independent H2 PQS supplement support-tiling audit
+
+Summary:
+- No implementation edits. The pass audited where support rows, source boxes,
+  parent-row indices, retained ranges, and support-unit facts are available for
+  the future independent-H2 supplement provider-block payload.
+- Finding: a support-partition summary is ready to implement, but provider
+  calls must wait until atom-contact per-piece descriptors and shared-shell
+  outer-minus-inner support tiles are carried as route-owned row maps.
+- The next implementation should expose a private support-partition payload and
+  compact row/tile/coverage fingerprints only. No provider blocks or
+  route-global matrices should be materialized yet.
+
+Validation:
+- Doer: `git diff --check` passed; no Julia run because this was no-edit audit.
+- Manager: reviewed the audit and accepted scoped line impact `0`.
+
+Goal advancement:
+- MT4/LT5: tightened the supplement-provider boundary without advancing into
+  provider blocks or supplemented values.
+- LT8: identified the support-partition object needed to keep common physical
+  support vocabulary separate from provider implementation details.
+- LT4: preserved the intended local/provider-level path instead of building
+  diagnostic route-global matrices.
+
+Medium-goal update:
+- none.
+
+Risk / guardrail:
+- Do not call CPB provider helpers on filled shared-shell source CPBs as if
+  they were support. Shared-shell support is `outer_box \ inner_box` and must
+  be tiled or row-mapped explicitly.
+
+Remaining blocker / next:
+- Implement only the private support-partition payload/summary. If the existing
+  complete-shell boundary-strata helper does not fit a shared shell, add only a
+  narrow rectangular-difference tiler and validate it against stored support
+  rows.
+
+Line-count / complexity note:
+- Scoped `src + test + bin` tracked impact was `0`.
