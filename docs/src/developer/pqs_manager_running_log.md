@@ -1688,3 +1688,66 @@ Remaining blocker / next:
 
 Line-count / complexity note:
 - Scoped `src + test + bin` tracked impact was `0`.
+
+## Pass 259 - Independent H2 PQS Provider-Block Seam Audit
+
+Commit(s):
+- this commit - Record independent H2 PQS provider-block seam audit
+
+Summary:
+- No implementation edits. Audited the first route-owned provider-block seam for
+  independent H2 PQS MWG/GTO supplement staging.
+- The first object should be private and route-owned, carrying compact
+  provider-block status/count/fingerprint summaries, not route-global
+  supplemented operators.
+- Key hazard: CPB providers operate on rectangular CPBs, but independent shared
+  shells are outer-minus-inner support. The implementation must carry explicit
+  support CPB tiling/row ownership or equivalent row maps before provider calls.
+
+Validation:
+- Doer: `git diff --check` passed; no Julia run because this was no-edit audit.
+- Manager: reviewed the audit and accepted scoped line impact `0`.
+
+Goal advancement:
+- MT4/LT4/LT5: identified the performance/authority seam for supplement
+  provider blocks without building route-global matrices or supplemented
+  values.
+- LT8: clarified that support partition/row ownership is the common object the
+  next implementation needs before local provider kernels can be reused.
+
+Medium-goal update:
+- Added the required checkpoint below for passes 255-259.
+
+Risk / guardrail:
+- Do not call provider blocks blindly on filled shared-shell source CPBs.
+- Keep matrices local/provider-level in the first implementation; route-global
+  matrices, residual MWG, combined density readiness, supplemented values,
+  CR2/export, and public API remain blocked.
+
+Remaining blocker / next:
+- Implement only the private independent-H2 provider-block payload and compact
+  support-partition summary, or do a narrower support-tiling audit if that seam
+  is not yet ready.
+
+Line-count / complexity note:
+- Scoped `src + test + bin` tracked impact was `0`.
+
+## Medium-Term Goal Checkpoint - Passes 255-259
+
+- MT1 Fake-PQS quarantine: active/maintained. None of passes 255-259 used
+  fake-PQS or source-backed WL/QW data as independent-PQS evidence.
+- MT2 Independent H2 PQS recovery: active. The base independent gausslet route
+  remains available through private RHF diagnostics; these passes did not alter
+  the base route.
+- MT3 Common physical support vocabulary: active. Supplement preflight now uses
+  the independent support/retained counts `(275, 578, 362)` and `(275, 98, 98)`.
+- MT4 Supplement staging after authority: active and advanced. The lane moved
+  from audit to explicit preflight input/artifact verification and then to a
+  provider-block seam audit. Provider-block implementation remains next, but
+  supplemented values remain blocked.
+- MT5 Cleanup pressure: active. Passes 255 and 257 were scoped net-negative;
+  passes 256, 258, and 259 were no-edit/audit or verification records with
+  scoped impact `0`.
+- MT6 Audit/classify old Cartesian flat paths: active. Cleanup continued for
+  old report-stage RouteCore mirrors, and the supplement audit classified
+  fake-PQS supplement preflight as schema/history only.
