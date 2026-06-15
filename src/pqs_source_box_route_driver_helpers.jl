@@ -6,12 +6,6 @@
 
 # Small local utility helpers.
 
-function _pqs_route_driver_probe_requested(value, core_spacing)
-    value == :auto && return !isnothing(core_spacing)
-    value isa Bool && return value
-    throw(ArgumentError("probe_parent_axis_construction must be :auto, true, or false"))
-end
-
 function _pqs_route_driver_axis_counts(parent_axis_counts)
     isnothing(parent_axis_counts) && return nothing
     if hasproperty(parent_axis_counts, :x)
@@ -203,8 +197,8 @@ function _cartesian_axis_bundle_from_parent_basis_object(parent_basis_object, pa
     axes = CartesianParentGaussletBases.parent_axes(parent_basis_object)
     expansion = coulomb_gaussian_expansion(doacc = false)
     backend =
-        hasproperty(parent_inputs, :parent_axis_probe_backend) ?
-        parent_inputs.parent_axis_probe_backend :
+        hasproperty(parent_inputs, :parent_axis_bundle_backend) ?
+        parent_inputs.parent_axis_bundle_backend :
         :pgdg_localized_experimental
     function _axis_bundle(axis)
         return _mapped_ordinary_gausslet_1d_bundle(
@@ -1242,8 +1236,6 @@ function cartesian_recipe(route_inputs)
             product_body_rule = route_inputs.product_body_rule,
             pqs_retained_rule = route_inputs.pqs_retained_rule,
             product_retained_rule = route_inputs.product_retained_rule,
-            support_dense_direct_allowed = route_inputs.support_dense_direct_allowed,
-            reference_only_authorities = route_inputs.reference_only_authorities,
         )
         white_lindsey_recipe = (;
             route_shape = route_inputs.white_lindsey_route_shape,
@@ -1251,7 +1243,6 @@ function cartesian_recipe(route_inputs)
             nesting_rule = route_inputs.white_lindsey_nesting_rule,
             retained_rule = route_inputs.white_lindsey_retained_rule,
             operator_rule = route_inputs.white_lindsey_operator_rule,
-            benchmark_role = route_inputs.white_lindsey_benchmark_role,
         )
         route_recipe = (;
             route_family = route_inputs.route_family,
@@ -1260,8 +1251,6 @@ function cartesian_recipe(route_inputs)
             pair_factor_normalization = route_inputs.pair_factor_normalization,
             source_box = source_box_recipe,
             white_lindsey = white_lindsey_recipe,
-            retained_atom_core_interiors =
-                get(route_inputs, :retained_atom_core_interiors, nothing),
             supplement_policy = get(route_inputs, :supplement_policy, nothing),
             run_final_basis =
                 isnothing(run_final_basis) ?
@@ -1303,21 +1292,15 @@ function cartesian_parent(system, spacing_inputs, parent_inputs, recipe)
         spacing_inputs,
         parent_inputs,
         standard_setup,
-        parent_axis,
-        route_axis_counts = (; parent_axis_counts),
         atom_count = length(center_table),
         atom_symbols = Tuple(center.atom_symbol for center in center_table),
         nuclear_charges = Tuple(center.nuclear_charge for center in center_table),
         atom_locations = Tuple(center.location for center in center_table),
         center_table,
-        center_count = length(center_table),
-        center_axis_metadata,
         system_classification = classification.system_classification,
         bond_axis = classification.bond_axis,
-        chain_axis = classification.chain_axis,
         axis_counts = parent_axis_counts,
         physical_box = standard_setup.parent_box,
-        physical_box_rule = standard_setup.parent_box_rule,
         parent_basis_object = object_carry.parent_basis_object,
         parent_axis_bundle_object = object_carry.parent_axis_bundle_object,
     )
@@ -1462,8 +1445,8 @@ function cartesian_shells(
 )
     route_skeleton =
         _pqs_source_box_route_driver_route_skeleton(
-            parent.route_axis_counts, spacing_inputs, recipe)
-    low_order_shellization =
+            parent.axis_counts, spacing_inputs, recipe)
+    shellification =
         _pqs_source_box_route_driver_shell_stage_low_order_shellization(
             parent,
             recipe;
@@ -1472,29 +1455,27 @@ function cartesian_shells(
     return (;
         spacing_inputs,
         route_skeleton,
-        low_order_shellization,
         shellification_plan =
-            isnothing(low_order_shellization) ?
+            isnothing(shellification) ?
             nothing :
-            low_order_shellization.shellification_plan,
+            shellification.shellification_plan,
         shellification_scaffold =
-            isnothing(low_order_shellization) ?
+            isnothing(shellification) ?
             nothing :
-            low_order_shellization.shellification_scaffold,
+            shellification.shellification_scaffold,
         shellification_kind =
-            isnothing(low_order_shellization) ?
+            isnothing(shellification) ?
             nothing :
-            low_order_shellization.shellification_kind,
+            shellification.shellification_kind,
         route_shape = route_skeleton.route_shape,
         source_boxes = route_skeleton.source_boxes,
     )
 end
 
-function _pqs_source_box_route_driver_terminal_lowering_family(low_order_shellization)
-    hasproperty(low_order_shellization, :route_family) || return nothing
-    low_order_shellization.route_family == :white_lindsey_low_order &&
+function _pqs_source_box_route_driver_terminal_lowering_family(route_family)
+    route_family == :white_lindsey_low_order &&
         return :white_lindsey_low_order
-    low_order_shellization.route_family == :pqs_source_box && return :pqs
+    route_family == :pqs_source_box && return :pqs
     return nothing
 end
 
@@ -1504,19 +1485,12 @@ end
 
 function _pqs_source_box_route_driver_terminal_lowering_policy(
     route_lowering_family,
-    low_order_shellization,
+    shellification_plan,
 )
     route_lowering_family == :white_lindsey_low_order &&
         return CartesianTerminalLowering.WhiteLindseyLowering()
     if route_lowering_family == :pqs
-        plan =
-            hasproperty(low_order_shellization, :terminal_shellification_plan) ?
-            low_order_shellization.terminal_shellification_plan :
-            nothing
-        raw_plan =
-            plan isa CartesianShellification.ShellificationPlan ?
-            CartesianShellification.raw_plan(plan) :
-            nothing
+        raw_plan = CartesianShellification.raw_plan(shellification_plan)
         q = !isnothing(raw_plan) && hasproperty(raw_plan, :q) ? raw_plan.q : nothing
         isnothing(q) &&
             throw(ArgumentError("PQS terminal lowering requires shellification q"))
@@ -1526,22 +1500,18 @@ function _pqs_source_box_route_driver_terminal_lowering_policy(
 end
 
 function _pqs_source_box_route_driver_terminal_lowering_plan(
-    low_order_shellization,
+    shellification_plan,
     route_lowering_family,
 )
-    plan =
-        hasproperty(low_order_shellization, :terminal_shellification_plan) ?
-        low_order_shellization.terminal_shellification_plan :
-        nothing
-    plan isa CartesianShellification.ShellificationPlan || return nothing
+    shellification_plan isa CartesianShellification.ShellificationPlan || return nothing
 
     policy =
         _pqs_source_box_route_driver_terminal_lowering_policy(
             route_lowering_family,
-            low_order_shellization,
+            shellification_plan,
         )
     isnothing(policy) && return nothing
-    return CartesianTerminalLowering.lower_terminal_regions(plan, policy)
+    return CartesianTerminalLowering.lower_terminal_regions(shellification_plan, policy)
 end
 
 function _pqs_source_box_route_driver_terminal_lowering_kind_counts(contracts)
@@ -2481,18 +2451,22 @@ function _pqs_source_box_route_driver_terminal_route_state_unavailable(
 end
 
 function _pqs_source_box_route_driver_unit_stage_low_order_summary(shells)
-    low_order_shellization = get(shells, :low_order_shellization, nothing)
-    isnothing(low_order_shellization) && return nothing
+    shellification_plan = get(shells, :shellification_plan, nothing)
+    shellification_scaffold = get(shells, :shellification_scaffold, nothing)
+    shellification_kind = get(shells, :shellification_kind, nothing)
+    (isnothing(shellification_plan) || isnothing(shellification_scaffold)) &&
+        return nothing
 
     unit_inventory =
         _cartesian_terminal_shellification_region_unit_inventory(
-            low_order_shellization.shellification_scaffold,
+            shellification_scaffold,
         )
     route_lowering_family =
-        _pqs_source_box_route_driver_terminal_lowering_family(low_order_shellization)
+        _pqs_source_box_route_driver_terminal_lowering_family(
+            shells.route_skeleton.route_family)
     lowering_plan =
         _pqs_source_box_route_driver_terminal_lowering_plan(
-            low_order_shellization,
+            shellification_plan,
             route_lowering_family,
         )
     lowering_contract_inventory =
@@ -2504,33 +2478,32 @@ function _pqs_source_box_route_driver_unit_stage_low_order_summary(shells)
         nothing
 
     return (;
-        shellification_kind = low_order_shellization.shellification_kind,
-        shellification_plan = low_order_shellization.shellification_plan,
-        shellification_scaffold = low_order_shellization.shellification_scaffold,
+        shellification_kind,
+        shellification_plan,
+        shellification_scaffold,
         unit_inventory,
         route_lowering_family,
         lowering_plan,
         lowering_contract_inventory,
-        region_count = low_order_shellization.region_count,
-        ordered_region_roles = low_order_shellization.ordered_region_roles,
+        region_count = shellification_scaffold.region_count,
+        ordered_region_roles = shellification_scaffold.ordered_region_roles,
         central_gap_region_count =
-            low_order_shellization.central_gap_region_count,
+            shellification_scaffold.central_gap_region_count,
         central_midpoint_slab_count =
-            low_order_shellization.central_midpoint_slab_count,
+            shellification_scaffold.central_midpoint_slab_count,
         central_distorted_product_box_count =
-            low_order_shellization.central_distorted_product_box_count,
+            shellification_scaffold.central_distorted_product_box_count,
         central_distorted_product_box_metadata =
-            low_order_shellization.central_distorted_product_box_metadata,
+            shellification_scaffold.central_distorted_product_box_metadata,
     )
 end
 
-function cartesian_units(parent, shells, route_inputs, recipe)
+function cartesian_units(parent, shells, recipe)
     low_order_units =
         _pqs_source_box_route_driver_unit_stage_low_order_summary(shells)
 
     return (;
         parent,
-        route_inputs,
         route_family = recipe.route_family,
         route_kind = recipe.route_kind,
         route_skeleton = shells.route_skeleton,
@@ -5436,51 +5409,4 @@ function cartesian_save(report, save_inputs, materialization)
         save_inputs...,
         materialization,
     )
-end
-
-
-# Compatibility dry-run wrapper. This mirrors the executable driver stages,
-# but returns a report directly for focused validation and tests.
-
-function _pqs_source_box_route_driver_dry_run(;
-    route_family = :pqs_source_box,
-    route_kind, atom_symbols, nuclear_charges, atom_locations,
-    radius, parent_axis_counts, map_backend,
-    q, n_s, reference_spacing, tail_spacing, q_to_core_spacing_rule, core_spacing,
-    probe_parent_axis_construction, parent_axis_probe_backend, parent_axis_probe_family,
-    probe_raw_product_box_plans, raw_product_box_probe_backend,
-    route_shape, product_body_rule, pqs_retained_rule, product_retained_rule,
-    terms, pair_factor_normalization,
-    support_dense_direct_allowed, reference_only_authorities,
-    white_lindsey_route_shape = (:standard_cartesian_units, :low_order_comx_coarsening,),
-    white_lindsey_mapping_rule = :standard_unit_backbone_mapping_family,
-    white_lindsey_nesting_rule = :unit_box_low_order_comx_coarsening,
-    white_lindsey_retained_rule = :low_order_unit_comx_retained_basis,
-    white_lindsey_operator_rule = :low_order_unit_operator_blocks,
-    white_lindsey_benchmark_role = :published_cartesian_baseline_for_pqs_comparison,
-)
-    system_inputs = (; atom_symbols, nuclear_charges, atom_locations,
-        radius, parent_axis_counts, map_backend,)
-    spacing_inputs = (; q, n_s, reference_spacing, tail_spacing,
-        q_to_core_spacing_rule, core_spacing,)
-    probe_inputs = (; probe_parent_axis_construction, parent_axis_probe_backend,
-        parent_axis_probe_family, probe_raw_product_box_plans, raw_product_box_probe_backend,)
-    route_inputs = (;
-        route_family, route_kind, route_shape, product_body_rule,
-        pqs_retained_rule, product_retained_rule, terms, pair_factor_normalization,
-        support_dense_direct_allowed, reference_only_authorities,
-        white_lindsey_route_shape, white_lindsey_mapping_rule,
-        white_lindsey_nesting_rule, white_lindsey_retained_rule,
-        white_lindsey_operator_rule, white_lindsey_benchmark_role,
-    )
-
-    system = cartesian_system(system_inputs)
-    recipe = cartesian_recipe(route_inputs)
-    parent = cartesian_parent(system, spacing_inputs, probe_inputs, recipe)
-    shells = cartesian_shells(parent, spacing_inputs, recipe)
-    units = cartesian_units(parent, shells, probe_inputs, recipe)
-    transforms = cartesian_transforms(units, recipe)
-    pairs = cartesian_pair_terms(units, transforms, recipe)
-    assembly = cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
-    return cartesian_report(system, parent, assembly, recipe)
 end

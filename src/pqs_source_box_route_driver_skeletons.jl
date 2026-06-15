@@ -75,7 +75,7 @@ function _pqs_source_box_route_driver_skeleton_unit(;
 end
 
 function _pqs_source_box_route_driver_generic_source_box_skeleton(
-    route_axis_counts,
+    parent_axis_counts,
     spacing_inputs,
     route_recipe,
 )
@@ -92,7 +92,7 @@ function _pqs_source_box_route_driver_generic_source_box_skeleton(
     route_recipe.pair_factor_normalization in (:density_normalized, :raw_weighted) ||
         throw(ArgumentError("generic PQS source-box skeleton requires a reviewed pair-factor normalization"))
 
-    raw_counts = route_axis_counts.parent_axis_counts
+    raw_counts = parent_axis_counts
     counts = (; x = Int(raw_counts.x), y = Int(raw_counts.y), z = Int(raw_counts.z))
     counts.x >= q && counts.y >= q && counts.z >= q ||
         throw(ArgumentError("PQS source-box route skeleton parent axis counts must be >= q"))
@@ -229,28 +229,28 @@ function _pqs_source_box_route_driver_generic_source_box_skeleton(
 end
 
 function _pqs_source_box_route_driver_route_skeleton(
-    route_axis_counts,
+    parent_axis_counts,
     spacing_inputs,
     route_recipe,
 )
     if route_recipe.route_family == :white_lindsey_low_order
         return _pqs_source_box_route_driver_white_lindsey_low_order_skeleton(
-            route_axis_counts, spacing_inputs, route_recipe)
+            parent_axis_counts, spacing_inputs, route_recipe)
     end
     if route_recipe.route_kind in (
         :bond_aligned_diatomic_physical_gausslet_core_shell_pqs,
         :bond_aligned_diatomic_independent_pqs_source_box_core_shell,
     )
         return _pqs_source_box_route_driver_physical_gausslet_core_shell_skeleton(
-            route_axis_counts, spacing_inputs, route_recipe)
+            parent_axis_counts, spacing_inputs, route_recipe)
     end
 
     return _pqs_source_box_route_driver_generic_source_box_skeleton(
-        route_axis_counts, spacing_inputs, route_recipe)
+        parent_axis_counts, spacing_inputs, route_recipe)
 end
 
 function _pqs_source_box_route_driver_physical_gausslet_core_shell_skeleton(
-    route_axis_counts,
+    parent_axis_counts,
     spacing_inputs,
     route_recipe,
 )
@@ -361,7 +361,7 @@ function _pqs_source_box_route_driver_physical_gausslet_core_shell_skeleton(
         route_shape = support_units,
         retained_unit_order = support_units,
         q = spacing_inputs.q,
-        parent_axis_counts = route_axis_counts.parent_axis_counts,
+        parent_axis_counts,
         source_boxes = unit_inventory.source_boxes,
         source_dimensions = unit_inventory.source_dimensions,
         retained_units,
@@ -379,12 +379,12 @@ function _pqs_source_box_route_driver_physical_gausslet_core_shell_skeleton(
 end
 
 function _pqs_source_box_route_driver_white_lindsey_low_order_skeleton(
-    route_axis_counts,
+    parent_axis_counts,
     spacing_inputs,
     route_recipe,
 )
     low_order_recipe = route_recipe.white_lindsey
-    counts = route_axis_counts.parent_axis_counts
+    counts = parent_axis_counts
     source_box = _pqs_route_driver_parent_source_box(counts)
     source_dimensions = _pqs_route_driver_axis_count_tuple(counts)
     source_dimension = isnothing(source_dimensions) ? nothing : prod(source_dimensions)

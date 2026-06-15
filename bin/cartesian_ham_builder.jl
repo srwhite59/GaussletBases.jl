@@ -24,16 +24,12 @@ core_spacing = nothing
 xmax_parallel = nothing
 xmax_transverse = nothing
 
-probe_parent_axis_construction = :auto
 parent_axis_family = :G10
-parent_axis_probe_backend = :pgdg_localized_experimental
-parent_axis_probe_family = parent_axis_family
+parent_axis_bundle_backend = :pgdg_localized_experimental
 parent_mapping_rule = :identity_mapping
 parent_mapping_Z = nothing
 parent_mapping_d = nothing
 parent_mapping_tail_spacing = tail_spacing
-probe_raw_product_box_plans = :auto
-raw_product_box_probe_backend = :pgdg_localized_experimental
 
 route_shape = (:pqs_left, :product, :pqs_right)
 product_body_rule = :centered_single_z_slab
@@ -43,18 +39,13 @@ terms = (:overlap, :position_x, :position_y, :position_z,
     :x2_x, :x2_y, :x2_z, :kinetic)
 pair_factor_normalization = :density_normalized
 
-support_dense_direct_allowed = false
-reference_only_authorities = (:support_row_oracle, :dense_parent_projection)
-
 white_lindsey_route_shape = (:standard_cartesian_units, :low_order_comx_coarsening)
 white_lindsey_mapping_rule = :standard_unit_backbone_mapping_family
 white_lindsey_nesting_rule = :unit_box_low_order_comx_coarsening
 white_lindsey_retained_rule = :low_order_unit_comx_retained_basis
 white_lindsey_operator_rule = :low_order_unit_operator_blocks
-white_lindsey_benchmark_role = :published_cartesian_baseline_for_pqs_comparison
 white_lindsey_Z = 2.0
 white_lindsey_expansion = coulomb_gaussian_expansion(doacc = false)
-retained_atom_core_interiors = nothing
 supplement_policy = nothing
 run_final_basis = nothing
 run_h1 = true
@@ -110,10 +101,9 @@ system_inputs = (; atom_symbols, nuclear_charges, atom_locations,
     bond_axis, bond_length, radius, parent_axis_counts, map_backend)
 spacing_inputs = (; q, n_s, reference_spacing, tail_spacing,
     q_to_core_spacing_rule, core_spacing, xmax_parallel, xmax_transverse)
-parent_inputs = (; probe_parent_axis_construction, parent_axis_probe_backend,
-    parent_axis_probe_family, parent_axis_family, parent_mapping_rule,
+parent_inputs = (; parent_axis_bundle_backend,
+    parent_axis_family, parent_mapping_rule,
     parent_mapping_Z, parent_mapping_d, parent_mapping_tail_spacing)
-route_probe_inputs = (; probe_raw_product_box_plans, raw_product_box_probe_backend)
 private_rhf_inputs = (; run_private_rhf, private_rhf_electron_count,
     private_rhf_fixture_role, private_rhf_mixing_kind, private_rhf_max_iterations,
     private_rhf_density_atol, private_rhf_energy_atol, private_rhf_residual_atol,
@@ -122,11 +112,10 @@ private_rhf_inputs = (; run_private_rhf, private_rhf_electron_count,
     private_rhf_diis_coefficient_max_abs)
 route_inputs = (; route_family, route_kind, route_shape, product_body_rule,
     pqs_retained_rule, product_retained_rule, terms, pair_factor_normalization,
-    support_dense_direct_allowed, reference_only_authorities,
     white_lindsey_route_shape, white_lindsey_mapping_rule,
     white_lindsey_nesting_rule, white_lindsey_retained_rule,
-    white_lindsey_operator_rule, white_lindsey_benchmark_role,
-    retained_atom_core_interiors, supplement_policy, run_final_basis, run_h1,
+    white_lindsey_operator_rule,
+    supplement_policy, run_final_basis, run_h1,
     run_h1_j, private_rhf_inputs)
 materialization_inputs = (; materialize_route, probe_route_configured_one_center_materializer,
     save_basis_artifact, save_ham_artifact, basisfile, hamfile,
@@ -166,7 +155,7 @@ shells = GaussletBases.cartesian_shells(
 )
 _cartesian_driver_stop_after(:cartesian_shells)
 _cartesian_driver_stage(:cartesian_units)
-units = GaussletBases.cartesian_units(parent, shells, route_probe_inputs, recipe)
+units = GaussletBases.cartesian_units(parent, shells, recipe)
 _cartesian_driver_stop_after(:cartesian_units)
 _cartesian_driver_stage(:cartesian_transforms)
 @time "Transforming: " transforms = GaussletBases.cartesian_transforms(units, recipe)
