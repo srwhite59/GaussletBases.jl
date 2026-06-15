@@ -313,17 +313,7 @@ function _pqs_source_box_route_driver_physical_gausslet_core_shell_skeleton(
     )
     unit_inventory = _pqs_source_box_route_driver_unit_inventory(retained_units)
     retained_counts = unit_inventory.retained_counts
-    target_status =
-        independent_target ?
-        :blocked_independent_pqs_source_box_target_readiness :
-        :available_physical_gausslet_core_shell_target_inventory
-    target_blocker =
-        independent_target ?
-        :missing_independent_pqs_physical_source_plan_materializer :
-        nothing
     target_inventory = (;
-        status = target_status,
-        blocker = target_blocker,
         support_units,
         support_counts,
         retained_units = independent_target ? () : support_units,
@@ -331,30 +321,14 @@ function _pqs_source_box_route_driver_physical_gausslet_core_shell_skeleton(
         retained_order = independent_target ? () : support_units,
         expected_final_dimension = independent_target ? nothing : unit_inventory.retained_dimension,
         retained_atom_core_interiors = !independent_target,
-        source_plan_role =
-            independent_target ?
-            :independent_pqs_source_box_construction :
-            :atom_contact_core_plus_pqs_shared_shells,
         supplement_policy = :none,
         provenance =
             independent_target ?
             :pass_230_independent_pqs_recovery_audit :
             :pass_200_reviewed_wl_qw_inventory,
-        source_backed_fixed_source_oracle_used = false,
-        retained_transform_authority = :pqs_source_box_construction,
-        primary_blocker = target_blocker,
-        secondary_blocker =
-            nothing,
-        source_plan_blocker =
-            independent_target ?
-            :missing_independent_pqs_physical_source_plan_materializer :
-            nothing,
     )
     pair_entries = ()
-    pair_family_counts =
-        independent_target ?
-        (independent_pqs_target_readiness = 0,) :
-        (physical_gausslet_target = 0,)
+    pair_family_counts = (;)
     return (;
         route_family = route_recipe.route_family,
         route_kind = route_recipe.route_kind,
@@ -370,10 +344,7 @@ function _pqs_source_box_route_driver_physical_gausslet_core_shell_skeleton(
         retained_dimension = unit_inventory.retained_dimension,
         pair_entries,
         pair_family_counts,
-        helper_by_pair_family =
-            independent_target ?
-            (independent_pqs_target_readiness = :target_readiness_only_not_materialized,) :
-            (physical_gausslet_target = :target_inventory_only_not_materialized,),
+        helper_by_pair_family = (;),
         physical_target_inventory = target_inventory,
     )
 end
