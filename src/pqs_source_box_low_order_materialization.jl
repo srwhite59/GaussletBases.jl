@@ -80,8 +80,6 @@ function _pqs_source_box_route_driver_wl_atomic_pure_gausslet_materialization(
         h1_lowest,
         h1_finite = all(isfinite, h1),
         h1_symmetry_error,
-        h1_matrix_finite = all(isfinite, h1),
-        h1_matrix_symmetry_error = h1_symmetry_error,
         density_density_pair_sum_present = hasproperty(fixed_block, :pair_sum),
     )
     basis_artifact_path = nothing
@@ -123,7 +121,7 @@ function _pqs_source_box_route_driver_wl_atomic_pure_gausslet_materialization(
         support_dimension = summary.support_dimension,
         final_dimension = dim,
         h1_lowest,
-        h1_finite = summary.h1_matrix_finite,
+        h1_finite = summary.h1_finite,
         h1_symmetry_error,
         overlap_identity_error,
         save_basis_artifact_requested = save_basis_artifact,
@@ -142,7 +140,10 @@ function _pqs_source_box_route_driver_materialization(
     save_ham_artifact::Bool = false,
     basisfile = nothing,
     hamfile = nothing,
-    kwargs...,
+    materializer_backend = nothing,
+    materializer_nside = nothing,
+    white_lindsey_expansion = nothing,
+    white_lindsey_Z = nothing,
 )
     requested = materialize_route || save_basis_artifact || save_ham_artifact
     retained_dimension =
@@ -156,11 +157,10 @@ function _pqs_source_box_route_driver_materialization(
                 save_ham_artifact,
                 basisfile,
                 hamfile,
-                materializer_backend = get(kwargs, :materializer_backend, nothing),
-                materializer_nside = get(kwargs, :materializer_nside, nothing),
-                white_lindsey_expansion =
-                    get(kwargs, :white_lindsey_expansion, nothing),
-                white_lindsey_Z = get(kwargs, :white_lindsey_Z, nothing),
+                materializer_backend,
+                materializer_nside,
+                white_lindsey_expansion,
+                white_lindsey_Z,
             )
         !isnothing(wl_materialization) && return wl_materialization
     end
@@ -174,6 +174,5 @@ function _pqs_source_box_route_driver_materialization(
         save_ham_artifact_requested = save_ham_artifact,
         basisfile,
         hamfile,
-        ignored_keyword_count = length(kwargs),
     )
 end

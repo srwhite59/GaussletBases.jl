@@ -1,7 +1,7 @@
 # Text report and optional artifact helpers for `bin/cartesian_ham_builder.jl`.
 #
 # Keep these after report construction so the core route helper file can focus
-# on setup, skeletons, diagnostics, and dry-run report assembly.
+# on setup and construction.
 
 
 # Text report helpers. These are intentionally simple print utilities, not a
@@ -75,64 +75,19 @@ function _pqs_source_box_route_driver_durable_report(report)
     )
 end
 
-function _pqs_source_box_route_driver_durable_diatomic_materialization(materialization)
-    isnothing(materialization) && return nothing
-    hasproperty(materialization, :source) || return materialization
-    sanitized = (;
-        (
-            field => field == :source ?
-                     nothing :
-                     getproperty(materialization, field) for
-            field in keys(materialization)
-        )...,
-    )
-    return merge(sanitized, (; source_elided_for_durable_report = true))
-end
-
-function _pqs_source_box_route_driver_durable_diatomic_probe(probe)
-    isnothing(probe) && return nothing
-    hasproperty(probe, :materialization) || return probe
-    return (;
-        (
-            field => field == :materialization ?
-                     _pqs_source_box_route_driver_durable_diatomic_materialization(
-                         probe.materialization,
-                     ) :
-                     getproperty(probe, field) for field in keys(probe)
-        )...,
-    )
-end
-
-function _pqs_source_box_route_driver_durable_materialization(materialization)
-    isnothing(materialization) && return nothing
-    hasproperty(materialization, :route_configured_diatomic_materializer_probe) ||
-        return materialization
-    return (;
-        (
-            field => field == :route_configured_diatomic_materializer_probe ?
-                     _pqs_source_box_route_driver_durable_diatomic_probe(
-                         materialization.route_configured_diatomic_materializer_probe,
-                     ) :
-                     getproperty(materialization, field) for field in keys(materialization)
-        )...,
-    )
-end
-
 function _pqs_source_box_route_driver_save(
     report;
     save_artifact, save_tsv, outfile, tsvfile, materialization = nothing,
     input_path = nothing,
 )
     durable_report = _pqs_source_box_route_driver_durable_report(report)
-    durable_materialization =
-        _pqs_source_box_route_driver_durable_materialization(materialization)
 
     if save_artifact
         println("saving JLD2 report ", outfile)
         jldopen(outfile, "w") do file
             file["report"] = durable_report
-            isnothing(durable_materialization) ||
-                (file["materialization"] = durable_materialization)
+            isnothing(materialization) ||
+                (file["materialization"] = materialization)
         end
     end
 

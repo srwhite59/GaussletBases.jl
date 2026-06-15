@@ -68,7 +68,6 @@ private_rhf_diis_coefficient_max_abs = 25.0
 save_artifact = false
 save_tsv = false
 materialize_route = false
-probe_route_configured_one_center_materializer = false
 save_basis_artifact = false
 save_ham_artifact = false
 stop_after_stage = nothing
@@ -76,7 +75,6 @@ stop_after_stage = nothing
 # backend from map/probe backend, nside from n_s.
 materializer_backend = nothing
 materializer_nside = nothing
-route_configured_diatomic_ham_interaction_treatment = :ggt_nearest
 outfile = "cartesian_ham_builder_report.jld2"
 tsvfile = "cartesian_ham_builder_report.tsv"
 basisfile = "cartesian_nesting_route_driver_basis_bundle.jld2"
@@ -117,10 +115,9 @@ route_inputs = (; route_family, route_kind, route_shape, product_body_rule,
     white_lindsey_operator_rule,
     supplement_policy, run_final_basis, run_h1,
     run_h1_j, private_rhf_inputs)
-materialization_inputs = (; materialize_route, probe_route_configured_one_center_materializer,
+materialization_inputs = (; materialize_route,
     save_basis_artifact, save_ham_artifact, basisfile, hamfile,
     materializer_backend, materializer_nside,
-    route_configured_diatomic_ham_interaction_treatment,
     white_lindsey_expansion, white_lindsey_Z)
 save_inputs = (; save_artifact, save_tsv, outfile, tsvfile,
     input_path = driver_input_path)
