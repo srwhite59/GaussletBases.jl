@@ -1557,3 +1557,47 @@ Remaining blocker / next:
 
 Line-count / complexity note:
 - Scoped `src + test + bin` diff was `0` added / `13` deleted, net `-13`.
+
+## Pass 256 - Independent H2 PQS Supplement Staging Audit
+
+Commit(s):
+- this commit - Record independent H2 PQS supplement staging audit
+
+Summary:
+- No source/test/bin implementation edits. The pass audited whether existing
+  supplement request, representation, and preflight helpers can attach to the
+  independent H2 PQS target.
+- Finding: the helpers are target-driven enough to attach mechanically to the
+  independent route, but their function/type/status vocabulary is still old
+  physical-gausslet shaped and not yet a clean independent-PQS supplement seam.
+- The first safe next step is an independent supplement-preflight input/artifact
+  role only, with provider blocks and supplemented values still blocked.
+
+Validation:
+- Doer: `git diff --check` passed; no Julia run because this was no-edit
+  inspection.
+- Manager: reviewed the audit response and accepted scoped line impact `0`.
+
+Goal advancement:
+- MT4/LT5: opened supplement staging deliberately after independent retained
+  authority was established, without starting provider-block work.
+- LT6: clarified the artifact facts expected for independent supplement
+  preflight: fake disabled, source-backed oracle disabled, retained authority
+  PQS, counts `(275, 578, 362)` and `(275, 98, 98)`, final dimension `471`,
+  H/cc-pVTZ lmax-1 supplement representation, and provider-block blockers.
+
+Medium-goal update:
+- none.
+
+Risk / guardrail:
+- Do not copy fake-PQS retained counts `(251, 98, 114)`, final dimension `463`,
+  source-backed labels, or WL/QW scalar comparisons into independent supplement
+  work.
+
+Remaining blocker / next:
+- Add only the independent supplement-preflight input/artifact role. Provider
+  blocks, mixed matrices, residual MWG representation, combined density
+  readiness, supplemented values, CR2/export, and public API remain blocked.
+
+Line-count / complexity note:
+- Scoped `src + test + bin` impact was `0`.
