@@ -2103,138 +2103,32 @@ function cartesian_parent(system, spacing_inputs, parent_inputs, recipe)
 end
 
 function _pqs_source_box_route_driver_shell_stage_atom_growth_plan(parent)
-    parent_qw_basis_object =
-        hasproperty(parent, :parent_qw_basis_object) ?
-        parent.parent_qw_basis_object :
-        nothing
-    parent_axis_bundle_object =
-        hasproperty(parent, :parent_axis_bundle_object) ?
-        parent.parent_axis_bundle_object :
-        nothing
-    missing_parent_objects = Symbol[]
-    isnothing(parent_qw_basis_object) &&
-        push!(missing_parent_objects, :parent_qw_basis_object)
-    isnothing(parent_axis_bundle_object) &&
-        push!(missing_parent_objects, :parent_axis_bundle_object)
-    missing_parent_objects = Tuple(missing_parent_objects)
-    if !isempty(missing_parent_objects)
-        return (;
-            object_kind = :cartesian_shell_stage_atom_growth_plan_payload,
-            status = :blocked_atom_growth_missing_parent_objects,
-            construction_plan = nothing,
-            scaffold = nothing,
-            construction_plan_available = false,
-            scaffold_available = false,
-            shellification_plan_materialization_available = false,
-            missing_parent_objects,
-            blocker = :blocked_atom_growth_missing_parent_objects,
-            error_message = nothing,
-            region_count = 0,
-            unsupported_region_count = nothing,
-            materialization_dependency_counts = nothing,
-            construction_region_order = (),
-            ordered_region_roles = (),
-            spatial_policy_order = :atom_outward,
-            coverage_status = :not_checked_missing_parent_objects,
-            coverage_complete = nothing,
-            parent_qw_basis_object_available = !isnothing(parent_qw_basis_object),
-            parent_axis_bundle_object_available =
-                !isnothing(parent_axis_bundle_object),
-        )
-    end
-
-    try
-        nside = parent.standard_setup.n_s
-        anatomy =
-            _nested_bond_aligned_diatomic_atom_growth_anatomy(
-                parent_qw_basis_object,
-                parent_axis_bundle_object;
-                bond_axis = parent.bond_axis,
-                protected_atom_side_count = nside,
-            )
-        construction_plan =
-            _nested_bond_aligned_diatomic_atom_growth_construction_plan(
-                anatomy,
-            )
-        retention = _nested_resolve_complete_shell_retention(nside)
-        protect_rows =
-            _nested_diatomic_resolve_core_near_nucleus_protect_rows(
-                :auto,
-                nside,
-            )
-        scaffold =
-            _cartesian_shellification_plan_atom_growth_complete_rectangular_low_order(
-                construction_plan,
-                parent_axis_bundle_object;
-                nside,
-                child_retention_policy = retention,
-                shared_retention_policy = retention,
-                reference_fudge_factor = 1.2,
-                core_near_nucleus_protect_rows = protect_rows,
-                shared_shell_angular_resolution_scale = 1.4,
-                route_family = :white_lindsey_low_order,
-            )
-        unsupported_region_count = scaffold.unsupported_region_count
-        blocked_on_unsupported = unsupported_region_count > 0
-
-        return (;
-            object_kind = :cartesian_shell_stage_atom_growth_plan_payload,
-            status =
-                blocked_on_unsupported ?
-                :blocked_atom_growth_unsupported_regions :
-                :available_atom_growth_shellification_plan,
-            construction_plan,
-            scaffold,
-            construction_plan_available = true,
-            scaffold_available = true,
-            shellification_plan_materialization_available =
-                !blocked_on_unsupported,
-            missing_parent_objects = (),
-            blocker =
-                blocked_on_unsupported ?
-                :blocked_atom_growth_unsupported_regions :
-                nothing,
-            error_message = nothing,
-            region_count = scaffold.region_count,
-            unsupported_region_count,
-            materialization_dependency_counts =
-                scaffold.materialization_dependency_counts,
-            construction_region_order = scaffold.construction_region_order,
-            ordered_region_roles = scaffold.ordered_region_roles,
-            spatial_policy_order = scaffold.spatial_policy_order,
-            coverage_status =
-                scaffold.coverage.coverage_complete ?
-                :coverage_complete :
-                :coverage_incomplete,
-            coverage_complete = scaffold.coverage.coverage_complete,
-            parent_qw_basis_object_available = true,
-            parent_axis_bundle_object_available = true,
-        )
-    catch error
-        error isa ArgumentError || rethrow()
-        return (;
-            object_kind = :cartesian_shell_stage_atom_growth_plan_payload,
-            status = :blocked_atom_growth_unsupported_regions,
-            construction_plan = nothing,
-            scaffold = nothing,
-            construction_plan_available = false,
-            scaffold_available = false,
-            shellification_plan_materialization_available = false,
-            missing_parent_objects = (),
-            blocker = :blocked_atom_growth_unsupported_regions,
-            error_message = sprint(showerror, error),
-            region_count = 0,
-            unsupported_region_count = nothing,
-            materialization_dependency_counts = nothing,
-            construction_region_order = (),
-            ordered_region_roles = (),
-            spatial_policy_order = :atom_outward,
-            coverage_status = :not_checked_atom_growth_plan_precondition,
-            coverage_complete = nothing,
-            parent_qw_basis_object_available = true,
-            parent_axis_bundle_object_available = true,
-        )
-    end
+    return (;
+        object_kind = :cartesian_shell_stage_atom_growth_plan_payload,
+        status = :blocked_atom_growth_route_removed,
+        construction_plan = nothing,
+        scaffold = nothing,
+        construction_plan_available = false,
+        scaffold_available = false,
+        shellification_plan_materialization_available = false,
+        missing_parent_objects = (),
+        blocker = :blocked_atom_growth_route_removed,
+        error_message = nothing,
+        region_count = 0,
+        unsupported_region_count = nothing,
+        materialization_dependency_counts = nothing,
+        construction_region_order = (),
+        ordered_region_roles = (),
+        spatial_policy_order = :atom_outward,
+        coverage_status = :not_checked_atom_growth_route_removed,
+        coverage_complete = nothing,
+        parent_qw_basis_object_available =
+            hasproperty(parent, :parent_qw_basis_object) &&
+            !isnothing(parent.parent_qw_basis_object),
+        parent_axis_bundle_object_available =
+            hasproperty(parent, :parent_axis_bundle_object) &&
+            !isnothing(parent.parent_axis_bundle_object),
+    )
 end
 
 function _pqs_source_box_route_driver_terminal_parent_axes(parent)

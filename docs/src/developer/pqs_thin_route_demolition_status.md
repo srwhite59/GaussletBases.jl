@@ -657,3 +657,46 @@ Recommended next cut:
 - Audit remaining low-order shellification plan materializers in
   `cartesian_shellification_plan.jl`; cut only old WL/atom-growth materializer
   surfaces, not shared shellification primitives.
+
+## Checkpoint 15 - Old Low-Order Shellification Plan Cut
+
+Status:
+
+- uncommitted demolition cut for review.
+
+Deleted/simplified:
+
+- Deleted `src/cartesian_shellification_plan.jl`, the old private low-order
+  shellification plan/materializer layer.
+- Removed its include from `src/GaussletBases.jl`.
+- Collapsed the driver helper's atom-growth shell-stage planner to an explicit
+  `:blocked_atom_growth_route_removed` tombstone instead of carrying the old
+  WL/atom-growth shellification scaffold.
+
+Validation:
+
+- `git diff --check` passed.
+- Caller grep for the deleted shellification-plan helpers is clean outside this
+  demolition note.
+- Package load passed.
+- The protected H2 independent PQS readiness driver smoke completed with saving
+  disabled.
+
+Line-count impact:
+
+- About 2,396 net source lines deleted before validation.
+
+Current breakage assessment:
+
+- This removes old low-order/WL/atom-growth shellification materializer
+  scaffolding.
+- The protected driver entry point, driver inputs, and independent H2 readiness
+  route remain present and green.
+- The module-owned `CartesianShellification` and terminal-lowering route spine
+  remain intact.
+
+Recommended next cut:
+
+- Continue auditing old driver/report status surfaces. Avoid deleting
+  construction-bearing independent H2 PQS source/final/H1/H1-J/RHF code; target
+  report/status wrappers and obsolete old-flat tests.
