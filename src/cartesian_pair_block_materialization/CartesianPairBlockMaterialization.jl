@@ -102,29 +102,8 @@ export PairBlockMaterializationPolicy,
        pqs_source_pair_one_body_blocks,
        pqs_source_pair_shell_realization_bridge_summary,
        pqs_source_pair_final_block_readiness_summary,
-       white_lindsey_materialized_seed_oracle_summary,
-       white_lindsey_boundary_stratum_unit_coefficients,
-       white_lindsey_boundary_stratum_unit_coefficient_context,
-       white_lindsey_boundary_stratum_pair_unit_coefficients,
-       white_lindsey_shellification_decomposed_unit_pair_inventory,
-       white_lindsey_decomposed_unit_pair_inventory,
-       white_lindsey_boundary_stratum_overlap_block,
-       white_lindsey_boundary_stratum_position_block,
-       white_lindsey_boundary_stratum_x2_block,
-       white_lindsey_boundary_stratum_kinetic_block,
-       white_lindsey_boundary_stratum_electron_nuclear_by_center_block,
-       white_lindsey_boundary_stratum_one_body_block,
-       white_lindsey_boundary_stratum_one_body_blocks,
-       white_lindsey_boundary_stratum_one_body_adapter_summary,
        one_body_electron_nuclear_by_center_placement_plan,
        one_body_global_electron_nuclear_by_center_matrix,
-       route_global_combined_gto_basis_layout,
-       route_global_mixed_gto_blocks_from_decomposed_units,
-       route_global_combined_gto_one_electron_matrices,
-       route_global_combined_gto_residual_moment_matrices,
-       route_global_combined_gto_final_basis_projection,
-       route_global_residual_gto_mwg_representation,
-       route_global_combined_gto_final_basis_density_density_matrix,
        direct_direct_overlap_block,
        direct_direct_overlap_blocks,
        direct_direct_position_block,
@@ -237,42 +216,6 @@ export PairBlockMaterializationPolicy,
 # pqs_source_final_readiness.jl
 #     Metadata-only readiness summaries for future final PQS pair blocks.
 #
-# white_lindsey_seed_oracle_summary.jl
-#     Compact old-seed oracle summary for LW adapter validation.
-#
-# white_lindsey_unit_coefficients.jl
-#     Narrow LW unit coefficient adapters.
-#
-# white_lindsey_pair_unit_coefficients.jl
-#     Pair-level gathering of LW unit coefficient maps, without operator
-#     blocks.
-#
-# white_lindsey_decomposed_unit_pair_inventory.jl
-#     Route-owned metadata validator for decomposed LW unit pairs with retained
-#     column ranges.
-#
-# white_lindsey_overlap.jl
-#     First overlap-only LW pair-block pilot.
-#
-# white_lindsey_position.jl
-#     Position-only LW pair-block pilot.
-#
-# white_lindsey_x2.jl
-#     X2-only LW pair-block pilot.
-#
-# white_lindsey_kinetic.jl
-#     Kinetic-only LW pair-block pilot.
-#
-# white_lindsey_electron_nuclear.jl
-#     By-center electron-nuclear LW pair-block pilot.
-#
-# white_lindsey_density_density.jl
-#     Route-global decomposed WL electron-electron density-density interaction
-#     matrix assembly from pair-factor local blocks.
-#
-# white_lindsey_one_body.jl
-#     Selector and compact summaries over LW one-body safe-term pilots.
-#
 # direct_overlap.jl
 #     First tiny direct/direct overlap pair-block pilot.
 #
@@ -298,12 +241,6 @@ include("one_body_terms.jl")
 include("one_body_factor_inputs.jl")
 include("one_body_dispatch.jl")
 include("one_body_block_collection.jl")
-include("route_global_combined_gto_basis_layout.jl")
-include("route_global_mixed_gto_blocks.jl")
-include("route_global_combined_gto_matrix_assembly.jl")
-include("route_global_combined_gto_final_basis.jl")
-include("route_global_combined_gto_density_density.jl")
-include("route_global_atom_gto_final_basis_route.jl")
 include("one_body_placement_plan.jl")
 include("one_body_global_matrix_helpers.jl")
 include("one_body_global_overlap.jl")
@@ -317,17 +254,6 @@ include("pqs_source_safe_terms.jl")
 include("pqs_source_shell_final_basis.jl")
 include("pqs_source_shell_bridge.jl")
 include("pqs_source_final_readiness.jl")
-include("white_lindsey_seed_oracle_summary.jl")
-include("white_lindsey_unit_coefficients.jl")
-include("white_lindsey_pair_unit_coefficients.jl")
-include("white_lindsey_decomposed_unit_pair_inventory.jl")
-include("white_lindsey_overlap.jl")
-include("white_lindsey_position.jl")
-include("white_lindsey_x2.jl")
-include("white_lindsey_kinetic.jl")
-include("white_lindsey_electron_nuclear.jl")
-include("white_lindsey_density_density.jl")
-include("white_lindsey_one_body.jl")
 include("direct_position.jl")
 include("direct_x2.jl")
 include("direct_kinetic.jl")

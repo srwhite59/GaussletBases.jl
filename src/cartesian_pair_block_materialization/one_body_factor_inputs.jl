@@ -222,7 +222,5 @@ function _one_body_materialization_path(selector_family, materialization_path)
         return :direct_direct_one_body_selector
     selector_family === :pqs_source_pair &&
         return :pqs_source_pair_one_body_selector
-    selector_family === :white_lindsey_boundary_stratum &&
-        return :white_lindsey_boundary_stratum_one_body_selector
     return nothing
 end

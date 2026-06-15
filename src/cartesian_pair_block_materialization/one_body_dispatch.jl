@@ -1269,7 +1269,6 @@ function _one_body_pair_block(
     materialize_selector_families = (
         :direct_direct,
         :pqs_source_pair,
-        :white_lindsey_boundary_stratum,
     ),
 )
     dispatch_summary = _one_body_pair_block_dispatch_summary(
@@ -1293,15 +1292,6 @@ function _one_body_pair_block(
         _one_body_direct_direct_pair_block(record, term; inputs, provider) :
         dispatch_summary.selector_family === :pqs_source_pair ?
         _one_body_pqs_source_pair_block(record, term; inputs, provider, dispatch_summary) :
-        dispatch_summary.selector_family === :white_lindsey_boundary_stratum ?
-        _one_body_white_lindsey_pair_block(
-            record,
-            term;
-            inputs,
-            provider,
-            unit_pair,
-            dispatch_summary,
-        ) :
         return _one_body_skipped_pair_block_summary(
             dispatch_summary,
             :mixed_one_body_selector_family_not_materialized_yet,
@@ -1326,7 +1316,6 @@ function _one_body_pair_blocks(
     materialize_selector_families = (
         :direct_direct,
         :pqs_source_pair,
-        :white_lindsey_boundary_stratum,
     ),
 )
     unit_pair_lookup = _one_body_unit_pair_lookup(plan)
@@ -1389,11 +1378,6 @@ function _one_body_pair_blocks(
                     result_tuple,
                     :pqs_source_pair,
                 ),
-            white_lindsey_materialized =
-                _one_body_result_selector_family_materialized(
-                    result_tuple,
-                    :white_lindsey_boundary_stratum,
-                ),
             route_driver_wiring = false,
             hamiltonian_data_materialized = false,
             artifacts_materialized = false,
@@ -1407,11 +1391,6 @@ function _one_body_plan_dispatcher_name(materialize_selector_families)
         return :direct_direct_only_plan_dispatcher
     selector_families == (:direct_direct, :pqs_source_pair) &&
         return :direct_pqs_source_plan_dispatcher
-    selector_families == (
-        :direct_direct,
-        :pqs_source_pair,
-        :white_lindsey_boundary_stratum,
-    ) && return :direct_pqs_source_lw_plan_dispatcher
     return :mixed_one_body_plan_dispatcher
 end
 
@@ -1420,11 +1399,6 @@ function _one_body_numerical_dispatch_scope(materialize_selector_families)
     selector_families == (:direct_direct,) && return :direct_direct_only
     selector_families == (:direct_direct, :pqs_source_pair) &&
         return :direct_direct_and_pqs_source_pair
-    selector_families == (
-        :direct_direct,
-        :pqs_source_pair,
-        :white_lindsey_boundary_stratum,
-    ) && return :direct_direct_pqs_source_pair_and_white_lindsey_boundary_stratum
     return :custom_selector_family_scope
 end
 
@@ -1487,40 +1461,6 @@ function _one_body_pqs_source_pair_block(
     )
 end
 
-function _one_body_white_lindsey_pair_block(
-    record::PairBlockMaterializationRecord,
-    term::Symbol;
-    inputs,
-    provider,
-    unit_pair,
-    dispatch_summary,
-)
-    unit_pair isa CUP.UnitPairRecord ||
-        return _one_body_skipped_pair_block_summary(
-            dispatch_summary,
-            :missing_white_lindsey_unit_pair,
-        )
-    factor_input_summary = _one_body_factor_input_summary(
-        term;
-        inputs,
-        provider,
-        selector_family = :white_lindsey_boundary_stratum,
-        parent_axis_counts_required = true,
-    )
-    return white_lindsey_boundary_stratum_one_body_block(
-        unit_pair,
-        term;
-        parent_axis_counts = factor_input_summary.parent_axis_counts,
-        overlap_1d = getproperty(factor_input_summary.factor_values, :overlap_1d),
-        position_1d =
-            _one_body_optional_factor(factor_input_summary.factor_values, :position_1d),
-        x2_1d =
-            _one_body_optional_factor(factor_input_summary.factor_values, :x2_1d),
-        kinetic_1d =
-            _one_body_optional_factor(factor_input_summary.factor_values, :kinetic_1d),
-    )
-end
-
 function _one_body_pair_blocks(plan, term; kwargs...)
     throw(
         ArgumentError(
@@ -1559,16 +1499,6 @@ function _one_body_pair_block_batch_summary(
             _one_body_result_selector_family_materialized(
                 result_tuple,
                 :pqs_source_pair,
-            ),
-        white_lindsey_boundary_stratum_materialized =
-            _one_body_result_selector_family_materialized(
-                result_tuple,
-                :white_lindsey_boundary_stratum,
-            ),
-        white_lindsey_materialized =
-            _one_body_result_selector_family_materialized(
-                result_tuple,
-                :white_lindsey_boundary_stratum,
             ),
         materialized = batch_result.materialized,
         source_operator_blocks_materialized =
@@ -1874,7 +1804,6 @@ function _one_body_pair_block_consumption(
     materialize_selector_families = (
         :direct_direct,
         :pqs_source_pair,
-        :white_lindsey_boundary_stratum,
     ),
 )
     batch_result = _one_body_pair_blocks(
@@ -1953,9 +1882,6 @@ function _one_body_record_selector_family(record::PairBlockMaterializationRecord
         return :direct_direct
     record.materialization_path === :pqs_source_pair_preflight &&
         return :pqs_source_pair
-    record.materialization_path ===
-        :white_lindsey_boundary_stratum_adapter_preflight &&
-        return :white_lindsey_boundary_stratum
     return :unsupported
 end
 
@@ -1971,9 +1897,7 @@ function _one_body_dispatch_unit_pair(
     record::PairBlockMaterializationRecord,
     unit_pair_lookup,
 )
-    record.materialization_path ===
-        :white_lindsey_boundary_stratum_adapter_preflight || return nothing
-    return get(unit_pair_lookup, record.pair_key, nothing)
+    return nothing
 end
 
 function _one_body_optional_factor(factor_values::NamedTuple, name::Symbol)
@@ -2029,16 +1953,12 @@ function _one_body_record_dispatcher_name(selector_family)
         return :direct_direct_only_record_dispatcher
     selector_family === :pqs_source_pair &&
         return :pqs_source_pair_record_dispatcher
-    selector_family === :white_lindsey_boundary_stratum &&
-        return :white_lindsey_boundary_stratum_record_dispatcher
     return :mixed_one_body_record_dispatcher
 end
 
 function _one_body_numerical_family_selector(selector_family)
     selector_family === :direct_direct && return :direct_direct_one_body_block
     selector_family === :pqs_source_pair && return :pqs_source_pair_one_body_block
-    selector_family === :white_lindsey_boundary_stratum &&
-        return :white_lindsey_boundary_stratum_one_body_block
     return nothing
 end
 
@@ -2159,8 +2079,7 @@ function _one_body_get_metadata(
 end
 
 function _one_body_dispatch_parent_axis_counts_required(selector_family)
-    return selector_family === :direct_direct ||
-           selector_family === :white_lindsey_boundary_stratum
+    return selector_family === :direct_direct
 end
 
 function _one_body_unit_pair_requirement(
@@ -2168,7 +2087,7 @@ function _one_body_unit_pair_requirement(
     selector_family,
     unit_pair,
 )
-    required = selector_family === :white_lindsey_boundary_stratum
+    required = false
     if !required
         return (;
             required = false,

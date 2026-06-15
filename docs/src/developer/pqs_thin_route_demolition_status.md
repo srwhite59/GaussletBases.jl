@@ -91,3 +91,59 @@ Current repair strategy:
 - If a live route still needs one removed numerical primitive, restore only that
   primitive behind a compact route-owned object, not the old report/status
   field cloud.
+
+## Checkpoint 3 - Precompile and Route-Global Caller Cut
+
+Status:
+
+- uncommitted demolition cut for review.
+
+Deleted:
+
+- `precompile_workloads.jl` and its include from `GaussletBases.jl`;
+- White-Lindsey boundary-stratum coefficient adapter files;
+- decomposed White-Lindsey route-global one-body and density-density files;
+- route-global combined GTO layout, mixed-block, matrix assembly,
+  final-basis, density-density, and atom-GTO route wrapper files;
+- direct tests for those old route-global, one-body selector, GTO readiness,
+  and WL acceptance surfaces.
+
+Simplified:
+
+- Removed White-Lindsey selector entries from the mixed one-body dispatch
+  surface after deleting the implementation they pointed to.
+- Removed route-core sidecar calls from the driver helper instead of replacing
+  the deleted sidecar adapters.
+
+Validation:
+
+- `git diff --check` passed.
+- Caller grep still finds only docs/old logs for deleted route-global/GTO names,
+  plus one active source diagnostic seam:
+  `_pqs_source_box_route_driver_diatomic_raw_box_route_payload(...)` still calls
+  `_pqs_pqs_product_raw_box_route_producer(...)`.
+- Package load was attempted once after the cut and now passes:
+  `julia --project=. -e 'using GaussletBases; println("load ok")'`.
+
+Line-count impact:
+
+- 14,568 deleted lines in the uncommitted third cut.
+
+Remaining live-looking breakage:
+
+- The diatomic raw-box route payload is still a live source caller of the
+  deleted legacy contracted-parent fixture producer. It did not block package
+  load, but it is the next demolition/repair decision point.
+- Lower-level WL boundary-stratum route vocabulary still exists in retained
+  units, pair-operator planning, and terminal lowering. This pass removed the
+  old route-global implementation, not the lower-level route vocabulary.
+
+Recommended next cut:
+
+- Audit and either delete or replace
+  `_pqs_source_box_route_driver_diatomic_raw_box_route_payload(...)` and its
+  downstream status/report fields. Do not restore
+  `_pqs_pqs_product_raw_box_route_producer(...)`.
+- After that, re-audit remaining WL boundary-stratum vocabulary to separate
+  lower-level route semantics from deleted old route-global implementation
+  scaffolding.

@@ -3,12 +3,10 @@
 # Existing local selectors that a mixed consumer should call:
 # - direct_direct_one_body_block / direct_direct_one_body_blocks
 # - pqs_source_pair_one_body_block / pqs_source_pair_one_body_blocks
-# - white_lindsey_boundary_stratum_one_body_block /
-#   white_lindsey_boundary_stratum_one_body_blocks
 #
 # This file only describes term vocabulary and selector surfaces. It does not
-# construct 1D factors, pair blocks, Hamiltonian data, exports, artifacts, PQS
-# Lowdin realization, or White--Lindsey route assembly.
+# construct 1D factors, pair blocks, Hamiltonian data, exports, artifacts, or
+# PQS Lowdin realization.
 
 const _ONE_BODY_TERMS = (
     :overlap,
@@ -188,20 +186,15 @@ function _one_body_selector_surface_summary()
         object_kind = :cartesian_pair_block_one_body_selector_surface_summary,
         status = :available_internal_one_body_selector_surface_audit,
         supported_terms = _ONE_BODY_TERMS,
-        selector_family_count = 3,
-        selector_families =
-            (:direct_direct, :pqs_source_pair, :white_lindsey_boundary_stratum),
+        selector_family_count = 2,
+        selector_families = (:direct_direct, :pqs_source_pair),
         record_selectors = (;
             direct_direct = :direct_direct_one_body_block,
             pqs_source_pair = :pqs_source_pair_one_body_block,
-            white_lindsey_boundary_stratum =
-                :white_lindsey_boundary_stratum_one_body_block,
         ),
         batch_selectors = (;
             direct_direct = :direct_direct_one_body_blocks,
             pqs_source_pair = :pqs_source_pair_one_body_blocks,
-            white_lindsey_boundary_stratum =
-                :white_lindsey_boundary_stratum_one_body_blocks,
         ),
         factor_provider_scope = :caller_supplied_or_family_provider,
         factors_constructed = false,
@@ -213,6 +206,5 @@ function _one_body_selector_surface_summary()
         coulomb_materialized = false,
         ida_mwg_data_materialized = false,
         pqs_lowdin_materialized = false,
-        full_white_lindsey_route_assembled = false,
     )
 end
