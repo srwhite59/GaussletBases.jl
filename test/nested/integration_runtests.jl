@@ -18,7 +18,6 @@ isdefined(Main, :_cached_fixture) ||
 include("cartesian_shellification_module_runtests.jl")
 include("cartesian_terminal_shellification_geometry_runtests.jl")
 include("cartesian_shellification_plan_runtests.jl")
-include("cartesian_ham_builder_one_center_config_smoke_runtests.jl")
 
 include("bond_aligned_diatomic_high_order_recipe_realization_audit_runtests.jl")
 

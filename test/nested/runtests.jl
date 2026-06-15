@@ -13,7 +13,6 @@ using LinearAlgebra
 using SparseArrays
 using GaussletBases
 
-include("pqs_standard_source_box_route_setup_runtests.jl")
 include("pqs_standard_parent_axis_readiness_runtests.jl")
 include("cartesian_route_core_examples_runtests.jl")
 include("cartesian_selected_terminal_lowering_contract_inventory_runtests.jl")

@@ -147,3 +147,61 @@ Recommended next cut:
 - After that, re-audit remaining WL boundary-stratum vocabulary to separate
   lower-level route semantics from deleted old route-global implementation
   scaffolding.
+
+## Checkpoint 4 - Driver Scaffold Test Cut
+
+Status:
+
+- uncommitted demolition cut for review.
+- Important correction: an initial over-aggressive attempt deleted
+  `bin/cartesian_ham_builder.jl`, driver inputs, and mixed route-construction
+  source files. That was rolled back before this checkpoint. The driver entry
+  point, input-driven workflow, and route-construction files are protected for
+  now. The demolition target is the bulky private report/status scaffolding
+  around them, not the existence of a driver.
+
+Deleted:
+
+- direct driver/report tests for fake-PQS, He PQS, one-center config smoke,
+  atom-growth materialized checkpoints, parent-contract field clouds, and
+  standard source-box route setup;
+- runner includes that anchored two deleted scaffold tests.
+
+Simplified:
+
+- None of the protected driver/source route files remain deleted in the current
+  diff.
+- The remaining cut removes old tests that primarily assert private driver
+  field clouds, old setup surfaces, or report-driven endpoint fixtures.
+
+Validation:
+
+- `git diff --check` passed after restoring the protected driver/source files.
+- Package load was attempted once and passes:
+  `julia --project=. -e 'using GaussletBases; println("load ok")'`.
+
+Line-count impact:
+
+- Current corrected fourth-cut diff is 1,347 deleted test/runner lines plus this
+  status-note update.
+- Current total branch pressure relative to `main` after correcting the
+  overreach: 214 insertions and 33,308 deletions.
+
+Current breakage assessment:
+
+- The driver and route source files are restored and should still be treated as
+  live until their construction/math can be separated from report/status
+  bureaucracy.
+- The diatomic raw-box diagnostic seam remains the next source-level decision:
+  cut report/status callers without deleting the core driver or identifiable
+  construction path.
+
+Recommended next cut:
+
+- Split decisions inside mixed files:
+  keep or extract construction/math, and cut report/status/alias/export
+  scaffolding.
+- Start with `_pqs_source_box_route_driver_diatomic_raw_box_route_payload(...)`
+  and downstream fields, but do not delete `bin/cartesian_ham_builder.jl`, all
+  driver inputs, or the independent H2 PQS construction path without explicit
+  approval.
