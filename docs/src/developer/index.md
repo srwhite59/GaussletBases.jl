@@ -18,6 +18,9 @@ This section is where to go when you want:
 ## Main developer-facing pages
 
 - [Architecture and current direction](architecture.md)
+- [Cartesian route migration](cartesian/route_migration.md)
+- [Cartesian feature donor inventory](cartesian/feature_donor_inventory.md)
+- [PQS thin route demolition history](archive/pqs_thin_route_demolition_history.md)
 - [Cartesian source/build unification plan](cartesian_source_build_unification_plan.md)
 - [Cartesian nesting route driver organization memo](cartesian_nesting_route_driver_organization_2026-06-04.md)
 - [Cartesian parent factors and CPB matrix kernels](cartesian_parent_factors_and_cpb_kernels.md)
