@@ -391,6 +391,154 @@ struct _PQSDiatomicPhysicalGaussletCoreShellTargetPayload
     metadata
 end
 
+struct _PQSIndependentH2PQSSupplementSupportPartitionPayload
+    status::Symbol
+    blocker
+    route_family::Symbol
+    route_kind::Symbol
+    support_order::Tuple
+    retained_order::Tuple
+    support_counts
+    retained_counts
+    retained_ranges
+    unit_partitions::Tuple
+    total_tile_count::Int
+    total_support_count::Int
+    coverage_complete::Bool
+    duplicate_parent_row_count::Int
+    missing_parent_row_count::Int
+    outside_parent_row_count::Int
+    source_backed_fixed_source_oracle_used::Bool
+    fake_pqs_enabled::Bool
+    retained_transform_authority::Symbol
+    summary
+    metadata
+end
+
+function _pqs_source_box_route_driver_support_tile(
+    unit_key::Symbol,
+    source_region_role::Symbol,
+    tile_index::Int,
+    box::NTuple{3,UnitRange{Int}},
+    parent_dims::NTuple{3,Int},
+)
+    tile_key = Symbol(unit_key, "_", source_region_role, "_tile_", tile_index)
+    support_indices = _nested_box_support_indices(box[1], box[2], box[3], parent_dims)
+    support_states = NTuple{3,Int}[
+        _cartesian_unflat_index(index, parent_dims) for index in support_indices
+    ]
+    cpb = CartesianCPB.cpb(
+        box...;
+        role = tile_key,
+        metadata = (;
+            unit_key,
+            source_region_role,
+            source = :independent_h2_pqs_supplement_support_partition,
+        ),
+    )
+    return (;
+        tile_key,
+        unit_key,
+        source_region_role,
+        support_tile_role = :rectangular_parent_row_support_tile,
+        cpb,
+        cpb_role = tile_key,
+        intervals = box,
+        support_indices,
+        support_states,
+        support_count = length(support_indices),
+        parent_row_min = minimum(support_indices),
+        parent_row_max = maximum(support_indices),
+        provider_tile_ready = true,
+    )
+end
+
+function _pqs_source_box_route_driver_nonempty_box_push!(
+    boxes,
+    x::UnitRange{Int},
+    y::UnitRange{Int},
+    z::UnitRange{Int},
+)
+    (isempty(x) || isempty(y) || isempty(z)) && return boxes
+    push!(boxes, (x, y, z))
+    return boxes
+end
+
+function _pqs_source_box_route_driver_rectangular_difference_boxes(
+    outer_box::NTuple{3,UnitRange{Int}},
+    inner_box::NTuple{3,UnitRange{Int}},
+)
+    boxes = NTuple{3,UnitRange{Int}}[]
+    _pqs_source_box_route_driver_nonempty_box_push!(
+        boxes,
+        first(outer_box[1]):(first(inner_box[1]) - 1),
+        outer_box[2],
+        outer_box[3],
+    )
+    _pqs_source_box_route_driver_nonempty_box_push!(
+        boxes,
+        (last(inner_box[1]) + 1):last(outer_box[1]),
+        outer_box[2],
+        outer_box[3],
+    )
+    _pqs_source_box_route_driver_nonempty_box_push!(
+        boxes,
+        inner_box[1],
+        first(outer_box[2]):(first(inner_box[2]) - 1),
+        outer_box[3],
+    )
+    _pqs_source_box_route_driver_nonempty_box_push!(
+        boxes,
+        inner_box[1],
+        (last(inner_box[2]) + 1):last(outer_box[2]),
+        outer_box[3],
+    )
+    _pqs_source_box_route_driver_nonempty_box_push!(
+        boxes,
+        inner_box[1],
+        inner_box[2],
+        first(outer_box[3]):(first(inner_box[3]) - 1),
+    )
+    _pqs_source_box_route_driver_nonempty_box_push!(
+        boxes,
+        inner_box[1],
+        inner_box[2],
+        (last(inner_box[3]) + 1):last(outer_box[3]),
+    )
+    return Tuple(boxes)
+end
+
+function _pqs_source_box_route_driver_shared_shell_support_tiles(
+    role::Symbol,
+    outer_box::NTuple{3,UnitRange{Int}},
+    inner_box::NTuple{3,UnitRange{Int}},
+    parent_dims::NTuple{3,Int},
+)
+    outer_cpb = CartesianCPB.filled_cpb(
+        outer_box...;
+        role = Symbol(role, "_outer_support_box"),
+    )
+    inner_cpb = CartesianCPB.filled_cpb(
+        inner_box...;
+        role = Symbol(role, "_inner_exclusion_box"),
+    )
+    boxes = try
+        strata = CartesianCPB.complete_shell_boundary_strata(outer_cpb, inner_cpb)
+        Tuple(CartesianCPB.intervals(cpb) for cpb in strata.all_strata)
+    catch
+        _pqs_source_box_route_driver_rectangular_difference_boxes(outer_box, inner_box)
+    end
+    return Tuple(
+        _pqs_source_box_route_driver_support_tile(
+            role,
+            :shared_molecular_shell,
+            index,
+            box,
+            parent_dims,
+        ) for (index, box) in pairs(boxes)
+    )
+end
+
 function _pqs_source_box_route_driver_independent_h2_support_region_plan(
     parent,
     route_skeleton,
@@ -473,6 +621,15 @@ function _pqs_source_box_route_driver_independent_h2_support_region_plan(
         _cartesian_unflat_index(index, axis_count_tuple) for
         index in atom_contact_core_support_indices
     ]
+    atom_contact_support_tiles = Tuple(
+        _pqs_source_box_route_driver_support_tile(
+            :atom_contact_core,
+            region.role,
+            index,
+            region.box,
+            axis_count_tuple,
+        ) for (index, region) in pairs(atom_contact_regions)
+    )
     shared_shell_descriptors =
         _pqs_source_box_route_driver_independent_h2_shared_shell_region_descriptors(
             shared_regions,
@@ -507,6 +664,10 @@ function _pqs_source_box_route_driver_independent_h2_support_region_plan(
         atom_contact_core_descriptor = (;
             role = :atom_contact_core,
             source_region_roles = Tuple(region.role for region in atom_contact_regions),
+            support_tiles = atom_contact_support_tiles,
+            tile_count = length(atom_contact_support_tiles),
+            tile_support_counts =
+                Tuple(tile.support_count for tile in atom_contact_support_tiles),
             support_indices = atom_contact_core_support_indices,
             support_states = atom_contact_core_support_states,
             support_count = length(atom_contact_core_support_indices),
@@ -541,6 +702,13 @@ function _pqs_source_box_route_driver_independent_h2_shared_shell_region_descrip
         support_states = NTuple{3,Int}[
             _cartesian_unflat_index(index, parent_dims) for index in support_indices
         ]
+        support_tiles =
+            _pqs_source_box_route_driver_shared_shell_support_tiles(
+                role,
+                raw.outer_box,
+                raw.inner_exclusion_box,
+                parent_dims,
+            )
         source_cpb = CartesianCPB.filled_cpb(
             raw.outer_box...;
             role = Symbol(role, "_pqs_filled_source_cpb"),
@@ -556,6 +724,9 @@ function _pqs_source_box_route_driver_independent_h2_shared_shell_region_descrip
             current_box = raw.outer_box,
             inner_box = raw.inner_exclusion_box,
             source_cpb,
+            support_tiles,
+            tile_count = length(support_tiles),
+            tile_support_counts = Tuple(tile.support_count for tile in support_tiles),
             support_indices,
             support_states,
             support_count = length(support_indices),
@@ -2561,6 +2732,264 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_pay
         missing_objects,
         summary,
         metadata,
+    )
+end
+
+function _pqs_source_box_route_driver_support_partition_rows(
+    source_plan,
+    unit_key::Symbol,
+)
+    unit_key === :atom_contact_core &&
+        return Vector{Int}(source_plan.atom_contact_core_support_indices)
+    unit_key === :shared_shell_1 &&
+        return Vector{Int}(source_plan.shared_shell_support_indices[1])
+    unit_key === :shared_shell_2 &&
+        return Vector{Int}(source_plan.shared_shell_support_indices[2])
+    return Int[]
+end
+
+function _pqs_source_box_route_driver_support_partition_local_rows(
+    support_indices::AbstractVector{Int},
+    tile_indices::AbstractVector{Int},
+)
+    local_by_parent = Dict{Int,Int}(
+        Int(parent_row) => Int(local_row) for (local_row, parent_row) in pairs(support_indices)
+    )
+    return Tuple(local_by_parent[Int(parent_row)] for parent_row in tile_indices)
+end
+
+function _pqs_source_box_route_driver_contiguous_unit_range(rows::Tuple)
+    isempty(rows) && return nothing
+    first_row = first(rows)
+    expected = first_row:(first_row + length(rows) - 1)
+    return Tuple(expected) == rows ? expected : nothing
+end
+
+function _pqs_source_box_route_driver_support_partition_unit(
+    unit_key::Symbol,
+    support_indices::AbstractVector{Int},
+    retained_range,
+    support_tiles::Tuple,
+)
+    observed = Int[]
+    tile_fingerprints = map(support_tiles) do tile
+        tile_rows = Vector{Int}(tile.support_indices)
+        append!(observed, tile_rows)
+        unit_local_rows =
+            _pqs_source_box_route_driver_support_partition_local_rows(
+                support_indices,
+                tile_rows,
+            )
+        unit_local_row_range =
+            _pqs_source_box_route_driver_contiguous_unit_range(unit_local_rows)
+        (;
+            tile_key = tile.tile_key,
+            unit_key,
+            source_region_role = tile.source_region_role,
+            support_tile_role = tile.support_tile_role,
+            cpb_role = tile.cpb_role,
+            intervals = tile.intervals,
+            support_count = tile.support_count,
+            parent_row_count = length(tile_rows),
+            parent_row_min = tile.parent_row_min,
+            parent_row_max = tile.parent_row_max,
+            parent_row_ids = Tuple(tile_rows),
+            unit_local_row_range,
+            unit_local_rows,
+            retained_range,
+            provider_tile_ready = tile.provider_tile_ready,
+        )
+    end
+    expected_set = Set(Int.(support_indices))
+    observed_set = Set(observed)
+    duplicate_count = length(observed) - length(observed_set)
+    missing_count = length(setdiff(expected_set, observed_set))
+    outside_count = length(setdiff(observed_set, expected_set))
+    coverage_complete =
+        duplicate_count == 0 && missing_count == 0 && outside_count == 0 &&
+        length(observed_set) == length(expected_set)
+    return (;
+        unit_key,
+        support_count = length(support_indices),
+        retained_range,
+        tile_count = length(support_tiles),
+        tile_support_counts = Tuple(tile.support_count for tile in support_tiles),
+        parent_row_count = length(observed_set),
+        parent_row_min = isempty(support_indices) ? nothing : minimum(support_indices),
+        parent_row_max = isempty(support_indices) ? nothing : maximum(support_indices),
+        duplicate_parent_row_count = duplicate_count,
+        missing_parent_row_count = missing_count,
+        outside_parent_row_count = outside_count,
+        coverage_complete,
+        tiles = support_tiles,
+        tile_fingerprints = Tuple(tile_fingerprints),
+    )
+end
+
+function _pqs_source_box_route_driver_partition_summary_unit(partition)
+    return (;
+        unit_key = partition.unit_key,
+        support_count = partition.support_count,
+        retained_range = partition.retained_range,
+        tile_count = partition.tile_count,
+        tile_support_counts = partition.tile_support_counts,
+        parent_row_count = partition.parent_row_count,
+        parent_row_min = partition.parent_row_min,
+        parent_row_max = partition.parent_row_max,
+        duplicate_parent_row_count = partition.duplicate_parent_row_count,
+        missing_parent_row_count = partition.missing_parent_row_count,
+        outside_parent_row_count = partition.outside_parent_row_count,
+        coverage_complete = partition.coverage_complete,
+        tile_fingerprints = partition.tile_fingerprints,
+    )
+end
+
+function _pqs_source_box_route_driver_independent_h2_pqs_supplement_support_partition_payload(
+    target_payload,
+    source_plan_payload,
+)
+    support_order = (:atom_contact_core, :shared_shell_1, :shared_shell_2)
+    blocked(blocker) = _PQSIndependentH2PQSSupplementSupportPartitionPayload(
+        :blocked_independent_h2_pqs_supplement_support_partition,
+        blocker,
+        isnothing(target_payload) ? :not_available : target_payload.route_family,
+        isnothing(target_payload) ? :not_available : target_payload.route_kind,
+        support_order,
+        (),
+        nothing,
+        nothing,
+        nothing,
+        (),
+        0,
+        0,
+        false,
+        0,
+        0,
+        0,
+        false,
+        false,
+        :not_available,
+        (; status = :blocked_independent_h2_pqs_supplement_support_partition, blocker),
+        (;
+            source =
+                :pqs_source_box_route_driver_independent_h2_pqs_supplement_support_partition_payload,
+            provider_blocks_materialized = false,
+            route_global_matrix_materialized = false,
+        ),
+    )
+    isnothing(target_payload) && return blocked(:missing_independent_h2_target_payload)
+    target_payload.status === :available_physical_gausslet_core_shell_target_inventory ||
+        return blocked(target_payload.blocker)
+    support_plan = get(target_payload.summary, :support_plan, nothing)
+    isnothing(support_plan) && return blocked(:missing_independent_pqs_support_region_plan)
+    source_plan =
+        !isnothing(source_plan_payload) && hasproperty(source_plan_payload, :source_plan) ?
+        source_plan_payload.source_plan :
+        nothing
+    isnothing(source_plan) && return blocked(:missing_independent_pqs_source_plan)
+    source_plan.status ===
+        :available_pqs_diatomic_physical_gausslet_core_shell_source_plan ||
+        return blocked(source_plan.status)
+    support_plan.support_order == support_order ||
+        return blocked(:independent_pqs_support_partition_order_mismatch)
+    source_plan.support_order == support_order ||
+        return blocked(:independent_pqs_source_plan_support_order_mismatch)
+
+    atom_descriptor = support_plan.atom_contact_core_descriptor
+    shared_descriptors = support_plan.shared_shell_descriptors
+    retained_ranges = source_plan.retained_ranges
+    tile_sources = (;
+        atom_contact_core = atom_descriptor.support_tiles,
+        shared_shell_1 = shared_descriptors.shared_shell_1.support_tiles,
+        shared_shell_2 = shared_descriptors.shared_shell_2.support_tiles,
+    )
+    unit_partitions = Tuple(
+        _pqs_source_box_route_driver_support_partition_unit(
+            unit_key,
+            _pqs_source_box_route_driver_support_partition_rows(source_plan, unit_key),
+            getproperty(retained_ranges, unit_key),
+            getproperty(tile_sources, unit_key),
+        ) for unit_key in support_order
+    )
+    duplicate_count =
+        sum(partition.duplicate_parent_row_count for partition in unit_partitions)
+    missing_count =
+        sum(partition.missing_parent_row_count for partition in unit_partitions)
+    outside_count =
+        sum(partition.outside_parent_row_count for partition in unit_partitions)
+    coverage_complete =
+        all(partition.coverage_complete for partition in unit_partitions) &&
+        duplicate_count == 0 && missing_count == 0 && outside_count == 0
+    total_tile_count = sum(partition.tile_count for partition in unit_partitions)
+    total_support_count = sum(partition.support_count for partition in unit_partitions)
+    status =
+        coverage_complete ?
+        :available_independent_h2_pqs_supplement_support_partition :
+        :blocked_independent_h2_pqs_supplement_support_partition
+    blocker =
+        coverage_complete ? nothing : :independent_h2_pqs_support_partition_coverage_mismatch
+    support_counts =
+        _pqs_source_box_route_driver_ordered_count_tuple(
+            target_payload.support_counts,
+            support_order,
+        )
+    retained_counts =
+        _pqs_source_box_route_driver_ordered_count_tuple(
+            target_payload.retained_counts,
+            source_plan.retained_order,
+        )
+    summary = (;
+        status,
+        blocker,
+        route_family = target_payload.route_family,
+        route_kind = target_payload.route_kind,
+        support_order,
+        retained_order = source_plan.retained_order,
+        support_counts,
+        retained_counts,
+        retained_ranges,
+        unit_partitions =
+            Tuple(_pqs_source_box_route_driver_partition_summary_unit(partition)
+                  for partition in unit_partitions),
+        total_tile_count,
+        total_support_count,
+        coverage_complete,
+        duplicate_parent_row_count = duplicate_count,
+        missing_parent_row_count = missing_count,
+        outside_parent_row_count = outside_count,
+        source_backed_fixed_source_oracle_used = false,
+        fake_pqs_enabled = false,
+        retained_transform_authority = :pqs_source_box_construction,
+        provider_blocks_materialized = false,
+        route_global_matrix_materialized = false,
+    )
+    return _PQSIndependentH2PQSSupplementSupportPartitionPayload(
+        status,
+        blocker,
+        target_payload.route_family,
+        target_payload.route_kind,
+        support_order,
+        source_plan.retained_order,
+        support_counts,
+        retained_counts,
+        retained_ranges,
+        unit_partitions,
+        total_tile_count,
+        total_support_count,
+        coverage_complete,
+        duplicate_count,
+        missing_count,
+        outside_count,
+        false,
+        false,
+        :pqs_source_box_construction,
+        summary,
+        (;
+            source =
+                :pqs_source_box_route_driver_independent_h2_pqs_supplement_support_partition_payload,
+            provider_blocks_materialized = false,
+            route_global_matrix_materialized = false,
+        ),
     )
 end
 

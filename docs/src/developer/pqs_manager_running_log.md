@@ -1796,3 +1796,52 @@ Remaining blocker / next:
 
 Line-count / complexity note:
 - Scoped `src + test + bin` tracked impact was `0`.
+
+## Pass 261 - Independent H2 PQS Supplement Support Partition
+
+Commit(s):
+- this commit - Materialize independent H2 PQS support partition
+
+Summary:
+- Implemented the private support-partition payload needed before independent
+  H2 PQS supplement provider blocks.
+- The payload exposes atom-contact per-piece tiles and shared-shell
+  outer-minus-inner support tiles/row maps. It reports support counts
+  `(275, 578, 362)`, retained counts `(275, 98, 98)`, final support count
+  `1215`, total tile count `55`, and zero duplicate/missing/outside rows.
+- No provider blocks, mixed/GTO matrices, residual MWG, route-global matrices,
+  supplemented values, CR2/export, HamV6, public API, or fake/WL comparison
+  paths were materialized.
+
+Validation:
+- Doer: package load, focused support-partition smoke, and `git diff --check`
+  passed. The focused smoke took about 164 seconds and did not run H1, H1-J,
+  RHF, provider blocks, or supplemented values.
+- Manager: reran package load and `git diff --check`; both passed.
+
+Goal advancement:
+- MT4/LT5: created the route-authority boundary required before provider-block
+  work can proceed without abusing filled shared-shell CPBs as support.
+- LT8: made the common support vocabulary concrete as row-owned support tiles
+  and unit partitions.
+- LT4: preserved the local/provider-first path by keeping route-global matrices
+  unmaterialized.
+
+Medium-goal update:
+- none.
+
+Risk / guardrail:
+- This is still pre-provider infrastructure. Provider blocks must consume this
+  support partition and keep matrices local/provider-level; supplemented values
+  remain blocked.
+
+Remaining blocker / next:
+- Either harden/pay down this support-partition seam or implement only the first
+  private provider-block payload against these tiles. Do not jump to residual
+  MWG or supplemented energies.
+
+Line-count / complexity note:
+- Scoped `src + test + bin` was `435` added / `0` deleted, net `+435`.
+- Exception accepted because the payload prevents a worse provider-block
+  authority error. The next cleanup-capable pass should pay this down with a
+  mature deletion candidate.

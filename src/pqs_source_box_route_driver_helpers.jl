@@ -7653,6 +7653,11 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
             diatomic_physical_gausslet_target_payload,
             diatomic_physical_gausslet_source_plan_candidate_payload,
         )
+    independent_h2_pqs_supplement_support_partition_payload =
+        _pqs_source_box_route_driver_independent_h2_pqs_supplement_support_partition_payload(
+            diatomic_physical_gausslet_target_payload,
+            diatomic_physical_gausslet_source_plan_payload,
+        )
     diatomic_physical_gausslet_final_basis_payload =
         _pqs_source_box_route_driver_diatomic_physical_gausslet_final_basis_payload(
             route_skeleton,
@@ -7818,6 +7823,7 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
         diatomic_physical_gausslet_supplement_preflight_payload,
         diatomic_physical_gausslet_source_plan_candidate_payload,
         diatomic_physical_gausslet_source_plan_payload,
+        independent_h2_pqs_supplement_support_partition_payload,
         diatomic_physical_gausslet_final_basis_payload,
         diatomic_physical_gausslet_h1_payload,
         diatomic_physical_gausslet_h1_j_payload,
