@@ -34,9 +34,9 @@ deleted.
 1. P1 residual-GTO / MWG supplement materialization: completed first vertical
    sidecar slice; remaining work is provider blocks, supplemented values, and
    a full provider-block Hamiltonian.
-2. P1 Ham/JLD2 artifact contract and basis transfer/roundtrip: H2 PQS
-   Ham/Basis plus residual-GTO sidecar artifacts write/reload; remaining work
-   is artifact/consumer roundtrip and provider-block artifact coverage.
+2. P1 Ham/JLD2 artifact contract and basis transfer/roundtrip: narrow H2 PQS
+   residual-GTO sidecar roundtrip is done; remaining work is broader downstream
+   consumer coverage and provider-block artifact coverage.
 3. P2 hydrogenic-core / ESOI corrections.
 4. P2 EGOI / density-density correction.
 5. P3 branch / fragment Hamiltonian workflow.

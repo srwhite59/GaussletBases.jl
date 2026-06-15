@@ -280,62 +280,6 @@ function _pqs_source_box_route_driver_pqs_h2_route_metadata(report, inputs)
     )
 end
 
-function _pqs_source_box_route_driver_jld2_contains(file, required_keys)
-    return all(key -> haskey(file, String(key)), required_keys)
-end
-
-function _pqs_source_box_route_driver_h2_pqs_basis_artifact_reload_ok(path)
-    jldopen(String(path), "r") do file
-        _pqs_source_box_route_driver_jld2_contains(
-            file,
-            (
-                :artifact_kind,
-                :final_dimension,
-                :final_coefficients,
-                :final_gto_cross_overlap,
-                :gto_self_overlap,
-                :gto_residual_overlap,
-            ),
-        ) || return false
-        final_dimension = Int(file["final_dimension"])
-        final_dimension == 471 || return false
-        final_coefficients = file["final_coefficients"]
-        final_gto_cross_overlap = file["final_gto_cross_overlap"]
-        gto_self_overlap = file["gto_self_overlap"]
-        gto_residual_overlap = file["gto_residual_overlap"]
-        size(final_coefficients, 2) == final_dimension || return false
-        size(final_gto_cross_overlap, 1) == final_dimension || return false
-        size(gto_self_overlap, 1) == size(gto_self_overlap, 2) || return false
-        size(gto_residual_overlap) == size(gto_self_overlap) || return false
-        return true
-    end
-end
-
-function _pqs_source_box_route_driver_h2_pqs_ham_artifact_reload_ok(
-    path,
-    final_dimension::Int,
-)
-    jldopen(String(path), "r") do file
-        _pqs_source_box_route_driver_jld2_contains(
-            file,
-            (
-                :artifact_kind,
-                :one_body_hamiltonian,
-                :pre_final_pair_matrix,
-                :h1_j_self_coulomb,
-            ),
-        ) || return false
-        one_body_hamiltonian = file["one_body_hamiltonian"]
-        pre_final_pair_matrix = file["pre_final_pair_matrix"]
-        h1_j_self_coulomb = Float64(file["h1_j_self_coulomb"])
-        size(one_body_hamiltonian) == (final_dimension, final_dimension) || return false
-        size(pre_final_pair_matrix, 1) == size(pre_final_pair_matrix, 2) ||
-            return false
-        isfinite(h1_j_self_coulomb) || return false
-        return true
-    end
-end
-
 function _pqs_source_box_route_driver_require_jld2_keys(file, keys)
     missing = Symbol[key for key in keys if !haskey(file, String(key))]
     isempty(missing) || throw(ArgumentError("H2 PQS sidecar artifact missing keys $(missing)"))
@@ -349,13 +293,16 @@ function _pqs_source_box_route_driver_square_matrix(name::AbstractString, matrix
 end
 
 """
-    pqs_h2_residual_gto_sidecar_artifact_roundtrip(basisfile, hamfile)
+    _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_roundtrip(
+        basisfile,
+        hamfile,
+    )
 
 Read the narrow H2 independent-PQS Ham/Basis plus residual-GTO sidecar
 artifacts and return compact consumer facts. This is intentionally specific to
 the current P1 artifact; it is not a general artifact registry.
 """
-function pqs_h2_residual_gto_sidecar_artifact_roundtrip(
+function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_roundtrip(
     basisfile,
     hamfile;
     symmetry_atol::Real = 1.0e-8,
@@ -570,7 +517,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
     )
 
     basis_artifact_path = nothing
-    basis_artifact_reloaded = false
     if save_basis_artifact
         basis_artifact_path = String(basisfile)
         jldopen(basis_artifact_path, "w") do file
@@ -592,14 +538,9 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
             file["gto_residual_overlap"] = sidecar.gto_residual_overlap
             file["gto_sidecar_diagnostics"] = sidecar.diagnostics
         end
-        basis_artifact_reloaded =
-            _pqs_source_box_route_driver_h2_pqs_basis_artifact_reload_ok(
-                basis_artifact_path,
-            )
     end
 
     ham_artifact_path = nothing
-    ham_artifact_reloaded = false
     if save_ham_artifact
         ham_artifact_path = String(hamfile)
         jldopen(ham_artifact_path, "w") do file
@@ -623,20 +564,17 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
             file["gto_residual_overlap"] = sidecar.gto_residual_overlap
             file["gto_sidecar_diagnostics"] = sidecar.diagnostics
         end
-        ham_artifact_reloaded =
-            _pqs_source_box_route_driver_h2_pqs_ham_artifact_reload_ok(
-                ham_artifact_path,
-                final_basis.final_dimension,
-            )
     end
 
     artifact_roundtrip =
         save_basis_artifact && save_ham_artifact ?
-        pqs_h2_residual_gto_sidecar_artifact_roundtrip(
+        _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_roundtrip(
             basis_artifact_path,
             ham_artifact_path,
         ) :
         nothing
+    basis_artifact_reloaded = !isnothing(artifact_roundtrip)
+    ham_artifact_reloaded = !isnothing(artifact_roundtrip)
 
     return (;
         route_family = report.route_family,
