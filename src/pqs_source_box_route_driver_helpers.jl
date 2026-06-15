@@ -476,231 +476,6 @@ function _pqs_source_box_route_driver_route_axis_counts(
 end
 
 
-# System metadata.
-
-function _pqs_source_box_route_driver_system_metadata(
-    standard_setup,
-    route_axis_counts,
-    system_inputs,
-)
-    return (;
-        atom_symbols = system_inputs.atom_symbols,
-        nuclear_charges = standard_setup.nuclear_charges,
-        atom_locations = standard_setup.atom_locations,
-        bond_axis = get(system_inputs, :bond_axis, nothing),
-        bond_length = get(system_inputs, :bond_length, nothing),
-        radius = standard_setup.radius,
-        manual_parent_axis_counts = system_inputs.parent_axis_counts,
-        parent_axis_counts = route_axis_counts.parent_axis_counts,
-        parent_axis_counts_status = route_axis_counts.status,
-        parent_axis_counts_source = route_axis_counts.parent_axis_counts_source,
-        parent_box = standard_setup.parent_box,
-        parent_box_rule = standard_setup.parent_box_rule,
-        map_backend = system_inputs.map_backend,
-    )
-end
-
-# Metadata and parent description.
-
-function _pqs_source_box_route_driver_parent_contract(parent)
-    return (;
-        object_kind = :cartesian_route_parent_contract,
-        status = parent.status,
-        atom_count = parent.atom_count,
-        center_count = parent.center_count,
-        atom_symbols = parent.atom_symbols,
-        nuclear_charges = parent.nuclear_charges,
-        atom_locations = parent.atom_locations,
-        center_table = parent.center_table,
-        center_axis_metadata = parent.center_axis_metadata,
-        system_classification = parent.system_classification,
-        system_classification_status = parent.system_classification_status,
-        bond_axis = parent.bond_axis,
-        chain_axis = parent.chain_axis,
-        parent_axis_counts = parent.axis_counts,
-        parent_axis_counts_source = parent.axis_counts_source,
-        parent_axis_counts_status = parent.axis_counts_status,
-        parent_box = parent.physical_box,
-        parent_box_rule = parent.physical_box_rule,
-        parent_materialization_plan = parent.parent_materialization_plan,
-        parent_materialization_plan_status =
-            parent.parent_materialization_plan_status,
-        parent_materialization_planning_family =
-            parent.parent_materialization_planning_family,
-        parent_materialization_blocker = parent.parent_materialization_blocker,
-        parent_basis_object_available = parent.parent_basis_object_available,
-        parent_qw_basis_object_available =
-            parent.parent_qw_basis_object_available,
-        parent_axis_bundle_object_available =
-            parent.parent_axis_bundle_object_available,
-        parent_basis_object_type_label = parent.parent_basis_object_type_label,
-        parent_qw_basis_object_type_label =
-            parent.parent_qw_basis_object_type_label,
-        parent_axis_bundle_object_type_label =
-            parent.parent_axis_bundle_object_type_label,
-        parent_basis_materialization_status =
-            parent.parent_basis_materialization_status,
-        parent_basis_materialization = parent.parent_basis_materialization,
-        parent_basis_materialized = parent.parent_basis_materialized,
-        parent_axis_metadata_constructed =
-            parent.parent_axis_metadata_constructed,
-        axis_bundle_materialized = parent.axis_bundle_materialized,
-        diagnostics = (
-            source = :cartesian_parent,
-            private_development_only = true,
-            report_parent_contract = true,
-            parent_contract_driven_downstream_metadata = true,
-            parent_basis_materialized = parent.parent_basis_materialized,
-            axis_bundle_materialized = parent.axis_bundle_materialized,
-            public_default_behavior_changed = false,
-        ),
-    )
-end
-
-function _pqs_source_box_route_driver_recipe_metadata(
-    standard_setup,
-    route_axis_counts,
-    parent_axis,
-    raw_box,
-    spacing_inputs, probe_inputs, route_recipe,
-)
-    common_metadata = (;
-        route_family = route_recipe.route_family,
-        route_kind = route_recipe.route_kind,
-        q = spacing_inputs.q,
-        n_s = standard_setup.n_s,
-        n_s_source = standard_setup.n_s_source,
-        core_cube_side = standard_setup.core_cube_side,
-        reference_spacing = standard_setup.reference_spacing,
-        tail_spacing = standard_setup.tail_spacing,
-        q_to_core_spacing_rule = standard_setup.q_to_core_spacing_rule,
-        core_spacing = standard_setup.core_spacing,
-        xmax_parallel = get(spacing_inputs, :xmax_parallel, nothing),
-        xmax_transverse = get(spacing_inputs, :xmax_transverse, nothing),
-        core_spacing_source = standard_setup.spacing.core_spacing_source,
-        q_to_core_spacing_rule_status =
-            standard_setup.spacing.q_to_core_spacing_rule_status,
-        probe_parent_axis_construction = probe_inputs.probe_parent_axis_construction,
-        parent_axis_probe_requested = parent_axis.parent_axis_probe_requested,
-        parent_axis_probe_backend = probe_inputs.parent_axis_probe_backend,
-        route_axis_counts_source = route_axis_counts.parent_axis_counts_source,
-        probe_raw_product_box_plans = probe_inputs.probe_raw_product_box_plans,
-        raw_product_box_probe_requested = raw_box.raw_product_box_probe_requested,
-        raw_product_box_probe_backend = probe_inputs.raw_product_box_probe_backend,
-        terms = route_recipe.terms,
-        pair_factor_normalization = route_recipe.pair_factor_normalization,
-        parent_mapping_rule = get(probe_inputs, :parent_mapping_rule, :identity_mapping),
-        parent_mapping_Z = get(probe_inputs, :parent_mapping_Z, nothing),
-        parent_mapping_d = get(probe_inputs, :parent_mapping_d, nothing),
-        parent_mapping_tail_spacing =
-            get(probe_inputs, :parent_mapping_tail_spacing, nothing),
-        retained_atom_core_interiors =
-            get(route_recipe, :retained_atom_core_interiors, nothing),
-        supplement_policy = get(route_recipe, :supplement_policy, nothing),
-        run_final_basis = get(route_recipe, :run_final_basis, true),
-        run_h1 = get(route_recipe, :run_h1, true),
-        run_h1_j = get(route_recipe, :run_h1_j, true),
-        run_private_rhf =
-            get(get(route_recipe, :private_rhf_inputs, (;)), :run_private_rhf, false),
-    )
-
-    if route_recipe.route_family == :pqs_source_box
-        source_box_recipe = route_recipe.source_box
-        return merge(
-            common_metadata,
-            (;
-                route_shape = source_box_recipe.route_shape,
-                product_body_rule = source_box_recipe.product_body_rule,
-                pqs_source_box_rule = :mode_selected_raw_box_pqs,
-                pqs_retained_rule = source_box_recipe.pqs_retained_rule,
-                product_retained_rule = source_box_recipe.product_retained_rule,
-                support_dense_direct_allowed =
-                    source_box_recipe.support_dense_direct_allowed,
-                reference_only_authorities =
-                    source_box_recipe.reference_only_authorities,
-            ),
-        )
-    end
-
-    low_order_recipe = route_recipe.white_lindsey
-    return merge(
-        common_metadata,
-        (;
-            route_shape = low_order_recipe.route_shape,
-            white_lindsey_mapping_rule = low_order_recipe.mapping_rule,
-            white_lindsey_nesting_rule = low_order_recipe.nesting_rule,
-            white_lindsey_retained_rule = low_order_recipe.retained_rule,
-            white_lindsey_operator_rule = low_order_recipe.operator_rule,
-            benchmark_role = low_order_recipe.benchmark_role,
-            pqs_source_box_rule = :not_applicable,
-            pqs_retained_rule = :not_applicable,
-            product_retained_rule = :not_applicable,
-            support_dense_direct_allowed = false,
-            reference_only_authorities = (),
-        ),
-    )
-end
-
-function _pqs_source_box_route_driver_parent_description(
-    standard_setup,
-    parent_axis,
-    route_axis_counts,
-    parent_contract,
-    route_skeleton,
-    raw_box,
-)
-    source_box_route = route_skeleton.route_family == :pqs_source_box
-    return (;
-        status = :described_not_constructed,
-        route_family = route_skeleton.route_family,
-        standard_setup,
-        route_axis_counts,
-        parent_contract_status = parent_contract.status,
-        parent_contract_object_kind = parent_contract.object_kind,
-        center_count = parent_contract.center_count,
-        system_classification = parent_contract.system_classification,
-        system_classification_status =
-            parent_contract.system_classification_status,
-        bond_axis = parent_contract.bond_axis,
-        chain_axis = parent_contract.chain_axis,
-        parent_materialization_plan_status =
-            parent_contract.parent_materialization_plan_status,
-        parent_materialization_planning_family =
-            parent_contract.parent_materialization_planning_family,
-        parent_materialization_blocker =
-            parent_contract.parent_materialization_blocker,
-        parent_basis_object_available =
-            parent_contract.parent_basis_object_available,
-        parent_axis_bundle_object_available =
-            parent_contract.parent_axis_bundle_object_available,
-        parent_basis_materialization_status =
-            parent_contract.parent_basis_materialization_status,
-        parent_basis_materialized = parent_contract.parent_basis_materialized,
-        axis_bundle_materialized = parent_contract.axis_bundle_materialized,
-        raw_product_box_probe = raw_box.raw_product_box_probe,
-        physical_parent_box = standard_setup.parent_box,
-        physical_parent_box_rule = standard_setup.parent_box_rule,
-        axis_transform_status = parent_axis.parent_axis_readiness.status,
-        one_dimensional_transforms = (:x_axis_transform, :y_axis_transform, :z_axis_transform),
-        parent_lattice =
-            source_box_route ?
-            :raw_product_box_parent_lattice :
-            :white_lindsey_nested_cartesian_parent_lattice,
-        parent_axis_counts = route_skeleton.parent_axis_counts,
-        parent_axis_counts_source = route_axis_counts.parent_axis_counts_source,
-        source_boxes = route_skeleton.source_boxes,
-        raw_product_box_plan_status = raw_box.raw_product_box_probe_status,
-        pending_facts = (
-            route_skeleton.pending_facts...,
-            :parent_axis_counts_from_standard_parent_constructor,
-            parent_axis.parent_axis_readiness.pending_facts...,
-            route_axis_counts.pending_facts...,
-            raw_box.raw_product_box_probe_pending_facts...,
-        ),
-    )
-end
-
-
 # Route facts, contracts, diagnostics, and report assembly.
 
 function _pqs_source_box_route_driver_shared_unit_fields()
@@ -1021,196 +796,22 @@ end
 _pqs_source_box_route_driver_contract_metadata() =
     _pqs_source_box_route_driver_contract_metadata((; route_family = :pqs_source_box))
 
-function _pqs_source_box_route_driver_diagnostics(
-    standard_setup,
-    parent_axis,
-    route_axis_counts,
-    route_skeleton,
-    raw_box,
-    contract,
-)
-    parent_axis_readiness = parent_axis.parent_axis_readiness
-    raw_product_box_probe = raw_box.raw_product_box_probe
-    source_box_route = route_skeleton.route_family == :pqs_source_box
-    route_skeleton_helper =
-        source_box_route ?
-        :_pqs_source_box_route_driver_generic_source_box_skeleton :
-        :_pqs_source_box_route_driver_white_lindsey_low_order_skeleton
-    route_axis_counts_helper =
-        source_box_route ?
-        :_pqs_source_box_route_parent_axis_counts_for_skeleton :
-        :_pqs_source_box_route_driver_route_axis_counts
-    output_representation =
-        hasproperty(route_skeleton.diagnostics, :output_representation) ?
-        route_skeleton.diagnostics.output_representation :
-        :retained_two_index_density_density
-    diagnostics = merge(
-        route_skeleton.diagnostics,
-        (
-            source = :cartesian_nesting_route_driver_skeleton,
-            route_family = route_skeleton.route_family,
-            standard_setup_helper = :_pqs_standard_source_box_route_setup,
-            standard_setup_status = standard_setup.status,
-            standard_setup_diagnostics = standard_setup.diagnostics,
-            parent_axis_readiness_helper =
-                :_pqs_standard_parent_axis_construction_readiness,
-            parent_axis_readiness_status = parent_axis_readiness.status,
-            parent_axis_readiness_diagnostics = parent_axis_readiness.diagnostics,
-            route_skeleton_helper = route_skeleton_helper,
-            n_s = standard_setup.n_s,
-            n_s_source = standard_setup.n_s_source,
-            core_cube_side = standard_setup.core_cube_side,
-            core_cube_side_rule = standard_setup.core_cube_side_rule,
-            parent_box_rule = standard_setup.parent_box_rule,
-            parent_box = standard_setup.parent_box,
-            core_spacing = standard_setup.core_spacing,
-            mapping_s = standard_setup.mapping_s,
-            q_to_core_spacing_rule = standard_setup.q_to_core_spacing_rule,
-            q_to_core_spacing_rule_status =
-                standard_setup.spacing.q_to_core_spacing_rule_status,
-            q_to_core_spacing_provenance = standard_setup.spacing.provenance,
-            core_spacing_source = standard_setup.spacing.core_spacing_source,
-            core_spacing_default_formula =
-                standard_setup.spacing.core_spacing_default_formula,
-            q_to_core_spacing_non_optimality_claim =
-                standard_setup.spacing.non_optimality_claim,
-            parent_axis_counts_status =
-                parent_axis_readiness.parent_axis_counts_status,
-            parent_axis_counts_manual_fixture =
-                parent_axis_readiness.parent_axis_counts_manual_fixture,
-            parent_axis_counts_derived =
-                parent_axis_readiness.parent_axis_counts_derived,
-            existing_parent_api_appears_applicable =
-                parent_axis_readiness.existing_parent_api_appears_applicable,
-            standard_parent_axis_rule_ready =
-                parent_axis_readiness.standard_parent_axis_rule_ready,
-            route_axis_counts_helper = route_axis_counts_helper,
-            route_axis_counts_status = route_axis_counts.status,
-            route_axis_counts_source = route_axis_counts.parent_axis_counts_source,
-            route_axis_counts_derived = route_axis_counts.parent_axis_counts_derived,
-            route_axis_counts_manual_fixture =
-                route_axis_counts.parent_axis_counts_manual_fixture,
-            route_axis_counts_diagnostics = route_axis_counts.diagnostics,
-            parent_axis_probe_requested = parent_axis.parent_axis_probe_requested,
-            parent_axis_probe_status = parent_axis.parent_axis_probe_status,
-            parent_axis_metadata_constructed = parent_axis.parent_axis_probe_constructed,
-            parent_axis_probe_pending_facts = parent_axis.parent_axis_probe_pending_facts,
-            raw_product_box_probe_requested = raw_box.raw_product_box_probe_requested,
-            raw_product_box_probe_status = raw_box.raw_product_box_probe_status,
-            raw_product_box_probe_pending_facts = raw_box.raw_product_box_probe_pending_facts,
-            raw_product_box_plan_count =
-                isnothing(raw_product_box_probe) ?
-                0 :
-                raw_product_box_probe.raw_product_box_plan_count,
-            raw_product_box_all_pgdg_exact =
-                isnothing(raw_product_box_probe) ?
-                false :
-                raw_product_box_probe.all_pgdg_exact,
-            raw_product_box_any_numerical_reference_fallback =
-                isnothing(raw_product_box_probe) ?
-                false :
-                raw_product_box_probe.any_numerical_reference_fallback,
-            parent_axis_pending_facts = parent_axis_readiness.pending_facts,
-            output_representation = output_representation,
-            no_go_flags = contract.no_go_flags,
-            driver_builds_real_hamiltonian = false,
-            driver_builds_route_matrices = false,
-        ),
-    )
-    return diagnostics
-end
-
-function _pqs_source_box_route_driver_report(
-    standard_setup,
-    parent,
-    parent_axis,
-    route_axis_counts,
-    raw_box,
-    system_metadata,
-    recipe_metadata,
-    parent_contract,
-    parent_description,
-    route_skeleton,
-    route_facts,
-    contract,
-    diagnostics,
-    low_order_route_summary,
-)
-    route_materializer_payload =
-        _pqs_source_box_route_driver_materializer_payload(parent)
-    return (;
-        object_kind = :cartesian_nesting_route_driver_skeleton_report,
-        generated_at = Base.Libc.strftime("%Y-%m-%dT%H:%M:%S", time()),
-        route_family = route_skeleton.route_family,
-        standard_setup,
-        route_axis_counts,
-        raw_product_box_probe = raw_box.raw_product_box_probe,
-        system_metadata,
-        recipe_metadata,
-        parent_contract,
-        parent_description,
-        route_skeleton,
-        route_shape = route_skeleton.route_shape,
-        retained_unit_order = route_skeleton.retained_unit_order,
-        source_boxes = route_facts.source_boxes,
-        source_dimensions = route_facts.source_dimensions,
-        retained_units = route_facts.retained_units,
-        retained_counts = route_facts.retained_counts,
-        ranges = route_facts.ranges,
-        retained_dimension = route_facts.retained_dimension,
-        pair_entries = route_facts.pair_entries,
-        pair_family_counts = route_facts.pair_family_counts,
-        helper_by_pair_family = route_facts.helper_by_pair_family,
-        standard_unit_inventory =
-            _pqs_source_box_route_driver_standard_unit_inventory_summary(route_facts),
-        linear_algebra_plan = contract.linear_algebra_plan,
-        stage_table = contract.stage_table,
-        dry_run_validation = contract.dry_run_validation,
-        low_order_route_summary,
-        diagnostics,
-        route_materializer_payload,
-    )
-end
-
 function _pqs_source_box_route_driver_materializer_payload(parent)
-    parent_axis_probe =
-        hasproperty(parent, :parent_axis_probe) ? parent.parent_axis_probe : nothing
     parent_basis_object =
         hasproperty(parent, :parent_basis_object) ? parent.parent_basis_object : nothing
-    parent_qw_basis_object =
-        hasproperty(parent, :parent_qw_basis_object) ?
-        parent.parent_qw_basis_object :
-        nothing
     parent_axis_bundle_object =
         hasproperty(parent, :parent_axis_bundle_object) ?
         parent.parent_axis_bundle_object :
         nothing
     axis_bundle_backend =
-        !isnothing(parent_axis_probe) &&
-        hasproperty(parent_axis_probe, :gausslet_backend) ?
-        parent_axis_probe.gausslet_backend :
+        hasproperty(parent, :parent_inputs) ?
+        parent.parent_inputs.parent_axis_bundle_backend :
         nothing
 
     return (;
-        object_kind = :cartesian_route_materializer_transient_payload,
-        private_development_only = true,
-        transient_only = true,
-        durable_report_serialization = :sanitize_before_save,
-        source = :parent_axis_probe_object_carry,
         parent_basis_object,
-        parent_qw_basis_object,
         parent_axis_bundle_object,
-        parent_basis_object_available = !isnothing(parent_basis_object),
-        parent_qw_basis_object_available = !isnothing(parent_qw_basis_object),
-        parent_axis_bundle_object_available = !isnothing(parent_axis_bundle_object),
-        parent_basis_object_type_label =
-            _pqs_route_driver_type_label(parent_basis_object),
-        parent_qw_basis_object_type_label =
-            _pqs_route_driver_type_label(parent_qw_basis_object),
-        parent_axis_bundle_object_type_label =
-            _pqs_route_driver_type_label(parent_axis_bundle_object),
         axis_bundle_backend,
-        axis_bundle_backend_available = !isnothing(axis_bundle_backend),
     )
 end
 
@@ -4108,33 +3709,6 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
     )
 end
 
-function _pqs_source_box_route_driver_report_stage_low_order_route_summary(assembly)
-    low_order_assembly =
-        hasproperty(assembly, :low_order_assembly) ?
-        assembly.low_order_assembly :
-        nothing
-    isnothing(low_order_assembly) && return (;
-        object_kind = :cartesian_report_stage_low_order_route_summary,
-        status = :not_available_missing_assembly_stage_summary,
-        materialization_status = :blocked_missing_assembly_stage_summary,
-        materialization_blocker = :missing_assembly_stage_low_order_summary,
-        plan_authority = false,
-        active_source_authority = false,
-        legacy_source_authority = false,
-        summary_only = true,
-    )
-    return (;
-        object_kind = :cartesian_report_stage_low_order_route_summary,
-        status = get(low_order_assembly, :status, :available_report_stage_low_order_route_summary),
-        materialization_status = get(low_order_assembly, :assembly_materialization_status, :not_available),
-        materialization_blocker = get(low_order_assembly, :assembly_blocker, nothing),
-        plan_authority = get(low_order_assembly, :plan_authority, false),
-        active_source_authority = get(low_order_assembly, :active_source_authority, false),
-        legacy_source_authority = get(low_order_assembly, :legacy_source_authority, false),
-        summary_only = true,
-    )
-end
-
 _pqs_source_box_route_driver_payload_summary(payload) =
     isnothing(payload) ? nothing :
     hasproperty(payload, :summary) ? payload.summary :
@@ -4246,63 +3820,117 @@ end
 
 function cartesian_report(system, parent, assembly, recipe)
     standard_setup = parent.standard_setup
-    parent_axis = parent.parent_axis
-    route_axis_counts = parent.route_axis_counts
     route_skeleton = assembly.route_skeleton
-    raw_box = assembly.raw_box
     route_facts = assembly.route_facts
     contract = assembly.contract
-    probe_inputs = merge(parent.parent_inputs, assembly.route_inputs)
 
-    system_metadata =
-        _pqs_source_box_route_driver_system_metadata(
-            standard_setup, route_axis_counts, system)
-    recipe_metadata =
-        _pqs_source_box_route_driver_recipe_metadata(
-            standard_setup, route_axis_counts, parent_axis, raw_box,
-            assembly.spacing_inputs, probe_inputs, recipe)
-    parent_contract = _pqs_source_box_route_driver_parent_contract(parent)
-    parent_description =
-        _pqs_source_box_route_driver_parent_description(
-            standard_setup, parent_axis, route_axis_counts, parent_contract,
-            route_skeleton, raw_box)
-    diagnostics =
-        _pqs_source_box_route_driver_diagnostics(
-            standard_setup, parent_axis, route_axis_counts,
-            route_skeleton, raw_box, contract)
-    low_order_route_summary =
-        _pqs_source_box_route_driver_report_stage_low_order_route_summary(
-            assembly,
-        )
-    complete_core_shell_h1_j_report_fields =
+    source_recipe =
+        recipe.route_family == :pqs_source_box ? recipe.source_box : recipe.white_lindsey
+    private_rhf_inputs = get(recipe, :private_rhf_inputs, (;))
+    system_metadata = (;
+        atom_symbols = parent.atom_symbols,
+        nuclear_charges = parent.nuclear_charges,
+        atom_locations = parent.atom_locations,
+        bond_axis = parent.bond_axis,
+        bond_length = get(system, :bond_length, nothing),
+        radius = get(system, :radius, nothing),
+        map_backend = get(system, :map_backend, nothing),
+    )
+    recipe_metadata = (;
+        route_family = recipe.route_family,
+        route_kind = recipe.route_kind,
+        route_shape = get(source_recipe, :route_shape, nothing),
+        q = assembly.spacing_inputs.q,
+        n_s = standard_setup.n_s,
+        core_cube_side = standard_setup.core_cube_side,
+        reference_spacing = standard_setup.reference_spacing,
+        tail_spacing = standard_setup.tail_spacing,
+        q_to_core_spacing_rule = standard_setup.q_to_core_spacing_rule,
+        core_spacing = standard_setup.core_spacing,
+        xmax_parallel = get(assembly.spacing_inputs, :xmax_parallel, nothing),
+        xmax_transverse = get(assembly.spacing_inputs, :xmax_transverse, nothing),
+        terms = recipe.terms,
+        pair_factor_normalization = recipe.pair_factor_normalization,
+        supplement_policy = get(recipe, :supplement_policy, nothing),
+        run_final_basis = get(recipe, :run_final_basis, false),
+        run_h1 = get(recipe, :run_h1, false),
+        run_h1_j = get(recipe, :run_h1_j, false),
+        run_private_rhf = get(private_rhf_inputs, :run_private_rhf, false),
+        product_body_rule = get(source_recipe, :product_body_rule, nothing),
+        pqs_retained_rule = get(source_recipe, :pqs_retained_rule, nothing),
+        product_retained_rule = get(source_recipe, :product_retained_rule, nothing),
+        white_lindsey_mapping_rule = get(source_recipe, :mapping_rule, nothing),
+        white_lindsey_nesting_rule = get(source_recipe, :nesting_rule, nothing),
+        white_lindsey_retained_rule = get(source_recipe, :retained_rule, nothing),
+        white_lindsey_operator_rule = get(source_recipe, :operator_rule, nothing),
+    )
+    parent_summary = (;
+        atom_count = parent.atom_count,
+        system_classification = parent.system_classification,
+        center_table = parent.center_table,
+        axis_counts = parent.axis_counts,
+        physical_box = parent.physical_box,
+    )
+    route_summary = (;
+        route_shape = get(route_skeleton, :route_shape, nothing),
+        retained_unit_order = get(route_skeleton, :retained_unit_order, ()),
+        source_boxes = route_facts.source_boxes,
+        source_dimensions = route_facts.source_dimensions,
+        retained_counts = route_facts.retained_counts,
+        retained_dimension = route_facts.retained_dimension,
+        shellification_kind = get(assembly.shells, :shellification_kind, nothing),
+    )
+    pair_summary = (;
+        pair_entries = assembly.pairs.pair_entries,
+        pair_family_counts = assembly.pairs.pair_family_counts,
+        helper_by_pair_family = assembly.pairs.helper_by_pair_family,
+    )
+
+    return merge(
+        (;
+            generated_at = Base.Libc.strftime("%Y-%m-%dT%H:%M:%S", time()),
+            route_family = route_skeleton.route_family,
+            route_kind = get(route_skeleton, :route_kind, recipe.route_kind),
+            standard_setup,
+            system_metadata,
+            recipe_metadata,
+            parent_summary,
+            route_summary,
+            pair_summary,
+            route_skeleton,
+            route_facts,
+            contract,
+            shells = assembly.shells,
+            units = assembly.units,
+            transforms = assembly.transforms,
+            pairs = assembly.pairs,
+            low_order_assembly = assembly.low_order_assembly,
+            source_boxes = route_facts.source_boxes,
+            source_dimensions = route_facts.source_dimensions,
+            retained_units = route_facts.retained_units,
+            retained_counts = route_facts.retained_counts,
+            ranges = route_facts.ranges,
+            retained_dimension = route_facts.retained_dimension,
+            pair_entries = assembly.pairs.pair_entries,
+            pair_family_counts = assembly.pairs.pair_family_counts,
+            helper_by_pair_family = assembly.pairs.helper_by_pair_family,
+            linear_algebra_plan = contract.linear_algebra_plan,
+            route_materializer_payload =
+                _pqs_source_box_route_driver_materializer_payload(parent),
+        ),
         _pqs_source_box_route_driver_complete_core_shell_h1_j_report_fields(
             assembly,
-        )
-    complete_core_shell_private_rhf_report_fields =
+        ),
         _pqs_source_box_route_driver_complete_core_shell_private_rhf_report_fields(
             assembly,
             recipe,
-        )
-    diatomic_complete_core_shell_report_fields =
+        ),
         _pqs_source_box_route_driver_diatomic_complete_core_shell_report_fields(
             assembly,
-        )
-    physical_gausslet_target_report_fields =
+        ),
         _pqs_source_box_route_driver_physical_gausslet_target_report_fields(
             assembly,
-        )
-
-    report = _pqs_source_box_route_driver_report(
-        standard_setup, parent, parent_axis, route_axis_counts, raw_box,
-        system_metadata, recipe_metadata, parent_contract, parent_description,
-        route_skeleton, route_facts, contract, diagnostics,
-        low_order_route_summary)
-    return merge(
-        report,
-        complete_core_shell_h1_j_report_fields,
-        complete_core_shell_private_rhf_report_fields,
-        diatomic_complete_core_shell_report_fields,
-        physical_gausslet_target_report_fields,
+        ),
     )
 end
 
@@ -4316,9 +3944,6 @@ end
 function cartesian_print_summary(report, materialization)
     recipe = report.recipe_metadata
     setup = report.standard_setup
-    readiness = report.parent_axis_readiness
-    route_axis_counts = report.route_axis_counts
-    diagnostics = report.diagnostics
     retained_counts = report.retained_counts
     retained_dimension = report.retained_dimension
 
@@ -4342,13 +3967,14 @@ function cartesian_print_summary(report, materialization)
     end
 
     @show setup.n_s setup.core_cube_side setup.core_spacing
-    @show setup.spacing.q_to_core_spacing_rule_status
-    @show readiness.status readiness.parent_axis_counts_status
-    @show route_axis_counts.parent_axis_counts_source route_axis_counts.parent_axis_counts
-    @show diagnostics.parent_axis_probe_requested diagnostics.parent_axis_probe_status
-    @show diagnostics.raw_product_box_probe_requested diagnostics.raw_product_box_probe_status
+    @show report.parent_summary.axis_counts
+    @show report.parent_summary.system_classification
     @show retained_counts retained_dimension
-    @show get(report.low_order_route_summary, :materialization_status, nothing)
+    @show report.pair_family_counts
+    @show report.route_summary.shellification_kind
+    @show report.physical_gausslet_final_basis_summary
+    @show report.physical_gausslet_h1_summary
+    @show report.physical_gausslet_h1_j_summary
     @show materialization.status materialization.pqs_materialization_status
     @show materialization.materialized_report_kind
     return nothing
