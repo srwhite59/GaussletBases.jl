@@ -1645,3 +1645,46 @@ Remaining blocker / next:
 Line-count / complexity note:
 - Scoped `src + test + bin`, counting the new input, was `13` added / `24`
   deleted, net `-11`.
+
+## Pass 258 - Independent H2 PQS Supplement Preflight Verification
+
+Commit(s):
+- this commit - Record independent H2 PQS supplement preflight verification
+
+Summary:
+- Ran the new independent H2 PQS supplement-preflight input through the driver
+  and inspected the JLD2 artifact.
+- The artifact reported fake-PQS disabled, source-backed oracle disabled,
+  retained authority PQS, support counts `(275, 578, 362)`, retained counts
+  `(275, 98, 98)`, final dimension `471`, and H/cc-pVTZ lmax-1 supplement
+  representation with 18 orbitals.
+- Preflight correctly remains blocked on
+  `:missing_provider_gto_supplement_blocks` with mixed/GTO/MWG/density missing
+  facts. No source fix was needed.
+
+Validation:
+- Doer: focused route/artifact probe passed on rerun in about 78 seconds;
+  `git diff --check` passed.
+- Manager: accepted doer validation without duplicating the slow focused route
+  run.
+
+Goal advancement:
+- MT4/LT5: verified the independent supplement-preflight artifact without
+  provider-block materialization or fake-PQS evidence.
+- LT6: confirmed the preflight artifact exposes the expected consumer-facing
+  blockers and counts.
+
+Medium-goal update:
+- none.
+
+Risk / guardrail:
+- Preflight is not supplement readiness. Provider blocks, residual MWG
+  representation, combined density readiness, supplemented values, CR2/export,
+  and public API remain blocked.
+
+Remaining blocker / next:
+- Open only a narrow provider-block seam or design audit next. Do not jump to
+  supplemented energies.
+
+Line-count / complexity note:
+- Scoped `src + test + bin` tracked impact was `0`.
