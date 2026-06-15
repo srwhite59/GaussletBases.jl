@@ -73,18 +73,53 @@ function _pqs_source_box_route_driver_check_inputs(route_recipe)
 end
 
 function _pqs_source_box_route_driver_standard_setup(system_inputs, spacing_inputs)
-    metrics = CartesianContractedParentMetrics
-    return metrics._pqs_standard_source_box_route_setup(
-        ;
-        nuclear_charges = system_inputs.nuclear_charges,
-        atom_locations = system_inputs.atom_locations,
-        q = spacing_inputs.q,
+    q = Int(spacing_inputs.q)
+    n_s = Int(spacing_inputs.n_s)
+    core_cube_side = 2 * n_s + 1
+    core_spacing = spacing_inputs.core_spacing
+    spacing_status =
+        isnothing(core_spacing) ?
+        :blocked_missing_core_spacing :
+        :available_core_spacing
+    spacing_source =
+        isnothing(core_spacing) ? :missing : :input_or_driver_default
+    parent_radius = max(Int(ceil(Float64(system_inputs.radius))), n_s)
+    parent_axis = -parent_radius:parent_radius
+    spacing = (;
+        q_to_core_spacing_rule_status = spacing_status,
+        provenance = :local_route_driver_setup_after_scaffold_demolition,
+        core_spacing_source = spacing_source,
+        core_spacing_default_formula = :not_reconstructed,
+        non_optimality_claim = :not_evaluated,
+    )
+    diagnostics = (;
+        q_to_core_spacing_rule_status = spacing_status,
+        q_to_core_spacing_provenance = spacing.provenance,
+        core_spacing_source = spacing.core_spacing_source,
+        core_spacing_default_formula = spacing.core_spacing_default_formula,
+        q_to_core_spacing_non_optimality_claim = spacing.non_optimality_claim,
+    )
+    return (;
+        object_kind = :local_cartesian_route_driver_standard_setup,
+        status = spacing_status,
+        nuclear_charges = Tuple(system_inputs.nuclear_charges),
+        atom_locations = Tuple(system_inputs.atom_locations),
+        q,
         radius = system_inputs.radius,
         reference_spacing = spacing_inputs.reference_spacing,
         tail_spacing = spacing_inputs.tail_spacing,
         q_to_core_spacing_rule = spacing_inputs.q_to_core_spacing_rule,
-        core_spacing = spacing_inputs.core_spacing,
-        n_s = spacing_inputs.n_s,
+        core_spacing,
+        n_s,
+        n_s_source = :input_or_driver_default,
+        core_cube_side,
+        core_cube_side_rule = :two_n_s_plus_one,
+        parent_box_rule = :radius_index_box,
+        parent_box = (x = parent_axis, y = parent_axis, z = parent_axis),
+        mapping_s = core_spacing,
+        mapping_s_by_atom = ntuple(_ -> core_spacing, length(system_inputs.nuclear_charges)),
+        spacing,
+        diagnostics,
     )
 end
 
@@ -917,36 +952,53 @@ function _pqs_source_box_route_driver_parent_axis(
     system_inputs,
     probe_inputs,
 )
-    metrics = CartesianContractedParentMetrics
-    parent_axis_readiness =
-        metrics._pqs_standard_parent_axis_construction_readiness(
-            standard_setup;
-            parent_axis_counts = system_inputs.parent_axis_counts,
-        )
+    manual_counts = _pqs_route_driver_axis_counts(system_inputs.parent_axis_counts)
+    derived_counts = isnothing(manual_counts) ? (;
+        x = length(standard_setup.parent_box.x),
+        y = length(standard_setup.parent_box.y),
+        z = length(standard_setup.parent_box.z),
+    ) : manual_counts
+    atom_count = length(standard_setup.nuclear_charges)
+    homonuclear =
+        atom_count > 0 &&
+        all(charge == first(standard_setup.nuclear_charges) for charge in standard_setup.nuclear_charges)
+    geometry = (;
+        existing_bond_aligned_api_geometry_ready =
+            atom_count == 2 && hasproperty(system_inputs, :bond_axis),
+        bond_axis = hasproperty(system_inputs, :bond_axis) ? system_inputs.bond_axis : nothing,
+        bond_length =
+            hasproperty(system_inputs, :bond_length) ? system_inputs.bond_length : nothing,
+    )
+    parent_axis_readiness = (;
+        object_kind = :local_cartesian_parent_axis_readiness,
+        status = :available,
+        core_spacing_available = !isnothing(standard_setup.core_spacing),
+        white_lindsey_spacing_facts_available = false,
+        charge_family = homonuclear ? :homonuclear : :heteronuclear_or_mixed,
+        homonuclear,
+        geometry,
+        extent_candidates = (),
+        parent_axis_counts = derived_counts,
+        parent_axis_counts_status = :available,
+        parent_axis_counts_manual_fixture = !isnothing(manual_counts),
+        parent_axis_counts_derived = isnothing(manual_counts),
+        existing_parent_api_appears_applicable = false,
+        standard_parent_axis_rule_ready = true,
+        parent_axis_metadata_constructed = false,
+        construction_decision = :local_index_axis_counts_after_scaffold_demolition,
+        pending_facts = (),
+        diagnostics = (;
+            source = :local_route_driver_parent_axis_readiness,
+            explicit_parent_axis_probe_removed = true,
+        ),
+    )
 
-    parent_axis_probe_requested =
-        _pqs_route_driver_probe_requested(
-            probe_inputs.probe_parent_axis_construction,
-            standard_setup.core_spacing,
-        )
-    parent_axis_probe_carry_objects_requested =
-        parent_axis_probe_requested &&
-        parent_axis_readiness.homonuclear &&
-        parent_axis_readiness.geometry.existing_bond_aligned_api_geometry_ready
-    parent_axis_probe = parent_axis_probe_requested ?
-        metrics._pqs_explicit_core_spacing_parent_axis_probe(
-            standard_setup;
-            gausslet_backend = probe_inputs.parent_axis_probe_backend,
-            family = probe_inputs.parent_axis_probe_family,
-            construct_axis_bundles = true,
-            carry_objects = parent_axis_probe_carry_objects_requested,
-        ) : nothing
-    parent_axis_probe_status =
-        isnothing(parent_axis_probe) ? :not_requested : parent_axis_probe.status
-    parent_axis_probe_constructed =
-        isnothing(parent_axis_probe) ? false : parent_axis_probe.parent_axis_metadata_constructed
-    parent_axis_probe_pending_facts =
-        isnothing(parent_axis_probe) ? () : parent_axis_probe.pending_facts
+    parent_axis_probe_requested = false
+    parent_axis_probe_carry_objects_requested = false
+    parent_axis_probe = nothing
+    parent_axis_probe_status = :not_requested_after_scaffold_demolition
+    parent_axis_probe_constructed = false
+    parent_axis_probe_pending_facts = ()
 
     return (;
         parent_axis_readiness,
@@ -968,11 +1020,30 @@ function _pqs_source_box_route_driver_route_axis_counts(
     system_inputs,
     route_recipe,
 )
-    metrics = CartesianContractedParentMetrics
     if route_recipe.route_family == :pqs_source_box
-        return metrics._pqs_source_box_route_parent_axis_counts_for_skeleton(
-            standard_setup, parent_axis.parent_axis_readiness, parent_axis.parent_axis_probe;
-            manual_parent_axis_counts = system_inputs.parent_axis_counts,
+        counts = parent_axis.parent_axis_readiness.parent_axis_counts
+        manual = parent_axis.parent_axis_readiness.parent_axis_counts_manual_fixture
+        return (;
+            object_kind = :cartesian_nesting_route_parent_axis_counts_for_skeleton,
+            status = :available,
+            parent_axis_counts = counts,
+            parent_axis_counts_source =
+                manual ? :manual_fixture : :local_standard_setup_parent_box,
+            parent_axis_counts_derived = !manual,
+            parent_axis_counts_manual_fixture = manual,
+            parent_axis_probe_status = parent_axis.parent_axis_probe_status,
+            parent_axis_readiness_status = parent_axis.parent_axis_readiness.status,
+            setup_object_kind = standard_setup.object_kind,
+            q = standard_setup.q,
+            q_minimum_satisfied =
+                counts.x >= standard_setup.q &&
+                counts.y >= standard_setup.q &&
+                counts.z >= standard_setup.q,
+            pending_facts = (),
+            diagnostics = (;
+                source = :local_route_driver_axis_counts_after_scaffold_demolition,
+                route_family = route_recipe.route_family,
+            ),
         )
     end
 
@@ -1045,10 +1116,11 @@ function _pqs_source_box_route_driver_route_axis_counts(
     parent_axis,
     system_inputs,
 )
-    metrics = CartesianContractedParentMetrics
-    return metrics._pqs_source_box_route_parent_axis_counts_for_skeleton(
-        standard_setup, parent_axis.parent_axis_readiness, parent_axis.parent_axis_probe;
-        manual_parent_axis_counts = system_inputs.parent_axis_counts,
+    return _pqs_source_box_route_driver_route_axis_counts(
+        standard_setup,
+        parent_axis,
+        system_inputs,
+        (; route_family = :pqs_source_box),
     )
 end
 
@@ -2503,9 +2575,15 @@ function _pqs_source_box_route_driver_shell_stage_low_order_shellization(
 )
     policy =
         recipe.route_family == :white_lindsey_low_order ?
-        _pqs_source_box_route_driver_low_order_shellization_policy(
-            low_order_shellization_policy,
-            probe_route_configured_diatomic_atom_growth_materializer,
+        (;
+            low_order_shellization_policy_requested = low_order_shellization_policy,
+            low_order_shellization_policy_resolved =
+                :route_configured_low_order_materializer_removed,
+            low_order_shellization_policy_source = :demolition_branch,
+            low_order_shellization_policy_status =
+                :blocked_route_configured_low_order_materializer_removed,
+            low_order_shellization_policy_blocker =
+                :route_configured_low_order_materializer_removed,
         ) :
         (;
             low_order_shellization_policy_requested = low_order_shellization_policy,
@@ -3859,6 +3937,10 @@ function _pqs_source_box_route_driver_unit_stage_low_order_summary(shells)
         hasproperty(shells, :low_order_shellization) ?
         shells.low_order_shellization :
         nothing
+    if hasproperty(shells, :route_skeleton) &&
+       get(shells.route_skeleton, :route_family, nothing) == :pqs_source_box
+        low_order_shellization = nothing
+    end
     if isnothing(low_order_shellization)
         terminal_route_state =
             _pqs_source_box_route_driver_terminal_route_state_unavailable(
@@ -4174,7 +4256,9 @@ function _pqs_source_box_route_driver_unit_stage_low_order_summary(shells)
         object_kind = :cartesian_unit_stage_low_order_summary,
         status,
         terminal_route_state,
-        terminal_route_summary = terminal_route_state.summary,
+        terminal_route_summary =
+            isnothing(terminal_route_state) ? nothing :
+            get(terminal_route_state, :summary, nothing),
         low_order_shellization_policy_requested =
             low_order_shellization.low_order_shellization_policy_requested,
         low_order_shellization_policy_resolved =
@@ -8500,35 +8584,15 @@ function cartesian_print_summary(report, materialization)
     @show diagnostics.parent_axis_probe_requested diagnostics.parent_axis_probe_status
     @show diagnostics.raw_product_box_probe_requested diagnostics.raw_product_box_probe_status
     @show retained_counts retained_dimension
-    @show report.low_order_shellization_policy_resolved
-    @show report.low_order_shellization_policy_source
-    @show report.atom_growth_low_order_route_selected
-    @show report.low_order_active_source_authority
-    @show report.low_order_materialization_required
-    @show report.low_order_materialization_status
-    @show report.low_order_pair_inventory_source
-    @show report.low_order_pair_count
-    @show report.low_order_hamiltonian_matrices_materialized
-    @show materialization.basis_artifact_status materialization.basis_artifact_written
-    @show materialization.status materialization.ham_bundle_export_status
+    @show get(report, :low_order_materialization_status, nothing)
+    @show materialization.status materialization.pqs_materialization_status
     @show materialization.materialized_report_kind
-    @show materialization.low_order_shellization_policy_requested
-    @show materialization.low_order_shellization_policy_resolved
-    @show materialization.low_order_shellization_policy_status
-    @show materialization.ham_artifact_status materialization.ham_artifact_written
     return nothing
 end
 
 function cartesian_print_details(report, materialization)
     _pqs_source_box_route_driver_print_details(report)
-    if materialization.materialize_route_requested ||
-       materialization.route_configured_one_center_materializer_probe_requested ||
-       materialization.route_configured_diatomic_materializer_probe_requested ||
-       materialization.route_configured_diatomic_atom_growth_materializer_probe_requested ||
-       materialization.save_basis_artifact_requested ||
-       materialization.save_ham_artifact_requested
-        _pqs_source_box_route_driver_print_materialization(materialization)
-    end
+    _pqs_source_box_route_driver_print_materialization(materialization)
     return nothing
 end
 

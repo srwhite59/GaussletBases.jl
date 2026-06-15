@@ -266,3 +266,56 @@ Recommended next cut:
   report/status-only use.
 - Keep the driver alive, but continue reducing `pqs_source_box_route_driver_*`
   report/status field clouds.
+
+## Checkpoint 6 - Low-Order Materializer Collapse
+
+Status:
+
+- uncommitted demolition cut for review.
+- The protected driver entry point and driver inputs remain present.
+
+Deleted/simplified:
+
+- Replaced the 2,655-line route-configured low-order/WL materialization
+  implementation with a compact blocked materialization stage.
+- Removed the old route-configured one-center/diatomic materializer probes,
+  basis adapters, Ham adapters, WL preflight helpers, and artifact export
+  decision tree.
+- Simplified driver printing so it no longer expects the removed low-order,
+  basis-artifact, and Ham-artifact status field cloud.
+- Replaced deleted CCPM standard setup and parent-axis readiness/count helpers
+  with small local driver records. This keeps the driver workflow alive without
+  restoring the old CCPM setup scaffolding.
+- Bypassed low-order terminal-route unit summary bookkeeping for source-box
+  routes.
+
+Validation:
+
+- `git diff --check` passed.
+- Package load passed:
+  `julia --project=. -e 'using GaussletBases; println("load ok")'`.
+- A protected driver readiness smoke completed with saving disabled:
+  `h2_pqs_q5_independent_source_box_r4.jl save_artifact=false save_tsv=false`.
+
+Line-count impact:
+
+- 2,713 deleted lines in the uncommitted sixth cut.
+- Current total branch pressure relative to `main`: 438 insertions and 45,169
+  deletions.
+
+Current breakage assessment:
+
+- Package load is green.
+- The basic input-driven driver workflow still runs for the independent H2 PQS
+  readiness input.
+- Old low-order/WL route-configured materialization, basis bundle export, and
+  Ham bundle export through this private driver are intentionally blocked by
+  `:route_configured_low_order_materializer_removed`.
+- This cut does not validate final-basis/H1/H1-J/RHF driver inputs.
+
+Recommended next cut:
+
+- Continue separating driver construction from report/status vocabulary in
+  `pqs_source_box_route_driver_helpers.jl`.
+- Re-run compact driver smokes for final-basis/H1 stages only after the next
+  source-side thinning pass, not as broad test gates.
