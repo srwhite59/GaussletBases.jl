@@ -18,9 +18,6 @@ const _TEST_GROUP_ENV = strip(get(ENV, "GAUSSLETBASES_TEST_GROUPS", "all"))
 const _AVAILABLE_TEST_GROUPS = (
     :radial,
     :core,
-    :nested,
-    :ordinary,
-    :diatomic,
     :angular,
     :ida,
     :docs,
@@ -2955,24 +2952,6 @@ end
 if _test_group_enabled(:core)
     include(joinpath(@__DIR__, "core", "runtests.jl"))
 end
-
-if _test_group_enabled(:nested)
-    include(joinpath(@__DIR__, "nested", "runtests.jl"))
-    if _RUN_SLOW_TESTS
-        include(joinpath(@__DIR__, "nested", "integration_runtests.jl"))
-    end
-end
-
-if _test_group_enabled(:ordinary)
-    include(joinpath(@__DIR__, "ordinary", "runtests.jl"))
-end
-
-if _test_group_enabled(:diatomic)
-    include(joinpath(@__DIR__, "diatomic", "runtests.jl"))
-end
-
-
-
 
 if _test_group_enabled(:angular)
     include(joinpath(@__DIR__, "angular", "runtests.jl"))

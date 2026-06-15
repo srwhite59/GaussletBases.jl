@@ -31,6 +31,10 @@ deleted or folded into the main matrix. Do not reintroduce standalone
 Cartesian nested helper tests, exact print-string tests, route payload schema
 tests, or `status`/`available`/`blocker`/`readiness` field-cloud tests.
 
+The old executable Cartesian test groups `nested`, `ordinary`, and `diatomic`
+were removed from the default test dispatcher. Their remaining validation role
+is covered by the driver ladders while the Cartesian lines are being merged.
+
 ## Demolition History
 
 This note tracks the non-adabatic thinning branch
