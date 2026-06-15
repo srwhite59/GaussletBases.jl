@@ -67,9 +67,11 @@ function _pqs_source_box_route_driver_durable_materializer_payload(payload)
         transient_only = payload.transient_only,
         durable_report_serialization = :sanitized_before_save,
         source = payload.source,
+        parent_basis_object_available = payload.parent_basis_object_available,
         parent_qw_basis_object_available = payload.parent_qw_basis_object_available,
         parent_axis_bundle_object_available =
             payload.parent_axis_bundle_object_available,
+        parent_basis_object_type_label = payload.parent_basis_object_type_label,
         parent_qw_basis_object_type_label = payload.parent_qw_basis_object_type_label,
         parent_axis_bundle_object_type_label =
             payload.parent_axis_bundle_object_type_label,

@@ -1,3 +1,16 @@
+function _nested_capture_timeg_report(
+    build,
+    timing::Union{Bool,Symbol},
+    timing_io::IO,
+)
+    timing === false && return build()
+    throw(
+        ArgumentError(
+            "nested fixed-block timing reports were removed from the demolition branch; rerun with timing=false",
+        ),
+    )
+end
+
 function _one_center_atomic_shell_increment(nside::Int)
     nside >= 3 || throw(ArgumentError("one-center atomic shell contract requires nside >= 3"))
     return nside^3 - (nside - 2)^3

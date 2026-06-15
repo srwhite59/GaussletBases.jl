@@ -747,3 +747,75 @@ Recommended next cut:
   repaired, or restore only a tiny timing helper without restoring the deleted
   doside/export reporting layer. Continue targeting report/status wrappers
   rather than numerical kernels.
+
+## Checkpoint 17 - Compact WL Capability Repair
+
+Status:
+
+- uncommitted repair checkpoint for review.
+- Correction: WL is first-class construction capability, not old bloat. The
+  demolition branch should delete old WL/QW report/export/scaffold surfaces, but
+  it must preserve or compactly rebuild WL physics-producing driver capability.
+
+Classification of deleted WL surfaces:
+
+- Real numerical/construction kernels: the deleted
+  `white_lindsey_overlap/kinetic/position/x2/electron_nuclear/one_body` block
+  files, density-density construction, and unit-coefficient adapters contained
+  real WL operator construction logic.
+- Route/final-basis construction: `white_lindsey_materialized_seed.jl` and
+  decomposed unit-pair inventory carried useful construction material mixed with
+  old route/report inventory.
+- Scaffold/report glue: adapter summaries, seed-oracle summaries, route-global
+  status wrappers, precompile workloads, and broad nested WL tests mostly
+  protected old flat vocabulary and were not restored.
+- Tests protecting physics output: old He/H WL acceptance tests protected real
+  scalar capability, but were too broad and scaffold-heavy to restore wholesale.
+
+Restored capability:
+
+- Added a compact atomic pure-gausslet WL materialization path through
+  `cartesian_materialization(...)`.
+- The path uses the surviving `one_center_atomic_full_parent_fixed_block`
+  numerical builder, computes the finite/symmetric one-body Hamiltonian, and
+  reports a small scalar summary: retained dimension, overlap identity error,
+  H1 lowest eigenvalue, and symmetry/finite checks.
+- Added compact JLD2 writing only when `save_basis_artifact` or
+  `save_ham_artifact` is requested. These files contain basis/operator arrays
+  and a short provenance summary, not the old report/status field cloud.
+- Added an opt-in driver input and survival smoke:
+  `test/driver_inputs/he_wl_q5_pure_gausslet_h1.jl` and
+  `test/nested/cartesian_ham_builder_he_wl_q5_pure_gausslet_h1_runtests.jl`.
+
+Validation:
+
+- `git diff --check` passed.
+- Package load passed.
+- WL driver survival smoke passed, including compact Ham JLD2 write/read:
+  retained dimension `419`, H1 lowest `-1.991344469963436`, H1 finite,
+  H1 symmetry error `0.0`, overlap identity error about `5.22e-15`.
+- Protected H2 independent PQS readiness driver smoke completed with saving
+  disabled and still reported support counts
+  `(atom_contact_core = 275, shared_shell_1 = 578, shared_shell_2 = 362)`.
+
+Line-count impact:
+
+- Repair adds about 231 lines before review: 185 tracked source lines plus a
+  small 11-line input and 35-line opt-in smoke.
+- This is an intentional capability-regression repair, not a general exception
+  for rebuilding deleted report scaffolding.
+
+Current breakage assessment:
+
+- WL atomic pure-gausslet H1 is physics-producing again through the driver.
+- WL density/H1-J/RHF and diatomic WL materialization are not restored in this
+  checkpoint.
+- Compact basis/Ham JLD2 output exists for this WL atomic seam; broader
+  consumer artifact contracts still need deliberate design.
+
+Recommended next repair/delete step:
+
+- Keep repairing WL by compact construction capability, not old adapter
+  summaries. Next WL work should decide the minimal compact path for
+  density/H1-J/RHF or diatomic pure-gausslet WL, while keeping report/status
+  alias surfaces deleted.

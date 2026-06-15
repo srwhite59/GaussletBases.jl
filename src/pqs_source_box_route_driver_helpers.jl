@@ -1905,6 +1905,8 @@ end
 function _pqs_source_box_route_driver_materializer_payload(parent)
     parent_axis_probe =
         hasproperty(parent, :parent_axis_probe) ? parent.parent_axis_probe : nothing
+    parent_basis_object =
+        hasproperty(parent, :parent_basis_object) ? parent.parent_basis_object : nothing
     parent_qw_basis_object =
         hasproperty(parent, :parent_qw_basis_object) ?
         parent.parent_qw_basis_object :
@@ -1925,10 +1927,14 @@ function _pqs_source_box_route_driver_materializer_payload(parent)
         transient_only = true,
         durable_report_serialization = :sanitize_before_save,
         source = :parent_axis_probe_object_carry,
+        parent_basis_object,
         parent_qw_basis_object,
         parent_axis_bundle_object,
+        parent_basis_object_available = !isnothing(parent_basis_object),
         parent_qw_basis_object_available = !isnothing(parent_qw_basis_object),
         parent_axis_bundle_object_available = !isnothing(parent_axis_bundle_object),
+        parent_basis_object_type_label =
+            _pqs_route_driver_type_label(parent_basis_object),
         parent_qw_basis_object_type_label =
             _pqs_route_driver_type_label(parent_qw_basis_object),
         parent_axis_bundle_object_type_label =
