@@ -700,3 +700,50 @@ Recommended next cut:
 - Continue auditing old driver/report status surfaces. Avoid deleting
   construction-bearing independent H2 PQS source/final/H1/H1-J/RHF code; target
   report/status wrappers and obsolete old-flat tests.
+
+## Checkpoint 16 - Old Nested Reporting and Experimental Export Cut
+
+Status:
+
+- uncommitted demolition cut for review.
+
+Deleted/simplified:
+
+- Deleted `src/cartesian_nested_reporting.jl`, including the doside/COMX trace
+  diagnostic writer and old nested fixed-block timing report implementation.
+- Deleted `src/bond_aligned_diatomic_geometry_export.jl`.
+- Deleted `src/experimental_chain_export.jl`.
+- Removed their public exports, empty generic declarations, and includes from
+  `src/GaussletBases.jl`.
+- Deleted ordinary/diatomic/docs tests and public-doc references that mainly
+  protected exact experimental export metadata, text output, and doside trace
+  diagnostics.
+
+Validation:
+
+- `git diff --check` passed.
+- Caller grep for deleted export/trace APIs is clean in source/tests/bin/public
+  docs.
+- Package load passed.
+- The protected H2 independent PQS readiness driver smoke completed with saving
+  disabled.
+
+Line-count impact:
+
+- About 1,942 net source/test/doc lines deleted before validation.
+
+Current breakage assessment:
+
+- `cartesian_nested_atomic.jl` still has optional timing-call sites for
+  `_nested_capture_timeg_report`. Package load does not require that path, but
+  optional nested fixed-block timing is now a live-looking fallout if invoked.
+- The deleted export/trace surfaces were old diagnostic/producer-side
+  bureaucracy, not part of the protected Cartesian/PQS driver survival path.
+- The protected driver entry point and driver inputs remain present and green.
+
+Recommended next cut:
+
+- Either leave optional nested timing broken until the smaller system is
+  repaired, or restore only a tiny timing helper without restoring the deleted
+  doside/export reporting layer. Continue targeting report/status wrappers
+  rather than numerical kernels.

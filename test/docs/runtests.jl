@@ -372,7 +372,6 @@
             "sliced_ham_payload",
             "atomic_hamv6_payload",
             "angular_benchmark_exact_hamv6_payload",
-            "experimental_homonuclear_chain_nested_dense_payload",
         )
         @test contains_all_lower(
             docs_site_reference_export,

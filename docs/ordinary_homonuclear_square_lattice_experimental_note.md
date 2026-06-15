@@ -41,14 +41,6 @@ Milestone D now also lands:
 
 Milestone E now also lands:
 
-- `experimental_homonuclear_square_lattice_nested_dense_payload(...)`
-- `write_experimental_homonuclear_square_lattice_nested_dense_jld2(...)`
-- a producer-side experimental dense export for tiny homonuclear square
-  lattices on the exploratory planar branch
-- explicit export provenance for the accepted root split and the
-  `min_in_plane_aspect_ratio` threshold
-- no claim that this is a settled or general-purpose square-lattice export
-  standard
 - the supported default square-lattice nested route now derives its
   complete-shell retention contract directly from `nside`
 - the earlier compressed `(4,3)` / `3` retain default has been removed as the

@@ -194,17 +194,11 @@ export AbstractFunction1D,
        one_center_atomic_nested_structure_report,
        experimental_bond_aligned_homonuclear_chain_nested_qw_operators,
        experimental_axis_aligned_homonuclear_square_lattice_nested_qw_operators,
-       experimental_homonuclear_chain_nested_dense_payload,
-       experimental_homonuclear_square_lattice_nested_dense_payload,
        write_bond_aligned_homonuclear_chain_nested_geometry_report,
        write_axis_aligned_homonuclear_square_lattice_nested_geometry_report,
-       write_experimental_homonuclear_chain_nested_dense_jld2,
-       write_experimental_homonuclear_square_lattice_nested_dense_jld2,
        bond_aligned_diatomic_geometry_payload,
        bond_aligned_diatomic_source_geometry_payload,
        bond_aligned_diatomic_plane_slice,
-       write_bond_aligned_diatomic_points3d,
-       write_bond_aligned_diatomic_plane_projection,
        SpherePointSetProvenance,
        SpherePointSet,
        CuratedSpherePointSet,
@@ -456,17 +450,11 @@ function one_center_atomic_nested_structure_diagnostics end
 function one_center_atomic_nested_structure_report end
 function experimental_bond_aligned_homonuclear_chain_nested_qw_operators end
 function experimental_axis_aligned_homonuclear_square_lattice_nested_qw_operators end
-function experimental_homonuclear_chain_nested_dense_payload end
-function experimental_homonuclear_square_lattice_nested_dense_payload end
 function write_bond_aligned_homonuclear_chain_nested_geometry_report end
 function write_axis_aligned_homonuclear_square_lattice_nested_geometry_report end
-function write_experimental_homonuclear_chain_nested_dense_jld2 end
-function write_experimental_homonuclear_square_lattice_nested_dense_jld2 end
 function bond_aligned_diatomic_geometry_payload end
 function bond_aligned_diatomic_source_geometry_payload end
 function bond_aligned_diatomic_plane_slice end
-function write_bond_aligned_diatomic_points3d end
-function write_bond_aligned_diatomic_plane_projection end
 function _qwrg_bond_aligned_axis_bundles end
 function mapped_ordinary_one_body_operators end
 function mapped_cartesian_hydrogen_energy end
@@ -620,7 +608,6 @@ include("cartesian_high_order_doside_experimental.jl")
 include("cartesian_high_order_doside_ida_experimental.jl")
 include("cartesian_nested_faces.jl")
 include("cartesian_nested_owned_units.jl")
-include("cartesian_nested_reporting.jl")
 include("cartesian_nested_atomic.jl")
 include("cartesian_nested_diatomic.jl")
 include("cartesian_cpb/CartesianCPB.jl")
@@ -669,7 +656,6 @@ include("cartesian_qw_operator_carried_spaces.jl")
 include("gaussian_coulomb_reference.jl")
 include("hamiltonian_corrections.jl")
 include("bond_aligned_diatomic_geometry.jl")
-include("bond_aligned_diatomic_geometry_export.jl")
 include("partitions.jl")
 include("hierarchical_partitions.jl")
 include("leaf_pgdg.jl")
@@ -693,7 +679,6 @@ include("atomic_ida_uhf.jl")
 include("atomic_ida_two_electron.jl")
 include("fullida_dense_export.jl")
 include("angular_sequence_export.jl")
-include("experimental_chain_export.jl")
 include("sliced_ham_export.jl")
 
 end
