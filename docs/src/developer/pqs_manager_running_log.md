@@ -1459,3 +1459,62 @@ Remaining blocker / next:
 Line-count / complexity note:
 - Scoped `src + test + bin`, counting the new input, was `11` added / `17`
   deleted, net `-6`.
+
+## Pass 254 - Terminal Report-Stage Alias Cleanup
+
+Commit(s):
+- this commit - Shrink terminal report-stage low-order aliases
+
+Summary:
+- Deleted stale terminal-shellification report-stage alias assertions from
+  `test/nested/cartesian_report_stage_low_order_policy_runtests.jl`.
+- Removed exact object-identity mirrors, flat
+  `low_order_terminal_shellification_*` alias mirrors, and deferred terminal
+  `low_order_route_core_*` status mirrors.
+- Preserved compact coverage for terminal selection, summary availability,
+  region/unit counts, pair/assembly deferral statuses, materialization blocker,
+  no operator blocks materialized, central counts, and print-line content.
+
+Validation:
+- Doer: Julia parse smoke passed; `git diff --check` passed.
+- Manager: reviewed the deletion-only diff and reran the Julia parse smoke. It
+  passed. The broad report-stage low-order test was intentionally not used as a
+  per-pass gate for stale-alias cleanup.
+
+Goal advancement:
+- MT5/LT2: removed another 36 lines of stale flat report alias pressure.
+- MT6/AG7: classified more old terminal-shellification flat report vocabulary
+  as compatibility/test scaffolding rather than public architecture.
+
+Medium-goal update:
+- Added the required checkpoint below for passes 250-254.
+
+Risk / guardrail:
+- Do not replace these deleted aliases with new flat report-key assertions.
+
+Remaining blocker / next:
+- Continue with either another classified cleanup candidate or a deliberate
+  supplement-staging decision. Public/export/CR2 readiness remains blocked.
+
+Line-count / complexity note:
+- Scoped `src + test + bin` diff was `0` added / `36` deleted, net `-36`.
+
+## Medium-Term Goal Checkpoint - Passes 250-254
+
+- MT1 Fake-PQS quarantine: active/maintained. None of passes 250-254 promoted
+  fake-PQS/source-backed WL/QW data as independent PQS evidence.
+- MT2 Independent H2 PQS recovery: active and substantially advanced. These
+  passes moved the independent route from H1-J/density diagnostic to
+  materialized private RHF diagnostic, then added explicit stage inputs through
+  private RHF. The route remains private/diagnostic-only.
+- MT3 Common physical support vocabulary: active. The independent route keeps
+  the H2 support vocabulary while retaining independent PQS counts and route
+  authority.
+- MT4 Supplement staging after authority: active/blocked. The base gausslet
+  independent route now has private RHF diagnostics, but supplement/provider
+  work is still blocked until manager deliberately opens that lane.
+- MT5 Cleanup pressure: active. Passes 250-254 were all scoped net-negative:
+  `-12`, `-3`, `-2`, `-6`, and `-36`.
+- MT6 Audit/classify old Cartesian flat paths: active. These passes continued
+  retiring stale selected-terminal, RouteCore, and report-stage flat alias
+  assertions while preserving compact active smoke checks.

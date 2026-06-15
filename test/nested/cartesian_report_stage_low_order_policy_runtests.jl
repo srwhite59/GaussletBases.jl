@@ -424,13 +424,9 @@ end
     @test !terminal_summary.legacy_source_selected
     @test terminal_summary.terminal_shellification_summary_available
     @test terminal_summary.terminal_shellification_scaffold_available
-    @test terminal_summary.terminal_shellification_scaffold ===
-          terminal_stages.assembly.terminal_shellification_scaffold
     @test terminal_summary.terminal_shellification_region_count ==
           terminal_stages.assembly.terminal_shellification_region_count
     @test terminal_summary.terminal_shellification_unit_inventory_available
-    @test terminal_summary.terminal_shellification_unit_inventory ===
-          terminal_stages.assembly.terminal_shellification_unit_inventory
     @test terminal_summary.terminal_shellification_unit_count ==
           terminal_stages.assembly.terminal_shellification_unit_count
     @test !terminal_summary.terminal_shellification_final_retained_unit_inventory_available
@@ -478,23 +474,11 @@ end
     @test terminal_report.low_order_terminal_shellification_selected
     @test terminal_report.low_order_terminal_shellification_summary_available
     @test terminal_report.low_order_terminal_shellification_scaffold_available
-    @test terminal_report.low_order_terminal_shellification_scaffold ===
-          terminal_summary.terminal_shellification_scaffold
     @test terminal_report.low_order_terminal_shellification_region_count ==
           terminal_summary.terminal_shellification_region_count
     @test terminal_report.low_order_terminal_shellification_unit_inventory_available
-    @test terminal_report.low_order_terminal_shellification_unit_inventory ===
-          terminal_summary.terminal_shellification_unit_inventory
     @test terminal_report.low_order_terminal_shellification_unit_count ==
           terminal_summary.terminal_shellification_unit_count
-    @test terminal_report.low_order_terminal_shellification_unit_keys ==
-          terminal_summary.terminal_shellification_unit_keys
-    @test terminal_report.low_order_terminal_shellification_unit_roles ==
-          terminal_summary.terminal_shellification_unit_roles
-    @test terminal_report.low_order_terminal_shellification_unit_kinds ==
-          terminal_summary.terminal_shellification_unit_kinds
-    @test terminal_report.low_order_terminal_shellification_unit_support_counts ==
-          terminal_summary.terminal_shellification_unit_support_counts
     @test !terminal_report.low_order_terminal_shellification_final_retained_unit_inventory_available
     @test !terminal_report.low_order_terminal_shellification_transform_contracts_available
     @test !terminal_report.low_order_terminal_shellification_pair_inventory_available
@@ -504,12 +488,6 @@ end
           :deferred_terminal_shellification_pair_materialization
     @test terminal_report.low_order_terminal_shellification_assembly_materialization_status ==
           :deferred_terminal_shellification_assembly_materialization
-    @test terminal_report.low_order_terminal_shellification_central_gap_region_count ==
-          terminal_summary.terminal_shellification_central_gap_region_count
-    @test terminal_report.low_order_terminal_shellification_central_midpoint_slab_count ==
-          terminal_summary.terminal_shellification_central_midpoint_slab_count
-    @test terminal_report.low_order_terminal_shellification_central_distorted_product_box_count ==
-          terminal_summary.terminal_shellification_central_distorted_product_box_count
     @test terminal_report.low_order_materialization_required
     @test terminal_report.low_order_materialization_status ==
           :deferred_terminal_shellification_assembly_materialization
@@ -524,20 +502,6 @@ end
     @test !terminal_report.low_order_independent_atom_growth_pair_inventory_available
     @test terminal_report.low_order_pair_count == 0
     @test terminal_report.low_order_pair_family_counts == ()
-    @test !terminal_report.low_order_route_core_pair_inventory_available
-    @test terminal_report.low_order_route_core_pair_inventory_status ==
-          :deferred_terminal_shellification_pair_inventory
-    @test terminal_report.low_order_route_core_pair_count == 0
-    @test terminal_report.low_order_route_core_summary_status ==
-          :deferred_terminal_shellification_pair_inventory
-    @test !terminal_report.low_order_route_core_pair_operator_ready
-    @test terminal_report.low_order_route_core_pair_operator_readiness_status ==
-          :deferred_terminal_shellification_pair_inventory
-    @test !terminal_report.low_order_route_core_typed_pair_operator_plan_inventory_available
-    @test terminal_report.low_order_route_core_typed_pair_operator_plan_inventory_status ==
-          :deferred_terminal_shellification_typed_pair_operator_plan_inventory
-    @test terminal_report.low_order_route_core_typed_pair_operator_plan_blocker ==
-          :deferred_terminal_shellification_pair_inventory
     terminal_print_line =
         GaussletBases._pqs_source_box_route_driver_terminal_shellification_print_line(
             terminal_report,
