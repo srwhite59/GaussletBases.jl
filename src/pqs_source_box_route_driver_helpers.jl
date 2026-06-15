@@ -2625,302 +2625,30 @@ end
 function _pqs_source_box_route_driver_assembly_stage_low_order_summary(pairs)
     low_order_pairs =
         hasproperty(pairs, :low_order_pairs) ? pairs.low_order_pairs : nothing
-    if isnothing(low_order_pairs)
-        terminal_route_state =
-            _pqs_source_box_route_driver_terminal_route_state_unavailable(
-                :not_available_missing_pair_stage_summary,
-                :missing_pair_stage_low_order_summary,
-            )
-        return (;
-            object_kind = :cartesian_assembly_stage_low_order_summary,
-            status = :not_available_missing_pair_stage_summary,
-            terminal_route_state,
-            terminal_route_summary = terminal_route_state.summary,
-            low_order_shellization_policy_requested = nothing,
-            low_order_shellization_policy_resolved = :not_available,
-            low_order_shellization_policy_source = :not_available,
-            low_order_shellization_policy_status =
-                :not_available_missing_pair_stage_summary,
-            low_order_shellization_policy_blocker =
-                :missing_pair_stage_low_order_summary,
-            shellization_source = :not_available,
-            shellization_kind = :not_available,
-            unit_route_kind = :not_available,
-            transform_route_kind = :not_available,
-            pair_route_kind = :not_available,
-            assembly_source = :not_available,
-            assembly_route_kind = :not_available,
-            assembly_kind = :not_available,
-            atom_growth_assembly_selected = false,
-            terminal_shellification_assembly_selected = false,
-            legacy_source_assembly_selected = false,
-            terminal_shellification_assembly_summary_available = false,
-            terminal_shellification_scaffold_available = false,
-            terminal_shellification_scaffold = nothing,
-            terminal_shellification_region_count = 0,
-            terminal_shellification_unit_inventory_available = false,
-            terminal_shellification_unit_inventory = nothing,
-            terminal_shellification_unit_count = 0,
-            terminal_shellification_unit_keys = (),
-            terminal_shellification_unit_roles = (),
-            terminal_shellification_unit_kinds = (),
-            terminal_shellification_unit_support_counts = (),
-            terminal_shellification_lowering_contract_inventory_available = false,
-            terminal_shellification_lowering_contract_inventory_status =
-                :not_available,
-            terminal_shellification_lowering_contract_inventory = nothing,
-            terminal_shellification_lowering_contract_count = 0,
-            terminal_shellification_lowering_contract_kinds = (),
-            terminal_shellification_lowering_contract_kind_counts =
-                (
-                    direct_core_identity_cpb_count = 0,
-                    direct_slab_identity_cpb_count = 0,
-                    direct_boundary_slab_identity_cpb_count = 0,
-                    white_lindsey_boundary_strata_count = 0,
-                    pqs_filled_source_cpb_count = 0,
-                    distorted_product_box_comx_count = 0,
-                ),
-            _pqs_source_box_route_driver_selected_terminal_lowering_fields(
-                nothing,
-                :not_available,
-                nothing,
-            )...,
-            terminal_shellification_contract_counts_by_unit = (),
-            terminal_shellification_lw_complete_shell_cpb_count = 0,
-            terminal_shellification_lw_complete_shell_cpb_family_counts =
-                (facet_cpb = 0, edge_cpb = 0, corner_cpb = 0),
-            terminal_shellification_final_retained_unit_inventory_available = false,
-            terminal_shellification_transform_contracts_available = false,
-            terminal_shellification_pair_inventory_available = false,
-            terminal_shellification_pair_inventory_status = :not_available,
-            terminal_shellification_pair_materialization_status = :not_available,
-            terminal_shellification_assembly_materialization_status =
-                :not_available,
-            terminal_shellification_central_gap_region_count = 0,
-            terminal_shellification_central_midpoint_slab_count = 0,
-            terminal_shellification_central_distorted_product_box_count = 0,
-            terminal_shellification_central_distorted_product_box_metadata = (),
-            hamiltonian_matrices_materialized = false,
-            operator_matrices_materialized = false,
-            pair_operator_blocks_materialized = false,
-            pair_operator_blocks_available = false,
-            pair_inventory_source = :not_available,
-            pair_inventory_known = false,
-            independent_atom_growth_pair_inventory_available = false,
-            pair_count = 0,
-            pair_family_counts = nothing,
-            route_core_final_unit_count = 0,
-            route_core_pair_inventory_available = false,
-            route_core_pair_inventory_status = :not_available,
-            route_core_pair_count = 0,
-            route_core_pair_order_matches_staged = false,
-            route_core_pair_order_comparison_source = :not_available,
-            route_core_pair_family_counts = (),
-            route_core_summary_status = :not_available,
-            route_core_pair_operator_ready = false,
-            route_core_pair_operator_readiness_status = :not_available,
-            route_core_pair_operator_blocker = :not_available,
-            route_core_pair_operator_readiness_requirements =
-                _pqs_source_box_route_driver_route_core_readiness_requirements(),
-            route_core_pair_operator_preflight_available = false,
-            route_core_pair_operator_preflight_status = :not_available,
-            route_core_pair_operator_preflight = nothing,
-            route_core_pair_operator_preflight_blocker = :not_available,
-            route_core_pair_operator_plan_available = false,
-            route_core_pair_operator_plan_status = :not_available,
-            route_core_pair_operator_plan = nothing,
-            route_core_pair_operator_plan_blocker = :not_available,
-            helper_by_pair_family = nothing,
-            pair_operator_helper_by_family = nothing,
-            pair_helper_status_by_family = nothing,
-            assembly_can_proceed_from_current_staged_data = false,
-            assembly_requires_materialization = true,
-            assembly_materialization_status =
-                :blocked_missing_pair_stage_summary,
-            assembly_blocker = :missing_pair_stage_low_order_summary,
-            plan_authority = false,
-            active_source_authority = false,
-            legacy_source_authority = false,
-            assembly_stage_fields_preserved = false,
-            summary_only = true,
-        )
-    end
+    isnothing(low_order_pairs) && return nothing
 
-    atom_growth_assembly_selected =
-        low_order_pairs.atom_growth_pairs_selected
-    terminal_shellification_assembly_selected =
-        low_order_pairs.terminal_shellification_pairs_selected
-    legacy_source_assembly_selected =
-        low_order_pairs.legacy_source_pairs_selected
-    assembly_route_kind =
-        atom_growth_assembly_selected ?
-        :atom_growth_complete_rectangular_low_order_assembly :
-        terminal_shellification_assembly_selected ?
-        :terminal_shellification_low_order_assembly :
-        legacy_source_assembly_selected ?
-        :legacy_diatomic_source_low_order_assembly :
-        :not_selected
-    assembly_source =
-        atom_growth_assembly_selected ?
-        :atom_growth_complete_rectangular_low_order_pair_terms :
-        terminal_shellification_assembly_selected ?
-        :terminal_shellification_pair_terms :
-        legacy_source_assembly_selected ?
-        :legacy_diatomic_source_pair_terms :
-        :not_selected
-    assembly_kind =
-        atom_growth_assembly_selected ?
-        :atom_growth_complete_rectangular_low_order :
-        terminal_shellification_assembly_selected ?
-        :terminal_shellification_low_order :
-        legacy_source_assembly_selected ?
-        :legacy_diatomic_source_low_order :
-        :not_selected
-    terminal_shellification_scaffold_available =
-        terminal_shellification_assembly_selected &&
-        low_order_pairs.terminal_shellification_scaffold_available
-    terminal_shellification_assembly_summary_available =
-        terminal_shellification_assembly_selected
-    terminal_shellification_assembly_materialization_status =
-        terminal_shellification_assembly_selected ?
-        :deferred_terminal_shellification_assembly_materialization :
-        :not_selected
-    pair_operator_blocks_materialized =
-        low_order_pairs.pair_operator_blocks_materialized
-    assembly_can_proceed_from_current_staged_data =
-        pair_operator_blocks_materialized
-    assembly_requires_materialization =
-        !assembly_can_proceed_from_current_staged_data
-    assembly_materialization_status =
-        pair_operator_blocks_materialized ?
-        :ready_for_low_order_operator_matrix_assembly :
-        atom_growth_assembly_selected ?
-        :deferred_atom_growth_complete_rectangular_pair_block_materialization :
-        terminal_shellification_assembly_selected ?
-        terminal_shellification_assembly_materialization_status :
-        legacy_source_assembly_selected ?
-        :deferred_legacy_diatomic_source_pair_block_materialization :
-        :not_selected
-    assembly_blocker =
-        assembly_requires_materialization ?
-        (
-            terminal_shellification_assembly_selected ?
-            :terminal_shellification_pair_blocks_deferred :
-            :pair_operator_blocks_deferred
-        ) :
-        nothing
-    terminal_route_state = low_order_pairs.terminal_route_state
-    terminal_route_summary = low_order_pairs.terminal_route_summary
-
+    pair_entries = hasproperty(low_order_pairs, :pair_entries) ?
+                   low_order_pairs.pair_entries :
+                   pairs.pair_entries
     return (;
-        object_kind = :cartesian_assembly_stage_low_order_summary,
-        status =
-            terminal_shellification_assembly_selected &&
-            terminal_shellification_scaffold_available ?
-            :deferred_terminal_shellification_assembly_materialization :
-            low_order_pairs.status == :available_pair_stage_low_order_summary ?
-            :available_assembly_stage_low_order_summary :
-            low_order_pairs.status,
-        terminal_route_state,
-        terminal_route_summary,
-        low_order_shellization_policy_requested =
-            low_order_pairs.low_order_shellization_policy_requested,
-        low_order_shellization_policy_resolved =
-            low_order_pairs.low_order_shellization_policy_resolved,
-        low_order_shellization_policy_source =
-            low_order_pairs.low_order_shellization_policy_source,
-        low_order_shellization_policy_status =
-            low_order_pairs.low_order_shellization_policy_status,
-        low_order_shellization_policy_blocker =
-            low_order_pairs.low_order_shellization_policy_blocker,
-        shellization_source = low_order_pairs.shellization_source,
-        shellization_kind = low_order_pairs.shellization_kind,
-        unit_route_kind = low_order_pairs.unit_route_kind,
-        transform_route_kind = low_order_pairs.transform_route_kind,
-        pair_route_kind = low_order_pairs.pair_route_kind,
-        assembly_source,
-        assembly_route_kind,
-        assembly_kind,
-        atom_growth_assembly_selected,
-        terminal_shellification_assembly_selected,
-        legacy_source_assembly_selected,
-        terminal_shellification_assembly_summary_available,
-        terminal_shellification_transform_contracts_available =
-            terminal_shellification_assembly_selected &&
-            low_order_pairs.terminal_shellification_transform_contracts_available,
-        terminal_shellification_pair_inventory_available =
-            terminal_shellification_assembly_selected &&
-            low_order_pairs.terminal_shellification_pair_inventory_available,
-        terminal_shellification_pair_inventory_status =
-            terminal_shellification_assembly_selected ?
-            low_order_pairs.terminal_shellification_pair_inventory_status :
-            :not_selected,
-        terminal_shellification_pair_materialization_status =
-            terminal_shellification_assembly_selected ?
-            low_order_pairs.terminal_shellification_pair_materialization_status :
-            :not_selected,
-        terminal_shellification_assembly_materialization_status,
-        hamiltonian_matrices_materialized = false,
-        operator_matrices_materialized = false,
-        pair_operator_blocks_materialized,
-        pair_operator_blocks_available = pair_operator_blocks_materialized,
-        pair_inventory_source = low_order_pairs.pair_inventory_source,
-        pair_inventory_known = low_order_pairs.pair_inventory_known,
-        independent_atom_growth_pair_inventory_available =
-            low_order_pairs.independent_atom_growth_pair_inventory_available,
-        pair_count = low_order_pairs.pair_count,
-        pair_family_counts = low_order_pairs.pair_family_counts,
-        route_core_final_unit_count =
-            low_order_pairs.route_core_final_unit_count,
-        route_core_pair_inventory_available =
-            low_order_pairs.route_core_pair_inventory_available,
-        route_core_pair_inventory_status =
-            low_order_pairs.route_core_pair_inventory_status,
-        route_core_pair_count = low_order_pairs.route_core_pair_count,
-        route_core_pair_order_matches_staged =
-            low_order_pairs.route_core_pair_order_matches_staged,
-        route_core_pair_order_comparison_source =
-            low_order_pairs.route_core_pair_order_comparison_source,
-        route_core_pair_family_counts =
-            low_order_pairs.route_core_pair_family_counts,
-        route_core_summary_status = low_order_pairs.route_core_summary_status,
-        route_core_pair_operator_ready =
-            low_order_pairs.route_core_pair_operator_ready,
-        route_core_pair_operator_readiness_status =
-            low_order_pairs.route_core_pair_operator_readiness_status,
-        route_core_pair_operator_blocker =
-            low_order_pairs.route_core_pair_operator_blocker,
-        route_core_pair_operator_readiness_requirements =
-            low_order_pairs.route_core_pair_operator_readiness_requirements,
-        route_core_pair_operator_preflight_available =
-            low_order_pairs.route_core_pair_operator_preflight_available,
-        route_core_pair_operator_preflight_status =
-            low_order_pairs.route_core_pair_operator_preflight_status,
-        route_core_pair_operator_preflight =
-            low_order_pairs.route_core_pair_operator_preflight,
-        route_core_pair_operator_preflight_blocker =
-            low_order_pairs.route_core_pair_operator_preflight_blocker,
-        route_core_pair_operator_plan_available =
-            low_order_pairs.route_core_pair_operator_plan_available,
-        route_core_pair_operator_plan_status =
-            low_order_pairs.route_core_pair_operator_plan_status,
-        route_core_pair_operator_plan =
-            low_order_pairs.route_core_pair_operator_plan,
-        route_core_pair_operator_plan_blocker =
-            low_order_pairs.route_core_pair_operator_plan_blocker,
-        helper_by_pair_family = low_order_pairs.helper_by_pair_family,
-        pair_operator_helper_by_family =
-            low_order_pairs.pair_operator_helper_by_family,
-        pair_helper_status_by_family = low_order_pairs.pair_helper_status_by_family,
-        assembly_can_proceed_from_current_staged_data,
-        assembly_requires_materialization,
-        assembly_materialization_status,
-        assembly_blocker,
-        plan_authority = low_order_pairs.plan_authority,
-        active_source_authority = low_order_pairs.active_source_authority,
-        legacy_source_authority = low_order_pairs.legacy_source_authority,
-        assembly_stage_fields_preserved = true,
-        summary_only = true,
+        shellification_kind = low_order_pairs.shellification_kind,
+        shellification_plan = low_order_pairs.shellification_plan,
+        shellification_scaffold = low_order_pairs.shellification_scaffold,
+        unit_inventory = low_order_pairs.unit_inventory,
+        route_lowering_family = low_order_pairs.route_lowering_family,
+        lowering_plan = low_order_pairs.lowering_plan,
+        lowering_contract_inventory =
+            low_order_pairs.lowering_contract_inventory,
+        pair_entries,
+        pair_keys = _pqs_source_box_route_driver_pair_keys_from_entries(
+            pair_entries),
+        pair_family_counts = hasproperty(low_order_pairs, :pair_family_counts) ?
+                             low_order_pairs.pair_family_counts :
+                             pairs.pair_family_counts,
+        helper_by_pair_family =
+            hasproperty(low_order_pairs, :helper_by_pair_family) ?
+            low_order_pairs.helper_by_pair_family :
+            pairs.helper_by_pair_family,
     )
 end
 
@@ -4214,7 +3942,9 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
             diatomic_physical_gausslet_final_basis_payload,
             diatomic_physical_gausslet_h1_payload,
         )
-    diatomic_physical_gausslet_rhf_input_contract =
+    run_private_rhf =
+        get(get(recipe, :private_rhf_inputs, (;)), :run_private_rhf, false)
+    diatomic_physical_gausslet_rhf_input_contract = run_private_rhf ?
         _pqs_source_box_route_driver_diatomic_physical_gausslet_rhf_input_contract(
             parent,
             route_skeleton,
@@ -4223,8 +3953,10 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
             diatomic_physical_gausslet_final_basis_payload,
             diatomic_physical_gausslet_h1_payload,
             diatomic_physical_gausslet_h1_j_payload,
-        )
+        ) : nothing
     diatomic_physical_gausslet_rhf_execution_payload =
+        isnothing(diatomic_physical_gausslet_rhf_input_contract) ?
+        nothing :
         _pqs_source_box_route_driver_diatomic_physical_gausslet_rhf_execution_payload(
             diatomic_physical_gausslet_rhf_input_contract,
             diatomic_physical_gausslet_h1_payload,
@@ -4338,12 +4070,8 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
         )
 
     return (;
-        object_kind = :cartesian_assembly,
-        status = route_skeleton.status,
         spacing_inputs = shells.spacing_inputs,
-        route_inputs = units.route_inputs,
         route_skeleton,
-        raw_box = units.raw_box,
         route_facts,
         contract,
         shells,
@@ -4377,57 +4105,6 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
         diatomic_complete_core_shell_ham_readiness_payload,
         complete_core_shell_h1_j_diagnostic_payload,
         complete_core_shell_private_rhf_payload,
-        complete_core_shell_h1_j_diagnostic_summary =
-            complete_core_shell_h1_j_diagnostic_payload.summary,
-        complete_core_shell_h1_j_diagnostic_status =
-            complete_core_shell_h1_j_diagnostic_payload.status,
-        complete_core_shell_h1_j_diagnostic_blocker =
-            complete_core_shell_h1_j_diagnostic_payload.blocker,
-        terminal_route_state = low_order_assembly.terminal_route_state,
-        terminal_route_summary = low_order_assembly.terminal_route_summary,
-        low_order_assembly_source = low_order_assembly.assembly_source,
-        low_order_assembly_route_kind =
-            low_order_assembly.assembly_route_kind,
-        atom_growth_assembly_selected =
-            low_order_assembly.atom_growth_assembly_selected,
-        hamiltonian_matrices_materialized =
-            low_order_assembly.hamiltonian_matrices_materialized,
-        operator_matrices_materialized =
-            low_order_assembly.operator_matrices_materialized,
-        pair_operator_blocks_materialized =
-            low_order_assembly.pair_operator_blocks_materialized,
-        low_order_pair_inventory_source =
-            low_order_assembly.pair_inventory_source,
-        low_order_pair_inventory_known =
-            low_order_assembly.pair_inventory_known,
-        low_order_independent_atom_growth_pair_inventory_available =
-            low_order_assembly.independent_atom_growth_pair_inventory_available,
-        low_order_pair_count = low_order_assembly.pair_count,
-        low_order_pair_family_counts = low_order_assembly.pair_family_counts,
-        low_order_route_core_final_unit_count =
-            low_order_assembly.route_core_final_unit_count,
-        low_order_route_core_pair_inventory_available =
-            low_order_assembly.route_core_pair_inventory_available,
-        low_order_route_core_pair_inventory_status =
-            low_order_assembly.route_core_pair_inventory_status,
-        low_order_route_core_pair_count =
-            low_order_assembly.route_core_pair_count,
-        low_order_route_core_pair_order_matches_staged =
-            low_order_assembly.route_core_pair_order_matches_staged,
-        low_order_route_core_pair_order_comparison_source =
-            low_order_assembly.route_core_pair_order_comparison_source,
-        low_order_route_core_pair_family_counts =
-            low_order_assembly.route_core_pair_family_counts,
-        low_order_route_core_summary_status =
-            low_order_assembly.route_core_summary_status,
-        low_order_pair_operator_helper_by_family =
-            low_order_assembly.pair_operator_helper_by_family,
-        low_order_pair_helper_status_by_family =
-            low_order_assembly.pair_helper_status_by_family,
-        assembly_requires_materialization =
-            low_order_assembly.assembly_requires_materialization,
-        active_source_authority = low_order_assembly.active_source_authority,
-        assembly_stage = :assembled_report_inputs,
     )
 end
 

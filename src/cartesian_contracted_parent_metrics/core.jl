@@ -114,6 +114,124 @@ function _validate_axis_metric_data(
     return metrics
 end
 
+function _pqs_source_box_expected_ida_term_count(expected_term_count)
+    isnothing(expected_term_count) && return nothing
+    value = Int(expected_term_count)
+    value > 0 ||
+        throw(ArgumentError("PQS source-box IDA term count must be positive"))
+    return value
+end
+
+function _pqs_source_box_ida_axis_factors(
+    pgdg::_MappedOrdinaryPGDGIntermediate1D;
+    axis::Symbol,
+    expected_term_count = nothing,
+)
+    axis in (:x, :y, :z) ||
+        throw(ArgumentError("PQS source-box IDA axis must be :x, :y, or :z"))
+    density_terms = pgdg.pair_factor_terms
+    raw_terms = pgdg.pair_factor_terms_raw
+    size(density_terms) == size(raw_terms) || throw(
+        DimensionMismatch("PQS source-box IDA raw and normalized terms differ"),
+    )
+    term_count, nrow, ncol = size(raw_terms)
+    nrow == ncol ||
+        throw(DimensionMismatch("PQS source-box IDA axis factors must be square"))
+    expected = _pqs_source_box_expected_ida_term_count(expected_term_count)
+    isnothing(expected) || term_count == expected || throw(
+        DimensionMismatch("PQS source-box IDA term count mismatch"),
+    )
+    weights = Float64[Float64(weight) for weight in pgdg.weights]
+    centers = Float64[Float64(center) for center in pgdg.centers]
+    length(weights) == nrow ||
+        throw(DimensionMismatch("PQS source-box IDA weights size mismatch"))
+    length(centers) == nrow ||
+        throw(DimensionMismatch("PQS source-box IDA centers size mismatch"))
+    all(isfinite, raw_terms) ||
+        throw(ArgumentError("PQS source-box IDA raw terms must be finite"))
+    all(isfinite, weights) ||
+        throw(ArgumentError("PQS source-box IDA weights must be finite"))
+    all(isfinite, centers) ||
+        throw(ArgumentError("PQS source-box IDA centers must be finite"))
+    return (;
+        axis,
+        raw_pair_factor_terms = raw_terms,
+        density_normalized_pair_factor_terms = density_terms,
+        source_weights = weights,
+        centers,
+        term_count,
+        factor_dimensions = (nrow, ncol),
+    )
+end
+
+function _pqs_source_box_ida_axis_factors(
+    bundle::_MappedOrdinaryGausslet1DBundle;
+    axis::Symbol,
+    expected_term_count = nothing,
+)
+    return _pqs_source_box_ida_axis_factors(
+        bundle.pgdg_intermediate;
+        axis,
+        expected_term_count,
+    )
+end
+
+function _pqs_source_box_ida_factor_provenance(
+    bundles::_CartesianNestedAxisBundles3D;
+    expected_term_count = nothing,
+)
+    axes = (;
+        x = _pqs_source_box_ida_axis_factors(
+            _nested_axis_bundle(bundles, :x);
+            axis = :x,
+            expected_term_count,
+        ),
+        y = _pqs_source_box_ida_axis_factors(
+            _nested_axis_bundle(bundles, :y);
+            axis = :y,
+            expected_term_count,
+        ),
+        z = _pqs_source_box_ida_axis_factors(
+            _nested_axis_bundle(bundles, :z);
+            axis = :z,
+            expected_term_count,
+        ),
+    )
+    term_count = axes.x.term_count
+    term_count == axes.y.term_count == axes.z.term_count || throw(
+        DimensionMismatch("PQS source-box IDA axes have different term counts"),
+    )
+    return (;
+        axes,
+        raw_axis_pair_factor_terms = (;
+            x = axes.x.raw_pair_factor_terms,
+            y = axes.y.raw_pair_factor_terms,
+            z = axes.z.raw_pair_factor_terms,
+        ),
+        axis_pair_factor_terms = (;
+            x = axes.x.density_normalized_pair_factor_terms,
+            y = axes.y.density_normalized_pair_factor_terms,
+            z = axes.z.density_normalized_pair_factor_terms,
+        ),
+        axis_weights = (;
+            x = axes.x.source_weights,
+            y = axes.y.source_weights,
+            z = axes.z.source_weights,
+        ),
+        axis_centers = (;
+            x = axes.x.centers,
+            y = axes.y.centers,
+            z = axes.z.centers,
+        ),
+        term_count,
+        factor_dimensions = (;
+            x = axes.x.factor_dimensions,
+            y = axes.y.factor_dimensions,
+            z = axes.z.factor_dimensions,
+        ),
+    )
+end
+
 function _unflat_parent_index(index::Int, dims::NTuple{3,Int})
     nx, ny, nz = dims
     1 <= index <= nx * ny * nz || throw(

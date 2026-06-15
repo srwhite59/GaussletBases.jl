@@ -4433,6 +4433,7 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_rhf_input_contr
     h1_j_payload_status =
         isnothing(h1_j_payload) ? :not_available : h1_j_payload.status
     private_rhf_inputs = get(recipe, :private_rhf_inputs, (;))
+    fixture_role = get(private_rhf_inputs, :private_rhf_fixture_role, :route_smoke)
     electron_count =
         get(private_rhf_inputs, :private_rhf_electron_count, nothing)
     occupation =
