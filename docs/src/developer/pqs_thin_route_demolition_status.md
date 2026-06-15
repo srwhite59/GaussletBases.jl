@@ -205,3 +205,64 @@ Recommended next cut:
   and downstream fields, but do not delete `bin/cartesian_ham_builder.jl`, all
   driver inputs, or the independent H2 PQS construction path without explicit
   approval.
+
+## Checkpoint 5 - Route-Status Test and Artifact-Key Cut
+
+Status:
+
+- uncommitted demolition cut for review.
+- The protected driver entry point and driver inputs remain present.
+
+Deleted:
+
+- synthetic route-core, pair-operator-plan, pair-block-materialization, and
+  terminal-lowering contract tests that mostly asserted status/materialized
+  sidecars and private route-core summaries;
+- old shellification module/plan integration tests that preserved
+  metadata-only route summaries, materialization flags, and private
+  low-order planning vocabulary;
+- old atom-growth, high-order recipe audit, fixed-block timing, QW adapter, and
+  residual/compression policy tests;
+- the endpoint manifest mirror.
+
+Simplified:
+
+- Removed the flattened He/H2 artifact-key writer cloud from
+  `pqs_source_box_route_driver_reporting.jl`.
+- Kept the basic driver artifact path: `cartesian_save` still writes durable
+  `report` and optional `materialization` payloads to JLD2.
+- Shrunk printed/TSV materialization fields to a compact status/dimension
+  summary instead of the old low-order/ham/artifact status field list.
+
+Validation:
+
+- `git diff --check` passed.
+- Package load was attempted once and passes:
+  `julia --project=. -e 'using GaussletBases; println("load ok")'`.
+- Caller grep for the deleted artifact writers and deleted test names finds no
+  active source/test/bin callers. Remaining hits are historical docs/logs.
+- `cartesian_selected_terminal_lowering_contract_inventory` still has active
+  source/driver callers, so only its stale test was deleted in this cut.
+
+Line-count impact:
+
+- 9,148 deleted lines in the uncommitted fifth cut.
+- Current total branch pressure relative to `main`: 218 insertions and 42,456
+  deletions.
+
+Current breakage assessment:
+
+- Package load remains green.
+- Old helper/status tests are intentionally gone.
+- No driver input file or driver entry point was deleted.
+- The flattened artifact contract is intentionally broken; future survival
+  checks should read compact semantic facts from the durable report or a smaller
+  driver-owned artifact, not exact legacy key lists.
+
+Recommended next cut:
+
+- Audit the remaining source-side selected-terminal-lowering inventory and
+  pair/materialization summary fields for active driver construction use versus
+  report/status-only use.
+- Keep the driver alive, but continue reducing `pqs_source_box_route_driver_*`
+  report/status field clouds.
