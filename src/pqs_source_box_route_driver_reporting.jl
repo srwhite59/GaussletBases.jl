@@ -539,7 +539,9 @@ function _pqs_source_box_route_driver_write_pqs_diatomic_readiness_artifact!(
     fake_pqs_artifact =
         artifact_role === :fake_pqs_source_backed_wl_reproduction
     independent_pqs_artifact =
-        artifact_role === :independent_h2_pqs_source_box_target_readiness
+        _pqs_source_box_route_driver_independent_h2_pqs_artifact_role(
+            artifact_role,
+        )
     physical_target_artifact =
         artifact_role === :physical_gausslet_endpoint_target ||
         fake_pqs_artifact ||

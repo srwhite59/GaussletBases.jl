@@ -36,7 +36,10 @@ function _pqs_multilayer_complete_core_shell_rhf_available_input_contract(
            _pqs_multilayer_rhf_contract_property(
                summary,
                :route_kind,
-           ) === :bond_aligned_diatomic_physical_gausslet_core_shell_pqs
+           ) in (
+               :bond_aligned_diatomic_physical_gausslet_core_shell_pqs,
+               :bond_aligned_diatomic_independent_pqs_source_box_core_shell,
+           )
 end
 
 function _pqs_multilayer_complete_core_shell_rhf_materialized_h1_payload(

@@ -8261,6 +8261,17 @@ function _pqs_source_box_route_driver_endpoint_blocker_update(summary, blocker)
     return blocker
 end
 
+function _pqs_source_box_route_driver_independent_h2_pqs_artifact_role(
+    artifact_role,
+)
+    return artifact_role in (
+        :independent_h2_pqs_source_box_target_readiness,
+        :independent_h2_pqs_final_basis_diagnostic,
+        :independent_h2_pqs_h1_diagnostic,
+        :independent_h2_pqs_h1_j_density_diagnostic,
+    )
+end
+
 function _pqs_source_box_route_driver_physical_gausslet_target_report_fields(
     assembly,
 )

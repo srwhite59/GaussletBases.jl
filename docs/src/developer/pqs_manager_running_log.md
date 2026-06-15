@@ -1366,3 +1366,51 @@ Line-count / complexity note:
   deleted, net `-3`.
 - Manifest/input taxonomy plus deletion offset was `28` added / `29` deleted,
   net `-1`.
+
+## Pass 252 - Independent H2 PQS Private RHF Diagnostic
+
+Commit(s):
+- this commit - Materialize independent H2 PQS private RHF diagnostic
+
+Summary:
+- Repaired the existing private RHF diagnostic seam so it accepts the
+  independent H2 PQS route/role family, not only the old physical/fake-PQS role.
+- The focused route now materializes private RHF on the independent 471-D H2 PQS
+  H1-J basis with `fake_pqs_enabled=false`,
+  `source_backed_fixed_source_oracle_used=false`, and
+  `retained_transform_authority=:pqs_source_box_construction`.
+- RHF converged in 8 iterations with total energy `-1.1589735957658853`,
+  one-body energy `-1.5609752182694798`, two-body energy
+  `0.4020016225035945`, density trace `1.9999999999999993`, idempotency
+  residual `3.1e-17`, and commutator residual `4.0e-9`.
+
+Validation:
+- Doer: package load passed; focused independent H2 PQS private RHF
+  driver/artifact probe passed in about 84 seconds; `git diff --check` passed.
+- Manager: reviewed the role-gate/RHF-helper diff, reran package load, and
+  accepted doer validation without duplicating the slow RHF route run.
+
+Goal advancement:
+- MT2/LT5: advanced independent H2 PQS from H1-J diagnostic to private RHF
+  diagnostic while preserving route authority and fake-PQS quarantine.
+- LT6/LT7: confirmed the driver artifact exposes the RHF input contract,
+  execution status, convergence, and residual diagnostics needed for review.
+- MT5/LT2: offset the RHF source changes by deleting stale terminal RouteCore
+  mirror assertions.
+
+Medium-goal update:
+- none.
+
+Risk / guardrail:
+- Private RHF is still diagnostic-only. Do not promote export/public solver
+  readiness, CR2 readiness, or supplement work from this result.
+- Do not compare this gausslet-only independent PQS value to supplemented WL/QW
+  references.
+
+Remaining blocker / next:
+- Decide whether to add a tiny explicit private-RHF input/manifest row, perform
+  a strategic checkpoint after pass 254, or resume old-flat cleanup before any
+  supplement/provider-block work.
+
+Line-count / complexity note:
+- Scoped `src + test + bin` diff was `29` added / `31` deleted, net `-2`.

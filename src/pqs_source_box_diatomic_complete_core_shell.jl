@@ -4039,11 +4039,17 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_rhf_input_contr
     if route_family !== :pqs_source_box
         status = :not_applicable_pqs_physical_gausslet_rhf_input_contract
         blocker = nothing
-    elseif route_kind !== :bond_aligned_diatomic_physical_gausslet_core_shell_pqs ||
-           !(fixture_role in (
-               :physical_gausslet_endpoint_target,
-               :fake_pqs_source_backed_wl_reproduction,
-           ))
+    elseif !(
+        route_kind === :bond_aligned_diatomic_physical_gausslet_core_shell_pqs &&
+        fixture_role in (
+            :physical_gausslet_endpoint_target,
+            :fake_pqs_source_backed_wl_reproduction,
+        ) ||
+        route_kind === :bond_aligned_diatomic_independent_pqs_source_box_core_shell &&
+        _pqs_source_box_route_driver_independent_h2_pqs_artifact_role(
+            fixture_role,
+        )
+    )
         status = :blocked_pqs_physical_gausslet_rhf_input_contract
         blocker = :unsupported_physical_gausslet_fixture_role
         push!(missing, :physical_gausslet_fixture_role)

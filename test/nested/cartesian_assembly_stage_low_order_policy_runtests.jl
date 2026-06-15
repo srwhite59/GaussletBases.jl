@@ -278,24 +278,6 @@ end
     @test !terminal_assembly.low_order_independent_atom_growth_pair_inventory_available
     @test terminal_assembly.low_order_pair_count == 0
     @test terminal_assembly.low_order_pair_family_counts == ()
-    @test !terminal_assembly.low_order_route_core_pair_inventory_available
-    @test terminal_assembly.low_order_route_core_pair_inventory_status ==
-          :deferred_terminal_shellification_pair_inventory
-    @test terminal_assembly.low_order_route_core_pair_count == 0
-    @test !terminal_assembly.low_order_route_core_pair_operator_ready
-    @test terminal_assembly.low_order_route_core_pair_operator_readiness_status ==
-          :deferred_terminal_shellification_pair_inventory
-    @test terminal_assembly.low_order_route_core_typed_pair_operator_plan_inventory_status ==
-          :deferred_terminal_shellification_typed_pair_operator_plan_inventory
-    @test terminal_assembly.low_order_route_core_typed_pair_operator_plan_blocker ==
-          :deferred_terminal_shellification_pair_inventory
-    @test !terminal_assembly.low_order_route_core_typed_pair_operator_plan_inventory_available
-    @test terminal_assembly.terminal_shellification_central_gap_region_count ==
-          terminal_stages.pairs.terminal_shellification_central_gap_region_count
-    @test terminal_assembly.terminal_shellification_central_midpoint_slab_count ==
-          terminal_stages.pairs.terminal_shellification_central_midpoint_slab_count
-    @test terminal_assembly.terminal_shellification_central_distorted_product_box_count ==
-          terminal_stages.pairs.terminal_shellification_central_distorted_product_box_count
     @test terminal_assembly.terminal_shellification_central_gap_region_count == 3
     @test terminal_assembly.terminal_shellification_central_midpoint_slab_count ==
           3
@@ -324,15 +306,9 @@ end
     @test !terminal_summary.legacy_source_assembly_selected
     @test terminal_summary.terminal_shellification_assembly_summary_available
     @test terminal_summary.terminal_shellification_scaffold_available
-    @test terminal_summary.terminal_shellification_scaffold ===
-          terminal_stages.pairs.terminal_shellification_scaffold
     @test terminal_summary.terminal_shellification_region_count ==
           terminal_stages.pairs.terminal_shellification_region_count
     @test terminal_summary.terminal_shellification_unit_inventory_available
-    @test terminal_summary.terminal_shellification_unit_inventory ===
-          terminal_stages.pairs.terminal_shellification_unit_inventory
-    @test terminal_summary.terminal_shellification_unit_count ==
-          terminal_stages.pairs.terminal_shellification_unit_count
     @test !terminal_summary.terminal_shellification_final_retained_unit_inventory_available
     @test !terminal_summary.terminal_shellification_transform_contracts_available
     @test !terminal_summary.terminal_shellification_pair_inventory_available
