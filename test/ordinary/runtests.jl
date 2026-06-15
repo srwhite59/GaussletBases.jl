@@ -2972,13 +2972,9 @@ end
         expansion = expansion,
         interaction_treatment = :ggt_nearest,
     )
-    heteronuclear_bundle = cartesian_basis_bundle_payload(heteronuclear_default)
-
     @test heteronuclear_default.nuclear_charges == [2.0, 1.0]
     @test heteronuclear_default.one_body_hamiltonian ≈
           heteronuclear_explicit.one_body_hamiltonian atol = 1.0e-12 rtol = 1.0e-12
-    @test heteronuclear_bundle.basis["metadata/route/nuclear_charges"] == [2.0, 1.0]
-    @test heteronuclear_bundle.ham["default_nuclear_charges"] == [2.0, 1.0]
 
     diatomic_reference, diatomic_localized, diatomic_reference_check, diatomic_localized_check =
         _check_direct_product_backend_pair(diatomic_basis, [1.0, 1.0])

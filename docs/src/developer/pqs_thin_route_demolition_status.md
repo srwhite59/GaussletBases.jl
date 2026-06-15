@@ -550,9 +550,8 @@ Deleted/simplified:
 
 Expected old-path fallout:
 
-- `test/ordinary/runtests.jl` still calls `cartesian_basis_bundle_payload`.
-  That is old export API pressure and should not be repaired in this demolition
-  branch unless the public artifact contract is explicitly rebuilt.
+- The ordinary-test `cartesian_basis_bundle_payload` call was removed in
+  checkpoint 13 instead of restoring the old export API.
 
 Validation:
 
@@ -578,3 +577,43 @@ Recommended next cut:
 
 - If package load returns green, continue removing old-path callers such as the
   ordinary-test bundle assertion and the four low-order source caller fallouts.
+
+## Checkpoint 13 - Deleted-Helper Caller Block Cut
+
+Status:
+
+- uncommitted demolition cut for review.
+
+Deleted/simplified:
+
+- Removed the one-center route materializer call to the deleted WL seed
+  inventory helper by leaving the obsolete inventory slot empty.
+- Replaced the old atom-growth low-order unit/transform/pair helper calls with
+  explicit `nothing` or `:blocked_atom_growth_route_removed` summaries.
+- Removed the ordinary-test bundle payload call and bundle-key assertions.
+
+Validation:
+
+- `git diff --check` passed.
+- Caller grep for deleted WL seed, atom-growth, and bundle export symbols is
+  clean outside this demolition note.
+- Package load passed.
+- The protected H2 independent PQS readiness driver smoke completed with
+  saving disabled.
+
+Line-count impact:
+
+- Small source/test cut: about 18 net deleted lines before validation.
+
+Current breakage assessment:
+
+- Caller grep for the deleted WL seed, atom-growth, and bundle export symbols is
+  now clean outside this demolition note.
+- The old atom-growth/WL branches are now explicitly blocked rather than
+  depending on deleted helper files.
+- Package load and the protected readiness driver smoke are green.
+
+Recommended next cut:
+
+- Continue deleting old export/report/status tests; avoid reintroducing bundle
+  or atom-growth compatibility just to satisfy old callers.

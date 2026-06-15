@@ -824,12 +824,7 @@ function _cartesian_shellization_route_materialize_one_center_low_order(
         source_kind = :route_configured_one_center_low_order,
         shellization_role = :route_configured_one_center_full_parent_shellization,
     )
-    inventory = _white_lindsey_low_order_materialized_seed_inventory(
-        sequence,
-        fixed_block,
-        structure,
-        packet_kernel = packet_kernel,
-    )
+    inventory = nothing
     fixture = (;
         parent_side_count,
         nside,

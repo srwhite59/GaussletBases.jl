@@ -4052,12 +4052,7 @@ function _pqs_source_box_route_driver_unit_stage_low_order_summary(shells)
                 terminal_lowering_plan_status :
                 nothing,
         )
-    atom_growth_plan_unit_inventory =
-        atom_growth_units_selected ?
-        _pqs_source_box_route_driver_atom_growth_plan_unit_inventory(
-            low_order_shellization,
-        ) :
-        nothing
+    atom_growth_plan_unit_inventory = nothing
     atom_growth_plan_unit_inventory_available =
         !isnothing(atom_growth_plan_unit_inventory) &&
         atom_growth_plan_unit_inventory.status ==
@@ -4515,12 +4510,7 @@ function _pqs_source_box_route_driver_transform_stage_low_order_summary(units)
         terminal_shellification_transforms_selected ?
         :deferred_terminal_shellification_transform_contracts :
         :not_selected
-    transform_contract_inventory =
-        atom_growth_transforms_selected ?
-        _pqs_source_box_route_driver_atom_growth_transform_contract_inventory(
-            low_order_units.plan_unit_inventory,
-        ) :
-        nothing
+    transform_contract_inventory = nothing
     transform_contract_inventory_available =
         !isnothing(transform_contract_inventory) &&
         transform_contract_inventory.status ==
@@ -5299,20 +5289,21 @@ function _pqs_source_box_route_driver_pair_stage_low_order_summary(
         atom_growth_pairs_selected && hasproperty(units, :plan_unit_inventory) ?
         units.plan_unit_inventory :
         nothing
-    atom_growth_pair_inventory =
-        atom_growth_pairs_selected ?
-        _pqs_source_box_route_driver_atom_growth_pair_inventory(
-            atom_growth_plan_unit_inventory,
-        ) :
-        nothing
+    atom_growth_pair_inventory = nothing
     route_core_pair_metadata =
         atom_growth_pairs_selected ?
-        _pqs_source_box_route_driver_route_core_pair_stage_metadata(
-            hasproperty(units, :route_core_sidecar_inventory) ?
-            units.route_core_sidecar_inventory :
-            nothing,
-            atom_growth_pair_inventory,
-            route_skeleton,
+        merge(
+            route_core_pair_unavailable,
+            (;
+                route_core_pair_inventory_status =
+                    :blocked_atom_growth_route_removed,
+                route_core_summary_status = :blocked_atom_growth_route_removed,
+                route_core_pair_operator_ready = false,
+                route_core_pair_operator_readiness_status =
+                    :blocked_atom_growth_route_removed,
+                route_core_pair_operator_blocker =
+                    :blocked_atom_growth_route_removed,
+            ),
         ) :
         terminal_shellification_pairs_selected ?
         merge(
