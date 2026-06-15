@@ -78,8 +78,6 @@ save_artifact = false
 save_tsv = false
 materialize_route = false
 probe_route_configured_one_center_materializer = false
-probe_route_configured_diatomic_atom_growth_materializer = false
-low_order_shellization_policy = nothing
 save_basis_artifact = false
 save_ham_artifact = false
 stop_after_stage = nothing
@@ -131,8 +129,6 @@ route_inputs = (; route_family, route_kind, route_shape, product_body_rule,
     retained_atom_core_interiors, supplement_policy, run_final_basis, run_h1,
     run_h1_j, private_rhf_inputs)
 materialization_inputs = (; materialize_route, probe_route_configured_one_center_materializer,
-    probe_route_configured_diatomic_atom_growth_materializer,
-    low_order_shellization_policy,
     save_basis_artifact, save_ham_artifact, basisfile, hamfile,
     materializer_backend, materializer_nside,
     route_configured_diatomic_ham_interaction_treatment,
@@ -166,9 +162,7 @@ _cartesian_driver_stage(:cartesian_shells)
 shells = GaussletBases.cartesian_shells(
     parent,
     spacing_inputs,
-    recipe;
-    low_order_shellization_policy,
-    probe_route_configured_diatomic_atom_growth_materializer,
+    recipe,
 )
 _cartesian_driver_stop_after(:cartesian_shells)
 _cartesian_driver_stage(:cartesian_units)
