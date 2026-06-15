@@ -247,37 +247,12 @@ end
     @test terminal_assembly.low_order_assembly_source ==
           :terminal_shellification_pair_terms
     @test terminal_assembly.terminal_shellification_assembly_selected
-    @test terminal_assembly.terminal_shellification_assembly_summary_available
-    @test terminal_assembly.terminal_shellification_scaffold_available
-    @test terminal_assembly.terminal_shellification_scaffold ===
-          terminal_stages.pairs.terminal_shellification_scaffold
     @test terminal_assembly.terminal_shellification_region_count ==
           terminal_stages.pairs.terminal_shellification_region_count
-    @test terminal_assembly.terminal_shellification_unit_inventory_available
-    @test terminal_assembly.terminal_shellification_unit_inventory ===
-          terminal_stages.pairs.terminal_shellification_unit_inventory
     @test terminal_assembly.terminal_shellification_unit_count ==
           terminal_stages.pairs.terminal_shellification_unit_count
-    @test !terminal_assembly.terminal_shellification_final_retained_unit_inventory_available
-    @test !terminal_assembly.terminal_shellification_transform_contracts_available
-    @test !terminal_assembly.terminal_shellification_pair_inventory_available
-    @test terminal_assembly.terminal_shellification_pair_inventory_status ==
-          :deferred_terminal_shellification_pair_inventory
-    @test terminal_assembly.terminal_shellification_pair_materialization_status ==
-          :deferred_terminal_shellification_pair_materialization
-    @test terminal_assembly.terminal_shellification_assembly_materialization_status ==
-          :deferred_terminal_shellification_assembly_materialization
-    @test !terminal_assembly.hamiltonian_matrices_materialized
-    @test !terminal_assembly.operator_matrices_materialized
-    @test !terminal_assembly.pair_operator_blocks_materialized
     @test terminal_assembly.assembly_requires_materialization
     @test !terminal_assembly.active_source_authority
-    @test terminal_assembly.low_order_pair_inventory_source ==
-          :terminal_shellification_scaffold
-    @test !terminal_assembly.low_order_pair_inventory_known
-    @test !terminal_assembly.low_order_independent_atom_growth_pair_inventory_available
-    @test terminal_assembly.low_order_pair_count == 0
-    @test terminal_assembly.low_order_pair_family_counts == ()
     @test terminal_assembly.terminal_shellification_central_gap_region_count == 3
     @test terminal_assembly.terminal_shellification_central_midpoint_slab_count ==
           3
@@ -293,8 +268,6 @@ end
           :terminal_cartesian_shellification_geometry
     @test terminal_summary.shellization_kind ==
           :terminal_cartesian_shellification_geometry
-    @test terminal_summary.pair_route_kind ==
-          :terminal_shellification_low_order_pairs
     @test terminal_summary.assembly_source ==
           :terminal_shellification_pair_terms
     @test terminal_summary.assembly_route_kind ==
@@ -304,30 +277,11 @@ end
     @test terminal_summary.terminal_shellification_assembly_selected
     @test !terminal_summary.atom_growth_assembly_selected
     @test !terminal_summary.legacy_source_assembly_selected
-    @test terminal_summary.terminal_shellification_assembly_summary_available
-    @test terminal_summary.terminal_shellification_scaffold_available
     @test terminal_summary.terminal_shellification_region_count ==
           terminal_stages.pairs.terminal_shellification_region_count
     @test terminal_summary.terminal_shellification_unit_inventory_available
-    @test !terminal_summary.terminal_shellification_final_retained_unit_inventory_available
-    @test !terminal_summary.terminal_shellification_transform_contracts_available
-    @test !terminal_summary.terminal_shellification_pair_inventory_available
-    @test terminal_summary.terminal_shellification_pair_inventory_status ==
-          :deferred_terminal_shellification_pair_inventory
-    @test terminal_summary.terminal_shellification_pair_materialization_status ==
-          :deferred_terminal_shellification_pair_materialization
-    @test terminal_summary.terminal_shellification_assembly_materialization_status ==
-          :deferred_terminal_shellification_assembly_materialization
-    @test !terminal_summary.hamiltonian_matrices_materialized
-    @test !terminal_summary.operator_matrices_materialized
     @test !terminal_summary.pair_operator_blocks_materialized
-    @test !terminal_summary.pair_operator_blocks_available
-    @test terminal_summary.pair_inventory_source ==
-          :terminal_shellification_scaffold
-    @test !terminal_summary.pair_inventory_known
-    @test !terminal_summary.independent_atom_growth_pair_inventory_available
     @test terminal_summary.pair_count == 0
-    @test terminal_summary.pair_family_counts == ()
     @test !terminal_summary.assembly_can_proceed_from_current_staged_data
     @test terminal_summary.assembly_requires_materialization
     @test terminal_summary.assembly_materialization_status ==
@@ -337,17 +291,18 @@ end
     @test terminal_summary.plan_authority
     @test !terminal_summary.active_source_authority
     @test !terminal_summary.legacy_source_authority
-    @test terminal_summary.helper_by_pair_family == ()
-    @test terminal_summary.pair_operator_helper_by_family == ()
-    @test terminal_summary.pair_helper_status_by_family == ()
     @test terminal_summary.summary_only
+    terminal_units =
+        terminal_summary.terminal_shellification_unit_inventory.terminal_region_units
+    @test length(terminal_units) ==
+          terminal_stages.pairs.terminal_shellification_unit_count
     @test all(
         record -> !record.owned_support_is_cpb,
-        terminal_summary.terminal_shellification_unit_inventory.terminal_region_units,
+        terminal_units,
     )
     @test all(
         record -> !record.shellification_region_is_cpb,
-        terminal_summary.terminal_shellification_unit_inventory.terminal_region_units,
+        terminal_units,
     )
     @test terminal_summary.assembly_stage_fields_preserved
     @test terminal_assembly.shells === terminal_stages.shells

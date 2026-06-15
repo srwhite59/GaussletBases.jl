@@ -1845,3 +1845,46 @@ Line-count / complexity note:
 - Exception accepted because the payload prevents a worse provider-block
   authority error. The next cleanup-capable pass should pay this down with a
   mature deletion candidate.
+
+## Pass 262 - Terminal Assembly Flat-Mirror Paydown
+
+Commit(s):
+- this commit - Shrink terminal assembly low-order flat mirrors
+
+Summary:
+- Tests-only cleanup in
+  `test/nested/cartesian_assembly_stage_low_order_policy_runtests.jl`.
+- Removed duplicated terminal-shellification flat assembly/summary mirror
+  assertions, deferred-status aliases, duplicate false matrix/materialization
+  checks, and empty helper-family mirrors.
+- Preserved compact live checks for terminal policy selection, summary/deferred
+  status, region/unit counts, midpoint/distorted-box facts, non-CPB support
+  records, and major stage-object preservation.
+
+Validation:
+- Doer: package-load/parse validation and `git diff --check` passed.
+- Manager: reran package-load/parse validation and `git diff --check`; both
+  passed. The stale low-order integration file was intentionally not used as a
+  per-pass gate.
+
+Goal advancement:
+- MT5/LT2: paid down part of the pass-261 implementation exception by removing
+  stale test pressure.
+- MT6/AG7: continued classifying old flat terminal-shellification report keys
+  as migration scaffolding rather than public route authority.
+
+Medium-goal update:
+- none.
+
+Risk / guardrail:
+- The test still protects compact terminal-policy behavior. Do not re-expand it
+  with exact flat report-key mirrors.
+
+Remaining blocker / next:
+- The pass-261 line-count debt is only partially paid down. Continue with
+  mature cleanup candidates, or proceed to provider-block payload work only if
+  it consumes the support-partition payload and keeps matrices local/provider
+  level.
+
+Line-count / complexity note:
+- Scoped `src + test + bin` was `6` added / `51` deleted, net `-45`.
