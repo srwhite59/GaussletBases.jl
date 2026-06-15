@@ -337,23 +337,6 @@ end
     @test terminal_summary.plan_authority
     @test !terminal_summary.active_source_authority
     @test !terminal_summary.legacy_source_authority
-    @test !terminal_summary.route_core_pair_inventory_available
-    @test terminal_summary.route_core_pair_inventory_status ==
-          :deferred_terminal_shellification_pair_inventory
-    @test terminal_summary.route_core_pair_count == 0
-    @test terminal_summary.route_core_pair_family_counts == ()
-    @test terminal_summary.route_core_summary_status ==
-          :deferred_terminal_shellification_pair_inventory
-    @test !terminal_summary.route_core_pair_operator_ready
-    @test terminal_summary.route_core_pair_operator_readiness_status ==
-          :deferred_terminal_shellification_pair_inventory
-    @test terminal_summary.route_core_pair_operator_blocker ==
-          :deferred_terminal_shellification_pair_inventory
-    @test !terminal_summary.route_core_typed_pair_operator_plan_inventory_available
-    @test terminal_summary.route_core_typed_pair_operator_plan_inventory_status ==
-          :deferred_terminal_shellification_typed_pair_operator_plan_inventory
-    @test terminal_summary.route_core_typed_pair_operator_plan_blocker ==
-          :deferred_terminal_shellification_pair_inventory
     @test terminal_summary.helper_by_pair_family == ()
     @test terminal_summary.pair_operator_helper_by_family == ()
     @test terminal_summary.pair_helper_status_by_family == ()

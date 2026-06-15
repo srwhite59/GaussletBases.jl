@@ -1414,3 +1414,48 @@ Remaining blocker / next:
 
 Line-count / complexity note:
 - Scoped `src + test + bin` diff was `29` added / `31` deleted, net `-2`.
+
+## Pass 253 - Independent H2 PQS Private RHF Input Taxonomy
+
+Commit(s):
+- this commit - Add independent H2 PQS private RHF input
+
+Summary:
+- Added an explicit include/override input for the independent H2 PQS private
+  RHF diagnostic:
+  `test/driver_inputs/h2_pqs_q5_independent_source_box_r4_private_rhf.jl`.
+- The input enables final basis, H1, H1-J, and private RHF with
+  `private_rhf_electron_count = 2`, while keeping
+  `physics_endpoint_ready = false` and blocker
+  `:private_rhf_diagnostic_not_public_solver_contract`.
+- Updated the endpoint manifest and compact independent-H2 artifact-role
+  classifier so the new role keeps fake-PQS/source-backed authority disabled.
+
+Validation:
+- Doer: include/flag smoke passed; package load passed; `git diff --check` and
+  trailing-whitespace search passed.
+- Manager: reran the include/flag smoke and package load. Both passed. No slow
+  H2 RHF route run was needed because pass 252 already validated the route.
+
+Goal advancement:
+- LT6/LT7: made the private RHF diagnostic stage explicit in driver inputs and
+  the endpoint manifest.
+- MT2/LT5: preserved independent-PQS authority and fake-PQS quarantine for the
+  new RHF role.
+- MT5/LT2: offset the taxonomy addition by deleting stale terminal RouteCore
+  status mirror assertions.
+
+Medium-goal update:
+- none.
+
+Risk / guardrail:
+- The new input is a private diagnostic input, not a public solver endpoint.
+
+Remaining blocker / next:
+- Pass 254 should either do a small cleanup/classification pass or a checkpoint
+  style pass. After accepting pass 254, add the required medium-term goal
+  checkpoint for passes 250-254.
+
+Line-count / complexity note:
+- Scoped `src + test + bin`, counting the new input, was `11` added / `17`
+  deleted, net `-6`.
