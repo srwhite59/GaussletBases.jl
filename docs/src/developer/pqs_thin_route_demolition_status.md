@@ -617,3 +617,43 @@ Recommended next cut:
 
 - Continue deleting old export/report/status tests; avoid reintroducing bundle
   or atom-growth compatibility just to satisfy old callers.
+
+## Checkpoint 14 - Shellization Route Scaffold Cut
+
+Status:
+
+- uncommitted demolition cut for review.
+
+Deleted/simplified:
+
+- Deleted `src/cartesian_shellization_route.jl`, which had become old
+  route-configured low-order/WL materialization scaffolding.
+- Removed the include from `src/GaussletBases.jl`.
+- Replaced its one surviving driver utility use with a tiny local
+  `_cartesian_parent_location_tuple` in `pqs_source_box_route_driver_helpers.jl`.
+
+Validation:
+
+- `git diff --check` passed.
+- Caller grep found no old route-scaffold code references. Remaining mentions
+  are this demolition note plus the new local parent-location helper.
+- Package load passed.
+- The protected H2 independent PQS readiness driver smoke completed with
+  saving disabled.
+
+Line-count impact:
+
+- About 1,014 net source lines deleted before validation.
+
+Current breakage assessment:
+
+- This removes old shellization-route materializer/report scaffolding. The
+  module-owned shellification and terminal-geometry code remains.
+- The protected driver entry point and driver inputs remain present.
+- Package load and the protected readiness driver smoke are green.
+
+Recommended next cut:
+
+- Audit remaining low-order shellification plan materializers in
+  `cartesian_shellification_plan.jl`; cut only old WL/atom-growth materializer
+  surfaces, not shared shellification primitives.

@@ -129,6 +129,13 @@ function _cartesian_parent_symbol_tuple(atom_symbols)
     return Tuple(atom_symbols)
 end
 
+function _cartesian_parent_location_tuple(location)
+    length(location) == 3 || throw(
+        ArgumentError("cartesian parent center locations must be three-dimensional"),
+    )
+    return (Float64(location[1]), Float64(location[2]), Float64(location[3]))
+end
+
 function _cartesian_parent_center_table(system, standard_setup)
     atom_symbols = _cartesian_parent_symbol_tuple(system.atom_symbols)
     nuclear_charges = Tuple(standard_setup.nuclear_charges)
@@ -142,7 +149,7 @@ function _cartesian_parent_center_table(system, standard_setup)
             center_key = Symbol(:center_, index),
             atom_symbol = atom_symbols[index],
             nuclear_charge = nuclear_charges[index],
-            location = _cartesian_shellization_route_location_tuple(atom_locations[index]),
+            location = _cartesian_parent_location_tuple(atom_locations[index]),
         ) for index in eachindex(atom_symbols)
     )
 end
