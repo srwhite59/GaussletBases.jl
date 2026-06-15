@@ -569,13 +569,9 @@ function _pqs_source_box_route_driver_independent_h2_support_region_plan(
         hasproperty(parent, :axis_counts) ? parent.axis_counts : nothing
     axis_count_tuple =
         _pqs_source_box_route_driver_axis_counts_tuple(parent_axis_counts)
-    axis_count_tuple == (9, 9, 15) ||
-        return blocked(:unexpected_independent_h2_parent_axis_counts)
-    bundles =
-        hasproperty(parent, :parent_axis_bundle_object) ?
-        parent.parent_axis_bundle_object :
-        nothing
-    isnothing(bundles) && return blocked(:missing_parent_axis_bundle_object)
+    isnothing(axis_count_tuple) &&
+        return blocked(:missing_independent_h2_parent_axis_counts)
+    bundles = parent.parent_axis_bundle_object
     axes = Tuple(collect(_nested_axis_pgdg(bundles, axis).centers)
                  for axis in (:x, :y, :z))
     locations =
@@ -1118,7 +1114,6 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_target_payload(
         :bond_aligned_diatomic_physical_gausslet_core_shell_pqs,
         :bond_aligned_diatomic_independent_pqs_source_box_core_shell,
     )
-    expected_parent_axis_counts = (9, 9, 15)
 
     if route_family !== :pqs_source_box
         status = :not_applicable_physical_gausslet_target_non_pqs_route
@@ -1132,9 +1127,6 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_target_payload(
     elseif isnothing(inventory)
         status = :blocked_physical_gausslet_target_inventory
         blocker = :missing_physical_gausslet_target_inventory
-    elseif parent_axis_count_tuple != expected_parent_axis_counts
-        status = :blocked_physical_gausslet_target_inventory
-        blocker = :unexpected_physical_gausslet_parent_axis_counts
     elseif independent_target
         status = inventory.status
         blocker = inventory.blocker
@@ -1191,6 +1183,8 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_target_payload(
         retained_rule_plan_available ||
         (!isnothing(inventory) && inventory.retained_atom_core_interiors)
     source_plan_role =
+        independent_target ?
+        get(recipe, :source_plan_role, :independent_pqs_source_box_construction) :
         isnothing(inventory) ?
         :not_available :
         inventory.source_plan_role
@@ -1216,6 +1210,8 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_target_payload(
         !isnothing(generated_support_plan) ? generated_support_plan :
         isnothing(inventory) ? nothing : get(inventory, :support_plan, nothing)
     supplement_policy =
+        independent_target ?
+        something(get(recipe, :supplement_policy, nothing), :none) :
         isnothing(inventory) ?
         :not_available :
         something(get(recipe, :supplement_policy, nothing), inventory.supplement_policy)

@@ -110,6 +110,8 @@ function _pqs_source_box_route_driver_standard_setup(system_inputs, spacing_inpu
         tail_spacing = spacing_inputs.tail_spacing,
         q_to_core_spacing_rule = spacing_inputs.q_to_core_spacing_rule,
         core_spacing,
+        xmax_parallel = get(spacing_inputs, :xmax_parallel, nothing),
+        xmax_transverse = get(spacing_inputs, :xmax_transverse, nothing),
         n_s,
         n_s_source = :input_or_driver_default,
         core_cube_side,
@@ -120,6 +122,138 @@ function _pqs_source_box_route_driver_standard_setup(system_inputs, spacing_inpu
         mapping_s_by_atom = ntuple(_ -> core_spacing, length(system_inputs.nuclear_charges)),
         spacing,
         diagnostics,
+    )
+end
+
+function _cartesian_center_list_axis_records(
+    center_table,
+    axis_index::Int,
+    core_spacing::Real,
+)
+    records = Dict{Float64,Tuple{Float64,Float64}}()
+    for center in center_table
+        coordinate = Float64(center.location[axis_index])
+        charge = Float64(center.nuclear_charge)
+        charge > 0.0 || throw(ArgumentError("Cartesian parent centers require positive nuclear charges"))
+        core_range = sqrt(Float64(core_spacing) / charge)
+        target_spacing = Float64(core_spacing)
+        records[coordinate] =
+            haskey(records, coordinate) ?
+            (min(records[coordinate][1], core_range), min(records[coordinate][2], target_spacing)) :
+            (core_range, target_spacing)
+    end
+    coordinates = sort(collect(keys(records)))
+    return coordinates,
+           [records[coordinate][1] for coordinate in coordinates],
+           [records[coordinate][2] for coordinate in coordinates]
+end
+
+function _cartesian_center_list_axis_extent(
+    center_table,
+    axis_index::Int,
+    standard_setup,
+)
+    coordinates = Float64[Float64(center.location[axis_index]) for center in center_table]
+    active_axis = maximum(coordinates) - minimum(coordinates) > 1.0e-12
+    requested =
+        active_axis ?
+        get(standard_setup, :xmax_parallel, nothing) :
+        get(standard_setup, :xmax_transverse, nothing)
+    return Float64(something(requested, standard_setup.radius))
+end
+
+function _cartesian_center_list_parent_axis(
+    center_table,
+    standard_setup,
+    parent_inputs,
+    axis_index::Int,
+)
+    isnothing(standard_setup.core_spacing) &&
+        throw(ArgumentError("center-list Cartesian parent construction requires core_spacing"))
+    coordinates, core_ranges, target_spacings =
+        _cartesian_center_list_axis_records(
+            center_table,
+            axis_index,
+            standard_setup.core_spacing,
+        )
+    mapping = fit_combined_invsqrt_mapping(
+        centers = coordinates,
+        core_ranges = core_ranges,
+        target_spacings = target_spacings,
+        tail_spacing = standard_setup.tail_spacing,
+    )
+    extent = _cartesian_center_list_axis_extent(center_table, axis_index, standard_setup)
+    count = _qwrg_mapped_odd_count_for_extent(
+        mapping,
+        extent;
+        reference_spacing = standard_setup.reference_spacing,
+    )
+    family = get(parent_inputs, :parent_axis_family,
+        get(parent_inputs, :parent_axis_probe_family, :G10))
+    axis = build_basis(MappedUniformBasisSpec(
+        family;
+        count,
+        mapping,
+        reference_spacing = standard_setup.reference_spacing,
+    ))
+    return axis, count
+end
+
+function _cartesian_center_list_parent_basis_object(
+    center_table,
+    classification,
+    standard_setup,
+    parent_inputs,
+)
+    classification.system_classification == :one_center && return nothing
+    axes_and_counts = ntuple(
+        axis_index ->
+            _cartesian_center_list_parent_axis(
+                center_table,
+                standard_setup,
+                parent_inputs,
+                axis_index,
+            ),
+        3,
+    )
+    axes = (x = axes_and_counts[1][1], y = axes_and_counts[2][1],
+        z = axes_and_counts[3][1])
+    counts = (x = axes_and_counts[1][2], y = axes_and_counts[2][2],
+        z = axes_and_counts[3][2])
+    return CartesianParentGaussletBases.CartesianParentGaussletBasis3D(
+        axes;
+        metadata = (
+            basis_family = :center_list_mapped_uniform_cartesian_product,
+            axis_basis_helper = :_cartesian_center_list_parent_basis_object,
+            reference_spacing = standard_setup.reference_spacing,
+            core_spacing = standard_setup.core_spacing,
+            atom_symbols = Tuple(center.atom_symbol for center in center_table),
+            nuclear_charges = Tuple(center.nuclear_charge for center in center_table),
+            atom_locations = Tuple(center.location for center in center_table),
+            axis_counts = counts,
+        ),
+    )
+end
+
+function _cartesian_axis_bundle_from_parent_basis_object(parent_basis_object, parent_inputs)
+    axes = CartesianParentGaussletBases.parent_axes(parent_basis_object)
+    expansion = coulomb_gaussian_expansion(doacc = false)
+    backend =
+        hasproperty(parent_inputs, :parent_axis_probe_backend) ?
+        parent_inputs.parent_axis_probe_backend :
+        :pgdg_localized_experimental
+    function _axis_bundle(axis)
+        return _mapped_ordinary_gausslet_1d_bundle(
+            axis;
+            exponents = expansion.exponents,
+            center = 0.0,
+            backend,
+        )
+    end
+    return _CartesianNestedAxisBundles3D(
+        _axis_bundle(axes.x),
+        _axis_bundle(axes.y),
+        _axis_bundle(axes.z),
     )
 end
 
@@ -432,9 +566,26 @@ function _cartesian_parent_object_carry(
             center_table, classification, standard_setup,
             route_axis_counts, parent_inputs) :
         nothing
+    center_list_parent_basis =
+        isnothing(parent_basis_object) &&
+        (
+            isnothing(one_center_parent_basis) ||
+            isnothing(one_center_parent_basis.parent_basis_object)
+        ) ?
+        _cartesian_center_list_parent_basis_object(
+            center_table,
+            classification,
+            standard_setup,
+            parent_inputs,
+        ) :
+        nothing
     parent_basis_object =
         isnothing(parent_basis_object) && !isnothing(one_center_parent_basis) ?
         one_center_parent_basis.parent_basis_object :
+        parent_basis_object
+    parent_basis_object =
+        isnothing(parent_basis_object) && !isnothing(center_list_parent_basis) ?
+        center_list_parent_basis :
         parent_basis_object
     parent_basis_metadata_available =
         !isnothing(qw_basis_object) ||
@@ -445,6 +596,8 @@ function _cartesian_parent_object_carry(
     parent_basis_object_source =
         !isnothing(qw_basis_object) ?
         :parent_axis_probe_qw_basis :
+        !isnothing(center_list_parent_basis) ?
+        :center_list_mapped_uniform_axes :
         isnothing(one_center_parent_basis) ?
         :unavailable :
         one_center_parent_basis.parent_basis_object_source
@@ -458,6 +611,19 @@ function _cartesian_parent_object_carry(
         isnothing(axis_bundle_object) && !isnothing(one_center_axis_bundle) ?
         one_center_axis_bundle.axis_bundle_object :
         axis_bundle_object
+    center_list_axis_bundle_object =
+        isnothing(axis_bundle_object) &&
+        !isnothing(center_list_parent_basis) &&
+        !isnothing(parent_basis_object) ?
+        _cartesian_axis_bundle_from_parent_basis_object(
+            parent_basis_object,
+            parent_inputs,
+        ) :
+        nothing
+    axis_bundle_object =
+        isnothing(axis_bundle_object) && !isnothing(center_list_axis_bundle_object) ?
+        center_list_axis_bundle_object :
+        axis_bundle_object
     axis_bundle_metadata_available =
         (
             !isnothing(parent_axis_probe) &&
@@ -470,6 +636,8 @@ function _cartesian_parent_object_carry(
     axis_bundle_object_source =
         parent_axis_probe_bundle_object_available ?
         :parent_axis_probe_axis_bundle :
+        !isnothing(center_list_axis_bundle_object) ?
+        :center_list_mapped_ordinary_axis_bundles :
         isnothing(one_center_axis_bundle) ?
         :unavailable :
         one_center_axis_bundle.axis_bundle_object_source
@@ -2052,6 +2220,20 @@ function cartesian_parent(system, spacing_inputs, parent_inputs, recipe)
             standard_setup, parent_axis, route_axis_counts, object_carry)
     materialization_status =
         _cartesian_parent_materialization_status(parent_axis, object_carry)
+    parent_axis_counts =
+        isnothing(object_carry.parent_axis_counts) ?
+        route_axis_counts.parent_axis_counts :
+        object_carry.parent_axis_counts
+    effective_route_axis_counts = merge(
+        route_axis_counts,
+        (;
+            parent_axis_counts,
+            parent_axis_counts_source =
+                isnothing(object_carry.parent_axis_counts) ?
+                route_axis_counts.parent_axis_counts_source :
+                :constructed_parent_basis_object,
+        ),
+    )
 
     return (;
         object_kind = :cartesian_route_parent,
@@ -2063,7 +2245,7 @@ function cartesian_parent(system, spacing_inputs, parent_inputs, recipe)
         parent_axis,
         parent_axis_readiness = parent_axis.parent_axis_readiness,
         parent_axis_probe = parent_axis.parent_axis_probe,
-        route_axis_counts,
+        route_axis_counts = effective_route_axis_counts,
         atom_count = length(center_table),
         atom_symbols = Tuple(center.atom_symbol for center in center_table),
         nuclear_charges = Tuple(center.nuclear_charge for center in center_table),
@@ -2075,8 +2257,8 @@ function cartesian_parent(system, spacing_inputs, parent_inputs, recipe)
         system_classification_status = classification.system_classification_status,
         bond_axis = classification.bond_axis,
         chain_axis = classification.chain_axis,
-        axis_counts = route_axis_counts.parent_axis_counts,
-        axis_counts_source = route_axis_counts.parent_axis_counts_source,
+        axis_counts = parent_axis_counts,
+        axis_counts_source = effective_route_axis_counts.parent_axis_counts_source,
         axis_counts_status = route_axis_counts.status,
         physical_box = standard_setup.parent_box,
         physical_box_rule = standard_setup.parent_box_rule,
