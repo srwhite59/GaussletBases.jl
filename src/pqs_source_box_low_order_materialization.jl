@@ -9,9 +9,8 @@ function _pqs_source_box_route_driver_wl_atomic_pure_gausslet_materialization(
     white_lindsey_expansion,
     white_lindsey_Z,
 )
-    payload = report.route_materializer_payload
     basis =
-        hasproperty(payload, :parent_basis_object) ? payload.parent_basis_object : nothing
+        hasproperty(report, :parent_basis_object) ? report.parent_basis_object : nothing
     isnothing(basis) && return nothing
     parent_axes = CartesianParentGaussletBases.parent_axes(basis)
     axis_basis = parent_axes.x
@@ -67,7 +66,6 @@ function _pqs_source_box_route_driver_wl_atomic_pure_gausslet_materialization(
     h1_symmetry_error = maximum(abs.(h1 .- transpose(h1)))
     h1_lowest = minimum(eigvals(Symmetric(h1_symmetric)))
     summary = (;
-        object_kind = :white_lindsey_atomic_pure_gausslet_materialization_summary,
         route_family = report.route_family,
         geometry = :atomic,
         supplement_policy = :none,
@@ -82,12 +80,9 @@ function _pqs_source_box_route_driver_wl_atomic_pure_gausslet_materialization(
         h1_lowest,
         h1_finite = all(isfinite, h1),
         h1_symmetry_error,
-        one_body_hamiltonian_available = true,
-        density_density_matrix_available = hasproperty(fixed_block, :pair_sum),
-        jld2_artifact_status =
-            (save_basis_artifact || save_ham_artifact) ?
-            :written_if_requested :
-            :not_requested,
+        h1_matrix_finite = all(isfinite, h1),
+        h1_matrix_symmetry_error = h1_symmetry_error,
+        density_density_pair_sum_present = hasproperty(fixed_block, :pair_sum),
     )
     basis_artifact_path = nothing
     if save_basis_artifact
@@ -119,29 +114,24 @@ function _pqs_source_box_route_driver_wl_atomic_pure_gausslet_materialization(
     end
 
     return (;
-        object_kind = :cartesian_nesting_route_driver_materialization,
         route_family = report.route_family,
-        status = :materialized_white_lindsey_atomic_pure_gausslet,
-        blocker = nothing,
-        materialized_report = summary,
-        materialized_report_kind = summary.object_kind,
+        result_kind = :white_lindsey_atomic_pure_gausslet,
+        requested = true,
+        materialized = true,
+        summary,
         retained_dimension = dim,
         support_dimension = summary.support_dimension,
         final_dimension = dim,
         h1_lowest,
-        h1_finite = summary.h1_finite,
+        h1_finite = summary.h1_matrix_finite,
         h1_symmetry_error,
         overlap_identity_error,
-        pqs_materialization_status = :not_applicable,
         save_basis_artifact_requested = save_basis_artifact,
         save_ham_artifact_requested = save_ham_artifact,
         basisfile = basis_artifact_path,
         hamfile = ham_artifact_path,
-        jld2_basis_artifact_status =
-            save_basis_artifact ? :written : :not_requested,
-        jld2_ham_artifact_status =
-            save_ham_artifact ? :written : :not_requested,
-        ignored_legacy_keyword_count = 0,
+        basis_artifact_written = save_basis_artifact,
+        ham_artifact_written = save_ham_artifact,
     )
 end
 
@@ -175,27 +165,15 @@ function _pqs_source_box_route_driver_materialization(
         !isnothing(wl_materialization) && return wl_materialization
     end
     return (;
-        object_kind = :cartesian_nesting_route_driver_materialization,
         route_family = hasproperty(report, :route_family) ? report.route_family : nothing,
-        status =
-            requested ?
-            :blocked_materialization_after_route_scaffold_demolition :
-            :not_requested,
-        blocker =
-            requested ?
-            :route_configured_low_order_materializer_removed :
-            nothing,
-        materialized_report = nothing,
-        materialized_report_kind = nothing,
+        result_kind = requested ? :not_materialized : :not_requested,
+        requested,
+        materialized = false,
         retained_dimension,
-        pqs_materialization_status =
-            requested ?
-            :blocked_materialization_after_route_scaffold_demolition :
-            :not_requested,
         save_basis_artifact_requested = save_basis_artifact,
         save_ham_artifact_requested = save_ham_artifact,
         basisfile,
         hamfile,
-        ignored_legacy_keyword_count = length(kwargs),
+        ignored_keyword_count = length(kwargs),
     )
 end

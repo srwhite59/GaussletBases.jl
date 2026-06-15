@@ -26,18 +26,23 @@ function _pqs_route_driver_print_named_tuple(title, values)
     return nothing
 end
 
-function _pqs_source_box_route_driver_materialization_status_fields()
-    return (
-        :status,
-        :materialized_report_kind,
-        :retained_dimension,
-        :pqs_materialization_status,
-    )
-end
-
 function _pqs_source_box_route_driver_print_materialization(materialization)
     _pqs_route_driver_print_section("route_materialization")
-    for field in _pqs_source_box_route_driver_materialization_status_fields()
+    for field in (
+        :route_family,
+        :result_kind,
+        :requested,
+        :materialized,
+        :retained_dimension,
+        :final_dimension,
+        :h1_lowest,
+        :h1_symmetry_error,
+        :overlap_identity_error,
+        :basisfile,
+        :hamfile,
+    )
+        hasproperty(materialization, field) ||
+            continue
         _pqs_route_driver_print_kv(field, getproperty(materialization, field))
     end
     return nothing
@@ -59,38 +64,14 @@ function _pqs_route_driver_write_named_tuple_tsv(io, section, values)
 end
 
 
-function _pqs_source_box_route_driver_durable_materializer_payload(payload)
-    isnothing(payload) && return nothing
-    return (;
-        object_kind = payload.object_kind,
-        private_development_only = payload.private_development_only,
-        transient_only = payload.transient_only,
-        durable_report_serialization = :sanitized_before_save,
-        source = payload.source,
-        parent_basis_object_available = payload.parent_basis_object_available,
-        parent_qw_basis_object_available = payload.parent_qw_basis_object_available,
-        parent_axis_bundle_object_available =
-            payload.parent_axis_bundle_object_available,
-        parent_basis_object_type_label = payload.parent_basis_object_type_label,
-        parent_qw_basis_object_type_label = payload.parent_qw_basis_object_type_label,
-        parent_axis_bundle_object_type_label =
-            payload.parent_axis_bundle_object_type_label,
-        axis_bundle_backend = payload.axis_bundle_backend,
-        axis_bundle_backend_available = payload.axis_bundle_backend_available,
-        heavy_objects_elided = true,
-    )
-end
-
 function _pqs_source_box_route_driver_durable_report(report)
-    hasproperty(report, :route_materializer_payload) || return report
     return (;
         (
-            field => field == :route_materializer_payload ?
-                     _pqs_source_box_route_driver_durable_materializer_payload(
-                         report.route_materializer_payload,
-                     ) :
+            field => field in (:parent_basis_object, :parent_axis_bundle_object) ?
+                     nothing :
                      getproperty(report, field) for field in keys(report)
         )...,
+        parent_objects_elided_for_durable_report = true,
     )
 end
 
@@ -161,32 +142,9 @@ function _pqs_source_box_route_driver_save(
             println(io, "section\tkey\tvalue")
             _pqs_route_driver_write_named_tuple_tsv(io, "system_metadata", report.system_metadata)
             _pqs_route_driver_write_named_tuple_tsv(io, "recipe_metadata", report.recipe_metadata)
-            _pqs_route_driver_write_named_tuple_tsv(
-                io, "parent_contract", report.parent_contract)
-            _pqs_route_driver_write_named_tuple_tsv(
-                io, "standard_setup_diagnostics", report.standard_setup.diagnostics,
-            )
-            _pqs_route_driver_write_named_tuple_tsv(
-                io, "parent_axis_readiness_diagnostics",
-                report.parent_axis_readiness.diagnostics,
-            )
-            if !isnothing(report.parent_axis_probe)
-                _pqs_route_driver_write_named_tuple_tsv(
-                    io, "parent_axis_probe_diagnostics",
-                    report.parent_axis_probe.diagnostics,
-                )
-            end
-            _pqs_route_driver_write_named_tuple_tsv(
-                io, "route_axis_counts_diagnostics", report.route_axis_counts.diagnostics,
-            )
-            if !isnothing(report.raw_product_box_probe)
-                _pqs_route_driver_write_named_tuple_tsv(
-                    io, "raw_product_box_probe_diagnostics",
-                    report.raw_product_box_probe.diagnostics,
-                )
-            end
-            _pqs_route_driver_write_named_tuple_tsv(
-                io, "standard_unit_inventory", report.standard_unit_inventory)
+            _pqs_route_driver_write_named_tuple_tsv(io, "parent_summary", report.parent_summary)
+            _pqs_route_driver_write_named_tuple_tsv(io, "route_summary", report.route_summary)
+            _pqs_route_driver_write_named_tuple_tsv(io, "pair_summary", report.pair_summary)
             for unit in report.retained_units
                 _pqs_route_driver_write_tsv_row(io, "retained_unit", unit.unit_key, unit)
             end
@@ -194,7 +152,7 @@ function _pqs_source_box_route_driver_save(
                 _pqs_route_driver_write_tsv_row(io, "pair_entry", entry.pair_key, entry)
             end
             if !isnothing(materialization)
-                for field in _pqs_source_box_route_driver_materialization_status_fields()
+                for field in keys(materialization)
                     _pqs_route_driver_write_tsv_row(
                         io,
                         "route_materialization",
@@ -203,7 +161,6 @@ function _pqs_source_box_route_driver_save(
                     )
                 end
             end
-            _pqs_route_driver_write_named_tuple_tsv(io, "diagnostics", report.diagnostics)
         end
     end
     return nothing

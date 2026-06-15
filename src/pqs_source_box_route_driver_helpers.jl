@@ -699,122 +699,6 @@ function _pqs_source_box_route_driver_route_facts(route_skeleton)
     )
 end
 
-function _pqs_source_box_route_driver_contract_metadata(route_recipe)
-    if route_recipe.route_family == :white_lindsey_low_order
-        linear_algebra_plan = (;
-            retained_block_formula =
-                "low-order nested Cartesian operator blocks in the White-Lindsey retained basis",
-            assemble_complete_retained_matrix = :planned_benchmark_step,
-            dense_parent_matrix_required = :implementation_dependent,
-            product_pqs_policy = :not_applicable,
-            product_pqs_lower_blocks = (),
-            finite_output_check = :required_when_operator_blocks_are_materialized,
-            symmetry_error_check = :required_for_symmetric_operator_blocks,
-        )
-        no_go_flags = (
-            public_default_behavior = false,
-            packet_fixed_block_qw_hamiltonian_adoption = false,
-            mwg_ida_semantic_change = false,
-            retained_weight_division = false,
-            retained_pqs_weights_used = false,
-            repo_side_ray_id = false,
-            ecp_behavior = false,
-            cr2_science_claim = false,
-            shell_projection = false,
-            lowdin_cleanup = false,
-            support_local_shell_row_algorithm = false,
-            support_coefficient_matrix = false,
-            pqs_source_box_algorithm_claim = false,
-        )
-        stage_table = (
-            (stage = 1, name = :collect_system_metadata, status = :represented),
-            (stage = 2, name = :select_route_family, status = :represented),
-            (stage = 3, name = :construct_standard_unit_backbone_maps, status = :contract_only),
-            (stage = 4, name = :apply_low_order_comx_to_unit_boxes, status = :contract_only),
-            (stage = 5, name = :form_low_order_unit_basis, status = :pending_implementation),
-            (stage = 6, name = :assemble_low_order_unit_operator_blocks, status = :pending_implementation),
-            (stage = 7, name = :compare_against_pqs_source_box_route, status = :planned_benchmark),
-            (stage = 8, name = :validate_report_save, status = :metadata_dry_run),
-        )
-        dry_run_validation = (;
-            builds_real_hamiltonian = false,
-            builds_route_matrices = false,
-            finite_output = :not_run_metadata_only,
-            symmetry_error = :not_run_metadata_only,
-            reference_error = :unavailable_metadata_only,
-            timing_allocation = :placeholder_only,
-        )
-        return (; linear_algebra_plan, no_go_flags, stage_table, dry_run_validation)
-    end
-
-    linear_algebra_plan = (;
-        retained_block_formula = "O_final[i,j] = T_i' * O_source_box_pair * T_j",
-        assemble_complete_retained_matrix = true,
-        dense_parent_matrix_required = false,
-        product_pqs_policy = :transpose_of_pqs_product_only_after_symmetric_pair_factor_check,
-        product_pqs_lower_blocks = ((:product, :pqs_left), (:product, :pqs_right)),
-        finite_output_check = :required_when_operator_blocks_are_materialized,
-        symmetry_error_check = :required_for_symmetric_same_route_input,
-    )
-    no_go_flags = (
-        public_default_behavior = false,
-        packet_fixed_block_qw_hamiltonian_adoption = false,
-        mwg_ida_semantic_change = false,
-        retained_weight_division = false,
-        retained_pqs_weights_used = false,
-        repo_side_ray_id = false,
-        ecp_behavior = false,
-        cr2_science_claim = false,
-        shell_projection = false,
-        lowdin_cleanup = false,
-        support_local_shell_row_algorithm = false,
-        support_coefficient_matrix = false,
-    )
-
-    stage_table = (
-        (stage = 1, name = :collect_system_metadata, status = :represented),
-        (stage = 2, name = :collect_recipe_metadata, status = :represented),
-        (stage = 3, name = :construct_parent_object, status = :described_not_constructed),
-        (stage = 4, name = :split_parent_into_product_type_units, status = :derived_by_helper),
-        (stage = 5, name = :define_each_unit, status = :derived_by_helper),
-        (stage = 6, name = :loop_over_unit_pairs, status = :derived_by_helper),
-        (stage = 7, name = :apply_final_linear_algebra, status = :plan_reported),
-        (stage = 8, name = :validate_report_save, status = :metadata_dry_run),
-    )
-    dry_run_validation = (;
-        builds_real_hamiltonian = false,
-        builds_route_matrices = false,
-        finite_output = :not_run_metadata_only,
-        symmetry_error = :not_run_metadata_only,
-        reference_error = :unavailable_metadata_only,
-        timing_allocation = :placeholder_only,
-    )
-
-    return (; linear_algebra_plan, no_go_flags, stage_table, dry_run_validation)
-end
-
-_pqs_source_box_route_driver_contract_metadata() =
-    _pqs_source_box_route_driver_contract_metadata((; route_family = :pqs_source_box))
-
-function _pqs_source_box_route_driver_materializer_payload(parent)
-    parent_basis_object =
-        hasproperty(parent, :parent_basis_object) ? parent.parent_basis_object : nothing
-    parent_axis_bundle_object =
-        hasproperty(parent, :parent_axis_bundle_object) ?
-        parent.parent_axis_bundle_object :
-        nothing
-    axis_bundle_backend =
-        hasproperty(parent, :parent_inputs) ?
-        parent.parent_inputs.parent_axis_bundle_backend :
-        nothing
-
-    return (;
-        parent_basis_object,
-        parent_axis_bundle_object,
-        axis_bundle_backend,
-    )
-end
-
 # High-level driver facade.
 
 function cartesian_system(system_inputs)
@@ -3474,7 +3358,6 @@ end
 function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
     route_skeleton = shells.route_skeleton
     route_facts = _pqs_source_box_route_driver_route_facts(route_skeleton)
-    contract = _pqs_source_box_route_driver_contract_metadata(recipe)
     low_order_assembly =
         _pqs_source_box_route_driver_assembly_stage_low_order_summary(pairs)
     diatomic_physical_gausslet_target_payload =
@@ -3674,7 +3557,6 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
         spacing_inputs = shells.spacing_inputs,
         route_skeleton,
         route_facts,
-        contract,
         shells,
         units,
         transforms,
@@ -3822,7 +3704,6 @@ function cartesian_report(system, parent, assembly, recipe)
     standard_setup = parent.standard_setup
     route_skeleton = assembly.route_skeleton
     route_facts = assembly.route_facts
-    contract = assembly.contract
 
     source_recipe =
         recipe.route_family == :pqs_source_box ? recipe.source_box : recipe.white_lindsey
@@ -3899,7 +3780,6 @@ function cartesian_report(system, parent, assembly, recipe)
             pair_summary,
             route_skeleton,
             route_facts,
-            contract,
             shells = assembly.shells,
             units = assembly.units,
             transforms = assembly.transforms,
@@ -3914,9 +3794,9 @@ function cartesian_report(system, parent, assembly, recipe)
             pair_entries = assembly.pairs.pair_entries,
             pair_family_counts = assembly.pairs.pair_family_counts,
             helper_by_pair_family = assembly.pairs.helper_by_pair_family,
-            linear_algebra_plan = contract.linear_algebra_plan,
-            route_materializer_payload =
-                _pqs_source_box_route_driver_materializer_payload(parent),
+            parent_basis_object = parent.parent_basis_object,
+            parent_axis_bundle_object = parent.parent_axis_bundle_object,
+            axis_bundle_backend = parent.parent_inputs.parent_axis_bundle_backend,
         ),
         _pqs_source_box_route_driver_complete_core_shell_h1_j_report_fields(
             assembly,
@@ -3942,6 +3822,7 @@ function cartesian_materialization(report, materialization_inputs)
 end
 
 function cartesian_print_summary(report, materialization)
+    maybe_get(obj, key) = isnothing(obj) ? nothing : get(obj, key, nothing)
     recipe = report.recipe_metadata
     setup = report.standard_setup
     retained_counts = report.retained_counts
@@ -3972,11 +3853,24 @@ function cartesian_print_summary(report, materialization)
     @show retained_counts retained_dimension
     @show report.pair_family_counts
     @show report.route_summary.shellification_kind
-    @show report.physical_gausslet_final_basis_summary
-    @show report.physical_gausslet_h1_summary
-    @show report.physical_gausslet_h1_j_summary
-    @show materialization.status materialization.pqs_materialization_status
-    @show materialization.materialized_report_kind
+    final_basis = report.physical_gausslet_final_basis_summary
+    h1 = report.physical_gausslet_h1_summary
+    h1_j = report.physical_gausslet_h1_j_summary
+    rhf = report.physical_gausslet_private_rhf_summary
+    supplement = report.physical_gausslet_supplement_preflight_summary
+    @show maybe_get(final_basis, :final_dimension)
+    @show maybe_get(final_basis, :final_overlap_identity_error)
+    @show maybe_get(h1, :lowest_energy)
+    @show maybe_get(h1, :h1_hamiltonian_symmetry_error)
+    @show maybe_get(h1_j, :self_coulomb)
+    @show maybe_get(h1_j, :pre_final_pair_matrix_symmetry_error)
+    @show maybe_get(rhf, :total_with_nuclear_repulsion)
+    @show maybe_get(rhf, :commutator_residual)
+    @show maybe_get(supplement, :supplement_policy)
+    @show maybe_get(supplement, :provider_block_count)
+    @show materialization.result_kind materialization.materialized
+    @show get(materialization, :h1_lowest, nothing)
+    @show get(materialization, :overlap_identity_error, nothing)
     return nothing
 end
 
