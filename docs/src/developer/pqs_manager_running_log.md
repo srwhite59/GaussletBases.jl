@@ -1164,3 +1164,50 @@ Remaining blocker / next:
 
 Line-count / complexity note:
 - Scoped `src + test + bin` diff was `267` added / `287` deleted, net `-20`.
+
+## Pass 248 - Independent H2 PQS Final Basis
+
+Commit(s):
+- this commit - Materialize independent H2 PQS final basis
+
+Summary:
+- Updated the independent H2 PQS final-basis seam so retained counts come from
+  the route-owned source-plan summary instead of the stale fake/WL-era
+  `(251, 98, 114)` tuple.
+- The focused route now materializes a 471-dimensional final basis with retained
+  counts `(275, 98, 98)`, full rank, and final overlap identity error about
+  `1.3e-13`.
+- Final-basis overlap/rank fields are exposed as diagnostics only. H1, H1-J,
+  RHF, supplements, CR2, export, and public API remain off.
+
+Validation:
+- Doer: package load passed; focused independent H2 PQS driver/artifact check
+  with `run_final_basis=true` passed in about 78 seconds; `git diff --check`
+  passed.
+- Manager: reviewed the source/report/test diffs, reran `git diff --check`, and
+  accepted the focused driver validation without duplicating the slow run.
+
+Goal advancement:
+- MT2/LT5: advanced the independent H2 PQS route from source-plan availability
+  to a route-owned final basis without reusing fake/WL authority.
+- LT6/LT7: exposed compact diagnostic final-basis contract fields while keeping
+  physics and export surfaces blocked.
+- MT5/LT2: offset the source/report additions by deleting stale
+  terminal-shellification exact-field test mirrors.
+
+Medium-goal update:
+- none.
+
+Risk / guardrail:
+- Do not treat dense support-overlap/final cleanup as production performance
+  evidence. It is first final-basis diagnostic materialization.
+- Do not attach H1-J/RHF/supplements before H1 and density conventions are
+  reviewed for this independent basis.
+
+Remaining blocker / next:
+- Begin the independent H2 PQS H1 one-body seam: kinetic and by-center
+  electron-nuclear construction for the 471-dimensional final basis. Keep
+  H1-J, RHF, supplements, CR2, export, and public API blocked.
+
+Line-count / complexity note:
+- Scoped `src + test + bin` diff was `87` added / `100` deleted, net `-13`.

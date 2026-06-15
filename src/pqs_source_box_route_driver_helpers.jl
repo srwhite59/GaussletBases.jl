@@ -8453,6 +8453,16 @@ function _pqs_source_box_route_driver_physical_gausslet_target_report_fields(
                 final_dimension = final_basis_payload.summary.final_dimension,
                 final_overlap_identity_error =
                     final_basis_payload.summary.final_overlap_identity_error,
+                pre_final_overlap_identity_error =
+                    final_basis_payload.summary.pre_final_overlap_identity_error,
+                final_overlap_rank =
+                    final_basis_payload.summary.final_overlap_rank,
+                final_overlap_full_rank =
+                    final_basis_payload.summary.final_overlap_full_rank,
+                final_overlap_eigenvalue_min =
+                    final_basis_payload.summary.final_overlap_eigenvalue_min,
+                final_overlap_eigenvalue_max =
+                    final_basis_payload.summary.final_overlap_eigenvalue_max,
                 physics_endpoint_blocker =
                     final_basis_payload.summary.endpoint_blocker,
             ),

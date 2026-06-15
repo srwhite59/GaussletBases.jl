@@ -618,6 +618,18 @@ function _pqs_source_box_route_driver_write_pqs_diatomic_readiness_artifact!(
             get(readiness, :final_overlap_identity_error, nothing),
         ) :
         get(readiness, :final_overlap_identity_error, nothing)
+    basis_pre_final_overlap_identity_error =
+        physical_target_artifact ?
+        get(target, :pre_final_overlap_identity_error, nothing) :
+        nothing
+    basis_final_overlap_rank =
+        physical_target_artifact ? get(target, :final_overlap_rank, nothing) : nothing
+    basis_final_overlap_full_rank =
+        physical_target_artifact ? get(target, :final_overlap_full_rank, nothing) : nothing
+    basis_final_overlap_eigenvalue_min =
+        physical_target_artifact ? get(target, :final_overlap_eigenvalue_min, nothing) : nothing
+    basis_final_overlap_eigenvalue_max =
+        physical_target_artifact ? get(target, :final_overlap_eigenvalue_max, nothing) : nothing
     h1_lowest_energy =
         physical_target_artifact ?
         get(target, :h1_lowest_energy, get(readiness, :h1_lowest_energy, nothing)) :
@@ -775,6 +787,12 @@ function _pqs_source_box_route_driver_write_pqs_diatomic_readiness_artifact!(
         (;
             final_dimension = basis_final_dimension,
             final_overlap_identity_error = basis_final_overlap_identity_error,
+            pre_final_overlap_identity_error =
+                basis_pre_final_overlap_identity_error,
+            final_overlap_rank = basis_final_overlap_rank,
+            final_overlap_full_rank = basis_final_overlap_full_rank,
+            final_overlap_eigenvalue_min = basis_final_overlap_eigenvalue_min,
+            final_overlap_eigenvalue_max = basis_final_overlap_eigenvalue_max,
             retained_atom_core_interiors =
                 get(recipe, :retained_atom_core_interiors, nothing),
             source_plan_role = get(recipe, :source_plan_role, nothing),
@@ -824,6 +842,17 @@ function _pqs_source_box_route_driver_write_pqs_diatomic_readiness_artifact!(
                 get(target, :shared_shell_realization_identity_errors, nothing),
             source_coefficients_materialized =
                 get(target, :source_coefficients_materialized, nothing),
+            final_basis_status = get(target, :final_basis_status, nothing),
+            final_basis_blocker = get(target, :final_basis_blocker, nothing),
+            final_basis_materialized =
+                get(target, :final_basis_materialized, nothing),
+            pre_final_overlap_identity_error =
+                get(target, :pre_final_overlap_identity_error, nothing),
+            final_overlap_identity_error =
+                get(target, :final_overlap_identity_error, nothing),
+            final_overlap_rank = get(target, :final_overlap_rank, nothing),
+            final_overlap_full_rank =
+                get(target, :final_overlap_full_rank, nothing),
             support_plan_status =
                 get(get(target, :support_plan, (;)), :status, nothing),
             support_plan_blocker =

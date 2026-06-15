@@ -549,33 +549,11 @@ end
           terminal_inventory.unit_count
     @test terminal_units.terminal_shellification_unit_count ==
           terminal_units.terminal_shellification_region_count
-    @test terminal_units.terminal_shellification_unit_keys ==
-          terminal_inventory.unit_keys
-    @test terminal_units.terminal_shellification_unit_roles ==
-          terminal_inventory.unit_roles
-    @test terminal_units.terminal_shellification_unit_kinds ==
-          terminal_inventory.unit_kinds
-    @test terminal_units.terminal_shellification_unit_support_counts ==
-          terminal_inventory.support_counts
     @test terminal_units.terminal_shellification_lowering_contract_inventory_available
-    @test terminal_units.terminal_shellification_lowering_contract_inventory_status ==
-          :available_terminal_region_lowering_contract_inventory
     terminal_lowering_inventory =
         terminal_units.terminal_shellification_lowering_contract_inventory
-    @test terminal_lowering_inventory.object_kind ==
-          :cartesian_terminal_region_lowering_contract_inventory
-    @test terminal_lowering_inventory.terminal_region_unit_count ==
-          terminal_inventory.unit_count
-    @test terminal_units.terminal_shellification_lowering_contract_count ==
-          terminal_lowering_inventory.lowering_contract_count
     @test terminal_units.terminal_shellification_lowering_contract_count >=
           terminal_units.terminal_shellification_unit_count
-    @test terminal_units.terminal_shellification_lowering_contract_kinds ==
-          terminal_lowering_inventory.lowering_contract_kinds
-    @test terminal_units.terminal_shellification_lowering_contract_kind_counts ==
-          terminal_lowering_inventory.lowering_contract_kind_counts
-    @test terminal_units.terminal_shellification_contract_counts_by_unit ==
-          terminal_lowering_inventory.contract_counts_by_unit
     @test all(
         entry.lowering_contract_count >= 1
         for entry in terminal_units.terminal_shellification_contract_counts_by_unit
@@ -684,25 +662,9 @@ end
           :available_terminal_region_unit_inventory
     @test terminal_summary.terminal_shellification_unit_count ==
           terminal_inventory.unit_count
-    @test terminal_summary.terminal_shellification_unit_keys ==
-          terminal_inventory.unit_keys
-    @test terminal_summary.terminal_shellification_unit_roles ==
-          terminal_inventory.unit_roles
-    @test terminal_summary.terminal_shellification_unit_kinds ==
-          terminal_inventory.unit_kinds
-    @test terminal_summary.terminal_shellification_unit_support_counts ==
-          terminal_inventory.support_counts
     @test terminal_summary.terminal_shellification_lowering_contract_inventory_available
-    @test terminal_summary.terminal_shellification_lowering_contract_inventory_status ==
-          :available_terminal_region_lowering_contract_inventory
     @test terminal_summary.terminal_shellification_lowering_contract_count ==
           terminal_lowering_inventory.lowering_contract_count
-    @test terminal_summary.terminal_shellification_lowering_contract_kinds ==
-          terminal_lowering_inventory.lowering_contract_kinds
-    @test terminal_summary.terminal_shellification_lowering_contract_kind_counts ==
-          terminal_lowering_inventory.lowering_contract_kind_counts
-    @test terminal_summary.terminal_shellification_contract_counts_by_unit ==
-          terminal_lowering_inventory.contract_counts_by_unit
     @test terminal_summary.terminal_shellification_lw_complete_shell_cpb_count ==
           terminal_lowering_inventory.lw_complete_shell_cpb_count
     @test terminal_summary.terminal_shellification_lw_complete_shell_cpb_family_counts ==

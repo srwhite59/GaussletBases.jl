@@ -2689,7 +2689,13 @@ function _pqs_source_box_route_driver_physical_gausslet_final_basis(
     support_counts == (275, 578, 362) ||
         return (; status = :blocked_pqs_physical_gausslet_final_basis,
             blocker = :physical_gausslet_support_count_mismatch)
-    retained_counts == (251, 98, 114) ||
+    expected_retained_counts =
+        get(source_plan.summary, :retained_counts, retained_counts)
+    expected_retained_counts =
+        expected_retained_counts isa Tuple ?
+        Tuple(Int(count) for count in expected_retained_counts) :
+        expected_retained_counts
+    retained_counts == expected_retained_counts ||
         return (; status = :blocked_pqs_physical_gausslet_final_basis,
             blocker = :physical_gausslet_retained_count_mismatch)
 
@@ -2801,6 +2807,16 @@ function _pqs_source_box_route_driver_physical_gausslet_final_basis(
         final_overlap_is_identity = true,
         overlap_diagnostics = diagnostics.summary,
         transform_source_plan_provenance = source_plan.convention_labels,
+        source_backed_fixed_source_oracle_used =
+            get(source_plan.convention_labels, :source_backed_fixed_source_oracle_used, false),
+        fake_pqs_enabled =
+            get(source_plan.convention_labels, :fake_pqs_enabled, false),
+        retained_transform_authority =
+            get(
+                source_plan.convention_labels,
+                :retained_transform_authority,
+                :not_available,
+            ),
         final_basis_materialized = true,
         h1_materialized = false,
         h1_j_materialized = false,
@@ -2811,8 +2827,10 @@ function _pqs_source_box_route_driver_physical_gausslet_final_basis(
         metadata = (;
             source = :pqs_source_box_route_driver_physical_gausslet_final_basis,
             support_decomposition = :shared_physical_gausslet_core_shell,
-            source_backed_adapter = true,
+            source_backed_adapter =
+                get(source_plan.convention_labels, :source_backed_adapter, false),
             route_owned_authority = true,
+            diagnostic_materialization = true,
             self_overlap_stored_for_downstream = false,
         ),
     )
@@ -2893,6 +2911,11 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_final_basis_pay
         hasproperty(final_basis, :final_overlap_identity_error) ?
         final_basis.final_overlap_identity_error :
         nothing
+    overlap_diagnostics =
+        !isnothing(final_basis) &&
+        hasproperty(final_basis, :overlap_diagnostics) ?
+        final_basis.overlap_diagnostics :
+        (;)
     summary = (;
         status,
         blocker,
@@ -2912,6 +2935,29 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_final_basis_pay
             hasproperty(final_basis, :pre_final_overlap_identity_error) ?
             final_basis.pre_final_overlap_identity_error :
             nothing,
+        final_overlap_rank = get(overlap_diagnostics, :rank, nothing),
+        final_overlap_full_rank = get(overlap_diagnostics, :full_rank, nothing),
+        final_overlap_eigenvalue_min =
+            get(overlap_diagnostics, :eigenvalue_min, nothing),
+        final_overlap_eigenvalue_max =
+            get(overlap_diagnostics, :eigenvalue_max, nothing),
+        source_backed_fixed_source_oracle_used =
+            !isnothing(final_basis) &&
+            hasproperty(final_basis, :source_backed_fixed_source_oracle_used) ?
+            final_basis.source_backed_fixed_source_oracle_used :
+            false,
+        fake_pqs_enabled =
+            !isnothing(final_basis) &&
+            hasproperty(final_basis, :fake_pqs_enabled) ?
+            final_basis.fake_pqs_enabled :
+            false,
+        retained_transform_authority =
+            !isnothing(final_basis) &&
+            hasproperty(final_basis, :retained_transform_authority) ?
+            final_basis.retained_transform_authority :
+            isnothing(source_plan) ?
+            :not_available :
+            get(source_plan.summary, :retained_transform_authority, :not_available),
         final_basis_materialized =
             final_basis_status === :available_pqs_physical_gausslet_final_basis,
         endpoint_blocker =

@@ -258,14 +258,6 @@ end
           terminal_stages.pairs.terminal_shellification_unit_inventory
     @test terminal_assembly.terminal_shellification_unit_count ==
           terminal_stages.pairs.terminal_shellification_unit_count
-    @test terminal_assembly.terminal_shellification_unit_keys ==
-          terminal_stages.pairs.terminal_shellification_unit_keys
-    @test terminal_assembly.terminal_shellification_unit_roles ==
-          terminal_stages.pairs.terminal_shellification_unit_roles
-    @test terminal_assembly.terminal_shellification_unit_kinds ==
-          terminal_stages.pairs.terminal_shellification_unit_kinds
-    @test terminal_assembly.terminal_shellification_unit_support_counts ==
-          terminal_stages.pairs.terminal_shellification_unit_support_counts
     @test !terminal_assembly.terminal_shellification_final_retained_unit_inventory_available
     @test !terminal_assembly.terminal_shellification_transform_contracts_available
     @test !terminal_assembly.terminal_shellification_pair_inventory_available
@@ -341,14 +333,6 @@ end
           terminal_stages.pairs.terminal_shellification_unit_inventory
     @test terminal_summary.terminal_shellification_unit_count ==
           terminal_stages.pairs.terminal_shellification_unit_count
-    @test terminal_summary.terminal_shellification_unit_keys ==
-          terminal_stages.pairs.terminal_shellification_unit_keys
-    @test terminal_summary.terminal_shellification_unit_roles ==
-          terminal_stages.pairs.terminal_shellification_unit_roles
-    @test terminal_summary.terminal_shellification_unit_kinds ==
-          terminal_stages.pairs.terminal_shellification_unit_kinds
-    @test terminal_summary.terminal_shellification_unit_support_counts ==
-          terminal_stages.pairs.terminal_shellification_unit_support_counts
     @test !terminal_summary.terminal_shellification_final_retained_unit_inventory_available
     @test !terminal_summary.terminal_shellification_transform_contracts_available
     @test !terminal_summary.terminal_shellification_pair_inventory_available

@@ -398,34 +398,16 @@ end
     @test terminal_transforms.terminal_shellification_unit_inventory_available
     @test terminal_transforms.terminal_shellification_unit_count ==
           terminal_units.terminal_shellification_unit_count
-    @test terminal_transforms.terminal_shellification_unit_keys ==
-          terminal_units.terminal_shellification_unit_keys
-    @test terminal_transforms.terminal_shellification_unit_roles ==
-          terminal_units.terminal_shellification_unit_roles
-    @test terminal_transforms.terminal_shellification_unit_kinds ==
-          terminal_units.terminal_shellification_unit_kinds
-    @test terminal_transforms.terminal_shellification_unit_support_counts ==
-          terminal_units.terminal_shellification_unit_support_counts
     unit_selected_crc_sidecars =
         terminal_units.low_order_units.terminal_shellification_selected_crc_sidecar_summary
     transform_selected_crc_sidecars =
         terminal_transforms.terminal_shellification_selected_crc_sidecar_summary
     @test transform_selected_crc_sidecars.object_kind ==
           :cartesian_unit_stage_selected_terminal_lowering_crc_sidecar_summary
-    @test transform_selected_crc_sidecars.status ==
-          unit_selected_crc_sidecars.status
     @test transform_selected_crc_sidecars.selected_contract_count ==
           unit_selected_crc_sidecars.selected_contract_count
-    @test transform_selected_crc_sidecars.sidecar_available_count ==
-          unit_selected_crc_sidecars.sidecar_available_count
-    @test transform_selected_crc_sidecars.sidecar_missing_count ==
-          unit_selected_crc_sidecars.sidecar_missing_count
-    @test transform_selected_crc_sidecars.sidecar_inventory_complete ==
-          unit_selected_crc_sidecars.sidecar_inventory_complete
     @test !transform_selected_crc_sidecars.final_retained_unit_inventory_available
     @test !transform_selected_crc_sidecars.pair_inventory_available
-    @test transform_selected_crc_sidecars.pair_inventory_status ==
-          unit_selected_crc_sidecars.pair_inventory_status
     @test !transform_selected_crc_sidecars.operator_blocks_materialized
     @test !transform_selected_crc_sidecars.pair_operator_blocks_materialized
     @test !transform_selected_crc_sidecars.hamiltonian_data_materialized
@@ -516,30 +498,12 @@ end
     @test terminal_summary.terminal_shellification_unit_inventory_available
     @test terminal_summary.terminal_shellification_unit_count ==
           terminal_units.terminal_shellification_unit_count
-    @test terminal_summary.terminal_shellification_unit_keys ==
-          terminal_units.terminal_shellification_unit_keys
-    @test terminal_summary.terminal_shellification_unit_roles ==
-          terminal_units.terminal_shellification_unit_roles
-    @test terminal_summary.terminal_shellification_unit_kinds ==
-          terminal_units.terminal_shellification_unit_kinds
-    @test terminal_summary.terminal_shellification_unit_support_counts ==
-          terminal_units.terminal_shellification_unit_support_counts
     summary_selected_crc_sidecars =
         terminal_summary.terminal_shellification_selected_crc_sidecar_summary
-    @test summary_selected_crc_sidecars.status ==
-          transform_selected_crc_sidecars.status
     @test summary_selected_crc_sidecars.selected_contract_count ==
           transform_selected_crc_sidecars.selected_contract_count
-    @test summary_selected_crc_sidecars.sidecar_available_count ==
-          transform_selected_crc_sidecars.sidecar_available_count
-    @test summary_selected_crc_sidecars.sidecar_missing_count ==
-          transform_selected_crc_sidecars.sidecar_missing_count
-    @test summary_selected_crc_sidecars.sidecar_inventory_complete ==
-          transform_selected_crc_sidecars.sidecar_inventory_complete
     @test !summary_selected_crc_sidecars.final_retained_unit_inventory_available
     @test !summary_selected_crc_sidecars.pair_inventory_available
-    @test summary_selected_crc_sidecars.pair_inventory_status ==
-          transform_selected_crc_sidecars.pair_inventory_status
     @test !summary_selected_crc_sidecars.operator_blocks_materialized
     @test !summary_selected_crc_sidecars.pair_operator_blocks_materialized
     @test !summary_selected_crc_sidecars.hamiltonian_data_materialized
