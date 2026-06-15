@@ -8270,6 +8270,7 @@ function _pqs_source_box_route_driver_independent_h2_pqs_artifact_role(
         :independent_h2_pqs_h1_diagnostic,
         :independent_h2_pqs_h1_j_density_diagnostic,
         :independent_h2_pqs_private_rhf_diagnostic,
+        :independent_h2_pqs_supplement_preflight_diagnostic,
     )
 end
 

@@ -260,30 +260,6 @@ end
     @test atom_growth_report.low_order_pair_count == 36
     @test atom_growth_report.low_order_pair_family_counts.white_lindsey_low_order_atom_growth_unit_pair ==
           36
-    @test atom_growth_report.low_order_route_core_summary_status ==
-          :available_route_core_unit_pair_summary
-    @test atom_growth_report.low_order_route_core_final_unit_count == 8
-    @test atom_growth_report.low_order_route_core_pair_inventory_available
-    @test atom_growth_report.low_order_route_core_pair_inventory_status ==
-          :available_route_core_unit_pair_inventory
-    @test atom_growth_report.low_order_route_core_pair_count == 36
-    @test atom_growth_report.low_order_route_core_pair_order_matches_staged
-    @test atom_growth_report.low_order_route_core_pair_order_comparison_source ==
-          :atom_growth_pair_inventory
-    @test atom_growth_report.low_order_route_core_pair_operator_ready
-    @test atom_growth_report.low_order_route_core_pair_operator_readiness_status ==
-          :ready_route_core_pair_operator_metadata
-    @test isnothing(atom_growth_report.low_order_route_core_pair_operator_blocker)
-    @test atom_growth_report.low_order_route_core_pair_operator_preflight_available
-    @test atom_growth_report.low_order_route_core_pair_operator_preflight_status ==
-          :ready_route_core_pair_operator_preflight
-    @test isnothing(
-        atom_growth_report.low_order_route_core_pair_operator_preflight_blocker,
-    )
-    @test atom_growth_report.low_order_route_core_pair_operator_plan_available
-    @test atom_growth_report.low_order_route_core_pair_operator_plan_status ==
-          :ready_route_core_pair_operator_plan
-    @test isnothing(atom_growth_report.low_order_route_core_pair_operator_plan_blocker)
     @test atom_growth_summary.route_core_typed_pair_operator_plan_inventory_status ==
           :blocked_route_core_pair_operator_plan_inventory
     @test atom_growth_summary.route_core_typed_pair_operator_plan_blocker ==

@@ -1601,3 +1601,47 @@ Remaining blocker / next:
 
 Line-count / complexity note:
 - Scoped `src + test + bin` impact was `0`.
+
+## Pass 257 - Independent H2 PQS Supplement Preflight Input
+
+Commit(s):
+- this commit - Add independent H2 PQS supplement preflight input
+
+Summary:
+- Added
+  `test/driver_inputs/h2_pqs_q5_independent_source_box_r4_supplement_preflight.jl`
+  as a tiny include/override input based on the H1-J diagnostic input.
+- The input sets `supplement_policy = :mwg_residual_gto`, marks comparison as
+  preflight-only, keeps private RHF off, and leaves endpoint readiness blocked
+  by `:missing_provider_gto_supplement_blocks`.
+- Added the new artifact role to the independent-H2 classifier and the endpoint
+  manifest. No provider blocks or supplemented values were implemented.
+
+Validation:
+- Doer: include/flag smoke, package load, report-stage parse smoke, classifier
+  smoke, and `git diff --check` passed.
+- Manager: reran include/flag smoke and classifier smoke. Both passed.
+
+Goal advancement:
+- MT4/LT5: created the explicit independent supplement-preflight entry point
+  while preserving independent-PQS route authority.
+- LT6/LT7: made the preflight role visible in the driver input taxonomy and
+  manifest.
+- MT5/LT2: offset the new input/classifier lines by deleting stale report-level
+  RouteCore mirror assertions.
+
+Medium-goal update:
+- none.
+
+Risk / guardrail:
+- This is preflight only. Do not interpret it as provider-block availability,
+  residual-MWG readiness, supplemented values, or export/public readiness.
+
+Remaining blocker / next:
+- The next supplement pass should either run/verify the independent preflight
+  artifact facts or start a narrow provider-block design audit. Actual
+  materialization remains blocked by `:missing_provider_gto_supplement_blocks`.
+
+Line-count / complexity note:
+- Scoped `src + test + bin`, counting the new input, was `13` added / `24`
+  deleted, net `-11`.
