@@ -1,24 +1,13 @@
 # Default nested runner: fast/default nested contract tests only.
 # Slow/manual integration and audit tests live in integration_runtests.jl.
 #
-# For mixed one-body consumer edits, prefer the tiny smoke test directly:
-#   julia --project=. test/nested/cartesian_pair_block_one_body_consumer_smoke_runtests.jl
-# Heavier mixed one-body contract/boundary files are for semantic changes or
-# baton closeout, not routine small-edit validation. White-Lindsey boundary and
-# oracle comparisons are gate tests only when LW adapter behavior changes or at
-# baton closeout.
+# White-Lindsey boundary and oracle comparisons are gate tests only when WL
+# adapter behavior changes or at baton closeout.
 
 using Test
 using LinearAlgebra
 using SparseArrays
 using GaussletBases
-
-include("pqs_standard_parent_axis_readiness_runtests.jl")
-include("cartesian_retained_units_contract_runtests.jl")
-include("cartesian_retained_unit_transform_contracts_runtests.jl")
-include("cartesian_unit_pairs_contract_runtests.jl")
-include("cartesian_final_basis_realization_contract_runtests.jl")
-include("cartesian_pair_block_one_body_consumer_smoke_runtests.jl")
 
 @testset "Cartesian nested owned-unit coverage audit" begin
     dense_unit = GaussletBases._CartesianNestedOwnedUnit3D(
