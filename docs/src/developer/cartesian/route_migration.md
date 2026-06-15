@@ -64,7 +64,7 @@ not need numerical validation.
 | `wl_atomic` | `test/driver_inputs/he_wl_q5_pure_gausslet_h1.jl`; `test/driver_inputs/he_wl_q5_gto_h1.jl` | Preserve WL atomic pure-gausslet and supplement-capable driver entry. | Driver recognizes WL; parent/basis construction runs; H1 materialization is finite when requested; GTO path reaches its current intended stage. | Delete or fold into main matrix once WL atomic is fully represented by the common route and no separate line ladder adds information. |
 | `wl_diatomic` | `test/driver_inputs/h2_wl_q5_pure_gausslet_h1.jl`; `test/driver_inputs/h2_wl_q5_gto_h1.jl` | Preserve WL diatomic route capability while WL and PQS are merged into common staged construction. | Driver recognizes WL diatomic; parent axes and route stages execute; H1/GTO stages fail only at real missing construction objects. | Delete or fold into main matrix once diatomic WL uses the common route without old donor wrappers. |
 | `pqs_atomic` | `test/driver_inputs/he_pqs_q5_wlmap.jl`; `test/driver_inputs/he_pqs_q5_gto.jl` | Keep an atomic PQS/source-box route smoke while PQS support/source construction is generalized. | Driver recognizes PQS; route executes through the current atomic stage; GTO case reaches supplement staging or a real missing object. | Delete or fold into main matrix once atomic PQS shares the same route stages as the diatomic PQS path. |
-| `pqs_diatomic` | `test/driver_inputs/h2_pqs_q5_independent_source_box_r4.jl`; `test/driver_inputs/h2_pqs_q5_independent_source_box_r4_supplement_preflight.jl`; `test/driver_inputs/h2_pqs_q5_independent_source_box_r4_supplement_materialized.jl` | Protect the independent H2 PQS source-box line, supplement preflight, and H2 PQS Ham/Basis plus residual-GTO sidecar materialization. | Independent route remains fake-free; final dimension is 471 for the materialized H2 PQS sidecar case; overlap error is finite/small; H1 is finite/symmetric with finite lowest energy; H1-J self-Coulomb is finite/positive; basis/ham sidecar artifacts are written and reloadable. | Delete or fold into main matrix once independent PQS and residual-GTO sidecar materialization are ordinary route functionality with compact consumer checks. |
+| `pqs_diatomic` | `test/driver_inputs/h2_pqs_q5_independent_source_box_r4.jl`; `test/driver_inputs/h2_pqs_q5_independent_source_box_r4_supplement_preflight.jl`; `test/driver_inputs/h2_pqs_q5_independent_source_box_r4_supplement_materialized.jl` | Protect the independent H2 PQS source-box line, supplement preflight, and H2 PQS Ham/Basis plus residual-GTO sidecar materialization. | Independent route remains fake-free; final dimension is 471 for the materialized H2 PQS sidecar case; overlap error is finite/small; H1 is finite/symmetric with finite lowest energy; H1-J self-Coulomb is finite/positive; basis/ham sidecar artifacts are written and reloadable; the materialized artifact includes narrow one-body-only provider blocks with `provider_blocks_included = :one_body_only`. | Delete or fold into main matrix once independent PQS and residual-GTO sidecar materialization are ordinary route functionality with compact consumer checks. |
 
 ## Feature Donor Inventory
 
@@ -74,8 +74,9 @@ The current feature-donor migration table lives in:
 
 The highest-priority donor features are:
 
-1. P1 residual-GTO / MWG supplement materialization: first vertical sidecar
-   slice completed; provider blocks and supplemented values remain.
+1. P1 residual-GTO / MWG supplement materialization: first sidecar slice and
+   narrow one-body-only provider-block artifact completed; density/pair/H1-J
+   provider blocks and supplemented values remain.
 2. P1 Ham/JLD2 artifact contract and basis transfer/roundtrip: H2 PQS
    Ham/Basis plus residual-GTO sidecar artifacts write/reload; downstream
    consumer roundtrip remains.

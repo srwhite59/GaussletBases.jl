@@ -317,6 +317,12 @@ function _pqs_source_box_route_driver_gto_primitive_arrays(orbital)
         orbital.primitive_normalization == :axiswise_normalized_cartesian_gaussian ||
             throw(ArgumentError("unsupported GTO primitive normalization"))
     end
+    length(orbital.coefficients) == length(orbital.exponents) ||
+        throw(ArgumentError("GTO coefficients and exponents must have the same length"))
+    length(orbital.center) == 3 ||
+        throw(ArgumentError("GTO orbital center must have exactly three coordinates"))
+    length(orbital.angular_powers) == 3 ||
+        throw(ArgumentError("GTO orbital angular_powers must have exactly three entries"))
     # Axis-last layout keeps the axis-wise primitive views contiguous:
     # centers[:, axis_index] and angular_powers[:, axis_index].
     nprimitive = length(orbital.exponents)
@@ -558,8 +564,9 @@ function _pqs_source_box_route_driver_pqs_gto_support_one_body(
     supplement = inputs.supplement_representation
     states = sidecar.support_states
     axes = sidecar.axis_representations
-    coefficients = Float64.(coulomb_gaussian_expansion(doacc = false).coefficients)
-    exponents = Float64.(coulomb_gaussian_expansion(doacc = false).exponents)
+    expansion = coulomb_gaussian_expansion(doacc = false)
+    coefficients = Float64.(expansion.coefficients)
+    exponents = Float64.(expansion.exponents)
     route_metadata = inputs.route_metadata
     nuclear_charges = Float64.(route_metadata.nuclear_charges)
     atom_locations = route_metadata.atom_locations
@@ -802,6 +809,39 @@ function _pqs_source_box_route_driver_square_matrix(name::AbstractString, matrix
     return nothing
 end
 
+function _pqs_source_box_route_driver_pqs_h2_provider_block_mode(mode)
+    mode === false && return false
+    mode === :one_body_only && return :one_body_only
+    throw(ArgumentError("provider_blocks_included must be false or :one_body_only; got $(mode)"))
+end
+
+function _pqs_source_box_route_driver_finite_matrix(
+    name::AbstractString,
+    matrix,
+    expected_size::Tuple{Int,Int},
+)
+    size(matrix) == expected_size ||
+        throw(ArgumentError("$name shape must be $(expected_size); got $(size(matrix))"))
+    all(isfinite, matrix) ||
+        throw(ArgumentError("$name contains non-finite entries"))
+    return nothing
+end
+
+function _pqs_source_box_route_driver_symmetric_matrix(
+    name::AbstractString,
+    matrix,
+    expected_size::Tuple{Int,Int},
+    symmetry_atol::Real,
+)
+    _pqs_source_box_route_driver_finite_matrix(name, matrix, expected_size)
+    size(matrix, 1) == size(matrix, 2) ||
+        throw(ArgumentError("$name must be square; got $(size(matrix))"))
+    symmetry_error = norm(matrix - transpose(matrix), Inf)
+    symmetry_error <= Float64(symmetry_atol) ||
+        throw(ArgumentError("$name is not symmetric"))
+    return symmetry_error
+end
+
 """
     _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_roundtrip(
         basisfile,
@@ -838,7 +878,10 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
         final_gto_cross_overlap = file["final_gto_cross_overlap"]
         gto_self_overlap = file["gto_self_overlap"]
         gto_residual_overlap = file["gto_residual_overlap"]
-        provider_blocks_included = file["provider_blocks_included"]
+        provider_blocks_included =
+            _pqs_source_box_route_driver_pqs_h2_provider_block_mode(
+                file["provider_blocks_included"],
+            )
         size(final_coefficients, 2) == final_dimension ||
             throw(ArgumentError("basis final_coefficients column count must equal final_dimension"))
         size(final_gto_cross_overlap, 1) == final_dimension ||
@@ -938,8 +981,11 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
         final_gto_cross_overlap = file["final_gto_cross_overlap"]
         gto_self_overlap = file["gto_self_overlap"]
         gto_residual_overlap = file["gto_residual_overlap"]
-        provider_blocks_included = file["provider_blocks_included"]
-        provider_blocks_included == basis_facts.provider_blocks_included ||
+        provider_blocks_included =
+            _pqs_source_box_route_driver_pqs_h2_provider_block_mode(
+                file["provider_blocks_included"],
+            )
+        provider_blocks_included === basis_facts.provider_blocks_included ||
             throw(ArgumentError("basis and ham provider block modes differ"))
         size(one_body_hamiltonian) == (final_dimension, final_dimension) ||
             throw(ArgumentError("one_body_hamiltonian shape must be final_dimension x final_dimension"))
@@ -982,51 +1028,107 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                         :augmented_h1_symmetry_error,
                         :h_fg_kinetic,
                         :h_fg_charged_nuclear,
+                        :h_fg_one_body,
                         :h_gg_kinetic,
                         :h_gg_charged_nuclear,
+                        :h_gg_one_body,
+                        :h_fr_one_body,
+                        :h_rr_one_body,
+                        :nuclear_mixed_block_convention,
                     ),
                 )
                 residual_rank = basis_facts.residual_rank
+                gto_dimension = size(gto_self_overlap, 1)
                 augmented_dimension = Int(file["augmented_dimension"])
                 augmented_dimension == final_dimension + residual_rank ||
                     throw(ArgumentError("augmented_dimension must equal final_dimension + residual_rank"))
                 augmented_one_body_hamiltonian =
                     file["augmented_one_body_hamiltonian"]
-                size(augmented_one_body_hamiltonian) ==
-                    (augmented_dimension, augmented_dimension) ||
-                    throw(ArgumentError("augmented one-body Hamiltonian shape mismatch"))
-                all(isfinite, augmented_one_body_hamiltonian) ||
-                    throw(ArgumentError("augmented one-body Hamiltonian contains non-finite entries"))
                 augmented_h1_symmetry_error =
-                    norm(
-                        augmented_one_body_hamiltonian -
-                        transpose(augmented_one_body_hamiltonian),
-                        Inf,
+                    _pqs_source_box_route_driver_symmetric_matrix(
+                        "augmented one-body Hamiltonian",
+                        augmented_one_body_hamiltonian,
+                        (augmented_dimension, augmented_dimension),
+                        symmetry_atol,
                     )
-                augmented_h1_symmetry_error <= Float64(symmetry_atol) ||
-                    throw(ArgumentError("augmented one-body Hamiltonian is not symmetric"))
                 augmented_h1_lowest = Float64(file["augmented_h1_lowest"])
                 isfinite(augmented_h1_lowest) ||
                     throw(ArgumentError("augmented_h1_lowest must be finite"))
-                size(file["h_fg_kinetic"]) == (final_dimension, size(gto_self_overlap, 1)) ||
-                    throw(ArgumentError("h_fg_kinetic shape mismatch"))
-                size(file["h_fg_charged_nuclear"]) ==
-                    (final_dimension, size(gto_self_overlap, 1)) ||
-                    throw(ArgumentError("h_fg_charged_nuclear shape mismatch"))
-                _pqs_source_box_route_driver_square_matrix(
+                fg_size = (final_dimension, gto_dimension)
+                gg_size = (gto_dimension, gto_dimension)
+                fr_size = (final_dimension, residual_rank)
+                rr_size = (residual_rank, residual_rank)
+                h_fg_kinetic = file["h_fg_kinetic"]
+                h_fg_charged_nuclear = file["h_fg_charged_nuclear"]
+                h_fg_one_body = file["h_fg_one_body"]
+                h_gg_kinetic = file["h_gg_kinetic"]
+                h_gg_charged_nuclear = file["h_gg_charged_nuclear"]
+                h_gg_one_body = file["h_gg_one_body"]
+                h_fr_one_body = file["h_fr_one_body"]
+                h_rr_one_body = file["h_rr_one_body"]
+                _pqs_source_box_route_driver_finite_matrix(
+                    "h_fg_kinetic",
+                    h_fg_kinetic,
+                    fg_size,
+                )
+                _pqs_source_box_route_driver_finite_matrix(
+                    "h_fg_charged_nuclear",
+                    h_fg_charged_nuclear,
+                    fg_size,
+                )
+                _pqs_source_box_route_driver_finite_matrix(
+                    "h_fg_one_body",
+                    h_fg_one_body,
+                    fg_size,
+                )
+                _pqs_source_box_route_driver_finite_matrix(
                     "h_gg_kinetic",
-                    file["h_gg_kinetic"],
+                    h_gg_kinetic,
+                    gg_size,
                 )
-                _pqs_source_box_route_driver_square_matrix(
+                _pqs_source_box_route_driver_finite_matrix(
                     "h_gg_charged_nuclear",
-                    file["h_gg_charged_nuclear"],
+                    h_gg_charged_nuclear,
+                    gg_size,
                 )
+                h_gg_one_body_symmetry_error =
+                    _pqs_source_box_route_driver_symmetric_matrix(
+                        "h_gg_one_body",
+                        h_gg_one_body,
+                        gg_size,
+                        symmetry_atol,
+                    )
+                _pqs_source_box_route_driver_finite_matrix(
+                    "h_fr_one_body",
+                    h_fr_one_body,
+                    fr_size,
+                )
+                h_rr_one_body_symmetry_error =
+                    _pqs_source_box_route_driver_symmetric_matrix(
+                        "h_rr_one_body",
+                        h_rr_one_body,
+                        rr_size,
+                        symmetry_atol,
+                    )
+                file["nuclear_mixed_block_convention"] === :charged_nuclear ||
+                    throw(
+                        ArgumentError(
+                            "nuclear_mixed_block_convention must be :charged_nuclear",
+                        ),
+                    )
                 (;
                     augmented_dimension,
                     augmented_one_body_hamiltonian_size =
                         size(augmented_one_body_hamiltonian),
                     augmented_h1_lowest,
                     augmented_h1_symmetry_error,
+                    h_fg_one_body_size = size(h_fg_one_body),
+                    h_gg_one_body_size = size(h_gg_one_body),
+                    h_gg_one_body_symmetry_error,
+                    h_fr_one_body_size = size(h_fr_one_body),
+                    h_rr_one_body_size = size(h_rr_one_body),
+                    h_rr_one_body_symmetry_error,
+                    nuclear_mixed_block_convention = :charged_nuclear,
                 )
             else
                 (;
@@ -1034,6 +1136,13 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                     augmented_one_body_hamiltonian_size = nothing,
                     augmented_h1_lowest = nothing,
                     augmented_h1_symmetry_error = nothing,
+                    h_fg_one_body_size = nothing,
+                    h_gg_one_body_size = nothing,
+                    h_gg_one_body_symmetry_error = nothing,
+                    h_fr_one_body_size = nothing,
+                    h_rr_one_body_size = nothing,
+                    h_rr_one_body_symmetry_error = nothing,
+                    nuclear_mixed_block_convention = nothing,
                 )
             end
         return (;
