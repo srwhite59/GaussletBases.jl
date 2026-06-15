@@ -12,17 +12,6 @@ function _pqs_route_driver_probe_requested(value, core_spacing)
     throw(ArgumentError("probe_parent_axis_construction must be :auto, true, or false"))
 end
 
-function _pqs_route_driver_raw_box_probe_requested(value, parent_axis_probe, route_axis_counts)
-    if value == :auto
-        return !isnothing(parent_axis_probe) &&
-               parent_axis_probe.parent_axis_metadata_constructed &&
-               route_axis_counts.parent_axis_counts_source == :constructed_parent_axis_probe
-    elseif value isa Bool
-        return value
-    end
-    throw(ArgumentError("probe_raw_product_box_plans must be :auto, true, or false"))
-end
-
 function _pqs_route_driver_axis_counts(parent_axis_counts)
     isnothing(parent_axis_counts) && return nothing
     if hasproperty(parent_axis_counts, :x)
@@ -516,51 +505,6 @@ function _pqs_source_box_route_driver_system_metadata(
         map_backend = system_inputs.map_backend,
     )
 end
-
-# Route-specific probes.
-
-function _pqs_source_box_route_driver_raw_box_probe(
-    standard_setup,
-    route_skeleton,
-    parent_axis,
-    route_axis_counts,
-    probe_inputs,
-    route_recipe,
-)
-    metrics = CartesianContractedParentMetrics
-    if route_recipe.route_family != :pqs_source_box
-        return (;
-            raw_product_box_probe_requested = false,
-            raw_product_box_probe = nothing,
-            raw_product_box_probe_status = :not_applicable_to_route_family,
-            raw_product_box_probe_pending_facts = (),
-        )
-    end
-
-    raw_product_box_probe_requested =
-        _pqs_route_driver_raw_box_probe_requested(
-            probe_inputs.probe_raw_product_box_plans,
-            parent_axis.parent_axis_probe,
-            route_axis_counts,
-        )
-    raw_product_box_probe = raw_product_box_probe_requested ?
-        metrics._pqs_explicit_core_spacing_route_raw_product_box_plan_probe(
-            standard_setup, route_skeleton;
-            gausslet_backend = probe_inputs.raw_product_box_probe_backend,
-        ) : nothing
-    raw_product_box_probe_status =
-        isnothing(raw_product_box_probe) ? :not_requested : raw_product_box_probe.status
-    raw_product_box_probe_pending_facts =
-        isnothing(raw_product_box_probe) ? () : raw_product_box_probe.pending_facts
-
-    return (;
-        raw_product_box_probe_requested,
-        raw_product_box_probe,
-        raw_product_box_probe_status,
-        raw_product_box_probe_pending_facts,
-    )
-end
-
 
 # Metadata and parent description.
 
@@ -2537,578 +2481,74 @@ function _pqs_source_box_route_driver_terminal_route_state_unavailable(
 end
 
 function _pqs_source_box_route_driver_unit_stage_low_order_summary(shells)
-    low_order_shellization =
-        hasproperty(shells, :low_order_shellization) ?
-        shells.low_order_shellization :
-        nothing
-    if hasproperty(shells, :route_skeleton) &&
-       get(shells.route_skeleton, :route_family, nothing) == :pqs_source_box
-        low_order_shellization = nothing
-    end
-    if isnothing(low_order_shellization)
-        terminal_route_state =
-            _pqs_source_box_route_driver_terminal_route_state_unavailable(
-                :not_available_missing_shell_stage_summary,
-                :missing_shell_stage_low_order_summary,
-            )
-        return (;
-            object_kind = :cartesian_unit_stage_low_order_summary,
-            status = :not_available_missing_shell_stage_summary,
-            terminal_route_state,
-            terminal_route_summary = terminal_route_state.summary,
-            low_order_shellization_policy_requested = nothing,
-            low_order_shellization_policy_resolved = :not_available,
-            low_order_shellization_policy_source = :not_available,
-            low_order_shellization_policy_status =
-                :not_available_missing_shell_stage_summary,
-            low_order_shellization_policy_blocker =
-                :missing_shell_stage_low_order_summary,
-            shellization_source = :not_available,
-            shellization_kind = :not_available,
-            unit_route_kind = :not_available,
-            atom_growth_units_selected = false,
-            terminal_shellification_units_selected = false,
-            legacy_source_units_selected = false,
-            atom_growth_unit_summary_available = false,
-            terminal_shellification_unit_summary_available = false,
-            terminal_shellification_scaffold_available = false,
-            terminal_shellification_scaffold = nothing,
-            terminal_shellification_region_count = 0,
-            terminal_shellification_unit_inventory_available = false,
-            terminal_shellification_unit_inventory_status = :not_available,
-            terminal_shellification_unit_inventory = nothing,
-            terminal_shellification_unit_count = 0,
-            terminal_shellification_unit_keys = (),
-            terminal_shellification_unit_roles = (),
-            terminal_shellification_unit_kinds = (),
-            terminal_shellification_unit_support_counts = (),
-            terminal_shellification_lowering_contract_inventory_available = false,
-            terminal_shellification_lowering_contract_inventory_status =
-                :not_available,
-            terminal_shellification_lowering_contract_inventory = nothing,
-            terminal_shellification_lowering_contract_count = 0,
-            terminal_shellification_lowering_contract_kinds = (),
-            terminal_shellification_lowering_contract_kind_counts =
-                (
-                    direct_core_identity_cpb_count = 0,
-                    direct_slab_identity_cpb_count = 0,
-                    direct_boundary_slab_identity_cpb_count = 0,
-                    white_lindsey_boundary_strata_count = 0,
-                    pqs_filled_source_cpb_count = 0,
-                    distorted_product_box_comx_count = 0,
-                ),
-            terminal_shellification_lowering_plan_available = false,
-            terminal_shellification_lowering_plan_status = :not_available,
-            terminal_shellification_lowering_plan = nothing,
-            terminal_shellification_lowering_summary = nothing,
-            _pqs_source_box_route_driver_selected_terminal_lowering_fields(
-                nothing,
-                :not_available,
-                nothing,
-            )...,
-            terminal_shellification_contract_counts_by_unit = (),
-            terminal_shellification_lw_complete_shell_cpb_count = 0,
-            terminal_shellification_lw_complete_shell_cpb_family_counts =
-                (facet_cpb = 0, edge_cpb = 0, corner_cpb = 0),
-            terminal_shellification_final_retained_unit_inventory_available = false,
-            terminal_shellification_pair_inventory_available = false,
-            terminal_shellification_central_gap_region_count = 0,
-            terminal_shellification_central_midpoint_slab_count = 0,
-            terminal_shellification_central_distorted_product_box_count = 0,
-            terminal_shellification_central_distorted_product_box_metadata = (),
-            materialized_units_available = false,
-            materialization_status = :not_available,
-            retained_unit_dimensions_known = false,
-            retained_unit_ranges_known = false,
-            retained_dimension_known = false,
-            retained_dimension = nothing,
-            plan_authority = false,
-            active_source_authority = false,
-            legacy_source_authority = false,
-            unit_inventory_source = :not_available,
-            unit_inventory_status = :not_available,
-            atom_growth_unit_inventory_available = false,
-            plan_unit_inventory_available = false,
-            plan_unit_inventory = nothing,
-            plan_unit_count = 0,
-            plan_unit_roles = (),
-            plan_unit_keys = (),
-            plan_unit_support_counts = (),
-            source_backed_region_count = 0,
-            cpb_contract_stage = :not_available,
-            shellification_regions_are_cpbs = false,
-            owned_support_available = false,
-            lowering_source_cpbs_available = false,
-            source_cpb_count = 0,
-            pqs_lowering_prototype_available = false,
-            pqs_lowering_prototype = nothing,
-            pqs_lowering_prototype_unit_key = nothing,
-            route_core_sidecar_inventory_available = false,
-            route_core_sidecar_inventory = nothing,
-            route_skeleton_unit_fields_preserved = false,
-            route_skeleton_unit_inventory_source = :not_available,
-            summary_only = true,
-        )
-    end
+    low_order_shellization = get(shells, :low_order_shellization, nothing)
+    isnothing(low_order_shellization) && return nothing
 
-    atom_growth_units_selected = low_order_shellization.atom_growth_selected
-    terminal_shellification_units_selected =
-        low_order_shellization.terminal_shellification_selected
-    legacy_source_units_selected = low_order_shellization.legacy_source_selected
-    unit_route_kind =
-        atom_growth_units_selected ?
-        :atom_growth_complete_rectangular_low_order_units :
-        terminal_shellification_units_selected ?
-        :terminal_shellification_low_order_units :
-        legacy_source_units_selected ?
-        :legacy_diatomic_source_low_order_units :
-        :not_selected
-    terminal_shellification_scaffold_available =
-        terminal_shellification_units_selected &&
-        low_order_shellization.terminal_shellification_scaffold_available
-    terminal_shellification_unit_summary_available =
-        terminal_shellification_units_selected
-    terminal_region_unit_inventory =
-        terminal_shellification_units_selected &&
-        terminal_shellification_scaffold_available ?
+    unit_inventory =
         _cartesian_terminal_shellification_region_unit_inventory(
-            low_order_shellization.terminal_shellification_scaffold,
-        ) :
-        nothing
-    terminal_region_unit_inventory_available =
-        !isnothing(terminal_region_unit_inventory) &&
-        terminal_region_unit_inventory.status ==
-        :available_terminal_region_unit_inventory
-    terminal_shellification_unit_inventory_status =
-        terminal_shellification_units_selected ?
-        (
-            terminal_region_unit_inventory_available ?
-            terminal_region_unit_inventory.status :
-            :deferred_terminal_shellification_unit_inventory
-        ) :
-        :not_selected
+            low_order_shellization.shellification_scaffold,
+        )
     route_lowering_family =
-        terminal_shellification_units_selected ?
-        _pqs_source_box_route_driver_terminal_lowering_family(low_order_shellization) :
-        nothing
-    terminal_lowering_plan =
-        terminal_shellification_units_selected && !isnothing(route_lowering_family) ?
+        _pqs_source_box_route_driver_terminal_lowering_family(low_order_shellization)
+    lowering_plan =
         _pqs_source_box_route_driver_terminal_lowering_plan(
             low_order_shellization,
             route_lowering_family,
-        ) :
-        nothing
-    terminal_lowering_plan_available =
-        terminal_lowering_plan isa CartesianTerminalLowering.TerminalLoweringPlan
-    terminal_lowering_summary =
-        terminal_lowering_plan_available ?
-        CartesianTerminalLowering.summary(terminal_lowering_plan) :
-        nothing
-    terminal_lowering_plan_status =
-        terminal_shellification_units_selected ?
-        (
-            terminal_lowering_plan_available ?
-            terminal_lowering_summary.status :
-            isnothing(route_lowering_family) ?
-            :not_available_terminal_lowering_family :
-            :deferred_terminal_lowering_plan
-        ) :
-        :not_selected
-    terminal_region_lowering_contract_inventory =
-        terminal_region_unit_inventory_available && terminal_lowering_plan_available ?
+        )
+    lowering_contract_inventory =
+        lowering_plan isa CartesianTerminalLowering.TerminalLoweringPlan ?
         _pqs_source_box_route_driver_terminal_lowering_contract_inventory_from_plan(
-            terminal_lowering_plan,
-            terminal_region_unit_inventory,
+            lowering_plan,
+            unit_inventory,
         ) :
         nothing
-    terminal_region_lowering_contract_inventory_available =
-        !isnothing(terminal_region_lowering_contract_inventory) &&
-        terminal_region_lowering_contract_inventory.status ==
-        :available_terminal_region_lowering_contract_inventory
-    terminal_shellification_lowering_contract_inventory_status =
-        terminal_shellification_units_selected ?
-        (
-            terminal_region_lowering_contract_inventory_available ?
-            terminal_region_lowering_contract_inventory.status :
-            terminal_lowering_plan_available ?
-            :deferred_terminal_lowering_plan_compatibility_inventory :
-            :deferred_terminal_shellification_lowering_contract_inventory
-        ) :
-        :not_selected
-    selected_terminal_lowering_contract_inventory =
-        terminal_region_lowering_contract_inventory_available &&
-        terminal_lowering_plan_available &&
-        !isnothing(route_lowering_family) ?
-        _pqs_source_box_route_driver_selected_terminal_lowering_contract_inventory_from_plan(
-            terminal_lowering_plan,
-            terminal_region_lowering_contract_inventory,
-            route_lowering_family,
-        ) :
-        nothing
-    selected_terminal_lowering_contract_inventory_available =
-        !isnothing(selected_terminal_lowering_contract_inventory) &&
-        selected_terminal_lowering_contract_inventory.status ==
-        :available_selected_terminal_lowering_contract_inventory
-    selected_terminal_lowering_contract_inventory_status =
-        terminal_shellification_units_selected ?
-        (
-            selected_terminal_lowering_contract_inventory_available ?
-            selected_terminal_lowering_contract_inventory.status :
-            isnothing(route_lowering_family) ?
-            :not_available_selected_terminal_lowering_family :
-            terminal_region_lowering_contract_inventory_available ?
-            :deferred_terminal_shellification_selected_lowering_contract_inventory :
-            :deferred_terminal_shellification_lowering_contract_inventory
-        ) :
-        :not_selected
-    selected_terminal_lowering_fields =
-        _pqs_source_box_route_driver_selected_terminal_lowering_fields(
-            selected_terminal_lowering_contract_inventory,
-            selected_terminal_lowering_contract_inventory_status,
-            route_lowering_family,
-            terminal_lowering_plan,
-        )
-    selected_terminal_crc_sidecar_summary = nothing
-    terminal_route_state =
-        _pqs_source_box_route_driver_terminal_route_state(;
-            status = terminal_shellification_units_selected ?
-                     terminal_lowering_plan_status :
-                     :not_selected,
-            selected = terminal_shellification_units_selected,
-            route_lowering_family,
-            shellification_plan =
-                terminal_shellification_units_selected ?
-                low_order_shellization.terminal_shellification_plan :
-                nothing,
-            unit_inventory = terminal_region_unit_inventory,
-            lowering_plan = terminal_lowering_plan,
-            lowering_summary = terminal_lowering_summary,
-            lowering_contract_inventory =
-                terminal_region_lowering_contract_inventory,
-            selected_contract_inventory =
-                selected_terminal_lowering_contract_inventory,
-            selected_crc_sidecar_summary = selected_terminal_crc_sidecar_summary,
-            blocker =
-                terminal_shellification_units_selected &&
-                !terminal_lowering_plan_available ?
-                terminal_lowering_plan_status :
-                nothing,
-        )
-    atom_growth_plan_unit_inventory = nothing
-    atom_growth_plan_unit_inventory_available =
-        !isnothing(atom_growth_plan_unit_inventory) &&
-        atom_growth_plan_unit_inventory.status ==
-        :available_atom_growth_plan_unit_inventory
-    plan_unit_inventory =
-        atom_growth_plan_unit_inventory_available ?
-        atom_growth_plan_unit_inventory :
-        terminal_region_unit_inventory_available ?
-        terminal_region_unit_inventory :
-        nothing
-    plan_unit_inventory_available = !isnothing(plan_unit_inventory)
-    unit_inventory_source =
-        atom_growth_plan_unit_inventory_available ?
-        atom_growth_plan_unit_inventory.unit_inventory_source :
-        terminal_region_unit_inventory_available ?
-        terminal_region_unit_inventory.inventory_source :
-        atom_growth_units_selected ?
-        :blocked_atom_growth_shellification_plan :
-        terminal_shellification_units_selected ?
-        :terminal_shellification_scaffold :
-        legacy_source_units_selected ?
-        :legacy_diatomic_source_summary :
-        :route_skeleton_compatibility_fields
-    unit_inventory_status =
-        terminal_shellification_units_selected ?
-        terminal_shellification_unit_inventory_status :
-        isnothing(atom_growth_plan_unit_inventory) ?
-            unit_inventory_source :
-            atom_growth_plan_unit_inventory.status
-    source_backed_region_count =
-        isnothing(atom_growth_plan_unit_inventory) ?
-        0 :
-        atom_growth_plan_unit_inventory.source_backed_region_count
-    cpb_contract_stage =
-        atom_growth_plan_unit_inventory_available ?
-        atom_growth_plan_unit_inventory.cpb_contract_stage :
-        terminal_region_unit_inventory_available ?
-        :terminal_region_unit_inventory_metadata :
-        :not_available
-    source_cpb_count =
-        atom_growth_plan_unit_inventory_available ?
-        atom_growth_plan_unit_inventory.source_cpb_count :
-        0
-    route_core_sidecar_inventory = nothing
-    status =
-        atom_growth_plan_unit_inventory_available ||
-        terminal_region_unit_inventory_available ?
-        :available_unit_stage_low_order_summary :
-        terminal_shellification_units_selected &&
-        terminal_shellification_scaffold_available ?
-        :deferred_terminal_shellification_unit_inventory :
-        low_order_shellization.status ==
-        :available_shell_stage_low_order_shellization_summary ?
-        :available_unit_stage_low_order_summary :
-        low_order_shellization.status
 
     return (;
-        object_kind = :cartesian_unit_stage_low_order_summary,
-        status,
-        terminal_route_state,
-        terminal_route_summary =
-            isnothing(terminal_route_state) ? nothing :
-            get(terminal_route_state, :summary, nothing),
-        low_order_shellization_policy_requested =
-            low_order_shellization.low_order_shellization_policy_requested,
-        low_order_shellization_policy_resolved =
-            low_order_shellization.low_order_shellization_policy_resolved,
-        low_order_shellization_policy_source =
-            low_order_shellization.low_order_shellization_policy_source,
-        low_order_shellization_policy_status =
-            low_order_shellization.low_order_shellization_policy_status,
-        low_order_shellization_policy_blocker =
-            low_order_shellization.low_order_shellization_policy_blocker,
-        shellization_source = low_order_shellization.shellization_source,
-        shellization_kind = low_order_shellization.shellization_kind,
-        unit_route_kind,
-        atom_growth_units_selected,
-        terminal_shellification_units_selected,
-        legacy_source_units_selected,
-        atom_growth_unit_summary_available = atom_growth_units_selected,
-        terminal_shellification_unit_summary_available,
-        terminal_shellification_scaffold_available,
-        terminal_shellification_scaffold =
-            terminal_shellification_units_selected ?
-            low_order_shellization.terminal_shellification_scaffold :
-            nothing,
-        terminal_shellification_region_count =
-            terminal_shellification_units_selected ?
-            low_order_shellization.terminal_shellification_region_count :
-            0,
-        terminal_shellification_unit_inventory_available =
-            terminal_region_unit_inventory_available,
-        terminal_shellification_unit_inventory_status,
-        terminal_shellification_unit_inventory = terminal_region_unit_inventory,
-        terminal_shellification_unit_count =
-            terminal_region_unit_inventory_available ?
-            terminal_region_unit_inventory.unit_count :
-            0,
-        terminal_shellification_unit_keys =
-            terminal_region_unit_inventory_available ?
-            terminal_region_unit_inventory.unit_keys :
-            (),
-        terminal_shellification_unit_roles =
-            terminal_region_unit_inventory_available ?
-            terminal_region_unit_inventory.unit_roles :
-            (),
-        terminal_shellification_unit_kinds =
-            terminal_region_unit_inventory_available ?
-            terminal_region_unit_inventory.unit_kinds :
-            (),
-        terminal_shellification_unit_support_counts =
-            terminal_region_unit_inventory_available ?
-            terminal_region_unit_inventory.support_counts :
-            (),
-        terminal_shellification_lowering_contract_inventory_available =
-            terminal_region_lowering_contract_inventory_available,
-        terminal_shellification_lowering_contract_inventory_status =
-            terminal_shellification_lowering_contract_inventory_status,
-        terminal_shellification_lowering_contract_inventory =
-            terminal_region_lowering_contract_inventory,
-        terminal_shellification_lowering_plan_available =
-            terminal_lowering_plan_available,
-        terminal_shellification_lowering_plan_status =
-            terminal_lowering_plan_status,
-        terminal_shellification_lowering_plan = terminal_lowering_plan,
-        terminal_shellification_lowering_summary = terminal_lowering_summary,
-        terminal_shellification_lowering_contract_count =
-            terminal_lowering_plan_available ?
-            terminal_lowering_summary.available_contract_count :
-            0,
-        terminal_shellification_lowering_contract_kinds =
-            terminal_lowering_plan_available ?
-            terminal_lowering_summary.available_contract_kinds :
-            (),
-        terminal_shellification_lowering_contract_kind_counts =
-            terminal_lowering_plan_available ?
-            _pqs_source_box_route_driver_terminal_lowering_kind_counts(
-                CartesianTerminalLowering.available_contracts(terminal_lowering_plan),
-            ) :
-            (
-                direct_core_identity_cpb_count = 0,
-                direct_slab_identity_cpb_count = 0,
-                direct_boundary_slab_identity_cpb_count = 0,
-                white_lindsey_boundary_strata_count = 0,
-                pqs_filled_source_cpb_count = 0,
-                distorted_product_box_comx_count = 0,
-            ),
-        selected_terminal_lowering_fields...,
-        terminal_shellification_contract_counts_by_unit =
-            terminal_region_lowering_contract_inventory_available ?
-            terminal_region_lowering_contract_inventory.contract_counts_by_unit :
-            (),
-        terminal_shellification_lw_complete_shell_cpb_count =
-            terminal_region_lowering_contract_inventory_available ?
-            terminal_region_lowering_contract_inventory.lw_complete_shell_cpb_count :
-            0,
-        terminal_shellification_lw_complete_shell_cpb_family_counts =
-            terminal_region_lowering_contract_inventory_available ?
-            terminal_region_lowering_contract_inventory.lw_complete_shell_cpb_family_counts :
-            (facet_cpb = 0, edge_cpb = 0, corner_cpb = 0),
-        terminal_shellification_final_retained_unit_inventory_available =
-            terminal_region_unit_inventory_available &&
-            terminal_region_unit_inventory.final_retained_unit_inventory_available,
-        terminal_shellification_pair_inventory_available =
-            terminal_region_unit_inventory_available &&
-            terminal_region_unit_inventory.pair_inventory_available,
-        terminal_shellification_central_gap_region_count =
-            terminal_shellification_units_selected ?
-            low_order_shellization.terminal_shellification_central_gap_region_count :
-            0,
-        terminal_shellification_central_midpoint_slab_count =
-            terminal_shellification_units_selected ?
-            low_order_shellization.terminal_shellification_central_midpoint_slab_count :
-            0,
-        terminal_shellification_central_distorted_product_box_count =
-            terminal_shellification_units_selected ?
-            low_order_shellization.terminal_shellification_central_distorted_product_box_count :
-            0,
-        terminal_shellification_central_distorted_product_box_metadata =
-            terminal_shellification_units_selected ?
-            low_order_shellization.terminal_shellification_central_distorted_product_box_metadata :
-            (),
-        materialized_units_available = false,
-        materialization_status =
-            atom_growth_units_selected ?
-            :deferred_atom_growth_complete_rectangular_unit_materialization :
-            terminal_shellification_units_selected ?
-            :deferred_terminal_shellification_unit_materialization :
-            legacy_source_units_selected ?
-            :deferred_legacy_diatomic_source_unit_materialization :
-            low_order_shellization.materialization_status,
-        retained_unit_dimensions_known = false,
-        retained_unit_ranges_known = false,
-        retained_dimension_known = false,
-        retained_dimension = nothing,
-        plan_authority =
-            terminal_shellification_units_selected ?
-            low_order_shellization.terminal_shellification_authority :
-            low_order_shellization.atom_growth_plan_authority,
-        active_source_authority =
-            terminal_shellification_units_selected ?
-            false :
-            low_order_shellization.active_source_authority,
-        legacy_source_authority =
-            terminal_shellification_units_selected ?
-            false :
-            low_order_shellization.legacy_source_authority,
-        unit_inventory_source,
-        unit_inventory_status,
-        atom_growth_unit_inventory_available =
-            atom_growth_plan_unit_inventory_available,
-        plan_unit_inventory_available,
-        plan_unit_inventory,
-        plan_unit_count =
-            plan_unit_inventory_available ? plan_unit_inventory.unit_count : 0,
-        plan_unit_roles =
-            plan_unit_inventory_available ? plan_unit_inventory.unit_roles : (),
-        plan_unit_keys =
-            plan_unit_inventory_available ? plan_unit_inventory.unit_keys : (),
-        plan_unit_support_counts =
-            plan_unit_inventory_available ?
-            plan_unit_inventory.support_counts :
-            (),
-        source_backed_region_count,
-        cpb_contract_stage,
-        shellification_regions_are_cpbs =
-            atom_growth_plan_unit_inventory_available ?
-            atom_growth_plan_unit_inventory.shellification_regions_are_cpbs :
-            false,
-        owned_support_available =
-            atom_growth_plan_unit_inventory_available &&
-            atom_growth_plan_unit_inventory.owned_support_available,
-        lowering_source_cpbs_available =
-            atom_growth_plan_unit_inventory_available &&
-            atom_growth_plan_unit_inventory.lowering_source_cpbs_available,
-        source_cpb_count,
-        pqs_lowering_prototype_available =
-            atom_growth_plan_unit_inventory_available &&
-            atom_growth_plan_unit_inventory.pqs_lowering_prototype_available,
-        pqs_lowering_prototype =
-            atom_growth_plan_unit_inventory_available ?
-            atom_growth_plan_unit_inventory.pqs_lowering_prototype :
-            nothing,
-        pqs_lowering_prototype_unit_key =
-            atom_growth_plan_unit_inventory_available ?
-            atom_growth_plan_unit_inventory.pqs_lowering_prototype_unit_key :
-            nothing,
-        route_core_sidecar_inventory_available = false,
-        route_core_sidecar_inventory,
-        route_skeleton_unit_fields_preserved = true,
-        route_skeleton_unit_inventory_source =
-            :route_skeleton_compatibility_fields,
-        summary_only =
-            terminal_shellification_units_selected || !plan_unit_inventory_available,
+        shellification_kind = low_order_shellization.shellification_kind,
+        shellification_plan = low_order_shellization.shellification_plan,
+        shellification_scaffold = low_order_shellization.shellification_scaffold,
+        unit_inventory,
+        route_lowering_family,
+        lowering_plan,
+        lowering_contract_inventory,
+        region_count = low_order_shellization.region_count,
+        ordered_region_roles = low_order_shellization.ordered_region_roles,
+        central_gap_region_count =
+            low_order_shellization.central_gap_region_count,
+        central_midpoint_slab_count =
+            low_order_shellization.central_midpoint_slab_count,
+        central_distorted_product_box_count =
+            low_order_shellization.central_distorted_product_box_count,
+        central_distorted_product_box_metadata =
+            low_order_shellization.central_distorted_product_box_metadata,
     )
 end
 
 function cartesian_units(parent, shells, route_inputs, recipe)
-    raw_box =
-        _pqs_source_box_route_driver_raw_box_probe(
-            parent.standard_setup, shells.route_skeleton, parent.parent_axis,
-            parent.route_axis_counts, route_inputs, recipe)
     low_order_units =
         _pqs_source_box_route_driver_unit_stage_low_order_summary(shells)
 
     return (;
-        object_kind = :cartesian_units,
-        status = shells.route_skeleton.status,
+        parent,
         route_inputs,
+        route_family = recipe.route_family,
+        route_kind = recipe.route_kind,
         route_skeleton = shells.route_skeleton,
-        raw_box,
         low_order_units,
-        terminal_route_state = low_order_units.terminal_route_state,
-        terminal_route_summary = low_order_units.terminal_route_summary,
-        low_order_unit_route_kind = low_order_units.unit_route_kind,
-        atom_growth_unit_summary_available =
-            low_order_units.atom_growth_unit_summary_available,
-        atom_growth_units_selected = low_order_units.atom_growth_units_selected,
-        atom_growth_unit_inventory_available =
-            low_order_units.atom_growth_unit_inventory_available,
-        plan_unit_inventory_available =
-            low_order_units.plan_unit_inventory_available,
-        plan_unit_inventory = low_order_units.plan_unit_inventory,
-        unit_inventory_source = low_order_units.unit_inventory_source,
-        unit_inventory_status = low_order_units.unit_inventory_status,
-        cpb_contract_stage = low_order_units.cpb_contract_stage,
-        shellification_regions_are_cpbs =
-            low_order_units.shellification_regions_are_cpbs,
-        owned_support_available = low_order_units.owned_support_available,
-        lowering_source_cpbs_available =
-            low_order_units.lowering_source_cpbs_available,
-        source_cpb_count = low_order_units.source_cpb_count,
-        pqs_lowering_prototype_available =
-            low_order_units.pqs_lowering_prototype_available,
-        pqs_lowering_prototype = low_order_units.pqs_lowering_prototype,
-        pqs_lowering_prototype_unit_key =
-            low_order_units.pqs_lowering_prototype_unit_key,
-        route_core_sidecar_inventory_available =
-            low_order_units.route_core_sidecar_inventory_available,
-        route_core_sidecar_inventory = low_order_units.route_core_sidecar_inventory,
-        materialized_units_available =
-            low_order_units.materialized_units_available,
-        retained_unit_dimensions_known =
-            low_order_units.retained_unit_dimensions_known,
-        retained_unit_ranges_known =
-            low_order_units.retained_unit_ranges_known,
-        retained_dimension_known = low_order_units.retained_dimension_known,
-        summary_only = low_order_units.summary_only,
-        active_source_authority = low_order_units.active_source_authority,
-        source_boxes = shells.route_skeleton.source_boxes,
+        shellification_plan = shells.shellification_plan,
+        shellification_scaffold = shells.shellification_scaffold,
+        shellification_kind = shells.shellification_kind,
+        route_shape = shells.route_shape,
+        source_boxes = shells.source_boxes,
         source_dimensions = shells.route_skeleton.source_dimensions,
         retained_units = shells.route_skeleton.retained_units,
         retained_unit_order = shells.route_skeleton.retained_unit_order,
-        unit_stage = :broken_into_source_units,
+        retained_counts = shells.route_skeleton.retained_counts,
+        ranges = shells.route_skeleton.ranges,
+        retained_dimension = shells.route_skeleton.retained_dimension,
+        pair_entries = shells.route_skeleton.pair_entries,
+        pair_family_counts = shells.route_skeleton.pair_family_counts,
+        helper_by_pair_family = shells.route_skeleton.helper_by_pair_family,
     )
 end
 

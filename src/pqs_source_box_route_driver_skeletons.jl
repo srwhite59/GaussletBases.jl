@@ -210,8 +210,6 @@ function _pqs_source_box_route_driver_generic_source_box_skeleton(
                 :product_product, route_recipe.pair_factor_normalization),
     )
     return (;
-        object_kind = :pqs_pqs_product_source_box_route_skeleton,
-        status = :compact_driver_skeleton,
         route_family = route_recipe.route_family,
         route_kind = route_recipe.route_kind,
         route_shape,
@@ -227,16 +225,6 @@ function _pqs_source_box_route_driver_generic_source_box_skeleton(
         pair_entries = pair_inventory.pair_entries,
         pair_family_counts = pair_inventory.pair_family_counts,
         helper_by_pair_family,
-        pending_facts = (:materialized_retained_operator_blocks,),
-        diagnostics = (;
-            source = :pqs_source_box_route_driver_generic_source_box_skeleton,
-            source_box_first = true,
-            pqs_boundary_column_count = retained_counts.pqs_left,
-            pair_count = length(pair_entries),
-            pair_family_counts = pair_inventory.pair_family_counts,
-            retained_dimension = unit_inventory.retained_dimension,
-            output_representation = :retained_two_index_density_density,
-        ),
     )
 end
 
@@ -367,21 +355,7 @@ function _pqs_source_box_route_driver_physical_gausslet_core_shell_skeleton(
         independent_target ?
         (independent_pqs_target_readiness = 0,) :
         (physical_gausslet_target = 0,)
-    pending_facts =
-        independent_target ?
-        (:independent_pqs_physical_source_plan_materializer,) :
-        (
-            :physical_gausslet_source_plan_producer,
-            :physical_gausslet_final_basis_builder,
-            :physical_gausslet_h1_builder,
-        )
-
     return (;
-        object_kind =
-            independent_target ?
-            :pqs_diatomic_independent_source_box_core_shell_target_skeleton :
-            :pqs_diatomic_physical_gausslet_core_shell_target_skeleton,
-        status = target_status,
         route_family = route_recipe.route_family,
         route_kind = route_recipe.route_kind,
         route_shape = support_units,
@@ -401,27 +375,6 @@ function _pqs_source_box_route_driver_physical_gausslet_core_shell_skeleton(
             (independent_pqs_target_readiness = :target_readiness_only_not_materialized,) :
             (physical_gausslet_target = :target_inventory_only_not_materialized,),
         physical_target_inventory = target_inventory,
-        pending_facts,
-        diagnostics = (
-            source = :pqs_source_box_route_driver_physical_gausslet_core_shell_skeleton,
-            route_family = route_recipe.route_family,
-            route_kind = route_recipe.route_kind,
-            private_development_only = true,
-            production_route = false,
-            source_box_first = true,
-            target_inventory_only = true,
-            source_plan_materialized = false,
-            final_basis_materialized = false,
-            h1_materialized = false,
-            h1_j_materialized = false,
-            rhf_materialized = false,
-            retained_atom_core_interiors = true,
-            supplement_policy = :none,
-            expected_final_dimension =
-                independent_target ? 471 : unit_inventory.retained_dimension,
-            source_backed_fixed_source_oracle_used = false,
-            retained_transform_authority = :pqs_source_box_construction,
-        ),
     )
 end
 
@@ -474,16 +427,7 @@ function _pqs_source_box_route_driver_white_lindsey_low_order_skeleton(
     helper_by_pair_family = (
         white_lindsey_low_order = :pending_white_lindsey_low_order_operator_builder,
     )
-    pending_facts = (
-        :materialized_standard_unit_partition,
-        :low_order_comx_transform_per_unit,
-        :low_order_operator_block_builder,
-        :benchmark_validation_against_pqs_source_box_route,
-    )
-
     return (;
-        object_kind = :white_lindsey_low_order_route_skeleton,
-        status = :published_benchmark_metadata_skeleton,
         route_family = route_recipe.route_family,
         route_shape = low_order_recipe.route_shape,
         retained_unit_order = (:low_order_units,),
@@ -499,53 +443,5 @@ function _pqs_source_box_route_driver_white_lindsey_low_order_skeleton(
         pair_family_counts,
         helper_by_pair_family,
         low_order_recipe,
-        pending_facts,
-        diagnostics = (
-            source = :white_lindsey_low_order_route_skeleton,
-            route_family = route_recipe.route_family,
-            route_shape = low_order_recipe.route_shape,
-            private_development_only = true,
-            production_route = false,
-            published_benchmark_route = true,
-            literature_reference = :white_lindsey_nested_gausslet_basis_sets_jcp_2023,
-            author_spelling = :lindsey,
-            mapping_rule = low_order_recipe.mapping_rule,
-            nesting_rule = low_order_recipe.nesting_rule,
-            retained_rule = low_order_recipe.retained_rule,
-            operator_rule = low_order_recipe.operator_rule,
-            benchmark_role = low_order_recipe.benchmark_role,
-            standard_unit_box_organization = true,
-            atom_count_special_case_required = false,
-            historical_split_rule_preserved = false,
-            comx_coarsening_reference = true,
-            one_dimensional_diagonal_basis_coarsening = true,
-            source_box_first = false,
-            source_box_algorithmic_path_true_for_every_pair = false,
-            derived_retained_counts = false,
-            derived_retained_ranges = false,
-            derived_pair_inventory = true,
-            pending_facts = pending_facts,
-            pair_factor_normalization = route_recipe.pair_factor_normalization,
-            pair_count = length(pair_entries),
-            pair_family_counts = pair_family_counts,
-            retained_dimension = nothing,
-            retained_unit_count = length(retained_units),
-            output_representation = :low_order_nested_cartesian_basis,
-            four_index_galerkin_tensor = false,
-            retained_pqs_weights_used = false,
-            retained_weight_division_allowed = false,
-            packet_adoption = false,
-            fixed_block_routing = false,
-            qwhamiltonian_consumes = false,
-            public_default_consumes = false,
-            mwg_ida_semantics_changed = false,
-            repo_side_ray_id = false,
-            ecp_terms_implemented = false,
-            cr2_science_status_changed = false,
-            shell_projection_used = false,
-            lowdin_cleanup_used = false,
-            support_local_shell_row_algorithm = false,
-            support_coefficient_matrix_used = false,
-        ),
     )
 end
