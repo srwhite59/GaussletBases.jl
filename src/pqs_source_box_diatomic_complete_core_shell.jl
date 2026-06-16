@@ -2369,6 +2369,159 @@ function _pqs_source_box_route_driver_physical_gausslet_axis_metrics(axis_bundle
     )
 end
 
+function _pqs_source_box_route_driver_physical_gausslet_multilayer_shell_records(
+    source_plan,
+)
+    records = NamedTuple[]
+    for shell_index in eachindex(source_plan.shared_shell_support_indices)
+        support_indices =
+            Vector{Int}(source_plan.shared_shell_support_indices[shell_index])
+        coefficient_matrix =
+            source_plan.shared_shell_coefficient_matrices[shell_index]
+        retained_count = size(coefficient_matrix, 2)
+        local_coefficients =
+            _pqs_source_box_route_driver_physical_gausslet_local_coefficients(
+                coefficient_matrix,
+                support_indices,
+                retained_count,
+                :physical_gausslet_shared_shell_coefficient_shape_mismatch,
+            )
+        isnothing(local_coefficients.blocker) ||
+            throw(ArgumentError(string(local_coefficients.blocker)))
+        push!(
+            records,
+            (;
+                layer_index = shell_index,
+                shell_support_indices = support_indices,
+                shell_support_states =
+                    source_plan.shared_shell_support_states[shell_index],
+                shell_final_coefficients = local_coefficients.coefficients,
+                support_count = length(support_indices),
+                retained_count,
+                provenance = :pqs_diatomic_physical_gausslet_source_plan,
+            ),
+        )
+    end
+    return Tuple(records)
+end
+
+function _pqs_source_box_route_driver_physical_gausslet_multilayer_plan(
+    source_plan,
+)
+    source_plan.status ===
+        :available_pqs_diatomic_physical_gausslet_core_shell_source_plan ||
+        throw(ArgumentError("physical gausslet source plan must be available"))
+    metrics =
+        _pqs_source_box_route_driver_physical_gausslet_axis_metrics(
+            source_plan.axis_bundles,
+        )
+    isnothing(metrics) &&
+        throw(ArgumentError("physical gausslet source plan is missing axis metrics"))
+
+    shell_records =
+        _pqs_source_box_route_driver_physical_gausslet_multilayer_shell_records(
+            source_plan,
+        )
+    shell_support_indices =
+        reduce(vcat, (record.shell_support_indices for record in shell_records); init = Int[])
+    shell_support_states =
+        reduce(
+            vcat,
+            (record.shell_support_states for record in shell_records);
+            init = Tuple{Int,Int,Int}[],
+        )
+    shell_final_coefficients =
+        _pqs_multilayer_block_concatenate_shell_coefficients(shell_records)
+    support_counts =
+        (length(source_plan.atom_contact_core_support_indices),
+            map(record -> record.support_count, shell_records)...)
+    retained_counts =
+        (length(source_plan.retained_ranges.atom_contact_core),
+            map(record -> record.retained_count, shell_records)...)
+    summary = (;
+        status = :available_pqs_multilayer_shell_source_plan,
+        blocker = nothing,
+        source_plan_family =
+            get(source_plan.convention_labels, :source_plan_family, :unknown),
+        layer_count = length(shell_records),
+        core_support_count = support_counts[1],
+        shell_support_count = length(shell_support_indices),
+        shell_final_retained_count = size(shell_final_coefficients, 2),
+        support_counts,
+        retained_counts,
+        collapsed_shell_sector = true,
+        final_basis_helper = :pqs_complete_core_shell_final_basis,
+    )
+    return (;
+        object_kind = :pqs_multilayer_shell_source_plan,
+        status = :available_pqs_multilayer_shell_source_plan,
+        blocker = nothing,
+        source_kind =
+            :pqs_diatomic_physical_gausslet_core_shell_source_plan_adapter,
+        bundles = source_plan.axis_bundles,
+        metrics,
+        core_box = nothing,
+        outer_box = nothing,
+        bond_axis = :z,
+        layer_count = length(shell_records),
+        shell_records,
+        core_support_indices = source_plan.atom_contact_core_support_indices,
+        core_support_states = source_plan.atom_contact_core_support_states,
+        shell_support_indices,
+        shell_support_states,
+        shell_final_coefficients,
+        summary,
+        metadata = merge(
+            NamedTuple(source_plan.metadata),
+            (;
+                source =
+                    :pqs_source_box_route_driver_physical_gausslet_multilayer_plan,
+                input_source_plan = source_plan.object_kind,
+                route_owned_authority = true,
+                collapsed_shell_sector = true,
+            ),
+        ),
+    )
+end
+
+function _pqs_source_box_route_driver_physical_gausslet_common_final_basis(
+    final_basis,
+    source_plan,
+)
+    final_basis.status === :available_pqs_physical_gausslet_final_basis ||
+        throw(ArgumentError("physical gausslet final basis must be available"))
+    shell_support_indices =
+        reduce(vcat, source_plan.shared_shell_support_indices; init = Int[])
+    shell_retained_count =
+        length(source_plan.retained_ranges.shared_shell_1) +
+        length(source_plan.retained_ranges.shared_shell_2)
+    return merge(
+        NamedTuple(final_basis),
+        (;
+            object_kind = :pqs_complete_core_shell_final_basis,
+            status = :available_pqs_complete_core_shell_final_basis,
+            blocker = nothing,
+            core_support_indices = source_plan.atom_contact_core_support_indices,
+            shell_support_indices,
+            support_row_order = :core_then_shell,
+            core_support_count =
+                length(source_plan.atom_contact_core_support_indices),
+            shell_support_count = length(shell_support_indices),
+            shell_final_retained_count = shell_retained_count,
+            source_physical_final_basis_status = final_basis.status,
+            metadata = merge(
+                NamedTuple(final_basis.metadata),
+                (;
+                    source =
+                        :pqs_source_box_route_driver_physical_gausslet_common_final_basis,
+                    common_operator_input_adapter = true,
+                    input_final_basis = :pqs_physical_gausslet_final_basis,
+                ),
+            ),
+        ),
+    )
+end
+
 function _pqs_source_box_route_driver_physical_gausslet_local_coefficients(
     coefficient_matrix,
     support_indices,
@@ -2779,240 +2932,6 @@ function _pqs_source_box_route_driver_physical_gausslet_support_states(source_pl
     )
 end
 
-function _pqs_source_box_route_driver_physical_gausslet_support_kinetic(source_plan)
-    states = _pqs_source_box_route_driver_physical_gausslet_support_states(source_plan)
-    metrics =
-        _pqs_source_box_route_driver_physical_gausslet_axis_metrics(
-            source_plan.axis_bundles,
-        )
-    support_operator =
-        _pqs_multilayer_support_product_matrix(
-            states,
-            states,
-            metrics.x.kinetic,
-            metrics.y.overlap,
-            metrics.z.overlap,
-        ) +
-        _pqs_multilayer_support_product_matrix(
-            states,
-            states,
-            metrics.x.overlap,
-            metrics.y.kinetic,
-            metrics.z.overlap,
-        ) +
-        _pqs_multilayer_support_product_matrix(
-            states,
-            states,
-            metrics.x.overlap,
-            metrics.y.overlap,
-            metrics.z.kinetic,
-        )
-    return (;
-        object_kind = :pqs_physical_gausslet_support_kinetic_matrix,
-        status = :materialized_pqs_physical_gausslet_support_kinetic_matrix,
-        blocker = nothing,
-        term = :kinetic,
-        support_operator,
-        support_operator_shape = size(support_operator),
-        support_operator_finite = all(isfinite, support_operator),
-        support_state_count = length(states),
-        support_order = source_plan.support_order,
-    )
-end
-
-function _pqs_source_box_route_driver_physical_gausslet_support_electron_nuclear(
-    source_plan;
-    coulomb_expansion,
-    center_records,
-    axis_layers,
-)
-    centers = _pqs_multilayer_center_records(center_records)
-    coefficients = Float64.(coulomb_expansion.coefficients)
-    states = _pqs_source_box_route_driver_physical_gausslet_support_states(source_plan)
-    records = map(enumerate(centers)) do (_center_index, center_record)
-        center = _pqs_multilayer_center_summary(center_record)
-        factor_x, factor_y, factor_z, factor_source =
-            _pqs_multilayer_centered_factor_terms(
-                axis_layers,
-                coulomb_expansion,
-                center,
-            )
-        axis_terms =
-            _pqs_multilayer_validate_factor_terms(
-                (factor_x, factor_y, factor_z),
-                length(coefficients),
-            )
-        support_operator =
-            _pqs_multilayer_support_electron_nuclear_matrix(
-                states,
-                axis_terms,
-                coefficients,
-            )
-        (;
-            object_kind =
-                :pqs_physical_gausslet_support_electron_nuclear_by_center_matrix,
-            status =
-                :materialized_pqs_physical_gausslet_support_electron_nuclear_by_center_matrix,
-            blocker = nothing,
-            term = :electron_nuclear_by_center,
-            support_operator,
-            support_operator_shape = size(support_operator),
-            support_operator_finite = all(isfinite, support_operator),
-            support_state_count = length(states),
-            support_order = source_plan.support_order,
-            center_key = center.center_key,
-            center_index = center.center_index,
-            center_location = center.location,
-            nuclear_charge = center.nuclear_charge,
-            nuclear_charge_recorded = true,
-            nuclear_charge_applied = false,
-            centers_summed = false,
-            uncharged_by_center_convention = true,
-            gaussian_factor_terms_source = factor_source,
-            metadata = (;
-                source =
-                    :pqs_source_box_route_driver_physical_gausslet_support_electron_nuclear,
-                physical_operator = :electron_nuclear_attraction,
-                nuclear_charge = center.nuclear_charge,
-                nuclear_charge_recorded = true,
-                nuclear_charge_applied = false,
-                centers_summed = false,
-                center_key = center.center_key,
-                center_index = center.center_index,
-                center_location = center.location,
-            ),
-        )
-    end
-    return (;
-        object_kind =
-            :pqs_physical_gausslet_support_electron_nuclear_by_center_matrix_set,
-        status =
-            :materialized_pqs_physical_gausslet_support_electron_nuclear_by_center_matrix_set,
-        blocker = nothing,
-        term = :electron_nuclear_by_center,
-        records,
-        center_count = length(records),
-        support_state_count = length(states),
-        support_order = source_plan.support_order,
-    )
-end
-
-function _pqs_source_box_route_driver_physical_gausslet_final_one_body(
-    final_basis,
-    support_operator;
-    term::Symbol,
-    center_record = nothing,
-    symmetry_atol::Real = 1.0e-8,
-)
-    operator = Matrix{Float64}(support_operator)
-    coefficients = Matrix{Float64}(final_basis.final_coefficients)
-    size(operator) == (size(coefficients, 1), size(coefficients, 1)) ||
-        throw(DimensionMismatch("physical gausslet support one-body shape mismatch"))
-    all(isfinite, operator) ||
-        throw(ArgumentError("physical gausslet support one-body matrix is nonfinite"))
-    support_symmetry_error = norm(operator - transpose(operator), Inf)
-    support_symmetry_error <= Float64(symmetry_atol) ||
-        throw(ArgumentError("physical gausslet support one-body matrix is not symmetric"))
-    final_operator = transpose(coefficients) * operator * coefficients
-    final_symmetry_error = norm(final_operator - transpose(final_operator), Inf)
-    final_symmetry_error <= Float64(symmetry_atol) ||
-        throw(ArgumentError("physical gausslet final one-body matrix is not symmetric"))
-    center_metadata =
-        isnothing(center_record) ?
-        (;) :
-        (;
-            center_key = center_record.center_key,
-            center_index = center_record.center_index,
-            center_location = center_record.center_location,
-            nuclear_charge = center_record.nuclear_charge,
-            nuclear_charge_recorded = true,
-            nuclear_charge_applied = false,
-            centers_summed = false,
-            uncharged_by_center_convention = true,
-        )
-    return (;
-        object_kind = :pqs_physical_gausslet_final_one_body_matrix,
-        status = :materialized_pqs_physical_gausslet_final_one_body_matrix,
-        blocker = nothing,
-        term,
-        final_basis_object_kind = final_basis.object_kind,
-        final_basis_status = final_basis.status,
-        support_order = final_basis.support_order,
-        support_operator_shape = size(operator),
-        support_operator_finite = all(isfinite, operator),
-        support_operator_symmetry_error = support_symmetry_error,
-        final_operator,
-        final_operator_shape = size(final_operator),
-        final_operator_finite = all(isfinite, final_operator),
-        final_operator_symmetry_error = final_symmetry_error,
-        final_retained_count = final_basis.final_retained_count,
-        metadata = merge(
-            (;
-                source =
-                    :pqs_source_box_route_driver_physical_gausslet_final_one_body,
-                physical_final_basis = true,
-            ),
-            center_metadata,
-        ),
-    )
-end
-
-function _pqs_source_box_route_driver_physical_gausslet_h1_hamiltonian(
-    final_kinetic,
-    final_nuclear_by_center;
-    symmetry_atol::Real = 1.0e-8,
-)
-    kinetic = Matrix{Float64}(final_kinetic.final_operator)
-    dimension = size(kinetic, 1)
-    charged_nuclear_sum = zeros(Float64, dimension, dimension)
-    for result in Tuple(final_nuclear_by_center)
-        nuclear = Matrix{Float64}(result.final_operator)
-        size(nuclear) == (dimension, dimension) ||
-            throw(DimensionMismatch("physical gausslet nuclear one-body shape mismatch"))
-        metadata = result.metadata
-        charge = Float64(metadata.nuclear_charge)
-        charged_nuclear_sum .+= charge .* nuclear
-    end
-    hamiltonian_matrix = kinetic + charged_nuclear_sum
-    symmetry_error = norm(hamiltonian_matrix - transpose(hamiltonian_matrix), Inf)
-    symmetry_error <= Float64(symmetry_atol) ||
-        throw(ArgumentError("physical gausslet H1 Hamiltonian is not symmetric"))
-    return (;
-        object_kind = :pqs_physical_gausslet_final_one_electron_hamiltonian,
-        status = :materialized_pqs_physical_gausslet_final_one_electron_hamiltonian,
-        blocker = nothing,
-        final_dimension = dimension,
-        kinetic_matrix = kinetic,
-        charged_nuclear_matrix = charged_nuclear_sum,
-        hamiltonian_matrix,
-        hamiltonian_matrix_shape = size(hamiltonian_matrix),
-        hamiltonian_matrix_finite = all(isfinite, hamiltonian_matrix),
-        hamiltonian_matrix_symmetry_error = symmetry_error,
-        center_count = length(Tuple(final_nuclear_by_center)),
-    )
-end
-
-function _pqs_source_box_route_driver_physical_gausslet_h1_solve(final_hamiltonian)
-    matrix = Matrix{Float64}(final_hamiltonian.hamiltonian_matrix)
-    all(isfinite, matrix) ||
-        throw(ArgumentError("physical gausslet H1 matrix contains non-finite entries"))
-    solution = eigen(Symmetric((matrix + transpose(matrix)) ./ 2))
-    eigenvalues = solution.values
-    energy = first(eigenvalues)
-    return (;
-        object_kind = :pqs_physical_gausslet_h1_solve,
-        status = :materialized_pqs_physical_gausslet_h1_solve,
-        blocker = nothing,
-        solve_kind = :ordinary_symmetric,
-        final_dimension = size(matrix, 1),
-        lowest_energy = energy,
-        lowest_orbital_coefficients = Vector{Float64}(solution.vectors[:, 1]),
-        eigenvalue_min = minimum(eigenvalues),
-        eigenvalue_max = maximum(eigenvalues),
-        h1_solve_materialized = true,
-    )
-end
-
 function _pqs_source_box_route_driver_diatomic_physical_gausslet_h1_payload(
     parent,
     route_skeleton,
@@ -3073,45 +2992,43 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_h1_payload(
         else
             try
                 coulomb_expansion = coulomb_gaussian_expansion(doacc = false)
-                support_kinetic =
-                    _pqs_source_box_route_driver_physical_gausslet_support_kinetic(
+                multilayer_plan =
+                    _pqs_source_box_route_driver_physical_gausslet_multilayer_plan(
                         source_plan,
                     )
-                support_kinetic_status = support_kinetic.status
-                support_nuclear =
-                    _pqs_source_box_route_driver_physical_gausslet_support_electron_nuclear(
-                        source_plan;
-                        coulomb_expansion,
-                        center_records,
-                        axis_layers,
+                common_final_basis =
+                    _pqs_source_box_route_driver_physical_gausslet_common_final_basis(
+                        final_basis,
+                        source_plan,
                     )
+                common_h1 = pqs_multilayer_complete_core_shell_h1_payload(
+                    multilayer_plan;
+                    final_basis = common_final_basis,
+                    coulomb_expansion,
+                    center_records,
+                    axis_layers,
+                    metadata = (;
+                        source =
+                            :pqs_source_box_route_driver_diatomic_physical_gausslet_h1_payload,
+                        h1_operator_authority =
+                            :pqs_multilayer_complete_core_shell_h1_payload,
+                        input_source_plan = source_plan.object_kind,
+                        input_final_basis = final_basis.object_kind,
+                    ),
+                )
+                support_kinetic = common_h1.support_kinetic
+                support_kinetic_status =
+                    :materialized_pqs_multilayer_support_kinetic_matrix
+                support_nuclear = common_h1.support_nuclear_by_center
                 support_nuclear_status = support_nuclear.status
-                final_kinetic =
-                    _pqs_source_box_route_driver_physical_gausslet_final_one_body(
-                        final_basis,
-                        support_kinetic.support_operator;
-                        term = :kinetic,
-                    )
+                final_kinetic = common_h1.final_kinetic
                 final_kinetic_status = final_kinetic.status
-                final_nuclear = map(support_nuclear.records) do record
-                    _pqs_source_box_route_driver_physical_gausslet_final_one_body(
-                        final_basis,
-                        record.support_operator;
-                        term = :electron_nuclear_by_center,
-                        center_record = record,
-                    )
-                end
+                final_nuclear = common_h1.final_nuclear_by_center
                 final_nuclear_status =
                     :materialized_pqs_physical_gausslet_final_electron_nuclear_by_center
-                final_hamiltonian =
-                    _pqs_source_box_route_driver_physical_gausslet_h1_hamiltonian(
-                        final_kinetic,
-                        final_nuclear,
-                    )
+                final_hamiltonian = common_h1.final_hamiltonian
                 final_hamiltonian_status = final_hamiltonian.status
-                h1 = _pqs_source_box_route_driver_physical_gausslet_h1_solve(
-                    final_hamiltonian,
-                )
+                h1 = common_h1.h1
                 h1_status = h1.status
                 if !(isfinite(h1.lowest_energy) && h1.lowest_energy < 0)
                     status = :blocked_pqs_physical_gausslet_h1_payload
@@ -3166,6 +3083,7 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_h1_payload(
             :pqs_source_box_route_driver_diatomic_physical_gausslet_h1_payload,
         route_kind = recipe.route_kind,
         physical_final_basis = true,
+        h1_operator_authority = :pqs_multilayer_complete_core_shell_h1_payload,
         h2_221_diagnostic_source_plan_reused = false,
     )
     return _PQSDiatomicPhysicalGaussletH1Payload(

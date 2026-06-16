@@ -2035,3 +2035,53 @@ Remaining blocker / next:
 Line-count / complexity note:
 - Added 197 summary lines and deleted 38,867 raw markdown lines, net
   `-38,670` tracked docs lines.
+
+## Pass 265 - H2 PQS H1 Common Operator Path
+
+Commit(s):
+- this commit - Route H2 PQS H1 through complete core shell path
+
+Summary:
+- Added a narrow adapter from the current H2 independent physical source plan
+  into the existing `pqs_multilayer_shell_source_plan` / complete core-shell
+  operator contract.
+- Routed the H2 PQS physical H1 payload through
+  `pqs_multilayer_complete_core_shell_h1_payload` while preserving the current
+  driver artifact behavior.
+- Extended the common final H1 solve with the lowest orbital coefficients so
+  the existing H1-J and RHF consumers continue to receive real computational
+  data.
+- Deleted the now-dead H2-local duplicate support kinetic, support
+  electron-nuclear, final one-body, final H1 Hamiltonian, and H1 solve helper
+  family.
+
+Validation:
+- Doer: `git diff --check`, package load, and
+  `tools/run_cartesian_line_ladder.jl --line=pqs_diatomic` passed. The ladder
+  checked the H2 PQS base route, residual-GTO preflight, and materialized
+  sidecar/provider artifact route.
+
+Goal advancement:
+- LT2/LT8: removed duplicate diatomic-local one-body authority and moved H2
+  PQS H1 onto the shared complete core-shell operator path.
+- LT5: preserved independent H2 PQS route authority while making the operator
+  authority explicit in the H1 payload metadata.
+- MT4: keeps residual-GTO/provider work staged above a common one-body path
+  rather than adding another route-specific operator stack.
+
+Medium-goal update:
+- none.
+
+Risk / guardrail:
+- This is an H2 adapter into the existing common path, not the final atomic /
+  diatomic unification. Do not generalize it into a provider registry or revive
+  status/readiness payloads.
+
+Remaining blocker / next:
+- Atomic PQS/WL still has its own direct materializer. The next unification
+  pass should design or implement the atomic source/support/final-basis adapter
+  below geometry construction and above one-body operators.
+
+Line-count / complexity note:
+- Scoped source diff before the log was `188` added / `266` deleted, net
+  `-78`; the net direction remains simplification while adding the adapter seam.

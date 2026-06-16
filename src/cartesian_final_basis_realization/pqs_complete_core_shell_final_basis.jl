@@ -420,7 +420,8 @@ function pqs_complete_core_shell_final_h1_solve(
     matrix = Matrix{Float64}(hamiltonian_result.hamiltonian_matrix)
     all(isfinite, matrix) ||
         throw(ArgumentError("complete core/shell H1 matrix contains non-finite entries"))
-    eigenvalues = eigvals(Symmetric((matrix + transpose(matrix)) ./ 2))
+    solution = eigen(Symmetric((matrix + transpose(matrix)) ./ 2))
+    eigenvalues = solution.values
     energy = first(eigenvalues)
     return (;
         object_kind = :pqs_complete_core_shell_final_h1_solve,
@@ -429,6 +430,7 @@ function pqs_complete_core_shell_final_h1_solve(
         solve_kind = :ordinary_symmetric,
         final_dimension = size(matrix, 1),
         lowest_energy = energy,
+        lowest_orbital_coefficients = Vector{Float64}(solution.vectors[:, 1]),
         reference_energy = Float64(reference_energy),
         reference_error = energy - Float64(reference_energy),
         eigenvalue_min = minimum(eigenvalues),

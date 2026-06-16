@@ -199,6 +199,8 @@ function pqs_multilayer_complete_core_shell_h1_payload(
         object_kind = :pqs_multilayer_complete_core_shell_h1_payload,
         status = summary.status,
         blocker = nothing,
+        support_kinetic,
+        support_nuclear_by_center,
         final_kinetic,
         final_nuclear_by_center,
         final_hamiltonian,
