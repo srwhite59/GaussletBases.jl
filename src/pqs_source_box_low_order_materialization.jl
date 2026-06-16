@@ -300,6 +300,39 @@ function _pqs_source_box_route_driver_pqs_gto_residual_transform(
     )
 end
 
+function _pqs_source_box_route_driver_pqs_h2_residual_gto_provider_packet(
+    inputs,
+    sidecar,
+    residual,
+)
+    expansion = coulomb_gaussian_expansion(doacc = false)
+    route_metadata = inputs.route_metadata
+    gto_primitive_arrays = map(
+        _pqs_source_box_route_driver_gto_primitive_arrays,
+        inputs.supplement_representation.orbitals,
+    )
+    return (;
+        final_basis = inputs.final_basis,
+        source_plan = inputs.source_plan,
+        support_states = sidecar.support_states,
+        axis_representations = sidecar.axis_representations,
+        supplement_representation = inputs.supplement_representation,
+        gto_primitive_arrays,
+        final_coefficients = Matrix{Float64}(inputs.final_basis.final_coefficients),
+        h_ff = Matrix{Float64}(inputs.h1_hamiltonian.hamiltonian_matrix),
+        s_fg = Matrix{Float64}(sidecar.final_gto_cross_overlap),
+        s_gg = Matrix{Float64}(sidecar.gto_self_overlap),
+        s_r = Matrix{Float64}(sidecar.gto_residual_overlap),
+        residual_transform = Matrix{Float64}(residual.residual_transform),
+        residual_rank = residual.residual_rank,
+        route_metadata,
+        nuclear_charges = Float64.(route_metadata.nuclear_charges),
+        atom_locations = route_metadata.atom_locations,
+        coulomb_coefficients = Float64.(expansion.coefficients),
+        coulomb_exponents = Float64.(expansion.exponents),
+    )
+end
+
 @inline function _pqs_source_box_route_driver_axis_index(axis::Symbol)
     axis === :x && return 1
     axis === :y && return 2
@@ -556,27 +589,20 @@ function _pqs_source_box_route_driver_gto_weighted_hadamard(
     return Float64(dot(left_coefficients, matrix * right_coefficients))
 end
 
-function _pqs_source_box_route_driver_pqs_gto_support_one_body(
-    inputs,
-    sidecar,
-)
-    source_plan = inputs.source_plan
-    supplement = inputs.supplement_representation
-    states = sidecar.support_states
-    axes = sidecar.axis_representations
-    expansion = coulomb_gaussian_expansion(doacc = false)
-    coefficients = Float64.(expansion.coefficients)
-    exponents = Float64.(expansion.exponents)
-    route_metadata = inputs.route_metadata
-    nuclear_charges = Float64.(route_metadata.nuclear_charges)
-    atom_locations = route_metadata.atom_locations
-    support_gto_kinetic = zeros(Float64, length(states), length(supplement.orbitals))
+function _pqs_source_box_route_driver_pqs_gto_support_one_body(packet)
+    states = packet.support_states
+    axes = packet.axis_representations
+    coefficients = packet.coulomb_coefficients
+    exponents = packet.coulomb_exponents
+    nuclear_charges = packet.nuclear_charges
+    atom_locations = packet.atom_locations
+    support_gto_kinetic =
+        zeros(Float64, length(states), length(packet.gto_primitive_arrays))
     support_gto_charged_nuclear =
-        zeros(Float64, length(states), length(supplement.orbitals))
+        zeros(Float64, length(states), length(packet.gto_primitive_arrays))
     scratch = zeros(Float64, length(states))
 
-    for (column, orbital) in pairs(supplement.orbitals)
-        orbital_arrays = _pqs_source_box_route_driver_gto_primitive_arrays(orbital)
+    for (column, orbital_arrays) in pairs(packet.gto_primitive_arrays)
         overlap_tables =
             _pqs_source_box_route_driver_gto_axis_cross_tables(
                 axes,
@@ -627,10 +653,12 @@ function _pqs_source_box_route_driver_pqs_gto_support_one_body(
         end
     end
 
-    final_coefficients = Matrix{Float64}(inputs.final_basis.final_coefficients)
-    h_fg_kinetic = Matrix{Float64}(transpose(final_coefficients) * support_gto_kinetic)
+    h_fg_kinetic =
+        Matrix{Float64}(transpose(packet.final_coefficients) * support_gto_kinetic)
     h_fg_charged_nuclear =
-        Matrix{Float64}(transpose(final_coefficients) * support_gto_charged_nuclear)
+        Matrix{Float64}(
+            transpose(packet.final_coefficients) * support_gto_charged_nuclear,
+        )
     return (;
         h_fg_kinetic,
         h_fg_charged_nuclear,
@@ -638,73 +666,68 @@ function _pqs_source_box_route_driver_pqs_gto_support_one_body(
     )
 end
 
-function _pqs_source_box_route_driver_pqs_gto_self_one_body(inputs)
-    supplement = inputs.supplement_representation
-    expansion = coulomb_gaussian_expansion(doacc = false)
-    coefficients = Float64.(expansion.coefficients)
-    exponents = Float64.(expansion.exponents)
-    route_metadata = inputs.route_metadata
-    nuclear_charges = Float64.(route_metadata.nuclear_charges)
-    atom_locations = route_metadata.atom_locations
-    norbital = length(supplement.orbitals)
+function _pqs_source_box_route_driver_pqs_gto_self_one_body(packet)
+    coefficients = packet.coulomb_coefficients
+    exponents = packet.coulomb_exponents
+    nuclear_charges = packet.nuclear_charges
+    atom_locations = packet.atom_locations
+    norbital = length(packet.gto_primitive_arrays)
     h_gg_kinetic = zeros(Float64, norbital, norbital)
     h_gg_charged_nuclear = zeros(Float64, norbital, norbital)
-    orbital_arrays = map(
-        _pqs_source_box_route_driver_gto_primitive_arrays,
-        supplement.orbitals,
-    )
-    for row in eachindex(orbital_arrays), column in eachindex(orbital_arrays)
-        left_arrays = orbital_arrays[row]
-        right_arrays = orbital_arrays[column]
-        overlap_tables =
-            _pqs_source_box_route_driver_gto_axis_self_tables(
-                left_arrays,
-                right_arrays,
-                :overlap,
-            )
-        kinetic_tables =
-            _pqs_source_box_route_driver_gto_axis_self_tables(
-                left_arrays,
-                right_arrays,
-                :kinetic,
-            )
-        for kinetic_axis in 1:3
-            axis_tables = ntuple(
-                axis -> axis == kinetic_axis ?
-                    kinetic_tables[axis] :
-                    overlap_tables[axis],
-                3,
-            )
-            h_gg_kinetic[row, column] +=
-                _pqs_source_box_route_driver_gto_weighted_hadamard(
-                    left_arrays.coefficients,
-                    axis_tables[1],
-                    axis_tables[2],
-                    axis_tables[3],
-                    right_arrays.coefficients,
+    for column in eachindex(packet.gto_primitive_arrays)
+        right_arrays = packet.gto_primitive_arrays[column]
+        for row in eachindex(packet.gto_primitive_arrays)
+            left_arrays = packet.gto_primitive_arrays[row]
+            overlap_tables =
+                _pqs_source_box_route_driver_gto_axis_self_tables(
+                    left_arrays,
+                    right_arrays,
+                    :overlap,
                 )
-        end
-        for (center_index, location) in pairs(atom_locations)
-            charge = nuclear_charges[center_index]
-            for term_index in eachindex(coefficients)
-                factor_tables =
-                    _pqs_source_box_route_driver_gto_axis_self_tables(
-                        left_arrays,
-                        right_arrays,
-                        :factor;
-                        factor_center = location,
-                        factor_exponent = exponents[term_index],
-                    )
-                h_gg_charged_nuclear[row, column] -=
-                    charge *
-                    coefficients[term_index] *
+            kinetic_tables =
+                _pqs_source_box_route_driver_gto_axis_self_tables(
+                    left_arrays,
+                    right_arrays,
+                    :kinetic,
+                )
+            for kinetic_axis in 1:3
+                axis_tables = ntuple(
+                    axis -> axis == kinetic_axis ?
+                        kinetic_tables[axis] :
+                        overlap_tables[axis],
+                    3,
+                )
+                h_gg_kinetic[row, column] +=
                     _pqs_source_box_route_driver_gto_weighted_hadamard(
                         left_arrays.coefficients,
-                        factor_tables[1],
-                        factor_tables[2],
-                        factor_tables[3],
+                        axis_tables[1],
+                        axis_tables[2],
+                        axis_tables[3],
                         right_arrays.coefficients,
                     )
+            end
+            for (center_index, location) in pairs(atom_locations)
+                charge = nuclear_charges[center_index]
+                for term_index in eachindex(coefficients)
+                    factor_tables =
+                        _pqs_source_box_route_driver_gto_axis_self_tables(
+                            left_arrays,
+                            right_arrays,
+                            :factor;
+                            factor_center = location,
+                            factor_exponent = exponents[term_index],
+                        )
+                    h_gg_charged_nuclear[row, column] -=
+                        charge *
+                        coefficients[term_index] *
+                        _pqs_source_box_route_driver_gto_weighted_hadamard(
+                            left_arrays.coefficients,
+                            factor_tables[1],
+                            factor_tables[2],
+                            factor_tables[3],
+                            right_arrays.coefficients,
+                        )
+                end
             end
         end
     end
@@ -718,16 +741,12 @@ function _pqs_source_box_route_driver_pqs_gto_self_one_body(inputs)
     )
 end
 
-function _pqs_source_box_route_driver_pqs_gto_one_body_blocks(
-    inputs,
-    sidecar,
-    residual,
-)
-    h_ff = Matrix{Float64}(inputs.h1_hamiltonian.hamiltonian_matrix)
-    s_fg = Matrix{Float64}(sidecar.final_gto_cross_overlap)
-    l = Matrix{Float64}(residual.residual_transform)
-    mixed = _pqs_source_box_route_driver_pqs_gto_support_one_body(inputs, sidecar)
-    self = _pqs_source_box_route_driver_pqs_gto_self_one_body(inputs)
+function _pqs_source_box_route_driver_pqs_gto_one_body_blocks(packet)
+    h_ff = packet.h_ff
+    s_fg = packet.s_fg
+    l = packet.residual_transform
+    mixed = _pqs_source_box_route_driver_pqs_gto_support_one_body(packet)
+    self = _pqs_source_box_route_driver_pqs_gto_self_one_body(packet)
     h_fg = Matrix{Float64}(mixed.h_fg_one_body)
     h_gg = Matrix{Float64}(self.h_gg_one_body)
     h_fr = Matrix{Float64}((h_fg - h_ff * s_fg) * l)
@@ -1238,13 +1257,17 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
         residual_gto_provider_blocks === :one_body_only ?
         _pqs_source_box_route_driver_pqs_gto_residual_transform(sidecar) :
         nothing
-    one_body_blocks =
+    provider_packet =
         residual_gto_provider_blocks === :one_body_only ?
-        _pqs_source_box_route_driver_pqs_gto_one_body_blocks(
+        _pqs_source_box_route_driver_pqs_h2_residual_gto_provider_packet(
             inputs,
             sidecar,
             residual,
         ) :
+        nothing
+    one_body_blocks =
+        residual_gto_provider_blocks === :one_body_only ?
+        _pqs_source_box_route_driver_pqs_gto_one_body_blocks(provider_packet) :
         nothing
     final_basis = inputs.final_basis
     h1_hamiltonian = inputs.h1_hamiltonian
