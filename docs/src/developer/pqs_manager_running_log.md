@@ -2189,3 +2189,60 @@ Line-count / complexity note:
 - Scoped source diff before the log was `46` added / `8` deleted, net `+38`.
   The extra helper replaces a conceptually heavier legacy block conversion and
   should make later fixed-block retirement simpler.
+
+## Pass 268 - H2 PQS Residual-GTO Density Descriptor
+
+Commit(s):
+- this commit - Add H2 PQS residual GTO density descriptor
+
+Summary:
+- Added a narrow density-provider descriptor for the H2 independent PQS
+  residual-GTO materialized route.
+- The descriptor explicitly fixes the next density-provider gauge as
+  `(:pre_final_pqs, :residual_gto)` with
+  `density_gauge = :pre_final_localized_positive_weight`, not `[F, R]`.
+- It carries the concrete residual-orbital carrier data needed by the next
+  provider pass: `p_projection_of_g = A*S_FG` and
+  `[-A*S_FG; I_G] * L`, where `A` is the common final-basis cleanup and `L` is
+  the residual-GTO transform.
+- The H2 sidecar artifact roundtrip now checks the descriptor shape and
+  provenance, while still leaving residual density moments, P-R/R-R blocks,
+  supplemented values, and RHF untouched.
+
+Validation:
+- Doer: `git diff --check`, package load, and
+  `tools/run_cartesian_line_ladder.jl --line=pqs_diatomic` passed.
+- Doer inspected the materialized artifacts and confirmed
+  `density_provider_kind = :descriptor_only`,
+  `augmented_density_space = (:pre_final_pqs, :residual_gto)`,
+  `p_projection_of_g` shape `(471, 18)`, residual carrier shape `(489, 18)`,
+  P-P pair matrix size `(471, 471)`, residual mode source
+  `:requires_mwg_residual_moments`, and
+  `fixed_block_pair_data_authority_used = false`.
+
+Goal advancement:
+- MT4: starts P1e at the correct density-gauge boundary before building
+  density/pair provider values.
+- LT8: keeps the common complete core-shell positive-weight pre-final density
+  convention as authority for the PQS sector.
+- LT5: prevents a scientifically wrong shortcut through `[F, R]` or
+  `L' * V_GG * L` by making the projected residual orbital carrier explicit.
+
+Medium-goal update:
+- none.
+
+Risk / guardrail:
+- This is descriptor-only. It does not materialize P-R/R-R provider blocks,
+  supplemented H1-J, density/pair values, RHF, or CR2 artifacts. Do not
+  interpret the new descriptor as provider-block completion.
+
+Remaining blocker / next:
+- Implement MWG residual moments for projected residual orbitals, then build
+  the first real P-R and R-R density/provider blocks in the
+  `[pre_final PQS, residual GTO]` gauge.
+
+Line-count / complexity note:
+- Scoped source diff before the log was `318` added / `0` deleted. Most of
+  the increase is local artifact readback validation for the new contract. This
+  is a deliberate guardrail pass; the next value-producing pass should avoid
+  expanding it into a general provider registry.
