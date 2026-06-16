@@ -1,3 +1,185 @@
+function _pqs_source_box_route_driver_atomic_bundle(
+    axis_basis;
+    expansion,
+    backend::Symbol,
+)
+    return _mapped_ordinary_gausslet_1d_bundle(
+        axis_basis;
+        exponents = expansion.exponents,
+        center = 0.0,
+        backend,
+        refinement_levels = 0,
+    )
+end
+
+function _pqs_source_box_route_driver_atomic_multilayer_shell_records(sequence)
+    records = NamedTuple[]
+    for (layer_index, shell) in enumerate(sequence.shell_layers)
+        support_indices = Vector{Int}(shell.support_indices)
+        local_coefficients =
+            _nested_support_coefficient_slice(
+                shell.coefficient_matrix,
+                support_indices,
+            )
+        push!(
+            records,
+            (;
+                layer_index,
+                shell_support_indices = support_indices,
+                shell_support_states = shell.support_states,
+                shell_final_coefficients = local_coefficients,
+                support_count = length(support_indices),
+                retained_count = size(local_coefficients, 2),
+                provenance = :one_center_atomic_full_parent_shell_sequence,
+            ),
+        )
+    end
+    return Tuple(records)
+end
+
+function _pqs_source_box_route_driver_atomic_multilayer_plan(sequence, bundles)
+    shell_records =
+        _pqs_source_box_route_driver_atomic_multilayer_shell_records(sequence)
+    shell_support_indices =
+        reduce(vcat, (record.shell_support_indices for record in shell_records); init = Int[])
+    shell_support_states =
+        reduce(
+            vcat,
+            (record.shell_support_states for record in shell_records);
+            init = Tuple{Int,Int,Int}[],
+        )
+    shell_final_coefficients =
+        _pqs_multilayer_block_concatenate_shell_coefficients(shell_records)
+    shell_duplicate_count =
+        length(shell_support_indices) - length(unique(shell_support_indices))
+    core_shell_duplicate_count =
+        length(intersect(sequence.core_indices, shell_support_indices))
+    shell_duplicate_count == 0 ||
+        throw(ArgumentError("atomic common operator plan requires disjoint shell support"))
+    core_shell_duplicate_count == 0 ||
+        throw(ArgumentError("atomic common operator plan requires disjoint core/shell support"))
+    support_indices = vcat(sequence.core_indices, shell_support_indices)
+    if !isnothing(sequence.support_indices)
+        sort!(copy(support_indices)) == sort!(copy(sequence.support_indices)) ||
+            throw(ArgumentError("atomic common operator plan support indices do not match sequence support"))
+    end
+    core_count = length(sequence.core_indices)
+    shell_retained_count = size(shell_final_coefficients, 2)
+    core_count + shell_retained_count == size(sequence.coefficient_matrix, 2) ||
+        throw(ArgumentError("atomic common operator plan retained count mismatch"))
+    size(shell_final_coefficients, 1) == length(shell_support_indices) ||
+        throw(ArgumentError("atomic common operator plan shell coefficient row mismatch"))
+    metrics = _pqs_multilayer_axis_metrics(bundles)
+    summary = (;
+        status = :available_pqs_multilayer_shell_source_plan,
+        blocker = nothing,
+        source_plan_family = :one_center_atomic_complete_core_shell,
+        layer_count = length(shell_records),
+        core_support_count = core_count,
+        shell_support_count = length(shell_support_indices),
+        shell_final_retained_count = shell_retained_count,
+        support_counts = (core_count, map(record -> record.support_count, shell_records)...),
+        retained_counts = (core_count, map(record -> record.retained_count, shell_records)...),
+        collapsed_shell_sector = true,
+        final_basis_helper = :pqs_complete_core_shell_final_basis,
+    )
+    return (;
+        object_kind = :pqs_multilayer_shell_source_plan,
+        status = :available_pqs_multilayer_shell_source_plan,
+        blocker = nothing,
+        source_kind = :one_center_atomic_complete_core_shell_adapter,
+        bundles,
+        metrics,
+        core_box = nothing,
+        outer_box = nothing,
+        bond_axis = nothing,
+        layer_count = length(shell_records),
+        shell_records,
+        core_support_indices = Vector{Int}(sequence.core_indices),
+        core_support_states = sequence.core_states,
+        shell_support_indices,
+        shell_support_states,
+        shell_final_coefficients,
+        summary,
+        metadata = (;
+            source =
+                :pqs_source_box_route_driver_atomic_multilayer_plan,
+            input_source = :one_center_atomic_full_parent_shell_sequence,
+            route_owned_authority = true,
+            collapsed_shell_sector = true,
+        ),
+    )
+end
+
+function _pqs_source_box_route_driver_atomic_axis_layers(bundle)
+    auxiliary_layer = bundle.pgdg_intermediate.auxiliary_layer
+    return (x = auxiliary_layer, y = auxiliary_layer, z = auxiliary_layer)
+end
+
+function _pqs_source_box_route_driver_atomic_center_records(system, z::Real)
+    location =
+        hasproperty(system, :atom_locations) && !isempty(system.atom_locations) ?
+        system.atom_locations[1] :
+        (0.0, 0.0, 0.0)
+    return ((;
+        center_key = :atom_1,
+        center_index = 1,
+        location,
+        charge = Float64(z),
+        nuclear_charge = Float64(z),
+    ),)
+end
+
+function _pqs_source_box_route_driver_atomic_common_h1(
+    axis_basis,
+    system;
+    expansion,
+    backend::Symbol,
+    nside::Int,
+    z::Real,
+)
+    bundle = _pqs_source_box_route_driver_atomic_bundle(
+        axis_basis;
+        expansion,
+        backend,
+    )
+    term_coefficients = _one_center_atomic_term_coefficients(bundle, expansion)
+    n = length(bundle.basis)
+    sequence = _build_one_center_atomic_shell_sequence(
+        bundle,
+        (1:n, 1:n, 1:n);
+        nside,
+        term_coefficients,
+    )
+    bundles = _CartesianNestedAxisBundles3D(bundle, bundle, bundle)
+    plan = _pqs_source_box_route_driver_atomic_multilayer_plan(sequence, bundles)
+    final_basis =
+        pqs_multilayer_complete_core_shell_final_basis(
+            plan;
+            metadata = (;
+                source =
+                    :pqs_source_box_route_driver_atomic_common_h1,
+                route_kind = :one_center_atomic_complete_core_shell,
+            ),
+        )
+    final_basis.status === :available_pqs_complete_core_shell_final_basis ||
+        throw(ArgumentError("atomic common final basis did not materialize"))
+    h1_payload = pqs_multilayer_complete_core_shell_h1_payload(
+        plan;
+        final_basis,
+        coulomb_expansion = expansion,
+        center_records =
+            _pqs_source_box_route_driver_atomic_center_records(system, z),
+        axis_layers = _pqs_source_box_route_driver_atomic_axis_layers(bundle),
+        metadata = (;
+            source = :pqs_source_box_route_driver_atomic_common_h1,
+            h1_operator_authority =
+                :pqs_multilayer_complete_core_shell_h1_payload,
+        ),
+    )
+    return (; bundle, sequence, plan, final_basis, h1_payload)
+end
+
 function _pqs_source_box_route_driver_wl_atomic_pure_gausslet_materialization(
     report;
     save_basis_artifact::Bool,
@@ -49,38 +231,47 @@ function _pqs_source_box_route_driver_wl_atomic_pure_gausslet_materialization(
         coulomb_gaussian_expansion(doacc = false) :
         white_lindsey_expansion
 
-    fixed_block =
-        one_center_atomic_full_parent_fixed_block(
-            axis_basis;
+    common =
+        _pqs_source_box_route_driver_atomic_common_h1(
+            axis_basis,
+            system;
             expansion,
+            backend,
             nside,
-            gausslet_backend = backend,
-            timing = false,
+            z,
         )
-    nuclear_one_body = -z .* fixed_block.gaussian_sum
-    h1 = fixed_block.kinetic .+ nuclear_one_body
-    h1_symmetric = 0.5 .* (h1 .+ transpose(h1))
-    dim = size(h1, 1)
-    overlap_identity_error =
-        maximum(abs.(fixed_block.overlap .- Matrix{Float64}(I, dim, dim)))
-    h1_symmetry_error = maximum(abs.(h1 .- transpose(h1)))
-    h1_lowest = minimum(eigvals(Symmetric(h1_symmetric)))
+    final_basis = common.final_basis
+    h1_payload = common.h1_payload
+    h1_hamiltonian = h1_payload.final_hamiltonian
+    nuclear_one_body = h1_hamiltonian.charged_nuclear_matrix
+    h1 = h1_hamiltonian.hamiltonian_matrix
+    dim = h1_payload.h1.final_dimension
+    overlap_identity_error = final_basis.final_overlap_identity_error
+    h1_symmetry_error = h1_hamiltonian.hamiltonian_matrix_symmetry_error
+    h1_lowest = h1_payload.h1.lowest_energy
+    fixed_block =
+        (save_basis_artifact || save_ham_artifact) ?
+        _nested_fixed_block(common.sequence, common.bundle) :
+        nothing
     summary = (;
         route_family = report.route_family,
         geometry = :atomic,
         supplement_policy = :none,
-        source = :one_center_atomic_full_parent_fixed_block,
+        source = :pqs_multilayer_complete_core_shell_h1_payload,
         backend,
         nside,
         nuclear_charge = z,
-        support_dimension = size(fixed_block.coefficient_matrix, 1),
+        support_dimension =
+            final_basis.core_support_count + final_basis.shell_support_count,
         retained_dimension = dim,
-        coefficient_matrix_size = size(fixed_block.coefficient_matrix),
+        coefficient_matrix_size = size(final_basis.final_coefficients),
         overlap_identity_error,
         h1_lowest,
         h1_finite = all(isfinite, h1),
         h1_symmetry_error,
-        density_density_pair_sum_present = hasproperty(fixed_block, :pair_sum),
+        density_density_pair_sum_present =
+            !isnothing(fixed_block) && hasproperty(fixed_block, :pair_sum),
+        h1_operator_authority = :pqs_multilayer_complete_core_shell_h1_payload,
     )
     basis_artifact_path = nothing
     if save_basis_artifact
@@ -88,9 +279,10 @@ function _pqs_source_box_route_driver_wl_atomic_pure_gausslet_materialization(
         jldopen(basis_artifact_path, "w") do file
             file["artifact_kind"] = :white_lindsey_atomic_pure_gausslet_basis
             file["summary"] = summary
-            file["coefficient_matrix"] = fixed_block.coefficient_matrix
-            file["support_indices"] = fixed_block.support_indices
-            file["overlap"] = fixed_block.overlap
+            file["coefficient_matrix"] = final_basis.final_coefficients
+            file["support_indices"] =
+                vcat(final_basis.core_support_indices, final_basis.shell_support_indices)
+            file["overlap"] = final_basis.final_overlap
             file["weights"] = fixed_block.weights
             file["fixed_centers"] = fixed_block.fixed_centers
         end
@@ -101,8 +293,8 @@ function _pqs_source_box_route_driver_wl_atomic_pure_gausslet_materialization(
         jldopen(ham_artifact_path, "w") do file
             file["artifact_kind"] = :white_lindsey_atomic_pure_gausslet_hamiltonian
             file["summary"] = summary
-            file["overlap"] = fixed_block.overlap
-            file["kinetic"] = fixed_block.kinetic
+            file["overlap"] = final_basis.final_overlap
+            file["kinetic"] = h1_hamiltonian.kinetic_matrix
             file["nuclear_one_body"] = nuclear_one_body
             file["one_body_hamiltonian"] = h1
             file["density_density_pair_sum"] = fixed_block.pair_sum

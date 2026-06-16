@@ -2085,3 +2085,55 @@ Remaining blocker / next:
 Line-count / complexity note:
 - Scoped source diff before the log was `188` added / `266` deleted, net
   `-78`; the net direction remains simplification while adding the adapter seam.
+
+## Pass 266 - Atomic WL H1 Common Operator Adapter
+
+Commit(s):
+- this commit - Route atomic WL H1 through complete core shell path
+
+Summary:
+- Added a narrow one-center atomic adapter from the existing full-parent shell
+  sequence into the shared `pqs_multilayer_shell_source_plan` / complete
+  core-shell operator contract.
+- Changed the WL atomic pure-gausslet materializer so final basis, kinetic,
+  charged nuclear, H1, and H1 lowest energy come from
+  `pqs_multilayer_complete_core_shell_h1_payload`.
+- Kept the old fixed-block path only as an optional artifact sidecar source for
+  legacy pair-sum/fixed-center fields when artifact saving is requested; it is
+  no longer the H1 authority for the active driver materialization.
+- Added explicit adapter checks for shell duplicate support, core/shell
+  disjointness, sequence support agreement, retained count agreement, and shell
+  coefficient row agreement.
+
+Validation:
+- Doer: `git diff --check`, package load,
+  `tools/run_cartesian_line_ladder.jl --line=wl_atomic`, and
+  `tools/run_cartesian_line_ladder.jl --line=pqs_atomic` passed.
+
+Goal advancement:
+- LT8: atomic and H2 now both have a path through the same complete core-shell
+  one-body authority above geometry/source construction.
+- LT5: preserved route provenance by keeping the atomic shell sequence as the
+  source/support producer while moving operator authority to the common path.
+- LT2/MT5: this is a positive-line adapter pass, but it avoids creating a new
+  framework and sets up later deletion of atomic fixed-block H1 use.
+
+Medium-goal update:
+- none.
+
+Risk / guardrail:
+- Atomic GTO/supplement materialization remains intentionally blocked/not
+  materialized. Do not interpret this pass as full atomic supplement support or
+  as a generalized provider registry.
+
+Remaining blocker / next:
+- The next common-path cleanup should either retire old atomic fixed-block H1
+  artifact assumptions after a replacement pair/density sidecar exists, or
+  route atomic PQS materialization through the same adapter once that endpoint
+  becomes active.
+
+Line-count / complexity note:
+- Scoped source diff before the log was `214` added / `22` deleted, net `+192`.
+  The addition is accepted as a narrow adapter seam; the carrying cost should be
+  paid down by deleting fixed-block H1 authority once pair/density sidecars are
+  replaced.
