@@ -180,6 +180,44 @@ function _pqs_source_box_route_driver_atomic_common_h1(
     return (; bundle, sequence, plan, final_basis, h1_payload)
 end
 
+function _pqs_source_box_route_driver_atomic_artifact_sidecar(common)
+    packet = common.sequence.packet
+    isnothing(packet) && throw(
+        ArgumentError("atomic artifact sidecar requires an assembled shell sequence packet"),
+    )
+    final_basis = common.final_basis
+    cleanup = Matrix{Float64}(final_basis.combined_lowdin_cleanup)
+    pre_final_count, final_count = size(cleanup)
+    length(packet.weights) == pre_final_count ||
+        throw(DimensionMismatch("atomic artifact sidecar weight dimension mismatch"))
+
+    function project_matrix(matrix, name)
+        local_matrix = Matrix{Float64}(matrix)
+        size(local_matrix) == (pre_final_count, pre_final_count) ||
+            throw(DimensionMismatch("atomic artifact sidecar $(name) dimension mismatch"))
+        return transpose(cleanup) * local_matrix * cleanup
+    end
+
+    weights = vec(transpose(cleanup) * Float64.(packet.weights))
+    length(weights) == final_count ||
+        throw(DimensionMismatch("atomic artifact sidecar final weight dimension mismatch"))
+    position_x = project_matrix(packet.position_x, "position_x")
+    position_y = project_matrix(packet.position_y, "position_y")
+    position_z = project_matrix(packet.position_z, "position_z")
+    pair_sum =
+        isnothing(packet.pair_sum) ? nothing :
+        project_matrix(packet.pair_sum, "pair_sum")
+    return (;
+        weights,
+        fixed_centers = hcat(
+            diag(position_x),
+            diag(position_y),
+            diag(position_z),
+        ),
+        pair_sum,
+    )
+end
+
 function _pqs_source_box_route_driver_wl_atomic_pure_gausslet_materialization(
     report;
     save_basis_artifact::Bool,
@@ -249,9 +287,9 @@ function _pqs_source_box_route_driver_wl_atomic_pure_gausslet_materialization(
     overlap_identity_error = final_basis.final_overlap_identity_error
     h1_symmetry_error = h1_hamiltonian.hamiltonian_matrix_symmetry_error
     h1_lowest = h1_payload.h1.lowest_energy
-    fixed_block =
+    artifact_sidecar =
         (save_basis_artifact || save_ham_artifact) ?
-        _nested_fixed_block(common.sequence, common.bundle) :
+        _pqs_source_box_route_driver_atomic_artifact_sidecar(common) :
         nothing
     summary = (;
         route_family = report.route_family,
@@ -270,7 +308,7 @@ function _pqs_source_box_route_driver_wl_atomic_pure_gausslet_materialization(
         h1_finite = all(isfinite, h1),
         h1_symmetry_error,
         density_density_pair_sum_present =
-            !isnothing(fixed_block) && hasproperty(fixed_block, :pair_sum),
+            !isnothing(artifact_sidecar) && !isnothing(artifact_sidecar.pair_sum),
         h1_operator_authority = :pqs_multilayer_complete_core_shell_h1_payload,
     )
     basis_artifact_path = nothing
@@ -283,8 +321,8 @@ function _pqs_source_box_route_driver_wl_atomic_pure_gausslet_materialization(
             file["support_indices"] =
                 vcat(final_basis.core_support_indices, final_basis.shell_support_indices)
             file["overlap"] = final_basis.final_overlap
-            file["weights"] = fixed_block.weights
-            file["fixed_centers"] = fixed_block.fixed_centers
+            file["weights"] = artifact_sidecar.weights
+            file["fixed_centers"] = artifact_sidecar.fixed_centers
         end
     end
     ham_artifact_path = nothing
@@ -297,9 +335,9 @@ function _pqs_source_box_route_driver_wl_atomic_pure_gausslet_materialization(
             file["kinetic"] = h1_hamiltonian.kinetic_matrix
             file["nuclear_one_body"] = nuclear_one_body
             file["one_body_hamiltonian"] = h1
-            file["density_density_pair_sum"] = fixed_block.pair_sum
-            file["weights"] = fixed_block.weights
-            file["fixed_centers"] = fixed_block.fixed_centers
+            file["density_density_pair_sum"] = artifact_sidecar.pair_sum
+            file["weights"] = artifact_sidecar.weights
+            file["fixed_centers"] = artifact_sidecar.fixed_centers
         end
     end
 

@@ -2137,3 +2137,55 @@ Line-count / complexity note:
   The addition is accepted as a narrow adapter seam; the carrying cost should be
   paid down by deleting fixed-block H1 authority once pair/density sidecars are
   replaced.
+
+## Pass 267 - Atomic WL Artifact Sidecar Without Fixed Block
+
+Commit(s):
+- this commit - Remove atomic WL fixed-block artifact dependency
+
+Summary:
+- Removed the remaining `_nested_fixed_block(common.sequence, common.bundle)`
+  call from the WL atomic pure-gausslet materializer.
+- Added a compact artifact-sidecar projection that consumes the already-built
+  atomic shell sequence packet and the common complete core-shell final-basis
+  cleanup transform.
+- Basis/Ham artifact sidecars now write final-gauge weights, fixed centers, and
+  the density-density pair matrix directly from common-path data, without
+  constructing a `_NestedFixedBlock3D`.
+
+Validation:
+- Doer: `git diff --check`, package load,
+  `tools/run_cartesian_line_ladder.jl --line=wl_atomic`, and
+  `tools/run_cartesian_line_ladder.jl --line=pqs_atomic` passed.
+- Doer also ran a direct WL atomic artifact-save smoke with temporary JLD2
+  files and reloaded the sidecar fields: basis coefficients `(1331, 419)`,
+  fixed centers `(419, 3)`, one-body Hamiltonian `(419, 419)`, and density
+  pair matrix `(419, 419)`.
+
+Goal advancement:
+- LT8: keeps atomic WL on the common complete core-shell one-body authority
+  while removing the last fixed-block conversion from the active artifact path.
+- LT2/MT5: narrows old fixed-block authority to historical/reference code
+  rather than current driver materialization.
+- LT5: preserves the atomic shell sequence as the route-owned source/support
+  producer while final-gauge artifact facts come from common final-basis data.
+
+Medium-goal update:
+- none.
+
+Risk / guardrail:
+- This is not a new density/pair provider implementation. The pair sidecar is
+  the existing shell packet pair matrix projected through the common final-basis
+  cleanup transform. Do not treat it as supplemented atomic pair-provider
+  support.
+
+Remaining blocker / next:
+- Atomic PQS materialization is still not implemented as an endpoint. The next
+  unification step should either add the atomic PQS endpoint through the same
+  common-path adapter or continue retiring old atomic fixed-block helper
+  pressure after caller audit.
+
+Line-count / complexity note:
+- Scoped source diff before the log was `46` added / `8` deleted, net `+38`.
+  The extra helper replaces a conceptually heavier legacy block conversion and
+  should make later fixed-block retirement simpler.
