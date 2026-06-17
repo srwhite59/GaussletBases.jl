@@ -2393,3 +2393,59 @@ Line-count / complexity note:
 - Scoped source diff before the log was `35` added / `2` deleted. The patch is
   intentionally narrow and fixes an existing gauge error rather than adding a
   new feature surface.
+
+## Pass 271 - Private Residual-GTO Augmented H1-J Diagnostic
+
+Commit(s):
+- this commit - Add H2 PQS residual GTO private H1-J diagnostic
+
+Summary:
+- Added the first private consumer of the corrected H2 residual-GTO
+  density-provider blocks.
+- The diagnostic solves the augmented one-body Hamiltonian in `[F, R]`, maps the
+  `F` component through the existing `final_to_pre_final_coefficients`, keeps
+  the residual component in the `R` sector, and contracts the resulting
+  `[P, R]` density coefficient vector with the augmented pair matrix.
+- The ham artifact now records
+  `augmented_h1_j_diagnostic_kind = :private_augmented_h1_j_self_coulomb`,
+  `augmented_h1_j_self_coulomb`, density coefficient length, and orbital
+  source. The artifact still records `supplemented_values_kind = :not_computed`.
+- No RHF, CR2, public API, provider registry, or generalized two-body framework
+  was added.
+
+Validation:
+- Manager/doer: `git diff --check` passed.
+- Manager/doer: package load passed with
+  `julia --project=. -e 'using GaussletBases; println("load ok")'`.
+- Manager/doer: `tools/run_cartesian_line_ladder.jl --line=pqs_diatomic`
+  passed all three cases after the final roundtrip-shape patch.
+- Manager/doer inspected the written ham artifact and confirmed
+  `augmented_h1_j_self_coulomb = 0.457435475059184`,
+  base `h1_j_self_coulomb = 0.4569117646737236`,
+  `augmented_h1_lowest = -0.79590283450777`, and augmented density coefficient
+  length `489`.
+
+Goal advancement:
+- MT4/LT8: moves the residual-GTO provider lane from block readiness to a
+  private H1-J diagnostic consumer while preserving the `[P, R]` density gauge.
+- LT5: continues to consume route-owned source/support artifacts and the common
+  complete-core-shell density convention.
+
+Medium-goal update:
+- none.
+
+Risk / guardrail:
+- This is a private scalar diagnostic, not a production supplemented H1-J value
+  and not an RHF input contract. The next step should audit the scalar and
+  decide whether it is adequate as the minimal bridge to private augmented RHF.
+
+Remaining blocker / next:
+- The immediate next pass can be a narrow science/performance audit of the
+  private augmented H1-J diagnostic, or, if accepted, a private augmented RHF
+  smoke that consumes the same `[F, R]` one-body and `[P, R]` density objects.
+
+Line-count / complexity note:
+- Scoped source diff before the log was `117` added / `0` deleted. This is
+  positive-line feature work with no new tests or registries; a later cleanup
+  pass should consolidate local scalar-contraction helpers if more consumers
+  appear.

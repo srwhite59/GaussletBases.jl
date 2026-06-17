@@ -974,6 +974,82 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_density_blocks(
     )
 end
 
+function _pqs_source_box_route_driver_restricted_one_orbital_self_coulomb(
+    pair_matrix,
+    orbital_coefficients,
+)
+    matrix = Matrix{Float64}(pair_matrix)
+    vector = Float64[Float64(value) for value in orbital_coefficients]
+    size(matrix) == (length(vector), length(vector)) ||
+        throw(DimensionMismatch("one-orbital pair matrix and coefficient dimensions mismatch"))
+    all(isfinite, matrix) ||
+        throw(ArgumentError("one-orbital pair matrix contains non-finite entries"))
+    all(isfinite, vector) ||
+        throw(ArgumentError("one-orbital coefficients contain non-finite entries"))
+    v = 0.5 .* (matrix .+ transpose(matrix))
+    density = vector * transpose(vector)
+    rho = 0.5 .* (density .+ transpose(density))
+    occupations = vec(diag(rho))
+    direct = 2.0 * dot(occupations, v * occupations)
+    exchange = dot(vec(rho), vec(v .* rho))
+    return direct - exchange
+end
+
+function _pqs_source_box_route_driver_pqs_h2_augmented_h1_j_diagnostic(
+    one_body_blocks,
+    density_blocks,
+    density_interaction,
+)
+    isnothing(one_body_blocks) &&
+        throw(ArgumentError("augmented H1-J diagnostic requires one-body provider blocks"))
+    isnothing(density_blocks) &&
+        throw(ArgumentError("augmented H1-J diagnostic requires density provider blocks"))
+    augmented_h1 =
+        Matrix{Float64}(one_body_blocks.augmented_one_body_hamiltonian)
+    augmented_pair = Matrix{Float64}(density_blocks.augmented_pair_matrix)
+    augmented_dimension = one_body_blocks.augmented_dimension
+    density_dimension = density_blocks.augmented_density_dimension
+    size(augmented_h1) == (augmented_dimension, augmented_dimension) ||
+        throw(DimensionMismatch("augmented H1 matrix dimension mismatch"))
+    size(augmented_pair) == (density_dimension, density_dimension) ||
+        throw(DimensionMismatch("augmented pair matrix dimension mismatch"))
+    final_to_pre_final =
+        Matrix{Float64}(density_interaction.final_to_pre_final_coefficients)
+    p_dimension, final_dimension = size(final_to_pre_final)
+    residual_rank = density_dimension - p_dimension
+    augmented_dimension == final_dimension + residual_rank ||
+        throw(DimensionMismatch("augmented H1 and density gauge dimensions mismatch"))
+    eigensystem = eigen(Symmetric(0.5 .* (augmented_h1 .+ transpose(augmented_h1))))
+    orbital = Vector{Float64}(eigensystem.vectors[:, 1])
+    f_coefficients = @view orbital[1:final_dimension]
+    r_coefficients = @view orbital[(final_dimension + 1):augmented_dimension]
+    density_coefficients =
+        vcat(final_to_pre_final * Vector{Float64}(f_coefficients),
+             Vector{Float64}(r_coefficients))
+    self_coulomb =
+        _pqs_source_box_route_driver_restricted_one_orbital_self_coulomb(
+            augmented_pair,
+            density_coefficients,
+        )
+    isfinite(self_coulomb) && self_coulomb > 0 ||
+        throw(ArgumentError("augmented H1-J self Coulomb diagnostic must be finite and positive"))
+    return (;
+        diagnostic_kind = :private_augmented_h1_j_self_coulomb,
+        density_gauge = :pre_final_pqs_plus_residual_gto,
+        orbital_source = :augmented_one_body_lowest_orbital,
+        final_coefficients_length = final_dimension,
+        residual_coefficients_length = residual_rank,
+        density_coefficients_length = length(density_coefficients),
+        augmented_h1_lowest = Float64(eigensystem.values[1]),
+        self_coulomb,
+        h1_j_self_coulomb = self_coulomb,
+        finite = isfinite(self_coulomb),
+        positive = self_coulomb > 0,
+        final_gauge_weights_used = false,
+        supplemented_values_kind = :private_augmented_h1_j_diagnostic,
+    )
+end
+
 @inline function _pqs_source_box_route_driver_axis_index(axis::Symbol)
     axis === :x && return 1
     axis === :y && return 2
@@ -2032,6 +2108,9 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                                 :r_r_component_source,
                                 :support_residual_input_convention,
                                 :p_r_weight_application,
+                                :augmented_h1_j_diagnostic_kind,
+                                :augmented_h1_j_self_coulomb,
+                                :augmented_h1_j_density_coefficients_length,
                             ),
                         )
                         augmented_density_dimension =
@@ -2077,12 +2156,24 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                         file["p_r_weight_application"] ===
                             :support_row_weights_before_pre_final_projection ||
                             throw(ArgumentError("unexpected P-R weight application convention"))
+                        file["augmented_h1_j_diagnostic_kind"] ===
+                            :private_augmented_h1_j_self_coulomb ||
+                            throw(ArgumentError("unexpected augmented H1-J diagnostic kind"))
+                        augmented_h1_j_self_coulomb =
+                            Float64(file["augmented_h1_j_self_coulomb"])
+                        isfinite(augmented_h1_j_self_coulomb) &&
+                            augmented_h1_j_self_coulomb > 0 ||
+                            throw(ArgumentError("augmented H1-J self Coulomb must be finite and positive"))
+                        Int(file["augmented_h1_j_density_coefficients_length"]) ==
+                            augmented_density_dimension ||
+                            throw(ArgumentError("augmented H1-J density coefficient length mismatch"))
                         (;
                             augmented_density_dimension,
                             v_pr_pair_matrix_size = size(v_pr_pair_matrix),
                             v_rr_pair_matrix_size = size(v_rr_pair_matrix),
                             augmented_pair_matrix_size = size(augmented_pair_matrix),
                             augmented_pair_matrix_symmetry_error,
+                            augmented_h1_j_self_coulomb,
                         )
                     else
                         (;
@@ -2091,6 +2182,7 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                             v_rr_pair_matrix_size = nothing,
                             augmented_pair_matrix_size = nothing,
                             augmented_pair_matrix_symmetry_error = nothing,
+                            augmented_h1_j_self_coulomb = nothing,
                         )
                     end
                 (;
@@ -2124,6 +2216,7 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                     augmented_one_body_hamiltonian_size = nothing,
                     augmented_h1_lowest = nothing,
                     augmented_h1_symmetry_error = nothing,
+                    augmented_h1_j_self_coulomb = nothing,
                     h_fg_one_body_size = nothing,
                     h_gg_one_body_size = nothing,
                     h_gg_one_body_symmetry_error = nothing,
@@ -2193,6 +2286,8 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
             ham_facts.augmented_one_body_hamiltonian_size,
         augmented_h1_lowest = ham_facts.augmented_h1_lowest,
         augmented_h1_symmetry_error = ham_facts.augmented_h1_symmetry_error,
+        augmented_h1_j_self_coulomb =
+            ham_facts.augmented_h1_j_self_coulomb,
         gto_residual_overlap_finite =
             basis_facts.gto_residual_overlap_finite &&
             ham_facts.gto_residual_overlap_finite,
@@ -2269,6 +2364,14 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
         _pqs_source_box_route_driver_pqs_h2_residual_gto_density_blocks(
             provider_packet,
             density_descriptor,
+        ) :
+        nothing
+    augmented_h1_j =
+        residual_gto_provider_blocks === :one_body_and_density_provider ?
+        _pqs_source_box_route_driver_pqs_h2_augmented_h1_j_diagnostic(
+            one_body_blocks,
+            density_blocks,
+            provider_packet.density_interaction,
         ) :
         nothing
     final_basis = inputs.final_basis
@@ -2378,6 +2481,10 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
             isnothing(density_blocks) ?
             nothing :
             density_blocks.augmented_pair_matrix_symmetry_error,
+        augmented_h1_j_self_coulomb =
+            isnothing(augmented_h1_j) ? nothing : augmented_h1_j.self_coulomb,
+        augmented_h1_j_diagnostic_kind =
+            isnothing(augmented_h1_j) ? nothing : augmented_h1_j.diagnostic_kind,
         residual_width_min =
             isnothing(density_blocks) ? nothing : density_blocks.residual_width_min,
         residual_width_max =
@@ -2559,6 +2666,14 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
                         density_blocks.support_residual_input_convention
                     file["p_r_weight_application"] =
                         density_blocks.p_r_weight_application
+                    file["augmented_h1_j_diagnostic_kind"] =
+                        augmented_h1_j.diagnostic_kind
+                    file["augmented_h1_j_self_coulomb"] =
+                        augmented_h1_j.self_coulomb
+                    file["augmented_h1_j_density_coefficients_length"] =
+                        augmented_h1_j.density_coefficients_length
+                    file["augmented_h1_j_orbital_source"] =
+                        augmented_h1_j.orbital_source
                 end
             end
             if !isnothing(one_body_blocks)
@@ -2648,6 +2763,10 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
             isnothing(density_blocks) ?
             nothing :
             density_blocks.augmented_pair_matrix_symmetry_error,
+        augmented_h1_j_self_coulomb =
+            isnothing(augmented_h1_j) ? nothing : augmented_h1_j.self_coulomb,
+        augmented_h1_j_diagnostic_kind =
+            isnothing(augmented_h1_j) ? nothing : augmented_h1_j.diagnostic_kind,
         augmented_dimension,
         augmented_h1_lowest,
         augmented_h1_symmetry_error,
