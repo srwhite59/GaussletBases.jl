@@ -2246,3 +2246,95 @@ Line-count / complexity note:
   the increase is local artifact readback validation for the new contract. This
   is a deliberate guardrail pass; the next value-producing pass should avoid
   expanding it into a general provider registry.
+
+## Pass 269 - H2 PQS Residual-GTO Density Provider Blocks
+
+Commit(s):
+- this commit - Add H2 PQS residual GTO density provider blocks
+
+Summary:
+- Advanced the P1e lane from descriptor-only to the first concrete
+  residual-GTO density/provider values for the H2 independent PQS materialized
+  route.
+- The materialized case now requests
+  `residual_gto_provider_blocks = :one_body_and_density_provider`.
+- Built residual MWG moment descriptors for projected residual orbitals in the
+  explicit `[pre_final_pqs, residual_gto]` density gauge, then used the MWG
+  interaction kernel to form P-R, R-R, and assembled augmented density/provider
+  pair matrices.
+- The artifact contract now writes and roundtrips concrete P-R/R-R fields:
+  `v_pr_pair_matrix`, `v_rr_pair_matrix`, `augmented_pair_matrix`,
+  residual centers/widths, source labels, and symmetry/shape facts.
+- The pass does not compute supplemented H1-J scalar values, RHF, CR2, or a
+  full two-body Hamiltonian.
+
+Validation:
+- Manager/doer: `git diff --check` passed.
+- Manager/doer: package load passed with
+  `julia --project=. -e 'using GaussletBases; println("load ok")'`.
+- Manager/doer: `tools/run_cartesian_line_ladder.jl --line=pqs_diatomic`
+  passed all three cases.
+- Manager/doer inspected the written artifacts and confirmed
+  `provider_blocks_included = :one_body_and_density_provider`,
+  `density_provider_kind = :augmented_residual_gto_pair_matrix`,
+  density space `(:pre_final_pqs, :residual_gto)`, residual center/width shapes
+  `(18, 3)`, P-R size `(471, 18)`, R-R size `(18, 18)`, augmented pair size
+  `(489, 489)`, and augmented pair symmetry error
+  `2.55351295663786e-15`.
+
+Goal advancement:
+- MT4/LT5: converts the residual-GTO density boundary from "known missing
+  object" to concrete provider blocks without entering supplemented values.
+- LT8: preserves the common positive-weight pre-final PQS density convention:
+  the augmented density gauge is `[P, R]`, not `[F, R]`.
+- MT1: keeps fake-PQS/source-backed WL/QW authority quarantined; the new values
+  use direct source/support moment kernels and MWG interaction components, not
+  receipt wrappers.
+
+Medium-goal update:
+- none.
+
+Risk / guardrail:
+- The residual density sector uses MWG moment descriptors for projected
+  residual orbitals. That is the intended first provider value, but it still
+  needs a numerical/science audit before being treated as a production
+  supplemented-H1-J authority.
+- The artifact field is honestly named
+  `:one_body_and_density_provider`; it must not be interpreted as full
+  supplemented density/pair/H1-J/RHF completion.
+
+Remaining blocker / next:
+- Next P1 work should decide how to consume the augmented density/provider
+  matrix: first as a supplemented H1-J diagnostic or as the minimal object
+  needed by the existing RHF path. Do not skip directly to a broad provider
+  registry.
+
+Line-count / complexity note:
+- Scoped source/input diff before the log was `609` added / `28` deleted. This
+  is a positive-line value-producing pass, with most new bulk in local kernel
+  plumbing and artifact roundtrip checks. No new tests, status/readiness
+  payloads, QW receipt wrappers, or provider registry were added.
+
+## Medium-Term Goal Checkpoint - Passes 265-269
+
+- MT1 Fake-PQS quarantine: active/maintained. Passes 265-269 moved H2 H1 and
+  residual-GTO density/provider work through common complete-core-shell and
+  source/support kernels without promoting fake-PQS or old source-backed WL/QW
+  routes as independent PQS authority.
+- MT2 Independent H2 PQS recovery: active and now extended. The base route
+  remains available through final-basis, H1, H1-J, private RHF diagnostics, and
+  the materialized residual-GTO Ham/Basis artifact.
+- MT3 Common physical support vocabulary: active and strengthened. H2 H1 now
+  uses the common complete-core-shell H1 path, and atomic WL has a common
+  packet/sidecar cleanup path, but atomic PQS is still not an endpoint.
+- MT4 Supplement staging after authority: active and substantially advanced.
+  The lane progressed from sidecar/roundtrip and one-body provider fields to a
+  concrete `[pre_final_pqs, residual_gto]` density/provider matrix. Remaining
+  work is supplemented H1-J/RHF consumption and a science/performance audit.
+- MT5 Cleanup pressure: active but temporarily line-positive. These passes were
+  architecture-paydown and P1 feature-slice work rather than demolition; pass
+  267 deleted old fixed-block pressure, while passes 268-269 added the guarded
+  density-provider contract needed to retire donor lines later.
+- MT6 Audit/classify old Cartesian flat paths: active. No new helper/schema
+  tests were added; the driver/line ladders remain the validation authority for
+  this route lane.

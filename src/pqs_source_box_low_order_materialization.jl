@@ -549,7 +549,9 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_provider_packet(
         supplement_representation = inputs.supplement_representation,
         gto_primitive_arrays,
         final_coefficients = Matrix{Float64}(inputs.final_basis.final_coefficients),
+        support_gto_cross = Matrix{Float64}(sidecar.support_gto_cross),
         h_ff = Matrix{Float64}(inputs.h1_hamiltonian.hamiltonian_matrix),
+        density_interaction = inputs.density_interaction,
         s_fg = Matrix{Float64}(sidecar.final_gto_cross_overlap),
         s_gg = Matrix{Float64}(sidecar.gto_self_overlap),
         s_r = Matrix{Float64}(sidecar.gto_residual_overlap),
@@ -618,6 +620,321 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_density_descriptor(
         p_p_density_gauge = density_interaction.density_gauge,
         p_p_pair_matrix_size = size(pair_matrix),
         residual_density_mode_source = :requires_mwg_residual_moments,
+        final_gauge_weights_used = false,
+        fixed_block_pair_data_authority_used = false,
+        supplemented_values_kind = :not_computed,
+    )
+end
+
+function _pqs_source_box_route_driver_pqs_gto_support_moment_matrix(
+    packet,
+    axis_index::Int,
+    term::Symbol,
+)
+    states = packet.support_states
+    axes = packet.axis_representations
+    result = zeros(Float64, length(states), length(packet.gto_primitive_arrays))
+    scratch = zeros(Float64, length(states))
+    for (column, orbital_arrays) in pairs(packet.gto_primitive_arrays)
+        overlap_tables =
+            _pqs_source_box_route_driver_gto_axis_cross_tables(
+                axes,
+                orbital_arrays,
+                :overlap,
+            )
+        moment_tables =
+            _pqs_source_box_route_driver_gto_axis_cross_tables(
+                axes,
+                orbital_arrays,
+                term,
+            )
+        axis_tables = ntuple(
+            axis -> axis == axis_index ? moment_tables[axis] : overlap_tables[axis],
+            3,
+        )
+        _pqs_source_box_route_driver_gto_support_column!(
+            scratch,
+            states,
+            orbital_arrays.coefficients,
+            axis_tables,
+        )
+        result[:, column] .= scratch
+    end
+    return result
+end
+
+function _pqs_source_box_route_driver_pqs_gto_self_moment_matrix(
+    packet,
+    axis_index::Int,
+    term::Symbol,
+)
+    norbital = length(packet.gto_primitive_arrays)
+    result = zeros(Float64, norbital, norbital)
+    for column in eachindex(packet.gto_primitive_arrays)
+        right_arrays = packet.gto_primitive_arrays[column]
+        for row in eachindex(packet.gto_primitive_arrays)
+            left_arrays = packet.gto_primitive_arrays[row]
+            overlap_tables =
+                _pqs_source_box_route_driver_gto_axis_self_tables(
+                    left_arrays,
+                    right_arrays,
+                    :overlap,
+                )
+            moment_tables =
+                _pqs_source_box_route_driver_gto_axis_self_tables(
+                    left_arrays,
+                    right_arrays,
+                    term,
+                )
+            axis_tables = ntuple(
+                axis -> axis == axis_index ? moment_tables[axis] : overlap_tables[axis],
+                3,
+            )
+            result[row, column] =
+                _pqs_source_box_route_driver_gto_weighted_hadamard(
+                    left_arrays.coefficients,
+                    axis_tables[1],
+                    axis_tables[2],
+                    axis_tables[3],
+                    right_arrays.coefficients,
+                )
+        end
+    end
+    return Matrix{Float64}(0.5 .* (result .+ transpose(result)))
+end
+
+function _pqs_source_box_route_driver_pqs_support_moment_matrix(
+    packet,
+    axis_index::Int,
+    term::Symbol,
+)
+    axis_index in 1:3 || throw(ArgumentError("axis index must be 1, 2, or 3"))
+    states = packet.support_states
+    bundles = packet.source_plan.axis_bundles
+    pgdgs = ntuple(axis -> _nested_axis_pgdg(
+        bundles,
+        _pqs_source_box_route_driver_axis_symbol(axis),
+    ), 3)
+    operators = ntuple(3) do axis
+        if axis == axis_index
+            term === :position && return pgdgs[axis].position
+            term === :x2 && return pgdgs[axis].x2
+            throw(ArgumentError("support moment term must be :position or :x2"))
+        end
+        return pgdgs[axis].overlap
+    end
+    return _pqs_multilayer_support_product_matrix(
+        states,
+        states,
+        operators[1],
+        operators[2],
+        operators[3],
+    )
+end
+
+function _pqs_source_box_route_driver_pqs_support_overlap_matrix(packet)
+    states = packet.support_states
+    bundles = packet.source_plan.axis_bundles
+    pgdgs = ntuple(axis -> _nested_axis_pgdg(
+        bundles,
+        _pqs_source_box_route_driver_axis_symbol(axis),
+    ), 3)
+    return _pqs_multilayer_support_product_matrix(
+        states,
+        states,
+        pgdgs[1].overlap,
+        pgdgs[2].overlap,
+        pgdgs[3].overlap,
+    )
+end
+
+function _pqs_source_box_route_driver_density_carrier_moment_matrix(
+    packet,
+    density_descriptor,
+    axis_index::Int,
+    term::Symbol,
+)
+    final_basis = packet.final_basis
+    pre_final_coefficients = Matrix{Float64}(final_basis.pre_final_coefficients)
+    support_pp =
+        _pqs_source_box_route_driver_pqs_support_moment_matrix(
+            packet,
+            axis_index,
+            term,
+        )
+    support_pg =
+        _pqs_source_box_route_driver_pqs_gto_support_moment_matrix(
+            packet,
+            axis_index,
+            term,
+        )
+    pp = Matrix{Float64}(transpose(pre_final_coefficients) * support_pp * pre_final_coefficients)
+    pg = Matrix{Float64}(transpose(pre_final_coefficients) * support_pg)
+    gg =
+        _pqs_source_box_route_driver_pqs_gto_self_moment_matrix(
+            packet,
+            axis_index,
+            term,
+        )
+    size(pp) == (density_descriptor.p_dimension, density_descriptor.p_dimension) ||
+        throw(DimensionMismatch("density carrier P-P moment dimension mismatch"))
+    size(pg) == (density_descriptor.p_dimension, density_descriptor.g_dimension) ||
+        throw(DimensionMismatch("density carrier P-G moment dimension mismatch"))
+    size(gg) == (density_descriptor.g_dimension, density_descriptor.g_dimension) ||
+        throw(DimensionMismatch("density carrier G-G moment dimension mismatch"))
+    return [pp pg; transpose(pg) gg]
+end
+
+function _pqs_source_box_route_driver_pqs_h2_residual_gto_moments(
+    packet,
+    density_descriptor,
+)
+    carrier = Matrix{Float64}(
+        density_descriptor.residual_orbital_coefficients_in_density_carrier,
+    )
+    pre_final_coefficients =
+        Matrix{Float64}(packet.final_basis.pre_final_coefficients)
+    support_overlap =
+        _pqs_source_box_route_driver_pqs_support_overlap_matrix(packet)
+    pp_overlap =
+        Matrix{Float64}(
+            transpose(pre_final_coefficients) *
+            support_overlap *
+            pre_final_coefficients,
+        )
+    pg_overlap =
+        Matrix{Float64}(transpose(pre_final_coefficients) * packet.support_gto_cross)
+    raw_overlap = [
+        pp_overlap pg_overlap
+        transpose(pg_overlap) packet.s_gg
+    ]
+    residual_overlap = Matrix{Float64}(transpose(carrier) * raw_overlap * carrier)
+    residual_overlap_error =
+        norm(
+            residual_overlap -
+            Matrix{Float64}(I, size(residual_overlap, 1), size(residual_overlap, 2)),
+            Inf,
+        )
+    residual_overlap_error <= 1.0e-8 ||
+        throw(ArgumentError("residual density moments require an orthonormal residual carrier"))
+    nresidual = size(carrier, 2)
+    centers = zeros(Float64, nresidual, 3)
+    widths = zeros(Float64, nresidual, 3)
+    norms = zeros(Float64, nresidual)
+    position_matrices = ntuple(
+        axis_index ->
+            _pqs_source_box_route_driver_density_carrier_moment_matrix(
+                packet,
+                density_descriptor,
+                axis_index,
+                :position,
+            ),
+        3,
+    )
+    second_moment_matrices = ntuple(
+        axis_index ->
+            _pqs_source_box_route_driver_density_carrier_moment_matrix(
+                packet,
+                density_descriptor,
+                axis_index,
+                :x2,
+            ),
+        3,
+    )
+    for residual in 1:nresidual
+        vector = view(carrier, :, residual)
+        norm_value = Float64(dot(vector, raw_overlap * vector))
+        norm_value > 1.0e-12 ||
+            throw(ArgumentError("residual density moment extraction requires nonzero residual norm"))
+        norms[residual] = norm_value
+        for axis_index in 1:3
+            position = position_matrices[axis_index]
+            second_moment = second_moment_matrices[axis_index]
+            center = Float64(dot(vector, position * vector) / norm_value)
+            x2 = Float64(dot(vector, second_moment * vector) / norm_value)
+            variance = x2 - center^2
+            variance > 1.0e-12 ||
+                throw(ArgumentError("MWG residual density moment extraction requires positive variances"))
+            centers[residual, axis_index] = center
+            widths[residual, axis_index] = sqrt(2.0 * variance)
+        end
+    end
+    return (;
+        residual_centers = centers,
+        residual_widths = widths,
+        residual_norms = norms,
+        residual_overlap_error,
+        residual_center_min = minimum(centers),
+        residual_center_max = maximum(centers),
+        residual_width_min = minimum(widths),
+        residual_width_max = maximum(widths),
+        residual_widths_positive = all(>(0.0), widths),
+    )
+end
+
+function _pqs_source_box_route_driver_pqs_h2_residual_gto_density_blocks(
+    packet,
+    density_descriptor,
+)
+    moments =
+        _pqs_source_box_route_driver_pqs_h2_residual_gto_moments(
+            packet,
+            density_descriptor,
+        )
+    bundles = packet.source_plan.axis_bundles
+    components = _qwrg_mwg_interaction_components(
+        _nested_axis_bundle(bundles, :x),
+        _nested_axis_bundle(bundles, :y),
+        _nested_axis_bundle(bundles, :z),
+        coulomb_gaussian_expansion(doacc = false),
+        moments.residual_centers,
+        moments.residual_widths,
+    )
+    dims = (
+        size(_nested_axis_pgdg(bundles, :x).overlap, 1),
+        size(_nested_axis_pgdg(bundles, :y).overlap, 1),
+        size(_nested_axis_pgdg(bundles, :z).overlap, 1),
+    )
+    support_states = packet.support_states
+    support_rows =
+        Int[_cartesian_flat_index(ix, iy, iz, dims) for (ix, iy, iz) in support_states]
+    support_residual = Matrix{Float64}(components.gausslet_residual[support_rows, :])
+    density_interaction = packet.density_interaction
+    pre_final_coefficients = Matrix{Float64}(packet.final_basis.pre_final_coefficients)
+    pre_final_weights = Float64.(density_interaction.pre_final_weights)
+    weighted_coefficients =
+        pre_final_coefficients .* reshape(1.0 ./ pre_final_weights, 1, :)
+    v_pr = Matrix{Float64}(transpose(weighted_coefficients) * support_residual)
+    v_rr = Matrix{Float64}(components.residual_residual)
+    v_rr = Matrix{Float64}(0.5 .* (v_rr .+ transpose(v_rr)))
+    v_pp = Matrix{Float64}(density_interaction.pre_final_pair_matrix)
+    v_dd = [
+        v_pp v_pr
+        transpose(v_pr) v_rr
+    ]
+    v_dd_symmetry_error = norm(v_dd - transpose(v_dd), Inf)
+    return (;
+        density_provider_kind = :augmented_residual_gto_pair_matrix,
+        augmented_density_gauge = :pre_final_localized_positive_weight,
+        augmented_density_space = (:pre_final_pqs, :residual_gto),
+        v_pp_pair_matrix = v_pp,
+        v_pr_pair_matrix = v_pr,
+        v_rr_pair_matrix = v_rr,
+        augmented_pair_matrix = v_dd,
+        augmented_density_dimension = size(v_dd, 1),
+        v_pr_pair_matrix_size = size(v_pr),
+        v_rr_pair_matrix_size = size(v_rr),
+        augmented_pair_matrix_size = size(v_dd),
+        augmented_pair_matrix_finite = all(isfinite, v_dd),
+        augmented_pair_matrix_symmetry_error = v_dd_symmetry_error,
+        residual_centers = moments.residual_centers,
+        residual_widths = moments.residual_widths,
+        residual_overlap_error = moments.residual_overlap_error,
+        residual_width_min = moments.residual_width_min,
+        residual_width_max = moments.residual_width_max,
+        residual_widths_positive = moments.residual_widths_positive,
+        p_r_component_source = :mwg_residual_moments,
+        r_r_component_source = :mwg_residual_moments,
         final_gauge_weights_used = false,
         fixed_block_pair_data_authority_used = false,
         supplemented_values_kind = :not_computed,
@@ -717,6 +1034,30 @@ function _pqs_source_box_route_driver_gto_axis_cross(
                     power,
                     prefactor,
                 ) :
+                term === :position ?
+                _qwrg_atomic_basic_integral(
+                    alpha_basis,
+                    primitive.center_value,
+                    0,
+                    1.0,
+                    exponent,
+                    center_value,
+                    power,
+                    prefactor;
+                    xpower = 1,
+                ) :
+                term === :x2 ?
+                _qwrg_atomic_basic_integral(
+                    alpha_basis,
+                    primitive.center_value,
+                    0,
+                    1.0,
+                    exponent,
+                    center_value,
+                    power,
+                    prefactor;
+                    xpower = 2,
+                ) :
                 term === :factor ?
                 _qwrg_atomic_basic_integral(
                     alpha_basis,
@@ -807,6 +1148,30 @@ function _pqs_source_box_route_driver_gto_axis_self(
                     center_right,
                     power_right,
                     prefactor_right,
+                ) :
+                term === :position ?
+                _qwrg_atomic_basic_integral(
+                    exponent_left,
+                    center_left,
+                    power_left,
+                    prefactor_left,
+                    exponent_right,
+                    center_right,
+                    power_right,
+                    prefactor_right;
+                    xpower = 1,
+                ) :
+                term === :x2 ?
+                _qwrg_atomic_basic_integral(
+                    exponent_left,
+                    center_left,
+                    power_left,
+                    prefactor_left,
+                    exponent_right,
+                    center_right,
+                    power_right,
+                    prefactor_right;
+                    xpower = 2,
                 ) :
                 term === :factor ?
                 _qwrg_atomic_basic_integral(
@@ -1122,7 +1487,8 @@ end
 function _pqs_source_box_route_driver_pqs_h2_provider_block_mode(mode)
     mode === false && return false
     mode === :one_body_only && return :one_body_only
-    throw(ArgumentError("provider_blocks_included must be false or :one_body_only; got $(mode)"))
+    mode === :one_body_and_density_provider && return :one_body_and_density_provider
+    throw(ArgumentError("provider_blocks_included must be false, :one_body_only, or :one_body_and_density_provider; got $(mode)"))
 end
 
 function _pqs_source_box_route_driver_finite_matrix(
@@ -1209,7 +1575,7 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
         residual_symmetry_error <= Float64(symmetry_atol) ||
             throw(ArgumentError("basis gto_residual_overlap is not symmetric"))
         residual_facts =
-            if provider_blocks_included === :one_body_only
+            if provider_blocks_included !== false
                 _pqs_source_box_route_driver_require_jld2_keys(
                     file,
                     (
@@ -1250,8 +1616,12 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                 residual_overlap_identity_error <= Float64(symmetry_atol) ||
                     throw(ArgumentError("residual overlap identity error is too large"))
                 density_provider_kind = file["density_provider_kind"]
-                density_provider_kind === :descriptor_only ||
-                    throw(ArgumentError("density_provider_kind must be :descriptor_only"))
+                expected_density_provider_kind =
+                    provider_blocks_included === :one_body_and_density_provider ?
+                    :augmented_residual_gto_pair_matrix :
+                    :descriptor_only
+                density_provider_kind === expected_density_provider_kind ||
+                    throw(ArgumentError("unexpected density_provider_kind $(density_provider_kind)"))
                 file["augmented_density_gauge"] ===
                     :pre_final_localized_positive_weight ||
                     throw(ArgumentError("augmented density gauge must be pre-final PQS"))
@@ -1285,8 +1655,12 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                     throw(ArgumentError("P-P density gauge must be pre-final localized positive-weight"))
                 Tuple(file["p_p_pair_matrix_size"]) == (p_dimension, p_dimension) ||
                     throw(ArgumentError("P-P pair matrix size mismatch"))
+                expected_residual_density_mode_source =
+                    provider_blocks_included === :one_body_and_density_provider ?
+                    :mwg_residual_moments :
+                    :requires_mwg_residual_moments
                 file["residual_density_mode_source"] ===
-                    :requires_mwg_residual_moments ||
+                    expected_residual_density_mode_source ||
                     throw(ArgumentError("unexpected residual density mode source"))
                 file["final_gauge_weights_used"] === false ||
                     throw(ArgumentError("density descriptor must not use final-gauge weights"))
@@ -1294,6 +1668,53 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                     throw(ArgumentError("density descriptor must not use fixed-block pair authority"))
                 file["supplemented_values_kind"] === :not_computed ||
                     throw(ArgumentError("density descriptor must not claim supplemented values"))
+                density_moment_facts =
+                    if provider_blocks_included === :one_body_and_density_provider
+                        _pqs_source_box_route_driver_require_jld2_keys(
+                            file,
+                            (
+                                :residual_centers,
+                                :residual_widths,
+                                :residual_moment_overlap_error,
+                                :residual_width_min,
+                                :residual_width_max,
+                                :residual_widths_positive,
+                            ),
+                        )
+                        residual_centers = file["residual_centers"]
+                        residual_widths = file["residual_widths"]
+                        size(residual_centers) == (residual_rank, 3) ||
+                            throw(ArgumentError("residual_centers shape mismatch"))
+                        size(residual_widths) == (residual_rank, 3) ||
+                            throw(ArgumentError("residual_widths shape mismatch"))
+                        all(isfinite, residual_centers) ||
+                            throw(ArgumentError("residual_centers contain non-finite entries"))
+                        all(isfinite, residual_widths) ||
+                            throw(ArgumentError("residual_widths contain non-finite entries"))
+                        all(>(0.0), residual_widths) ||
+                            throw(ArgumentError("residual_widths must be positive"))
+                        residual_moment_overlap_error =
+                            Float64(file["residual_moment_overlap_error"])
+                        residual_moment_overlap_error <= Float64(symmetry_atol) ||
+                            throw(ArgumentError("residual moment overlap error is too large"))
+                        file["residual_widths_positive"] === true ||
+                            throw(ArgumentError("residual_widths_positive must be true"))
+                        (;
+                            residual_centers_size = size(residual_centers),
+                            residual_widths_size = size(residual_widths),
+                            residual_moment_overlap_error,
+                            residual_width_min = Float64(file["residual_width_min"]),
+                            residual_width_max = Float64(file["residual_width_max"]),
+                        )
+                    else
+                        (;
+                            residual_centers_size = nothing,
+                            residual_widths_size = nothing,
+                            residual_moment_overlap_error = nothing,
+                            residual_width_min = nothing,
+                            residual_width_max = nothing,
+                        )
+                    end
                 (;
                     residual_transform_size = size(residual_transform),
                     residual_rank,
@@ -1311,6 +1732,7 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                         size(residual_carrier),
                     residual_density_mode_source =
                         file["residual_density_mode_source"],
+                    density_moment_facts...,
                 )
             else
                 (;
@@ -1410,7 +1832,7 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
         residual_symmetry_error <= Float64(symmetry_atol) ||
             throw(ArgumentError("ham gto_residual_overlap is not symmetric"))
         augmented_facts =
-            if provider_blocks_included === :one_body_only
+            if provider_blocks_included !== false
                 _pqs_source_box_route_driver_require_jld2_keys(
                     file,
                     (
@@ -1547,8 +1969,12 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                 Tuple(file["p_p_pair_matrix_size"]) ==
                     (basis_facts.p_dimension, basis_facts.p_dimension) ||
                     throw(ArgumentError("ham P-P pair matrix size mismatch"))
+                expected_residual_density_mode_source =
+                    provider_blocks_included === :one_body_and_density_provider ?
+                    :mwg_residual_moments :
+                    :requires_mwg_residual_moments
                 file["residual_density_mode_source"] ===
-                    :requires_mwg_residual_moments ||
+                    expected_residual_density_mode_source ||
                     throw(ArgumentError("unexpected ham residual density mode source"))
                 file["final_gauge_weights_used"] === false ||
                     throw(ArgumentError("ham density descriptor must not use final-gauge weights"))
@@ -1556,6 +1982,76 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                     throw(ArgumentError("ham density descriptor must not use fixed-block pair authority"))
                 file["supplemented_values_kind"] === :not_computed ||
                     throw(ArgumentError("ham density descriptor must not claim supplemented values"))
+                density_matrix_facts =
+                    if provider_blocks_included === :one_body_and_density_provider
+                        _pqs_source_box_route_driver_require_jld2_keys(
+                            file,
+                            (
+                                :v_pr_pair_matrix,
+                                :v_rr_pair_matrix,
+                                :augmented_pair_matrix,
+                                :augmented_density_dimension,
+                                :augmented_pair_matrix_symmetry_error,
+                                :residual_centers,
+                                :residual_widths,
+                                :residual_moment_overlap_error,
+                                :p_r_component_source,
+                                :r_r_component_source,
+                            ),
+                        )
+                        augmented_density_dimension =
+                            Int(file["augmented_density_dimension"])
+                        augmented_density_dimension ==
+                            basis_facts.p_dimension + residual_rank ||
+                            throw(
+                                ArgumentError(
+                                    "augmented_density_dimension must equal p_dimension + residual_rank",
+                                ),
+                            )
+                        v_pr_pair_matrix = file["v_pr_pair_matrix"]
+                        v_rr_pair_matrix = file["v_rr_pair_matrix"]
+                        augmented_pair_matrix = file["augmented_pair_matrix"]
+                        _pqs_source_box_route_driver_finite_matrix(
+                            "v_pr_pair_matrix",
+                            v_pr_pair_matrix,
+                            (basis_facts.p_dimension, residual_rank),
+                        )
+                        _pqs_source_box_route_driver_symmetric_matrix(
+                            "v_rr_pair_matrix",
+                            v_rr_pair_matrix,
+                            (residual_rank, residual_rank),
+                            symmetry_atol,
+                        )
+                        augmented_pair_matrix_symmetry_error =
+                            _pqs_source_box_route_driver_symmetric_matrix(
+                                "augmented_pair_matrix",
+                                augmented_pair_matrix,
+                                (
+                                    augmented_density_dimension,
+                                    augmented_density_dimension,
+                                ),
+                                symmetry_atol,
+                            )
+                        file["p_r_component_source"] === :mwg_residual_moments ||
+                            throw(ArgumentError("P-R component source must be MWG residual moments"))
+                        file["r_r_component_source"] === :mwg_residual_moments ||
+                            throw(ArgumentError("R-R component source must be MWG residual moments"))
+                        (;
+                            augmented_density_dimension,
+                            v_pr_pair_matrix_size = size(v_pr_pair_matrix),
+                            v_rr_pair_matrix_size = size(v_rr_pair_matrix),
+                            augmented_pair_matrix_size = size(augmented_pair_matrix),
+                            augmented_pair_matrix_symmetry_error,
+                        )
+                    else
+                        (;
+                            augmented_density_dimension = nothing,
+                            v_pr_pair_matrix_size = nothing,
+                            v_rr_pair_matrix_size = nothing,
+                            augmented_pair_matrix_size = nothing,
+                            augmented_pair_matrix_symmetry_error = nothing,
+                        )
+                    end
                 (;
                     augmented_dimension,
                     augmented_one_body_hamiltonian_size =
@@ -1579,6 +2075,7 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                         Tuple(file["residual_orbital_coefficients_in_density_carrier_size"]),
                     residual_density_mode_source =
                         file["residual_density_mode_source"],
+                    density_matrix_facts...,
                 )
             else
                 (;
@@ -1688,13 +2185,14 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
         ),
     )
 
-    residual_gto_provider_blocks in (:none, :one_body_only) || throw(
+    residual_gto_provider_blocks in
+        (:none, :one_body_only, :one_body_and_density_provider) || throw(
         ArgumentError(
-            "residual_gto_provider_blocks must be :none or :one_body_only",
+            "residual_gto_provider_blocks must be :none, :one_body_only, or :one_body_and_density_provider",
         ),
     )
     provider_blocks_included =
-        residual_gto_provider_blocks === :one_body_only ? :one_body_only : false
+        residual_gto_provider_blocks === :none ? false : residual_gto_provider_blocks
     sidecar = _pqs_source_box_route_driver_pqs_gto_sidecar(inputs)
     route_metadata = _pqs_source_box_route_driver_pqs_h2_route_metadata(
         report,
@@ -1702,11 +2200,11 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
     )
     inputs = merge(inputs, (; route_metadata, provider_blocks_included,))
     residual =
-        residual_gto_provider_blocks === :one_body_only ?
+        residual_gto_provider_blocks !== :none ?
         _pqs_source_box_route_driver_pqs_gto_residual_transform(sidecar) :
         nothing
     provider_packet =
-        residual_gto_provider_blocks === :one_body_only ?
+        residual_gto_provider_blocks !== :none ?
         _pqs_source_box_route_driver_pqs_h2_residual_gto_provider_packet(
             inputs,
             sidecar,
@@ -1714,7 +2212,7 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
         ) :
         nothing
     density_descriptor =
-        residual_gto_provider_blocks === :one_body_only ?
+        residual_gto_provider_blocks !== :none ?
         _pqs_source_box_route_driver_pqs_h2_residual_gto_density_descriptor(
             inputs,
             sidecar,
@@ -1722,8 +2220,15 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
         ) :
         nothing
     one_body_blocks =
-        residual_gto_provider_blocks === :one_body_only ?
+        residual_gto_provider_blocks !== :none ?
         _pqs_source_box_route_driver_pqs_gto_one_body_blocks(provider_packet) :
+        nothing
+    density_blocks =
+        residual_gto_provider_blocks === :one_body_and_density_provider ?
+        _pqs_source_box_route_driver_pqs_h2_residual_gto_density_blocks(
+            provider_packet,
+            density_descriptor,
+        ) :
         nothing
     final_basis = inputs.final_basis
     h1_hamiltonian = inputs.h1_hamiltonian
@@ -1791,9 +2296,13 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
             nothing :
             size(one_body_blocks.h_gg_charged_nuclear),
         density_provider_kind =
-            isnothing(density_descriptor) ?
-            nothing :
-            density_descriptor.density_provider_kind,
+            isnothing(density_blocks) ?
+            (
+                isnothing(density_descriptor) ?
+                nothing :
+                density_descriptor.density_provider_kind
+            ) :
+            density_blocks.density_provider_kind,
         augmented_density_space =
             isnothing(density_descriptor) ?
             nothing :
@@ -1812,6 +2321,26 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
             isnothing(density_descriptor) ?
             nothing :
             density_descriptor.residual_density_mode_source,
+        augmented_density_dimension =
+            isnothing(density_blocks) ?
+            nothing :
+            density_blocks.augmented_density_dimension,
+        v_pr_pair_matrix_size =
+            isnothing(density_blocks) ? nothing : density_blocks.v_pr_pair_matrix_size,
+        v_rr_pair_matrix_size =
+            isnothing(density_blocks) ? nothing : density_blocks.v_rr_pair_matrix_size,
+        augmented_pair_matrix_size =
+            isnothing(density_blocks) ?
+            nothing :
+            density_blocks.augmented_pair_matrix_size,
+        augmented_pair_matrix_symmetry_error =
+            isnothing(density_blocks) ?
+            nothing :
+            density_blocks.augmented_pair_matrix_symmetry_error,
+        residual_width_min =
+            isnothing(density_blocks) ? nothing : density_blocks.residual_width_min,
+        residual_width_max =
+            isnothing(density_blocks) ? nothing : density_blocks.residual_width_max,
     )
 
     basis_artifact_path = nothing
@@ -1852,7 +2381,9 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
             end
             if !isnothing(density_descriptor)
                 file["density_provider_kind"] =
-                    density_descriptor.density_provider_kind
+                    isnothing(density_blocks) ?
+                    density_descriptor.density_provider_kind :
+                    density_blocks.density_provider_kind
                 file["augmented_density_gauge"] =
                     density_descriptor.density_gauge
                 file["augmented_density_space"] =
@@ -1875,13 +2406,25 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
                 file["p_p_pair_matrix_size"] =
                     density_descriptor.p_p_pair_matrix_size
                 file["residual_density_mode_source"] =
-                    density_descriptor.residual_density_mode_source
+                    isnothing(density_blocks) ?
+                    density_descriptor.residual_density_mode_source :
+                    :mwg_residual_moments
                 file["final_gauge_weights_used"] =
                     density_descriptor.final_gauge_weights_used
                 file["fixed_block_pair_data_authority_used"] =
                     density_descriptor.fixed_block_pair_data_authority_used
                 file["supplemented_values_kind"] =
                     density_descriptor.supplemented_values_kind
+                if !isnothing(density_blocks)
+                    file["residual_centers"] = density_blocks.residual_centers
+                    file["residual_widths"] = density_blocks.residual_widths
+                    file["residual_moment_overlap_error"] =
+                        density_blocks.residual_overlap_error
+                    file["residual_width_min"] = density_blocks.residual_width_min
+                    file["residual_width_max"] = density_blocks.residual_width_max
+                    file["residual_widths_positive"] =
+                        density_blocks.residual_widths_positive
+                end
             end
         end
     end
@@ -1926,7 +2469,9 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
             end
             if !isnothing(density_descriptor)
                 file["density_provider_kind"] =
-                    density_descriptor.density_provider_kind
+                    isnothing(density_blocks) ?
+                    density_descriptor.density_provider_kind :
+                    density_blocks.density_provider_kind
                 file["augmented_density_gauge"] =
                     density_descriptor.density_gauge
                 file["augmented_density_space"] =
@@ -1943,13 +2488,33 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
                 file["p_p_pair_matrix_size"] =
                     density_descriptor.p_p_pair_matrix_size
                 file["residual_density_mode_source"] =
-                    density_descriptor.residual_density_mode_source
+                    isnothing(density_blocks) ?
+                    density_descriptor.residual_density_mode_source :
+                    :mwg_residual_moments
                 file["final_gauge_weights_used"] =
                     density_descriptor.final_gauge_weights_used
                 file["fixed_block_pair_data_authority_used"] =
                     density_descriptor.fixed_block_pair_data_authority_used
                 file["supplemented_values_kind"] =
                     density_descriptor.supplemented_values_kind
+                if !isnothing(density_blocks)
+                    file["v_pr_pair_matrix"] = density_blocks.v_pr_pair_matrix
+                    file["v_rr_pair_matrix"] = density_blocks.v_rr_pair_matrix
+                    file["augmented_pair_matrix"] =
+                        density_blocks.augmented_pair_matrix
+                    file["augmented_density_dimension"] =
+                        density_blocks.augmented_density_dimension
+                    file["augmented_pair_matrix_symmetry_error"] =
+                        density_blocks.augmented_pair_matrix_symmetry_error
+                    file["residual_centers"] = density_blocks.residual_centers
+                    file["residual_widths"] = density_blocks.residual_widths
+                    file["residual_moment_overlap_error"] =
+                        density_blocks.residual_overlap_error
+                    file["p_r_component_source"] =
+                        density_blocks.p_r_component_source
+                    file["r_r_component_source"] =
+                        density_blocks.r_r_component_source
+                end
             end
             if !isnothing(one_body_blocks)
                 file["augmented_dimension"] = one_body_blocks.augmented_dimension
@@ -2012,16 +2577,32 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
         residual_rank = isnothing(residual) ? nothing : residual.residual_rank,
         residual_overlap_identity_error =
             isnothing(residual) ? nothing : residual.residual_overlap_identity_error,
-        density_provider_kind =
-            isnothing(density_descriptor) ?
-            nothing :
-            density_descriptor.density_provider_kind,
         augmented_density_gauge =
             isnothing(density_descriptor) ? nothing : density_descriptor.density_gauge,
         residual_density_mode_source =
-            isnothing(density_descriptor) ?
+            isnothing(density_blocks) ?
+            (
+                isnothing(density_descriptor) ?
+                nothing :
+                density_descriptor.residual_density_mode_source
+            ) :
+            :mwg_residual_moments,
+        density_provider_kind =
+            isnothing(density_blocks) ?
+            (
+                isnothing(density_descriptor) ?
+                nothing :
+                density_descriptor.density_provider_kind
+            ) :
+            density_blocks.density_provider_kind,
+        augmented_density_dimension =
+            isnothing(density_blocks) ?
             nothing :
-            density_descriptor.residual_density_mode_source,
+            density_blocks.augmented_density_dimension,
+        augmented_pair_matrix_symmetry_error =
+            isnothing(density_blocks) ?
+            nothing :
+            density_blocks.augmented_pair_matrix_symmetry_error,
         augmented_dimension,
         augmented_h1_lowest,
         augmented_h1_symmetry_error,
