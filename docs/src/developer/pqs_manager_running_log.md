@@ -2338,3 +2338,58 @@ Line-count / complexity note:
 - MT6 Audit/classify old Cartesian flat paths: active. No new helper/schema
   tests were added; the driver/line ladders remain the validation authority for
   this route lane.
+
+## Pass 270 - Residual-GTO P-R Density Gauge Correction
+
+Commit(s):
+- this commit - Correct H2 PQS residual GTO P-R density normalization
+
+Summary:
+- Corrected the P-R density-provider block for the H2 independent PQS
+  residual-GTO materialized route.
+- The prior implementation contracted the pre-final weighted PQS coefficients
+  against density-normalized support-residual MWG rows directly. That missed
+  the support-row weight factor required by the same raw-numerator convention
+  used to build the trusted P-P pre-final pair matrix.
+- The corrected path recomputes support-row weights from the route source-plan
+  axis PGDG weights in `packet.support_states` order, forms
+  `diag(support_weights) * gausslet_residual`, and only then applies
+  `pre_final_coefficients ./ pre_final_weights`.
+- Added two narrow ham-artifact provenance fields:
+  `support_residual_input_convention = :density_normalized` and
+  `p_r_weight_application = :support_row_weights_before_pre_final_projection`.
+
+Validation:
+- Manager/doer: `git diff --check` passed.
+- Manager/doer: package load passed with
+  `julia --project=. -e 'using GaussletBases; println("load ok")'`.
+- Manager/doer: `tools/run_cartesian_line_ladder.jl --line=pqs_diatomic`
+  passed all three cases.
+- Manager/doer reran the artifact PSD/Schur audit after the ladder rewrote the
+  artifacts. The augmented matrix eigenvalue minimum changed from the previous
+  failing `-6.7885` to `3.1943e-9`, and the regularized Schur eigenvalue range
+  is now `(3.1943e-9, 0.01952)`.
+
+Goal advancement:
+- MT4/LT8: repairs the density gauge so the `[pre_final_pqs, residual_gto]`
+  provider matrix is internally consistent enough for the next private H1-J
+  diagnostic attempt.
+- LT5: preserves source/support authority and the common pre-final
+  positive-weight convention rather than introducing a final-gauge shortcut.
+
+Medium-goal update:
+- none.
+
+Risk / guardrail:
+- This is still provider-block readiness, not a supplemented value. No H1-J
+  scalar, RHF, CR2, public API, or provider registry was added.
+
+Remaining blocker / next:
+- The next pass can attempt a private supplemented H1-J diagnostic using the
+  corrected augmented one-body and density-provider objects, with coarse
+  semantic checks only.
+
+Line-count / complexity note:
+- Scoped source diff before the log was `35` added / `2` deleted. The patch is
+  intentionally narrow and fixes an existing gauge error rather than adding a
+  new feature surface.

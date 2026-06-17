@@ -748,6 +748,27 @@ function _pqs_source_box_route_driver_pqs_support_overlap_matrix(packet)
     )
 end
 
+function _pqs_source_box_route_driver_pqs_support_weights(packet)
+    states = packet.support_states
+    bundles = packet.source_plan.axis_bundles
+    pgdgs = ntuple(axis -> _nested_axis_pgdg(
+        bundles,
+        _pqs_source_box_route_driver_axis_symbol(axis),
+    ), 3)
+    weights = Vector{Float64}(undef, length(states))
+    @inbounds for (index, (ix, iy, iz)) in pairs(states)
+        weights[index] =
+            Float64(pgdgs[1].weights[ix]) *
+            Float64(pgdgs[2].weights[iy]) *
+            Float64(pgdgs[3].weights[iz])
+    end
+    all(isfinite, weights) ||
+        throw(ArgumentError("support weights for residual-GTO density provider contain non-finite entries"))
+    all(>(0.0), weights) ||
+        throw(ArgumentError("support weights for residual-GTO density provider must be positive"))
+    return weights
+end
+
 function _pqs_source_box_route_driver_density_carrier_moment_matrix(
     packet,
     density_descriptor,
@@ -898,13 +919,21 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_density_blocks(
     support_states = packet.support_states
     support_rows =
         Int[_cartesian_flat_index(ix, iy, iz, dims) for (ix, iy, iz) in support_states]
-    support_residual = Matrix{Float64}(components.gausslet_residual[support_rows, :])
+    support_residual_density_normalized =
+        Matrix{Float64}(components.gausslet_residual[support_rows, :])
+    support_weights =
+        _pqs_source_box_route_driver_pqs_support_weights(packet)
+    support_residual_raw_numerator =
+        support_residual_density_normalized .* reshape(support_weights, :, 1)
     density_interaction = packet.density_interaction
     pre_final_coefficients = Matrix{Float64}(packet.final_basis.pre_final_coefficients)
     pre_final_weights = Float64.(density_interaction.pre_final_weights)
     weighted_coefficients =
         pre_final_coefficients .* reshape(1.0 ./ pre_final_weights, 1, :)
-    v_pr = Matrix{Float64}(transpose(weighted_coefficients) * support_residual)
+    v_pr =
+        Matrix{Float64}(
+            transpose(weighted_coefficients) * support_residual_raw_numerator,
+        )
     v_rr = Matrix{Float64}(components.residual_residual)
     v_rr = Matrix{Float64}(0.5 .* (v_rr .+ transpose(v_rr)))
     v_pp = Matrix{Float64}(density_interaction.pre_final_pair_matrix)
@@ -933,6 +962,10 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_density_blocks(
         residual_width_min = moments.residual_width_min,
         residual_width_max = moments.residual_width_max,
         residual_widths_positive = moments.residual_widths_positive,
+        support_residual_input_convention = :density_normalized,
+        p_r_weight_application = :support_row_weights_before_pre_final_projection,
+        support_weight_min = minimum(support_weights),
+        support_weight_max = maximum(support_weights),
         p_r_component_source = :mwg_residual_moments,
         r_r_component_source = :mwg_residual_moments,
         final_gauge_weights_used = false,
@@ -1997,6 +2030,8 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                                 :residual_moment_overlap_error,
                                 :p_r_component_source,
                                 :r_r_component_source,
+                                :support_residual_input_convention,
+                                :p_r_weight_application,
                             ),
                         )
                         augmented_density_dimension =
@@ -2036,6 +2071,12 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                             throw(ArgumentError("P-R component source must be MWG residual moments"))
                         file["r_r_component_source"] === :mwg_residual_moments ||
                             throw(ArgumentError("R-R component source must be MWG residual moments"))
+                        file["support_residual_input_convention"] ===
+                            :density_normalized ||
+                            throw(ArgumentError("unexpected support-residual input convention"))
+                        file["p_r_weight_application"] ===
+                            :support_row_weights_before_pre_final_projection ||
+                            throw(ArgumentError("unexpected P-R weight application convention"))
                         (;
                             augmented_density_dimension,
                             v_pr_pair_matrix_size = size(v_pr_pair_matrix),
@@ -2514,6 +2555,10 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
                         density_blocks.p_r_component_source
                     file["r_r_component_source"] =
                         density_blocks.r_r_component_source
+                    file["support_residual_input_convention"] =
+                        density_blocks.support_residual_input_convention
+                    file["p_r_weight_application"] =
+                        density_blocks.p_r_weight_application
                 end
             end
             if !isnothing(one_body_blocks)
