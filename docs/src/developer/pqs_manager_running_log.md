@@ -2623,3 +2623,53 @@ Line-count / complexity note:
 - Net cleanup before this log entry was `1` added / `114` deleted in
   `src/pqs_source_box_low_order_materialization.jl`; the full commit is net
   negative despite this log entry.
+
+## Pass 275 - Residual-GTO Provider Payload Paydown
+
+Commit(s):
+- this commit - Trim H2 PQS residual GTO provider payload labels
+
+Summary:
+- Audited recent residual-GTO provider additions for payload/schema bloat and
+  removed label-only mirrors from the descriptor, density-provider, H1-J
+  diagnostic, JLD2 writer, and artifact readback path.
+- Deleted fields and reload checks such as density-provider kind mirrors,
+  duplicated sector labels, residual-mode source labels, final-gauge/fixed-block
+  negative flags, component-source labels, P-R weight-application labels, and
+  H1-J diagnostic/source labels.
+- Kept concrete data and physics facts: residual transform, residual carrier
+  coefficients, augmented density gauge/space, dimensions, moment centers and
+  widths, one-body/provider matrices, augmented pair matrix, H1-J self-Coulomb,
+  and private RHF convergence/energy facts.
+
+Validation:
+- `git diff --check`
+- `julia --project=. -e 'using GaussletBases; println("load ok")'`
+- `julia --project=. tools/run_cartesian_line_ladder.jl --line=pqs_diatomic`
+  passed all three cases through `cartesian_print/save`.
+- Artifact readback still shows the retained private RHF facts: converged
+  `true`, iterations `15`, density trace `2.0000000000000018`, commutator
+  residual `9.90647328058536e-10`, total with nuclear repulsion
+  `-0.9111254039289651`.
+
+Goal advancement:
+- MT4/LT8: keeps the H2 PQS residual-GTO provider lane functional while
+  reducing runtime artifact/schema carrying cost.
+- LT5: reinforces that the thin route should carry real provider data and
+  compact physics facts, not status/provenance mirrors or helper-schema tests.
+
+Medium-goal update:
+- none.
+
+Risk / guardrail:
+- This pass deliberately did not change the numerical provider construction or
+  private RHF smoke. The remaining P1 risks are still science/performance
+  validation and deciding which consumer contract should survive.
+
+Remaining blocker / next:
+- Continue with the private RHF science/performance audit or a further paydown
+  pass if review finds more non-physics payload duplication.
+
+Line-count / complexity note:
+- Source cleanup before this log entry was `210` deleted / `0` added in
+  `src/pqs_source_box_low_order_materialization.jl`.
