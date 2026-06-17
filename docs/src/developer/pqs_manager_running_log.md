@@ -2507,3 +2507,64 @@ Remaining blocker / next:
 Line-count / complexity note:
 - No source-code behavior changed. The only tracked change is this audit log
   entry.
+
+## Pass 273 - Private Residual-GTO Augmented RHF Smoke
+
+Commit(s):
+- this commit - Add H2 PQS residual GTO private RHF smoke
+
+Summary:
+- Added a private closed-shell RHF smoke for the H2 PQS residual-GTO materialized
+  route. The smoke consumes the augmented one-body Hamiltonian in `[F, R]` and
+  the corrected augmented density provider in `[P, R]`.
+- The implementation is intentionally local and bounded: a 25-iteration maximum
+  SCF, first-three-iteration density damping, convergence on energy, density
+  change, and Fock-density commutator, and no DIIS/general solver framework.
+- The ham artifact now carries compact private RHF facts and the roundtrip
+  check validates convergence, finite energies, trace, idempotency, and
+  commutator residual.
+- The route remains private/diagnostic only: `private_augmented_rhf_public_api =
+  false`, no CR2/export consumer contract, no provider registry, and no
+  production supplemented RHF claim.
+
+Validation:
+- `git diff --check`
+- `julia --project=. -e 'using GaussletBases; println("load ok")'`
+- `julia --project=. tools/run_cartesian_line_ladder.jl --line=pqs_diatomic`
+  passed all three cases through `cartesian_print/save`.
+- Artifact readback from
+  `/Users/srw/dmrgtmp/h2_pqs_q5_independent_source_box_r4_gto_ham.jld2`:
+  converged `true`, iterations `15`, electronic energy
+  `-1.1611254039289651`, nuclear repulsion `0.25`, total with nuclear
+  repulsion `-0.9111254039289651`, density trace `2.0000000000000018`, trace
+  error `1.7763568394002505e-15`, idempotency error
+  `1.249000902703301e-16`, commutator residual `9.90647328058536e-10`, F/R
+  orbital weights `0.9998235792815352` / `0.0001764207184651116`.
+
+Goal advancement:
+- MT4/LT8: advances the residual-GTO P1 lane from a private H1-J scalar
+  diagnostic to the first private augmented RHF smoke over the same provider
+  objects.
+- LT5: keeps the authority on route-owned augmented one-body and density
+  provider data, with no fake WL/QW receipt wrappers or readiness/status
+  payloads.
+
+Medium-goal update:
+- none.
+
+Risk / guardrail:
+- This is not a public solver, not a production supplemented RHF value, and not
+  a broad RHF framework. It is a narrow private smoke for one H2 PQS residual-GTO
+  fixture. Science and performance review are still required before broadening
+  it or using it as a downstream consumer contract.
+
+Remaining blocker / next:
+- Audit the private RHF smoke numerically and operationally: energy
+  decomposition, stability under tolerances, timing/allocation cost, and whether
+  the local Fock construction is the right long-lived consumer. After that,
+  choose between cleanup/paydown or a broader supplemented-consumer step.
+
+Line-count / complexity note:
+- The source diff before this log entry was `369` added / `0` deleted. This is
+  positive-line feature work on an active physics target; it should be followed
+  by audit and later paydown once the consumer shape is accepted.

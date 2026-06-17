@@ -1050,6 +1050,226 @@ function _pqs_source_box_route_driver_pqs_h2_augmented_h1_j_diagnostic(
     )
 end
 
+function _pqs_source_box_route_driver_nuclear_repulsion(route_metadata)
+    charges = Float64.(route_metadata.nuclear_charges)
+    locations = route_metadata.atom_locations
+    length(charges) == length(locations) ||
+        throw(DimensionMismatch("nuclear charge and location counts differ"))
+    repulsion = 0.0
+    for right in 2:length(charges), left in 1:(right - 1)
+        displacement = Float64[
+            locations[right][axis] - locations[left][axis] for axis in 1:3
+        ]
+        distance = norm(displacement)
+        distance > 0.0 ||
+            throw(ArgumentError("nuclear repulsion requires distinct centers"))
+        repulsion += charges[left] * charges[right] / distance
+    end
+    return repulsion
+end
+
+function _pqs_source_box_route_driver_augmented_density_transform(
+    density_interaction,
+    one_body_blocks,
+    density_blocks,
+)
+    final_to_pre_final =
+        Matrix{Float64}(density_interaction.final_to_pre_final_coefficients)
+    p_dimension, final_dimension = size(final_to_pre_final)
+    augmented_dimension = one_body_blocks.augmented_dimension
+    density_dimension = density_blocks.augmented_density_dimension
+    residual_rank = density_dimension - p_dimension
+    augmented_dimension == final_dimension + residual_rank ||
+        throw(DimensionMismatch("augmented RHF density transform dimension mismatch"))
+    transform = zeros(Float64, density_dimension, augmented_dimension)
+    transform[1:p_dimension, 1:final_dimension] .= final_to_pre_final
+    transform[(p_dimension + 1):density_dimension,
+        (final_dimension + 1):augmented_dimension] .= I(residual_rank)
+    return transform
+end
+
+function _pqs_source_box_route_driver_augmented_rhf_fock_components(
+    hamiltonian,
+    pair_matrix,
+    density_transform,
+    spin_summed_density,
+)
+    h = Matrix{Float64}(hamiltonian)
+    v = Matrix{Float64}(pair_matrix)
+    transform = Matrix{Float64}(density_transform)
+    density = Matrix{Float64}(spin_summed_density)
+    size(h, 1) == size(h, 2) ||
+        throw(DimensionMismatch("augmented RHF Hamiltonian must be square"))
+    size(density) == size(h) ||
+        throw(DimensionMismatch("augmented RHF density dimension mismatch"))
+    size(v, 1) == size(v, 2) ||
+        throw(DimensionMismatch("augmented RHF pair matrix must be square"))
+    size(transform, 2) == size(h, 1) ||
+        throw(DimensionMismatch("augmented RHF density transform column mismatch"))
+    size(transform, 1) == size(v, 1) ||
+        throw(DimensionMismatch("augmented RHF density transform row mismatch"))
+    all(isfinite, h) && all(isfinite, v) && all(isfinite, transform) &&
+        all(isfinite, density) ||
+        throw(ArgumentError("augmented RHF inputs contain non-finite entries"))
+
+    orbital_density = 0.5 .* density
+    density_gauge =
+        transform * orbital_density * transpose(transform)
+    density_gauge =
+        0.5 .* (density_gauge .+ transpose(density_gauge))
+    interaction = 0.5 .* (v .+ transpose(v))
+    occupations = vec(diag(density_gauge))
+    density_fock =
+        2.0 .* Diagonal(interaction * occupations) .-
+        density_gauge .* interaction
+    coulomb_exchange =
+        transpose(transform) * Matrix(density_fock) * transform
+    fock = h + coulomb_exchange
+    fock = 0.5 .* (fock .+ transpose(fock))
+    one_body_energy = tr(density * h)
+    two_body_energy = 0.5 * tr(density * coulomb_exchange)
+    return (;
+        fock,
+        coulomb_exchange,
+        one_body_energy,
+        two_body_energy,
+        electronic_energy = one_body_energy + two_body_energy,
+        density_gauge,
+    )
+end
+
+function _pqs_source_box_route_driver_closed_shell_density(orbital)
+    vector = Vector{Float64}(orbital)
+    all(isfinite, vector) ||
+        throw(ArgumentError("closed-shell RHF orbital contains non-finite entries"))
+    return 2.0 .* (vector * transpose(vector))
+end
+
+function _pqs_source_box_route_driver_pqs_h2_private_augmented_rhf_smoke(
+    one_body_blocks,
+    density_blocks,
+    density_interaction,
+    route_metadata;
+    max_iterations::Int = 25,
+    energy_atol::Real = 1.0e-10,
+    residual_atol::Real = 1.0e-8,
+    density_atol::Real = 1.0e-8,
+)
+    isnothing(one_body_blocks) &&
+        throw(ArgumentError("private augmented RHF requires one-body provider blocks"))
+    isnothing(density_blocks) &&
+        throw(ArgumentError("private augmented RHF requires density provider blocks"))
+    max_iterations > 0 ||
+        throw(ArgumentError("private augmented RHF requires a positive iteration limit"))
+    h = Matrix{Float64}(one_body_blocks.augmented_one_body_hamiltonian)
+    pair_matrix = Matrix{Float64}(density_blocks.augmented_pair_matrix)
+    transform =
+        _pqs_source_box_route_driver_augmented_density_transform(
+            density_interaction,
+            one_body_blocks,
+            density_blocks,
+        )
+    initial_eigensystem = eigen(Symmetric(0.5 .* (h .+ transpose(h))))
+    density =
+        _pqs_source_box_route_driver_closed_shell_density(
+            initial_eigensystem.vectors[:, 1],
+        )
+    previous_energy = Inf
+    converged = false
+    iteration_count = 0
+    final_energy_delta = Inf
+    final_density_delta = Inf
+    for iteration in 1:max_iterations
+        components =
+            _pqs_source_box_route_driver_augmented_rhf_fock_components(
+                h,
+                pair_matrix,
+                transform,
+                density,
+            )
+        fock_eigensystem = eigen(Symmetric(components.fock))
+        updated_density =
+            _pqs_source_box_route_driver_closed_shell_density(
+                fock_eigensystem.vectors[:, 1],
+            )
+        mixed_density =
+            iteration < 4 ?
+            0.35 .* updated_density .+ 0.65 .* density :
+            updated_density
+        energy_delta = abs(components.electronic_energy - previous_energy)
+        density_delta = norm(mixed_density - density, Inf)
+        commutator = norm(components.fock * density - density * components.fock, Inf)
+        previous_energy = components.electronic_energy
+        density = mixed_density
+        iteration_count = iteration
+        final_energy_delta = energy_delta
+        final_density_delta = density_delta
+        if energy_delta <= Float64(energy_atol) &&
+           density_delta <= Float64(density_atol) &&
+           commutator <= Float64(residual_atol)
+            density = updated_density
+            converged = true
+            break
+        end
+    end
+    final_components =
+        _pqs_source_box_route_driver_augmented_rhf_fock_components(
+            h,
+            pair_matrix,
+            transform,
+            density,
+        )
+    density_trace = tr(density)
+    idempotency_error = norm(density * density - 2.0 .* density, Inf)
+    commutator_residual =
+        norm(final_components.fock * density - density * final_components.fock, Inf)
+    trace_error = abs(density_trace - 2.0)
+    converged = converged ||
+        (
+            final_energy_delta <= Float64(energy_atol) &&
+            final_density_delta <= Float64(density_atol) &&
+            commutator_residual <= Float64(residual_atol)
+        )
+    converged ||
+        throw(ArgumentError("private augmented RHF smoke did not converge"))
+    trace_error <= Float64(density_atol) ||
+        throw(ArgumentError("private augmented RHF density trace mismatch"))
+    idempotency_error <= 10.0 * Float64(density_atol) ||
+        throw(ArgumentError("private augmented RHF density idempotency mismatch"))
+    nuclear_repulsion =
+        _pqs_source_box_route_driver_nuclear_repulsion(route_metadata)
+    final_orbital = eigen(Symmetric(final_components.fock)).vectors[:, 1]
+    final_dimension = size(density_interaction.final_to_pre_final_coefficients, 2)
+    f_weight = sum(abs2, @view final_orbital[1:final_dimension])
+    r_weight = sum(abs2, @view final_orbital[(final_dimension + 1):end])
+    return (;
+        rhf_kind = :private_augmented_residual_gto_rhf_smoke,
+        converged,
+        iteration_count,
+        electron_count = 2.0,
+        density_trace,
+        density_trace_error = trace_error,
+        idempotency_error,
+        commutator_residual,
+        energy_delta = final_energy_delta,
+        density_delta = final_density_delta,
+        one_body_energy = final_components.one_body_energy,
+        two_body_energy = final_components.two_body_energy,
+        electronic_energy = final_components.electronic_energy,
+        nuclear_repulsion,
+        total_with_nuclear_repulsion =
+            final_components.electronic_energy + nuclear_repulsion,
+        f_orbital_weight = f_weight,
+        r_orbital_weight = r_weight,
+        max_iterations,
+        energy_atol = Float64(energy_atol),
+        residual_atol = Float64(residual_atol),
+        density_atol = Float64(density_atol),
+        public_api = false,
+        supplemented_values_kind = :private_augmented_rhf_smoke,
+    )
+end
+
 @inline function _pqs_source_box_route_driver_axis_index(axis::Symbol)
     axis === :x && return 1
     axis === :y && return 2
@@ -2111,6 +2331,15 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                                 :augmented_h1_j_diagnostic_kind,
                                 :augmented_h1_j_self_coulomb,
                                 :augmented_h1_j_density_coefficients_length,
+                                :private_augmented_rhf_kind,
+                                :private_augmented_rhf_converged,
+                                :private_augmented_rhf_iterations,
+                                :private_augmented_rhf_electronic_energy,
+                                :private_augmented_rhf_total_with_nuclear_repulsion,
+                                :private_augmented_rhf_density_trace,
+                                :private_augmented_rhf_density_trace_error,
+                                :private_augmented_rhf_idempotency_error,
+                                :private_augmented_rhf_commutator_residual,
                             ),
                         )
                         augmented_density_dimension =
@@ -2167,6 +2396,37 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                         Int(file["augmented_h1_j_density_coefficients_length"]) ==
                             augmented_density_dimension ||
                             throw(ArgumentError("augmented H1-J density coefficient length mismatch"))
+                        file["private_augmented_rhf_kind"] ===
+                            :private_augmented_residual_gto_rhf_smoke ||
+                            throw(ArgumentError("unexpected private augmented RHF kind"))
+                        file["private_augmented_rhf_converged"] === true ||
+                            throw(ArgumentError("private augmented RHF smoke did not converge"))
+                        rhf_iterations =
+                            Int(file["private_augmented_rhf_iterations"])
+                        rhf_iterations > 0 ||
+                            throw(ArgumentError("private augmented RHF iteration count must be positive"))
+                        rhf_electronic_energy =
+                            Float64(file["private_augmented_rhf_electronic_energy"])
+                        rhf_total_with_nuclear_repulsion =
+                            Float64(file["private_augmented_rhf_total_with_nuclear_repulsion"])
+                        rhf_density_trace =
+                            Float64(file["private_augmented_rhf_density_trace"])
+                        rhf_density_trace_error =
+                            Float64(file["private_augmented_rhf_density_trace_error"])
+                        rhf_idempotency_error =
+                            Float64(file["private_augmented_rhf_idempotency_error"])
+                        rhf_commutator_residual =
+                            Float64(file["private_augmented_rhf_commutator_residual"])
+                        isfinite(rhf_electronic_energy) &&
+                            isfinite(rhf_total_with_nuclear_repulsion) ||
+                            throw(ArgumentError("private augmented RHF energies must be finite"))
+                        abs(rhf_density_trace - 2.0) <= 1.0e-8 &&
+                            rhf_density_trace_error <= 1.0e-8 ||
+                            throw(ArgumentError("private augmented RHF density trace mismatch"))
+                        rhf_idempotency_error <= 1.0e-7 ||
+                            throw(ArgumentError("private augmented RHF idempotency residual too large"))
+                        rhf_commutator_residual <= 1.0e-8 ||
+                            throw(ArgumentError("private augmented RHF commutator residual too large"))
                         (;
                             augmented_density_dimension,
                             v_pr_pair_matrix_size = size(v_pr_pair_matrix),
@@ -2174,6 +2434,13 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                             augmented_pair_matrix_size = size(augmented_pair_matrix),
                             augmented_pair_matrix_symmetry_error,
                             augmented_h1_j_self_coulomb,
+                            private_augmented_rhf_iterations = rhf_iterations,
+                            private_augmented_rhf_electronic_energy =
+                                rhf_electronic_energy,
+                            private_augmented_rhf_total_with_nuclear_repulsion =
+                                rhf_total_with_nuclear_repulsion,
+                            private_augmented_rhf_commutator_residual =
+                                rhf_commutator_residual,
                         )
                     else
                         (;
@@ -2183,6 +2450,11 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                             augmented_pair_matrix_size = nothing,
                             augmented_pair_matrix_symmetry_error = nothing,
                             augmented_h1_j_self_coulomb = nothing,
+                            private_augmented_rhf_iterations = nothing,
+                            private_augmented_rhf_electronic_energy = nothing,
+                            private_augmented_rhf_total_with_nuclear_repulsion =
+                                nothing,
+                            private_augmented_rhf_commutator_residual = nothing,
                         )
                     end
                 (;
@@ -2217,6 +2489,10 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                     augmented_h1_lowest = nothing,
                     augmented_h1_symmetry_error = nothing,
                     augmented_h1_j_self_coulomb = nothing,
+                    private_augmented_rhf_iterations = nothing,
+                    private_augmented_rhf_electronic_energy = nothing,
+                    private_augmented_rhf_total_with_nuclear_repulsion = nothing,
+                    private_augmented_rhf_commutator_residual = nothing,
                     h_fg_one_body_size = nothing,
                     h_gg_one_body_size = nothing,
                     h_gg_one_body_symmetry_error = nothing,
@@ -2374,6 +2650,15 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
             provider_packet.density_interaction,
         ) :
         nothing
+    private_augmented_rhf =
+        residual_gto_provider_blocks === :one_body_and_density_provider ?
+        _pqs_source_box_route_driver_pqs_h2_private_augmented_rhf_smoke(
+            one_body_blocks,
+            density_blocks,
+            provider_packet.density_interaction,
+            route_metadata,
+        ) :
+        nothing
     final_basis = inputs.final_basis
     h1_hamiltonian = inputs.h1_hamiltonian
     h1 = inputs.h1
@@ -2485,6 +2770,30 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
             isnothing(augmented_h1_j) ? nothing : augmented_h1_j.self_coulomb,
         augmented_h1_j_diagnostic_kind =
             isnothing(augmented_h1_j) ? nothing : augmented_h1_j.diagnostic_kind,
+        private_augmented_rhf_kind =
+            isnothing(private_augmented_rhf) ?
+            nothing :
+            private_augmented_rhf.rhf_kind,
+        private_augmented_rhf_converged =
+            isnothing(private_augmented_rhf) ?
+            nothing :
+            private_augmented_rhf.converged,
+        private_augmented_rhf_iterations =
+            isnothing(private_augmented_rhf) ?
+            nothing :
+            private_augmented_rhf.iteration_count,
+        private_augmented_rhf_electronic_energy =
+            isnothing(private_augmented_rhf) ?
+            nothing :
+            private_augmented_rhf.electronic_energy,
+        private_augmented_rhf_total_with_nuclear_repulsion =
+            isnothing(private_augmented_rhf) ?
+            nothing :
+            private_augmented_rhf.total_with_nuclear_repulsion,
+        private_augmented_rhf_commutator_residual =
+            isnothing(private_augmented_rhf) ?
+            nothing :
+            private_augmented_rhf.commutator_residual,
         residual_width_min =
             isnothing(density_blocks) ? nothing : density_blocks.residual_width_min,
         residual_width_max =
@@ -2674,6 +2983,42 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
                         augmented_h1_j.density_coefficients_length
                     file["augmented_h1_j_orbital_source"] =
                         augmented_h1_j.orbital_source
+                    file["private_augmented_rhf_kind"] =
+                        private_augmented_rhf.rhf_kind
+                    file["private_augmented_rhf_converged"] =
+                        private_augmented_rhf.converged
+                    file["private_augmented_rhf_iterations"] =
+                        private_augmented_rhf.iteration_count
+                    file["private_augmented_rhf_electron_count"] =
+                        private_augmented_rhf.electron_count
+                    file["private_augmented_rhf_density_trace"] =
+                        private_augmented_rhf.density_trace
+                    file["private_augmented_rhf_density_trace_error"] =
+                        private_augmented_rhf.density_trace_error
+                    file["private_augmented_rhf_idempotency_error"] =
+                        private_augmented_rhf.idempotency_error
+                    file["private_augmented_rhf_commutator_residual"] =
+                        private_augmented_rhf.commutator_residual
+                    file["private_augmented_rhf_energy_delta"] =
+                        private_augmented_rhf.energy_delta
+                    file["private_augmented_rhf_density_delta"] =
+                        private_augmented_rhf.density_delta
+                    file["private_augmented_rhf_one_body_energy"] =
+                        private_augmented_rhf.one_body_energy
+                    file["private_augmented_rhf_two_body_energy"] =
+                        private_augmented_rhf.two_body_energy
+                    file["private_augmented_rhf_electronic_energy"] =
+                        private_augmented_rhf.electronic_energy
+                    file["private_augmented_rhf_nuclear_repulsion"] =
+                        private_augmented_rhf.nuclear_repulsion
+                    file["private_augmented_rhf_total_with_nuclear_repulsion"] =
+                        private_augmented_rhf.total_with_nuclear_repulsion
+                    file["private_augmented_rhf_f_orbital_weight"] =
+                        private_augmented_rhf.f_orbital_weight
+                    file["private_augmented_rhf_r_orbital_weight"] =
+                        private_augmented_rhf.r_orbital_weight
+                    file["private_augmented_rhf_public_api"] =
+                        private_augmented_rhf.public_api
                 end
             end
             if !isnothing(one_body_blocks)
@@ -2767,6 +3112,30 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
             isnothing(augmented_h1_j) ? nothing : augmented_h1_j.self_coulomb,
         augmented_h1_j_diagnostic_kind =
             isnothing(augmented_h1_j) ? nothing : augmented_h1_j.diagnostic_kind,
+        private_augmented_rhf_kind =
+            isnothing(private_augmented_rhf) ?
+            nothing :
+            private_augmented_rhf.rhf_kind,
+        private_augmented_rhf_converged =
+            isnothing(private_augmented_rhf) ?
+            nothing :
+            private_augmented_rhf.converged,
+        private_augmented_rhf_iterations =
+            isnothing(private_augmented_rhf) ?
+            nothing :
+            private_augmented_rhf.iteration_count,
+        private_augmented_rhf_electronic_energy =
+            isnothing(private_augmented_rhf) ?
+            nothing :
+            private_augmented_rhf.electronic_energy,
+        private_augmented_rhf_total_with_nuclear_repulsion =
+            isnothing(private_augmented_rhf) ?
+            nothing :
+            private_augmented_rhf.total_with_nuclear_repulsion,
+        private_augmented_rhf_commutator_residual =
+            isnothing(private_augmented_rhf) ?
+            nothing :
+            private_augmented_rhf.commutator_residual,
         augmented_dimension,
         augmented_h1_lowest,
         augmented_h1_symmetry_error,
