@@ -2568,3 +2568,58 @@ Line-count / complexity note:
 - The source diff before this log entry was `369` added / `0` deleted. This is
   positive-line feature work on an active physics target; it should be followed
   by audit and later paydown once the consumer shape is accepted.
+
+## Pass 274 - Private RHF Smoke Payload Paydown
+
+Commit(s):
+- this commit - Trim H2 PQS residual GTO RHF smoke payload
+
+Summary:
+- Reduced bloat introduced by the private H2 PQS residual-GTO RHF smoke without
+  changing the RHF computation.
+- Simplified the nuclear-repulsion displacement expression and removed an
+  unused final-orbital sector decomposition/eigensolve from the RHF helper.
+- Stripped duplicate artifact-roundtrip assertions for the private RHF smoke.
+  The SCF still enforces convergence before writing; reload now stays focused
+  on the existing artifact shape rather than re-testing every convergence
+  scalar.
+- Removed nonessential saved/returned fields such as private-public status,
+  electron-count mirror, delta bookkeeping, and F/R orbital weights. The ham
+  artifact still carries the useful private smoke facts: kind, convergence,
+  iteration count, density trace, idempotency, commutator, one-/two-body energy,
+  electronic energy, nuclear repulsion, and total energy.
+
+Validation:
+- `git diff --check`
+- `julia --project=. -e 'using GaussletBases; println("load ok")'`
+- `julia --project=. tools/run_cartesian_line_ladder.jl --line=pqs_diatomic`
+  passed all three cases through `cartesian_print/save`.
+- Artifact readback confirms the retained private RHF facts still exist:
+  converged `true`, iterations `15`, density trace `2.0000000000000018`,
+  idempotency error `1.249000902703301e-16`, commutator residual
+  `9.90647328058536e-10`, electronic energy `-1.1611254039289651`, total with
+  nuclear repulsion `-0.9111254039289651`.
+
+Goal advancement:
+- MT4/LT8: keeps the private RHF smoke working while reducing the carrying cost
+  of the P1 residual-GTO lane.
+- LT5: reinforces the driver-ladder validation policy and avoids rebuilding
+  artifact/schema test pressure inside the runtime materializer.
+
+Medium-goal update:
+- none.
+
+Risk / guardrail:
+- This remains a private diagnostic, not a production supplemented RHF contract.
+  The cleanup intentionally did not remove the core convergence checks inside
+  the SCF helper.
+
+Remaining blocker / next:
+- The same science/performance audit remains the next decision point before
+  broadening the private RHF smoke or using it as a downstream consumer
+  contract.
+
+Line-count / complexity note:
+- Net cleanup before this log entry was `1` added / `114` deleted in
+  `src/pqs_source_box_low_order_materialization.jl`; the full commit is net
+  negative despite this log entry.
