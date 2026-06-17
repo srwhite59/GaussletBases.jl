@@ -2449,3 +2449,61 @@ Line-count / complexity note:
   positive-line feature work with no new tests or registries; a later cleanup
   pass should consolidate local scalar-contraction helpers if more consumers
   appear.
+
+## Pass 272 - Private Augmented H1-J Diagnostic Audit
+
+Commit(s):
+- this commit - Audit H2 PQS residual GTO private H1-J diagnostic
+
+Summary:
+- Performed a read-only numerical audit of the private H2 PQS residual-GTO
+  augmented H1-J diagnostic introduced in pass 271.
+- Recomputed the augmented one-body lowest orbital, mapped its F sector through
+  the pre-final PQS density transform, appended the residual R coefficients,
+  and decomposed the `[P, R]` self-Coulomb diagnostic into P-P, P-R, and R-R
+  contributions.
+- The audit did not change source behavior, did not add RHF, CR2, public API,
+  tests, or provider registries, and left `supplemented_values_kind =
+  :not_computed`.
+
+Validation:
+- Manager/doer inspected the current artifacts at
+  `/Users/srw/dmrgtmp/h2_pqs_q5_independent_source_box_r4_gto_basis.jld2` and
+  `/Users/srw/dmrgtmp/h2_pqs_q5_independent_source_box_r4_gto_ham.jld2`.
+- Recomputed `augmented_h1_lowest = -0.7959028345077876`, matching the artifact
+  value `-0.79590283450777`.
+- Recomputed `augmented_h1_j_self_coulomb = 0.457435475059184`, matching the
+  artifact. Base `h1_j_self_coulomb` remains `0.4569117646737236`.
+- Augmented orbital weights are F `0.9998627116279778` and R
+  `0.0001372883720226732`; the density coefficient vector has length `489`.
+- Self-Coulomb decomposition:
+  P-P `0.4573636390600626`, P-R `7.183224722295418e-5`, R-R
+  `3.75189826063245e-9`, summing to `0.4574354750591838`.
+- The augmented pair matrix remains positive to audit tolerance:
+  eigenvalue range `(3.194313211426547e-9, 141.59598639666223)`, regularized
+  Schur range `(3.194312980933833e-9, 0.01952029093239803)`.
+
+Goal advancement:
+- MT4/LT8: classifies the private augmented H1-J diagnostic as numerically sane
+  enough for a first private augmented RHF smoke.
+- LT5: confirms that the scalar is dominated by the trusted P-P sector with a
+  small P-R correction and negligible R-R contribution for this H2 fixture.
+
+Medium-goal update:
+- none.
+
+Risk / guardrail:
+- This is still not a production supplemented H1-J value. The diagnostic is a
+  private consumer sanity check over the current provider blocks. Any RHF pass
+  must keep the same private/diagnostic label until a separate science and
+  performance review accepts the route.
+
+Remaining blocker / next:
+- The next pass may attempt a private augmented RHF smoke using the augmented
+  one-body Hamiltonian and corrected `[P, R]` density provider, with only
+  convergence/trace/residual diagnostics. Do not add CR2, public API, or broad
+  provider abstractions in that pass.
+
+Line-count / complexity note:
+- No source-code behavior changed. The only tracked change is this audit log
+  entry.
