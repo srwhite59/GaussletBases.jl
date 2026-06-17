@@ -2673,3 +2673,81 @@ Remaining blocker / next:
 Line-count / complexity note:
 - Source cleanup before this log entry was `210` deleted / `0` added in
   `src/pqs_source_box_low_order_materialization.jl`.
+
+## Pass 276 - Private Residual-GTO RHF Science/Performance Audit
+
+Commit(s):
+- this commit - Audit H2 PQS residual GTO private RHF smoke
+
+Summary:
+- Performed a read-only audit of the private H2 PQS residual-GTO augmented RHF
+  smoke after the payload paydown passes.
+- Re-read the H2 PQS residual-GTO Ham/Basis artifacts and checked the augmented
+  one-body, density-provider, H1-J, and RHF scalar facts. No source behavior,
+  artifact schema, tests, public API, or provider registry changed.
+- Compared against the base H2 PQS private-RHF driver path where the current
+  driver exposes data: the base run completes and reports commutator residual
+  `3.965093933744335e-9`; the compact summary does not currently expose a base
+  total energy, so that remains a visibility gap rather than a reason to
+  rebuild reporting.
+
+Validation / audit results:
+- Base driver probe:
+  `julia --project=. -e 'empty!(ARGS); append!(ARGS,
+  ["test/driver_inputs/h2_pqs_q5_independent_source_box_r4_private_rhf.jl",
+  "save_artifact=false", "save_tsv=false"]); include("bin/cartesian_ham_builder.jl")'`
+  completed through `cartesian_print/save`. Assembly took `23.466620` seconds
+  with `53.17 M` allocations / `6.825 GiB`, mostly compilation.
+- Artifact readback/eigen audit elapsed `1.486418084` seconds.
+- Artifact facts: provider blocks `:one_body_and_density_provider`, final
+  dimension `471`, residual rank `18`, augmented dimension `489`, augmented
+  density dimension `489`, final overlap identity error
+  `1.295907825493714e-13`.
+- One-body/H1-J facts: base H1 lowest `-0.7946037173365885`, augmented H1
+  lowest `-0.79590283450777`, augmented H1 symmetry error
+  `1.0658141036401503e-14`, base H1-J self-Coulomb
+  `0.4569117646737236`, augmented H1-J self-Coulomb
+  `0.457435475059184`, delta `5.237103854604519e-4`.
+- Residual density facts: residual overlap identity error
+  `3.753268124085306e-15`, residual moment overlap error
+  `1.976174779372286e-11`, residual width range
+  `(0.7873020609606813, 10.51582331678006)`.
+- Density-provider PSD/symmetry facts: V_PP eigen range
+  `(0.2006880365831959, 138.44830404378297)`, V_RR eigen range
+  `(2.1365833223596135e-8, 3.5225668776085977)`, augmented pair eigen range
+  `(3.1943132473945437e-9, 141.59598639666217)`, regularized Schur eigen range
+  `(3.194312938499561e-9, 0.01952029093239794)`, augmented pair symmetry error
+  `2.55351295663786e-15`.
+- Private augmented RHF facts: converged `true`, iterations `15`, density trace
+  `2.0000000000000018`, idempotency error `1.249000902703301e-16`,
+  commutator residual `9.90647328058536e-10`, one-body energy
+  `-1.5634981066427645`, two-body energy `0.4023727027137994`, electronic
+  energy `-1.1611254039289651`, nuclear repulsion `0.25`, total with nuclear
+  repulsion `-0.9111254039289651`.
+
+Goal advancement:
+- MT4/LT8: classifies the private augmented RHF smoke as coherent enough for a
+  next private supplemented-consumer step. The provider matrix is positive to
+  audit tolerance, the self-Coulomb correction is small and positive, and the
+  RHF fixed point is numerically tight.
+- LT5: confirms that the thin route remains anchored in route-owned augmented
+  one-body and `[P, R]` density-provider data, not QW/WL receipt wrappers.
+
+Medium-goal update:
+- none.
+
+Risk / guardrail:
+- This is still private/prototype-grade. Performance is compilation-heavy and
+  allocation-heavy at the driver level, and the Fock construction is local to
+  the slice rather than a reviewed production solver. Base private RHF energy
+  is not exposed in the current compact print/report path.
+
+Remaining blocker / next:
+- It is reasonable to move to the next private supplemented-consumer step, but
+  not to public RHF or CR2. Before any production claim, do a performance pass
+  on provider construction/Fock assembly and decide whether the private RHF
+  consumer should be refactored into a reusable module-owned contract.
+
+Line-count / complexity note:
+- No source behavior changed. The audit used a temporary `tmp/work` script that
+  was removed before commit; this commit is log-only.
