@@ -2751,3 +2751,56 @@ Remaining blocker / next:
 Line-count / complexity note:
 - No source behavior changed. The audit used a temporary `tmp/work` script that
   was removed before commit; this commit is log-only.
+
+## Pass 277 - Print Private Residual-GTO Consumer Facts
+
+Commit(s):
+- this commit - Print H2 PQS residual GTO private consumer facts
+
+Summary:
+- Promoted the existing private H2 PQS residual-GTO consumer facts to driver
+  glass-box output in the `[route_materialization]` section.
+- Added no new runtime payloads, tests, artifact fields, solver framework,
+  provider registry, public API, or CR2/export path. This pass only makes the
+  already-computed materialization facts visible to the driver ladder and human
+  inspection.
+- Printed facts now include provider mode, residual rank, augmented dimension,
+  augmented H1 lowest/symmetry, augmented density dimension/symmetry,
+  augmented H1-J self-Coulomb, and private augmented RHF convergence, iteration
+  count, energy, total with nuclear repulsion, and commutator residual.
+
+Validation:
+- `git diff --check`
+- `julia --project=. -e 'using GaussletBases; println("load ok")'`
+- `julia --project=. tools/run_cartesian_line_ladder.jl --line=pqs_diatomic`
+  passed all three cases through `cartesian_print/save`.
+- The materialized H2 PQS residual-GTO case now prints:
+  `provider_blocks_included = :one_body_and_density_provider`,
+  residual rank `18`, augmented dimension `489`, augmented H1 lowest
+  `-0.79590283450777`, augmented H1-J self-Coulomb `0.457435475059184`,
+  private augmented RHF converged `true`, iterations `15`, electronic energy
+  `-1.1611254039289651`, total with nuclear repulsion
+  `-0.9111254039289651`, and commutator residual `9.90647328058536e-10`.
+
+Goal advancement:
+- MT4/LT8: turns the private supplemented-consumer lane into visible driver
+  diagnostics, which is the intended validation mechanism for this Cartesian
+  route.
+- LT5: keeps validation at the driver/materialization boundary instead of
+  adding helper-schema tests or status/report payloads.
+
+Medium-goal update:
+- none.
+
+Risk / guardrail:
+- This is still private diagnostic output, not a production supplemented RHF or
+  public artifact-consumer contract. Exact print strings must not become tests.
+
+Remaining blocker / next:
+- Next useful work is either a small performance/paydown pass on the provider
+  construction/Fock assembly, or a carefully scoped private consumer step that
+  uses these visible facts without broadening to public RHF/CR2.
+
+Line-count / complexity note:
+- Source change before this log entry was `13` added / `0` deleted in the
+  simple print helper.
