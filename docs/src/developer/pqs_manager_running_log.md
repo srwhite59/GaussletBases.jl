@@ -3779,3 +3779,58 @@ Guardrail update:
 - The private H2 route remains a producer prototype, not a public solver lane.
   Continue to reject status/readiness/probe payloads, provider registries, and
   private H1-J/RHF diagnostics as part of the producer surface.
+
+## Pass 296 - Internal H/V/T Contract Hardening
+
+Commit(s):
+- `2af0bf67` - Harden internal Cartesian HVT contract
+
+Summary:
+- Hardened the private `_CartesianDensityDensityHamiltonian` constructor.
+- Avoided copies when H, V, T, nuclear charges, or nuclear positions are
+  already owned dense `Float64` containers.
+- Added spin-sector consumer invariants: `nup <= norb` and `ndn <= norb`.
+- Routed private H2 residual-GTO artifact readback through the neutral H/V/T
+  constructor and the no-solver consumer invariant.
+- Deleted duplicate H/V/T finite/symmetry/shape checks from the full H/V/T
+  provider readback path.
+- Removed the unproven package-source precompile workload and direct
+  `PrecompileTools` dependency.
+- Preserved current artifact keys and did not add public API, Cr2 branches,
+  provider registries, or private solver diagnostics.
+
+Validation:
+- Doer reported `git diff --check`.
+- Doer reported `julia --project=. -e 'using Pkg; Pkg.resolve()'`.
+- Doer reported package load.
+- Doer reported
+  `julia --project=. tools/run_cartesian_line_ladder.jl --line=pqs_diatomic`
+  passed all three cases.
+- Doer reported direct H/V/T artifact readback with consumer self-Coulomb
+  `0.4574354750591831`.
+- Doer reported `julia --project=docs docs/make.jl` passed with existing
+  Documenter size warnings.
+- Manager inspected the pushed diff and found no blocking issue.
+
+Goal advancement:
+- MT4/LT8: strengthens the internal neutral H/V/T seam while keeping the H2
+  producer private.
+- LT5: removes route-specific package-source precompile bloat and deletes
+  duplicate readback validation now owned by the neutral constructor.
+
+Medium-goal update:
+- none.
+
+Risk / guardrail:
+- The one-body-only artifact mode still has local augmented-H validation
+  because it does not produce a full H/V/T object. Do not expand that mode into
+  another parallel contract unless it remains a real endpoint.
+
+Remaining blocker / next:
+- Obtain or prepare the exact external/Cr2 consumer handshake before public
+  naming, durable format/version, Cr2 source dimensions, or electron/spin/core
+  treatment are coded.
+
+Line-count / complexity note:
+- Net source/docs impact was strongly negative: `63` insertions / `188`
+  deletions (`-125` lines).
