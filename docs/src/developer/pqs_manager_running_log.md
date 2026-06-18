@@ -3403,3 +3403,51 @@ Line-count / complexity note:
 - Source diff before this log entry was `28` added / `16` deleted. The small
   positive delta buys a named private boundary for the no-solver consumer
   invariant.
+
+## Pass 289 - Residual-GTO Handoff Helper Extraction
+
+Commit(s):
+- this commit - Extract H2 PQS residual GTO handoff helpers
+
+Summary:
+- Moved the private H2 PQS residual-GTO sidecar, provider-block, artifact
+  roundtrip, and Ham handoff helper family out of
+  `pqs_source_box_low_order_materialization.jl` into
+  `pqs_h2_residual_gto_handoff.jl`.
+- Left the low-order materialization file focused on atomic materialization,
+  H2 route wiring, artifact writing, and the generic materialization dispatcher.
+- Did not change helper names, artifact fields, physics, readback behavior, or
+  driver output facts.
+
+Validation:
+- `git diff --check`
+- `julia --project=. -e 'using GaussletBases; println("load ok")'`
+- `julia --project=. tools/run_cartesian_line_ladder.jl --line=pqs_diatomic`
+  passed all three cases through `cartesian_print/save`.
+- Direct artifact readback returned
+  `provider_block_mode = :one_body_and_density_provider` and H1-J consumer
+  delta `9.43689570931383e-16`.
+
+Goal advancement:
+- MT4/LT8: preserves the private H2 residual-GTO Ham handoff lane while giving
+  it a focused implementation file.
+- LT5: reduces conceptual carrying cost in the low-order materialization file
+  without moving stale helper bloat into a public framework.
+
+Medium-goal update:
+- Extraction is complete enough that subsequent paydown can target the focused
+  helper file directly. It remains private and route-specific.
+
+Risk / guardrail:
+- This was mechanical extraction, not a broad architecture split. Keep the new
+  file private; do not turn it into a provider registry.
+
+Remaining blocker / next:
+- Reasonable next passes are targeted pruning inside
+  `pqs_h2_residual_gto_handoff.jl` or performance review of the residual-GTO
+  provider construction before further physics expansion.
+
+Line-count / complexity note:
+- `pqs_source_box_low_order_materialization.jl` dropped from about `2907` lines
+  to `800`; the extracted private helper file is about `2109` lines. Net source
+  line count is roughly flat, but ownership is clearer.
