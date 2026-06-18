@@ -3651,3 +3651,50 @@ Remaining blocker / next:
 
 Line-count / complexity note:
 - Documentation impact was small: `30` insertions / `18` deletions.
+
+## Pass 294 - H/V/T Public Contract Sketch
+
+Commit(s):
+- none; read-only baton pass
+
+Summary:
+- Doer produced a read-only sketch for the neutral density-density Hamiltonian
+  handoff contract.
+- The proposed durable object carries `H` in the orbital basis, `V` in the
+  density/provider basis, `T` as the orbital-to-density map, explicit spin
+  counts, constant energy, compact basis labels, nuclear metadata, and eventual
+  format version.
+- The convention was stated explicitly:
+  `(ij|kl) = sum_ab T[a,i] T[a,j] V[a,b] T[b,k] T[b,l]`.
+- The sketch excludes derived dimensions, finite flags, symmetry errors, route
+  labels, private H1-J/RHF diagnostics, sidecar overlap matrices, residual
+  debug facts, and route payloads from the durable consumer contract.
+- It also lists the H2 fixture assumptions that block Cr2/public readiness.
+
+Validation:
+- Read-only response; no Julia validation was required.
+- Doer reported inspection only and a clean/even git state before response.
+- Manager reviewed the sketch and accepted it as the next coding boundary.
+
+Goal advancement:
+- MT4/LT8: clarifies the exact public/neutral producer seam before public API
+  or Cr2 work starts.
+- LT5: prevents the private H2 payload and diagnostic field cloud from becoming
+  the public Hamiltonian contract by accident.
+
+Medium-goal update:
+- none.
+
+Risk / guardrail:
+- The next pass must stay internal/private. Do not export a type, change
+  artifact schema, add Cr2 branches, or make private solver diagnostics part of
+  the handoff.
+
+Remaining blocker / next:
+- Add an internal neutral H/V/T constructor/validator and route the existing
+  private H2 handoff through it while preserving current artifact behavior.
+
+Line-count / complexity note:
+- No source or docs changed in the doer pass. The accepted sketch should enable
+  later deletion by centralizing validation and reducing private H2 field
+  authority.
