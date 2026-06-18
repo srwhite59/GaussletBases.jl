@@ -2,7 +2,6 @@ module GaussletBases
 
 using JLD2
 using LinearAlgebra
-using PrecompileTools: @compile_workload, @setup_workload
 using SHA
 using SparseArrays
 using SpecialFunctions
@@ -683,6 +682,5 @@ include("atomic_ida_two_electron.jl")
 include("fullida_dense_export.jl")
 include("angular_sequence_export.jl")
 include("sliced_ham_export.jl")
-include("precompile_workloads.jl")
 
 end

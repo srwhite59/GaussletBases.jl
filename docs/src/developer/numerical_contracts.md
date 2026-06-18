@@ -491,18 +491,12 @@ seconds warm. The avoided diagnostic repeated-axis setup remains about 14 to 17
 seconds on the q/ns = 5/5 He fixture, confirming that the cache targets the
 previous warm bottleneck.
 
-A narrow `PrecompileTools` workload now compiles only the existing decomposed WL
-one-body production route calls for the q/ns = 5/5 seed: route-global overlap,
-kinetic, and electron-nuclear by-center. No route behavior, fallback,
-Hamiltonian solve, acceptance assertion, GTO/PQS path, export, or artifact
-logic lives in the precompile workload. After a content-changing edit to the
-workload, package precompilation took about `39.5` seconds. A cached fresh
-process `using GaussletBases` measured about `0.67` seconds. Fresh-process route
-calls then landed at warm-scale timings for the seed-backed one-shell
-route-global operator calls: route-global overlap about `0.012` seconds cold,
-route-global kinetic about `0.016` seconds cold, and route-global
-electron-nuclear by-center about `0.089` seconds cold. After redirecting the
-active He acceptance route to shellification-derived retained units, the He RHF
+A previous narrow `PrecompileTools` workload compiled route-specific one-body
+calls for the q/ns = 5/5 seed. That opt-in workload was removed when it no
+longer had a demonstrated current benefit for active route validation; package
+precompilation should not carry route-specific construction cost by default.
+After redirecting the active He acceptance route to shellification-derived
+retained units, the He RHF
 energy remained within the same regression window at about
 `-2.045516767078339` Hartree. A representative fresh test run spent about
 `9.0` seconds in shellification retained-unit/lightweight-pair inventory

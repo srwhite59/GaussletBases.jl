@@ -1089,16 +1089,12 @@ function _pqs_source_box_route_driver_symmetric_matrix(
     return symmetry_error
 end
 
-function _pqs_source_box_route_driver_ham_handoff_consumer_invariant(
-    one_body_hamiltonian,
-    density_pair_matrix,
-    orbital_to_density,
-)
-    h1_orbital = eigen(Symmetric(one_body_hamiltonian)).vectors[:, 1]
-    density_coefficients = orbital_to_density * h1_orbital
+function _pqs_source_box_route_driver_ham_handoff_consumer_invariant(ham_handoff)
+    h1_orbital = eigen(Symmetric(ham_handoff.one_body)).vectors[:, 1]
+    density_coefficients = ham_handoff.orbital_to_density * h1_orbital
     self_coulomb =
         _pqs_source_box_route_driver_restricted_one_orbital_self_coulomb(
-            density_pair_matrix,
+            ham_handoff.density_interaction,
             density_coefficients,
         )
     isfinite(self_coulomb) && self_coulomb > 0 ||
@@ -1303,6 +1299,7 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                 :one_body_hamiltonian,
                 :pre_final_pair_matrix,
                 :h1_lowest,
+                :route_metadata,
                 :final_gto_cross_overlap,
                 :gto_self_overlap,
                 :gto_residual_overlap,
@@ -1380,12 +1377,16 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                 augmented_one_body_hamiltonian =
                     file["augmented_one_body_hamiltonian"]
                 augmented_h1_symmetry_error =
+                    provider_block_mode === :one_body_and_density_provider ?
+                    Float64(file["augmented_h1_symmetry_error"]) :
                     _pqs_source_box_route_driver_symmetric_matrix(
                         "augmented one-body Hamiltonian",
                         augmented_one_body_hamiltonian,
                         (augmented_dimension, augmented_dimension),
                         symmetry_atol,
                     )
+                isfinite(augmented_h1_symmetry_error) ||
+                    throw(ArgumentError("augmented_h1_symmetry_error must be finite"))
                 augmented_h1_lowest = Float64(file["augmented_h1_lowest"])
                 isfinite(augmented_h1_lowest) ||
                     throw(ArgumentError("augmented_h1_lowest must be finite"))
@@ -1441,50 +1442,48 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                                 ArgumentError(
                                     "augmented_density_dimension must equal p_dimension + residual_rank",
                                 ),
-                            )
+                        )
                         augmented_pair_matrix = file["augmented_pair_matrix"]
                         augmented_pair_matrix_symmetry_error =
-                            _pqs_source_box_route_driver_symmetric_matrix(
-                                "augmented_pair_matrix",
-                                augmented_pair_matrix,
-                                (
-                                    augmented_density_dimension,
-                                    augmented_density_dimension,
-                                ),
-                                symmetry_atol,
-                            )
-                        Tuple(file["ham_handoff_orbital_basis"]) ===
+                            Float64(file["augmented_pair_matrix_symmetry_error"])
+                        isfinite(augmented_pair_matrix_symmetry_error) ||
+                            throw(ArgumentError("augmented_pair_matrix_symmetry_error must be finite"))
+                        orbital_basis = Tuple(file["ham_handoff_orbital_basis"])
+                        density_basis = Tuple(file["ham_handoff_density_basis"])
+                        orbital_basis ===
                             (:final_pqs, :residual_gto) ||
                             throw(ArgumentError("unexpected Ham handoff orbital basis"))
-                        Tuple(file["ham_handoff_density_basis"]) ===
+                        density_basis ===
                             (:pre_final_pqs, :residual_gto) ||
                             throw(ArgumentError("unexpected Ham handoff density basis"))
                         orbital_to_density = file["ham_handoff_orbital_to_density"]
-                        _pqs_source_box_route_driver_finite_matrix(
-                            "ham_handoff_orbital_to_density",
+                        route_metadata = file["route_metadata"]
+                        ham_handoff = _CartesianDensityDensityHamiltonian(
+                            augmented_one_body_hamiltonian,
+                            augmented_pair_matrix,
                             orbital_to_density,
-                            (augmented_density_dimension, augmented_dimension),
+                            Int(file["ham_handoff_spin_nup"]),
+                            Int(file["ham_handoff_spin_ndn"]),
+                            Float64(file["ham_handoff_nuclear_repulsion"]);
+                            orbital_basis,
+                            density_basis,
+                            nuclear_charges = route_metadata.nuclear_charges,
+                            nuclear_positions = route_metadata.atom_locations,
                         )
-                        Int(file["ham_handoff_electron_count"]) == 2 ||
-                            throw(ArgumentError("Ham handoff electron count must be 2"))
-                        Int(file["ham_handoff_spin_nup"]) == 1 ||
-                            throw(ArgumentError("Ham handoff spin nup must be 1"))
-                        Int(file["ham_handoff_spin_ndn"]) == 1 ||
-                            throw(ArgumentError("Ham handoff spin ndn must be 1"))
-                        isfinite(Float64(file["ham_handoff_nuclear_repulsion"])) ||
-                            throw(ArgumentError("Ham handoff nuclear repulsion must be finite"))
+                        Int(file["ham_handoff_electron_count"]) ==
+                            ham_handoff.nup + ham_handoff.ndn ||
+                            throw(ArgumentError("Ham handoff electron count must match spin sectors"))
                         consumer_invariant =
                             _pqs_source_box_route_driver_ham_handoff_consumer_invariant(
-                                augmented_one_body_hamiltonian,
-                                augmented_pair_matrix,
-                                orbital_to_density,
+                                ham_handoff,
                             )
                         (;
                             augmented_density_dimension,
-                            augmented_pair_matrix_size = size(augmented_pair_matrix),
+                            augmented_pair_matrix_size =
+                                size(ham_handoff.density_interaction),
                             augmented_pair_matrix_symmetry_error,
                             ham_handoff_orbital_to_density_size =
-                                size(orbital_to_density),
+                                size(ham_handoff.orbital_to_density),
                             ham_handoff_consumer_self_coulomb =
                                 consumer_invariant.self_coulomb,
                         )

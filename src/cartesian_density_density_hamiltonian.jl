@@ -22,17 +22,32 @@ function _cartesian_nuclear_position_matrix(positions)
     return matrix
 end
 
+_cartesian_dense_float_matrix(matrix::Matrix{Float64}) = matrix
+_cartesian_dense_float_matrix(matrix) = Matrix{Float64}(matrix)
+
+_cartesian_float_vector(values::Vector{Float64}) = values
+
+function _cartesian_float_vector(values)
+    return Float64[Float64(value) for value in values]
+end
+
+function _cartesian_nuclear_position_matrix(positions::Matrix{Float64})
+    size(positions, 2) == 3 ||
+        throw(DimensionMismatch("nuclear position matrix must have three columns"))
+    return positions
+end
+
 function _cartesian_nuclear_position_matrix(positions::AbstractMatrix{<:Real})
     size(positions, 2) == 3 ||
         throw(DimensionMismatch("nuclear position matrix must have three columns"))
-    return Matrix{Float64}(positions)
+    return _cartesian_dense_float_matrix(positions)
 end
 
 function _cartesian_check_symmetric_finite_matrix(
     name::AbstractString,
     matrix::AbstractMatrix{<:Real},
 )
-    dense = Matrix{Float64}(matrix)
+    dense = _cartesian_dense_float_matrix(matrix)
     size(dense, 1) == size(dense, 2) ||
         throw(DimensionMismatch("$(name) must be square"))
     all(isfinite, dense) ||
@@ -61,7 +76,7 @@ function _CartesianDensityDensityHamiltonian(
             "density interaction",
             density_interaction,
         )
-    transform = Matrix{Float64}(orbital_to_density)
+    transform = _cartesian_dense_float_matrix(orbital_to_density)
     size(transform) == (size(density_matrix, 1), size(one_body_matrix, 1)) ||
         throw(DimensionMismatch("orbital-to-density transform shape mismatch"))
     all(isfinite, transform) ||
@@ -70,10 +85,13 @@ function _CartesianDensityDensityHamiltonian(
     ndn_value = Int(ndn)
     nup_value >= 0 && ndn_value >= 0 && nup_value + ndn_value > 0 ||
         throw(ArgumentError("spin-sector electron counts must be non-negative and nonzero"))
+    norb = size(one_body_matrix, 1)
+    nup_value <= norb && ndn_value <= norb ||
+        throw(ArgumentError("spin-sector electron counts must not exceed orbital dimension"))
     constant = Float64(constant_energy)
     isfinite(constant) ||
         throw(ArgumentError("constant energy must be finite"))
-    charges = Float64[Float64(charge) for charge in nuclear_charges]
+    charges = _cartesian_float_vector(nuclear_charges)
     all(isfinite, charges) ||
         throw(ArgumentError("nuclear charges contain non-finite entries"))
     positions = _cartesian_nuclear_position_matrix(nuclear_positions)
