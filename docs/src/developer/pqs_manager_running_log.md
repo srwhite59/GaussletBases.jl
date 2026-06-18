@@ -3834,3 +3834,53 @@ Remaining blocker / next:
 Line-count / complexity note:
 - Net source/docs impact was strongly negative: `63` insertions / `188`
   deletions (`-125` lines).
+
+## Pass 297 - Cr2 Consumer Handshake Preparation
+
+Commit(s):
+- none; read-only baton pass
+
+Summary:
+- Doer produced a read-only decision packet for the external/Cr2 consumer
+  handshake needed before public H/V/T API or Cr2 producer work.
+- The current internal contract was restated: `H` in orbital basis `O`, `V` in
+  density/provider basis `D`, `T: O -> D`, spin counts, constant energy, and
+  nuclear metadata.
+- The two-body convention was stated as
+  `(ij|kl) = sum_ab T[a,i] T[a,j] V[a,b] T[b,k] T[b,l]`.
+- Existing export surfaces were classified as not directly compatible:
+  `fullida_dense`, sliced Ham/HamIO-style exports, HamV6/angular bridges, and
+  the private H2 sidecar are references at most, not the public H/V/T artifact.
+- The consumer checklist now names the decisions required: factorized H/V/T
+  versus four-index integrals, dense versus sparse/block storage, Cr2
+  electron/spin/core treatment, constant-energy semantics, nuclear metadata,
+  ordering/locality metadata, and durable JLD2 layout/version expectations.
+
+Validation:
+- Read-only response; no Julia validation was required.
+- Doer reported clean/even git status.
+- Manager reviewed the response and accepted it as the correct stop point.
+
+Goal advancement:
+- MT4/LT8: separates producer-contract design from Cr2/generalization coding.
+- LT5: prevents speculative public fields, old HamV6/QW receipt reuse, or
+  private route sidecars from becoming the external contract.
+
+Medium-goal update:
+- none.
+
+Risk / guardrail:
+- Do not code a public writer/reader, Cr2 branch, or extra metadata until the
+  consumer confirms whether dense factorized H/V/T is acceptable and which
+  ordering/core/constant-energy fields are actually consumed.
+
+Remaining blocker / next:
+- User/chat/Cr2-consumer review of the decision packet. If dense factorized
+  H/V/T is accepted, the next small coding pass is a format-versioned
+  writer/reader boundary for the neutral object plus one H2 consumer smoke. If
+  the consumer requires four-index/block/order metadata, stop and redesign
+  against that requirement.
+
+Line-count / complexity note:
+- No source/docs changed in the doer pass. The baton was stopped deliberately
+  rather than adding speculative public fields.
