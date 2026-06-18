@@ -382,7 +382,7 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
         nothing
     isnothing(inputs) && throw(
         ArgumentError(
-            "H2 PQS residual-GTO sidecar materialization requires source plan, final basis, H1, H1-J, and supplement representation",
+            "H2 PQS residual-GTO sidecar materialization requires source plan, final basis, H1, density interaction, and supplement representation",
         ),
     )
 
@@ -439,34 +439,15 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
             nuclear_repulsion,
         ) :
         nothing
-    augmented_h1_j =
-        provider_block_mode === :one_body_and_density_provider ?
-        _pqs_source_box_route_driver_pqs_h2_augmented_h1_j_diagnostic(
-            one_body_blocks,
-            density_blocks,
-            provider_packet.density_interaction,
-        ) :
-        nothing
-    private_augmented_rhf =
-        provider_block_mode === :one_body_and_density_provider ?
-        _pqs_source_box_route_driver_pqs_h2_private_augmented_rhf_smoke(
-            one_body_blocks,
-            density_blocks,
-            provider_packet.density_interaction,
-            route_metadata,
-        ) :
-        nothing
     ham_handoff_summary =
         _pqs_source_box_route_driver_ham_handoff_summary(ham_handoff)
     final_basis = inputs.final_basis
     h1_hamiltonian = inputs.h1_hamiltonian
     h1 = inputs.h1
     density_interaction = inputs.density_interaction
-    h1_j = inputs.h1_j
     h1_matrix = Matrix{Float64}(h1_hamiltonian.hamiltonian_matrix)
     h1_symmetry_error = norm(h1_matrix - transpose(h1_matrix), Inf)
     h1_finite = all(isfinite, h1_matrix)
-    h1_j_self_coulomb = h1_j.self_coulomb
     final_gto_cross_overlap_size = size(sidecar.final_gto_cross_overlap)
     gto_self_overlap_size = size(sidecar.gto_self_overlap)
     gto_residual_overlap_size = size(sidecar.gto_residual_overlap)
@@ -484,18 +465,11 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
         h1_lowest = h1.lowest_energy,
         h1_finite,
         h1_symmetry_error,
-        h1_j_self_coulomb,
-        h1_j_self_coulomb_positive =
-            isfinite(h1_j_self_coulomb) && h1_j_self_coulomb > 0,
         supplement_policy = report.recipe_metadata.supplement_policy,
-        gto_dimension = sidecar.diagnostics.gto_dimension,
+        gto_dimension = size(sidecar.gto_self_overlap, 1),
         final_gto_cross_overlap_size,
         gto_self_overlap_size,
         gto_residual_overlap_size,
-        gto_residual_overlap_eigenvalue_min =
-            sidecar.diagnostics.gto_residual_overlap_eigenvalue_min,
-        gto_residual_overlap_eigenvalue_max =
-            sidecar.diagnostics.gto_residual_overlap_eigenvalue_max,
         provider_block_mode,
         residual_rank = optional(residual, :residual_rank),
         residual_overlap_identity_error =
@@ -519,7 +493,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
                 density_blocks,
                 :augmented_pair_matrix_symmetry_error,
             ),
-        augmented_h1_j_self_coulomb = optional(augmented_h1_j, :self_coulomb),
         ham_handoff_summary...,
     )
 
@@ -586,7 +559,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
             file["final_to_pre_final_coefficients"] =
                 density_interaction.final_to_pre_final_coefficients
             file["h1_lowest"] = h1.lowest_energy
-            file["h1_j_self_coulomb"] = h1_j_self_coulomb
             _pqs_source_box_route_driver_write_pqs_h2_sidecar_common!(
                 file,
                 inputs,
@@ -620,33 +592,10 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
                     :augmented_pair_matrix_symmetry_error,
                 ),
             )
-            if !isnothing(density_blocks)
-                file["augmented_h1_j_self_coulomb"] = augmented_h1_j.self_coulomb
-                file["augmented_h1_j_density_coefficients_length"] =
-                    augmented_h1_j.density_coefficients_length
-            end
             _pqs_source_box_route_driver_write_jld2_fields!(
                 file,
                 density_blocks,
                 _PQS_H2_DENSITY_MOMENT_ARTIFACT_FIELDS,
-            )
-            _pqs_source_box_route_driver_write_jld2_fields!(
-                file,
-                private_augmented_rhf,
-                (
-                    :private_augmented_rhf_converged => :converged,
-                    :private_augmented_rhf_iterations => :iteration_count,
-                    :private_augmented_rhf_density_trace => :density_trace,
-                    :private_augmented_rhf_idempotency_error => :idempotency_error,
-                    :private_augmented_rhf_commutator_residual =>
-                        :commutator_residual,
-                    :private_augmented_rhf_one_body_energy => :one_body_energy,
-                    :private_augmented_rhf_two_body_energy => :two_body_energy,
-                    :private_augmented_rhf_electronic_energy => :electronic_energy,
-                    :private_augmented_rhf_nuclear_repulsion => :nuclear_repulsion,
-                    :private_augmented_rhf_total_with_nuclear_repulsion =>
-                        :total_with_nuclear_repulsion,
-                ),
             )
             _pqs_source_box_route_driver_write_jld2_fields!(
                 file,
@@ -694,19 +643,13 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
         h1_lowest = h1.lowest_energy,
         h1_finite,
         h1_symmetry_error,
-        h1_j_self_coulomb,
-        h1_j_self_coulomb_positive = summary.h1_j_self_coulomb_positive,
         overlap_identity_error = final_basis.final_overlap_identity_error,
-        gto_dimension = sidecar.diagnostics.gto_dimension,
+        gto_dimension = size(sidecar.gto_self_overlap, 1),
         final_gto_cross_overlap_size,
         gto_self_overlap_size,
         gto_residual_overlap_size,
         gto_residual_overlap_symmetry_error =
             sidecar.diagnostics.gto_residual_overlap_symmetry_error,
-        gto_residual_overlap_eigenvalue_min =
-            sidecar.diagnostics.gto_residual_overlap_eigenvalue_min,
-        gto_residual_overlap_eigenvalue_max =
-            sidecar.diagnostics.gto_residual_overlap_eigenvalue_max,
         provider_block_mode,
         residual_rank = summary.residual_rank,
         residual_overlap_identity_error = summary.residual_overlap_identity_error,
@@ -714,17 +657,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
         augmented_density_dimension = summary.augmented_density_dimension,
         augmented_pair_matrix_symmetry_error =
             summary.augmented_pair_matrix_symmetry_error,
-        augmented_h1_j_self_coulomb = summary.augmented_h1_j_self_coulomb,
-        private_augmented_rhf_converged =
-            optional(private_augmented_rhf, :converged),
-        private_augmented_rhf_iterations =
-            optional(private_augmented_rhf, :iteration_count),
-        private_augmented_rhf_electronic_energy =
-            optional(private_augmented_rhf, :electronic_energy),
-        private_augmented_rhf_total_with_nuclear_repulsion =
-            optional(private_augmented_rhf, :total_with_nuclear_repulsion),
-        private_augmented_rhf_commutator_residual =
-            optional(private_augmented_rhf, :commutator_residual),
         ham_handoff,
         ham_handoff_summary...,
         augmented_dimension,

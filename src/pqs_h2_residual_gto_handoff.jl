@@ -87,28 +87,9 @@ function _pqs_source_box_route_driver_pqs_gto_sidecar(inputs)
         )
     residual_symmetry_error =
         norm(gto_residual_overlap - transpose(gto_residual_overlap), Inf)
-    residual_eigenvalues =
-        isempty(gto_residual_overlap) ?
-        Float64[] :
-        eigvals(Symmetric(0.5 .* (gto_residual_overlap + transpose(gto_residual_overlap))))
     diagnostics = (;
         sidecar_kind = :pqs_h2_residual_gto_sidecar,
-        final_dimension = size(final_gto_cross_overlap, 1),
-        gto_dimension = size(final_gto_cross_overlap, 2),
-        support_dimension = length(support_states),
-        final_gto_cross_overlap_finite = all(isfinite, final_gto_cross_overlap),
-        gto_self_overlap_finite = all(isfinite, gto_self_overlap),
-        gto_residual_overlap_finite = all(isfinite, gto_residual_overlap),
         gto_residual_overlap_symmetry_error = residual_symmetry_error,
-        gto_residual_overlap_eigenvalue_min =
-            isempty(residual_eigenvalues) ? nothing : minimum(residual_eigenvalues),
-        gto_residual_overlap_eigenvalue_max =
-            isempty(residual_eigenvalues) ? nothing : maximum(residual_eigenvalues),
-        donor_kernels = (
-            :basis_representation,
-            :_cartesian_basis_supplement_axis_primitive_cross,
-            :_cartesian_supplement_cross_overlap,
-        ),
     )
     return (;
         final_gto_cross_overlap,
@@ -158,10 +139,6 @@ function _pqs_source_box_route_driver_pqs_gto_residual_transform(
         residual_rank,
         residual_overlap_eigenvalues = eigenvalues,
         residual_overlap_identity_error,
-        residual_overlap_eigenvalue_min =
-            isempty(eigenvalues) ? nothing : minimum(eigenvalues),
-        residual_overlap_eigenvalue_max =
-            isempty(eigenvalues) ? nothing : maximum(eigenvalues),
         residual_overlap_cutoff = cutoff,
     )
 end
@@ -182,7 +159,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_provider_packet(
         source_plan = inputs.source_plan,
         support_states = sidecar.support_states,
         axis_representations = sidecar.axis_representations,
-        supplement_representation = inputs.supplement_representation,
         gto_primitive_arrays,
         final_coefficients = Matrix{Float64}(inputs.final_basis.final_coefficients),
         support_gto_cross = Matrix{Float64}(sidecar.support_gto_cross),
@@ -190,10 +166,7 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_provider_packet(
         density_interaction = inputs.density_interaction,
         s_fg = Matrix{Float64}(sidecar.final_gto_cross_overlap),
         s_gg = Matrix{Float64}(sidecar.gto_self_overlap),
-        s_r = Matrix{Float64}(sidecar.gto_residual_overlap),
         residual_transform = Matrix{Float64}(residual.residual_transform),
-        residual_rank = residual.residual_rank,
-        route_metadata,
         nuclear_charges = Float64.(route_metadata.nuclear_charges),
         atom_locations = route_metadata.atom_locations,
         coulomb_coefficients = Float64.(expansion.coefficients),
@@ -464,7 +437,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_moments(
     nresidual = size(carrier, 2)
     centers = zeros(Float64, nresidual, 3)
     widths = zeros(Float64, nresidual, 3)
-    norms = zeros(Float64, nresidual)
     position_matrices = ntuple(
         axis_index ->
             _pqs_source_box_route_driver_density_carrier_moment_matrix(
@@ -490,7 +462,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_moments(
         norm_value = Float64(dot(vector, raw_overlap * vector))
         norm_value > 1.0e-12 ||
             throw(ArgumentError("residual density moment extraction requires nonzero residual norm"))
-        norms[residual] = norm_value
         for axis_index in 1:3
             position = position_matrices[axis_index]
             second_moment = second_moment_matrices[axis_index]
@@ -506,13 +477,7 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_moments(
     return (;
         residual_centers = centers,
         residual_widths = widths,
-        residual_norms = norms,
         residual_overlap_error,
-        residual_center_min = minimum(centers),
-        residual_center_max = maximum(centers),
-        residual_width_min = minimum(widths),
-        residual_width_max = maximum(widths),
-        residual_widths_positive = all(>(0.0), widths),
     )
 end
 
@@ -559,33 +524,21 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_density_blocks(
         )
     v_rr = Matrix{Float64}(components.residual_residual)
     v_rr = Matrix{Float64}(0.5 .* (v_rr .+ transpose(v_rr)))
-    v_pp = Matrix{Float64}(density_interaction.pre_final_pair_matrix)
     v_dd = [
-        v_pp v_pr
+        Matrix{Float64}(density_interaction.pre_final_pair_matrix) v_pr
         transpose(v_pr) v_rr
     ]
     v_dd_symmetry_error = norm(v_dd - transpose(v_dd), Inf)
     return (;
         augmented_density_gauge = :pre_final_localized_positive_weight,
         augmented_density_space = (:pre_final_pqs, :residual_gto),
-        v_pp_pair_matrix = v_pp,
-        v_pr_pair_matrix = v_pr,
-        v_rr_pair_matrix = v_rr,
         augmented_pair_matrix = v_dd,
         augmented_density_dimension = size(v_dd, 1),
-        v_pr_pair_matrix_size = size(v_pr),
-        v_rr_pair_matrix_size = size(v_rr),
         augmented_pair_matrix_size = size(v_dd),
-        augmented_pair_matrix_finite = all(isfinite, v_dd),
         augmented_pair_matrix_symmetry_error = v_dd_symmetry_error,
         residual_centers = moments.residual_centers,
         residual_widths = moments.residual_widths,
         residual_overlap_error = moments.residual_overlap_error,
-        residual_width_min = moments.residual_width_min,
-        residual_width_max = moments.residual_width_max,
-        residual_widths_positive = moments.residual_widths_positive,
-        support_weight_min = minimum(support_weights),
-        support_weight_max = maximum(support_weights),
     )
 end
 
@@ -608,57 +561,6 @@ function _pqs_source_box_route_driver_restricted_one_orbital_self_coulomb(
     direct = 2.0 * dot(occupations, v * occupations)
     exchange = dot(vec(rho), vec(v .* rho))
     return direct - exchange
-end
-
-function _pqs_source_box_route_driver_pqs_h2_augmented_h1_j_diagnostic(
-    one_body_blocks,
-    density_blocks,
-    density_interaction,
-)
-    isnothing(one_body_blocks) &&
-        throw(ArgumentError("augmented H1-J diagnostic requires one-body provider blocks"))
-    isnothing(density_blocks) &&
-        throw(ArgumentError("augmented H1-J diagnostic requires density provider blocks"))
-    augmented_h1 =
-        Matrix{Float64}(one_body_blocks.augmented_one_body_hamiltonian)
-    augmented_pair = Matrix{Float64}(density_blocks.augmented_pair_matrix)
-    augmented_dimension = one_body_blocks.augmented_dimension
-    density_dimension = density_blocks.augmented_density_dimension
-    size(augmented_h1) == (augmented_dimension, augmented_dimension) ||
-        throw(DimensionMismatch("augmented H1 matrix dimension mismatch"))
-    size(augmented_pair) == (density_dimension, density_dimension) ||
-        throw(DimensionMismatch("augmented pair matrix dimension mismatch"))
-    final_to_pre_final =
-        Matrix{Float64}(density_interaction.final_to_pre_final_coefficients)
-    p_dimension, final_dimension = size(final_to_pre_final)
-    residual_rank = density_dimension - p_dimension
-    augmented_dimension == final_dimension + residual_rank ||
-        throw(DimensionMismatch("augmented H1 and density gauge dimensions mismatch"))
-    eigensystem = eigen(Symmetric(0.5 .* (augmented_h1 .+ transpose(augmented_h1))))
-    orbital = Vector{Float64}(eigensystem.vectors[:, 1])
-    f_coefficients = @view orbital[1:final_dimension]
-    r_coefficients = @view orbital[(final_dimension + 1):augmented_dimension]
-    density_coefficients =
-        vcat(final_to_pre_final * Vector{Float64}(f_coefficients),
-             Vector{Float64}(r_coefficients))
-    self_coulomb =
-        _pqs_source_box_route_driver_restricted_one_orbital_self_coulomb(
-            augmented_pair,
-            density_coefficients,
-        )
-    isfinite(self_coulomb) && self_coulomb > 0 ||
-        throw(ArgumentError("augmented H1-J self Coulomb diagnostic must be finite and positive"))
-    return (;
-        density_gauge = :pre_final_pqs_plus_residual_gto,
-        final_coefficients_length = final_dimension,
-        residual_coefficients_length = residual_rank,
-        density_coefficients_length = length(density_coefficients),
-        augmented_h1_lowest = Float64(eigensystem.values[1]),
-        self_coulomb,
-        h1_j_self_coulomb = self_coulomb,
-        finite = isfinite(self_coulomb),
-        positive = self_coulomb > 0,
-    )
 end
 
 function _pqs_source_box_route_driver_nuclear_repulsion(route_metadata)
@@ -694,171 +596,6 @@ function _pqs_source_box_route_driver_augmented_density_transform(
     transform[(p_dimension + 1):density_dimension,
         (final_dimension + 1):augmented_dimension] .= I(residual_rank)
     return transform
-end
-
-function _pqs_source_box_route_driver_augmented_rhf_fock_components(
-    hamiltonian,
-    pair_matrix,
-    density_transform,
-    spin_summed_density,
-)
-    h = Matrix{Float64}(hamiltonian)
-    v = Matrix{Float64}(pair_matrix)
-    transform = Matrix{Float64}(density_transform)
-    density = Matrix{Float64}(spin_summed_density)
-    size(h, 1) == size(h, 2) ||
-        throw(DimensionMismatch("augmented RHF Hamiltonian must be square"))
-    size(density) == size(h) ||
-        throw(DimensionMismatch("augmented RHF density dimension mismatch"))
-    size(v, 1) == size(v, 2) ||
-        throw(DimensionMismatch("augmented RHF pair matrix must be square"))
-    size(transform, 2) == size(h, 1) ||
-        throw(DimensionMismatch("augmented RHF density transform column mismatch"))
-    size(transform, 1) == size(v, 1) ||
-        throw(DimensionMismatch("augmented RHF density transform row mismatch"))
-    all(isfinite, h) && all(isfinite, v) && all(isfinite, transform) &&
-        all(isfinite, density) ||
-        throw(ArgumentError("augmented RHF inputs contain non-finite entries"))
-
-    orbital_density = 0.5 .* density
-    density_gauge =
-        transform * orbital_density * transpose(transform)
-    density_gauge =
-        0.5 .* (density_gauge .+ transpose(density_gauge))
-    interaction = 0.5 .* (v .+ transpose(v))
-    occupations = vec(diag(density_gauge))
-    density_fock =
-        2.0 .* Diagonal(interaction * occupations) .-
-        density_gauge .* interaction
-    coulomb_exchange =
-        transpose(transform) * Matrix(density_fock) * transform
-    fock = h + coulomb_exchange
-    fock = 0.5 .* (fock .+ transpose(fock))
-    one_body_energy = tr(density * h)
-    two_body_energy = 0.5 * tr(density * coulomb_exchange)
-    return (;
-        fock,
-        coulomb_exchange,
-        one_body_energy,
-        two_body_energy,
-        electronic_energy = one_body_energy + two_body_energy,
-        density_gauge,
-    )
-end
-
-function _pqs_source_box_route_driver_closed_shell_density(orbital)
-    vector = Vector{Float64}(orbital)
-    all(isfinite, vector) ||
-        throw(ArgumentError("closed-shell RHF orbital contains non-finite entries"))
-    return 2.0 .* (vector * transpose(vector))
-end
-
-function _pqs_source_box_route_driver_pqs_h2_private_augmented_rhf_smoke(
-    one_body_blocks,
-    density_blocks,
-    density_interaction,
-    route_metadata;
-    max_iterations::Int = 25,
-    energy_atol::Real = 1.0e-10,
-    residual_atol::Real = 1.0e-8,
-    density_atol::Real = 1.0e-8,
-)
-    isnothing(one_body_blocks) &&
-        throw(ArgumentError("private augmented RHF requires one-body provider blocks"))
-    isnothing(density_blocks) &&
-        throw(ArgumentError("private augmented RHF requires density provider blocks"))
-    max_iterations > 0 ||
-        throw(ArgumentError("private augmented RHF requires a positive iteration limit"))
-    h = Matrix{Float64}(one_body_blocks.augmented_one_body_hamiltonian)
-    pair_matrix = Matrix{Float64}(density_blocks.augmented_pair_matrix)
-    transform =
-        _pqs_source_box_route_driver_augmented_density_transform(
-            density_interaction,
-            one_body_blocks,
-            density_blocks,
-        )
-    initial_eigensystem = eigen(Symmetric(0.5 .* (h .+ transpose(h))))
-    density =
-        _pqs_source_box_route_driver_closed_shell_density(
-            initial_eigensystem.vectors[:, 1],
-        )
-    previous_energy = Inf
-    converged = false
-    iteration_count = 0
-    final_energy_delta = Inf
-    final_density_delta = Inf
-    for iteration in 1:max_iterations
-        components =
-            _pqs_source_box_route_driver_augmented_rhf_fock_components(
-                h,
-                pair_matrix,
-                transform,
-                density,
-            )
-        fock_eigensystem = eigen(Symmetric(components.fock))
-        updated_density =
-            _pqs_source_box_route_driver_closed_shell_density(
-                fock_eigensystem.vectors[:, 1],
-            )
-        mixed_density =
-            iteration < 4 ?
-            0.35 .* updated_density .+ 0.65 .* density :
-            updated_density
-        energy_delta = abs(components.electronic_energy - previous_energy)
-        density_delta = norm(mixed_density - density, Inf)
-        commutator = norm(components.fock * density - density * components.fock, Inf)
-        previous_energy = components.electronic_energy
-        density = mixed_density
-        iteration_count = iteration
-        final_energy_delta = energy_delta
-        final_density_delta = density_delta
-        if energy_delta <= Float64(energy_atol) &&
-           density_delta <= Float64(density_atol) &&
-           commutator <= Float64(residual_atol)
-            density = updated_density
-            converged = true
-            break
-        end
-    end
-    final_components =
-        _pqs_source_box_route_driver_augmented_rhf_fock_components(
-            h,
-            pair_matrix,
-            transform,
-            density,
-        )
-    density_trace = tr(density)
-    idempotency_error = norm(density * density - 2.0 .* density, Inf)
-    commutator_residual =
-        norm(final_components.fock * density - density * final_components.fock, Inf)
-    trace_error = abs(density_trace - 2.0)
-    converged = converged ||
-        (
-            final_energy_delta <= Float64(energy_atol) &&
-            final_density_delta <= Float64(density_atol) &&
-            commutator_residual <= Float64(residual_atol)
-        )
-    converged ||
-        throw(ArgumentError("private augmented RHF smoke did not converge"))
-    trace_error <= Float64(density_atol) ||
-        throw(ArgumentError("private augmented RHF density trace mismatch"))
-    idempotency_error <= 10.0 * Float64(density_atol) ||
-        throw(ArgumentError("private augmented RHF density idempotency mismatch"))
-    nuclear_repulsion =
-        _pqs_source_box_route_driver_nuclear_repulsion(route_metadata)
-    return (;
-        converged,
-        iteration_count,
-        density_trace,
-        idempotency_error,
-        commutator_residual,
-        one_body_energy = final_components.one_body_energy,
-        two_body_energy = final_components.two_body_energy,
-        electronic_energy = final_components.electronic_energy,
-        nuclear_repulsion,
-        total_with_nuclear_repulsion =
-            final_components.electronic_energy + nuclear_repulsion,
-    )
 end
 
 function _pqs_source_box_route_driver_pqs_h2_residual_gto_ham_handoff(
@@ -1305,11 +1042,7 @@ function _pqs_source_box_route_driver_pqs_gto_support_one_body(packet)
         Matrix{Float64}(
             transpose(packet.final_coefficients) * support_gto_charged_nuclear,
         )
-    return (;
-        h_fg_kinetic,
-        h_fg_charged_nuclear,
-        h_fg_one_body = h_fg_kinetic + h_fg_charged_nuclear,
-    )
+    return h_fg_kinetic + h_fg_charged_nuclear
 end
 
 function _pqs_source_box_route_driver_pqs_gto_self_one_body(packet)
@@ -1380,21 +1113,19 @@ function _pqs_source_box_route_driver_pqs_gto_self_one_body(packet)
     h_gg_kinetic = Matrix{Float64}(0.5 .* (h_gg_kinetic .+ transpose(h_gg_kinetic)))
     h_gg_charged_nuclear =
         Matrix{Float64}(0.5 .* (h_gg_charged_nuclear .+ transpose(h_gg_charged_nuclear)))
-    return (;
-        h_gg_kinetic,
-        h_gg_charged_nuclear,
-        h_gg_one_body = h_gg_kinetic + h_gg_charged_nuclear,
-    )
+    return h_gg_kinetic + h_gg_charged_nuclear
 end
 
 function _pqs_source_box_route_driver_pqs_gto_one_body_blocks(packet)
     h_ff = packet.h_ff
     s_fg = packet.s_fg
     l = packet.residual_transform
-    mixed = _pqs_source_box_route_driver_pqs_gto_support_one_body(packet)
-    self = _pqs_source_box_route_driver_pqs_gto_self_one_body(packet)
-    h_fg = Matrix{Float64}(mixed.h_fg_one_body)
-    h_gg = Matrix{Float64}(self.h_gg_one_body)
+    h_fg = Matrix{Float64}(
+        _pqs_source_box_route_driver_pqs_gto_support_one_body(packet),
+    )
+    h_gg = Matrix{Float64}(
+        _pqs_source_box_route_driver_pqs_gto_self_one_body(packet),
+    )
     h_fr = Matrix{Float64}((h_fg - h_ff * s_fg) * l)
     residual_core = Matrix{Float64}(
         h_gg -
@@ -1415,14 +1146,6 @@ function _pqs_source_box_route_driver_pqs_gto_one_body_blocks(packet)
             augmented_one_body_hamiltonian + transpose(augmented_one_body_hamiltonian)
         ))))
     return (;
-        h_fg_kinetic = mixed.h_fg_kinetic,
-        h_fg_charged_nuclear = mixed.h_fg_charged_nuclear,
-        h_gg_kinetic = self.h_gg_kinetic,
-        h_gg_charged_nuclear = self.h_gg_charged_nuclear,
-        h_fg_one_body = h_fg,
-        h_gg_one_body = h_gg,
-        h_fr_one_body = h_fr,
-        h_rr_one_body = h_rr,
         augmented_one_body_hamiltonian,
         augmented_dimension = size(augmented_one_body_hamiltonian, 1),
         augmented_h1_lowest,
@@ -1525,8 +1248,6 @@ function _pqs_source_box_route_driver_ham_handoff_consumer_invariant(
     one_body_hamiltonian,
     density_pair_matrix,
     orbital_to_density,
-    expected_h1_j_self_coulomb::Real;
-    symmetry_atol::Real = 1.0e-8,
 )
     h1_orbital = eigen(Symmetric(one_body_hamiltonian)).vectors[:, 1]
     density_coefficients = orbital_to_density * h1_orbital
@@ -1535,10 +1256,9 @@ function _pqs_source_box_route_driver_ham_handoff_consumer_invariant(
             density_pair_matrix,
             density_coefficients,
         )
-    delta = abs(self_coulomb - Float64(expected_h1_j_self_coulomb))
-    delta <= 10.0 * Float64(symmetry_atol) ||
-        throw(ArgumentError("Ham handoff consumer H1-J invariant mismatch"))
-    return (; self_coulomb, delta,)
+    isfinite(self_coulomb) && self_coulomb > 0 ||
+        throw(ArgumentError("Ham handoff consumer H/V/T scalar must be finite and positive"))
+    return (; self_coulomb,)
 end
 
 """
@@ -1656,9 +1376,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                                 :residual_centers,
                                 :residual_widths,
                                 :residual_moment_overlap_error,
-                                :residual_width_min,
-                                :residual_width_max,
-                                :residual_widths_positive,
                             ),
                         )
                         residual_centers = file["residual_centers"]
@@ -1677,22 +1394,16 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                             Float64(file["residual_moment_overlap_error"])
                         residual_moment_overlap_error <= Float64(symmetry_atol) ||
                             throw(ArgumentError("residual moment overlap error is too large"))
-                        file["residual_widths_positive"] === true ||
-                            throw(ArgumentError("residual_widths_positive must be true"))
                         (;
                             residual_centers_size = size(residual_centers),
                             residual_widths_size = size(residual_widths),
                             residual_moment_overlap_error,
-                            residual_width_min = Float64(file["residual_width_min"]),
-                            residual_width_max = Float64(file["residual_width_max"]),
                         )
                     else
                         (;
                             residual_centers_size = nothing,
                             residual_widths_size = nothing,
                             residual_moment_overlap_error = nothing,
-                            residual_width_min = nothing,
-                            residual_width_max = nothing,
                         )
                     end
                 (;
@@ -1733,7 +1444,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
             final_gto_cross_overlap_size = size(final_gto_cross_overlap),
             gto_self_overlap_size = size(gto_self_overlap),
             gto_residual_overlap_size = size(gto_residual_overlap),
-            gto_residual_overlap_finite = true,
             gto_residual_overlap_symmetry_error = residual_symmetry_error,
             residual_facts...,
         )
@@ -1748,7 +1458,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                 :one_body_hamiltonian,
                 :pre_final_pair_matrix,
                 :h1_lowest,
-                :h1_j_self_coulomb,
                 :final_gto_cross_overlap,
                 :gto_self_overlap,
                 :gto_residual_overlap,
@@ -1764,7 +1473,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
         one_body_hamiltonian = file["one_body_hamiltonian"]
         pre_final_pair_matrix = file["pre_final_pair_matrix"]
         h1_lowest = Float64(file["h1_lowest"])
-        h1_j_self_coulomb = Float64(file["h1_j_self_coulomb"])
         final_gto_cross_overlap = file["final_gto_cross_overlap"]
         gto_self_overlap = file["gto_self_overlap"]
         gto_residual_overlap = file["gto_residual_overlap"]
@@ -1786,8 +1494,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
             "pre_final_pair_matrix",
             pre_final_pair_matrix,
         )
-        isfinite(h1_j_self_coulomb) && h1_j_self_coulomb > 0 ||
-            throw(ArgumentError("h1_j_self_coulomb must be finite and positive"))
         size(final_gto_cross_overlap, 1) == final_dimension ||
             throw(ArgumentError("ham final_gto_cross_overlap row count must equal final_dimension"))
         _pqs_source_box_route_driver_square_matrix(
@@ -1873,8 +1579,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                                 :residual_centers,
                                 :residual_widths,
                                 :residual_moment_overlap_error,
-                                :augmented_h1_j_self_coulomb,
-                                :augmented_h1_j_density_coefficients_length,
                                 :ham_handoff_orbital_basis,
                                 :ham_handoff_density_basis,
                                 :ham_handoff_orbital_to_density,
@@ -1904,14 +1608,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                                 ),
                                 symmetry_atol,
                             )
-                        augmented_h1_j_self_coulomb =
-                            Float64(file["augmented_h1_j_self_coulomb"])
-                        isfinite(augmented_h1_j_self_coulomb) &&
-                            augmented_h1_j_self_coulomb > 0 ||
-                            throw(ArgumentError("augmented H1-J self Coulomb must be finite and positive"))
-                        Int(file["augmented_h1_j_density_coefficients_length"]) ==
-                            augmented_density_dimension ||
-                            throw(ArgumentError("augmented H1-J density coefficient length mismatch"))
                         Tuple(file["ham_handoff_orbital_basis"]) ===
                             (:final_pqs, :residual_gto) ||
                             throw(ArgumentError("unexpected Ham handoff orbital basis"))
@@ -1937,30 +1633,23 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                                 augmented_one_body_hamiltonian,
                                 augmented_pair_matrix,
                                 orbital_to_density,
-                                augmented_h1_j_self_coulomb;
-                                symmetry_atol,
                             )
                         (;
                             augmented_density_dimension,
                             augmented_pair_matrix_size = size(augmented_pair_matrix),
                             augmented_pair_matrix_symmetry_error,
-                            augmented_h1_j_self_coulomb,
                             ham_handoff_orbital_to_density_size =
                                 size(orbital_to_density),
-                            ham_handoff_consumer_h1_j_self_coulomb =
+                            ham_handoff_consumer_self_coulomb =
                                 consumer_invariant.self_coulomb,
-                            ham_handoff_consumer_h1_j_delta =
-                                consumer_invariant.delta,
                         )
                     else
                         (;
                             augmented_density_dimension = nothing,
                             augmented_pair_matrix_size = nothing,
                             augmented_pair_matrix_symmetry_error = nothing,
-                            augmented_h1_j_self_coulomb = nothing,
                             ham_handoff_orbital_to_density_size = nothing,
-                            ham_handoff_consumer_h1_j_self_coulomb = nothing,
-                            ham_handoff_consumer_h1_j_delta = nothing,
+                            ham_handoff_consumer_self_coulomb = nothing,
                         )
                     end
                 (;
@@ -1985,7 +1674,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                     augmented_one_body_hamiltonian_size = nothing,
                     augmented_h1_lowest = nothing,
                     augmented_h1_symmetry_error = nothing,
-                    augmented_h1_j_self_coulomb = nothing,
                     nuclear_mixed_block_convention = nothing,
                     augmented_density_gauge = nothing,
                     augmented_density_space = nothing,
@@ -1998,16 +1686,12 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
             ham_artifact_kind = artifact_kind,
             provider_block_mode,
             one_body_hamiltonian_size = size(one_body_hamiltonian),
-            h1_finite = true,
             h1_symmetry_error,
             h1_lowest,
             pre_final_pair_matrix_size = size(pre_final_pair_matrix),
-            h1_j_self_coulomb,
-            h1_j_self_coulomb_positive = true,
             final_gto_cross_overlap_size = size(final_gto_cross_overlap),
             gto_self_overlap_size = size(gto_self_overlap),
             gto_residual_overlap_size = size(gto_residual_overlap),
-            gto_residual_overlap_finite = true,
             gto_residual_overlap_symmetry_error = residual_symmetry_error,
             augmented_facts...,
         )
@@ -2024,11 +1708,8 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
         final_gto_cross_overlap_size = basis_facts.final_gto_cross_overlap_size,
         gto_self_overlap_size = basis_facts.gto_self_overlap_size,
         gto_residual_overlap_size = basis_facts.gto_residual_overlap_size,
-        h1_finite = ham_facts.h1_finite,
         h1_symmetry_error = ham_facts.h1_symmetry_error,
         h1_lowest = ham_facts.h1_lowest,
-        h1_j_self_coulomb = ham_facts.h1_j_self_coulomb,
-        h1_j_self_coulomb_positive = ham_facts.h1_j_self_coulomb_positive,
         residual_rank = basis_facts.residual_rank,
         residual_overlap_identity_error =
             basis_facts.residual_overlap_identity_error,
@@ -2045,17 +1726,10 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
             ham_facts.augmented_one_body_hamiltonian_size,
         augmented_h1_lowest = ham_facts.augmented_h1_lowest,
         augmented_h1_symmetry_error = ham_facts.augmented_h1_symmetry_error,
-        augmented_h1_j_self_coulomb =
-            ham_facts.augmented_h1_j_self_coulomb,
         ham_handoff_orbital_to_density_size =
             ham_facts.ham_handoff_orbital_to_density_size,
-        ham_handoff_consumer_h1_j_self_coulomb =
-            ham_facts.ham_handoff_consumer_h1_j_self_coulomb,
-        ham_handoff_consumer_h1_j_delta =
-            ham_facts.ham_handoff_consumer_h1_j_delta,
-        gto_residual_overlap_finite =
-            basis_facts.gto_residual_overlap_finite &&
-            ham_facts.gto_residual_overlap_finite,
+        ham_handoff_consumer_self_coulomb =
+            ham_facts.ham_handoff_consumer_self_coulomb,
         basis_gto_residual_overlap_symmetry_error =
             basis_facts.gto_residual_overlap_symmetry_error,
         ham_gto_residual_overlap_symmetry_error =
@@ -2093,8 +1767,6 @@ const _PQS_H2_RESIDUAL_TRANSFORM_ARTIFACT_FIELDS = (
     :residual_rank,
     :residual_overlap_eigenvalues,
     :residual_overlap_identity_error,
-    :residual_overlap_eigenvalue_min,
-    :residual_overlap_eigenvalue_max,
     :residual_overlap_cutoff,
 )
 
@@ -2102,8 +1774,4 @@ const _PQS_H2_DENSITY_MOMENT_ARTIFACT_FIELDS = (
     :residual_centers,
     :residual_widths,
     :residual_moment_overlap_error => :residual_overlap_error,
-    :residual_width_min,
-    :residual_width_max,
-    :residual_widths_positive,
 )
-
