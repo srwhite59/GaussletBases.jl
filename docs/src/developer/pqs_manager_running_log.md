@@ -2995,3 +2995,60 @@ Remaining blocker / next:
 Line-count / complexity note:
 - Source diff before this log entry was `266` added / `242` deleted in
   `pqs_source_box_low_order_materialization.jl`, net `+24`.
+
+## Pass 281 - Residual-GTO Ham Handoff Artifact Readback
+
+Commit(s):
+- this commit - Add H2 PQS residual GTO Ham handoff readback
+
+Summary:
+- Extended the H2 PQS residual-GTO Ham artifact with the compact private Ham
+  handoff contract needed by downstream consumers: handoff kind/visibility,
+  model, orbital basis `[F,R]`, density basis `[P,R]`, `T: [F,R] -> [P,R]`,
+  electron count, spin sectors, and nuclear repulsion.
+- Reused the existing artifact matrices for `H` in `[F,R]` and `V` in `[P,R]`
+  rather than duplicating those large matrices under a second handoff tree.
+- Extended the narrow sidecar roundtrip to require and validate the handoff
+  fields when `provider_block_mode === :one_body_and_density_provider`,
+  including shape/finiteness for the orbital-to-density map and exact labels
+  for the private handoff convention.
+- No solver execution, CR2 integration, public API, provider registry, or route
+  payload tree was added.
+
+Validation:
+- `git diff --check`
+- `julia --project=. -e 'using GaussletBases; println("load ok")'`
+- `julia --project=. tools/run_cartesian_line_ladder.jl --line=pqs_diatomic`
+  passed all three cases through `cartesian_print/save`.
+- The materialized case still reports final dimension `471`, residual rank
+  `18`, augmented dimension `489`, augmented H1-J self-Coulomb
+  `0.457435475059184`, private RHF convergence in `15` iterations, and private
+  Ham handoff orbital/density dimensions `489`/`489`.
+
+Goal advancement:
+- MT4/LT8: upgrades the residual-GTO Ham artifact from route-local fields to a
+  small solver-neutral handoff boundary with explicit gauge transform.
+- LT5: keeps the critical distinction that the one-body Hamiltonian lives in
+  `[F,R]`, while the density interaction lives in `[P,R]` and requires the
+  stored orbital-to-density transform.
+
+Medium-goal update:
+- The narrow H2 residual-GTO Ham handoff artifact/readback goal is complete for
+  the private H2 lane. Broader consumer coverage and provider-block artifact
+  coverage remain separate work.
+
+Risk / guardrail:
+- This remains private experimental data. It is not an HFDMRG integration and
+  not a public Hamiltonian API. The stored handoff fields must not grow into a
+  route payload dump.
+
+Remaining blocker / next:
+- A minimal consumer smoke can now read the artifact and reconstruct invariants
+  from `H`, `V`, and `T` without solving. Performance/paydown and helper
+  extraction remain open before broadening this lane.
+
+Line-count / complexity note:
+- Source diff before this log entry was `57` added / `0` deleted. The added
+  lines are explicit artifact readback checks and compact handoff fields; a
+  later extraction pass should move this route-specific handoff logic out of
+  `pqs_source_box_low_order_materialization.jl` if the file continues to grow.

@@ -2326,6 +2326,16 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                                 :residual_moment_overlap_error,
                                 :augmented_h1_j_self_coulomb,
                                 :augmented_h1_j_density_coefficients_length,
+                                :ham_handoff_kind,
+                                :ham_handoff_visibility,
+                                :ham_handoff_model,
+                                :ham_handoff_orbital_basis,
+                                :ham_handoff_density_basis,
+                                :ham_handoff_orbital_to_density,
+                                :ham_handoff_electron_count,
+                                :ham_handoff_spin_nup,
+                                :ham_handoff_spin_ndn,
+                                :ham_handoff_nuclear_repulsion,
                             ),
                         )
                         augmented_density_dimension =
@@ -2369,6 +2379,33 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                         Int(file["augmented_h1_j_density_coefficients_length"]) ==
                             augmented_density_dimension ||
                             throw(ArgumentError("augmented H1-J density coefficient length mismatch"))
+                        file["ham_handoff_kind"] ===
+                            :pqs_h2_residual_gto_ham_handoff ||
+                            throw(ArgumentError("unexpected Ham handoff kind"))
+                        file["ham_handoff_visibility"] === :private_experimental ||
+                            throw(ArgumentError("unexpected Ham handoff visibility"))
+                        file["ham_handoff_model"] === :density_density ||
+                            throw(ArgumentError("unexpected Ham handoff model"))
+                        Tuple(file["ham_handoff_orbital_basis"]) ===
+                            (:final_pqs, :residual_gto) ||
+                            throw(ArgumentError("unexpected Ham handoff orbital basis"))
+                        Tuple(file["ham_handoff_density_basis"]) ===
+                            (:pre_final_pqs, :residual_gto) ||
+                            throw(ArgumentError("unexpected Ham handoff density basis"))
+                        orbital_to_density = file["ham_handoff_orbital_to_density"]
+                        _pqs_source_box_route_driver_finite_matrix(
+                            "ham_handoff_orbital_to_density",
+                            orbital_to_density,
+                            (augmented_density_dimension, augmented_dimension),
+                        )
+                        Int(file["ham_handoff_electron_count"]) == 2 ||
+                            throw(ArgumentError("Ham handoff electron count must be 2"))
+                        Int(file["ham_handoff_spin_nup"]) == 1 ||
+                            throw(ArgumentError("Ham handoff spin nup must be 1"))
+                        Int(file["ham_handoff_spin_ndn"]) == 1 ||
+                            throw(ArgumentError("Ham handoff spin ndn must be 1"))
+                        isfinite(Float64(file["ham_handoff_nuclear_repulsion"])) ||
+                            throw(ArgumentError("Ham handoff nuclear repulsion must be finite"))
                         (;
                             augmented_density_dimension,
                             v_pr_pair_matrix_size = size(v_pr_pair_matrix),
@@ -2376,6 +2413,8 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                             augmented_pair_matrix_size = size(augmented_pair_matrix),
                             augmented_pair_matrix_symmetry_error,
                             augmented_h1_j_self_coulomb,
+                            ham_handoff_orbital_to_density_size =
+                                size(orbital_to_density),
                         )
                     else
                         (;
@@ -2385,6 +2424,7 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                             augmented_pair_matrix_size = nothing,
                             augmented_pair_matrix_symmetry_error = nothing,
                             augmented_h1_j_self_coulomb = nothing,
+                            ham_handoff_orbital_to_density_size = nothing,
                         )
                     end
                 (;
@@ -2427,6 +2467,7 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                     augmented_density_space = nothing,
                     p_projection_of_g_size = nothing,
                     residual_orbital_coefficients_in_density_carrier_size = nothing,
+                    ham_handoff_orbital_to_density_size = nothing,
                 )
             end
         return (;
@@ -2484,6 +2525,8 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
         augmented_h1_symmetry_error = ham_facts.augmented_h1_symmetry_error,
         augmented_h1_j_self_coulomb =
             ham_facts.augmented_h1_j_self_coulomb,
+        ham_handoff_orbital_to_density_size =
+            ham_facts.ham_handoff_orbital_to_density_size,
         gto_residual_overlap_finite =
             basis_facts.gto_residual_overlap_finite &&
             ham_facts.gto_residual_overlap_finite,
@@ -2871,6 +2914,20 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
                     :nuclear_mixed_block_convention,
                 ),
             )
+            if !isnothing(ham_handoff)
+                file["ham_handoff_kind"] = ham_handoff.handoff_kind
+                file["ham_handoff_visibility"] = ham_handoff.visibility
+                file["ham_handoff_model"] = ham_handoff.model
+                file["ham_handoff_orbital_basis"] = ham_handoff.orbital_basis
+                file["ham_handoff_density_basis"] = ham_handoff.density_basis
+                file["ham_handoff_orbital_to_density"] =
+                    ham_handoff.orbital_to_density
+                file["ham_handoff_electron_count"] = ham_handoff.electron_count
+                file["ham_handoff_spin_nup"] = ham_handoff.spin_sectors.nup
+                file["ham_handoff_spin_ndn"] = ham_handoff.spin_sectors.ndn
+                file["ham_handoff_nuclear_repulsion"] =
+                    ham_handoff.nuclear_repulsion
+            end
         end
     end
 
