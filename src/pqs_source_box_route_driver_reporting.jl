@@ -99,14 +99,16 @@ function _pqs_source_box_route_driver_durable_report(report)
 end
 
 function _pqs_source_box_route_driver_durable_materialization(materialization)
+    ham_handoff_elided =
+        hasproperty(materialization, :ham_handoff) &&
+        !isnothing(getproperty(materialization, :ham_handoff))
     return (;
         (
             field =>
                 field === :ham_handoff ? nothing : getproperty(materialization, field)
             for field in keys(materialization)
         )...,
-        heavy_materialization_objects_elided =
-            hasproperty(materialization, :ham_handoff),
+        heavy_materialization_objects_elided = ham_handoff_elided,
     )
 end
 
@@ -149,7 +151,7 @@ function _pqs_source_box_route_driver_save(
                     _pqs_source_box_route_driver_durable_materialization(
                         materialization,
                     )
-                for field in keys(materialization)
+                for field in keys(durable_materialization)
                     _pqs_route_driver_write_tsv_row(
                         io,
                         "route_materialization",

@@ -2866,3 +2866,67 @@ Line-count / complexity note:
   pass should move the provider/handoff family out of
   `pqs_source_box_low_order_materialization.jl` after the artifact handoff shape
   is accepted.
+
+## Pass 279 - Handoff Summary and Durable Save Paydown
+
+Commit(s):
+- this commit - Simplify H2 PQS Ham handoff summary fields
+
+Summary:
+- Factored the repeated nullable `ham_handoff` flat-field extraction into
+  `_pqs_source_box_route_driver_ham_handoff_summary`.
+- The materialization summary and returned materialization object now both
+  splice that compact summary while still exposing the same flat
+  `ham_handoff_*` fields for the current driver print path.
+- Fixed two durable-save details introduced with the handoff: the
+  `heavy_materialization_objects_elided` marker now reports true only when a
+  non-`nothing` handoff object was actually elided, and TSV output iterates the
+  durable materialization keys so that the marker is written.
+- Added the missing `augmented_h1_j` contract check to the private Ham handoff
+  constructor, so a missing H1-J diagnostic fails at the handoff boundary with
+  a local error.
+- No physics, artifact fields, handoff object contents, or driver behavior were
+  intentionally changed.
+- A local scan of the recent materialization code found no other duplicated
+  handoff nullable cloud. The larger flat-summary smell for optional
+  one-body/density/RHF facts remains; this pass intentionally treated that as a
+  deferred carrying-cost cleanup rather than broadening into a summary rewrite.
+
+Validation:
+- `git diff --check`
+- `julia --project=. -e 'using GaussletBases; println("load ok")'`
+- `julia --project=. tools/run_cartesian_line_ladder.jl --line=pqs_diatomic`
+  passed all three cases through `cartesian_print/save`.
+- Direct durable-materialization probe confirmed `(ham_handoff = nothing,
+  heavy_materialization_objects_elided = false)` when no object is present and
+  `(ham_handoff = nothing, heavy_materialization_objects_elided = true)` when a
+  real handoff object is elided.
+- The materialized residual-GTO case still printed
+  `ham_handoff_kind = pqs_h2_residual_gto_ham_handoff`, orbital/density bases,
+  and matching orbital/density dimensions `489`.
+
+Goal advancement:
+- LT5/LT8: keeps the new private handoff boundary while reducing flat-field
+  duplication and lowering carrying cost in the materialization layer.
+
+Medium-goal update:
+- none.
+
+Risk / guardrail:
+- The flat `ham_handoff_*` mirrors are still present for current report/print
+  compatibility. Longer-term they should probably shrink behind the compact
+  `ham_handoff` object or a single `ham_handoff_summary` field when the print
+  path can consume that directly. The same principle likely applies to the
+  wider optional provider/RHF summary cloud, but that should be a focused
+  cleanup pass, not an incidental edit.
+
+Remaining blocker / next:
+- Continue with the planned handoff artifact/readback pass, or first extract
+  the provider/handoff helpers out of
+  `pqs_source_box_low_order_materialization.jl` if carrying cost becomes the
+  dominant blocker.
+
+Line-count / complexity note:
+- Source/reporting diff before this log entry was `36` added / `45` deleted.
+  The log entry itself adds documentation lines, but the code path is net
+  smaller.
