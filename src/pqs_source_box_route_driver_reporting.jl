@@ -51,7 +51,6 @@ function _pqs_source_box_route_driver_print_materialization(materialization)
         :private_augmented_rhf_electronic_energy,
         :private_augmented_rhf_total_with_nuclear_repulsion,
         :private_augmented_rhf_commutator_residual,
-        :ham_handoff_kind,
         :ham_handoff_orbital_basis,
         :ham_handoff_density_basis,
         :ham_handoff_orbital_dimension,

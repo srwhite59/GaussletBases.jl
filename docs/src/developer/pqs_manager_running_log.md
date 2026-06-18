@@ -3052,3 +3052,50 @@ Line-count / complexity note:
   lines are explicit artifact readback checks and compact handoff fields; a
   later extraction pass should move this route-specific handoff logic out of
   `pqs_source_box_low_order_materialization.jl` if the file continues to grow.
+
+## Pass 282 - Residual-GTO Handoff Label Paydown
+
+Commit(s):
+- this commit - Drop H2 PQS residual GTO handoff labels
+
+Summary:
+- Removed label-only fields from the private H2 residual-GTO handoff surface:
+  `ham_handoff_kind`, `ham_handoff_visibility`, `ham_handoff_model`, and
+  `private_augmented_rhf_kind`.
+- The Ham artifact and readback now rely on the concrete consumer facts:
+  orbital basis, density basis, orbital-to-density map, electron count, spin
+  sectors, nuclear repulsion, and the existing artifact/result discriminators.
+- The materialization print surface no longer shows `ham_handoff_kind`; it
+  still shows orbital/density basis and dimensions as the human-facing handoff
+  facts.
+- No numerical path, matrix, driver input, or construction mode changed.
+
+Validation:
+- `git diff --check`
+- `julia --project=. -e 'using GaussletBases; println("load ok")'`
+- `julia --project=. tools/run_cartesian_line_ladder.jl --line=pqs_diatomic`
+  passed all three cases through `cartesian_print/save`.
+- The materialized case still reports final dimension `471`, residual rank
+  `18`, augmented dimension `489`, augmented H1-J self-Coulomb
+  `0.457435475059184`, private RHF convergence in `15` iterations, and handoff
+  orbital/density dimensions `489`/`489`.
+
+Goal advancement:
+- LT5/LT8: reduces route-specific label carrying cost while preserving the
+  actual solver-neutral handoff contract.
+
+Medium-goal update:
+- none.
+
+Risk / guardrail:
+- Keep artifact/result discriminators and mathematical convention labels, but
+  do not add new constant warning/schema labels unless they drive behavior or
+  protect a real consumer contract.
+
+Remaining blocker / next:
+- The next useful step remains a minimal consumer invariant smoke or a
+  provider/handoff helper extraction pass; avoid broadening into solver
+  execution.
+
+Line-count / complexity note:
+- Source/reporting diff before this log entry was `0` added / `22` deleted.

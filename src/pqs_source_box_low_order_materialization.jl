@@ -1211,7 +1211,6 @@ function _pqs_source_box_route_driver_pqs_h2_private_augmented_rhf_smoke(
     nuclear_repulsion =
         _pqs_source_box_route_driver_nuclear_repulsion(route_metadata)
     return (;
-        rhf_kind = :private_augmented_residual_gto_rhf_smoke,
         converged,
         iteration_count,
         density_trace,
@@ -1263,9 +1262,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_ham_handoff(
     one_body_symmetry_error = norm(one_body - transpose(one_body), Inf)
     pair_symmetry_error = norm(pair_matrix - transpose(pair_matrix), Inf)
     return (;
-        handoff_kind = :pqs_h2_residual_gto_ham_handoff,
-        visibility = :private_experimental,
-        model = :density_density,
         orbital_basis = (:final_pqs, :residual_gto),
         density_basis = (:pre_final_pqs, :residual_gto),
         one_body_hamiltonian = one_body,
@@ -1296,7 +1292,6 @@ end
 function _pqs_source_box_route_driver_ham_handoff_summary(ham_handoff)
     isnothing(ham_handoff) &&
         return (;
-            ham_handoff_kind = nothing,
             ham_handoff_orbital_basis = nothing,
             ham_handoff_density_basis = nothing,
             ham_handoff_orbital_dimension = nothing,
@@ -1304,7 +1299,6 @@ function _pqs_source_box_route_driver_ham_handoff_summary(ham_handoff)
         )
 
     return (;
-        ham_handoff_kind = ham_handoff.handoff_kind,
         ham_handoff_orbital_basis = ham_handoff.orbital_basis,
         ham_handoff_density_basis = ham_handoff.density_basis,
         ham_handoff_orbital_dimension = ham_handoff.diagnostics.orbital_dimension,
@@ -2326,9 +2320,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                                 :residual_moment_overlap_error,
                                 :augmented_h1_j_self_coulomb,
                                 :augmented_h1_j_density_coefficients_length,
-                                :ham_handoff_kind,
-                                :ham_handoff_visibility,
-                                :ham_handoff_model,
                                 :ham_handoff_orbital_basis,
                                 :ham_handoff_density_basis,
                                 :ham_handoff_orbital_to_density,
@@ -2379,13 +2370,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                         Int(file["augmented_h1_j_density_coefficients_length"]) ==
                             augmented_density_dimension ||
                             throw(ArgumentError("augmented H1-J density coefficient length mismatch"))
-                        file["ham_handoff_kind"] ===
-                            :pqs_h2_residual_gto_ham_handoff ||
-                            throw(ArgumentError("unexpected Ham handoff kind"))
-                        file["ham_handoff_visibility"] === :private_experimental ||
-                            throw(ArgumentError("unexpected Ham handoff visibility"))
-                        file["ham_handoff_model"] === :density_density ||
-                            throw(ArgumentError("unexpected Ham handoff model"))
                         Tuple(file["ham_handoff_orbital_basis"]) ===
                             (:final_pqs, :residual_gto) ||
                             throw(ArgumentError("unexpected Ham handoff orbital basis"))
@@ -2880,7 +2864,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
                 file,
                 private_augmented_rhf,
                 (
-                    :private_augmented_rhf_kind => :rhf_kind,
                     :private_augmented_rhf_converged => :converged,
                     :private_augmented_rhf_iterations => :iteration_count,
                     :private_augmented_rhf_density_trace => :density_trace,
@@ -2915,9 +2898,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
                 ),
             )
             if !isnothing(ham_handoff)
-                file["ham_handoff_kind"] = ham_handoff.handoff_kind
-                file["ham_handoff_visibility"] = ham_handoff.visibility
-                file["ham_handoff_model"] = ham_handoff.model
                 file["ham_handoff_orbital_basis"] = ham_handoff.orbital_basis
                 file["ham_handoff_density_basis"] = ham_handoff.density_basis
                 file["ham_handoff_orbital_to_density"] =
@@ -2974,7 +2954,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
         augmented_pair_matrix_symmetry_error =
             summary.augmented_pair_matrix_symmetry_error,
         augmented_h1_j_self_coulomb = summary.augmented_h1_j_self_coulomb,
-        private_augmented_rhf_kind = optional(private_augmented_rhf, :rhf_kind),
         private_augmented_rhf_converged =
             optional(private_augmented_rhf, :converged),
         private_augmented_rhf_iterations =
