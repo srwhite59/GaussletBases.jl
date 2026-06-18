@@ -3698,3 +3698,84 @@ Line-count / complexity note:
 - No source or docs changed in the doer pass. The accepted sketch should enable
   later deletion by centralizing validation and reducing private H2 field
   authority.
+
+## Pass 295 - Internal Cartesian Density-Density Hamiltonian Contract
+
+Commit(s):
+- `015b6508` - Add internal Cartesian density-density Hamiltonian contract
+
+Summary:
+- Added private `_CartesianDensityDensityHamiltonian` as the internal neutral
+  H/V/T contract object.
+- The object carries one-body `H`, density interaction `V`, orbital-to-density
+  transform `T`, spin counts, constant energy, compact basis labels, and
+  nuclear metadata.
+- Constructor validation now owns the square/finite/symmetric matrix checks,
+  transform shape check, spin-count check, constant-energy check, and nuclear
+  metadata shape/finiteness checks.
+- The existing private H2 residual-GTO handoff now adapts H2-specific labels,
+  spin counts, and nuclear repulsion into the neutral constructor.
+- Existing artifact/report key names were preserved; no public API, Cr2 branch,
+  provider registry, or private H1-J/RHF solver diagnostic was added.
+
+Validation:
+- Doer reported `git diff --check`.
+- Doer reported package load.
+- Doer reported
+  `julia --project=. tools/run_cartesian_line_ladder.jl --line=pqs_diatomic`
+  passed all three cases after fixing a constructor materialization issue for
+  tuple nuclear charges.
+- Doer reported direct H/V/T artifact readback with provider mode
+  `one_body_and_density_provider`, final dimension `471`, and handoff consumer
+  self-Coulomb `0.4574354750591831`.
+- Manager inspected the pushed diff and found no blocking issue.
+
+Goal advancement:
+- MT4/LT8: creates the first internal neutral contract seam between the H2
+  private producer and a future public Hamiltonian object.
+- LT5: pulls validation authority out of the H2 payload field cloud without
+  changing durable artifact keys yet.
+
+Medium-goal update:
+- The private H2 H/V/T producer lane now has an internal neutral object. The
+  next lane should decide public naming/read-write format and external consumer
+  needs before adding Cr2/generalization code.
+
+Risk / guardrail:
+- This is still private/internal. Do not export the object, treat it as Cr2
+  ready, or add consumer-specific fields until the external contract is agreed.
+
+Remaining blocker / next:
+- Decide public name, durable format/version, factorized H/V/T consumer
+  requirements, Cr2 electron/spin/core treatment, and performance validation
+  before public promotion.
+
+Line-count / complexity note:
+- Source impact was `117` insertions / `38` deletions. The positive count is
+  accepted because it creates the neutral validation seam, but later passes
+  should use it to delete H2 private validation/readback code rather than grow
+  parallel surfaces.
+
+## Medium-Term Goal Checkpoint - Passes 291-295
+
+Status:
+- Active: neutral H2 residual-GTO H/V/T producer migration. The H2 private
+  artifact now has shared Gaussian kernels and an internal neutral
+  density-density Hamiltonian contract.
+- Active: donor-wrapper paydown. Weighted-Hadamard and 1D Gaussian axis table
+  loops have moved into neutral private helpers; QW names remain as wrappers
+  because live donor callers still need them.
+- Completed for this checkpoint: private solver diagnostics were kept out of
+  the producer contract, and donor docs now reflect the current H2/private
+  status.
+- Blocked: public/Cr2 producer promotion is blocked on external consumer
+  contract, electron/spin/core treatment, durable format/version, non-H2 source
+  dimensions, and performance review.
+- Needing refinement: the next medium goal should separate two lanes:
+  public H/V/T contract/read-write design, and continued donor-kernel
+  extraction/deletion.
+
+Guardrail update:
+- The private H2 route remains a producer prototype, not a public solver lane.
+  Continue to reject status/readiness/probe payloads, provider registries, and
+  private H1-J/RHF diagnostics as part of the producer surface.
