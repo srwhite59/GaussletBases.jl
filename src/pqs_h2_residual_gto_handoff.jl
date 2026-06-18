@@ -602,52 +602,33 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_ham_handoff(
     one_body_blocks,
     density_blocks,
     density_interaction,
-    nuclear_repulsion,
+    route_metadata,
 )
     isnothing(one_body_blocks) &&
         throw(ArgumentError("H2 residual-GTO Ham handoff requires one-body blocks"))
     isnothing(density_blocks) &&
         throw(ArgumentError("H2 residual-GTO Ham handoff requires density blocks"))
+    nuclear_repulsion =
+        _pqs_source_box_route_driver_nuclear_repulsion(route_metadata)
     isfinite(Float64(nuclear_repulsion)) ||
         throw(ArgumentError("H2 residual-GTO Ham handoff requires finite nuclear repulsion"))
-    one_body = Matrix{Float64}(one_body_blocks.augmented_one_body_hamiltonian)
-    pair_matrix = Matrix{Float64}(density_blocks.augmented_pair_matrix)
     orbital_to_density =
         _pqs_source_box_route_driver_augmented_density_transform(
             density_interaction,
             one_body_blocks,
             density_blocks,
         )
-    orbital_dimension = size(one_body, 1)
-    density_dimension = size(pair_matrix, 1)
-    size(one_body, 2) == orbital_dimension ||
-        throw(DimensionMismatch("Ham handoff one-body matrix must be square"))
-    size(pair_matrix, 2) == density_dimension ||
-        throw(DimensionMismatch("Ham handoff density pair matrix must be square"))
-    size(orbital_to_density) == (density_dimension, orbital_dimension) ||
-        throw(DimensionMismatch("Ham handoff orbital-to-density transform shape mismatch"))
-    all(isfinite, one_body) && all(isfinite, pair_matrix) &&
-        all(isfinite, orbital_to_density) ||
-        throw(ArgumentError("Ham handoff matrices contain non-finite entries"))
-    one_body_symmetry_error = norm(one_body - transpose(one_body), Inf)
-    pair_symmetry_error = norm(pair_matrix - transpose(pair_matrix), Inf)
-    return (;
+    return _CartesianDensityDensityHamiltonian(
+        one_body_blocks.augmented_one_body_hamiltonian,
+        density_blocks.augmented_pair_matrix,
+        orbital_to_density,
+        1,
+        1,
+        nuclear_repulsion;
         orbital_basis = (:final_pqs, :residual_gto),
         density_basis = (:pre_final_pqs, :residual_gto),
-        one_body_hamiltonian = one_body,
-        density_pair_matrix = pair_matrix,
-        orbital_to_density,
-        electron_count = 2,
-        spin_sectors = (; nup = 1, ndn = 1),
-        nuclear_repulsion = Float64(nuclear_repulsion),
-        diagnostics = (;
-            orbital_dimension,
-            density_dimension,
-            residual_rank = density_blocks.augmented_density_dimension -
-                size(density_interaction.final_to_pre_final_coefficients, 1),
-            one_body_symmetry_error,
-            pair_symmetry_error,
-        ),
+        nuclear_charges = route_metadata.nuclear_charges,
+        nuclear_positions = route_metadata.atom_locations,
     )
 end
 
@@ -663,8 +644,8 @@ function _pqs_source_box_route_driver_ham_handoff_summary(ham_handoff)
     return (;
         ham_handoff_orbital_basis = ham_handoff.orbital_basis,
         ham_handoff_density_basis = ham_handoff.density_basis,
-        ham_handoff_orbital_dimension = ham_handoff.diagnostics.orbital_dimension,
-        ham_handoff_density_dimension = ham_handoff.diagnostics.density_dimension,
+        ham_handoff_orbital_dimension = size(ham_handoff.one_body, 1),
+        ham_handoff_density_dimension = size(ham_handoff.density_interaction, 1),
     )
 end
 

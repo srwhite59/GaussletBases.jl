@@ -436,7 +436,7 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
             one_body_blocks,
             density_blocks,
             provider_packet.density_interaction,
-            nuclear_repulsion,
+            route_metadata,
         ) :
         nothing
     ham_handoff_summary =
@@ -613,11 +613,12 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
                 file["ham_handoff_density_basis"] = ham_handoff.density_basis
                 file["ham_handoff_orbital_to_density"] =
                     ham_handoff.orbital_to_density
-                file["ham_handoff_electron_count"] = ham_handoff.electron_count
-                file["ham_handoff_spin_nup"] = ham_handoff.spin_sectors.nup
-                file["ham_handoff_spin_ndn"] = ham_handoff.spin_sectors.ndn
+                file["ham_handoff_electron_count"] =
+                    ham_handoff.nup + ham_handoff.ndn
+                file["ham_handoff_spin_nup"] = ham_handoff.nup
+                file["ham_handoff_spin_ndn"] = ham_handoff.ndn
                 file["ham_handoff_nuclear_repulsion"] =
-                    ham_handoff.nuclear_repulsion
+                    ham_handoff.constant_energy
             end
         end
     end
