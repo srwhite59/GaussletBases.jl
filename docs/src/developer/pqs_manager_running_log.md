@@ -2804,3 +2804,65 @@ Remaining blocker / next:
 Line-count / complexity note:
 - Source change before this log entry was `13` added / `0` deleted in the
   simple print helper.
+
+## Pass 278 - Private Residual-GTO Ham Handoff Payload
+
+Commit(s):
+- this commit - Define H2 PQS residual GTO Ham handoff payload
+
+Summary:
+- Added a private, solver-neutral in-memory Ham handoff payload for the H2 PQS
+  residual-GTO materialized route.
+- The handoff explicitly separates gauges: one-body Hamiltonian in orbital
+  basis `[F, R] = (:final_pqs, :residual_gto)`, density interaction in
+  provider basis `[P, R] = (:pre_final_pqs, :residual_gto)`, and
+  `orbital_to_density` as the required map from orbital coefficients to the
+  density-provider gauge.
+- The payload also carries electron count `2`, spin sectors `(nup = 1, ndn =
+  1)`, nuclear repulsion, and compact diagnostics. No public API, external
+  solver call, CR2 path, provider registry, or new physics was added.
+- To avoid accidental report/TSV bloat, the generic durable materialization
+  helper now elides the heavy `ham_handoff` object while preserving scalar
+  handoff facts in the driver output.
+
+Validation:
+- `git diff --check`
+- `julia --project=. -e 'using GaussletBases; println("load ok")'`
+- `julia --project=. tools/run_cartesian_line_ladder.jl --line=pqs_diatomic`
+  passed all three cases through `cartesian_print/save`.
+- The materialized case prints `ham_handoff_kind =
+  :pqs_h2_residual_gto_ham_handoff`, orbital basis
+  `(:final_pqs, :residual_gto)`, density basis
+  `(:pre_final_pqs, :residual_gto)`, orbital dimension `489`, and density
+  dimension `489`.
+- Direct durable-materialization probe confirmed `ham_handoff` is elided from
+  generic saved materialization output:
+  `d.ham_handoff = nothing` and `heavy_materialization_objects_elided = true`.
+
+Goal advancement:
+- MT4/LT8: creates the first explicit solver-neutral Hamiltonian handoff
+  boundary for the residual-GTO slice, using already-validated one-body,
+  density-provider, H1-J, and private RHF data.
+- LT5: preserves the corrected `[F,R]`/`[P,R]` gauge distinction as a concrete
+  consumer contract, preventing downstream code from misusing the pair matrix.
+
+Medium-goal update:
+- none.
+
+Risk / guardrail:
+- This is an in-memory private experimental payload only. The next artifact
+  pass must decide how to write/read a compact handoff without dumping route
+  payload trees. This is not an HFDMRG integration and not a public Ham API.
+
+Remaining blocker / next:
+- Add a narrow JLD2 handoff artifact/group and readback check for this payload:
+  H in `[F,R]`, V in `[P,R]`, `T: [F,R] -> [P,R]`, electron/spin counts,
+  nuclear repulsion, dimensions, finiteness, and symmetry. Do not add solver
+  execution in that pass.
+
+Line-count / complexity note:
+- Source diff before this log entry was `130` added / `2` deleted. The added
+  lines are a live private contract plus save-path elision; a later extraction
+  pass should move the provider/handoff family out of
+  `pqs_source_box_low_order_materialization.jl` after the artifact handoff shape
+  is accepted.

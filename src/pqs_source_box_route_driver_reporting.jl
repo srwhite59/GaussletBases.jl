@@ -51,6 +51,11 @@ function _pqs_source_box_route_driver_print_materialization(materialization)
         :private_augmented_rhf_electronic_energy,
         :private_augmented_rhf_total_with_nuclear_repulsion,
         :private_augmented_rhf_commutator_residual,
+        :ham_handoff_kind,
+        :ham_handoff_orbital_basis,
+        :ham_handoff_density_basis,
+        :ham_handoff_orbital_dimension,
+        :ham_handoff_density_dimension,
         :basisfile,
         :hamfile,
     )
@@ -93,6 +98,18 @@ function _pqs_source_box_route_driver_durable_report(report)
     )
 end
 
+function _pqs_source_box_route_driver_durable_materialization(materialization)
+    return (;
+        (
+            field =>
+                field === :ham_handoff ? nothing : getproperty(materialization, field)
+            for field in keys(materialization)
+        )...,
+        heavy_materialization_objects_elided =
+            hasproperty(materialization, :ham_handoff),
+    )
+end
+
 function _pqs_source_box_route_driver_save(
     report;
     save_artifact, save_tsv, outfile, tsvfile, materialization = nothing,
@@ -105,7 +122,10 @@ function _pqs_source_box_route_driver_save(
         jldopen(outfile, "w") do file
             file["report"] = durable_report
             isnothing(materialization) ||
-                (file["materialization"] = materialization)
+                (file["materialization"] =
+                    _pqs_source_box_route_driver_durable_materialization(
+                        materialization,
+                    ))
         end
     end
 
@@ -125,12 +145,16 @@ function _pqs_source_box_route_driver_save(
                 _pqs_route_driver_write_tsv_row(io, "pair_entry", entry.pair_key, entry)
             end
             if !isnothing(materialization)
+                durable_materialization =
+                    _pqs_source_box_route_driver_durable_materialization(
+                        materialization,
+                    )
                 for field in keys(materialization)
                     _pqs_route_driver_write_tsv_row(
                         io,
                         "route_materialization",
                         field,
-                        getproperty(materialization, field),
+                        getproperty(durable_materialization, field),
                     )
                 end
             end

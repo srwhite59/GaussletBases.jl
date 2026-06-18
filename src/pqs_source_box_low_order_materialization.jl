@@ -1226,6 +1226,71 @@ function _pqs_source_box_route_driver_pqs_h2_private_augmented_rhf_smoke(
     )
 end
 
+function _pqs_source_box_route_driver_pqs_h2_residual_gto_ham_handoff(
+    one_body_blocks,
+    density_blocks,
+    density_interaction,
+    augmented_h1_j,
+    private_augmented_rhf,
+)
+    isnothing(one_body_blocks) &&
+        throw(ArgumentError("H2 residual-GTO Ham handoff requires one-body blocks"))
+    isnothing(density_blocks) &&
+        throw(ArgumentError("H2 residual-GTO Ham handoff requires density blocks"))
+    isnothing(private_augmented_rhf) &&
+        throw(ArgumentError("H2 residual-GTO Ham handoff requires private RHF facts"))
+    one_body = Matrix{Float64}(one_body_blocks.augmented_one_body_hamiltonian)
+    pair_matrix = Matrix{Float64}(density_blocks.augmented_pair_matrix)
+    orbital_to_density =
+        _pqs_source_box_route_driver_augmented_density_transform(
+            density_interaction,
+            one_body_blocks,
+            density_blocks,
+        )
+    orbital_dimension = size(one_body, 1)
+    density_dimension = size(pair_matrix, 1)
+    size(one_body, 2) == orbital_dimension ||
+        throw(DimensionMismatch("Ham handoff one-body matrix must be square"))
+    size(pair_matrix, 2) == density_dimension ||
+        throw(DimensionMismatch("Ham handoff density pair matrix must be square"))
+    size(orbital_to_density) == (density_dimension, orbital_dimension) ||
+        throw(DimensionMismatch("Ham handoff orbital-to-density transform shape mismatch"))
+    all(isfinite, one_body) && all(isfinite, pair_matrix) &&
+        all(isfinite, orbital_to_density) ||
+        throw(ArgumentError("Ham handoff matrices contain non-finite entries"))
+    one_body_symmetry_error = norm(one_body - transpose(one_body), Inf)
+    pair_symmetry_error = norm(pair_matrix - transpose(pair_matrix), Inf)
+    return (;
+        handoff_kind = :pqs_h2_residual_gto_ham_handoff,
+        visibility = :private_experimental,
+        model = :density_density,
+        orbital_basis = (:final_pqs, :residual_gto),
+        density_basis = (:pre_final_pqs, :residual_gto),
+        one_body_hamiltonian = one_body,
+        density_pair_matrix = pair_matrix,
+        orbital_to_density,
+        electron_count = 2,
+        spin_sectors = (; nup = 1, ndn = 1),
+        nuclear_repulsion = private_augmented_rhf.nuclear_repulsion,
+        diagnostics = (;
+            orbital_dimension,
+            density_dimension,
+            residual_rank = density_blocks.augmented_density_dimension -
+                size(density_interaction.final_to_pre_final_coefficients, 1),
+            one_body_symmetry_error,
+            pair_symmetry_error,
+            h1_lowest = one_body_blocks.augmented_h1_lowest,
+            h1_j_self_coulomb = augmented_h1_j.self_coulomb,
+            private_rhf_converged = private_augmented_rhf.converged,
+            private_rhf_iterations = private_augmented_rhf.iteration_count,
+            private_rhf_total_with_nuclear_repulsion =
+                private_augmented_rhf.total_with_nuclear_repulsion,
+            private_rhf_commutator_residual =
+                private_augmented_rhf.commutator_residual,
+        ),
+    )
+end
+
 @inline function _pqs_source_box_route_driver_axis_index(axis::Symbol)
     axis === :x && return 1
     axis === :y && return 2
@@ -2460,6 +2525,16 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
             route_metadata,
         ) :
         nothing
+    ham_handoff =
+        residual_gto_provider_blocks === :one_body_and_density_provider ?
+        _pqs_source_box_route_driver_pqs_h2_residual_gto_ham_handoff(
+            one_body_blocks,
+            density_blocks,
+            provider_packet.density_interaction,
+            augmented_h1_j,
+            private_augmented_rhf,
+        ) :
+        nothing
     final_basis = inputs.final_basis
     h1_hamiltonian = inputs.h1_hamiltonian
     h1 = inputs.h1
@@ -2561,6 +2636,20 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
             isnothing(density_blocks) ? nothing : density_blocks.residual_width_min,
         residual_width_max =
             isnothing(density_blocks) ? nothing : density_blocks.residual_width_max,
+        ham_handoff_kind =
+            isnothing(ham_handoff) ? nothing : ham_handoff.handoff_kind,
+        ham_handoff_orbital_basis =
+            isnothing(ham_handoff) ? nothing : ham_handoff.orbital_basis,
+        ham_handoff_density_basis =
+            isnothing(ham_handoff) ? nothing : ham_handoff.density_basis,
+        ham_handoff_orbital_dimension =
+            isnothing(ham_handoff) ?
+            nothing :
+            ham_handoff.diagnostics.orbital_dimension,
+        ham_handoff_density_dimension =
+            isnothing(ham_handoff) ?
+            nothing :
+            ham_handoff.diagnostics.density_dimension,
     )
 
     basis_artifact_path = nothing
@@ -2813,6 +2902,21 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
             isnothing(private_augmented_rhf) ?
             nothing :
             private_augmented_rhf.commutator_residual,
+        ham_handoff,
+        ham_handoff_kind =
+            isnothing(ham_handoff) ? nothing : ham_handoff.handoff_kind,
+        ham_handoff_orbital_basis =
+            isnothing(ham_handoff) ? nothing : ham_handoff.orbital_basis,
+        ham_handoff_density_basis =
+            isnothing(ham_handoff) ? nothing : ham_handoff.density_basis,
+        ham_handoff_orbital_dimension =
+            isnothing(ham_handoff) ?
+            nothing :
+            ham_handoff.diagnostics.orbital_dimension,
+        ham_handoff_density_dimension =
+            isnothing(ham_handoff) ?
+            nothing :
+            ham_handoff.diagnostics.density_dimension,
         augmented_dimension,
         augmented_h1_lowest,
         augmented_h1_symmetry_error,
