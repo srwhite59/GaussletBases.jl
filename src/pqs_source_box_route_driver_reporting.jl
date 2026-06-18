@@ -38,7 +38,7 @@ function _pqs_source_box_route_driver_print_materialization(materialization)
         :h1_lowest,
         :h1_symmetry_error,
         :overlap_identity_error,
-        :provider_blocks_included,
+        :provider_block_mode,
         :residual_rank,
         :augmented_dimension,
         :augmented_h1_lowest,

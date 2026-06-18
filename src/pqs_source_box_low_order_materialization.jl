@@ -472,7 +472,6 @@ function _pqs_source_box_route_driver_pqs_gto_sidecar(inputs)
             :_cartesian_basis_supplement_axis_primitive_cross,
             :_cartesian_supplement_cross_overlap,
         ),
-        provider_blocks_included = false,
     )
     return (;
         final_gto_cross_overlap,
@@ -1801,12 +1800,8 @@ function _pqs_source_box_route_driver_pqs_h2_route_metadata(report, inputs)
     recipe = report.recipe_metadata
     system = report.system_metadata
     provider_block_mode = _pqs_source_box_route_driver_pqs_h2_provider_block_mode(
-        get(inputs, :provider_block_mode, get(inputs, :provider_blocks_included, false)),
+        get(inputs, :provider_block_mode, false),
     )
-    provider_blocks_included =
-        _pqs_source_box_route_driver_legacy_provider_blocks_included(
-            provider_block_mode,
-        )
     return (;
         route_family = report.route_family,
         route_kind = report.route_kind,
@@ -1827,7 +1822,6 @@ function _pqs_source_box_route_driver_pqs_h2_route_metadata(report, inputs)
         final_dimension = final_basis.final_dimension,
         artifact_scope = :pqs_ham_basis_plus_residual_gto_sidecar,
         provider_block_mode,
-        provider_blocks_included,
     )
 end
 
@@ -1851,17 +1845,11 @@ function _pqs_source_box_route_driver_pqs_h2_provider_block_mode(mode)
     throw(ArgumentError("provider block mode must be :none, :one_body_only, or :one_body_and_density_provider; got $(mode)"))
 end
 
-function _pqs_source_box_route_driver_legacy_provider_blocks_included(mode)
-    provider_block_mode =
-        _pqs_source_box_route_driver_pqs_h2_provider_block_mode(mode)
-    return provider_block_mode === :none ? false : provider_block_mode
-end
-
 function _pqs_source_box_route_driver_read_pqs_h2_provider_block_mode(file)
+    haskey(file, "provider_block_mode") ||
+        throw(ArgumentError("H2 PQS sidecar artifact missing provider_block_mode"))
     return _pqs_source_box_route_driver_pqs_h2_provider_block_mode(
-        haskey(file, "provider_block_mode") ?
-        file["provider_block_mode"] :
-        file["provider_blocks_included"],
+        file["provider_block_mode"],
     )
 end
 
@@ -1921,7 +1909,7 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                 :final_gto_cross_overlap,
                 :gto_self_overlap,
                 :gto_residual_overlap,
-                :provider_blocks_included,
+                :provider_block_mode,
             ),
         )
         artifact_kind = file["artifact_kind"]
@@ -1934,10 +1922,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
         gto_residual_overlap = file["gto_residual_overlap"]
         provider_block_mode =
             _pqs_source_box_route_driver_read_pqs_h2_provider_block_mode(file)
-        provider_blocks_included =
-            _pqs_source_box_route_driver_legacy_provider_blocks_included(
-                provider_block_mode,
-            )
         size(final_coefficients, 2) == final_dimension ||
             throw(ArgumentError("basis final_coefficients column count must equal final_dimension"))
         size(final_gto_cross_overlap, 1) == final_dimension ||
@@ -2088,7 +2072,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
             basis_artifact_kind = artifact_kind,
             final_dimension,
             provider_block_mode,
-            provider_blocks_included,
             final_coefficients_size = size(final_coefficients),
             final_gto_cross_overlap_size = size(final_gto_cross_overlap),
             gto_self_overlap_size = size(gto_self_overlap),
@@ -2112,7 +2095,7 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                 :final_gto_cross_overlap,
                 :gto_self_overlap,
                 :gto_residual_overlap,
-                :provider_blocks_included,
+                :provider_block_mode,
             ),
         )
         artifact_kind = file["artifact_kind"]
@@ -2130,10 +2113,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
         gto_residual_overlap = file["gto_residual_overlap"]
         provider_block_mode =
             _pqs_source_box_route_driver_read_pqs_h2_provider_block_mode(file)
-        provider_blocks_included =
-            _pqs_source_box_route_driver_legacy_provider_blocks_included(
-                provider_block_mode,
-            )
         provider_block_mode === basis_facts.provider_block_mode ||
             throw(ArgumentError("basis and ham provider block modes differ"))
         size(one_body_hamiltonian) == (final_dimension, final_dimension) ||
@@ -2369,7 +2348,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
         return (;
             ham_artifact_kind = artifact_kind,
             provider_block_mode,
-            provider_blocks_included,
             one_body_hamiltonian_size = size(one_body_hamiltonian),
             h1_finite = true,
             h1_symmetry_error,
@@ -2393,7 +2371,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
         basis_artifact_kind = basis_facts.basis_artifact_kind,
         ham_artifact_kind = ham_facts.ham_artifact_kind,
         provider_block_mode = basis_facts.provider_block_mode,
-        provider_blocks_included = basis_facts.provider_blocks_included,
         final_coefficients_size = basis_facts.final_coefficients_size,
         final_gto_cross_overlap_size = basis_facts.final_gto_cross_overlap_size,
         gto_self_overlap_size = basis_facts.gto_self_overlap_size,
@@ -2442,7 +2419,6 @@ function _pqs_source_box_route_driver_write_pqs_h2_sidecar_common!(
     inputs,
     sidecar,
     provider_block_mode,
-    provider_blocks_included,
 )
     file["gto_supplement_metadata"] = inputs.supplement_representation.metadata
     file["final_gto_cross_overlap"] = sidecar.final_gto_cross_overlap
@@ -2450,7 +2426,6 @@ function _pqs_source_box_route_driver_write_pqs_h2_sidecar_common!(
     file["gto_residual_overlap"] = sidecar.gto_residual_overlap
     file["gto_sidecar_diagnostics"] = sidecar.diagnostics
     file["provider_block_mode"] = provider_block_mode
-    file["provider_blocks_included"] = provider_blocks_included
     return nothing
 end
 
@@ -2510,17 +2485,13 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
         _pqs_source_box_route_driver_pqs_h2_provider_block_mode(
             residual_gto_provider_blocks,
         )
-    provider_blocks_included =
-        _pqs_source_box_route_driver_legacy_provider_blocks_included(
-            provider_block_mode,
-        )
     sidecar = _pqs_source_box_route_driver_pqs_gto_sidecar(inputs)
     route_metadata = _pqs_source_box_route_driver_pqs_h2_route_metadata(
         report,
-        merge(inputs, (; provider_block_mode, provider_blocks_included,)),
+        merge(inputs, (; provider_block_mode,)),
     )
     inputs =
-        merge(inputs, (; route_metadata, provider_block_mode, provider_blocks_included,))
+        merge(inputs, (; route_metadata, provider_block_mode,))
     residual =
         provider_block_mode !== :none ?
         _pqs_source_box_route_driver_pqs_gto_residual_transform(sidecar) :
@@ -2621,7 +2592,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
         gto_residual_overlap_eigenvalue_max =
             sidecar.diagnostics.gto_residual_overlap_eigenvalue_max,
         provider_block_mode,
-        provider_blocks_included,
         residual_rank = optional(residual, :residual_rank),
         residual_overlap_identity_error =
             optional(residual, :residual_overlap_identity_error),
@@ -2668,7 +2638,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
                 inputs,
                 sidecar,
                 provider_block_mode,
-                provider_blocks_included,
             )
             _pqs_source_box_route_driver_write_jld2_fields!(
                 file,
@@ -2718,7 +2687,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
                 inputs,
                 sidecar,
                 provider_block_mode,
-                provider_blocks_included,
             )
             _pqs_source_box_route_driver_write_jld2_fields!(
                 file,
@@ -2835,7 +2803,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
         gto_residual_overlap_eigenvalue_max =
             sidecar.diagnostics.gto_residual_overlap_eigenvalue_max,
         provider_block_mode,
-        provider_blocks_included,
         residual_rank = summary.residual_rank,
         residual_overlap_identity_error = summary.residual_overlap_identity_error,
         augmented_density_gauge = summary.augmented_density_gauge,
