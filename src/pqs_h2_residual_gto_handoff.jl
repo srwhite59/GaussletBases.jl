@@ -724,83 +724,24 @@ function _pqs_source_box_route_driver_gto_axis_cross(
         ),
     )
     axis_index = _pqs_source_box_route_driver_axis_index(axis)
-    centers_axis = @view orbital_arrays.centers[:, axis_index]
-    powers_axis = @view orbital_arrays.angular_powers[:, axis_index]
-    primitive_cross = zeros(
-        Float64,
-        length(basis_primitives),
-        length(orbital_arrays.exponents),
+    right_centers = @view orbital_arrays.centers[:, axis_index]
+    right_powers = @view orbital_arrays.angular_powers[:, axis_index]
+    primitive_cross = _cartesian_gaussian_axis_integral_table(
+        Float64[
+            GaussianAnalyticIntegrals.gaussian_exponent(primitive)
+            for primitive in basis_primitives
+        ],
+        Float64[primitive.center_value for primitive in basis_primitives],
+        zeros(Int, length(basis_primitives)),
+        ones(Float64, length(basis_primitives)),
+        orbital_arrays.exponents,
+        right_centers,
+        right_powers,
+        _cartesian_gaussian_axis_prefactors(orbital_arrays.exponents, right_powers),
+        term;
+        factor_exponent = isnothing(factor_exponent) ? 0.0 : Float64(factor_exponent),
+        factor_center = isnothing(factor_center) ? 0.0 : Float64(factor_center),
     )
-    for (row, primitive) in pairs(basis_primitives)
-        alpha_basis = _qwrg_gaussian_exponent(primitive::Gaussian)
-        for column in eachindex(orbital_arrays.exponents)
-            exponent = orbital_arrays.exponents[column]
-            center_value = centers_axis[column]
-            power = powers_axis[column]
-            prefactor = _qwrg_atomic_shell_prefactor(exponent, power)
-            primitive_cross[row, column] =
-                term === :overlap ?
-                _qwrg_atomic_basic_integral(
-                    alpha_basis,
-                    primitive.center_value,
-                    0,
-                    1.0,
-                    exponent,
-                    center_value,
-                    power,
-                    prefactor,
-                ) :
-                term === :kinetic ?
-                _qwrg_atomic_kinetic_integral(
-                    alpha_basis,
-                    primitive.center_value,
-                    0,
-                    1.0,
-                    exponent,
-                    center_value,
-                    power,
-                    prefactor,
-                ) :
-                term === :position ?
-                _qwrg_atomic_basic_integral(
-                    alpha_basis,
-                    primitive.center_value,
-                    0,
-                    1.0,
-                    exponent,
-                    center_value,
-                    power,
-                    prefactor;
-                    xpower = 1,
-                ) :
-                term === :x2 ?
-                _qwrg_atomic_basic_integral(
-                    alpha_basis,
-                    primitive.center_value,
-                    0,
-                    1.0,
-                    exponent,
-                    center_value,
-                    power,
-                    prefactor;
-                    xpower = 2,
-                ) :
-                term === :factor ?
-                _qwrg_atomic_basic_integral(
-                    alpha_basis,
-                    primitive.center_value,
-                    0,
-                    1.0,
-                    exponent,
-                    center_value,
-                    power,
-                    prefactor;
-                    extra_exponent = Float64(factor_exponent),
-                    extra_center = Float64(factor_center),
-                ) :
-                throw(ArgumentError("unsupported PQS/GTO axis cross term :$(term)"))
-        end
-    end
     return Matrix{Float64}(transpose(basis.coefficient_matrix) * primitive_cross)
 end
 
@@ -838,85 +779,19 @@ function _pqs_source_box_route_driver_gto_axis_self(
     center_right_axis = @view right_arrays.centers[:, axis_index]
     power_left_axis = @view left_arrays.angular_powers[:, axis_index]
     power_right_axis = @view right_arrays.angular_powers[:, axis_index]
-    matrix = zeros(
-        Float64,
-        length(left_arrays.exponents),
-        length(right_arrays.exponents),
+    return _cartesian_gaussian_axis_integral_table(
+        left_arrays.exponents,
+        center_left_axis,
+        power_left_axis,
+        _cartesian_gaussian_axis_prefactors(left_arrays.exponents, power_left_axis),
+        right_arrays.exponents,
+        center_right_axis,
+        power_right_axis,
+        _cartesian_gaussian_axis_prefactors(right_arrays.exponents, power_right_axis),
+        term;
+        factor_exponent = isnothing(factor_exponent) ? 0.0 : Float64(factor_exponent),
+        factor_center = isnothing(factor_center) ? 0.0 : Float64(factor_center),
     )
-    for j in eachindex(right_arrays.exponents)
-        exponent_right = right_arrays.exponents[j]
-        center_right = center_right_axis[j]
-        power_right = power_right_axis[j]
-        prefactor_right = _qwrg_atomic_shell_prefactor(exponent_right, power_right)
-        for i in eachindex(left_arrays.exponents)
-            exponent_left = left_arrays.exponents[i]
-            center_left = center_left_axis[i]
-            power_left = power_left_axis[i]
-            prefactor_left = _qwrg_atomic_shell_prefactor(exponent_left, power_left)
-            matrix[i, j] =
-                term === :overlap ?
-                _qwrg_atomic_basic_integral(
-                    exponent_left,
-                    center_left,
-                    power_left,
-                    prefactor_left,
-                    exponent_right,
-                    center_right,
-                    power_right,
-                    prefactor_right,
-                ) :
-                term === :kinetic ?
-                _qwrg_atomic_kinetic_integral(
-                    exponent_left,
-                    center_left,
-                    power_left,
-                    prefactor_left,
-                    exponent_right,
-                    center_right,
-                    power_right,
-                    prefactor_right,
-                ) :
-                term === :position ?
-                _qwrg_atomic_basic_integral(
-                    exponent_left,
-                    center_left,
-                    power_left,
-                    prefactor_left,
-                    exponent_right,
-                    center_right,
-                    power_right,
-                    prefactor_right;
-                    xpower = 1,
-                ) :
-                term === :x2 ?
-                _qwrg_atomic_basic_integral(
-                    exponent_left,
-                    center_left,
-                    power_left,
-                    prefactor_left,
-                    exponent_right,
-                    center_right,
-                    power_right,
-                    prefactor_right;
-                    xpower = 2,
-                ) :
-                term === :factor ?
-                _qwrg_atomic_basic_integral(
-                    exponent_left,
-                    center_left,
-                    power_left,
-                    prefactor_left,
-                    exponent_right,
-                    center_right,
-                    power_right,
-                    prefactor_right;
-                    extra_exponent = Float64(factor_exponent),
-                    extra_center = Float64(factor_center),
-                ) :
-                throw(ArgumentError("unsupported GTO/GTO axis term :$(term)"))
-        end
-    end
-    return matrix
 end
 
 function _pqs_source_box_route_driver_gto_axis_self_tables(

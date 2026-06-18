@@ -315,81 +315,80 @@ function _qwrg_atomic_axis_cross_data(
     power = _qwrg_atomic_orbital_axis_power(orbital, axis)
     nproxy = length(proxy_gaussians)
     nprimitive = length(orbital.exponents)
+    left_exponents = Float64[
+        GaussianAnalyticIntegrals.gaussian_exponent(gaussian)
+        for gaussian in proxy_gaussians
+    ]
+    left_centers = Float64[gaussian.center_value for gaussian in proxy_gaussians]
+    left_powers = zeros(Int, nproxy)
+    left_prefactors = ones(Float64, nproxy)
+    right_exponents = Float64.(orbital.exponents)
+    right_centers = fill(Float64(center_value), nprimitive)
+    right_powers = fill(power, nprimitive)
+    right_prefactors =
+        _cartesian_gaussian_axis_prefactors(right_exponents, right_powers)
 
-    overlap = zeros(Float64, nproxy, nprimitive)
-    kinetic = zeros(Float64, nproxy, nprimitive)
-    position = zeros(Float64, nproxy, nprimitive)
-    x2 = zeros(Float64, nproxy, nprimitive)
+    overlap = _cartesian_gaussian_axis_integral_table(
+        left_exponents,
+        left_centers,
+        left_powers,
+        left_prefactors,
+        right_exponents,
+        right_centers,
+        right_powers,
+        right_prefactors,
+        :overlap,
+    )
+    kinetic = _cartesian_gaussian_axis_integral_table(
+        left_exponents,
+        left_centers,
+        left_powers,
+        left_prefactors,
+        right_exponents,
+        right_centers,
+        right_powers,
+        right_prefactors,
+        :kinetic,
+    )
+    position = _cartesian_gaussian_axis_integral_table(
+        left_exponents,
+        left_centers,
+        left_powers,
+        left_prefactors,
+        right_exponents,
+        right_centers,
+        right_powers,
+        right_prefactors,
+        :position,
+    )
+    x2 = _cartesian_gaussian_axis_integral_table(
+        left_exponents,
+        left_centers,
+        left_powers,
+        left_prefactors,
+        right_exponents,
+        right_centers,
+        right_powers,
+        right_prefactors,
+        :x2,
+    )
     factor = include_factor_terms ?
-        [zeros(Float64, nproxy, nprimitive) for _ in expansion.exponents] :
+        [
+            _cartesian_gaussian_axis_integral_table(
+                left_exponents,
+                left_centers,
+                left_powers,
+                left_prefactors,
+                right_exponents,
+                right_centers,
+                right_powers,
+                right_prefactors,
+                :factor;
+                factor_exponent = Float64(exponent),
+                factor_center = 0.0,
+            ) for exponent in expansion.exponents
+        ] :
         Matrix{Float64}[]
-
-    for primitive in 1:nprimitive
-        exponent = Float64(orbital.exponents[primitive])
-        prefactor = _qwrg_atomic_shell_prefactor(exponent, power)
-        for proxy in 1:nproxy
-            gaussian = proxy_gaussians[proxy]
-            alpha_proxy = _qwrg_gaussian_exponent(gaussian)
-            overlap[proxy, primitive] = _qwrg_atomic_basic_integral(
-                alpha_proxy,
-                gaussian.center_value,
-                0,
-                1.0,
-                exponent,
-                center_value,
-                power,
-                prefactor,
-            )
-            kinetic[proxy, primitive] = _qwrg_atomic_kinetic_integral(
-                alpha_proxy,
-                gaussian.center_value,
-                0,
-                1.0,
-                exponent,
-                center_value,
-                power,
-                prefactor,
-            )
-            position[proxy, primitive] = _qwrg_atomic_basic_integral(
-                alpha_proxy,
-                gaussian.center_value,
-                0,
-                1.0,
-                exponent,
-                center_value,
-                power,
-                prefactor;
-                xpower = 1,
-            )
-            x2[proxy, primitive] = _qwrg_atomic_basic_integral(
-                alpha_proxy,
-                gaussian.center_value,
-                0,
-                1.0,
-                exponent,
-                center_value,
-                power,
-                prefactor;
-                xpower = 2,
-            )
-            if include_factor_terms
-                for term in eachindex(expansion.exponents)
-                    factor[term][proxy, primitive] = _qwrg_atomic_basic_integral(
-                        alpha_proxy,
-                        gaussian.center_value,
-                        0,
-                        1.0,
-                        exponent,
-                        center_value,
-                        power,
-                        prefactor;
-                        extra_exponent = Float64(expansion.exponents[term]),
-                        extra_center = 0.0,
-                    )
-                end
-            end
-        end
-    end
 
     return (
         overlap = _qwrg_left_contract_cross_matrix(proxy_layer, overlap),
@@ -414,81 +413,77 @@ function _qwrg_atomic_axis_aa_data(
     power_right = _qwrg_atomic_orbital_axis_power(right, axis)
     nleft = length(left.exponents)
     nright = length(right.exponents)
+    left_exponents = Float64.(left.exponents)
+    left_centers = fill(Float64(center_left), nleft)
+    left_powers = fill(power_left, nleft)
+    left_prefactors = _cartesian_gaussian_axis_prefactors(left_exponents, left_powers)
+    right_exponents = Float64.(right.exponents)
+    right_centers = fill(Float64(center_right), nright)
+    right_powers = fill(power_right, nright)
+    right_prefactors =
+        _cartesian_gaussian_axis_prefactors(right_exponents, right_powers)
 
-    overlap = zeros(Float64, nleft, nright)
-    kinetic = zeros(Float64, nleft, nright)
-    position = zeros(Float64, nleft, nright)
-    x2 = zeros(Float64, nleft, nright)
+    overlap = _cartesian_gaussian_axis_integral_table(
+        left_exponents,
+        left_centers,
+        left_powers,
+        left_prefactors,
+        right_exponents,
+        right_centers,
+        right_powers,
+        right_prefactors,
+        :overlap,
+    )
+    kinetic = _cartesian_gaussian_axis_integral_table(
+        left_exponents,
+        left_centers,
+        left_powers,
+        left_prefactors,
+        right_exponents,
+        right_centers,
+        right_powers,
+        right_prefactors,
+        :kinetic,
+    )
+    position = _cartesian_gaussian_axis_integral_table(
+        left_exponents,
+        left_centers,
+        left_powers,
+        left_prefactors,
+        right_exponents,
+        right_centers,
+        right_powers,
+        right_prefactors,
+        :position,
+    )
+    x2 = _cartesian_gaussian_axis_integral_table(
+        left_exponents,
+        left_centers,
+        left_powers,
+        left_prefactors,
+        right_exponents,
+        right_centers,
+        right_powers,
+        right_prefactors,
+        :x2,
+    )
     factor = include_factor_terms ?
-        [zeros(Float64, nleft, nright) for _ in expansion.exponents] :
+        [
+            _cartesian_gaussian_axis_integral_table(
+                left_exponents,
+                left_centers,
+                left_powers,
+                left_prefactors,
+                right_exponents,
+                right_centers,
+                right_powers,
+                right_prefactors,
+                :factor;
+                factor_exponent = Float64(exponent),
+                factor_center = 0.0,
+            ) for exponent in expansion.exponents
+        ] :
         Matrix{Float64}[]
-
-    for j in 1:nright
-        exponent_right = Float64(right.exponents[j])
-        prefactor_right = _qwrg_atomic_shell_prefactor(exponent_right, power_right)
-        for i in 1:nleft
-            exponent_left = Float64(left.exponents[i])
-            prefactor_left = _qwrg_atomic_shell_prefactor(exponent_left, power_left)
-            overlap[i, j] = _qwrg_atomic_basic_integral(
-                exponent_left,
-                center_left,
-                power_left,
-                prefactor_left,
-                exponent_right,
-                center_right,
-                power_right,
-                prefactor_right,
-            )
-            kinetic[i, j] = _qwrg_atomic_kinetic_integral(
-                exponent_left,
-                center_left,
-                power_left,
-                prefactor_left,
-                exponent_right,
-                center_right,
-                power_right,
-                prefactor_right,
-            )
-            position[i, j] = _qwrg_atomic_basic_integral(
-                exponent_left,
-                center_left,
-                power_left,
-                prefactor_left,
-                exponent_right,
-                center_right,
-                power_right,
-                prefactor_right;
-                xpower = 1,
-            )
-            x2[i, j] = _qwrg_atomic_basic_integral(
-                exponent_left,
-                center_left,
-                power_left,
-                prefactor_left,
-                exponent_right,
-                center_right,
-                power_right,
-                prefactor_right;
-                xpower = 2,
-            )
-            if include_factor_terms
-                for term in eachindex(expansion.exponents)
-                    factor[term][i, j] = _qwrg_atomic_basic_integral(
-                        exponent_left,
-                        center_left,
-                        power_left,
-                        prefactor_left,
-                        exponent_right,
-                        center_right,
-                        power_right,
-                        prefactor_right;
-                        extra_exponent = Float64(expansion.exponents[term]),
-                        extra_center = 0.0,
-                    )
-                end
-            end
-        end
-    end
 
     return (
         overlap = overlap,
@@ -511,30 +506,33 @@ function _qwrg_atomic_axis_factor_cross_data(
     power = _qwrg_atomic_orbital_axis_power(orbital, axis)
     nproxy = length(proxy_gaussians)
     nprimitive = length(orbital.exponents)
-    factor = [zeros(Float64, nproxy, nprimitive) for _ in expansion.exponents]
-
-    for primitive in 1:nprimitive
-        exponent = Float64(orbital.exponents[primitive])
-        prefactor = _qwrg_atomic_shell_prefactor(exponent, power)
-        for proxy in 1:nproxy
-            gaussian = proxy_gaussians[proxy]
-            alpha_proxy = _qwrg_gaussian_exponent(gaussian)
-            for term in eachindex(expansion.exponents)
-                factor[term][proxy, primitive] = _qwrg_atomic_basic_integral(
-                    alpha_proxy,
-                    gaussian.center_value,
-                    0,
-                    1.0,
-                    exponent,
-                    center_value,
-                    power,
-                    prefactor;
-                    extra_exponent = Float64(expansion.exponents[term]),
-                    extra_center = factor_center,
-                )
-            end
-        end
-    end
+    left_exponents = Float64[
+        GaussianAnalyticIntegrals.gaussian_exponent(gaussian)
+        for gaussian in proxy_gaussians
+    ]
+    left_centers = Float64[gaussian.center_value for gaussian in proxy_gaussians]
+    left_powers = zeros(Int, nproxy)
+    left_prefactors = ones(Float64, nproxy)
+    right_exponents = Float64.(orbital.exponents)
+    right_centers = fill(Float64(center_value), nprimitive)
+    right_powers = fill(power, nprimitive)
+    right_prefactors =
+        _cartesian_gaussian_axis_prefactors(right_exponents, right_powers)
+    factor = [
+        _cartesian_gaussian_axis_integral_table(
+            left_exponents,
+            left_centers,
+            left_powers,
+            left_prefactors,
+            right_exponents,
+            right_centers,
+            right_powers,
+            right_prefactors,
+            :factor;
+            factor_exponent = Float64(exponent),
+            factor_center = Float64(factor_center),
+        ) for exponent in expansion.exponents
+    ]
 
     return [_qwrg_left_contract_cross_matrix(proxy_layer, matrix) for matrix in factor]
 end
@@ -552,32 +550,30 @@ function _qwrg_atomic_axis_factor_aa_data(
     power_right = _qwrg_atomic_orbital_axis_power(right, axis)
     nleft = length(left.exponents)
     nright = length(right.exponents)
-    factor = [zeros(Float64, nleft, nright) for _ in expansion.exponents]
-
-    for j in 1:nright
-        exponent_right = Float64(right.exponents[j])
-        prefactor_right = _qwrg_atomic_shell_prefactor(exponent_right, power_right)
-        for i in 1:nleft
-            exponent_left = Float64(left.exponents[i])
-            prefactor_left = _qwrg_atomic_shell_prefactor(exponent_left, power_left)
-            for term in eachindex(expansion.exponents)
-                factor[term][i, j] = _qwrg_atomic_basic_integral(
-                    exponent_left,
-                    center_left,
-                    power_left,
-                    prefactor_left,
-                    exponent_right,
-                    center_right,
-                    power_right,
-                    prefactor_right;
-                    extra_exponent = Float64(expansion.exponents[term]),
-                    extra_center = factor_center,
-                )
-            end
-        end
-    end
-
-    return factor
+    left_exponents = Float64.(left.exponents)
+    left_centers = fill(Float64(center_left), nleft)
+    left_powers = fill(power_left, nleft)
+    left_prefactors = _cartesian_gaussian_axis_prefactors(left_exponents, left_powers)
+    right_exponents = Float64.(right.exponents)
+    right_centers = fill(Float64(center_right), nright)
+    right_powers = fill(power_right, nright)
+    right_prefactors =
+        _cartesian_gaussian_axis_prefactors(right_exponents, right_powers)
+    return [
+        _cartesian_gaussian_axis_integral_table(
+            left_exponents,
+            left_centers,
+            left_powers,
+            left_prefactors,
+            right_exponents,
+            right_centers,
+            right_powers,
+            right_prefactors,
+            :factor;
+            factor_exponent = Float64(exponent),
+            factor_center = Float64(factor_center),
+        ) for exponent in expansion.exponents
+    ]
 end
 
 function _qwrg_atomic_weighted_hadamard(
