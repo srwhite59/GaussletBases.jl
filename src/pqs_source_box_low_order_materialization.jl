@@ -2179,14 +2179,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                         :augmented_one_body_hamiltonian,
                         :augmented_h1_lowest,
                         :augmented_h1_symmetry_error,
-                        :h_fg_kinetic,
-                        :h_fg_charged_nuclear,
-                        :h_fg_one_body,
-                        :h_gg_kinetic,
-                        :h_gg_charged_nuclear,
-                        :h_gg_one_body,
-                        :h_fr_one_body,
-                        :h_rr_one_body,
                         :nuclear_mixed_block_convention,
                         :augmented_density_gauge,
                         :augmented_density_space,
@@ -2214,62 +2206,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                 augmented_h1_lowest = Float64(file["augmented_h1_lowest"])
                 isfinite(augmented_h1_lowest) ||
                     throw(ArgumentError("augmented_h1_lowest must be finite"))
-                fg_size = (final_dimension, gto_dimension)
-                gg_size = (gto_dimension, gto_dimension)
-                fr_size = (final_dimension, residual_rank)
-                rr_size = (residual_rank, residual_rank)
-                h_fg_kinetic = file["h_fg_kinetic"]
-                h_fg_charged_nuclear = file["h_fg_charged_nuclear"]
-                h_fg_one_body = file["h_fg_one_body"]
-                h_gg_kinetic = file["h_gg_kinetic"]
-                h_gg_charged_nuclear = file["h_gg_charged_nuclear"]
-                h_gg_one_body = file["h_gg_one_body"]
-                h_fr_one_body = file["h_fr_one_body"]
-                h_rr_one_body = file["h_rr_one_body"]
-                _pqs_source_box_route_driver_finite_matrix(
-                    "h_fg_kinetic",
-                    h_fg_kinetic,
-                    fg_size,
-                )
-                _pqs_source_box_route_driver_finite_matrix(
-                    "h_fg_charged_nuclear",
-                    h_fg_charged_nuclear,
-                    fg_size,
-                )
-                _pqs_source_box_route_driver_finite_matrix(
-                    "h_fg_one_body",
-                    h_fg_one_body,
-                    fg_size,
-                )
-                _pqs_source_box_route_driver_finite_matrix(
-                    "h_gg_kinetic",
-                    h_gg_kinetic,
-                    gg_size,
-                )
-                _pqs_source_box_route_driver_finite_matrix(
-                    "h_gg_charged_nuclear",
-                    h_gg_charged_nuclear,
-                    gg_size,
-                )
-                h_gg_one_body_symmetry_error =
-                    _pqs_source_box_route_driver_symmetric_matrix(
-                        "h_gg_one_body",
-                        h_gg_one_body,
-                        gg_size,
-                        symmetry_atol,
-                    )
-                _pqs_source_box_route_driver_finite_matrix(
-                    "h_fr_one_body",
-                    h_fr_one_body,
-                    fr_size,
-                )
-                h_rr_one_body_symmetry_error =
-                    _pqs_source_box_route_driver_symmetric_matrix(
-                        "h_rr_one_body",
-                        h_rr_one_body,
-                        rr_size,
-                        symmetry_atol,
-                    )
                 file["nuclear_mixed_block_convention"] === :charged_nuclear ||
                     throw(
                         ArgumentError(
@@ -2299,8 +2235,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                         _pqs_source_box_route_driver_require_jld2_keys(
                             file,
                             (
-                                :v_pr_pair_matrix,
-                                :v_rr_pair_matrix,
                                 :augmented_pair_matrix,
                                 :augmented_density_dimension,
                                 :augmented_pair_matrix_symmetry_error,
@@ -2327,20 +2261,7 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                                     "augmented_density_dimension must equal p_dimension + residual_rank",
                                 ),
                             )
-                        v_pr_pair_matrix = file["v_pr_pair_matrix"]
-                        v_rr_pair_matrix = file["v_rr_pair_matrix"]
                         augmented_pair_matrix = file["augmented_pair_matrix"]
-                        _pqs_source_box_route_driver_finite_matrix(
-                            "v_pr_pair_matrix",
-                            v_pr_pair_matrix,
-                            (basis_facts.p_dimension, residual_rank),
-                        )
-                        _pqs_source_box_route_driver_symmetric_matrix(
-                            "v_rr_pair_matrix",
-                            v_rr_pair_matrix,
-                            (residual_rank, residual_rank),
-                            symmetry_atol,
-                        )
                         augmented_pair_matrix_symmetry_error =
                             _pqs_source_box_route_driver_symmetric_matrix(
                                 "augmented_pair_matrix",
@@ -2397,8 +2318,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                             throw(ArgumentError("Ham handoff consumer H1-J invariant mismatch"))
                         (;
                             augmented_density_dimension,
-                            v_pr_pair_matrix_size = size(v_pr_pair_matrix),
-                            v_rr_pair_matrix_size = size(v_rr_pair_matrix),
                             augmented_pair_matrix_size = size(augmented_pair_matrix),
                             augmented_pair_matrix_symmetry_error,
                             augmented_h1_j_self_coulomb,
@@ -2412,8 +2331,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                     else
                         (;
                             augmented_density_dimension = nothing,
-                            v_pr_pair_matrix_size = nothing,
-                            v_rr_pair_matrix_size = nothing,
                             augmented_pair_matrix_size = nothing,
                             augmented_pair_matrix_symmetry_error = nothing,
                             augmented_h1_j_self_coulomb = nothing,
@@ -2428,12 +2345,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                         size(augmented_one_body_hamiltonian),
                     augmented_h1_lowest,
                     augmented_h1_symmetry_error,
-                    h_fg_one_body_size = size(h_fg_one_body),
-                    h_gg_one_body_size = size(h_gg_one_body),
-                    h_gg_one_body_symmetry_error,
-                    h_fr_one_body_size = size(h_fr_one_body),
-                    h_rr_one_body_size = size(h_rr_one_body),
-                    h_rr_one_body_symmetry_error,
                     nuclear_mixed_block_convention = :charged_nuclear,
                     augmented_density_gauge = file["augmented_density_gauge"],
                     augmented_density_space =
@@ -2451,12 +2362,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                     augmented_h1_lowest = nothing,
                     augmented_h1_symmetry_error = nothing,
                     augmented_h1_j_self_coulomb = nothing,
-                    h_fg_one_body_size = nothing,
-                    h_gg_one_body_size = nothing,
-                    h_gg_one_body_symmetry_error = nothing,
-                    h_fr_one_body_size = nothing,
-                    h_rr_one_body_size = nothing,
-                    h_rr_one_body_symmetry_error = nothing,
                     nuclear_mixed_block_convention = nothing,
                     augmented_density_gauge = nothing,
                     augmented_density_space = nothing,
@@ -2859,8 +2764,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
                 file,
                 density_blocks,
                 (
-                    :v_pr_pair_matrix,
-                    :v_rr_pair_matrix,
                     :augmented_pair_matrix,
                     :augmented_density_dimension,
                     :augmented_pair_matrix_symmetry_error,
@@ -2899,14 +2802,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
                 one_body_blocks,
                 (
                     :augmented_dimension,
-                    :h_fg_kinetic,
-                    :h_fg_charged_nuclear,
-                    :h_gg_kinetic,
-                    :h_gg_charged_nuclear,
-                    :h_fg_one_body,
-                    :h_gg_one_body,
-                    :h_fr_one_body,
-                    :h_rr_one_body,
                     :augmented_one_body_hamiltonian,
                     :augmented_h1_lowest,
                     :augmented_h1_symmetry_error,

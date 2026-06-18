@@ -3198,3 +3198,53 @@ Remaining blocker / next:
 
 Line-count / complexity note:
 - Source diff before this log entry was `14` added / `24` deleted, net `-10`.
+
+## Pass 285 - Residual-GTO Artifact Decomposition Pruning
+
+Commit(s):
+- this commit - Prune H2 PQS residual GTO artifact decomposition fields
+
+Summary:
+- Pruned provider-development decomposition matrices from the default H2 PQS
+  residual-GTO Ham artifact and readback path.
+- The artifact no longer writes or requires the intermediate one-body component
+  blocks (`H_FG`, `H_GG`, `H_FR`, `H_RR` and kinetic/nuclear splits) or the
+  density-provider decomposition blocks (`V_PR`, `V_RR`).
+- The saved consumer contract remains focused on the durable Ham handoff:
+  augmented one-body `H` in `[F,R]`, augmented density interaction `V` in
+  `[P,R]`, explicit `T: [F,R] -> [P,R]`, electron/spin counts, nuclear
+  repulsion, and compact dimensions/symmetry facts.
+- Provider decomposition objects still exist in memory where they are needed to
+  construct `H` and `V`; this pass only removes them from the default durable
+  artifact/readback surface.
+
+Validation:
+- `git diff --check`
+- `julia --project=. -e 'using GaussletBases; println("load ok")'`
+- `julia --project=. tools/run_cartesian_line_ladder.jl --line=pqs_diatomic`
+  passed all three cases through `cartesian_print/save`.
+- Direct artifact readback reconstructed the handoff consumer H1-J
+  self-Coulomb as `0.4574354750591831` with delta
+  `9.43689570931383e-16`, using saved `H`, `V`, and `T`.
+
+Goal advancement:
+- MT4/LT8: makes the residual-GTO Ham artifact more clearly a consumer
+  boundary rather than a provider-debug dump.
+- LT5: reduces flat matrix/key carrying cost without changing the mathematical
+  gauge contract.
+
+Medium-goal update:
+- none.
+
+Risk / guardrail:
+- Do not delete the in-memory decomposition blocks yet; they remain the
+  construction path for the augmented one-body and density matrices.
+
+Remaining blocker / next:
+- Continue contract slimming before new physics: remove returned
+  `artifact_roundtrip`/flat optional summary spillover or retire
+  `provider_blocks_included` once no live caller requires the compatibility
+  mirror.
+
+Line-count / complexity note:
+- Source diff before this log entry was `0` added / `105` deleted.
