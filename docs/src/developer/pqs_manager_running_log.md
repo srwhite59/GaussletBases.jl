@@ -3099,3 +3099,56 @@ Remaining blocker / next:
 
 Line-count / complexity note:
 - Source/reporting diff before this log entry was `0` added / `22` deleted.
+
+## Pass 283 - Residual-GTO Ham Handoff Consumer Invariant
+
+Commit(s):
+- this commit - Add H2 PQS residual GTO handoff consumer invariant
+
+Summary:
+- Added a minimal private consumer invariant to the H2 PQS residual-GTO
+  sidecar artifact roundtrip.
+- The readback now consumes only artifact-level handoff facts: augmented
+  one-body `H` in `[F,R]`, augmented density interaction `V` in `[P,R]`, and
+  the stored `T: [F,R] -> [P,R]` orbital-to-density map.
+- It diagonalizes artifact `H`, maps the lowest orbital through artifact `T`,
+  contracts artifact `V`, and checks that the reconstructed one-orbital H1-J
+  self-Coulomb matches the stored augmented H1-J diagnostic.
+- No RHF solve, DMRG, CR2, public API, provider registry, or route payload tree
+  was added.
+
+Validation:
+- `git diff --check`
+- `julia --project=. -e 'using GaussletBases; println("load ok")'`
+- `julia --project=. tools/run_cartesian_line_ladder.jl --line=pqs_diatomic`
+  passed all three cases through `cartesian_print/save`.
+- Direct artifact readback returned consumer H1-J self-Coulomb
+  `0.4574354750591831`, delta `9.43689570931383e-16` against the stored
+  diagnostic, and orbital-to-density size `(489, 489)`.
+
+Goal advancement:
+- MT4/LT8: proves the residual-GTO Ham artifact is usable by a downstream
+  consumer without route-internal payload knowledge.
+- LT5: reinforces the explicit gauge contract: orbital coefficients in
+  `[F,R]` must be mapped by `T` before using the density interaction in
+  `[P,R]`.
+
+Medium-goal update:
+- The narrow H2 residual-GTO Ham handoff artifact now has both readback checks
+  and a minimal consumer invariant. Further consumer work should either be a
+  similarly small invariant smoke or an external integration, not more internal
+  solver development.
+
+Risk / guardrail:
+- This remains a private route-specific consumer smoke. It should not become a
+  hidden solver test or a general artifact registry.
+
+Remaining blocker / next:
+- Reasonable next work is either route-specific helper extraction/paydown from
+  `pqs_source_box_low_order_materialization.jl`, or a performance review of the
+  residual-GTO provider construction before broadening.
+
+Line-count / complexity note:
+- Source diff before this log entry was `26` added / `0` deleted. The added
+  lines are direct artifact-consumer invariant checks inside the existing
+  roundtrip helper.

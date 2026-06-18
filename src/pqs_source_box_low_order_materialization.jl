@@ -2390,6 +2390,22 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                             throw(ArgumentError("Ham handoff spin ndn must be 1"))
                         isfinite(Float64(file["ham_handoff_nuclear_repulsion"])) ||
                             throw(ArgumentError("Ham handoff nuclear repulsion must be finite"))
+                        h1_orbital =
+                            eigen(Symmetric(augmented_one_body_hamiltonian)).vectors[:, 1]
+                        consumer_density_coefficients =
+                            orbital_to_density * h1_orbital
+                        consumer_h1_j_self_coulomb =
+                            _pqs_source_box_route_driver_restricted_one_orbital_self_coulomb(
+                                augmented_pair_matrix,
+                                consumer_density_coefficients,
+                            )
+                        consumer_h1_j_delta =
+                            abs(
+                                consumer_h1_j_self_coulomb -
+                                augmented_h1_j_self_coulomb,
+                            )
+                        consumer_h1_j_delta <= 10.0 * Float64(symmetry_atol) ||
+                            throw(ArgumentError("Ham handoff consumer H1-J invariant mismatch"))
                         (;
                             augmented_density_dimension,
                             v_pr_pair_matrix_size = size(v_pr_pair_matrix),
@@ -2399,6 +2415,10 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                             augmented_h1_j_self_coulomb,
                             ham_handoff_orbital_to_density_size =
                                 size(orbital_to_density),
+                            ham_handoff_consumer_h1_j_self_coulomb =
+                                consumer_h1_j_self_coulomb,
+                            ham_handoff_consumer_h1_j_delta =
+                                consumer_h1_j_delta,
                         )
                     else
                         (;
@@ -2409,6 +2429,8 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                             augmented_pair_matrix_symmetry_error = nothing,
                             augmented_h1_j_self_coulomb = nothing,
                             ham_handoff_orbital_to_density_size = nothing,
+                            ham_handoff_consumer_h1_j_self_coulomb = nothing,
+                            ham_handoff_consumer_h1_j_delta = nothing,
                         )
                     end
                 (;
@@ -2511,6 +2533,10 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
             ham_facts.augmented_h1_j_self_coulomb,
         ham_handoff_orbital_to_density_size =
             ham_facts.ham_handoff_orbital_to_density_size,
+        ham_handoff_consumer_h1_j_self_coulomb =
+            ham_facts.ham_handoff_consumer_h1_j_self_coulomb,
+        ham_handoff_consumer_h1_j_delta =
+            ham_facts.ham_handoff_consumer_h1_j_delta,
         gto_residual_overlap_finite =
             basis_facts.gto_residual_overlap_finite &&
             ham_facts.gto_residual_overlap_finite,
