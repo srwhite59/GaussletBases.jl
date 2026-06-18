@@ -15,6 +15,7 @@ makedocs(
         prettyurls = DOCS_CI,
         edit_link = "main",
         canonical = DOCS_CI ? "https://srwhite59.github.io/GaussletBases.jl/dev/" : nothing,
+        size_threshold_ignore = ["developer/pqs_manager_running_log.md"],
     ),
     pages = [
         "Home" => "index.md",
