@@ -3549,3 +3549,58 @@ Remaining blocker / next:
 Line-count / complexity note:
 - Source impact was small and line-negative: `18` insertions / `19` deletions
   across four source files.
+
+## Pass 292 - Neutral Cartesian Gaussian Axis Table Kernels
+
+Commit(s):
+- `dcba7dff` - Share Cartesian Gaussian axis table kernels
+
+Summary:
+- Extended `cartesian_gaussian_axis_integrals.jl` with neutral private helpers
+  for Cartesian 1D Gaussian axis prefactors, scalar integrals, and integral
+  tables.
+- Routed the H2 residual-GTO axis cross/self builders through the neutral
+  table helper.
+- Routed the QW donor axis cross/self/factor wrapper family through the same
+  neutral table helper while preserving the old QW function names for live
+  callers.
+- Left H2 route-local tuple wrappers and larger 3D support/product contractions
+  untouched because their data layouts and caller contracts are not exact
+  duplicates.
+
+Validation:
+- Doer reported `git diff --check`.
+- Doer reported package load.
+- Doer reported
+  `julia --project=. tools/run_cartesian_line_ladder.jl --line=pqs_diatomic`
+  passed all three cases.
+- Doer reported
+  `julia --project=. tools/run_cartesian_line_ladder.jl --line=wl_diatomic`
+  passed both cases.
+- Doer reported direct H/V/T artifact readback with provider mode
+  `one_body_and_density_provider`, final dimension `471`, and handoff consumer
+  self-Coulomb `0.4574354750591831`.
+- Manager inspected the pushed diff and found no blocking issue.
+
+Goal advancement:
+- MT4/LT8: moves more reusable Gaussian integral machinery out from under H2
+  residual-GTO and QW donor-specific names.
+- LT5: removes duplicated scalar axis loops without creating a new public
+  surface or preserving old donor code as the target architecture.
+
+Medium-goal update:
+- none.
+
+Risk / guardrail:
+- The neutral helpers still use dense table construction and dispatch by
+  `term::Symbol`; this pass is consolidation and carrying-cost reduction, not
+  the final performance shape.
+- QW wrapper names remain because live donor callers still reference them.
+
+Remaining blocker / next:
+- Inventory the remaining MWG/Gaussian donor surfaces and update the Cartesian
+  feature-donor documentation so absorbed/shared-kernel status is accurate
+  before the next deletion wave.
+
+Line-count / complexity note:
+- Net source impact was slightly negative: `336` insertions / `350` deletions.
