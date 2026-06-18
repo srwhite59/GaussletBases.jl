@@ -587,8 +587,7 @@ function _qwrg_atomic_weighted_hadamard(
     z::AbstractMatrix{<:Real},
     right_coefficients::AbstractVector{<:Real},
 )
-    matrix = Matrix{Float64}(x) .* Matrix{Float64}(y) .* Matrix{Float64}(z)
-    return Float64(dot(left_coefficients, matrix * right_coefficients))
+    return _cartesian_weighted_hadamard3(left_coefficients, right_coefficients, x, y, z)
 end
 
 function _qwrg_gausslet_axis_matrix(data, axis::Symbol; squared::Bool = false)

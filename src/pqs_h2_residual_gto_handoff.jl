@@ -287,12 +287,12 @@ function _pqs_source_box_route_driver_pqs_gto_self_moment_matrix(
                 3,
             )
             result[row, column] =
-                _pqs_source_box_route_driver_gto_weighted_hadamard(
+                _cartesian_weighted_hadamard3(
                     left_arrays.coefficients,
+                    right_arrays.coefficients,
                     axis_tables[1],
                     axis_tables[2],
                     axis_tables[3],
-                    right_arrays.coefficients,
                 )
         end
     end
@@ -961,17 +961,6 @@ function _pqs_source_box_route_driver_gto_support_column!(
     return destination
 end
 
-function _pqs_source_box_route_driver_gto_weighted_hadamard(
-    left_coefficients::AbstractVector{<:Real},
-    x::AbstractMatrix{<:Real},
-    y::AbstractMatrix{<:Real},
-    z::AbstractMatrix{<:Real},
-    right_coefficients::AbstractVector{<:Real},
-)
-    matrix = Matrix{Float64}(x) .* Matrix{Float64}(y) .* Matrix{Float64}(z)
-    return Float64(dot(left_coefficients, matrix * right_coefficients))
-end
-
 function _pqs_source_box_route_driver_pqs_gto_support_one_body(packet)
     states = packet.support_states
     axes = packet.axis_representations
@@ -1077,12 +1066,12 @@ function _pqs_source_box_route_driver_pqs_gto_self_one_body(packet)
                     3,
                 )
                 h_gg_kinetic[row, column] +=
-                    _pqs_source_box_route_driver_gto_weighted_hadamard(
+                    _cartesian_weighted_hadamard3(
                         left_arrays.coefficients,
+                        right_arrays.coefficients,
                         axis_tables[1],
                         axis_tables[2],
                         axis_tables[3],
-                        right_arrays.coefficients,
                     )
             end
             for (center_index, location) in pairs(atom_locations)
@@ -1099,12 +1088,12 @@ function _pqs_source_box_route_driver_pqs_gto_self_one_body(packet)
                     h_gg_charged_nuclear[row, column] -=
                         charge *
                         coefficients[term_index] *
-                        _pqs_source_box_route_driver_gto_weighted_hadamard(
+                        _cartesian_weighted_hadamard3(
                             left_arrays.coefficients,
+                            right_arrays.coefficients,
                             factor_tables[1],
                             factor_tables[2],
                             factor_tables[3],
-                            right_arrays.coefficients,
                         )
                 end
             end
