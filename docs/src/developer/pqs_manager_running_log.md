@@ -3248,3 +3248,63 @@ Remaining blocker / next:
 
 Line-count / complexity note:
 - Source diff before this log entry was `0` added / `105` deleted.
+
+## Pass 286 - Residual-GTO Materialization Summary Trim
+
+Commit(s):
+- this commit - Trim H2 PQS residual GTO materialization summary
+
+Summary:
+- Kept the H2 PQS residual-GTO artifact roundtrip as a local validation step
+  but removed the returned `artifact_roundtrip` object from the materialization
+  payload.
+- Trimmed summary-only provider/debug shape fields that were not printed or
+  consumed: component one-body block sizes, P-projection carrier sizes, P-R/R-R
+  pair sizes, and residual width extrema.
+- Deleted the now-unused optional-size helper.
+- Preserved the printed and durable consumer facts: final dimension, overlap,
+  H1/H1-J diagnostics, provider mode, residual rank, augmented H/V dimensions,
+  Ham handoff basis/dimension facts, and private RHF audit facts.
+
+Validation:
+- `git diff --check`
+- `julia --project=. -e 'using GaussletBases; println("load ok")'`
+- `julia --project=. tools/run_cartesian_line_ladder.jl --line=pqs_diatomic`
+  passed all three cases through `cartesian_print/save`.
+- Direct artifact readback reconstructed the handoff consumer H1-J
+  self-Coulomb as `0.4574354750591831` with delta
+  `9.43689570931383e-16`.
+
+Goal advancement:
+- MT4/LT8: keeps the Ham handoff artifact as the consumer boundary while
+  reducing the route materialization payload back toward printed/consumed facts.
+- LT5: removes another small flat-field cloud without changing construction,
+  artifact writing, or physics values.
+
+Medium-goal checkpoint:
+- Active: residual-GTO Ham handoff artifact/readback remains the current
+  consumer-boundary lane; recent passes made it smaller and less debug-shaped.
+- Active: `provider_blocks_included` retirement is now the next obvious
+  compatibility cleanup, provided the readback and driver can rely only on
+  `provider_block_mode`.
+- Active: helper extraction from `pqs_source_box_low_order_materialization.jl`
+  is still desirable, but should follow another pruning pass rather than move
+  bulky route-specific helpers unchanged.
+- Deferred: density/pair/H1-J provider expansion, atomic PQS unification, and
+  public solver integration should wait until this handoff surface is slimmer
+  and performance is reviewed.
+- Completed for now: the private H2 materialized ladder validates source plan,
+  final basis, H1, H1-J, one-body provider, density provider, private RHF smoke,
+  Ham handoff artifact, and minimal consumer invariant.
+
+Risk / guardrail:
+- The artifact roundtrip is still essential validation; it is just no longer a
+  returned materialization object. Do not replace it with a public status object
+  or helper-schema test.
+
+Remaining blocker / next:
+- Retire the legacy `provider_blocks_included` mirror or continue trimming
+  non-consumer artifact fields before any new physics.
+
+Line-count / complexity note:
+- Source diff before this log entry was `0` added / `23` deleted.

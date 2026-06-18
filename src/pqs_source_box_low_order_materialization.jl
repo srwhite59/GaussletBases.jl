@@ -1869,10 +1869,6 @@ function _pqs_source_box_route_driver_optional_property(source, property::Symbol
     return isnothing(source) ? nothing : getproperty(source, property)
 end
 
-function _pqs_source_box_route_driver_optional_size(source, property::Symbol)
-    return isnothing(source) ? nothing : size(getproperty(source, property))
-end
-
 function _pqs_source_box_route_driver_finite_matrix(
     name::AbstractString,
     matrix,
@@ -2599,7 +2595,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
     gto_self_overlap_size = size(sidecar.gto_self_overlap)
     gto_residual_overlap_size = size(sidecar.gto_residual_overlap)
     optional = _pqs_source_box_route_driver_optional_property
-    optional_size = _pqs_source_box_route_driver_optional_size
     augmented_dimension = optional(one_body_blocks, :augmented_dimension)
     augmented_h1_lowest = optional(one_body_blocks, :augmented_h1_lowest)
     augmented_h1_symmetry_error =
@@ -2636,27 +2631,12 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
         augmented_h1_symmetry_error,
         nuclear_mixed_block_convention =
             optional(one_body_blocks, :nuclear_mixed_block_convention),
-        h_fg_kinetic_size = optional_size(one_body_blocks, :h_fg_kinetic),
-        h_fg_charged_nuclear_size =
-            optional_size(one_body_blocks, :h_fg_charged_nuclear),
-        h_gg_kinetic_size = optional_size(one_body_blocks, :h_gg_kinetic),
-        h_gg_charged_nuclear_size =
-            optional_size(one_body_blocks, :h_gg_charged_nuclear),
         augmented_density_space =
             optional(density_descriptor, :augmented_density_space),
         augmented_density_gauge =
             optional(density_descriptor, :density_gauge),
-        p_projection_of_g_size =
-            optional(density_descriptor, :p_projection_of_g_size),
-        residual_orbital_coefficients_in_density_carrier_size =
-            optional(
-                density_descriptor,
-                :residual_orbital_coefficients_in_density_carrier_size,
-            ),
         augmented_density_dimension =
             optional(density_blocks, :augmented_density_dimension),
-        v_pr_pair_matrix_size = optional(density_blocks, :v_pr_pair_matrix_size),
-        v_rr_pair_matrix_size = optional(density_blocks, :v_rr_pair_matrix_size),
         augmented_pair_matrix_size =
             optional(density_blocks, :augmented_pair_matrix_size),
         augmented_pair_matrix_symmetry_error =
@@ -2665,8 +2645,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
                 :augmented_pair_matrix_symmetry_error,
             ),
         augmented_h1_j_self_coulomb = optional(augmented_h1_j, :self_coulomb),
-        residual_width_min = optional(density_blocks, :residual_width_min),
-        residual_width_max = optional(density_blocks, :residual_width_max),
         ham_handoff_summary...,
     )
 
@@ -2888,7 +2866,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
         ham_artifact_written = save_ham_artifact,
         basis_artifact_reloaded,
         ham_artifact_reloaded,
-        artifact_roundtrip,
     )
 end
 
