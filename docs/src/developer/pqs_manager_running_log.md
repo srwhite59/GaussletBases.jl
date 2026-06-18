@@ -3451,3 +3451,51 @@ Line-count / complexity note:
 - `pqs_source_box_low_order_materialization.jl` dropped from about `2907` lines
   to `800`; the extracted private helper file is about `2109` lines. Net source
   line count is roughly flat, but ownership is clearer.
+
+## Pass 290 - Optional Cartesian Driver Precompile Workload
+
+Commit(s):
+- this commit - Add optional Cartesian driver precompile workload
+
+Summary:
+- Added an opt-in PrecompileTools workload for repeated Cartesian/PQS driver
+  ladder work.
+- The workload executes the H2 PQS source-box staged route through
+  materialization with no artifacts, no supplement provider blocks, and no
+  private RHF. This targets the high-level driver methods that dominate cold
+  ladder startup without forcing the full materialized residual-GTO route into
+  ordinary package precompilation.
+- The workload is guarded by
+  `GAUSSLETBASES_PRECOMPILE_CARTESIAN_DRIVER=1`; normal package load does not
+  execute it.
+
+Validation:
+- `git diff --check`
+- `julia --project=. -e 'using GaussletBases; println("load ok")'` passed and
+  did not run the opt-in workload.
+- Direct invocation of `_cartesian_driver_precompile_workload` completed in
+  about `26.7` seconds.
+- `julia --project=. tools/run_cartesian_line_ladder.jl --line=pqs_diatomic`
+  passed all three cases through `cartesian_print/save`.
+
+Goal advancement:
+- MT4/LT8: supports the current driver-ladder validation authority by giving
+  developers an opt-in route to precompile the staged H2 PQS path.
+- LT5: keeps the precompile workload out of normal package startup so the
+  validation optimization does not become default carrying cost for all users.
+
+Medium-goal update:
+- none.
+
+Risk / guardrail:
+- This does not replace the need for a performance review. It is a developer
+  precompile aid, not a production scaling fix.
+
+Remaining blocker / next:
+- To use it, rebuild the package cache with
+  `ENV["GAUSSLETBASES_PRECOMPILE_CARTESIAN_DRIVER"]="1"` before package
+  precompilation. Measure ladder runtime before making it default.
+
+Line-count / complexity note:
+- Adds a small private precompile workload file. The workload mirrors existing
+  driver inputs rather than adding new route behavior.
