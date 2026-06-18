@@ -3604,3 +3604,50 @@ Remaining blocker / next:
 
 Line-count / complexity note:
 - Net source impact was slightly negative: `336` insertions / `350` deletions.
+
+## Pass 293 - Cartesian Donor Inventory Refresh For H2 Handoff
+
+Commit(s):
+- `6b355bea` - Refresh Cartesian donor inventory for H2 handoff
+
+Summary:
+- Updated the Cartesian donor inventory and route migration docs after the H2
+  residual-GTO handoff/paydown sequence.
+- Replaced stale wording that described only one-body provider-block or missing
+  density-provider coverage.
+- Documented the current private H2 H/V/T handoff: `H` in
+  `(:final_pqs, :residual_gto)`, `V` in
+  `(:pre_final_pqs, :residual_gto)`, and an explicit orbital-to-density
+  transform with `provider_block_mode = :one_body_and_density_provider`.
+- Recorded that private H1-J/RHF solver diagnostics are not part of the
+  producer contract.
+- Added a shared-kernel status note for the neutral weighted-Hadamard and 1D
+  Gaussian axis-table helpers.
+
+Validation:
+- Doer reported `git diff --check`.
+- Doer reported package load.
+- Doer reported `julia --project=. tools/run_cartesian_line_ladder.jl --list`
+  and listed all four temporary line ladders.
+- Manager inspected the pushed diff and found no blocking issue.
+
+Goal advancement:
+- MT4/LT8: keeps the migration ledger aligned with the current private H2
+  producer capability before starting public contract work.
+- LT5: prevents stale donor-doc claims from preserving private solver
+  diagnostics or old QW wrapper architecture as if they were target surfaces.
+
+Medium-goal update:
+- none.
+
+Risk / guardrail:
+- The docs now correctly say this is still H2-fixture/private producer work,
+  not a public Cr2-ready producer. Do not weaken that distinction in the next
+  pass.
+
+Remaining blocker / next:
+- Sketch the public/neutral H/V/T Hamiltonian contract and list the exact H2
+  fixture assumptions that must be removed before Cr2 or public API work.
+
+Line-count / complexity note:
+- Documentation impact was small: `30` insertions / `18` deletions.
