@@ -1229,17 +1229,14 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_ham_handoff(
     one_body_blocks,
     density_blocks,
     density_interaction,
-    augmented_h1_j,
-    private_augmented_rhf,
+    nuclear_repulsion,
 )
     isnothing(one_body_blocks) &&
         throw(ArgumentError("H2 residual-GTO Ham handoff requires one-body blocks"))
     isnothing(density_blocks) &&
         throw(ArgumentError("H2 residual-GTO Ham handoff requires density blocks"))
-    isnothing(augmented_h1_j) &&
-        throw(ArgumentError("H2 residual-GTO Ham handoff requires H1-J facts"))
-    isnothing(private_augmented_rhf) &&
-        throw(ArgumentError("H2 residual-GTO Ham handoff requires private RHF facts"))
+    isfinite(Float64(nuclear_repulsion)) ||
+        throw(ArgumentError("H2 residual-GTO Ham handoff requires finite nuclear repulsion"))
     one_body = Matrix{Float64}(one_body_blocks.augmented_one_body_hamiltonian)
     pair_matrix = Matrix{Float64}(density_blocks.augmented_pair_matrix)
     orbital_to_density =
@@ -1269,7 +1266,7 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_ham_handoff(
         orbital_to_density,
         electron_count = 2,
         spin_sectors = (; nup = 1, ndn = 1),
-        nuclear_repulsion = private_augmented_rhf.nuclear_repulsion,
+        nuclear_repulsion = Float64(nuclear_repulsion),
         diagnostics = (;
             orbital_dimension,
             density_dimension,
@@ -1277,14 +1274,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_ham_handoff(
                 size(density_interaction.final_to_pre_final_coefficients, 1),
             one_body_symmetry_error,
             pair_symmetry_error,
-            h1_lowest = one_body_blocks.augmented_h1_lowest,
-            h1_j_self_coulomb = augmented_h1_j.self_coulomb,
-            private_rhf_converged = private_augmented_rhf.converged,
-            private_rhf_iterations = private_augmented_rhf.iteration_count,
-            private_rhf_total_with_nuclear_repulsion =
-                private_augmented_rhf.total_with_nuclear_repulsion,
-            private_rhf_commutator_residual =
-                private_augmented_rhf.commutator_residual,
         ),
     )
 end
@@ -2662,6 +2651,17 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
             density_descriptor,
         ) :
         nothing
+    nuclear_repulsion =
+        _pqs_source_box_route_driver_nuclear_repulsion(route_metadata)
+    ham_handoff =
+        provider_block_mode === :one_body_and_density_provider ?
+        _pqs_source_box_route_driver_pqs_h2_residual_gto_ham_handoff(
+            one_body_blocks,
+            density_blocks,
+            provider_packet.density_interaction,
+            nuclear_repulsion,
+        ) :
+        nothing
     augmented_h1_j =
         provider_block_mode === :one_body_and_density_provider ?
         _pqs_source_box_route_driver_pqs_h2_augmented_h1_j_diagnostic(
@@ -2677,16 +2677,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
             density_blocks,
             provider_packet.density_interaction,
             route_metadata,
-        ) :
-        nothing
-    ham_handoff =
-        provider_block_mode === :one_body_and_density_provider ?
-        _pqs_source_box_route_driver_pqs_h2_residual_gto_ham_handoff(
-            one_body_blocks,
-            density_blocks,
-            provider_packet.density_interaction,
-            augmented_h1_j,
-            private_augmented_rhf,
         ) :
         nothing
     ham_handoff_summary =

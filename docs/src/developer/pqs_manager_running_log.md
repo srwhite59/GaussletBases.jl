@@ -3152,3 +3152,49 @@ Line-count / complexity note:
 - Source diff before this log entry was `26` added / `0` deleted. The added
   lines are direct artifact-consumer invariant checks inside the existing
   roundtrip helper.
+
+## Pass 284 - Residual-GTO Ham Handoff Decoupling
+
+Commit(s):
+- this commit - Decouple H2 PQS residual GTO Ham handoff
+
+Summary:
+- Changed the private H2 residual-GTO Ham handoff constructor so it no longer
+  depends on the augmented H1-J diagnostic or private RHF smoke.
+- The handoff is now built directly from producer-side data: one-body provider
+  blocks, density provider blocks, the density interaction transform, and
+  nuclear repulsion from route metadata.
+- Removed H1-J and private RHF facts from `ham_handoff.diagnostics`; those
+  remain separate consumer/audit results in the materialization path.
+- Reordered the materialization path so the Ham handoff is produced before the
+  private H1-J/RHF diagnostics. No artifact keys, matrix values, or driver
+  output facts were intentionally changed.
+
+Validation:
+- `git diff --check`
+- `julia --project=. -e 'using GaussletBases; println("load ok")'`
+- `julia --project=. tools/run_cartesian_line_ladder.jl --line=pqs_diatomic`
+  passed all three cases through `cartesian_print/save`.
+
+Goal advancement:
+- MT4/LT8: makes the Ham handoff a producer contract rather than a wrapper
+  around private solver/audit results.
+- LT5: keeps the handoff boundary focused on `H`, `V`, `T`, electron/spin
+  counts, nuclear repulsion, and minimal dimensions/symmetry diagnostics.
+
+Medium-goal update:
+- The next slimming pass can target artifact-field pruning: remove default Ham
+  artifact keys that are provider-development decomposition data rather than
+  consumer contract data.
+
+Risk / guardrail:
+- Private H1-J and RHF facts are still present in the materialization artifact
+  and print surface as audits. They should not be allowed to define the Ham
+  handoff contract.
+
+Remaining blocker / next:
+- Prune intermediate provider block fields from the default Ham artifact and
+  readback path while preserving the minimal consumer invariant.
+
+Line-count / complexity note:
+- Source diff before this log entry was `14` added / `24` deleted, net `-10`.
