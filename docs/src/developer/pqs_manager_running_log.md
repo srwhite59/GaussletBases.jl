@@ -2930,3 +2930,68 @@ Line-count / complexity note:
 - Source/reporting diff before this log entry was `36` added / `45` deleted.
   The log entry itself adds documentation lines, but the code path is net
   smaller.
+
+## Pass 280 - Residual-GTO Artifact Writer Paydown
+
+Commit(s):
+- this commit - Trim H2 PQS residual GTO artifact writing
+
+Summary:
+- Accepted the doer cleanup that made the residual-GTO provider mode explicit
+  as `provider_block_mode` while continuing to write the legacy
+  `provider_blocks_included` artifact key for compatibility.
+- Replaced repeated nullable summary extraction in the residual-GTO
+  materialization summary with small optional property/size helpers.
+- Collapsed the new artifact-writer helper family into one local
+  `_pqs_source_box_route_driver_write_jld2_fields!` plus two named field lists
+  for repeated residual-transform and density-moment artifact fields.
+- The long inline basis/Ham JLD2 write blocks remain decomposed, but without a
+  dozen one-off setter helpers. No physics or artifact key meaning was changed.
+
+Validation:
+- `git diff --check`
+- `julia --project=. -e 'using GaussletBases; println("load ok")'`
+- `julia --project=. tools/run_cartesian_line_ladder.jl --line=pqs_diatomic`
+  passed all three cases through `cartesian_print/save`.
+- The materialized case still reports final dimension `471`, residual rank
+  `18`, augmented dimension `489`, augmented H1-J self-Coulomb
+  `0.457435475059184`, private RHF convergence in `15` iterations, and the
+  private Ham handoff dimensions `489`/`489`.
+
+Goal advancement:
+- LT5/LT8: preserves the residual-GTO Ham/Basis/sidecar/handoff lane while
+  reducing carrying cost in the route-specific materialization writer.
+- MT4: keeps the H2 PQS residual-GTO artifact path as the active downstream
+  consumer boundary without promoting it to a public solver API.
+
+Medium-goal checkpoint:
+- Active: residual-GTO Ham handoff artifact/readback remains the next
+  consumer-boundary goal.
+- Active: provider/handoff helper extraction from
+  `pqs_source_box_low_order_materialization.jl` remains desirable once the
+  handoff artifact layout is stable.
+- Active: performance review for the residual-GTO provider construction/Fock
+  path is still required before broadening beyond the H2 private lane.
+- Deferred: atomic PQS unification and density/pair generalization should not
+  be mixed into the current handoff-artifact paydown lane.
+- Completed for now: current private H2 PQS residual-GTO materialized ladder
+  still exercises source plan, final basis, H1, H1-J, one-body provider,
+  density provider, private RHF smoke, and private Ham handoff facts.
+
+Risk / guardrail:
+- `provider_blocks_included` is now explicitly legacy compatibility beside
+  `provider_block_mode`. It should not become a second authority. Delete the
+  legacy key once artifact consumers and roundtrip readers no longer need it.
+- The flat materialization summary still carries optional provider facts; this
+  pass reduced repeated extraction but did not fully replace the flat summary
+  with compact nested summaries.
+
+Remaining blocker / next:
+- Continue with the narrow H2 residual-GTO Ham handoff artifact/readback pass:
+  write/read `H` in `[F,R]`, `V` in `[P,R]`, `T: [F,R] -> [P,R]`,
+  electron/spin counts, nuclear repulsion, dimensions, finiteness, and
+  symmetry. No solver execution.
+
+Line-count / complexity note:
+- Source diff before this log entry was `266` added / `242` deleted in
+  `pqs_source_box_low_order_materialization.jl`, net `+24`.
