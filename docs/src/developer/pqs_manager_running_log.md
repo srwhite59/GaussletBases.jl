@@ -3499,3 +3499,53 @@ Remaining blocker / next:
 Line-count / complexity note:
 - Adds a small private precompile workload file. The workload mirrors existing
   driver inputs rather than adding new route behavior.
+
+## Pass 291 - Neutral Cartesian Weighted Hadamard Kernel
+
+Commit(s):
+- `4bfd9d04` - Share Cartesian weighted Hadamard contraction
+
+Summary:
+- Added neutral private `_cartesian_weighted_hadamard3` in
+  `cartesian_gaussian_axis_integrals.jl`.
+- Removed the duplicate H2 residual-GTO weighted-Hadamard implementation and
+  routed H2 private provider code directly through the neutral helper.
+- Preserved `_qwrg_atomic_weighted_hadamard` as a compatibility wrapper for
+  existing QW/CPB donor callers.
+- Did not touch axis cross/self table extraction, MWG interaction code,
+  artifacts, public API, or Cr2 logic.
+
+Validation:
+- Doer reported `git diff --check`.
+- Doer reported package load.
+- Doer reported
+  `julia --project=. tools/run_cartesian_line_ladder.jl --line=pqs_diatomic`
+  passed all three cases through `cartesian_print/save`.
+- Doer reported direct artifact readback:
+  `provider_block_mode=one_body_and_density_provider`, final dimension `471`,
+  and handoff consumer self-Coulomb `0.4574354750591831`.
+- Manager inspected the pushed diff and confirmed the worktree is clean.
+
+Goal advancement:
+- MT4/LT8: starts moving reusable residual-GTO producer kernels out from under
+  route-specific and QW donor names.
+- LT5: removes an exact duplicate implementation while preserving old donor
+  surfaces as wrappers.
+
+Medium-goal update:
+- The neutral Gaussian-kernel lane is open. The next pass can tackle axis
+  cross/self table loops, but should keep old QW names as wrappers and remain
+  private/internal.
+
+Risk / guardrail:
+- `_cartesian_weighted_hadamard3` still allocates the same intermediate matrix
+  as the old implementations. This pass is semantic consolidation, not a
+  performance optimization.
+
+Remaining blocker / next:
+- Consolidate the axis-table scalar/table loops into neutral helpers without
+  changing donor wrapper APIs.
+
+Line-count / complexity note:
+- Source impact was small and line-negative: `18` insertions / `19` deletions
+  across four source files.
