@@ -1884,6 +1884,26 @@ function _pqs_source_box_route_driver_symmetric_matrix(
     return symmetry_error
 end
 
+function _pqs_source_box_route_driver_ham_handoff_consumer_invariant(
+    one_body_hamiltonian,
+    density_pair_matrix,
+    orbital_to_density,
+    expected_h1_j_self_coulomb::Real;
+    symmetry_atol::Real = 1.0e-8,
+)
+    h1_orbital = eigen(Symmetric(one_body_hamiltonian)).vectors[:, 1]
+    density_coefficients = orbital_to_density * h1_orbital
+    self_coulomb =
+        _pqs_source_box_route_driver_restricted_one_orbital_self_coulomb(
+            density_pair_matrix,
+            density_coefficients,
+        )
+    delta = abs(self_coulomb - Float64(expected_h1_j_self_coulomb))
+    delta <= 10.0 * Float64(symmetry_atol) ||
+        throw(ArgumentError("Ham handoff consumer H1-J invariant mismatch"))
+    return (; self_coulomb, delta,)
+end
+
 """
     _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_roundtrip(
         basisfile,
@@ -2275,22 +2295,14 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                             throw(ArgumentError("Ham handoff spin ndn must be 1"))
                         isfinite(Float64(file["ham_handoff_nuclear_repulsion"])) ||
                             throw(ArgumentError("Ham handoff nuclear repulsion must be finite"))
-                        h1_orbital =
-                            eigen(Symmetric(augmented_one_body_hamiltonian)).vectors[:, 1]
-                        consumer_density_coefficients =
-                            orbital_to_density * h1_orbital
-                        consumer_h1_j_self_coulomb =
-                            _pqs_source_box_route_driver_restricted_one_orbital_self_coulomb(
+                        consumer_invariant =
+                            _pqs_source_box_route_driver_ham_handoff_consumer_invariant(
+                                augmented_one_body_hamiltonian,
                                 augmented_pair_matrix,
-                                consumer_density_coefficients,
+                                orbital_to_density,
+                                augmented_h1_j_self_coulomb;
+                                symmetry_atol,
                             )
-                        consumer_h1_j_delta =
-                            abs(
-                                consumer_h1_j_self_coulomb -
-                                augmented_h1_j_self_coulomb,
-                            )
-                        consumer_h1_j_delta <= 10.0 * Float64(symmetry_atol) ||
-                            throw(ArgumentError("Ham handoff consumer H1-J invariant mismatch"))
                         (;
                             augmented_density_dimension,
                             augmented_pair_matrix_size = size(augmented_pair_matrix),
@@ -2299,9 +2311,9 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                             ham_handoff_orbital_to_density_size =
                                 size(orbital_to_density),
                             ham_handoff_consumer_h1_j_self_coulomb =
-                                consumer_h1_j_self_coulomb,
+                                consumer_invariant.self_coulomb,
                             ham_handoff_consumer_h1_j_delta =
-                                consumer_h1_j_delta,
+                                consumer_invariant.delta,
                         )
                     else
                         (;

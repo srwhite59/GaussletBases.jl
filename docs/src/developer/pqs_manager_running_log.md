@@ -3357,3 +3357,49 @@ Remaining blocker / next:
 Line-count / complexity note:
 - Diff before this log entry was `11` added / `44` deleted across source and
   current developer docs.
+
+## Pass 288 - Residual-GTO Handoff Consumer Invariant Isolation
+
+Commit(s):
+- this commit - Isolate H2 PQS residual GTO handoff invariant
+
+Summary:
+- Factored the private no-solver Ham handoff consumer invariant out of the JLD2
+  roundtrip body into a small helper.
+- The invariant still consumes only saved handoff facts: augmented one-body
+  `H`, augmented density interaction `V`, and `T: [F,R] -> [P,R]`, then
+  reconstructs the lowest-orbital H1-J self-Coulomb and compares it to the
+  stored diagnostic.
+- No new artifact fields, solver execution, public API, provider registry, or
+  helper-schema test was added.
+
+Validation:
+- `git diff --check`
+- `julia --project=. -e 'using GaussletBases; println("load ok")'`
+- `julia --project=. tools/run_cartesian_line_ladder.jl --line=pqs_diatomic`
+  passed all three cases through `cartesian_print/save`.
+- Direct artifact readback returned
+  `provider_block_mode = :one_body_and_density_provider` and H1-J consumer
+  delta `9.43689570931383e-16`.
+
+Goal advancement:
+- MT4/LT8: keeps the handoff consumer check small and explicitly solver-free.
+- LT5: prevents the roundtrip helper from growing another embedded
+  computation block while preserving the exact consumer invariant.
+
+Medium-goal update:
+- none.
+
+Risk / guardrail:
+- This helper is private and route-specific. Do not broaden it into an artifact
+  registry or a solver smoke suite.
+
+Remaining blocker / next:
+- Pass F can extract the surviving residual-GTO helper family into a focused
+  private file now that the default artifact and materialization surface have
+  been pruned.
+
+Line-count / complexity note:
+- Source diff before this log entry was `28` added / `16` deleted. The small
+  positive delta buys a named private boundary for the no-solver consumer
+  invariant.
