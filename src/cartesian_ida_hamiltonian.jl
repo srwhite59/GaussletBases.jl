@@ -60,8 +60,7 @@ function _CartesianIDAHamiltonian(
     nuclear_attraction_unit_by_center,
     electron_electron_ida,
     nup::Integer,
-    ndn::Integer,
-    nuclear_repulsion::Real;
+    ndn::Integer;
     nuclear_charges,
     nuclear_positions,
 )
@@ -99,9 +98,7 @@ function _CartesianIDAHamiltonian(
         throw(DimensionMismatch("nuclear position row count must match charges"))
     all(isfinite, positions) ||
         throw(ArgumentError("nuclear positions contain non-finite entries"))
-    repulsion = Float64(nuclear_repulsion)
-    isfinite(repulsion) ||
-        throw(ArgumentError("nuclear repulsion must be finite"))
+    repulsion = _cartesian_ida_nuclear_repulsion(charges, positions)
     return _CartesianIDAHamiltonian{Float64}(
         kinetic_matrix,
         center_matrices,
@@ -116,35 +113,41 @@ end
 
 function _cartesian_ida_one_body(
     ham::_CartesianIDAHamiltonian;
-    charge_multipliers = ham.nuclear_charges,
+    center_weights = ones(length(ham.nuclear_charges)),
 )
-    multipliers = _cartesian_float_vector(charge_multipliers)
-    length(multipliers) == length(ham.nuclear_attraction_unit_by_center) ||
-        throw(DimensionMismatch("charge multiplier count must match centers"))
-    all(isfinite, multipliers) ||
-        throw(ArgumentError("charge multipliers contain non-finite entries"))
+    weights = _cartesian_ida_center_weights(center_weights, ham.nuclear_charges)
     matrix = copy(ham.kinetic)
-    for (charge, nuclear) in zip(multipliers, ham.nuclear_attraction_unit_by_center)
-        matrix .+= charge .* nuclear
+    for (weight, charge, nuclear) in
+        zip(weights, ham.nuclear_charges, ham.nuclear_attraction_unit_by_center)
+        matrix .+= weight * charge .* nuclear
     end
     return matrix
 end
 
 function _cartesian_ida_nuclear_repulsion(
     ham::_CartesianIDAHamiltonian;
-    charge_multipliers = ham.nuclear_charges,
+    center_weights = ones(length(ham.nuclear_charges)),
 )
-    multipliers = _cartesian_float_vector(charge_multipliers)
-    length(multipliers) == length(ham.nuclear_charges) ||
-        throw(DimensionMismatch("charge multiplier count must match centers"))
-    all(isfinite, multipliers) ||
-        throw(ArgumentError("charge multipliers contain non-finite entries"))
+    weights = _cartesian_ida_center_weights(center_weights, ham.nuclear_charges)
+    return _cartesian_ida_nuclear_repulsion(weights .* ham.nuclear_charges, ham.nuclear_positions)
+end
+
+function _cartesian_ida_center_weights(center_weights, charges)
+    weights = _cartesian_float_vector(center_weights)
+    length(weights) == length(charges) ||
+        throw(DimensionMismatch("center weight count must match centers"))
+    all(isfinite, weights) ||
+        throw(ArgumentError("center weights contain non-finite entries"))
+    return weights
+end
+
+function _cartesian_ida_nuclear_repulsion(charges, positions)
     repulsion = 0.0
-    for right in 2:length(multipliers), left in 1:(right - 1)
-        distance = norm(ham.nuclear_positions[right, :] .- ham.nuclear_positions[left, :])
+    for right in 2:length(charges), left in 1:(right - 1)
+        distance = norm(positions[right, :] .- positions[left, :])
         distance > 0.0 ||
             throw(ArgumentError("nuclear repulsion requires distinct centers"))
-        repulsion += multipliers[left] * multipliers[right] / distance
+        repulsion += charges[left] * charges[right] / distance
     end
     return repulsion
 end

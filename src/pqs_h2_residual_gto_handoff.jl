@@ -566,21 +566,6 @@ function _pqs_source_box_route_driver_restricted_one_orbital_self_coulomb(
     return direct - exchange
 end
 
-function _pqs_source_box_route_driver_nuclear_repulsion(route_metadata)
-    charges = Float64.(route_metadata.nuclear_charges)
-    locations = route_metadata.atom_locations
-    length(charges) == length(locations) ||
-        throw(DimensionMismatch("nuclear charge and location counts differ"))
-    repulsion = 0.0
-    for right in 2:length(charges), left in 1:(right - 1)
-        distance = norm(Float64.(locations[right] .- locations[left]))
-        distance > 0.0 ||
-            throw(ArgumentError("nuclear repulsion requires distinct centers"))
-        repulsion += charges[left] * charges[right] / distance
-    end
-    return repulsion
-end
-
 function _pqs_source_box_route_driver_pqs_h2_residual_gto_ida_hamiltonian(
     one_body_blocks,
     density_blocks,
@@ -590,17 +575,12 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_ida_hamiltonian(
         throw(ArgumentError("H2 residual-GTO IDA Hamiltonian requires one-body blocks"))
     isnothing(density_blocks) &&
         throw(ArgumentError("H2 residual-GTO IDA Hamiltonian requires density blocks"))
-    nuclear_repulsion =
-        _pqs_source_box_route_driver_nuclear_repulsion(route_metadata)
-    isfinite(Float64(nuclear_repulsion)) ||
-        throw(ArgumentError("H2 residual-GTO IDA Hamiltonian requires finite nuclear repulsion"))
     return _CartesianIDAHamiltonian(
         one_body_blocks.augmented_kinetic,
         one_body_blocks.augmented_nuclear_attraction_unit_by_center,
         density_blocks.augmented_pair_matrix,
         1,
-        1,
-        nuclear_repulsion;
+        1;
         nuclear_charges = route_metadata.nuclear_charges,
         nuclear_positions = route_metadata.atom_locations,
     )
@@ -1020,13 +1000,11 @@ function _pqs_source_box_route_driver_pqs_gto_one_body_blocks(packet)
     return (;
         augmented_kinetic,
         augmented_nuclear_attraction_unit_by_center,
-        nuclear_attraction_unit_by_center_count = center_count,
         augmented_one_body_hamiltonian,
         final_dimension = size(packet.h_ff, 1),
         augmented_dimension = size(augmented_one_body_hamiltonian, 1),
         augmented_h1_lowest,
         augmented_h1_symmetry_error = augmented_symmetry_error,
-        augmented_h1_component_reconstruction_error = 0.0,
         base_h1_component_reconstruction_error = base_reconstruction_error,
     )
 end
@@ -1141,17 +1119,17 @@ function _pqs_source_box_route_driver_ida_hamiltonian_smoke(ida_hamiltonian)
     center_count == 2 ||
         throw(ArgumentError("H2 IDA counterpoise smoke expects exactly two centers"))
     for active_center in 1:center_count
-        multipliers = zeros(Float64, center_count)
-        multipliers[active_center] = ida_hamiltonian.nuclear_charges[active_center]
+        center_weights = zeros(Float64, center_count)
+        center_weights[active_center] = 1.0
         branch_h1 =
-            _cartesian_ida_one_body(ida_hamiltonian; charge_multipliers = multipliers)
+            _cartesian_ida_one_body(ida_hamiltonian; center_weights)
         norm(branch_h1 - transpose(branch_h1), Inf) <= 1.0e-8 ||
             throw(ArgumentError("IDA counterpoise branch H1 is not symmetric"))
         isfinite(eigen(Symmetric(branch_h1)).values[1]) ||
             throw(ArgumentError("IDA counterpoise branch H1 lowest value is not finite"))
         _cartesian_ida_nuclear_repulsion(
             ida_hamiltonian;
-            charge_multipliers = multipliers,
+            center_weights,
         ) == 0.0 ||
             throw(ArgumentError("IDA ghost branch nuclear repulsion must be zero"))
     end
@@ -1455,8 +1433,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                         :augmented_one_body_hamiltonian,
                         :augmented_h1_lowest,
                         :augmented_h1_symmetry_error,
-                        :augmented_h1_component_reconstruction_error,
-                        :nuclear_attraction_unit_by_center_count,
                         :augmented_density_gauge,
                         :augmented_density_space,
                         :p_dimension,
@@ -1499,9 +1475,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                     (augmented_dimension, augmented_dimension),
                     symmetry_atol,
                 )
-                Int(file["nuclear_attraction_unit_by_center_count"]) ==
-                    length(nuclear_charges) ||
-                    throw(ArgumentError("augmented unit-nuclear center count must match nuclear charges"))
                 length(augmented_nuclear_attraction_unit_by_center) ==
                     length(nuclear_charges) ||
                     throw(ArgumentError("augmented unit-nuclear matrices must match nuclear charges"))
@@ -1522,11 +1495,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                     norm(augmented_reconstructed - augmented_one_body_hamiltonian, Inf)
                 augmented_h1_component_reconstruction_error <= Float64(symmetry_atol) ||
                     throw(ArgumentError("augmented H1 does not reconstruct from K + Z*U centers"))
-                recorded_augmented_error =
-                    Float64(file["augmented_h1_component_reconstruction_error"])
-                abs(recorded_augmented_error - augmented_h1_component_reconstruction_error) <=
-                    Float64(symmetry_atol) ||
-                    throw(ArgumentError("recorded augmented H1 reconstruction error mismatch"))
                 file["augmented_density_gauge"] ===
                     :localized_ida ||
                     throw(ArgumentError("ham augmented density gauge must be localized IDA"))
@@ -1558,7 +1526,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                                 :residual_moment_overlap_error,
                                 :ida_spin_nup,
                                 :ida_spin_ndn,
-                                :ida_nuclear_repulsion,
                             ),
                         )
                         augmented_density_dimension =
@@ -1580,8 +1547,7 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                             augmented_nuclear_attraction_unit_by_center,
                             augmented_pair_matrix,
                             Int(file["ida_spin_nup"]),
-                            Int(file["ida_spin_ndn"]),
-                            Float64(file["ida_nuclear_repulsion"]);
+                            Int(file["ida_spin_ndn"]);
                             nuclear_charges = route_metadata.nuclear_charges,
                             nuclear_positions = route_metadata.atom_locations,
                         )
@@ -1617,11 +1583,8 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                     augmented_one_body_hamiltonian_size =
                         size(augmented_one_body_hamiltonian),
                     augmented_kinetic_size = size(augmented_kinetic),
-                    augmented_nuclear_attraction_unit_by_center_count =
-                        length(augmented_nuclear_attraction_unit_by_center),
                     augmented_h1_lowest,
                     augmented_h1_symmetry_error,
-                    augmented_h1_component_reconstruction_error,
                     augmented_density_gauge = file["augmented_density_gauge"],
                     augmented_density_space =
                         Tuple(file["augmented_density_space"]),
@@ -1636,10 +1599,8 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                     augmented_dimension = nothing,
                     augmented_one_body_hamiltonian_size = nothing,
                     augmented_kinetic_size = nothing,
-                    augmented_nuclear_attraction_unit_by_center_count = nothing,
                     augmented_h1_lowest = nothing,
                     augmented_h1_symmetry_error = nothing,
-                    augmented_h1_component_reconstruction_error = nothing,
                     augmented_density_gauge = nothing,
                     augmented_density_space = nothing,
                     p_projection_of_g_size = nothing,
@@ -1692,12 +1653,8 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
         augmented_one_body_hamiltonian_size =
             ham_facts.augmented_one_body_hamiltonian_size,
         augmented_kinetic_size = ham_facts.augmented_kinetic_size,
-        augmented_nuclear_attraction_unit_by_center_count =
-            ham_facts.augmented_nuclear_attraction_unit_by_center_count,
         augmented_h1_lowest = ham_facts.augmented_h1_lowest,
         augmented_h1_symmetry_error = ham_facts.augmented_h1_symmetry_error,
-        augmented_h1_component_reconstruction_error =
-            ham_facts.augmented_h1_component_reconstruction_error,
         ida_orbital_dimension = ham_facts.ida_orbital_dimension,
         ida_center_count = ham_facts.ida_center_count,
         ida_full_self_coulomb = ham_facts.ida_full_self_coulomb,

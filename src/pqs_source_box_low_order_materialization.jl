@@ -428,8 +428,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
             density_descriptor,
         ) :
         nothing
-    nuclear_repulsion =
-        _pqs_source_box_route_driver_nuclear_repulsion(route_metadata)
     ida_hamiltonian =
         provider_block_mode === :one_body_and_density_provider ?
         _pqs_source_box_route_driver_pqs_h2_residual_gto_ida_hamiltonian(
@@ -455,8 +453,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
     augmented_h1_lowest = optional(one_body_blocks, :augmented_h1_lowest)
     augmented_h1_symmetry_error =
         optional(one_body_blocks, :augmented_h1_symmetry_error)
-    augmented_h1_component_reconstruction_error =
-        optional(one_body_blocks, :augmented_h1_component_reconstruction_error)
     summary = (;
         route_family = report.route_family,
         route_kind = report.route_kind,
@@ -479,7 +475,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
         augmented_dimension,
         augmented_h1_lowest,
         augmented_h1_symmetry_error,
-        augmented_h1_component_reconstruction_error,
         augmented_density_space =
             optional(density_descriptor, :augmented_density_space),
         augmented_density_gauge =
@@ -609,15 +604,11 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
                     :augmented_one_body_hamiltonian,
                     :augmented_h1_lowest,
                     :augmented_h1_symmetry_error,
-                    :augmented_h1_component_reconstruction_error,
-                    :nuclear_attraction_unit_by_center_count,
                 ),
             )
             if !isnothing(ida_hamiltonian)
                 file["ida_spin_nup"] = ida_hamiltonian.nup
                 file["ida_spin_ndn"] = ida_hamiltonian.ndn
-                file["ida_nuclear_repulsion"] =
-                    ida_hamiltonian.nuclear_repulsion
             end
         end
     end
@@ -662,7 +653,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
         augmented_dimension,
         augmented_h1_lowest,
         augmented_h1_symmetry_error,
-        augmented_h1_component_reconstruction_error,
         ida_full_self_coulomb = optional(artifact_roundtrip, :ida_full_self_coulomb),
         ida_counterpoise_branch_count =
             optional(artifact_roundtrip, :ida_counterpoise_branch_count),

@@ -46,6 +46,7 @@ basis. In that basis:
 - `K` is `n x n`.
 - each `U_A` is `n x n`.
 - `Vee` is `n x n`.
+- nuclear positions are stored as `ncenter x 3`, one row per center.
 - orbital coefficient matrices `C` are `n x m` when a later calculation chooses
   `m` orbitals.
 
@@ -115,13 +116,16 @@ Current implementation surfaces are:
   for common complete core/shell basis and IDA interaction helpers.
 - `src/pqs_multilayer_complete_core_shell_h1.jl` for the common PQS H1 and
   density-interaction payload.
+- `src/cartesian_ida_hamiltonian.jl` for the current private internal
+  one-basis IDA Hamiltonian object.
 - `src/pqs_h2_residual_gto_handoff.jl` for the current private H2
-  residual-Gaussian extension and handoff prototype.
+  residual-Gaussian extension and artifact/readback scaffolding.
 - `src/cartesian_gaussian_axis_integrals.jl` for shared Cartesian Gaussian axis
   integral kernels where present.
 
 ## Current Implementation Deviations
 
 The active H2 PQS route no longer applies the forbidden global core/shell
-Lowdin cleanup. The private route is being migrated from the old two-gauge
-H/V/T prototype toward the one-basis IDA contract described here.
+Lowdin cleanup. The private H2 residual-GTO route now uses an internal
+one-basis IDA object. The public type and versioned writer/reader are still
+pending.

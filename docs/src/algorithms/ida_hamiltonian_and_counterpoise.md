@@ -11,7 +11,7 @@ For a localized IDA basis with `n` functions:
 - each unit-nuclear attraction matrix `U_A` is `n x n`.
 - `Vee` is `n x n`.
 - nuclear charges have length `ncenter`.
-- nuclear positions are `3 x ncenter` or an equivalent explicit center table.
+- nuclear positions are `ncenter x 3`, one row per center.
 
 ## Inputs
 
@@ -63,8 +63,18 @@ For a localized IDA basis with `n` functions:
    ```
 
 7. For monomer or counterpoise branches, keep the same basis and `Vee`, but
-   choose the electron/spin counts, nuclear repulsion, and which uncharged
-   nuclear attraction matrices contribute to `H_1`.
+   choose the electron/spin counts and center weights `w_A`. A branch one-body
+   matrix is assembled as:
+
+   ```math
+   H_1(w)=K+\sum_A w_A Z_A U_A.
+   ```
+
+   The branch nuclear repulsion uses the same weights:
+
+   ```math
+   E_{nn}(w)=\sum_{A<B}\frac{(w_AZ_A)(w_BZ_B)}{|R_A-R_B|}.
+   ```
 
 ## Linear Algebra
 
@@ -110,8 +120,7 @@ consumer transformations, not Hamiltonian-construction repair.
 - `E_nn` is finite for nonzero internuclear separations.
 - `H_1 = K + sum_A Z_A U_A` reproduces the normal charged one-body matrix.
 - Counterpoise branches use the same basis and `Vee` as the full system while
-  allowing branch-specific electron/spin counts, nuclear repulsion, and
-  selected nuclear attractions.
+  allowing branch-specific electron/spin counts and center weights.
 
 ## Operator and Gauge Conventions
 
@@ -131,20 +140,23 @@ H_1^{\mathrm{ghost},A+B}=K+Z_BU_B.
 
 The basis and `Vee` remain fixed for these branches.
 
+Equivalently, these are center-weight choices `w=(1,1)`, `w=(1,0)`,
+and `w=(0,1)` using the stored physical charges.
+
 ## Code Map
 
 - `src/pqs_multilayer_complete_core_shell_h1.jl` builds the common complete
   core/shell H1 path and separated center contributions.
 - `src/cartesian_final_basis_realization/pqs_complete_core_shell_final_basis.jl`
   builds IDA density interaction helpers in the completed localized basis.
+- `src/cartesian_ida_hamiltonian.jl` contains the current private internal
+  one-basis IDA Hamiltonian object.
 - `src/pqs_h2_residual_gto_handoff.jl` contains the current private H2
-  residual-GTO Hamiltonian handoff prototype.
+  residual-GTO producer/readback scaffolding.
 - Future public code should expose a one-basis IDA Hamiltonian object rather
   than the current private H2 sidecar artifact.
 
 ## Current Implementation Deviations
 
-The public one-basis IDA Hamiltonian type and writer/reader are not yet
-implemented. The current H2 residual-GTO artifact still carries private names
-from the former H/V/T handoff stage. Those names should be retired when the
-public `K`, `{U_A}`, `Vee` contract is introduced.
+The private H2 residual-GTO route now uses an internal one-basis IDA object.
+The public type and versioned writer/reader are still pending.
