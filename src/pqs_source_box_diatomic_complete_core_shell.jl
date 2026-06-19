@@ -2564,13 +2564,8 @@ function _pqs_source_box_route_driver_physical_gausslet_overlap_diagnostics(
         shape = size(matrix),
         symmetry_error,
         identity_error,
-        eigenvalue_min = nothing,
-        eigenvalue_max = nothing,
-        rank = nothing,
         expected_dimension = size(matrix, 1),
-        rank_atol = Float64(rank_atol),
         identity_atol = Float64(identity_atol),
-        full_rank = nothing,
     )
     blocker =
         identity_error <= Float64(identity_atol) ?
@@ -2669,7 +2664,7 @@ function _pqs_source_box_route_driver_physical_gausslet_final_basis(
     )
     total_support_count = sum(support_counts)
     final_dimension = sum(retained_counts)
-    pre_final_coefficients = zeros(Float64, total_support_count, final_dimension)
+    final_coefficients = zeros(Float64, total_support_count, final_dimension)
     support_row_ranges = (
         atom_contact_core = 1:support_counts[1],
         shared_shell_1 = (support_counts[1] + 1):(support_counts[1] + support_counts[2]),
@@ -2682,22 +2677,22 @@ function _pqs_source_box_route_driver_physical_gausslet_final_basis(
         shared_shell_2 =
             (retained_counts[1] + retained_counts[2] + 1):final_dimension,
     )
-    pre_final_coefficients[support_row_ranges.atom_contact_core, retained_ranges.atom_contact_core] .=
+    final_coefficients[support_row_ranges.atom_contact_core, retained_ranges.atom_contact_core] .=
         local_blocks[1]
-    pre_final_coefficients[support_row_ranges.shared_shell_1, retained_ranges.shared_shell_1] .=
+    final_coefficients[support_row_ranges.shared_shell_1, retained_ranges.shared_shell_1] .=
         local_blocks[2]
-    pre_final_coefficients[support_row_ranges.shared_shell_2, retained_ranges.shared_shell_2] .=
+    final_coefficients[support_row_ranges.shared_shell_2, retained_ranges.shared_shell_2] .=
         local_blocks[3]
-    pre_final_overlap =
-        transpose(pre_final_coefficients) * support_overlap * pre_final_coefficients
-    pre_final_identity_error = norm(
-        pre_final_overlap -
+    final_overlap =
+        transpose(final_coefficients) * support_overlap * final_coefficients
+    final_identity_error = norm(
+        final_overlap -
         Matrix{Float64}(I, final_dimension, final_dimension),
         Inf,
     )
     diagnostics =
         _pqs_source_box_route_driver_physical_gausslet_overlap_diagnostics(
-            pre_final_overlap;
+            final_overlap;
             identity_atol,
             rank_atol,
         )
@@ -2707,13 +2702,10 @@ function _pqs_source_box_route_driver_physical_gausslet_final_basis(
         blocker = diagnostics.blocker,
         final_retained_count = final_dimension,
         final_overlap_identity_error = diagnostics.final_identity_error,
-        pre_final_overlap_identity_error = pre_final_identity_error,
         support_counts,
         retained_counts,
         overlap_diagnostics = diagnostics.summary,
     )
-    identity_cleanup = Matrix{Float64}(I, final_dimension, final_dimension)
-    final_coefficients = pre_final_coefficients
     return (;
         object_kind = :pqs_physical_gausslet_final_basis,
         status = :available_pqs_physical_gausslet_final_basis,
@@ -2727,10 +2719,7 @@ function _pqs_source_box_route_driver_physical_gausslet_final_basis(
         retained_ranges,
         final_retained_count = final_dimension,
         final_dimension,
-        pre_final_coefficients,
-        combined_lowdin_cleanup = identity_cleanup,
         final_coefficients,
-        pre_final_overlap_identity_error = pre_final_identity_error,
         final_overlap_identity_error = diagnostics.final_identity_error,
         final_overlap_is_identity = true,
         overlap_diagnostics = diagnostics.summary,
@@ -2846,11 +2835,6 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_final_basis_pay
         retained_counts,
         final_dimension,
         final_overlap_identity_error,
-        pre_final_overlap_identity_error =
-            !isnothing(final_basis) &&
-            hasproperty(final_basis, :pre_final_overlap_identity_error) ?
-            final_basis.pre_final_overlap_identity_error :
-            nothing,
         final_overlap_rank = get(overlap_diagnostics, :rank, nothing),
         final_overlap_full_rank = get(overlap_diagnostics, :full_rank, nothing),
         final_overlap_eigenvalue_min =
@@ -3157,7 +3141,7 @@ function _pqs_source_box_route_driver_physical_gausslet_support_weights(
             source =
                 :pqs_source_box_route_driver_physical_gausslet_support_weights,
             support_order = source_plan.support_order,
-            density_gauge = :pre_final_localized_positive_weight,
+            density_gauge = :localized_ida,
         ),
     )
 end
@@ -3209,7 +3193,7 @@ function _pqs_source_box_route_driver_physical_gausslet_support_pair_raw_numerat
     )
 end
 
-function _pqs_source_box_route_driver_physical_gausslet_pre_final_density_interaction(
+function _pqs_source_box_route_driver_physical_gausslet_ida_density_interaction(
     final_basis,
     support_pair_raw_numerator,
     support_weights;
@@ -3239,110 +3223,98 @@ function _pqs_source_box_route_driver_physical_gausslet_pre_final_density_intera
     all(isfinite, weights) ||
         throw(ArgumentError("physical gausslet support weights contain non-finite entries"))
 
-    pre_final_coefficients = Matrix{Float64}(final_basis.pre_final_coefficients)
     final_coefficients = Matrix{Float64}(final_basis.final_coefficients)
-    cleanup = Matrix{Float64}(
-        I,
-        final_basis.final_retained_count,
-        final_basis.final_retained_count,
-    )
-    size(pre_final_coefficients, 1) == support_count ||
-        throw(DimensionMismatch("physical gausslet pre-final coefficient row mismatch"))
-    size(pre_final_coefficients, 2) == final_basis.final_retained_count ||
-        throw(DimensionMismatch("physical gausslet pre-final coefficient column mismatch"))
+    size(final_coefficients, 1) == support_count ||
+        throw(DimensionMismatch("physical gausslet final coefficient row mismatch"))
+    size(final_coefficients, 2) == final_basis.final_retained_count ||
+        throw(DimensionMismatch("physical gausslet final coefficient column mismatch"))
 
-    pre_final_weights = vec(transpose(pre_final_coefficients) * weights)
+    ida_weights = vec(transpose(final_coefficients) * weights)
     near_zero_threshold = Float64(near_zero_atol)
-    near_zero_count = count(weight -> abs(weight) <= near_zero_threshold, pre_final_weights)
-    negative_count = count(<(0.0), pre_final_weights)
-    positive_count = count(>(0.0), pre_final_weights)
-    all_finite = all(isfinite, pre_final_weights)
+    near_zero_count = count(weight -> abs(weight) <= near_zero_threshold, ida_weights)
+    negative_count = count(<(0.0), ida_weights)
+    positive_count = count(>(0.0), ida_weights)
+    all_finite = all(isfinite, ida_weights)
     positive_weight_gauge =
         all_finite && near_zero_count == 0 && negative_count == 0 &&
-        positive_count == length(pre_final_weights)
-    reconstruction_error =
-        norm(pre_final_coefficients * cleanup - final_coefficients, Inf)
+        positive_count == length(ida_weights)
 
     if !positive_weight_gauge
         return (;
-            object_kind = :pqs_physical_gausslet_pre_final_density_interaction,
+            object_kind = :pqs_physical_gausslet_ida_density_interaction,
             status =
-                :blocked_pqs_physical_gausslet_pre_final_density_interaction,
-            blocker = :physical_gausslet_pre_final_density_weights_not_positive,
+                :blocked_pqs_physical_gausslet_ida_density_interaction,
+            blocker = :physical_gausslet_ida_density_weights_not_positive,
             final_basis_object_kind = final_basis.object_kind,
             final_basis_status = final_basis.status,
             support_order = final_basis.support_order,
-            density_gauge = :pre_final_localized_positive_weight,
+            density_gauge = :localized_ida,
             support_weight_count = length(weights),
-            pre_final_weight_count = length(pre_final_weights),
-            pre_final_weights,
-            pre_final_weight_min = minimum(pre_final_weights),
-            pre_final_weight_max = maximum(pre_final_weights),
-            pre_final_weight_sum = sum(pre_final_weights),
-            pre_final_weight_positive_count = positive_count,
-            pre_final_weight_negative_count = negative_count,
-            pre_final_weight_near_zero_count = near_zero_count,
-            pre_final_weights_all_finite = all_finite,
-            pre_final_weights_all_positive = false,
-            final_to_pre_final_coefficients = cleanup,
-            final_to_pre_final_reconstruction_error = reconstruction_error,
+            ida_weight_count = length(ida_weights),
+            ida_weights,
+            ida_weight_min = minimum(ida_weights),
+            ida_weight_max = maximum(ida_weights),
+            ida_weight_sum = sum(ida_weights),
+            ida_weight_positive_count = positive_count,
+            ida_weight_negative_count = negative_count,
+            ida_weight_near_zero_count = near_zero_count,
+            ida_weights_all_finite = all_finite,
+            ida_weights_all_positive = false,
             raw_pair_numerator_shape = size(raw_pair),
             raw_pair_numerator_symmetry_error = raw_pair_symmetry_error,
-            pre_final_pair_matrix = nothing,
-            pre_final_pair_matrix_shape = nothing,
-            pre_final_pair_matrix_finite = false,
-            pre_final_pair_matrix_symmetry_error = nothing,
+            electron_electron_ida = nothing,
+            electron_electron_ida_shape = nothing,
+            electron_electron_ida_finite = false,
+            electron_electron_ida_symmetry_error = nothing,
             metadata = merge(NamedTuple(metadata), (;
                 source =
-                    :pqs_source_box_route_driver_physical_gausslet_pre_final_density_interaction,
+                    :pqs_source_box_route_driver_physical_gausslet_ida_density_interaction,
                 raw_pair_factor_convention = :raw_numerator,
             )),
         )
     end
 
     weighted_coefficients =
-        pre_final_coefficients .* reshape(1.0 ./ pre_final_weights, 1, :)
-    pre_final_pair_matrix =
+        final_coefficients .* reshape(1.0 ./ ida_weights, 1, :)
+    electron_electron_ida =
         transpose(weighted_coefficients) * raw_pair * weighted_coefficients
-    pre_final_symmetry_error =
-        norm(pre_final_pair_matrix - transpose(pre_final_pair_matrix), Inf)
+    ida_symmetry_error =
+        norm(electron_electron_ida - transpose(electron_electron_ida), Inf)
     return (;
-        object_kind = :pqs_physical_gausslet_pre_final_density_interaction,
-        status = :materialized_pqs_physical_gausslet_pre_final_density_interaction,
+        object_kind = :pqs_physical_gausslet_ida_density_interaction,
+        status = :materialized_pqs_physical_gausslet_ida_density_interaction,
         blocker = nothing,
         final_basis_object_kind = final_basis.object_kind,
         final_basis_status = final_basis.status,
         support_order = final_basis.support_order,
-        density_gauge = :pre_final_localized_positive_weight,
+        density_gauge = :localized_ida,
         support_weight_count = length(weights),
-        pre_final_weight_count = length(pre_final_weights),
-        pre_final_weights,
-        pre_final_weight_min = minimum(pre_final_weights),
-        pre_final_weight_max = maximum(pre_final_weights),
-        pre_final_weight_sum = sum(pre_final_weights),
-        pre_final_weight_positive_count = positive_count,
-        pre_final_weight_negative_count = negative_count,
-        pre_final_weight_near_zero_count = near_zero_count,
-        pre_final_weights_all_finite = all_finite,
-        pre_final_weights_all_positive = true,
-        final_to_pre_final_coefficients = cleanup,
-        final_to_pre_final_reconstruction_error = reconstruction_error,
+        ida_weight_count = length(ida_weights),
+        ida_weights,
+        ida_weight_min = minimum(ida_weights),
+        ida_weight_max = maximum(ida_weights),
+        ida_weight_sum = sum(ida_weights),
+        ida_weight_positive_count = positive_count,
+        ida_weight_negative_count = negative_count,
+        ida_weight_near_zero_count = near_zero_count,
+        ida_weights_all_finite = all_finite,
+        ida_weights_all_positive = true,
         raw_pair_numerator_shape = size(raw_pair),
         raw_pair_numerator_symmetry_error = raw_pair_symmetry_error,
-        pre_final_pair_matrix,
-        pre_final_pair_matrix_shape = size(pre_final_pair_matrix),
-        pre_final_pair_matrix_finite = all(isfinite, pre_final_pair_matrix),
-        pre_final_pair_matrix_symmetry_error = pre_final_symmetry_error,
-        pre_final_weight_division_applied = true,
+        electron_electron_ida,
+        electron_electron_ida_shape = size(electron_electron_ida),
+        electron_electron_ida_finite = all(isfinite, electron_electron_ida),
+        electron_electron_ida_symmetry_error = ida_symmetry_error,
+        ida_weight_division_applied = true,
         signed_final_weight_division_used = false,
         raw_no_division_used = false,
         fixed_block_pair_data_authority_used = false,
         density_density_materialized = true,
         metadata = merge(NamedTuple(metadata), (;
             source =
-                :pqs_source_box_route_driver_physical_gausslet_pre_final_density_interaction,
+                :pqs_source_box_route_driver_physical_gausslet_ida_density_interaction,
             raw_pair_factor_convention = :raw_numerator,
-            weight_application_stage = :pre_final_density_interaction_boundary,
+            weight_application_stage = :localized_ida_density_interaction_boundary,
             final_orbital_consumption_rule = :localized_ida_coefficients,
         )),
     )
@@ -3353,13 +3325,13 @@ function _pqs_source_box_route_driver_physical_gausslet_h1_j_diagnostic(
     final_orbital_coefficients,
 )
     get(density_interaction, :status, nothing) ===
-        :materialized_pqs_physical_gausslet_pre_final_density_interaction ||
+        :materialized_pqs_physical_gausslet_ida_density_interaction ||
         throw(ArgumentError("physical gausslet H1-J diagnostic requires materialized density interaction"))
     coefficients = Float64[Float64(value) for value in final_orbital_coefficients]
-    length(coefficients) == size(density_interaction.final_to_pre_final_coefficients, 2) ||
+    length(coefficients) == density_interaction.ida_weight_count ||
         throw(DimensionMismatch("physical gausslet H1 orbital coefficient length mismatch"))
     orbital = coefficients
-    pair_matrix = Matrix{Float64}(density_interaction.pre_final_pair_matrix)
+    pair_matrix = Matrix{Float64}(density_interaction.electron_electron_ida)
     density = orbital * transpose(orbital)
     rho = 0.5 .* (density .+ transpose(density))
     v = 0.5 .* (pair_matrix .+ transpose(pair_matrix))
@@ -3376,7 +3348,7 @@ function _pqs_source_box_route_driver_physical_gausslet_h1_j_diagnostic(
         self_coulomb,
         h1_j_self_coulomb = self_coulomb,
         final_orbital_coefficient_count = length(coefficients),
-        pre_final_orbital_coefficient_count = length(orbital),
+        ida_orbital_coefficient_count = length(orbital),
         h1_self_coulomb_contraction =
             :restricted_one_orbital_direct_minus_exchange,
     )
@@ -3418,7 +3390,7 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_h1_j_payload(
     support_pair_raw_numerator_status =
         :not_materialized_pqs_physical_gausslet_support_raw_pair_numerator_matrix
     density_interaction_status =
-        :not_materialized_pqs_physical_gausslet_pre_final_density_interaction
+        :not_materialized_pqs_physical_gausslet_ida_density_interaction
     h1_j_status = :not_materialized_pqs_physical_gausslet_h1_j_payload
 
     if route_family !== :pqs_source_box
@@ -3466,7 +3438,7 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_h1_j_payload(
             support_pair_raw_numerator_status =
                 support_pair_raw_numerator.status
             density_interaction =
-                _pqs_source_box_route_driver_physical_gausslet_pre_final_density_interaction(
+                _pqs_source_box_route_driver_physical_gausslet_ida_density_interaction(
                     final_basis,
                     support_pair_raw_numerator.support_pair_raw_numerator,
                     support_weights.support_weights;
@@ -3478,9 +3450,9 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_h1_j_payload(
                 )
             density_interaction_status = density_interaction.status
             if density_interaction_status !==
-               :materialized_pqs_physical_gausslet_pre_final_density_interaction
+               :materialized_pqs_physical_gausslet_ida_density_interaction
                 status = :blocked_pqs_physical_gausslet_h1_j_payload
-                blocker = :physical_gausslet_pre_final_density_interaction_blocked
+                blocker = :physical_gausslet_ida_density_interaction_blocked
             else
                 h1_j_diagnostic =
                     _pqs_source_box_route_driver_physical_gausslet_h1_j_diagnostic(
@@ -3502,7 +3474,7 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_h1_j_payload(
             elseif occursin("support weights", message)
                 blocker = :physical_gausslet_support_weight_nonpositive
             else
-                blocker = :physical_gausslet_pre_final_density_interaction_blocked
+                blocker = :physical_gausslet_ida_density_interaction_blocked
             end
         end
     end
@@ -3511,7 +3483,7 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_h1_j_payload(
         status === :materialized_pqs_physical_gausslet_h1_j_payload
     density_interaction_materialized =
         density_interaction_status ===
-        :materialized_pqs_physical_gausslet_pre_final_density_interaction
+        :materialized_pqs_physical_gausslet_ida_density_interaction
     summary = (;
         status,
         blocker,
@@ -3541,15 +3513,15 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_h1_j_payload(
         support_raw_pair_finite =
             isnothing(support_pair_raw_numerator) ? nothing :
             support_pair_raw_numerator.support_pair_raw_numerator_finite,
-        pre_final_pair_matrix_shape =
+        electron_electron_ida_shape =
             isnothing(density_interaction) ? nothing :
-            density_interaction.pre_final_pair_matrix_shape,
-        pre_final_pair_matrix_finite =
+            density_interaction.electron_electron_ida_shape,
+        electron_electron_ida_finite =
             isnothing(density_interaction) ? nothing :
-            density_interaction.pre_final_pair_matrix_finite,
-        pre_final_pair_matrix_symmetry_error =
+            density_interaction.electron_electron_ida_finite,
+        electron_electron_ida_symmetry_error =
             isnothing(density_interaction) ? nothing :
-            density_interaction.pre_final_pair_matrix_symmetry_error,
+            density_interaction.electron_electron_ida_symmetry_error,
         self_coulomb =
             isnothing(h1_j_diagnostic) ? nothing : h1_j_diagnostic.self_coulomb,
         h1_j_materialized,
@@ -3645,15 +3617,10 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_rhf_input_contr
         !isnothing(h1_j_payload) && hasproperty(h1_j_payload, :density_interaction) ?
         h1_j_payload.density_interaction :
         nothing
-    final_to_pre_final =
+    electron_electron_ida =
         !isnothing(density_interaction) &&
-        hasproperty(density_interaction, :final_to_pre_final_coefficients) ?
-        density_interaction.final_to_pre_final_coefficients :
-        nothing
-    pre_final_pair_matrix =
-        !isnothing(density_interaction) &&
-        hasproperty(density_interaction, :pre_final_pair_matrix) ?
-        density_interaction.pre_final_pair_matrix :
+        hasproperty(density_interaction, :electron_electron_ida) ?
+        density_interaction.electron_electron_ida :
         nothing
     if route_family !== :pqs_source_box
         status = :not_applicable_pqs_physical_gausslet_rhf_input_contract
@@ -3679,12 +3646,9 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_rhf_input_contr
            isnothing(density_interaction)
         status = :blocked_pqs_physical_gausslet_rhf_input_contract
         blocker = :missing_physical_gausslet_density_interaction
-    elseif isnothing(final_to_pre_final)
+    elseif isnothing(electron_electron_ida)
         status = :blocked_pqs_physical_gausslet_rhf_input_contract
-        blocker = :missing_physical_gausslet_final_to_pre_final_transform
-    elseif isnothing(pre_final_pair_matrix)
-        status = :blocked_pqs_physical_gausslet_rhf_input_contract
-        blocker = :missing_physical_gausslet_pre_final_pair_matrix
+        blocker = :missing_physical_gausslet_electron_electron_ida
     elseif isnothing(electron_count)
         status = :blocked_pqs_physical_gausslet_rhf_input_contract
         blocker = :missing_physical_gausslet_electron_count
@@ -3693,8 +3657,7 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_rhf_input_contr
         blocker = :unsupported_physical_gausslet_electron_count
     else
         h1 = Matrix{Float64}(h1_matrix)
-        pair = Matrix{Float64}(pre_final_pair_matrix)
-        transform = Matrix{Float64}(final_to_pre_final)
+        pair = Matrix{Float64}(electron_electron_ida)
         h1_symmetry_error = norm(h1 - transpose(h1), Inf)
         pair_symmetry_error = norm(pair - transpose(pair), Inf)
         if size(h1) != (final_basis.final_dimension, final_basis.final_dimension) ||
@@ -3702,8 +3665,7 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_rhf_input_contr
            h1_symmetry_error > 1.0e-8
             status = :blocked_pqs_physical_gausslet_rhf_input_contract
             blocker = :missing_physical_gausslet_h1_payload
-        elseif get(density_interaction, :density_gauge, nothing) !==
-               :pre_final_localized_positive_weight
+        elseif get(density_interaction, :density_gauge, nothing) !== :localized_ida
             status = :blocked_pqs_physical_gausslet_rhf_input_contract
             blocker = :physical_gausslet_rhf_input_contract_unreviewed
         elseif get(density_interaction.metadata, :raw_pair_factor_convention, nothing) !==
@@ -3711,12 +3673,11 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_rhf_input_contr
             status = :blocked_pqs_physical_gausslet_rhf_input_contract
             blocker = :physical_gausslet_rhf_input_contract_unreviewed
         elseif size(pair, 1) != size(pair, 2) ||
-               size(transform, 1) != size(pair, 1) ||
-               size(transform, 2) != size(h1, 1) ||
+               size(pair, 1) != size(h1, 1) ||
                !all(isfinite, pair) ||
                pair_symmetry_error > 1.0e-8
             status = :blocked_pqs_physical_gausslet_rhf_input_contract
-            blocker = :missing_physical_gausslet_pre_final_pair_matrix
+            blocker = :missing_physical_gausslet_electron_electron_ida
         else
             status = :available_pqs_physical_gausslet_rhf_input_contract
             blocker = nothing
@@ -3730,14 +3691,14 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_rhf_input_contr
     h1_matrix_symmetry_error =
         isnothing(h1_matrix) ? nothing :
         norm(Matrix{Float64}(h1_matrix) - transpose(Matrix{Float64}(h1_matrix)), Inf)
-    pre_final_pair_matrix_finite =
-        isnothing(pre_final_pair_matrix) ? nothing :
-        all(isfinite, Matrix{Float64}(pre_final_pair_matrix))
-    pre_final_pair_matrix_symmetry_error =
-        isnothing(pre_final_pair_matrix) ? nothing :
+    electron_electron_ida_finite =
+        isnothing(electron_electron_ida) ? nothing :
+        all(isfinite, Matrix{Float64}(electron_electron_ida))
+    electron_electron_ida_symmetry_error =
+        isnothing(electron_electron_ida) ? nothing :
         norm(
-            Matrix{Float64}(pre_final_pair_matrix) -
-            transpose(Matrix{Float64}(pre_final_pair_matrix)),
+            Matrix{Float64}(electron_electron_ida) -
+            transpose(Matrix{Float64}(electron_electron_ida)),
             Inf,
         )
     summary = (;
@@ -3765,10 +3726,9 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_rhf_input_contr
         raw_pair_factor_convention =
             isnothing(density_interaction) ? nothing :
             get(density_interaction.metadata, :raw_pair_factor_convention, nothing),
-        final_to_pre_final_transform_available = !isnothing(final_to_pre_final),
-        pre_final_pair_matrix_available = !isnothing(pre_final_pair_matrix),
-        pre_final_pair_matrix_finite,
-        pre_final_pair_matrix_symmetry_error,
+        electron_electron_ida_available = !isnothing(electron_electron_ida),
+        electron_electron_ida_finite,
+        electron_electron_ida_symmetry_error,
         private_diagnostic_only = true,
         private_rhf_materialized = false,
         endpoint_blocker =

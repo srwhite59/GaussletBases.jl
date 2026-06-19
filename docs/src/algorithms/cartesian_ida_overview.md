@@ -117,14 +117,11 @@ Current implementation surfaces are:
   density-interaction payload.
 - `src/pqs_h2_residual_gto_handoff.jl` for the current private H2
   residual-Gaussian extension and handoff prototype.
-- `src/cartesian_gaussian_kernels.jl` for shared Cartesian Gaussian axis
+- `src/cartesian_gaussian_axis_integrals.jl` for shared Cartesian Gaussian axis
   integral kernels where present.
 
 ## Current Implementation Deviations
 
 The active H2 PQS route no longer applies the forbidden global core/shell
-Lowdin cleanup. Some private route fields still use transitional names such as
-`pre_final_pair_matrix`, `final_to_pre_final_coefficients`, and
-`ham_handoff_orbital_to_density`. These are compatibility aliases for private
-artifact and ladder continuity, not public algorithm concepts.
-
+Lowdin cleanup. The private route is being migrated from the old two-gauge
+H/V/T prototype toward the one-basis IDA contract described here.

@@ -75,24 +75,19 @@ function _pqs_multilayer_complete_core_shell_rhf_materialized_density_interactio
     pair_matrix =
         _pqs_multilayer_rhf_contract_property(
             density_interaction,
-            :pre_final_pair_matrix,
+            :electron_electron_ida,
         )
-    final_to_pre_final =
-        _pqs_multilayer_rhf_contract_property(
-            density_interaction,
-            :final_to_pre_final_coefficients,
-        )
-    if isnothing(pair_matrix) || isnothing(final_to_pre_final)
+    if isnothing(pair_matrix)
         return false
     end
     return (
-        kind === :pqs_complete_core_shell_pre_final_density_interaction &&
+        kind === :pqs_complete_core_shell_ida_density_interaction &&
         status ===
-        :materialized_pqs_complete_core_shell_pre_final_density_interaction
+        :materialized_pqs_complete_core_shell_ida_density_interaction
     ) || (
-        kind === :pqs_physical_gausslet_pre_final_density_interaction &&
+        kind === :pqs_physical_gausslet_ida_density_interaction &&
         status ===
-        :materialized_pqs_physical_gausslet_pre_final_density_interaction
+        :materialized_pqs_physical_gausslet_ida_density_interaction
     )
 end
 
@@ -1780,23 +1775,8 @@ function _pqs_multilayer_complete_core_shell_rhf_one_step_payload(;
             metadata,
         )
 
-    final_to_pre_final =
-        Matrix{Float64}(density_interaction.final_to_pre_final_coefficients)
-    pair_matrix = Matrix{Float64}(density_interaction.pre_final_pair_matrix)
-    size(final_to_pre_final, 2) == final_dimension ||
-        return _pqs_multilayer_complete_core_shell_rhf_one_step_blocked_payload(
-            ;
-            blocker = :final_to_pre_final_dimension_mismatch,
-            input_contract,
-            h1_payload,
-            density_interaction,
-            final_density = density_matrix,
-            final_density_trace = density_trace,
-            final_density_symmetry_error = density_symmetry_error,
-            metadata,
-        )
-    pre_final_dimension = size(final_to_pre_final, 1)
-    size(pair_matrix) == (pre_final_dimension, pre_final_dimension) ||
+    pair_matrix = Matrix{Float64}(density_interaction.electron_electron_ida)
+    size(pair_matrix) == (final_dimension, final_dimension) ||
         return _pqs_multilayer_complete_core_shell_rhf_one_step_blocked_payload(
             ;
             blocker = :density_interaction_dimension_mismatch,
@@ -1808,7 +1788,7 @@ function _pqs_multilayer_complete_core_shell_rhf_one_step_payload(;
             final_density_symmetry_error = density_symmetry_error,
             metadata,
         )
-    all(isfinite, final_to_pre_final) && all(isfinite, pair_matrix) ||
+    all(isfinite, pair_matrix) ||
         return _pqs_multilayer_complete_core_shell_rhf_one_step_blocked_payload(
             ;
             blocker = :nonfinite_density_interaction,
@@ -1823,20 +1803,16 @@ function _pqs_multilayer_complete_core_shell_rhf_one_step_payload(;
 
     occupancy = input_contract.occupation.occupancy
     orbital_density_final = density_matrix ./ Float64(occupancy)
-    orbital_density_pre =
-        final_to_pre_final * orbital_density_final * transpose(final_to_pre_final)
-    orbital_density_pre =
-        0.5 .* (orbital_density_pre .+ transpose(orbital_density_pre))
+    orbital_density_ida =
+        0.5 .* (orbital_density_final .+ transpose(orbital_density_final))
     interaction_matrix = 0.5 .* (pair_matrix .+ transpose(pair_matrix))
-    occupations = vec(diag(orbital_density_pre))
+    occupations = vec(diag(orbital_density_ida))
     coulomb_pre =
         2.0 .* Diagonal(interaction_matrix * occupations) .-
-        orbital_density_pre .* interaction_matrix
-    coulomb_final =
-        transpose(final_to_pre_final) * Matrix(coulomb_pre) * final_to_pre_final
-    effective_fock_matrix = h1_matrix + coulomb_final
+        orbital_density_ida .* interaction_matrix
+    effective_fock_matrix = h1_matrix + Matrix(coulomb_pre)
     one_body_energy = tr(density_matrix * h1_matrix)
-    two_body_energy = 0.5 * tr(density_matrix * coulomb_final)
+    two_body_energy = 0.5 * tr(density_matrix * Matrix(coulomb_pre))
     total_energy = one_body_energy + two_body_energy
 
     summary = (;
@@ -1847,7 +1823,7 @@ function _pqs_multilayer_complete_core_shell_rhf_one_step_payload(;
         h1_payload_status = h1_payload.status,
         density_interaction_status = density_interaction.status,
         final_dimension,
-        pre_final_dimension,
+        ida_dimension = final_dimension,
         electron_count,
         density_trace,
         final_density_symmetry_error = density_symmetry_error,
@@ -1855,7 +1831,7 @@ function _pqs_multilayer_complete_core_shell_rhf_one_step_payload(;
             _pqs_multilayer_complete_core_shell_rhf_fixture_role(input_contract),
         density_convention = :spin_summed_closed_shell_final_density,
         contraction_rule =
-            :pre_final_restricted_direct_minus_exchange_from_orbital_density,
+            :localized_ida_restricted_direct_minus_exchange_from_orbital_density,
         h1_matrix_materialized = true,
         fock_materialized = true,
         one_step_energy_materialized = true,
@@ -1887,8 +1863,6 @@ function _pqs_multilayer_complete_core_shell_rhf_one_step_payload(;
                     :pqs_multilayer_complete_core_shell_rhf_one_step_payload,
                 density_convention = summary.density_convention,
                 contraction_rule = summary.contraction_rule,
-                final_to_pre_final_coefficients_source =
-                    :combined_lowdin_cleanup_times_final_coefficients,
                 h1_matrix_source =
                     :pqs_multilayer_complete_core_shell_h1_payload,
                 fock_materialized = true,

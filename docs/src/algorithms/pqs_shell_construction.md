@@ -30,6 +30,17 @@ If shell `s` retains `r_s` functions, the only Lowdin matrix for that shell is
 
 ## Pseudocode
 
+The source-box shell stage order is:
+
+```text
+raw product-box source modes
+-> boundary-mode selection
+-> box-to-shell projection
+-> shell-local Gram matrix
+-> shell-local Lowdin
+-> append
+```
+
 1. Start with accepted inner functions `B_<s`.
 
 2. Form the projector onto the already-retained span:
@@ -135,8 +146,6 @@ same localized basis for the base all-electron Hamiltonian.
 ## Current Implementation Deviations
 
 The active H2 PQS route has removed the forbidden combined core/shell Lowdin.
-Private route fields still include compatibility names such as
-`combined_lowdin_cleanup` and `final_to_pre_final_coefficients`; in the corrected
-route these are identity/private compatibility surfaces and should not be
-promoted as public concepts.
-
+The private H2 route is still being migrated toward the public one-basis IDA
+contract, but the shell construction itself must remain source-box-first and
+shell-local.

@@ -229,7 +229,7 @@ end
 
 Build the narrow complete core/shell PQS H1/J diagnostic payload from an
 available H1 payload and route-owned support-density inputs. This helper uses
-the reviewed pre-final positive-weight density gauge. It does not materialize
+the reviewed localized IDA density gauge. It does not materialize
 RHF, GTO, driver wiring, exports, artifacts, or fixture-rule policy.
 """
 function pqs_multilayer_complete_core_shell_h1_j_payload(
@@ -262,7 +262,7 @@ function pqs_multilayer_complete_core_shell_h1_j_payload(
         coulomb_expansion,
     )
     density_interaction =
-        CartesianFinalBasisRealization.pqs_complete_core_shell_pre_final_density_interaction(
+        CartesianFinalBasisRealization.pqs_complete_core_shell_ida_density_interaction(
             final_basis,
             support_pair_raw,
             support_weights;
@@ -276,7 +276,7 @@ function pqs_multilayer_complete_core_shell_h1_j_payload(
             ),
         )
     if density_interaction.status !==
-       :materialized_pqs_complete_core_shell_pre_final_density_interaction
+       :materialized_pqs_complete_core_shell_ida_density_interaction
         summary = (;
             status = :blocked_pqs_multilayer_complete_core_shell_h1_j_payload,
             blocker = density_interaction.blocker,
@@ -315,7 +315,7 @@ function pqs_multilayer_complete_core_shell_h1_j_payload(
     lowest_energy = first(decomposition.values)
     lowest_orbital = decomposition.vectors[:, 1]
     self_coulomb =
-        CartesianFinalBasisRealization.pqs_complete_core_shell_pre_final_orbital_self_coulomb(
+        CartesianFinalBasisRealization.pqs_complete_core_shell_ida_orbital_self_coulomb(
             density_interaction,
             lowest_orbital;
             metadata = merge(
@@ -335,10 +335,10 @@ function pqs_multilayer_complete_core_shell_h1_j_payload(
         h1_energy_reconstruction_error = abs(lowest_energy - h1_payload.h1.lowest_energy),
         density_interaction_status = density_interaction.status,
         density_gauge = density_interaction.density_gauge,
-        pre_final_weights_all_positive =
-            density_interaction.pre_final_weights_all_positive,
-        pre_final_pair_matrix_finite =
-            density_interaction.pre_final_pair_matrix_finite,
+        ida_weights_all_positive =
+            density_interaction.ida_weights_all_positive,
+        electron_electron_ida_finite =
+            density_interaction.electron_electron_ida_finite,
         self_coulomb = self_coulomb.self_coulomb,
         support_density_input_source = :pqs_multilayer_support_density_helpers,
         h1_orbital_source = :h1_payload_final_hamiltonian_lowest_eigenvector,
@@ -366,7 +366,7 @@ function pqs_multilayer_complete_core_shell_h1_j_payload(
                 source = :pqs_multilayer_complete_core_shell_h1_j_payload,
                 support_density_input_source =
                     :pqs_multilayer_support_density_helpers,
-                density_gauge = :pre_final_localized_positive_weight,
+                density_gauge = :localized_ida,
                 signed_final_weight_division_used = false,
                 raw_no_division_used = false,
                 density_normalized_pair_terms_used_as_authority = false,

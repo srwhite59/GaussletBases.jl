@@ -121,7 +121,7 @@ model choice, not a failed attempt to store full four-index ERIs.
   contains source-space safe one-body term assembly.
 - `src/pqs_multilayer_complete_core_shell_h1.jl` consumes support operators
   for the common complete core/shell H1 path.
-- `src/cartesian_gaussian_kernels.jl` owns shared Gaussian axis integral
+- `src/cartesian_gaussian_axis_integrals.jl` owns shared Gaussian axis integral
   kernels where present.
 - `src/ordinary_qw_raw_blocks.jl` still contains donor/reference raw-block
   surfaces used by surviving QW routes.
@@ -131,4 +131,3 @@ model choice, not a failed attempt to store full four-index ERIs.
 Some older donor routes still expose QW/WL-specific wrapper names around shared
 Gaussian and weighted-Hadamard kernels. Those wrappers are migration surfaces,
 not the long-term public Cartesian operator contract.
-

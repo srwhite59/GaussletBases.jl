@@ -1,14 +1,8 @@
 # Algorithms
 
 This section records basis-construction and operator-construction algorithms in
-an implementation-facing form.
-
-The intended reading order inside each page is:
-
-1. pseudocode
-2. short code pointers with file names
-3. short references
-4. supporting detail in descending order of human importance
+an implementation-facing form. The page contract below is the authority for new
+or revised algorithm pages.
 
 For new basis-construction routes, the algorithm page should be written before
 or alongside implementation so that the construction order is explicit before

@@ -65,15 +65,15 @@ function pqs_complete_core_shell_final_basis(;
 
     shell_final_overlap =
         transpose(shell_coefficients) * shell_matrix * shell_coefficients
-    pre_final_overlap = Matrix{Float64}(undef, total_count, total_count)
-    pre_final_overlap[core_range, core_range] .= core_matrix
-    pre_final_overlap[core_range, shell_range] .= cross_matrix * shell_coefficients
-    pre_final_overlap[shell_range, core_range] .=
+    final_overlap = Matrix{Float64}(undef, total_count, total_count)
+    final_overlap[core_range, core_range] .= core_matrix
+    final_overlap[core_range, shell_range] .= cross_matrix * shell_coefficients
+    final_overlap[shell_range, core_range] .=
         transpose(shell_coefficients) * transpose(cross_matrix)
-    pre_final_overlap[shell_range, shell_range] .= shell_final_overlap
+    final_overlap[shell_range, shell_range] .= shell_final_overlap
 
     diagnostics = _pqs_complete_core_shell_overlap_diagnostics(
-        pre_final_overlap;
+        final_overlap;
         identity_atol,
         rank_atol,
     )
@@ -90,28 +90,23 @@ function pqs_complete_core_shell_final_basis(;
             shell_range,
             disjoint_support,
             shell_final_overlap,
-            pre_final_overlap,
+            final_overlap,
             diagnostics.summary,
-            nothing,
-            nothing,
             nothing,
             metadata,
         )
     end
 
-    pre_final_coefficients = zeros(
+    final_coefficients = zeros(
         Float64,
         core_count + shell_support_count,
         total_count,
     )
-    pre_final_coefficients[1:core_count, core_range] .=
+    final_coefficients[1:core_count, core_range] .=
         Matrix{Float64}(I, core_count, core_count)
     shell_support_rows = (core_count + 1):(core_count + shell_support_count)
-    pre_final_coefficients[shell_support_rows, shell_range] .= shell_coefficients
-    cleanup = Matrix{Float64}(I, total_count, total_count)
-    final_overlap = pre_final_overlap
+    final_coefficients[shell_support_rows, shell_range] .= shell_coefficients
     final_identity_error = diagnostics.summary.identity_error
-    final_coefficients = pre_final_coefficients
 
     return _pqs_complete_core_shell_final_basis_result(
         :available_pqs_complete_core_shell_final_basis,
@@ -125,11 +120,9 @@ function pqs_complete_core_shell_final_basis(;
         shell_range,
         disjoint_support,
         shell_final_overlap,
-        pre_final_overlap,
-        diagnostics.summary,
-        cleanup,
         final_overlap,
-        (pre_final_coefficients = pre_final_coefficients, final_coefficients = final_coefficients),
+        diagnostics.summary,
+        final_coefficients,
         metadata,
         final_identity_error = final_identity_error,
     )
@@ -147,10 +140,8 @@ function _pqs_complete_core_shell_final_basis_result(
     shell_range,
     disjoint_support::Bool,
     shell_final_overlap,
-    pre_final_overlap,
-    diagnostics,
-    cleanup,
     final_overlap,
+    diagnostics,
     coefficients,
     metadata;
     final_identity_error = nothing,
@@ -176,18 +167,14 @@ function _pqs_complete_core_shell_final_basis_result(
             Matrix{Float64}(I, size(shell_final_overlap, 1), size(shell_final_overlap, 2)),
             Inf,
         ),
-        pre_final_overlap,
-        pre_final_overlap_diagnostics = diagnostics,
-        combined_lowdin_cleanup = cleanup,
         final_overlap,
+        final_overlap_diagnostics = diagnostics,
         final_overlap_identity_error = final_identity_error,
         final_overlap_is_identity =
             !isnothing(final_identity_error) && final_identity_error <= diagnostics.identity_atol,
-        pre_final_coefficients = isnothing(coefficients) ? nothing : coefficients.pre_final_coefficients,
-        final_coefficients = isnothing(coefficients) ? nothing : coefficients.final_coefficients,
+        final_coefficients = coefficients,
         final_basis_materialized = materialized,
         shell_realization_materialized = true,
-        combined_lowdin_cleanup_used = false,
         one_body_operator_materialized = false,
         operator_blocks_materialized = false,
         h1_solve_materialized = false,
@@ -231,18 +218,10 @@ function _pqs_complete_core_shell_overlap_diagnostics(
         shape = size(matrix),
         symmetry_error,
         identity_error,
-        eigenvalue_min = nothing,
-        eigenvalue_max = nothing,
-        rank = nothing,
         expected_dimension = size(matrix, 1),
-        rank_atol = Float64(rank_atol),
         identity_atol = Float64(identity_atol),
-        full_rank = nothing,
     )
-    return (;
-        summary,
-        full_rank = nothing,
-    )
+    return (; summary,)
 end
 
 """
@@ -514,26 +493,26 @@ function pqs_complete_core_shell_final_ida_weights(
 end
 
 """
-    pqs_complete_core_shell_pre_final_density_interaction(final_basis, support_pair_raw_numerator, support_weights)
+    pqs_complete_core_shell_ida_density_interaction(final_basis, support_pair_raw_numerator, support_weights)
 
-Build the complete core/shell density interaction in the localized pre-final
-gauge. The caller supplies a raw pair numerator matrix on support rows and the
+Build the complete core/shell density interaction in the localized IDA basis.
+The caller supplies a raw pair numerator matrix on support rows and the
 positive support-row IDA weights in `core_then_shell` order.
 
 This helper applies the old fixed-block weight convention to the route-owned
 complete support coefficients:
 
 ```text
-pre_final_weights = pre_final_coefficients' * support_weights
-weighted_coefficients = pre_final_coefficients ./ pre_final_weights
-pair_matrix = weighted_coefficients' * raw_pair_numerator * weighted_coefficients
+ida_weights = final_coefficients' * support_weights
+weighted_coefficients = final_coefficients ./ ida_weights
+electron_electron_ida = weighted_coefficients' * raw_pair_numerator * weighted_coefficients
 ```
 
-The result remains in the pre-final density gauge. It does not apply signed
-final-gauge weight division, does not run RHF, and does not use fixed-block
-pair matrices as authority.
+The result remains in the localized IDA basis. It does not apply signed weight
+division, does not run RHF, and does not use fixed-block pair matrices as
+authority.
 """
-function pqs_complete_core_shell_pre_final_density_interaction(
+function pqs_complete_core_shell_ida_density_interaction(
     final_basis::NamedTuple,
     support_pair_raw_numerator,
     support_weights;
@@ -558,55 +537,49 @@ function pqs_complete_core_shell_pre_final_density_interaction(
     all(isfinite, weights) ||
         throw(ArgumentError("complete core/shell support weights contain non-finite entries"))
 
-    pre_final_coefficients = Matrix{Float64}(final_basis.pre_final_coefficients)
     final_coefficients = Matrix{Float64}(final_basis.final_coefficients)
-    cleanup = Matrix{Float64}(final_basis.combined_lowdin_cleanup)
-    size(pre_final_coefficients, 1) == support_count ||
-        throw(DimensionMismatch("complete core/shell pre-final coefficient row mismatch"))
-    size(pre_final_coefficients, 2) == final_basis.final_retained_count ||
-        throw(DimensionMismatch("complete core/shell pre-final coefficient column mismatch"))
+    size(final_coefficients, 1) == support_count ||
+        throw(DimensionMismatch("complete core/shell final coefficient row mismatch"))
+    size(final_coefficients, 2) == final_basis.final_retained_count ||
+        throw(DimensionMismatch("complete core/shell final coefficient column mismatch"))
 
-    pre_final_weights = vec(transpose(pre_final_coefficients) * weights)
+    ida_weights = vec(transpose(final_coefficients) * weights)
     near_zero_threshold = Float64(near_zero_atol)
-    near_zero_count = count(weight -> abs(weight) <= near_zero_threshold, pre_final_weights)
-    negative_count = count(<(0.0), pre_final_weights)
-    positive_count = count(>(0.0), pre_final_weights)
-    all_finite = all(isfinite, pre_final_weights)
+    near_zero_count = count(weight -> abs(weight) <= near_zero_threshold, ida_weights)
+    negative_count = count(<(0.0), ida_weights)
+    positive_count = count(>(0.0), ida_weights)
+    all_finite = all(isfinite, ida_weights)
     positive_weight_gauge =
         all_finite && near_zero_count == 0 && negative_count == 0 &&
-        positive_count == length(pre_final_weights)
-    reconstruction_error =
-        norm(pre_final_coefficients * cleanup - final_coefficients, Inf)
+        positive_count == length(ida_weights)
 
     if !positive_weight_gauge
         return (;
-            object_kind = :pqs_complete_core_shell_pre_final_density_interaction,
-            status = :blocked_pqs_complete_core_shell_pre_final_density_interaction,
-            blocker = :pre_final_density_weights_not_positive,
+            object_kind = :pqs_complete_core_shell_ida_density_interaction,
+            status = :blocked_pqs_complete_core_shell_ida_density_interaction,
+            blocker = :ida_density_weights_not_positive,
             final_basis_object_kind = final_basis.object_kind,
             final_basis_status = final_basis.status,
             support_row_order = final_basis.support_row_order,
-            density_gauge = :pre_final_localized_positive_weight,
+            density_gauge = :localized_ida,
             support_weight_count = length(weights),
-            pre_final_weight_count = length(pre_final_weights),
-            pre_final_weights,
-            pre_final_weight_min = minimum(pre_final_weights),
-            pre_final_weight_max = maximum(pre_final_weights),
-            pre_final_weight_sum = sum(pre_final_weights),
-            pre_final_weight_positive_count = positive_count,
-            pre_final_weight_negative_count = negative_count,
-            pre_final_weight_near_zero_count = near_zero_count,
-            pre_final_weights_all_finite = all_finite,
-            pre_final_weights_all_positive = false,
-            final_to_pre_final_coefficients = cleanup,
-            final_to_pre_final_reconstruction_error = reconstruction_error,
+            ida_weight_count = length(ida_weights),
+            ida_weights,
+            ida_weight_min = minimum(ida_weights),
+            ida_weight_max = maximum(ida_weights),
+            ida_weight_sum = sum(ida_weights),
+            ida_weight_positive_count = positive_count,
+            ida_weight_negative_count = negative_count,
+            ida_weight_near_zero_count = near_zero_count,
+            ida_weights_all_finite = all_finite,
+            ida_weights_all_positive = false,
             raw_pair_numerator_shape = size(raw_pair),
             raw_pair_numerator_symmetry_error = raw_pair_symmetry_error,
-            pre_final_pair_matrix = nothing,
-            pre_final_pair_matrix_shape = nothing,
-            pre_final_pair_matrix_finite = false,
-            pre_final_pair_matrix_symmetry_error = nothing,
-            pre_final_weight_division_applied = false,
+            electron_electron_ida = nothing,
+            electron_electron_ida_shape = nothing,
+            electron_electron_ida_finite = false,
+            electron_electron_ida_symmetry_error = nothing,
+            ida_weight_division_applied = false,
             signed_final_weight_division_used = false,
             raw_no_division_used = false,
             fixed_block_pair_data_authority_used = false,
@@ -618,48 +591,46 @@ function pqs_complete_core_shell_pre_final_density_interaction(
             metadata = merge(
                 NamedTuple(metadata),
                 (;
-                    source = :pqs_complete_core_shell_pre_final_density_interaction,
-                    blocker = :pre_final_density_weights_not_positive,
+                    source = :pqs_complete_core_shell_ida_density_interaction,
+                    blocker = :ida_density_weights_not_positive,
                 ),
             ),
         )
     end
 
     weighted_coefficients =
-        pre_final_coefficients .* reshape(1.0 ./ pre_final_weights, 1, :)
-    pre_final_pair_matrix =
+        final_coefficients .* reshape(1.0 ./ ida_weights, 1, :)
+    electron_electron_ida =
         transpose(weighted_coefficients) * raw_pair * weighted_coefficients
-    pre_final_symmetry_error =
-        norm(pre_final_pair_matrix - transpose(pre_final_pair_matrix), Inf)
+    ida_symmetry_error =
+        norm(electron_electron_ida - transpose(electron_electron_ida), Inf)
 
     return (;
-        object_kind = :pqs_complete_core_shell_pre_final_density_interaction,
-        status = :materialized_pqs_complete_core_shell_pre_final_density_interaction,
+        object_kind = :pqs_complete_core_shell_ida_density_interaction,
+        status = :materialized_pqs_complete_core_shell_ida_density_interaction,
         blocker = nothing,
         final_basis_object_kind = final_basis.object_kind,
         final_basis_status = final_basis.status,
         support_row_order = final_basis.support_row_order,
-        density_gauge = :pre_final_localized_positive_weight,
+        density_gauge = :localized_ida,
         support_weight_count = length(weights),
-        pre_final_weight_count = length(pre_final_weights),
-        pre_final_weights,
-        pre_final_weight_min = minimum(pre_final_weights),
-        pre_final_weight_max = maximum(pre_final_weights),
-        pre_final_weight_sum = sum(pre_final_weights),
-        pre_final_weight_positive_count = positive_count,
-        pre_final_weight_negative_count = negative_count,
-        pre_final_weight_near_zero_count = near_zero_count,
-        pre_final_weights_all_finite = all_finite,
-        pre_final_weights_all_positive = true,
-        final_to_pre_final_coefficients = cleanup,
-        final_to_pre_final_reconstruction_error = reconstruction_error,
+        ida_weight_count = length(ida_weights),
+        ida_weights,
+        ida_weight_min = minimum(ida_weights),
+        ida_weight_max = maximum(ida_weights),
+        ida_weight_sum = sum(ida_weights),
+        ida_weight_positive_count = positive_count,
+        ida_weight_negative_count = negative_count,
+        ida_weight_near_zero_count = near_zero_count,
+        ida_weights_all_finite = all_finite,
+        ida_weights_all_positive = true,
         raw_pair_numerator_shape = size(raw_pair),
         raw_pair_numerator_symmetry_error = raw_pair_symmetry_error,
-        pre_final_pair_matrix,
-        pre_final_pair_matrix_shape = size(pre_final_pair_matrix),
-        pre_final_pair_matrix_finite = all(isfinite, pre_final_pair_matrix),
-        pre_final_pair_matrix_symmetry_error = pre_final_symmetry_error,
-        pre_final_weight_division_applied = true,
+        electron_electron_ida,
+        electron_electron_ida_shape = size(electron_electron_ida),
+        electron_electron_ida_finite = all(isfinite, electron_electron_ida),
+        electron_electron_ida_symmetry_error = ida_symmetry_error,
+        ida_weight_division_applied = true,
         signed_final_weight_division_used = false,
         raw_no_division_used = false,
         fixed_block_pair_data_authority_used = false,
@@ -671,11 +642,10 @@ function pqs_complete_core_shell_pre_final_density_interaction(
         metadata = merge(
             NamedTuple(metadata),
             (;
-                source = :pqs_complete_core_shell_pre_final_density_interaction,
+                source = :pqs_complete_core_shell_ida_density_interaction,
                 raw_pair_factor_convention = :raw_numerator,
-                weight_application_stage = :pre_final_density_interaction_boundary,
-                final_orbital_consumption_rule =
-                    :combined_lowdin_cleanup_times_final_coefficients,
+                weight_application_stage = :localized_ida_density_interaction_boundary,
+                final_orbital_consumption_rule = :localized_ida_coefficients,
                 signed_final_weight_division_used = false,
                 raw_no_division_used = false,
                 fixed_block_pair_data_authority_used = false,
@@ -685,53 +655,45 @@ function pqs_complete_core_shell_pre_final_density_interaction(
 end
 
 """
-    pqs_complete_core_shell_pre_final_orbital_self_coulomb(density_interaction, final_orbital_coefficients)
+    pqs_complete_core_shell_ida_orbital_self_coulomb(density_interaction, final_orbital_coefficients)
 
 Evaluate the one-orbital restricted direct-minus-exchange Coulomb diagnostic for
-a final-basis orbital by mapping its coefficients into the pre-final density
-gauge with `combined_lowdin_cleanup * c_final`.
+a final-basis orbital in the localized IDA basis.
 """
-function pqs_complete_core_shell_pre_final_orbital_self_coulomb(
+function pqs_complete_core_shell_ida_orbital_self_coulomb(
     density_interaction::NamedTuple,
     final_orbital_coefficients;
     metadata = (;),
 )
     get(density_interaction, :object_kind, nothing) ===
-        :pqs_complete_core_shell_pre_final_density_interaction ||
-        throw(ArgumentError("complete core/shell self Coulomb requires pre-final density interaction"))
+        :pqs_complete_core_shell_ida_density_interaction ||
+        throw(ArgumentError("complete core/shell self Coulomb requires IDA density interaction"))
     get(density_interaction, :status, nothing) ===
-        :materialized_pqs_complete_core_shell_pre_final_density_interaction ||
-        throw(ArgumentError("complete core/shell self Coulomb requires materialized pre-final density interaction"))
+        :materialized_pqs_complete_core_shell_ida_density_interaction ||
+        throw(ArgumentError("complete core/shell self Coulomb requires materialized IDA density interaction"))
 
     coefficients = Float64[Float64(value) for value in final_orbital_coefficients]
-    dimension = density_interaction.pre_final_weight_count
+    dimension = density_interaction.ida_weight_count
     length(coefficients) == dimension ||
         throw(DimensionMismatch("complete core/shell final orbital coefficient length mismatch"))
     all(isfinite, coefficients) ||
         throw(ArgumentError("complete core/shell final orbital coefficients contain non-finite entries"))
 
-    final_to_pre_final = Matrix{Float64}(density_interaction.final_to_pre_final_coefficients)
-    pre_final_coefficients = final_to_pre_final * coefficients
-    pair_matrix = Matrix{Float64}(density_interaction.pre_final_pair_matrix)
+    pair_matrix = Matrix{Float64}(density_interaction.electron_electron_ida)
     self_coulomb = _pqs_complete_core_shell_restricted_one_orbital_interaction_energy(
         pair_matrix,
-        pre_final_coefficients,
+        coefficients,
     )
 
     return (;
-        object_kind = :pqs_complete_core_shell_pre_final_orbital_self_coulomb,
-        status = :materialized_pqs_complete_core_shell_pre_final_orbital_self_coulomb,
+        object_kind = :pqs_complete_core_shell_ida_orbital_self_coulomb,
+        status = :materialized_pqs_complete_core_shell_ida_orbital_self_coulomb,
         blocker = nothing,
         density_interaction_object_kind = density_interaction.object_kind,
         density_interaction_status = density_interaction.status,
         density_gauge = density_interaction.density_gauge,
         final_dimension = dimension,
         final_orbital_coefficient_count = length(coefficients),
-        pre_final_orbital_coefficient_count = length(pre_final_coefficients),
-        final_to_pre_final_coefficients_source =
-            :combined_lowdin_cleanup_times_final_coefficients,
-        final_to_pre_final_reconstruction_error =
-            density_interaction.final_to_pre_final_reconstruction_error,
         self_coulomb,
         h1_self_coulomb_contraction =
             :restricted_one_orbital_direct_minus_exchange,
@@ -745,9 +707,8 @@ function pqs_complete_core_shell_pre_final_orbital_self_coulomb(
         metadata = merge(
             NamedTuple(metadata),
             (;
-                source = :pqs_complete_core_shell_pre_final_orbital_self_coulomb,
-                final_orbital_consumption_rule =
-                    :combined_lowdin_cleanup_times_final_coefficients,
+                source = :pqs_complete_core_shell_ida_orbital_self_coulomb,
+                final_orbital_consumption_rule = :localized_ida_coefficients,
             ),
         ),
     )

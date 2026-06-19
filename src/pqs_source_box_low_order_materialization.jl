@@ -186,19 +186,19 @@ function _pqs_source_box_route_driver_atomic_artifact_sidecar(common)
         ArgumentError("atomic artifact sidecar requires an assembled shell sequence packet"),
     )
     final_basis = common.final_basis
-    cleanup = Matrix{Float64}(final_basis.combined_lowdin_cleanup)
-    pre_final_count, final_count = size(cleanup)
-    length(packet.weights) == pre_final_count ||
+    final_coefficients = Matrix{Float64}(final_basis.final_coefficients)
+    support_count, final_count = size(final_coefficients)
+    length(packet.weights) == support_count ||
         throw(DimensionMismatch("atomic artifact sidecar weight dimension mismatch"))
 
     function project_matrix(matrix, name)
         local_matrix = Matrix{Float64}(matrix)
-        size(local_matrix) == (pre_final_count, pre_final_count) ||
+        size(local_matrix) == (support_count, support_count) ||
             throw(DimensionMismatch("atomic artifact sidecar $(name) dimension mismatch"))
-        return transpose(cleanup) * local_matrix * cleanup
+        return transpose(final_coefficients) * local_matrix * final_coefficients
     end
 
-    weights = vec(transpose(cleanup) * Float64.(packet.weights))
+    weights = vec(transpose(final_coefficients) * Float64.(packet.weights))
     length(weights) == final_count ||
         throw(DimensionMismatch("atomic artifact sidecar final weight dimension mismatch"))
     position_x = project_matrix(packet.position_x, "position_x")
@@ -435,7 +435,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
         _pqs_source_box_route_driver_pqs_h2_residual_gto_ham_handoff(
             one_body_blocks,
             density_blocks,
-            provider_packet.density_interaction,
             route_metadata,
         ) :
         nothing
@@ -508,7 +507,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
             file["retained_ranges"] = final_basis.retained_ranges
             file["final_dimension"] = final_basis.final_dimension
             file["final_coefficients"] = final_basis.final_coefficients
-            file["pre_final_coefficients"] = final_basis.pre_final_coefficients
             file["final_overlap_identity_error"] =
                 final_basis.final_overlap_identity_error
             _pqs_source_box_route_driver_write_pqs_h2_sidecar_common!(
@@ -554,10 +552,8 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
             file["one_body_hamiltonian"] = h1_hamiltonian.hamiltonian_matrix
             file["kinetic"] = h1_hamiltonian.kinetic_matrix
             file["charged_nuclear"] = h1_hamiltonian.charged_nuclear_matrix
-            file["pre_final_pair_matrix"] =
-                density_interaction.pre_final_pair_matrix
-            file["final_to_pre_final_coefficients"] =
-                density_interaction.final_to_pre_final_coefficients
+            file["electron_electron_ida"] =
+                density_interaction.electron_electron_ida
             file["h1_lowest"] = h1.lowest_energy
             _pqs_source_box_route_driver_write_pqs_h2_sidecar_common!(
                 file,
@@ -611,8 +607,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
             if !isnothing(ham_handoff)
                 file["ham_handoff_orbital_basis"] = ham_handoff.orbital_basis
                 file["ham_handoff_density_basis"] = ham_handoff.density_basis
-                file["ham_handoff_orbital_to_density"] =
-                    ham_handoff.orbital_to_density
                 file["ham_handoff_electron_count"] =
                     ham_handoff.nup + ham_handoff.ndn
                 file["ham_handoff_spin_nup"] = ham_handoff.nup

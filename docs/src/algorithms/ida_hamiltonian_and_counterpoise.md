@@ -62,8 +62,9 @@ For a localized IDA basis with `n` functions:
    H_1 = K + \sum_A Z_A U_A.
    ```
 
-7. For counterpoise, keep the same basis and `Vee`, but choose which nuclear
-   centers contribute to `H_1`.
+7. For monomer or counterpoise branches, keep the same basis and `Vee`, but
+   choose the electron/spin counts, nuclear repulsion, and which uncharged
+   nuclear attraction matrices contribute to `H_1`.
 
 ## Linear Algebra
 
@@ -108,7 +109,9 @@ consumer transformations, not Hamiltonian-construction repair.
 - `K`, each `U_A`, and `Vee` are finite and symmetric.
 - `E_nn` is finite for nonzero internuclear separations.
 - `H_1 = K + sum_A Z_A U_A` reproduces the normal charged one-body matrix.
-- Counterpoise branches use the same basis and `Vee` as the full system.
+- Counterpoise branches use the same basis and `Vee` as the full system while
+  allowing branch-specific electron/spin counts, nuclear repulsion, and
+  selected nuclear attractions.
 
 ## Operator and Gauge Conventions
 
@@ -145,4 +148,3 @@ The public one-basis IDA Hamiltonian type and writer/reader are not yet
 implemented. The current H2 residual-GTO artifact still carries private names
 from the former H/V/T handoff stage. Those names should be retired when the
 public `K`, `{U_A}`, `Vee` contract is introduced.
-
