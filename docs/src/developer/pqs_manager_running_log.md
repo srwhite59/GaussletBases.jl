@@ -4673,3 +4673,64 @@ Guardrail update:
 - For remaining H2/q5 cleanup, prefer one upstream authority boundary per pass.
   Do not delete fixture admissions until an equivalent derived construction
   check exists.
+
+## Pass 311 - Restore Canonical Cartesian Ham Builder Template
+
+Commit(s):
+- `51641313` - Restore Cartesian Ham builder template
+
+Summary:
+- Restored `bin/cartesian_ham_builder.jl` as the human-facing Cartesian
+  producer template with a visible public stage sequence:
+  `cartesian_system -> recipe -> parent -> shells -> units -> transforms ->
+  pair_terms -> assembly -> report -> materialization -> print/save`.
+- Removed ladder instrumentation, stop-after controls, private RHF controls,
+  arbitrary command-line `Meta.parse` overrides, basis-sidecar controls, and
+  route-internal residual-GTO provider switches from the canonical driver.
+- Added `tools/cartesian_driver_harness.jl` as the explicit home for ladder
+  stage markers, fixture input inclusion, stop-after probing, private
+  diagnostic knobs, and route-internal materialization switches. The temporary
+  Cartesian ladders now run this harness rather than the canonical template.
+- Added a small public materialization request field,
+  `hamiltonian_output = :cartesian_ida_hamiltonian`, so a user-facing producer
+  can ask for an IDA Ham artifact without naming the internal residual-GTO
+  provider mode.
+- Added an `AGENTS.md` guardrail and a cheap policy test to prevent the
+  canonical driver from drifting back into a shared integration-test harness.
+
+Validation:
+- `git diff --check`
+- `julia --project=. -e 'using GaussletBases; println("load ok")'`
+- Direct policy test for the canonical driver:
+  `julia --project=. -e 'using Test; const _PROJECT_ROOT = pwd(); include("test/docs/cartesian_ham_builder_policy_runtests.jl")'`
+- Direct H2 residual-GTO materialized harness run. It wrote/read the public IDA
+  Ham artifact and reported `final_dimension = 471`, `residual_rank = 18`,
+  and `augmented_dimension = 489`.
+- `julia --project=. tools/run_cartesian_line_ladder.jl --line=pqs_diatomic`
+  passed all three cases through the harness.
+
+Goal advancement:
+- LT5/LT6: protects the public Cartesian/IDA producer boundary from test and
+  private-solver drift while preserving the working H2 residual-GTO IDA
+  artifact route.
+- MT: keeps Cr2 preparation on the intended path: copy/adapt the visible public
+  stage sequence, then implement missing functionality inside `cartesian_*`
+  stage functions rather than patching private internals into driver scripts.
+
+Risk / guardrail:
+- The harness intentionally preserves old fixture override machinery and
+  private diagnostic knobs while active ladder cases still need them. This is a
+  quarantine, not a new architecture surface.
+- The canonical driver has not been promoted as a general Cr2 producer; H2/q5
+  source-plan fixture admissions remain the next substantive blocker.
+
+Remaining blocker / next:
+- Resume upstream H2/q5 source-plan generalization after this driver guardrail:
+  derive retained-rule source dimensions/key or support-region admission from
+  construction while preserving the compact public IDA artifact contract.
+
+Line-count / complexity note:
+- Canonical driver is back to `111` lines. The pass is deliberately net
+  line-positive because it separates the harness from the template and adds a
+  policy test, but it reduces conceptual carrying cost by quarantining ladder
+  instrumentation outside `bin/cartesian_ham_builder.jl`.
