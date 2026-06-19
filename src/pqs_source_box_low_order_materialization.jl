@@ -441,7 +441,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
     final_basis = inputs.final_basis
     h1_hamiltonian = inputs.h1_hamiltonian
     h1 = inputs.h1
-    density_interaction = inputs.density_interaction
     h1_matrix = Matrix{Float64}(h1_hamiltonian.hamiltonian_matrix)
     h1_symmetry_error = norm(h1_matrix - transpose(h1_matrix), Inf)
     h1_finite = all(isfinite, h1_matrix)
@@ -450,13 +449,10 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
     gto_residual_overlap_size = size(sidecar.gto_residual_overlap)
     optional = _pqs_source_box_route_driver_optional_property
     augmented_dimension = optional(one_body_blocks, :augmented_dimension)
-    augmented_h1_lowest = optional(one_body_blocks, :augmented_h1_lowest)
-    augmented_h1_symmetry_error =
-        optional(one_body_blocks, :augmented_h1_symmetry_error)
     summary = (;
         route_family = report.route_family,
         route_kind = report.route_kind,
-        result_kind = :h2_pqs_ham_with_residual_gto_sidecar,
+        result_kind = :h2_pqs_residual_gto_ida_hamiltonian,
         final_dimension = final_basis.final_dimension,
         overlap_identity_error = final_basis.final_overlap_identity_error,
         h1_lowest = h1.lowest_energy,
@@ -473,21 +469,10 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
             optional(residual, :residual_overlap_identity_error),
         residual_overlap_cutoff = optional(residual, :residual_overlap_cutoff),
         augmented_dimension,
-        augmented_h1_lowest,
-        augmented_h1_symmetry_error,
         augmented_density_space =
             optional(density_descriptor, :augmented_density_space),
         augmented_density_gauge =
             optional(density_descriptor, :density_gauge),
-        augmented_density_dimension =
-            optional(density_blocks, :augmented_density_dimension),
-        augmented_pair_matrix_size =
-            optional(density_blocks, :augmented_pair_matrix_size),
-        augmented_pair_matrix_symmetry_error =
-            optional(
-                density_blocks,
-                :augmented_pair_matrix_symmetry_error,
-            ),
         ida_hamiltonian_summary...,
     )
 
@@ -540,77 +525,9 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
     ham_artifact_path = nothing
     if save_ham_artifact
         ham_artifact_path = String(hamfile)
-        jldopen(ham_artifact_path, "w") do file
-            file["artifact_kind"] = :pqs_h2_residual_gto_sidecar_ham_bundle
-            file["summary"] = summary
-            file["route_metadata"] = route_metadata
-            file["final_dimension"] = final_basis.final_dimension
-            file["one_body_hamiltonian"] = h1_hamiltonian.hamiltonian_matrix
-            file["kinetic"] = h1_hamiltonian.kinetic_matrix
-            file["nuclear_attraction_unit_by_center"] =
-                Matrix{Float64}[
-                    Matrix{Float64}(record.final_operator)
-                    for record in inputs.final_nuclear_by_center
-                ]
-            file["charged_nuclear"] = h1_hamiltonian.charged_nuclear_matrix
-            file["electron_electron_ida"] =
-                density_interaction.electron_electron_ida
-            file["h1_lowest"] = h1.lowest_energy
-            _pqs_source_box_route_driver_write_pqs_h2_sidecar_common!(
-                file,
-                inputs,
-                sidecar,
-                provider_block_mode,
-            )
-            _pqs_source_box_route_driver_write_jld2_fields!(
-                file,
-                residual,
-                _PQS_H2_RESIDUAL_TRANSFORM_ARTIFACT_FIELDS,
-            )
-            _pqs_source_box_route_driver_write_jld2_fields!(
-                file,
-                density_descriptor,
-                (
-                    :augmented_density_gauge => :density_gauge,
-                    :augmented_density_space,
-                    :p_dimension,
-                    :f_dimension,
-                    :g_dimension,
-                    :p_projection_of_g_size,
-                    :residual_orbital_coefficients_in_density_carrier_size,
-                ),
-            )
-            _pqs_source_box_route_driver_write_jld2_fields!(
-                file,
-                density_blocks,
-                (
-                    :augmented_pair_matrix,
-                    :augmented_density_dimension,
-                    :augmented_pair_matrix_symmetry_error,
-                ),
-            )
-            _pqs_source_box_route_driver_write_jld2_fields!(
-                file,
-                density_blocks,
-                _PQS_H2_DENSITY_MOMENT_ARTIFACT_FIELDS,
-            )
-            _pqs_source_box_route_driver_write_jld2_fields!(
-                file,
-                one_body_blocks,
-                (
-                    :augmented_dimension,
-                    :augmented_kinetic,
-                    :augmented_nuclear_attraction_unit_by_center,
-                    :augmented_one_body_hamiltonian,
-                    :augmented_h1_lowest,
-                    :augmented_h1_symmetry_error,
-                ),
-            )
-            if !isnothing(ida_hamiltonian)
-                file["ida_spin_nup"] = ida_hamiltonian.nup
-                file["ida_spin_ndn"] = ida_hamiltonian.ndn
-            end
-        end
+        isnothing(ida_hamiltonian) &&
+            throw(ArgumentError("H2 residual-GTO Ham artifact requires IDA Hamiltonian provider blocks"))
+        write_cartesian_ida_hamiltonian(ham_artifact_path, ida_hamiltonian)
     end
 
     artifact_roundtrip =
@@ -625,7 +542,7 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
 
     return (;
         route_family = report.route_family,
-        result_kind = :h2_pqs_ham_with_residual_gto_sidecar,
+        result_kind = :h2_pqs_residual_gto_ida_hamiltonian,
         requested = true,
         materialized = true,
         summary,
@@ -644,15 +561,9 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
         provider_block_mode,
         residual_rank = summary.residual_rank,
         residual_overlap_identity_error = summary.residual_overlap_identity_error,
-        augmented_density_gauge = summary.augmented_density_gauge,
-        augmented_density_dimension = summary.augmented_density_dimension,
-        augmented_pair_matrix_symmetry_error =
-            summary.augmented_pair_matrix_symmetry_error,
         ida_hamiltonian,
         ida_hamiltonian_summary...,
         augmented_dimension,
-        augmented_h1_lowest,
-        augmented_h1_symmetry_error,
         ida_full_self_coulomb = optional(artifact_roundtrip, :ida_full_self_coulomb),
         ida_counterpoise_branch_count =
             optional(artifact_roundtrip, :ida_counterpoise_branch_count),

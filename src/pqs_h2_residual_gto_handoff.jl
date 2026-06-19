@@ -531,14 +531,10 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_density_blocks(
         Matrix{Float64}(density_interaction.electron_electron_ida) v_pr
         transpose(v_pr) v_rr
     ]
-    v_dd_symmetry_error = norm(v_dd - transpose(v_dd), Inf)
     return (;
         augmented_density_gauge = :localized_ida,
         augmented_density_space = (:localized_ida_pqs, :residual_gto),
         augmented_pair_matrix = v_dd,
-        augmented_density_dimension = size(v_dd, 1),
-        augmented_pair_matrix_size = size(v_dd),
-        augmented_pair_matrix_symmetry_error = v_dd_symmetry_error,
         residual_centers = moments.residual_centers,
         residual_widths = moments.residual_widths,
         residual_overlap_error = moments.residual_overlap_error,
@@ -970,17 +966,6 @@ function _pqs_source_box_route_driver_pqs_gto_one_body_blocks(packet)
                 l,
             ) for index in 1:center_count
         ]
-    augmented_one_body_hamiltonian = Matrix{Float64}(augmented_kinetic)
-    for (charge, nuclear) in zip(packet.nuclear_charges, augmented_nuclear_attraction_unit_by_center)
-        augmented_one_body_hamiltonian .+= Float64(charge) .* nuclear
-    end
-    augmented_one_body_hamiltonian =
-        Matrix{Float64}(
-            0.5 .* (
-                augmented_one_body_hamiltonian +
-                transpose(augmented_one_body_hamiltonian)
-            ),
-        )
     base_reconstructed =
         Matrix{Float64}(packet.kinetic_ff)
     for (charge, nuclear) in zip(packet.nuclear_charges, packet.nuclear_unit_by_center_ff)
@@ -989,23 +974,11 @@ function _pqs_source_box_route_driver_pqs_gto_one_body_blocks(packet)
     base_reconstruction_error = norm(base_reconstructed - packet.h_ff, Inf)
     base_reconstruction_error <= 1.0e-8 ||
         throw(ArgumentError("PQS one-body H1 reconstruction from K + Z*U centers failed"))
-    augmented_symmetry_error =
-        norm(
-            augmented_one_body_hamiltonian -
-            transpose(augmented_one_body_hamiltonian),
-            Inf,
-        )
-    augmented_h1_lowest =
-        minimum(eigvals(Symmetric(augmented_one_body_hamiltonian)))
     return (;
         augmented_kinetic,
         augmented_nuclear_attraction_unit_by_center,
-        augmented_one_body_hamiltonian,
         final_dimension = size(packet.h_ff, 1),
-        augmented_dimension = size(augmented_one_body_hamiltonian, 1),
-        augmented_h1_lowest,
-        augmented_h1_symmetry_error = augmented_symmetry_error,
-        base_h1_component_reconstruction_error = base_reconstruction_error,
+        augmented_dimension = size(augmented_kinetic, 1),
     )
 end
 
@@ -1330,340 +1303,41 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
         )
     end
 
-    ham_facts = jldopen(String(hamfile), "r") do file
-        _pqs_source_box_route_driver_require_jld2_keys(
-            file,
-            (
-                :artifact_kind,
-                :final_dimension,
-                :one_body_hamiltonian,
-                :kinetic,
-                :nuclear_attraction_unit_by_center,
-                :electron_electron_ida,
-                :h1_lowest,
-                :route_metadata,
-                :final_gto_cross_overlap,
-                :gto_self_overlap,
-                :gto_residual_overlap,
-                :provider_block_mode,
-            ),
-        )
-        artifact_kind = file["artifact_kind"]
-        artifact_kind === :pqs_h2_residual_gto_sidecar_ham_bundle ||
-            throw(ArgumentError("unexpected H2 PQS sidecar ham artifact kind $(artifact_kind)"))
-        final_dimension = Int(file["final_dimension"])
-        final_dimension == basis_facts.final_dimension ||
-            throw(ArgumentError("basis and ham final dimensions differ"))
-        route_metadata = file["route_metadata"]
-        one_body_hamiltonian = file["one_body_hamiltonian"]
-        kinetic = file["kinetic"]
-        nuclear_attraction_unit_by_center =
-            Matrix{Float64}[
-                Matrix{Float64}(matrix)
-                for matrix in file["nuclear_attraction_unit_by_center"]
-            ]
-        electron_electron_ida = file["electron_electron_ida"]
-        h1_lowest = Float64(file["h1_lowest"])
-        final_gto_cross_overlap = file["final_gto_cross_overlap"]
-        gto_self_overlap = file["gto_self_overlap"]
-        gto_residual_overlap = file["gto_residual_overlap"]
-        provider_block_mode =
-            _pqs_source_box_route_driver_read_pqs_h2_provider_block_mode(file)
-        provider_block_mode === basis_facts.provider_block_mode ||
-            throw(ArgumentError("basis and ham provider block modes differ"))
-        size(one_body_hamiltonian) == (final_dimension, final_dimension) ||
-            throw(ArgumentError("one_body_hamiltonian shape must be final_dimension x final_dimension"))
-        all(isfinite, one_body_hamiltonian) ||
-            throw(ArgumentError("one_body_hamiltonian contains non-finite entries"))
-        h1_symmetry_error =
-            norm(one_body_hamiltonian - transpose(one_body_hamiltonian), Inf)
-        h1_symmetry_error <= Float64(symmetry_atol) ||
-            throw(ArgumentError("one_body_hamiltonian is not symmetric"))
-        isfinite(h1_lowest) ||
-            throw(ArgumentError("h1_lowest must be finite"))
-        _pqs_source_box_route_driver_square_matrix(
-            "electron_electron_ida",
-            electron_electron_ida,
-        )
-        _pqs_source_box_route_driver_symmetric_matrix(
-            "kinetic",
-            kinetic,
-            (final_dimension, final_dimension),
-            symmetry_atol,
-        )
-        nuclear_charges = Float64.(route_metadata.nuclear_charges)
-        length(nuclear_attraction_unit_by_center) == length(nuclear_charges) ||
-            throw(ArgumentError("base unit-nuclear center count must match nuclear charges"))
-        base_h1_reconstructed = Matrix{Float64}(kinetic)
-        for (charge, nuclear) in zip(nuclear_charges, nuclear_attraction_unit_by_center)
-            _pqs_source_box_route_driver_symmetric_matrix(
-                "base unit-nuclear attraction",
-                nuclear,
-                (final_dimension, final_dimension),
-                symmetry_atol,
-            )
-            base_h1_reconstructed .+= charge .* nuclear
-        end
-        base_h1_component_reconstruction_error =
-            norm(base_h1_reconstructed - one_body_hamiltonian, Inf)
-        base_h1_component_reconstruction_error <= Float64(symmetry_atol) ||
-            throw(ArgumentError("base H1 does not reconstruct from K + Z*U centers"))
-        size(final_gto_cross_overlap, 1) == final_dimension ||
-            throw(ArgumentError("ham final_gto_cross_overlap row count must equal final_dimension"))
-        _pqs_source_box_route_driver_square_matrix(
-            "ham gto_self_overlap",
-            gto_self_overlap,
-        )
-        size(gto_residual_overlap) == size(gto_self_overlap) ||
-            throw(ArgumentError("ham gto_residual_overlap shape must match gto_self_overlap"))
-        all(isfinite, gto_residual_overlap) ||
-            throw(ArgumentError("ham gto_residual_overlap contains non-finite entries"))
-        residual_symmetry_error =
-            norm(gto_residual_overlap - transpose(gto_residual_overlap), Inf)
-        residual_symmetry_error <= Float64(symmetry_atol) ||
-            throw(ArgumentError("ham gto_residual_overlap is not symmetric"))
-        augmented_facts =
-            if provider_block_mode !== :none
-                _pqs_source_box_route_driver_require_jld2_keys(
-                    file,
-                    (
-                        :augmented_dimension,
-                        :augmented_kinetic,
-                        :augmented_nuclear_attraction_unit_by_center,
-                        :augmented_one_body_hamiltonian,
-                        :augmented_h1_lowest,
-                        :augmented_h1_symmetry_error,
-                        :augmented_density_gauge,
-                        :augmented_density_space,
-                        :p_dimension,
-                        :f_dimension,
-                        :g_dimension,
-                        :p_projection_of_g_size,
-                        :residual_orbital_coefficients_in_density_carrier_size,
-                    ),
-                )
-                residual_rank = basis_facts.residual_rank
-                gto_dimension = size(gto_self_overlap, 1)
-                augmented_dimension = Int(file["augmented_dimension"])
-                augmented_dimension == final_dimension + residual_rank ||
-                    throw(ArgumentError("augmented_dimension must equal final_dimension + residual_rank"))
-                augmented_one_body_hamiltonian =
-                    file["augmented_one_body_hamiltonian"]
-                augmented_kinetic = file["augmented_kinetic"]
-                augmented_nuclear_attraction_unit_by_center =
-                    Matrix{Float64}[
-                        Matrix{Float64}(matrix)
-                        for matrix in file["augmented_nuclear_attraction_unit_by_center"]
-                    ]
-                augmented_h1_symmetry_error =
-                    provider_block_mode === :one_body_and_density_provider ?
-                    Float64(file["augmented_h1_symmetry_error"]) :
-                    _pqs_source_box_route_driver_symmetric_matrix(
-                        "augmented one-body Hamiltonian",
-                        augmented_one_body_hamiltonian,
-                        (augmented_dimension, augmented_dimension),
-                        symmetry_atol,
-                    )
-                isfinite(augmented_h1_symmetry_error) ||
-                    throw(ArgumentError("augmented_h1_symmetry_error must be finite"))
-                augmented_h1_lowest = Float64(file["augmented_h1_lowest"])
-                isfinite(augmented_h1_lowest) ||
-                    throw(ArgumentError("augmented_h1_lowest must be finite"))
-                _pqs_source_box_route_driver_symmetric_matrix(
-                    "augmented kinetic",
-                    augmented_kinetic,
-                    (augmented_dimension, augmented_dimension),
-                    symmetry_atol,
-                )
-                length(augmented_nuclear_attraction_unit_by_center) ==
-                    length(nuclear_charges) ||
-                    throw(ArgumentError("augmented unit-nuclear matrices must match nuclear charges"))
-                augmented_reconstructed = Matrix{Float64}(augmented_kinetic)
-                for (charge, nuclear) in zip(
-                    nuclear_charges,
-                    augmented_nuclear_attraction_unit_by_center,
-                )
-                    _pqs_source_box_route_driver_symmetric_matrix(
-                        "augmented unit-nuclear attraction",
-                        nuclear,
-                        (augmented_dimension, augmented_dimension),
-                        symmetry_atol,
-                    )
-                    augmented_reconstructed .+= charge .* nuclear
-                end
-                augmented_h1_component_reconstruction_error =
-                    norm(augmented_reconstructed - augmented_one_body_hamiltonian, Inf)
-                augmented_h1_component_reconstruction_error <= Float64(symmetry_atol) ||
-                    throw(ArgumentError("augmented H1 does not reconstruct from K + Z*U centers"))
-                file["augmented_density_gauge"] ===
-                    :localized_ida ||
-                    throw(ArgumentError("ham augmented density gauge must be localized IDA"))
-                Tuple(file["augmented_density_space"]) ===
-                    (:localized_ida_pqs, :residual_gto) ||
-                    throw(ArgumentError("ham augmented density space must be (:localized_ida_pqs, :residual_gto)"))
-                Int(file["p_dimension"]) == basis_facts.p_dimension ||
-                    throw(ArgumentError("basis and ham P dimensions differ"))
-                Int(file["f_dimension"]) == final_dimension ||
-                    throw(ArgumentError("ham F dimension must match final_dimension"))
-                Int(file["g_dimension"]) == gto_dimension ||
-                    throw(ArgumentError("ham G dimension must match GTO dimension"))
-                Tuple(file["p_projection_of_g_size"]) ==
-                    basis_facts.p_projection_of_g_size ||
-                    throw(ArgumentError("basis and ham P-projection sizes differ"))
-                Tuple(file["residual_orbital_coefficients_in_density_carrier_size"]) ==
-                    basis_facts.residual_orbital_coefficients_in_density_carrier_size ||
-                    throw(ArgumentError("basis and ham residual carrier sizes differ"))
-                density_matrix_facts =
-                    if provider_block_mode === :one_body_and_density_provider
-                        _pqs_source_box_route_driver_require_jld2_keys(
-                            file,
-                            (
-                                :augmented_pair_matrix,
-                                :augmented_density_dimension,
-                                :augmented_pair_matrix_symmetry_error,
-                                :residual_centers,
-                                :residual_widths,
-                                :residual_moment_overlap_error,
-                                :ida_spin_nup,
-                                :ida_spin_ndn,
-                            ),
-                        )
-                        augmented_density_dimension =
-                            Int(file["augmented_density_dimension"])
-                        augmented_density_dimension ==
-                            basis_facts.p_dimension + residual_rank ||
-                            throw(
-                                ArgumentError(
-                                    "augmented_density_dimension must equal p_dimension + residual_rank",
-                                ),
-                        )
-                        augmented_pair_matrix = file["augmented_pair_matrix"]
-                        augmented_pair_matrix_symmetry_error =
-                            Float64(file["augmented_pair_matrix_symmetry_error"])
-                        isfinite(augmented_pair_matrix_symmetry_error) ||
-                            throw(ArgumentError("augmented_pair_matrix_symmetry_error must be finite"))
-                        ida_hamiltonian = CartesianIDAHamiltonian(
-                            augmented_kinetic,
-                            augmented_nuclear_attraction_unit_by_center,
-                            augmented_pair_matrix,
-                            Int(file["ida_spin_nup"]),
-                            Int(file["ida_spin_ndn"]);
-                            nuclear_charges = route_metadata.nuclear_charges,
-                            nuclear_positions = route_metadata.atom_locations,
-                        )
-                        ida_smoke =
-                            _pqs_source_box_route_driver_ida_hamiltonian_smoke(
-                                ida_hamiltonian,
-                            )
-                        (;
-                            augmented_density_dimension,
-                            augmented_pair_matrix_size =
-                                size(ida_hamiltonian.electron_electron_ida),
-                            augmented_pair_matrix_symmetry_error,
-                            ida_orbital_dimension = size(ida_hamiltonian.kinetic, 1),
-                            ida_center_count =
-                                length(ida_hamiltonian.nuclear_charges),
-                            ida_full_self_coulomb = ida_smoke.full_self_coulomb,
-                            ida_counterpoise_branch_count =
-                                ida_smoke.counterpoise_branch_count,
-                        )
-                    else
-                        (;
-                            augmented_density_dimension = nothing,
-                            augmented_pair_matrix_size = nothing,
-                            augmented_pair_matrix_symmetry_error = nothing,
-                            ida_orbital_dimension = nothing,
-                            ida_center_count = nothing,
-                            ida_full_self_coulomb = nothing,
-                            ida_counterpoise_branch_count = nothing,
-                        )
-                    end
-                (;
-                    augmented_dimension,
-                    augmented_one_body_hamiltonian_size =
-                        size(augmented_one_body_hamiltonian),
-                    augmented_kinetic_size = size(augmented_kinetic),
-                    augmented_h1_lowest,
-                    augmented_h1_symmetry_error,
-                    augmented_density_gauge = file["augmented_density_gauge"],
-                    augmented_density_space =
-                        Tuple(file["augmented_density_space"]),
-                    p_projection_of_g_size =
-                        Tuple(file["p_projection_of_g_size"]),
-                    residual_orbital_coefficients_in_density_carrier_size =
-                        Tuple(file["residual_orbital_coefficients_in_density_carrier_size"]),
-                    density_matrix_facts...,
-                )
-            else
-                (;
-                    augmented_dimension = nothing,
-                    augmented_one_body_hamiltonian_size = nothing,
-                    augmented_kinetic_size = nothing,
-                    augmented_h1_lowest = nothing,
-                    augmented_h1_symmetry_error = nothing,
-                    augmented_density_gauge = nothing,
-                    augmented_density_space = nothing,
-                    p_projection_of_g_size = nothing,
-                    residual_orbital_coefficients_in_density_carrier_size = nothing,
-                )
-            end
-        return (;
-            ham_artifact_kind = artifact_kind,
-            provider_block_mode,
-            one_body_hamiltonian_size = size(one_body_hamiltonian),
-            base_h1_component_reconstruction_error,
-            h1_symmetry_error,
-            h1_lowest,
-            electron_electron_ida_size = size(electron_electron_ida),
-            final_gto_cross_overlap_size = size(final_gto_cross_overlap),
-            gto_self_overlap_size = size(gto_self_overlap),
-            gto_residual_overlap_size = size(gto_residual_overlap),
-            gto_residual_overlap_symmetry_error = residual_symmetry_error,
-            augmented_facts...,
-        )
-    end
+    basis_facts.provider_block_mode === :one_body_and_density_provider ||
+        throw(ArgumentError("public H2 Ham artifact requires density provider mode"))
+    ham = read_cartesian_ida_hamiltonian(hamfile)
+    augmented_dimension = size(ham.kinetic, 1)
+    expected_dimension = basis_facts.final_dimension + basis_facts.residual_rank
+    augmented_dimension == expected_dimension ||
+        throw(ArgumentError("public H2 Ham dimension must equal final_dimension + residual_rank"))
+    length(ham.nuclear_charges) == 2 ||
+        throw(ArgumentError("H2 public Ham artifact must have two centers"))
+    full_h1 = one_body_hamiltonian(ham)
+    all(isfinite, full_h1) ||
+        throw(ArgumentError("public H2 Ham H1 contains non-finite entries"))
+    norm(full_h1 - transpose(full_h1), Inf) <= Float64(symmetry_atol) ||
+        throw(ArgumentError("public H2 Ham H1 is not symmetric"))
+    isfinite(eigen(Symmetric(full_h1)).values[1]) ||
+        throw(ArgumentError("public H2 Ham H1 lowest value is not finite"))
+    ida_smoke = _pqs_source_box_route_driver_ida_hamiltonian_smoke(ham)
 
     return (;
         basisfile = String(basisfile),
         hamfile = String(hamfile),
         final_dimension = basis_facts.final_dimension,
         basis_artifact_kind = basis_facts.basis_artifact_kind,
-        ham_artifact_kind = ham_facts.ham_artifact_kind,
+        ham_artifact_kind = :cartesian_ida_hamiltonian,
         provider_block_mode = basis_facts.provider_block_mode,
-        final_coefficients_size = basis_facts.final_coefficients_size,
-        final_gto_cross_overlap_size = basis_facts.final_gto_cross_overlap_size,
-        gto_self_overlap_size = basis_facts.gto_self_overlap_size,
-        gto_residual_overlap_size = basis_facts.gto_residual_overlap_size,
-        h1_symmetry_error = ham_facts.h1_symmetry_error,
-        h1_lowest = ham_facts.h1_lowest,
-        base_h1_component_reconstruction_error =
-            ham_facts.base_h1_component_reconstruction_error,
         residual_rank = basis_facts.residual_rank,
         residual_overlap_identity_error =
             basis_facts.residual_overlap_identity_error,
-        augmented_density_gauge = basis_facts.augmented_density_gauge,
-        augmented_density_space = basis_facts.augmented_density_space,
-        p_dimension = basis_facts.p_dimension,
-        f_dimension = basis_facts.f_dimension,
-        g_dimension = basis_facts.g_dimension,
-        p_projection_of_g_size = basis_facts.p_projection_of_g_size,
-        residual_orbital_coefficients_in_density_carrier_size =
-            basis_facts.residual_orbital_coefficients_in_density_carrier_size,
-        augmented_dimension = ham_facts.augmented_dimension,
-        augmented_one_body_hamiltonian_size =
-            ham_facts.augmented_one_body_hamiltonian_size,
-        augmented_kinetic_size = ham_facts.augmented_kinetic_size,
-        augmented_h1_lowest = ham_facts.augmented_h1_lowest,
-        augmented_h1_symmetry_error = ham_facts.augmented_h1_symmetry_error,
-        ida_orbital_dimension = ham_facts.ida_orbital_dimension,
-        ida_center_count = ham_facts.ida_center_count,
-        ida_full_self_coulomb = ham_facts.ida_full_self_coulomb,
-        ida_counterpoise_branch_count =
-            ham_facts.ida_counterpoise_branch_count,
+        augmented_dimension,
+        ida_orbital_dimension = augmented_dimension,
+        ida_center_count = length(ham.nuclear_charges),
+        ida_full_self_coulomb = ida_smoke.full_self_coulomb,
+        ida_counterpoise_branch_count = ida_smoke.counterpoise_branch_count,
         basis_gto_residual_overlap_symmetry_error =
             basis_facts.gto_residual_overlap_symmetry_error,
-        ham_gto_residual_overlap_symmetry_error =
-            ham_facts.gto_residual_overlap_symmetry_error,
     )
 end
 
