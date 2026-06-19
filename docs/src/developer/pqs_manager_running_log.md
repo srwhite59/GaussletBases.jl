@@ -3956,7 +3956,7 @@ Line-count / complexity note:
 ## Pass 299 - Public PQS/IDA Algorithm Contract Pages
 
 Commit(s):
-- `920ed236` - Document Cartesian PQS and IDA algorithms
+- `35f0c5e4` - Document Cartesian PQS and IDA algorithms
 
 Summary:
 - Added the missing public Algorithms suite for the corrected Cartesian PQS/IDA
