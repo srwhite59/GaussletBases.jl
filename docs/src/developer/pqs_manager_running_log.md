@@ -4003,3 +4003,85 @@ Remaining blocker / next:
 Line-count / complexity note:
 - This intentionally adds public documentation surface: five pages, about 705
   lines total. No source behavior changed.
+
+## Pass 300 - Delete Obsolete Two-Gauge Compatibility Aliases
+
+Commit(s):
+- `5ca229f2` - Delete obsolete PQS two-gauge compatibility aliases
+
+Summary:
+- Deleted the private identity compatibility layer left behind after removing
+  the global PQS core/shell Lowdin.
+- Removed active `combined_lowdin_cleanup`,
+  `combined_lowdin_cleanup_used`, `pre_final_coefficients`,
+  `pre_final_overlap`, `final_to_pre_final_coefficients`, and
+  `ham_handoff_orbital_to_density` artifact persistence.
+- Renamed the active density interaction surface from pre-final vocabulary to
+  localized IDA vocabulary, including `electron_electron_ida`,
+  `ida_weights`, and `pqs_complete_core_shell_ida_density_interaction`.
+- Updated the residual-GTO density/handoff labels so both orbital and density
+  sectors are `(:localized_ida_pqs, :residual_gto)` in the remaining private
+  H/V/T constructor.
+- Fixed the new Algorithms docs paths, made the PQS source-box shell stages
+  explicit, clarified counterpoise branch data, and made the Page Contract the
+  single index authority.
+
+Validation:
+- Doer reported `git diff --check`, package load,
+  `julia --project=. tools/run_cartesian_line_ladder.jl --line=pqs_diatomic`,
+  and `julia --project=docs docs/make.jl`.
+- Manager reran diff check, package load, docs build, and the pqs_diatomic
+  ladder. All three ladder cases passed; the materialized case reported
+  localized IDA handoff sectors and residual-GTO artifact readback succeeded.
+
+Goal advancement:
+- LT2: removes stale identity matrix allocation, identity multiplication, and
+  two-gauge field aliases before Cr2-scale work.
+- LT5/LT6: aligns the private H2 route surface with the documented one-basis
+  IDA contract and prevents obsolete H/V/T gauge vocabulary from becoming
+  public.
+
+Medium-goal update:
+- The obsolete two-gauge compatibility layer is no longer a blocker for the
+  next internal one-basis work. The remaining blocker is functional: residual
+  GTO augmentation still carries charged/summed one-body data rather than
+  separated `K` and unit-nuclear `{U_A}` components.
+
+Risk / guardrail:
+- `_CartesianDensityDensityHamiltonian.orbital_to_density` remains only inside
+  the private H/V/T constructor for the current artifact invariant. Do not
+  promote it; replace it with the one-basis IDA object after separated
+  augmented one-body components exist.
+
+Remaining blocker / next:
+- Preserve one-body components through residual-GTO augmentation: build and
+  carry augmented `K` and separated uncharged `{U_A}` before public writer work.
+
+Line-count / complexity note:
+- Net impact was `300` insertions / `428` deletions (`-128` lines). This was a
+  productive deletion pass rather than another compatibility layer.
+
+## Medium-Term Goal Checkpoint - Passes 296-300
+
+Status:
+- Completed: global core/shell Lowdin removal and the old two-gauge identity
+  compatibility layer. The active H2 PQS route now uses shell-local PQS
+  coefficients directly and names the active density interaction as localized
+  IDA.
+- Completed: public algorithm documentation for PQS shell construction,
+  residual-Gaussian extension, low-dimensional operator assembly, and IDA
+  counterpoise.
+- Active: one-basis IDA producer transition. The next code target is separated
+  augmented `K`, `{U_A}`, and `Vee`, not public writer/reader work yet.
+- Active: carrying-cost reduction. Recent passes removed package precompile
+  bloat and private alias fields; continue deleting stale private H/V/T surfaces
+  as the one-basis object takes over.
+- Blocked: Cr2/general diatomic promotion remains blocked on separated
+  residual-GTO one-body components, public one-basis object/format, source-plan
+  generalization beyond H2/q5, and performance review.
+
+Guardrail update:
+- The public all-electron contract is now one localized IDA basis:
+  `K`, separated unit-nuclear `{U_A}`, `Vee`, charges/positions, spin counts,
+  and nuclear repulsion. Do not reintroduce a public density transform or a
+  global Lowdin cleanup to make old artifacts easier to preserve.
