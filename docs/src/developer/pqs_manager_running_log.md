@@ -3952,3 +3952,54 @@ Remaining blocker / next:
 Line-count / complexity note:
 - Source impact was line-negative: `48` insertions / `74` deletions (`-26`
   lines). The compatibility aliases are the main remaining carrying cost.
+
+## Pass 299 - Public PQS/IDA Algorithm Contract Pages
+
+Commit(s):
+- `920ed236` - Document Cartesian PQS and IDA algorithms
+
+Summary:
+- Added the missing public Algorithms suite for the corrected Cartesian PQS/IDA
+  route: overview, low-dimensional Cartesian operator assembly, PQS shell
+  construction, residual-Gaussian extension, and IDA Hamiltonian/counterpoise.
+- Updated the Algorithms index to require spaces/dimensions, inputs/outputs,
+  pseudocode, linear algebra, allowed orthogonalizations, forbidden operations,
+  invariants, operator/gauge conventions, code maps, and current deviations for
+  active routes.
+- Wired the new pages into Documenter navigation.
+- The pages make the corrected one-basis IDA contract explicit: `K`, separated
+  unit-nuclear `{U_A}`, `Vee`, charges, positions, spin counts, and nuclear
+  repulsion. They also state that there is no public all-electron density
+  transform and no global PQS core/shell or PQS+residual-Gaussian Lowdin.
+
+Validation:
+- Manager ran `git diff --check`.
+- Manager ran package load.
+- Manager ran `julia --project=docs docs/make.jl`; it passed with the existing
+  large-page/search-index warnings only.
+
+Goal advancement:
+- LT3: promotes the Cartesian/PQS basis and Hamiltonian rules into public
+  Algorithms documentation before public PQS/Cr2 producer promotion.
+- LT5/LT6: records the mathematical guardrails that would have caught the
+  former global Lowdin mistake and prevents the obsolete two-basis H/V/T story
+  from becoming the public contract.
+
+Medium-goal update:
+- The public-contract lane now has a documentation prerequisite satisfied for
+  one-basis IDA work. The next code pass should implement or transition toward
+  the `K`, `{U_A}`, `Vee` contract rather than resurrecting a public density
+  transform.
+
+Risk / guardrail:
+- This was documentation only. The private H2 artifact still carries
+  compatibility names from the former H/V/T handoff stage; future code should
+  retire those aliases rather than documenting them as public concepts.
+
+Remaining blocker / next:
+- Implement the one-basis IDA Hamiltonian object and versioned read/write
+  boundary, preserving separated unit-nuclear matrices for counterpoise.
+
+Line-count / complexity note:
+- This intentionally adds public documentation surface: five pages, about 705
+  lines total. No source behavior changed.
