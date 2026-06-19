@@ -4138,3 +4138,61 @@ Remaining blocker / next:
 Line-count / complexity note:
 - Source impact was `231` insertions / `61` deletions (`+170` lines). Accepted
   as required functionality, with explicit paydown expected in the next pass.
+
+## Pass 302 - Replace Private HVT Handoff With IDA Object
+
+Commit(s):
+- `c0e80954` - Replace private Cartesian HVT handoff with IDA object
+
+Summary:
+- Replaced the old private `_CartesianDensityDensityHamiltonian` shape with a
+  private `_CartesianIDAHamiltonian` carrying the one-basis IDA contract:
+  kinetic, separated unit-nuclear attraction matrices by center,
+  electron-electron IDA, spin counts, nuclear charges/positions, and nuclear
+  repulsion.
+- Removed the identity `orbital_to_density` construction and the active
+  `ham_handoff_*` orbital/density basis mirrors from the H2 residual-GTO
+  producer path.
+- Reworked artifact readback to construct the internal IDA object, rebuild full
+  `H1 = K + sum_A Z_A U_A`, run two H2 ghost/counterpoise branch checks with
+  the same basis and `Vee`, and report compact IDA facts instead of handoff
+  mirror fields.
+
+Validation:
+- Doer reported `git diff --check`, package load,
+  `julia --project=. tools/run_cartesian_line_ladder.jl --line=pqs_diatomic`,
+  and `julia --project=docs docs/make.jl`.
+- Manager reran diff check on `c0e80954`, package load, docs build, and the
+  pqs_diatomic ladder. All three ladder cases passed; the materialized case
+  reported `ida_orbital_dimension = 489`, `ida_center_count = 2`,
+  `ida_full_self_coulomb = 0.4574354750591777`, and
+  `ida_counterpoise_branch_count = 2`.
+
+Goal advancement:
+- LT5/LT6: completes the internal correction from the obsolete H/V/T-with-map
+  artifact idea to the documented one-basis IDA contract.
+- LT2: deletes a stale identity-map concept before it can become public API or
+  Cr2-scale allocation pressure.
+
+Medium-goal update:
+- The private H2 residual-GTO lane now has the core ingredients needed for a
+  public one-basis artifact: `K`, `{U_A}`, `Vee`, charges/positions, spin
+  counts, and nuclear repulsion. Public writer/reader work should not start
+  until the artifact field list and deletion plan for the remaining private H2
+  scaffolding are explicitly reviewed.
+
+Risk / guardrail:
+- This pass is net `+35` lines because it introduced a real constructor and
+  counterpoise smoke helpers. Do not let the private artifact readback become a
+  second public reader; the next public contract should replace and delete that
+  scaffolding, not wrap it.
+
+Remaining blocker / next:
+- Decide the public one-basis IDA artifact shape and spin-count ownership, then
+  implement the writer/reader as a replacement for the private H2 handoff
+  artifact rather than another compatibility layer.
+
+Line-count / complexity note:
+- Source impact was `173` insertions / `138` deletions (`+35` lines). The
+  conceptual surface shrank even though the constructor made the pass slightly
+  line-positive.
