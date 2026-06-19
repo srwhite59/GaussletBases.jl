@@ -1,5 +1,6 @@
 route_family = :pqs_source_box; route_kind = :bond_aligned_diatomic_independent_pqs_source_box_core_shell; route_shape = (:atom_contact_core, :shared_shell_1, :shared_shell_2)
 atom_symbols = ("H", "H"); nuclear_charges = (1, 1); atom_locations = ((0.0, 0.0, -2.0), (0.0, 0.0, 2.0))
+nup = 1; ndn = 1
 bond_axis = :z; bond_length = 4.0; radius = 4.0
 parent_axis_family = :G10; core_spacing = 0.5; xmax_parallel = 6.0; xmax_transverse = 4.0
 parent_axis_counts = nothing

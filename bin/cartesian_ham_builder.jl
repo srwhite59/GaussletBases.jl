@@ -9,6 +9,8 @@ route_kind = :be2_cartesian_nesting_route_driver_spine
 atom_symbols = ("Be", "Be")
 nuclear_charges = (4, 4)
 atom_locations = ((-2.0, 0.0, 0.0), (2.0, 0.0, 0.0))
+nup = nothing
+ndn = nothing
 bond_axis = nothing
 bond_length = nothing
 radius = 15.0
@@ -97,7 +99,7 @@ end
 eval.(Meta.parse.(inputs))
 
 system_inputs = (; atom_symbols, nuclear_charges, atom_locations,
-    bond_axis, bond_length, radius, parent_axis_counts, map_backend)
+    nup, ndn, bond_axis, bond_length, radius, parent_axis_counts, map_backend)
 spacing_inputs = (; q, n_s, reference_spacing, tail_spacing,
     q_to_core_spacing_rule, core_spacing, xmax_parallel, xmax_transverse)
 parent_inputs = (; parent_axis_bundle_backend,

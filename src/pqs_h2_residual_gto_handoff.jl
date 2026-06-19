@@ -568,12 +568,16 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_ida_hamiltonian(
         throw(ArgumentError("H2 residual-GTO IDA Hamiltonian requires one-body blocks"))
     isnothing(density_blocks) &&
         throw(ArgumentError("H2 residual-GTO IDA Hamiltonian requires density blocks"))
+    isnothing(route_metadata.nup) &&
+        throw(ArgumentError("H2 residual-GTO IDA Hamiltonian requires explicit nup system input"))
+    isnothing(route_metadata.ndn) &&
+        throw(ArgumentError("H2 residual-GTO IDA Hamiltonian requires explicit ndn system input"))
     return CartesianIDAHamiltonian(
         one_body_blocks.augmented_kinetic,
         one_body_blocks.augmented_nuclear_attraction_unit_by_center,
         density_blocks.augmented_pair_matrix,
-        1,
-        1;
+        route_metadata.nup,
+        route_metadata.ndn;
         nuclear_charges = route_metadata.nuclear_charges,
         nuclear_positions = route_metadata.atom_locations,
     )
@@ -993,6 +997,8 @@ function _pqs_source_box_route_driver_pqs_h2_route_metadata(report, inputs)
         atom_symbols = system.atom_symbols,
         nuclear_charges = system.nuclear_charges,
         atom_locations = system.atom_locations,
+        nup = system.nup,
+        ndn = system.ndn,
         bond_axis = system.bond_axis,
         bond_length = system.bond_length,
         q = recipe.q,

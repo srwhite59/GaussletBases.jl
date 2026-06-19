@@ -1921,6 +1921,8 @@ function cartesian_report(system, parent, assembly, recipe)
         atom_symbols = parent.atom_symbols,
         nuclear_charges = parent.nuclear_charges,
         atom_locations = parent.atom_locations,
+        nup = get(system, :nup, nothing),
+        ndn = get(system, :ndn, nothing),
         bond_axis = parent.bond_axis,
         bond_length = get(system, :bond_length, nothing),
         radius = get(system, :radius, nothing),
