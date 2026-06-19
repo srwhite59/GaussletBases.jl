@@ -4085,3 +4085,56 @@ Guardrail update:
   `K`, separated unit-nuclear `{U_A}`, `Vee`, charges/positions, spin counts,
   and nuclear repulsion. Do not reintroduce a public density transform or a
   global Lowdin cleanup to make old artifacts easier to preserve.
+
+## Pass 301 - Preserve Residual-GTO One-Body Components
+
+Commit(s):
+- `6d69a2bd` - Preserve residual GTO one-body components
+
+Summary:
+- Refactored the H2 residual-GTO one-body provider so it builds residualized
+  one-body operators one component at a time.
+- The provider now carries augmented kinetic `K_aug` and separated uncharged
+  unit-nuclear matrices `{U_A,aug}` through residual-GTO augmentation.
+- The augmented one-body Hamiltonian is reconstructed as
+  `K_aug + sum_A Z_A U_A,aug`, instead of treating charged/summed nuclear data
+  as the provider authority.
+- Added artifact/readback checks that validate base and augmented H1
+  reconstruction from separated components.
+- Kept `charged_nuclear` only as a derived legacy base artifact field, not as
+  augmented route authority.
+
+Validation:
+- Doer reported package load, `git diff --check`, pqs_diatomic ladder, docs
+  build, and focused artifact reconstruction readback.
+- Manager reran diff check, package load, docs build, and the pqs_diatomic
+  ladder. All three cases passed; the materialized case reported augmented H1
+  lowest `-0.7959028345077871`, augmented symmetry error `0.0`, and successful
+  residual-GTO artifact readback.
+
+Goal advancement:
+- LT5/LT6: closes the main functional gap between the private residual-GTO
+  artifact and the documented one-basis IDA counterpoise contract.
+- LT3: keeps the implementation aligned with the new public Algorithms pages
+  before public writer/reader promotion.
+
+Medium-goal update:
+- The one-basis IDA lane can now introduce an internal object around
+  `K`, `{U_A}`, `Vee`, charges/positions, spin counts, and nuclear repulsion.
+  The obsolete private `_CartesianDensityDensityHamiltonian` shape should be
+  retired rather than preserved.
+
+Risk / guardrail:
+- This pass was line-positive because it added real separated component
+  construction and readback checks. The next pass should pay that back by
+  deleting the private H/V/T object shape and its identity `orbital_to_density`
+  invariant rather than running both contracts in parallel.
+
+Remaining blocker / next:
+- Replace `_CartesianDensityDensityHamiltonian` with a compact internal
+  one-basis IDA object and add a small counterpoise smoke that uses the same
+  basis and `Vee` for full and ghost branches.
+
+Line-count / complexity note:
+- Source impact was `231` insertions / `61` deletions (`+170` lines). Accepted
+  as required functionality, with explicit paydown expected in the next pass.
