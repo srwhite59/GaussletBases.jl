@@ -181,10 +181,10 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_density_descriptor(
 )
     final_basis = inputs.final_basis
     density_interaction = inputs.density_interaction
-    cleanup = Matrix{Float64}(final_basis.combined_lowdin_cleanup)
     s_fg = Matrix{Float64}(sidecar.final_gto_cross_overlap)
     residual_transform = Matrix{Float64}(residual.residual_transform)
-    p_dimension, f_dimension = size(cleanup)
+    f_dimension = final_basis.final_dimension
+    p_dimension = f_dimension
     size(s_fg, 1) == f_dimension ||
         throw(DimensionMismatch("density descriptor S_FG row count must match final dimension"))
     g_dimension = size(s_fg, 2)
@@ -193,7 +193,7 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_density_descriptor(
     residual_rank = size(residual_transform, 2)
     residual_rank == residual.residual_rank ||
         throw(DimensionMismatch("density descriptor residual rank mismatch"))
-    p_projection_of_g = Matrix{Float64}(cleanup * s_fg)
+    p_projection_of_g = s_fg
     residual_carrier =
         Matrix{Float64}(
             vcat(
@@ -583,16 +583,16 @@ function _pqs_source_box_route_driver_augmented_density_transform(
     one_body_blocks,
     density_blocks,
 )
-    final_to_pre_final =
-        Matrix{Float64}(density_interaction.final_to_pre_final_coefficients)
-    p_dimension, final_dimension = size(final_to_pre_final)
+    final_dimension = one_body_blocks.final_dimension
+    p_dimension = final_dimension
     augmented_dimension = one_body_blocks.augmented_dimension
     density_dimension = density_blocks.augmented_density_dimension
     residual_rank = density_dimension - p_dimension
     augmented_dimension == final_dimension + residual_rank ||
         throw(DimensionMismatch("augmented RHF density transform dimension mismatch"))
     transform = zeros(Float64, density_dimension, augmented_dimension)
-    transform[1:p_dimension, 1:final_dimension] .= final_to_pre_final
+    transform[1:p_dimension, 1:final_dimension] .=
+        Matrix{Float64}(I, final_dimension, final_dimension)
     transform[(p_dimension + 1):density_dimension,
         (final_dimension + 1):augmented_dimension] .= I(residual_rank)
     return transform
@@ -992,6 +992,7 @@ function _pqs_source_box_route_driver_pqs_gto_one_body_blocks(packet)
         ))))
     return (;
         augmented_one_body_hamiltonian,
+        final_dimension = size(h_ff, 1),
         augmented_dimension = size(augmented_one_body_hamiltonian, 1),
         augmented_h1_lowest,
         augmented_h1_symmetry_error = augmented_symmetry_error,

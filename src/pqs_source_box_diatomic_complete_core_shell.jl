@@ -2552,47 +2552,31 @@ function _pqs_source_box_route_driver_physical_gausslet_overlap_diagnostics(
     size(matrix, 1) == size(matrix, 2) || return (;
         blocker = :physical_gausslet_final_overlap_not_square,
         summary = (;),
-        cleanup = nothing,
         final_overlap = nothing,
         final_identity_error = nothing,
     )
-    symmetric_matrix = Symmetric((matrix + transpose(matrix)) ./ 2)
     symmetry_error = norm(matrix - transpose(matrix), Inf)
-    decomposition = eigen(symmetric_matrix)
-    eigenvalues = decomposition.values
-    threshold = max(Float64(rank_atol), eps(Float64) * max(size(matrix, 1), 1))
-    rank = count(value -> value > threshold, eigenvalues)
+    identity_error = norm(
+        matrix - Matrix{Float64}(I, size(matrix, 1), size(matrix, 2)),
+        Inf,
+    )
     summary = (;
         shape = size(matrix),
         symmetry_error,
-        eigenvalue_min = minimum(eigenvalues),
-        eigenvalue_max = maximum(eigenvalues),
-        rank,
+        identity_error,
+        eigenvalue_min = nothing,
+        eigenvalue_max = nothing,
+        rank = nothing,
         expected_dimension = size(matrix, 1),
         rank_atol = Float64(rank_atol),
         identity_atol = Float64(identity_atol),
-        full_rank = rank == size(matrix, 1),
-    )
-    rank == size(matrix, 1) || return (;
-        blocker = :physical_gausslet_final_overlap_rank_deficient,
-        summary,
-        cleanup = nothing,
-        final_overlap = nothing,
-        final_identity_error = nothing,
-    )
-    cleanup =
-        decomposition.vectors * Diagonal(1.0 ./ sqrt.(decomposition.values))
-    final_overlap = transpose(cleanup) * matrix * cleanup
-    final_identity_error = norm(
-        final_overlap -
-        Matrix{Float64}(I, size(final_overlap, 1), size(final_overlap, 2)),
-        Inf,
+        full_rank = nothing,
     )
     blocker =
-        final_identity_error <= Float64(identity_atol) ?
+        identity_error <= Float64(identity_atol) ?
         nothing :
         :physical_gausslet_final_overlap_not_identity
-    return (; blocker, summary, cleanup, final_overlap, final_identity_error)
+    return (; blocker, summary, final_overlap = matrix, final_identity_error = identity_error)
 end
 
 function _pqs_source_box_route_driver_physical_gausslet_final_basis(
@@ -2728,7 +2712,8 @@ function _pqs_source_box_route_driver_physical_gausslet_final_basis(
         retained_counts,
         overlap_diagnostics = diagnostics.summary,
     )
-    final_coefficients = pre_final_coefficients * diagnostics.cleanup
+    identity_cleanup = Matrix{Float64}(I, final_dimension, final_dimension)
+    final_coefficients = pre_final_coefficients
     return (;
         object_kind = :pqs_physical_gausslet_final_basis,
         status = :available_pqs_physical_gausslet_final_basis,
@@ -2743,7 +2728,7 @@ function _pqs_source_box_route_driver_physical_gausslet_final_basis(
         final_retained_count = final_dimension,
         final_dimension,
         pre_final_coefficients,
-        combined_lowdin_cleanup = diagnostics.cleanup,
+        combined_lowdin_cleanup = identity_cleanup,
         final_coefficients,
         pre_final_overlap_identity_error = pre_final_identity_error,
         final_overlap_identity_error = diagnostics.final_identity_error,
@@ -3256,7 +3241,11 @@ function _pqs_source_box_route_driver_physical_gausslet_pre_final_density_intera
 
     pre_final_coefficients = Matrix{Float64}(final_basis.pre_final_coefficients)
     final_coefficients = Matrix{Float64}(final_basis.final_coefficients)
-    cleanup = Matrix{Float64}(final_basis.combined_lowdin_cleanup)
+    cleanup = Matrix{Float64}(
+        I,
+        final_basis.final_retained_count,
+        final_basis.final_retained_count,
+    )
     size(pre_final_coefficients, 1) == support_count ||
         throw(DimensionMismatch("physical gausslet pre-final coefficient row mismatch"))
     size(pre_final_coefficients, 2) == final_basis.final_retained_count ||
@@ -3354,8 +3343,7 @@ function _pqs_source_box_route_driver_physical_gausslet_pre_final_density_intera
                 :pqs_source_box_route_driver_physical_gausslet_pre_final_density_interaction,
             raw_pair_factor_convention = :raw_numerator,
             weight_application_stage = :pre_final_density_interaction_boundary,
-            final_orbital_consumption_rule =
-                :combined_lowdin_cleanup_times_final_coefficients,
+            final_orbital_consumption_rule = :localized_ida_coefficients,
         )),
     )
 end
@@ -3370,9 +3358,7 @@ function _pqs_source_box_route_driver_physical_gausslet_h1_j_diagnostic(
     coefficients = Float64[Float64(value) for value in final_orbital_coefficients]
     length(coefficients) == size(density_interaction.final_to_pre_final_coefficients, 2) ||
         throw(DimensionMismatch("physical gausslet H1 orbital coefficient length mismatch"))
-    final_to_pre_final =
-        Matrix{Float64}(density_interaction.final_to_pre_final_coefficients)
-    orbital = final_to_pre_final * coefficients
+    orbital = coefficients
     pair_matrix = Matrix{Float64}(density_interaction.pre_final_pair_matrix)
     density = orbital * transpose(orbital)
     rho = 0.5 .* (density .+ transpose(density))

@@ -77,10 +77,10 @@ function pqs_complete_core_shell_final_basis(;
         identity_atol,
         rank_atol,
     )
-    if !diagnostics.full_rank
+    if diagnostics.summary.identity_error > Float64(identity_atol)
         return _pqs_complete_core_shell_final_basis_result(
             :blocked_pqs_complete_core_shell_final_basis,
-            :combined_core_shell_overlap_rank_deficient,
+            :combined_core_shell_concatenated_overlap_not_identity,
             core_indices,
             shell_indices,
             core_count,
@@ -99,20 +99,6 @@ function pqs_complete_core_shell_final_basis(;
         )
     end
 
-    cleanup =
-        diagnostics.eigenvectors * Diagonal(1.0 ./ sqrt.(diagnostics.eigenvalues))
-    final_overlap = transpose(cleanup) * pre_final_overlap * cleanup
-    final_identity_error = norm(
-        final_overlap -
-        Matrix{Float64}(I, size(final_overlap, 1), size(final_overlap, 2)),
-        Inf,
-    )
-    blocker = final_identity_error <= Float64(identity_atol) ?
-        nothing : :combined_core_shell_final_overlap_not_identity
-    status = isnothing(blocker) ?
-        :available_pqs_complete_core_shell_final_basis :
-        :blocked_pqs_complete_core_shell_final_basis
-
     pre_final_coefficients = zeros(
         Float64,
         core_count + shell_support_count,
@@ -122,11 +108,14 @@ function pqs_complete_core_shell_final_basis(;
         Matrix{Float64}(I, core_count, core_count)
     shell_support_rows = (core_count + 1):(core_count + shell_support_count)
     pre_final_coefficients[shell_support_rows, shell_range] .= shell_coefficients
-    final_coefficients = pre_final_coefficients * cleanup
+    cleanup = Matrix{Float64}(I, total_count, total_count)
+    final_overlap = pre_final_overlap
+    final_identity_error = diagnostics.summary.identity_error
+    final_coefficients = pre_final_coefficients
 
     return _pqs_complete_core_shell_final_basis_result(
-        status,
-        blocker,
+        :available_pqs_complete_core_shell_final_basis,
+        nothing,
         core_indices,
         shell_indices,
         core_count,
@@ -198,7 +187,7 @@ function _pqs_complete_core_shell_final_basis_result(
         final_coefficients = isnothing(coefficients) ? nothing : coefficients.final_coefficients,
         final_basis_materialized = materialized,
         shell_realization_materialized = true,
-        combined_lowdin_cleanup_used = materialized,
+        combined_lowdin_cleanup_used = false,
         one_body_operator_materialized = false,
         operator_blocks_materialized = false,
         h1_solve_materialized = false,
@@ -233,28 +222,26 @@ function _pqs_complete_core_shell_overlap_diagnostics(
         throw(DimensionMismatch("complete core/shell overlap must be square"))
     all(isfinite, matrix) ||
         throw(ArgumentError("complete core/shell overlap contains non-finite entries"))
-    symmetric_matrix = Symmetric((matrix + transpose(matrix)) ./ 2)
     symmetry_error = norm(matrix - transpose(matrix), Inf)
-    decomposition = eigen(symmetric_matrix)
-    eigenvalues = decomposition.values
-    threshold = max(Float64(rank_atol), eps(Float64) * max(size(matrix, 1), 1))
-    rank = count(value -> value > threshold, eigenvalues)
+    identity_error = norm(
+        matrix - Matrix{Float64}(I, size(matrix, 1), size(matrix, 2)),
+        Inf,
+    )
     summary = (;
         shape = size(matrix),
         symmetry_error,
-        eigenvalue_min = minimum(eigenvalues),
-        eigenvalue_max = maximum(eigenvalues),
-        rank,
+        identity_error,
+        eigenvalue_min = nothing,
+        eigenvalue_max = nothing,
+        rank = nothing,
         expected_dimension = size(matrix, 1),
         rank_atol = Float64(rank_atol),
         identity_atol = Float64(identity_atol),
-        full_rank = rank == size(matrix, 1),
+        full_rank = nothing,
     )
     return (;
         summary,
-        eigenvalues,
-        eigenvectors = decomposition.vectors,
-        full_rank = rank == size(matrix, 1),
+        full_rank = nothing,
     )
 end
 
