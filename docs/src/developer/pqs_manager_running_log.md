@@ -4552,3 +4552,47 @@ Remaining blocker / next:
 Line-count / complexity note:
 - No tracked line-count change. The inventory points to a low-risk, likely
   line-neutral or slightly negative local cleanup.
+
+## Pass 309 - Derive H2 PQS Shared-Shell Retained Shape
+
+Commit(s):
+- `888d9714` - Derive H2 PQS shared-shell retained shape
+
+Summary:
+- In `_pqs_source_box_route_driver_independent_h2_shared_shell_realization`,
+  derived the raw source key from `role` and `source_mode_dims[1]` instead of
+  embedding a q5 source-key literal.
+- Derived `retained_count` from `retained_rule.retained_count` and checked the
+  coefficient shape against `(shell_descriptor.support_count, retained_count)`
+  instead of `(support_count, 98)`.
+- Left upstream H2 support-count and retained-count admissions, ladder fixture
+  names, and WL/QW comparator constants unchanged.
+
+Validation:
+- Doer reported diff check, package load, and the `pqs_diatomic` ladder.
+- Manager reran package load and the full `pqs_diatomic` ladder. Both passed.
+  The materialized case still reported `final_dimension = 471`,
+  `residual_rank = 18`, and `augmented_dimension = 489`.
+
+Goal advancement:
+- LT5/LT6: removes one local q5/98 duplication from the active H2 residual-GTO
+  producer path without pretending the source regions are general.
+
+Medium-goal update:
+- Active next code slice: derive complete-source-plan constructor-local
+  `support_counts` and `retained_counts` from `target_payload`, leaving the
+  upstream admission checks in place.
+
+Risk / guardrail:
+- This is still not a general diatomic producer. Do not remove the upstream
+  admissions until the source-region and retained-rule constructors can derive
+  valid counts for multiple geometries/q values.
+
+Remaining blocker / next:
+- The complete source-plan constructor still restates `(275, 578, 362)` and
+  `(275, 98, 98)` after upstream admission. Remove that duplicate local
+  restatement next.
+
+Line-count / complexity note:
+- Small local patch: `7` insertions / `4` deletions. Slightly line-positive but
+  removes duplicated fixture literals from an active construction helper.
