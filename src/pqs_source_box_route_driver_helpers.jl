@@ -1800,6 +1800,16 @@ function _pqs_source_box_route_driver_pqs_gto_sidecar_inputs(assembly)
         hasproperty(h1_payload, :final_hamiltonian) ?
         h1_payload.final_hamiltonian :
         nothing
+    final_kinetic =
+        !isnothing(h1_payload) &&
+        hasproperty(h1_payload, :final_kinetic) ?
+        h1_payload.final_kinetic :
+        nothing
+    final_nuclear_by_center =
+        !isnothing(h1_payload) &&
+        hasproperty(h1_payload, :final_electron_nuclear_by_center) ?
+        h1_payload.final_electron_nuclear_by_center :
+        nothing
     density_interaction =
         !isnothing(h1_j_payload) &&
         hasproperty(h1_j_payload, :density_interaction) ?
@@ -1823,6 +1833,8 @@ function _pqs_source_box_route_driver_pqs_gto_sidecar_inputs(assembly)
             final_basis,
             h1,
             h1_hamiltonian,
+            final_kinetic,
+            final_nuclear_by_center,
             density_interaction,
             h1_j,
             supplement_representation,
@@ -1834,6 +1846,8 @@ function _pqs_source_box_route_driver_pqs_gto_sidecar_inputs(assembly)
         final_basis,
         h1,
         h1_hamiltonian,
+        final_kinetic,
+        final_nuclear_by_center,
         density_interaction,
         h1_j,
         supplement_representation,

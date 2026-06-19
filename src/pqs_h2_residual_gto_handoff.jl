@@ -163,6 +163,10 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_provider_packet(
         final_coefficients = Matrix{Float64}(inputs.final_basis.final_coefficients),
         support_gto_cross = Matrix{Float64}(sidecar.support_gto_cross),
         h_ff = Matrix{Float64}(inputs.h1_hamiltonian.hamiltonian_matrix),
+        kinetic_ff = Matrix{Float64}(inputs.final_kinetic.final_operator),
+        nuclear_unit_by_center_ff =
+            Matrix{Float64}[Matrix{Float64}(record.final_operator)
+                            for record in inputs.final_nuclear_by_center],
         density_interaction = inputs.density_interaction,
         s_fg = Matrix{Float64}(sidecar.final_gto_cross_overlap),
         s_gg = Matrix{Float64}(sidecar.gto_self_overlap),
@@ -810,12 +814,12 @@ function _pqs_source_box_route_driver_pqs_gto_support_one_body(packet)
     axes = packet.axis_representations
     coefficients = packet.coulomb_coefficients
     exponents = packet.coulomb_exponents
-    nuclear_charges = packet.nuclear_charges
     atom_locations = packet.atom_locations
     support_gto_kinetic =
         zeros(Float64, length(states), length(packet.gto_primitive_arrays))
-    support_gto_charged_nuclear =
-        zeros(Float64, length(states), length(packet.gto_primitive_arrays))
+    support_gto_nuclear_by_center =
+        [zeros(Float64, length(states), length(packet.gto_primitive_arrays))
+         for _ in atom_locations]
     scratch = zeros(Float64, length(states))
 
     for (column, orbital_arrays) in pairs(packet.gto_primitive_arrays)
@@ -847,7 +851,6 @@ function _pqs_source_box_route_driver_pqs_gto_support_one_body(packet)
             support_gto_kinetic[:, column] .+= scratch
         end
         for (center_index, location) in pairs(atom_locations)
-            charge = nuclear_charges[center_index]
             for term_index in eachindex(coefficients)
                 factor_tables =
                     _pqs_source_box_route_driver_gto_axis_cross_tables(
@@ -863,29 +866,30 @@ function _pqs_source_box_route_driver_pqs_gto_support_one_body(packet)
                     orbital_arrays.coefficients,
                     factor_tables,
                 )
-                support_gto_charged_nuclear[:, column] .-=
-                    charge * coefficients[term_index] .* scratch
+                support_gto_nuclear_by_center[center_index][:, column] .-=
+                    coefficients[term_index] .* scratch
             end
         end
     end
 
-    h_fg_kinetic =
+    kinetic_fg =
         Matrix{Float64}(transpose(packet.final_coefficients) * support_gto_kinetic)
-    h_fg_charged_nuclear =
-        Matrix{Float64}(
-            transpose(packet.final_coefficients) * support_gto_charged_nuclear,
-        )
-    return h_fg_kinetic + h_fg_charged_nuclear
+    nuclear_unit_by_center_fg =
+        Matrix{Float64}[
+            Matrix{Float64}(transpose(packet.final_coefficients) * nuclear)
+            for nuclear in support_gto_nuclear_by_center
+        ]
+    return (; kinetic_fg, nuclear_unit_by_center_fg)
 end
 
 function _pqs_source_box_route_driver_pqs_gto_self_one_body(packet)
     coefficients = packet.coulomb_coefficients
     exponents = packet.coulomb_exponents
-    nuclear_charges = packet.nuclear_charges
     atom_locations = packet.atom_locations
     norbital = length(packet.gto_primitive_arrays)
-    h_gg_kinetic = zeros(Float64, norbital, norbital)
-    h_gg_charged_nuclear = zeros(Float64, norbital, norbital)
+    kinetic_gg = zeros(Float64, norbital, norbital)
+    nuclear_unit_by_center_gg =
+        [zeros(Float64, norbital, norbital) for _ in atom_locations]
     for column in eachindex(packet.gto_primitive_arrays)
         right_arrays = packet.gto_primitive_arrays[column]
         for row in eachindex(packet.gto_primitive_arrays)
@@ -909,7 +913,7 @@ function _pqs_source_box_route_driver_pqs_gto_self_one_body(packet)
                         overlap_tables[axis],
                     3,
                 )
-                h_gg_kinetic[row, column] +=
+                kinetic_gg[row, column] +=
                     _cartesian_weighted_hadamard3(
                         left_arrays.coefficients,
                         right_arrays.coefficients,
@@ -919,7 +923,6 @@ function _pqs_source_box_route_driver_pqs_gto_self_one_body(packet)
                     )
             end
             for (center_index, location) in pairs(atom_locations)
-                charge = nuclear_charges[center_index]
                 for term_index in eachindex(coefficients)
                     factor_tables =
                         _pqs_source_box_route_driver_gto_axis_self_tables(
@@ -929,8 +932,7 @@ function _pqs_source_box_route_driver_pqs_gto_self_one_body(packet)
                             factor_center = location,
                             factor_exponent = exponents[term_index],
                         )
-                    h_gg_charged_nuclear[row, column] -=
-                        charge *
+                    nuclear_unit_by_center_gg[center_index][row, column] -=
                         coefficients[term_index] *
                         _cartesian_weighted_hadamard3(
                             left_arrays.coefficients,
@@ -943,48 +945,111 @@ function _pqs_source_box_route_driver_pqs_gto_self_one_body(packet)
             end
         end
     end
-    h_gg_kinetic = Matrix{Float64}(0.5 .* (h_gg_kinetic .+ transpose(h_gg_kinetic)))
-    h_gg_charged_nuclear =
-        Matrix{Float64}(0.5 .* (h_gg_charged_nuclear .+ transpose(h_gg_charged_nuclear)))
-    return h_gg_kinetic + h_gg_charged_nuclear
+    kinetic_gg = Matrix{Float64}(0.5 .* (kinetic_gg .+ transpose(kinetic_gg)))
+    nuclear_unit_by_center_gg =
+        Matrix{Float64}[
+            Matrix{Float64}(0.5 .* (nuclear .+ transpose(nuclear)))
+            for nuclear in nuclear_unit_by_center_gg
+        ]
+    return (; kinetic_gg, nuclear_unit_by_center_gg)
+end
+
+function _pqs_source_box_route_driver_pqs_gto_augmented_one_body(
+    o_ff,
+    o_fg,
+    o_gg,
+    s_fg,
+    residual_transform,
+)
+    ff = Matrix{Float64}(o_ff)
+    fg = Matrix{Float64}(o_fg)
+    gg = Matrix{Float64}(o_gg)
+    s = Matrix{Float64}(s_fg)
+    l = Matrix{Float64}(residual_transform)
+    o_fr = Matrix{Float64}((fg - ff * s) * l)
+    residual_core = Matrix{Float64}(
+        gg -
+        transpose(s) * fg -
+        transpose(fg) * s +
+        transpose(s) * ff * s,
+    )
+    o_rr = Matrix{Float64}(transpose(l) * residual_core * l)
+    o_rr = Matrix{Float64}(0.5 .* (o_rr .+ transpose(o_rr)))
+    augmented = [
+        ff o_fr
+        transpose(o_fr) o_rr
+    ]
+    return Matrix{Float64}(0.5 .* (augmented .+ transpose(augmented)))
 end
 
 function _pqs_source_box_route_driver_pqs_gto_one_body_blocks(packet)
-    h_ff = packet.h_ff
     s_fg = packet.s_fg
     l = packet.residual_transform
-    h_fg = Matrix{Float64}(
-        _pqs_source_box_route_driver_pqs_gto_support_one_body(packet),
-    )
-    h_gg = Matrix{Float64}(
-        _pqs_source_box_route_driver_pqs_gto_self_one_body(packet),
-    )
-    h_fr = Matrix{Float64}((h_fg - h_ff * s_fg) * l)
-    residual_core = Matrix{Float64}(
-        h_gg -
-        transpose(s_fg) * h_fg -
-        transpose(h_fg) * s_fg +
-        transpose(s_fg) * h_ff * s_fg,
-    )
-    h_rr = Matrix{Float64}(transpose(l) * residual_core * l)
-    h_rr = Matrix{Float64}(0.5 .* (h_rr .+ transpose(h_rr)))
-    augmented_one_body_hamiltonian = [
-        h_ff h_fr
-        transpose(h_fr) h_rr
-    ]
+    support = _pqs_source_box_route_driver_pqs_gto_support_one_body(packet)
+    self = _pqs_source_box_route_driver_pqs_gto_self_one_body(packet)
+    augmented_kinetic =
+        _pqs_source_box_route_driver_pqs_gto_augmented_one_body(
+            packet.kinetic_ff,
+            support.kinetic_fg,
+            self.kinetic_gg,
+            s_fg,
+            l,
+        )
+    center_count = length(packet.nuclear_charges)
+    length(packet.nuclear_unit_by_center_ff) == center_count ||
+        throw(DimensionMismatch("PQS/GTO one-body blocks require one PQS unit-nuclear block per center"))
+    length(support.nuclear_unit_by_center_fg) == center_count ||
+        throw(DimensionMismatch("PQS/GTO one-body blocks require one support/GTO unit-nuclear block per center"))
+    length(self.nuclear_unit_by_center_gg) == center_count ||
+        throw(DimensionMismatch("PQS/GTO one-body blocks require one GTO/GTO unit-nuclear block per center"))
+    augmented_nuclear_attraction_unit_by_center =
+        Matrix{Float64}[
+            _pqs_source_box_route_driver_pqs_gto_augmented_one_body(
+                packet.nuclear_unit_by_center_ff[index],
+                support.nuclear_unit_by_center_fg[index],
+                self.nuclear_unit_by_center_gg[index],
+                s_fg,
+                l,
+            ) for index in 1:center_count
+        ]
+    augmented_one_body_hamiltonian = Matrix{Float64}(augmented_kinetic)
+    for (charge, nuclear) in zip(packet.nuclear_charges, augmented_nuclear_attraction_unit_by_center)
+        augmented_one_body_hamiltonian .+= Float64(charge) .* nuclear
+    end
+    augmented_one_body_hamiltonian =
+        Matrix{Float64}(
+            0.5 .* (
+                augmented_one_body_hamiltonian +
+                transpose(augmented_one_body_hamiltonian)
+            ),
+        )
+    base_reconstructed =
+        Matrix{Float64}(packet.kinetic_ff)
+    for (charge, nuclear) in zip(packet.nuclear_charges, packet.nuclear_unit_by_center_ff)
+        base_reconstructed .+= Float64(charge) .* Matrix{Float64}(nuclear)
+    end
+    base_reconstruction_error = norm(base_reconstructed - packet.h_ff, Inf)
+    base_reconstruction_error <= 1.0e-8 ||
+        throw(ArgumentError("PQS one-body H1 reconstruction from K + Z*U centers failed"))
     augmented_symmetry_error =
-        norm(augmented_one_body_hamiltonian - transpose(augmented_one_body_hamiltonian), Inf)
+        norm(
+            augmented_one_body_hamiltonian -
+            transpose(augmented_one_body_hamiltonian),
+            Inf,
+        )
     augmented_h1_lowest =
-        minimum(eigvals(Symmetric(0.5 .* (
-            augmented_one_body_hamiltonian + transpose(augmented_one_body_hamiltonian)
-        ))))
+        minimum(eigvals(Symmetric(augmented_one_body_hamiltonian)))
     return (;
+        augmented_kinetic,
+        augmented_nuclear_attraction_unit_by_center,
+        nuclear_attraction_unit_by_center_count = center_count,
         augmented_one_body_hamiltonian,
-        final_dimension = size(h_ff, 1),
+        final_dimension = size(packet.h_ff, 1),
         augmented_dimension = size(augmented_one_body_hamiltonian, 1),
         augmented_h1_lowest,
         augmented_h1_symmetry_error = augmented_symmetry_error,
-        nuclear_mixed_block_convention = :charged_nuclear,
+        augmented_h1_component_reconstruction_error = 0.0,
+        base_h1_component_reconstruction_error = base_reconstruction_error,
     )
 end
 
@@ -1286,6 +1351,8 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                 :artifact_kind,
                 :final_dimension,
                 :one_body_hamiltonian,
+                :kinetic,
+                :nuclear_attraction_unit_by_center,
                 :electron_electron_ida,
                 :h1_lowest,
                 :route_metadata,
@@ -1301,7 +1368,14 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
         final_dimension = Int(file["final_dimension"])
         final_dimension == basis_facts.final_dimension ||
             throw(ArgumentError("basis and ham final dimensions differ"))
+        route_metadata = file["route_metadata"]
         one_body_hamiltonian = file["one_body_hamiltonian"]
+        kinetic = file["kinetic"]
+        nuclear_attraction_unit_by_center =
+            Matrix{Float64}[
+                Matrix{Float64}(matrix)
+                for matrix in file["nuclear_attraction_unit_by_center"]
+            ]
         electron_electron_ida = file["electron_electron_ida"]
         h1_lowest = Float64(file["h1_lowest"])
         final_gto_cross_overlap = file["final_gto_cross_overlap"]
@@ -1325,6 +1399,29 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
             "electron_electron_ida",
             electron_electron_ida,
         )
+        _pqs_source_box_route_driver_symmetric_matrix(
+            "kinetic",
+            kinetic,
+            (final_dimension, final_dimension),
+            symmetry_atol,
+        )
+        nuclear_charges = Float64.(route_metadata.nuclear_charges)
+        length(nuclear_attraction_unit_by_center) == length(nuclear_charges) ||
+            throw(ArgumentError("base unit-nuclear center count must match nuclear charges"))
+        base_h1_reconstructed = Matrix{Float64}(kinetic)
+        for (charge, nuclear) in zip(nuclear_charges, nuclear_attraction_unit_by_center)
+            _pqs_source_box_route_driver_symmetric_matrix(
+                "base unit-nuclear attraction",
+                nuclear,
+                (final_dimension, final_dimension),
+                symmetry_atol,
+            )
+            base_h1_reconstructed .+= charge .* nuclear
+        end
+        base_h1_component_reconstruction_error =
+            norm(base_h1_reconstructed - one_body_hamiltonian, Inf)
+        base_h1_component_reconstruction_error <= Float64(symmetry_atol) ||
+            throw(ArgumentError("base H1 does not reconstruct from K + Z*U centers"))
         size(final_gto_cross_overlap, 1) == final_dimension ||
             throw(ArgumentError("ham final_gto_cross_overlap row count must equal final_dimension"))
         _pqs_source_box_route_driver_square_matrix(
@@ -1345,10 +1442,13 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                     file,
                     (
                         :augmented_dimension,
+                        :augmented_kinetic,
+                        :augmented_nuclear_attraction_unit_by_center,
                         :augmented_one_body_hamiltonian,
                         :augmented_h1_lowest,
                         :augmented_h1_symmetry_error,
-                        :nuclear_mixed_block_convention,
+                        :augmented_h1_component_reconstruction_error,
+                        :nuclear_attraction_unit_by_center_count,
                         :augmented_density_gauge,
                         :augmented_density_space,
                         :p_dimension,
@@ -1365,6 +1465,12 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                     throw(ArgumentError("augmented_dimension must equal final_dimension + residual_rank"))
                 augmented_one_body_hamiltonian =
                     file["augmented_one_body_hamiltonian"]
+                augmented_kinetic = file["augmented_kinetic"]
+                augmented_nuclear_attraction_unit_by_center =
+                    Matrix{Float64}[
+                        Matrix{Float64}(matrix)
+                        for matrix in file["augmented_nuclear_attraction_unit_by_center"]
+                    ]
                 augmented_h1_symmetry_error =
                     provider_block_mode === :one_body_and_density_provider ?
                     Float64(file["augmented_h1_symmetry_error"]) :
@@ -1379,12 +1485,40 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                 augmented_h1_lowest = Float64(file["augmented_h1_lowest"])
                 isfinite(augmented_h1_lowest) ||
                     throw(ArgumentError("augmented_h1_lowest must be finite"))
-                file["nuclear_mixed_block_convention"] === :charged_nuclear ||
-                    throw(
-                        ArgumentError(
-                            "nuclear_mixed_block_convention must be :charged_nuclear",
-                        ),
+                _pqs_source_box_route_driver_symmetric_matrix(
+                    "augmented kinetic",
+                    augmented_kinetic,
+                    (augmented_dimension, augmented_dimension),
+                    symmetry_atol,
+                )
+                Int(file["nuclear_attraction_unit_by_center_count"]) ==
+                    length(nuclear_charges) ||
+                    throw(ArgumentError("augmented unit-nuclear center count must match nuclear charges"))
+                length(augmented_nuclear_attraction_unit_by_center) ==
+                    length(nuclear_charges) ||
+                    throw(ArgumentError("augmented unit-nuclear matrices must match nuclear charges"))
+                augmented_reconstructed = Matrix{Float64}(augmented_kinetic)
+                for (charge, nuclear) in zip(
+                    nuclear_charges,
+                    augmented_nuclear_attraction_unit_by_center,
+                )
+                    _pqs_source_box_route_driver_symmetric_matrix(
+                        "augmented unit-nuclear attraction",
+                        nuclear,
+                        (augmented_dimension, augmented_dimension),
+                        symmetry_atol,
                     )
+                    augmented_reconstructed .+= charge .* nuclear
+                end
+                augmented_h1_component_reconstruction_error =
+                    norm(augmented_reconstructed - augmented_one_body_hamiltonian, Inf)
+                augmented_h1_component_reconstruction_error <= Float64(symmetry_atol) ||
+                    throw(ArgumentError("augmented H1 does not reconstruct from K + Z*U centers"))
+                recorded_augmented_error =
+                    Float64(file["augmented_h1_component_reconstruction_error"])
+                abs(recorded_augmented_error - augmented_h1_component_reconstruction_error) <=
+                    Float64(symmetry_atol) ||
+                    throw(ArgumentError("recorded augmented H1 reconstruction error mismatch"))
                 file["augmented_density_gauge"] ===
                     :localized_ida ||
                     throw(ArgumentError("ham augmented density gauge must be localized IDA"))
@@ -1446,7 +1580,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                             throw(ArgumentError("unexpected Ham handoff density basis"))
                         orbital_to_density =
                             Matrix{Float64}(I, augmented_dimension, augmented_dimension)
-                        route_metadata = file["route_metadata"]
                         ham_handoff = _CartesianDensityDensityHamiltonian(
                             augmented_one_body_hamiltonian,
                             augmented_pair_matrix,
@@ -1486,9 +1619,12 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                     augmented_dimension,
                     augmented_one_body_hamiltonian_size =
                         size(augmented_one_body_hamiltonian),
+                    augmented_kinetic_size = size(augmented_kinetic),
+                    augmented_nuclear_attraction_unit_by_center_count =
+                        length(augmented_nuclear_attraction_unit_by_center),
                     augmented_h1_lowest,
                     augmented_h1_symmetry_error,
-                    nuclear_mixed_block_convention = :charged_nuclear,
+                    augmented_h1_component_reconstruction_error,
                     augmented_density_gauge = file["augmented_density_gauge"],
                     augmented_density_space =
                         Tuple(file["augmented_density_space"]),
@@ -1502,9 +1638,11 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                 (;
                     augmented_dimension = nothing,
                     augmented_one_body_hamiltonian_size = nothing,
+                    augmented_kinetic_size = nothing,
+                    augmented_nuclear_attraction_unit_by_center_count = nothing,
                     augmented_h1_lowest = nothing,
                     augmented_h1_symmetry_error = nothing,
-                    nuclear_mixed_block_convention = nothing,
+                    augmented_h1_component_reconstruction_error = nothing,
                     augmented_density_gauge = nothing,
                     augmented_density_space = nothing,
                     p_projection_of_g_size = nothing,
@@ -1515,6 +1653,7 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
             ham_artifact_kind = artifact_kind,
             provider_block_mode,
             one_body_hamiltonian_size = size(one_body_hamiltonian),
+            base_h1_component_reconstruction_error,
             h1_symmetry_error,
             h1_lowest,
             electron_electron_ida_size = size(electron_electron_ida),
@@ -1539,6 +1678,8 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
         gto_residual_overlap_size = basis_facts.gto_residual_overlap_size,
         h1_symmetry_error = ham_facts.h1_symmetry_error,
         h1_lowest = ham_facts.h1_lowest,
+        base_h1_component_reconstruction_error =
+            ham_facts.base_h1_component_reconstruction_error,
         residual_rank = basis_facts.residual_rank,
         residual_overlap_identity_error =
             basis_facts.residual_overlap_identity_error,
@@ -1553,8 +1694,13 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
         augmented_dimension = ham_facts.augmented_dimension,
         augmented_one_body_hamiltonian_size =
             ham_facts.augmented_one_body_hamiltonian_size,
+        augmented_kinetic_size = ham_facts.augmented_kinetic_size,
+        augmented_nuclear_attraction_unit_by_center_count =
+            ham_facts.augmented_nuclear_attraction_unit_by_center_count,
         augmented_h1_lowest = ham_facts.augmented_h1_lowest,
         augmented_h1_symmetry_error = ham_facts.augmented_h1_symmetry_error,
+        augmented_h1_component_reconstruction_error =
+            ham_facts.augmented_h1_component_reconstruction_error,
         ham_handoff_consumer_self_coulomb =
             ham_facts.ham_handoff_consumer_self_coulomb,
         basis_gto_residual_overlap_symmetry_error =

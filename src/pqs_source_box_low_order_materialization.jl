@@ -455,6 +455,8 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
     augmented_h1_lowest = optional(one_body_blocks, :augmented_h1_lowest)
     augmented_h1_symmetry_error =
         optional(one_body_blocks, :augmented_h1_symmetry_error)
+    augmented_h1_component_reconstruction_error =
+        optional(one_body_blocks, :augmented_h1_component_reconstruction_error)
     summary = (;
         route_family = report.route_family,
         route_kind = report.route_kind,
@@ -477,8 +479,7 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
         augmented_dimension,
         augmented_h1_lowest,
         augmented_h1_symmetry_error,
-        nuclear_mixed_block_convention =
-            optional(one_body_blocks, :nuclear_mixed_block_convention),
+        augmented_h1_component_reconstruction_error,
         augmented_density_space =
             optional(density_descriptor, :augmented_density_space),
         augmented_density_gauge =
@@ -551,6 +552,11 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
             file["final_dimension"] = final_basis.final_dimension
             file["one_body_hamiltonian"] = h1_hamiltonian.hamiltonian_matrix
             file["kinetic"] = h1_hamiltonian.kinetic_matrix
+            file["nuclear_attraction_unit_by_center"] =
+                Matrix{Float64}[
+                    Matrix{Float64}(record.final_operator)
+                    for record in inputs.final_nuclear_by_center
+                ]
             file["charged_nuclear"] = h1_hamiltonian.charged_nuclear_matrix
             file["electron_electron_ida"] =
                 density_interaction.electron_electron_ida
@@ -598,10 +604,13 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
                 one_body_blocks,
                 (
                     :augmented_dimension,
+                    :augmented_kinetic,
+                    :augmented_nuclear_attraction_unit_by_center,
                     :augmented_one_body_hamiltonian,
                     :augmented_h1_lowest,
                     :augmented_h1_symmetry_error,
-                    :nuclear_mixed_block_convention,
+                    :augmented_h1_component_reconstruction_error,
+                    :nuclear_attraction_unit_by_center_count,
                 ),
             )
             if !isnothing(ham_handoff)
@@ -657,6 +666,7 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
         augmented_dimension,
         augmented_h1_lowest,
         augmented_h1_symmetry_error,
+        augmented_h1_component_reconstruction_error,
         save_basis_artifact_requested = save_basis_artifact,
         save_ham_artifact_requested = save_ham_artifact,
         basisfile = basis_artifact_path,
