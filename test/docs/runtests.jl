@@ -430,3 +430,5 @@
         )
     end
 end
+
+include(joinpath(@__DIR__, "cartesian_ham_builder_policy_runtests.jl"))

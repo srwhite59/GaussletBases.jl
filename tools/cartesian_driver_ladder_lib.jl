@@ -141,7 +141,7 @@ function _driver_command(input; stop_after_stage = nothing)
     expression = """
         empty!(ARGS)
         append!(ARGS, $(repr(vcat([input], driver_args))))
-        include("bin/cartesian_ham_builder.jl")
+        include("tools/cartesian_driver_harness.jl")
         """
     return Cmd(vcat(Base.julia_cmd().exec, ["--project=$(REPO_ROOT)", "-e", expression]))
 end

@@ -335,6 +335,17 @@ state:
 Keep target cards short and task-local. Do not create a new design-note layer
 unless the manager explicitly asks for one.
 
+## Canonical Cartesian driver
+
+`bin/cartesian_ham_builder.jl` is the canonical human-facing Cartesian producer
+template. Do not add test instrumentation, private solver controls, fixture
+values, underscored package calls, or route-internal provider switches. Changes
+to its visible public stage sequence require explicit manager/user approval.
+
+Ladder probing, stop-after controls, stage markers, fixture overrides, and
+private diagnostic knobs belong in `tools/cartesian_driver_harness.jl` or a
+more specific tool, not in the canonical driver.
+
 ## Basis bundle policy
 
 It is acceptable for a basis bundle to carry:

@@ -519,7 +519,15 @@ function _pqs_source_box_route_driver_materialization(
     white_lindsey_expansion = nothing,
     white_lindsey_Z = nothing,
     residual_gto_provider_blocks::Symbol = :none,
+    hamiltonian_output = nothing,
 )
+    if hamiltonian_output === :cartesian_ida_hamiltonian &&
+       residual_gto_provider_blocks === :none
+        residual_gto_provider_blocks = :one_body_and_density_provider
+    elseif !isnothing(hamiltonian_output) &&
+           hamiltonian_output !== :cartesian_ida_hamiltonian
+        throw(ArgumentError("unknown Cartesian materialization output $(repr(hamiltonian_output))"))
+    end
     requested = materialize_route || save_basis_artifact || save_ham_artifact
     retained_dimension =
         hasproperty(report, :retained_dimension) ? report.retained_dimension : nothing
