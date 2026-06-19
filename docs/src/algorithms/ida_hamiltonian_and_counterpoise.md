@@ -143,14 +143,26 @@ The basis and `Vee` remain fixed for these branches.
 Equivalently, these are center-weight choices `w=(1,1)`, `w=(1,0)`,
 and `w=(0,1)` using the stored physical charges.
 
+## Public API
+
+`CartesianIDAHamiltonian` is the public in-memory object for this all-electron
+one-basis contract. Use `one_body_hamiltonian(ham; center_weights=...)` and
+`nuclear_repulsion(ham; center_weights=...)` for full and counterpoise
+branches.
+
+`write_cartesian_ida_hamiltonian` and `read_cartesian_ida_hamiltonian` provide
+the minimal versioned JLD2 artifact. The artifact stores only `K`, `{U_A}` as
+an `n x n x ncenter` tensor, `Vee`, charges, `ncenter x 3` positions, and spin
+counts. It does not store nuclear repulsion or route diagnostics.
+
 ## Code Map
 
 - `src/pqs_multilayer_complete_core_shell_h1.jl` builds the common complete
   core/shell H1 path and separated center contributions.
 - `src/cartesian_final_basis_realization/pqs_complete_core_shell_final_basis.jl`
   builds IDA density interaction helpers in the completed localized basis.
-- `src/cartesian_ida_hamiltonian.jl` contains the current private internal
-  one-basis IDA Hamiltonian object.
+- `src/cartesian_ida_hamiltonian.jl` contains the public one-basis IDA
+  Hamiltonian object and minimal artifact reader/writer.
 - `src/pqs_h2_residual_gto_handoff.jl` contains the current private H2
   residual-GTO producer/readback scaffolding.
 - Future public code should expose a one-basis IDA Hamiltonian object rather
@@ -158,5 +170,6 @@ and `w=(0,1)` using the stored physical charges.
 
 ## Current Implementation Deviations
 
-The private H2 residual-GTO route now uses an internal one-basis IDA object.
-The public type and versioned writer/reader are still pending.
+The public `CartesianIDAHamiltonian` type and minimal versioned writer/reader
+exist. The private H2 residual-GTO route still writes its older sidecar
+artifact until the next replacement/deletion pass.

@@ -1,4 +1,21 @@
-struct _CartesianIDAHamiltonian{T}
+"""
+    CartesianIDAHamiltonian(
+        kinetic,
+        nuclear_attraction_unit_by_center,
+        electron_electron_ida,
+        nup,
+        ndn;
+        nuclear_charges,
+        nuclear_positions,
+    )
+
+One-basis Cartesian IDA Hamiltonian data. The basis is fixed and localized:
+`kinetic`, each uncharged unit-nuclear attraction matrix, and
+`electron_electron_ida` all share the same `n x n` basis. Nuclear positions are
+stored as `ncenter x 3`, and nuclear repulsion is derived from the stored
+physical charges and positions.
+"""
+struct CartesianIDAHamiltonian{T}
     kinetic::Matrix{T}
     nuclear_attraction_unit_by_center::Vector{Matrix{T}}
     electron_electron_ida::Matrix{T}
@@ -55,7 +72,7 @@ function _cartesian_check_symmetric_finite_matrix(
     return dense
 end
 
-function _CartesianIDAHamiltonian(
+function CartesianIDAHamiltonian(
     kinetic,
     nuclear_attraction_unit_by_center,
     electron_electron_ida,
@@ -73,12 +90,8 @@ function _CartesianIDAHamiltonian(
         )
     size(electron_electron_matrix) == size(kinetic_matrix) ||
         throw(DimensionMismatch("IDA one-body and electron-electron dimensions differ"))
-    center_matrices = Matrix{Float64}[
-        _cartesian_check_symmetric_finite_matrix(
-            "unit nuclear attraction",
-            matrix,
-        ) for matrix in nuclear_attraction_unit_by_center
-    ]
+    center_matrices =
+        _cartesian_ida_center_matrices(nuclear_attraction_unit_by_center)
     all(size(matrix) == size(kinetic_matrix) for matrix in center_matrices) ||
         throw(DimensionMismatch("unit nuclear attraction dimensions differ"))
     nup_value = Int(nup)
@@ -99,7 +112,7 @@ function _CartesianIDAHamiltonian(
     all(isfinite, positions) ||
         throw(ArgumentError("nuclear positions contain non-finite entries"))
     repulsion = _cartesian_ida_nuclear_repulsion(charges, positions)
-    return _CartesianIDAHamiltonian{Float64}(
+    return CartesianIDAHamiltonian{Float64}(
         kinetic_matrix,
         center_matrices,
         electron_electron_matrix,
@@ -111,8 +124,14 @@ function _CartesianIDAHamiltonian(
     )
 end
 
-function _cartesian_ida_one_body(
-    ham::_CartesianIDAHamiltonian;
+"""
+    one_body_hamiltonian(ham::CartesianIDAHamiltonian; center_weights = ones(ncenter))
+
+Assemble `K + sum_A center_weights[A] * Z_A * U_A` in the Hamiltonian's
+localized IDA basis.
+"""
+function one_body_hamiltonian(
+    ham::CartesianIDAHamiltonian;
     center_weights = ones(length(ham.nuclear_charges)),
 )
     weights = _cartesian_ida_center_weights(center_weights, ham.nuclear_charges)
@@ -124,12 +143,21 @@ function _cartesian_ida_one_body(
     return matrix
 end
 
-function _cartesian_ida_nuclear_repulsion(
-    ham::_CartesianIDAHamiltonian;
+"""
+    nuclear_repulsion(ham::CartesianIDAHamiltonian; center_weights = ones(ncenter))
+
+Return `sum_{A<B} (w_A Z_A)(w_B Z_B)/|R_A - R_B|` using stored physical
+charges and positions.
+"""
+function nuclear_repulsion(
+    ham::CartesianIDAHamiltonian;
     center_weights = ones(length(ham.nuclear_charges)),
 )
     weights = _cartesian_ida_center_weights(center_weights, ham.nuclear_charges)
-    return _cartesian_ida_nuclear_repulsion(weights .* ham.nuclear_charges, ham.nuclear_positions)
+    return _cartesian_ida_nuclear_repulsion(
+        weights .* ham.nuclear_charges,
+        ham.nuclear_positions,
+    )
 end
 
 function _cartesian_ida_center_weights(center_weights, charges)
@@ -150,4 +178,76 @@ function _cartesian_ida_nuclear_repulsion(charges, positions)
         repulsion += charges[left] * charges[right] / distance
     end
     return repulsion
+end
+
+function _cartesian_ida_center_matrices(matrices)
+    return Matrix{Float64}[
+        _cartesian_check_symmetric_finite_matrix(
+            "unit nuclear attraction",
+            matrix,
+        ) for matrix in matrices
+    ]
+end
+
+function _cartesian_ida_center_matrices(tensor::AbstractArray{<:Real,3})
+    return Matrix{Float64}[
+        _cartesian_check_symmetric_finite_matrix(
+            "unit nuclear attraction",
+            view(tensor, :, :, center),
+        ) for center in axes(tensor, 3)
+    ]
+end
+
+function _cartesian_ida_center_tensor(ham::CartesianIDAHamiltonian)
+    norb = size(ham.kinetic, 1)
+    center_count = length(ham.nuclear_attraction_unit_by_center)
+    tensor = Array{Float64}(undef, norb, norb, center_count)
+    for center in 1:center_count
+        tensor[:, :, center] .= ham.nuclear_attraction_unit_by_center[center]
+    end
+    return tensor
+end
+
+"""
+    write_cartesian_ida_hamiltonian(path, ham::CartesianIDAHamiltonian)
+
+Write the minimal versioned Cartesian IDA Hamiltonian JLD2 artifact.
+"""
+function write_cartesian_ida_hamiltonian(path, ham::CartesianIDAHamiltonian)
+    jldopen(String(path), "w") do file
+        file["artifact_kind"] = :cartesian_ida_hamiltonian
+        file["format_version"] = 1
+        file["kinetic"] = ham.kinetic
+        file["nuclear_attraction_unit_by_center"] =
+            _cartesian_ida_center_tensor(ham)
+        file["electron_electron_ida"] = ham.electron_electron_ida
+        file["nuclear_charges"] = ham.nuclear_charges
+        file["nuclear_positions"] = ham.nuclear_positions
+        file["nup"] = ham.nup
+        file["ndn"] = ham.ndn
+    end
+    return path
+end
+
+"""
+    read_cartesian_ida_hamiltonian(path)
+
+Read a minimal Cartesian IDA Hamiltonian JLD2 artifact.
+"""
+function read_cartesian_ida_hamiltonian(path)
+    return jldopen(String(path), "r") do file
+        file["artifact_kind"] === :cartesian_ida_hamiltonian ||
+            throw(ArgumentError("artifact_kind must be :cartesian_ida_hamiltonian"))
+        Int(file["format_version"]) == 1 ||
+            throw(ArgumentError("unsupported Cartesian IDA Hamiltonian format version"))
+        CartesianIDAHamiltonian(
+            file["kinetic"],
+            file["nuclear_attraction_unit_by_center"],
+            file["electron_electron_ida"],
+            Int(file["nup"]),
+            Int(file["ndn"]);
+            nuclear_charges = file["nuclear_charges"],
+            nuclear_positions = file["nuclear_positions"],
+        )
+    end
 end

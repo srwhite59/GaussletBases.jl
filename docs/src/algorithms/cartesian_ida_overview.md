@@ -116,8 +116,8 @@ Current implementation surfaces are:
   for common complete core/shell basis and IDA interaction helpers.
 - `src/pqs_multilayer_complete_core_shell_h1.jl` for the common PQS H1 and
   density-interaction payload.
-- `src/cartesian_ida_hamiltonian.jl` for the current private internal
-  one-basis IDA Hamiltonian object.
+- `src/cartesian_ida_hamiltonian.jl` for the public one-basis IDA Hamiltonian
+  object and minimal artifact reader/writer.
 - `src/pqs_h2_residual_gto_handoff.jl` for the current private H2
   residual-Gaussian extension and artifact/readback scaffolding.
 - `src/cartesian_gaussian_axis_integrals.jl` for shared Cartesian Gaussian axis
@@ -126,6 +126,7 @@ Current implementation surfaces are:
 ## Current Implementation Deviations
 
 The active H2 PQS route no longer applies the forbidden global core/shell
-Lowdin cleanup. The private H2 residual-GTO route now uses an internal
-one-basis IDA object. The public type and versioned writer/reader are still
-pending.
+Lowdin cleanup. The public `CartesianIDAHamiltonian` type and minimal
+versioned writer/reader now exist, while the private H2 residual-GTO route
+still writes its older sidecar artifact until the next replacement/deletion
+pass.

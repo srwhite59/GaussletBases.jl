@@ -9,6 +9,19 @@ The package’s current export layer is producer-side only. It now exposes both:
 The current atomic IDA Hamiltonian model is exported honestly as dense or
 sliced/block density-density data for downstream solver consumers.
 
+The Cartesian one-basis IDA boundary is now exposed as a minimal Hamiltonian
+object and versioned JLD2 artifact:
+
+- `CartesianIDAHamiltonian`
+- `one_body_hamiltonian`
+- `nuclear_repulsion`
+- `write_cartesian_ida_hamiltonian`
+- `read_cartesian_ida_hamiltonian`
+
+This format stores `K`, separated uncharged `{U_A}`, `Vee`, nuclear charges,
+`ncenter x 3` positions, and spin counts. It derives nuclear repulsion on load
+and does not store route diagnostics or solver results.
+
 For the current SlicedMRGUtils / HamIO bridge family, the package also exposes a
 thin explicit compatibility adapter:
 
@@ -74,6 +87,9 @@ For the narrative explanation of the current producer-side story, see:
 
 ```@docs
 atomic_ida_density_interaction_matrix
+CartesianIDAHamiltonian
+one_body_hamiltonian
+nuclear_repulsion
 build_atomic_fixed_radial_angular_sequence
 atomic_fixed_radial_angular_level_dense_payload
 atomic_fixed_radial_angular_overlap_sidecar_payload
@@ -83,6 +99,8 @@ atomic_hamv6_payload
 angular_benchmark_exact_hamv6_payload
 write_atomic_fixed_radial_angular_level_jld2
 write_atomic_fixed_radial_angular_overlap_sidecar_jld2
+write_cartesian_ida_hamiltonian
+read_cartesian_ida_hamiltonian
 write_fullida_dense_jld2
 write_sliced_ham_jld2
 write_atomic_hamv6_jld2

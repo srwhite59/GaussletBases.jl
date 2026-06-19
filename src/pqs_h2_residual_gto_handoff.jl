@@ -575,7 +575,7 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_ida_hamiltonian(
         throw(ArgumentError("H2 residual-GTO IDA Hamiltonian requires one-body blocks"))
     isnothing(density_blocks) &&
         throw(ArgumentError("H2 residual-GTO IDA Hamiltonian requires density blocks"))
-    return _CartesianIDAHamiltonian(
+    return CartesianIDAHamiltonian(
         one_body_blocks.augmented_kinetic,
         one_body_blocks.augmented_nuclear_attraction_unit_by_center,
         density_blocks.augmented_pair_matrix,
@@ -1100,7 +1100,7 @@ function _pqs_source_box_route_driver_symmetric_matrix(
 end
 
 function _pqs_source_box_route_driver_ida_hamiltonian_smoke(ida_hamiltonian)
-    full_h1 = _cartesian_ida_one_body(ida_hamiltonian)
+    full_h1 = one_body_hamiltonian(ida_hamiltonian)
     full_h1_symmetry_error =
         norm(full_h1 - transpose(full_h1), Inf)
     full_h1_symmetry_error <= 1.0e-8 ||
@@ -1122,18 +1122,18 @@ function _pqs_source_box_route_driver_ida_hamiltonian_smoke(ida_hamiltonian)
         center_weights = zeros(Float64, center_count)
         center_weights[active_center] = 1.0
         branch_h1 =
-            _cartesian_ida_one_body(ida_hamiltonian; center_weights)
+            one_body_hamiltonian(ida_hamiltonian; center_weights)
         norm(branch_h1 - transpose(branch_h1), Inf) <= 1.0e-8 ||
             throw(ArgumentError("IDA counterpoise branch H1 is not symmetric"))
         isfinite(eigen(Symmetric(branch_h1)).values[1]) ||
             throw(ArgumentError("IDA counterpoise branch H1 lowest value is not finite"))
-        _cartesian_ida_nuclear_repulsion(
+        nuclear_repulsion(
             ida_hamiltonian;
             center_weights,
         ) == 0.0 ||
             throw(ArgumentError("IDA ghost branch nuclear repulsion must be zero"))
     end
-    full_nuclear_repulsion = _cartesian_ida_nuclear_repulsion(ida_hamiltonian)
+    full_nuclear_repulsion = nuclear_repulsion(ida_hamiltonian)
     abs(full_nuclear_repulsion - ida_hamiltonian.nuclear_repulsion) <= 1.0e-8 ||
         throw(ArgumentError("IDA nuclear repulsion reconstruction mismatch"))
     return (;
@@ -1542,7 +1542,7 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                             Float64(file["augmented_pair_matrix_symmetry_error"])
                         isfinite(augmented_pair_matrix_symmetry_error) ||
                             throw(ArgumentError("augmented_pair_matrix_symmetry_error must be finite"))
-                        ida_hamiltonian = _CartesianIDAHamiltonian(
+                        ida_hamiltonian = CartesianIDAHamiltonian(
                             augmented_kinetic,
                             augmented_nuclear_attraction_unit_by_center,
                             augmented_pair_matrix,

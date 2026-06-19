@@ -147,5 +147,5 @@ same localized basis for the base all-electron Hamiltonian.
 
 The active H2 PQS route has removed the forbidden combined core/shell Lowdin.
 The private H2 residual-GTO route now uses an internal one-basis IDA object.
-The public type and versioned writer/reader are still pending, and the shell
-construction itself must remain source-box-first and shell-local.
+The public `CartesianIDAHamiltonian` type and minimal writer/reader now exist,
+and the shell construction itself must remain source-box-first and shell-local.

@@ -1,3 +1,5 @@
+include(joinpath(@__DIR__, "cartesian_ida_hamiltonian_runtests.jl"))
+
 @testset "PQS source-box IDA PGDG factor provenance" begin
     function _tiny_pgdg_source_box_ida_basis(count::Int)
         xmax = 3.0
