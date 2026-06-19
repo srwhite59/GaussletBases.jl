@@ -4459,3 +4459,51 @@ Line-count / complexity note:
 - The pass was strongly line-negative: `41` insertions / `426` deletions
   (`-385` lines), with the deleted sidecar validator accounting for most of the
   reduction.
+
+## Pass 307 - Route Cartesian IDA Spin Sectors From Driver Input
+
+Commit(s):
+- `bc6c936d` - Route Cartesian IDA spin sectors from driver input
+
+Summary:
+- Added `nup` and `ndn` to the Cartesian driver/system input path and to
+  `cartesian_report` system metadata.
+- Routed those fields through H2 residual-GTO route metadata and removed the
+  hardcoded `CartesianIDAHamiltonian(..., 1, 1; ...)` adapter.
+- Updated the H2 independent PQS driver input to explicitly set `nup = 1`,
+  `ndn = 1`. Missing spin sectors now produce a clear error when the public
+  IDA Ham is materialized.
+
+Validation:
+- Doer reported diff check, package load, public IDA contract test,
+  `pqs_diatomic` ladder, and a direct public Ham readback showing `nup = 1`,
+  `ndn = 1`, `ham_dimension = 489`, and no private sidecar fields.
+- Manager reran package load, the public IDA contract test, the full
+  `pqs_diatomic` ladder, and direct public Ham readback. All passed; the loaded
+  artifact reported `nup = 1`, `ndn = 1`, `dim = 489`.
+
+Goal advancement:
+- LT5/LT6: removes another H2-only assumption from the public artifact
+  producer. Electron/spin sectors are now caller-owned problem data, which is
+  required for Cr2, ions, and broken-symmetry workflows.
+
+Medium-goal update:
+- Completed: explicit spin sectors in the H2 public IDA Ham producer. Active
+  blocker: exact H2/q5 source-plan dimensions, retained counts, and source
+  names still gate the successful path.
+
+Risk / guardrail:
+- Do not derive spin sectors from nuclear charge in later passes. Keep them as
+  explicit problem data. Do not broaden this into solver workflow or frozen-core
+  semantics.
+
+Remaining blocker / next:
+- Inventory H2/q5 fixture assumptions in the diatomic source-plan and
+  residual-GTO producer path before changing them. The next code slice should
+  target one narrow derived-count/name replacement, not wholesale Cr2
+  generalization.
+
+Line-count / complexity note:
+- The patch was small and slightly line-positive: `14` insertions / `3`
+  deletions. The added fields are justified because they remove a hardcoded
+  public-artifact assumption.
