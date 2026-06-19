@@ -297,6 +297,13 @@ default permission source for new code. Before adding a helper, adapter,
 metadata field, summary object, or test, state which live physics target or
 active module contract it advances.
 
+Agents touching Gausslet semantics should use
+`docs/src/developer/architecture/gausslet_methods_fundamentals.md` as a
+fresh-start conceptual reference. It is a paper-centered onboarding packet for
+ordinary gausslets, IDA, COMX, Qiu-White hybrids, White-Lindsey nesting, PGDG,
+radial/angular variants, MWG, and PQS source boxes. If that packet and a live
+repo doc disagree, report the conflict instead of improvising.
+
 The following answers are not enough without explicit manager approval:
 
 - makes the architecture more complete
