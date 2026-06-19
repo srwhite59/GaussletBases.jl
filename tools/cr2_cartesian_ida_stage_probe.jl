@@ -99,6 +99,13 @@ function _probe_dig(obj, keys...)
     return value
 end
 
+function _probe_first_notnothing(values...)
+    for value in values
+        isnothing(value) || return value
+    end
+    return nothing
+end
+
 function _probe_print(label, value)
     isnothing(value) && return nothing
     println("  ", label, " = ", value)
@@ -244,6 +251,151 @@ function _probe_print_geometry(label, parent)
     return facts
 end
 
+_probe_count_equal(values, target) =
+    isnothing(values) ? nothing : count(==(target), values)
+
+function _probe_outer_mismatch_roles(scaffold)
+    regions = _probe_get(scaffold, :regions, ())
+    isempty(regions) && return ()
+    return Tuple(
+        _probe_get(region, :role)
+        for region in regions
+        if _probe_get(region, :region_kind) === :outer_mismatch_slab
+    )
+end
+
+function _probe_central_gap_type(scaffold)
+    isnothing(scaffold) && return nothing
+    _probe_get(scaffold, :central_midpoint_slab_count, 0) > 0 &&
+        return :midpoint_slab
+    _probe_get(scaffold, :central_distorted_product_box_count, 0) > 0 &&
+        return :distorted_product_box
+    return :none
+end
+
+function _probe_topology_facts(stage)
+    low_order_shellification = _probe_get(stage, :low_order_shellification)
+    low_order_units = _probe_get(stage, :low_order_units)
+    low_order_transforms = _probe_get(stage, :low_order_transforms)
+    scaffold =
+        _probe_first_notnothing(
+            _probe_get(stage, :shellification_scaffold, nothing),
+            _probe_get(low_order_shellification, :shellification_scaffold, nothing),
+            _probe_get(low_order_shellification, :scaffold, nothing),
+            _probe_get(low_order_units, :shellification_scaffold, nothing),
+            _probe_get(low_order_transforms, :shellification_scaffold, nothing),
+            nothing,
+        )
+    terminal =
+        _probe_first_notnothing(
+            _probe_get(low_order_shellification, :terminal_shellification, nothing),
+            low_order_shellification,
+            nothing,
+        )
+    unit_inventory =
+        _probe_first_notnothing(
+            _probe_get(low_order_units, :unit_inventory, nothing),
+            _probe_get(low_order_transforms, :unit_inventory, nothing),
+            nothing,
+        )
+    lowering_inventory =
+        _probe_first_notnothing(
+            _probe_get(low_order_units, :lowering_contract_inventory, nothing),
+            _probe_get(low_order_transforms, :lowering_contract_inventory, nothing),
+            nothing,
+        )
+    ordered_region_roles =
+        _probe_first_notnothing(
+            _probe_get(scaffold, :ordered_region_roles, nothing),
+            _probe_get(unit_inventory, :terminal_region_roles, nothing),
+            (),
+        )
+    coverage = _probe_get(scaffold, :coverage)
+    return (;
+        shellification_status =
+            _probe_first_notnothing(
+                _probe_get(stage, :shellification_status, nothing),
+                _probe_get(low_order_shellification, :status, nothing),
+                _probe_get(terminal, :status, nothing),
+                isnothing(scaffold) ? :not_available : :available,
+            ),
+        shellification_blocker =
+            _probe_first_notnothing(
+                _probe_get(stage, :shellification_blocker, nothing),
+                _probe_get(low_order_shellification, :blocker, nothing),
+                _probe_get(terminal, :blocker, nothing),
+                nothing,
+            ),
+        shellification_blocker_message =
+            _probe_first_notnothing(
+                _probe_get(stage, :shellification_blocker_message, nothing),
+                _probe_get(low_order_shellification, :blocker_message, nothing),
+                _probe_get(terminal, :blocker_message, nothing),
+                nothing,
+            ),
+        core_side =
+            _probe_first_notnothing(
+                _probe_get(scaffold, :core_side, nothing),
+                _probe_get(terminal, :core_side, nothing),
+                nothing,
+            ),
+        q =
+            _probe_first_notnothing(
+                _probe_get(scaffold, :q, nothing),
+                _probe_get(terminal, :q, nothing),
+                nothing,
+            ),
+        parent_axis_counts =
+            _probe_first_notnothing(
+                _probe_dig(stage, :route_skeleton, :parent_axis_counts),
+                _probe_dig(stage, :parent, :axis_counts),
+                _probe_get(terminal, :parent_axis_counts, nothing),
+                nothing,
+            ),
+        ordered_region_roles,
+        region_count = _probe_get(scaffold, :region_count),
+        support_counts_by_region =
+            _probe_first_notnothing(
+                _probe_get(unit_inventory, :support_counts, nothing),
+                !isnothing(scaffold) ?
+                Tuple(_probe_get(region, :support_count) for region in scaffold.regions) :
+                nothing,
+                nothing,
+            ),
+        unit_count = _probe_get(unit_inventory, :unit_count),
+        unit_roles = _probe_get(unit_inventory, :unit_roles),
+        unit_kinds = _probe_get(unit_inventory, :unit_kinds),
+        lowering_contract_count =
+            _probe_get(lowering_inventory, :lowering_contract_count),
+        lowering_contract_kinds =
+            _probe_get(lowering_inventory, :lowering_contract_kinds),
+        lowering_contract_kind_counts =
+            _probe_get(lowering_inventory, :lowering_contract_kind_counts),
+        central_gap_type = _probe_central_gap_type(scaffold),
+        central_midpoint_slab_count =
+            _probe_get(scaffold, :central_midpoint_slab_count),
+        central_distorted_product_box_count =
+            _probe_get(scaffold, :central_distorted_product_box_count),
+        shared_molecular_shell_count =
+            _probe_count_equal(ordered_region_roles, :shared_molecular_shell),
+        outer_mismatch_slab_count = length(_probe_outer_mismatch_roles(scaffold)),
+        outer_mismatch_slab_roles = _probe_outer_mismatch_roles(scaffold),
+        coverage_duplicate_count = _probe_get(coverage, :duplicate_count),
+        coverage_missing_count = _probe_get(coverage, :missing_count),
+        coverage_outside_count = _probe_get(coverage, :outside_count),
+        coverage_complete = _probe_get(coverage, :coverage_complete),
+    )
+end
+
+function _probe_print_topology(label, stage)
+    facts = _probe_topology_facts(stage)
+    println(label)
+    for key in keys(facts)
+        _probe_print(String(key), getproperty(facts, key))
+    end
+    return facts
+end
+
 function _probe_h2_geometry_comparison()
     h2_system_inputs = (;
         atom_symbols = ("H", "H"),
@@ -266,6 +418,12 @@ function _probe_h2_geometry_comparison()
         recipe,
     )
     _probe_print_geometry("h2_materialized_fixture_geometry", parent)
+    shells = GaussletBases.cartesian_shells(parent, spacing_inputs, recipe)
+    _probe_print_topology("h2_shells_topology", shells)
+    units = GaussletBases.cartesian_units(parent, shells, recipe)
+    _probe_print_topology("h2_units_topology", units)
+    transforms = GaussletBases.cartesian_transforms(units, recipe)
+    _probe_print_topology("h2_transforms_topology", transforms)
     return nothing
 end
 
@@ -288,6 +446,7 @@ function _probe_stage_summary(stage, value)
         _probe_print("bond_axis", _probe_get(value, :bond_axis))
         _probe_print_geometry("cr2_probe_geometry", value)
     elseif stage === :cartesian_shells
+        _probe_print_topology("cr2_shells_topology", value)
         scaffold = _probe_get(value, :shellification_scaffold)
         _probe_print("terminal_region_roles",
             _probe_dig(scaffold, :ordered_region_roles))
@@ -295,6 +454,7 @@ function _probe_stage_summary(stage, value)
             _probe_dig(scaffold, :shared_molecular_shell_count))
         _probe_print("route_shape", _probe_get(value, :route_shape))
     elseif stage in (:cartesian_units, :cartesian_transforms)
+        _probe_print_topology("cr2_$(stage)_topology", value)
         _probe_print("retained_counts",
             _probe_count_summary(_probe_get(value, :retained_counts)))
         _probe_print("estimated_final_dimension",

@@ -865,7 +865,10 @@ function _pqs_source_box_route_driver_terminal_nuclear_index_positions(parent)
     return Tuple(positions)
 end
 
-function _pqs_source_box_route_driver_shell_stage_terminal_shellification(parent)
+function _pqs_source_box_route_driver_shell_stage_terminal_shellification(
+    parent,
+    recipe,
+)
     parent_axes = _pqs_source_box_route_driver_terminal_parent_axes(parent)
     nuclear_positions =
         _pqs_source_box_route_driver_terminal_nuclear_index_positions(parent)
@@ -883,9 +886,11 @@ function _pqs_source_box_route_driver_shell_stage_terminal_shellification(parent
     plan = CartesianShellification.shellify(parent_axes, nuclear_positions, policy)
     scaffold = CartesianShellification.scaffold(
         plan;
-        route_family = :white_lindsey_low_order,
+        route_family = recipe.route_family,
     )
     return (;
+        status = :available_terminal_cartesian_shellification_geometry,
+        blocker = nothing,
         policy,
         plan,
         raw_plan = CartesianShellification.raw_plan(plan),
@@ -903,6 +908,28 @@ function _pqs_source_box_route_driver_shell_stage_terminal_shellification(parent
     )
 end
 
+function _pqs_source_box_route_driver_blocked_terminal_shellification(
+    parent,
+    recipe,
+    error,
+)
+    return (;
+        status = :blocked_terminal_cartesian_shellification_geometry,
+        blocker = Symbol(nameof(typeof(error))),
+        blocker_message = sprint(showerror, error),
+        policy = nothing,
+        plan = nothing,
+        raw_plan = nothing,
+        scaffold = nothing,
+        route_family = recipe.route_family,
+        system_classification = parent.system_classification,
+        bond_axis = parent.bond_axis,
+        core_side = parent.standard_setup.core_cube_side,
+        q = parent.standard_setup.q,
+        parent_axis_counts = parent.axis_counts,
+    )
+end
+
 function _pqs_source_box_route_driver_shell_stage_low_order_shellization(
     parent,
     recipe;
@@ -914,29 +941,44 @@ function _pqs_source_box_route_driver_shell_stage_low_order_shellization(
         ) ||
         (
             recipe.route_family == :pqs_source_box &&
-            parent.system_classification == :one_center
+            parent.system_classification in (:one_center, :bond_aligned_diatomic)
         )
     uses_terminal_shellification ||
         return nothing
 
-    terminal = _pqs_source_box_route_driver_shell_stage_terminal_shellification(parent)
+    terminal = try
+        _pqs_source_box_route_driver_shell_stage_terminal_shellification(
+            parent,
+            recipe,
+        )
+    catch error
+        _pqs_source_box_route_driver_blocked_terminal_shellification(
+            parent,
+            recipe,
+            error,
+        )
+    end
     return (;
+        status = terminal.status,
+        blocker = terminal.blocker,
+        blocker_message = get(terminal, :blocker_message, nothing),
         route_family = recipe.route_family,
         shellification_kind = :terminal_cartesian_shellification_geometry,
         terminal_shellification = terminal,
-        shellification_plan = terminal.plan,
-        raw_shellification_plan = terminal.raw_plan,
-        shellification_scaffold = terminal.scaffold,
-        region_count = terminal.region_count,
-        ordered_region_roles = terminal.ordered_region_roles,
-        spatial_policy_order = terminal.spatial_policy_order,
-        coverage_complete = terminal.coverage_complete,
-        central_gap_region_count = terminal.central_gap_region_count,
-        central_midpoint_slab_count = terminal.central_midpoint_slab_count,
+        shellification_plan = get(terminal, :plan, nothing),
+        raw_shellification_plan = get(terminal, :raw_plan, nothing),
+        shellification_scaffold = get(terminal, :scaffold, nothing),
+        region_count = get(terminal, :region_count, nothing),
+        ordered_region_roles = get(terminal, :ordered_region_roles, ()),
+        spatial_policy_order = get(terminal, :spatial_policy_order, nothing),
+        coverage_complete = get(terminal, :coverage_complete, false),
+        central_gap_region_count = get(terminal, :central_gap_region_count, 0),
+        central_midpoint_slab_count =
+            get(terminal, :central_midpoint_slab_count, 0),
         central_distorted_product_box_count =
-            terminal.central_distorted_product_box_count,
+            get(terminal, :central_distorted_product_box_count, 0),
         central_distorted_product_box_metadata =
-            terminal.central_distorted_product_box_metadata,
+            get(terminal, :central_distorted_product_box_metadata, ()),
     )
 end
 
@@ -957,6 +999,19 @@ function cartesian_shells(
     return (;
         spacing_inputs,
         route_skeleton,
+        low_order_shellification = shellification,
+        shellification_status =
+            isnothing(shellification) ?
+            :not_requested :
+            shellification.status,
+        shellification_blocker =
+            isnothing(shellification) ?
+            nothing :
+            shellification.blocker,
+        shellification_blocker_message =
+            isnothing(shellification) ?
+            nothing :
+            get(shellification, :blocker_message, nothing),
         shellification_plan =
             isnothing(shellification) ?
             nothing :
@@ -1454,6 +1509,13 @@ function cartesian_units(parent, shells, recipe)
         route_family = recipe.route_family,
         route_kind = recipe.route_kind,
         route_skeleton = shells.route_skeleton,
+        low_order_shellification = get(shells, :low_order_shellification, nothing),
+        shellification_status =
+            get(shells, :shellification_status, :not_requested),
+        shellification_blocker =
+            get(shells, :shellification_blocker, nothing),
+        shellification_blocker_message =
+            get(shells, :shellification_blocker_message, nothing),
         low_order_units,
         shellification_plan = shells.shellification_plan,
         shellification_scaffold = shells.shellification_scaffold,
@@ -1504,6 +1566,14 @@ function cartesian_transforms(units, recipe)
         route_family = recipe.route_family,
         route_kind = recipe.route_kind,
         retained_units,
+        low_order_shellification =
+            get(units, :low_order_shellification, nothing),
+        shellification_status =
+            get(units, :shellification_status, :not_requested),
+        shellification_blocker =
+            get(units, :shellification_blocker, nothing),
+        shellification_blocker_message =
+            get(units, :shellification_blocker_message, nothing),
         low_order_transforms,
         shellification_plan = units.shellification_plan,
         shellification_scaffold = units.shellification_scaffold,
