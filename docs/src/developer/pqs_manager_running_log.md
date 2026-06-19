@@ -3884,3 +3884,71 @@ Remaining blocker / next:
 Line-count / complexity note:
 - No source/docs changed in the doer pass. The baton was stopped deliberately
   rather than adding speculative public fields.
+
+## Pass 298 - Remove Global PQS Core-Shell Lowdin
+
+Commit(s):
+- `60fa3945` - Remove global PQS core shell Lowdin cleanup
+
+Summary:
+- Audited the active H2 independent PQS shell-local concatenated basis before
+  touching the cleanup path.
+- The block overlap diagnostics were clean: core/shell block identity errors
+  were around `1e-14`, cross-overlap maxima were around `1e-15`, and the full
+  concatenated overlap identity error was `5.29668900282789e-14`.
+- Removed the active global assembled core-shell overlap eigendecomposition and
+  global Lowdin application from both the common complete-core/shell final-basis
+  helper and the H2 physical-gausslet final-basis path.
+- Promoted shell-local concatenated coefficients directly to final localized
+  coefficients.
+- Kept `combined_lowdin_cleanup` only as an identity compatibility field for
+  private schema callers, with `combined_lowdin_cleanup_used = false`.
+- Adjusted the residual-GTO density descriptor so the residual carrier uses
+  the fixed localized PQS basis directly: `[-S_FG; I] * L_R`.
+
+Validation:
+- Doer reported `git diff --check`.
+- Doer reported package load.
+- Doer reported focused audit rerun with final overlap identity error
+  `5.29668900282789e-14`, H1 lowest `-0.7946037173365894`, H1-J self-Coulomb
+  `0.4569117646737199`, and augmented H1 lowest `-0.7959028345077699`.
+- Doer reported
+  `julia --project=. tools/run_cartesian_line_ladder.jl --line=pqs_diatomic`
+  passed all three cases.
+- Doer reported direct artifact readback with provider mode
+  `one_body_and_density_provider`, consumer self-Coulomb
+  `0.4574354750591778`, residual rank `18`, and residual overlap identity
+  error `7.88144916874193e-15`.
+- Doer reported `julia --project=docs docs/make.jl` passed with existing
+  Documenter size warnings.
+- Manager inspected the pushed diff and reran `git diff --check` plus package
+  load.
+
+Goal advancement:
+- MT4/LT8: corrects the basis authority before public Hamiltonian export work.
+  The public producer can now target one localized IDA working basis rather
+  than a split final/pre-final gauge.
+- LT5: removes a mathematically wrong cleanup layer instead of preserving it as
+  compatibility architecture.
+
+Medium-goal update:
+- The next public contract should be a one-basis IDA contract:
+  `Tkin`, unit-nuclear `{U_i}`, `Vee`, spin counts, nuclear charges/positions,
+  and nuclear repulsion. The previous two-basis H/V/T framing is obsolete for
+  the all-electron producer.
+
+Risk / guardrail:
+- Private schema names such as `pre_final_pair_matrix`,
+  `final_to_pre_final_coefficients`, and `ham_handoff_orbital_to_density`
+  remain as compatibility aliases. They should not be promoted publicly and
+  should be retired after the one-basis public artifact exists.
+
+Remaining blocker / next:
+- User/chat review of this mathematical correction. If accepted, resume with a
+  public/private transition pass for the one-basis `Tkin`, `{U_i}`, `Vee`
+  contract. Do not reintroduce a public density transform for the all-electron
+  producer.
+
+Line-count / complexity note:
+- Source impact was line-negative: `48` insertions / `74` deletions (`-26`
+  lines). The compatibility aliases are the main remaining carrying cost.
