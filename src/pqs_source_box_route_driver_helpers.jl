@@ -737,6 +737,10 @@ function cartesian_recipe(route_inputs)
             source_box = source_box_recipe,
             white_lindsey = white_lindsey_recipe,
             supplement_policy = get(route_inputs, :supplement_policy, nothing),
+            supplement_basis = get(route_inputs, :supplement_basis, nothing),
+            supplement_lmax = get(route_inputs, :supplement_lmax, nothing),
+            supplement_uncontracted =
+                get(route_inputs, :supplement_uncontracted, nothing),
             run_final_basis =
                 isnothing(run_final_basis) ?
                 (run_h1 || run_h1_j || run_private_rhf) :
@@ -1644,6 +1648,7 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
         _pqs_source_box_route_driver_diatomic_physical_gausslet_supplement_request_payload(
             parent,
             diatomic_physical_gausslet_target_payload,
+            recipe,
         )
     diatomic_physical_gausslet_supplement_representation_payload =
         _pqs_source_box_route_driver_diatomic_physical_gausslet_supplement_representation_payload(

@@ -869,6 +869,7 @@ end
 function _pqs_source_box_route_driver_diatomic_physical_gausslet_supplement_request_payload(
     parent,
     target_payload,
+    recipe = (;),
 )
     target_available =
         !isnothing(target_payload) &&
@@ -909,9 +910,17 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_supplement_requ
     route_family = target_available ? target_payload.route_family : :not_available
     route_kind = target_available ? target_payload.route_kind : :not_available
     basis_name =
-        supplement_policy === :mwg_residual_gto ? "H/cc-pVTZ" : nothing
-    lmax = supplement_policy === :mwg_residual_gto ? 1 : nothing
-    uncontracted = supplement_policy === :mwg_residual_gto ? false : nothing
+        supplement_policy === :mwg_residual_gto ?
+        something(get(recipe, :supplement_basis, nothing), "H/cc-pVTZ") :
+        nothing
+    lmax =
+        supplement_policy === :mwg_residual_gto ?
+        something(get(recipe, :supplement_lmax, nothing), 1) :
+        nothing
+    uncontracted =
+        supplement_policy === :mwg_residual_gto ?
+        something(get(recipe, :supplement_uncontracted, nothing), false) :
+        nothing
     residual_keep_policy =
         supplement_policy === :mwg_residual_gto ?
         :route_private_mwg_residual_gto_preflight_only :
@@ -992,6 +1001,12 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_supplement_requ
     )
 end
 
+function _pqs_source_box_route_driver_diatomic_supplement_atom_string(atom)
+    atom isa AbstractString && return String(atom)
+    atom isa Symbol && return String(atom)
+    return String(atom)
+end
+
 function _pqs_source_box_route_driver_diatomic_physical_gausslet_supplement_representation_payload(
     request_payload,
 )
@@ -1035,6 +1050,7 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_supplement_repr
             locations = request_payload.atom_locations
             locations_valid =
                 length(locations) == 2 &&
+                length(atom_symbols) == 2 &&
                 all(
                     location -> !isnothing(location) && length(location) == 3,
                     locations,
@@ -1050,15 +1066,32 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_supplement_repr
                     ntuple(axis -> Float64(location[axis]), 3)
                     for location in locations
                 ]
-                supplement = legacy_bond_aligned_diatomic_gaussian_supplement(
-                    "H",
+                constructor_basis =
                     _pqs_source_box_route_driver_supplement_constructor_basis_name(
                         basis_name,
-                    ),
-                    nuclei;
-                    lmax,
-                    uncontracted,
-                )
+                    )
+                atom_name =
+                    _pqs_source_box_route_driver_diatomic_supplement_atom_string.(
+                        atom_symbols,
+                    )
+                supplement =
+                    atom_name[1] == atom_name[2] ?
+                    legacy_bond_aligned_diatomic_gaussian_supplement(
+                        atom_name[1],
+                        constructor_basis,
+                        nuclei;
+                        lmax,
+                        uncontracted,
+                    ) :
+                    legacy_bond_aligned_heteronuclear_gaussian_supplement(
+                        atom_name[1],
+                        constructor_basis,
+                        atom_name[2],
+                        constructor_basis,
+                        nuclei;
+                        lmax,
+                        uncontracted,
+                    )
                 representation = basis_representation(supplement)
                 status =
                     :available_pqs_physical_gausslet_gto_supplement_representation
