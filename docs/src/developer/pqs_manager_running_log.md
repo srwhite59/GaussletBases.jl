@@ -4507,3 +4507,48 @@ Line-count / complexity note:
 - The patch was small and slightly line-positive: `14` insertions / `3`
   deletions. The added fields are justified because they remove a hardcoded
   public-artifact assumption.
+
+## Pass 308 - H2/Q5 Fixture Assumption Inventory
+
+Commit(s):
+- None. Read-only baton response:
+  `.agent_handoffs/repo_manager_doer_ida_sidecar_deletion_2026-06-19/response.003.md`
+
+Summary:
+- Classified H2/q5 literals and labels across the diatomic PQS source-plan,
+  residual-GTO producer, skeletons, ladder inputs, and developer docs.
+- Identified literal support counts `(275, 578, 362)`, retained counts
+  `(275, 98, 98)`, retained shell count `98`, q5 source names, exact two shared
+  shell assumptions, and H2 helper labels as the remaining blocker families.
+- Separated current-ladder fixtures and WL/QW reference/comparator constants
+  from the active public IDA producer lane so they are not removed casually.
+
+Validation:
+- Read-only audit. Doer reported the repo stayed clean and even with
+  `origin/main`.
+
+Goal advancement:
+- LT5/LT6: turns the vague "remove H2/q5 assumptions" blocker into a set of
+  concrete surfaces and replacement rules. This reduces the risk of broad
+  branchy Cr2 work layered onto fixture code.
+
+Medium-goal update:
+- Active next code slice: derive the shared-shell realization source key and
+  retained coefficient shape from local `source_mode_dims` and
+  `retained_rule.retained_count`, while keeping H2 support-count admissions in
+  place.
+
+Risk / guardrail:
+- Do not touch WL/QW 463 reference blocks or ladder fixture names in the next
+  pass. Do not delete exact support-count admissions until downstream source
+  plan constructors can derive and consume the counts consistently.
+
+Remaining blocker / next:
+- Remove one local q5/98 duplication in
+  `_pqs_source_box_route_driver_independent_h2_shared_shell_realization`; then
+  reassess whether the complete source-plan constructor can derive counts from
+  the realized payload.
+
+Line-count / complexity note:
+- No tracked line-count change. The inventory points to a low-risk, likely
+  line-neutral or slightly negative local cleanup.
