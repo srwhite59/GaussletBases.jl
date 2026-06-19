@@ -4596,3 +4596,80 @@ Remaining blocker / next:
 Line-count / complexity note:
 - Small local patch: `7` insertions / `4` deletions. Slightly line-positive but
   removes duplicated fixture literals from an active construction helper.
+
+## Pass 310 - Derive H2 PQS Complete Source-Plan Counts
+
+Commit(s):
+- `18d9bd40` - Derive H2 PQS complete source-plan counts
+
+Summary:
+- In `_pqs_source_box_route_driver_independent_h2_complete_core_shell_source_plan`,
+  replaced constructor-local duplicate count literals `(275, 578, 362)` and
+  `(275, 98, 98)` with ordered tuples derived from
+  `target_payload.support_counts` and `target_payload.retained_counts`.
+- Preserved the existing support/retained order checks and left upstream
+  source-region and retained-rule admission checks untouched.
+
+Validation:
+- Doer reported diff check, package load, and the `pqs_diatomic` ladder.
+- Manager reran package load and the full `pqs_diatomic` ladder. Both passed.
+  The materialized case still reported `final_dimension = 471`,
+  `residual_rank = 18`, and `augmented_dimension = 489`.
+
+Goal advancement:
+- LT5/LT6: removes another duplicate fixture literal from the active H2
+  residual-GTO producer path while preserving current ladder behavior.
+
+Medium-goal update:
+- Completed: local constructor-level duplicate q5/count removal. Active
+  blocker remains upstream: support-region plan admission, retained-rule
+  admission/source dimensions, exact two shared shells, final-basis
+  support-count blocking, and H2-specific helper/provenance labels.
+
+Risk / guardrail:
+- This pass deliberately did not remove the upstream H2 admissions. The next
+  source-plan generalization pass must choose one upstream authority boundary
+  and prove it with a bounded fixture, not simply delete checks.
+
+Remaining blocker / next:
+- Decide whether the next slice should derive the retained-rule source
+  dimensions/key from `q` while keeping H2 counts fixed, or tackle the support
+  region admission. The retained-rule source dimension/key slice is likely
+  smaller.
+
+Line-count / complexity note:
+- Small local patch: `4` insertions / `2` deletions. It is slightly
+  line-positive but eliminates two repeated count literals at a downstream
+  constructor boundary.
+
+## Medium-Term Goal Checkpoint - Passes 306-310
+
+Status:
+- Completed: deleted the private H2 residual-GTO basis-sidecar persistence and
+  roundtrip validator. The H2 residual-GTO route now writes only the public
+  one-basis Cartesian IDA Ham artifact.
+- Completed: public `CartesianIDAHamiltonian` now owns small nuclear metadata
+  defensively while treating large dense operator matrices as owned/read-only.
+- Completed: explicit `nup`/`ndn` spin sectors flow from driver/system input
+  into the public IDA artifact. They are no longer hardcoded by the H2 adapter.
+- Completed: H2/q5 fixture inventory separated active-producer blockers from
+  ladder fixtures and WL/QW comparator constants.
+- Completed: two local duplicate fixture-literal removals in the active H2
+  source-plan path: shared-shell source key/retained shape and complete
+  source-plan local count tuples.
+- Active: upstream source-plan generalization. Remaining blockers are exact H2
+  support-region admission `(275, 578, 362)`, retained-rule source dimensions
+  and retained count `(5,5,5) -> 98`, exact two shared shells, final-basis
+  support-count blocking, and H2-specific helper/provenance names.
+- Blocked: Cr2 production remains blocked until the source-plan route derives
+  its dimensions from construction for at least one non-fixture variant and has
+  a performance plan at Cr2-relevant scale.
+
+Guardrail update:
+- Keep the public Ham artifact compact: `K`, `{U_A}`, `Vee`, physical nuclear
+  charges, `ncenter x 3` positions, and explicit spin counts. Do not revive the
+  deleted basis sidecar or add route metadata/residual diagnostics without a
+  named consumer.
+- For remaining H2/q5 cleanup, prefer one upstream authority boundary per pass.
+  Do not delete fixture admissions until an equivalent derived construction
+  check exists.
