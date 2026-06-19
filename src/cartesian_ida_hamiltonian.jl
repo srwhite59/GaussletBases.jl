@@ -11,9 +11,10 @@
 
 One-basis Cartesian IDA Hamiltonian data. The basis is fixed and localized:
 `kinetic`, each uncharged unit-nuclear attraction matrix, and
-`electron_electron_ida` all share the same `n x n` basis. Nuclear positions are
-stored as `ncenter x 3`, and nuclear repulsion is derived from the stored
-physical charges and positions.
+`electron_electron_ida` all share the same `n x n` basis. Dense operator
+matrices are treated as owned/read-only by the Hamiltonian object. Nuclear
+positions are stored as `ncenter x 3`, and nuclear repulsion is derived from the
+stored physical charges and positions.
 """
 struct CartesianIDAHamiltonian{T}
     kinetic::Matrix{T}
@@ -40,7 +41,7 @@ end
 _cartesian_dense_float_matrix(matrix::Matrix{Float64}) = matrix
 _cartesian_dense_float_matrix(matrix) = Matrix{Float64}(matrix)
 
-_cartesian_float_vector(values::Vector{Float64}) = values
+_cartesian_float_vector(values::Vector{Float64}) = copy(values)
 
 function _cartesian_float_vector(values)
     return Float64[Float64(value) for value in values]
@@ -49,7 +50,7 @@ end
 function _cartesian_nuclear_position_matrix(positions::Matrix{Float64})
     size(positions, 2) == 3 ||
         throw(DimensionMismatch("nuclear position matrix must have three columns"))
-    return positions
+    return copy(positions)
 end
 
 function _cartesian_nuclear_position_matrix(positions::AbstractMatrix{<:Real})

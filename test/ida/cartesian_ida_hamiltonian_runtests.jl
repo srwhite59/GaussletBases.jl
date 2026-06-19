@@ -29,6 +29,12 @@ using GaussletBases
     @test one_body_hamiltonian(ham; center_weights = [1.0, 0.0]) ≈
           kinetic + charges[1] .* unit_nuclear[1]
     @test nuclear_repulsion(ham; center_weights = [1.0, 0.0]) == 0.0
+    charges[1] = 99.0
+    positions[2, 3] = 99.0
+    @test ham.nuclear_charges ≈ [2.0, 1.0]
+    @test ham.nuclear_positions ≈ [0.0 0.0 0.0; 0.0 0.0 2.0]
+    @test ham.nuclear_repulsion ≈ 1.0 atol = 0.0 rtol = 0.0
+    @test nuclear_repulsion(ham) ≈ ham.nuclear_repulsion atol = 0.0 rtol = 0.0
 
     mktempdir() do dir
         path = joinpath(dir, "cartesian_ida_hamiltonian.jld2")

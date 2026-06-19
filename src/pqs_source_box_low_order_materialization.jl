@@ -444,9 +444,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
     h1_matrix = Matrix{Float64}(h1_hamiltonian.hamiltonian_matrix)
     h1_symmetry_error = norm(h1_matrix - transpose(h1_matrix), Inf)
     h1_finite = all(isfinite, h1_matrix)
-    final_gto_cross_overlap_size = size(sidecar.final_gto_cross_overlap)
-    gto_self_overlap_size = size(sidecar.gto_self_overlap)
-    gto_residual_overlap_size = size(sidecar.gto_residual_overlap)
     optional = _pqs_source_box_route_driver_optional_property
     augmented_dimension = optional(one_body_blocks, :augmented_dimension)
     summary = (;
@@ -459,10 +456,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
         h1_finite,
         h1_symmetry_error,
         supplement_policy = report.recipe_metadata.supplement_policy,
-        gto_dimension = size(sidecar.gto_self_overlap, 1),
-        final_gto_cross_overlap_size,
-        gto_self_overlap_size,
-        gto_residual_overlap_size,
         provider_block_mode,
         residual_rank = optional(residual, :residual_rank),
         residual_overlap_identity_error =
@@ -476,69 +469,18 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
         ida_hamiltonian_summary...,
     )
 
-    basis_artifact_path = nothing
-    if save_basis_artifact
-        basis_artifact_path = String(basisfile)
-        jldopen(basis_artifact_path, "w") do file
-            file["artifact_kind"] = :pqs_h2_residual_gto_sidecar_basis_bundle
-            file["summary"] = summary
-            file["route_metadata"] = route_metadata
-            file["support_counts"] = final_basis.support_counts
-            file["retained_counts"] = final_basis.retained_counts
-            file["retained_ranges"] = final_basis.retained_ranges
-            file["final_dimension"] = final_basis.final_dimension
-            file["final_coefficients"] = final_basis.final_coefficients
-            file["final_overlap_identity_error"] =
-                final_basis.final_overlap_identity_error
-            _pqs_source_box_route_driver_write_pqs_h2_sidecar_common!(
-                file,
-                inputs,
-                sidecar,
-                provider_block_mode,
-            )
-            _pqs_source_box_route_driver_write_jld2_fields!(
-                file,
-                residual,
-                _PQS_H2_RESIDUAL_TRANSFORM_ARTIFACT_FIELDS,
-            )
-            _pqs_source_box_route_driver_write_jld2_fields!(
-                file,
-                density_descriptor,
-                (
-                    :augmented_density_gauge => :density_gauge,
-                    :augmented_density_space,
-                    :p_dimension,
-                    :f_dimension,
-                    :g_dimension,
-                    :p_projection_of_g,
-                    :residual_orbital_coefficients_in_density_carrier,
-                ),
-            )
-            _pqs_source_box_route_driver_write_jld2_fields!(
-                file,
-                density_blocks,
-                _PQS_H2_DENSITY_MOMENT_ARTIFACT_FIELDS,
-            )
-        end
-    end
-
     ham_artifact_path = nothing
+    ham_artifact_reloaded = false
     if save_ham_artifact
         ham_artifact_path = String(hamfile)
         isnothing(ida_hamiltonian) &&
             throw(ArgumentError("H2 residual-GTO Ham artifact requires IDA Hamiltonian provider blocks"))
         write_cartesian_ida_hamiltonian(ham_artifact_path, ida_hamiltonian)
+        _pqs_source_box_route_driver_ida_hamiltonian_smoke(
+            read_cartesian_ida_hamiltonian(ham_artifact_path),
+        )
+        ham_artifact_reloaded = true
     end
-
-    artifact_roundtrip =
-        save_basis_artifact && save_ham_artifact ?
-        _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_roundtrip(
-            basis_artifact_path,
-            ham_artifact_path,
-        ) :
-        nothing
-    basis_artifact_reloaded = !isnothing(artifact_roundtrip)
-    ham_artifact_reloaded = !isnothing(artifact_roundtrip)
 
     return (;
         route_family = report.route_family,
@@ -552,28 +494,15 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
         h1_finite,
         h1_symmetry_error,
         overlap_identity_error = final_basis.final_overlap_identity_error,
-        gto_dimension = size(sidecar.gto_self_overlap, 1),
-        final_gto_cross_overlap_size,
-        gto_self_overlap_size,
-        gto_residual_overlap_size,
-        gto_residual_overlap_symmetry_error =
-            sidecar.diagnostics.gto_residual_overlap_symmetry_error,
         provider_block_mode,
         residual_rank = summary.residual_rank,
         residual_overlap_identity_error = summary.residual_overlap_identity_error,
         ida_hamiltonian,
         ida_hamiltonian_summary...,
         augmented_dimension,
-        ida_full_self_coulomb = optional(artifact_roundtrip, :ida_full_self_coulomb),
-        ida_counterpoise_branch_count =
-            optional(artifact_roundtrip, :ida_counterpoise_branch_count),
-        save_basis_artifact_requested = save_basis_artifact,
         save_ham_artifact_requested = save_ham_artifact,
-        basisfile = basis_artifact_path,
         hamfile = ham_artifact_path,
-        basis_artifact_written = save_basis_artifact,
         ham_artifact_written = save_ham_artifact,
-        basis_artifact_reloaded,
         ham_artifact_reloaded,
     )
 end

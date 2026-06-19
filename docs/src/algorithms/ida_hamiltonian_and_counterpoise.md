@@ -143,6 +143,10 @@ The basis and `Vee` remain fixed for these branches.
 Equivalently, these are center-weight choices `w=(1,1)`, `w=(1,0)`,
 and `w=(0,1)` using the stored physical charges.
 
+Center weights change only the nuclear attraction and nuclear repulsion terms.
+They do not change `nup` or `ndn`; branch electron/spin counts are owned by the
+caller constructing the branch Hamiltonian.
+
 ## Public API
 
 `CartesianIDAHamiltonian` is the public in-memory object for this all-electron
@@ -164,12 +168,10 @@ counts. It does not store nuclear repulsion or route diagnostics.
 - `src/cartesian_ida_hamiltonian.jl` contains the public one-basis IDA
   Hamiltonian object and minimal artifact reader/writer.
 - `src/pqs_h2_residual_gto_handoff.jl` contains the current private H2
-  residual-GTO producer/readback scaffolding.
-- Future public code should expose a one-basis IDA Hamiltonian object rather
-  than the current private H2 sidecar artifact.
+  residual-GTO producer helpers that feed the public Ham artifact.
 
 ## Current Implementation Deviations
 
 The public `CartesianIDAHamiltonian` type and minimal versioned writer/reader
-exist. The private H2 residual-GTO route still writes its older sidecar
-artifact until the next replacement/deletion pass.
+exist. The active H2 residual-GTO route is still H2/q5-specific producer work;
+it is not yet a general Cr2-ready diatomic constructor.

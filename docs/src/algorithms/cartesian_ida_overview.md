@@ -119,7 +119,7 @@ Current implementation surfaces are:
 - `src/cartesian_ida_hamiltonian.jl` for the public one-basis IDA Hamiltonian
   object and minimal artifact reader/writer.
 - `src/pqs_h2_residual_gto_handoff.jl` for the current private H2
-  residual-Gaussian extension and artifact/readback scaffolding.
+  residual-Gaussian extension helpers feeding the public Ham artifact.
 - `src/cartesian_gaussian_axis_integrals.jl` for shared Cartesian Gaussian axis
   integral kernels where present.
 
@@ -127,6 +127,6 @@ Current implementation surfaces are:
 
 The active H2 PQS route no longer applies the forbidden global core/shell
 Lowdin cleanup. The public `CartesianIDAHamiltonian` type and minimal
-versioned writer/reader now exist, while the private H2 residual-GTO route
-still writes its older sidecar artifact until the next replacement/deletion
-pass.
+versioned writer/reader now exist. The active H2 residual-GTO route is still
+H2/q5-specific producer work rather than a general Cr2-ready diatomic
+constructor.

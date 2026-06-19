@@ -1,4 +1,4 @@
-# Private H2 PQS residual-GTO sidecar, provider-block, and Ham handoff helpers.
+# Private H2 PQS residual-GTO provider-block and Ham artifact helpers.
 
 function _pqs_source_box_route_driver_axis_representation_for_gto(axis_bundles, axis::Symbol)
     pgdg = _nested_axis_pgdg(axis_bundles, axis)
@@ -218,10 +218,7 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_density_descriptor(
         g_dimension,
         residual_rank,
         p_projection_of_g,
-        p_projection_of_g_size = size(p_projection_of_g),
         residual_orbital_coefficients_in_density_carrier = residual_carrier,
-        residual_orbital_coefficients_in_density_carrier_size =
-            size(residual_carrier),
     )
 end
 
@@ -1008,68 +1005,20 @@ function _pqs_source_box_route_driver_pqs_h2_route_metadata(report, inputs)
         retained_counts = final_basis.retained_counts,
         retained_ranges = final_basis.retained_ranges,
         final_dimension = final_basis.final_dimension,
-        artifact_scope = :pqs_ham_basis_plus_residual_gto_sidecar,
+        artifact_scope = :pqs_h2_residual_gto_ida_hamiltonian,
         provider_block_mode,
     )
-end
-
-function _pqs_source_box_route_driver_require_jld2_keys(file, keys)
-    missing = Symbol[key for key in keys if !haskey(file, String(key))]
-    isempty(missing) || throw(ArgumentError("H2 PQS sidecar artifact missing keys $(missing)"))
-    return nothing
-end
-
-function _pqs_source_box_route_driver_square_matrix(name::AbstractString, matrix)
-    size(matrix, 1) == size(matrix, 2) ||
-        throw(ArgumentError("$name must be square; got $(size(matrix))"))
-    return nothing
 end
 
 function _pqs_source_box_route_driver_pqs_h2_provider_block_mode(mode)
     mode === false && return :none
     mode === :none && return :none
-    mode === :one_body_only && return :one_body_only
     mode === :one_body_and_density_provider && return :one_body_and_density_provider
-    throw(ArgumentError("provider block mode must be :none, :one_body_only, or :one_body_and_density_provider; got $(mode)"))
-end
-
-function _pqs_source_box_route_driver_read_pqs_h2_provider_block_mode(file)
-    haskey(file, "provider_block_mode") ||
-        throw(ArgumentError("H2 PQS sidecar artifact missing provider_block_mode"))
-    return _pqs_source_box_route_driver_pqs_h2_provider_block_mode(
-        file["provider_block_mode"],
-    )
+    throw(ArgumentError("provider block mode must be :none or :one_body_and_density_provider; got $(mode)"))
 end
 
 function _pqs_source_box_route_driver_optional_property(source, property::Symbol)
     return isnothing(source) ? nothing : getproperty(source, property)
-end
-
-function _pqs_source_box_route_driver_finite_matrix(
-    name::AbstractString,
-    matrix,
-    expected_size::Tuple{Int,Int},
-)
-    size(matrix) == expected_size ||
-        throw(ArgumentError("$name shape must be $(expected_size); got $(size(matrix))"))
-    all(isfinite, matrix) ||
-        throw(ArgumentError("$name contains non-finite entries"))
-    return nothing
-end
-
-function _pqs_source_box_route_driver_symmetric_matrix(
-    name::AbstractString,
-    matrix,
-    expected_size::Tuple{Int,Int},
-    symmetry_atol::Real,
-)
-    _pqs_source_box_route_driver_finite_matrix(name, matrix, expected_size)
-    size(matrix, 1) == size(matrix, 2) ||
-        throw(ArgumentError("$name must be square; got $(size(matrix))"))
-    symmetry_error = norm(matrix - transpose(matrix), Inf)
-    symmetry_error <= Float64(symmetry_atol) ||
-        throw(ArgumentError("$name is not symmetric"))
-    return symmetry_error
 end
 
 function _pqs_source_box_route_driver_ida_hamiltonian_smoke(ida_hamiltonian)
@@ -1114,268 +1063,3 @@ function _pqs_source_box_route_driver_ida_hamiltonian_smoke(ida_hamiltonian)
         counterpoise_branch_count = center_count,
     )
 end
-
-"""
-    _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_roundtrip(
-        basisfile,
-        hamfile,
-    )
-
-Read the narrow H2 independent-PQS Ham/Basis plus residual-GTO sidecar
-artifacts and return compact consumer facts. This is intentionally specific to
-the current P1 artifact; it is not a general artifact registry.
-"""
-function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_roundtrip(
-    basisfile,
-    hamfile;
-    symmetry_atol::Real = 1.0e-8,
-)
-    basis_facts = jldopen(String(basisfile), "r") do file
-        _pqs_source_box_route_driver_require_jld2_keys(
-            file,
-            (
-                :artifact_kind,
-                :final_dimension,
-                :final_coefficients,
-                :final_gto_cross_overlap,
-                :gto_self_overlap,
-                :gto_residual_overlap,
-                :provider_block_mode,
-            ),
-        )
-        artifact_kind = file["artifact_kind"]
-        artifact_kind === :pqs_h2_residual_gto_sidecar_basis_bundle ||
-            throw(ArgumentError("unexpected H2 PQS sidecar basis artifact kind $(artifact_kind)"))
-        final_dimension = Int(file["final_dimension"])
-        final_coefficients = file["final_coefficients"]
-        final_gto_cross_overlap = file["final_gto_cross_overlap"]
-        gto_self_overlap = file["gto_self_overlap"]
-        gto_residual_overlap = file["gto_residual_overlap"]
-        provider_block_mode =
-            _pqs_source_box_route_driver_read_pqs_h2_provider_block_mode(file)
-        size(final_coefficients, 2) == final_dimension ||
-            throw(ArgumentError("basis final_coefficients column count must equal final_dimension"))
-        size(final_gto_cross_overlap, 1) == final_dimension ||
-            throw(ArgumentError("basis final_gto_cross_overlap row count must equal final_dimension"))
-        _pqs_source_box_route_driver_square_matrix(
-            "basis gto_self_overlap",
-            gto_self_overlap,
-        )
-        size(gto_residual_overlap) == size(gto_self_overlap) ||
-            throw(ArgumentError("basis gto_residual_overlap shape must match gto_self_overlap"))
-        all(isfinite, gto_residual_overlap) ||
-            throw(ArgumentError("basis gto_residual_overlap contains non-finite entries"))
-        residual_symmetry_error =
-            norm(gto_residual_overlap - transpose(gto_residual_overlap), Inf)
-        residual_symmetry_error <= Float64(symmetry_atol) ||
-            throw(ArgumentError("basis gto_residual_overlap is not symmetric"))
-        residual_facts =
-            if provider_block_mode !== :none
-                _pqs_source_box_route_driver_require_jld2_keys(
-                    file,
-                    (
-                        :residual_transform,
-                        :residual_rank,
-                        :residual_overlap_eigenvalues,
-                        :residual_overlap_identity_error,
-                        :residual_overlap_cutoff,
-                        :augmented_density_gauge,
-                        :augmented_density_space,
-                        :p_dimension,
-                        :f_dimension,
-                        :g_dimension,
-                        :p_projection_of_g,
-                        :residual_orbital_coefficients_in_density_carrier,
-                    ),
-                )
-                residual_transform = file["residual_transform"]
-                residual_rank = Int(file["residual_rank"])
-                residual_overlap_identity_error =
-                    Float64(file["residual_overlap_identity_error"])
-                residual_rank > 0 ||
-                    throw(ArgumentError("one-body provider artifact requires positive residual_rank"))
-                size(residual_transform) == (size(gto_self_overlap, 1), residual_rank) ||
-                    throw(ArgumentError("residual_transform shape must be gto_dimension x residual_rank"))
-                isfinite(residual_overlap_identity_error) ||
-                    throw(ArgumentError("residual_overlap_identity_error must be finite"))
-                residual_overlap_identity_error <= Float64(symmetry_atol) ||
-                    throw(ArgumentError("residual overlap identity error is too large"))
-                file["augmented_density_gauge"] ===
-                    :localized_ida ||
-                    throw(ArgumentError("augmented density gauge must be localized IDA"))
-                Tuple(file["augmented_density_space"]) ===
-                    (:localized_ida_pqs, :residual_gto) ||
-                    throw(ArgumentError("augmented density space must be (:localized_ida_pqs, :residual_gto)"))
-                p_dimension = Int(file["p_dimension"])
-                f_dimension = Int(file["f_dimension"])
-                g_dimension = Int(file["g_dimension"])
-                f_dimension == final_dimension ||
-                    throw(ArgumentError("density descriptor F dimension must match final_dimension"))
-                p_projection_of_g = file["p_projection_of_g"]
-                residual_carrier =
-                    file["residual_orbital_coefficients_in_density_carrier"]
-                size(p_projection_of_g) == (p_dimension, g_dimension) ||
-                    throw(ArgumentError("p_projection_of_g shape mismatch"))
-                all(isfinite, p_projection_of_g) ||
-                    throw(ArgumentError("p_projection_of_g contains non-finite entries"))
-                size(residual_carrier) == (p_dimension + g_dimension, residual_rank) ||
-                    throw(ArgumentError("residual density carrier coefficient shape mismatch"))
-                all(isfinite, residual_carrier) ||
-                    throw(ArgumentError("residual density carrier contains non-finite entries"))
-                density_moment_facts =
-                    if provider_block_mode === :one_body_and_density_provider
-                        _pqs_source_box_route_driver_require_jld2_keys(
-                            file,
-                            (
-                                :residual_centers,
-                                :residual_widths,
-                                :residual_moment_overlap_error,
-                            ),
-                        )
-                        residual_centers = file["residual_centers"]
-                        residual_widths = file["residual_widths"]
-                        size(residual_centers) == (residual_rank, 3) ||
-                            throw(ArgumentError("residual_centers shape mismatch"))
-                        size(residual_widths) == (residual_rank, 3) ||
-                            throw(ArgumentError("residual_widths shape mismatch"))
-                        all(isfinite, residual_centers) ||
-                            throw(ArgumentError("residual_centers contain non-finite entries"))
-                        all(isfinite, residual_widths) ||
-                            throw(ArgumentError("residual_widths contain non-finite entries"))
-                        all(>(0.0), residual_widths) ||
-                            throw(ArgumentError("residual_widths must be positive"))
-                        residual_moment_overlap_error =
-                            Float64(file["residual_moment_overlap_error"])
-                        residual_moment_overlap_error <= Float64(symmetry_atol) ||
-                            throw(ArgumentError("residual moment overlap error is too large"))
-                        (;
-                            residual_centers_size = size(residual_centers),
-                            residual_widths_size = size(residual_widths),
-                            residual_moment_overlap_error,
-                        )
-                    else
-                        (;
-                            residual_centers_size = nothing,
-                            residual_widths_size = nothing,
-                            residual_moment_overlap_error = nothing,
-                        )
-                    end
-                (;
-                    residual_transform_size = size(residual_transform),
-                    residual_rank,
-                    residual_overlap_identity_error,
-                    residual_overlap_cutoff = Float64(file["residual_overlap_cutoff"]),
-                    augmented_density_gauge = file["augmented_density_gauge"],
-                    augmented_density_space = Tuple(file["augmented_density_space"]),
-                    p_dimension,
-                    f_dimension,
-                    g_dimension,
-                    p_projection_of_g_size = size(p_projection_of_g),
-                    residual_orbital_coefficients_in_density_carrier_size =
-                        size(residual_carrier),
-                    density_moment_facts...,
-                )
-            else
-                (;
-                    residual_transform_size = nothing,
-                    residual_rank = nothing,
-                    residual_overlap_identity_error = nothing,
-                    residual_overlap_cutoff = nothing,
-                    augmented_density_gauge = nothing,
-                    augmented_density_space = nothing,
-                    p_dimension = nothing,
-                    f_dimension = nothing,
-                    g_dimension = nothing,
-                    p_projection_of_g_size = nothing,
-                    residual_orbital_coefficients_in_density_carrier_size = nothing,
-                )
-            end
-        return (;
-            basis_artifact_kind = artifact_kind,
-            final_dimension,
-            provider_block_mode,
-            final_coefficients_size = size(final_coefficients),
-            final_gto_cross_overlap_size = size(final_gto_cross_overlap),
-            gto_self_overlap_size = size(gto_self_overlap),
-            gto_residual_overlap_size = size(gto_residual_overlap),
-            gto_residual_overlap_symmetry_error = residual_symmetry_error,
-            residual_facts...,
-        )
-    end
-
-    basis_facts.provider_block_mode === :one_body_and_density_provider ||
-        throw(ArgumentError("public H2 Ham artifact requires density provider mode"))
-    ham = read_cartesian_ida_hamiltonian(hamfile)
-    augmented_dimension = size(ham.kinetic, 1)
-    expected_dimension = basis_facts.final_dimension + basis_facts.residual_rank
-    augmented_dimension == expected_dimension ||
-        throw(ArgumentError("public H2 Ham dimension must equal final_dimension + residual_rank"))
-    length(ham.nuclear_charges) == 2 ||
-        throw(ArgumentError("H2 public Ham artifact must have two centers"))
-    full_h1 = one_body_hamiltonian(ham)
-    all(isfinite, full_h1) ||
-        throw(ArgumentError("public H2 Ham H1 contains non-finite entries"))
-    norm(full_h1 - transpose(full_h1), Inf) <= Float64(symmetry_atol) ||
-        throw(ArgumentError("public H2 Ham H1 is not symmetric"))
-    isfinite(eigen(Symmetric(full_h1)).values[1]) ||
-        throw(ArgumentError("public H2 Ham H1 lowest value is not finite"))
-    ida_smoke = _pqs_source_box_route_driver_ida_hamiltonian_smoke(ham)
-
-    return (;
-        basisfile = String(basisfile),
-        hamfile = String(hamfile),
-        final_dimension = basis_facts.final_dimension,
-        basis_artifact_kind = basis_facts.basis_artifact_kind,
-        ham_artifact_kind = :cartesian_ida_hamiltonian,
-        provider_block_mode = basis_facts.provider_block_mode,
-        residual_rank = basis_facts.residual_rank,
-        residual_overlap_identity_error =
-            basis_facts.residual_overlap_identity_error,
-        augmented_dimension,
-        ida_orbital_dimension = augmented_dimension,
-        ida_center_count = length(ham.nuclear_charges),
-        ida_full_self_coulomb = ida_smoke.full_self_coulomb,
-        ida_counterpoise_branch_count = ida_smoke.counterpoise_branch_count,
-        basis_gto_residual_overlap_symmetry_error =
-            basis_facts.gto_residual_overlap_symmetry_error,
-    )
-end
-
-function _pqs_source_box_route_driver_write_pqs_h2_sidecar_common!(
-    file,
-    inputs,
-    sidecar,
-    provider_block_mode,
-)
-    file["gto_supplement_metadata"] = inputs.supplement_representation.metadata
-    file["final_gto_cross_overlap"] = sidecar.final_gto_cross_overlap
-    file["gto_self_overlap"] = sidecar.gto_self_overlap
-    file["gto_residual_overlap"] = sidecar.gto_residual_overlap
-    file["gto_sidecar_diagnostics"] = sidecar.diagnostics
-    file["provider_block_mode"] = provider_block_mode
-    return nothing
-end
-
-function _pqs_source_box_route_driver_write_jld2_fields!(file, source, fields)
-    isnothing(source) && return nothing
-    for field in fields
-        key = field isa Pair ? first(field) : field
-        property = field isa Pair ? last(field) : field
-        file[String(key)] = getproperty(source, property)
-    end
-    return nothing
-end
-
-const _PQS_H2_RESIDUAL_TRANSFORM_ARTIFACT_FIELDS = (
-    :residual_transform,
-    :residual_rank,
-    :residual_overlap_eigenvalues,
-    :residual_overlap_identity_error,
-    :residual_overlap_cutoff,
-)
-
-const _PQS_H2_DENSITY_MOMENT_ARTIFACT_FIELDS = (
-    :residual_centers,
-    :residual_widths,
-    :residual_moment_overlap_error => :residual_overlap_error,
-)

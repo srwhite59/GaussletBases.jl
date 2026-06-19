@@ -38,14 +38,10 @@ function _pqs_source_box_route_driver_print_materialization(materialization)
         :h1_lowest,
         :h1_symmetry_error,
         :overlap_identity_error,
-        :provider_block_mode,
         :residual_rank,
         :augmented_dimension,
         :ida_orbital_dimension,
         :ida_center_count,
-        :ida_full_self_coulomb,
-        :ida_counterpoise_branch_count,
-        :basisfile,
         :hamfile,
     )
         hasproperty(materialization, field) ||
