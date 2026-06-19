@@ -4254,3 +4254,61 @@ Remaining blocker / next:
 Line-count / complexity note:
 - Source/docs impact was `64` insertions / `98` deletions (`-34` lines), a
   useful semantic cleanup before the public API pass.
+
+## Pass 304 - Add Public Cartesian IDA Hamiltonian Artifact
+
+Commit(s):
+- `a462e862` - Add public Cartesian IDA Hamiltonian artifact
+
+Summary:
+- Promoted the one-basis IDA contract to the public
+  `CartesianIDAHamiltonian` type with public `one_body_hamiltonian` and
+  `nuclear_repulsion` helpers.
+- Added `write_cartesian_ida_hamiltonian` and
+  `read_cartesian_ida_hamiltonian` with a minimal versioned JLD2 format:
+  `artifact_kind`, `format_version`, `kinetic`,
+  `nuclear_attraction_unit_by_center`, `electron_electron_ida`,
+  `nuclear_charges`, `nuclear_positions`, `nup`, and `ndn`.
+- The public artifact stores center matrices as `(norb, norb, ncenter)` and
+  derives nuclear repulsion on read rather than storing it.
+- Removed the private `_CartesianIDAHamiltonian` alias; private H2 code now
+  constructs the public object and uses the public helpers directly.
+- Added a compact synthetic public-contract test covering construction,
+  center-weight counterpoise, roundtrip, and tensor layout.
+
+Validation:
+- Doer reported `git diff --check`, package load, the focused public IDA test,
+  `julia --project=. tools/run_cartesian_line_ladder.jl --line=pqs_diatomic`,
+  and `julia --project=docs docs/make.jl`.
+- Manager reran diff check on `a462e862`, package load, the focused public IDA
+  test, docs build, and the pqs_diatomic ladder. All three ladder cases passed;
+  the materialized case still reported
+  `ida_full_self_coulomb = 0.4574354750591777` and
+  `ida_counterpoise_branch_count = 2`.
+
+Goal advancement:
+- LT5/LT6: establishes the public all-electron one-basis IDA boundary needed
+  by downstream Cr2 work without exposing route metadata, residual diagnostics,
+  or a density transform.
+- LT2: creates the replacement target needed to delete the private H2 Ham
+  sidecar artifact.
+
+Medium-goal update:
+- The next pass should switch the materialized H2 Ham artifact to the public
+  writer/reader and delete the private Ham field cloud. The private
+  basis/residual sidecar may remain temporarily as construction/debug data.
+
+Risk / guardrail:
+- The pass was line-positive because it added a public type, writer/reader, and
+  public-contract test. Pay this back by replacing the private H2 artifact path
+  rather than running both formats in parallel.
+
+Remaining blocker / next:
+- Use `write_cartesian_ida_hamiltonian` for the materialized H2 Ham artifact,
+  read it back with `read_cartesian_ida_hamiltonian`, and remove private Ham
+  sidecar fields/readback checks.
+
+Line-count / complexity note:
+- Source/docs/test impact was `227` insertions / `31` deletions (`+196`
+  lines). This is acceptable only as a short-lived replacement boundary before
+  the private artifact deletion pass.
