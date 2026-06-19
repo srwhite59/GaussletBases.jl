@@ -1743,10 +1743,12 @@ function _pqs_source_box_route_driver_independent_h2_shared_shell_realization(
         realized_overlap_identity_error = nothing,
     )
     try
+        source_q = source_mode_dims[1]
+        source_key = Symbol("independent_h2_", role, "_q", source_q, "_source")
         raw_plan = CartesianRawProductSources.raw_product_box_plan(
             shell_descriptor.source_cpb;
             source_mode_dims,
-            source_key = Symbol("independent_h2_", role, "_q5_source"),
+            source_key,
             metadata = (; route_unit_role = role),
         )
         retained_rule =
@@ -1754,7 +1756,8 @@ function _pqs_source_box_route_driver_independent_h2_shared_shell_realization(
                 raw_plan;
                 metadata = (; route_unit_role = role),
             )
-        retained_rule.retained_count == 98 ||
+        retained_count = Int(retained_rule.retained_count)
+        retained_count > 0 ||
             return blocked(:independent_pqs_shared_shell_retained_count_mismatch)
         layer = _nested_projected_q_shell_layer(
             bundles,
@@ -1775,7 +1778,7 @@ function _pqs_source_box_route_driver_independent_h2_shared_shell_realization(
                 metrics,
             )
         coefficients = shell_plan.shell_projection_matrix * shell_plan.lowdin_cleanup
-        size(coefficients) == (shell_descriptor.support_count, 98) ||
+        size(coefficients) == (shell_descriptor.support_count, retained_count) ||
             return blocked(:independent_pqs_shared_shell_coefficient_shape_mismatch)
         return (;
             role,
@@ -1788,7 +1791,7 @@ function _pqs_source_box_route_driver_independent_h2_shared_shell_realization(
             shell_projection = shell_plan.shell_projection_matrix,
             lowdin_cleanup = shell_plan.lowdin_cleanup,
             shell_final_coefficients = coefficients,
-            retained_count = size(coefficients, 2),
+            retained_count,
             coefficient_shape = size(coefficients),
             realized_overlap_identity_error = shell_plan.isometry_error,
             shell_projection_materialized = true,
