@@ -400,8 +400,58 @@ function raw_terminal_geometry(
         left_core = centered_box(nuclear_indices[left_atom], core_side)
         right_core = centered_box(nuclear_indices[right_atom], core_side)
         initial_gap = gap_between(left_core, right_core, axis)
-        initial_gap >= 0 ||
-            throw(ArgumentError("initial atom core boxes overlap along the bond axis"))
+        if initial_gap < q
+            contact_core = hull_box(left_core, right_core)
+            push_region!(
+                role = :atom_contact_core,
+                region_kind = :direct_atom_contact_core,
+                outer_box = contact_core,
+                atom_side = :contact,
+                shell_index = 0,
+                metadata = (;
+                    bond_axis = axis_symbol(axis),
+                    left_atom,
+                    right_atom,
+                    left_seed_box = left_core,
+                    right_seed_box = right_core,
+                    seed_gap = initial_gap,
+                    seed_contact_policy = :combined_atom_contact_core,
+                ),
+            )
+
+            current = contact_core
+            shared_shell_index = 0
+            while can_expand(current)
+                next_box = expand_box(current)
+                shared_shell_index += 1
+                push_region!(
+                    role = :shared_molecular_shell,
+                    region_kind = :complete_shell,
+                    outer_box = next_box,
+                    inner_box = current,
+                    shell_index = shared_shell_index,
+                    metadata = (; bond_axis = axis_symbol(axis)),
+                )
+                current = next_box
+            end
+
+            for piece in outer_mismatch_pieces(current)
+                push_region!(
+                    role = piece.role,
+                    region_kind = :outer_mismatch_slab,
+                    outer_box = piece.box,
+                    metadata = (; bond_axis = axis_symbol(axis)),
+                )
+            end
+
+            return (;
+                bond_axis = axis_symbol(axis),
+                left_atom,
+                right_atom,
+                atom_contact_core = true,
+                seed_gap = initial_gap,
+            )
+        end
 
         push_region!(
             role = :atom_local_core,
@@ -601,7 +651,8 @@ function raw_terminal_geometry(
 end
 
 function _cartesian_terminal_shellification_geometry_region_dependency(region)
-    region.region_kind == :direct_core && return :plan_lowerable_direct_core
+    region.region_kind in (:direct_core, :direct_atom_contact_core) &&
+        return :plan_lowerable_direct_core
     if region.region_kind == :complete_shell
         region.role == :shared_molecular_shell &&
             return :plan_lowerable_shared_complete_shell
@@ -757,7 +808,8 @@ end
 function _cartesian_terminal_shellification_geometry_region_lowering_family(
     region_summary,
 )
-    region_summary.region_kind == :direct_core && return :direct_product_core
+    region_summary.region_kind in (:direct_core, :direct_atom_contact_core) &&
+        return :direct_product_core
     if region_summary.region_kind == :complete_shell
         region_summary.role == :shared_molecular_shell &&
             return :white_lindsey_adaptive_complete_shell

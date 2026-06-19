@@ -120,9 +120,13 @@ function _cartesian_terminal_region_direct_source_metadata(
 end
 
 function _cartesian_terminal_region_unit_mapping(region)
-    if region.region_kind == :direct_core
+    if region.region_kind in (:direct_core, :direct_atom_contact_core)
+        unit_kind =
+            region.region_kind == :direct_atom_contact_core ?
+            :direct_atom_contact_core_unit :
+            :direct_core_unit
         return (;
-            unit_kind = :direct_core_unit,
+            unit_kind,
             lowering_family_planned = :direct_core_identity_cpb,
             identity_lowering_planned = true,
             owned_support_is_cpb = false,
@@ -782,7 +786,8 @@ function _cartesian_selected_terminal_lowering_contract_kind(
     terminal_region_kind::Symbol,
     route_lowering_family::Symbol,
 )
-    terminal_region_kind == :direct_core && return :direct_core_identity_cpb
+    terminal_region_kind in (:direct_core, :direct_atom_contact_core) &&
+        return :direct_core_identity_cpb
     terminal_region_kind == :direct_midpoint_slab &&
         return :direct_slab_identity_cpb
     terminal_region_kind == :outer_mismatch_slab &&

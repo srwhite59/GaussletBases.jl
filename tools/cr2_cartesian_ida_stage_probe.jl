@@ -25,9 +25,9 @@ n_s = 5
 reference_spacing = 1.0
 tail_spacing = 10.0
 q_to_core_spacing_rule = :standard_pqs_ns_equals_q
-core_spacing = 0.5
-xmax_parallel = 6.0
-xmax_transverse = 4.0
+core_spacing = 1.2 / (24 * (q - 3))
+xmax_parallel = 20.0
+xmax_transverse = 20.0
 
 parent_axis_family = :G10
 parent_axis_bundle_backend = :pgdg_localized_experimental
@@ -53,7 +53,7 @@ white_lindsey_retained_rule = :low_order_unit_comx_retained_basis
 white_lindsey_operator_rule = :low_order_unit_operator_blocks
 
 supplement_policy = :mwg_residual_gto
-supplement_basis = "cc-pVTZ"
+supplement_basis = "cc-pV5Z"
 supplement_lmax = 1
 supplement_uncontracted = false
 materialize_route = true
@@ -163,6 +163,20 @@ function _probe_nearest_index(axis_values, coordinate)
     return findmin(distances)[2]
 end
 
+function _probe_axis_window(axis_values, index::Int; radius::Int = 2)
+    lo = max(1, index - radius)
+    hi = min(length(axis_values), index + radius)
+    return Tuple(
+        (index = i, center = Float64(axis_values[i]), spacing_left =
+            i == 1 ? nothing : Float64(axis_values[i] - axis_values[i - 1]),
+            spacing_right =
+                i == length(axis_values) ?
+                nothing :
+                Float64(axis_values[i + 1] - axis_values[i]))
+        for i in lo:hi
+    )
+end
+
 function _probe_core_box(center::NTuple{3,Int}, side::Int)
     radius = div(side - 1, 2)
     return ntuple(axis -> (center[axis] - radius):(center[axis] + radius), 3)
@@ -212,14 +226,39 @@ function _probe_geometry_facts(parent)
             right_range = right_core[axis],
         ) for axis in 1:3 if axis != bond_axis_index
     )
+    proposed_contact_core = ntuple(
+        axis -> begin
+            lo = min(first(left_core[axis]), first(right_core[axis]))
+            hi = max(last(left_core[axis]), last(right_core[axis]))
+            lo:hi
+        end,
+        3,
+    )
+    proposed_contact_core_dimensions =
+        Tuple(length(proposed_contact_core[axis]) for axis in 1:3)
+    coordinate_errors = Tuple(
+        ntuple(
+            axis ->
+                Float64(axes[axis][nuclear_indices[atom][axis]]) -
+                Float64(locations[atom][axis]),
+            3,
+        ) for atom in eachindex(locations)
+    )
+    bond_axis_windows = Tuple(
+        _probe_axis_window(axes[bond_axis_index], index)
+        for index in atom_axis_indices
+    )
     classification =
+        bond_axis_gap < q ?
+        :atom_seed_boxes_use_combined_contact_core :
         index_separation >= core_side && bond_axis_gap >= 0 ?
         :passes_disjoint_atom_core_check :
-        :B_core_spacing_or_parent_grid_too_coarse_for_disjoint_atom_cores
+        :atom_seed_boxes_need_combined_contact_core
     return (;
         q = setup.q,
         n_s = setup.n_s,
         standard_setup_core_cube_side = core_side,
+        direct_core_side = core_side,
         terminal_shellification_core_side = core_side,
         source_plan_geometry_core_side = core_side,
         core_spacing = setup.core_spacing,
@@ -228,11 +267,22 @@ function _probe_geometry_facts(parent)
         parent_axis_counts = _probe_get(parent, :axis_counts),
         nuclear_continuous_coordinates = locations,
         nuclear_grid_indices = nuclear_indices,
+        nearest_index_coordinate_errors = coordinate_errors,
+        mapped_bond_axis_center_values_near_nuclei = bond_axis_windows,
         bond_axis_index_separation = index_separation,
         left_core_box_bond_axis_range = left_core[bond_axis_index],
         right_core_box_bond_axis_range = right_core[bond_axis_index],
         minimum_disjoint_index_separation = core_side,
         bond_axis_gap,
+        seed_overlap_touch_or_gap =
+            bond_axis_gap < 0 ? :overlap :
+            bond_axis_gap == 0 ? :touch :
+            :gap,
+        proposed_combined_core_bond_axis_range =
+            proposed_contact_core[bond_axis_index],
+        proposed_combined_core_dimensions = proposed_contact_core_dimensions,
+        proposed_combined_core_support_count =
+            prod(proposed_contact_core_dimensions),
         transverse_ranges_overlap,
         core_boxes,
         classification,
@@ -310,6 +360,26 @@ function _probe_topology_facts(stage)
             _probe_get(unit_inventory, :terminal_region_roles, nothing),
             (),
         )
+    support_counts =
+        _probe_first_notnothing(
+            _probe_get(unit_inventory, :support_counts, nothing),
+            !isnothing(scaffold) ?
+            Tuple(_probe_get(region, :support_count) for region in scaffold.regions) :
+            nothing,
+            nothing,
+        )
+    atom_contact_core_count =
+        _probe_count_equal(ordered_region_roles, :atom_contact_core)
+    atom_contact_core_support_count =
+        isnothing(support_counts) ?
+        nothing :
+        sum(
+            index -> ordered_region_roles[index] === :atom_contact_core ?
+                     support_counts[index] :
+                     0,
+            eachindex(support_counts);
+            init = 0,
+        )
     coverage = _probe_get(scaffold, :coverage)
     return (;
         shellification_status =
@@ -354,14 +424,9 @@ function _probe_topology_facts(stage)
             ),
         ordered_region_roles,
         region_count = _probe_get(scaffold, :region_count),
-        support_counts_by_region =
-            _probe_first_notnothing(
-                _probe_get(unit_inventory, :support_counts, nothing),
-                !isnothing(scaffold) ?
-                Tuple(_probe_get(region, :support_count) for region in scaffold.regions) :
-                nothing,
-                nothing,
-            ),
+        support_counts_by_region = support_counts,
+        atom_contact_core_count,
+        atom_contact_core_support_count,
         unit_count = _probe_get(unit_inventory, :unit_count),
         unit_roles = _probe_get(unit_inventory, :unit_roles),
         unit_kinds = _probe_get(unit_inventory, :unit_kinds),
@@ -397,6 +462,9 @@ function _probe_print_topology(label, stage)
 end
 
 function _probe_h2_geometry_comparison()
+    h2_spacing_inputs = (; q, n_s, reference_spacing, tail_spacing,
+        q_to_core_spacing_rule, core_spacing = 0.5, xmax_parallel = 6.0,
+        xmax_transverse = 4.0)
     h2_system_inputs = (;
         atom_symbols = ("H", "H"),
         nuclear_charges = (1, 1),
@@ -413,12 +481,12 @@ function _probe_h2_geometry_comparison()
     recipe = GaussletBases.cartesian_recipe(route_inputs)
     parent = GaussletBases.cartesian_parent(
         system,
-        spacing_inputs,
+        h2_spacing_inputs,
         parent_inputs,
         recipe,
     )
     _probe_print_geometry("h2_materialized_fixture_geometry", parent)
-    shells = GaussletBases.cartesian_shells(parent, spacing_inputs, recipe)
+    shells = GaussletBases.cartesian_shells(parent, h2_spacing_inputs, recipe)
     _probe_print_topology("h2_shells_topology", shells)
     units = GaussletBases.cartesian_units(parent, shells, recipe)
     _probe_print_topology("h2_units_topology", units)

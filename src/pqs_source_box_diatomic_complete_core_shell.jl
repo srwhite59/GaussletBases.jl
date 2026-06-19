@@ -232,6 +232,8 @@ function _pqs_source_box_route_driver_independent_h2_support_region_plan(
         bond_axis,
     )
     regions = raw.regions
+    contact_regions =
+        Tuple(region for region in regions if region.role == :atom_contact_core)
     atom_regions = Tuple(region for region in regions if region.role == :atom_local_core)
     midpoint_regions = Tuple(region for region in regions if region.role == :midpoint_slab)
     shared_regions = sort(
@@ -239,17 +241,28 @@ function _pqs_source_box_route_driver_independent_h2_support_region_plan(
         by = region -> prod(length.(region.outer_box)),
         rev = true,
     )
-    length(atom_regions) == 2 && length(midpoint_regions) == 1 &&
+    contact_core_available =
+        length(contact_regions) == 1 &&
+        isempty(atom_regions) &&
+        isempty(midpoint_regions)
+    separated_core_available =
+        length(atom_regions) == 2 &&
+        length(midpoint_regions) == 1 &&
+        isempty(contact_regions)
+    (contact_core_available || separated_core_available) &&
         length(shared_regions) == 2 ||
         return blocked(:unexpected_independent_h2_terminal_region_shape)
     support_order = (:atom_contact_core, :shared_shell_1, :shared_shell_2)
+    atom_contact_regions =
+        contact_core_available ?
+        contact_regions :
+        (atom_regions..., midpoint_regions...)
     support_counts = (;
         atom_contact_core =
-            sum(region.support_count for region in (atom_regions..., midpoint_regions...)),
+            sum(region.support_count for region in atom_contact_regions),
         shared_shell_1 = shared_regions[1].support_count,
         shared_shell_2 = shared_regions[2].support_count,
     )
-    atom_contact_regions = (atom_regions..., midpoint_regions...)
     atom_contact_support(region) =
         _nested_box_support_indices(
             region.box[1],

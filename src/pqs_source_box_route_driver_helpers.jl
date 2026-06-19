@@ -816,6 +816,16 @@ function cartesian_parent(system, spacing_inputs, parent_inputs, recipe)
 end
 
 function _pqs_source_box_route_driver_terminal_parent_axes(parent)
+    parent_basis_object =
+        hasproperty(parent, :parent_basis_object) ? parent.parent_basis_object : nothing
+    if !isnothing(parent_basis_object)
+        axes = CartesianParentGaussletBases.parent_axes(parent_basis_object)
+        return (
+            collect(axes.x.center_data),
+            collect(axes.y.center_data),
+            collect(axes.z.center_data),
+        )
+    end
     counts = _pqs_route_driver_axis_count_tuple(parent.axis_counts)
     isnothing(counts) &&
         throw(ArgumentError("terminal shellification requires parent axis counts"))
@@ -829,7 +839,16 @@ function _pqs_source_box_route_driver_terminal_center_index(count::Int)
     return cld(count, 2)
 end
 
-function _pqs_source_box_route_driver_terminal_nuclear_index_positions(parent)
+function _pqs_source_box_route_driver_terminal_nuclear_positions(parent)
+    parent_basis_object =
+        hasproperty(parent, :parent_basis_object) ? parent.parent_basis_object : nothing
+    if !isnothing(parent_basis_object)
+        return Tuple(
+            ntuple(axis -> Float64(location[axis]), 3)
+            for location in parent.atom_locations
+        )
+    end
+
     counts = _pqs_route_driver_axis_count_tuple(parent.axis_counts)
     isnothing(counts) &&
         throw(ArgumentError("terminal shellification requires parent axis counts"))
@@ -871,7 +890,7 @@ function _pqs_source_box_route_driver_shell_stage_terminal_shellification(
 )
     parent_axes = _pqs_source_box_route_driver_terminal_parent_axes(parent)
     nuclear_positions =
-        _pqs_source_box_route_driver_terminal_nuclear_index_positions(parent)
+        _pqs_source_box_route_driver_terminal_nuclear_positions(parent)
     policy =
         parent.system_classification == :one_center ?
         CartesianShellification.OneCenterShellification(;

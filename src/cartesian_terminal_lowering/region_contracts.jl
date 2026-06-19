@@ -17,7 +17,8 @@ function _raw_region(region)
 end
 
 function _direct_lowering_kind(region)
-    region.region_kind == :direct_core && return :direct_core_identity_cpb
+    region.region_kind in (:direct_core, :direct_atom_contact_core) &&
+        return :direct_core_identity_cpb
     region.region_kind == :direct_midpoint_slab && return :direct_slab_identity_cpb
     region.region_kind == :outer_mismatch_slab &&
         return :direct_boundary_slab_identity_cpb
@@ -167,6 +168,7 @@ end
 function available_contracts(region::CartesianShellification.TerminalRegion; pqs_q = nothing)
     if region.region_kind in (
         :direct_core,
+        :direct_atom_contact_core,
         :direct_midpoint_slab,
         :outer_mismatch_slab,
     )
