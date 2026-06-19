@@ -4402,3 +4402,60 @@ Guardrail update:
   add route metadata, residual-GTO diagnostics, provider modes, H1 eigenvalue
   mirrors, solver diagnostics, or a density transform to that format without a
   live consumer requirement.
+
+## Pass 306 - Prune Private H2 Residual-GTO Basis Sidecar
+
+Commit(s):
+- `07af18de` - Prune private H2 residual GTO basis sidecar
+
+Summary:
+- Deleted the private H2 residual-GTO basis-sidecar JLD2 writer and the large
+  sidecar roundtrip validator. The materialized H2 residual-GTO input now uses
+  `save_basis_artifact = false` and validates only the public
+  `CartesianIDAHamiltonian` Ham artifact.
+- Fixed the public constructor's small-metadata ownership bug by copying
+  `nuclear_charges` and `nuclear_positions`, while keeping already-owned dense
+  operator matrices no-copy/read-only.
+- Removed the `:one_body_only` provider admission path from the current H2
+  residual-GTO producer and updated algorithm/developer docs to describe the
+  deleted sidecar as intentionally gone unless a named consumer appears.
+
+Validation:
+- Doer reported `git diff --check`, package load, the focused public IDA test,
+  the `pqs_diatomic` ladder, docs build, and a direct no-basis Ham smoke showing
+  `artifact_kind = :cartesian_ida_hamiltonian`, `format_version = 1`,
+  no final-coefficient/residual-transform sidecar keys, center tensor size
+  `(489, 489, 2)`, and `nup = ndn = 1`.
+- Manager validated directly from the pushed commit while the response file was
+  delayed. `git show --check 07af18de`, package load,
+  `test/ida/cartesian_ida_hamiltonian_runtests.jl`, the `pqs_diatomic` ladder,
+  and docs build passed. The materialized ladder case reported the public Ham
+  artifact at `/Users/srw/dmrgtmp/h2_pqs_q5_independent_source_box_r4_gto_ham.jld2`
+  with `final_dimension = 471`, `residual_rank = 18`, and
+  `augmented_dimension = 489`.
+
+Goal advancement:
+- LT2/LT5/LT6: the H2 residual-GTO lane now has a single durable Ham consumer
+  artifact and no private basis-sidecar persistence contract. Residual/basis
+  data remain in memory only as construction facts.
+
+Medium-goal update:
+- Completed: private H2 basis/residual sidecar deletion. Active next blocker:
+  spin sectors are still hardcoded by the H2 residual-GTO IDA adapter instead
+  of coming from physical system/problem input.
+
+Risk / guardrail:
+- Do not revive a basis/provenance artifact unless a named downstream consumer
+  requires it. The next route work should keep the public artifact small and
+  avoid adding route metadata, residual diagnostics, or solver facts back into
+  the Ham format.
+
+Remaining blocker / next:
+- Put `nup` and `ndn` into the driver/system metadata path and consume them in
+  the public IDA Hamiltonian constructor. Exact H2/q5 source-plan dimensions
+  and source names remain a later generalization blocker.
+
+Line-count / complexity note:
+- The pass was strongly line-negative: `41` insertions / `426` deletions
+  (`-385` lines), with the deleted sidecar validator accounting for most of the
+  reduction.
