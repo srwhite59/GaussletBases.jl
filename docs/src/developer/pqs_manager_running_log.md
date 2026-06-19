@@ -4312,3 +4312,93 @@ Line-count / complexity note:
 - Source/docs/test impact was `227` insertions / `31` deletions (`+196`
   lines). This is acceptable only as a short-lived replacement boundary before
   the private artifact deletion pass.
+
+## Pass 305 - Use Public Cartesian IDA Artifact For H2 Residual-GTO Ham
+
+Commit(s):
+- `3d095485` - Use public Cartesian IDA artifact for H2 residual GTO Ham
+
+Summary:
+- Switched the materialized H2 residual-GTO Ham artifact from the private
+  `:pqs_h2_residual_gto_sidecar_ham_bundle` field cloud to the public
+  `CartesianIDAHamiltonian` JLD2 writer/reader.
+- Deleted the private Ham artifact's copied route metadata, base/augmented H1
+  mirrors, GTO overlap/residual sidecar copies, provider-mode fields, and
+  density/residual diagnostics.
+- Renamed the materialization result to
+  `:h2_pqs_residual_gto_ida_hamiltonian`.
+- Kept the private basis/residual sidecar only as construction/debug data for
+  final coefficients, residual transforms, density carrier, and residual moment
+  descriptors.
+- Updated Cartesian developer docs to say the H2 residual-GTO route now writes
+  a public Cartesian IDA Hamiltonian artifact on the Ham side.
+
+Validation:
+- Doer reported `git diff --check`, package load, the focused public IDA test,
+  pqs_diatomic ladder, direct public-Ham JLD2 inspection, and docs build.
+- Manager reran diff check, the focused public IDA test, package load, the
+  pqs_diatomic ladder, direct JLD2 inspection, and docs build. All passed; the
+  materialized case reported
+  `result_kind = :h2_pqs_residual_gto_ida_hamiltonian`,
+  `ida_full_self_coulomb = 0.4574354750591777`, and
+  `ida_counterpoise_branch_count = 2`. The direct artifact check showed
+  `artifact_kind = :cartesian_ida_hamiltonian`, `format_version = 1`,
+  center tensor size `(489, 489, 2)`, and no route metadata.
+
+Goal advancement:
+- LT5/LT6: completes the current public one-basis IDA artifact transition for
+  the H2 residual-GTO Ham side. The consumer boundary is now `K`, `{U_A}`,
+  `Vee`, charges/positions, and spin counts, not private route payloads.
+- LT2: pays down the line-positive public API pass by deleting the old private
+  Ham sidecar reader/writer surface.
+
+Medium-goal update:
+- The Ham side is no longer the blocker for public IDA handoff. Remaining
+  blockers are route-neutral/general-diatomic construction, H2/q5 fixture
+  assumptions, private basis/residual sidecar ownership, and Cr2-scale
+  performance/source-plan validation.
+
+Risk / guardrail:
+- Do not broaden the public artifact with route metadata, residual diagnostics,
+  provider modes, or old H1 mirrors. If residual construction data remains
+  useful, keep it in a clearly private basis/debug sidecar or delete it after
+  the producer no longer needs it.
+
+Remaining blocker / next:
+- Stop for review before route-neutral producer work. The next lane should be a
+  deliberate manager choice: private basis-sidecar cleanup, route-neutral
+  producer design, source-plan generalization beyond H2/q5, or Cr2 preparation.
+
+Line-count / complexity note:
+- Source/docs impact was `48` insertions / `467` deletions (`-419` lines), a
+  major carrying-cost reduction and the intended payoff for the public artifact
+  boundary.
+
+## Medium-Term Goal Checkpoint - Passes 301-305
+
+Status:
+- Completed: separated residual-GTO one-body components. The H2 residual-GTO
+  route now carries augmented kinetic and separated unit-nuclear center
+  matrices before assembling charged H1.
+- Completed: internal one-basis IDA object. The obsolete private H/V/T object
+  with identity density transform has been removed.
+- Completed: semantic cleanup. Counterpoise uses `center_weights`, positions
+  are `ncenter x 3`, and nuclear repulsion is derived from physical charges and
+  positions.
+- Completed: public `CartesianIDAHamiltonian` and minimal JLD2 reader/writer.
+  The public artifact stores only the all-electron one-basis IDA fields.
+- Completed for H2 Ham side: the materialized H2 residual-GTO Ham artifact now
+  uses the public IDA writer/reader and no longer stores private route/Ham
+  sidecar diagnostics.
+- Active: private basis/residual sidecar cleanup. It still carries construction
+  and debug data needed by the current H2 materialized lane.
+- Blocked: Cr2/general-diatomic promotion remains blocked on route-neutral
+  producer design, removal of H2/q5 fixture assumptions, source-plan
+  generalization, and performance review at Cr2-relevant sizes.
+
+Guardrail update:
+- The public Hamiltonian artifact is intentionally small: `K`, `{U_A}`, `Vee`,
+  physical nuclear charges, `ncenter x 3` positions, and spin counts. Do not
+  add route metadata, residual-GTO diagnostics, provider modes, H1 eigenvalue
+  mirrors, solver diagnostics, or a density transform to that format without a
+  live consumer requirement.
