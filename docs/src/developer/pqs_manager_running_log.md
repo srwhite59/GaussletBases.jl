@@ -4734,3 +4734,66 @@ Line-count / complexity note:
   line-positive because it separates the harness from the template and adds a
   policy test, but it reduces conceptual carrying cost by quarantining ladder
   instrumentation outside `bin/cartesian_ham_builder.jl`.
+
+## Pass 312 - Expose Diatomic Terminal Shellification Topology
+
+Commit(s):
+- `3b45fc01` - Expose diatomic terminal shellification topology
+
+Summary:
+- Enabled the public shellification gate for PQS bond-aligned diatomics, using
+  the already-reviewed odd-`q` direct-core policy. The public stage spine now
+  carries compact shellification status through `cartesian_shells`,
+  `cartesian_units`, and `cartesian_transforms`.
+- Kept Hamiltonian assembly and materialization semantics unchanged. Assembly
+  still calls the H2-specific independent source-plan path; this pass only
+  made terminal shellification/lowering topology visible before assembly.
+- Updated the Cr2 stage probe to inspect actual public-stage topology objects:
+  shellification scaffold, low-order unit inventory, and lowering contract
+  inventory.
+- For H2 q5, the public terminal topology is now visible as two direct atom
+  cores, one central distorted product box, and four transverse outer mismatch
+  slabs. This differs materially from the old assembly-facing
+  `atom_contact_core/shared_shell_1/shared_shell_2` story.
+- For Cr2 q5, `cartesian_shells`, `cartesian_units`, and
+  `cartesian_transforms` now report
+  `:blocked_terminal_cartesian_shellification_geometry` with the overlap
+  blocker before assembly separately fails on the same geometry issue.
+
+Validation:
+- Doer reported `git diff --check`, package load, Cr2 stage probe, and
+  `pqs_diatomic` line ladder.
+- Manager reran `git diff --check`, package load, Cr2 stage probe, and
+  `julia --project=. tools/run_cartesian_line_ladder.jl --line=pqs_diatomic`.
+  All existing H2 ladder cases passed. The materialized case retained
+  `final_dimension = 471`, `residual_rank = 18`, `augmented_dimension = 489`,
+  and H1 lowest `-0.7946037173365894`.
+
+Goal advancement:
+- LT5/LT6: moves the true geometry/topology authority up into the public stage
+  spine, which is required before replacing assembly-time H2 reconstruction.
+- MT: refines the Cr2 blocker. Cr2 is not blocked by supplement wiring in this
+  pass; it is blocked because q5 direct atom cores overlap on the snapped
+  parent grid before any terminal unit/lowering inventory can be built.
+
+Risk / guardrail:
+- The shellification helper now converts terminal geometry failures into a
+  blocked shellification status for visibility. This is acceptable for the
+  staged route, but it must not become a way to silently continue into a fake
+  successful Hamiltonian; assembly still fails for Cr2.
+- Probe additions are intentionally developer-only and should be pruned or
+  collapsed once assembly consumes the public topology.
+
+Remaining blocker / next:
+- Design the assembly handoff from the visible terminal lowering contracts.
+  The next pass should not delete H2 admissions blindly; it should decide how
+  the existing source-plan/final-basis builder consumes ordered terminal
+  records such as direct atom cores, distorted product boxes, and outer
+  mismatch slabs.
+- Separately, Cr2 q5 still needs a geometry/core policy decision for overlapping
+  short-bond atom cores before it can produce terminal units.
+
+Line-count / complexity note:
+- Line-positive pass: `+245/-15`, mostly in the Cr2 probe. This is acceptable
+  as a one-pass topology audit, but the probe output/helpers should not become
+  product surface.
