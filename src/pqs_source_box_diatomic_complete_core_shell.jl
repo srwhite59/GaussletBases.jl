@@ -1860,8 +1860,10 @@ function _pqs_source_box_route_driver_independent_h2_complete_core_shell_source_
 
     support_order = (:atom_contact_core, :shared_shell_1, :shared_shell_2)
     retained_order = support_order
-    support_counts = (275, 578, 362)
-    retained_counts = (275, 98, 98)
+    support_counts =
+        Tuple(getproperty(target_payload.support_counts, role) for role in support_order)
+    retained_counts =
+        Tuple(getproperty(target_payload.retained_counts, role) for role in retained_order)
     target_payload.support_units == support_order ||
         return blocked(:independent_pqs_source_plan_support_order_mismatch)
     target_payload.retained_order == retained_order ||
