@@ -4196,3 +4196,61 @@ Line-count / complexity note:
 - Source impact was `173` insertions / `138` deletions (`+35` lines). The
   conceptual surface shrank even though the constructor made the pass slightly
   line-positive.
+
+## Pass 303 - Clean Up Cartesian IDA Hamiltonian Semantics
+
+Commit(s):
+- `ee9cfd88` - Clean up Cartesian IDA Hamiltonian semantics
+
+Summary:
+- Renamed the implementation file to `cartesian_ida_hamiltonian.jl` and updated
+  the include.
+- Replaced ambiguous effective-charge `charge_multipliers` semantics with
+  `center_weights`, so branch H1 and nuclear repulsion use
+  `w_A * Z_A` while the object retains physical nuclear charges.
+- Changed `_CartesianIDAHamiltonian` so nuclear repulsion is derived from
+  stored physical charges and `ncenter x 3` positions rather than accepted as a
+  caller-provided all-electron value.
+- Removed private persistence/readback fields for
+  `augmented_h1_component_reconstruction_error`,
+  `nuclear_attraction_unit_by_center_count`, and `ida_nuclear_repulsion`.
+- Updated Algorithms docs to state that the private H2 residual-GTO lane now
+  uses an internal one-basis IDA object while the public type and
+  writer/reader remain pending.
+
+Validation:
+- Doer reported `git diff --check`, package load,
+  `julia --project=. tools/run_cartesian_line_ladder.jl --line=pqs_diatomic`,
+  and `julia --project=docs docs/make.jl`.
+- Manager reran diff check on `ee9cfd88`, package load, docs build, and the
+  pqs_diatomic ladder. All three ladder cases passed; the materialized case
+  reported `ida_full_self_coulomb = 0.4574354750591777` and
+  `ida_counterpoise_branch_count = 2`.
+
+Goal advancement:
+- LT5/LT6: removes the last semantic ambiguity before public IDA artifact
+  promotion. Counterpoise is now framed as center weighting of stored physical
+  charges rather than passing effective charges under a misleading name.
+- LT2: deletes private derived artifact mirrors that should not enter the
+  public format.
+
+Medium-goal update:
+- The public IDA artifact shape can now be implemented narrowly around `K`,
+  `{U_A}`, `Vee`, physical nuclear charges, `ncenter x 3` positions, and
+  spin-sector defaults. It should replace the private H2 artifact in the next
+  deletion pass, not coexist indefinitely.
+
+Risk / guardrail:
+- The remaining private H2 artifact still carries route-side diagnostic fields
+  such as augmented H1 lowest/symmetry and augmented density dimension. Keep
+  them out of the public artifact and delete them when the public reader
+  replaces the private sidecar reader.
+
+Remaining blocker / next:
+- Add the public `CartesianIDAHamiltonian` type plus minimal versioned JLD2
+  writer/reader. Do not generalize to Cr2 or switch the H2 ladder until that
+  public format is reviewed.
+
+Line-count / complexity note:
+- Source/docs impact was `64` insertions / `98` deletions (`-34` lines), a
+  useful semantic cleanup before the public API pass.
