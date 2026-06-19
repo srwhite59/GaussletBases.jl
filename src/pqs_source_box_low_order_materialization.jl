@@ -430,16 +430,16 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
         nothing
     nuclear_repulsion =
         _pqs_source_box_route_driver_nuclear_repulsion(route_metadata)
-    ham_handoff =
+    ida_hamiltonian =
         provider_block_mode === :one_body_and_density_provider ?
-        _pqs_source_box_route_driver_pqs_h2_residual_gto_ham_handoff(
+        _pqs_source_box_route_driver_pqs_h2_residual_gto_ida_hamiltonian(
             one_body_blocks,
             density_blocks,
             route_metadata,
         ) :
         nothing
-    ham_handoff_summary =
-        _pqs_source_box_route_driver_ham_handoff_summary(ham_handoff)
+    ida_hamiltonian_summary =
+        _pqs_source_box_route_driver_ida_hamiltonian_summary(ida_hamiltonian)
     final_basis = inputs.final_basis
     h1_hamiltonian = inputs.h1_hamiltonian
     h1 = inputs.h1
@@ -493,7 +493,7 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
                 density_blocks,
                 :augmented_pair_matrix_symmetry_error,
             ),
-        ham_handoff_summary...,
+        ida_hamiltonian_summary...,
     )
 
     basis_artifact_path = nothing
@@ -613,15 +613,11 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
                     :nuclear_attraction_unit_by_center_count,
                 ),
             )
-            if !isnothing(ham_handoff)
-                file["ham_handoff_orbital_basis"] = ham_handoff.orbital_basis
-                file["ham_handoff_density_basis"] = ham_handoff.density_basis
-                file["ham_handoff_electron_count"] =
-                    ham_handoff.nup + ham_handoff.ndn
-                file["ham_handoff_spin_nup"] = ham_handoff.nup
-                file["ham_handoff_spin_ndn"] = ham_handoff.ndn
-                file["ham_handoff_nuclear_repulsion"] =
-                    ham_handoff.constant_energy
+            if !isnothing(ida_hamiltonian)
+                file["ida_spin_nup"] = ida_hamiltonian.nup
+                file["ida_spin_ndn"] = ida_hamiltonian.ndn
+                file["ida_nuclear_repulsion"] =
+                    ida_hamiltonian.nuclear_repulsion
             end
         end
     end
@@ -661,12 +657,15 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
         augmented_density_dimension = summary.augmented_density_dimension,
         augmented_pair_matrix_symmetry_error =
             summary.augmented_pair_matrix_symmetry_error,
-        ham_handoff,
-        ham_handoff_summary...,
+        ida_hamiltonian,
+        ida_hamiltonian_summary...,
         augmented_dimension,
         augmented_h1_lowest,
         augmented_h1_symmetry_error,
         augmented_h1_component_reconstruction_error,
+        ida_full_self_coulomb = optional(artifact_roundtrip, :ida_full_self_coulomb),
+        ida_counterpoise_branch_count =
+            optional(artifact_roundtrip, :ida_counterpoise_branch_count),
         save_basis_artifact_requested = save_basis_artifact,
         save_ham_artifact_requested = save_ham_artifact,
         basisfile = basis_artifact_path,

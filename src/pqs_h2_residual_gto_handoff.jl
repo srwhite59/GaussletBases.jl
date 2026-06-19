@@ -581,63 +581,41 @@ function _pqs_source_box_route_driver_nuclear_repulsion(route_metadata)
     return repulsion
 end
 
-function _pqs_source_box_route_driver_augmented_density_transform(
-    one_body_blocks,
-    density_blocks,
-)
-    augmented_dimension = one_body_blocks.augmented_dimension
-    density_dimension = density_blocks.augmented_density_dimension
-    density_dimension == augmented_dimension ||
-        throw(DimensionMismatch("augmented density and orbital dimensions must match"))
-    return Matrix{Float64}(I, augmented_dimension, augmented_dimension)
-end
-
-function _pqs_source_box_route_driver_pqs_h2_residual_gto_ham_handoff(
+function _pqs_source_box_route_driver_pqs_h2_residual_gto_ida_hamiltonian(
     one_body_blocks,
     density_blocks,
     route_metadata,
 )
     isnothing(one_body_blocks) &&
-        throw(ArgumentError("H2 residual-GTO Ham handoff requires one-body blocks"))
+        throw(ArgumentError("H2 residual-GTO IDA Hamiltonian requires one-body blocks"))
     isnothing(density_blocks) &&
-        throw(ArgumentError("H2 residual-GTO Ham handoff requires density blocks"))
+        throw(ArgumentError("H2 residual-GTO IDA Hamiltonian requires density blocks"))
     nuclear_repulsion =
         _pqs_source_box_route_driver_nuclear_repulsion(route_metadata)
     isfinite(Float64(nuclear_repulsion)) ||
-        throw(ArgumentError("H2 residual-GTO Ham handoff requires finite nuclear repulsion"))
-    orbital_to_density =
-        _pqs_source_box_route_driver_augmented_density_transform(
-            one_body_blocks,
-            density_blocks,
-        )
-    return _CartesianDensityDensityHamiltonian(
-        one_body_blocks.augmented_one_body_hamiltonian,
+        throw(ArgumentError("H2 residual-GTO IDA Hamiltonian requires finite nuclear repulsion"))
+    return _CartesianIDAHamiltonian(
+        one_body_blocks.augmented_kinetic,
+        one_body_blocks.augmented_nuclear_attraction_unit_by_center,
         density_blocks.augmented_pair_matrix,
-        orbital_to_density,
         1,
         1,
         nuclear_repulsion;
-        orbital_basis = (:localized_ida_pqs, :residual_gto),
-        density_basis = (:localized_ida_pqs, :residual_gto),
         nuclear_charges = route_metadata.nuclear_charges,
         nuclear_positions = route_metadata.atom_locations,
     )
 end
 
-function _pqs_source_box_route_driver_ham_handoff_summary(ham_handoff)
-    isnothing(ham_handoff) &&
+function _pqs_source_box_route_driver_ida_hamiltonian_summary(ida_hamiltonian)
+    isnothing(ida_hamiltonian) &&
         return (;
-            ham_handoff_orbital_basis = nothing,
-            ham_handoff_density_basis = nothing,
-            ham_handoff_orbital_dimension = nothing,
-            ham_handoff_density_dimension = nothing,
+            ida_orbital_dimension = nothing,
+            ida_center_count = nothing,
         )
 
     return (;
-        ham_handoff_orbital_basis = ham_handoff.orbital_basis,
-        ham_handoff_density_basis = ham_handoff.density_basis,
-        ham_handoff_orbital_dimension = size(ham_handoff.one_body, 1),
-        ham_handoff_density_dimension = size(ham_handoff.density_interaction, 1),
+        ida_orbital_dimension = size(ida_hamiltonian.kinetic, 1),
+        ida_center_count = length(ida_hamiltonian.nuclear_charges),
     )
 end
 
@@ -1143,17 +1121,47 @@ function _pqs_source_box_route_driver_symmetric_matrix(
     return symmetry_error
 end
 
-function _pqs_source_box_route_driver_ham_handoff_consumer_invariant(ham_handoff)
-    h1_orbital = eigen(Symmetric(ham_handoff.one_body)).vectors[:, 1]
-    density_coefficients = ham_handoff.orbital_to_density * h1_orbital
+function _pqs_source_box_route_driver_ida_hamiltonian_smoke(ida_hamiltonian)
+    full_h1 = _cartesian_ida_one_body(ida_hamiltonian)
+    full_h1_symmetry_error =
+        norm(full_h1 - transpose(full_h1), Inf)
+    full_h1_symmetry_error <= 1.0e-8 ||
+        throw(ArgumentError("IDA full H1 reconstruction is not symmetric"))
+    h1_eigen = eigen(Symmetric(full_h1))
+    h1_orbital = h1_eigen.vectors[:, 1]
     self_coulomb =
         _pqs_source_box_route_driver_restricted_one_orbital_self_coulomb(
-            ham_handoff.density_interaction,
-            density_coefficients,
+            ida_hamiltonian.electron_electron_ida,
+            h1_orbital,
         )
     isfinite(self_coulomb) && self_coulomb > 0 ||
-        throw(ArgumentError("Ham handoff consumer H/V/T scalar must be finite and positive"))
-    return (; self_coulomb,)
+        throw(ArgumentError("IDA self-Coulomb scalar must be finite and positive"))
+
+    center_count = length(ida_hamiltonian.nuclear_charges)
+    center_count == 2 ||
+        throw(ArgumentError("H2 IDA counterpoise smoke expects exactly two centers"))
+    for active_center in 1:center_count
+        multipliers = zeros(Float64, center_count)
+        multipliers[active_center] = ida_hamiltonian.nuclear_charges[active_center]
+        branch_h1 =
+            _cartesian_ida_one_body(ida_hamiltonian; charge_multipliers = multipliers)
+        norm(branch_h1 - transpose(branch_h1), Inf) <= 1.0e-8 ||
+            throw(ArgumentError("IDA counterpoise branch H1 is not symmetric"))
+        isfinite(eigen(Symmetric(branch_h1)).values[1]) ||
+            throw(ArgumentError("IDA counterpoise branch H1 lowest value is not finite"))
+        _cartesian_ida_nuclear_repulsion(
+            ida_hamiltonian;
+            charge_multipliers = multipliers,
+        ) == 0.0 ||
+            throw(ArgumentError("IDA ghost branch nuclear repulsion must be zero"))
+    end
+    full_nuclear_repulsion = _cartesian_ida_nuclear_repulsion(ida_hamiltonian)
+    abs(full_nuclear_repulsion - ida_hamiltonian.nuclear_repulsion) <= 1.0e-8 ||
+        throw(ArgumentError("IDA nuclear repulsion reconstruction mismatch"))
+    return (;
+        full_self_coulomb = self_coulomb,
+        counterpoise_branch_count = center_count,
+    )
 end
 
 """
@@ -1548,12 +1556,9 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                                 :residual_centers,
                                 :residual_widths,
                                 :residual_moment_overlap_error,
-                                :ham_handoff_orbital_basis,
-                                :ham_handoff_density_basis,
-                                :ham_handoff_electron_count,
-                                :ham_handoff_spin_nup,
-                                :ham_handoff_spin_ndn,
-                                :ham_handoff_nuclear_repulsion,
+                                :ida_spin_nup,
+                                :ida_spin_ndn,
+                                :ida_nuclear_repulsion,
                             ),
                         )
                         augmented_density_dimension =
@@ -1570,49 +1575,41 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
                             Float64(file["augmented_pair_matrix_symmetry_error"])
                         isfinite(augmented_pair_matrix_symmetry_error) ||
                             throw(ArgumentError("augmented_pair_matrix_symmetry_error must be finite"))
-                        orbital_basis = Tuple(file["ham_handoff_orbital_basis"])
-                        density_basis = Tuple(file["ham_handoff_density_basis"])
-                        orbital_basis ===
-                            (:localized_ida_pqs, :residual_gto) ||
-                            throw(ArgumentError("unexpected Ham handoff orbital basis"))
-                        density_basis ===
-                            (:localized_ida_pqs, :residual_gto) ||
-                            throw(ArgumentError("unexpected Ham handoff density basis"))
-                        orbital_to_density =
-                            Matrix{Float64}(I, augmented_dimension, augmented_dimension)
-                        ham_handoff = _CartesianDensityDensityHamiltonian(
-                            augmented_one_body_hamiltonian,
+                        ida_hamiltonian = _CartesianIDAHamiltonian(
+                            augmented_kinetic,
+                            augmented_nuclear_attraction_unit_by_center,
                             augmented_pair_matrix,
-                            orbital_to_density,
-                            Int(file["ham_handoff_spin_nup"]),
-                            Int(file["ham_handoff_spin_ndn"]),
-                            Float64(file["ham_handoff_nuclear_repulsion"]);
-                            orbital_basis,
-                            density_basis,
+                            Int(file["ida_spin_nup"]),
+                            Int(file["ida_spin_ndn"]),
+                            Float64(file["ida_nuclear_repulsion"]);
                             nuclear_charges = route_metadata.nuclear_charges,
                             nuclear_positions = route_metadata.atom_locations,
                         )
-                        Int(file["ham_handoff_electron_count"]) ==
-                            ham_handoff.nup + ham_handoff.ndn ||
-                            throw(ArgumentError("Ham handoff electron count must match spin sectors"))
-                        consumer_invariant =
-                            _pqs_source_box_route_driver_ham_handoff_consumer_invariant(
-                                ham_handoff,
+                        ida_smoke =
+                            _pqs_source_box_route_driver_ida_hamiltonian_smoke(
+                                ida_hamiltonian,
                             )
                         (;
                             augmented_density_dimension,
                             augmented_pair_matrix_size =
-                                size(ham_handoff.density_interaction),
+                                size(ida_hamiltonian.electron_electron_ida),
                             augmented_pair_matrix_symmetry_error,
-                            ham_handoff_consumer_self_coulomb =
-                                consumer_invariant.self_coulomb,
+                            ida_orbital_dimension = size(ida_hamiltonian.kinetic, 1),
+                            ida_center_count =
+                                length(ida_hamiltonian.nuclear_charges),
+                            ida_full_self_coulomb = ida_smoke.full_self_coulomb,
+                            ida_counterpoise_branch_count =
+                                ida_smoke.counterpoise_branch_count,
                         )
                     else
                         (;
                             augmented_density_dimension = nothing,
                             augmented_pair_matrix_size = nothing,
                             augmented_pair_matrix_symmetry_error = nothing,
-                            ham_handoff_consumer_self_coulomb = nothing,
+                            ida_orbital_dimension = nothing,
+                            ida_center_count = nothing,
+                            ida_full_self_coulomb = nothing,
+                            ida_counterpoise_branch_count = nothing,
                         )
                     end
                 (;
@@ -1701,8 +1698,11 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_sidecar_artifact_round
         augmented_h1_symmetry_error = ham_facts.augmented_h1_symmetry_error,
         augmented_h1_component_reconstruction_error =
             ham_facts.augmented_h1_component_reconstruction_error,
-        ham_handoff_consumer_self_coulomb =
-            ham_facts.ham_handoff_consumer_self_coulomb,
+        ida_orbital_dimension = ham_facts.ida_orbital_dimension,
+        ida_center_count = ham_facts.ida_center_count,
+        ida_full_self_coulomb = ham_facts.ida_full_self_coulomb,
+        ida_counterpoise_branch_count =
+            ham_facts.ida_counterpoise_branch_count,
         basis_gto_residual_overlap_symmetry_error =
             basis_facts.gto_residual_overlap_symmetry_error,
         ham_gto_residual_overlap_symmetry_error =

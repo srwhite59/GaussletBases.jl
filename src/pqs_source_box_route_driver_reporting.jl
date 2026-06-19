@@ -45,10 +45,10 @@ function _pqs_source_box_route_driver_print_materialization(materialization)
         :augmented_h1_symmetry_error,
         :augmented_density_dimension,
         :augmented_pair_matrix_symmetry_error,
-        :ham_handoff_orbital_basis,
-        :ham_handoff_density_basis,
-        :ham_handoff_orbital_dimension,
-        :ham_handoff_density_dimension,
+        :ida_orbital_dimension,
+        :ida_center_count,
+        :ida_full_self_coulomb,
+        :ida_counterpoise_branch_count,
         :basisfile,
         :hamfile,
     )
@@ -92,16 +92,16 @@ function _pqs_source_box_route_driver_durable_report(report)
 end
 
 function _pqs_source_box_route_driver_durable_materialization(materialization)
-    ham_handoff_elided =
-        hasproperty(materialization, :ham_handoff) &&
-        !isnothing(getproperty(materialization, :ham_handoff))
+    ida_hamiltonian_elided =
+        hasproperty(materialization, :ida_hamiltonian) &&
+        !isnothing(getproperty(materialization, :ida_hamiltonian))
     return (;
         (
             field =>
-                field === :ham_handoff ? nothing : getproperty(materialization, field)
+                field === :ida_hamiltonian ? nothing : getproperty(materialization, field)
             for field in keys(materialization)
         )...,
-        heavy_materialization_objects_elided = ham_handoff_elided,
+        heavy_materialization_objects_elided = ida_hamiltonian_elided,
     )
 end
 

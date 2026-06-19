@@ -1,14 +1,12 @@
-struct _CartesianDensityDensityHamiltonian{T}
-    one_body::Matrix{T}
-    density_interaction::Matrix{T}
-    orbital_to_density::Matrix{T}
+struct _CartesianIDAHamiltonian{T}
+    kinetic::Matrix{T}
+    nuclear_attraction_unit_by_center::Vector{Matrix{T}}
+    electron_electron_ida::Matrix{T}
     nup::Int
     ndn::Int
-    constant_energy::T
-    orbital_basis::Tuple
-    density_basis::Tuple
     nuclear_charges::Vector{T}
     nuclear_positions::Matrix{T}
+    nuclear_repulsion::T
 end
 
 function _cartesian_nuclear_position_matrix(positions)
@@ -57,58 +55,96 @@ function _cartesian_check_symmetric_finite_matrix(
     return dense
 end
 
-function _CartesianDensityDensityHamiltonian(
-    one_body,
-    density_interaction,
-    orbital_to_density,
+function _CartesianIDAHamiltonian(
+    kinetic,
+    nuclear_attraction_unit_by_center,
+    electron_electron_ida,
     nup::Integer,
     ndn::Integer,
-    constant_energy::Real;
-    orbital_basis,
-    density_basis,
+    nuclear_repulsion::Real;
     nuclear_charges,
     nuclear_positions,
 )
-    one_body_matrix =
-        _cartesian_check_symmetric_finite_matrix("one-body Hamiltonian", one_body)
-    density_matrix =
+    kinetic_matrix =
+        _cartesian_check_symmetric_finite_matrix("kinetic energy", kinetic)
+    electron_electron_matrix =
         _cartesian_check_symmetric_finite_matrix(
-            "density interaction",
-            density_interaction,
+            "IDA electron-electron interaction",
+            electron_electron_ida,
         )
-    transform = _cartesian_dense_float_matrix(orbital_to_density)
-    size(transform) == (size(density_matrix, 1), size(one_body_matrix, 1)) ||
-        throw(DimensionMismatch("orbital-to-density transform shape mismatch"))
-    all(isfinite, transform) ||
-        throw(ArgumentError("orbital-to-density transform contains non-finite entries"))
+    size(electron_electron_matrix) == size(kinetic_matrix) ||
+        throw(DimensionMismatch("IDA one-body and electron-electron dimensions differ"))
+    center_matrices = Matrix{Float64}[
+        _cartesian_check_symmetric_finite_matrix(
+            "unit nuclear attraction",
+            matrix,
+        ) for matrix in nuclear_attraction_unit_by_center
+    ]
+    all(size(matrix) == size(kinetic_matrix) for matrix in center_matrices) ||
+        throw(DimensionMismatch("unit nuclear attraction dimensions differ"))
     nup_value = Int(nup)
     ndn_value = Int(ndn)
     nup_value >= 0 && ndn_value >= 0 && nup_value + ndn_value > 0 ||
         throw(ArgumentError("spin-sector electron counts must be non-negative and nonzero"))
-    norb = size(one_body_matrix, 1)
+    norb = size(kinetic_matrix, 1)
     nup_value <= norb && ndn_value <= norb ||
         throw(ArgumentError("spin-sector electron counts must not exceed orbital dimension"))
-    constant = Float64(constant_energy)
-    isfinite(constant) ||
-        throw(ArgumentError("constant energy must be finite"))
     charges = _cartesian_float_vector(nuclear_charges)
     all(isfinite, charges) ||
         throw(ArgumentError("nuclear charges contain non-finite entries"))
+    length(center_matrices) == length(charges) ||
+        throw(DimensionMismatch("unit nuclear attraction count must match charges"))
     positions = _cartesian_nuclear_position_matrix(nuclear_positions)
     size(positions, 1) == length(charges) ||
         throw(DimensionMismatch("nuclear position row count must match charges"))
     all(isfinite, positions) ||
         throw(ArgumentError("nuclear positions contain non-finite entries"))
-    return _CartesianDensityDensityHamiltonian{Float64}(
-        one_body_matrix,
-        density_matrix,
-        transform,
+    repulsion = Float64(nuclear_repulsion)
+    isfinite(repulsion) ||
+        throw(ArgumentError("nuclear repulsion must be finite"))
+    return _CartesianIDAHamiltonian{Float64}(
+        kinetic_matrix,
+        center_matrices,
+        electron_electron_matrix,
         nup_value,
         ndn_value,
-        constant,
-        Tuple(orbital_basis),
-        Tuple(density_basis),
         charges,
         positions,
+        repulsion,
     )
+end
+
+function _cartesian_ida_one_body(
+    ham::_CartesianIDAHamiltonian;
+    charge_multipliers = ham.nuclear_charges,
+)
+    multipliers = _cartesian_float_vector(charge_multipliers)
+    length(multipliers) == length(ham.nuclear_attraction_unit_by_center) ||
+        throw(DimensionMismatch("charge multiplier count must match centers"))
+    all(isfinite, multipliers) ||
+        throw(ArgumentError("charge multipliers contain non-finite entries"))
+    matrix = copy(ham.kinetic)
+    for (charge, nuclear) in zip(multipliers, ham.nuclear_attraction_unit_by_center)
+        matrix .+= charge .* nuclear
+    end
+    return matrix
+end
+
+function _cartesian_ida_nuclear_repulsion(
+    ham::_CartesianIDAHamiltonian;
+    charge_multipliers = ham.nuclear_charges,
+)
+    multipliers = _cartesian_float_vector(charge_multipliers)
+    length(multipliers) == length(ham.nuclear_charges) ||
+        throw(DimensionMismatch("charge multiplier count must match centers"))
+    all(isfinite, multipliers) ||
+        throw(ArgumentError("charge multipliers contain non-finite entries"))
+    repulsion = 0.0
+    for right in 2:length(multipliers), left in 1:(right - 1)
+        distance = norm(ham.nuclear_positions[right, :] .- ham.nuclear_positions[left, :])
+        distance > 0.0 ||
+            throw(ArgumentError("nuclear repulsion requires distinct centers"))
+        repulsion += multipliers[left] * multipliers[right] / distance
+    end
+    return repulsion
 end
