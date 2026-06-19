@@ -127,6 +127,148 @@ function _probe_dense_memory(dim, center_count)
     )
 end
 
+_probe_axis_index(axis::Symbol) =
+    axis === :x ? 1 :
+    axis === :y ? 2 :
+    axis === :z ? 3 :
+    throw(ArgumentError("unsupported bond axis $(repr(axis))"))
+
+_probe_axis_symbol(axis::Int) = (:x, :y, :z)[axis]
+
+function _probe_axis_centers(parent)
+    counts = _probe_get(parent, :axis_counts)
+    fallback =
+        isnothing(counts) ?
+        nothing :
+        (collect(1:counts.x), collect(1:counts.y), collect(1:counts.z))
+    basis = _probe_get(parent, :parent_basis_object)
+    isnothing(basis) && return fallback
+    axes = GaussletBases.CartesianParentGaussletBases.parent_axes(basis)
+    return (
+        collect(axes.x.center_data),
+        collect(axes.y.center_data),
+        collect(axes.z.center_data),
+    )
+end
+
+function _probe_nearest_index(axis_values, coordinate)
+    distances = abs.(Float64.(axis_values) .- Float64(coordinate))
+    return findmin(distances)[2]
+end
+
+function _probe_core_box(center::NTuple{3,Int}, side::Int)
+    radius = div(side - 1, 2)
+    return ntuple(axis -> (center[axis] - radius):(center[axis] + radius), 3)
+end
+
+_probe_ranges_overlap(a, b) = first(a) <= last(b) && first(b) <= last(a)
+
+function _probe_bond_length(locations)
+    length(locations) == 2 || return nothing
+    return sqrt(sum(
+        (Float64(locations[2][axis]) - Float64(locations[1][axis]))^2
+        for axis in 1:3
+    ))
+end
+
+function _probe_geometry_facts(parent)
+    setup = _probe_get(parent, :standard_setup)
+    axes = _probe_axis_centers(parent)
+    isnothing(setup) && return nothing
+    isnothing(axes) && return nothing
+    locations = Tuple(_probe_get(parent, :atom_locations, ()))
+    length(locations) == 2 || return nothing
+    core_side = setup.core_cube_side
+    bond_axis = _probe_get(parent, :bond_axis, :z)
+    bond_axis_index = _probe_axis_index(bond_axis)
+    nuclear_indices = Tuple(
+        ntuple(axis -> _probe_nearest_index(axes[axis], location[axis]), 3)
+        for location in locations
+    )
+    atom_axis_indices = Tuple(index[bond_axis_index] for index in nuclear_indices)
+    atom_order = Tuple(sortperm(collect(atom_axis_indices)))
+    left_atom, right_atom = atom_order
+    core_boxes = Tuple(_probe_core_box(index, core_side) for index in nuclear_indices)
+    left_core = core_boxes[left_atom]
+    right_core = core_boxes[right_atom]
+    index_separation =
+        abs(nuclear_indices[right_atom][bond_axis_index] -
+            nuclear_indices[left_atom][bond_axis_index])
+    bond_axis_gap =
+        first(right_core[bond_axis_index]) -
+        last(left_core[bond_axis_index]) - 1
+    transverse_ranges_overlap = Tuple(
+        (
+            axis = _probe_axis_symbol(axis),
+            overlap = _probe_ranges_overlap(left_core[axis], right_core[axis]),
+            left_range = left_core[axis],
+            right_range = right_core[axis],
+        ) for axis in 1:3 if axis != bond_axis_index
+    )
+    classification =
+        index_separation >= core_side && bond_axis_gap >= 0 ?
+        :passes_disjoint_atom_core_check :
+        :B_core_spacing_or_parent_grid_too_coarse_for_disjoint_atom_cores
+    return (;
+        q = setup.q,
+        n_s = setup.n_s,
+        standard_setup_core_cube_side = core_side,
+        terminal_shellification_core_side = core_side,
+        source_plan_geometry_core_side = core_side,
+        core_spacing = setup.core_spacing,
+        bond_length_bohr = _probe_bond_length(locations),
+        bond_axis,
+        parent_axis_counts = _probe_get(parent, :axis_counts),
+        nuclear_continuous_coordinates = locations,
+        nuclear_grid_indices = nuclear_indices,
+        bond_axis_index_separation = index_separation,
+        left_core_box_bond_axis_range = left_core[bond_axis_index],
+        right_core_box_bond_axis_range = right_core[bond_axis_index],
+        minimum_disjoint_index_separation = core_side,
+        bond_axis_gap,
+        transverse_ranges_overlap,
+        core_boxes,
+        classification,
+        call_path =
+            :pqs_independent_diatomic_support_plan_to_raw_terminal_geometry,
+    )
+end
+
+function _probe_print_geometry(label, parent)
+    facts = _probe_geometry_facts(parent)
+    isnothing(facts) && return nothing
+    println(label)
+    for key in keys(facts)
+        println("  ", key, " = ", getproperty(facts, key))
+    end
+    return facts
+end
+
+function _probe_h2_geometry_comparison()
+    h2_system_inputs = (;
+        atom_symbols = ("H", "H"),
+        nuclear_charges = (1, 1),
+        atom_locations = ((0.0, 0.0, -2.0), (0.0, 0.0, 2.0)),
+        nup = 1,
+        ndn = 1,
+        bond_axis = :z,
+        bond_length = 4.0,
+        radius = 4.0,
+        parent_axis_counts = nothing,
+        map_backend,
+    )
+    system = GaussletBases.cartesian_system(h2_system_inputs)
+    recipe = GaussletBases.cartesian_recipe(route_inputs)
+    parent = GaussletBases.cartesian_parent(
+        system,
+        spacing_inputs,
+        parent_inputs,
+        recipe,
+    )
+    _probe_print_geometry("h2_materialized_fixture_geometry", parent)
+    return nothing
+end
+
 function _probe_stage_summary(stage, value)
     if stage === :cartesian_system
         _probe_print("atom_symbols", _probe_get(value, :atom_symbols))
@@ -144,6 +286,7 @@ function _probe_stage_summary(stage, value)
             _probe_get(value, :system_classification))
         _probe_print("parent_axis_dimensions", _probe_get(value, :axis_counts))
         _probe_print("bond_axis", _probe_get(value, :bond_axis))
+        _probe_print_geometry("cr2_probe_geometry", value)
     elseif stage === :cartesian_shells
         scaffold = _probe_get(value, :shellification_scaffold)
         _probe_print("terminal_region_roles",
@@ -253,6 +396,8 @@ function _probe_finish()
     end
     return nothing
 end
+
+_probe_h2_geometry_comparison()
 
 system, ok = _probe_run_stage(:cartesian_system) do
     GaussletBases.cartesian_system(system_inputs)

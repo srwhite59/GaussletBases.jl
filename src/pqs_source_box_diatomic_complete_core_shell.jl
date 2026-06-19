@@ -222,11 +222,13 @@ function _pqs_source_box_route_driver_independent_h2_support_region_plan(
         hasproperty(parent, :atom_locations) ? Tuple(parent.atom_locations) : ()
     length(locations) == 2 || return blocked(:missing_diatomic_atom_locations)
     bond_axis = hasproperty(parent, :bond_axis) ? parent.bond_axis : :z
+    core_side = parent.standard_setup.core_cube_side
+    q = parent.standard_setup.q
     raw = CartesianShellification.raw_terminal_geometry(
         axes,
         Tuple(Tuple(Float64(value) for value in location) for location in locations);
-        core_side = 5,
-        q = 5,
+        core_side,
+        q,
         bond_axis,
     )
     regions = raw.regions
