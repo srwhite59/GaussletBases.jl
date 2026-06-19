@@ -60,7 +60,8 @@ of orbital coefficients in the same localized IDA basis.
   defines how one-dimensional data build Cartesian overlap, kinetic, nuclear,
   moment, and IDA pair quantities.
 - [PQS shell construction](pqs_shell_construction.md) defines the localized
-  shell-projection algorithm and the allowed shell-local Lowdin transforms.
+  shell-projection algorithm, the bond-aligned diatomic atom-contact core
+  hull rule, and the allowed shell-local Lowdin transforms.
 - [Residual-Gaussian extension](residual_gaussian_extension.md) defines the
   one-sided residualization and residual-block Lowdin for Gaussian supplements.
 - [IDA Hamiltonian and counterpoise](ida_hamiltonian_and_counterpoise.md)

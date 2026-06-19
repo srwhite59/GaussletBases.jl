@@ -401,6 +401,11 @@ function raw_terminal_geometry(
         right_core = centered_box(nuclear_indices[right_atom], core_side)
         initial_gap = gap_between(left_core, right_core, axis)
         if initial_gap < q
+            # Alg PQS-SHELL diatomic atom-contact core: if q-side atom seed
+            # boxes overlap, touch, or have a sub-q gap, use exactly their
+            # discrete hull as the direct core. Do not force double-core
+            # volume or odd bond-axis length.
+            # See docs/src/algorithms/pqs_shell_construction.md.
             contact_core = hull_box(left_core, right_core)
             push_region!(
                 role = :atom_contact_core,

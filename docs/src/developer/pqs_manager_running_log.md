@@ -4797,3 +4797,65 @@ Line-count / complexity note:
 - Line-positive pass: `+245/-15`, mostly in the Cr2 probe. This is acceptable
   as a one-pass topology audit, but the probe output/helpers should not become
   product surface.
+
+## Pass 313 - Add Diatomic Atom-Contact Core Shellification
+
+Commit(s):
+- `bbea7906` - Add diatomic atom-contact core shellification
+
+Summary:
+- Replaced the previous overlap-failure behavior for short-bond diatomic
+  q-side seed boxes with an explicit `:atom_contact_core` terminal region.
+  The region is a direct identity-lowered core whose support is the discrete
+  hull of the two atom seed boxes.
+- Corrected the geometry policy: this is not a forced double-core-volume rule.
+  Coincident nuclei collapse to one `q x q x q` core, small sub-core
+  separations produce only the necessary hull elongation, and H2 q5 produces
+  the familiar `5 x 5 x 11` / 275-row contact core.
+- Physical Cr2 at the reviewed fine mapped spacing is not in the contact-core
+  regime. It now shellifies through public stages as two atom-local cores,
+  atom-local shells, one midpoint slab, six shared molecular shells, and two
+  axial outer mismatch slabs. The remaining Cr2 blocker is assembly consuming
+  the old independent-H2 retained/support plan, not terminal shellification.
+- Added the contact-core hull rule to the public Algorithms documentation and
+  a code-map comment at the implementation seam.
+
+Validation:
+- Doer reported `git diff --check`, package load, the `pqs_diatomic` ladder,
+  and the Cr2 stage probe.
+- Manager reran `git diff --check`, package load, `julia --project=docs
+  docs/make.jl`, the Cr2 stage probe, and
+  `julia --project=. tools/run_cartesian_line_ladder.jl --line=pqs_diatomic`.
+  Docs built with only existing Documenter size warnings. The H2 ladder passed
+  all three cases; the materialized case retained `final_dimension = 471`,
+  `residual_rank = 18`, `augmented_dimension = 489`, H1 lowest
+  `-0.7946037173365863`, and overlap identity error
+  `5.29668900282789e-14`. The Cr2 probe reached `cartesian_pair_terms` and
+  failed at `cartesian_assembly` with the expected independent-H2 support-plan
+  blocker.
+
+Goal advancement:
+- LT5/LT6: makes terminal shellification geometry the route authority for the
+  short-bond atom-contact core case and removes another H2-only geometry story
+  from the conceptual path toward a general bond-aligned diatomic producer.
+- MT: Cr2 preparation advances from a geometry/core-overlap blocker to an
+  assembly/source-plan consumer blocker over an available 19-region terminal
+  topology.
+
+Risk / guardrail:
+- The `initial_gap < q` contact-core threshold is now documented as the active
+  PQS seed-box policy. Do not reinterpret it as a physical double-core-volume
+  rule or force odd hull length along the bond axis.
+- The Cr2 probe remains developer instrumentation. It should shrink once
+  assembly consumes ordered public terminal records.
+
+Remaining blocker / next:
+- Replace the independent-H2 retained/support-plan consumer in assembly with a
+  route-neutral consumer of ordered terminal lowering contracts. It must handle
+  direct atom-local/contact cores, direct slabs, arbitrary ordered PQS shell
+  records, and outer mismatch slabs without adding a Cr2 branch.
+
+Line-count / complexity note:
+- Doer pass was line-positive (`+187/-28`) mostly from probe/audit reporting.
+  The manager doc patch adds durable algorithm documentation and should prevent
+  this core-size policy from living only in chat or probe output.

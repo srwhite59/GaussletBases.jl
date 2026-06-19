@@ -85,6 +85,32 @@ raw product-box source modes
 
 8. Check, but do not globally repair, the full localized basis overlap.
 
+## Diatomic Atom-Contact Core Rule
+
+For a bond-aligned diatomic, first define one odd `q`-side atom seed box around
+each snapped nuclear grid index. These seed boxes describe direct gausslet
+support near each nucleus; they are not shell-projected PQS sectors.
+
+If the two seed boxes overlap, touch, or have a bond-axis gap shorter than `q`,
+the direct molecular core is the discrete hull of the two seed boxes:
+
+```text
+atom_contact_core = hull(left_q_seed_box, right_q_seed_box)
+```
+
+This hull rule is the entire size rule. Do not force a double-core volume and
+do not force the bond-axis length to be odd. For `q = 5`, coincident nuclei
+therefore give a `5 x 5 x 5` direct core, a small sub-core nuclear separation
+gives a slightly elongated direct core such as `5 x 5 x 6`, and the current
+H2 q5 fixture gives `5 x 5 x 11`.
+
+When the seed-box gap is at least `q`, keep the seed boxes as separate
+atom-local direct cores, grow atom-local projected shells outside them, and
+represent the central region by midpoint slabs or a distorted product box
+according to the terminal shellification geometry. In all cases, separated
+unit nuclear attraction matrices remain center-specific even when both nuclei
+lie inside the same direct atom-contact core.
+
 ## Linear Algebra
 
 The projection step is responsible for shell-to-inner orthogonality. The
@@ -138,6 +164,9 @@ same localized basis for the base all-electron Hamiltonian.
 - `src/cartesian_final_basis_realization/pqs_source_shell_final_basis.jl`
   implements shell projection, shell-local Lowdin cleanup, and shell block
   realization.
+- `src/cartesian_shellification/terminal_geometry.jl` implements the
+  diatomic atom-contact core seed-box hull rule and terminal region coverage
+  checks before lowering.
 - `src/cartesian_final_basis_realization/pqs_complete_core_shell_final_basis.jl`
   concatenates core and shell sectors and checks the completed overlap.
 - `src/pqs_multilayer_complete_core_shell_h1.jl` consumes the completed basis
