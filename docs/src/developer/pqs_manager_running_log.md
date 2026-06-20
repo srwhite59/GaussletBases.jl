@@ -5599,3 +5599,61 @@ Deletion accounting:
 - MT pair-stage authority: still open. The public pair stage remains a later
   cleanup/construction concern; do not extend the unused pair framework before
   the generic terminal shell realization is unblocked.
+
+## Pass 327 - Stop Blocked Final-Basis/H1 Wrapper Churn
+
+Commit(s):
+- this commit - Stop blocked final basis H1 wrapper churn
+
+Target card:
+- Target: avoid constructing blocked final-basis and H1 payload wrappers on
+  the independent terminal route when no source plan exists.
+- Physics endpoint: H2 and Cr2 remain on the same generic terminal route,
+  blocked at `:missing_terminal_shell_projection`.
+- Allowed files: `src/pqs_source_box_route_driver_helpers.jl`.
+- Forbidden additions: no payload type deletion, fake/source-backed behavior
+  changes, terminal shell projection, new summary/status fields, compatibility
+  adapters, or tests.
+- Success condition: independent terminal H2/Cr2 do not create blocked
+  final-basis/H1 wrapper objects when `source_plan` is absent, while real
+  source-backed source plans still take the same construction path.
+- Failure rule: if avoiding wrapper construction requires new status plumbing
+  or broader fake/source-backed branching, do not commit and report the
+  blocker.
+
+Summary:
+- Added a small guard in `cartesian_assembly` so
+  `_pqs_source_box_route_driver_diatomic_physical_gausslet_final_basis_payload`
+  is skipped when `diatomic_physical_gausslet_source_plan_payload.source_plan`
+  is `nothing`.
+- Added the corresponding guard so the H1 payload is skipped when no final
+  basis payload exists.
+- This reduces blocked-route object churn without adding a replacement payload
+  or changing the source-backed/fake route when it has a real source plan.
+
+Mechanical gate:
+- `git diff --check`: passed.
+- `git diff --numstat -- src bin tools test docs`: `4 0
+  src/pqs_source_box_route_driver_helpers.jl`.
+- Suspicious added-lines grep: no matches.
+- New tests/files: none.
+
+Validation:
+- Doer reported package load and
+  `julia --project=. tools/h2_pqs_terminal_stage_smoke.jl` passed with elapsed
+  time `38.066892875s`.
+- Manager reviewed the diff and did not rerun the smoke or Cr2 probe.
+
+Deletion accounting:
+- deleted: none in this pass.
+- simplified: blocked independent terminal routes no longer allocate
+  final-basis/H1 payload wrappers solely to carry blocked summaries.
+- quarantined: none.
+- not deleted because: the remaining payload types still have source-backed
+  construction meaning and are part of a later payload-collapse lane.
+- exact remaining caller/blocker: H2 and Cr2 remain blocked at
+  `:missing_terminal_shell_projection`.
+- added src lines: 4.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

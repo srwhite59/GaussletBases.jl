@@ -1766,12 +1766,16 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
             low_order_assembly,
         )
     diatomic_physical_gausslet_final_basis_payload =
+        isnothing(diatomic_physical_gausslet_source_plan_payload.source_plan) ?
+        nothing :
         _pqs_source_box_route_driver_diatomic_physical_gausslet_final_basis_payload(
             route_skeleton,
             recipe,
             diatomic_physical_gausslet_source_plan_payload,
         )
     diatomic_physical_gausslet_h1_payload =
+        isnothing(diatomic_physical_gausslet_final_basis_payload) ?
+        nothing :
         _pqs_source_box_route_driver_diatomic_physical_gausslet_h1_payload(
             parent,
             route_skeleton,
