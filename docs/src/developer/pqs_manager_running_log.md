@@ -5175,3 +5175,35 @@ Line-count / complexity note:
   cost, so the next substantive pass should either replace H2 compatibility
   realization or delete/quarantine obsolete preflight scaffolding as real
   realization lands.
+
+## Pass 319 - H2 PQS Terminal Stage Developer Smoke
+
+Commit(s):
+- this commit - Add H2 PQS terminal stage smoke
+
+Summary:
+- Added `tools/h2_pqs_terminal_stage_smoke.jl`, a developer-only one-case H2
+  smoke that reuses the existing driver harness and materialized H2 fixture,
+  disables artifact/TSV writes, and asserts the compact topology/final-basis/IDA
+  facts needed for routine manager review.
+- This is a validation-workflow improvement only; no production code, public
+  API, Cr2 path, or physics contract changed.
+
+Validation:
+- Manager ran `git diff --check`, package load, and
+  `julia --project=. tools/h2_pqs_terminal_stage_smoke.jl`. The smoke passed
+  with terminal roles `(:atom_contact_core, :shared_molecular_shell,
+  :shared_molecular_shell)`, support counts `(275, 362, 578)`,
+  `final_dimension = 471`, H1 lowest `-0.7946037173365863`, H1-J self-Coulomb
+  `0.4569117646737212`, residual rank `18`, and IDA dimension `489`.
+
+Goal / guardrail:
+- No strategic change to MT/LT goals. This supports the test-scope policy by
+  replacing routine use of the three-case cold-process `pqs_diatomic` ladder
+  with a smaller H2 smoke for stage-wiring/preflight/status reviews. The full
+  ladder remains the broader acceptance gate when final-basis, H1/IDA,
+  residual-GTO, materialization, or driver/harness behavior changes.
+
+Line-count / complexity note:
+- The initial doer version duplicated too much input setup. Manager trimmed the
+  smoke to an 88-line harness assertion wrapper before acceptance.
