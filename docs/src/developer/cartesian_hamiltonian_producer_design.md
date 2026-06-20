@@ -1,6 +1,6 @@
 # Cartesian Hamiltonian Producer Design
 
-Status: **draft v2 candidate for milestone review; not yet an implementation authority**
+Status: **draft v3 Slice A freeze candidate; not yet an implementation authority**
 
 This document is the proposed implementation authority for completing the
 Cartesian/PQS Hamiltonian producer from the current terminal-topology route to a
@@ -72,7 +72,7 @@ No H2 numerical compatibility route may be reintroduced.
 
 ## 3. Scope
 
-This design covers the base all-electron PQS Hamiltonian producer:
+This design ultimately covers the base all-electron PQS Hamiltonian producer:
 
 ```text
 terminal support and retained contracts
@@ -96,6 +96,11 @@ The following are outside this design and require separate approval:
 A supplement request may remain visible, but supplement construction must not
 block or complicate the base Hamiltonian producer.
 
+The first freeze should cover **Slice A only**. Blockwise one-body operators,
+localized IDA assembly, and final Hamiltonian materialization remain future
+candidate work until Slice A reports support sizes, coefficient densities,
+cross-overlap errors, and memory behavior.
+
 ## 4. Binding invariants
 
 ### 4.1 PQS basis construction
@@ -110,6 +115,10 @@ columns.
 - Previous blocks are never rotated by a later shell.
 - No global Lowdin is permitted.
 - Concatenation is accepted only after explicit cross-block overlap checks.
+- Projecting a new shell against previous blocks may put nonzero coefficients
+  on previous terminal rows. A block's `support_indices` are therefore its
+  effective parent-row coefficient support after projection, not necessarily
+  its original terminal region rows.
 
 For every realized PQS shell:
 
@@ -165,6 +174,10 @@ During construction, each final basis column is sign-canonicalized so its
 localized IDA weight is positive. One-body matrices and IDA contractions must
 use the same canonicalized final basis. A near-zero or nonfinite final IDA
 weight is a construction error.
+
+`X` is real in the current producer contract. A future complex-valued consumer
+must define the corresponding conjugation convention before it can reuse this
+artifact.
 
 ### 4.4 Data contracts
 
@@ -233,14 +246,13 @@ Before merge, the branch must be reduced or squashed so the mainline change:
 
 Prototype-only or blocker-only commits do not merge.
 
-## 6. Candidate object and surface registry
+## 6. Object and surface registry
 
-This draft records candidate surfaces and rejected surfaces. It is not yet
-implementation authority. Only items later marked **approved** in a frozen
-design revision are permitted in implementation. Items marked **candidate**
-require another design review before coding.
+This draft records Slice A freeze candidates, future candidates, and rejected
+surfaces. It is not yet implementation authority. Only items later marked
+**approved** in a frozen design revision are permitted in implementation.
 
-### HP-OBJ-01 — `CartesianTerminalBasisBlock` — candidate
+### HP-OBJ-01 — `CartesianTerminalBasisBlock` — Slice A freeze candidate
 
 Owner:
 `CartesianFinalBasisRealization`
@@ -269,12 +281,20 @@ Meaning:
   fields.
 - `support_states` may remain only because blockwise Cartesian operator
   assembly uses `(ix, iy, iz)` directly. It is not a second source of support
-  authority; it must be derived from `support_indices` and `parent_dims` at
-  construction.
+  authority; it must be derived from `support_indices` and parent axis
+  dimensions at construction.
+- `support_indices` are the effective coefficient support after projection and
+  sign canonicalization. For a PQS shell, they may include rows from previous
+  terminal regions.
+- `coefficients` for a PQS block are already sign-canonicalized to positive
+  localized IDA weights.
+- Direct `coefficients === nothing` blocks are valid only after the direct
+  support overlap is identity within tolerance and the direct support IDA
+  weights are finite and positive.
 
 Definition and validation target: **25 added source lines**.
 
-### HP-OBJ-02 — `CartesianTerminalBasisRealization` — candidate
+### HP-OBJ-02 — `CartesianTerminalBasisRealization` — Slice A freeze candidate
 
 Owner:
 `CartesianFinalBasisRealization`
@@ -287,7 +307,6 @@ Exact fields:
 ```julia
 struct CartesianTerminalBasisRealization
     blocks::Vector{CartesianTerminalBasisBlock}
-    parent_dims::NTuple{3,Int}
     final_dimension::Int
     max_cross_overlap::Float64
 end
@@ -300,34 +319,18 @@ input.
 
 Definition and validation target: **20 added source lines**.
 
-### HP-RES-01 — terminal basis build result — candidate
+### HP-RES-01 — terminal basis build result — rejected
 
-Persistent result shape:
+Do not introduce a persistent terminal-basis result wrapper. The Slice A
+realizer should return `CartesianTerminalBasisRealization` on success.
 
-```julia
-(
-    basis::Union{Nothing,CartesianTerminalBasisRealization},
-    blocker::Union{Nothing,Symbol},
-)
-```
+Expected unsupported topology such as distorted COMX should be rejected before
+calling the Slice A PQS realizer. Missing shell-projection/overlap/Lowdin inputs
+are implementation defects after Slice A and must not survive as route-state
+blockers. Rank loss or failed cross projection is a numerical construction
+error, not a mergeable endpoint.
 
-No `status`, `materialized`, `summary`, `metadata`, `next_blocker`, or child
-mirrors are permitted.
-Invariant: `basis === nothing` if and only if `blocker !== nothing`.
-
-Candidate blocker vocabulary:
-
-```text
-:missing_terminal_shell_projection
-:missing_terminal_shell_overlap
-:missing_terminal_shell_lowdin_cleanup
-:terminal_pqs_cross_block_projection_required
-:distorted_product_realization_missing
-```
-
-No additional blocker symbol may be added without a design amendment.
-
-### HP-FILE-01 — terminal realization implementation file — candidate
+### HP-FILE-01 — terminal realization implementation file — Slice A freeze candidate
 
 Path:
 
@@ -343,7 +346,58 @@ including object definitions and all helpers. Exceeding the target requires
 manager review; numerical projection correctness takes priority over meeting
 the target by omitting validation.
 
-### HP-FN-01 — terminal basis realizer — candidate
+### HP-FN-00 — projected terminal shell realization — Slice A freeze candidate
+
+Candidate internal helper. It may be file-local inside `HP-FILE-01`.
+
+Purpose:
+Realize one PQS terminal shell by explicitly projecting its raw boundary seed
+against all previously accepted blocks, forming the projected Gram matrix,
+performing shell-local Lowdin, and returning effective support plus
+sign-canonicalized final coefficients.
+
+Conceptual signature:
+
+```julia
+realize_projected_terminal_shell(
+    seed_support_indices,
+    seed_coefficients,
+    previous_blocks::Vector{CartesianTerminalBasisBlock},
+    metrics;
+    rank_atol = 1.0e-10,
+    identity_atol = 1.0e-8,
+    projection_atol = 1.0e-8,
+)
+```
+
+Normative projection:
+
+```text
+B = all previous accepted blocks embedded on their effective support
+X = current boundary-mode candidate on its seed support
+
+X_projected = X - B * (B' S B)^(-1) * (B' S X)
+G = X_projected' S X_projected
+L = G^(-1/2)
+C_new = X_projected * L
+```
+
+Because previous blocks are intended to be orthonormal, an implementation may
+use sequential orthogonal projection:
+
+```text
+for previous block C_j:
+    X <- X - C_j * (C_j' S X)
+```
+
+It must validate previous-block orthonormality and run a second
+reorthogonalization pass or fail if the projection residual remains above
+tolerance. The helper returns only data consumed immediately by `HP-FN-01`; it
+does not create a public result object.
+
+Implementation target within `HP-FILE-01`: **70 source lines**.
+
+### HP-FN-01 — terminal basis realizer — Slice A freeze candidate
 
 Proposed internal signature:
 
@@ -359,7 +413,7 @@ pqs_terminal_basis_realization(
 ```
 
 Return:
-`HP-RES-01`.
+`CartesianTerminalBasisRealization` on success.
 
 The helper may consume typed objects and vectors. It may not read numerical data
 from summaries. Until transform contracts have typed numerical fields, it may
@@ -368,9 +422,9 @@ contract metadata, but this exception is temporary and must not be extended to
 new fields. Shell projection, overlap, and Lowdin must never be added to
 metadata.
 
-Implementation target within `HP-FILE-01`: **85 source lines**.
+Implementation target within `HP-FILE-01`: **80 source lines**.
 
-### HP-FN-02 — cross-block overlap audit — candidate
+### HP-FN-02 — cross-block overlap audit — Slice A freeze candidate
 
 Purpose:
 Compute `C_i' * S_ij * C_j` one block pair at a time and return the largest
@@ -386,17 +440,19 @@ Requirements:
 
 Implementation target within `HP-FILE-01`: **35 source lines**.
 
-### HP-CHANGE-01 — return shell overlap from existing shell plan — candidate
+### HP-CHANGE-01 — return shell overlap from existing shell plan — rejected/deferred
 
-Allowed modification:
-Add `shell_overlap_matrix` to the existing return value of
-`CartesianContractedParentMetrics._pqs_shell_realization_plan`.
+Returning `shell_overlap_matrix` from
+`CartesianContractedParentMetrics._pqs_shell_realization_plan` may still be a
+useful local edit, but it is not sufficient Slice A authority. The required
+previous-block projection can enlarge effective support beyond the original
+descriptor support, so the projected Gram and overlap diagnostics must be
+computed on the effective support used by `HP-FN-00`.
 
-Target budget: **2 added source lines**.
+If implementation uses this existing return, it is a helper detail under
+`HP-FN-00`, not a standalone approved production surface.
 
-It must be a normal returned field, not metadata.
-
-### HP-FN-03 — blockwise final one-body assembly — candidate
+### HP-FN-03 — blockwise final one-body assembly — future candidate
 
 Candidate owner:
 `src/pqs_multilayer_complete_core_shell_h1.jl` or a smaller existing
@@ -428,7 +484,7 @@ Implementation target: **90 source lines**.
 
 No result object is proposed; the destination matrix is the result.
 
-### HP-FN-04 — blockwise IDA assembly — candidate
+### HP-FN-04 — blockwise IDA assembly — future candidate
 
 Purpose:
 Construct positive-gauge final IDA weights and the final localized
@@ -443,14 +499,13 @@ Implementation target: **120 source lines**.
 Rules:
 
 - do not form a global support raw-pair matrix;
-- canonicalize a nonzero column sign before positive-weight division rather than
-  using signed-final-weight division;
+- consume the sign-canonicalized basis produced by Slice A;
 - a near-zero or nonfinite final weight is a construction error;
 - tile a terminal block pair when one full support-pair workspace would exceed
   the reviewed memory limit;
 - no separate IDA payload object is proposed.
 
-### HP-FN-05 — final Hamiltonian producer — candidate
+### HP-FN-05 — final Hamiltonian producer — future candidate
 
 Conceptual signature:
 
@@ -502,6 +557,8 @@ function realize_terminal_basis(...):
 
     for terminal record in authoritative terminal order:
         if direct identity sector:
+            require direct support overlap ~= I
+            require direct support IDA weights finite and positive
             r = support_count
             append block with:
                 support rows/states
@@ -511,36 +568,24 @@ function realize_terminal_basis(...):
         else if PQS filled-source sector:
             raw_plan = existing transform-contract raw source plan
             retained_rule = existing transform-contract boundary rule
-            projection_basis = all previously accepted terminal blocks
 
-            descriptor = projected q-shell descriptor from:
-                outer_box
-                inner_exclusion_box
-                source_mode_shape
-                bond_axis
-                parent bundles
-                projection_basis
+            seed candidate = retained boundary product modes from raw_plan and
+                             retained_rule on the terminal shell seed support
 
-            descriptor/projection must remove the candidate shell from the span
-            of every previous terminal block before shell-local Gram/Lowdin
-
-            shell_plan = existing _pqs_shell_realization_plan(descriptor, metrics)
-
-            shell_basis = existing pqs_source_shell_realization_final_basis(
-                raw_plan,
-                retained_rule,
-                shell_support_indices = record.support_indices,
-                shell_overlap = shell_plan.shell_overlap_matrix,
-                shell_projection = shell_plan.shell_projection_matrix,
-                lowdin_cleanup = shell_plan.lowdin_cleanup,
+            shell_basis = realize_projected_terminal_shell(
+                seed_support_indices,
+                seed_coefficients,
+                previous_blocks = blocks,
+                metrics,
             )
 
-            require shell_basis available
-            r = shell_basis.final_retained_count
-            append block with shell_basis.final_shell_coefficients
+            r = shell_basis.retained_count
+            append block with:
+                support rows/states = shell_basis.effective support
+                coefficients = shell_basis.sign-canonicalized coefficients
 
         else if distorted COMX sector:
-            return blocker :distorted_product_realization_missing
+            fail before calling this Slice A PQS realizer
 
         else:
             fail; no compatibility fallback
@@ -549,7 +594,7 @@ function realize_terminal_basis(...):
 
     max_cross = audit every off-diagonal block overlap
     if max_cross > cross_atol:
-        return blocker :terminal_pqs_cross_block_projection_required
+        fail; previous-block projection is not correct enough for production
 
     return CartesianTerminalBasisRealization(...)
 ```
@@ -595,10 +640,10 @@ for center A:
 `U_A` is uncharged `-1/r_A`. Physical charges are passed separately to
 `CartesianIDAHamiltonian`.
 
-### 7.4 Fix the localized IDA gauge
+### 7.4 Localized IDA gauge already fixed by Slice A
 
 ```text
-for each terminal block i:
+inside terminal basis finalization for each block i:
     support_weights_i = product of parent 1D weights on its support states
     final_weights_i = C_i' * support_weights_i
 
@@ -610,10 +655,8 @@ for each terminal block i:
             weight[c] = -weight[c]
 ```
 
-This is column-sign canonicalization, not signed-final-weight division.
-
-The sign choice must be applied consistently to later one-body and IDA
-contractions.
+This is column-sign canonicalization, not signed-final-weight division. Slice B
+and Slice C consume the canonicalized terminal basis unchanged.
 
 ### 7.5 Assemble localized IDA electron-electron matrix
 
@@ -665,7 +708,7 @@ Required production-memory shape:
 
 ```text
 owned final matrices: O(N^2)
-block workspace:      O(max_ij b_i*b_j)
+block workspace:      O(tile_rows * tile_cols)
 working basis:        sum_i O(b_i*r_i) for PQS blocks
 ```
 
@@ -679,14 +722,23 @@ all pair workspaces retained simultaneously
 
 For the current Cr2 preflight estimate `N = 4291`, one dense `Float64` matrix is
 about 140.5 MiB. `CartesianIDAHamiltonian` with kinetic, two center matrices, and
-IDA interaction owns about 562 MiB before object overhead. The producer should
-target peak memory below **1.2 GiB** for the base two-center Cr2 fixture and must
-report measured peak allocation before being called production-ready.
+IDA interaction owns about 562 MiB before object overhead. For the base
+two-center Cr2 fixture:
+
+```text
+target peak RSS increase: <= 1.2 GiB
+absolute merge cap:       <= 1.5 GiB
+raw pair tile workspace:  <= 64 MiB
+```
+
+Measure peak RSS of an isolated producer process relative to a package-load
+baseline. Report cumulative allocations separately; do not confuse cumulative
+allocated bytes with peak live memory.
 
 If `max_ij b_i*b_j` exceeds the reviewed memory budget for one workspace, IDA
 assembly must tile that terminal block pair. A full support-pair workspace is
 allowed only when the implementation report shows the peak allocation remains
-below the reviewed limit on the representative Cr2 fixture.
+below the reviewed target and cap on the representative Cr2 fixture.
 
 A full dense eigendecomposition is not part of producer construction. H2 may use
 it as a bounded physics validation; Cr2 validation should not require it.
@@ -696,15 +748,23 @@ it as a bounded physics validation; Cr2 validation should not require it.
 Exploratory commits may be separate on a branch. The mergeable slices below must
 produce a real consumer-visible result and delete the replaced path.
 
-### Slice A — terminal basis and H2 physics restoration
+Only Slice A is a freeze candidate in this design revision. Slices B, C, and D
+remain future candidates until Slice A reports support sizes, coefficient
+density, cross-overlap errors, and memory behavior.
+
+### Slice A — terminal basis realization
 
 Target:
-Real terminal basis realization on the generic H2/Cr2 topology plus restoration
-of the H2 one-body physics endpoint through existing common kernels where safe.
+Real terminal basis realization on the generic H2/Cr2 topology. This slice does
+not assemble one-body operators, IDA, or a Hamiltonian artifact.
 
-Added-source target: **150 lines**. Exceeding the target requires manager
-review, but projection correctness and numerical validation take priority over
-meeting the target by omitting checks.
+Added-source target: **150 lines**.
+Redesign threshold: **225 added source lines**.
+Requirement: net source decrease after deleting the terminal preflight path.
+
+Crossing the redesign threshold returns the work to design. Projection
+correctness and numerical validation take priority over meeting the target by
+omitting checks.
 
 Must delete in the same merge:
 
@@ -716,15 +776,19 @@ Must delete in the same merge:
 Merge validation:
 
 - package load;
-- H atom one-body energy remains near `-0.5`;
-- generic H2 route restores its reviewed one-body lowest energy;
+- generic H2 terminal basis realizes without the retired compatibility route;
 - completed H2 final overlap is near identity;
 - Cr2 produces a real terminal basis or stops only at a reviewed
   distorted-product blocker.
+- implementation report includes raw cross overlaps, projected cross overlaps,
+  effective support sizes, shell ranks, coefficient memory, and H2/Cr2 terminal
+  basis facts.
 
 A branch commit that only moves Cr2 to another blocker does not merge.
 
 ### Slice B — blockwise final one-body operators
+
+Status: future candidate, not approved by the Slice A freeze.
 
 Target:
 Final-basis kinetic and by-center unit nuclear attraction without global support
@@ -749,6 +813,8 @@ Merge validation:
 
 ### Slice C — localized IDA and `CartesianIDAHamiltonian`
 
+Status: future candidate, not approved by the Slice A freeze.
+
 Target:
 Complete base Hamiltonian producer and existing minimal artifact output.
 
@@ -772,6 +838,8 @@ Merge validation:
   or the implementation does not merge.
 
 ### Slice D — driver simplification
+
+Status: future candidate, not approved by the Slice A freeze.
 
 Target:
 Make the canonical materialization stage return/write the real Hamiltonian with
@@ -798,13 +866,34 @@ Do not preserve tests whose main purpose is asserting internal blocker symbols,
 preflight names, field presence, terminal role vocabulary, or metadata flags.
 Temporary debugging belongs in ignored `tmp/work` scripts.
 
+### 10.1 Allowed uncommitted numerical spike
+
+Before Slice A implementation, an ignored `tmp/work` script may be used to
+measure the projection design. It must not be committed or treated as
+implementation authority.
+
+The spike should report:
+
+- H2 and Cr2 terminal records used;
+- raw `B_previous' S X` cross overlaps;
+- projected cross overlaps after previous-block projection;
+- effective support sizes for each shell;
+- projected shell ranks and retained counts;
+- coefficient memory estimate;
+- allocation/RSS observations when practical.
+
+If the spike shows that previous-block projection produces unexpectedly dense
+effective supports or unstable ranks, Slice A returns to design before source
+implementation.
+
 ## 11. Mechanical implementation gate
 
 After a future frozen design revision, every implementation PR must list the
-approved design IDs it uses, for example:
+approved design IDs it uses. For a future Slice A implementation, the expected
+approved ID set should be no broader than:
 
 ```text
-Design IDs: HP-OBJ-01, HP-OBJ-02, HP-FN-01, HP-FN-02, HP-CHANGE-01
+Design IDs: HP-OBJ-01, HP-OBJ-02, HP-FILE-01, HP-FN-00, HP-FN-01, HP-FN-02
 ```
 
 Review added lines before scientific review:
@@ -859,21 +948,19 @@ consumer should normally be rejected.
 
 ## 13. Open review questions
 
-The three design reviewers should resolve these before implementation begins:
+These must be resolved before freezing Slice A or beginning implementation:
 
-1. Can Slice A restore the H2 physics endpoint within the 150-line target while
-   keeping the terminal basis representation generic for Cr2?
-2. Is the one-basis localized IDA convention in Section 4.3 the correct public
-   mathematical contract for `CartesianIDAHamiltonian`?
-3. Which existing operator file should own `HP-FN-03` and `HP-FN-04` without
-   reviving the inactive pair-materialization framework?
-4. Can previous-block projection be implemented through the current
-   projected-shell descriptor path, or is a small explicit projection operation
-   needed before approval?
-5. Which current H2 smoke assertions can be deleted immediately when the real
+1. Does `HP-FN-00` describe the correct previous-block projection operation for
+   terminal PQS shells, including effective support growth?
+2. Can Slice A restore the H2 physics endpoint within the 150-line target and
+   below the 225-line redesign threshold while keeping the terminal basis
+   representation generic for Cr2?
+3. Which current H2 smoke assertions can be deleted immediately when the real
    basis and Hamiltonian return?
-6. Is the 1.2 GiB Cr2 peak-memory ceiling appropriate for the intended producer
-   machine, or should v2 use a smaller target plus an absolute hard cap?
+4. Does the allowed uncommitted numerical spike show acceptable effective
+   support sizes, shell ranks, and cross-overlap residuals for H2 and Cr2?
+5. Are `HP-OBJ-01`, `HP-OBJ-02`, `HP-FILE-01`, `HP-FN-00`, `HP-FN-01`, and
+   `HP-FN-02` sufficient for Slice A without approving B/C surfaces?
 
 No source implementation begins until these questions are answered in this
 document or explicitly deferred by the user/manager.

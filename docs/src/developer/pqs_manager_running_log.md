@@ -6128,3 +6128,59 @@ Deferred questions:
 Next step:
 - Send the v2 design plus round-001 reconciliation to ChatGPT-Pro for milestone
   review. Do not start source implementation or bind `AGENTS.md` yet.
+
+## Cartesian Hamiltonian Producer Design Pass 003 - Reconcile Milestone Review
+
+Commit(s):
+- this branch - Reconcile Hamiltonian producer Slice A design
+
+Summary:
+- Reconciled the ChatGPT-Pro milestone verdict into
+  `docs/src/developer/cartesian_hamiltonian_producer_design.md`.
+- Added `round_002_chatgpt_pro_review.md` and
+  `round_002_reconciliation.md` to the design-review lane.
+- The design is now a v3 **Slice A freeze candidate**, not implementation
+  authority.
+
+Accepted review changes:
+- Freeze scope is limited to Slice A terminal-basis realization. One-body,
+  IDA, and final Hamiltonian producer slices remain future candidates until
+  Slice A reports effective supports, cross-overlaps, ranks, and memory.
+- The fictitious descriptor `projection_basis` path was replaced by an explicit
+  previous-block projection formula before shell-local Lowdin.
+- `CartesianTerminalBasisBlock.support_indices` now means effective coefficient
+  support after projection, not merely the original terminal region support.
+- Column sign canonicalization moved into Slice A terminal-basis finalization so
+  later one-body and IDA assembly consume the same gauge-fixed basis.
+- Direct identity sectors must validate direct overlap identity and finite
+  positive IDA weights before `coefficients === nothing` is accepted.
+- `HP-RES-01` was rejected as a persistent result wrapper, and `HP-CHANGE-01`
+  was rejected/deferred as insufficient for projected effective supports.
+- `parent_dims` was removed from `CartesianTerminalBasisRealization`.
+- Slice A now uses a target/redesign-threshold budget: 150 added source lines
+  target, 225 added source lines redesign threshold, and net source decrease
+  required after deleting the terminal preflight path.
+
+Strategic interpretation:
+- The design-first lane caught and corrected a real mathematical hazard before
+  implementation: shell-local Lowdin is not sufficient unless each PQS shell is
+  first projected against the already accepted terminal basis.
+- The next implementation should still not start automatically. A final freeze
+  decision is needed for the Slice A IDs only; B/C/D should remain deliberately
+  unapproved until empirical Slice A data exists.
+
+Risk/guardrail:
+- Do not turn the v3 document into a whole-producer authority. It is a Slice A
+  freeze candidate and still leaves later operator/IDA ownership unresolved.
+- If a local numerical spike shows large effective supports, unstable ranks, or
+  large projection residuals, Slice A returns to design before source coding.
+
+Validation:
+- Docs-only pass; no source validation required.
+- Manager used focused text scans for stale `projection_basis`, `parent_dims`,
+  `HP-RES-01`, `HP-CHANGE-01`, and Slice A approval language.
+
+Next step:
+- Decide whether the listed Slice A freeze candidates should now be marked
+  approved and bound in `AGENTS.md`, or whether the uncommitted numerical spike
+  should run first.
