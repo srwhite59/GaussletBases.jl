@@ -5268,3 +5268,45 @@ Line-count / complexity note:
 - Doer reported the combined working-tree impact for Passes 320 and 321 as
   `111 insertions(+), 1092 deletions(-)` across eight files. This is the desired
   deletion-oriented simplification before adding the generic realization path.
+
+## Policy Gate - Hard Cartesian/PQS Anti-Bloat Review
+
+Commit(s):
+- this commit - Add hard Cartesian PQS anti-bloat gate
+
+Summary:
+- Added a hard Cartesian/PQS anti-bloat gate to `AGENTS.md`. This converts the
+  prior directional carrying-cost guidance into a review gate for active
+  `src/cartesian*`, `src/pqs*`, source-box, route-driver, Cartesian driver,
+  Cartesian tool, and related-test work.
+- The gate rejects blocker-progression commits, requires a target card before
+  coding, forbids unapproved metadata/status/preflight/report/test expansion,
+  defines added-source-line budgets, requires replacement commits to delete old
+  paths, and makes mechanical diff review mandatory before scientific review.
+- The current priority is deletion-oriented cleanup: remove recursive stage
+  embedding, delete route-skeleton retained/pair mirrors once typed terminal
+  plans are live, retire duplicate H2-local H1/J helpers, quarantine inactive
+  pair scaffolding, and replace metadata-carried numerical data with typed
+  fields on one canonical object.
+
+Validation:
+- Documentation-only policy change. Manager ran `git diff --check`.
+
+Goal / guardrail:
+- No numerical or route behavior changed. This is a governance update for LT5,
+  LT6, and the current Cr2 terminal-realization lane: future commits must cross
+  a real physics/cleanup/cost boundary rather than only moving blockers or
+  adding staged vocabulary.
+
+Deletion accounting:
+- deleted: none; policy-only change.
+- simplified: review standard is now explicit and centralized in `AGENTS.md`.
+- quarantined: preflight/status/report-only work is not banned, but is capped
+  and cannot be the main achievement of a source commit.
+- not deleted because: no source code changed.
+- exact remaining caller/blocker: route blocker remains
+  `:missing_terminal_shell_projection`.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

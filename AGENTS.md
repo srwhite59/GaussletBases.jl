@@ -342,6 +342,165 @@ state:
 Keep target cards short and task-local. Do not create a new design-note layer
 unless the manager explicitly asks for one.
 
+## Hard Cartesian/PQS anti-bloat gate
+
+Until explicitly relaxed by the user, repo-manager must reject Cartesian/PQS
+commits that fail this gate. This section applies to active work touching:
+
+- `src/cartesian*`
+- `src/pqs*`
+- `src/*source_box*`
+- `src/*route_driver*`
+- `bin/cartesian_ham_builder.jl`
+- `tools/cartesian*`
+- tests that exercise these paths
+
+No blocker-only commits:
+
+- Do not accept a source commit whose main achievement is only exposing a later
+  blocker, adding a preflight/status vocabulary, carrying a planned object
+  farther through the pipeline, adding report/summary/metadata fields, or
+  proving a future implementation is needed.
+- A source commit must produce a real numerical object used by a physics
+  endpoint, fix a demonstrated wrong result, delete obsolete code, or reduce
+  measured cost/complexity.
+- If a blocker is discovered but not crossed within the task constraints, make
+  no commit and report the blocker.
+
+Before coding, require this compact target card:
+
+```text
+Target:
+Physics endpoint:
+Allowed files:
+Forbidden files/surfaces:
+Must delete or simplify:
+Forbidden additions:
+Success condition:
+Validation:
+Line budget:
+Failure rule:
+```
+
+The failure rule must say that if the goal cannot be met within the constraints,
+the agent makes no commit and reports the obstacle.
+
+Default forbidden additions unless explicitly approved before implementation:
+
+- new `NamedTuple{...}` with runtime-generated keys
+- new `.metadata` reads for algorithmic data
+- new metadata fields that carry transforms, rules, matrices, source plans,
+  dimensions, or coefficients
+- new status/materialized flag clouds
+- new payload structs with many untyped fields
+- new broad `catch`
+- new compatibility adapters
+- new committed tests
+- new report fields duplicating stage internals
+- recursive stage returns that embed prior full stages
+
+Metadata may contain provenance only. Summaries are disposable views, not
+algorithmic APIs.
+
+Line budgets use added source lines, not net lines:
+
+- bug fix: at most 60 added `src` lines
+- cleanup/refactor: at most 80 added `src` lines and net source decrease
+  required
+- new numerical capability: at most 150 added `src` lines, with replaced
+  implementation deleted in the same commit
+- status/preflight/report-only work: at most 20 added `src` lines
+
+Reject over-budget patches unless the user explicitly approved the overage
+before coding.
+
+Replacement rule:
+
+- Do not accept "new path plus old path still present" unless there is a listed
+  live external caller.
+- A replacement commit must add the replacement, switch live callers, delete the
+  old implementation, and delete obsolete tests/probes/docstrings preserving the
+  old contract.
+- Git history is the archive.
+
+Test rule:
+
+- Do not accept new committed smoke tests in this lane unless explicitly
+  approved.
+- Tests should be real physics endpoints or very small numerical-kernel tests.
+- Reject tests that mainly assert internal status symbols, blocker names,
+  metadata flags, helper names, field presence, terminal role vocabulary, or
+  all-pairs inventory details.
+- Temporary probes belong in ignored `tmp/work` files and must not be
+  committed.
+
+Mechanical review comes before scientific review. For accepted Cartesian/PQS
+commits, run a diff gate and paste the result or a compact summary into the
+manager-log entry:
+
+```bash
+git diff --check
+
+echo "SRC line changes:"
+git diff --numstat HEAD~1..HEAD -- src bin tools test docs | sort -k1,1nr | head -40
+
+echo "Suspicious added lines:"
+git diff -U0 HEAD~1..HEAD -- src bin tools test |
+  grep '^+' |
+  grep -Ev '^\+\+\+' |
+  grep -nE 'NamedTuple\{|\.metadata|get\(.*metadata|haskey\(.*metadata|_materialized|status.*=|blocker.*=|catch$|catch err|::Any|Payload|summary.*=' || true
+
+echo "New tests/files:"
+git diff --name-status HEAD~1..HEAD |
+  grep -E '^(A|R|C).*test|^(A|R|C).*tools' || true
+```
+
+If suspicious lines appear, the doer must justify each one. Default action is
+reject.
+
+Every accepted Cartesian/PQS manager-log entry must include:
+
+- deleted:
+- simplified:
+- quarantined:
+- not deleted because:
+- exact remaining caller/blocker:
+- added src lines:
+- deleted src lines:
+- new tests:
+- new metadata/status fields:
+- validation:
+
+If `deleted` and `simplified` are empty, be suspicious.
+
+Cleanup mode is stricter:
+
+- no new committed tests
+- no new public helper files
+- no new payload structs
+- no new status symbols
+- no new metadata keys
+- no new compatibility adapters
+- no recursive stage embedding
+- no report expansion
+
+Each cleanup pass should either delete a stale surface or replace duplicate code
+with a canonical existing implementation. Do not start a new framework to clean
+up the old framework.
+
+Current preferred deletion sequence:
+
+1. Stop assembly/report objects from recursively embedding prior stages and
+   duplicating route summaries.
+2. Delete old route-skeleton retained/pair mirrors once the typed terminal plan
+   is live.
+3. Route H2 H1/J through the common H1/J helper and delete H2-local
+   support-weight/raw-pair/IDA/self-Coulomb duplicates.
+4. Quarantine or delete inactive pair-materialization scaffolding not used by a
+   live physics endpoint.
+5. Replace metadata-carried numerical data with typed fields on one canonical
+   terminal/unit object, not more summaries.
+
 ## Canonical Cartesian driver
 
 `bin/cartesian_ham_builder.jl` is the canonical human-facing Cartesian producer
