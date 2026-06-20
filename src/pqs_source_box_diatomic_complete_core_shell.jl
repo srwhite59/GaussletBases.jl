@@ -249,10 +249,16 @@ function _pqs_source_box_route_driver_terminal_support_record(
 end
 
 function _pqs_source_box_route_driver_terminal_support_coverage(records, parent_dims)
+    expected_count = prod(parent_dims)
     seen = Set{Int}()
     duplicate_count = 0
+    outside_count = 0
     for record in records
         for index in record.support_indices
+            if index < 1 || index > expected_count
+                outside_count += 1
+                continue
+            end
             if index in seen
                 duplicate_count += 1
             else
@@ -260,12 +266,13 @@ function _pqs_source_box_route_driver_terminal_support_coverage(records, parent_
             end
         end
     end
-    expected_count = prod(parent_dims)
+    missing_count = expected_count - length(seen)
     return (;
-        coverage_complete = length(seen) == expected_count && duplicate_count == 0,
+        coverage_complete =
+            missing_count == 0 && duplicate_count == 0 && outside_count == 0,
         duplicate_count,
-        missing_count = expected_count - length(seen),
-        outside_count = count(index -> index < 1 || index > expected_count, seen),
+        missing_count,
+        outside_count,
     )
 end
 
@@ -376,15 +383,26 @@ function _pqs_source_box_route_driver_terminal_topology_support_region_plan(
         nothing
     isnothing(lowering_inventory) &&
         return blocked(:missing_terminal_lowering_contract_inventory)
-    contracts = Tuple(
-        contract for contract in lowering_inventory.lowering_contracts
-        if contract.lowering_contract_kind in (
-            :direct_core_identity_cpb,
-            :direct_slab_identity_cpb,
-            :direct_boundary_slab_identity_cpb,
-            :pqs_filled_source_cpb,
-        )
+    supported_lowering_kinds = (
+        :direct_core_identity_cpb,
+        :direct_slab_identity_cpb,
+        :direct_boundary_slab_identity_cpb,
+        :pqs_filled_source_cpb,
+        :distorted_product_box_comx,
     )
+    unsupported_lowering_kinds = Tuple(
+        unique(
+            contract.lowering_contract_kind for
+            contract in lowering_inventory.lowering_contracts
+            if !(contract.lowering_contract_kind in supported_lowering_kinds)
+        ),
+    )
+    isempty(unsupported_lowering_kinds) ||
+        return merge(
+            blocked(:unsupported_terminal_lowering_kind),
+            (; unsupported_lowering_kinds),
+        )
+    contracts = Tuple(lowering_inventory.lowering_contracts)
     isempty(contracts) && return blocked(:missing_terminal_support_contracts)
     records = Tuple(
         _pqs_source_box_route_driver_terminal_support_record(
@@ -399,15 +417,22 @@ function _pqs_source_box_route_driver_terminal_topology_support_region_plan(
         NamedTuple{support_order}(Tuple(record.support_count for record in records))
     coverage =
         _pqs_source_box_route_driver_terminal_support_coverage(records, parent_dims)
+    coverage.coverage_complete ||
+        return merge(
+            blocked(:terminal_support_coverage_incomplete),
+            (;
+                duplicate_count = coverage.duplicate_count,
+                missing_count = coverage.missing_count,
+                outside_count = coverage.outside_count,
+            ),
+        )
     bond_axes = unique(
         Any[record.bond_axis for record in records if !isnothing(record.bond_axis)],
     )
     length(bond_axes) <= 1 || return blocked(:inconsistent_terminal_bond_axes)
     bond_axis = isempty(bond_axes) ? nothing : only(bond_axes)
     h2_plan =
-        coverage.coverage_complete ?
-        _pqs_source_box_route_driver_h2_terminal_support_plan(records, parent_dims) :
-        nothing
+        _pqs_source_box_route_driver_h2_terminal_support_plan(records, parent_dims)
     h2_available = !isnothing(h2_plan)
     status =
         h2_available ?
@@ -816,9 +841,12 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_target_payload(
             generated_support_plan,
         ) :
         nothing
-    if independent_target && generated_support_available
+    if independent_target && !isnothing(retained_rule_plan)
         status = :available_physical_gausslet_core_shell_target_inventory
         blocker = nothing
+    elseif independent_target && generated_support_available
+        status = :blocked_physical_gausslet_target_inventory
+        blocker = :missing_terminal_retained_rule_plan
     end
     support_units =
         generated_support_available ? generated_support_plan.support_order :
@@ -847,7 +875,7 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_target_payload(
         !isnothing(retained_rule_plan) ?
         nothing :
         generated_support_available ?
-        :missing_independent_pqs_retained_rule_plan :
+        :missing_terminal_retained_rule_plan :
         nothing
     retained_transform_authority =
         !isnothing(retained_rule_plan) ?
@@ -945,6 +973,29 @@ function _pqs_source_box_route_driver_supplement_constructor_basis_name(basis_na
     return String(parts[end])
 end
 
+function _pqs_source_box_route_driver_diatomic_fixture_label(target_payload)
+    isnothing(target_payload) && return :not_available
+    route_kind =
+        hasproperty(target_payload, :route_kind) ?
+        target_payload.route_kind :
+        :not_available
+    if route_kind === :bond_aligned_diatomic_independent_pqs_source_box_core_shell
+        retained_rule_plan =
+            hasproperty(target_payload, :summary) ?
+            get(target_payload.summary, :retained_rule_plan, nothing) :
+            nothing
+        return isnothing(retained_rule_plan) ?
+               :bond_aligned_diatomic_terminal_topology :
+               :h2_r4_physical_gausslet_q5
+    end
+    return :h2_r4_physical_gausslet_q5
+end
+
+function _pqs_source_box_route_driver_missing_legacy_basis_error(error)
+    error isa ArgumentError || return false
+    return occursin("could not find legacy basis block", sprint(showerror, error))
+end
+
 function _pqs_source_box_route_driver_diatomic_physical_gausslet_supplement_request_payload(
     parent,
     target_payload,
@@ -983,7 +1034,8 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_supplement_requ
         )
     bond_axis = hasproperty(parent, :bond_axis) ? parent.bond_axis : nothing
     bond_length = _pqs_source_box_route_driver_diatomic_bond_length(atom_locations)
-    fixture_label = :h2_r4_physical_gausslet_q5
+    fixture_label =
+        _pqs_source_box_route_driver_diatomic_fixture_label(target_payload)
     supplement_policy =
         target_available ? target_payload.supplement_policy : :not_available
     route_family = target_available ? target_payload.route_family : :not_available
@@ -1094,7 +1146,7 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_supplement_repr
         blocker = :missing_physical_gausslet_supplement_request_payload
         route_family = :not_available
         route_kind = :not_available
-        fixture_label = :h2_r4_physical_gausslet_q5
+        fixture_label = :not_available
         supplement_policy = :not_available
         object_kind = :not_available
         supplement = nothing
@@ -1179,7 +1231,7 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_supplement_repr
                     object_kind =
                         :cartesian_gaussian_shell_supplement_representation
                 catch err
-                    if err isa ArgumentError
+                    if _pqs_source_box_route_driver_missing_legacy_basis_error(err)
                         status =
                             :blocked_pqs_physical_gausslet_gto_supplement_representation
                         blocker = :missing_gto_supplement_basis
@@ -1245,7 +1297,8 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_supplement_pref
     target_available =
         !isnothing(target_payload) &&
         target_payload.status === :available_physical_gausslet_core_shell_target_inventory
-    fixture_label = :h2_r4_physical_gausslet_q5
+    fixture_label =
+        _pqs_source_box_route_driver_diatomic_fixture_label(target_payload)
     retained_transform_kind = :pqs
     if !target_available
         status = :blocked_pqs_physical_gausslet_supplement_preflight

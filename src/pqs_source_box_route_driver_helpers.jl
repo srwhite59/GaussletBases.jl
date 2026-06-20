@@ -971,6 +971,7 @@ function _pqs_source_box_route_driver_shell_stage_low_order_shellization(
             recipe,
         )
     catch error
+        (error isa ArgumentError || error isa DimensionMismatch) || rethrow()
         _pqs_source_box_route_driver_blocked_terminal_shellification(
             parent,
             recipe,
