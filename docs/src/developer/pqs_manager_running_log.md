@@ -5053,3 +5053,66 @@ Line-count / complexity note:
   real authority boundary. The next pass should prioritize replacing H2
   compatibility realization rather than adding a second parallel source-plan
   path.
+
+## Pass 317 - Wire Terminal Retained Unit Transform Contracts
+
+Commit(s):
+- `c30a3200` - Wire terminal retained unit transform contracts
+
+Summary:
+- Wired the existing typed retained-unit stack into the public stage spine.
+  `cartesian_units` now constructs `CartesianRetainedUnits.retained_unit_plan`
+  from the terminal lowering plan, and `cartesian_transforms` constructs
+  `CartesianRetainedUnitTransformContracts.retained_unit_transform_contract_plan`.
+- Replaced the Pass 316 local PQS retained-count calculation with a narrow
+  adapter that joins terminal support records to retained units by
+  `terminal_region_key` and joins retained units to transform contracts by
+  `unit_key`.
+- PQS retained counts now come from the typed transform contract metadata
+  `raw_product_source_retained_rule`; direct sectors use the typed
+  direct-identity transform path. Distorted products remain explicitly blocked
+  by the realization boundary.
+- Cr2 retained budget remains `4291` over the same 19 ordered records, and
+  the blocker remains `:missing_terminal_source_plan_realization`.
+
+Validation:
+- Doer reported `git diff --check`, package load, the `pqs_diatomic` ladder,
+  and the Cr2 stage probe.
+- Manager reran `git diff --check`, package load, the Cr2 stage probe, and
+  `julia --project=. tools/run_cartesian_line_ladder.jl --line=pqs_diatomic`.
+  The H2 ladder passed all three cases; the materialized case retained
+  `final_dimension = 471`, `residual_rank = 18`, `augmented_dimension = 489`,
+  H1 lowest `-0.7946037173365863`, and overlap identity error
+  `5.29668900282789e-14`. The Cr2 probe shows typed transform paths in the
+  retained budget and reports first blocker `source_plan blocker:
+  missing_terminal_source_plan_realization`.
+
+Goal advancement:
+- LT5/LT6: replaces duplicate route-driver retained-rule logic with the
+  module-owned retained-unit and transform-contract authorities already present
+  in the route stack.
+- MT: current Cr2 blocker is unchanged but cleaner: source-plan/final-basis
+  realization must now consume typed retained-unit transform contracts rather
+  than ad hoc retained-count records.
+
+Risk / guardrail:
+- Carrying typed retained-unit and transform-contract plans through the probe
+  increased cold compile/allocation cost in early stages. This is acceptable
+  while the spine is being connected, but performance needs review before any
+  Cr2-scale dense operator construction.
+- The adapter still lives in the H2-oriented diatomic complete-core/shell file.
+  Do not grow that file into the generic final-basis realizer; extract or use
+  module-owned helpers as the realization path becomes real.
+
+Remaining blocker / next:
+- Build terminal source-plan/final-basis realization from typed transform
+  contracts: direct records as identity coefficient blocks, PQS records as
+  shell-local projection/Lowdin planned by their raw-product source contract,
+  and cross-block overlap audits before accepting concatenation. Stop on
+  distorted-product realization if encountered.
+
+Line-count / complexity note:
+- Doer reported `+130/-23`. The pass is line-positive but deletes duplicate
+  local retained-count calculation and makes typed plans the authority. The
+  next pass should focus on replacing H2 compatibility realization, not adding
+  another adapter layer.
