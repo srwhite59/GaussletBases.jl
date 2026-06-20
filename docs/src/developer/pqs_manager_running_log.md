@@ -6377,3 +6377,44 @@ Next step:
 - Freeze and bind exactly `HP-OBJ-01`, `HP-OBJ-02`, `HP-FILE-01`,
   `HP-FN-00`, `HP-FN-01`, `HP-FN-02`, and `HP-WIRE-01`; keep B/C/D IDs as
   future candidates.
+
+## Cartesian Hamiltonian Producer Design Pass 008 - Freeze Slice A Authority
+
+Commit(s):
+- this branch - Freeze Slice A Hamiltonian producer design
+
+Summary:
+- Changed `docs/src/developer/cartesian_hamiltonian_producer_design.md` from
+  Slice A freeze candidate to Slice A implementation authority.
+- Bound the approved Slice A IDs in `AGENTS.md`.
+- Added `round_007_slice_a_freeze.md` to the design-review lane.
+
+Approved IDs:
+- `HP-OBJ-01`
+- `HP-OBJ-02`
+- `HP-FILE-01`
+- `HP-FN-00`
+- `HP-FN-01`
+- `HP-FN-02`
+- `HP-WIRE-01`
+
+Guardrail:
+- `HP-FN-03`, `HP-FN-04`, and `HP-FN-05` remain future candidates. This freeze
+  does not authorize one-body assembly, IDA assembly, Hamiltonian artifact
+  production, or driver simplification.
+- Unlisted production surfaces require a prior docs-only amendment.
+
+Strategic interpretation:
+- Slice A now has enough numerical evidence and policy structure to begin
+  implementation without another broad review. The first implementation pass
+  should realize the terminal basis only, delete the terminal preflight path it
+  replaces, and keep one-center/H2/Cr2 on the same entry point.
+
+Validation:
+- Docs/policy-only pass; no source validation required.
+- Manager will run `git diff --check`, focused text scans, and post-commit diff
+  gates before push.
+
+Next step:
+- Draft the Slice A implementation blurb for repo-doer, constrained to the
+  approved IDs and forbidden from touching B/C/D work.

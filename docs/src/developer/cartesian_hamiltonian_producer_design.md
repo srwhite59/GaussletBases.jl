@@ -1,9 +1,9 @@
 # Cartesian Hamiltonian Producer Design
 
-Status: **draft v3 Slice A freeze candidate; not yet an implementation authority**
+Status: **Slice A implementation authority; later slices remain candidates**
 
-This document is the proposed implementation authority for completing the
-Cartesian/PQS Hamiltonian producer from the current terminal-topology route to a
+This document is the implementation authority for Slice A of the Cartesian/PQS
+Hamiltonian producer and the candidate design record for later slices through
 `CartesianIDAHamiltonian`. It is intentionally more detailed than a target card
 and less historical than the manager running log.
 
@@ -12,10 +12,10 @@ The normative PQS mathematics remains in
 implementation shape, allowed objects, pseudocode, line budgets, deletion
 requirements, and merge gates.
 
-After review and explicit manager/user approval, `AGENTS.md` should point here
-and the object registry below becomes binding. Until then, agents may edit this
-document but must not treat it as permission to change `src`. Registry entries
-are candidates unless this document is later frozen as implementation authority.
+`AGENTS.md` points here for Cartesian Hamiltonian producer work. The Slice A
+registry entries explicitly marked **approved** below are binding
+implementation authority. Later-slice registry entries remain candidates and do
+not permit source implementation without a later docs-only approval.
 
 ## 1. Why this document exists
 
@@ -296,11 +296,11 @@ Prototype-only or blocker-only commits do not merge.
 
 ## 6. Object and surface registry
 
-This draft records Slice A freeze candidates, future candidates, and rejected
-surfaces. It is not yet implementation authority. Only items later marked
-**approved** in a frozen design revision are permitted in implementation.
+This registry records approved Slice A surfaces, future candidates, and rejected
+surfaces. Only items explicitly marked **approved** are permitted in
+implementation.
 
-### HP-OBJ-01 — `CartesianTerminalBasisBlock` — Slice A freeze candidate
+### HP-OBJ-01 — `CartesianTerminalBasisBlock` — approved Slice A
 
 Owner:
 `CartesianFinalBasisRealization`
@@ -340,7 +340,7 @@ Meaning:
   support overlap is identity within tolerance and the direct support IDA
   weights are finite and positive.
 
-### HP-OBJ-02 — `CartesianTerminalBasisRealization` — Slice A freeze candidate
+### HP-OBJ-02 — `CartesianTerminalBasisRealization` — approved Slice A
 
 Owner:
 `CartesianFinalBasisRealization`
@@ -374,7 +374,7 @@ are implementation defects after Slice A and must not survive as route-state
 blockers. Rank loss or failed cross projection is a numerical construction
 error, not a mergeable endpoint.
 
-### HP-FILE-01 — terminal realization implementation file — Slice A freeze candidate
+### HP-FILE-01 — terminal realization implementation file — approved Slice A
 
 Path:
 
@@ -386,7 +386,7 @@ It would be included by the existing `CartesianFinalBasisRealization` module. No
 new module is proposed. All source additions in this file count against the
 single Slice A budget in Section 9.
 
-### HP-FN-00 — projected terminal shell realization — Slice A freeze candidate
+### HP-FN-00 — projected terminal shell realization — approved Slice A
 
 Candidate internal helper. It may be file-local inside `HP-FILE-01`.
 
@@ -448,7 +448,7 @@ Production Slice A must use the recursively projected coefficients of previous
 PQS blocks and their effective supports. It must not approximate previous PQS
 blocks by their original shell-local coefficients when projecting later shells.
 
-### HP-FN-01 — terminal basis realizer — Slice A freeze candidate
+### HP-FN-01 — terminal basis realizer — approved Slice A
 
 Proposed internal signature:
 
@@ -478,7 +478,7 @@ bundles, validates direct-sector weights, sign-canonicalizes completed block
 columns to positive localized IDA weights, and constructs
 `CartesianTerminalBasisBlock`.
 
-### HP-FN-02 — cross-block overlap audit — Slice A freeze candidate
+### HP-FN-02 — cross-block overlap audit — approved Slice A
 
 Purpose:
 Compute `C_i' * S_ij * C_j` one block pair at a time and return the largest
@@ -492,7 +492,7 @@ Requirements:
 - one temporary support cross block at a time;
 - symmetric pair traversal only.
 
-### HP-WIRE-01 — generic terminal-basis stage integration — Slice A freeze candidate
+### HP-WIRE-01 — generic terminal-basis stage integration — approved Slice A
 
 Owner:
 `cartesian_transforms`
@@ -838,9 +838,9 @@ it as a bounded physics validation; Cr2 validation should not require it.
 Exploratory commits may be separate on a branch. The mergeable slices below must
 produce a real consumer-visible result and delete the replaced path.
 
-Only Slice A is a freeze candidate in this design revision. Slices B, C, and D
-remain future candidates until Slice A reports support sizes, coefficient
-density, cross-overlap errors, and memory behavior.
+Only Slice A is approved in this design revision. Slices B, C, and D remain
+future candidates until Slice A reports support sizes, coefficient density,
+cross-overlap errors, and memory behavior.
 
 ### Slice A — terminal basis realization
 
@@ -891,7 +891,7 @@ be deleted rather than preserved through adapters.
 
 ### Slice B — blockwise final one-body operators
 
-Status: future candidate, not approved by the Slice A freeze.
+Status: future candidate, not approved by the Slice A authority.
 
 Target:
 Final-basis kinetic and by-center unit nuclear attraction without global support
@@ -920,7 +920,7 @@ Merge validation:
 
 ### Slice C — localized IDA and `CartesianIDAHamiltonian`
 
-Status: future candidate, not approved by the Slice A freeze.
+Status: future candidate, not approved by the Slice A authority.
 
 Target:
 Complete base Hamiltonian producer and existing minimal artifact output.
@@ -949,7 +949,7 @@ Merge validation:
 
 ### Slice D — driver simplification
 
-Status: future candidate, not approved by the Slice A freeze.
+Status: future candidate, not approved by the Slice A authority.
 
 Target:
 Make the canonical materialization stage return/write the real Hamiltonian with
@@ -980,11 +980,11 @@ Do not preserve tests whose main purpose is asserting internal blocker symbols,
 preflight names, field presence, terminal role vocabulary, or metadata flags.
 Temporary debugging belongs in ignored `tmp/work` scripts.
 
-### 10.1 Allowed uncommitted numerical spike
+### 10.1 Optional uncommitted numerical spike
 
-Before Slice A implementation, an ignored `tmp/work` script may be used to
-measure the projection design. It must not be committed or treated as
-implementation authority.
+During Slice A implementation or future design amendments, an ignored
+`tmp/work` script may be used to measure the projection design. It must not be
+committed or treated as implementation authority.
 
 The spike should report:
 
@@ -1004,9 +1004,8 @@ implementation.
 
 ## 11. Mechanical implementation gate
 
-After a future frozen design revision, every implementation PR must list the
-approved design IDs it uses. For a future Slice A implementation, the expected
-approved ID set should be no broader than:
+Every implementation PR must list the approved design IDs it uses. For Slice A,
+the approved ID set is:
 
 ```text
 Design IDs: HP-OBJ-01, HP-OBJ-02, HP-FILE-01, HP-FN-00, HP-FN-01, HP-FN-02, HP-WIRE-01
@@ -1062,23 +1061,21 @@ Why this is not metadata, a status mirror, or a compatibility adapter:
 An amendment with no concrete deletion/simplification target and no physics
 consumer should normally be rejected.
 
-## 13. Open review questions
+## 13. Slice A implementation watchpoints
 
-These must be resolved before freezing Slice A or beginning implementation:
+The final recursive spike answered the pre-freeze numerical questions well
+enough to approve Slice A. Implementation must still report:
 
-1. Does `HP-FN-00` describe the correct previous-block projection operation for
-   terminal PQS shells, including effective support growth?
-2. Can Slice A realize one-center atomic, contact-core H2, and separated Cr2
-   terminal plans through the same entry point within the 150-line target and
-   below the 225-line redesign threshold?
-3. Which current H2 smoke assertions can be deleted immediately when the real
-   terminal basis returns?
-4. Does the allowed uncommitted numerical spike show acceptable effective
-   support sizes, shell ranks, and cross-overlap residuals for one-center,
-   H2, and Cr2?
-5. Are `HP-OBJ-01`, `HP-OBJ-02`, `HP-FILE-01`, `HP-FN-00`, `HP-FN-01`,
-   `HP-FN-02`, and `HP-WIRE-01` sufficient for Slice A without approving B/C
-   surfaces?
+1. whether one-center atomic, contact-core H2, and separated Cr2 terminal plans
+   realize through the same entry point within the 150-line target and below the
+   225-line redesign threshold;
+2. which current H2 smoke assertions were deleted when the real terminal basis
+   returned;
+3. effective support sizes, shell ranks, cross-overlap residuals, and workspace
+   sizes for one-center, H2, and Cr2;
+4. whether one-center public staging was connected to typed terminal records
+   without freezing the old route-skeleton shape as the intended contract.
 
-No source implementation begins until these questions are answered in this
-document or explicitly deferred by the user/manager.
+No source implementation may add unlisted production surfaces while answering
+these questions. Any new production surface requires a prior docs-only
+amendment.

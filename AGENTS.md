@@ -342,6 +342,36 @@ state:
 Keep target cards short and task-local. Do not create a new design-note layer
 unless the manager explicitly asks for one.
 
+## Cartesian Hamiltonian producer design authority
+
+For Cartesian Hamiltonian producer source work, read
+`docs/src/developer/cartesian_hamiltonian_producer_design.md` before
+implementation.
+
+Slice A source work is currently authorized only for these approved design IDs:
+
+- `HP-OBJ-01`
+- `HP-OBJ-02`
+- `HP-FILE-01`
+- `HP-FN-00`
+- `HP-FN-01`
+- `HP-FN-02`
+- `HP-WIRE-01`
+
+No other production surface may be added in this lane without a prior
+documentation-only design amendment. This includes new structs, persistent
+result shapes, modules/files, stage-return fields, metadata keys, status or
+blocker symbols, report/artifact fields, committed probes/tests, and cross-file
+or module-owned helpers.
+
+Private file-local helpers are allowed only when they implement the approved
+Slice A pseudocode, create no persistent shape or vocabulary, stay within the
+approved file and line budget, and are reported in the implementation handoff.
+
+`HP-FN-03`, `HP-FN-04`, and `HP-FN-05` remain future candidates. They do not
+authorize one-body assembly, IDA assembly, Hamiltonian artifact production, or
+driver simplification work until a later docs-only approval.
+
 ## Hard Cartesian/PQS anti-bloat gate
 
 Until explicitly relaxed by the user, repo-manager must reject Cartesian/PQS
