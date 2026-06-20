@@ -5961,3 +5961,69 @@ Deletion accounting:
 - deleted source lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Pass 339 - Delete Old Source-Plan Mirror Fields
+
+Commit(s):
+- this commit - Delete old source plan mirror fields
+
+Target card:
+- Target: remove old H2/source-plan compatibility mirrors from the current
+  blocked generic terminal source-plan summary.
+- Physics endpoint: H2 and Cr2 remain on the generic terminal route, blocked at
+  `:missing_terminal_shell_projection`.
+- Allowed files: `src/pqs_source_box_diatomic_complete_core_shell.jl` and
+  `tools/h2_pqs_terminal_stage_smoke.jl`.
+- Forbidden additions: no terminal shell projection, payload wrapper deletion,
+  active blocker status renames, tests, replacement metadata/status fields, or
+  report expansion.
+- Success condition: old descriptor/shared-shell/source-coefficient mirror
+  fields are gone from active summaries, and the H2 smoke validates the generic
+  blocker through terminal preflight.
+- Failure rule: if any mirror field has a live non-smoke caller, leave it and
+  report the exact caller.
+
+Summary:
+- Deleted descriptor/shared-shell/source-coefficient mirror fields from the
+  blocked diatomic source-plan summary:
+  `source_plan_descriptor_status`, `source_plan_descriptor_blocker`,
+  `source_plan_descriptor_available`, `shared_shell_realization_status`,
+  `shared_shell_realization_blocker`, `shared_shell_realization_counts`,
+  `shared_shell_realization_identity_errors`,
+  `shared_shell_realization_materialized`, `source_coefficients_materialized`,
+  and `source_plan_authority_status`.
+- Updated `tools/h2_pqs_terminal_stage_smoke.jl` to stop asserting the deleted
+  mirror fields while preserving topology, source-plan status/blocker,
+  terminal-preflight status/blocker, and retained-dimension checks.
+
+Mechanical gate:
+- `git diff --check`: passed.
+- `git diff --numstat -- src bin tools test docs`: `0 39
+  src/pqs_source_box_diatomic_complete_core_shell.jl`, `0 6
+  tools/h2_pqs_terminal_stage_smoke.jl`.
+- Suspicious added-lines grep: no matches.
+- New tests/files: none.
+- Focused mirror-field grep now returns only historical manager/blurb-log
+  references.
+
+Validation:
+- Doer reported package load and
+  `julia --project=. tools/h2_pqs_terminal_stage_smoke.jl` passed with elapsed
+  time `35.481812625s`.
+- Manager reviewed the diff and did not rerun validation.
+
+Deletion accounting:
+- deleted: old descriptor/shared-shell/source-coefficient mirror fields from
+  active blocked source-plan summaries.
+- simplified: H2 smoke now checks the terminal preflight blocker instead of
+  old compatibility mirrors.
+- quarantined: none.
+- not deleted because: `physical_gausslet_source_plan_summary`,
+  `terminal_source_realization_preflight_summary`, and `low_order_assembly`
+  remain the active blocked-route contract until shell projection exists.
+- exact remaining caller/blocker: H2 and Cr2 remain blocked at
+  `:missing_terminal_shell_projection`.
+- added source/tool lines: 0.
+- deleted source/tool lines: 45.
+- new tests: none.
+- new metadata/status fields: none.

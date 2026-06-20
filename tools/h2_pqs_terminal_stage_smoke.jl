@@ -76,12 +76,6 @@ _check("source_plan_blocker", _get(source_plan, :blocker),
     :missing_terminal_shell_projection)
 _check("source_plan_materialized", _get(source_plan, :source_plan_materialized),
     false)
-_check("source_coefficients_materialized",
-    _get(source_plan, :source_coefficients_materialized), false)
-_check("source_plan_descriptor_available",
-    _get(source_plan, :source_plan_descriptor_available), false)
-_check("shared_shell_realization_materialized",
-    _get(source_plan, :shared_shell_realization_materialized), false)
 _check("terminal_realization_status", _get(preflight, :status),
     :blocked_terminal_source_realization_preflight)
 _check("terminal_realization_blocker", _get(preflight, :blocker),

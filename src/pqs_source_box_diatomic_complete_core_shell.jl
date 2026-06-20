@@ -1442,10 +1442,6 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_pay
         ) :
         nothing
     source_plan = nothing
-    descriptor = nothing
-    descriptor_available = false
-    shared_shell_realization = nothing
-    shared_shell_realization_available = false
     independent_source_plan_available = false
     independent_source_plan_blocker =
         !isnothing(target_payload) ?
@@ -1486,49 +1482,14 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_pay
         supplement_policy =
             isnothing(target_payload) ? :not_available : target_payload.supplement_policy,
         source_plan_materialized = !isnothing(source_plan),
-        source_plan_descriptor_status =
-            isnothing(descriptor) ? :not_available : descriptor.status,
-        source_plan_descriptor_blocker =
-            isnothing(descriptor) ? nothing : descriptor.blocker,
-        shared_shell_realization_status =
-            isnothing(shared_shell_realization) ?
-            :not_available :
-            shared_shell_realization.status,
-        shared_shell_realization_blocker =
-            isnothing(shared_shell_realization) ?
-            nothing :
-            shared_shell_realization.blocker,
-        shared_shell_realization_counts =
-            isnothing(shared_shell_realization) ?
-            () :
-            shared_shell_realization.shared_shell_realization_counts,
-        shared_shell_realization_identity_errors =
-            isnothing(shared_shell_realization) ?
-            () :
-            shared_shell_realization.shared_shell_realization_identity_errors,
-        shared_shell_realization_materialized = shared_shell_realization_available,
         terminal_source_realization_preflight_summary =
             _pqs_source_box_route_driver_terminal_source_realization_summary(
                 terminal_source_realization_preflight,
             ),
-        source_plan_descriptor_available = false,
-        source_plan_family =
-            isnothing(source_plan) ?
-            :not_available :
-            hasproperty(source_plan, :source_plan_family) ?
-            source_plan.source_plan_family :
-            :not_available,
-        source_plan_authority_status =
-            isnothing(source_plan) ?
-            independent_target ?
-            :blocked_pqs_source_box_construction_authority :
-            :not_available :
-            :available_pqs_source_box_construction_authority,
         retained_transform_authority =
             isnothing(target_payload) ?
             :not_available :
             get(target_payload.summary, :retained_transform_authority, :not_available),
-        source_coefficients_materialized = false,
         secondary_blocker =
             isnothing(target_payload) ? nothing : get(target_payload.summary, :secondary_blocker, nothing),
         independent_source_plan_blocker =
