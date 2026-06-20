@@ -406,7 +406,7 @@ realize_projected_terminal_shell(
     metrics;
     rank_atol = 1.0e-10,
     identity_atol = 1.0e-8,
-    projection_atol = 1.0e-8,
+    projection_atol = 1.0e-12,
 )
 ```
 
@@ -438,6 +438,11 @@ It must validate previous-block orthonormality and run a second
 reorthogonalization pass or fail if the projection residual remains above
 tolerance. The helper returns only data consumed immediately by `HP-FN-01`; it
 does not create a public result object.
+
+The default `projection_atol = 1.0e-12` is deliberately tighter than the final
+cross-overlap acceptance tolerance. It is the threshold for deciding whether a
+candidate is already orthogonal enough to avoid a roundoff-only subtraction
+that would artificially grow effective support.
 
 Production Slice A must use the recursively projected coefficients of previous
 PQS blocks and their effective supports. It must not approximate previous PQS
@@ -790,10 +795,12 @@ C_left' * S_lr * C_right
 ```
 
 They must not construct a global parent overlap matrix or a global final
-overlap matrix. At most one terminal support-pair workspace may be live. If that
-workspace exceeds the approved cap, it must be tiled. A dense local pair block
-is acceptable when bounded; the forbidden operations are global overlap
-construction and simultaneous retention of many pair blocks.
+overlap matrix. At most one terminal support-pair workspace may be live. The
+Slice A support-pair workspace cap is **64 MiB** unless a later design amendment
+approves a different cap. If a local action exceeds the cap, it must be tiled or
+streamed. A dense local pair block is acceptable when bounded; the forbidden
+operations are global overlap construction and simultaneous retention of many
+pair blocks.
 
 Forbidden shape:
 

@@ -6324,3 +6324,56 @@ Next step:
   stable ranks, bounded support growth, later-direct orthogonality, and no
   global overlap construction for one-center/H2/Cr2, freeze Slice A and bind
   the approved IDs.
+
+## Cartesian Hamiltonian Producer Design Pass 007 - Final Recursive Spike Reconciliation
+
+Commit(s):
+- this branch - Reconcile final recursive projection spike
+
+Summary:
+- Recorded repo-doer's final uncommitted recursive-projection spike in
+  `round_006_recursive_projection_spike_report.md`.
+- Reconciled the spike into
+  `docs/src/developer/cartesian_hamiltonian_producer_design.md`.
+- The design remains unbound until the Slice A IDs are explicitly frozen.
+
+Spike result:
+- One-center, H2, and Cr2 all used the same terminal realization inputs once
+  terminal records were reached.
+- True recursive accepted blocks were used.
+- With `projection_atol = 1e-12`, all residuals were skipped as roundoff; no
+  subtraction was numerically justified.
+- Effective supports remained unchanged and shell ranks stayed at `98`.
+- Final cross overlaps were small: one-center `8.073e-16`, H2 `3.095e-15`,
+  Cr2 `5.463e-14`.
+- Later Cr2 direct records remained orthogonal to prior blocks at
+  `2.4e-15 .. 5.3e-15`.
+
+Accepted design changes:
+- Default `projection_atol` is now `1.0e-12`.
+- The design says `projection_atol` is a roundoff-subtraction threshold, not the
+  final cross-overlap acceptance tolerance.
+- Slice A support-pair workspace cap is now `64 MiB`; larger local actions must
+  tile or stream.
+
+Remaining caveats:
+- One-center public staging still relies on old route-shape skeleton access to
+  reach terminal records. Slice A must connect it to the typed terminal
+  contract and must not freeze that skeleton as the intended public boundary.
+- The Cr2 spike's largest dense local workspace was `175.928 MiB`, so
+  production Slice A needs tiling/streaming for that action.
+
+Strategic interpretation:
+- The final spike supports freezing Slice A. No further broad design review is
+  recommended. The next step is a docs/policy freeze commit if the user accepts
+  the evidence.
+
+Validation:
+- Doer reported `git diff --check`, package load, and a clean tracked worktree
+  after the ignored `tmp/work` spike.
+- Manager reconciled docs only; no source validation run.
+
+Next step:
+- Freeze and bind exactly `HP-OBJ-01`, `HP-OBJ-02`, `HP-FILE-01`,
+  `HP-FN-00`, `HP-FN-01`, `HP-FN-02`, and `HP-WIRE-01`; keep B/C/D IDs as
+  future candidates.
