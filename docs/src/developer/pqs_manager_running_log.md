@@ -4859,3 +4859,70 @@ Line-count / complexity note:
 - Doer pass was line-positive (`+187/-28`) mostly from probe/audit reporting.
   The manager doc patch adds durable algorithm documentation and should prevent
   this core-size policy from living only in chat or probe output.
+
+## Pass 314 - Route Diatomic Assembly Through Terminal Topology
+
+Commit(s):
+- `7eb07a22` - Route diatomic assembly through terminal topology
+
+Summary:
+- Assembly now receives the public low-order terminal topology and derives
+  support records from ordered terminal lowering contracts rather than
+  rebuilding raw H2 geometry inside the assembly helper.
+- The new support derivation handles direct core, direct slab, direct boundary
+  slab, and PQS filled-source terminal contracts. For the current H2 q5
+  three-region topology, a narrow compatibility view maps
+  `:atom_contact_core` and the two shared molecular shells into the existing
+  H2 source/final-basis realization path.
+- Deleted the old assembly-side H2 raw-geometry support-plan helper and its
+  shared-shell descriptor helper. The legacy `shared_shell_1/shared_shell_2`
+  names remain only as the current H2 compatibility view, not as terminal
+  geometry authority.
+- Cr2 now reaches `cartesian_assembly` with the full 19-region terminal
+  support topology available. Its first blocker has moved to
+  `:missing_independent_pqs_retained_rule_plan`; the supplement side also
+  reports `:missing_gto_supplement_basis` for `Cr/cc-pV5Z`.
+
+Validation:
+- Doer reported `git diff --check`, package load, the `pqs_diatomic` ladder,
+  and the Cr2 stage probe.
+- Manager reran `git diff --check`, package load, the Cr2 stage probe, and
+  `julia --project=. tools/run_cartesian_line_ladder.jl --line=pqs_diatomic`.
+  The H2 ladder passed all three cases; the materialized case retained
+  `final_dimension = 471`, `residual_rank = 18`, `augmented_dimension = 489`,
+  H1 lowest `-0.7946037173365863`, and overlap identity error
+  `5.29668900282789e-14`. The Cr2 probe now reports
+  `last_successful_public_stage = cartesian_assembly` and
+  `source_plan blocker: missing_independent_pqs_retained_rule_plan`.
+
+Goal advancement:
+- LT5/LT6: moves the assembly authority from H2-specific geometry
+  reconstruction to public terminal lowering/support records while preserving
+  the compact public IDA artifact path.
+- MT: completes the immediate assembly-support handoff. The active Cr2 blocker
+  is now retained-rule/final-basis realization over ordered terminal records,
+  not support topology visibility.
+
+Risk / guardrail:
+- `target_status = :available_physical_gausslet_core_shell_target_inventory`
+  is now too broad for Cr2, because support topology is available while
+  retained/source/final realization remains blocked. The blocker fields are
+  correct, but a near-term cleanup should split support-topology availability
+  from full target availability before that label hardens into a contract.
+- Do not generalize by adding Cr2 branches. The next pass should consume
+  terminal contract records generically or stop with an exact missing retained
+  rule object.
+
+Remaining blocker / next:
+- Define the retained-rule and final-basis realization path for ordered
+  terminal topologies beyond the H2 three-unit compatibility view. The direct
+  sectors should remain identity/source-mode sectors, and each PQS filled
+  source shell should receive its own shell-local projection/Lowdin realization
+  without a global cleanup.
+
+Line-count / complexity note:
+- Doer reported `+350/-220` net `+130`. The pass removes stale H2 geometry
+  reconstruction but adds a general terminal support-record adapter and probe
+  reporting. The next implementation should try to be line-neutral or
+  line-negative by retiring more H2 compatibility once ordered retained rules
+  exist.
