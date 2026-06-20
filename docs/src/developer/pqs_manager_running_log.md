@@ -6500,3 +6500,37 @@ Strategic interpretation:
 Next step:
 - Continue from the realized terminal basis toward the next approved design
   boundary only after B/C/D surfaces are explicitly approved.
+
+## Cartesian Hamiltonian Producer Design Pass 011 - Freeze Slice B Authority
+
+Commit(s):
+- this branch - Freeze Slice B one-body operator design
+
+Summary:
+- Promoted `HP-FN-03` from future candidate to approved Slice B authority in
+  `docs/src/developer/cartesian_hamiltonian_producer_design.md`.
+- Updated `AGENTS.md` so Cartesian Hamiltonian producer source work is
+  authorized for approved Slice A IDs plus `HP-FN-03`.
+- Added `round_008_slice_b_freeze.md` to the design-review lane.
+
+Approved Slice B boundary:
+- Build final-basis kinetic matrix `K`.
+- Build separated unit nuclear attraction matrices `U_A = -1/r_A`.
+- Use one separable product-term helper over `CartesianTerminalBasisRealization`.
+- Do not form global support-space operators.
+- Do not add atomic/diatomic operator branches.
+- Do not implement IDA, Hamiltonian artifact production, residual-GTO, or driver
+  simplification.
+
+Guardrail:
+- `HP-FN-04` and `HP-FN-05` remain future candidates.
+- Unlisted production surfaces still require a prior docs-only amendment.
+
+Validation:
+- Docs/policy-only pass; no source validation required.
+- Manager will run `git diff --check`, focused scans for approved/candidate ID
+  wording, and post-commit diff gates before push.
+
+Next step:
+- Draft the Slice B implementation blurb for Chat review before sending it to
+  repo-doer.

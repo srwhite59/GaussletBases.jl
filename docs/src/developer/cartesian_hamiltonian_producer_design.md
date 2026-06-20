@@ -1,21 +1,21 @@
 # Cartesian Hamiltonian Producer Design
 
-Status: **Slice A implementation authority; later slices remain candidates**
+Status: **Slice A and Slice B implementation authority; later slices remain candidates**
 
-This document is the implementation authority for Slice A of the Cartesian/PQS
-Hamiltonian producer and the candidate design record for later slices through
-`CartesianIDAHamiltonian`. It is intentionally more detailed than a target card
-and less historical than the manager running log.
+This document is the implementation authority for Slice A and Slice B of the
+Cartesian/PQS Hamiltonian producer and the candidate design record for later
+slices through `CartesianIDAHamiltonian`. It is intentionally more detailed than
+a target card and less historical than the manager running log.
 
 The normative PQS mathematics remains in
 `docs/src/algorithms/pqs_shell_construction.md`. This document controls the
 implementation shape, allowed objects, pseudocode, line budgets, deletion
 requirements, and merge gates.
 
-`AGENTS.md` points here for Cartesian Hamiltonian producer work. The Slice A
-registry entries explicitly marked **approved** below are binding
-implementation authority. Later-slice registry entries remain candidates and do
-not permit source implementation without a later docs-only approval.
+`AGENTS.md` points here for Cartesian Hamiltonian producer work. Registry
+entries explicitly marked **approved** below are binding implementation
+authority. Later-slice registry entries remain candidates and do not permit
+source implementation without a later docs-only approval.
 
 ## 1. Why this document exists
 
@@ -296,7 +296,7 @@ Prototype-only or blocker-only commits do not merge.
 
 ## 6. Object and surface registry
 
-This registry records approved Slice A surfaces, future candidates, and rejected
+This registry records approved Slice A/B surfaces, future candidates, and rejected
 surfaces. Only items explicitly marked **approved** are permitted in
 implementation.
 
@@ -528,12 +528,12 @@ computed on the effective support used by `HP-FN-00`.
 If implementation uses this existing return, it is a helper detail under
 `HP-FN-00`, not a standalone approved production surface.
 
-### HP-FN-03 — blockwise final one-body assembly — future candidate
+### HP-FN-03 — blockwise final one-body assembly — approved Slice B
 
-Candidate owner:
-`src/pqs_multilayer_complete_core_shell_h1.jl` or a smaller existing
-`CartesianFinalBasisRealization` operator file. This must be resolved before
-approval and must not revive the retired pair-materialization framework.
+Owner:
+`CartesianFinalBasisRealization`, in a small terminal-basis one-body file
+included by `src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl`.
+It must not revive the retired pair-materialization framework.
 
 Purpose:
 Fill a dense final-basis matrix from terminal block pairs and caller-supplied 1D
@@ -552,13 +552,34 @@ assemble_terminal_product_operator!(
 )
 ```
 
-The helper handles a single separable Cartesian product term. Kinetic and
-Gaussian-expanded nuclear attraction call it repeatedly. The helper always
-accumulates into `destination`; it does not allocate or return a result matrix.
+The helper handles a single separable Cartesian product term. For terminal
+blocks `L` and `R`, it computes local block actions:
+
+```text
+C_L' * P_lr * C_R
+P_lr[a,b] = axis_x[ix_a, ix_b] * axis_y[iy_a, iy_b] * axis_z[iz_a, iz_b]
+```
+
+Direct block coefficients remain implicit identity. Kinetic and
+Gaussian-expanded unit nuclear attraction call the helper repeatedly. The
+helper always accumulates into `destination`; it does not allocate or return a
+result matrix.
 
 Implementation target: **90 source lines**.
 
 No result object is proposed; the destination matrix is the result.
+
+Rules:
+
+- consume only `CartesianTerminalBasisRealization` plus the three caller-supplied
+  1D factor matrices;
+- no atomic/diatomic branches;
+- no global support-space operator matrix;
+- no global dense coefficient matrix;
+- at most one terminal support-pair workspace live;
+- tile or stream any local support-pair action above the `64 MiB` cap;
+- preserve symmetry by filling both final-basis block triangles or by an
+  explicit final symmetrization that does not hide construction errors.
 
 ### HP-FN-04 — blockwise IDA assembly — future candidate
 
@@ -838,9 +859,9 @@ it as a bounded physics validation; Cr2 validation should not require it.
 Exploratory commits may be separate on a branch. The mergeable slices below must
 produce a real consumer-visible result and delete the replaced path.
 
-Only Slice A is approved in this design revision. Slices B, C, and D remain
-future candidates until Slice A reports support sizes, coefficient density,
-cross-overlap errors, and memory behavior.
+Slice A and Slice B are approved in this design revision. Slices C and D remain
+future candidates until Slice B reports one-body operator correctness,
+allocation behavior, and memory behavior.
 
 ### Slice A — terminal basis realization
 
@@ -891,36 +912,48 @@ be deleted rather than preserved through adapters.
 
 ### Slice B — blockwise final one-body operators
 
-Status: future candidate, not approved by the Slice A authority.
+Status: approved Slice B authority.
 
 Target:
-Final-basis kinetic and by-center unit nuclear attraction without global support
-matrices.
+Final-basis kinetic `K` and by-center unit nuclear attraction matrices `U_A`
+without global support matrices. Slice B does not assemble IDA, does not build a
+`CartesianIDAHamiltonian`, and does not write artifacts.
 
 `assemble_terminal_product_operator!` consumes only
 `CartesianTerminalBasisRealization`. Atomic and diatomic operator branches are
 not permitted.
 
-Added-source target: **150 lines**. Exceeding the target requires manager
-review and a deletion/simplification explanation.
+Added-source target: **150 lines**.
+Redesign threshold: **225 added source lines**.
+Requirement: net source decrease or a documented net deletion path in the same
+producer lane. Crossing the redesign threshold returns the work to design.
 
 Must delete or stop calling:
 
 - any terminal-route dense support-matrix adapter replaced by the blockwise
   kernel;
 - duplicate route-local kinetic/nuclear contractions.
+- any Slice A/B report or smoke field whose only purpose is to preserve the old
+  blocked/operator-preflight vocabulary.
 
 Merge validation:
 
-- H and H2 reviewed one-body energies unchanged within tolerance;
+- one-center/H endpoint reproduces the reviewed one-body energy near `-0.5`
+  through the unified terminal basis;
+- H2 reviewed one-body lowest energy is unchanged within tolerance;
 - H2 old/common dense result and new blockwise result agree as a temporary
-  cross-check, after which the cross-check adapter is deleted;
-- Cr2 final K and center matrices are finite and symmetric;
-- measured allocation and peak-memory report.
+  cross-check if such an oracle is still live, after which the cross-check
+  adapter is deleted;
+- Cr2 final `K` and every unit center matrix `U_A` are finite and symmetric;
+- no IDA, Hamiltonian artifact, residual-GTO, or driver simplification work is
+  included;
+- implementation report includes final dimensions, matrix symmetry errors,
+  finite checks, largest local workspace, elapsed time, and allocation/peak
+  memory observations where practical.
 
 ### Slice C — localized IDA and `CartesianIDAHamiltonian`
 
-Status: future candidate, not approved by the Slice A authority.
+Status: future candidate, not approved by the current Slice A/B authority.
 
 Target:
 Complete base Hamiltonian producer and existing minimal artifact output.
@@ -949,7 +982,7 @@ Merge validation:
 
 ### Slice D — driver simplification
 
-Status: future candidate, not approved by the Slice A authority.
+Status: future candidate, not approved by the current Slice A/B authority.
 
 Target:
 Make the canonical materialization stage return/write the real Hamiltonian with
@@ -1004,11 +1037,11 @@ implementation.
 
 ## 11. Mechanical implementation gate
 
-Every implementation PR must list the approved design IDs it uses. For Slice A,
-the approved ID set is:
+Every implementation PR must list the approved design IDs it uses. For the
+current Slice A/B authority, the approved ID set is:
 
 ```text
-Design IDs: HP-OBJ-01, HP-OBJ-02, HP-FILE-01, HP-FN-00, HP-FN-01, HP-FN-02, HP-WIRE-01
+Design IDs: HP-OBJ-01, HP-OBJ-02, HP-FILE-01, HP-FN-00, HP-FN-01, HP-FN-02, HP-WIRE-01, HP-FN-03
 ```
 
 Review added lines before scientific review:
