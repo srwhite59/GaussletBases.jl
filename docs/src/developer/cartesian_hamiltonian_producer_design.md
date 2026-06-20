@@ -340,8 +340,6 @@ Meaning:
   support overlap is identity within tolerance and the direct support IDA
   weights are finite and positive.
 
-Definition and validation target: **25 added source lines**.
-
 ### HP-OBJ-02 — `CartesianTerminalBasisRealization` — Slice A freeze candidate
 
 Owner:
@@ -365,8 +363,6 @@ global coefficients, or global self-overlap matrices.
 `max_cross_overlap` is a diagnostic only and must not become an algorithmic
 input.
 
-Definition and validation target: **20 added source lines**.
-
 ### HP-RES-01 — terminal basis build result — rejected
 
 Do not introduce a persistent terminal-basis result wrapper. The Slice A
@@ -387,12 +383,8 @@ src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl
 ```
 
 It would be included by the existing `CartesianFinalBasisRealization` module. No
-new module is proposed.
-
-Target file size in the first accepted implementation: **150 source lines**,
-including object definitions and all helpers. Exceeding the target requires
-manager review; numerical projection correctness takes priority over meeting
-the target by omitting validation.
+new module is proposed. All source additions in this file count against the
+single Slice A budget in Section 9.
 
 ### HP-FN-00 — projected terminal shell realization — Slice A freeze candidate
 
@@ -401,8 +393,8 @@ Candidate internal helper. It may be file-local inside `HP-FILE-01`.
 Purpose:
 Realize one PQS terminal shell by explicitly projecting its raw boundary seed
 against all previously accepted blocks, forming the projected Gram matrix,
-performing shell-local Lowdin, and returning effective support plus
-sign-canonicalized final coefficients.
+performing shell-local Lowdin, and returning effective support plus final
+coefficients. It does not own final IDA sign-gauge canonicalization.
 
 Conceptual signature:
 
@@ -435,7 +427,11 @@ use sequential orthogonal projection:
 
 ```text
 for previous block C_j:
-    X <- X - C_j * (C_j' S X)
+    residual = C_j' * S * X
+    if norm(residual, Inf) <= projection_atol:
+        do not subtract and do not enlarge effective support
+    else:
+        X <- X - C_j * residual
 ```
 
 It must validate previous-block orthonormality and run a second
@@ -446,8 +442,6 @@ does not create a public result object.
 Production Slice A must use the recursively projected coefficients of previous
 PQS blocks and their effective supports. It must not approximate previous PQS
 blocks by their original shell-local coefficients when projecting later shells.
-
-Implementation target within `HP-FILE-01`: **70 source lines**.
 
 ### HP-FN-01 — terminal basis realizer — Slice A freeze candidate
 
@@ -474,7 +468,10 @@ contract metadata, but this exception is temporary and must not be extended to
 new fields. Shell projection, overlap, and Lowdin must never be added to
 metadata.
 
-Implementation target within `HP-FILE-01`: **80 source lines**.
+`HP-FN-01` owns final basis-block construction. It derives support weights from
+bundles, validates direct-sector weights, sign-canonicalizes completed block
+columns to positive localized IDA weights, and constructs
+`CartesianTerminalBasisBlock`.
 
 ### HP-FN-02 — cross-block overlap audit — Slice A freeze candidate
 
@@ -489,8 +486,6 @@ Requirements:
 - no global repair;
 - one temporary support cross block at a time;
 - symmetric pair traversal only.
-
-Implementation target within `HP-FILE-01`: **35 source lines**.
 
 ### HP-WIRE-01 — generic terminal-basis stage integration — Slice A freeze candidate
 
@@ -515,8 +510,6 @@ Contract:
 - It must serve one-center atomic, contact-core diatomic, and separated
   diatomic terminal plans through the same entry point.
 - It must not create atomic-specific or diatomic-specific final-basis adapters.
-
-Implementation target within existing stage wiring: **25 source lines**.
 
 ### HP-CHANGE-01 — return shell overlap from existing shell plan — rejected/deferred
 
@@ -790,10 +783,17 @@ block workspace:      O(tile_rows * tile_cols)
 working basis:        sum_i O(b_i*r_i) for PQS blocks
 ```
 
-For Slice A projection and overlap audits, support-overlap construction should
-be factorized or incremental by terminal block pair. Dense scratch construction
-is acceptable only as a bounded diagnostic on small fixtures; it is not the
-production Cr2 strategy.
+Projection and audit compute terminal block cross actions:
+
+```text
+C_left' * S_lr * C_right
+```
+
+They must not construct a global parent overlap matrix or a global final
+overlap matrix. At most one terminal support-pair workspace may be live. If that
+workspace exceeds the approved cap, it must be tiled. A dense local pair block
+is acceptable when bounded; the forbidden operations are global overlap
+construction and simultaneous retention of many pair blocks.
 
 Forbidden shape:
 
@@ -867,8 +867,9 @@ Merge validation:
 - one-center PQS shells use previous-block projection and shell-local Lowdin;
 - generic H2 terminal basis realizes without the retired compatibility route;
 - completed H2 final overlap is near identity;
-- Cr2 produces a real terminal basis or stops only at a reviewed
-  distorted-product blocker.
+- the reviewed Cr2 fixture produces a real terminal basis;
+- distorted-COMX rejection is allowed only for an input whose typed transform
+  inventory actually contains distorted COMX;
 - implementation report includes raw cross overlaps, projected cross overlaps,
   recursive effective support sizes, shell ranks, coefficient memory, and
   one-center/H2/Cr2 terminal basis facts.

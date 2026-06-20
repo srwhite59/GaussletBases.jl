@@ -6281,3 +6281,46 @@ Next step:
 - Decide whether the updated Slice A freeze candidate is now ready for explicit
   approval and `AGENTS.md` binding, or whether one more review should inspect
   the recursive projection/factorized-overlap requirements.
+
+## Cartesian Hamiltonian Producer Design Pass 006 - Recursive Projection Freeze Review
+
+Commit(s):
+- this branch - Tighten Slice A recursive projection design
+
+Summary:
+- Reconciled the final recursive-projection freeze recommendation into
+  `docs/src/developer/cartesian_hamiltonian_producer_design.md`.
+- Added `round_005_recursive_projection_review.md` and
+  `round_005_reconciliation.md` to the design-review lane.
+- The design remains a Slice A freeze candidate, not implementation authority.
+
+Accepted changes:
+- `HP-FN-00` now owns projection plus shell-local Lowdin only; it does not own
+  final sign canonicalization.
+- `HP-FN-01` now owns support-weight derivation, direct-weight validation,
+  sign canonicalization, and `CartesianTerminalBasisBlock` construction.
+- The projection algorithm now has a roundoff guard: if a previous-block
+  residual is already below `projection_atol`, do not subtract and do not grow
+  effective support.
+- Projection/audit workspace is specified as block cross actions
+  `C_left' * S_lr * C_right`, with no global parent/final overlap and at most
+  one support-pair workspace live.
+- Removed per-object/helper line targets; retained only the Slice A added-line
+  target, redesign threshold, and net-deletion requirement.
+- The reviewed Cr2 fixture must produce a real terminal basis. Distorted-COMX
+  rejection is allowed only when that typed inventory is actually present.
+
+Strategic interpretation:
+- This keeps the design gate focused on the actual numerical risk: true
+  recursive projection with support-growth control. If the final spike passes,
+  no further broad design review should be needed before freezing Slice A.
+
+Validation:
+- Docs-only pass; no source validation required.
+- Manager will run `git diff --check` and focused text scans before commit.
+
+Next step:
+- Ask doer for one final uncommitted recursive-projection spike. If it shows
+  stable ranks, bounded support growth, later-direct orthogonality, and no
+  global overlap construction for one-center/H2/Cr2, freeze Slice A and bind
+  the approved IDs.
