@@ -5931,3 +5931,33 @@ Deletion accounting:
 - deleted source/tool/test lines: 15.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Pass 337 - Residual-GTO Inventory Docs Correction
+
+Commit(s):
+- this commit - Update residual GTO inventory status
+
+No strategic change beyond closing the stale residual-GTO request-pressure
+cleanup lane. The donor inventory now says the H2-specific residual-GTO
+materializer has been retired, public `CartesianIDAHamiltonian` read/write
+remains live, no active PQS route currently materializes that artifact, and
+future residual-GTO/MWG supplement work belongs to a generic terminal producer.
+
+Validation:
+- Doer reported `git diff --check` passed.
+- Manager reviewed the docs diff and reran the stale-phrase grep; no matches.
+
+Deletion accounting:
+- deleted: stale developer-doc claim that private H2 residual-GTO construction
+  writes a public Cartesian IDA artifact.
+- simplified: priority wording now points future work at the generic terminal
+  producer.
+- quarantined: none.
+- not deleted because: donor inventory still tracks residual-GTO/MWG as a
+  future/retirement feature.
+- exact remaining caller/blocker: H2 and Cr2 remain blocked at
+  `:missing_terminal_shell_projection`.
+- added source lines: 0.
+- deleted source lines: 0.
+- new tests: none.
+- new metadata/status fields: none.
