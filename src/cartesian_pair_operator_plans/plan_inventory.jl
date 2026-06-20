@@ -27,6 +27,7 @@ function pair_operator_plan(
     policy::PairOperatorPlanPolicy = MetadataOnlyPairOperatorPlans(),
     supported_terms = _PAIR_OPERATOR_PLAN_DEFAULT_TERMS,
     route_core_sidecars::Bool = true,
+    require_route_core_crosscheck::Bool = false,
     metadata = (;),
 )
     transform_contract_plan =
@@ -39,6 +40,7 @@ function pair_operator_plan(
         policy,
         supported_terms,
         route_core_sidecars,
+        require_route_core_crosscheck,
         metadata,
     )
 end
@@ -49,6 +51,7 @@ function pair_operator_plan(
     policy::PairOperatorPlanPolicy = MetadataOnlyPairOperatorPlans(),
     supported_terms = _PAIR_OPERATOR_PLAN_DEFAULT_TERMS,
     route_core_sidecars::Bool = true,
+    require_route_core_crosscheck::Bool = false,
     metadata = (;),
 )
     terms = _supported_terms_tuple(supported_terms)
@@ -71,6 +74,7 @@ function pair_operator_plan(
             terms,
             isnothing(route_core_plans) ? nothing : route_core_plans[pair.pair_index],
             route_core_plan,
+            require_route_core_crosscheck,
             transform_lookup,
         ) for pair in CartesianUnitPairs.unit_pairs(unit_pair_plan)
     )
@@ -168,6 +172,7 @@ function _pair_operator_plan_record(
     supported_terms,
     route_core_sidecar,
     route_core_plan,
+    require_route_core_crosscheck::Bool,
     transform_lookup,
 )
     source_path, source_blocker = _source_operator_path(pair)
@@ -182,7 +187,7 @@ function _pair_operator_plan_record(
         right = right_transform.realization_path,
     )
     blocker =
-        isnothing(route_core_plan.inventory) ?
+        require_route_core_crosscheck && isnothing(route_core_plan.inventory) ?
         _first_blocker(
             transform_lookup.blocker,
             left_transform.blocker,

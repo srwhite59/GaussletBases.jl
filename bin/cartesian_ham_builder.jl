@@ -58,6 +58,7 @@ white_lindsey_operator_rule = :low_order_unit_operator_blocks
 supplement_policy = nothing
 run_final_basis = nothing
 run_h1 = true
+run_h1_j = false
 
 # Output request
 
@@ -83,7 +84,7 @@ route_inputs = (; route_family, route_kind, route_shape, product_body_rule,
     white_lindsey_route_shape, white_lindsey_mapping_rule,
     white_lindsey_nesting_rule, white_lindsey_retained_rule,
     white_lindsey_operator_rule,
-    supplement_policy, run_final_basis, run_h1)
+    supplement_policy, run_final_basis, run_h1, run_h1_j)
 materialization_inputs = (; materialize_route,
     save_ham_artifact = save_ida_hamiltonian, hamfile,
     hamiltonian_output)

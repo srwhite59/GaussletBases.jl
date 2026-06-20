@@ -284,8 +284,8 @@ function pqs_multilayer_complete_core_shell_h1_j_payload(
             h1_energy = h1_payload.h1.lowest_energy,
             density_interaction_status = density_interaction.status,
             self_coulomb_materialized = false,
-            ida_data_materialized = true,
-            density_density_materialized = true,
+            ida_data_materialized = false,
+            density_density_materialized = false,
             rhf_materialized = false,
             gto_materialized = false,
             driver_route_materialized = false,
@@ -311,9 +311,11 @@ function pqs_multilayer_complete_core_shell_h1_j_payload(
     end
 
     hamiltonian = Matrix{Float64}(h1_payload.final_hamiltonian.hamiltonian_matrix)
-    decomposition = eigen(Symmetric((hamiltonian + transpose(hamiltonian)) ./ 2))
-    lowest_energy = first(decomposition.values)
-    lowest_orbital = decomposition.vectors[:, 1]
+    lowest_orbital = Vector{Float64}(h1_payload.h1.lowest_orbital_coefficients)
+    h1_energy = Float64(h1_payload.h1.lowest_energy)
+    lowest_energy = dot(lowest_orbital, hamiltonian * lowest_orbital)
+    h1_orbital_residual_norm =
+        norm(hamiltonian * lowest_orbital - h1_energy * lowest_orbital, Inf)
     self_coulomb =
         CartesianFinalBasisRealization.pqs_complete_core_shell_ida_orbital_self_coulomb(
             density_interaction,
@@ -333,6 +335,7 @@ function pqs_multilayer_complete_core_shell_h1_j_payload(
         h1_energy = h1_payload.h1.lowest_energy,
         h1_orbital_energy = lowest_energy,
         h1_energy_reconstruction_error = abs(lowest_energy - h1_payload.h1.lowest_energy),
+        h1_orbital_residual_norm,
         density_interaction_status = density_interaction.status,
         density_gauge = density_interaction.density_gauge,
         ida_weights_all_positive =

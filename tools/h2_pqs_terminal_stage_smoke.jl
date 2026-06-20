@@ -1,6 +1,6 @@
 #!/usr/bin/env julia
 
-# Developer smoke for the active H2 PQS terminal-topology/materialization path.
+# Developer smoke for the active H2 PQS terminal-topology blocked route.
 # It reuses the existing harness once, then asserts compact manager-review facts.
 
 fixture = joinpath(
@@ -15,6 +15,7 @@ append!(ARGS, [
     "save_tsv=false",
     "save_basis_artifact=false",
     "save_ham_artifact=false",
+    "materialize_route=false",
 ])
 
 harness_elapsed = @elapsed include(joinpath(@__DIR__, "cartesian_driver_harness.jl"))
@@ -28,14 +29,6 @@ end
 
 function _check(label, observed, expected)
     observed == expected || error("$label expected $expected, got $observed")
-    println("  ", label, " = ", observed)
-    return nothing
-end
-
-function _check_approx(label, observed, expected; atol)
-    observed isa Number || error("$label expected numeric value, got $observed")
-    isapprox(observed, expected; atol, rtol = 0.0) ||
-        error("$label expected $expected +/- $atol, got $observed")
     println("  ", label, " = ", observed)
     return nothing
 end
@@ -68,21 +61,33 @@ _check("coverage_outside_count", facts.outside_count, 0)
 _check("q", facts.q, 5)
 _check("core_side", facts.core_side, 5)
 
-final_basis = report.physical_gausslet_final_basis_summary
-h1 = report.physical_gausslet_h1_summary
-h1_j = report.physical_gausslet_h1_j_summary
-_check("final_dimension", _get(final_basis, :final_dimension), 471)
-_check_approx(
-    "final_overlap_identity_error",
-    _get(final_basis, :final_overlap_identity_error),
-    5.29668900282789e-14;
-    atol = 1.0e-12,
+target = report.physical_gausslet_target_summary
+source_plan = report.physical_gausslet_source_plan_summary
+preflight = _get(source_plan, :terminal_source_realization_preflight_summary)
+
+_check("target_status", _get(target, :status),
+    :blocked_physical_gausslet_target_inventory)
+_check("target_retained_transform_authority",
+    _get(target, :retained_transform_authority),
+    :terminal_retained_rule_preflight)
+_check("source_plan_status", _get(source_plan, :status),
+    :blocked_pqs_diatomic_physical_gausslet_core_shell_source_plan)
+_check("source_plan_blocker", _get(source_plan, :blocker),
+    :missing_terminal_shell_projection)
+_check("source_plan_materialized", _get(source_plan, :source_plan_materialized),
+    false)
+_check("source_coefficients_materialized",
+    _get(source_plan, :source_coefficients_materialized), false)
+_check("source_plan_descriptor_available",
+    _get(source_plan, :source_plan_descriptor_available), false)
+_check("shared_shell_realization_materialized",
+    _get(source_plan, :shared_shell_realization_materialized), false)
+_check("terminal_realization_status", _get(preflight, :status),
+    :blocked_terminal_source_realization_preflight)
+_check("terminal_realization_blocker", _get(preflight, :blocker),
+    :missing_terminal_shell_projection)
+_check("terminal_realization_total_retained_dimension",
+    _get(_get(preflight, :dimension_summary), :total_retained_dimension),
+    471,
 )
-_check_approx("h1_lowest", _get(h1, :lowest_energy), -0.7946037173365863;
-    atol = 1.0e-12)
-_check_approx("h1_j_self_coulomb", _get(h1_j, :self_coulomb), 0.4569117646737212;
-    atol = 1.0e-12)
-_check("residual_rank", _get(materialization, :residual_rank), 18)
-_check("ida_orbital_dimension", _get(materialization, :ida_orbital_dimension), 489)
-_check("augmented_dimension", _get(materialization, :augmented_dimension), 489)
 println("h2_pqs_terminal_stage_smoke_elapsed_s=", harness_elapsed)

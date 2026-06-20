@@ -40,149 +40,6 @@ struct _PQSDiatomicPhysicalGaussletCoreShellTargetPayload
     metadata
 end
 
-struct _PQSIndependentH2PQSSupplementSupportPartitionPayload
-    status::Symbol
-    blocker
-    route_family::Symbol
-    route_kind::Symbol
-    support_order::Tuple
-    retained_order::Tuple
-    support_counts
-    retained_counts
-    retained_ranges
-    unit_partitions::Tuple
-    total_tile_count::Int
-    total_support_count::Int
-    coverage_complete::Bool
-    duplicate_parent_row_count::Int
-    missing_parent_row_count::Int
-    outside_parent_row_count::Int
-end
-
-function _pqs_source_box_route_driver_support_tile(
-    unit_key::Symbol,
-    source_region_role::Symbol,
-    tile_index::Int,
-    box::NTuple{3,UnitRange{Int}},
-    parent_dims::NTuple{3,Int},
-)
-    tile_key = Symbol(unit_key, "_", source_region_role, "_tile_", tile_index)
-    support_indices = _nested_box_support_indices(box[1], box[2], box[3], parent_dims)
-    support_states = NTuple{3,Int}[
-        _cartesian_unflat_index(index, parent_dims) for index in support_indices
-    ]
-    cpb = CartesianCPB.cpb(
-        box...;
-        role = tile_key,
-        metadata = (;
-            unit_key,
-            source_region_role,
-            source = :independent_h2_pqs_supplement_support_partition,
-        ),
-    )
-    return (;
-        tile_key,
-        unit_key,
-        source_region_role,
-        support_tile_role = :rectangular_parent_row_support_tile,
-        cpb,
-        cpb_role = tile_key,
-        intervals = box,
-        support_indices,
-        support_states,
-        support_count = length(support_indices),
-        parent_row_min = minimum(support_indices),
-        parent_row_max = maximum(support_indices),
-        provider_tile_ready = true,
-    )
-end
-
-function _pqs_source_box_route_driver_nonempty_box_push!(
-    boxes,
-    x::UnitRange{Int},
-    y::UnitRange{Int},
-    z::UnitRange{Int},
-)
-    (isempty(x) || isempty(y) || isempty(z)) && return boxes
-    push!(boxes, (x, y, z))
-    return boxes
-end
-
-function _pqs_source_box_route_driver_rectangular_difference_boxes(
-    outer_box::NTuple{3,UnitRange{Int}},
-    inner_box::NTuple{3,UnitRange{Int}},
-)
-    boxes = NTuple{3,UnitRange{Int}}[]
-    _pqs_source_box_route_driver_nonempty_box_push!(
-        boxes,
-        first(outer_box[1]):(first(inner_box[1]) - 1),
-        outer_box[2],
-        outer_box[3],
-    )
-    _pqs_source_box_route_driver_nonempty_box_push!(
-        boxes,
-        (last(inner_box[1]) + 1):last(outer_box[1]),
-        outer_box[2],
-        outer_box[3],
-    )
-    _pqs_source_box_route_driver_nonempty_box_push!(
-        boxes,
-        inner_box[1],
-        first(outer_box[2]):(first(inner_box[2]) - 1),
-        outer_box[3],
-    )
-    _pqs_source_box_route_driver_nonempty_box_push!(
-        boxes,
-        inner_box[1],
-        (last(inner_box[2]) + 1):last(outer_box[2]),
-        outer_box[3],
-    )
-    _pqs_source_box_route_driver_nonempty_box_push!(
-        boxes,
-        inner_box[1],
-        inner_box[2],
-        first(outer_box[3]):(first(inner_box[3]) - 1),
-    )
-    _pqs_source_box_route_driver_nonempty_box_push!(
-        boxes,
-        inner_box[1],
-        inner_box[2],
-        (last(inner_box[3]) + 1):last(outer_box[3]),
-    )
-    return Tuple(boxes)
-end
-
-function _pqs_source_box_route_driver_shared_shell_support_tiles(
-    role::Symbol,
-    outer_box::NTuple{3,UnitRange{Int}},
-    inner_box::NTuple{3,UnitRange{Int}},
-    parent_dims::NTuple{3,Int},
-)
-    outer_cpb = CartesianCPB.filled_cpb(
-        outer_box...;
-        role = Symbol(role, "_outer_support_box"),
-    )
-    inner_cpb = CartesianCPB.filled_cpb(
-        inner_box...;
-        role = Symbol(role, "_inner_exclusion_box"),
-    )
-    boxes = try
-        strata = CartesianCPB.complete_shell_boundary_strata(outer_cpb, inner_cpb)
-        Tuple(CartesianCPB.intervals(cpb) for cpb in strata.all_strata)
-    catch
-        _pqs_source_box_route_driver_rectangular_difference_boxes(outer_box, inner_box)
-    end
-    return Tuple(
-        _pqs_source_box_route_driver_support_tile(
-            role,
-            :shared_molecular_shell,
-            index,
-            box,
-            parent_dims,
-        ) for (index, box) in pairs(boxes)
-    )
-end
-
 function _pqs_source_box_route_driver_box_support_indices(
     box::NTuple{3,UnitRange{Int}},
     inner_box,
@@ -276,83 +133,6 @@ function _pqs_source_box_route_driver_terminal_support_coverage(records, parent_
     )
 end
 
-function _pqs_source_box_route_driver_h2_terminal_support_plan(records, parent_dims)
-    contact_records = Tuple(
-        record for record in records
-        if record.terminal_region_role == :atom_contact_core &&
-           record.lowering_contract_kind == :direct_core_identity_cpb
-    )
-    shared_records = sort(
-        collect(
-            record for record in records
-            if record.terminal_region_role == :shared_molecular_shell &&
-               record.lowering_contract_kind == :pqs_filled_source_cpb
-        );
-        by = record -> prod(length.(record.outer_box)),
-        rev = true,
-    )
-    length(contact_records) == 1 && length(shared_records) == 2 &&
-        length(records) == 3 ||
-        return nothing
-    support_order = (:atom_contact_core, :shared_shell_1, :shared_shell_2)
-    support_counts = (;
-        atom_contact_core = contact_records[1].support_count,
-        shared_shell_1 = shared_records[1].support_count,
-        shared_shell_2 = shared_records[2].support_count,
-    )
-    atom_record = contact_records[1]
-    atom_contact_core_descriptor = (;
-        role = :atom_contact_core,
-        source_region_roles = (atom_record.terminal_region_role,),
-        support_tiles = (
-            _pqs_source_box_route_driver_support_tile(
-                :atom_contact_core,
-                atom_record.terminal_region_role,
-                1,
-                atom_record.outer_box,
-                parent_dims,
-            ),
-        ),
-        tile_count = 1,
-        tile_support_counts = (atom_record.support_count,),
-        support_indices = atom_record.support_indices,
-        support_states = atom_record.support_states,
-        support_count = atom_record.support_count,
-        coefficient_representation = :sparse_parent_row_direct_selector,
-    )
-    shared_descriptor(role, record) = begin
-        support_tiles =
-            _pqs_source_box_route_driver_shared_shell_support_tiles(
-                role,
-                record.outer_box,
-                record.inner_exclusion_box,
-                parent_dims,
-            )
-        (;
-            role,
-            terminal_region_key = record.terminal_region_key,
-            current_box = record.outer_box,
-            inner_box = record.inner_exclusion_box,
-            source_cpb = record.source_cpb,
-            support_tiles,
-            tile_count = length(support_tiles),
-            tile_support_counts = Tuple(tile.support_count for tile in support_tiles),
-            support_indices = record.support_indices,
-            support_states = record.support_states,
-            support_count = record.support_count,
-        )
-    end
-    return (;
-        support_order,
-        support_counts,
-        atom_contact_core_descriptor,
-        shared_shell_descriptors = (;
-            shared_shell_1 = shared_descriptor(:shared_shell_1, shared_records[1]),
-            shared_shell_2 = shared_descriptor(:shared_shell_2, shared_records[2]),
-        ),
-    )
-end
-
 function _pqs_source_box_route_driver_terminal_topology_support_region_plan(
     parent,
     low_order_assembly,
@@ -431,89 +211,29 @@ function _pqs_source_box_route_driver_terminal_topology_support_region_plan(
     )
     length(bond_axes) <= 1 || return blocked(:inconsistent_terminal_bond_axes)
     bond_axis = isempty(bond_axes) ? nothing : only(bond_axes)
-    h2_plan =
-        _pqs_source_box_route_driver_h2_terminal_support_plan(records, parent_dims)
-    h2_available = !isnothing(h2_plan)
-    status =
-        h2_available ?
-        :available_independent_pqs_support_region_plan :
-        :available_terminal_topology_support_region_plan
-    return merge(
-        (;
-            status,
-            blocker = nothing,
-            authority = :terminal_lowering_contract_inventory,
-            support_order = h2_available ? h2_plan.support_order : support_order,
-            support_counts = h2_available ? h2_plan.support_counts : support_counts,
-            terminal_support_order = support_order,
-            terminal_support_counts = support_counts,
-            terminal_support_records = records,
-            terminal_region_roles =
-                Tuple(record.terminal_region_role for record in records),
-            terminal_region_kinds =
-                Tuple(record.terminal_region_kind for record in records),
-            lowering_contract_kinds =
-                Tuple(record.lowering_contract_kind for record in records),
-            counts_generated = true,
-            counts_source = :terminal_lowering_contract_inventory,
-            coverage_complete = coverage.coverage_complete,
-            duplicate_count = coverage.duplicate_count,
-            missing_count = coverage.missing_count,
-            outside_count = coverage.outside_count,
-            parent_dims,
-            bond_axis,
-        ),
-        h2_available ?
-        (;
-            atom_contact_core_descriptor = h2_plan.atom_contact_core_descriptor,
-            shared_shell_descriptors = h2_plan.shared_shell_descriptors,
-        ) :
-        (;),
-    )
-end
-
-function _pqs_source_box_route_driver_independent_h2_retained_rule_plan(
-    support_plan,
-)
-    support_order = (:atom_contact_core, :shared_shell_1, :shared_shell_2)
-    isnothing(support_plan) && return nothing
-    support_plan.status === :available_independent_pqs_support_region_plan ||
-        return nothing
-    support_plan.support_order == support_order ||
-        throw(ArgumentError("independent H2 retained rule support order mismatch"))
-    support_counts = support_plan.support_counts
-    Tuple(values(support_counts)) == (275, 578, 362) ||
-        throw(ArgumentError("independent H2 retained rule support count mismatch"))
-
-    shared_shell_rule =
-        CartesianRawProductSources.pqs_boundary_product_mode_retained_rule(
-            (5, 5, 5);
-            source_key = :independent_h2_shared_shell_q5_source,
-            metadata = (;
-                route_unit_role = :shared_molecular_shell,
-                source = :independent_h2_retained_rule_readiness,
-            ),
-        )
-    retained_counts = (;
-        atom_contact_core = support_counts.atom_contact_core,
-        shared_shell_1 = shared_shell_rule.retained_count,
-        shared_shell_2 = shared_shell_rule.retained_count,
-    )
-    Tuple(values(retained_counts)) == (275, 98, 98) ||
-        throw(ArgumentError("independent H2 retained rule count mismatch"))
     return (;
+        status = :available_terminal_topology_support_region_plan,
+        blocker = nothing,
+        authority = :terminal_lowering_contract_inventory,
         support_order,
         support_counts,
-        retained_order = support_order,
-        retained_counts,
-        expected_final_dimension = sum(values(retained_counts)),
-        per_unit_transform_kind = (;
-            atom_contact_core = :identity_source_modes,
-            shared_shell_1 = shared_shell_rule.transform_kind,
-            shared_shell_2 = shared_shell_rule.transform_kind,
-        ),
-        shared_shell_source_mode_dims = shared_shell_rule.source_mode_dims,
-        shared_shell_retained_rule_kind = shared_shell_rule.retained_rule_kind,
+        terminal_support_order = support_order,
+        terminal_support_counts = support_counts,
+        terminal_support_records = records,
+        terminal_region_roles =
+            Tuple(record.terminal_region_role for record in records),
+        terminal_region_kinds =
+            Tuple(record.terminal_region_kind for record in records),
+        lowering_contract_kinds =
+            Tuple(record.lowering_contract_kind for record in records),
+        counts_generated = true,
+        counts_source = :terminal_lowering_contract_inventory,
+        coverage_complete = coverage.coverage_complete,
+        duplicate_count = coverage.duplicate_count,
+        missing_count = coverage.missing_count,
+        outside_count = coverage.outside_count,
+        parent_dims,
+        bond_axis,
     )
 end
 
@@ -647,10 +367,8 @@ function _pqs_source_box_route_driver_terminal_retained_rule_plan(
             parent,
             low_order_stage,
         )
-    support_plan.status in (
-        :available_independent_pqs_support_region_plan,
-        :available_terminal_topology_support_region_plan,
-    ) || return blocked(support_plan.blocker)
+    support_plan.status === :available_terminal_topology_support_region_plan ||
+        return blocked(support_plan.blocker)
     retained_unit_plan isa CartesianRetainedUnits.RetainedUnitPlan ||
         return blocked(:missing_retained_unit_plan)
     retained_unit_transform_contract_plan isa
@@ -1293,16 +1011,9 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_target_payload(
         nothing
     generated_support_available =
         !isnothing(generated_support_plan) &&
-        generated_support_plan.status in (
-            :available_independent_pqs_support_region_plan,
-            :available_terminal_topology_support_region_plan,
-        )
-    retained_rule_plan =
-        independent_target ?
-        _pqs_source_box_route_driver_independent_h2_retained_rule_plan(
-            generated_support_plan,
-        ) :
-        nothing
+        generated_support_plan.status ===
+        :available_terminal_topology_support_region_plan
+    retained_rule_plan = nothing
     terminal_retained_rule_plan =
         independent_target &&
         !isnothing(low_order_assembly) &&
@@ -1316,10 +1027,7 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_target_payload(
         isnothing(terminal_retained_rule_plan) ?
         :missing_terminal_retained_rule_plan :
         terminal_retained_rule_plan.blocker
-    if independent_target && !isnothing(retained_rule_plan)
-        status = :available_physical_gausslet_core_shell_target_inventory
-        blocker = nothing
-    elseif independent_target && terminal_retained_available
+    if independent_target && terminal_retained_available
         status = :blocked_physical_gausslet_target_inventory
         blocker = :missing_terminal_source_plan_realization
     elseif independent_target && generated_support_available
@@ -1333,38 +1041,29 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_target_payload(
         generated_support_available ? generated_support_plan.support_counts :
         isnothing(inventory) ? (;) : inventory.support_counts
     retained_units =
-        !isnothing(retained_rule_plan) ? retained_rule_plan.retained_order :
         terminal_retained_available ? terminal_retained_rule_plan.retained_order :
         retained_units
     retained_counts =
-        !isnothing(retained_rule_plan) ? retained_rule_plan.retained_counts :
         terminal_retained_available ? terminal_retained_rule_plan.retained_counts :
         isnothing(inventory) ? (;) : inventory.retained_counts
     retained_order =
-        !isnothing(retained_rule_plan) ? retained_rule_plan.retained_order :
         terminal_retained_available ? terminal_retained_rule_plan.retained_order :
         isnothing(inventory) ? () : Tuple(inventory.retained_order)
     expected_final_dimension =
-        !isnothing(retained_rule_plan) ? retained_rule_plan.expected_final_dimension :
         terminal_retained_available ?
         terminal_retained_rule_plan.total_retained_dimension :
         isnothing(inventory) ? nothing : inventory.expected_final_dimension
     retained_atom_core_interiors =
-        !isnothing(retained_rule_plan) ||
         (!isnothing(inventory) && inventory.retained_atom_core_interiors)
     source_backed_fixed_source_oracle_used =
         false
     source_plan_blocker =
-        !isnothing(retained_rule_plan) ?
-        nothing :
         terminal_retained_available ?
         :missing_terminal_source_plan_realization :
         generated_support_available ?
         terminal_retained_blocker :
         nothing
     retained_transform_authority =
-        !isnothing(retained_rule_plan) ?
-        :pqs_source_box_construction :
         terminal_retained_available ?
         :terminal_retained_rule_preflight :
         generated_support_available ?
@@ -1373,14 +1072,10 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_target_payload(
         :not_available :
         :pqs_source_box_construction
     primary_blocker =
-        !isnothing(retained_rule_plan) ?
-        source_plan_blocker :
         generated_support_available ?
         source_plan_blocker :
         blocker
     secondary_blocker =
-        !isnothing(retained_rule_plan) ?
-        nothing :
         nothing
     support_plan =
         !isnothing(generated_support_plan) ? generated_support_plan :
@@ -1415,7 +1110,7 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_target_payload(
         independent_source_plan_blocker = source_plan_blocker,
         support_plan,
         terminal_retained_rule_plan,
-        retained_rule_plan,
+        retained_rule_plan = nothing,
     )
     metadata = (;
         source =
@@ -1468,13 +1163,7 @@ function _pqs_source_box_route_driver_diatomic_fixture_label(target_payload)
         target_payload.route_kind :
         :not_available
     if route_kind === :bond_aligned_diatomic_independent_pqs_source_box_core_shell
-        retained_rule_plan =
-            hasproperty(target_payload, :summary) ?
-            get(target_payload.summary, :retained_rule_plan, nothing) :
-            nothing
-        return isnothing(retained_rule_plan) ?
-               :bond_aligned_diatomic_terminal_topology :
-               :h2_r4_physical_gausslet_q5
+        return :bond_aligned_diatomic_terminal_topology
     end
     return :h2_r4_physical_gausslet_q5
 end
@@ -2190,466 +1879,6 @@ function _pqs_source_box_route_driver_physical_gausslet_source_plan_from_candida
     )
 end
 
-function _pqs_source_box_route_driver_independent_h2_physical_source_plan_descriptor(
-    target_payload,
-)
-    descriptor_blocker = :missing_independent_pqs_source_plan_numerical_materialization
-    blocked(blocker) = (;
-        object_kind = :pqs_independent_h2_physical_source_plan_descriptor,
-        status = :blocked_independent_pqs_physical_source_plan_descriptor,
-        blocker,
-        source_plan_family = :independent_pqs_physical_source_box_descriptor,
-        source_plan_authority_status =
-            :blocked_independent_pqs_route_owned_source_plan_descriptor,
-        source_coefficients_materialized = false,
-        final_basis_materialized = false,
-        source_backed_fixed_source_oracle_used = false,
-        fake_pqs_enabled = false,
-        missing_objects = (blocker,),
-    )
-    isnothing(target_payload) &&
-        return blocked(:missing_independent_pqs_target_payload)
-    target_payload.route_kind ===
-        :bond_aligned_diatomic_independent_pqs_source_box_core_shell ||
-        return blocked(:not_independent_pqs_route_kind)
-    target_payload.status === :available_physical_gausslet_core_shell_target_inventory ||
-        return blocked(target_payload.blocker)
-    support_plan = get(target_payload.summary, :support_plan, nothing)
-    retained_rule_plan = get(target_payload.summary, :retained_rule_plan, nothing)
-    isnothing(support_plan) &&
-        return blocked(:missing_independent_pqs_support_region_plan)
-    isnothing(retained_rule_plan) &&
-        return blocked(:missing_independent_pqs_retained_rule_plan)
-    support_counts = target_payload.support_counts
-    retained_counts = target_payload.retained_counts
-    Tuple(values(support_counts)) == (275, 578, 362) ||
-        return blocked(:independent_pqs_source_plan_support_count_mismatch)
-    Tuple(values(retained_counts)) == (275, 98, 98) ||
-        return blocked(:independent_pqs_source_plan_retained_count_mismatch)
-
-    shared_source(role) = (;
-        source_family = :pqs_filled_source_cpb,
-        source_mode_dims = retained_rule_plan.shared_shell_source_mode_dims,
-        source_mode_count = prod(retained_rule_plan.shared_shell_source_mode_dims),
-        support_count = getproperty(support_counts, role),
-        transform_kind = getproperty(retained_rule_plan.per_unit_transform_kind, role),
-        coefficient_matrix_materialized = false,
-    )
-    retained_rule(role, rule, materialized) = (;
-        retained_rule = rule,
-        retained_count = getproperty(retained_counts, role),
-        retained_column_selector_materialized = materialized,
-    )
-    descriptor_summary = (;
-        source_plan_family = :independent_pqs_physical_source_box_descriptor,
-        source_plan_authority_status =
-            :independent_pqs_route_owned_source_plan_descriptor,
-        support_counts,
-        retained_counts,
-        final_dimension = target_payload.expected_final_dimension,
-        source_coefficients_materialized = false,
-        final_basis_materialized = false,
-    )
-    return (;
-        object_kind = :pqs_independent_h2_physical_source_plan_descriptor,
-        status = :available_independent_pqs_physical_source_plan_descriptor,
-        blocker = nothing,
-        source_plan_family = :independent_pqs_physical_source_box_descriptor,
-        source_plan_authority_status =
-            :independent_pqs_route_owned_source_plan_descriptor,
-        support_order = target_payload.support_units,
-        retained_order = target_payload.retained_order,
-        support_counts,
-        retained_counts,
-        final_dimension = target_payload.expected_final_dimension,
-        expected_final_dimension = target_payload.expected_final_dimension,
-        unit_source_descriptors = (;
-            atom_contact_core = (;
-                source_family = :direct_terminal_source_modes,
-                source_region_roles =
-                    support_plan.atom_contact_core_descriptor.source_region_roles,
-                support_count = support_counts.atom_contact_core,
-                source_mode_count = support_counts.atom_contact_core,
-                transform_kind = :identity_source_modes,
-                coefficient_matrix_materialized = false,
-            ),
-            shared_shell_1 = shared_source(:shared_shell_1),
-            shared_shell_2 = shared_source(:shared_shell_2),
-        ),
-        unit_retained_rule_descriptors = (;
-            atom_contact_core =
-                retained_rule(:atom_contact_core, :direct_source_modes, false),
-            shared_shell_1 = retained_rule(
-                :shared_shell_1,
-                retained_rule_plan.shared_shell_retained_rule_kind,
-                true,
-            ),
-            shared_shell_2 = retained_rule(
-                :shared_shell_2,
-                retained_rule_plan.shared_shell_retained_rule_kind,
-                true,
-            ),
-        ),
-        source_coefficients_materialized = false,
-        final_basis_materialized = false,
-        source_backed_fixed_source_oracle_used = false,
-        fake_pqs_enabled = false,
-        next_blocker = descriptor_blocker,
-        support_plan,
-        retained_rule_plan,
-        missing_objects = (descriptor_blocker,),
-        summary = descriptor_summary,
-        metadata = (;
-            source =
-                :pqs_source_box_route_driver_independent_h2_physical_source_plan_descriptor,
-            descriptor_only = true,
-        ),
-    )
-end
-
-function _pqs_source_box_route_driver_independent_h2_shared_shell_realization_payload(
-    parent,
-    target_payload,
-    descriptor,
-)
-    blocked(blocker) = (;
-        object_kind = :pqs_independent_h2_shared_shell_realization_payload,
-        status = :blocked_independent_pqs_shared_shell_realization_payload,
-        blocker,
-        shared_shell_realization_counts = (),
-        shared_shell_realization_identity_errors = (),
-        shared_shell_realization_materialized = false,
-        source_backed_fixed_source_oracle_used = false,
-        fake_pqs_enabled = false,
-        shared_shells = (;),
-        summary = (;
-            status = :blocked_independent_pqs_shared_shell_realization_payload,
-            blocker,
-            shared_shell_realization_counts = (),
-            shared_shell_realization_identity_errors = (),
-            shared_shell_realization_materialized = false,
-        ),
-    )
-    isnothing(descriptor) &&
-        return blocked(:missing_independent_pqs_source_plan_descriptor)
-    descriptor.status === :available_independent_pqs_physical_source_plan_descriptor ||
-        return blocked(descriptor.blocker)
-    support_plan = get(target_payload.summary, :support_plan, nothing)
-    retained_rule_plan = get(target_payload.summary, :retained_rule_plan, nothing)
-    isnothing(support_plan) &&
-        return blocked(:missing_independent_pqs_support_region_plan)
-    isnothing(retained_rule_plan) &&
-        return blocked(:missing_independent_pqs_retained_rule_plan)
-    hasproperty(support_plan, :shared_shell_descriptors) ||
-        return blocked(:missing_independent_pqs_shared_shell_support_descriptors)
-    bundles =
-        hasproperty(parent, :parent_axis_bundle_object) ?
-        parent.parent_axis_bundle_object :
-        nothing
-    isnothing(bundles) && return blocked(:missing_parent_axis_bundle_object)
-    metrics = _pqs_multilayer_axis_metrics(bundles)
-    source_mode_dims = retained_rule_plan.shared_shell_source_mode_dims
-    shells = map(
-        role -> _pqs_source_box_route_driver_independent_h2_shared_shell_realization(
-            role,
-            getproperty(support_plan.shared_shell_descriptors, role),
-            bundles,
-            metrics,
-            source_mode_dims,
-            support_plan.bond_axis,
-        ),
-        (:shared_shell_1, :shared_shell_2),
-    )
-    blocker = findfirst(shell -> shell.status !==
-                                 :available_independent_pqs_shared_shell_realization,
-                        shells)
-    isnothing(blocker) || return blocked(shells[blocker].blocker)
-    counts = Tuple(shell.retained_count for shell in shells)
-    identity_errors = Tuple(shell.realized_overlap_identity_error for shell in shells)
-    summary = (;
-        status = :available_independent_pqs_shared_shell_realization_payload,
-        blocker = nothing,
-        shared_shell_realization_counts = counts,
-        shared_shell_realization_identity_errors = identity_errors,
-        coefficient_shapes = Tuple(shell.coefficient_shape for shell in shells),
-        shell_projection_materialized = true,
-        lowdin_cleanup_materialized = true,
-        shared_shell_realization_materialized = true,
-        source_backed_fixed_source_oracle_used = false,
-        fake_pqs_enabled = false,
-    )
-    return (;
-        object_kind = :pqs_independent_h2_shared_shell_realization_payload,
-        status = summary.status,
-        blocker = nothing,
-        shared_shell_realization_counts = counts,
-        shared_shell_realization_identity_errors = identity_errors,
-        shared_shell_realization_materialized = true,
-        source_backed_fixed_source_oracle_used = false,
-        fake_pqs_enabled = false,
-        shared_shells = (; shared_shell_1 = shells[1], shared_shell_2 = shells[2]),
-        summary,
-    )
-end
-
-function _pqs_source_box_route_driver_independent_h2_shared_shell_realization(
-    role::Symbol,
-    shell_descriptor,
-    bundles,
-    metrics,
-    source_mode_dims::NTuple{3,Int},
-    bond_axis::Symbol,
-)
-    blocked(blocker) = (;
-        role,
-        status = :blocked_independent_pqs_shared_shell_realization,
-        blocker,
-        retained_count = nothing,
-        coefficient_shape = nothing,
-        realized_overlap_identity_error = nothing,
-    )
-    try
-        source_q = source_mode_dims[1]
-        source_key = Symbol("independent_h2_", role, "_q", source_q, "_source")
-        raw_plan = CartesianRawProductSources.raw_product_box_plan(
-            shell_descriptor.source_cpb;
-            source_mode_dims,
-            source_key,
-            metadata = (; route_unit_role = role),
-        )
-        retained_rule =
-            CartesianRawProductSources.pqs_boundary_product_mode_retained_rule(
-                raw_plan;
-                metadata = (; route_unit_role = role),
-            )
-        retained_count = Int(retained_rule.retained_count)
-        retained_count > 0 ||
-            return blocked(:independent_pqs_shared_shell_retained_count_mismatch)
-        layer = _nested_projected_q_shell_layer(
-            bundles,
-            shell_descriptor.current_box,
-            shell_descriptor.inner_box;
-            bond_axis,
-            q = source_mode_dims[1],
-            L = source_mode_dims[1],
-            raw_source_dims = source_mode_dims,
-            selected_q = source_mode_dims[1],
-        )
-        projected_descriptor = _nested_projected_q_shell_staged_unit_descriptor(layer)
-        projected_descriptor.support_count == shell_descriptor.support_count ||
-            return blocked(:independent_pqs_shared_shell_support_count_mismatch)
-        shell_plan =
-            CartesianContractedParentMetrics._pqs_shell_realization_plan(
-                projected_descriptor,
-                metrics,
-            )
-        coefficients = shell_plan.shell_projection_matrix * shell_plan.lowdin_cleanup
-        size(coefficients) == (shell_descriptor.support_count, retained_count) ||
-            return blocked(:independent_pqs_shared_shell_coefficient_shape_mismatch)
-        return (;
-            role,
-            status = :available_independent_pqs_shared_shell_realization,
-            blocker = nothing,
-            raw_source_plan = raw_plan,
-            retained_rule,
-            support_indices = shell_descriptor.support_indices,
-            support_states = shell_descriptor.support_states,
-            shell_projection = shell_plan.shell_projection_matrix,
-            lowdin_cleanup = shell_plan.lowdin_cleanup,
-            shell_final_coefficients = coefficients,
-            retained_count,
-            coefficient_shape = size(coefficients),
-            realized_overlap_identity_error = shell_plan.isometry_error,
-            shell_projection_materialized = true,
-            lowdin_cleanup_materialized = true,
-            source_backed_fixed_source_oracle_used = false,
-            fake_pqs_enabled = false,
-        )
-    catch err
-        return blocked(Symbol(:independent_pqs_shared_shell_realization_error))
-    end
-end
-
-function _pqs_source_box_route_driver_parent_row_sparse_coefficients(
-    support_indices::AbstractVector{Int},
-    local_coefficients::AbstractMatrix{<:Real},
-    parent_count::Int,
-)
-    row_indices = Int[]
-    col_indices = Int[]
-    values = Float64[]
-    for column in axes(local_coefficients, 2)
-        for (local_row, parent_row) in pairs(support_indices)
-            value = local_coefficients[local_row, column]
-            iszero(value) && continue
-            push!(row_indices, Int(parent_row))
-            push!(col_indices, Int(column))
-            push!(values, Float64(value))
-        end
-    end
-    return _nested_sparse_coefficient_map(
-        row_indices,
-        col_indices,
-        values,
-        parent_count,
-        size(local_coefficients, 2),
-    )
-end
-
-function _pqs_source_box_route_driver_independent_h2_complete_core_shell_source_plan(
-    parent,
-    target_payload,
-    descriptor,
-    shared_shell_realization,
-)
-    blocked(blocker) = (;
-        status = :blocked_pqs_diatomic_physical_gausslet_core_shell_source_plan,
-        blocker,
-        source_plan = nothing,
-    )
-    isnothing(target_payload) && return blocked(:missing_independent_pqs_target_payload)
-    descriptor.status === :available_independent_pqs_physical_source_plan_descriptor ||
-        return blocked(descriptor.blocker)
-    shared_shell_realization.status ===
-        :available_independent_pqs_shared_shell_realization_payload ||
-        return blocked(shared_shell_realization.blocker)
-    support_plan = get(target_payload.summary, :support_plan, nothing)
-    isnothing(support_plan) &&
-        return blocked(:missing_independent_pqs_support_region_plan)
-    hasproperty(support_plan, :atom_contact_core_descriptor) ||
-        return blocked(:missing_independent_pqs_atom_contact_core_descriptor)
-    bundles =
-        hasproperty(parent, :parent_axis_bundle_object) ?
-        parent.parent_axis_bundle_object :
-        nothing
-    isnothing(bundles) && return blocked(:missing_parent_axis_bundle_object)
-
-    support_order = (:atom_contact_core, :shared_shell_1, :shared_shell_2)
-    retained_order = support_order
-    support_counts =
-        Tuple(getproperty(target_payload.support_counts, role) for role in support_order)
-    retained_counts =
-        Tuple(getproperty(target_payload.retained_counts, role) for role in retained_order)
-    target_payload.support_units == support_order ||
-        return blocked(:independent_pqs_source_plan_support_order_mismatch)
-    target_payload.retained_order == retained_order ||
-        return blocked(:independent_pqs_source_plan_retained_order_mismatch)
-    Tuple(values(target_payload.support_counts)) == support_counts ||
-        return blocked(:independent_pqs_source_plan_support_count_mismatch)
-    Tuple(values(target_payload.retained_counts)) == retained_counts ||
-        return blocked(:independent_pqs_source_plan_retained_count_mismatch)
-
-    core = support_plan.atom_contact_core_descriptor
-    core.support_count == retained_counts[1] ||
-        return blocked(:independent_pqs_atom_contact_core_count_mismatch)
-    shell_1 = shared_shell_realization.shared_shells.shared_shell_1
-    shell_2 = shared_shell_realization.shared_shells.shared_shell_2
-    parent_dims = _pqs_source_box_route_driver_axis_counts_tuple(
-        target_payload.parent_axis_counts,
-    )
-    isnothing(parent_dims) &&
-        return blocked(:missing_independent_pqs_parent_axis_counts)
-    parent_count = prod(parent_dims)
-    core_indices = Vector{Int}(core.support_indices)
-    core_coefficient_matrix = _nested_sparse_coefficient_map(
-        core_indices,
-        collect(1:length(core_indices)),
-        ones(Float64, length(core_indices)),
-        parent_count,
-        length(core_indices),
-    )
-    shared_shell_coefficient_matrices = (
-        _pqs_source_box_route_driver_parent_row_sparse_coefficients(
-            shell_1.support_indices,
-            shell_1.shell_final_coefficients,
-            parent_count,
-        ),
-        _pqs_source_box_route_driver_parent_row_sparse_coefficients(
-            shell_2.support_indices,
-            shell_2.shell_final_coefficients,
-            parent_count,
-        ),
-    )
-    retained_ranges = (;
-        atom_contact_core = 1:retained_counts[1],
-        shared_shell_1 = (retained_counts[1] + 1):sum(retained_counts[1:2]),
-        shared_shell_2 = (sum(retained_counts[1:2]) + 1):sum(retained_counts),
-    )
-    convention_labels = (;
-        source_plan_family = :independent_pqs_physical_source_box_core_shell,
-        source_backed_adapter = false,
-        source_backed_fixed_source_oracle_used = false,
-        retained_transform_kind = :pqs_source_box_retained_transform,
-        independent_pqs_transform = true,
-        fake_pqs_enabled = false,
-        retained_transform_authority = :pqs_source_box_construction,
-        source_plan_authority_status = :independent_pqs_route_owned_source_plan,
-        route_owned_authority = true,
-        core_coefficient_representation = :sparse_parent_row_direct_selector,
-        shared_shell_coefficient_representation = :sparse_parent_row_realization,
-        final_basis_materialized = false,
-        h1_materialized = false,
-        h1_j_materialized = false,
-        rhf_materialized = false,
-        exports_materialized = false,
-    )
-    summary = (;
-        object_kind = :pqs_diatomic_physical_gausslet_core_shell_source_plan,
-        status = :available_pqs_diatomic_physical_gausslet_core_shell_source_plan,
-        blocker = nothing,
-        support_order,
-        retained_order,
-        support_counts,
-        retained_counts,
-        final_dimension = sum(retained_counts),
-        retained_ranges,
-        source_plan_family = :independent_pqs_physical_source_box_core_shell,
-        source_plan_authority_status = :independent_pqs_route_owned_source_plan,
-        source_backed_fixed_source_oracle_used = false,
-        fake_pqs_enabled = false,
-        retained_transform_authority = :pqs_source_box_construction,
-        source_coefficients_materialized = true,
-        final_basis_materialized = false,
-        shared_shell_realization_counts =
-            shared_shell_realization.shared_shell_realization_counts,
-        shared_shell_realization_identity_errors =
-            shared_shell_realization.shared_shell_realization_identity_errors,
-    )
-    parent_basis =
-        hasproperty(parent, :parent_qw_basis_object) ? parent.parent_qw_basis_object :
-        hasproperty(parent, :parent_basis_object) ? parent.parent_basis_object :
-        nothing
-    source_plan = _PQSDiatomicPhysicalGaussletCoreShellSourcePlan(
-        :pqs_diatomic_physical_gausslet_core_shell_source_plan,
-        :available_pqs_diatomic_physical_gausslet_core_shell_source_plan,
-        parent_basis,
-        bundles,
-        core_indices,
-        core.support_states,
-        (Vector{Int}(shell_1.support_indices), Vector{Int}(shell_2.support_indices)),
-        (shell_1.support_states, shell_2.support_states),
-        core_coefficient_matrix,
-        shared_shell_coefficient_matrices,
-        support_order,
-        retained_order,
-        retained_ranges,
-        sum(retained_counts),
-        convention_labels,
-        summary,
-        (;
-            source =
-                :pqs_source_box_route_driver_independent_h2_complete_core_shell_source_plan,
-            route_owned = true,
-            source_backed_adapter = false,
-        ),
-    )
-    return (;
-        status = source_plan.status,
-        blocker = nothing,
-        source_plan,
-    )
-end
-
 function _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_payload(
     parent,
     target_payload,
@@ -2677,44 +1906,13 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_pay
             candidate_payload,
         ) :
         nothing
-    descriptor =
-        independent_target ?
-        _pqs_source_box_route_driver_independent_h2_physical_source_plan_descriptor(
-            target_payload,
-        ) :
-        nothing
-    descriptor_available =
-        !isnothing(descriptor) &&
-        descriptor.status === :available_independent_pqs_physical_source_plan_descriptor
-    shared_shell_realization =
-        descriptor_available ?
-        _pqs_source_box_route_driver_independent_h2_shared_shell_realization_payload(
-            parent,
-            target_payload,
-            descriptor,
-        ) :
-        nothing
-    shared_shell_realization_available =
-        !isnothing(shared_shell_realization) &&
-        shared_shell_realization.status ===
-        :available_independent_pqs_shared_shell_realization_payload
-    independent_source_plan =
-        shared_shell_realization_available ?
-        _pqs_source_box_route_driver_independent_h2_complete_core_shell_source_plan(
-            parent,
-            target_payload,
-            descriptor,
-            shared_shell_realization,
-        ) :
-        nothing
-    independent_source_plan_available =
-        !isnothing(independent_source_plan) &&
-        independent_source_plan.status ===
-        :available_pqs_diatomic_physical_gausslet_core_shell_source_plan
+    descriptor = nothing
+    descriptor_available = false
+    shared_shell_realization = nothing
+    shared_shell_realization_available = false
+    independent_source_plan_available = false
     source_plan =
-        independent_source_plan_available ?
-        independent_source_plan.source_plan :
-        descriptor_available ? nothing : source_plan
+        independent_target ? nothing : source_plan
     independent_source_plan_blocker =
         !isnothing(target_payload) ?
         get(
@@ -2724,20 +1922,10 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_pay
         ) :
         :missing_independent_pqs_physical_source_plan_materializer
     status =
-        independent_source_plan_available ?
-        source_plan.status :
-        descriptor_available ?
-        :blocked_pqs_diatomic_physical_gausslet_core_shell_source_plan :
         isnothing(source_plan) ?
         :blocked_pqs_diatomic_physical_gausslet_core_shell_source_plan :
         source_plan.status
     blocker =
-        independent_source_plan_available ?
-        nothing :
-        descriptor_available ?
-        shared_shell_realization_available ?
-        independent_source_plan.blocker :
-        shared_shell_realization.blocker :
         !isnothing(source_plan) ?
         nothing :
         independent_target ?
@@ -2789,20 +1977,14 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_pay
             _pqs_source_box_route_driver_terminal_source_realization_summary(
                 terminal_source_realization_preflight,
             ),
-        source_plan_descriptor_available = descriptor_available,
+        source_plan_descriptor_available = false,
         source_plan_family =
-            independent_source_plan_available ?
-            source_plan.summary.source_plan_family :
             isnothing(source_plan) ?
             :not_available :
             hasproperty(source_plan, :source_plan_family) ?
             source_plan.source_plan_family :
             :not_available,
         source_plan_authority_status =
-            independent_source_plan_available ?
-            source_plan.summary.source_plan_authority_status :
-            descriptor_available ?
-            descriptor.source_plan_authority_status :
             isnothing(source_plan) ?
             independent_target ?
             :blocked_pqs_source_box_construction_authority :
@@ -2812,13 +1994,10 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_pay
             !isnothing(target_payload) &&
             get(target_payload.summary, :source_backed_fixed_source_oracle_used, false),
         retained_transform_authority =
-            independent_source_plan_available ?
-            source_plan.summary.retained_transform_authority :
             isnothing(target_payload) ?
             :not_available :
             get(target_payload.summary, :retained_transform_authority, :not_available),
-        source_coefficients_materialized =
-            independent_source_plan_available,
+        source_coefficients_materialized = false,
         secondary_blocker =
             isnothing(target_payload) ? nothing : get(target_payload.summary, :secondary_blocker, nothing),
         independent_source_plan_blocker =
@@ -2841,201 +2020,6 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_pay
         source_plan,
         summary,
         metadata,
-    )
-end
-
-function _pqs_source_box_route_driver_support_partition_rows(
-    source_plan,
-    unit_key::Symbol,
-)
-    unit_key === :atom_contact_core &&
-        return Vector{Int}(source_plan.atom_contact_core_support_indices)
-    unit_key === :shared_shell_1 &&
-        return Vector{Int}(source_plan.shared_shell_support_indices[1])
-    unit_key === :shared_shell_2 &&
-        return Vector{Int}(source_plan.shared_shell_support_indices[2])
-    return Int[]
-end
-
-function _pqs_source_box_route_driver_support_partition_local_rows(
-    support_indices::AbstractVector{Int},
-    tile_indices::AbstractVector{Int},
-)
-    local_by_parent = Dict{Int,Int}(
-        Int(parent_row) => Int(local_row) for (local_row, parent_row) in pairs(support_indices)
-    )
-    return Tuple(local_by_parent[Int(parent_row)] for parent_row in tile_indices)
-end
-
-function _pqs_source_box_route_driver_contiguous_unit_range(rows::Tuple)
-    isempty(rows) && return nothing
-    first_row = first(rows)
-    expected = first_row:(first_row + length(rows) - 1)
-    return Tuple(expected) == rows ? expected : nothing
-end
-
-function _pqs_source_box_route_driver_support_partition_unit(
-    unit_key::Symbol,
-    support_indices::AbstractVector{Int},
-    retained_range,
-    support_tiles::Tuple,
-)
-    observed = Int[]
-    tile_fingerprints = map(support_tiles) do tile
-        tile_rows = Vector{Int}(tile.support_indices)
-        append!(observed, tile_rows)
-        unit_local_rows =
-            _pqs_source_box_route_driver_support_partition_local_rows(
-                support_indices,
-                tile_rows,
-            )
-        unit_local_row_range =
-            _pqs_source_box_route_driver_contiguous_unit_range(unit_local_rows)
-        (;
-            tile_key = tile.tile_key,
-            unit_key,
-            source_region_role = tile.source_region_role,
-            support_tile_role = tile.support_tile_role,
-            cpb_role = tile.cpb_role,
-            intervals = tile.intervals,
-            support_count = tile.support_count,
-            parent_row_count = length(tile_rows),
-            parent_row_min = tile.parent_row_min,
-            parent_row_max = tile.parent_row_max,
-            parent_row_ids = Tuple(tile_rows),
-            unit_local_row_range,
-            unit_local_rows,
-            retained_range,
-            provider_tile_ready = tile.provider_tile_ready,
-        )
-    end
-    expected_set = Set(Int.(support_indices))
-    observed_set = Set(observed)
-    duplicate_count = length(observed) - length(observed_set)
-    missing_count = length(setdiff(expected_set, observed_set))
-    outside_count = length(setdiff(observed_set, expected_set))
-    coverage_complete =
-        duplicate_count == 0 && missing_count == 0 && outside_count == 0 &&
-        length(observed_set) == length(expected_set)
-    return (;
-        unit_key,
-        support_count = length(support_indices),
-        retained_range,
-        tile_count = length(support_tiles),
-        tile_support_counts = Tuple(tile.support_count for tile in support_tiles),
-        parent_row_count = length(observed_set),
-        parent_row_min = isempty(support_indices) ? nothing : minimum(support_indices),
-        parent_row_max = isempty(support_indices) ? nothing : maximum(support_indices),
-        duplicate_parent_row_count = duplicate_count,
-        missing_parent_row_count = missing_count,
-        outside_parent_row_count = outside_count,
-        coverage_complete,
-        tiles = support_tiles,
-        tile_fingerprints = Tuple(tile_fingerprints),
-    )
-end
-
-function _pqs_source_box_route_driver_independent_h2_pqs_supplement_support_partition_payload(
-    target_payload,
-    source_plan_payload,
-)
-    support_order = (:atom_contact_core, :shared_shell_1, :shared_shell_2)
-    blocked(blocker) = _PQSIndependentH2PQSSupplementSupportPartitionPayload(
-        :blocked_independent_h2_pqs_supplement_support_partition,
-        blocker,
-        isnothing(target_payload) ? :not_available : target_payload.route_family,
-        isnothing(target_payload) ? :not_available : target_payload.route_kind,
-        support_order,
-        (),
-        nothing,
-        nothing,
-        nothing,
-        (),
-        0,
-        0,
-        false,
-        0,
-        0,
-        0,
-    )
-    isnothing(target_payload) && return blocked(:missing_independent_h2_target_payload)
-    target_payload.status === :available_physical_gausslet_core_shell_target_inventory ||
-        return blocked(target_payload.blocker)
-    support_plan = get(target_payload.summary, :support_plan, nothing)
-    isnothing(support_plan) && return blocked(:missing_independent_pqs_support_region_plan)
-    source_plan =
-        !isnothing(source_plan_payload) && hasproperty(source_plan_payload, :source_plan) ?
-        source_plan_payload.source_plan :
-        nothing
-    isnothing(source_plan) && return blocked(:missing_independent_pqs_source_plan)
-    source_plan.status ===
-        :available_pqs_diatomic_physical_gausslet_core_shell_source_plan ||
-        return blocked(source_plan.status)
-    support_plan.support_order == support_order ||
-        return blocked(:independent_pqs_support_partition_order_mismatch)
-    source_plan.support_order == support_order ||
-        return blocked(:independent_pqs_source_plan_support_order_mismatch)
-
-    atom_descriptor = support_plan.atom_contact_core_descriptor
-    shared_descriptors = support_plan.shared_shell_descriptors
-    retained_ranges = source_plan.retained_ranges
-    tile_sources = (;
-        atom_contact_core = atom_descriptor.support_tiles,
-        shared_shell_1 = shared_descriptors.shared_shell_1.support_tiles,
-        shared_shell_2 = shared_descriptors.shared_shell_2.support_tiles,
-    )
-    unit_partitions = Tuple(
-        _pqs_source_box_route_driver_support_partition_unit(
-            unit_key,
-            _pqs_source_box_route_driver_support_partition_rows(source_plan, unit_key),
-            getproperty(retained_ranges, unit_key),
-            getproperty(tile_sources, unit_key),
-        ) for unit_key in support_order
-    )
-    duplicate_count =
-        sum(partition.duplicate_parent_row_count for partition in unit_partitions)
-    missing_count =
-        sum(partition.missing_parent_row_count for partition in unit_partitions)
-    outside_count =
-        sum(partition.outside_parent_row_count for partition in unit_partitions)
-    coverage_complete =
-        all(partition.coverage_complete for partition in unit_partitions) &&
-        duplicate_count == 0 && missing_count == 0 && outside_count == 0
-    total_tile_count = sum(partition.tile_count for partition in unit_partitions)
-    total_support_count = sum(partition.support_count for partition in unit_partitions)
-    status =
-        coverage_complete ?
-        :available_independent_h2_pqs_supplement_support_partition :
-        :blocked_independent_h2_pqs_supplement_support_partition
-    blocker =
-        coverage_complete ? nothing : :independent_h2_pqs_support_partition_coverage_mismatch
-    support_counts =
-        _pqs_source_box_route_driver_ordered_count_tuple(
-            target_payload.support_counts,
-            support_order,
-        )
-    retained_counts =
-        _pqs_source_box_route_driver_ordered_count_tuple(
-            target_payload.retained_counts,
-            source_plan.retained_order,
-        )
-    return _PQSIndependentH2PQSSupplementSupportPartitionPayload(
-        status,
-        blocker,
-        target_payload.route_family,
-        target_payload.route_kind,
-        support_order,
-        source_plan.retained_order,
-        support_counts,
-        retained_counts,
-        retained_ranges,
-        unit_partitions,
-        total_tile_count,
-        total_support_count,
-        coverage_complete,
-        duplicate_count,
-        missing_count,
-        outside_count,
     )
 end
 

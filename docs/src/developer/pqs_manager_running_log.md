@@ -5207,3 +5207,64 @@ Goal / guardrail:
 Line-count / complexity note:
 - The initial doer version duplicated too much input setup. Manager trimmed the
   smoke to an 88-line harness assertion wrapper before acceptance.
+
+## Passes 320-321 - Cleanup Confirmed Defects and Remove H2 Route Authority
+
+Commit(s):
+- this commit - Remove H2 compatibility route authority
+
+Summary:
+- Fixed the compact confirmed-defect set before further Cr2 construction:
+  `run_h1_j` now defaults false and is visible in the canonical driver; generic
+  independent diatomic labeling no longer flips to the H2 fixture; blocked H1/J
+  no longer claims IDA/density materialization; H1/J reuses the stored H1 lowest
+  orbital instead of a second eigensolve; complete core/shell overlap
+  diagnostics now enforce/report `rank_atol`; and RouteCore pair sidecars are
+  diagnostic unless a crosscheck is explicitly required.
+- Removed the active H2 compatibility route authority. The independent-H2
+  retained-rule adapter, source descriptor, shared-shell realization,
+  complete-core/shell source-plan materializer, terminal support relabeler, and
+  supplement support-partition sidecar were deleted from the active source tree.
+- H2 and Cr2 now both use ordered terminal records and both block at the shared
+  generic source-realization gap `:missing_terminal_shell_projection`.
+
+Validation:
+- Doer reported `git diff --check`, package load,
+  `julia --project=. tools/h2_pqs_terminal_stage_smoke.jl`, and
+  `julia --project=. tools/cr2_cartesian_ida_stage_probe.jl`.
+- The H2 smoke passed as a blocked generic-route smoke with terminal roles
+  `(:atom_contact_core, :shared_molecular_shell, :shared_molecular_shell)`,
+  support counts `(275, 362, 578)`, no source-plan materialization, no source
+  coefficients, no source descriptor, no shared-shell realization, and blocker
+  `:missing_terminal_shell_projection`.
+- The Cr2 probe remained a clean blocked probe at `cartesian_assembly` with
+  source-plan blocker `:missing_terminal_shell_projection`. Manager reviewed
+  the diff and symbol searches, and did not rerun the heavy probes.
+
+Goal advancement:
+- LT5/LT6: removes the H2-specific successful back half as an algorithmic
+  authority. H2 is now only a fixture/topology check for the generic terminal
+  route, not a separate successful route.
+- MT: current blocker is now unambiguous and shared: terminal PQS shell
+  projection/overlap/Lowdin ingredients must be produced for ordered terminal
+  shell records before any final-basis or operator materialization can resume.
+
+Risk / guardrail:
+- H2 materialized parity is intentionally unavailable until generic terminal
+  shell realization lands. Do not reintroduce a compatibility oracle to recover
+  old H2 numbers; recover them through the generic route.
+- Older source-backed/candidate code still contains `shared_shell_1/2`
+  vocabulary outside the independent terminal authority. Treat that as later
+  retirement work, not as a live independent-H2 escape path.
+
+Remaining blocker / next:
+- Implement terminal shell projection/overlap/shell-local Lowdin for typed
+  terminal PQS shell records. Direct records remain identity sectors. If
+  cross-block overlap is not already acceptable after shell-local realization,
+  stop with `:terminal_pqs_cross_block_projection_required`; do not apply a
+  global cleanup.
+
+Line-count / complexity note:
+- Doer reported the combined working-tree impact for Passes 320 and 321 as
+  `111 insertions(+), 1092 deletions(-)` across eight files. This is the desired
+  deletion-oriented simplification before adding the generic realization path.

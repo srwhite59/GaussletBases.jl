@@ -52,7 +52,7 @@ white_lindsey_expansion = coulomb_gaussian_expansion(doacc = false)
 supplement_policy = nothing
 run_final_basis = nothing
 run_h1 = true
-run_h1_j = true
+run_h1_j = false
 run_private_rhf = false
 private_rhf_electron_count = nothing
 private_rhf_fixture_role = :route_smoke

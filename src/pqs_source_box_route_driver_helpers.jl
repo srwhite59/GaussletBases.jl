@@ -731,7 +731,7 @@ function cartesian_recipe(route_inputs)
         route_recipe = route_inputs
     else
         run_h1 = get(route_inputs, :run_h1, true)
-        run_h1_j = get(route_inputs, :run_h1_j, true)
+        run_h1_j = get(route_inputs, :run_h1_j, false)
         private_rhf_inputs =
             get(route_inputs, :private_rhf_inputs, (; run_private_rhf = false))
         run_private_rhf = get(private_rhf_inputs, :run_private_rhf, false)
@@ -1834,11 +1834,6 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
             diatomic_physical_gausslet_source_plan_candidate_payload,
             low_order_assembly,
         )
-    independent_h2_pqs_supplement_support_partition_payload =
-        _pqs_source_box_route_driver_independent_h2_pqs_supplement_support_partition_payload(
-            diatomic_physical_gausslet_target_payload,
-            diatomic_physical_gausslet_source_plan_payload,
-        )
     diatomic_physical_gausslet_final_basis_payload =
         _pqs_source_box_route_driver_diatomic_physical_gausslet_final_basis_payload(
             route_skeleton,
@@ -1904,7 +1899,6 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
         diatomic_physical_gausslet_supplement_preflight_payload,
         diatomic_physical_gausslet_source_plan_candidate_payload,
         diatomic_physical_gausslet_source_plan_payload,
-        independent_h2_pqs_supplement_support_partition_payload,
         diatomic_physical_gausslet_final_basis_payload,
         diatomic_physical_gausslet_h1_payload,
         diatomic_physical_gausslet_h1_j_payload,

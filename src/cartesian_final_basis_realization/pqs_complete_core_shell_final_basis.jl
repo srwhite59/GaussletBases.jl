@@ -77,6 +77,25 @@ function pqs_complete_core_shell_final_basis(;
         identity_atol,
         rank_atol,
     )
+    if !diagnostics.summary.full_rank
+        return _pqs_complete_core_shell_final_basis_result(
+            :blocked_pqs_complete_core_shell_final_basis,
+            :combined_core_shell_concatenated_overlap_rank_deficient,
+            core_indices,
+            shell_indices,
+            core_count,
+            shell_support_count,
+            shell_count,
+            core_range,
+            shell_range,
+            disjoint_support,
+            shell_final_overlap,
+            final_overlap,
+            diagnostics.summary,
+            nothing,
+            metadata,
+        )
+    end
     if diagnostics.summary.identity_error > Float64(identity_atol)
         return _pqs_complete_core_shell_final_basis_result(
             :blocked_pqs_complete_core_shell_final_basis,
@@ -210,6 +229,9 @@ function _pqs_complete_core_shell_overlap_diagnostics(
     all(isfinite, matrix) ||
         throw(ArgumentError("complete core/shell overlap contains non-finite entries"))
     symmetry_error = norm(matrix - transpose(matrix), Inf)
+    eigenvalues = eigvals(Symmetric((matrix + transpose(matrix)) ./ 2))
+    threshold = max(Float64(rank_atol), eps(Float64) * max(size(matrix, 1), 1))
+    numerical_rank = count(value -> value > threshold, eigenvalues)
     identity_error = norm(
         matrix - Matrix{Float64}(I, size(matrix, 1), size(matrix, 2)),
         Inf,
@@ -219,7 +241,12 @@ function _pqs_complete_core_shell_overlap_diagnostics(
         symmetry_error,
         identity_error,
         expected_dimension = size(matrix, 1),
+        eigenvalue_min = minimum(eigenvalues),
+        eigenvalue_max = maximum(eigenvalues),
+        numerical_rank,
+        full_rank = numerical_rank == size(matrix, 1),
         identity_atol = Float64(identity_atol),
+        rank_atol = Float64(rank_atol),
     )
     return (; summary,)
 end
