@@ -118,7 +118,7 @@ function _canonicalize!(coefficients, states, bundles, weight_atol)
     return coefficients
 end
 function _realize_shell(record, contract, blocks, bundles, overlaps,
-    projection_atol, rank_atol, identity_atol, weight_atol)
+    projection_atol, identity_atol, weight_atol)
     state = _shell_seed(record, contract, bundles)
     for pass in 1:2
         changed = false
@@ -134,9 +134,6 @@ function _realize_shell(record, contract, blocks, bundles, overlaps,
     gram = transpose(state.coefficients) *
            _support_action(state.states, state.states, state.coefficients, overlaps)
     overlap = Symmetric((gram + transpose(gram)) ./ 2)
-    rank = count(>(rank_atol), eigvals(overlap))
-    rank == record.retained_count ||
-        throw(ArgumentError("terminal PQS projected Gram rank does not match retained count"))
     coefficients = _canonicalize!(
         state.coefficients * inv(sqrt(overlap)), state.states, bundles, weight_atol)
     error = norm(transpose(coefficients) *
@@ -151,7 +148,6 @@ function pqs_terminal_basis_realization(
     identity_atol::Real = 1.0e-8,
     cross_atol::Real = 1.0e-8,
     projection_atol::Real = 1.0e-12,
-    rank_atol::Real = 1.0e-10,
     weight_atol::Real = 1.0e-14,
 )
     length(support_records) == length(retained_records) ||
@@ -173,7 +169,7 @@ function pqs_terminal_basis_realization(
             isnothing(contract) && throw(ArgumentError("missing terminal transform contract"))
             indices, states, coefficients = _realize_shell(
                 record, contract, blocks, bundles, overlaps,
-                projection_atol, rank_atol, identity_atol, weight_atol)
+                projection_atol, identity_atol, weight_atol)
             nextcol = _push_block!(
                 blocks, record.support_record.unit_key, indices, states,
                 coefficients, nextcol)

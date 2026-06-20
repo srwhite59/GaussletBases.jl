@@ -6467,3 +6467,36 @@ Guardrail:
 Next step:
 - Commit the `JuliaStyle.md` Löwdin guidance so future agents do not repeat the
   one-sided eigentransform mistake, then push the accepted Slice A commit.
+
+## Cartesian Hamiltonian Producer Pass 010 - Trim Terminal Basis Cleanup
+
+Commit(s):
+- this branch - Trim terminal basis cleanup
+
+Summary:
+- Removed the separate `eigvals(overlap)` rank check and the now-unused
+  `rank_atol` plumbing from the Slice A terminal PQS realizer.
+- Kept Löwdin construction as `inv(sqrt(Symmetric(overlap)))` and kept the final
+  realized-shell overlap identity check.
+- Removed an unused H2 smoke helper and compacted a simple topology-facts
+  return.
+
+Validation reported by doer:
+- `git diff --check`: passed.
+- `julia --project=. -e 'using GaussletBases; println("load ok")'`: passed.
+- `julia --project=. tools/h2_pqs_terminal_stage_smoke.jl`: passed in `39.01s`.
+
+Line-count/complexity:
+- Source: `2` added / `6` deleted.
+- Tools: `2` added / `12` deleted.
+- Total: `4` added / `18` deleted.
+
+Strategic interpretation:
+- This removes low-value defensive/report clutter after the real bug was found
+  to be the one-sided eigentransform, not a rank-loss condition. It leaves the
+  construction path simpler and aligned with the new `JuliaStyle.md` Löwdin
+  guidance.
+
+Next step:
+- Continue from the realized terminal basis toward the next approved design
+  boundary only after B/C/D surfaces are explicitly approved.

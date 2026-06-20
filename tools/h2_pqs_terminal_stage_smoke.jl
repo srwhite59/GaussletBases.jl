@@ -20,13 +20,6 @@ append!(ARGS, [
 
 harness_elapsed = @elapsed include(joinpath(@__DIR__, "cartesian_driver_harness.jl"))
 
-function _get(obj, key::Symbol, default = nothing)
-    isnothing(obj) && return default
-    hasproperty(obj, key) && return getproperty(obj, key)
-    obj isa NamedTuple && haskey(obj, key) && return getfield(obj, key)
-    return default
-end
-
 function _check(label, observed, expected)
     observed == expected || error("$label expected $expected, got $observed")
     println("  ", label, " = ", observed)
@@ -42,15 +35,12 @@ end
 function _topology_facts(shells)
     scaffold = shells.shellification_scaffold
     coverage = scaffold.coverage
-    return (;
-        roles = scaffold.ordered_region_roles,
+    return (; roles = scaffold.ordered_region_roles,
         support_counts = Tuple(region.support_count for region in scaffold.regions),
         duplicate_count = coverage.duplicate_count,
         missing_count = coverage.missing_count,
         outside_count = coverage.outside_count,
-        q = scaffold.q,
-        core_side = scaffold.core_side,
-    )
+        q = scaffold.q, core_side = scaffold.core_side)
 end
 
 println("h2_pqs_terminal_stage_smoke_checks")
