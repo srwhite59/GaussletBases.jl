@@ -6230,3 +6230,54 @@ Next step:
 - Freeze Slice A only after the manager/user accepts the expanded ID set:
   `HP-OBJ-01`, `HP-OBJ-02`, `HP-FILE-01`, `HP-FN-00`, `HP-FN-01`,
   `HP-FN-02`, and `HP-WIRE-01`.
+
+## Cartesian Hamiltonian Producer Design Pass 005 - Projection Spike Reconciliation
+
+Commit(s):
+- this branch - Reconcile terminal projection spike
+
+Summary:
+- Recorded repo-doer's uncommitted terminal projection spike in
+  `round_004_projection_spike_report.md`.
+- Reconciled the spike into
+  `docs/src/developer/cartesian_hamiltonian_producer_design.md`.
+- The design remains a Slice A freeze candidate, not implementation authority.
+
+Spike result:
+- One-center, H2, and Cr2 all expose compatible terminal
+  support/retained/transform record shapes.
+- Raw cross-overlaps were already small and projected overlaps fell to
+  roundoff in the spike.
+- PQS shell ranks stayed at the expected `98`.
+- Direct overlap and IDA weight checks were finite and well conditioned for the
+  inspected one-center, H2, and Cr2 direct records.
+- Cr2 dense scratch projection took about `75 s`, so production Slice A needs
+  factorized or incremental overlap/projection construction.
+
+Accepted design changes:
+- Shell projection, shell overlap, and Lowdin cleanup are not terminal contract
+  fields and must not be added as metadata or summaries.
+- Production Slice A must recursively use projected coefficients and effective
+  supports from previous PQS blocks; the spike's shell-local approximation is
+  not sufficient as implementation authority.
+- Later direct records must be cross-checked against all previous direct and
+  PQS blocks.
+- If one-center still reaches terminal records through old route-skeleton shape
+  input, Slice A must connect it to typed terminal records without adding an
+  atomic adapter.
+
+Strategic interpretation:
+- The numerical spike supports the Slice A direction but prevents an immediate
+  freeze without the recursive-coefficient and factorized-overlap guardrails.
+  The next implementation boundary is still terminal basis realization, not
+  one-body or IDA assembly.
+
+Validation:
+- Doer reported `git diff --check`, package load, and a clean tracked worktree
+  after the ignored `tmp/work` spike.
+- Manager reconciled docs only; no source validation run.
+
+Next step:
+- Decide whether the updated Slice A freeze candidate is now ready for explicit
+  approval and `AGENTS.md` binding, or whether one more review should inspect
+  the recursive projection/factorized-overlap requirements.

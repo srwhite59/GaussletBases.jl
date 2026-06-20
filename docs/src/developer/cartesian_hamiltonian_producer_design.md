@@ -53,6 +53,11 @@ shell_overlap
 lowdin_cleanup
 ```
 
+These ingredients are **not** terminal contract fields today and should not be
+added as metadata or staged summaries. Slice A must construct them inside the
+terminal realizer from the typed support, retained, transform, and parent metric
+objects.
+
 Existing reusable seams are:
 
 ```julia
@@ -138,6 +143,11 @@ Slice A is not complete unless at least one one-center atomic terminal plan and
 the H2/Cr2 terminal plans pass through the same realization entry point. No
 atomic-specific final-basis object, adapter, or overload is permitted.
 
+If the current one-center route can reach terminal records only through the old
+route-skeleton shape input, Slice A must connect that one-center terminal plan
+to the typed terminal records before implementation proceeds. It must not
+introduce an atomic adapter around the terminal basis realizer.
+
 ### 4.1 PQS basis construction
 
 For terminal unit `i`, let `C_i` map unit support rows to its retained localized
@@ -154,6 +164,9 @@ columns.
   on previous terminal rows. A block's `support_indices` are therefore its
   effective parent-row coefficient support after projection, not necessarily
   its original terminal region rows.
+- A later direct block must be checked against all previously accepted PQS and
+  direct blocks. Direct identity does not imply automatic orthogonality to
+  earlier blocks when the terminal order interleaves direct and PQS regions.
 
 For every realized PQS shell:
 
@@ -429,6 +442,10 @@ It must validate previous-block orthonormality and run a second
 reorthogonalization pass or fail if the projection residual remains above
 tolerance. The helper returns only data consumed immediately by `HP-FN-01`; it
 does not create a public result object.
+
+Production Slice A must use the recursively projected coefficients of previous
+PQS blocks and their effective supports. It must not approximate previous PQS
+blocks by their original shell-local coefficients when projecting later shells.
 
 Implementation target within `HP-FILE-01`: **70 source lines**.
 
@@ -773,6 +790,11 @@ block workspace:      O(tile_rows * tile_cols)
 working basis:        sum_i O(b_i*r_i) for PQS blocks
 ```
 
+For Slice A projection and overlap audits, support-overlap construction should
+be factorized or incremental by terminal block pair. Dense scratch construction
+is acceptable only as a bounded diagnostic on small fixtures; it is not the
+production Cr2 strategy.
+
 Forbidden shape:
 
 ```text
@@ -848,8 +870,8 @@ Merge validation:
 - Cr2 produces a real terminal basis or stops only at a reviewed
   distorted-product blocker.
 - implementation report includes raw cross overlaps, projected cross overlaps,
-  effective support sizes, shell ranks, coefficient memory, and one-center/H2/Cr2
-  terminal basis facts.
+  recursive effective support sizes, shell ranks, coefficient memory, and
+  one-center/H2/Cr2 terminal basis facts.
 
 A branch commit that only moves Cr2 to another blocker does not merge.
 
@@ -965,6 +987,8 @@ The spike should report:
 - projected shell ranks and retained counts;
 - coefficient memory estimate;
 - allocation/RSS observations when practical.
+- whether the calculation used true recursively projected previous blocks or a
+  shell-local approximation.
 
 If the spike shows that previous-block projection produces unexpectedly dense
 effective supports or unstable ranks, Slice A returns to design before source
