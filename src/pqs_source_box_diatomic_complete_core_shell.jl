@@ -519,12 +519,17 @@ end
 
 function _pqs_source_box_route_driver_terminal_retained_rule_record(
     support_record,
+    retained_unit,
+    transform_contract,
     order_index::Int,
 )
     kind = support_record.lowering_contract_kind
     blocked(blocker) = (;
         order_index,
         support_record,
+        retained_unit_key = isnothing(retained_unit) ? nothing : retained_unit.unit_key,
+        transform_contract_unit_key =
+            isnothing(transform_contract) ? nothing : transform_contract.unit_key,
         role = support_record.terminal_region_role,
         lowering_contract_kind = kind,
         support_count = support_record.support_count,
@@ -541,38 +546,31 @@ function _pqs_source_box_route_driver_terminal_retained_rule_record(
         return (;
             order_index,
             support_record,
+            retained_unit_key = retained_unit.unit_key,
+            transform_contract_unit_key = transform_contract.unit_key,
             role = support_record.terminal_region_role,
             lowering_contract_kind = kind,
             support_count = support_record.support_count,
             retained_count = support_record.support_count,
-            transform_kind = :identity_source_modes,
+            transform_kind = transform_contract.transform_path,
             realization_status = :identity_retained_sector_available,
             blocker = nothing,
         )
     elseif kind === :pqs_filled_source_cpb
-        shape = support_record.source_mode_shape
-        isnothing(shape) && return blocked(:missing_terminal_source_mode_shape)
-        length(shape) == 3 || return blocked(:invalid_terminal_source_mode_shape)
-        source_mode_dims = ntuple(axis -> Int(shape[axis]), 3)
-        all(>(0), source_mode_dims) ||
-            return blocked(:invalid_terminal_source_mode_shape)
         retained_rule =
-            CartesianRawProductSources.pqs_boundary_product_mode_retained_rule(
-                source_mode_dims;
-                source_key = support_record.unit_key,
-                metadata = (;
-                    route_unit_role = support_record.terminal_region_role,
-                    source = :terminal_retained_rule_preflight,
-                ),
-            )
+            get(transform_contract.metadata, :raw_product_source_retained_rule, nothing)
+        isnothing(retained_rule) &&
+            return blocked(:missing_raw_product_source_retained_rule)
         return (;
             order_index,
             support_record,
+            retained_unit_key = retained_unit.unit_key,
+            transform_contract_unit_key = transform_contract.unit_key,
             role = support_record.terminal_region_role,
             lowering_contract_kind = kind,
             support_count = support_record.support_count,
             retained_count = Int(retained_rule.retained_count),
-            transform_kind = retained_rule.transform_kind,
+            transform_kind = transform_contract.transform_path,
             realization_status = :retained_rule_available_not_realized,
             blocker = nothing,
         )
@@ -580,6 +578,27 @@ function _pqs_source_box_route_driver_terminal_retained_rule_record(
         return blocked(:distorted_product_realization_missing)
     end
     return blocked(:unsupported_terminal_lowering_kind)
+end
+
+function _pqs_source_box_route_driver_terminal_retained_records_by_region(records)
+    by_region = Dict{Symbol,Vector{Any}}()
+    for record in records
+        units = get!(by_region, record.terminal_region_key, Any[])
+        push!(units, record)
+    end
+    return by_region
+end
+
+function _pqs_source_box_route_driver_terminal_transform_contracts_by_unit(
+    contracts,
+)
+    by_unit = Dict{Symbol,Any}()
+    for contract in contracts
+        haskey(by_unit, contract.unit_key) &&
+            throw(ArgumentError("duplicate retained-unit transform contract key"))
+        by_unit[contract.unit_key] = contract
+    end
+    return by_unit
 end
 
 function _pqs_source_box_route_driver_terminal_retained_rule_dimension_budget(records)
@@ -610,11 +629,13 @@ end
 function _pqs_source_box_route_driver_terminal_retained_rule_plan(
     parent,
     low_order_stage,
+    retained_unit_plan,
+    retained_unit_transform_contract_plan,
 )
     blocked(blocker) = (;
         status = :blocked_terminal_retained_rule_plan,
         blocker,
-        authority = :terminal_lowering_contract_inventory,
+        authority = :cartesian_retained_unit_transform_contract_plan,
         records = (),
         dimension_budget = (),
         retained_order = (),
@@ -630,12 +651,68 @@ function _pqs_source_box_route_driver_terminal_retained_rule_plan(
         :available_independent_pqs_support_region_plan,
         :available_terminal_topology_support_region_plan,
     ) || return blocked(support_plan.blocker)
+    retained_unit_plan isa CartesianRetainedUnits.RetainedUnitPlan ||
+        return blocked(:missing_retained_unit_plan)
+    retained_unit_transform_contract_plan isa
+    CartesianRetainedUnitTransformContracts.RetainedUnitTransformContractPlan ||
+        return blocked(:missing_retained_unit_transform_contract_plan)
     support_records = support_plan.terminal_support_records
+    retained_units_by_region =
+        _pqs_source_box_route_driver_terminal_retained_records_by_region(
+            CartesianRetainedUnits.units(retained_unit_plan),
+        )
+    transform_contracts_by_unit =
+        _pqs_source_box_route_driver_terminal_transform_contracts_by_unit(
+            CartesianRetainedUnitTransformContracts.transform_contracts(
+                retained_unit_transform_contract_plan,
+            ),
+        )
     records = Tuple(
-        _pqs_source_box_route_driver_terminal_retained_rule_record(
-            record,
-            order_index,
-        ) for (order_index, record) in pairs(support_records)
+        begin
+            retained_units =
+                get(retained_units_by_region, support_record.terminal_region_key, Any[])
+            if length(retained_units) != 1
+                (;
+                    order_index,
+                    support_record,
+                    retained_unit_key = nothing,
+                    transform_contract_unit_key = nothing,
+                    role = support_record.terminal_region_role,
+                    lowering_contract_kind = support_record.lowering_contract_kind,
+                    support_count = support_record.support_count,
+                    retained_count = nothing,
+                    transform_kind = :not_available,
+                    realization_status = :blocked_terminal_retained_rule,
+                    blocker = :terminal_retained_unit_join_mismatch,
+                )
+            else
+                retained_unit = only(retained_units)
+                transform_contract =
+                    get(transform_contracts_by_unit, retained_unit.unit_key, nothing)
+                if isnothing(transform_contract)
+                    (;
+                        order_index,
+                        support_record,
+                        retained_unit_key = retained_unit.unit_key,
+                        transform_contract_unit_key = nothing,
+                        role = support_record.terminal_region_role,
+                        lowering_contract_kind = support_record.lowering_contract_kind,
+                        support_count = support_record.support_count,
+                        retained_count = nothing,
+                        transform_kind = :not_available,
+                        realization_status = :blocked_terminal_retained_rule,
+                        blocker = :missing_retained_unit_transform_contract,
+                    )
+                else
+                    _pqs_source_box_route_driver_terminal_retained_rule_record(
+                        support_record,
+                        retained_unit,
+                        transform_contract,
+                        order_index,
+                    )
+                end
+            end
+        end for (order_index, support_record) in pairs(support_records)
     )
     blocked_records = Tuple(record for record in records if !isnothing(record.blocker))
     budget, total_retained_dimension =
@@ -648,7 +725,7 @@ function _pqs_source_box_route_driver_terminal_retained_rule_plan(
         return (;
             status = :blocked_terminal_retained_rule_plan,
             blocker = first(blocked_records).blocker,
-            authority = :terminal_lowering_contract_inventory,
+            authority = :cartesian_retained_unit_transform_contract_plan,
             records,
             dimension_budget = budget,
             retained_order,
@@ -659,7 +736,7 @@ function _pqs_source_box_route_driver_terminal_retained_rule_plan(
     return (;
         status = :available_terminal_retained_rule_plan,
         blocker = nothing,
-        authority = :terminal_lowering_contract_inventory,
+        authority = :cartesian_retained_unit_transform_contract_plan,
         records,
         dimension_budget = budget,
         retained_order,

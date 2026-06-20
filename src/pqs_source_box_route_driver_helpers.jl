@@ -1498,6 +1498,10 @@ function _pqs_source_box_route_driver_unit_stage_low_order_summary(shells)
             unit_inventory,
         ) :
         nothing
+    retained_unit_plan =
+        lowering_plan isa CartesianTerminalLowering.TerminalLoweringPlan ?
+        CartesianRetainedUnits.retained_unit_plan(lowering_plan) :
+        nothing
 
     return (;
         shellification_kind,
@@ -1507,6 +1511,7 @@ function _pqs_source_box_route_driver_unit_stage_low_order_summary(shells)
         route_lowering_family,
         lowering_plan,
         lowering_contract_inventory,
+        retained_unit_plan,
         region_count = shellification_scaffold.region_count,
         ordered_region_roles = shellification_scaffold.ordered_region_roles,
         central_gap_region_count =
@@ -1559,10 +1564,19 @@ function _pqs_source_box_route_driver_transform_stage_low_order_summary(units)
     isnothing(low_order_units) && return nothing
 
     retained_units = get(low_order_units, :retained_units, ())
+    retained_unit_plan = low_order_units.retained_unit_plan
+    retained_unit_transform_contract_plan =
+        retained_unit_plan isa CartesianRetainedUnits.RetainedUnitPlan ?
+        CartesianRetainedUnitTransformContracts.retained_unit_transform_contract_plan(
+            retained_unit_plan,
+        ) :
+        nothing
     terminal_retained_rule_plan =
         _pqs_source_box_route_driver_terminal_retained_rule_plan(
             units.parent,
             low_order_units,
+            retained_unit_plan,
+            retained_unit_transform_contract_plan,
         )
     return (;
         shellification_kind = low_order_units.shellification_kind,
@@ -1572,6 +1586,8 @@ function _pqs_source_box_route_driver_transform_stage_low_order_summary(units)
         route_lowering_family = low_order_units.route_lowering_family,
         lowering_plan = low_order_units.lowering_plan,
         lowering_contract_inventory = low_order_units.lowering_contract_inventory,
+        retained_unit_plan,
+        retained_unit_transform_contract_plan,
         terminal_retained_rule_plan,
         retained_units,
         retained_counts =
@@ -1605,6 +1621,14 @@ function cartesian_transforms(units, recipe)
             isnothing(low_order_transforms) ?
             nothing :
             low_order_transforms.terminal_retained_rule_plan,
+        retained_unit_plan =
+            isnothing(low_order_transforms) ?
+            nothing :
+            low_order_transforms.retained_unit_plan,
+        retained_unit_transform_contract_plan =
+            isnothing(low_order_transforms) ?
+            nothing :
+            low_order_transforms.retained_unit_transform_contract_plan,
         shellification_plan = units.shellification_plan,
         shellification_scaffold = units.shellification_scaffold,
         shellification_kind = units.shellification_kind,
@@ -1642,6 +1666,9 @@ function _pqs_source_box_route_driver_pair_stage_low_order_summary(
         lowering_plan = low_order_transforms.lowering_plan,
         lowering_contract_inventory =
             low_order_transforms.lowering_contract_inventory,
+        retained_unit_plan = low_order_transforms.retained_unit_plan,
+        retained_unit_transform_contract_plan =
+            low_order_transforms.retained_unit_transform_contract_plan,
         terminal_retained_rule_plan =
             low_order_transforms.terminal_retained_rule_plan,
         pair_entries = transforms.pair_entries,
@@ -1688,6 +1715,9 @@ function _pqs_source_box_route_driver_assembly_stage_low_order_summary(pairs)
         lowering_plan = low_order_pairs.lowering_plan,
         lowering_contract_inventory =
             low_order_pairs.lowering_contract_inventory,
+        retained_unit_plan = low_order_pairs.retained_unit_plan,
+        retained_unit_transform_contract_plan =
+            low_order_pairs.retained_unit_transform_contract_plan,
         terminal_retained_rule_plan =
             low_order_pairs.terminal_retained_rule_plan,
         pair_entries,
