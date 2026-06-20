@@ -5370,3 +5370,69 @@ Deletion accounting:
 - deleted src lines: 17.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Pass 323 - Delete Route-Skeleton Report Mirrors
+
+Commit(s):
+- this commit - Delete route skeleton report mirrors
+
+Target card:
+- Target: remove stale route-skeleton retained/pair mirrors from active
+  Cartesian/PQS report and materialization surfaces where typed terminal plans
+  are the active authority.
+- Physics endpoint: H2 and Cr2 independent terminal diatomic routes remain
+  blocked at `:missing_terminal_shell_projection`.
+- Allowed files: `src/pqs_source_box_route_driver_helpers.jl`,
+  `src/pqs_source_box_route_driver_reporting.jl`, and
+  `src/pqs_source_box_low_order_materialization.jl`.
+- Forbidden additions: no terminal shell projection, pair materialization,
+  numerical kernels, new tests, metadata/status fields, compatibility adapters,
+  or report expansion.
+- Success condition: net source deletion and no old route-skeleton mirror in
+  the checked active report/materialization surfaces.
+- Failure rule: if a route-skeleton mirror has a live caller, report the exact
+  caller and do not add an adapter.
+
+Summary:
+- Deleted report-level route-skeleton mirrors:
+  `source_boxes`, `source_dimensions`, `retained_units`, `retained_counts`,
+  `ranges`, `retained_dimension`, `pair_entries`, `pair_family_counts`, and
+  `helper_by_pair_family`.
+- Deleted route-summary retained/source mirrors, the `pair_summary` surface,
+  TSV loops for retained units and pair entries, dead route-facts helpers, and
+  stale retained-dimension materialization fallbacks.
+- `cartesian_print_summary` no longer prints old retained/pair route-skeleton
+  mirrors, and materialization no longer preserves a route-skeleton
+  retained-dimension display field.
+
+Mechanical gate:
+- `git diff --check`: passed.
+- `git diff --numstat -- src bin tools test docs`: `0 94
+  src/pqs_source_box_route_driver_helpers.jl`, `0 7
+  src/pqs_source_box_route_driver_reporting.jl`, `0 4
+  src/pqs_source_box_low_order_materialization.jl`.
+- Suspicious added-lines grep: no matches.
+- New tests/files: none.
+
+Validation:
+- Doer reported package load and
+  `julia --project=. tools/h2_pqs_terminal_stage_smoke.jl` passed with elapsed
+  time `32.347137416s`.
+- Manager reviewed the diff, checked for live active-report references to the
+  removed mirrors, and did not rerun the smoke or Cr2 probe.
+
+Deletion accounting:
+- deleted: route-skeleton retained/pair mirrors from active report,
+  materialization display, summary printing, and TSV output.
+- simplified: route summary now carries only the active compact route shape and
+  shellification kind.
+- quarantined: none.
+- not deleted because: lower inventory helpers remain live in route-skeleton
+  construction; `route_skeleton` itself remains a live caller input for current
+  route payload construction.
+- exact remaining caller/blocker: H2 and Cr2 remain blocked at
+  `:missing_terminal_shell_projection`.
+- added src lines: 0.
+- deleted src lines: 105.
+- new tests: none.
+- new metadata/status fields: none.

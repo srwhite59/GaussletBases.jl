@@ -124,13 +124,6 @@ function _pqs_source_box_route_driver_save(
             _pqs_route_driver_write_named_tuple_tsv(io, "recipe_metadata", report.recipe_metadata)
             _pqs_route_driver_write_named_tuple_tsv(io, "parent_summary", report.parent_summary)
             _pqs_route_driver_write_named_tuple_tsv(io, "route_summary", report.route_summary)
-            _pqs_route_driver_write_named_tuple_tsv(io, "pair_summary", report.pair_summary)
-            for unit in report.retained_units
-                _pqs_route_driver_write_tsv_row(io, "retained_unit", unit.unit_key, unit)
-            end
-            for entry in report.pair_entries
-                _pqs_route_driver_write_tsv_row(io, "pair_entry", entry.pair_key, entry)
-            end
             if !isnothing(materialization)
                 durable_materialization =
                     _pqs_source_box_route_driver_durable_materialization(

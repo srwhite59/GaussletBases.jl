@@ -651,74 +651,6 @@ function _pqs_source_box_route_driver_pair_inventory(
     return (; pair_entries, pair_family_counts)
 end
 
-function _pqs_source_box_route_driver_standard_unit_inventory_summary(route_facts)
-    retained_units = route_facts.retained_units
-    pair_entries = route_facts.pair_entries
-    retained_counts = route_facts.retained_counts
-    retained_ranges = route_facts.ranges
-    return (;
-        unit_count = length(retained_units),
-        unit_keys = Tuple(unit.unit_key for unit in retained_units),
-        retained_unit_kinds = Tuple(unit.retained_unit_kind for unit in retained_units),
-        source_families = Tuple(unit.source_family for unit in retained_units),
-        source_dimensions = route_facts.source_dimensions,
-        retained_counts = retained_counts,
-        retained_dimension = route_facts.retained_dimension,
-        retained_counts_materialized =
-            all(!isnothing(getproperty(retained_counts, key)) for key in keys(retained_counts)),
-        retained_ranges_materialized =
-            all(!isnothing(getproperty(retained_ranges, key)) for key in keys(retained_ranges)),
-        pair_count = length(pair_entries),
-        pair_family_counts = route_facts.pair_family_counts,
-        pair_families = Tuple(unique(entry.pair_family for entry in pair_entries)),
-        output_representations =
-            Tuple(unique(entry.output_representation for entry in pair_entries)),
-    )
-end
-
-function _pqs_source_box_route_driver_route_facts(route_skeleton)
-    unit_inventory =
-        _pqs_source_box_route_driver_unit_inventory(route_skeleton.retained_units)
-    _pqs_source_box_route_driver_inventory_map_matches(
-        route_skeleton.source_boxes, unit_inventory.source_boxes) || throw(
-        ArgumentError("route skeleton source_boxes do not match retained unit records"),
-    )
-    _pqs_source_box_route_driver_inventory_map_matches(
-        route_skeleton.source_dimensions, unit_inventory.source_dimensions) || throw(
-        ArgumentError("route skeleton source_dimensions do not match retained unit records"),
-    )
-    _pqs_source_box_route_driver_inventory_map_matches(
-        route_skeleton.retained_counts, unit_inventory.retained_counts) || throw(
-        ArgumentError("route skeleton retained_counts do not match retained unit records"),
-    )
-    _pqs_source_box_route_driver_inventory_map_matches(
-        route_skeleton.ranges, unit_inventory.ranges) || throw(
-        ArgumentError("route skeleton ranges do not match retained unit records"),
-    )
-    route_skeleton.retained_dimension == unit_inventory.retained_dimension || throw(
-        ArgumentError("route skeleton retained_dimension does not match retained unit records"),
-    )
-    pair_inventory = _pqs_source_box_route_driver_pair_inventory(
-        route_skeleton.pair_entries;
-        expected_families = keys(route_skeleton.pair_family_counts),
-    )
-    route_skeleton.pair_family_counts == pair_inventory.pair_family_counts || throw(
-        ArgumentError("route skeleton pair_family_counts do not match pair entries"),
-    )
-
-    return (;
-        source_boxes = route_skeleton.source_boxes,
-        source_dimensions = route_skeleton.source_dimensions,
-        retained_units = route_skeleton.retained_units,
-        retained_counts = route_skeleton.retained_counts,
-        ranges = route_skeleton.ranges,
-        retained_dimension = route_skeleton.retained_dimension,
-        pair_entries = route_skeleton.pair_entries,
-        pair_family_counts = route_skeleton.pair_family_counts,
-        helper_by_pair_family = route_skeleton.helper_by_pair_family,
-    )
-end
-
 # High-level driver facade.
 
 function cartesian_system(system_inputs)
@@ -1789,7 +1721,6 @@ end
 
 function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
     route_skeleton = shells.route_skeleton
-    route_facts = _pqs_source_box_route_driver_route_facts(route_skeleton)
     low_order_assembly =
         _pqs_source_box_route_driver_assembly_stage_low_order_summary(pairs)
     diatomic_physical_gausslet_target_payload =
@@ -2061,7 +1992,6 @@ end
 function cartesian_report(system, parent, assembly, recipe)
     standard_setup = parent.standard_setup
     route_skeleton = assembly.route_skeleton
-    route_facts = _pqs_source_box_route_driver_route_facts(route_skeleton)
     low_order_assembly = assembly.low_order_assembly
 
     source_recipe =
@@ -2115,17 +2045,7 @@ function cartesian_report(system, parent, assembly, recipe)
     )
     route_summary = (;
         route_shape = get(route_skeleton, :route_shape, nothing),
-        retained_unit_order = get(route_skeleton, :retained_unit_order, ()),
-        source_boxes = route_facts.source_boxes,
-        source_dimensions = route_facts.source_dimensions,
-        retained_counts = route_facts.retained_counts,
-        retained_dimension = route_facts.retained_dimension,
         shellification_kind = get(low_order_assembly, :shellification_kind, nothing),
-    )
-    pair_summary = (;
-        pair_entries = get(low_order_assembly, :pair_entries, ()),
-        pair_family_counts = get(low_order_assembly, :pair_family_counts, (;)),
-        helper_by_pair_family = get(low_order_assembly, :helper_by_pair_family, (;)),
     )
 
     return merge(
@@ -2138,16 +2058,6 @@ function cartesian_report(system, parent, assembly, recipe)
             recipe_metadata,
             parent_summary,
             route_summary,
-            pair_summary,
-            source_boxes = route_facts.source_boxes,
-            source_dimensions = route_facts.source_dimensions,
-            retained_units = route_facts.retained_units,
-            retained_counts = route_facts.retained_counts,
-            ranges = route_facts.ranges,
-            retained_dimension = route_facts.retained_dimension,
-            pair_entries = pair_summary.pair_entries,
-            pair_family_counts = pair_summary.pair_family_counts,
-            helper_by_pair_family = pair_summary.helper_by_pair_family,
             parent_basis_object = parent.parent_basis_object,
             parent_axis_bundle_object = parent.parent_axis_bundle_object,
             axis_bundle_backend = parent.parent_inputs.parent_axis_bundle_backend,
@@ -2171,8 +2081,6 @@ function cartesian_print_summary(report, materialization)
     maybe_get(obj, key) = isnothing(obj) ? nothing : get(obj, key, nothing)
     recipe = report.recipe_metadata
     setup = report.standard_setup
-    retained_counts = report.retained_counts
-    retained_dimension = report.retained_dimension
 
     route_family = report.route_family
     route_kind = recipe.route_kind
@@ -2196,8 +2104,6 @@ function cartesian_print_summary(report, materialization)
     @show setup.n_s setup.core_cube_side setup.core_spacing
     @show report.parent_summary.axis_counts
     @show report.parent_summary.system_classification
-    @show retained_counts retained_dimension
-    @show report.pair_family_counts
     @show report.route_summary.shellification_kind
     final_basis = report.physical_gausslet_final_basis_summary
     h1 = report.physical_gausslet_h1_summary

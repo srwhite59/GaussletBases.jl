@@ -489,7 +489,6 @@ function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
         materialized = true,
         summary,
         final_dimension = final_basis.final_dimension,
-        retained_dimension = report.retained_dimension,
         h1_lowest = h1.lowest_energy,
         h1_finite,
         h1_symmetry_error,
@@ -529,8 +528,6 @@ function _pqs_source_box_route_driver_materialization(
         throw(ArgumentError("unknown Cartesian materialization output $(repr(hamiltonian_output))"))
     end
     requested = materialize_route || save_basis_artifact || save_ham_artifact
-    retained_dimension =
-        hasproperty(report, :retained_dimension) ? report.retained_dimension : nothing
     if requested && hasproperty(report, :route_family) &&
        report.route_family == :white_lindsey_low_order
         wl_materialization =
@@ -565,7 +562,6 @@ function _pqs_source_box_route_driver_materialization(
         result_kind = requested ? :not_materialized : :not_requested,
         requested,
         materialized = false,
-        retained_dimension,
         save_basis_artifact_requested = save_basis_artifact,
         save_ham_artifact_requested = save_ham_artifact,
         basisfile,
