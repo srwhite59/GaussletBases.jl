@@ -1832,6 +1832,7 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
             parent,
             diatomic_physical_gausslet_target_payload,
             diatomic_physical_gausslet_source_plan_candidate_payload,
+            low_order_assembly,
         )
     independent_h2_pqs_supplement_support_partition_payload =
         _pqs_source_box_route_driver_independent_h2_pqs_supplement_support_partition_payload(

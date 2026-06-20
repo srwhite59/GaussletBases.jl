@@ -596,6 +596,25 @@ function _probe_stage_summary(stage, value)
             _probe_get(supplement, :orbital_count))
         _probe_print("source_plan_status", _probe_get(source_plan, :status))
         _probe_print("source_plan_blocker", _probe_get(source_plan, :blocker))
+        realization =
+            _probe_get(source_plan, :terminal_source_realization_preflight_summary)
+        _probe_print("realization_status",
+            _probe_get(realization, :status))
+        _probe_print("realization_blocker",
+            _probe_get(realization, :blocker))
+        realization_dims = _probe_get(realization, :dimension_summary)
+        _probe_print("direct_retained_dimension",
+            _probe_get(realization_dims, :direct_retained_dimension))
+        _probe_print("pqs_retained_dimension",
+            _probe_get(realization_dims, :pqs_retained_dimension))
+        _probe_print("boundary_slab_retained_dimension",
+            _probe_get(realization_dims, :boundary_slab_retained_dimension))
+        _probe_print("realization_total_retained_dimension",
+            _probe_get(realization_dims, :total_retained_dimension))
+        _probe_print("cross_block_overlap_status",
+            _probe_get(realization, :cross_block_overlap_status))
+        _probe_print("cross_block_overlap_blocker",
+            _probe_get(realization, :cross_block_overlap_blocker))
         _probe_print("final_basis_status", _probe_get(final_basis, :status))
         _probe_print("final_basis_blocker", _probe_get(final_basis, :blocker))
         _probe_print("projected_shell_overlap_errors",
