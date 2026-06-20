@@ -1532,10 +1532,36 @@ function _pqs_source_box_route_driver_transform_stage_low_order_summary(units)
     )
 end
 
+function _pqs_source_box_route_driver_terminal_basis_realization(
+    units,
+    low_order_transforms,
+    recipe,
+)
+    recipe.route_family === :pqs_source_box || return nothing
+    isnothing(low_order_transforms) && return nothing
+    plan = low_order_transforms.terminal_retained_rule_plan
+    plan.status === :available_terminal_retained_rule_plan || return nothing
+    contract_plan = low_order_transforms.retained_unit_transform_contract_plan
+    contracts =
+        CartesianRetainedUnitTransformContracts.transform_contracts(contract_plan)
+    return CartesianFinalBasisRealization.pqs_terminal_basis_realization(
+        plan.support_plan.terminal_support_records,
+        plan.records,
+        contracts,
+        units.parent.parent_axis_bundle_object,
+    )
+end
+
 function cartesian_transforms(units, recipe)
     retained_units = units.retained_units
     low_order_transforms =
         _pqs_source_box_route_driver_transform_stage_low_order_summary(units)
+    terminal_basis_realization =
+        _pqs_source_box_route_driver_terminal_basis_realization(
+            units,
+            low_order_transforms,
+            recipe,
+        )
     return (;
         route_family = recipe.route_family,
         route_kind = recipe.route_kind,
@@ -1561,6 +1587,7 @@ function cartesian_transforms(units, recipe)
             isnothing(low_order_transforms) ?
             nothing :
             low_order_transforms.retained_unit_transform_contract_plan,
+        terminal_basis_realization,
         shellification_plan = units.shellification_plan,
         shellification_scaffold = units.shellification_scaffold,
         shellification_kind = units.shellification_kind,

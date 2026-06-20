@@ -464,239 +464,6 @@ function _pqs_source_box_route_driver_terminal_retained_rule_plan(
     )
 end
 
-function _pqs_source_box_route_driver_terminal_realization_record(
-    retained_record,
-    transform_contract,
-)
-    support_record = retained_record.support_record
-    kind = retained_record.transform_kind
-    blocked(blocker) = (;
-        order_index = retained_record.order_index,
-        role = retained_record.role,
-        lowering_contract_kind = retained_record.lowering_contract_kind,
-        transform_kind = kind,
-        support_indices = support_record.support_indices,
-        support_count = retained_record.support_count,
-        retained_count = retained_record.retained_count,
-        coefficient_representation = :not_available,
-        status = :blocked_terminal_source_realization_record,
-        blocker,
-    )
-    if kind === :direct_identity_transform_contract
-        return (;
-            order_index = retained_record.order_index,
-            role = retained_record.role,
-            lowering_contract_kind = retained_record.lowering_contract_kind,
-            transform_kind = kind,
-            support_indices = support_record.support_indices,
-            support_count = retained_record.support_count,
-            retained_count = retained_record.retained_count,
-            coefficient_representation = :identity_source_row_selector,
-            status = :available_terminal_source_realization_record,
-            blocker = nothing,
-        )
-    elseif kind === :pqs_source_modes_boundary_selection_shell_realization_contract
-        raw_plan =
-            get(transform_contract.metadata, :raw_product_source_plan, nothing)
-        isnothing(raw_plan) && return blocked(:missing_raw_product_source_plan)
-        retained_rule =
-            get(transform_contract.metadata, :raw_product_source_retained_rule, nothing)
-        isnothing(retained_rule) &&
-            return blocked(:missing_raw_product_source_retained_rule)
-        shell_projection =
-            get(transform_contract.metadata, :shell_projection, nothing)
-        isnothing(shell_projection) && return blocked(:missing_terminal_shell_projection)
-        shell_overlap = get(transform_contract.metadata, :shell_overlap, nothing)
-        isnothing(shell_overlap) && return blocked(:missing_terminal_shell_overlap)
-        lowdin_cleanup = get(transform_contract.metadata, :lowdin_cleanup, nothing)
-        isnothing(lowdin_cleanup) && return blocked(:missing_terminal_shell_lowdin_cleanup)
-        final_basis =
-            CartesianFinalBasisRealization.pqs_source_shell_realization_final_basis(
-                raw_plan,
-                retained_rule;
-                shell_support_indices = support_record.support_indices,
-                shell_overlap,
-                shell_projection,
-                lowdin_cleanup,
-                metadata = (;
-                    source = :terminal_source_realization_preflight,
-                    terminal_region_key = support_record.terminal_region_key,
-                    terminal_region_role = support_record.terminal_region_role,
-                ),
-            )
-        final_basis.status === :available_pqs_shell_realization_final_basis ||
-            return blocked(final_basis.blocker)
-        return (;
-            order_index = retained_record.order_index,
-            role = retained_record.role,
-            lowering_contract_kind = retained_record.lowering_contract_kind,
-            transform_kind = kind,
-            support_indices = support_record.support_indices,
-            support_count = retained_record.support_count,
-            retained_count = final_basis.final_retained_count,
-            coefficient_representation = :pqs_shell_local_projection_lowdin,
-            status = :available_terminal_source_realization_record,
-            blocker = nothing,
-            final_basis,
-        )
-    elseif kind === :distorted_product_comx_contract
-        return blocked(:distorted_product_realization_missing)
-    end
-    return blocked(:unsupported_terminal_source_realization_contract)
-end
-
-function _pqs_source_box_route_driver_terminal_realization_dimension_summary(records)
-    direct_retained_dimension = sum(
-        record.retained_count for record in records
-        if !isnothing(record.retained_count) &&
-           record.transform_kind === :direct_identity_transform_contract &&
-           record.lowering_contract_kind === :direct_core_identity_cpb;
-        init = 0,
-    )
-    boundary_slab_retained_dimension = sum(
-        record.retained_count for record in records
-        if !isnothing(record.retained_count) &&
-           record.transform_kind === :direct_identity_transform_contract &&
-           record.lowering_contract_kind === :direct_boundary_slab_identity_cpb;
-        init = 0,
-    )
-    direct_slab_retained_dimension = sum(
-        record.retained_count for record in records
-        if !isnothing(record.retained_count) &&
-           record.transform_kind === :direct_identity_transform_contract &&
-           record.lowering_contract_kind === :direct_slab_identity_cpb;
-        init = 0,
-    )
-    pqs_retained_dimension = sum(
-        record.retained_count for record in records
-        if !isnothing(record.retained_count) &&
-           record.transform_kind ===
-           :pqs_source_modes_boundary_selection_shell_realization_contract;
-        init = 0,
-    )
-    total_retained_dimension = sum(
-        isnothing(record.retained_count) ? 0 : record.retained_count
-        for record in records;
-        init = 0,
-    )
-    return (;
-        direct_retained_dimension,
-        direct_slab_retained_dimension,
-        pqs_retained_dimension,
-        boundary_slab_retained_dimension,
-        total_retained_dimension,
-    )
-end
-
-function _pqs_source_box_route_driver_terminal_source_realization_preflight(
-    target_payload,
-    low_order_assembly,
-)
-    blocked(blocker) = (;
-        status = :blocked_terminal_source_realization_preflight,
-        blocker,
-        records = (),
-        final_basis_preflight_status = :not_available,
-        final_basis_preflight_blocker = blocker,
-        cross_block_overlap_status = :not_computed,
-        cross_block_overlap_blocker = blocker,
-        dimension_summary = (;
-            direct_retained_dimension = 0,
-            direct_slab_retained_dimension = 0,
-            pqs_retained_dimension = 0,
-            boundary_slab_retained_dimension = 0,
-            total_retained_dimension = 0,
-        ),
-    )
-    isnothing(target_payload) &&
-        return blocked(:missing_physical_gausslet_target_inventory)
-    terminal_retained_rule_plan =
-        get(target_payload.summary, :terminal_retained_rule_plan, nothing)
-    isnothing(terminal_retained_rule_plan) &&
-        return blocked(:missing_terminal_retained_rule_plan)
-    terminal_retained_rule_plan.status === :available_terminal_retained_rule_plan ||
-        return blocked(terminal_retained_rule_plan.blocker)
-    retained_unit_transform_contract_plan =
-        !isnothing(low_order_assembly) &&
-        hasproperty(low_order_assembly, :retained_unit_transform_contract_plan) ?
-        low_order_assembly.retained_unit_transform_contract_plan :
-        nothing
-    retained_unit_transform_contract_plan isa
-    CartesianRetainedUnitTransformContracts.RetainedUnitTransformContractPlan ||
-        return blocked(:missing_retained_unit_transform_contract_plan)
-    transform_contracts_by_unit =
-        _pqs_source_box_route_driver_terminal_transform_contracts_by_unit(
-            CartesianRetainedUnitTransformContracts.transform_contracts(
-                retained_unit_transform_contract_plan,
-            ),
-        )
-    records = Tuple(
-        begin
-            transform_contract = get(
-                transform_contracts_by_unit,
-                retained_record.transform_contract_unit_key,
-                nothing,
-            )
-            isnothing(transform_contract) ?
-            (;
-                order_index = retained_record.order_index,
-                role = retained_record.role,
-                lowering_contract_kind = retained_record.lowering_contract_kind,
-                transform_kind = retained_record.transform_kind,
-                support_indices = retained_record.support_record.support_indices,
-                support_count = retained_record.support_count,
-                retained_count = retained_record.retained_count,
-                coefficient_representation = :not_available,
-                status = :blocked_terminal_source_realization_record,
-                blocker = :missing_retained_unit_transform_contract,
-            ) :
-            _pqs_source_box_route_driver_terminal_realization_record(
-                retained_record,
-                transform_contract,
-            )
-        end for retained_record in terminal_retained_rule_plan.records
-    )
-    blocked_records = Tuple(record for record in records if !isnothing(record.blocker))
-    dimension_summary =
-        _pqs_source_box_route_driver_terminal_realization_dimension_summary(records)
-    isempty(blocked_records) ||
-        return (;
-            status = :blocked_terminal_source_realization_preflight,
-            blocker = first(blocked_records).blocker,
-            records,
-            final_basis_preflight_status = :blocked_terminal_final_basis_preflight,
-            final_basis_preflight_blocker = first(blocked_records).blocker,
-            cross_block_overlap_status = :not_computed,
-            cross_block_overlap_blocker = first(blocked_records).blocker,
-            dimension_summary,
-        )
-
-    return (;
-        status = :blocked_terminal_source_realization_preflight,
-        blocker = :terminal_pqs_cross_block_projection_required,
-        records,
-        final_basis_preflight_status = :blocked_terminal_final_basis_preflight,
-        final_basis_preflight_blocker = :terminal_pqs_cross_block_projection_required,
-        cross_block_overlap_status = :blocked_terminal_cross_block_overlap_audit,
-        cross_block_overlap_blocker = :terminal_pqs_cross_block_projection_required,
-        dimension_summary,
-    )
-end
-
-function _pqs_source_box_route_driver_terminal_source_realization_summary(preflight)
-    isnothing(preflight) && return nothing
-    return (;
-        status = preflight.status,
-        blocker = preflight.blocker,
-        record_count = length(preflight.records),
-        dimension_summary = preflight.dimension_summary,
-        final_basis_preflight_status = preflight.final_basis_preflight_status,
-        final_basis_preflight_blocker = preflight.final_basis_preflight_blocker,
-        cross_block_overlap_status = preflight.cross_block_overlap_status,
-        cross_block_overlap_blocker = preflight.cross_block_overlap_blocker,
-    )
-end
-
 struct _PQSDiatomicPhysicalGaussletSupplementRequestPayload
     status::Symbol
     blocker
@@ -1434,13 +1201,6 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_pay
         !isnothing(target_payload) &&
         target_payload.route_kind ===
         :bond_aligned_diatomic_independent_pqs_source_box_core_shell
-    terminal_source_realization_preflight =
-        independent_target ?
-        _pqs_source_box_route_driver_terminal_source_realization_preflight(
-            target_payload,
-            low_order_assembly,
-        ) :
-        nothing
     source_plan = nothing
     independent_source_plan_available = false
     independent_source_plan_blocker =
@@ -1459,8 +1219,6 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_pay
         !isnothing(source_plan) ?
         nothing :
         independent_target ?
-        !isnothing(terminal_source_realization_preflight) ?
-        terminal_source_realization_preflight.blocker :
         independent_source_plan_blocker :
         target_available ?
         :missing_atom_contact_core_support_rows :
@@ -1482,10 +1240,6 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_pay
         supplement_policy =
             isnothing(target_payload) ? :not_available : target_payload.supplement_policy,
         source_plan_materialized = !isnothing(source_plan),
-        terminal_source_realization_preflight_summary =
-            _pqs_source_box_route_driver_terminal_source_realization_summary(
-                terminal_source_realization_preflight,
-            ),
         retained_transform_authority =
             isnothing(target_payload) ?
             :not_available :

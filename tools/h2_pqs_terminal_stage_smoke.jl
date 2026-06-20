@@ -1,6 +1,6 @@
 #!/usr/bin/env julia
 
-# Developer smoke for the active H2 PQS terminal-topology blocked route.
+# Developer smoke for the active H2 PQS terminal-basis route.
 # It reuses the existing harness once, then asserts compact manager-review facts.
 
 fixture = joinpath(
@@ -33,6 +33,12 @@ function _check(label, observed, expected)
     return nothing
 end
 
+function _check_le(label, observed, bound)
+    observed <= bound || error("$label expected <= $bound, got $observed")
+    println("  ", label, " = ", observed)
+    return nothing
+end
+
 function _topology_facts(shells)
     scaffold = shells.shellification_scaffold
     coverage = scaffold.coverage
@@ -61,27 +67,14 @@ _check("coverage_outside_count", facts.outside_count, 0)
 _check("q", facts.q, 5)
 _check("core_side", facts.core_side, 5)
 
-target = report.physical_gausslet_target_summary
-source_plan = report.physical_gausslet_source_plan_summary
-preflight = _get(source_plan, :terminal_source_realization_preflight_summary)
-
-_check("target_status", _get(target, :status),
-    :blocked_physical_gausslet_target_inventory)
-_check("target_retained_transform_authority",
-    _get(target, :retained_transform_authority),
-    :terminal_retained_rule_preflight)
-_check("source_plan_status", _get(source_plan, :status),
-    :blocked_pqs_diatomic_physical_gausslet_core_shell_source_plan)
-_check("source_plan_blocker", _get(source_plan, :blocker),
-    :missing_terminal_shell_projection)
-_check("source_plan_materialized", _get(source_plan, :source_plan_materialized),
-    false)
-_check("terminal_realization_status", _get(preflight, :status),
-    :blocked_terminal_source_realization_preflight)
-_check("terminal_realization_blocker", _get(preflight, :blocker),
-    :missing_terminal_shell_projection)
-_check("terminal_realization_total_retained_dimension",
-    _get(_get(preflight, :dimension_summary), :total_retained_dimension),
-    471,
-)
+basis = transforms.terminal_basis_realization
+_check("terminal_basis_block_count", length(basis.blocks), 3)
+_check("terminal_basis_support_counts",
+    Tuple(length(block.support_indices) for block in basis.blocks),
+    (275, 637, 1215))
+_check("terminal_basis_column_ranges",
+    Tuple(block.column_range for block in basis.blocks),
+    (1:275, 276:373, 374:471))
+_check("terminal_basis_final_dimension", basis.final_dimension, 471)
+_check_le("terminal_basis_max_cross_overlap", basis.max_cross_overlap, 1.0e-8)
 println("h2_pqs_terminal_stage_smoke_elapsed_s=", harness_elapsed)
