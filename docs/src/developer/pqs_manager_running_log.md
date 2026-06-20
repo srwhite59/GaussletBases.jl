@@ -6184,3 +6184,49 @@ Next step:
 - Decide whether the listed Slice A freeze candidates should now be marked
   approved and bound in `AGENTS.md`, or whether the uncommitted numerical spike
   should run first.
+
+## Cartesian Hamiltonian Producer Design Pass 004 - Atomic/Diatomic Unification
+
+Commit(s):
+- this branch - Require generic atomic and diatomic terminal basis
+
+Summary:
+- Reconciled the atomic/diatomic unification recommendation into
+  `docs/src/developer/cartesian_hamiltonian_producer_design.md`.
+- Added `round_003_atomic_diatomic_unification_review.md` and
+  `round_003_reconciliation.md` to the design-review lane.
+- The design remains a Slice A freeze candidate, not implementation authority.
+
+Accepted changes:
+- One-center atomic and bond-aligned diatomic PQS routes may differ in geometry
+  only. After terminal support, retained, and transform records exist, both
+  must use the same terminal-basis realizer and produce
+  `CartesianTerminalBasisRealization`.
+- Added `HP-WIRE-01`, generic terminal-basis stage integration, owned by
+  `cartesian_transforms`.
+- The terminal-basis realizer may dispatch on terminal lowering/transform kind
+  but not on system classification, atom count, route kind, bond axis, or
+  terminal role vocabulary.
+- Slice A validation now includes one-center atomic, contact-core H2, and
+  separated Cr2 terminal records through the same entry point.
+- Future Slice B/C/D contracts now state that one-body, IDA, and final producer
+  code consume `CartesianTerminalBasisRealization` without atomic/diatomic
+  branches.
+- The old atomic multilayer/common-H1 path is explicitly migration-only: no new
+  features, useful as an oracle, and deleted after the generic one-body route
+  reproduces the reviewed atomic endpoint.
+
+Strategic interpretation:
+- This prevents Slice A from becoming a diatomic-only implementation hidden
+  behind generic object names. It also avoids expanding Slice A into the full
+  atomic Hamiltonian; atomic support is required only at the terminal-basis
+  boundary.
+
+Validation:
+- Docs-only pass; no source validation required.
+- Manager will run `git diff --check` and focused text scans before commit.
+
+Next step:
+- Freeze Slice A only after the manager/user accepts the expanded ID set:
+  `HP-OBJ-01`, `HP-OBJ-02`, `HP-FILE-01`, `HP-FN-00`, `HP-FN-01`,
+  `HP-FN-02`, and `HP-WIRE-01`.

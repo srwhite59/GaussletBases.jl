@@ -70,6 +70,11 @@ but currently does not return it.
 The active H2 and Cr2 routes must remain one generic terminal-topology route.
 No H2 numerical compatibility route may be reintroduced.
 
+One-center atomic and bond-aligned diatomic PQS routes may differ in
+shellification geometry only. Once terminal support, retained, and transform
+records exist, both routes must use the same terminal-basis realizer and produce
+`CartesianTerminalBasisRealization`.
+
 ## 3. Scope
 
 This design ultimately covers the base all-electron PQS Hamiltonian producer:
@@ -99,9 +104,39 @@ block or complicate the base Hamiltonian producer.
 The first freeze should cover **Slice A only**. Blockwise one-body operators,
 localized IDA assembly, and final Hamiltonian materialization remain future
 candidate work until Slice A reports support sizes, coefficient densities,
-cross-overlap errors, and memory behavior.
+cross-overlap errors, and memory behavior for one-center atomic, contact-core
+diatomic, and separated diatomic terminal plans.
 
 ## 4. Binding invariants
+
+### 4.0 Atomic/diatomic unification boundary
+
+Geometry-specific code may produce terminal regions differently:
+
+```text
+one-center shellification
+bond-aligned diatomic shellification
+```
+
+After that boundary, these steps are shared:
+
+```text
+terminal lowering
+retained rules
+terminal basis realization
+one-body assembly
+IDA assembly
+CartesianIDAHamiltonian construction
+```
+
+The terminal basis realizer must not inspect system classification, atom count,
+route kind, bond axis, or terminal role vocabulary to choose an atomic or
+diatomic algorithm. It may dispatch only on terminal lowering/transform kind,
+such as direct identity, PQS shell, or unsupported distorted COMX.
+
+Slice A is not complete unless at least one one-center atomic terminal plan and
+the H2/Cr2 terminal plans pass through the same realization entry point. No
+atomic-specific final-basis object, adapter, or overload is permitted.
 
 ### 4.1 PQS basis construction
 
@@ -440,6 +475,32 @@ Requirements:
 
 Implementation target within `HP-FILE-01`: **35 source lines**.
 
+### HP-WIRE-01 — generic terminal-basis stage integration — Slice A freeze candidate
+
+Owner:
+`cartesian_transforms`
+
+Purpose:
+Connect Slice A terminal-basis realization to every supported
+`:pqs_source_box` terminal plan from typed terminal support, retained, and
+transform records.
+
+Contract:
+
+- `cartesian_transforms` owns terminal basis realization for supported PQS
+  terminal plans.
+- It invokes `pqs_terminal_basis_realization(...)` from typed terminal support,
+  retained, and transform records.
+- It must not dispatch on system classification, atom count, route kind, bond
+  axis, or terminal role names.
+- It may dispatch only on terminal lowering/transform kind:
+  direct identity, PQS shell, or unsupported distorted COMX.
+- It must serve one-center atomic, contact-core diatomic, and separated
+  diatomic terminal plans through the same entry point.
+- It must not create atomic-specific or diatomic-specific final-basis adapters.
+
+Implementation target within existing stage wiring: **25 source lines**.
+
 ### HP-CHANGE-01 — return shell overlap from existing shell plan — rejected/deferred
 
 Returning `shell_overlap_matrix` from
@@ -755,8 +816,10 @@ density, cross-overlap errors, and memory behavior.
 ### Slice A — terminal basis realization
 
 Target:
-Real terminal basis realization on the generic H2/Cr2 topology. This slice does
-not assemble one-body operators, IDA, or a Hamiltonian artifact.
+Real terminal basis realization on generic one-center and bond-aligned diatomic
+PQS terminal topology, validated on one-center atomic, contact-core H2, and
+separated Cr2 records. This slice does not assemble one-body operators, IDA, or
+a Hamiltonian artifact.
 
 Added-source target: **150 lines**.
 Redesign threshold: **225 added source lines**.
@@ -776,15 +839,25 @@ Must delete in the same merge:
 Merge validation:
 
 - package load;
+- one-center atomic terminal records pass through the same realization entry
+  point as diatomics;
+- one-center direct sectors pass identity and positive-weight checks;
+- one-center PQS shells use previous-block projection and shell-local Lowdin;
 - generic H2 terminal basis realizes without the retired compatibility route;
 - completed H2 final overlap is near identity;
 - Cr2 produces a real terminal basis or stops only at a reviewed
   distorted-product blocker.
 - implementation report includes raw cross overlaps, projected cross overlaps,
-  effective support sizes, shell ranks, coefficient memory, and H2/Cr2 terminal
-  basis facts.
+  effective support sizes, shell ranks, coefficient memory, and one-center/H2/Cr2
+  terminal basis facts.
 
 A branch commit that only moves Cr2 to another blocker does not merge.
+
+The existing atomic multilayer-plan/common-H1 path is migration-only. Slice A
+must not delete it and must not add features to it. It should be used only as a
+numerical oracle until Slice B or C reproduces the reviewed atomic one-body
+endpoint, including hydrogen energy near `-0.5`; then the migration path should
+be deleted rather than preserved through adapters.
 
 ### Slice B — blockwise final one-body operators
 
@@ -793,6 +866,10 @@ Status: future candidate, not approved by the Slice A freeze.
 Target:
 Final-basis kinetic and by-center unit nuclear attraction without global support
 matrices.
+
+`assemble_terminal_product_operator!` consumes only
+`CartesianTerminalBasisRealization`. Atomic and diatomic operator branches are
+not permitted.
 
 Added-source target: **150 lines**. Exceeding the target requires manager
 review and a deletion/simplification explanation.
@@ -817,6 +894,9 @@ Status: future candidate, not approved by the Slice A freeze.
 
 Target:
 Complete base Hamiltonian producer and existing minimal artifact output.
+
+Localized IDA assembly consumes only `CartesianTerminalBasisRealization` plus
+physical center records. The number of centers is data, not dispatch.
 
 Added-source target: **150 lines**. Exceeding the target requires manager
 review and a measured memory/validation justification.
@@ -845,6 +925,9 @@ Target:
 Make the canonical materialization stage return/write the real Hamiltonian with
 no duplicate payload/report graph.
 
+The final producer receives the same `CartesianTerminalBasisRealization` for
+atoms and diatomics.
+
 Added-source target: **80 lines**, with a net source decrease required.
 
 No new driver stage, public type, report field cloud, or artifact wrapper is
@@ -857,6 +940,7 @@ No new committed test file is proposed by this design.
 Acceptance should reuse or replace existing tests so the durable checks are
 physical:
 
+- one-center terminal-basis realization through the same entry point as H2/Cr2;
 - hydrogen energy;
 - H2 one-body energy and localized IDA quantity;
 - symmetry and finiteness of physical matrices;
@@ -874,7 +958,7 @@ implementation authority.
 
 The spike should report:
 
-- H2 and Cr2 terminal records used;
+- one-center, H2, and Cr2 terminal records used;
 - raw `B_previous' S X` cross overlaps;
 - projected cross overlaps after previous-block projection;
 - effective support sizes for each shell;
@@ -893,7 +977,7 @@ approved design IDs it uses. For a future Slice A implementation, the expected
 approved ID set should be no broader than:
 
 ```text
-Design IDs: HP-OBJ-01, HP-OBJ-02, HP-FILE-01, HP-FN-00, HP-FN-01, HP-FN-02
+Design IDs: HP-OBJ-01, HP-OBJ-02, HP-FILE-01, HP-FN-00, HP-FN-01, HP-FN-02, HP-WIRE-01
 ```
 
 Review added lines before scientific review:
@@ -952,15 +1036,17 @@ These must be resolved before freezing Slice A or beginning implementation:
 
 1. Does `HP-FN-00` describe the correct previous-block projection operation for
    terminal PQS shells, including effective support growth?
-2. Can Slice A restore the H2 physics endpoint within the 150-line target and
-   below the 225-line redesign threshold while keeping the terminal basis
-   representation generic for Cr2?
+2. Can Slice A realize one-center atomic, contact-core H2, and separated Cr2
+   terminal plans through the same entry point within the 150-line target and
+   below the 225-line redesign threshold?
 3. Which current H2 smoke assertions can be deleted immediately when the real
-   basis and Hamiltonian return?
+   terminal basis returns?
 4. Does the allowed uncommitted numerical spike show acceptable effective
-   support sizes, shell ranks, and cross-overlap residuals for H2 and Cr2?
-5. Are `HP-OBJ-01`, `HP-OBJ-02`, `HP-FILE-01`, `HP-FN-00`, `HP-FN-01`, and
-   `HP-FN-02` sufficient for Slice A without approving B/C surfaces?
+   support sizes, shell ranks, and cross-overlap residuals for one-center,
+   H2, and Cr2?
+5. Are `HP-OBJ-01`, `HP-OBJ-02`, `HP-FILE-01`, `HP-FN-00`, `HP-FN-01`,
+   `HP-FN-02`, and `HP-WIRE-01` sufficient for Slice A without approving B/C
+   surfaces?
 
 No source implementation begins until these questions are answered in this
 document or explicitly deferred by the user/manager.
