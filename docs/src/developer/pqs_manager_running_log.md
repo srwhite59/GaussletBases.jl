@@ -5521,3 +5521,81 @@ Deletion accounting:
 - deleted src lines: 1056.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Pass 325 - Delete Stale PQS-GTO Sidecar Guards
+
+Commit(s):
+- this commit - Delete stale PQS-GTO sidecar guards
+
+Target card:
+- Target: remove the remaining `pqs_gto_sidecar_inputs` compatibility surface
+  after active construction of that field was deleted.
+- Physics endpoint: H2 and Cr2 remain on the same generic terminal route and
+  may remain blocked at `:missing_terminal_shell_projection`.
+- Allowed files: `src/pqs_source_box_route_driver_reporting.jl` and
+  `src/pqs_source_box_low_order_materialization.jl`.
+- Forbidden additions: no replacement sidecar field, terminal shell projection,
+  residual-GTO rewrite, new status fields, tests, or report expansion.
+- Success condition: no `pqs_gto_sidecar_inputs` matches remain in active
+  source.
+- Failure rule: if a live producer or consumer exists, report the exact caller
+  and do not add an adapter.
+
+Summary:
+- Deleted the durable-report elision entry for `:pqs_gto_sidecar_inputs`.
+- Deleted the materialization read/fallback of `report.pqs_gto_sidecar_inputs`.
+- Deleted the dead residual-GTO sidecar/provider branch that depended entirely
+  on that removed field. The old H2 residual-GTO materializer now route-checks
+  and then fails directly with an unavailable-sidecar error instead of carrying
+  a large unreachable construction branch.
+
+Mechanical gate:
+- `git diff --check`: passed.
+- `git diff --numstat -- src bin tools test docs`: `1 128
+  src/pqs_source_box_low_order_materialization.jl`, `0 1
+  src/pqs_source_box_route_driver_reporting.jl`.
+- Suspicious added-lines grep: no matches.
+- New tests/files: none.
+- `rg -n "pqs_gto_sidecar_inputs" src bin tools test`: no matches.
+
+Validation:
+- Doer reported package load and
+  `julia --project=. tools/h2_pqs_terminal_stage_smoke.jl` passed with elapsed
+  time `32.10834875s`.
+- Manager reviewed the diff and did not rerun the smoke or Cr2 probe.
+
+Deletion accounting:
+- deleted: durable-report elision for `:pqs_gto_sidecar_inputs`, materialization
+  read/fallback of the field, and the unreachable residual-GTO sidecar/provider
+  materialization branch.
+- simplified: the old residual-GTO materializer now reports direct
+  unavailability instead of preserving dead construction plumbing.
+- quarantined: none.
+- not deleted because: residual-GTO helper functions in
+  `src/pqs_h2_residual_gto_handoff.jl` remain outside this narrow stale-guard
+  cleanup.
+- exact remaining caller/blocker: H2 and Cr2 remain blocked at
+  `:missing_terminal_shell_projection`; residual-GTO materialization has no live
+  sidecar input producer.
+- added src lines: 1.
+- deleted src lines: 129.
+- new tests: none.
+- new metadata/status fields: none.
+
+## Medium-Term Goal Checkpoint after Pass 325
+
+- MT terminal-route cleanup: active and advanced. Passes 321-325 removed the
+  H2 compatibility route authority, recursive stage embedding,
+  route-skeleton report mirrors, duplicate H2 H1/J/IDA/RHF physics surfaces,
+  and stale residual-GTO sidecar guards. H2 and Cr2 now share the same generic
+  route blocker.
+- MT generic terminal realization: still blocked at
+  `:missing_terminal_shell_projection`. The next construction work must produce
+  real shell-local projection/overlap/Lowdin objects through the generic
+  terminal route, not new preflight/status vocabulary.
+- MT anti-bloat gate: active. Recent accepted passes were deletion-positive,
+  added no committed tests, and kept validation to package load plus the
+  compact H2 smoke when doer needed it.
+- MT pair-stage authority: still open. The public pair stage remains a later
+  cleanup/construction concern; do not extend the unused pair framework before
+  the generic terminal shell realization is unblocked.

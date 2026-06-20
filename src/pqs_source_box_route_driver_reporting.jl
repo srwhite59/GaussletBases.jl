@@ -74,7 +74,6 @@ function _pqs_source_box_route_driver_durable_report(report)
                 field in (
                     :parent_basis_object,
                     :parent_axis_bundle_object,
-                    :pqs_gto_sidecar_inputs,
                 ) ?
                      nothing :
                      getproperty(report, field) for field in keys(report)
