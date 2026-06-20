@@ -4926,3 +4926,64 @@ Line-count / complexity note:
   reporting. The next implementation should try to be line-neutral or
   line-negative by retiring more H2 compatibility once ordered retained rules
   exist.
+
+## Pass 315 - Tighten Terminal Topology Support Status
+
+Commit(s):
+- `005f3b03` - Tighten terminal topology support status
+
+Summary:
+- Fixed terminal support-plan availability semantics. A support plan now blocks
+  unless support coverage is complete, duplicate-free, and in-parent. It also
+  blocks explicitly on unsupported terminal lowering kinds and includes
+  `:distorted_product_box_comx` in the generic support path.
+- Fixed target gating. A generic terminal support topology without retained
+  rules now leaves the physical gausslet target blocked with
+  `:missing_terminal_retained_rule_plan`; it no longer reports the whole target
+  as available.
+- Supplement construction is now gated behind a real available target, so Cr2
+  no longer attempts `Cr/cc-pV5Z` merely because support topology exists.
+- Narrowed shellification exception handling to expected geometry/input
+  failures (`ArgumentError` and reviewed `DimensionMismatch`) and narrowed
+  supplement `ArgumentError` handling to the actual legacy-basis-missing
+  message.
+
+Validation:
+- Doer reported `git diff --check`, package load, the `pqs_diatomic` ladder,
+  and the Cr2 stage probe.
+- Manager reran `git diff --check`, package load, the Cr2 stage probe, and
+  `julia --project=. tools/run_cartesian_line_ladder.jl --line=pqs_diatomic`.
+  The H2 ladder passed all three cases; the materialized case retained
+  `final_dimension = 471`, `residual_rank = 18`, `augmented_dimension = 489`,
+  H1 lowest `-0.7946037173365863`, and overlap identity error
+  `5.29668900282789e-14`. The Cr2 probe now reports
+  `target_status = blocked_physical_gausslet_target_inventory`,
+  `target_blocker = missing_terminal_retained_rule_plan`, supplement blocked
+  on missing target, and first blocker `source_plan blocker:
+  missing_terminal_retained_rule_plan`.
+
+Goal advancement:
+- LT5/LT6: repairs the public-stage status contract before retained-rule
+  generalization. The stage spine can now distinguish available support
+  topology from unavailable retained/source/final realization.
+- MT: keeps the active Cr2 blocker precise: generic terminal retained-rule and
+  final-basis realization over ordered terminal records.
+
+Risk / guardrail:
+- The pass did not implement retained rules, by design. Do not treat the 19
+  Cr2 terminal support records as a realized basis until `cartesian_transforms`
+  owns a per-record retained plan and dimension budget.
+- The H2 fixture label remains only when the H2 retained-rule compatibility
+  plan exists. Continue deleting fixture labels as generic retained realization
+  replaces the compatibility view.
+
+Remaining blocker / next:
+- Move retained-rule ownership into `cartesian_transforms`: direct records
+  retain identity/source modes, PQS filled-source records derive boundary
+  retained counts and shell-local projection/Lowdin inputs, and distorted
+  product records block explicitly until COMX realization is implemented.
+
+Line-count / complexity note:
+- Doer reported `+75/-21` across two files. This is line-positive but corrects
+  real status/exception semantics and prevents a larger wrong-contract retained
+  pass.
