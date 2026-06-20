@@ -4987,3 +4987,69 @@ Line-count / complexity note:
 - Doer reported `+75/-21` across two files. This is line-positive but corrects
   real status/exception semantics and prevents a larger wrong-contract retained
   pass.
+
+## Pass 316 - Add Terminal Retained Rule Preflight
+
+Commit(s):
+- `d09a0671` - Add terminal retained rule preflight
+
+Summary:
+- Added a terminal retained-rule preflight owned by the `cartesian_transforms`
+  stage and carried through `cartesian_pair_terms` into assembly. The plan is
+  derived from ordered terminal support/lowering records rather than H2
+  `shared_shell_1/shared_shell_2` names.
+- Direct core, midpoint slab, and boundary slab sectors retain identity/source
+  modes with retained count equal to support count. PQS filled-source sectors
+  derive retained counts from their source-mode shape via the boundary
+  product-mode retained rule. Distorted product boxes still block explicitly.
+- Cr2 now has a concrete 19-record retained budget. The current physical Cr2
+  probe reports retained dimension `4291`: two direct atom cores (`125 + 125`),
+  fourteen PQS filled-source sectors (`14 * 98`), one direct midpoint slab
+  (`169`), and two direct boundary slabs (`1250 + 1250`).
+- The Cr2 blocker moved from missing retained rules to
+  `:missing_terminal_source_plan_realization`, which is the next construction
+  boundary before final-basis realization.
+
+Validation:
+- Doer reported `git diff --check`, package load, the `pqs_diatomic` ladder,
+  and the Cr2 stage probe.
+- Manager reran `git diff --check`, package load, the Cr2 stage probe, and
+  `julia --project=. tools/run_cartesian_line_ladder.jl --line=pqs_diatomic`.
+  The H2 ladder passed all three cases; the materialized case retained
+  `final_dimension = 471`, `residual_rank = 18`, `augmented_dimension = 489`,
+  H1 lowest `-0.7946037173365863`, and overlap identity error
+  `5.29668900282789e-14`. The Cr2 probe reports
+  `terminal_retained_plan_status = available_terminal_retained_rule_plan`,
+  estimated final dimension `4291`, and first blocker
+  `source_plan blocker: missing_terminal_source_plan_realization`.
+
+Goal advancement:
+- LT5/LT6: moves another stage authority into the public driver spine. The
+  retained-dimension story now belongs to transforms rather than being first
+  discovered inside assembly.
+- MT: current Cr2 blocker is source-plan/final-basis realization from ordered
+  terminal retained records. This is a narrower and more actionable blocker
+  than generic missing retained rules.
+
+Risk / guardrail:
+- The `4291` retained dimension is a preflight budget, not an accepted Cr2
+  final basis. The two direct outer boundary slabs contribute `2500` retained
+  functions and must be reviewed before dense K/U/Vee materialization.
+- The retained preflight implementation still lives in the diatomic
+  complete-core/shell helper file while being surfaced through transforms.
+  Keep the next realization pass from simply growing that file around another
+  compatibility layer.
+
+Remaining blocker / next:
+- Build the terminal source-plan realization from the ordered retained records:
+  direct sectors as identity/source-mode coefficient blocks and PQS filled
+  source sectors as shell-local projection/Lowdin inputs. Stop or block
+  explicitly on distorted product realization and review boundary-slab
+  retention before allocating dense operators.
+
+Line-count / complexity note:
+- Doer reported `+228/-3`. This is materially line-positive and acceptable as
+  a preflight pass only because it exposes the Cr2 retained budget and moves a
+  real authority boundary. The next pass should prioritize replacing H2
+  compatibility realization rather than adding a second parallel source-plan
+  path.
