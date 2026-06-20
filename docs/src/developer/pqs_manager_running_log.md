@@ -6093,3 +6093,38 @@ Risk/guardrail:
 Validation:
 - Doer reported `git diff --check` passed.
 - Manager reviewed the review file and did not run source validation.
+
+## Cartesian Hamiltonian Producer Design Pass 002 - Reconcile Round 001
+
+Commit(s):
+- this branch - Reconcile Hamiltonian producer design round 001
+
+Summary:
+- Reconciled `round_001_consolidated_review.md` into
+  `docs/src/developer/cartesian_hamiltonian_producer_design.md`.
+- Filled `round_001_reconciliation.md`.
+- The design is now a v2 candidate for milestone review, not implementation
+  authority.
+
+Accepted review changes:
+- Positive HP-* registry entries are candidates rather than approved surfaces.
+- PQS shell realization now explicitly requires projection against all
+  previously retained terminal blocks before shell-local Lowdin.
+- Localized one-basis IDA convention is written in terms of
+  `electron_electron_ida[a,b]` and later consumer coefficients.
+- IDA block-pair tiling is required when a full support-pair workspace would
+  exceed the reviewed Cr2 memory budget.
+- Line budgets are review targets where hard caps could discourage numerical
+  validation.
+
+Deferred questions:
+- Whether `HP-FN-04` should split into smaller design IDs.
+- Whether accumulated previous-block projection can be expressed through the
+  current projected-shell descriptor path.
+- Which existing source file should own blockwise one-body and IDA assembly.
+- Whether the 1.2 GiB Cr2 peak-memory target needs a lower target or absolute
+  hard cap.
+
+Next step:
+- Send the v2 design plus round-001 reconciliation to ChatGPT-Pro for milestone
+  review. Do not start source implementation or bind `AGENTS.md` yet.
