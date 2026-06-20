@@ -5,7 +5,7 @@
 
 fixture = joinpath(
     dirname(@__DIR__),
-    "test/driver_inputs/h2_pqs_q5_independent_source_box_r4_supplement_materialized.jl",
+    "test/driver_inputs/h2_pqs_q5_independent_source_box_r4_supplement_preflight.jl",
 )
 
 empty!(ARGS)

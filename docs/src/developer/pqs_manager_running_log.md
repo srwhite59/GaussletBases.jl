@@ -5869,3 +5869,65 @@ Deletion accounting:
 - deleted src lines: 35.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Pass 335 - Delete Stale Supplement-Materialized H2 Fixture
+
+Commit(s):
+- this commit - Delete stale supplement materialized H2 fixture
+
+Target card:
+- Target: remove the H2 residual-GTO materialization fixture pressure now that
+  the private residual-GTO producer is gone.
+- Physics endpoint: H2 and Cr2 remain on the generic terminal route, blocked at
+  `:missing_terminal_shell_projection`; supplement policy remains preflight
+  intent only.
+- Allowed files: `tools/h2_pqs_terminal_stage_smoke.jl`,
+  `tools/cartesian_driver_ladder_lib.jl`, the stale H2 materialized fixture,
+  and stale developer documentation rows naming the deleted case.
+- Forbidden additions: no new tests, fixtures, residual-GTO rewrite, terminal
+  shell projection, status fields, or public API changes.
+- Success condition: no active fixture/ladder case names the deleted H2
+  residual-GTO materialized capability, and the H2 smoke uses the preflight
+  fixture directly.
+- Failure rule: if the ladder case or fixture has a live purpose beyond stale
+  materialization pressure, stop and report exact evidence.
+
+Summary:
+- Updated `tools/h2_pqs_terminal_stage_smoke.jl` to include
+  `h2_pqs_q5_independent_source_box_r4_supplement_preflight.jl` directly.
+- Deleted `test/driver_inputs/h2_pqs_q5_independent_source_box_r4_supplement_materialized.jl`.
+- Removed the stale `h2_pqs_q5_independent_source_box_r4_gto_materialized`
+  ladder case from `tools/cartesian_driver_ladder_lib.jl`.
+- Updated active developer migration/inventory tables so they no longer
+  describe the deleted residual-GTO materialized case as current coverage.
+
+Mechanical gate:
+- `git diff --check`: passed.
+- `git diff --numstat -- src bin tools test docs`: `0 9
+  test/driver_inputs/h2_pqs_q5_independent_source_box_r4_supplement_materialized.jl`,
+  `0 5 tools/cartesian_driver_ladder_lib.jl`, `1 1
+  tools/h2_pqs_terminal_stage_smoke.jl`, plus small developer-doc row updates.
+- Suspicious added-lines grep: no matches.
+- New tests/files: none.
+- `rg` for the deleted fixture/case names now returns only historical
+  manager-log references.
+
+Validation:
+- Doer reported package load and
+  `julia --project=. tools/h2_pqs_terminal_stage_smoke.jl` passed with elapsed
+  time `29.557102333s`.
+- Manager reviewed the diff and did not rerun validation.
+
+Deletion accounting:
+- deleted: stale supplement-materialized H2 fixture and matching ladder case.
+- simplified: H2 smoke now uses the supplement preflight fixture directly while
+  preserving its explicit non-materializing overrides.
+- quarantined: none.
+- not deleted because: `:mwg_residual_gto` supplement policy remains live as
+  preflight intent.
+- exact remaining caller/blocker: H2 and Cr2 remain blocked at
+  `:missing_terminal_shell_projection`.
+- added source/tool/test lines: 1.
+- deleted source/tool/test lines: 15.
+- new tests: none.
+- new metadata/status fields: none.
