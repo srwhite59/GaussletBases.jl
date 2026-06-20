@@ -1885,13 +1885,7 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
             diatomic_physical_gausslet_final_basis_payload,
         )
     return (;
-        spacing_inputs = shells.spacing_inputs,
         route_skeleton,
-        route_facts,
-        shells,
-        units,
-        transforms,
-        pairs,
         low_order_assembly,
         diatomic_physical_gausslet_target_payload,
         diatomic_physical_gausslet_supplement_request_payload,
@@ -2067,7 +2061,8 @@ end
 function cartesian_report(system, parent, assembly, recipe)
     standard_setup = parent.standard_setup
     route_skeleton = assembly.route_skeleton
-    route_facts = assembly.route_facts
+    route_facts = _pqs_source_box_route_driver_route_facts(route_skeleton)
+    low_order_assembly = assembly.low_order_assembly
 
     source_recipe =
         recipe.route_family == :pqs_source_box ? recipe.source_box : recipe.white_lindsey
@@ -2087,15 +2082,15 @@ function cartesian_report(system, parent, assembly, recipe)
         route_family = recipe.route_family,
         route_kind = recipe.route_kind,
         route_shape = get(source_recipe, :route_shape, nothing),
-        q = assembly.spacing_inputs.q,
+        q = standard_setup.q,
         n_s = standard_setup.n_s,
         core_cube_side = standard_setup.core_cube_side,
         reference_spacing = standard_setup.reference_spacing,
         tail_spacing = standard_setup.tail_spacing,
         q_to_core_spacing_rule = standard_setup.q_to_core_spacing_rule,
         core_spacing = standard_setup.core_spacing,
-        xmax_parallel = get(assembly.spacing_inputs, :xmax_parallel, nothing),
-        xmax_transverse = get(assembly.spacing_inputs, :xmax_transverse, nothing),
+        xmax_parallel = standard_setup.xmax_parallel,
+        xmax_transverse = standard_setup.xmax_transverse,
         terms = recipe.terms,
         pair_factor_normalization = recipe.pair_factor_normalization,
         supplement_policy = get(recipe, :supplement_policy, nothing),
@@ -2125,12 +2120,12 @@ function cartesian_report(system, parent, assembly, recipe)
         source_dimensions = route_facts.source_dimensions,
         retained_counts = route_facts.retained_counts,
         retained_dimension = route_facts.retained_dimension,
-        shellification_kind = get(assembly.shells, :shellification_kind, nothing),
+        shellification_kind = get(low_order_assembly, :shellification_kind, nothing),
     )
     pair_summary = (;
-        pair_entries = assembly.pairs.pair_entries,
-        pair_family_counts = assembly.pairs.pair_family_counts,
-        helper_by_pair_family = assembly.pairs.helper_by_pair_family,
+        pair_entries = get(low_order_assembly, :pair_entries, ()),
+        pair_family_counts = get(low_order_assembly, :pair_family_counts, (;)),
+        helper_by_pair_family = get(low_order_assembly, :helper_by_pair_family, (;)),
     )
 
     return merge(
@@ -2150,9 +2145,9 @@ function cartesian_report(system, parent, assembly, recipe)
             retained_counts = route_facts.retained_counts,
             ranges = route_facts.ranges,
             retained_dimension = route_facts.retained_dimension,
-            pair_entries = assembly.pairs.pair_entries,
-            pair_family_counts = assembly.pairs.pair_family_counts,
-            helper_by_pair_family = assembly.pairs.helper_by_pair_family,
+            pair_entries = pair_summary.pair_entries,
+            pair_family_counts = pair_summary.pair_family_counts,
+            helper_by_pair_family = pair_summary.helper_by_pair_family,
             parent_basis_object = parent.parent_basis_object,
             parent_axis_bundle_object = parent.parent_axis_bundle_object,
             axis_bundle_backend = parent.parent_inputs.parent_axis_bundle_backend,

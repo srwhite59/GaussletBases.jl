@@ -5310,3 +5310,63 @@ Deletion accounting:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Pass 322 - Stop Recursive Stage Embedding
+
+Commit(s):
+- this commit - Stop recursive Cartesian stage embedding
+
+Target card:
+- Target: reduce Cartesian/PQS staged-object bloat by removing recursive prior
+  stage embedding from assembly/report surfaces.
+- Physics endpoint: H2 and Cr2 generic independent terminal diatomic routes
+  remain blocked at `:missing_terminal_shell_projection`.
+- Allowed files: `src/pqs_source_box_route_driver_helpers.jl`.
+- Forbidden additions: no numerical kernels, terminal shell realization, pair
+  materialization, new tests, metadata/status fields, payload structs, report
+  expansion, or compatibility adapters.
+- Success condition: net source decrease, H2 blocked smoke still passes, no
+  replacement adapter.
+- Failure rule: if a removed field has a live caller, report the exact caller
+  and leave it alone.
+
+Summary:
+- `cartesian_assembly` no longer returns full prior stages `shells`, `units`,
+  `transforms`, or `pairs`, and no longer mirrors `spacing_inputs` or
+  `route_facts`.
+- `cartesian_report` now derives compact route facts from `route_skeleton`, uses
+  `parent.standard_setup` for spacing/setup values, and reads pair summary facts
+  from `low_order_assembly` instead of from a full embedded `pairs` stage.
+- No numerical route behavior changed; the independent terminal routes remain
+  blocked at the same generic source-realization gap.
+
+Mechanical gate:
+- `git diff --check`: passed.
+- `git diff --numstat -- src bin tools test docs`: `12 17
+  src/pqs_source_box_route_driver_helpers.jl`.
+- Suspicious added-lines grep: no matches.
+- New tests/files: none.
+
+Validation:
+- Doer reported package load and
+  `julia --project=. tools/h2_pqs_terminal_stage_smoke.jl` passed with elapsed
+  time `32.680194541s`.
+- Manager reviewed the diff, checked for live `assembly.(shells|units|transforms|pairs|spacing_inputs|route_facts)`
+  callers, and did not rerun the smoke or Cr2 probe.
+
+Deletion accounting:
+- deleted: recursive full-stage returns from `cartesian_assembly`; duplicate
+  `spacing_inputs` and `route_facts` mirrors.
+- simplified: report route/setup/pair facts are derived locally from compact
+  active objects.
+- quarantined: none.
+- not deleted because: `route_skeleton`, report-level retained/pair mirrors,
+  and `report.retained_dimension` still have live materialization/report/TSV
+  callers.
+- exact remaining caller/blocker: `src/pqs_source_box_low_order_materialization.jl`
+  still reads `report.retained_dimension`; route blocker remains
+  `:missing_terminal_shell_projection`.
+- added src lines: 12.
+- deleted src lines: 17.
+- new tests: none.
+- new metadata/status fields: none.
