@@ -5436,3 +5436,88 @@ Deletion accounting:
 - deleted src lines: 105.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Pass 324 - Delete Duplicate H2 Physics Surfaces
+
+Commit(s):
+- this commit - Delete duplicate H2 physics surfaces
+
+Target card:
+- Target: remove H2-local H1/J, IDA, support-weight, raw-pair, and private-RHF
+  duplicate code that only supported the deleted independent-H2 compatibility
+  materialization.
+- Physics endpoint: H2 and Cr2 remain on the same generic terminal route and
+  may remain blocked at `:missing_terminal_shell_projection`.
+- Allowed files: `src/pqs_source_box_diatomic_complete_core_shell.jl`,
+  `src/pqs_source_box_route_driver_helpers.jl`, and only source surfaces needed
+  to remove dead caller fields.
+- Forbidden additions: no terminal shell projection, pair-materialization
+  framework work, supplement work, new tests, metadata/status fields,
+  compatibility adapters, or generic renames of H2-local numerical code.
+- Success condition: net source deletion, no H2-specific route authority
+  returns, and H2/Cr2 still share the same generic blocker.
+- Failure rule: if deletion needs compatibility glue or a stale helper has a
+  live source caller, report the exact caller and do not add an adapter.
+
+Summary:
+- Deleted `_PQSDiatomicPhysicalGaussletH1JPayload`,
+  `_PQSDiatomicPhysicalGaussletRHFInputContractPayload`, and
+  `_PQSDiatomicPhysicalGaussletRHFExecutionPayload`.
+- Deleted the H2-local density-provenance, support-weight,
+  support raw-pair-numerator, IDA-density-interaction, H1-J diagnostic,
+  diatomic H1-J payload, private-RHF contract, and private-RHF execution helper
+  chain.
+- Removed diatomic H1-J/private-RHF assembly/report fields and summary prints.
+- `run_h1_j` and private RHF no longer implicitly request the old diatomic
+  final-basis/H1 path.
+
+Caller audit:
+- The deleted H1-J/RHF payload types and H2-local raw-pair/IDA/H1-J helpers
+  have no live source matches after deletion.
+- `_PQSDiatomicPhysicalGaussletCoreShellSourcePlan`,
+  `_PQSDiatomicPhysicalGaussletCoreShellSourcePlanPayload`,
+  `_PQSDiatomicPhysicalGaussletFinalBasisPayload`, and
+  `_PQSDiatomicPhysicalGaussletH1Payload` remain live only as blocked-route
+  payload-collapse work in
+  `src/pqs_source_box_diatomic_complete_core_shell.jl`.
+- `_pqs_source_box_route_driver_physical_gausslet_support_states` remains live
+  through the residual-GTO path in `src/pqs_h2_residual_gto_handoff.jl`.
+- Broader `support_weights`, `raw_pair_factor`, and `density_interaction`
+  names remain in common/generic IDA, multilayer, residual-GTO, and atomic
+  surfaces outside this H2-local deletion slice.
+- Defensive `pqs_gto_sidecar_inputs` elision/read guards remain in
+  `src/pqs_source_box_route_driver_reporting.jl` and
+  `src/pqs_source_box_low_order_materialization.jl`; those are the next narrow
+  stale-surface cleanup, not part of this file-limited pass.
+
+Mechanical gate:
+- `git diff --check`: passed.
+- `git diff --numstat -- src bin tools test docs`: `2 909
+  src/pqs_source_box_diatomic_complete_core_shell.jl`, `0 147
+  src/pqs_source_box_route_driver_helpers.jl`.
+- Suspicious added-lines grep: no matches.
+- New tests/files: none.
+
+Validation:
+- Doer reported package load and
+  `julia --project=. tools/h2_pqs_terminal_stage_smoke.jl` passed with elapsed
+  time `31.899142458s`.
+- Manager reviewed the diff and caller audit, and did not rerun the smoke or
+  Cr2 probe.
+
+Deletion accounting:
+- deleted: duplicate H2-local support-weight/raw-pair/IDA/H1-J/private-RHF
+  helper chain and its assembly/report surfaces.
+- simplified: H1-J/private-RHF requests no longer drive the old diatomic H1
+  route; summary printing no longer includes deleted private diagnostics.
+- quarantined: none.
+- not deleted because: core-shell source-plan, final-basis, and H1 payload
+  wrappers remain live as blocked-route payload-collapse work; residual-GTO
+  still has common support/density callers outside this pass.
+- exact remaining caller/blocker: H2 and Cr2 remain blocked at
+  `:missing_terminal_shell_projection`; stale `pqs_gto_sidecar_inputs` guards
+  remain as a small deletion target.
+- added src lines: 2.
+- deleted src lines: 1056.
+- new tests: none.
+- new metadata/status fields: none.

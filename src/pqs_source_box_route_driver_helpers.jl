@@ -1779,34 +1779,6 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
             diatomic_physical_gausslet_source_plan_payload,
             diatomic_physical_gausslet_final_basis_payload,
         )
-    diatomic_physical_gausslet_h1_j_payload =
-        _pqs_source_box_route_driver_diatomic_physical_gausslet_h1_j_payload(
-            route_skeleton,
-            recipe,
-            diatomic_physical_gausslet_source_plan_payload,
-            diatomic_physical_gausslet_final_basis_payload,
-            diatomic_physical_gausslet_h1_payload,
-        )
-    run_private_rhf =
-        get(get(recipe, :private_rhf_inputs, (;)), :run_private_rhf, false)
-    diatomic_physical_gausslet_rhf_input_contract = run_private_rhf ?
-        _pqs_source_box_route_driver_diatomic_physical_gausslet_rhf_input_contract(
-            parent,
-            route_skeleton,
-            recipe,
-            diatomic_physical_gausslet_source_plan_payload,
-            diatomic_physical_gausslet_final_basis_payload,
-            diatomic_physical_gausslet_h1_payload,
-            diatomic_physical_gausslet_h1_j_payload,
-        ) : nothing
-    diatomic_physical_gausslet_rhf_execution_payload =
-        isnothing(diatomic_physical_gausslet_rhf_input_contract) ?
-        nothing :
-        _pqs_source_box_route_driver_diatomic_physical_gausslet_rhf_execution_payload(
-            diatomic_physical_gausslet_rhf_input_contract,
-            diatomic_physical_gausslet_h1_payload,
-            diatomic_physical_gausslet_h1_j_payload,
-        )
     h2_wl_gausslet_only_reference_candidate =
         _pqs_source_box_route_driver_h2_wl_gausslet_only_reference_candidate(
             parent,
@@ -1826,9 +1798,6 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
         diatomic_physical_gausslet_source_plan_payload,
         diatomic_physical_gausslet_final_basis_payload,
         diatomic_physical_gausslet_h1_payload,
-        diatomic_physical_gausslet_h1_j_payload,
-        diatomic_physical_gausslet_rhf_input_contract,
-        diatomic_physical_gausslet_rhf_execution_payload,
         h2_wl_gausslet_only_reference_candidate,
     )
 end
@@ -1837,102 +1806,6 @@ _pqs_source_box_route_driver_payload_summary(payload) =
     isnothing(payload) ? nothing :
     hasproperty(payload, :summary) ? payload.summary :
     payload
-
-function _pqs_source_box_route_driver_pqs_gto_sidecar_inputs(assembly)
-    source_plan_payload =
-        hasproperty(assembly, :diatomic_physical_gausslet_source_plan_payload) ?
-        assembly.diatomic_physical_gausslet_source_plan_payload :
-        nothing
-    final_basis_payload =
-        hasproperty(assembly, :diatomic_physical_gausslet_final_basis_payload) ?
-        assembly.diatomic_physical_gausslet_final_basis_payload :
-        nothing
-    h1_payload =
-        hasproperty(assembly, :diatomic_physical_gausslet_h1_payload) ?
-        assembly.diatomic_physical_gausslet_h1_payload :
-        nothing
-    h1_j_payload =
-        hasproperty(assembly, :diatomic_physical_gausslet_h1_j_payload) ?
-        assembly.diatomic_physical_gausslet_h1_j_payload :
-        nothing
-    supplement_payload =
-        hasproperty(assembly, :diatomic_physical_gausslet_supplement_representation_payload) ?
-        assembly.diatomic_physical_gausslet_supplement_representation_payload :
-        nothing
-
-    source_plan =
-        !isnothing(source_plan_payload) &&
-        hasproperty(source_plan_payload, :source_plan) ?
-        source_plan_payload.source_plan :
-        nothing
-    final_basis =
-        !isnothing(final_basis_payload) &&
-        hasproperty(final_basis_payload, :final_basis) ?
-        final_basis_payload.final_basis :
-        nothing
-    h1 =
-        !isnothing(h1_payload) &&
-        hasproperty(h1_payload, :h1) ?
-        h1_payload.h1 :
-        nothing
-    h1_hamiltonian =
-        !isnothing(h1_payload) &&
-        hasproperty(h1_payload, :final_hamiltonian) ?
-        h1_payload.final_hamiltonian :
-        nothing
-    final_kinetic =
-        !isnothing(h1_payload) &&
-        hasproperty(h1_payload, :final_kinetic) ?
-        h1_payload.final_kinetic :
-        nothing
-    final_nuclear_by_center =
-        !isnothing(h1_payload) &&
-        hasproperty(h1_payload, :final_electron_nuclear_by_center) ?
-        h1_payload.final_electron_nuclear_by_center :
-        nothing
-    density_interaction =
-        !isnothing(h1_j_payload) &&
-        hasproperty(h1_j_payload, :density_interaction) ?
-        h1_j_payload.density_interaction :
-        nothing
-    h1_j =
-        !isnothing(h1_j_payload) &&
-        hasproperty(h1_j_payload, :h1_j_diagnostic) ?
-        h1_j_payload.h1_j_diagnostic :
-        nothing
-    supplement_representation =
-        !isnothing(supplement_payload) &&
-        hasproperty(supplement_payload, :representation) ?
-        supplement_payload.representation :
-        nothing
-
-    any(
-        isnothing,
-        (
-            source_plan,
-            final_basis,
-            h1,
-            h1_hamiltonian,
-            final_kinetic,
-            final_nuclear_by_center,
-            density_interaction,
-            h1_j,
-            supplement_representation,
-        ),
-    ) && return nothing
-
-    return (;
-        source_plan,
-        final_basis,
-        h1,
-        h1_hamiltonian,
-        final_kinetic,
-        final_nuclear_by_center,
-        density_interaction,
-        h1_j,
-        supplement_representation,
-    )
-end
 
 function _pqs_source_box_route_driver_physical_gausslet_target_report_fields(
     assembly,
@@ -1953,14 +1826,6 @@ function _pqs_source_box_route_driver_physical_gausslet_target_report_fields(
         hasproperty(assembly, :diatomic_physical_gausslet_h1_payload) ?
         assembly.diatomic_physical_gausslet_h1_payload :
         nothing
-    h1_j =
-        hasproperty(assembly, :diatomic_physical_gausslet_h1_j_payload) ?
-        assembly.diatomic_physical_gausslet_h1_j_payload :
-        nothing
-    rhf =
-        hasproperty(assembly, :diatomic_physical_gausslet_rhf_execution_payload) ?
-        assembly.diatomic_physical_gausslet_rhf_execution_payload :
-        nothing
     supplement =
         hasproperty(assembly, :diatomic_physical_gausslet_supplement_preflight_payload) ?
         assembly.diatomic_physical_gausslet_supplement_preflight_payload :
@@ -1980,10 +1845,6 @@ function _pqs_source_box_route_driver_physical_gausslet_target_report_fields(
             _pqs_source_box_route_driver_payload_summary(final_basis),
         physical_gausslet_h1_summary =
             _pqs_source_box_route_driver_payload_summary(h1),
-        physical_gausslet_h1_j_summary =
-            _pqs_source_box_route_driver_payload_summary(h1_j),
-        physical_gausslet_private_rhf_summary =
-            _pqs_source_box_route_driver_payload_summary(rhf),
         physical_gausslet_supplement_preflight_summary =
             _pqs_source_box_route_driver_payload_summary(supplement),
     )
@@ -2061,8 +1922,6 @@ function cartesian_report(system, parent, assembly, recipe)
             parent_basis_object = parent.parent_basis_object,
             parent_axis_bundle_object = parent.parent_axis_bundle_object,
             axis_bundle_backend = parent.parent_inputs.parent_axis_bundle_backend,
-            pqs_gto_sidecar_inputs =
-                _pqs_source_box_route_driver_pqs_gto_sidecar_inputs(assembly),
         ),
         _pqs_source_box_route_driver_physical_gausslet_target_report_fields(
             assembly,
@@ -2107,17 +1966,11 @@ function cartesian_print_summary(report, materialization)
     @show report.route_summary.shellification_kind
     final_basis = report.physical_gausslet_final_basis_summary
     h1 = report.physical_gausslet_h1_summary
-    h1_j = report.physical_gausslet_h1_j_summary
-    rhf = report.physical_gausslet_private_rhf_summary
     supplement = report.physical_gausslet_supplement_preflight_summary
     @show maybe_get(final_basis, :final_dimension)
     @show maybe_get(final_basis, :final_overlap_identity_error)
     @show maybe_get(h1, :lowest_energy)
     @show maybe_get(h1, :h1_hamiltonian_symmetry_error)
-    @show maybe_get(h1_j, :self_coulomb)
-    @show maybe_get(h1_j, :electron_electron_ida_symmetry_error)
-    @show maybe_get(rhf, :total_with_nuclear_repulsion)
-    @show maybe_get(rhf, :commutator_residual)
     @show maybe_get(supplement, :supplement_policy)
     @show maybe_get(supplement, :provider_block_count)
     @show materialization.result_kind materialization.materialized
