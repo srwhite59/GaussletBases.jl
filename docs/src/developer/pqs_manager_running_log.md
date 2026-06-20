@@ -5733,3 +5733,66 @@ Deletion accounting:
 - deleted src lines: 1177.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Pass 331 - Delete Unreachable Private H2 Residual-GTO Helpers
+
+Commit(s):
+- this commit - Delete private H2 residual GTO helper file
+
+Target card:
+- Target: remove the unreachable private H2 residual-GTO helper cluster now
+  that the sidecar producer and fake/source-backed path are gone.
+- Physics endpoint: H2 and Cr2 remain on the generic terminal route, blocked at
+  `:missing_terminal_shell_projection`; public `CartesianIDAHamiltonian`
+  reader/writer APIs must remain untouched.
+- Allowed files: `src/GaussletBases.jl`, `src/pqs_h2_residual_gto_handoff.jl`,
+  `src/pqs_source_box_diatomic_complete_core_shell.jl`, and stale algorithm
+  code-map docs that named the deleted file.
+- Forbidden additions: no public IDA API changes, residual-GTO rewrite, tests,
+  adapters, status fields, or replacement helpers.
+- Success condition: no active source/docs code map points at the deleted
+  private helper file or its support-state helper, and package load still
+  passes.
+- Failure rule: if any deleted helper has a live non-file-internal caller, stop
+  and report the exact caller instead of adding a replacement.
+
+Summary:
+- Removed `include("pqs_h2_residual_gto_handoff.jl")` from
+  `src/GaussletBases.jl`.
+- Deleted `src/pqs_h2_residual_gto_handoff.jl`.
+- Deleted `_pqs_source_box_route_driver_physical_gausslet_support_states` from
+  `src/pqs_source_box_diatomic_complete_core_shell.jl`.
+- Removed stale public algorithm-page code-map references to the deleted file
+  and clarified that the private H2 residual-GTO producer has been retired.
+
+Mechanical gate:
+- `git diff --check`: passed.
+- `git diff --numstat -- src bin tools test docs`: `0 1071
+  src/pqs_h2_residual_gto_handoff.jl`, `0 8
+  src/pqs_source_box_diatomic_complete_core_shell.jl`, `0 1
+  src/GaussletBases.jl`, plus small algorithm-doc code-map corrections.
+- Suspicious added-lines grep: no matches.
+- New tests/files: none.
+- `rg -n "pqs_h2_residual_gto_handoff|_pqs_source_box_route_driver_physical_gausslet_support_states" src bin tools test docs`
+  now returns only historical manager-log references.
+
+Validation:
+- Doer reported `git diff --check` and package load passed.
+- Manager reviewed the diff, removed stale algorithm-doc references, and did
+  not rerun package load or H2/Cr2 probes.
+
+Deletion accounting:
+- deleted: private H2 residual-GTO helper file, include edge, and its remaining
+  support-state helper.
+- simplified: residual-GTO producer docs now state that the private H2 helper is
+  retired rather than pointing to a deleted implementation.
+- quarantined: none.
+- not deleted because: public `CartesianIDAHamiltonian` and reader/writer remain
+  live in `src/cartesian_ida_hamiltonian.jl` and were untouched.
+- exact remaining caller/blocker: H2 and Cr2 still block at
+  `:missing_terminal_shell_projection`; a future residual-GTO producer must be
+  rebuilt on the generic terminal route.
+- added src lines: 0.
+- deleted src lines: 1080.
+- new tests: none.
+- new metadata/status fields: none.

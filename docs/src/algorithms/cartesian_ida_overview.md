@@ -119,8 +119,6 @@ Current implementation surfaces are:
   density-interaction payload.
 - `src/cartesian_ida_hamiltonian.jl` for the public one-basis IDA Hamiltonian
   object and minimal artifact reader/writer.
-- `src/pqs_h2_residual_gto_handoff.jl` for the current private H2
-  residual-Gaussian extension helpers feeding the public Ham artifact.
 - `src/cartesian_gaussian_axis_integrals.jl` for shared Cartesian Gaussian axis
   integral kernels where present.
 

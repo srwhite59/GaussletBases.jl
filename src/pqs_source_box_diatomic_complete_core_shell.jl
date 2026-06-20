@@ -1553,11 +1553,3 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_pay
         metadata,
     )
 end
-
-function _pqs_source_box_route_driver_physical_gausslet_support_states(source_plan)
-    return vcat(
-        Vector{NTuple{3,Int}}(source_plan.atom_contact_core_support_states),
-        Vector{NTuple{3,Int}}(source_plan.shared_shell_support_states[1]),
-        Vector{NTuple{3,Int}}(source_plan.shared_shell_support_states[2]),
-    )
-end

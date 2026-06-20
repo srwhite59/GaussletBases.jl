@@ -167,11 +167,10 @@ counts. It does not store nuclear repulsion or route diagnostics.
   builds IDA density interaction helpers in the completed localized basis.
 - `src/cartesian_ida_hamiltonian.jl` contains the public one-basis IDA
   Hamiltonian object and minimal artifact reader/writer.
-- `src/pqs_h2_residual_gto_handoff.jl` contains the current private H2
-  residual-GTO producer helpers that feed the public Ham artifact.
 
 ## Current Implementation Deviations
 
 The public `CartesianIDAHamiltonian` type and minimal versioned writer/reader
-exist. The active H2 residual-GTO route is still H2/q5-specific producer work;
-it is not yet a general Cr2-ready diatomic constructor.
+exist. The private H2 residual-GTO producer has been retired; the general
+terminal PQS producer still needs shell-local realization before H2 or Cr2 can
+materialize this public artifact through the current route.

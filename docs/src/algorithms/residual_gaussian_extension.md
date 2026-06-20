@@ -133,9 +133,6 @@ documents GGT and MWG variants.
 
 ## Code Map
 
-- `src/pqs_h2_residual_gto_handoff.jl`
-  contains the current private H2 residual-GTO transform, moment descriptors,
-  and IDA provider blocks.
 - `src/ordinary_qw_residuals.jl` contains the Qiu-White donor/reference
   residual-space construction.
 - `src/ordinary_qw_operator_assembly.jl` contains donor/reference GGT and MWG
@@ -145,7 +142,6 @@ documents GGT and MWG variants.
 
 ## Current Implementation Deviations
 
-The active H2 residual-GTO route follows the fixed-basis projection plus
-residual-block Lowdin rule. Some helper names still include H2/private route
-language because the public residual-Gaussian producer is not yet promoted.
-
+The former private H2 residual-GTO handoff helper has been retired. A public
+residual-Gaussian producer still needs to be rebuilt on the generic terminal
+PQS route before this algorithm is available as a promoted construction path.
