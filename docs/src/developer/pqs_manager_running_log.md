@@ -6062,3 +6062,34 @@ Risk/guardrail:
 Next step:
 - Fill `round_001_consolidated_review.md`, reconcile into design v2, then send
   v2 plus reconciliation summary to ChatGPT-Pro for broad review.
+
+## Cartesian Hamiltonian Producer Round 001 Review Received
+
+Commit(s):
+- this branch - Add round 001 Hamiltonian producer review
+
+Summary:
+- Repo-doer completed the consolidated docs-only review at
+  `docs/src/developer/design_reviews/cartesian_hamiltonian_producer_2026-06/round_001_consolidated_review.md`.
+- Verdict: the draft needs design revision before ChatGPT-Pro review.
+- Blocking themes: accumulated previous-block shell projection must be explicit;
+  several HP-* items should be demoted from approved to candidate; localized
+  IDA and `electron_electron_ida` need a precise mathematical convention; IDA
+  block workspace/tiling must be specified for Cr2-scale memory; line budgets
+  should not encourage skipping numerical validation.
+
+Strategic interpretation:
+- The design-review lane is working as intended: it caught real scientific and
+  performance underspecification before source implementation began.
+- The next manager task is reconciliation into design v2, not implementation.
+  The draft remains non-authoritative.
+
+Risk/guardrail:
+- Do not send the current v1 draft to ChatGPT-Pro as a candidate authority.
+  First reconcile the review into a compressed v2 with candidate/approved
+  registry language fixed and unresolved IDA/projection/memory questions
+  called out explicitly.
+
+Validation:
+- Doer reported `git diff --check` passed.
+- Manager reviewed the review file and did not run source validation.
