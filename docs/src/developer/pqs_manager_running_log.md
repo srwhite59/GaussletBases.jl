@@ -6027,3 +6027,38 @@ Deletion accounting:
 - deleted source/tool lines: 45.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Design-Review Lane Setup
+
+Commit(s):
+- this branch - Set up Cartesian Hamiltonian producer design review lane
+
+Summary:
+- Created a tracked review directory for
+  `docs/src/developer/cartesian_hamiltonian_producer_design.md`.
+- Added a round-001 consolidated review prompt, review template, and
+  reconciliation template. The lane is explicitly docs-only: reviewers may
+  propose document edits but may not edit `src`, `test`, `bin`, `tools`, or
+  `AGENTS.md`.
+- The goal of round 001 is a reviewed v2 of the design document plus a
+  reconciliation note ready for ChatGPT-Pro milestone review.
+
+Strategic interpretation:
+- The cleanup lane has reduced active route surfaces enough that more abstract
+  cleanup is likely lower value than a controlled design phase for the real
+  blocker, `:missing_terminal_shell_projection`.
+- The design branch remains unapproved implementation authority. No source
+  coding should begin until the review/reconciliation loop freezes approved
+  design IDs and repo policy explicitly binds them.
+
+Risk/guardrail:
+- The design document must be compressed before it becomes authority; extended
+  debate belongs in this review directory and Git history, not in an
+  append-only implementation contract.
+- A subagent review was attempted in the current manager session but could not
+  start because the session had reached its agent-thread limit. The tracked
+  prompt/template files are ready for a fresh or existing reviewer agent.
+
+Next step:
+- Fill `round_001_consolidated_review.md`, reconcile into design v2, then send
+  v2 plus reconciliation summary to ChatGPT-Pro for broad review.
