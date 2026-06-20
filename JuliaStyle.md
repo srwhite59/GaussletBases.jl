@@ -208,6 +208,22 @@ update the opening comments and docstrings in the same pass.
 A stale boundary comment is worse than no comment, because later work may follow
 the old contract.
 
+## Prefer Matrix Functions For Lowdin Transforms
+
+When forming a Löwdin cleanup or other symmetric inverse square root, prefer the
+matrix function directly:
+
+```julia
+transform = inv(sqrt(Symmetric(gram)))
+cleaned = coefficients * transform
+```
+
+Do not hand-roll the eigendecomposition as `V * Diagonal(1 ./ sqrt.(d)) * V'`
+unless there is a documented numerical reason and a focused test. Agents often
+get the eigenvector orientation, ordering, or reconstruction wrong. If rank
+checks or eigenvalue diagnostics are needed, compute them separately from the
+construction path.
+
 ## Test Through Public Or Module-Level Interfaces
 
 Prefer tests that exercise the module's intended interface:

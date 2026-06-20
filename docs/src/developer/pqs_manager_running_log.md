@@ -6418,3 +6418,52 @@ Validation:
 Next step:
 - Draft the Slice A implementation blurb for repo-doer, constrained to the
   approved IDs and forbidden from touching B/C/D work.
+
+## Cartesian Hamiltonian Producer Pass 009 - Realize Terminal PQS Basis
+
+Commit(s):
+- `082c9cb8` - Realize terminal PQS basis
+
+Summary:
+- Implemented approved Slice A terminal-basis realization.
+- Added `CartesianTerminalBasisBlock`,
+  `CartesianTerminalBasisRealization`, recursive terminal PQS shell
+  projection, shell-local symmetric Löwdin, positive-integral sign
+  canonicalization, and cross-block overlap audit.
+- Wired `cartesian_transforms` to produce the shared terminal basis for
+  one-center, H2, and Cr2 terminal records.
+- Deleted the obsolete terminal source-realization preflight/report summary
+  machinery.
+
+Validation reported by doer:
+- `git diff --check`: passed.
+- `julia --project=. -e 'using GaussletBases; println("load ok")'`: passed.
+- `julia --project=. tools/h2_pqs_terminal_stage_smoke.jl`: passed in `33.09s`.
+- `julia --project=. tmp/work/terminal_production_cases.jl`: passed.
+
+Terminal facts:
+- One-center: dimension `419`, ranks `(98,98,98)`, max cross
+  `1.90e-15`, min PQS integral `0.8691`, largest workspace `13.52 MiB`.
+- H2: dimension `471`, ranks `(98,98)`, max cross `5.92e-15`, min PQS
+  integral `1.4706`, largest workspace `11.26 MiB`.
+- Cr2: dimension `4291`, all shell ranks `98`, max cross `2.53e-14`, min PQS
+  integral `0.02385`, largest workspace `64.00 MiB`.
+
+Line-count/complexity:
+- Added source: `225` lines, exactly at the approved redesign threshold.
+- Deleted source: `246` lines.
+- Net source: `-21`.
+- Overall commit: `242` insertions / `270` deletions including the smoke tool.
+
+Guardrail:
+- This pass does not authorize one-body assembly, IDA assembly, Hamiltonian
+  artifact production, or driver simplification. B/C/D IDs remain future
+  candidates.
+- The near-zero integral blocker was traced to an implementation bug: the WIP
+  had used a one-sided eigentransform for Löwdin. The accepted code uses
+  `inv(sqrt(Symmetric(overlap)))` and full source-box boundary-mode columns
+  before projection.
+
+Next step:
+- Commit the `JuliaStyle.md` Löwdin guidance so future agents do not repeat the
+  one-sided eigentransform mistake, then push the accepted Slice A commit.
