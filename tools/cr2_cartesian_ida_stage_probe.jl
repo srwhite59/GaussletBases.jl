@@ -121,6 +121,36 @@ function _probe_count_summary(counts)
     return counts
 end
 
+function _probe_print_retained_budget(plan)
+    isnothing(plan) && return nothing
+    _probe_print("terminal_retained_plan_status", _probe_get(plan, :status))
+    _probe_print("terminal_retained_plan_blocker", _probe_get(plan, :blocker))
+    budget = _probe_get(plan, :dimension_budget, ())
+    isempty(budget) && return nothing
+    println("  terminal_retained_dimension_budget:")
+    for record in budget
+        println(
+            "    ",
+            _probe_get(record, :order_index),
+            " ",
+            _probe_get(record, :role),
+            " ",
+            _probe_get(record, :lowering_contract_kind),
+            " support=",
+            _probe_get(record, :support_count),
+            " retained=",
+            _probe_get(record, :retained_count),
+            " cumulative=",
+            _probe_get(record, :cumulative_retained_dimension),
+            " transform=",
+            _probe_get(record, :transform_kind),
+            " blocker=",
+            _probe_get(record, :blocker),
+        )
+    end
+    return nothing
+end
+
 function _probe_dense_memory(dim, center_count)
     isnothing(dim) && return nothing
     dim isa Integer || return nothing
@@ -525,6 +555,9 @@ function _probe_stage_summary(stage, value)
         _probe_print_topology("cr2_$(stage)_topology", value)
         _probe_print("retained_counts",
             _probe_count_summary(_probe_get(value, :retained_counts)))
+        _probe_print_retained_budget(
+            _probe_get(value, :terminal_retained_rule_plan),
+        )
         _probe_print("estimated_final_dimension",
             _probe_get(value, :retained_dimension))
     elseif stage === :cartesian_pair_terms

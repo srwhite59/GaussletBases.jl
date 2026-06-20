@@ -517,6 +517,158 @@ function _pqs_source_box_route_driver_independent_h2_retained_rule_plan(
     )
 end
 
+function _pqs_source_box_route_driver_terminal_retained_rule_record(
+    support_record,
+    order_index::Int,
+)
+    kind = support_record.lowering_contract_kind
+    blocked(blocker) = (;
+        order_index,
+        support_record,
+        role = support_record.terminal_region_role,
+        lowering_contract_kind = kind,
+        support_count = support_record.support_count,
+        retained_count = nothing,
+        transform_kind = :not_available,
+        realization_status = :blocked_terminal_retained_rule,
+        blocker,
+    )
+    if kind in (
+        :direct_core_identity_cpb,
+        :direct_slab_identity_cpb,
+        :direct_boundary_slab_identity_cpb,
+    )
+        return (;
+            order_index,
+            support_record,
+            role = support_record.terminal_region_role,
+            lowering_contract_kind = kind,
+            support_count = support_record.support_count,
+            retained_count = support_record.support_count,
+            transform_kind = :identity_source_modes,
+            realization_status = :identity_retained_sector_available,
+            blocker = nothing,
+        )
+    elseif kind === :pqs_filled_source_cpb
+        shape = support_record.source_mode_shape
+        isnothing(shape) && return blocked(:missing_terminal_source_mode_shape)
+        length(shape) == 3 || return blocked(:invalid_terminal_source_mode_shape)
+        source_mode_dims = ntuple(axis -> Int(shape[axis]), 3)
+        all(>(0), source_mode_dims) ||
+            return blocked(:invalid_terminal_source_mode_shape)
+        retained_rule =
+            CartesianRawProductSources.pqs_boundary_product_mode_retained_rule(
+                source_mode_dims;
+                source_key = support_record.unit_key,
+                metadata = (;
+                    route_unit_role = support_record.terminal_region_role,
+                    source = :terminal_retained_rule_preflight,
+                ),
+            )
+        return (;
+            order_index,
+            support_record,
+            role = support_record.terminal_region_role,
+            lowering_contract_kind = kind,
+            support_count = support_record.support_count,
+            retained_count = Int(retained_rule.retained_count),
+            transform_kind = retained_rule.transform_kind,
+            realization_status = :retained_rule_available_not_realized,
+            blocker = nothing,
+        )
+    elseif kind === :distorted_product_box_comx
+        return blocked(:distorted_product_realization_missing)
+    end
+    return blocked(:unsupported_terminal_lowering_kind)
+end
+
+function _pqs_source_box_route_driver_terminal_retained_rule_dimension_budget(records)
+    budget = NamedTuple[]
+    cumulative = 0
+    for record in records
+        retained_count = record.retained_count
+        if !isnothing(retained_count)
+            cumulative += retained_count
+        end
+        push!(
+            budget,
+            (;
+                order_index = record.order_index,
+                role = record.role,
+                lowering_contract_kind = record.lowering_contract_kind,
+                support_count = record.support_count,
+                retained_count,
+                transform_kind = record.transform_kind,
+                cumulative_retained_dimension = cumulative,
+                blocker = record.blocker,
+            ),
+        )
+    end
+    return Tuple(budget), cumulative
+end
+
+function _pqs_source_box_route_driver_terminal_retained_rule_plan(
+    parent,
+    low_order_stage,
+)
+    blocked(blocker) = (;
+        status = :blocked_terminal_retained_rule_plan,
+        blocker,
+        authority = :terminal_lowering_contract_inventory,
+        records = (),
+        dimension_budget = (),
+        retained_order = (),
+        retained_counts = (;),
+        total_retained_dimension = nothing,
+    )
+    support_plan =
+        _pqs_source_box_route_driver_terminal_topology_support_region_plan(
+            parent,
+            low_order_stage,
+        )
+    support_plan.status in (
+        :available_independent_pqs_support_region_plan,
+        :available_terminal_topology_support_region_plan,
+    ) || return blocked(support_plan.blocker)
+    support_records = support_plan.terminal_support_records
+    records = Tuple(
+        _pqs_source_box_route_driver_terminal_retained_rule_record(
+            record,
+            order_index,
+        ) for (order_index, record) in pairs(support_records)
+    )
+    blocked_records = Tuple(record for record in records if !isnothing(record.blocker))
+    budget, total_retained_dimension =
+        _pqs_source_box_route_driver_terminal_retained_rule_dimension_budget(records)
+    retained_order = Tuple(record.support_record.unit_key for record in records)
+    retained_counts = NamedTuple{retained_order}(
+        Tuple(record.retained_count for record in records),
+    )
+    isempty(blocked_records) ||
+        return (;
+            status = :blocked_terminal_retained_rule_plan,
+            blocker = first(blocked_records).blocker,
+            authority = :terminal_lowering_contract_inventory,
+            records,
+            dimension_budget = budget,
+            retained_order,
+            retained_counts,
+            total_retained_dimension,
+            support_plan,
+        )
+    return (;
+        status = :available_terminal_retained_rule_plan,
+        blocker = nothing,
+        authority = :terminal_lowering_contract_inventory,
+        records,
+        dimension_budget = budget,
+        retained_order,
+        retained_counts,
+        total_retained_dimension,
+        support_plan,
+    )
+end
+
 struct _PQSDiatomicPhysicalGaussletSupplementRequestPayload
     status::Symbol
     blocker
@@ -841,12 +993,28 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_target_payload(
             generated_support_plan,
         ) :
         nothing
+    terminal_retained_rule_plan =
+        independent_target &&
+        !isnothing(low_order_assembly) &&
+        hasproperty(low_order_assembly, :terminal_retained_rule_plan) ?
+        low_order_assembly.terminal_retained_rule_plan :
+        nothing
+    terminal_retained_available =
+        !isnothing(terminal_retained_rule_plan) &&
+        terminal_retained_rule_plan.status === :available_terminal_retained_rule_plan
+    terminal_retained_blocker =
+        isnothing(terminal_retained_rule_plan) ?
+        :missing_terminal_retained_rule_plan :
+        terminal_retained_rule_plan.blocker
     if independent_target && !isnothing(retained_rule_plan)
         status = :available_physical_gausslet_core_shell_target_inventory
         blocker = nothing
+    elseif independent_target && terminal_retained_available
+        status = :blocked_physical_gausslet_target_inventory
+        blocker = :missing_terminal_source_plan_realization
     elseif independent_target && generated_support_available
         status = :blocked_physical_gausslet_target_inventory
-        blocker = :missing_terminal_retained_rule_plan
+        blocker = terminal_retained_blocker
     end
     support_units =
         generated_support_available ? generated_support_plan.support_order :
@@ -856,15 +1024,20 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_target_payload(
         isnothing(inventory) ? (;) : inventory.support_counts
     retained_units =
         !isnothing(retained_rule_plan) ? retained_rule_plan.retained_order :
+        terminal_retained_available ? terminal_retained_rule_plan.retained_order :
         retained_units
     retained_counts =
         !isnothing(retained_rule_plan) ? retained_rule_plan.retained_counts :
+        terminal_retained_available ? terminal_retained_rule_plan.retained_counts :
         isnothing(inventory) ? (;) : inventory.retained_counts
     retained_order =
         !isnothing(retained_rule_plan) ? retained_rule_plan.retained_order :
+        terminal_retained_available ? terminal_retained_rule_plan.retained_order :
         isnothing(inventory) ? () : Tuple(inventory.retained_order)
     expected_final_dimension =
         !isnothing(retained_rule_plan) ? retained_rule_plan.expected_final_dimension :
+        terminal_retained_available ?
+        terminal_retained_rule_plan.total_retained_dimension :
         isnothing(inventory) ? nothing : inventory.expected_final_dimension
     retained_atom_core_interiors =
         !isnothing(retained_rule_plan) ||
@@ -874,14 +1047,18 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_target_payload(
     source_plan_blocker =
         !isnothing(retained_rule_plan) ?
         nothing :
+        terminal_retained_available ?
+        :missing_terminal_source_plan_realization :
         generated_support_available ?
-        :missing_terminal_retained_rule_plan :
+        terminal_retained_blocker :
         nothing
     retained_transform_authority =
         !isnothing(retained_rule_plan) ?
         :pqs_source_box_construction :
+        terminal_retained_available ?
+        :terminal_retained_rule_preflight :
         generated_support_available ?
-        :missing_terminal_retained_rule_plan :
+        terminal_retained_blocker :
         isnothing(inventory) ?
         :not_available :
         :pqs_source_box_construction
@@ -927,6 +1104,7 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_target_payload(
         secondary_blocker,
         independent_source_plan_blocker = source_plan_blocker,
         support_plan,
+        terminal_retained_rule_plan,
         retained_rule_plan,
     )
     metadata = (;

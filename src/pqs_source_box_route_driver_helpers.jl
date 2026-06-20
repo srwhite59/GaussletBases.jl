@@ -1559,6 +1559,11 @@ function _pqs_source_box_route_driver_transform_stage_low_order_summary(units)
     isnothing(low_order_units) && return nothing
 
     retained_units = get(low_order_units, :retained_units, ())
+    terminal_retained_rule_plan =
+        _pqs_source_box_route_driver_terminal_retained_rule_plan(
+            units.parent,
+            low_order_units,
+        )
     return (;
         shellification_kind = low_order_units.shellification_kind,
         shellification_plan = low_order_units.shellification_plan,
@@ -1567,6 +1572,7 @@ function _pqs_source_box_route_driver_transform_stage_low_order_summary(units)
         route_lowering_family = low_order_units.route_lowering_family,
         lowering_plan = low_order_units.lowering_plan,
         lowering_contract_inventory = low_order_units.lowering_contract_inventory,
+        terminal_retained_rule_plan,
         retained_units,
         retained_counts =
             _pqs_source_box_route_driver_named_tuple_from_units(
@@ -1595,6 +1601,10 @@ function cartesian_transforms(units, recipe)
         shellification_blocker_message =
             get(units, :shellification_blocker_message, nothing),
         low_order_transforms,
+        terminal_retained_rule_plan =
+            isnothing(low_order_transforms) ?
+            nothing :
+            low_order_transforms.terminal_retained_rule_plan,
         shellification_plan = units.shellification_plan,
         shellification_scaffold = units.shellification_scaffold,
         shellification_kind = units.shellification_kind,
@@ -1632,6 +1642,8 @@ function _pqs_source_box_route_driver_pair_stage_low_order_summary(
         lowering_plan = low_order_transforms.lowering_plan,
         lowering_contract_inventory =
             low_order_transforms.lowering_contract_inventory,
+        terminal_retained_rule_plan =
+            low_order_transforms.terminal_retained_rule_plan,
         pair_entries = transforms.pair_entries,
         pair_keys = _pqs_source_box_route_driver_pair_keys_from_entries(
             transforms.pair_entries),
@@ -1676,6 +1688,8 @@ function _pqs_source_box_route_driver_assembly_stage_low_order_summary(pairs)
         lowering_plan = low_order_pairs.lowering_plan,
         lowering_contract_inventory =
             low_order_pairs.lowering_contract_inventory,
+        terminal_retained_rule_plan =
+            low_order_pairs.terminal_retained_rule_plan,
         pair_entries,
         pair_keys = _pqs_source_box_route_driver_pair_keys_from_entries(
             pair_entries),
