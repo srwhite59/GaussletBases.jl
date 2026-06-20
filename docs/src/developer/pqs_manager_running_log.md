@@ -5657,3 +5657,79 @@ Deletion accounting:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Pass 329 - Delete Stale Fake/Source-Backed PQS Route
+
+Commit(s):
+- this commit - Delete stale fake source-backed PQS route
+
+Target card:
+- Target: remove the stale fake/source-backed PQS route branch and its
+  checked-in fixture pressure.
+- Physics endpoint: H2 and Cr2 remain on the generic independent terminal
+  route, blocked at `:missing_terminal_shell_projection`; materialization must
+  not be recovered through the stale fake path.
+- Allowed files: `src/pqs_source_box_diatomic_complete_core_shell.jl`,
+  `src/pqs_source_box_route_driver_helpers.jl`, and
+  `test/driver_inputs/h2_fake_pqs_q5_wl_source_backed_r4.jl`.
+- Forbidden additions: no terminal shell projection, new route branch,
+  compatibility adapter, payload replacement object, tests, or route renames.
+- Success condition: fake/source-backed fixture is gone, no fake/source-backed
+  candidate path remains, and H2/Cr2 still share the same generic blocker.
+- Failure rule: if deleting the stale path requires changing active generic
+  H2/Cr2 behavior or adding a replacement surface, do not commit.
+
+Summary:
+- Deleted the stale `h2_fake_pqs_q5_wl_source_backed_r4.jl` fixture.
+- Removed fake/source-backed candidate construction and conversion from
+  `cartesian_assembly`.
+- Deleted the candidate payload, candidate-to-source-plan adapter, old
+  source-backed final-basis/H1 materialization helpers, and the old
+  WL/QW H2 gausslet-only reference candidate pressure.
+- Removed report/print fields for the deleted final-basis/H1 payloads.
+
+Payload audit:
+- Deleted `_PQSDiatomicPhysicalGaussletCoreShellSourcePlan`,
+  `_PQSDiatomicPhysicalGaussletFinalBasisPayload`, and
+  `_PQSDiatomicPhysicalGaussletH1Payload`.
+- `_PQSDiatomicPhysicalGaussletCoreShellSourcePlanPayload` remains because the
+  generic terminal route still uses it to report the blocked source-plan state.
+- `_pqs_source_box_route_driver_physical_gausslet_support_states` remains
+  because `src/pqs_h2_residual_gto_handoff.jl` still calls it.
+- Remaining `source_backed` matches are in unrelated old QW experimental
+  surfaces, not the PQS independent terminal route.
+
+Mechanical gate:
+- `git diff --check`: passed.
+- `git diff --numstat -- src bin tools test docs`: `5 1116
+  src/pqs_source_box_diatomic_complete_core_shell.jl`, `0 61
+  src/pqs_source_box_route_driver_helpers.jl`, `0 43
+  test/driver_inputs/h2_fake_pqs_q5_wl_source_backed_r4.jl`.
+- Suspicious added-lines grep: no matches.
+- New tests/files: none.
+
+Validation:
+- Doer reported package load,
+  `julia --project=. tools/h2_pqs_terminal_stage_smoke.jl`, and
+  `julia --project=. tools/cr2_cartesian_ida_stage_probe.jl` passed. H2 and Cr2
+  both continue to block at `:missing_terminal_shell_projection`.
+- Manager reviewed the diff, checked that the stale fixture/candidate/payload
+  names were gone from the PQS route, and did not rerun validation.
+
+Deletion accounting:
+- deleted: fake/source-backed fixture, candidate route, candidate conversion,
+  old physical-gausslet final-basis/H1 payload construction, and WL/QW H2
+  reference-candidate pressure.
+- simplified: `cartesian_assembly` no longer coordinates fake
+  candidate/final/H1 payloads.
+- quarantined: none.
+- not deleted because: generic blocked source-plan payload remains live;
+  residual-GTO support-state helper remains live through
+  `src/pqs_h2_residual_gto_handoff.jl`.
+- exact remaining caller/blocker: `cartesian_assembly` still calls the generic
+  source-plan payload; H2/Cr2 both block at
+  `:missing_terminal_shell_projection`.
+- added src lines: 5.
+- deleted src lines: 1177.
+- new tests: none.
+- new metadata/status fields: none.

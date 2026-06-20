@@ -1746,50 +1746,11 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
             diatomic_physical_gausslet_supplement_request_payload,
             diatomic_physical_gausslet_supplement_representation_payload,
         )
-    independent_physical_source_plan_route =
-        recipe.route_kind ===
-        :bond_aligned_diatomic_independent_pqs_source_box_core_shell
-    diatomic_physical_gausslet_source_plan_candidate_payload =
-        independent_physical_source_plan_route ?
-        nothing :
-        _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_candidate_payload(
-            parent,
-            route_skeleton,
-            recipe,
-            diatomic_physical_gausslet_target_payload,
-        )
     diatomic_physical_gausslet_source_plan_payload =
         _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_payload(
             parent,
             diatomic_physical_gausslet_target_payload,
-            diatomic_physical_gausslet_source_plan_candidate_payload,
             low_order_assembly,
-        )
-    diatomic_physical_gausslet_final_basis_payload =
-        isnothing(diatomic_physical_gausslet_source_plan_payload.source_plan) ?
-        nothing :
-        _pqs_source_box_route_driver_diatomic_physical_gausslet_final_basis_payload(
-            route_skeleton,
-            recipe,
-            diatomic_physical_gausslet_source_plan_payload,
-        )
-    diatomic_physical_gausslet_h1_payload =
-        isnothing(diatomic_physical_gausslet_final_basis_payload) ?
-        nothing :
-        _pqs_source_box_route_driver_diatomic_physical_gausslet_h1_payload(
-            parent,
-            route_skeleton,
-            recipe,
-            diatomic_physical_gausslet_source_plan_payload,
-            diatomic_physical_gausslet_final_basis_payload,
-        )
-    h2_wl_gausslet_only_reference_candidate =
-        _pqs_source_box_route_driver_h2_wl_gausslet_only_reference_candidate(
-            parent,
-            route_skeleton,
-            recipe,
-            diatomic_physical_gausslet_target_payload,
-            diatomic_physical_gausslet_final_basis_payload,
         )
     return (;
         route_skeleton,
@@ -1798,11 +1759,7 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
         diatomic_physical_gausslet_supplement_request_payload,
         diatomic_physical_gausslet_supplement_representation_payload,
         diatomic_physical_gausslet_supplement_preflight_payload,
-        diatomic_physical_gausslet_source_plan_candidate_payload,
         diatomic_physical_gausslet_source_plan_payload,
-        diatomic_physical_gausslet_final_basis_payload,
-        diatomic_physical_gausslet_h1_payload,
-        h2_wl_gausslet_only_reference_candidate,
     )
 end
 
@@ -1822,14 +1779,6 @@ function _pqs_source_box_route_driver_physical_gausslet_target_report_fields(
         hasproperty(assembly, :diatomic_physical_gausslet_source_plan_payload) ?
         assembly.diatomic_physical_gausslet_source_plan_payload :
         nothing
-    final_basis =
-        hasproperty(assembly, :diatomic_physical_gausslet_final_basis_payload) ?
-        assembly.diatomic_physical_gausslet_final_basis_payload :
-        nothing
-    h1 =
-        hasproperty(assembly, :diatomic_physical_gausslet_h1_payload) ?
-        assembly.diatomic_physical_gausslet_h1_payload :
-        nothing
     supplement =
         hasproperty(assembly, :diatomic_physical_gausslet_supplement_preflight_payload) ?
         assembly.diatomic_physical_gausslet_supplement_preflight_payload :
@@ -1845,10 +1794,6 @@ function _pqs_source_box_route_driver_physical_gausslet_target_report_fields(
             get(target_summary, :blocker, nothing),
         physical_gausslet_source_plan_summary =
             _pqs_source_box_route_driver_payload_summary(source_plan),
-        physical_gausslet_final_basis_summary =
-            _pqs_source_box_route_driver_payload_summary(final_basis),
-        physical_gausslet_h1_summary =
-            _pqs_source_box_route_driver_payload_summary(h1),
         physical_gausslet_supplement_preflight_summary =
             _pqs_source_box_route_driver_payload_summary(supplement),
     )
@@ -1968,13 +1913,7 @@ function cartesian_print_summary(report, materialization)
     @show report.parent_summary.axis_counts
     @show report.parent_summary.system_classification
     @show report.route_summary.shellification_kind
-    final_basis = report.physical_gausslet_final_basis_summary
-    h1 = report.physical_gausslet_h1_summary
     supplement = report.physical_gausslet_supplement_preflight_summary
-    @show maybe_get(final_basis, :final_dimension)
-    @show maybe_get(final_basis, :final_overlap_identity_error)
-    @show maybe_get(h1, :lowest_energy)
-    @show maybe_get(h1, :h1_hamiltonian_symmetry_error)
     @show maybe_get(supplement, :supplement_policy)
     @show maybe_get(supplement, :provider_block_count)
     @show materialization.result_kind materialization.materialized
