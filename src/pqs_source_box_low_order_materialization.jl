@@ -363,22 +363,6 @@ function _pqs_source_box_route_driver_wl_atomic_pure_gausslet_materialization(
     )
 end
 
-function _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
-    report;
-    save_basis_artifact::Bool,
-    save_ham_artifact::Bool,
-    basisfile,
-    hamfile,
-    residual_gto_provider_blocks::Symbol = :none,
-)
-    report.route_family === :pqs_source_box || return nothing
-    report.route_kind === :bond_aligned_diatomic_independent_pqs_source_box_core_shell ||
-        return nothing
-    get(report.recipe_metadata, :supplement_policy, nothing) === :mwg_residual_gto ||
-        return nothing
-    throw(ArgumentError("H2 PQS residual-GTO sidecar materialization is not available"))
-end
-
 function _pqs_source_box_route_driver_materialization(
     report;
     materialize_route::Bool = false,
@@ -390,14 +374,10 @@ function _pqs_source_box_route_driver_materialization(
     materializer_nside = nothing,
     white_lindsey_expansion = nothing,
     white_lindsey_Z = nothing,
-    residual_gto_provider_blocks::Symbol = :none,
     hamiltonian_output = nothing,
 )
-    if hamiltonian_output === :cartesian_ida_hamiltonian &&
-       residual_gto_provider_blocks === :none
-        residual_gto_provider_blocks = :one_body_and_density_provider
-    elseif !isnothing(hamiltonian_output) &&
-           hamiltonian_output !== :cartesian_ida_hamiltonian
+    if !isnothing(hamiltonian_output) &&
+       hamiltonian_output !== :cartesian_ida_hamiltonian
         throw(ArgumentError("unknown Cartesian materialization output $(repr(hamiltonian_output))"))
     end
     requested = materialize_route || save_basis_artifact || save_ham_artifact
@@ -416,19 +396,6 @@ function _pqs_source_box_route_driver_materialization(
                 white_lindsey_Z,
             )
         !isnothing(wl_materialization) && return wl_materialization
-    end
-    if requested && hasproperty(report, :route_family) &&
-       report.route_family == :pqs_source_box
-        pqs_materialization =
-            _pqs_source_box_route_driver_pqs_h2_residual_gto_materialization(
-                report;
-                save_basis_artifact,
-                save_ham_artifact,
-                basisfile,
-                hamfile,
-                residual_gto_provider_blocks,
-            )
-        !isnothing(pqs_materialization) && return pqs_materialization
     end
     return (;
         route_family = hasproperty(report, :route_family) ? report.route_family : nothing,

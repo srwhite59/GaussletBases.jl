@@ -76,7 +76,6 @@ save_ham_artifact = false
 stop_after_stage = nothing
 materializer_backend = nothing
 materializer_nside = nothing
-residual_gto_provider_blocks = :none
 hamiltonian_output = nothing
 outfile = "cartesian_ham_builder_report.jld2"
 tsvfile = "cartesian_ham_builder_report.tsv"
@@ -122,7 +121,7 @@ materialization_inputs = (; materialize_route,
     save_basis_artifact, save_ham_artifact, basisfile, hamfile,
     materializer_backend, materializer_nside,
     white_lindsey_expansion, white_lindsey_Z,
-    residual_gto_provider_blocks, hamiltonian_output)
+    hamiltonian_output)
 save_inputs = (; save_artifact, save_tsv, outfile, tsvfile,
     input_path = driver_input_path)
 

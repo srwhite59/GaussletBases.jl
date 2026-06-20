@@ -5796,3 +5796,76 @@ Deletion accounting:
 - deleted src lines: 1080.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Pass 333 - Remove Stale Residual-GTO Materialization Request Path
+
+Commit(s):
+- this commit - Remove stale residual GTO materialization request path
+
+Target card:
+- Target: stop the materialization dispatcher and developer harness from
+  implying the deleted private residual-GTO producer still exists.
+- Physics endpoint: H2 and Cr2 remain on the generic terminal route, blocked at
+  `:missing_terminal_shell_projection`; public `CartesianIDAHamiltonian` type
+  and reader/writer remain live.
+- Allowed files: `src/pqs_source_box_low_order_materialization.jl`,
+  `tools/cartesian_driver_harness.jl`, and the H2 supplement-materialized input
+  if it was only carrying stale provider-block pressure.
+- Forbidden additions: no public IDA writer/reader changes, residual-GTO
+  rewrite, terminal shell projection, new status fields, tests, or WL/GTO
+  fixture changes.
+- Success condition: no active source/tool/test request path maps public IDA
+  output to `:one_body_and_density_provider`, and no
+  `residual_gto_provider_blocks` plumbing remains outside negative policy
+  assertions.
+- Failure rule: if cleanup needs a replacement residual-GTO producer or output
+  framework, stop and report the blocker.
+
+Summary:
+- Removed `residual_gto_provider_blocks` from
+  `tools/cartesian_driver_harness.jl`.
+- Removed `residual_gto_provider_blocks` and the
+  `hamiltonian_output === :cartesian_ida_hamiltonian` to
+  `:one_body_and_density_provider` mapping from the PQS materialization
+  dispatcher.
+- Deleted the unavailable private H2 residual-GTO materializer stub and its
+  PQS dispatch branch.
+- Removed the stale provider-block request from the H2
+  supplement-materialized driver input while preserving public
+  `save_ida_hamiltonian` / `hamiltonian_output` controls.
+
+Mechanical gate:
+- `git diff --check`: passed.
+- `git diff --numstat -- src bin tools test docs`: `2 35
+  src/pqs_source_box_low_order_materialization.jl`, `1 2
+  tools/cartesian_driver_harness.jl`, `0 1
+  test/driver_inputs/h2_pqs_q5_independent_source_box_r4_supplement_materialized.jl`.
+- Suspicious added-lines grep: no matches.
+- New tests/files: none.
+- `rg` for `residual_gto_provider_blocks`, `one_body_and_density_provider`,
+  and private `pqs_h2_residual_gto` materializer names now finds only existing
+  negative policy-test assertions.
+
+Validation:
+- Doer reported package load and
+  `julia --project=. tools/h2_pqs_terminal_stage_smoke.jl` passed with elapsed
+  time `35.824882959s`.
+- Manager reviewed the diff and did not rerun validation.
+
+Deletion accounting:
+- deleted: stale provider-block argument, public-IDA-to-provider-block mapping,
+  unavailable private residual-GTO materializer stub, and stale fixture request
+  line.
+- simplified: PQS materialization now falls through to ordinary
+  not-materialized behavior instead of pretending a deleted private producer is
+  selectable.
+- quarantined: none.
+- not deleted because: `save_ida_hamiltonian`, `hamiltonian_output`, and public
+  `CartesianIDAHamiltonian` controls remain live public API surfaces.
+- exact remaining caller/blocker: H2 and Cr2 remain blocked at
+  `:missing_terminal_shell_projection`; the supplement-materialized H2 input
+  remains only because `tools/h2_pqs_terminal_stage_smoke.jl` includes it.
+- added src lines: 2.
+- deleted src lines: 35.
+- new tests: none.
+- new metadata/status fields: none.
