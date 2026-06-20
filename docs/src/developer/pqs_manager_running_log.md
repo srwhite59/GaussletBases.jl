@@ -5116,3 +5116,62 @@ Line-count / complexity note:
   local retained-count calculation and makes typed plans the authority. The
   next pass should focus on replacing H2 compatibility realization, not adding
   another adapter layer.
+
+## Pass 318 - Add Terminal Source Realization Preflight
+
+Commit(s):
+- `1e2d52d7` - Add terminal source realization preflight
+
+Summary:
+- Added a terminal source/final-basis realization preflight over the typed
+  retained transform contracts. Direct identity sectors now produce available
+  realization records with `:identity_source_row_selector`; PQS shell sectors
+  check for raw source plan, retained rule, shell projection, shell overlap, and
+  shell-local Lowdin ingredients.
+- The Cr2 blocker moved from broad missing source realization to the exact
+  missing ingredient `:missing_terminal_shell_projection`. The preflight reports
+  the retained budget before final-basis work: direct cores `250`, PQS retained
+  dimension `1372`, boundary slabs `2500`, total `4291`.
+- The pass deliberately does not build K/U/Vee, residual-GTO supplements, public
+  artifact fields, or a Cr2 branch. Cross-block overlap remains `:not_computed`
+  because shell projection is missing first.
+
+Validation:
+- Doer reported `git diff --check`, package load, the `pqs_diatomic` ladder,
+  and the Cr2 stage probe.
+- Manager reran `git diff --check`, package load, the Cr2 stage probe, and
+  `julia --project=. tools/run_cartesian_line_ladder.jl --line=pqs_diatomic`.
+  The H2 ladder passed all three cases; the materialized case retained
+  `final_dimension = 471`, `residual_rank = 18`, `augmented_dimension = 489`,
+  H1 lowest `-0.7946037173365863`, and overlap identity error
+  `5.29668900282789e-14`. The Cr2 probe reached `cartesian_assembly` and
+  reported first blocker `source_plan blocker: missing_terminal_shell_projection`.
+
+Goal advancement:
+- LT5/LT6: sharpens the stage-authority transfer by making source/final-basis
+  realization depend on typed terminal records instead of the old H2 support
+  names.
+- MT: current Cr2 blocker is now shell projection/overlap/Lowdin input
+  production for terminal PQS shell records, followed by mandatory cross-block
+  overlap audit. This is the correct boundary before accepting any concatenated
+  localized basis.
+
+Risk / guardrail:
+- The implementation is line-positive and preflight-only. It is acceptable as a
+  blocker-localization pass, but the next step must not add another parallel
+  H2/Cr2 realization adapter.
+- Boundary slabs still contribute `2500` direct retained functions in the Cr2
+  budget. Review that policy before any dense operator materialization.
+
+Remaining blocker / next:
+- Locate or extract the existing per-shell projection/overlap/Lowdin ingredients
+  and wire them into the typed terminal transform contracts. If cross-block
+  overlap is not already small after shell-local realization, stop with
+  `:terminal_pqs_cross_block_projection_required`; do not reintroduce any global
+  Lowdin cleanup.
+
+Line-count / complexity note:
+- Doer reported `+267` insertions and no deletions. This increases carrying
+  cost, so the next substantive pass should either replace H2 compatibility
+  realization or delete/quarantine obsolete preflight scaffolding as real
+  realization lands.
