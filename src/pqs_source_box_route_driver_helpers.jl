@@ -1752,6 +1752,7 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
             parent,
             route_skeleton,
             recipe,
+            low_order_assembly,
         )
     diatomic_physical_gausslet_supplement_request_payload =
         _pqs_source_box_route_driver_diatomic_physical_gausslet_supplement_request_payload(

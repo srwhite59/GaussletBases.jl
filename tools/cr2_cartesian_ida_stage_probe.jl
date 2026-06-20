@@ -539,6 +539,11 @@ function _probe_stage_summary(stage, value)
             :diatomic_physical_gausslet_supplement_representation_payload,
             :summary,
         )
+        source_plan = _probe_dig(
+            value,
+            :diatomic_physical_gausslet_source_plan_payload,
+            :summary,
+        )
         final_basis = _probe_dig(
             value,
             :diatomic_physical_gausslet_final_basis_payload,
@@ -556,7 +561,10 @@ function _probe_stage_summary(stage, value)
         _probe_print("supplement_blocker", _probe_get(supplement, :blocker))
         _probe_print("supplement_orbital_count",
             _probe_get(supplement, :orbital_count))
+        _probe_print("source_plan_status", _probe_get(source_plan, :status))
+        _probe_print("source_plan_blocker", _probe_get(source_plan, :blocker))
         _probe_print("final_basis_status", _probe_get(final_basis, :status))
+        _probe_print("final_basis_blocker", _probe_get(final_basis, :blocker))
         _probe_print("projected_shell_overlap_errors",
             _probe_get(final_basis, :projected_shell_overlap_errors))
     elseif stage === :cartesian_report
@@ -575,6 +583,44 @@ function _probe_stage_summary(stage, value)
         _probe_print("ida_orbital_dimension",
             _probe_get(value, :ida_orbital_dimension))
         _probe_print("hamfile", _probe_get(value, :hamfile))
+    end
+    return nothing
+end
+
+function _probe_blocked_status(summary)
+    status = _probe_get(summary, :status)
+    status isa Symbol || return false
+    return startswith(String(status), "blocked_")
+end
+
+function _probe_assembly_route_blocker(assembly)
+    source_plan = _probe_dig(
+        assembly,
+        :diatomic_physical_gausslet_source_plan_payload,
+        :summary,
+    )
+    final_basis = _probe_dig(
+        assembly,
+        :diatomic_physical_gausslet_final_basis_payload,
+        :summary,
+    )
+    supplement = _probe_dig(
+        assembly,
+        :diatomic_physical_gausslet_supplement_representation_payload,
+        :summary,
+    )
+    for (label, summary) in (
+        (:source_plan, source_plan),
+        (:final_basis, final_basis),
+        (:supplement, supplement),
+    )
+        _probe_blocked_status(summary) || continue
+        return (;
+            stage = :cartesian_assembly,
+            type = label,
+            message =
+                string(label, " blocker: ", _probe_get(summary, :blocker)),
+        )
     end
     return nothing
 end
@@ -666,6 +712,12 @@ assembly, ok = _probe_run_stage(:cartesian_assembly) do
     GaussletBases.cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
 end
 ok || (_probe_finish(); exit(0))
+assembly_blocker = _probe_assembly_route_blocker(assembly)
+if !isnothing(assembly_blocker)
+    first_blocker = assembly_blocker
+    _probe_finish()
+    exit(0)
+end
 
 report, ok = _probe_run_stage(:cartesian_report) do
     GaussletBases.cartesian_report(system, parent, assembly, recipe)

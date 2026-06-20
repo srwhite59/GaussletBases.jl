@@ -183,213 +183,267 @@ function _pqs_source_box_route_driver_shared_shell_support_tiles(
     )
 end
 
-function _pqs_source_box_route_driver_independent_h2_support_region_plan(
-    parent,
-    route_skeleton,
-    recipe,
+function _pqs_source_box_route_driver_box_support_indices(
+    box::NTuple{3,UnitRange{Int}},
+    inner_box,
+    parent_dims::NTuple{3,Int},
 )
-    route_kind =
-        hasproperty(route_skeleton, :route_kind) ?
-        route_skeleton.route_kind :
-        recipe.route_kind
-    route_kind === :bond_aligned_diatomic_independent_pqs_source_box_core_shell ||
+    outer_indices =
+        _nested_box_support_indices(box[1], box[2], box[3], parent_dims)
+    isnothing(inner_box) && return outer_indices
+    inner = Set(
+        _nested_box_support_indices(
+            inner_box[1],
+            inner_box[2],
+            inner_box[3],
+            parent_dims,
+        ),
+    )
+    return Int[index for index in outer_indices if !(index in inner)]
+end
+
+function _pqs_source_box_route_driver_terminal_support_record(
+    contract,
+    parent_dims::NTuple{3,Int},
+)
+    support_indices = _pqs_source_box_route_driver_box_support_indices(
+        contract.outer_box,
+        contract.inner_exclusion_box,
+        parent_dims,
+    )
+    length(support_indices) == contract.support_count ||
+        throw(
+            ArgumentError(
+                "terminal support count mismatch for $(contract.unit_key)",
+            ),
+        )
+    return (;
+        unit_key = contract.unit_key,
+        unit_role = contract.unit_role,
+        terminal_region_key = contract.terminal_region_key,
+        terminal_region_role = contract.terminal_region_role,
+        terminal_region_kind = contract.terminal_region_kind,
+        lowering_contract_kind = contract.lowering_contract_kind,
+        outer_box = contract.outer_box,
+        inner_exclusion_box = contract.inner_exclusion_box,
+        support_indices,
+        support_states = NTuple{3,Int}[
+            _cartesian_unflat_index(index, parent_dims) for index in support_indices
+        ],
+        support_count = length(support_indices),
+        source_cpb = hasproperty(contract, :source_cpb) ? contract.source_cpb : nothing,
+        source_cpb_plan_box =
+            hasproperty(contract, :source_cpb_plan_box) ?
+            contract.source_cpb_plan_box :
+            nothing,
+        source_mode_shape =
+            hasproperty(contract, :source_mode_shape) ?
+            contract.source_mode_shape :
+            nothing,
+        retained_rule =
+            hasproperty(contract, :retained_rule) ?
+            contract.retained_rule :
+            nothing,
+        bond_axis = get(contract.metadata, :bond_axis, nothing),
+    )
+end
+
+function _pqs_source_box_route_driver_terminal_support_coverage(records, parent_dims)
+    seen = Set{Int}()
+    duplicate_count = 0
+    for record in records
+        for index in record.support_indices
+            if index in seen
+                duplicate_count += 1
+            else
+                push!(seen, index)
+            end
+        end
+    end
+    expected_count = prod(parent_dims)
+    return (;
+        coverage_complete = length(seen) == expected_count && duplicate_count == 0,
+        duplicate_count,
+        missing_count = expected_count - length(seen),
+        outside_count = count(index -> index < 1 || index > expected_count, seen),
+    )
+end
+
+function _pqs_source_box_route_driver_h2_terminal_support_plan(records, parent_dims)
+    contact_records = Tuple(
+        record for record in records
+        if record.terminal_region_role == :atom_contact_core &&
+           record.lowering_contract_kind == :direct_core_identity_cpb
+    )
+    shared_records = sort(
+        collect(
+            record for record in records
+            if record.terminal_region_role == :shared_molecular_shell &&
+               record.lowering_contract_kind == :pqs_filled_source_cpb
+        );
+        by = record -> prod(length.(record.outer_box)),
+        rev = true,
+    )
+    length(contact_records) == 1 && length(shared_records) == 2 &&
+        length(records) == 3 ||
         return nothing
+    support_order = (:atom_contact_core, :shared_shell_1, :shared_shell_2)
+    support_counts = (;
+        atom_contact_core = contact_records[1].support_count,
+        shared_shell_1 = shared_records[1].support_count,
+        shared_shell_2 = shared_records[2].support_count,
+    )
+    atom_record = contact_records[1]
+    atom_contact_core_descriptor = (;
+        role = :atom_contact_core,
+        source_region_roles = (atom_record.terminal_region_role,),
+        support_tiles = (
+            _pqs_source_box_route_driver_support_tile(
+                :atom_contact_core,
+                atom_record.terminal_region_role,
+                1,
+                atom_record.outer_box,
+                parent_dims,
+            ),
+        ),
+        tile_count = 1,
+        tile_support_counts = (atom_record.support_count,),
+        support_indices = atom_record.support_indices,
+        support_states = atom_record.support_states,
+        support_count = atom_record.support_count,
+        coefficient_representation = :sparse_parent_row_direct_selector,
+    )
+    shared_descriptor(role, record) = begin
+        support_tiles =
+            _pqs_source_box_route_driver_shared_shell_support_tiles(
+                role,
+                record.outer_box,
+                record.inner_exclusion_box,
+                parent_dims,
+            )
+        (;
+            role,
+            terminal_region_key = record.terminal_region_key,
+            current_box = record.outer_box,
+            inner_box = record.inner_exclusion_box,
+            source_cpb = record.source_cpb,
+            support_tiles,
+            tile_count = length(support_tiles),
+            tile_support_counts = Tuple(tile.support_count for tile in support_tiles),
+            support_indices = record.support_indices,
+            support_states = record.support_states,
+            support_count = record.support_count,
+        )
+    end
+    return (;
+        support_order,
+        support_counts,
+        atom_contact_core_descriptor,
+        shared_shell_descriptors = (;
+            shared_shell_1 = shared_descriptor(:shared_shell_1, shared_records[1]),
+            shared_shell_2 = shared_descriptor(:shared_shell_2, shared_records[2]),
+        ),
+    )
+end
+
+function _pqs_source_box_route_driver_terminal_topology_support_region_plan(
+    parent,
+    low_order_assembly,
+)
     blocked(blocker) = (;
-        status = :blocked_independent_pqs_support_region_plan,
+        status = :blocked_terminal_topology_support_region_plan,
         blocker,
-        authority = :cartesian_shellification_route_geometry,
-        support_order = (:atom_contact_core, :shared_shell_1, :shared_shell_2),
+        authority = :terminal_lowering_contract_inventory,
+        support_order = (),
         support_counts = (;),
         counts_generated = false,
-        counts_source = :support_region_materializer_blocked,
+        counts_source = :terminal_topology_support_region_plan_blocked,
         coverage_complete = false,
         duplicate_count = nothing,
         missing_count = nothing,
         outside_count = nothing,
     )
+    isnothing(low_order_assembly) &&
+        return blocked(:missing_low_order_assembly_terminal_topology)
     parent_axis_counts =
-        hasproperty(route_skeleton, :parent_axis_counts) ?
-        route_skeleton.parent_axis_counts :
         hasproperty(parent, :axis_counts) ? parent.axis_counts : nothing
-    axis_count_tuple =
+    parent_dims =
         _pqs_source_box_route_driver_axis_counts_tuple(parent_axis_counts)
-    isnothing(axis_count_tuple) &&
-        return blocked(:missing_independent_h2_parent_axis_counts)
-    bundles = parent.parent_axis_bundle_object
-    axes = Tuple(collect(_nested_axis_pgdg(bundles, axis).centers)
-                 for axis in (:x, :y, :z))
-    locations =
-        hasproperty(parent, :atom_locations) ? Tuple(parent.atom_locations) : ()
-    length(locations) == 2 || return blocked(:missing_diatomic_atom_locations)
-    bond_axis = hasproperty(parent, :bond_axis) ? parent.bond_axis : :z
-    core_side = parent.standard_setup.core_cube_side
-    q = parent.standard_setup.q
-    raw = CartesianShellification.raw_terminal_geometry(
-        axes,
-        Tuple(Tuple(Float64(value) for value in location) for location in locations);
-        core_side,
-        q,
-        bond_axis,
-    )
-    regions = raw.regions
-    contact_regions =
-        Tuple(region for region in regions if region.role == :atom_contact_core)
-    atom_regions = Tuple(region for region in regions if region.role == :atom_local_core)
-    midpoint_regions = Tuple(region for region in regions if region.role == :midpoint_slab)
-    shared_regions = sort(
-        collect(region for region in regions if region.role == :shared_molecular_shell);
-        by = region -> prod(length.(region.outer_box)),
-        rev = true,
-    )
-    contact_core_available =
-        length(contact_regions) == 1 &&
-        isempty(atom_regions) &&
-        isempty(midpoint_regions)
-    separated_core_available =
-        length(atom_regions) == 2 &&
-        length(midpoint_regions) == 1 &&
-        isempty(contact_regions)
-    (contact_core_available || separated_core_available) &&
-        length(shared_regions) == 2 ||
-        return blocked(:unexpected_independent_h2_terminal_region_shape)
-    support_order = (:atom_contact_core, :shared_shell_1, :shared_shell_2)
-    atom_contact_regions =
-        contact_core_available ?
-        contact_regions :
-        (atom_regions..., midpoint_regions...)
-    support_counts = (;
-        atom_contact_core =
-            sum(region.support_count for region in atom_contact_regions),
-        shared_shell_1 = shared_regions[1].support_count,
-        shared_shell_2 = shared_regions[2].support_count,
-    )
-    atom_contact_support(region) =
-        _nested_box_support_indices(
-            region.box[1],
-            region.box[2],
-            region.box[3],
-            axis_count_tuple,
+    isnothing(parent_dims) && return blocked(:missing_terminal_parent_axis_counts)
+    lowering_inventory =
+        hasproperty(low_order_assembly, :lowering_contract_inventory) ?
+        low_order_assembly.lowering_contract_inventory :
+        nothing
+    isnothing(lowering_inventory) &&
+        return blocked(:missing_terminal_lowering_contract_inventory)
+    contracts = Tuple(
+        contract for contract in lowering_inventory.lowering_contracts
+        if contract.lowering_contract_kind in (
+            :direct_core_identity_cpb,
+            :direct_slab_identity_cpb,
+            :direct_boundary_slab_identity_cpb,
+            :pqs_filled_source_cpb,
         )
-    atom_contact_core_support_indices =
-        reduce(vcat, (atom_contact_support(region) for region in atom_contact_regions))
-    atom_contact_core_support_states = NTuple{3,Int}[
-        _cartesian_unflat_index(index, axis_count_tuple) for
-        index in atom_contact_core_support_indices
-    ]
-    atom_contact_support_tiles = Tuple(
-        _pqs_source_box_route_driver_support_tile(
-            :atom_contact_core,
-            region.role,
-            index,
-            region.box,
-            axis_count_tuple,
-        ) for (index, region) in pairs(atom_contact_regions)
     )
-    shared_shell_descriptors =
-        _pqs_source_box_route_driver_independent_h2_shared_shell_region_descriptors(
-            shared_regions,
-            axis_count_tuple,
-        )
-    coverage = raw.coverage
-    counts_match =
-        Tuple(values(support_counts)) == (275, 578, 362)
+    isempty(contracts) && return blocked(:missing_terminal_support_contracts)
+    records = Tuple(
+        _pqs_source_box_route_driver_terminal_support_record(
+            contract,
+            parent_dims,
+        ) for contract in contracts
+    )
+    support_order = Tuple(record.unit_key for record in records)
+    length(unique(support_order)) == length(support_order) ||
+        return blocked(:duplicate_terminal_support_unit_keys)
+    support_counts =
+        NamedTuple{support_order}(Tuple(record.support_count for record in records))
+    coverage =
+        _pqs_source_box_route_driver_terminal_support_coverage(records, parent_dims)
+    bond_axes = unique(
+        Any[record.bond_axis for record in records if !isnothing(record.bond_axis)],
+    )
+    length(bond_axes) <= 1 || return blocked(:inconsistent_terminal_bond_axes)
+    bond_axis = isempty(bond_axes) ? nothing : only(bond_axes)
+    h2_plan =
+        coverage.coverage_complete ?
+        _pqs_source_box_route_driver_h2_terminal_support_plan(records, parent_dims) :
+        nothing
+    h2_available = !isnothing(h2_plan)
     status =
-        coverage.coverage_complete && counts_match ?
+        h2_available ?
         :available_independent_pqs_support_region_plan :
-        :blocked_independent_pqs_support_region_plan
-    blocker =
-        status === :available_independent_pqs_support_region_plan ?
-        nothing :
-        !counts_match ? :independent_h2_support_count_mismatch :
-        :independent_h2_support_coverage_mismatch
-    return (;
-        status,
-        blocker,
-        authority = :cartesian_shellification_route_geometry,
-        support_order,
-        support_counts,
-        counts_generated = status === :available_independent_pqs_support_region_plan,
-        counts_source = :cartesian_shellification_route_geometry,
-        coverage_complete = coverage.coverage_complete,
-        duplicate_count = coverage.duplicate_site_count,
-        missing_count = coverage.missing_site_count,
-        outside_count = 0,
-        nuclear_indices = raw.nuclear_indices,
-        bond_axis = raw.bond_axis,
-        atom_contact_core_descriptor = (;
-            role = :atom_contact_core,
-            source_region_roles = Tuple(region.role for region in atom_contact_regions),
-            support_tiles = atom_contact_support_tiles,
-            tile_count = length(atom_contact_support_tiles),
-            tile_support_counts =
-                Tuple(tile.support_count for tile in atom_contact_support_tiles),
-            support_indices = atom_contact_core_support_indices,
-            support_states = atom_contact_core_support_states,
-            support_count = length(atom_contact_core_support_indices),
-            coefficient_representation = :sparse_parent_row_direct_selector,
-        ),
-        shared_shell_descriptors,
-    )
-end
-
-function _pqs_source_box_route_driver_independent_h2_shared_shell_region_descriptors(
-    shared_regions,
-    parent_dims::NTuple{3,Int},
-)
-    length(shared_regions) == 2 ||
-        throw(ArgumentError("independent H2 PQS requires exactly two shared shell regions"))
-    descriptor(role, region) = begin
-        raw = hasproperty(region, :raw_region) ? region.raw_region : region
-        region_key = hasproperty(region, :key) ? region.key : role
-        isnothing(raw.inner_exclusion_box) &&
-            throw(ArgumentError("independent H2 PQS shared shell requires inner exclusion box"))
-        outer_indices =
-            _nested_box_support_indices(raw.outer_box[1], raw.outer_box[2], raw.outer_box[3], parent_dims)
-        inner = Set(
-            _nested_box_support_indices(
-                raw.inner_exclusion_box[1],
-                raw.inner_exclusion_box[2],
-                raw.inner_exclusion_box[3],
-                parent_dims,
-            ),
-        )
-        support_indices = Int[index for index in outer_indices if !(index in inner)]
-        support_states = NTuple{3,Int}[
-            _cartesian_unflat_index(index, parent_dims) for index in support_indices
-        ]
-        support_tiles =
-            _pqs_source_box_route_driver_shared_shell_support_tiles(
-                role,
-                raw.outer_box,
-                raw.inner_exclusion_box,
-                parent_dims,
-            )
-        source_cpb = CartesianCPB.filled_cpb(
-            raw.outer_box...;
-            role = Symbol(role, "_pqs_filled_source_cpb"),
-            metadata = (;
-                terminal_region_key = region_key,
-                route_unit_role = role,
-                source = :independent_h2_pqs_shared_shell_region_descriptor,
-            ),
-        )
+        :available_terminal_topology_support_region_plan
+    return merge(
         (;
-            role,
-            terminal_region_key = region_key,
-            current_box = raw.outer_box,
-            inner_box = raw.inner_exclusion_box,
-            source_cpb,
-            support_tiles,
-            tile_count = length(support_tiles),
-            tile_support_counts = Tuple(tile.support_count for tile in support_tiles),
-            support_indices,
-            support_states,
-            support_count = length(support_indices),
-        )
-    end
-    return (;
-        shared_shell_1 = descriptor(:shared_shell_1, shared_regions[1]),
-        shared_shell_2 = descriptor(:shared_shell_2, shared_regions[2]),
+            status,
+            blocker = nothing,
+            authority = :terminal_lowering_contract_inventory,
+            support_order = h2_available ? h2_plan.support_order : support_order,
+            support_counts = h2_available ? h2_plan.support_counts : support_counts,
+            terminal_support_order = support_order,
+            terminal_support_counts = support_counts,
+            terminal_support_records = records,
+            terminal_region_roles =
+                Tuple(record.terminal_region_role for record in records),
+            terminal_region_kinds =
+                Tuple(record.terminal_region_kind for record in records),
+            lowering_contract_kinds =
+                Tuple(record.lowering_contract_kind for record in records),
+            counts_generated = true,
+            counts_source = :terminal_lowering_contract_inventory,
+            coverage_complete = coverage.coverage_complete,
+            duplicate_count = coverage.duplicate_count,
+            missing_count = coverage.missing_count,
+            outside_count = coverage.outside_count,
+            parent_dims,
+            bond_axis,
+        ),
+        h2_available ?
+        (;
+            atom_contact_core_descriptor = h2_plan.atom_contact_core_descriptor,
+            shared_shell_descriptors = h2_plan.shared_shell_descriptors,
+        ) :
+        (;),
     )
 end
 
@@ -397,14 +451,9 @@ function _pqs_source_box_route_driver_independent_h2_retained_rule_plan(
     support_plan,
 )
     support_order = (:atom_contact_core, :shared_shell_1, :shared_shell_2)
-    isnothing(support_plan) &&
-        throw(ArgumentError("independent H2 retained rule plan requires a support plan"))
+    isnothing(support_plan) && return nothing
     support_plan.status === :available_independent_pqs_support_region_plan ||
-        throw(
-            ArgumentError(
-                "independent H2 retained rule plan requires an available support plan",
-            ),
-        )
+        return nothing
     support_plan.support_order == support_order ||
         throw(ArgumentError("independent H2 retained rule support order mismatch"))
     support_counts = support_plan.support_counts
@@ -694,6 +743,7 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_target_payload(
     parent,
     route_skeleton,
     recipe,
+    low_order_assembly = nothing,
 )
     route_family =
         hasproperty(route_skeleton, :route_family) ?
@@ -749,25 +799,30 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_target_payload(
         isnothing(inventory) ? () : Tuple(inventory.retained_units)
     generated_support_plan =
         independent_target ?
-        _pqs_source_box_route_driver_independent_h2_support_region_plan(
+        _pqs_source_box_route_driver_terminal_topology_support_region_plan(
             parent,
-            route_skeleton,
-            recipe,
+            low_order_assembly,
         ) :
         nothing
     generated_support_available =
         !isnothing(generated_support_plan) &&
-        generated_support_plan.status === :available_independent_pqs_support_region_plan
+        generated_support_plan.status in (
+            :available_independent_pqs_support_region_plan,
+            :available_terminal_topology_support_region_plan,
+        )
     retained_rule_plan =
         independent_target ?
         _pqs_source_box_route_driver_independent_h2_retained_rule_plan(
             generated_support_plan,
         ) :
         nothing
-    if independent_target && !isnothing(retained_rule_plan)
+    if independent_target && generated_support_available
         status = :available_physical_gausslet_core_shell_target_inventory
         blocker = nothing
     end
+    support_units =
+        generated_support_available ? generated_support_plan.support_order :
+        support_units
     support_counts =
         generated_support_available ? generated_support_plan.support_counts :
         isnothing(inventory) ? (;) : inventory.support_counts
@@ -788,15 +843,24 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_target_payload(
         (!isnothing(inventory) && inventory.retained_atom_core_interiors)
     source_backed_fixed_source_oracle_used =
         false
-    source_plan_blocker = nothing
+    source_plan_blocker =
+        !isnothing(retained_rule_plan) ?
+        nothing :
+        generated_support_available ?
+        :missing_independent_pqs_retained_rule_plan :
+        nothing
     retained_transform_authority =
         !isnothing(retained_rule_plan) ?
         :pqs_source_box_construction :
+        generated_support_available ?
+        :missing_terminal_retained_rule_plan :
         isnothing(inventory) ?
         :not_available :
         :pqs_source_box_construction
     primary_blocker =
         !isnothing(retained_rule_plan) ?
+        source_plan_blocker :
+        generated_support_available ?
         source_plan_blocker :
         blocker
     secondary_blocker =
@@ -1089,30 +1153,43 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_supplement_repr
                     _pqs_source_box_route_driver_diatomic_supplement_atom_string.(
                         atom_symbols,
                     )
-                supplement =
-                    atom_name[1] == atom_name[2] ?
-                    legacy_bond_aligned_diatomic_gaussian_supplement(
-                        atom_name[1],
-                        constructor_basis,
-                        nuclei;
-                        lmax,
-                        uncontracted,
-                    ) :
-                    legacy_bond_aligned_heteronuclear_gaussian_supplement(
-                        atom_name[1],
-                        constructor_basis,
-                        atom_name[2],
-                        constructor_basis,
-                        nuclei;
-                        lmax,
-                        uncontracted,
-                    )
-                representation = basis_representation(supplement)
-                status =
-                    :available_pqs_physical_gausslet_gto_supplement_representation
-                blocker = nothing
-                object_kind =
-                    :cartesian_gaussian_shell_supplement_representation
+                try
+                    supplement =
+                        atom_name[1] == atom_name[2] ?
+                        legacy_bond_aligned_diatomic_gaussian_supplement(
+                            atom_name[1],
+                            constructor_basis,
+                            nuclei;
+                            lmax,
+                            uncontracted,
+                        ) :
+                        legacy_bond_aligned_heteronuclear_gaussian_supplement(
+                            atom_name[1],
+                            constructor_basis,
+                            atom_name[2],
+                            constructor_basis,
+                            nuclei;
+                            lmax,
+                            uncontracted,
+                        )
+                    representation = basis_representation(supplement)
+                    status =
+                        :available_pqs_physical_gausslet_gto_supplement_representation
+                    blocker = nothing
+                    object_kind =
+                        :cartesian_gaussian_shell_supplement_representation
+                catch err
+                    if err isa ArgumentError
+                        status =
+                            :blocked_pqs_physical_gausslet_gto_supplement_representation
+                        blocker = :missing_gto_supplement_basis
+                        object_kind = :not_available
+                        supplement = nothing
+                        representation = nothing
+                    else
+                        rethrow()
+                    end
+                end
             end
         end
     end
@@ -1649,7 +1726,7 @@ function _pqs_source_box_route_driver_independent_h2_physical_source_plan_descri
             atom_contact_core = (;
                 source_family = :direct_terminal_source_modes,
                 source_region_roles =
-                    (:atom_local_core, :atom_local_core, :midpoint_slab),
+                    support_plan.atom_contact_core_descriptor.source_region_roles,
                 support_count = support_counts.atom_contact_core,
                 source_mode_count = support_counts.atom_contact_core,
                 transform_kind = :identity_source_modes,
