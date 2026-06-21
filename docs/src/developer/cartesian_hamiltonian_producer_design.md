@@ -15,7 +15,7 @@ The full June 2026 design document is preserved as historical material at:
 
 Review rounds are preserved at:
 
-- [designs/cartesian_hamiltonian_producer/reviews/](designs/cartesian_hamiltonian_producer/reviews/)
+- [designs/cartesian_hamiltonian_producer/reviews/README.md](designs/cartesian_hamiltonian_producer/reviews/README.md)
 
 Do not treat this stub as a second authority document. Future implementation
 work should cite the compact authority files above plus

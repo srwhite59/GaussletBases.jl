@@ -20,7 +20,7 @@ Historical material:
 
 - [history/cartesian_hamiltonian_producer_design_2026-06_full.md](history/cartesian_hamiltonian_producer_design_2026-06_full.md)
   preserves the full June 2026 design document.
-- [reviews/](reviews/) preserves design review rounds and reconciliations.
+- [reviews/README.md](reviews/README.md) preserves design review rounds and reconciliations.
 
 Historical files are useful for context and audit trails, but they are not
 normal startup reading and should not override the compact current authority.
