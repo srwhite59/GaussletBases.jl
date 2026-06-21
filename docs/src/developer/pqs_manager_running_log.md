@@ -6565,3 +6565,51 @@ Guardrail:
 Next step:
 - Provide the revised Slice B implementation blurb for Chat review; do not hand
   to repo-doer until reviewed.
+
+## Cartesian Hamiltonian Producer Pass 013 - Slice B Terminal One-Body Kernel
+
+Commit(s):
+- this branch - Add terminal basis one-body product assembly
+
+Summary:
+- Accepted the first Slice B source implementation under approved `HP-FN-03`.
+- Added the approved file
+  `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl`.
+- Implemented `assemble_terminal_product_operator!` over
+  `CartesianTerminalBasisRealization` with upper-triangular terminal block
+  traversal, implicit direct selectors, and bounded support-pair workspaces.
+- Included the approved source file from `CartesianFinalBasisRealization.jl`.
+- Removed the dense direct-identity allocation path from the Slice A
+  `_block_pair_matrix` helper.
+
+Validation:
+- `git diff --check`: passed.
+- `julia --project=. -e 'using GaussletBases; println("load ok")'`: passed.
+- `julia --project=. tools/h2_pqs_terminal_stage_smoke.jl`: passed.
+- `julia --project=. tmp/work/terminal_one_body_validation.jl h h2`: passed.
+  - H terminal one-body lowest: `-0.49855234726272379`, matching the new
+    ignored-script oracle baseline `-0.49855234726272035` within `1e-10`.
+  - H2 terminal one-body lowest: `-0.7946037173365883`, matching the reviewed
+    baseline `-0.7946037173365863` within `1e-10`.
+
+Goal advancement:
+- Advances LT1/LT4 by making one separable final-basis one-body product term a
+  real numerical object in the unified terminal basis, without reintroducing
+  the retired pair-materialization framework.
+- Preserves the Slice A atomic/H2/diatomic unification boundary: source code
+  does not branch on atom count, route kind, or terminal role vocabulary.
+
+Risk/guardrail:
+- Cr2 dense `4291 x 4291` operator construction is a stress test, not the
+  default wiring gate. Future Slice B validation should use a light separated
+  diatomic with Cr2-like terminal variety, such as Be2 or N2, before the final
+  Cr2 scale check.
+- Source line count is positive because this is the new approved numerical
+  capability. The same-lane cleanup removed the immediate dense identity
+  allocation; later one-body parity should delete migration-only dense/oracle
+  adapters rather than preserving them.
+
+Remaining blocker/next step:
+- Extend validation to a light separated-diatomic terminal topology and then
+  decide the next approved boundary for persistent K/U orchestration or Slice C.
+- `HP-FN-04` and `HP-FN-05` remain unapproved.

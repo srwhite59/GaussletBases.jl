@@ -38,8 +38,18 @@ function _block_action(left, right_states, right_coefficients, overlaps)
 end
 function _block_pair_matrix(left, right, overlaps)
     if isnothing(right.coefficients)
-        eye = Matrix{Float64}(I, length(right.support_states), length(right.support_states))
-        return _block_action(left, right.support_states, eye, overlaps)
+        nrow = isnothing(left.coefficients) ? length(left.support_states) :
+            size(left.coefficients, 2)
+        result = Matrix{Float64}(undef, nrow, length(right.support_states))
+        maxcols = max(1, _TERMINAL_WORKSPACE_BYTES ÷ (8 * max(length(left.support_states), 1)))
+        for firstcol in 1:maxcols:length(right.support_states)
+            cols = firstcol:min(firstcol + maxcols - 1, length(right.support_states))
+            action = _support_cross(left.support_states, @view(right.support_states[cols]), overlaps)
+            result[:, cols] .= isnothing(left.coefficients) ?
+                action :
+                transpose(left.coefficients) * action
+        end
+        return result
     end
     return _block_action(left, right.support_states, right.coefficients, overlaps)
 end
