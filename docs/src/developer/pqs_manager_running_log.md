@@ -7048,3 +7048,37 @@ Carrying-cost accounting:
 - deleted src lines: `2`.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 025 - Slice C C1 IDA Candidate Amendment
+
+Commit(s):
+- this branch - Amend Slice C C1 IDA candidate
+
+Summary:
+- Amended the Slice C candidate design so `HP-FN-04` is implementable from its
+  listed inputs: explicit parent axis integral-weight vectors are now part of
+  the proposed internal IDA assembly signature.
+- Split Slice C authority into candidate-only C1/C2 wording. C1 is localized
+  IDA matrix assembly producing final-basis `electron_electron_ida`; C2 is
+  later construction of the existing `CartesianIDAHamiltonian`.
+- Added C1 validation language around the reviewed H2 self-Coulomb value
+  `0.4569117646737212` and allowed an ignored H2 oracle comparison against the
+  existing complete-core/shell IDA formula for validation only.
+
+Guardrail:
+- `HP-FN-04` and `HP-FN-05` remain candidate-only. This pass does not approve
+  Slice C source implementation, a new payload, a persistent pair-factor cache,
+  metadata-carried pair data, or Hamiltonian/artifact wiring.
+
+Validation:
+- Doer ran `git diff --check` and focused grep checks for the new C1/C2
+  wording, explicit weights, tolerances, reviewed self-Coulomb value, and
+  candidate-only status.
+- Manager reviewed the full docs diff and confirmed the candidate-only boundary
+  remained intact.
+
+Next step:
+- Draft a narrow C1 implementation blurb only if explicitly proceeding with
+  Slice C. The blurb must approve `HP-FN-04` for source work, require explicit
+  parent weights, forbid cache/payload/orchestration additions, and preserve the
+  term-first raw-pair contraction pattern.

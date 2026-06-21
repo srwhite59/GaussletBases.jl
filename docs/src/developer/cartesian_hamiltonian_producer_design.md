@@ -653,6 +653,9 @@ Rules:
 
 ### HP-FN-04 — blockwise localized IDA assembly — Slice C candidate
 
+HP-FN-04 remains candidate-only unless a later manager handoff explicitly
+approves Slice C1 source implementation.
+
 Purpose:
 Construct positive-gauge final IDA weights and the final localized
 `electron_electron_ida` matrix blockwise from raw PGDG pair-factor terms.
@@ -713,6 +716,11 @@ assemble_terminal_ida_interaction!(
     raw_pair_terms_x,
     raw_pair_terms_y,
     raw_pair_terms_z,
+    weights_x,
+    weights_y,
+    weights_z;
+    weight_atol = 1.0e-12,
+    symmetry_atol = 1.0e-10,
 )
 ```
 
@@ -724,11 +732,28 @@ Expected inputs:
 - `coefficients` are the Coulomb Gaussian expansion coefficients;
 - `raw_pair_terms_x/y/z` are term-first PGDG raw pair-factor tensors with shape
   `(nterms, n_axis, n_axis)`;
+- `weights_x/y/z` are ordinary parent axis integral-weight vectors using the
+  same convention as Slice A sign canonicalization;
 - the helper may accept arrays obtained directly from
   `pgdg.pair_factor_terms_raw` or from the raw-axis fields of
   `_pqs_source_box_ida_factor_provenance`;
+- implementation may use three explicit vectors or a fixed three-axis tuple. It
+  must not introduce a runtime-keyed axis `NamedTuple` or persistent weight
+  payload;
 - the helper must not build those tensors per terminal block pair and must not
   allocate any `(nterms, tile_rows, tile_cols)` workspace.
+
+Input validation:
+
+- coefficient count must match all three raw pair tensors;
+- all raw tensors must have matching term count and adequate axis dimensions for
+  every terminal support state;
+- exponent ordering must match the Coulomb expansion used to build the raw pair
+  tensors;
+- every raw term matrix must be finite and symmetric before upper-triangle
+  mirroring can hide bad inputs;
+- every axis weight vector must be finite and long enough for the corresponding
+  terminal support indices.
 
 Rules:
 
@@ -738,8 +763,19 @@ Rules:
 - consume the sign-canonicalized basis produced by Slice A;
 - compute final localized IDA weights from the canonicalized terminal basis and
   parent 1D weights at the contraction boundary;
+- for each terminal block, compute support product weights from
+  `weights_x/y/z`;
+- compute final localized IDA weights as
+
+  ```text
+  d = C' * support_weights
+  ```
+
+  with direct blocks treated as implicit identity;
 - a near-zero, nonpositive, or nonfinite final IDA weight is a construction
   error. Residual-Gaussian near-zero weights are not part of this base Slice C;
+- do not repeat Slice A sign flips in Slice C. Negative recomputed weights mean
+  the supplied basis and weights are inconsistent;
 - tile a terminal block pair when one full support-pair workspace would exceed
   the reviewed memory limit;
 - use the same **64 MiB** simultaneous local-workspace cap as Slices A/B unless
@@ -759,6 +795,19 @@ Rules:
 
 - apply the final IDA density gauge only after the raw numerator tile has been
   contracted through the terminal block coefficients and positive final weights;
+- for each block pair, first accumulate the unnormalized final block:
+
+  ```text
+  B_ij = C_i' * N_ij * C_j
+  ```
+
+  after all support tiles have contributed, normalize:
+
+  ```text
+  V_ij[p,q] = B_ij[p,q] / (d_i[p] * d_j[q])
+  ```
+
+- do not materialize weight-scaled coefficient copies as the primary design;
 - do not use `_ordinary_cartesian_ida_from_pair_factors` or any term-by-term
   `kron` construction as production authority;
 - no separate IDA payload object is proposed.
@@ -924,6 +973,10 @@ and Slice C consume the canonicalized terminal basis unchanged.
 V = zeros(final_dimension, final_dimension)
 
 for upper-triangular terminal block pair (i,j):
+    compute d_i and d_j from parent axis product weights:
+        d = C' * support_weights
+    reject nonfinite, nonpositive, or <= weight_atol entries
+
     for each tile of terminal support block pair (i,j):
         raw_support_pair_tile = zero tile
 
@@ -932,10 +985,10 @@ for upper-triangular terminal block pair (i,j):
                 raw_pair_x[k] * raw_pair_y[k] * raw_pair_z[k]
 
         local C_i/C_j rows are block-local coefficients or implicit identity
-        W_i_tile = local C_i rows divided by positive final IDA weights_i
-        W_j_tile = local C_j rows divided by positive final IDA weights_j
+        accumulate unnormalized B_ij += C_i' * raw_support_pair_tile * C_j
 
-        accumulate V_ij += W_i_tile' * raw_support_pair_tile * W_j_tile
+    normalize after all support tiles contribute:
+        V_ij[p,q] = B_ij[p,q] / (d_i[p] * d_j[q])
     place V_ij and transpose partner
 
 symmetry-check V
@@ -1138,9 +1191,10 @@ Merge validation:
 
 ### Slice C — localized IDA and `CartesianIDAHamiltonian`
 
-Status: future candidate. HP-FN-04 is the proposed IDA assembly surface; HP-FN-05
-remains the candidate Hamiltonian construction surface. Neither is
-implementation authority until Slice C is explicitly approved.
+Status: future candidate. HP-FN-04 remains candidate-only as the proposed Slice
+C1 localized IDA assembly surface. HP-FN-05 remains candidate-only as the Slice
+C2 Hamiltonian construction surface. Neither is implementation authority until a
+later manager handoff explicitly approves the corresponding slice.
 
 Target:
 Complete base in-memory Hamiltonian producer using the existing
@@ -1148,9 +1202,17 @@ Complete base in-memory Hamiltonian producer using the existing
 artifact routing are deferred to Slice D unless a later Slice C amendment
 explicitly changes that boundary.
 
-Localized IDA assembly consumes only `CartesianTerminalBasisRealization`,
-Coulomb expansion coefficients, and raw axis pair-factor term tensors derived
-from the parent bundles. The number of centers is data, not dispatch.
+Slice C1:
+localized IDA matrix assembly only. It consumes only
+`CartesianTerminalBasisRealization`, Coulomb expansion coefficients, raw axis
+pair-factor term tensors derived from the parent bundles, and explicit parent
+axis weight vectors. It produces a real final-basis `electron_electron_ida`
+matrix. It does not construct `CartesianIDAHamiltonian`.
+
+Slice C2:
+later construction of the existing `CartesianIDAHamiltonian` from Slice B `K`,
+by-center unit `U_A`, and Slice C1 `V`. The number of centers is data, not
+dispatch. HP-FN-05 stays separate and candidate-only.
 
 Added-source target: **150 lines**. Exceeding the target requires manager
 review and a measured memory/validation justification.
@@ -1174,12 +1236,17 @@ Must not add:
 
 Merge validation:
 
-- H2 one-body energy and reviewed self-Coulomb/IDA endpoint are the first
-  correctness gate. Cr2 is not the first Slice C correctness gate;
+- C1 first correctness gate: H2 one-body energy plus reviewed H2
+  self-Coulomb/localized IDA parity. The reviewed H2 self-Coulomb value is
+  `0.4569117646737212`;
+- an ignored H2 oracle comparison against the still-present complete-core/shell
+  IDA formula is allowed for validation, but not production authority;
+- Cr2 is not the first Slice C correctness gate;
 - a light separated diatomic may be used as the first topology/performance smoke
   after H2 parity, but not as a replacement for H2 physics parity;
-- constructed `CartesianIDAHamiltonian` has physically correct center charges,
-  positions, and electron counts;
+- C2 validation, when later approved, checks that constructed
+  `CartesianIDAHamiltonian` has physically correct center charges, positions,
+  and electron counts;
 - `electron_electron_ida` is finite and symmetric;
 - final localized IDA weights are positive and finite;
 - implementation report states which IDA anchors were directly reused versus
