@@ -211,9 +211,9 @@ Return contract:
 
 These entries authorize only the R1 public base producer scope recorded in
 `r1_public_base_producer.md`. They do not approve broad driver polish,
-additional routes, new artifact shapes beyond the approved normalized public
-input provenance in the final Hamiltonian file, solver work, supplements,
-corrections, or status/report/payload expansion.
+additional routes, new artifact shapes beyond the approved `HP-R1-ART-01`
+`producer_provenance/` keys in the final Hamiltonian file, solver work,
+supplements, corrections, or status/report/payload expansion.
 
 ### HP-R1-FILE-01 — public base producer source file
 
@@ -246,12 +246,15 @@ Scope:
 - plain `NamedTuple` input groups only;
 - no public `method`, `route`, or output group in R1;
 - `n_s`, bond length, and private H2 radius are derived internally;
-- one-center H maps public `reference_spacing` to the private mapping
-  parameter historically named `parent_mapping_d`; public `d` and public
-  `parent_mapping_d` remain unsupported;
-- the reviewed H baseline requires explicit public `reference_spacing = 0.3`;
-  omitted `reference_spacing` keeps the general public default `1.0` and is
-  not the reviewed R1 H endpoint;
+- one-center H requires explicit public `d` with no default;
+- one-center H maps `reference_spacing` and `d` separately:
+  `spacing_inputs.reference_spacing = basis.reference_spacing`,
+  `parent_inputs.parent_mapping_rule = :white_lindsey_atomic_mapping`, and
+  `parent_inputs.parent_mapping_d = basis.d`;
+- the reviewed H baseline uses explicit public `d = 0.3` and
+  `reference_spacing = 1.0`;
+- z-axis H2 rejects public `d` because it uses the multicenter mapping
+  contract;
 - x/y-aligned diatomics, shifted-parallel diatomics, generally oriented
   molecules, translation, and rotation are deferred;
 - center-sized public collections must be vectors or other `AbstractVector`
@@ -262,14 +265,11 @@ Scope:
   H/H2 scope;
 - return the existing `CartesianIDAHamiltonian{Float64}` directly;
 - no wrapper, payload, status object, report mirror, or new artifact shape
-  except the approved normalized public input provenance in the final
+  except the approved `HP-R1-ART-01` `producer_provenance/` keys in the final
   Hamiltonian file;
 - non-`nothing` `hamfile` writes with existing
   `write_cartesian_ida_hamiltonian`; production does not automatically
-  read back the artifact;
-- the final Hamiltonian file records normalized public `system` and `basis`
-  provenance for consumers, but that provenance must not be a staged
-  algorithm input after initial lattice/parent construction.
+  read back the artifact.
 
 ### HP-R1-WIRE-01 — report-free base producer wiring
 
@@ -325,6 +325,45 @@ duplicate the Hamiltonian builder in the new public file, leave two parallel
 base Hamiltonian construction paths, or replace the dependency with a new
 report field cloud, status payload, or metadata-carried numerical data.
 
+### HP-R1-ART-01 — public base producer artifact provenance
+
+Approved artifact extension for R1 public facade writes only. When
+`hamfile !== nothing`, the final Hamiltonian file may add the following JLD2
+keys under `producer_provenance/`:
+
+```text
+provenance_version
+producer
+route
+q
+core_spacing
+reference_spacing
+tail_spacing
+parent_axis_family
+parent_axis_counts
+mapping_kind
+mapping_d
+radius
+xmax_parallel
+xmax_transverse
+atom_symbols
+nuclear_charges
+atom_locations
+nup
+ndn
+final_dimension
+```
+
+Exact values and route-specific `nothing` fields are defined in
+`r1_public_base_producer.md`. For one-center H, the provenance must record
+`reference_spacing = 1.0`, `mapping_kind = :white_lindsey_atomic_mapping`, and
+`mapping_d = 0.3` for the reviewed endpoint. Existing
+`read_cartesian_ida_hamiltonian` must continue reading the Hamiltonian matrices
+while ignoring these extra keys. This ID does not approve a separate manifest,
+provenance file, wrapper object, public provenance reader, status/report
+payload, or use of provenance as staged algorithm data after initial
+lattice/parent construction.
+
 ### HP-R1-TEST-01 — public base producer endpoint test/example
 
 Approved committed validation surface for R1.
@@ -343,15 +382,16 @@ julia --project=. test/driver_public/cartesian_base_hamiltonian_runtests.jl
 
 The test/example should exercise the public facade for one-center H and
 z-axis H2, verify `CartesianIDAHamiltonian{Float64}` output, validate the
-reviewed H baseline using explicit public `reference_spacing = 0.3` and H2
-endpoint facts, validate unknown-key and malformed input errors, validate
+reviewed H baseline using explicit public `d = 0.3` with
+`reference_spacing = 1.0` and H2 endpoint facts, validate unknown-key and
+malformed input errors including missing H `d` and rejected H2 `d`, validate
 x/y-aligned, shifted-parallel, and generally oriented H2 rejection before
 expensive construction, and validate existing Hamiltonian artifact
-write/readback plus normalized public input provenance using `mktempdir()`. It
-is a standalone integration/endpoint gate, not ordinary tiny unit coverage, and
-this ID does not approve adding it to `test/runtests.jl`. It must not assert
-private route-stage fields, report mirrors, status/blocker symbols, terminal
-role vocabulary, or pair inventories.
+write/readback plus `HP-R1-ART-01` provenance using `mktempdir()`. It is a
+standalone integration/endpoint gate, not ordinary tiny unit coverage, and this
+ID does not approve adding it to `test/runtests.jl`. It must not assert private
+route-stage fields, report mirrors, status/blocker symbols, terminal role
+vocabulary, or pair inventories.
 
 ## Rejected Or Deferred
 

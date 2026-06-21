@@ -102,3 +102,6 @@ Do not hand-roll one-sided eigendecomposition transforms for Lowdin.
 - Missing terminal basis for requested PQS Hamiltonian construction is an error,
   not a blocked-result wrapper.
 - Artifact writing uses the existing `write_cartesian_ida_hamiltonian` shape.
+- R1 public facade artifact writes may add only the `HP-R1-ART-01`
+  `producer_provenance/` keys in the final Hamiltonian file. Those keys are
+  consumer provenance, not staged algorithm inputs.

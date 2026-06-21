@@ -14,10 +14,12 @@ implementation outside these IDs.
 - `HP-R1-FN-01` - public base Hamiltonian producer facade.
 - `HP-R1-WIRE-01` - report-free base producer wiring from the facade to the
   existing terminal-basis and Hamiltonian construction path.
+- `HP-R1-ART-01` - fixed producer-provenance schema in the final Hamiltonian
+  file.
 - `HP-R1-TEST-01` - small committed public endpoint test/example for the
   facade.
 
-All four R1 IDs are approved for first implementation in `registry.md`.
+All five R1 IDs are approved for first implementation in `registry.md`.
 
 ## Ownership And Export
 
@@ -94,7 +96,7 @@ public in R1.
 Scalar and collection validation rules:
 
 - `q` must be a positive integer;
-- `core_spacing`, `reference_spacing`, `tail_spacing`, `radius`,
+- `core_spacing`, `reference_spacing`, `tail_spacing`, `radius`, `d`,
   `xmax_parallel`, and `xmax_transverse` must be finite and positive when
   present;
 - all coordinates and nuclear charges must be finite;
@@ -115,7 +117,9 @@ Required common fields:
 
 Conditional fields:
 
-- one-center H requires `radius`
+- one-center H requires:
+  - `radius`
+  - `d`
 - z-axis H2 requires:
   - `xmax_parallel`
   - `xmax_transverse`
@@ -128,30 +132,32 @@ Optional public fields with R1 defaults:
 - `reference_spacing = 1.0`
 - `tail_spacing = 10.0`
 
-The reviewed R1 one-center H endpoint is not the omitted-`reference_spacing`
-default. It must use explicit public `reference_spacing = 0.3` in the example
-and endpoint test to reproduce the reviewed H baseline
-`-0.49855234726272035`. Omitting `reference_spacing` leaves the general public
-default at `1.0`, which is an allowed user choice but not the reviewed R1 H
-baseline.
+The reviewed R1 one-center H endpoint uses the general
+`reference_spacing = 1.0` default plus required explicit public `d = 0.3`.
+`d` has no default. Missing `d` for one-center H must throw `ArgumentError`.
 
 Fixed private choices in R1:
 
 - `method = :pqs_source_box`
 - `q_to_core_spacing_rule = :standard_pqs_ns_equals_q`
 - `parent_axis_bundle_backend = :pgdg_localized_experimental`
-- `parent_mapping_rule = :identity_mapping`
 
 The current private H2 setup still needs an internal radius-like domain value.
 The public z-axis H2 facade must derive that private value as
 `max(xmax_parallel, xmax_transverse)`. This derived value is not a public
 `basis` field.
 
-For one-center H, public `reference_spacing` maps to the private one-center
-mapping parameter historically named `parent_mapping_d`. The facade must not
-accept public `d` or public `parent_mapping_d`, and no later stage may reset
-that value to a hidden default. After initial lattice/parent construction, the
-resolved value is provenance, not a staged algorithm input.
+One-center H private wiring:
+
+```text
+spacing_inputs.reference_spacing = basis.reference_spacing
+parent_inputs.parent_mapping_rule = :white_lindsey_atomic_mapping
+parent_inputs.parent_mapping_d = basis.d
+```
+
+`d`, `core_spacing`, and `reference_spacing` are independent public controls in
+R1. The facade must not accept public `parent_mapping_d`, and no later stage may
+identify or overwrite `d` with `core_spacing` or `reference_spacing`.
 
 These are not public keywords or accepted `basis` fields in R1:
 
@@ -166,7 +172,8 @@ These are not public keywords or accepted `basis` fields in R1:
 - `parent_mapping_d`
 
 `xmax_parallel` and `xmax_transverse` are accepted only for z-axis H2.
-They are unknown keys for one-center H.
+They are unknown keys for one-center H. `d` is accepted only for one-center H
+and is an unknown key for z-axis H2.
 
 Routing is implicit. One supported center selects the one-center base route.
 Two supported centers must be z-axis H2 and select the z-axis diatomic base
@@ -196,7 +203,8 @@ h_basis = (;
     q = 5,
     core_spacing = 0.5,
     radius = 4.0,
-    reference_spacing = 0.3,
+    d = 0.3,
+    reference_spacing = 1.0,
 )
 
 h_ham = cartesian_base_hamiltonian(h_system; basis = h_basis)
@@ -244,19 +252,78 @@ writer should propagate normally.
 The production facade must not automatically read back the artifact after
 writing. `read_cartesian_ida_hamiltonian` is for validation and users.
 
-R1 amends the artifact contract narrowly: when `hamfile !== nothing`, the final
-Hamiltonian file must also preserve the normalized public input provenance
-needed by consumers to identify the run. This provenance records the accepted
-public `system` and `basis` values after validation and default resolution,
-including the resolved `reference_spacing` whether explicit or defaulted. It
-must not be consumed by downstream construction stages after initial
-lattice/parent setup, and it must not become a report, status object, wrapper
-payload, separate manifest, or second artifact file.
+## Artifact Provenance Schema
+
+`HP-R1-ART-01` amends the artifact contract narrowly: when
+`hamfile !== nothing`, the final Hamiltonian file must also preserve a fixed,
+versioned producer-provenance record for consumers. The existing Hamiltonian
+matrix payload remains the existing writer/readback payload; R1 provenance is
+additional data in the same file, not a separate artifact or report.
+
+Approved JLD2 provenance key prefix:
+
+```text
+producer_provenance/
+```
+
+Approved common keys:
+
+| Key | Value |
+| --- | --- |
+| `producer_provenance/provenance_version` | `1` |
+| `producer_provenance/producer` | `:cartesian_base_hamiltonian` |
+| `producer_provenance/route` | `:one_center_pqs_base` or `:z_axis_diatomic_pqs_base` |
+| `producer_provenance/q` | public `basis.q::Int` |
+| `producer_provenance/core_spacing` | public `basis.core_spacing::Float64` |
+| `producer_provenance/reference_spacing` | resolved public `basis.reference_spacing::Float64` |
+| `producer_provenance/tail_spacing` | resolved public `basis.tail_spacing::Float64` |
+| `producer_provenance/parent_axis_family` | resolved public `basis.parent_axis_family::Symbol` |
+| `producer_provenance/parent_axis_counts` | realized `NTuple{3,Int}` |
+| `producer_provenance/mapping_kind` | route mapping symbol |
+| `producer_provenance/mapping_d` | `Float64` for H, `nothing` for H2 |
+| `producer_provenance/radius` | `Float64` for H, `nothing` for H2 |
+| `producer_provenance/xmax_parallel` | `nothing` for H, `Float64` for H2 |
+| `producer_provenance/xmax_transverse` | `nothing` for H, `Float64` for H2 |
+| `producer_provenance/atom_symbols` | `Vector{String}` |
+| `producer_provenance/nuclear_charges` | `Vector{Float64}` |
+| `producer_provenance/atom_locations` | `Matrix{Float64}` with one row per center |
+| `producer_provenance/nup` | `Int` |
+| `producer_provenance/ndn` | `Int` |
+| `producer_provenance/final_dimension` | `Int` |
+
+Route-specific values:
+
+- one-center H:
+  - `producer_provenance/route = :one_center_pqs_base`
+  - `producer_provenance/mapping_kind = :white_lindsey_atomic_mapping`
+  - `producer_provenance/mapping_d = basis.d`
+  - `producer_provenance/radius = basis.radius`
+  - `producer_provenance/xmax_parallel = nothing`
+  - `producer_provenance/xmax_transverse = nothing`
+- z-axis H2:
+  - `producer_provenance/route = :z_axis_diatomic_pqs_base`
+  - `producer_provenance/mapping_kind = :multicenter_pqs_mapping`
+  - `producer_provenance/mapping_d = nothing`
+  - `producer_provenance/radius = nothing`
+  - `producer_provenance/xmax_parallel = basis.xmax_parallel`
+  - `producer_provenance/xmax_transverse = basis.xmax_transverse`
+
+`format_version` for the existing Cartesian IDA Hamiltonian matrix payload is
+not changed by R1. Existing `read_cartesian_ida_hamiltonian` must continue to
+read the Hamiltonian matrices while ignoring the provenance keys. Validation
+may inspect the `producer_provenance/` keys directly. A public provenance
+reader, a separate manifest, or a new Hamiltonian wrapper requires another
+design amendment.
+
+The provenance is for consumer tracking. It must not be consumed by downstream
+construction stages after initial lattice/parent setup, and it must not become
+a report, status object, wrapper payload, separate manifest, or second artifact
+file.
 
 This design does not approve:
 
-- a new artifact file shape beyond the R1 normalized public input provenance
-  stored in the final Hamiltonian file;
+- a new artifact file shape beyond the `HP-R1-ART-01`
+  `producer_provenance/` keys stored in the final Hamiltonian file;
 - a new artifact manifest;
 - a separate basis/provenance artifact;
 - a new materialization wrapper;
@@ -389,11 +456,11 @@ First implementation must validate:
 
 - package load;
 - H base Hamiltonian construction through the public facade with a reviewed
-  one-center H system and explicit `reference_spacing = 0.3`;
+  one-center H system, `reference_spacing = 1.0`, and explicit `d = 0.3`;
 - H2 base Hamiltonian construction through the public facade;
 - returned type is `CartesianIDAHamiltonian{Float64}`;
 - H one-body baseline remains `-0.49855234726272035` within `1.0e-10` for the
-  explicit-`reference_spacing = 0.3` public example;
+  explicit-`d = 0.3`, `reference_spacing = 1.0` public example;
 - H2 final dimension remains `471`;
 - H2 `one_body_hamiltonian(ham)` lowest value remains
   `-0.79460371733658908` within reviewed tolerance;
@@ -404,12 +471,15 @@ First implementation must validate:
 - invalid public requests throw clear `ArgumentError`s rather than returning
   status/blocker objects;
 - unknown public input keys throw `ArgumentError`;
+- missing `d` for one-center H throws `ArgumentError`;
+- `d` for z-axis H2 throws `ArgumentError`;
 - empty `hamfile` throws `ArgumentError`;
 - non-`nothing` `hamfile` writes with `write_cartesian_ida_hamiltonian`;
 - validation readback with `read_cartesian_ida_hamiltonian` has zero one-body
   readback delta;
-- validation readback preserves normalized public input provenance, including
-  the H example's `reference_spacing = 0.3`;
+- artifact validation preserves the fixed `producer_provenance/` keys,
+  including H `reference_spacing = 1.0`,
+  `mapping_kind = :white_lindsey_atomic_mapping`, and `mapping_d = 0.3`;
 - R0 warm/cold baseline is not materially regressed without explanation;
 - no `cartesian_pair_terms` or `cartesian_assembly` call appears in the
   recommended public example path.
@@ -441,9 +511,9 @@ explicit repo-manager approval.
 
 Test artifact behavior: use `mktempdir()` for `hamfile` output.
 
-The H endpoint test must use the public example's explicit
-`reference_spacing = 0.3`. It must not accept a hidden public `d` keyword or
-`parent_mapping_d` field as a substitute.
+The H endpoint test must use the public example's explicit `d = 0.3` with
+`reference_spacing = 1.0`. It must reject missing `d` and public
+`parent_mapping_d`.
 
 The test must enforce the R1 geometry contract: x/y-aligned H2,
 shifted-parallel H2, and generally oriented H2 fail with `ArgumentError`
@@ -476,8 +546,8 @@ The R1 base producer design forbids:
 - new report fields duplicating terminal bases, matrices, factors, or raw pair
   tensors;
 - metadata-carried numerical data;
-- new artifact shapes except the approved normalized public input provenance in
-  the final Hamiltonian file;
+- new artifact shapes except the approved `HP-R1-ART-01`
+  `producer_provenance/` keys in the final Hamiltonian file;
 - public solver controls;
 - supplement, correction, fragment, counterpoise, or Cr2 stress functionality;
 - broad compatibility adapters that preserve the old pair/assembly story.
