@@ -98,10 +98,11 @@ R0 status refresh, 2026-06-21:
   route-spine recovery. Treat source-space, pair-block, placement, and
   provider-level blockers below as scoped to those local adapter/donor lanes,
   not as the current status of the base PQS Hamiltonian producer.
-- The open R0 design question is the role of `cartesian_pair_terms` and
-  `cartesian_assembly`: they either need real downstream authority for a live
-  consumer such as supplements/mixed blocks, or they should later collapse out
-  of the base public workflow. This ledger does not decide that source change.
+- The R0 design decision is that `cartesian_pair_terms` and
+  `cartesian_assembly` are not required base-public concepts. They may remain
+  temporarily for legacy script/report compatibility, but R1 should route the
+  recommended base public workflow around them after the quantitative baseline
+  is recorded. This ledger does not authorize that source change.
 - Cr2 remains stress/performance and consumer-readiness evidence. It is not the
   next correctness blocker for the recovered base H2 PQS Hamiltonian endpoint.
 

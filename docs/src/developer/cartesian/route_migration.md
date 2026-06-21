@@ -16,9 +16,11 @@ This is the current developer note for the Cartesian/PQS route on `main`.
 - Residual-GTO/MWG supplements and other non-base Hamiltonians are no longer
   the immediate PQS route status; they are future roadmap work.
 - `cartesian_pair_terms` and `cartesian_assembly` remain in the public stage
-  sequence, but their role in the base public workflow is an open R0 decision.
+  sequence temporarily, but they are not required base-public concepts.
+  Recommended R1 public producer work should route the base workflow around
+  them after the R0 quantitative baseline is recorded.
 
-The target architecture is a thin, staged driver:
+The current legacy staged driver still runs:
 
 ```text
 input file
@@ -33,6 +35,17 @@ input file
 -> report
 -> materialization
 -> print/save
+```
+
+The R1 base-public target should not require the nominal pair and assembly
+stages:
+
+```text
+system / specification
+-> parent and route geometry
+-> terminal basis realization
+-> Hamiltonian production
+-> artifact
 ```
 
 Required construction objects should be built and passed as objects. Missing
@@ -101,8 +114,9 @@ Active pressure for later R0/repo-manager work:
 - record the quantitative R0 baseline: line counts, H2 smoke timing/allocation,
   light separated-diatomic one-body/IDA timing if practical, and current Cr2
   stress status;
-- decide whether `cartesian_pair_terms` and `cartesian_assembly` gain real
-  downstream authority or collapse out of the base public workflow;
+- do not delete or rewire `cartesian_pair_terms` and `cartesian_assembly`
+  before that baseline, even though the design decision says they should not
+  remain required base-public stages;
 - keep Cr2 as stress/performance and consumer-readiness evidence, not the next
   base-PQS correctness gate.
 
@@ -113,7 +127,7 @@ Active pressure for later R0/repo-manager work:
 | `wl_atomic` | `test/driver_inputs/he_wl_q5_pure_gausslet_h1.jl`; `test/driver_inputs/he_wl_q5_gto_h1.jl` | Preserve WL atomic pure-gausslet and supplement-capable driver entry. | Driver recognizes WL; parent/basis construction runs; H1 materialization is finite when requested; GTO path reaches its current intended stage. | Delete or fold into main matrix once WL atomic is fully represented by the common route and no separate line ladder adds information. |
 | `wl_diatomic` | `test/driver_inputs/h2_wl_q5_pure_gausslet_h1.jl`; `test/driver_inputs/h2_wl_q5_gto_h1.jl` | Preserve WL diatomic route capability while WL and PQS are merged into common staged construction. | Driver recognizes WL diatomic; parent axes and route stages execute; H1/GTO stages fail only at real missing construction objects. | Delete or fold into main matrix once diatomic WL uses the common route without old donor wrappers. |
 | `pqs_atomic` | `test/driver_inputs/he_pqs_q5_wlmap.jl`; `test/driver_inputs/he_pqs_q5_gto.jl` | Keep an atomic PQS/source-box route smoke while PQS support/source construction is generalized. | Driver recognizes PQS; route executes through the current atomic stage; GTO case reaches supplement staging or a real missing object. | Delete or fold into main matrix once atomic PQS shares the same route stages as the diatomic PQS path. |
-| `pqs_diatomic` | `test/driver_inputs/h2_pqs_q5_independent_source_box_r4.jl`; `test/driver_inputs/h2_pqs_q5_independent_source_box_r4_base_hamiltonian.jl` | Protect the independent H2 PQS source-box line and the recovered base Hamiltonian endpoint. | H2 reaches terminal basis realization, materializes `CartesianIDAHamiltonian{Float64}`, and validates H1/self-Coulomb/artifact readback through the endpoint smoke. Cr2 remains later stress/performance evidence, not the immediate correctness blocker. Supplement materialization is deferred roadmap work. | Delete or fold into main matrix once the base public producer covers H2 PQS without private route-stage vocabulary and pair/assembly role is settled. |
+| `pqs_diatomic` | `test/driver_inputs/h2_pqs_q5_independent_source_box_r4.jl`; `test/driver_inputs/h2_pqs_q5_independent_source_box_r4_base_hamiltonian.jl` | Protect the independent H2 PQS source-box line and the recovered base Hamiltonian endpoint. | H2 reaches terminal basis realization, materializes `CartesianIDAHamiltonian{Float64}`, and validates H1/self-Coulomb/artifact readback through the endpoint smoke. Cr2 remains later stress/performance evidence, not the immediate correctness blocker. Supplement materialization is deferred roadmap work. | Delete or fold into main matrix once the base public producer covers H2 PQS without private route-stage vocabulary; R1 should not require `cartesian_pair_terms` or `cartesian_assembly` for the base workflow. |
 
 ## Feature Donor Inventory
 

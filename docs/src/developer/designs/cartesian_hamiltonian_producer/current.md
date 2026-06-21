@@ -35,6 +35,40 @@ Current implementation boundary:
 - Optional base-Hamiltonian artifact writing uses the existing
   `write_cartesian_ida_hamiltonian` shape.
 
+Base pair/assembly role decision:
+
+- The future base public workflow should be:
+
+  ```text
+  system / specification
+  -> parent and route geometry
+  -> terminal basis realization
+  -> Hamiltonian production
+  -> artifact
+  ```
+
+- `cartesian_pair_terms` and `cartesian_assembly` are not required
+  base-public concepts. The current base Hamiltonian construction path already
+  uses terminal basis realization, blockwise `K` and unit `U_A`, term-first
+  localized IDA `V`, and direct `CartesianIDAHamiltonian` construction.
+- No new base-route consumer should be added to `cartesian_pair_terms` or
+  `cartesian_assembly`.
+- The existing stages may remain temporarily for legacy script and report
+  compatibility until R1 rewires the public facade.
+- Their direct report dependency is narrow: `cartesian_assembly` currently
+  exists chiefly so `cartesian_report` can recover `route_skeleton` and a
+  low-order shellification summary. That is not numerical assembly authority.
+- Pair modules remain donor/oracle inventory pending R2/R3 file-level
+  classification. Useful local product-box and 1D factor kernels should move
+  to the module that owns their scientific consumer rather than justify empty
+  public stages.
+- Future pair authority requires an explicitly approved, factorized, local,
+  consumer-owned contract with a scale/workspace model and immediate numerical
+  consumption. Metadata-only all-pairs inventories, status frameworks, and
+  payload graphs are not future pair authority.
+- Quantitative R0 baselines should be recorded before deleting or rewiring
+  these stages.
+
 Deferred lanes:
 
 - public-driver polish and examples;

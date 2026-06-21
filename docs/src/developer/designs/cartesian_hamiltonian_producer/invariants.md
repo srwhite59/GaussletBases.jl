@@ -17,6 +17,24 @@ These guardrails apply to the Cartesian/PQS base Hamiltonian producer.
 - Do not carry numerical matrices, factor tensors, terminal bases, or raw pair
   data through metadata.
 
+## Pair And Box Terminology
+
+Use these terms consistently:
+
+| Term | Meaning | Production judgment |
+| --- | --- | --- |
+| Full parent 3D space | Entire Cartesian parent grid/basis. | Avoid dense 3D work. |
+| Local product box / CPB | Full rectangular local box chosen to expose product structure. | Preferred intermediate. |
+| Axis pair-factor terms | One-dimensional tensors such as `raw_x[k,i,j]`. | Preferred fast data. |
+| Local product-box pair action | Pair contraction through 1D factors on local boxes. | Preferred fast kernel. |
+| Terminal block pair | Pair of realized final-basis blocks used by K/U/V assembly. | Preferred final-basis operation. |
+| Route pair inventory | Metadata enumeration of unit pairs and helper labels. | Planning only; not numerical authority. |
+| Unstructured shell 3D contraction | Generic shell coefficient contraction without 1D simplification. | Avoid as routine production. |
+| Global parent pair matrix | Dense pair object on the entire parent. | Forbidden production shape. |
+
+"Full box" often means the fast local product-box route. "Full parent" is the
+dangerous dense shape.
+
 ## Basis
 
 - Direct core/slab/boundary blocks use implicit identity maps; do not allocate

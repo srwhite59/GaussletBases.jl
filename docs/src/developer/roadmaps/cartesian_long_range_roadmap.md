@@ -71,8 +71,9 @@ documented producer surface:
 - Tests and docs count as carrying cost.
 - Final Cartesian/WL/QW/PQS source plus tests should be smaller than the R0
   baseline despite broader functionality.
-- The `pair terms -> assembly` stages must either become real authority for a
-  live downstream consumer or disappear from the base public workflow.
+- The `pair terms -> assembly` stages are not required base-public concepts.
+  Future pair authority needs a named downstream consumer and an approved local,
+  factorized, immediately consumed contract.
 
 ## Current Planning Integration
 
@@ -112,6 +113,10 @@ Done:
 - Route migration/status docs, feature donor inventory, and route retirement
   ledger refreshed so they no longer describe base PQS as blocked at
   source-plan or supplement-preflight recovery.
+- Pair/assembly role decision recorded in the compact Hamiltonian producer
+  authority: `cartesian_pair_terms` and `cartesian_assembly` are not required
+  base-public concepts, though useful local-box kernels remain donor/oracle
+  inventory for R2/R3 classification.
 
 Still open:
 
@@ -120,8 +125,6 @@ Still open:
   - H2 base Hamiltonian smoke time/allocation;
   - light separated-diatomic one-body/IDA time/allocation where practical;
   - current Cr2 stress status;
-- decide the current role of `cartesian_pair_terms` and `cartesian_assembly` in
-  the base public workflow.
 
 Exit condition:
 
