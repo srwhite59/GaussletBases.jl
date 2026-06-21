@@ -165,7 +165,8 @@ _cartesian_driver_stage(:cartesian_report)
 report = GaussletBases.cartesian_report(system, parent, assembly, recipe)
 _cartesian_driver_stop_after(:cartesian_report)
 _cartesian_driver_stage(:cartesian_materialization)
-materialization = GaussletBases.cartesian_materialization(report, materialization_inputs)
+materialization = GaussletBases.cartesian_materialization(
+    report, transforms.terminal_basis_realization, materialization_inputs)
 _cartesian_driver_stop_after(:cartesian_materialization)
 
 _cartesian_driver_stage(Symbol("cartesian_print/save"))

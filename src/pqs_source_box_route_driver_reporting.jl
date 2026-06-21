@@ -27,6 +27,8 @@ function _pqs_route_driver_print_named_tuple(title, values)
 end
 
 function _pqs_source_box_route_driver_print_materialization(materialization)
+    isnothing(materialization) && return nothing
+    materialization isa CartesianIDAHamiltonian && return nothing
     _pqs_route_driver_print_section("route_materialization")
     for field in (
         :route_family,
@@ -82,20 +84,6 @@ function _pqs_source_box_route_driver_durable_report(report)
     )
 end
 
-function _pqs_source_box_route_driver_durable_materialization(materialization)
-    ida_hamiltonian_elided =
-        hasproperty(materialization, :ida_hamiltonian) &&
-        !isnothing(getproperty(materialization, :ida_hamiltonian))
-    return (;
-        (
-            field =>
-                field === :ida_hamiltonian ? nothing : getproperty(materialization, field)
-            for field in keys(materialization)
-        )...,
-        heavy_materialization_objects_elided = ida_hamiltonian_elided,
-    )
-end
-
 function _pqs_source_box_route_driver_save(
     report;
     save_artifact, save_tsv, outfile, tsvfile, materialization = nothing,
@@ -107,11 +95,6 @@ function _pqs_source_box_route_driver_save(
         println("saving JLD2 report ", outfile)
         jldopen(outfile, "w") do file
             file["report"] = durable_report
-            isnothing(materialization) ||
-                (file["materialization"] =
-                    _pqs_source_box_route_driver_durable_materialization(
-                        materialization,
-                    ))
         end
     end
 
@@ -123,20 +106,6 @@ function _pqs_source_box_route_driver_save(
             _pqs_route_driver_write_named_tuple_tsv(io, "recipe_metadata", report.recipe_metadata)
             _pqs_route_driver_write_named_tuple_tsv(io, "parent_summary", report.parent_summary)
             _pqs_route_driver_write_named_tuple_tsv(io, "route_summary", report.route_summary)
-            if !isnothing(materialization)
-                durable_materialization =
-                    _pqs_source_box_route_driver_durable_materialization(
-                        materialization,
-                    )
-                for field in keys(durable_materialization)
-                    _pqs_route_driver_write_tsv_row(
-                        io,
-                        "route_materialization",
-                        field,
-                        getproperty(durable_materialization, field),
-                    )
-                end
-            end
         end
     end
     return nothing

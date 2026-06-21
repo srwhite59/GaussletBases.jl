@@ -7253,3 +7253,83 @@ Next step:
   the terminal basis directly, constructs the real Hamiltonian in
   materialization, writes/roundtrips the existing artifact when requested, and
   deletes obsolete blocked source-plan/report surfaces.
+
+## Cartesian Hamiltonian Producer Pass 030 - HP-WIRE-02 Materialization Wiring
+
+Commit(s):
+- this branch - Wire terminal Hamiltonian materialization
+
+Summary:
+- Accepted the narrow `HP-WIRE-02` source implementation. PQS materialization
+  now receives `transforms.terminal_basis_realization` directly and returns
+  either `nothing` or a real `CartesianIDAHamiltonian{Float64}`.
+- Requested PQS materialization builds Slice B `K`, uncharged by-center unit
+  `U_A`, Slice C1 `electron_electron_ida`, then constructs the existing
+  Hamiltonian object. Artifact writes use the existing
+  `write_cartesian_ida_hamiltonian` path.
+- Live driver/harness/probe call sites were updated to pass the terminal basis
+  directly. The terminal basis is not embedded in `cartesian_report`, and the
+  full `transforms` stage is not passed to materialization.
+- Deleted the generic durable materialization wrapper serialization and TSV
+  materialization rows from report saving. PQS no-request materialization now
+  returns `nothing`.
+
+Validation:
+- Doer ran `git diff --check`, package load,
+  `tools/h2_pqs_terminal_stage_smoke.jl`, and ignored
+  `tmp/work/h2_terminal_wire02_materialization_validation.jl`.
+- H2 materialization reported `no_request_materialization = nothing`,
+  `CartesianIDAHamiltonian{Float64}`, dimension `471`, `nup_ndn = (1, 1)`,
+  physical charges/positions, finite/symmetric `K`, both unit `U_A`, and `V`,
+  H1 lowest `-0.79460371733658908`, self-Coulomb
+  `0.45691176467371986`, and artifact readback one-body delta `0.0`.
+- Manager reviewed the diff, checked live `cartesian_materialization` call
+  sites, ran `git diff --check`, line accounting, and the suspicious added-line
+  gate. Suspicious hits were expected fixed axis triples, Hamiltonian output
+  symbols, and the legacy White-Lindsey materialization print fallback.
+
+Guardrail:
+- No new wrapper/payload/status/cache/artifact shape was added. White-Lindsey
+  materialization wrapper behavior remains separate. The pass did not use
+  report summaries, metadata, or recursive stage embedding as numerical input.
+
+Carrying-cost accounting:
+- deleted: durable materialization wrapper serialization and TSV/report
+  materialization wrapper handling.
+- simplified: PQS materialization return contract is now `nothing` or
+  `CartesianIDAHamiltonian`.
+- quarantined: H2 HP-WIRE-02 validation remains ignored under `tmp/work`.
+- not deleted because: White-Lindsey materialization wrapper behavior remains a
+  separate live route.
+- exact remaining blocker: broader Slice D report/driver cleanup and stale
+  physical-gausslet target/supplement report surfaces remain for a later
+  deletion pass.
+- added src lines: `111`.
+- deleted src lines: `60`.
+- net source: `+51`.
+- new tests: none.
+- new metadata/status fields: none.
+
+Medium-term goal checkpoint:
+- Completed: A/B/C in-memory producer boundary. The generic terminal route now
+  realizes a basis, constructs one-body and localized IDA matrices, and returns
+  a real `CartesianIDAHamiltonian` through materialization for H2.
+- Active: Slice D deletion/simplification. The next lane is no longer numerical
+  construction; it is deleting obsolete blocked source-plan/report surfaces and
+  shrinking driver/report compatibility residue around the real Hamiltonian
+  endpoint.
+- Active guardrail: anti-bloat/design authority. This pass stayed under the
+  hard source threshold and avoided new payload/cache/report surfaces, but was
+  line-positive because it connected the first production materialization
+  endpoint.
+- Deferred: Cr2 and larger separated-diatomic stress testing. H2 closes this
+  endpoint wiring; Cr2 remains a performance/stress gate, not the first
+  correctness gate.
+- Deferred/open: public typed pair-stage authority and mixed-pair planning
+  remain outside the current Hamiltonian materialization lane.
+
+Next step:
+- Run a focused cleanup/design pass over the remaining old
+  `physical_gausslet_*` report fields and source-plan payload construction.
+  Delete surfaces that now only preserve the false blocked source-plan story, or
+  report exact live callers that still require them.

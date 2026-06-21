@@ -103,7 +103,8 @@ units = GaussletBases.cartesian_units(parent, shells, recipe)
 @time "Assembly: " assembly =
     GaussletBases.cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
 report = GaussletBases.cartesian_report(system, parent, assembly, recipe)
-materialization = GaussletBases.cartesian_materialization(report, materialization_inputs)
+materialization = GaussletBases.cartesian_materialization(
+    report, transforms.terminal_basis_realization, materialization_inputs)
 
 GaussletBases.cartesian_print_summary(report, materialization)
 GaussletBases.cartesian_print_details(report, materialization)

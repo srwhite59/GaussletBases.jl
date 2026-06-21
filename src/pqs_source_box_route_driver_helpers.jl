@@ -1905,9 +1905,10 @@ function cartesian_report(system, parent, assembly, recipe)
     )
 end
 
-function cartesian_materialization(report, materialization_inputs)
+function cartesian_materialization(report, terminal_basis_realization, materialization_inputs)
     return _pqs_source_box_route_driver_materialization(
         report;
+        terminal_basis_realization,
         materialization_inputs...,
     )
 end
@@ -1943,9 +1944,16 @@ function cartesian_print_summary(report, materialization)
     supplement = report.physical_gausslet_supplement_preflight_summary
     @show maybe_get(supplement, :supplement_policy)
     @show maybe_get(supplement, :provider_block_count)
-    @show materialization.result_kind materialization.materialized
-    @show get(materialization, :h1_lowest, nothing)
-    @show get(materialization, :overlap_identity_error, nothing)
+    if isnothing(materialization)
+        @show materialization
+    elseif materialization isa CartesianIDAHamiltonian
+        @show typeof(materialization)
+        @show size(materialization.kinetic)
+    else
+        @show materialization.result_kind materialization.materialized
+        @show get(materialization, :h1_lowest, nothing)
+        @show get(materialization, :overlap_identity_error, nothing)
+    end
     return nothing
 end
 

@@ -629,12 +629,14 @@ function _probe_stage_summary(stage, value)
         _probe_print("estimated_dense_K_U_V_memory_MB",
             _probe_dense_memory(dim, length(atom_symbols)))
     elseif stage === :cartesian_materialization
-        _probe_print("result_kind", _probe_get(value, :result_kind))
-        _probe_print("materialized", _probe_get(value, :materialized))
-        _probe_print("residual_rank", _probe_get(value, :residual_rank))
-        _probe_print("ida_orbital_dimension",
-            _probe_get(value, :ida_orbital_dimension))
-        _probe_print("hamfile", _probe_get(value, :hamfile))
+        if value isa GaussletBases.CartesianIDAHamiltonian
+            _probe_print("hamiltonian_type", typeof(value))
+            _probe_print("hamiltonian_dimension", size(value.kinetic, 1))
+            _probe_print("hamiltonian_center_count",
+                length(value.nuclear_attraction_unit_by_center))
+        else
+            _probe_print("materialization", value)
+        end
     end
     return nothing
 end
@@ -777,7 +779,8 @@ end
 ok || (_probe_finish(); exit(0))
 
 materialization, ok = _probe_run_stage(:cartesian_materialization) do
-    GaussletBases.cartesian_materialization(report, materialization_inputs)
+    GaussletBases.cartesian_materialization(
+        report, transforms.terminal_basis_realization, materialization_inputs)
 end
 ok || (_probe_finish(); exit(0))
 

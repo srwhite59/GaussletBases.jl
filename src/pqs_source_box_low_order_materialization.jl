@@ -363,8 +363,74 @@ function _pqs_source_box_route_driver_wl_atomic_pure_gausslet_materialization(
     )
 end
 
+function _pqs_source_box_route_driver_centered_factor_terms(pgdg, expansion, center)
+    center == pgdg.center && return pgdg.gaussian_factor_terms
+    ops = mapped_ordinary_one_body_operators(
+        pgdg.basis; exponents = expansion.exponents, center, backend = pgdg.backend)
+    return ops.gaussian_factors
+end
+
+function _pqs_source_box_route_driver_terminal_one_body(
+    report,
+    terminal_basis_realization,
+    expansion,
+    pgdg,
+)
+    S = Tuple(axis.overlap for axis in pgdg)
+    T = Tuple(axis.kinetic for axis in pgdg)
+    n = terminal_basis_realization.final_dimension
+    K = zeros(Float64, n, n)
+    C = CartesianFinalBasisRealization
+    C.assemble_terminal_product_operator!(K, terminal_basis_realization, T[1], S[2], S[3])
+    C.assemble_terminal_product_operator!(K, terminal_basis_realization, S[1], T[2], S[3])
+    C.assemble_terminal_product_operator!(K, terminal_basis_realization, S[1], S[2], T[3])
+    U = Matrix{Float64}[]
+    for location in report.system_metadata.atom_locations
+        matrix = zeros(Float64, n, n)
+        factors = ntuple(axis -> _pqs_source_box_route_driver_centered_factor_terms(
+            pgdg[axis], expansion, location[axis]), 3)
+        C._accumulate_terminal_gaussian_sum!(
+            matrix, terminal_basis_realization, expansion.coefficients,
+            factors[1], factors[2], factors[3])
+        push!(U, matrix)
+    end
+    return K, U
+end
+
+function _pqs_source_box_route_driver_terminal_ida_hamiltonian(
+    report,
+    terminal_basis_realization,
+)
+    expansion = coulomb_gaussian_expansion(doacc = false)
+    pgdg = Tuple(_nested_axis_pgdg(report.parent_axis_bundle_object, axis)
+        for axis in (:x, :y, :z))
+    K, U = _pqs_source_box_route_driver_terminal_one_body(
+        report, terminal_basis_realization, expansion, pgdg)
+    for axis in pgdg
+        axis.exponents == Float64.(expansion.exponents) ||
+            throw(ArgumentError("PQS IDA raw pair tensor exponent ordering mismatch"))
+    end
+    V = zeros(Float64, terminal_basis_realization.final_dimension,
+        terminal_basis_realization.final_dimension)
+    CartesianFinalBasisRealization.assemble_terminal_ida_interaction!(
+        V, terminal_basis_realization, expansion.coefficients,
+        pgdg[1].pair_factor_terms_raw, pgdg[2].pair_factor_terms_raw,
+        pgdg[3].pair_factor_terms_raw,
+        pgdg[1].weights, pgdg[2].weights, pgdg[3].weights)
+    return CartesianIDAHamiltonian(
+        K,
+        U,
+        V,
+        report.system_metadata.nup,
+        report.system_metadata.ndn;
+        nuclear_charges = report.system_metadata.nuclear_charges,
+        nuclear_positions = report.system_metadata.atom_locations,
+    )
+end
+
 function _pqs_source_box_route_driver_materialization(
     report;
+    terminal_basis_realization = nothing,
     materialize_route::Bool = false,
     save_basis_artifact::Bool = false,
     save_ham_artifact::Bool = false,
@@ -380,9 +446,12 @@ function _pqs_source_box_route_driver_materialization(
        hamiltonian_output !== :cartesian_ida_hamiltonian
         throw(ArgumentError("unknown Cartesian materialization output $(repr(hamiltonian_output))"))
     end
-    requested = materialize_route || save_basis_artifact || save_ham_artifact
-    if requested && hasproperty(report, :route_family) &&
-       report.route_family == :white_lindsey_low_order
+    route_family = hasproperty(report, :route_family) ? report.route_family : nothing
+    requested =
+        materialize_route || save_ham_artifact ||
+        hamiltonian_output === :cartesian_ida_hamiltonian ||
+        (save_basis_artifact && route_family == :white_lindsey_low_order)
+    if requested && route_family == :white_lindsey_low_order
         wl_materialization =
             _pqs_source_box_route_driver_wl_atomic_pure_gausslet_materialization(
                 report;
@@ -394,17 +463,17 @@ function _pqs_source_box_route_driver_materialization(
                 materializer_nside,
                 white_lindsey_expansion,
                 white_lindsey_Z,
-            )
+        )
         !isnothing(wl_materialization) && return wl_materialization
     end
-    return (;
-        route_family = hasproperty(report, :route_family) ? report.route_family : nothing,
-        result_kind = requested ? :not_materialized : :not_requested,
-        requested,
-        materialized = false,
-        save_basis_artifact_requested = save_basis_artifact,
-        save_ham_artifact_requested = save_ham_artifact,
-        basisfile,
-        hamfile,
-    )
+    requested || return nothing
+    route_family == :pqs_source_box || return nothing
+    isnothing(terminal_basis_realization) &&
+        throw(ArgumentError("PQS Hamiltonian materialization requires terminal basis realization"))
+    ham = _pqs_source_box_route_driver_terminal_ida_hamiltonian(
+        report, terminal_basis_realization)
+    if save_ham_artifact
+        write_cartesian_ida_hamiltonian(hamfile, ham)
+    end
+    return ham
 end
