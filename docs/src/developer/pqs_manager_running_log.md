@@ -7388,3 +7388,57 @@ Next step:
 - Audit/collapse the remaining physical-gausslet target and supplement payload
   chain. Keep supplement intent only if it has a real consumer; otherwise delete
   the remaining `:missing_terminal_source_plan_realization` blocker story.
+
+## Cartesian Hamiltonian Producer Pass 032 - Delete Physical-Gausslet Payload Chain
+
+Commit(s):
+- this branch - Delete physical-gausslet payload chain
+
+Summary:
+- Deleted the remaining physical-gausslet target/supplement payload structs and
+  helpers from the active route. `cartesian_assembly` no longer constructs or
+  returns the target payload, supplement request payload, supplement
+  representation payload, or supplement preflight payload.
+- Removed the old physical-gausslet target/source/supplement status and blocker
+  vocabulary, including `:missing_terminal_source_plan_realization`,
+  `:available_physical_gausslet_core_shell_target_inventory`, and
+  `:blocked_physical_gausslet_target_inventory`.
+- Simplified the Cr2 probe by removing display of the deleted supplement
+  representation payload.
+
+Validation:
+- Doer ran `git diff --check`, package load,
+  `tools/h2_pqs_terminal_stage_smoke.jl`, and ignored
+  `tmp/work/h2_terminal_wire02_materialization_validation.jl`.
+- H2 remained on the real terminal/materialization endpoint: final dimension
+  `471`, max cross overlap `5.918709287301405e-15`, no-request materialization
+  returned `nothing`, requested materialization returned
+  `CartesianIDAHamiltonian{Float64}`, H1 lowest `-0.79460371733658908`,
+  self-Coulomb `0.45691176467371986`, and artifact readback one-body delta
+  `0.0`.
+- Manager reviewed the pure-deletion diff, ran `git diff --check`, line
+  accounting, suspicious added-line gate, and focused greps showing the deleted
+  payload/helper/status names are gone from active source/tools.
+
+Carrying-cost accounting:
+- deleted: `750` source lines and `10` tool lines from the remaining
+  physical-gausslet target/supplement payload chain.
+- simplified: `cartesian_assembly` now returns only `route_skeleton` and
+  `low_order_assembly` for this lane; supplement policy remains only as
+  recipe/input intent.
+- quarantined: none.
+- not deleted because: stale fixture naming around
+  `h2_pqs_q5_independent_source_box_r4_supplement_preflight.jl` remains if a
+  later cleanup wants to stop implying supplement-preflight machinery exists.
+- exact remaining caller/blocker: focused grep found no active matches for the
+  deleted payload/helper/status names in allowed source/tools.
+- added src lines: `0`.
+- deleted src lines: `750`.
+- deleted tool lines: `10`.
+- new tests: none.
+- new metadata/status fields: none.
+
+Next step:
+- Decide whether to clean up stale fixture/tool naming around the old
+  supplement-preflight input, or move to a broader review/merge decision for
+  the design branch now that the base H2 PQS Hamiltonian endpoint is live.

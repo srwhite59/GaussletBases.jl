@@ -1750,36 +1750,9 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
     route_skeleton = shells.route_skeleton
     low_order_assembly =
         _pqs_source_box_route_driver_assembly_stage_low_order_summary(pairs)
-    diatomic_physical_gausslet_target_payload =
-        _pqs_source_box_route_driver_diatomic_physical_gausslet_target_payload(
-            parent,
-            route_skeleton,
-            recipe,
-            low_order_assembly,
-        )
-    diatomic_physical_gausslet_supplement_request_payload =
-        _pqs_source_box_route_driver_diatomic_physical_gausslet_supplement_request_payload(
-            parent,
-            diatomic_physical_gausslet_target_payload,
-            recipe,
-        )
-    diatomic_physical_gausslet_supplement_representation_payload =
-        _pqs_source_box_route_driver_diatomic_physical_gausslet_supplement_representation_payload(
-            diatomic_physical_gausslet_supplement_request_payload,
-        )
-    diatomic_physical_gausslet_supplement_preflight_payload =
-        _pqs_source_box_route_driver_diatomic_physical_gausslet_supplement_preflight_payload(
-            diatomic_physical_gausslet_target_payload,
-            diatomic_physical_gausslet_supplement_request_payload,
-            diatomic_physical_gausslet_supplement_representation_payload,
-        )
     return (;
         route_skeleton,
         low_order_assembly,
-        diatomic_physical_gausslet_target_payload,
-        diatomic_physical_gausslet_supplement_request_payload,
-        diatomic_physical_gausslet_supplement_representation_payload,
-        diatomic_physical_gausslet_supplement_preflight_payload,
     )
 end
 

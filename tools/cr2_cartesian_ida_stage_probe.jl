@@ -564,16 +564,6 @@ function _probe_stage_summary(stage, value)
         _probe_print("pair_family_counts", _probe_get(value, :pair_family_counts))
         _probe_print("estimated_final_dimension",
             _probe_get(value, :retained_dimension))
-    elseif stage === :cartesian_assembly
-        supplement = _probe_dig(
-            value,
-            :diatomic_physical_gausslet_supplement_representation_payload,
-            :summary,
-        )
-        _probe_print("supplement_status", _probe_get(supplement, :status))
-        _probe_print("supplement_blocker", _probe_get(supplement, :blocker))
-        _probe_print("supplement_orbital_count",
-            _probe_get(supplement, :orbital_count))
     elseif stage === :cartesian_report
         dim = _probe_get(value, :retained_dimension)
         _probe_print("estimated_final_dimension", dim)
