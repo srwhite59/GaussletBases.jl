@@ -21,6 +21,7 @@ export AbstractFunction1D,
        CartesianGaussianShellOrbitalRepresentation3D,
        CartesianGaussianShellSupplementRepresentation3D,
        CartesianIDAHamiltonian,
+       cartesian_base_hamiltonian,
        CartesianBasisBundle3D,
        CartesianBasisTransferDiagnostics,
        CartesianBasisProjector3D,
@@ -642,6 +643,7 @@ include("pqs_multilayer_complete_core_shell_h1.jl")
 include("pqs_multilayer_complete_core_shell_rhf.jl")
 include("pqs_source_box_route_driver_helpers.jl")
 include("pqs_source_box_low_order_materialization.jl")
+include("cartesian_base_hamiltonian.jl")
 include("pqs_source_box_diatomic_complete_core_shell.jl")
 include("pqs_source_box_route_driver_skeletons.jl")
 include("pqs_source_box_route_driver_reporting.jl")

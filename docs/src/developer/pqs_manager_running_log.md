@@ -7601,3 +7601,59 @@ Next step:
 - Ask repo-design-manager for the R1 public base-producer design pass. No new
   source implementation should start until that public surface and its
   deletion/validation obligations are approved.
+
+## Cartesian Hamiltonian Producer Pass 037 - Implement R1 Public Base Producer
+
+Commit(s):
+- this branch - Add public Cartesian base Hamiltonian facade
+
+Summary:
+- Accepted the narrow R1 implementation of the public
+  `cartesian_base_hamiltonian` facade for origin-centered H and Cartesian
+  z-axis H2. The public function returns the existing
+  `CartesianIDAHamiltonian{Float64}` directly, writes the existing Hamiltonian
+  artifact format when `hamfile` is supplied, and records the approved fixed
+  `producer_provenance/` keys.
+- Added the approved public source file and export, moved base K/unit-`U_A`/V
+  construction behind the shared `_cartesian_base_ida_hamiltonian` seam, and
+  added the standalone public endpoint gate under `test/driver_public/` without
+  wiring it into the default test runner.
+
+Validation:
+- Doer ran `git diff --check`, package load, the new public endpoint gate
+  (`83/83`, about 37.5 s), and the existing H2 base Hamiltonian smoke.
+- Manager reran `git diff --cached --check`, package load, and the standalone
+  public endpoint gate (`83/83`, 37.9 s). The mechanical suspicious-line scan
+  flagged only local H/H2 bridge tuple conversions into existing private driver
+  helpers and the fixed x/y/z `Tuple` construction for PGDG axes.
+
+Goal advancement:
+- LT: establishes the first public base Cartesian Hamiltonian producer while
+  preserving the existing Hamiltonian object and artifact payload.
+- MT/R1: closes the first approved R1 implementation slice for H and z-axis H2;
+  broader public driver polish, x/y/general orientation, WL/QW unification,
+  supplements, and Cr2 stress remain deferred roadmap lanes.
+
+Carrying-cost result:
+- deleted: the report-bound terminal IDA Hamiltonian helper body was replaced
+  by the shared report-free constructor seam.
+- simplified: existing private materialization and the new public facade now
+  share one base Hamiltonian construction path.
+- quarantined: none.
+- not deleted because: the private staged route remains the construction
+  backend for the public facade and legacy materialization smoke; pair/assembly
+  stages remain legacy/report compatibility, not public base workflow.
+- exact remaining caller/blocker: R1 public API is limited to origin-centered H
+  and z-axis H2; remaining lanes are public documentation polish, stale
+  pair/assembly retirement in R2/R3, and larger-system performance validation.
+- added src lines: 225.
+- deleted src lines: 13.
+- new tests: one standalone public endpoint/provenance test file, not wired
+  into `test/runtests.jl`.
+- new metadata/status fields: none. New artifact data is only the approved
+  fixed `producer_provenance/` group.
+
+Risk or guardrail:
+- Source additions hit the 225-line hard threshold exactly. Do not expand this
+  facade in place without a follow-up design amendment or a deletion-backed
+  cleanup.

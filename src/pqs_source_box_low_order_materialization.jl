@@ -371,10 +371,10 @@ function _pqs_source_box_route_driver_centered_factor_terms(pgdg, expansion, cen
 end
 
 function _pqs_source_box_route_driver_terminal_one_body(
-    report,
     terminal_basis_realization,
     expansion,
     pgdg,
+    atom_locations::Vector{NTuple{3,Float64}},
 )
     S = Tuple(axis.overlap for axis in pgdg)
     T = Tuple(axis.kinetic for axis in pgdg)
@@ -385,7 +385,7 @@ function _pqs_source_box_route_driver_terminal_one_body(
     C.assemble_terminal_product_operator!(K, terminal_basis_realization, S[1], T[2], S[3])
     C.assemble_terminal_product_operator!(K, terminal_basis_realization, S[1], S[2], T[3])
     U = Matrix{Float64}[]
-    for location in report.system_metadata.atom_locations
+    for location in atom_locations
         matrix = zeros(Float64, n, n)
         factors = ntuple(axis -> _pqs_source_box_route_driver_centered_factor_terms(
             pgdg[axis], expansion, location[axis]), 3)
@@ -397,15 +397,19 @@ function _pqs_source_box_route_driver_terminal_one_body(
     return K, U
 end
 
-function _pqs_source_box_route_driver_terminal_ida_hamiltonian(
-    report,
+function _cartesian_base_ida_hamiltonian(
     terminal_basis_realization,
-)
+    parent_axis_bundle_object,
+    atom_locations::Vector{NTuple{3,Float64}},
+    nuclear_charges::Vector{Float64},
+    nup::Int,
+    ndn::Int,
+)::CartesianIDAHamiltonian{Float64}
     expansion = coulomb_gaussian_expansion(doacc = false)
-    pgdg = Tuple(_nested_axis_pgdg(report.parent_axis_bundle_object, axis)
+    pgdg = Tuple(_nested_axis_pgdg(parent_axis_bundle_object, axis)
         for axis in (:x, :y, :z))
     K, U = _pqs_source_box_route_driver_terminal_one_body(
-        report, terminal_basis_realization, expansion, pgdg)
+        terminal_basis_realization, expansion, pgdg, atom_locations)
     for axis in pgdg
         axis.exponents == Float64.(expansion.exponents) ||
             throw(ArgumentError("PQS IDA raw pair tensor exponent ordering mismatch"))
@@ -421,10 +425,10 @@ function _pqs_source_box_route_driver_terminal_ida_hamiltonian(
         K,
         U,
         V,
-        report.system_metadata.nup,
-        report.system_metadata.ndn;
-        nuclear_charges = report.system_metadata.nuclear_charges,
-        nuclear_positions = report.system_metadata.atom_locations,
+        nup,
+        ndn;
+        nuclear_charges,
+        nuclear_positions = atom_locations,
     )
 end
 
@@ -470,8 +474,14 @@ function _pqs_source_box_route_driver_materialization(
     route_family == :pqs_source_box || return nothing
     isnothing(terminal_basis_realization) &&
         throw(ArgumentError("PQS Hamiltonian materialization requires terminal basis realization"))
-    ham = _pqs_source_box_route_driver_terminal_ida_hamiltonian(
-        report, terminal_basis_realization)
+    ham = _cartesian_base_ida_hamiltonian(
+        terminal_basis_realization,
+        report.parent_axis_bundle_object,
+        NTuple{3,Float64}[location for location in report.system_metadata.atom_locations],
+        Float64[charge for charge in report.system_metadata.nuclear_charges],
+        Int(report.system_metadata.nup),
+        Int(report.system_metadata.ndn),
+    )
     if save_ham_artifact
         write_cartesian_ida_hamiltonian(hamfile, ham)
     end
