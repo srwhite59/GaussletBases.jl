@@ -7739,3 +7739,42 @@ Next step:
 - Run a measurement-only N2 proxy pass before source optimization. Use it to
   identify whether the first optimization target is terminal-basis realization,
   K assembly/buffer reuse, unit-`U_A`, IDA V, or artifact writing.
+
+## Cartesian Hamiltonian Producer Pass 040 - Corrected Be2 Core-Spacing Probe
+
+Commit(s):
+- none from doer; this entry records an ignored `tmp/work` measurement
+
+Summary:
+- Accepted the corrected Be2 measurement after applying the documented
+  homonuclear diatomic spacing rule `core_spacing = 1.2 / (Z * (q - 3))`. For
+  Be at `Z = 4`, `q = 5`, the correct value is `0.15`; the prior `0.30` probe
+  was a He-scale spacing and was too coarse near the nuclei.
+- With `core_spacing = 0.15`, Be2 now exercises the intended separated
+  topology: atom-local cores/shells, midpoint slabs, shared shell behavior, and
+  outer slabs depending on separation. Final retained dimensions were `1257`,
+  `1395`, and `1541` for close/far/farther cases, with complete coverage and
+  finite symmetric K, unit-`U_A`, and V.
+- The corrected run supersedes the previous N2-next conclusion. Be2 is now a
+  useful optimization proxy before Cr2; N2 remains optional only if a different
+  chemistry/electron-count proxy is specifically desired.
+
+Validation:
+- Doer ran `git diff --check`, package load, and the ignored
+  `tmp/work/be2_corrected_core_spacing_perf_probe.jl`; final worktree was
+  clean.
+
+Goal advancement:
+- LT/Roadmap: keeps Cr2 out of the inner loop while moving to a topology-rich,
+  all-electron diatomic proxy.
+- MT: identifies terminal basis realization as the first optimization target
+  (`~1.7-2.0 GiB`, `~5.8-7.5 s` warm corrected Be2), with K allocation
+  (`~1.7-2.1 GiB` for subsecond work) as the next likely target.
+
+Risk or guardrail:
+- The optimization lane should preserve the corrected spacing rule. Do not tune
+  performance around the invalid `core_spacing = 0.30` Be2 measurements.
+
+Next step:
+- Start with a focused terminal-basis allocation/timing audit on corrected Be2,
+  then implement a bounded optimization only after the cost center is localized.
