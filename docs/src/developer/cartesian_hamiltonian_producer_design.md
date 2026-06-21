@@ -1,11 +1,12 @@
 # Cartesian Hamiltonian Producer Design
 
-Status: **Slice A and Slice B implementation authority; later slices remain candidates**
+Status: **Slice A, Slice B, Slice C1, and Slice C2 implementation authority; Slice D remains candidate**
 
-This document is the implementation authority for Slice A and Slice B of the
-Cartesian/PQS Hamiltonian producer and the candidate design record for later
-slices through `CartesianIDAHamiltonian`. It is intentionally more detailed than
-a target card and less historical than the manager running log.
+This document is the implementation authority for Slice A, Slice B, Slice C1,
+and the Slice C2 Hamiltonian construction boundary of the Cartesian/PQS
+Hamiltonian producer. It remains the candidate design record for Slice D
+driver/artifact simplification. It is intentionally more detailed than a target
+card and less historical than the manager running log.
 
 The normative PQS mathematics remains in
 `docs/src/algorithms/pqs_shell_construction.md`. This document controls the
@@ -14,8 +15,8 @@ requirements, and merge gates.
 
 `AGENTS.md` points here for Cartesian Hamiltonian producer work. Registry
 entries explicitly marked **approved** below are binding implementation
-authority. Later-slice registry entries remain candidates and do not permit
-source implementation without a later docs-only approval.
+authority. Registry entries marked candidate do not permit source
+implementation without a later docs-only approval.
 
 ## 1. Why this document exists
 
@@ -106,11 +107,10 @@ The following are outside this design and require separate approval:
 A supplement request may remain visible, but supplement construction must not
 block or complicate the base Hamiltonian producer.
 
-The first freeze should cover **Slice A only**. Blockwise one-body operators,
-localized IDA assembly, and final Hamiltonian materialization remain future
-candidate work until Slice A reports support sizes, coefficient densities,
-cross-overlap errors, and memory behavior for one-center atomic, contact-core
-diatomic, and separated diatomic terminal plans.
+Current authority covers the realized terminal basis, blockwise one-body
+operators, localized IDA assembly, and the narrow final Hamiltonian construction
+boundary. Driver/materialization simplification, artifact routing, and solver
+integration remain future candidate work.
 
 ## 4. Binding invariants
 
@@ -296,8 +296,8 @@ Prototype-only or blocker-only commits do not merge.
 
 ## 6. Object and surface registry
 
-This registry records approved Slice A/B surfaces, future candidates, and rejected
-surfaces. Only items explicitly marked **approved** are permitted in
+This registry records approved surfaces, candidate future surfaces, and
+rejected surfaces. Only items explicitly marked **approved** are permitted in
 implementation.
 
 ### HP-OBJ-01 — `CartesianTerminalBasisBlock` — approved Slice A
@@ -651,21 +651,23 @@ Rules:
   computed upper-triangular block. Do not compute a full nonsymmetric result and
   hide it with final averaging.
 
-### HP-FN-04 — blockwise localized IDA assembly — Slice C candidate
+### HP-FN-04 — blockwise localized IDA assembly — Slice C1 implemented
 
-HP-FN-04 remains candidate-only unless a later manager handoff explicitly
-approves Slice C1 source implementation.
+HP-FN-04 was implemented as the narrow Slice C1 localized IDA kernel. The
+approved surface remains limited to final-basis `electron_electron_ida`
+assembly; it does not authorize Hamiltonian construction, route wiring, or
+artifact work.
 
 Purpose:
 Construct positive-gauge final IDA weights and the final localized
 `electron_electron_ida` matrix blockwise from raw PGDG pair-factor terms.
 
-Candidate owner:
+Owner:
 `CartesianFinalBasisRealization`, in
 `src/cartesian_final_basis_realization/pqs_terminal_ida.jl`, included by
 `src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl`.
-This is a Slice C candidate surface only until Slice C is explicitly approved.
-It must not be implemented in the retired pair-materialization framework.
+This surface must not be reimplemented in the retired pair-materialization
+framework.
 
 Required pre-coding navigation:
 Use `docs/src/developer/algorithm_implementation_index.md` before Slice C
@@ -817,23 +819,65 @@ If efficient implementation requires a persistent pair-factor cache/result type,
 stage field, metadata key, orchestration API, or status framework, stop and
 request a docs-only design amendment before coding it.
 
-### HP-FN-05 — final Hamiltonian producer — future candidate
+### HP-FN-05 — final Hamiltonian producer — Slice C2 approved
 
-Conceptual signature:
+C2 approval:
+`HP-FN-05` is approved only for constructing the existing
+`CartesianIDAHamiltonian` from already assembled Slice B/C1 matrices and
+physical center/electron data. It does not approve driver/materialization,
+artifact writing, route-stage plumbing, or a Hamiltonian wrapper payload.
+
+Approved construction boundary:
 
 ```julia
 build_cartesian_ida_hamiltonian(
-    basis::CartesianTerminalBasisRealization,
-    parent,
-    system,
-    coulomb_expansion,
+    kinetic,
+    nuclear_attraction_unit_by_center,
+    electron_electron_ida,
+    nup,
+    ndn;
+    nuclear_charges,
+    nuclear_positions,
 )::CartesianIDAHamiltonian{Float64}
 ```
 
-It allocates only the final owned matrices required by
-`CartesianIDAHamiltonian` plus bounded block workspaces.
+Implementation may call the existing `CartesianIDAHamiltonian(...)`
+constructor directly if no extra source helper is needed. If a helper is added,
+it must be internal to `CartesianFinalBasisRealization` and must only validate
+the C2 boundary before delegating to the existing constructor.
 
-Wrapper/orchestration target: **60 source lines**.
+Inputs:
+
+- `kinetic` is the final-basis kinetic matrix assembled by Slice B;
+- `nuclear_attraction_unit_by_center` is a vector of uncharged unit nuclear
+  attraction matrices from Slice B, one per physical center;
+- `electron_electron_ida` is the final-basis localized IDA matrix from C1;
+- `nuclear_charges`, `nuclear_positions`, `nup`, and `ndn` are physical system
+  data, not route-status data.
+
+Caller-side provenance requirements:
+
+- before invoking C1, the caller must verify that Coulomb expansion
+  coefficients and every raw pair-factor tensor came from the same exponent
+  vector in the same order;
+- before invoking C2, the caller must verify that `K`, every unit `U_A`, and
+  `electron_electron_ida` were built from the same
+  `CartesianTerminalBasisRealization`;
+- C2 must not recover provenance from metadata or infer it from route labels.
+
+Rules:
+
+- do not apply nuclear charges to `U_A` before construction; the existing
+  `CartesianIDAHamiltonian` stores unit attraction matrices and applies charges
+  through `one_body_hamiltonian`;
+- do not allocate a global support operator or global dense coefficient matrix;
+- do not add a result wrapper, route payload, stage field, report field,
+  metadata key, status framework, artifact path, or persistent factor cache;
+- do not add center-specific or atom/diatomic branches. Center count is data;
+- do not revive the retired CartesianPairBlockMaterialization route.
+
+Wrapper/orchestration target: **60 source lines**. If C2 cannot stay as a thin
+constructor boundary, stop for a docs-only amendment.
 
 ### HP-OBJ-03 — generic build-result wrapper — rejected
 
@@ -1080,9 +1124,9 @@ it as a bounded physics validation; Cr2 validation should not require it.
 Exploratory commits may be separate on a branch. The mergeable slices below must
 produce a real consumer-visible result and delete the replaced path.
 
-Slice A and Slice B are approved in this design revision. Slices C and D remain
-future candidates until Slice B reports one-body operator correctness,
-allocation behavior, and memory behavior.
+Slice A, Slice B, and Slice C1 have been implemented under this design. Slice
+C2 is approved as a narrow Hamiltonian construction boundary. Slice D remains a
+future candidate.
 
 ### Slice A — terminal basis realization
 
@@ -1191,10 +1235,10 @@ Merge validation:
 
 ### Slice C — localized IDA and `CartesianIDAHamiltonian`
 
-Status: future candidate. HP-FN-04 remains candidate-only as the proposed Slice
-C1 localized IDA assembly surface. HP-FN-05 remains candidate-only as the Slice
-C2 Hamiltonian construction surface. Neither is implementation authority until a
-later manager handoff explicitly approves the corresponding slice.
+Status: C1 has been implemented under `HP-FN-04`. C2 is approved under
+`HP-FN-05` as the narrow construction boundary for the existing
+`CartesianIDAHamiltonian`. Driver/materialization/artifact wiring remains Slice
+D candidate work.
 
 Target:
 Complete base in-memory Hamiltonian producer using the existing
@@ -1210,19 +1254,21 @@ axis weight vectors. It produces a real final-basis `electron_electron_ida`
 matrix. It does not construct `CartesianIDAHamiltonian`.
 
 Slice C2:
-later construction of the existing `CartesianIDAHamiltonian` from Slice B `K`,
-by-center unit `U_A`, and Slice C1 `V`. The number of centers is data, not
-dispatch. HP-FN-05 stays separate and candidate-only.
+approved construction of the existing `CartesianIDAHamiltonian` from Slice B
+`K`, by-center unit `U_A`, and Slice C1 `V`. The number of centers is data, not
+dispatch. C2 may use the existing constructor directly or a thin internal helper
+that only validates the C2 boundary and delegates to that constructor.
 
 Added-source target: **150 lines**. Exceeding the target requires manager
 review and a measured memory/validation justification.
 
-Must delete in the same merge:
+Must delete or account for in the same merge:
 
-- blocked source-plan payload surfaces superseded by the real Hamiltonian;
-- temporary H2 terminal-stage smoke assertions that inspect blocker/status
-  vocabulary;
-- any duplicate IDA weight/raw-pair implementation exposed during wiring.
+- any duplicate IDA weight/raw-pair implementation exposed during C2 wiring;
+- any new validation scratch code must remain ignored under `tmp/work`;
+- blocked source-plan payload surfaces, H2 terminal-stage smoke cleanup, and
+  route/materialization report cleanup are deferred to Slice D unless C2 source
+  directly touches or supersedes them.
 
 Must not add:
 
@@ -1244,9 +1290,14 @@ Merge validation:
 - Cr2 is not the first Slice C correctness gate;
 - a light separated diatomic may be used as the first topology/performance smoke
   after H2 parity, but not as a replacement for H2 physics parity;
-- C2 validation, when later approved, checks that constructed
-  `CartesianIDAHamiltonian` has physically correct center charges, positions,
-  and electron counts;
+- C2 validation checks that constructed `CartesianIDAHamiltonian` has physically
+  correct center charges, positions, electron counts, finite/symmetric `K`, all
+  unit `U_A`, and finite/symmetric `electron_electron_ida`;
+- C2 validation checks `one_body_hamiltonian(ham)` reproduces the Slice B H2
+  H1 matrix and lowest eigenvalue;
+- C2 validation checks the H2 self-Coulomb computed from
+  `ham.electron_electron_ida` remains at the reviewed value
+  `0.4569117646737212`;
 - `electron_electron_ida` is finite and symmetric;
 - final localized IDA weights are positive and finite;
 - implementation report states which IDA anchors were directly reused versus
@@ -1255,12 +1306,14 @@ Merge validation:
   `pgdg.pair_factor_terms_raw` or through
   `_pqs_source_box_ida_factor_provenance`, and confirms they were not rebuilt
   inside terminal block loops;
+- implementation report states how C1 caller-side exponent provenance was
+  checked before IDA assembly;
 - Cr2 base Hamiltonian construction is a later stress/performance gate, not a
   blocker for the first H2 Slice C correctness merge.
 
 ### Slice D — driver simplification
 
-Status: future candidate, not approved by the current Slice A/B authority.
+Status: future candidate, not approved by the current Slice A/B/C authority.
 
 Target:
 Make the canonical materialization stage return/write the real Hamiltonian with
@@ -1285,7 +1338,8 @@ physical:
 - hydrogen energy;
 - H2 one-body energy and localized IDA quantity;
 - symmetry and finiteness of physical matrices;
-- real `CartesianIDAHamiltonian` construction and artifact consumption.
+- real `CartesianIDAHamiltonian` construction;
+- artifact consumption only when Slice D is approved.
 
 Do not preserve tests whose main purpose is asserting internal blocker symbols,
 preflight names, field presence, terminal role vocabulary, or metadata flags.
@@ -1316,10 +1370,10 @@ implementation.
 ## 11. Mechanical implementation gate
 
 Every implementation PR must list the approved design IDs it uses. For the
-current Slice A/B authority, the approved ID set is:
+current Slice A/B/C authority, the approved ID set is:
 
 ```text
-Design IDs: HP-OBJ-01, HP-OBJ-02, HP-FILE-01, HP-FN-00, HP-FN-01, HP-FN-02, HP-WIRE-01, HP-FN-03
+Design IDs: HP-OBJ-01, HP-OBJ-02, HP-FILE-01, HP-FN-00, HP-FN-01, HP-FN-02, HP-WIRE-01, HP-FN-03, HP-FN-04, HP-FN-05
 ```
 
 Review added lines before scientific review:

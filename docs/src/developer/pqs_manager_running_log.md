@@ -7128,3 +7128,38 @@ Carrying-cost accounting:
 - deleted src lines: `0`.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 027 - Slice C2 Hamiltonian Boundary Approval
+
+Commit(s):
+- this branch - Approve Slice C2 Hamiltonian boundary
+
+Summary:
+- Updated the Hamiltonian producer design so `HP-FN-05` is approved for narrow
+  Slice C2 source work: construction of the existing `CartesianIDAHamiltonian`
+  from already assembled Slice B `K`, by-center unit `U_A`, and Slice C1
+  `electron_electron_ida`.
+- Recorded the caller-side provenance rules that C1 cannot enforce from bare
+  arrays: raw pair tensors and Coulomb coefficients must be verified to come
+  from the same exponent vector/order before C1, and C2 inputs must be verified
+  to come from the same `CartesianTerminalBasisRealization`.
+- Corrected stale design text so C1 is recorded as implemented under
+  `HP-FN-04`, C2 is approved under `HP-FN-05`, and Slice D remains the future
+  driver/materialization/artifact lane.
+
+Guardrail:
+- C2 approval does not authorize driver/materialization wiring, artifact
+  writing, a Hamiltonian wrapper payload, route-stage fields, report fields,
+  metadata keys, status frameworks, persistent factor caches, global support
+  operators, or CartesianPairBlockMaterialization route revival.
+
+Validation:
+- Docs-only pass. Manager reviewed the C1 acceptance feedback, checked the
+  existing `CartesianIDAHamiltonian` constructor boundary, and ran focused text
+  audits for stale candidate/approval wording before commit.
+
+Next step:
+- Draft the narrow C2 implementation blurb: build or directly construct the
+  existing `CartesianIDAHamiltonian`, validate H2 `one_body_hamiltonian(ham)`
+  and H2 self-Coulomb through `ham.electron_electron_ida`, and keep all route,
+  driver, artifact, and wrapper work deferred to Slice D.
