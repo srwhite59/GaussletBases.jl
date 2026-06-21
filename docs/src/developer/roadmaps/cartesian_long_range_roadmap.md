@@ -117,14 +117,13 @@ Done:
   authority: `cartesian_pair_terms` and `cartesian_assembly` are not required
   base-public concepts, though useful local-box kernels remain donor/oracle
   inventory for R2/R3 classification.
+- Quantitative R0 baseline recorded in
+  `docs/src/developer/roadmaps/cartesian_r0_baseline_2026-06.md`.
 
 Still open:
 
-- record a quantitative R0 baseline:
-  - source/test/doc line counts by lane;
-  - H2 base Hamiltonian smoke time/allocation;
-  - light separated-diatomic one-body/IDA time/allocation where practical;
-  - current Cr2 stress status;
+- decide whether any remaining stale roadmap/design references should be
+  archived or left as historical breadcrumbs.
 
 Exit condition:
 

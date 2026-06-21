@@ -7561,3 +7561,43 @@ Next step:
   record a quantitative baseline, and decide whether `cartesian_pair_terms` and
   `cartesian_assembly` become real downstream authority or leave the base public
   workflow.
+
+## Cartesian Hamiltonian Producer Pass 036 - Record R0 Baseline
+
+Commit(s):
+- this branch - Record Cartesian R0 baseline
+
+Summary:
+- Accepted a measurement/docs-only R0 quantitative baseline at commit
+  `2979514492cd4311426bd8f6e19c8be61c3e5a66`, after the base PQS path reached
+  in-memory `CartesianIDAHamiltonian` materialization and artifact roundtrip.
+- The baseline records lane line/file counts, H2 cold and warm
+  base-Hamiltonian smoke timing/allocation, light separated-N2 one-body status,
+  cheap pair/assembly stage timings, and the explicit deferral of full Cr2
+  Hamiltonian stress/performance.
+- The long-range roadmap now marks the quantitative baseline complete; the
+  remaining R0 issue is only whether stale historical breadcrumbs need archival
+  cleanup.
+
+Validation:
+- Doer ran `git diff --check`, package load, H2 base Hamiltonian smoke, and the
+  existing ignored light separated-diatomic validation.
+- Manager reviewed the baseline record, ran `git diff --check`, and ran
+  `julia --project=docs docs/make.jl`; the docs build passed with only
+  pre-existing size/deploy warnings.
+
+Goal advancement:
+- LT: creates the carrying-cost and performance baseline that future R1-R7
+  shrinkage, public-producer, and stress-validation work can be judged against.
+- MT: closes the substantive R0 measurement requirement after Slice D and the
+  pair/assembly role decision.
+
+Risk or guardrail:
+- The baseline is a snapshot, not implementation authority. It deliberately
+  does not bless Cr2 Hamiltonian readiness or restore pair/assembly as public
+  base-producer concepts.
+
+Next step:
+- Ask repo-design-manager for the R1 public base-producer design pass. No new
+  source implementation should start until that public surface and its
+  deletion/validation obligations are approved.
