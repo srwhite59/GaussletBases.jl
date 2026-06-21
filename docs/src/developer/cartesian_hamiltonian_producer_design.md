@@ -890,17 +890,47 @@ Proposed boundary:
 
 ```julia
 cartesian_materialization(
-    report,
+    parent,
+    recipe,
     terminal_basis_realization::CartesianTerminalBasisRealization,
     materialization_inputs,
-)
+)::Union{Nothing,CartesianIDAHamiltonian{Float64}}
 ```
 
 The exact implementation may use an equivalent positional boundary, but it must
 pass the existing `transforms.terminal_basis_realization` directly from the
-driver/harness call site. It must not carry the basis through `cartesian_report`,
-embed `transforms`, reconstruct terminal realization from report summaries, or
-introduce a new build-input payload.
+driver/harness call site. It may use `parent` and `recipe` as non-summary input
+objects for parent bundles, center records, physical charges/positions,
+electron counts, and approved recipe controls. If `report` remains in the
+signature for compatibility with nearby printing/saving code, it must not be
+used as a computational payload except for already non-summary fields that are
+also available from `parent`/`recipe`; it must not read target/source-plan or
+supplement summaries as construction data.
+
+Return contract:
+
+- return `nothing` when no base Hamiltonian materialization is requested;
+- return the `CartesianIDAHamiltonian{Float64}` object itself on success;
+- if `save_ham_artifact = true`, write the Hamiltonian with
+  `write_cartesian_ida_hamiltonian` and still return the same Hamiltonian;
+- never return a `NamedTuple` containing `ida_hamiltonian`, `result_kind`,
+  `materialized`, blocker/status mirrors, or durable materialization fields;
+- for a requested PQS Hamiltonian, missing terminal basis or missing provenance
+  is an error, not a blocked-result wrapper.
+
+Non-PQS behavior:
+
+- preserve the existing White-Lindsey materialization behavior as a separate
+  route if it still has live callers, or keep a two-argument compatibility
+  method only for that route;
+- do not treat `terminal_basis_realization === nothing` as a PQS fallback;
+- if a unified signature accepts `Union{Nothing,CartesianTerminalBasisRealization}`,
+  it must dispatch cleanly by route family and error on requested PQS
+  Hamiltonian construction without a terminal basis.
+
+It must not carry the basis through `cartesian_report`, embed `transforms`,
+reconstruct terminal realization from report summaries, or introduce a new
+build-input payload.
 
 Candidate rules:
 
@@ -910,11 +940,15 @@ Candidate rules:
   build Slice B `K`, by-center unit `U_A`, Slice C1 `V`, then construct the
   existing `CartesianIDAHamiltonian`;
 - enforce C1 coefficient/raw tensor exponent provenance before IDA assembly;
-- use existing public `write_cartesian_ida_hamiltonian` /
-  `read_cartesian_ida_hamiltonian` for artifact validation. Do not invent a new
+- use existing public `write_cartesian_ida_hamiltonian` for production artifact
+  writes. Use `read_cartesian_ida_hamiltonian` only in validation/readback
+  checks, not automatically after every production write. Do not invent a new
   artifact shape;
 - delete the false blocked-source-plan materialization/report contract in the
   same merge, or report exact live callers that prevent deletion;
+- delete or simplify the old materialization wrapper plumbing, including
+  `_pqs_source_box_route_driver_durable_materialization`, generic
+  materialization serialization, and result-kind/materialized print paths;
 - no new report field may duplicate the terminal basis, Hamiltonian matrices,
   raw pair tensors, factor packets, or route stages.
 
@@ -1373,7 +1407,8 @@ Required handoff:
 transforms = cartesian_transforms(units, recipe)
 ...
 materialization = cartesian_materialization(
-    report,
+    parent,
+    recipe,
     transforms.terminal_basis_realization,
     materialization_inputs,
 )
@@ -1388,6 +1423,15 @@ The signature may be adjusted only to preserve this dataflow. Slice D must not:
 - place terminal basis, matrices, raw pair tensors, or factor packets in
   metadata.
 
+`cartesian_materialization` return contract:
+
+- `nothing` when no base Hamiltonian is requested;
+- `CartesianIDAHamiltonian{Float64}` on successful base Hamiltonian
+  materialization;
+- the same Hamiltonian object when artifact writing is requested;
+- no materialization `NamedTuple`, `result_kind`, `materialized`,
+  `ida_hamiltonian` wrapper field, or blocked-status mirror.
+
 Production work:
 
 1. Materialization constructs Slice B `K` and by-center uncharged unit `U_A`
@@ -1396,8 +1440,9 @@ Production work:
    constructs Slice C1 `electron_electron_ida`.
 3. Materialization constructs the existing `CartesianIDAHamiltonian` directly.
 4. If artifact output is requested, materialization uses the existing
-   `write_cartesian_ida_hamiltonian` / `read_cartesian_ida_hamiltonian`
-   contract. It must not add a new artifact shape.
+   `write_cartesian_ida_hamiltonian` contract. Validation may read the artifact
+   back with `read_cartesian_ida_hamiltonian`; production should not
+   automatically perform readback. It must not add a new artifact shape.
 
 Deletion target:
 
@@ -1409,6 +1454,9 @@ Deletion target:
 - audit `physical_gausslet_target_*` and supplement-preflight report fields and
   either delete them in the same merge or report exact live callers that still
   require them;
+- delete or simplify `_pqs_source_box_route_driver_durable_materialization`,
+  generic report-artifact serialization of materialization data, and
+  old `result_kind`/`materialized` printing;
 - remove H2 smoke/probe assertions that inspect obsolete blocker/status
   vocabulary after the real Hamiltonian endpoint is available.
 
@@ -1428,8 +1476,9 @@ Validation:
   `-0.79460371733658908`;
 - `ham.electron_electron_ida` reproduces H2 self-Coulomb
   `0.4569117646737212`;
-- requested artifact output roundtrips through existing
-  `write_cartesian_ida_hamiltonian` and `read_cartesian_ida_hamiltonian`;
+- requested artifact output writes with existing `write_cartesian_ida_hamiltonian`;
+- validation-only artifact readback uses existing
+  `read_cartesian_ida_hamiltonian`;
 - light separated diatomic may be used as a topology/performance smoke after H2
   passes. Cr2 remains a later stress/performance gate unless explicitly
   requested.

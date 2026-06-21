@@ -7224,16 +7224,22 @@ Summary:
   of `transforms.terminal_basis_realization` into `cartesian_materialization`
   rather than embedding the basis in reports, passing recursive `transforms`,
   reconstructing from summaries, or adding a build-input payload.
+- Froze the proposed materialization return contract as
+  `Union{Nothing,CartesianIDAHamiltonian{Float64}}`: return `nothing` when no
+  base Hamiltonian is requested, return the Hamiltonian itself on success, and
+  do not preserve `result_kind`/`materialized`/`ida_hamiltonian` wrapper fields.
 - Expanded Slice D with concrete production work, deletion targets, and
   validation: materialization composes Slice B `K`/unit `U_A`, Slice C1 `V`,
-  and the existing `CartesianIDAHamiltonian`, then optionally uses the existing
-  public writer/readback contract.
+  and the existing `CartesianIDAHamiltonian`, then optionally writes through the
+  existing public writer. Readback is validation-only.
 
 Guardrail:
 - This is still docs/policy only. `HP-WIRE-02` is candidate, not implementation
   authority. The pass intentionally prevents the next doer from treating report
   metadata, source-plan blockers, or route payloads as the way to move basis
   data into materialization.
+- The old White-Lindsey materialization route must remain separate if it has
+  live callers; `terminal_basis_realization === nothing` is not a PQS fallback.
 
 Validation:
 - Manager audited current call sites and confirmed `terminal_basis_realization`
