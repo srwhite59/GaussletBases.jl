@@ -74,6 +74,27 @@ documented producer surface:
 - The `pair terms -> assembly` stages must either become real authority for a
   live downstream consumer or disappear from the base public workflow.
 
+## Current Planning Integration
+
+Slice D base materialization handoff is closed under the compact Hamiltonian
+producer authority. Do not keep extending "Stage D" as a catch-all for later
+work.
+
+Short-term follow-up planning should classify each task by roadmap lane:
+
+- stale authority, route-status, fixture, baseline, and pair/assembly-role
+  reconciliation belongs to R0;
+- public driver shape, examples, artifact naming, and user-facing producer
+  polish belongs to R1;
+- WL/QW/PQS downstream sharing belongs to R2;
+- residual-GTO/MWG and other non-base Hamiltonians belong to R3;
+- Cr2-scale stress, performance, and consumer-readiness gates belong to R6.
+
+Volatile pass sequencing belongs in repo-manager blurbs and the manager running
+log, not in this roadmap. Any task that needs a new production surface, report
+field, metadata key, public API, artifact shape, committed test, or source file
+still needs a compact design amendment before implementation.
+
 ## Roadmap
 
 ### R0 - Reconcile Authority, Tests, And Baselines

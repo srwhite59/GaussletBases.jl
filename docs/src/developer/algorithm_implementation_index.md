@@ -7,6 +7,9 @@ optimization lessons, and oracle/reference paths before writing new code.
 Status labels:
 - **active reusable kernel**: current implementation code that may be called
   when its contract matches the new route.
+- **active implementation surface**: current code named by approved design
+  authority; use it through its owning boundary rather than treating it as new
+  public API authority.
 - **active donor pattern**: current code worth copying organizationally, but
   not necessarily callable from the new route.
 - **consumer example only**: useful for seeing how a kernel is used; do not copy
@@ -14,8 +17,6 @@ Status labels:
 - **oracle/reference only**: comparison or migration code, not production route
   authority.
 - **retired/do not call**: historical or explicitly disallowed path.
-- **planned approved file**: approved design surface that may not exist yet or
-  may still be under active implementation.
 
 ## Term-First Coulomb Gaussian Contractions
 
@@ -113,7 +114,7 @@ realization. The terminal basis route uses previous-block projection and
 shell-local Lowdin; no global Lowdin repair is allowed.
 
 Key docs:
-- `docs/src/developer/cartesian_hamiltonian_producer_design.md`
+- `docs/src/developer/designs/cartesian_hamiltonian_producer/`
 - `docs/src/developer/pqs_source_box_operator_framework.md`
 - `docs/src/developer/pqs_near_term_final_basis_realization_plan.md`
 - `JuliaStyle.md`, Lowdin guidance
@@ -164,13 +165,14 @@ Why to check:
 Prevent sign, charge, and center-summing errors.
 
 Key docs:
-- `docs/src/developer/cartesian_hamiltonian_producer_design.md`
+- `docs/src/developer/designs/cartesian_hamiltonian_producer/`
 - `docs/src/developer/numerical_contracts.md`
 - `docs/src/developer/pqs_near_term_final_basis_realization_plan.md`
 
 Source anchors:
-- **planned approved file**:
-  `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl`
+- **active implementation surface**:
+  `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl`,
+  `assemble_terminal_product_operator!`
 - **consumer example only**: `src/ordinary_qw_operator_assembly.jl`,
   `assembled_one_body_hamiltonian`
 - **oracle/reference only**: `src/pqs_multilayer_support_one_body.jl`:
@@ -189,12 +191,16 @@ Avoid mixing raw/source weights, density-normalized pair factors, retained
 weights, and final IDA weights.
 
 Key docs:
+- `docs/src/developer/designs/cartesian_hamiltonian_producer/`
 - `docs/src/developer/numerical_contracts.md`
 - `docs/src/developer/white_lindsey_low_order_density_density_builder_contract_2026-06-04.md`
 - `docs/src/developer/raw_product_source_retained_transform_policy.md`
 - `docs/src/developer/pqs_source_box_operator_framework.md`
 
 Source anchors:
+- **active implementation surface**:
+  `src/cartesian_final_basis_realization/pqs_terminal_ida.jl`,
+  `assemble_terminal_ida_interaction!`
 - **oracle/reference only**: `src/cartesian_nested_faces.jl`,
   `_nested_factorized_weight_aware_pair_terms`,
   `_nested_weight_aware_pair_terms`, `_nested_support_reference_pair_sum`
@@ -216,6 +222,35 @@ Use PGDG `pair_factor_terms_raw` as the raw numerator source and keep the
 Gaussian expansion index as the short inner reduction. Carry raw pair numerators
 through projection/realization first. Normalize only at the reviewed final
 retained/final-basis density boundary.
+
+## Base Hamiltonian Construction And Materialization
+
+Why to check:
+Use the implemented Slice C2/D handoff without recreating wrapper payloads,
+report mirrors, or artifact formats.
+
+Key docs:
+- `docs/src/developer/designs/cartesian_hamiltonian_producer/`
+- `docs/src/developer/numerical_contracts.md`
+
+Source anchors:
+- **active reusable kernel**: `src/cartesian_ida_hamiltonian.jl`,
+  `CartesianIDAHamiltonian`, `write_cartesian_ida_hamiltonian`
+- **active implementation surface**:
+  `src/pqs_source_box_low_order_materialization.jl`,
+  `_pqs_source_box_route_driver_terminal_ida_hamiltonian`,
+  `_pqs_source_box_route_driver_materialization`
+- **active implementation surface**:
+  `src/pqs_source_box_route_driver_helpers.jl`,
+  `cartesian_materialization(report, terminal_basis_realization,
+  materialization_inputs)`
+- **consumer example only**: `bin/cartesian_ham_builder.jl`
+
+Do-not-forget rule:
+Requested base PQS materialization returns `CartesianIDAHamiltonian{Float64}`
+directly; no-request materialization returns `nothing`. Do not add a materialized
+wrapper, status mirror, report field, metadata-carried matrix, or new artifact
+shape for the base handoff.
 
 ## Performance And Reuse Policy
 
