@@ -541,6 +541,24 @@ Purpose:
 Fill a dense final-basis matrix from terminal block pairs and caller-supplied 1D
 axis matrices without constructing a global support matrix.
 
+Required pre-coding navigation:
+Use `docs/src/developer/algorithm_implementation_index.md` before Slice B
+implementation work, especially its term-first Coulomb Gaussian contraction and
+Gaussian factor reuse entries. Inspect these source anchors before coding:
+
+- `src/ordinary_mapped_backends.jl`
+- `src/ordinary_coulomb.jl`
+- `src/ordinary_cartesian_ida.jl`
+- `src/ordinary_qw_raw_blocks.jl`
+- `src/ordinary_qw_operator_assembly.jl`
+
+Direct reuse is preferred when the ordinary helpers match terminal-basis layout.
+If the existing ordinary helpers cannot be called directly because their basis,
+indexing, or matrix layout is different, Slice B must still reuse their
+organization: build and reuse Gaussian factor packets once, then contract
+Coulomb terms term-first with the Gaussian expansion index as the short inner
+reduction.
+
 Proposed conceptual signature:
 
 ```julia
@@ -563,9 +581,17 @@ P_lr[a,b] = axis_x[ix_a, ix_b] * axis_y[iy_a, iy_b] * axis_z[iz_a, iz_b]
 ```
 
 Direct block coefficients remain implicit identity. Kinetic and
-Gaussian-expanded unit nuclear attraction call the helper repeatedly. The
-helper always accumulates into `destination`; it does not allocate or return a
-result matrix.
+Gaussian-expanded unit nuclear attraction must not locally rebuild one dense
+final-basis matrix per Coulomb term as the long-lived implementation pattern.
+The approved implementation shape is term-first: for each terminal support-pair
+tile, reuse the centered 1D Gaussian factor data and reduce over the Gaussian
+expansion index before accumulating the final block. The helper always
+accumulates into `destination`; it does not allocate or return a result matrix.
+For Gaussian-expanded nuclear attraction, `HP-FN-03` may use private file-local
+helpers in the approved Slice B file to perform term-first support-tile
+contraction from reusable factor packets. Those helpers are not persistent
+production surfaces and must not introduce new result, cache, stage, metadata,
+or status objects.
 
 Implementation target: **90 source lines**.
 
@@ -575,6 +601,13 @@ persistent one-body orchestration API, or status vocabulary. If source-level
 K/U orchestration proves necessary, implementation stops for a docs-only design
 amendment.
 
+Stop rule:
+If efficient Slice B implementation requires a new persistent factor-cache or
+result type, stage field, metadata key, or orchestration API, stop and request a
+docs-only design amendment before coding it. HP-FN-03 remains the only approved
+Slice B source surface unless a later amendment explicitly approves another
+surface.
+
 Rules:
 
 - consume only `CartesianTerminalBasisRealization` plus the three caller-supplied
@@ -582,6 +615,8 @@ Rules:
 - no atomic/diatomic branches;
 - no global support-space operator matrix;
 - no global dense coefficient matrix;
+- no IDA, Hamiltonian payload/artifact work, or retired
+  CartesianPairBlockMaterialization route revival;
 - direct blocks are implicit row selectors; do not allocate dense identity
   matrices for them;
 - for Slice B use, validate symmetric axis factors before upper-triangular
@@ -732,15 +767,12 @@ U_by_center = one final matrix per nucleus
 
 for center A:
     U_A = zeros(final_dimension, final_dimension)
-    build centered 1D Gaussian factor matrices for A
+    build/reuse centered 1D Gaussian factor packet for A
 
-    for Gaussian Coulomb term k:
-        assemble_terminal_product_operator!(
-            U_A,
-            basis,
-            factor_x[k], factor_y[k], factor_z[k],
-            scale = -coefficient[k],
-        )
+    for each upper-triangular terminal block pair and support tile:
+        reduce over Gaussian Coulomb term k as the short inner loop:
+            sum -coefficient[k] * Fx[k] * Fy[k] * Fz[k]
+        accumulate the reduced tile into U_A
 
     symmetry-check U_A
 ```
@@ -949,6 +981,10 @@ Must delete or stop calling:
 
 Merge validation:
 
+- source work must cite `docs/src/developer/algorithm_implementation_index.md`
+  and report whether it directly reused the ordinary Gaussian-factor/term-first
+  helpers or followed their organization because terminal-basis layout prevented
+  direct calls;
 - before source coding, the implementation target card must name the exact
   one-center/H oracle baseline and tolerance to be used for the unified
   terminal basis check. If no reviewed one-center/H baseline is available,
@@ -961,6 +997,10 @@ Merge validation:
 - Cr2 final `K` and every unit center matrix `U_A` are finite and symmetric;
 - no IDA, Hamiltonian artifact, residual-GTO, or driver simplification work is
   included;
+- no global support-space operator, global dense coefficient matrix, or retired
+  CartesianPairBlockMaterialization route is used as production authority;
+- no new factor-cache/result type, stage field, metadata key, or orchestration
+  API is introduced without a docs-only design amendment;
 - implementation report includes final dimensions, matrix symmetry errors,
   finite checks, largest local workspace, elapsed time, and allocation/peak
   memory observations where practical.

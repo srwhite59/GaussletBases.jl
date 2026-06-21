@@ -6745,3 +6745,33 @@ Next step:
 - Any Slice B performance redesign should first cite the relevant index entry
   and then update the formal Hamiltonian producer design if it needs a new
   production surface beyond `HP-FN-03`.
+
+## Cartesian Hamiltonian Producer Pass 017 - Slice B Term-First Design Revision
+
+Commit(s):
+- this branch - Require term-first Slice B Gaussian reuse
+
+Summary:
+- Revised the Slice B design text in
+  `docs/src/developer/cartesian_hamiltonian_producer_design.md` to require the
+  algorithm implementation index before Slice B source work.
+- Named the ordinary Gaussian-factor and term-first Coulomb source anchors that
+  implementation must inspect before coding.
+- Clarified that direct reuse of ordinary helpers is preferred, but when layout
+  prevents direct calls, Slice B must still follow their organization: reusable
+  1D Gaussian factor packets and a term-first contraction over the Coulomb
+  expansion index.
+
+Guardrail:
+- `HP-FN-03` remains the only approved Slice B source surface.
+- Private file-local helpers inside the approved Slice B file may perform
+  term-first support-tile contraction, but they must not introduce persistent
+  result/cache/stage/metadata/status objects.
+
+Validation:
+- Docs-only pass; manager ran `git diff --check` and reviewed the Slice B diff.
+
+Next step:
+- Send the revised design to ChatGPT-Pro for review of whether it now requires
+  the optimized contraction pattern without accidentally authorizing a new
+  payload or cache framework.
