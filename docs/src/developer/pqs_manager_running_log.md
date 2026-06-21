@@ -7700,3 +7700,42 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 039 - Be2 Performance Probe
+
+Commit(s):
+- none from doer; this entry records an ignored `tmp/work` measurement
+
+Summary:
+- Accepted a measurement-only Be2 probe using two z-axis separations. Both
+  cases built finite symmetric base K, separated unit-`U_A`, and localized IDA
+  V without tracked code changes.
+- The close and far Be2 cases changed parent boxes/support counts and final
+  dimensions (`633` and `683`), but both still used contact-core/shared-shell
+  topology with outer slabs. Be2 therefore works as a cheap contact/shared-shell
+  sanity probe, not as the separated atom-local topology proxy needed before
+  Cr2.
+- Warm Be2 was small: the far case completed the measured Hamiltonian phases in
+  about `0.451 s`, with one-body/IDA contractions not yet dominating. The
+  useful allocation signals are terminal-basis realization and K assembly, but
+  the scale is too small to justify a Be2-only optimization pass.
+
+Validation:
+- Doer ran `git diff --check`, package load, and the ignored
+  `tmp/work/be2_base_producer_perf_probe.jl`; final worktree was clean.
+
+Goal advancement:
+- LT/Roadmap: keeps Cr2 stress out of the inner optimization loop while still
+  measuring a light all-electron diatomic proxy.
+- MT: changes the next performance step from Be2 optimization to an N2 proxy
+  measurement, because N2 is already known to exercise separated atom-local
+  shells and shared/mismatch regions.
+
+Risk or guardrail:
+- Do not infer Cr2 readiness from these Be2 timings. The measured Be2 cases are
+  too small and topologically incomplete for that.
+
+Next step:
+- Run a measurement-only N2 proxy pass before source optimization. Use it to
+  identify whether the first optimization target is terminal-basis realization,
+  K assembly/buffer reuse, unit-`U_A`, IDA V, or artifact writing.
