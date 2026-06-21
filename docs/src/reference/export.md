@@ -12,6 +12,7 @@ sliced/block density-density data for downstream solver consumers.
 The Cartesian one-basis IDA boundary is now exposed as a minimal Hamiltonian
 object and versioned JLD2 artifact:
 
+- `cartesian_base_hamiltonian`
 - `CartesianIDAHamiltonian`
 - `one_body_hamiltonian`
 - `nuclear_repulsion`
@@ -21,6 +22,74 @@ object and versioned JLD2 artifact:
 This format stores `K`, separated uncharged `{U_A}`, `Vee`, nuclear charges,
 `ncenter x 3` positions, and spin counts. It derives nuclear repulsion on load
 and does not store route diagnostics or solver results.
+
+## Cartesian Base Hamiltonian
+
+`cartesian_base_hamiltonian(system; basis, hamfile=nothing)` is the current
+public producer for the base Cartesian IDA Hamiltonian. It returns a
+`CartesianIDAHamiltonian{Float64}` directly. If `hamfile` is not `nothing`, it
+writes the existing Cartesian IDA Hamiltonian artifact and records fixed
+producer provenance under `producer_provenance/`.
+
+The R1 public scope is intentionally narrow:
+
+- origin-centered hydrogen atom;
+- hydrogen molecule on the Cartesian z axis;
+- unsupplemented, uncorrected, all-electron localized-IDA Hamiltonians.
+
+It does not support arbitrary molecular orientation, x/y-aligned H2, other
+atoms, supplements, corrections, solver controls, or public route-stage
+selection.
+
+One-center H:
+
+```julia
+h_system = (;
+    atom_symbols = ["H"],
+    nuclear_charges = [1.0],
+    atom_locations = [(0.0, 0.0, 0.0)],
+    nup = 1,
+    ndn = 0,
+)
+
+h_basis = (;
+    q = 5,
+    core_spacing = 0.5,
+    radius = 4.0,
+    d = 0.3,
+    reference_spacing = 1.0,
+)
+
+h_ham = cartesian_base_hamiltonian(h_system; basis = h_basis)
+```
+
+Z-axis H2:
+
+```julia
+h2_system = (;
+    atom_symbols = ["H", "H"],
+    nuclear_charges = [1.0, 1.0],
+    atom_locations = [(0.0, 0.0, -2.0), (0.0, 0.0, 2.0)],
+    nup = 1,
+    ndn = 1,
+)
+
+h2_basis = (;
+    q = 5,
+    core_spacing = 0.5,
+    xmax_parallel = 6.0,
+    xmax_transverse = 4.0,
+)
+
+h2_ham = cartesian_base_hamiltonian(
+    h2_system;
+    basis = h2_basis,
+    hamfile = "h2_cartesian_ida_hamiltonian.jld2",
+)
+```
+
+For H, `d` is the White-Lindsey atomic mapping parameter and is independent of
+`core_spacing` and `reference_spacing`. For H2, `d` is not a public input.
 
 For the current SlicedMRGUtils / HamIO bridge family, the package also exposes a
 thin explicit compatibility adapter:

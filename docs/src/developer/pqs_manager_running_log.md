@@ -7657,3 +7657,46 @@ Risk or guardrail:
 - Source additions hit the 225-line hard threshold exactly. Do not expand this
   facade in place without a follow-up design amendment or a deletion-backed
   cleanup.
+
+## Cartesian Hamiltonian Producer Pass 038 - Document R1 Public Facade
+
+Commit(s):
+- this branch - Document Cartesian base Hamiltonian facade
+
+Summary:
+- Accepted a docs-only public-polish pass after the R1 facade landed. The
+  reference/export page now names `cartesian_base_hamiltonian`, shows the
+  supported origin-centered H and z-axis H2 calls, and states the current
+  limitations plainly.
+- Updated the IDA Hamiltonian algorithm page so it no longer says the terminal
+  PQS producer is blocked at shell realization. It now describes the public
+  H/H2 facade, existing artifact readback, and `producer_provenance/` behavior.
+- Added a short examples-index pointer that directs users to the public facade
+  instead of implying that older Cartesian example scripts are the recommended
+  base-Hamiltonian entry point.
+
+Validation:
+- Manager ran `git diff --check` and `julia --project=docs docs/make.jl`. The
+  docs build passed with only the existing large-page/search-index and local
+  deploy-detection warnings.
+
+Goal advancement:
+- LT/R1: makes the first public base Cartesian Hamiltonian producer visible and
+  usable without expanding the approved science scope.
+- MT: keeps public guidance aligned with the R1 contract while leaving broader
+  molecule support, supplements, WL/QW unification, Cr2 stress, and pair/stage
+  retirement to later roadmap lanes.
+
+Carrying-cost result:
+- deleted: stale blocked-route wording from the public IDA Hamiltonian page.
+- simplified: public examples now point to one supported facade instead of the
+  older route-stage story.
+- quarantined: none.
+- not deleted because: older example scripts and algorithm notes remain useful
+  for their existing lanes and were not part of this docs polish.
+- exact remaining caller/blocker: R1 docs cover only H and z-axis H2; any
+  broader public facade behavior needs repo-design-manager approval.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

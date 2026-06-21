@@ -154,10 +154,20 @@ one-basis contract. Use `one_body_hamiltonian(ham; center_weights=...)` and
 `nuclear_repulsion(ham; center_weights=...)` for full and counterpoise
 branches.
 
+`cartesian_base_hamiltonian(system; basis, hamfile=nothing)` is the current
+public producer for the base Cartesian IDA Hamiltonian in the first supported
+PQS cases: origin-centered H and Cartesian z-axis H2. It returns
+`CartesianIDAHamiltonian{Float64}` directly. A non-`nothing` `hamfile` writes
+the existing Hamiltonian artifact and adds fixed producer provenance under
+`producer_provenance/`.
+
 `write_cartesian_ida_hamiltonian` and `read_cartesian_ida_hamiltonian` provide
 the minimal versioned JLD2 artifact. The artifact stores only `K`, `{U_A}` as
 an `n x n x ncenter` tensor, `Vee`, charges, `ncenter x 3` positions, and spin
-counts. It does not store nuclear repulsion or route diagnostics.
+counts. It does not store nuclear repulsion, route diagnostics, solver results,
+or a Hamiltonian wrapper. Artifacts written through
+`cartesian_base_hamiltonian` additionally carry producer provenance; the
+matrix readback path ignores those extra keys.
 
 ## Code Map
 
@@ -167,10 +177,11 @@ counts. It does not store nuclear repulsion or route diagnostics.
   builds IDA density interaction helpers in the completed localized basis.
 - `src/cartesian_ida_hamiltonian.jl` contains the public one-basis IDA
   Hamiltonian object and minimal artifact reader/writer.
+- `src/cartesian_base_hamiltonian.jl` contains the narrow public H/H2 facade.
 
 ## Current Implementation Deviations
 
-The public `CartesianIDAHamiltonian` type and minimal versioned writer/reader
-exist. The private H2 residual-GTO producer has been retired; the general
-terminal PQS producer still needs shell-local realization before H2 or Cr2 can
-materialize this public artifact through the current route.
+The public base producer is intentionally limited to origin-centered H and
+Cartesian z-axis H2. General atoms, x/y-aligned or arbitrarily oriented
+diatomics, Cr2-scale production readiness, supplements, corrections, and
+solver handoff are separate roadmap lanes.
