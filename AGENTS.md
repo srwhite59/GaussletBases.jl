@@ -348,6 +348,12 @@ For Cartesian Hamiltonian producer source work, read
 `docs/src/developer/cartesian_hamiltonian_producer_design.md` before
 implementation.
 
+Before Cartesian/PQS numerical implementation, also check
+`docs/src/developer/algorithm_implementation_index.md` for existing kernels,
+optimization notes, and oracle/reference paths. This index is navigation, not
+new algorithm authority; use it to avoid reimplementing known optimized
+patterns.
+
 Cartesian Hamiltonian producer source work is currently authorized only for
 these approved design IDs:
 

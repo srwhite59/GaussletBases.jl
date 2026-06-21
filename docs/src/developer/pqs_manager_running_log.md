@@ -6709,3 +6709,39 @@ Next step:
   `assemble_terminal_product_operator!`.
 - If performance work finds repeated factor construction, fix routing to reuse
   the existing factor packets before inventing new caching.
+
+## Cartesian/PQS Documentation Pass 016 - Algorithm Implementation Index
+
+Commit(s):
+- this branch - Add algorithm implementation index
+
+Summary:
+- Added `docs/src/developer/algorithm_implementation_index.md` as a compact
+  navigation guide for future agents before numerical Cartesian/PQS coding.
+- Linked it from `docs/src/developer/index.md`.
+- Updated `AGENTS.md` to instruct agents to check the index before
+  Cartesian/PQS numerical implementation.
+
+Purpose:
+- Prevent repeated rediscovery and accidental reimplementation of existing
+  optimized algorithm paths.
+- Record the term-first Coulomb Gaussian contraction lesson near the active
+  developer entry point: keep the Gaussian expansion index as the short inner
+  reduction, using term-first 1D factor data.
+
+Scope:
+- Documentation/navigation only. The index is not new algorithm authority and
+  does not approve new source surfaces.
+- Initial entries cover term-first Coulomb contractions, Gaussian factor reuse,
+  CPB parent-factor/provider layers, PQS terminal realization, PQS source-box
+  retained transforms, one-body unit nuclear convention, IDA factor conventions,
+  performance/reuse policy, high-order donor notes, and migration/oracle paths.
+
+Validation:
+- Docs-only pass; manager ran `git diff --check` and focused link/status
+  checks before commit.
+
+Next step:
+- Any Slice B performance redesign should first cite the relevant index entry
+  and then update the formal Hamiltonian producer design if it needs a new
+  production surface beyond `HP-FN-03`.

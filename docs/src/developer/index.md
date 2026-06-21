@@ -19,6 +19,7 @@ This section is where to go when you want:
 
 - [Architecture and current direction](architecture.md)
 - [Gausslet methods fundamentals](architecture/gausslet_methods_fundamentals.md)
+- [Algorithm implementation index](algorithm_implementation_index.md)
 - [Cartesian route migration](cartesian/route_migration.md)
 - [Cartesian feature donor inventory](cartesian/feature_donor_inventory.md)
 - [PQS thin route demolition history](archive/pqs_thin_route_demolition_history.md)
