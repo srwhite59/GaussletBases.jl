@@ -522,15 +522,6 @@ struct _PQSDiatomicPhysicalGaussletSupplementPreflightPayload
     metadata
 end
 
-struct _PQSDiatomicPhysicalGaussletCoreShellSourcePlanPayload
-    status::Symbol
-    blocker
-    route_family::Symbol
-    source_plan
-    summary
-    metadata
-end
-
 function _pqs_source_box_route_driver_axis_counts_tuple(axis_counts)
     isnothing(axis_counts) && return nothing
     if axis_counts isa NamedTuple
@@ -681,26 +672,6 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_target_payload(
         isnothing(inventory) ? nothing : inventory.expected_final_dimension
     retained_atom_core_interiors =
         (!isnothing(inventory) && inventory.retained_atom_core_interiors)
-    source_plan_blocker =
-        terminal_retained_available ?
-        :missing_terminal_source_plan_realization :
-        generated_support_available ?
-        terminal_retained_blocker :
-        nothing
-    retained_transform_authority =
-        terminal_retained_available ?
-        :terminal_retained_rule_preflight :
-        generated_support_available ?
-        terminal_retained_blocker :
-        isnothing(inventory) ?
-        :not_available :
-        :pqs_source_box_construction
-    primary_blocker =
-        generated_support_available ?
-        source_plan_blocker :
-        blocker
-    secondary_blocker =
-        nothing
     support_plan =
         !isnothing(generated_support_plan) ? generated_support_plan :
         isnothing(inventory) ? nothing : get(inventory, :support_plan, nothing)
@@ -726,11 +697,6 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_target_payload(
         supplement_policy,
         target_inventory_available =
             status === :available_physical_gausslet_core_shell_target_inventory,
-        source_plan_materialized = false,
-        retained_transform_authority,
-        primary_blocker,
-        secondary_blocker,
-        independent_source_plan_blocker = source_plan_blocker,
         support_plan,
         terminal_retained_rule_plan,
         retained_rule_plan = nothing,
@@ -1184,86 +1150,6 @@ function _pqs_source_box_route_driver_diatomic_physical_gausslet_supplement_pref
         retained_transform_kind,
         gausslet_final_dimension,
         supplement_policy,
-        summary,
-        metadata,
-    )
-end
-
-function _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_payload(
-    parent,
-    target_payload,
-    low_order_assembly = nothing,
-)
-    target_available =
-        !isnothing(target_payload) &&
-        target_payload.status === :available_physical_gausslet_core_shell_target_inventory
-    independent_target =
-        !isnothing(target_payload) &&
-        target_payload.route_kind ===
-        :bond_aligned_diatomic_independent_pqs_source_box_core_shell
-    source_plan = nothing
-    independent_source_plan_available = false
-    independent_source_plan_blocker =
-        !isnothing(target_payload) ?
-        get(
-            target_payload.summary,
-            :independent_source_plan_blocker,
-            :missing_independent_pqs_physical_source_plan_materializer,
-        ) :
-        :missing_independent_pqs_physical_source_plan_materializer
-    status =
-        isnothing(source_plan) ?
-        :blocked_pqs_diatomic_physical_gausslet_core_shell_source_plan :
-        source_plan.status
-    blocker =
-        !isnothing(source_plan) ?
-        nothing :
-        independent_target ?
-        independent_source_plan_blocker :
-        target_available ?
-        :missing_atom_contact_core_support_rows :
-        :missing_physical_gausslet_target_inventory
-    summary = (;
-        object_kind = :pqs_diatomic_physical_gausslet_core_shell_source_plan,
-        status,
-        blocker,
-        target_status = isnothing(target_payload) ? :not_available : target_payload.status,
-        parent_axis_counts = isnothing(target_payload) ? nothing : target_payload.parent_axis_counts,
-        support_order = isnothing(target_payload) ? () : target_payload.support_units,
-        retained_order = isnothing(target_payload) ? () : target_payload.retained_order,
-        support_counts = isnothing(target_payload) ? (;) : target_payload.support_counts,
-        retained_counts = isnothing(target_payload) ? (;) : target_payload.retained_counts,
-        expected_final_dimension =
-            isnothing(target_payload) ? nothing : target_payload.expected_final_dimension,
-        retained_atom_core_interiors =
-            !isnothing(target_payload) && target_payload.retained_atom_core_interiors,
-        supplement_policy =
-            isnothing(target_payload) ? :not_available : target_payload.supplement_policy,
-        source_plan_materialized = !isnothing(source_plan),
-        retained_transform_authority =
-            isnothing(target_payload) ?
-            :not_available :
-            get(target_payload.summary, :retained_transform_authority, :not_available),
-        secondary_blocker =
-            isnothing(target_payload) ? nothing : get(target_payload.summary, :secondary_blocker, nothing),
-        independent_source_plan_blocker =
-            isnothing(target_payload) ?
-            nothing :
-            get(target_payload.summary, :independent_source_plan_blocker, nothing),
-    )
-    metadata = (;
-        source =
-            :pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_payload,
-        route_owned = true,
-        diagnostic_221_source_plan_reused = false,
-        placeholders_synthesized = false,
-    )
-
-    return _PQSDiatomicPhysicalGaussletCoreShellSourcePlanPayload(
-        status,
-        blocker,
-        isnothing(target_payload) ? :not_available : target_payload.route_family,
-        source_plan,
         summary,
         metadata,
     )

@@ -1773,12 +1773,6 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
             diatomic_physical_gausslet_supplement_request_payload,
             diatomic_physical_gausslet_supplement_representation_payload,
         )
-    diatomic_physical_gausslet_source_plan_payload =
-        _pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_payload(
-            parent,
-            diatomic_physical_gausslet_target_payload,
-            low_order_assembly,
-        )
     return (;
         route_skeleton,
         low_order_assembly,
@@ -1786,43 +1780,6 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
         diatomic_physical_gausslet_supplement_request_payload,
         diatomic_physical_gausslet_supplement_representation_payload,
         diatomic_physical_gausslet_supplement_preflight_payload,
-        diatomic_physical_gausslet_source_plan_payload,
-    )
-end
-
-_pqs_source_box_route_driver_payload_summary(payload) =
-    isnothing(payload) ? nothing :
-    hasproperty(payload, :summary) ? payload.summary :
-    payload
-
-function _pqs_source_box_route_driver_physical_gausslet_target_report_fields(
-    assembly,
-)
-    target =
-        hasproperty(assembly, :diatomic_physical_gausslet_target_payload) ?
-        assembly.diatomic_physical_gausslet_target_payload :
-        nothing
-    source_plan =
-        hasproperty(assembly, :diatomic_physical_gausslet_source_plan_payload) ?
-        assembly.diatomic_physical_gausslet_source_plan_payload :
-        nothing
-    supplement =
-        hasproperty(assembly, :diatomic_physical_gausslet_supplement_preflight_payload) ?
-        assembly.diatomic_physical_gausslet_supplement_preflight_payload :
-        nothing
-    target_summary = _pqs_source_box_route_driver_payload_summary(target)
-    return (;
-        physical_gausslet_target_summary = target_summary,
-        physical_gausslet_target_status =
-            isnothing(target_summary) ? :not_available :
-            get(target_summary, :status, :available),
-        physical_gausslet_target_blocker =
-            isnothing(target_summary) ? :missing_physical_gausslet_target :
-            get(target_summary, :blocker, nothing),
-        physical_gausslet_source_plan_summary =
-            _pqs_source_box_route_driver_payload_summary(source_plan),
-        physical_gausslet_supplement_preflight_summary =
-            _pqs_source_box_route_driver_payload_summary(supplement),
     )
 end
 
@@ -1885,23 +1842,18 @@ function cartesian_report(system, parent, assembly, recipe)
         shellification_kind = get(low_order_assembly, :shellification_kind, nothing),
     )
 
-    return merge(
-        (;
-            generated_at = Base.Libc.strftime("%Y-%m-%dT%H:%M:%S", time()),
-            route_family = route_skeleton.route_family,
-            route_kind = get(route_skeleton, :route_kind, recipe.route_kind),
-            standard_setup,
-            system_metadata,
-            recipe_metadata,
-            parent_summary,
-            route_summary,
-            parent_basis_object = parent.parent_basis_object,
-            parent_axis_bundle_object = parent.parent_axis_bundle_object,
-            axis_bundle_backend = parent.parent_inputs.parent_axis_bundle_backend,
-        ),
-        _pqs_source_box_route_driver_physical_gausslet_target_report_fields(
-            assembly,
-        ),
+    return (;
+        generated_at = Base.Libc.strftime("%Y-%m-%dT%H:%M:%S", time()),
+        route_family = route_skeleton.route_family,
+        route_kind = get(route_skeleton, :route_kind, recipe.route_kind),
+        standard_setup,
+        system_metadata,
+        recipe_metadata,
+        parent_summary,
+        route_summary,
+        parent_basis_object = parent.parent_basis_object,
+        parent_axis_bundle_object = parent.parent_axis_bundle_object,
+        axis_bundle_backend = parent.parent_inputs.parent_axis_bundle_backend,
     )
 end
 
@@ -1914,7 +1866,6 @@ function cartesian_materialization(report, terminal_basis_realization, materiali
 end
 
 function cartesian_print_summary(report, materialization)
-    maybe_get(obj, key) = isnothing(obj) ? nothing : get(obj, key, nothing)
     recipe = report.recipe_metadata
     setup = report.standard_setup
 
@@ -1941,9 +1892,6 @@ function cartesian_print_summary(report, materialization)
     @show report.parent_summary.axis_counts
     @show report.parent_summary.system_classification
     @show report.route_summary.shellification_kind
-    supplement = report.physical_gausslet_supplement_preflight_summary
-    @show maybe_get(supplement, :supplement_policy)
-    @show maybe_get(supplement, :provider_block_count)
     if isnothing(materialization)
         @show materialization
     elseif materialization isa CartesianIDAHamiltonian

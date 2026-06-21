@@ -7333,3 +7333,58 @@ Next step:
   `physical_gausslet_*` report fields and source-plan payload construction.
   Delete surfaces that now only preserve the false blocked source-plan story, or
   report exact live callers that still require them.
+
+## Cartesian Hamiltonian Producer Pass 031 - Delete Source-Plan Report Mirrors
+
+Commit(s):
+- this branch - Delete source-plan report mirrors
+
+Summary:
+- Deleted the obsolete physical-gausslet source-plan payload type and helper:
+  `_PQSDiatomicPhysicalGaussletCoreShellSourcePlanPayload` and
+  `_pqs_source_box_route_driver_diatomic_physical_gausslet_source_plan_payload`.
+- Removed `diatomic_physical_gausslet_source_plan_payload` construction and the
+  report-field merger that published `physical_gausslet_target_*`,
+  `physical_gausslet_source_plan_summary`, and
+  `physical_gausslet_supplement_preflight_summary`.
+- Simplified `cartesian_report` to return its base report directly and removed
+  stale supplement-preflight print lines. The Cr2 probe no longer treats the old
+  source-plan/final-basis summaries as the route blocker.
+
+Validation:
+- Doer ran `git diff --check`, package load,
+  `tools/h2_pqs_terminal_stage_smoke.jl`, and ignored
+  `tmp/work/h2_terminal_wire02_materialization_validation.jl`.
+- H2 retained the terminal basis endpoint and HP-WIRE-02 materialization:
+  no-request returned `nothing`, requested materialization returned
+  `CartesianIDAHamiltonian{Float64}`, final dimension `471`, H1 lowest
+  `-0.79460371733658908`, self-Coulomb `0.45691176467371986`, and artifact
+  readback one-body delta `0.0`.
+- Manager reviewed the diff, ran `git diff --check`, line accounting,
+  suspicious added-line gate, and focused greps confirming deleted source-plan
+  report names are gone from active source/tools.
+
+Carrying-cost accounting:
+- deleted: source-plan payload type/helper, source-plan assembly field,
+  physical-gausslet report mirror helper and fields, old Cr2 probe
+  source-plan/final-basis blocker reads.
+- simplified: report construction no longer merges stale physical-gausslet
+  mirrors; print summary no longer reports stale supplement-preflight fields.
+- quarantined: H2 HP-WIRE-02 validation remains ignored under `tmp/work`.
+- not deleted because: `diatomic_physical_gausslet_target_payload` and the
+  supplement request/representation/preflight payload chain still have live
+  assembly/probe callers for supplement intent.
+- exact remaining caller/blocker: target payload still carries
+  `:missing_terminal_source_plan_realization` internally for supplement target
+  availability. Collapse or retire that payload chain after supplement
+  preflight ownership is clarified.
+- added src lines: `12`.
+- deleted src lines: `178`.
+- deleted tool lines: `93`.
+- new tests: none.
+- new metadata/status fields: none.
+
+Next step:
+- Audit/collapse the remaining physical-gausslet target and supplement payload
+  chain. Keep supplement intent only if it has a real consumer; otherwise delete
+  the remaining `:missing_terminal_source_plan_realization` blocker story.
