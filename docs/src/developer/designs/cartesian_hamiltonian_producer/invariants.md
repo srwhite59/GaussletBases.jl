@@ -1,0 +1,86 @@
+# Invariants
+
+These guardrails apply to the Cartesian/PQS base Hamiltonian producer.
+
+## Architecture
+
+- Geometry-specific code may produce terminal regions differently for
+  one-center and bond-aligned diatomic systems.
+- After terminal support, retained, and transform records exist, terminal basis
+  realization, one-body assembly, IDA assembly, and
+  `CartesianIDAHamiltonian` construction are shared.
+- Terminal basis realization must not dispatch on atom count, system
+  classification, route kind, bond axis, or terminal role names. It may dispatch
+  on terminal lowering/transform kind.
+- Do not create recursive stage embedding, route-status payload chains, flat
+  field clouds, or report mirrors for construction data.
+- Do not carry numerical matrices, factor tensors, terminal bases, or raw pair
+  data through metadata.
+
+## Basis
+
+- Direct core/slab/boundary blocks use implicit identity maps; do not allocate
+  dense identity matrices.
+- PQS shell blocks are projected against already accepted previous blocks in
+  terminal order.
+- Previous blocks are never rotated by later shells.
+- No global Lowdin is permitted.
+- No global support matrix or global dense coefficient matrix is permitted as
+  production authority.
+- Final-basis self-overlaps are construction checks only, not downstream working
+  data.
+
+## Lowdin
+
+Use symmetric Lowdin through the matrix inverse square root:
+
+```julia
+transform = inv(sqrt(Symmetric(overlap)))
+cleaned = coefficients * transform
+```
+
+Do not hand-roll one-sided eigendecomposition transforms for Lowdin.
+
+## Gauge And Weights
+
+- Slice A sign-canonicalizes completed block columns so localized final
+  integrals/IDA weights are positive.
+- Gausslet final integrals and final IDA weights must be finite, positive, and
+  not near zero.
+- Residual-Gaussian near-zero weights are a different non-base/supplement lane;
+  they are not part of this base producer.
+- Slice C recomputes final localized IDA weights from the supplied
+  sign-canonicalized basis and parent axis weights. Negative recomputed weights
+  mean the supplied basis and weights are inconsistent; Slice C must not repeat
+  sign flips.
+
+## Operators
+
+- Kinetic energy is assembled from final-basis block products:
+
+  ```text
+  K = Tx*S y*Sz + Sx*Ty*Sz + Sx*Sy*Tz
+  ```
+
+- Unit nuclear attraction matrices are uncharged:
+
+  ```text
+  U_A = -1/r_A
+  H1 = K + sum_A Z_A * U_A
+  ```
+
+- Nuclear charges are not applied to `U_A` before constructing
+  `CartesianIDAHamiltonian`.
+- Gaussian-expanded nuclear attraction and localized IDA use term-first
+  contraction with the Gaussian expansion index as the short inner reduction.
+- At most one terminal support-pair workspace should be live. Tile or stream
+  any simultaneous local workspace above 64 MiB.
+
+## Materialization
+
+- PQS materialization receives `terminal_basis_realization` directly.
+- Requested base PQS materialization returns `CartesianIDAHamiltonian{Float64}`
+  directly.
+- Missing terminal basis for requested PQS Hamiltonian construction is an error,
+  not a blocked-result wrapper.
+- Artifact writing uses the existing `write_cartesian_ida_hamiltonian` shape.

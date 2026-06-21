@@ -162,6 +162,24 @@ reorganization.
 Do not duplicate the doer response. Use the running log to preserve strategic
 interpretation and prevent drift.
 
+## Cartesian Hamiltonian producer startup
+
+For Cartesian Hamiltonian producer work, normal startup reading is:
+
+- `docs/src/developer/designs/cartesian_hamiltonian_producer/README.md`
+- `docs/src/developer/designs/cartesian_hamiltonian_producer/current.md`
+- `docs/src/developer/designs/cartesian_hamiltonian_producer/registry.md`
+- `docs/src/developer/designs/cartesian_hamiltonian_producer/invariants.md`
+- `docs/src/developer/algorithm_implementation_index.md`
+
+The full historical design and review rounds remain available under:
+
+- `docs/src/developer/designs/cartesian_hamiltonian_producer/history/`
+- `docs/src/developer/designs/cartesian_hamiltonian_producer/reviews/`
+
+Those history/review files are not normal startup reading unless a task
+explicitly asks for design-history review or archaeology.
+
 ## Structured state, staged metadata, and test runtime rules
 
 Short commandment:
@@ -348,15 +366,24 @@ unless the manager explicitly asks for one.
 
 ## Cartesian Hamiltonian producer design authority
 
-For Cartesian Hamiltonian producer source work, read
-`docs/src/developer/cartesian_hamiltonian_producer_design.md` before
-implementation.
+For Cartesian Hamiltonian producer source work, use the compact current
+authority path:
+
+- `docs/src/developer/designs/cartesian_hamiltonian_producer/README.md`
+- `docs/src/developer/designs/cartesian_hamiltonian_producer/current.md`
+- `docs/src/developer/designs/cartesian_hamiltonian_producer/registry.md`
+- `docs/src/developer/designs/cartesian_hamiltonian_producer/invariants.md`
 
 Before Cartesian/PQS numerical implementation, also check
 `docs/src/developer/algorithm_implementation_index.md` for existing kernels,
 optimization notes, and oracle/reference paths. This index is navigation, not
 new algorithm authority; use it to avoid reimplementing known optimized
 patterns.
+
+The full June 2026 design and reviews are historical material under
+`docs/src/developer/designs/cartesian_hamiltonian_producer/history/` and
+`docs/src/developer/designs/cartesian_hamiltonian_producer/reviews/`; do not
+use them as normal startup reading.
 
 Cartesian Hamiltonian producer source work is currently authorized only for
 these approved design IDs:

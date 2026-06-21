@@ -7487,3 +7487,41 @@ Next step:
   in-memory base PQS boundary, and Slice D base materialization is ratified; any
   remaining work should be classified as public polish, larger-system
   performance stress, or a separate non-base Hamiltonian lane.
+
+## Cartesian Hamiltonian Producer Pass 034 - Compact Design Authority
+
+Commit(s):
+- this branch - Compact Cartesian Hamiltonian design authority
+
+Summary:
+- Accepted a docs-only restructuring of the Cartesian Hamiltonian producer
+  design record after the design-governed implementation branch merged to
+  `main`. The compact current authority now lives under
+  `docs/src/developer/designs/cartesian_hamiltonian_producer/`, split into
+  `README.md`, `current.md`, `registry.md`, `invariants.md`, and
+  `implementation_slices.md`.
+- Preserved the full June 2026 design document verbatim under
+  `history/cartesian_hamiltonian_producer_design_2026-06_full.md` and moved
+  review rounds under the same design directory. The old top-level design file
+  is now only a redirect stub.
+- Updated `AGENTS.md` and the developer index so normal agent startup reads the
+  compact authority path rather than the 1600-line historical design.
+
+Validation:
+- Manager reviewed the compact authority files, corrected the Slice A/one-body
+  signatures in `registry.md`, ran `git diff --check`, confirmed the historical
+  full design matches the pre-compaction file byte-for-byte, and checked that
+  stale old-path hits are confined to historical review/log references or the
+  redirect path.
+
+Goal advancement:
+- LT: reduces design drift by keeping one compact current authority and one
+  complete historical archive.
+- MT: closes the immediate documentation-carrying-cost problem from the
+  design-first Hamiltonian producer lane. Manager-log splitting remains a
+  separate deferred docs-maintenance task.
+
+Next step:
+- Use the compact design authority for future Cartesian Hamiltonian producer
+  work. Do not restart implementation from the historical design/review files
+  unless investigating past decisions.
