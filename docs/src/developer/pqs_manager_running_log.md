@@ -6935,3 +6935,36 @@ Next step:
 - Before any Slice C source work, get explicit approval of the candidate IDs
   and name the reviewed H2 self-Coulomb/IDA parity value in the implementation
   handoff.
+
+## Cartesian Hamiltonian Producer Pass 022 - Slice C Fast Coulomb Reuse
+
+Commit(s):
+- this branch - Tighten Slice C fast Coulomb reuse
+
+Summary:
+- Tightened the Slice C candidate design so localized IDA explicitly uses PGDG
+  `pair_factor_terms_raw` as the raw numerator source.
+- Added `_mapped_coulomb_expanded_symmetric_matrix` as the fast term-first loop
+  donor while making clear it is not directly callable for terminal block
+  layout because it builds a full ordinary Cartesian product matrix.
+- Marked `_nested_weight_aware_pair_terms` /
+  `_nested_support_reference_pair_sum` as support-set oracle patterns and
+  `_ordinary_cartesian_ida_from_pair_factors` as a consumer/convention example
+  whose term-by-term `kron` path must not be copied when term-first contraction
+  is available.
+
+Guardrail:
+- `HP-FN-04` remains a candidate only. The pass does not approve Slice C source
+  work or any new production surface.
+- Future implementation must report whether raw pair terms came directly from
+  `pgdg.pair_factor_terms_raw` or through
+  `_pqs_source_box_ida_factor_provenance`, and confirm those tensors were not
+  rebuilt inside terminal block loops.
+
+Validation:
+- Docs-only pass; manager inspected existing IDA/pair-factor anchors and ran
+  `git diff --check` plus focused string scans before commit.
+
+Next step:
+- Get explicit approval before converting `HP-FN-04` from candidate to Slice C
+  implementation authority.

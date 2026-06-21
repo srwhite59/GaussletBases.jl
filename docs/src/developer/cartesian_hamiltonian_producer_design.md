@@ -675,14 +675,31 @@ implementation work. Inspect these anchors before coding:
   `_qwrg_fixed_block_interaction_matrix`
 - `src/cartesian_contracted_parent_metrics/core.jl`:
   `_pqs_source_box_ida_factor_provenance`
+- `src/ordinary_mapped_backends.jl`:
+  `_mapped_coulomb_expanded_symmetric_matrix`
 - `src/ordinary_cartesian_ida.jl`:
   `_ordinary_cartesian_ida_from_pair_factors`,
   `_ordinary_cartesian_ida_from_gausslet_bundle`
 
 The current conclusion is that these are donor/oracle patterns, not directly
-callable Slice C kernels for terminal block layout. Slice C must reuse their
-organization and conventions: raw pair-factor numerators, positive final IDA
-weights, term-first Gaussian reduction, and bounded block/tile contraction.
+callable Slice C kernels for terminal block layout. Slice C must reuse this
+organization and convention:
+
+- raw numerator factors come from PGDG `pair_factor_terms_raw`, or from
+  `_pqs_source_box_ida_factor_provenance` as a validation/provenance wrapper
+  over those same arrays;
+- density-normalized `pair_factor_terms` are donor/reference data only for the
+  final-density convention and must not replace the raw numerator in the base
+  terminal contraction;
+- `_mapped_coulomb_expanded_symmetric_matrix` is the fast loop-shape donor:
+  terminal Slice C keeps the Gaussian expansion index as the short inner
+  reduction, but does not call it directly because it constructs a full ordinary
+  Cartesian product matrix;
+- `_nested_weight_aware_pair_terms` and `_nested_support_reference_pair_sum` are
+  support-set oracle patterns, not terminal block-pair kernels;
+- `_ordinary_cartesian_ida_from_pair_factors` is a consumer/convention example;
+  its term-by-term `kron` construction is not an approved implementation pattern
+  when term-first mapped/terminal contraction is available.
 
 Implementation target: **120 source lines**.
 
@@ -702,6 +719,17 @@ assemble_terminal_ida_interaction!(
 This function is internal to `CartesianFinalBasisRealization`; it is not
 exported and does not introduce a result object.
 
+Expected inputs:
+
+- `coefficients` are the Coulomb Gaussian expansion coefficients;
+- `raw_pair_terms_x/y/z` are term-first PGDG raw pair-factor tensors with shape
+  `(nterms, n_axis, n_axis)`;
+- the helper may accept arrays obtained directly from
+  `pgdg.pair_factor_terms_raw` or from the raw-axis fields of
+  `_pqs_source_box_ida_factor_provenance`;
+- the helper must not build those tensors per terminal block pair and must not
+  allocate any `(nterms, tile_rows, tile_cols)` workspace.
+
 Rules:
 
 - do not form a global support raw-pair matrix;
@@ -720,11 +748,19 @@ Rules:
   terminal support-pair tile:
 
   ```text
-  sum(coeff[k] * raw_x[k, ix, jx] * raw_y[k, iy, jy] * raw_z[k, iz, jz])
+  for each final support pair (a,b) in the current tile:
+      ix, iy, iz = left_state[a]
+      jx, jy, jz = right_state[b]
+      value = sum(coeff[k] *
+                  raw_x[k, ix, jx] *
+                  raw_y[k, iy, jy] *
+                  raw_z[k, iz, jz])
   ```
 
 - apply the final IDA density gauge only after the raw numerator tile has been
   contracted through the terminal block coefficients and positive final weights;
+- do not use `_ordinary_cartesian_ida_from_pair_factors` or any term-by-term
+  `kron` construction as production authority;
 - no separate IDA payload object is proposed.
 
 Stop rule:
@@ -1146,6 +1182,10 @@ Merge validation:
 - final localized IDA weights are positive and finite;
 - implementation report states which IDA anchors were directly reused versus
   used only as donor patterns;
+- implementation report states whether raw pair-factor terms came directly from
+  `pgdg.pair_factor_terms_raw` or through
+  `_pqs_source_box_ida_factor_provenance`, and confirms they were not rebuilt
+  inside terminal block loops;
 - Cr2 base Hamiltonian construction is a later stress/performance gate, not a
   blocker for the first H2 Slice C correctness merge.
 

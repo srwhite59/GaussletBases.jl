@@ -197,7 +197,9 @@ Key docs:
 Source anchors:
 - **oracle/reference only**: `src/cartesian_nested_faces.jl`,
   `_nested_factorized_weight_aware_pair_terms`,
-  `_nested_weight_aware_pair_terms`
+  `_nested_weight_aware_pair_terms`, `_nested_support_reference_pair_sum`
+- **active donor pattern**: `src/ordinary_mapped_backends.jl`,
+  `_mapped_coulomb_expanded_symmetric_matrix`
 - **active donor pattern**: `src/ordinary_qw_raw_blocks.jl`,
   `_qwrg_fixed_block_interaction_matrix`
 - **active donor pattern**: `src/cartesian_contracted_parent_metrics/core.jl`:
@@ -205,10 +207,15 @@ Source anchors:
 - **consumer example only**: `src/ordinary_cartesian_ida.jl`,
   `_ordinary_cartesian_ida_from_pair_factors`,
   `_ordinary_cartesian_ida_from_gausslet_bundle`
+- **retired/do not call**: `src/ordinary_cartesian_ida.jl`,
+  `_ordinary_cartesian_ida_from_pair_factors` term-by-term `kron` construction
+  when a term-first mapped/terminal contraction is available
 
 Do-not-forget rule:
-Carry raw pair numerators through projection/realization first. Normalize only
-at the reviewed final retained/final-basis density boundary.
+Use PGDG `pair_factor_terms_raw` as the raw numerator source and keep the
+Gaussian expansion index as the short inner reduction. Carry raw pair numerators
+through projection/realization first. Normalize only at the reviewed final
+retained/final-basis density boundary.
 
 ## Performance And Reuse Policy
 
