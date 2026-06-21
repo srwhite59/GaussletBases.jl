@@ -79,6 +79,36 @@ function _append_direct!(blocks, record, bundles, overlaps, nextcol, identity_at
         blocks, support.unit_key, support.support_indices, support.support_states,
         nothing, nextcol)
 end
+function _validate_shell_seed_contract(support, rule, raw_plan, modes, source_shape)
+    isnothing(rule) &&
+        throw(ArgumentError("terminal PQS seed requires retained source-mode rule"))
+    rule.retained_rule_kind === :boundary_comx_product_mode_selection ||
+        throw(ArgumentError("terminal PQS seed requires boundary retained rule"))
+    rule.transform_kind === :source_mode_column_selector ||
+        throw(ArgumentError("terminal PQS seed requires source-mode column selector"))
+    rule.source_mode_dims == source_shape ||
+        throw(ArgumentError("terminal PQS seed retained-rule source-mode mismatch"))
+    rule.source_mode_ordering === :x_major_y_major_z_fast ||
+        throw(ArgumentError("terminal PQS seed requires x-major/y-major/z-fast ordering"))
+    rule.retained_column_indices == modes.column_indices ||
+        throw(ArgumentError("terminal PQS seed retained columns do not match generated boundary columns"))
+    rule.retained_mode_indices == modes.mode_indices ||
+        throw(ArgumentError("terminal PQS seed retained modes do not match generated boundary modes"))
+    rule.retained_count == length(modes.column_indices) ||
+        throw(ArgumentError("terminal PQS seed retained count does not match boundary columns"))
+    isnothing(raw_plan) && return nothing
+    raw_plan.source_intervals == support.outer_box ||
+        throw(ArgumentError("terminal PQS seed raw source intervals do not match support outer box"))
+    raw_plan.source_shape == length.(support.outer_box) ||
+        throw(ArgumentError("terminal PQS seed raw source shape does not match support outer box"))
+    raw_plan.source_mode_dims == source_shape ||
+        throw(ArgumentError("terminal PQS seed raw source-mode dimensions mismatch"))
+    raw_plan.source_mode_ordering == rule.source_mode_ordering ||
+        throw(ArgumentError("terminal PQS seed raw source-mode ordering mismatch"))
+    raw_plan.source_mode_count == prod(source_shape) ||
+        throw(ArgumentError("terminal PQS seed raw source-mode count mismatch"))
+    return nothing
+end
 function _shell_seed(record, contract, bundles)
     support = record.support_record
     source_shape = Tuple(Int(value) for value in support.source_mode_shape)
@@ -91,8 +121,8 @@ function _shell_seed(record, contract, bundles)
     states = NTuple{3,Int}[_cartesian_unflat_index(index, dims) for index in indices]
     coefficients = Matrix{Float64}(full_coefficients[indices, modes.column_indices])
     rule = get(contract.metadata, :raw_product_source_retained_rule, nothing)
-    !isnothing(rule) && Int(rule.retained_count) == size(coefficients, 2) ||
-        throw(ArgumentError("terminal PQS retained rule does not match seed columns"))
+    raw_plan = get(contract.metadata, :raw_product_source_plan, nothing)
+    _validate_shell_seed_contract(support, rule, raw_plan, modes, source_shape)
     return (; indices, states, coefficients)
 end
 function _subtract_previous(state, block, residual)

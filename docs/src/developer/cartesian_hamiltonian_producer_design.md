@@ -1119,11 +1119,13 @@ Merge validation:
 - H2 old/common dense result and new blockwise result agree as a temporary
   cross-check if such an oracle is still live, after which the cross-check
   adapter is deleted;
-- Cr2 final `K` and every unit center matrix `U_A` are finite and symmetric;
 - N2 light separated-diatomic one-body validation reduces cumulative
   allocations by at least `10x` from the recorded `~18,063 MiB` baseline while
   preserving the H/H2 energies and the `64 MiB` simultaneous local-workspace
   cap;
+- Cr2 one-body construction is a later whole-producer stress/performance gate,
+  not required to close the first Slice B correctness/performance merge unless
+  explicitly requested;
 - no IDA, Hamiltonian artifact, residual-GTO, or driver simplification work is
   included;
 - no global support-space operator, global dense coefficient matrix, or retired

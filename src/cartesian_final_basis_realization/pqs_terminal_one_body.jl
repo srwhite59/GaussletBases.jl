@@ -46,6 +46,11 @@ function _check_terminal_factor_terms(terms, nterms, n, name)
         throw(DimensionMismatch("terminal Gaussian $name factor is too small"))
     all(isfinite, terms) ||
         throw(ArgumentError("terminal Gaussian $name factor is not finite"))
+    for term in 1:nterms
+        matrix = @view terms[term, :, :]
+        norm(matrix - transpose(matrix), Inf) <= 1.0e-10 ||
+            throw(ArgumentError("terminal Gaussian $name factor term is not symmetric"))
+    end
     return terms
 end
 

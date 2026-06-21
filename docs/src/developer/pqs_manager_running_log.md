@@ -6997,3 +6997,54 @@ Validation:
 
 Next step:
 - Apply the strengthened gate to any Slice C implementation blurb and review.
+
+## Cartesian Hamiltonian Producer Pass 024 - Slice B Contract Hardening
+
+Commit(s):
+- this branch - Harden terminal seed and Gaussian factor contracts
+
+Summary:
+- Hardened `_shell_seed` so terminal PQS realization no longer only
+  count-checks generated source-box boundary columns. It now validates retained
+  rule kind, transform kind, source-mode dimensions, ordering, exact retained
+  column indices, exact retained mode tuples, and retained count. When the
+  existing raw product source plan is available on the transform contract, it
+  also validates source intervals, source shape, source-mode dimensions,
+  ordering, and source-mode count.
+- Hardened the Slice B Gaussian-sum nuclear helper so every term matrix is
+  finite and symmetric before upper-triangular block mirroring can hide bad
+  input.
+- Amended Slice B validation wording: light separated N2 closes the current
+  correctness/performance gate; Cr2 one-body construction is a later
+  whole-producer stress/performance gate unless explicitly requested.
+
+Guardrail:
+- The suspicious-line gate flagged the new `contract.metadata` read. This pass
+  uses an existing transform-contract metadata field,
+  `:raw_product_source_plan`, only to validate the already-existing retained
+  source-mode rule against its raw source plan. It does not add a metadata key
+  or make metadata a new algorithmic transport surface.
+
+Validation:
+- `git diff --check`
+- package load
+- `tools/h2_pqs_terminal_stage_smoke.jl`
+- `tmp/work/terminal_one_body_validation.jl h h2`
+- H: `-0.49855234726272429`
+- H2: `-0.79460371733658908`
+- N2 and Cr2 were not rerun; this was a narrow contract-hardening pass and the
+  design now records Cr2 as a later stress gate.
+
+Carrying-cost accounting:
+- deleted: none.
+- simplified: terminal seed/retained-rule mismatch now fails at the source of
+  shell realization rather than being inferred later from numerical behavior.
+- quarantined: none.
+- not deleted because: raw source facts still live on transform-contract
+  metadata until a later typed payload-collapse pass.
+- exact remaining caller/blocker: Slice C still needs explicit approval of
+  corrected `HP-FN-04` before source work.
+- added src lines: `37`.
+- deleted src lines: `2`.
+- new tests: none.
+- new metadata/status fields: none.
