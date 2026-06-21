@@ -7778,3 +7778,45 @@ Risk or guardrail:
 Next step:
 - Start with a focused terminal-basis allocation/timing audit on corrected Be2,
   then implement a bounded optimization only after the cost center is localized.
+
+## Cartesian Hamiltonian Producer Pass 041 - Terminal Basis Allocation Audit
+
+Commit(s):
+- none from doer; this entry records an ignored `tmp/work` measurement
+
+Summary:
+- Accepted a focused terminal-basis audit on corrected Be2 far
+  (`R = 8.0`, `q = 5`, `core_spacing = 0.15`). The topology-rich case has 12
+  terminal blocks, final dimension `1395`, max cross overlap about `3.17e-14`,
+  and largest local workspace near `64 MiB`.
+- The terminal realization replay allocated about `1620 MiB` and took `3.248 s`
+  in the instrumented run; the cross-overlap audit alone allocated about
+  `339 MiB`.
+- The dominant source is repeated support-action/support-cross construction:
+  the shared molecular shell projected against nine previous blocks, enlarged
+  to effective support `4225`, and allocated about `462 MiB` in projection plus
+  about `306 MiB` across Gram and identity-check support actions. Large
+  atom-local shells showed the same pattern at smaller scale.
+
+Validation:
+- Doer ran `git diff --check`, package load, and the ignored
+  `tmp/work/be2_terminal_basis_perf_audit.jl`; final worktree was clean.
+
+Goal advancement:
+- LT/Roadmap: provides a measured optimization target on a Cr2-relevant
+  separated-topology proxy without running Cr2.
+- MT: first optimization should target support-action construction and local
+  workspace reuse/streaming inside terminal basis realization. Do not start by
+  removing cross-audit validation; it is smaller than projection/Gram/check
+  allocation and still protects the final-basis contract.
+
+Risk or guardrail:
+- Avoid creating a persistent cache or new stage object. A first optimization
+  should stay file-local and bounded, preferably inside
+  `pqs_terminal_basis_realization.jl`, with no new public API, metadata fields,
+  or report/status vocabulary.
+
+Next step:
+- Issue a narrow implementation pass for terminal-basis support-action buffer
+  reuse/streaming, using corrected Be2 far as the performance proxy and H/H2
+  public endpoints as correctness gates.
