@@ -7082,3 +7082,49 @@ Next step:
   Slice C. The blurb must approve `HP-FN-04` for source work, require explicit
   parent weights, forbid cache/payload/orchestration additions, and preserve the
   term-first raw-pair contraction pattern.
+
+## Cartesian Hamiltonian Producer Pass 026 - Slice C1 Terminal IDA Kernel
+
+Commit(s):
+- this branch - Implement terminal IDA interaction kernel
+
+Summary:
+- Accepted the narrow `HP-FN-04` source implementation for Slice C1. The new
+  terminal IDA helper constructs final-basis `electron_electron_ida` blocks from
+  raw PGDG pair-factor terms and explicit parent axis weights.
+- The implementation computes final localized weights once per terminal block,
+  contracts unnormalized raw numerator blocks through the realized terminal
+  basis, normalizes by positive final weights, and mirrors upper-triangular
+  block results.
+- It reuses the existing Slice B term-first support-pair action instead of
+  adding a second contraction engine.
+
+Guardrail:
+- This pass does not approve `HP-FN-05`. It adds no Hamiltonian construction,
+  driver/materialization/artifact path, stage/report field, metadata key,
+  payload, status framework, or persistent pair-factor cache.
+
+Validation:
+- Doer ran `git diff --check`, package load,
+  `tools/h2_pqs_terminal_stage_smoke.jl`, and ignored
+  `tmp/work/h2_terminal_c1_ida_validation.jl`.
+- H2 validation reported final dimension `471`, H1 lowest
+  `-0.79460371733658908`, finite/symmetric `electron_electron_ida` with
+  symmetry error `1.665e-15`, positive IDA weights in
+  `[0.35917508613447269, 4.770906361845503]`, and self-Coulomb
+  `0.45691176467371986`, within `1.332e-15` of the reviewed value.
+- Manager reviewed the source diff and confirmed the implementation stayed
+  inside the approved C1 surface.
+
+Carrying-cost accounting:
+- deleted: none.
+- simplified: C1 reuses the terminal Gaussian-sum action from Slice B rather
+  than introducing a duplicate raw-pair contraction engine.
+- quarantined: H2 C1 validation remains ignored under `tmp/work`.
+- not deleted because: no stale C1 source implementation existed to remove.
+- exact remaining caller/blocker: `HP-FN-05` / `CartesianIDAHamiltonian`
+  construction remains unapproved.
+- added src lines: `91`.
+- deleted src lines: `0`.
+- new tests: none.
+- new metadata/status fields: none.

@@ -42,5 +42,6 @@ include("pqs_complete_core_shell_final_basis.jl")
 
 include("pqs_terminal_basis_realization.jl")
 include("pqs_terminal_one_body.jl")
+include("pqs_terminal_ida.jl")
 
 end # module CartesianFinalBasisRealization
