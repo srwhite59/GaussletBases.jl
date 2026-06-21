@@ -6806,3 +6806,58 @@ Next step:
 - Resume Slice B source work with the term-first Gaussian-sum helper inside the
   approved file only, reporting whether existing ordinary helpers were directly
   reusable or only donor patterns for terminal-layout code.
+
+## Cartesian Hamiltonian Producer Pass 019 - Term-First Terminal Nuclear Attraction
+
+Commit(s):
+- this branch - Optimize terminal Gaussian nuclear contraction
+
+Summary:
+- Accepted the Slice B source optimization in
+  `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl`.
+- Added private file-local helpers under the approved `HP-FN-03` surface to
+  accumulate Gaussian-expanded unit nuclear attraction term-first inside each
+  terminal support-pair tile.
+- Kept `assemble_terminal_product_operator!` as the public single-product
+  helper; no K/U payload, cache object, stage field, metadata key, report
+  surface, IDA path, artifact path, or CPBM route was added.
+
+Validation actually used:
+- Doer: `git diff --check`, package load, H2 terminal smoke, H/H2 one-body
+  validation, and light separated N2 one-body validation.
+- Doer reported H `-0.49855234726272429`, H2
+  `-0.79460371733658908`, N2 final dimension `1063`, one-body elapsed
+  `1.47s`, allocations `1191.98 MiB`, largest workspace `49.26 MiB`, and
+  finite symmetric K/U matrices.
+- Manager: reviewed the single-file diff and surface exposure; reran
+  `git diff --check`, package load, H2 terminal smoke, and H/H2 one-body
+  validation. The long N2 gate was not rerun after review; the manager used
+  doer's reported N2 allocation gate to respect the smallest-test discipline.
+
+Goal advancement:
+- LT: advances the generic terminal Hamiltonian producer by making Slice B's
+  nuclear attraction path follow the known term-first Gaussian contraction
+  pattern.
+- MT: reduces the measured N2 one-body allocation cost by about `15x` from the
+  recorded `~18,063 MiB` baseline while keeping the `64 MiB` local-workspace
+  cap.
+
+Carrying-cost accounting:
+- deleted: none.
+- simplified: nuclear attraction contraction no longer allocates one dense
+  final-basis matrix per Gaussian term.
+- quarantined: validation/profiling scripts remain ignored under `tmp/work/`.
+- not deleted because: the single-product K helper remains the approved
+  `HP-FN-03` public helper.
+- exact remaining caller/blocker: further allocation work, if needed, is buffer
+  reuse in terminal product/K assembly or terminal-basis construction, not
+  Gaussian factor reconstruction.
+- added src lines: `92`.
+- deleted src lines: `0`.
+- new tests: none.
+- new metadata/status fields: none.
+
+Guardrail:
+- The private helper is an implementation detail inside the approved Slice B
+  file only. It must not become route orchestration authority or a persistent
+  cache/result surface without another docs-only design amendment.
