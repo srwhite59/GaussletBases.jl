@@ -21,6 +21,8 @@ This section is where to go when you want:
 - [Gausslet methods fundamentals](architecture/gausslet_methods_fundamentals.md)
 - [Algorithm implementation index](algorithm_implementation_index.md)
 - [Developer designs](designs/README.md)
+- [Developer roadmaps](roadmaps/README.md)
+- [Cartesian long-range roadmap](roadmaps/cartesian_long_range_roadmap.md)
 - [Cartesian Hamiltonian producer current authority](designs/cartesian_hamiltonian_producer/README.md)
 - [Cartesian route migration](cartesian/route_migration.md)
 - [Cartesian feature donor inventory](cartesian/feature_donor_inventory.md)

@@ -24,3 +24,9 @@ Historical material:
 
 Historical files are useful for context and audit trails, but they are not
 normal startup reading and should not override the compact current authority.
+
+Strategic context:
+
+- [Cartesian long-range roadmap](../../roadmaps/cartesian_long_range_roadmap.md)
+  sequences future public-producer, unification, supplement, high-order, and
+  Cr2 validation work. It is not implementation authority.

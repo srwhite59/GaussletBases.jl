@@ -7525,3 +7525,39 @@ Next step:
 - Use the compact design authority for future Cartesian Hamiltonian producer
   work. Do not restart implementation from the historical design/review files
   unless investigating past decisions.
+
+## Cartesian Hamiltonian Producer Pass 035 - Add Long-Range Roadmap
+
+Commit(s):
+- this branch - Add Cartesian long-range roadmap
+
+Summary:
+- Added `docs/src/developer/roadmaps/cartesian_long_range_roadmap.md` as
+  strategic sequencing for the post-recovery Cartesian era. The roadmap records
+  that the base PQS Hamiltonian path now exists and that the next program is
+  public producer hardening, WL/QW/PQS downstream unification, supplement and
+  correction migration, high-order geometry integration, Cr2-scale validation,
+  and donor retirement.
+- Linked the roadmap from the developer index and the compact Hamiltonian
+  producer README as strategic context only. It is explicitly not
+  implementation authority and does not approve new production surfaces.
+- Reconciled the pasted roadmap with current `main`: R0 is marked partially
+  complete because Slice D ratification, the base H2 Hamiltonian smoke, and
+  compact design authority are already done. Remaining R0 work is stale
+  route-status docs, baseline recording, and the pair/assembly stage decision.
+
+Validation:
+- Manager ran `git diff --check` and focused greps confirming the roadmap says
+  it is not implementation authority and that R0 reflects the current state.
+
+Goal advancement:
+- LT: creates a durable strategic sequence without expanding normal startup
+  reading or weakening the compact design gate.
+- MT: separates future public-polish/unification/supplement/high-order lanes
+  from the completed internal base Hamiltonian recovery lane.
+
+Next step:
+- Execute R0 follow-up only when needed: refresh stale route-status docs,
+  record a quantitative baseline, and decide whether `cartesian_pair_terms` and
+  `cartesian_assembly` become real downstream authority or leave the base public
+  workflow.
