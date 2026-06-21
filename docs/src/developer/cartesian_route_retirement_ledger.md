@@ -88,6 +88,23 @@ outside this decomposed WL acceptance contract.
 
 ## Current Replacement Pressure
 
+R0 status refresh, 2026-06-21:
+
+- The base H2 PQS Hamiltonian path no longer stops at source-plan,
+  supplement-preflight, terminal shell projection, or blocked-report status
+  vocabulary. The current endpoint materializes `CartesianIDAHamiltonian{Float64}`
+  and validates artifact readback through `tools/h2_pqs_base_hamiltonian_smoke.jl`.
+- Older bullets in this section record replacement pressure accumulated during
+  route-spine recovery. Treat source-space, pair-block, placement, and
+  provider-level blockers below as scoped to those local adapter/donor lanes,
+  not as the current status of the base PQS Hamiltonian producer.
+- The open R0 design question is the role of `cartesian_pair_terms` and
+  `cartesian_assembly`: they either need real downstream authority for a live
+  consumer such as supplements/mixed blocks, or they should later collapse out
+  of the base public workflow. This ledger does not decide that source change.
+- Cr2 remains stress/performance and consumer-readiness evidence. It is not the
+  next correctness blocker for the recovered base H2 PQS Hamiltonian endpoint.
+
 - Selected global overlap, kinetic, position_x, position_y, position_z, x2_x,
   x2_y, and x2_z equivalence are now covered for White--Lindsey face/face and
   face/edge slices.

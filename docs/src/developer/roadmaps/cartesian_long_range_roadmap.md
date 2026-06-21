@@ -109,11 +109,12 @@ Done:
 - Design authority compacted into
   `docs/src/developer/designs/cartesian_hamiltonian_producer/`.
 - Full June 2026 design and review rounds preserved as history.
+- Route migration/status docs, feature donor inventory, and route retirement
+  ledger refreshed so they no longer describe base PQS as blocked at
+  source-plan or supplement-preflight recovery.
 
 Still open:
 
-- refresh stale route-status pages and donor inventories that still describe
-  the pre-Hamiltonian recovery state;
 - record a quantitative R0 baseline:
   - source/test/doc line counts by lane;
   - H2 base Hamiltonian smoke time/allocation;

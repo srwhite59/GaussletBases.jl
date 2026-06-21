@@ -15,13 +15,19 @@ deleted.
 - Donor migration should preserve numerical capability without resurrecting old
   report, readiness, probe, status, blocker, availability, or helper-payload
   schema machinery.
+- The base H2 PQS Hamiltonian producer now exists and materializes
+  `CartesianIDAHamiltonian{Float64}` through the current driver harness. This
+  inventory tracks donor features outside that recovered base path.
+- Residual-GTO/MWG supplements, corrections, branch/fragment workflows, and
+  high-order geometry are future roadmap lanes, not proof that the base PQS
+  Hamiltonian endpoint is still blocked.
 
 ## Migration Table
 
 | feature | donor files/functions | current surface | what thin route lacks | temporary ladder case | proposed thin-route destination | deletion condition | priority |
 |---|---|---|---|---|---|---|---|
-| Residual-GTO / MWG supplement materialization | `ordinary_qw_residuals.jl`; `ordinary_qw_raw_blocks.jl`; `ordinary_qw_operator_assembly.jl`; `cartesian_gto_probes.jl`; residual-GTO and mixed gausslet/GTO block helpers | mixed public/internal | The H2-specific residual-GTO materializer has been retired. The current independent PQS route carries `:mwg_residual_gto` only as supplement preflight intent until generic terminal shell realization and a new producer exist. | None. Future cases should cover external consumer use after a generic producer is rebuilt. | Public Cartesian IDA Ham artifact plus any consumer-driven supplement/basis artifact contract. | Delete or shrink donor pieces after a public producer absorbs mixed gausslet/GTO blocks, GTO/GTO blocks, residual representation, MWG interaction kernels, and consumer-validated IDA output, or after the feature is intentionally abandoned. | P1 |
-| Ham/JLD2 artifact contract and basis transfer/roundtrip | `cartesian_basis_representation.jl`; `cartesian_cross_overlap.jl`; `cartesian_representation_transfer.jl`; `cartesian_carried_spaces.jl`; current JLD2 writer patterns | public/mixed | Public Cartesian IDA Hamiltonian read/write exists, but no active H2 residual-GTO route currently materializes that artifact through the PQS driver. This does not yet provide Cr2-ready production, full donor retirement, or a public basis/supplement artifact contract. | None until the generic terminal producer can materialize a public artifact. | Compact public artifact writer/reader for basis/provenance only if a downstream consumer needs it, paired with the public Cartesian IDA Ham artifact. | Donor line can be deleted or retained narrowly once thin artifacts can be loaded and used by downstream consumers without old representation wrappers. | P1 |
+| Residual-GTO / MWG supplement materialization | `ordinary_qw_residuals.jl`; `ordinary_qw_raw_blocks.jl`; `ordinary_qw_operator_assembly.jl`; `cartesian_gto_probes.jl`; residual-GTO and mixed gausslet/GTO block helpers | mixed public/internal | The H2-specific residual-GTO materializer has been retired. The base PQS Hamiltonian endpoint now exists; what remains missing is generic final-basis supplement augmentation and consumer validation for mixed gausslet/GTO and MWG terms. | None yet. Future cases should cover a reviewed generic supplement endpoint and external consumer use. | Generic final-basis supplement augmentation paired with the public Cartesian IDA Hamiltonian boundary and any consumer-driven supplement/basis artifact contract. | Delete or shrink donor pieces after a public producer absorbs mixed gausslet/GTO blocks, GTO/GTO blocks, residual representation, MWG interaction kernels, and consumer-validated IDA output, or after the feature is intentionally abandoned. | P1 |
+| Ham/JLD2 artifact contract and basis transfer/roundtrip | `cartesian_basis_representation.jl`; `cartesian_cross_overlap.jl`; `cartesian_representation_transfer.jl`; `cartesian_carried_spaces.jl`; current JLD2 writer patterns | public/mixed | Public Cartesian IDA Hamiltonian read/write exists, and the H2 base PQS endpoint writes and reads that Hamiltonian artifact. This still does not provide Cr2-ready production, full donor retirement, or a public basis/supplement artifact contract. | `tools/h2_pqs_base_hamiltonian_smoke.jl` covers the current base Hamiltonian artifact; future basis/provenance cases should wait for a downstream consumer need. | Compact public artifact writer/reader for basis/provenance only if a downstream consumer needs it, paired with the public Cartesian IDA Ham artifact. | Donor line can be deleted or retained narrowly once thin artifacts can be loaded and used by downstream consumers without old representation wrappers. | P1 |
 | Hydrogenic-core / ESOI corrections | `ordinary_qw_corrections.jl`; `HydrogenicCoreProjectorCorrectionSpec`; `HydrogenicCoreBranchCorrectionSpec`; `HydrogenicCoreCorrectionSpec`; `include_esoi`; `apply_ordinary_cartesian_corrections`; `ordinary_cartesian_corrected_branch` | public | No thin-route correction stage for hydrogenic-core projector, branch-local correction, or ESOI-style correction after one-body assembly. | `h2_wl_branch_correction` or a smaller `he_wl_core_correction` case. | Thin route correction stage after H1 assembly and before optional branch/fragment materialization. | Delete donor implementation after thin route exposes equivalent correction semantics, or explicitly retire the public correction feature. | P2 |
 | EGOI / density-density correction | `hamiltonian_corrections.jl`; `EGOIDensityDensityCorrectionResult`; `egoi_target_product_matrix`; `egoi_target_coulomb_matrix`; `egoi_density_density_correction`; `egoi_stationary_hamiltonian_correction`; `ordinary_cartesian_egoi_stationary_correction` | public | Thin H1-J/RHF path has no EGOI correction hook or driver-owned correction artifact. | `he_wl_egoi_correction` or `h2_wl_egoi_correction`. | Post-H1/H1-J correction stage in thin materialization, with compact correction summary and optional saved artifact. | Delete donor path only after thin route reproduces or intentionally drops the EGOI correction capability. | P2 |
 | Branch / fragment Hamiltonian workflow | `ordinary_qw_operator_assembly.jl`; `ordinary_qw_corrections.jl`; branch nuclear-charge and fragment/counterpoise helpers | public/mixed | Thin route does not yet express branch nuclear-charge variants, fragment Hamiltonians, or counterpoise-style corrected branches. | `h2_wl_fragment_branch` with pure gausslet first; supplement branch later. | Route-level branch materialization mode using the same basis/operator artifact contract. | Delete donor path after branch/fragment workflow is represented by thin driver cases or abandoned. | P3 |
@@ -33,13 +39,14 @@ deleted.
 
 1. P1 residual-GTO / MWG supplement materialization: the H2-specific
    residual-GTO materializer has been retired. Public `CartesianIDAHamiltonian`
-   read/write remains live, but no active PQS route currently materializes that
-   artifact. Residual-GTO/MWG supplement work is future generic terminal
-   producer work.
+   read/write remains live, and the H2 base PQS endpoint now materializes that
+   artifact. Residual-GTO/MWG supplement work is future generic final-basis
+   augmentation work.
 2. P1 Ham/JLD2 artifact contract and basis transfer/roundtrip: the Ham side has
-   a public Cartesian IDA writer/reader. Remaining work is downstream consumer
-   coverage and any explicitly needed basis/provenance contract, not private
-   H2 sidecar revival or private H1-J/RHF solver diagnostics.
+   a public Cartesian IDA writer/reader. The current base H2 PQS smoke covers
+   the Hamiltonian artifact. Remaining work is downstream consumer coverage and
+   any explicitly needed basis/provenance contract, not private H2 sidecar
+   revival or private H1-J/RHF solver diagnostics.
 3. P2 hydrogenic-core / ESOI corrections.
 4. P2 EGOI / density-density correction.
 5. P3 branch / fragment Hamiltonian workflow.

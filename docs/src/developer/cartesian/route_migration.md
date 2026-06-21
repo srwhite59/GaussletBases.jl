@@ -10,6 +10,13 @@ This is the current developer note for the Cartesian/PQS route on `main`.
 - Validation now uses driver ladders, not private helper payload tests.
 - Old Cartesian code remains feature-donor inventory until its features are
   migrated, explicitly abandoned, or proven unused.
+- The base H2 PQS Hamiltonian endpoint now materializes
+  `CartesianIDAHamiltonian{Float64}` and validates artifact readback through
+  `tools/h2_pqs_base_hamiltonian_smoke.jl`.
+- Residual-GTO/MWG supplements and other non-base Hamiltonians are no longer
+  the immediate PQS route status; they are future roadmap work.
+- `cartesian_pair_terms` and `cartesian_assembly` remain in the public stage
+  sequence, but their role in the base public workflow is an open R0 decision.
 
 The target architecture is a thin, staged driver:
 
@@ -57,6 +64,48 @@ construction object.
 Use `--dry-run` or `--list` for quick command-discovery checks when a pass does
 not need numerical validation.
 
+Run the current H2 base PQS Hamiltonian endpoint smoke with:
+
+```text
+julia --project=. tools/h2_pqs_base_hamiltonian_smoke.jl
+```
+
+That smoke validates the materialized `CartesianIDAHamiltonian`, H2 final
+dimension, H1 lowest value, localized IDA self-Coulomb value, and artifact
+readback. It is the current endpoint evidence for the recovered base H2 PQS
+path.
+
+## R0 Status Audit
+
+This audit classifies stale pre-recovery claims for the roadmap R0 closure lane.
+
+Update docs now:
+
+- this route migration/status page, especially the `pqs_diatomic` row;
+- [Feature donor inventory](feature_donor_inventory.md), especially
+  residual-GTO/MWG and artifact rows that previously implied no base PQS
+  producer exists;
+- [Cartesian route retirement ledger](../cartesian_route_retirement_ledger.md),
+  with a current-status note separating old replacement-pressure bullets from
+  the recovered base Hamiltonian endpoint.
+
+Leave as historical:
+
+- `docs/src/developer/pqs_manager_running_log.md`;
+- `docs/src/developer/designs/cartesian_hamiltonian_producer/history/`;
+- `docs/src/developer/designs/cartesian_hamiltonian_producer/reviews/`;
+- archived demolition notes, handoffs, blurb logs, and old pass responses.
+
+Active pressure for later R0/repo-manager work:
+
+- record the quantitative R0 baseline: line counts, H2 smoke timing/allocation,
+  light separated-diatomic one-body/IDA timing if practical, and current Cr2
+  stress status;
+- decide whether `cartesian_pair_terms` and `cartesian_assembly` gain real
+  downstream authority or collapse out of the base public workflow;
+- keep Cr2 as stress/performance and consumer-readiness evidence, not the next
+  base-PQS correctness gate.
+
 ## Current Driver Lines
 
 | line | current driver inputs | purpose | expected coarse facts | deletion/merge condition |
@@ -64,7 +113,7 @@ not need numerical validation.
 | `wl_atomic` | `test/driver_inputs/he_wl_q5_pure_gausslet_h1.jl`; `test/driver_inputs/he_wl_q5_gto_h1.jl` | Preserve WL atomic pure-gausslet and supplement-capable driver entry. | Driver recognizes WL; parent/basis construction runs; H1 materialization is finite when requested; GTO path reaches its current intended stage. | Delete or fold into main matrix once WL atomic is fully represented by the common route and no separate line ladder adds information. |
 | `wl_diatomic` | `test/driver_inputs/h2_wl_q5_pure_gausslet_h1.jl`; `test/driver_inputs/h2_wl_q5_gto_h1.jl` | Preserve WL diatomic route capability while WL and PQS are merged into common staged construction. | Driver recognizes WL diatomic; parent axes and route stages execute; H1/GTO stages fail only at real missing construction objects. | Delete or fold into main matrix once diatomic WL uses the common route without old donor wrappers. |
 | `pqs_atomic` | `test/driver_inputs/he_pqs_q5_wlmap.jl`; `test/driver_inputs/he_pqs_q5_gto.jl` | Keep an atomic PQS/source-box route smoke while PQS support/source construction is generalized. | Driver recognizes PQS; route executes through the current atomic stage; GTO case reaches supplement staging or a real missing object. | Delete or fold into main matrix once atomic PQS shares the same route stages as the diatomic PQS path. |
-| `pqs_diatomic` | `test/driver_inputs/h2_pqs_q5_independent_source_box_r4.jl`; `test/driver_inputs/h2_pqs_q5_independent_source_box_r4_supplement_preflight.jl` | Protect the independent H2 PQS source-box line and supplement preflight while the generic terminal realization is rebuilt. | Independent H2 and Cr2 share the generic terminal route and currently block at `:missing_terminal_shell_projection`; supplement policy remains visible as preflight intent only. | Delete or fold into main matrix once generic terminal PQS realization is ordinary route functionality with compact consumer checks. |
+| `pqs_diatomic` | `test/driver_inputs/h2_pqs_q5_independent_source_box_r4.jl`; `test/driver_inputs/h2_pqs_q5_independent_source_box_r4_base_hamiltonian.jl` | Protect the independent H2 PQS source-box line and the recovered base Hamiltonian endpoint. | H2 reaches terminal basis realization, materializes `CartesianIDAHamiltonian{Float64}`, and validates H1/self-Coulomb/artifact readback through the endpoint smoke. Cr2 remains later stress/performance evidence, not the immediate correctness blocker. Supplement materialization is deferred roadmap work. | Delete or fold into main matrix once the base public producer covers H2 PQS without private route-stage vocabulary and pair/assembly role is settled. |
 
 ## Feature Donor Inventory
 
@@ -75,16 +124,16 @@ The current feature-donor migration table lives in:
 The highest-priority donor features are:
 
 1. P1 residual-GTO / MWG supplement materialization: H2 residual-GTO
-   materialization writes a public Cartesian IDA Ham artifact with one-body and
-   density-provider blocks; it is not a public Cr2 producer. Remaining work is
-   arbitrary electron/spin and non-H2 source dimensions, external consumer
-   agreement/smoke, performance review, and donor-wrapper deletion after shared
-   kernels and public producer absorb the capability.
+   materialization is no longer the current base-PQS route blocker. Remaining
+   work is a generic final-basis supplement design, arbitrary electron/spin and
+   non-H2 source dimensions, external consumer agreement/smoke, performance
+   review, and donor-wrapper deletion after shared kernels and the public
+   producer absorb the capability.
 2. P1 Ham/JLD2 artifact contract and basis transfer/roundtrip: the Ham side has
-   a public Cartesian IDA writer/reader. Any future basis/provenance artifact
-   should be consumer-driven rather than reviving the deleted private H2
-   sidecar. Private H1-J/RHF solver diagnostics are not part of the producer
-   contract.
+   a public Cartesian IDA writer/reader and the H2 base PQS endpoint writes and
+   reads that Hamiltonian artifact. Any future basis/provenance artifact should
+   be consumer-driven rather than reviving the deleted private H2 sidecar.
+   Private H1-J/RHF solver diagnostics are not part of the producer contract.
 3. P2 hydrogenic-core / ESOI corrections.
 4. P2 EGOI / density-density correction.
 5. P3 branch / fragment Hamiltonian workflow.
