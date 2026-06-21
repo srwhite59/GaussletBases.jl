@@ -43,6 +43,8 @@ simplification.
 
 Slice B authorizes final-basis one-body operator assembly only:
 
+- exact source file:
+  `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl`;
 - kinetic matrix `K`;
 - separated unit nuclear attraction matrices `U_A = -1/r_A`;
 - one separable product-term helper accumulating into a caller-owned dense final
@@ -51,4 +53,6 @@ Slice B authorizes final-basis one-body operator assembly only:
 - no atomic/diatomic branches;
 - no IDA or artifact production.
 
-Unlisted production surfaces require a prior docs-only amendment.
+It does not authorize a new K/U payload, stage-return field, report object,
+persistent one-body orchestration API, or status vocabulary. Unlisted production
+surfaces require a prior docs-only amendment.

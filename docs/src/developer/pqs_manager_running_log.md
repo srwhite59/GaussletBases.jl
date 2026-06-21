@@ -6534,3 +6534,34 @@ Validation:
 Next step:
 - Draft the Slice B implementation blurb for Chat review before sending it to
   repo-doer.
+
+## Cartesian Hamiltonian Producer Design Pass 012 - Clarify Slice B Source Surface
+
+Commit(s):
+- this branch - Clarify Slice B one-body source boundary
+
+Summary:
+- Applied Chat review of `361b6996`.
+- Bound `HP-FN-03` to the exact source file
+  `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl`.
+- Clarified that Slice B does not approve a new K/U payload, stage-return field,
+  report object, persistent one-body orchestration API, or status vocabulary.
+- Added Slice B implementation requirements for implicit direct selectors,
+  symmetric-axis validation, upper-triangular block traversal, and no final
+  averaging that hides nonsymmetric construction.
+
+Validation/baseline note:
+- H2 one-body validation should use the reviewed lowest-energy baseline
+  `-0.7946037173365863` with `1e-10` tolerance.
+- A terminal one-center/H exact oracle baseline is not recorded in the design
+  lane. Before source coding, the implementation target card must name that
+  baseline and tolerance, or establish it in ignored `tmp/work` code and stop
+  before source changes.
+
+Guardrail:
+- No source implementation is started by this correction.
+- `HP-FN-04` and `HP-FN-05` remain future candidates.
+
+Next step:
+- Provide the revised Slice B implementation blurb for Chat review; do not hand
+  to repo-doer until reviewed.

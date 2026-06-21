@@ -374,6 +374,11 @@ approved file and line budget, and are reported in the implementation handoff.
 not authorize IDA assembly, Hamiltonian artifact production, or driver
 simplification work until a later docs-only approval.
 
+`HP-FN-03` specifically approves
+`src/cartesian_final_basis_realization/pqs_terminal_one_body.jl` as the Slice B
+source file. It does not approve a new K/U payload, stage-return field, report
+object, persistent one-body orchestration API, or status vocabulary.
+
 ## Hard Cartesian/PQS anti-bloat gate
 
 Until explicitly relaxed by the user, repo-manager must reject Cartesian/PQS

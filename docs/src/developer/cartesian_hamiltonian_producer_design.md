@@ -531,9 +531,11 @@ If implementation uses this existing return, it is a helper detail under
 ### HP-FN-03 — blockwise final one-body assembly — approved Slice B
 
 Owner:
-`CartesianFinalBasisRealization`, in a small terminal-basis one-body file
-included by `src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl`.
-It must not revive the retired pair-materialization framework.
+`CartesianFinalBasisRealization`, in the exact source file
+`src/cartesian_final_basis_realization/pqs_terminal_one_body.jl`, included by
+`src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl`.
+This file path is part of the approved Slice B surface. The implementation must
+not revive the retired pair-materialization framework.
 
 Purpose:
 Fill a dense final-basis matrix from terminal block pairs and caller-supplied 1D
@@ -567,7 +569,11 @@ result matrix.
 
 Implementation target: **90 source lines**.
 
-No result object is proposed; the destination matrix is the result.
+No result object is proposed; the destination matrix is the result. `HP-FN-03`
+does not approve a `K`/`U_A` payload, stage-return field, report object,
+persistent one-body orchestration API, or status vocabulary. If source-level
+K/U orchestration proves necessary, implementation stops for a docs-only design
+amendment.
 
 Rules:
 
@@ -576,10 +582,15 @@ Rules:
 - no atomic/diatomic branches;
 - no global support-space operator matrix;
 - no global dense coefficient matrix;
+- direct blocks are implicit row selectors; do not allocate dense identity
+  matrices for them;
+- for Slice B use, validate symmetric axis factors before upper-triangular
+  block traversal;
 - at most one terminal support-pair workspace live;
 - tile or stream any local support-pair action above the `64 MiB` cap;
-- preserve symmetry by filling both final-basis block triangles or by an
-  explicit final symmetrization that does not hide construction errors.
+- preserve symmetry by filling both final-basis block triangles from one
+  computed upper-triangular block. Do not compute a full nonsymmetric result and
+  hide it with final averaging.
 
 ### HP-FN-04 — blockwise IDA assembly — future candidate
 
@@ -938,9 +949,12 @@ Must delete or stop calling:
 
 Merge validation:
 
-- one-center/H endpoint reproduces the reviewed one-body energy near `-0.5`
-  through the unified terminal basis;
-- H2 reviewed one-body lowest energy is unchanged within tolerance;
+- before source coding, the implementation target card must name the exact
+  one-center/H oracle baseline and tolerance to be used for the unified
+  terminal basis check. If no reviewed one-center/H baseline is available,
+  establish it first in ignored `tmp/work` code and do not commit source;
+- H2 reviewed one-body lowest energy remains
+  `-0.7946037173365863` within `1e-10`;
 - H2 old/common dense result and new blockwise result agree as a temporary
   cross-check if such an oracle is still live, after which the cross-check
   adapter is deleted;
