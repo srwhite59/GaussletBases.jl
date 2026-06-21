@@ -6861,3 +6861,44 @@ Guardrail:
 - The private helper is an implementation detail inside the approved Slice B
   file only. It must not become route orchestration authority or a persistent
   cache/result surface without another docs-only design amendment.
+
+## Cartesian Hamiltonian Producer Pass 020 - Delete CPBM Global Nuclear Pilot
+
+Commit(s):
+- this branch - Delete stale CPBM global nuclear pilot
+
+Summary:
+- Deleted the unused
+  `src/cartesian_pair_block_materialization/one_body_global_electron_nuclear.jl`
+  dense global retained-matrix pilot.
+- Removed its export/include and file-map entry from
+  `CartesianPairBlockMaterialization.jl`.
+- Updated the algorithm implementation index so agents see this as a deleted
+  CPBM pilot, not a donor route.
+
+Validation actually used:
+- Manager ran `git diff --check`, package load, exact symbol/file reference
+  scans, and source numstat.
+- No long H/H2/N2 endpoint was rerun because this pass deletes an uncalled CPBM
+  pilot and does not alter the accepted terminal one-body implementation.
+
+Goal advancement:
+- LT: reduces stale pair-materialization scaffolding after Slice B established
+  the terminal-basis one-body path.
+- MT: keeps terminal one-body authority with `HP-FN-03` and prevents future
+  work from reviving a dense global retained electron-nuclear assembly pilot.
+
+Carrying-cost accounting:
+- deleted: CPBM global electron-nuclear retained-matrix pilot.
+- simplified: CPBM module no longer exports/includes that unused dense nuclear
+  global matrix surface.
+- quarantined: none.
+- not deleted because: shared placement planning and global overlap/kinetic/x2
+  pilots remain separate CPBM scaffolding with broader safe-term scope; this
+  pass only removed the obsolete nuclear path replaced by terminal Slice B.
+- exact remaining caller/blocker: no exact source/test/tool caller remains for
+  `one_body_global_electron_nuclear_by_center_matrix`.
+- added src lines: `0`.
+- deleted src lines: `210` including module entry cleanup.
+- new tests: none.
+- new metadata/status fields: none.

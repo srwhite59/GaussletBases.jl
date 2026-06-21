@@ -176,7 +176,7 @@ Source anchors:
 - **oracle/reference only**: `src/pqs_multilayer_support_one_body.jl`:
   `pqs_multilayer_support_electron_nuclear_by_center_matrices`
 - **retired/do not call**:
-  `src/cartesian_pair_block_materialization/one_body_global_electron_nuclear.jl`
+  deleted CPBM global electron-nuclear retained-matrix pilot
 
 Do-not-forget rule:
 By-center nuclear matrices are uncharged unit attractions, `U_A = -1/r_A`.

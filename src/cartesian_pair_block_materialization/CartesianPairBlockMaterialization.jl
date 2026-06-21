@@ -103,7 +103,6 @@ export PairBlockMaterializationPolicy,
        pqs_source_pair_shell_realization_bridge_summary,
        pqs_source_pair_final_block_readiness_summary,
        one_body_electron_nuclear_by_center_placement_plan,
-       one_body_global_electron_nuclear_by_center_matrix,
        direct_direct_overlap_block,
        direct_direct_overlap_blocks,
        direct_direct_position_block,
@@ -195,10 +194,6 @@ export PairBlockMaterializationPolicy,
 #     X2-axis dense global retained-matrix assembly pilots from placeable local
 #     placement records only.
 #
-# one_body_global_electron_nuclear.jl
-#     By-center electron-nuclear dense global retained-matrix pilot from
-#     placeable local placement records only.
-#
 # pqs_source_safe_terms.jl
 #     PQS/PQS raw source-space safe-term helpers.
 #
@@ -247,7 +242,6 @@ include("one_body_global_overlap.jl")
 include("one_body_global_kinetic.jl")
 include("one_body_global_position.jl")
 include("one_body_global_x2.jl")
-include("one_body_global_electron_nuclear.jl")
 include("direct_overlap.jl")
 include("pqs_source_axis_transforms.jl")
 include("pqs_source_safe_terms.jl")
