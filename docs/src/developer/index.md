@@ -18,6 +18,7 @@ This section is where to go when you want:
 ## Main developer-facing pages
 
 - [Architecture and current direction](architecture.md)
+- [Cartesian long-range roadmap](cartesian_long_range_roadmap.md)
 - [Gausslet methods fundamentals](architecture/gausslet_methods_fundamentals.md)
 - [Algorithm implementation index](algorithm_implementation_index.md)
 - [Cartesian route migration](cartesian/route_migration.md)
