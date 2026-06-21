@@ -104,6 +104,12 @@ rather than new data. If code is building a vector and immediately converting it
 to a tuple, check whether the tuple is truly fixed-size contract data. If not,
 keep the vector or replace the collection with a lightweight indexed view.
 
+Treat new `Tuple(...)`, `Tuple{Vararg{...}}`, or runtime-keyed `NamedTuple`
+storage of route inventories as a review trigger. This includes collections
+whose length follows basis size, shell count, terminal unit count, pair count,
+center count, or all-pairs inventories. The issue is not only memory use; it is
+also compile-time specialization and invalidation pressure.
+
 ## Make Internal Modules Human-Facing
 
 Even private/internal modules should be readable by a human who opens the file

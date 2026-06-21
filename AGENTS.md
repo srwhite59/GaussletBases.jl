@@ -176,6 +176,10 @@ Short commandment:
 - do not compare large staged metadata objects with `==` or `===`
 - compare compact fingerprints or summaries: statuses, counts, keys, kinds,
   booleans, materialization flags, and short missing-reason tuples
+- do not store basis-size, shell-size, unit-size, pair-size, center-size, or
+  route-inventory collections as variable-size `Tuple(...)` or runtime-keyed
+  `NamedTuple` objects; use vectors, indexed/lazy views, or compact summaries
+  unless the tuple shape is mathematically fixed and tiny
 - choose the smallest test that validates the edit
 - before running any test expected to take more than 60 seconds, explain why it
   is necessary
@@ -431,6 +435,8 @@ the agent makes no commit and reports the obstacle.
 Default forbidden additions unless explicitly approved before implementation:
 
 - new `NamedTuple{...}` with runtime-generated keys
+- new variable-size `Tuple(...)` / `Tuple{Vararg{...}}` route inventories for
+  basis-size, shell-size, unit-size, pair-size, center-size, or all-pairs data
 - new `.metadata` reads for algorithmic data
 - new metadata fields that carry transforms, rules, matrices, source plans,
   dimensions, or coefficients
@@ -491,7 +497,7 @@ echo "Suspicious added lines:"
 git diff -U0 HEAD~1..HEAD -- src bin tools test |
   grep '^+' |
   grep -Ev '^\+\+\+' |
-  grep -nE 'NamedTuple\{|\.metadata|get\(.*metadata|haskey\(.*metadata|_materialized|status.*=|blocker.*=|catch$|catch err|::Any|Payload|summary.*=' || true
+  grep -nE 'NamedTuple\{|Tuple\(|Tuple\{Vararg|tuple\(.*record|tuple\(.*unit|tuple\(.*pair|\.metadata|get\(.*metadata|haskey\(.*metadata|_materialized|status.*=|blocker.*=|catch$|catch err|::Any|Payload|summary.*=' || true
 
 echo "New tests/files:"
 git diff --name-status HEAD~1..HEAD |

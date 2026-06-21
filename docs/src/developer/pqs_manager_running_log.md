@@ -6968,3 +6968,32 @@ Validation:
 Next step:
 - Get explicit approval before converting `HP-FN-04` from candidate to Slice C
   implementation authority.
+
+## Cartesian/PQS Policy Pass 023 - Variable Tuple Compile Guard
+
+Commit(s):
+- this branch - Strengthen variable tuple guardrails
+
+Summary:
+- Strengthened `AGENTS.md` and `JuliaStyle.md` to explicitly reject
+  variable-size `Tuple(...)`, `Tuple{Vararg{...}}`, and runtime-keyed
+  `NamedTuple` route inventories for basis-size, shell-size, unit-size,
+  pair-size, center-size, or all-pairs data unless explicitly approved.
+- Updated the Cartesian/PQS suspicious-line gate so `Tuple(`,
+  `Tuple{Vararg`, and common record/unit/pair tuple conversions are review
+  triggers.
+
+Purpose:
+- Prevent compile-time bloat and excessive specialization from large
+  route-inventory tuple types before Slice C introduces pair-factor and IDA
+  work.
+- Preserve the intended data model: vectors, indexed/lazy views, or compact
+  summaries for variable-size scientific collections; tuples only for fixed,
+  tiny mathematical shapes such as axis triples.
+
+Validation:
+- Docs/policy-only pass; manager ran `git diff --check` and focused grep checks
+  before commit.
+
+Next step:
+- Apply the strengthened gate to any Slice C implementation blurb and review.
