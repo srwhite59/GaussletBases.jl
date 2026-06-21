@@ -6613,3 +6613,59 @@ Remaining blocker/next step:
 - Extend validation to a light separated-diatomic terminal topology and then
   decide the next approved boundary for persistent K/U orchestration or Slice C.
 - `HP-FN-04` and `HP-FN-05` remain unapproved.
+
+## Cartesian Hamiltonian Producer Pass 014 - Light Separated-Diatomic Slice B Validation
+
+Commit(s):
+- this branch - Record light separated diatomic one-body validation
+
+Summary:
+- Accepted an ignored `tmp/work` validation probe for a cheaper separated
+  diatomic Slice B fixture.
+- Be2 variants were tried first. Physical-ish and longer Be2 cases remained
+  contact-core; a far Be2 case produced atom-local cores/shells plus
+  midpoint/outer slabs, but no shared molecular shell.
+- Selected an N2 separated fixture because it exercises the Cr2-like terminal
+  variety needed for wiring validation without Cr2 scale cost.
+
+Selected fixture:
+- Atoms/charges: N2, `(7, 7)`.
+- Bond length: `8.0` bohr.
+- `q = 5`, `core_side = 5`, `core_spacing = 0.15`.
+- Extents: `xmax_parallel = 10.0`, `xmax_transverse = 4.0`.
+- Terminal roles:
+  `(:atom_local_core, :atom_local_core, :atom_local_shell,
+  :atom_local_shell, :atom_local_shell, :atom_local_shell, :midpoint_slab,
+  :shared_molecular_shell, :z_low_outer_mismatch_slab,
+  :z_high_outer_mismatch_slab)`.
+- Support counts: `(125, 125, 218, 218, 386, 386, 81, 1002, 121, 121)`.
+- Coverage duplicate/missing/outside counts: `0 / 0 / 0`.
+- Final retained dimension: `1063`.
+- Terminal max cross overlap: `1.0957649991595716e-14`.
+
+Slice B validation result:
+- `K`: shape `(1063, 1063)`, finite, symmetry error `2.84e-14`.
+- `U1`, `U2`: shape `(1063, 1063)`, finite, symmetry errors
+  `3.47e-16` and `4.44e-16`.
+- `H1` lowest: `-24.93857219722815`.
+- Largest local workspace: `49.26 MiB`.
+- One-body elapsed time: `3.70s`.
+- Allocations: about `18063 MiB`.
+
+Validation:
+- `git diff --check`: passed.
+- Package load: passed.
+- Working tree was clean/even except for ignored `tmp/work` scripts.
+
+Goal advancement:
+- Confirms Slice B one-body assembly works on a separated-diatomic terminal
+  topology with atom-local shells, midpoint slab, shared molecular shell, and
+  outer mismatch slabs.
+- Confirms Cr2 should remain a stress test, not the default wiring fixture.
+
+Risk/next step:
+- Allocation volume is high enough to require a later timing/reuse study before
+  treating Cr2 performance as representative.
+- The validation script currently constructs Coulomb Gaussian factors around
+  the Slice B helper; an audit is now open to identify existing repo-owned
+  factor/operator packets that should be reused rather than rebuilt locally.
