@@ -234,9 +234,7 @@ Candidate public call shape:
 cartesian_base_hamiltonian(
     system::NamedTuple;
     basis::NamedTuple,
-    method::Symbol = :pqs_source_box,
-    route::Symbol = :auto,
-    output::NamedTuple = (;),
+    hamfile::Union{Nothing,AbstractString} = nothing,
 )::CartesianIDAHamiltonian{Float64}
 ```
 
@@ -244,10 +242,16 @@ Scope:
 
 - base H and bond-aligned base H2 first;
 - plain `NamedTuple` input groups only;
+- no public `method`, `route`, or output group in R1;
+- `n_s`, bond axis, and bond length are derived internally;
+- center-sized public collections must be vectors or other `AbstractVector`
+  values, not variable-size tuples;
+- unknown public input keys throw `ArgumentError`;
 - return the existing `CartesianIDAHamiltonian{Float64}` directly;
 - no wrapper, payload, status object, report mirror, or new artifact shape;
-- optional Hamiltonian artifact output uses existing
-  `write_cartesian_ida_hamiltonian`.
+- non-`nothing` `hamfile` writes with existing
+  `write_cartesian_ida_hamiltonian`; production does not automatically
+  read back the artifact.
 
 ### HP-R1-WIRE-01 — report-free base producer wiring — candidate
 
@@ -266,20 +270,56 @@ The recommended base-public path must not require `cartesian_pair_terms` or
 script/report compatibility, but this candidate does not approve adding a new
 base-route consumer to either stage.
 
-The implementation must remove or bypass the current report dependency where
-`cartesian_assembly` exists chiefly to supply `route_skeleton` and a low-order
-shellification summary to `cartesian_report`. It must not replace that
-dependency with a new report field cloud, status payload, or metadata-carried
-numerical data.
+Candidate private shared constructor seam:
+
+```julia
+_cartesian_base_ida_hamiltonian(
+    terminal_basis_realization,
+    parent_axis_bundle_object,
+    atom_locations::Vector{NTuple{3,Float64}},
+    nuclear_charges::Vector{Float64},
+    nup::Int,
+    ndn::Int,
+)::CartesianIDAHamiltonian{Float64}
+```
+
+Candidate owner file:
+
+```text
+src/pqs_source_box_low_order_materialization.jl
+```
+
+Allowed caller files after approval:
+
+- `src/pqs_source_box_low_order_materialization.jl`
+- `src/cartesian_base_hamiltonian.jl`
+
+The existing report-bound materialization path and the new public facade should
+call this same private constructor. The implementation must remove or bypass
+the current report dependency where `cartesian_assembly` exists chiefly to
+supply `route_skeleton` and a low-order shellification summary to
+`cartesian_report`, and delete the duplicated report-bound numerical
+orchestration it replaces. It must not fabricate a private report object,
+duplicate the Hamiltonian builder in the new public file, leave two parallel
+base Hamiltonian construction paths, or replace the dependency with a new
+report field cloud, status payload, or metadata-carried numerical data.
 
 ### HP-R1-TEST-01 — public base producer endpoint test/example — candidate
 
 Candidate committed validation surface for R1 only after explicit approval.
 
+Candidate test path:
+
+```text
+test/driver_public/cartesian_base_hamiltonian_runtests.jl
+```
+
 The test/example should exercise the public facade for one-center H and
 bond-aligned H2, verify `CartesianIDAHamiltonian{Float64}` output, validate the
-reviewed H2 endpoint facts, and validate existing Hamiltonian artifact
-write/readback. It must not assert private route-stage fields, report mirrors,
+reviewed H baseline and H2 endpoint facts, validate unknown-key and malformed
+input errors, and validate existing Hamiltonian artifact write/readback using
+`mktempdir()`. It is an integration/endpoint gate, not ordinary tiny unit
+coverage. It must not assert private route-stage fields, report mirrors,
 status/blocker symbols, terminal role vocabulary, or pair inventories.
 
 ## Rejected Or Deferred
