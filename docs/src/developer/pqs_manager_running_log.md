@@ -6669,3 +6669,43 @@ Risk/next step:
 - The validation script currently constructs Coulomb Gaussian factors around
   the Slice B helper; an audit is now open to identify existing repo-owned
   factor/operator packets that should be reused rather than rebuilt locally.
+
+## Cartesian Hamiltonian Producer Pass 015 - Slice B Gaussian Factor Reuse Audit
+
+Commit(s):
+- this branch - Record Slice B Gaussian factor reuse audit
+
+Summary:
+- Accepted a read-only subagent audit of existing Coulomb Gaussian expansion and
+  one-body factor construction.
+- The recommended validation path is to reuse existing factor machinery:
+  `coulomb_gaussian_expansion`, `gaussian_factor_matrices`, and
+  `mapped_ordinary_one_body_operators`.
+- `mapped_ordinary_one_body_operators(basis; exponents, center, backend)`
+  returns `MappedOrdinaryOneBody1D` with `gaussian_factors`, and internally
+  calls `gaussian_factor_matrices` once for the full exponent list.
+- This means the current ignored validation style is acceptable when it obtains
+  per-center axis factor lists from `mapped_ordinary_one_body_operators` and
+  then loops over the already-built term matrices for
+  `assemble_terminal_product_operator!`.
+
+Do not use as Slice B production authority:
+- `pqs_multilayer_support_electron_nuclear_by_center_matrices`, because it is a
+  dense support-space seam rather than final terminal-basis block assembly.
+- `pqs_source_pair_centered_electron_nuclear_by_center_block` or retained
+  variants in pair-materialization code, because they are source/retained-pair
+  machinery before terminal shell realization.
+- CPB local block providers or ordinary QW full-product dense by-center
+  builders except as oracle/reference context.
+
+Missing seam:
+- There is no approved production helper that directly returns final-terminal
+  by-center unit nuclear matrices from `(terminal_basis, axis_layers, centers,
+  expansion)`. Adding one would be a new production surface and requires a
+  docs-only design amendment.
+
+Next step:
+- Keep Slice B validation composed from existing factor builders plus
+  `assemble_terminal_product_operator!`.
+- If performance work finds repeated factor construction, fix routing to reuse
+  the existing factor packets before inventing new caching.
