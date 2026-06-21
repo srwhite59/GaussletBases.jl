@@ -4,6 +4,19 @@ This is a navigation index for agents before Cartesian/PQS numerical work. It
 does not create new algorithm authority. Use it to find existing implementations,
 optimization lessons, and oracle/reference paths before writing new code.
 
+Status labels:
+- **active reusable kernel**: current implementation code that may be called
+  when its contract matches the new route.
+- **active donor pattern**: current code worth copying organizationally, but
+  not necessarily callable from the new route.
+- **consumer example only**: useful for seeing how a kernel is used; do not copy
+  its orchestration contract.
+- **oracle/reference only**: comparison or migration code, not production route
+  authority.
+- **retired/do not call**: historical or explicitly disallowed path.
+- **planned approved file**: approved design surface that may not exist yet or
+  may still be under active implementation.
+
 ## Term-First Coulomb Gaussian Contractions
 
 Why to check:
@@ -18,10 +31,14 @@ Key docs:
 - `docs/ordinary_cartesian_qiu_white_ga_cross_legacy_optimization.md`
 
 Source anchors:
-- `src/ordinary_mapped_backends.jl`: `_mapped_coulomb_expanded_symmetric_matrix`
-- `src/ordinary_cartesian_ida.jl`
-- `src/ordinary_qw_raw_blocks.jl`
-- `src/ordinary_qw_operator_assembly.jl`
+- **active donor pattern**: `src/ordinary_mapped_backends.jl`,
+  `_mapped_coulomb_expanded_symmetric_matrix`
+- **consumer example only**: `src/ordinary_cartesian_ida.jl`,
+  `_ordinary_cartesian_ida_from_gausslet_bundle`
+- **retired/do not call**: `src/ordinary_mapped_backends.jl`,
+  `_mapped_cartesian_one_body_matrix` term-by-term `kron` path
+- **active donor pattern**: `src/ordinary_qw_raw_blocks.jl`
+- **consumer example only**: `src/ordinary_qw_operator_assembly.jl`
 
 Do-not-forget rule:
 Use the Gaussian expansion term index as an inner reduction:
@@ -47,12 +64,20 @@ Key docs:
   entries
 
 Source anchors:
-- `src/ordinary_mapped_backends.jl`: `_mapped_legacy_proxy_layer`,
+- **active reusable kernel**: `src/ordinary_coulomb.jl`,
+  `coulomb_gaussian_expansion`, `gaussian_factor_matrices`
+- **active reusable local data**: PGDG intermediates such as
+  `pgdg.gaussian_factor_terms` when already centered for the requested axis and
+  center
+- **active donor pattern**: `src/ordinary_mapped_backends.jl`:
+  `_mapped_legacy_proxy_layer`,
   `_mapped_legacy_proxy_scalar_data`, `mapped_ordinary_one_body_operators`
-- `src/ordinary_coulomb.jl`: `coulomb_gaussian_expansion`,
-  `gaussian_factor_matrices`
-- `src/ordinary_cartesian_ida.jl`: `_pair_gaussian_factor_matrices`
-- `src/ordinary_qw_raw_blocks.jl`: `_qwrg_cross_1d_blocks`
+- **active donor pattern**: `src/ordinary_cartesian_ida.jl`,
+  `_pair_gaussian_factor_matrices`
+- **active donor pattern**: `src/ordinary_qw_raw_blocks.jl`,
+  `_qwrg_cross_1d_blocks`
+- **retired/do not call**: `src/ordinary_qw_raw_blocks.jl`,
+  `_qwrg_cross_1d_blocks_midpoint`
 
 Do-not-forget rule:
 Prefer analytic mapped proxy/raw-layer contraction and existing factor packets
@@ -69,8 +94,10 @@ Key docs:
 - `docs/src/developer/cartesian_parent_factors_and_cpb_kernels.md`
 
 Source anchors:
-- `src/CartesianParentAxisFactors.jl`: `parent_overlap_axis_factor_packet`
-- `src/CartesianCPBBlockProviders.jl`: `cpb_interval_pair`,
+- **active reusable kernel**: `src/CartesianParentAxisFactors.jl`,
+  `parent_overlap_axis_factor_packet`
+- **active reusable kernel**: `src/CartesianCPBBlockProviders.jl`,
+  `cpb_interval_pair`,
   `cpb_overlap_axis_blocks`, `cpb_overlap_dense_block`,
   `cpb_electron_nuclear_by_center_local_block`
 
@@ -92,10 +119,13 @@ Key docs:
 - `JuliaStyle.md`, Lowdin guidance
 
 Source anchors:
-- `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
-- `src/cartesian_final_basis_realization/pqs_source_shell_final_basis.jl`
-- `src/cartesian_final_basis_realization/pqs_complete_core_shell_final_basis.jl`
-- `src/pqs_multilayer_complete_core_shell_h1.jl`
+- **active reusable kernel**:
+  `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
+- **active donor pattern**:
+  `src/cartesian_final_basis_realization/pqs_source_shell_final_basis.jl`
+- **oracle/reference only**:
+  `src/cartesian_final_basis_realization/pqs_complete_core_shell_final_basis.jl`
+- **oracle/reference only**: `src/pqs_multilayer_complete_core_shell_h1.jl`
 
 Do-not-forget rule:
 Use `inv(sqrt(Symmetric(overlap)))` for symmetric Lowdin. Build from raw
@@ -115,11 +145,14 @@ Key docs:
 - `docs/src/developer/pqs_source_box_operator_framework.md`
 
 Source anchors:
-- `src/cartesian_route_core/retained_spaces.jl`
-- `src/cartesian_contracted_parent_metrics/source_box_pair_shadow.jl`:
+- **active reusable kernel**: `src/cartesian_route_core/retained_spaces.jl`
+- **active donor pattern**:
+  `src/cartesian_contracted_parent_metrics/source_box_pair_shadow.jl`:
   `_pqs_raw_product_box_plan`, `_pqs_product_box_realization_plan`
-- `src/cartesian_pair_block_materialization/pqs_source_safe_terms.jl`
-- `src/cartesian_pair_block_materialization/pqs_source_one_body.jl`
+- **oracle/reference only**:
+  `src/cartesian_pair_block_materialization/pqs_source_safe_terms.jl`
+- **retired/do not call**:
+  `src/cartesian_pair_block_materialization/pqs_source_one_body.jl`
 
 Do-not-forget rule:
 COMX boundary product modes define retained source modes. Support rows and
@@ -136,11 +169,14 @@ Key docs:
 - `docs/src/developer/pqs_near_term_final_basis_realization_plan.md`
 
 Source anchors:
-- `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl`
-- `src/ordinary_qw_operator_assembly.jl`: `assembled_one_body_hamiltonian`
-- `src/pqs_multilayer_support_one_body.jl`:
+- **planned approved file**:
+  `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl`
+- **consumer example only**: `src/ordinary_qw_operator_assembly.jl`,
+  `assembled_one_body_hamiltonian`
+- **oracle/reference only**: `src/pqs_multilayer_support_one_body.jl`:
   `pqs_multilayer_support_electron_nuclear_by_center_matrices`
-- `src/cartesian_pair_block_materialization/one_body_global_electron_nuclear.jl`
+- **retired/do not call**:
+  `src/cartesian_pair_block_materialization/one_body_global_electron_nuclear.jl`
 
 Do-not-forget rule:
 By-center nuclear matrices are uncharged unit attractions, `U_A = -1/r_A`.
@@ -159,10 +195,12 @@ Key docs:
 - `docs/src/developer/pqs_source_box_operator_framework.md`
 
 Source anchors:
-- `src/cartesian_nested_faces.jl`: `_nested_factorized_weight_aware_pair_terms`,
+- **oracle/reference only**: `src/cartesian_nested_faces.jl`,
+  `_nested_factorized_weight_aware_pair_terms`,
   `_nested_weight_aware_pair_terms`
-- `src/ordinary_qw_raw_blocks.jl`: `_qwrg_fixed_block_interaction_matrix`
-- `src/cartesian_contracted_parent_metrics/core.jl`:
+- **active donor pattern**: `src/ordinary_qw_raw_blocks.jl`,
+  `_qwrg_fixed_block_interaction_matrix`
+- **active donor pattern**: `src/cartesian_contracted_parent_metrics/core.jl`:
   `_pqs_source_box_ida_factor_provenance`
 
 Do-not-forget rule:
@@ -198,11 +236,13 @@ Key docs:
 - `docs/src/developer/high_order_doside_physical_block_speed_plan.md`
 
 Source anchors:
-- `src/cartesian_nested_owned_units.jl`: `_nested_endcap_panel_owned_units`,
+- **active donor pattern**: `src/cartesian_nested_owned_units.jl`,
+  `_nested_endcap_panel_owned_units`,
   `_nested_endcap_panel_shell_layer`
-- `src/cartesian_high_order_doside_experimental.jl`
-- `src/cartesian_high_order_doside_ida_experimental.jl`
-- `src/cartesian_nested_faces.jl`: `_nested_doside_1d`
+- **oracle/reference only**: `src/cartesian_high_order_doside_experimental.jl`
+- **oracle/reference only**:
+  `src/cartesian_high_order_doside_ida_experimental.jl`
+- **active donor pattern**: `src/cartesian_nested_faces.jl`, `_nested_doside_1d`
 
 Do-not-forget rule:
 Treat high-order doside/endcap/panel code as opt-in, experimental, or donor
@@ -221,10 +261,10 @@ Key docs:
 - `docs/src/developer/old_flat_cartesian_retirement_audit_2026-06-14.md`
 
 Source anchors:
-- `src/cartesian_nested_faces.jl`
-- `src/ordinary_qw_raw_blocks.jl`
-- `src/ordinary_qw_operator_assembly.jl`
-- `src/cartesian_contracted_parent_metrics/`
+- **oracle/reference only**: `src/cartesian_nested_faces.jl`
+- **oracle/reference only**: `src/ordinary_qw_raw_blocks.jl`
+- **consumer example only**: `src/ordinary_qw_operator_assembly.jl`
+- **oracle/reference only**: `src/cartesian_contracted_parent_metrics/`
 
 Do-not-forget rule:
 Old code may feed adapters or oracle comparisons. It should not silently become

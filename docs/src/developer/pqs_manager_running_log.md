@@ -6775,3 +6775,34 @@ Next step:
 - Send the revised design to ChatGPT-Pro for review of whether it now requires
   the optimized contraction pattern without accidentally authorizing a new
   payload or cache framework.
+
+## Cartesian Hamiltonian Producer Pass 018 - Slice B Reuse Status Labels
+
+Commit(s):
+- this branch - Tighten Slice B reuse guidance
+
+Summary:
+- Added authority/status labels to the algorithm implementation index so source
+  anchors distinguish active reusable kernels, donor patterns, consumer
+  examples, oracle/reference paths, retired paths, and planned approved files.
+- Tightened the Slice B design after ChatGPT-Pro review: the public
+  `assemble_terminal_product_operator!` signature remains single-product, while
+  one private file-local Gaussian-sum helper may consume coefficients and
+  term-first factor arrays without becoming a persistent production surface.
+- Added an N2 allocation gate requiring at least `10x` cumulative allocation
+  reduction from the recorded `~18,063 MiB` one-body baseline while preserving
+  H/H2 energies and the `64 MiB` simultaneous local-workspace cap.
+
+Guardrail:
+- `HP-FN-03` is still the only approved Slice B source surface. The amendment
+  does not approve new cache/result/stage/metadata/status objects or route
+  orchestration APIs.
+
+Validation:
+- Docs-only pass; manager ran `git diff --check` and focused status-anchor
+  scans before commit.
+
+Next step:
+- Resume Slice B source work with the term-first Gaussian-sum helper inside the
+  approved file only, reporting whether existing ordinary helpers were directly
+  reusable or only donor patterns for terminal-layout code.

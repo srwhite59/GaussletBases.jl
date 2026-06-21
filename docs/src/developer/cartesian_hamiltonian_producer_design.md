@@ -593,6 +593,27 @@ contraction from reusable factor packets. Those helpers are not persistent
 production surfaces and must not introduce new result, cache, stage, metadata,
 or status objects.
 
+Input exception for the efficient nuclear path:
+`assemble_terminal_product_operator!` retains its single-term public signature.
+One unexported helper in the same approved file may additionally consume the
+Coulomb coefficient vector and three term-first factor arrays:
+
+```julia
+_accumulate_terminal_gaussian_sum!(
+    destination,
+    basis::CartesianTerminalBasisRealization,
+    coefficients,
+    factors_x,
+    factors_y,
+    factors_z;
+    scale::Float64 = -1.0,
+)
+```
+
+This helper may be called by validation or future approved orchestration code,
+but it must not be stored in a stage, returned as a result, exported, or treated
+as route orchestration authority.
+
 Implementation target: **90 source lines**.
 
 No result object is proposed; the destination matrix is the result. `HP-FN-03`
@@ -610,8 +631,10 @@ surface.
 
 Rules:
 
-- consume only `CartesianTerminalBasisRealization` plus the three caller-supplied
-  1D factor matrices;
+- consume only `CartesianTerminalBasisRealization` plus the caller-supplied 1D
+  factor data: three matrices for the single-product public helper, or the
+  coefficient vector plus three term-first factor arrays for the private
+  Gaussian-sum helper;
 - no atomic/diatomic branches;
 - no global support-space operator matrix;
 - no global dense coefficient matrix;
@@ -621,8 +644,9 @@ Rules:
   matrices for them;
 - for Slice B use, validate symmetric axis factors before upper-triangular
   block traversal;
-- at most one terminal support-pair workspace live;
-- tile or stream any local support-pair action above the `64 MiB` cap;
+- at most one terminal support-pair contraction workspace live;
+- tile or stream any simultaneously live local contraction workspace above the
+  `64 MiB` cap;
 - preserve symmetry by filling both final-basis block triangles from one
   computed upper-triangular block. Do not compute a full nonsymmetric result and
   hide it with final averaging.
@@ -995,6 +1019,10 @@ Merge validation:
   cross-check if such an oracle is still live, after which the cross-check
   adapter is deleted;
 - Cr2 final `K` and every unit center matrix `U_A` are finite and symmetric;
+- N2 light separated-diatomic one-body validation reduces cumulative
+  allocations by at least `10x` from the recorded `~18,063 MiB` baseline while
+  preserving the H/H2 energies and the `64 MiB` simultaneous local-workspace
+  cap;
 - no IDA, Hamiltonian artifact, residual-GTO, or driver simplification work is
   included;
 - no global support-space operator, global dense coefficient matrix, or retired
