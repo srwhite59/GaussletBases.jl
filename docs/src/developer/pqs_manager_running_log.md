@@ -7163,3 +7163,47 @@ Next step:
   existing `CartesianIDAHamiltonian`, validate H2 `one_body_hamiltonian(ham)`
   and H2 self-Coulomb through `ham.electron_electron_ida`, and keep all route,
   driver, artifact, and wrapper work deferred to Slice D.
+
+## Cartesian Hamiltonian Producer Pass 028 - Slice C2 Constructor Validation
+
+Commit(s):
+- this branch - Record Slice C2 constructor validation
+
+Summary:
+- Accepted the C2 implementation result: no new source helper was needed. The
+  existing `CartesianIDAHamiltonian(...)` constructor is sufficient for the
+  approved in-memory boundary.
+- Doer validated C2 with an ignored H2 script that assembled Slice B `K`, unit
+  `U_A`, and Slice C1 `electron_electron_ida`, then constructed
+  `CartesianIDAHamiltonian{Float64}` directly.
+
+Validation:
+- Doer ran `git diff --check`, package load,
+  `tools/h2_pqs_terminal_stage_smoke.jl`, and ignored
+  `tmp/work/h2_terminal_c2_hamiltonian_validation.jl`.
+- H2 C2 result: dimension `471`, `nup_ndn = (1, 1)`, charges `[1.0, 1.0]`,
+  positions `[0.0 0.0 -2.0; 0.0 0.0 2.0]`, finite/symmetric `K`, both unit
+  `U_A`, and `V`, `one_body_matrix_delta = 0.0`, H1 lowest
+  `-0.79460371733658908`, and self-Coulomb `0.45691176467371986`.
+- The ignored validation checked C1 coefficient/raw tensor exponent ordering
+  before IDA assembly and confirmed uncharged unit `U_A` matrices are charged
+  only by `one_body_hamiltonian(ham)`.
+
+Carrying-cost accounting:
+- deleted: none.
+- simplified: no C2 helper was added; the existing public constructor owns the
+  Hamiltonian object validation.
+- quarantined: C2 validation remains ignored under `tmp/work`.
+- not deleted because: no C2 source was added.
+- exact remaining caller/blocker: Slice D driver/materialization/artifact wiring
+  remains unapproved.
+- added src lines: `0`.
+- deleted src lines: `0`.
+- new tests: none.
+- new metadata/status fields: none.
+
+Next step:
+- Decide whether to request ChatGPT-Pro review of the completed A/B/C in-memory
+  producer boundary, or proceed to a Slice D design pass that wires the real
+  Hamiltonian into materialization/artifact output while deleting obsolete
+  blocked-source/report surfaces.
