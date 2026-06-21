@@ -9,22 +9,43 @@ the candidate IDs below.
 
 ## Candidate IDs
 
+- `HP-R1-FILE-01` - public base producer source file.
 - `HP-R1-FN-01` - public base Hamiltonian producer facade.
 - `HP-R1-WIRE-01` - report-free base producer wiring from the facade to the
   existing terminal-basis and Hamiltonian construction path.
+- `HP-R1-TEST-01` - small committed public endpoint test/example for the
+  facade.
 
 Both IDs are candidate-only until explicitly approved in `registry.md`.
+
+## Ownership And Export
+
+Candidate owner: top-level `GaussletBases` public API.
+
+Candidate source file:
+
+```text
+src/cartesian_base_hamiltonian.jl
+```
+
+If approved, `cartesian_base_hamiltonian` should be exported from
+`src/GaussletBases.jl`. No other public symbol is proposed by this candidate.
+
+The source file may use existing internal driver helpers, but it must not make
+those helpers public API and must not expose route-stage vocabulary in the
+public call shape.
 
 ## Public Call Shape
 
 The proposed public entry point is a single function:
 
 ```julia
-cartesian_base_hamiltonian(system;
-    basis,
-    method = :pqs_source_box,
-    route = :auto,
-    output = (;),
+cartesian_base_hamiltonian(
+    system::NamedTuple;
+    basis::NamedTuple,
+    method::Symbol = :pqs_source_box,
+    route::Symbol = :auto,
+    output::NamedTuple = (;),
 )::CartesianIDAHamiltonian{Float64}
 ```
 
@@ -37,39 +58,69 @@ atoms, general molecules, WL/QW unification, supplements, corrections, solver
 handoff, and Cr2-scale performance remain later roadmap lanes unless separately
 approved.
 
-## Inputs
+## Input Shape
 
-`system` describes the physical system:
+All public inputs are plain `NamedTuple` groups. This candidate does not
+introduce public input structs, builder objects, config payloads, or keyword
+field clouds attached to intermediate stages.
+
+`system` is a `NamedTuple`.
+
+Required fields for first H/H2 scope:
 
 - `atom_symbols`
 - `nuclear_charges`
 - `atom_locations`
 - `nup`
 - `ndn`
-- optional geometry facts such as `bond_axis`, `bond_length`, and `radius`
+- `radius`
 
-`basis` describes basis and spacing choices:
+Optional fields:
+
+- `bond_axis`
+- `bond_length`
+- `map_backend`
+
+`basis` is a `NamedTuple`.
+
+Required fields for first H/H2 scope:
 
 - `q`
 - `n_s`
-- `reference_spacing`
-- `tail_spacing`
 - `core_spacing`
 - `xmax_parallel`
 - `xmax_transverse`
-- parent-axis family and backend choices needed by the existing route
+- `parent_axis_family`
+
+Optional fields with R1 defaults:
+
+- `reference_spacing = 1.0`
+- `tail_spacing = 10.0`
+- `q_to_core_spacing_rule = :standard_pqs_ns_equals_q`
+- `parent_axis_bundle_backend = :pgdg_localized_experimental`
+- `parent_mapping_rule = :identity_mapping`
+- `parent_mapping_Z = nothing`
+- `parent_mapping_d = nothing`
+- `parent_axis_counts = nothing`
 
 `method` / `route` choose the construction method:
 
 - first candidate method: `:pqs_source_box`
 - first candidate route: automatic one-center atomic or bond-aligned diatomic
   base PQS route selection from `system`
-- explicit route override may be allowed only for reviewed H/H2 fixtures
+- allowed route overrides, if needed: `:one_center_atomic_base` and
+  `:bond_aligned_diatomic_base`
+- private route-kind symbols are not part of the public API
 
-`output` controls optional artifact behavior:
+`output` is a `NamedTuple`.
 
+Allowed fields:
+
+- `save_ham_artifact::Bool = false`
 - `hamfile`
-- `save_ham_artifact::Bool`
+
+No other output fields are part of the minimal base R1 contract:
+
 - no basis artifact is part of this base R1 contract
 - no TSV/report artifact is part of this base R1 contract
 
@@ -77,19 +128,104 @@ Grouped inputs are call-boundary convenience only. They must not become
 persistent payload structs, status summaries, metadata field clouds, or report
 mirrors.
 
+## First Public Examples
+
+One-center H:
+
+```julia
+h_system = (;
+    atom_symbols = ("H",),
+    nuclear_charges = (1,),
+    atom_locations = ((0.0, 0.0, 0.0),),
+    nup = 1,
+    ndn = 0,
+    radius = 4.0,
+)
+
+h_basis = (;
+    q = 5,
+    n_s = 5,
+    parent_axis_family = :G10,
+    core_spacing = 0.5,
+    xmax_parallel = 4.0,
+    xmax_transverse = 4.0,
+)
+
+h_ham = cartesian_base_hamiltonian(h_system; basis = h_basis)
+```
+
+Bond-aligned H2:
+
+```julia
+h2_system = (;
+    atom_symbols = ("H", "H"),
+    nuclear_charges = (1, 1),
+    atom_locations = ((0.0, 0.0, -2.0), (0.0, 0.0, 2.0)),
+    nup = 1,
+    ndn = 1,
+    bond_axis = :z,
+    bond_length = 4.0,
+    radius = 4.0,
+)
+
+h2_basis = (;
+    q = 5,
+    n_s = 5,
+    parent_axis_family = :G10,
+    core_spacing = 0.5,
+    xmax_parallel = 6.0,
+    xmax_transverse = 4.0,
+)
+
+h2_ham = cartesian_base_hamiltonian(
+    h2_system;
+    basis = h2_basis,
+    output = (;
+        save_ham_artifact = true,
+        hamfile = "h2_cartesian_ida_hamiltonian.jld2",
+    ),
+)
+```
+
+The examples intentionally do not call `cartesian_pair_terms`,
+`cartesian_assembly`, `cartesian_report`, or route-internal fixture controls.
+
 ## Output And Artifact Contract
 
 The output is the existing `CartesianIDAHamiltonian{Float64}`.
 
 If `save_ham_artifact = true`, the implementation must use the existing
-`write_cartesian_ida_hamiltonian` writer and existing readback path. This
-candidate does not approve:
+`write_cartesian_ida_hamiltonian` writer and existing readback path. If
+`save_ham_artifact = true` and `hamfile` is missing, `nothing`, or an empty
+string, the facade must throw `ArgumentError` before writing. It must not invent
+a default file name for the public API. Parent-directory and file-system errors
+from the existing writer should propagate normally.
+
+This candidate does not approve:
 
 - a new artifact file shape;
 - a new artifact manifest;
 - a new basis/provenance artifact;
 - a new materialization wrapper;
 - durable status/result-kind fields.
+
+## Error Behavior
+
+Unsupported or malformed public requests must throw clear exceptions, normally
+`ArgumentError` for input validation failures:
+
+- missing required `system`, `basis`, or `output` fields;
+- unsupported `method`;
+- unsupported `route`;
+- unsupported atom count, route geometry, or non-H/H2 system in the first R1
+  scope;
+- inconsistent field lengths for symbols, charges, positions, or electron
+  counts;
+- requested artifact write without `hamfile`.
+
+The facade must not return status objects, readiness summaries, blocker
+symbols, `nothing`, or partial payloads for unsupported public requests.
+Internal numerical construction errors may propagate after validation.
 
 ## Public Workflow
 
@@ -169,15 +305,21 @@ First implementation must validate:
   tolerance;
 - `K`, every unit `U_A`, and `V` are finite and symmetric within reviewed
   tolerance;
+- invalid public requests throw clear `ArgumentError`s rather than returning
+  status/blocker objects;
+- `save_ham_artifact = true` without `hamfile` throws `ArgumentError`;
 - optional artifact write/readback uses `write_cartesian_ida_hamiltonian` and
   has zero one-body readback delta;
 - R0 warm/cold baseline is not materially regressed without explanation;
 - no `cartesian_pair_terms` or `cartesian_assembly` call appears in the
   recommended public example path.
 
-No new committed smoke/test file is approved by this candidate. If a committed
-public example or smoke is needed, add or approve a separate test/example ID
-before implementation.
+Validation policy decision: ignored validation is not enough for a new public
+facade. R1 should include one small committed public endpoint test or executable
+example after `HP-R1-TEST-01` is explicitly approved. The test/example should
+exercise only the public facade, H/H2 endpoint facts, and existing
+Hamiltonian-artifact readback. It must not assert route-internal stage fields,
+status symbols, report mirrors, terminal role vocabulary, or pair inventories.
 
 ## Deletion And Shrinkage Targets
 

@@ -213,22 +213,37 @@ Candidate entries do not authorize source work. They become implementation
 authority only after an explicit approval update moves them to the approved
 section.
 
+### HP-R1-FILE-01 — public base producer source file — candidate
+
+Candidate file:
+
+```text
+src/cartesian_base_hamiltonian.jl
+```
+
+Candidate owner: top-level `GaussletBases` public API.
+
+If approved, the only new export proposed by R1 is
+`cartesian_base_hamiltonian` from `src/GaussletBases.jl`.
+
 ### HP-R1-FN-01 — public base Hamiltonian producer facade — candidate
 
 Candidate public call shape:
 
 ```julia
-cartesian_base_hamiltonian(system;
-    basis,
-    method = :pqs_source_box,
-    route = :auto,
-    output = (;),
+cartesian_base_hamiltonian(
+    system::NamedTuple;
+    basis::NamedTuple,
+    method::Symbol = :pqs_source_box,
+    route::Symbol = :auto,
+    output::NamedTuple = (;),
 )::CartesianIDAHamiltonian{Float64}
 ```
 
 Scope:
 
 - base H and bond-aligned base H2 first;
+- plain `NamedTuple` input groups only;
 - return the existing `CartesianIDAHamiltonian{Float64}` directly;
 - no wrapper, payload, status object, report mirror, or new artifact shape;
 - optional Hamiltonian artifact output uses existing
@@ -256,6 +271,16 @@ The implementation must remove or bypass the current report dependency where
 shellification summary to `cartesian_report`. It must not replace that
 dependency with a new report field cloud, status payload, or metadata-carried
 numerical data.
+
+### HP-R1-TEST-01 — public base producer endpoint test/example — candidate
+
+Candidate committed validation surface for R1 only after explicit approval.
+
+The test/example should exercise the public facade for one-center H and
+bond-aligned H2, verify `CartesianIDAHamiltonian{Float64}` output, validate the
+reviewed H2 endpoint facts, and validate existing Hamiltonian artifact
+write/readback. It must not assert private route-stage fields, report mirrors,
+status/blocker symbols, terminal role vocabulary, or pair inventories.
 
 ## Rejected Or Deferred
 
