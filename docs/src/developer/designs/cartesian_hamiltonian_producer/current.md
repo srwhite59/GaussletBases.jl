@@ -71,7 +71,8 @@ Base pair/assembly role decision:
 
 Deferred lanes:
 
-- public-driver polish and examples;
+- public-driver polish and examples; R1 public base producer design is
+  candidate-only in `r1_public_base_producer.md`;
 - Cr2-scale stress and performance validation;
 - residual-GTO/MWG supplements and other non-base Hamiltonians;
 - solver integration;

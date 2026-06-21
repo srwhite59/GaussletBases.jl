@@ -16,6 +16,12 @@ Agents should read first:
 - [implementation_slices.md](implementation_slices.md)
 - [Algorithm implementation index](../../algorithm_implementation_index.md)
 
+Candidate amendments:
+
+- [R1 public base producer candidate](r1_public_base_producer.md) defines a
+  proposed minimal public base Hamiltonian producer. It is not implementation
+  authority until candidate IDs are explicitly approved in `registry.md`.
+
 Historical material:
 
 - [history/cartesian_hamiltonian_producer_design_2026-06_full.md](history/cartesian_hamiltonian_producer_design_2026-06_full.md)

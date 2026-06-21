@@ -133,6 +133,8 @@ Exit condition:
 
 ### R1 - Public Base Producer
 
+Status: candidate design drafted; implementation not approved.
+
 Goal:
 Expose a real public producer for base atomic and molecular Cartesian
 Hamiltonians.
@@ -140,6 +142,8 @@ Hamiltonians.
 Scope:
 
 - document the intended public call shape;
+- use `r1_public_base_producer.md` as the candidate design for first H/H2
+  public base producer review;
 - route atomic and molecular base cases through the common final-basis
   Hamiltonian path;
 - keep `CartesianIDAHamiltonian` as the output boundary unless a later design

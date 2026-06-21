@@ -207,6 +207,56 @@ Return contract:
 - no materialization wrapper, `result_kind`, `materialized`, status mirror, or
   `ida_hamiltonian` field is approved.
 
+## Candidate, Not Approved
+
+Candidate entries do not authorize source work. They become implementation
+authority only after an explicit approval update moves them to the approved
+section.
+
+### HP-R1-FN-01 — public base Hamiltonian producer facade — candidate
+
+Candidate public call shape:
+
+```julia
+cartesian_base_hamiltonian(system;
+    basis,
+    method = :pqs_source_box,
+    route = :auto,
+    output = (;),
+)::CartesianIDAHamiltonian{Float64}
+```
+
+Scope:
+
+- base H and bond-aligned base H2 first;
+- return the existing `CartesianIDAHamiltonian{Float64}` directly;
+- no wrapper, payload, status object, report mirror, or new artifact shape;
+- optional Hamiltonian artifact output uses existing
+  `write_cartesian_ida_hamiltonian`.
+
+### HP-R1-WIRE-01 — report-free base producer wiring — candidate
+
+Candidate wiring for the R1 public facade:
+
+```text
+system / specification
+-> parent and route geometry
+-> terminal basis realization
+-> Hamiltonian production
+-> optional existing Hamiltonian artifact
+```
+
+The recommended base-public path must not require `cartesian_pair_terms` or
+`cartesian_assembly`. Existing stages may remain temporarily for legacy
+script/report compatibility, but this candidate does not approve adding a new
+base-route consumer to either stage.
+
+The implementation must remove or bypass the current report dependency where
+`cartesian_assembly` exists chiefly to supply `route_skeleton` and a low-order
+shellification summary to `cartesian_report`. It must not replace that
+dependency with a new report field cloud, status payload, or metadata-carried
+numerical data.
+
 ## Rejected Or Deferred
 
 ### HP-RES-01 — terminal basis build result — rejected
