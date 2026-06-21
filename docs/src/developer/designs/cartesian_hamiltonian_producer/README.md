@@ -4,9 +4,11 @@ This directory is the compact current authority for the Cartesian/PQS
 Hamiltonian producer.
 
 Status: Slice A, Slice B, Slice C1, Slice C2, and Slice D base handoff are
-implemented for the internal base PQS Hamiltonian path. This is not public API
-polish. Broad driver UX, Cr2 stress/performance validation, and non-base or
-supplement Hamiltonians remain deferred.
+implemented for the internal base PQS Hamiltonian path. R1 public base
+producer implementation is approved only for the narrow H/H2 scope recorded in
+`r1_public_base_producer.md` and `registry.md`. Broad driver UX, Cr2
+stress/performance validation, and non-base or supplement Hamiltonians remain
+deferred.
 
 Agents should read first:
 
@@ -16,11 +18,11 @@ Agents should read first:
 - [implementation_slices.md](implementation_slices.md)
 - [Algorithm implementation index](../../algorithm_implementation_index.md)
 
-Candidate amendments:
+Approved amendments:
 
-- [R1 public base producer candidate](r1_public_base_producer.md) defines a
-  proposed minimal public base Hamiltonian producer. It is not implementation
-  authority until candidate IDs are explicitly approved in `registry.md`.
+- [R1 public base producer](r1_public_base_producer.md) defines the approved
+  minimal public base Hamiltonian producer surface for first origin-centered H
+  and z-axis H2 implementation.
 
 Historical material:
 

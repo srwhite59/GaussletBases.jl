@@ -133,7 +133,10 @@ Exit condition:
 
 ### R1 - Public Base Producer
 
-Status: candidate design drafted; implementation not approved.
+Status: narrow first implementation approved through
+`docs/src/developer/designs/cartesian_hamiltonian_producer/r1_public_base_producer.md`
+and the `HP-R1-*` registry entries. Broader public-driver polish remains
+deferred.
 
 Goal:
 Expose a real public producer for base atomic and molecular Cartesian
@@ -141,9 +144,10 @@ Hamiltonians.
 
 Scope:
 
-- document the intended public call shape;
-- use `r1_public_base_producer.md` as the candidate design for first H/H2
-  public base producer review;
+- implement the approved public call shape for origin-centered H and z-axis
+  H2;
+- use `r1_public_base_producer.md` as the approved design for first H/H2
+  public base producer implementation;
 - route atomic and molecular base cases through the common final-basis
   Hamiltonian path;
 - keep `CartesianIDAHamiltonian` as the output boundary unless a later design

@@ -207,28 +207,29 @@ Return contract:
 - no materialization wrapper, `result_kind`, `materialized`, status mirror, or
   `ida_hamiltonian` field is approved.
 
-## Candidate, Not Approved
+## Approved For R1 Implementation
 
-Candidate entries do not authorize source work. They become implementation
-authority only after an explicit approval update moves them to the approved
-section.
+These entries authorize only the R1 public base producer scope recorded in
+`r1_public_base_producer.md`. They do not approve broad driver polish,
+additional routes, new artifact shapes, solver work, supplements, corrections,
+or status/report/payload expansion.
 
-### HP-R1-FILE-01 — public base producer source file — candidate
+### HP-R1-FILE-01 — public base producer source file
 
-Candidate file:
+Approved file:
 
 ```text
 src/cartesian_base_hamiltonian.jl
 ```
 
-Candidate owner: top-level `GaussletBases` public API.
+Approved owner: top-level `GaussletBases` public API.
 
-If approved, the only new export proposed by R1 is
-`cartesian_base_hamiltonian` from `src/GaussletBases.jl`.
+The only new export approved by R1 is `cartesian_base_hamiltonian` from
+`src/GaussletBases.jl`.
 
-### HP-R1-FN-01 — public base Hamiltonian producer facade — candidate
+### HP-R1-FN-01 — public base Hamiltonian producer facade
 
-Candidate public call shape:
+Approved public call shape:
 
 ```julia
 cartesian_base_hamiltonian(
@@ -240,22 +241,27 @@ cartesian_base_hamiltonian(
 
 Scope:
 
-- base H and bond-aligned base H2 first;
+- origin-centered base H and Cartesian z-axis aligned base H2 first;
 - plain `NamedTuple` input groups only;
 - no public `method`, `route`, or output group in R1;
-- `n_s`, bond axis, and bond length are derived internally;
+- `n_s`, bond length, and private H2 radius are derived internally;
+- x/y-aligned diatomics, shifted-parallel diatomics, generally oriented
+  molecules, translation, and rotation are deferred;
 - center-sized public collections must be vectors or other `AbstractVector`
   values, not variable-size tuples;
 - unknown public input keys throw `ArgumentError`;
+- scalar inputs must be positive and finite where applicable;
+- symbols, charges, coordinates, and electron counts must match the approved
+  H/H2 scope;
 - return the existing `CartesianIDAHamiltonian{Float64}` directly;
 - no wrapper, payload, status object, report mirror, or new artifact shape;
 - non-`nothing` `hamfile` writes with existing
   `write_cartesian_ida_hamiltonian`; production does not automatically
   read back the artifact.
 
-### HP-R1-WIRE-01 — report-free base producer wiring — candidate
+### HP-R1-WIRE-01 — report-free base producer wiring
 
-Candidate wiring for the R1 public facade:
+Approved wiring for the R1 public facade:
 
 ```text
 system / specification
@@ -267,10 +273,10 @@ system / specification
 
 The recommended base-public path must not require `cartesian_pair_terms` or
 `cartesian_assembly`. Existing stages may remain temporarily for legacy
-script/report compatibility, but this candidate does not approve adding a new
-base-route consumer to either stage.
+script/report compatibility, but this R1 authority does not approve adding a
+new base-route consumer to either stage.
 
-Candidate private shared constructor seam:
+Approved private shared constructor seam:
 
 ```julia
 _cartesian_base_ida_hamiltonian(
@@ -283,13 +289,16 @@ _cartesian_base_ida_hamiltonian(
 )::CartesianIDAHamiltonian{Float64}
 ```
 
-Candidate owner file:
+Approved owner file:
 
 ```text
 src/pqs_source_box_low_order_materialization.jl
 ```
 
-Allowed caller files after approval:
+This PQS-named owner is acceptable for the explicitly PQS-only R1 migration.
+It is not permanent method-neutral ownership for R2.
+
+Allowed caller files:
 
 - `src/pqs_source_box_low_order_materialization.jl`
 - `src/cartesian_base_hamiltonian.jl`
@@ -304,23 +313,32 @@ duplicate the Hamiltonian builder in the new public file, leave two parallel
 base Hamiltonian construction paths, or replace the dependency with a new
 report field cloud, status payload, or metadata-carried numerical data.
 
-### HP-R1-TEST-01 — public base producer endpoint test/example — candidate
+### HP-R1-TEST-01 — public base producer endpoint test/example
 
-Candidate committed validation surface for R1 only after explicit approval.
+Approved committed validation surface for R1.
 
-Candidate test path:
+Approved standalone integration gate:
 
 ```text
 test/driver_public/cartesian_base_hamiltonian_runtests.jl
 ```
 
+Invocation:
+
+```text
+julia --project=. test/driver_public/cartesian_base_hamiltonian_runtests.jl
+```
+
 The test/example should exercise the public facade for one-center H and
-bond-aligned H2, verify `CartesianIDAHamiltonian{Float64}` output, validate the
+z-axis H2, verify `CartesianIDAHamiltonian{Float64}` output, validate the
 reviewed H baseline and H2 endpoint facts, validate unknown-key and malformed
-input errors, and validate existing Hamiltonian artifact write/readback using
-`mktempdir()`. It is an integration/endpoint gate, not ordinary tiny unit
-coverage. It must not assert private route-stage fields, report mirrors,
-status/blocker symbols, terminal role vocabulary, or pair inventories.
+input errors, validate x/y-aligned, shifted-parallel, and generally oriented H2
+rejection before expensive construction, and validate existing Hamiltonian
+artifact write/readback using `mktempdir()`. It is a standalone
+integration/endpoint gate, not ordinary tiny unit coverage, and this ID does
+not approve adding it to `test/runtests.jl`. It must not assert private
+route-stage fields, report mirrors, status/blocker symbols, terminal role
+vocabulary, or pair inventories.
 
 ## Rejected Or Deferred
 

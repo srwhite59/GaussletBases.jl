@@ -15,10 +15,11 @@ terminal support and retained contracts
 -> existing minimal artifact writer
 ```
 
-This is internal base-Hamiltonian authority, not public API polish. The visible
-driver shape may call the implemented path, but this design does not approve a
-new public workflow, new artifact format, solver integration, or broad driver
-redesign.
+This is internal base-Hamiltonian authority plus the narrow approved R1 public
+base producer surface recorded in `r1_public_base_producer.md` and
+`registry.md`. The visible driver shape may call the implemented path, but this
+design does not approve a new artifact format, solver integration, broad
+driver redesign, or public workflow outside the R1 H/H2 scope.
 
 Current implementation boundary:
 
@@ -71,8 +72,8 @@ Base pair/assembly role decision:
 
 Deferred lanes:
 
-- public-driver polish and examples; R1 public base producer design is
-  candidate-only in `r1_public_base_producer.md`;
+- public-driver polish and examples outside the approved R1 origin-centered H
+  and z-axis H2 base producer scope;
 - Cr2-scale stress and performance validation;
 - residual-GTO/MWG supplements and other non-base Hamiltonians;
 - solver integration;

@@ -1,13 +1,14 @@
-# R1 Public Base Producer Candidate
+# R1 Public Base Producer
 
-Status: candidate design amendment, not implementation authority.
+Status: approved design amendment for first R1 implementation.
 
-This document defines the proposed minimal public base Cartesian Hamiltonian
-producer for first H/H2 use. It does not approve source work, tests, tools,
-driver edits, new report fields, new artifact formats, or implementation of
-the candidate IDs below.
+This document defines the minimal public base Cartesian Hamiltonian producer
+for first H/H2 use. It approves only the R1 IDs listed below and only within
+the scope recorded in `registry.md`. It does not approve tools, driver edits,
+new report fields, new artifact formats, broad public-driver polish, or
+implementation outside these IDs.
 
-## Candidate IDs
+## Approved IDs
 
 - `HP-R1-FILE-01` - public base producer source file.
 - `HP-R1-FN-01` - public base Hamiltonian producer facade.
@@ -16,22 +17,22 @@ the candidate IDs below.
 - `HP-R1-TEST-01` - small committed public endpoint test/example for the
   facade.
 
-All four R1 IDs are candidate-only until explicitly approved in `registry.md`.
+All four R1 IDs are approved for first implementation in `registry.md`.
 
 ## Ownership And Export
 
-Candidate owner: top-level `GaussletBases` public API.
+Approved owner: top-level `GaussletBases` public API.
 
-Candidate source file:
+Approved source file:
 
 ```text
 src/cartesian_base_hamiltonian.jl
 ```
 
-If approved, `cartesian_base_hamiltonian` should be exported from
-`src/GaussletBases.jl`. No other public symbol is proposed by this candidate.
+`cartesian_base_hamiltonian` should be exported from `src/GaussletBases.jl`.
+No other public symbol is approved by this R1 design.
 
-The name "base" is permanent terminology in this candidate: it means
+The name "base" is permanent terminology in this design: it means
 unsupplemented, uncorrected, all-electron localized-IDA Hamiltonian
 construction. Supplements, corrections, fragments, counterpoise, solver
 handoff, and non-base Hamiltonians are separate roadmap lanes. If a later API
@@ -44,7 +45,7 @@ public call shape.
 
 ## Public Call Shape
 
-The proposed public entry point is a single function:
+The approved public entry point is a single function:
 
 ```julia
 cartesian_base_hamiltonian(
@@ -58,14 +59,14 @@ The function returns the existing `CartesianIDAHamiltonian{Float64}` directly.
 It must not return a wrapper, status object, materialization payload, report
 mirror, or `(value, status)` pair.
 
-The first implementation scope is base H and bond-aligned base H2. Broader
-atoms, general molecules, WL/QW unification, supplements, corrections, solver
-handoff, and Cr2-scale performance remain later roadmap lanes unless separately
-approved.
+The first implementation scope is origin-centered base H and Cartesian z-axis
+aligned base H2. Broader atoms, x/y-aligned diatomics, generally oriented
+molecules, WL/QW unification, supplements, corrections, solver handoff, and
+Cr2-scale performance remain later roadmap lanes unless separately approved.
 
 ## Input Shape
 
-All public inputs are plain `NamedTuple` groups. This candidate does not
+All public inputs are plain `NamedTuple` groups. This design does not
 introduce public input structs, builder objects, config payloads, or keyword
 field clouds attached to intermediate stages.
 
@@ -85,9 +86,25 @@ Required fields for first H/H2 scope:
 - `nup`
 - `ndn`
 
-No optional `system` fields are part of the R1 public contract. Bond axis and
-bond length are derived from `atom_locations`. `map_backend` is a construction
-choice, not physical-system data, and is not public in R1.
+No optional `system` fields are part of the R1 public contract. Bond length is
+derived from `atom_locations`; the bond axis must be Cartesian `z` in R1.
+`map_backend` is a construction choice, not physical-system data, and is not
+public in R1.
+
+Scalar and collection validation rules:
+
+- `q` must be a positive integer;
+- `core_spacing`, `reference_spacing`, `tail_spacing`, `radius`,
+  `xmax_parallel`, and `xmax_transverse` must be finite and positive when
+  present;
+- all coordinates and nuclear charges must be finite;
+- first scope supports only H and H2 with symbols and charges consistent with
+  hydrogen nuclei;
+- `nup` and `ndn` must be nonnegative integers and must give the supported
+  total electron count for the requested H or H2 system;
+- one-center H must be at `(0.0, 0.0, 0.0)`;
+- z-axis H2 centers must have finite `x == 0`, finite `y == 0`, and distinct
+  finite `z` coordinates.
 
 `basis` is a `NamedTuple`.
 
@@ -99,7 +116,7 @@ Required common fields:
 Conditional fields:
 
 - one-center H requires `radius`
-- bond-aligned H2 requires:
+- z-axis H2 requires:
   - `xmax_parallel`
   - `xmax_transverse`
 
@@ -118,6 +135,11 @@ Fixed private choices in R1:
 - `parent_axis_bundle_backend = :pgdg_localized_experimental`
 - `parent_mapping_rule = :identity_mapping`
 
+The current private H2 setup still needs an internal radius-like domain value.
+The public z-axis H2 facade must derive that private value as
+`max(xmax_parallel, xmax_transverse)`. This derived value is not a public
+`basis` field.
+
 These are not public keywords or accepted `basis` fields in R1:
 
 - `n_s`
@@ -130,13 +152,16 @@ These are not public keywords or accepted `basis` fields in R1:
 - `parent_mapping_Z`
 - `parent_mapping_d`
 
-`xmax_parallel` and `xmax_transverse` are accepted only for bond-aligned H2.
+`xmax_parallel` and `xmax_transverse` are accepted only for z-axis H2.
 They are unknown keys for one-center H.
 
-Routing is implicit. One center selects the one-center base route. Two centers
-must be bond-aligned and select the bond-aligned diatomic base route. R1 has no
-public `method`, `route`, or output group selector. New method or route
-keywords should wait until R2 or later provides a second real public method.
+Routing is implicit. One supported center selects the one-center base route.
+Two supported centers must be z-axis H2 and select the z-axis diatomic base
+route. R1 performs no translation or rotation. Cartesian x/y alignment and
+arbitrary molecular orientation must throw `ArgumentError` and are deferred.
+R1 has no public `method`, `route`, or output group selector. New method or
+route keywords should wait until R2 or later provides a second real public
+method.
 
 No basis artifact, TSV, report artifact, or output group is part of this base
 R1 contract.
@@ -163,7 +188,7 @@ h_basis = (;
 h_ham = cartesian_base_hamiltonian(h_system; basis = h_basis)
 ```
 
-Bond-aligned H2:
+Z-axis H2:
 
 ```julia
 h2_system = (;
@@ -205,7 +230,7 @@ writer should propagate normally.
 The production facade must not automatically read back the artifact after
 writing. `read_cartesian_ida_hamiltonian` is for validation and users.
 
-This candidate does not approve:
+This design does not approve:
 
 - a new artifact file shape;
 - a new artifact manifest;
@@ -222,9 +247,12 @@ Unsupported or malformed public requests must throw clear exceptions, normally
 - unknown `system` or `basis` fields;
 - unsupported atom count, route geometry, or non-H/H2 system in the first R1
   scope;
-- non-bond-aligned two-center geometry;
+- non-z-axis H2 geometry, including x/y-aligned or generally oriented H2;
 - inconsistent field lengths for symbols, charges, positions, or electron
   counts;
+- nonpositive or nonfinite spacing, radius, extent, coordinate, or charge
+  values;
+- unsupported electron counts for H or H2;
 - empty `hamfile`;
 - center-sized tuple inventories for atom symbols, charges, or locations.
 
@@ -296,7 +324,7 @@ new report field clouds.
 
 ## Report-Free Shared Constructor Seam
 
-`HP-R1-WIRE-01` candidate wiring owns one private shared constructor seam:
+`HP-R1-WIRE-01` owns one private shared constructor seam:
 
 ```julia
 _cartesian_base_ida_hamiltonian(
@@ -309,13 +337,16 @@ _cartesian_base_ida_hamiltonian(
 )::CartesianIDAHamiltonian{Float64}
 ```
 
-Candidate owner file:
+Approved owner file:
 
 ```text
 src/pqs_source_box_low_order_materialization.jl
 ```
 
-Allowed caller files after approval:
+This PQS-named owner is acceptable for the explicitly PQS-only R1 migration.
+It is not permanent method-neutral ownership for R2.
+
+Allowed caller files:
 
 - `src/pqs_source_box_low_order_materialization.jl`
 - `src/cartesian_base_hamiltonian.jl`
@@ -357,24 +388,35 @@ First implementation must validate:
   recommended public example path.
 
 Validation policy decision: ignored validation is not enough for a new public
-facade. R1 should include one small committed public endpoint test or executable
-example after `HP-R1-TEST-01` is explicitly approved. The test/example should
-exercise only the public facade, H/H2 endpoint facts, and existing
-Hamiltonian-artifact readback. It must not assert route-internal stage fields,
-status symbols, report mirrors, terminal role vocabulary, or pair inventories.
+facade. `HP-R1-TEST-01` approves one small committed public endpoint
+test/example. The test/example should exercise only the public facade, H/H2
+endpoint facts, and existing Hamiltonian-artifact readback. It must not assert
+route-internal stage fields, status symbols, report mirrors, terminal role
+vocabulary, or pair inventories.
 
-Candidate test path:
+Approved standalone integration gate:
 
 ```text
 test/driver_public/cartesian_base_hamiltonian_runtests.jl
 ```
 
-Candidate cadence: integration/endpoint gate, not default tiny unit coverage.
+Invocation:
+
+```text
+julia --project=. test/driver_public/cartesian_base_hamiltonian_runtests.jl
+```
+
+Cadence: standalone integration/endpoint gate, not default tiny unit coverage.
 Run it when touching the public facade, base producer wiring, Hamiltonian
-artifact writer/reader, or terminal base-Hamiltonian path. Do not add it to the
-ordinary fast per-edit test set without explicit repo-manager approval.
+artifact writer/reader, or terminal base-Hamiltonian path. `HP-R1-TEST-01` does
+not approve adding this gate to `test/runtests.jl`; a runner edit would require
+explicit repo-manager approval.
 
 Test artifact behavior: use `mktempdir()` for `hamfile` output.
+
+The test must enforce the R1 geometry contract: x/y-aligned H2,
+shifted-parallel H2, and generally oriented H2 fail with `ArgumentError`
+before expensive construction, while the reviewed z-axis H2 endpoint succeeds.
 
 ## Deletion And Shrinkage Targets
 
@@ -396,7 +438,7 @@ classification.
 
 ## Forbidden Additions
 
-The R1 base producer candidate forbids:
+The R1 base producer design forbids:
 
 - new payload/result/status wrapper around `CartesianIDAHamiltonian`;
 - new status, blocker, readiness, materialized, or result-kind field clouds;
