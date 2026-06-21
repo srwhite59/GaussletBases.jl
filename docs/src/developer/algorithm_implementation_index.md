@@ -202,6 +202,9 @@ Source anchors:
   `_qwrg_fixed_block_interaction_matrix`
 - **active donor pattern**: `src/cartesian_contracted_parent_metrics/core.jl`:
   `_pqs_source_box_ida_factor_provenance`
+- **consumer example only**: `src/ordinary_cartesian_ida.jl`,
+  `_ordinary_cartesian_ida_from_pair_factors`,
+  `_ordinary_cartesian_ida_from_gausslet_bundle`
 
 Do-not-forget rule:
 Carry raw pair numerators through projection/realization first. Normalize only

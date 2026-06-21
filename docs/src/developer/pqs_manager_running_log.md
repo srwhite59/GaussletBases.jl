@@ -6902,3 +6902,36 @@ Carrying-cost accounting:
 - deleted src lines: `210` including module entry cleanup.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 021 - Slice C Candidate Design
+
+Commit(s):
+- this branch - Draft Slice C localized IDA candidate
+
+Summary:
+- Revised the Hamiltonian producer design to make `HP-FN-04` a concrete Slice C
+  candidate for blockwise localized IDA assembly.
+- Proposed `CartesianFinalBasisRealization` ownership and candidate file
+  `src/cartesian_final_basis_realization/pqs_terminal_ida.jl`, with internal
+  function `assemble_terminal_ida_interaction!`.
+- Updated the algorithm implementation index with ordinary IDA consumer
+  examples and kept them marked as donor/reference, not direct terminal route
+  authority.
+
+Guardrail:
+- This is docs-only candidate design. `HP-FN-04` and `HP-FN-05` remain without
+  implementation authority until explicitly approved in a later revision.
+- The candidate forbids global support raw-pair matrices, global dense
+  coefficient matrices, all-pairs status plumbing, metadata-carried numerical
+  pair data, CPBM route authority, and new persistent cache/result/stage/report
+  surfaces without a docs-only amendment.
+
+Validation:
+- Doer ran `git diff --check`.
+- Manager reviewed the candidate wording and normalized the index status label
+  to `consumer example only`.
+
+Next step:
+- Before any Slice C source work, get explicit approval of the candidate IDs
+  and name the reviewed H2 self-Coulomb/IDA parity value in the implementation
+  handoff.
