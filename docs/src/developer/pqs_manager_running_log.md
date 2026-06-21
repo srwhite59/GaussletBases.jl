@@ -7207,3 +7207,43 @@ Next step:
   producer boundary, or proceed to a Slice D design pass that wires the real
   Hamiltonian into materialization/artifact output while deleting obsolete
   blocked-source/report surfaces.
+
+## Cartesian Hamiltonian Producer Pass 029 - Slice D Candidate Handoff Design
+
+Commit(s):
+- this branch - Draft Slice D materialization handoff
+
+Summary:
+- Synchronized `AGENTS.md` with the current Hamiltonian producer authority:
+  `HP-FN-04` is approved only for internal Slice C1 localized IDA assembly and
+  `HP-FN-05` is approved only for the narrow Slice C2
+  `CartesianIDAHamiltonian` construction boundary. Driver/materialization,
+  artifact production, route-stage/report fields, wrapper payloads, and
+  persistent factor caches remain unauthorized.
+- Added `HP-WIRE-02` as a Slice D candidate design. It chooses a direct handoff
+  of `transforms.terminal_basis_realization` into `cartesian_materialization`
+  rather than embedding the basis in reports, passing recursive `transforms`,
+  reconstructing from summaries, or adding a build-input payload.
+- Expanded Slice D with concrete production work, deletion targets, and
+  validation: materialization composes Slice B `K`/unit `U_A`, Slice C1 `V`,
+  and the existing `CartesianIDAHamiltonian`, then optionally uses the existing
+  public writer/readback contract.
+
+Guardrail:
+- This is still docs/policy only. `HP-WIRE-02` is candidate, not implementation
+  authority. The pass intentionally prevents the next doer from treating report
+  metadata, source-plan blockers, or route payloads as the way to move basis
+  data into materialization.
+
+Validation:
+- Manager audited current call sites and confirmed `terminal_basis_realization`
+  is owned by `cartesian_transforms`, while `cartesian_materialization`
+  currently receives only `report` and materialization inputs.
+- `git diff --check` and focused text checks were used before commit.
+
+Next step:
+- Send the Slice D candidate handoff design for review. If accepted, approve a
+  narrow `HP-WIRE-02` implementation blurb that updates live call sites to pass
+  the terminal basis directly, constructs the real Hamiltonian in
+  materialization, writes/roundtrips the existing artifact when requested, and
+  deletes obsolete blocked source-plan/report surfaces.

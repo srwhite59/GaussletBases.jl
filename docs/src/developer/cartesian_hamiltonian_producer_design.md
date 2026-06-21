@@ -879,6 +879,50 @@ Rules:
 Wrapper/orchestration target: **60 source lines**. If C2 cannot stay as a thin
 constructor boundary, stop for a docs-only amendment.
 
+### HP-WIRE-02 — direct materialization Hamiltonian handoff — Slice D candidate
+
+Proposed purpose:
+Wire the already realized terminal basis and already approved A/B/C kernels into
+the canonical materialization stage so a real `CartesianIDAHamiltonian` is
+returned and optionally written by the existing artifact writer.
+
+Proposed boundary:
+
+```julia
+cartesian_materialization(
+    report,
+    terminal_basis_realization::CartesianTerminalBasisRealization,
+    materialization_inputs,
+)
+```
+
+The exact implementation may use an equivalent positional boundary, but it must
+pass the existing `transforms.terminal_basis_realization` directly from the
+driver/harness call site. It must not carry the basis through `cartesian_report`,
+embed `transforms`, reconstruct terminal realization from report summaries, or
+introduce a new build-input payload.
+
+Candidate rules:
+
+- update live driver/harness/probe callers to pass
+  `transforms.terminal_basis_realization` directly;
+- materialization owns A/B/C composition for the base Hamiltonian:
+  build Slice B `K`, by-center unit `U_A`, Slice C1 `V`, then construct the
+  existing `CartesianIDAHamiltonian`;
+- enforce C1 coefficient/raw tensor exponent provenance before IDA assembly;
+- use existing public `write_cartesian_ida_hamiltonian` /
+  `read_cartesian_ida_hamiltonian` for artifact validation. Do not invent a new
+  artifact shape;
+- delete the false blocked-source-plan materialization/report contract in the
+  same merge, or report exact live callers that prevent deletion;
+- no new report field may duplicate the terminal basis, Hamiltonian matrices,
+  raw pair tensors, factor packets, or route stages.
+
+Stop rule:
+If Slice D needs to move basis-sized numerical data through report metadata, a
+new route payload, recursive stage embedding, a new artifact wrapper, or a
+compatibility adapter for the old blocked source-plan path, stop for review.
+
 ### HP-OBJ-03 — generic build-result wrapper — rejected
 
 Do not introduce `CartesianHamiltonianBuildResult`, another `Payload`, or a
@@ -1320,12 +1364,75 @@ Make the canonical materialization stage return/write the real Hamiltonian with
 no duplicate payload/report graph.
 
 The final producer receives the same `CartesianTerminalBasisRealization` for
-atoms and diatomics.
+atoms and diatomics by direct handoff from `cartesian_transforms` to
+`cartesian_materialization`.
+
+Required handoff:
+
+```julia
+transforms = cartesian_transforms(units, recipe)
+...
+materialization = cartesian_materialization(
+    report,
+    transforms.terminal_basis_realization,
+    materialization_inputs,
+)
+```
+
+The signature may be adjusted only to preserve this dataflow. Slice D must not:
+
+- embed `terminal_basis_realization` in `cartesian_report`;
+- pass the full `transforms` stage recursively into materialization;
+- reconstruct terminal realization from report summaries;
+- introduce a new Hamiltonian build-input payload;
+- place terminal basis, matrices, raw pair tensors, or factor packets in
+  metadata.
+
+Production work:
+
+1. Materialization constructs Slice B `K` and by-center uncharged unit `U_A`
+   from the handed-off terminal basis.
+2. Materialization verifies C1 coefficient/raw-tensor exponent provenance, then
+   constructs Slice C1 `electron_electron_ida`.
+3. Materialization constructs the existing `CartesianIDAHamiltonian` directly.
+4. If artifact output is requested, materialization uses the existing
+   `write_cartesian_ida_hamiltonian` / `read_cartesian_ida_hamiltonian`
+   contract. It must not add a new artifact shape.
+
+Deletion target:
+
+- delete the obsolete blocked source-plan payload/report contract whose only
+  remaining message is that `source_plan = nothing`;
+- delete or stop publishing report fields such as
+  `physical_gausslet_source_plan_summary` when they only preserve the old
+  blocked source-plan story;
+- audit `physical_gausslet_target_*` and supplement-preflight report fields and
+  either delete them in the same merge or report exact live callers that still
+  require them;
+- remove H2 smoke/probe assertions that inspect obsolete blocker/status
+  vocabulary after the real Hamiltonian endpoint is available.
 
 Added-source target: **80 lines**, with a net source decrease required.
 
 No new driver stage, public type, report field cloud, or artifact wrapper is
 proposed.
+
+Validation:
+
+- package load;
+- H2 terminal smoke updated to validate real materialization rather than the old
+  blocked source-plan contract;
+- H2 materialization constructs `CartesianIDAHamiltonian{Float64}` with final
+  dimension `471`;
+- `one_body_hamiltonian(ham)` reproduces H2 H1 lowest
+  `-0.79460371733658908`;
+- `ham.electron_electron_ida` reproduces H2 self-Coulomb
+  `0.4569117646737212`;
+- requested artifact output roundtrips through existing
+  `write_cartesian_ida_hamiltonian` and `read_cartesian_ida_hamiltonian`;
+- light separated diatomic may be used as a topology/performance smoke after H2
+  passes. Cr2 remains a later stress/performance gate unless explicitly
+  requested.
 
 ## 10. Test policy
 
