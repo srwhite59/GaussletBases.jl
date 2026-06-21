@@ -427,12 +427,17 @@ polish.
 
 `HP-R1-FILE-01` approves only `src/cartesian_base_hamiltonian.jl`.
 `HP-R1-FN-01` approves only the public `cartesian_base_hamiltonian` facade with
-the approved signature. `HP-R1-WIRE-01` approves only the report-free shared
-base constructor seam and the approved callers. `HP-R1-TEST-01` approves only
+the approved signature. The reviewed one-center H endpoint requires explicit
+public `reference_spacing = 0.3`, mapped to the private one-center mapping
+parameter historically named `parent_mapping_d`; public `d` and public
+`parent_mapping_d` remain unsupported. `HP-R1-WIRE-01` approves only the
+report-free shared base constructor seam and the approved callers.
+`HP-R1-TEST-01` approves only
 `test/driver_public/cartesian_base_hamiltonian_runtests.jl` as a standalone
 integration/endpoint gate. R1 scope is origin-centered H and Cartesian z-axis
-H2 only. No driver/bin/tool/report/artifact-shape/payload/status/pair/assembly
-public workflow expansion is approved.
+H2 only. No driver/bin/tool/report/payload/status/pair/assembly public workflow
+expansion is approved, and no artifact expansion is approved except normalized
+public input provenance in the final Hamiltonian file.
 
 `HP-FN-03` specifically approves
 `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl` as the Slice B

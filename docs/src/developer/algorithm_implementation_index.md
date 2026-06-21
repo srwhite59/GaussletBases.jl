@@ -250,7 +250,10 @@ Do-not-forget rule:
 Requested base PQS materialization returns `CartesianIDAHamiltonian{Float64}`
 directly; no-request materialization returns `nothing`. Do not add a materialized
 wrapper, status mirror, report field, metadata-carried matrix, or new artifact
-shape for the base handoff.
+shape for the base handoff, except the approved R1 normalized public input
+provenance stored in the final Hamiltonian file. That provenance is for
+consumer tracking, not a staged algorithm input after initial lattice/parent
+construction.
 
 ## Performance And Reuse Policy
 

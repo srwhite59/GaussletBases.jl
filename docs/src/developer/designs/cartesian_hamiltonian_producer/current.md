@@ -18,7 +18,8 @@ terminal support and retained contracts
 This is internal base-Hamiltonian authority plus the narrow approved R1 public
 base producer surface recorded in `r1_public_base_producer.md` and
 `registry.md`. The visible driver shape may call the implemented path, but this
-design does not approve a new artifact format, solver integration, broad
+design does not approve a new artifact format except the R1 normalized public
+input provenance in the final Hamiltonian file, solver integration, broad
 driver redesign, or public workflow outside the R1 H/H2 scope.
 
 Current implementation boundary:

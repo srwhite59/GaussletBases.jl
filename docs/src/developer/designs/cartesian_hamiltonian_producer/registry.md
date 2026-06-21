@@ -211,8 +211,9 @@ Return contract:
 
 These entries authorize only the R1 public base producer scope recorded in
 `r1_public_base_producer.md`. They do not approve broad driver polish,
-additional routes, new artifact shapes, solver work, supplements, corrections,
-or status/report/payload expansion.
+additional routes, new artifact shapes beyond the approved normalized public
+input provenance in the final Hamiltonian file, solver work, supplements,
+corrections, or status/report/payload expansion.
 
 ### HP-R1-FILE-01 — public base producer source file
 
@@ -245,6 +246,12 @@ Scope:
 - plain `NamedTuple` input groups only;
 - no public `method`, `route`, or output group in R1;
 - `n_s`, bond length, and private H2 radius are derived internally;
+- one-center H maps public `reference_spacing` to the private mapping
+  parameter historically named `parent_mapping_d`; public `d` and public
+  `parent_mapping_d` remain unsupported;
+- the reviewed H baseline requires explicit public `reference_spacing = 0.3`;
+  omitted `reference_spacing` keeps the general public default `1.0` and is
+  not the reviewed R1 H endpoint;
 - x/y-aligned diatomics, shifted-parallel diatomics, generally oriented
   molecules, translation, and rotation are deferred;
 - center-sized public collections must be vectors or other `AbstractVector`
@@ -254,10 +261,15 @@ Scope:
 - symbols, charges, coordinates, and electron counts must match the approved
   H/H2 scope;
 - return the existing `CartesianIDAHamiltonian{Float64}` directly;
-- no wrapper, payload, status object, report mirror, or new artifact shape;
+- no wrapper, payload, status object, report mirror, or new artifact shape
+  except the approved normalized public input provenance in the final
+  Hamiltonian file;
 - non-`nothing` `hamfile` writes with existing
   `write_cartesian_ida_hamiltonian`; production does not automatically
-  read back the artifact.
+  read back the artifact;
+- the final Hamiltonian file records normalized public `system` and `basis`
+  provenance for consumers, but that provenance must not be a staged
+  algorithm input after initial lattice/parent construction.
 
 ### HP-R1-WIRE-01 — report-free base producer wiring
 
@@ -331,14 +343,15 @@ julia --project=. test/driver_public/cartesian_base_hamiltonian_runtests.jl
 
 The test/example should exercise the public facade for one-center H and
 z-axis H2, verify `CartesianIDAHamiltonian{Float64}` output, validate the
-reviewed H baseline and H2 endpoint facts, validate unknown-key and malformed
-input errors, validate x/y-aligned, shifted-parallel, and generally oriented H2
-rejection before expensive construction, and validate existing Hamiltonian
-artifact write/readback using `mktempdir()`. It is a standalone
-integration/endpoint gate, not ordinary tiny unit coverage, and this ID does
-not approve adding it to `test/runtests.jl`. It must not assert private
-route-stage fields, report mirrors, status/blocker symbols, terminal role
-vocabulary, or pair inventories.
+reviewed H baseline using explicit public `reference_spacing = 0.3` and H2
+endpoint facts, validate unknown-key and malformed input errors, validate
+x/y-aligned, shifted-parallel, and generally oriented H2 rejection before
+expensive construction, and validate existing Hamiltonian artifact
+write/readback plus normalized public input provenance using `mktempdir()`. It
+is a standalone integration/endpoint gate, not ordinary tiny unit coverage, and
+this ID does not approve adding it to `test/runtests.jl`. It must not assert
+private route-stage fields, report mirrors, status/blocker symbols, terminal
+role vocabulary, or pair inventories.
 
 ## Rejected Or Deferred
 

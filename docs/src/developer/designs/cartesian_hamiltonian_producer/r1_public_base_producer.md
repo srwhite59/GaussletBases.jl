@@ -128,6 +128,13 @@ Optional public fields with R1 defaults:
 - `reference_spacing = 1.0`
 - `tail_spacing = 10.0`
 
+The reviewed R1 one-center H endpoint is not the omitted-`reference_spacing`
+default. It must use explicit public `reference_spacing = 0.3` in the example
+and endpoint test to reproduce the reviewed H baseline
+`-0.49855234726272035`. Omitting `reference_spacing` leaves the general public
+default at `1.0`, which is an allowed user choice but not the reviewed R1 H
+baseline.
+
 Fixed private choices in R1:
 
 - `method = :pqs_source_box`
@@ -139,6 +146,12 @@ The current private H2 setup still needs an internal radius-like domain value.
 The public z-axis H2 facade must derive that private value as
 `max(xmax_parallel, xmax_transverse)`. This derived value is not a public
 `basis` field.
+
+For one-center H, public `reference_spacing` maps to the private one-center
+mapping parameter historically named `parent_mapping_d`. The facade must not
+accept public `d` or public `parent_mapping_d`, and no later stage may reset
+that value to a hidden default. After initial lattice/parent construction, the
+resolved value is provenance, not a staged algorithm input.
 
 These are not public keywords or accepted `basis` fields in R1:
 
@@ -183,6 +196,7 @@ h_basis = (;
     q = 5,
     core_spacing = 0.5,
     radius = 4.0,
+    reference_spacing = 0.3,
 )
 
 h_ham = cartesian_base_hamiltonian(h_system; basis = h_basis)
@@ -230,11 +244,21 @@ writer should propagate normally.
 The production facade must not automatically read back the artifact after
 writing. `read_cartesian_ida_hamiltonian` is for validation and users.
 
+R1 amends the artifact contract narrowly: when `hamfile !== nothing`, the final
+Hamiltonian file must also preserve the normalized public input provenance
+needed by consumers to identify the run. This provenance records the accepted
+public `system` and `basis` values after validation and default resolution,
+including the resolved `reference_spacing` whether explicit or defaulted. It
+must not be consumed by downstream construction stages after initial
+lattice/parent setup, and it must not become a report, status object, wrapper
+payload, separate manifest, or second artifact file.
+
 This design does not approve:
 
-- a new artifact file shape;
+- a new artifact file shape beyond the R1 normalized public input provenance
+  stored in the final Hamiltonian file;
 - a new artifact manifest;
-- a new basis/provenance artifact;
+- a separate basis/provenance artifact;
 - a new materialization wrapper;
 - durable status/result-kind fields.
 
@@ -365,10 +389,11 @@ First implementation must validate:
 
 - package load;
 - H base Hamiltonian construction through the public facade with a reviewed
-  one-center H system;
+  one-center H system and explicit `reference_spacing = 0.3`;
 - H2 base Hamiltonian construction through the public facade;
 - returned type is `CartesianIDAHamiltonian{Float64}`;
-- H one-body baseline remains `-0.49855234726272035` within `1.0e-10`;
+- H one-body baseline remains `-0.49855234726272035` within `1.0e-10` for the
+  explicit-`reference_spacing = 0.3` public example;
 - H2 final dimension remains `471`;
 - H2 `one_body_hamiltonian(ham)` lowest value remains
   `-0.79460371733658908` within reviewed tolerance;
@@ -383,6 +408,8 @@ First implementation must validate:
 - non-`nothing` `hamfile` writes with `write_cartesian_ida_hamiltonian`;
 - validation readback with `read_cartesian_ida_hamiltonian` has zero one-body
   readback delta;
+- validation readback preserves normalized public input provenance, including
+  the H example's `reference_spacing = 0.3`;
 - R0 warm/cold baseline is not materially regressed without explanation;
 - no `cartesian_pair_terms` or `cartesian_assembly` call appears in the
   recommended public example path.
@@ -413,6 +440,10 @@ not approve adding this gate to `test/runtests.jl`; a runner edit would require
 explicit repo-manager approval.
 
 Test artifact behavior: use `mktempdir()` for `hamfile` output.
+
+The H endpoint test must use the public example's explicit
+`reference_spacing = 0.3`. It must not accept a hidden public `d` keyword or
+`parent_mapping_d` field as a substitute.
 
 The test must enforce the R1 geometry contract: x/y-aligned H2,
 shifted-parallel H2, and generally oriented H2 fail with `ArgumentError`
@@ -445,7 +476,8 @@ The R1 base producer design forbids:
 - new report fields duplicating terminal bases, matrices, factors, or raw pair
   tensors;
 - metadata-carried numerical data;
-- new artifact shapes;
+- new artifact shapes except the approved normalized public input provenance in
+  the final Hamiltonian file;
 - public solver controls;
 - supplement, correction, fragment, counterpoise, or Cr2 stress functionality;
 - broad compatibility adapters that preserve the old pair/assembly story.
