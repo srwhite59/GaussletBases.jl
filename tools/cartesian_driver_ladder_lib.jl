@@ -61,9 +61,9 @@ const CARTESIAN_LINE_CASES = Dict(
             input = "test/driver_inputs/h2_pqs_q5_independent_source_box_r4.jl",
         ),
         (;
-            name = "pqs_diatomic_gto",
+            name = "pqs_diatomic_base_hamiltonian",
             input =
-                "test/driver_inputs/h2_pqs_q5_independent_source_box_r4_supplement_preflight.jl",
+                "test/driver_inputs/h2_pqs_q5_independent_source_box_r4_base_hamiltonian.jl",
         ),
     ],
 )

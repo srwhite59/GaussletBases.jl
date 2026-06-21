@@ -1,12 +1,13 @@
 # Cartesian Hamiltonian Producer Design
 
-Status: **Slice A, Slice B, Slice C1, and Slice C2 implementation authority; Slice D remains candidate**
+Status: **Slice A, Slice B, Slice C1, Slice C2, and Slice D base-handoff implementation authority**
 
 This document is the implementation authority for Slice A, Slice B, Slice C1,
-and the Slice C2 Hamiltonian construction boundary of the Cartesian/PQS
-Hamiltonian producer. It remains the candidate design record for Slice D
-driver/artifact simplification. It is intentionally more detailed than a target
-card and less historical than the manager running log.
+the Slice C2 Hamiltonian construction boundary, and the Slice D base
+materialization handoff of the Cartesian/PQS Hamiltonian producer. Broader
+driver polish, solver integration, and public workflow expansion remain outside
+this authority. This document is intentionally more detailed than a target card
+and less historical than the manager running log.
 
 The normative PQS mathematics remains in
 `docs/src/algorithms/pqs_shell_construction.md`. This document controls the
@@ -108,9 +109,10 @@ A supplement request may remain visible, but supplement construction must not
 block or complicate the base Hamiltonian producer.
 
 Current authority covers the realized terminal basis, blockwise one-body
-operators, localized IDA assembly, and the narrow final Hamiltonian construction
-boundary. Driver/materialization simplification, artifact routing, and solver
-integration remain future candidate work.
+operators, localized IDA assembly, the narrow final Hamiltonian construction
+boundary, and the direct base-Hamiltonian materialization handoff. Solver
+integration, new artifact shapes, and broad public-driver polish remain future
+candidate work.
 
 ## 4. Binding invariants
 
@@ -879,33 +881,37 @@ Rules:
 Wrapper/orchestration target: **60 source lines**. If C2 cannot stay as a thin
 constructor boundary, stop for a docs-only amendment.
 
-### HP-WIRE-02 — direct materialization Hamiltonian handoff — Slice D candidate
+### HP-WIRE-02 — direct materialization Hamiltonian handoff — Slice D approved and implemented
 
-Proposed purpose:
+Purpose:
 Wire the already realized terminal basis and already approved A/B/C kernels into
 the canonical materialization stage so a real `CartesianIDAHamiltonian` is
 returned and optionally written by the existing artifact writer.
 
-Proposed boundary:
+Implemented boundary:
 
 ```julia
 cartesian_materialization(
-    parent,
-    recipe,
-    terminal_basis_realization::CartesianTerminalBasisRealization,
+    report,
+    terminal_basis_realization,
     materialization_inputs,
 )::Union{Nothing,CartesianIDAHamiltonian{Float64}}
 ```
 
-The exact implementation may use an equivalent positional boundary, but it must
-pass the existing `transforms.terminal_basis_realization` directly from the
-driver/harness call site. It may use `parent` and `recipe` as non-summary input
-objects for parent bundles, center records, physical charges/positions,
-electron counts, and approved recipe controls. If `report` remains in the
-signature for compatibility with nearby printing/saving code, it must not be
-used as a computational payload except for already non-summary fields that are
-also available from `parent`/`recipe`; it must not read target/source-plan or
-supplement summaries as construction data.
+The call site must pass the existing `transforms.terminal_basis_realization`
+directly. The basis must not be embedded in `cartesian_report`, reconstructed
+from summaries, or recovered by passing the full `transforms` stage.
+
+The only computational `report` fields approved for this boundary are:
+
+- `report.route_family`;
+- `report.parent_axis_bundle_object`;
+- `report.system_metadata`.
+
+These are existing non-summary carriers for route selection, parent bundles,
+center records, physical charges/positions, and electron counts. Slice D must
+not read target/source-plan/supplement summaries, status fields, blocker
+fields, or report-printing mirrors as construction data.
 
 Return contract:
 
@@ -932,7 +938,7 @@ It must not carry the basis through `cartesian_report`, embed `transforms`,
 reconstruct terminal realization from report summaries, or introduce a new
 build-input payload.
 
-Candidate rules:
+Rules:
 
 - update live driver/harness/probe callers to pass
   `transforms.terminal_basis_realization` directly;
@@ -1202,9 +1208,9 @@ it as a bounded physics validation; Cr2 validation should not require it.
 Exploratory commits may be separate on a branch. The mergeable slices below must
 produce a real consumer-visible result and delete the replaced path.
 
-Slice A, Slice B, and Slice C1 have been implemented under this design. Slice
-C2 is approved as a narrow Hamiltonian construction boundary. Slice D remains a
-future candidate.
+Slice A, Slice B, Slice C1, Slice C2, and the Slice D base materialization
+handoff have been implemented under this design. Broader driver polish, solver
+integration, and non-base Hamiltonian routes remain future candidates.
 
 ### Slice A — terminal basis realization
 
@@ -1389,9 +1395,7 @@ Merge validation:
 - Cr2 base Hamiltonian construction is a later stress/performance gate, not a
   blocker for the first H2 Slice C correctness merge.
 
-### Slice D — driver simplification
-
-Status: future candidate, not approved by the current Slice A/B/C authority.
+### Slice D — base materialization handoff
 
 Target:
 Make the canonical materialization stage return/write the real Hamiltonian with
@@ -1407,14 +1411,15 @@ Required handoff:
 transforms = cartesian_transforms(units, recipe)
 ...
 materialization = cartesian_materialization(
-    parent,
-    recipe,
+    report,
     transforms.terminal_basis_realization,
     materialization_inputs,
 )
 ```
 
-The signature may be adjusted only to preserve this dataflow. Slice D must not:
+The implemented signature keeps `report` for compatibility with the existing
+driver shape. It may use only `route_family`, `parent_axis_bundle_object`, and
+`system_metadata` as computational inputs. Slice D must not:
 
 - embed `terminal_basis_realization` in `cartesian_report`;
 - pass the full `transforms` stage recursively into materialization;
@@ -1468,7 +1473,7 @@ proposed.
 Validation:
 
 - package load;
-- H2 terminal smoke updated to validate real materialization rather than the old
+- H2 base Hamiltonian smoke updated to validate real materialization rather than the old
   blocked source-plan contract;
 - H2 materialization constructs `CartesianIDAHamiltonian{Float64}` with final
   dimension `471`;
@@ -1526,10 +1531,10 @@ implementation.
 ## 11. Mechanical implementation gate
 
 Every implementation PR must list the approved design IDs it uses. For the
-current Slice A/B/C authority, the approved ID set is:
+current Slice A/B/C/D base-handoff authority, the approved ID set is:
 
 ```text
-Design IDs: HP-OBJ-01, HP-OBJ-02, HP-FILE-01, HP-FN-00, HP-FN-01, HP-FN-02, HP-WIRE-01, HP-FN-03, HP-FN-04, HP-FN-05
+Design IDs: HP-OBJ-01, HP-OBJ-02, HP-FILE-01, HP-FN-00, HP-FN-01, HP-FN-02, HP-WIRE-01, HP-FN-03, HP-FN-04, HP-FN-05, HP-WIRE-02
 ```
 
 Review added lines before scientific review:

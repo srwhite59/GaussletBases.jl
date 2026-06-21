@@ -7442,3 +7442,48 @@ Next step:
 - Decide whether to clean up stale fixture/tool naming around the old
   supplement-preflight input, or move to a broader review/merge decision for
   the design branch now that the base H2 PQS Hamiltonian endpoint is live.
+
+## Cartesian Hamiltonian Producer Pass 033 - Ratify Slice D and H2 Endpoint Smoke
+
+Commit(s):
+- this branch - Ratify Slice D handoff and H2 endpoint smoke
+
+Summary:
+- Reconciled design authority with the already accepted HP-WIRE-02
+  implementation: `AGENTS.md` and the design document now list `HP-WIRE-02` as
+  approved for the narrow base-Hamiltonian materialization handoff.
+- Recorded the implemented materialization boundary:
+  `cartesian_materialization(report, terminal_basis_realization, inputs)`,
+  with only `route_family`, `parent_axis_bundle_object`, and
+  `system_metadata` approved as computational report fields.
+- Replaced the old H2 supplement-preflight fixture/tool vocabulary with a base
+  H2 PQS Hamiltonian endpoint fixture and smoke. The durable smoke now requests
+  materialization, validates the returned `CartesianIDAHamiltonian`, checks H1
+  and self-Coulomb endpoints, and verifies existing artifact readback.
+
+Validation:
+- Manager ran `git diff --check`, package load, focused stale-name greps, and
+  `julia --project=. tools/h2_pqs_base_hamiltonian_smoke.jl`.
+- The converted smoke passed with final dimension `471`, K/V/unit-U symmetry
+  errors below `1.0e-10`, H1 lowest delta `0.0`, self-Coulomb delta
+  `1.3322676295501878e-15`, and artifact readback one-body delta `0.0`.
+
+Carrying-cost accounting:
+- deleted: the active `supplement_preflight` fixture/tool naming and old smoke
+  assertions centered on terminal roles, support counts, and column ranges.
+- simplified: the H2 smoke now checks the user-facing Hamiltonian endpoint
+  rather than route-internal staging vocabulary.
+- quarantined: ignored temporary validation scripts remain under `tmp/work`.
+- not deleted because: historical running-log references to the old smoke name
+  remain as pass history.
+- exact remaining caller/blocker: no active `tools/` or `test/driver_inputs/`
+  reference to the old supplement-preflight H2 fixture remains.
+- new tests: no new test file; the existing developer smoke was renamed and
+  converted.
+- new metadata/status fields: none.
+
+Next step:
+- Run the broad branch review/merge decision. Slice C is closed for the planned
+  in-memory base PQS boundary, and Slice D base materialization is ratified; any
+  remaining work should be classified as public polish, larger-system
+  performance stress, or a separate non-base Hamiltonian lane.

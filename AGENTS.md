@@ -371,6 +371,7 @@ these approved design IDs:
 - `HP-FN-03`
 - `HP-FN-04`
 - `HP-FN-05`
+- `HP-WIRE-02`
 
 No other production surface may be added in this lane without a prior
 documentation-only design amendment. This includes new structs, persistent
@@ -379,16 +380,19 @@ blocker symbols, report/artifact fields, committed probes/tests, and cross-file
 or module-owned helpers.
 
 Private file-local helpers are allowed only when they implement the approved
-Slice A/B/C pseudocode, create no persistent shape or vocabulary, stay within
+Slice A/B/C/D pseudocode, create no persistent shape or vocabulary, stay within
 the approved file and line budget, and are reported in the implementation
 handoff.
 
 `HP-FN-04` approves only the internal Slice C1 localized IDA matrix assembly
 surface. `HP-FN-05` approves only the narrow Slice C2 construction boundary for
-the existing `CartesianIDAHamiltonian`. The current approved IDs do not
-authorize Hamiltonian artifact production, driver/materialization
-simplification, route-stage/report fields, wrapper payloads, or persistent
-factor caches.
+the existing `CartesianIDAHamiltonian`. `HP-WIRE-02` approves only the narrow
+Slice D base Hamiltonian materialization handoff: return `nothing` when no base
+Hamiltonian is requested, return the existing `CartesianIDAHamiltonian` on
+success, and use the existing Hamiltonian writer when artifact output is
+requested. It does not authorize new artifact shapes, route-stage/report fields,
+wrapper payloads, persistent factor caches, solver work, or broad public-driver
+polish.
 
 `HP-FN-03` specifically approves
 `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl` as the Slice B
