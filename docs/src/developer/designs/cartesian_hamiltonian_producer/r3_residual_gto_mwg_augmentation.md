@@ -78,6 +78,18 @@ validated construction specification. An arbitrary
 provenance for augmentation. Existing base G-G matrix blocks may be reused, but
 augmentation is not a post-hoc wrapper around an opaque Hamiltonian.
 
+Parent-axis numerical ownership invariant: once the Cartesian parent lattice
+and axis bundle are realized, that construction is the authority for reusable
+parent-only one-dimensional numerical data, including overlap, kinetic,
+coordinate, second moment, integral weights, Gaussian factor terms, raw
+pair-factor terms, and exponent ordering. Parent-supplement cross tables are
+derived augmentation work data because they additionally depend on the
+validated supplement, Gaussian expansion, and physical centers. R3 may derive
+those tables construction-locally from the parent-axis source and reuse them
+across residual overlap, exact kinetic, coordinate moments, second moments, and
+by-center nuclear attraction. They are not metadata, report fields, route-stage
+fields, artifacts, public API, or global mutable caches.
+
 ## Donor Inventory
 
 | Surface | Classification | R3 use |
@@ -313,6 +325,12 @@ dense global pair matrix. This does not approve edits to
 `src/ordinary_qw_raw_blocks.jl`, a new shared QW API, persistent provider
 bundles, public API, artifact/provenance, driver/tool workflow, R3-C, Be2 as a
 validation gate, or Cr2.
+
+The production target is to derive parent-supplement 1D cross tables once per
+augmentation construction and reuse them. The immediate R3-local bridge may
+tolerate one duplicate overlap construction between residualization and full
+exact-operator assembly to avoid adding a persistent raw-block bundle, but it
+must not rebuild cross tables per terminal block or per operator.
 
 R3-A validation gates:
 

@@ -61,6 +61,15 @@ Current implementation boundary:
   directly. No-request materialization returns `nothing`.
 - Optional base-Hamiltonian artifact writing uses the existing
   `write_cartesian_ida_hamiltonian` shape.
+- Once the Cartesian parent lattice and axis bundle are realized, that
+  construction is the authority for reusable parent-only one-dimensional
+  numerical data: overlap, kinetic, coordinate, second moment, integral
+  weights, Gaussian factor terms, raw pair-factor terms, and exponent ordering.
+  Supplement-dependent parent-by-supplement cross tables are derived
+  construction-local work data, built from that parent-axis source for a
+  validated supplement, expansion, and physical centers. They are not metadata,
+  report fields, route-stage fields, artifacts, public API, or global mutable
+  caches.
 
 Approved R3-A residual-GTO exact one-body/moment scope:
 

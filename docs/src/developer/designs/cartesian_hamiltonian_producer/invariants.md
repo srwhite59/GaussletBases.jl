@@ -63,6 +63,26 @@ dangerous dense shape.
   operators. Cross-block kinetic, nuclear-attraction, and localized IDA matrix
   elements may be nonzero and remain assembled over terminal block pairs.
 
+## Parent-Axis Numerical Ownership
+
+- Once the Cartesian parent lattice and axis bundle are realized, that
+  construction is the sole authority for reusable parent-only one-dimensional
+  numerical data: overlap, kinetic, coordinate, second moment, integral
+  weights, Gaussian factor terms, raw pair-factor terms, and exponent ordering.
+- Parent-supplement cross tables are not parent data. They additionally depend
+  on the validated supplement, Gaussian expansion, and physical centers, so
+  they are construction-local augmentation work data derived from the
+  authoritative parent-axis source.
+- Downstream code may materialize rectangular parent-by-supplement cross
+  matrices and project them through terminal blocks. It must not rebuild the
+  one-dimensional cross tables independently per terminal block or per
+  operator in production.
+- Parent-supplement cross tables are numerical work data, not metadata, report
+  fields, route-stage fields, artifacts, public API, or global mutable caches.
+- A shared upstream source owner for supplement-dependent cross tables requires
+  a separate docs-only amendment when a second production consumer or measured
+  parent-side source cost justifies it.
+
 ## Lowdin
 
 Use symmetric Lowdin through the matrix inverse square root:

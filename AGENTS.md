@@ -478,6 +478,16 @@ new shared QW APIs, persistent provider bundles, payload/status/report
 surfaces, artifact/provenance, public APIs, driver/tool workflows, Be2
 validation gates, and Cr2 work are not approved.
 
+Parent-only one-dimensional numerical data belong to the realized parent axis
+bundle/factor source once the parent lattice is fixed. Parent-supplement cross
+tables are construction-local augmentation work data derived from that source
+for a validated supplement, expansion, and physical centers. They are not
+metadata, report fields, route-stage fields, artifacts, public APIs, global
+mutable caches, or persistent provider payloads. R3 may materialize
+rectangular parent-by-supplement cross matrices and project them through
+terminal blocks; it must not rebuild one-dimensional cross tables per terminal
+block or per operator.
+
 `HP-R3-FN-03` approves only the R3-B in-memory residual-MWG/IDA interaction
 continuation in
 `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`, owned by

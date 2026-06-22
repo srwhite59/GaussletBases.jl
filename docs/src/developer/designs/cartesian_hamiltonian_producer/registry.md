@@ -554,6 +554,16 @@ operator, dense global pair matrix, new shared QW API, persistent provider
 bundle, payload/status/report surface, artifact/provenance, public API,
 driver/tool workflow, Be2 validation gate, or Cr2 work.
 
+Parent-only one-dimensional numerical data belong to the realized parent axis
+bundle/factor source once the parent lattice is fixed. Parent-supplement cross
+tables are construction-local augmentation work data because they also depend
+on the supplement, expansion, and physical centers. The production target is to
+derive them from the parent-axis source once per augmentation construction and
+reuse them across residual overlap and exact operators; the immediate R3-local
+bridge may tolerate one duplicate overlap construction to avoid a new
+persistent raw-block bundle, but it must not rebuild cross tables per terminal
+block or per operator.
+
 ### HP-R3-TEST-01 — first augmented one-body endpoint validation
 
 Approved standalone R3-A/R3-B endpoint gate:
