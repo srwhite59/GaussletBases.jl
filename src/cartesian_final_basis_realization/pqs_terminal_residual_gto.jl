@@ -1,32 +1,6 @@
-struct CartesianTerminalResidualGTOAugmentation
-    base_dimension::Int
-    candidate_count::Int
-    residual_dimension::Int
-    candidate_labels::Vector{String}
-    candidate_owner_indices::Vector{Int}
-    candidate_centers::Vector{NTuple{3,Float64}}
-    residual_source_owner_indices::Vector{Int}
-    residual_occupations::Vector{Float64}
-    owner_retained_counts::Vector{Int}
-    residual_labels::Vector{String}
-    T_G::Matrix{Float64}
-    T_A::Matrix{Float64}
-    occupation_cutoff::Float64
-    tau_neg_abs::Float64
-    tau_neg_rel::Float64
-    tau_merge_abs::Float64
-    tau_merge_rel::Float64
-    selection_rule::Symbol
-    orientation::Symbol
-    sign_rule::Symbol
-end
-
 const _GB_PARENT = parentmodule(@__MODULE__)
+const CartesianTerminalResidualGTOAugmentation = CRG.CartesianResidualGaussianBasis
 
-_r3_center(center) = (Float64(center[1]), Float64(center[2]), Float64(center[3]))
-_r3_float_centers(centers) = NTuple{3,Float64}[_r3_center(center) for center in centers]
-_r3_candidate_labels(supplement) = String[String(orbital.label) for orbital in supplement.orbitals]
-_r3_candidate_centers(supplement) = NTuple{3,Float64}[_r3_center(orbital.center) for orbital in supplement.orbitals]
 _r3_require_size(matrix, dims, label) = size(matrix) == dims || throw(DimensionMismatch(label))
 _r3_require_close(block, reference, label) = norm(block - reference, Inf) <= 1.0e-10 || throw(ArgumentError(label))
 _r3_moment_ok(matrix, dims) = size(matrix) == dims && all(isfinite, matrix) && norm(matrix - transpose(matrix), Inf) <= 1.0e-10
@@ -56,12 +30,12 @@ function _r3_validate_residual_contract(
     if !isnothing(supplement)
         residual.candidate_count == length(supplement.orbitals) ||
             throw(DimensionMismatch("R3 residual candidate count mismatch"))
-        residual.candidate_labels == _r3_candidate_labels(supplement) ||
+        residual.candidate_labels == CRG.residual_gaussian_candidate_labels(supplement) ||
             throw(ArgumentError("R3 residual candidate labels do not match supplement"))
-        residual.candidate_centers == _r3_candidate_centers(supplement) ||
+        residual.candidate_centers == CRG.residual_gaussian_candidate_centers(supplement) ||
             throw(ArgumentError("R3 residual candidate centers do not match supplement"))
     end
-    locations = _r3_float_centers(atom_locations)
+    locations = CRG.residual_gaussian_float_centers(atom_locations)
     for (index, owner) in pairs(residual.candidate_owner_indices)
         1 <= owner <= length(locations) ||
             throw(ArgumentError("R3 residual candidate owner index is out of range"))
@@ -209,7 +183,8 @@ function pqs_terminal_residual_gto_augmented_hamiltonian(
     expansion = nothing,
 )
     center_count = _r3_validate_base_hamiltonian(base_hamiltonian, residual)
-    atom_locations = NTuple{3,Float64}[_r3_center(view(base_hamiltonian.nuclear_positions, index, :)) for index in 1:center_count]
+    atom_locations = NTuple{3,Float64}[CRG.residual_gaussian_center(
+        view(base_hamiltonian.nuclear_positions, index, :)) for index in 1:center_count]
     _r3_validate_residual_contract(basis, nothing, residual, atom_locations)
     _r3_validate_augmented_operator_dimensions(augmented_operators, base_hamiltonian, residual, center_count)
     centers, widths = _r3b_residual_mwg_descriptors(augmented_operators, residual)
@@ -324,13 +299,6 @@ function write_pqs_terminal_residual_gto_augmented_hamiltonian(
     return path
 end
 
-function _residual_candidate_owner(center, nuclei)
-    matches = findall(==(center), nuclei)
-    length(matches) == 1 ||
-        throw(ArgumentError("residual-GTO candidate center must exactly match one nucleus"))
-    return first(matches)
-end
-
 function _r3a_qw_orbital(orbital)
     orbital.primitive_normalization === :axiswise_normalized_cartesian_gaussian ||
         throw(ArgumentError("R3-A QW donor requires axiswise-normalized Cartesian Gaussian primitives"))
@@ -440,7 +408,8 @@ function _r3a_qw_blocks(basis, bundles, supplement, atom_locations, expansion)
         include_factor_terms = false)
     self = getfield(_GB_PARENT, :_qwrg_cartesian_shell_self_moment_blocks_3d)(
         donor, expansion; include_factor_terms = false)
-    nuclear = _r3a_qw_nuclear_blocks(proxy, donor, expansion, _r3_float_centers(atom_locations))
+    nuclear = _r3a_qw_nuclear_blocks(proxy, donor, expansion,
+        CRG.residual_gaussian_float_centers(atom_locations))
     return (;
         mixed = (;
             overlap = _r3a_project_parent_ga(basis, cross.overlap_ga),
@@ -471,53 +440,8 @@ function _terminal_residual_mixed_overlap(
     supplement,
 )
     expansion = getfield(_GB_PARENT, :coulomb_gaussian_expansion)(doacc = false)
-    return _r3a_qw_blocks(basis, bundles, supplement, (), expansion).mixed.overlap
-end
-
-function _canonicalize_residual_signs!(T_A, T_G)
-    for column in axes(T_A, 2)
-        row = argmax(abs.(view(T_A, :, column)))
-        if T_A[row, column] < 0
-            T_A[:, column] .*= -1
-            T_G[:, column] .*= -1
-        end
-    end
-    return T_A, T_G
-end
-
-_r3a_residual_overlap(T_G, T_A, X, S_AA) =
-    transpose(T_G) * T_G + transpose(T_G) * X * T_A +
-    transpose(T_A) * transpose(X) * T_G + transpose(T_A) * S_AA * T_A
-
-function _r3a_check_metric(values, tau_abs, tau_rel, label)
-    max_value = max(maximum(values), 1.0)
-    tau = max(Float64(tau_abs), Float64(tau_rel) * max_value)
-    minimum(values) >= -tau ||
-        throw(ArgumentError("$(label) has a negative eigenvalue beyond tolerance"))
-    return tau
-end
-
-function _r3a_owner_residual_block(X, S_AA, owner_indices, owner, nA, cutoff,
-    tau_neg_abs, tau_neg_rel)
-    indices = findall(==(owner), owner_indices)
-    M = Matrix{Float64}(S_AA[indices, indices] - transpose(X[:, indices]) * X[:, indices])
-    M = 0.5 .* (M .+ transpose(M))
-    values, vectors = eigen(Symmetric(M))
-    _r3a_check_metric(values, tau_neg_abs, tau_neg_rel, "owner-local residual metric")
-    keep = findall(>(cutoff), values)
-    isempty(keep) && return nothing
-    natural = length(keep) == length(values) ? collect(eachindex(values)) :
-        sort(keep; by = index -> (-values[index], index))
-    transform = length(keep) == length(values) ?
-        Matrix{Float64}(inv(sqrt(Symmetric(M)))) :
-        Matrix{Float64}(vectors[:, natural] *
-            Diagonal(1.0 ./ sqrt.(values[natural])))
-    T_A = zeros(Float64, nA, length(natural))
-    T_A[indices, :] .= transform
-    return (; owner, T_A, occupations = Float64[values[natural]...],
-        labels = length(keep) == length(values) ?
-            String["r$(owner)_$(column)_$(index)" for (column, index) in pairs(indices)] :
-            String["r$(owner)_mode$(column)" for column in eachindex(natural)])
+    return CRG.terminal_residual_mixed_overlap(basis, bundles, supplement,
+        _r3a_qw_blocks, expansion)
 end
 
 function pqs_terminal_residual_gto_augmentation(
@@ -533,54 +457,16 @@ function pqs_terminal_residual_gto_augmentation(
     orthogonality_atol::Real = 1.0e-10,
     identity_atol::Real = 1.0e-10,
 )
-    nuclei_value = _r3_float_centers(nuclei)
-    labels = _r3_candidate_labels(supplement)
-    centers = _r3_candidate_centers(supplement)
-    owners = Int[_residual_candidate_owner(center, nuclei_value) for center in centers]
-    candidate_count = length(labels)
+    nuclei_value = CRG.residual_gaussian_float_centers(nuclei)
+    labels = CRG.residual_gaussian_candidate_labels(supplement)
+    centers = CRG.residual_gaussian_candidate_centers(supplement)
+    owners = Int[CRG.residual_candidate_owner(center, nuclei_value) for center in centers]
     X = _terminal_residual_mixed_overlap(basis, bundles, supplement)
-    size(X) == (basis.final_dimension, candidate_count) ||
-        throw(DimensionMismatch("residual-GTO mixed overlap has wrong shape"))
     S_AA = Matrix{Float64}(
         getfield(_GB_PARENT, :_cartesian_supplement_cross_overlap)(supplement, supplement))
-    cutoff = Float64(residual_occupation_cutoff)
-    owner_blocks = filter(!isnothing, [_r3a_owner_residual_block(
-        X, S_AA, owners, owner, candidate_count, cutoff, tau_neg_abs, tau_neg_rel)
-        for owner in unique(owners)])
-    isempty(owner_blocks) &&
-        throw(ArgumentError("residual-GTO candidate metric has no retained directions"))
-    T_A0 = hcat((block.T_A for block in owner_blocks)...)
-    T_G0 = Matrix{Float64}(-X * T_A0)
-    S_merge = Matrix{Float64}(_r3a_residual_overlap(T_G0, T_A0, X, S_AA))
-    S_merge = 0.5 .* (S_merge .+ transpose(S_merge))
-    merge_values = eigvals(Symmetric(S_merge))
-    tau_merge = _r3a_check_metric(merge_values, tau_merge_abs, tau_merge_rel,
-        "residual-GTO final merge metric")
-    minimum(merge_values) > tau_merge ||
-        throw(ArgumentError("residual-GTO final merge metric is near singular"))
-    transform = Matrix{Float64}(inv(sqrt(Symmetric(S_merge))))
-    T_A = Matrix{Float64}(T_A0 * transform)
-    T_G = Matrix{Float64}(T_G0 * transform)
-    _canonicalize_residual_signs!(T_A, T_G)
-    norm(T_G + X * T_A, Inf) <= orthogonality_atol ||
-        throw(ArgumentError("residual-GTO G' S R validation failed"))
-    overlap = _r3a_residual_overlap(T_G, T_A, X, S_AA)
-    norm(overlap - I, Inf) <= identity_atol ||
-        throw(ArgumentError("residual-GTO R' S R validation failed"))
-    residual_source_owner_indices = Int[vcat((fill(block.owner, size(block.T_A, 2))
-        for block in owner_blocks)...)...]
-    residual_occupations = Float64[vcat((block.occupations for block in owner_blocks)...)...]
-    owner_retained_counts = [count(==(owner), residual_source_owner_indices)
-        for owner in eachindex(nuclei_value)]
-    residual_labels = String[vcat((block.labels for block in owner_blocks)...)...]
-    return CartesianTerminalResidualGTOAugmentation(
-        basis.final_dimension, candidate_count, size(T_A, 2), labels, owners, centers,
-        residual_source_owner_indices, residual_occupations, owner_retained_counts,
-        residual_labels, T_G, T_A, cutoff, Float64(tau_neg_abs), Float64(tau_neg_rel),
-        Float64(tau_merge_abs), Float64(tau_merge_rel),
-        :owner_local_residual_occupation,
-        :owner_local_residual_occupation_final_merge_lowdin,
-        :largest_T_A_entry_positive)
+    return CRG.build_residual_gaussian_basis(basis.final_dimension, X, S_AA,
+        labels, centers, owners; residual_occupation_cutoff, tau_neg_abs,
+        tau_neg_rel, tau_merge_abs, tau_merge_rel, orthogonality_atol, identity_atol)
 end
 
 function _r3a_augmented_operator(O_GG, O_GA, O_AA, residual)
@@ -657,7 +543,7 @@ function pqs_terminal_residual_gto_augmented_operators(
         supplement_blocks.self.x2[axis],
         residual) for axis in (:x, :y, :z)))
     U = Matrix{Float64}[]
-    for (center_index, center) in enumerate(_r3_float_centers(atom_locations))
+    for (center_index, center) in enumerate(CRG.residual_gaussian_float_centers(atom_locations))
         U_GG = zeros(Float64, basis.final_dimension, basis.final_dimension)
         factors = ntuple(axis -> _r3a_centered_factor_terms(pgdg[axis], expansion_value,
             center[axis]), 3)

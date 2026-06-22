@@ -18,6 +18,7 @@ exports, or artifacts.
 module CartesianFinalBasisRealization
 
 using ..CartesianRawProductSources
+using ..CartesianResidualGaussians
 using LinearAlgebra
 import ..GaussletBases: _cartesian_unflat_index, _nested_axis_lengths,
        _nested_axis_pgdg, _nested_box_support_indices, _nested_product_coefficients,
@@ -25,6 +26,7 @@ import ..GaussletBases: _cartesian_unflat_index, _nested_axis_lengths,
        _nested_projected_q_shell_full_sides, gto_overlap_matrix
 
 const CRPS = CartesianRawProductSources
+const CRG = CartesianResidualGaussians
 
 export pqs_source_shell_realization_final_basis,
        pqs_source_shell_projected_one_body_matrix,

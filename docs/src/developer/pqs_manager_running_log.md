@@ -9412,3 +9412,59 @@ Carrying-cost result:
 Risk / guardrail:
 - The first source pass should be narrow. Do not move artifact writing, public
   facade parsing, QW donor kernels, or Cr2 support into the RG module.
+
+## Cartesian Hamiltonian Producer Pass 068 - Extract Residual Gaussian Basis Module
+
+Commit(s):
+- this commit - Extract residual Gaussian basis module
+
+Summary:
+- Accepted the first behavior-preserving Residual Gaussian source migration.
+  The residual basis object and owner-local residual-basis construction moved
+  from `pqs_terminal_residual_gto.jl` into the new internal
+  `CartesianResidualGaussians` module under
+  `src/cartesian_residual_gaussians/`.
+- The old terminal residual file now keeps the temporary compatibility alias
+  and wrapper needed by current callers. Exact augmented operators, matched
+  width Gaussian interaction, artifact writing, and facade parsing intentionally
+  remain in the terminal/facade path for later slices.
+- The migration uses domain naming around residual Gaussian basis construction
+  instead of adding another R3-named helper layer.
+
+Validation:
+- Doer ran `git diff --check`, package load, and the standalone H2 R3 endpoint
+  gate. The endpoint remained at augmented dimension `489` with H2
+  self-Coulomb `0.45742652143620904`, within `1.6e-15` of target.
+- Manager reviewed the diff and new files, confirmed no public export or old
+  residual-selection helpers remained, ran package load, reran the standalone
+  H2 endpoint, and reran the ignored Be2 owner-local usability measurement.
+  Be2 returned `CartesianIDAHamiltonian{Float64}`, wrote/read back its artifact
+  with zero deltas, kept owner counts `[13, 13]`, and took about `58.7s` with
+  `11465 MiB` allocated.
+
+Goal advancement:
+- RG/LT6: establishes the approved domain module with the first real physics
+  object: the owner-local residual Gaussian basis.
+- MT5: begins deleting semantic flattening by moving residual-basis meaning out
+  of the terminal-basis implementation file.
+
+Carrying-cost result:
+- deleted: old residual-basis struct and owner-local residual construction
+  helpers from `pqs_terminal_residual_gto.jl`.
+- simplified: `pqs_terminal_residual_gto_augmentation(...)` is now a small
+  delegation wrapper around `build_residual_gaussian_basis(...)`.
+- quarantined: none.
+- not deleted because: current R3 callers still use the old terminal residual
+  entry point; exact operators, MWG interaction, artifact writer, and facade
+  parsing are out of scope for this slice.
+- exact remaining caller/blocker: move exact augmented operators next, then
+  retire more `_r3a_*` helper names as callers move into the RG module.
+- added src lines: 149.
+- deleted src lines: 132.
+- new tests: none.
+- new metadata/status fields: none.
+
+Risk / guardrail:
+- This is source organization only. It does not approve public API/export,
+  artifact schema changes, Cr2 support, driver workflow, or new physics
+  behavior.
