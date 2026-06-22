@@ -9874,3 +9874,60 @@ Risk / guardrail:
 - Do not optimize the dense RG transform first. Do not broaden to full Cr2
   facade or artifact support before reducing or justifying nuclear donor
   allocation.
+
+## Cartesian Hamiltonian Producer Pass 076 - Audit Cr2 Nuclear Factor Reuse
+
+Commit(s):
+- this commit - Record Cr2 nuclear factor reuse audit
+
+Summary:
+- Accepted a read-only planning/audit pass for the Cr2 q4 by-center nuclear
+  factor-table hotspot. The waste is mostly in `A-A` nuclear one-dimensional
+  factor tables inside `_r3a_qw_nuclear_blocks(...)`.
+- The current `A-A` loop rebuilds nuclear factor tables for every ordered
+  supplement orbital pair, including both `(i,j)` and `(j,i)`, even though the
+  final `A-A` nuclear matrix is symmetric. `G-A` already reuses x/y
+  center-coordinate tables across the two Cr centers; `A-A` reuses x/y only
+  within one orbital pair and then discards that local cache.
+
+Validation:
+- Doer ran `git diff --check`, package load,
+  `tmp/work/cr2_nuclear_factor_reuse_audit.jl`, and final tracked
+  `git status`. Manager did not rerun the probe.
+
+Cr2 q4 facts:
+- Parent counts `(19,19,31)`, parent Cartesian count `11191`, base dimension
+  `1557`, supplement candidates `66`, primitive count `1284`, Coulomb terms
+  `45`, unique center coordinates x/y/z = `1/1/2`.
+- `G-A` axis factor calls: x `66`, y `66`, z `132`.
+- `A-A` axis factor calls: x `4356`, y `4356`, z `8712`, total `17424`.
+- Allocation split: `G-A` factor tables `11443 MiB`, `G-A` assembly
+  `10864 MiB`, `A-A` factor tables `67752 MiB`, `A-A` assembly `5310 MiB`.
+  Nuclear total was `24.31s` with `79195 MiB` table allocation and
+  `16174 MiB` assembly allocation.
+
+Goal advancement:
+- Cr2-readiness/MT4: identifies the first bounded optimization: avoid ordered
+  duplicate `A-A` nuclear pair work.
+- RG/LT6: keeps the optimization local to the current exact-block donor bridge
+  instead of prematurely extracting a broad neutral cross-block module.
+
+Carrying-cost result:
+- deleted: none; read-only audit.
+- simplified: next source pass can stay inside
+  `_r3a_qw_nuclear_blocks(...)`.
+- quarantined: neutral `CartesianGaussianCrossBlocks` extraction remains a
+  later architecture cleanup, not the immediate Cr2 blocker fix.
+- not deleted because: no source changed.
+- exact remaining caller/blocker: implement upper-triangle `A-A` nuclear loop
+  with mirroring, plus optional local scratch cleanup for `G-A`, then remeasure
+  Cr2 exact-operator allocation.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.
+
+Risk / guardrail:
+- Do not add a new source owner, neutral module, facade support, or artifact
+  workflow in the optimization pass. Keep it a local behavior-preserving
+  performance fix unless source evidence contradicts the audit.
