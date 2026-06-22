@@ -127,3 +127,142 @@ function pqs_terminal_residual_gto_augmentation(
         :full_rank_candidate_order, :selected_candidate_order_symmetric_lowdin,
         :largest_T_A_entry_positive)
 end
+
+function _r3a_dense(block, label)
+    isnothing(block.dense_block) &&
+        throw(ArgumentError("R3-A required CPB block $label is unavailable"))
+    return Matrix{Float64}(block.dense_block)
+end
+
+function _r3a_local_index(ix, iy, iz, shape)
+    return (ix - 1) * shape[2] * shape[3] + (iy - 1) * shape[3] + iz
+end
+
+function _r3a_bounding_cpb(states)
+    CPB = getfield(_GB_PARENT, :CartesianCPB)
+    ix = minimum(s -> s[1], states):maximum(s -> s[1], states)
+    iy = minimum(s -> s[2], states):maximum(s -> s[2], states)
+    iz = minimum(s -> s[3], states):maximum(s -> s[3], states)
+    cpb = CPB.cpb(ix, iy, iz; role = :r3a_terminal_owned_support_bounding_cpb)
+    shape = CPB.shape(cpb)
+    rows = Int[
+        _r3a_local_index(s[1] - first(ix) + 1, s[2] - first(iy) + 1,
+            s[3] - first(iz) + 1, shape) for s in states
+    ]
+    return cpb, rows
+end
+
+function _r3a_mixed_block(basis, parent_basis_object, supplement, builder)
+    nA = length(supplement.orbitals)
+    O_GA = zeros(Float64, basis.final_dimension, nA)
+    for block in basis.blocks
+        cpb, rows = _r3a_bounding_cpb(block.support_states)
+        local_block = _r3a_dense(builder(parent_basis_object, cpb, supplement), :mixed)[
+            rows, :]
+        block.coefficients === nothing ?
+            (O_GA[block.column_range, :] .= local_block) :
+            mul!(view(O_GA, block.column_range, :), transpose(block.coefficients), local_block)
+    end
+    return O_GA
+end
+
+function _r3a_augmented_operator(O_GG, O_GA, O_AA, residual)
+    T_G, T_A = residual.T_G, residual.T_A
+    O_GR = O_GG * T_G + O_GA * T_A
+    O_RR = transpose(T_G) * O_GG * T_G +
+           transpose(T_G) * O_GA * T_A +
+           transpose(T_A) * transpose(O_GA) * T_G +
+           transpose(T_A) * O_AA * T_A
+    nG, nR = residual.base_dimension, residual.residual_dimension
+    out = zeros(Float64, nG + nR, nG + nR)
+    out[1:nG, 1:nG] .= O_GG
+    out[1:nG, (nG + 1):(nG + nR)] .= O_GR
+    out[(nG + 1):(nG + nR), 1:nG] .= transpose(O_GR)
+    out[(nG + 1):(nG + nR), (nG + 1):(nG + nR)] .= O_RR
+    return out
+end
+
+function _r3a_product_matrix(basis, ax, ay, az)
+    matrix = zeros(Float64, basis.final_dimension, basis.final_dimension)
+    assemble_terminal_product_operator!(matrix, basis, ax, ay, az)
+    return matrix
+end
+
+function _r3a_centered_factor_terms(axis, expansion, center)
+    center == axis.center && return axis.gaussian_factor_terms
+    ops = getfield(_GB_PARENT, :mapped_ordinary_one_body_operators)(
+        axis.basis; exponents = expansion.exponents, center, backend = axis.backend)
+    return ops.gaussian_factors
+end
+
+function pqs_terminal_residual_gto_augmented_operators(
+    basis::CartesianTerminalBasisRealization,
+    bundles,
+    parent_basis_object,
+    supplement,
+    residual::CartesianTerminalResidualGTOAugmentation,
+    atom_locations,
+    nuclear_charges;
+    expansion = nothing,
+)
+    CPBP = getfield(_GB_PARENT, :CartesianCPBBlockProviders)
+    expansion_value = isnothing(expansion) ?
+        getfield(_GB_PARENT, :coulomb_gaussian_expansion)(doacc = false) : expansion
+    pgdg = Tuple(_nested_axis_pgdg(bundles, axis) for axis in (:x, :y, :z))
+    S = Tuple(axis.overlap for axis in pgdg)
+    K = _r3a_product_matrix(basis, pgdg[1].kinetic, S[2], S[3]) +
+        _r3a_product_matrix(basis, S[1], pgdg[2].kinetic, S[3]) +
+        _r3a_product_matrix(basis, S[1], S[2], pgdg[3].kinetic)
+    K_GA = _r3a_mixed_block(
+        basis, parent_basis_object, supplement, CPBP.cpb_mixed_gto_kinetic_operator_block)
+    K_AA = _r3a_dense(CPBP.cpb_gto_kinetic_operator_block(supplement), :gto_kinetic)
+    pos_GG = (
+        x = _r3a_product_matrix(basis, pgdg[1].position, S[2], S[3]),
+        y = _r3a_product_matrix(basis, S[1], pgdg[2].position, S[3]),
+        z = _r3a_product_matrix(basis, S[1], S[2], pgdg[3].position),
+    )
+    x2_GG = (
+        x = _r3a_product_matrix(basis, pgdg[1].x2, S[2], S[3]),
+        y = _r3a_product_matrix(basis, S[1], pgdg[2].x2, S[3]),
+        z = _r3a_product_matrix(basis, S[1], S[2], pgdg[3].x2),
+    )
+    pos = NamedTuple{(:x, :y, :z)}(Tuple(_r3a_augmented_operator(
+        pos_GG[axis],
+        _r3a_mixed_block(basis, parent_basis_object, supplement,
+            (parent, cpb, supp) -> CPBP.cpb_mixed_gto_position_operator_block(
+                parent, cpb, supp; axis)),
+        _r3a_dense(CPBP.cpb_gto_position_operator_block(supplement; axis),
+            Symbol(:gto_position_, axis)),
+        residual) for axis in (:x, :y, :z)))
+    x2 = NamedTuple{(:x, :y, :z)}(Tuple(_r3a_augmented_operator(
+        x2_GG[axis],
+        _r3a_mixed_block(basis, parent_basis_object, supplement,
+            (parent, cpb, supp) -> CPBP.cpb_mixed_gto_x2_operator_block(
+                parent, cpb, supp; axis)),
+        _r3a_dense(CPBP.cpb_gto_x2_operator_block(supplement; axis),
+            Symbol(:gto_x2_, axis)),
+        residual) for axis in (:x, :y, :z)))
+    U = Matrix{Float64}[]
+    for (center_index, location) in enumerate(atom_locations)
+        center = (Float64(location[1]), Float64(location[2]), Float64(location[3]))
+        U_GG = zeros(Float64, basis.final_dimension, basis.final_dimension)
+        factors = ntuple(axis -> _r3a_centered_factor_terms(pgdg[axis], expansion_value,
+            center[axis]), 3)
+        _accumulate_terminal_gaussian_sum!(
+            U_GG, basis, expansion_value.coefficients, factors[1], factors[2], factors[3])
+        record = (; center_index, nuclear_charge = Float64(nuclear_charges[center_index]),
+            location = center)
+        U_GA = _r3a_mixed_block(basis, parent_basis_object, supplement,
+            (parent, cpb, supp) -> CPBP.cpb_mixed_gto_nuclear_by_center_block(
+                parent, cpb, supp, expansion_value, record))
+        U_AA = _r3a_dense(CPBP.cpb_gto_nuclear_by_center_block(
+            supplement, expansion_value, record), :gto_nuclear_by_center)
+        push!(U, _r3a_augmented_operator(U_GG, U_GA, U_AA, residual))
+    end
+    return (;
+        kinetic = _r3a_augmented_operator(K, K_GA, K_AA, residual),
+        nuclear_attraction_unit_by_center = U,
+        position = pos,
+        x2,
+    )
+end

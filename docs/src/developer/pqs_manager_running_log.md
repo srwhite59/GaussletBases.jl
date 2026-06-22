@@ -8203,3 +8203,83 @@ Risk / guardrail:
 - The internal helper lookups reflect current include order for older
   representation/cross-overlap helpers. If R3-A becomes a wider production
   surface, revisit owner/module boundaries instead of adding a provider payload.
+
+## Cartesian Hamiltonian Producer Pass 050 - Assemble R3-A Exact One-Body And Moments
+
+Commit(s):
+- this branch - Assemble R3A augmented one-body blocks
+
+Summary:
+- Accepted the second R3-A implementation slice in the approved
+  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` owner
+  file. The patch adds exact augmented `[G, R]` operator assembly for kinetic,
+  uncharged by-center nuclear attraction, position moments, and second
+  position moments.
+- The implementation reuses the base terminal operator path for `G-G` blocks
+  and existing CPB mixed/self GTO providers for `G-A` and `A-A` blocks, then
+  applies the approved transformation formulas using `T_G` and `T_A`.
+- During review, the manager removed the final `0.5*(O+O')` smoothing from
+  the augmented operator helper so symmetry is validated by the endpoint script
+  instead of hidden by construction. The remaining raw symmetry errors are
+  around `1e-12`, well below the R3-A endpoint tolerance.
+
+Validation:
+- Doer ran `git diff --check`, package load, and the ignored
+  `tmp/work/r3a_h2_residual_gto_validation.jl`.
+- Manager reviewed the source diff and CPB nuclear-provider convention,
+  confirmed the CPB nuclear blocks are uncharged by-center operators, ran
+  `git diff --check`, package load, the source line-count gate, the
+  suspicious-line scan, and reran the ignored H2 R3-A validation script.
+
+Goal advancement:
+- R3: completes the approved in-memory R3-A numerical endpoint: base H2
+  augmented by contracted two-center H/cc-pVTZ residual GTOs now has exact
+  augmented `K`, unit `U_A`, `x/y/z`, and `x^2/y^2/z^2` matrices.
+- LT5/LT6: extends the common final-basis Hamiltonian architecture without
+  adding public API, artifacts, report fields, status vocabulary, or an MWG/IDA
+  path ahead of approval.
+
+Endpoint facts:
+- Base dimension `471`, residual dimension `18`, augmented dimension `489`.
+- Residual eigenvalue min/max `3.0488355008683734e-04` /
+  `1.3512432621413795e-02`; `G' S R` error `0.0`; `R' S R` identity error
+  `3.4106051316484809e-12`.
+- Base `G-G` block equality error is `0.0` in the validation script after the
+  manager cleanup; augmented one-body energy improved from
+  `-0.7946037173365925` to `-0.7959028345077851`.
+
+Carrying-cost result:
+- deleted: final augmented-operator symmetrization that would have hidden an
+  invalid mixed/self block convention.
+- simplified: one generic augmented-operator formula is reused for kinetic,
+  unit nuclear attraction, and moment matrices.
+- quarantined: ignored R3-A validation remains under `tmp/work`.
+- not deleted because: CPB donor kernels remain the active exact mixed/self
+  GTO provider source.
+- exact remaining caller/blocker: committed standalone `HP-R3-TEST-01` gate is
+  still not added; R3-B MWG/IDA remains candidate-only and unimplemented.
+- added src lines: 139.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.
+
+Risk / guardrail:
+- R3-A is now numerically useful but not durable in the committed test suite
+  until the standalone `HP-R3-TEST-01` endpoint gate is added. Do not proceed
+  to R3-B MWG/IDA implementation before that test gate or an explicit manager
+  decision to defer it.
+
+## Medium-Term Checkpoint After Pass 050
+
+- Completed: base PQS A/B/C/D/R1 in-memory and public base-Hamiltonian
+  boundary; terminal shell ownership correction; Be2 local optimization triage;
+  R3-A residual basis plus exact one-body/moment implementation.
+- Active: make R3-A durable with the approved standalone endpoint gate, then
+  request or review focused R3-B design approval for MWG/IDA interaction blocks.
+- Deferred: Be2/N2 performance optimization beyond the already accepted K and
+  terminal-support corrections, Cr2 stress/performance validation, public
+  non-base/supplement lanes, ECP/correction workflows, and broad driver polish.
+- Guardrail update: residual-GTO work should continue to be split by physics
+  endpoint. Exact one-body/moments are accepted; MWG/IDA `V`, supplemented
+  Hamiltonian construction, artifacts, and public API remain unauthorized until
+  their own approved slice.
