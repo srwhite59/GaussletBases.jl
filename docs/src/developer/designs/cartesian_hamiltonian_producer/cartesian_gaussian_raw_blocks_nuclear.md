@@ -30,12 +30,15 @@ artifact workflow, or public API.
   root include plumbing.
 - `HP-CGRB-FN-01` - exact uncharged by-center Gaussian nuclear `G-A` and `A-A`
   raw-block construction.
+- `HP-CGRB-FN-02` - one-dimensional supplement axis-family reuse and
+  term-first nuclear table organization inside the neutral raw-block owner.
 - `HP-CGRB-WIRE-01` - behavior-preserving rewiring from Residual Gaussian and
   Qiu-White callers to the neutral nuclear kernel, with duplicate route-local
   loops deleted after parity.
 - `HP-CGRB-TEST-01` - focused parity and endpoint validation for the extraction.
-- `HP-CGAI-FN-01` - low-level in-place Cartesian Gaussian axis integral table
-  fill helper, consumed by the neutral nuclear raw-block owner only.
+- `HP-CGAI-FN-01` - optional low-level Cartesian Gaussian axis helper. It is
+  allowed only as support for `HP-CGRB-FN-02`, not as the accepted performance
+  endpoint.
 
 ## Scope
 
@@ -112,7 +115,7 @@ Optimization must remain behavior-preserving. Do not add persistent cache
 objects, status fields, provider payloads, route objects, or artifact data to
 justify reuse.
 
-## Approved Low-Level Axis Table Helper
+## Approved Family-Reuse Optimization
 
 Cr2 q4 profiling after `47d9b2a3` shows that the remaining neutral nuclear
 raw-block allocation is one-dimensional analytic axis-integral table work, not
@@ -125,8 +128,57 @@ Residual Gaussian logic, Qiu-White route logic, or wrapper/result allocation:
 - scalar one-dimensional integral calls: `51,539,760`;
 - parity against the current neutral function: `G-A = 0.0`, `A-A = 0.0`.
 
-`HP-CGAI-FN-01` approves adding the low-level in-place helper next to the
-existing allocating helper:
+The failed in-place-table WIP reduced Cr2 q4 nuclear raw-block allocation only
+from about `44552.840 MiB` to about `43471.448 MiB`. Therefore
+`HP-CGAI-FN-01` is superseded as a performance endpoint. It may remain an
+optional small helper, but the approved optimization target is
+`HP-CGRB-FN-02`.
+
+`HP-CGRB-FN-02` approves reorganizing nuclear raw-block construction inside:
+
+```text
+src/cartesian_gaussian_raw_blocks/nuclear_blocks.jl
+```
+
+The kernel must identify unique supplement one-dimensional axis families
+independent of flattened 3D orbital labels, then reuse their factor tables
+across every 3D orbital or orbital pair that references the same family.
+
+Approved implementation concepts:
+
+- identify unique supplement axis families from primitive exponents, axis
+  center, Cartesian power, and primitive normalization prefactors;
+- build integer maps
+  `orbital_axis_family[orbital, axis] -> family_id`;
+- build unique `G-A` table keys
+  `(axis, supplement_axis_family, nuclear_axis_coordinate)`;
+- build unique `A-A` table keys
+  `(axis, canonical(left_family, right_family), nuclear_axis_coordinate)`;
+- keep transpose/orientation flags where canonical `A-A` family-pair order is
+  reversed;
+- fill each required one-dimensional table at most once per Coulomb Gaussian
+  term;
+- reuse those tables across all flattened 3D orbitals and orbital pairs that
+  reference the same axis families;
+- preserve the coupled primitive-pair contraction
+  `sum_pq c_p c_q Ix[p,q] Iy[p,q] Iz[p,q]`;
+- use only function-local workspaces and integer lookup plans.
+
+Independent contraction of x/y/z axis tables into separate scalar contractions
+is forbidden. The correct contracted 3D matrix element keeps the coupled
+primitive-pair form above and is generally not the product of independently
+contracted one-dimensional shell integrals.
+
+Optional low-level support:
+
+- `src/cartesian_gaussian_axis_integrals.jl` may add a specialized
+  nonallocating nuclear-factor scalar integral for the `:factor` term if
+  needed;
+- the same file may keep/add a tiny in-place table-fill helper if it supports
+  the family-reuse kernel;
+- neither helper is sufficient as the optimization endpoint.
+
+The optional in-place table-fill helper shape remains:
 
 ```julia
 _cartesian_gaussian_axis_integral_table!(
@@ -145,7 +197,7 @@ _cartesian_gaussian_axis_integral_table!(
 )
 ```
 
-The exact argument names may follow local style. The required contract is:
+Its required contract is:
 
 - fill an already allocated destination matrix;
 - allocate no result matrix;
@@ -155,35 +207,68 @@ The exact argument names may follow local style. The required contract is:
 
 Approved source surfaces for this follow-on optimization:
 
-- `src/cartesian_gaussian_axis_integrals.jl`, only to add the in-place helper
-  and, if clean, delegate the allocating helper to it;
-- `src/cartesian_gaussian_raw_blocks/nuclear_blocks.jl`, only to consume the
-  in-place helper for neutral nuclear raw-block construction.
+- `src/cartesian_gaussian_raw_blocks/nuclear_blocks.jl`, for the
+  one-dimensional family inventory, integer maps, unique table inventories,
+  term-first table fill, and coupled primitive-pair accumulation;
+- `src/cartesian_gaussian_axis_integrals.jl`, only for the optional
+  specialized nonallocating nuclear-factor scalar integral or tiny table-fill
+  helper described above.
 
-No other source file is approved by `HP-CGAI-FN-01`. If implementation needs
-another source owner, stop for a docs-only amendment.
+No other source file is approved. If implementation needs another source
+owner, stop for a docs-only amendment.
 
 Implementation sequence for the later source pass:
 
-1. Add the in-place table fill helper next to the existing allocating table
-   helper.
-2. Reuse the allocating helper by delegating to the in-place helper if that is
-   cleaner and preserves behavior.
-3. Update `CartesianGaussianRawBlocks` nuclear code to use the in-place helper.
-4. Preserve H2, Be2, Qiu-White, and Cr2 parity.
-5. Remeasure Cr2 q4 nuclear raw-block allocation.
+1. Add a count-only/structural check, in ignored code if useful, reporting
+   unique axis-family counts, unique `G-A` and `A-A` table counts, and current
+   versus unique table-fill/scalar-call counts.
+2. Implement a function-local axis-family inventory and integer
+   orbital-to-family maps.
+3. Fill unique one-dimensional tables term-first and reuse them across all 3D
+   orbital/orbital-pair accumulations.
+4. Add a specialized nonallocating nuclear-factor scalar integral only if the
+   family-reuse kernel still needs it for material allocation reduction.
+5. Preserve H2, Be2, Qiu-White, and Cr2 parity.
+6. Remeasure Cr2 q4 nuclear raw-block allocation.
 
 Acceptance criteria for the source pass:
 
-- exact table values match the old helper at roundoff;
 - H2 Residual Gaussian endpoint is unchanged;
 - Be2 facade/readback remains unchanged;
 - Qiu-White nuclear parity remains unchanged;
 - Cr2 q4 raw nuclear `G-A`/`A-A` parity remains unchanged;
-- Cr2 q4 nuclear raw-block allocation drops materially from about
+- Cr2 q4 nuclear raw-block allocation drops substantially from about
   `44552.840 MiB`;
+- report unique family counts, unique table counts, scalar-call count
+  reduction, time, and allocation;
+- no persistent object or broadened raw-block framework is introduced;
+- no independent axis contraction is introduced;
+- if low-level helper work is included, exact table/scalar values match the old
+  helper at roundoff;
 - no metadata, status, cache, route object, payload, report, artifact, public
   API, or persistent raw-block bundle is added.
+
+Rationale: the Cr2 q4 fixture has only a modest number of real
+one-dimensional Gaussian families, but the flattened 3D orbital-pair loop
+rebuilds equivalent axis tables many times. The current `A-A` path already
+fills preallocated tables in place, so an in-place result-table helper alone
+cannot solve the measured `A-A` allocation. The primary optimization must
+recover the shell/axis structure, reuse one-dimensional family tables, and
+avoid heap allocation in genuinely distinct scalar nuclear factor evaluations.
+
+## Deprecated Optimization Target
+
+`HP-CGAI-FN-01` is no longer the accepted performance endpoint for Cr2 nuclear
+raw-block allocation. It remains allowed only as an optional helper surface:
+
+- `src/cartesian_gaussian_axis_integrals.jl`, for a specialized nonallocating
+  nuclear-factor scalar integral or tiny table-fill helper if needed by
+  `HP-CGRB-FN-02`;
+- `src/cartesian_gaussian_raw_blocks/nuclear_blocks.jl`, only as the consumer
+  of that helper inside the neutral nuclear kernel.
+
+Do not proceed under the assumption that eliminating result-matrix allocation
+solves the Cr2 q4 nuclear profile.
 
 ## Validation
 

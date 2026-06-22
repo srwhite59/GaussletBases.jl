@@ -769,7 +769,44 @@ The kernel must not apply physical nuclear charges, perform terminal
 projection, transform into residual bases, create overlap/kinetic/moment
 blocks, assemble Hamiltonians, or create persistent caches/bundles.
 
-### HP-CGAI-FN-01 — in-place Cartesian Gaussian axis integral table fill
+### HP-CGRB-FN-02 — nuclear one-dimensional axis-family reuse
+
+Approved source owner:
+
+```text
+src/cartesian_gaussian_raw_blocks/nuclear_blocks.jl
+```
+
+Approved optimization target: reorganize exact uncharged nuclear raw-block
+construction around unique supplement one-dimensional axis families rather
+than flattened 3D orbital labels.
+
+Approved concepts:
+
+- unique supplement axis-family inventory independent of flattened 3D orbital
+  labels;
+- integer map `orbital_axis_family[orbital, axis] -> family_id`;
+- unique `G-A` table keys
+  `(axis, supplement_axis_family, nuclear_axis_coordinate)`;
+- unique `A-A` table keys
+  `(axis, canonical(left_family, right_family), nuclear_axis_coordinate)`;
+- transpose/orientation flags when canonical `A-A` family order is reversed;
+- term-first filling of each required one-dimensional table at most once per
+  Coulomb Gaussian term;
+- reuse of those tables across all 3D orbitals and orbital pairs that reference
+  the same axis families;
+- coupled primitive-pair contraction
+  `sum_pq c_p c_q Ix[p,q] Iy[p,q] Iz[p,q]`;
+- function-local workspaces and integer lookup plans only.
+
+Independent contraction of x/y/z axis tables into separate scalar contractions
+is forbidden. The kernel must not introduce persistent caches, metadata,
+status/report fields, route objects, payload structs, public API/export,
+artifact changes, Residual Gaussian algorithm changes, Qiu-White route
+semantic changes, overlap/kinetic/moment migration, Cr2 facade support, or Cr2
+artifact workflow.
+
+### HP-CGAI-FN-01 — optional Cartesian Gaussian axis helper
 
 Approved source owner:
 
@@ -777,7 +814,10 @@ Approved source owner:
 src/cartesian_gaussian_axis_integrals.jl
 ```
 
-Approved internal helper concept:
+Status: superseded as a performance endpoint. It remains an optional helper
+surface only if needed by `HP-CGRB-FN-02`.
+
+Optional internal helper concept:
 
 ```julia
 _cartesian_gaussian_axis_integral_table!(
@@ -801,6 +841,9 @@ same values as `_cartesian_gaussian_axis_integral_table(...)` without
 allocating the result matrix. The existing scalar
 `_cartesian_gaussian_axis_integral(...)` behavior is unchanged. The allocating
 helper may delegate to the in-place helper if that preserves behavior cleanly.
+The same owner may also add a specialized nonallocating nuclear-factor scalar
+integral for the `:factor` term if needed by the `HP-CGRB-FN-02` family-reuse
+kernel.
 
 Allowed consumer surface:
 
@@ -808,12 +851,13 @@ Allowed consumer surface:
 src/cartesian_gaussian_raw_blocks/nuclear_blocks.jl
 ```
 
-That file may consume the in-place helper only for exact uncharged by-center
-Gaussian nuclear raw-block construction under `HP-CGRB-FN-01`. No public API,
-export, persistent cache, raw-block payload, metadata/status/report field,
-artifact change, route object, Residual Gaussian algorithm change, Qiu-White
-route semantic change, overlap/kinetic/moment migration, Cr2 facade, or Cr2
-artifact workflow is approved by this ID.
+That file may consume the optional helper only inside the exact uncharged
+by-center Gaussian nuclear raw-block construction under `HP-CGRB-FN-02`. Do
+not treat result-matrix allocation removal as the accepted Cr2 optimization
+target. No public API, export, persistent cache, raw-block payload,
+metadata/status/report field, artifact change, route object, Residual Gaussian
+algorithm change, Qiu-White route semantic change, overlap/kinetic/moment
+migration, Cr2 facade, or Cr2 artifact workflow is approved by this ID.
 
 ### HP-CGRB-WIRE-01 — Residual Gaussian and Qiu-White rewiring
 

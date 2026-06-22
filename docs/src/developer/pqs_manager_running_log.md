@@ -10277,3 +10277,66 @@ Risk / guardrail:
   axis-table helper is approved, keep it low-level and narrow: no broad raw
   block framework, no persistent cache, no route/status/report object, and no
   Cr2 workflow expansion.
+
+## Cartesian Hamiltonian Producer Pass 081 - Approve Nuclear Family Reuse Target
+
+Commit(s):
+- this commit - Approve nuclear family reuse target
+
+Summary:
+- Accepted the docs-only correction to the Cartesian Gaussian raw-block nuclear
+  optimization target. The active boundary is now `HP-CGRB-FN-02`: reorganize
+  `src/cartesian_gaussian_raw_blocks/nuclear_blocks.jl` around unique
+  one-dimensional supplement axis families, integer `orbital_axis_family` maps,
+  unique `G-A` and `A-A` table keys, and term-first table reuse.
+- `HP-CGAI-FN-01` is explicitly superseded as a performance endpoint. It
+  remains allowed only as optional support in
+  `src/cartesian_gaussian_axis_integrals.jl` for a specialized nonallocating
+  `:factor` scalar integral or tiny table-fill helper needed by
+  `HP-CGRB-FN-02`.
+- The correction records that the in-place table helper alone cannot solve the
+  measured Cr2 allocation because `A-A` already fills preallocated tables, and
+  the remaining cost comes from repeated one-dimensional family evaluation and
+  scalar nuclear-factor integral allocation.
+
+Validation:
+- Design-manager validation was docs-only: `git diff --check`, focused `rg`
+  for `HP-CGRB-FN-02`, supersession wording, `orbital_axis_family`, canonical
+  family-pair keys, `sum_pq` contraction wording, nonallocating factor-helper
+  wording, and independent-contraction forbiddance. It also confirmed no
+  `src`, `test`, `tools`, or `bin` files changed.
+- Manager reviewed the commit surfaces and pushed the amended docs/log commit;
+  no source tests were run.
+
+Goal advancement:
+- Cr2-readiness/MT4: moves the next source target from result-matrix allocation
+  to the real remaining kernel shape: one-dimensional family reuse and
+  nonallocating nuclear-factor scalar evaluation.
+- CGRB/LT6: preserves `CartesianGaussianRawBlocks` as the neutral nuclear
+  owner while forbidding broad raw-block framework expansion.
+
+Carrying-cost result:
+- deleted: no source; docs supersede the stale performance interpretation of
+  `HP-CGAI-FN-01`.
+- simplified: active optimization authority now says what the kernel must
+  actually reuse: axis families and canonical family-pair table keys.
+- quarantined: persistent caches, metadata/status/report fields, route objects,
+  payload structs, public API/export, artifact changes, Residual Gaussian
+  algorithm changes, Qiu-White route semantic changes, overlap/kinetic/moment
+  migration, Cr2 facade/artifact workflow, and independent x/y/z scalar
+  contractions remain forbidden.
+- not deleted because: source implementation is the next pass under the new
+  `HP-CGRB-FN-02` boundary.
+- exact remaining caller/blocker: implement family inventory and table reuse in
+  `nuclear_blocks.jl`, optionally adding only the approved low-level
+  nonallocating `:factor` helper if needed.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.
+
+Risk / guardrail:
+- Do not revive the rejected high-level `G-A` streaming or in-place-table-only
+  patches as the endpoint. The next implementation must preserve the coupled
+  primitive-pair contraction `sum_pq c_p c_q I_x[p,q] I_y[p,q] I_z[p,q]` and
+  must not independently contract x/y/z axes.

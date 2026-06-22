@@ -262,15 +262,23 @@ Forbidden in this slice:
 
 Follow-on low-level optimization approval:
 
-- `HP-CGAI-FN-01` approves only
-  `src/cartesian_gaussian_axis_integrals.jl` for an in-place
-  `_cartesian_gaussian_axis_integral_table!(...)` helper and
-  `src/cartesian_gaussian_raw_blocks/nuclear_blocks.jl` for consuming that
-  helper in the neutral nuclear raw-block kernel;
-- the bottleneck addressed is one-dimensional analytic axis-integral table
-  allocation measured in Cr2 q4 nuclear raw blocks, not Residual Gaussian
-  selection, Qiu-White route objects, or wrapper/result allocation;
-- the later source pass must preserve table parity, H2/Be2/Qiu-White/Cr2
-  nuclear parity, and materially reduce Cr2 q4 nuclear raw-block allocation
-  from the `44552.840 MiB` baseline without adding caches, metadata, route
-  objects, reports, artifacts, public API, or semantic changes.
+- `HP-CGRB-FN-02` approves only
+  `src/cartesian_gaussian_raw_blocks/nuclear_blocks.jl` for reorganizing the
+  neutral nuclear kernel around unique one-dimensional supplement axis
+  families, integer orbital-to-family maps, unique `G-A`/`A-A` table keys, and
+  term-first table reuse;
+- `HP-CGAI-FN-01` is superseded as a performance endpoint and remains only an
+  optional helper surface in `src/cartesian_gaussian_axis_integrals.jl` for a
+  specialized nonallocating nuclear-factor scalar integral or tiny table-fill
+  helper if needed by `HP-CGRB-FN-02`;
+- the bottleneck addressed is repeated rebuilding of equivalent
+  one-dimensional Gaussian axis families through flattened 3D orbital loops,
+  plus allocation inside scalar nuclear factor integrals;
+- independent contraction of x/y/z axis tables into separate scalar
+  contractions is forbidden; the kernel must preserve
+  `sum_pq c_p c_q Ix[p,q] Iy[p,q] Iz[p,q]`;
+- the later source pass must preserve H2/Be2/Qiu-White/Cr2 nuclear parity,
+  report unique family/table/scalar-call count reductions, and substantially
+  reduce Cr2 q4 nuclear raw-block allocation from the `44552.840 MiB`
+  baseline without adding caches, metadata, route objects, reports, artifacts,
+  public API, or semantic changes.
