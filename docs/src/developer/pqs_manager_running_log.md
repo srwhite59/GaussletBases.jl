@@ -8885,3 +8885,61 @@ Risk / guardrail:
 The medium-term section should be rewritten in a future planning/doc pass to
 reflect the post-R3-C state; this commit records the checkpoint without
 changing the top-level goal wording.
+
+## Cartesian Hamiltonian Producer Pass 061 - R3 Closeout Status Refresh
+
+Commit(s):
+- this commit - Refresh R3 closeout status
+
+Summary:
+- Accepted a docs-only planning/status refresh after R3-A/B/C reached the
+  intended narrow H2 supplemented endpoint. The compact authority now records
+  R3-A residual/rank-loss/exact one-body and moment work, R3-B
+  same-construction MWG/IDA Hamiltonian work, and R3-C compact supplemented
+  artifact provenance as implemented for the H2 path.
+- The refresh records the Be2 measurement conclusions without promoting Be2 to
+  a committed validation gate: R3-A exact-operator construction moved from the
+  repeated CPB-per-terminal-block path at about `43.2 s` / `35.4 GiB` to the
+  one-shot parent-by-supplement analytic organization at about `1.94 s` /
+  `2.1 GiB`, with roundoff agreement for tested blocks. Be2 R3-B at residual
+  rank `26` showed modest MWG/IDA storage and runtime, so bounded MWG
+  streaming is not urgent before the next planning lane.
+- The roadmap now separates three candidate next lanes: usability workflow for
+  H2/Be2 supplemented artifacts, measurement-only Cr2-readiness forecasting,
+  and basis/supplement realism. The recommended next lane is usability so
+  consumers can request GTO/MWG artifacts without assembling private R3 calls.
+
+Validation:
+- Design-manager ran `git diff --check`, focused `rg` checks for R3-A/B/C
+  implemented status, Be2 conclusions, bounded MWG/Cr2 deferral, and stale
+  R3 hardening wording, and confirmed no `src`, `test`, `tools`, or `bin`
+  files changed.
+
+Goal advancement:
+- R3/LT6: closes the short-term R3 status story before public workflow or Cr2
+  expansion.
+- MT4: updated from "make MWG/GTO endpoint real" to "choose the next
+  consumer-facing lane after a real H2 artifact endpoint and Be2 sanity
+  measurement."
+
+Carrying-cost result:
+- deleted: stale live-authority wording that treated same-construction,
+  deterministic rank loss, independent weight-aware `V_GM`, and R3-C artifact
+  provenance as still-open hardening blockers.
+- simplified: deferred lanes now distinguish usability, Cr2-readiness, and
+  basis/supplement realism instead of one mixed R3 hardening bucket.
+- quarantined: Cr2 remains deferred as stress/consumer-readiness, not a
+  correctness gate.
+- not deleted because: historical log and review material intentionally retain
+  old R3 blocker history.
+- exact remaining caller/blocker: choose the next lane; no public supplemented
+  workflow or Cr2 run is approved by this pass.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.
+
+Risk / guardrail:
+- This is status reconciliation only. It does not approve source work, public
+  API expansion, driver/bin/tool workflow, new artifact fields beyond R3-C, or
+  Be2/Cr2 validation gates.

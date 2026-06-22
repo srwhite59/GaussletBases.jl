@@ -2,12 +2,11 @@
 
 Status: Slice A, Slice B, Slice C1, Slice C2, and Slice D base handoff are
 implemented for the internal base PQS Hamiltonian producer. R1 public base
-producer implementation is approved for the narrow H/H2 scope. R3-A
-residual-GTO basis plus exact augmented one-body/moment implementation is
-approved for the first H2 endpoint. R3-B in-memory residual MWG/IDA
-Hamiltonian construction is reapproved for the first H2 endpoint with the
-corrected weight-aware compact-path baseline. R3-C compact supplemented
-artifact provenance is approved for the existing Hamiltonian artifact shape.
+producer implementation is approved for the narrow H/H2 scope. R3-A, R3-B,
+and R3-C are implemented for the narrow internal H2 residual-GTO/MWG endpoint:
+deterministic residual-GTO basis construction, exact augmented one-body and
+moment matrices, same-construction in-memory MWG/IDA Hamiltonian construction,
+and compact supplemented artifact provenance in the existing Hamiltonian file.
 
 This authority covers the base all-electron PQS path:
 
@@ -23,11 +22,10 @@ terminal support and retained contracts
 
 This is internal base-Hamiltonian authority plus the narrow approved R1 public
 base producer surface recorded in `r1_public_base_producer.md` and
-`registry.md`, plus the narrow R3-A residual-GTO exact one-body/moment and
-R3-B in-memory residual MWG/IDA Hamiltonian surface
-recorded in `r3_residual_gto_mwg_augmentation.md` and `registry.md`. The
-visible driver shape may call the implemented base path, but this design does
-not approve a new artifact format except the `HP-R1-ART-01`
+`registry.md`, plus the narrow implemented R3-A/R3-B/R3-C residual-GTO/MWG
+surfaces recorded in `r3_residual_gto_mwg_augmentation.md` and `registry.md`.
+The visible driver shape may call the implemented base path, but this design
+does not approve a new artifact format except the `HP-R1-ART-01`
 `producer_provenance/` keys and the `HP-R3-ART-01`
 `supplement_provenance/` keys in the final Hamiltonian file, solver
 integration, broad driver redesign, or public workflow outside the R1 H/H2
@@ -155,6 +153,28 @@ Approved R3-C compact supplemented artifact provenance scope:
   residual-basis serialization, or any artifact format beyond the existing
   Hamiltonian file plus provenance group.
 
+R3 closeout status:
+
+- R3-A/B/C now provide the first narrow supplemented Hamiltonian path for the
+  H2 fixture: augmented dimension `489` and accepted lowest-orbital IDA
+  self-Coulomb `0.4574256036192161` within `1.0e-10`.
+- The Be2 R3-A donor-kernel measurement closed the first exact-operator
+  scaling blocker. Repeated CPB-per-terminal-block construction measured about
+  `43.2 s` and `35.4 GiB`; the one-shot parent-by-supplement analytic block
+  organization measured about `1.94 s` and `2.1 GiB` with roundoff agreement
+  for tested `G-A` and `A-A` blocks.
+- Be2 R3-B residual rank `26` showed modest MWG/IDA storage and runtime at
+  that proxy size. Bounded/streamed MWG storage is therefore not urgent before
+  the next planning lane, but remains a high-rank/Cr2 guardrail.
+- Cr2 remains deferred. It is a stress/consumer-readiness milestone, not the
+  next correctness gate.
+- Candidate next lanes are: a usability lane for a supported internal/public
+  H2/Be2 supplemented artifact workflow; a Cr2-readiness lane for
+  measurement-only candidate/rank/memory forecasting without a full Cr2
+  Hamiltonian; or a basis/supplement-realism lane for improving validated
+  supplement choices and filtering. The recommended next lane is usability so
+  consumers can request GTO/MWG artifacts without composing private calls.
+
 Base pair/assembly role decision:
 
 - The future base public workflow should be:
@@ -193,13 +213,18 @@ Deferred lanes:
 
 - public-driver polish and examples outside the approved R1 origin-centered H
   and z-axis H2 base producer scope;
-- R3 hardening before Be2/Cr2: independent weight-aware `V_GM` validation,
-  same-construction consistency, deterministic rank-loss implementation,
-  owned-support mixed providers, bounded MWG term storage, and nonallocating
-  large-matrix validation checks;
+- R3 usability lane: supported internal/public workflow for H2/Be2
+  supplemented artifacts, still requiring a separate design amendment;
+- Cr2-readiness lane: measurement-only candidate/rank/memory forecast, with no
+  full Cr2 Hamiltonian yet;
+- high-rank R3 performance guardrails: bounded/streamed residual MWG storage
+  if residual rank grows, nonallocating large-matrix validation checks, and
+  consumer-scale timing;
+- basis/supplement-realism lane: validated supplement choices, basis labels,
+  and filtering policy beyond the first H2 fixture;
 - Cr2-scale stress and performance validation;
-- R3 cleanup beyond compact artifact provenance, Be2/Cr2 validation, and other
-  non-base Hamiltonians;
+- R3 cleanup beyond compact artifact provenance and other non-base
+  Hamiltonians;
 - solver integration;
 - White-Lindsey pair-framework completion;
 - distorted-product COMX realization;

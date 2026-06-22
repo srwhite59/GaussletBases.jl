@@ -798,20 +798,32 @@ status wrapper around `CartesianIDAHamiltonian`.
 No new committed terminal smoke/probe is approved. Use existing smokes or
 ignored `tmp/work` validation unless a later design explicitly approves a test.
 
-### R3 Be2/Cr2 hardening guardrail — deferred
+### R3 Be2/Cr2 readiness guardrail — deferred
+
+R3-A/B/C are implemented for the narrow H2 residual-GTO/MWG endpoint and
+compact supplemented artifact. The following items are closed for that narrow
+path and should not be listed as future blockers by default:
+
+- same-construction internal path for the accepted H2 R3 construction;
+- deterministic rank-deficient residual selection under the approved
+  rank/orientation policy;
+- one-shot parent-by-supplement analytic exact-block organization for R3-A
+  mixed/self blocks, avoiding repeated CPB-per-terminal-block construction on
+  the Be2 proxy;
+- independent weight-aware final-basis `V_GM` validation for R3-B;
+- compact `supplement_provenance/` artifact group for R3-C.
 
 Do not present Be2, Cr2, or broader residual-GTO/MWG supplement support as
-approved until a later docs-only amendment closes these items:
+approved until a later docs-only amendment chooses and closes the next lane.
+Remaining deferred lanes are:
 
-- an exact same-construction guard for independently supplied basis, bundle,
-  supplement, residual, and base-Hamiltonian objects. Acceptable candidates are
-  a single internal construction orchestrator or a numerical consistency check
-  such as recomputing `X = G' S A` and validating `T_G + X*T_A`;
-- deterministic rank-deficient residual selection under the already-approved
-  rank/orientation policy;
-- owned-support mixed overlap/operator providers that avoid full-parent
-  identity allocation and avoid bounding CPB interior materialization for
-  hollow shells;
-- bounded or streamed residual MWG term storage for higher residual rank;
+- a usability lane for a supported internal or public H2/Be2 supplemented
+  artifact workflow;
+- a Cr2-readiness lane for measurement-only candidate/rank/memory forecasting,
+  with no full Cr2 Hamiltonian yet;
+- a basis/supplement-realism lane for validated supplement choices, basis
+  labels, and filtering policy beyond the first H2 fixture;
+- bounded or streamed residual MWG term storage if higher residual rank makes
+  the current dense residual term storage costly;
 - allocation-free or bounded-allocation validation reductions for large dense
   matrices.

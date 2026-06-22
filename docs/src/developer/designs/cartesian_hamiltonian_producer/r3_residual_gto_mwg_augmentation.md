@@ -1,7 +1,11 @@
 # R3 Residual-GTO/MWG Augmentation
 
-Status: R3-A and R3-B approved with corrected weight-aware compact-path
-scalar. R3-C compact supplemented artifact provenance is approved.
+Status: R3-A, R3-B, and R3-C are implemented for the narrow H2
+residual-GTO/MWG endpoint. R3-A provides deterministic residual-GTO basis
+construction, exact augmented one-body matrices, and exact moments. R3-B
+provides the same-construction in-memory MWG/IDA Hamiltonian path with the
+corrected weight-aware compact-path scalar. R3-C provides compact supplemented
+artifact provenance in the existing Hamiltonian artifact shape.
 
 This document records the R3 path for generic residual-GTO/MWG augmentation of
 the Cartesian base Hamiltonian producer. It approves only the R3-A, R3-B, and
@@ -12,9 +16,10 @@ compact supplemented artifact provenance. It does not approve public API
 expansion, driver or tool workflow, broad payload/status/report objects, ECP,
 EGOI, Be2/Cr2 validation, or broad residual-basis serialization.
 
-The first R3 review did not approve the IDs unchanged. This revision tightens
-the residual basis contract, splits the implementation lane, and keeps artifact
-provenance compact after the in-memory numerical endpoint is accepted.
+The first R3 review did not approve the IDs unchanged. This revision tightened
+the residual basis contract, split the implementation lane, kept artifact
+provenance compact after the in-memory numerical endpoint was accepted, and now
+records the R3 closeout status before public workflow or Cr2 expansion.
 
 ## Approved IDs And Split
 
@@ -646,26 +651,64 @@ residual rank must be measured.
 R3-A first endpoint is H2 augmented one-body and moments, not a
 residual-basis-only scaffold commit. R3-B adds MWG interaction and the existing
 in-memory Hamiltonian for the same H2 fixture, using the corrected
-weight-aware compact-path self-Coulomb baseline. Be2 follows as the first
-performance/realism proxy before Cr2.
+weight-aware compact-path self-Coulomb baseline. R3-C adds compact artifact
+provenance for the same supplemented Hamiltonian shape.
 
 Cr2 remains a later stress/consumer-readiness milestone, not the first R3
 correctness gate.
 
-Before Be2, Cr2, or broader residual-GTO/MWG support is approved, R3 must close
-these hardening blockers:
+## R3 Closeout Status
 
-- same-construction consistency for independently supplied basis, bundle,
-  supplement, residual, and base-Hamiltonian objects, either through a single
-  internal construction orchestrator or an exact numerical check such as
-  recomputing `X = G' S A` and validating `T_G + X*T_A`;
-- deterministic rank-deficient residual selection under the approved
-  rank/orientation policy;
-- owned-support mixed overlap/operator providers, avoiding full-parent identity
-  allocation and bounding CPB interior work for hollow shells;
-- bounded or streamed residual MWG term storage for high residual rank;
-- nonallocating or bounded-allocation validation checks for large dense
-  matrices.
+Implemented narrow R3 scope:
+
+- R3-A: residual-GTO augmentation object, deterministic residual construction,
+  deterministic rank-loss handling, exact augmented `K`, uncharged `U_A`, and
+  exact moment matrices `x`/`y`/`z`/`x^2`/`y^2`/`z^2`;
+- R3-B: same-construction internal augmented Hamiltonian path, residual
+  moment-matched Gaussian descriptors, weight-aware final-basis
+  density-normalized `V_GM`, direct density-normalized `V_MM`, unchanged base
+  `V_GG`, and existing `CartesianIDAHamiltonian{Float64}`;
+- R3-C: compact `supplement_provenance/` group added to the existing
+  Hamiltonian artifact shape, with validation-only readback.
+
+Accepted H2 closeout facts:
+
+- augmented dimension `489`;
+- lowest augmented one-body orbital IDA self-Coulomb
+  `0.4574256036192161` within `1.0e-10`;
+- tracked standalone endpoint exercises the same-construction path and
+  independent weight-aware `V_GM` check;
+- H2 supplemented artifact write/readback preserves Hamiltonian matrices within
+  tight deltas and stores compact provenance from the validated construction
+  specification.
+
+Be2 measurement conclusions:
+
+- The R3-A exact-operator bottleneck was repeated CPB-per-terminal-block
+  mixed/self block construction, not residualization math. On the Be2 proxy it
+  measured about `43.2 s` and `35.4 GiB`.
+- The one-shot parent-by-supplement analytic block organization measured about
+  `1.94 s` and `2.1 GiB` on the same proxy, with roundoff agreement for tested
+  overlap, kinetic, coordinate, second-moment, and by-center nuclear blocks.
+- Be2 R3-B MWG/IDA storage and runtime were modest at residual rank `26`.
+  Bounded/streamed MWG term storage remains a high-rank and Cr2 guardrail, but
+  is not urgent before choosing the next lane at this proxy scale.
+
+Remaining deferred hardening:
+
+- Cr2-readiness measurement only: candidate count, retained rank, memory, and
+  time forecast before any full Cr2 Hamiltonian stress run;
+- high-rank residual MWG streaming if rank growth makes the current dense
+  residual term storage costly;
+- nonallocating or bounded-allocation validation reductions for large dense
+  matrices;
+- public or supported internal supplemented workflow for H2/Be2 artifacts;
+- basis and supplement realism beyond the first H2 contracted cc-pVTZ fixture.
+
+Recommended next lane: usability. Define a supported internal or public
+workflow for H2/Be2 supplemented artifacts so consumers can request GTO/MWG
+artifacts without composing private R3 calls. A Cr2-readiness lane should stay
+measurement-only until that workflow and its input policy are clear.
 
 ## R3-A Approval Evidence
 
@@ -724,10 +767,10 @@ After R3-C:
 - remove historical docs only when explicitly doing documentation
   reorganization; history and blurb logs are not deletion targets by default.
 
-## Approved First Implementation Target
+## Implemented First Target
 
-The approved first implementation target is R3-A plus the narrow R3-B
-in-memory interaction continuation:
+The implemented first target is R3-A plus the narrow R3-B in-memory
+interaction continuation and R3-C compact artifact provenance:
 
 ```text
 base z-axis H2
@@ -739,6 +782,7 @@ base z-axis H2
 -> weight-aware V_GM and direct V_MM MWG/IDA blocks
 -> in-memory supplemented CartesianIDAHamiltonian
 -> H2 lowest-orbital IDA self-Coulomb endpoint
+-> existing Hamiltonian artifact plus compact supplement_provenance/
 ```
 
 The first committed/standalone endpoint gate is approved by `HP-R3-TEST-01`
@@ -754,5 +798,6 @@ lowest-orbital IDA self-Coulomb `0.4574256036192161` within `1.0e-10`. It must
 not assert private pair/assembly/report/status behavior, add the standalone
 file to `test/runtests.jl`, or run Be2 or Cr2.
 
-Do not start Cr2 stress tests before the H2 and Be2 augmented paths are
-numerically and organizationally accepted.
+Do not start Cr2 stress tests from this R3 closeout. The next design choice is
+between a usability lane, a measurement-only Cr2-readiness lane, and a
+basis/supplement-realism lane; this document recommends usability first.
