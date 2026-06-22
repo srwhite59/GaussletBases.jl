@@ -8620,3 +8620,71 @@ Risk / guardrail:
 - This test remains a standalone ~39 s integration gate, not default per-edit
   CI. Do not use it to justify Be2/Cr2 readiness; rank-loss handling and
   larger-scale provider performance remain separate lanes.
+
+## Cartesian Hamiltonian Producer Pass 057 - Optimize R3-A Parent-Supplement Blocks
+
+Commit(s):
+- this commit - Optimize R3A parent-supplement block construction
+
+Summary:
+- Accepted the measured R3-A performance replacement in
+  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`. The
+  active path now builds analytic parent-by-supplement `G-A` and supplement
+  `A-A` overlap, kinetic, position, second-moment, and by-center unit nuclear
+  blocks using the QW one-dimensional table organization, then projects the
+  rectangular parent-by-supplement rows through terminal blocks.
+- The old CPB-per-terminal-block mixed-provider path was removed from active
+  R3-A construction. This preserves the exact augmented one-body/moment
+  contract while avoiding repeated bounding-box construction and repeated
+  orbital/axis table rebuilding.
+- No parent-stage field, shared helper API, payload/status/report object,
+  artifact, public API, R3-C surface, Be2 committed gate, or Cr2 workflow was
+  added.
+
+Validation:
+- Doer ran `git diff --check`, package load, the standalone R3 H2 endpoint
+  gate, and the ignored Be2 donor comparison/performance probe. H2 passed
+  `49/49` in `26.9 s`; R3-B self-Coulomb was
+  `0.4574256036192164`, within roundoff of the accepted
+  `0.4574256036192161` target.
+- Be2 far donor comparison reported optimized `G-A` differences of
+  `6.11e-16` overlap, `3.55e-15` kinetic, moments up to `2.66e-14`, and
+  nuclear up to `4.44e-16`; optimized `A-A` differences were at or below
+  `1.78e-15`, nuclear `0.0`.
+- Be2 far exact-operator construction improved from the CPB-reference
+  `43.66 s / 35430.81 MiB` block path to `1.28 s / 1725.49 MiB` for the
+  QW block construction and `2.91 s / 3520.58 MiB` for optimized augmented
+  exact operators.
+- Manager ran `git diff --check`, reviewed the one-file source diff, checked
+  the anti-bloat suspicious-line scan, verified no stale R3 CPB helper names
+  remain in the target file, and accepted the fresh doer endpoint/performance
+  runs without repeating the long scripts.
+
+Goal advancement:
+- R3: removes the first measured Be2 R3-A scaling blocker before Cr2 work.
+- LT4/LT8: restores the intended one-dimensional analytic table reuse while
+  keeping the terminal block projection and compact R3 owner boundary.
+
+Carrying-cost result:
+- deleted: active `_r3a_bounding_cpb`, `_r3a_mixed_block`,
+  `_r3a_local_index`, and `_r3a_dense` CPB-per-block helper path.
+- simplified: R3-A mixed/self block construction now uses one construction-
+  local analytic parent-supplement block family per augmented-operator call.
+- quarantined: ignored Be2 comparison/profiling script remains under
+  `tmp/work`.
+- not deleted because: the existing internal function signature still carries
+  `parent_basis_object` for current callers; the small duplicate overlap build
+  between residualization and augmented-operator construction is accepted by
+  the current design rather than adding a persistent raw-block bundle.
+- exact remaining caller/blocker: deterministic rank-loss handling, broader
+  same-construction orchestration, bounded high-rank MWG storage, and R3-C
+  artifacts remain deferred; Cr2 is still not approved.
+- added src lines: 144.
+- deleted src lines: 76.
+- new tests: none.
+- new metadata/status fields: none.
+
+Risk / guardrail:
+- The QW donor organization is now the tactical R3-local performance bridge.
+  Do not promote it into a new shared provider/cache surface without a design
+  amendment and a second production consumer.
