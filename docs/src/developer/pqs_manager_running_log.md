@@ -8111,3 +8111,43 @@ Carrying-cost result:
 Risk / guardrail:
 - Do not reintroduce overlap audits to diagnose structural mistakes. Duplicate
   or intersecting support rows should fail as ownership/indexing errors.
+
+## Cartesian Hamiltonian Producer Pass 048 - R3-A Residual Spectrum Spike
+
+Commit(s):
+- none from doer; this entry records an ignored `tmp/work` measurement
+
+Summary:
+- Accepted a measurement-only R3-A residual-spectrum spike for the proposed
+  first supplemented proxy: base z-axis H2 plus contracted two-center
+  H/cc-pVTZ, `lmax = 1`, `uncontracted = false`, no width filtering.
+- The fixture produced the expected 18 supplement candidates, 9 per H center,
+  in deterministic center-major/source-shell/Cartesian-component order. Base
+  final dimension was `471`.
+- The residual metric spectrum for `S_R = S_AA - X'X` was full rank and far
+  from the proposed threshold band: min eigenvalue about `3.05e-4`, max about
+  `1.35e-2`, condition estimate about `44.3`. `inv(sqrt(Symmetric(S_R)))`
+  succeeded and the measured `R' S R` identity error was about `4.4e-15`.
+
+Validation:
+- Doer ran `git diff --check`, package load, the ignored
+  `tmp/work/r3a_h2_ccpvtz_residual_spectrum_spike.jl`, and verified final
+  worktree cleanliness.
+
+Goal advancement:
+- R3: supplies the numerical threshold evidence needed for a focused R3-A
+  docs-only approval pass. No source implementation was started.
+- LT5/LT6: keeps supplement work tied to measured residual-basis behavior
+  before introducing new production surfaces.
+
+Risk / guardrail:
+- The recommended first R3-A thresholds are `tau_abs = 1e-10`,
+  `tau_rel = 1e-10`, `tau_neg_abs = 1e-12`, and `tau_neg_rel = 1e-12`.
+  These should be frozen by repo-design-manager before doer implementation.
+  The ordinary-QW donor thresholds remain context, not automatic authority.
+
+Next step:
+- Request a docs-only R3-A approval amendment that moves only the R3-A IDs
+  needed for residual basis plus exact one-body/moments into approved status,
+  with the measured thresholds and H2 fixture locked. R3-B and R3-C should
+  remain candidate-only.
