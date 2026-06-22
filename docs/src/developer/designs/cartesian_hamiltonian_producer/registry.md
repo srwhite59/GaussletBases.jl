@@ -721,6 +721,96 @@ interaction path or facade wiring.
 No new committed test file, Be2 committed gate, or Cr2 full
 Hamiltonian/artifact/facade validation is approved.
 
+## Approved For Cartesian Gaussian Raw-Block Nuclear Owner
+
+This section approves only the neutral uncharged by-center nuclear raw-block
+slice recorded in `cartesian_gaussian_raw_blocks_nuclear.md`. It does not
+approve a broad Gaussian raw-block framework.
+
+### HP-CGRB-FILE-01 — neutral Cartesian Gaussian raw-block module files
+
+Approved internal module and files:
+
+```text
+src/cartesian_gaussian_raw_blocks/CartesianGaussianRawBlocks.jl
+src/cartesian_gaussian_raw_blocks/nuclear_blocks.jl
+```
+
+`src/GaussletBases.jl` may add only the internal include needed to load the
+module, with include-order changes limited to immediate dependency/caller
+needs. No public export is approved.
+
+### HP-CGRB-FN-01 — exact uncharged Gaussian nuclear raw blocks
+
+Approved internal kernel family:
+
+```text
+cartesian Gaussian nuclear raw blocks by center
+```
+
+The exact Julia names may follow local module style, but they must be neutral:
+no `r3`, `residual`, `qw`, route-stage, report, or status vocabulary.
+
+Approved numerical outputs:
+
+- parent-supplement `G-A` matrices by nuclear center;
+- supplement-supplement `A-A` matrices by nuclear center;
+- uncharged unit attraction convention, `U_A = -1/r_A`.
+
+Approved construction details:
+
+- analytic one-dimensional nuclear factor construction;
+- reuse across unique nuclear coordinates;
+- upper-triangular `A-A` assembly and mirroring;
+- function-local scratch/workspace reuse;
+- term-first contraction over the Gaussian expansion.
+
+The kernel must not apply physical nuclear charges, perform terminal
+projection, transform into residual bases, create overlap/kinetic/moment
+blocks, assemble Hamiltonians, or create persistent caches/bundles.
+
+### HP-CGRB-WIRE-01 — Residual Gaussian and Qiu-White rewiring
+
+Approved caller rewiring surfaces:
+
+```text
+src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl
+src/ordinary_qw_raw_blocks.jl
+src/ordinary_qw_operator_assembly.jl
+```
+
+The implementation sequence is binding:
+
+1. Extract current nuclear `G-A`/`A-A` behavior preserving conventions.
+2. Rewire Residual Gaussian and Qiu-White callers to the neutral kernel.
+3. Delete duplicate route-local nuclear loops once parity is established.
+4. Optimize allocation inside the neutral owner only after extraction parity.
+
+No Qiu-White route objects, Residual Gaussian selection logic, augmented
+operator transforms, terminal projection, parent construction, artifact
+workflow, report/status/payload fields, public API, or Cr2 facade/artifact
+workflow may be added under this ID.
+
+### HP-CGRB-TEST-01 — nuclear extraction validation
+
+Approved validation:
+
+- existing H2 Residual Gaussian endpoint unchanged;
+- Be2 Residual Gaussian endpoint unchanged, as ignored validation if needed;
+- Cr2 q4 exact nuclear `G-A`/`A-A` blocks match the current implementation at
+  roundoff, as ignored measurement only;
+- one small Qiu-White nuclear parity fixture.
+
+Approved committed standalone parity file, if needed:
+
+```text
+test/nested/cartesian_gaussian_raw_blocks_nuclear_runtests.jl
+```
+
+This file must not be added to `test/runtests.jl` without a later amendment.
+It must not validate Cr2 workflow, artifacts, public API, route statuses,
+report mirrors, payload fields, or Residual Gaussian internals.
+
 ## Rejected Or Deferred
 
 ### HP-RES-01 — terminal basis build result — rejected

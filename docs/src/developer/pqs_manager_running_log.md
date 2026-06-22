@@ -9996,3 +9996,61 @@ Risk / guardrail:
 - Do not turn this into immediate Cr2 facade/artifact support. The next
   decision should compare the remaining Cr2 exact-operator allocation against
   the cost and risk of a broader neutral Cartesian Gaussian cross-block kernel.
+
+## Cartesian Hamiltonian Producer Pass 078 - Approve Neutral Gaussian Nuclear Raw Blocks
+
+Commit(s):
+- this commit - Approve neutral Gaussian nuclear raw blocks
+
+Summary:
+- Approved a narrow neutral Cartesian Gaussian raw-block nuclear owner under
+  `HP-CGRB-FILE-01`, `HP-CGRB-FN-01`, `HP-CGRB-WIRE-01`, and
+  `HP-CGRB-TEST-01`. The approved owner is
+  `src/cartesian_gaussian_raw_blocks/` and owns only exact uncharged by-center
+  Gaussian nuclear parent-supplement `G-A` and supplement-supplement `A-A`
+  raw blocks.
+- This is a design/ownership correction after Passes 075-077 showed the Cr2 q4
+  exact-operator allocation hotspot sits in nuclear raw-block construction.
+  Residual Gaussian remains the owner of residual selection, exact operator
+  transforms, MWG descriptors, and residual interaction. Qiu-White remains a
+  consumer/parity route, not the owner of the shared kernel.
+- The approved implementation sequence is extraction first, Residual
+  Gaussian/Qiu-White rewiring second, duplicate route-local loop deletion
+  third, and only then allocation optimization inside the neutral owner.
+
+Validation:
+- Design-manager validation is docs-only: `git diff --check`, focused `rg`
+  for `HP-CGRB-*` IDs and forbidden-scope wording, and confirmation that no
+  `src`, `test`, `tools`, or `bin` files changed.
+
+Goal advancement:
+- Cr2-readiness/MT4: creates the exact source owner needed to attack the
+  dominant Cr2 q4 nuclear allocation cost without expanding Cr2 workflow.
+- RG/LT6: removes raw analytic nuclear formula ownership from RG while
+  preserving RG's exact augmented-operator transform contract.
+- Qiu-White reuse: converts QW from route-local duplicate nuclear logic into a
+  parity consumer of a neutral kernel.
+
+Carrying-cost result:
+- deleted: none; docs-only design authority.
+- simplified: ownership boundary for shared Gaussian nuclear raw blocks is now
+  explicit and no longer flattened into R3/RG or QW route code.
+- quarantined: overlap, kinetic, moments, MWG/pair interaction, terminal
+  projection, artifacts, public API, and Cr2 facade/artifact workflow remain
+  out of scope.
+- not deleted because: source extraction and duplicate-loop deletion belong to
+  the next doer pass under the new IDs.
+- exact remaining caller/blocker: implement the neutral nuclear kernel, rewire
+  `pqs_terminal_residual_gto.jl` and Qiu-White callers, prove H2/Be2/Roundoff
+  parity including Cr2 q4 exact nuclear blocks, then delete the old route-local
+  loops.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none in this docs pass; `HP-CGRB-TEST-01` approves one standalone
+  Qiu-White nuclear parity fixture if needed.
+- new metadata/status fields: none.
+
+Risk / guardrail:
+- Do not generalize this into a broad Gaussian raw-block framework. The first
+  owner is nuclear slice only: uncharged by-center `G-A`/`A-A`, no persistent
+  cache, no route payload, and no Cr2 workflow promotion.

@@ -84,6 +84,36 @@ Do-not-forget rule:
 Prefer analytic mapped proxy/raw-layer contraction and existing factor packets
 over sampled midpoint-grid kernels or duplicated primitive formulas.
 
+## Cartesian Gaussian Nuclear Raw Blocks
+
+Why to check:
+Residual Gaussian augmentation and Qiu-White route code both need exact
+by-center Cartesian Gaussian nuclear `G-A` and `A-A` matrices. The neutral
+owner prevents duplicate route-local nuclear loops while keeping raw analytic
+formula ownership out of Residual Gaussian physics and Qiu-White route objects.
+
+Key docs:
+- `docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_gaussian_raw_blocks_nuclear.md`
+- `docs/src/developer/designs/cartesian_hamiltonian_producer/registry.md`,
+  `HP-CGRB-FILE-01`, `HP-CGRB-FN-01`, `HP-CGRB-WIRE-01`,
+  `HP-CGRB-TEST-01`
+
+Source anchors:
+- **active implementation surface after extraction**:
+  `src/cartesian_gaussian_raw_blocks/CartesianGaussianRawBlocks.jl`,
+  `src/cartesian_gaussian_raw_blocks/nuclear_blocks.jl`
+- **current extraction targets / parity consumers**:
+  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`,
+  `src/ordinary_qw_raw_blocks.jl`,
+  `src/ordinary_qw_operator_assembly.jl`
+
+Do-not-forget rule:
+The neutral raw-block owner returns uncharged by-center `U_A = -1/r_A`
+parent-supplement and supplement-supplement matrices. It does not apply
+physical nuclear charges, project through terminal blocks, transform into
+Residual Gaussian bases, construct overlap/kinetic/moment blocks, create route
+objects, or own artifacts/status/payloads.
+
 ## CPB Local Blocks And Parent Axis Factors
 
 Why to check:

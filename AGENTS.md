@@ -434,6 +434,10 @@ these approved design IDs:
 - `HP-RG-FN-04`
 - `HP-RG-WIRE-01`
 - `HP-RG-TEST-01`
+- `HP-CGRB-FILE-01`
+- `HP-CGRB-FN-01`
+- `HP-CGRB-WIRE-01`
+- `HP-CGRB-TEST-01`
 
 No other production surface may be added in this lane without a prior
 documentation-only design amendment. This includes new structs, persistent
@@ -535,6 +539,37 @@ Do not add width scaling, tolerance relaxation, global raw-candidate Lowdin,
 global raw-column pivoted-Cholesky residual selection, public export, Cr2 facade
 support, full Cr2 Hamiltonian/artifact, new committed tests, driver/bin/tool
 workflow, or artifact schema expansion without a prior docs-only amendment.
+
+Approved neutral Cartesian Gaussian raw-block nuclear owner:
+
+- `HP-CGRB-FILE-01` approves only
+  `src/cartesian_gaussian_raw_blocks/CartesianGaussianRawBlocks.jl`,
+  `src/cartesian_gaussian_raw_blocks/nuclear_blocks.jl`, and the internal
+  `src/GaussletBases.jl` include needed to load the module. No public export is
+  approved.
+- `HP-CGRB-FN-01` approves only exact uncharged by-center Cartesian Gaussian
+  nuclear parent-supplement `G-A` and supplement-supplement `A-A` raw-block
+  construction, including analytic 1D nuclear factors, unique coordinate reuse,
+  upper-triangular `A-A` assembly/mirroring, function-local scratch reuse, and
+  term-first contraction.
+- `HP-CGRB-WIRE-01` approves only behavior-preserving rewiring of the Residual
+  Gaussian and Qiu-White nuclear callers in
+  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`,
+  `src/ordinary_qw_raw_blocks.jl`, and `src/ordinary_qw_operator_assembly.jl`,
+  with duplicate route-local nuclear loops deleted after parity.
+- `HP-CGRB-TEST-01` approves the existing H2 Residual Gaussian endpoint,
+  ignored Be2 Residual Gaussian parity/performance if needed, ignored Cr2 q4
+  exact nuclear block parity, and one small standalone Qiu-White nuclear parity
+  fixture at `test/nested/cartesian_gaussian_raw_blocks_nuclear_runtests.jl` if
+  no existing test can host it cleanly. Do not add it to `test/runtests.jl`
+  without a later amendment.
+
+The neutral raw-block owner must not construct overlap, kinetic, coordinate
+moments, second moments, pair factors, MWG interaction, terminal projection,
+Residual Gaussian selection/transforms, Qiu-White route objects, parent
+construction, persistent caches, metadata/report/status/payload fields,
+artifacts, public API, Cr2 facade support, or Cr2 artifact workflow. Physical
+nuclear charges are applied by consumers, not by the neutral uncharged kernel.
 
 `HP-FN-03` specifically approves
 `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl` as the Slice B

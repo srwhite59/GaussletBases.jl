@@ -75,6 +75,8 @@ The module must not own:
 - parent lattice construction;
 - terminal shell topology or terminal support ownership;
 - raw analytic Gaussian integral formulas;
+- exact uncharged by-center Cartesian Gaussian nuclear `G-A`/`A-A` raw-block
+  construction;
 - facade input parsing;
 - terminal or base stage orchestration;
 - Hamiltonian artifact writing;
@@ -84,8 +86,11 @@ The module must not own:
 
 The module may consume already-validated base Hamiltonian facts, terminal
 basis realization, parent axis/bundle data, supplement representations, raw
-exact blocks, and donor factor tables. It must not turn those inputs into a
-new report or provider payload framework.
+exact blocks, and donor factor tables. Exact uncharged nuclear raw blocks are
+owned by the neutral Cartesian Gaussian raw-block nuclear owner when that
+kernel is present. RG consumes them as exact operator inputs to
+`transform_augmented_operator(...)`; it must not turn those inputs into a new
+report or provider payload framework.
 
 ## Approved Source Surfaces
 

@@ -398,13 +398,16 @@ through terminal blocks, reuse the once-built overlap `G-A` block for
 `X = G' S A`, and use the once-built `G-A`/`A-A` blocks in augmented operator
 assembly.
 
-This allowance is limited to the approved R3 owner file and exact R3-A
-operators. A full parent-by-supplement cross matrix is allowed because it is
-rectangular cross data, not a forbidden parent-by-parent global operator or
-dense global pair matrix. This does not approve edits to
-`src/ordinary_qw_raw_blocks.jl`, a new shared QW API, persistent provider
-bundles, public API, artifact/provenance, driver/tool workflow, R3-C, Be2 as a
-validation gate, or Cr2.
+This allowance was the tactical R3-local bridge for the first exact R3-A
+operator implementation. A full parent-by-supplement cross matrix is allowed
+because it is rectangular cross data, not a forbidden parent-by-parent global
+operator or dense global pair matrix. For uncharged by-center nuclear
+`G-A`/`A-A` raw blocks, the later `HP-CGRB-*` authority supersedes the
+R3-local ownership story and approves a neutral raw-block owner plus
+behavior-preserving Residual Gaussian and Qiu-White rewiring. That later
+authority still does not approve a broad QW API, persistent provider bundles,
+public API, artifact/provenance, driver/tool workflow, R3-C expansion, Be2 as a
+committed validation gate, or Cr2 facade/artifact support.
 
 The production target is to derive parent-supplement 1D cross tables once per
 augmentation construction and reuse them. The immediate R3-local bridge may

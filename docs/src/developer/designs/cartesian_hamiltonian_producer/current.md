@@ -12,6 +12,8 @@ Normal startup reading:
 - `invariants.md` for architecture-wide guardrails;
 - `residual_gaussian_domain_module.md` for the canonical Residual Gaussian
   algorithm contract;
+- `cartesian_gaussian_raw_blocks_nuclear.md` for the neutral uncharged nuclear
+  raw-block owner;
 - `docs/src/developer/algorithm_implementation_index.md` for existing kernels
   and donor paths.
 
@@ -49,6 +51,16 @@ Implemented Residual Gaussian path:
 - Cr2 residual diagnostics are not facade support and do not authorize full Cr2
   supplemented Hamiltonian or artifact production.
 
+Approved neutral raw-block nuclear owner:
+
+- `src/cartesian_gaussian_raw_blocks/` is approved for exact uncharged
+  by-center Cartesian Gaussian nuclear `G-A` and `A-A` raw blocks only;
+- the owner may be consumed by Residual Gaussian and Qiu-White code after
+  behavior-preserving parity;
+- it does not own overlap, kinetic, moments, terminal projection, residual
+  Gaussian transforms, Qiu-White route objects, caches, reports, artifacts, or
+  public API.
+
 ## Residual Gaussian Authority
 
 `residual_gaussian_domain_module.md` is the canonical current RG algorithm
@@ -65,7 +77,12 @@ Essential live guardrails:
 - MWG descriptors are rotation-dependent and must be computed from the final
   merged residual basis;
 - RG does not own artifact writing, artifact provenance, basis loading, facade
-  parsing, parent lattice construction, terminal topology, or public exports.
+  parsing, parent lattice construction, terminal topology, raw Gaussian
+  nuclear block formula ownership, or public exports.
+
+Exact uncharged by-center Gaussian nuclear raw blocks are a separate neutral
+kernel authority under `cartesian_gaussian_raw_blocks_nuclear.md`. RG consumes
+those blocks as exact operator inputs; RG does not own their raw construction.
 
 The old R3-A/R3-B/R3-C labels are implementation-history labels. The current
 domain names are:

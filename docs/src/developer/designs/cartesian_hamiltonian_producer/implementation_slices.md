@@ -219,3 +219,43 @@ Remaining cleanup:
 - delete any future compatibility wrapper once the exact live caller moves;
 - keep artifact and facade hooks outside RG unless a separate design amendment
   approves moving them.
+
+## Cartesian Gaussian Raw Blocks - Nuclear Slice
+
+Status: approved for implementation; not part of R3/RG public workflow.
+
+Approved boundary:
+
+- neutral owner files under `src/cartesian_gaussian_raw_blocks/`;
+- exact uncharged by-center Cartesian Gaussian nuclear raw blocks:
+  parent-supplement `G-A` and supplement-supplement `A-A`;
+- analytic one-dimensional nuclear factor construction, unique nuclear
+  coordinate reuse, upper-triangular `A-A` assembly with mirroring,
+  function-local scratch reuse, and term-first contraction.
+
+Implementation sequence:
+
+1. Extract the current Residual Gaussian/Qiu-White nuclear `G-A`/`A-A`
+   behavior into the neutral owner without changing numerical conventions.
+2. Rewire Residual Gaussian and Qiu-White callers to consume the neutral
+   kernel.
+3. Delete the duplicate route-local nuclear loops once parity is established.
+4. Optimize allocation inside the neutral owner only after extraction parity.
+
+Validation gates:
+
+- existing H2 Residual Gaussian endpoint unchanged;
+- Be2 Residual Gaussian endpoint unchanged as an ignored performance/usability
+  measurement if needed;
+- Cr2 q4 exact nuclear blocks match the current implementation at roundoff as
+  an ignored measurement only;
+- a small Qiu-White nuclear parity fixture passes.
+
+Forbidden in this slice:
+
+- overlap, kinetic, coordinate moments, second moments;
+- pair factors or matched-width Gaussian interaction;
+- terminal projection or residual-basis transformation;
+- Qiu-White route objects or parent construction;
+- persistent caches, metadata, reports, status fields, artifacts, public API,
+  Cr2 facade support, or Cr2 artifact workflow.
