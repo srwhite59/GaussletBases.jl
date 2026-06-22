@@ -9816,3 +9816,61 @@ Risk / guardrail:
 - Do not jump from this probe to full Cr2 support. The next pass should be a
   focused allocation audit of exact augmented operator assembly, not facade
   expansion or artifact writing.
+
+## Cartesian Hamiltonian Producer Pass 075 - Audit Cr2 Exact Operator Allocation
+
+Commit(s):
+- this commit - Record Cr2 exact operator allocation audit
+
+Summary:
+- Accepted a measurement-only allocation audit for Cr2 q4 exact augmented
+  operator construction. The audit shows the large allocation is not from final
+  dense output matrices or the `[G,A] -> [G,R]` transform. It is dominated by
+  QW donor by-center nuclear block construction.
+- The actual `pqs_terminal_residual_gto_augmented_operators(...)` call measured
+  `32.17s` and `114553 MiB`. Replayed substeps attribute `27.33s` and
+  `106319 MiB` to QW donor blocks, `2.87s` and `7076 MiB` to `G-G` product
+  matrices, and only `0.061s` and `817 MiB` to exact transform calls.
+- The dominant substep is `qw_bycenter_nuclear_blocks_GA_AA`, at `24.39s` and
+  `95365 MiB`. The next largest are QW self moment blocks at `2.31s` /
+  `8453 MiB` and QW cross moment blocks at `0.46s` / `2488 MiB`.
+
+Validation:
+- Doer ran `git diff --check`, package load,
+  `tmp/work/cr2_exact_operator_allocation_audit.jl`, and final tracked
+  `git status`. The audit verified wrapper/replay kinetic delta `0.0`, all
+  replayed exact operators finite, and replayed exact-operator symmetry error
+  `0.0`. Manager did not rerun the Cr2 audit.
+
+Goal advancement:
+- Cr2-readiness/MT4: narrows the performance blocker to by-center nuclear
+  `G-A`/`A-A` donor construction.
+- RG/LT6: protects the RG extraction from premature optimization in the wrong
+  place. `transform_augmented_operator(...)` is not the first Cr2 bottleneck.
+
+Performance read:
+- Final storage remains small: augmented dimension `1623`; one augmented dense
+  matrix is about `20.10 MiB`; nine augmented output matrices are about
+  `180.87 MiB`.
+- Parent-by-supplement dimensions are `(11191, 66)`.
+- Allocation churn is therefore transient donor construction, especially
+  repeated one-dimensional factor/table allocation in nuclear by-center paths.
+
+Carrying-cost result:
+- deleted: none; measurement-only pass.
+- simplified: next optimization target is concrete:
+  `_r3a_qw_nuclear_blocks(...)`, not exact transform in-place work.
+- quarantined: no Cr2 facade/artifact support is claimed.
+- not deleted because: no source changed.
+- exact remaining caller/blocker: plan a bounded optimization/design pass for
+  by-center nuclear `G-A`/`A-A` block construction, likely by caching/reusing
+  one-dimensional nuclear factor tables and separating `G-A` from `A-A` work.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.
+
+Risk / guardrail:
+- Do not optimize the dense RG transform first. Do not broaden to full Cr2
+  facade or artifact support before reducing or justifying nuclear donor
+  allocation.
