@@ -10072,6 +10072,79 @@ Risk / guardrail:
   should target streamed/reused one-dimensional nuclear tables. Do not broaden
   the owner or move artifact/facade responsibilities into it.
 
+## Cartesian Hamiltonian Producer Pass 079 - Stream Nuclear A-A Terms
+
+Commit(s):
+- this commit - Stream Gaussian nuclear AA terms
+
+Summary:
+- Accepted a neutral-kernel optimization in
+  `src/cartesian_gaussian_raw_blocks/nuclear_blocks.jl`.
+  The supplement-supplement (`A-A`) nuclear block now streams
+  Coulomb-Gaussian terms through reusable per-term axis tables and immediate
+  scalar contraction, instead of storing vectors of per-axis factor matrices.
+- The physical calculation is unchanged: exact uncharged by-center nuclear raw
+  blocks are still returned as `(; ga, aa)`, `A-A` still uses upper-triangle
+  assembly plus mirroring, and nuclear charges remain outside the raw-block
+  kernel.
+
+Validation:
+- Doer ran `git diff --check`, package load,
+  `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`,
+  `tmp/work/be2_r3u_facade_measurement.jl`,
+  `tmp/work/cgrb_qw_nuclear_parity_check.jl`, and
+  `tmp/work/cr2_exact_operator_allocation_audit.jl`.
+- Manager reviewed the source diff, confirmed the legacy Gaussian orbital
+  fields used by the helper, and ran `git diff --check`, numstat, the
+  suspicious-added-line anti-bloat scan, and the new-test/file scan. Manager did
+  not rerun the numerical gates.
+
+Numerical result:
+- H2 Residual Gaussian self-Coulomb remained
+  `0.45742652143620927`, delta `1.78e-15` from the active target.
+- Be2 augmented dimension remained `1421` and artifact readback deltas were
+  `0.0`.
+- Qiu-White parity reported neutral/reference `G-A` delta `0.0`,
+  neutral/reference `A-A` delta `4.44e-16`, and route/one-body rebuild deltas
+  `0.0`.
+- Cr2 exact-operator audit reported raw nuclear `G-A` reference delta `0.0`,
+  raw nuclear `A-A` reference delta `2.84e-14`, with exact operator matrices
+  finite and symmetric.
+
+Performance result:
+- Cr2 q4 nuclear raw-block step improved from `14.34s` / `48539.7 MiB` to
+  `14.07s` / `44548.7 MiB`.
+- The reduction is modest in percentage, about `8.2%`, but material in
+  absolute allocation: about `3991 MiB`.
+- The remaining dominant cost is now the `G-A` parent-supplement factor path,
+  which still calls `_qwrg_atomic_axis_factor_cross_data(...)` and stores term
+  factor matrices.
+
+Goal advancement:
+- Cr2-readiness/MT4: reduces the remaining nuclear allocation and identifies
+  the next concrete target, `G-A` parent-supplement factor construction.
+- CGRB/LT6: proves the neutral raw-block owner can carry focused allocation
+  improvements without broadening its scope or reintroducing route-local loops.
+
+Carrying-cost result:
+- deleted: `A-A` vector-of-factor-tables construction in the neutral owner.
+- simplified: `A-A` now uses per-term scratch tables and immediate scalar
+  contraction.
+- quarantined: `G-A` term-vector construction remains.
+- not deleted because: `G-A` is live and now dominates remaining allocation.
+- exact remaining caller/blocker:
+  `_qwrg_atomic_axis_factor_cross_data(...)` still stores term factor matrices
+  for parent-supplement nuclear blocks.
+- added src lines: 123.
+- deleted src lines: 22.
+- new tests: none.
+- new metadata/status fields: none.
+
+Risk / guardrail:
+- The next optimization should target `G-A` streaming inside
+  `CartesianGaussianRawBlocks`, still without changing Residual Gaussian,
+  Qiu-White route semantics, artifacts, public API, or non-nuclear raw blocks.
+
 ## Cartesian Hamiltonian Producer Pass 078 - Approve Neutral Gaussian Nuclear Raw Blocks
 
 Commit(s):
