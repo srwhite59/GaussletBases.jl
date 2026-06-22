@@ -61,6 +61,9 @@ Current implementation boundary:
 
 Approved R3-A residual-GTO exact one-body/moment scope:
 
+- approved source owner/path: `CartesianFinalBasisRealization` owns
+  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` for
+  `HP-R3-OBJ-01`, `HP-R3-FN-01`, and `HP-R3-FN-02`;
 - first fixture: public/base z-axis H2 plus contracted two-center H/cc-pVTZ,
   `lmax = 1`, `uncontracted = false`, no width filtering;
 - frozen residual thresholds: `tau_abs = 1.0e-10`,

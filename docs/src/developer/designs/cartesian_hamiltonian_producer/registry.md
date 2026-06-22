@@ -469,6 +469,19 @@ tau_neg_abs = 1.0e-12
 tau_neg_rel = 1.0e-12
 ```
 
+Approved R3-A source owner/path:
+
+```text
+Owner module: CartesianFinalBasisRealization
+Source file: src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl
+```
+
+`HP-R3-OBJ-01`, `HP-R3-FN-01`, and `HP-R3-FN-02` may be implemented only in
+that file. Existing `CartesianFinalBasisRealization` module include plumbing may
+include the file only to expose the approved internal R3-A surfaces. This does
+not approve a public API or export, a second source owner, a driver/tool
+workflow, or any R3-B/R3-C surface.
+
 ### HP-R3-OBJ-01 — residual-GTO augmentation object
 
 Approved R3-A scope. The residual object is a numerical object, not a

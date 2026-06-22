@@ -23,6 +23,18 @@ R3-A approved scope: residual basis plus exact one-body and moments.
 - `HP-R3-FN-02` - exact augmented one-body and moment assembly.
 - `HP-R3-TEST-01` - first H2 augmented one-body endpoint validation.
 
+Approved R3-A source owner/path:
+
+```text
+Owner module: CartesianFinalBasisRealization
+Source file: src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl
+```
+
+`HP-R3-OBJ-01`, `HP-R3-FN-01`, and `HP-R3-FN-02` may be implemented only in
+that source file. Existing `CartesianFinalBasisRealization` module include
+plumbing may include the file only to expose the approved internal R3-A
+surfaces; it does not approve public API or export expansion.
+
 R3-B candidate-only scope: MWG interaction and in-memory Hamiltonian.
 
 - `HP-R3-FN-03` - residual MWG/IDA interaction assembly and existing

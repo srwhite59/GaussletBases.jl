@@ -450,7 +450,13 @@ expansion is approved, and no artifact expansion is approved except the
 only R3-A residual-GTO basis construction plus exact augmented kinetic,
 uncharged by-center nuclear-attraction, and moment matrices
 `x`/`y`/`z`/`x^2`/`y^2`/`z^2` for the first H2 augmented one-body/moment
-endpoint. The frozen thresholds are `tau_abs = 1.0e-10`,
+endpoint. The approved R3-A source owner is
+`CartesianFinalBasisRealization`; `HP-R3-OBJ-01`, `HP-R3-FN-01`, and
+`HP-R3-FN-02` may be implemented only in
+`src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`. Existing
+module include plumbing may include that file only to expose the approved
+internal R3-A surfaces; it does not approve a public API or export. The frozen
+thresholds are `tau_abs = 1.0e-10`,
 `tau_rel = 1.0e-10`, `tau_neg_abs = 1.0e-12`, and
 `tau_neg_rel = 1.0e-12`. `HP-R3-TEST-01` approves only
 `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl` as a standalone
