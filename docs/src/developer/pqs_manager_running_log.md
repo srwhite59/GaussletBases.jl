@@ -8688,3 +8688,59 @@ Risk / guardrail:
 - The QW donor organization is now the tactical R3-local performance bridge.
   Do not promote it into a new shared provider/cache surface without a design
   amendment and a second production consumer.
+
+## Cartesian Hamiltonian Producer Pass 058 - Add R3 Same-Construction Entry
+
+Commit(s):
+- this commit - Add R3 same-construction Hamiltonian entry
+
+Summary:
+- Accepted the docs-approved `HP-R3-FN-03` same-construction overload in
+  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`. The new
+  internal call shape takes a same-construction base Hamiltonian, terminal
+  basis, bundles, supplement, atom locations, and nuclear charges, then
+  constructs the R3 residual object, exact augmented operators, and final
+  in-memory augmented `CartesianIDAHamiltonian{Float64}` inside one call.
+- The overload delegates to the existing R3-A residual, R3-A augmented
+  operator, and lower-level R3-B Hamiltonian helpers. It does not duplicate the
+  MWG/IDA logic, add a public API/export, introduce a new result shape, or add
+  artifact/report/status/payload fields.
+
+Validation:
+- Doer ran `git diff --check`, package load, the standalone R3 H2 endpoint
+  gate, and an ignored same-construction comparison script. The standalone
+  test passed `49/49` with augmented dimension `489` and R3-B self-Coulomb
+  `0.4574256036192164`.
+- The ignored comparison reported returned type
+  `CartesianIDAHamiltonian{Float64}`, `K`/`U`/`V` deltas of `0.0` versus the
+  lower-level composition, and self-Coulomb delta `3.33e-16` from the accepted
+  target.
+- Manager ran `git diff --check`, reviewed the one-file source diff, checked
+  the suspicious-line scan, and accepted doer's fresh endpoint validation
+  without repeating the longer scripts.
+
+Goal advancement:
+- R3: reduces same-construction provenance risk by giving future callers a
+  narrow internal path that does not require manually threading residual and
+  augmented-operator objects.
+- LT5/LT6: keeps residual-GTO augmentation inside the existing in-memory
+  Hamiltonian contract without a wrapper or artifact expansion.
+
+Carrying-cost result:
+- deleted: none.
+- simplified: same-construction callers can now rely on one internal entry
+  rather than independently composing residual and augmented-operator objects.
+- quarantined: ignored same-construction validation remains under `tmp/work`.
+- not deleted because: lower-level R3-A/R3-B helpers remain active tested
+  contracts and useful validation seams.
+- exact remaining caller/blocker: deterministic rank-loss handling, bounded
+  high-rank MWG storage, broader public/workflow surfaces, and R3-C artifacts
+  remain deferred.
+- added src lines: 18.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.
+
+Risk / guardrail:
+- The same-construction entry is internal only. Do not promote it to R1/public
+  facade, driver workflow, or artifact authority without a design amendment.

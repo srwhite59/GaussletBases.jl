@@ -221,6 +221,24 @@ function pqs_terminal_residual_gto_augmented_hamiltonian(
     )
 end
 
+function pqs_terminal_residual_gto_augmented_hamiltonian(
+    base_hamiltonian,
+    basis::CartesianTerminalBasisRealization,
+    bundles,
+    supplement,
+    atom_locations,
+    nuclear_charges;
+    expansion = nothing,
+)
+    residual = pqs_terminal_residual_gto_augmentation(
+        basis, bundles, supplement, atom_locations)
+    augmented_operators = pqs_terminal_residual_gto_augmented_operators(
+        basis, bundles, nothing, supplement, residual, atom_locations, nuclear_charges;
+        expansion)
+    return pqs_terminal_residual_gto_augmented_hamiltonian(
+        base_hamiltonian, basis, bundles, residual, augmented_operators; expansion)
+end
+
 function _residual_candidate_owner(center, nuclei)
     matches = findall(==(center), nuclei)
     length(matches) == 1 ||
