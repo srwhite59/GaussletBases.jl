@@ -8,6 +8,7 @@ const EXPECTED_LABELS = [
     "a_s1", "a_s2", "a_s3", "a_px1", "a_py1", "a_pz1", "a_px2", "a_py2", "a_pz2",
     "b_s1", "b_s2", "b_s3", "b_px1", "b_py1", "b_pz1", "b_px2", "b_py2", "b_pz2",
 ]
+const R3B_OWNER_LOCAL_SELF_COULOMB = 0.4574265214362075
 
 function terminal_h2()
     route_inputs = (;
@@ -213,11 +214,14 @@ elapsed = @elapsed @testset "R3-A H2 augmented one-body and moments" begin
     @test residual.candidate_labels == EXPECTED_LABELS
     @test Dict(owner => count(==(owner), residual.candidate_owner_indices)
         for owner in unique(residual.candidate_owner_indices)) == Dict(1 => 9, 2 => 9)
+    @test residual.residual_source_owner_indices == vcat(fill(1, 9), fill(2, 9))
+    @test residual.owner_retained_counts == [9, 9]
+    @test residual.occupation_cutoff == 1.0e-8
     @test residual.base_dimension == 471
     @test residual.residual_dimension == 18
     @test size(operators.kinetic) == (489, 489)
-    @test minimum(residual.residual_metric_eigenvalues) ≈ 3.0488355008683734e-4 atol = 1.0e-14
-    @test maximum(residual.residual_metric_eigenvalues) ≈ 1.3512432621413795e-2 atol = 1.0e-14
+    @test minimum(residual.residual_occupations) ≈ 5.809976169475061e-4 atol = 1.0e-14
+    @test maximum(residual.residual_occupations) ≈ 1.3455087681603393e-2 atol = 1.0e-14
     @test norm(residual.T_G + X * residual.T_A, Inf) <= 1.0e-10
     @test norm(RSR - I, Inf) <= 1.0e-10
 
@@ -272,12 +276,12 @@ elapsed = @elapsed @testset "R3-A H2 augmented one-body and moments" begin
     eig = eigen(Symmetric(H_r3b))
     orbital = eig.vectors[:, argmin(eig.values)]
     r3b_self_coulomb = self_coulomb(ham.electron_electron_ida, orbital)
-    @test r3b_self_coulomb ≈ 0.4574256036192161 atol = 1.0e-10
+    @test r3b_self_coulomb ≈ R3B_OWNER_LOCAL_SELF_COULOMB atol = 1.0e-10
 
     println("r3a_h2_augmented_dimensions base=471 residual=18 augmented=489")
     println("r3a_h2_augmented_energies E_base=", E_base, " E_aug=", E_aug)
     println("r3b_h2_self_coulomb=", r3b_self_coulomb,
-        " delta=", r3b_self_coulomb - 0.4574256036192161)
+        " delta=", r3b_self_coulomb - R3B_OWNER_LOCAL_SELF_COULOMB)
     println("r3b_h2_vgm_errors direct=", direct_vgm_error, " pqs=", pqs_vgm_error)
 end
 
@@ -294,7 +298,7 @@ facade_elapsed = @elapsed @testset "R3 H2 supplemented Hamiltonian facade" begin
     eig = eigen(Symmetric(H))
     orbital = eig.vectors[:, argmin(eig.values)]
     facade_self_coulomb = self_coulomb(ham.electron_electron_ida, orbital)
-    @test facade_self_coulomb ≈ 0.4574256036192161 atol = 1.0e-10
+    @test facade_self_coulomb ≈ R3B_OWNER_LOCAL_SELF_COULOMB atol = 1.0e-10
 
     readback = read_cartesian_ida_hamiltonian(artifact)
     kinetic_delta = norm(readback.kinetic - ham.kinetic, Inf)
@@ -315,7 +319,8 @@ facade_elapsed = @elapsed @testset "R3 H2 supplemented Hamiltonian facade" begin
         :lmax, :uncontracted, :width_filtering, :candidate_count, :owner_counts,
         :base_dimension, :residual_dimension, :augmented_dimension,
         :augmented_basis_order, :residual_basis_convention, :rank_rule,
-        :tau_abs, :tau_rel, :tau_neg_abs, :tau_neg_rel, :mwg_convention_version,
+        :occupation_cutoff, :tau_neg_abs, :tau_neg_rel, :tau_merge_abs,
+        :tau_merge_rel, :mwg_convention_version,
         :mwg_convention, :one_body_source, :interaction_source,
         :validation_check_labels, :h2_self_coulomb_reference,
     )
@@ -338,9 +343,13 @@ facade_elapsed = @elapsed @testset "R3 H2 supplemented Hamiltonian facade" begin
         @test values[:residual_dimension] == 18
         @test values[:augmented_dimension] == 489
         @test values[:augmented_basis_order] === :base_then_residual
-        @test values[:rank_rule] === :full_rank_candidate_order
+        @test values[:residual_basis_convention] === :owner_local_residual_occupation_final_merge_lowdin
+        @test values[:rank_rule] === :owner_local_residual_occupation
+        @test values[:occupation_cutoff] == 1.0e-8
+        @test values[:tau_merge_abs] == 1.0e-12
+        @test values[:tau_merge_rel] == 1.0e-12
         @test values[:interaction_source] === :weight_aware_residual_mwg_ida_blocks
-        @test values[:h2_self_coulomb_reference] == 0.4574256036192161
+        @test values[:h2_self_coulomb_reference] == R3B_OWNER_LOCAL_SELF_COULOMB
     end
 
     @test_throws ArgumentError GaussletBases.cartesian_residual_gto_mwg_hamiltonian(
@@ -367,7 +376,7 @@ facade_elapsed = @elapsed @testset "R3 H2 supplemented Hamiltonian facade" begin
         basis = FACADE_BASIS, supplement = FACADE_SUPPLEMENT)
 
     println("r3u_h2_facade_self_coulomb=", facade_self_coulomb,
-        " delta=", facade_self_coulomb - 0.4574256036192161)
+        " delta=", facade_self_coulomb - R3B_OWNER_LOCAL_SELF_COULOMB)
     println("r3u_h2_facade_readback_deltas kinetic=", kinetic_delta,
         " unit_U=", unit_delta, " one_body=", one_body_delta, " V=", V_delta)
     println("r3u_h2_facade_artifact=", artifact)

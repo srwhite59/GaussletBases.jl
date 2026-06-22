@@ -9177,3 +9177,81 @@ Risk / guardrail:
 - Do not preserve the old scalar by width scaling or tolerance relaxation. Do
   not use width filtering as conditioning repair, do not add a public export,
   and do not run or approve a full Cr2 Hamiltonian/artifact in the source pass.
+
+## Cartesian Hamiltonian Producer Pass 065 - Implement R3 Owner-Local Residual Selection
+
+Commit(s):
+- this commit - Implement R3 owner-local residual selection
+
+Summary:
+- Accepted the source correction replacing global residual-GTO selection with
+  owner-local residual-occupation selection. Residual Gaussian directions are
+  now selected separately on each physical center, then the retained center
+  sectors are merged once by the final symmetric Lowdin step.
+- Deleted the active global raw-candidate metric selection and pivoted-Cholesky
+  helper. The persistent residual object now carries the approved owner-local
+  fields: source owner indices, residual occupations, retained counts by
+  owner, occupation cutoff, final-merge thresholds, and selection/orientation
+  symbols.
+- Retargeted the R3-B and R3U H2 endpoint to the owner-local self-Coulomb
+  value `0.4574265214362075`. The accepted run produced
+  `0.45742652143620843`, a `9.4e-16` delta from target.
+
+Validation:
+- Doer ran `git diff --check`, package load, the standalone R3 H2 endpoint
+  gate, and the ignored owner-local H2/Be2/Cr2 residual-selection measurement.
+  The residual measurement retained full rank for H2, Be2, Cr2 q4, and Cr2 q5
+  and kept final `R' S R - I` below `1.0e-10`.
+- Manager reviewed the diff, reran `git diff --check`, the anti-bloat
+  suspicious-line scan, package load, and
+  `julia --project=. test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`.
+  The endpoint passed `52/52`; the facade/artifact section passed `59/59`.
+
+Goal advancement:
+- R3/LT6: corrects the physical residual-basis construction used by the
+  supplemented Hamiltonian path before it becomes broader workflow authority.
+- MT4: resumes the R3 usability lane on the corrected residual convention
+  while keeping Cr2 full Hamiltonians, public export, and solver work deferred.
+
+Carrying-cost result:
+- deleted: global raw-candidate residual selection and the global
+  pivoted-Cholesky rank-selection helper.
+- simplified: active tests, facade artifact reference, and R3-C provenance now
+  share the owner-local scalar and residual-selection vocabulary.
+- quarantined: Cr2 remains residual-selection measurement only; no full Cr2
+  augmented Hamiltonian/artifact is claimed.
+- not deleted because: R3-B/R3-C writer and the non-exported usability facade
+  remain live workflow surfaces.
+- exact remaining caller/blocker: decide the next lane after owner-local R3U
+  restoration; likely Be2 owner-local facade measurement before any Cr2
+  support expansion.
+- added src lines: 92.
+- deleted src lines: 76.
+- new tests: none; one existing standalone endpoint file changed by `+18/-9`.
+- new metadata/status fields: none; the residual numerical object fields
+  changed under the approved R3 contract.
+
+Risk / guardrail:
+- The rank-loss natural-mode branch is implemented but not covered by the
+  tracked H2 endpoint because H2, Be2, and measured Cr2 cases retained full
+  owner-local rank. Continue to treat full Cr2 Hamiltonian and artifact work as
+  deferred until explicitly approved.
+
+### Medium-Term Goal Checkpoint After Pass 065
+
+- MT1, base Cartesian Hamiltonian producer: completed for the approved H/H2
+  public base path. Public-driver polish remains deferred rather than an active
+  correctness blocker.
+- MT2, R3 supplemented H2 usability: active and healthier after the owner-local
+  correction. The non-exported facade and compact artifact provenance exist;
+  the active H2 scalar is now owner-local.
+- MT3, Be2 realism/performance proxy: active as the next sensible measurement
+  target. Be2 has already shown R3-A exact-operator performance is acceptable
+  after the QW donor-block optimization; it should be remeasured through the
+  corrected owner-local facade before widening scope.
+- MT4, Cr2 readiness: active but still deferred. Residual selection is viable
+  for Cr2 q4/q5 in ignored measurement, but full Cr2 Hamiltonian/artifact and
+  facade support remain unapproved.
+- MT5, anti-bloat and deletion: active. This pass removed the wrong global
+  residual selection path instead of preserving it behind another compatibility
+  layer.

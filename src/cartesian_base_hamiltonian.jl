@@ -319,6 +319,6 @@ function cartesian_residual_gto_mwg_hamiltonian(
         width_filtering = supplement_input.width_filtering,
         validation_check_labels = h2_fixture ?
             (:h2_lowest_augmented_one_body_orbital_ida_self_coulomb,) : (),
-        h2_validation_self_coulomb = h2_fixture ? 0.4574256036192161 : nothing)
+        h2_validation_self_coulomb = h2_fixture ? 0.4574265214362075 : nothing)
     return ham
 end

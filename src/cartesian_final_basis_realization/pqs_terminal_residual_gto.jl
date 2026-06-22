@@ -5,16 +5,18 @@ struct CartesianTerminalResidualGTOAugmentation
     candidate_labels::Vector{String}
     candidate_owner_indices::Vector{Int}
     candidate_centers::Vector{NTuple{3,Float64}}
-    retained_candidate_indices::Vector{Int}
+    residual_source_owner_indices::Vector{Int}
+    residual_occupations::Vector{Float64}
+    owner_retained_counts::Vector{Int}
     residual_labels::Vector{String}
     T_G::Matrix{Float64}
     T_A::Matrix{Float64}
-    residual_metric_eigenvalues::Vector{Float64}
-    tau_abs::Float64
-    tau_rel::Float64
+    occupation_cutoff::Float64
     tau_neg_abs::Float64
     tau_neg_rel::Float64
-    rank_rule::Symbol
+    tau_merge_abs::Float64
+    tau_merge_rel::Float64
+    selection_rule::Symbol
     orientation::Symbol
     sign_rule::Symbol
 end
@@ -37,8 +39,18 @@ function _r3_validate_residual_contract(
     nG, nR = basis.final_dimension, residual.residual_dimension
     residual.base_dimension == basis.final_dimension ||
         throw(DimensionMismatch("R3 residual base dimension must match terminal basis"))
+    length(residual.candidate_labels) == residual.candidate_count &&
+        length(residual.candidate_owner_indices) == residual.candidate_count &&
+        length(residual.candidate_centers) == residual.candidate_count ||
+        throw(DimensionMismatch("R3 residual candidate metadata count mismatch"))
     residual.residual_dimension == length(residual.residual_labels) ||
         throw(DimensionMismatch("R3 residual label count mismatch"))
+    length(residual.residual_source_owner_indices) == nR &&
+        length(residual.residual_occupations) == nR &&
+        sum(residual.owner_retained_counts) == nR ||
+        throw(DimensionMismatch("R3 residual owner-local metadata count mismatch"))
+    all(>(residual.occupation_cutoff), residual.residual_occupations) ||
+        throw(ArgumentError("R3 retained residual occupations must exceed the cutoff"))
     _r3_require_size(residual.T_G, (nG, nR), "R3 residual T_G shape mismatch")
     _r3_require_size(residual.T_A, (residual.candidate_count, nR), "R3 residual T_A shape mismatch")
     if !isnothing(supplement)
@@ -55,6 +67,10 @@ function _r3_validate_residual_contract(
             throw(ArgumentError("R3 residual candidate owner index is out of range"))
         locations[owner] == residual.candidate_centers[index] ||
             throw(ArgumentError("R3 residual candidate owner center mismatch"))
+    end
+    for owner in residual.residual_source_owner_indices
+        1 <= owner <= length(locations) ||
+            throw(ArgumentError("R3 residual source owner index is out of range"))
     end
     return nothing
 end
@@ -285,11 +301,12 @@ function write_pqs_terminal_residual_gto_augmented_hamiltonian(
         augmented_dimension,
         augmented_basis_order = :base_then_residual,
         residual_basis_convention = residual.orientation,
-        rank_rule = residual.rank_rule,
-        tau_abs = residual.tau_abs,
-        tau_rel = residual.tau_rel,
+        rank_rule = residual.selection_rule,
+        occupation_cutoff = residual.occupation_cutoff,
         tau_neg_abs = residual.tau_neg_abs,
         tau_neg_rel = residual.tau_neg_rel,
+        tau_merge_abs = residual.tau_merge_abs,
+        tau_merge_rel = residual.tau_merge_rel,
         mwg_convention_version = 1,
         mwg_convention = :separable_moment_matched_density_normalized,
         one_body_source = :exact_transformed_raw_blocks,
@@ -468,40 +485,39 @@ function _canonicalize_residual_signs!(T_A, T_G)
     return T_A, T_G
 end
 
-function _r3a_pivoted_cholesky_indices(metric, rank_target, tau_keep)
-    rank_target == 0 && return Int[]
-    n = size(metric, 1)
-    residual_diag = Float64[metric[index, index] for index in 1:n]
-    factors = zeros(Float64, n, rank_target)
-    selected = Int[]
-    for column in 1:rank_target
-        pivot = 0
-        pivot_value = -Inf
-        for index in 1:n
-            (index in selected) && continue
-            value = residual_diag[index]
-            if value > pivot_value || (value == pivot_value && (pivot == 0 || index < pivot))
-                pivot = index
-                pivot_value = value
-            end
-        end
-        pivot_value > tau_keep ||
-            throw(ArgumentError("residual-GTO rank selection could not find enough independent candidates"))
-        push!(selected, pivot)
-        scale = sqrt(pivot_value)
-        for row in 1:n
-            value = metric[row, pivot]
-            for previous in 1:(column - 1)
-                value -= factors[row, previous] * factors[pivot, previous]
-            end
-            factors[row, column] = value / scale
-        end
-        for row in 1:n
-            residual_diag[row] -= factors[row, column]^2
-        end
-        residual_diag[pivot] = -Inf
-    end
-    return sort!(selected)
+_r3a_residual_overlap(T_G, T_A, X, S_AA) =
+    transpose(T_G) * T_G + transpose(T_G) * X * T_A +
+    transpose(T_A) * transpose(X) * T_G + transpose(T_A) * S_AA * T_A
+
+function _r3a_check_metric(values, tau_abs, tau_rel, label)
+    max_value = max(maximum(values), 1.0)
+    tau = max(Float64(tau_abs), Float64(tau_rel) * max_value)
+    minimum(values) >= -tau ||
+        throw(ArgumentError("$(label) has a negative eigenvalue beyond tolerance"))
+    return tau
+end
+
+function _r3a_owner_residual_block(X, S_AA, owner_indices, owner, nA, cutoff,
+    tau_neg_abs, tau_neg_rel)
+    indices = findall(==(owner), owner_indices)
+    M = Matrix{Float64}(S_AA[indices, indices] - transpose(X[:, indices]) * X[:, indices])
+    M = 0.5 .* (M .+ transpose(M))
+    values, vectors = eigen(Symmetric(M))
+    _r3a_check_metric(values, tau_neg_abs, tau_neg_rel, "owner-local residual metric")
+    keep = findall(>(cutoff), values)
+    isempty(keep) && return nothing
+    natural = length(keep) == length(values) ? collect(eachindex(values)) :
+        sort(keep; by = index -> (-values[index], index))
+    transform = length(keep) == length(values) ?
+        Matrix{Float64}(inv(sqrt(Symmetric(M)))) :
+        Matrix{Float64}(vectors[:, natural] *
+            Diagonal(1.0 ./ sqrt.(values[natural])))
+    T_A = zeros(Float64, nA, length(natural))
+    T_A[indices, :] .= transform
+    return (; owner, T_A, occupations = Float64[values[natural]...],
+        labels = length(keep) == length(values) ?
+            String["r$(owner)_$(column)_$(index)" for (column, index) in pairs(indices)] :
+            String["r$(owner)_mode$(column)" for column in eachindex(natural)])
 end
 
 function pqs_terminal_residual_gto_augmentation(
@@ -509,10 +525,11 @@ function pqs_terminal_residual_gto_augmentation(
     bundles,
     supplement,
     nuclei;
-    tau_abs::Real = 1.0e-10,
-    tau_rel::Real = 1.0e-10,
+    residual_occupation_cutoff::Real = 1.0e-8,
     tau_neg_abs::Real = 1.0e-12,
     tau_neg_rel::Real = 1.0e-12,
+    tau_merge_abs::Real = 1.0e-12,
+    tau_merge_rel::Real = 1.0e-12,
     orthogonality_atol::Real = 1.0e-10,
     identity_atol::Real = 1.0e-10,
 )
@@ -526,44 +543,43 @@ function pqs_terminal_residual_gto_augmentation(
         throw(DimensionMismatch("residual-GTO mixed overlap has wrong shape"))
     S_AA = Matrix{Float64}(
         getfield(_GB_PARENT, :_cartesian_supplement_cross_overlap)(supplement, supplement))
-    S_R = Symmetric(0.5 .* ((S_AA - transpose(X) * X) .+ transpose(S_AA - transpose(X) * X)))
-    eigenvalues = eigvals(S_R)
-    lambda_max = max(maximum(eigenvalues), 0.0)
-    tau_keep = max(Float64(tau_abs), Float64(tau_rel) * lambda_max)
-    tau_neg = max(Float64(tau_neg_abs), Float64(tau_neg_rel) * max(lambda_max, 1.0))
-    minimum(eigenvalues) >= -tau_neg ||
-        throw(ArgumentError("residual-GTO metric has a negative eigenvalue beyond tolerance"))
-    rank_target = count(>(tau_keep), eigenvalues)
-    rank_target > 0 ||
+    cutoff = Float64(residual_occupation_cutoff)
+    owner_blocks = filter(!isnothing, [_r3a_owner_residual_block(
+        X, S_AA, owners, owner, candidate_count, cutoff, tau_neg_abs, tau_neg_rel)
+        for owner in unique(owners)])
+    isempty(owner_blocks) &&
         throw(ArgumentError("residual-GTO candidate metric has no retained directions"))
-    full_rank = rank_target == candidate_count
-    retained_indices = full_rank ? collect(1:candidate_count) :
-        _r3a_pivoted_cholesky_indices(S_R, rank_target, tau_keep)
-    selected_metric = Symmetric(Matrix{Float64}(S_R[retained_indices, retained_indices]))
-    transform = Matrix{Float64}(inv(sqrt(selected_metric)))
-    T_A = zeros(Float64, candidate_count, length(retained_indices))
-    T_A[retained_indices, :] .= transform
-    T_G = Matrix{Float64}(-X * T_A)
+    T_A0 = hcat((block.T_A for block in owner_blocks)...)
+    T_G0 = Matrix{Float64}(-X * T_A0)
+    S_merge = Matrix{Float64}(_r3a_residual_overlap(T_G0, T_A0, X, S_AA))
+    S_merge = 0.5 .* (S_merge .+ transpose(S_merge))
+    merge_values = eigvals(Symmetric(S_merge))
+    tau_merge = _r3a_check_metric(merge_values, tau_merge_abs, tau_merge_rel,
+        "residual-GTO final merge metric")
+    minimum(merge_values) > tau_merge ||
+        throw(ArgumentError("residual-GTO final merge metric is near singular"))
+    transform = Matrix{Float64}(inv(sqrt(Symmetric(S_merge))))
+    T_A = Matrix{Float64}(T_A0 * transform)
+    T_G = Matrix{Float64}(T_G0 * transform)
     _canonicalize_residual_signs!(T_A, T_G)
     norm(T_G + X * T_A, Inf) <= orthogonality_atol ||
         throw(ArgumentError("residual-GTO G' S R validation failed"))
-    overlap = transpose(T_G) * T_G + transpose(T_G) * X * T_A +
-              transpose(T_A) * transpose(X) * T_G + transpose(T_A) * S_AA * T_A
+    overlap = _r3a_residual_overlap(T_G, T_A, X, S_AA)
     norm(overlap - I, Inf) <= identity_atol ||
         throw(ArgumentError("residual-GTO R' S R validation failed"))
-    owner_counts = Dict{Int,Int}()
-    residual_labels = String[]
-    for index in retained_indices
-        count = get(owner_counts, owners[index], 0) + 1
-        owner_counts[owners[index]] = count
-        push!(residual_labels, string("r", owners[index], "_", count, "_", labels[index]))
-    end
+    residual_source_owner_indices = Int[vcat((fill(block.owner, size(block.T_A, 2))
+        for block in owner_blocks)...)...]
+    residual_occupations = Float64[vcat((block.occupations for block in owner_blocks)...)...]
+    owner_retained_counts = [count(==(owner), residual_source_owner_indices)
+        for owner in eachindex(nuclei_value)]
+    residual_labels = String[vcat((block.labels for block in owner_blocks)...)...]
     return CartesianTerminalResidualGTOAugmentation(
-        basis.final_dimension, candidate_count, length(retained_indices), labels, owners, centers,
-        retained_indices, residual_labels, T_G, T_A, Float64[eigenvalues...],
-        Float64(tau_abs), Float64(tau_rel), Float64(tau_neg_abs), Float64(tau_neg_rel),
-        full_rank ? :full_rank_candidate_order : :rank_deficient_pivoted_cholesky,
-        :selected_candidate_order_symmetric_lowdin,
+        basis.final_dimension, candidate_count, size(T_A, 2), labels, owners, centers,
+        residual_source_owner_indices, residual_occupations, owner_retained_counts,
+        residual_labels, T_G, T_A, cutoff, Float64(tau_neg_abs), Float64(tau_neg_rel),
+        Float64(tau_merge_abs), Float64(tau_merge_rel),
+        :owner_local_residual_occupation,
+        :owner_local_residual_occupation_final_merge_lowdin,
         :largest_T_A_entry_positive)
 end
 
