@@ -9752,3 +9752,67 @@ Carrying-cost result:
 Risk / guardrail:
 - Future RG algorithm changes should edit the canonical domain-module page and
   registry surfaces, not re-expand startup docs with duplicated algorithms.
+
+## Cartesian Hamiltonian Producer Pass 074 - Measure Cr2 RG Components
+
+Commit(s):
+- this commit - Record Cr2 RG component probe
+
+Summary:
+- Accepted a measurement-only Cr2 q4 Residual Gaussian component probe. The
+  probe did not expand facade support, write artifacts, or change tracked
+  files. It tested lower-level internal construction through terminal basis,
+  residual Gaussian basis, exact augmented operators, base Hamiltonian,
+  residual MWG/IDA interaction, and a small eigensolve diagnostic.
+- Cr2 q4 completed all measured RG components. The base terminal dimension was
+  `1557`, the Cr/cc-pV5Z `lmax=1` supplement had `66` candidates split
+  `[33, 33]`, residual rank was `66`, and the augmented dimension was `1623`.
+  Residual checks passed with `G' S R = 3.89e-14` and
+  `R' S R - I = 4.00e-11`.
+- Exact augmented `K`/`U`/moment matrices were finite and symmetric; the
+  residual interaction matrix was finite and symmetric with `1.42e-14`
+  symmetry error. The lowest one-body diagnostic was
+  `-295.54804525309942`, and the lowest-orbital self-Coulomb diagnostic was
+  `7.712075333114081`.
+
+Validation:
+- Doer ran `git diff --check`, package load, the ignored script
+  `tmp/work/cr2_rg_component_probe.jl`, final tracked `git status`, and an
+  ignored-file status check. Manager did not rerun the 105-second probe.
+
+Goal advancement:
+- Cr2-readiness/MT4: moves Cr2 from residual-selection-only evidence to a
+  lower-level component readiness measurement. Correctness did not fail at q4;
+  performance allocation now defines the next blocker.
+- RG/LT6: confirms the extracted RG component path is viable beyond H2/Be2 at
+  a bounded Cr2 q4 scale.
+
+Performance read:
+- Terminal/base stages: `46.21s`, about `2.13 GiB`.
+- Residual mixed overlap plus `S_AA` plus selection: `3.61s`, about
+  `11.90 GiB`.
+- Exact augmented operators: `31.96s`, about `111.85 GiB`.
+- Base Hamiltonian `G-G`: `3.71s`, about `4.12 GiB`.
+- MWG pair factors plus `V_GM`/`V_MM`/`V`: `0.26s`, about `0.42 GiB`.
+- Dense final storage is small relative to allocation churn: one augmented
+  dense matrix is about `0.020 GiB`, and ten dense matrices about `0.196 GiB`.
+
+Carrying-cost result:
+- deleted: none; measurement-only pass.
+- simplified: Cr2 readiness now has a concrete bottleneck instead of a broad
+  uncertainty list.
+- quarantined: Cr2 remains an ignored lower-level measurement only; no facade
+  support, artifact, or public claim was made.
+- not deleted because: no source was changed.
+- exact remaining caller/blocker: investigate exact augmented operator
+  allocation churn before approving Cr2 facade/artifact support or neutral
+  cross-block extraction.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.
+
+Risk / guardrail:
+- Do not jump from this probe to full Cr2 support. The next pass should be a
+  focused allocation audit of exact augmented operator assembly, not facade
+  expansion or artifact writing.
