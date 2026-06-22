@@ -34,9 +34,15 @@ Current implementation boundary:
   the block with unchanged owned support.
 - Previous-block projection, recursive projection, projection-basis repair, and
   effective-support growth onto previous terminal regions are forbidden.
-  Cross-block overlap remains an audit; large overlap after shell-owned
-  realization is a parent metric or shell construction problem, not a reason to
-  mix coefficients into previous supports.
+  Parent gausslet rows are orthonormal to machine precision and terminal
+  regions own disjoint parent rows, so block-local terminal basis supports are
+  structurally orthogonal across blocks. Cross-block overlap is zero by
+  construction, not a physical residual to compute or repair. A nonzero
+  structural overlap means duplicated support rows, incorrect row restriction,
+  wrong support ownership, or an indexing error.
+- Cross-block kinetic, nuclear-attraction, and IDA interactions may still be
+  nonzero and remain assembled over terminal block pairs. Structural
+  cross-overlap zero does not imply block-diagonal operators.
 - `cartesian_transforms` owns terminal basis realization for supported PQS
   terminal plans.
 - `cartesian_materialization(report, terminal_basis_realization,

@@ -19,9 +19,13 @@ not normal startup reading and do not override the compact current authority.
 
 Historical recursive/previous-block projection material in these reviews is
 stale. The live Slice A authority rejects previous-block projection and
-effective-support growth for PQS terminal shell realization; use the compact
-`registry.md`, `invariants.md`, and `implementation_slices.md` contract
-instead.
+effective-support growth for PQS terminal shell realization. Cross-block
+overlap is structurally zero for disjoint owned terminal supports, not a
+physical residual or repair target. Recursive-projection spike and performance
+measurements, including earlier Be2 measurements, are superseded; use
+post-`d2bf139c` Be2 measurements as the valid optimization baseline. Use the
+compact `registry.md`, `invariants.md`, and `implementation_slices.md`
+contract instead.
 
 ## Historical Operating Model
 

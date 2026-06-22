@@ -39,6 +39,10 @@ Historical material:
 
 Historical files are useful for context and audit trails, but they are not
 normal startup reading and should not override the compact current authority.
+Recursive/previous-block projection review, spike, and performance material is
+stale: terminal supports are owned local rows, cross-block overlap is
+structurally zero, and post-`d2bf139c` Be2 measurements supersede earlier
+recursive-projection Be2 measurements.
 
 Strategic context:
 

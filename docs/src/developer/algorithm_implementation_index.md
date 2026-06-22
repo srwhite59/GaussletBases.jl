@@ -112,7 +112,10 @@ Why to check:
 Avoid confusing shell-row truncation, raw source operators, and final shell
 realization. The terminal basis route uses full-box boundary source modes
 restricted to shell-owned support followed by shell-local Lowdin; previous-block
-projection and global Lowdin repair are forbidden.
+projection and global Lowdin repair are forbidden. Cross-block overlap is
+structurally zero for disjoint owned supports; cross-block kinetic, nuclear,
+and IDA operator terms may still be nonzero and are assembled over terminal
+block pairs.
 
 Key docs:
 - `docs/src/developer/designs/cartesian_hamiltonian_producer/`

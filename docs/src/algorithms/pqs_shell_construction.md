@@ -6,63 +6,59 @@ it is forbidden.
 
 ## Spaces and Dimensions
 
-Let `B_<s` be the matrix of all already-retained inner/core and previous-shell
-functions for shell step `s`. Let `X_s` be the candidate source-box functions
-for shell `s`, represented in the same support metric `S`.
+Let `X_s` be the boundary-selected product-mode columns generated from the full
+source box for shell step `s`. Let `I_s` be the authoritative owned terminal
+support rows for that shell, represented by `support.support_indices` and
+`support.support_states`.
 
-If shell `s` retains `r_s` functions, the only Lowdin matrix for that shell is
-`r_s x r_s` after projection onto the shell complement.
+The full source box is used only to generate candidate product-mode columns.
+The realized shell block lives only on rows `I_s`. If shell `s` retains `r_s`
+functions, the only Lowdin matrix for that shell is `r_s x r_s` and is formed
+from the shell-local Gram matrix on rows `I_s`.
 
 ## Inputs
 
-- support overlap metric `S`;
-- already-retained localized functions `B_<s`;
-- shell candidate functions `X_s`;
+- full source-box product modes;
+- boundary product-mode column selection for shell `s`;
+- authoritative owned shell support rows `I_s`;
 - retained shell count and keep policy;
-- tolerances for projection rank and shell overlap checks.
+- tolerances for shell-local rank and overlap checks.
 
 ## Outputs
 
 - shell-local realized basis block `B_s`;
 - shell-local Lowdin transform `L_s`;
 - shell Gram eigenvalues and rank diagnostics;
-- appended localized basis `B_<=s = [B_<s, B_s]`.
+- appended terminal block record with unchanged owned support rows `I_s`.
 
 ## Pseudocode
 
 The source-box shell stage order is:
 
 ```text
-raw product-box source modes
--> boundary-mode selection
--> box-to-shell projection
+full source-box product modes
+-> boundary product-mode column selection
+-> restrict rows to authoritative owned shell support
 -> shell-local Gram matrix
 -> shell-local Lowdin
--> append
+-> final sign canonicalization
+-> append block with unchanged owned support
 ```
 
-1. Start with accepted inner functions `B_<s`.
+1. Generate full source-box product modes.
 
-2. Form the projector onto the already-retained span:
+2. Select boundary product-mode columns for shell `s`.
+
+3. Restrict candidate rows to authoritative owned shell support `I_s`:
 
    ```math
-   P_{<s}
-   =
-   B_{<s}
-   (B_{<s}^{T} S B_{<s})^{-1}
-   B_{<s}^{T} S.
+   X_s^{I} = R_{I_s} X_s.
    ```
 
-3. Project the shell candidates out of that span:
+4. Build the shell-local Gram matrix on the owned support:
 
    ```math
-   \widetilde X_s = (I - P_{<s}) X_s.
-   ```
-
-4. Build the shell-local Gram matrix:
-
-   ```math
-   G_s = \widetilde X_s^T S \widetilde X_s.
+   G_s = (X_s^{I})^T S_{I_s I_s} X_s^{I}.
    ```
 
 5. Apply a Lowdin transform only to this shell-local Gram matrix:
@@ -74,16 +70,12 @@ raw product-box source modes
 6. Realize the shell block:
 
    ```math
-   B_s = \widetilde X_s L_s.
+   B_s = X_s^{I} L_s.
    ```
 
-7. Append the block without rotating any earlier block:
+7. Canonicalize final signs according to the current PQS final-weight gauge.
 
-   ```math
-   B_{\leq s} = [B_{<s}, B_s].
-   ```
-
-8. Check, but do not globally repair, the full localized basis overlap.
+8. Append a terminal block whose support rows remain exactly `I_s`.
 
 ## Diatomic Atom-Contact Core Rule
 
@@ -113,12 +105,18 @@ lie inside the same direct atom-contact core.
 
 ## Linear Algebra
 
-The projection step is responsible for shell-to-inner orthogonality. The
-shell-local Lowdin step is responsible only for orthonormalizing retained
-directions within the new projected shell block.
+Parent gausslet rows are orthonormal to machine precision. Terminal regions own
+disjoint parent rows. Therefore block-local terminal basis supports are
+structurally orthogonal across blocks.
 
-If `B_<s^T S B_s` is not small, the projection step is wrong or insufficient.
-The remedy is to repair projection, not to rotate `B_<s` and `B_s` together.
+The shell-local Lowdin step is responsible only for orthonormalizing retained
+directions within the new shell-owned support. There is no projection against
+previous terminal blocks and no corrective projection step.
+
+If a cross-block overlap is nonzero after owned-support restriction, the
+problem is duplicated support rows, incorrect row restriction, wrong support
+ownership, or an indexing error. It is not a physical residual and must not be
+repaired by mixing coefficients into previous supports.
 
 ## Allowed Orthogonalizations
 
@@ -127,9 +125,11 @@ The remedy is to repair projection, not to rotate `B_<s` and `B_s` together.
 
 ## Forbidden Operations
 
+- No previous-block projection or recursive projection.
 - No Lowdin over all core and shell functions together.
 - No rotation of previously completed core or shell blocks.
-- No global orthogonalization to conceal shell-projection error.
+- No global orthogonalization to conceal support ownership or indexing errors.
+- No growth of a shell block onto previous terminal regions.
 - No signed-final-weight division for the localized IDA interaction.
 - No promotion of a source-backed WL/QW retained transform as independent PQS
   shell authority.
@@ -139,19 +139,17 @@ The remedy is to repair projection, not to rotate `B_<s` and `B_s` together.
 Each completed shell must satisfy:
 
 ```math
-B_s^T S B_s \approx I,
-\qquad
-B_{<s}^T S B_s \approx 0.
+B_s^T S_{I_s I_s} B_s \approx I.
 ```
 
-The concatenated localized PQS basis should satisfy:
+The terminal realization must also satisfy:
 
-```math
-B_{\leq s}^T S B_{\leq s} \approx I.
-```
+- every block support equals its authoritative terminal support;
+- terminal support sets are pairwise disjoint;
+- structural cross-block overlap is zero by construction.
 
-Failure of the concatenated check is a construction error. It must not be
-hidden by a global Lowdin cleanup.
+Failure of any structural check is a construction error. It must not be hidden
+by a global Lowdin cleanup or previous-block projection.
 
 ## Operator and Gauge Conventions
 
@@ -159,22 +157,34 @@ The localized PQS basis produced by this algorithm is the IDA working basis.
 The IDA pair matrix and the one-body matrices should be constructed in this
 same localized basis for the base all-electron Hamiltonian.
 
+Structural cross-block overlap zero does not make operators block diagonal.
+Cross-block kinetic, nuclear-attraction, and localized IDA interactions may be
+nonzero and remain assembled over terminal block pairs.
+
 ## Code Map
 
+- `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
+  owns the current terminal block-local realization contract.
 - `src/cartesian_final_basis_realization/pqs_source_shell_final_basis.jl`
-  implements shell projection, shell-local Lowdin cleanup, and shell block
-  realization.
+  is a donor/reference path only where it still preserves older shell
+  projection vocabulary; it is not current terminal support authority.
 - `src/cartesian_shellification/terminal_geometry.jl` implements the
   diatomic atom-contact core seed-box hull rule and terminal region coverage
   checks before lowering.
 - `src/cartesian_final_basis_realization/pqs_complete_core_shell_final_basis.jl`
-  concatenates core and shell sectors and checks the completed overlap.
+  is oracle/reference for legacy complete core/shell basis assembly, not the
+  current block-local terminal support authority.
 - `src/pqs_multilayer_complete_core_shell_h1.jl` consumes the completed basis
-  for common H1 and density-interaction construction.
+  in legacy/operator-reference paths.
 
 ## Current Implementation Deviations
 
 The active H2 PQS route has removed the forbidden combined core/shell Lowdin.
 The private H2 residual-GTO route now uses an internal one-basis IDA object.
 The public `CartesianIDAHamiltonian` type and minimal writer/reader now exist,
-and the shell construction itself must remain source-box-first and shell-local.
+and the shell construction itself must remain source-box-first, owned-support
+restricted, and shell-local.
+
+Production source still needs cleanup to replace cross-overlap audit /
+`max_cross_overlap` plumbing with structural support checks. That cleanup is a
+separate implementation handoff, not approved by this algorithm note.

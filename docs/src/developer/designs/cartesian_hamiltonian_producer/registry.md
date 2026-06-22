@@ -46,8 +46,14 @@ end
 The object does not store parent bundles, stage objects, summaries, metadata,
 global coefficients, or global self-overlap matrices. Its blocks are
 represented on disjoint owned terminal regions. This block-sparse basis
-representation does not imply block-diagonal kinetic, nuclear, overlap, or IDA
-operators.
+representation does not imply block-diagonal kinetic, nuclear, or IDA
+operators. Overlap between distinct owned-support blocks is structurally zero.
+
+The implemented `max_cross_overlap` field is legacy implementation debt after
+the structural-support correction. It must not be treated as a physical
+cross-block residual or construction repair signal. Source cleanup should
+replace production cross-overlap audit plumbing with structural support checks
+under a separate implementation handoff.
 
 ### HP-FILE-01 — terminal realization file
 
@@ -97,14 +103,26 @@ Returns `CartesianTerminalBasisRealization` on success. It owns direct-sector
 checks, PQS shell realization, positive final-integral sign canonicalization,
 and construction of `CartesianTerminalBasisBlock`.
 
-### HP-FN-02 — cross-block overlap audit
+### HP-FN-02 — structural terminal support checks
 
-Approved as internal Slice A logic. It computes `C_i' * S_ij * C_j` one block
-pair at a time and returns the largest infinity norm. It must not form global
-self-overlap or coefficient matrices. Cross-block overlap is an audit only, not
-a construction repair. If overlap is large after block-local shell-owned
-realization, report a parent metric or shell construction problem; do not mix
-coefficients into previous supports to repair it.
+Corrected design authority: parent gausslet rows are orthonormal to machine
+precision and terminal regions own disjoint parent rows. Therefore block-local
+terminal basis supports are structurally orthogonal across blocks, and
+cross-block overlap is zero by construction.
+
+Production validation should check:
+
+- every block support equals its authoritative terminal support;
+- terminal support sets are pairwise disjoint;
+- each shell-local overlap is identity within tolerance.
+
+A nonzero structural overlap means duplicated support rows, incorrect row
+restriction, wrong support ownership, or an indexing error. It is not a
+physical residual to compute or repair, and production code must not mix
+coefficients into previous supports to reduce it. This correction does not
+approve source cleanup by itself; removing `max_cross_overlap` and replacing
+the audit plumbing needs a separate implementation blurb or approved cleanup
+surface.
 
 ### HP-WIRE-01 — terminal-basis stage integration
 

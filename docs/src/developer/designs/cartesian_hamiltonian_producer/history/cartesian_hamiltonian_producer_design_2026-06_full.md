@@ -1,18 +1,26 @@
 # Cartesian Hamiltonian Producer Design
 
-Status: **Slice A, Slice B, Slice C1, Slice C2, and Slice D base-handoff implementation authority**
+Historical note, June 2026: recursive/previous-block projection material in
+this archived design is stale. Current compact authority keeps PQS terminal
+blocks on authoritative owned support rows, treats structural cross-block
+overlap as zero by construction, and supersedes recursive-projection Be2
+measurements with post-`d2bf139c` Be2 measurements. Use
+`../current.md`, `../registry.md`, `../invariants.md`, and
+`../implementation_slices.md` for live authority.
 
-This document is the implementation authority for Slice A, Slice B, Slice C1,
+Status: **historical archive; superseded by the compact current authority**
+
+This document was the implementation authority for Slice A, Slice B, Slice C1,
 the Slice C2 Hamiltonian construction boundary, and the Slice D base
-materialization handoff of the Cartesian/PQS Hamiltonian producer. Broader
-driver polish, solver integration, and public workflow expansion remain outside
-this authority. This document is intentionally more detailed than a target card
-and less historical than the manager running log.
+materialization handoff of the Cartesian/PQS Hamiltonian producer. It is now an
+archive; live authority is the compact design tree one directory up. This
+document is intentionally more detailed than a target card and less historical
+than the manager running log.
 
-The normative PQS mathematics remains in
-`docs/src/algorithms/pqs_shell_construction.md`. This document controls the
-implementation shape, allowed objects, pseudocode, line budgets, deletion
-requirements, and merge gates.
+The normative PQS mathematics is now in
+`docs/src/algorithms/pqs_shell_construction.md`, with live implementation
+shape, allowed objects, pseudocode, deletion requirements, and gates in the
+compact authority files one directory up.
 
 `AGENTS.md` points here for Cartesian Hamiltonian producer work. Registry
 entries explicitly marked **approved** below are binding implementation

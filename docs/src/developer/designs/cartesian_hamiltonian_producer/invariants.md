@@ -39,6 +39,9 @@ dangerous dense shape.
 
 - Direct core/slab/boundary blocks use implicit identity maps; do not allocate
   dense identity matrices.
+- Parent gausslet rows are orthonormal to machine precision. Terminal regions
+  own disjoint parent rows, so block-local terminal basis supports are
+  structurally orthogonal across blocks.
 - Terminal basis blocks are represented on disjoint owned terminal regions.
   `support_indices` and `support_states` are authoritative owned rows, not
   post-projection enlarged supports.
@@ -52,13 +55,13 @@ dangerous dense shape.
   production authority.
 - Final-basis self-overlaps are construction checks only, not downstream working
   data.
-- Cross-block overlap is an audit only, not a construction repair. If
-  cross-block overlap is large after correct shell-owned realization, report a
-  parent metric or shell construction problem instead of mixing coefficients
-  into previous supports.
+- Cross-block overlap is zero by construction because owned parent-row supports
+  are disjoint. It is not a physical residual to compute, minimize, or repair.
+  A nonzero structural overlap means duplicated support rows, incorrect row
+  restriction, wrong support ownership, or an indexing error.
 - Block-sparse terminal-basis representation does not imply block-diagonal
-  operators. Cross-block overlap, kinetic, nuclear attraction, and localized IDA
-  matrix elements may be nonzero.
+  operators. Cross-block kinetic, nuclear-attraction, and localized IDA matrix
+  elements may be nonzero and remain assembled over terminal block pairs.
 
 ## Lowdin
 

@@ -24,8 +24,14 @@ full source-box product modes
 ```
 
 Previous-block projection, recursive projection, and effective-support growth
-onto previous terminal regions are rejected. Cross-block overlap is retained as
-an audit only.
+onto previous terminal regions are rejected. Cross-block overlap is structurally
+zero because parent gausslet rows are orthonormal and terminal regions own
+disjoint parent rows. A nonzero structural overlap means duplicated support
+rows, incorrect row restriction, wrong support ownership, or an indexing error;
+it is not a physical residual to compute or repair.
+
+Cross-block kinetic, nuclear-attraction, and IDA interactions may still be
+nonzero and remain assembled over terminal block pairs.
 
 Validation gates used:
 
@@ -33,7 +39,7 @@ Validation gates used:
 - H2 terminal basis dimension `471`;
 - Cr2 terminal basis dimension `4291` during design/implementation validation;
 - positive final integrals;
-- max cross-block overlap near `1e-14`;
+- structurally disjoint terminal supports and shell-local identity overlaps;
 - no global Lowdin.
 
 Deletion obligations completed:
@@ -52,9 +58,16 @@ Implementation correction required:
 - make `_shell_seed` use `support.support_indices` /
   `support.support_states`, not all `outer_box` rows;
 - remove `projection_atol` plumbing when it has no remaining construction use;
+- replace production cross-overlap audit / `max_cross_overlap` with structural
+  checks: every block support equals its authoritative terminal support,
+  terminal support sets are pairwise disjoint, and each shell-local overlap is
+  identity;
 - H2 realized block supports should return to local counts such as `(275, 362,
   578)`, not cumulative supports like `(275, 637, 1215)`;
 - rerun Slice A/B/C and R1 validation after source correction.
+
+The recursive-projection Be2 measurements are superseded. Post-`d2bf139c` Be2
+measurements are the valid optimization baseline.
 
 ## Slice B — Final-Basis One-Body Operators
 

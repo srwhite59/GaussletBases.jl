@@ -449,8 +449,12 @@ object, persistent one-body orchestration API, or status vocabulary.
 
 PQS terminal basis blocks must remain supported on owned terminal regions.
 Previous-block projection, recursive projection, and effective-support growth
-onto earlier terminal supports are not approved. Cross-block overlap is an
-audit, not a repair path.
+onto earlier terminal supports are not approved. Cross-block overlap is zero by
+construction because parent rows are orthonormal and terminal support regions
+are disjoint. A nonzero structural overlap means duplicated support rows,
+incorrect row restriction, wrong support ownership, or an indexing error; it is
+not a physical residual or repair path. Cross-block kinetic, nuclear, and IDA
+operator terms may still be nonzero.
 
 ## Hard Cartesian/PQS anti-bloat gate
 
