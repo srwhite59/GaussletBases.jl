@@ -131,7 +131,7 @@ function _r3b_mwg_axis_pairs(bundles, expansion, residual_centers, residual_widt
     )
 end
 
-function _r3b_terminal_mwg_fixed_residual(basis, pair_terms, coefficients)
+function _r3b_terminal_mwg_fixed_residual(basis, bundles, pair_terms, coefficients)
     nR = size(first(pair_terms.ga[1]), 2)
     V_GM = zeros(Float64, basis.final_dimension, nR)
     for block in basis.blocks
@@ -152,8 +152,17 @@ function _r3b_terminal_mwg_fixed_residual(basis, pair_terms, coefficients)
         end
         block.coefficients === nothing ?
             (V_GM[block.column_range, :] .= local_values) :
-            mul!(view(V_GM, block.column_range, :), transpose(block.coefficients),
-                local_values)
+            begin
+                support_weights = _support_weights(block.support_states, bundles)
+                final_weights = vec(transpose(block.coefficients) * support_weights)
+                all(weight -> isfinite(weight) && weight > 1.0e-12, final_weights) ||
+                    throw(ArgumentError("R3-B final density weights must be finite positive"))
+                density_coefficients =
+                    block.coefficients .* reshape(support_weights, :, 1) ./
+                    reshape(final_weights, 1, :)
+                mul!(view(V_GM, block.column_range, :), transpose(density_coefficients),
+                    local_values)
+            end
     end
     return V_GM
 end
@@ -190,7 +199,8 @@ function pqs_terminal_residual_gto_augmented_hamiltonian(
     centers, widths = _r3b_residual_mwg_descriptors(augmented_operators, residual)
     expansion_value = _r3b_default_expansion(expansion)
     pair_terms = _r3b_mwg_axis_pairs(bundles, expansion_value, centers, widths)
-    V_GM = _r3b_terminal_mwg_fixed_residual(basis, pair_terms, expansion_value.coefficients)
+    V_GM = _r3b_terminal_mwg_fixed_residual(
+        basis, bundles, pair_terms, expansion_value.coefficients)
     V_MM = _r3b_mwg_residual_residual(pair_terms, expansion_value.coefficients)
     nG, nR = residual.base_dimension, residual.residual_dimension
     V = zeros(Float64, nG + nR, nG + nR)

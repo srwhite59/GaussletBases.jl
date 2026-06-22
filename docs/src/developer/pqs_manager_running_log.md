@@ -8508,3 +8508,61 @@ Risk / guardrail:
 - This is the maximum cleanup-budget source addition for this lane. Further R3
   hardening should either delete/simplify existing code in the same pass or get
   explicit over-budget approval.
+
+## Cartesian Hamiltonian Producer Pass 055 - Correct R3-B Final-Basis V_GM Normalization
+
+Commit(s):
+- this branch - Correct R3B VGM final-basis normalization
+
+Summary:
+- Accepted the R3-B mathematical correction following design commit
+  `e1b5796d`. The mixed base-residual IDA block `V_GM` now converts
+  density-normalized parent/MWG donor values to the final-basis density
+  convention for PQS blocks.
+- Direct terminal blocks retain the identity selector path. PQS blocks now
+  compute owned-support product weights, final retained weights
+  `C' * support_weights`, density-normalized coefficients, and then contract
+  `C_density' * V_support_M`.
+- `V_MM` and base `V_GG` construction were intentionally unchanged.
+
+Validation:
+- Doer ran `git diff --check`, package load, the ignored
+  `tmp/work/r3b_h2_vgm_normalization_audit.jl`, and the ignored
+  `tmp/work/r3b_h2_augmented_hamiltonian_validation.jl`.
+- Manager reviewed the one-file diff, confirmed the active authority uses the
+  corrected weight-aware scalar, ran `git diff --check` and package load, and
+  accepted doer's fresh expensive validation runs rather than repeating them.
+
+Endpoint facts:
+- The normalization audit reports current-vs-weight-aware `V_GM` difference
+  `0.0` overall, `0.0` on direct blocks, and `0.0` on PQS blocks after the fix.
+- `V_GG` delta `0.0`; `V_MM` delta `0.0`; `V_aug` symmetry error
+  `1.5543122344752192e-15`.
+- Corrected H2 lowest augmented one-body orbital self-Coulomb is
+  `0.4574256036192161`, with delta `0.0` from the weight-aware target.
+
+Goal advancement:
+- R3: fixes the mixed base-residual final-basis density convention before the
+  scalar is frozen into tracked R3-B validation.
+- LT5/LT6: keeps the residual-GTO/MWG path aligned with the existing localized
+  IDA final-weight convention rather than a parent-density shortcut.
+
+Carrying-cost result:
+- deleted: old PQS path that applied terminal coefficients directly to
+  density-normalized `G-M` support values.
+- simplified: none.
+- quarantined: ignored normalization and R3-B validation scripts remain under
+  `tmp/work`.
+- not deleted because: direct block path and `V_MM` path remain valid active
+  contracts.
+- exact remaining caller/blocker: tracked R3-B endpoint validation is still not
+  extended to the corrected scalar.
+- added src lines: 14.
+- deleted src lines: 4.
+- new tests: none.
+- new metadata/status fields: none.
+
+Risk / guardrail:
+- Do not restore the direct parent-density `G-M` insertion scalar
+  `0.4574331709135599`. The accepted R3-B value is now the weight-aware
+  `0.4574256036192161` scalar.
