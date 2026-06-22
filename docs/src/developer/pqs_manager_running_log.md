@@ -7820,3 +7820,57 @@ Next step:
 - Issue a narrow implementation pass for terminal-basis support-action buffer
   reuse/streaming, using corrected Be2 far as the performance proxy and H/H2
   public endpoints as correctness gates.
+
+## Cartesian Hamiltonian Producer Pass 042 - Reuse Terminal Support-Action Scratch
+
+Commit(s):
+- this branch - Reuse terminal support action scratch
+
+Summary:
+- Accepted a bounded optimization in
+  `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`.
+  The patch adds file-local `_support_cross!` filling into reusable scratch,
+  routes support actions through `mul!`, reuses a tile in direct-right block
+  pair assembly, and replaces dense identity temporaries in direct and shell
+  identity checks.
+- Corrected-Be2 far terminal realization allocation dropped from about
+  `1643 MiB` to `1427 MiB`, with elapsed time from `3.332 s` to `3.039 s`.
+  The shared-shell Gram plus identity-check allocation dropped from roughly
+  `309 MiB` to `135 MiB`. Final dimension (`1395`) and max cross overlap
+  (`~3.17e-14`) were unchanged.
+
+Validation:
+- Doer ran `git diff --check`, package load, the standalone public endpoint
+  gate (`83/83`), the ignored Be2 terminal audit before/after, and the ignored
+  corrected-Be2 full K/unit-`U_A`/V probe for close/far/farther.
+- Manager reran `git diff --check`, the mechanical suspicious-line scan,
+  package load, and `julia --project=. test/driver_public/cartesian_base_hamiltonian_runtests.jl`
+  (`83/83`, 39.3 s).
+
+Goal advancement:
+- LT/Roadmap: improves the Cr2-relevant terminal-basis path on a separated Be2
+  proxy without running Cr2 or expanding public scope.
+- MT: removes a measured allocation source in Gram/identity/check support
+  actions. Projection remains the dominant terminal-basis target.
+
+Carrying-cost result:
+- deleted: dense identity temporaries for direct-sector and shell identity
+  checks.
+- simplified: support-cross construction now has an in-place file-local path
+  reused by support actions and direct-right block pair assembly.
+- quarantined: none.
+- not deleted because: projection still needs `_subtract_previous` and
+  effective-support reconstruction; that is the next optimization target, not
+  safe to delete in this pass.
+- exact remaining caller/blocker: shared-shell projection allocation remains
+  high, around `490 MiB`, from residual/action construction plus effective
+  support/coefficient rebuilding.
+- added src lines: 40.
+- deleted src lines: 12.
+- new tests: none.
+- new metadata/status fields: none.
+
+Risk or guardrail:
+- Cross-overlap audit and shell identity checks remain active. Do not optimize
+  by skipping validation; the next pass should target projection allocation
+  directly.

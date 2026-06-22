@@ -12,8 +12,11 @@ struct CartesianTerminalBasisRealization
 end
 const _TERMINAL_WORKSPACE_BYTES = 64 * 1024^2
 function _support_cross(left, right, overlaps)
-    sx, sy, sz = overlaps
     matrix = Matrix{Float64}(undef, length(left), length(right))
+    return _support_cross!(matrix, left, right, overlaps)
+end
+function _support_cross!(matrix, left, right, overlaps)
+    sx, sy, sz = overlaps
     @inbounds for j in eachindex(right), i in eachindex(left)
         ix, iy, iz = left[i]
         jx, jy, jz = right[j]
@@ -21,13 +24,36 @@ function _support_cross(left, right, overlaps)
     end
     return matrix
 end
+function _support_identity_error(states, overlaps)
+    sx, sy, sz = overlaps
+    error = 0.0
+    @inbounds for j in eachindex(states), i in eachindex(states)
+        ix, iy, iz = states[i]
+        jx, jy, jz = states[j]
+        target = i == j ? 1.0 : 0.0
+        value = sx[ix, jx] * sy[iy, jy] * sz[iz, jz]
+        error = max(error, abs(value - target))
+    end
+    return error
+end
+function _matrix_identity_error(matrix)
+    error = 0.0
+    @inbounds for j in axes(matrix, 2), i in axes(matrix, 1)
+        target = i == j ? 1.0 : 0.0
+        error = max(error, abs(matrix[i, j] - target))
+    end
+    return error
+end
 function _support_action(left, right, coefficients, overlaps)
     result = zeros(Float64, length(left), size(coefficients, 2))
     maxcols = max(1, _TERMINAL_WORKSPACE_BYTES ÷ (8 * max(length(left), 1)))
+    scratch = Matrix{Float64}(undef, length(left), min(length(right), maxcols))
     for firstcol in 1:maxcols:length(right)
         cols = firstcol:min(firstcol + maxcols - 1, length(right))
-        result .+= _support_cross(left, @view(right[cols]), overlaps) *
-                   @view(coefficients[cols, :])
+        ncols = length(cols)
+        cross = @view scratch[:, 1:ncols]
+        _support_cross!(cross, left, @view(right[cols]), overlaps)
+        mul!(result, cross, @view(coefficients[cols, :]), 1.0, 1.0)
     end
     return result
 end
@@ -42,12 +68,16 @@ function _block_pair_matrix(left, right, overlaps)
             size(left.coefficients, 2)
         result = Matrix{Float64}(undef, nrow, length(right.support_states))
         maxcols = max(1, _TERMINAL_WORKSPACE_BYTES ÷ (8 * max(length(left.support_states), 1)))
+        scratch = Matrix{Float64}(undef, length(left.support_states),
+            min(length(right.support_states), maxcols))
         for firstcol in 1:maxcols:length(right.support_states)
             cols = firstcol:min(firstcol + maxcols - 1, length(right.support_states))
-            action = _support_cross(left.support_states, @view(right.support_states[cols]), overlaps)
-            result[:, cols] .= isnothing(left.coefficients) ?
-                action :
-                transpose(left.coefficients) * action
+            ncols = length(cols)
+            cross = @view scratch[:, 1:ncols]
+            _support_cross!(cross, left.support_states, @view(right.support_states[cols]), overlaps)
+            isnothing(left.coefficients) ?
+                (@view(result[:, cols]) .= cross) :
+                mul!(@view(result[:, cols]), transpose(left.coefficients), cross)
         end
         return result
     end
@@ -68,8 +98,7 @@ function _push_block!(blocks, key, indices, states, coefficients, nextcol)
 end
 function _append_direct!(blocks, record, bundles, overlaps, nextcol, identity_atol)
     support = record.support_record
-    error = norm(_support_cross(support.support_states, support.support_states, overlaps) -
-                 Matrix{Float64}(I, support.support_count, support.support_count), Inf)
+    error = _support_identity_error(support.support_states, overlaps)
     error <= identity_atol ||
         throw(ArgumentError("terminal direct sector overlap is not identity"))
     all(weight -> isfinite(weight) && weight > 0,
@@ -176,9 +205,8 @@ function _realize_shell(record, contract, blocks, bundles, overlaps,
     overlap = Symmetric((gram + transpose(gram)) ./ 2)
     coefficients = _canonicalize!(
         state.coefficients * inv(sqrt(overlap)), state.states, bundles, weight_atol)
-    error = norm(transpose(coefficients) *
-                 _support_action(state.states, state.states, coefficients, overlaps) -
-                 Matrix{Float64}(I, size(coefficients, 2), size(coefficients, 2)), Inf)
+    error = _matrix_identity_error(transpose(coefficients) *
+                 _support_action(state.states, state.states, coefficients, overlaps))
     error <= identity_atol ||
         throw(ArgumentError("terminal PQS realized shell overlap is not identity"))
     return state.indices, state.states, coefficients
