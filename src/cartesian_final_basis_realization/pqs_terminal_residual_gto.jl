@@ -256,34 +256,41 @@ function _r3a_qw_nuclear_blocks(proxy, supplement, expansion, atom_locations)
                     view(factors[1][term], :, primitive),
                     view(factors[2][term], :, primitive),
                     view(factors[3][term], :, primitive))
-                ga[center_index][:, orbital_index] .-=
-                    expansion.coefficients[term] *
-                    Float64(orbital.coefficients[primitive]) .* scratch
+                column = view(ga[center_index], :, orbital_index)
+                scale = expansion.coefficients[term] *
+                    Float64(orbital.coefficients[primitive])
+                @inbounds for row in eachindex(scratch)
+                    column[row] -= scale * scratch[row]
+                end
             end
         end
     end
     axis_aa = getfield(qw, :_qwrg_atomic_axis_factor_aa_data)
     weighted = getfield(qw, :_qwrg_atomic_weighted_hadamard)
-    for (left_index, left) in pairs(supplement.orbitals),
-            (right_index, right) in pairs(supplement.orbitals)
-        local_cache = Dict()
-        for (center_index, center) in pairs(atom_locations)
-            fx = get!(local_cache, (:x, center[1])) do
-                axis_aa(left, right, :x, expansion, center[1])
+    for left_index in eachindex(supplement.orbitals)
+        left = supplement.orbitals[left_index]
+        for right_index in left_index:length(supplement.orbitals)
+            right = supplement.orbitals[right_index]
+            local_cache = Dict()
+            for (center_index, center) in pairs(atom_locations)
+                fx = get!(local_cache, (:x, center[1])) do
+                    axis_aa(left, right, :x, expansion, center[1])
+                end
+                fy = get!(local_cache, (:y, center[2])) do
+                    axis_aa(left, right, :y, expansion, center[2])
+                end
+                fz = get!(local_cache, (:z, center[3])) do
+                    axis_aa(left, right, :z, expansion, center[3])
+                end
+                value = 0.0
+                for term in eachindex(expansion.coefficients)
+                    value -= expansion.coefficients[term] *
+                        weighted(left.coefficients, fx[term], fy[term], fz[term],
+                            right.coefficients)
+                end
+                aa[center_index][left_index, right_index] = value
+                aa[center_index][right_index, left_index] = value
             end
-            fy = get!(local_cache, (:y, center[2])) do
-                axis_aa(left, right, :y, expansion, center[2])
-            end
-            fz = get!(local_cache, (:z, center[3])) do
-                axis_aa(left, right, :z, expansion, center[3])
-            end
-            value = 0.0
-            for term in eachindex(expansion.coefficients)
-                value -= expansion.coefficients[term] *
-                    weighted(left.coefficients, fx[term], fy[term], fz[term],
-                        right.coefficients)
-            end
-            aa[center_index][left_index, right_index] = value
         end
     end
     return (; ga, aa = [CRG.symmetrize_operator(matrix) for matrix in aa])

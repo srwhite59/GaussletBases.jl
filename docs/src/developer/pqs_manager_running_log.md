@@ -9931,3 +9931,68 @@ Risk / guardrail:
 - Do not add a new source owner, neutral module, facade support, or artifact
   workflow in the optimization pass. Keep it a local behavior-preserving
   performance fix unless source evidence contradicts the audit.
+
+## Cartesian Hamiltonian Producer Pass 077 - Reduce Cr2 Nuclear A-A Duplication
+
+Commit(s):
+- this commit - Reduce R3 nuclear A-A duplicate work
+
+Summary:
+- Accepted a bounded local optimization in
+  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`.
+  `_r3a_qw_nuclear_blocks(...)` now computes supplement-supplement nuclear
+  attraction blocks over the upper triangle for each nuclear center and mirrors
+  the result, instead of rebuilding one-dimensional factor tables for both
+  ordered pairs `(i,j)` and `(j,i)`.
+- The same pass removed a small base-to-supplement scaled-vector temporary in
+  the nuclear block assembly by updating the destination column in place.
+- The physical object is unchanged: exact augmented kinetic, uncharged
+  by-center nuclear-attraction, position, and second-moment matrices still feed
+  the Residual Gaussian H2/Be2/Cr2 paths.
+
+Validation:
+- Doer ran `git diff --check`, package load,
+  `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`,
+  `tmp/work/be2_r3u_facade_measurement.jl`, and
+  `tmp/work/cr2_exact_operator_allocation_audit.jl`.
+- Manager reviewed the source diff and ran `git diff --check`, `git diff
+  --numstat -- src bin tools test docs`, the suspicious-added-line anti-bloat
+  scan, and the new-test/file scan. Manager did not rerun the H2/Be2/Cr2
+  numerical gates.
+
+Performance result:
+- Cr2 q4 exact augmented operators improved from `32.17s` / `114553 MiB` to
+  `22.06s` / `67660 MiB`.
+- By-center nuclear `G-A`/`A-A` improved from `24.39s` / `95365 MiB` to
+  `14.37s` / `48541 MiB`.
+- QW donor blocks as a group improved from `27.33s` / `106319 MiB` to
+  `17.34s` / `59495 MiB`.
+- Wrapper/replay deltas remained roundoff or zero; kinetic replay delta was
+  `0.0`; exact operator matrices remained finite and symmetric.
+
+Goal advancement:
+- Cr2-readiness/MT4: removes the first confirmed duplicate nuclear-table
+  construction cost and leaves a smaller, better isolated Cr2 exact-operator
+  allocation problem.
+- RG/LT6: preserves the current RG module split. This is a tactical local
+  exact-block donor optimization, not a broad neutral cross-block extraction.
+
+Carrying-cost result:
+- deleted: duplicate lower-triangle `A-A` nuclear construction and the local
+  `G-A` scaled scratch allocation.
+- simplified: `A-A` nuclear construction is now upper-triangle plus mirror.
+- quarantined: broader donor-kernel extraction/cache work remains deferred.
+- not deleted because: remaining `G-A` and upper-triangle `A-A` nuclear factor
+  tables are active numerical work.
+- exact remaining caller/blocker: `_r3a_qw_blocks(...)` still calls
+  `_r3a_qw_nuclear_blocks(...)`; remaining Cr2 cost is live nuclear
+  factor-table construction/assembly, not duplicate ordered-pair work.
+- added src lines: 29.
+- deleted src lines: 22.
+- new tests: none.
+- new metadata/status fields: none.
+
+Risk / guardrail:
+- Do not turn this into immediate Cr2 facade/artifact support. The next
+  decision should compare the remaining Cr2 exact-operator allocation against
+  the cost and risk of a broader neutral Cartesian Gaussian cross-block kernel.
