@@ -1,4 +1,5 @@
 const _GB_PARENT = parentmodule(@__MODULE__)
+const CGRB = getfield(_GB_PARENT, :CartesianGaussianRawBlocks)
 const CartesianTerminalResidualGTOAugmentation = CRG.CartesianResidualGaussianBasis
 
 _r3_require_size(matrix, dims, label) = size(matrix) == dims || throw(DimensionMismatch(label))
@@ -228,74 +229,6 @@ function _r3a_project_parent_ga(basis, parent_ga)
     return out
 end
 
-function _r3a_qw_nuclear_blocks(proxy, supplement, expansion, atom_locations)
-    qw = _GB_PARENT
-    ncart, norbital = proxy.ncart, length(supplement.orbitals)
-    ga = [zeros(Float64, ncart, norbital) for _ in atom_locations]
-    aa = [zeros(Float64, norbital, norbital) for _ in atom_locations]
-    cross_cache = Dict()
-    scratch = zeros(Float64, ncart)
-    fill_product! = getfield(qw, :_qwrg_fill_product_column!)
-    axis_cross = getfield(qw, :_qwrg_atomic_axis_factor_cross_data)
-    for (orbital_index, orbital) in pairs(supplement.orbitals)
-        for (center_index, center) in pairs(atom_locations)
-            factors = (
-                get!(cross_cache, (orbital_index, :x, center[1])) do
-                    axis_cross(proxy.x, orbital, :x, expansion, center[1])
-                end,
-                get!(cross_cache, (orbital_index, :y, center[2])) do
-                    axis_cross(proxy.y, orbital, :y, expansion, center[2])
-                end,
-                get!(cross_cache, (orbital_index, :z, center[3])) do
-                    axis_cross(proxy.z, orbital, :z, expansion, center[3])
-                end,
-            )
-            for term in eachindex(expansion.coefficients),
-                    primitive in eachindex(orbital.coefficients)
-                fill_product!(scratch,
-                    view(factors[1][term], :, primitive),
-                    view(factors[2][term], :, primitive),
-                    view(factors[3][term], :, primitive))
-                column = view(ga[center_index], :, orbital_index)
-                scale = expansion.coefficients[term] *
-                    Float64(orbital.coefficients[primitive])
-                @inbounds for row in eachindex(scratch)
-                    column[row] -= scale * scratch[row]
-                end
-            end
-        end
-    end
-    axis_aa = getfield(qw, :_qwrg_atomic_axis_factor_aa_data)
-    weighted = getfield(qw, :_qwrg_atomic_weighted_hadamard)
-    for left_index in eachindex(supplement.orbitals)
-        left = supplement.orbitals[left_index]
-        for right_index in left_index:length(supplement.orbitals)
-            right = supplement.orbitals[right_index]
-            local_cache = Dict()
-            for (center_index, center) in pairs(atom_locations)
-                fx = get!(local_cache, (:x, center[1])) do
-                    axis_aa(left, right, :x, expansion, center[1])
-                end
-                fy = get!(local_cache, (:y, center[2])) do
-                    axis_aa(left, right, :y, expansion, center[2])
-                end
-                fz = get!(local_cache, (:z, center[3])) do
-                    axis_aa(left, right, :z, expansion, center[3])
-                end
-                value = 0.0
-                for term in eachindex(expansion.coefficients)
-                    value -= expansion.coefficients[term] *
-                        weighted(left.coefficients, fx[term], fy[term], fz[term],
-                            right.coefficients)
-                end
-                aa[center_index][left_index, right_index] = value
-                aa[center_index][right_index, left_index] = value
-            end
-        end
-    end
-    return (; ga, aa = [CRG.symmetrize_operator(matrix) for matrix in aa])
-end
-
 function _r3a_qw_blocks(basis, bundles, supplement, atom_locations, expansion)
     donor = _r3a_qw_supplement(supplement)
     proxy = _r3a_qw_proxy_layers(bundles)
@@ -304,7 +237,7 @@ function _r3a_qw_blocks(basis, bundles, supplement, atom_locations, expansion)
         include_factor_terms = false)
     self = getfield(_GB_PARENT, :_qwrg_cartesian_shell_self_moment_blocks_3d)(
         donor, expansion; include_factor_terms = false)
-    nuclear = _r3a_qw_nuclear_blocks(proxy, donor, expansion,
+    nuclear = CGRB.gaussian_nuclear_raw_blocks_by_center(proxy, donor, expansion,
         CRG.residual_gaussian_float_centers(atom_locations))
     return (;
         mixed = (;

@@ -2283,7 +2283,6 @@ function _qwrg_diatomic_cartesian_shell_blocks_3d(
     proxy_y = context.proxy_y
     proxy_z = context.proxy_z
     ngausslet3d = context.ngausslet3d
-    norbital = context.norbital
 
     cross = _qwrg_cartesian_shell_cross_moment_blocks_3d(
         (x = proxy_x, y = proxy_y, z = proxy_z),
@@ -2298,94 +2297,18 @@ function _qwrg_diatomic_cartesian_shell_blocks_3d(
         include_factor_terms = false,
     )
 
+    nuclear = CartesianGaussianRawBlocks.gaussian_nuclear_raw_blocks_by_center(
+        (x = proxy_x, y = proxy_y, z = proxy_z, ncart = ngausslet3d),
+        supplement, expansion, basis.nuclei)
+    nuclear_ga_by_center = nuclear.ga
+    nuclear_aa_by_center = nuclear.aa
     one_body_ga = Matrix{Float64}(cross.kinetic_ga)
     one_body_aa = Matrix{Float64}(self.kinetic_aa)
-    nuclear_ga_by_center = [zeros(Float64, ngausslet3d, norbital) for _ in basis.nuclei]
-    nuclear_aa_by_center = [zeros(Float64, norbital, norbital) for _ in basis.nuclei]
-
-    factor_cross_cache = Dict{Tuple{Int,Symbol,Int},Any}()
-    scratch = zeros(Float64, ngausslet3d)
-
-    # Alg QW-RG step 3: build the added 3D molecular Gaussian orbitals as one
-    # explicit two-center Cartesian shell set on the bond-aligned nuclei.
-    # See docs/src/algorithms/qiu_white_residual_gaussian_route.md.
-    for (orbital_index, orbital) in pairs(supplement.orbitals)
-        for (nucleus_index, nucleus) in pairs(basis.nuclei)
-            charge_value = Float64(nuclear_charges[nucleus_index])
-            x_factor = get!(factor_cross_cache, (orbital_index, :x, nucleus_index)) do
-                _qwrg_atomic_axis_factor_cross_data(
-                    proxy_x,
-                    orbital,
-                    :x,
-                    expansion,
-                    nucleus[1],
-                )
-            end
-            y_factor = get!(factor_cross_cache, (orbital_index, :y, nucleus_index)) do
-                _qwrg_atomic_axis_factor_cross_data(
-                    proxy_y,
-                    orbital,
-                    :y,
-                    expansion,
-                    nucleus[2],
-                )
-            end
-            z_factor = get!(factor_cross_cache, (orbital_index, :z, nucleus_index)) do
-                _qwrg_atomic_axis_factor_cross_data(
-                    proxy_z,
-                    orbital,
-                    :z,
-                    expansion,
-                    nucleus[3],
-                )
-            end
-            for term in eachindex(expansion.coefficients), primitive in eachindex(orbital.coefficients)
-                coefficient = Float64(orbital.coefficients[primitive])
-                _qwrg_fill_product_column!(
-                    scratch,
-                    view(x_factor[term], :, primitive),
-                    view(y_factor[term], :, primitive),
-                    view(z_factor[term], :, primitive),
-                )
-                nuclear_ga_by_center[nucleus_index][:, orbital_index] .-=
-                    expansion.coefficients[term] .* coefficient .* scratch
-            end
-            one_body_ga[:, orbital_index] .+=
-                charge_value .* nuclear_ga_by_center[nucleus_index][:, orbital_index]
-        end
+    for (charge, matrix) in zip(nuclear_charges, nuclear_ga_by_center)
+        one_body_ga .+= Float64(charge) .* matrix
     end
-
-    for (left_index, left) in pairs(supplement.orbitals), (right_index, right) in pairs(supplement.orbitals)
-        one_body_value = self.kinetic_aa[left_index, right_index]
-        factor_aa_local = Dict{Tuple{Symbol,Float64},Any}()
-        for (nucleus_index, nucleus) in pairs(basis.nuclei)
-            charge_value = Float64(nuclear_charges[nucleus_index])
-            x_center = Float64(nucleus[1])
-            x_factor = get!(factor_aa_local, (:x, x_center)) do
-                _qwrg_atomic_axis_factor_aa_data(left, right, :x, expansion, x_center)
-            end
-            y_center = Float64(nucleus[2])
-            y_factor = get!(factor_aa_local, (:y, y_center)) do
-                _qwrg_atomic_axis_factor_aa_data(left, right, :y, expansion, y_center)
-            end
-            z_center = Float64(nucleus[3])
-            z_factor = get!(factor_aa_local, (:z, z_center)) do
-                _qwrg_atomic_axis_factor_aa_data(left, right, :z, expansion, z_center)
-            end
-            center_value = 0.0
-            for term in eachindex(expansion.coefficients)
-                center_value -= expansion.coefficients[term] * _qwrg_atomic_weighted_hadamard(
-                    left.coefficients,
-                    x_factor[term],
-                    y_factor[term],
-                    z_factor[term],
-                    right.coefficients,
-                )
-            end
-            nuclear_aa_by_center[nucleus_index][left_index, right_index] = center_value
-            one_body_value += charge_value * center_value
-        end
-        one_body_aa[left_index, right_index] = one_body_value
+    for (charge, matrix) in zip(nuclear_charges, nuclear_aa_by_center)
+        one_body_aa .+= Float64(charge) .* matrix
     end
 
     return (
@@ -2396,8 +2319,7 @@ function _qwrg_diatomic_cartesian_shell_blocks_3d(
         one_body_ga = one_body_ga,
         one_body_aa = Matrix{Float64}(0.5 .* (one_body_aa .+ transpose(one_body_aa))),
         nuclear_ga_by_center = nuclear_ga_by_center,
-        nuclear_aa_by_center =
-            [Matrix{Float64}(0.5 .* (matrix .+ transpose(matrix))) for matrix in nuclear_aa_by_center],
+        nuclear_aa_by_center = nuclear_aa_by_center,
         position_x_ga = cross.position_x_ga,
         position_y_ga = cross.position_y_ga,
         position_z_ga = cross.position_z_ga,

@@ -9997,6 +9997,81 @@ Risk / guardrail:
   decision should compare the remaining Cr2 exact-operator allocation against
   the cost and risk of a broader neutral Cartesian Gaussian cross-block kernel.
 
+## Cartesian Hamiltonian Producer Pass 078 - Extract Neutral Nuclear Raw Blocks
+
+Commit(s):
+- this commit - Extract Gaussian nuclear raw blocks
+
+Summary:
+- Accepted the first `CartesianGaussianRawBlocks` implementation slice. Exact
+  uncharged by-center Cartesian Gaussian nuclear raw blocks now have one
+  neutral owner:
+  `src/cartesian_gaussian_raw_blocks/CartesianGaussianRawBlocks.jl` and
+  `src/cartesian_gaussian_raw_blocks/nuclear_blocks.jl`.
+- Residual Gaussian and Qiu-White both call
+  `CartesianGaussianRawBlocks.gaussian_nuclear_raw_blocks_by_center(...)`.
+  The route-local `G-A`/`A-A` nuclear loops were deleted from
+  `pqs_terminal_residual_gto.jl` and `_qwrg_diatomic_cartesian_shell_blocks_3d`.
+- The kernel returns uncharged by-center matrices. Nuclear charges remain in
+  the Hamiltonian/one-body consumers, preserving the approved boundary.
+
+Validation:
+- Doer ran `git diff --check`, package load,
+  `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`,
+  `tmp/work/be2_r3u_facade_measurement.jl`,
+  `tmp/work/cr2_exact_operator_allocation_audit.jl`, and
+  `tmp/work/cgrb_qw_nuclear_parity_check.jl`.
+- Manager reviewed the source diff and ran `git diff --cached --check`,
+  cached numstat, the suspicious-added-line anti-bloat scan, and the
+  new-test/file scan. Manager did not rerun the numerical gates.
+
+Numerical result:
+- H2 Residual Gaussian self-Coulomb remained
+  `0.45742652143620904`, delta `1.55e-15` from the active target.
+- Be2 artifact readback deltas remained `0.0`.
+- Cr2 exact-operator audit reported raw nuclear `G-A` and `A-A` reference
+  deltas `0.0`, with exact operator matrices finite and symmetric.
+- Small Qiu-White parity reported route-vs-neutral `G-A`/`A-A` deltas `0.0`
+  and one-body rebuild deltas `0.0`.
+
+Performance result:
+- Extraction preserved the improved upper-triangle baseline. Cr2 q4 nuclear
+  step measured `14.34s` / `48539.7 MiB`, compared with the immediate
+  pre-extraction upper-triangle result of about `14.37s` / `48541 MiB` and the
+  older duplicated lower-triangle baseline of about `24.39s` / `95364.6 MiB`.
+
+Goal advancement:
+- Cr2-readiness/MT4: removes duplicate raw nuclear implementations and gives
+  the remaining Cr2 nuclear allocation a permanent owner for future streamed
+  table optimization.
+- RG/LT6: keeps Residual Gaussian focused on residual physics and exact
+  transforms, not raw analytic Gaussian nuclear formulas.
+- QW/RG shared-kernel direction: establishes the narrow nuclear-only owner
+  without broadening to overlap, kinetic, moments, terminal projection, pair
+  factors, artifacts, or route objects.
+
+Carrying-cost result:
+- deleted: duplicated Residual Gaussian nuclear loop and Qiu-White nuclear
+  loop.
+- simplified: Qiu-White one-body nuclear assembly now consumes neutral
+  uncharged by-center raw blocks and applies charges locally.
+- quarantined: broader raw-block framework/extraction for overlap, kinetic,
+  moments, pair factors, and terminal projection.
+- not deleted because: low-level QW one-dimensional factor helpers remain the
+  existing donor kernels used by the neutral owner.
+- exact remaining caller/blocker: the neutral kernel still calls
+  `_qwrg_atomic_axis_factor_*` helpers; extracting or optimizing those tables
+  requires a separate approved pass.
+- added src lines: 106.
+- deleted src lines: 157.
+- new tests: none.
+- new metadata/status fields: none.
+
+Risk / guardrail:
+- The next optimization should happen inside `CartesianGaussianRawBlocks` and
+  should target streamed/reused one-dimensional nuclear tables. Do not broaden
+  the owner or move artifact/facade responsibilities into it.
+
 ## Cartesian Hamiltonian Producer Pass 078 - Approve Neutral Gaussian Nuclear Raw Blocks
 
 Commit(s):
