@@ -8338,3 +8338,52 @@ Carrying-cost result:
 Risk / guardrail:
 - This is a ~36 s integration gate, not a default per-edit unit test. Keep it
   as an explicit standalone acceptance check unless test-suite policy changes.
+
+## Cartesian Hamiltonian Producer Pass 052 - Retire Stale H2 Blocked Fixtures
+
+Commit(s):
+- this branch - Remove stale H2 blocked endpoint fixtures
+
+Summary:
+- Accepted a tightly scoped R3-A retirement cleanup after the R3-A durability
+  gate. The pass deleted four unused H2 driver-input fixtures whose only
+  purpose was to advertise missing physical-gausslet H1/H1+J/RHF endpoints.
+- A focused search found no active source, tool, bin, or test caller for the
+  deleted fixture files. The old supplement-preflight/provider-blocker wrapper
+  family remains absent from live implementation code.
+- Retained `test/docs/cartesian_ham_builder_policy_runtests.jl`, which is a
+  useful negative policy guard preventing `residual_gto_provider_blocks` from
+  becoming canonical-driver surface. Retained CPB provider blocked statuses
+  because they describe local provider availability, not stale route preflight
+  payloads.
+
+Validation:
+- Doer ran `git diff --check` and package load.
+- Manager reviewed the deletion diff, reran `git diff --check`, package load,
+  and a focused `rg` for stale supplement-preflight/provider-blocker names.
+  Remaining live hits are the retained canonical-driver negative test and
+  current R3 design text documenting the old family as deleted/forbidden.
+
+Goal advancement:
+- R3/Roadmap: removes stale fixture vocabulary after R3-A created a real
+  augmented one-body endpoint, reducing the chance that R3-B work revives the
+  old blocked-preflight story.
+
+Carrying-cost result:
+- deleted: four unused `test/driver_inputs/h2_pqs_q5_independent_source_box_r4_*`
+  blocked endpoint fixtures.
+- simplified: removed obsolete H2 fixture variants that only named missing
+  physics endpoints.
+- quarantined: none.
+- not deleted because: canonical-driver negative policy test and local CPB
+  provider statuses remain live contracts.
+- exact remaining caller/blocker: none for the deleted fixtures.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.
+
+Risk / guardrail:
+- This cleanup does not approve R3-B source work. R3-B remains owned by
+  repo-design-manager approval and must not reintroduce a provider-blocker
+  preflight layer.
