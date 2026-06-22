@@ -763,6 +763,13 @@ The R3 owner file may call `write_cartesian_ida_hamiltonian` and then add the
 writer shape is sufficient. If implementation proves otherwise, the exact
 writer seam must return for a separate docs-only amendment.
 
+This compact writer remains terminal/facade workflow glue, not Residual
+Gaussian module ownership. It may consume RG-produced residual objects,
+operators, interactions, or Hamiltonians, but `CartesianResidualGaussians` does
+not own artifact schema, JLD2 file workflow, facade input parsing, or
+`supplement_provenance/` policy. Moving or splitting the writer requires a
+later docs-only amendment with a named duplication or consumer reason.
+
 Approved `supplement_provenance/` keys:
 
 - `provenance_version`;
@@ -960,6 +967,12 @@ Hamiltonians/artifacts, driver/bin/tool workflow, report/status/payload
 objects, solver/RHF, ECP, EGOI, or new production behavior beyond moving the
 existing approved owner-local residual-GTO/MWG construction into a domain
 module with physical names.
+
+The Residual Gaussian module does not own compact supplemented artifact
+writing or the `supplement_provenance/` schema. The current
+`write_pqs_terminal_residual_gto_augmented_hamiltonian(...)` location remains
+acceptable under R3-C workflow authority unless a later amendment names a real
+duplication or consumer need.
 
 ### HP-RG-FILE-01 — Residual Gaussian module files
 

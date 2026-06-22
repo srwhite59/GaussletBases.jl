@@ -179,6 +179,9 @@ Deferred gates:
   `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` to the
   approved `CartesianResidualGaussians` domain module, with physical/domain
   helper names and temporary wrappers deleted after callers move;
+- compact supplemented artifact writing remains outside
+  `CartesianResidualGaussians` as terminal/facade workflow provenance glue
+  unless a later amendment identifies a real duplication or consumer need;
 - Cr2 stress/performance and any full Cr2 supplemented Hamiltonian run;
 - measurement-only Cr2-readiness forecasting, consumer workflow beyond the
   approved H2/Be2 R3 usability facade, and basis/supplement-realism decisions

@@ -1,11 +1,10 @@
 # Residual Gaussian Domain Module
 
-Status: approved design authority for a future internal
+Status: approved design authority for the internal
 `CartesianResidualGaussians` domain module. This is a source-organization and
 ownership amendment only. It approves no public export, no artifact schema
-change, no Cr2 facade support, and no new production behavior beyond moving
-the existing approved owner-local residual-GTO/MWG construction into a domain
-module with physical names.
+change, no Cr2 facade support, and no new production behavior beyond the
+approved owner-local residual-GTO/MWG construction and domain migration.
 
 ## Decision
 
@@ -22,8 +21,7 @@ physics operations:
 - matched-width Gaussians are only the residual-containing IDA interaction
   approximation.
 
-Future production code should make those meanings explicit in a new internal
-module:
+Production code should make those meanings explicit in the internal module:
 
 ```text
 src/cartesian_residual_gaussians/
@@ -56,7 +54,7 @@ These IDs are approved for implementation only within the surfaces below.
 
 ### Owned By CartesianResidualGaussians
 
-The new module owns:
+The module owns:
 
 - owner-local residual Gaussian basis selection;
 - residual occupation spectra and cutoff policy;
@@ -76,8 +74,12 @@ The module must not own:
 - parent lattice construction;
 - terminal shell topology or terminal support ownership;
 - raw analytic Gaussian integral formulas;
-- route reports, route stages, status symbols, artifacts, driver parsing,
-  public API, or public exports.
+- facade input parsing;
+- terminal or base stage orchestration;
+- Hamiltonian artifact writing;
+- `supplement_provenance/` schema ownership;
+- route reports, route stages, status symbols, driver parsing, public API, or
+  public exports.
 
 The module may consume already-validated base Hamiltonian facts, terminal
 basis realization, parent axis/bundle data, supplement representations, raw
@@ -253,7 +255,7 @@ binding requirements.
 - MWG interaction is not invariant under arbitrary residual rotations; the
   residual orientation policy is part of the interaction convention.
 
-## Migration Sequence
+## Migration And Cleanup Sequence
 
 1. Create `CartesianResidualGaussians` and move residual-basis construction
    first. The existing H2 endpoint must keep the approved owner-local scalar
@@ -293,3 +295,27 @@ Future source migration must validate:
 No Cr2 full Hamiltonian, Cr2 artifact, Cr2 facade support, public export,
 driver/bin/tool workflow, artifact schema expansion, report/status/payload
 object, solver/RHF, ECP, or EGOI work is approved by this amendment.
+
+## Artifact Writing Boundary
+
+Compact supplemented artifact writing remains outside
+`CartesianResidualGaussians`. Artifact writing is workflow/provenance glue
+attached to the supported R3 usability path, not residual Gaussian
+mathematics.
+
+`CartesianResidualGaussians` may produce residual basis objects, exact
+augmented operators, moment-matched Gaussian descriptors, residual interaction
+blocks, and in-memory Hamiltonian ingredients consumed by a workflow writer.
+It must not own the artifact schema, JLD2 file workflow, facade input parsing,
+or `supplement_provenance/` policy.
+
+The current writer location remains acceptable:
+
+```julia
+write_pqs_terminal_residual_gto_augmented_hamiltonian(...)
+```
+
+That writer stays with the terminal/facade workflow under the existing R3-C
+artifact authority unless a later docs-only amendment approves moving or
+splitting it. Future movement requires a named duplication or consumer reason;
+"closer to RG" is not sufficient justification.

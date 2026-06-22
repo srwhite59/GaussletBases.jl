@@ -620,7 +620,14 @@ basis-set loading, parent lattice construction, terminal shell topology, raw
 analytic Gaussian formula ownership, report/status/payload object, artifact
 schema change, public API/export, driver/bin/tool workflow, Cr2 facade/full
 Hamiltonian/artifact, ECP, EGOI, RHF/solver work, new committed test file, or
-new production behavior beyond the approved migration is authorized.
+new production behavior beyond the approved migration is authorized. Compact
+R3 supplemented artifact writing remains terminal/facade workflow glue outside
+`CartesianResidualGaussians`:
+`write_pqs_terminal_residual_gto_augmented_hamiltonian(...)` may call
+RG-produced objects and Hamiltonians, but RG does not own Hamiltonian artifact
+writing, JLD2 file workflow, facade input parsing, or the
+`supplement_provenance/` schema. Moving or splitting that writer requires a
+later docs-only amendment with a named duplication or consumer reason.
 
 `HP-FN-03` specifically approves
 `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl` as the Slice B

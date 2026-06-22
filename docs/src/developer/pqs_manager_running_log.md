@@ -9655,3 +9655,55 @@ Carrying-cost result:
 Risk / guardrail:
 - This is cleanup only. It does not approve public API/export, artifact schema
   changes, Cr2 support, driver workflow, or interaction behavior changes.
+
+## Cartesian Hamiltonian Producer Pass 072 - Clarify RG Artifact Boundary
+
+Commit(s):
+- this commit - Clarify RG artifact boundary
+
+Summary:
+- Recorded that compact supplemented Hamiltonian artifact writing remains
+  outside `CartesianResidualGaussians`. RG owns residual Gaussian physics:
+  residual basis selection, exact augmented operator transformation,
+  moment-matched Gaussian descriptors, and residual IDA interaction assembly.
+- Clarified that artifact writing is workflow/provenance glue attached to the
+  supported R3 usability path. The current
+  `write_pqs_terminal_residual_gto_augmented_hamiltonian(...)` location remains
+  acceptable under R3-C terminal/facade workflow authority.
+- Updated the live authority so RG may provide objects and Hamiltonians
+  consumed by the writer, but RG does not own JLD2 file workflow, facade input
+  parsing, or `supplement_provenance/` schema policy. Moving or splitting the
+  writer now requires a named duplication or consumer reason, not proximity to
+  RG.
+
+Validation:
+- Design-manager ran `git diff --check`, focused `rg` checks for artifact
+  boundary wording, `supplement_provenance/`, `CartesianResidualGaussians`, and
+  writer ownership, and confirmed
+  `git diff --name-only -- src test tools bin` was empty.
+
+Goal advancement:
+- RG/LT6: keeps the new domain module focused on physics while preserving the
+  compact artifact path as workflow/provenance glue.
+- MT5: resolves the remaining cleanup decision from Pass 071 without moving
+  code or adding a new source surface.
+
+Carrying-cost result:
+- deleted: no files or source in this docs-only clarification.
+- simplified: future agents no longer need to decide whether artifact writing
+  belongs in RG by default.
+- quarantined: artifact/facade workflow remains outside RG unless a later
+  amendment names a real reason to move it.
+- not deleted because: `write_pqs_terminal_residual_gto_augmented_hamiltonian`
+  remains a live R3-C workflow writer.
+- exact remaining caller/blocker: none for this ownership decision; any future
+  writer movement needs a separate docs-only amendment.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.
+
+Risk / guardrail:
+- Do not move artifact schema ownership into RG just because the writer
+  consumes RG outputs. No artifact schema change, public API/export, Cr2
+  support, driver workflow, or new behavior is approved here.

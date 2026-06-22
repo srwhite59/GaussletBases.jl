@@ -12,8 +12,8 @@ existing R3 residual/Hamiltonian IDs. The R3 usability lane is approved only as
 a non-exported supported facade for H2 and internal/performance-supported Be2
 supplemented artifacts; it must use the corrected owner-local residual
 selection and the updated H2 scalar below. The Residual Gaussian domain module
-is approved as the future internal owner for residual basis, exact augmented
-operator, matched-width Gaussian, and residual IDA interaction code.
+is approved as the internal owner for residual basis, exact augmented operator,
+matched-width Gaussian, and residual IDA interaction code.
 
 This authority covers the base all-electron PQS path:
 
@@ -172,6 +172,10 @@ Approved R3-C compact supplemented artifact provenance scope:
 - R3-C writes the existing `CartesianIDAHamiltonian{Float64}` artifact shape
   with `write_cartesian_ida_hamiltonian`, then adds only the compact
   `supplement_provenance/` group defined in `registry.md`;
+- compact supplemented artifact writing is workflow/provenance glue attached
+  to the supported R3 usability path. It remains outside
+  `CartesianResidualGaussians`; the writer may call RG-produced objects and
+  Hamiltonians, but RG does not own artifact schema or file workflow;
 - `read_cartesian_ida_hamiltonian` is used for validation/readback only and
   remains a Hamiltonian reader, not a public provenance API;
 - R3-C does not approve a Hamiltonian wrapper, payload/status/report object,
@@ -277,8 +281,9 @@ Approved Residual Gaussian domain-module scope:
   residual-containing IDA interaction blocks;
 - the module must not own basis-set loading, parent lattice construction,
   terminal shell topology, raw analytic Gaussian integral formulas, route
-  reports/stages/status symbols, artifacts, driver parsing, public API, or
-  public export;
+  reports/stages/status symbols, facade input parsing, Hamiltonian artifact
+  writing, `supplement_provenance/` schema ownership, driver parsing, public
+  API, or public export;
 - production source names should be physical/domain names such as
   `build_residual_gaussian_basis`, `transform_augmented_operator`,
   `moment_matched_gaussians`, and `assemble_residual_ida_interaction`;
