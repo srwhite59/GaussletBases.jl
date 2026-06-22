@@ -27,9 +27,10 @@ Approved amendments:
 Candidate amendments:
 
 - [R3 residual-GTO/MWG augmentation](r3_residual_gto_mwg_augmentation.md)
-  sketches a generic supplemented-Hamiltonian path against the current
-  terminal final-basis boundary. It is not implementation authority until its
-  candidate IDs are explicitly approved.
+  sketches a split generic supplemented-Hamiltonian path: R3-A residual
+  basis/exact one-body, R3-B MWG interaction/in-memory Hamiltonian, and R3-C
+  artifact/cleanup. It is not implementation authority until its candidate IDs
+  are explicitly approved.
 
 Historical material:
 

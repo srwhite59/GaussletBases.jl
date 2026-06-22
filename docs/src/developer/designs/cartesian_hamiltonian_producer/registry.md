@@ -440,66 +440,131 @@ Candidate entries record proposed design surfaces for review. They do not
 authorize source, test, tool, driver, public API, or artifact changes until
 explicitly moved into an approved section.
 
-### HP-R3-OBJ-01 — augmented residual-GTO/MWG basis object — candidate
+### HP-R3-OBJ-01 — residual-GTO augmentation object — candidate
 
-Candidate scope for residual-GTO/MWG augmentation only. A future object may
-describe fixed base final basis `G`, Gaussian supplement candidates `A`,
-residual block `R`, residual metric facts, and augmented dimension. It must not
-rotate or re-Lowdin the base PQS basis, carry route-global matrices in
-metadata, or introduce broad status/report payloads.
+R3-A candidate scope. A future residual object must be a numerical object, not
+a status/result payload, and must expose matrices as typed fields rather than
+metadata. Candidate fields and invariants are defined in
+`r3_residual_gto_mwg_augmentation.md` and include base dimension, candidate
+count, residual dimension, deterministic candidate labels/order, derived
+candidate owner indices, retained candidate indices, `T_G::Matrix{Float64}`,
+`T_A::Matrix{Float64}`, residual metric eigenvalue diagnostics, keep
+thresholds, rank rule, orientation rule, and sign rule.
 
-### HP-R3-FN-01 — residual-GTO/MWG augmentation boundary — candidate
+No hidden metadata matrices, route-global field clouds, readiness/status
+graphs, or Hamiltonian wrappers are candidate authority.
 
-Candidate conceptual boundary:
+### HP-R3-FN-01 — deterministic residual-basis construction — candidate
 
-```julia
-augment_cartesian_ida_hamiltonian_with_residual_gto_mwg(
-    terminal_basis_realization::CartesianTerminalBasisRealization,
-    base_hamiltonian::CartesianIDAHamiltonian{Float64},
-    supplement::CartesianGaussianShellSupplementRepresentation3D,
-    provider_blocks,
-    residual_options,
-)::CartesianIDAHamiltonian{Float64}
+R3-A candidate scope. Candidate construction:
+
+```text
+X = G' S A
+S_AA = A' S A
+S_R = S_AA - X'X
+A_perp = A - G X
+R = (A - G X) T
+T_A = T
+T_G = -X T
 ```
 
-The final name, owner file, and argument types are not approved. The candidate
-construction extends the fixed localized final basis with residual GTO/MWG
-functions before final supplemented `K`/`U_A`/`V` assembly. It is not a
-post-hoc wrapper around an opaque base Hamiltonian.
+`G` is the fixed orthonormal base terminal final basis and `A` is the
+deterministically ordered Gaussian supplement sector. `X` must be assembled
+from exact mixed overlaps one terminal block at a time; no global parent-space
+coefficient matrix is approved.
 
-### HP-R3-FN-02 — augmented one-body assembly — candidate
+Residual orientation is selected-candidate-order symmetric Lowdin, not raw
+eigenvectors of `S_R`. Rank selection uses
+`tau_keep = max(tau_abs, tau_rel * lambda_max)` with negative-eigenvalue error
+handling as defined in the R3 note. Numeric threshold values must be frozen in
+a later approval before source work begins.
 
-Candidate scope: assemble augmented kinetic and uncharged by-center nuclear
-matrices in basis `[G, R]`. Reuse base `G-G` blocks only when exactly
-equivalent, and build mixed/residual blocks from explicit GTO/provider kernels.
-No route-global metadata matrices, report clouds, or status-only preflight
-graphs are candidate authority.
+### HP-R3-FN-02 — exact augmented one-body and moment assembly — candidate
 
-### HP-R3-FN-03 — residual MWG/IDA assembly — candidate
+R3-A candidate scope. For each exact one-body or moment operator `O`, assemble
+raw `[G, A]` blocks and transform:
 
-Candidate scope: assemble supplemented localized IDA terms using the base
-`G-G` block plus residual-GTO/MWG descriptors for residual-containing terms.
-The base PQS positive final-weight gauge must not be applied blindly to
-residual-GTO/MWG integrals or moments; near-zero or negative residual
-contributions are allowed where the residual construction or physical operator
-permits them.
+```text
+O_GR = O_GG T_G + O_GA T_A
+O_RR =
+    T_G' O_GG T_G
+  + T_G' O_GA T_A
+  + T_A' O_AG T_G
+  + T_A' O_AA T_A
+O_aug = [O_GG  O_GR
+         O_GR' O_RR]
+```
 
-### HP-R3-ART-01 — supplemented artifact provenance — candidate
+This applies to kinetic, every uncharged by-center nuclear attraction, `x`,
+`y`, `z`, `x^2`, `y^2`, and `z^2`. Moment matrices are not stored in
+`CartesianIDAHamiltonian`, so R3-A must produce/consume them in the same
+construction boundary and must not recover them from an arbitrary base
+Hamiltonian.
 
-Candidate artifact extension only. The in-memory numerical object remains the
-existing `CartesianIDAHamiltonian{Float64}` when its matrices satisfy the
-current contract. A supplemented artifact may add fixed
-`supplement_provenance/` keys exactly as defined in
-`r3_residual_gto_mwg_augmentation.md`. This candidate does not approve a
-Hamiltonian wrapper, separate manifest, public provenance reader, HamV6 export,
-solver export, or consumer API.
+### HP-R3-FN-03 — residual MWG/IDA and in-memory Hamiltonian — candidate
 
-### HP-R3-TEST-01 — first supplemented endpoint validation — candidate
+R3-B candidate scope, not R3-A. Residual MWG descriptors are computed from
+exact R3-A moments of the actual final residual functions:
 
-Candidate first proxy: z-axis H2 with the existing base H2 public geometry and
-a small H-centered Cartesian GTO supplement such as H/cc-pVTZ with `lmax = 1`.
-Be2 should follow as the first performance/realism proxy. Cr2 remains a later
-stress and consumer-readiness milestone, not the first R3 correctness gate.
+```text
+c_ralpha = <r | alpha | r>
+v_ralpha = <r | alpha^2 | r> - c_ralpha^2
+sigma_ralpha = sqrt(2 * v_ralpha)
+```
+
+The MWG approximation is separable and omits off-diagonal covariance. R3-B uses
+density-normalized `G-M` and `M-M` pair factors and inserts them directly into
+
+```text
+V_aug = [V_GG_base  V_GM
+         V_GM'      V_MM]
+```
+
+with no second division by final weights. `M` denotes moment-matched effective
+Gaussians, not raw supplement candidates and not exact residual-GTO Coulomb
+integrals. Term-first pair-factor reuse and bounded workspace are binding
+requirements in the R3 note.
+
+This candidate may return the existing `CartesianIDAHamiltonian{Float64}` after
+R3-A is accepted. It does not approve wrappers, payload/result/status objects,
+or artifact changes.
+
+### HP-R3-ART-01 — compact supplemented artifact provenance — candidate/deferred
+
+R3-C candidate scope, deferred until after accepted R3-A and R3-B numerical
+endpoints. The in-memory numerical object remains
+`CartesianIDAHamiltonian{Float64}`. A future artifact may add compact
+`supplement_provenance/` keys defined in
+`r3_residual_gto_mwg_augmentation.md`, derived from the validated R3
+construction specification rather than from an in-memory Hamiltonian.
+
+The first compact schema must not store full residual eigenvalue vectors, MWG
+center matrices, MWG width matrices, `T_G`, `T_A`, or candidate labels. If
+those arrays become consumer-critical, a later explicit residual-basis artifact
+group must promote them together. This candidate does not approve a Hamiltonian
+wrapper, separate manifest, public provenance reader, HamV6 export, solver
+export, or consumer API.
+
+### HP-R3-TEST-01 — first augmented one-body endpoint validation — candidate
+
+R3-A candidate first proxy: z-axis H2 with the existing base H2 public geometry
+and frozen contracted two-center H/cc-pVTZ supplement fixture:
+
+```text
+lmax = 1
+uncontracted = false
+max_width filtering = none
+candidate ordering = center-major, then source-shell/contraction order,
+                     then Cartesian component order
+candidate count = 18 total
+owner counts = 9 on center 1 and 9 on center 2
+```
+
+The retained residual rank is measured, not assumed. R3-A validation should
+check candidate ownership, `G' S R`, `R' S R`, base G-G block equality,
+finite/symmetric augmented exact operators and moments, and the one-body
+variational check. Be2 should follow as the first performance/realism proxy.
+Cr2 remains a later stress and consumer-readiness milestone.
 
 ## Rejected Or Deferred
 
