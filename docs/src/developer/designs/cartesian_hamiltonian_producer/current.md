@@ -1,7 +1,10 @@
 # Current Authority
 
 Status: Slice A, Slice B, Slice C1, Slice C2, and Slice D base handoff are
-implemented for the internal base PQS Hamiltonian producer.
+implemented for the internal base PQS Hamiltonian producer. R1 public base
+producer implementation is approved for the narrow H/H2 scope. R3-A
+residual-GTO basis plus exact augmented one-body/moment implementation is
+approved for the first H2 endpoint only.
 
 This authority covers the base all-electron PQS path:
 
@@ -17,10 +20,13 @@ terminal support and retained contracts
 
 This is internal base-Hamiltonian authority plus the narrow approved R1 public
 base producer surface recorded in `r1_public_base_producer.md` and
-`registry.md`. The visible driver shape may call the implemented path, but this
-design does not approve a new artifact format except the `HP-R1-ART-01`
+`registry.md`, plus the narrow R3-A residual-GTO exact one-body/moment surface
+recorded in `r3_residual_gto_mwg_augmentation.md` and `registry.md`. The
+visible driver shape may call the implemented base path, but this design does
+not approve a new artifact format except the `HP-R1-ART-01`
 `producer_provenance/` keys in the final Hamiltonian file, solver integration,
-broad driver redesign, or public workflow outside the R1 H/H2 scope.
+broad driver redesign, public workflow outside the R1 H/H2 scope, or R3-B/R3-C
+supplemented Hamiltonian work.
 
 Current implementation boundary:
 
@@ -52,6 +58,25 @@ Current implementation boundary:
   directly. No-request materialization returns `nothing`.
 - Optional base-Hamiltonian artifact writing uses the existing
   `write_cartesian_ida_hamiltonian` shape.
+
+Approved R3-A residual-GTO exact one-body/moment scope:
+
+- first fixture: public/base z-axis H2 plus contracted two-center H/cc-pVTZ,
+  `lmax = 1`, `uncontracted = false`, no width filtering;
+- frozen residual thresholds: `tau_abs = 1.0e-10`,
+  `tau_rel = 1.0e-10`, `tau_neg_abs = 1.0e-12`, and
+  `tau_neg_rel = 1.0e-12`;
+- allowed numerical work: deterministic residual-basis construction plus exact
+  augmented `K`, uncharged `U_A`, and moment matrices `x`/`y`/`z`/`x^2`/`y^2`/
+  `z^2`;
+- first validation gate: H2 augmented one-body/moment endpoint only, checking
+  `G' S R`, `R' S R`, base G-G block equality, finite/symmetric augmented
+  operators and moments, and `E1_aug <= E1_base + epsilon`.
+
+R3-A does not approve MWG/IDA `V`, supplemented
+`CartesianIDAHamiltonian` construction, artifact provenance, public API
+expansion, driver/bin/tool workflow, broad provider payloads, status/result
+objects, report fields, Be2 first-gate validation, or Cr2 validation.
 
 Base pair/assembly role decision:
 
@@ -92,7 +117,8 @@ Deferred lanes:
 - public-driver polish and examples outside the approved R1 origin-centered H
   and z-axis H2 base producer scope;
 - Cr2-scale stress and performance validation;
-- residual-GTO/MWG supplements and other non-base Hamiltonians;
+- R3-B residual-MWG/IDA, supplemented Hamiltonian construction, R3-C artifact
+  provenance/cleanup, and other non-base Hamiltonians;
 - solver integration;
 - White-Lindsey pair-framework completion;
 - distorted-product COMX realization;

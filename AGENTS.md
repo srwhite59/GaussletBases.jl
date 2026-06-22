@@ -404,6 +404,10 @@ these approved design IDs:
 - `HP-R1-WIRE-01`
 - `HP-R1-ART-01`
 - `HP-R1-TEST-01`
+- `HP-R3-OBJ-01`
+- `HP-R3-FN-01`
+- `HP-R3-FN-02`
+- `HP-R3-TEST-01`
 
 No other production surface may be added in this lane without a prior
 documentation-only design amendment. This includes new structs, persistent
@@ -441,6 +445,20 @@ integration/endpoint gate. R1 scope is origin-centered H and Cartesian z-axis
 H2 only. No driver/bin/tool/report/payload/status/pair/assembly public workflow
 expansion is approved, and no artifact expansion is approved except the
 `HP-R1-ART-01` provenance keys.
+
+`HP-R3-OBJ-01`, `HP-R3-FN-01`, `HP-R3-FN-02`, and `HP-R3-TEST-01` approve
+only R3-A residual-GTO basis construction plus exact augmented kinetic,
+uncharged by-center nuclear-attraction, and moment matrices
+`x`/`y`/`z`/`x^2`/`y^2`/`z^2` for the first H2 augmented one-body/moment
+endpoint. The frozen thresholds are `tau_abs = 1.0e-10`,
+`tau_rel = 1.0e-10`, `tau_neg_abs = 1.0e-12`, and
+`tau_neg_rel = 1.0e-12`. `HP-R3-TEST-01` approves only
+`test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl` as a standalone
+endpoint gate, not inclusion in `test/runtests.jl`. R3-A does not approve
+MWG/IDA `V`, supplemented `CartesianIDAHamiltonian` construction, artifact
+provenance, public API expansion, driver/bin/tool workflow, broad provider
+payloads, status/result objects, report fields, Be2 first-gate validation, or
+Cr2 validation. `HP-R3-FN-03` and `HP-R3-ART-01` remain candidate-only.
 
 `HP-FN-03` specifically approves
 `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl` as the Slice B

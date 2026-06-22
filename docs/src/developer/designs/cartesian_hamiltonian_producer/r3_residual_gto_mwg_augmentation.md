@@ -1,40 +1,43 @@
-# R3 Residual-GTO/MWG Augmentation Candidate
+# R3 Residual-GTO/MWG Augmentation
 
-Status: candidate design amendment, not implementation authority.
+Status: R3-A approved; R3-B and R3-C remain candidate-only.
 
-This document sketches the R3 path for generic residual-GTO/MWG augmentation of
-the Cartesian base Hamiltonian producer. It does not approve source work, tests,
-tools, driver edits, public API expansion, artifact changes, or implementation
-of the candidate IDs below.
+This document records the R3 path for generic residual-GTO/MWG augmentation of
+the Cartesian base Hamiltonian producer. It approves only the R3-A IDs listed
+below for deterministic residual-basis construction plus exact augmented
+one-body and moment matrices. It does not approve R3-B MWG/IDA, supplemented
+`CartesianIDAHamiltonian` construction, artifacts, public API expansion, driver
+or tool workflow, broad payload/status/report objects, ECP, EGOI, Be2/Cr2
+first-gate validation, or implementation of the R3-B/R3-C candidate IDs.
 
 The first R3 review did not approve the IDs unchanged. This revision tightens
 the residual basis contract, splits the implementation lane, and defers
 artifact provenance until the in-memory numerical endpoint exists.
 
-## Candidate IDs And Split
+## Approved IDs And Split
 
-All R3 IDs are candidate-only until explicitly approved in `registry.md`.
-
-R3-A candidate scope: residual basis plus exact one-body and moments.
+R3-A approved scope: residual basis plus exact one-body and moments.
 
 - `HP-R3-OBJ-01` - residual-GTO augmentation object.
 - `HP-R3-FN-01` - deterministic residual-basis construction.
 - `HP-R3-FN-02` - exact augmented one-body and moment assembly.
 - `HP-R3-TEST-01` - first H2 augmented one-body endpoint validation.
 
-R3-B candidate scope: MWG interaction and in-memory Hamiltonian.
+R3-B candidate-only scope: MWG interaction and in-memory Hamiltonian.
 
 - `HP-R3-FN-03` - residual MWG/IDA interaction assembly and existing
   `CartesianIDAHamiltonian{Float64}` construction.
 
-R3-C candidate scope: artifact provenance and cleanup.
+R3-C candidate-only scope: artifact provenance and cleanup.
 
 - `HP-R3-ART-01` - compact supplemented artifact provenance and retirement
   cleanup after R3-A/B numerical acceptance.
 
-No R3 candidate approves a monolithic public producer, broad payload bundle,
-driver workflow expansion, status/result object, pair/assembly workflow
-expansion, solver work, ECP, EGOI, or Cr2 stress gate.
+No R3-A approved ID authorizes a monolithic public producer, broad payload
+bundle, driver workflow expansion, status/result object, pair/assembly workflow
+expansion, solver work, ECP, EGOI, MWG/IDA, supplemented Hamiltonian
+construction, artifact provenance, Be2 first-gate validation, or Cr2 stress
+gate.
 
 ## Goal
 
@@ -42,7 +45,7 @@ R3 restores supplement augmentation as a generic final-basis augmentation, not
 as an H2-specific residual-GTO sidecar and not as a route-stage
 preflight/status graph.
 
-The durable common boundary is:
+The durable long-range boundary is:
 
 ```text
 validated base construction specification
@@ -168,7 +171,7 @@ Deterministic candidate convention:
   entry of the corresponding `T_A` column positive, with lower candidate index
   breaking ties.
 
-Candidate cutoff rule:
+Approved cutoff rule:
 
 ```text
 lambda_max = max(maximum(eigenvalues(Symmetric(S_R))), 0.0)
@@ -183,17 +186,24 @@ Policy:
   are discarded;
 - eigenvalues `> tau_keep` define the residual numerical rank.
 
-The first R3-A approval must freeze the numeric values for `tau_abs`,
-`tau_rel`, `tau_neg_abs`, and `tau_neg_rel`. The values are part of the
-persistent residual object and artifact provenance; ordinary-QW values are
-donor evidence, not automatic authority.
+Frozen R3-A threshold values:
 
-### HP-R3-OBJ-01 Candidate Fields
+```text
+tau_abs = 1.0e-10
+tau_rel = 1.0e-10
+tau_neg_abs = 1.0e-12
+tau_neg_rel = 1.0e-12
+```
+
+The values are part of the persistent residual object and later artifact
+provenance; ordinary-QW values remain donor evidence, not automatic authority.
+
+### HP-R3-OBJ-01 Approved Fields
 
 The R3 residual object is a numerical object, not a status/result payload. It
 does not store matrices in metadata.
 
-Candidate exact fields:
+Approved exact fields:
 
 | Field | Contract |
 | --- | --- |
@@ -283,12 +293,14 @@ R3-A validation gates:
 - augmented `K`, every `U_A`, and all moment matrices are finite and symmetric;
 - first one-body eigenvalue is variational:
   `E1_aug <= E1_base + epsilon`.
+- no Be2 or Cr2 validation is part of the first R3-A gate.
 
 ## R3-B MWG/IDA And In-Memory Hamiltonian
 
 R3-B starts only after R3-A is accepted. It constructs residual MWG descriptors,
 residual-containing IDA blocks, and the in-memory augmented
 `CartesianIDAHamiltonian{Float64}`.
+It remains candidate-only and is not approved by R3-A.
 
 ### MWG Moment Convention
 
@@ -360,6 +372,7 @@ R3-B validation gates:
 accepted. The existing `CartesianIDAHamiltonian{Float64}` is sufficient as the
 in-memory numeric Hamiltonian object when the augmented matrices satisfy the
 existing contract.
+It remains candidate-only and is not approved by R3-A.
 
 The first supplemented artifact schema should be compact. It should derive
 provenance from the validated R3 construction specification, not recover
@@ -439,6 +452,31 @@ performance/realism proxy before Cr2.
 Cr2 remains a later stress/consumer-readiness milestone, not the first R3
 correctness gate.
 
+## R3-A Approval Evidence
+
+Manager log Pass 048 records the measurement-only R3-A residual-spectrum spike
+used for this approval.
+
+Evidence:
+
+- fixture: public/base z-axis H2;
+- supplement: contracted H/cc-pVTZ on both physical H centers;
+- `lmax = 1`;
+- `uncontracted = false`;
+- no width filtering;
+- 18 supplement candidates total;
+- 9 candidates per H center;
+- deterministic center-major/source-shell/Cartesian-component order;
+- base final dimension `471`;
+- full residual rank `18`;
+- residual metric eigenvalue range approximately `3.05e-4` to `1.35e-2`;
+- condition estimate approximately `44.3`;
+- `inv(sqrt(Symmetric(S_R)))` in candidate order succeeded;
+- measured `R' S R` identity error approximately `4.4e-15`.
+
+The spectrum is far from the frozen threshold band, so symmetric Lowdin
+residualization in candidate order is not marginal for the first H2 fixture.
+
 ## Deletion And Retirement Targets
 
 Current live-code audit found no active `src`, `test`, `tools`, or `bin`
@@ -471,9 +509,9 @@ After R3-C:
 - remove historical docs only when explicitly doing documentation
   reorganization; history and blurb logs are not deletion targets by default.
 
-## Recommendation
+## Approved First Implementation Target
 
-The next approval should be R3-A only:
+The approved first implementation target is R3-A only:
 
 ```text
 base z-axis H2
@@ -482,6 +520,13 @@ base z-axis H2
 -> exact augmented K, U_A, x/y/z, and x2/y2/z2
 -> H2 augmented one-body endpoint
 ```
+
+The first committed/standalone endpoint gate is approved by `HP-R3-TEST-01`
+for the H2 augmented one-body/moment endpoint only. It must check `G' S R`,
+`R' S R`, base G-G block equality, finite/symmetric augmented `K`, uncharged
+`U_A`, and moment matrices, and `E1_aug <= E1_base + epsilon`. It must not
+assert private pair/assembly/report/status behavior and must not run Be2 or
+Cr2.
 
 Do not approve R3-B or R3-C until R3-A produces the exact one-body/moment
 endpoint. Do not start Cr2 stress tests before the H2 and Be2 augmented paths

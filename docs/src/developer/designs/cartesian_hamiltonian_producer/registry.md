@@ -434,29 +434,58 @@ ID does not approve adding it to `test/runtests.jl`. It must not assert private
 route-stage fields, report mirrors, status/blocker symbols, terminal role
 vocabulary, or pair inventories.
 
-## Candidate, Not Approved
+## Approved For R3-A Implementation
 
-Candidate entries record proposed design surfaces for review. They do not
-authorize source, test, tool, driver, public API, or artifact changes until
-explicitly moved into an approved section.
+These entries authorize only the R3-A residual-GTO basis plus exact one-body
+and moment scope recorded in `r3_residual_gto_mwg_augmentation.md`. R3-A may
+implement deterministic residual-basis construction plus exact augmented
+kinetic, uncharged by-center nuclear attraction, and moment matrices
+`x`/`y`/`z`/`x^2`/`y^2`/`z^2`.
 
-### HP-R3-OBJ-01 — residual-GTO augmentation object — candidate
+R3-A does not approve MWG/IDA `V`, supplemented
+`CartesianIDAHamiltonian` construction, artifact provenance, public API
+expansion, driver/bin/tool workflow, broad provider payloads, status/result
+objects, report fields, pair/assembly public workflow, Be2 first-gate
+validation, Cr2 validation, ECP, or EGOI.
 
-R3-A candidate scope. A future residual object must be a numerical object, not
-a status/result payload, and must expose matrices as typed fields rather than
-metadata. Candidate fields and invariants are defined in
+Approved first fixture and spike evidence from manager-log Pass 048:
+
+- public/base z-axis H2;
+- contracted H/cc-pVTZ on both physical H centers;
+- `lmax = 1`;
+- `uncontracted = false`;
+- no width filtering;
+- 18 supplement candidates total, 9 per center;
+- full residual rank `18`;
+- residual metric eigenvalue range approximately `3.05e-4` to `1.35e-2`;
+- symmetric Lowdin residualization in candidate order is not marginal.
+
+Approved residual thresholds:
+
+```text
+tau_abs = 1.0e-10
+tau_rel = 1.0e-10
+tau_neg_abs = 1.0e-12
+tau_neg_rel = 1.0e-12
+```
+
+### HP-R3-OBJ-01 — residual-GTO augmentation object
+
+Approved R3-A scope. The residual object is a numerical object, not a
+status/result payload, and must expose matrices as typed fields rather than
+metadata. Fields and invariants are defined in
 `r3_residual_gto_mwg_augmentation.md` and include base dimension, candidate
 count, residual dimension, deterministic candidate labels/order, derived
 candidate owner indices, retained candidate indices, `T_G::Matrix{Float64}`,
-`T_A::Matrix{Float64}`, residual metric eigenvalue diagnostics, keep
+`T_A::Matrix{Float64}`, residual metric eigenvalue diagnostics, frozen keep
 thresholds, rank rule, orientation rule, and sign rule.
 
 No hidden metadata matrices, route-global field clouds, readiness/status
-graphs, or Hamiltonian wrappers are candidate authority.
+graphs, or Hamiltonian wrappers are approved.
 
-### HP-R3-FN-01 — deterministic residual-basis construction — candidate
+### HP-R3-FN-01 — deterministic residual-basis construction
 
-R3-A candidate scope. Candidate construction:
+Approved R3-A scope. Construction:
 
 ```text
 X = G' S A
@@ -476,12 +505,11 @@ coefficient matrix is approved.
 Residual orientation is selected-candidate-order symmetric Lowdin, not raw
 eigenvectors of `S_R`. Rank selection uses
 `tau_keep = max(tau_abs, tau_rel * lambda_max)` with negative-eigenvalue error
-handling as defined in the R3 note. Numeric threshold values must be frozen in
-a later approval before source work begins.
+handling as defined in the R3 note and the frozen thresholds above.
 
-### HP-R3-FN-02 — exact augmented one-body and moment assembly — candidate
+### HP-R3-FN-02 — exact augmented one-body and moment assembly
 
-R3-A candidate scope. For each exact one-body or moment operator `O`, assemble
+Approved R3-A scope. For each exact one-body or moment operator `O`, assemble
 raw `[G, A]` blocks and transform:
 
 ```text
@@ -500,6 +528,34 @@ This applies to kinetic, every uncharged by-center nuclear attraction, `x`,
 `CartesianIDAHamiltonian`, so R3-A must produce/consume them in the same
 construction boundary and must not recover them from an arbitrary base
 Hamiltonian.
+
+### HP-R3-TEST-01 — first augmented one-body endpoint validation
+
+Approved standalone R3-A endpoint gate:
+
+```text
+test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl
+```
+
+Invocation:
+
+```text
+julia --project=. test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl
+```
+
+The gate covers only the H2 augmented one-body/moment endpoint. It should
+validate the frozen H2/H/cc-pVTZ fixture, candidate ownership, `G' S R`,
+`R' S R`, base G-G block equality, finite/symmetric augmented `K`, uncharged
+`U_A`, and moment matrices, and `E1_aug <= E1_base + epsilon`. It is a
+standalone endpoint/integration gate and is not approved for inclusion in
+`test/runtests.jl`. It must not assert private pair/assembly/report/status
+behavior and must not run Be2 or Cr2.
+
+## Candidate, Not Approved
+
+Candidate entries record proposed design surfaces for review. They do not
+authorize source, test, tool, driver, public API, or artifact changes until
+explicitly moved into an approved section.
 
 ### HP-R3-FN-03 — residual MWG/IDA and in-memory Hamiltonian — candidate
 
@@ -544,27 +600,6 @@ those arrays become consumer-critical, a later explicit residual-basis artifact
 group must promote them together. This candidate does not approve a Hamiltonian
 wrapper, separate manifest, public provenance reader, HamV6 export, solver
 export, or consumer API.
-
-### HP-R3-TEST-01 — first augmented one-body endpoint validation — candidate
-
-R3-A candidate first proxy: z-axis H2 with the existing base H2 public geometry
-and frozen contracted two-center H/cc-pVTZ supplement fixture:
-
-```text
-lmax = 1
-uncontracted = false
-max_width filtering = none
-candidate ordering = center-major, then source-shell/contraction order,
-                     then Cartesian component order
-candidate count = 18 total
-owner counts = 9 on center 1 and 9 on center 2
-```
-
-The retained residual rank is measured, not assumed. R3-A validation should
-check candidate ownership, `G' S R`, `R' S R`, base G-G block equality,
-finite/symmetric augmented exact operators and moments, and the one-body
-variational check. Be2 should follow as the first performance/realism proxy.
-Cr2 remains a later stress and consumer-readiness milestone.
 
 ## Rejected Or Deferred
 
