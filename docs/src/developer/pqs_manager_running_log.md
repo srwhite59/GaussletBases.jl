@@ -10202,3 +10202,78 @@ Risk / guardrail:
 - Do not generalize this into a broad Gaussian raw-block framework. The first
   owner is nuclear slice only: uncharged by-center `G-A`/`A-A`, no persistent
   cache, no route payload, and no Cr2 workflow promotion.
+
+## Cartesian Hamiltonian Producer Pass 080 - Audit Nuclear Raw Allocation Source
+
+Commit(s):
+- this commit - Record nuclear raw allocation source audit
+
+Summary:
+- Accepted a measurement-only audit after rejecting the uncommitted `G-A`
+  streaming WIP. The audit restored the accepted baseline first and measured
+  where the remaining Cr2 q4 nuclear raw-block allocation is coming from.
+- The result changes the optimization read: the remaining cost is no longer
+  mostly final dense matrices, route-local duplicate loops, or high-level
+  `G-A`/`A-A` block orchestration. It is mostly one-dimensional analytic
+  nuclear factor work, especially repeated primitive factor-table filling and
+  scalar axis-integral calls.
+
+Validation:
+- Doer restored the discarded WIP in
+  `src/cartesian_gaussian_raw_blocks/CartesianGaussianRawBlocks.jl` and
+  `src/cartesian_gaussian_raw_blocks/nuclear_blocks.jl`, then ran
+  `git status --short --branch`, `git diff --check`, package load, and
+  `tmp/work/cr2_nuclear_raw_allocation_source_audit.jl`. Final tracked status
+  was clean.
+- Manager confirmed clean status and `git diff --check`. Manager did not rerun
+  the audit.
+
+Cr2 q4 facts:
+- Fixture: all-electron z-axis Cr2, `q=4`, `core_spacing=0.05`, extents
+  `20.0 / 20.0`, Cr/cc-pV5Z, `lmax=1`, contracted, no width filtering.
+- Parent Cartesian count `11191`, parent axes `(19,19,31)`, supplement
+  candidates `66`, Coulomb terms `45`, nuclear centers `2`.
+- G-A axis factor calls `264`, primitive factor matrices `11880`, scalar
+  one-dimensional integral calls `51,539,760`.
+- Parity against the accepted neutral full function: `G-A` delta `0.0`,
+  `A-A` delta `0.0`.
+
+Allocation breakdown:
+- `G-A` primitive input vectors: `0.048s`, `10.767 MiB`.
+- `G-A` primitive tables only: `3.188s`, `10787.069 MiB`.
+- `G-A` stencil matrix conversions: `0.013s`, `557.781 MiB`.
+- `G-A` primitive plus left contraction: `3.316s`, `11440.003 MiB`.
+- Current `G-A` factor construction: `3.513s`, `11470.237 MiB`.
+- `G-A` 3D assembly from cached factors: `0.529s`, `20.625 MiB`.
+- `A-A` streamed upper-triangle fill: `9.890s`, `33071.848 MiB`.
+- `A-A` output symmetrization: `0.002s`, `0.188 MiB`.
+- Full neutral nuclear raw blocks: `13.880s`, `44552.840 MiB`.
+
+Goal advancement:
+- Cr2-readiness/MT4: narrows the remaining allocation problem below the
+  raw-block orchestration layer. The next source pass should target the
+  one-dimensional analytic axis-integral/table layer, not another wrapper-level
+  `G-A` loop reshaping.
+- CGRB/LT6: confirms `CartesianGaussianRawBlocks` is the correct consumer, but
+  not necessarily the owner of the lowest-level axis-integral fill API.
+
+Carrying-cost result:
+- deleted: none; measurement-only pass.
+- simplified: rejected `G-A` streaming WIP is not part of the live branch; the
+  next bottleneck is now clearly lower-level axis table/scalar integral work.
+- quarantined: no tracked instrumentation or source changes.
+- not deleted because: no production code changed.
+- exact remaining caller/blocker: decide whether to approve a narrow in-place
+  `_cartesian_gaussian_axis_integral_table!`-style helper in the existing axis
+  integral owner, likely `src/cartesian_gaussian_axis_integrals.jl`, and then
+  adapt `CartesianGaussianRawBlocks` to consume it.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.
+
+Risk / guardrail:
+- Do not revive the rejected high-level `G-A` streaming patch. If an in-place
+  axis-table helper is approved, keep it low-level and narrow: no broad raw
+  block framework, no persistent cache, no route/status/report object, and no
+  Cr2 workflow expansion.
