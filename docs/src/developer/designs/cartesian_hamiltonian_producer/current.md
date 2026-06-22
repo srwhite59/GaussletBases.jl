@@ -6,7 +6,7 @@ producer implementation is approved for the narrow H/H2 scope. R3-A
 residual-GTO basis plus exact augmented one-body/moment implementation is
 approved for the first H2 endpoint. R3-B in-memory residual MWG/IDA
 Hamiltonian construction is reapproved for the first H2 endpoint with the
-corrected compact-path baseline.
+corrected weight-aware compact-path baseline.
 
 This authority covers the base all-electron PQS path:
 
@@ -95,15 +95,21 @@ Approved R3-B residual-MWG/IDA in-memory Hamiltonian scope:
   `v_ralpha = <r | alpha^2 | r> - c_ralpha^2`, and
   `sigma_ralpha = sqrt(2 * v_ralpha)`;
 - `V_aug = [V_GG_base V_GM; V_GM' V_MM]`, with `V_GG_base` unchanged from the
-  base Hamiltonian and `V_GM`/`V_MM` using density-normalized MWG/IDA factors
-  with no second final-weight division;
+  base Hamiltonian, `V_MM` using density-normalized MWG/IDA factors directly,
+  and `V_GM` transformed from parent density normalization to final-basis
+  density normalization block by block:
+  `support_weights = wx .* wy .* wz`,
+  `final_weights = C' * support_weights`,
+  `C_density = C .* support_weights ./ final_weights'`, and
+  `V_GM_block = C_density' * V_support_M`;
 - the returned object is the existing in-memory
   `CartesianIDAHamiltonian{Float64}`;
-- corrected compact-path H2 closure value: lowest augmented one-body orbital
-  IDA self-Coulomb `0.4574331709135599` within `1.0e-10`;
-- superseded R3-B target: `0.457435475059184`, from the retired private
-  `[pre_final_pqs, residual_gto]` density gauge, is not an acceptance target
-  for the compact R3-A residual basis.
+- corrected weight-aware compact-path H2 closure value: lowest augmented
+  one-body orbital IDA self-Coulomb `0.4574256036192161` within `1.0e-10`;
+- superseded R3-B targets: `0.457435475059184`, from the retired private
+  `[pre_final_pqs, residual_gto]` density gauge, and
+  `0.4574331709135599`, from direct parent-density `G-M` insertion, are not
+  acceptance targets for the compact R3-A residual basis.
 
 R3-B does not approve artifact provenance, public API expansion,
 driver/bin/tool workflow, broad provider payloads, status/result objects,

@@ -473,14 +473,17 @@ continuation in
 `CartesianFinalBasisRealization`, through the internal function
 `pqs_terminal_residual_gto_augmented_hamiltonian`. It may compute residual MWG
 centers/widths from current R3-A exact residual moments using
-`sigma = sqrt(2v)`, assemble density-normalized `V_GM` and `V_MM`, combine
-them with unchanged base `V_GG`, and return the existing
+`sigma = sqrt(2v)`, assemble weight-aware final-basis density-normalized
+`V_GM` and direct density-normalized `V_MM`, combine them with unchanged
+base `V_GG`, and return the existing
 `CartesianIDAHamiltonian{Float64}` directly. The first H2 closure value is
-lowest-orbital IDA self-Coulomb `0.4574331709135599` within `1.0e-10` for
+lowest-orbital IDA self-Coulomb `0.4574256036192161` within `1.0e-10` for
 augmented dimension `489`. The older `0.457435475059184` scalar is superseded
 for R3-B because it came from a retired private
-`[pre_final_pqs, residual_gto]` density-gauge diagnostic. Do not add a residual
-width scale factor or relax tolerance to fit the old scalar. `HP-R3-FN-03`
+`[pre_final_pqs, residual_gto]` density-gauge diagnostic; the intermediate
+`0.4574331709135599` scalar is also superseded because it came from direct
+parent-density insertion of `G-M` factors. Do not add a residual width scale
+factor or relax tolerance to fit either stale scalar. `HP-R3-FN-03`
 does not approve artifact provenance, public API expansion, driver/bin/tool
 workflow, broad provider payloads, status/result objects, report fields, Be2
 validation, Cr2 validation, ECP, EGOI, RHF/solver work, wrappers, or a new test

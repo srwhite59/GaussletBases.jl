@@ -1,7 +1,7 @@
 # R3 Residual-GTO/MWG Augmentation
 
-Status: R3-A and R3-B approved with corrected compact-path scalar. R3-C
-remains candidate-only.
+Status: R3-A and R3-B approved with corrected weight-aware compact-path
+scalar. R3-C remains candidate-only.
 
 This document records the R3 path for generic residual-GTO/MWG augmentation of
 the Cartesian base Hamiltonian producer. It approves only the R3-A and R3-B IDs
@@ -314,12 +314,15 @@ R3-B starts only after R3-A is accepted. It constructs residual MWG descriptors,
 residual-containing IDA blocks, and the in-memory augmented
 `CartesianIDAHamiltonian{Float64}`.
 
-R3-B is reapproved with a corrected compact-path acceptance scalar. The earlier
-closure target `0.457435475059184` is superseded for R3-B because it came from
-a retired private `[pre_final_pqs, residual_gto]` density-gauge diagnostic, not
-from the compact accepted R3-A residual basis. The current compact R3-A
-residual moments with the approved `sigma = sqrt(2v)` MWG convention produce
-lowest-orbital IDA self-Coulomb `0.4574331709135599`, which is the R3-B
+R3-B is reapproved with a corrected weight-aware compact-path acceptance
+scalar. The earlier closure target `0.457435475059184` is superseded for R3-B
+because it came from a retired private `[pre_final_pqs, residual_gto]`
+density-gauge diagnostic, not from the compact accepted R3-A residual basis.
+The later direct compact-path scalar `0.4574331709135599` is also superseded:
+it inserted parent-density-normalized `G-M` factors directly into the final
+basis. The current compact R3-A residual moments with the approved
+`sigma = sqrt(2v)` MWG convention and weight-aware `G-M` contraction produce
+lowest-orbital IDA self-Coulomb `0.4574256036192161`, which is the R3-B
 acceptance target.
 
 Do not add a residual width scale factor and do not relax tolerance to cover
@@ -377,9 +380,21 @@ V_aug = [V_GG_base  V_GM
 ```
 
 Normalization convention: R3-B consumes density-normalized donor factors for
-`G-M` and `M-M` pair blocks, matching the ordinary-QW donor convention. The
-final augmented `V` assembly inserts those density-normalized blocks directly;
-no second division by base final weights or effective-Gaussian weights occurs.
+`M-M` pair blocks directly. For `G-M`, donor support-to-M factors are
+parent-density normalized and must be transformed to final-basis density
+normalization at each terminal block:
+
+```text
+support_weights = wx .* wy .* wz
+final_weights = C' * support_weights
+C_density = C .* support_weights ./ final_weights'
+V_GM_block = C_density' * V_support_M
+```
+
+Direct blocks use identity/final weights consistently and therefore agree with
+direct insertion. PQS shell blocks must use the weight-aware contraction above.
+After this contraction, the final augmented `V` assembly performs no additional
+division by base final weights or effective-Gaussian weights.
 
 `V_GG_base` is reused from the accepted base localized IDA path. `V_GM` and
 `V_MM` are MWG approximations, not exact residual-GTO Coulomb integrals.
@@ -425,14 +440,16 @@ R3-B validation gates:
 - returned object is the existing `CartesianIDAHamiltonian{Float64}`;
 - augmented dimension is `489` for the first H2 fixture;
 - the lowest augmented one-body orbital has IDA self-Coulomb
-  `0.4574331709135599` within `1.0e-10`;
+  `0.4574256036192161` within `1.0e-10`;
 - no Hamiltonian wrapper/result/status payload is introduced.
 
-The validation scalar above comes from the direct compact-path R3-B equations:
-current R3-A exact residual moments, `sigma = sqrt(2v)`, density-normalized
-MWG contraction, and no final-width or tolerance fitting. Old private provider
-payloads, artifact fields, driver diagnostics, and the retired pre-final density
-gauge are donor history only, not production authority.
+The validation scalar above comes from the weight-aware compact-path R3-B
+equations: current R3-A exact residual moments, `sigma = sqrt(2v)`,
+final-basis density-normalized `G-M` contraction, direct density-normalized
+`M-M` contraction, and no final-width or tolerance fitting. Old private
+provider payloads, artifact fields, driver diagnostics, the retired pre-final
+density gauge, and the direct parent-density `G-M` scalar are donor history
+only, not production authority.
 
 ## R3-C Artifact And Provenance
 
@@ -515,9 +532,9 @@ residual rank must be measured.
 
 R3-A first endpoint is H2 augmented one-body and moments, not a
 residual-basis-only scaffold commit. R3-B adds MWG interaction and the existing
-in-memory Hamiltonian for the same H2 fixture, using the corrected compact-path
-self-Coulomb baseline. Be2 follows as the first performance/realism proxy
-before Cr2.
+in-memory Hamiltonian for the same H2 fixture, using the corrected
+weight-aware compact-path self-Coulomb baseline. Be2 follows as the first
+performance/realism proxy before Cr2.
 
 Cr2 remains a later stress/consumer-readiness milestone, not the first R3
 correctness gate.
@@ -591,7 +608,7 @@ base z-axis H2
 -> exact augmented K, U_A, x/y/z, and x2/y2/z2
 -> H2 augmented one-body endpoint
 -> residual moment-matched Gaussians with sigma = sqrt(2v)
--> V_GM and V_MM MWG/IDA blocks
+-> weight-aware V_GM and direct V_MM MWG/IDA blocks
 -> in-memory supplemented CartesianIDAHamiltonian
 -> H2 lowest-orbital IDA self-Coulomb endpoint
 ```
@@ -604,7 +621,7 @@ Hamiltonian checks described above. It must check `G' S R`, `R' S R`, base G-G
 block equality, finite/symmetric augmented `K`, uncharged `U_A`, and moment
 matrices, `E1_aug <= E1_base + epsilon`, finite/symmetric `V_aug`, unchanged
 base `V_GG`, returned `CartesianIDAHamiltonian{Float64}`, augmented dimension
-`489`, and lowest-orbital IDA self-Coulomb `0.4574331709135599` within
+`489`, and lowest-orbital IDA self-Coulomb `0.4574256036192161` within
 `1.0e-10`. It must not assert private pair/assembly/report/status behavior,
 add the standalone file to `test/runtests.jl`, or run Be2 or Cr2.
 

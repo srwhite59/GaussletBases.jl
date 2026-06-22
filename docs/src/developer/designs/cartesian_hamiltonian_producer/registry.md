@@ -565,7 +565,7 @@ standalone endpoint/integration gate and is not approved for inclusion in
 with the first in-memory supplemented Hamiltonian checks: finite/symmetric
 `V_aug`, unchanged base `V_GG`, returned `CartesianIDAHamiltonian{Float64}`,
 augmented dimension `489`, and lowest-orbital IDA self-Coulomb
-`0.4574331709135599` within `1.0e-10`. It must not assert private
+`0.4574256036192161` within `1.0e-10`. It must not assert private
 pair/assembly/report/status behavior and must not run Be2 or Cr2.
 
 ## Approved For R3-B Implementation
@@ -594,15 +594,28 @@ The MWG approximation is separable, uses the repo Gaussian-width convention in
 the factor `sqrt(2 * v_ralpha)`, and omits off-diagonal covariance. Nonfinite
 moments, nonpositive variances, or nonpositive widths are construction errors.
 
-R3-B uses density-normalized `G-M` and `M-M` pair factors and inserts them
-directly into
+R3-B uses density-normalized `M-M` pair factors directly. For `G-M`, donor
+support-to-M factors are parent-density normalized and must be transformed to
+final-basis density normalization for each terminal block before insertion:
+
+```text
+support_weights = wx .* wy .* wz
+final_weights = C' * support_weights
+C_density = C .* support_weights ./ final_weights'
+V_GM_block = C_density' * V_support_M
+```
+
+Direct blocks use identity/final weights consistently and therefore agree with
+the direct insertion formula. PQS shell blocks must use the weight-aware
+contraction above. The resulting interaction is inserted into
 
 ```text
 V_aug = [V_GG_base  V_GM
          V_GM'      V_MM]
 ```
 
-with no second division by final weights. `M` denotes moment-matched effective
+with no additional downstream division by final weights. `M` denotes
+moment-matched effective
 Gaussians, not raw supplement candidates and not exact residual-GTO Coulomb
 integrals. Term-first pair-factor reuse and bounded workspace are binding
 requirements in the R3 note.
@@ -616,10 +629,14 @@ approved provenance source.
 
 H2 closure value: for the public/base z-axis H2 plus contracted
 two-center H/cc-pVTZ `lmax = 1` fixture, the lowest augmented one-body orbital
-must have IDA self-Coulomb `0.4574331709135599` within `1.0e-10` under the
-compact R3-A residual basis and `sigma = sqrt(2v)` MWG convention. The earlier
-target `0.457435475059184` is superseded for R3-B because it came from a
-retired private `[pre_final_pqs, residual_gto]` density-gauge diagnostic.
+must have IDA self-Coulomb `0.4574256036192161` within `1.0e-10` under the
+compact R3-A residual basis, `sigma = sqrt(2v)` MWG convention, and
+weight-aware `G-M` contraction. The earlier target `0.457435475059184` is
+superseded for R3-B because it came from a retired private
+`[pre_final_pqs, residual_gto]` density-gauge diagnostic. The intermediate
+target `0.4574331709135599` is also superseded because it came from direct
+parent-density insertion of `G-M` factors rather than final-basis
+density-normalized `G-M` contraction.
 
 Do not add a width scale factor and do not relax tolerance to fit the old
 scalar. This ID does not approve artifacts, public API expansion,
