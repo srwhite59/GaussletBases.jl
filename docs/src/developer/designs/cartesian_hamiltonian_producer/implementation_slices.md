@@ -175,6 +175,10 @@ Deferred gates:
   usability facade;
 - implementation and validation of the approved owner-local residual-selection
   source correction before broader R3 usability expansion;
+- migration of residual Gaussian code from
+  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` to the
+  approved `CartesianResidualGaussians` domain module, with physical/domain
+  helper names and temporary wrappers deleted after callers move;
 - Cr2 stress/performance and any full Cr2 supplemented Hamiltonian run;
 - measurement-only Cr2-readiness forecasting, consumer workflow beyond the
   approved H2/Be2 R3 usability facade, and basis/supplement-realism decisions

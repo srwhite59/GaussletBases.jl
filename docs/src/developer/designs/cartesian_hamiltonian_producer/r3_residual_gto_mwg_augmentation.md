@@ -8,6 +8,10 @@ provides compact supplemented artifact provenance in the existing Hamiltonian
 artifact shape. The residual selection authority is corrected and approved for
 source implementation: owner-local residual occupation selection plus final
 merge Lowdin replaces the implemented global candidate-order selection.
+Future residual Gaussian source ownership is the
+`CartesianResidualGaussians` domain module approved in
+`residual_gaussian_domain_module.md`; the R3-A/B/C labels and
+`pqs_terminal_residual_gto.jl` helper names are implementation history.
 
 This document records the R3 path for generic residual-GTO/MWG augmentation of
 the Cartesian base Hamiltonian producer. It approves only the R3-A, R3-B, and

@@ -426,6 +426,14 @@ these approved design IDs:
 - `HP-R3U-FN-01`
 - `HP-R3U-WIRE-01`
 - `HP-R3U-TEST-01`
+- `HP-RG-FILE-01`
+- `HP-RG-OBJ-01`
+- `HP-RG-FN-01`
+- `HP-RG-FN-02`
+- `HP-RG-FN-03`
+- `HP-RG-FN-04`
+- `HP-RG-WIRE-01`
+- `HP-RG-TEST-01`
 
 No other production surface may be added in this lane without a prior
 documentation-only design amendment. This includes new structs, persistent
@@ -586,6 +594,33 @@ No Cr2 full run/artifact, ECP, EGOI, RHF/solver work, driver/bin/tool
 workflow, public export, Hamiltonian wrapper, report/status/payload object,
 new artifact format, exposed internal stage object, new source file, or new
 committed test file is approved.
+
+`HP-RG-FILE-01`, `HP-RG-OBJ-01`, `HP-RG-FN-01`, `HP-RG-FN-02`,
+`HP-RG-FN-03`, `HP-RG-FN-04`, `HP-RG-WIRE-01`, and `HP-RG-TEST-01` approve
+only the internal Residual Gaussian domain-module migration recorded in
+`docs/src/developer/designs/cartesian_hamiltonian_producer/residual_gaussian_domain_module.md`.
+Approved source files are
+`src/cartesian_residual_gaussians/CartesianResidualGaussians.jl`,
+`src/cartesian_residual_gaussians/residual_basis.jl`,
+`src/cartesian_residual_gaussians/augmented_operators.jl`, and
+`src/cartesian_residual_gaussians/mwg_interaction.jl`; `src/GaussletBases.jl`
+may add only the internal include needed to load that module, with no public
+export. The module owns physical/domain concepts with production names such as
+`build_residual_gaussian_basis`, `transform_augmented_operator`,
+`moment_matched_gaussians`, and `assemble_residual_ida_interaction`. It must
+require candidate owner indices for residual-basis construction and must keep
+owner-local residual occupation, residual integral weight, atom-local
+orthogonalization, final inter-owner merge, exact one-body transformation, and
+MWG approximation distinct. `R3-A`, `R3-B`, and `R3-C` are implementation
+history labels, not permanent source concepts. The old
+`src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` surface
+may retain only temporary delegating wrappers for existing callers while they
+move, and those wrappers must be deleted once no live caller remains. No
+basis-set loading, parent lattice construction, terminal shell topology, raw
+analytic Gaussian formula ownership, report/status/payload object, artifact
+schema change, public API/export, driver/bin/tool workflow, Cr2 facade/full
+Hamiltonian/artifact, ECP, EGOI, RHF/solver work, new committed test file, or
+new production behavior beyond the approved migration is authorized.
 
 `HP-FN-03` specifically approves
 `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl` as the Slice B

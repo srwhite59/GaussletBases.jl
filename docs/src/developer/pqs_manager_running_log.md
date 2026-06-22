@@ -9178,6 +9178,60 @@ Risk / guardrail:
   not use width filtering as conditioning repair, do not add a public export,
   and do not run or approve a full Cr2 Hamiltonian/artifact in the source pass.
 
+## Cartesian Hamiltonian Producer Pass 065 - Approve Residual Gaussian Domain Module
+
+Commit(s):
+- this commit - Approve Residual Gaussian domain module
+
+Summary:
+- Approved a docs-only source-organization amendment for the future internal
+  `CartesianResidualGaussians` module. The decision moves residual Gaussian
+  meaning out of the terminal-basis file: owner-local residual basis
+  selection, exact augmented operator transformation, moment-matched Gaussian
+  descriptors, and residual-containing IDA interactions get physical/domain
+  names instead of permanent `R3-A/B/C` source concepts.
+- Added approved `HP-RG-*` IDs for the module files, residual basis object,
+  `build_residual_gaussian_basis`, `transform_augmented_operator`,
+  `moment_matched_gaussians`, `assemble_residual_ida_interaction`, migration
+  wiring, and migration validation.
+- Froze the migration boundary: `pqs_terminal_residual_gto.jl` may keep only
+  temporary delegating wrappers for existing callers, and those wrappers must
+  be deleted after callers move.
+
+Validation:
+- Design-manager ran docs-only validation: `git diff --check`, focused `rg`
+  checks for the new `HP-RG-*` IDs, module path, production function names,
+  forbidden public/Cr2 surfaces, and confirmed
+  `git diff --name-only -- src test tools bin` was empty.
+
+Goal advancement:
+- R3/LT6: turns the residual-GTO/MWG implementation from a terminal-basis
+  helper cluster into a named domain-module migration lane.
+- MT4: enables a narrow cleanup/source-organization pass without changing
+  scientific behavior, public API, artifact schema, or Cr2 scope.
+
+Carrying-cost result:
+- deleted: none in this docs pass.
+- simplified: future source ownership is now one domain module with physical
+  function names rather than more R3-named helpers in the terminal file.
+- quarantined: R3-A/B/C labels remain implementation-history and review/log
+  vocabulary only.
+- not deleted because: current source callers still use
+  `pqs_terminal_residual_gto.jl` until repo-doer performs the migration.
+- exact remaining caller/blocker: implement the approved module migration,
+  rewire existing H2/R3U callers, validate the H2 endpoint and ignored Be2
+  measurement, then delete old wrappers once no live callers remain.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.
+
+Risk / guardrail:
+- Do not create a broad provider/cache framework or a vague
+  `stabilize_residual_metric(...)` entry point. Do not add public exports,
+  artifact keys, driver workflow, Cr2 facade/full Hamiltonian, ECP/EGOI, or
+  solver/RHF work under the domain-module migration.
+
 ## Cartesian Hamiltonian Producer Pass 065 - Implement R3 Owner-Local Residual Selection
 
 Commit(s):

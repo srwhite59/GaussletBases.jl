@@ -113,6 +113,25 @@ dangerous dense shape.
 - Width filtering changes the candidate span; it is not a conditioning repair
   for owner-local residual selection.
 
+## Residual Gaussian Domain Separation
+
+- `R3-A`, `R3-B`, and `R3-C` are implementation-history labels, not permanent
+  source concepts.
+- Residual occupation is not numerical rank and is not residual integral
+  weight.
+- Atom-local orthonormalization or localization is not the final inter-owner
+  merge.
+- Exact augmented one-body and moment transformation is not the MWG
+  approximation.
+- MWG interaction is not invariant under arbitrary residual rotations; the
+  residual orientation policy is part of the interaction convention.
+- The Residual Gaussian domain module owns residual basis selection,
+  exact augmented operator transformation, moment-matched descriptors, and
+  residual-containing IDA blocks. It does not own basis-set loading, parent
+  lattice construction, terminal shell topology, raw analytic Gaussian
+  integral formulas, reports, status objects, artifacts, drivers, or public
+  API/export.
+
 ## Lowdin
 
 Use symmetric Lowdin through the matrix inverse square root:

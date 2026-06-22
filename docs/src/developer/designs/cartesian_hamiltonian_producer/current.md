@@ -11,7 +11,9 @@ The R3 owner-local residual-selection source correction is approved under the
 existing R3 residual/Hamiltonian IDs. The R3 usability lane is approved only as
 a non-exported supported facade for H2 and internal/performance-supported Be2
 supplemented artifacts; it must use the corrected owner-local residual
-selection and the updated H2 scalar below.
+selection and the updated H2 scalar below. The Residual Gaussian domain module
+is approved as the future internal owner for residual basis, exact augmented
+operator, matched-width Gaussian, and residual IDA interaction code.
 
 This authority covers the base all-electron PQS path:
 
@@ -30,9 +32,11 @@ base producer surface recorded in `r1_public_base_producer.md` and
 `registry.md`, plus the narrow implemented R3-A/R3-B/R3-C residual-GTO/MWG
 surfaces recorded in `r3_residual_gto_mwg_augmentation.md` and `registry.md`,
 and the R3 usability facade recorded in
-`r3_usability_supplemented_workflow.md`. The visible driver shape may call the
-implemented base path, but this design does not approve a new artifact format
-except the `HP-R1-ART-01` `producer_provenance/` keys and the `HP-R3-ART-01`
+`r3_usability_supplemented_workflow.md`, plus the Residual Gaussian domain
+module migration recorded in `residual_gaussian_domain_module.md`. The visible
+driver shape may call the implemented base path, but this design does not
+approve a new artifact format except the `HP-R1-ART-01`
+`producer_provenance/` keys and the `HP-R3-ART-01`
 `supplement_provenance/` keys in the final Hamiltonian file, solver
 integration, broad driver redesign, or public workflow outside the R1 H/H2
 scope.
@@ -255,6 +259,31 @@ R3 usability does not approve a public export, driver/bin/tool workflow, Cr2
 artifact or full run, ECP/EGOI/RHF/solver work, a Hamiltonian wrapper,
 new artifact format, broad report/status/payload object, or exposed internal
 stage objects.
+
+Approved Residual Gaussian domain-module scope:
+
+- approved IDs: `HP-RG-FILE-01`, `HP-RG-OBJ-01`, `HP-RG-FN-01`,
+  `HP-RG-FN-02`, `HP-RG-FN-03`, `HP-RG-FN-04`, `HP-RG-WIRE-01`, and
+  `HP-RG-TEST-01`;
+- approved internal module files:
+  `src/cartesian_residual_gaussians/CartesianResidualGaussians.jl`,
+  `src/cartesian_residual_gaussians/residual_basis.jl`,
+  `src/cartesian_residual_gaussians/augmented_operators.jl`, and
+  `src/cartesian_residual_gaussians/mwg_interaction.jl`;
+- approved ownership: owner-local residual Gaussian basis selection, residual
+  occupation spectra and cutoff policy, atom-local orientation, final
+  inter-owner merge, final `T_G`/`T_A` transforms, exact augmented
+  `K`/`U_A`/moments, matched-width Gaussian descriptors, and
+  residual-containing IDA interaction blocks;
+- the module must not own basis-set loading, parent lattice construction,
+  terminal shell topology, raw analytic Gaussian integral formulas, route
+  reports/stages/status symbols, artifacts, driver parsing, public API, or
+  public export;
+- production source names should be physical/domain names such as
+  `build_residual_gaussian_basis`, `transform_augmented_operator`,
+  `moment_matched_gaussians`, and `assemble_residual_ida_interaction`;
+- `R3-A`, `R3-B`, and `R3-C` are implementation history labels, not permanent
+  source concepts.
 
 Base pair/assembly role decision:
 

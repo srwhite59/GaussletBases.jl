@@ -11,8 +11,10 @@ augmentation is implemented for the narrow H2 endpoint and compact artifact.
 The R3 usability lane approves only a non-exported supported facade for H2 and
 internal/performance-supported Be2 artifacts. The owner-local
 residual-selection source correction is approved with H2 self-Coulomb
-`0.4574265214362075`; broad public API, driver UX, Cr2 validation, ECP, EGOI,
-RHF, and solver work remain deferred.
+`0.4574265214362075`. The Residual Gaussian domain module is approved as the
+future internal owner for residual basis, exact augmented operators, and MWG
+interaction code; broad public API, driver UX, Cr2 validation, ECP, EGOI, RHF,
+and solver work remain deferred.
 
 Agents should read first:
 
@@ -35,6 +37,10 @@ Approved amendments:
   approves only a non-exported supported facade that constructs H2 and
   internal/performance-supported Be2 supplemented artifacts from system, base
   basis, and supplement specs.
+- [Residual Gaussian domain module](residual_gaussian_domain_module.md)
+  approves the future internal source owner and migration path for residual
+  Gaussian basis selection, exact augmented operators, matched-width Gaussian
+  descriptors, and residual IDA interaction blocks.
 
 Candidate amendments:
 

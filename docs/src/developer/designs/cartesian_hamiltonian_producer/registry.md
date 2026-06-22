@@ -448,6 +448,11 @@ expansion, driver/bin/tool workflow, broad provider payloads, status/result
 objects, report fields, pair/assembly public workflow, Be2 first-gate
 validation, Cr2 validation, ECP, or EGOI.
 
+The implemented R3 file/path entries below remain valid for the current code
+and temporary compatibility wrappers. Future source migration to
+physical/domain names and the new Residual Gaussian module files is authorized
+by the `HP-RG-*` IDs below, not by adding more R3-named helpers.
+
 Approved first fixture and spike evidence from manager-log Pass 048:
 
 - public/base z-axis H2;
@@ -945,6 +950,139 @@ stage objects.
 
 An ignored Be2 timing/proxy script under `tmp/work` is allowed, but Be2 is not
 a committed gate in this amendment and no Be2/Cr2 test file is approved.
+
+## Approved For Residual Gaussian Domain Migration
+
+These entries authorize only the internal source-organization migration
+recorded in `residual_gaussian_domain_module.md`. They do not approve public
+export, public API, artifact schema changes, Cr2 facade support, full Cr2
+Hamiltonians/artifacts, driver/bin/tool workflow, report/status/payload
+objects, solver/RHF, ECP, EGOI, or new production behavior beyond moving the
+existing approved owner-local residual-GTO/MWG construction into a domain
+module with physical names.
+
+### HP-RG-FILE-01 — Residual Gaussian module files
+
+Approved internal module and files:
+
+```text
+src/cartesian_residual_gaussians/CartesianResidualGaussians.jl
+src/cartesian_residual_gaussians/residual_basis.jl
+src/cartesian_residual_gaussians/augmented_operators.jl
+src/cartesian_residual_gaussians/mwg_interaction.jl
+```
+
+`src/GaussletBases.jl` may add only the internal include needed to load the
+module. No public export is approved. Include-order adjustments are allowed
+only as needed to place the module after existing internal dependencies and
+before approved callers; unrelated subsystem reordering is not approved.
+
+### HP-RG-OBJ-01 — residual Gaussian basis object
+
+Approved domain object: a numerical residual Gaussian basis object carrying
+base dimension, candidate count, residual dimension, candidate owner indices,
+residual source owner indices, owner retained counts, retained residual
+occupations, cutoff/tolerance policy, selection/orientation/sign rules, and
+final `T_G::Matrix{Float64}` / `T_A::Matrix{Float64}` transforms.
+
+The object must not be a status/result payload and must not carry route
+metadata, report fields, status flags, raw candidate payload clouds, full
+discarded spectra, MWG center/width matrices, dense moment matrices,
+artifacts, or public API state.
+
+### HP-RG-FN-01 — residual Gaussian basis construction
+
+Approved production name:
+
+```julia
+build_residual_gaussian_basis(...)
+```
+
+The exact Julia signature may follow local types, but candidate owner indices
+are required. Parsing owner identity from labels is not approved.
+
+The algorithm is owner-local residual occupation selection, donor-style
+full-rank owner orientation when all owner modes are retained, deterministic
+owner-local natural modes when rank is lost, and one final inter-owner
+symmetric Lowdin merge. It must use the approved `eta_RG = 1.0e-8`,
+`tau_neg_abs = tau_neg_rel = 1.0e-12`, and
+`tau_merge_abs = tau_merge_rel = 1.0e-12` policies.
+
+Do not add a vague global entry point such as
+`stabilize_residual_metric(...)`. Global raw-candidate Lowdin and global
+raw-column pivoted-Cholesky selection are not the Residual Gaussian basis
+algorithm.
+
+### HP-RG-FN-02 — exact augmented operator transformation
+
+Approved production name:
+
+```julia
+transform_augmented_operator(...)
+```
+
+This owns exact transformation of raw `[G, A]` blocks into augmented `[G, R]`
+operator blocks for kinetic, every uncharged by-center nuclear attraction,
+`x`, `y`, `z`, `x^2`, `y^2`, and `z^2`. This is exact operator
+transformation, not the MWG approximation.
+
+### HP-RG-FN-03 — moment-matched Gaussian descriptors
+
+Approved production name:
+
+```julia
+moment_matched_gaussians(...)
+```
+
+This builds residual matched-width Gaussian descriptors from final merged
+residual functions and exact transformed moment matrices using
+`sigma = sqrt(2v)`. The descriptors are only for residual-containing
+interaction approximation and must not be treated as exact residual-GTO
+Coulomb integrals or base-PQS IDA weights.
+
+### HP-RG-FN-04 — residual IDA interaction assembly
+
+Approved production name:
+
+```julia
+assemble_residual_ida_interaction(...)
+```
+
+This owns residual-containing MWG/IDA interaction blocks
+`V_aug = [V_GG_base V_GM; V_GM' V_MM]`. `V_GG_base` is unchanged from the base
+Hamiltonian. `V_GM` must use the approved weight-aware final-basis
+density-normalized contraction for PQS shell blocks, `V_MM` uses the direct
+density-normalized matched-Gaussian interaction, and term-first pair-factor
+reuse plus bounded workspace remain binding requirements.
+
+### HP-RG-WIRE-01 — migration from terminal residual file
+
+The existing
+`src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` may be
+touched only to delegate existing R3/R3U callers to `CartesianResidualGaussians`
+or to delete old helpers after callers move. Temporary compatibility wrappers
+may remain only for existing callers, must delegate to the new module, must
+not preserve the old global-selection algorithm, and must be deleted when the
+last live caller moves. Prefer deleting wrappers immediately if a source pass
+can switch all callers in one commit.
+
+### HP-RG-TEST-01 — migration validation
+
+Approved validation for the migration:
+
+- existing standalone H2 residual-GTO/MWG endpoint with augmented dimension
+  `489` and lowest-orbital IDA self-Coulomb `0.4574265214362075` within
+  `1.0e-10`;
+- exact one-body/moment checks for `G' S R`, `R' S R`, base G-G block
+  equality, finite/symmetric `K`, uncharged `U_A`, and moment matrices;
+- independent weight-aware `V_GM` check;
+- R3U facade section, if touched, against the same scalar and artifact
+  readback deltas;
+- ignored Be2 owner-local usability/performance measurement under `tmp/work`
+  when the source pass changes the interaction path or facade wiring.
+
+No new committed test file, no Be2 committed gate, and no Cr2 full
+Hamiltonian/artifact/facade validation is approved.
 
 ## Rejected Or Deferred
 
