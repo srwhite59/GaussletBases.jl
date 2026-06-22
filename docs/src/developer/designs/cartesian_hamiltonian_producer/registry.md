@@ -416,6 +416,73 @@ ID does not approve adding it to `test/runtests.jl`. It must not assert private
 route-stage fields, report mirrors, status/blocker symbols, terminal role
 vocabulary, or pair inventories.
 
+## Candidate, Not Approved
+
+Candidate entries record proposed design surfaces for review. They do not
+authorize source, test, tool, driver, public API, or artifact changes until
+explicitly moved into an approved section.
+
+### HP-R3-OBJ-01 — augmented residual-GTO/MWG basis object — candidate
+
+Candidate scope for residual-GTO/MWG augmentation only. A future object may
+describe fixed base final basis `G`, Gaussian supplement candidates `A`,
+residual block `R`, residual metric facts, and augmented dimension. It must not
+rotate or re-Lowdin the base PQS basis, carry route-global matrices in
+metadata, or introduce broad status/report payloads.
+
+### HP-R3-FN-01 — residual-GTO/MWG augmentation boundary — candidate
+
+Candidate conceptual boundary:
+
+```julia
+augment_cartesian_ida_hamiltonian_with_residual_gto_mwg(
+    terminal_basis_realization::CartesianTerminalBasisRealization,
+    base_hamiltonian::CartesianIDAHamiltonian{Float64},
+    supplement::CartesianGaussianShellSupplementRepresentation3D,
+    provider_blocks,
+    residual_options,
+)::CartesianIDAHamiltonian{Float64}
+```
+
+The final name, owner file, and argument types are not approved. The candidate
+construction extends the fixed localized final basis with residual GTO/MWG
+functions before final supplemented `K`/`U_A`/`V` assembly. It is not a
+post-hoc wrapper around an opaque base Hamiltonian.
+
+### HP-R3-FN-02 — augmented one-body assembly — candidate
+
+Candidate scope: assemble augmented kinetic and uncharged by-center nuclear
+matrices in basis `[G, R]`. Reuse base `G-G` blocks only when exactly
+equivalent, and build mixed/residual blocks from explicit GTO/provider kernels.
+No route-global metadata matrices, report clouds, or status-only preflight
+graphs are candidate authority.
+
+### HP-R3-FN-03 — residual MWG/IDA assembly — candidate
+
+Candidate scope: assemble supplemented localized IDA terms using the base
+`G-G` block plus residual-GTO/MWG descriptors for residual-containing terms.
+The base PQS positive final-weight gauge must not be applied blindly to
+residual-GTO/MWG integrals or moments; near-zero or negative residual
+contributions are allowed where the residual construction or physical operator
+permits them.
+
+### HP-R3-ART-01 — supplemented artifact provenance — candidate
+
+Candidate artifact extension only. The in-memory numerical object remains the
+existing `CartesianIDAHamiltonian{Float64}` when its matrices satisfy the
+current contract. A supplemented artifact may add fixed
+`supplement_provenance/` keys exactly as defined in
+`r3_residual_gto_mwg_augmentation.md`. This candidate does not approve a
+Hamiltonian wrapper, separate manifest, public provenance reader, HamV6 export,
+solver export, or consumer API.
+
+### HP-R3-TEST-01 — first supplemented endpoint validation — candidate
+
+Candidate first proxy: z-axis H2 with the existing base H2 public geometry and
+a small H-centered Cartesian GTO supplement such as H/cc-pVTZ with `lmax = 1`.
+Be2 should follow as the first performance/realism proxy. Cr2 remains a later
+stress and consumer-readiness milestone, not the first R3 correctness gate.
+
 ## Rejected Or Deferred
 
 ### HP-RES-01 — terminal basis build result — rejected

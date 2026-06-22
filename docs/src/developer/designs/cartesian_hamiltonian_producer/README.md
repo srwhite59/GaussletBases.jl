@@ -24,6 +24,13 @@ Approved amendments:
   minimal public base Hamiltonian producer surface for first origin-centered H
   and z-axis H2 implementation.
 
+Candidate amendments:
+
+- [R3 residual-GTO/MWG augmentation](r3_residual_gto_mwg_augmentation.md)
+  sketches a generic supplemented-Hamiltonian path against the current
+  terminal final-basis boundary. It is not implementation authority until its
+  candidate IDs are explicitly approved.
+
 Historical material:
 
 - [history/cartesian_hamiltonian_producer_design_2026-06_full.md](history/cartesian_hamiltonian_producer_design_2026-06_full.md)
