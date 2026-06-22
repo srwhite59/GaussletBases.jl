@@ -1,20 +1,20 @@
 # R3 Residual-GTO/MWG Augmentation
 
 Status: R3-A and R3-B approved with corrected weight-aware compact-path
-scalar. R3-C remains candidate-only.
+scalar. R3-C compact supplemented artifact provenance is approved.
 
 This document records the R3 path for generic residual-GTO/MWG augmentation of
-the Cartesian base Hamiltonian producer. It approves only the R3-A and R3-B IDs
-listed below for deterministic residual-basis construction, exact augmented
-one-body and moment matrices, residual MWG/IDA interaction blocks, and the
-first in-memory supplemented `CartesianIDAHamiltonian{Float64}`. It does not
-approve artifacts, public API expansion, driver or tool workflow, broad
-payload/status/report objects, ECP, EGOI, Be2/Cr2 validation, or implementation
-of the R3-C candidate ID.
+the Cartesian base Hamiltonian producer. It approves only the R3-A, R3-B, and
+R3-C IDs listed below for deterministic residual-basis construction, exact
+augmented one-body and moment matrices, residual MWG/IDA interaction blocks,
+the first in-memory supplemented `CartesianIDAHamiltonian{Float64}`, and
+compact supplemented artifact provenance. It does not approve public API
+expansion, driver or tool workflow, broad payload/status/report objects, ECP,
+EGOI, Be2/Cr2 validation, or broad residual-basis serialization.
 
 The first R3 review did not approve the IDs unchanged. This revision tightens
-the residual basis contract, splits the implementation lane, and defers
-artifact provenance until the in-memory numerical endpoint exists.
+the residual basis contract, splits the implementation lane, and keeps artifact
+provenance compact after the in-memory numerical endpoint is accepted.
 
 ## Approved IDs And Split
 
@@ -42,15 +42,16 @@ R3-B approved scope: MWG interaction and in-memory Hamiltonian.
 - `HP-R3-FN-03` - residual MWG/IDA interaction assembly and existing
   `CartesianIDAHamiltonian{Float64}` construction.
 
-R3-C candidate-only scope: artifact provenance and cleanup.
+R3-C approved scope: compact supplemented artifact provenance.
 
-- `HP-R3-ART-01` - compact supplemented artifact provenance and retirement
-  cleanup after R3-A/B numerical acceptance.
+- `HP-R3-ART-01` - compact supplemented artifact provenance in the existing
+  Cartesian IDA Hamiltonian artifact.
 
-No R3-A or R3-B approved ID authorizes a monolithic public producer, broad
+No R3 approved ID authorizes a monolithic public producer, broad
 payload bundle, driver workflow expansion, status/result object, pair/assembly
-workflow expansion, solver work, ECP, EGOI, artifact provenance, Be2
-validation, or Cr2 stress gate.
+workflow expansion, solver work, ECP, EGOI, Be2 validation, or Cr2 stress
+gate. R3-C approves only the compact `supplement_provenance/` group described
+below.
 
 ## Goal
 
@@ -542,18 +543,17 @@ them with residual-diagonal-only moments.
 
 ## R3-C Artifact And Provenance
 
-`HP-R3-ART-01` is deferred until after R3-A and the reapproved R3-B numerical
-endpoint are
-accepted. The existing `CartesianIDAHamiltonian{Float64}` is sufficient as the
-in-memory numeric Hamiltonian object when the augmented matrices satisfy the
-existing contract.
-It remains candidate-only and is not approved by R3-A or R3-B.
+`HP-R3-ART-01` is approved. The existing
+`CartesianIDAHamiltonian{Float64}` is sufficient as the in-memory numeric
+Hamiltonian object when the augmented matrices satisfy the existing contract.
+The artifact remains the existing `write_cartesian_ida_hamiltonian` file shape
+plus a compact `supplement_provenance/` group.
 
-The first supplemented artifact schema should be compact. It should derive
+The supplemented artifact schema is compact. It must derive
 provenance from the validated R3 construction specification, not recover
 `base_route` or input data from an in-memory Hamiltonian.
 
-Candidate compact provenance keys:
+Approved compact provenance keys:
 
 | Key | Value |
 | --- | --- |
@@ -579,21 +579,45 @@ Candidate compact provenance keys:
 | `supplement_provenance/mwg_convention_version` | `1` |
 | `supplement_provenance/mwg_convention` | `:separable_moment_matched_density_normalized` |
 | `supplement_provenance/one_body_source` | `:exact_transformed_raw_blocks` |
-| `supplement_provenance/interaction_source` | `:density_normalized_mwg_blocks` |
+| `supplement_provenance/interaction_source` | `:weight_aware_residual_mwg_ida_blocks` |
+| `supplement_provenance/validation_check_labels` | compact symbols naming accepted checks, including `:h2_lowest_augmented_one_body_orbital_ida_self_coulomb` when writing the H2 validation fixture |
+| `supplement_provenance/h2_self_coulomb_reference` | `0.4574256036192161` for the H2 validation fixture, otherwise `nothing` |
 
-The first compact schema should not store:
+The compact schema must not store:
 
 - the full residual eigenvalue vector;
 - MWG center matrices;
 - MWG width matrices;
 - `T_G` or `T_A`;
-- candidate labels.
+- candidate labels;
+- dense moment matrices;
+- full construction inputs.
 
 If those arrays become consumer-critical, a later explicit residual-basis
 artifact group must promote them together: residual transforms, candidate
 labels/order, owner indices, retained candidate indices, eigenvalue
 diagnostics, centers, and widths. Calling only centers and widths "provenance"
 would be misleading.
+
+Approved implementation surface:
+
+- `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` owns the
+  R3-C supplemented artifact write path.
+- It may call the existing `write_cartesian_ida_hamiltonian` and then add
+  `supplement_provenance/` keys to the same JLD2 file, following the R1
+  provenance pattern.
+- No edit to `src/cartesian_ida_hamiltonian.jl` is approved by this amendment.
+  If a future implementation cannot add the provenance group from the R3 owner
+  file, the exact writer seam must return for a separate docs-only amendment.
+
+Validation gate:
+
+- H2 supplemented artifact write/readback;
+- readback Hamiltonian `K`, every uncharged `U_A`, and `V` match the returned
+  in-memory Hamiltonian exactly or within tight roundoff deltas;
+- provenance keys match the validated R3 construction specification;
+- R3-B lowest-orbital IDA self-Coulomb remains `0.4574256036192161` within
+  `1.0e-10`.
 
 ## First Validation Fixture
 
@@ -730,6 +754,5 @@ lowest-orbital IDA self-Coulomb `0.4574256036192161` within `1.0e-10`. It must
 not assert private pair/assembly/report/status behavior, add the standalone
 file to `test/runtests.jl`, or run Be2 or Cr2.
 
-Do not approve R3-C until R3-B produces the in-memory supplemented Hamiltonian
-endpoint. Do not start Cr2 stress tests before the H2 and Be2 augmented paths
-are numerically and organizationally accepted.
+Do not start Cr2 stress tests before the H2 and Be2 augmented paths are
+numerically and organizationally accepted.

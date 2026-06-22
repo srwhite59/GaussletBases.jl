@@ -516,7 +516,19 @@ API expansion, driver/bin/tool workflow, broad provider payloads, status/result
 objects, report fields, parent-stage fields, Be2 validation, Cr2 validation,
 ECP, EGOI, RHF/solver work, rank-loss implementation, wrappers, or a new test
 file.
-`HP-R3-ART-01` remains candidate-only.
+
+`HP-R3-ART-01` approves only compact supplemented Hamiltonian artifact
+provenance for the R3 path. The approved source owner is
+`src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`. It may
+write the existing `CartesianIDAHamiltonian{Float64}` artifact shape with
+`write_cartesian_ida_hamiltonian` and then add a compact
+`supplement_provenance/` group to the same JLD2 file. No edit to
+`src/cartesian_ida_hamiltonian.jl`, no new Hamiltonian wrapper/payload, no
+public API/export, no driver/bin/tool workflow, no report/status/payload
+object, no new artifact format beyond the existing Hamiltonian file plus
+provenance group, no solver/RHF/Cr2 work, and no broad residual-basis
+serialization are approved. Validation-only readback may use
+`read_cartesian_ida_hamiltonian`; production must not require readback.
 
 `HP-FN-03` specifically approves
 `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl` as the Slice B

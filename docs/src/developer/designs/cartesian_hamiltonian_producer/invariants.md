@@ -140,3 +140,7 @@ Do not hand-roll one-sided eigendecomposition transforms for Lowdin.
 - R1 public facade artifact writes may add only the `HP-R1-ART-01`
   `producer_provenance/` keys in the final Hamiltonian file. Those keys are
   consumer provenance, not staged algorithm inputs.
+- R3 supplemented Hamiltonian artifact writes may add only the `HP-R3-ART-01`
+  `supplement_provenance/` keys in the final Hamiltonian file. Those keys are
+  consumer provenance, not staged algorithm inputs, and do not change the
+  `CartesianIDAHamiltonian` matrix artifact shape.

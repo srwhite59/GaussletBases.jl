@@ -712,27 +712,70 @@ The first R3-B endpoint may keep the approved full R3-A moment matrices
 `x`/`y`/`z`/`x^2`/`y^2`/`z^2`; this amendment does not replace them with a
 diagonal-only moment contract.
 
-## Candidate, Not Approved
+## Approved For R3-C Implementation
 
-Candidate entries record proposed design surfaces for review. They do not
-authorize source, test, tool, driver, public API, or artifact changes until
-explicitly moved into an approved section.
+### HP-R3-ART-01 — compact supplemented artifact provenance
 
-### HP-R3-ART-01 — compact supplemented artifact provenance — candidate/deferred
+Approved R3-C scope. The in-memory numerical object remains
+`CartesianIDAHamiltonian{Float64}`. The artifact remains the existing
+Cartesian IDA Hamiltonian file written by `write_cartesian_ida_hamiltonian`,
+with an added compact `supplement_provenance/` group defined in
+`r3_residual_gto_mwg_augmentation.md`. Provenance is derived from the validated
+R3 construction specification rather than recovered from an in-memory
+Hamiltonian.
 
-R3-C candidate scope, deferred until after accepted R3-A and R3-B numerical
-endpoints. The in-memory numerical object remains
-`CartesianIDAHamiltonian{Float64}`. A future artifact may add compact
-`supplement_provenance/` keys defined in
-`r3_residual_gto_mwg_augmentation.md`, derived from the validated R3
-construction specification rather than from an in-memory Hamiltonian.
+Approved source owner/path:
 
-The first compact schema must not store full residual eigenvalue vectors, MWG
-center matrices, MWG width matrices, `T_G`, `T_A`, or candidate labels. If
-those arrays become consumer-critical, a later explicit residual-basis artifact
-group must promote them together. This candidate does not approve a Hamiltonian
-wrapper, separate manifest, public provenance reader, HamV6 export, solver
-export, or consumer API.
+```text
+Owner module: CartesianFinalBasisRealization
+Source file: src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl
+```
+
+The R3 owner file may call `write_cartesian_ida_hamiltonian` and then add the
+`supplement_provenance/` group to the same JLD2 file. No edit to
+`src/cartesian_ida_hamiltonian.jl` is approved by this ID because the existing
+writer shape is sufficient. If implementation proves otherwise, the exact
+writer seam must return for a separate docs-only amendment.
+
+Approved `supplement_provenance/` keys:
+
+- `provenance_version`;
+- `producer = :cartesian_residual_gto_mwg_augmentation`;
+- `supplement_policy = :mwg_residual_gto`;
+- `basis_by_center`;
+- `lmax`;
+- `uncontracted`;
+- `width_filtering`;
+- `candidate_count`;
+- `owner_counts`;
+- `base_dimension`;
+- `residual_dimension`;
+- `augmented_dimension`;
+- `augmented_basis_order = :base_then_residual`;
+- `residual_basis_convention = :selected_candidate_order_symmetric_lowdin`;
+- `rank_rule`;
+- `tau_abs`, `tau_rel`, `tau_neg_abs`, `tau_neg_rel`;
+- `mwg_convention_version`;
+- `mwg_convention = :separable_moment_matched_density_normalized`;
+- `one_body_source`;
+- `interaction_source = :weight_aware_residual_mwg_ida_blocks`;
+- compact validation check labels, including the H2 self-Coulomb check when
+  writing the H2 validation fixture;
+- H2 self-Coulomb reference `0.4574256036192161` for the validation fixture,
+  otherwise `nothing`.
+
+Do not store full residual eigenvalue vectors, MWG center matrices, MWG width
+matrices, dense moment matrices, `T_G`, `T_A`, candidate labels, full
+construction inputs, or broad residual-basis serialization in the first
+supplemented artifact. If those arrays become consumer-critical, a later
+explicit residual-basis artifact group must promote them together.
+
+Validation-only readback with `read_cartesian_ida_hamiltonian` is approved to
+confirm the returned/read Hamiltonian matrices agree and that R3-B
+self-Coulomb remains `0.4574256036192161` within `1.0e-10`. This ID does not
+approve a Hamiltonian wrapper, separate manifest, public provenance reader,
+HamV6 export, solver export, public API/export, driver/bin/tool workflow,
+report/status/payload object, solver/RHF/Cr2 work, or consumer API.
 
 ## Rejected Or Deferred
 

@@ -6,7 +6,8 @@ producer implementation is approved for the narrow H/H2 scope. R3-A
 residual-GTO basis plus exact augmented one-body/moment implementation is
 approved for the first H2 endpoint. R3-B in-memory residual MWG/IDA
 Hamiltonian construction is reapproved for the first H2 endpoint with the
-corrected weight-aware compact-path baseline.
+corrected weight-aware compact-path baseline. R3-C compact supplemented
+artifact provenance is approved for the existing Hamiltonian artifact shape.
 
 This authority covers the base all-electron PQS path:
 
@@ -27,9 +28,10 @@ R3-B in-memory residual MWG/IDA Hamiltonian surface
 recorded in `r3_residual_gto_mwg_augmentation.md` and `registry.md`. The
 visible driver shape may call the implemented base path, but this design does
 not approve a new artifact format except the `HP-R1-ART-01`
-`producer_provenance/` keys in the final Hamiltonian file, solver integration,
-broad driver redesign, public workflow outside the R1 H/H2 scope, or R3-C
-artifact/cleanup work.
+`producer_provenance/` keys and the `HP-R3-ART-01`
+`supplement_provenance/` keys in the final Hamiltonian file, solver
+integration, broad driver redesign, or public workflow outside the R1 H/H2
+scope.
 
 Current implementation boundary:
 
@@ -138,6 +140,21 @@ report fields, parent-stage fields, Be2 validation, Cr2 validation,
 RHF/solver work, rank-loss implementation, width scaling, or tolerance
 relaxation.
 
+Approved R3-C compact supplemented artifact provenance scope:
+
+- approved source owner/path: `CartesianFinalBasisRealization` owns
+  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` for
+  `HP-R3-ART-01`;
+- R3-C writes the existing `CartesianIDAHamiltonian{Float64}` artifact shape
+  with `write_cartesian_ida_hamiltonian`, then adds only the compact
+  `supplement_provenance/` group defined in `registry.md`;
+- `read_cartesian_ida_hamiltonian` is used for validation/readback only and
+  remains a Hamiltonian reader, not a public provenance API;
+- R3-C does not approve a Hamiltonian wrapper, payload/status/report object,
+  public API/export, driver/bin/tool workflow, solver/RHF/Cr2, broad
+  residual-basis serialization, or any artifact format beyond the existing
+  Hamiltonian file plus provenance group.
+
 Base pair/assembly role decision:
 
 - The future base public workflow should be:
@@ -181,8 +198,8 @@ Deferred lanes:
   owned-support mixed providers, bounded MWG term storage, and nonallocating
   large-matrix validation checks;
 - Cr2-scale stress and performance validation;
-- R3-C artifact provenance/cleanup, Be2/Cr2 validation, and other non-base
-  Hamiltonians;
+- R3 cleanup beyond compact artifact provenance, Be2/Cr2 validation, and other
+  non-base Hamiltonians;
 - solver integration;
 - White-Lindsey pair-framework completion;
 - distorted-product COMX realization;
