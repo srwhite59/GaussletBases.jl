@@ -1,14 +1,15 @@
 # R3 Residual-GTO/MWG Augmentation
 
-Status: R3-A approved; R3-B and R3-C remain candidate-only.
+Status: R3-A and R3-B approved; R3-C remains candidate-only.
 
 This document records the R3 path for generic residual-GTO/MWG augmentation of
-the Cartesian base Hamiltonian producer. It approves only the R3-A IDs listed
-below for deterministic residual-basis construction plus exact augmented
-one-body and moment matrices. It does not approve R3-B MWG/IDA, supplemented
-`CartesianIDAHamiltonian` construction, artifacts, public API expansion, driver
-or tool workflow, broad payload/status/report objects, ECP, EGOI, Be2/Cr2
-first-gate validation, or implementation of the R3-B/R3-C candidate IDs.
+the Cartesian base Hamiltonian producer. It approves only the R3-A and R3-B IDs
+listed below for deterministic residual-basis construction, exact augmented
+one-body and moment matrices, residual MWG/IDA interaction blocks, and the
+first in-memory supplemented `CartesianIDAHamiltonian{Float64}`. It does not
+approve artifacts, public API expansion, driver or tool workflow, broad
+payload/status/report objects, ECP, EGOI, Be2/Cr2 validation, or implementation
+of the R3-C candidate ID.
 
 The first R3 review did not approve the IDs unchanged. This revision tightens
 the residual basis contract, splits the implementation lane, and defers
@@ -35,7 +36,7 @@ that source file. Existing `CartesianFinalBasisRealization` module include
 plumbing may include the file only to expose the approved internal R3-A
 surfaces; it does not approve public API or export expansion.
 
-R3-B candidate-only scope: MWG interaction and in-memory Hamiltonian.
+R3-B approved scope: MWG interaction and in-memory Hamiltonian.
 
 - `HP-R3-FN-03` - residual MWG/IDA interaction assembly and existing
   `CartesianIDAHamiltonian{Float64}` construction.
@@ -45,11 +46,10 @@ R3-C candidate-only scope: artifact provenance and cleanup.
 - `HP-R3-ART-01` - compact supplemented artifact provenance and retirement
   cleanup after R3-A/B numerical acceptance.
 
-No R3-A approved ID authorizes a monolithic public producer, broad payload
+No R3-A or R3-B approved ID authorizes a monolithic public producer, broad payload
 bundle, driver workflow expansion, status/result object, pair/assembly workflow
-expansion, solver work, ECP, EGOI, MWG/IDA, supplemented Hamiltonian
-construction, artifact provenance, Be2 first-gate validation, or Cr2 stress
-gate.
+expansion, solver work, ECP, EGOI, artifact provenance, Be2 validation, or Cr2
+stress gate.
 
 ## Goal
 
@@ -312,7 +312,22 @@ R3-A validation gates:
 R3-B starts only after R3-A is accepted. It constructs residual MWG descriptors,
 residual-containing IDA blocks, and the in-memory augmented
 `CartesianIDAHamiltonian{Float64}`.
-It remains candidate-only and is not approved by R3-A.
+
+Approved R3-B source owner/path/function:
+
+```text
+Owner module: CartesianFinalBasisRealization
+Source file: src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl
+Function: pqs_terminal_residual_gto_augmented_hamiltonian
+```
+
+`HP-R3-FN-03` may be implemented only in that file. The function is internal
+module surface, not a public API or export. It consumes the accepted R3-A
+residual object and exact augmented one-body/moment matrices, reuses the base
+Hamiltonian `V_GG`, assembles residual-containing MWG/IDA blocks, and returns
+the existing `CartesianIDAHamiltonian{Float64}` directly. File-local helpers
+are allowed only for residual MWG descriptor extraction, `G-M` block assembly,
+`M-M` block assembly, final `V_aug` construction, and endpoint validation.
 
 ### MWG Moment Convention
 
@@ -357,6 +372,26 @@ no second division by base final weights or effective-Gaussian weights occurs.
 `V_GG_base` is reused from the accepted base localized IDA path. `V_GM` and
 `V_MM` are MWG approximations, not exact residual-GTO Coulomb integrals.
 
+The in-memory Hamiltonian is constructed as:
+
+```text
+CartesianIDAHamiltonian(
+    K_aug,
+    U_aug_by_center,
+    V_aug,
+    base_hamiltonian.nup,
+    base_hamiltonian.ndn;
+    nuclear_charges = base_hamiltonian.nuclear_charges,
+    nuclear_positions = base_hamiltonian.nuclear_positions,
+)
+```
+
+`K_aug` and `U_aug_by_center` must come from the accepted R3-A augmented
+one-body construction. The `G-G` blocks of `K_aug`, every `U_A`, and `V_aug`
+must match the supplied base Hamiltonian. The base Hamiltonian is allowed only
+as the same-construction base object for the validated H2 fixture; accepting an
+arbitrary dimension-compatible Hamiltonian is not an R3-B contract.
+
 ### Fast Coulomb Organization
 
 R3-B must:
@@ -376,7 +411,15 @@ R3-B validation gates:
 - `V_aug` is symmetric;
 - base `V_GG` block is unchanged;
 - returned object is the existing `CartesianIDAHamiltonian{Float64}`;
+- augmented dimension is `489` for the first H2 fixture;
+- the lowest augmented one-body orbital has IDA self-Coulomb
+  `0.457435475059184` within `1.0e-10`;
 - no Hamiltonian wrapper/result/status payload is introduced.
+
+The validation scalar above comes from the reviewed private residual-GTO H2
+diagnostic in the manager log. R3-B must reproduce it through the compact
+R3-A/R3-B authority path; old private provider payloads, artifact fields, and
+driver diagnostics are donor evidence only, not production authority.
 
 ## R3-C Artifact And Provenance
 
@@ -384,7 +427,7 @@ R3-B validation gates:
 accepted. The existing `CartesianIDAHamiltonian{Float64}` is sufficient as the
 in-memory numeric Hamiltonian object when the augmented matrices satisfy the
 existing contract.
-It remains candidate-only and is not approved by R3-A.
+It remains candidate-only and is not approved by R3-A or R3-B.
 
 The first supplemented artifact schema should be compact. It should derive
 provenance from the validated R3 construction specification, not recover
@@ -456,9 +499,9 @@ owner rule: exact candidate-center match to one physical nucleus
 of this contracted cc-pVTZ fixture and must be asserted directly. The retained
 residual rank must be measured.
 
-R3-A first endpoint should be H2 augmented one-body and moments, not a
-residual-basis-only scaffold commit. R3-B should then add MWG interaction and
-the existing in-memory Hamiltonian. Be2 follows as the first
+R3-A first endpoint is H2 augmented one-body and moments, not a
+residual-basis-only scaffold commit. R3-B adds MWG interaction and the existing
+in-memory Hamiltonian for the same H2 fixture. Be2 follows as the first
 performance/realism proxy before Cr2.
 
 Cr2 remains a later stress/consumer-readiness milestone, not the first R3
@@ -523,7 +566,8 @@ After R3-C:
 
 ## Approved First Implementation Target
 
-The approved first implementation target is R3-A only:
+The approved first implementation target is R3-A plus the narrow R3-B
+in-memory interaction continuation:
 
 ```text
 base z-axis H2
@@ -531,15 +575,24 @@ base z-axis H2
 -> deterministic residual-GTO block
 -> exact augmented K, U_A, x/y/z, and x2/y2/z2
 -> H2 augmented one-body endpoint
+-> residual moment-matched Gaussians
+-> V_GM and V_MM MWG/IDA blocks
+-> in-memory supplemented CartesianIDAHamiltonian
+-> H2 lowest-orbital IDA self-Coulomb endpoint
 ```
 
 The first committed/standalone endpoint gate is approved by `HP-R3-TEST-01`
-for the H2 augmented one-body/moment endpoint only. It must check `G' S R`,
-`R' S R`, base G-G block equality, finite/symmetric augmented `K`, uncharged
-`U_A`, and moment matrices, and `E1_aug <= E1_base + epsilon`. It must not
-assert private pair/assembly/report/status behavior and must not run Be2 or
-Cr2.
+in `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`. R3-A checks
+the H2 augmented one-body/moment endpoint. R3-B may extend that same standalone
+file, despite its R3-A name, only with the first in-memory supplemented
+Hamiltonian checks described above. It must check `G' S R`, `R' S R`, base G-G
+block equality, finite/symmetric augmented `K`, uncharged `U_A`, and moment
+matrices, `E1_aug <= E1_base + epsilon`, finite/symmetric `V_aug`, unchanged
+base `V_GG`, returned `CartesianIDAHamiltonian{Float64}`, augmented dimension
+`489`, and lowest-orbital IDA self-Coulomb `0.457435475059184` within
+`1.0e-10`. It must not assert private pair/assembly/report/status behavior,
+add the standalone file to `test/runtests.jl`, or run Be2 or Cr2.
 
-Do not approve R3-B or R3-C until R3-A produces the exact one-body/moment
+Do not approve R3-C until R3-B produces the in-memory supplemented Hamiltonian
 endpoint. Do not start Cr2 stress tests before the H2 and Be2 augmented paths
 are numerically and organizationally accepted.

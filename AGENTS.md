@@ -407,6 +407,7 @@ these approved design IDs:
 - `HP-R3-OBJ-01`
 - `HP-R3-FN-01`
 - `HP-R3-FN-02`
+- `HP-R3-FN-03`
 - `HP-R3-TEST-01`
 
 No other production surface may be added in this lane without a prior
@@ -464,7 +465,22 @@ endpoint gate, not inclusion in `test/runtests.jl`. R3-A does not approve
 MWG/IDA `V`, supplemented `CartesianIDAHamiltonian` construction, artifact
 provenance, public API expansion, driver/bin/tool workflow, broad provider
 payloads, status/result objects, report fields, Be2 first-gate validation, or
-Cr2 validation. `HP-R3-FN-03` and `HP-R3-ART-01` remain candidate-only.
+Cr2 validation.
+
+`HP-R3-FN-03` approves only the R3-B in-memory residual-MWG/IDA interaction
+continuation in
+`src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`, owned by
+`CartesianFinalBasisRealization`, through the internal function
+`pqs_terminal_residual_gto_augmented_hamiltonian`. It may compute residual MWG
+centers/widths from exact R3-A moment matrices, assemble density-normalized
+`V_GM` and `V_MM`, combine them with unchanged base `V_GG`, and return the
+existing `CartesianIDAHamiltonian{Float64}` directly. The first H2 closure
+value is lowest-orbital IDA self-Coulomb `0.457435475059184` within `1.0e-10`
+for augmented dimension `489`. `HP-R3-FN-03` does not approve artifact
+provenance, public API expansion, driver/bin/tool workflow, broad provider
+payloads, status/result objects, report fields, Be2 validation, Cr2 validation,
+ECP, EGOI, RHF/solver work, wrappers, or a new test file.
+`HP-R3-ART-01` remains candidate-only.
 
 `HP-FN-03` specifically approves
 `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl` as the Slice B

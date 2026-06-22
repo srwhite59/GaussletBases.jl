@@ -172,5 +172,6 @@ Deferred gates:
 
 - public-driver polish;
 - Cr2 stress/performance;
-- residual-GTO/MWG supplement materialization;
+- residual-GTO/MWG work outside the approved R3-A/R3-B first H2 in-memory
+  path, including artifacts and broader consumers;
 - non-base Hamiltonian variants.

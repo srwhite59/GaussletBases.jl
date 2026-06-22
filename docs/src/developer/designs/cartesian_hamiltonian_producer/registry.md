@@ -544,7 +544,7 @@ Hamiltonian.
 
 ### HP-R3-TEST-01 — first augmented one-body endpoint validation
 
-Approved standalone R3-A endpoint gate:
+Approved standalone R3-A/R3-B endpoint gate:
 
 ```text
 test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl
@@ -556,24 +556,33 @@ Invocation:
 julia --project=. test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl
 ```
 
-The gate covers only the H2 augmented one-body/moment endpoint. It should
+The gate covers only the H2 residual-GTO endpoint family. It should
 validate the frozen H2/H/cc-pVTZ fixture, candidate ownership, `G' S R`,
 `R' S R`, base G-G block equality, finite/symmetric augmented `K`, uncharged
 `U_A`, and moment matrices, and `E1_aug <= E1_base + epsilon`. It is a
 standalone endpoint/integration gate and is not approved for inclusion in
-`test/runtests.jl`. It must not assert private pair/assembly/report/status
-behavior and must not run Be2 or Cr2.
+`test/runtests.jl`. Under approved R3-B, the same file may be extended only
+with the first in-memory supplemented Hamiltonian checks: finite/symmetric
+`V_aug`, unchanged base `V_GG`, returned `CartesianIDAHamiltonian{Float64}`,
+augmented dimension `489`, and lowest-orbital IDA self-Coulomb
+`0.457435475059184` within `1.0e-10`. It must not assert private
+pair/assembly/report/status behavior and must not run Be2 or Cr2.
 
-## Candidate, Not Approved
+## Approved For R3-B Implementation
 
-Candidate entries record proposed design surfaces for review. They do not
-authorize source, test, tool, driver, public API, or artifact changes until
-explicitly moved into an approved section.
+### HP-R3-FN-03 — residual MWG/IDA and in-memory Hamiltonian
 
-### HP-R3-FN-03 — residual MWG/IDA and in-memory Hamiltonian — candidate
+Approved source owner/path/function:
 
-R3-B candidate scope, not R3-A. Residual MWG descriptors are computed from
-exact R3-A moments of the actual final residual functions:
+```text
+Owner module: CartesianFinalBasisRealization
+Source file: src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl
+Function: pqs_terminal_residual_gto_augmented_hamiltonian
+```
+
+This ID approves only the narrow R3-B in-memory interaction continuation for
+the accepted H2 R3-A path. It may compute residual MWG descriptors from exact
+R3-A moments of the actual final residual functions:
 
 ```text
 c_ralpha = <r | alpha | r>
@@ -581,8 +590,12 @@ v_ralpha = <r | alpha^2 | r> - c_ralpha^2
 sigma_ralpha = sqrt(2 * v_ralpha)
 ```
 
-The MWG approximation is separable and omits off-diagonal covariance. R3-B uses
-density-normalized `G-M` and `M-M` pair factors and inserts them directly into
+The MWG approximation is separable, uses the repo Gaussian-width convention in
+the factor `sqrt(2 * v_ralpha)`, and omits off-diagonal covariance. Nonfinite
+moments, nonpositive variances, or nonpositive widths are construction errors.
+
+R3-B uses density-normalized `G-M` and `M-M` pair factors and inserts them
+directly into
 
 ```text
 V_aug = [V_GG_base  V_GM
@@ -594,9 +607,29 @@ Gaussians, not raw supplement candidates and not exact residual-GTO Coulomb
 integrals. Term-first pair-factor reuse and bounded workspace are binding
 requirements in the R3 note.
 
-This candidate may return the existing `CartesianIDAHamiltonian{Float64}` after
-R3-A is accepted. It does not approve wrappers, payload/result/status objects,
-or artifact changes.
+The approved function must combine `V_aug` with the accepted R3-A augmented
+`K` and uncharged `U_A` blocks, and return the existing
+`CartesianIDAHamiltonian{Float64}` directly. It must reuse base
+`nup`/`ndn`, nuclear charges, and nuclear positions from the same-construction
+base Hamiltonian. An arbitrary dimension-compatible Hamiltonian is not an
+approved provenance source.
+
+First H2 closure value: for the public/base z-axis H2 plus contracted
+two-center H/cc-pVTZ `lmax = 1` fixture, the lowest augmented one-body orbital
+must have IDA self-Coulomb `0.457435475059184` within `1.0e-10`. This value is
+donor evidence from the reviewed private residual-GTO H2 diagnostic; R3-B must
+reproduce it through the compact R3-A/R3-B authority path.
+
+This ID does not approve artifacts, public API expansion, driver/bin/tool
+workflow, broad provider payloads, status/result objects, report fields,
+pair/assembly workflow expansion, Be2 validation, Cr2 validation, ECP, EGOI,
+RHF/solver work, wrappers, or a new test file.
+
+## Candidate, Not Approved
+
+Candidate entries record proposed design surfaces for review. They do not
+authorize source, test, tool, driver, public API, or artifact changes until
+explicitly moved into an approved section.
 
 ### HP-R3-ART-01 — compact supplemented artifact provenance — candidate/deferred
 
