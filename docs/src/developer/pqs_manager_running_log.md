@@ -8566,3 +8566,57 @@ Risk / guardrail:
 - Do not restore the direct parent-density `G-M` insertion scalar
   `0.4574331709135599`. The accepted R3-B value is now the weight-aware
   `0.4574256036192161` scalar.
+
+## Cartesian Hamiltonian Producer Pass 056 - Track R3-B Weight-Aware Endpoint
+
+Commit(s):
+- this branch - Extend R3 endpoint test for R3B VGM
+
+Summary:
+- Accepted the approved standalone R3 endpoint gate extension in
+  `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`. The file now
+  covers both R3-A exact one-body/moment checks and the R3-B in-memory
+  Hamiltonian endpoint.
+- The new R3-B section constructs the base `CartesianIDAHamiltonian`, calls
+  `pqs_terminal_residual_gto_augmented_hamiltonian`, verifies the returned
+  Hamiltonian type and augmented dimension, checks finite/symmetric `V_aug`,
+  confirms the base `V_GG` block is unchanged, and computes the lowest
+  augmented one-body orbital self-Coulomb.
+- The test independently reconstructs `V_GM` with the documented weight-aware
+  final-basis contraction and compares both direct and PQS block rows against
+  the produced Hamiltonian interaction matrix.
+
+Validation:
+- Doer ran `git diff --check`, package load, and the standalone R3 endpoint
+  gate. The gate passed `49/49` in `39.14 s`.
+- Manager reviewed the test-only diff, ran `git diff --check`, package load,
+  and the suspicious-line scan, and accepted doer's fresh standalone endpoint
+  run without repeating the long test.
+
+Endpoint facts:
+- R3-B self-Coulomb `0.4574256036192161`, delta `0.0`.
+- Independent `V_GM` direct-block error `0.0`; PQS-block error `0.0`.
+
+Goal advancement:
+- R3: makes the corrected weight-aware R3-B endpoint durable in tracked
+  validation before R3-C or larger-system work.
+- LT5/LT6: protects the final-basis density-normalization convention with an
+  independent test computation rather than only the final scalar.
+
+Carrying-cost result:
+- deleted: none.
+- simplified: none.
+- quarantined: none.
+- not deleted because: existing R3-A checks remain active and the added R3-B
+  convention checks protect the corrected normalization.
+- exact remaining caller/blocker: no blocker for the tracked H2 R3-B endpoint;
+  Be2/Cr2 remain deferred by R3 design guardrails.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: extended one standalone integration gate by 86 lines.
+- new metadata/status fields: none.
+
+Risk / guardrail:
+- This test remains a standalone ~39 s integration gate, not default per-edit
+  CI. Do not use it to justify Be2/Cr2 readiness; rank-loss handling and
+  larger-scale provider performance remain separate lanes.
