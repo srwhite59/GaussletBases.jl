@@ -8283,3 +8283,58 @@ Risk / guardrail:
   endpoint. Exact one-body/moments are accepted; MWG/IDA `V`, supplemented
   Hamiltonian construction, artifacts, and public API remain unauthorized until
   their own approved slice.
+
+## Cartesian Hamiltonian Producer Pass 051 - Add R3-A Standalone Endpoint Gate
+
+Commit(s):
+- this branch - Add R3A augmented one-body endpoint test
+
+Summary:
+- Accepted the approved `HP-R3-TEST-01` durability gate at
+  `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`. The test is
+  intentionally standalone and is not wired into `test/runtests.jl`.
+- The gate validates the frozen H2 plus contracted two-center H/cc-pVTZ
+  `lmax = 1` residual-GTO fixture. It checks candidate labels/order, owner
+  counts, residual rank, `G' S R`, `R' S R`, finite/symmetric augmented
+  kinetic/unit-nuclear/moment matrices, base `G-G` block equality, and the
+  augmented one-body variational endpoint.
+- No source code, public API, artifact, report/status vocabulary, Be2/Cr2
+  scope, or R3-B MWG/IDA path was added.
+
+Validation:
+- Doer ran `git diff --check`, package load, and the new standalone gate.
+- Manager reviewed the new test file, confirmed it asserts the approved
+  physics endpoint rather than stale pair/assembly/report internals, reran
+  package load, and reran
+  `julia --project=. test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`.
+
+Endpoint facts:
+- Test passed `39/39` in `36.58 s` on the manager rerun.
+- Base dimension `471`, residual dimension `18`, augmented dimension `489`.
+- `E1_base = -0.7946037173365925`; `E1_aug = -0.7959028345077851`, satisfying
+  `E1_aug <= E1_base + 1e-10`.
+
+Goal advancement:
+- R3: makes the accepted R3-A exact one-body/moment endpoint durable in tracked
+  validation before any R3-B interaction work.
+- LT5/LT6: protects the residual-GTO convention with a physical endpoint gate
+  without expanding the public producer or adding a new payload layer.
+
+Carrying-cost result:
+- deleted: none.
+- simplified: converted the ignored R3-A validation into one focused
+  standalone endpoint gate.
+- quarantined: Be2/Cr2 and R3-B MWG/IDA remain out of scope.
+- not deleted because: ignored `tmp/work` validation can remain disposable
+  scratch and is not part of tracked contract.
+- exact remaining caller/blocker: R3-B MWG/IDA and supplemented Hamiltonian
+  construction remain candidate-only and unimplemented.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: one standalone integration gate, `177` lines, not in
+  `test/runtests.jl`.
+- new metadata/status fields: none.
+
+Risk / guardrail:
+- This is a ~36 s integration gate, not a default per-edit unit test. Keep it
+  as an explicit standalone acceptance check unless test-suite policy changes.
