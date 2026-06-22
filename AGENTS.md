@@ -447,6 +447,11 @@ expansion is approved, and no artifact expansion is approved except the
 source file. It does not approve a new K/U payload, stage-return field, report
 object, persistent one-body orchestration API, or status vocabulary.
 
+PQS terminal basis blocks must remain supported on owned terminal regions.
+Previous-block projection, recursive projection, and effective-support growth
+onto earlier terminal supports are not approved. Cross-block overlap is an
+audit, not a repair path.
+
 ## Hard Cartesian/PQS anti-bloat gate
 
 Until explicitly relaxed by the user, repo-manager must reject Cartesian/PQS

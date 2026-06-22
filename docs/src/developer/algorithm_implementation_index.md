@@ -110,8 +110,9 @@ operator blocks; route-global placement is a separate layer.
 
 Why to check:
 Avoid confusing shell-row truncation, raw source operators, and final shell
-realization. The terminal basis route uses previous-block projection and
-shell-local Lowdin; no global Lowdin repair is allowed.
+realization. The terminal basis route uses full-box boundary source modes
+restricted to shell-owned support followed by shell-local Lowdin; previous-block
+projection and global Lowdin repair are forbidden.
 
 Key docs:
 - `docs/src/developer/designs/cartesian_hamiltonian_producer/`
@@ -130,8 +131,10 @@ Source anchors:
 
 Do-not-forget rule:
 Use `inv(sqrt(Symmetric(overlap)))` for symmetric Lowdin. Build from raw
-source modes, then project and clean shell-locally. Do not substitute a global
-cleanup.
+full source-box boundary modes, restrict rows to
+`support.support_indices` / `support.support_states`, and clean only within the
+shell-owned support. Do not project against previous terminal blocks, grow
+support onto previous regions, or substitute a global cleanup.
 
 ## PQS Source-Box Retained Transforms
 

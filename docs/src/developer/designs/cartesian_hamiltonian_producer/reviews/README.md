@@ -17,6 +17,12 @@ The full June 2026 design document is preserved at:
 Review files are historical discussion and reconciliation artifacts. They are
 not normal startup reading and do not override the compact current authority.
 
+Historical recursive/previous-block projection material in these reviews is
+stale. The live Slice A authority rejects previous-block projection and
+effective-support growth for PQS terminal shell realization; use the compact
+`registry.md`, `invariants.md`, and `implementation_slices.md` contract
+instead.
+
 ## Historical Operating Model
 
 Repo-manager owned this design-review lane.

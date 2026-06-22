@@ -27,6 +27,16 @@ Current implementation boundary:
 - One-center atomic and bond-aligned diatomic terminal plans share the same
   terminal-basis realization entry point once typed terminal support, retained,
   and transform records exist.
+- Terminal basis realization is block-local. A PQS shell uses the full source
+  box only to generate boundary product-mode columns, then restricts rows to
+  the shell-owned `support_indices` / `support_states` before shell-local Gram
+  construction, symmetric Lowdin, final sign canonicalization, and appending
+  the block with unchanged owned support.
+- Previous-block projection, recursive projection, projection-basis repair, and
+  effective-support growth onto previous terminal regions are forbidden.
+  Cross-block overlap remains an audit; large overlap after shell-owned
+  realization is a parent metric or shell construction problem, not a reason to
+  mix coefficients into previous supports.
 - `cartesian_transforms` owns terminal basis realization for supported PQS
   terminal plans.
 - `cartesian_materialization(report, terminal_basis_realization,

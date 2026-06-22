@@ -11,6 +11,22 @@ Implemented boundary:
 - `pqs_terminal_basis_realization(...)`
 - terminal-basis wiring from `cartesian_transforms`
 
+Corrected construction contract:
+
+```text
+full source-box product modes
+-> boundary product-mode column selection
+-> restrict rows to support.support_indices / support.support_states
+-> shell-local Gram on that owned support
+-> symmetric shell-local Lowdin
+-> final sign canonicalization
+-> append block with unchanged owned support
+```
+
+Previous-block projection, recursive projection, and effective-support growth
+onto previous terminal regions are rejected. Cross-block overlap is retained as
+an audit only.
+
 Validation gates used:
 
 - one-center atomic terminal basis through the shared entry point;
@@ -29,6 +45,16 @@ Deletion obligations completed:
 Deferred gates:
 
 - larger performance/stress work is not part of Slice A.
+
+Implementation correction required:
+
+- remove `_subtract_previous` and recursive projection;
+- make `_shell_seed` use `support.support_indices` /
+  `support.support_states`, not all `outer_box` rows;
+- remove `projection_atol` plumbing when it has no remaining construction use;
+- H2 realized block supports should return to local counts such as `(275, 362,
+  578)`, not cumulative supports like `(275, 637, 1215)`;
+- rerun Slice A/B/C and R1 validation after source correction.
 
 ## Slice B — Final-Basis One-Body Operators
 

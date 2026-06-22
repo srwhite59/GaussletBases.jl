@@ -23,6 +23,11 @@ end
 
 `coefficients === nothing` means direct identity on the listed support rows.
 Otherwise `coefficients` is support-local rows by retained columns.
+`support_indices` and `support_states` are the authoritative owned terminal
+rows for the block. They must not mean a post-projection enlarged support, and
+PQS shell realization must not grow a block onto previous terminal regions.
+Terminal blocks are block-sparse by representation; direct blocks remain
+implicit identity on their owned support.
 
 ### HP-OBJ-02 — `CartesianTerminalBasisRealization`
 
@@ -39,7 +44,10 @@ end
 ```
 
 The object does not store parent bundles, stage objects, summaries, metadata,
-global coefficients, or global self-overlap matrices.
+global coefficients, or global self-overlap matrices. Its blocks are
+represented on disjoint owned terminal regions. This block-sparse basis
+representation does not imply block-diagonal kinetic, nuclear, overlap, or IDA
+operators.
 
 ### HP-FILE-01 — terminal realization file
 
@@ -49,12 +57,25 @@ Approved file:
 src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl
 ```
 
-### HP-FN-00 — projected terminal shell realization
+### HP-FN-00 — block-local terminal shell realization
 
 Approved as a file-local/internal helper under HP-FILE-01. It realizes one PQS
-terminal shell by projecting raw boundary seed columns against all previously
-accepted blocks, forming the projected Gram matrix, applying shell-local Lowdin,
-and returning effective support plus coefficients.
+terminal shell by:
+
+```text
+full source-box product modes
+-> boundary product-mode column selection
+-> restrict rows to support.support_indices / support.support_states
+-> shell-local Gram on that owned support
+-> symmetric shell-local Lowdin
+-> final sign canonicalization
+-> append block with unchanged owned support
+```
+
+Previous-block projection, recursive projection, projection basis, and
+effective-support growth are forbidden. Full source-box modes are used only to
+generate boundary product-mode columns before row restriction to the
+shell-owned support.
 
 ### HP-FN-01 — terminal basis realizer
 
@@ -68,7 +89,6 @@ pqs_terminal_basis_realization(
     bundles;
     identity_atol = 1.0e-8,
     cross_atol = 1.0e-8,
-    projection_atol = 1.0e-12,
     weight_atol = 1.0e-14,
 )
 ```
@@ -81,7 +101,10 @@ and construction of `CartesianTerminalBasisBlock`.
 
 Approved as internal Slice A logic. It computes `C_i' * S_ij * C_j` one block
 pair at a time and returns the largest infinity norm. It must not form global
-self-overlap or coefficient matrices.
+self-overlap or coefficient matrices. Cross-block overlap is an audit only, not
+a construction repair. If overlap is large after block-local shell-owned
+realization, report a parent metric or shell construction problem; do not mix
+coefficients into previous supports to repair it.
 
 ### HP-WIRE-01 — terminal-basis stage integration
 
