@@ -407,6 +407,7 @@ these approved design IDs:
 - `HP-R3-OBJ-01`
 - `HP-R3-FN-01`
 - `HP-R3-FN-02`
+- `HP-R3-FN-03`
 - `HP-R3-TEST-01`
 
 No other production surface may be added in this lane without a prior
@@ -466,21 +467,24 @@ provenance, public API expansion, driver/bin/tool workflow, broad provider
 payloads, status/result objects, report fields, Be2 first-gate validation, or
 Cr2 validation.
 
-`HP-R3-FN-03` is paused and not source-authorizing. The corrected compact-path
-R3-B evidence is: current R3-A exact residual moments with
-`sigma = sqrt(2v)` produce lowest-orbital IDA self-Coulomb
-`0.4574331709135599` within `1.0e-10` for augmented dimension `489`. The older
-`0.457435475059184` scalar is superseded for R3-B because it came from a
-retired private `[pre_final_pqs, residual_gto]` density-gauge diagnostic. Do
-not add a residual width scale factor, do not relax tolerance to fit the old
-scalar, and do not edit
-`src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` for R3-B
-until `HP-R3-FN-03` is separately reapproved. The paused owner/function would
-remain `CartesianFinalBasisRealization` /
-`pqs_terminal_residual_gto_augmented_hamiltonian`; this note does not approve
-artifact provenance, public API expansion, driver/bin/tool workflow, broad
-provider payloads, status/result objects, report fields, Be2 validation, Cr2
-validation, ECP, EGOI, RHF/solver work, wrappers, or a new test file.
+`HP-R3-FN-03` approves only the R3-B in-memory residual-MWG/IDA interaction
+continuation in
+`src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`, owned by
+`CartesianFinalBasisRealization`, through the internal function
+`pqs_terminal_residual_gto_augmented_hamiltonian`. It may compute residual MWG
+centers/widths from current R3-A exact residual moments using
+`sigma = sqrt(2v)`, assemble density-normalized `V_GM` and `V_MM`, combine
+them with unchanged base `V_GG`, and return the existing
+`CartesianIDAHamiltonian{Float64}` directly. The first H2 closure value is
+lowest-orbital IDA self-Coulomb `0.4574331709135599` within `1.0e-10` for
+augmented dimension `489`. The older `0.457435475059184` scalar is superseded
+for R3-B because it came from a retired private
+`[pre_final_pqs, residual_gto]` density-gauge diagnostic. Do not add a residual
+width scale factor or relax tolerance to fit the old scalar. `HP-R3-FN-03`
+does not approve artifact provenance, public API expansion, driver/bin/tool
+workflow, broad provider payloads, status/result objects, report fields, Be2
+validation, Cr2 validation, ECP, EGOI, RHF/solver work, wrappers, or a new test
+file.
 `HP-R3-ART-01` remains candidate-only.
 
 `HP-FN-03` specifically approves

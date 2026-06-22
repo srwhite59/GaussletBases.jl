@@ -5,7 +5,7 @@ implemented for the internal base PQS Hamiltonian producer. R1 public base
 producer implementation is approved for the narrow H/H2 scope. R3-A
 residual-GTO basis plus exact augmented one-body/moment implementation is
 approved for the first H2 endpoint. R3-B in-memory residual MWG/IDA
-Hamiltonian construction is paused pending follow-up reapproval with the
+Hamiltonian construction is reapproved for the first H2 endpoint with the
 corrected compact-path baseline.
 
 This authority covers the base all-electron PQS path:
@@ -22,8 +22,8 @@ terminal support and retained contracts
 
 This is internal base-Hamiltonian authority plus the narrow approved R1 public
 base producer surface recorded in `r1_public_base_producer.md` and
-`registry.md`, plus the narrow R3-A residual-GTO exact one-body/moment surface
-and paused R3-B evidence
+`registry.md`, plus the narrow R3-A residual-GTO exact one-body/moment and
+R3-B in-memory residual MWG/IDA Hamiltonian surface
 recorded in `r3_residual_gto_mwg_augmentation.md` and `registry.md`. The
 visible driver shape may call the implemented base path, but this design does
 not approve a new artifact format except the `HP-R1-ART-01`
@@ -84,9 +84,9 @@ R3-A does not approve MWG/IDA `V`, supplemented
 expansion, driver/bin/tool workflow, broad provider payloads, status/result
 objects, report fields, Be2 first-gate validation, or Cr2 validation.
 
-Paused R3-B residual-MWG/IDA in-memory Hamiltonian scope:
+Approved R3-B residual-MWG/IDA in-memory Hamiltonian scope:
 
-- paused source owner/path/function, if later reapproved:
+- approved source owner/path/function:
   `CartesianFinalBasisRealization` owns
   `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`, function
   `pqs_terminal_residual_gto_augmented_hamiltonian`, for `HP-R3-FN-03`;
@@ -105,10 +105,10 @@ Paused R3-B residual-MWG/IDA in-memory Hamiltonian scope:
   `[pre_final_pqs, residual_gto]` density gauge, is not an acceptance target
   for the compact R3-A residual basis.
 
-R3-B is paused and does not approve source work, test extension, artifact
-provenance, public API expansion, driver/bin/tool workflow, broad provider
-payloads, status/result objects, report fields, Be2 validation, Cr2 validation,
-RHF/solver work, width scaling, or tolerance relaxation.
+R3-B does not approve artifact provenance, public API expansion,
+driver/bin/tool workflow, broad provider payloads, status/result objects,
+report fields, Be2 validation, Cr2 validation, RHF/solver work, width scaling,
+or tolerance relaxation.
 
 Base pair/assembly role decision:
 
@@ -149,8 +149,8 @@ Deferred lanes:
 - public-driver polish and examples outside the approved R1 origin-centered H
   and z-axis H2 base producer scope;
 - Cr2-scale stress and performance validation;
-- R3-B reapproval, R3-C artifact provenance/cleanup, Be2/Cr2 validation, and
-  other non-base Hamiltonians;
+- R3-C artifact provenance/cleanup, Be2/Cr2 validation, and other non-base
+  Hamiltonians;
 - solver integration;
 - White-Lindsey pair-framework completion;
 - distorted-product COMX realization;

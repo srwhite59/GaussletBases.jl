@@ -7,10 +7,9 @@ Status: Slice A, Slice B, Slice C1, Slice C2, and Slice D base handoff are
 implemented for the internal base PQS Hamiltonian path. R1 public base
 producer implementation is approved only for the narrow H/H2 scope recorded in
 `r1_public_base_producer.md` and `registry.md`. R3-A residual-GTO basis plus
-exact augmented one-body/moment implementation is approved only for the narrow
-H2 first endpoint recorded in `r3_residual_gto_mwg_augmentation.md` and
-`registry.md`. R3-B in-memory residual MWG/IDA Hamiltonian construction is
-paused pending follow-up reapproval with the corrected compact-path baseline.
+exact augmented one-body/moment implementation and R3-B in-memory residual
+MWG/IDA Hamiltonian construction are approved only for the narrow H2 first
+endpoint recorded in `r3_residual_gto_mwg_augmentation.md` and `registry.md`.
 Broad driver UX, artifacts, Be2/Cr2 validation, and R3-C remain deferred.
 
 Agents should read first:
@@ -28,13 +27,13 @@ Approved amendments:
   and z-axis H2 implementation.
 - [R3 residual-GTO/MWG augmentation](r3_residual_gto_mwg_augmentation.md)
   approves only R3-A residual basis plus exact augmented one-body/moment
-  implementation for the first H2 endpoint.
+  implementation and R3-B in-memory residual MWG/IDA Hamiltonian construction
+  for the first H2 endpoint.
 
 Candidate amendments:
 
 - [R3 residual-GTO/MWG augmentation](r3_residual_gto_mwg_augmentation.md)
-  keeps R3-B in-memory residual MWG/IDA Hamiltonian construction paused and
-  R3-C artifact/cleanup candidate-only until separately approved.
+  keeps R3-C artifact/cleanup candidate-only until separately approved.
 
 Historical material:
 
