@@ -173,8 +173,8 @@ Deferred gates:
 - public-driver polish;
 - public export or driver workflow beyond the approved non-exported R3
   usability facade;
-- owner-local residual-selection measurement for H2, Be2, and Cr2 before any
-  stabilized residual implementation or R3 usability source pass;
+- implementation and validation of the approved owner-local residual-selection
+  source correction before broader R3 usability expansion;
 - Cr2 stress/performance and any full Cr2 supplemented Hamiltonian run;
 - measurement-only Cr2-readiness forecasting, consumer workflow beyond the
   approved H2/Be2 R3 usability facade, and basis/supplement-realism decisions

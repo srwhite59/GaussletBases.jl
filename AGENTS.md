@@ -470,12 +470,17 @@ uncharged by-center nuclear-attraction, and moment matrices
 `x`/`y`/`z`/`x^2`/`y^2`/`z^2` for the first H2 augmented one-body/moment
 endpoint. The global raw-candidate symmetric Lowdin and global raw-column
 pivoted-Cholesky selection are superseded as residual-selection authority:
-future R3 residual selection must be owner-local by physical center, select by
-owner-local residual occupations, orthonormalize owner-local retained sectors,
-and use one final symmetric Lowdin only to merge inter-owner residual overlap.
-Do not implement a stabilized global raw-candidate Lowdin pass, do not use
-eigenvalue flooring to retain low-occupation modes, and do not use width
-filtering as conditioning repair. The approved R3-A source owner is
+R3 residual selection must be owner-local by physical center, select by
+owner-local residual occupations with `eta_RG = 1.0e-8`, preserve donor-style
+full-rank owner orientation when all owner modes are retained, use
+deterministic owner-local natural modes when rank is lost, and use one final
+symmetric Lowdin only to merge inter-owner residual overlap. Final merge
+thresholds are `tau_merge_abs = 1.0e-12` and
+`tau_merge_rel = 1.0e-12`; near-singular merge spectra are construction
+errors, not directions to preserve by flooring. Do not implement a stabilized
+global raw-candidate Lowdin pass, do not use eigenvalue flooring to retain
+low-occupation modes, and do not use width filtering as conditioning repair.
+The approved R3-A source owner is
 `CartesianFinalBasisRealization`; `HP-R3-OBJ-01`, `HP-R3-FN-01`, and
 `HP-R3-FN-02` may be implemented only in
 `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`. Existing
@@ -483,7 +488,8 @@ module include plumbing may include that file only to expose the approved
 internal R3-A surfaces; it does not approve a public API or export. The frozen
 thresholds are `tau_abs = 1.0e-10`,
 `tau_rel = 1.0e-10`, `tau_neg_abs = 1.0e-12`, and
-`tau_neg_rel = 1.0e-12`. `HP-R3-TEST-01` approves only
+`tau_neg_rel = 1.0e-12`; final `G' S R` and `R' S R - I` errors must be below
+`1.0e-10`. `HP-R3-TEST-01` approves only
 `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl` as a standalone
 endpoint gate, not inclusion in `test/runtests.jl`. R3-A does not approve
 MWG/IDA `V`, supplemented `CartesianIDAHamiltonian` construction, artifact
@@ -528,8 +534,9 @@ and R3-B helpers may remain and may be reused, but callers should not pass
 independently constructed residual or augmented-operator objects into the
 R3-B boundary. The prior H2 closure value, lowest-orbital IDA self-Coulomb
 `0.4574256036192161` within `1.0e-10` for augmented dimension `489`, belongs
-to the superseded global candidate-order residual basis. It is not a target to
-preserve after owner-local residual selection. The older
+to the superseded global candidate-order residual basis. The active
+owner-local target is `0.4574265214362075` within `1.0e-10` for augmented
+dimension `489`. The older
 `0.457435475059184` scalar and intermediate `0.4574331709135599` scalar are
 also superseded. Do not add a residual width scale factor or relax tolerance
 to fit any stale scalar. `HP-R3-FN-03`
@@ -565,8 +572,8 @@ touched only to reuse the same-construction path and R3-C writer without a new
 artifact schema, public API, status object, report field, or persistent cache.
 For Be2, the only approved base-input expansion is generalized internal
 z-axis homonuclear diatomic normalization in `src/cartesian_base_hamiltonian.jl`.
-Do not implement this facade until owner-local residual selection has been
-measured and the corrected H2 MWG scalar has been recorded.
+This facade must use the approved owner-local residual-selection correction
+and H2 MWG scalar `0.4574265214362075`.
 The facade must not be exported and no `src/GaussletBases.jl` edit is
 approved. The only committed validation surface is extending
 `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl` as a standalone

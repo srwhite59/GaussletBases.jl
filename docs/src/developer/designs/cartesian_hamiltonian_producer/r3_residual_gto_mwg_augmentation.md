@@ -3,12 +3,11 @@
 Status: R3-A, R3-B, and R3-C are implemented for the narrow H2
 residual-GTO/MWG endpoint. R3-A provides deterministic residual-GTO basis
 construction, exact augmented one-body matrices, and exact moments. R3-B
-provides the same-construction in-memory MWG/IDA Hamiltonian path with the
-corrected weight-aware compact-path scalar. R3-C provides compact supplemented
-artifact provenance in the existing Hamiltonian artifact shape. The residual
-selection authority is now corrected to owner-local residual occupation
-selection plus final merge Lowdin; the implemented global candidate-order
-selection is legacy evidence and must be replaced before R3U source work.
+provides the same-construction in-memory MWG/IDA Hamiltonian path. R3-C
+provides compact supplemented artifact provenance in the existing Hamiltonian
+artifact shape. The residual selection authority is corrected and approved for
+source implementation: owner-local residual occupation selection plus final
+merge Lowdin replaces the implemented global candidate-order selection.
 
 This document records the R3 path for generic residual-GTO/MWG augmentation of
 the Cartesian base Hamiltonian producer. It approves only the R3-A, R3-B, and
@@ -216,6 +215,18 @@ GTO-like span, or a later approved localization rotation. The selection
 criterion remains the owner-local residual occupation spectrum regardless of
 that orientation choice.
 
+Approved first orientation rule:
+
+- diagonalize `M_a` for owner-local residual-occupation selection;
+- if all owner-local modes are retained, preserve the owner candidate order and
+  use owner-local symmetric Lowdin `B_a M_a^(-1/2)` so the residual block
+  retains the donor-style atom-centered GTO orientation;
+- if rank loss occurs, use deterministic owner-local natural residual modes
+  from the retained `M_a` eigenspace, ordered by decreasing residual
+  occupation with deterministic sign canonicalization;
+- after either owner-local orientation, apply the final inter-owner merge
+  Lowdin described below.
+
 Concatenate owner-local residual blocks:
 
 ```text
@@ -245,12 +256,38 @@ R = G T_G + A T_A
 `T_G` and `T_A` after the final merge are the numerical authority consumed by
 exact one-body, moment, and MWG construction.
 
-No `eta_RG` value is frozen by this correction. The next pass is
-measurement-only and should report owner-local spectra under trial cutoffs
-around `1.0e-8` and `1.0e-7`. The previously frozen `tau_abs`, `tau_rel`,
-`tau_neg_abs`, and `tau_neg_rel` values remain historical/current
-implementation tolerances, not the approved physical residual-occupation
-policy for the corrected algorithm.
+Approved cutoff and tolerance policy:
+
+```text
+eta_RG = 1.0e-8
+tau_neg_abs = 1.0e-12
+tau_neg_rel = 1.0e-12
+tau_merge_abs = 1.0e-12
+tau_merge_rel = 1.0e-12
+final_orthogonality_tol = 1.0e-10
+```
+
+For each owner-local `M_a`, use
+`tau_neg = max(tau_neg_abs, tau_neg_rel * max(lambda_max, 1.0))`.
+Eigenvalues below `-tau_neg` are construction errors. Eigenvalues between
+`-tau_neg` and `eta_RG` are discarded. Eigenvalues greater than `eta_RG` are
+retained residual occupations.
+
+For the final merge, let
+`tau_merge = max(tau_merge_abs, tau_merge_rel * max(lambda_max(S_merge), 1.0))`.
+Any merge eigenvalue below `-tau_merge` is a construction error. Any merge
+eigenvalue `<= tau_merge` is a near-singular merge error. Do not floor merge
+eigenvalues to preserve directions. After final merge, require `G' S R` and
+`R' S R - I` errors below `final_orthogonality_tol`.
+
+Measurement evidence for this approval:
+
+- H2, Be2, Cr2 q4, and Cr2 q5 pass owner-local selection with final
+  orthogonality below `1.0e-10`;
+- no rank loss was observed under trial residual-occupation cutoffs
+  `1.0e-8` or `1.0e-7`;
+- the corrected H2 lowest-orbital IDA self-Coulomb scalar is
+  `0.4574265214362075`.
 
 ### HP-R3-OBJ-01 Approved Fields
 
@@ -273,9 +310,11 @@ Approved exact fields:
 | `residual_labels::Vector{String}` | deterministic residual labels derived from owner and local retained mode order |
 | `T_G::Matrix{Float64}` | shape `n_G x n_R`; base-side residual transform |
 | `T_A::Matrix{Float64}` | shape `n_A x n_R`; supplement-side residual transform |
-| `occupation_cutoff::Float64` | approved residual-occupation cutoff `eta_RG` |
+| `occupation_cutoff::Float64` | approved residual-occupation cutoff `eta_RG = 1.0e-8` |
 | `tau_neg_abs::Float64` | absolute negative-eigenvalue error tolerance |
 | `tau_neg_rel::Float64` | relative negative-eigenvalue error tolerance |
+| `tau_merge_abs::Float64` | absolute final-merge near-singular threshold |
+| `tau_merge_rel::Float64` | relative final-merge near-singular threshold |
 | `selection_rule::Symbol` | owner-local residual occupation selection rule |
 | `orientation::Symbol` | owner-local orientation plus final merge convention |
 | `sign_rule::Symbol` | `:largest_T_A_entry_positive` |
@@ -389,10 +428,12 @@ R3-B starts only after R3-A is accepted. It constructs residual MWG descriptors,
 residual-containing IDA blocks, and the in-memory augmented
 `CartesianIDAHamiltonian{Float64}`.
 
-R3-B was reapproved with a corrected weight-aware compact-path scalar for the
-then-current global candidate-order residual basis. That scalar is now
-superseded for future corrected R3 work because the residual basis construction
-itself is superseded.
+R3-B was first reapproved with a corrected weight-aware compact-path scalar for
+the then-current global candidate-order residual basis. That scalar is
+superseded for corrected R3 work because the residual basis construction
+itself is superseded. Under the approved owner-local residual-selection
+convention, the H2 lowest-orbital IDA self-Coulomb scalar is
+`0.4574265214362075`.
 
 Previously superseded scalar history:
 
@@ -406,9 +447,8 @@ Previously superseded scalar history:
 The owner-local residual-selection correction may change the MWG interaction
 because MWG is not invariant under rotations of the residual subspace. Exact
 augmented one-body eigenvalues should remain invariant when the retained span
-is unchanged, but R3-B self-Coulomb targets must be remeasured after the
-owner-local selection/merge algorithm is implemented. Do not add a residual
-width scale factor and do not relax tolerance to preserve any stale scalar.
+is unchanged. Do not add a residual width scale factor and do not relax
+tolerance to preserve any stale scalar.
 
 Approved R3-B source owner/path/function:
 
@@ -563,7 +603,7 @@ R3-B validation gates:
 - returned object is the existing `CartesianIDAHamiltonian{Float64}`;
 - augmented dimension is `489` for the first H2 fixture;
 - the lowest augmented one-body orbital has IDA self-Coulomb
-  `0.4574256036192161` within `1.0e-10`;
+  `0.4574265214362075` within `1.0e-10`;
 - no Hamiltonian wrapper/result/status payload is introduced.
 
 The existing standalone H2 R3 endpoint gate remains the validation surface. It
@@ -573,12 +613,13 @@ weight-aware `V_GM` check either in that standalone test or in ignored
 validation. This amendment does not approve a new test file.
 
 The validation scalar above comes from the weight-aware compact-path R3-B
-equations: current R3-A exact residual moments, `sigma = sqrt(2v)`,
-final-basis density-normalized `G-M` contraction, direct density-normalized
-`M-M` contraction, and no final-width or tolerance fitting. Old private
-provider payloads, artifact fields, driver diagnostics, the retired pre-final
-density gauge, and the direct parent-density `G-M` scalar are donor history
-only, not production authority.
+equations after owner-local residual selection and final inter-owner merge
+Lowdin: current R3-A exact residual moments, `sigma = sqrt(2v)`, final-basis
+density-normalized `G-M` contraction, direct density-normalized `M-M`
+contraction, and no final-width or tolerance fitting. Old private provider
+payloads, artifact fields, driver diagnostics, the retired pre-final density
+gauge, the direct parent-density `G-M` scalar, and the global candidate-order
+R3-A scalar are donor history only, not production authority.
 
 The full R3-A moment matrices `x`/`y`/`z`/`x^2`/`y^2`/`z^2` remain approved
 outputs of the H2 construction boundary. This hardening note does not replace
@@ -613,17 +654,19 @@ Approved compact provenance keys:
 | `supplement_provenance/residual_dimension` | retained residual rank |
 | `supplement_provenance/augmented_dimension` | final Hamiltonian dimension |
 | `supplement_provenance/augmented_basis_order` | `:base_then_residual` |
-| `supplement_provenance/residual_basis_convention` | `:owner_local_residual_occupation_final_merge_lowdin` after the correction lands |
+| `supplement_provenance/residual_basis_convention` | `:owner_local_residual_occupation_final_merge_lowdin` |
 | `supplement_provenance/rank_rule` | owner-local residual occupation selector |
-| `supplement_provenance/occupation_cutoff` | approved `eta_RG` after measurement |
+| `supplement_provenance/occupation_cutoff` | `1.0e-8` |
 | `supplement_provenance/tau_neg_abs` | `Float64` |
 | `supplement_provenance/tau_neg_rel` | `Float64` |
+| `supplement_provenance/tau_merge_abs` | `Float64` |
+| `supplement_provenance/tau_merge_rel` | `Float64` |
 | `supplement_provenance/mwg_convention_version` | `1` |
 | `supplement_provenance/mwg_convention` | `:separable_moment_matched_density_normalized` |
 | `supplement_provenance/one_body_source` | `:exact_transformed_raw_blocks` |
 | `supplement_provenance/interaction_source` | `:weight_aware_residual_mwg_ida_blocks` |
 | `supplement_provenance/validation_check_labels` | compact symbols naming accepted checks, including `:h2_lowest_augmented_one_body_orbital_ida_self_coulomb` when writing the H2 validation fixture |
-| `supplement_provenance/h2_self_coulomb_reference` | remeasured owner-local H2 value for the validation fixture, otherwise `nothing` |
+| `supplement_provenance/h2_self_coulomb_reference` | `0.4574265214362075` for the validation fixture, otherwise `nothing` |
 
 The compact schema must not store:
 
@@ -658,8 +701,8 @@ Validation gate:
 - readback Hamiltonian `K`, every uncharged `U_A`, and `V` match the returned
   in-memory Hamiltonian exactly or within tight roundoff deltas;
 - provenance keys match the validated R3 construction specification;
-- R3-B lowest-orbital IDA self-Coulomb matches the remeasured owner-local H2
-  value within the approved tolerance.
+- R3-B lowest-orbital IDA self-Coulomb matches
+  `0.4574265214362075` within `1.0e-10`.
 
 ## First Validation Fixture
 
@@ -721,8 +764,10 @@ Legacy H2 closeout facts before the owner-local selection correction:
   specification.
 
 These facts remain useful regression evidence for the old compact path, but
-the self-Coulomb scalar and residual-basis provenance must be remeasured after
-owner-local residual selection and final merge Lowdin are implemented.
+the old self-Coulomb scalar and residual-basis provenance must not be
+preserved as targets after owner-local residual selection and final merge
+Lowdin are implemented. The corrected H2 self-Coulomb scalar is
+`0.4574265214362075`.
 
 Be2 measurement conclusions:
 
@@ -755,9 +800,12 @@ until that workflow and its input policy are exercised.
 
 ## Owner-Local Selection Measurement Pass
 
-Before implementing the corrected residual-selection algorithm or the R3
-usability facade on top of it, run a measurement-only diagnostic for H2, Be2,
-and Cr2. The diagnostic may live under ignored `tmp/work`; it must not edit
+The owner-local measurement pass is closed for source-approval purposes. It
+reported H2, Be2, Cr2 q4, and Cr2 q5 final orthogonality below `1.0e-10`, no
+rank loss at trial residual-occupation cutoffs `1.0e-8` or `1.0e-7`, and H2
+self-Coulomb `0.4574265214362075`.
+
+Future diagnostics may live under ignored `tmp/work`; they must not edit
 source, tests, tools, drivers, artifacts, or public APIs.
 
 Use the existing `X`, `S_AA`, and `candidate_owner_indices` data. For each
@@ -774,9 +822,7 @@ normalize retained owner-local modes
 Then concatenate owner blocks, form `S_merge`, report its eigenvalue range and
 condition, apply the final symmetric Lowdin, and report final orthogonality.
 
-The first diagnostic should compare trial residual-occupation cutoffs around
-`1.0e-8` and `1.0e-7`, matching legacy-scale evidence without freezing either
-value. It should report:
+Diagnostics should report:
 
 - atom-local residual occupation spectra separately;
 - retained counts per owner under each trial cutoff;
@@ -799,8 +845,9 @@ the donor cannot express the required owner-local selection and final merge.
 
 ## R3-A Approval Evidence
 
-Manager log Pass 048 records the measurement-only R3-A residual-spectrum spike
-used for this approval.
+Manager log Pass 048 records the old measurement-only R3-A residual-spectrum
+spike for the superseded global candidate-order construction. The owner-local
+approval above supersedes it for future source work.
 
 Evidence:
 
@@ -856,15 +903,17 @@ After R3-C:
 - remove historical docs only when explicitly doing documentation
   reorganization; history and blurb logs are not deletion targets by default.
 
-## Implemented First Target
+## Implemented / Corrected First Target
 
 The implemented first target is R3-A plus the narrow R3-B in-memory
-interaction continuation and R3-C compact artifact provenance:
+interaction continuation and R3-C compact artifact provenance. The corrected
+source target replaces the legacy residual block with owner-local
+residual-occupation selection:
 
 ```text
 base z-axis H2
 -> contracted two-center H/cc-pVTZ lmax-1 candidates
--> legacy global deterministic residual-GTO block
+-> owner-local residual-occupation selection and final merge Lowdin
 -> exact augmented K, U_A, x/y/z, and x2/y2/z2
 -> H2 augmented one-body endpoint
 -> residual moment-matched Gaussians with sigma = sqrt(2v)
@@ -883,10 +932,9 @@ block equality, finite/symmetric augmented `K`, uncharged `U_A`, and moment
 matrices, `E1_aug <= E1_base + epsilon`, finite/symmetric `V_aug`, unchanged
 base `V_GG`, independent weight-aware `V_GM`, returned
 `CartesianIDAHamiltonian{Float64}`, augmented dimension `489`, and the
-remeasured owner-local lowest-orbital IDA self-Coulomb within the approved
-tolerance after the correction lands. It must not assert private
-pair/assembly/report/status behavior, add the standalone file to
-`test/runtests.jl`, or run Be2 or Cr2.
+owner-local lowest-orbital IDA self-Coulomb `0.4574265214362075` within
+`1.0e-10`. It must not assert private pair/assembly/report/status behavior,
+add the standalone file to `test/runtests.jl`, or run Be2 or Cr2.
 
 Do not start Cr2 stress tests from this R3 closeout. The immediate follow-on
 usability lane is recorded in `r3_usability_supplemented_workflow.md`; public

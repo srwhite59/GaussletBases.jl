@@ -91,13 +91,20 @@ dangerous dense shape.
   `M_a = S_AaAa - X_a' X_a` is interpreted as the residual occupation spectrum
   of unit-occupied projected owner candidates. Its eigenvalues control
   retention; they are not merely numerical-rank diagnostics.
-- The residual occupation cutoff `eta_RG` is separate from numerical
-  negative-eigenvalue and stabilization tolerances.
+- The residual occupation cutoff `eta_RG = 1.0e-8` is separate from numerical
+  negative-eigenvalue and stabilization tolerances. The negative-eigenvalue
+  tolerances remain `tau_neg_abs = 1.0e-12` and `tau_neg_rel = 1.0e-12`.
 - Owner-local modes below `eta_RG` are discarded. Eigenvalue flooring must not
   be used to retain nearly absent residual modes.
 - Retained owner-local residual sectors are orthonormalized locally, then
   concatenated and merged by one final symmetric Lowdin over the inter-owner
   overlap matrix.
+- Final merge thresholds are `tau_merge_abs = 1.0e-12` and
+  `tau_merge_rel = 1.0e-12`. Any merge eigenvalue below
+  `-max(tau_merge_abs, tau_merge_rel * max(lambda_max(S_merge), 1.0))` is a
+  construction error, and any merge eigenvalue at or below that positive
+  threshold is a near-singular merge error. Final `G' S R` and
+  `R' S R - I` errors must be below `1.0e-10`.
 - Global raw-candidate symmetric Lowdin and global raw-column pivoted-Cholesky
   selection are not the R3 residual algorithm.
 - MWG centers and widths are computed from the final merged residual functions.

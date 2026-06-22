@@ -494,8 +494,8 @@ count, residual dimension, deterministic candidate labels/order, derived
 candidate owner indices, residual source owner indices, retained residual
 occupations, owner retained counts, `T_G::Matrix{Float64}`,
 `T_A::Matrix{Float64}`, residual occupation cutoff, numerical
-negative-eigenvalue tolerances, selection rule, orientation rule, and sign
-rule.
+negative-eigenvalue tolerances, final-merge tolerances, selection rule,
+orientation rule, and sign rule.
 
 No hidden metadata matrices, route-global field clouds, readiness/status
 graphs, retained raw-candidate-index authority, or Hamiltonian wrappers are
@@ -524,11 +524,21 @@ coefficient matrix is approved.
 
 Residual content selection is owner-local. The eigenvalues of each owner-local
 `M_a` are residual occupations and control retention through a separate
-residual-occupation cutoff `eta_RG`. Numerical negative-eigenvalue tolerance
-and physical residual-occupation cutoff are separate policies. Global
-raw-candidate symmetric Lowdin and global raw-column pivoted-Cholesky
-selection are superseded and not approved as the R3 residual algorithm.
-Eigenvalue flooring must not retain tiny residual occupations.
+residual-occupation cutoff `eta_RG = 1.0e-8`. Numerical negative-eigenvalue
+tolerance and physical residual-occupation cutoff are separate policies. If
+all modes for an owner are retained, preserve donor-style full-rank owner
+orientation with owner-local symmetric Lowdin in candidate order. If rank is
+lost, use deterministic owner-local natural residual modes ordered by
+decreasing residual occupation with deterministic sign canonicalization. After
+owner-local construction, perform the final inter-owner symmetric Lowdin merge.
+For `S_merge`, use
+`tau_merge = max(1.0e-12, 1.0e-12 * max(lambda_max(S_merge), 1.0))`; any
+merge eigenvalue below `-tau_merge` is a construction error and any eigenvalue
+`<= tau_merge` is a near-singular merge error. Final `G' S R` and
+`R' S R - I` errors must be below `1.0e-10`. Global raw-candidate symmetric
+Lowdin and global raw-column pivoted-Cholesky selection are superseded and not
+approved as the R3 residual algorithm. Eigenvalue flooring must not retain
+tiny residual occupations or preserve near-singular merge directions.
 
 ### HP-R3-FN-02 — exact augmented one-body and moment assembly
 
@@ -597,10 +607,10 @@ standalone endpoint/integration gate and is not approved for inclusion in
 with the first in-memory supplemented Hamiltonian checks: finite/symmetric
 `V_aug`, unchanged base `V_GG`, returned `CartesianIDAHamiltonian{Float64}`,
 augmented dimension `489`, an independent weight-aware `V_GM` comparison, and
-the remeasured owner-local lowest-orbital IDA self-Coulomb within the approved
-tolerance after the residual-selection correction lands. The historical
-global-selection scalar `0.4574256036192161` must not be forced by width
-scaling or tolerance relaxation. The independent `V_GM` check must recompute
+the owner-local lowest-orbital IDA self-Coulomb `0.4574265214362075` within
+`1.0e-10`. The historical global-selection scalar `0.4574256036192161` must
+not be forced by width scaling or tolerance relaxation. The independent
+`V_GM` check must recompute
 the final-basis density-normalized
 mixed block from support weights, final weights, and support-to-M donor values;
 it must not only compare the final self-Coulomb scalar against the same
@@ -703,14 +713,14 @@ raw-block bundle/cache object. One duplicate overlap build between
 residualization and full exact-operator assembly remains acceptable unless it
 can be removed locally without a new persistent shape.
 
-H2 closure value: the prior compact-path value `0.4574256036192161` belongs to
-the superseded global candidate-order residual basis with corrected
-weight-aware `G-M` contraction. It is historical evidence, not the target for
-the owner-local residual-selection correction. The earlier targets
-`0.457435475059184` and `0.4574331709135599` remain superseded for the reasons
-recorded in the R3 note. After owner-local selection and final merge Lowdin are
-implemented, the H2 MWG self-Coulomb value must be remeasured and recorded
-before being used as a tracked acceptance scalar.
+H2 closure value: under approved owner-local residual selection and final
+merge Lowdin, the lowest-orbital IDA self-Coulomb target is
+`0.4574265214362075` within `1.0e-10`. The prior compact-path value
+`0.4574256036192161` belongs to the superseded global candidate-order residual
+basis with corrected weight-aware `G-M` contraction. It is historical
+evidence, not an acceptance target. The earlier targets `0.457435475059184`
+and `0.4574331709135599` remain superseded for the reasons recorded in the R3
+note.
 
 Do not add a width scale factor and do not relax tolerance to fit any old
 scalar. This ID does not approve artifacts, public API expansion,
@@ -763,19 +773,19 @@ Approved `supplement_provenance/` keys:
 - `residual_dimension`;
 - `augmented_dimension`;
 - `augmented_basis_order = :base_then_residual`;
-- `residual_basis_convention = :owner_local_residual_occupation_final_merge_lowdin`
-  after the correction lands;
+- `residual_basis_convention = :owner_local_residual_occupation_final_merge_lowdin`;
 - `rank_rule` / owner-local selection rule;
-- `occupation_cutoff` after the measurement pass chooses `eta_RG`;
+- `occupation_cutoff = 1.0e-8`;
 - `tau_neg_abs`, `tau_neg_rel`;
+- `tau_merge_abs = 1.0e-12`, `tau_merge_rel = 1.0e-12`;
 - `mwg_convention_version`;
 - `mwg_convention = :separable_moment_matched_density_normalized`;
 - `one_body_source`;
 - `interaction_source = :weight_aware_residual_mwg_ida_blocks`;
 - compact validation check labels, including the H2 self-Coulomb check when
   writing the H2 validation fixture;
-- remeasured H2 self-Coulomb reference for the validation fixture, otherwise
-  `nothing`.
+- H2 self-Coulomb reference `0.4574265214362075` for the validation fixture,
+  otherwise `nothing`.
 
 Do not store full residual eigenvalue vectors, MWG center matrices, MWG width
 matrices, dense moment matrices, `T_G`, `T_A`, candidate labels, full
@@ -785,8 +795,8 @@ explicit residual-basis artifact group must promote them together.
 
 Validation-only readback with `read_cartesian_ida_hamiltonian` is approved to
 confirm the returned/read Hamiltonian matrices agree and that R3-B
-self-Coulomb matches the remeasured owner-local H2 value after the
-residual-selection correction lands. This ID does not approve a Hamiltonian
+self-Coulomb matches the owner-local H2 value `0.4574265214362075` within
+`1.0e-10`. This ID does not approve a Hamiltonian
 wrapper, separate manifest, public provenance reader, HamV6 export, solver
 export, public API/export, driver/bin/tool workflow, report/status/payload
 object, solver/RHF/Cr2 work, or consumer API.
@@ -928,11 +938,10 @@ The file may be extended with one usability-facade section that calls
 contracted H/cc-pVTZ `lmax = 1` supplement fixture, writes to `mktempdir()`,
 checks returned/read `CartesianIDAHamiltonian{Float64}` matrices, validates
 augmented dimension `489`, validates lowest-orbital IDA self-Coulomb
-against the remeasured owner-local residual-selection scalar within the
-approved tolerance, validates `supplement_provenance/` keys against normalized
-input, and checks malformed input/unsupported Cr2 errors without asserting
-private stage objects. R3U implementation should wait until the owner-local
-residual-selection correction has measured and recorded that scalar.
+against owner-local residual-selection scalar `0.4574265214362075` within
+`1.0e-10`, validates `supplement_provenance/` keys against normalized input,
+and checks malformed input/unsupported Cr2 errors without asserting private
+stage objects.
 
 An ignored Be2 timing/proxy script under `tmp/work` is allowed, but Be2 is not
 a committed gate in this amendment and no Be2/Cr2 test file is approved.
@@ -966,7 +975,8 @@ path and should not be listed as future blockers by default:
 
 - same-construction internal path for the accepted H2 R3 construction;
 - deterministic rank-deficient handling in the legacy global-selection
-  implementation, now superseded by the owner-local selection correction;
+  implementation, now superseded by the approved owner-local selection source
+  correction;
 - one-shot parent-by-supplement analytic exact-block organization for R3-A
   mixed/self blocks, avoiding repeated CPB-per-terminal-block construction on
   the Be2 proxy;
@@ -979,9 +989,8 @@ non-exported H2/Be2 R3 usability facade is approved separately by
 `HP-R3U-FILE-01`, `HP-R3U-FN-01`, `HP-R3U-WIRE-01`, and `HP-R3U-TEST-01`.
 Remaining deferred lanes are:
 
-- owner-local residual-selection measurement for H2, Be2, and Cr2, followed by
-  a narrow source correction after `eta_RG` and the corrected H2 scalar are
-  recorded;
+- implementation and validation of the approved owner-local source correction,
+  including the updated H2 scalar and no full Cr2 Hamiltonian;
 - public export, public examples, or driver workflow beyond the non-exported
   R3 usability facade;
 - a Cr2-readiness lane for measurement-only candidate/rank/memory forecasting,

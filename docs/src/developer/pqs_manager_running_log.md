@@ -9124,3 +9124,56 @@ Risk / guardrail:
 - The facade is module-qualified internal supported workflow, not a public API.
   The H2 self-Coulomb reference is written only for the exact validation
   fixture, not arbitrary H2 inputs.
+
+## Cartesian Hamiltonian Producer Pass 064 - Approve R3 Owner-Local Source Correction
+
+Commit(s):
+- this commit - Approve R3 owner-local residual source correction
+
+Summary:
+- Accepted the measurement evidence for owner-local residual selection as R3
+  source authority. H2, Be2, Cr2 q4, and Cr2 q5 all passed owner-local
+  selection with final orthogonality below `1.0e-10`, and no rank loss under
+  trial residual-occupation cutoffs `1.0e-8` or `1.0e-7`.
+- Froze `eta_RG = 1.0e-8`, kept `tau_neg_abs = tau_neg_rel = 1.0e-12`
+  separate from the physical occupation cutoff, and added final-merge
+  thresholds `tau_merge_abs = tau_merge_rel = 1.0e-12` with a hard
+  near-singular merge failure rule.
+- Updated live R3 authority, registry, invariants, AGENTS, and R3U docs so the
+  active H2 R3-B/R3U self-Coulomb target is
+  `0.4574265214362075`. The prior `0.4574256036192161` scalar remains
+  historical global-selection evidence only.
+
+Validation:
+- Design-manager ran `git diff --check`, focused `rg` checks for stale
+  wait/remeasure wording and both H2 scalars, and confirmed
+  `git diff --name-only -- src test tools bin` was empty.
+
+Goal advancement:
+- R3/LT6: converts the owner-local residual-selection correction from
+  measurement evidence into approved source authority.
+- MT4: unblocks the narrow R3 source correction and R3U retargeting while
+  keeping public export and Cr2 full Hamiltonians deferred.
+
+Carrying-cost result:
+- deleted: live authority that kept owner-local selection as a future
+  measurement/source-correction lane.
+- simplified: R3U now targets one corrected scalar and one residual-selection
+  convention.
+- quarantined: old global-selection H2 scalars remain historical review/log
+  evidence only.
+- not deleted because: current implemented R3 source remains to be corrected
+  by repo-doer under the approved owner-local authority.
+- exact remaining caller/blocker: implement the owner-local correction in
+  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`, update
+  the standalone H2 R3/R3U endpoint to `0.4574265214362075`, and keep Cr2 to
+  ignored measurement only.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.
+
+Risk / guardrail:
+- Do not preserve the old scalar by width scaling or tolerance relaxation. Do
+  not use width filtering as conditioning repair, do not add a public export,
+  and do not run or approve a full Cr2 Hamiltonian/artifact in the source pass.

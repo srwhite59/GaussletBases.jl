@@ -6,9 +6,9 @@ supplemented PQS Hamiltonian path. This is not an exported public API.
 This amendment closes the immediate usability gap after R3-A/B/C: callers
 should not have to manually reconstruct the base stages, load a supplement,
 call the R3 same-construction function, and then call the R3-C writer.
-Implementation of this facade should wait until the owner-local residual
-selection correction in `r3_residual_gto_mwg_augmentation.md` has measured and
-recorded the corrected H2 MWG scalar.
+Implementation of this facade must use the approved owner-local residual
+selection correction in `r3_residual_gto_mwg_augmentation.md` and the corrected
+H2 MWG scalar `0.4574265214362075`.
 
 It approves only a narrow module-qualified internal facade for z-axis H2 and
 internal/performance-supported z-axis Be2. Cr2 remains deferred.
@@ -259,8 +259,8 @@ julia --project=. test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl
 - validates returned type `CartesianIDAHamiltonian{Float64}`;
 - validates augmented dimension `489`;
 - validates lowest augmented one-body orbital IDA self-Coulomb against the
-  remeasured owner-local residual-selection scalar within the approved
-  tolerance;
+  owner-local residual-selection scalar `0.4574265214362075` within
+  `1.0e-10`;
 - validates readback Hamiltonian matrices against the returned Hamiltonian
   within tight deltas;
 - validates `supplement_provenance/` keys match the normalized supplement
