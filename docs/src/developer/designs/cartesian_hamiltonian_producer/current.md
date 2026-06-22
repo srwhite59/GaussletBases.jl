@@ -104,6 +104,13 @@ Approved R3-B residual-MWG/IDA in-memory Hamiltonian scope:
   `CartesianFinalBasisRealization` owns
   `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`, function
   `pqs_terminal_residual_gto_augmented_hamiltonian`, for `HP-R3-FN-03`;
+- `HP-R3-FN-03` is extended as the same-construction internal path for the H2
+  endpoint. The approved function may accept the same-construction
+  `base_hamiltonian`, `CartesianTerminalBasisRealization`, bundles,
+  supplement, atom locations, and nuclear charges, then construct the residual
+  augmentation object, exact augmented `K`/`U_A`/moments, residual MWG
+  descriptors, weight-aware `V_GM`, direct `V_MM`, and the existing
+  `CartesianIDAHamiltonian{Float64}` inside one call;
 - residual MWG centers and widths are computed from exact R3-A moment matrices
   using `c_ralpha = <r | alpha | r>`,
   `v_ralpha = <r | alpha^2 | r> - c_ralpha^2`, and
@@ -127,8 +134,9 @@ Approved R3-B residual-MWG/IDA in-memory Hamiltonian scope:
 
 R3-B does not approve artifact provenance, public API expansion,
 driver/bin/tool workflow, broad provider payloads, status/result objects,
-report fields, Be2 validation, Cr2 validation, RHF/solver work, width scaling,
-or tolerance relaxation.
+report fields, parent-stage fields, Be2 validation, Cr2 validation,
+RHF/solver work, rank-loss implementation, width scaling, or tolerance
+relaxation.
 
 Base pair/assembly role decision:
 

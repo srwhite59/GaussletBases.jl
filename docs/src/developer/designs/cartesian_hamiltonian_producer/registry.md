@@ -653,6 +653,43 @@ The approved function must combine `V_aug` with the accepted R3-A augmented
 base Hamiltonian. An arbitrary dimension-compatible Hamiltonian is not an
 approved provenance source.
 
+Same-construction extension decision: this amendment is an approved extension
+of `HP-R3-FN-03`, not a new HP ID. The approved internal function may take the
+same-construction inputs:
+
+```text
+pqs_terminal_residual_gto_augmented_hamiltonian(
+    base_hamiltonian,
+    basis::CartesianTerminalBasisRealization,
+    bundles,
+    supplement,
+    atom_locations,
+    nuclear_charges;
+    expansion = nothing,
+)::CartesianIDAHamiltonian{Float64}
+```
+
+The exact Julia signature may be adjusted to match local types, but the
+boundary is fixed: callers provide the base Hamiltonian, terminal realization,
+axis/bundle source, supplement, atom locations, and nuclear charges from the
+same base construction. The function constructs inside one call:
+
+- the residual augmentation object;
+- exact augmented `K`, uncharged `U_A`, `x`/`y`/`z`, and `x^2`/`y^2`/`z^2`;
+- residual MWG descriptors;
+- weight-aware `V_GM`;
+- direct `V_MM`;
+- the existing `CartesianIDAHamiltonian{Float64}`.
+
+This same-construction path removes the need for callers to independently pass
+the residual object or augmented-operator object. Existing lower-level R3-A and
+R3-B helpers may remain and may be reused; this amendment does not require
+deleting or replacing them. The function may recompute or locally reuse the
+one-shot parent-by-supplement exact-block family, but must not add a persistent
+raw-block bundle/cache object. One duplicate overlap build between
+residualization and full exact-operator assembly remains acceptable unless it
+can be removed locally without a new persistent shape.
+
 H2 closure value: for the public/base z-axis H2 plus contracted
 two-center H/cc-pVTZ `lmax = 1` fixture, the lowest augmented one-body orbital
 must have IDA self-Coulomb `0.4574256036192161` within `1.0e-10` under the
@@ -667,8 +704,9 @@ density-normalized `G-M` contraction.
 Do not add a width scale factor and do not relax tolerance to fit the old
 scalar. This ID does not approve artifacts, public API expansion,
 driver/bin/tool workflow, broad provider payloads, status/result objects,
-report fields, pair/assembly workflow expansion, Be2 validation, Cr2
-validation, ECP, EGOI, RHF/solver work, wrappers, or a new test file.
+report fields, pair/assembly workflow expansion, parent-stage fields, Be2
+validation, Cr2 validation, ECP, EGOI, RHF/solver work, rank-loss
+implementation, wrappers, or a new test file.
 
 The first R3-B endpoint may keep the approved full R3-A moment matrices
 `x`/`y`/`z`/`x^2`/`y^2`/`z^2`; this amendment does not replace them with a

@@ -375,12 +375,42 @@ Function: pqs_terminal_residual_gto_augmented_hamiltonian
 ```
 
 `HP-R3-FN-03` may be implemented only in that file. The function is internal
-module surface, not a public API or export. It consumes the accepted R3-A
-residual object and exact augmented one-body/moment matrices, reuses the base
-Hamiltonian `V_GG`, assembles residual-containing MWG/IDA blocks, and returns
-the existing `CartesianIDAHamiltonian{Float64}` directly. File-local helpers
-are allowed only for residual MWG descriptor extraction, `G-M` block assembly,
-`M-M` block assembly, final `V_aug` construction, and endpoint validation.
+module surface, not a public API or export. The approved R3-B construction
+shape is same-construction: callers supply the base Hamiltonian, terminal
+realization, bundle/axis source, supplement, atom locations, and nuclear
+charges from the same base construction; the function constructs the accepted
+R3-A residual object, exact augmented one-body/moment matrices, residual MWG
+descriptors, `V_GM`, `V_MM`, and the existing
+`CartesianIDAHamiltonian{Float64}` inside one call.
+
+Conceptual boundary:
+
+```text
+pqs_terminal_residual_gto_augmented_hamiltonian(
+    base_hamiltonian,
+    basis::CartesianTerminalBasisRealization,
+    bundles,
+    supplement,
+    atom_locations,
+    nuclear_charges;
+    expansion = nothing,
+)::CartesianIDAHamiltonian{Float64}
+```
+
+The exact Julia signature may be adjusted to match local types and naming. The
+contract is that callers no longer pass independently constructed residual or
+augmented-operator objects into the internal R3-B boundary. Existing
+lower-level R3-A and R3-B helpers may remain and may be reused; this amendment
+does not require deleting or replacing them. File-local helpers are allowed
+only for residual construction, exact augmented operator construction,
+residual MWG descriptor extraction, `G-M` block assembly, `M-M` block
+assembly, final `V_aug` construction, and endpoint validation.
+
+The same-construction path may recompute or locally reuse the one-shot
+parent-by-supplement exact-block family. It must not add a persistent
+raw-block bundle/cache object. One duplicate overlap build between
+residualization and full exact-operator assembly remains acceptable unless it
+can be removed locally without a new persistent shape.
 
 ### MWG Moment Convention
 
@@ -457,6 +487,14 @@ must match the supplied base Hamiltonian. The base Hamiltonian is allowed only
 as the same-construction base object for the validated H2 fixture; accepting an
 arbitrary dimension-compatible Hamiltonian is not an R3-B contract.
 
+The same-construction function must reject inconsistent inputs with clear
+errors rather than status/result payloads. At minimum, `base_hamiltonian`,
+`basis`, and `bundles` must correspond to the same base construction, and
+`atom_locations` / `nuclear_charges` must match the physical centers used by
+that construction. The design does not require a new provenance object or
+parent-stage field to prove this; local numerical and dimensional consistency
+checks are allowed.
+
 ### Fast Coulomb Organization
 
 R3-B must:
@@ -483,6 +521,12 @@ R3-B validation gates:
 - the lowest augmented one-body orbital has IDA self-Coulomb
   `0.4574256036192161` within `1.0e-10`;
 - no Hamiltonian wrapper/result/status payload is introduced.
+
+The existing standalone H2 R3 endpoint gate remains the validation surface. It
+must exercise the same-construction path, keep the returned augmented
+dimension `489`, keep the self-Coulomb value above, and keep an independent
+weight-aware `V_GM` check either in that standalone test or in ignored
+validation. This amendment does not approve a new test file.
 
 The validation scalar above comes from the weight-aware compact-path R3-B
 equations: current R3-A exact residual moments, `sigma = sqrt(2v)`,
