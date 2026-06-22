@@ -7924,3 +7924,44 @@ Risk or guardrail:
 - Do not reintroduce previous-block projection to reduce cross overlap. If a
   block-local shell has large cross overlap, treat that as a parent-metric or
   shell-construction problem and return to design/numerical review.
+
+## Cartesian Hamiltonian Producer Pass 044 - Post-Correction Be2 Performance Refresh
+
+Commit(s):
+- none from doer; this entry records an ignored `tmp/work` measurement
+
+Summary:
+- Accepted the post-correction Be2 refresh at `d2bf139c`, after block-local
+  PQS shell support replaced cumulative previous-block projection. This makes
+  the old projection-heavy terminal allocation baseline stale.
+- Corrected Be2 (`q = 5`, `core_spacing = 0.15`) remains a useful Cr2-facing
+  optimization proxy: close/far/farther cases have final dimensions `1257`,
+  `1395`, and `1541`, complete terminal coverage, and finite symmetric K,
+  unit-`U_A`, and V.
+- Terminal transform allocation is now much lower in the far case
+  (`~371.5 MiB`) than under the stale cumulative-support model. K assembly is
+  the largest single numerical assembly allocation in the far/farther cases
+  (`~552-643 MiB`) despite subsecond elapsed time, so it is the next target.
+
+Validation:
+- Doer ran `git diff --check`, package load, the ignored corrected-Be2
+  performance probe, and verified final worktree cleanliness.
+- Manager reviewed the measurement and inspected
+  `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl` to identify
+  the likely allocation pattern before issuing the next handoff.
+
+Goal advancement:
+- LT4/LT6: redirects optimization to the current block-local producer rather
+  than the retired recursive-projection model.
+- MT/Roadmap: keeps Cr2 out of the inner loop while selecting a measured Be2
+  allocation target in the approved Slice B source file.
+
+Risk / guardrail:
+- Optimize K assembly without changing the HP-FN-03 public surface. The likely
+  issue is repeated temporary allocation inside `_terminal_product_action` and
+  per-pair `block` construction, not the term-first Coulomb path.
+
+Next step:
+- Issue a bounded HP-FN-03 optimization pass in
+  `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl` for
+  single-product/K assembly buffer reuse and direct accumulation.
