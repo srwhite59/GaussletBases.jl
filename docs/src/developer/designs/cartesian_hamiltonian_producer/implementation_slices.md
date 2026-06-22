@@ -171,9 +171,10 @@ Deletion obligations completed:
 Deferred gates:
 
 - public-driver polish;
-- R3 usability workflow outside the implemented R3-A/B/C narrow H2 internal
-  path and compact supplemented artifact;
+- public export or driver workflow beyond the approved non-exported R3
+  usability facade;
 - Cr2 stress/performance and any full Cr2 supplemented Hamiltonian run;
-- measurement-only Cr2-readiness forecasting, Be2/consumer-scale workflow, and
-  basis/supplement-realism decisions until separately approved;
+- measurement-only Cr2-readiness forecasting, consumer workflow beyond the
+  approved H2/Be2 R3 usability facade, and basis/supplement-realism decisions
+  until separately approved;
 - non-base Hamiltonian variants.

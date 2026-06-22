@@ -6,11 +6,11 @@ Hamiltonian producer.
 Status: Slice A, Slice B, Slice C1, Slice C2, and Slice D base handoff are
 implemented for the internal base PQS Hamiltonian path. R1 public base
 producer implementation is approved only for the narrow H/H2 scope recorded in
-`r1_public_base_producer.md` and `registry.md`. R3-A residual-GTO basis plus
-exact augmented one-body/moment implementation and R3-B in-memory residual
-MWG/IDA Hamiltonian construction are approved only for the narrow H2 first
-endpoint recorded in `r3_residual_gto_mwg_augmentation.md` and `registry.md`.
-Broad driver UX, artifacts, Be2/Cr2 validation, and R3-C remain deferred.
+`r1_public_base_producer.md` and `registry.md`. R3-A/B/C residual-GTO/MWG
+augmentation is implemented for the narrow H2 endpoint and compact artifact.
+The R3 usability lane approves only a non-exported supported facade for H2 and
+internal/performance-supported Be2 artifacts. Broad public API, driver UX, Cr2
+validation, ECP, EGOI, RHF, and solver work remain deferred.
 
 Agents should read first:
 
@@ -26,14 +26,19 @@ Approved amendments:
   minimal public base Hamiltonian producer surface for first origin-centered H
   and z-axis H2 implementation.
 - [R3 residual-GTO/MWG augmentation](r3_residual_gto_mwg_augmentation.md)
-  approves only R3-A residual basis plus exact augmented one-body/moment
-  implementation and R3-B in-memory residual MWG/IDA Hamiltonian construction
-  for the first H2 endpoint.
+  records the implemented R3-A/B/C residual basis, exact augmented one-body,
+  MWG/IDA Hamiltonian, and compact artifact provenance path for the first H2
+  endpoint.
+- [R3 usability supplemented workflow](r3_usability_supplemented_workflow.md)
+  approves only a non-exported supported facade that constructs H2 and
+  internal/performance-supported Be2 supplemented artifacts from system, base
+  basis, and supplement specs.
 
 Candidate amendments:
 
-- [R3 residual-GTO/MWG augmentation](r3_residual_gto_mwg_augmentation.md)
-  keeps R3-C artifact/cleanup candidate-only until separately approved.
+- Cr2-readiness measurement, public supplemented workflow/export, and
+  basis/supplement-realism lanes remain candidate-only until separately
+  approved.
 
 Historical material:
 

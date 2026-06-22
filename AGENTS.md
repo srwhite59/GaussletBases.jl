@@ -408,7 +408,12 @@ these approved design IDs:
 - `HP-R3-FN-01`
 - `HP-R3-FN-02`
 - `HP-R3-FN-03`
+- `HP-R3-ART-01`
 - `HP-R3-TEST-01`
+- `HP-R3U-FILE-01`
+- `HP-R3U-FN-01`
+- `HP-R3U-WIRE-01`
+- `HP-R3U-TEST-01`
 
 No other production surface may be added in this lane without a prior
 documentation-only design amendment. This includes new structs, persistent
@@ -529,6 +534,30 @@ object, no new artifact format beyond the existing Hamiltonian file plus
 provenance group, no solver/RHF/Cr2 work, and no broad residual-basis
 serialization are approved. Validation-only readback may use
 `read_cartesian_ida_hamiltonian`; production must not require readback.
+
+`HP-R3U-FILE-01`, `HP-R3U-FN-01`, `HP-R3U-WIRE-01`, and `HP-R3U-TEST-01`
+approve only the non-exported supported usability facade
+`cartesian_residual_gto_mwg_hamiltonian(system; basis, supplement,
+hamfile = nothing)` for z-axis H2 and internal/performance-supported z-axis
+Be2 residual-GTO/MWG supplemented artifacts. The primary source owner is
+`src/cartesian_base_hamiltonian.jl`. The existing R3 owner
+`src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` may be
+touched only to reuse the same-construction path and R3-C writer without a new
+artifact schema, public API, status object, report field, or persistent cache.
+For Be2, the only approved base-input expansion is generalized internal
+z-axis homonuclear diatomic normalization in `src/cartesian_base_hamiltonian.jl`.
+The facade must not be exported and no `src/GaussletBases.jl` edit is
+approved. The only committed validation surface is extending
+`test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl` as a standalone
+gate. The facade accepts compact `system`, `basis`, and `supplement`
+NamedTuple inputs as defined in
+`docs/src/developer/designs/cartesian_hamiltonian_producer/r3_usability_supplemented_workflow.md`,
+returns the existing `CartesianIDAHamiltonian{Float64}`, and optionally writes
+the existing Hamiltonian artifact plus approved `supplement_provenance/` keys.
+No Cr2 full run/artifact, ECP, EGOI, RHF/solver work, driver/bin/tool
+workflow, public export, Hamiltonian wrapper, report/status/payload object,
+new artifact format, exposed internal stage object, new source file, or new
+committed test file is approved.
 
 `HP-FN-03` specifically approves
 `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl` as the Slice B

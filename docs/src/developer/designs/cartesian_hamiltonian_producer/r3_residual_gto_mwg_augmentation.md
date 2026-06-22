@@ -705,10 +705,11 @@ Remaining deferred hardening:
 - public or supported internal supplemented workflow for H2/Be2 artifacts;
 - basis and supplement realism beyond the first H2 contracted cc-pVTZ fixture.
 
-Recommended next lane: usability. Define a supported internal or public
-workflow for H2/Be2 supplemented artifacts so consumers can request GTO/MWG
-artifacts without composing private R3 calls. A Cr2-readiness lane should stay
-measurement-only until that workflow and its input policy are clear.
+Follow-on lane: `r3_usability_supplemented_workflow.md` approves a
+non-exported supported facade for H2 and internal/performance-supported Be2
+supplemented artifacts so consumers can request GTO/MWG artifacts without
+composing private R3 calls. A Cr2-readiness lane should stay measurement-only
+until that workflow and its input policy are exercised.
 
 ## R3-A Approval Evidence
 
@@ -798,6 +799,7 @@ lowest-orbital IDA self-Coulomb `0.4574256036192161` within `1.0e-10`. It must
 not assert private pair/assembly/report/status behavior, add the standalone
 file to `test/runtests.jl`, or run Be2 or Cr2.
 
-Do not start Cr2 stress tests from this R3 closeout. The next design choice is
-between a usability lane, a measurement-only Cr2-readiness lane, and a
-basis/supplement-realism lane; this document recommends usability first.
+Do not start Cr2 stress tests from this R3 closeout. The immediate follow-on
+usability lane is recorded in `r3_usability_supplemented_workflow.md`; public
+export, Cr2-readiness, and basis/supplement-realism lanes still require
+separate amendments.

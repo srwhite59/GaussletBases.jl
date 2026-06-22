@@ -777,6 +777,150 @@ approve a Hamiltonian wrapper, separate manifest, public provenance reader,
 HamV6 export, solver export, public API/export, driver/bin/tool workflow,
 report/status/payload object, solver/RHF/Cr2 work, or consumer API.
 
+## Approved For R3 Usability Implementation
+
+These entries authorize only the non-exported supported residual-GTO/MWG
+supplemented workflow recorded in
+`r3_usability_supplemented_workflow.md`. They do not approve a public export,
+driver/bin/tool workflow, Cr2 run, ECP, EGOI, RHF, solver work, new Hamiltonian
+wrapper, report/status/payload object, exposed internal stage object, broad
+provider/cache object, or artifact shape beyond the approved
+`supplement_provenance/` group.
+
+### HP-R3U-FILE-01 — supplemented workflow source and validation files
+
+Approved primary owner file:
+
+```text
+src/cartesian_base_hamiltonian.jl
+```
+
+This file may add the non-exported
+`cartesian_residual_gto_mwg_hamiltonian` facade, input validation,
+supplement-spec normalization, and base-to-R3 wiring.
+
+Existing R3 owner file:
+
+```text
+src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl
+```
+
+This file may be touched only if needed to reuse the R3 same-construction
+path and R3-C writer without recomputing residual objects. It may not add a
+new artifact schema, public API, status object, report field, or persistent
+provider/cache object.
+
+Approved validation file:
+
+```text
+test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl
+```
+
+No new source file, no new committed test file, and no `src/GaussletBases.jl`
+export or include edit is approved. If implementation needs a new root include
+or export, it must return for another docs-only amendment.
+
+### HP-R3U-FN-01 — non-exported supplemented Hamiltonian facade
+
+Approved internal call shape:
+
+```julia
+cartesian_residual_gto_mwg_hamiltonian(
+    system::NamedTuple;
+    basis::NamedTuple,
+    supplement::NamedTuple,
+    hamfile::Union{Nothing,AbstractString} = nothing,
+)::CartesianIDAHamiltonian{Float64}
+```
+
+The function is supported for module-qualified internal use but must not be
+exported. It returns the existing `CartesianIDAHamiltonian{Float64}` directly.
+It must not return a wrapper, status object, report object, payload, or
+`(value, metadata)` pair.
+
+Supported first systems:
+
+- z-axis H2 with `["H", "H"]`, charges `[1.0, 1.0]`, `nup = 1`, `ndn = 1`;
+- z-axis Be2 with `["Be", "Be"]`, charges `[4.0, 4.0]`, `nup = 4`,
+  `ndn = 4`, as internal/performance-supported only.
+
+Both centers must have finite `x = 0`, finite `y = 0`, and distinct finite
+`z` coordinates. Cr2, other atoms, heteronuclear diatomics, x/y-aligned
+diatomics, arbitrary orientation, ECP systems, and solver/RHF handoff are not
+approved.
+
+Base `basis` required keys: `q`, `core_spacing`, `xmax_parallel`, and
+`xmax_transverse`. Optional keys are `parent_axis_family = :G10`,
+`reference_spacing = 1.0`, and `tail_spacing = 10.0`. Unknown keys throw
+`ArgumentError`; no `method`, `route`, `n_s`, `radius`, `d`, mapping, backend,
+or output-group selector is approved.
+
+`supplement` required keys: `basis_by_center` and `lmax`. Optional keys are
+`uncontracted = false` and `width_filtering = nothing`. First scope is
+homonuclear: all center basis labels must match and all atom symbols must
+match. `lmax` must satisfy `0 <= lmax <= 6`. `width_filtering` must be
+`nothing` or a `NamedTuple` with exactly `max_width`, finite and positive.
+This maps to the existing legacy `max_width` filter.
+
+### HP-R3U-WIRE-01 — base-to-R3 same-construction workflow
+
+Approved wiring:
+
+```text
+validated system/basis/supplement spec
+-> R1-style/base producer normalization and base stages
+-> base CartesianIDAHamiltonian plus same-construction terminal basis/bundles
+-> legacy named-basis supplement loading
+-> basis_representation(supplement)
+-> R3 same-construction augmented Hamiltonian path
+-> optional R3-C artifact writer
+-> CartesianIDAHamiltonian{Float64}
+```
+
+For H2, the facade should reuse existing R1 validation/stage helpers. For Be2,
+it may add generalized internal z-axis homonuclear diatomic normalization in
+`src/cartesian_base_hamiltonian.jl`. The facade must not call public
+`cartesian_base_hamiltonian` and then reconstruct terminal basis state
+separately. The base Hamiltonian, terminal basis realization, and parent axis
+bundle must come from the same base construction call. The facade must reuse
+the R3 same-construction augmented Hamiltonian path and the R3-C writer.
+
+If `hamfile === nothing`, no artifact is written. If `hamfile !== nothing`,
+the facade writes the supplemented Hamiltonian using the existing Cartesian IDA
+Hamiltonian artifact shape plus the approved `supplement_provenance/` group
+and still returns the Hamiltonian. Empty `hamfile` throws `ArgumentError`.
+Readback is validation-only.
+
+The facade must not expose or return terminal basis realizations, bundles,
+residual objects, augmented-operator objects, MWG descriptors, pair factors,
+or provenance payloads.
+
+### HP-R3U-TEST-01 — supplemented workflow usability endpoint
+
+Approved standalone validation remains:
+
+```text
+test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl
+```
+
+Invocation:
+
+```text
+julia --project=. test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl
+```
+
+The file may be extended with one usability-facade section that calls
+`cartesian_residual_gto_mwg_hamiltonian` on the frozen z-axis H2 plus
+contracted H/cc-pVTZ `lmax = 1` supplement fixture, writes to `mktempdir()`,
+checks returned/read `CartesianIDAHamiltonian{Float64}` matrices, validates
+augmented dimension `489`, validates lowest-orbital IDA self-Coulomb
+`0.4574256036192161` within `1.0e-10`, validates `supplement_provenance/`
+keys against normalized input, and checks malformed input/unsupported Cr2
+errors without asserting private stage objects.
+
+An ignored Be2 timing/proxy script under `tmp/work` is allowed, but Be2 is not
+a committed gate in this amendment and no Be2/Cr2 test file is approved.
+
 ## Rejected Or Deferred
 
 ### HP-RES-01 — terminal basis build result — rejected
@@ -813,12 +957,14 @@ path and should not be listed as future blockers by default:
 - independent weight-aware final-basis `V_GM` validation for R3-B;
 - compact `supplement_provenance/` artifact group for R3-C.
 
-Do not present Be2, Cr2, or broader residual-GTO/MWG supplement support as
-approved until a later docs-only amendment chooses and closes the next lane.
+Do not present Cr2 or broader residual-GTO/MWG supplement support as approved
+until a later docs-only amendment chooses and closes the next lane. The
+non-exported H2/Be2 R3 usability facade is approved separately by
+`HP-R3U-FILE-01`, `HP-R3U-FN-01`, `HP-R3U-WIRE-01`, and `HP-R3U-TEST-01`.
 Remaining deferred lanes are:
 
-- a usability lane for a supported internal or public H2/Be2 supplemented
-  artifact workflow;
+- public export, public examples, or driver workflow beyond the non-exported
+  R3 usability facade;
 - a Cr2-readiness lane for measurement-only candidate/rank/memory forecasting,
   with no full Cr2 Hamiltonian yet;
 - a basis/supplement-realism lane for validated supplement choices, basis

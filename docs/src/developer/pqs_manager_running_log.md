@@ -8943,3 +8943,59 @@ Risk / guardrail:
 - This is status reconciliation only. It does not approve source work, public
   API expansion, driver/bin/tool workflow, new artifact fields beyond R3-C, or
   Be2/Cr2 validation gates.
+
+## Cartesian Hamiltonian Producer Pass 062 - Approve R3 Usability Facade
+
+Commit(s):
+- this commit - Approve R3 usability supplemented workflow
+
+Summary:
+- Approved a docs-only R3 usability amendment after R3-A/B/C closeout. The
+  new lane authorizes one non-exported supported facade,
+  `cartesian_residual_gto_mwg_hamiltonian(system; basis, supplement,
+  hamfile = nothing)`, so callers can request residual-GTO/MWG supplemented
+  Hamiltonians without manually composing base stages, supplement loading, R3
+  same-construction construction, and R3-C artifact writing.
+- The approved scope is intentionally narrow: z-axis H2 as the committed
+  endpoint and z-axis Be2 as an internal/performance-supported proxy. Cr2,
+  public export, driver/bin/tool workflow, ECP, EGOI, RHF/solver work, new
+  artifact formats, wrappers, and report/status/payload objects remain
+  forbidden.
+- The design freezes compact `system`, `basis`, and `supplement` NamedTuple
+  schemas. The supplement schema uses `basis_by_center`, `lmax`, optional
+  `uncontracted`, and optional `width_filtering`; first scope is homonuclear
+  and maps to the existing legacy bond-aligned diatomic supplement loader.
+
+Validation:
+- Design-manager ran `git diff --check`, focused `rg` checks for all R3U IDs,
+  the non-export/no-`src/GaussletBases.jl` guardrail, H2/Be2/Cr2 wording, and
+  `supplement_provenance/` reuse, and confirmed no source, test, tool, or bin
+  files changed in this docs pass.
+
+Goal advancement:
+- R3/LT6: moves from "scientifically coherent internal pieces" to an approved
+  usability implementation surface for producing supplemented artifacts.
+- MT4: chooses the usability lane over immediate Cr2 stress. Cr2 remains a
+  later measurement/stress milestone after the workflow is usable.
+
+Carrying-cost result:
+- deleted: none.
+- simplified: callers get one approved internal facade rather than manually
+  threading R1/R3 stage objects and writer calls.
+- quarantined: Be2 is internal/performance-supported only; Cr2 is explicitly
+  unsupported.
+- not deleted because: lower-level R3-A/B/C helpers remain active contracts
+  and validation seams.
+- exact remaining caller/blocker: implementation of the R3U facade and H2
+  artifact endpoint validation; public export and Cr2-readiness remain later
+  design lanes.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none in this docs pass; `HP-R3U-TEST-01` approves extending the
+  existing standalone R3 H2 endpoint gate during implementation.
+- new metadata/status fields: none.
+
+Risk / guardrail:
+- The facade is supported internal surface, not public API. Do not edit
+  `src/GaussletBases.jl`, add an export, or add a new source/test file under
+  this approval.

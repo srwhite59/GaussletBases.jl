@@ -7,6 +7,8 @@ and R3-C are implemented for the narrow internal H2 residual-GTO/MWG endpoint:
 deterministic residual-GTO basis construction, exact augmented one-body and
 moment matrices, same-construction in-memory MWG/IDA Hamiltonian construction,
 and compact supplemented artifact provenance in the existing Hamiltonian file.
+The R3 usability lane is approved only as a non-exported supported facade for
+H2 and internal/performance-supported Be2 supplemented artifacts.
 
 This authority covers the base all-electron PQS path:
 
@@ -23,10 +25,11 @@ terminal support and retained contracts
 This is internal base-Hamiltonian authority plus the narrow approved R1 public
 base producer surface recorded in `r1_public_base_producer.md` and
 `registry.md`, plus the narrow implemented R3-A/R3-B/R3-C residual-GTO/MWG
-surfaces recorded in `r3_residual_gto_mwg_augmentation.md` and `registry.md`.
-The visible driver shape may call the implemented base path, but this design
-does not approve a new artifact format except the `HP-R1-ART-01`
-`producer_provenance/` keys and the `HP-R3-ART-01`
+surfaces recorded in `r3_residual_gto_mwg_augmentation.md` and `registry.md`,
+and the R3 usability facade recorded in
+`r3_usability_supplemented_workflow.md`. The visible driver shape may call the
+implemented base path, but this design does not approve a new artifact format
+except the `HP-R1-ART-01` `producer_provenance/` keys and the `HP-R3-ART-01`
 `supplement_provenance/` keys in the final Hamiltonian file, solver
 integration, broad driver redesign, or public workflow outside the R1 H/H2
 scope.
@@ -168,12 +171,37 @@ R3 closeout status:
   the next planning lane, but remains a high-rank/Cr2 guardrail.
 - Cr2 remains deferred. It is a stress/consumer-readiness milestone, not the
   next correctness gate.
-- Candidate next lanes are: a usability lane for a supported internal/public
-  H2/Be2 supplemented artifact workflow; a Cr2-readiness lane for
-  measurement-only candidate/rank/memory forecasting without a full Cr2
-  Hamiltonian; or a basis/supplement-realism lane for improving validated
-  supplement choices and filtering. The recommended next lane is usability so
-  consumers can request GTO/MWG artifacts without composing private calls.
+- The immediate follow-on usability lane is now approved as a non-exported
+  H2/Be2 facade so consumers can request GTO/MWG artifacts without composing
+  private calls. Remaining candidate next lanes are Cr2-readiness
+  measurement-only forecasting and basis/supplement realism.
+
+Approved R3 usability workflow scope:
+
+- approved IDs: `HP-R3U-FILE-01`, `HP-R3U-FN-01`, `HP-R3U-WIRE-01`, and
+  `HP-R3U-TEST-01`;
+- approved facade: non-exported
+  `cartesian_residual_gto_mwg_hamiltonian(system; basis, supplement,
+  hamfile = nothing)::CartesianIDAHamiltonian{Float64}`;
+- approved primary owner file: `src/cartesian_base_hamiltonian.jl`;
+- existing R3 owner file
+  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` may be
+  adjusted only to reuse the R3 same-construction path and R3-C writer without
+  recomputing residual objects or adding new payload/status/artifact shapes;
+- approved validation path:
+  `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`, as a
+  standalone gate only;
+- first supported systems: z-axis H2 as the committed endpoint and z-axis Be2
+  as an internal/performance-supported proxy. Cr2 remains unsupported;
+- supplement input is a compact `NamedTuple` with `basis_by_center`, `lmax`,
+  optional `uncontracted`, and optional `width_filtering`;
+- optional artifact output writes the existing Hamiltonian artifact plus the
+  approved `supplement_provenance/` group and returns the Hamiltonian.
+
+R3 usability does not approve a public export, driver/bin/tool workflow, Cr2
+artifact or full run, ECP/EGOI/RHF/solver work, a Hamiltonian wrapper,
+new artifact format, broad report/status/payload object, or exposed internal
+stage objects.
 
 Base pair/assembly role decision:
 
@@ -213,8 +241,8 @@ Deferred lanes:
 
 - public-driver polish and examples outside the approved R1 origin-centered H
   and z-axis H2 base producer scope;
-- R3 usability lane: supported internal/public workflow for H2/Be2
-  supplemented artifacts, still requiring a separate design amendment;
+- public export or driver workflow for supplemented Hamiltonians beyond the
+  approved non-exported R3 usability facade;
 - Cr2-readiness lane: measurement-only candidate/rank/memory forecast, with no
   full Cr2 Hamiltonian yet;
 - high-rank R3 performance guardrails: bounded/streamed residual MWG storage
