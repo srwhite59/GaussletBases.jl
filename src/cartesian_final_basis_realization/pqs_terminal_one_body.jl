@@ -7,22 +7,38 @@ function _check_terminal_axis_factor(axis, n, name)
     return axis
 end
 
-function _terminal_product_action(left, right, axes)
+function _add_terminal_product_block!(
+    destination, left, right, axes, factor, mirror, action_buffer, tile_buffer, block_buffer)
     ncols = isnothing(right.coefficients) ?
         length(right.support_states) :
         size(right.coefficients, 2)
-    action = zeros(Float64, length(left.support_states), ncols)
+    action = _buffer_view!(action_buffer, length(left.support_states), ncols)
+    fill!(action, 0.0)
     maxcols = max(1, _TERMINAL_WORKSPACE_BYTES ÷ (8 * max(length(left.support_states), 1)))
+    tile_buffer_view = _buffer_view!(
+        tile_buffer, length(left.support_states), min(length(right.support_states), maxcols))
     for firstcol in 1:maxcols:length(right.support_states)
         cols = firstcol:min(firstcol + maxcols - 1, length(right.support_states))
-        tile = _support_cross(left.support_states, @view(right.support_states[cols]), axes)
+        tile = @view tile_buffer_view[:, 1:length(cols)]
+        _support_cross!(tile, left.support_states, @view(right.support_states[cols]), axes)
         if isnothing(right.coefficients)
-            action[:, cols] .+= tile
+            @view(action[:, cols]) .+= tile
         else
-            action .+= tile * @view(right.coefficients[cols, :])
+            mul!(action, tile, @view(right.coefficients[cols, :]), 1.0, 1.0)
         end
     end
-    return isnothing(left.coefficients) ? action : transpose(left.coefficients) * action
+    rows = left.column_range
+    cols = right.column_range
+    if isnothing(left.coefficients)
+        destination[rows, cols] .+= factor .* action
+        mirror && (destination[cols, rows] .+= factor .* transpose(action))
+        return destination
+    end
+    block = _buffer_view!(block_buffer, size(left.coefficients, 2), ncols)
+    mul!(block, transpose(left.coefficients), action)
+    destination[rows, cols] .+= factor .* block
+    mirror && (destination[cols, rows] .+= factor .* transpose(block))
+    return destination
 end
 
 function _terminal_factor_terms(factors)
@@ -142,14 +158,15 @@ function assemble_terminal_product_operator!(
         _check_terminal_axis_factor(axis_z, max_state[3], "z"),
     )
     factor = Float64(scale)
+    action_buffer = Ref(Matrix{Float64}(undef, 0, 0))
+    tile_buffer = Ref(Matrix{Float64}(undef, 0, 0))
+    block_buffer = Ref(Matrix{Float64}(undef, 0, 0))
     for right in eachindex(basis.blocks), left in 1:right
         left_block = basis.blocks[left]
         right_block = basis.blocks[right]
-        rows = left_block.column_range
-        cols = right_block.column_range
-        block = factor .* _terminal_product_action(left_block, right_block, axes)
-        destination[rows, cols] .+= block
-        left != right && (destination[cols, rows] .+= transpose(block))
+        _add_terminal_product_block!(
+            destination, left_block, right_block, axes, factor, left != right,
+            action_buffer, tile_buffer, block_buffer)
     end
     return destination
 end

@@ -7965,3 +7965,55 @@ Next step:
 - Issue a bounded HP-FN-03 optimization pass in
   `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl` for
   single-product/K assembly buffer reuse and direct accumulation.
+
+## Cartesian Hamiltonian Producer Pass 045 - Reduce K Assembly Allocation
+
+Commit(s):
+- this branch - Reuse terminal product assembly buffers
+
+Summary:
+- Accepted a bounded HP-FN-03 optimization in
+  `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl`. The old
+  allocating `_terminal_product_action` was replaced by an in-place
+  `_add_terminal_product_block!` that reuses support-cross, action, and
+  PQS-left block buffers inside `assemble_terminal_product_operator!`.
+- The helper now fills support-pair tiles through `_support_cross!`, uses
+  `mul!` for coefficient contractions, and accumulates the current block
+  contribution directly into the destination and mirrored transpose location.
+- Corrected-Be2 K allocation dropped materially: close `471 -> 256 MiB`, far
+  `552 -> 222 MiB`, farther `643 -> 177 MiB`. K elapsed time stayed subsecond
+  and improved for far/farther, while close became slightly slower but still
+  inexpensive.
+
+Validation:
+- Doer ran `git diff --check`, package load, the standalone public endpoint
+  gate (`83/83`), H2 base Hamiltonian smoke, and the ignored corrected-Be2
+  probe. H/H2 endpoint deltas stayed at roundoff scale and Be2 K/unit-`U_A`/V
+  stayed finite and symmetric.
+- Manager reviewed the one-file diff, checked include-order compatibility for
+  `_buffer_view!`/`_support_cross!`, ran `git diff --check`, the source
+  line-count gate, the suspicious-line scan, and package load.
+
+Goal advancement:
+- LT4/LT6: reduces allocation in the public base Hamiltonian K path on the
+  current block-local Be2 proxy without changing the public API or Hamiltonian
+  artifact contract.
+- MT/Roadmap: completes the first post-correction optimization target and
+  leaves unit-`U_A`/IDA allocation as separate future candidates.
+
+Carrying-cost result:
+- deleted: old allocating `_terminal_product_action`.
+- simplified: single-product assembly now has one in-place block helper.
+- quarantined: none.
+- not deleted because: Gaussian-sum/unit-`U_A` and IDA term-first paths remain
+  separate and were intentionally out of scope.
+- exact remaining caller/blocker: none for the old helper.
+- added src lines: 28.
+- deleted src lines: 11.
+- new tests: none.
+- new metadata/status fields: none.
+
+Risk or guardrail:
+- Do not fold the Gaussian-sum or IDA paths into this helper unless a measured
+  pass shows the same allocation pattern and stays within their existing
+  approved internal surfaces.
