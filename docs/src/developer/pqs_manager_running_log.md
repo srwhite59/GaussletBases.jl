@@ -8060,3 +8060,54 @@ Next step:
 - With K optimized and units-stage runtime cleared, decide whether to audit
   `cartesian_transforms`/terminal-basis warm allocation, unit-`U_A`/IDA
   allocation, or stop local Be2 optimization and move back to roadmap work.
+
+## Cartesian Hamiltonian Producer Pass 047 - Replace Cross-Overlap Audit With Structural Checks
+
+Commit(s):
+- this branch - Enforce structural terminal support checks
+
+Summary:
+- Accepted the source cleanup following design commit `e86c08a8`. The terminal
+  realizer no longer computes pairwise production cross-overlap matrices or
+  accepts `cross_atol`.
+- Added structural support checks to enforce the corrected invariant directly:
+  each realized block must match its authoritative terminal support exactly,
+  duplicate support rows inside a block are errors, and support intersections
+  across blocks are errors.
+- Deleted `_block_pair_matrix`, `_block_action`, and the allocating
+  `_support_cross` wrapper. The in-place `_support_cross!` remains because
+  local support actions and one-body assembly still use it.
+
+Validation:
+- Doer ran `git diff --check`, package load, the standalone public endpoint
+  gate (`83/83`), H2 base Hamiltonian smoke, and the ignored corrected-Be2
+  probe. H/H2 endpoint deltas stayed at roundoff scale; corrected-Be2
+  close/far/farther K, unit-`U_A`, and V stayed finite and symmetric.
+- Manager reviewed the one-file diff, confirmed only the compatibility
+  `max_cross_overlap` field remains in live source, ran `git diff --check`,
+  the source line-count gate, the suspicious-line scan, and package load.
+
+Goal advancement:
+- LT5/LT6: removes the last production code path that treated terminal
+  cross-block overlap as a numerical residual instead of a structural support
+  invariant.
+- MT/R3 readiness: clears stale Slice A/B/C implementation debt before
+  residual-GTO/MWG design review proceeds to source work.
+
+Carrying-cost result:
+- deleted: production cross-overlap audit helpers and `cross_atol`.
+- simplified: terminal basis finalization now validates owned-support
+  structure directly.
+- quarantined: `max_cross_overlap` remains as a `0.0` compatibility field.
+- not deleted because: ignored Be2 validation probes still read the field, and
+  removing it cleanly can be done in a later broader cleanup.
+- exact remaining caller/blocker: ignored `tmp/work` Be2 probe access to
+  `max_cross_overlap`; no live source/tool/test caller remains.
+- added src lines: 23.
+- deleted src lines: 39.
+- new tests: none.
+- new metadata/status fields: none.
+
+Risk / guardrail:
+- Do not reintroduce overlap audits to diagnose structural mistakes. Duplicate
+  or intersecting support rows should fail as ownership/indexing errors.

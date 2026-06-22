@@ -11,10 +11,6 @@ struct CartesianTerminalBasisRealization
     max_cross_overlap::Float64
 end
 const _TERMINAL_WORKSPACE_BYTES = 64 * 1024^2
-function _support_cross(left, right, overlaps)
-    matrix = Matrix{Float64}(undef, length(left), length(right))
-    return _support_cross!(matrix, left, right, overlaps)
-end
 function _support_cross!(matrix, left, right, overlaps)
     sx, sy, sz = overlaps
     @inbounds for j in eachindex(right), i in eachindex(left)
@@ -70,32 +66,6 @@ function _support_action!(result, left, right, coefficients, overlaps, scratch)
     end
     return result
 end
-function _block_action(left, right_states, right_coefficients, overlaps)
-    action = _support_action(
-        left.support_states, right_states, right_coefficients, overlaps)
-    return isnothing(left.coefficients) ? action : transpose(left.coefficients) * action
-end
-function _block_pair_matrix(left, right, overlaps)
-    if isnothing(right.coefficients)
-        nrow = isnothing(left.coefficients) ? length(left.support_states) :
-            size(left.coefficients, 2)
-        result = Matrix{Float64}(undef, nrow, length(right.support_states))
-        maxcols = max(1, _TERMINAL_WORKSPACE_BYTES ÷ (8 * max(length(left.support_states), 1)))
-        scratch = Matrix{Float64}(undef, length(left.support_states),
-            min(length(right.support_states), maxcols))
-        for firstcol in 1:maxcols:length(right.support_states)
-            cols = firstcol:min(firstcol + maxcols - 1, length(right.support_states))
-            ncols = length(cols)
-            cross = @view scratch[:, 1:ncols]
-            _support_cross!(cross, left.support_states, @view(right.support_states[cols]), overlaps)
-            isnothing(left.coefficients) ?
-                (@view(result[:, cols]) .= cross) :
-                mul!(@view(result[:, cols]), transpose(left.coefficients), cross)
-        end
-        return result
-    end
-    return _block_action(left, right.support_states, right.coefficients, overlaps)
-end
 function _support_weights(states, bundles)
     wx = _nested_axis_pgdg(bundles, :x).weights
     wy = _nested_axis_pgdg(bundles, :y).weights
@@ -108,6 +78,25 @@ function _push_block!(blocks, key, indices, states, coefficients, nextcol)
         key, Int.(indices), NTuple{3,Int}.(states), coefficients,
         nextcol:(nextcol + count - 1)))
     return nextcol + count
+end
+function _validate_block_support!(block, support, seen)
+    length(block.support_indices) == length(support.support_indices) &&
+        length(block.support_states) == length(support.support_states) ||
+        throw(ArgumentError("terminal block support length does not match owned support"))
+    local_seen = Set{Int}()
+    for i in eachindex(block.support_indices)
+        index = block.support_indices[i]
+        index == support.support_indices[i] &&
+            block.support_states[i] == support.support_states[i] ||
+            throw(ArgumentError("terminal block support does not match owned support"))
+        index in local_seen &&
+            throw(ArgumentError("terminal block support contains duplicate parent rows"))
+        push!(local_seen, index)
+        index in seen &&
+            throw(ArgumentError("terminal block supports are not disjoint"))
+        push!(seen, index)
+    end
+    return nothing
 end
 function _append_direct!(blocks, record, bundles, overlaps, nextcol, identity_atol)
     support = record.support_record
@@ -192,7 +181,6 @@ end
 function pqs_terminal_basis_realization(
     support_records, retained_records, transform_contracts, bundles;
     identity_atol::Real = 1.0e-8,
-    cross_atol::Real = 1.0e-8,
     weight_atol::Real = 1.0e-14,
 )
     length(support_records) == length(retained_records) ||
@@ -202,6 +190,7 @@ function pqs_terminal_basis_realization(
         _nested_axis_pgdg(bundles, :y).overlap,
         _nested_axis_pgdg(bundles, :z).overlap)
     blocks = CartesianTerminalBasisBlock[]
+    seen_support = Set{Int}()
     nextcol = 1
     for (support, record) in zip(support_records, retained_records)
         support.unit_key == record.support_record.unit_key ||
@@ -209,6 +198,7 @@ function pqs_terminal_basis_realization(
         if record.transform_kind === :direct_identity_transform_contract
             nextcol = _append_direct!(
                 blocks, record, bundles, overlaps, nextcol, identity_atol)
+            _validate_block_support!(last(blocks), support, seen_support)
         elseif record.transform_kind === :pqs_source_modes_boundary_selection_shell_realization_contract
             contract = get(contracts, record.transform_contract_unit_key, nothing)
             isnothing(contract) && throw(ArgumentError("missing terminal transform contract"))
@@ -217,16 +207,10 @@ function pqs_terminal_basis_realization(
             nextcol = _push_block!(
                 blocks, record.support_record.unit_key, indices, states,
                 coefficients, nextcol)
+            _validate_block_support!(last(blocks), support, seen_support)
         else
             throw(ArgumentError("unsupported terminal transform kind for PQS basis realization"))
         end
     end
-    max_cross = maximum(
-        (norm(_block_pair_matrix(blocks[left], blocks[right], overlaps), Inf)
-         for right in 2:length(blocks) for left in 1:(right - 1));
-        init = 0.0,
-    )
-    max_cross <= cross_atol ||
-        throw(ArgumentError("terminal cross-block overlap exceeds tolerance"))
-    return CartesianTerminalBasisRealization(blocks, nextcol - 1, max_cross)
+    return CartesianTerminalBasisRealization(blocks, nextcol - 1, 0.0)
 end
