@@ -8151,3 +8151,55 @@ Next step:
   needed for residual basis plus exact one-body/moments into approved status,
   with the measured thresholds and H2 fixture locked. R3-B and R3-C should
   remain candidate-only.
+
+## Cartesian Hamiltonian Producer Pass 049 - Implement R3-A Residual Basis
+
+Commit(s):
+- this branch - Add R3A residual GTO basis construction
+
+Summary:
+- Accepted the first R3-A implementation slice under the approved
+  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` path.
+  The patch adds `CartesianTerminalResidualGTOAugmentation` with the approved
+  numerical fields and implements deterministic residual-basis construction for
+  the frozen H2/H/cc-pVTZ full-rank fixture.
+- The implementation derives candidate ownership by exact center-to-nucleus
+  match, assembles `X = G' S A` blockwise through terminal basis supports,
+  builds `S_R = S_AA - X'X`, applies the frozen R3-A thresholds, uses
+  `inv(sqrt(Symmetric(S_R)))` in candidate order, constructs `T_A = T` and
+  `T_G = -X*T`, and canonicalizes signs by largest `T_A` entry.
+- This pass does not implement exact augmented one-body/moment assembly
+  (`HP-R3-FN-02`), MWG/IDA, supplemented Hamiltonian construction, artifacts,
+  public API, Be2, or Cr2 validation.
+
+Validation:
+- Doer ran `git diff --check`, package load, and the ignored
+  `tmp/work/r3a_h2_residual_gto_validation.jl`.
+- Manager reviewed the two-file source diff, ran `git diff --check`, source
+  line-count and suspicious-line scans, package load, and reran the ignored
+  H2 R3-A residual validation script.
+
+Goal advancement:
+- R3: creates the first real residual-GTO numerical object on top of the
+  block-local base PQS final basis, with no status/payload/report framework.
+- LT5/LT6: establishes explicit residual provenance (`T_G`, `T_A`, owner
+  indices, thresholds, orientation/sign rules) needed before exact augmented
+  one-body and later MWG/IDA work.
+
+Carrying-cost result:
+- deleted: none.
+- simplified: kept R3-A part 1 to one owner file plus one include.
+- quarantined: ignored validation remains under `tmp/work`.
+- not deleted because: no live stale R3 source surface existed yet.
+- exact remaining caller/blocker: `HP-R3-FN-02` exact augmented one-body and
+  moment assembly is still unimplemented; rank-deficient residual selection
+  currently stops rather than silently choosing a pivot rule.
+- added src lines: 131.
+- deleted src lines: 1.
+- new tests: none.
+- new metadata/status fields: none.
+
+Risk / guardrail:
+- The internal helper lookups reflect current include order for older
+  representation/cross-overlap helpers. If R3-A becomes a wider production
+  surface, revisit owner/module boundaries instead of adding a provider payload.
