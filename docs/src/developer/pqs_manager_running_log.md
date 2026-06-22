@@ -8805,3 +8805,83 @@ Risk / guardrail:
 - This implements deterministic selection, not support for broad public
   supplement workflows. Do not infer Cr2 readiness without the remaining
   performance and workflow gates.
+
+## Cartesian Hamiltonian Producer Pass 060 - Add R3-C Supplement Provenance Writer
+
+Commit(s):
+- this commit - Add R3C supplement provenance writer
+
+Summary:
+- Accepted the approved R3-C compact artifact provenance implementation in
+  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`. The new
+  internal, non-exported
+  `write_pqs_terminal_residual_gto_augmented_hamiltonian(...)` first writes the
+  existing `CartesianIDAHamiltonian{Float64}` artifact with
+  `write_cartesian_ida_hamiltonian`, then appends fixed
+  `supplement_provenance/` keys to the same JLD2 file.
+- The artifact stores compact construction provenance: supplement policy,
+  basis labels by center, candidate and owner counts, base/residual/augmented
+  dimensions, residual convention, rank rule, thresholds, MWG convention, and
+  validation labels/reference scalar when supplied.
+- The implementation does not serialize residual transforms, full residual
+  eigenvalues, candidate labels, MWG centers/widths, dense moment matrices, or
+  full construction inputs. It adds no public API, driver workflow, wrapper,
+  payload/status/report object, or new artifact shape beyond the approved
+  provenance group.
+
+Validation:
+- Doer ran `git diff --check`, package load, and the ignored H2 R3-C artifact
+  validation script. The script wrote
+  `/Users/srw/dmrgtmp/jl_V2wAQM/r3c_h2_augmented_hamiltonian.jld2`, read it
+  back with the existing Hamiltonian reader, and reported one-body and
+  electron-electron IDA deltas of `0.0`.
+- H2 R3-B self-Coulomb remained `0.4574256036192164`.
+- Manager ran `git diff --check`, reviewed the one-file source diff, checked
+  the suspicious-line scan, confirmed no new tracked tests/tools, and accepted
+  doer's fresh artifact validation without rerunning the longer script.
+
+Goal advancement:
+- R3/LT6: creates the first durable supplemented Hamiltonian handoff while
+  preserving the existing `CartesianIDAHamiltonian` artifact contract.
+- LT5: records compact provenance from validated construction inputs without
+  turning residual numerical state into metadata.
+
+Carrying-cost result:
+- deleted: none.
+- simplified: artifact output reuses the existing Hamiltonian writer/readback
+  instead of adding a wrapper artifact.
+- quarantined: ignored H2 artifact validation remains under `tmp/work`.
+- not deleted because: this is the first compact R3 artifact provenance writer
+  and there was no stale R3-C writer to retire.
+- exact remaining caller/blocker: public workflow exposure and Cr2/consumer
+  readiness remain deferred outside R3-C.
+- added src lines: 68.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: approved `supplement_provenance/` artifact keys
+  only; no staged metadata/status fields.
+
+Risk / guardrail:
+- Keep this artifact schema compact. Do not add residual transforms, moments,
+  centers, widths, or construction inputs unless a later consumer-driven design
+  amendment promotes a residual-basis artifact group.
+
+## Medium-Term Goal Checkpoint After Pass 060
+
+- MT1 and MT2 are completed/stale as active work items: fake-PQS quarantine and
+  independent H2 PQS recovery have been superseded by the implemented base PQS
+  Hamiltonian and public H/H2 base producer.
+- MT3 remains a standing guardrail: shared terminal support and retained
+  vocabulary continue to anchor the base and R3 supplement paths.
+- MT4 is active but changed shape: MWG/GTO supplements now have accepted H2
+  in-memory and artifact endpoints; broader Be2/Cr2 and public workflow remain
+  deferred.
+- MT5 remains active: recent passes replaced the CPB-per-block R3-A path,
+  avoided new payloads, and kept probes ignored.
+- MT6 remains active: QW/raw-block code is now a tactical donor for R3-A
+  performance, not public architecture. Further old-path classification should
+  wait for the next public workflow or Cr2-readiness lane.
+
+The medium-term section should be rewritten in a future planning/doc pass to
+reflect the post-R3-C state; this commit records the checkpoint without
+changing the top-level goal wording.

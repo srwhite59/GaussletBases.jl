@@ -239,6 +239,74 @@ function pqs_terminal_residual_gto_augmented_hamiltonian(
         base_hamiltonian, basis, bundles, residual, augmented_operators; expansion)
 end
 
+function _r3_supplement_owner_counts(residual, center_count)
+    counts = zeros(Int, center_count)
+    length(residual.candidate_owner_indices) == residual.candidate_count ||
+        throw(DimensionMismatch("R3 supplement owner count mismatch"))
+    for owner in residual.candidate_owner_indices
+        1 <= owner <= center_count ||
+            throw(ArgumentError("R3 supplement owner index out of range"))
+        counts[owner] += 1
+    end
+    return counts
+end
+
+function write_pqs_terminal_residual_gto_augmented_hamiltonian(
+    path,
+    hamiltonian,
+    residual::CartesianTerminalResidualGTOAugmentation;
+    basis_by_center,
+    lmax::Integer,
+    uncontracted::Bool,
+    width_filtering = nothing,
+    validation_check_labels = (),
+    h2_validation_self_coulomb = nothing,
+)
+    Hamiltonian = getfield(_GB_PARENT, :CartesianIDAHamiltonian)
+    hamiltonian isa Hamiltonian{Float64} ||
+        throw(ArgumentError("R3 augmented artifact writer requires CartesianIDAHamiltonian{Float64}"))
+    augmented_dimension = size(hamiltonian.kinetic, 1)
+    augmented_dimension == residual.base_dimension + residual.residual_dimension ||
+        throw(DimensionMismatch("R3 augmented artifact dimension mismatch"))
+    basis_labels = String[String(label) for label in basis_by_center]
+    owner_counts = _r3_supplement_owner_counts(residual, length(basis_labels))
+    values = (;
+        provenance_version = 1,
+        producer = :cartesian_residual_gto_mwg_augmentation,
+        supplement_policy = :mwg_residual_gto,
+        basis_by_center = basis_labels,
+        lmax = Int(lmax),
+        uncontracted = Bool(uncontracted),
+        width_filtering,
+        candidate_count = residual.candidate_count,
+        owner_counts,
+        base_dimension = residual.base_dimension,
+        residual_dimension = residual.residual_dimension,
+        augmented_dimension,
+        augmented_basis_order = :base_then_residual,
+        residual_basis_convention = residual.orientation,
+        rank_rule = residual.rank_rule,
+        tau_abs = residual.tau_abs,
+        tau_rel = residual.tau_rel,
+        tau_neg_abs = residual.tau_neg_abs,
+        tau_neg_rel = residual.tau_neg_rel,
+        mwg_convention_version = 1,
+        mwg_convention = :separable_moment_matched_density_normalized,
+        one_body_source = :exact_transformed_raw_blocks,
+        interaction_source = :weight_aware_residual_mwg_ida_blocks,
+        validation_check_labels = Symbol[Symbol(label) for label in validation_check_labels],
+        h2_self_coulomb_reference = isnothing(h2_validation_self_coulomb) ?
+            nothing : Float64(h2_validation_self_coulomb),
+    )
+    getfield(_GB_PARENT, :write_cartesian_ida_hamiltonian)(String(path), hamiltonian)
+    getfield(_GB_PARENT, :jldopen)(String(path), "r+") do file
+        for key in keys(values)
+            file["supplement_provenance/$(key)"] = getproperty(values, key)
+        end
+    end
+    return path
+end
+
 function _residual_candidate_owner(center, nuclei)
     matches = findall(==(center), nuclei)
     length(matches) == 1 ||
