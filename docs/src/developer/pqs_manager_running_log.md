@@ -8449,3 +8449,62 @@ Risk / guardrail:
 - Do not reintroduce the superseded `0.457435475059184` private-gauge scalar,
   width scaling, or tolerance relaxation. The accepted compact R3-B baseline is
   `0.4574331709135599` for this fixture.
+
+## Cartesian Hamiltonian Producer Pass 054 - Harden R3 Construction Consistency
+
+Commit(s):
+- this branch - Harden R3 residual construction checks
+
+Summary:
+- Accepted a narrow hardening pass in the existing
+  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` file.
+  The patch adds cheap consistency checks for R3 residual dimensions,
+  `T_G`/`T_A` shapes, supplement labels/centers, owner-center matching,
+  augmented operator dimensions, R3-B base Hamiltonian dimensions, and R3-B
+  base-vs-augmented `G-G` block equality for `K` and each unit `U_A`.
+- The pass also validates R3-B moment inputs before MWG descriptor extraction:
+  moment matrices must have the augmented dimension, be finite, and be
+  symmetric within tolerance.
+- R3-A custom Coulomb expansions remain allowed. Cached centered Gaussian
+  factors are reused only when center and exponent order match; otherwise the
+  factors are regenerated. R3-B still rejects custom expansions because
+  `V_GG` from the base Hamiltonian has no expansion provenance.
+
+Validation:
+- Doer ran `git diff --check`, package load, the standalone R3-A endpoint gate,
+  and the ignored R3-B H2 validation script. Endpoint values were unchanged:
+  R3-A `E_base = -0.7946037173365925`,
+  `E_aug = -0.7959028345077851`, and R3-B self-Coulomb
+  `0.4574331709135599`.
+- Manager reviewed the one-file diff, confirmed the requested high-order
+  manager checks were included, ran `git diff --check`, package load, and the
+  suspicious-line scan. The manager began rerunning the two longer endpoint
+  tests but stopped after user interruption and accepted doer's fresh endpoint
+  validation instead.
+
+Goal advancement:
+- R3: protects the accepted R3-A/R3-B H2 endpoints against mismatched
+  separately supplied construction objects and unsafe cached-factor reuse.
+- LT5/LT6: improves correctness guardrails without adding artifacts, public API,
+  new files, committed tests, or a new payload/status layer.
+
+Carrying-cost result:
+- deleted: duplicate inline candidate label/center construction and the unsafe
+  unconditional cached centered-factor reuse.
+- simplified: residual identity and construction checks now use small shared
+  helpers.
+- quarantined: none.
+- not deleted because: residual shape/label/center/owner checks and R3-B
+  consistency checks protect active R3-A/R3-B contracts.
+- exact remaining caller/blocker: R3-B custom Coulomb expansions require
+  explicit base-`V_GG` expansion provenance before they can be accepted safely;
+  R3-C artifact/provenance remains unapproved.
+- added src lines: 80.
+- deleted src lines: 17.
+- new tests: none.
+- new metadata/status fields: none.
+
+Risk / guardrail:
+- This is the maximum cleanup-budget source addition for this lane. Further R3
+  hardening should either delete/simplify existing code in the same pass or get
+  explicit over-budget approval.

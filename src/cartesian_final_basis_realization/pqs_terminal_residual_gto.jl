@@ -21,6 +21,72 @@ end
 
 const _GB_PARENT = parentmodule(@__MODULE__)
 
+_r3_center(center) = (Float64(center[1]), Float64(center[2]), Float64(center[3]))
+_r3_float_centers(centers) = NTuple{3,Float64}[_r3_center(center) for center in centers]
+_r3_candidate_labels(supplement) = String[String(orbital.label) for orbital in supplement.orbitals]
+_r3_candidate_centers(supplement) = NTuple{3,Float64}[_r3_center(orbital.center) for orbital in supplement.orbitals]
+_r3_require_size(matrix, dims, label) = size(matrix) == dims || throw(DimensionMismatch(label))
+_r3_require_close(block, reference, label) = norm(block - reference, Inf) <= 1.0e-10 || throw(ArgumentError(label))
+_r3_moment_ok(matrix, dims) = size(matrix) == dims && all(isfinite, matrix) && norm(matrix - transpose(matrix), Inf) <= 1.0e-10
+function _r3_validate_residual_contract(
+    basis,
+    supplement,
+    residual::CartesianTerminalResidualGTOAugmentation,
+    atom_locations,
+)
+    nG, nR = basis.final_dimension, residual.residual_dimension
+    residual.base_dimension == basis.final_dimension ||
+        throw(DimensionMismatch("R3 residual base dimension must match terminal basis"))
+    residual.residual_dimension == length(residual.residual_labels) ||
+        throw(DimensionMismatch("R3 residual label count mismatch"))
+    _r3_require_size(residual.T_G, (nG, nR), "R3 residual T_G shape mismatch")
+    _r3_require_size(residual.T_A, (residual.candidate_count, nR), "R3 residual T_A shape mismatch")
+    if !isnothing(supplement)
+        residual.candidate_count == length(supplement.orbitals) ||
+            throw(DimensionMismatch("R3 residual candidate count mismatch"))
+        residual.candidate_labels == _r3_candidate_labels(supplement) ||
+            throw(ArgumentError("R3 residual candidate labels do not match supplement"))
+        residual.candidate_centers == _r3_candidate_centers(supplement) ||
+            throw(ArgumentError("R3 residual candidate centers do not match supplement"))
+    end
+    locations = _r3_float_centers(atom_locations)
+    for (index, owner) in pairs(residual.candidate_owner_indices)
+        1 <= owner <= length(locations) ||
+            throw(ArgumentError("R3 residual candidate owner index is out of range"))
+        locations[owner] == residual.candidate_centers[index] ||
+            throw(ArgumentError("R3 residual candidate owner center mismatch"))
+    end
+    return nothing
+end
+function _r3_validate_augmented_operator_dimensions(operators, base_hamiltonian, residual, center_count)
+    nG, n = residual.base_dimension, residual.base_dimension + residual.residual_dimension
+    length(operators.nuclear_attraction_unit_by_center) == center_count || throw(DimensionMismatch("R3 augmented unit nuclear center count mismatch"))
+    for matrix in (operators.kinetic, operators.nuclear_attraction_unit_by_center...)
+        _r3_require_size(matrix, (n, n), "R3 augmented operator dimension mismatch")
+    end
+    _r3_require_close(view(operators.kinetic, 1:nG, 1:nG), base_hamiltonian.kinetic, "R3 augmented kinetic G-G block mismatch")
+    for (matrix, base) in zip(operators.nuclear_attraction_unit_by_center,
+                              base_hamiltonian.nuclear_attraction_unit_by_center)
+        _r3_require_close(view(matrix, 1:nG, 1:nG), base, "R3 augmented unit nuclear G-G block mismatch")
+    end
+    for matrix in (operators.position.x, operators.position.y, operators.position.z,
+                   operators.x2.x, operators.x2.y, operators.x2.z)
+        _r3_moment_ok(matrix, (n, n)) || throw(ArgumentError("R3 augmented moment matrix invalid"))
+    end
+    return nothing
+end
+function _r3_validate_base_hamiltonian(base_hamiltonian, residual)
+    nG, center_count = residual.base_dimension, length(base_hamiltonian.nuclear_charges)
+    _r3_require_size(base_hamiltonian.nuclear_positions, (center_count, 3), "R3-B base Hamiltonian center metadata mismatch")
+    length(base_hamiltonian.nuclear_attraction_unit_by_center) == center_count || throw(DimensionMismatch("R3-B base Hamiltonian unit nuclear count mismatch"))
+    for matrix in (base_hamiltonian.electron_electron_ida, base_hamiltonian.kinetic, base_hamiltonian.nuclear_attraction_unit_by_center...)
+        _r3_require_size(matrix, (nG, nG), "R3-B base Hamiltonian matrix dimension mismatch")
+    end
+    return center_count
+end
+
+_r3b_default_expansion(expansion) = isnothing(expansion) ? getfield(_GB_PARENT, :coulomb_gaussian_expansion)(doacc = false) : throw(ArgumentError("R3-B augmented Hamiltonian rejects custom expansion because base V_GG has no expansion provenance"))
+
 function _r3b_residual_mwg_descriptors(operators, residual)
     nG, nR = residual.base_dimension, residual.residual_dimension
     rows = (nG + 1):(nG + nR)
@@ -117,15 +183,16 @@ function pqs_terminal_residual_gto_augmented_hamiltonian(
     augmented_operators;
     expansion = nothing,
 )
-    nG, nR = residual.base_dimension, residual.residual_dimension
-    size(base_hamiltonian.electron_electron_ida) == (nG, nG) ||
-        throw(DimensionMismatch("R3-B base Hamiltonian V_GG dimension mismatch"))
+    center_count = _r3_validate_base_hamiltonian(base_hamiltonian, residual)
+    atom_locations = NTuple{3,Float64}[_r3_center(view(base_hamiltonian.nuclear_positions, index, :)) for index in 1:center_count]
+    _r3_validate_residual_contract(basis, nothing, residual, atom_locations)
+    _r3_validate_augmented_operator_dimensions(augmented_operators, base_hamiltonian, residual, center_count)
     centers, widths = _r3b_residual_mwg_descriptors(augmented_operators, residual)
-    expansion_value = isnothing(expansion) ?
-        getfield(_GB_PARENT, :coulomb_gaussian_expansion)(doacc = false) : expansion
+    expansion_value = _r3b_default_expansion(expansion)
     pair_terms = _r3b_mwg_axis_pairs(bundles, expansion_value, centers, widths)
     V_GM = _r3b_terminal_mwg_fixed_residual(basis, pair_terms, expansion_value.coefficients)
     V_MM = _r3b_mwg_residual_residual(pair_terms, expansion_value.coefficients)
+    nG, nR = residual.base_dimension, residual.residual_dimension
     V = zeros(Float64, nG + nR, nG + nR)
     residual_range = (nG + 1):(nG + nR)
     V[1:nG, 1:nG] .= base_hamiltonian.electron_electron_ida
@@ -200,15 +267,9 @@ function pqs_terminal_residual_gto_augmentation(
     orthogonality_atol::Real = 1.0e-10,
     identity_atol::Real = 1.0e-10,
 )
-    nuclei_value = NTuple{3,Float64}[
-        (Float64(nucleus[1]), Float64(nucleus[2]), Float64(nucleus[3]))
-        for nucleus in nuclei
-    ]
-    labels = String[String(orbital.label) for orbital in supplement.orbitals]
-    centers = NTuple{3,Float64}[
-        (Float64(orbital.center[1]), Float64(orbital.center[2]), Float64(orbital.center[3]))
-        for orbital in supplement.orbitals
-    ]
+    nuclei_value = _r3_float_centers(nuclei)
+    labels = _r3_candidate_labels(supplement)
+    centers = _r3_candidate_centers(supplement)
     owners = Int[_residual_candidate_owner(center, nuclei_value) for center in centers]
     candidate_count = length(labels)
     X = _terminal_residual_mixed_overlap(basis, bundles, supplement)
@@ -312,7 +373,8 @@ function _r3a_product_matrix(basis, ax, ay, az)
 end
 
 function _r3a_centered_factor_terms(axis, expansion, center)
-    center == axis.center && return axis.gaussian_factor_terms
+    center == axis.center && Float64.(axis.exponents) == Float64.(expansion.exponents) &&
+        return axis.gaussian_factor_terms
     ops = getfield(_GB_PARENT, :mapped_ordinary_one_body_operators)(
         axis.basis; exponents = expansion.exponents, center, backend = axis.backend)
     return ops.gaussian_factors
@@ -328,6 +390,8 @@ function pqs_terminal_residual_gto_augmented_operators(
     nuclear_charges;
     expansion = nothing,
 )
+    length(atom_locations) == length(nuclear_charges) || throw(DimensionMismatch("R3-A atom location count must match nuclear charges"))
+    _r3_validate_residual_contract(basis, supplement, residual, atom_locations)
     CPBP = getfield(_GB_PARENT, :CartesianCPBBlockProviders)
     expansion_value = isnothing(expansion) ?
         getfield(_GB_PARENT, :coulomb_gaussian_expansion)(doacc = false) : expansion
@@ -366,8 +430,7 @@ function pqs_terminal_residual_gto_augmented_operators(
             Symbol(:gto_x2_, axis)),
         residual) for axis in (:x, :y, :z)))
     U = Matrix{Float64}[]
-    for (center_index, location) in enumerate(atom_locations)
-        center = (Float64(location[1]), Float64(location[2]), Float64(location[3]))
+    for (center_index, center) in enumerate(_r3_float_centers(atom_locations))
         U_GG = zeros(Float64, basis.final_dimension, basis.final_dimension)
         factors = ntuple(axis -> _r3a_centered_factor_terms(pgdg[axis], expansion_value,
             center[axis]), 3)
