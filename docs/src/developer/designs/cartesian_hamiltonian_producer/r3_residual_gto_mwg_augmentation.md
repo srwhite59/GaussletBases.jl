@@ -435,6 +435,9 @@ R3-B validation gates:
 
 - residual centers and widths are finite and widths are positive;
 - `V_GM` and `V_MM` are finite;
+- `V_GM` matches an independent weight-aware final-basis density-normalized
+  check built from support weights, final weights, and support-to-M donor
+  values; matching only the final self-Coulomb scalar is not sufficient;
 - `V_aug` is symmetric;
 - base `V_GG` block is unchanged;
 - returned object is the existing `CartesianIDAHamiltonian{Float64}`;
@@ -450,6 +453,10 @@ final-basis density-normalized `G-M` contraction, direct density-normalized
 provider payloads, artifact fields, driver diagnostics, the retired pre-final
 density gauge, and the direct parent-density `G-M` scalar are donor history
 only, not production authority.
+
+The full R3-A moment matrices `x`/`y`/`z`/`x^2`/`y^2`/`z^2` remain approved
+outputs of the H2 construction boundary. This hardening note does not replace
+them with residual-diagonal-only moments.
 
 ## R3-C Artifact And Provenance
 
@@ -539,6 +546,21 @@ performance/realism proxy before Cr2.
 Cr2 remains a later stress/consumer-readiness milestone, not the first R3
 correctness gate.
 
+Before Be2, Cr2, or broader residual-GTO/MWG support is approved, R3 must close
+these hardening blockers:
+
+- same-construction consistency for independently supplied basis, bundle,
+  supplement, residual, and base-Hamiltonian objects, either through a single
+  internal construction orchestrator or an exact numerical check such as
+  recomputing `X = G' S A` and validating `T_G + X*T_A`;
+- deterministic rank-deficient residual selection under the approved
+  rank/orientation policy;
+- owned-support mixed overlap/operator providers, avoiding full-parent identity
+  allocation and bounding CPB interior work for hollow shells;
+- bounded or streamed residual MWG term storage for high residual rank;
+- nonallocating or bounded-allocation validation checks for large dense
+  matrices.
+
 ## R3-A Approval Evidence
 
 Manager log Pass 048 records the measurement-only R3-A residual-spectrum spike
@@ -620,10 +642,11 @@ file, despite its R3-A name, only with the first in-memory supplemented
 Hamiltonian checks described above. It must check `G' S R`, `R' S R`, base G-G
 block equality, finite/symmetric augmented `K`, uncharged `U_A`, and moment
 matrices, `E1_aug <= E1_base + epsilon`, finite/symmetric `V_aug`, unchanged
-base `V_GG`, returned `CartesianIDAHamiltonian{Float64}`, augmented dimension
-`489`, and lowest-orbital IDA self-Coulomb `0.4574256036192161` within
-`1.0e-10`. It must not assert private pair/assembly/report/status behavior,
-add the standalone file to `test/runtests.jl`, or run Be2 or Cr2.
+base `V_GG`, independent weight-aware `V_GM`, returned
+`CartesianIDAHamiltonian{Float64}`, augmented dimension `489`, and
+lowest-orbital IDA self-Coulomb `0.4574256036192161` within `1.0e-10`. It must
+not assert private pair/assembly/report/status behavior, add the standalone
+file to `test/runtests.jl`, or run Be2 or Cr2.
 
 Do not approve R3-C until R3-B produces the in-memory supplemented Hamiltonian
 endpoint. Do not start Cr2 stress tests before the H2 and Be2 augmented paths

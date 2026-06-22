@@ -154,6 +154,10 @@ Deferred lanes:
 
 - public-driver polish and examples outside the approved R1 origin-centered H
   and z-axis H2 base producer scope;
+- R3 hardening before Be2/Cr2: independent weight-aware `V_GM` validation,
+  same-construction consistency, deterministic rank-loss implementation,
+  owned-support mixed providers, bounded MWG term storage, and nonallocating
+  large-matrix validation checks;
 - Cr2-scale stress and performance validation;
 - R3-C artifact provenance/cleanup, Be2/Cr2 validation, and other non-base
   Hamiltonians;

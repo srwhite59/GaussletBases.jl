@@ -484,10 +484,12 @@ for R3-B because it came from a retired private
 `0.4574331709135599` scalar is also superseded because it came from direct
 parent-density insertion of `G-M` factors. Do not add a residual width scale
 factor or relax tolerance to fit either stale scalar. `HP-R3-FN-03`
-does not approve artifact provenance, public API expansion, driver/bin/tool
-workflow, broad provider payloads, status/result objects, report fields, Be2
-validation, Cr2 validation, ECP, EGOI, RHF/solver work, wrappers, or a new test
-file.
+requires the first H2 endpoint gate to compare `V_GM` against an independent
+weight-aware final-basis density-normalized check, not only the final
+self-Coulomb scalar. `HP-R3-FN-03` does not approve artifact provenance, public
+API expansion, driver/bin/tool workflow, broad provider payloads, status/result
+objects, report fields, Be2 validation, Cr2 validation, ECP, EGOI,
+RHF/solver work, wrappers, or a new test file.
 `HP-R3-ART-01` remains candidate-only.
 
 `HP-FN-03` specifically approves

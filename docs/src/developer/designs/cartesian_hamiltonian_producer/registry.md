@@ -564,9 +564,13 @@ standalone endpoint/integration gate and is not approved for inclusion in
 `test/runtests.jl`. Under approved R3-B, the same file may be extended only
 with the first in-memory supplemented Hamiltonian checks: finite/symmetric
 `V_aug`, unchanged base `V_GG`, returned `CartesianIDAHamiltonian{Float64}`,
-augmented dimension `489`, and lowest-orbital IDA self-Coulomb
-`0.4574256036192161` within `1.0e-10`. It must not assert private
-pair/assembly/report/status behavior and must not run Be2 or Cr2.
+augmented dimension `489`, an independent weight-aware `V_GM` comparison, and
+lowest-orbital IDA self-Coulomb `0.4574256036192161` within `1.0e-10`. The
+independent `V_GM` check must recompute the final-basis density-normalized
+mixed block from support weights, final weights, and support-to-M donor values;
+it must not only compare the final self-Coulomb scalar against the same
+implementation path. It must not assert private pair/assembly/report/status
+behavior and must not run Be2 or Cr2.
 
 ## Approved For R3-B Implementation
 
@@ -644,6 +648,10 @@ driver/bin/tool workflow, broad provider payloads, status/result objects,
 report fields, pair/assembly workflow expansion, Be2 validation, Cr2
 validation, ECP, EGOI, RHF/solver work, wrappers, or a new test file.
 
+The first R3-B endpoint may keep the approved full R3-A moment matrices
+`x`/`y`/`z`/`x^2`/`y^2`/`z^2`; this amendment does not replace them with a
+diagonal-only moment contract.
+
 ## Candidate, Not Approved
 
 Candidate entries record proposed design surfaces for review. They do not
@@ -686,3 +694,21 @@ status wrapper around `CartesianIDAHamiltonian`.
 
 No new committed terminal smoke/probe is approved. Use existing smokes or
 ignored `tmp/work` validation unless a later design explicitly approves a test.
+
+### R3 Be2/Cr2 hardening guardrail — deferred
+
+Do not present Be2, Cr2, or broader residual-GTO/MWG supplement support as
+approved until a later docs-only amendment closes these items:
+
+- an exact same-construction guard for independently supplied basis, bundle,
+  supplement, residual, and base-Hamiltonian objects. Acceptable candidates are
+  a single internal construction orchestrator or a numerical consistency check
+  such as recomputing `X = G' S A` and validating `T_G + X*T_A`;
+- deterministic rank-deficient residual selection under the already-approved
+  rank/orientation policy;
+- owned-support mixed overlap/operator providers that avoid full-parent
+  identity allocation and avoid bounding CPB interior materialization for
+  hollow shells;
+- bounded or streamed residual MWG term storage for higher residual rank;
+- allocation-free or bounded-allocation validation reductions for large dense
+  matrices.
