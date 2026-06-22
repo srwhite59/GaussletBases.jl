@@ -8,7 +8,9 @@ deterministic residual-GTO basis construction, exact augmented one-body and
 moment matrices, same-construction in-memory MWG/IDA Hamiltonian construction,
 and compact supplemented artifact provenance in the existing Hamiltonian file.
 The R3 usability lane is approved only as a non-exported supported facade for
-H2 and internal/performance-supported Be2 supplemented artifacts.
+H2 and internal/performance-supported Be2 supplemented artifacts, but
+implementation should wait for the owner-local residual-selection correction
+below.
 
 This authority covers the base all-electron PQS path:
 
@@ -92,6 +94,14 @@ Approved R3-A residual-GTO exact one-body/moment scope:
   `G-A` blocks once and project them through terminal blocks. This does not
   approve parent-by-parent global operators, a new shared QW API, persistent
   provider bundles, payloads, or edits outside the approved file;
+- corrected residual-selection invariant: residual-GTO candidates are
+  partitioned by physical owner center before residual-content selection.
+  Owner-local residual Gram eigenvalues are residual occupations and control
+  retention. Retained owner-local sectors are orthonormalized locally,
+  concatenated, and merged by one final symmetric Lowdin over inter-owner
+  overlap. Global raw-candidate symmetric Lowdin and global raw-column
+  pivoted-Cholesky selection are superseded and are not the R3 residual
+  algorithm;
 - first validation gate: H2 augmented one-body/moment endpoint only, checking
   `G' S R`, `R' S R`, base G-G block equality, finite/symmetric augmented
   operators and moments, and `E1_aug <= E1_base + epsilon`.
@@ -128,12 +138,13 @@ Approved R3-B residual-MWG/IDA in-memory Hamiltonian scope:
   `V_GM_block = C_density' * V_support_M`;
 - the returned object is the existing in-memory
   `CartesianIDAHamiltonian{Float64}`;
-- corrected weight-aware compact-path H2 closure value: lowest augmented
+- historical global-selection compact-path H2 closure value: lowest augmented
   one-body orbital IDA self-Coulomb `0.4574256036192161` within `1.0e-10`;
+  the owner-local residual-selection correction must remeasure this value;
 - superseded R3-B targets: `0.457435475059184`, from the retired private
   `[pre_final_pqs, residual_gto]` density gauge, and
   `0.4574331709135599`, from direct parent-density `G-M` insertion, are not
-  acceptance targets for the compact R3-A residual basis.
+  future acceptance targets.
 
 R3-B does not approve artifact provenance, public API expansion,
 driver/bin/tool workflow, broad provider payloads, status/result objects,
@@ -159,8 +170,9 @@ Approved R3-C compact supplemented artifact provenance scope:
 R3 closeout status:
 
 - R3-A/B/C now provide the first narrow supplemented Hamiltonian path for the
-  H2 fixture: augmented dimension `489` and accepted lowest-orbital IDA
-  self-Coulomb `0.4574256036192161` within `1.0e-10`.
+  H2 fixture under the superseded global candidate-order residual basis:
+  augmented dimension `489` and lowest-orbital IDA self-Coulomb
+  `0.4574256036192161` within `1.0e-10`.
 - The Be2 R3-A donor-kernel measurement closed the first exact-operator
   scaling blocker. Repeated CPB-per-terminal-block construction measured about
   `43.2 s` and `35.4 GiB`; the one-shot parent-by-supplement analytic block
@@ -171,10 +183,33 @@ R3 closeout status:
   the next planning lane, but remains a high-rank/Cr2 guardrail.
 - Cr2 remains deferred. It is a stress/consumer-readiness milestone, not the
   next correctness gate.
-- The immediate follow-on usability lane is now approved as a non-exported
-  H2/Be2 facade so consumers can request GTO/MWG artifacts without composing
-  private calls. Remaining candidate next lanes are Cr2-readiness
-  measurement-only forecasting and basis/supplement realism.
+- The immediate follow-on action is owner-local residual-selection
+  measurement for H2, Be2, and Cr2. R3 usability facade authority remains
+  approved as a shape, but implementation should not proceed until the
+  owner-local residual-selection convention and remeasured H2 MWG scalar are
+  recorded.
+
+Owner-local residual-selection correction:
+
+- For each owner center, compute `M_a = S_AaAa - X_a' X_a` after projecting
+  that owner's candidates against the fixed orthonormal terminal gausslet
+  basis. The eigenvalues of `M_a` are residual occupations, not just numerical
+  rank diagnostics.
+- Retain owner-local modes using a separate residual-occupation cutoff
+  `eta_RG`; numerical negative-eigenvalue tolerance and physical residual
+  occupation cutoff are separate policies.
+- Orthonormalize retained owner-local sectors, concatenate them, and perform
+  one final symmetric Lowdin over the inter-owner merge overlap.
+- MWG centers and widths are computed from the final merged residual
+  functions. Residual integral weights may be near zero or sign-changing and
+  must not be treated as base-PQS IDA weights.
+- Do not implement a stabilized global raw-candidate Lowdin pass, do not use
+  global raw-column pivoted-Cholesky as residual-content selection, do not use
+  eigenvalue flooring to retain tiny residual modes, and do not use width
+  filtering as conditioning repair.
+- The old R3-B H2 scalar `0.4574256036192161` is a global-selection baseline,
+  not a target to preserve after the owner-local correction. Remeasure the H2
+  self-Coulomb after the corrected residual basis is implemented.
 
 Approved R3 usability workflow scope:
 
@@ -243,6 +278,7 @@ Deferred lanes:
   and z-axis H2 base producer scope;
 - public export or driver workflow for supplemented Hamiltonians beyond the
   approved non-exported R3 usability facade;
+- owner-local residual-selection source correction after the measurement pass;
 - Cr2-readiness lane: measurement-only candidate/rank/memory forecast, with no
   full Cr2 Hamiltonian yet;
 - high-rank R3 performance guardrails: bounded/streamed residual MWG storage

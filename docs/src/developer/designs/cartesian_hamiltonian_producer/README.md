@@ -9,8 +9,10 @@ producer implementation is approved only for the narrow H/H2 scope recorded in
 `r1_public_base_producer.md` and `registry.md`. R3-A/B/C residual-GTO/MWG
 augmentation is implemented for the narrow H2 endpoint and compact artifact.
 The R3 usability lane approves only a non-exported supported facade for H2 and
-internal/performance-supported Be2 artifacts. Broad public API, driver UX, Cr2
-validation, ECP, EGOI, RHF, and solver work remain deferred.
+internal/performance-supported Be2 artifacts, but implementation should wait
+for the owner-local residual-selection measurement and correction. Broad
+public API, driver UX, Cr2 validation, ECP, EGOI, RHF, and solver work remain
+deferred.
 
 Agents should read first:
 

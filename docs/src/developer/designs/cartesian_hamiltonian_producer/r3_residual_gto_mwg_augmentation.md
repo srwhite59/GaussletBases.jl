@@ -5,7 +5,10 @@ residual-GTO/MWG endpoint. R3-A provides deterministic residual-GTO basis
 construction, exact augmented one-body matrices, and exact moments. R3-B
 provides the same-construction in-memory MWG/IDA Hamiltonian path with the
 corrected weight-aware compact-path scalar. R3-C provides compact supplemented
-artifact provenance in the existing Hamiltonian artifact shape.
+artifact provenance in the existing Hamiltonian artifact shape. The residual
+selection authority is now corrected to owner-local residual occupation
+selection plus final merge Lowdin; the implemented global candidate-order
+selection is legacy evidence and must be replaced before R3U source work.
 
 This document records the R3 path for generic residual-GTO/MWG augmentation of
 the Cartesian base Hamiltonian producer. It approves only the R3-A, R3-B, and
@@ -147,6 +150,10 @@ indices. R3-A does not require that representation change.
 
 ### Residualization Algebra
 
+Corrected R3 residual selection is owner-local. The global raw-candidate
+symmetric Lowdin and global raw-column pivoted-Cholesky selection are
+superseded and are not the R3 residual algorithm for future work.
+
 Let `G` be the fixed, orthonormal base terminal final basis and `A` the ordered
 Gaussian supplement candidates. Assemble the mixed overlap one terminal block
 at a time from exact mixed overlaps; do not form a global parent-space
@@ -155,79 +162,95 @@ coefficient matrix.
 ```text
 X = G' S A
 S_AA = A' S A
-S_R = S_AA - X'X
-A_perp = A - G X
 ```
 
-For a supplement-side residual transform `T`,
+Partition candidate indices by physical owner center. For owner `a`, let
+`A_a` be the candidate subblock and `X_a = G' S A_a`. The projected
+owner-local residual candidates are
 
 ```text
-R = (A - G X) T
+B_a = (I - P_G) A_a
 ```
 
-and the raw-basis representation is:
+and their owner-local residual Gram matrix is
 
 ```text
-T_A = T
-T_G = -X T
+M_a = B_a' S B_a = S_AaAa - X_a' X_a
+```
+
+Interpret `M_a` as the nonzero spectrum of a unit-candidate-occupation
+residual density for that owner. Its eigenvalues are residual occupations:
+they measure how much atom-local GTO content remains outside the fixed
+gausslet span. They are not merely numerical-rank diagnostics.
+
+Do not insert `S_AA^-1` to make a proper nonorthogonal occupied density. That
+would turn the construction into a projector and destroy the residual
+occupation information.
+
+### Owner-Local Selection And Merge
+
+For each owner:
+
+```text
+M_a = U_a Lambda_a U_a'
+K_a = {mu : lambda_a_mu > eta_RG}
+R_a0 = B_a U_a[:, K_a] Lambda_a[K_a, K_a]^(-1/2)
+```
+
+The cutoff `eta_RG` is a physical residual-occupation cutoff. It is separate
+from numerical negative-eigenvalue and stabilization tolerances. Owner-local
+modes below `eta_RG` are discarded because they are already represented by the
+gausslet basis. Eigenvalue flooring must not be used to retain low-occupation
+residual modes.
+
+Each retained owner-local residual block satisfies:
+
+```text
+G' S R_a0 = 0
+R_a0' S R_a0 = I
+```
+
+The owner-local orientation inside a retained subspace may use deterministic
+natural residual modes, owner-local symmetric orthogonalization of a selected
+GTO-like span, or a later approved localization rotation. The selection
+criterion remains the owner-local residual occupation spectrum regardless of
+that orientation choice.
+
+Concatenate owner-local residual blocks:
+
+```text
+R0 = [R_1^0, R_2^0, ...]
+S_merge = R0' S R0
+```
+
+The diagonal owner blocks of `S_merge` are identity; only inter-owner overlaps
+remain. Perform one final symmetric Lowdin over `S_merge`:
+
+```text
+R = R0 S_merge^(-1/2)
+```
+
+This final merge Lowdin is legitimate. It merges already selected and
+orthonormal owner-local residual sectors. If `S_merge` is nearly singular
+after owner-local low-occupation modes are removed, diagnose duplicated
+interatomic residual directions or an inadequate occupation policy; do not use
+flooring to preserve the directions.
+
+The final raw-basis representation remains:
+
+```text
 R = G T_G + A T_A
 ```
 
-The transform must satisfy:
+`T_G` and `T_A` after the final merge are the numerical authority consumed by
+exact one-body, moment, and MWG construction.
 
-```text
-T' S_R T = I
-```
-
-### Orientation And Rank Policy
-
-Residual basis orientation matters because each final residual function is
-later replaced by an effective moment-matched Gaussian. R3 must not use raw
-eigenvectors of `S_R` as the residual functions.
-
-Deterministic candidate convention:
-
-- preserve candidate ordering from the validated supplement fixture;
-- project all candidates against `G`;
-- use residual eigenvalues as rank diagnostics, not as final orientation;
-- if all candidate directions are retained, use symmetric Lowdin in candidate
-  order: `T = S_R^(-1/2)`;
-- if rank loss occurs, select independent candidate columns with a
-  deterministic rank-revealing rule before Lowdin, then apply symmetric Lowdin
-  to the selected projected candidates;
-- tie breaks in any rank-revealing step use lower original candidate index;
-- selected candidates are returned to ascending original candidate order before
-  the Lowdin step;
-- final residual column signs are canonicalized by making the largest-magnitude
-  entry of the corresponding `T_A` column positive, with lower candidate index
-  breaking ties.
-
-Approved cutoff rule:
-
-```text
-lambda_max = max(maximum(eigenvalues(Symmetric(S_R))), 0.0)
-tau_keep = max(tau_abs, tau_rel * lambda_max)
-tau_neg = max(tau_neg_abs, tau_neg_rel * max(lambda_max, 1.0))
-```
-
-Policy:
-
-- eigenvalues `< -tau_neg` are construction errors;
-- eigenvalues in `[-tau_neg, tau_keep]` are roundoff-negative or near-null and
-  are discarded;
-- eigenvalues `> tau_keep` define the residual numerical rank.
-
-Frozen R3-A threshold values:
-
-```text
-tau_abs = 1.0e-10
-tau_rel = 1.0e-10
-tau_neg_abs = 1.0e-12
-tau_neg_rel = 1.0e-12
-```
-
-The values are part of the persistent residual object and later artifact
-provenance; ordinary-QW values remain donor evidence, not automatic authority.
+No `eta_RG` value is frozen by this correction. The next pass is
+measurement-only and should report owner-local spectra under trial cutoffs
+around `1.0e-8` and `1.0e-7`. The previously frozen `tau_abs`, `tau_rel`,
+`tau_neg_abs`, and `tau_neg_rel` values remain historical/current
+implementation tolerances, not the approved physical residual-occupation
+policy for the corrected algorithm.
 
 ### HP-R3-OBJ-01 Approved Fields
 
@@ -244,17 +267,17 @@ Approved exact fields:
 | `candidate_labels::Vector{String}` | deterministic raw candidate labels |
 | `candidate_owner_indices::Vector{Int}` | derived from exact center-to-nucleus match |
 | `candidate_centers::Vector{NTuple{3,Float64}}` | raw candidate centers in candidate order |
-| `retained_candidate_indices::Vector{Int}` | selected raw candidate columns in ascending candidate order |
-| `residual_labels::Vector{String}` | deterministic residual labels derived from retained candidate labels and owner counts |
+| `residual_source_owner_indices::Vector{Int}` | owner center for each final residual function |
+| `residual_occupations::Vector{Float64}` | retained owner-local residual occupations associated with final residual functions before final merge |
+| `owner_retained_counts::Vector{Int}` | retained residual count by owner |
+| `residual_labels::Vector{String}` | deterministic residual labels derived from owner and local retained mode order |
 | `T_G::Matrix{Float64}` | shape `n_G x n_R`; base-side residual transform |
 | `T_A::Matrix{Float64}` | shape `n_A x n_R`; supplement-side residual transform |
-| `residual_metric_eigenvalues::Vector{Float64}` | diagnostic eigenvalues of `S_R`, not final orientation |
-| `tau_abs::Float64` | absolute keep threshold |
-| `tau_rel::Float64` | relative keep threshold |
-| `tau_neg_abs::Float64` | absolute negative-eigenvalue error threshold |
-| `tau_neg_rel::Float64` | relative negative-eigenvalue error threshold |
-| `rank_rule::Symbol` | deterministic rank selector, e.g. `:pivoted_cholesky_candidate_order` |
-| `orientation::Symbol` | `:selected_candidate_order_symmetric_lowdin` |
+| `occupation_cutoff::Float64` | approved residual-occupation cutoff `eta_RG` |
+| `tau_neg_abs::Float64` | absolute negative-eigenvalue error tolerance |
+| `tau_neg_rel::Float64` | relative negative-eigenvalue error tolerance |
+| `selection_rule::Symbol` | owner-local residual occupation selection rule |
+| `orientation::Symbol` | owner-local orientation plus final merge convention |
 | `sign_rule::Symbol` | `:largest_T_A_entry_positive` |
 
 Invariants:
@@ -264,9 +287,17 @@ Invariants:
 - `length(candidate_labels) == candidate_count`;
 - `length(candidate_owner_indices) == candidate_count`;
 - `length(candidate_centers) == candidate_count`;
-- `length(retained_candidate_indices) == residual_dimension`;
+- `length(residual_source_owner_indices) == residual_dimension`;
+- `length(residual_occupations) == residual_dimension`;
+- `sum(owner_retained_counts) == residual_dimension`;
+- retained `residual_occupations` are greater than `occupation_cutoff`;
 - `G' S R` is zero within tolerance;
 - `R' S R` is identity within tolerance.
+
+`retained_candidate_indices` is not part of the corrected persistent object
+contract because a retained residual mode may be a linear combination of
+several atom-local candidates. Full discarded owner spectra belong in ignored
+diagnostics unless a later consumer-driven artifact amendment promotes them.
 
 ## R3-A Exact One-Body And Moment Assembly
 
@@ -358,19 +389,26 @@ R3-B starts only after R3-A is accepted. It constructs residual MWG descriptors,
 residual-containing IDA blocks, and the in-memory augmented
 `CartesianIDAHamiltonian{Float64}`.
 
-R3-B is reapproved with a corrected weight-aware compact-path acceptance
-scalar. The earlier closure target `0.457435475059184` is superseded for R3-B
-because it came from a retired private `[pre_final_pqs, residual_gto]`
-density-gauge diagnostic, not from the compact accepted R3-A residual basis.
-The later direct compact-path scalar `0.4574331709135599` is also superseded:
-it inserted parent-density-normalized `G-M` factors directly into the final
-basis. The current compact R3-A residual moments with the approved
-`sigma = sqrt(2v)` MWG convention and weight-aware `G-M` contraction produce
-lowest-orbital IDA self-Coulomb `0.4574256036192161`, which is the R3-B
-acceptance target.
+R3-B was reapproved with a corrected weight-aware compact-path scalar for the
+then-current global candidate-order residual basis. That scalar is now
+superseded for future corrected R3 work because the residual basis construction
+itself is superseded.
 
-Do not add a residual width scale factor and do not relax tolerance to cover
-the old scalar.
+Previously superseded scalar history:
+
+- `0.457435475059184` came from a retired private
+  `[pre_final_pqs, residual_gto]` density-gauge diagnostic;
+- `0.4574331709135599` came from direct parent-density-normalized `G-M`
+  insertion into the final basis;
+- `0.4574256036192161` came from the global candidate-order R3-A residual
+  basis with the corrected weight-aware `G-M` contraction.
+
+The owner-local residual-selection correction may change the MWG interaction
+because MWG is not invariant under rotations of the residual subspace. Exact
+augmented one-body eigenvalues should remain invariant when the retained span
+is unchanged, but R3-B self-Coulomb targets must be remeasured after the
+owner-local selection/merge algorithm is implemented. Do not add a residual
+width scale factor and do not relax tolerance to preserve any stale scalar.
 
 Approved R3-B source owner/path/function:
 
@@ -575,10 +613,9 @@ Approved compact provenance keys:
 | `supplement_provenance/residual_dimension` | retained residual rank |
 | `supplement_provenance/augmented_dimension` | final Hamiltonian dimension |
 | `supplement_provenance/augmented_basis_order` | `:base_then_residual` |
-| `supplement_provenance/residual_basis_convention` | `:selected_candidate_order_symmetric_lowdin` |
-| `supplement_provenance/rank_rule` | deterministic rank selector |
-| `supplement_provenance/tau_abs` | `Float64` |
-| `supplement_provenance/tau_rel` | `Float64` |
+| `supplement_provenance/residual_basis_convention` | `:owner_local_residual_occupation_final_merge_lowdin` after the correction lands |
+| `supplement_provenance/rank_rule` | owner-local residual occupation selector |
+| `supplement_provenance/occupation_cutoff` | approved `eta_RG` after measurement |
 | `supplement_provenance/tau_neg_abs` | `Float64` |
 | `supplement_provenance/tau_neg_rel` | `Float64` |
 | `supplement_provenance/mwg_convention_version` | `1` |
@@ -586,7 +623,7 @@ Approved compact provenance keys:
 | `supplement_provenance/one_body_source` | `:exact_transformed_raw_blocks` |
 | `supplement_provenance/interaction_source` | `:weight_aware_residual_mwg_ida_blocks` |
 | `supplement_provenance/validation_check_labels` | compact symbols naming accepted checks, including `:h2_lowest_augmented_one_body_orbital_ida_self_coulomb` when writing the H2 validation fixture |
-| `supplement_provenance/h2_self_coulomb_reference` | `0.4574256036192161` for the H2 validation fixture, otherwise `nothing` |
+| `supplement_provenance/h2_self_coulomb_reference` | remeasured owner-local H2 value for the validation fixture, otherwise `nothing` |
 
 The compact schema must not store:
 
@@ -621,8 +658,8 @@ Validation gate:
 - readback Hamiltonian `K`, every uncharged `U_A`, and `V` match the returned
   in-memory Hamiltonian exactly or within tight roundoff deltas;
 - provenance keys match the validated R3 construction specification;
-- R3-B lowest-orbital IDA self-Coulomb remains `0.4574256036192161` within
-  `1.0e-10`.
+- R3-B lowest-orbital IDA self-Coulomb matches the remeasured owner-local H2
+  value within the approved tolerance.
 
 ## First Validation Fixture
 
@@ -671,16 +708,21 @@ Implemented narrow R3 scope:
 - R3-C: compact `supplement_provenance/` group added to the existing
   Hamiltonian artifact shape, with validation-only readback.
 
-Accepted H2 closeout facts:
+Legacy H2 closeout facts before the owner-local selection correction:
 
 - augmented dimension `489`;
 - lowest augmented one-body orbital IDA self-Coulomb
-  `0.4574256036192161` within `1.0e-10`;
+  `0.4574256036192161` within `1.0e-10` for the global candidate-order
+  residual basis;
 - tracked standalone endpoint exercises the same-construction path and
   independent weight-aware `V_GM` check;
 - H2 supplemented artifact write/readback preserves Hamiltonian matrices within
   tight deltas and stores compact provenance from the validated construction
   specification.
+
+These facts remain useful regression evidence for the old compact path, but
+the self-Coulomb scalar and residual-basis provenance must be remeasured after
+owner-local residual selection and final merge Lowdin are implemented.
 
 Be2 measurement conclusions:
 
@@ -711,6 +753,50 @@ supplemented artifacts so consumers can request GTO/MWG artifacts without
 composing private R3 calls. A Cr2-readiness lane should stay measurement-only
 until that workflow and its input policy are exercised.
 
+## Owner-Local Selection Measurement Pass
+
+Before implementing the corrected residual-selection algorithm or the R3
+usability facade on top of it, run a measurement-only diagnostic for H2, Be2,
+and Cr2. The diagnostic may live under ignored `tmp/work`; it must not edit
+source, tests, tools, drivers, artifacts, or public APIs.
+
+Use the existing `X`, `S_AA`, and `candidate_owner_indices` data. For each
+owner:
+
+```text
+M_a = S_AA[I_a, I_a] - X[:, I_a]' X[:, I_a]
+diagonalize M_a
+report residual occupation spectrum
+retain trial modes above eta_RG
+normalize retained owner-local modes
+```
+
+Then concatenate owner blocks, form `S_merge`, report its eigenvalue range and
+condition, apply the final symmetric Lowdin, and report final orthogonality.
+
+The first diagnostic should compare trial residual-occupation cutoffs around
+`1.0e-8` and `1.0e-7`, matching legacy-scale evidence without freezing either
+value. It should report:
+
+- atom-local residual occupation spectra separately;
+- retained counts per owner under each trial cutoff;
+- owner-local orthogonality errors;
+- `S_merge` eigenvalue range and condition;
+- final merged `G' S R` and `R' S R` errors.
+
+Forbidden in the measurement pass:
+
+- global raw-candidate Lowdin as residual-content selection;
+- global raw-column pivoted-Cholesky selection as residual-content selection;
+- eigenvalue flooring to retain tiny residual occupations;
+- width filtering as conditioning repair;
+- Cr2 facade expansion or full Hamiltonian construction;
+- operator, MWG, artifact, public API, driver, bin, or tool work.
+
+The existing `_qwrg_residual_space_by_owner` owner-local organization is the
+primary donor. Do not create a new residual framework unless measurement shows
+the donor cannot express the required owner-local selection and final merge.
+
 ## R3-A Approval Evidence
 
 Manager log Pass 048 records the measurement-only R3-A residual-spectrum spike
@@ -730,11 +816,13 @@ Evidence:
 - full residual rank `18`;
 - residual metric eigenvalue range approximately `3.05e-4` to `1.35e-2`;
 - condition estimate approximately `44.3`;
-- `inv(sqrt(Symmetric(S_R)))` in candidate order succeeded;
+- `inv(sqrt(Symmetric(S_R)))` in candidate order succeeded for the superseded
+  global residual construction;
 - measured `R' S R` identity error approximately `4.4e-15`.
 
-The spectrum is far from the frozen threshold band, so symmetric Lowdin
-residualization in candidate order is not marginal for the first H2 fixture.
+This evidence explains why the first H2 global construction was numerically
+well behaved. It is no longer residual-selection authority for Cr-like
+supplements or future R3 implementation.
 
 ## Deletion And Retirement Targets
 
@@ -776,7 +864,7 @@ interaction continuation and R3-C compact artifact provenance:
 ```text
 base z-axis H2
 -> contracted two-center H/cc-pVTZ lmax-1 candidates
--> deterministic residual-GTO block
+-> legacy global deterministic residual-GTO block
 -> exact augmented K, U_A, x/y/z, and x2/y2/z2
 -> H2 augmented one-body endpoint
 -> residual moment-matched Gaussians with sigma = sqrt(2v)
@@ -794,10 +882,11 @@ Hamiltonian checks described above. It must check `G' S R`, `R' S R`, base G-G
 block equality, finite/symmetric augmented `K`, uncharged `U_A`, and moment
 matrices, `E1_aug <= E1_base + epsilon`, finite/symmetric `V_aug`, unchanged
 base `V_GG`, independent weight-aware `V_GM`, returned
-`CartesianIDAHamiltonian{Float64}`, augmented dimension `489`, and
-lowest-orbital IDA self-Coulomb `0.4574256036192161` within `1.0e-10`. It must
-not assert private pair/assembly/report/status behavior, add the standalone
-file to `test/runtests.jl`, or run Be2 or Cr2.
+`CartesianIDAHamiltonian{Float64}`, augmented dimension `489`, and the
+remeasured owner-local lowest-orbital IDA self-Coulomb within the approved
+tolerance after the correction lands. It must not assert private
+pair/assembly/report/status behavior, add the standalone file to
+`test/runtests.jl`, or run Be2 or Cr2.
 
 Do not start Cr2 stress tests from this R3 closeout. The immediate follow-on
 usability lane is recorded in `r3_usability_supplemented_workflow.md`; public

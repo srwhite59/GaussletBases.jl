@@ -83,6 +83,29 @@ dangerous dense shape.
   a separate docs-only amendment when a second production consumer or measured
   parent-side source cost justifies it.
 
+## R3 Residual Selection
+
+- Residual-GTO candidates are partitioned by physical owner center before
+  residual-content selection.
+- For owner `a`, the residual Gram
+  `M_a = S_AaAa - X_a' X_a` is interpreted as the residual occupation spectrum
+  of unit-occupied projected owner candidates. Its eigenvalues control
+  retention; they are not merely numerical-rank diagnostics.
+- The residual occupation cutoff `eta_RG` is separate from numerical
+  negative-eigenvalue and stabilization tolerances.
+- Owner-local modes below `eta_RG` are discarded. Eigenvalue flooring must not
+  be used to retain nearly absent residual modes.
+- Retained owner-local residual sectors are orthonormalized locally, then
+  concatenated and merged by one final symmetric Lowdin over the inter-owner
+  overlap matrix.
+- Global raw-candidate symmetric Lowdin and global raw-column pivoted-Cholesky
+  selection are not the R3 residual algorithm.
+- MWG centers and widths are computed from the final merged residual functions.
+  Residual integral weights may be near zero or sign-changing and are not
+  base-PQS IDA weights.
+- Width filtering changes the candidate span; it is not a conditioning repair
+  for owner-local residual selection.
+
 ## Lowdin
 
 Use symmetric Lowdin through the matrix inverse square root:
@@ -93,6 +116,10 @@ cleaned = coefficients * transform
 ```
 
 Do not hand-roll one-sided eigendecomposition transforms for Lowdin.
+For the R3 final inter-owner merge, a stable symmetric eigensystem
+implementation is acceptable when it implements the same symmetric inverse
+square root. It must diagnose near-singular merge spectra rather than floor
+eigenvalues to preserve low-occupation directions.
 
 ## Gauge And Weights
 

@@ -9000,6 +9000,64 @@ Risk / guardrail:
   `src/GaussletBases.jl`, add an export, or add a new source/test file under
   this approval.
 
+## Cartesian Hamiltonian Producer Pass 063 - Correct R3 Residual Selection Authority
+
+Commit(s):
+- this commit - Correct R3 owner-local residual selection authority
+
+Summary:
+- Accepted a design correction that supersedes the current global
+  raw-candidate symmetric Lowdin residual-selection story. Stabilizing the
+  global Lowdin would improve roundoff in the wrong algorithm; it would not
+  restore atom-local residual content selection.
+- The live R3 authority now requires owner-local residual selection: group
+  candidates by physical owner, form `M_a = S_AaAa - X_a'X_a`, interpret its
+  eigenvalues as residual occupations, discard low-occupation owner-local
+  modes using a still-to-be-measured `eta_RG`, orthonormalize owner sectors,
+  then perform one final symmetric Lowdin only to merge inter-owner residual
+  overlap.
+- The old H2 MWG scalar `0.4574256036192161` is now recorded as a
+  global-selection baseline, not a future target. Corrected owner-local
+  residual orientation can change MWG values and must be remeasured.
+- R3U facade implementation is paused until the owner-local residual-selection
+  diagnostic records owner-local spectra, merge conditioning, and a corrected
+  H2 scalar.
+
+Validation:
+- Design-manager ran `git diff --check`, focused `rg` checks for owner-local
+  selection/occupation/final-merge wording, stale global Lowdin/candidate-order
+  targets, R3U pause wording, and confirmed no `src`, `test`, `tools`, or
+  `bin` files changed.
+
+Goal advancement:
+- R3/LT6: prevents the usability lane from solidifying the wrong residual-GTO
+  basis construction.
+- MT4/Cr2-readiness: reframes Cr-like failures as evidence against global
+  residual selection, not evidence that q5 or residual-GTO/MWG is unsuitable.
+
+Carrying-cost result:
+- deleted: live authority that treated global candidate-order Lowdin and
+  global raw-column pivoted-Cholesky selection as the R3 residual algorithm.
+- simplified: next action is measurement-only owner-local spectra and merge
+  conditioning, not another implementation stabilization pass.
+- quarantined: current H2 scalar remains historical/global-selection evidence
+  only.
+- not deleted because: current R3-A/B/C implementation and tests remain useful
+  regression evidence until the owner-local correction is implemented.
+- exact remaining caller/blocker: run the owner-local measurement diagnostic
+  for H2, Be2, and Cr2; choose `eta_RG`; remeasure H2 MWG scalar; then approve
+  a narrow source correction.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.
+
+Risk / guardrail:
+- Do not implement a stabilized global Lowdin pass. Do not use eigenvalue
+  flooring or width filtering to preserve low-occupation residual modes. Do
+  not resume the R3U facade implementation until the corrected owner-local
+  residual-selection convention and H2 scalar are recorded.
+
 ## Cartesian Hamiltonian Producer Pass 063 - Implement R3 Usability Facade
 
 Commit(s):
