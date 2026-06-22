@@ -9468,3 +9468,60 @@ Risk / guardrail:
 - This is source organization only. It does not approve public API/export,
   artifact schema changes, Cr2 support, driver workflow, or new physics
   behavior.
+
+## Cartesian Hamiltonian Producer Pass 069 - Extract RG Augmented Operator Transform
+
+Commit(s):
+- this commit - Extract RG augmented operator transform
+
+Summary:
+- Accepted the second Residual Gaussian source migration slice. The exact
+  augmented single-operator transformation moved from
+  `pqs_terminal_residual_gto.jl` into
+  `src/cartesian_residual_gaussians/augmented_operators.jl` as
+  `transform_augmented_operator(...)`.
+- The old terminal residual file still builds the base and supplement operator
+  blocks through the existing QW donor bridge and terminal product helpers, but
+  delegates the exact `[G,A] -> [G,R]` operator math to the RG module.
+- Symmetrization of exact operators also now lives with the RG operator
+  transform as `symmetrize_operator(...)`.
+
+Validation:
+- Doer ran `git diff --check`, package load, the standalone H2 R3 endpoint,
+  and the ignored Be2 owner-local facade measurement. H2 remained at augmented
+  dimension `489` with self-Coulomb `0.45742652143620904`; Be2 returned
+  `CartesianIDAHamiltonian{Float64}` with artifact readback deltas all `0.0`.
+- Manager reviewed the diff and new file, confirmed no old
+  `_r3a_augmented_operator` helper remained, ran `git diff --check`, package
+  load, the standalone H2 R3 endpoint, and the Be2 owner-local facade
+  measurement. Be2 took about `59.4s` and allocated `11390 MiB`. The
+  suspicious-line scan flagged two existing fixed-axis `NamedTuple{(:x,:y,:z)}`
+  constructors only because the callee changed; no new variable-size
+  inventory or status shape was introduced.
+
+Goal advancement:
+- RG/LT6: separates exact one-body/moment operator transformation from
+  terminal-basis assembly and from matched-width Gaussian interaction.
+- MT5: continues replacing historical R3 helper names with domain names while
+  preserving behavior.
+
+Carrying-cost result:
+- deleted: `_r3a_augmented_operator(...)` and `_r3a_sym(...)` definitions from
+  the terminal residual file.
+- simplified: exact operator construction calls one domain-named
+  `CRG.transform_augmented_operator(...)`.
+- quarantined: QW donor bridge and terminal product helpers remain in the old
+  file until a later slice.
+- not deleted because: the compatibility operator-set entry point still owns
+  base/supplement block construction and current callers.
+- exact remaining caller/blocker: move matched-width Gaussian descriptors and
+  residual IDA interaction next, then reconsider whether artifact writing
+  should remain outside RG.
+- added src lines: 32.
+- deleted src lines: 29.
+- new tests: none.
+- new metadata/status fields: none.
+
+Risk / guardrail:
+- This pass is exact operator migration only. It does not change MWG/IDA
+  interaction behavior, artifact schema, public API, or Cr2 scope.

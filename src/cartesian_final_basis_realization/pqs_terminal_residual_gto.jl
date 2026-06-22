@@ -325,8 +325,6 @@ function _r3a_qw_proxy_layers(bundles)
     )
 end
 
-_r3a_sym(matrix) = Matrix{Float64}(0.5 .* (matrix .+ transpose(matrix)))
-
 function _r3a_project_parent_ga(basis, parent_ga)
     out = zeros(Float64, basis.final_dimension, size(parent_ga, 2))
     for block in basis.blocks
@@ -397,7 +395,7 @@ function _r3a_qw_nuclear_blocks(proxy, supplement, expansion, atom_locations)
             aa[center_index][left_index, right_index] = value
         end
     end
-    return (; ga, aa = [_r3a_sym(matrix) for matrix in aa])
+    return (; ga, aa = [CRG.symmetrize_operator(matrix) for matrix in aa])
 end
 
 function _r3a_qw_blocks(basis, bundles, supplement, atom_locations, expansion)
@@ -423,12 +421,14 @@ function _r3a_qw_blocks(basis, bundles, supplement, atom_locations, expansion)
             nuclear = [_r3a_project_parent_ga(basis, matrix) for matrix in nuclear.ga],
         ),
         self = (;
-            overlap = _r3a_sym(self.overlap_aa),
-            kinetic = _r3a_sym(self.kinetic_aa),
-            position = (x = _r3a_sym(self.position_x_aa),
-                y = _r3a_sym(self.position_y_aa), z = _r3a_sym(self.position_z_aa)),
-            x2 = (x = _r3a_sym(self.x2_x_aa),
-                y = _r3a_sym(self.x2_y_aa), z = _r3a_sym(self.x2_z_aa)),
+            overlap = CRG.symmetrize_operator(self.overlap_aa),
+            kinetic = CRG.symmetrize_operator(self.kinetic_aa),
+            position = (x = CRG.symmetrize_operator(self.position_x_aa),
+                y = CRG.symmetrize_operator(self.position_y_aa),
+                z = CRG.symmetrize_operator(self.position_z_aa)),
+            x2 = (x = CRG.symmetrize_operator(self.x2_x_aa),
+                y = CRG.symmetrize_operator(self.x2_y_aa),
+                z = CRG.symmetrize_operator(self.x2_z_aa)),
             nuclear = nuclear.aa,
         ),
     )
@@ -467,22 +467,6 @@ function pqs_terminal_residual_gto_augmentation(
     return CRG.build_residual_gaussian_basis(basis.final_dimension, X, S_AA,
         labels, centers, owners; residual_occupation_cutoff, tau_neg_abs,
         tau_neg_rel, tau_merge_abs, tau_merge_rel, orthogonality_atol, identity_atol)
-end
-
-function _r3a_augmented_operator(O_GG, O_GA, O_AA, residual)
-    T_G, T_A = residual.T_G, residual.T_A
-    O_GR = O_GG * T_G + O_GA * T_A
-    O_RR = transpose(T_G) * O_GG * T_G +
-           transpose(T_G) * O_GA * T_A +
-           transpose(T_A) * transpose(O_GA) * T_G +
-           transpose(T_A) * O_AA * T_A
-    nG, nR = residual.base_dimension, residual.residual_dimension
-    out = zeros(Float64, nG + nR, nG + nR)
-    out[1:nG, 1:nG] .= O_GG
-    out[1:nG, (nG + 1):(nG + nR)] .= O_GR
-    out[(nG + 1):(nG + nR), 1:nG] .= transpose(O_GR)
-    out[(nG + 1):(nG + nR), (nG + 1):(nG + nR)] .= O_RR
-    return _r3a_sym(out)
 end
 
 function _r3a_product_matrix(basis, ax, ay, az)
@@ -532,12 +516,12 @@ function pqs_terminal_residual_gto_augmented_operators(
         y = _r3a_product_matrix(basis, S[1], pgdg[2].x2, S[3]),
         z = _r3a_product_matrix(basis, S[1], S[2], pgdg[3].x2),
     )
-    pos = NamedTuple{(:x, :y, :z)}(Tuple(_r3a_augmented_operator(
+    pos = NamedTuple{(:x, :y, :z)}(Tuple(CRG.transform_augmented_operator(
         pos_GG[axis],
         supplement_blocks.mixed.position[axis],
         supplement_blocks.self.position[axis],
         residual) for axis in (:x, :y, :z)))
-    x2 = NamedTuple{(:x, :y, :z)}(Tuple(_r3a_augmented_operator(
+    x2 = NamedTuple{(:x, :y, :z)}(Tuple(CRG.transform_augmented_operator(
         x2_GG[axis],
         supplement_blocks.mixed.x2[axis],
         supplement_blocks.self.x2[axis],
@@ -551,10 +535,10 @@ function pqs_terminal_residual_gto_augmented_operators(
             U_GG, basis, expansion_value.coefficients, factors[1], factors[2], factors[3])
         U_GA = supplement_blocks.mixed.nuclear[center_index]
         U_AA = supplement_blocks.self.nuclear[center_index]
-        push!(U, _r3a_augmented_operator(U_GG, U_GA, U_AA, residual))
+        push!(U, CRG.transform_augmented_operator(U_GG, U_GA, U_AA, residual))
     end
     return (;
-        kinetic = _r3a_augmented_operator(K, K_GA, K_AA, residual),
+        kinetic = CRG.transform_augmented_operator(K, K_GA, K_AA, residual),
         nuclear_attraction_unit_by_center = U,
         position = pos,
         x2,
