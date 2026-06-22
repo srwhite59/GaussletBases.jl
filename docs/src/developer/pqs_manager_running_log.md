@@ -8017,3 +8017,46 @@ Risk or guardrail:
 - Do not fold the Gaussian-sum or IDA paths into this helper unless a measured
   pass shows the same allocation pattern and stays within their existing
   approved internal surfaces.
+
+## Cartesian Hamiltonian Producer Pass 046 - Audit Units-Phase Cost
+
+Commit(s):
+- none from doer; this entry records an ignored `tmp/work` measurement
+
+Summary:
+- Accepted a measurement-only audit of corrected-Be2 `cartesian_units` at
+  `R = 8.0`, `q = 5`, `core_spacing = 0.15`. The fixture has 12 terminal
+  regions/retained units and 7 PQS shell units with source boxes from
+  `(7,7,7)` through `(13,13,25)`.
+- The apparent `cartesian_units` cost was cold compilation, not warm runtime.
+  The expensive cold substeps were unit inventory (`8.37 s`), lowering
+  contract inventory (`14.93 s`), and related terminal lowering helpers. Warm
+  repeats were sub-millisecond to about `0.0005 s` per substep, with only a few
+  MiB allocated.
+- Raw product source-plan setup is not the runtime bottleneck. It remains
+  metadata-only in this stage; axis transform statuses were all
+  `:not_materialized`, and warm raw-source metadata allocation was about
+  `2.9 MiB` total across PQS shells.
+
+Validation:
+- Doer ran `git diff --check`, package load, the ignored
+  `tmp/work/be2_units_phase_audit.jl`, and verified final worktree
+  cleanliness.
+
+Goal advancement:
+- LT4/Roadmap: prevents a mistaken source optimization pass in route-unit
+  planning and keeps performance effort focused on real runtime costs.
+- MT: classifies units-stage warm runtime as good enough for now. Cold compile
+  pressure may matter later, but it is a separate product-startup concern.
+
+Risk / guardrail:
+- Do not move raw source-box construction or rewrite units-stage ownership
+  based on cold timing alone. If cold compile becomes a product requirement,
+  investigate NamedTuple/type specialization pressure in route helper and
+  terminal shellification code as a compile-time project, not a numerical
+  kernel optimization.
+
+Next step:
+- With K optimized and units-stage runtime cleared, decide whether to audit
+  `cartesian_transforms`/terminal-basis warm allocation, unit-`U_A`/IDA
+  allocation, or stop local Be2 optimization and move back to roadmap work.
