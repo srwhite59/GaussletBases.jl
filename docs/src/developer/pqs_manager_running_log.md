@@ -9357,3 +9357,58 @@ Carrying-cost result:
 Risk / guardrail:
 - This is not a tolerance relaxation and not a Cr2 readiness claim. Full Cr2
   supplemented Hamiltonian/artifact support remains deferred.
+
+## Cartesian Hamiltonian Producer Pass 067 - Map Residual Gaussian Module Extraction
+
+Commit(s):
+- this commit - Record residual Gaussian extraction map
+
+Summary:
+- Accepted a read-only extraction map for moving residual-Gaussian domain logic
+  out of `pqs_terminal_residual_gto.jl` and into the approved
+  `CartesianResidualGaussians` module. The map classifies the current code into
+  residual-basis construction, exact augmented-operator transformation,
+  moment-matched Gaussian descriptor construction, residual IDA interaction,
+  and artifact/facade hooks.
+- The map confirms the approved split is feasible without new physics behavior:
+  residual basis logic moves to `residual_basis.jl`, exact `[G,A] -> [G,R]`
+  operator transformation moves to `augmented_operators.jl`, and matched-width
+  Gaussian plus residual-interaction logic moves to `mwg_interaction.jl`.
+- Artifact writing, facade parsing, basis loading, terminal basis construction,
+  parent bundles, QW donor kernels, and raw analytic Gaussian formulas remain
+  outside the Residual Gaussian module. Compact R3 artifact writing may remain
+  a terminal/facade hook unless design-manager later expands artifact
+  ownership.
+
+Validation:
+- Doer performed a read-only `rg`/source map and confirmed final
+  `git status --short --branch` was clean. No Julia tests were needed because
+  this pass did not change source.
+- Manager checked the approved `HP-RG-*` authority, include-order context in
+  `src/GaussletBases.jl` and `CartesianFinalBasisRealization.jl`, and the
+  manager log before drafting the first source-migration blurb.
+
+Goal advancement:
+- RG/LT6: turns the approved domain-module design into a concrete
+  behavior-preserving migration map.
+- MT5: gives the cleanup/deletion pass a deletion target: old `_r3a_*`,
+  `_r3b_*`, and `pqs_terminal_residual_gto_*` names should become temporary
+  wrappers only, then disappear once callers move.
+
+Carrying-cost result:
+- deleted: none in this read-only pass.
+- simplified: future source work is split by physical meaning rather than by
+  historical R3-A/B/C implementation labels.
+- quarantined: artifact/facade workflow stays outside the RG module for now.
+- not deleted because: source migration has not started yet.
+- exact remaining caller/blocker: implement the first behavior-preserving
+  module slice, starting with residual-basis construction and compatibility
+  wrapper wiring.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.
+
+Risk / guardrail:
+- The first source pass should be narrow. Do not move artifact writing, public
+  facade parsing, QW donor kernels, or Cr2 support into the RG module.
