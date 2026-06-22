@@ -9255,3 +9255,51 @@ Risk / guardrail:
 - MT5, anti-bloat and deletion: active. This pass removed the wrong global
   residual selection path instead of preserving it behind another compatibility
   layer.
+
+## Cartesian Hamiltonian Producer Pass 066 - Symmetrize R3 Augmented Operators
+
+Commit(s):
+- this commit - Symmetrize R3 augmented operators
+
+Summary:
+- Accepted a one-line source bug fix for the owner-local R3 Be2 usability
+  path. The corrected residual basis worked, but Be2 stopped before artifact
+  writing because the exact augmented `z^2` moment matrix had a floating-point
+  antisymmetric residue of about `2.18e-10`, above the strict `1.0e-10`
+  moment validation threshold.
+- The fix explicitly symmetrizes the augmented `[G,R]` operator matrix returned
+  by `_r3a_augmented_operator(...)`. This matches the physical operator
+  symmetry and keeps the validation threshold unchanged.
+
+Validation:
+- Doer ran `git diff --check`, package load, the standalone R3 H2 endpoint,
+  Be2 owner-local facade measurement, and the Be2 failure diagnostic. Be2 then
+  returned `CartesianIDAHamiltonian{Float64}`, wrote/read back the artifact
+  with zero deltas, and reported all moment symmetry errors as `0.0`.
+- Manager reviewed the one-line diff, reran `git diff --check`, the
+  suspicious-line scan, package load, and the standalone R3 H2 endpoint. The
+  endpoint passed `52/52`; the facade/artifact section passed `59/59`.
+
+Goal advancement:
+- R3/LT6: clears the first Be2 usability blocker after owner-local residual
+  selection without weakening numerical validation.
+- MT3: Be2 remains the active realism/performance proxy before any Cr2 support
+  expansion.
+
+Carrying-cost result:
+- deleted: none.
+- simplified: exact augmented operators now enforce their mathematical
+  symmetry at the construction boundary instead of relying on downstream
+  validation to catch roundoff residue.
+- quarantined: none.
+- not deleted because: R3-A/B/C writer and facade surfaces remain live.
+- exact remaining caller/blocker: decide whether to record Be2 owner-local
+  usability as closed and move to residual-Gaussian module planning.
+- added src lines: 1.
+- deleted src lines: 1.
+- new tests: none.
+- new metadata/status fields: none.
+
+Risk / guardrail:
+- This is not a tolerance relaxation and not a Cr2 readiness claim. Full Cr2
+  supplemented Hamiltonian/artifact support remains deferred.

@@ -596,7 +596,7 @@ function _r3a_augmented_operator(O_GG, O_GA, O_AA, residual)
     out[1:nG, (nG + 1):(nG + nR)] .= O_GR
     out[(nG + 1):(nG + nR), 1:nG] .= transpose(O_GR)
     out[(nG + 1):(nG + nR), (nG + 1):(nG + nR)] .= O_RR
-    return out
+    return _r3a_sym(out)
 end
 
 function _r3a_product_matrix(basis, ax, ay, az)
