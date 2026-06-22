@@ -75,11 +75,6 @@ function _r3_validate_base_hamiltonian(base_hamiltonian, residual)
     return center_count
 end
 
-_r3b_residual_mwg_descriptors(operators, residual) =
-    CRG.moment_matched_gaussians(operators, residual)
-_r3b_mwg_axis_pairs(bundles, expansion, centers, widths) =
-    CRG._mwg_axis_pairs(bundles, expansion, centers, widths)
-
 function pqs_terminal_residual_gto_augmented_hamiltonian(
     base_hamiltonian,
     basis::CartesianTerminalBasisRealization,

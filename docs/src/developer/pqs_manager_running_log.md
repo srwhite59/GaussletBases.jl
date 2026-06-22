@@ -9606,3 +9606,52 @@ Risk / guardrail:
   now has a real internal module. Remaining cleanup is to retire the last
   `_r3b_*` test-support wrappers and decide whether the compact artifact writer
   should remain outside RG.
+
+## Cartesian Hamiltonian Producer Pass 071 - Retire R3B Test Wrappers
+
+Commit(s):
+- this commit - Retire R3B test wrappers
+
+Summary:
+- Accepted a cleanup pass removing the last two `_r3b_*` compatibility wrapper
+  names from `pqs_terminal_residual_gto.jl`. The standalone H2 endpoint test
+  now calls `CartesianResidualGaussians.moment_matched_gaussians(...)` and the
+  RG `_mwg_axis_pairs(...)` helper directly for its independent `V_GM`
+  convention check.
+- This keeps the independent weight-aware `V_GM` check intact while removing
+  stale R3-B vocabulary from the terminal residual file.
+
+Validation:
+- Doer ran `git diff --check`, package load, and the standalone H2 R3 endpoint.
+  The endpoint preserved augmented dimension `489`, self-Coulomb
+  `0.45742652143620904`, independent `V_GM` errors `0.0/0.0`, and artifact
+  readback deltas `0.0`.
+- Manager reviewed the diff, ran `git diff --check`, and ran the suspicious
+  added-line scan. No H2 or Be2 rerun was performed because doer had just run
+  the endpoint and the patch deleted wrappers without changing production
+  interaction logic.
+
+Goal advancement:
+- RG/LT6: removes the final R3-B compatibility names left only for the test's
+  independent interaction check.
+- MT5: closes the immediate wrapper-retirement cleanup item after extracting RG
+  interaction logic.
+
+Carrying-cost result:
+- deleted: `_r3b_residual_mwg_descriptors` and `_r3b_mwg_axis_pairs`.
+- simplified: the standalone test now names the RG domain helpers it is
+  validating.
+- quarantined: none.
+- not deleted because: artifact writing and facade parsing remain intentionally
+  outside RG.
+- exact remaining caller/blocker: decide whether compact artifact writing
+  should remain a terminal/facade hook or get a later docs-approved RG-adjacent
+  helper.
+- added src lines: 0.
+- deleted src lines: 5.
+- new tests: none; existing standalone test changed by `+3/-2`.
+- new metadata/status fields: none.
+
+Risk / guardrail:
+- This is cleanup only. It does not approve public API/export, artifact schema
+  changes, Cr2 support, driver workflow, or interaction behavior changes.

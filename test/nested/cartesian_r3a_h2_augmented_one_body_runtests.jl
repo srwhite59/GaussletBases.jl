@@ -4,6 +4,7 @@ using LinearAlgebra
 using Test
 
 const NUCLEI = NTuple{3,Float64}[(0.0, 0.0, -2.0), (0.0, 0.0, 2.0)]
+const CRG = GaussletBases.CartesianResidualGaussians
 const EXPECTED_LABELS = [
     "a_s1", "a_s2", "a_s3", "a_px1", "a_py1", "a_pz1", "a_px2", "a_py2", "a_pz2",
     "b_s1", "b_s2", "b_s3", "b_px1", "b_py1", "b_pz1", "b_px2", "b_py2", "b_pz2",
@@ -262,8 +263,8 @@ elapsed = @elapsed @testset "R3-A H2 augmented one-body and moments" begin
                base_ham.electron_electron_ida, Inf) <= 1.0e-12
 
     expansion = GaussletBases.coulomb_gaussian_expansion(doacc = false)
-    centers, widths = C._r3b_residual_mwg_descriptors(operators, residual)
-    pair_terms = C._r3b_mwg_axis_pairs(parent.parent_axis_bundle_object, expansion,
+    centers, widths = CRG.moment_matched_gaussians(operators, residual)
+    pair_terms = CRG._mwg_axis_pairs(parent.parent_axis_bundle_object, expansion,
         centers, widths)
     V_GM_expected = independent_weight_aware_vgm(
         C, basis, parent.parent_axis_bundle_object, pair_terms, expansion.coefficients)
