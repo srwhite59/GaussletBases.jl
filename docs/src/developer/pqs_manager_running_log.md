@@ -9525,3 +9525,84 @@ Carrying-cost result:
 Risk / guardrail:
 - This pass is exact operator migration only. It does not change MWG/IDA
   interaction behavior, artifact schema, public API, or Cr2 scope.
+
+## Cartesian Hamiltonian Producer Pass 070 - Extract RG MWG Interaction
+
+Commit(s):
+- this commit - Extract RG MWG interaction
+
+Summary:
+- Accepted the third Residual Gaussian source migration slice. The residual
+  two-electron interaction logic moved from `pqs_terminal_residual_gto.jl` into
+  `src/cartesian_residual_gaussians/mwg_interaction.jl`.
+- The RG module now owns moment-matched Gaussian descriptor construction,
+  density-normalized MWG pair-factor construction, weight-aware `V_GM`, direct
+  `V_MM`, and final residual interaction matrix assembly through
+  `assemble_residual_ida_interaction(...)`.
+- The physical conventions are unchanged: widths use `sigma = sqrt(2v)`, base
+  `V_GG` is copied unchanged, PQS shell `V_GM` uses final-basis weight-aware
+  density normalization, direct blocks use selector behavior, `V_MM` remains
+  direct density-normalized matched-Gaussian interaction, and custom expansion
+  remains rejected until base `V_GG` carries expansion provenance.
+
+Validation:
+- Doer ran `git diff --check`, package load, the standalone H2 R3 endpoint,
+  and the ignored Be2 owner-local facade measurement. H2 self-Coulomb remained
+  `0.45742652143620904`; Be2 returned `CartesianIDAHamiltonian{Float64}` with
+  all artifact readback deltas `0.0`.
+- Manager reviewed the diff and new file, confirmed production assembly now
+  delegates through `CRG.assemble_residual_ida_interaction(...)`, and confirmed
+  the remaining `_r3b_*` wrappers are only for the existing test's independent
+  `V_GM` check. Manager reran `git diff --check`, package load, the standalone
+  H2 R3 endpoint, and Be2 owner-local facade measurement. Be2 took about
+  `60.4s` and allocated `11420 MiB`. The suspicious-line scan flagged two
+  fixed three-axis `ntuple` constructions for x/y/z MWG pair factors; these
+  are fixed-dimensional axis packets, not variable-size route inventories.
+
+Goal advancement:
+- RG/LT6: completes the first internal RG split across residual basis, exact
+  operator transformation, and residual MWG interaction.
+- MT5: shrinks the terminal residual file and turns R3-B interaction helpers
+  into domain-named RG code.
+
+Carrying-cost result:
+- deleted: `_r3b_terminal_mwg_fixed_residual(...)`,
+  `_r3b_mwg_residual_residual(...)`, and production interaction assembly logic
+  from the terminal residual file.
+- simplified: the lower-level augmented Hamiltonian wrapper now delegates the
+  residual interaction matrix to `CRG.assemble_residual_ida_interaction(...)`.
+- quarantined: two `_r3b_*` wrappers remain only for the current standalone
+  test's independent `V_GM` reconstruction.
+- not deleted because: the test still calls those two wrappers directly, and
+  artifact writing/facade parsing remain intentionally outside RG.
+- exact remaining caller/blocker: decide whether to update the standalone
+  test to use RG-domain helpers directly, then remove the last `_r3b_*`
+  wrappers; decide separately whether compact artifact writing should remain
+  outside RG.
+- added src lines: 99.
+- deleted src lines: 111.
+- new tests: none.
+- new metadata/status fields: none.
+
+Risk / guardrail:
+- This is behavior-preserving internal migration only. It does not approve
+  public export, artifact schema changes, Cr2 support, driver workflow,
+  residual-basis changes, or interaction tolerance/scalar changes.
+
+### Medium-Term Goal Checkpoint After Pass 070
+
+- MT1, base Cartesian Hamiltonian producer: still completed for approved H/H2
+  public base construction. No new base API work is active.
+- MT2, R3 supplemented H2 usability: completed for the non-exported internal
+  H2 workflow and compact artifact provenance under the owner-local residual
+  convention.
+- MT3, Be2 realism/performance proxy: active and healthy. Be2 owner-local
+  usability now passes after residual-basis, exact-operator, and MWG
+  interaction migration, with zero artifact readback deltas.
+- MT4, Cr2 readiness: active but deferred. Cr2 residual selection is viable in
+  ignored measurement, but full Cr2 supplemented Hamiltonian/artifact support
+  remains explicitly unapproved.
+- MT5, anti-bloat and domain cleanup: active. Residual Gaussian domain logic
+  now has a real internal module. Remaining cleanup is to retire the last
+  `_r3b_*` test-support wrappers and decide whether the compact artifact writer
+  should remain outside RG.

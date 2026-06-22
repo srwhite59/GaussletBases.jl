@@ -4,5 +4,6 @@ using LinearAlgebra
 
 include("residual_basis.jl")
 include("augmented_operators.jl")
+include("mwg_interaction.jl")
 
 end
