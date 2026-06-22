@@ -117,6 +117,18 @@ should include exact known code surfaces, explicit exclusions, decision rules,
 and reporting requirements rather than expecting the doer to reconstruct the
 manager's searches or reasoning.
 
+Reports back to a human should use two layers:
+
+1. Plain-language result first: what problem was solved, what physical object
+   or calculation changed, what result changed, what remains uncertain, and
+   what should happen next.
+2. Technical evidence second: files, functions, dimensions, timings,
+   validation commands, artifacts, and commit IDs.
+
+Do not make the user infer the physical meaning from repo-internal vocabulary.
+For example, say "the residual basis is selected separately on each atom"
+before naming an owner-local residual-selection helper.
+
 ## Manager running log
 
 For Cartesian/PQS manager-led work, read:
@@ -839,8 +851,24 @@ When reporting calculation or analysis results back to the user:
 - if a new term is necessary, define it briefly the first time it appears
 - if an internal code label is not directly meaningful to the user, translate it
   into a plain-language description
+- expand an acronym the first time it appears unless it is already common in
+  the immediate conversation
+- avoid unexplained internal status symbols
+- write complete sentences for conclusions and recommendations
+- explain the physical object before its data structure
+- avoid words such as "lane", "seam", "surface", and "payload" in user-facing
+  explanations unless the word is genuinely necessary; use plainer words such
+  as "path", "boundary", "interface", or "object" when that is what is meant
+- separate uncertainty from evidence: say what is still unknown and what
+  measurement or review would resolve it
 
 Default rule:
 
 - summaries should be understandable without requiring the user to know repo
   internals, Julia helper names, or private shorthand
+
+For subtle numerical code, comments should explain why the equation or
+convention is being used, not narrate the loop. Prefer names whose meaning is
+visible at the call site, such as `residual_occupation_cutoff`,
+`owner_candidate_indices`, or `interowner_overlap`, over compact abbreviations
+whose meaning must be reconstructed from surrounding context.

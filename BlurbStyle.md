@@ -24,6 +24,48 @@ Use the standard doer blurb shape:
 Do not force every short blurb into numbered headings, but make sure the same
 information is present when the task is technical or risky.
 
+## Human-Readable First
+
+Ask doers to report in two layers when handing results back to a human:
+
+1. Plain-language result:
+   - what problem was solved;
+   - what physical object or calculation changed;
+   - what result changed;
+   - what remains uncertain;
+   - what should happen next.
+2. Technical evidence:
+   - files and functions;
+   - dimensions and counts;
+   - timings and allocations;
+   - validation commands;
+   - artifact paths;
+   - commit IDs, if any.
+
+The plain-language layer should come first. It should not require the user to
+decode repo-internal helper names, status symbols, or route vocabulary.
+
+Prefer:
+
+```text
+The residual basis is now selected separately on each atom before the atom
+blocks are merged. This matters physically because nearly redundant Gaussian
+directions on chromium can be discarded before they destabilize the final
+residual basis.
+
+Technical evidence:
+- ...
+```
+
+Avoid:
+
+```text
+Owner-local R3-A authority advanced; HP-R3 residual path updated.
+```
+
+That wording may be useful inside a design registry, but it is not a useful
+human-facing result.
+
 ## Include What The Manager Already Knows
 
 If the manager has already searched the repo, name the files, functions,
@@ -192,6 +234,19 @@ For cleanup work, ask for:
 - quarantined;
 - not deleted because;
 - exact remaining caller or blocker.
+
+For subtle numerical work, also ask for:
+
+- the equation or convention in plain language;
+- why that convention is physically or numerically appropriate;
+- which quantity is a physical diagnostic and which is only an implementation
+  check;
+- the next measurement that would reduce remaining uncertainty.
+
+Ask doers to expand acronyms on first use and to avoid words such as "lane",
+"seam", "surface", and "payload" in user-facing summaries unless those words
+are genuinely necessary. Internal terms can appear in the technical evidence
+section after they have been translated.
 
 ## Keep Physics Tests Primary
 
