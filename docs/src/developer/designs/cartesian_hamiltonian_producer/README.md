@@ -6,14 +6,11 @@ Hamiltonian producer.
 Status: Slice A, Slice B, Slice C1, Slice C2, and Slice D base handoff are
 implemented for the internal base PQS Hamiltonian path. R1 public base
 producer implementation is approved only for the narrow H/H2 scope recorded in
-`r1_public_base_producer.md` and `registry.md`. R3-A/B/C residual-GTO/MWG
-augmentation is implemented for the narrow H2 endpoint and compact artifact.
-The R3 usability lane approves only a non-exported supported facade for H2 and
-internal/performance-supported Be2 artifacts. The owner-local
-residual-selection source correction is approved with H2 self-Coulomb
-`0.4574265214362075`. The Residual Gaussian domain module is approved as the
-future internal owner for residual basis, exact augmented operators, and MWG
-interaction code; broad public API, driver UX, Cr2 validation, ECP, EGOI, RHF,
+`r1_public_base_producer.md` and `registry.md`. Residual Gaussian basis,
+exact augmented operators, and residual MWG/IDA interaction now belong to the
+internal `CartesianResidualGaussians` module. The R3 usability lane approves
+only a non-exported supported facade for H2 and internal/performance-supported
+Be2 artifacts. Broad public API, driver UX, Cr2 validation, ECP, EGOI, RHF,
 and solver work remain deferred.
 
 Agents should read first:
@@ -22,6 +19,8 @@ Agents should read first:
 - [registry.md](registry.md)
 - [invariants.md](invariants.md)
 - [implementation_slices.md](implementation_slices.md)
+- [Residual Gaussian domain module](residual_gaussian_domain_module.md) for
+  current RG algorithm authority
 - [Algorithm implementation index](../../algorithm_implementation_index.md)
 
 Approved amendments:
@@ -30,17 +29,17 @@ Approved amendments:
   minimal public base Hamiltonian producer surface for first origin-centered H
   and z-axis H2 implementation.
 - [R3 residual-GTO/MWG augmentation](r3_residual_gto_mwg_augmentation.md)
-  records the implemented R3-A/B/C residual basis, exact augmented one-body,
-  MWG/IDA Hamiltonian, and compact artifact provenance path for the first H2
-  endpoint.
+  records implementation history and compact artifact provenance for the first
+  H2 endpoint. Current residual Gaussian algorithm authority is the domain
+  module page below.
 - [R3 usability supplemented workflow](r3_usability_supplemented_workflow.md)
   approves only a non-exported supported facade that constructs H2 and
   internal/performance-supported Be2 supplemented artifacts from system, base
   basis, and supplement specs.
 - [Residual Gaussian domain module](residual_gaussian_domain_module.md)
-  approves the future internal source owner and migration path for residual
-  Gaussian basis selection, exact augmented operators, matched-width Gaussian
-  descriptors, and residual IDA interaction blocks.
+  is the canonical current RG algorithm contract for residual basis selection,
+  exact augmented operators, matched-width Gaussian descriptors, and residual
+  IDA interaction blocks.
 
 Candidate amendments:
 

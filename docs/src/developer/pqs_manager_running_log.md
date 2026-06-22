@@ -9707,3 +9707,48 @@ Risk / guardrail:
 - Do not move artifact schema ownership into RG just because the writer
   consumes RG outputs. No artifact schema change, public API/export, Cr2
   support, driver workflow, or new behavior is approved here.
+
+## Cartesian Hamiltonian Producer Pass 073 - Compact RG Design Authority
+
+Commit(s):
+- this commit - Compact RG design authority
+
+Summary:
+- Compacted active Cartesian Hamiltonian producer authority so
+  `residual_gaussian_domain_module.md` is the canonical Residual Gaussian
+  algorithm page. `current.md` now gives live status and reading order,
+  `registry.md` records approved IDs and surfaces, `invariants.md` records
+  guardrails, and `implementation_slices.md` records migration status.
+- Slimmed `AGENTS.md` so startup keeps approved surfaces and guardrails without
+  carrying a second full copy of the RG residual-selection/MWG algorithm.
+- Historical R3 labels and old scalar evidence remain in history/log material;
+  active authority points future agents to RG domain names and the owner-local
+  H2 scalar.
+
+Validation:
+- Planned/used validation for this docs-only pass: `git diff --check`,
+  focused stale-wording scans, focused canonical-pointer scans, and
+  confirmation that no `src/`, `test/`, `tools/`, or `bin/` files changed.
+
+Goal advancement:
+- RG/LT6: makes the domain module the single active algorithm authority.
+- MT5: reduces duplication and startup drift without changing source behavior.
+
+Carrying-cost result:
+- deleted: repeated active-authority RG algorithm prose from current/registry/
+  invariants/AGENTS.
+- simplified: active startup docs now point to one canonical RG contract.
+- quarantined: full R3/RG history remains historical evidence only.
+- not deleted because: approved IDs, artifact keys, and source ownership still
+  belong in registry/AGENTS.
+- exact remaining caller/blocker: none for docs compaction; source wrappers and
+  artifact/facade hooks remain governed by existing live callers and approved
+  surfaces.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.
+
+Risk / guardrail:
+- Future RG algorithm changes should edit the canonical domain-module page and
+  registry surfaces, not re-expand startup docs with duplicated algorithms.

@@ -173,17 +173,49 @@ Deferred gates:
 - public-driver polish;
 - public export or driver workflow beyond the approved non-exported R3
   usability facade;
-- implementation and validation of the approved owner-local residual-selection
-  source correction before broader R3 usability expansion;
-- migration of residual Gaussian code from
-  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` to the
-  approved `CartesianResidualGaussians` domain module, with physical/domain
-  helper names and temporary wrappers deleted after callers move;
-- compact supplemented artifact writing remains outside
-  `CartesianResidualGaussians` as terminal/facade workflow provenance glue
-  unless a later amendment identifies a real duplication or consumer need;
+- Residual Gaussian migration cleanup: residual basis construction, exact
+  augmented operators, and residual MWG interaction now live under
+  `src/cartesian_residual_gaussians/`; keep deleting old R3 wrappers when live
+  callers move;
+- compact supplemented artifact writing and facade parsing remain outside
+  `CartesianResidualGaussians` as terminal/facade workflow glue unless a later
+  amendment identifies a real duplication or consumer need;
 - Cr2 stress/performance and any full Cr2 supplemented Hamiltonian run;
 - measurement-only Cr2-readiness forecasting, consumer workflow beyond the
   approved H2/Be2 R3 usability facade, and basis/supplement-realism decisions
   until separately approved;
 - non-base Hamiltonian variants.
+
+## Residual Gaussian Module Migration
+
+Status: residual-basis construction, exact augmented operator transformation,
+and matched-width Gaussian residual interaction are migrated to the
+`CartesianResidualGaussians` domain module.
+
+Canonical algorithm authority:
+
+- `residual_gaussian_domain_module.md`
+
+Current compatibility boundary:
+
+- `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` remains
+  the terminal/facade compatibility file for existing R3 entry points, artifact
+  writing, and facade wiring;
+- moved physics helpers should not be reintroduced there;
+- RG does not own `supplement_provenance/`, JLD2 artifact workflow, facade
+  input parsing, basis loading, parent lattice construction, or public exports.
+
+Completed cleanup:
+
+- residual-basis helpers moved to `residual_basis.jl`;
+- exact `[G,A] -> [G,R]` operator transform moved to
+  `augmented_operators.jl`;
+- residual MWG descriptor and interaction assembly moved to
+  `mwg_interaction.jl`;
+- standalone R3 test no longer depends on old test-only R3-B wrapper names.
+
+Remaining cleanup:
+
+- delete any future compatibility wrapper once the exact live caller moves;
+- keep artifact and facade hooks outside RG unless a separate design amendment
+  approves moving them.

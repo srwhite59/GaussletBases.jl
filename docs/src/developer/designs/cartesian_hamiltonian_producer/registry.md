@@ -434,321 +434,79 @@ ID does not approve adding it to `test/runtests.jl`. It must not assert private
 route-stage fields, report mirrors, status/blocker symbols, terminal role
 vocabulary, or pair inventories.
 
-## Approved For R3-A Implementation
+## Approved For R3/RG Implementation
 
-These entries authorize only the R3-A residual-GTO basis plus exact one-body
-and moment scope recorded in `r3_residual_gto_mwg_augmentation.md`. R3-A may
-implement deterministic residual-basis construction plus exact augmented
-kinetic, uncharged by-center nuclear attraction, and moment matrices
-`x`/`y`/`z`/`x^2`/`y^2`/`z^2`.
+The R3 labels remain approved compatibility and endpoint-history IDs. Current
+Residual Gaussian algorithm authority lives in
+`residual_gaussian_domain_module.md`; do not copy that algorithm into this
+registry. This section records approved IDs, source owners, function surfaces,
+artifact keys, and validation gates.
 
-R3-A does not approve MWG/IDA `V`, supplemented
-`CartesianIDAHamiltonian` construction, artifact provenance, public API
-expansion, driver/bin/tool workflow, broad provider payloads, status/result
-objects, report fields, pair/assembly public workflow, Be2 first-gate
-validation, Cr2 validation, ECP, or EGOI.
+### R3 Compatibility Boundary
 
-The implemented R3 file/path entries below remain valid for the current code
-and temporary compatibility wrappers. Future source migration to
-physical/domain names and the new Residual Gaussian module files is authorized
-by the `HP-RG-*` IDs below, not by adding more R3-named helpers.
-
-Approved first fixture and spike evidence from manager-log Pass 048:
-
-- public/base z-axis H2;
-- contracted H/cc-pVTZ on both physical H centers;
-- `lmax = 1`;
-- `uncontracted = false`;
-- no width filtering;
-- 18 supplement candidates total, 9 per center;
-- full residual rank `18`;
-- residual metric eigenvalue range approximately `3.05e-4` to `1.35e-2`;
-- symmetric Lowdin residualization in global candidate order was numerically
-  non-marginal for the first H2 fixture, but that global construction is now
-  superseded as residual-selection authority.
-
-Approved residual thresholds:
-
-```text
-tau_abs = 1.0e-10
-tau_rel = 1.0e-10
-tau_neg_abs = 1.0e-12
-tau_neg_rel = 1.0e-12
-```
-
-Approved R3-A source owner/path:
+Approved R3 owner/path for compatibility entry points, artifact writing, and the
+non-exported usability facade:
 
 ```text
 Owner module: CartesianFinalBasisRealization
 Source file: src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl
 ```
 
-`HP-R3-OBJ-01`, `HP-R3-FN-01`, and `HP-R3-FN-02` may be implemented only in
-that file. Existing `CartesianFinalBasisRealization` module include plumbing may
-include the file only to expose the approved internal R3-A surfaces. This does
-not approve a public API or export, a second source owner, a driver/tool
-workflow, or any R3-B/R3-C surface.
+R3 compatibility surfaces must delegate current residual-basis, exact-operator,
+and residual-interaction physics to the Residual Gaussian module where those
+module functions exist. They must not preserve retired global raw-candidate
+selection, old density gauges, or duplicate RG algorithms.
 
 ### HP-R3-OBJ-01 — residual-GTO augmentation object
 
-Approved R3-A scope. The residual object is a numerical object, not a
-status/result payload, and must expose matrices as typed fields rather than
-metadata. Fields and invariants are defined in
-`r3_residual_gto_mwg_augmentation.md` and include base dimension, candidate
-count, residual dimension, deterministic candidate labels/order, derived
-candidate owner indices, residual source owner indices, retained residual
-occupations, owner retained counts, `T_G::Matrix{Float64}`,
-`T_A::Matrix{Float64}`, residual occupation cutoff, numerical
-negative-eigenvalue tolerances, final-merge tolerances, selection rule,
-orientation rule, and sign rule.
+Approved historical/object authority for the first H2 residual-GTO endpoint.
+Current domain object fields and semantics are recorded under `HP-RG-OBJ-01` and
+`residual_gaussian_domain_module.md`. Compatibility names may remain only where
+live callers still use them.
 
-No hidden metadata matrices, route-global field clouds, readiness/status
-graphs, retained raw-candidate-index authority, or Hamiltonian wrappers are
-approved.
+### HP-R3-FN-01 — residual-basis construction
 
-### HP-R3-FN-01 — deterministic residual-basis construction
+Approved historical R3-A basis-construction surface. Current production logic is
+`build_residual_gaussian_basis(...)` under `HP-RG-FN-01`.
 
-Approved R3-A scope. Construction:
-
-```text
-X = G' S A
-S_AA = A' S A
-for each owner a:
-    M_a = S_AaAa - X_a' X_a
-    select owner-local modes by residual occupation
-    orthonormalize retained owner-local residual sector
-concatenate owner sectors
-merge by final symmetric Lowdin over S_merge
-R = G T_G + A T_A
-```
-
-`G` is the fixed orthonormal base terminal final basis and `A` is the
-deterministically ordered Gaussian supplement sector. `X` must be assembled
-from exact mixed overlaps one terminal block at a time; no global parent-space
-coefficient matrix is approved.
-
-Residual content selection is owner-local. The eigenvalues of each owner-local
-`M_a` are residual occupations and control retention through a separate
-residual-occupation cutoff `eta_RG = 1.0e-8`. Numerical negative-eigenvalue
-tolerance and physical residual-occupation cutoff are separate policies. If
-all modes for an owner are retained, preserve donor-style full-rank owner
-orientation with owner-local symmetric Lowdin in candidate order. If rank is
-lost, use deterministic owner-local natural residual modes ordered by
-decreasing residual occupation with deterministic sign canonicalization. After
-owner-local construction, perform the final inter-owner symmetric Lowdin merge.
-For `S_merge`, use
-`tau_merge = max(1.0e-12, 1.0e-12 * max(lambda_max(S_merge), 1.0))`; any
-merge eigenvalue below `-tau_merge` is a construction error and any eigenvalue
-`<= tau_merge` is a near-singular merge error. Final `G' S R` and
-`R' S R - I` errors must be below `1.0e-10`. Global raw-candidate symmetric
-Lowdin and global raw-column pivoted-Cholesky selection are superseded and not
-approved as the R3 residual algorithm. Eigenvalue flooring must not retain
-tiny residual occupations or preserve near-singular merge directions.
+Binding guardrails: residual basis directions are selected separately on each
+physical owner atom; residual occupation is not numerical rank; owner-local
+sectors are merged once; global raw-candidate Lowdin and global raw-column
+pivoted-Cholesky selection are not approved current algorithms.
 
 ### HP-R3-FN-02 — exact augmented one-body and moment assembly
 
-Approved R3-A scope. For each exact one-body or moment operator `O`, assemble
-raw `[G, A]` blocks and transform:
+Approved historical R3-A exact-operator surface. Current production logic is
+`transform_augmented_operator(...)` under `HP-RG-FN-02`.
 
-```text
-O_GR = O_GG T_G + O_GA T_A
-O_RR =
-    T_G' O_GG T_G
-  + T_G' O_GA T_A
-  + T_A' O_AG T_G
-  + T_A' O_AA T_A
-O_aug = [O_GG  O_GR
-         O_GR' O_RR]
-```
-
-This applies to kinetic, every uncharged by-center nuclear attraction, `x`,
-`y`, `z`, `x^2`, `y^2`, and `z^2`. Moment matrices are not stored in
-`CartesianIDAHamiltonian`, so R3-A must produce/consume them in the same
-construction boundary and must not recover them from an arbitrary base
-Hamiltonian.
-
-`HP-R3-FN-02` does not require CPB providers as the only exact-block
-implementation. Inside the approved owner file, R3-A may use the QW analytic
-1D-table donor organization to build full parent-by-supplement `G-A` matrices
-once for overlap, kinetic, position, second moments, and by-center nuclear
-attraction, then project parent rows through terminal blocks. It may reuse the
-once-built overlap `G-A` block for `X = G' S A` and use the once-built
-`G-A`/`A-A` blocks in `pqs_terminal_residual_gto_augmented_operators`. This is
-allowed rectangular cross data, not an approved parent-by-parent global
-operator, dense global pair matrix, new shared QW API, persistent provider
-bundle, payload/status/report surface, artifact/provenance, public API,
-driver/tool workflow, Be2 validation gate, or Cr2 work.
-
-Parent-only one-dimensional numerical data belong to the realized parent axis
-bundle/factor source once the parent lattice is fixed. Parent-supplement cross
-tables are construction-local augmentation work data because they also depend
-on the supplement, expansion, and physical centers. The production target is to
-derive them from the parent-axis source once per augmentation construction and
-reuse them across residual overlap and exact operators; the immediate R3-local
-bridge may tolerate one duplicate overlap construction to avoid a new
-persistent raw-block bundle, but it must not rebuild cross tables per terminal
-block or per operator.
-
-### HP-R3-TEST-01 — first augmented one-body endpoint validation
-
-Approved standalone R3-A/R3-B endpoint gate:
-
-```text
-test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl
-```
-
-Invocation:
-
-```text
-julia --project=. test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl
-```
-
-The gate covers only the H2 residual-GTO endpoint family. It should
-validate the frozen H2/H/cc-pVTZ fixture, candidate ownership, `G' S R`,
-`R' S R`, base G-G block equality, finite/symmetric augmented `K`, uncharged
-`U_A`, and moment matrices, and `E1_aug <= E1_base + epsilon`. It is a
-standalone endpoint/integration gate and is not approved for inclusion in
-`test/runtests.jl`. Under approved R3-B, the same file may be extended only
-with the first in-memory supplemented Hamiltonian checks: finite/symmetric
-`V_aug`, unchanged base `V_GG`, returned `CartesianIDAHamiltonian{Float64}`,
-augmented dimension `489`, an independent weight-aware `V_GM` comparison, and
-the owner-local lowest-orbital IDA self-Coulomb `0.4574265214362075` within
-`1.0e-10`. The historical global-selection scalar `0.4574256036192161` must
-not be forced by width scaling or tolerance relaxation. The independent
-`V_GM` check must recompute
-the final-basis density-normalized
-mixed block from support weights, final weights, and support-to-M donor values;
-it must not only compare the final self-Coulomb scalar against the same
-implementation path. It must not assert private pair/assembly/report/status
-behavior and must not run Be2 or Cr2.
-
-## Approved For R3-B Implementation
+The exact transformed operators are kinetic, every uncharged by-center nuclear
+attraction, `x`, `y`, `z`, `x^2`, `y^2`, and `z^2`. This exact transformation is
+not the MWG approximation and must not be replaced by moment-matched interaction
+logic.
 
 ### HP-R3-FN-03 — residual MWG/IDA and in-memory Hamiltonian
 
-Approved source owner/path/function:
+Approved R3-B compatibility entry point:
 
 ```text
-Owner module: CartesianFinalBasisRealization
-Source file: src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl
-Function: pqs_terminal_residual_gto_augmented_hamiltonian
+pqs_terminal_residual_gto_augmented_hamiltonian(...)
 ```
 
-This ID approves only the narrow R3-B in-memory interaction continuation for
-the accepted H2 R3-A path. It may compute residual MWG descriptors from exact
-R3-A moments of the actual final residual functions:
+Output is the existing `CartesianIDAHamiltonian{Float64}`. Current residual MWG
+descriptor and interaction math is owned by `moment_matched_gaussians(...)` and
+`assemble_residual_ida_interaction(...)` under `HP-RG-FN-03` and `HP-RG-FN-04`.
 
-```text
-c_ralpha = <r | alpha | r>
-v_ralpha = <r | alpha^2 | r> - c_ralpha^2
-sigma_ralpha = sqrt(2 * v_ralpha)
-```
-
-The MWG approximation is separable, uses the repo Gaussian-width convention in
-the factor `sqrt(2 * v_ralpha)`, and omits off-diagonal covariance. Nonfinite
-moments, nonpositive variances, or nonpositive widths are construction errors.
-
-R3-B uses density-normalized `M-M` pair factors directly. For `G-M`, donor
-support-to-M factors are parent-density normalized and must be transformed to
-final-basis density normalization for each terminal block before insertion:
-
-```text
-support_weights = wx .* wy .* wz
-final_weights = C' * support_weights
-C_density = C .* support_weights ./ final_weights'
-V_GM_block = C_density' * V_support_M
-```
-
-Direct blocks use identity/final weights consistently and therefore agree with
-the direct insertion formula. PQS shell blocks must use the weight-aware
-contraction above. The resulting interaction is inserted into
-
-```text
-V_aug = [V_GG_base  V_GM
-         V_GM'      V_MM]
-```
-
-with no additional downstream division by final weights. `M` denotes
-moment-matched effective
-Gaussians, not raw supplement candidates and not exact residual-GTO Coulomb
-integrals. Term-first pair-factor reuse and bounded workspace are binding
-requirements in the R3 note.
-
-The approved function must combine `V_aug` with the accepted R3-A augmented
-`K` and uncharged `U_A` blocks, and return the existing
-`CartesianIDAHamiltonian{Float64}` directly. It must reuse base
-`nup`/`ndn`, nuclear charges, and nuclear positions from the same-construction
-base Hamiltonian. An arbitrary dimension-compatible Hamiltonian is not an
-approved provenance source.
-
-Same-construction extension decision: this amendment is an approved extension
-of `HP-R3-FN-03`, not a new HP ID. The approved internal function may take the
-same-construction inputs:
-
-```text
-pqs_terminal_residual_gto_augmented_hamiltonian(
-    base_hamiltonian,
-    basis::CartesianTerminalBasisRealization,
-    bundles,
-    supplement,
-    atom_locations,
-    nuclear_charges;
-    expansion = nothing,
-)::CartesianIDAHamiltonian{Float64}
-```
-
-The exact Julia signature may be adjusted to match local types, but the
-boundary is fixed: callers provide the base Hamiltonian, terminal realization,
-axis/bundle source, supplement, atom locations, and nuclear charges from the
-same base construction. The function constructs inside one call:
-
-- the residual augmentation object;
-- exact augmented `K`, uncharged `U_A`, `x`/`y`/`z`, and `x^2`/`y^2`/`z^2`;
-- residual MWG descriptors;
-- weight-aware `V_GM`;
-- direct `V_MM`;
-- the existing `CartesianIDAHamiltonian{Float64}`.
-
-This same-construction path removes the need for callers to independently pass
-the residual object or augmented-operator object. Existing lower-level R3-A and
-R3-B helpers may remain and may be reused; this amendment does not require
-deleting or replacing them. The function may recompute or locally reuse the
-one-shot parent-by-supplement exact-block family, but must not add a persistent
-raw-block bundle/cache object. One duplicate overlap build between
-residualization and full exact-operator assembly remains acceptable unless it
-can be removed locally without a new persistent shape.
-
-H2 closure value: under approved owner-local residual selection and final
-merge Lowdin, the lowest-orbital IDA self-Coulomb target is
-`0.4574265214362075` within `1.0e-10`. The prior compact-path value
-`0.4574256036192161` belongs to the superseded global candidate-order residual
-basis with corrected weight-aware `G-M` contraction. It is historical
-evidence, not an acceptance target. The earlier targets `0.457435475059184`
-and `0.4574331709135599` remain superseded for the reasons recorded in the R3
-note.
-
-Do not add a width scale factor and do not relax tolerance to fit any old
-scalar. This ID does not approve artifacts, public API expansion,
-driver/bin/tool workflow, broad provider payloads, status/result objects,
-report fields, pair/assembly workflow expansion, parent-stage fields, Be2
-validation, Cr2 validation, ECP, EGOI, RHF/solver work, rank-loss
-implementation, wrappers, or a new test file.
-
-The first R3-B endpoint may keep the approved full R3-A moment matrices
-`x`/`y`/`z`/`x^2`/`y^2`/`z^2`; this amendment does not replace them with a
-diagonal-only moment contract.
-
-## Approved For R3-C Implementation
+The accepted H2 owner-local endpoint has augmented dimension `489` and
+lowest-orbital IDA self-Coulomb `0.4574265214362075` within `1.0e-10`. Older
+R3-B scalars from global-selection or retired density-gauge diagnostics are
+historical evidence only and are not active targets.
 
 ### HP-R3-ART-01 — compact supplemented artifact provenance
 
-Approved R3-C scope. The in-memory numerical object remains
-`CartesianIDAHamiltonian{Float64}`. The artifact remains the existing
-Cartesian IDA Hamiltonian file written by `write_cartesian_ida_hamiltonian`,
-with an added compact `supplement_provenance/` group defined in
-`r3_residual_gto_mwg_augmentation.md`. Provenance is derived from the validated
-R3 construction specification rather than recovered from an in-memory
-Hamiltonian.
+Approved R3-C internal artifact helper remains outside the RG module. It may
+write an existing `CartesianIDAHamiltonian` file and add compact
+`supplement_provenance/` provenance. RG does not own artifact writing,
+artifact schema, JLD2 workflow, or provenance readers.
 
 Approved source owner/path:
 
@@ -756,19 +514,6 @@ Approved source owner/path:
 Owner module: CartesianFinalBasisRealization
 Source file: src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl
 ```
-
-The R3 owner file may call `write_cartesian_ida_hamiltonian` and then add the
-`supplement_provenance/` group to the same JLD2 file. No edit to
-`src/cartesian_ida_hamiltonian.jl` is approved by this ID because the existing
-writer shape is sufficient. If implementation proves otherwise, the exact
-writer seam must return for a separate docs-only amendment.
-
-This compact writer remains terminal/facade workflow glue, not Residual
-Gaussian module ownership. It may consume RG-produced residual objects,
-operators, interactions, or Hamiltonians, but `CartesianResidualGaussians` does
-not own artifact schema, JLD2 file workflow, facade input parsing, or
-`supplement_provenance/` policy. Moving or splitting the writer requires a
-later docs-only amendment with a named duplication or consumer reason.
 
 Approved `supplement_provenance/` keys:
 
@@ -794,67 +539,29 @@ Approved `supplement_provenance/` keys:
 - `mwg_convention = :separable_moment_matched_density_normalized`;
 - `one_body_source`;
 - `interaction_source = :weight_aware_residual_mwg_ida_blocks`;
-- compact validation check labels, including the H2 self-Coulomb check when
-  writing the H2 validation fixture;
-- H2 self-Coulomb reference `0.4574265214362075` for the validation fixture,
-  otherwise `nothing`.
+- compact validation labels and H2 reference value when supplied.
 
-Do not store full residual eigenvalue vectors, MWG center matrices, MWG width
-matrices, dense moment matrices, `T_G`, `T_A`, candidate labels, full
-construction inputs, or broad residual-basis serialization in the first
-supplemented artifact. If those arrays become consumer-critical, a later
-explicit residual-basis artifact group must promote them together.
-
-Validation-only readback with `read_cartesian_ida_hamiltonian` is approved to
-confirm the returned/read Hamiltonian matrices agree and that R3-B
-self-Coulomb matches the owner-local H2 value `0.4574265214362075` within
-`1.0e-10`. This ID does not approve a Hamiltonian
-wrapper, separate manifest, public provenance reader, HamV6 export, solver
-export, public API/export, driver/bin/tool workflow, report/status/payload
-object, solver/RHF/Cr2 work, or consumer API.
-
-## Approved For R3 Usability Implementation
-
-These entries authorize only the non-exported supported residual-GTO/MWG
-supplemented workflow recorded in
-`r3_usability_supplemented_workflow.md`. They do not approve a public export,
-driver/bin/tool workflow, Cr2 run, ECP, EGOI, RHF, solver work, new Hamiltonian
-wrapper, report/status/payload object, exposed internal stage object, broad
-provider/cache object, or artifact shape beyond the approved
-`supplement_provenance/` group.
+Do not serialize full residual bases, dense moments, `T_G`, `T_A`, MWG centers,
+MWG widths, or broad construction inputs in this compact group.
 
 ### HP-R3U-FILE-01 — supplemented workflow source and validation files
 
-Approved primary owner file:
+Approved non-exported usability owner:
 
 ```text
 src/cartesian_base_hamiltonian.jl
 ```
 
-This file may add the non-exported
-`cartesian_residual_gto_mwg_hamiltonian` facade, input validation,
-supplement-spec normalization, and base-to-R3 wiring.
-
-Existing R3 owner file:
+Allowed companion surfaces:
 
 ```text
 src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl
-```
-
-This file may be touched only if needed to reuse the R3 same-construction
-path and R3-C writer without recomputing residual objects. It may not add a
-new artifact schema, public API, status object, report field, or persistent
-provider/cache object.
-
-Approved validation file:
-
-```text
 test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl
 ```
 
-No new source file, no new committed test file, and no `src/GaussletBases.jl`
-export or include edit is approved. If implementation needs a new root include
-or export, it must return for another docs-only amendment.
+No public export, new source file, new committed test file, driver/bin/tool
+workflow, report/status/payload object, or artifact shape beyond
+`supplement_provenance/` is approved.
 
 ### HP-R3U-FN-01 — non-exported supplemented Hamiltonian facade
 
@@ -869,71 +576,34 @@ cartesian_residual_gto_mwg_hamiltonian(
 )::CartesianIDAHamiltonian{Float64}
 ```
 
-The function is supported for module-qualified internal use but must not be
-exported. It returns the existing `CartesianIDAHamiltonian{Float64}` directly.
-It must not return a wrapper, status object, report object, payload, or
-`(value, metadata)` pair.
+Supported first systems are z-axis H2 and z-axis Be2. Be2 is
+internal/performance-supported only. Cr2, heteronuclear systems, non-z-axis or
+arbitrary orientations, ECP inputs, solver/RHF workflow, and public export are
+not approved.
 
-Supported first systems:
-
-- z-axis H2 with `["H", "H"]`, charges `[1.0, 1.0]`, `nup = 1`, `ndn = 1`;
-- z-axis Be2 with `["Be", "Be"]`, charges `[4.0, 4.0]`, `nup = 4`,
-  `ndn = 4`, as internal/performance-supported only.
-
-Both centers must have finite `x = 0`, finite `y = 0`, and distinct finite
-`z` coordinates. Cr2, other atoms, heteronuclear diatomics, x/y-aligned
-diatomics, arbitrary orientation, ECP systems, and solver/RHF handoff are not
-approved.
-
-Base `basis` required keys: `q`, `core_spacing`, `xmax_parallel`, and
-`xmax_transverse`. Optional keys are `parent_axis_family = :G10`,
-`reference_spacing = 1.0`, and `tail_spacing = 10.0`. Unknown keys throw
-`ArgumentError`; no `method`, `route`, `n_s`, `radius`, `d`, mapping, backend,
-or output-group selector is approved.
-
-`supplement` required keys: `basis_by_center` and `lmax`. Optional keys are
-`uncontracted = false` and `width_filtering = nothing`. First scope is
-homonuclear: all center basis labels must match and all atom symbols must
-match. `lmax` must satisfy `0 <= lmax <= 6`. `width_filtering` must be
-`nothing` or a `NamedTuple` with exactly `max_width`, finite and positive.
-This maps to the existing legacy `max_width` filter.
-
-### HP-R3U-WIRE-01 — base-to-R3 same-construction workflow
+### HP-R3U-WIRE-01 — base-to-RG same-construction workflow
 
 Approved wiring:
 
 ```text
 validated system/basis/supplement spec
--> R1-style/base producer normalization and base stages
+-> R1-style/base normalization and base stages
 -> base CartesianIDAHamiltonian plus same-construction terminal basis/bundles
 -> legacy named-basis supplement loading
 -> basis_representation(supplement)
--> R3 same-construction augmented Hamiltonian path
+-> RG/R3 same-construction augmented Hamiltonian path
 -> optional R3-C artifact writer
 -> CartesianIDAHamiltonian{Float64}
 ```
 
-For H2, the facade should reuse existing R1 validation/stage helpers. For Be2,
-it may add generalized internal z-axis homonuclear diatomic normalization in
-`src/cartesian_base_hamiltonian.jl`. The facade must not call public
-`cartesian_base_hamiltonian` and then reconstruct terminal basis state
-separately. The base Hamiltonian, terminal basis realization, and parent axis
-bundle must come from the same base construction call. The facade must reuse
-the R3 same-construction augmented Hamiltonian path and the R3-C writer.
+The base Hamiltonian, terminal basis realization, and parent axis bundle must
+come from the same base construction call. The facade must not expose terminal
+basis realizations, bundles, residual objects, augmented-operator objects, MWG
+descriptors, pair factors, or provenance payloads.
 
-If `hamfile === nothing`, no artifact is written. If `hamfile !== nothing`,
-the facade writes the supplemented Hamiltonian using the existing Cartesian IDA
-Hamiltonian artifact shape plus the approved `supplement_provenance/` group
-and still returns the Hamiltonian. Empty `hamfile` throws `ArgumentError`.
-Readback is validation-only.
+### HP-R3-TEST-01 / HP-R3U-TEST-01 — standalone H2 endpoint gate
 
-The facade must not expose or return terminal basis realizations, bundles,
-residual objects, augmented-operator objects, MWG descriptors, pair factors,
-or provenance payloads.
-
-### HP-R3U-TEST-01 — supplemented workflow usability endpoint
-
-Approved standalone validation remains:
+Approved standalone validation file:
 
 ```text
 test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl
@@ -945,34 +615,21 @@ Invocation:
 julia --project=. test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl
 ```
 
-The file may be extended with one usability-facade section that calls
-`cartesian_residual_gto_mwg_hamiltonian` on the frozen z-axis H2 plus
-contracted H/cc-pVTZ `lmax = 1` supplement fixture, writes to `mktempdir()`,
-checks returned/read `CartesianIDAHamiltonian{Float64}` matrices, validates
-augmented dimension `489`, validates lowest-orbital IDA self-Coulomb
-against owner-local residual-selection scalar `0.4574265214362075` within
-`1.0e-10`, validates `supplement_provenance/` keys against normalized input,
-and checks malformed input/unsupported Cr2 errors without asserting private
-stage objects.
-
-An ignored Be2 timing/proxy script under `tmp/work` is allowed, but Be2 is not
-a committed gate in this amendment and no Be2/Cr2 test file is approved.
+The gate covers the H2 residual-GTO/MWG endpoint family, including residual
+basis checks, exact augmented one-body/moment checks, independent weight-aware
+`V_GM` comparison, in-memory Hamiltonian checks, and the non-exported usability
+facade/artifact readback section. It is not approved for `test/runtests.jl`,
+Be2 committed validation, Cr2 validation, or private route/status assertions.
 
 ## Approved For Residual Gaussian Domain Migration
 
-These entries authorize only the internal source-organization migration
-recorded in `residual_gaussian_domain_module.md`. They do not approve public
-export, public API, artifact schema changes, Cr2 facade support, full Cr2
-Hamiltonians/artifacts, driver/bin/tool workflow, report/status/payload
-objects, solver/RHF, ECP, EGOI, or new production behavior beyond moving the
-existing approved owner-local residual-GTO/MWG construction into a domain
-module with physical names.
+Current Residual Gaussian domain algorithm authority is
+`residual_gaussian_domain_module.md`. This registry records the approved module
+files and function surfaces only.
 
-The Residual Gaussian module does not own compact supplemented artifact
-writing or the `supplement_provenance/` schema. The current
-`write_pqs_terminal_residual_gto_augmented_hamiltonian(...)` location remains
-acceptable under R3-C workflow authority unless a later amendment names a real
-duplication or consumer need.
+The Residual Gaussian module does not own compact supplemented artifact writing
+or `supplement_provenance/`. Artifact/facade hooks remain outside RG unless a
+later amendment names a real duplication or consumer reason.
 
 ### HP-RG-FILE-01 — Residual Gaussian module files
 
@@ -985,23 +642,19 @@ src/cartesian_residual_gaussians/augmented_operators.jl
 src/cartesian_residual_gaussians/mwg_interaction.jl
 ```
 
-`src/GaussletBases.jl` may add only the internal include needed to load the
-module. No public export is approved. Include-order adjustments are allowed
-only as needed to place the module after existing internal dependencies and
-before approved callers; unrelated subsystem reordering is not approved.
+No public export is approved.
 
 ### HP-RG-OBJ-01 — residual Gaussian basis object
 
-Approved domain object: a numerical residual Gaussian basis object carrying
-base dimension, candidate count, residual dimension, candidate owner indices,
-residual source owner indices, owner retained counts, retained residual
-occupations, cutoff/tolerance policy, selection/orientation/sign rules, and
-final `T_G::Matrix{Float64}` / `T_A::Matrix{Float64}` transforms.
+Approved domain object: a numerical residual Gaussian basis object carrying base
+dimension, candidate count, residual dimension, candidate owner indices,
+residual source owner indices, owner retained counts, residual occupations,
+cutoff/tolerance policy, selection/orientation/sign rules, and final
+`T_G::Matrix{Float64}` / `T_A::Matrix{Float64}` transforms.
 
-The object must not be a status/result payload and must not carry route
-metadata, report fields, status flags, raw candidate payload clouds, full
-discarded spectra, MWG center/width matrices, dense moment matrices,
-artifacts, or public API state.
+It must not be a status/result payload and must not carry route metadata,
+report fields, status flags, artifact data, MWG descriptors, or public API
+state.
 
 ### HP-RG-FN-01 — residual Gaussian basis construction
 
@@ -1011,20 +664,9 @@ Approved production name:
 build_residual_gaussian_basis(...)
 ```
 
-The exact Julia signature may follow local types, but candidate owner indices
-are required. Parsing owner identity from labels is not approved.
-
-The algorithm is owner-local residual occupation selection, donor-style
-full-rank owner orientation when all owner modes are retained, deterministic
-owner-local natural modes when rank is lost, and one final inter-owner
-symmetric Lowdin merge. It must use the approved `eta_RG = 1.0e-8`,
-`tau_neg_abs = tau_neg_rel = 1.0e-12`, and
-`tau_merge_abs = tau_merge_rel = 1.0e-12` policies.
-
-Do not add a vague global entry point such as
-`stabilize_residual_metric(...)`. Global raw-candidate Lowdin and global
-raw-column pivoted-Cholesky selection are not the Residual Gaussian basis
-algorithm.
+Candidate owner indices are required. The current algorithm is the owner-local
+residual occupation construction defined in
+`residual_gaussian_domain_module.md`.
 
 ### HP-RG-FN-02 — exact augmented operator transformation
 
@@ -1034,10 +676,8 @@ Approved production name:
 transform_augmented_operator(...)
 ```
 
-This owns exact transformation of raw `[G, A]` blocks into augmented `[G, R]`
-operator blocks for kinetic, every uncharged by-center nuclear attraction,
-`x`, `y`, `z`, `x^2`, `y^2`, and `z^2`. This is exact operator
-transformation, not the MWG approximation.
+This owns exact `[G,A] -> [G,R]` transformation for kinetic, uncharged
+by-center nuclear attraction, and first/second Cartesian moment matrices.
 
 ### HP-RG-FN-03 — moment-matched Gaussian descriptors
 
@@ -1047,11 +687,9 @@ Approved production name:
 moment_matched_gaussians(...)
 ```
 
-This builds residual matched-width Gaussian descriptors from final merged
-residual functions and exact transformed moment matrices using
-`sigma = sqrt(2v)`. The descriptors are only for residual-containing
-interaction approximation and must not be treated as exact residual-GTO
-Coulomb integrals or base-PQS IDA weights.
+Descriptors are computed from final merged residual functions and exact moment
+matrices. They are residual-containing interaction descriptors only, not exact
+residual-GTO Coulomb integrals.
 
 ### HP-RG-FN-04 — residual IDA interaction assembly
 
@@ -1061,40 +699,26 @@ Approved production name:
 assemble_residual_ida_interaction(...)
 ```
 
-This owns residual-containing MWG/IDA interaction blocks
-`V_aug = [V_GG_base V_GM; V_GM' V_MM]`. `V_GG_base` is unchanged from the base
-Hamiltonian. `V_GM` must use the approved weight-aware final-basis
-density-normalized contraction for PQS shell blocks, `V_MM` uses the direct
-density-normalized matched-Gaussian interaction, and term-first pair-factor
-reuse plus bounded workspace remain binding requirements.
+This owns residual-containing MWG/IDA blocks `V_GM` and `V_MM`, combined with
+unchanged base `V_GG`. `V_GM` uses weight-aware final-basis density
+normalization for PQS shell blocks.
 
 ### HP-RG-WIRE-01 — migration from terminal residual file
 
-The existing
-`src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` may be
-touched only to delegate existing R3/R3U callers to `CartesianResidualGaussians`
-or to delete old helpers after callers move. Temporary compatibility wrappers
-may remain only for existing callers, must delegate to the new module, must
-not preserve the old global-selection algorithm, and must be deleted when the
-last live caller moves. Prefer deleting wrappers immediately if a source pass
-can switch all callers in one commit.
+`src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` may keep
+small compatibility wrappers for live callers and artifact/facade hooks. Moved
+physics helpers should be deleted from that file once callers use RG-domain
+helpers directly.
 
 ### HP-RG-TEST-01 — migration validation
 
-Approved validation for the migration:
+Approved validation is the existing standalone H2 residual-GTO/MWG endpoint
+with augmented dimension `489`, self-Coulomb `0.4574265214362075`, exact
+one-body/moment checks, independent weight-aware `V_GM` check, and optional
+ignored Be2 usability/performance measurement when a source pass changes the
+interaction path or facade wiring.
 
-- existing standalone H2 residual-GTO/MWG endpoint with augmented dimension
-  `489` and lowest-orbital IDA self-Coulomb `0.4574265214362075` within
-  `1.0e-10`;
-- exact one-body/moment checks for `G' S R`, `R' S R`, base G-G block
-  equality, finite/symmetric `K`, uncharged `U_A`, and moment matrices;
-- independent weight-aware `V_GM` check;
-- R3U facade section, if touched, against the same scalar and artifact
-  readback deltas;
-- ignored Be2 owner-local usability/performance measurement under `tmp/work`
-  when the source pass changes the interaction path or facade wiring.
-
-No new committed test file, no Be2 committed gate, and no Cr2 full
+No new committed test file, Be2 committed gate, or Cr2 full
 Hamiltonian/artifact/facade validation is approved.
 
 ## Rejected Or Deferred

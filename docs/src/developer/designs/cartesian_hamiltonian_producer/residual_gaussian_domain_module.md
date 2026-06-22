@@ -1,10 +1,11 @@
 # Residual Gaussian Domain Module
 
-Status: approved design authority for the internal
-`CartesianResidualGaussians` domain module. This is a source-organization and
-ownership amendment only. It approves no public export, no artifact schema
-change, no Cr2 facade support, and no new production behavior beyond the
-approved owner-local residual-GTO/MWG construction and domain migration.
+Status: canonical algorithm authority for the internal
+`CartesianResidualGaussians` domain module. This is the current home for RG
+residual selection, exact augmented operators, and MWG interaction convention.
+It approves no public export, no artifact schema change, no Cr2 facade support,
+and no new production behavior beyond the approved owner-local
+residual-GTO/MWG construction and domain migration.
 
 ## Decision
 
