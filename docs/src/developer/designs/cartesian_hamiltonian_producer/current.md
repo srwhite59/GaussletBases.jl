@@ -55,6 +55,9 @@ Approved neutral raw-block nuclear owner:
 
 - `src/cartesian_gaussian_raw_blocks/` is approved for exact uncharged
   by-center Cartesian Gaussian nuclear `G-A` and `A-A` raw blocks only;
+- `src/cartesian_gaussian_axis_integrals.jl` is approved only for the
+  `HP-CGAI-FN-01` in-place axis integral table fill helper consumed by that
+  neutral nuclear owner;
 - the owner may be consumed by Residual Gaussian and Qiu-White code after
   behavior-preserving parity;
 - it does not own overlap, kinetic, moments, terminal projection, residual

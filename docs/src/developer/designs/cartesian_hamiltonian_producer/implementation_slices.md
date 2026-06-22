@@ -259,3 +259,18 @@ Forbidden in this slice:
 - Qiu-White route objects or parent construction;
 - persistent caches, metadata, reports, status fields, artifacts, public API,
   Cr2 facade support, or Cr2 artifact workflow.
+
+Follow-on low-level optimization approval:
+
+- `HP-CGAI-FN-01` approves only
+  `src/cartesian_gaussian_axis_integrals.jl` for an in-place
+  `_cartesian_gaussian_axis_integral_table!(...)` helper and
+  `src/cartesian_gaussian_raw_blocks/nuclear_blocks.jl` for consuming that
+  helper in the neutral nuclear raw-block kernel;
+- the bottleneck addressed is one-dimensional analytic axis-integral table
+  allocation measured in Cr2 q4 nuclear raw blocks, not Residual Gaussian
+  selection, Qiu-White route objects, or wrapper/result allocation;
+- the later source pass must preserve table parity, H2/Be2/Qiu-White/Cr2
+  nuclear parity, and materially reduce Cr2 q4 nuclear raw-block allocation
+  from the `44552.840 MiB` baseline without adding caches, metadata, route
+  objects, reports, artifacts, public API, or semantic changes.

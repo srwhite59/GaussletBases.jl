@@ -34,6 +34,8 @@ artifact workflow, or public API.
   Qiu-White callers to the neutral nuclear kernel, with duplicate route-local
   loops deleted after parity.
 - `HP-CGRB-TEST-01` - focused parity and endpoint validation for the extraction.
+- `HP-CGAI-FN-01` - low-level in-place Cartesian Gaussian axis integral table
+  fill helper, consumed by the neutral nuclear raw-block owner only.
 
 ## Scope
 
@@ -109,6 +111,79 @@ and request a docs-only source-surface amendment before coding that edit.
 Optimization must remain behavior-preserving. Do not add persistent cache
 objects, status fields, provider payloads, route objects, or artifact data to
 justify reuse.
+
+## Approved Low-Level Axis Table Helper
+
+Cr2 q4 profiling after `47d9b2a3` shows that the remaining neutral nuclear
+raw-block allocation is one-dimensional analytic axis-integral table work, not
+Residual Gaussian logic, Qiu-White route logic, or wrapper/result allocation:
+
+- full neutral nuclear raw blocks: about `13.880s / 44552.840 MiB`;
+- `G-A` primitive axis tables only: about `3.188s / 10787.069 MiB`;
+- `G-A` 3D assembly from cached factors: about `0.529s / 20.625 MiB`;
+- streamed upper-triangle `A-A` fill: about `9.890s / 33071.848 MiB`;
+- scalar one-dimensional integral calls: `51,539,760`;
+- parity against the current neutral function: `G-A = 0.0`, `A-A = 0.0`.
+
+`HP-CGAI-FN-01` approves adding the low-level in-place helper next to the
+existing allocating helper:
+
+```julia
+_cartesian_gaussian_axis_integral_table!(
+    destination,
+    left_exponents,
+    left_centers,
+    left_powers,
+    left_prefactors,
+    right_exponents,
+    right_centers,
+    right_powers,
+    right_prefactors,
+    term;
+    factor_exponent = 0.0,
+    factor_center = 0.0,
+)
+```
+
+The exact argument names may follow local style. The required contract is:
+
+- fill an already allocated destination matrix;
+- allocate no result matrix;
+- return the same numerical values as
+  `_cartesian_gaussian_axis_integral_table(...)`;
+- preserve existing scalar `_cartesian_gaussian_axis_integral(...)` behavior.
+
+Approved source surfaces for this follow-on optimization:
+
+- `src/cartesian_gaussian_axis_integrals.jl`, only to add the in-place helper
+  and, if clean, delegate the allocating helper to it;
+- `src/cartesian_gaussian_raw_blocks/nuclear_blocks.jl`, only to consume the
+  in-place helper for neutral nuclear raw-block construction.
+
+No other source file is approved by `HP-CGAI-FN-01`. If implementation needs
+another source owner, stop for a docs-only amendment.
+
+Implementation sequence for the later source pass:
+
+1. Add the in-place table fill helper next to the existing allocating table
+   helper.
+2. Reuse the allocating helper by delegating to the in-place helper if that is
+   cleaner and preserves behavior.
+3. Update `CartesianGaussianRawBlocks` nuclear code to use the in-place helper.
+4. Preserve H2, Be2, Qiu-White, and Cr2 parity.
+5. Remeasure Cr2 q4 nuclear raw-block allocation.
+
+Acceptance criteria for the source pass:
+
+- exact table values match the old helper at roundoff;
+- H2 Residual Gaussian endpoint is unchanged;
+- Be2 facade/readback remains unchanged;
+- Qiu-White nuclear parity remains unchanged;
+- Cr2 q4 raw nuclear `G-A`/`A-A` parity remains unchanged;
+- Cr2 q4 nuclear raw-block allocation drops materially from about
+  `44552.840 MiB`;
+- no metadata, status, cache, route object, payload, report, artifact, public
+  API, or persistent raw-block bundle is added.
 
 ## Validation
 

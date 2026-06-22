@@ -769,6 +769,52 @@ The kernel must not apply physical nuclear charges, perform terminal
 projection, transform into residual bases, create overlap/kinetic/moment
 blocks, assemble Hamiltonians, or create persistent caches/bundles.
 
+### HP-CGAI-FN-01 — in-place Cartesian Gaussian axis integral table fill
+
+Approved source owner:
+
+```text
+src/cartesian_gaussian_axis_integrals.jl
+```
+
+Approved internal helper concept:
+
+```julia
+_cartesian_gaussian_axis_integral_table!(
+    destination,
+    left_exponents,
+    left_centers,
+    left_powers,
+    left_prefactors,
+    right_exponents,
+    right_centers,
+    right_powers,
+    right_prefactors,
+    term;
+    factor_exponent = 0.0,
+    factor_center = 0.0,
+)
+```
+
+The helper fills an already allocated destination matrix and must return the
+same values as `_cartesian_gaussian_axis_integral_table(...)` without
+allocating the result matrix. The existing scalar
+`_cartesian_gaussian_axis_integral(...)` behavior is unchanged. The allocating
+helper may delegate to the in-place helper if that preserves behavior cleanly.
+
+Allowed consumer surface:
+
+```text
+src/cartesian_gaussian_raw_blocks/nuclear_blocks.jl
+```
+
+That file may consume the in-place helper only for exact uncharged by-center
+Gaussian nuclear raw-block construction under `HP-CGRB-FN-01`. No public API,
+export, persistent cache, raw-block payload, metadata/status/report field,
+artifact change, route object, Residual Gaussian algorithm change, Qiu-White
+route semantic change, overlap/kinetic/moment migration, Cr2 facade, or Cr2
+artifact workflow is approved by this ID.
+
 ### HP-CGRB-WIRE-01 — Residual Gaussian and Qiu-White rewiring
 
 Approved caller rewiring surfaces:
