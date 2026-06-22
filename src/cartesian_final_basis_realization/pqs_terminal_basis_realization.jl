@@ -44,14 +44,27 @@ function _matrix_identity_error(matrix)
     end
     return error
 end
+function _buffer_view!(buffer, nrow, ncol)
+    matrix = buffer[]
+    if size(matrix, 1) < nrow || size(matrix, 2) < ncol
+        matrix = Matrix{Float64}(undef, nrow, ncol)
+        buffer[] = matrix
+    end
+    return @view matrix[1:nrow, 1:ncol]
+end
 function _support_action(left, right, coefficients, overlaps)
     result = zeros(Float64, length(left), size(coefficients, 2))
+    scratch = Ref(Matrix{Float64}(undef, 0, 0))
+    return _support_action!(result, left, right, coefficients, overlaps, scratch)
+end
+function _support_action!(result, left, right, coefficients, overlaps, scratch)
+    fill!(result, 0.0)
     maxcols = max(1, _TERMINAL_WORKSPACE_BYTES ÷ (8 * max(length(left), 1)))
-    scratch = Matrix{Float64}(undef, length(left), min(length(right), maxcols))
+    cross_buffer = _buffer_view!(scratch, length(left), min(length(right), maxcols))
     for firstcol in 1:maxcols:length(right)
         cols = firstcol:min(firstcol + maxcols - 1, length(right))
         ncols = length(cols)
-        cross = @view scratch[:, 1:ncols]
+        cross = @view cross_buffer[:, 1:ncols]
         _support_cross!(cross, left, @view(right[cols]), overlaps)
         mul!(result, cross, @view(coefficients[cols, :]), 1.0, 1.0)
     end
@@ -146,35 +159,12 @@ function _shell_seed(record, contract, bundles)
         _nested_projected_q_shell_full_sides(bundles, support.outer_box, source_shape)
     full_coefficients = _nested_product_coefficients(full_sides..., dims)
     modes = _nested_projected_q_shell_boundary_comx_product_modes(source_shape)
-    indices = _nested_box_support_indices(support.outer_box..., dims)
-    states = NTuple{3,Int}[_cartesian_unflat_index(index, dims) for index in indices]
+    indices = support.support_indices
+    states = support.support_states
     coefficients = Matrix{Float64}(full_coefficients[indices, modes.column_indices])
     rule = get(contract.metadata, :raw_product_source_retained_rule, nothing)
     raw_plan = get(contract.metadata, :raw_product_source_plan, nothing)
     _validate_shell_seed_contract(support, rule, raw_plan, modes, source_shape)
-    return (; indices, states, coefficients)
-end
-function _subtract_previous(state, block, residual)
-    contribution = isnothing(block.coefficients) ? residual : block.coefficients * residual
-    row = Dict{Int,Int}()
-    indices = Int[]
-    states = NTuple{3,Int}[]
-    for (index, point) in Iterators.flatten((
-        zip(state.indices, state.states),
-        zip(block.support_indices, block.support_states),
-    ))
-        haskey(row, index) && continue
-        row[index] = length(indices) + 1
-        push!(indices, index)
-        push!(states, point)
-    end
-    coefficients = zeros(Float64, length(indices), size(state.coefficients, 2))
-    for (i, index) in enumerate(state.indices)
-        coefficients[row[index], :] .+= @view state.coefficients[i, :]
-    end
-    for (i, index) in enumerate(block.support_indices)
-        coefficients[row[index], :] .-= @view contribution[i, :]
-    end
     return (; indices, states, coefficients)
 end
 function _canonicalize!(coefficients, states, bundles, weight_atol)
@@ -186,20 +176,8 @@ function _canonicalize!(coefficients, states, bundles, weight_atol)
     end
     return coefficients
 end
-function _realize_shell(record, contract, blocks, bundles, overlaps,
-    projection_atol, identity_atol, weight_atol)
+function _realize_shell(record, contract, bundles, overlaps, identity_atol, weight_atol)
     state = _shell_seed(record, contract, bundles)
-    for pass in 1:2
-        changed = false
-        for block in blocks
-            residual = _block_action(block, state.states, state.coefficients, overlaps)
-            norm(residual, Inf) <= projection_atol && continue
-            pass == 2 && throw(ArgumentError("terminal PQS projection residual remains above tolerance"))
-            state = _subtract_previous(state, block, residual)
-            changed = true
-        end
-        changed || break
-    end
     gram = transpose(state.coefficients) *
            _support_action(state.states, state.states, state.coefficients, overlaps)
     overlap = Symmetric((gram + transpose(gram)) ./ 2)
@@ -215,7 +193,6 @@ function pqs_terminal_basis_realization(
     support_records, retained_records, transform_contracts, bundles;
     identity_atol::Real = 1.0e-8,
     cross_atol::Real = 1.0e-8,
-    projection_atol::Real = 1.0e-12,
     weight_atol::Real = 1.0e-14,
 )
     length(support_records) == length(retained_records) ||
@@ -236,8 +213,7 @@ function pqs_terminal_basis_realization(
             contract = get(contracts, record.transform_contract_unit_key, nothing)
             isnothing(contract) && throw(ArgumentError("missing terminal transform contract"))
             indices, states, coefficients = _realize_shell(
-                record, contract, blocks, bundles, overlaps,
-                projection_atol, identity_atol, weight_atol)
+                record, contract, bundles, overlaps, identity_atol, weight_atol)
             nextcol = _push_block!(
                 blocks, record.support_record.unit_key, indices, states,
                 coefficients, nextcol)

@@ -7874,3 +7874,53 @@ Risk or guardrail:
 - Cross-overlap audit and shell identity checks remain active. Do not optimize
   by skipping validation; the next pass should target projection allocation
   directly.
+
+## Cartesian Hamiltonian Producer Pass 043 - Restore Block-Local PQS Shells
+
+Commit(s):
+- this branch - Restore block-local PQS terminal shells
+
+Summary:
+- Accepted the source correction required by design commit `5ec55882`. The
+  terminal PQS realizer now uses the owned shell rows
+  `support.support_indices` / `support.support_states` after full-box
+  boundary-mode generation, then performs shell-local Gram/Lowdin cleanup on
+  that block-local support.
+- Removed recursive previous-block projection, `_subtract_previous`, and
+  `projection_atol` plumbing. Cross-block overlap remains an audit only; it is
+  no longer a construction repair path.
+- This supersedes the Pass 042 "projection allocation" next-target note. The
+  allocation target was a symptom of the wrong cumulative-support contract, not
+  a path to optimize further.
+
+Validation:
+- Doer ran `git diff --check`, package load, the standalone public endpoint
+  gate (`83/83`), the H2 base Hamiltonian smoke, and the ignored corrected-Be2
+  full K/unit-`U_A`/V probe.
+- Manager reviewed the one-file source diff, ran `git diff --check`, and ran
+  the mechanical stale-projection scan over live source/design files. Remaining
+  `support.outer_box` source uses are limited to raw-plan/source-box
+  construction checks.
+
+Goal advancement:
+- LT5/LT6: restores the intended PQS support provenance and stable
+  final-basis block contract before larger Cr2-facing optimization work.
+- MT/R1: keeps the public H/H2 facade numerically intact while correcting the
+  internal terminal basis representation.
+
+Carrying-cost result:
+- deleted: recursive previous-block projection and `_subtract_previous`.
+- simplified: `_realize_shell` is now shell-local and block-local.
+- quarantined: none.
+- not deleted because: support-action scratch reuse still serves local
+  Gram/check/audit paths.
+- exact remaining caller/blocker: none for removed projection symbols.
+- added src lines: 19.
+- deleted src lines: 43.
+- new tests: none.
+- new metadata/status fields: none.
+
+Risk or guardrail:
+- Do not reintroduce previous-block projection to reduce cross overlap. If a
+  block-local shell has large cross overlap, treat that as a parent-metric or
+  shell-construction problem and return to design/numerical review.
