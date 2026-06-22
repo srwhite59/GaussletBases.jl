@@ -400,6 +400,42 @@ function _canonicalize_residual_signs!(T_A, T_G)
     return T_A, T_G
 end
 
+function _r3a_pivoted_cholesky_indices(metric, rank_target, tau_keep)
+    rank_target == 0 && return Int[]
+    n = size(metric, 1)
+    residual_diag = Float64[metric[index, index] for index in 1:n]
+    factors = zeros(Float64, n, rank_target)
+    selected = Int[]
+    for column in 1:rank_target
+        pivot = 0
+        pivot_value = -Inf
+        for index in 1:n
+            (index in selected) && continue
+            value = residual_diag[index]
+            if value > pivot_value || (value == pivot_value && (pivot == 0 || index < pivot))
+                pivot = index
+                pivot_value = value
+            end
+        end
+        pivot_value > tau_keep ||
+            throw(ArgumentError("residual-GTO rank selection could not find enough independent candidates"))
+        push!(selected, pivot)
+        scale = sqrt(pivot_value)
+        for row in 1:n
+            value = metric[row, pivot]
+            for previous in 1:(column - 1)
+                value -= factors[row, previous] * factors[pivot, previous]
+            end
+            factors[row, column] = value / scale
+        end
+        for row in 1:n
+            residual_diag[row] -= factors[row, column]^2
+        end
+        residual_diag[pivot] = -Inf
+    end
+    return sort!(selected)
+end
+
 function pqs_terminal_residual_gto_augmentation(
     basis::CartesianTerminalBasisRealization,
     bundles,
@@ -429,10 +465,16 @@ function pqs_terminal_residual_gto_augmentation(
     tau_neg = max(Float64(tau_neg_abs), Float64(tau_neg_rel) * max(lambda_max, 1.0))
     minimum(eigenvalues) >= -tau_neg ||
         throw(ArgumentError("residual-GTO metric has a negative eigenvalue beyond tolerance"))
-    retained = findall(>(tau_keep), eigenvalues)
-    length(retained) == candidate_count ||
-        throw(ArgumentError("residual-GTO rank-deficient candidate selection is not implemented in R3-A part 1"))
-    T_A = Matrix{Float64}(inv(sqrt(S_R)))
+    rank_target = count(>(tau_keep), eigenvalues)
+    rank_target > 0 ||
+        throw(ArgumentError("residual-GTO candidate metric has no retained directions"))
+    full_rank = rank_target == candidate_count
+    retained_indices = full_rank ? collect(1:candidate_count) :
+        _r3a_pivoted_cholesky_indices(S_R, rank_target, tau_keep)
+    selected_metric = Symmetric(Matrix{Float64}(S_R[retained_indices, retained_indices]))
+    transform = Matrix{Float64}(inv(sqrt(selected_metric)))
+    T_A = zeros(Float64, candidate_count, length(retained_indices))
+    T_A[retained_indices, :] .= transform
     T_G = Matrix{Float64}(-X * T_A)
     _canonicalize_residual_signs!(T_A, T_G)
     norm(T_G + X * T_A, Inf) <= orthogonality_atol ||
@@ -441,7 +483,6 @@ function pqs_terminal_residual_gto_augmentation(
               transpose(T_A) * transpose(X) * T_G + transpose(T_A) * S_AA * T_A
     norm(overlap - I, Inf) <= identity_atol ||
         throw(ArgumentError("residual-GTO R' S R validation failed"))
-    retained_indices = collect(1:candidate_count)
     owner_counts = Dict{Int,Int}()
     residual_labels = String[]
     for index in retained_indices
@@ -450,10 +491,11 @@ function pqs_terminal_residual_gto_augmentation(
         push!(residual_labels, string("r", owners[index], "_", count, "_", labels[index]))
     end
     return CartesianTerminalResidualGTOAugmentation(
-        basis.final_dimension, candidate_count, candidate_count, labels, owners, centers,
+        basis.final_dimension, candidate_count, length(retained_indices), labels, owners, centers,
         retained_indices, residual_labels, T_G, T_A, Float64[eigenvalues...],
         Float64(tau_abs), Float64(tau_rel), Float64(tau_neg_abs), Float64(tau_neg_rel),
-        :full_rank_candidate_order, :selected_candidate_order_symmetric_lowdin,
+        full_rank ? :full_rank_candidate_order : :rank_deficient_pivoted_cholesky,
+        :selected_candidate_order_symmetric_lowdin,
         :largest_T_A_entry_positive)
 end
 

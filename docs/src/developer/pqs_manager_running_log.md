@@ -8744,3 +8744,64 @@ Carrying-cost result:
 Risk / guardrail:
 - The same-construction entry is internal only. Do not promote it to R1/public
   facade, driver workflow, or artifact authority without a design amendment.
+
+## Cartesian Hamiltonian Producer Pass 059 - Handle R3-A Rank Loss
+
+Commit(s):
+- this commit - Handle R3A residual rank loss
+
+Summary:
+- Accepted deterministic rank-deficient residual selection in
+  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`. R3-A no
+  longer throws merely because the supplement candidate metric has near-null
+  directions. It computes the retained rank from the approved eigenvalue
+  threshold policy, selects independent raw candidate columns with a
+  deterministic pivoted-Cholesky rule, sorts retained indices back to ascending
+  candidate order, applies symmetric Lowdin on the selected metric, and embeds
+  the resulting transform into the full `T_A` rows.
+- The existing full-rank H2 path remains candidate-order symmetric Lowdin. The
+  residual object keeps the approved orientation symbol
+  `:selected_candidate_order_symmetric_lowdin`; manager review corrected a
+  transient new rank-loss orientation symbol before commit so the persistent
+  object vocabulary stays aligned with design authority.
+
+Validation:
+- Doer ran `git diff --check`, package load, the standalone R3 H2 endpoint
+  gate, and an ignored duplicate-candidate rank-loss probe. H2 remained full
+  rank with residual dimension `18`, augmented dimension `489`, and R3-B
+  self-Coulomb `0.4574256036192164`.
+- The ignored rank-loss probe used a duplicate H2 candidate set: candidate
+  count `19`, residual rank `18`, retained indices `[1, 2, ..., 18]`,
+  `G' S R = 0.0`, `R' S R` error `5.00e-12`, and no hidden negative-eigenvalue
+  violation.
+- Manager ran `git diff --check`, reviewed the one-file source diff, checked
+  the suspicious-line scan, verified the design vocabulary for `orientation`,
+  and accepted doer's fresh endpoint/probe validation without rerunning the
+  long scripts.
+
+Goal advancement:
+- R3: removes the rank-loss correctness blocker for realistic supplements
+  before larger Be2/Cr2-style work.
+- LT5: keeps residual-GTO construction deterministic and provenance-friendly
+  when raw supplement candidates are linearly dependent or already represented
+  by the base final basis.
+
+Carrying-cost result:
+- deleted: throw-only rank-loss branch.
+- simplified: full-rank and rank-deficient residual construction now share the
+  same validation and residual-object return path.
+- quarantined: ignored duplicate-candidate rank-loss probe remains under
+  `tmp/work`.
+- not deleted because: lower-level residual, augmented-operator, and R3-B
+  helpers remain live contracts.
+- exact remaining caller/blocker: bounded high-rank MWG storage, public/workflow
+  surfaces, R3-C artifacts, and Cr2 remain deferred.
+- added src lines: 49.
+- deleted src lines: 7.
+- new tests: none.
+- new metadata/status fields: none.
+
+Risk / guardrail:
+- This implements deterministic selection, not support for broad public
+  supplement workflows. Do not infer Cr2 readiness without the remaining
+  performance and workflow gates.
