@@ -198,3 +198,127 @@ function cartesian_base_hamiltonian(
         _cartesian_base_write_hamiltonian(String(hamfile), ham, input, parent)
     return ham
 end
+
+function _cartesian_r3_diatomic_inputs(system::NamedTuple, basis::NamedTuple)
+    _cartesian_base_check_keys(system, _CARTESIAN_BASE_SYSTEM_KEYS, "system")
+    _cartesian_base_check_basis_keys(basis, _CARTESIAN_BASE_H2_BASIS_REQUIRED_KEYS)
+    for field in (:atom_symbols, :nuclear_charges, :atom_locations)
+        getproperty(system, field) isa AbstractVector ||
+            throw(ArgumentError("system.$(field) must be an AbstractVector"))
+    end
+    symbols = String.(system.atom_symbols)
+    charges = Float64.(system.nuclear_charges)
+    locations = _cartesian_base_location.(system.atom_locations)
+    length(symbols) == length(charges) == length(locations) == 2 ||
+        throw(ArgumentError("R3 usability facade supports two-center systems only"))
+    symbols[1] == symbols[2] || throw(ArgumentError("heteronuclear supplements are unsupported"))
+    expected_charge, expected_electrons =
+        symbols[1] == "H" ? (1.0, 1) :
+        symbols[1] == "Be" ? (4.0, 4) :
+        throw(ArgumentError("only z-axis H2 and Be2 are supported"))
+    charges == [expected_charge, expected_charge] ||
+        throw(ArgumentError("unsupported nuclear charges for $(symbols[1])2"))
+    system.nup isa Integer && system.ndn isa Integer &&
+        !(system.nup isa Bool) && !(system.ndn isa Bool) ||
+        throw(ArgumentError("nup and ndn must be nonnegative integers"))
+    nup, ndn = Int(system.nup), Int(system.ndn)
+    nup == expected_electrons && ndn == expected_electrons ||
+        throw(ArgumentError("unsupported spin-sector electron counts"))
+    all(location -> location[1] == 0.0 && location[2] == 0.0, locations) ||
+        throw(ArgumentError("R3 usability facade supports Cartesian z-axis diatomics only"))
+    locations[1][3] != locations[2][3] ||
+        throw(ArgumentError("diatomic centers must be distinct"))
+    return (; symbols, charges, locations, nup, ndn, kind = :h2,
+        q = _cartesian_base_q(basis.q),
+        core_spacing = _cartesian_base_positive(basis.core_spacing, "basis.core_spacing"),
+        radius = nothing, d = nothing,
+        xmax_parallel = _cartesian_base_positive(basis.xmax_parallel, "basis.xmax_parallel"),
+        xmax_transverse = _cartesian_base_positive(basis.xmax_transverse, "basis.xmax_transverse"),
+        parent_axis_family = _cartesian_base_parent_axis_family(basis),
+        reference_spacing = _cartesian_base_get_positive(basis, :reference_spacing, 1.0),
+        tail_spacing = _cartesian_base_get_positive(basis, :tail_spacing, 10.0))
+end
+
+function _cartesian_r3_supplement_inputs(input, supplement::NamedTuple)
+    required = Set((:basis_by_center, :lmax))
+    optional = Set((:uncontracted, :width_filtering))
+    supplied = Set(Symbol.(keys(supplement)))
+    required ⊆ supplied && supplied ⊆ union(required, optional) ||
+        throw(ArgumentError("supplement has missing or unsupported keys"))
+    supplement.basis_by_center isa AbstractVector ||
+        throw(ArgumentError("supplement.basis_by_center must be an AbstractVector"))
+    all(label -> label isa AbstractString, supplement.basis_by_center) ||
+        throw(ArgumentError("supplement basis labels must be strings"))
+    basis_by_center = String.(supplement.basis_by_center)
+    length(basis_by_center) == length(input.symbols) ||
+        throw(ArgumentError("supplement basis count must match centers"))
+    all(==(first(basis_by_center)), basis_by_center) ||
+        throw(ArgumentError("heteronuclear basis labels are unsupported"))
+    supplement.lmax isa Integer && !(supplement.lmax isa Bool) ||
+        throw(ArgumentError("supplement.lmax must be an integer"))
+    lmax = Int(supplement.lmax)
+    0 <= lmax <= 6 || throw(ArgumentError("supplement.lmax must be between 0 and 6"))
+    uncontracted = haskey(supplement, :uncontracted) ? supplement.uncontracted : false
+    uncontracted isa Bool || throw(ArgumentError("supplement.uncontracted must be Bool"))
+    width_filtering = haskey(supplement, :width_filtering) ? supplement.width_filtering : nothing
+    max_width = nothing
+    if !isnothing(width_filtering)
+        width_filtering isa NamedTuple &&
+            Set(Symbol.(keys(width_filtering))) == Set((:max_width,)) ||
+            throw(ArgumentError("supplement.width_filtering must be nothing or (; max_width)"))
+        max_width = _cartesian_base_positive(
+            width_filtering.max_width, "supplement.width_filtering.max_width")
+    end
+    return (; basis_by_center, lmax, uncontracted, width_filtering, max_width)
+end
+
+function _cartesian_r3_h2_validation_fixture(input, supplement_input)
+    return input.symbols == ["H", "H"] && input.locations == [(0.0, 0.0, -2.0), (0.0, 0.0, 2.0)] &&
+           input.q == 5 && input.core_spacing == 0.5 &&
+           input.xmax_parallel == 6.0 && input.xmax_transverse == 4.0 &&
+           supplement_input.basis_by_center == ["cc-pVTZ", "cc-pVTZ"] &&
+           supplement_input.lmax == 1 && !supplement_input.uncontracted &&
+           isnothing(supplement_input.width_filtering)
+end
+
+function cartesian_residual_gto_mwg_hamiltonian(
+    system::NamedTuple;
+    basis::NamedTuple,
+    supplement::NamedTuple,
+    hamfile::Union{Nothing,AbstractString} = nothing,
+)::CartesianIDAHamiltonian{Float64}
+    !(!isnothing(hamfile) && isempty(String(hamfile))) ||
+        throw(ArgumentError("hamfile must not be empty"))
+    input = _cartesian_r3_diatomic_inputs(system, basis)
+    supplement_input = _cartesian_r3_supplement_inputs(input, supplement)
+    parent, transforms = _cartesian_base_stages(input)
+    terminal_basis = transforms.terminal_basis_realization
+    base_ham = _cartesian_base_ida_hamiltonian(
+        terminal_basis, parent.parent_axis_bundle_object,
+        input.locations, input.charges, input.nup, input.ndn)
+    raw_supplement = legacy_bond_aligned_diatomic_gaussian_supplement(
+        first(input.symbols), first(supplement_input.basis_by_center), input.locations;
+        lmax = supplement_input.lmax,
+        uncontracted = supplement_input.uncontracted,
+        max_width = supplement_input.max_width)
+    supplement_basis = basis_representation(raw_supplement)
+    C = CartesianFinalBasisRealization
+    residual = C.pqs_terminal_residual_gto_augmentation(
+        terminal_basis, parent.parent_axis_bundle_object, supplement_basis, input.locations)
+    operators = C.pqs_terminal_residual_gto_augmented_operators(
+        terminal_basis, parent.parent_axis_bundle_object, parent.parent_basis_object,
+        supplement_basis, residual, input.locations, input.charges)
+    ham = C.pqs_terminal_residual_gto_augmented_hamiltonian(
+        base_ham, terminal_basis, parent.parent_axis_bundle_object, residual, operators)
+    h2_fixture = _cartesian_r3_h2_validation_fixture(input, supplement_input)
+    isnothing(hamfile) || C.write_pqs_terminal_residual_gto_augmented_hamiltonian(
+        String(hamfile), ham, residual;
+        basis_by_center = supplement_input.basis_by_center,
+        lmax = supplement_input.lmax,
+        uncontracted = supplement_input.uncontracted,
+        width_filtering = supplement_input.width_filtering,
+        validation_check_labels = h2_fixture ?
+            (:h2_lowest_augmented_one_body_orbital_ida_self_coulomb,) : (),
+        h2_validation_self_coulomb = h2_fixture ? 0.4574256036192161 : nothing)
+    return ham
+end

@@ -1,4 +1,5 @@
 using GaussletBases
+using JLD2
 using LinearAlgebra
 using Test
 
@@ -170,6 +171,26 @@ function block_vgm_errors(basis, actual, expected)
     return direct, pqs
 end
 
+const FACADE_SYSTEM = (;
+    atom_symbols = ["H", "H"],
+    nuclear_charges = [1.0, 1.0],
+    atom_locations = NUCLEI,
+    nup = 1,
+    ndn = 1,
+)
+const FACADE_BASIS = (;
+    q = 5,
+    core_spacing = 0.5,
+    xmax_parallel = 6.0,
+    xmax_transverse = 4.0,
+)
+const FACADE_SUPPLEMENT = (;
+    basis_by_center = ["cc-pVTZ", "cc-pVTZ"],
+    lmax = 1,
+    uncontracted = false,
+    width_filtering = nothing,
+)
+
 elapsed = @elapsed @testset "R3-A H2 augmented one-body and moments" begin
     raw_supplement = legacy_bond_aligned_diatomic_gaussian_supplement(
         "H", "cc-pVTZ", NUCLEI; lmax = 1, uncontracted = false, max_width = nothing)
@@ -261,3 +282,95 @@ elapsed = @elapsed @testset "R3-A H2 augmented one-body and moments" begin
 end
 
 println("cartesian_r3a_h2_augmented_one_body_elapsed_s=", elapsed)
+
+facade_elapsed = @elapsed @testset "R3 H2 supplemented Hamiltonian facade" begin
+    artifact = joinpath(mktempdir(), "r3_h2_supplemented.jld2")
+    ham = GaussletBases.cartesian_residual_gto_mwg_hamiltonian(
+        FACADE_SYSTEM; basis = FACADE_BASIS, supplement = FACADE_SUPPLEMENT,
+        hamfile = artifact)
+    @test ham isa CartesianIDAHamiltonian{Float64}
+    @test size(ham.electron_electron_ida) == (489, 489)
+    H = one_body_hamiltonian(ham)
+    eig = eigen(Symmetric(H))
+    orbital = eig.vectors[:, argmin(eig.values)]
+    facade_self_coulomb = self_coulomb(ham.electron_electron_ida, orbital)
+    @test facade_self_coulomb ≈ 0.4574256036192161 atol = 1.0e-10
+
+    readback = read_cartesian_ida_hamiltonian(artifact)
+    kinetic_delta = norm(readback.kinetic - ham.kinetic, Inf)
+    V_delta = norm(readback.electron_electron_ida - ham.electron_electron_ida, Inf)
+    one_body_delta = norm(one_body_hamiltonian(readback) - H, Inf)
+    @test kinetic_delta <= 1.0e-12
+    @test V_delta <= 1.0e-12
+    @test one_body_delta <= 1.0e-12
+    unit_delta = 0.0
+    for (left, right) in zip(readback.nuclear_attraction_unit_by_center,
+                             ham.nuclear_attraction_unit_by_center)
+        unit_delta = max(unit_delta, norm(left - right, Inf))
+    end
+    @test unit_delta <= 1.0e-12
+
+    required = (
+        :provenance_version, :producer, :supplement_policy, :basis_by_center,
+        :lmax, :uncontracted, :width_filtering, :candidate_count, :owner_counts,
+        :base_dimension, :residual_dimension, :augmented_dimension,
+        :augmented_basis_order, :residual_basis_convention, :rank_rule,
+        :tau_abs, :tau_rel, :tau_neg_abs, :tau_neg_rel, :mwg_convention_version,
+        :mwg_convention, :one_body_source, :interaction_source,
+        :validation_check_labels, :h2_self_coulomb_reference,
+    )
+    JLD2.jldopen(artifact, "r") do file
+        values = Dict{Symbol,Any}()
+        for key in required
+            path = "supplement_provenance/$(key)"
+            @test haskey(file, path)
+            values[key] = file[path]
+        end
+        @test values[:producer] === :cartesian_residual_gto_mwg_augmentation
+        @test values[:supplement_policy] === :mwg_residual_gto
+        @test values[:basis_by_center] == FACADE_SUPPLEMENT.basis_by_center
+        @test values[:lmax] == 1
+        @test values[:uncontracted] == false
+        @test values[:width_filtering] === nothing
+        @test values[:candidate_count] == 18
+        @test values[:owner_counts] == [9, 9]
+        @test values[:base_dimension] == 471
+        @test values[:residual_dimension] == 18
+        @test values[:augmented_dimension] == 489
+        @test values[:augmented_basis_order] === :base_then_residual
+        @test values[:rank_rule] === :full_rank_candidate_order
+        @test values[:interaction_source] === :weight_aware_residual_mwg_ida_blocks
+        @test values[:h2_self_coulomb_reference] == 0.4574256036192161
+    end
+
+    @test_throws ArgumentError GaussletBases.cartesian_residual_gto_mwg_hamiltonian(
+        merge(FACADE_SYSTEM, (; extra = true));
+        basis = FACADE_BASIS, supplement = FACADE_SUPPLEMENT)
+    @test_throws ArgumentError GaussletBases.cartesian_residual_gto_mwg_hamiltonian(
+        FACADE_SYSTEM; basis = merge(FACADE_BASIS, (; radius = 4.0)),
+        supplement = FACADE_SUPPLEMENT)
+    @test_throws ArgumentError GaussletBases.cartesian_residual_gto_mwg_hamiltonian(
+        FACADE_SYSTEM; basis = FACADE_BASIS,
+        supplement = merge(FACADE_SUPPLEMENT, (; extra = true)))
+    @test_throws ArgumentError GaussletBases.cartesian_residual_gto_mwg_hamiltonian(
+        FACADE_SYSTEM; basis = FACADE_BASIS,
+        supplement = merge(FACADE_SUPPLEMENT, (; width_filtering = (; min_width = 1.0))))
+    @test_throws ArgumentError GaussletBases.cartesian_residual_gto_mwg_hamiltonian(
+        merge(FACADE_SYSTEM, (; atom_locations = [(-2.0, 0.0, 0.0), (2.0, 0.0, 0.0)]));
+        basis = FACADE_BASIS, supplement = FACADE_SUPPLEMENT)
+    @test_throws ArgumentError GaussletBases.cartesian_residual_gto_mwg_hamiltonian(
+        merge(FACADE_SYSTEM, (; atom_locations = [(1.0, 0.0, -2.0), (1.0, 0.0, 2.0)]));
+        basis = FACADE_BASIS, supplement = FACADE_SUPPLEMENT)
+    @test_throws ArgumentError GaussletBases.cartesian_residual_gto_mwg_hamiltonian(
+        (; atom_symbols = ["Cr", "Cr"], nuclear_charges = [24.0, 24.0],
+         atom_locations = NUCLEI, nup = 24, ndn = 24);
+        basis = FACADE_BASIS, supplement = FACADE_SUPPLEMENT)
+
+    println("r3u_h2_facade_self_coulomb=", facade_self_coulomb,
+        " delta=", facade_self_coulomb - 0.4574256036192161)
+    println("r3u_h2_facade_readback_deltas kinetic=", kinetic_delta,
+        " unit_U=", unit_delta, " one_body=", one_body_delta, " V=", V_delta)
+    println("r3u_h2_facade_artifact=", artifact)
+end
+
+println("cartesian_r3u_h2_facade_elapsed_s=", facade_elapsed)

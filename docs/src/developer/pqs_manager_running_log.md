@@ -8999,3 +8999,70 @@ Risk / guardrail:
 - The facade is supported internal surface, not public API. Do not edit
   `src/GaussletBases.jl`, add an export, or add a new source/test file under
   this approval.
+
+## Cartesian Hamiltonian Producer Pass 063 - Implement R3 Usability Facade
+
+Commit(s):
+- this commit - Add R3 usability supplemented facade
+
+Summary:
+- Accepted the non-exported internal usability facade
+  `cartesian_residual_gto_mwg_hamiltonian(system; basis, supplement,
+  hamfile = nothing)` in `src/cartesian_base_hamiltonian.jl`. The facade
+  validates the approved z-axis H2/Be2 input contract, builds base stages once,
+  constructs the base Hamiltonian and R3 supplemented Hamiltonian from the same
+  terminal basis and parent bundles, and optionally writes the R3-C
+  `supplement_provenance/` artifact.
+- The existing standalone R3 endpoint test was extended with one facade
+  section. It exercises the H2 supplemented artifact path, readback deltas,
+  provenance keys, and malformed-input/unsupported-system errors.
+- No public export, root include, new source file, new committed test file,
+  driver/bin/tool workflow, wrapper, report/status/payload object, or new
+  artifact key family was added.
+
+Validation:
+- Doer ran `git diff --check`, package load, and the standalone R3 endpoint
+  gate. The original R3-A/B section passed `49/49`; the new facade section
+  passed `54/54`. The H2 supplemented artifact readback reported kinetic,
+  unit-`U`, one-body, and `V` deltas of `0.0`.
+- Manager reviewed the source/test diffs, confirmed no `src/GaussletBases.jl`
+  export change, ran `git diff --check`, the suspicious-line scan, package
+  load, and reran the standalone R3 endpoint gate after tightening the H2
+  validation-reference predicate. The rerun passed `49/49` plus `54/54`.
+
+Endpoint facts:
+- Augmented dimension `489`.
+- R3-B self-Coulomb `0.4574256036192164`, delta
+  `3.33e-16` from the accepted target.
+- Facade artifact path in manager rerun:
+  `/Users/srw/dmrgtmp/jl_TchLVP/r3_h2_supplemented.jld2`.
+- Facade readback deltas: kinetic `0.0`, unit `U` `0.0`, one-body `0.0`,
+  `V` `0.0`.
+
+Goal advancement:
+- R3/LT6: turns the accepted residual-GTO/MWG pieces into a usable internal
+  workflow for producing supplemented Hamiltonians and artifacts.
+- MT4: advances the usability lane while keeping Cr2, public export, solver,
+  and ECP/EGOI work deferred.
+
+Carrying-cost result:
+- deleted: none.
+- simplified: callers no longer need to manually compose base stages, R3
+  residual/operator/Hamiltonian calls, and R3-C writer calls.
+- quarantined: Be2 remains internal/performance-supported and is not a
+  committed gate.
+- not deleted because: lower-level R3-A/B/C helpers remain the scientific
+  implementation authority and validation seams.
+- exact remaining caller/blocker: public/exported supplemented workflow,
+  Cr2-readiness forecasting, ECP/EGOI/RHF/solver, and HamV6 remain deferred.
+- added src lines: 124.
+- deleted src lines: 0.
+- new tests: extended one existing standalone endpoint file by 113 lines; no
+  new committed test file.
+- new metadata/status fields: none; artifact provenance stays within approved
+  `supplement_provenance/`.
+
+Risk / guardrail:
+- The facade is module-qualified internal supported workflow, not a public API.
+  The H2 self-Coulomb reference is written only for the exact validation
+  fixture, not arbitrary H2 inputs.
