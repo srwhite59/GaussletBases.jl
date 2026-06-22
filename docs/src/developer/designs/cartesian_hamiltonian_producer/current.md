@@ -75,6 +75,11 @@ Approved R3-A residual-GTO exact one-body/moment scope:
 - allowed numerical work: deterministic residual-basis construction plus exact
   augmented `K`, uncharged `U_A`, and moment matrices `x`/`y`/`z`/`x^2`/`y^2`/
   `z^2`;
+- implementation organization: R3-A may use the QW analytic 1D-table donor
+  pattern inside the approved owner file to build full parent-by-supplement
+  `G-A` blocks once and project them through terminal blocks. This does not
+  approve parent-by-parent global operators, a new shared QW API, persistent
+  provider bundles, payloads, or edits outside the approved file;
 - first validation gate: H2 augmented one-body/moment endpoint only, checking
   `G' S R`, `R' S R`, base G-G block equality, finite/symmetric augmented
   operators and moments, and `E1_aug <= E1_base + epsilon`.

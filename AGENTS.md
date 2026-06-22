@@ -467,6 +467,17 @@ provenance, public API expansion, driver/bin/tool workflow, broad provider
 payloads, status/result objects, report fields, Be2 first-gate validation, or
 Cr2 validation.
 
+`HP-R3-FN-02` does not require CPB providers as the only exact-block
+implementation. Inside
+`src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`, R3-A may
+use the QW analytic 1D-table donor organization to build full
+parent-by-supplement `G-A` matrices once and project them through terminal
+blocks. That rectangular cross data is allowed; parent-by-parent global
+operators, dense global pair matrices, edits to `src/ordinary_qw_raw_blocks.jl`,
+new shared QW APIs, persistent provider bundles, payload/status/report
+surfaces, artifact/provenance, public APIs, driver/tool workflows, Be2
+validation gates, and Cr2 work are not approved.
+
 `HP-R3-FN-03` approves only the R3-B in-memory residual-MWG/IDA interaction
 continuation in
 `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`, owned by

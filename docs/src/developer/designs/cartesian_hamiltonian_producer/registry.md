@@ -542,6 +542,18 @@ This applies to kinetic, every uncharged by-center nuclear attraction, `x`,
 construction boundary and must not recover them from an arbitrary base
 Hamiltonian.
 
+`HP-R3-FN-02` does not require CPB providers as the only exact-block
+implementation. Inside the approved owner file, R3-A may use the QW analytic
+1D-table donor organization to build full parent-by-supplement `G-A` matrices
+once for overlap, kinetic, position, second moments, and by-center nuclear
+attraction, then project parent rows through terminal blocks. It may reuse the
+once-built overlap `G-A` block for `X = G' S A` and use the once-built
+`G-A`/`A-A` blocks in `pqs_terminal_residual_gto_augmented_operators`. This is
+allowed rectangular cross data, not an approved parent-by-parent global
+operator, dense global pair matrix, new shared QW API, persistent provider
+bundle, payload/status/report surface, artifact/provenance, public API,
+driver/tool workflow, Be2 validation gate, or Cr2 work.
+
 ### HP-R3-TEST-01 — first augmented one-body endpoint validation
 
 Approved standalone R3-A/R3-B endpoint gate:
