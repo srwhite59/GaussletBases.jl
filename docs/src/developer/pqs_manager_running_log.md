@@ -8387,3 +8387,65 @@ Risk / guardrail:
 - This cleanup does not approve R3-B source work. R3-B remains owned by
   repo-design-manager approval and must not reintroduce a provider-blocker
   preflight layer.
+
+## Cartesian Hamiltonian Producer Pass 053 - Implement R3-B Compact MWG Hamiltonian
+
+Commit(s):
+- this branch - Add R3B compact MWG Hamiltonian assembly
+
+Summary:
+- Accepted the reapproved `HP-R3-FN-03` implementation in the existing
+  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` file.
+  The new internal function
+  `pqs_terminal_residual_gto_augmented_hamiltonian(...)` consumes the base
+  Hamiltonian, terminal basis, R3-A residual object, and R3-A exact augmented
+  one-body/moment matrices, then returns the existing
+  `CartesianIDAHamiltonian{Float64}`.
+- The implementation derives residual MWG centers and widths from exact R3-A
+  moment diagonals using the compact convention `sigma = sqrt(2v)`, rejects
+  invalid variances/widths, builds density-normalized `G-M` and `M-M`
+  interaction blocks from the existing QW donor kernels, reuses the base
+  `V_GG`, and assembles `V_aug`.
+- No artifacts, public API, driver/bin/tool workflow, payload/result/status
+  object, committed test, Be2/Cr2 validation, or RHF/solver work was added.
+
+Validation:
+- Doer ran `git diff --check`, package load, and the ignored
+  `tmp/work/r3b_h2_augmented_hamiltonian_validation.jl`.
+- Manager reviewed the one-file diff, checked the QW donor helper signatures,
+  confirmed the corrected R3-B scalar in active authority docs, ran
+  `git diff --check`, package load, the suspicious-line scan, and reran the
+  ignored R3-B H2 validation script.
+
+Endpoint facts:
+- Augmented dimension `489`.
+- MWG center range `(-3.3667418611021276, 3.3667418611025823)`.
+- MWG width range `(0.6597141664082136, 7.262076101034195)`.
+- `V_aug` symmetry error `1.5543122344752192e-15`; base `V_GG` delta `0.0`.
+- Lowest augmented one-body orbital IDA self-Coulomb
+  `0.4574331709135599`, exactly matching the corrected compact-path target.
+
+Goal advancement:
+- R3: completes the first in-memory supplemented H2 Hamiltonian endpoint under
+  the compact R3-A/R3-B convention.
+- LT5/LT6: extends the common final-basis Hamiltonian boundary to residual-GTO
+  augmentation without introducing a parallel payload or artifact framework.
+
+Carrying-cost result:
+- deleted: none.
+- simplified: compact R3-B directly reuses R3-A exact moments, base `V_GG`,
+  and existing QW density-normalized pair-factor kernels.
+- quarantined: ignored R3-B validation remains under `tmp/work`.
+- not deleted because: QW donor kernels remain active reuse/oracle sources;
+  R3-C artifact/provenance is still unapproved.
+- exact remaining caller/blocker: `HP-R3-ART-01` and public/driver workflow
+  remain candidate-only; no committed R3-B test update was added in this pass.
+- added src lines: 123.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.
+
+Risk / guardrail:
+- Do not reintroduce the superseded `0.457435475059184` private-gauge scalar,
+  width scaling, or tolerance relaxation. The accepted compact R3-B baseline is
+  `0.4574331709135599` for this fixture.

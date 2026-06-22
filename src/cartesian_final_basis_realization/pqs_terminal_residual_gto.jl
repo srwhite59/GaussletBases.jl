@@ -21,6 +21,129 @@ end
 
 const _GB_PARENT = parentmodule(@__MODULE__)
 
+function _r3b_residual_mwg_descriptors(operators, residual)
+    nG, nR = residual.base_dimension, residual.residual_dimension
+    rows = (nG + 1):(nG + nR)
+    centers = zeros(Float64, nR, 3)
+    widths = zeros(Float64, nR, 3)
+    for (axis_index, axis) in pairs((:x, :y, :z))
+        position = operators.position[axis]
+        second = operators.x2[axis]
+        for (residual_index, row) in enumerate(rows)
+            center = Float64(position[row, row])
+            variance = Float64(second[row, row]) - center^2
+            isfinite(center) && isfinite(variance) && variance > 0.0 ||
+                throw(ArgumentError("R3-B residual MWG moment variance must be finite positive"))
+            centers[residual_index, axis_index] = center
+            widths[residual_index, axis_index] = sqrt(2.0 * variance)
+            isfinite(widths[residual_index, axis_index]) &&
+                widths[residual_index, axis_index] > 0.0 ||
+                throw(ArgumentError("R3-B residual MWG width must be finite positive"))
+        end
+    end
+    return centers, widths
+end
+
+_r3b_axis_bundle(bundles, axis::Int) =
+    axis == 1 ? bundles.bundle_x : axis == 2 ? bundles.bundle_y : bundles.bundle_z
+
+function _r3b_mwg_axis_pairs(bundles, expansion, residual_centers, residual_widths)
+    qw = _GB_PARENT
+    effective = getfield(qw, :_qwrg_effective_gaussians)(residual_centers, residual_widths)
+    split = ntuple(axis -> getfield(qw, :_qwrg_split_block_matrices)(
+        _r3b_axis_bundle(bundles, axis), effective[axis], expansion), 3)
+    analytic = ntuple(axis -> getfield(qw, :_qwrg_gaussian_analytic_blocks)(
+        effective[axis], expansion), 3)
+    weights = ntuple(axis -> getfield(qw, :_qwrg_supplement_integral_weights)(
+        effective[axis]), 3)
+    normalize = getfield(qw, :_qwrg_density_normalized_pair_matrices)
+    return (;
+        ga = ntuple(axis -> normalize(split[axis].pair_ga, split[axis].weight_gg,
+            weights[axis]; label = "R3-B MWG $((:x, :y, :z)[axis]) G-M"), 3),
+        aa = ntuple(axis -> normalize(analytic[axis].pair_aa, weights[axis],
+            weights[axis]; label = "R3-B MWG $((:x, :y, :z)[axis]) M-M"), 3),
+    )
+end
+
+function _r3b_terminal_mwg_fixed_residual(basis, pair_terms, coefficients)
+    nR = size(first(pair_terms.ga[1]), 2)
+    V_GM = zeros(Float64, basis.final_dimension, nR)
+    for block in basis.blocks
+        local_values = zeros(Float64, length(block.support_states), nR)
+        for residual in 1:nR
+            column = view(local_values, :, residual)
+            @inbounds for (row, state) in pairs(block.support_states)
+                ix, iy, iz = state
+                value = 0.0
+                for term in eachindex(coefficients)
+                    value += Float64(coefficients[term]) *
+                        pair_terms.ga[1][term][ix, residual] *
+                        pair_terms.ga[2][term][iy, residual] *
+                        pair_terms.ga[3][term][iz, residual]
+                end
+                column[row] = value
+            end
+        end
+        block.coefficients === nothing ?
+            (V_GM[block.column_range, :] .= local_values) :
+            mul!(view(V_GM, block.column_range, :), transpose(block.coefficients),
+                local_values)
+    end
+    return V_GM
+end
+
+function _r3b_mwg_residual_residual(pair_terms, coefficients)
+    nR = size(first(pair_terms.aa[1]), 1)
+    V_MM = zeros(Float64, nR, nR)
+    for i in 1:nR, j in i:nR
+        value = 0.0
+        for term in eachindex(coefficients)
+            value += Float64(coefficients[term]) *
+                pair_terms.aa[1][term][i, j] *
+                pair_terms.aa[2][term][i, j] *
+                pair_terms.aa[3][term][i, j]
+        end
+        V_MM[i, j] = value
+        V_MM[j, i] = value
+    end
+    return V_MM
+end
+
+function pqs_terminal_residual_gto_augmented_hamiltonian(
+    base_hamiltonian,
+    basis::CartesianTerminalBasisRealization,
+    bundles,
+    residual::CartesianTerminalResidualGTOAugmentation,
+    augmented_operators;
+    expansion = nothing,
+)
+    nG, nR = residual.base_dimension, residual.residual_dimension
+    size(base_hamiltonian.electron_electron_ida) == (nG, nG) ||
+        throw(DimensionMismatch("R3-B base Hamiltonian V_GG dimension mismatch"))
+    centers, widths = _r3b_residual_mwg_descriptors(augmented_operators, residual)
+    expansion_value = isnothing(expansion) ?
+        getfield(_GB_PARENT, :coulomb_gaussian_expansion)(doacc = false) : expansion
+    pair_terms = _r3b_mwg_axis_pairs(bundles, expansion_value, centers, widths)
+    V_GM = _r3b_terminal_mwg_fixed_residual(basis, pair_terms, expansion_value.coefficients)
+    V_MM = _r3b_mwg_residual_residual(pair_terms, expansion_value.coefficients)
+    V = zeros(Float64, nG + nR, nG + nR)
+    residual_range = (nG + 1):(nG + nR)
+    V[1:nG, 1:nG] .= base_hamiltonian.electron_electron_ida
+    V[1:nG, residual_range] .= V_GM
+    V[residual_range, 1:nG] .= transpose(V_GM)
+    V[residual_range, residual_range] .= V_MM
+    Hamiltonian = getfield(_GB_PARENT, :CartesianIDAHamiltonian)
+    return Hamiltonian(
+        augmented_operators.kinetic,
+        augmented_operators.nuclear_attraction_unit_by_center,
+        V,
+        base_hamiltonian.nup,
+        base_hamiltonian.ndn;
+        nuclear_charges = base_hamiltonian.nuclear_charges,
+        nuclear_positions = base_hamiltonian.nuclear_positions,
+    )
+end
+
 function _residual_candidate_owner(center, nuclei)
     matches = findall(==(center), nuclei)
     length(matches) == 1 ||
