@@ -493,8 +493,12 @@ Status: approved for implementation under `HP-DRV-FILE-01`,
 Approved boundary:
 
 - source file `bin/cartesian_ham_builder.jl`;
-- source file `src/cartesian_base_hamiltonian.jl` only for the staged producer
-  surface;
+- source file `src/cartesian_base_hamiltonian.jl` for the driver-facing staged
+  producer surface;
+- source files `src/pqs_source_box_low_order_materialization.jl`,
+  `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl`, and
+  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` only for
+  behavior-preserving physical operator-class stage factoring;
 - compact driver invocation
   `julia --project=. bin/cartesian_ham_builder.jl [input.jl] [key=value ...]`;
 - visible editable defaults, one optional trusted project input file,
@@ -513,9 +517,10 @@ Allowed workflow:
 - call the staged producer surface as separate visible top-level stage calls,
   not as one all-in-one staged replacement wrapper;
 - time and print visible physics-level stages: base working basis / terminal
-  realization, base Hamiltonian assembly, Gaussian supplement, residual
-  augmentation, exact augmented operators, supplemented Hamiltonian assembly,
-  and artifact write/check;
+  realization, product/moment operators, unit-nuclear attraction operators,
+  electron-electron / IDA or residual-MWG interactions, base Hamiltonian
+  assembly, Gaussian supplement, residual augmentation, supplemented
+  Hamiltonian assembly, and artifact write/check;
 - write existing `CartesianIDAHamiltonian` artifacts with approved provenance
   groups;
 - print user-facing summaries and timing.
@@ -538,7 +543,8 @@ Forbidden:
 - private route-stage controls, stop-after internals, ladder probes, stage
   markers, fixture hacks, diagnostic knobs, underscored package helper calls,
   raw-block provider switches, report/status/payload dumps, metadata clouds,
-  allocation probes, benchmark harness behavior, solver/RHF/ECP/EGOI/HamV6,
+  allocation probes, per-kernel timing frameworks, benchmark harness behavior,
+  solver/RHF/ECP/EGOI/HamV6,
   private contract construction, artifact schema dumps, public API/export
   changes, artifact schema changes, committed tests, committed input fixtures,
   supplemented atoms, old route-stage choreography, Cr2-specific driver runs,
@@ -562,12 +568,14 @@ Validation gates:
 Line budget:
 
 - at most `150` added `bin` lines;
-- at most `150` added `src` lines in `src/cartesian_base_hamiltonian.jl`;
+- at most `200` added `src` lines across the approved staged-driver source
+  files;
 - no new committed test or tool file;
 - stop for a new amendment if a parser framework, source files outside the
   canonical driver and staged producer owner, route-stage diagnostics,
-  status/report/payload expansion, artifact schema changes, public API/export
-  changes, or Cr2-specific workflow support are required.
+  raw-block changes, kernel rewrites, status/report/payload expansion,
+  artifact schema changes, public API/export changes, or Cr2-specific workflow
+  support are required.
 
 ## Canonical Driver Atom Workflow
 

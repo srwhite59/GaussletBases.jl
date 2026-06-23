@@ -1336,6 +1336,9 @@ Approved source file:
 
 ```text
 src/cartesian_base_hamiltonian.jl
+src/pqs_source_box_low_order_materialization.jl
+src/cartesian_final_basis_realization/pqs_terminal_one_body.jl
+src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl
 ```
 
 Approved purpose: expose a small non-exported, non-underscored,
@@ -1343,22 +1346,41 @@ driver-facing staged producer surface so the canonical driver can execute and
 time visible physics-level construction stages without calling private
 underscored helpers.
 
+`src/cartesian_base_hamiltonian.jl` remains the primary driver-facing owner.
+The lower-level files listed above are approved only for behavior-preserving
+operator-class stage factoring in their existing domains; they are not
+approved for new algorithms, raw-block changes, or diagnostics.
+
 Approved visible stages are:
 
 - construct public `system`, `basis`, and optional `supplement`;
 - build the base working basis / terminal realization;
+- build base product/moment operators;
+- build base unit-nuclear attraction operators;
+- build base electron-electron / IDA interaction;
 - assemble the base Hamiltonian;
 - load or build the Gaussian supplement basis when `basisname !== nothing`;
 - build residual Gaussian augmentation;
-- build exact augmented operators;
+- build augmented product/moment operators;
+- build augmented unit-nuclear attraction operators;
+- build augmented electron-electron / residual-MWG interaction;
 - assemble the supplemented Hamiltonian;
 - write and check the artifact.
 
+Approved physical operator classes are:
+
+- product/moment operators: kinetic `K`, Cartesian coordinate moments
+  `x`/`y`/`z`, and second moments `x^2`/`y^2`/`z^2` where present;
+- unit-nuclear attraction: uncharged by-center `U_A` / `Vnuc` matrices before
+  applying physical nuclear charges;
+- electron-electron interaction: base localized IDA `Vee` and supplemented
+  residual-MWG/IDA `Vee`.
+
 The first and last stages remain driver/writer responsibilities. This ID
 approves source factoring needed for the base working-basis/terminal
-realization, base-Hamiltonian assembly, Gaussian supplement, residual
-augmentation, exact augmented operators, and supplemented-Hamiltonian assembly
-stages.
+realization, base product/moment, base unit-nuclear, base IDA, Gaussian
+supplement, residual augmentation, augmented product/moment, augmented
+unit-nuclear, residual-MWG/IDA, and Hamiltonian assembly stages.
 
 The staged surface may factor the existing `cartesian_base_hamiltonian(...)`
 and `cartesian_residual_gto_mwg_hamiltonian(...)` bodies so that those facades
@@ -1369,20 +1391,22 @@ next approved stage.
 The staged surface must be a set of separate named construction-stage
 functions. It must not be a single opaque replacement wrapper that hides the
 same construction sequence under a new name. The canonical driver must be able
-to bind visible local variables for the base realization, base Hamiltonian,
-supplement basis, residual augmentation, exact augmented operators, and final
-Hamiltonian assembly.
+to bind visible local variables for the base realization, base products,
+base unit-nuclear operators, base `Vee`, base Hamiltonian, supplement basis,
+residual augmentation, augmented products, augmented unit-nuclear operators,
+augmented `Vee`, and final Hamiltonian assembly.
 
 This ID does not approve public exports, public API redesign, route-stage
 objects, reports, status/result payloads, metadata field clouds, runtime-keyed
-field groups, persistent caches, raw-block switches, solver/ECP workflow,
-artifact schema changes, or source files outside
-`src/cartesian_base_hamiltonian.jl`.
+field groups, persistent caches, raw-block switches, allocation probes,
+per-kernel timing frameworks, solver/ECP workflow, artifact schema changes, or
+source files outside the four approved paths listed above.
 
-Line budget: at most `150` added `src` lines. If the staged surface requires a
-new module, source files outside `src/cartesian_base_hamiltonian.jl`, a broad
-payload object, committed tests, or new artifact keys, stop and request a new
-docs-only amendment.
+Line budget: at most `200` added `src` lines across the approved source files.
+If the staged surface requires a new module, source files outside the four
+approved paths, a broad payload object, committed tests, new artifact keys,
+raw-block changes, or kernel rewrites, stop and request a new docs-only
+amendment.
 
 ### HP-DRV-STAGE-WIRE-01 — canonical driver staged wiring
 
@@ -1397,6 +1421,12 @@ as separate top-level stage calls and assign local variables using the approved
 physics-stage names. It may print or record coarse user-facing timings for
 those stages. Replacing the current facade call with one all-in-one staged
 wrapper call is not approved for the canonical driver.
+
+Driver timing should expose the three physical operator classes separately:
+product/moment, unit-nuclear, and electron-electron. These timings are
+user-facing stage timings only. They must not become allocation probes,
+raw-block timing controls, per-kernel instrumentation, or diagnostic stop
+points.
 
 This ID does not approve calls from the driver to underscored package helpers,
 old route stages such as `cartesian_parent`, `cartesian_shells`,

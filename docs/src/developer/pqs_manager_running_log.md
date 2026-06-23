@@ -12099,3 +12099,58 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 099 - Approve Operator-Class Driver Stages
+
+Commit(s):
+- this commit - Approve operator-class driver stage timings
+
+Summary:
+- Refined `HP-DRV-STAGE-*` so visible driver stages distinguish physical
+  operator classes, not only broad Hamiltonian phases.
+- Approved separate coarse stages for product/moment operators, unit-nuclear
+  attraction operators, and electron-electron / IDA or residual-MWG
+  interactions. This makes the expected timing model visible: product/moment
+  work should remain fast, while unit-nuclear and electron-electron work may be
+  long.
+- Expanded the staged-driver source surface narrowly beyond
+  `src/cartesian_base_hamiltonian.jl` to include
+  `src/pqs_source_box_low_order_materialization.jl`,
+  `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl`, and
+  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` only for
+  behavior-preserving operator-class stage factoring in their existing domains.
+
+Validation:
+- Design-manager validation: docs-only `git diff --check`, focused `rg` for
+  product/moment, unit-nuclear, electron-electron, approved source file names,
+  and forbidden raw-block/diagnostic/probe wording. Local `src`/`bin` WIP was
+  present but not part of this docs pass; cached validation confirmed no
+  `src`, `test`, `tools`, or `bin` files were staged. No implementation tests
+  were run.
+
+Goal advancement:
+- LT1/LT3: improves the canonical driver as an expert-readable construction
+  script and makes timing useful without exposing route internals.
+- RG/LT6: supports Cr-scale usability by making long operator classes visible
+  while preserving the ban on diagnostics, raw-block switches, per-kernel
+  instrumentation, solver/ECP workflow, and Cr2-specific branches.
+
+Carrying-cost result:
+- deleted: none; docs-only authority pass.
+- simplified: replaces one coarse "exact augmented operators" stage with the
+  physical operator-class split that users actually need for timing.
+- quarantined: raw-block provider switches, allocation probes, per-kernel
+  timing frameworks, old route stages, underscored helper calls from the
+  driver, report/status payloads, artifact schema dumps, solver/ECP workflow,
+  Cr2-specific workflow, and supplemented atoms remain unapproved.
+- not deleted because: source factoring has not run yet.
+- exact remaining caller/blocker: repo-doer may edit only the canonical driver
+  plus the four approved staged-driver source files for this lane; stop if the
+  operator-class split requires raw-block changes, kernel rewrites, new modules,
+  broad payload/report/status objects, public API/export changes, artifact
+  schema changes, committed fixtures/tests, route diagnostics, allocation
+  probes, per-kernel timing frameworks, or a single all-in-one staged wrapper.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

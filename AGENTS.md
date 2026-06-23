@@ -921,24 +921,34 @@ substitute for constructing public `system`, `basis`, and optional
 `supplement` objects.
 
 `HP-DRV-STAGE-FN-01` approves only a narrow non-exported, non-underscored
-driver-facing staged producer surface in `src/cartesian_base_hamiltonian.jl`.
-That surface may factor the existing base and residual-GTO/MWG facade bodies so
-the canonical driver can execute visible physics-level stages: base working
-basis / terminal realization, base Hamiltonian assembly, Gaussian supplement,
-residual Gaussian augmentation, exact augmented operators, supplemented
+driver-facing staged producer surface. Approved source files are
+`src/cartesian_base_hamiltonian.jl`,
+`src/pqs_source_box_low_order_materialization.jl`,
+`src/cartesian_final_basis_realization/pqs_terminal_one_body.jl`, and
+`src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`.
+`src/cartesian_base_hamiltonian.jl` remains the primary driver-facing owner;
+the lower-level files are approved only for behavior-preserving
+operator-class stage factoring in their existing domains. That surface may
+factor the existing base and residual-GTO/MWG facade bodies so the canonical
+driver can execute visible physics-level stages: base working basis / terminal
+realization, product/moment operators, unit-nuclear attraction operators,
+electron-electron / IDA or residual-MWG interactions, base Hamiltonian
+assembly, Gaussian supplement, residual Gaussian augmentation, supplemented
 Hamiltonian assembly, followed by the existing artifact writer/readback stage.
 The staged surface must be separate named construction-stage functions, not one
 all-in-one replacement wrapper. It may return existing domain objects and small
 fixed-key ephemeral stage products needed by the next stage, but it must not
 create a public API/export, route-stage object, report, status/result payload,
 metadata field cloud, runtime-keyed field group, persistent cache, artifact
-schema, or source files outside `src/cartesian_base_hamiltonian.jl`.
+schema, raw-block switch, allocation probe, per-kernel timing framework, or
+source files outside the approved paths.
 
 `HP-DRV-STAGE-WIRE-01` allows `bin/cartesian_ham_builder.jl` to call that staged
 producer surface as separate visible top-level stage calls and time/print the
-visible physics stages. It does not approve one opaque staged wrapper call,
-driver calls to underscored package helpers, or old route stages such as
-`cartesian_parent`, `cartesian_shells`, `cartesian_units`,
+visible physics stages. Driver timing must distinguish product/moment,
+unit-nuclear, and electron-electron stages. It does not approve one opaque
+staged wrapper call, driver calls to underscored package helpers, or old route
+stages such as `cartesian_parent`, `cartesian_shells`, `cartesian_units`,
 `cartesian_pair_terms`, or `cartesian_assembly`.
 
 `HP-R3U-ZDI-FN-01` relaxes the supplemented facade from hardcoded H2/Be2 checks

@@ -2,10 +2,10 @@
 
 Status: approved narrow source authority for making
 `bin/cartesian_ham_builder.jl` a compact functional Hamiltonian producer
-driver, plus a narrow internal staged producer surface in
-`src/cartesian_base_hamiltonian.jl` so the driver can execute visible
-physics-level construction stages. This is workflow authority only; it is not
-new Hamiltonian algorithm, raw-kernel, solver, or diagnostic authority.
+driver, plus a narrow internal staged producer surface so the driver can
+execute visible physics-level construction stages and operator-class timing
+stages. This is workflow authority only; it is not new Hamiltonian algorithm,
+raw-kernel, solver, or diagnostic authority.
 
 ## Decision
 
@@ -25,6 +25,7 @@ visible editable defaults
 -> visible public system / basis / optional supplement contract construction
 -> compact normalized run summary
 -> coarse timed user-facing physics-level construction stages
+-> coarse timed operator-class stages
 -> supported base or supplemented Hamiltonian construction
 -> artifact write
 -> optional readback check
@@ -48,13 +49,18 @@ private route-stage diagnostics.
 ```text
 bin/cartesian_ham_builder.jl
 src/cartesian_base_hamiltonian.jl
+src/pqs_source_box_low_order_materialization.jl
+src/cartesian_final_basis_realization/pqs_terminal_one_body.jl
+src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl
 ```
 
-`src/cartesian_base_hamiltonian.jl` is approved only for the staged producer
-surface described below. No other `bin`, `tools`, `src`, `test`, or committed
-input-fixture file is approved by this lane. Project-specific copied drivers
-are acceptable consumer artifacts, but they are not part of the canonical
-driver authority.
+`src/cartesian_base_hamiltonian.jl` is approved for the staged driver-facing
+surface. The lower-level `src` files listed here are approved only for
+behavior-preserving operator-class stage factoring needed to expose coarse
+product/moment, unit-nuclear, and electron-electron timings. No other `bin`,
+`tools`, `src`, `test`, or committed input-fixture file is approved by this
+lane. Project-specific copied drivers are acceptable consumer artifacts, but
+they are not part of the canonical driver authority.
 
 ## Input Shape
 
@@ -157,10 +163,15 @@ Approved visible stages are:
 
 - construct public `system`, `basis`, and optional `supplement`;
 - build the base working basis / terminal realization;
+- build base product/moment operators;
+- build base unit-nuclear attraction operators;
+- build base electron-electron / IDA interaction;
 - assemble the base Hamiltonian;
 - load or build the Gaussian supplement basis when `basisname !== nothing`;
 - build residual Gaussian augmentation;
-- build exact augmented operators;
+- build augmented product/moment operators;
+- build augmented unit-nuclear attraction operators;
+- build augmented electron-electron / residual-MWG interaction;
 - assemble the supplemented Hamiltonian;
 - write and check the artifact.
 
@@ -170,14 +181,34 @@ These are workflow stages, not old route stages. They must not expose
 retained-rule internals, raw-block providers, or diagnostic stop points.
 
 `HP-DRV-STAGE-FN-01` approves a small non-exported, non-underscored,
-driver-facing staged producer surface in `src/cartesian_base_hamiltonian.jl`.
-The exact function names may follow local style, but their purpose must match
-the approved construction stages above. Public contract construction remains a
-driver responsibility, and artifact write/check remains an approved writer and
-readback responsibility. The source owner may factor the existing base and
+driver-facing staged producer surface. The primary driver-facing owner remains
+`src/cartesian_base_hamiltonian.jl`. Narrow behavior-preserving factoring is
+also approved in `src/pqs_source_box_low_order_materialization.jl`,
+`src/cartesian_final_basis_realization/pqs_terminal_one_body.jl`, and
+`src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` only to
+separate the approved physical operator classes. The exact function names may
+follow local style, but their purpose must match the approved construction
+stages above. Public contract construction remains a driver responsibility,
+and artifact write/check remains an approved writer and readback
+responsibility. The source owner may factor the existing base and
 residual-GTO/MWG facade bodies into these stage functions so the canonical
 driver can call named construction stages without calling underscored helpers
 directly.
+
+Approved physical operator classes are:
+
+- product/moment operators: kinetic `K`, Cartesian coordinate moments
+  `x`/`y`/`z`, and second moments `x^2`/`y^2`/`z^2` where that construction
+  exists for the current basis;
+- unit-nuclear attraction operators: uncharged by-center `U_A` / `Vnuc`
+  matrices before applying physical nuclear charges;
+- electron-electron interactions: base localized IDA `Vee` and supplemented
+  residual-MWG/IDA `Vee`.
+
+The product/moment stage should be timed separately from unit-nuclear and
+electron-electron stages because it is expected to remain fast on normal
+scales. Unit-nuclear and electron-electron stages may be long and must be
+visible to an expert user through coarse timing.
 
 The canonical driver must call separate named stage functions with visible
 local variables. A single replacement wrapper such as
@@ -187,10 +218,15 @@ to:
 
 ```text
 base = ...
+base_products = ...
+base_unit_nuclear = ...
+base_vee = ...
 base_ham = ...
 supplement_basis = ...
 residual = ...
-operators = ...
+augmented_products = ...
+augmented_unit_nuclear = ...
+augmented_vee = ...
 ham = ...
 ```
 
@@ -223,10 +259,15 @@ Allowed user-facing phases:
 - validate/normalize input;
 - construct public contract;
 - build base working basis / terminal realization;
+- build base product/moment operators;
+- build base unit-nuclear attraction operators;
+- build base electron-electron / IDA interaction;
 - assemble base Hamiltonian;
 - build Gaussian supplement;
 - build residual augmentation;
-- build exact augmented operators;
+- build augmented product/moment operators;
+- build augmented unit-nuclear attraction operators;
+- build augmented electron-electron / residual-MWG interaction;
 - assemble supplemented Hamiltonian;
 - write artifact;
 - read back artifact for validation;

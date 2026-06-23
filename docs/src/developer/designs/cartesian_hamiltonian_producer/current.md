@@ -129,12 +129,18 @@ Approved canonical driver usability lane:
   optional readback check, and only the compact hooks `check_file`,
   `print_contract`, `print_timing`, and `expected_dimension`;
 - `HP-DRV-STAGE-FN-01` approves a narrow non-exported, non-underscored staged
-  producer surface in `src/cartesian_base_hamiltonian.jl` so the driver can
-  execute visible physics-level stages: base working basis / terminal
-  realization, base Hamiltonian assembly, Gaussian supplement, residual
-  augmentation, exact augmented operators, and supplemented Hamiltonian
-  assembly; this must be separate named stage functions, not one all-in-one
-  replacement wrapper;
+  producer surface so the driver can execute visible physics-level stages and
+  operator-class timings: base working basis / terminal realization, product
+  / moment operators, unit-nuclear attraction, electron-electron / IDA or
+  residual-MWG interaction, base Hamiltonian assembly, Gaussian supplement,
+  residual augmentation, and supplemented Hamiltonian assembly; this must be
+  separate named stage functions, not one all-in-one replacement wrapper;
+- approved source files for `HP-DRV-STAGE-FN-01` are
+  `src/cartesian_base_hamiltonian.jl`,
+  `src/pqs_source_box_low_order_materialization.jl`,
+  `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl`, and
+  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`, only
+  for behavior-preserving operator-class stage factoring;
 - `HP-DRV-STAGE-WIRE-01` allows the canonical driver to call that staged
   surface as visible top-level stage calls and time/print those workflow stages
   without calling underscored package helpers;
