@@ -420,6 +420,8 @@ these approved design IDs:
 - `HP-R1-ATOM-FN-01`
 - `HP-R1-ATOM-WIRE-01`
 - `HP-R1-ATOM-TEST-01`
+- `HP-ROUTE-RECIPE-FN-01`
+- `HP-ROUTE-RECIPE-TEST-01`
 - `HP-R3-OBJ-01`
 - `HP-R3-FN-01`
 - `HP-R3-FN-02`
@@ -531,6 +533,19 @@ plus optional ignored/user-run Be or Cr one-center base atom artifact checks; it
 does not approve committed non-H fixtures/tests, translated atoms, supplemented
 atoms, ECP, solver workflow, new artifact keys, driver changes, or source files
 outside `src/cartesian_base_hamiltonian.jl`.
+
+`HP-ROUTE-RECIPE-FN-01` approves only family-selective route recipe cleanup in
+`src/pqs_source_box_route_driver_helpers.jl` and
+`src/cartesian_base_hamiltonian.jl`. `cartesian_recipe(...)` may build only the
+selected `route_family` subrecipe and set the inactive subrecipe to `nothing`;
+`:pqs_source_box` route inputs must not require inactive `white_lindsey_*`
+fields, and `_cartesian_base_route(kind)` may delete those fields. Explicit
+`:white_lindsey_low_order` route support must remain. This ID does not approve
+canonical driver changes, numerical kernel changes, terminal lowering or
+shellification changes, materialization/artifact schema changes, route-stage
+diagnostics, status/report expansion, WL materialization deletion, Cr2 runs, or
+new committed tests. `HP-ROUTE-RECIPE-TEST-01` permits only existing direct
+route-input tests to be adjusted if necessary.
 
 R3/RG current source authority is compact by design. Read
 `docs/src/developer/designs/cartesian_hamiltonian_producer/residual_gaussian_domain_module.md`

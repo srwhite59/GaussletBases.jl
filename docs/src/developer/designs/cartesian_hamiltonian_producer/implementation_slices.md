@@ -705,6 +705,70 @@ Line budget:
 - no new committed test, tool, driver, or input-fixture file;
 - stop for a new amendment if the implementation needs any forbidden surface.
 
+## Route Recipe Family Selection Cleanup
+
+Status: approved for implementation under `HP-ROUTE-RECIPE-FN-01` and
+`HP-ROUTE-RECIPE-TEST-01`.
+
+Approved boundary:
+
+- source files `src/pqs_source_box_route_driver_helpers.jl` and
+  `src/cartesian_base_hamiltonian.jl`;
+- target function `cartesian_recipe(route_inputs)`;
+- target base helper `_cartesian_base_route(kind)`;
+- existing tests only if they directly construct route inputs that need
+  inactive-family fields removed; no new committed tests.
+
+Allowed source shapes:
+
+- validate `route_family` and build only the selected family subrecipe;
+- for `:pqs_source_box`, require only source-box recipe fields and set inactive
+  `white_lindsey` data to `nothing` or an equivalent non-authoritative empty
+  value;
+- for `:white_lindsey_low_order`, preserve explicit WL route support and build
+  the selected WL subrecipe from existing WL route fields;
+- remove unused `white_lindsey_*` fields from `_cartesian_base_route(kind)`,
+  because the live base producer route is PQS-only;
+- keep existing precomposed recipe compatibility only if a live caller still
+  needs it.
+
+Must delete or simplify:
+
+- the PQS base producer should no longer carry inactive
+  `white_lindsey_route_shape`, `white_lindsey_mapping_rule`,
+  `white_lindsey_nesting_rule`, `white_lindsey_retained_rule`, or
+  `white_lindsey_operator_rule` fields.
+
+Validation gates:
+
+- `git diff --check`;
+- package load;
+- H atom/base artifact readback;
+- H2 base artifact readback;
+- compact H2 supplemented facade or driver path;
+- focused explicit `:white_lindsey_low_order` route recipe smoke if practical,
+  or report exact live test/tool callers that block further WL cleanup;
+- no Cr2 run.
+
+Forbidden:
+
+- canonical driver changes, numerical kernel changes, terminal lowering policy
+  changes, shellification behavior changes, materialization/artifact schema
+  changes, route-stage diagnostics, status/report expansion, deletion of WL
+  materialization, new route-stage objects, new payload/cache structs, new
+  committed tests, or source files outside the approved surfaces.
+
+Failure rule:
+
+- if `cartesian_recipe(...)` cannot be made family-selective without broader
+  route-driver, report, materialization, or stage-object changes, make no
+  source commit and report the blocker.
+
+Line budget:
+
+- at most `80` added `src` lines, with net simplification expected;
+- no new committed test file.
+
 ## Homonuclear Z-Axis Diatomic Supplemented Workflow
 
 Status: approved for implementation under `HP-R3U-ZDI-FN-01`,

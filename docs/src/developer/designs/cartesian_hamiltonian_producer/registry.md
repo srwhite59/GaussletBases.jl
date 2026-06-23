@@ -409,6 +409,69 @@ duplicate the Hamiltonian builder in the new public file, leave two parallel
 base Hamiltonian construction paths, or replace the dependency with a new
 report field cloud, status payload, or metadata-carried numerical data.
 
+### HP-ROUTE-RECIPE-FN-01 — family-selective route recipe cleanup
+
+Approved source files:
+
+```text
+src/pqs_source_box_route_driver_helpers.jl
+src/cartesian_base_hamiltonian.jl
+```
+
+Approved behavior:
+
+- `cartesian_recipe(route_inputs)` may construct only the subrecipe selected by
+  `route_inputs.route_family`;
+- for `route_family = :pqs_source_box`, route inputs must not require inactive
+  `white_lindsey_*` fields; the produced recipe may set the inactive
+  `white_lindsey` subrecipe to `nothing` while retaining the existing field
+  name for caller compatibility;
+- for `route_family = :white_lindsey_low_order`, explicit White-Lindsey route
+  support must be preserved and the selected `white_lindsey` subrecipe must
+  continue to be built from the existing WL route fields; the inactive
+  `source_box` subrecipe may be `nothing` if no live WL caller requires it;
+- `_cartesian_base_route(kind)` in `src/cartesian_base_hamiltonian.jl` may
+  remove unused `white_lindsey_*` fields because the live base producer route
+  uses `route_family = :pqs_source_box`;
+- existing precomposed recipes that already provide `source_box` and
+  `white_lindsey` fields may remain accepted if that compatibility path is
+  still live, but it must not force new PQS-only route inputs to carry inactive
+  WL vocabulary.
+
+This ID preserves real WL/PQS algorithm differences while removing inactive WL
+route-family fields from the current PQS base producer contract. It does not
+approve canonical-driver changes, numerical kernel changes, terminal lowering
+policy changes, shellification behavior changes, materialization or artifact
+schema changes, route-stage diagnostics, status/report expansion, deletion of
+WL materialization, or source files outside the two approved files.
+
+Line budget: at most `80` added `src` lines, with net simplification expected.
+
+Failure rule: if `cartesian_recipe(...)` cannot be made family-selective
+without broader route-driver, report, materialization, or stage-object changes,
+make no source commit and report the blocker.
+
+### HP-ROUTE-RECIPE-TEST-01 — route recipe cleanup validation
+
+Approved validation:
+
+- `git diff --check`;
+- package load;
+- H atom/base artifact readback;
+- H2 base artifact readback;
+- compact H2 supplemented facade or driver path;
+- focused route recipe smoke for explicit `:white_lindsey_low_order` if still
+  practical, or a report of the exact live test/tool callers that block further
+  WL route-input cleanup.
+
+Existing committed tests may be adjusted only where they directly construct
+route inputs that now no longer need inactive family fields. Known direct
+route-recipe tests such as
+`test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl` may drop inactive
+WL fields if required by the source cleanup. No new committed test file, Cr2
+run, driver workflow change, route diagnostic, or physics-reference scalar is
+approved by this ID.
+
 ### HP-R1-ART-01 — public base producer artifact provenance
 
 Approved artifact extension for R1 public facade writes only. When

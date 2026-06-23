@@ -12529,3 +12529,48 @@ Carrying-cost result:
 - deleted src lines: 19.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 108 - Approve Family-Selective Route Recipes
+
+Commit(s):
+- this commit - Approve family-selective route recipes
+
+Summary:
+- Approved `HP-ROUTE-RECIPE-FN-01` / `HP-ROUTE-RECIPE-TEST-01` as a narrow
+  cleanup lane for `cartesian_recipe(...)`.
+- The design now lets `cartesian_recipe(route_inputs)` build only the selected
+  route-family subrecipe. PQS-only route inputs must no longer carry inactive
+  `white_lindsey_*` fields, and `_cartesian_base_route(kind)` may remove those
+  unused fields. Explicit `:white_lindsey_low_order` route support remains
+  preserved.
+- This is a contract-unification cleanup, not a physics change. Real WL/PQS
+  algorithm differences remain; inactive WL vocabulary should stop flowing
+  through the current PQS base producer.
+
+Validation:
+- Design-manager validation only: docs-only `git diff --check`, focused `rg`
+  for `HP-ROUTE-RECIPE-*`, `cartesian_recipe`, `white_lindsey_*`, selected
+  subrecipe wording, and no `src`, `test`, `tools`, or `bin` changes. No
+  implementation tests were run.
+
+Goal advancement:
+- LT1/LT3: removes another needless old-route concept from the live base
+  producer contract.
+- MT: continues the contract-unification lane after core-spacing and shared
+  diatomic normalization cleanup.
+
+Carrying-cost result:
+- deleted: none; docs-only authority pass.
+- simplified: future PQS base route inputs no longer need inactive WL fields.
+- quarantined: canonical driver changes, numerical kernels, shellification,
+  terminal lowering, materialization/artifact schema, route diagnostics,
+  status/report expansion, WL materialization deletion, new tests, and Cr2 runs
+  remain unapproved.
+- not deleted because: source cleanup has not run yet.
+- exact remaining caller/blocker: doer must stop if family-selective
+  `cartesian_recipe(...)` requires broader route-driver, report,
+  materialization, or stage-object changes.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

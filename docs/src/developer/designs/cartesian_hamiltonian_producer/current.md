@@ -182,6 +182,22 @@ Approved R1 one-center base atom relaxation:
   schema change, element lookup/default table, public API redesign, or source
   file outside `src/cartesian_base_hamiltonian.jl` is approved.
 
+Approved route-recipe cleanup:
+
+- `HP-ROUTE-RECIPE-FN-01` allows `cartesian_recipe(...)` in
+  `src/pqs_source_box_route_driver_helpers.jl` to construct only the
+  `route_family`-selected subrecipe and to set the inactive subrecipe to
+  `nothing` where needed for compatibility;
+- `:pqs_source_box` route inputs must no longer require inactive
+  `white_lindsey_*` fields, and `_cartesian_base_route(kind)` in
+  `src/cartesian_base_hamiltonian.jl` may delete those unused fields;
+- explicit `:white_lindsey_low_order` route support remains live and must keep
+  using its WL route fields where selected;
+- no canonical-driver changes, numerical kernel changes, shellification or
+  terminal-lowering changes, materialization/artifact schema changes,
+  report/status expansion, WL materialization deletion, new tests, or Cr2 run
+  are approved by this cleanup.
+
 Approved canonical driver atom workflow:
 
 - `HP-DRV-ATOM-FN-01` approves explicit one-center atom input normalization in
