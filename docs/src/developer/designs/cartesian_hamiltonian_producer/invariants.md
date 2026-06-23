@@ -98,7 +98,13 @@ The canonical RG algorithm contract is
 
 ## Public Boundaries
 
-- R1 public base scope is origin-centered H and Cartesian z-axis H2 only.
+- R1 public base scope is origin-centered H, Cartesian z-axis H2, and explicit
+  origin-centered all-electron one-center atoms under `HP-R1-ATOM-*`.
+- Atoms and diatomics must share the same base producer workflow after
+  geometry/shellification normalization. Do not introduce atom-only
+  Hamiltonian builders, materialization paths, route-stage/report/status
+  objects, or artifact shapes when the shared terminal-basis, one-body, IDA,
+  Hamiltonian-construction, and writer machinery applies.
 - R3/RG supplemented usability remains internal unless a later public/export
   amendment approves it.
 - The canonical Cartesian driver is an artifact-producing workflow over
@@ -110,7 +116,8 @@ The canonical RG algorithm contract is
   Cr2-specific support.
 - The canonical driver may expose an explicit one-center base atom workflow
   only through the existing base facade. Current atom validation remains
-  origin-centered H. Broader base atoms, translated atoms, supplemented atoms,
+  origin-centered H, while `HP-R1-ATOM-*` permits explicit origin-centered
+  all-electron base atoms in the facade. Translated atoms, supplemented atoms,
   element lookup/default tables, ECP, solver workflow, and artifact-schema
   changes require separate authority.
 - The supplemented R3 usability facade may support explicit homonuclear

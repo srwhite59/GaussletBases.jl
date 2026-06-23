@@ -23,6 +23,8 @@ Normal startup reading:
   workspace reuse;
 - `r3_unit_nuclear_ugg_gaussian_sum.md` for the narrow terminal final-basis
   unit-nuclear `U_GG` Gaussian-sum allocation lane;
+- `r1_one_center_base_atoms.md` for explicit origin-centered all-electron
+  one-center base atoms beyond H;
 - `cartesian_driver_usability_workflow.md` for the compact artifact-producing
   canonical driver lane;
 - `cartesian_driver_atom_workflow.md` for explicit origin-centered base atom
@@ -39,7 +41,9 @@ startup authority when they conflict with the compact current files.
 ## Live Status
 
 The internal base PQS Hamiltonian lane is implemented for origin-centered H and
-Cartesian z-axis H2. This is internal numerical producer authority, not broad
+Cartesian z-axis H2. `HP-R1-ATOM-*` approves a narrow source relaxation for
+explicit origin-centered all-electron one-center atoms beyond H through the
+same base facade. This is internal numerical producer authority, not broad
 public API polish.
 
 Implemented base path:
@@ -51,6 +55,8 @@ Implemented base path:
 - Slice D base PQS materialization handoff;
 - R1 public base facade for the approved H/H2 scope and fixed
   `producer_provenance/` artifact group.
+- R1 one-center base atom relaxation for explicit origin-centered all-electron
+  atoms through the existing base facade; current committed endpoint remains H.
 
 Implemented Residual Gaussian path:
 
@@ -126,6 +132,24 @@ Approved canonical driver usability lane:
   underscored package helper calls, status/report/payload fields, solver work,
   public API/export changes, artifact schema changes, and Cr2-specific
   workflow remain unapproved in the canonical driver.
+
+Approved R1 one-center base atom relaxation:
+
+- `HP-R1-ATOM-FN-01` relaxes `cartesian_base_hamiltonian(...)` from
+  one-center H-only validation to explicit origin-centered all-electron
+  one-center atoms;
+- `HP-R1-ATOM-WIRE-01` maps the public nuclear charge to the existing
+  White-Lindsey atomic mapping `Z` while keeping `d`, `core_spacing`, and
+  `reference_spacing` separate;
+- atoms and diatomics must share the same producer workflow after the narrow
+  geometry/shellification differences; no atom-only Hamiltonian builder,
+  materialization path, route-stage object, report/status payload, or artifact
+  shape is approved;
+- `HP-R1-ATOM-TEST-01` keeps the committed H endpoint as the regression gate
+  and allows ignored/user-run Be or Cr atom artifact checks;
+- no translated atoms, supplemented atoms, ECP, solver workflow, artifact
+  schema change, element lookup/default table, public API redesign, or source
+  file outside `src/cartesian_base_hamiltonian.jl` is approved.
 
 Approved canonical driver atom workflow:
 
@@ -208,8 +232,7 @@ Deferred lanes:
 
 - broad driver diagnostics and public-driver polish beyond the approved
   compact artifact-producing workflow;
-- supplemented atom Hamiltonians and any broader atom support beyond the
-  current base facade;
+- supplemented atom Hamiltonians and translated atoms;
 - Cr2-specific workflow, committed Cr2 gates, and Cr2 support decisions beyond
   the generic explicit homonuclear z-axis path;
 - non-base/supplement public workflow;

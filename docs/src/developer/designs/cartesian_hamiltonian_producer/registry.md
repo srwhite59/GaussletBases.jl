@@ -435,6 +435,92 @@ ID does not approve adding it to `test/runtests.jl`. It must not assert private
 route-stage fields, report mirrors, status/blocker symbols, terminal role
 vocabulary, or pair inventories.
 
+## Approved For R1 One-Center Base Atoms
+
+This section approves only the explicit origin-centered one-center
+all-electron atom relaxation recorded in `r1_one_center_base_atoms.md`. It
+extends the existing base facade scope without adding a new public function,
+new export, new artifact schema, new route vocabulary, or supplemented atom
+authority.
+
+### HP-R1-ATOM-FN-01 — explicit one-center all-electron base atom facade
+
+Approved source file:
+
+```text
+src/cartesian_base_hamiltonian.jl
+```
+
+Approved behavior:
+
+- accept exactly one origin-centered atom in the existing
+  `cartesian_base_hamiltonian(system; basis, hamfile)` call shape;
+- require explicit vector-valued `atom_symbols`, `nuclear_charges`,
+  `atom_locations`, and explicit integer `nup`, `ndn`;
+- require finite positive integer-valued nuclear charge supplied by the caller;
+- require neutral all-electron count
+  `nup + ndn == round(Int, only(nuclear_charges))`;
+- treat the atom symbol as provenance/user labeling only, not as a source of
+  charge, spin, basis, or ECP defaults;
+- keep required one-center basis fields `q`, `core_spacing`, `radius`, and
+  explicit public `d`.
+
+This ID does not approve translated atoms, element lookup/default tables,
+inferred charge or spin, ECP, solver workflow, supplemented atoms, public API
+redesign, or new artifact fields.
+
+### HP-R1-ATOM-WIRE-01 — one-center atom shared workflow wiring
+
+Approved source file:
+
+```text
+src/cartesian_base_hamiltonian.jl
+```
+
+Approved behavior:
+
+- map public `only(system.nuclear_charges)` to the existing private
+  White-Lindsey atomic mapping `Z`;
+- keep `d`, `core_spacing`, and `reference_spacing` independent;
+- feed atom geometry/shellification normalization into the same terminal-basis,
+  one-body, IDA, `CartesianIDAHamiltonian`, artifact-writing, and provenance
+  machinery used by the base producer;
+- preserve existing `HP-R1-ART-01` `producer_provenance/` keys with
+  `route = :one_center_pqs_base`.
+
+Atoms and diatomics must share the same producer workflow after the narrow
+geometry/shellification differences. This ID does not approve an atom-only
+Hamiltonian builder, parallel atom materialization path, atom route-stage
+object, atom report/status/payload object, or metadata/provenance carrier used
+as algorithmic data.
+
+Line budget for `HP-R1-ATOM-FN-01` plus `HP-R1-ATOM-WIRE-01`: at most `80`
+added `src` lines. If implementation needs source edits outside
+`src/cartesian_base_hamiltonian.jl`, changes to private materialization
+owners, atom-only materialization, new artifact keys, translated atoms,
+supplemented atoms, ECP behavior, solver workflow, element lookup/default
+tables, committed fixtures/tests, or route/report/status/payload expansion,
+stop and request a new docs-only amendment.
+
+### HP-R1-ATOM-TEST-01 — one-center base atom validation
+
+Approved validation:
+
+- existing origin-centered H public facade endpoint remains unchanged,
+  including the reviewed `d = 0.3`, `reference_spacing = 1.0` baseline;
+- optional ignored/user-run Be or Cr one-center base atom artifact
+  write/readback using explicit charge, spin sectors, origin geometry, and
+  basis controls;
+- finite/symmetric `K`, unit `U_A`, and IDA `V` for ignored/user-run non-H
+  atom checks;
+- clear `ArgumentError` for translated atom input, missing `d`, noninteger or
+  nonpositive charge, nonneutral electron count, or element-table/default
+  requests where practical.
+
+No new committed test file, committed non-H atom fixture, public non-H
+reference scalar, solver run, supplemented atom endpoint, ECP gate,
+translated-atom gate, or driver change is approved by this ID.
+
 ## Approved For R3/RG Implementation
 
 The R3 labels remain approved compatibility and endpoint-history IDs. Current
@@ -1262,8 +1348,9 @@ Approved behavior:
 - use clear `ArgumentError`s for unsupported atom workflow inputs where
   practical.
 
-Current production validation remains origin-centered H. This ID does not
-approve changing `src/cartesian_base_hamiltonian.jl` for broader atoms.
+Current driver validation remains origin-centered H. This driver ID does not
+approve changing `src/cartesian_base_hamiltonian.jl`; producer-side
+one-center atom support is governed separately by `HP-R1-ATOM-*`.
 
 ### HP-DRV-ATOM-WIRE-01 — driver atom-to-base-facade wiring
 

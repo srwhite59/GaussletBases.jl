@@ -13,8 +13,11 @@ origin-centered one-center atoms in `mode = :base`.
 This approval is for base atom driver output only. The driver may accept an
 explicit one-center atom system, validate the visible workflow input, and call
 the existing `cartesian_base_hamiltonian(...)` facade with `hamfile` when the
-base facade already supports the requested atom. Current production validation
-remains the approved origin-centered H endpoint.
+base facade already supports the requested atom. Current committed validation
+remains the approved origin-centered H endpoint. The separate `HP-R1-ATOM-*`
+amendment may broaden the base facade to explicit origin-centered
+all-electron atoms; the driver may consume that support through the same
+base-facade call without new driver authority.
 
 Supplemented atom Hamiltonians are not approved in this pass. The Residual
 Gaussian owner-local selection algorithm is compatible in spirit with a single
@@ -101,8 +104,9 @@ report/status/payload objects.
 
 If the requested one-center atom is outside the existing base facade support,
 the driver or facade must throw a clear `ArgumentError` before or at the
-supported producer boundary. This approval does not authorize changing
-`src/cartesian_base_hamiltonian.jl` to support broader atoms.
+supported producer boundary. This driver approval does not itself authorize
+changing `src/cartesian_base_hamiltonian.jl`; broader one-center base atom
+facade support is governed by `HP-R1-ATOM-*`.
 
 ## Validation
 
@@ -130,8 +134,9 @@ This amendment does not approve:
 - changes to Residual Gaussian selection, MWG/IDA conventions, raw blocks, or
   terminal kernels;
 - changes to `src/cartesian_base_hamiltonian.jl` or any other source file
-  outside the canonical driver;
-- general atom support beyond the existing base facade;
+  outside the canonical driver, except under separate `HP-R1-ATOM-*`
+  authority;
+- general atom support beyond the existing base facade and `HP-R1-ATOM-*`;
 - translated atoms;
 - element-specific defaults beyond visible example inputs;
 - ECP or pseudopotential support;
@@ -152,8 +157,7 @@ Line budget:
 - no new committed test, tool, or input-fixture file.
 
 Failure rule: if implementation requires source changes outside
-`bin/cartesian_ham_builder.jl`, new base-facade atom support, supplemented atom
-support, translated atoms, ECP, solver workflow, artifact schema changes,
-route diagnostics, metadata/status/report fields, committed fixtures/tests, or
-element lookup/default tables, stop and request a separate docs-only
-amendment.
+`bin/cartesian_ham_builder.jl`, supplemented atom support, translated atoms,
+ECP, solver workflow, artifact schema changes, route diagnostics,
+metadata/status/report fields, committed fixtures/tests, or element
+lookup/default tables, stop and request a separate docs-only amendment.

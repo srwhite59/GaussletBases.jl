@@ -11819,3 +11819,53 @@ Carrying-cost result:
 - deleted src lines: 12.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 094 - Approve One-Center Base Atom Facade
+
+Commit(s):
+- this commit - Approve one-center base atom facade
+
+Summary:
+- Approved a narrow R1 producer-side relaxation from one-center H-only
+  validation to explicit origin-centered all-electron one-center atoms through
+  the existing `cartesian_base_hamiltonian(...)` facade.
+- Added `r1_one_center_base_atoms.md` and approved `HP-R1-ATOM-FN-01`,
+  `HP-R1-ATOM-WIRE-01`, and `HP-R1-ATOM-TEST-01`.
+- Recorded the shared-workflow constraint from the user: atoms and diatomics
+  must share the same producer machinery after the narrow geometry and
+  shellification differences. No atom-only Hamiltonian builder, atom-only
+  materialization path, atom route/report/status payload, or atom-specific
+  artifact shape is approved.
+
+Validation:
+- Design-manager validation: `git diff --check`, focused `rg` for
+  `HP-R1-ATOM-*`, explicit origin-centered/all-electron atom wording, shared
+  workflow requirements, element-table/default exclusions, supplemented-atom
+  deferral, and exact source file authority.
+- No implementation tests were run; this was docs-only authority work.
+
+Goal advancement:
+- LT1/LT3: moves singular atom production toward the same practical user
+  workflow as diatomics, without making the driver invent atom behavior.
+- RG/LT6: keeps supplemented atoms explicitly deferred until the residual-GTO
+  facade and validation endpoint are approved, while preserving the principle
+  that atom and diatomic implementations share machinery wherever possible.
+
+Carrying-cost result:
+- deleted: none; docs-only authority pass.
+- simplified: source authority now distinguishes driver atom workflow from
+  base-facade atom support.
+- quarantined: translated atoms, supplemented atoms, ECP, element lookup,
+  solver workflow, atom-specific materialization, committed non-H fixtures, and
+  public non-H reference gates remain unapproved.
+- not deleted because: source implementation has not run yet.
+- exact remaining caller/blocker: repo-doer may edit only
+  `src/cartesian_base_hamiltonian.jl` for this source lane and must stop if the
+  work needs private materialization-owner edits, atom-only materialization,
+  new artifact keys, translated atom support, supplemented atoms, ECP behavior,
+  solver workflow, element lookup/default tables, committed fixtures/tests, or
+  route/report/status/payload expansion.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

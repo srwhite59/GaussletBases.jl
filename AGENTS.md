@@ -416,6 +416,9 @@ these approved design IDs:
 - `HP-R1-WIRE-01`
 - `HP-R1-ART-01`
 - `HP-R1-TEST-01`
+- `HP-R1-ATOM-FN-01`
+- `HP-R1-ATOM-WIRE-01`
+- `HP-R1-ATOM-TEST-01`
 - `HP-R3-OBJ-01`
 - `HP-R3-FN-01`
 - `HP-R3-FN-02`
@@ -490,10 +493,28 @@ only the report-free shared base constructor seam and the approved callers.
 `HP-R1-ART-01` approves only the fixed `producer_provenance/` schema in the
 final Hamiltonian file. `HP-R1-TEST-01` approves only
 `test/driver_public/cartesian_base_hamiltonian_runtests.jl` as a standalone
-integration/endpoint gate. R1 scope is origin-centered H and Cartesian z-axis
-H2 only. No driver/bin/tool/report/payload/status/pair/assembly public workflow
-expansion is approved, and no artifact expansion is approved except the
-`HP-R1-ART-01` provenance keys.
+integration/endpoint gate. Base R1 scope is origin-centered H, Cartesian
+z-axis H2, and explicit origin-centered all-electron one-center atoms under
+`HP-R1-ATOM-*`. No driver/bin/tool/report/payload/status/pair/assembly public
+workflow expansion is approved, and no artifact expansion is approved except
+the `HP-R1-ART-01` provenance keys.
+
+`HP-R1-ATOM-FN-01` and `HP-R1-ATOM-WIRE-01` relax the one-center base facade in
+`src/cartesian_base_hamiltonian.jl` from H-only validation to explicit
+origin-centered all-electron atoms. The caller must provide vector-valued
+`atom_symbols`, `nuclear_charges`, `atom_locations`, explicit `nup`/`ndn`, and
+one-center basis controls including public `d`. The atom symbol is provenance
+only; charge, electron count, spin, basis, and ECP behavior must not be inferred
+from element tables. Public charge maps to the private White-Lindsey atomic
+mapping `Z`; `d`, `core_spacing`, and `reference_spacing` remain independent.
+Atoms and diatomics must share the same producer workflow after
+geometry/shellification normalization. Do not add atom-only Hamiltonian
+builders, parallel atom materialization, atom route/report/status payloads, or
+atom-specific artifact shapes. `HP-R1-ATOM-TEST-01` approves only H regression
+plus optional ignored/user-run Be or Cr one-center base atom artifact checks; it
+does not approve committed non-H fixtures/tests, translated atoms, supplemented
+atoms, ECP, solver workflow, new artifact keys, driver changes, or source files
+outside `src/cartesian_base_hamiltonian.jl`.
 
 R3/RG current source authority is compact by design. Read
 `docs/src/developer/designs/cartesian_hamiltonian_producer/residual_gaussian_domain_module.md`
@@ -904,8 +925,9 @@ The driver may normalize explicit `atom_symbols`, `nuclear_charges`,
 `atom_locations`, `nup`, `ndn`, visible one-center basis fields, and call the
 existing `cartesian_base_hamiltonian(system; basis, hamfile)` facade where that
 facade already supports the atom. Current validation remains origin-centered H.
-These IDs do not approve edits to `src/cartesian_base_hamiltonian.jl`, broader
-base atom support, translated atoms, supplemented atom Hamiltonians, element
+These driver IDs do not approve edits to `src/cartesian_base_hamiltonian.jl`;
+producer-side atom support is governed separately by `HP-R1-ATOM-*`. They also
+do not approve translated atoms, supplemented atom Hamiltonians, element
 lookup/default tables, ECP, solver workflow, artifact schema changes, public
 API/export changes, route diagnostics, metadata/status/report fields,
 committed atom fixtures, or committed tests. `HP-DRV-ATOM-TEST-01` approves

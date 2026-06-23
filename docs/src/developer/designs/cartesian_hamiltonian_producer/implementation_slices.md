@@ -567,8 +567,8 @@ Decision:
 
 Forbidden:
 
-- source edits outside `bin/cartesian_ham_builder.jl`, including
-  `src/cartesian_base_hamiltonian.jl`;
+- source edits outside `bin/cartesian_ham_builder.jl`, except under separate
+  `HP-R1-ATOM-*` authority;
 - supplemented atom Hamiltonians;
 - translated atoms;
 - broader base atom support beyond the existing base facade;
@@ -588,6 +588,69 @@ Line budget:
 
 - at most `80` added `bin` lines;
 - no new committed test, tool, or input-fixture file;
+- stop for a new amendment if the implementation needs any forbidden surface.
+
+## R1 One-Center Base Atoms
+
+Status: approved for implementation under `HP-R1-ATOM-FN-01`,
+`HP-R1-ATOM-WIRE-01`, and `HP-R1-ATOM-TEST-01`.
+
+Approved boundary:
+
+- source file `src/cartesian_base_hamiltonian.jl`;
+- existing public call shape
+  `cartesian_base_hamiltonian(system; basis, hamfile = nothing)`;
+- explicit origin-centered one-center all-electron atoms only;
+- current committed regression remains the origin-centered H endpoint.
+
+Allowed source shapes:
+
+- replace H-specific one-center validation with explicit one-center atom
+  validation;
+- require explicit symbol, nuclear charge, origin location, `nup`, `ndn`, and
+  one-center basis controls;
+- derive neutral all-electron count from the explicit nuclear charge, not an
+  element table;
+- map the explicit nuclear charge to private White-Lindsey atomic mapping `Z`;
+- keep `d`, `core_spacing`, and `reference_spacing` separate;
+- reuse existing `HP-R1-ART-01` provenance keys and
+  `route = :one_center_pqs_base`.
+
+Shared workflow requirement:
+
+- atoms and diatomics must share the same producer workflow after
+  geometry/shellification normalization;
+- do not add an atom-only Hamiltonian builder, atom materialization path,
+  atom route-stage object, atom report/status/payload object, or atom-specific
+  artifact shape;
+- if an atom cannot pass through the shared terminal-basis, one-body, IDA,
+  Hamiltonian-construction, and writer machinery, stop and report the missing
+  shared seam.
+
+Validation gates:
+
+- H public facade endpoint unchanged;
+- optional ignored/user-run Be or Cr atom artifact write/readback with explicit
+  charge, spin sectors, origin geometry, and basis controls;
+- finite/symmetric `K`, unit `U_A`, and IDA `V` for ignored/user-run non-H
+  atom checks;
+- unsupported translated atoms, noninteger/nonpositive charge, nonneutral
+  electron count, missing `d`, and element-table/default requests throw clear
+  errors where practical.
+
+Forbidden:
+
+- source edits outside `src/cartesian_base_hamiltonian.jl`, private
+  materialization-owner edits, atom-only materialization, supplemented atom
+  Hamiltonians, translated atoms, ECP/pseudopotentials, solver/RHF workflow,
+  public API/export changes, artifact schema changes, element lookup/default
+  tables, route diagnostics, metadata/status/report fields, committed non-H
+  atom fixtures, committed tests, or driver changes.
+
+Line budget:
+
+- at most `80` added `src` lines;
+- no new committed test, tool, driver, or input-fixture file;
 - stop for a new amendment if the implementation needs any forbidden surface.
 
 ## Homonuclear Z-Axis Diatomic Supplemented Workflow

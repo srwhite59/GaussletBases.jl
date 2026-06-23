@@ -358,8 +358,11 @@ driver may write artifacts and print compact timings/summaries, but must call
 approved producer surfaces rather than underscored route internals. That
 provenance is for consumer tracking, not a staged algorithm input after initial
 lattice/parent construction. The atom driver workflow is base-only through the
-existing base facade; it does not approve supplemented atom Hamiltonians or
-broader atom source support.
+existing base facade. `HP-R1-ATOM-*` approves explicit origin-centered
+all-electron one-center atom source support in that facade, and requires atoms
+and diatomics to share the same producer workflow after geometry/shellification
+normalization. It does not approve supplemented atom Hamiltonians, translated
+atoms, element lookup/default tables, or atom-only materialization paths.
 
 ## Performance And Reuse Policy
 

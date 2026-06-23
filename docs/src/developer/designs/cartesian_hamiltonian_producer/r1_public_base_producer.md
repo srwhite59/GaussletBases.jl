@@ -1,6 +1,9 @@
 # R1 Public Base Producer
 
-Status: approved design amendment for first R1 implementation.
+Status: approved design amendment for first R1 implementation. The later
+`r1_one_center_base_atoms.md` amendment relaxes the one-center base atom scope
+from H-only to explicit origin-centered all-electron atoms; this document
+remains the baseline R1 H/H2 contract.
 
 This document defines the minimal public base Cartesian Hamiltonian producer
 for first H/H2 use. It approves only the R1 IDs listed below and only within
@@ -61,10 +64,13 @@ The function returns the existing `CartesianIDAHamiltonian{Float64}` directly.
 It must not return a wrapper, status object, materialization payload, report
 mirror, or `(value, status)` pair.
 
-The first implementation scope is origin-centered base H and Cartesian z-axis
-aligned base H2. Broader atoms, x/y-aligned diatomics, generally oriented
-molecules, WL/QW unification, supplements, corrections, solver handoff, and
-Cr2-scale performance remain later roadmap lanes unless separately approved.
+The first implementation scope was origin-centered base H and Cartesian z-axis
+aligned base H2. `HP-R1-ATOM-*` separately approves explicit origin-centered
+all-electron one-center atoms through the same base facade and shared
+atom/diatomic producer machinery. X/y-aligned diatomics, generally oriented
+molecules, translated atoms, WL/QW unification, supplements, corrections,
+solver handoff, and Cr2-scale performance remain later roadmap lanes unless
+separately approved.
 
 ## Input Shape
 
@@ -100,8 +106,9 @@ Scalar and collection validation rules:
   `xmax_parallel`, and `xmax_transverse` must be finite and positive when
   present;
 - all coordinates and nuclear charges must be finite;
-- first scope supports only H and H2 with symbols and charges consistent with
-  hydrogen nuclei;
+- first H/H2 scope supports only symbols and charges consistent with hydrogen
+  nuclei; `HP-R1-ATOM-*` separately relaxes one-center atoms to explicit
+  origin-centered all-electron inputs without element lookup;
 - `nup` and `ndn` must be nonnegative integers and must give the supported
   total electron count for the requested H or H2 system;
 - one-center H must be at `(0.0, 0.0, 0.0)`;
@@ -336,8 +343,8 @@ Unsupported or malformed public requests must throw clear exceptions, normally
 
 - missing required `system` or `basis` fields;
 - unknown `system` or `basis` fields;
-- unsupported atom count, route geometry, or non-H/H2 system in the first R1
-  scope;
+- unsupported atom count, route geometry, or unsupported system in the active
+  R1/R1-atom scope;
 - non-z-axis H2 geometry, including x/y-aligned or generally oriented H2;
 - inconsistent field lengths for symbols, charges, positions, or electron
   counts;

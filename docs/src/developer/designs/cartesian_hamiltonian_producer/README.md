@@ -5,8 +5,10 @@ Hamiltonian producer.
 
 Status: Slice A, Slice B, Slice C1, Slice C2, and Slice D base handoff are
 implemented for the internal base PQS Hamiltonian path. R1 public base
-producer implementation is approved only for the narrow H/H2 scope recorded in
-`r1_public_base_producer.md` and `registry.md`. Residual Gaussian basis,
+producer implementation is approved for the H/H2 scope recorded in
+`r1_public_base_producer.md`, with a narrow explicit origin-centered
+one-center all-electron atom relaxation recorded in
+`r1_one_center_base_atoms.md`. Residual Gaussian basis,
 exact augmented operators, and residual MWG/IDA interaction now belong to the
 internal `CartesianResidualGaussians` module. The R3 usability lane approves
 only a non-exported supported facade for H2 and internal/performance-supported
@@ -42,6 +44,8 @@ Agents should read first:
   for the narrow terminal final-basis unit-nuclear `U_GG` optimization lane
 - [Cartesian driver usability workflow](cartesian_driver_usability_workflow.md)
   for the compact artifact-producing canonical driver lane
+- [R1 one-center base atoms](r1_one_center_base_atoms.md)
+  for explicit origin-centered all-electron one-center base atom inputs
 - [Cartesian driver atom workflow](cartesian_driver_atom_workflow.md)
   for explicit origin-centered base atom driver inputs
 - [R3 homonuclear z-axis diatomic supplemented workflow](r3_homonuclear_diatomic_supplemented_workflow.md)
@@ -53,6 +57,10 @@ Approved amendments:
 - [R1 public base producer](r1_public_base_producer.md) defines the approved
   minimal public base Hamiltonian producer surface for first origin-centered H
   and z-axis H2 implementation.
+- [R1 one-center base atoms](r1_one_center_base_atoms.md)
+  relaxes the one-center base producer from H-only to explicit origin-centered
+  all-electron atoms, while requiring atoms and diatomics to share the same
+  producer workflow after geometry/shellification normalization.
 - [R3 residual-GTO/MWG augmentation](r3_residual_gto_mwg_augmentation.md)
   records implementation history and compact artifact provenance for the first
   H2 endpoint. Current residual Gaussian algorithm authority is the domain
@@ -98,9 +106,10 @@ Approved amendments:
 
 Candidate amendments:
 
-- Supplemented atoms, Cr2-specific workflow, public supplemented workflow/export,
-  basis/supplement-realism beyond explicit supplied labels/files, and broad
-  driver diagnostics remain candidate-only until separately approved.
+- Supplemented atoms, translated atoms, Cr2-specific workflow, public
+  supplemented workflow/export, basis/supplement-realism beyond explicit
+  supplied labels/files, and broad driver diagnostics remain candidate-only
+  until separately approved.
 
 Historical material:
 
