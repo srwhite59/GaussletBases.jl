@@ -464,6 +464,7 @@ these approved design IDs:
 - `HP-DRV-ATOM-FN-01`
 - `HP-DRV-ATOM-WIRE-01`
 - `HP-DRV-ATOM-TEST-01`
+- `HP-DRV-ATOM-CLEAN-01`
 - `HP-R3U-ZDI-FN-01`
 - `HP-R3U-ZDI-WIRE-01`
 - `HP-R3U-ZDI-TEST-01`
@@ -1054,6 +1055,15 @@ API/export changes, route diagnostics, metadata/status/report fields,
 committed atom fixtures, or committed tests. `HP-DRV-ATOM-TEST-01` approves
 only H atom driver artifact write/readback and optional ignored negative
 checks.
+
+`HP-DRV-ATOM-CLEAN-01` approves only removing hidden
+`d = vars[:core_spacing]` from one-center atom basis construction in
+`bin/cartesian_ham_builder.jl`. Public inputs, defaults, overrides, hooks,
+timing labels, visible stage sequence, artifact schema, and the driver contract
+must remain unchanged. This cleanup does not approve source/kernel changes,
+diagnostics, new hooks, committed tests/fixtures, Cr2 workflow,
+`:white_lindsey_low_order` retirement, test/tool route-input cleanup, or edits
+outside `bin/cartesian_ham_builder.jl`.
 
 Do not add private route-stage controls, stop-after internals, ladder probes,
 stage markers, fixture hacks, diagnostic knobs, underscored package helper

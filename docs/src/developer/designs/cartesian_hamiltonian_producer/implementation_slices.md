@@ -743,6 +743,43 @@ Line budget:
 - no new committed test, tool, or input-fixture file;
 - stop for a new amendment if the implementation needs any forbidden surface.
 
+## Canonical Driver Atom Hidden-d Cleanup
+
+Status: approved for implementation under `HP-DRV-ATOM-CLEAN-01`.
+
+Approved boundary:
+
+- source file `bin/cartesian_ham_builder.jl`;
+- one-center atom basis construction only.
+
+Allowed source shape:
+
+- remove the hidden `d = vars[:core_spacing]` field from the one-center atom
+  `basis` construction;
+- keep visible atom basis fields `q`, `core_spacing`, `radius`, and existing
+  optional public fields unchanged.
+
+Validation gates:
+
+- `git diff --check`;
+- package load;
+- H atom base driver artifact/readback;
+- H2 base or supplemented driver smoke only if the changed code path shares the
+  touched construction.
+
+Forbidden:
+
+- public input changes, default changes, override changes, hook changes, timing
+  label changes, visible stage-sequence changes, artifact schema changes,
+  diagnostics, source/kernel changes, committed tests/fixtures, Cr2 workflow,
+  old `:white_lindsey_low_order` retirement, test/tool route-input cleanup, or
+  files outside `bin/cartesian_ham_builder.jl`.
+
+Failure rule:
+
+- if removing the hidden `d` field requires any visible driver contract change
+  or producer/source change, make no source commit and report the blocker.
+
 ## R1 One-Center Base Atoms
 
 Status: approved for implementation under `HP-R1-ATOM-FN-01`,

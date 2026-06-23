@@ -1781,6 +1781,32 @@ No supplemented atom endpoint, translated-atom gate, committed atom fixture,
 new committed test file, solver run, artifact-schema validation, or broader
 base-atom validation is approved by this ID.
 
+### HP-DRV-ATOM-CLEAN-01 — remove hidden atom `d` driver residue
+
+Approved source file:
+
+```text
+bin/cartesian_ham_builder.jl
+```
+
+Approved behavior:
+
+- remove the hidden one-center atom basis field `d = vars[:core_spacing]`;
+- keep the visible driver atom basis in terms of `q`, `core_spacing`,
+  `radius`, and existing optional public fields only;
+- keep public inputs, defaults, overrides, hooks, timing labels, visible stage
+  sequence, artifact schema, and driver contract unchanged.
+
+This ID exists because the producer no longer requires public `d` for
+one-center atoms. It does not approve source/kernel changes, diagnostics, new
+hooks, new timing labels, public input changes, committed tests/fixtures, Cr2
+workflow, old `:white_lindsey_low_order` retirement, test/tool route-input
+cleanup, or edits outside `bin/cartesian_ham_builder.jl`.
+
+Failure rule: if removing the hidden `d` field requires any visible driver
+contract change or producer/source change, make no source commit and report the
+blocker.
+
 ## Approved For Homonuclear Z-Axis Diatomic Supplemented Workflow
 
 This section approves only the molecule-scope relaxation recorded in

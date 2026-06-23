@@ -218,6 +218,10 @@ Approved canonical driver atom workflow:
 - current validation remains origin-centered H; this does not approve broader
   base atoms, translated atoms, supplemented atoms, element tables, ECP,
   solver workflow, public API/export changes, or artifact schema changes.
+- `HP-DRV-ATOM-CLEAN-01` approves only removing the stale hidden
+  `d = core_spacing` atom-basis field from the canonical driver; public
+  inputs, defaults, overrides, hooks, timing labels, stage sequence, artifact
+  schema, and driver contract must remain unchanged.
 
 Approved homonuclear z-axis diatomic supplemented workflow:
 

@@ -12815,3 +12815,42 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 111 - Approve Driver Hidden-d Cleanup
+
+Commit(s):
+- this commit - Approve driver hidden-d cleanup
+
+Summary:
+- Approved `HP-DRV-ATOM-CLEAN-01` for the tiny canonical-driver cleanup that
+  removes hidden `d = vars[:core_spacing]` from one-center atom basis
+  construction.
+- The producer no longer requires public `d`; keeping the hidden field in the
+  driver would preserve stale public-contract residue.
+- Explicitly deferred larger cleanup targets: old `:white_lindsey_low_order`
+  route/materialization retirement and stale inactive `white_lindsey_*` fields
+  in tests/tools remain audit/amendment work, not immediate deletion.
+
+Validation:
+- Design-manager validation only: docs-only `git diff --check`, focused `rg`
+  for `HP-DRV-ATOM-CLEAN-01`, hidden `d`, forbidden driver-contract changes,
+  and no `src`, `test`, `tools`, or `bin` changes. No implementation tests
+  were run.
+
+Goal advancement:
+- LT1/LT3: removes another tiny false public-contract remnant from the
+  canonical driver after core-spacing unification.
+
+Carrying-cost result:
+- deleted: none; docs-only authority pass.
+- simplified: future driver atom basis construction should expose only
+  `core_spacing`, not a hidden `d` alias.
+- quarantined: WL route/materialization retirement and stale test/tool
+  `white_lindsey_*` route-input cleanup remain deferred.
+- not deleted because: source cleanup has not run yet.
+- exact remaining caller/blocker: doer must stop if removing hidden `d`
+  requires any visible driver contract change or producer/source change.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.
