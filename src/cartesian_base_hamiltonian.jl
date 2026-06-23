@@ -1,14 +1,15 @@
 const _CARTESIAN_BASE_SYSTEM_KEYS = Set((:atom_symbols, :nuclear_charges, :atom_locations, :nup, :ndn))
-const _CARTESIAN_BASE_H_BASIS_REQUIRED_KEYS = Set((:q, :core_spacing, :radius, :d))
+const _CARTESIAN_BASE_H_BASIS_REQUIRED_KEYS = Set((:q, :core_spacing, :radius))
 const _CARTESIAN_BASE_H2_BASIS_REQUIRED_KEYS = Set((:q, :core_spacing, :xmax_parallel, :xmax_transverse))
 const _CARTESIAN_BASE_OPTIONAL_BASIS_KEYS = Set((:parent_axis_family, :reference_spacing, :tail_spacing))
+const _CARTESIAN_BASE_H_OPTIONAL_BASIS_KEYS = union(_CARTESIAN_BASE_OPTIONAL_BASIS_KEYS, Set((:d,)))
 _cartesian_base_check_keys(input, expected, label) =
     Set(Symbol.(keys(input))) == expected ||
         throw(ArgumentError("$(label) has unsupported keys"))
 
-function _cartesian_base_check_basis_keys(basis, required)
+function _cartesian_base_check_basis_keys(basis, required, optional = _CARTESIAN_BASE_OPTIONAL_BASIS_KEYS)
     supplied = Set(Symbol.(keys(basis)))
-    required ⊆ supplied && supplied ⊆ union(required, _CARTESIAN_BASE_OPTIONAL_BASIS_KEYS) ||
+    required ⊆ supplied && supplied ⊆ union(required, optional) ||
         throw(ArgumentError("basis has missing or unsupported keys"))
 end
 
@@ -25,6 +26,13 @@ function _cartesian_base_positive(value, label)
     x = Float64(value)
     isfinite(x) && x > 0.0 || throw(ArgumentError("$(label) must be finite and positive"))
     return x
+end
+
+function _cartesian_base_atom_mapping_d(basis, core_spacing)
+    haskey(basis, :d) || return core_spacing
+    d = _cartesian_base_positive(basis.d, "basis.d")
+    d == core_spacing || throw(ArgumentError("legacy basis.d must equal basis.core_spacing"))
+    return core_spacing
 end
 
 function _cartesian_base_q(value)
@@ -65,16 +73,18 @@ function _cartesian_base_inputs(system::NamedTuple, basis::NamedTuple)
         throw(ArgumentError("nup and ndn must be nonnegative integers"))
     base = (; symbols, charges, locations, nup, ndn)
     if length(symbols) == 1
-        _cartesian_base_check_basis_keys(basis, _CARTESIAN_BASE_H_BASIS_REQUIRED_KEYS)
+        _cartesian_base_check_basis_keys(
+            basis, _CARTESIAN_BASE_H_BASIS_REQUIRED_KEYS, _CARTESIAN_BASE_H_OPTIONAL_BASIS_KEYS)
         symbols == ["H"] && charges == [1.0] ||
             throw(ArgumentError("only origin-centered H is supported"))
         locations[1] == (0.0, 0.0, 0.0) ||
             throw(ArgumentError("H must be centered at (0,0,0)"))
         nup + ndn == 1 || throw(ArgumentError("H requires one electron"))
+        core_spacing = _cartesian_base_positive(basis.core_spacing, "basis.core_spacing")
         return merge(base, (; kind = :h, q = _cartesian_base_q(basis.q),
-            core_spacing = _cartesian_base_positive(basis.core_spacing, "basis.core_spacing"),
+            core_spacing,
             radius = _cartesian_base_positive(basis.radius, "basis.radius"),
-            d = _cartesian_base_positive(basis.d, "basis.d"), xmax_parallel = nothing,
+            d = _cartesian_base_atom_mapping_d(basis, core_spacing), xmax_parallel = nothing,
             xmax_transverse = nothing, parent_axis_family = _cartesian_base_parent_axis_family(basis),
             reference_spacing = _cartesian_base_get_positive(basis, :reference_spacing, 1.0),
             tail_spacing = _cartesian_base_get_positive(basis, :tail_spacing, 10.0)))
@@ -130,7 +140,7 @@ function _cartesian_base_stages(input)
         parent_mapping_tail_spacing = input.tail_spacing,
         parent_mapping_rule = input.kind === :h ? :white_lindsey_atomic_mapping : :identity_mapping,
         parent_mapping_Z = input.kind === :h ? only(input.charges) : nothing,
-        parent_mapping_d = input.kind === :h ? input.d : nothing)
+        parent_mapping_d = input.kind === :h ? input.core_spacing : nothing)
     if input.kind === :h
         side = 2 * input.q + 1
         system_inputs = (; atom_symbols, nuclear_charges, atom_locations,

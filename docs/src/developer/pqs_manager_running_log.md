@@ -12291,3 +12291,52 @@ Validation:
 - Docs-only `git diff --check`, focused `rg` for the new validation-policy
   sentence, and no `src`, `test`, `tools`, or `bin` changes. No implementation
   tests were run.
+
+## Cartesian Hamiltonian Producer Pass 103 - Implement Core-Spacing Producer Contract
+
+Commit(s):
+- this commit - Use core spacing for atom mapping d
+
+Summary:
+- Accepted the narrow `HP-R1-CORE-FN-01` source cleanup in
+  `src/cartesian_base_hamiltonian.jl`. One-center base atoms now require only
+  `q`, `core_spacing`, and `radius`; public `d` is optional legacy
+  compatibility only.
+- When legacy atom `d` is supplied, it is validated as positive and exactly
+  equal to resolved `core_spacing`; mismatches throw `ArgumentError`. H2 still
+  rejects public `d`.
+- Internal `input.d` remains populated from `core_spacing` for compatibility
+  and existing `producer_provenance/mapping_d`, while White-Lindsey atom
+  wiring now passes `parent_mapping_d = input.core_spacing`.
+
+Validation:
+- Doer validation: `git diff --check`, package load, H atom facade
+  artifact/readback with `core_spacing=0.3` and no public `d` (dimension 419),
+  H atom legacy `d == core_spacing` (dimension 419), H atom
+  `d != core_spacing` rejection, H2 public `d` rejection, H2 base
+  artifact/readback (dimension 471), and no Cr2 run.
+- Manager validation: reviewed the one-file diff, confirmed `git diff
+  --check`, numstat +17/-7 in `src/cartesian_base_hamiltonian.jl`,
+  suspicious added-line scan clean, and new-test/tool scan empty.
+
+Goal advancement:
+- LT1/LT3: removes the false public `d`/`core_spacing` split while preserving
+  the compact driver contract.
+- MT: this establishes the first prototype for the broader unification audit:
+  atom and diatomic producer inputs now share one public near-core scale,
+  while genuine mapping differences remain internal.
+
+Carrying-cost result:
+- deleted: `d` from the one-center required basis-key set.
+- simplified: one-center White-Lindsey near-core mapping now derives from the
+  same resolved `core_spacing` used by the rest of the producer contract.
+- quarantined: legacy `d` is retained only as an equality-checked compatibility
+  alias.
+- not deleted because: `input.d` and artifact `mapping_d` remain for
+  compatibility with the existing provenance schema.
+- exact remaining caller/blocker: no source blocker for `HP-R1-CORE-FN-01`;
+  a later artifact-schema cleanup would be needed to remove `mapping_d`.
+- added src lines: 17.
+- deleted src lines: 7.
+- new tests: none.
+- new metadata/status fields: none.
