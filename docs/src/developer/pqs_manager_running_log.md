@@ -12340,3 +12340,51 @@ Carrying-cost result:
 - deleted src lines: 7.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 104 - Share Base System Normalization
+
+Commit(s):
+- this commit - Share base system normalization
+
+Summary:
+- Accepted the first 2->1 cleanup enabled by the core-spacing contract.
+  `src/cartesian_base_hamiltonian.jl` now has one private
+  `_cartesian_base_system_parts(system::NamedTuple)` helper for public system
+  key/container validation, conversion to symbols/charges/locations, and
+  nonnegative electron normalization.
+- `_cartesian_base_inputs(...)` and `_cartesian_r3_diatomic_inputs(...)` now
+  share that normalization, while all scope-specific H/H2/R3 checks and basis
+  normalization remain separate.
+
+Validation:
+- Doer validation: `git diff --check`, package load, H atom no-`d`
+  artifact/readback (dimension 419), H atom legacy `d == core_spacing`
+  (dimension 419), H atom `d != core_spacing` rejection, H2 public `d`
+  rejection, H2 base artifact/readback (dimension 471), compact H2
+  supplemented driver path (dimension 489), and no Cr2 run.
+- Manager validation: reviewed the one-file diff, confirmed `git diff
+  --check`, numstat +11/-17 in `src/cartesian_base_hamiltonian.jl`,
+  suspicious added-line scan clean, and new-test/tool scan empty.
+
+Goal advancement:
+- LT1/LT3: reduces duplicate producer input handling without changing the
+  public driver or facade contract.
+- MT: confirms the first unification step after `core_spacing`: common public
+  system normalization can be shared, while real atom/H2/R3 semantics remain
+  explicitly scoped.
+
+Carrying-cost result:
+- deleted: duplicated system key/container/charge/electron normalization from
+  the R3 diatomic input path.
+- simplified: base and supplemented input paths now use one private
+  normalization helper before diverging into scope-specific validation.
+- quarantined: none.
+- not deleted because: branch-specific H/H2/R3 validation is intentionally
+  still separate.
+- exact remaining caller/blocker: no blocker for this cleanup. A later audit
+  may consider shared H2-like basis normalization, but that should be a
+  separate pass.
+- added src lines: 11.
+- deleted src lines: 17.
+- new tests: none.
+- new metadata/status fields: none.

@@ -51,7 +51,7 @@ function _cartesian_base_location(value)
     return location
 end
 
-function _cartesian_base_inputs(system::NamedTuple, basis::NamedTuple)
+function _cartesian_base_system_parts(system::NamedTuple)
     _cartesian_base_check_keys(system, _CARTESIAN_BASE_SYSTEM_KEYS, "system")
     for field in (:atom_symbols, :nuclear_charges, :atom_locations)
         getproperty(system, field) isa AbstractVector ||
@@ -71,7 +71,13 @@ function _cartesian_base_inputs(system::NamedTuple, basis::NamedTuple)
     ndn = Int(system.ndn)
     nup >= 0 && ndn >= 0 ||
         throw(ArgumentError("nup and ndn must be nonnegative integers"))
-    base = (; symbols, charges, locations, nup, ndn)
+    return (; symbols, charges, locations, nup, ndn)
+end
+
+function _cartesian_base_inputs(system::NamedTuple, basis::NamedTuple)
+    base = _cartesian_base_system_parts(system)
+    symbols, charges, locations, nup, ndn =
+        base.symbols, base.charges, base.locations, base.nup, base.ndn
     if length(symbols) == 1
         _cartesian_base_check_basis_keys(
             basis, _CARTESIAN_BASE_H_BASIS_REQUIRED_KEYS, _CARTESIAN_BASE_H_OPTIONAL_BASIS_KEYS)
@@ -247,28 +253,16 @@ function cartesian_base_hamiltonian_assembly(base, products, unit_nuclear, vee; 
 end
 
 function _cartesian_r3_diatomic_inputs(system::NamedTuple, basis::NamedTuple)
-    _cartesian_base_check_keys(system, _CARTESIAN_BASE_SYSTEM_KEYS, "system")
     _cartesian_base_check_basis_keys(basis, _CARTESIAN_BASE_H2_BASIS_REQUIRED_KEYS)
-    for field in (:atom_symbols, :nuclear_charges, :atom_locations)
-        getproperty(system, field) isa AbstractVector ||
-            throw(ArgumentError("system.$(field) must be an AbstractVector"))
-    end
-    symbols = String.(system.atom_symbols)
-    charges = Float64.(system.nuclear_charges)
-    locations = _cartesian_base_location.(system.atom_locations)
+    base = _cartesian_base_system_parts(system)
+    symbols, charges, locations, nup, ndn =
+        base.symbols, base.charges, base.locations, base.nup, base.ndn
     length(symbols) == length(charges) == length(locations) == 2 ||
         throw(ArgumentError("R3 usability facade supports two-center systems only"))
     symbols[1] == symbols[2] ||
         throw(ArgumentError("heteronuclear supplements are unsupported"))
-    all(charge -> isfinite(charge) && charge > 0.0, charges) ||
-        throw(ArgumentError("nuclear charges must be finite and positive"))
     charges[1] == charges[2] ||
         throw(ArgumentError("homonuclear supplemented diatomics require equal nuclear charges"))
-    system.nup isa Integer && system.ndn isa Integer &&
-        !(system.nup isa Bool) && !(system.ndn isa Bool) ||
-        throw(ArgumentError("nup and ndn must be nonnegative integers"))
-    nup, ndn = Int(system.nup), Int(system.ndn)
-    nup >= 0 && ndn >= 0 || throw(ArgumentError("nup and ndn must be nonnegative integers"))
     total_charge = sum(charges)
     electron_count = round(Int, total_charge)
     isapprox(total_charge, electron_count; atol = 1.0e-12, rtol = 0.0) ||
