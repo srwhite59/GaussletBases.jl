@@ -12961,3 +12961,66 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 113 - Implement Compact Artifact Manifest
+
+Commit(s):
+- this commit - Add compact Hamiltonian artifact manifest
+
+Summary:
+- Accepted the first `HP-HAM-MANIFEST-FN-01` source pass. Canonical base and
+  supplemented artifact writes now attach `hamiltonian_manifest/manifest_version`,
+  `hamiltonian_manifest/final_basis_labels/`, and `recipe_provenance/` sidecar
+  groups without changing matrix keys, the Hamiltonian object, the reader, or
+  the canonical driver.
+- The first-pass manifest is intentionally compact: one status-bearing row per
+  matrix-order final basis column plus public recipe/dimension provenance. It
+  does not attempt optional `final_basis_source_relations/`, `source_shells/`,
+  or `source_modes/` because those would need construction-native facts not yet
+  present in this artifact seam.
+- Base-row representative centers come from terminal support states and parent
+  axis centers; Lowdin/PQS rows use an abs2-coefficient support centroid and are
+  marked representative. Supplemented residual rows use exact augmented position
+  diagonals and residual owner/label metadata.
+
+Validation:
+- Doer validation: `git diff --check`, package load, and ignored direct JLD2
+  validation via `tmp/work/ham_manifest_validation.jl`. H2 base and H2
+  supplemented artifacts read back through the existing reader; manifest row
+  counts matched matrix dimensions; recipe dimensions matched base/residual/
+  augmented dimensions; inferred-label flags were false; unavailable/mixed
+  label status checks passed. No Cr2 run.
+- Manager validation: `git diff --check`; `git diff --numstat` reported
+  `147` added and `5` deleted source lines in `src/cartesian_base_hamiltonian.jl`;
+  suspicious-line scan found only approved artifact `*_status` columns and
+  assignments; new-test/tool scan was empty; focused `rg` found no optional
+  source-relation/source-shell/source-mode groups and no serialized `T_G`/`T_A`
+  manifest fields.
+
+Goal advancement:
+- LT1/LT3: makes canonical-driver artifacts self-describing enough for
+  downstream row/order consumers without exposing route internals or changing
+  the public reader contract.
+- RG/LT6: directly addresses CR2 feedback that supplemented artifacts lacked a
+  matrix-order final-basis manifest while keeping centers representative rather
+  than identity-bearing labels.
+
+Carrying-cost result:
+- deleted: none; this was a new approved artifact-sidecar capability.
+- simplified: downstream consumers no longer need to reconstruct row labels and
+  public recipe context from external workflow memory or center heuristics.
+- quarantined: optional source relations, source shells, and source modes are
+  omitted until construction-native relation data is available; CR2-specific
+  fields and dense transform/raw inventory fields remain unapproved.
+- not deleted because: existing `producer_provenance/` and
+  `supplement_provenance/` remain approved compatibility groups, and the minimal
+  low-level Hamiltonian writer remains intentionally manifest-free.
+- exact remaining caller/blocker: direct low-level
+  `write_cartesian_ida_hamiltonian` callers still write the minimal artifact
+  only; richer source-mode/ray/shell labels need a later construction-native
+  provenance lane.
+- added src lines: 147.
+- deleted src lines: 5.
+- new tests: none.
+- new metadata/status fields: approved artifact sidecar fields only; no
+  algorithmic metadata/status fields.

@@ -179,7 +179,145 @@ _cartesian_base_atom_location_matrix(input) =
 _cartesian_base_axis_counts_tuple(axis_counts) =
     (Int(axis_counts.x), Int(axis_counts.y), Int(axis_counts.z))
 
-function _cartesian_base_write_hamiltonian(path, ham, input, parent)
+function _cartesian_write_sidecar_values!(file, group, values)
+    for key in keys(values); file["$(group)/$(key)"] = getproperty(values, key); end
+end
+
+function _cartesian_manifest_label_table(n)
+    return (;
+        final_basis_col = collect(1:n), sector = fill(:base, n),
+        unit_label = fill(:unavailable, n), unit_kind = fill(:unavailable, n),
+        source_region_label = fill(:unavailable, n), source_region_label_status = fill(:unavailable, n),
+        source_box_label = fill(:unavailable, n), source_box_label_status = fill(:unavailable, n),
+        owner_nucleus_index = zeros(Int, n), owner_label_status = fill(:unavailable, n),
+        shell_label_status = fill(:unavailable, n), shell_index = zeros(Int, n),
+        ray_label_status = fill(:unavailable, n), ray_id = zeros(Int, n),
+        ray_family_label = fill(:unavailable, n), radial_order_status = fill(:unavailable, n),
+        radial_order = zeros(Int, n),
+        center_x = zeros(Float64, n), center_y = zeros(Float64, n), center_z = zeros(Float64, n),
+        center_definition = fill(:unavailable, n), center_status = fill(:unavailable, n),
+        lowdin_correction_applied = falses(n), supplement_label = fill("unavailable", n),
+        angular_power_x = fill(-1, n), angular_power_y = fill(-1, n), angular_power_z = fill(-1, n),
+        inferred_from_centers = falses(n), inferred_from_nearest_grid = falses(n),
+        inferred_from_support_order = falses(n), inferred_from_support_indices = falses(n),
+        inferred_from_raw_to_final_support = falses(n),
+    )
+end
+
+_cartesian_manifest_axis_centers(bundles) =
+    (; x = Float64.(_nested_axis_pgdg(bundles, :x).centers),
+        y = Float64.(_nested_axis_pgdg(bundles, :y).centers),
+        z = Float64.(_nested_axis_pgdg(bundles, :z).centers))
+
+_cartesian_manifest_state_center(centers, state) =
+    (centers.x[state[1]], centers.y[state[2]], centers.z[state[3]])
+
+function _cartesian_manifest_block_center(centers, block, local_col)
+    isnothing(block.coefficients) &&
+        return _cartesian_manifest_state_center(centers, block.support_states[local_col])
+    total = cx = cy = cz = 0.0
+    for (row, state) in pairs(block.support_states)
+        x, y, z = _cartesian_manifest_state_center(centers, state)
+        weight = abs2(block.coefficients[row, local_col])
+        total += weight
+        cx += weight * x
+        cy += weight * y
+        cz += weight * z
+    end
+    total > 0.0 || return _cartesian_manifest_state_center(centers, first(block.support_states))
+    return (cx / total, cy / total, cz / total)
+end
+
+function _cartesian_manifest_fill_base_labels!(labels, basis, bundles)
+    centers = _cartesian_manifest_axis_centers(bundles)
+    for block in basis.blocks, (local_col, col) in enumerate(block.column_range)
+        direct = isnothing(block.coefficients)
+        x, y, z = _cartesian_manifest_block_center(centers, block, local_col)
+        labels.unit_label[col] = block.unit_key
+        labels.unit_kind[col] = direct ? :direct_parent_support : :lowdin_support_mixture
+        labels.source_region_label[col], labels.source_region_label_status[col] = block.unit_key, :available
+        labels.center_x[col], labels.center_y[col], labels.center_z[col] = x, y, z
+        labels.center_definition[col] =
+            direct ? :parent_support_row_center : :coefficient_abs2_support_centroid
+        labels.center_status[col], labels.lowdin_correction_applied[col] =
+            direct ? :available : :representative, !direct
+    end
+    return labels
+end
+
+function _cartesian_manifest_fill_residual_labels!(labels, residual, augmented_products)
+    offset = residual.base_dimension
+    position = augmented_products.position
+    for row in 1:residual.residual_dimension
+        col = offset + row
+        owner = residual.residual_source_owner_indices[row]
+        labels.sector[col], labels.unit_label[col] = :residual, :residual_gaussian
+        labels.unit_kind[col] = :owner_local_residual_gaussian
+        labels.source_region_label[col], labels.source_region_label_status[col] =
+            Symbol("owner_", string(owner)), :available
+        labels.owner_nucleus_index[col], labels.owner_label_status[col] = owner, :available
+        labels.center_x[col] = position.x[col, col]
+        labels.center_y[col] = position.y[col, col]
+        labels.center_z[col] = position.z[col, col]
+        labels.center_definition[col], labels.center_status[col] =
+            :exact_position_expectation, :representative
+        labels.lowdin_correction_applied[col], labels.supplement_label[col] =
+            true, residual.residual_labels[row]
+    end
+    return labels
+end
+
+function _cartesian_manifest_final_basis_labels(base; residual = nothing, augmented_products = nothing)
+    base_dimension = base.terminal_basis.final_dimension
+    residual_dimension = isnothing(residual) ? 0 : residual.residual_dimension
+    labels = _cartesian_manifest_label_table(base_dimension + residual_dimension)
+    _cartesian_manifest_fill_base_labels!(
+        labels, base.terminal_basis, base.parent.parent_axis_bundle_object)
+    isnothing(residual) ||
+        _cartesian_manifest_fill_residual_labels!(labels, residual, augmented_products)
+    return labels
+end
+
+function _cartesian_recipe_provenance(input, parent, base_dimension;
+    residual_dimension = 0, supplement_input = nothing, producer, route)
+    return (;
+        provenance_version = 1, producer, route, q = input.q,
+        core_spacing = input.core_spacing, padding = input.kind === :h ? input.radius : input.xmax_transverse,
+        radius = input.radius, xmax_parallel = input.xmax_parallel,
+        xmax_transverse = input.xmax_transverse,
+        extent_source = input.kind === :h ? :one_center_radius : :z_axis_diatomic_padding_extents,
+        parent_axis_counts = _cartesian_base_axis_counts_tuple(parent.axis_counts),
+        atom_symbols = copy(input.symbols), nuclear_charges = copy(input.charges),
+        atom_locations = _cartesian_base_atom_location_matrix(input), nup = input.nup, ndn = input.ndn,
+        basisname = isnothing(supplement_input) ? nothing : first(supplement_input.basis_by_center),
+        basisfile = isnothing(supplement_input) ? nothing : supplement_input.basisfile,
+        lmax = isnothing(supplement_input) ? nothing : supplement_input.lmax,
+        uncontracted = isnothing(supplement_input) ? nothing : supplement_input.uncontracted,
+        width_filtering = isnothing(supplement_input) ? nothing : supplement_input.width_filtering,
+        base_dimension, residual_dimension, augmented_dimension = base_dimension + residual_dimension,
+    )
+end
+
+function _cartesian_write_hamiltonian_manifest(path, base, ham; residual = nothing,
+    augmented_products = nothing, supplement_input = nothing, producer, route)
+    labels = _cartesian_manifest_final_basis_labels(base; residual, augmented_products)
+    size(ham.kinetic, 1) == length(labels.final_basis_col) ||
+        throw(DimensionMismatch("Hamiltonian manifest dimension mismatch"))
+    recipe = _cartesian_recipe_provenance(base.input, base.parent,
+        base.terminal_basis.final_dimension; residual_dimension =
+        isnothing(residual) ? 0 : residual.residual_dimension,
+        supplement_input, producer, route)
+    jldopen(String(path), "r+") do file
+        file["hamiltonian_manifest/manifest_version"] = 1
+        _cartesian_write_sidecar_values!(file, "hamiltonian_manifest/final_basis_labels", labels)
+        _cartesian_write_sidecar_values!(file, "recipe_provenance", recipe)
+    end
+    return path
+end
+
+function _cartesian_base_write_hamiltonian(path, ham, base)
+    input = base.input
+    parent = base.parent
     write_cartesian_ida_hamiltonian(path, ham)
     route = input.kind === :h ? :one_center_pqs_base : :z_axis_diatomic_pqs_base
     mapping_kind = input.kind === :h ? :white_lindsey_atomic_mapping : :multicenter_pqs_mapping
@@ -194,10 +332,10 @@ function _cartesian_base_write_hamiltonian(path, ham, input, parent)
         atom_locations = _cartesian_base_atom_location_matrix(input),
         nup = input.nup, ndn = input.ndn, final_dimension = size(ham.kinetic, 1))
     jldopen(String(path), "r+") do file
-        for key in keys(values)
-            file["producer_provenance/$(key)"] = getproperty(values, key)
-        end
+        _cartesian_write_sidecar_values!(file, "producer_provenance", values)
     end
+    _cartesian_write_hamiltonian_manifest(path, base, ham; producer = :cartesian_base_hamiltonian,
+        route)
     return path
 end
 
@@ -251,7 +389,7 @@ function cartesian_base_hamiltonian_assembly(base, products, unit_nuclear, vee; 
     ham = CartesianIDAHamiltonian(products.kinetic, unit_nuclear, vee, input.nup, input.ndn;
         nuclear_charges = input.charges, nuclear_positions = input.locations)
     isnothing(hamfile) ||
-        _cartesian_base_write_hamiltonian(String(hamfile), ham, input, parent)
+        _cartesian_base_write_hamiltonian(String(hamfile), ham, base)
     return ham
 end
 
@@ -422,5 +560,9 @@ function cartesian_residual_gto_mwg_hamiltonian_assembly(base, base_ham::Cartesi
         validation_check_labels = h2_fixture ?
             (:h2_lowest_augmented_one_body_orbital_ida_self_coulomb,) : (),
         h2_validation_self_coulomb = h2_fixture ? 0.4574265214362075 : nothing)
+    isnothing(hamfile) || _cartesian_write_hamiltonian_manifest(
+        String(hamfile), base, ham; residual, augmented_products, supplement_input,
+        producer = :cartesian_residual_gto_mwg_hamiltonian,
+        route = :z_axis_diatomic_residual_gto_mwg)
     return ham
 end
