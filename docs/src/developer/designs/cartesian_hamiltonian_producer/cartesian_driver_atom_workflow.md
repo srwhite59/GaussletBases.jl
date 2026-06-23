@@ -92,6 +92,9 @@ as `core_spacing = 0.3` and a template `padding`. Those defaults are treated as
 explicit driver/input-file values after construction, not hidden universal
 producer defaults. Command-line or input-file overrides such as
 `core_spacing = 0.5` for quick tests remain normal driver behavior.
+Routine correctness tests may override driver physics defaults, but any
+asserted scalar must be tied to the exact test input and not described as a
+physics-default result.
 
 ## Wiring Contract
 

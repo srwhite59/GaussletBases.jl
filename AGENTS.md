@@ -499,7 +499,10 @@ near-nucleus spacing after explicit input, driver default, or preset
 resolution. White-Lindsey `Z` behavior is an internal mapping-shape/default
 rule, not a second public knob. Driver/project defaults such as
 `core_spacing = 0.3` are allowed only when visible and overrideable; once
-resolved, they are ordinary explicit inputs. `HP-R1-WIRE-01` approves
+resolved, they are ordinary explicit inputs. Routine correctness tests may
+override driver physics defaults, but any asserted scalar must be tied to the
+exact test input and not described as a physics-default result.
+`HP-R1-WIRE-01` approves
 only the report-free shared base constructor seam and the approved callers.
 `HP-R1-ART-01` approves only the fixed `producer_provenance/` schema in the
 final Hamiltonian file. `HP-R1-TEST-01` approves only

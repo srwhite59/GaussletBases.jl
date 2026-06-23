@@ -12271,3 +12271,23 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 102 - Clarify Driver Defaults Versus Test Inputs
+
+Commit(s):
+- this commit - Clarify driver defaults and test scalars
+
+Summary:
+- Added the validation-policy distinction that the canonical driver may keep
+  physics-facing editable defaults, while routine correctness tests may
+  override those defaults for speed or path coverage. Any asserted scalar must
+  be tied to its exact test input and must not be described as a
+  physics-default result.
+- No strategic change to the core-spacing model: `core_spacing` remains the
+  public near-core scale, visible driver defaults remain allowed, and quick-test
+  overrides remain normal input behavior.
+
+Validation:
+- Docs-only `git diff --check`, focused `rg` for the new validation-policy
+  sentence, and no `src`, `test`, `tools`, or `bin` changes. No implementation
+  tests were run.

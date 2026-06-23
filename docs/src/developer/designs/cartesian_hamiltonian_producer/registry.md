@@ -345,6 +345,9 @@ Approved behavior:
   such as `core_spacing = 0.3`; these are explicit resolved inputs, not hidden
   universal producer defaults, and normal overrides such as quick-test
   `core_spacing = 0.5` remain allowed.
+- routine correctness tests may override driver physics defaults, but any
+  asserted scalar must be tied to the exact test input and not described as a
+  physics-default result.
 
 This ID does not approve a public `d`, public `parent_mapping_d`, public
 mapping-strength/range knobs, element-table defaults, ECP behavior, solver

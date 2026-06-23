@@ -170,7 +170,8 @@ Approved R1 one-center base atom relaxation:
   and box padding separate; White-Lindsey `Z` behavior is a mapping-shape rule
   or preset rule, not a second public knob; visible driver/project defaults
   such as `core_spacing = 0.3` are explicit resolved inputs and may be
-  overridden for quick tests;
+  overridden for quick tests; routine correctness-test scalars must be tied to
+  their exact override inputs, not described as physics-default results;
 - atoms and diatomics must share the same producer workflow after the narrow
   geometry/shellification differences; no atom-only Hamiltonian builder,
   materialization path, route-stage object, report/status payload, or artifact

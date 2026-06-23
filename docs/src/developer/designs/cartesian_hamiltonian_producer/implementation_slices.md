@@ -602,6 +602,9 @@ Allowed source shapes:
 - allow visible, easily edited driver/project defaults such as
   `core_spacing = 0.3` and template `padding`, while treating them as explicit
   resolved input values that may be overridden for quick tests;
+- routine correctness tests may override driver physics defaults, but any
+  asserted scalar must be tied to the exact test input and not described as a
+  physics-default result;
 - keep any example/default atom input explicit, not inferred from element
   tables.
 
