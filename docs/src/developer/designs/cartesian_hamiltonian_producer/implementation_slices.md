@@ -223,7 +223,9 @@ Remaining cleanup:
 ## Compact Hamiltonian Artifact Manifest
 
 Status: approved for implementation under `HP-HAM-MANIFEST-FN-01` and
-`HP-HAM-MANIFEST-TEST-01`.
+`HP-HAM-MANIFEST-TEST-01`. The source-mode provenance seam is approved
+separately under `HP-HAM-MANIFEST-SRC-FN-01` and
+`HP-HAM-MANIFEST-SRC-TEST-01`.
 
 Approved boundary:
 
@@ -269,6 +271,26 @@ Required implementation rule:
   inventories, dense moments, allocation probes, route reports, or status
   payloads.
 
+Source-mode provenance seam:
+
+- carry one compact construction-native provenance object from terminal
+  lowering / retained-unit / raw-product source planning to the base working
+  basis manifest context;
+- approved source files are terminal lowering contracts/region contracts, raw
+  product source records/source-mode ordering, retained-unit records/lowering,
+  retained-unit transform-contract records/unit contracts, terminal basis
+  realization, and `src/cartesian_base_hamiltonian.jl`;
+- the preferred carrier is a `source_mode_provenance` field on the internal
+  `cartesian_base_working_basis(...)` result;
+- adding one optional source-mode provenance field to
+  `CartesianTerminalBasisRealization` is allowed only if it avoids duplication
+  or loss of terminal construction ordering;
+- populate optional `source_shells/`, `source_modes/`, and native
+  `final_basis_source_relations/` only from construction-native facts;
+- improve `final_basis_labels/` only where the label is native and directly
+  tied to the row's unit/source mode;
+- do not add ray/cone/radial labels unless already natively defined.
+
 Padding scope:
 
 - this lane records current recipe provenance only;
@@ -294,11 +316,14 @@ Forbidden:
   artifact schema dumps in the driver, solver-specific fields,
   CR2-consumer-specific fields, Cr2-specific fields, committed Cr2 fixtures,
   Cr2-specific branches, route reports/status payloads, persistent caches, new
-  algorithmic metadata, or source files outside the approved surfaces.
+  algorithmic metadata, coefficients, dense transforms, `T_G`, `T_A`, raw
+  inventories, diagnostic payloads, or source files outside the approved
+  surfaces.
 
 Line budget:
 
 - at most `150` added `src` lines;
+- for `HP-HAM-MANIFEST-SRC-FN-01`, at most `180` added `src` lines;
 - no new committed test, tool, or input-fixture file.
 
 ## Cartesian Gaussian Raw Blocks - Nuclear Slice

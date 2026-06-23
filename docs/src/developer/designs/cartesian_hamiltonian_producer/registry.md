@@ -56,6 +56,12 @@ cross-block residual or construction repair signal. Source cleanup should
 replace production cross-overlap audit plumbing with structural support checks
 under a separate implementation handoff.
 
+Under `HP-HAM-MANIFEST-SRC-FN-01`, a source pass may add one optional compact
+terminal source-mode provenance carrier if the implementation chooses to attach
+the manifest seam to this realization object. That carrier is artifact
+provenance only and must not become a basis, operator, route-report, or
+algorithm input.
+
 ### HP-FILE-01 — terminal realization file
 
 Approved file:
@@ -939,6 +945,98 @@ Approved validation:
 No new committed test file, public reader API, artifact schema dump, driver
 public input change, Cr2 fixture, or solver/CR2 workflow validation is approved
 by this ID.
+
+### HP-HAM-MANIFEST-SRC-FN-01 — source-mode provenance seam
+
+Approved purpose: carry compact construction-native source-mode provenance
+from terminal lowering / retained-unit / raw-product source planning to the
+base working basis manifest context so artifact writing can populate optional
+source provenance groups without route reports or center inference.
+
+Approved source files:
+
+```text
+src/cartesian_terminal_lowering/contracts.jl
+src/cartesian_terminal_lowering/region_contracts.jl
+src/cartesian_raw_product_sources/CartesianRawProductSources.jl
+src/cartesian_raw_product_sources/records.jl
+src/cartesian_raw_product_sources/source_mode_indices.jl
+src/cartesian_retained_units/CartesianRetainedUnits.jl
+src/cartesian_retained_units/records.jl
+src/cartesian_retained_units/lower_contract_units.jl
+src/cartesian_retained_unit_transform_contracts/CartesianRetainedUnitTransformContracts.jl
+src/cartesian_retained_unit_transform_contracts/records.jl
+src/cartesian_retained_unit_transform_contracts/unit_contracts.jl
+src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl
+src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl
+src/cartesian_base_hamiltonian.jl
+```
+
+Module wrapper files are approved only for internal exports/includes required
+by the compact provenance seam. They are not public API authority.
+
+Approved carrier:
+
+- preferred: one internal `source_mode_provenance` field on the
+  `cartesian_base_working_basis(...)` return value;
+- allowed if cleaner: one optional compact source-mode provenance field on
+  `CartesianTerminalBasisRealization`;
+- no other stage object, report, status payload, route summary, artifact
+  wrapper, or persistent cache is approved.
+
+Approved source facts:
+
+- source shell IDs, unit links, source-box/source-region labels, construction
+  kind, source intervals, source-mode dimensions, source-mode ordering, center
+  definition/status, Lowdin-correction status, and shell/ray/radial label
+  statuses;
+- source mode identities
+  `(source_shell_id, local_axis_x, local_axis_y, local_axis_z)`, local
+  source-mode ordering, native parent-lattice coordinates only when already
+  available, representative center metadata, and status flags;
+- final-basis source-relation rows only where the relation is construction
+  native: direct identity, boundary source-mode selection, product-axis tuple,
+  or explicit `:mixed` / `:unavailable`;
+- final-basis label improvements only where the final basis column is directly
+  and natively tied to the row's unit/source mode.
+
+Ray, cone, shell, and radial labels may be written only when already natively
+defined by the construction. This ID does not approve a repo-chosen ray/cone
+grouping policy or inferred labels from centers, nearest-grid snapping, support
+order, support indices, or raw-to-final support.
+
+This ID does not approve coefficients, dense transforms, `T_G`, `T_A`, raw
+candidate inventories, raw pair inventories, allocation probes, route reports,
+diagnostic payloads, metadata/status field clouds beyond the compact approved
+provenance object, Hamiltonian object changes, matrix-key changes,
+`read_cartesian_ida_hamiltonian` changes, public API/export changes, driver
+changes, artifact schema dumps, solver fields, CR2-consumer-specific fields,
+Cr2-specific fields, committed Cr2 fixtures, or Cr2-specific branches.
+
+Line budget: at most `180` added `src` lines. Stop for a separate amendment if
+the implementation needs new source files, public exports, dense payloads,
+driver changes, reader changes, route report plumbing, or a source-mode/ray
+policy not already present in construction metadata.
+
+### HP-HAM-MANIFEST-SRC-TEST-01 — source-mode provenance seam validation
+
+Approved validation:
+
+- `git diff --check`;
+- package load;
+- H2 base artifact write/readback through the existing reader;
+- H2 supplemented artifact write/readback through the existing reader;
+- direct JLD2 checks that optional `source_shells/`, `source_modes/`, and
+  `final_basis_source_relations/` are present only for construction-native
+  provenance rows;
+- checks that absent shell/ray/radial/source facts are explicitly
+  `:unavailable` or `:mixed` and not inferred;
+- optional practical Be2 supplemented manifest inspection;
+- no Cr2 run.
+
+No new committed test file, public reader API, driver public input change,
+artifact schema dump, Cr2 fixture, solver/CR2 workflow validation, or broad
+route/report validation is approved by this ID.
 
 ### HP-R3U-FILE-01 — supplemented workflow source and validation files
 

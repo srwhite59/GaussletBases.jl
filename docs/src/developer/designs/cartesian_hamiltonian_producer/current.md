@@ -154,6 +154,14 @@ Approved compact Hamiltonian artifact manifest lane:
 - no public reader API, driver public input change, route report/status
   payload, dense transform, raw inventory, inferred shell/ray labels, solver
   field, Cr2-specific field, or committed Cr2 fixture is approved.
+- `HP-HAM-MANIFEST-SRC-FN-01` separately approves a compact construction-native
+  source-mode provenance seam from terminal lowering / retained-unit /
+  raw-product source plans to the base working basis manifest context, only for
+  optional `source_shells/`, `source_modes/`, native source relations, and
+  native final-label improvements.
+- the source-mode seam must not serialize coefficients, dense transforms,
+  `T_G`, `T_A`, raw inventories, route reports, allocation probes, diagnostic
+  payloads, or repo-chosen ray/radial labels.
 
 Approved canonical driver usability lane:
 

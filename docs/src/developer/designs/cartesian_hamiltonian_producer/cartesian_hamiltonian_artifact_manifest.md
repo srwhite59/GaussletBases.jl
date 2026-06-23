@@ -3,6 +3,9 @@
 Status: approved for implementation under `HP-HAM-MANIFEST-FN-01` and
 `HP-HAM-MANIFEST-TEST-01`.
 
+The optional source-mode provenance seam is approved separately under
+`HP-HAM-MANIFEST-SRC-FN-01` and `HP-HAM-MANIFEST-SRC-TEST-01`.
+
 ## Purpose
 
 Canonical-driver Hamiltonian artifacts need enough sidecar information for
@@ -209,6 +212,78 @@ without adding algorithmic metadata, it must stop and report the missing seam.
 Do not add coefficients, dense transforms, raw inventories, route reports, or
 status payloads to force the manifest to exist.
 
+## Source-Mode Provenance Seam
+
+The first compact manifest writer may write only `final_basis_labels/` and
+`recipe_provenance/` when source-mode facts are not live at the artifact seam.
+`HP-HAM-MANIFEST-SRC-FN-01` approves one narrow construction-native provenance
+carrier so later source work can populate optional groups:
+
+```text
+hamiltonian_manifest/source_shells/
+hamiltonian_manifest/source_modes/
+```
+
+and, where the relation is native, improve:
+
+```text
+hamiltonian_manifest/final_basis_source_relations/
+hamiltonian_manifest/final_basis_labels/
+```
+
+Approved carrier concept:
+
+```text
+terminal lowering / retained-unit / raw-product source plans
+-> compact source-mode provenance object
+-> base working basis manifest context
+-> artifact sidecar writer
+```
+
+The preferred live carrier is one internal `source_mode_provenance` field on
+the object returned by `cartesian_base_working_basis(...)`. A source pass may
+instead attach the same compact object to `CartesianTerminalBasisRealization`
+only if that avoids duplication or loss of terminal construction ordering. In
+either case, the object is artifact provenance only; Hamiltonian construction,
+operator assembly, residual selection, and reader behavior must not consume it.
+
+Approved object contents are row tables matching the optional manifest groups:
+
+- source-shell rows with stable shell IDs, unit links, construction kind,
+  source-box/source-region labels, source-mode dimensions/order, source
+  intervals, center definition/status, Lowdin-correction status, and
+  shell/ray/radial label statuses;
+- source-mode rows with `(source_shell_id, local_axis_x, local_axis_y,
+  local_axis_z)` identity, source-mode label/order fields, parent-lattice
+  coordinates only when native, representative center metadata, and status
+  flags;
+- final-basis source-relation rows only for native relation facts, such as
+  direct identity, boundary source-mode selection, product-axis tuple, or
+  explicit mixed/unavailable relation status;
+- optional final-basis label improvements only where the final basis column is
+  directly and natively tied to a unit/source mode.
+
+The object must not contain coefficients, dense transforms, `T_G`, `T_A`,
+raw candidate inventories, raw pair inventories, route reports, allocation
+probes, or diagnostic payloads. It may carry compact row IDs, labels, small
+integer coordinates, source-mode dimensions, status symbols, and booleans.
+
+Ray and radial labels remain unavailable unless already natively defined by
+the construction. Do not add a repo-chosen ray/cone/radial grouping policy in
+this lane.
+
+The seam may reuse facts already present in:
+
+- terminal lowering contracts and their source CPBs;
+- retained-unit records;
+- retained-unit transform contracts and raw product source metadata;
+- `RawProductBoxPlan` / `PQSBoundaryProductModeRetainedRule`;
+- terminal basis blocks and their matrix-order column ranges.
+
+It must not add algorithmic metadata upstream merely to satisfy an artifact
+consumer. If the native facts are missing, write explicit `:unavailable` or
+`:mixed` statuses and report the missing producer seam.
+
 ## Recipe Provenance Group
 
 Approved group:
@@ -301,3 +376,7 @@ Required validation:
 Optional validation:
 
 - Be2 supplemented artifact write/readback and manifest inspection if practical.
+- Source-mode seam validation under `HP-HAM-MANIFEST-SRC-TEST-01` may add
+  ignored/direct JLD2 checks that optional source groups are present only when
+  construction-native provenance rows exist and that missing shell/ray/radial
+  labels remain explicitly unavailable.

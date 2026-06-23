@@ -13024,3 +13024,62 @@ Carrying-cost result:
 - new tests: none.
 - new metadata/status fields: approved artifact sidecar fields only; no
   algorithmic metadata/status fields.
+
+## Cartesian Hamiltonian Producer Pass 114 - Approve Source-Mode Manifest Seam
+
+Commit(s):
+- this commit - Approve source-mode manifest seam
+
+Summary:
+- Approved `HP-HAM-MANIFEST-SRC-FN-01` /
+  `HP-HAM-MANIFEST-SRC-TEST-01` as the narrow follow-on authority for carrying
+  construction-native source-mode provenance to the compact Hamiltonian
+  manifest writer.
+- The approved seam is:
+  terminal lowering / retained-unit / raw-product source plans -> compact
+  source-mode provenance object -> base working basis manifest context ->
+  artifact sidecar writer.
+- The preferred carrier is one internal `source_mode_provenance` field on the
+  `cartesian_base_working_basis(...)` result. One optional
+  `CartesianTerminalBasisRealization` field is allowed only if it avoids
+  duplicated or lost terminal construction ordering.
+- The seam may populate optional `hamiltonian_manifest/source_shells/`,
+  `hamiltonian_manifest/source_modes/`, native
+  `final_basis_source_relations/`, and native `final_basis_labels/`
+  improvements. Missing ray/radial/source facts must remain explicit
+  `:unavailable` or `:mixed`.
+
+Validation:
+- Design-manager validation only: docs-only `git diff --check`, focused `rg`
+  checks for `HP-HAM-MANIFEST-SRC-*`, source-mode provenance carrier wording,
+  approved source files, optional source groups, no-inference guardrails, and
+  forbidden dense transform/raw inventory/route report fields; confirmed no
+  `src`, `test`, `tools`, or `bin` files changed. No implementation tests were
+  run.
+
+Goal advancement:
+- LT1/LT3: closes the exact design gap found by the first manifest source pass:
+  the writer can only emit source-shell/source-mode groups when live
+  construction-native provenance reaches the artifact seam.
+- RG/LT6: keeps CR2-facing provenance useful without adding CR2-specific
+  schema, ray policies, or Hamiltonian-object changes.
+
+Carrying-cost result:
+- deleted: none; docs-only authority pass.
+- simplified: doer now has one approved place to carry source-mode provenance
+  instead of inventing route reports or deriving labels from centers.
+- quarantined: coefficients, dense transforms, `T_G`, `T_A`, raw inventories,
+  raw pair inventories, route reports, allocation probes, diagnostic payloads,
+  driver changes, reader changes, matrix-key changes, public API/export
+  changes, and non-native ray/radial labels remain unapproved.
+- not deleted because: the first compact manifest source pass is already live
+  and remains valid for final-basis labels and recipe provenance.
+- exact remaining caller/blocker: source implementation must stop if native
+  source shell/mode facts cannot be carried from existing terminal lowering,
+  retained-unit, raw-product source, and terminal basis records without adding
+  algorithmic metadata or route report plumbing.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none; this approves only a compact artifact
+  provenance carrier for a future source pass.

@@ -473,6 +473,8 @@ these approved design IDs:
 - `HP-DRV-STAGE-TEST-01`
 - `HP-HAM-MANIFEST-FN-01`
 - `HP-HAM-MANIFEST-TEST-01`
+- `HP-HAM-MANIFEST-SRC-FN-01`
+- `HP-HAM-MANIFEST-SRC-TEST-01`
 
 No other production surface may be added in this lane without a prior
 documentation-only design amendment. This includes new structs, persistent
@@ -598,6 +600,37 @@ Approved R3 compatibility and endpoint surfaces:
   committed Cr2 fixtures, or
   Cr2-specific branches. One-center atom padding is provenance-only in this
   lane; do not change atom parent counts or atom size policy under these IDs.
+- `HP-HAM-MANIFEST-SRC-FN-01` approves only a compact construction-native
+  source-mode provenance seam for optional manifest groups
+  `hamiltonian_manifest/source_shells/`,
+  `hamiltonian_manifest/source_modes/`, and native
+  `final_basis_source_relations/` / `final_basis_labels/` improvements.
+  Approved source files are `src/cartesian_terminal_lowering/contracts.jl`,
+  `src/cartesian_terminal_lowering/region_contracts.jl`,
+  `src/cartesian_raw_product_sources/CartesianRawProductSources.jl`,
+  `src/cartesian_raw_product_sources/records.jl`,
+  `src/cartesian_raw_product_sources/source_mode_indices.jl`,
+  `src/cartesian_retained_units/CartesianRetainedUnits.jl`,
+  `src/cartesian_retained_units/records.jl`,
+  `src/cartesian_retained_units/lower_contract_units.jl`,
+  `src/cartesian_retained_unit_transform_contracts/CartesianRetainedUnitTransformContracts.jl`,
+  `src/cartesian_retained_unit_transform_contracts/records.jl`,
+  `src/cartesian_retained_unit_transform_contracts/unit_contracts.jl`,
+  `src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl`,
+  `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`,
+  and `src/cartesian_base_hamiltonian.jl`. Preferred carrier is one internal
+  `source_mode_provenance` field on the `cartesian_base_working_basis(...)`
+  result; one optional `CartesianTerminalBasisRealization` field is allowed only
+  if needed to avoid duplicated or lost terminal construction ordering. The
+  seam must not add coefficients, dense transforms, `T_G`, `T_A`, raw
+  inventories, route reports, allocation probes, diagnostic payloads, driver
+  changes, reader changes, matrix-key changes, public API/export changes, or
+  non-native ray/radial labels. Line budget is at most 180 added `src` lines.
+- `HP-HAM-MANIFEST-SRC-TEST-01` approves only `git diff --check`, package load,
+  H2 base and H2 supplemented artifact write/readback through the existing
+  reader, direct JLD2 checks for optional source groups when native rows exist,
+  unavailable/mixed status checks for missing labels, optional practical Be2
+  manifest inspection, and no Cr2 run. No committed test file is approved.
 - `HP-R3U-FILE-01`, `HP-R3U-FN-01`, `HP-R3U-WIRE-01`, and `HP-R3U-TEST-01`
   remain approved only for the non-exported supplemented usability facade and
   its existing standalone H2 validation section.

@@ -55,7 +55,8 @@ Agents should read first:
   for the explicit homonuclear diatomic molecule-scope relaxation
 - [Cartesian Hamiltonian artifact manifest](cartesian_hamiltonian_artifact_manifest.md)
   for compact JLD2 sidecar groups describing matrix-order basis rows and public
-  recipe provenance
+  recipe provenance, plus the narrow construction-native source-mode
+  provenance seam
 - [Algorithm implementation index](../../algorithm_implementation_index.md)
 
 Approved amendments:
@@ -116,8 +117,10 @@ Approved amendments:
   defaults or Cr2-specific branch.
 - [Cartesian Hamiltonian artifact manifest](cartesian_hamiltonian_artifact_manifest.md)
   approves only compact JLD2 sidecar groups for matrix-order basis labels and
-  uniform recipe provenance. It does not change the Hamiltonian object, matrix
-  keys, public inputs, or `read_cartesian_ida_hamiltonian`.
+  uniform recipe provenance, and separately approves a compact source-mode
+  provenance seam for optional source-shell/source-mode manifest groups. It
+  does not change the Hamiltonian object, matrix keys, public inputs, or
+  `read_cartesian_ida_hamiltonian`.
 
 Candidate amendments:
 
