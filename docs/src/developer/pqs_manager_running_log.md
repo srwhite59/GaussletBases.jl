@@ -10590,3 +10590,63 @@ Risk / guardrail:
 - Do not use this approval as a broad raw-block framework or as permission to
   optimize `G-G` product matrices. Keep the first source pass to non-nuclear
   `G-A`/`A-A` raw blocks and construction-local reuse only.
+
+## Cartesian Hamiltonian Producer Pass 084A - Map Non-Nuclear Extraction
+
+Commit(s):
+- this commit - Record non-nuclear extraction map
+
+Summary:
+- Accepted a read-only mapping audit for the first source pass under
+  `HP-CGRB-NN-*`. The duplicated non-nuclear work is localized to the
+  Qiu-White cross/self moment builders, while Residual Gaussian currently calls
+  that donor path twice: once for residual setup mixed overlap `X`, and again
+  for the full exact augmented operators.
+- Exact current builders are
+  `_qwrg_cartesian_shell_cross_moment_blocks_3d(...)`,
+  `_qwrg_cartesian_shell_self_moment_blocks_3d(...)`, and the diatomic wrapper
+  `_qwrg_diatomic_cartesian_shell_blocks_3d(...)` in
+  `src/ordinary_qw_raw_blocks.jl`. Residual Gaussian callers are
+  `_r3a_qw_blocks(...)`, `_terminal_residual_mixed_overlap(...)`, and
+  `pqs_terminal_residual_gto_augmented_operators(...)` in
+  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`.
+- The first implementation should add
+  `src/cartesian_gaussian_raw_blocks/non_nuclear_blocks.jl`, include it from
+  `CartesianGaussianRawBlocks.jl`, rewire RG and QW diatomic consumers to a
+  neutral non-nuclear raw-block result, and delete direct QW donor calls from
+  those paths. Atomic QW factor-term and CPB/oracle callers remain live, so the
+  old QW builders should not be deleted yet.
+
+Validation:
+- Doer/design-manager reported no files edited, final
+  `git status --short --branch` clean except the pre-existing untracked
+  successor handoff file. Manager confirmed `git status --short --branch` and
+  `git diff --check`.
+
+Goal advancement:
+- Cr2-readiness/MT4: converts the new non-nuclear authority into a concrete
+  source-pass boundary with exact current callers and deletion limits.
+- CGRB/LT6: protects the neutral-owner extraction from becoming a broad QW or
+  CPB/oracle rewrite.
+
+Carrying-cost result:
+- deleted: none; read-only audit.
+- simplified: identified the exact neutral extraction boundary and live
+  callers.
+- quarantined: atomic factor-term QW, CPB oracle paths, `G-G` product-matrix
+  optimization, and Cr2 workflow.
+- not deleted because: old QW cross/self builders still have atomic and
+  CPB/oracle callers.
+- exact remaining caller/blocker: source pass must fit under `HP-CGRB-NN-*`
+  and the 150 added-source-line budget; otherwise request an amendment before
+  coding.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.
+
+Risk / guardrail:
+- Keep the first source pass narrow: non-nuclear `G-A`/`A-A`
+  overlap/kinetic/moment raw blocks only. Do not touch nuclear raw blocks,
+  final-basis `G-G` product matrices, atomic factor-term QW, CPB oracle
+  behavior, public API, artifacts, reports, statuses, or persistent caches.
