@@ -11510,3 +11510,92 @@ Risk / guardrail:
   replay/oracle costs, terminal kinetic/moment `G-G`, neutral raw blocks,
   residual/MWG/IDA, artifacts, metadata, reports, public API, or Cr2 workflow
   without a separate authority decision.
+
+## Cartesian Hamiltonian Producer Pass 089B - Post-UGG Production Attribution
+
+Commit(s):
+- this commit - Record post-UGG production attribution
+
+Summary:
+- Accepted the measurement-only post-UGG attribution audit. Cr2 q4
+  production-equivalent in-memory construction now looks memory-acceptable:
+  peak RSS was about `2652.031 MiB`, and the final Hamiltonian retained size
+  was about `80.388 MiB`.
+- The prior exact-operator kernel lanes remain crossed. The audit identifies
+  one possible remaining exact-operator source target: same-construction reuse
+  of already-built base Hamiltonian `K_GG` and by-center unit `U_GG` blocks,
+  rather than recomputing those final-basis matrices inside augmented
+  operators.
+- The replay using base `K/U_A` blocks was exact at zero operator delta and
+  reduced the exact-operator replay to `0.8620s / 1237.136 MiB`. Route setup
+  dominates elapsed time end-to-end, but that is a separate attribution lane,
+  not an exact-operator continuation.
+
+Validation:
+- Doer ran `git diff --check`, package load, and
+  `tmp/work/cr2_post_ugg_production_attribution.jl`.
+- Final status had no tracked changes and only the pre-existing untracked
+  successor handoff. Manager reviewed the reported attribution and did not
+  rerun the Cr2 audit.
+
+Production-equivalent result:
+- Route/base stages: `47.0332s`, GC `0.1748s`, `2134.579 MiB` allocated,
+  `12.220 MiB` retained.
+- Base Hamiltonian: `4.9447s`, GC `0.6853s`, `4404.736 MiB` allocated,
+  `73.983 MiB` retained.
+- Supplement load/convert: `0.0103s`, `3.400 MiB` allocated,
+  `0.066 MiB` retained.
+- Residual construction: `0.7314s`, GC `0.0284s`, `1426.763 MiB` allocated,
+  `1.641 MiB` retained.
+- Exact augmented operators: `5.0239s`, GC `0.3747s`, `3043.013 MiB`
+  allocated, `180.872 MiB` retained.
+- Final MWG Hamiltonian: `0.1779s`, GC `0.0029s`, `738.960 MiB` allocated,
+  `80.388 MiB` retained.
+- Total: `73.0740s / 13107.681 MiB`, GC `2.7732s`, peak RSS
+  `2652.031 MiB`.
+
+Replay attribution:
+- Neutral non-nuclear raw blocks: `0.1842s / 862.643 MiB`.
+- Neutral nuclear raw blocks: `0.6438s / 19.828 MiB`.
+- Terminal `G-G` kinetic/moment products: `0.8438s / 721.346 MiB`.
+- Unit-nuclear `U_GG`: `2.0093s / 609.146 MiB`.
+- Exact augmented transforms: `0.0569s / 627.354 MiB`.
+- MWG substep replay: `0.2778s / 837.870 MiB`.
+- Same-construction supplement-block overload: `4.7994s / 4771.127 MiB`,
+  zero K and V deltas.
+- Hypothetical base `K/U_A` reuse: `0.8620s / 1237.136 MiB`, operator delta
+  `0.0`.
+
+Goal advancement:
+- Cr2-readiness/MT4: shifts the next optional exact-operator target from
+  low-level scratch reuse to same-construction orchestration reuse. The current
+  production-equivalent peak memory is acceptable enough that stopping
+  exact-operator micro-optimization is also defensible.
+- RG/LT6: keeps the next possible source work attached to
+  `CartesianFinalBasisRealization` and same-construction data reuse, not raw
+  blocks, residual/MWG conventions, or public workflow.
+
+Mechanical/anti-bloat gate:
+- No production files changed in the doer pass.
+- Manager-log commit only; no `src`, `test`, `tools`, or `bin` edits.
+
+Carrying-cost result:
+- deleted: none; measurement-only pass.
+- simplified: separates production-equivalent memory acceptability, replay
+  overhead, and same-construction duplication.
+- quarantined: ignored `tmp/work` audit only.
+- not deleted because: no source authority exists for same-construction base
+  `K/U_A` reuse.
+- exact remaining caller/blocker: a new docs-only amendment is needed before
+  wiring base Hamiltonian `K_GG` and unit `U_GG[A]` reuse into augmented
+  operators.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.
+
+Risk / guardrail:
+- Do not implement same-construction base `K/U_A` reuse without a narrow
+  authority decision. If approved, it should avoid provenance payloads,
+  metadata/status fields, route-stage cleanup, public API, artifacts, raw-block
+  changes, residual/MWG/IDA convention changes, and committed tests.
