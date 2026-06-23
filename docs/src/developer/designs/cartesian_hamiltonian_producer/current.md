@@ -162,8 +162,15 @@ Approved R1 one-center base atom relaxation:
   one-center H-only validation to explicit origin-centered all-electron
   one-center atoms;
 - `HP-R1-ATOM-WIRE-01` maps the public nuclear charge to the existing
-  White-Lindsey atomic mapping `Z` while keeping `d`, `core_spacing`, and
-  `reference_spacing` separate;
+  White-Lindsey atomic mapping `Z` and maps resolved public `core_spacing` to
+  the private `parent_mapping_d`; public `d` is deprecated and, if
+  temporarily accepted, must equal resolved `core_spacing`;
+- `HP-R1-CORE-FN-01` freezes `core_spacing` as the single public
+  near-nucleus physical scale while keeping `reference_spacing`, tail spacing,
+  and box padding separate; White-Lindsey `Z` behavior is a mapping-shape rule
+  or preset rule, not a second public knob; visible driver/project defaults
+  such as `core_spacing = 0.3` are explicit resolved inputs and may be
+  overridden for quick tests;
 - atoms and diatomics must share the same producer workflow after the narrow
   geometry/shellification differences; no atom-only Hamiltonian builder,
   materialization path, route-stage object, report/status payload, or artifact

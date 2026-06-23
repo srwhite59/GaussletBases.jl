@@ -77,13 +77,21 @@ For the current approved H endpoint, the visible basis fields include:
 - `q`;
 - `core_spacing`;
 - `radius`;
-- explicit `d`;
 - optional `reference_spacing`;
 - optional `tail_spacing`;
 - optional `parent_axis_family`.
 
-`d` remains the public one-center mapping control and has no driver-created
-hidden default. `reference_spacing` remains a separate reference-grid spacing.
+`core_spacing` is the public physical near-nucleus spacing. The canonical
+driver should not expose `d` as a separate input; if an implementation still
+passes through a temporary compatibility `d`, the producer must require it to
+equal resolved `core_spacing`. `reference_spacing` remains a separate
+reference-grid spacing.
+
+The canonical driver may carry visible, easily edited project defaults, such
+as `core_spacing = 0.3` and a template `padding`. Those defaults are treated as
+explicit driver/input-file values after construction, not hidden universal
+producer defaults. Command-line or input-file overrides such as
+`core_spacing = 0.5` for quick tests remain normal driver behavior.
 
 ## Wiring Contract
 
@@ -119,7 +127,8 @@ workflow:
   `atom_symbols`, `nuclear_charges`, `atom_locations`, `nup`, `ndn`, and
   one-center basis fields;
 - optional ignored negative checks for non-origin atom input, nonneutral
-  electron count, missing `d`, or unsupported atom input;
+  electron count, mismatched temporary `d` if accepted, or unsupported atom
+  input;
 - no committed atom fixture, committed test file, solver run, supplemented
   atom endpoint, or translated-atom gate.
 

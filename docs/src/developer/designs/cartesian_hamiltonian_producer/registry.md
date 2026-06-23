@@ -288,15 +288,18 @@ Scope:
 - plain `NamedTuple` input groups only;
 - no public `method`, `route`, or output group in R1;
 - `n_s`, bond length, and private H2 radius are derived internally;
-- one-center H requires explicit public `d` with no default;
-- one-center H maps `reference_spacing` and `d` separately:
+- `core_spacing` is the authoritative physical near-nucleus spacing for each
+  center;
+- public `d` is deprecated and is not part of the durable producer contract;
+- one-center H maps `reference_spacing` and `core_spacing` separately:
   `spacing_inputs.reference_spacing = basis.reference_spacing`,
   `parent_inputs.parent_mapping_rule = :white_lindsey_atomic_mapping`, and
-  `parent_inputs.parent_mapping_d = basis.d`;
-- the reviewed H baseline uses explicit public `d = 0.3` and
+  `parent_inputs.parent_mapping_d = basis.core_spacing`;
+- the reviewed H baseline uses explicit public `core_spacing = 0.3` and
   `reference_spacing = 1.0`;
-- z-axis H2 rejects public `d` because it uses the multicenter mapping
-  contract;
+- if a temporary compatibility path accepts public `d`, it must require
+  `d == resolved core_spacing`; z-axis H2 and durable public examples must not
+  use `d`;
 - x/y-aligned diatomics, shifted-parallel diatomics, generally oriented
   molecules, translation, and rotation are deferred;
 - center-sized public collections must be vectors or other `AbstractVector`
@@ -312,6 +315,42 @@ Scope:
 - non-`nothing` `hamfile` writes with existing
   `write_cartesian_ida_hamiltonian`; production does not automatically
   read back the artifact.
+
+### HP-R1-CORE-FN-01 — unified core-spacing producer contract
+
+Approved source file:
+
+```text
+src/cartesian_base_hamiltonian.jl
+```
+
+Approved behavior:
+
+- `core_spacing` is the single public physical near-nucleus spacing for each
+  center after explicit input or preset resolution;
+- public `d` is deprecated as a producer field;
+- a temporary compatibility acceptance of `d` may exist only when
+  `d == resolved core_spacing`; mismatches must throw `ArgumentError`;
+- one-center White-Lindsey atom wiring sets
+  `parent_inputs.parent_mapping_d = resolved core_spacing`;
+- the White-Lindsey `Z` dependence is an internal mapping-shape rule:
+  `core_range = sqrt(core_spacing / Z)` and
+  `mapping_strength = sqrt(core_spacing * Z)`;
+- multi-center mappings use the same per-center resolved-core-spacing model
+  before applying the combined/neighbor mapping effects;
+- future automatic presets may derive `core_spacing = core_scale(q or n_s) / Z`
+  or an equivalent fixed `core_spacing * Z` family, but once resolved,
+  `core_spacing` remains the authoritative scale.
+- canonical driver or project-input defaults may choose visible editable values
+  such as `core_spacing = 0.3`; these are explicit resolved inputs, not hidden
+  universal producer defaults, and normal overrides such as quick-test
+  `core_spacing = 0.5` remain allowed.
+
+This ID does not approve a public `d`, public `parent_mapping_d`, public
+mapping-strength/range knobs, element-table defaults, ECP behavior, solver
+workflow, artifact schema changes, or source files outside
+`src/cartesian_base_hamiltonian.jl`. `reference_spacing`, `tail_spacing`, and
+physical box padding remain separate concepts.
 
 ### HP-R1-WIRE-01 — report-free base producer wiring
 
@@ -398,8 +437,12 @@ final_dimension
 
 Exact values and route-specific `nothing` fields are defined in
 `r1_public_base_producer.md`. For one-center H, the provenance must record
-`reference_spacing = 1.0`, `mapping_kind = :white_lindsey_atomic_mapping`, and
-`mapping_d = 0.3` for the reviewed endpoint. Existing
+`core_spacing = 0.3`, `reference_spacing = 1.0`,
+`mapping_kind = :white_lindsey_atomic_mapping`, and
+`mapping_d = 0.3` for the reviewed endpoint. The `mapping_d` provenance value
+is the resolved internal White-Lindsey mapping parameter and equals
+`core_spacing` for one-center atoms; it is not a separate public input.
+Existing
 `read_cartesian_ida_hamiltonian` must continue reading the Hamiltonian matrices
 while ignoring these extra keys. This ID does not approve a separate manifest,
 provenance file, wrapper object, public provenance reader, status/report
@@ -424,9 +467,10 @@ julia --project=. test/driver_public/cartesian_base_hamiltonian_runtests.jl
 
 The test/example should exercise the public facade for one-center H and
 z-axis H2, verify `CartesianIDAHamiltonian{Float64}` output, validate the
-reviewed H baseline using explicit public `d = 0.3` with
+reviewed H baseline using explicit public `core_spacing = 0.3` with
 `reference_spacing = 1.0` and H2 endpoint facts, validate unknown-key and
-malformed input errors including missing H `d` and rejected H2 `d`, validate
+malformed input errors including mismatched temporary H `d` and rejected H2
+`d`, validate
 x/y-aligned, shifted-parallel, and generally oriented H2 rejection before
 expensive construction, and validate existing Hamiltonian artifact
 write/readback plus `HP-R1-ART-01` provenance using `mktempdir()`. It is a
@@ -462,8 +506,9 @@ Approved behavior:
   `nup + ndn == round(Int, only(nuclear_charges))`;
 - treat the atom symbol as provenance/user labeling only, not as a source of
   charge, spin, basis, or ECP defaults;
-- keep required one-center basis fields `q`, `core_spacing`, `radius`, and
-  explicit public `d`.
+- keep required one-center basis fields `q`, `core_spacing`, and `radius`;
+- treat public `d`, if temporarily accepted, as a deprecated compatibility
+  alias that must equal resolved `core_spacing`.
 
 This ID does not approve translated atoms, element lookup/default tables,
 inferred charge or spin, ECP, solver workflow, supplemented atoms, public API
@@ -481,7 +526,10 @@ Approved behavior:
 
 - map public `only(system.nuclear_charges)` to the existing private
   White-Lindsey atomic mapping `Z`;
-- keep `d`, `core_spacing`, and `reference_spacing` independent;
+- map the resolved public `core_spacing` to the private White-Lindsey
+  `parent_mapping_d`;
+- keep `reference_spacing`, `tail_spacing`, and box/domain controls separate
+  from `core_spacing`;
 - feed atom geometry/shellification normalization into the same terminal-basis,
   one-body, IDA, `CartesianIDAHamiltonian`, artifact-writing, and provenance
   machinery used by the base producer;
@@ -507,15 +555,16 @@ stop and request a new docs-only amendment.
 Approved validation:
 
 - existing origin-centered H public facade endpoint remains unchanged,
-  including the reviewed `d = 0.3`, `reference_spacing = 1.0` baseline;
+  now expressed as `core_spacing = 0.3`, `reference_spacing = 1.0`, and
+  internal `parent_mapping_d = core_spacing`;
 - optional ignored/user-run Be or Cr one-center base atom artifact
   write/readback using explicit charge, spin sectors, origin geometry, and
   basis controls;
 - finite/symmetric `K`, unit `U_A`, and IDA `V` for ignored/user-run non-H
   atom checks;
-- clear `ArgumentError` for translated atom input, missing `d`, noninteger or
-  nonpositive charge, nonneutral electron count, or element-table/default
-  requests where practical.
+- clear `ArgumentError` for translated atom input, mismatched temporary `d`,
+  noninteger or nonpositive charge, nonneutral electron count, or
+  element-table/default requests where practical.
 
 No new committed test file, committed non-H atom fixture, public non-H
 reference scalar, solver run, supplemented atom endpoint, ECP gate,
@@ -1492,8 +1541,11 @@ Approved behavior:
 - require exactly one center at `(0.0, 0.0, 0.0)`;
 - require finite positive explicit nuclear charge and neutral all-electron
   count `nup + ndn == round(Int, only(nuclear_charges))`;
-- pass explicit one-center base `basis` fields, including required public `d`,
-  to the existing base facade;
+- pass explicit one-center base `basis` fields, including `core_spacing`, to
+  the existing base facade;
+- allow visible, easily edited driver/project defaults such as
+  `core_spacing = 0.3` and template `padding`, while treating them as explicit
+  resolved input values that may be overridden for quick tests;
 - use clear `ArgumentError`s for unsupported atom workflow inputs where
   practical.
 
@@ -1534,7 +1586,8 @@ Approved validation:
 - origin-centered H base driver artifact write/readback with explicit system
   and one-center basis fields;
 - optional ignored negative checks for non-origin atom input, nonneutral
-  electron count, missing `d`, or unsupported atom input.
+  electron count, mismatched temporary `d` if accepted, or unsupported atom
+  input.
 
 No supplemented atom endpoint, translated-atom gate, committed atom fixture,
 new committed test file, solver run, artifact-schema validation, or broader

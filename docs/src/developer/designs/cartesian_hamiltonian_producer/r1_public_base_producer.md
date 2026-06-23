@@ -102,7 +102,7 @@ public in R1.
 Scalar and collection validation rules:
 
 - `q` must be a positive integer;
-- `core_spacing`, `reference_spacing`, `tail_spacing`, `radius`, `d`,
+- `core_spacing`, `reference_spacing`, `tail_spacing`, `radius`,
   `xmax_parallel`, and `xmax_transverse` must be finite and positive when
   present;
 - all coordinates and nuclear charges must be finite;
@@ -126,7 +126,6 @@ Conditional fields:
 
 - one-center H requires:
   - `radius`
-  - `d`
 - z-axis H2 requires:
   - `xmax_parallel`
   - `xmax_transverse`
@@ -139,9 +138,11 @@ Optional public fields with R1 defaults:
 - `reference_spacing = 1.0`
 - `tail_spacing = 10.0`
 
-The reviewed R1 one-center H endpoint uses the general
-`reference_spacing = 1.0` default plus required explicit public `d = 0.3`.
-`d` has no default. Missing `d` for one-center H must throw `ArgumentError`.
+The reviewed R1 one-center H endpoint uses explicit public
+`core_spacing = 0.3` plus the general `reference_spacing = 1.0` default.
+Public `d` is deprecated and is not part of the durable producer contract.
+If a temporary compatibility path accepts `d`, it must require
+`d == resolved core_spacing`; mismatches must throw `ArgumentError`.
 
 Fixed private choices in R1:
 
@@ -159,12 +160,16 @@ One-center H private wiring:
 ```text
 spacing_inputs.reference_spacing = basis.reference_spacing
 parent_inputs.parent_mapping_rule = :white_lindsey_atomic_mapping
-parent_inputs.parent_mapping_d = basis.d
+parent_inputs.parent_mapping_d = resolved basis.core_spacing
 ```
 
-`d`, `core_spacing`, and `reference_spacing` are independent public controls in
-R1. The facade must not accept public `parent_mapping_d`, and no later stage may
-identify or overwrite `d` with `core_spacing` or `reference_spacing`.
+`core_spacing` is the authoritative public near-core physical spacing. In the
+White-Lindsey atom mapping, the internal `parent_mapping_d` is this same
+resolved physical scale. The `Z` dependence is the mapping-shape rule
+`core_range = sqrt(core_spacing / Z)` and
+`mapping_strength = sqrt(core_spacing * Z)`, not a second public knob.
+`reference_spacing`, `tail_spacing`, and box/domain controls remain separate
+concepts. The facade must not accept public `parent_mapping_d`.
 
 These are not public keywords or accepted `basis` fields in R1:
 
@@ -177,10 +182,12 @@ These are not public keywords or accepted `basis` fields in R1:
 - `parent_mapping_rule`
 - `parent_mapping_Z`
 - `parent_mapping_d`
+- `d` in durable public examples
 
 `xmax_parallel` and `xmax_transverse` are accepted only for z-axis H2.
-They are unknown keys for one-center H. `d` is accepted only for one-center H
-and is an unknown key for z-axis H2.
+They are unknown keys for one-center H. Public `d` is deprecated; if
+temporarily accepted for one-center H, it must equal resolved `core_spacing`,
+and it remains an unknown key for z-axis H2.
 
 Routing is implicit. One supported center selects the one-center base route.
 Two supported centers must be z-axis H2 and select the z-axis diatomic base
@@ -208,9 +215,8 @@ h_system = (;
 
 h_basis = (;
     q = 5,
-    core_spacing = 0.5,
+    core_spacing = 0.3,
     radius = 4.0,
-    d = 0.3,
     reference_spacing = 1.0,
 )
 
@@ -303,7 +309,7 @@ Route-specific values:
 - one-center H:
   - `producer_provenance/route = :one_center_pqs_base`
   - `producer_provenance/mapping_kind = :white_lindsey_atomic_mapping`
-  - `producer_provenance/mapping_d = basis.d`
+  - `producer_provenance/mapping_d = resolved basis.core_spacing`
   - `producer_provenance/radius = basis.radius`
   - `producer_provenance/xmax_parallel = nothing`
   - `producer_provenance/xmax_transverse = nothing`
@@ -463,11 +469,12 @@ First implementation must validate:
 
 - package load;
 - H base Hamiltonian construction through the public facade with a reviewed
-  one-center H system, `reference_spacing = 1.0`, and explicit `d = 0.3`;
+  one-center H system, explicit `core_spacing = 0.3`, and
+  `reference_spacing = 1.0`;
 - H2 base Hamiltonian construction through the public facade;
 - returned type is `CartesianIDAHamiltonian{Float64}`;
 - H one-body baseline remains `-0.49855234726272035` within `1.0e-10` for the
-  explicit-`d = 0.3`, `reference_spacing = 1.0` public example;
+  `core_spacing = 0.3`, `reference_spacing = 1.0` public example;
 - H2 final dimension remains `471`;
 - H2 `one_body_hamiltonian(ham)` lowest value remains
   `-0.79460371733658908` within reviewed tolerance;
@@ -478,15 +485,17 @@ First implementation must validate:
 - invalid public requests throw clear `ArgumentError`s rather than returning
   status/blocker objects;
 - unknown public input keys throw `ArgumentError`;
-- missing `d` for one-center H throws `ArgumentError`;
+- temporary `d` for one-center H, if accepted, must match resolved
+  `core_spacing`; mismatches throw `ArgumentError`;
 - `d` for z-axis H2 throws `ArgumentError`;
 - empty `hamfile` throws `ArgumentError`;
 - non-`nothing` `hamfile` writes with `write_cartesian_ida_hamiltonian`;
 - validation readback with `read_cartesian_ida_hamiltonian` has zero one-body
   readback delta;
 - artifact validation preserves the fixed `producer_provenance/` keys,
-  including H `reference_spacing = 1.0`,
-  `mapping_kind = :white_lindsey_atomic_mapping`, and `mapping_d = 0.3`;
+  including H `core_spacing = 0.3`, `reference_spacing = 1.0`,
+  `mapping_kind = :white_lindsey_atomic_mapping`, and resolved
+  `mapping_d = 0.3`;
 - R0 warm/cold baseline is not materially regressed without explanation;
 - no `cartesian_pair_terms` or `cartesian_assembly` call appears in the
   recommended public example path.
@@ -518,9 +527,10 @@ explicit repo-manager approval.
 
 Test artifact behavior: use `mktempdir()` for `hamfile` output.
 
-The H endpoint test must use the public example's explicit `d = 0.3` with
-`reference_spacing = 1.0`. It must reject missing `d` and public
-`parent_mapping_d`.
+The H endpoint test must use the public example's explicit
+`core_spacing = 0.3` with `reference_spacing = 1.0`. It must reject public
+`parent_mapping_d` and any temporary `d` value that differs from resolved
+`core_spacing`.
 
 The test must enforce the R1 geometry contract: x/y-aligned H2,
 shifted-parallel H2, and generally oriented H2 fail with `ArgumentError`

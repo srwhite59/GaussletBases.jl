@@ -12219,3 +12219,55 @@ Carrying-cost result:
 - deleted src lines: 68.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 101 - Unify Core Spacing Authority
+
+Commit(s):
+- this commit - Unify core spacing producer contract
+
+Summary:
+- Corrected the R1/base and atom authority so `core_spacing` is the single
+  public physical near-nucleus spacing after explicit input, driver default, or
+  preset resolution. The legacy White-Lindsey atom `d` is no longer a durable
+  public producer field; if temporarily accepted for compatibility, it must
+  equal resolved `core_spacing`.
+- Recorded that one-center White-Lindsey wiring sets
+  `parent_mapping_d = core_spacing`, while the `Z` dependence lives in the
+  mapping-shape/default rule: `sqrt(core_spacing / Z)` and
+  `sqrt(core_spacing * Z)`.
+- Preserved the important separation from `reference_spacing`, `tail_spacing`,
+  and physical box padding. The canonical driver may still carry visible,
+  editable defaults such as `core_spacing = 0.3` and template padding, and quick
+  test overrides such as `core_spacing = 0.5` remain normal input behavior.
+
+Validation:
+- Design-manager validation only: focused `rg` removed stale live-authority
+  claims that public `d` is required, independent, or mapped separately from
+  `core_spacing`; remaining hits are intentional `mapping_d` provenance or
+  rejected compatibility checks. `git diff --check` and cached no-source/bin
+  staging checks are required before commit. No implementation tests were run.
+
+Goal advancement:
+- LT1/LT3: simplifies the public base/driver contract and removes a false
+  independent spacing knob before more driver-facing atom/molecule workflow is
+  built on it.
+- RG/LT6: keeps driver defaults editable and compact for real molecules while
+  avoiding hidden universal element defaults.
+
+Carrying-cost result:
+- deleted: none; docs-only authority correction.
+- simplified: one public core-spacing concept replaces the prior public
+  `d`/`core_spacing` split.
+- quarantined: temporary `d` compatibility is allowed only as an equality
+  check against resolved `core_spacing`; public `parent_mapping_d`, mapping
+  strength/range knobs, element-table defaults, ECP, solver workflow, artifact
+  schema changes, and Cr-specific workflow remain unapproved.
+- not deleted because: source compatibility handling has not been audited in
+  this design-only pass.
+- exact remaining caller/blocker: repo-manager/doer must update source only
+  under the approved R1/core-spacing surface; stop if implementation requires
+  new public fields, artifact schema changes, or element-specific defaults.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

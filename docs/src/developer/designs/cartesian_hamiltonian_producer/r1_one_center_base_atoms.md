@@ -101,12 +101,13 @@ Approved one-center atom `system` rules:
 
 Approved one-center atom `basis` rules:
 
-- required fields: `q`, `core_spacing`, `radius`, and `d`;
+- required fields: `q`, `core_spacing`, and `radius`;
 - optional fields retain existing R1 defaults:
   `reference_spacing = 1.0`, `tail_spacing = 10.0`, and
   `parent_axis_family = :G10`;
-- `d` has no default and remains independent from `core_spacing` and
-  `reference_spacing`;
+- public `d` is deprecated and is not part of the durable atom contract; if a
+  temporary compatibility path accepts it, it must equal resolved
+  `core_spacing`;
 - public `parent_mapping_Z`, `parent_mapping_d`, `parent_mapping_rule`,
   backend controls, and parent axis counts remain unsupported.
 
@@ -115,11 +116,18 @@ Private one-center mapping remains:
 ```text
 spacing_inputs.reference_spacing = basis.reference_spacing
 parent_inputs.parent_mapping_rule = :white_lindsey_atomic_mapping
-parent_inputs.parent_mapping_d = basis.d
+parent_inputs.parent_mapping_d = resolved basis.core_spacing
 parent_inputs.parent_mapping_Z = only(system.nuclear_charges)
 ```
 
 The public charge, not the atom symbol, supplies `Z`.
+The White-Lindsey `Z` dependence remains the internal mapping-shape rule
+`core_range = sqrt(core_spacing / Z)` and
+`mapping_strength = sqrt(core_spacing * Z)`. Future automatic presets may
+derive `core_spacing` from `Z`, for example through a fixed
+`core_spacing * Z` family, but after resolution `core_spacing` is the single
+authoritative near-nucleus spacing. `reference_spacing`, `tail_spacing`, and
+box controls remain separate concepts.
 
 ## Artifact Contract
 
@@ -128,7 +136,7 @@ No new artifact schema is approved. Existing `HP-R1-ART-01`
 
 - `route = :one_center_pqs_base`;
 - `mapping_kind = :white_lindsey_atomic_mapping`;
-- `mapping_d = basis.d`;
+- `mapping_d = resolved basis.core_spacing`;
 - `radius = basis.radius`;
 - `atom_symbols`, `nuclear_charges`, `atom_locations`, `nup`, `ndn`, and
   `final_dimension` record the explicit public input and result.
@@ -144,15 +152,16 @@ relaxation:
 - `git diff --check`;
 - package load;
 - existing origin-centered H public facade endpoint remains unchanged,
-  including the reviewed `d = 0.3`, `reference_spacing = 1.0` baseline;
+  including the reviewed `core_spacing = 0.3`, `reference_spacing = 1.0`
+  baseline and internal `parent_mapping_d = core_spacing`;
 - optional ignored/user-run Be or Cr one-center base atom artifact
   write/readback using explicit charge, spin sectors, origin geometry, and
   basis controls;
 - finite/symmetric `K`, unit `U_A`, and IDA `V` for ignored/user-run non-H
   atom checks;
-- clear `ArgumentError` for translated atom input, missing `d`, noninteger or
-  nonpositive charge, nonneutral electron count, or element-table/default
-  requests where practical.
+- clear `ArgumentError` for translated atom input, mismatched temporary `d`,
+  noninteger or nonpositive charge, nonneutral electron count, or
+  element-table/default requests where practical.
 
 No new committed test file, committed non-H atom fixture, public reference
 scalar, solver run, supplemented atom endpoint, ECP gate, or translated-atom

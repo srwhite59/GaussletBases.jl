@@ -597,8 +597,11 @@ Allowed source shapes:
   `atom_locations`, `nup`, and `ndn`;
 - require one center at `(0.0, 0.0, 0.0)`;
 - validate neutral all-electron count from the explicit nuclear charge;
-- pass visible one-center basis fields, including required `d`, to the base
+- pass visible one-center basis fields, including `core_spacing`, to the base
   facade;
+- allow visible, easily edited driver/project defaults such as
+  `core_spacing = 0.3` and template `padding`, while treating them as explicit
+  resolved input values that may be overridden for quick tests;
 - keep any example/default atom input explicit, not inferred from element
   tables.
 
@@ -624,7 +627,8 @@ Validation gates:
 
 - H atom base driver artifact write/readback with explicit system and basis;
 - optional ignored negative checks for non-origin atom input, nonneutral
-  electron count, missing `d`, or unsupported atom input;
+  electron count, mismatched temporary `d` if accepted, or unsupported atom
+  input;
 - no supplemented atom or translated-atom validation.
 
 Line budget:
@@ -655,7 +659,9 @@ Allowed source shapes:
 - derive neutral all-electron count from the explicit nuclear charge, not an
   element table;
 - map the explicit nuclear charge to private White-Lindsey atomic mapping `Z`;
-- keep `d`, `core_spacing`, and `reference_spacing` separate;
+- map resolved public `core_spacing` to private `parent_mapping_d`;
+- keep `reference_spacing`, `tail_spacing`, and box/domain controls separate
+  from `core_spacing`;
 - reuse existing `HP-R1-ART-01` provenance keys and
   `route = :one_center_pqs_base`.
 
@@ -678,8 +684,8 @@ Validation gates:
 - finite/symmetric `K`, unit `U_A`, and IDA `V` for ignored/user-run non-H
   atom checks;
 - unsupported translated atoms, noninteger/nonpositive charge, nonneutral
-  electron count, missing `d`, and element-table/default requests throw clear
-  errors where practical.
+  electron count, mismatched temporary `d`, and element-table/default requests
+  throw clear errors where practical.
 
 Forbidden:
 

@@ -413,6 +413,7 @@ these approved design IDs:
 - `HP-WIRE-02`
 - `HP-R1-FILE-01`
 - `HP-R1-FN-01`
+- `HP-R1-CORE-FN-01`
 - `HP-R1-WIRE-01`
 - `HP-R1-ART-01`
 - `HP-R1-TEST-01`
@@ -487,11 +488,18 @@ polish.
 
 `HP-R1-FILE-01` approves only `src/cartesian_base_hamiltonian.jl`.
 `HP-R1-FN-01` approves only the public `cartesian_base_hamiltonian` facade with
-the approved signature. The reviewed one-center H endpoint requires explicit
-public `d = 0.3` with `reference_spacing = 1.0`; public `d` maps to the private
-one-center `parent_mapping_d`, while `reference_spacing` remains the separate
-reference-grid spacing. One-center H has no default `d`, and z-axis H2 rejects
-`d`. Public `parent_mapping_d` remains unsupported. `HP-R1-WIRE-01` approves
+the approved signature. The reviewed one-center H endpoint uses explicit
+public `core_spacing = 0.3` with `reference_spacing = 1.0`; resolved
+`core_spacing` maps to the private one-center `parent_mapping_d`, while
+`reference_spacing` remains the separate reference-grid spacing. Public `d` is
+deprecated; if temporarily accepted, it must equal resolved `core_spacing`, and
+z-axis H2 rejects `d`. Public `parent_mapping_d` remains unsupported.
+`HP-R1-CORE-FN-01` freezes `core_spacing` as the single public physical
+near-nucleus spacing after explicit input, driver default, or preset
+resolution. White-Lindsey `Z` behavior is an internal mapping-shape/default
+rule, not a second public knob. Driver/project defaults such as
+`core_spacing = 0.3` are allowed only when visible and overrideable; once
+resolved, they are ordinary explicit inputs. `HP-R1-WIRE-01` approves
 only the report-free shared base constructor seam and the approved callers.
 `HP-R1-ART-01` approves only the fixed `producer_provenance/` schema in the
 final Hamiltonian file. `HP-R1-TEST-01` approves only
@@ -506,10 +514,12 @@ the `HP-R1-ART-01` provenance keys.
 `src/cartesian_base_hamiltonian.jl` from H-only validation to explicit
 origin-centered all-electron atoms. The caller must provide vector-valued
 `atom_symbols`, `nuclear_charges`, `atom_locations`, explicit `nup`/`ndn`, and
-one-center basis controls including public `d`. The atom symbol is provenance
-only; charge, electron count, spin, basis, and ECP behavior must not be inferred
-from element tables. Public charge maps to the private White-Lindsey atomic
-mapping `Z`; `d`, `core_spacing`, and `reference_spacing` remain independent.
+one-center basis controls including `core_spacing`. The atom symbol is
+provenance only; charge, electron count, spin, basis, and ECP behavior must not
+be inferred from element tables. Public charge maps to the private
+White-Lindsey atomic mapping `Z`; resolved `core_spacing` maps to the private
+`parent_mapping_d`; `reference_spacing`, tail spacing, and box/domain controls
+remain separate.
 Atoms and diatomics must share the same producer workflow after
 geometry/shellification normalization. Do not add atom-only Hamiltonian
 builders, parallel atom materialization, atom route/report/status payloads, or
