@@ -11291,3 +11291,100 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 088A - Attribute Remaining Exact-Operator Allocation
+
+Commit(s):
+- this commit - Record remaining allocation attribution audit
+
+Summary:
+- Accepted the `HP-R3REM-AUDIT-01` measurement-only audit. The remaining Cr2 q4
+  exact augmented-operator allocation after the terminal `G-G` workspace passes
+  is no longer primarily owned by Gaussian raw blocks or terminal `G-G`
+  product buffers.
+- The largest in-wrapper owner is now unit-nuclear `U_GG` Gaussian-sum
+  construction by center, measured at about `2.0447s / 1856.819 MiB` inside a
+  total wrapper cost of `5.7739s / 4680.627 MiB`.
+- The audit recommends a future source lane for unit-nuclear `U_GG` assembly
+  in `CartesianFinalBasisRealization`, centered on
+  `_accumulate_terminal_gaussian_sum!` and `_terminal_gaussian_sum_action`, but
+  no such source authority exists yet.
+
+Validation:
+- Doer ran `git diff --check`, package load, and
+  `tmp/work/cr2_exact_operator_allocation_audit.jl`; final status had no
+  tracked changes and only the pre-existing untracked successor handoff.
+- Manager reviewed the reported bucket attribution and existing
+  `HP-R3REM-AUDIT-01` authority. Per user direction, manager did not rerun the
+  Cr2 audit.
+
+Numerical/performance result:
+- Wrapper total: `5.7739s / 4680.627 MiB`.
+- Neutral non-nuclear `G-A`/`A-A` raw blocks: `0.1894s / 860.736 MiB`.
+- Neutral nuclear `G-A`/`A-A` raw blocks: `0.6316s / 15.765 MiB`.
+- Terminal `G-G` kinetic/moment products with shared workspace:
+  `0.8352s / 733.701 MiB`.
+- Unit-nuclear `U_GG` factor lookup plus Gaussian-sum construction:
+  `2.0447s / 1856.819 MiB`.
+- Augmented nuclear transforms only: `0.0125s / 179.268 MiB`; all augmented
+  transforms together: `0.0600s / 739.698 MiB`.
+- Raw-block setup/projection/symmetry miscellaneous cost was about
+  `0.160s / 12.5 MiB`. Audit-only parity/oracle replay cost was large
+  (`~16.575s / ~59482.7 MiB`) and explicitly not production wrapper cost.
+- Outside the wrapper, route/residual setup remains expensive for this fixture:
+  about `46.9s / 3569.8 MiB`, with `cartesian_units` dominant in time and
+  `cartesian_transforms`/`S_AA` dominant in allocation.
+
+Goal advancement:
+- Cr2-readiness/MT4: identifies the next source candidate as unit-nuclear
+  `U_GG` Gaussian-sum assembly, not raw blocks, residual/MWG code, or terminal
+  `G-G` product buffers.
+- RG/LT6: preserves authority boundaries by keeping the result measurement-only
+  and requiring a separate docs-only source amendment before implementation.
+
+Mechanical/anti-bloat gate:
+- No production files changed in the doer pass.
+- Manager-log commit only; no `src`, `test`, `tools`, or `bin` edits.
+
+Carrying-cost result:
+- deleted: none; measurement-only pass.
+- simplified: remaining exact-operator allocation is now attributed to exact
+  buckets rather than a broad post-`G-G` remainder.
+- quarantined: ignored `tmp/work` probes only.
+- not deleted because: no source authority existed for unit-nuclear `U_GG` or
+  route/setup cleanup.
+- exact remaining caller/blocker: unit-nuclear `U_GG` Gaussian-sum source work
+  needs a docs-only amendment naming owner, files, functions, forbidden
+  surfaces, validation gates, line budget, and failure rule.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.
+
+Risk / guardrail:
+- Do not implement unit-nuclear `U_GG` optimization under
+  `HP-R3REM-AUDIT-01` or `HP-R3GG-FN-01`. The likely owner is
+  `CartesianFinalBasisRealization`, but source work must wait for a new
+  docs-only authority decision.
+
+### Medium-Term Goal Checkpoint After Pass 088A
+
+- Completed: neutral nuclear raw-block reuse, neutral non-nuclear `G-A`/`A-A`
+  reuse, residual mixed-overlap-only setup, terminal `G-G` product lifetime
+  cleanup, and terminal `G-G` workspace reuse are no longer the current Cr2 q4
+  exact-operator allocation blockers.
+- Active: Cr2-readiness/MT4 now points to unit-nuclear `U_GG` Gaussian-sum
+  assembly as the next in-wrapper numerical kernel candidate, with route/setup
+  allocation still visible but outside the wrapper and not yet source-ready.
+- Blocked/deferred: unit-nuclear `U_GG` source work, route/raw-block setup
+  cleanup, Cr2 facade/artifact workflow, public API expansion, metadata/report
+  fields, and residual/MWG/IDA changes all remain blocked without later
+  docs-only amendments.
+- Needing refinement: the next source authority should decide whether to target
+  only reusable scratch/in-place accumulation inside the existing
+  `_accumulate_terminal_gaussian_sum!` path, or first require a smaller
+  count/shape audit of Gaussian-sum action allocation. It should not authorize
+  a broad Gaussian-sum framework.
+- Current lane direction: ask repo-design-manager for a narrow unit-nuclear
+  `U_GG` amendment, or explicitly stop Cr2 exact-operator allocation work at
+  the current measured cost.
