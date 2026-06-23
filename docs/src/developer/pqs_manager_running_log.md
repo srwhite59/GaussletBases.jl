@@ -10797,3 +10797,67 @@ Risk / guardrail:
   kinetic/moment `A-A` family reuse, nuclear work, `G-G` product matrices,
   persistent caches, public API, artifacts, reports, statuses, or broad provider
   bundles.
+
+## Cartesian Hamiltonian Producer Pass 085B - Add Overlap-Only Mixed Blocks
+
+Commit(s):
+- `9fa0cc16` - Add overlap-only Gaussian mixed blocks
+- this commit - Record overlap-only mixed-block optimization
+
+Summary:
+- Accepted the overlap-only mixed-`X` source pass. Residual mixed overlap
+  `X = G' S A` now uses a neutral
+  `CartesianGaussianRawBlocks.gaussian_non_nuclear_overlap_blocks(...)` helper
+  instead of building the full non-nuclear `G-A`/`A-A` kinetic/moment block
+  family and discarding almost all of it.
+- Physics is unchanged: the Cr2 mixed-overlap replay delta is `0.0`, H2
+  residual-GTO/MWG self-Coulomb is unchanged at
+  `0.4574265214362078`, and the Be2 facade/readback gate still passes.
+- The targeted setup cost improved from `3.1195s / 10990.107 MiB` to
+  `0.0817s / 199.292 MiB`. Full Cr2 exact-operator wrapper cost stayed roughly
+  flat/noisy at `8.7030s / 19269.019 MiB`, because full augmented operators
+  still need the full non-nuclear raw blocks.
+
+Validation:
+- Doer ran `git diff --check`, package load,
+  `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`,
+  `tmp/work/be2_r3u_facade_measurement.jl`, and
+  `tmp/work/cr2_exact_operator_allocation_audit.jl`, then a post-commit diff
+  gate and suspicious-line scan.
+- Manager ran `git diff --check HEAD~1..HEAD`, numstat, suspicious-added-line
+  scan, new-test/file scan, and package load. Per user direction, manager did
+  not complete a redundant long Cr2 validation rerun and relied on the doer
+  report for long gates.
+
+Goal advancement:
+- Cr2-readiness/MT4: removes the waste in residual setup mixed overlap and
+  narrows the remaining exact-operator blocker to full non-nuclear raw-block
+  construction plus separately deferred `G-G` product matrices.
+- CGRB/LT4/LT6: adds a focused neutral-owner helper without broadening into a
+  cache/provider framework.
+
+Mechanical/anti-bloat gate:
+- `git diff --check`: clean.
+- Numstat: `4 3 src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`;
+  `45 0 src/cartesian_gaussian_raw_blocks/non_nuclear_blocks.jl`.
+- Suspicious-added-line scan: none.
+- New-test/file scan: none.
+
+Carrying-cost result:
+- deleted: mixed-overlap dependence on full non-nuclear raw-block construction.
+- simplified: residual `X` setup now uses overlap-only neutral raw blocks.
+- quarantined: none.
+- not deleted because: full `gaussian_non_nuclear_raw_blocks(...)` is still
+  needed by exact augmented operators and Qiu-White paths.
+- exact remaining caller/blocker: full non-nuclear family reuse and `G-G`
+  product matrices remain the next exact-operator cost centers.
+- added src lines: 49.
+- deleted src lines: 3.
+- new tests: none.
+- new metadata/status fields: none.
+
+Risk / guardrail:
+- Do not fold the next full non-nuclear family-reuse pass into `G-G` product
+  matrix work. Keep `G-G` deferred unless a separate amendment approves it, and
+  keep any non-nuclear optimization inside the neutral owner and approved
+  caller surfaces.
