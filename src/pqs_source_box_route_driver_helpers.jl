@@ -668,19 +668,17 @@ function cartesian_recipe(route_inputs)
             get(route_inputs, :private_rhf_inputs, (; run_private_rhf = false))
         run_private_rhf = get(private_rhf_inputs, :run_private_rhf, false)
         run_final_basis = get(route_inputs, :run_final_basis, nothing)
-        source_box_recipe = (;
+        source_box_recipe = route_inputs.route_family == :pqs_source_box ? (;
             route_shape = route_inputs.route_shape,
             product_body_rule = route_inputs.product_body_rule,
             pqs_retained_rule = route_inputs.pqs_retained_rule,
-            product_retained_rule = route_inputs.product_retained_rule,
-        )
-        white_lindsey_recipe = (;
+            product_retained_rule = route_inputs.product_retained_rule) : nothing
+        white_lindsey_recipe = route_inputs.route_family == :white_lindsey_low_order ? (;
             route_shape = route_inputs.white_lindsey_route_shape,
             mapping_rule = route_inputs.white_lindsey_mapping_rule,
             nesting_rule = route_inputs.white_lindsey_nesting_rule,
             retained_rule = route_inputs.white_lindsey_retained_rule,
-            operator_rule = route_inputs.white_lindsey_operator_rule,
-        )
+            operator_rule = route_inputs.white_lindsey_operator_rule) : nothing
         route_recipe = (;
             route_family = route_inputs.route_family,
             route_kind = route_inputs.route_kind,

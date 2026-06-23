@@ -12530,6 +12530,57 @@ Carrying-cost result:
 - new tests: none.
 - new metadata/status fields: none.
 
+## Cartesian Hamiltonian Producer Pass 108 - Select Active Route Subrecipe
+
+Commit(s):
+- this commit - Select active route subrecipe
+
+Summary:
+- Accepted the `HP-ROUTE-RECIPE-FN-01` cleanup. `cartesian_recipe(...)` in
+  `src/pqs_source_box_route_driver_helpers.jl` now constructs only the active
+  route-family subrecipe: `source_box` for `:pqs_source_box`, or
+  `white_lindsey` for explicit `:white_lindsey_low_order`.
+- The inactive subrecipe is retained as `nothing` for compatibility, rather
+  than populated with stale fields. `_cartesian_base_route(...)` no longer
+  carries five unused `white_lindsey_*` fields through the live PQS base
+  producer path.
+- Explicit White-Lindsey low-order support remains present; no materialization,
+  shellification, terminal-lowering, numerical, artifact, or driver behavior
+  was changed.
+
+Validation:
+- Doer validation: `git diff --check`, package load, H atom base
+  artifact/readback (dimension 419), H2 base artifact/readback (dimension
+  471), H2 supplemented facade artifact/readback (dimension 489), explicit
+  `:white_lindsey_low_order` recipe smoke, focused `rg` confirming removed
+  `white_lindsey_*` route fields in `src/cartesian_base_hamiltonian.jl`, and
+  no Cr2 run.
+- Manager validation: reviewed the two-file source diff, confirmed `git diff
+  --check`, numstat 0/-5 in `src/cartesian_base_hamiltonian.jl` and +4/-6 in
+  `src/pqs_source_box_route_driver_helpers.jl`, no driver/test/tool changes,
+  no new metadata/status fields, and net source deletion.
+
+Goal advancement:
+- LT1/LT3: removes inactive White-Lindsey vocabulary from the current PQS base
+  producer contract while preserving the older explicit WL route path.
+- MT: continues contract unification by separating real WL/PQS algorithm
+  differences from accidental route-input coupling.
+
+Carrying-cost result:
+- deleted: inactive `white_lindsey_*` route fields from `_cartesian_base_route`.
+- simplified: `cartesian_recipe(...)` now builds only the selected route-family
+  subrecipe.
+- quarantined: inactive subrecipe side remains `nothing`, not stale populated
+  data.
+- not deleted because: explicit `:white_lindsey_low_order` support and WL
+  materialization remain live/deferred for a separate retirement decision.
+- exact remaining caller/blocker: tools/tests may still pass old WL fields in
+  PQS route inputs, but they are no longer required by `cartesian_recipe(...)`.
+- added src lines: 4.
+- deleted src lines: 11.
+- new tests: none.
+- new metadata/status fields: none.
+
 ## Cartesian Hamiltonian Producer Pass 108 - Approve Family-Selective Route Recipes
 
 Commit(s):

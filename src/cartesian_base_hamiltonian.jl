@@ -133,11 +133,6 @@ function _cartesian_base_route(kind)
         pqs_retained_rule = :boundary_comx_product_mode_selection,
         product_retained_rule = :product_doside_retained_unit, terms = (:overlap,),
         pair_factor_normalization = :density_normalized,
-        white_lindsey_route_shape = (:standard_cartesian_units, :low_order_comx_coarsening),
-        white_lindsey_mapping_rule = :standard_unit_backbone_mapping_family,
-        white_lindsey_nesting_rule = :unit_box_low_order_comx_coarsening,
-        white_lindsey_retained_rule = :low_order_unit_comx_retained_basis,
-        white_lindsey_operator_rule = :low_order_unit_operator_blocks,
         supplement_policy = nothing, run_final_basis = false, run_h1 = false, run_h1_j = false)
 end
 
