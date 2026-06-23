@@ -10650,3 +10650,84 @@ Risk / guardrail:
   overlap/kinetic/moment raw blocks only. Do not touch nuclear raw blocks,
   final-basis `G-G` product matrices, atomic factor-term QW, CPB oracle
   behavior, public API, artifacts, reports, statuses, or persistent caches.
+
+## Cartesian Hamiltonian Producer Pass 084B - Extract Non-Nuclear Raw Blocks
+
+Commit(s):
+- `00d052e2` - Extract Gaussian non-nuclear raw blocks
+- this commit - Record non-nuclear raw-block extraction
+
+Summary:
+- Accepted the first `HP-CGRB-NN-*` source cut. Exact non-nuclear Gaussian
+  `G-A`/`A-A` raw blocks now have a neutral owner boundary in
+  `src/cartesian_gaussian_raw_blocks/non_nuclear_blocks.jl`, loaded by
+  `CartesianGaussianRawBlocks.jl`.
+- Residual Gaussian `_r3a_qw_blocks(...)` and the Qiu-White diatomic wrapper no
+  longer call the QW cross/self moment donors directly. They consume
+  `CartesianGaussianRawBlocks.gaussian_non_nuclear_raw_blocks(...)` and keep
+  the previous numerical values at roundoff. The R3 same-construction overload
+  also reuses the same supplement block result for residual mixed overlap and
+  augmented-operator construction.
+- This is an ownership/deletion boundary, not yet the allocation optimization.
+  The neutral wrapper still delegates to the existing QW donor kernels, so Cr2
+  exact-operator allocation stayed effectively flat: `8.4294s /
+  19123.019 MiB` versus the prior post-reuse reference of about `8.3579s /
+  19107.314 MiB`.
+
+Validation:
+- Doer ran `git diff --check`, package load,
+  `tmp/work/cgrb_qw_nuclear_parity_check.jl`,
+  `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`,
+  `tmp/work/be2_r3u_facade_measurement.jl`, and
+  `tmp/work/cr2_exact_operator_allocation_audit.jl`.
+- Manager ran `git diff --check HEAD~1..HEAD`, numstat, suspicious-added-line
+  scan, new-test/file scan, package load, and
+  `tmp/work/cgrb_qw_nuclear_parity_check.jl`. Manager did not rerun the H2,
+  Be2, or Cr2 long gates.
+
+Numerical/performance result:
+- H2 R3 self-Coulomb remained `0.4574265214362078`, delta `3.33e-16`; H2
+  facade readback deltas were all `0.0`.
+- Be2 augmented dimension remained `1421`; readback deltas were all `0.0`;
+  self-Coulomb was `1.3119725917573790`.
+- Small Qiu-White non-nuclear neutral/reference and route/neutral max deltas
+  were `0.0`.
+- Cr2 q4 raw non-nuclear reference delta and residual mixed-overlap `X` replay
+  delta were `0.0`; nuclear deltas stayed `G-A 7.11e-15`, `A-A 1.07e-14`;
+  wrapper/replay kinetic delta was `0.0`.
+
+Goal advancement:
+- CGRB/LT6: establishes the neutral non-nuclear owner boundary and removes
+  direct RG/QW diatomic dependence on route-local QW donor construction.
+- Cr2-readiness/MT4: confirms the next optimization must be inside the
+  non-nuclear donor construction itself, while `G-G` product matrices remain a
+  separate deferred target.
+
+Mechanical/anti-bloat gate:
+- `git diff --check`: clean.
+- Numstat: `40 35 src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`;
+  `3 0 src/cartesian_gaussian_raw_blocks/CartesianGaussianRawBlocks.jl`;
+  `33 0 src/cartesian_gaussian_raw_blocks/non_nuclear_blocks.jl`;
+  `21 31 src/ordinary_qw_raw_blocks.jl`.
+- Suspicious-added-line scan: none.
+- New-test/file scan: none.
+
+Carrying-cost result:
+- deleted: direct RG and QW diatomic cross/self donor call sites.
+- simplified: one neutral non-nuclear raw-block owner boundary.
+- quarantined: ignored probe updates only; atomic factor-term QW, CPB/oracle
+  paths, and `G-G` product-matrix optimization remain out of this pass.
+- not deleted because: QW donor helpers still serve live neutral-wrapper
+  delegation and atomic/factor/oracle paths.
+- exact remaining caller/blocker: non-nuclear donor kernels still allocate
+  heavily; optimizing them is the next source target under `HP-CGRB-NN-*`.
+- added src lines: 97.
+- deleted src lines: 66.
+- new tests: none.
+- new metadata/status fields: none.
+
+Risk / guardrail:
+- Do not misread this ownership extraction as the performance fix. The next
+  source pass may optimize the neutral non-nuclear owner internals, but must
+  still avoid nuclear changes, `G-G` product-matrix work, persistent caches,
+  broad provider bundles, public API, artifacts, and Cr2 workflow.
