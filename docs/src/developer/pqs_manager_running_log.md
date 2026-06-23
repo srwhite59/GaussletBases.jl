@@ -10731,3 +10731,69 @@ Risk / guardrail:
   source pass may optimize the neutral non-nuclear owner internals, but must
   still avoid nuclear changes, `G-G` product-matrix work, persistent caches,
   broad provider bundles, public API, artifacts, and Cr2 workflow.
+
+## Cartesian Hamiltonian Producer Pass 085A - Count Non-Nuclear Family Reuse
+
+Commit(s):
+- this commit - Record non-nuclear reuse count audit
+
+Summary:
+- Accepted a read-only post-extraction non-nuclear count audit. The repeated
+  work is real, but the smallest next source cut is narrower than a full
+  non-nuclear kernel replacement: residual mixed-overlap setup currently builds
+  the full non-nuclear `G-A`/`A-A` family and then uses only projected `G-A`
+  overlap.
+- For the mixed-overlap-only path, current table builds are `53064`, while the
+  unique overlap-only `G-A` table builds needed are only `32`, a `1658.25x`
+  table-build reduction. Scalar calls drop from `835884` to `97228`, an
+  `8.60x` reduction.
+- The full exact-operator path also has a strong optimization target:
+  full-block `A-A` scalar calls would drop from `19,783,872` to `161,044`, a
+  `122.85x` reduction. That is justified later, but it is a larger source pass
+  than the overlap-only mixed-`X` helper.
+
+Validation:
+- Doer ran `git diff --check`, package load, focused ignored probe
+  `tmp/work/cr2_non_nuclear_family_reuse_count_audit.jl`, and final
+  `git status --short --branch`. Final tracked status was clean, with the
+  pre-existing untracked successor handoff file.
+- Manager confirmed `git status --short --branch`, `git diff --check`, and
+  current `HEAD`/`origin` state. Manager did not rerun the count probe.
+
+Measured facts:
+- Cr2 q4 fixture: parent axes `(19,19,31)`, parent Cartesian count `11191`,
+  supplement candidates `66`, unique families x `8`, y `8`, z `16`.
+- Current QW `G-A` all non-nuclear: `0.5110s / 2489.246 MiB`.
+- Current QW `A-A` all non-nuclear: `2.2813s / 8476.370 MiB`.
+- Neutral wrapper all non-nuclear: `2.6527s / 10941.712 MiB`.
+- Full raw-block table builds: `G-A 792 -> 128`, `A-A 52272 -> 832`, total
+  `53064 -> 960`.
+- Full raw-block scalar calls: `G-A 3,343,536 -> 388,912`,
+  `A-A 19,783,872 -> 161,044`, total `23,127,408 -> 549,956`.
+
+Goal advancement:
+- Cr2-readiness/MT4: identifies an overlap-only mixed-`X` helper as the next
+  smallest source pass, rather than jumping directly to full non-nuclear
+  family-reuse replacement.
+- CGRB/LT4/LT6: preserves the neutral owner boundary while keeping source
+  growth and risk proportional to the measured target.
+
+Carrying-cost result:
+- deleted: none; measurement-only pass.
+- simplified: next implementation target is narrowed to overlap-only mixed
+  overlap first.
+- quarantined: ignored probe only; full non-nuclear family-reuse replacement
+  and `G-G` product matrices remain later work.
+- not deleted because: no production source changed.
+- exact remaining caller/blocker: current residual mixed-overlap path still
+  pays full non-nuclear `G-A`/`A-A` construction cost.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.
+
+Risk / guardrail:
+- The next source pass should be overlap-only. Do not mix it with full
+  kinetic/moment `A-A` family reuse, nuclear work, `G-G` product matrices,
+  persistent caches, public API, artifacts, reports, statuses, or broad provider
+  bundles.
