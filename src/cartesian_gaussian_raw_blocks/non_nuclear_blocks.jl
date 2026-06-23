@@ -122,7 +122,8 @@ function _non_nuclear_aa_values(left, right, tables, ids, reversed)
     return (; overlap, kinetic, px, py, pz, x2x, x2y, x2z)
 end
 
-function _non_nuclear_aa_block_matrices(supplement)
+function _non_nuclear_aa_block_matrices(supplement,
+    inventory = _axis_family_inventory(supplement))
     norbital = length(supplement.orbitals)
     overlap = zeros(Float64, norbital, norbital)
     kinetic = zeros(Float64, norbital, norbital)
@@ -132,7 +133,6 @@ function _non_nuclear_aa_block_matrices(supplement)
     x2x = zeros(Float64, norbital, norbital)
     x2y = zeros(Float64, norbital, norbital)
     x2z = zeros(Float64, norbital, norbital)
-    inventory = _axis_family_inventory(supplement)
     tables = [_non_nuclear_aa_axis_tables(inventory, axis) for axis in 1:3]
 
     for left_index in 1:norbital, right_index in left_index:norbital
@@ -176,22 +176,114 @@ function _non_nuclear_aa_block_matrices(supplement)
         x2 = (x = x2x, y = x2y, z = x2z))
 end
 
+function _non_nuclear_ga_axis_tables(proxy, inventory, axis::Int)
+    parent = _GB_PARENT
+    layer = _axis_layer(proxy, axis)
+    inputs = _proxy_axis_factor_inputs(layer)
+    overlap = Matrix{Float64}[]
+    kinetic = Matrix{Float64}[]
+    position = Matrix{Float64}[]
+    x2 = Matrix{Float64}[]
+    for family in inventory.families[axis]
+        push!(overlap, parent._qwrg_left_contract_cross_matrix(layer,
+            parent._cartesian_gaussian_axis_integral_table(inputs.exponents,
+                inputs.centers, inputs.powers, inputs.prefactors,
+                family.exponents, family.centers, family.powers,
+                family.prefactors, :overlap)))
+        push!(kinetic, parent._qwrg_left_contract_cross_matrix(layer,
+            parent._cartesian_gaussian_axis_integral_table(inputs.exponents,
+                inputs.centers, inputs.powers, inputs.prefactors,
+                family.exponents, family.centers, family.powers,
+                family.prefactors, :kinetic)))
+        push!(position, parent._qwrg_left_contract_cross_matrix(layer,
+            parent._cartesian_gaussian_axis_integral_table(inputs.exponents,
+                inputs.centers, inputs.powers, inputs.prefactors,
+                family.exponents, family.centers, family.powers,
+                family.prefactors, :position)))
+        push!(x2, parent._qwrg_left_contract_cross_matrix(layer,
+            parent._cartesian_gaussian_axis_integral_table(inputs.exponents,
+                inputs.centers, inputs.powers, inputs.prefactors,
+                family.exponents, family.centers, family.powers,
+                family.prefactors, :x2)))
+    end
+    return (; overlap, kinetic, position, x2)
+end
+
+function _non_nuclear_ga_block_matrices(proxy, supplement, inventory)
+    ncart, norbital = proxy.ncart, length(supplement.orbitals)
+    overlap = zeros(Float64, ncart, norbital)
+    kinetic = zeros(Float64, ncart, norbital)
+    px = zeros(Float64, ncart, norbital)
+    py = zeros(Float64, ncart, norbital)
+    pz = zeros(Float64, ncart, norbital)
+    x2x = zeros(Float64, ncart, norbital)
+    x2y = zeros(Float64, ncart, norbital)
+    x2z = zeros(Float64, ncart, norbital)
+    tables = [_non_nuclear_ga_axis_tables(proxy, inventory, axis) for axis in 1:3]
+    fill_product! = getfield(_GB_PARENT, :_qwrg_fill_product_column!)
+    scratch = zeros(Float64, ncart)
+
+    for (orbital_index, orbital) in pairs(supplement.orbitals)
+        ids = ntuple(axis -> inventory.maps[axis][orbital_index], 3)
+        x, y, z = tables[1], tables[2], tables[3]
+        for primitive in eachindex(orbital.coefficients)
+            coefficient = Float64(orbital.coefficients[primitive])
+            fill_product!(scratch, view(x.overlap[ids[1]], :, primitive),
+                view(y.overlap[ids[2]], :, primitive),
+                view(z.overlap[ids[3]], :, primitive))
+            view(overlap, :, orbital_index) .+= coefficient .* scratch
+            fill_product!(scratch, view(x.kinetic[ids[1]], :, primitive),
+                view(y.overlap[ids[2]], :, primitive),
+                view(z.overlap[ids[3]], :, primitive))
+            view(kinetic, :, orbital_index) .+= coefficient .* scratch
+            fill_product!(scratch, view(x.overlap[ids[1]], :, primitive),
+                view(y.kinetic[ids[2]], :, primitive),
+                view(z.overlap[ids[3]], :, primitive))
+            view(kinetic, :, orbital_index) .+= coefficient .* scratch
+            fill_product!(scratch, view(x.overlap[ids[1]], :, primitive),
+                view(y.overlap[ids[2]], :, primitive),
+                view(z.kinetic[ids[3]], :, primitive))
+            view(kinetic, :, orbital_index) .+= coefficient .* scratch
+            fill_product!(scratch, view(x.position[ids[1]], :, primitive),
+                view(y.overlap[ids[2]], :, primitive),
+                view(z.overlap[ids[3]], :, primitive))
+            view(px, :, orbital_index) .+= coefficient .* scratch
+            fill_product!(scratch, view(x.overlap[ids[1]], :, primitive),
+                view(y.position[ids[2]], :, primitive),
+                view(z.overlap[ids[3]], :, primitive))
+            view(py, :, orbital_index) .+= coefficient .* scratch
+            fill_product!(scratch, view(x.overlap[ids[1]], :, primitive),
+                view(y.overlap[ids[2]], :, primitive),
+                view(z.position[ids[3]], :, primitive))
+            view(pz, :, orbital_index) .+= coefficient .* scratch
+            fill_product!(scratch, view(x.x2[ids[1]], :, primitive),
+                view(y.overlap[ids[2]], :, primitive),
+                view(z.overlap[ids[3]], :, primitive))
+            view(x2x, :, orbital_index) .+= coefficient .* scratch
+            fill_product!(scratch, view(x.overlap[ids[1]], :, primitive),
+                view(y.x2[ids[2]], :, primitive),
+                view(z.overlap[ids[3]], :, primitive))
+            view(x2y, :, orbital_index) .+= coefficient .* scratch
+            fill_product!(scratch, view(x.overlap[ids[1]], :, primitive),
+                view(y.overlap[ids[2]], :, primitive),
+                view(z.x2[ids[3]], :, primitive))
+            view(x2z, :, orbital_index) .+= coefficient .* scratch
+        end
+    end
+    return (; overlap, kinetic, position = (x = px, y = py, z = pz),
+        x2 = (x = x2x, y = x2y, z = x2z))
+end
+
 function gaussian_non_nuclear_raw_blocks(proxy, supplement, expansion)
-    cross = getfield(_GB_PARENT, :_qwrg_cartesian_shell_cross_moment_blocks_3d)(
-        (x = proxy.x, y = proxy.y, z = proxy.z),
-        supplement,
-        expansion,
-        proxy.ncart;
-        include_factor_terms = false,
-    )
-    aa = _non_nuclear_aa_block_matrices(supplement)
+    inventory = _axis_family_inventory(supplement)
+    ga = _non_nuclear_ga_block_matrices(proxy, supplement, inventory)
+    aa = _non_nuclear_aa_block_matrices(supplement, inventory)
     return (;
         ga = (;
-            overlap = cross.overlap_ga,
-            kinetic = cross.kinetic_ga,
-            position = (x = cross.position_x_ga, y = cross.position_y_ga,
-                z = cross.position_z_ga),
-            x2 = (x = cross.x2_x_ga, y = cross.x2_y_ga, z = cross.x2_z_ga),
+            overlap = ga.overlap,
+            kinetic = ga.kinetic,
+            position = ga.position,
+            x2 = ga.x2,
         ),
         aa = (;
             overlap = aa.overlap,
