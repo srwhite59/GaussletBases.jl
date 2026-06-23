@@ -924,18 +924,20 @@ substitute for constructing public `system`, `basis`, and optional
 driver-facing staged producer surface in `src/cartesian_base_hamiltonian.jl`.
 That surface may factor the existing base and residual-GTO/MWG facade bodies so
 the canonical driver can execute visible physics-level stages: base working
-basis / terminal realization and base Hamiltonian, Gaussian supplement,
+basis / terminal realization, base Hamiltonian assembly, Gaussian supplement,
 residual Gaussian augmentation, exact augmented operators, supplemented
 Hamiltonian assembly, followed by the existing artifact writer/readback stage.
-It may return existing domain objects and small fixed-key ephemeral stage
-products needed by the next stage, but it must not create a public API/export,
-route-stage object, report, status/result payload, metadata field cloud,
-runtime-keyed field group, persistent cache, artifact schema, or source files
-outside `src/cartesian_base_hamiltonian.jl`.
+The staged surface must be separate named construction-stage functions, not one
+all-in-one replacement wrapper. It may return existing domain objects and small
+fixed-key ephemeral stage products needed by the next stage, but it must not
+create a public API/export, route-stage object, report, status/result payload,
+metadata field cloud, runtime-keyed field group, persistent cache, artifact
+schema, or source files outside `src/cartesian_base_hamiltonian.jl`.
 
 `HP-DRV-STAGE-WIRE-01` allows `bin/cartesian_ham_builder.jl` to call that staged
-producer surface and time/print the visible physics stages. It does not approve
-driver calls to underscored package helpers or old route stages such as
+producer surface as separate visible top-level stage calls and time/print the
+visible physics stages. It does not approve one opaque staged wrapper call,
+driver calls to underscored package helpers, or old route stages such as
 `cartesian_parent`, `cartesian_shells`, `cartesian_units`,
 `cartesian_pair_terms`, or `cartesian_assembly`.
 

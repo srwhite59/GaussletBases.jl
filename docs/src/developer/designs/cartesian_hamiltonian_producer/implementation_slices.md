@@ -510,8 +510,10 @@ Allowed workflow:
 - call the approved non-exported residual-GTO/MWG usability facade or the
   staged producer surface for supported supplemented H2 and
   internal/performance-supported Be2;
+- call the staged producer surface as separate visible top-level stage calls,
+  not as one all-in-one staged replacement wrapper;
 - time and print visible physics-level stages: base working basis / terminal
-  realization and base Hamiltonian, Gaussian supplement, residual
+  realization, base Hamiltonian assembly, Gaussian supplement, residual
   augmentation, exact augmented operators, supplemented Hamiltonian assembly,
   and artifact write/check;
 - write existing `CartesianIDAHamiltonian` artifacts with approved provenance

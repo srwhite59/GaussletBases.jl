@@ -12001,7 +12001,7 @@ Summary:
   physics-level construction stages without calling underscored helpers or old
   route stages.
 - The approved stage sequence is: public contract construction, base working
-  basis / terminal realization and base Hamiltonian, Gaussian supplement,
+  basis / terminal realization, base Hamiltonian assembly, Gaussian supplement,
   residual Gaussian augmentation, exact augmented operators, supplemented
   Hamiltonian assembly, and artifact write/check. The staged producer surface
   is owned only by `src/cartesian_base_hamiltonian.jl`; artifact writing
@@ -12040,6 +12040,61 @@ Carrying-cost result:
   source files outside those two paths, broad payload/report/status objects,
   artifact schema changes, committed fixtures/tests, route diagnostics, or
   Cr2-specific workflow.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 098 - Require Visible Stage Calls
+
+Commit(s):
+- this commit - Require visible canonical-driver stage calls
+
+Summary:
+- Compared the `Dropbox/bin/nestpgg.jl` driver shape with the current
+  canonical driver and tightened the plan accordingly. The desired property is
+  not only compact editable inputs; it is also visible top-level construction
+  calls and local variables that an expert user can read and customize.
+- Clarified that `HP-DRV-STAGE-FN-01` must expose separate named
+  construction-stage functions. One all-in-one staged replacement wrapper is
+  not sufficient for the canonical driver.
+- Split the base construction wording into two visible stages: base working
+  basis / terminal realization, then base Hamiltonian assembly. Supplemented
+  mode remains Gaussian supplement, residual augmentation, exact augmented
+  operators, supplemented Hamiltonian assembly, then existing artifact
+  write/check.
+
+Validation:
+- Design-manager validation: docs-only `git diff --check`, focused `rg` for
+  visible top-level stage-call wording, all-in-one wrapper exclusions, split
+  base-realization/base-Hamiltonian wording, and forbidden route-stage
+  surfaces, plus confirmation that `src`, `test`, and `tools` had no changes.
+  The existing local `bin/cartesian_ham_builder.jl` WIP was not part of this
+  docs pass. No implementation tests were run.
+
+Goal advancement:
+- LT1/LT3: aligns the canonical driver more closely with the compact
+  `nestpgg.jl` style: visible defaults plus visible staged construction,
+  without carrying route-stage diagnostics.
+- RG/LT6: keeps residual-GTO/MWG construction visible to expert users while
+  preserving the ban on raw-block switches, report/status payloads, solver/ECP
+  workflow, and Cr2-specific branches.
+
+Carrying-cost result:
+- deleted: none; docs-only clarification.
+- simplified: prevents the staged surface from becoming another opaque facade
+  and makes the intended driver call shape more reviewable.
+- quarantined: one opaque staged wrapper, old route stages, underscored helper
+  calls from the driver, raw-block provider switches, artifact schema dumps,
+  allocation probes, solver/ECP workflow, Cr2-specific workflow, and
+  supplemented atoms remain unapproved.
+- not deleted because: source factoring has not run yet.
+- exact remaining caller/blocker: repo-doer may edit only
+  `src/cartesian_base_hamiltonian.jl` and `bin/cartesian_ham_builder.jl` for
+  this lane; stop if separate visible stage calls require source files outside
+  those paths, broad payload/report/status objects, public API/export changes,
+  artifact schema changes, committed fixtures/tests, route diagnostics, or a
+  single all-in-one staged replacement wrapper.
 - added src lines: 0.
 - deleted src lines: 0.
 - new tests: none.

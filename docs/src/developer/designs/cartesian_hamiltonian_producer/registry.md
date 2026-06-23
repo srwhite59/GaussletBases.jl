@@ -1346,7 +1346,8 @@ underscored helpers.
 Approved visible stages are:
 
 - construct public `system`, `basis`, and optional `supplement`;
-- build the base working basis / terminal realization and base Hamiltonian;
+- build the base working basis / terminal realization;
+- assemble the base Hamiltonian;
 - load or build the Gaussian supplement basis when `basisname !== nothing`;
 - build residual Gaussian augmentation;
 - build exact augmented operators;
@@ -1354,15 +1355,23 @@ Approved visible stages are:
 - write and check the artifact.
 
 The first and last stages remain driver/writer responsibilities. This ID
-approves source factoring needed for the base working-basis/base-Hamiltonian,
-Gaussian supplement, residual augmentation, exact augmented operators, and
-supplemented-Hamiltonian assembly stages.
+approves source factoring needed for the base working-basis/terminal
+realization, base-Hamiltonian assembly, Gaussian supplement, residual
+augmentation, exact augmented operators, and supplemented-Hamiltonian assembly
+stages.
 
 The staged surface may factor the existing `cartesian_base_hamiltonian(...)`
 and `cartesian_residual_gto_mwg_hamiltonian(...)` bodies so that those facades
 can remain wrappers over the same implementation. It may return existing
 domain objects and small fixed-key ephemeral stage products required by the
 next approved stage.
+
+The staged surface must be a set of separate named construction-stage
+functions. It must not be a single opaque replacement wrapper that hides the
+same construction sequence under a new name. The canonical driver must be able
+to bind visible local variables for the base realization, base Hamiltonian,
+supplement basis, residual augmentation, exact augmented operators, and final
+Hamiltonian assembly.
 
 This ID does not approve public exports, public API redesign, route-stage
 objects, reports, status/result payloads, metadata field clouds, runtime-keyed
@@ -1384,8 +1393,10 @@ bin/cartesian_ham_builder.jl
 ```
 
 The canonical driver may call the `HP-DRV-STAGE-FN-01` staged producer surface
-and assign local variables using the approved physics-stage names. It may print
-or record coarse user-facing timings for those stages.
+as separate top-level stage calls and assign local variables using the approved
+physics-stage names. It may print or record coarse user-facing timings for
+those stages. Replacing the current facade call with one all-in-one staged
+wrapper call is not approved for the canonical driver.
 
 This ID does not approve calls from the driver to underscored package helpers,
 old route stages such as `cartesian_parent`, `cartesian_shells`,

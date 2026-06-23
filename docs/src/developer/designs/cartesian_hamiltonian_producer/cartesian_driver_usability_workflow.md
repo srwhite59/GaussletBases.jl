@@ -156,7 +156,8 @@ physics-level stages while still avoiding route-internal choreography.
 Approved visible stages are:
 
 - construct public `system`, `basis`, and optional `supplement`;
-- build the base working basis / terminal realization and base Hamiltonian;
+- build the base working basis / terminal realization;
+- assemble the base Hamiltonian;
 - load or build the Gaussian supplement basis when `basisname !== nothing`;
 - build residual Gaussian augmentation;
 - build exact augmented operators;
@@ -177,6 +178,24 @@ readback responsibility. The source owner may factor the existing base and
 residual-GTO/MWG facade bodies into these stage functions so the canonical
 driver can call named construction stages without calling underscored helpers
 directly.
+
+The canonical driver must call separate named stage functions with visible
+local variables. A single replacement wrapper such as
+`cartesian_residual_gto_mwg_hamiltonian_staged(...)` that performs the whole
+construction internally is not sufficient. The intended driver shape is closer
+to:
+
+```text
+base = ...
+base_ham = ...
+supplement_basis = ...
+residual = ...
+operators = ...
+ham = ...
+```
+
+Exact names may follow local style, but the top-level script should make the
+construction sequence readable to an expert user.
 
 The staged surface may return existing domain objects and small fixed-key
 ephemeral stage products needed by the next approved stage. It must not create
@@ -203,7 +222,8 @@ Allowed user-facing phases:
 
 - validate/normalize input;
 - construct public contract;
-- build base working basis and base Hamiltonian;
+- build base working basis / terminal realization;
+- assemble base Hamiltonian;
 - build Gaussian supplement;
 - build residual augmentation;
 - build exact augmented operators;

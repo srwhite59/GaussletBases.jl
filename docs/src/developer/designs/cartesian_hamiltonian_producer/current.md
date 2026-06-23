@@ -131,12 +131,13 @@ Approved canonical driver usability lane:
 - `HP-DRV-STAGE-FN-01` approves a narrow non-exported, non-underscored staged
   producer surface in `src/cartesian_base_hamiltonian.jl` so the driver can
   execute visible physics-level stages: base working basis / terminal
-  realization and base Hamiltonian, Gaussian supplement, residual
+  realization, base Hamiltonian assembly, Gaussian supplement, residual
   augmentation, exact augmented operators, and supplemented Hamiltonian
-  assembly;
+  assembly; this must be separate named stage functions, not one all-in-one
+  replacement wrapper;
 - `HP-DRV-STAGE-WIRE-01` allows the canonical driver to call that staged
-  surface and time/print those workflow stages without calling underscored
-  package helpers;
+  surface as visible top-level stage calls and time/print those workflow stages
+  without calling underscored package helpers;
 - the driver may call only approved base, staged, and supported supplemented
   producer surfaces and the approved artifact writer/readback;
 - `basisname = nothing` selects base mode; `basisname !== nothing` selects
