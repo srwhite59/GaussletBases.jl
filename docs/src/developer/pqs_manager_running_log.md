@@ -12625,3 +12625,47 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 109 - Approve Same-Construction Base K/U Reuse
+
+Commit(s):
+- this commit - Approve same-construction base K/U reuse
+
+Summary:
+- Approved `HP-R3BASE-FN-01` / `HP-R3BASE-TEST-01` as a narrow source lane for
+  reusing same-construction base final-basis `K_GG` and unit `U_GG[A]` blocks
+  inside supplemented residual-GTO/MWG exact augmented operators.
+- Recorded the trust model: the base Hamiltonian, terminal basis, parent
+  bundles, residual basis, and supplement must come from the same
+  `cartesian_base_working_basis(...)` path; dimension and center-count checks
+  are required; no provenance payload, metadata proof, report/status object, or
+  persistent cache is approved.
+- Preserved fallback behavior when trusted base blocks are not supplied.
+
+Validation:
+- Design-manager validation only: docs-only `git diff --check`, focused `rg`
+  for `HP-R3BASE-*`, same-construction `K_GG` / `U_GG[A]` reuse, forbidden
+  metadata/cache/public/driver scope, and no `src`, `test`, `tools`, or `bin`
+  changes. No implementation tests were run.
+
+Goal advancement:
+- LT1/LT3: removes duplicate base one-body work from the supported
+  no-supplement/supplement construction story without changing physics.
+- RG/LT6: gives repo-doer a narrow performance/complexity cleanup path before
+  broader Cr2 workflow expansion.
+
+Carrying-cost result:
+- deleted: none; docs-only authority pass.
+- simplified: future same-construction supplemented runs may reuse already
+  constructed base K/U blocks instead of recomputing them.
+- quarantined: public API/export changes, canonical driver changes, raw
+  blocks, residual algorithms, MWG/IDA conventions, terminal kernels, route
+  setup, metadata/status/report/artifact fields, persistent caches, committed
+  tests, and Cr2 workflow remain unapproved.
+- not deleted because: source reuse has not run yet.
+- exact remaining caller/blocker: doer must stop if local call shape plus
+  dimension/center validation cannot guarantee same-construction trust.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

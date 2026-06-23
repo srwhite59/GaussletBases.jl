@@ -503,6 +503,13 @@ raw-block bundle/cache object. One duplicate overlap build between
 residualization and full exact-operator assembly remains acceptable unless it
 can be removed locally without a new persistent shape.
 
+Later `HP-R3BASE-FN-01` authority additionally allows same-construction reuse
+of already-built base final-basis kinetic `K_GG` and unit nuclear `U_GG[A]`
+blocks when the base Hamiltonian, terminal basis, parent bundles, residual
+basis, and supplement come from the same base construction path. That reuse is
+validated by dimensions and center count only; it must not introduce
+provenance payloads, metadata proofs, persistent caches, or stage objects.
+
 ### MWG Moment Convention
 
 For normalized residual `r` and Cartesian axis `alpha`:

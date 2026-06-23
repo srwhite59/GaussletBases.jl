@@ -115,6 +115,10 @@ Approved remaining exact-operator allocation decision:
 - `HP-R3UN-FN-01` now approves only that narrow terminal final-basis
   unit-nuclear `U_GG` Gaussian-sum allocation lane under
   `CartesianFinalBasisRealization`;
+- `HP-R3BASE-FN-01` approves same-construction reuse of already-built base
+  final-basis `K_GG` and unit `U_GG[A]` blocks in supplemented exact augmented
+  operators, with dimension and center-count validation and no metadata or
+  provenance payload;
 - route/stage setup, raw-block setup, neutral raw-block kernels,
   residual/MWG/IDA changes, public workflow, and Cr2 facade/artifact work
   remain unapproved.

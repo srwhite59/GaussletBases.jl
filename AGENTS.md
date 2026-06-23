@@ -454,6 +454,8 @@ these approved design IDs:
 - `HP-R3GG-TEST-01`
 - `HP-R3UN-FN-01`
 - `HP-R3UN-TEST-01`
+- `HP-R3BASE-FN-01`
+- `HP-R3BASE-TEST-01`
 - `HP-DRV-FILE-01`
 - `HP-DRV-FN-01`
 - `HP-DRV-TEST-01`
@@ -737,6 +739,31 @@ Approved R3 unit-nuclear `U_GG` Gaussian-sum optimization:
   frameworks, metadata/report/status/payload fields, artifacts, public
   API/export, Cr2 facade support, or Cr2 artifact workflow. Line budget is at
   most 100 added `src` lines.
+
+Approved R3 same-construction base K/U reuse:
+
+- `HP-R3BASE-FN-01` approves only reuse of already-built same-construction base
+  final-basis kinetic `K_GG` and unit nuclear `U_GG[A]` blocks in supplemented
+  exact augmented operators.
+- Approved files are
+  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` and
+  `src/cartesian_base_hamiltonian.jl`.
+- Allowed wiring is passing `base_ham.kinetic` and
+  `base_ham.nuclear_attraction_unit_by_center` from the same
+  `cartesian_base_working_basis(...)` construction path into the augmented
+  product/unit-nuclear construction, with matrix-dimension and center-count
+  validation. Existing recomputation behavior must remain when trusted base
+  blocks are not supplied.
+- `HP-R3BASE-TEST-01` approves only H2 R3 endpoint validation, Be2
+  facade/readback validation, ignored Cr2 exact-operator attribution or replay
+  showing base K/U reuse parity and allocation effect, and finite/symmetric
+  exact-operator checks. No committed test file is approved.
+- This lane must not change public API/export, canonical driver, raw blocks,
+  residual selection/orientation/transforms, MWG/IDA conventions, terminal
+  product or Gaussian-sum kernels, route/stage setup, metadata/status/report/
+  artifact schema, persistent cache/workspace objects, committed tests, Cr2
+  workflow, or files outside the approved surfaces. Line budget target is under
+  100 added `src` lines.
 
 `HP-FN-03` specifically approves
 `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl` as the Slice B

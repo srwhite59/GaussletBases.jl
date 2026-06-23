@@ -484,6 +484,70 @@ Line budget:
   Gaussian-sum framework, files outside the approved surfaces, or source edits
   outside terminal unit-nuclear `U_GG`.
 
+## R3 Same-Construction Base K/U Reuse
+
+Status: approved for implementation under `HP-R3BASE-FN-01` and
+`HP-R3BASE-TEST-01`.
+
+Decision:
+
+- the supported supplemented construction already builds base product and unit
+  nuclear blocks before constructing the base Hamiltonian;
+- exact augmented operator construction may reuse those same-construction base
+  `K_GG` and unit `U_GG[A]` blocks instead of recomputing them;
+- prior replay evidence found exact operator delta `0.0` and reduced exact
+  augmented-operator replay to `0.8620s / 1237.136 MiB`.
+
+Approved boundary:
+
+- owner module `CartesianFinalBasisRealization` plus narrow caller wiring;
+- source files `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
+  and `src/cartesian_base_hamiltonian.jl`;
+- target functions or wrappers around
+  `pqs_terminal_residual_gto_augmented_products(...)`,
+  `pqs_terminal_residual_gto_augmented_unit_nuclear(...)`, and
+  `cartesian_residual_gto_mwg_hamiltonian(...)` / staged helpers.
+
+Allowed source shapes:
+
+- pass `base_ham.kinetic` as trusted same-construction `K_GG` into augmented
+  product construction;
+- pass `base_ham.nuclear_attraction_unit_by_center` as trusted
+  same-construction unit `U_GG[A]` blocks into augmented unit-nuclear
+  construction;
+- validate matrix dimensions and center count before reuse;
+- preserve existing recomputation behavior when trusted base blocks are not
+  supplied;
+- keep trust local to the same `cartesian_base_working_basis(...)` construction
+  path; do not create provenance payloads or metadata proofs.
+
+Validation gates:
+
+- `git diff --check`;
+- package load;
+- H2 R3 endpoint unchanged;
+- Be2 supplemented facade/readback unchanged except allowed
+  timing/allocation improvement;
+- Cr2 exact-operator attribution audit or focused ignored replay showing base
+  `K_GG` / unit `U_GG[A]` reuse parity and allocation effect;
+- final exact operators finite and symmetric;
+- no Cr2 artifact/workflow.
+
+Forbidden:
+
+- public API/export changes, canonical driver changes, raw-block changes,
+  residual selection/orientation/transform changes, MWG/IDA convention changes,
+  terminal product or Gaussian-sum kernel rewrites, persistent cache/workspace
+  objects, metadata/status/report/artifact schema fields, route/stage setup
+  cleanup, committed tests, or Cr2 workflow.
+
+Line budget:
+
+- target under `100` added `src` lines;
+- stop without a source commit if same-construction trust cannot be guaranteed
+  by local call shape and dimension/center validation, or if implementation
+  needs public payloads, metadata, or stage objects.
+
 ## Canonical Cartesian Driver Usability
 
 Status: approved for implementation under `HP-DRV-FILE-01`,

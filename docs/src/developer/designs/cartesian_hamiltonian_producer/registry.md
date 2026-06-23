@@ -1361,6 +1361,87 @@ Approved validation:
 
 No new committed test file is approved by this ID.
 
+## Approved For R3 Same-Construction Base K/U Reuse
+
+This section approves only narrow reuse of already-built same-construction
+base final-basis kinetic and unit-nuclear blocks in supplemented residual-GTO
+/ MWG exact augmented operators. It is an orchestration reuse lane, not a
+terminal product, Gaussian-sum, raw-block, residual-basis, or interaction
+algorithm lane.
+
+Evidence recorded before approval: a replay that reused same-construction base
+`K_GG` and unit `U_GG[A]` blocks had exact operator delta `0.0` and reduced the
+exact augmented-operator replay to `0.8620s / 1237.136 MiB`.
+
+### HP-R3BASE-FN-01 — same-construction base K/U reuse
+
+Approved owner:
+
+```text
+Owner module: CartesianFinalBasisRealization plus narrow caller wiring
+```
+
+Approved source files:
+
+```text
+src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl
+src/cartesian_base_hamiltonian.jl
+```
+
+Approved behavior:
+
+- `pqs_terminal_residual_gto_augmented_products(...)`, or its approved caller
+  wrapper, may accept a trusted same-construction base kinetic matrix and use
+  it as the `G-G` kinetic block for `transform_augmented_operator`;
+- `pqs_terminal_residual_gto_augmented_unit_nuclear(...)`, or its approved
+  caller wrapper, may accept trusted same-construction unit nuclear
+  `U_GG[A]` matrices and use them as the `G-G` unit blocks for
+  `transform_augmented_operator`;
+- `cartesian_residual_gto_mwg_hamiltonian(...)` and staged helpers in
+  `src/cartesian_base_hamiltonian.jl` may pass `base_ham.kinetic` and
+  `base_ham.nuclear_attraction_unit_by_center` into the augmented operator
+  construction;
+- current behavior must be preserved when trusted base blocks are not supplied.
+
+Trust condition:
+
+- the base Hamiltonian, terminal basis realization, parent bundles, residual
+  basis, and supplement must come from the same
+  `cartesian_base_working_basis(...)` construction path;
+- implementation must validate matrix dimensions and center count before
+  reuse;
+- no provenance payload, metadata proof, report field, status object, or
+  persistent cache is required or approved for this trust check.
+
+This ID does not approve public API/export changes, canonical-driver changes,
+raw-block changes, residual selection/orientation/transform changes, MWG/IDA
+convention changes, terminal product or Gaussian-sum kernel rewrites,
+persistent cache/workspace objects, metadata/status/report/artifact schema
+fields, route/stage setup cleanup, committed tests, Cr2 workflow, or source
+files outside the two approved files.
+
+Line budget: target under `100` added `src` lines. If trusted
+same-construction provenance cannot be guaranteed by local call shape plus
+dimension/center validation, or if implementation needs public payloads,
+metadata, or stage objects, make no source commit and report the blocker.
+
+### HP-R3BASE-TEST-01 — base K/U reuse validation
+
+Approved validation:
+
+- `git diff --check`;
+- package load;
+- existing H2 R3 endpoint unchanged;
+- Be2 supplemented facade/readback unchanged except allowed
+  timing/allocation improvement;
+- Cr2 exact-operator attribution audit or focused ignored replay showing base
+  `K_GG` / unit `U_GG[A]` reuse parity and allocation effect;
+- final exact operators finite and symmetric.
+
+No new committed test file, Cr2 artifact, Cr2 workflow, public API/export,
+driver workflow change, metadata/status/report field, or artifact schema
+change is approved by this ID.
+
 ## Approved For Canonical Cartesian Driver Usability
 
 This section approves only the compact artifact-producing canonical driver
