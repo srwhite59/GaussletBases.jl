@@ -10340,3 +10340,59 @@ Risk / guardrail:
   patches as the endpoint. The next implementation must preserve the coupled
   primitive-pair contraction `sum_pq c_p c_q I_x[p,q] I_y[p,q] I_z[p,q]` and
   must not independently contract x/y/z axes.
+
+## Cartesian Hamiltonian Producer Pass 082A - Count Nuclear Axis-Family Reuse
+
+Commit(s):
+- this commit - Record nuclear family reuse count audit
+
+Summary:
+- Accepted a measurement-only audit of the Cr2 q4 neutral Cartesian Gaussian
+  nuclear raw-block loop structure. The audit confirms that the family-reuse
+  target is not speculative: 66 flattened 3D supplement orbitals collapse to
+  only 8 unique x-axis families, 8 y-axis families, and 16 z-axis families.
+- The current kernel therefore rebuilds equivalent one-dimensional nuclear
+  tables many times. For Cr2 q4, unique `G-A` table keys drop from 264 to 48
+  and unique `A-A` table keys drop from 8844 to 344. Total table fills drop
+  from 409860 to 17640, a 23.23x reduction, before any scalar-integral
+  allocation fix.
+- The audit also measured per-call allocation in the scalar `:factor` integral:
+  representative powers `0/0`, `0/1`, and `1/1` allocate 192, 272, and
+  368 bytes per call. This justifies a specialized nonallocating nuclear-factor
+  scalar helper if the family-reuse implementation still needs it.
+
+Validation:
+- Doer ran `git diff --check`, package load,
+  `tmp/work/cr2_nuclear_family_reuse_count_audit.jl`, and final
+  `git status --short --branch`. Final tracked status was clean, with only the
+  pre-existing untracked successor handoff file.
+- Manager confirmed `git status --short --branch`, `git diff --check`, and the
+  ignored probe path. Manager did not rerun the Cr2 audit.
+
+Goal advancement:
+- Cr2-readiness/MT4: proves the next source pass should reorganize the neutral
+  nuclear kernel around one-dimensional axis-family reuse rather than continue
+  wrapper-level loop reshaping or in-place-table-only work.
+- CGRB/LT6: keeps the optimization inside `CartesianGaussianRawBlocks` while
+  preserving the neutral uncharged nuclear `G-A`/`A-A` contract and forbidding
+  Cr2 workflow promotion.
+
+Carrying-cost result:
+- deleted: none; measurement-only pass.
+- simplified: the implementation target is now numerically bounded by measured
+  unique family/key counts.
+- quarantined: ignored count/allocation probe only.
+- not deleted because: no production code changed.
+- exact remaining caller/blocker: production
+  `src/cartesian_gaussian_raw_blocks/nuclear_blocks.jl` still loops by
+  flattened 3D orbitals/pairs and scalar `:factor` integrals allocate per call.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.
+
+Risk / guardrail:
+- The implementation pass must preserve the coupled primitive-pair contraction
+  `sum_pq c_p c_q I_x[p,q] I_y[p,q] I_z[p,q]`. Do not independently contract
+  x/y/z axes, add persistent caches, broaden the raw-block owner, or change
+  Residual Gaussian/Qiu-White semantics.
