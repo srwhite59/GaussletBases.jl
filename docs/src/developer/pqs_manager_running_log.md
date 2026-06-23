@@ -13083,3 +13083,79 @@ Carrying-cost result:
 - new tests: none.
 - new metadata/status fields: none; this approves only a compact artifact
   provenance carrier for a future source pass.
+
+## Cartesian Hamiltonian Producer Pass 115 - Implement Source-Mode Manifest Seam
+
+Commit(s):
+- this commit - Add source-mode Hamiltonian manifest groups
+
+Summary:
+- Accepted the `HP-HAM-MANIFEST-SRC-FN-01` source pass. Base working-basis
+  construction now carries compact construction-native source-mode provenance
+  from terminal retained-rule / raw-product source plans to the artifact
+  manifest writer.
+- Artifacts now write optional `hamiltonian_manifest/source_shells/` and
+  `hamiltonian_manifest/source_modes/` groups when the facts are native, and
+  `final_basis_labels/` rows now receive native source-box and shell labels
+  where the final row belongs to a native terminal source shell.
+- Ray IDs, radial labels, and `final_basis_source_relations/` remain
+  unavailable/omitted. The source pass intentionally did not serialize dense
+  transforms, coefficients, `T_G`, `T_A`, raw inventories, route reports, or
+  CR2-specific schema.
+
+Validation:
+- Doer validation: package load; H2 base artifact/readback with dimension 471,
+  K readback delta 0.0, 3 source shells, 525 source modes, shell index max 3,
+  and no inferred flags; H2 supplemented artifact/readback with dimension 489,
+  K/V readback deltas 0.0, 3 source shells, 525 source modes, 18 residual rows,
+  and no inferred flags; `git diff --check`.
+- Manager validation: `git diff --check`; `git diff --numstat` reported
+  `150` added and `4` deleted source lines in
+  `src/cartesian_base_hamiltonian.jl`; suspicious-line scan found only fixed
+  three-axis tuple conversions, the approved native `raw_product_source_plan`
+  metadata read, and approved artifact status fields; new-test/tool scan was
+  empty. The generated source-mode coordinate inventory was amended from a
+  variable-length `Tuple(...)` to vector-backed append loops before acceptance.
+
+Goal advancement:
+- LT1/LT3: upgrades Hamiltonian artifacts from row/order metadata to the first
+  construction-native source-mode layer without changing matrix keys, reader
+  behavior, public APIs, or the canonical driver.
+- RG/LT6: materially improves CR2 source inspection while preserving the
+  distinction between native producer facts and consumer ray/locality policy.
+
+Carrying-cost result:
+- deleted: none; this was an approved provenance extension.
+- simplified: artifact consumers can now read native source shell/mode tables
+  instead of relying on ignored sidecar prototypes for this first provenance
+  layer.
+- quarantined: non-native ray/radial labels, final-basis source relations,
+  dense relation weights, transform storage, and CR2-specific labels remain
+  deferred.
+- not deleted because: the minimal Hamiltonian writer remains intentionally
+  sidecar-free, and old ignored CR2/postprocess scripts remain only as
+  prototype/reference evidence.
+- exact remaining caller/blocker: ray/locality contraction still needs either a
+  reviewed native relation producer or explicit consumer-side policy; the
+  producer should not infer those labels from centers or support order.
+- added src lines: 150.
+- deleted src lines: 4.
+- new tests: none.
+- new metadata/status fields: approved artifact `source_shells/` and
+  `source_modes/` sidecar datasets only.
+
+### Medium-Term Goal Checkpoint After Pass 115
+
+- Active: CR2 usability has shifted from "can the canonical driver write a
+  usable artifact?" to "can downstream consumers recover enough native row
+  provenance for locality/ray decisions without relying on center heuristics?"
+- Completed: compact artifact manifest baseline, public recipe provenance, and
+  native source shell/mode sidecar writing for current base/supplemented
+  artifacts.
+- Active: timing/compile attribution is now a separate lane. Current evidence
+  says one-shot driver timings mix compilation, artifact reuse, and real
+  construction cost; future performance claims need clean repeated fresh-target
+  runs and a type-surface audit before source optimization.
+- Deferred: ray IDs, radial labels, source relations, and AFQMC/locality
+  policy remain outside producer authority until a native producer seam or
+  explicit consumer contract is approved.

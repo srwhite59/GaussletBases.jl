@@ -173,6 +173,127 @@ function _cartesian_base_stages(input)
     return parent, transforms
 end
 
+function _cartesian_record_source_mode_facts(record, contract)
+    support = record.support_record
+    if record.transform_kind === :direct_identity_transform_contract
+        dims = Tuple(Int.(length.(support.outer_box)))::NTuple{3,Int}
+        return (; dims, modes = nothing,
+            ordering = :x_major_y_major_z_fast, lowdin = false,
+            construction_kind = support.lowering_contract_kind,
+            axis_intervals = support.outer_box)
+    elseif record.transform_kind === :pqs_source_modes_boundary_selection_shell_realization_contract
+        isnothing(contract) && return nothing
+        raw_plan = get(contract.metadata, :raw_product_source_plan, nothing)
+        dims = isnothing(raw_plan) ?
+            Tuple(Int.(support.source_mode_shape))::NTuple{3,Int} :
+            raw_plan.source_mode_dims
+        ordering = isnothing(raw_plan) ? :x_major_y_major_z_fast :
+            raw_plan.source_mode_ordering
+        modes = isnothing(raw_plan) ? nothing : raw_plan.source_mode_indices
+        return (; dims, modes, ordering, lowdin = true,
+            construction_kind = :pqs_boundary_comx_source_box,
+            axis_intervals = support.outer_box)
+    end
+    return nothing
+end
+
+function _cartesian_append_source_modes!(mode_shells, mode_indices, mode_units, mode_labels,
+    local_axes, mode_lowdin, id, unit_key, source_label, facts)
+    function append_mode(mode_index, mode)
+        push!(mode_shells, id); push!(mode_indices, mode_index); push!(mode_units, unit_key)
+        push!(mode_labels, string(source_label, ":", mode[1], "_", mode[2], "_", mode[3]))
+        push!(local_axes, mode); push!(mode_lowdin, facts.lowdin)
+    end
+    if isnothing(facts.modes)
+        mode_index = 0
+        for ix in 1:facts.dims[1], iy in 1:facts.dims[2], iz in 1:facts.dims[3]
+            mode_index += 1
+            append_mode(mode_index, (ix, iy, iz))
+        end
+    else
+        for (mode_index, mode) in pairs(facts.modes)
+            append_mode(mode_index, mode)
+        end
+    end
+    return nothing
+end
+
+function _cartesian_source_mode_provenance(transforms)
+    low = get(transforms, :low_order_transforms, nothing)
+    basis = get(transforms, :terminal_basis_realization, nothing)
+    (isnothing(low) || isnothing(basis)) && return nothing
+    plan = low.terminal_retained_rule_plan
+    plan.status === :available_terminal_retained_rule_plan || return nothing
+    contract_plan = low.retained_unit_transform_contract_plan
+    contracts = Dict(contract.unit_key => contract for contract in contract_plan.contracts)
+    blocks = Dict(block.unit_key => block for block in basis.blocks)
+    shell_id = Int[]; unit_labels = Symbol[]; unit_kinds = Symbol[]
+    starts = Int[]; stops = Int[]; labels = Symbol[]; kinds = Symbol[]
+    axis_starts = Vector{NTuple{3,Int}}(); axis_stops = Vector{NTuple{3,Int}}()
+    dims_rows = Vector{NTuple{3,Int}}(); mode_counts = Int[]; orderings = Symbol[]
+    lowdin = Bool[]; shell_by_unit = Dict{Symbol,Tuple{Int,Symbol}}()
+    mode_shells = Int[]; mode_indices = Int[]; mode_units = Symbol[]
+    mode_labels = String[]; local_axes = Vector{NTuple{3,Int}}(); mode_lowdin = Bool[]
+    for record in plan.records
+        block = get(blocks, record.support_record.unit_key, nothing)
+        isnothing(block) && continue
+        contract = get(contracts, record.transform_contract_unit_key, nothing)
+        facts = _cartesian_record_source_mode_facts(record, contract)
+        isnothing(facts) && continue
+        id = length(shell_id) + 1
+        source_label = Symbol(string(record.support_record.unit_key), "_source_shell")
+        push!(shell_id, id); push!(unit_labels, record.support_record.unit_key)
+        push!(unit_kinds, record.lowering_contract_kind)
+        push!(starts, first(block.column_range)); push!(stops, last(block.column_range))
+        push!(labels, source_label); push!(kinds, facts.construction_kind)
+        push!(axis_starts, ntuple(axis -> first(facts.axis_intervals[axis]), 3))
+        push!(axis_stops, ntuple(axis -> last(facts.axis_intervals[axis]), 3))
+        push!(dims_rows, facts.dims)
+        push!(mode_counts, isnothing(facts.modes) ? prod(facts.dims) : length(facts.modes))
+        push!(orderings, facts.ordering); push!(lowdin, facts.lowdin)
+        shell_by_unit[record.support_record.unit_key] = (id, source_label)
+        _cartesian_append_source_modes!(mode_shells, mode_indices, mode_units, mode_labels,
+            local_axes, mode_lowdin, id, record.support_record.unit_key, source_label, facts)
+    end
+    isempty(shell_id) && return nothing
+    n_shells = length(shell_id); n_modes = length(mode_shells)
+    shell_matrix(rows) = [rows[row][axis] for row in eachindex(rows), axis in 1:3]
+    return (;
+        shell_by_unit,
+        source_shells = (;
+            status = :native_terminal_source_shells, schema_version = 1,
+            row_count = n_shells, source_shell_id = shell_id,
+            unit_label = unit_labels, unit_kind = unit_kinds,
+            final_basis_start = starts, final_basis_stop = stops,
+            source_shell_label = labels, construction_kind = kinds,
+            axis_start = shell_matrix(axis_starts), axis_stop = shell_matrix(axis_stops),
+            contracted_dims = shell_matrix(dims_rows), source_mode_count = mode_counts,
+            source_mode_ordering = orderings, center_definition = fill(:unavailable, n_shells),
+            center_status = fill(:unavailable, n_shells), lowdin_correction_applied = lowdin,
+            shell_label_status = fill(:native, n_shells),
+            ray_label_status = fill(:unavailable, n_shells),
+            radial_order_status = fill(:unavailable, n_shells),
+            inferred_from_centers = falses(n_shells), inferred_from_nearest_grid = falses(n_shells),
+            inferred_from_support_order = falses(n_shells), inferred_from_support_indices = falses(n_shells),
+            inferred_from_raw_to_final_support = falses(n_shells)),
+        source_modes = (;
+            status = :native_terminal_source_modes, schema_version = 1,
+            row_count = n_modes, source_shell_id = mode_shells, mode_index = mode_indices,
+            unit_label = mode_units, native_source_id_label = mode_labels,
+            local_axis_x = [axis[1] for axis in local_axes],
+            local_axis_y = [axis[2] for axis in local_axes],
+            local_axis_z = [axis[3] for axis in local_axes],
+            center_x = fill(NaN, n_modes), center_y = fill(NaN, n_modes),
+            center_z = fill(NaN, n_modes), center_definition = fill(:unavailable, n_modes),
+            center_status = fill(:unavailable, n_modes), lowdin_correction_applied = mode_lowdin,
+            source_mode_status = fill(:native, n_modes), shell_label_status = fill(:native, n_modes),
+            ray_label_status = fill(:unavailable, n_modes),
+            radial_order_status = fill(:unavailable, n_modes),
+            inferred_from_centers = falses(n_modes), inferred_from_nearest_grid = falses(n_modes),
+            inferred_from_support_order = falses(n_modes), inferred_from_support_indices = falses(n_modes),
+            inferred_from_raw_to_final_support = falses(n_modes)))
+end
+
 _cartesian_base_atom_location_matrix(input) =
     [input.locations[row][axis] for row in eachindex(input.locations), axis in 1:3]
 
@@ -228,8 +349,14 @@ function _cartesian_manifest_block_center(centers, block, local_col)
     return (cx / total, cy / total, cz / total)
 end
 
-function _cartesian_manifest_fill_base_labels!(labels, basis, bundles)
+function _cartesian_manifest_fill_base_labels!(labels, base)
+    basis = base.terminal_basis
+    bundles = base.parent.parent_axis_bundle_object
     centers = _cartesian_manifest_axis_centers(bundles)
+    source_mode_provenance =
+        hasproperty(base, :source_mode_provenance) ? base.source_mode_provenance : nothing
+    shell_by_unit = isnothing(source_mode_provenance) ?
+        Dict{Symbol,Tuple{Int,Symbol}}() : source_mode_provenance.shell_by_unit
     for block in basis.blocks, (local_col, col) in enumerate(block.column_range)
         direct = isnothing(block.coefficients)
         x, y, z = _cartesian_manifest_block_center(centers, block, local_col)
@@ -241,6 +368,16 @@ function _cartesian_manifest_fill_base_labels!(labels, basis, bundles)
             direct ? :parent_support_row_center : :coefficient_abs2_support_centroid
         labels.center_status[col], labels.lowdin_correction_applied[col] =
             direct ? :available : :representative, !direct
+        if base.input.kind === :h
+            labels.owner_nucleus_index[col], labels.owner_label_status[col] = 1, :available
+        end
+        shell = get(shell_by_unit, block.unit_key, nothing)
+        if !isnothing(shell)
+            labels.source_box_label[col], labels.source_box_label_status[col] =
+                shell[2], :available
+            labels.shell_index[col], labels.shell_label_status[col] =
+                shell[1], :native
+        end
     end
     return labels
 end
@@ -271,8 +408,7 @@ function _cartesian_manifest_final_basis_labels(base; residual = nothing, augmen
     base_dimension = base.terminal_basis.final_dimension
     residual_dimension = isnothing(residual) ? 0 : residual.residual_dimension
     labels = _cartesian_manifest_label_table(base_dimension + residual_dimension)
-    _cartesian_manifest_fill_base_labels!(
-        labels, base.terminal_basis, base.parent.parent_axis_bundle_object)
+    _cartesian_manifest_fill_base_labels!(labels, base)
     isnothing(residual) ||
         _cartesian_manifest_fill_residual_labels!(labels, residual, augmented_products)
     return labels
@@ -310,6 +446,14 @@ function _cartesian_write_hamiltonian_manifest(path, base, ham; residual = nothi
     jldopen(String(path), "r+") do file
         file["hamiltonian_manifest/manifest_version"] = 1
         _cartesian_write_sidecar_values!(file, "hamiltonian_manifest/final_basis_labels", labels)
+        if hasproperty(base, :source_mode_provenance) && !isnothing(base.source_mode_provenance)
+            _cartesian_write_sidecar_values!(
+                file, "hamiltonian_manifest/source_shells",
+                base.source_mode_provenance.source_shells)
+            _cartesian_write_sidecar_values!(
+                file, "hamiltonian_manifest/source_modes",
+                base.source_mode_provenance.source_modes)
+        end
         _cartesian_write_sidecar_values!(file, "recipe_provenance", recipe)
     end
     return path
@@ -359,7 +503,9 @@ function cartesian_base_working_basis(system::NamedTuple; basis::NamedTuple, sup
     input = supplemented ? _cartesian_r3_diatomic_inputs(system, basis) :
         _cartesian_base_inputs(system, basis)
     parent, transforms = _cartesian_base_stages(input)
-    return (; input, parent, terminal_basis = transforms.terminal_basis_realization)
+    source_mode_provenance = _cartesian_source_mode_provenance(transforms)
+    return (; input, parent, terminal_basis = transforms.terminal_basis_realization,
+        source_mode_provenance)
 end
 
 cartesian_base_products(base) =
