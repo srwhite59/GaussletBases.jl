@@ -12726,3 +12726,45 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 110 - Approve Driver K/U Reuse Wiring
+
+Commit(s):
+- this commit - Approve driver K/U reuse wiring
+
+Summary:
+- Approved `HP-R3BASE-DRV-WIRE-01` / `HP-R3BASE-DRV-TEST-01` for the tiny
+  canonical-driver supplemented-mode call-site pass.
+- The only approved file is `bin/cartesian_ham_builder.jl`. The driver may
+  pass `base_ham.kinetic` as `base_kinetic` and
+  `base_ham.nuclear_attraction_unit_by_center` as `base_unit_nuclear` into the
+  existing augmented product and unit-nuclear stage calls.
+- The approval explicitly forbids public input changes, hook changes, timing
+  label changes, stage-sequence changes, artifact schema changes, diagnostics,
+  source/kernel changes, committed tests/fixtures, and Cr2 workflow.
+
+Validation:
+- Design-manager validation only: docs-only `git diff --check`, focused `rg`
+  for `HP-R3BASE-DRV-*`, `base_kinetic`, `base_unit_nuclear`, forbidden driver
+  contract changes, and no `src`, `test`, `tools`, or `bin` changes. No
+  implementation tests were run.
+
+Goal advancement:
+- LT1/LT3: lets the canonical driver use the same same-construction base K/U
+  reuse path already approved for the supplemented facade without changing its
+  human-facing contract.
+
+Carrying-cost result:
+- deleted: none; docs-only authority pass.
+- simplified: future driver supplemented runs can avoid duplicate base K/U
+  construction through a call-site-only change.
+- quarantined: diagnostics, new hooks, timing-label changes, visible stage
+  changes, public inputs, artifacts, source/kernel edits, tests/fixtures, and
+  Cr2 workflow remain unapproved.
+- not deleted because: source driver wiring has not run yet.
+- exact remaining caller/blocker: doer must stop if the call-site update needs
+  any visible driver contract change.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

@@ -119,6 +119,11 @@ Approved remaining exact-operator allocation decision:
   final-basis `K_GG` and unit `U_GG[A]` blocks in supplemented exact augmented
   operators, with dimension and center-count validation and no metadata or
   provenance payload;
+- `HP-R3BASE-DRV-WIRE-01` approves only the canonical driver supplemented-mode
+  call-site wiring that passes `base_ham.kinetic` as `base_kinetic` and
+  `base_ham.nuclear_attraction_unit_by_center` as `base_unit_nuclear`;
+- the driver wiring must not change public inputs, hooks, timing labels,
+  visible stage sequence, artifact schema, or driver contract;
 - route/stage setup, raw-block setup, neutral raw-block kernels,
   residual/MWG/IDA changes, public workflow, and Cr2 facade/artifact work
   remain unapproved.

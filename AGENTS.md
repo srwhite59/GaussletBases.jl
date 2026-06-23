@@ -456,6 +456,8 @@ these approved design IDs:
 - `HP-R3UN-TEST-01`
 - `HP-R3BASE-FN-01`
 - `HP-R3BASE-TEST-01`
+- `HP-R3BASE-DRV-WIRE-01`
+- `HP-R3BASE-DRV-TEST-01`
 - `HP-DRV-FILE-01`
 - `HP-DRV-FN-01`
 - `HP-DRV-TEST-01`
@@ -764,6 +766,22 @@ Approved R3 same-construction base K/U reuse:
   artifact schema, persistent cache/workspace objects, committed tests, Cr2
   workflow, or files outside the approved surfaces. Line budget target is under
   100 added `src` lines.
+
+Approved canonical-driver call-site wiring for R3 same-construction K/U reuse:
+
+- `HP-R3BASE-DRV-WIRE-01` approves only `bin/cartesian_ham_builder.jl`.
+- In supplemented mode only, the driver may pass `base_ham.kinetic` as
+  `base_kinetic` to `cartesian_residual_gto_augmented_products(...)` and
+  `base_ham.nuclear_attraction_unit_by_center` as `base_unit_nuclear` to
+  `cartesian_residual_gto_augmented_unit_nuclear(...)`.
+- Public inputs, hooks, timing labels, visible stage sequence, artifact schema,
+  and the driver contract must remain unchanged.
+- `HP-R3BASE-DRV-TEST-01` approves only `git diff --check`, package load, H2
+  supplemented driver artifact/readback, optional practical Be2 supplemented
+  driver/readback, and no Cr2 run.
+- This lane must not change source/kernels, diagnostics, hooks, timing labels,
+  public inputs, artifacts, committed tests/fixtures, Cr2 workflow, or any file
+  outside `bin/cartesian_ham_builder.jl`.
 
 `HP-FN-03` specifically approves
 `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl` as the Slice B

@@ -548,6 +548,45 @@ Line budget:
   by local call shape and dimension/center validation, or if implementation
   needs public payloads, metadata, or stage objects.
 
+## R3 Driver Call-Site Base K/U Reuse Wiring
+
+Status: approved for implementation under `HP-R3BASE-DRV-WIRE-01` and
+`HP-R3BASE-DRV-TEST-01`.
+
+Approved boundary:
+
+- source file `bin/cartesian_ham_builder.jl`;
+- supplemented mode only;
+- call sites for `cartesian_residual_gto_augmented_products(...)` and
+  `cartesian_residual_gto_augmented_unit_nuclear(...)`.
+
+Allowed source shapes:
+
+- pass `base_ham.kinetic` as `base_kinetic` to augmented products;
+- pass `base_ham.nuclear_attraction_unit_by_center` as `base_unit_nuclear` to
+  augmented unit-nuclear construction;
+- leave public inputs, hooks, timing labels, visible stage sequence, artifact
+  schema, and driver contract unchanged.
+
+Validation gates:
+
+- `git diff --check`;
+- package load;
+- H2 supplemented driver artifact/readback;
+- Be2 supplemented driver artifact/readback if practical;
+- no Cr2 run.
+
+Forbidden:
+
+- source/kernel changes, diagnostics, new hooks, new timing labels, public
+  input changes, visible stage-sequence changes, artifact schema changes,
+  committed tests/fixtures, Cr2 workflow, or files outside
+  `bin/cartesian_ham_builder.jl`.
+
+Failure rule:
+
+- if this needs any visible driver contract change, stop and report.
+
 ## Canonical Cartesian Driver Usability
 
 Status: approved for implementation under `HP-DRV-FILE-01`,

@@ -1442,6 +1442,47 @@ No new committed test file, Cr2 artifact, Cr2 workflow, public API/export,
 driver workflow change, metadata/status/report field, or artifact schema
 change is approved by this ID.
 
+### HP-R3BASE-DRV-WIRE-01 — canonical driver K/U reuse call-site wiring
+
+Approved source file:
+
+```text
+bin/cartesian_ham_builder.jl
+```
+
+Approved behavior:
+
+- in supplemented mode only, pass `base_ham.kinetic` into
+  `cartesian_residual_gto_augmented_products(...)` as `base_kinetic`;
+- in supplemented mode only, pass
+  `base_ham.nuclear_attraction_unit_by_center` into
+  `cartesian_residual_gto_augmented_unit_nuclear(...)` as
+  `base_unit_nuclear`;
+- keep the current public inputs, hooks, timing labels, visible stage sequence,
+  artifact schema, and driver contract unchanged.
+
+This ID is only call-site wiring so the canonical driver uses the already
+approved same-construction base K/U reuse path. It does not approve source or
+kernel changes, diagnostics, new hooks, new timing labels, public API/export
+changes, artifact changes, tests/fixtures, Cr2 workflow, or edits outside
+`bin/cartesian_ham_builder.jl`.
+
+Failure rule: if the driver call-site update needs any visible driver contract
+change, make no source commit and report the blocker.
+
+### HP-R3BASE-DRV-TEST-01 — driver K/U reuse validation
+
+Approved validation:
+
+- `git diff --check`;
+- package load;
+- H2 supplemented driver artifact/readback;
+- Be2 supplemented driver artifact/readback if practical;
+- no Cr2 run.
+
+No new committed test file, fixture, diagnostic, hook, timing label, public
+input, artifact schema, or Cr2 workflow is approved by this ID.
+
 ## Approved For Canonical Cartesian Driver Usability
 
 This section approves only the compact artifact-producing canonical driver
