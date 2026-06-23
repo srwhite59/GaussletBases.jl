@@ -11246,3 +11246,48 @@ Risk / guardrail:
 - Do not continue `HP-R3GG-FN-01` into unit-nuclear Gaussian sums or route/raw
   setup. Those are separate measured targets and need their own authority if
   pursued.
+
+## Cartesian Hamiltonian Producer Pass 088 - Approve Remaining Exact-Operator Allocation Audit
+
+Commit(s):
+- this commit - Record remaining exact-operator allocation audit
+
+Summary:
+- Made the docs/authority decision after `954c86cd`: the terminal `G-G`
+  product-workspace lane is crossed, but the remaining Cr2 q4 exact
+  augmented-operator allocation is still a mixed attribution problem rather
+  than a source-ready target.
+- Added `r3_remaining_exact_operator_allocation_audit.md` and approved
+  `HP-R3REM-AUDIT-01` as measurement-only authority. It separates the next
+  audit from `HP-R3GG-FN-01` and explicitly blocks implementation in
+  unit-nuclear `U_GG` Gaussian sums, route/raw-block setup, or any other source
+  lane until a later amendment names exact owner/files/functions, validation,
+  and line budget.
+
+Validation:
+- Design-manager validation: `git diff --check`, focused `rg` for
+  `HP-R3REM-AUDIT-01`, measurement-only wording, unit-nuclear exclusions, and
+  confirmation that no `src`, `test`, `tools`, or `bin` files changed.
+- No implementation tests were run; this was docs-only authority work.
+
+Goal advancement:
+- Cr2-readiness/MT4: keeps performance work moving by requiring exact
+  attribution before the next source lane.
+- RG/LT6: preserves completed R3GG and raw-block authority boundaries and
+  prevents conceptual drift into source setup or nuclear-sum optimization under
+  the wrong ID.
+
+Carrying-cost result:
+- deleted: none.
+- simplified: next-step authority is now one measurement-only ID rather than
+  an ambiguous continuation of `HP-R3GG-FN-01`.
+- quarantined: future probes must remain ignored `tmp/work` measurement.
+- not deleted because: no source surface was edited or retired in this docs
+  pass.
+- exact remaining caller/blocker: Cr2 q4 exact augmented-operator allocation
+  remains to be attributed among unit-nuclear `U_GG`, route/raw-block setup,
+  and any audit overhead before source approval.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

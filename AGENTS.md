@@ -642,6 +642,20 @@ route setup, parent construction, persistent caches, metadata/report/status/
 payload fields, artifacts, public API/export, Cr2 facade support, or Cr2
 artifact workflow. Line budget is at most 100 added `src` lines.
 
+Measurement-only current R3 allocation decision:
+
+- `HP-R3REM-AUDIT-01` approves only ignored `tmp/work` measurement/probe work
+  to classify remaining Cr2 q4 exact augmented-operator allocation after
+  `954c86cd`.
+- It is intentionally not listed as production source authority. It does not
+  approve unit-nuclear `U_GG` Gaussian-sum optimization, route/raw-block setup
+  cleanup, extension of `HP-R3GG-FN-01`, committed tests, artifacts, public
+  API/export, metadata/report/status/payload fields, persistent caches, Cr2
+  facade support, or Cr2 artifact workflow.
+- A later source lane needs a docs-only amendment that names exact IDs,
+  owner/files/functions, forbidden surfaces, validation gates, line budget,
+  deletion/simplification expectation, and failure rule.
+
 `HP-FN-03` specifically approves
 `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl` as the Slice B
 source file. It does not approve a new K/U payload, stage-return field, report

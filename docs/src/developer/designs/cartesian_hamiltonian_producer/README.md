@@ -30,6 +30,8 @@ Agents should read first:
   for the neutral overlap/kinetic/moment raw-block owner
 - [R3 terminal G-G product matrices](r3_terminal_gg_product_matrices.md)
   for the narrow final-basis `G-G` product-matrix optimization lane
+- [R3 remaining exact-operator allocation audit](r3_remaining_exact_operator_allocation_audit.md)
+  for the measurement-only decision after terminal `G-G` workspace reuse
 - [Algorithm implementation index](../../algorithm_implementation_index.md)
 
 Approved amendments:
@@ -59,6 +61,10 @@ Approved amendments:
 - [R3 terminal G-G product matrices](r3_terminal_gg_product_matrices.md)
   approves only the terminal final-basis `G-G` product matrices used by
   residual-Gaussian exact augmented operators.
+- [R3 remaining exact-operator allocation audit](r3_remaining_exact_operator_allocation_audit.md)
+  approves only a measurement-only audit of the post-`954c86cd` Cr2 exact
+  augmented-operator allocation. It does not approve a unit-nuclear, route
+  setup, raw-block setup, or other source lane.
 
 Candidate amendments:
 

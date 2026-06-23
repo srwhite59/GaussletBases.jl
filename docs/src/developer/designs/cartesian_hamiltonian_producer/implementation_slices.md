@@ -381,3 +381,41 @@ Line budget:
 - no new committed test file in the first source pass;
 - stop for a new amendment if a broad product framework, persistent workspace,
   or files outside the approved source surfaces are required.
+
+## R3 Remaining Exact-Operator Allocation Audit
+
+Status: approved measurement-only under `HP-R3REM-AUDIT-01`; no production
+source lane is approved.
+
+Decision:
+
+- after `954c86cd`, terminal final-basis `G-G` product workspace is crossed for
+  the current Cr2 q4 exact augmented-operator proxy;
+- the wrapper now measures about `5.8389s / 4605.517 MiB`;
+- remaining allocation is reported mainly outside the nine terminal product
+  buffers, including unit-nuclear `U_GG` Gaussian-sum work and route/raw-block
+  setup;
+- those buckets are not covered by `HP-R3GG-FN-01`.
+
+Approved audit boundary:
+
+- use ignored `tmp/work` probes only;
+- separate allocation and timing for terminal `G-G` products, unit-nuclear
+  `U_GG` Gaussian-sum construction, neutral raw blocks, exact augmented nuclear
+  transforms, route/stage setup, raw-block setup, and audit/replay overhead;
+- report the next proposed owner and source surface only after attribution is
+  clear.
+
+Forbidden:
+
+- no `src`, `test`, `tools`, or `bin` edits;
+- no unit-nuclear, route/raw-block setup, raw-block, residual Gaussian,
+  IDA/MWG, Qiu-White, parent, terminal-basis, public API, artifact, metadata,
+  report/status/payload, persistent cache/workspace, Cr2 facade, or Cr2
+  artifact source work.
+
+Exit rule:
+
+- approve no implementation handoff unless a later docs-only amendment names
+  the exact ID, owner/files/functions, forbidden surfaces, validation gates,
+  line budget, deletion/simplification expectation, and failure rule.

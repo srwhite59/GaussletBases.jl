@@ -18,6 +18,9 @@ Normal startup reading:
   overlap/kinetic/moment raw-block owner;
 - `r3_terminal_gg_product_matrices.md` for the narrow R3/RG terminal `G-G`
   product-matrix optimization lane;
+- `r3_remaining_exact_operator_allocation_audit.md` for the measurement-only
+  decision on remaining exact-operator allocation after terminal `G-G`
+  workspace reuse;
 - `docs/src/developer/algorithm_implementation_index.md` for existing kernels
   and donor paths.
 
@@ -84,6 +87,19 @@ Approved R3/RG terminal `G-G` product-matrix lane:
 - it does not approve `G-A`/`A-A` raw-block changes, unit-nuclear Gaussian-sum
   work, IDA/MWG changes, route setup, public API, artifacts, metadata/status
   fields, persistent caches, or Cr2 workflow.
+
+Approved remaining exact-operator allocation decision:
+
+- after `954c86cd`, terminal `G-G` product workspace is considered crossed for
+  the current Cr2 q4 proxy;
+- the remaining Cr2 q4 exact augmented-operator wrapper allocation is reported
+  mainly outside the nine terminal product buffers, including unit-nuclear
+  `U_GG` Gaussian-sum work and route/raw-block setup;
+- `HP-R3REM-AUDIT-01` approves only a measurement-only audit to separate those
+  buckets and identify the exact next owner, if any;
+- no unit-nuclear `U_GG`, route setup, raw-block setup, or other source lane is
+  approved until a later docs-only amendment names IDs, owner/files/functions,
+  forbidden surfaces, validation gates, and line budget.
 
 ## Residual Gaussian Authority
 

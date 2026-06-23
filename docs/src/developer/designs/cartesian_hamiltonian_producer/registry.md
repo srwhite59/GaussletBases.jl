@@ -1,7 +1,8 @@
 # Registry
 
-Only entries marked approved/implemented authorize source work. Candidate or
-rejected entries do not authorize implementation.
+Only entries marked approved/implemented authorize work on the exact surface
+they describe. Measurement-only entries do not authorize production source
+edits. Candidate or rejected entries do not authorize implementation.
 
 ## Approved And Implemented
 
@@ -1081,6 +1082,40 @@ Approved validation:
 - Cr2 q4 exact-operator allocation is remeasured after parity.
 
 No new committed test file is approved by this ID.
+
+## Approved Measurement-Only Authority
+
+These entries authorize ignored measurement/probe work only. They do not
+authorize production source edits, committed tests, source files, persistent
+objects, metadata/report/status/payload fields, artifacts, public API, or Cr2
+workflow support.
+
+### HP-R3REM-AUDIT-01 — remaining exact-operator allocation audit
+
+Approved scope:
+
+- measure the Cr2 q4 R3/RG exact augmented-operator allocation remaining after
+  `954c86cd` and the terminal `G-G` product-workspace optimization;
+- separate total wrapper allocation from neutral raw-block construction,
+  terminal `G-G` product buffers, unit-nuclear `U_GG` Gaussian-sum
+  construction, exact augmented nuclear transforms, route/stage setup, and
+  audit/replay overhead;
+- use ignored `tmp/work` probes only, with H2/Be2 sanity if needed.
+
+Required outcome:
+
+- classify the dominant remaining allocation bucket;
+- recommend a future source lane only if the owner, files, functions,
+  forbidden surfaces, validation gates, line budget, deletion/simplification
+  expectation, and failure rule are specific enough for a separate docs-only
+  amendment.
+
+This ID does not extend `HP-R3GG-FN-01` and does not approve unit-nuclear
+`U_GG` Gaussian-sum optimization, route/raw-block setup cleanup, final-basis
+`G-G` changes, `G-A`/`A-A` raw-block changes, residual Gaussian algorithm
+changes, IDA/MWG changes, Qiu-White semantic changes, parent or terminal-basis
+changes, persistent caches/workspaces, artifacts, public API/export, Cr2 facade
+support, or Cr2 artifact workflow.
 
 ## Rejected Or Deferred
 
