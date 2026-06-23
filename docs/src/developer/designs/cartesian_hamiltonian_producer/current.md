@@ -25,6 +25,8 @@ Normal startup reading:
   unit-nuclear `U_GG` Gaussian-sum allocation lane;
 - `cartesian_driver_usability_workflow.md` for the compact artifact-producing
   canonical driver lane;
+- `r3_homonuclear_diatomic_supplemented_workflow.md` for the explicit
+  homonuclear z-axis diatomic supplemented facade/driver relaxation;
 - `docs/src/developer/algorithm_implementation_index.md` for existing kernels
   and donor paths.
 
@@ -59,8 +61,12 @@ Implemented Residual Gaussian path:
   and lowest-orbital IDA self-Coulomb `0.4574265214362075` within `1.0e-10`;
 - Be2 remains an internal/performance-supported usability proxy, not a
   committed public gate;
-- Cr2 residual diagnostics are not facade support and do not authorize full Cr2
-  supplemented Hamiltonian or artifact production.
+- `HP-R3U-ZDI-*` relaxes the supported supplemented molecule scope to explicit
+  homonuclear z-axis diatomics with no element-specific defaults or
+  Cr2-specific branch;
+- Cr2 may be used only as an explicit generic homonuclear z-axis ignored/user
+  stress or usability run after H2/Be2 validation, not as a committed gate or
+  special workflow.
 
 Approved neutral Cartesian Gaussian raw-block owner:
 
@@ -116,8 +122,20 @@ Approved canonical driver usability lane:
   surfaces and the approved artifact writer/readback;
 - route diagnostics, stop-after internals, ladder probes, raw-block switches,
   underscored package helper calls, status/report/payload fields, solver work,
-  public API/export changes, artifact schema changes, and Cr2 workflow remain
-  unapproved in the canonical driver.
+  public API/export changes, artifact schema changes, and Cr2-specific
+  workflow remain unapproved in the canonical driver.
+
+Approved homonuclear z-axis diatomic supplemented workflow:
+
+- `HP-R3U-ZDI-FN-01` relaxes the non-exported supplemented facade from
+  hardcoded H2/Be2 checks to explicit homonuclear two-center z-axis diatomic
+  validation;
+- `HP-R3U-ZDI-WIRE-01` lets canonical driver supplemented mode call the
+  supported facade instead of package-internal helper paths;
+- required inputs remain explicit: symbols, charges, spin sectors, geometry,
+  base basis controls, supplement labels, and optional trusted `basisfile`;
+- no heteronuclear, non-z-axis, ECP, solver, public export, artifact schema,
+  route diagnostic, or Cr2-specific branch is approved.
 
 ## Residual Gaussian Authority
 
@@ -174,9 +192,10 @@ Artifact ownership:
 
 Deferred lanes:
 
-- broad driver diagnostics and public-driver polish beyond the approved compact
-  artifact-producing workflow;
-- Cr2 stress/performance and Cr2 support decision;
+- broad driver diagnostics and public-driver polish beyond the approved
+  compact artifact-producing workflow;
+- Cr2-specific workflow, committed Cr2 gates, and Cr2 support decisions beyond
+  the generic explicit homonuclear z-axis path;
 - non-base/supplement public workflow;
 - ECP/EGOI/RHF/solver/HamV6 work;
 - artifact/public API decisions beyond the approved compact provenance groups.

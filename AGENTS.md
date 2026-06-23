@@ -451,6 +451,9 @@ these approved design IDs:
 - `HP-DRV-FILE-01`
 - `HP-DRV-FN-01`
 - `HP-DRV-TEST-01`
+- `HP-R3U-ZDI-FN-01`
+- `HP-R3U-ZDI-WIRE-01`
+- `HP-R3U-ZDI-TEST-01`
 
 No other production surface may be added in this lane without a prior
 documentation-only design amendment. This includes new structs, persistent
@@ -549,9 +552,10 @@ The active H2 owner-local residual-MWG endpoint has augmented dimension `489`
 and lowest-orbital IDA self-Coulomb `0.4574265214362075` within `1.0e-10`.
 Older R3-B scalars and global-selection construction paths are historical only.
 Do not add width scaling, tolerance relaxation, global raw-candidate Lowdin,
-global raw-column pivoted-Cholesky residual selection, public export, Cr2 facade
-support, full Cr2 Hamiltonian/artifact, new committed tests, driver/bin/tool
-workflow, or artifact schema expansion without a prior docs-only amendment.
+global raw-column pivoted-Cholesky residual selection, public export,
+Cr2-specific facade support, full Cr2 Hamiltonian/artifact, new committed
+tests, driver/bin/tool workflow, or artifact schema expansion without a prior
+docs-only amendment.
 
 Approved neutral Cartesian Gaussian raw-block nuclear owner:
 
@@ -875,13 +879,31 @@ The intended shape is compact and copyable. Consumers may copy the standard
 driver for project-specific customization; copied local drivers are not
 canonical repo surfaces.
 
+`HP-R3U-ZDI-FN-01` relaxes the supplemented facade from hardcoded H2/Be2 checks
+to explicit homonuclear two-center z-axis validation in
+`src/cartesian_base_hamiltonian.jl`. Required inputs remain explicit: atom
+symbols, nuclear charges, `nup`, `ndn`, geometry, base basis controls,
+supplement labels, and optional trusted supplement `basisfile`. This does not
+approve heteronuclear systems, non-z-axis orientation, ECP, charged systems,
+solver workflow, public export/API redesign, artifact schema changes,
+metadata/status/report fields, or Cr2-specific branches/defaults/fixtures.
+
+`HP-R3U-ZDI-WIRE-01` allows `bin/cartesian_ham_builder.jl` supplemented mode
+to call the supported supplemented facade through the compact `HP-DRV-*`
+workflow. `HP-R3U-ZDI-TEST-01` approves H2 and Be2 facade/driver artifact
+write/readback plus optional ignored/user-run Cr2 stress after H2/Be2 pass. It
+does not approve committed Cr2 fixtures, committed Cr2 tests, Cr2-specific
+workflow, or new committed tests.
+
 Do not add private route-stage controls, stop-after internals, ladder probes,
 stage markers, fixture hacks, diagnostic knobs, underscored package helper
 calls, raw-block provider switches, report/status/payload dumps, metadata field
 clouds, allocation probes, benchmark harness behavior, solver/RHF/ECP/EGOI/
 HamV6 workflow, public API/export changes, artifact schema changes, committed
-driver-input fixtures, committed tests, Cr2 driver runs, or Cr2 workflow
-support. Diagnostics and ladder probing belong in `tools/` or ignored
+driver-input fixtures, committed tests, Cr2-specific driver branches, or
+Cr2-specific workflow support. Generic explicit Cr2 may be used only as an
+ignored/user-run homonuclear z-axis stress through `HP-R3U-ZDI-*` after H2/Be2
+validation. Diagnostics and ladder probing belong in `tools/` or ignored
 `tmp/work` probes, not in the canonical driver.
 
 ## Basis bundle policy

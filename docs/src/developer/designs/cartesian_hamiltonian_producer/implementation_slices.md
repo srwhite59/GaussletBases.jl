@@ -514,7 +514,9 @@ Forbidden:
   raw-block provider switches, report/status/payload dumps, metadata clouds,
   allocation probes, benchmark harness behavior, solver/RHF/ECP/EGOI/HamV6,
   public API/export changes, artifact schema changes, committed tests,
-  committed input fixtures, Cr2 driver runs, or Cr2 workflow support.
+  committed input fixtures, Cr2-specific driver runs, or Cr2-specific
+  workflow support. Generic explicit homonuclear z-axis Cr2 stress through
+  `HP-R3U-ZDI-WIRE-01` is separate ignored/user-run validation authority.
 
 Validation gates:
 
@@ -529,4 +531,47 @@ Line budget:
 - no new committed test or tool file;
 - stop for a new amendment if a parser framework, source files outside the
   canonical driver, route-stage diagnostics, status/report/payload expansion,
-  artifact schema changes, or Cr2 workflow support are required.
+  artifact schema changes, or Cr2-specific workflow support are required.
+
+## Homonuclear Z-Axis Diatomic Supplemented Workflow
+
+Status: approved for implementation under `HP-R3U-ZDI-FN-01`,
+`HP-R3U-ZDI-WIRE-01`, and `HP-R3U-ZDI-TEST-01`.
+
+Approved boundary:
+
+- source file `src/cartesian_base_hamiltonian.jl` for the non-exported
+  supplemented facade;
+- source file `bin/cartesian_ham_builder.jl` for canonical driver
+  supplemented-mode wiring;
+- explicit homonuclear two-center z-axis diatomics only.
+
+Allowed source shapes:
+
+- replace H/Be-specific guards in `_cartesian_r3_diatomic_inputs(...)` or the
+  local equivalent with explicit homonuclear z-axis validation;
+- require explicit system, base basis, supplement, and optional `basisfile`
+  inputs;
+- let the canonical driver call the supported supplemented facade;
+- keep Cr2 as an optional ignored/user-run stress through the generic path.
+
+Validation gates:
+
+- H2 supplemented facade/driver artifact write/readback unchanged;
+- Be2 supplemented facade/driver artifact write/readback unchanged;
+- optional ignored/user-run Cr2 stress/usability run after H2/Be2 pass.
+
+Forbidden:
+
+- element-specific defaults, Cr2-specific branch, committed Cr2 fixture or
+  gate, heteronuclear support, non-z-axis/general orientation support, charged
+  systems, ECP, solver/RHF, public export/API redesign, artifact schema
+  changes, route diagnostics, metadata/status/report fields, package-internal
+  helper composition from the driver, new route objects, committed tests, or
+  new source/tool/input-fixture files.
+
+Line budget:
+
+- at most `100` added `src`/`bin` lines total;
+- net simplification expected where hardcoded H/Be checks are removed;
+- stop for a new amendment if the implementation needs any forbidden surface.

@@ -11652,3 +11652,55 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 091 - Approve Homonuclear Diatomic Supplemented Scope
+
+Commit(s):
+- this commit - Approve homonuclear diatomic supplemented scope
+
+Summary:
+- Approved a narrow molecule-scope relaxation for the residual-GTO/MWG
+  supplemented facade and canonical driver. The hardcoded H2/Be2-only story is
+  replaced by explicit homonuclear two-center z-axis diatomic validation.
+- Added `r3_homonuclear_diatomic_supplemented_workflow.md` and approved
+  `HP-R3U-ZDI-FN-01`, `HP-R3U-ZDI-WIRE-01`, and `HP-R3U-ZDI-TEST-01`.
+  `src/cartesian_base_hamiltonian.jl` may replace H/Be-specific guarded
+  helpers with explicit homonuclear z-axis validation, and
+  `bin/cartesian_ham_builder.jl` may route supplemented mode through the
+  supported facade.
+- Cr2 is allowed only as an explicit generic homonuclear z-axis ignored/user-run
+  stress or usability case after H2/Be2 validation. No Cr2-specific branch,
+  default, committed fixture, committed gate, ECP, solver workflow, public
+  export, artifact schema change, diagnostics, metadata/status/report field,
+  or route object is approved.
+
+Validation:
+- Design-manager validation: `git diff --check`, focused `rg` for the
+  `HP-R3U-ZDI-*` IDs, explicit homonuclear z-axis wording, optional
+  `basisfile`, Cr2 stress limitations, and forbidden surfaces; confirmation
+  that no `src`, `test`, `tools`, or `bin` files changed.
+- No implementation tests were run; this was docs-only authority work.
+
+Goal advancement:
+- LT1/LT3: makes the canonical driver useful for real explicit molecule inputs
+  while preserving compact, copyable workflow shape.
+- RG/LT6: moves supplemented artifact production from H/Be fixture wording to a
+  generic homonuclear diatomic producer surface without promoting Cr2-specific
+  code or broad molecule support.
+
+Carrying-cost result:
+- deleted: none; docs-only authority pass.
+- simplified: H2/Be2 hardcoding is replaced by one explicit molecule-scope
+  validation contract.
+- quarantined: Cr2 remains ignored/user-run stress through the generic path,
+  not a committed gate or special branch.
+- not deleted because: source implementation has not run yet.
+- exact remaining caller/blocker: repo-doer must implement within
+  `src/cartesian_base_hamiltonian.jl` and `bin/cartesian_ham_builder.jl`,
+  stop if the change needs heteronuclear/non-z-axis support, ECP, solver work,
+  artifact schema changes, route diagnostics, committed fixtures/tests,
+  metadata/status/report fields, or Cr2-specific branching.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

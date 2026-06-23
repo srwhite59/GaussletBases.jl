@@ -115,7 +115,7 @@ This lane does not approve:
 - residual algorithm, MWG/IDA, raw-block, or terminal-kernel changes;
 - route reports, status symbols, payload dumps, metadata field clouds, or
   report mirrors;
-- allocation probes, benchmarking harnesses, or Cr2 stress controls;
+- allocation probes, benchmarking harnesses, or Cr2-specific stress controls;
 - solver/RHF/ECP/EGOI/HamV6 workflow;
 - public API/export changes;
 - artifact schema changes beyond the existing approved provenance groups;
@@ -137,8 +137,10 @@ scripts, not in the canonical driver.
   `supplement_provenance/` group and optional readback passes;
 - optional ignored Be2 usability run if the implementation touches the
   supplemented mode;
-- no Cr2 driver run, solver run, committed test file, or committed input
-  fixture is approved by this ID.
+- generic explicit homonuclear z-axis Cr2 stress is approved only by
+  `HP-R3U-ZDI-WIRE-01` and remains ignored/user-run after H2/Be2 validation;
+- no Cr2-specific driver run, solver run, committed test file, or committed
+  input fixture is approved by this ID.
 
 Temporary project input files for validation should live under ignored
 `tmp/work`.
@@ -153,8 +155,8 @@ Line budget:
 
 Failure rule: if implementation requires a parser framework, source files
 outside `bin/cartesian_ham_builder.jl`, committed input fixtures, route-stage
-diagnostics, status/report/payload expansion, artifact schema changes, or Cr2
-workflow support, stop and request a new docs-only amendment.
+diagnostics, status/report/payload expansion, artifact schema changes, or
+Cr2-specific workflow support, stop and request a new docs-only amendment.
 
 ## Deferred
 

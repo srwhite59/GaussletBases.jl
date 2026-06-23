@@ -17,8 +17,10 @@ optimization lane is approved separately. A narrow unit-nuclear `U_GG`
 Gaussian-sum allocation lane is approved after the remaining-allocation audit.
 The canonical Cartesian driver usability lane is approved so the standard
 driver can directly produce base and supported supplemented Hamiltonian
-artifacts. Broad public API/export, Cr2 validation, ECP, EGOI, RHF, and solver
-work remain deferred.
+artifacts. The supported supplemented workflow now accepts explicit
+homonuclear z-axis diatomics without element-specific branches. Broad public
+API/export, Cr2-specific workflow, ECP, EGOI, RHF, and solver work remain
+deferred.
 
 Agents should read first:
 
@@ -40,6 +42,8 @@ Agents should read first:
   for the narrow terminal final-basis unit-nuclear `U_GG` optimization lane
 - [Cartesian driver usability workflow](cartesian_driver_usability_workflow.md)
   for the compact artifact-producing canonical driver lane
+- [R3 homonuclear z-axis diatomic supplemented workflow](r3_homonuclear_diatomic_supplemented_workflow.md)
+  for the explicit homonuclear diatomic molecule-scope relaxation
 - [Algorithm implementation index](../../algorithm_implementation_index.md)
 
 Approved amendments:
@@ -81,12 +85,16 @@ Approved amendments:
   visible defaults, optional trusted input file, command-line overrides,
   coarse timing/summary, and artifact production through approved producer
   surfaces.
+- [R3 homonuclear z-axis diatomic supplemented workflow](r3_homonuclear_diatomic_supplemented_workflow.md)
+  approves explicit homonuclear two-center z-axis diatomic supplemented inputs
+  through the existing facade and canonical driver, with no element-specific
+  defaults or Cr2-specific branch.
 
 Candidate amendments:
 
-- Cr2-readiness measurement, public supplemented workflow/export,
-  basis/supplement-realism, and broad driver diagnostics remain candidate-only
-  until separately approved.
+- Cr2-specific workflow, public supplemented workflow/export,
+  basis/supplement-realism beyond explicit supplied labels/files, and broad
+  driver diagnostics remain candidate-only until separately approved.
 
 Historical material:
 

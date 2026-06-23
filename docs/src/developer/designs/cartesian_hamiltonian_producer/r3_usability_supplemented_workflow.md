@@ -10,8 +10,11 @@ Implementation of this facade must use the approved owner-local residual
 selection correction in `r3_residual_gto_mwg_augmentation.md` and the corrected
 H2 MWG scalar `0.4574265214362075`.
 
-It approves only a narrow module-qualified internal facade for z-axis H2 and
-internal/performance-supported z-axis Be2. Cr2 remains deferred.
+It originally approved only a narrow module-qualified internal facade for
+z-axis H2 and internal/performance-supported z-axis Be2. The follow-on
+`r3_homonuclear_diatomic_supplemented_workflow.md` amendment relaxes that to
+explicit homonuclear two-center z-axis diatomics with no element-specific
+defaults and no Cr2-specific branch.
 
 ## Approved IDs
 
@@ -19,6 +22,9 @@ internal/performance-supported z-axis Be2. Cr2 remains deferred.
 - `HP-R3U-FN-01` - non-exported supplemented Hamiltonian facade.
 - `HP-R3U-WIRE-01` - same-construction base/R3/R3-C wiring.
 - `HP-R3U-TEST-01` - standalone H2 usability endpoint validation.
+- `HP-R3U-ZDI-FN-01` - homonuclear z-axis diatomic supplemented facade scope.
+- `HP-R3U-ZDI-WIRE-01` - canonical driver supplemented-mode wiring.
+- `HP-R3U-ZDI-TEST-01` - H2/Be2 correctness and optional ignored Cr2 stress.
 
 ## Decision
 
@@ -97,28 +103,24 @@ a docs-only amendment.
 Center-sized collections must be vectors or other `AbstractVector` values, not
 variable-size tuples. Unknown keys must throw `ArgumentError`.
 
-Supported first systems:
+Supported systems after `HP-R3U-ZDI-FN-01`:
 
-- z-axis H2:
-  - `atom_symbols = ["H", "H"]`;
-  - `nuclear_charges = [1.0, 1.0]`;
-  - `nup = 1`, `ndn = 1`;
-  - both centers have `x = 0` and `y = 0`;
-  - distinct finite `z` coordinates.
-- z-axis Be2, internal/performance-supported only:
-  - `atom_symbols = ["Be", "Be"]`;
-  - `nuclear_charges = [4.0, 4.0]`;
-  - `nup = 4`, `ndn = 4`;
-  - both centers have `x = 0` and `y = 0`;
-  - distinct finite `z` coordinates.
-
-Be2 support is for internal usability and performance sanity, not a public API
-guarantee and not a committed validation gate in the first implementation.
+- explicit homonuclear two-center z-axis diatomics;
+- equal atom symbols and equal finite positive nuclear charges;
+- both centers have `x = 0` and `y = 0`;
+- centers have distinct finite `z` coordinates;
+- `nup` and `ndn` are explicit nonnegative integers;
+- current neutral all-electron policy requires
+  `nup + ndn == round(Int, sum(nuclear_charges))`;
+- no element-specific defaults or Cr2-specific branch.
 
 Unsupported systems must throw clear `ArgumentError`s before expensive
-construction where practical. Cr, Cr2, ECP systems, heteronuclear molecules,
-non-z-axis diatomics, translated/rotated general molecules, RHF/solver
-handoff, and non-base Hamiltonian variants are not approved.
+construction where practical. ECP systems, charged systems, heteronuclear
+molecules, non-z-axis diatomics, translated/rotated general molecules,
+RHF/solver handoff, and non-base Hamiltonian variants are not approved. Cr2 is
+permitted only as an explicit homonuclear z-axis diatomic ignored/user-run
+stress or usability case through the generic path, not as a committed gate or
+special branch.
 
 ## Base Basis Input
 
@@ -157,6 +159,7 @@ Optional keys and defaults:
 
 - `uncontracted = false`
 - `width_filtering = nothing`
+- `basisfile = nothing`
 
 Validation and normalization:
 
@@ -171,6 +174,8 @@ Validation and normalization:
 - `width_filtering` must be either `nothing` or a `NamedTuple` with exactly
   `max_width`, where `max_width` is finite and positive. This maps to the
   existing legacy `max_width` filter.
+- `basisfile` must be either `nothing` or an `AbstractString` naming a trusted
+  local/project basis source used by the existing basis-loading path.
 - Unknown supplement keys throw `ArgumentError`.
 
 First H2 validation fixture:
@@ -184,8 +189,9 @@ supplement = (;
 )
 ```
 
-Basis-file lookup uses the existing legacy named-basis resolution order. This
-amendment does not approve a public basis-file path selector.
+Basis-file lookup uses the existing legacy named-basis resolution order unless
+`basisfile` is explicitly supplied. This amendment does not approve ECP,
+pseudopotential, or element-default basis behavior.
 
 ## Wiring Contract
 
@@ -266,7 +272,8 @@ julia --project=. test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl
 - validates `supplement_provenance/` keys match the normalized supplement
   spec;
 - checks unknown keys, malformed supplement width filtering, unsupported
-  orientation, and unsupported Cr2 rejection without private stage assertions.
+  orientation, and unsupported non-homonuclear inputs without private stage
+  assertions.
 
 An ignored Be2 timing/proxy script under `tmp/work` is allowed but not
 committed. It may report candidate count, residual rank, dimension, elapsed
@@ -278,9 +285,9 @@ internal performance proxy. It must not become a gate in this amendment.
 This usability amendment does not approve:
 
 - public export;
-- Cr2 full run or Cr2 artifact;
+- Cr2-specific branch, default, fixture, committed gate, or special workflow;
 - ECP, EGOI, RHF, solver, or HamV6 export;
-- driver/bin/tool workflow;
+- driver/bin/tool workflow outside `HP-DRV-*` and `HP-R3U-ZDI-WIRE-01`;
 - report/status/payload object;
 - new artifact shape or artifact keys beyond R3-C provenance;
 - exposing internal stage objects;

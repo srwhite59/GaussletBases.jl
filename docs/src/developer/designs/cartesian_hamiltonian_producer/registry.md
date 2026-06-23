@@ -577,10 +577,13 @@ cartesian_residual_gto_mwg_hamiltonian(
 )::CartesianIDAHamiltonian{Float64}
 ```
 
-Supported first systems are z-axis H2 and z-axis Be2. Be2 is
-internal/performance-supported only. Cr2, heteronuclear systems, non-z-axis or
-arbitrary orientations, ECP inputs, solver/RHF workflow, and public export are
-not approved.
+Original first systems were z-axis H2 and z-axis Be2. `HP-R3U-ZDI-FN-01`
+relaxes that guard to explicit homonuclear two-center z-axis diatomics. Be2
+remains an internal/performance-supported proxy. Cr2 is permitted only as an
+explicit generic homonuclear z-axis ignored/user-run stress or usability case
+after H2/Be2 validation. Heteronuclear systems, non-z-axis or arbitrary
+orientations, charged systems, ECP inputs, solver/RHF workflow, public export,
+and Cr2-specific branches remain unapproved.
 
 ### HP-R3U-WIRE-01 — base-to-RG same-construction workflow
 
@@ -1204,13 +1207,15 @@ package helper calls from the driver, raw-block provider switches,
 report/status/payload dumps, metadata field clouds, allocation probes,
 benchmark harness behavior, solver/RHF/ECP/EGOI/HamV6 workflow, public
 API/export changes, artifact schema changes, committed test files, committed
-driver-input fixtures, or Cr2 workflow support.
+driver-input fixtures, or Cr2-specific workflow support. Generic explicit
+homonuclear z-axis Cr2 stress through `HP-R3U-ZDI-WIRE-01` is separate
+ignored/user-run validation authority, not driver-owned Cr2 support.
 
 Line budget: at most `150` added `bin` lines. If implementation needs a parser
 framework, source files outside `bin/cartesian_ham_builder.jl`, committed
 input fixtures, route-stage diagnostics, status/report/payload expansion,
-artifact schema changes, or Cr2 workflow support, stop and request a new
-docs-only amendment.
+artifact schema changes, or Cr2-specific workflow support, stop and request a
+new docs-only amendment.
 
 ### HP-DRV-TEST-01 — driver workflow validation
 
@@ -1226,8 +1231,80 @@ Approved validation:
   supplemented mode.
 
 Validation input files, if needed, must be ignored `tmp/work` files. No
-committed test file, committed driver-input fixture, Cr2 driver run, or solver
-run is approved by this ID.
+committed test file, committed driver-input fixture, Cr2-specific driver run,
+or solver run is approved by this ID.
+
+## Approved For Homonuclear Z-Axis Diatomic Supplemented Workflow
+
+This section approves only the molecule-scope relaxation recorded in
+`r3_homonuclear_diatomic_supplemented_workflow.md`. It is generic
+homonuclear z-axis diatomic authority, not element-specific Cr2 authority.
+
+### HP-R3U-ZDI-FN-01 — homonuclear z-axis diatomic supplemented facade
+
+Approved source file:
+
+```text
+src/cartesian_base_hamiltonian.jl
+```
+
+Approved behavior:
+
+- replace hardcoded H/Be supplemented guards with explicit homonuclear z-axis
+  diatomic validation;
+- require explicit atom symbols, nuclear charges, `nup`, `ndn`, geometry, base
+  basis parameters, supplement basis labels, and optional supplement
+  `basisfile`;
+- support exactly two equal-symbol/equal-charge centers on the Cartesian
+  z-axis with distinct finite `z` coordinates;
+- require neutral all-electron count
+  `nup + ndn == round(Int, sum(nuclear_charges))`;
+- throw clear `ArgumentError`s for unsupported systems before expensive
+  construction where practical.
+
+This ID does not approve heteronuclear systems, non-z-axis/general orientation,
+charged systems, ECP, solver/RHF workflow, public API/export redesign,
+artifact schema changes, route diagnostics, metadata/status/report fields, or
+Cr2-specific branches/defaults/fixtures.
+
+### HP-R3U-ZDI-WIRE-01 — canonical driver supplemented-mode wiring
+
+Approved source file:
+
+```text
+bin/cartesian_ham_builder.jl
+```
+
+Approved behavior:
+
+- canonical driver `:supplemented` mode may call the supported
+  `cartesian_residual_gto_mwg_hamiltonian(...)` facade;
+- driver inputs may carry explicit homonuclear z-axis diatomic system, base
+  basis, supplement labels, optional `basisfile`, and `hamfile`;
+- Cr2 may be an ignored/user-run stress or usability case through the generic
+  path only after H2/Be2 validation.
+
+This ID does not approve package-internal helper composition from the driver,
+Cr2-specific workflow, committed Cr2 fixtures, route diagnostics, artifact
+schema changes, public exports, solver workflow, or broad driver feature
+growth.
+
+Line budget for `HP-R3U-ZDI-FN-01` plus `HP-R3U-ZDI-WIRE-01`: at most `100`
+added `src`/`bin` lines total, with net simplification expected where
+H/Be-specific checks are removed.
+
+### HP-R3U-ZDI-TEST-01 — homonuclear diatomic validation
+
+Approved validation:
+
+- H2 supplemented facade/driver artifact path remains unchanged;
+- Be2 supplemented facade/driver artifact path remains unchanged and acts as
+  the non-H correctness/performance gate;
+- optional ignored/user-run Cr2 stress or usability run after H2/Be2 pass.
+
+No committed Cr2 fixture, committed Cr2 test, new committed test file,
+heteronuclear gate, non-z-axis gate, solver run, or artifact schema validation
+is approved by this ID.
 
 ## Approved Measurement-Only Authority
 

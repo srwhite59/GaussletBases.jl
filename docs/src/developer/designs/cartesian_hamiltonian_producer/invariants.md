@@ -106,10 +106,17 @@ The canonical RG algorithm contract is
   local input-file loading, command-line overrides, coarse timing, compact
   printing, artifact writing, and readback checks. It must not own route
   diagnostics, private stage controls, raw provider switches, report/status
-  payloads, solver workflow, artifact schema, public exports, or Cr2 support.
+  payloads, solver workflow, artifact schema, public exports, or
+  Cr2-specific support.
+- The supplemented R3 usability facade may support explicit homonuclear
+  two-center z-axis diatomics under `HP-R3U-ZDI-*`. This is not
+  heteronuclear, non-z-axis, ECP, solver, public export, artifact-schema, or
+  Cr2-specific workflow authority.
 - Be2 is an internal performance/usability proxy, not a committed public gate.
-- Cr2 diagnostics do not authorize Cr2 facade support, full augmented
-  Hamiltonian construction, artifacts, or stress gates.
+- Cr2 may be used only as an explicit homonuclear z-axis ignored/user-run
+  stress or usability case after H2/Be2 validation. Cr2 diagnostics do not
+  authorize Cr2-specific branches, committed Cr2 gates, full production Cr2
+  artifacts, ECP, solver workflow, or broad molecule support.
 
 ## Carrying Cost
 
