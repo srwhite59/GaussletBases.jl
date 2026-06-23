@@ -146,6 +146,25 @@ function assemble_terminal_product_operator!(
     axis_z;
     scale = 1.0,
 )
+    action_buffer = Ref(Matrix{Float64}(undef, 0, 0))
+    tile_buffer = Ref(Matrix{Float64}(undef, 0, 0))
+    block_buffer = Ref(Matrix{Float64}(undef, 0, 0))
+    return _assemble_terminal_product_operator!(
+        destination, basis, axis_x, axis_y, axis_z,
+        action_buffer, tile_buffer, block_buffer; scale = scale)
+end
+
+function _assemble_terminal_product_operator!(
+    destination,
+    basis::CartesianTerminalBasisRealization,
+    axis_x,
+    axis_y,
+    axis_z,
+    action_buffer,
+    tile_buffer,
+    block_buffer;
+    scale = 1.0,
+)
     size(destination) == (basis.final_dimension, basis.final_dimension) ||
         throw(DimensionMismatch("terminal product destination size is wrong"))
     max_state = (0, 0, 0)
@@ -158,9 +177,6 @@ function assemble_terminal_product_operator!(
         _check_terminal_axis_factor(axis_z, max_state[3], "z"),
     )
     factor = Float64(scale)
-    action_buffer = Ref(Matrix{Float64}(undef, 0, 0))
-    tile_buffer = Ref(Matrix{Float64}(undef, 0, 0))
-    block_buffer = Ref(Matrix{Float64}(undef, 0, 0))
     for right in eachindex(basis.blocks), left in 1:right
         left_block = basis.blocks[left]
         right_block = basis.blocks[right]

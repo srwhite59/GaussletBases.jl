@@ -333,33 +333,39 @@ function pqs_terminal_residual_gto_augmented_operators(
     pgdg = Tuple(_nested_axis_pgdg(bundles, axis) for axis in (:x, :y, :z))
     S = Tuple(axis.overlap for axis in pgdg)
     scratch_GG = zeros(Float64, basis.final_dimension, basis.final_dimension)
-    assemble_terminal_product_operator!(scratch_GG, basis, pgdg[1].kinetic, S[2], S[3])
-    assemble_terminal_product_operator!(scratch_GG, basis, S[1], pgdg[2].kinetic, S[3])
-    assemble_terminal_product_operator!(scratch_GG, basis, S[1], S[2], pgdg[3].kinetic)
+    product_action_buffer = Ref(Matrix{Float64}(undef, 0, 0))
+    product_tile_buffer = Ref(Matrix{Float64}(undef, 0, 0))
+    product_block_buffer = Ref(Matrix{Float64}(undef, 0, 0))
+    product!(ax, ay, az) = _assemble_terminal_product_operator!(
+        scratch_GG, basis, ax, ay, az,
+        product_action_buffer, product_tile_buffer, product_block_buffer)
+    product!(pgdg[1].kinetic, S[2], S[3])
+    product!(S[1], pgdg[2].kinetic, S[3])
+    product!(S[1], S[2], pgdg[3].kinetic)
     kinetic = CRG.transform_augmented_operator(scratch_GG,
         supplement_blocks_value.mixed.kinetic, supplement_blocks_value.self.kinetic, residual)
     fill!(scratch_GG, 0.0)
-    assemble_terminal_product_operator!(scratch_GG, basis, pgdg[1].position, S[2], S[3])
+    product!(pgdg[1].position, S[2], S[3])
     pos_x = CRG.transform_augmented_operator(scratch_GG,
         supplement_blocks_value.mixed.position.x, supplement_blocks_value.self.position.x, residual)
     fill!(scratch_GG, 0.0)
-    assemble_terminal_product_operator!(scratch_GG, basis, S[1], pgdg[2].position, S[3])
+    product!(S[1], pgdg[2].position, S[3])
     pos_y = CRG.transform_augmented_operator(scratch_GG,
         supplement_blocks_value.mixed.position.y, supplement_blocks_value.self.position.y, residual)
     fill!(scratch_GG, 0.0)
-    assemble_terminal_product_operator!(scratch_GG, basis, S[1], S[2], pgdg[3].position)
+    product!(S[1], S[2], pgdg[3].position)
     pos_z = CRG.transform_augmented_operator(scratch_GG,
         supplement_blocks_value.mixed.position.z, supplement_blocks_value.self.position.z, residual)
     fill!(scratch_GG, 0.0)
-    assemble_terminal_product_operator!(scratch_GG, basis, pgdg[1].x2, S[2], S[3])
+    product!(pgdg[1].x2, S[2], S[3])
     x2_x = CRG.transform_augmented_operator(scratch_GG,
         supplement_blocks_value.mixed.x2.x, supplement_blocks_value.self.x2.x, residual)
     fill!(scratch_GG, 0.0)
-    assemble_terminal_product_operator!(scratch_GG, basis, S[1], pgdg[2].x2, S[3])
+    product!(S[1], pgdg[2].x2, S[3])
     x2_y = CRG.transform_augmented_operator(scratch_GG,
         supplement_blocks_value.mixed.x2.y, supplement_blocks_value.self.x2.y, residual)
     fill!(scratch_GG, 0.0)
-    assemble_terminal_product_operator!(scratch_GG, basis, S[1], S[2], pgdg[3].x2)
+    product!(S[1], S[2], pgdg[3].x2)
     x2_z = CRG.transform_augmented_operator(scratch_GG,
         supplement_blocks_value.mixed.x2.z, supplement_blocks_value.self.x2.z, residual)
     pos = (x = pos_x, y = pos_y, z = pos_z)
