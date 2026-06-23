@@ -12900,3 +12900,64 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 112 - Approve Compact Artifact Manifest
+
+Commit(s):
+- this commit - Approve compact Hamiltonian artifact manifest
+
+Summary:
+- Approved `HP-HAM-MANIFEST-FN-01` / `HP-HAM-MANIFEST-TEST-01` for compact
+  JLD2 sidecar groups on existing `CartesianIDAHamiltonian{Float64}` artifacts.
+- The manifest lane reuses the prior PQS fixed-column/source-mode provenance
+  model from `projected_q_shell_policy.md`: basis identity is a
+  status-bearing construction label, not a representative center.
+- `hamiltonian_manifest/final_basis_labels/` records exact matrix-order final
+  basis rows with sector, unit/source labels, shell/ray/radial status,
+  representative center metadata, owner nucleus index, locality/freezing
+  labels, and supplement labels/angular powers where available.
+- Optional `final_basis_source_relations/`, `source_shells/`, and
+  `source_modes/` subgroups are approved only for construction-native facts;
+  unavailable/mixed labels must be explicit and must not be inferred from
+  centers, nearest-grid snapping, support order, support indices, or
+  raw-to-final support.
+- It also records uniform public recipe provenance under `recipe_provenance/`:
+  system/basis/supplement inputs, padding-derived extents, route, parent-axis
+  counts, and base/residual/augmented dimensions.
+- Existing Hamiltonian matrix keys and `read_cartesian_ida_hamiltonian`
+  behavior remain unchanged. The manifest is for downstream artifact consumers
+  and validation-only direct JLD2 inspection, not a new public reader API or
+  Hamiltonian wrapper.
+
+Validation:
+- Design-manager validation only: docs-only `git diff --check`, focused `rg`
+  checks for `HP-HAM-MANIFEST-*`, `hamiltonian_manifest/`,
+  `final_basis_labels`, source relation/source mode wording,
+  `recipe_provenance/`, forbidden dense transform/raw inventory fields,
+  no-inference guardrails, unchanged reader wording, and no `src`, `test`,
+  `tools`, or `bin` changes. No implementation tests were run.
+
+Goal advancement:
+- LT1/LT3: makes canonical-driver artifacts more useful to downstream
+  consumers without changing the Hamiltonian object or public driver inputs.
+- RG/LT6: supports realistic supplemented diatomic handoff while keeping Cr2 as
+  a generic ignored/user-run stress case rather than a schema branch.
+
+Carrying-cost result:
+- deleted: none; docs-only authority pass.
+- simplified: future artifact consumers can read compact basis/recipe sidecars
+  instead of reconstructing locality from private workflow context or center
+  heuristics.
+- quarantined: `T_G`, `T_A`, dense transforms, raw inventories, allocation
+  probes, report/status payloads, public readers, driver schema dumps,
+  solver-specific fields, CR2-consumer-specific fields, Cr2-specific fields,
+  committed Cr2 fixtures, and atom size-policy changes remain unapproved.
+- not deleted because: source manifest writing has not run yet.
+- exact remaining caller/blocker: first source pass must stop if center
+  conventions cannot be derived from existing terminal basis blocks, parent
+  axes, residual metadata, and augmented moment/MWG descriptors without adding
+  algorithmic metadata.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

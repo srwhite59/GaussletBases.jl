@@ -471,6 +471,8 @@ these approved design IDs:
 - `HP-DRV-STAGE-FN-01`
 - `HP-DRV-STAGE-WIRE-01`
 - `HP-DRV-STAGE-TEST-01`
+- `HP-HAM-MANIFEST-FN-01`
+- `HP-HAM-MANIFEST-TEST-01`
 
 No other production surface may be added in this lane without a prior
 documentation-only design amendment. This includes new structs, persistent
@@ -568,6 +570,34 @@ Approved R3 compatibility and endpoint surfaces:
 - `HP-R3-ART-01` remains approved only for the compact supplemented artifact
   provenance writer that adds `supplement_provenance/` to the existing
   Hamiltonian file.
+- `HP-HAM-MANIFEST-FN-01` approves only compact JLD2 sidecar groups
+  `hamiltonian_manifest/` and `recipe_provenance/` for existing
+  `CartesianIDAHamiltonian{Float64}` artifacts. Approved source files are
+  `src/cartesian_base_hamiltonian.jl`,
+  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`, and
+  `src/cartesian_ida_hamiltonian.jl` only for a small unexported sidecar
+  writer/helper if needed. Existing Hamiltonian matrix keys and
+  `read_cartesian_ida_hamiltonian` behavior must not change. The manifest must
+  reuse the prior PQS fixed-column/source-mode provenance model:
+  `hamiltonian_manifest/final_basis_labels/` has one status-bearing row per
+  matrix-order final basis column, and optional
+  `final_basis_source_relations/`, `source_shells/`, and `source_modes/`
+  groups may be written only for native construction facts. Basis identity is a
+  construction label, not a representative center; centers are metadata with
+  explicit definition/status. Do not infer shell/ray/radial/source labels from
+  centers, nearest-grid snapping, support order, support indices, or
+  raw-to-final support.
+- `HP-HAM-MANIFEST-TEST-01` approves only existing-reader artifact readback plus
+  direct JLD2 sidecar checks for H atom or H2 base artifacts, H2 supplemented
+  artifacts, optional practical Be2 supplemented artifacts, explicit
+  unavailable/mixed status checks, no inferred-label checks, and no Cr2 run.
+  This lane must not add `T_G`, `T_A`, dense transforms, coefficients, raw
+  inventories, allocation probes, route reports, status/payload fields, public
+  reader APIs, driver public input changes, artifact schema dumps in the
+  driver, solver-specific, CR2-consumer-specific, Cr2-specific fields,
+  committed Cr2 fixtures, or
+  Cr2-specific branches. One-center atom padding is provenance-only in this
+  lane; do not change atom parent counts or atom size policy under these IDs.
 - `HP-R3U-FILE-01`, `HP-R3U-FN-01`, `HP-R3U-WIRE-01`, and `HP-R3U-TEST-01`
   remain approved only for the non-exported supplemented usability facade and
   its existing standalone H2 validation section.

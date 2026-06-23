@@ -21,9 +21,11 @@ The canonical Cartesian driver usability lane is approved so the standard
 driver can directly produce base and supported supplemented Hamiltonian
 artifacts from visible public `system`, `basis`, and optional `supplement`
 contracts. The supported supplemented workflow now accepts explicit homonuclear
-z-axis diatomics without element-specific branches. Broad public API/export,
-supplemented atoms, Cr2-specific workflow, ECP, EGOI, RHF, and solver work
-remain deferred.
+z-axis diatomics without element-specific branches. A compact artifact manifest
+lane is approved for JLD2 sidecar groups that make written Hamiltonians
+self-describing without changing matrix keys or reader behavior. Broad public
+API/export, supplemented atoms, Cr2-specific workflow, ECP, EGOI, RHF, and
+solver work remain deferred.
 
 Agents should read first:
 
@@ -51,6 +53,9 @@ Agents should read first:
   for explicit origin-centered base atom driver inputs
 - [R3 homonuclear z-axis diatomic supplemented workflow](r3_homonuclear_diatomic_supplemented_workflow.md)
   for the explicit homonuclear diatomic molecule-scope relaxation
+- [Cartesian Hamiltonian artifact manifest](cartesian_hamiltonian_artifact_manifest.md)
+  for compact JLD2 sidecar groups describing matrix-order basis rows and public
+  recipe provenance
 - [Algorithm implementation index](../../algorithm_implementation_index.md)
 
 Approved amendments:
@@ -109,6 +114,10 @@ Approved amendments:
   approves explicit homonuclear two-center z-axis diatomic supplemented inputs
   through the existing facade and canonical driver, with no element-specific
   defaults or Cr2-specific branch.
+- [Cartesian Hamiltonian artifact manifest](cartesian_hamiltonian_artifact_manifest.md)
+  approves only compact JLD2 sidecar groups for matrix-order basis labels and
+  uniform recipe provenance. It does not change the Hamiltonian object, matrix
+  keys, public inputs, or `read_cartesian_ida_hamiltonian`.
 
 Candidate amendments:
 

@@ -31,6 +31,8 @@ Normal startup reading:
   driver inputs;
 - `r3_homonuclear_diatomic_supplemented_workflow.md` for the explicit
   homonuclear z-axis diatomic supplemented facade/driver relaxation;
+- `cartesian_hamiltonian_artifact_manifest.md` for compact Hamiltonian
+  artifact sidecar groups and recipe provenance;
 - `docs/src/developer/algorithm_implementation_index.md` for existing kernels
   and donor paths.
 
@@ -127,6 +129,31 @@ Approved remaining exact-operator allocation decision:
 - route/stage setup, raw-block setup, neutral raw-block kernels,
   residual/MWG/IDA changes, public workflow, and Cr2 facade/artifact work
   remain unapproved.
+
+Approved compact Hamiltonian artifact manifest lane:
+
+- `HP-HAM-MANIFEST-FN-01` approves only sidecar JLD2 groups for existing
+  `CartesianIDAHamiltonian{Float64}` artifact files;
+- approved source files are `src/cartesian_base_hamiltonian.jl`,
+  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`, and
+  `src/cartesian_ida_hamiltonian.jl` only for a small unexported sidecar writer
+  helper if needed;
+- `hamiltonian_manifest/` follows the earlier PQS fixed-column/source-mode
+  provenance model: basis identity is a status-bearing construction label, not
+  a representative center;
+- `hamiltonian_manifest/final_basis_labels/` records one row per matrix-order
+  final basis column with sector, unit/source labels, shell/ray/radial status,
+  representative center metadata, owner nucleus index where meaningful,
+  locality/freezing labels, and supplement angular labels where available;
+- optional `final_basis_source_relations/`, `source_shells/`, and
+  `source_modes/` subgroups may be written only for native construction facts;
+- `recipe_provenance/` records the validated public construction recipe and
+  base/residual/augmented dimensions;
+- existing matrix keys and `read_cartesian_ida_hamiltonian` behavior must not
+  change;
+- no public reader API, driver public input change, route report/status
+  payload, dense transform, raw inventory, inferred shell/ray labels, solver
+  field, Cr2-specific field, or committed Cr2 fixture is approved.
 
 Approved canonical driver usability lane:
 

@@ -220,6 +220,87 @@ Remaining cleanup:
 - keep artifact and facade hooks outside RG unless a separate design amendment
   approves moving them.
 
+## Compact Hamiltonian Artifact Manifest
+
+Status: approved for implementation under `HP-HAM-MANIFEST-FN-01` and
+`HP-HAM-MANIFEST-TEST-01`.
+
+Approved boundary:
+
+- JLD2 sidecar groups for existing `CartesianIDAHamiltonian{Float64}` artifact
+  files;
+- source file `src/cartesian_base_hamiltonian.jl`;
+- source file `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`;
+- source file `src/cartesian_ida_hamiltonian.jl` only for a small unexported
+  sidecar writer/helper if needed;
+- no changes to Hamiltonian matrix keys or `read_cartesian_ida_hamiltonian`
+  behavior.
+
+Approved sidecar groups:
+
+- `hamiltonian_manifest/` for source/final-column provenance modeled on the
+  prior PQS fixed-column sidecar contract;
+- `hamiltonian_manifest/final_basis_labels/` for exact matrix-order final
+  basis row labels, sectors, unit/source labels, shell/ray/radial status,
+  representative center metadata, owner nucleus indices, locality/freezing
+  labels, supplement labels, and angular powers where available;
+- optional `hamiltonian_manifest/final_basis_source_relations/`,
+  `hamiltonian_manifest/source_shells/`, and
+  `hamiltonian_manifest/source_modes/` groups only for construction-native
+  relation/source-mode facts;
+- `recipe_provenance/` for the validated public recipe: `q`, `core_spacing`,
+  padding-derived extents, route, parent axis counts, atom symbols/charges/
+  locations, `nup`/`ndn`, supplement label/file/options, and
+  base/residual/augmented dimensions.
+
+Required implementation rule:
+
+- basis-function identity is a construction label with status, not a center;
+- centers are representative metadata with explicit definition/status;
+- derive center conventions only from existing terminal basis blocks, parent
+  axes, residual metadata, and augmented moment/MWG descriptors;
+- do not infer source-box, shell, ray, radial, or relation labels from centers,
+  nearest-grid snapping, support order, support indices, or raw-to-final
+  support;
+- use explicit `:unavailable` or `:mixed` status when a native construction
+  label is not available;
+- stop and report if this cannot be done without adding algorithmic metadata;
+- do not serialize `T_G`, `T_A`, dense transforms, coefficients, raw
+  inventories, dense moments, allocation probes, route reports, or status
+  payloads.
+
+Padding scope:
+
+- this lane records current recipe provenance only;
+- one-center atom padding remains a separate contract clarification and must
+  not be bundled into this source pass;
+- diatomic padding-derived extents remain active through the existing facade.
+
+Validation gates:
+
+- `git diff --check`;
+- package load;
+- H atom or H2 base artifact write/readback;
+- H2 supplemented artifact write/readback;
+- direct JLD2 checks for approved final-basis label keys, dimensions,
+  status-bearing unavailable/mixed labels, no inferred labels, and recipe
+  values;
+- optional Be2 supplemented artifact manifest inspection if practical;
+- no Cr2 run.
+
+Forbidden:
+
+- driver public input changes, public reader API/export, matrix-key changes,
+  artifact schema dumps in the driver, solver-specific fields,
+  CR2-consumer-specific fields, Cr2-specific fields, committed Cr2 fixtures,
+  Cr2-specific branches, route reports/status payloads, persistent caches, new
+  algorithmic metadata, or source files outside the approved surfaces.
+
+Line budget:
+
+- at most `150` added `src` lines;
+- no new committed test, tool, or input-fixture file.
+
 ## Cartesian Gaussian Raw Blocks - Nuclear Slice
 
 Status: approved for implementation; not part of R3/RG public workflow.

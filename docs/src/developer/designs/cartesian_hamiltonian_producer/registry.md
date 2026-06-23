@@ -746,6 +746,200 @@ Approved `supplement_provenance/` keys:
 Do not serialize full residual bases, dense moments, `T_G`, `T_A`, MWG centers,
 MWG widths, or broad construction inputs in this compact group.
 
+## Approved For Compact Hamiltonian Artifact Manifest
+
+This section approves only artifact sidecar groups for existing
+`CartesianIDAHamiltonian{Float64}` JLD2 files. It does not approve a new
+Hamiltonian object, new matrix keys, public reader API, driver public input
+change, solver workflow, CR2-consumer-specific field, Cr2-specific field,
+report/status payload, or artifact schema dump in the driver.
+
+### HP-HAM-MANIFEST-FN-01 — compact Hamiltonian artifact manifest
+
+Approved source files:
+
+```text
+src/cartesian_base_hamiltonian.jl
+src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl
+src/cartesian_ida_hamiltonian.jl
+```
+
+`src/cartesian_ida_hamiltonian.jl` is approved only for a small unexported
+sidecar writer/helper if needed; it must not change
+`write_cartesian_ida_hamiltonian` matrix keys or
+`read_cartesian_ida_hamiltonian` behavior.
+
+Approved sidecar groups:
+
+```text
+hamiltonian_manifest/
+hamiltonian_manifest/final_basis_labels/
+hamiltonian_manifest/final_basis_source_relations/
+hamiltonian_manifest/source_shells/
+hamiltonian_manifest/source_modes/
+recipe_provenance/
+```
+
+`hamiltonian_manifest/` reuses the source/fixed-column provenance model from
+`docs/src/developer/projected_q_shell_policy.md`. Basis identity is a
+status-bearing construction label, not `center_xyz`. Centers are
+representative metadata only.
+
+Approved `hamiltonian_manifest/` root key:
+
+- `manifest_version = 1`;
+
+Approved required `hamiltonian_manifest/final_basis_labels/` fields:
+
+- `final_basis_col`;
+- `sector`;
+- `unit_label`;
+- `unit_kind`;
+- `source_region_label`;
+- `source_region_label_status`;
+- `source_box_label`;
+- `source_box_label_status`;
+- `owner_nucleus_index`;
+- `owner_label_status`;
+- `shell_label_status`;
+- `shell_index`;
+- `ray_label_status`;
+- `ray_id`;
+- `ray_family_label`;
+- `radial_order_status`;
+- `radial_order`;
+- `center_x`;
+- `center_y`;
+- `center_z`;
+- `center_definition`;
+- `center_status`;
+- `lowdin_correction_applied`;
+- `supplement_label`;
+- `angular_power_x`;
+- `angular_power_y`;
+- `angular_power_z`;
+- `inferred_from_centers`;
+- `inferred_from_nearest_grid`;
+- `inferred_from_support_order`;
+- `inferred_from_support_indices`;
+- `inferred_from_raw_to_final_support`.
+
+The final-basis label rows must follow the exact matrix row/column order.
+`owner_nucleus_index` uses one-based physical nucleus indices and `0` when no
+owner is meaningful; unavailable integer shell/ray/radial labels use `0`;
+unavailable angular powers use `-1`; and all `inferred_from_*` flags must be
+`false` for production manifest rows. Approved sectors are `:base`,
+`:residual`, and `:supplement_derived`.
+
+Approved optional `hamiltonian_manifest/final_basis_source_relations/` fields:
+
+- `final_basis_col`;
+- `relation_index`;
+- `relation_kind`;
+- `source_shell_id`;
+- `source_mode_label`;
+- `local_axis_x`;
+- `local_axis_y`;
+- `local_axis_z`;
+- `relation_status`;
+- `shell_label_status`;
+- `ray_label_status`;
+- `radial_order_status`;
+- `coefficient_status`;
+- `weight_status`;
+- `span_status`;
+- `inferred_from_centers`;
+- `inferred_from_nearest_grid`;
+- `inferred_from_support_order`;
+- `inferred_from_support_indices`;
+- `inferred_from_raw_to_final_support`.
+
+Relations, `source_shells/`, and `source_modes/` may be populated only when
+the construction natively defines those facts. Source-mode identity is
+`(source_shell_id, local_axis_x, local_axis_y, local_axis_z)` in shell-local
+coordinates. It is a label, not a coefficient map, support row, parent row, or
+operator reconstruction claim. Missing shell, ray, radial, source-box, or
+relation facts must be status-bearing `:unavailable` or `:mixed`, not inferred
+from centers, nearest-grid snapping, support order, support indices, or
+raw-to-final support.
+
+Approved `recipe_provenance/` keys:
+
+- `provenance_version = 1`;
+- `producer`;
+- `route`;
+- `q`;
+- `core_spacing`;
+- `padding`;
+- `radius`;
+- `xmax_parallel`;
+- `xmax_transverse`;
+- `extent_source`;
+- `parent_axis_counts`;
+- `atom_symbols`;
+- `nuclear_charges`;
+- `atom_locations`;
+- `nup`;
+- `ndn`;
+- `basisname`;
+- `basisfile`;
+- `lmax`;
+- `uncontracted`;
+- `width_filtering`;
+- `base_dimension`;
+- `residual_dimension`;
+- `augmented_dimension`.
+
+The recipe group may repeat facts from `producer_provenance/` and
+`supplement_provenance/` so consumers have one uniform location. Values must
+come from the validated public construction contract and produced dimensions,
+not route reports, element tables, solver assumptions, or private diagnostics.
+
+Center conventions and construction labels must be derived from existing
+terminal basis blocks, parent axes, residual metadata, and augmented moment/MWG
+descriptors. If the implementation cannot derive a required center convention
+or source label from those existing objects without adding algorithmic
+metadata, it must stop and report the missing seam.
+
+This ID does not approve `T_G`, `T_A`, dense residual transforms, coefficients,
+dense moment matrices, raw inventories, allocation probes, report/status
+payloads, public reader APIs, public exports, driver public input changes,
+artifact schema dumps in the driver, solver-specific fields,
+CR2-consumer-specific fields, Cr2-specific fields, committed Cr2 fixtures, or
+Cr2-specific branches.
+
+One-center atom padding is provenance-only for this lane. Source work under
+this ID must not change the current one-center atom size policy or parent-axis
+counts; diatomic padding-derived extents continue to use the existing facade
+contract.
+
+Line budget: at most `150` added `src` lines. Stop for a separate amendment if
+the implementation needs source files outside the approved surfaces, new
+algorithmic metadata, a public reader, driver contract changes, or changes to
+the Hamiltonian matrix writer/reader contract.
+
+### HP-HAM-MANIFEST-TEST-01 — artifact manifest validation
+
+Approved validation:
+
+- `git diff --check`;
+- package load;
+- H atom or H2 base artifact write/readback through the existing reader;
+- H2 supplemented artifact write/readback through the existing reader;
+- direct JLD2 checks that `hamiltonian_manifest/final_basis_labels/` rows
+  match matrix dimension and approved status-bearing fields;
+- direct JLD2 checks that unavailable or mixed shell/ray/radial/source labels
+  are explicit and that no production row is marked inferred from centers,
+  nearest grid, support order, support indices, or raw-to-final support;
+- direct JLD2 checks that `recipe_provenance/` records validated public
+  system, basis, supplement, route, parent-axis counts, and dimensions;
+- optional practical Be2 supplemented artifact manifest inspection;
+- no Cr2 run.
+
+No new committed test file, public reader API, artifact schema dump, driver
+public input change, Cr2 fixture, or solver/CR2 workflow validation is approved
+by this ID.
+
 ### HP-R3U-FILE-01 — supplemented workflow source and validation files
 
 Approved non-exported usability owner:
