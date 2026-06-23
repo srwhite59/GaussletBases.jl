@@ -12154,3 +12154,68 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 100 - Staged Operator-Class Driver
+
+Commit(s):
+- this commit - Stage canonical driver operator classes
+
+Summary:
+- Accepted the canonical-driver implementation of the staged workflow. The
+  driver now constructs the public contract, then visibly binds and times
+  `base`, `base_products`, `base_unit_nuclear`, `base_vee`, `base_ham`, and,
+  for supplemented runs, `supplement_basis`, `residual`,
+  `augmented_products`, `augmented_unit_nuclear`, `augmented_vee`, and final
+  `ham`.
+- `src/cartesian_base_hamiltonian.jl` now acts as the driver-facing staged
+  owner while the lower-level approved files expose behavior-preserving
+  operator-class factoring. Existing one-call facades remain, but compose
+  through the same staged implementation.
+- Manager accepted the known coarse-label caveat that the augmented product
+  stage also performs shared supplement-block setup used by the following
+  nuclear stage. This is treated as acceptable program-stage timing, not a
+  per-kernel attribution claim.
+
+Validation:
+- Doer validation: `git diff --check`, package load, H atom base driver
+  artifact/readback with dimension 419, H2 supplemented assignment-style
+  driver artifact/readback with quick overrides
+  `core_spacing=0.5`, `padding=4.0`, `basisname="cc-pVTZ"` and dimension 489,
+  unknown override rejection for `mode`, `radius`, `d`,
+  `reference_spacing`, and `tail_spacing`, and a driver scan showing no old
+  route-stage calls or `GaussletBases._...` helper calls. No Cr2 run.
+- Manager validation: `git diff --check`; numstat line-budget check
+  (`bin` +148/-68, `src` +200/-68); suspicious added-line scan found only two
+  fixed three-axis `Tuple(...)` constructions; new-test/tool scan was empty;
+  focused driver scan found no forbidden old route-stage or underscored helper
+  calls.
+
+Goal advancement:
+- LT1/LT3: turns the canonical driver into a readable human workflow rather
+  than a black-box facade call, while keeping visible inputs compact and
+  copyable.
+- RG/LT6: supports Cr-scale artifact production by making the long operator
+  classes visible through coarse timing without adding diagnostics, stop
+  points, raw-block switches, or Cr2-specific branches.
+- MT update: the driver usability lane is now source-functional for base and
+  supplemented paths. The next driver work should be user-run artifact
+  exercise and small polish only if it preserves the public contract shape.
+
+Carrying-cost result:
+- deleted: the driver's direct opaque one-call build branch and duplicated
+  facade bodies that bypassed the staged implementation.
+- simplified: base and supplemented facades now share staged construction
+  functions; driver timing is organized by physical/program stages instead of
+  route internals.
+- quarantined: old route stages, raw-block switches, allocation probes,
+  per-kernel timing frameworks, solver/ECP workflow, Cr2-specific workflow,
+  artifact schema dumps, report/status payloads, and committed fixtures/tests.
+- not deleted because: compatibility composition helpers and one-call facades
+  remain live for existing callers.
+- exact remaining caller/blocker: no blocker for the staged driver pass. The
+  deferred parent-distortion unification concern remains separate from driver
+  usability and should be audited after the driver settles.
+- added src lines: 200.
+- deleted src lines: 68.
+- new tests: none.
+- new metadata/status fields: none.

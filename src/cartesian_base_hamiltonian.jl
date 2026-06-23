@@ -189,11 +189,48 @@ function cartesian_base_hamiltonian(
 )::CartesianIDAHamiltonian{Float64}
     !(!isnothing(hamfile) && isempty(String(hamfile))) ||
         throw(ArgumentError("hamfile must not be empty"))
-    input = _cartesian_base_inputs(system, basis)
+    base = cartesian_base_working_basis(system; basis)
+    return cartesian_base_hamiltonian_assembly(base; hamfile)
+end
+
+_cartesian_base_expansion() = coulomb_gaussian_expansion(doacc = false)
+
+_cartesian_base_pgdg(base) =
+    Tuple(_nested_axis_pgdg(base.parent.parent_axis_bundle_object, axis) for axis in (:x, :y, :z))
+
+function cartesian_base_working_basis(system::NamedTuple; basis::NamedTuple, supplemented::Bool = false)
+    input = supplemented ? _cartesian_r3_diatomic_inputs(system, basis) :
+        _cartesian_base_inputs(system, basis)
     parent, transforms = _cartesian_base_stages(input)
-    ham = _cartesian_base_ida_hamiltonian(
-        transforms.terminal_basis_realization, parent.parent_axis_bundle_object,
-        input.locations, input.charges, input.nup, input.ndn)
+    return (; input, parent, terminal_basis = transforms.terminal_basis_realization)
+end
+
+cartesian_base_products(base) =
+    _pqs_source_box_route_driver_terminal_products(base.terminal_basis, _cartesian_base_pgdg(base))
+
+cartesian_base_unit_nuclear(base) =
+    _pqs_source_box_route_driver_terminal_unit_nuclear(base.terminal_basis,
+        _cartesian_base_expansion(), _cartesian_base_pgdg(base), base.input.locations)
+
+cartesian_base_vee(base) =
+    _pqs_source_box_route_driver_terminal_vee(base.terminal_basis,
+        _cartesian_base_expansion(), _cartesian_base_pgdg(base))
+
+function cartesian_base_hamiltonian_assembly(base; hamfile::Union{Nothing,AbstractString} = nothing)::CartesianIDAHamiltonian{Float64}
+    products = cartesian_base_products(base)
+    unit_nuclear = cartesian_base_unit_nuclear(base)
+    vee = cartesian_base_vee(base)
+    return cartesian_base_hamiltonian_assembly(
+        base, products, unit_nuclear, vee; hamfile)
+end
+
+function cartesian_base_hamiltonian_assembly(base, products, unit_nuclear, vee; hamfile::Union{Nothing,AbstractString} = nothing)::CartesianIDAHamiltonian{Float64}
+    !(!isnothing(hamfile) && isempty(String(hamfile))) ||
+        throw(ArgumentError("hamfile must not be empty"))
+    input = base.input
+    parent = base.parent
+    ham = CartesianIDAHamiltonian(products.kinetic, unit_nuclear, vee, input.nup, input.ndn;
+        nuclear_charges = input.charges, nuclear_positions = input.locations)
     isnothing(hamfile) ||
         _cartesian_base_write_hamiltonian(String(hamfile), ham, input, parent)
     return ham
@@ -297,28 +334,87 @@ function cartesian_residual_gto_mwg_hamiltonian(
 )::CartesianIDAHamiltonian{Float64}
     !(!isnothing(hamfile) && isempty(String(hamfile))) ||
         throw(ArgumentError("hamfile must not be empty"))
-    input = _cartesian_r3_diatomic_inputs(system, basis)
+    base = cartesian_base_working_basis(system; basis, supplemented = true)
+    base_products = cartesian_base_products(base)
+    base_unit_nuclear = cartesian_base_unit_nuclear(base)
+    base_vee = cartesian_base_vee(base)
+    base_ham = cartesian_base_hamiltonian_assembly(base, base_products, base_unit_nuclear, base_vee)
+    supplement_basis = cartesian_residual_gto_supplement_basis(base, supplement)
+    residual = cartesian_residual_gto_augmentation(base, supplement_basis)
+    augmented_products = cartesian_residual_gto_augmented_products(base, supplement_basis, residual)
+    augmented_unit_nuclear = cartesian_residual_gto_augmented_unit_nuclear(base, residual, augmented_products)
+    augmented_vee = cartesian_residual_gto_augmented_vee(base, base_ham, residual, augmented_products, augmented_unit_nuclear)
+    return cartesian_residual_gto_mwg_hamiltonian_assembly(base, base_ham, supplement_basis,
+        residual, augmented_products, augmented_unit_nuclear, augmented_vee; hamfile)
+end
+
+function cartesian_residual_gto_supplement_basis(base, supplement::NamedTuple)
+    input = base.input
     supplement_input = _cartesian_r3_supplement_inputs(input, supplement)
-    parent, transforms = _cartesian_base_stages(input)
-    terminal_basis = transforms.terminal_basis_realization
-    base_ham = _cartesian_base_ida_hamiltonian(
-        terminal_basis, parent.parent_axis_bundle_object,
-        input.locations, input.charges, input.nup, input.ndn)
     raw_supplement = legacy_bond_aligned_diatomic_gaussian_supplement(
         first(input.symbols), first(supplement_input.basis_by_center), input.locations;
         lmax = supplement_input.lmax,
         basisfile = supplement_input.basisfile,
         uncontracted = supplement_input.uncontracted,
         max_width = supplement_input.max_width)
-    supplement_basis = basis_representation(raw_supplement)
+    return (; input = supplement_input, basis = basis_representation(raw_supplement))
+end
+
+function cartesian_residual_gto_augmentation(base, supplement_basis)
     C = CartesianFinalBasisRealization
-    residual = C.pqs_terminal_residual_gto_augmentation(
-        terminal_basis, parent.parent_axis_bundle_object, supplement_basis, input.locations)
-    operators = C.pqs_terminal_residual_gto_augmented_operators(
-        terminal_basis, parent.parent_axis_bundle_object, parent.parent_basis_object,
-        supplement_basis, residual, input.locations, input.charges)
-    ham = C.pqs_terminal_residual_gto_augmented_hamiltonian(
-        base_ham, terminal_basis, parent.parent_axis_bundle_object, residual, operators)
+    input = base.input
+    return C.pqs_terminal_residual_gto_augmentation(
+        base.terminal_basis, base.parent.parent_axis_bundle_object,
+        supplement_basis.basis, input.locations)
+end
+
+function cartesian_residual_gto_augmented_operators(base, supplement_basis, residual)
+    products = cartesian_residual_gto_augmented_products(base, supplement_basis, residual)
+    unit_nuclear = cartesian_residual_gto_augmented_unit_nuclear(base, residual, products)
+    return _cartesian_residual_augmented_operator_pack(products, unit_nuclear)
+end
+
+function cartesian_residual_gto_augmented_products(base, supplement_basis, residual)
+    C = CartesianFinalBasisRealization
+    input = base.input
+    parent = base.parent
+    return C.pqs_terminal_residual_gto_augmented_products(
+        base.terminal_basis, parent.parent_axis_bundle_object,
+        parent.parent_basis_object, supplement_basis.basis, residual,
+        input.locations, input.charges)
+end
+
+function cartesian_residual_gto_augmented_unit_nuclear(base, residual, augmented_products)
+    C = CartesianFinalBasisRealization
+    input = base.input
+    parent = base.parent
+    return C.pqs_terminal_residual_gto_augmented_unit_nuclear(
+        base.terminal_basis, parent.parent_axis_bundle_object,
+        residual, input.locations, input.charges, augmented_products)
+end
+
+_cartesian_residual_augmented_operator_pack(products, unit_nuclear) =
+    (; kinetic = products.kinetic, nuclear_attraction_unit_by_center = unit_nuclear,
+        position = products.position, x2 = products.x2)
+
+function cartesian_residual_gto_augmented_vee(base, base_ham::CartesianIDAHamiltonian{Float64}, residual, augmented_products, augmented_unit_nuclear)
+    C = CartesianFinalBasisRealization
+    return C.pqs_terminal_residual_gto_augmented_vee(
+        base_ham, base.terminal_basis, base.parent.parent_axis_bundle_object,
+        residual, _cartesian_residual_augmented_operator_pack(augmented_products, augmented_unit_nuclear))
+end
+
+function cartesian_residual_gto_mwg_hamiltonian_assembly(base, base_ham::CartesianIDAHamiltonian{Float64}, supplement_basis, residual, augmented_products, augmented_unit_nuclear, augmented_vee; hamfile::Union{Nothing,AbstractString} = nothing)::CartesianIDAHamiltonian{Float64}
+    !(!isnothing(hamfile) && isempty(String(hamfile))) ||
+        throw(ArgumentError("hamfile must not be empty"))
+    C = CartesianFinalBasisRealization
+    input = base.input
+    supplement_input = supplement_basis.input
+    operators = _cartesian_residual_augmented_operator_pack(augmented_products, augmented_unit_nuclear)
+    ham = CartesianIDAHamiltonian(operators.kinetic,
+        operators.nuclear_attraction_unit_by_center, augmented_vee, base_ham.nup,
+        base_ham.ndn; nuclear_charges = base_ham.nuclear_charges,
+        nuclear_positions = base_ham.nuclear_positions)
     h2_fixture = _cartesian_r3_h2_validation_fixture(input, supplement_input)
     isnothing(hamfile) || C.write_pqs_terminal_residual_gto_augmented_hamiltonian(
         String(hamfile), ham, residual;
