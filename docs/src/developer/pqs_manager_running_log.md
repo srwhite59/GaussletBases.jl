@@ -11760,3 +11760,62 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 093 - Implement Homonuclear Diatomic Supplemented Facade
+
+Commit(s):
+- this commit - Relax supplemented diatomic facade scope
+
+Summary:
+- Accepted the first `HP-R3U-ZDI-FN-01` source pass in
+  `src/cartesian_base_hamiltonian.jl`.
+- `_cartesian_r3_diatomic_inputs(...)` no longer hardcodes H2/Be2 element and
+  spin-sector checks. It now validates the approved data-driven homonuclear
+  two-center z-axis all-electron contract: equal symbols, equal finite
+  positive charges, finite z-axis centers with distinct z coordinates,
+  nonnegative integer `nup`/`ndn`, and neutral electron count from explicit
+  nuclear charge.
+- `_cartesian_r3_supplement_inputs(...)` now accepts optional trusted
+  `basisfile` and passes it to the existing
+  `legacy_bond_aligned_diatomic_gaussian_supplement(...)` loading path. No
+  artifact schema or provenance field changed.
+
+Validation:
+- Doer reported `git diff --check`, package load, the H2 residual-GTO endpoint
+  with self-Coulomb `0.4574265214362095` and zero readback deltas, the Be2
+  facade/readback probe with dimension `1421` and zero readback deltas, and an
+  optional ignored Cr2-style smoke returning a finite symmetric
+  `CartesianIDAHamiltonian{Float64}` of dimension `1623`.
+- Manager static review only, per current no-rerun guidance: `git status
+  --short --branch`, `git diff --check`, direct source diff inspection,
+  `git diff --numstat -- src/cartesian_base_hamiltonian.jl`, and the
+  suspicious-added-line scan. The diff gate was clean, line impact was
+  `21` added / `12` deleted in one approved source file, and no new files or
+  tests were added.
+
+Goal advancement:
+- LT1/LT3: moves supplemented artifact construction from H/Be fixture wording
+  to a real explicit homonuclear diatomic input contract, which is the
+  prerequisite for making the canonical driver a practical molecule workflow.
+- RG/LT6: keeps the residual-GTO/MWG supplement path generic over explicit
+  homonuclear z-axis inputs without opening heteronuclear, non-z-axis,
+  ECP/solver, public API/export, artifact schema, or Cr2-specific workflow
+  surfaces.
+
+Carrying-cost result:
+- deleted: H/Be-specific element/electron guard in the supplemented facade.
+- simplified: molecule validation is now data-driven homonuclear z-axis
+  validation, and basisfile handling is a small pass-through to the existing
+  supplement loader.
+- quarantined: Cr2 remains an ignored/user-run generic stress case, not a
+  branch, default, fixture, committed gate, or driver workflow.
+- not deleted because: the H2 validation fixture label check remains live for
+  existing H2 reference artifact validation.
+- exact remaining caller/blocker: canonical driver wiring is still separate
+  under `HP-DRV-*` / `HP-R3U-ZDI-WIRE-01`, and base atom driver support is
+  separate under `HP-DRV-ATOM-*`. Supplemented atom Hamiltonians remain
+  unapproved.
+- added src lines: 21.
+- deleted src lines: 12.
+- new tests: none.
+- new metadata/status fields: none.

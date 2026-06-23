@@ -211,20 +211,24 @@ function _cartesian_r3_diatomic_inputs(system::NamedTuple, basis::NamedTuple)
     locations = _cartesian_base_location.(system.atom_locations)
     length(symbols) == length(charges) == length(locations) == 2 ||
         throw(ArgumentError("R3 usability facade supports two-center systems only"))
-    symbols[1] == symbols[2] || throw(ArgumentError("heteronuclear supplements are unsupported"))
-    expected_charge, expected_electrons =
-        symbols[1] == "H" ? (1.0, 1) :
-        symbols[1] == "Be" ? (4.0, 4) :
-        throw(ArgumentError("only z-axis H2 and Be2 are supported"))
-    charges == [expected_charge, expected_charge] ||
-        throw(ArgumentError("unsupported nuclear charges for $(symbols[1])2"))
+    symbols[1] == symbols[2] ||
+        throw(ArgumentError("heteronuclear supplements are unsupported"))
+    all(charge -> isfinite(charge) && charge > 0.0, charges) ||
+        throw(ArgumentError("nuclear charges must be finite and positive"))
+    charges[1] == charges[2] ||
+        throw(ArgumentError("homonuclear supplemented diatomics require equal nuclear charges"))
     system.nup isa Integer && system.ndn isa Integer &&
         !(system.nup isa Bool) && !(system.ndn isa Bool) ||
         throw(ArgumentError("nup and ndn must be nonnegative integers"))
     nup, ndn = Int(system.nup), Int(system.ndn)
-    nup == expected_electrons && ndn == expected_electrons ||
-        throw(ArgumentError("unsupported spin-sector electron counts"))
-    all(location -> location[1] == 0.0 && location[2] == 0.0, locations) ||
+    nup >= 0 && ndn >= 0 || throw(ArgumentError("nup and ndn must be nonnegative integers"))
+    total_charge = sum(charges)
+    electron_count = round(Int, total_charge)
+    isapprox(total_charge, electron_count; atol = 1.0e-12, rtol = 0.0) ||
+        throw(ArgumentError("neutral all-electron count requires integer total nuclear charge"))
+    nup + ndn == electron_count ||
+        throw(ArgumentError("neutral all-electron count requires nup + ndn == total nuclear charge"))
+    all(location -> all(isfinite, location) && location[1] == 0.0 && location[2] == 0.0, locations) ||
         throw(ArgumentError("R3 usability facade supports Cartesian z-axis diatomics only"))
     locations[1][3] != locations[2][3] ||
         throw(ArgumentError("diatomic centers must be distinct"))
@@ -241,7 +245,7 @@ end
 
 function _cartesian_r3_supplement_inputs(input, supplement::NamedTuple)
     required = Set((:basis_by_center, :lmax))
-    optional = Set((:uncontracted, :width_filtering))
+    optional = Set((:uncontracted, :width_filtering, :basisfile))
     supplied = Set(Symbol.(keys(supplement)))
     required ⊆ supplied && supplied ⊆ union(required, optional) ||
         throw(ArgumentError("supplement has missing or unsupported keys"))
@@ -269,7 +273,11 @@ function _cartesian_r3_supplement_inputs(input, supplement::NamedTuple)
         max_width = _cartesian_base_positive(
             width_filtering.max_width, "supplement.width_filtering.max_width")
     end
-    return (; basis_by_center, lmax, uncontracted, width_filtering, max_width)
+    basisfile = haskey(supplement, :basisfile) ? supplement.basisfile : nothing
+    isnothing(basisfile) || basisfile isa AbstractString ||
+        throw(ArgumentError("supplement.basisfile must be nothing or an AbstractString"))
+    return (; basis_by_center, lmax, uncontracted, width_filtering, max_width,
+        basisfile = isnothing(basisfile) ? nothing : String(basisfile))
 end
 
 function _cartesian_r3_h2_validation_fixture(input, supplement_input)
@@ -299,6 +307,7 @@ function cartesian_residual_gto_mwg_hamiltonian(
     raw_supplement = legacy_bond_aligned_diatomic_gaussian_supplement(
         first(input.symbols), first(supplement_input.basis_by_center), input.locations;
         lmax = supplement_input.lmax,
+        basisfile = supplement_input.basisfile,
         uncontracted = supplement_input.uncontracted,
         max_width = supplement_input.max_width)
     supplement_basis = basis_representation(raw_supplement)
