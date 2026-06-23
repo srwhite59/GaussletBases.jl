@@ -210,6 +210,16 @@ Short commandment:
   route-inventory collections as variable-size `Tuple(...)` or runtime-keyed
   `NamedTuple` objects; use vectors, indexed/lazy views, or compact summaries
   unless the tuple shape is mathematically fixed and tiny
+- `NamedTuple` is allowed for small stable records, explicit input
+  normalization, and final serialization bundles, but not as a substitute for
+  construction-stage objects or route plans with identity
+- do not let a `NamedTuple` value crossing a hot construction-stage boundary
+  have a concrete type that encodes `q`, molecule size, retained-unit count,
+  source-mode count, shell count, candidate count, or other basis-size
+  inventory dimensions
+- if a record crosses a construction-stage boundary and carries nontrivial
+  algorithmic data, prefer a small concrete struct with vector-backed fields
+  over nested `NamedTuple` carriers
 - choose the smallest test that validates the edit
 - before running any test expected to take more than 60 seconds, explain why it
   is necessary
@@ -907,8 +917,14 @@ the agent makes no commit and reports the obstacle.
 Default forbidden additions unless explicitly approved before implementation:
 
 - new `NamedTuple{...}` with runtime-generated keys
+- new `NamedTuple` construction-stage objects, route plans, or provenance
+  carriers whose concrete type encodes `q`, molecule size, retained-unit count,
+  source-mode count, shell count, candidate count, or other basis-size
+  inventory dimensions
 - new variable-size `Tuple(...)` / `Tuple{Vararg{...}}` route inventories for
   basis-size, shell-size, unit-size, pair-size, center-size, or all-pairs data
+- new `NamedTuple` wrappers around variable-size `Tuple{Vararg{...}}`
+  inventories, even when the wrapper field names are stable
 - new `.metadata` reads for algorithmic data
 - new metadata fields that carry transforms, rules, matrices, source plans,
   dimensions, or coefficients
