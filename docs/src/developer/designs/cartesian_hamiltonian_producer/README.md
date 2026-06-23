@@ -19,10 +19,11 @@ optimization lane is approved separately. A narrow unit-nuclear `U_GG`
 Gaussian-sum allocation lane is approved after the remaining-allocation audit.
 The canonical Cartesian driver usability lane is approved so the standard
 driver can directly produce base and supported supplemented Hamiltonian
-artifacts. The supported supplemented workflow now accepts explicit
-homonuclear z-axis diatomics without element-specific branches. Broad public
-API/export, supplemented atoms, Cr2-specific workflow, ECP, EGOI, RHF, and
-solver work remain deferred.
+artifacts from visible public `system`, `basis`, and optional `supplement`
+contracts. The supported supplemented workflow now accepts explicit homonuclear
+z-axis diatomics without element-specific branches. Broad public API/export,
+supplemented atoms, Cr2-specific workflow, ECP, EGOI, RHF, and solver work
+remain deferred.
 
 Agents should read first:
 
@@ -93,8 +94,8 @@ Approved amendments:
 - [Cartesian driver usability workflow](cartesian_driver_usability_workflow.md)
   approves only the compact canonical `bin/cartesian_ham_builder.jl` workflow:
   visible defaults, optional trusted input file, command-line overrides,
-  coarse timing/summary, and artifact production through approved producer
-  surfaces.
+  visible public contract construction, compact run-level hooks, coarse
+  timing/summary, and artifact production through approved producer surfaces.
 - [Cartesian driver atom workflow](cartesian_driver_atom_workflow.md)
   approves only explicit origin-centered one-center base atom driver inputs
   through the existing base facade. Current validation remains the

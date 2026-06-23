@@ -893,6 +893,8 @@ Approved under `HP-DRV-FILE-01`, `HP-DRV-FN-01`, and `HP-DRV-TEST-01`:
 - visible editable defaults near the top of the file;
 - optional trusted local Julia input file for project-specific defaults;
 - command-line `key=value` overrides;
+- visible public `system`, `basis`, and optional `supplement` contract
+  construction before calling an approved facade;
 - compact normalized run summary;
 - coarse user-facing phase timing;
 - base or supported supplemented Hamiltonian construction through approved
@@ -902,6 +904,16 @@ Approved under `HP-DRV-FILE-01`, `HP-DRV-FN-01`, and `HP-DRV-TEST-01`:
 The intended shape is compact and copyable. Consumers may copy the standard
 driver for project-specific customization; copied local drivers are not
 canonical repo surfaces.
+
+The only approved compact run-level hooks are `check_file`, `print_contract`,
+`print_timing`, and `expected_dimension`. They are for human expert review and
+Codex-controlled artifact checks only. The driver may use `basisname = nothing`
+as the base-mode selector; `basisname !== nothing` selects supported
+supplemented diatomic mode and must reject `Natom == 1`. `padding` is physical
+box padding around the atom or two nuclei and maps internally to the existing
+facade fields. The driver must not expose private route-stage choreography as a
+substitute for constructing public `system`, `basis`, and optional
+`supplement` objects.
 
 `HP-R3U-ZDI-FN-01` relaxes the supplemented facade from hardcoded H2/Be2 checks
 to explicit homonuclear two-center z-axis validation in
@@ -939,11 +951,11 @@ stage markers, fixture hacks, diagnostic knobs, underscored package helper
 calls, raw-block provider switches, report/status/payload dumps, metadata field
 clouds, allocation probes, benchmark harness behavior, solver/RHF/ECP/EGOI/
 HamV6 workflow, public API/export changes, artifact schema changes, committed
-driver-input fixtures, committed tests, Cr2-specific driver branches, or
-Cr2-specific workflow support. Generic explicit Cr2 may be used only as an
-ignored/user-run homonuclear z-axis stress through `HP-R3U-ZDI-*` after H2/Be2
-validation. Diagnostics and ladder probing belong in `tools/` or ignored
-`tmp/work` probes, not in the canonical driver.
+driver-input fixtures, committed tests, artifact schema dumps, supplemented
+atoms, Cr2-specific driver branches, or Cr2-specific workflow support. Generic
+explicit Cr2 may be used only as an ignored/user-run homonuclear z-axis stress
+through `HP-R3U-ZDI-*` after H2/Be2 validation. Diagnostics and ladder probing
+belong in `tools/` or ignored `tmp/work` probes, not in the canonical driver.
 
 ## Basis bundle policy
 

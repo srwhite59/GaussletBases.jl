@@ -495,11 +495,13 @@ Approved boundary:
 - compact driver invocation
   `julia --project=. bin/cartesian_ham_builder.jl [input.jl] [key=value ...]`;
 - visible editable defaults, one optional trusted project input file,
-  command-line overrides, compact run summary, coarse phase timing, artifact
-  write, and optional readback check.
+  command-line overrides, visible public contract construction, compact run
+  summary, coarse phase timing, artifact write, and optional readback check.
 
 Allowed workflow:
 
+- construct public `system`, `basis`, and optional `supplement` objects before
+  calling a facade;
 - call approved base producer surfaces for base H/H2;
 - call the approved non-exported residual-GTO/MWG usability facade for
   supported supplemented H2 and internal/performance-supported Be2;
@@ -507,20 +509,35 @@ Allowed workflow:
   groups;
 - print user-facing summaries and timing.
 
+Approved run-level hooks:
+
+- `check_file`;
+- `print_contract`;
+- `print_timing`;
+- `expected_dimension`.
+
+`basisname = nothing` selects base mode. `basisname !== nothing` selects
+supported supplemented diatomic mode, is the visible supplement basis label,
+and must reject `Natom == 1`. `padding` is physical box padding: it maps to
+one-center `radius` for atoms and to z-axis diatomic facade extents around the
+two nuclei.
+
 Forbidden:
 
 - private route-stage controls, stop-after internals, ladder probes, stage
   markers, fixture hacks, diagnostic knobs, underscored package helper calls,
   raw-block provider switches, report/status/payload dumps, metadata clouds,
   allocation probes, benchmark harness behavior, solver/RHF/ECP/EGOI/HamV6,
-  public API/export changes, artifact schema changes, committed tests,
-  committed input fixtures, Cr2-specific driver runs, or Cr2-specific
-  workflow support. Generic explicit homonuclear z-axis Cr2 stress through
+  private contract construction, artifact schema dumps, public API/export
+  changes, artifact schema changes, committed tests, committed input fixtures,
+  supplemented atoms, Cr2-specific driver runs, or Cr2-specific workflow
+  support. Generic explicit homonuclear z-axis Cr2 stress through
   `HP-R3U-ZDI-WIRE-01` is separate ignored/user-run validation authority.
 
 Validation gates:
 
 - package load;
+- public contract print/check output for at least one base run when touched;
 - H atom base driver artifact write/readback under `HP-DRV-ATOM-TEST-01`;
 - H2 base driver artifact write/readback;
 - H2 supplemented driver artifact write/readback;

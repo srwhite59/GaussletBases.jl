@@ -11933,3 +11933,56 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 096 - Amend Driver Public Contract Hooks
+
+Commit(s):
+- this commit - Amend canonical driver public contract hooks
+
+Summary:
+- Amended the canonical driver workflow so the driver must visibly construct
+  public `system`, `basis`, and optional `supplement` contract objects before
+  calling an approved facade. This keeps the driver compact and reviewable
+  without exposing old route-stage choreography.
+- Approved only four compact public run-level hooks: `check_file`,
+  `print_contract`, `print_timing`, and `expected_dimension`. These are for
+  human expert review and Codex-controlled artifact checks, not route reports,
+  allocation probes, artifact schema dumps, solver controls, or private helper
+  calls.
+- Recorded `basisname = nothing` as the base-mode selector and
+  `basisname !== nothing` as supported supplemented diatomic mode; the latter
+  must reject `Natom == 1`. Recorded `padding` as physical box padding around
+  the atom or two nuclei, mapped internally to existing facade fields.
+
+Validation:
+- Design-manager validation: docs-only `git diff --check`, focused `rg` for
+  `check_file`, `print_contract`, `print_timing`, `expected_dimension`,
+  `basisname`, `padding`, public contract construction, and forbidden surfaces.
+- No implementation tests were run; this was docs-only authority work.
+
+Goal advancement:
+- LT1/LT3: keeps the canonical driver a public-contract producer template
+  rather than a private route harness, even after implementation made it
+  functional.
+- RG/LT6: keeps supplemented mode reachable through visible public supplement
+  contracts while preserving the ban on supplemented atoms until a separate
+  facade/RG decision exists.
+
+Carrying-cost result:
+- deleted: none; docs-only authority pass.
+- simplified: replaces implicit driver choreography with explicit public
+  contract objects and four run-level hooks.
+- quarantined: route-stage controls, raw-block switches, allocation probes,
+  artifact schema dumps, solver controls, Cr2-specific workflow, private helper
+  calls, and supplemented atoms remain unapproved.
+- not deleted because: this pass records authority only; source cleanup and
+  alignment must be done by repo-doer under approved driver IDs.
+- exact remaining caller/blocker: repo-doer may edit only
+  `bin/cartesian_ham_builder.jl` under `HP-DRV-*` and must stop if public
+  contract construction requires route internals, extra hooks, artifact schema
+  changes, supplemented atom support, Cr2-specific workflow, committed
+  fixtures/tests, or parser/framework expansion.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

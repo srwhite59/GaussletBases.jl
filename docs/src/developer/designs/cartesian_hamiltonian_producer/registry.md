@@ -1277,6 +1277,8 @@ Approved behavior:
 - visible editable defaults near the top of the driver;
 - optional trusted local Julia input file for project-specific defaults;
 - later command-line `key=value` overrides;
+- visible public `system`, `basis`, and optional `supplement` contract
+  construction before calling an approved facade;
 - compact normalized run summary;
 - coarse user-facing phase timing;
 - base or supported supplemented Hamiltonian construction through approved
@@ -1284,18 +1286,42 @@ Approved behavior:
 - artifact write;
 - optional readback check.
 
-Approved configuration concepts are `mode`, `system`, base `basis`, optional
-`supplement`, `hamfile`, `timing`, `print_summary`, and `readback_check`.
+Approved configuration concepts are `basisname`, `system`, base `basis`,
+optional `supplement`, `hamfile`, `padding`, `check_file`, `print_contract`,
+`print_timing`, and `expected_dimension`.
+
+Compact summary printing and artifact readback checks remain allowed workflow
+behavior, but they are not open-ended hooks and must not introduce route,
+diagnostic, artifact-schema, or solver controls.
+
+`basisname = nothing` selects base mode. `basisname !== nothing` selects the
+supported supplemented diatomic mode and is the visible supplement basis label;
+that path must reject `Natom == 1`. Supplemented atoms remain unapproved.
+
+`padding` is a public physical box-padding control. For one-center atoms it
+maps to the base facade `radius`. For z-axis diatomics it maps to the existing
+facade extents as padding around the two nuclei; under the current origin-based
+z-axis contract this means `xmax_parallel = max(abs(z_i)) + padding` and
+`xmax_transverse = padding`.
+
+Approved hooks are only `check_file`, `print_contract`, `print_timing`, and
+`expected_dimension`. They may support human expert review and
+Codex-controlled artifact checks. They must not expose route internals,
+stop-after stages, raw-block switches, allocation probes, artifact schema
+dumps, solver controls, Cr2-specific workflow, or private helper calls.
+`check_file` may contain compact public contract facts, artifact path, final
+dimension, expected-dimension result, readback deltas, and coarse timing only.
 
 This ID does not approve private route-stage controls, stop-after internals,
 ladder probes, stage markers, fixture hacks, diagnostic knobs, underscored
 package helper calls from the driver, raw-block provider switches,
 report/status/payload dumps, metadata field clouds, allocation probes,
 benchmark harness behavior, solver/RHF/ECP/EGOI/HamV6 workflow, public
-API/export changes, artifact schema changes, committed test files, committed
-driver-input fixtures, or Cr2-specific workflow support. Generic explicit
-homonuclear z-axis Cr2 stress through `HP-R3U-ZDI-WIRE-01` is separate
-ignored/user-run validation authority, not driver-owned Cr2 support.
+API/export changes, artifact schema changes or dumps, committed test files,
+committed driver-input fixtures, supplemented atoms, or Cr2-specific workflow
+support. Generic explicit homonuclear z-axis Cr2 stress through
+`HP-R3U-ZDI-WIRE-01` is separate ignored/user-run validation authority, not
+driver-owned Cr2 support.
 
 Line budget: at most `150` added `bin` lines. If implementation needs a parser
 framework, source files outside `bin/cartesian_ham_builder.jl`, committed
@@ -1308,6 +1334,8 @@ new docs-only amendment.
 Approved validation:
 
 - package load;
+- public contract construction and optional `print_contract`/`check_file`
+  output for at least one base run when driver construction code changes;
 - H2 base driver run writes a `CartesianIDAHamiltonian` artifact and optional
   readback passes;
 - H2 supplemented driver run writes a supplemented `CartesianIDAHamiltonian`

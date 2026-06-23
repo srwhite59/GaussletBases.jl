@@ -124,14 +124,21 @@ Approved canonical driver usability lane:
 - `HP-DRV-FILE-01` approves only `bin/cartesian_ham_builder.jl`;
 - `HP-DRV-FN-01` approves a compact functional driver workflow with visible
   defaults, one optional trusted project input file, command-line `key=value`
-  overrides, coarse user-facing timing/summary printing, artifact write, and
-  optional readback check;
+  overrides, visible public `system`/`basis`/optional `supplement` contract
+  construction, coarse user-facing timing/summary printing, artifact write,
+  optional readback check, and only the compact hooks `check_file`,
+  `print_contract`, `print_timing`, and `expected_dimension`;
 - the driver may call only approved base and supported supplemented producer
   surfaces and the approved artifact writer/readback;
+- `basisname = nothing` selects base mode; `basisname !== nothing` selects
+  supported supplemented diatomic mode and must reject `Natom == 1`;
+- `padding` is physical box padding around the atom or two nuclei and maps
+  internally to the existing public facade fields;
 - route diagnostics, stop-after internals, ladder probes, raw-block switches,
-  underscored package helper calls, status/report/payload fields, solver work,
-  public API/export changes, artifact schema changes, and Cr2-specific
-  workflow remain unapproved in the canonical driver.
+  underscored package helper calls, status/report/payload fields, allocation
+  probes, artifact schema dumps, solver work, public API/export changes,
+  artifact schema changes, supplemented atoms, and Cr2-specific workflow
+  remain unapproved in the canonical driver.
 
 Approved R1 one-center base atom relaxation:
 

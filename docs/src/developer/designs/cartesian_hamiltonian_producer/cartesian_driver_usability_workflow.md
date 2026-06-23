@@ -20,6 +20,7 @@ scientific-driver pattern:
 visible editable defaults
 -> optional trusted project input file
 -> command-line key=value overrides
+-> visible public system / basis / optional supplement contract construction
 -> compact normalized run summary
 -> coarse timed user-facing phases
 -> supported base or supplemented Hamiltonian construction
@@ -67,19 +68,76 @@ Approved input policy:
 
 Approved user-facing configuration concepts:
 
-- `mode = :base` or `mode = :supplemented`;
+- `basisname = nothing` for base mode, or `basisname !== nothing` for
+  supported supplemented diatomic mode;
 - `system` specification;
 - base `basis` specification;
 - optional `supplement` specification for the supported residual-GTO/MWG path;
 - `hamfile`;
-- coarse `timing`;
-- compact `print_summary`;
-- optional `readback_check`.
+- `padding`;
+- `check_file`;
+- `print_contract`;
+- `print_timing`;
+- `expected_dimension`.
+
+Compact summary printing and artifact readback checks may remain part of the
+workflow, but they are not open-ended run-level hooks. They must not introduce
+additional route, diagnostic, artifact-schema, or solver controls.
 
 The implementation may choose a compact concrete representation, such as a
 small `NamedTuple` or driver-local variables, but it must not grow route-stage
 payloads, report mirrors, status objects, provider bundles, or metadata
 carriers.
+
+## Public Contract Construction
+
+The driver must visibly construct the public contract objects before it calls
+an approved producer facade:
+
+```text
+system
+basis
+optional supplement
+hamfile
+```
+
+For base runs, `basisname = nothing` selects the base facade path. For
+supplemented runs, `basisname !== nothing` selects the supported residual-GTO
+/ MWG supplemented diatomic facade and becomes the visible supplement basis
+label. `basisname !== nothing` must reject `Natom == 1`; supplemented atoms
+remain unapproved until a separate facade/RG amendment approves them.
+
+`padding` is a public physical box-padding control, not a route-stage field.
+For one-center atoms, it means the box padding around the atom and maps to the
+one-center base facade's `radius`. For z-axis diatomics, it means the padding
+around the two nuclei and maps internally to the existing facade extents; under
+the current origin-based z-axis contract this is equivalent to
+`xmax_parallel = max(abs(z_i)) + padding` and
+`xmax_transverse = padding`. If a future translated/general geometry needs
+different box-centering semantics, that requires a separate amendment.
+
+The driver may print the public contract when `print_contract = true`. The
+printed contract is limited to the public `system`, `basis`, optional
+`supplement`, `hamfile`, and run-level hooks. It must not print route-stage
+objects, private helper inputs, raw-provider choices, report payloads,
+metadata clouds, artifact schemas, or internal matrices.
+
+## Public Hooks
+
+The only approved compact run-level hooks are:
+
+- `check_file`;
+- `print_contract`;
+- `print_timing`;
+- `expected_dimension`.
+
+These hooks exist for human expert review and Codex-controlled artifact checks.
+`print_timing` may print coarse user-facing phase timings. `expected_dimension`
+may validate the returned Hamiltonian dimension and throw a clear error on
+mismatch. `check_file` may write a compact check record containing public
+contract facts, artifact path, final dimension, expected-dimension result,
+readback deltas, and coarse timing. It must not become an artifact schema,
+provenance dump, status object, route report, allocation log, or solver output.
 
 ## Allowed Workflow
 
@@ -94,6 +152,7 @@ The driver may call only supported producer surfaces:
 Allowed user-facing phases:
 
 - validate/normalize input;
+- construct public contract;
 - build base Hamiltonian;
 - build supplemented Hamiltonian;
 - write artifact;
@@ -113,6 +172,8 @@ This lane does not approve:
   markers, fixture hacks, or diagnostic knobs;
 - underscored package helper calls from the driver;
 - raw-block provider switches;
+- private helper contract construction instead of public `system` / `basis` /
+  `supplement` objects;
 - residual algorithm, MWG/IDA, raw-block, or terminal-kernel changes;
 - route reports, status symbols, payload dumps, metadata field clouds, or
   report mirrors;
@@ -131,6 +192,8 @@ scripts, not in the canonical driver.
 
 - `git diff --check`;
 - package load;
+- public contract printing/checking for at least one base run when the driver
+  construction code changes;
 - H2 base driver run writes a `CartesianIDAHamiltonian` artifact and optional
   readback passes;
 - origin-centered H atom driver run writes a `CartesianIDAHamiltonian` artifact
