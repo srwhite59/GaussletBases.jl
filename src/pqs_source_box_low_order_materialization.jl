@@ -413,14 +413,6 @@ function _pqs_source_box_route_driver_terminal_vee(terminal_basis_realization, e
     return V
 end
 
-function _pqs_source_box_route_driver_terminal_one_body(terminal_basis_realization, expansion, pgdg, atom_locations::Vector{NTuple{3,Float64}})
-    products = _pqs_source_box_route_driver_terminal_products(
-        terminal_basis_realization, pgdg)
-    U = _pqs_source_box_route_driver_terminal_unit_nuclear(
-        terminal_basis_realization, expansion, pgdg, atom_locations)
-    return products.kinetic, U
-end
-
 function _cartesian_base_ida_hamiltonian(
     terminal_basis_realization,
     parent_axis_bundle_object,

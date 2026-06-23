@@ -372,12 +372,6 @@ function cartesian_residual_gto_augmentation(base, supplement_basis)
         supplement_basis.basis, input.locations)
 end
 
-function cartesian_residual_gto_augmented_operators(base, supplement_basis, residual)
-    products = cartesian_residual_gto_augmented_products(base, supplement_basis, residual)
-    unit_nuclear = cartesian_residual_gto_augmented_unit_nuclear(base, residual, products)
-    return _cartesian_residual_augmented_operator_pack(products, unit_nuclear)
-end
-
 function cartesian_residual_gto_augmented_products(base, supplement_basis, residual)
     C = CartesianFinalBasisRealization
     input = base.input

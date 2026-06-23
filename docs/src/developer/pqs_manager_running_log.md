@@ -12388,3 +12388,46 @@ Carrying-cost result:
 - deleted src lines: 17.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 105 - Delete Staged Compatibility Wrappers
+
+Commit(s):
+- this commit - Delete unused staged compatibility wrappers
+
+Summary:
+- Accepted a deletion-only cleanup after the staged operator-class driver
+  split. Removed `_pqs_source_box_route_driver_terminal_one_body(...)` and
+  `cartesian_residual_gto_augmented_operators(...)`, both of which were
+  superseded by the explicit product/unit-nuclear/electron-electron stage
+  functions.
+
+Validation:
+- Doer validation: pre-delete `rg` confirmed both helper names appeared only
+  at their definitions; `git diff --check`; package load; post-delete `rg`
+  over `src`, `bin`, `test`, `tools`, and `docs` found no remaining matches;
+  no Cr2 run.
+- Manager validation: reviewed the deletion-only diff, confirmed `git diff
+  --check`, numstat 0/-6 in `src/cartesian_base_hamiltonian.jl` and 0/-8 in
+  `src/pqs_source_box_low_order_materialization.jl`, suspicious added-line
+  scan clean, new-test/tool scan empty, and helper-name `rg` empty.
+
+Goal advancement:
+- LT1/LT3: reduces compatibility surface now that the canonical driver has
+  settled on explicit operator-class stages.
+- MT: keeps the producer cleanup moving by deleting wrappers that preserved
+  older coarse-stage vocabulary.
+
+Carrying-cost result:
+- deleted: `_pqs_source_box_route_driver_terminal_one_body(...)` and
+  `cartesian_residual_gto_augmented_operators(...)`.
+- simplified: staged construction now has only the explicit physical
+  operator-class helper path.
+- quarantined: none.
+- not deleted because: `_cartesian_base_ida_hamiltonian(...)` and
+  `pqs_terminal_residual_gto_augmented_operators(...)` remain live and were
+  explicitly out of scope.
+- exact remaining caller/blocker: none for the deleted helpers.
+- added src lines: 0.
+- deleted src lines: 14.
+- new tests: none.
+- new metadata/status fields: none.
