@@ -11093,3 +11093,79 @@ Risk / guardrail:
   setup cleanup. Line budget is `100` added source lines, and any persistent
   workspace/cache object or source surface outside the approved files requires
   a new amendment.
+
+## Cartesian Hamiltonian Producer Pass 087A - Reuse Terminal G-G Scratch
+
+Commit(s):
+- `fb9b0414` - Reuse R3 terminal GG product scratch
+- this commit - Record terminal G-G scratch reuse
+
+Summary:
+- Accepted the first `HP-R3GG-FN-01` source pass. The R3/RG exact augmented
+  operator path now uses one `nG x nG` scratch matrix for terminal final-basis
+  `G-G` product construction in
+  `pqs_terminal_residual_gto_augmented_operators(...)`.
+- Kinetic `G-G` assembly accumulates the three axis contributions into that
+  scratch, then transforms immediately. Coordinate moments and second moments
+  now clear and reuse the same scratch one axis at a time, transform
+  immediately, and no longer retain `pos_GG` or `x2_GG` product tuples.
+- `_r3a_product_matrix(...)` was deleted. No terminal product kernel,
+  Gaussian raw-block, residual, MWG/IDA, artifact, metadata, status, report, or
+  public API surface changed.
+
+Validation:
+- Doer ran `git diff --check`, package load,
+  `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`,
+  `tmp/work/be2_r3u_facade_measurement.jl`, and updated ignored
+  `tmp/work/cr2_exact_operator_allocation_audit.jl`, then a post-commit diff
+  gate and suspicious-line scan.
+- Manager ran `git diff --check HEAD~1..HEAD`, numstat, source diff review,
+  suspicious-added-line scan, new-test/file scan, and a targeted symbol check
+  for `_r3a_product_matrix`, `pos_GG`, `x2_GG`, and `scratch_GG`. Per user
+  direction, manager did not rerun doer validation.
+
+Numerical/performance result:
+- H2 residual-GTO/MWG self-Coulomb stayed at `0.4574265214362095`.
+- Be2 facade/readback stayed at final dimension `1421`, with
+  K/unit-U/one-body/V deltas all `0.0`.
+- Cr2 exact-operator wrapper measured `6.4873s / 8872.858 MiB`.
+- Cr2 audit attribution: seven K/moment transform outputs allocated
+  `572.321 MiB`; nine replayed `assemble_terminal_product_operator!` product
+  calls allocated `5307.975 MiB`.
+- Cr2 raw non-nuclear delta was `1.11e-16`, residual mixed-overlap replay delta
+  was `0.0`, and wrapper kinetic replay delta was `3.84e-12`.
+
+Goal advancement:
+- Cr2-readiness/MT4: removes the obvious retained full-matrix lifetime waste in
+  the approved terminal `G-G` lane, but confirms that repeated terminal product
+  assembly internals remain the main local allocation source.
+- RG/LT6: keeps the optimization inside `CartesianFinalBasisRealization` and
+  does not reopen completed neutral raw-block, residual, or MWG/IDA lanes.
+
+Mechanical/anti-bloat gate:
+- `git diff --check`: clean.
+- Numstat: `33 32 src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`.
+- Suspicious-added-line scan: none.
+- New-test/file scan: none.
+
+Carrying-cost result:
+- deleted: `_r3a_product_matrix(...)`.
+- simplified: no retained `pos_GG` or `x2_GG` tuples; one local scratch lifetime
+  now covers kinetic, coordinate moment, and second-moment `G-G` products.
+- quarantined: ignored Cr2 audit script updates only.
+- not deleted because: `assemble_terminal_product_operator!` remains the
+  approved terminal product kernel and is still shared by live callers.
+- exact remaining caller/blocker: allocation is now dominated by repeated
+  terminal product assembly internals; a later pass would need shared
+  `action/tile/block` workspace in `pqs_terminal_one_body.jl`.
+- added src lines: 33.
+- deleted src lines: 32.
+- new tests: none.
+- new metadata/status fields: none.
+
+Risk / guardrail:
+- A follow-up may inspect workspace reuse in `pqs_terminal_one_body.jl`, but
+  only within `HP-R3GG-FN-01`: no persistent cache/workspace object, no broad
+  product-operator framework, no route/stage cleanup, and no raw-block,
+  residual-selection, MWG/IDA, artifact, metadata, report, status, public API,
+  or Cr2 workflow changes.
