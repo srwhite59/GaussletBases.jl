@@ -10480,3 +10480,56 @@ Risk / guardrail:
   detail. Do not grow this into staged tuple inventories, persistent caches,
   metadata/report summaries, or a broader raw-block framework. Cr2 facade and
   artifact workflow remain deferred.
+
+## Cartesian Hamiltonian Producer Pass 083A - Measure Post-Reuse Cr2 Cost
+
+Commit(s):
+- this commit - Record post-reuse Cr2 exact operator audit
+
+Summary:
+- Accepted a read-only post-`HP-CGRB-FN-02` Cr2 q4 exact-operator audit. The
+  nuclear bottleneck is crossed: neutral nuclear raw blocks now measure
+  `0.6364s / 19.828 MiB` with roundoff parity against the old reference, while
+  the same-audit old nuclear reference was `14.0439s / 48545.698 MiB`.
+- The full exact augmented-operator wrapper now measures
+  `8.3579s / 19107.314 MiB`. The remaining cost is non-nuclear: residual setup
+  mixed overlap `X` (`3.0855s / 10990.106 MiB`), Qiu-White self moment `A-A`
+  blocks (`2.1954s / 8453.301 MiB`), `G-G` product matrices
+  (`2.8728s / 7024.456 MiB`), and Qiu-White cross moment `G-A` blocks
+  (`0.4495s / 2489.566 MiB`).
+- Dense output storage and exact transforms are not the next bottleneck. One
+  augmented dense matrix is about `20.097 MiB`, nine outputs are about
+  `180.871 MiB`, and exact transforms measured `0.0562s / 623.604 MiB`.
+
+Validation:
+- Doer ran `git diff --check`, package load,
+  `tmp/work/cr2_exact_operator_allocation_audit.jl`, and final
+  `git status --short --branch`. Final tracked status was clean, with the
+  pre-existing untracked successor handoff file.
+- Manager confirmed `git status --short --branch`, `git diff --check`, and
+  current `HEAD`/`origin` state. Manager did not rerun the Cr2 audit.
+
+Goal advancement:
+- Cr2-readiness/MT4: closes the nuclear raw-block allocation story as the
+  current dominant Cr2 q4 blocker and identifies the next measured cost center.
+- LT4/LT6: preserves the distinction between an efficient neutral nuclear
+  owner and still-expensive non-nuclear Qiu-White donor/mixed-overlap paths.
+
+Carrying-cost result:
+- deleted: none; measurement-only pass.
+- simplified: bottleneck attribution is now simpler: do not target nuclear raw
+  blocks next.
+- quarantined: no new probe needed.
+- not deleted because: no production code changed.
+- exact remaining caller/blocker: non-nuclear Qiu-White donor/mixed-overlap
+  and `G-G` product-matrix allocation, not nuclear raw blocks.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.
+
+Risk / guardrail:
+- The obvious next implementation area, non-nuclear overlap/kinetic/moment
+  raw-block organization, is explicitly outside the approved neutral nuclear
+  slice. Do not start source work there under `HP-CGRB-FN-02`; request a
+  docs-only design amendment first.
