@@ -1157,6 +1157,78 @@ Approved validation:
 
 No new committed test file is approved by this ID.
 
+## Approved For Canonical Cartesian Driver Usability
+
+This section approves only the compact artifact-producing canonical driver
+workflow recorded in `cartesian_driver_usability_workflow.md`. It is workflow
+authority over approved producer surfaces, not algorithm, kernel, solver,
+artifact-schema, or diagnostic authority.
+
+### HP-DRV-FILE-01 — canonical driver file
+
+Approved file:
+
+```text
+bin/cartesian_ham_builder.jl
+```
+
+No other `bin`, `tools`, `src`, `test`, or committed driver-input fixture file
+is approved by this ID.
+
+### HP-DRV-FN-01 — compact functional driver workflow
+
+Approved invocation shape:
+
+```text
+julia --project=. bin/cartesian_ham_builder.jl [input.jl] [key=value ...]
+```
+
+Approved behavior:
+
+- visible editable defaults near the top of the driver;
+- optional trusted local Julia input file for project-specific defaults;
+- later command-line `key=value` overrides;
+- compact normalized run summary;
+- coarse user-facing phase timing;
+- base or supported supplemented Hamiltonian construction through approved
+  producer surfaces;
+- artifact write;
+- optional readback check.
+
+Approved configuration concepts are `mode`, `system`, base `basis`, optional
+`supplement`, `hamfile`, `timing`, `print_summary`, and `readback_check`.
+
+This ID does not approve private route-stage controls, stop-after internals,
+ladder probes, stage markers, fixture hacks, diagnostic knobs, underscored
+package helper calls from the driver, raw-block provider switches,
+report/status/payload dumps, metadata field clouds, allocation probes,
+benchmark harness behavior, solver/RHF/ECP/EGOI/HamV6 workflow, public
+API/export changes, artifact schema changes, committed test files, committed
+driver-input fixtures, or Cr2 workflow support.
+
+Line budget: at most `150` added `bin` lines. If implementation needs a parser
+framework, source files outside `bin/cartesian_ham_builder.jl`, committed
+input fixtures, route-stage diagnostics, status/report/payload expansion,
+artifact schema changes, or Cr2 workflow support, stop and request a new
+docs-only amendment.
+
+### HP-DRV-TEST-01 — driver workflow validation
+
+Approved validation:
+
+- package load;
+- H2 base driver run writes a `CartesianIDAHamiltonian` artifact and optional
+  readback passes;
+- H2 supplemented driver run writes a supplemented `CartesianIDAHamiltonian`
+  artifact with approved compact `supplement_provenance/` and optional readback
+  passes;
+- optional ignored Be2 usability run if the implementation touches
+  supplemented mode.
+
+Validation input files, if needed, must be ignored `tmp/work` files. No
+committed test file, committed driver-input fixture, Cr2 driver run, or solver
+run is approved by this ID.
+
 ## Approved Measurement-Only Authority
 
 These entries authorize ignored measurement/probe work only. They do not

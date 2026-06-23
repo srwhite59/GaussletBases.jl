@@ -448,6 +448,9 @@ these approved design IDs:
 - `HP-R3GG-TEST-01`
 - `HP-R3UN-FN-01`
 - `HP-R3UN-TEST-01`
+- `HP-DRV-FILE-01`
+- `HP-DRV-FN-01`
+- `HP-DRV-TEST-01`
 
 No other production surface may be added in this lane without a prior
 documentation-only design amendment. This includes new structs, persistent
@@ -853,14 +856,33 @@ Current preferred deletion sequence:
 
 ## Canonical Cartesian driver
 
-`bin/cartesian_ham_builder.jl` is the canonical human-facing Cartesian producer
-template. Do not add test instrumentation, private solver controls, fixture
-values, underscored package calls, or route-internal provider switches. Changes
-to its visible public stage sequence require explicit manager/user approval.
+`bin/cartesian_ham_builder.jl` is now the canonical compact, human-facing
+Cartesian Hamiltonian producer driver. Its job is to prove the approved
+producer paths work together by producing a Hamiltonian artifact directly.
 
-Ladder probing, stop-after controls, stage markers, fixture overrides, and
-private diagnostic knobs belong in `tools/cartesian_driver_harness.jl` or a
-more specific tool, not in the canonical driver.
+Approved under `HP-DRV-FILE-01`, `HP-DRV-FN-01`, and `HP-DRV-TEST-01`:
+
+- visible editable defaults near the top of the file;
+- optional trusted local Julia input file for project-specific defaults;
+- command-line `key=value` overrides;
+- compact normalized run summary;
+- coarse user-facing phase timing;
+- base or supported supplemented Hamiltonian construction through approved
+  producer surfaces;
+- artifact write and optional readback check.
+
+The intended shape is compact and copyable. Consumers may copy the standard
+driver for project-specific customization; copied local drivers are not
+canonical repo surfaces.
+
+Do not add private route-stage controls, stop-after internals, ladder probes,
+stage markers, fixture hacks, diagnostic knobs, underscored package helper
+calls, raw-block provider switches, report/status/payload dumps, metadata field
+clouds, allocation probes, benchmark harness behavior, solver/RHF/ECP/EGOI/
+HamV6 workflow, public API/export changes, artifact schema changes, committed
+driver-input fixtures, committed tests, Cr2 driver runs, or Cr2 workflow
+support. Diagnostics and ladder probing belong in `tools/` or ignored
+`tmp/work` probes, not in the canonical driver.
 
 ## Basis bundle policy
 

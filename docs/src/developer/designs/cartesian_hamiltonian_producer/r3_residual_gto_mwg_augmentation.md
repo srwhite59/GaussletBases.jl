@@ -118,7 +118,7 @@ fields, artifacts, public API, or global mutable caches.
 | `src/ordinary_qw_operator_assembly.jl` | oracle/reference plus MWG semantic donor | Reference for moment-matched Gaussian semantics and residual-containing interaction blocks. Do not copy QW payload/status structure. |
 | `src/gaussian_coulomb_reference.jl` | oracle/reference only | Use for tiny dense Gaussian Coulomb checks, not production scaling. |
 | `gto_overlap_matrix`, `gto_occupancy_matrix` public probes in `src/cartesian_gto_probes.jl` | diagnostics / oracle only | Keep for user diagnostics and validation; do not route production through broad probe APIs. |
-| `test/docs/cartesian_ham_builder_policy_runtests.jl` | negative policy guard | Currently asserts the canonical driver does not expose `residual_gto_provider_blocks`. Retain until a later public-driver design changes that policy. |
+| `test/docs/cartesian_ham_builder_policy_runtests.jl` | superseded negative policy guard | The canonical-driver policy is now amended by `cartesian_driver_usability_workflow.md`. Update or delete this test during driver implementation if it conflicts with the compact functional driver, while preserving the ban on route-provider diagnostics in the canonical driver. |
 
 Current-symbol audit, June 2026:
 
@@ -889,8 +889,9 @@ After R3-A:
 - delete any reintroduced supplement-preflight fixture or wrapper whose only
   purpose is to announce missing overlap, one-body, or moment provider blocks;
 - keep named-basis loading, Gaussian representation, and CPB provider kernels;
-- keep `test/docs/cartesian_ham_builder_policy_runtests.jl` unless R3 later
-  amends canonical-driver policy.
+- update or delete `test/docs/cartesian_ham_builder_policy_runtests.jl` under
+  the driver usability lane if it conflicts with the amended canonical-driver
+  policy.
 
 After R3-B:
 

@@ -23,6 +23,8 @@ Normal startup reading:
   workspace reuse;
 - `r3_unit_nuclear_ugg_gaussian_sum.md` for the narrow terminal final-basis
   unit-nuclear `U_GG` Gaussian-sum allocation lane;
+- `cartesian_driver_usability_workflow.md` for the compact artifact-producing
+  canonical driver lane;
 - `docs/src/developer/algorithm_implementation_index.md` for existing kernels
   and donor paths.
 
@@ -103,6 +105,20 @@ Approved remaining exact-operator allocation decision:
   residual/MWG/IDA changes, public workflow, and Cr2 facade/artifact work
   remain unapproved.
 
+Approved canonical driver usability lane:
+
+- `HP-DRV-FILE-01` approves only `bin/cartesian_ham_builder.jl`;
+- `HP-DRV-FN-01` approves a compact functional driver workflow with visible
+  defaults, one optional trusted project input file, command-line `key=value`
+  overrides, coarse user-facing timing/summary printing, artifact write, and
+  optional readback check;
+- the driver may call only approved base and supported supplemented producer
+  surfaces and the approved artifact writer/readback;
+- route diagnostics, stop-after internals, ladder probes, raw-block switches,
+  underscored package helper calls, status/report/payload fields, solver work,
+  public API/export changes, artifact schema changes, and Cr2 workflow remain
+  unapproved in the canonical driver.
+
 ## Residual Gaussian Authority
 
 `residual_gaussian_domain_module.md` is the canonical current RG algorithm
@@ -158,7 +174,8 @@ Artifact ownership:
 
 Deferred lanes:
 
-- public-driver polish and canonical user-facing workflow cleanup;
+- broad driver diagnostics and public-driver polish beyond the approved compact
+  artifact-producing workflow;
 - Cr2 stress/performance and Cr2 support decision;
 - non-base/supplement public workflow;
 - ECP/EGOI/RHF/solver/HamV6 work;

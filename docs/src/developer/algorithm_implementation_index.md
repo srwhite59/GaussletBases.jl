@@ -345,14 +345,17 @@ Source anchors:
   `src/pqs_source_box_route_driver_helpers.jl`,
   `cartesian_materialization(report, terminal_basis_realization,
   materialization_inputs)`
-- **consumer example only**: `bin/cartesian_ham_builder.jl`
+- **approved driver workflow surface**: `bin/cartesian_ham_builder.jl`,
+  `HP-DRV-FILE-01` / `HP-DRV-FN-01`
 
 Do-not-forget rule:
 Requested base PQS materialization returns `CartesianIDAHamiltonian{Float64}`
 directly; no-request materialization returns `nothing`. Do not add a materialized
 wrapper, status mirror, report field, metadata-carried matrix, or new artifact
 shape for the base handoff, except the approved `HP-R1-ART-01`
-`producer_provenance/` keys stored in the final Hamiltonian file. That
+`producer_provenance/` keys stored in the final Hamiltonian file. The canonical
+driver may write artifacts and print compact timings/summaries, but must call
+approved producer surfaces rather than underscored route internals. That
 provenance is for consumer tracking, not a staged algorithm input after initial
 lattice/parent construction.
 

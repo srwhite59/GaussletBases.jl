@@ -11599,3 +11599,56 @@ Risk / guardrail:
   authority decision. If approved, it should avoid provenance payloads,
   metadata/status fields, route-stage cleanup, public API, artifacts, raw-block
   changes, residual/MWG/IDA convention changes, and committed tests.
+
+## Cartesian Hamiltonian Producer Pass 090 - Approve Canonical Driver Usability Workflow
+
+Commit(s):
+- this commit - Approve canonical driver usability workflow
+
+Summary:
+- Changed the driver plan now that the base and residual-GTO/MWG producer paths
+  are coherent enough to work together. The canonical driver should no longer
+  be only a frozen template; it is approved as a compact artifact-producing
+  workflow over approved producer surfaces.
+- Added `cartesian_driver_usability_workflow.md` and approved
+  `HP-DRV-FILE-01`, `HP-DRV-FN-01`, and `HP-DRV-TEST-01`.
+  `bin/cartesian_ham_builder.jl` may now own visible editable defaults, one
+  optional trusted local input file, command-line `key=value` overrides,
+  compact summaries, coarse user-facing timing, artifact write, and optional
+  readback check.
+- Preserved the old anti-diagnostic guardrail: route-stage controls,
+  stop-after internals, ladder probes, private helper calls, raw-block
+  switches, report/status/payload dumps, allocation probes, solver workflow,
+  public API/export changes, artifact schema changes, committed fixtures/tests,
+  and Cr2 driver workflow remain outside the canonical driver.
+
+Validation:
+- Design-manager validation: `git diff --check`, focused `rg` for
+  `HP-DRV-FILE-01`, `HP-DRV-FN-01`, `HP-DRV-TEST-01`, `bin/cartesian_ham_builder.jl`,
+  input-file/override/timing/artifact wording, and forbidden diagnostic
+  surfaces; confirmation that no `src`, `test`, `tools`, or `bin` files
+  changed.
+- No implementation tests were run; this was docs-only authority work.
+
+Goal advancement:
+- LT1/LT3: moves the driver from protected template to real consumer workflow.
+  Producing a Hamiltonian artifact becomes the complete-success test for the
+  standard driver.
+- RG/LT6: lets the supported supplemented path be exercised by a human-facing
+  driver without promoting Cr2, solver, public export, or diagnostic surfaces.
+
+Carrying-cost result:
+- deleted: none.
+- simplified: the driver policy now has one compact workflow lane instead of
+  conflicting "do not touch the driver" and "make workflows usable" pressures.
+- quarantined: diagnostics, ladder probing, allocation audits, and Cr2 stress
+  controls stay in `tools/` or ignored `tmp/work`.
+- not deleted because: this is a docs-only authority pass.
+- exact remaining caller/blocker: source implementation must stay within
+  `bin/cartesian_ham_builder.jl` and stop if it needs a parser framework,
+  committed fixtures/tests, route-stage diagnostics, artifact schema changes,
+  or Cr2 workflow support.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

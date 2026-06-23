@@ -101,6 +101,12 @@ The canonical RG algorithm contract is
 - R1 public base scope is origin-centered H and Cartesian z-axis H2 only.
 - R3/RG supplemented usability remains internal unless a later public/export
   amendment approves it.
+- The canonical Cartesian driver is an artifact-producing workflow over
+  approved producer surfaces. It may own compact editable defaults, trusted
+  local input-file loading, command-line overrides, coarse timing, compact
+  printing, artifact writing, and readback checks. It must not own route
+  diagnostics, private stage controls, raw provider switches, report/status
+  payloads, solver workflow, artifact schema, public exports, or Cr2 support.
 - Be2 is an internal performance/usability proxy, not a committed public gate.
 - Cr2 diagnostics do not authorize Cr2 facade support, full augmented
   Hamiltonian construction, artifacts, or stress gates.

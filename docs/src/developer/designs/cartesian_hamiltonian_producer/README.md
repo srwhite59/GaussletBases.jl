@@ -15,8 +15,10 @@ uncharged by-center nuclear slice and the narrow non-nuclear
 overlap/kinetic/moment slice. A narrow R3/RG terminal `G-G` product-matrix
 optimization lane is approved separately. A narrow unit-nuclear `U_GG`
 Gaussian-sum allocation lane is approved after the remaining-allocation audit.
-Broad public API, driver UX, Cr2 validation, ECP, EGOI, RHF, and solver work
-remain deferred.
+The canonical Cartesian driver usability lane is approved so the standard
+driver can directly produce base and supported supplemented Hamiltonian
+artifacts. Broad public API/export, Cr2 validation, ECP, EGOI, RHF, and solver
+work remain deferred.
 
 Agents should read first:
 
@@ -36,6 +38,8 @@ Agents should read first:
   for the measurement-only decision after terminal `G-G` workspace reuse
 - [R3 unit-nuclear U_GG Gaussian sum](r3_unit_nuclear_ugg_gaussian_sum.md)
   for the narrow terminal final-basis unit-nuclear `U_GG` optimization lane
+- [Cartesian driver usability workflow](cartesian_driver_usability_workflow.md)
+  for the compact artifact-producing canonical driver lane
 - [Algorithm implementation index](../../algorithm_implementation_index.md)
 
 Approved amendments:
@@ -72,12 +76,17 @@ Approved amendments:
 - [R3 unit-nuclear U_GG Gaussian sum](r3_unit_nuclear_ugg_gaussian_sum.md)
   approves only terminal final-basis unit-nuclear `U_GG` Gaussian-sum
   allocation reduction under `CartesianFinalBasisRealization`.
+- [Cartesian driver usability workflow](cartesian_driver_usability_workflow.md)
+  approves only the compact canonical `bin/cartesian_ham_builder.jl` workflow:
+  visible defaults, optional trusted input file, command-line overrides,
+  coarse timing/summary, and artifact production through approved producer
+  surfaces.
 
 Candidate amendments:
 
-- Cr2-readiness measurement, public supplemented workflow/export, and
-  basis/supplement-realism lanes remain candidate-only until separately
-  approved.
+- Cr2-readiness measurement, public supplemented workflow/export,
+  basis/supplement-realism, and broad driver diagnostics remain candidate-only
+  until separately approved.
 
 Historical material:
 

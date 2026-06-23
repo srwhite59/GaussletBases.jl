@@ -483,3 +483,50 @@ Line budget:
 - stop for a new amendment if the source pass needs a persistent cache, broad
   Gaussian-sum framework, files outside the approved surfaces, or source edits
   outside terminal unit-nuclear `U_GG`.
+
+## Canonical Cartesian Driver Usability
+
+Status: approved for implementation under `HP-DRV-FILE-01`,
+`HP-DRV-FN-01`, and `HP-DRV-TEST-01`.
+
+Approved boundary:
+
+- source file `bin/cartesian_ham_builder.jl`;
+- compact driver invocation
+  `julia --project=. bin/cartesian_ham_builder.jl [input.jl] [key=value ...]`;
+- visible editable defaults, one optional trusted project input file,
+  command-line overrides, compact run summary, coarse phase timing, artifact
+  write, and optional readback check.
+
+Allowed workflow:
+
+- call approved base producer surfaces for base H/H2;
+- call the approved non-exported residual-GTO/MWG usability facade for
+  supported supplemented H2 and internal/performance-supported Be2;
+- write existing `CartesianIDAHamiltonian` artifacts with approved provenance
+  groups;
+- print user-facing summaries and timing.
+
+Forbidden:
+
+- private route-stage controls, stop-after internals, ladder probes, stage
+  markers, fixture hacks, diagnostic knobs, underscored package helper calls,
+  raw-block provider switches, report/status/payload dumps, metadata clouds,
+  allocation probes, benchmark harness behavior, solver/RHF/ECP/EGOI/HamV6,
+  public API/export changes, artifact schema changes, committed tests,
+  committed input fixtures, Cr2 driver runs, or Cr2 workflow support.
+
+Validation gates:
+
+- package load;
+- H2 base driver artifact write/readback;
+- H2 supplemented driver artifact write/readback;
+- optional ignored Be2 usability run for supplemented-mode changes.
+
+Line budget:
+
+- at most `150` added `bin` lines;
+- no new committed test or tool file;
+- stop for a new amendment if a parser framework, source files outside the
+  canonical driver, route-stage diagnostics, status/report/payload expansion,
+  artifact schema changes, or Cr2 workflow support are required.
