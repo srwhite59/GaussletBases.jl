@@ -14,6 +14,8 @@ Normal startup reading:
   algorithm contract;
 - `cartesian_gaussian_raw_blocks_nuclear.md` for the neutral uncharged nuclear
   raw-block owner;
+- `cartesian_gaussian_raw_blocks_non_nuclear.md` for the neutral
+  overlap/kinetic/moment raw-block owner;
 - `docs/src/developer/algorithm_implementation_index.md` for existing kernels
   and donor paths.
 
@@ -51,19 +53,21 @@ Implemented Residual Gaussian path:
 - Cr2 residual diagnostics are not facade support and do not authorize full Cr2
   supplemented Hamiltonian or artifact production.
 
-Approved neutral raw-block nuclear owner:
+Approved neutral Cartesian Gaussian raw-block owner:
 
 - `src/cartesian_gaussian_raw_blocks/` is approved for exact uncharged
-  by-center Cartesian Gaussian nuclear `G-A` and `A-A` raw blocks only;
+  by-center Cartesian Gaussian nuclear `G-A` and `A-A` raw blocks;
 - `HP-CGRB-FN-02` approves only a neutral-kernel reorganization around unique
   one-dimensional supplement axis families and term-first table reuse;
+- `HP-CGRB-NN-*` approves only non-nuclear overlap, kinetic, coordinate
+  moment, and second-moment `G-A`/`A-A` raw blocks;
 - `src/cartesian_gaussian_axis_integrals.jl` remains optional support only for
   `HP-CGAI-FN-01` helper work needed by that family-reuse kernel;
 - the owner may be consumed by Residual Gaussian and Qiu-White code after
   behavior-preserving parity;
-- it does not own overlap, kinetic, moments, terminal projection, residual
-  Gaussian transforms, Qiu-White route objects, caches, reports, artifacts, or
-  public API.
+- it does not own terminal projection, residual Gaussian transforms,
+  Qiu-White route objects, final-basis `G-G` product-matrix optimization,
+  caches, reports, artifacts, or public API.
 
 ## Residual Gaussian Authority
 
@@ -81,12 +85,15 @@ Essential live guardrails:
 - MWG descriptors are rotation-dependent and must be computed from the final
   merged residual basis;
 - RG does not own artifact writing, artifact provenance, basis loading, facade
-  parsing, parent lattice construction, terminal topology, raw Gaussian
-  nuclear block formula ownership, or public exports.
+  parsing, parent lattice construction, terminal topology, raw Gaussian block
+  formula ownership, or public exports.
 
-Exact uncharged by-center Gaussian nuclear raw blocks are a separate neutral
-kernel authority under `cartesian_gaussian_raw_blocks_nuclear.md`. RG consumes
-those blocks as exact operator inputs; RG does not own their raw construction.
+Exact Cartesian Gaussian raw blocks are separate neutral kernel authority:
+uncharged by-center nuclear blocks under
+`cartesian_gaussian_raw_blocks_nuclear.md`, and non-nuclear
+overlap/kinetic/moment blocks under
+`cartesian_gaussian_raw_blocks_non_nuclear.md`. RG consumes those blocks as
+exact operator inputs; RG does not own their raw construction.
 
 The old R3-A/R3-B/R3-C labels are implementation-history labels. The current
 domain names are:

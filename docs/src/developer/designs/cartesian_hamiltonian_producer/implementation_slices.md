@@ -282,3 +282,52 @@ Follow-on low-level optimization approval:
   reduce Cr2 q4 nuclear raw-block allocation from the `44552.840 MiB`
   baseline without adding caches, metadata, route objects, reports, artifacts,
   public API, or semantic changes.
+
+## Cartesian Gaussian Raw Blocks - Non-Nuclear Slice
+
+Status: approved for implementation under `HP-CGRB-NN-*`; not part of
+`HP-CGRB-FN-02`.
+
+Approved boundary:
+
+- neutral owner file `src/cartesian_gaussian_raw_blocks/non_nuclear_blocks.jl`;
+- exact non-nuclear Cartesian Gaussian raw blocks:
+  overlap, kinetic, coordinate moments `x`/`y`/`z`, and second moments
+  `x^2`/`y^2`/`z^2`;
+- parent-supplement `G-A` and supplement-supplement `A-A` only;
+- analytic one-dimensional table construction, unique supplement axis-family
+  reuse, canonical `A-A` family-pair table keys, upper-triangular `A-A`
+  assembly with mirroring, function-local scratch reuse, and coupled
+  product-axis contraction.
+
+Implementation sequence:
+
+1. Extract the current Qiu-White non-nuclear `G-A`/`A-A` behavior into the
+   neutral owner without changing numerical conventions.
+2. Rewire Residual Gaussian exact-operator construction and residual mixed
+   overlap setup to consume the neutral output where they currently use the
+   Qiu-White donor organization.
+3. Rewire Qiu-White consumers to the neutral output.
+4. Delete duplicate route-local non-nuclear loops once parity is established.
+5. Optimize allocation inside the neutral owner only after extraction parity.
+
+Validation gates:
+
+- existing H2 Residual Gaussian endpoint unchanged;
+- Be2 Residual Gaussian endpoint unchanged as ignored validation if needed;
+- Cr2 q4 non-nuclear `G-A`/`A-A` overlap, kinetic, coordinate moment, and
+  second-moment blocks match current implementation at roundoff as ignored
+  measurement only;
+- residual setup mixed overlap `X` matches the current construction at
+  roundoff;
+- a small Qiu-White non-nuclear parity fixture passes.
+
+Forbidden in this slice:
+
+- nuclear raw-block changes;
+- final-basis `G-G` product-matrix optimization;
+- terminal projection or residual-basis transformation;
+- Qiu-White semantic changes or route objects;
+- pair factors, MWG interaction, parent construction, persistent caches,
+  metadata, reports, status fields, artifacts, public API, Cr2 facade support,
+  or Cr2 artifact workflow.

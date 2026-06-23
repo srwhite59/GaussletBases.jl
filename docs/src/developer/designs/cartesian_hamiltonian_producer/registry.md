@@ -901,6 +901,115 @@ This file must not be added to `test/runtests.jl` without a later amendment.
 It must not validate Cr2 workflow, artifacts, public API, route statuses,
 report mirrors, payload fields, or Residual Gaussian internals.
 
+## Approved For Cartesian Gaussian Raw-Block Non-Nuclear Owner
+
+This section approves only the non-nuclear raw-block slice recorded in
+`cartesian_gaussian_raw_blocks_non_nuclear.md`. It extends the existing neutral
+Cartesian Gaussian raw-block owner under new `HP-CGRB-NN-*` IDs. It must not be
+implemented under `HP-CGRB-FN-02`.
+
+### HP-CGRB-NN-FILE-01 — non-nuclear raw-block file
+
+Approved owner file:
+
+```text
+src/cartesian_gaussian_raw_blocks/non_nuclear_blocks.jl
+```
+
+Allowed module plumbing:
+
+```text
+src/cartesian_gaussian_raw_blocks/CartesianGaussianRawBlocks.jl
+```
+
+Only the include needed to load `non_nuclear_blocks.jl` is approved there.
+Root include changes in `src/GaussletBases.jl` are not expected and are not
+approved unless a later amendment identifies a real include-order blocker.
+
+### HP-CGRB-NN-FN-01 — exact non-nuclear Gaussian raw blocks
+
+Approved internal kernel family:
+
+```text
+cartesian Gaussian non-nuclear raw blocks
+```
+
+The exact Julia names may follow local module style, but they must be neutral:
+no `r3`, `residual`, `qw`, route-stage, report, or status vocabulary.
+
+Approved numerical outputs:
+
+- parent-supplement `G-A` overlap, kinetic, coordinate moments, and second
+  moments;
+- supplement-supplement `A-A` overlap, kinetic, coordinate moments, and second
+  moments.
+
+Approved construction details:
+
+- analytic one-dimensional table construction;
+- unique supplement axis-family reuse;
+- canonical `A-A` family-pair table keys and orientation handling;
+- upper-triangular `A-A` assembly and mirroring;
+- function-local scratch/workspace reuse;
+- coupled product-axis contraction preserving existing Qiu-White values;
+- reuse of once-built overlap `G-A` for residual setup mixed overlap
+  `X = G' S A` and exact augmented-operator assembly when both are built in
+  the same local construction call.
+
+The kernel may return a compact fixed-field internal result containing only the
+approved raw matrices. It must not be a status object, route stage, report
+payload, metadata carrier, persistent cache, broad provider bundle, or artifact
+data.
+
+### HP-CGRB-NN-WIRE-01 — Residual Gaussian and Qiu-White non-nuclear rewiring
+
+Approved caller rewiring surfaces:
+
+```text
+src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl
+src/ordinary_qw_raw_blocks.jl
+src/ordinary_qw_operator_assembly.jl
+```
+
+The implementation sequence is binding:
+
+1. Extract current Qiu-White non-nuclear `G-A`/`A-A` behavior preserving
+   conventions.
+2. Rewire Residual Gaussian exact-operator construction and residual mixed
+   overlap setup to consume the neutral output.
+3. Rewire Qiu-White consumers to the neutral output.
+4. Delete duplicate route-local non-nuclear loops once parity is established.
+5. Optimize allocation inside the neutral owner only after extraction parity.
+
+No nuclear raw-block changes, final-basis `G-G` product-matrix optimization,
+terminal projection, Residual Gaussian algorithm changes, augmented-operator
+transform changes, Qiu-White semantic changes, Qiu-White route objects, parent
+construction, persistent cache, report/status/payload fields, public API,
+artifact workflow, or Cr2 facade/artifact workflow may be added under this ID.
+
+### HP-CGRB-NN-TEST-01 — non-nuclear extraction validation
+
+Approved validation:
+
+- existing H2 Residual Gaussian endpoint unchanged;
+- Be2 Residual Gaussian endpoint unchanged, as ignored validation if needed;
+- Cr2 q4 non-nuclear `G-A`/`A-A` overlap, kinetic, coordinate moment, and
+  second-moment blocks match the current implementation at roundoff, as
+  ignored measurement only;
+- residual setup mixed overlap `X` matches the current construction at
+  roundoff;
+- one small Qiu-White non-nuclear parity fixture.
+
+Approved committed standalone parity file, if needed:
+
+```text
+test/nested/cartesian_gaussian_raw_blocks_non_nuclear_runtests.jl
+```
+
+This file must not be added to `test/runtests.jl` without a later amendment.
+It must not validate Cr2 workflow, artifacts, public API, route statuses,
+report mirrors, payload fields, or Residual Gaussian internals.
+
 ## Rejected Or Deferred
 
 ### HP-RES-01 — terminal basis build result — rejected

@@ -10533,3 +10533,60 @@ Risk / guardrail:
   raw-block organization, is explicitly outside the approved neutral nuclear
   slice. Do not start source work there under `HP-CGRB-FN-02`; request a
   docs-only design amendment first.
+
+## Cartesian Hamiltonian Producer Pass 083B - Approve Non-Nuclear Raw Blocks
+
+Commit(s):
+- this commit - Approve non-nuclear Gaussian raw blocks
+
+Summary:
+- Approved the next narrow neutral Cartesian Gaussian raw-block slice under
+  `HP-CGRB-NN-FILE-01`, `HP-CGRB-NN-FN-01`, `HP-CGRB-NN-WIRE-01`, and
+  `HP-CGRB-NN-TEST-01`. The owner remains
+  `src/cartesian_gaussian_raw_blocks/`, with a new non-nuclear file for exact
+  overlap, kinetic, coordinate-moment, and second-moment `G-A`/`A-A` raw
+  blocks.
+- This is explicitly not `HP-CGRB-FN-02`; that ID remains nuclear-only
+  one-dimensional axis-family reuse. The new approval follows Pass 083A, where
+  nuclear raw blocks were no longer the bottleneck and the remaining measured
+  costs were residual mixed overlap, Qiu-White self/cross moment blocks, and
+  `G-G` product matrices.
+- The approved non-nuclear scope is `G-A`/`A-A` only. The measured `G-G`
+  product-matrix allocation remains deferred and needs a separate source
+  decision if targeted later.
+
+Validation:
+- Design-manager validation is docs-only: `git diff --check`, focused `rg`
+  for `HP-CGRB-NN-*` IDs and forbidden-scope wording, and confirmation that no
+  `src`, `test`, `tools`, or `bin` files changed.
+
+Goal advancement:
+- Cr2-readiness/MT4: defines the next allowed source surface for the
+  post-nuclear Cr2 q4 exact-operator allocation problem without promoting Cr2
+  facade/artifact support.
+- CGRB/LT6: keeps reusable analytic Gaussian raw-block construction in the
+  neutral owner while preserving Residual Gaussian and Qiu-White as consumers.
+
+Carrying-cost result:
+- deleted: none; docs-only design authority.
+- simplified: post-nuclear source authority is now explicit and separated from
+  nuclear `HP-CGRB-FN-02`.
+- quarantined: final-basis `G-G` product-matrix optimization, terminal
+  projection, Residual Gaussian algorithm changes, Qiu-White semantic changes,
+  artifacts, public API, and Cr2 workflow remain out of scope.
+- not deleted because: source extraction and duplicate-loop deletion belong to
+  the next doer pass under the new IDs.
+- exact remaining caller/blocker: implement
+  `src/cartesian_gaussian_raw_blocks/non_nuclear_blocks.jl`, rewire
+  `pqs_terminal_residual_gto.jl` and Qiu-White consumers, prove H2/Be2/QW/Cr2
+  q4 non-nuclear parity, then delete route-local duplicate loops.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none in this docs pass; `HP-CGRB-NN-TEST-01` approves one
+  standalone non-nuclear parity fixture if needed.
+- new metadata/status fields: none.
+
+Risk / guardrail:
+- Do not use this approval as a broad raw-block framework or as permission to
+  optimize `G-G` product matrices. Keep the first source pass to non-nuclear
+  `G-A`/`A-A` raw blocks and construction-local reuse only.

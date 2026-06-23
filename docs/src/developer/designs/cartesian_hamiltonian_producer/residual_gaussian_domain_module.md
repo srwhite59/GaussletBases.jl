@@ -77,6 +77,8 @@ The module must not own:
 - raw analytic Gaussian integral formulas;
 - exact uncharged by-center Cartesian Gaussian nuclear `G-A`/`A-A` raw-block
   construction;
+- exact Cartesian Gaussian overlap, kinetic, coordinate-moment, and
+  second-moment `G-A`/`A-A` raw-block construction;
 - facade input parsing;
 - terminal or base stage orchestration;
 - Hamiltonian artifact writing;
@@ -88,7 +90,9 @@ The module may consume already-validated base Hamiltonian facts, terminal
 basis realization, parent axis/bundle data, supplement representations, raw
 exact blocks, and donor factor tables. Exact uncharged nuclear raw blocks are
 owned by the neutral Cartesian Gaussian raw-block nuclear owner when that
-kernel is present. RG consumes them as exact operator inputs to
+kernel is present. Exact non-nuclear overlap/kinetic/moment raw blocks are
+owned by the neutral non-nuclear raw-block owner when that kernel is present.
+RG consumes these blocks as exact operator inputs to
 `transform_augmented_operator(...)`; it must not turn those inputs into a new
 report or provider payload framework.
 

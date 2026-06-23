@@ -59,7 +59,7 @@ this kernel.
 
 ## Not Approved
 
-This amendment does not approve:
+This nuclear-slice amendment does not approve:
 
 - overlap, kinetic, coordinate moments, or second moments;
 - pair factors or matched-width Gaussian interaction;
@@ -72,6 +72,11 @@ This amendment does not approve:
 - artifact schema changes;
 - public API or exports;
 - Cr2 facade support or Cr2 artifact workflow.
+
+Non-nuclear overlap/kinetic/moment raw-block work, if needed, must use the
+separate `HP-CGRB-NN-*` authority in
+`cartesian_gaussian_raw_blocks_non_nuclear.md`. It must not be implemented
+under `HP-CGRB-FN-02`.
 
 ## Source Surfaces
 

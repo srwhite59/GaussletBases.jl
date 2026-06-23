@@ -47,6 +47,11 @@ Gaussian work.
   uncharged by-center `G-A` and `A-A` raw matrices, `U_A = -1/r_A`. They do not
   apply physical nuclear charges, perform terminal projection, transform into
   residual bases, or own overlap/kinetic/moment blocks.
+- Neutral Cartesian Gaussian raw-block non-nuclear kernels may own only exact
+  overlap, kinetic, coordinate moment, and second-moment `G-A` and `A-A` raw
+  matrices. They do not perform terminal projection, optimize final-basis
+  `G-G` product matrices, transform into residual bases, or own nuclear/MWG
+  interaction blocks.
 - Slice C/base IDA assembly produces a real final-basis matrix and then uses the
   existing `CartesianIDAHamiltonian`; no Hamiltonian wrapper or result payload is
   approved.
@@ -61,8 +66,8 @@ The canonical RG algorithm contract is
 - residual occupation is not numerical rank, an integral weight, or a tolerance
   repair knob;
 - exact augmented one-body/moment transformation is not the MWG approximation;
-- raw Cartesian Gaussian nuclear block construction is not Residual Gaussian
-  basis selection or augmented-operator transformation;
+- raw Cartesian Gaussian block construction is not Residual Gaussian basis
+  selection or augmented-operator transformation;
 - MWG centers and widths are computed from the final merged residual basis and
   are not invariant under arbitrary residual rotations;
 - weight-aware final-basis density normalization is required for PQS-shell

@@ -11,8 +11,9 @@ exact augmented operators, and residual MWG/IDA interaction now belong to the
 internal `CartesianResidualGaussians` module. The R3 usability lane approves
 only a non-exported supported facade for H2 and internal/performance-supported
 Be2 artifacts. A neutral Cartesian Gaussian raw-block owner is approved for the
-uncharged by-center nuclear slice only. Broad public API, driver UX, Cr2
-validation, ECP, EGOI, RHF, and solver work remain deferred.
+uncharged by-center nuclear slice and the narrow non-nuclear
+overlap/kinetic/moment slice. Broad public API, driver UX, Cr2 validation, ECP,
+EGOI, RHF, and solver work remain deferred.
 
 Agents should read first:
 
@@ -24,6 +25,8 @@ Agents should read first:
   current RG algorithm authority
 - [Cartesian Gaussian raw blocks - nuclear slice](cartesian_gaussian_raw_blocks_nuclear.md)
   for the neutral uncharged nuclear raw-block owner
+- [Cartesian Gaussian raw blocks - non-nuclear slice](cartesian_gaussian_raw_blocks_non_nuclear.md)
+  for the neutral overlap/kinetic/moment raw-block owner
 - [Algorithm implementation index](../../algorithm_implementation_index.md)
 
 Approved amendments:
@@ -47,6 +50,9 @@ Approved amendments:
   approves only the neutral owner for exact uncharged by-center Gaussian
   nuclear `G-A`/`A-A` raw blocks shared by Residual Gaussian and Qiu-White
   consumers.
+- [Cartesian Gaussian raw blocks - non-nuclear slice](cartesian_gaussian_raw_blocks_non_nuclear.md)
+  approves only the neutral owner for exact non-nuclear Gaussian
+  overlap/kinetic/coordinate-moment/second-moment `G-A`/`A-A` raw blocks.
 
 Candidate amendments:
 

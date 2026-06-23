@@ -95,8 +95,8 @@ formula ownership out of Residual Gaussian physics and Qiu-White route objects.
 Key docs:
 - `docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_gaussian_raw_blocks_nuclear.md`
 - `docs/src/developer/designs/cartesian_hamiltonian_producer/registry.md`,
-  `HP-CGRB-FILE-01`, `HP-CGRB-FN-01`, `HP-CGRB-WIRE-01`,
-  `HP-CGRB-TEST-01`
+  `HP-CGRB-FILE-01`, `HP-CGRB-FN-01`, `HP-CGRB-FN-02`,
+  `HP-CGAI-FN-01`, `HP-CGRB-WIRE-01`, `HP-CGRB-TEST-01`
 
 Source anchors:
 - **active implementation surface after extraction**:
@@ -113,6 +113,35 @@ parent-supplement and supplement-supplement matrices. It does not apply
 physical nuclear charges, project through terminal blocks, transform into
 Residual Gaussian bases, construct overlap/kinetic/moment blocks, create route
 objects, or own artifacts/status/payloads.
+
+## Cartesian Gaussian Non-Nuclear Raw Blocks
+
+Why to check:
+After nuclear axis-family reuse, Cr2 q4 exact-operator cost moved to
+non-nuclear mixed/self Gaussian raw blocks and residual mixed-overlap setup.
+The neutral owner now has a separate non-nuclear slice for exact overlap,
+kinetic, coordinate-moment, and second-moment `G-A`/`A-A` matrices.
+
+Key docs:
+- `docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_gaussian_raw_blocks_non_nuclear.md`
+- `docs/src/developer/designs/cartesian_hamiltonian_producer/registry.md`,
+  `HP-CGRB-NN-FILE-01`, `HP-CGRB-NN-FN-01`,
+  `HP-CGRB-NN-WIRE-01`, `HP-CGRB-NN-TEST-01`
+
+Source anchors:
+- **active implementation surface after extraction**:
+  `src/cartesian_gaussian_raw_blocks/non_nuclear_blocks.jl`
+- **current extraction targets / parity consumers**:
+  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`,
+  `src/ordinary_qw_raw_blocks.jl`,
+  `src/ordinary_qw_operator_assembly.jl`
+
+Do-not-forget rule:
+This owner is for non-nuclear `G-A`/`A-A` raw blocks only: overlap, kinetic,
+`x`/`y`/`z`, and `x^2`/`y^2`/`z^2`. It does not optimize final-basis `G-G`
+product matrices, project through terminal blocks, transform into Residual
+Gaussian bases, change Qiu-White semantics, create route objects, or own
+artifacts/status/payloads.
 
 ## CPB Local Blocks And Parent Axis Factors
 
