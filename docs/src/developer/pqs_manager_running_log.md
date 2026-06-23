@@ -11169,3 +11169,80 @@ Risk / guardrail:
   product-operator framework, no route/stage cleanup, and no raw-block,
   residual-selection, MWG/IDA, artifact, metadata, report, status, public API,
   or Cr2 workflow changes.
+
+## Cartesian Hamiltonian Producer Pass 087B - Reuse Terminal G-G Product Workspace
+
+Commit(s):
+- `5cd9e15a` - Reuse R3 terminal GG product workspace
+- this commit - Record terminal G-G workspace reuse
+
+Summary:
+- Accepted the second narrow `HP-R3GG-FN-01` source pass. The R3/RG terminal
+  `G-G` product fills now share one function-local `action_buffer`,
+  `tile_buffer`, and `block_buffer` across the nine kinetic/moment product
+  assemblies in `pqs_terminal_residual_gto_augmented_operators(...)`.
+- `assemble_terminal_product_operator!(...)` keeps its existing external
+  behavior by delegating to a private `_assemble_terminal_product_operator!(...)`
+  with fresh refs. The R3 path calls the private helper with caller-owned refs.
+- The prepatch buffer request probe showed `_buffer_view!` already grows by
+  capacity and reuses smaller views, so no `_buffer_view!` change was needed.
+  No raw-block, nuclear, residual, MWG/IDA, Qiu-White, route/stage, artifact,
+  metadata, report, status, or public API surface changed.
+
+Validation:
+- Doer ran `git diff --check`, package load,
+  `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`,
+  `tmp/work/be2_r3u_facade_measurement.jl`,
+  `tmp/work/cr2_exact_operator_allocation_audit.jl`, and
+  `tmp/work/r3gg_product_buffer_request_audit.jl`.
+- Manager ran `git diff --check`, numstat, source diff review,
+  suspicious-added-line scan, new-test/file scan, and a targeted symbol check
+  for product workspace refs and the new private helper. Per user direction,
+  manager did not rerun doer validation.
+
+Numerical/performance result:
+- Cr2 nine `G-G` product assemblies improved from `1.4260s / 4800.477 MiB`
+  with fresh refs to `0.8522s / 685.534 MiB` with shared refs.
+- Cr2 exact augmented-operator wrapper improved from about
+  `6.4873s / 8872.858 MiB` after Pass 087A to `5.8389s / 4605.517 MiB`.
+- Direct product parity max delta was `0.0`.
+- H2 residual-GTO/MWG self-Coulomb stayed at `0.4574265214362095`.
+- Be2 facade/readback stayed at final dimension `1421`, with readback deltas
+  all `0.0`.
+- Cr2 operators were finite/symmetric, raw parity deltas stayed at roundoff,
+  and wrapper replay kinetic delta was `3.8369307731045410e-12`.
+
+Goal advancement:
+- Cr2-readiness/MT4: crosses the measured terminal `G-G` product-workspace
+  allocation blocker opened by Pass 087A, dropping the exact-operator wrapper
+  below `5 GiB` allocation on the Cr2 q4 audit.
+- RG/LT6: preserves terminal final-basis ownership and does not reopen the
+  completed Gaussian raw-block or residual/MWG lanes.
+
+Mechanical/anti-bloat gate:
+- `git diff --check`: clean.
+- Numstat:
+  `19 3 src/cartesian_final_basis_realization/pqs_terminal_one_body.jl`;
+  `15 9 src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`.
+- Suspicious-added-line scan: none.
+- New-test/file scan: none.
+
+Carrying-cost result:
+- deleted: none.
+- simplified: R3 exact `G-G` products reuse one internal terminal-product
+  workspace instead of rebuilding fresh refs and buffers per product call.
+- quarantined: ignored `tmp/work` probes only.
+- not deleted because: public `assemble_terminal_product_operator!` remains
+  live for other callers and preserves fresh-ref behavior.
+- exact remaining caller/blocker: allocation now mainly lies outside these nine
+  product buffers, including unit-nuclear `U_GG` Gaussian-sum work and
+  route/raw-block setup, which are outside this pass.
+- added src lines: 34.
+- deleted src lines: 12.
+- new tests: none.
+- new metadata/status fields: none.
+
+Risk / guardrail:
+- Do not continue `HP-R3GG-FN-01` into unit-nuclear Gaussian sums or route/raw
+  setup. Those are separate measured targets and need their own authority if
+  pursued.
