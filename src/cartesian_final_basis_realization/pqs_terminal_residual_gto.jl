@@ -304,12 +304,6 @@ function pqs_terminal_residual_gto_augmentation(
         tau_neg_rel, tau_merge_abs, tau_merge_rel, orthogonality_atol, identity_atol)
 end
 
-function _r3a_product_matrix(basis, ax, ay, az)
-    matrix = zeros(Float64, basis.final_dimension, basis.final_dimension)
-    assemble_terminal_product_operator!(matrix, basis, ax, ay, az)
-    return matrix
-end
-
 function _r3a_centered_factor_terms(axis, expansion, center)
     center == axis.center && Float64.(axis.exponents) == Float64.(expansion.exponents) &&
         return axis.gaussian_factor_terms
@@ -338,31 +332,38 @@ function pqs_terminal_residual_gto_augmented_operators(
         supplement_blocks
     pgdg = Tuple(_nested_axis_pgdg(bundles, axis) for axis in (:x, :y, :z))
     S = Tuple(axis.overlap for axis in pgdg)
-    K = _r3a_product_matrix(basis, pgdg[1].kinetic, S[2], S[3]) +
-        _r3a_product_matrix(basis, S[1], pgdg[2].kinetic, S[3]) +
-        _r3a_product_matrix(basis, S[1], S[2], pgdg[3].kinetic)
-    K_GA = supplement_blocks_value.mixed.kinetic
-    K_AA = supplement_blocks_value.self.kinetic
-    pos_GG = (
-        x = _r3a_product_matrix(basis, pgdg[1].position, S[2], S[3]),
-        y = _r3a_product_matrix(basis, S[1], pgdg[2].position, S[3]),
-        z = _r3a_product_matrix(basis, S[1], S[2], pgdg[3].position),
-    )
-    x2_GG = (
-        x = _r3a_product_matrix(basis, pgdg[1].x2, S[2], S[3]),
-        y = _r3a_product_matrix(basis, S[1], pgdg[2].x2, S[3]),
-        z = _r3a_product_matrix(basis, S[1], S[2], pgdg[3].x2),
-    )
-    pos = NamedTuple{(:x, :y, :z)}(Tuple(CRG.transform_augmented_operator(
-        pos_GG[axis],
-        supplement_blocks_value.mixed.position[axis],
-        supplement_blocks_value.self.position[axis],
-        residual) for axis in (:x, :y, :z)))
-    x2 = NamedTuple{(:x, :y, :z)}(Tuple(CRG.transform_augmented_operator(
-        x2_GG[axis],
-        supplement_blocks_value.mixed.x2[axis],
-        supplement_blocks_value.self.x2[axis],
-        residual) for axis in (:x, :y, :z)))
+    scratch_GG = zeros(Float64, basis.final_dimension, basis.final_dimension)
+    assemble_terminal_product_operator!(scratch_GG, basis, pgdg[1].kinetic, S[2], S[3])
+    assemble_terminal_product_operator!(scratch_GG, basis, S[1], pgdg[2].kinetic, S[3])
+    assemble_terminal_product_operator!(scratch_GG, basis, S[1], S[2], pgdg[3].kinetic)
+    kinetic = CRG.transform_augmented_operator(scratch_GG,
+        supplement_blocks_value.mixed.kinetic, supplement_blocks_value.self.kinetic, residual)
+    fill!(scratch_GG, 0.0)
+    assemble_terminal_product_operator!(scratch_GG, basis, pgdg[1].position, S[2], S[3])
+    pos_x = CRG.transform_augmented_operator(scratch_GG,
+        supplement_blocks_value.mixed.position.x, supplement_blocks_value.self.position.x, residual)
+    fill!(scratch_GG, 0.0)
+    assemble_terminal_product_operator!(scratch_GG, basis, S[1], pgdg[2].position, S[3])
+    pos_y = CRG.transform_augmented_operator(scratch_GG,
+        supplement_blocks_value.mixed.position.y, supplement_blocks_value.self.position.y, residual)
+    fill!(scratch_GG, 0.0)
+    assemble_terminal_product_operator!(scratch_GG, basis, S[1], S[2], pgdg[3].position)
+    pos_z = CRG.transform_augmented_operator(scratch_GG,
+        supplement_blocks_value.mixed.position.z, supplement_blocks_value.self.position.z, residual)
+    fill!(scratch_GG, 0.0)
+    assemble_terminal_product_operator!(scratch_GG, basis, pgdg[1].x2, S[2], S[3])
+    x2_x = CRG.transform_augmented_operator(scratch_GG,
+        supplement_blocks_value.mixed.x2.x, supplement_blocks_value.self.x2.x, residual)
+    fill!(scratch_GG, 0.0)
+    assemble_terminal_product_operator!(scratch_GG, basis, S[1], pgdg[2].x2, S[3])
+    x2_y = CRG.transform_augmented_operator(scratch_GG,
+        supplement_blocks_value.mixed.x2.y, supplement_blocks_value.self.x2.y, residual)
+    fill!(scratch_GG, 0.0)
+    assemble_terminal_product_operator!(scratch_GG, basis, S[1], S[2], pgdg[3].x2)
+    x2_z = CRG.transform_augmented_operator(scratch_GG,
+        supplement_blocks_value.mixed.x2.z, supplement_blocks_value.self.x2.z, residual)
+    pos = (x = pos_x, y = pos_y, z = pos_z)
+    x2 = (x = x2_x, y = x2_y, z = x2_z)
     U = Matrix{Float64}[]
     for (center_index, center) in enumerate(CRG.residual_gaussian_float_centers(atom_locations))
         U_GG = zeros(Float64, basis.final_dimension, basis.final_dimension)
@@ -375,7 +376,7 @@ function pqs_terminal_residual_gto_augmented_operators(
         push!(U, CRG.transform_augmented_operator(U_GG, U_GA, U_AA, residual))
     end
     return (;
-        kinetic = CRG.transform_augmented_operator(K, K_GA, K_AA, residual),
+        kinetic,
         nuclear_attraction_unit_by_center = U,
         position = pos,
         x2,
