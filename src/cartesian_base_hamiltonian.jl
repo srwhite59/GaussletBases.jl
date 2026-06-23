@@ -43,6 +43,18 @@ function _cartesian_base_q(value)
     return q
 end
 
+function _cartesian_base_diatomic_basis_parts(basis)
+    _cartesian_base_check_basis_keys(basis, _CARTESIAN_BASE_H2_BASIS_REQUIRED_KEYS)
+    return (; q = _cartesian_base_q(basis.q),
+        core_spacing = _cartesian_base_positive(basis.core_spacing, "basis.core_spacing"),
+        radius = nothing, d = nothing,
+        xmax_parallel = _cartesian_base_positive(basis.xmax_parallel, "basis.xmax_parallel"),
+        xmax_transverse = _cartesian_base_positive(basis.xmax_transverse, "basis.xmax_transverse"),
+        parent_axis_family = _cartesian_base_parent_axis_family(basis),
+        reference_spacing = _cartesian_base_get_positive(basis, :reference_spacing, 1.0),
+        tail_spacing = _cartesian_base_get_positive(basis, :tail_spacing, 10.0))
+end
+
 function _cartesian_base_location(value)
     value isa Tuple || throw(ArgumentError("nuclear center must be a fixed 3-tuple"))
     length(value) == 3 || throw(ArgumentError("nuclear center must have three coordinates"))
@@ -98,7 +110,7 @@ function _cartesian_base_inputs(system::NamedTuple, basis::NamedTuple)
             reference_spacing = _cartesian_base_get_positive(basis, :reference_spacing, 1.0),
             tail_spacing = _cartesian_base_get_positive(basis, :tail_spacing, 10.0)))
     elseif length(symbols) == 2
-        _cartesian_base_check_basis_keys(basis, _CARTESIAN_BASE_H2_BASIS_REQUIRED_KEYS)
+        basis_parts = _cartesian_base_diatomic_basis_parts(basis)
         symbols == ["H", "H"] && charges == [1.0, 1.0] ||
             throw(ArgumentError("only z-axis H2 is supported"))
         all(location -> location[1] == 0.0 && location[2] == 0.0, locations) ||
@@ -106,14 +118,7 @@ function _cartesian_base_inputs(system::NamedTuple, basis::NamedTuple)
         locations[1][3] != locations[2][3] ||
             throw(ArgumentError("H2 centers must be distinct"))
         nup == 1 && ndn == 1 || throw(ArgumentError("H2 requires nup=1 and ndn=1"))
-        return merge(base, (; kind = :h2, q = _cartesian_base_q(basis.q),
-            core_spacing = _cartesian_base_positive(basis.core_spacing, "basis.core_spacing"),
-            radius = nothing, d = nothing,
-            xmax_parallel = _cartesian_base_positive(basis.xmax_parallel, "basis.xmax_parallel"),
-            xmax_transverse = _cartesian_base_positive(basis.xmax_transverse, "basis.xmax_transverse"),
-            parent_axis_family = _cartesian_base_parent_axis_family(basis),
-            reference_spacing = _cartesian_base_get_positive(basis, :reference_spacing, 1.0),
-            tail_spacing = _cartesian_base_get_positive(basis, :tail_spacing, 10.0)))
+        return merge(base, (; kind = :h2), basis_parts)
     end
     throw(ArgumentError("only one-center atoms and H2 are supported"))
 end
@@ -256,7 +261,7 @@ function cartesian_base_hamiltonian_assembly(base, products, unit_nuclear, vee; 
 end
 
 function _cartesian_r3_diatomic_inputs(system::NamedTuple, basis::NamedTuple)
-    _cartesian_base_check_basis_keys(basis, _CARTESIAN_BASE_H2_BASIS_REQUIRED_KEYS)
+    basis_parts = _cartesian_base_diatomic_basis_parts(basis)
     base = _cartesian_base_system_parts(system)
     symbols, charges, locations, nup, ndn =
         base.symbols, base.charges, base.locations, base.nup, base.ndn
@@ -276,15 +281,7 @@ function _cartesian_r3_diatomic_inputs(system::NamedTuple, basis::NamedTuple)
         throw(ArgumentError("R3 usability facade supports Cartesian z-axis diatomics only"))
     locations[1][3] != locations[2][3] ||
         throw(ArgumentError("diatomic centers must be distinct"))
-    return (; symbols, charges, locations, nup, ndn, kind = :h2,
-        q = _cartesian_base_q(basis.q),
-        core_spacing = _cartesian_base_positive(basis.core_spacing, "basis.core_spacing"),
-        radius = nothing, d = nothing,
-        xmax_parallel = _cartesian_base_positive(basis.xmax_parallel, "basis.xmax_parallel"),
-        xmax_transverse = _cartesian_base_positive(basis.xmax_transverse, "basis.xmax_transverse"),
-        parent_axis_family = _cartesian_base_parent_axis_family(basis),
-        reference_spacing = _cartesian_base_get_positive(basis, :reference_spacing, 1.0),
-        tail_spacing = _cartesian_base_get_positive(basis, :tail_spacing, 10.0))
+    return merge(base, (; kind = :h2), basis_parts)
 end
 
 function _cartesian_r3_supplement_inputs(input, supplement::NamedTuple)

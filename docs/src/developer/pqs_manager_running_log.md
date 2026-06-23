@@ -12483,3 +12483,49 @@ Carrying-cost result:
 - deleted src lines: 5.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 107 - Share Diatomic Basis Normalization
+
+Commit(s):
+- this commit - Share diatomic basis normalization
+
+Summary:
+- Accepted the narrow 2->1 cleanup in `src/cartesian_base_hamiltonian.jl`.
+  Base H2 and supplemented homonuclear z-axis diatomic input paths now both use
+  private `_cartesian_base_diatomic_basis_parts(...)` for shared basis-key
+  checking and normalization.
+- The helper owns only the common diatomic basis fields: `q`, `core_spacing`,
+  `xmax_parallel`, `xmax_transverse`, `parent_axis_family`,
+  `reference_spacing`, `tail_spacing`, plus the intentionally absent
+  atom-only `radius`/`d` fields.
+- Scope validation remains separate: base H2 is still exactly H2 with
+  `nup=1`, `ndn=1`, while the supplemented path is still explicit
+  homonuclear z-axis all-electron diatomic validation.
+
+Validation:
+- Doer validation: `git diff --check`, package load, H2 base
+  artifact/readback (dimension 471), H2 supplemented facade artifact/readback
+  (dimension 489), and no Cr2 run.
+- Manager validation: reviewed the one-file diff, confirmed `git diff
+  --check`, numstat +16/-19 in `src/cartesian_base_hamiltonian.jl`, no driver
+  or atom branch changes, no new tests/tools, and net source decrease.
+
+Goal advancement:
+- LT1/LT3: removes duplicated producer input normalization without changing
+  physics, artifacts, or the settled canonical driver.
+- MT: continues the atomic/diatomic unification cleanup by sharing the common
+  diatomic contract while preserving genuine scope differences.
+
+Carrying-cost result:
+- deleted: duplicate H2-like diatomic basis normalization from the two callers.
+- simplified: `_cartesian_base_inputs(...)` H2 branch and
+  `_cartesian_r3_diatomic_inputs(...)` now share one private helper for common
+  basis fields.
+- quarantined: none.
+- not deleted because: atom-specific basis normalization remains genuinely
+  different, and H2/R3 scope checks remain intentionally separate.
+- exact remaining caller/blocker: none for this cleanup.
+- added src lines: 16.
+- deleted src lines: 19.
+- new tests: none.
+- new metadata/status fields: none.
