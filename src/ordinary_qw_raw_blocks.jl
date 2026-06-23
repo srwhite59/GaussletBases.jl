@@ -2284,26 +2284,16 @@ function _qwrg_diatomic_cartesian_shell_blocks_3d(
     proxy_z = context.proxy_z
     ngausslet3d = context.ngausslet3d
 
-    cross = _qwrg_cartesian_shell_cross_moment_blocks_3d(
-        (x = proxy_x, y = proxy_y, z = proxy_z),
-        supplement,
-        expansion,
-        ngausslet3d;
-        include_factor_terms = false,
-    )
-    self = _qwrg_cartesian_shell_self_moment_blocks_3d(
-        supplement,
-        expansion;
-        include_factor_terms = false,
-    )
-
+    non_nuclear = CartesianGaussianRawBlocks.gaussian_non_nuclear_raw_blocks(
+        (x = proxy_x, y = proxy_y, z = proxy_z, ncart = ngausslet3d),
+        supplement, expansion)
     nuclear = CartesianGaussianRawBlocks.gaussian_nuclear_raw_blocks_by_center(
         (x = proxy_x, y = proxy_y, z = proxy_z, ncart = ngausslet3d),
         supplement, expansion, basis.nuclei)
     nuclear_ga_by_center = nuclear.ga
     nuclear_aa_by_center = nuclear.aa
-    one_body_ga = Matrix{Float64}(cross.kinetic_ga)
-    one_body_aa = Matrix{Float64}(self.kinetic_aa)
+    one_body_ga = Matrix{Float64}(non_nuclear.ga.kinetic)
+    one_body_aa = Matrix{Float64}(non_nuclear.aa.kinetic)
     for (charge, matrix) in zip(nuclear_charges, nuclear_ga_by_center)
         one_body_ga .+= Float64(charge) .* matrix
     end
@@ -2312,26 +2302,26 @@ function _qwrg_diatomic_cartesian_shell_blocks_3d(
     end
 
     return (
-        overlap_ga = cross.overlap_ga,
-        overlap_aa = Matrix{Float64}(0.5 .* (self.overlap_aa .+ transpose(self.overlap_aa))),
-        kinetic_ga = cross.kinetic_ga,
-        kinetic_aa = Matrix{Float64}(0.5 .* (self.kinetic_aa .+ transpose(self.kinetic_aa))),
+        overlap_ga = non_nuclear.ga.overlap,
+        overlap_aa = non_nuclear.aa.overlap,
+        kinetic_ga = non_nuclear.ga.kinetic,
+        kinetic_aa = non_nuclear.aa.kinetic,
         one_body_ga = one_body_ga,
         one_body_aa = Matrix{Float64}(0.5 .* (one_body_aa .+ transpose(one_body_aa))),
         nuclear_ga_by_center = nuclear_ga_by_center,
         nuclear_aa_by_center = nuclear_aa_by_center,
-        position_x_ga = cross.position_x_ga,
-        position_y_ga = cross.position_y_ga,
-        position_z_ga = cross.position_z_ga,
-        position_x_aa = Matrix{Float64}(0.5 .* (self.position_x_aa .+ transpose(self.position_x_aa))),
-        position_y_aa = Matrix{Float64}(0.5 .* (self.position_y_aa .+ transpose(self.position_y_aa))),
-        position_z_aa = Matrix{Float64}(0.5 .* (self.position_z_aa .+ transpose(self.position_z_aa))),
-        x2_x_ga = cross.x2_x_ga,
-        x2_y_ga = cross.x2_y_ga,
-        x2_z_ga = cross.x2_z_ga,
-        x2_x_aa = Matrix{Float64}(0.5 .* (self.x2_x_aa .+ transpose(self.x2_x_aa))),
-        x2_y_aa = Matrix{Float64}(0.5 .* (self.x2_y_aa .+ transpose(self.x2_y_aa))),
-        x2_z_aa = Matrix{Float64}(0.5 .* (self.x2_z_aa .+ transpose(self.x2_z_aa))),
+        position_x_ga = non_nuclear.ga.position.x,
+        position_y_ga = non_nuclear.ga.position.y,
+        position_z_ga = non_nuclear.ga.position.z,
+        position_x_aa = non_nuclear.aa.position.x,
+        position_y_aa = non_nuclear.aa.position.y,
+        position_z_aa = non_nuclear.aa.position.z,
+        x2_x_ga = non_nuclear.ga.x2.x,
+        x2_y_ga = non_nuclear.ga.x2.y,
+        x2_z_ga = non_nuclear.ga.x2.z,
+        x2_x_aa = non_nuclear.aa.x2.x,
+        x2_y_aa = non_nuclear.aa.x2.y,
+        x2_z_aa = non_nuclear.aa.x2.z,
     )
 end
 

@@ -113,13 +113,24 @@ function pqs_terminal_residual_gto_augmented_hamiltonian(
     nuclear_charges;
     expansion = nothing,
 )
-    residual = pqs_terminal_residual_gto_augmentation(
-        basis, bundles, supplement, atom_locations)
+    expansion_value = isnothing(expansion) ?
+        getfield(_GB_PARENT, :coulomb_gaussian_expansion)(doacc = false) : expansion
+    supplement_blocks = _r3a_qw_blocks(basis, bundles, supplement, atom_locations,
+        expansion_value)
+    nuclei_value = CRG.residual_gaussian_float_centers(atom_locations)
+    labels = CRG.residual_gaussian_candidate_labels(supplement)
+    centers = CRG.residual_gaussian_candidate_centers(supplement)
+    owners = Int[CRG.residual_candidate_owner(center, nuclei_value) for center in centers]
+    S_AA = Matrix{Float64}(
+        getfield(_GB_PARENT, :_cartesian_supplement_cross_overlap)(supplement, supplement))
+    residual = CRG.build_residual_gaussian_basis(
+        basis.final_dimension, supplement_blocks.mixed.overlap, S_AA, labels, centers, owners)
     augmented_operators = pqs_terminal_residual_gto_augmented_operators(
         basis, bundles, nothing, supplement, residual, atom_locations, nuclear_charges;
-        expansion)
+        expansion = expansion_value, supplement_blocks)
     return pqs_terminal_residual_gto_augmented_hamiltonian(
-        base_hamiltonian, basis, bundles, residual, augmented_operators; expansion)
+        base_hamiltonian, basis, bundles, residual, augmented_operators;
+        expansion)
 end
 
 function _r3_supplement_owner_counts(residual, center_count)
@@ -232,34 +243,26 @@ end
 function _r3a_qw_blocks(basis, bundles, supplement, atom_locations, expansion)
     donor = _r3a_qw_supplement(supplement)
     proxy = _r3a_qw_proxy_layers(bundles)
-    cross = getfield(_GB_PARENT, :_qwrg_cartesian_shell_cross_moment_blocks_3d)(
-        (x = proxy.x, y = proxy.y, z = proxy.z), donor, expansion, proxy.ncart;
-        include_factor_terms = false)
-    self = getfield(_GB_PARENT, :_qwrg_cartesian_shell_self_moment_blocks_3d)(
-        donor, expansion; include_factor_terms = false)
+    non_nuclear = CGRB.gaussian_non_nuclear_raw_blocks(proxy, donor, expansion)
     nuclear = CGRB.gaussian_nuclear_raw_blocks_by_center(proxy, donor, expansion,
         CRG.residual_gaussian_float_centers(atom_locations))
     return (;
         mixed = (;
-            overlap = _r3a_project_parent_ga(basis, cross.overlap_ga),
-            kinetic = _r3a_project_parent_ga(basis, cross.kinetic_ga),
-            position = (x = _r3a_project_parent_ga(basis, cross.position_x_ga),
-                y = _r3a_project_parent_ga(basis, cross.position_y_ga),
-                z = _r3a_project_parent_ga(basis, cross.position_z_ga)),
-            x2 = (x = _r3a_project_parent_ga(basis, cross.x2_x_ga),
-                y = _r3a_project_parent_ga(basis, cross.x2_y_ga),
-                z = _r3a_project_parent_ga(basis, cross.x2_z_ga)),
+            overlap = _r3a_project_parent_ga(basis, non_nuclear.ga.overlap),
+            kinetic = _r3a_project_parent_ga(basis, non_nuclear.ga.kinetic),
+            position = (x = _r3a_project_parent_ga(basis, non_nuclear.ga.position.x),
+                y = _r3a_project_parent_ga(basis, non_nuclear.ga.position.y),
+                z = _r3a_project_parent_ga(basis, non_nuclear.ga.position.z)),
+            x2 = (x = _r3a_project_parent_ga(basis, non_nuclear.ga.x2.x),
+                y = _r3a_project_parent_ga(basis, non_nuclear.ga.x2.y),
+                z = _r3a_project_parent_ga(basis, non_nuclear.ga.x2.z)),
             nuclear = [_r3a_project_parent_ga(basis, matrix) for matrix in nuclear.ga],
         ),
         self = (;
-            overlap = CRG.symmetrize_operator(self.overlap_aa),
-            kinetic = CRG.symmetrize_operator(self.kinetic_aa),
-            position = (x = CRG.symmetrize_operator(self.position_x_aa),
-                y = CRG.symmetrize_operator(self.position_y_aa),
-                z = CRG.symmetrize_operator(self.position_z_aa)),
-            x2 = (x = CRG.symmetrize_operator(self.x2_x_aa),
-                y = CRG.symmetrize_operator(self.x2_y_aa),
-                z = CRG.symmetrize_operator(self.x2_z_aa)),
+            overlap = non_nuclear.aa.overlap,
+            kinetic = non_nuclear.aa.kinetic,
+            position = non_nuclear.aa.position,
+            x2 = non_nuclear.aa.x2,
             nuclear = nuclear.aa,
         ),
     )
@@ -323,20 +326,22 @@ function pqs_terminal_residual_gto_augmented_operators(
     atom_locations,
     nuclear_charges;
     expansion = nothing,
+    supplement_blocks = nothing,
 )
     length(atom_locations) == length(nuclear_charges) || throw(DimensionMismatch("R3-A atom location count must match nuclear charges"))
     _r3_validate_residual_contract(basis, supplement, residual, atom_locations)
     expansion_value = isnothing(expansion) ?
         getfield(_GB_PARENT, :coulomb_gaussian_expansion)(doacc = false) : expansion
-    supplement_blocks = _r3a_qw_blocks(basis, bundles, supplement, atom_locations,
-        expansion_value)
+    supplement_blocks_value = isnothing(supplement_blocks) ?
+        _r3a_qw_blocks(basis, bundles, supplement, atom_locations, expansion_value) :
+        supplement_blocks
     pgdg = Tuple(_nested_axis_pgdg(bundles, axis) for axis in (:x, :y, :z))
     S = Tuple(axis.overlap for axis in pgdg)
     K = _r3a_product_matrix(basis, pgdg[1].kinetic, S[2], S[3]) +
         _r3a_product_matrix(basis, S[1], pgdg[2].kinetic, S[3]) +
         _r3a_product_matrix(basis, S[1], S[2], pgdg[3].kinetic)
-    K_GA = supplement_blocks.mixed.kinetic
-    K_AA = supplement_blocks.self.kinetic
+    K_GA = supplement_blocks_value.mixed.kinetic
+    K_AA = supplement_blocks_value.self.kinetic
     pos_GG = (
         x = _r3a_product_matrix(basis, pgdg[1].position, S[2], S[3]),
         y = _r3a_product_matrix(basis, S[1], pgdg[2].position, S[3]),
@@ -349,13 +354,13 @@ function pqs_terminal_residual_gto_augmented_operators(
     )
     pos = NamedTuple{(:x, :y, :z)}(Tuple(CRG.transform_augmented_operator(
         pos_GG[axis],
-        supplement_blocks.mixed.position[axis],
-        supplement_blocks.self.position[axis],
+        supplement_blocks_value.mixed.position[axis],
+        supplement_blocks_value.self.position[axis],
         residual) for axis in (:x, :y, :z)))
     x2 = NamedTuple{(:x, :y, :z)}(Tuple(CRG.transform_augmented_operator(
         x2_GG[axis],
-        supplement_blocks.mixed.x2[axis],
-        supplement_blocks.self.x2[axis],
+        supplement_blocks_value.mixed.x2[axis],
+        supplement_blocks_value.self.x2[axis],
         residual) for axis in (:x, :y, :z)))
     U = Matrix{Float64}[]
     for (center_index, center) in enumerate(CRG.residual_gaussian_float_centers(atom_locations))
@@ -364,8 +369,8 @@ function pqs_terminal_residual_gto_augmented_operators(
             center[axis]), 3)
         _accumulate_terminal_gaussian_sum!(
             U_GG, basis, expansion_value.coefficients, factors[1], factors[2], factors[3])
-        U_GA = supplement_blocks.mixed.nuclear[center_index]
-        U_AA = supplement_blocks.self.nuclear[center_index]
+        U_GA = supplement_blocks_value.mixed.nuclear[center_index]
+        U_AA = supplement_blocks_value.self.nuclear[center_index]
         push!(U, CRG.transform_augmented_operator(U_GG, U_GA, U_AA, residual))
     end
     return (;
