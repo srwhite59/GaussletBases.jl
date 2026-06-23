@@ -11869,3 +11869,67 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 095 - Replace Canonical Driver With Facade Workflow
+
+Commit(s):
+- this commit - Replace canonical driver with facade workflow
+
+Summary:
+- Accepted the `HP-DRV-*`, `HP-R3U-ZDI-WIRE-01`, and `HP-DRV-ATOM-*` driver
+  source pass in `bin/cartesian_ham_builder.jl`.
+- The canonical driver is now a compact public-input script rather than a
+  route-stage template. It exposes user-facing controls such as `mode`,
+  `Natom`, `R`, `Z`, `atom`, `nup`/`ndn`, `q`, `core_spacing`, one-center and
+  diatomic basis extents, supplement basis controls, `hamfile`, and
+  `readback`.
+- The driver constructs `system`, `basis`, and optional `supplement` locally
+  and dispatches only through approved facades:
+  `GaussletBases.cartesian_base_hamiltonian(...)`,
+  `GaussletBases.cartesian_residual_gto_mwg_hamiltonian(...)`, and
+  `GaussletBases.read_cartesian_ida_hamiltonian(...)`.
+  Old route-stage choreography and report/TSV/materialization controls are no
+  longer present in the public script.
+
+Validation:
+- Doer reported `git diff --check`, package load, H atom base driver
+  artifact/readback with dimension `419`, H2 base driver artifact/readback
+  with dimension `471`, H2 supplemented driver artifact/readback with
+  dimension `489`, and Be2 supplemented driver artifact/readback with
+  dimension `1421`.
+- Manager static review only: `git status --short --branch`, `wc -l
+  bin/cartesian_ham_builder.jl`, `git diff --check`, direct driver diff
+  inspection, `git diff --numstat -- src bin tools test docs`,
+  suspicious-added-line scan, old route-stage-name `rg`, and
+  `git diff --name-status`.
+- The final driver is `108` lines, under the `115` line target and `125` line
+  review threshold. Line impact was `101` added / `106` deleted in one
+  approved `bin` file. The suspicious-line scan was clean, and the old
+  route-stage-name scan found no matches.
+
+Goal advancement:
+- LT1/LT3: makes the canonical driver a practical artifact-producing workflow
+  while keeping it copyable and human-facing. A user can now drive base atom,
+  base diatomic, and supported supplemented homonuclear diatomic artifacts
+  without seeing route internals.
+- RG/LT6: keeps supplemented construction behind the supported facade and does
+  not introduce Cr2-specific workflow, public API/export changes, artifact
+  schema changes, diagnostics, solver/ECP behavior, or private helper calls.
+
+Carrying-cost result:
+- deleted: old `cartesian_system` through `cartesian_save` public route-stage
+  sequence, route/report/TSV/materialization flags, retained-rule controls,
+  WL/internal route knobs, and `run_h1*` controls from the canonical driver.
+- simplified: the driver is now facade choreography with compact trusted
+  input/override handling and optional public readback.
+- quarantined: Cr2 remains only an optional ignored/user-run homonuclear
+  z-axis stress through the generic supplemented facade after H2/Be2 pass.
+- not deleted because: compact trusted input-file and top-level `key=value`
+  override handling are part of the approved driver workflow.
+- exact remaining caller/blocker: producer-side non-H one-center atom support
+  still requires the separate `HP-R1-ATOM-*` source pass in
+  `src/cartesian_base_hamiltonian.jl`; supplemented atoms remain unapproved.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

@@ -1,113 +1,108 @@
 #!/usr/bin/env julia
-
-# Canonical human-facing Cartesian producer template.
-# Keep the public stage sequence visible here. Test instrumentation, private
-# solver controls, fixture values, and route-internal provider switches belong
-# in the driver harness or route implementation, not this copyable script.
-
+# Canonical human-facing Cartesian producer. Edit these inputs directly, or pass
+# one trusted local input file and optional key=value overrides.
 using GaussletBases
-
-# Physical system
-
-atom_symbols = ("Be", "Be")
-nuclear_charges = (4, 4)
-atom_locations = ((-2.0, 0.0, 0.0), (2.0, 0.0, 0.0))
-nup = nothing
-ndn = nothing
-bond_axis = nothing
-bond_length = nothing
-radius = 15.0
-parent_axis_counts = (x = 9, y = 7, z = 9)
-map_backend = :pgdg_localized_experimental
-
-# Basis and spacing
-
+# Public inputs
+mode = :base                  # :base or :supplemented
+Natom = 2                     # 1 atom, or 2 for homonuclear z-axis diatomic
+R = 4.0                       # full bond length in bohr when Natom == 2
+Z = 1.0
+atom = "H"                    # label only; Z is the charge authority
+nup = 1
+ndn = 1
 q = 5
-n_s = q
+core_spacing = 0.5
 reference_spacing = 1.0
 tail_spacing = 10.0
-q_to_core_spacing_rule = :standard_pqs_ns_equals_q
-core_spacing = nothing
-xmax_parallel = nothing
-xmax_transverse = nothing
-
 parent_axis_family = :G10
-parent_axis_bundle_backend = :pgdg_localized_experimental
-parent_mapping_rule = :identity_mapping
-parent_mapping_Z = nothing
-parent_mapping_d = nothing
-parent_mapping_tail_spacing = tail_spacing
-
-# Route recipe
-
-route_family = :pqs_source_box
-route_kind = :be2_cartesian_nesting_route_driver_spine
-route_shape = (:pqs_left, :product, :pqs_right)
-product_body_rule = :centered_single_z_slab
-pqs_retained_rule = :boundary_comx_product_mode_selection
-product_retained_rule = :product_doside_retained_unit
-terms = (:overlap, :position_x, :position_y, :position_z,
-    :x2_x, :x2_y, :x2_z, :kinetic)
-pair_factor_normalization = :density_normalized
-
-white_lindsey_route_shape = (:standard_cartesian_units, :low_order_comx_coarsening)
-white_lindsey_mapping_rule = :standard_unit_backbone_mapping_family
-white_lindsey_nesting_rule = :unit_box_low_order_comx_coarsening
-white_lindsey_retained_rule = :low_order_unit_comx_retained_basis
-white_lindsey_operator_rule = :low_order_unit_operator_blocks
-supplement_policy = nothing
-run_final_basis = nothing
-run_h1 = true
-run_h1_j = false
-
-# Output request
-
-save_artifact = false
-save_tsv = false
-materialize_route = false
-save_ida_hamiltonian = false
-hamiltonian_output =
-    save_ida_hamiltonian ? :cartesian_ida_hamiltonian : nothing
-outfile = "cartesian_ham_builder_report.jld2"
-tsvfile = "cartesian_ham_builder_report.tsv"
+radius = 4.0
+d = 0.3
+xmax_parallel = 6.0
+xmax_transverse = 4.0
+basisname = "cc-pVTZ"
+lmax = 1
+uncontracted = false
+width_filtering = nothing
+basisfile = nothing
 hamfile = "cartesian_ida_hamiltonian.jld2"
-
-system_inputs = (; atom_symbols, nuclear_charges, atom_locations,
-    nup, ndn, bond_axis, bond_length, radius, parent_axis_counts, map_backend)
-spacing_inputs = (; q, n_s, reference_spacing, tail_spacing,
-    q_to_core_spacing_rule, core_spacing, xmax_parallel, xmax_transverse)
-parent_inputs = (; parent_axis_bundle_backend,
-    parent_axis_family, parent_mapping_rule,
-    parent_mapping_Z, parent_mapping_d, parent_mapping_tail_spacing)
-route_inputs = (; route_family, route_kind, route_shape, product_body_rule,
-    pqs_retained_rule, product_retained_rule, terms, pair_factor_normalization,
-    white_lindsey_route_shape, white_lindsey_mapping_rule,
-    white_lindsey_nesting_rule, white_lindsey_retained_rule,
-    white_lindsey_operator_rule,
-    supplement_policy, run_final_basis, run_h1, run_h1_j)
-materialization_inputs = (; materialize_route,
-    save_ham_artifact = save_ida_hamiltonian, hamfile,
-    hamiltonian_output)
-save_inputs = (; save_artifact, save_tsv, outfile, tsvfile,
-    input_path = nothing)
-
-# Begin actual construction
-
-system = GaussletBases.cartesian_system(system_inputs)
-recipe = GaussletBases.cartesian_recipe(route_inputs)
-parent = GaussletBases.cartesian_parent(system, spacing_inputs, parent_inputs, recipe)
-shells = GaussletBases.cartesian_shells(parent, spacing_inputs, recipe)
-units = GaussletBases.cartesian_units(parent, shells, recipe)
-@time "Transforming: " transforms = GaussletBases.cartesian_transforms(units, recipe)
-@time "Pair terms: " pairs = GaussletBases.cartesian_pair_terms(units, transforms, recipe)
-@time "Assembly: " assembly =
-    GaussletBases.cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
-report = GaussletBases.cartesian_report(system, parent, assembly, recipe)
-materialization = GaussletBases.cartesian_materialization(
-    report, transforms.terminal_basis_realization, materialization_inputs)
-
-GaussletBases.cartesian_print_summary(report, materialization)
-GaussletBases.cartesian_print_details(report, materialization)
-GaussletBases.cartesian_save(report, save_inputs, materialization)
-
-println("driver complete")
+readback = true
+public_inputs = (
+    :mode, :Natom, :R, :Z, :atom, :nup, :ndn, :q, :core_spacing,
+    :reference_spacing, :tail_spacing, :parent_axis_family, :radius, :d,
+    :xmax_parallel, :xmax_transverse, :basisname, :lmax, :uncontracted,
+    :width_filtering, :basisfile, :hamfile, :readback,
+)
+allowed_inputs = Set(public_inputs)
+vars = Dict(name => getfield(Main, name) for name in public_inputs)
+function apply_inputs!(vars, values, allowed_inputs)
+    for (key, value) in pairs(values)
+        name = Symbol(key)
+        name in allowed_inputs || throw(ArgumentError("unknown driver input: $(name)"))
+        vars[name] = value
+    end
+    return vars
+end
+args = collect(ARGS)
+if !isempty(args) && !occursin("=", first(args))
+    file_value = Base.include(Main, popfirst!(args))
+    if file_value isa NamedTuple || file_value isa AbstractDict
+        apply_inputs!(vars, file_value, allowed_inputs)
+    else
+        vars = Dict(name => getfield(Main, name) for name in public_inputs)
+    end
+end
+for arg in args
+    key, value = split(arg, "="; limit = 2)
+    Symbol(key) in allowed_inputs || throw(ArgumentError("unknown driver input: $(key)"))
+    vars[Symbol(key)] = Core.eval(Main, Meta.parse(value))
+end
+N = Int(vars[:Natom])
+charge = Float64(vars[:Z])
+label = String(vars[:atom])
+system = if N == 1
+    (;  atom_symbols = [label], nuclear_charges = [charge],
+        atom_locations = [(0.0, 0.0, 0.0)],
+        nup = vars[:nup], ndn = vars[:ndn])
+elseif N == 2
+    half_R = Float64(vars[:R]) / 2
+    (;  atom_symbols = [label, label], nuclear_charges = [charge, charge],
+        atom_locations = [(0.0, 0.0, -half_R), (0.0, 0.0, half_R)],
+        nup = vars[:nup], ndn = vars[:ndn])
+else
+    throw(ArgumentError("Natom must be 1 or 2"))
+end
+common_basis = (; q = vars[:q], core_spacing = vars[:core_spacing],
+    reference_spacing = vars[:reference_spacing],
+    tail_spacing = vars[:tail_spacing],
+    parent_axis_family = vars[:parent_axis_family])
+basis = N == 1 ?
+    (; common_basis..., radius = vars[:radius], d = vars[:d]) :
+    (; common_basis...,
+        xmax_parallel = vars[:xmax_parallel],
+        xmax_transverse = vars[:xmax_transverse])
+hamfile_value = String(vars[:hamfile])
+isempty(hamfile_value) && throw(ArgumentError("hamfile must not be empty"))
+elapsed = @elapsed ham = if vars[:mode] === :base
+    GaussletBases.cartesian_base_hamiltonian(system; basis, hamfile = hamfile_value)
+elseif vars[:mode] === :supplemented
+    N == 2 || throw(ArgumentError("supplemented mode supports diatomics only"))
+    supplement = (; basis_by_center = fill(String(vars[:basisname]), N),
+        lmax = vars[:lmax], uncontracted = vars[:uncontracted],
+        width_filtering = vars[:width_filtering], basisfile = vars[:basisfile])
+    GaussletBases.cartesian_residual_gto_mwg_hamiltonian(
+        system; basis, supplement, hamfile = hamfile_value)
+else
+    throw(ArgumentError("mode must be :base or :supplemented"))
+end
+dimension = size(ham.kinetic, 1)
+if vars[:readback]
+    loaded = GaussletBases.read_cartesian_ida_hamiltonian(hamfile_value)
+    size(loaded.kinetic, 1) == dimension ||
+        throw(ArgumentError("readback dimension mismatch"))
+end
+println("mode: ", vars[:mode])
+println("Natom: ", N, "  atom: ", label, "  Z: ", charge)
+println("electrons: nup=", vars[:nup], " ndn=", vars[:ndn])
+println("hamfile: ", hamfile_value)
+println("dimension: ", dimension)
+println("elapsed_s: ", round(elapsed; digits = 3))
