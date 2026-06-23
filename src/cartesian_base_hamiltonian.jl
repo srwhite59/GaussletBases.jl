@@ -340,8 +340,11 @@ function cartesian_residual_gto_mwg_hamiltonian(
     base_ham = cartesian_base_hamiltonian_assembly(base, base_products, base_unit_nuclear, base_vee)
     supplement_basis = cartesian_residual_gto_supplement_basis(base, supplement)
     residual = cartesian_residual_gto_augmentation(base, supplement_basis)
-    augmented_products = cartesian_residual_gto_augmented_products(base, supplement_basis, residual)
-    augmented_unit_nuclear = cartesian_residual_gto_augmented_unit_nuclear(base, residual, augmented_products)
+    augmented_products = cartesian_residual_gto_augmented_products(
+        base, supplement_basis, residual; base_kinetic = base_ham.kinetic)
+    augmented_unit_nuclear = cartesian_residual_gto_augmented_unit_nuclear(
+        base, residual, augmented_products;
+        base_unit_nuclear = base_ham.nuclear_attraction_unit_by_center)
     augmented_vee = cartesian_residual_gto_augmented_vee(base, base_ham, residual, augmented_products, augmented_unit_nuclear)
     return cartesian_residual_gto_mwg_hamiltonian_assembly(base, base_ham, supplement_basis,
         residual, augmented_products, augmented_unit_nuclear, augmented_vee; hamfile)
@@ -367,23 +370,24 @@ function cartesian_residual_gto_augmentation(base, supplement_basis)
         supplement_basis.basis, input.locations)
 end
 
-function cartesian_residual_gto_augmented_products(base, supplement_basis, residual)
+function cartesian_residual_gto_augmented_products(base, supplement_basis, residual; base_kinetic = nothing)
     C = CartesianFinalBasisRealization
     input = base.input
     parent = base.parent
     return C.pqs_terminal_residual_gto_augmented_products(
         base.terminal_basis, parent.parent_axis_bundle_object,
         parent.parent_basis_object, supplement_basis.basis, residual,
-        input.locations, input.charges)
+        input.locations, input.charges; base_kinetic)
 end
 
-function cartesian_residual_gto_augmented_unit_nuclear(base, residual, augmented_products)
+function cartesian_residual_gto_augmented_unit_nuclear(base, residual, augmented_products; base_unit_nuclear = nothing)
     C = CartesianFinalBasisRealization
     input = base.input
     parent = base.parent
     return C.pqs_terminal_residual_gto_augmented_unit_nuclear(
         base.terminal_basis, parent.parent_axis_bundle_object,
-        residual, input.locations, input.charges, augmented_products)
+        residual, input.locations, input.charges, augmented_products;
+        base_unit_nuclear)
 end
 
 _cartesian_residual_augmented_operator_pack(products, unit_nuclear) =

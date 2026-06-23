@@ -12581,6 +12581,63 @@ Carrying-cost result:
 - new tests: none.
 - new metadata/status fields: none.
 
+## Cartesian Hamiltonian Producer Pass 109 - Reuse Same-Construction Base K/U
+
+Commit(s):
+- this commit - Reuse same-construction base operators
+
+Summary:
+- Accepted `HP-R3BASE-FN-01` in the approved source files. The supplemented
+  one-call facade and lower-level same-construction R3 path can now pass
+  trusted base `K_GG` and by-center unit `U_GG[A]` blocks into augmented
+  operator construction instead of recomputing those base final-basis `G-G`
+  blocks.
+- Standalone augmented-operator helpers preserve the old recompute behavior
+  unless trusted `base_kinetic` or `base_unit_nuclear` keyword inputs are
+  supplied. The trust model remains local: dimension and center-count checks,
+  no provenance payloads or metadata proofs.
+- The canonical driver was intentionally not changed under this source lane;
+  its visible staged call site still needs separate `bin/` authority to pass
+  `base_ham` into the augmented stages.
+
+Validation:
+- Doer validation: `git diff --check`, package load, H2 R3 endpoint with
+  self-Coulomb `0.4574265214362095`, Be2 facade/readback with augmented
+  dimension `1421` and all readback deltas `0.0`, focused Cr2 attribution
+  replay with base `K/U` reuse operator delta `0.0`, same-construction `K/V`
+  deltas `0.0`, finite/symmetric exact operators, and no Cr2 artifact/workflow.
+- Doer reported Cr2 allocation evidence: default production exact
+  augmented-operator wrapper `5.0452s / 2987.948 MiB`; base `K/U` reuse replay
+  `0.8558s / 1229.886 MiB`.
+- Manager validation: reviewed the two-file diff, confirmed `git diff
+  --check`, numstat +10/-6 in `src/cartesian_base_hamiltonian.jl` and +45/-21
+  in `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`, no
+  driver/test/tool changes, no metadata/status fields, and unchanged standalone
+  fallback behavior.
+
+Goal advancement:
+- LT1/LT3: unifies same-construction base and supplemented operator assembly
+  by reusing physical base blocks already computed in the same construction.
+- MT: crosses the strongest remaining no-supplement/supplement duplication in
+  the exact augmented-operator path. The remaining staged-driver gap is wiring,
+  not a numerical-kernel issue.
+
+Carrying-cost result:
+- deleted: base `K_GG` and unit `U_GG[A]` recomputation from same-construction
+  facade paths when trusted base blocks are available.
+- simplified: augmented operator construction now has local keyword reuse paths
+  with dimension/count checks.
+- quarantined: none.
+- not deleted because: default recompute path remains live for standalone
+  callers that do not have trusted same-construction base blocks.
+- exact remaining caller/blocker: canonical driver needs a separate approved
+  `bin/cartesian_ham_builder.jl` call-site update to pass `base_ham` into the
+  staged augmented helpers.
+- added src lines: 55.
+- deleted src lines: 27.
+- new tests: none.
+- new metadata/status fields: none.
+
 ## Cartesian Hamiltonian Producer Pass 108 - Approve Family-Selective Route Recipes
 
 Commit(s):

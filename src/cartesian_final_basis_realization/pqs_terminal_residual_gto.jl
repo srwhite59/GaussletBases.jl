@@ -133,7 +133,9 @@ function pqs_terminal_residual_gto_augmented_hamiltonian(
         basis.final_dimension, supplement_blocks.mixed.overlap, S_AA, labels, centers, owners)
     augmented_operators = pqs_terminal_residual_gto_augmented_operators(
         basis, bundles, nothing, supplement, residual, atom_locations, nuclear_charges;
-        expansion = expansion_value, supplement_blocks)
+        expansion = expansion_value, supplement_blocks,
+        base_kinetic = base_hamiltonian.kinetic,
+        base_unit_nuclear = base_hamiltonian.nuclear_attraction_unit_by_center)
     return pqs_terminal_residual_gto_augmented_hamiltonian(
         base_hamiltonian, basis, bundles, residual, augmented_operators;
         expansion)
@@ -318,7 +320,7 @@ function _r3a_centered_factor_terms(axis, expansion, center)
     return ops.gaussian_factors
 end
 
-function pqs_terminal_residual_gto_augmented_products(basis::CartesianTerminalBasisRealization, bundles, parent_basis_object, supplement, residual::CartesianTerminalResidualGTOAugmentation, atom_locations, nuclear_charges; expansion = nothing, supplement_blocks = nothing)
+function pqs_terminal_residual_gto_augmented_products(basis::CartesianTerminalBasisRealization, bundles, parent_basis_object, supplement, residual::CartesianTerminalResidualGTOAugmentation, atom_locations, nuclear_charges; expansion = nothing, supplement_blocks = nothing, base_kinetic = nothing)
     length(atom_locations) == length(nuclear_charges) || throw(DimensionMismatch("R3-A atom location count must match nuclear charges"))
     _r3_validate_residual_contract(basis, supplement, residual, atom_locations)
     expansion_value = isnothing(expansion) ?
@@ -335,10 +337,17 @@ function pqs_terminal_residual_gto_augmented_products(basis::CartesianTerminalBa
     product!(ax, ay, az) = _assemble_terminal_product_operator!(
         scratch_GG, basis, ax, ay, az,
         product_action_buffer, product_tile_buffer, product_block_buffer)
-    product!(pgdg[1].kinetic, S[2], S[3])
-    product!(S[1], pgdg[2].kinetic, S[3])
-    product!(S[1], S[2], pgdg[3].kinetic)
-    kinetic = CRG.transform_augmented_operator(scratch_GG,
+    kinetic_GG = if isnothing(base_kinetic)
+        product!(pgdg[1].kinetic, S[2], S[3])
+        product!(S[1], pgdg[2].kinetic, S[3])
+        product!(S[1], S[2], pgdg[3].kinetic)
+        scratch_GG
+    else
+        _r3_require_size(base_kinetic, (basis.final_dimension, basis.final_dimension),
+            "R3 trusted base kinetic dimension mismatch")
+        base_kinetic
+    end
+    kinetic = CRG.transform_augmented_operator(kinetic_GG,
         supplement_blocks_value.mixed.kinetic, supplement_blocks_value.self.kinetic, residual)
     fill!(scratch_GG, 0.0)
     product!(pgdg[1].position, S[2], S[3])
@@ -369,24 +378,37 @@ function pqs_terminal_residual_gto_augmented_products(basis::CartesianTerminalBa
     return (; kinetic, position = pos, x2, supplement_blocks = supplement_blocks_value)
 end
 
-function pqs_terminal_residual_gto_augmented_unit_nuclear(basis::CartesianTerminalBasisRealization, bundles, residual::CartesianTerminalResidualGTOAugmentation, atom_locations, nuclear_charges, augmented_products; expansion = nothing)
+function pqs_terminal_residual_gto_augmented_unit_nuclear(basis::CartesianTerminalBasisRealization, bundles, residual::CartesianTerminalResidualGTOAugmentation, atom_locations, nuclear_charges, augmented_products; expansion = nothing, base_unit_nuclear = nothing)
     length(atom_locations) == length(nuclear_charges) || throw(DimensionMismatch("R3-A atom location count must match nuclear charges"))
     _r3_validate_residual_contract(basis, nothing, residual, atom_locations)
-    expansion_value = isnothing(expansion) ?
-        getfield(_GB_PARENT, :coulomb_gaussian_expansion)(doacc = false) : expansion
+    recompute_unit_GG = isnothing(base_unit_nuclear)
+    if !recompute_unit_GG
+        length(base_unit_nuclear) == length(atom_locations) ||
+            throw(DimensionMismatch("R3 trusted base unit nuclear center count mismatch"))
+    end
+    expansion_value = recompute_unit_GG ? (isnothing(expansion) ?
+        getfield(_GB_PARENT, :coulomb_gaussian_expansion)(doacc = false) : expansion) : nothing
     supplement_blocks_value = augmented_products.supplement_blocks
-    pgdg = Tuple(_nested_axis_pgdg(bundles, axis) for axis in (:x, :y, :z))
+    pgdg = recompute_unit_GG ? Tuple(_nested_axis_pgdg(bundles, axis) for axis in (:x, :y, :z)) : nothing
     U = Matrix{Float64}[]
-    gaussian_sum_action_buffer = Ref(Matrix{Float64}(undef, 0, 0))
-    gaussian_sum_tile_buffer = Ref(Matrix{Float64}(undef, 0, 0))
-    gaussian_sum_block_buffer = Ref(Matrix{Float64}(undef, 0, 0))
+    gaussian_sum_action_buffer = recompute_unit_GG ? Ref(Matrix{Float64}(undef, 0, 0)) : nothing
+    gaussian_sum_tile_buffer = recompute_unit_GG ? Ref(Matrix{Float64}(undef, 0, 0)) : nothing
+    gaussian_sum_block_buffer = recompute_unit_GG ? Ref(Matrix{Float64}(undef, 0, 0)) : nothing
     for (center_index, center) in enumerate(CRG.residual_gaussian_float_centers(atom_locations))
-        U_GG = zeros(Float64, basis.final_dimension, basis.final_dimension)
-        factors = ntuple(axis -> _r3a_centered_factor_terms(pgdg[axis], expansion_value,
-            center[axis]), 3)
-        _accumulate_terminal_gaussian_sum!(
-            U_GG, basis, expansion_value.coefficients, factors[1], factors[2], factors[3],
-            gaussian_sum_action_buffer, gaussian_sum_tile_buffer, gaussian_sum_block_buffer)
+        U_GG = if recompute_unit_GG
+            matrix = zeros(Float64, basis.final_dimension, basis.final_dimension)
+            factors = ntuple(axis -> _r3a_centered_factor_terms(pgdg[axis], expansion_value,
+                center[axis]), 3)
+            _accumulate_terminal_gaussian_sum!(
+                matrix, basis, expansion_value.coefficients, factors[1], factors[2], factors[3],
+                gaussian_sum_action_buffer, gaussian_sum_tile_buffer, gaussian_sum_block_buffer)
+            matrix
+        else
+            matrix = base_unit_nuclear[center_index]
+            _r3_require_size(matrix, (basis.final_dimension, basis.final_dimension),
+                "R3 trusted base unit nuclear dimension mismatch")
+            matrix
+        end
         U_GA = supplement_blocks_value.mixed.nuclear[center_index]
         U_AA = supplement_blocks_value.self.nuclear[center_index]
         push!(U, CRG.transform_augmented_operator(U_GG, U_GA, U_AA, residual))
@@ -404,13 +426,15 @@ function pqs_terminal_residual_gto_augmented_operators(
     nuclear_charges;
     expansion = nothing,
     supplement_blocks = nothing,
+    base_kinetic = nothing,
+    base_unit_nuclear = nothing,
 )
     products = pqs_terminal_residual_gto_augmented_products(
         basis, bundles, parent_basis_object, supplement, residual, atom_locations,
-        nuclear_charges; expansion, supplement_blocks)
+        nuclear_charges; expansion, supplement_blocks, base_kinetic)
     U = pqs_terminal_residual_gto_augmented_unit_nuclear(
         basis, bundles, residual, atom_locations, nuclear_charges, products;
-        expansion)
+        expansion, base_unit_nuclear)
     return (;
         kinetic = products.kinetic,
         nuclear_attraction_unit_by_center = U,
