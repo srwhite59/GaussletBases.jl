@@ -13,8 +13,10 @@ only a non-exported supported facade for H2 and internal/performance-supported
 Be2 artifacts. A neutral Cartesian Gaussian raw-block owner is approved for the
 uncharged by-center nuclear slice and the narrow non-nuclear
 overlap/kinetic/moment slice. A narrow R3/RG terminal `G-G` product-matrix
-optimization lane is approved separately. Broad public API, driver UX, Cr2
-validation, ECP, EGOI, RHF, and solver work remain deferred.
+optimization lane is approved separately. A narrow unit-nuclear `U_GG`
+Gaussian-sum allocation lane is approved after the remaining-allocation audit.
+Broad public API, driver UX, Cr2 validation, ECP, EGOI, RHF, and solver work
+remain deferred.
 
 Agents should read first:
 
@@ -32,6 +34,8 @@ Agents should read first:
   for the narrow final-basis `G-G` product-matrix optimization lane
 - [R3 remaining exact-operator allocation audit](r3_remaining_exact_operator_allocation_audit.md)
   for the measurement-only decision after terminal `G-G` workspace reuse
+- [R3 unit-nuclear U_GG Gaussian sum](r3_unit_nuclear_ugg_gaussian_sum.md)
+  for the narrow terminal final-basis unit-nuclear `U_GG` optimization lane
 - [Algorithm implementation index](../../algorithm_implementation_index.md)
 
 Approved amendments:
@@ -65,6 +69,9 @@ Approved amendments:
   approves only a measurement-only audit of the post-`954c86cd` Cr2 exact
   augmented-operator allocation. It does not approve a unit-nuclear, route
   setup, raw-block setup, or other source lane.
+- [R3 unit-nuclear U_GG Gaussian sum](r3_unit_nuclear_ugg_gaussian_sum.md)
+  approves only terminal final-basis unit-nuclear `U_GG` Gaussian-sum
+  allocation reduction under `CartesianFinalBasisRealization`.
 
 Candidate amendments:
 

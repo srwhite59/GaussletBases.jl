@@ -446,6 +446,8 @@ these approved design IDs:
 - `HP-CGRB-NN-TEST-01`
 - `HP-R3GG-FN-01`
 - `HP-R3GG-TEST-01`
+- `HP-R3UN-FN-01`
+- `HP-R3UN-TEST-01`
 
 No other production surface may be added in this lane without a prior
 documentation-only design amendment. This includes new structs, persistent
@@ -647,14 +649,32 @@ Measurement-only current R3 allocation decision:
 - `HP-R3REM-AUDIT-01` approves only ignored `tmp/work` measurement/probe work
   to classify remaining Cr2 q4 exact augmented-operator allocation after
   `954c86cd`.
-- It is intentionally not listed as production source authority. It does not
-  approve unit-nuclear `U_GG` Gaussian-sum optimization, route/raw-block setup
-  cleanup, extension of `HP-R3GG-FN-01`, committed tests, artifacts, public
-  API/export, metadata/report/status/payload fields, persistent caches, Cr2
-  facade support, or Cr2 artifact workflow.
-- A later source lane needs a docs-only amendment that names exact IDs,
-  owner/files/functions, forbidden surfaces, validation gates, line budget,
-  deletion/simplification expectation, and failure rule.
+- It is intentionally not listed as production source authority.
+
+Approved R3 unit-nuclear `U_GG` Gaussian-sum optimization:
+
+- `HP-R3UN-FN-01` approves only terminal final-basis unit-nuclear `U_GG`
+  Gaussian-sum allocation reduction in
+  `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl`, with
+  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` allowed
+  only for narrow caller wiring if needed.
+- Target functions are `_accumulate_terminal_gaussian_sum!` and
+  `_terminal_gaussian_sum_action`.
+- Allowed changes are function-local scratch/workspace reuse, in-place
+  accumulation into caller destinations, allocation reduction in factor lookup
+  and terminal Gaussian-sum action, and deletion/simplification of obsolete
+  allocation-heavy code in that path.
+- `HP-R3UN-TEST-01` approves only H2 endpoint validation, Be2
+  facade/readback measurement, Cr2 exact-operator audit with before/after
+  `U_GG` allocation, Cr2 `U_GG` replay parity, and finite/symmetric exact
+  operators. No committed test file is approved.
+- This lane must not change neutral raw blocks, terminal kinetic/moment `G-G`
+  products, residual Gaussian algorithms or transforms, IDA/MWG, Qiu-White
+  semantics, route/stage setup, raw-block setup, parent construction, terminal
+  basis realization, persistent caches/workspaces, broad Gaussian-sum
+  frameworks, metadata/report/status/payload fields, artifacts, public
+  API/export, Cr2 facade support, or Cr2 artifact workflow. Line budget is at
+  most 100 added `src` lines.
 
 `HP-FN-03` specifically approves
 `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl` as the Slice B

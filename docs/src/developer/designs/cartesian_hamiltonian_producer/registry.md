@@ -1083,6 +1083,80 @@ Approved validation:
 
 No new committed test file is approved by this ID.
 
+## Approved For R3 Unit-Nuclear U_GG Gaussian Sum
+
+This section approves only the terminal final-basis unit-nuclear `U_GG`
+Gaussian-sum optimization recorded in
+`r3_unit_nuclear_ugg_gaussian_sum.md`. It is owned by
+`CartesianFinalBasisRealization`, not by `CartesianGaussianRawBlocks`.
+
+### HP-R3UN-FN-01 — R3/RG unit-nuclear U_GG Gaussian-sum optimization
+
+Approved owner:
+
+```text
+Owner module: CartesianFinalBasisRealization
+```
+
+Approved source files:
+
+```text
+src/cartesian_final_basis_realization/pqs_terminal_one_body.jl
+src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl
+```
+
+The first implementation should prefer `pqs_terminal_one_body.jl`. Edits to
+`pqs_terminal_residual_gto.jl` are approved only for narrow R3 exact-operator
+caller wiring needed to use function-local scratch or the optimized helper.
+
+Approved target functions:
+
+```text
+_accumulate_terminal_gaussian_sum!
+_terminal_gaussian_sum_action
+```
+
+Approved implementation shapes:
+
+- reuse function-local scratch/workspace across Gaussian-sum terms and center
+  calls;
+- accumulate terminal Gaussian-sum contributions in-place into the caller's
+  destination;
+- reduce avoidable allocation in factor lookup and terminal Gaussian-sum action
+  construction;
+- add small internal scratch arguments or file-local helpers only if they remain
+  inside `CartesianFinalBasisRealization` and create no persistent state;
+- simplify or delete allocation-heavy helper code inside the targeted
+  Gaussian-sum path after parity.
+
+This ID does not approve neutral raw-block changes, terminal kinetic/moment
+`G-G` product changes, residual Gaussian selection/orientation/transform
+changes, MWG/IDA changes, Qiu-White semantic changes, route/stage setup
+cleanup, raw-block setup cleanup, parent construction, terminal basis
+realization changes, persistent caches/workspaces, broad Gaussian-sum
+frameworks, metadata/report/status/payload fields, artifacts, public
+API/export, Cr2 facade support, or Cr2 artifact workflow.
+
+Line budget: at most `100` added `src` lines total. If implementation needs a
+broad Gaussian-sum framework, persistent cache/workspace object, files outside
+the approved source files, or source edits outside the terminal unit-nuclear
+`U_GG` path, stop and request a new docs-only amendment.
+
+### HP-R3UN-TEST-01 — unit-nuclear U_GG validation
+
+Approved validation:
+
+- existing H2 Residual Gaussian endpoint unchanged;
+- Be2 Residual Gaussian facade/readback unchanged except for allowed
+  timing/allocation improvement;
+- Cr2 q4 exact-operator audit reports before/after unit-nuclear `U_GG`
+  allocation and total wrapper allocation;
+- Cr2 q4 unit-nuclear `U_GG` block replay parity and final exact augmented
+  operator parity at roundoff;
+- exact operators remain finite and symmetric.
+
+No new committed test file is approved by this ID.
+
 ## Approved Measurement-Only Authority
 
 These entries authorize ignored measurement/probe work only. They do not

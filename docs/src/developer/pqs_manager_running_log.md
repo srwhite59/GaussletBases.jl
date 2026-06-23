@@ -11388,3 +11388,46 @@ Risk / guardrail:
 - Current lane direction: ask repo-design-manager for a narrow unit-nuclear
   `U_GG` amendment, or explicitly stop Cr2 exact-operator allocation work at
   the current measured cost.
+
+## Cartesian Hamiltonian Producer Pass 089 - Approve Unit-Nuclear U_GG Source Lane
+
+Commit(s):
+- this commit - Approve unit-nuclear U_GG Gaussian-sum lane
+
+Summary:
+- Accepted the Pass 088A audit evidence as sufficient to approve a narrow
+  source lane. The dominant in-wrapper Cr2 q4 exact-operator allocation is now
+  unit-nuclear `U_GG` factor lookup plus Gaussian-sum construction, measured at
+  `2.0447s / 1856.819 MiB` inside a `5.7739s / 4680.627 MiB` wrapper.
+- Added `r3_unit_nuclear_ugg_gaussian_sum.md` and approved `HP-R3UN-FN-01` /
+  `HP-R3UN-TEST-01` for terminal final-basis unit-nuclear `U_GG`
+  Gaussian-sum allocation reduction under `CartesianFinalBasisRealization`.
+  The lane is deliberately not a raw-block, route/setup, residual/MWG/IDA,
+  public workflow, or Cr2 artifact/facade lane.
+
+Validation:
+- Design-manager validation: `git diff --check`, focused `rg` for
+  `HP-R3UN-FN-01`, `HP-R3UN-TEST-01`, approved files/functions, forbidden
+  surfaces, and confirmation that no `src`, `test`, `tools`, or `bin` files
+  changed.
+- No implementation tests were run; this was docs-only authority work.
+
+Goal advancement:
+- Cr2-readiness/MT4: turns the measured dominant exact-operator bucket into a
+  source-ready, narrow, reviewable lane.
+- RG/LT6: preserves completed raw-block, R3GG, residual, MWG/IDA, and workflow
+  boundaries while allowing one allocation-focused kernel pass.
+
+Carrying-cost result:
+- deleted: none.
+- simplified: source authority now targets one terminal Gaussian-sum path
+  instead of a broad remaining-allocation bucket.
+- quarantined: route/setup and raw-block setup remain outside this lane.
+- not deleted because: this is a docs-only authority pass.
+- exact remaining caller/blocker: source pass must stay within
+  `_accumulate_terminal_gaussian_sum!` / `_terminal_gaussian_sum_action` and
+  stop if it needs broader Gaussian-sum framework or persistent cache authority.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

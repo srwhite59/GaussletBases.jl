@@ -58,9 +58,10 @@ Gaussian work.
   basis realization, `G-A`/`A-A` raw blocks, unit-nuclear Gaussian sums, IDA,
   MWG, residual selection, or route/public/artifact surfaces.
 - Remaining R3/RG exact-operator allocation after terminal `G-G` product
-  workspace reuse is measurement-only under `HP-R3REM-AUDIT-01` until a later
-  amendment names a precise source lane. Unit-nuclear `U_GG` Gaussian-sum work
-  and route/raw-block setup are not covered by `HP-R3GG-FN-01`.
+  workspace reuse was attributed by `HP-R3REM-AUDIT-01`. `HP-R3UN-FN-01` may
+  own only terminal final-basis unit-nuclear `U_GG` Gaussian-sum allocation
+  reduction. Route/raw-block setup, neutral raw blocks, residual/MWG/IDA work,
+  public workflow, and Cr2 facade/artifact work remain outside this authority.
 - Slice C/base IDA assembly produces a real final-basis matrix and then uses the
   existing `CartesianIDAHamiltonian`; no Hamiltonian wrapper or result payload is
   approved.

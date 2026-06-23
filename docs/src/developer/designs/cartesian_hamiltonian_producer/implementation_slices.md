@@ -384,8 +384,7 @@ Line budget:
 
 ## R3 Remaining Exact-Operator Allocation Audit
 
-Status: approved measurement-only under `HP-R3REM-AUDIT-01`; no production
-source lane is approved.
+Status: completed measurement-only attribution under `HP-R3REM-AUDIT-01`.
 
 Decision:
 
@@ -396,6 +395,15 @@ Decision:
   buffers, including unit-nuclear `U_GG` Gaussian-sum work and route/raw-block
   setup;
 - those buckets are not covered by `HP-R3GG-FN-01`.
+
+Follow-up audit result:
+
+- Cr2 q4 wrapper total: `5.7739s / 4680.627 MiB`;
+- largest in-wrapper owner: unit-nuclear `U_GG` factor lookup plus
+  Gaussian-sum construction at `2.0447s / 1856.819 MiB`;
+- non-target or crossed buckets: neutral non-nuclear raw blocks, neutral
+  nuclear raw blocks, terminal `G-G` kinetic/moment products, and augmented
+  nuclear transforms.
 
 Approved audit boundary:
 
@@ -419,3 +427,59 @@ Exit rule:
 - approve no implementation handoff unless a later docs-only amendment names
   the exact ID, owner/files/functions, forbidden surfaces, validation gates,
   line budget, deletion/simplification expectation, and failure rule.
+
+The later amendment is now `HP-R3UN-FN-01` / `HP-R3UN-TEST-01` for the narrow
+unit-nuclear `U_GG` lane only.
+
+## R3 Unit-Nuclear U_GG Gaussian-Sum Optimization
+
+Status: approved for implementation under `HP-R3UN-FN-01`; not part of the
+`HP-R3GG-*` product-matrix lane or `HP-CGRB-*` raw-block lanes.
+
+Approved boundary:
+
+- owner module `CartesianFinalBasisRealization`;
+- source files `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl`
+  and, only for narrow caller wiring if needed,
+  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`;
+- target functions `_accumulate_terminal_gaussian_sum!` and
+  `_terminal_gaussian_sum_action`;
+- terminal final-basis unit-nuclear `U_GG` Gaussian-sum construction only.
+
+Allowed source shapes:
+
+- function-local scratch/workspace reuse across Gaussian-sum terms and center
+  calls;
+- in-place accumulation into caller destinations;
+- allocation reduction in factor lookup and terminal Gaussian-sum action;
+- small internal scratch arguments or file-local helpers with no persistent
+  state;
+- deletion/simplification of obsolete allocation-heavy Gaussian-sum helper code
+  after parity.
+
+Validation gates:
+
+- H2 Residual Gaussian endpoint unchanged;
+- Be2 facade/readback unchanged except allowed timing/allocation improvement;
+- Cr2 exact-operator audit reports before/after unit-nuclear `U_GG`
+  allocation and total wrapper allocation;
+- Cr2 `U_GG` block replay parity and exact-operator parity at roundoff;
+- exact operators finite and symmetric.
+
+Forbidden:
+
+- neutral raw-block changes, terminal kinetic/moment `G-G` changes, residual
+  Gaussian algorithm changes, exact augmented transform semantic changes,
+  IDA/MWG changes, Qiu-White semantic changes, route/stage setup, raw-block
+  setup, parent construction, terminal basis realization, persistent
+  caches/workspaces, broad Gaussian-sum framework, metadata, reports, status
+  fields, payload objects, artifacts, public API, committed tests, Cr2 facade
+  support, or Cr2 artifact workflow.
+
+Line budget:
+
+- at most `100` added `src` lines;
+- no new committed test file;
+- stop for a new amendment if the source pass needs a persistent cache, broad
+  Gaussian-sum framework, files outside the approved surfaces, or source edits
+  outside terminal unit-nuclear `U_GG`.

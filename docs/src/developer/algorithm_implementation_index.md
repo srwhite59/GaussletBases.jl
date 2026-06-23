@@ -238,6 +238,9 @@ Source anchors:
 - **active implementation surface**:
   `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl`,
   `assemble_terminal_product_operator!`
+- **active implementation surface under `HP-R3UN-FN-01`**:
+  `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl`,
+  `_accumulate_terminal_gaussian_sum!`, `_terminal_gaussian_sum_action`
 - **consumer example only**: `src/ordinary_qw_operator_assembly.jl`,
   `assembled_one_body_hamiltonian`
 - **oracle/reference only**: `src/pqs_multilayer_support_one_body.jl`:
@@ -248,6 +251,11 @@ Source anchors:
 Do-not-forget rule:
 By-center nuclear matrices are uncharged unit attractions, `U_A = -1/r_A`.
 Apply `Z_A` and sum centers only when forming the Hamiltonian.
+The `HP-R3UN-FN-01` optimization lane covers only terminal final-basis
+unit-nuclear `U_GG` Gaussian-sum allocation reduction. It does not approve
+neutral raw-block changes, terminal kinetic/moment `G-G` product changes,
+route/setup cleanup, residual/MWG/IDA changes, artifacts, public API, or Cr2
+workflow.
 
 ## R3 Terminal G-G Product Matrices
 

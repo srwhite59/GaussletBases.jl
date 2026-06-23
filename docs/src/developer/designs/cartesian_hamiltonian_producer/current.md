@@ -21,6 +21,8 @@ Normal startup reading:
 - `r3_remaining_exact_operator_allocation_audit.md` for the measurement-only
   decision on remaining exact-operator allocation after terminal `G-G`
   workspace reuse;
+- `r3_unit_nuclear_ugg_gaussian_sum.md` for the narrow terminal final-basis
+  unit-nuclear `U_GG` Gaussian-sum allocation lane;
 - `docs/src/developer/algorithm_implementation_index.md` for existing kernels
   and donor paths.
 
@@ -92,14 +94,14 @@ Approved remaining exact-operator allocation decision:
 
 - after `954c86cd`, terminal `G-G` product workspace is considered crossed for
   the current Cr2 q4 proxy;
-- the remaining Cr2 q4 exact augmented-operator wrapper allocation is reported
-  mainly outside the nine terminal product buffers, including unit-nuclear
-  `U_GG` Gaussian-sum work and route/raw-block setup;
-- `HP-R3REM-AUDIT-01` approves only a measurement-only audit to separate those
-  buckets and identify the exact next owner, if any;
-- no unit-nuclear `U_GG`, route setup, raw-block setup, or other source lane is
-  approved until a later docs-only amendment names IDs, owner/files/functions,
-  forbidden surfaces, validation gates, and line budget.
+- `HP-R3REM-AUDIT-01` attributed the largest in-wrapper remaining allocation to
+  unit-nuclear `U_GG` factor lookup plus Gaussian-sum construction;
+- `HP-R3UN-FN-01` now approves only that narrow terminal final-basis
+  unit-nuclear `U_GG` Gaussian-sum allocation lane under
+  `CartesianFinalBasisRealization`;
+- route/stage setup, raw-block setup, neutral raw-block kernels,
+  residual/MWG/IDA changes, public workflow, and Cr2 facade/artifact work
+  remain unapproved.
 
 ## Residual Gaussian Authority
 
