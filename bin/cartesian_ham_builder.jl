@@ -136,12 +136,14 @@ if supplemented
     push!(stage_timings, "residual augmentation" => time() - stage_start)
 
     stage_start = time()
-    augmented_products = GaussletBases.cartesian_residual_gto_augmented_products(base, supplement_basis, residual)
+    augmented_products = GaussletBases.cartesian_residual_gto_augmented_products(
+        base, supplement_basis, residual; base_kinetic = base_ham.kinetic)
     push!(stage_timings, "augmented products" => time() - stage_start)
 
     stage_start = time()
     augmented_unit_nuclear = GaussletBases.cartesian_residual_gto_augmented_unit_nuclear(
-        base, residual, augmented_products)
+        base, residual, augmented_products;
+        base_unit_nuclear = base_ham.nuclear_attraction_unit_by_center)
     push!(stage_timings, "augmented unit nuclear" => time() - stage_start)
 
     stage_start = time()

@@ -12638,6 +12638,53 @@ Carrying-cost result:
 - new tests: none.
 - new metadata/status fields: none.
 
+## Cartesian Hamiltonian Producer Pass 110 - Wire Driver Base K/U Reuse
+
+Commit(s):
+- this commit - Wire driver base operator reuse
+
+Summary:
+- Accepted the tiny `HP-R3BASE-DRV-WIRE-01` driver call-site update. In
+  supplemented mode, the canonical driver now passes `base_ham.kinetic` into
+  `cartesian_residual_gto_augmented_products(...)` as `base_kinetic`, and
+  passes `base_ham.nuclear_attraction_unit_by_center` into
+  `cartesian_residual_gto_augmented_unit_nuclear(...)` as
+  `base_unit_nuclear`.
+- No public inputs, hooks, timing labels, stage sequence, printed contract,
+  artifact schema, or base-mode behavior changed. This makes the staged driver
+  benefit from the same-construction base `K/U_A` reuse accepted in Pass 109.
+
+Validation:
+- Doer validation: `git diff --check`, package load, H2 supplemented driver
+  artifact/readback with dimension `489`, Be2 supplemented driver
+  artifact/readback with dimension `1421`, and no Cr2 run. Doer reported
+  staged timings after wiring: H2 augmented products `2.896s`, augmented unit
+  nuclear `0.195s`; Be2 augmented products `3.323s`, augmented unit nuclear
+  `0.215s`.
+- Manager validation: reviewed the driver-only diff, confirmed `git diff
+  --check`, numstat +4/-2 in `bin/cartesian_ham_builder.jl`, no `src`, `test`,
+  or `tools` edits, no new tests, and no public driver contract changes.
+
+Goal advancement:
+- LT1/LT3: closes the driver-facing gap left by same-construction base
+  operator reuse while preserving the canonical driver's human-facing shape.
+- MT: completes the no-supplement/supplement `K/U_A` reuse lane for the
+  canonical supplemented workflow.
+
+Carrying-cost result:
+- deleted: none.
+- simplified: supplemented driver call sites now use same-construction base
+  blocks already available in the visible staged workflow.
+- quarantined: none.
+- not deleted because: staged timing labels and public contract were
+  intentionally preserved.
+- exact remaining caller/blocker: none for canonical driver base `K/U_A`
+  reuse.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.
+
 ## Cartesian Hamiltonian Producer Pass 108 - Approve Family-Selective Route Recipes
 
 Commit(s):
