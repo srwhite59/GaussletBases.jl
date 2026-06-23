@@ -12,8 +12,9 @@ internal `CartesianResidualGaussians` module. The R3 usability lane approves
 only a non-exported supported facade for H2 and internal/performance-supported
 Be2 artifacts. A neutral Cartesian Gaussian raw-block owner is approved for the
 uncharged by-center nuclear slice and the narrow non-nuclear
-overlap/kinetic/moment slice. Broad public API, driver UX, Cr2 validation, ECP,
-EGOI, RHF, and solver work remain deferred.
+overlap/kinetic/moment slice. A narrow R3/RG terminal `G-G` product-matrix
+optimization lane is approved separately. Broad public API, driver UX, Cr2
+validation, ECP, EGOI, RHF, and solver work remain deferred.
 
 Agents should read first:
 
@@ -27,6 +28,8 @@ Agents should read first:
   for the neutral uncharged nuclear raw-block owner
 - [Cartesian Gaussian raw blocks - non-nuclear slice](cartesian_gaussian_raw_blocks_non_nuclear.md)
   for the neutral overlap/kinetic/moment raw-block owner
+- [R3 terminal G-G product matrices](r3_terminal_gg_product_matrices.md)
+  for the narrow final-basis `G-G` product-matrix optimization lane
 - [Algorithm implementation index](../../algorithm_implementation_index.md)
 
 Approved amendments:
@@ -53,6 +56,9 @@ Approved amendments:
 - [Cartesian Gaussian raw blocks - non-nuclear slice](cartesian_gaussian_raw_blocks_non_nuclear.md)
   approves only the neutral owner for exact non-nuclear Gaussian
   overlap/kinetic/coordinate-moment/second-moment `G-A`/`A-A` raw blocks.
+- [R3 terminal G-G product matrices](r3_terminal_gg_product_matrices.md)
+  approves only the terminal final-basis `G-G` product matrices used by
+  residual-Gaussian exact augmented operators.
 
 Candidate amendments:
 

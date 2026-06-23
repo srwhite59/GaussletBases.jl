@@ -11039,3 +11039,57 @@ Risk / guardrail:
   That target is explicitly deferred and needs a separate design amendment.
   The neutral raw-block lane should now pause unless a new measured non-G-G
   blocker appears inside its approved `G-A`/`A-A` scope.
+
+## Cartesian Hamiltonian Producer Pass 087 - Approve Terminal G-G Product Matrices
+
+Commit(s):
+- this commit - Approve R3 terminal G-G product matrices
+
+Summary:
+- Approved a narrow `CartesianFinalBasisRealization` source lane for R3/RG
+  terminal final-basis `G-G` product-matrix optimization under
+  `HP-R3GG-FN-01` and `HP-R3GG-TEST-01`.
+- The approval follows Pass 086B, where neutral non-nuclear raw blocks dropped
+  to `0.1873s / 860.736 MiB` and the Cr2 exact-operator wrapper measured
+  `6.4184s / 9043.987 MiB`. Remaining measured allocation is now dominated by
+  terminal `G-G` product matrices and unrelated route/stage setup, not
+  `G-A`/`A-A` raw-block construction.
+- Approved product matrices are only the `G-G` kinetic, coordinate moment, and
+  second-moment matrices used by
+  `pqs_terminal_residual_gto_augmented_operators(...)`. The neutral raw-block
+  lane remains closed for this target.
+
+Validation:
+- Design-manager validation is docs-only: `git diff --check`, focused `rg`
+  for `HP-R3GG-*` IDs and forbidden-scope wording, and confirmation that no
+  `src`, `test`, `tools`, or `bin` files changed.
+
+Goal advancement:
+- Cr2-readiness/MT4: opens the next measured exact-operator allocation target
+  after the neutral raw-block lanes crossed their bottlenecks.
+- RG/LT6: keeps the optimization attached to final-basis product assembly
+  rather than misclassifying it as Gaussian raw-block work.
+
+Carrying-cost result:
+- deleted: none; docs-only design authority.
+- simplified: separates terminal `G-G` product matrices from completed
+  `G-A`/`A-A` raw-block lanes.
+- quarantined: route/stage setup allocation, unit-nuclear Gaussian sums,
+  IDA/MWG, residual selection/transforms, Qiu-White semantics, artifacts,
+  public API, and Cr2 workflow remain out of scope.
+- not deleted because: source simplification belongs to the next doer pass
+  under `HP-R3GG-FN-01`.
+- exact remaining caller/blocker: optimize product-matrix construction in
+  `pqs_terminal_residual_gto.jl`, optionally using a small internal helper in
+  `pqs_terminal_one_body.jl`, while preserving H2/Be2/Cr2 parity.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none in this docs pass; `HP-R3GG-TEST-01` approves existing H2
+  and ignored Be2/Cr2 validation only.
+- new metadata/status fields: none.
+
+Risk / guardrail:
+- Do not use this approval for a broad product-operator framework or route
+  setup cleanup. Line budget is `100` added source lines, and any persistent
+  workspace/cache object or source surface outside the approved files requires
+  a new amendment.

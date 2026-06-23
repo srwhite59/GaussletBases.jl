@@ -16,6 +16,8 @@ Normal startup reading:
   raw-block owner;
 - `cartesian_gaussian_raw_blocks_non_nuclear.md` for the neutral
   overlap/kinetic/moment raw-block owner;
+- `r3_terminal_gg_product_matrices.md` for the narrow R3/RG terminal `G-G`
+  product-matrix optimization lane;
 - `docs/src/developer/algorithm_implementation_index.md` for existing kernels
   and donor paths.
 
@@ -68,6 +70,20 @@ Approved neutral Cartesian Gaussian raw-block owner:
 - it does not own terminal projection, residual Gaussian transforms,
   Qiu-White route objects, final-basis `G-G` product-matrix optimization,
   caches, reports, artifacts, or public API.
+
+Approved R3/RG terminal `G-G` product-matrix lane:
+
+- `HP-R3GG-FN-01` approves only `K_GG`, coordinate moment `G-G`, and
+  second-moment `G-G` product matrices used by
+  `pqs_terminal_residual_gto_augmented_operators(...)`;
+- owner module is `CartesianFinalBasisRealization`;
+- approved files are
+  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` and,
+  only if needed for small internal terminal-product workspace/helper reuse,
+  `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl`;
+- it does not approve `G-A`/`A-A` raw-block changes, unit-nuclear Gaussian-sum
+  work, IDA/MWG changes, route setup, public API, artifacts, metadata/status
+  fields, persistent caches, or Cr2 workflow.
 
 ## Residual Gaussian Authority
 

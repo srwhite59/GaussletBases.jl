@@ -52,6 +52,11 @@ Gaussian work.
   matrices. They do not perform terminal projection, optimize final-basis
   `G-G` product matrices, transform into residual bases, or own nuclear/MWG
   interaction blocks.
+- R3/RG terminal `G-G` product-matrix optimization may own only final-basis
+  product matrices for kinetic, coordinate moments, and second moments used by
+  residual-Gaussian exact augmented operators. It must not change terminal
+  basis realization, `G-A`/`A-A` raw blocks, unit-nuclear Gaussian sums, IDA,
+  MWG, residual selection, or route/public/artifact surfaces.
 - Slice C/base IDA assembly produces a real final-basis matrix and then uses the
   existing `CartesianIDAHamiltonian`; no Hamiltonian wrapper or result payload is
   approved.

@@ -444,6 +444,8 @@ these approved design IDs:
 - `HP-CGRB-NN-FN-01`
 - `HP-CGRB-NN-WIRE-01`
 - `HP-CGRB-NN-TEST-01`
+- `HP-R3GG-FN-01`
+- `HP-R3GG-TEST-01`
 
 No other production surface may be added in this lane without a prior
 documentation-only design amendment. This includes new structs, persistent
@@ -611,6 +613,34 @@ objects, parent construction, final-basis `G-G` product-matrix optimization,
 persistent caches, metadata/report/status/payload fields, artifacts, public
 API, Cr2 facade support, or Cr2 artifact workflow. Physical nuclear charges
 are applied by consumers, not by the neutral uncharged nuclear kernel.
+
+Approved R3/RG terminal `G-G` product-matrix optimization:
+
+- `HP-R3GG-FN-01` approves only
+  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` and, if
+  needed for small internal terminal-product workspace/helper reuse,
+  `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl`.
+- Approved product matrices are only the final-basis `G-G` kinetic,
+  coordinate-moment, and second-moment matrices used by
+  `pqs_terminal_residual_gto_augmented_operators(...)`.
+- Allowed shapes are accumulation of the three kinetic-axis contributions into
+  one destination, reuse of an already constructed same-construction base
+  Hamiltonian kinetic block when available and validated equal, axis-by-axis
+  product/transform for coordinate and second moments, function-local scratch
+  reuse across consecutive product assemblies, and deletion/simplification of
+  `_r3a_product_matrix(...)` when no live caller remains.
+- `HP-R3GG-TEST-01` approves only the existing H2 Residual Gaussian endpoint,
+  ignored Be2 measurement, ignored Cr2 q4 `K_GG`/moment `G-G` parity, exact
+  operator finiteness/symmetry, existing base `G-G` block equality checks, and
+  Cr2 q4 exact-operator allocation remeasurement. No new committed test file
+  is approved.
+
+This G-G lane must not change `G-A`/`A-A` raw blocks, nuclear raw blocks,
+unit-nuclear Gaussian-sum construction, IDA/MWG, residual selection,
+orientation, or transforms, terminal basis realization, Qiu-White semantics,
+route setup, parent construction, persistent caches, metadata/report/status/
+payload fields, artifacts, public API/export, Cr2 facade support, or Cr2
+artifact workflow. Line budget is at most 100 added `src` lines.
 
 `HP-FN-03` specifically approves
 `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl` as the Slice B

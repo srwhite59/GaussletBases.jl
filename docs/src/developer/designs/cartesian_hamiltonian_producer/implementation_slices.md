@@ -331,3 +331,53 @@ Forbidden in this slice:
 - pair factors, MWG interaction, parent construction, persistent caches,
   metadata, reports, status fields, artifacts, public API, Cr2 facade support,
   or Cr2 artifact workflow.
+
+## R3 Terminal G-G Product-Matrix Optimization
+
+Status: approved for implementation under `HP-R3GG-FN-01`; not part of the
+`HP-CGRB-NN-*` raw-block lane.
+
+Approved boundary:
+
+- owner module `CartesianFinalBasisRealization`;
+- source files `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
+  and, only if needed for small internal terminal-product workspace/helper
+  reuse, `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl`;
+- terminal final-basis `G-G` product matrices used by
+  `pqs_terminal_residual_gto_augmented_operators(...)`: kinetic, coordinate
+  moments, and second moments.
+
+Allowed source shapes:
+
+- accumulate kinetic-axis product contributions into one destination;
+- reuse same-construction base Hamiltonian kinetic `G-G` when available and
+  validated equal;
+- build/transform coordinate and second-moment product matrices axis by axis;
+- share function-local terminal-product scratch across consecutive product
+  assemblies;
+- delete or simplify `_r3a_product_matrix(...)` if replaced.
+
+Validation gates:
+
+- H2 Residual Gaussian endpoint unchanged;
+- Be2 usability/performance measurement unchanged except allowed
+  timing/allocation improvement;
+- Cr2 q4 `K_GG`, coordinate moment, and second-moment `G-G` products match the
+  current construction at roundoff as ignored validation;
+- Cr2 exact-operator allocation remeasured after parity.
+
+Forbidden in this slice:
+
+- `G-A`/`A-A` raw-block changes;
+- nuclear raw-block or unit-nuclear Gaussian-sum changes;
+- IDA/MWG, residual selection/orientation/transform changes;
+- terminal basis realization, parent construction, Qiu-White semantics, route
+  setup, persistent caches, metadata, reports, status fields, artifacts,
+  public API, Cr2 facade support, or Cr2 artifact workflow.
+
+Line budget:
+
+- at most `100` added `src` lines;
+- no new committed test file in the first source pass;
+- stop for a new amendment if a broad product framework, persistent workspace,
+  or files outside the approved source surfaces are required.

@@ -1010,6 +1010,78 @@ This file must not be added to `test/runtests.jl` without a later amendment.
 It must not validate Cr2 workflow, artifacts, public API, route statuses,
 report mirrors, payload fields, or Residual Gaussian internals.
 
+## Approved For R3 Terminal G-G Product Matrices
+
+This section approves only the terminal final-basis `G-G` product-matrix
+optimization recorded in `r3_terminal_gg_product_matrices.md`. It is owned by
+`CartesianFinalBasisRealization`, not by `CartesianGaussianRawBlocks`.
+
+### HP-R3GG-FN-01 — R3/RG terminal G-G product-matrix optimization
+
+Approved owner:
+
+```text
+Owner module: CartesianFinalBasisRealization
+```
+
+Approved source files:
+
+```text
+src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl
+src/cartesian_final_basis_realization/pqs_terminal_one_body.jl
+```
+
+The first implementation should prefer editing only
+`pqs_terminal_residual_gto.jl`. Edits to `pqs_terminal_one_body.jl` are
+approved only for a small internal terminal-product workspace or multi-product
+helper needed to reuse function-local buffers across consecutive product
+assemblies.
+
+Approved product matrices:
+
+- kinetic `K_GG`;
+- coordinate moments `x_GG`, `y_GG`, `z_GG`;
+- second moments `x2_GG`, `y2_GG`, `z2_GG`.
+
+Approved implementation shapes:
+
+- accumulate the three kinetic-axis product contributions into one destination;
+- reuse an already constructed base Hamiltonian kinetic `G-G` block in the
+  same-construction path when available and validated equal;
+- build coordinate and second-moment `G-G` products one axis at a time and
+  transform immediately;
+- share function-local scratch/workspace across consecutive terminal product
+  assemblies;
+- delete or simplify `_r3a_product_matrix(...)` when replaced and no live
+  caller remains.
+
+This ID does not approve `G-A`/`A-A` raw-block changes, nuclear raw-block
+changes, unit-nuclear `U_A` Gaussian-sum changes, terminal basis realization
+changes, residual Gaussian algorithm changes, Qiu-White semantic changes,
+IDA/MWG changes, parent construction, persistent caches, metadata,
+report/status/payload fields, public API/export, artifact changes, Cr2 facade
+support, or Cr2 artifact workflow.
+
+Line budget: at most `100` added `src` lines total. If implementation needs a
+broad product-operator framework, persistent workspace/cache object, files
+outside the approved source files, or a public/internal payload, stop and
+request a new docs-only amendment.
+
+### HP-R3GG-TEST-01 — terminal G-G product validation
+
+Approved validation:
+
+- existing H2 Residual Gaussian endpoint unchanged;
+- Be2 Residual Gaussian usability/performance measurement unchanged except for
+  allowed timing/allocation improvement;
+- Cr2 q4 `K_GG`, coordinate moment `G-G`, and second-moment `G-G` products
+  match the current construction at roundoff as ignored validation;
+- augmented exact operators remain finite and symmetric;
+- base `G-G` block equality checks in the existing H2 endpoint still pass;
+- Cr2 q4 exact-operator allocation is remeasured after parity.
+
+No new committed test file is approved by this ID.
+
 ## Rejected Or Deferred
 
 ### HP-RES-01 — terminal basis build result — rejected
