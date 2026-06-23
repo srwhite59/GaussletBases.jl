@@ -19,8 +19,8 @@ The canonical Cartesian driver usability lane is approved so the standard
 driver can directly produce base and supported supplemented Hamiltonian
 artifacts. The supported supplemented workflow now accepts explicit
 homonuclear z-axis diatomics without element-specific branches. Broad public
-API/export, Cr2-specific workflow, ECP, EGOI, RHF, and solver work remain
-deferred.
+API/export, supplemented atoms, Cr2-specific workflow, ECP, EGOI, RHF, and
+solver work remain deferred.
 
 Agents should read first:
 
@@ -42,6 +42,8 @@ Agents should read first:
   for the narrow terminal final-basis unit-nuclear `U_GG` optimization lane
 - [Cartesian driver usability workflow](cartesian_driver_usability_workflow.md)
   for the compact artifact-producing canonical driver lane
+- [Cartesian driver atom workflow](cartesian_driver_atom_workflow.md)
+  for explicit origin-centered base atom driver inputs
 - [R3 homonuclear z-axis diatomic supplemented workflow](r3_homonuclear_diatomic_supplemented_workflow.md)
   for the explicit homonuclear diatomic molecule-scope relaxation
 - [Algorithm implementation index](../../algorithm_implementation_index.md)
@@ -85,6 +87,10 @@ Approved amendments:
   visible defaults, optional trusted input file, command-line overrides,
   coarse timing/summary, and artifact production through approved producer
   surfaces.
+- [Cartesian driver atom workflow](cartesian_driver_atom_workflow.md)
+  approves only explicit origin-centered one-center base atom driver inputs
+  through the existing base facade. Current validation remains the
+  origin-centered H endpoint; supplemented atom Hamiltonians are not approved.
 - [R3 homonuclear z-axis diatomic supplemented workflow](r3_homonuclear_diatomic_supplemented_workflow.md)
   approves explicit homonuclear two-center z-axis diatomic supplemented inputs
   through the existing facade and canonical driver, with no element-specific
@@ -92,7 +98,7 @@ Approved amendments:
 
 Candidate amendments:
 
-- Cr2-specific workflow, public supplemented workflow/export,
+- Supplemented atoms, Cr2-specific workflow, public supplemented workflow/export,
   basis/supplement-realism beyond explicit supplied labels/files, and broad
   driver diagnostics remain candidate-only until separately approved.
 

@@ -1234,6 +1234,76 @@ Validation input files, if needed, must be ignored `tmp/work` files. No
 committed test file, committed driver-input fixture, Cr2-specific driver run,
 or solver run is approved by this ID.
 
+## Approved For Canonical Driver Atom Workflow
+
+This section approves only the base atom workflow recorded in
+`cartesian_driver_atom_workflow.md`. It is driver authority over the existing
+base facade, not new atom physics, Residual Gaussian, artifact-schema, or
+solver authority.
+
+### HP-DRV-ATOM-FN-01 — explicit base atom driver workflow
+
+Approved source file:
+
+```text
+bin/cartesian_ham_builder.jl
+```
+
+Approved behavior:
+
+- accept explicit one-center atom input in `mode = :base`;
+- require `atom_symbols`, `nuclear_charges`, `atom_locations`, `nup`, and
+  `ndn`;
+- require exactly one center at `(0.0, 0.0, 0.0)`;
+- require finite positive explicit nuclear charge and neutral all-electron
+  count `nup + ndn == round(Int, only(nuclear_charges))`;
+- pass explicit one-center base `basis` fields, including required public `d`,
+  to the existing base facade;
+- use clear `ArgumentError`s for unsupported atom workflow inputs where
+  practical.
+
+Current production validation remains origin-centered H. This ID does not
+approve changing `src/cartesian_base_hamiltonian.jl` for broader atoms.
+
+### HP-DRV-ATOM-WIRE-01 — driver atom-to-base-facade wiring
+
+Approved source file:
+
+```text
+bin/cartesian_ham_builder.jl
+```
+
+Approved behavior:
+
+- the canonical driver may call
+  `cartesian_base_hamiltonian(system; basis, hamfile)` for one-center base
+  atom construction;
+- artifact write/readback uses the existing base facade and existing
+  `producer_provenance/` schema;
+- no package-internal route-stage helper, terminal basis object, raw-block
+  provider, report/status/payload object, or new artifact field is approved.
+
+Supplemented atom Hamiltonians are not approved. If the requested atom is
+outside the existing base facade support, the implementation must stop at a
+clear unsupported-input error rather than adding broader atom construction.
+
+Line budget for `HP-DRV-ATOM-FN-01` plus `HP-DRV-ATOM-WIRE-01`: at most `80`
+added `bin` lines, with no committed test, tool, or input-fixture file.
+
+### HP-DRV-ATOM-TEST-01 — base atom driver validation
+
+Approved validation:
+
+- package load;
+- origin-centered H base driver artifact write/readback with explicit system
+  and one-center basis fields;
+- optional ignored negative checks for non-origin atom input, nonneutral
+  electron count, missing `d`, or unsupported atom input.
+
+No supplemented atom endpoint, translated-atom gate, committed atom fixture,
+new committed test file, solver run, artifact-schema validation, or broader
+base-atom validation is approved by this ID.
+
 ## Approved For Homonuclear Z-Axis Diatomic Supplemented Workflow
 
 This section approves only the molecule-scope relaxation recorded in

@@ -451,6 +451,9 @@ these approved design IDs:
 - `HP-DRV-FILE-01`
 - `HP-DRV-FN-01`
 - `HP-DRV-TEST-01`
+- `HP-DRV-ATOM-FN-01`
+- `HP-DRV-ATOM-WIRE-01`
+- `HP-DRV-ATOM-TEST-01`
 - `HP-R3U-ZDI-FN-01`
 - `HP-R3U-ZDI-WIRE-01`
 - `HP-R3U-ZDI-TEST-01`
@@ -894,6 +897,20 @@ workflow. `HP-R3U-ZDI-TEST-01` approves H2 and Be2 facade/driver artifact
 write/readback plus optional ignored/user-run Cr2 stress after H2/Be2 pass. It
 does not approve committed Cr2 fixtures, committed Cr2 tests, Cr2-specific
 workflow, or new committed tests.
+
+`HP-DRV-ATOM-FN-01` and `HP-DRV-ATOM-WIRE-01` approve only explicit
+origin-centered one-center base atom workflow in `bin/cartesian_ham_builder.jl`.
+The driver may normalize explicit `atom_symbols`, `nuclear_charges`,
+`atom_locations`, `nup`, `ndn`, visible one-center basis fields, and call the
+existing `cartesian_base_hamiltonian(system; basis, hamfile)` facade where that
+facade already supports the atom. Current validation remains origin-centered H.
+These IDs do not approve edits to `src/cartesian_base_hamiltonian.jl`, broader
+base atom support, translated atoms, supplemented atom Hamiltonians, element
+lookup/default tables, ECP, solver workflow, artifact schema changes, public
+API/export changes, route diagnostics, metadata/status/report fields,
+committed atom fixtures, or committed tests. `HP-DRV-ATOM-TEST-01` approves
+only H atom driver artifact write/readback and optional ignored negative
+checks.
 
 Do not add private route-stage controls, stop-after internals, ladder probes,
 stage markers, fixture hacks, diagnostic knobs, underscored package helper

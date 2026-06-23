@@ -521,6 +521,7 @@ Forbidden:
 Validation gates:
 
 - package load;
+- H atom base driver artifact write/readback under `HP-DRV-ATOM-TEST-01`;
 - H2 base driver artifact write/readback;
 - H2 supplemented driver artifact write/readback;
 - optional ignored Be2 usability run for supplemented-mode changes.
@@ -532,6 +533,62 @@ Line budget:
 - stop for a new amendment if a parser framework, source files outside the
   canonical driver, route-stage diagnostics, status/report/payload expansion,
   artifact schema changes, or Cr2-specific workflow support are required.
+
+## Canonical Driver Atom Workflow
+
+Status: approved for implementation under `HP-DRV-ATOM-FN-01`,
+`HP-DRV-ATOM-WIRE-01`, and `HP-DRV-ATOM-TEST-01`.
+
+Approved boundary:
+
+- source file `bin/cartesian_ham_builder.jl`;
+- explicit one-center atom input in `mode = :base`;
+- origin-centered atoms only;
+- base Hamiltonian artifact writing through the existing
+  `cartesian_base_hamiltonian` facade where that facade already supports the
+  requested atom.
+
+Allowed source shapes:
+
+- normalize explicit `system` fields: `atom_symbols`, `nuclear_charges`,
+  `atom_locations`, `nup`, and `ndn`;
+- require one center at `(0.0, 0.0, 0.0)`;
+- validate neutral all-electron count from the explicit nuclear charge;
+- pass visible one-center basis fields, including required `d`, to the base
+  facade;
+- keep any example/default atom input explicit, not inferred from element
+  tables.
+
+Decision:
+
+- base atom driver output only is approved;
+- current validation remains origin-centered H;
+- supplemented atom Hamiltonians remain candidate-only.
+
+Forbidden:
+
+- source edits outside `bin/cartesian_ham_builder.jl`, including
+  `src/cartesian_base_hamiltonian.jl`;
+- supplemented atom Hamiltonians;
+- translated atoms;
+- broader base atom support beyond the existing base facade;
+- element lookup/default tables, ECP, pseudopotentials, solver/RHF workflow,
+  public API/export changes, artifact schema changes, route diagnostics,
+  metadata/status/report fields, package-internal helper composition from the
+  driver, committed atom fixture files, committed tests, or new tool files.
+
+Validation gates:
+
+- H atom base driver artifact write/readback with explicit system and basis;
+- optional ignored negative checks for non-origin atom input, nonneutral
+  electron count, missing `d`, or unsupported atom input;
+- no supplemented atom or translated-atom validation.
+
+Line budget:
+
+- at most `80` added `bin` lines;
+- no new committed test, tool, or input-fixture file;
+- stop for a new amendment if the implementation needs any forbidden surface.
 
 ## Homonuclear Z-Axis Diatomic Supplemented Workflow
 

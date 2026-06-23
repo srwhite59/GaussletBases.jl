@@ -25,6 +25,8 @@ Normal startup reading:
   unit-nuclear `U_GG` Gaussian-sum allocation lane;
 - `cartesian_driver_usability_workflow.md` for the compact artifact-producing
   canonical driver lane;
+- `cartesian_driver_atom_workflow.md` for explicit origin-centered base atom
+  driver inputs;
 - `r3_homonuclear_diatomic_supplemented_workflow.md` for the explicit
   homonuclear z-axis diatomic supplemented facade/driver relaxation;
 - `docs/src/developer/algorithm_implementation_index.md` for existing kernels
@@ -125,6 +127,18 @@ Approved canonical driver usability lane:
   public API/export changes, artifact schema changes, and Cr2-specific
   workflow remain unapproved in the canonical driver.
 
+Approved canonical driver atom workflow:
+
+- `HP-DRV-ATOM-FN-01` approves explicit one-center atom input normalization in
+  `bin/cartesian_ham_builder.jl` for `mode = :base`;
+- `HP-DRV-ATOM-WIRE-01` lets the driver call the existing
+  `cartesian_base_hamiltonian(system; basis, hamfile)` facade for
+  origin-centered base atom construction where the base facade already
+  supports the requested atom;
+- current validation remains origin-centered H; this does not approve broader
+  base atoms, translated atoms, supplemented atoms, element tables, ECP,
+  solver workflow, public API/export changes, or artifact schema changes.
+
 Approved homonuclear z-axis diatomic supplemented workflow:
 
 - `HP-R3U-ZDI-FN-01` relaxes the non-exported supplemented facade from
@@ -194,6 +208,8 @@ Deferred lanes:
 
 - broad driver diagnostics and public-driver polish beyond the approved
   compact artifact-producing workflow;
+- supplemented atom Hamiltonians and any broader atom support beyond the
+  current base facade;
 - Cr2-specific workflow, committed Cr2 gates, and Cr2 support decisions beyond
   the generic explicit homonuclear z-axis path;
 - non-base/supplement public workflow;

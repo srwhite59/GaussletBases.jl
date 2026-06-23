@@ -346,7 +346,7 @@ Source anchors:
   `cartesian_materialization(report, terminal_basis_realization,
   materialization_inputs)`
 - **approved driver workflow surface**: `bin/cartesian_ham_builder.jl`,
-  `HP-DRV-FILE-01` / `HP-DRV-FN-01`
+  `HP-DRV-FILE-01` / `HP-DRV-FN-01` / `HP-DRV-ATOM-FN-01`
 
 Do-not-forget rule:
 Requested base PQS materialization returns `CartesianIDAHamiltonian{Float64}`
@@ -357,7 +357,9 @@ shape for the base handoff, except the approved `HP-R1-ART-01`
 driver may write artifacts and print compact timings/summaries, but must call
 approved producer surfaces rather than underscored route internals. That
 provenance is for consumer tracking, not a staged algorithm input after initial
-lattice/parent construction.
+lattice/parent construction. The atom driver workflow is base-only through the
+existing base facade; it does not approve supplemented atom Hamiltonians or
+broader atom source support.
 
 ## Performance And Reuse Policy
 

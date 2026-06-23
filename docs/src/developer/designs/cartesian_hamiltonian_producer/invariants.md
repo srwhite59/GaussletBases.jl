@@ -108,6 +108,11 @@ The canonical RG algorithm contract is
   diagnostics, private stage controls, raw provider switches, report/status
   payloads, solver workflow, artifact schema, public exports, or
   Cr2-specific support.
+- The canonical driver may expose an explicit one-center base atom workflow
+  only through the existing base facade. Current atom validation remains
+  origin-centered H. Broader base atoms, translated atoms, supplemented atoms,
+  element lookup/default tables, ECP, solver workflow, and artifact-schema
+  changes require separate authority.
 - The supplemented R3 usability facade may support explicit homonuclear
   two-center z-axis diatomics under `HP-R3U-ZDI-*`. This is not
   heteronuclear, non-z-axis, ECP, solver, public export, artifact-schema, or

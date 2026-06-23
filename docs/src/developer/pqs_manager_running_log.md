@@ -11704,3 +11704,59 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 092 - Approve Base Atom Driver Workflow
+
+Commit(s):
+- this commit - Approve base atom driver workflow
+
+Summary:
+- Approved a narrow canonical-driver atom workflow for explicit
+  origin-centered one-center atoms in `mode = :base`.
+- Added `cartesian_driver_atom_workflow.md` and approved
+  `HP-DRV-ATOM-FN-01`, `HP-DRV-ATOM-WIRE-01`, and `HP-DRV-ATOM-TEST-01`.
+  The only approved source file is `bin/cartesian_ham_builder.jl`; the driver
+  may normalize explicit one-center atom inputs and call the existing
+  `cartesian_base_hamiltonian(system; basis, hamfile)` facade.
+- The decision is base atom output only. Current validation remains the
+  origin-centered H endpoint. Supplemented atom Hamiltonians, broader base
+  atom source support, translated atoms, element tables/defaults, ECP,
+  solver workflow, artifact schema changes, public API/export changes,
+  route diagnostics, metadata/status/report fields, committed atom fixtures,
+  and committed tests remain unapproved.
+
+Validation:
+- Design-manager validation: docs-only `git diff --check` over touched docs,
+  focused `rg` for `HP-DRV-ATOM-*`, origin-centered/base-only wording,
+  supplemented-atom deferral, forbidden surfaces, and exact source file
+  authority.
+- No implementation tests were run.
+- Pre-existing source WIP `src/cartesian_base_hamiltonian.jl` was present
+  before this pass and was left unstaged/untouched by the design-manager
+  commit.
+
+Goal advancement:
+- LT1/LT3: keeps the canonical driver moving toward practical artifact
+  production for normal user inputs without weakening the compact-driver
+  guardrails.
+- RG/LT6: explicitly defers supplemented atom Hamiltonians until there is a
+  separate facade/RG validation decision, avoiding accidental expansion of the
+  residual-GTO/MWG contract.
+
+Carrying-cost result:
+- deleted: none; docs-only authority pass.
+- simplified: atom handling is separated into base-driver workflow now and
+  candidate supplemented-atom work later.
+- quarantined: supplemented atom Hamiltonians and broader atom/source support
+  remain candidate-only.
+- not deleted because: source implementation has not run yet.
+- exact remaining caller/blocker: repo-doer must implement, if requested, only
+  in `bin/cartesian_ham_builder.jl` and stop if the work needs source edits
+  outside that file, broader base atom support, translated atoms, supplemented
+  atom support, ECP, solver workflow, artifact schema changes, route
+  diagnostics, metadata/status/report fields, committed fixtures/tests, or
+  element lookup/default tables.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

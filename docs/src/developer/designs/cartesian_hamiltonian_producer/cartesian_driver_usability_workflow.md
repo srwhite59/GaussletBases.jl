@@ -85,7 +85,8 @@ carriers.
 
 The driver may call only supported producer surfaces:
 
-- the approved base producer facade for base H/H2 scope;
+- the approved base producer facade for base H/H2 scope, including the
+  origin-centered H atom workflow approved by `HP-DRV-ATOM-*`;
 - the approved non-exported residual-GTO/MWG usability facade for supported
   supplemented H2 and internal/performance-supported Be2 scope;
 - the approved Hamiltonian artifact writer and readback check.
@@ -132,6 +133,8 @@ scripts, not in the canonical driver.
 - package load;
 - H2 base driver run writes a `CartesianIDAHamiltonian` artifact and optional
   readback passes;
+- origin-centered H atom driver run writes a `CartesianIDAHamiltonian` artifact
+  and optional readback passes under `HP-DRV-ATOM-TEST-01`;
 - H2 supplemented driver run writes a supplemented
   `CartesianIDAHamiltonian` artifact with the approved compact
   `supplement_provenance/` group and optional readback passes;
