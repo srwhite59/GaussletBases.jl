@@ -487,24 +487,33 @@ Line budget:
 ## Canonical Cartesian Driver Usability
 
 Status: approved for implementation under `HP-DRV-FILE-01`,
-`HP-DRV-FN-01`, and `HP-DRV-TEST-01`.
+`HP-DRV-FN-01`, `HP-DRV-STAGE-FN-01`, `HP-DRV-STAGE-WIRE-01`,
+`HP-DRV-STAGE-TEST-01`, and `HP-DRV-TEST-01`.
 
 Approved boundary:
 
 - source file `bin/cartesian_ham_builder.jl`;
+- source file `src/cartesian_base_hamiltonian.jl` only for the staged producer
+  surface;
 - compact driver invocation
   `julia --project=. bin/cartesian_ham_builder.jl [input.jl] [key=value ...]`;
 - visible editable defaults, one optional trusted project input file,
   command-line overrides, visible public contract construction, compact run
-  summary, coarse phase timing, artifact write, and optional readback check.
+  summary, visible physics-level construction stages, coarse phase timing,
+  artifact write, and optional readback check.
 
 Allowed workflow:
 
 - construct public `system`, `basis`, and optional `supplement` objects before
-  calling a facade;
-- call approved base producer surfaces for base H/H2;
-- call the approved non-exported residual-GTO/MWG usability facade for
-  supported supplemented H2 and internal/performance-supported Be2;
+  calling a facade or staged producer surface;
+- call approved base and staged producer surfaces for base H/H2;
+- call the approved non-exported residual-GTO/MWG usability facade or the
+  staged producer surface for supported supplemented H2 and
+  internal/performance-supported Be2;
+- time and print visible physics-level stages: base working basis / terminal
+  realization and base Hamiltonian, Gaussian supplement, residual
+  augmentation, exact augmented operators, supplemented Hamiltonian assembly,
+  and artifact write/check;
 - write existing `CartesianIDAHamiltonian` artifacts with approved provenance
   groups;
 - print user-facing summaries and timing.
@@ -530,14 +539,19 @@ Forbidden:
   allocation probes, benchmark harness behavior, solver/RHF/ECP/EGOI/HamV6,
   private contract construction, artifact schema dumps, public API/export
   changes, artifact schema changes, committed tests, committed input fixtures,
-  supplemented atoms, Cr2-specific driver runs, or Cr2-specific workflow
-  support. Generic explicit homonuclear z-axis Cr2 stress through
+  supplemented atoms, old route-stage choreography, Cr2-specific driver runs,
+  or Cr2-specific workflow support. Generic explicit homonuclear z-axis Cr2
+  stress through
   `HP-R3U-ZDI-WIRE-01` is separate ignored/user-run validation authority.
 
 Validation gates:
 
 - package load;
 - public contract print/check output for at least one base run when touched;
+- visible base-stage timing/summary for H atom or H2 base construction when
+  staged wiring changes;
+- visible supplemented-stage timing/summary for H2 supplemented construction
+  when staged wiring changes;
 - H atom base driver artifact write/readback under `HP-DRV-ATOM-TEST-01`;
 - H2 base driver artifact write/readback;
 - H2 supplemented driver artifact write/readback;
@@ -546,10 +560,12 @@ Validation gates:
 Line budget:
 
 - at most `150` added `bin` lines;
+- at most `150` added `src` lines in `src/cartesian_base_hamiltonian.jl`;
 - no new committed test or tool file;
 - stop for a new amendment if a parser framework, source files outside the
-  canonical driver, route-stage diagnostics, status/report/payload expansion,
-  artifact schema changes, or Cr2-specific workflow support are required.
+  canonical driver and staged producer owner, route-stage diagnostics,
+  status/report/payload expansion, artifact schema changes, public API/export
+  changes, or Cr2-specific workflow support are required.
 
 ## Canonical Driver Atom Workflow
 

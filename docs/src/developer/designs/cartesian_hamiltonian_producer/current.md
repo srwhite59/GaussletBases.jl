@@ -128,8 +128,17 @@ Approved canonical driver usability lane:
   construction, coarse user-facing timing/summary printing, artifact write,
   optional readback check, and only the compact hooks `check_file`,
   `print_contract`, `print_timing`, and `expected_dimension`;
-- the driver may call only approved base and supported supplemented producer
-  surfaces and the approved artifact writer/readback;
+- `HP-DRV-STAGE-FN-01` approves a narrow non-exported, non-underscored staged
+  producer surface in `src/cartesian_base_hamiltonian.jl` so the driver can
+  execute visible physics-level stages: base working basis / terminal
+  realization and base Hamiltonian, Gaussian supplement, residual
+  augmentation, exact augmented operators, and supplemented Hamiltonian
+  assembly;
+- `HP-DRV-STAGE-WIRE-01` allows the canonical driver to call that staged
+  surface and time/print those workflow stages without calling underscored
+  package helpers;
+- the driver may call only approved base, staged, and supported supplemented
+  producer surfaces and the approved artifact writer/readback;
 - `basisname = nothing` selects base mode; `basisname !== nothing` selects
   supported supplemented diatomic mode and must reject `Natom == 1`;
 - `padding` is physical box padding around the atom or two nuclei and maps
@@ -137,8 +146,8 @@ Approved canonical driver usability lane:
 - route diagnostics, stop-after internals, ladder probes, raw-block switches,
   underscored package helper calls, status/report/payload fields, allocation
   probes, artifact schema dumps, solver work, public API/export changes,
-  artifact schema changes, supplemented atoms, and Cr2-specific workflow
-  remain unapproved in the canonical driver.
+  artifact schema changes, supplemented atoms, old route-stage choreography,
+  and Cr2-specific workflow remain unapproved in the canonical driver.
 
 Approved R1 one-center base atom relaxation:
 

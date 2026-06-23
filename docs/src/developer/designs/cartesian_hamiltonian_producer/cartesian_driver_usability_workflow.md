@@ -2,8 +2,10 @@
 
 Status: approved narrow source authority for making
 `bin/cartesian_ham_builder.jl` a compact functional Hamiltonian producer
-driver. This is workflow authority only; it is not new Hamiltonian algorithm,
-raw-kernel, solver, or diagnostic authority.
+driver, plus a narrow internal staged producer surface in
+`src/cartesian_base_hamiltonian.jl` so the driver can execute visible
+physics-level construction stages. This is workflow authority only; it is not
+new Hamiltonian algorithm, raw-kernel, solver, or diagnostic authority.
 
 ## Decision
 
@@ -22,7 +24,7 @@ visible editable defaults
 -> command-line key=value overrides
 -> visible public system / basis / optional supplement contract construction
 -> compact normalized run summary
--> coarse timed user-facing phases
+-> coarse timed user-facing physics-level construction stages
 -> supported base or supplemented Hamiltonian construction
 -> artifact write
 -> optional readback check
@@ -36,17 +38,23 @@ private route-stage diagnostics.
 
 - `HP-DRV-FILE-01` - canonical Cartesian driver source file.
 - `HP-DRV-FN-01` - compact functional driver workflow.
+- `HP-DRV-STAGE-FN-01` - internal visible physics-stage producer surface.
+- `HP-DRV-STAGE-WIRE-01` - canonical driver wiring to the staged surface.
+- `HP-DRV-STAGE-TEST-01` - validation gates for staged driver execution.
 - `HP-DRV-TEST-01` - validation gates for the driver usability lane.
 
 ## Approved File
 
 ```text
 bin/cartesian_ham_builder.jl
+src/cartesian_base_hamiltonian.jl
 ```
 
-No other `bin`, `tools`, `src`, `test`, or committed input-fixture file is
-approved by this lane. Project-specific copied drivers are acceptable consumer
-artifacts, but they are not part of the canonical driver authority.
+`src/cartesian_base_hamiltonian.jl` is approved only for the staged producer
+surface described below. No other `bin`, `tools`, `src`, `test`, or committed
+input-fixture file is approved by this lane. Project-specific copied drivers
+are acceptable consumer artifacts, but they are not part of the canonical
+driver authority.
 
 ## Input Shape
 
@@ -139,22 +147,67 @@ contract facts, artifact path, final dimension, expected-dimension result,
 readback deltas, and coarse timing. It must not become an artifact schema,
 provenance dump, status object, route report, allocation log, or solver output.
 
+## Visible Physics-Level Stages
+
+The canonical driver must not hide the supplemented construction entirely
+inside one opaque facade call. It should execute and optionally time visible
+physics-level stages while still avoiding route-internal choreography.
+
+Approved visible stages are:
+
+- construct public `system`, `basis`, and optional `supplement`;
+- build the base working basis / terminal realization and base Hamiltonian;
+- load or build the Gaussian supplement basis when `basisname !== nothing`;
+- build residual Gaussian augmentation;
+- build exact augmented operators;
+- assemble the supplemented Hamiltonian;
+- write and check the artifact.
+
+These are workflow stages, not old route stages. They must not expose
+`cartesian_parent`, `cartesian_shells`, `cartesian_units`,
+`cartesian_pair_terms`, `cartesian_assembly`, reports, route skeletons,
+retained-rule internals, raw-block providers, or diagnostic stop points.
+
+`HP-DRV-STAGE-FN-01` approves a small non-exported, non-underscored,
+driver-facing staged producer surface in `src/cartesian_base_hamiltonian.jl`.
+The exact function names may follow local style, but their purpose must match
+the approved construction stages above. Public contract construction remains a
+driver responsibility, and artifact write/check remains an approved writer and
+readback responsibility. The source owner may factor the existing base and
+residual-GTO/MWG facade bodies into these stage functions so the canonical
+driver can call named construction stages without calling underscored helpers
+directly.
+
+The staged surface may return existing domain objects and small fixed-key
+ephemeral stage products needed by the next approved stage. It must not create
+a broad payload/report/status object, route-stage object, persistent cache,
+runtime-keyed field cloud, artifact schema, or new public API/export.
+
+The existing one-call facades may remain as convenience wrappers around the
+same staged implementation. The canonical driver should prefer the staged
+surface when it needs visible execution and timing.
+
 ## Allowed Workflow
 
 The driver may call only supported producer surfaces:
 
-- the approved base producer facade for base H/H2 scope, including the
-  origin-centered H atom workflow approved by `HP-DRV-ATOM-*`;
+- the approved staged producer surface for base working-basis/base-Hamiltonian
+  construction, including the origin-centered atom workflow approved by
+  `HP-DRV-ATOM-*`;
 - the approved non-exported residual-GTO/MWG usability facade for supported
-  supplemented H2 and internal/performance-supported Be2 scope;
+  supplemented H2 and internal/performance-supported Be2 scope, or the staged
+  producer surface that factors that facade into visible physics-level stages;
 - the approved Hamiltonian artifact writer and readback check.
 
 Allowed user-facing phases:
 
 - validate/normalize input;
 - construct public contract;
-- build base Hamiltonian;
-- build supplemented Hamiltonian;
+- build base working basis and base Hamiltonian;
+- build Gaussian supplement;
+- build residual augmentation;
+- build exact augmented operators;
+- assemble supplemented Hamiltonian;
 - write artifact;
 - read back artifact for validation;
 - print compact summary and coarse timing.
@@ -174,6 +227,8 @@ This lane does not approve:
 - raw-block provider switches;
 - private helper contract construction instead of public `system` / `basis` /
   `supplement` objects;
+- opaque one-call supplemented construction as the only canonical-driver
+  execution shape;
 - residual algorithm, MWG/IDA, raw-block, or terminal-kernel changes;
 - route reports, status symbols, payload dumps, metadata field clouds, or
   report mirrors;
@@ -194,6 +249,8 @@ scripts, not in the canonical driver.
 - package load;
 - public contract printing/checking for at least one base run when the driver
   construction code changes;
+- visible stage timing or summary for base construction and supplemented H2
+  construction when staged wiring changes;
 - H2 base driver run writes a `CartesianIDAHamiltonian` artifact and optional
   readback passes;
 - origin-centered H atom driver run writes a `CartesianIDAHamiltonian` artifact
@@ -215,14 +272,15 @@ Temporary project input files for validation should live under ignored
 
 Line budget:
 
-- at most `150` added `bin` lines;
+- at most `150` added `bin` lines and at most `150` added `src` lines;
 - the canonical driver should remain compact and copyable;
 - no new committed test or tool file.
 
 Failure rule: if implementation requires a parser framework, source files
-outside `bin/cartesian_ham_builder.jl`, committed input fixtures, route-stage
-diagnostics, status/report/payload expansion, artifact schema changes, or
-Cr2-specific workflow support, stop and request a new docs-only amendment.
+outside `bin/cartesian_ham_builder.jl` and `src/cartesian_base_hamiltonian.jl`,
+committed input fixtures, route-stage diagnostics, status/report/payload
+expansion, artifact schema changes, public API/export changes, or Cr2-specific
+workflow support, stop and request a new docs-only amendment.
 
 ## Deferred
 

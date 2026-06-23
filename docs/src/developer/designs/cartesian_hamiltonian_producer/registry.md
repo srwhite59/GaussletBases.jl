@@ -1281,6 +1281,7 @@ Approved behavior:
   construction before calling an approved facade;
 - compact normalized run summary;
 - coarse user-facing phase timing;
+- visible physics-level construction stages through the staged producer surface;
 - base or supported supplemented Hamiltonian construction through approved
   producer surfaces;
 - artifact write;
@@ -1324,10 +1325,89 @@ support. Generic explicit homonuclear z-axis Cr2 stress through
 driver-owned Cr2 support.
 
 Line budget: at most `150` added `bin` lines. If implementation needs a parser
-framework, source files outside `bin/cartesian_ham_builder.jl`, committed
-input fixtures, route-stage diagnostics, status/report/payload expansion,
-artifact schema changes, or Cr2-specific workflow support, stop and request a
-new docs-only amendment.
+framework, source files outside the approved driver and staged producer
+surfaces, committed input fixtures, route-stage diagnostics,
+status/report/payload expansion, artifact schema changes, or Cr2-specific
+workflow support, stop and request a new docs-only amendment.
+
+### HP-DRV-STAGE-FN-01 — visible physics-stage producer surface
+
+Approved source file:
+
+```text
+src/cartesian_base_hamiltonian.jl
+```
+
+Approved purpose: expose a small non-exported, non-underscored,
+driver-facing staged producer surface so the canonical driver can execute and
+time visible physics-level construction stages without calling private
+underscored helpers.
+
+Approved visible stages are:
+
+- construct public `system`, `basis`, and optional `supplement`;
+- build the base working basis / terminal realization and base Hamiltonian;
+- load or build the Gaussian supplement basis when `basisname !== nothing`;
+- build residual Gaussian augmentation;
+- build exact augmented operators;
+- assemble the supplemented Hamiltonian;
+- write and check the artifact.
+
+The first and last stages remain driver/writer responsibilities. This ID
+approves source factoring needed for the base working-basis/base-Hamiltonian,
+Gaussian supplement, residual augmentation, exact augmented operators, and
+supplemented-Hamiltonian assembly stages.
+
+The staged surface may factor the existing `cartesian_base_hamiltonian(...)`
+and `cartesian_residual_gto_mwg_hamiltonian(...)` bodies so that those facades
+can remain wrappers over the same implementation. It may return existing
+domain objects and small fixed-key ephemeral stage products required by the
+next approved stage.
+
+This ID does not approve public exports, public API redesign, route-stage
+objects, reports, status/result payloads, metadata field clouds, runtime-keyed
+field groups, persistent caches, raw-block switches, solver/ECP workflow,
+artifact schema changes, or source files outside
+`src/cartesian_base_hamiltonian.jl`.
+
+Line budget: at most `150` added `src` lines. If the staged surface requires a
+new module, source files outside `src/cartesian_base_hamiltonian.jl`, a broad
+payload object, committed tests, or new artifact keys, stop and request a new
+docs-only amendment.
+
+### HP-DRV-STAGE-WIRE-01 — canonical driver staged wiring
+
+Approved source file:
+
+```text
+bin/cartesian_ham_builder.jl
+```
+
+The canonical driver may call the `HP-DRV-STAGE-FN-01` staged producer surface
+and assign local variables using the approved physics-stage names. It may print
+or record coarse user-facing timings for those stages.
+
+This ID does not approve calls from the driver to underscored package helpers,
+old route stages such as `cartesian_parent`, `cartesian_shells`,
+`cartesian_units`, `cartesian_pair_terms`, or `cartesian_assembly`, raw-block
+provider switches, stop-after controls, route diagnostics, allocation probes,
+artifact schema dumps, solver controls, Cr2-specific workflow, or new
+committed fixtures/tests.
+
+### HP-DRV-STAGE-TEST-01 — staged driver validation
+
+Approved validation:
+
+- package load;
+- H atom or H2 base driver run with visible base-stage timing/summary;
+- H2 supplemented driver run with visible supplement/residual/operator/
+  Hamiltonian stage timing/summary;
+- artifact write/readback still passes for those runs;
+- `expected_dimension`, `print_contract`, and `check_file` behavior still
+  uses only public contract and coarse stage facts.
+
+No committed test file, committed input fixture, Cr2-specific driver run,
+solver run, or diagnostic harness is approved by this ID.
 
 ### HP-DRV-TEST-01 — driver workflow validation
 

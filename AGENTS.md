@@ -460,6 +460,9 @@ these approved design IDs:
 - `HP-R3U-ZDI-FN-01`
 - `HP-R3U-ZDI-WIRE-01`
 - `HP-R3U-ZDI-TEST-01`
+- `HP-DRV-STAGE-FN-01`
+- `HP-DRV-STAGE-WIRE-01`
+- `HP-DRV-STAGE-TEST-01`
 
 No other production surface may be added in this lane without a prior
 documentation-only design amendment. This includes new structs, persistent
@@ -888,7 +891,8 @@ Current preferred deletion sequence:
 Cartesian Hamiltonian producer driver. Its job is to prove the approved
 producer paths work together by producing a Hamiltonian artifact directly.
 
-Approved under `HP-DRV-FILE-01`, `HP-DRV-FN-01`, and `HP-DRV-TEST-01`:
+Approved under `HP-DRV-FILE-01`, `HP-DRV-FN-01`, `HP-DRV-STAGE-FN-01`,
+`HP-DRV-STAGE-WIRE-01`, `HP-DRV-STAGE-TEST-01`, and `HP-DRV-TEST-01`:
 
 - visible editable defaults near the top of the file;
 - optional trusted local Julia input file for project-specific defaults;
@@ -896,7 +900,8 @@ Approved under `HP-DRV-FILE-01`, `HP-DRV-FN-01`, and `HP-DRV-TEST-01`:
 - visible public `system`, `basis`, and optional `supplement` contract
   construction before calling an approved facade;
 - compact normalized run summary;
-- coarse user-facing phase timing;
+- visible physics-level construction stages and coarse user-facing phase
+  timing;
 - base or supported supplemented Hamiltonian construction through approved
   producer surfaces;
 - artifact write and optional readback check.
@@ -914,6 +919,25 @@ box padding around the atom or two nuclei and maps internally to the existing
 facade fields. The driver must not expose private route-stage choreography as a
 substitute for constructing public `system`, `basis`, and optional
 `supplement` objects.
+
+`HP-DRV-STAGE-FN-01` approves only a narrow non-exported, non-underscored
+driver-facing staged producer surface in `src/cartesian_base_hamiltonian.jl`.
+That surface may factor the existing base and residual-GTO/MWG facade bodies so
+the canonical driver can execute visible physics-level stages: base working
+basis / terminal realization and base Hamiltonian, Gaussian supplement,
+residual Gaussian augmentation, exact augmented operators, supplemented
+Hamiltonian assembly, followed by the existing artifact writer/readback stage.
+It may return existing domain objects and small fixed-key ephemeral stage
+products needed by the next stage, but it must not create a public API/export,
+route-stage object, report, status/result payload, metadata field cloud,
+runtime-keyed field group, persistent cache, artifact schema, or source files
+outside `src/cartesian_base_hamiltonian.jl`.
+
+`HP-DRV-STAGE-WIRE-01` allows `bin/cartesian_ham_builder.jl` to call that staged
+producer surface and time/print the visible physics stages. It does not approve
+driver calls to underscored package helpers or old route stages such as
+`cartesian_parent`, `cartesian_shells`, `cartesian_units`,
+`cartesian_pair_terms`, or `cartesian_assembly`.
 
 `HP-R3U-ZDI-FN-01` relaxes the supplemented facade from hardcoded H2/Be2 checks
 to explicit homonuclear two-center z-axis validation in

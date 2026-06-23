@@ -11986,3 +11986,61 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 097 - Approve Driver Physics-Stage Surface
+
+Commit(s):
+- this commit - Approve canonical driver physics-stage surface
+
+Summary:
+- Corrected the previous driver authority: visible public `system`, `basis`,
+  and `supplement` construction was not enough because the real construction
+  still disappeared inside `cartesian_residual_gto_mwg_hamiltonian(...)`.
+- Approved `HP-DRV-STAGE-FN-01`, `HP-DRV-STAGE-WIRE-01`, and
+  `HP-DRV-STAGE-TEST-01` so the canonical driver can execute and time visible
+  physics-level construction stages without calling underscored helpers or old
+  route stages.
+- The approved stage sequence is: public contract construction, base working
+  basis / terminal realization and base Hamiltonian, Gaussian supplement,
+  residual Gaussian augmentation, exact augmented operators, supplemented
+  Hamiltonian assembly, and artifact write/check. The staged producer surface
+  is owned only by `src/cartesian_base_hamiltonian.jl`; artifact writing
+  remains existing writer/readback workflow.
+
+Validation:
+- Design-manager validation: docs-only `git diff --check`, focused `rg` for
+  `HP-DRV-STAGE-*`, visible physics-stage wording,
+  non-underscored/staged surface limits, and forbidden route diagnostic
+  surfaces, plus confirmation that `src`, `test`, and `tools` had no changes.
+- No implementation tests were run; this was authority-only documentation
+  work.
+
+Goal advancement:
+- LT1/LT3: restores the original expert-driver property of showing the
+  construction stages while keeping those stages at public physics workflow
+  level rather than old route choreography.
+- RG/LT6: allows residual-GTO/MWG construction to be visible and timed through
+  approved staged surfaces without adding Cr2-specific branches, solver/ECP
+  workflow, raw-block switches, or report/status payloads.
+
+Carrying-cost result:
+- deleted: none; docs-only authority pass.
+- simplified: separates public physics workflow stages from old route-stage
+  diagnostics and from opaque all-in-one facade execution.
+- quarantined: `cartesian_parent`, `cartesian_shells`, `cartesian_units`,
+  `cartesian_pair_terms`, `cartesian_assembly`, reports, route skeletons,
+  raw-block provider switches, allocation probes, artifact schema dumps,
+  solver/ECP workflow, Cr2-specific workflow, and supplemented atoms remain
+  unapproved.
+- not deleted because: source factoring has not run yet, and existing one-call
+  facades may remain as convenience wrappers over the staged implementation.
+- exact remaining caller/blocker: repo-doer may edit only
+  `src/cartesian_base_hamiltonian.jl` and `bin/cartesian_ham_builder.jl` for
+  this lane; stop if the implementation needs public API/export changes,
+  source files outside those two paths, broad payload/report/status objects,
+  artifact schema changes, committed fixtures/tests, route diagnostics, or
+  Cr2-specific workflow.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.
