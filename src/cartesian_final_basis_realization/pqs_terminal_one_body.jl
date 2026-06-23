@@ -70,37 +70,73 @@ function _check_terminal_factor_terms(terms, nterms, n, name)
     return terms
 end
 
-function _terminal_gaussian_sum_action(left, right, coefficients, factor_terms)
+function _fill_terminal_gaussian_sum_action!(
+    action, left, right, coefficients, factor_terms, tile_buffer)
     fx, fy, fz = factor_terms
     nterms = length(coefficients)
-    ncols = isnothing(right.coefficients) ?
-        length(right.support_states) :
-        size(right.coefficients, 2)
-    action = zeros(Float64, length(left.support_states), ncols)
+    fill!(action, 0.0)
     maxcols = max(1, _TERMINAL_WORKSPACE_BYTES ÷ (8 * max(length(left.support_states), 1)))
-    tile = Matrix{Float64}(undef, length(left.support_states), 0)
-    coeffs = Float64.(coefficients)
+    tile_buffer_view = _buffer_view!(
+        tile_buffer, length(left.support_states), min(length(right.support_states), maxcols))
     for firstcol in 1:maxcols:length(right.support_states)
         cols = firstcol:min(firstcol + maxcols - 1, length(right.support_states))
-        length(cols) == size(tile, 2) || (tile = Matrix{Float64}(
-            undef, length(left.support_states), length(cols)))
+        tile = @view tile_buffer_view[:, 1:length(cols)]
         @inbounds for (jj, j) in enumerate(cols), i in eachindex(left.support_states)
             ix, iy, iz = left.support_states[i]
             jx, jy, jz = right.support_states[j]
             value = 0.0
             for term in 1:nterms
-                value += coeffs[term] * fx[term, ix, jx] *
+                value += coefficients[term] * fx[term, ix, jx] *
                     fy[term, iy, jy] * fz[term, iz, jz]
             end
             tile[i, jj] = value
         end
         if isnothing(right.coefficients)
-            action[:, cols] .+= tile
+            @views action[:, cols] .+= tile
         else
-            action .+= tile * @view(right.coefficients[cols, :])
+            mul!(action, tile, @view(right.coefficients[cols, :]), 1.0, 1.0)
         end
     end
-    return isnothing(left.coefficients) ? action : transpose(left.coefficients) * action
+    return action
+end
+
+function _terminal_gaussian_sum_action(left, right, coefficients, factor_terms)
+    ncols = isnothing(right.coefficients) ?
+        length(right.support_states) :
+        size(right.coefficients, 2)
+    action = zeros(Float64, length(left.support_states), ncols)
+    tile_buffer = Ref(Matrix{Float64}(undef, 0, 0))
+    _fill_terminal_gaussian_sum_action!(
+        action, left, right, coefficients, factor_terms, tile_buffer)
+    if isnothing(left.coefficients)
+        return action
+    end
+    block = Matrix{Float64}(undef, size(left.coefficients, 2), ncols)
+    mul!(block, transpose(left.coefficients), action)
+    return block
+end
+
+function _add_terminal_gaussian_sum_block!(
+    destination, left, right, coefficients, factor_terms, factor, mirror,
+    action_buffer, tile_buffer, block_buffer)
+    ncols = isnothing(right.coefficients) ?
+        length(right.support_states) :
+        size(right.coefficients, 2)
+    action = _buffer_view!(action_buffer, length(left.support_states), ncols)
+    _fill_terminal_gaussian_sum_action!(
+        action, left, right, coefficients, factor_terms, tile_buffer)
+    rows = left.column_range
+    cols = right.column_range
+    if isnothing(left.coefficients)
+        @views destination[rows, cols] .+= factor .* action
+        mirror && @views destination[cols, rows] .+= factor .* transpose(action)
+        return destination
+    end
+    block = _buffer_view!(block_buffer, size(left.coefficients, 2), ncols)
+    mul!(block, transpose(left.coefficients), action)
+    @views destination[rows, cols] .+= factor .* block
+    mirror && @views destination[cols, rows] .+= factor .* transpose(block)
+    return destination
 end
 
 function _accumulate_terminal_gaussian_sum!(
@@ -112,13 +148,34 @@ function _accumulate_terminal_gaussian_sum!(
     factors_z;
     scale = -1.0,
 )
+    action_buffer = Ref(Matrix{Float64}(undef, 0, 0))
+    tile_buffer = Ref(Matrix{Float64}(undef, 0, 0))
+    block_buffer = Ref(Matrix{Float64}(undef, 0, 0))
+    return _accumulate_terminal_gaussian_sum!(
+        destination, basis, coefficients, factors_x, factors_y, factors_z,
+        action_buffer, tile_buffer, block_buffer; scale = scale)
+end
+
+function _accumulate_terminal_gaussian_sum!(
+    destination,
+    basis::CartesianTerminalBasisRealization,
+    coefficients,
+    factors_x,
+    factors_y,
+    factors_z,
+    action_buffer,
+    tile_buffer,
+    block_buffer;
+    scale = -1.0,
+)
     size(destination) == (basis.final_dimension, basis.final_dimension) ||
         throw(DimensionMismatch("terminal Gaussian-sum destination size is wrong"))
     max_state = (0, 0, 0)
     for block in basis.blocks, state in block.support_states
         max_state = ntuple(axis -> max(max_state[axis], state[axis]), 3)
     end
-    nterms = length(coefficients)
+    coeffs = Float64.(coefficients)
+    nterms = length(coeffs)
     factor_terms = (
         _check_terminal_factor_terms(_terminal_factor_terms(factors_x), nterms, max_state[1], "x"),
         _check_terminal_factor_terms(_terminal_factor_terms(factors_y), nterms, max_state[2], "y"),
@@ -128,12 +185,9 @@ function _accumulate_terminal_gaussian_sum!(
     for right in eachindex(basis.blocks), left in 1:right
         left_block = basis.blocks[left]
         right_block = basis.blocks[right]
-        rows = left_block.column_range
-        cols = right_block.column_range
-        block = factor .* _terminal_gaussian_sum_action(
-            left_block, right_block, coefficients, factor_terms)
-        destination[rows, cols] .+= block
-        left != right && (destination[cols, rows] .+= transpose(block))
+        _add_terminal_gaussian_sum_block!(
+            destination, left_block, right_block, coeffs, factor_terms, factor, left != right,
+            action_buffer, tile_buffer, block_buffer)
     end
     return destination
 end

@@ -371,12 +371,16 @@ function pqs_terminal_residual_gto_augmented_operators(
     pos = (x = pos_x, y = pos_y, z = pos_z)
     x2 = (x = x2_x, y = x2_y, z = x2_z)
     U = Matrix{Float64}[]
+    gaussian_sum_action_buffer = Ref(Matrix{Float64}(undef, 0, 0))
+    gaussian_sum_tile_buffer = Ref(Matrix{Float64}(undef, 0, 0))
+    gaussian_sum_block_buffer = Ref(Matrix{Float64}(undef, 0, 0))
     for (center_index, center) in enumerate(CRG.residual_gaussian_float_centers(atom_locations))
         U_GG = zeros(Float64, basis.final_dimension, basis.final_dimension)
         factors = ntuple(axis -> _r3a_centered_factor_terms(pgdg[axis], expansion_value,
             center[axis]), 3)
         _accumulate_terminal_gaussian_sum!(
-            U_GG, basis, expansion_value.coefficients, factors[1], factors[2], factors[3])
+            U_GG, basis, expansion_value.coefficients, factors[1], factors[2], factors[3],
+            gaussian_sum_action_buffer, gaussian_sum_tile_buffer, gaussian_sum_block_buffer)
         U_GA = supplement_blocks_value.mixed.nuclear[center_index]
         U_AA = supplement_blocks_value.self.nuclear[center_index]
         push!(U, CRG.transform_augmented_operator(U_GG, U_GA, U_AA, residual))
