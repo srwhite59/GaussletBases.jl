@@ -273,9 +273,10 @@ function _terminal_residual_mixed_overlap(
     bundles,
     supplement,
 )
-    expansion = getfield(_GB_PARENT, :coulomb_gaussian_expansion)(doacc = false)
-    return CRG.terminal_residual_mixed_overlap(basis, bundles, supplement,
-        _r3a_qw_blocks, expansion)
+    donor = _r3a_qw_supplement(supplement)
+    proxy = _r3a_qw_proxy_layers(bundles)
+    blocks = CGRB.gaussian_non_nuclear_overlap_blocks(proxy, donor)
+    return _r3a_project_parent_ga(basis, blocks.ga.overlap)
 end
 
 function pqs_terminal_residual_gto_augmentation(
