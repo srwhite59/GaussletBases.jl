@@ -11431,3 +11431,82 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 089A - Reuse Unit-Nuclear U_GG Workspace
+
+Commit(s):
+- `79e5cd47` - Reuse R3 unit-nuclear UGG workspace
+- this commit - Record unit-nuclear U_GG workspace reuse
+
+Summary:
+- Accepted the narrow `HP-R3UN-FN-01` source pass. Terminal final-basis
+  unit-nuclear `U_GG` Gaussian-sum construction now uses an in-place scratch
+  path in `CartesianFinalBasisRealization`.
+- `_accumulate_terminal_gaussian_sum!` delegates to a scratch-buffer method that
+  reuses action/tile/block buffers, uses `mul!`, and accumulates scaled blocks
+  directly into destination views. The compatibility
+  `_terminal_gaussian_sum_action(...)` remains live for terminal IDA block
+  assembly.
+- The R3 exact-operator path shares one Gaussian-sum scratch set across nuclear
+  centers. No raw-block, terminal kinetic/moment `G-G`, residual/MWG/IDA,
+  Qiu-White, route/stage, artifact, metadata, report, status, payload, public
+  API, committed-test, or Cr2 workflow surface changed.
+
+Validation:
+- Doer ran `git diff --check`, package load,
+  `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`,
+  `tmp/work/be2_r3u_facade_measurement.jl`, and
+  `tmp/work/cr2_exact_operator_allocation_audit.jl`.
+- Manager ran `git diff --check`, numstat, source diff review,
+  suspicious-added-line scan, new-test/file scan, targeted helper/caller search,
+  and terminal IDA caller review. Per user direction, manager did not rerun
+  doer validation.
+
+Numerical/performance result:
+- Cr2 `U_GG` construction only improved from `2.0206s / 1803.721 MiB` to
+  `1.9910s / 593.201 MiB`.
+- Cr2 `U_GG` plus factor lookup improved from `2.0447s / 1856.819 MiB` to
+  `2.0145s / 646.299 MiB`.
+- Cr2 exact-operator wrapper allocation improved from the prior
+  `~5.84s / 4605.5 MiB` to `5.9048s / 3540.638 MiB` in the reported run.
+- Cr2 `U` replay parity was `0.0`; exact operators were finite and symmetric.
+- H2 residual-GTO/MWG self-Coulomb stayed at `0.4574265214362095`.
+- Be2 facade/readback stayed at final dimension `1421`, with all readback
+  deltas `0.0`.
+
+Goal advancement:
+- Cr2-readiness/MT4: crosses the largest in-wrapper allocation owner identified
+  by `HP-R3REM-AUDIT-01`, reducing unit-nuclear `U_GG` allocation by about
+  `1.2 GiB`.
+- RG/LT6: keeps unit-nuclear Gaussian-sum work in
+  `CartesianFinalBasisRealization` and preserves raw-block, residual/MWG, and
+  public workflow boundaries.
+
+Mechanical/anti-bloat gate:
+- `git diff --check`: clean.
+- Numstat:
+  `74 20 src/cartesian_final_basis_realization/pqs_terminal_one_body.jl`;
+  `5 1 src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`.
+- Suspicious-added-line scan: none.
+- New-test/file scan: none.
+
+Carrying-cost result:
+- deleted: old allocation-heavy `_accumulate_terminal_gaussian_sum!` block
+  materialization path.
+- simplified: shared Gaussian-sum action fill now serves both terminal IDA
+  block action and in-place unit-nuclear `U_GG` accumulation.
+- quarantined: ignored audit probe changes only.
+- not deleted because: `_terminal_gaussian_sum_action(...)` remains live for
+  terminal IDA assembly.
+- exact remaining caller/blocker: route setup and remaining raw-block
+  replay/oracle costs are outside `HP-R3UN-FN-01`.
+- added src lines: 79.
+- deleted src lines: 21.
+- new tests: none.
+- new metadata/status fields: none.
+
+Risk / guardrail:
+- Do not continue this source lane into route/stage setup, raw-block
+  replay/oracle costs, terminal kinetic/moment `G-G`, neutral raw blocks,
+  residual/MWG/IDA, artifacts, metadata, reports, public API, or Cr2 workflow
+  without a separate authority decision.
