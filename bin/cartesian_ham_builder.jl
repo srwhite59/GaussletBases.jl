@@ -77,7 +77,7 @@ else
 end
 common_basis = (; q = vars[:q], core_spacing = vars[:core_spacing],
     parent_axis_family = vars[:gausslet_family])
-basis = N == 1 ? (; common_basis..., radius = vars[:padding], d = vars[:core_spacing]) :
+basis = N == 1 ? (; common_basis..., radius = vars[:padding]) :
     (; common_basis..., xmax_parallel = Float64(vars[:R]) / 2 + vars[:padding],
         xmax_transverse = vars[:padding])
 hamfile_value = String(vars[:hamfile])

@@ -5311,6 +5311,52 @@ Deletion accounting:
 - new tests: none.
 - new metadata/status fields: none.
 
+## Cartesian Hamiltonian Producer Pass 111 - Remove Hidden Driver Atom d
+
+Commit(s):
+- this commit - Remove hidden driver atom d
+
+Summary:
+- Accepted `HP-DRV-ATOM-CLEAN-01`. The canonical driver no longer injects
+  hidden legacy `d = core_spacing` into one-center atom basis construction.
+  Atom driver basis input now contains only `q`, `core_spacing`,
+  `parent_axis_family`, and `radius` from the public driver contract.
+- Public inputs, defaults, override behavior, hooks, timing labels, visible
+  stage sequence, printed contract, artifact schema, base/supplemented
+  dispatch, and diatomic branch behavior were unchanged.
+
+Validation:
+- Doer validation: `git diff --check`, package load, H atom base driver
+  artifact/readback with dimension `419` at
+  `tmp/work/driver_atom_clean_h_atom_base.jld2`, focused `rg` showing no
+  `d = vars[:core_spacing]` or `:d` in the driver, no H2 rerun because the
+  diatomic branch was untouched, and no Cr2 run.
+- Manager validation: reviewed the driver-only diff, confirmed `git diff
+  --check`, numstat +1/-1 in `bin/cartesian_ham_builder.jl`, no `src`,
+  `test`, or `tools` edits, no public driver contract changes, and no new
+  metadata/status fields.
+
+Goal advancement:
+- LT1/LT3: removes a stale compatibility echo from the human-facing driver
+  after `core_spacing` became the single public near-core scale.
+- MT: completes the small post-core-spacing driver cleanup; future deletion
+  pressure should focus on explicit `:white_lindsey_low_order` retirement or
+  stale test/tool route inputs only under separate authority.
+
+Carrying-cost result:
+- deleted: hidden legacy atom `d` basis field in the canonical driver.
+- simplified: one-center driver basis construction now mirrors the intended
+  public contract.
+- quarantined: none.
+- not deleted because: public `core_spacing` remains the intended near-core
+  input, and producer-side legacy `d` compatibility/provenance remains outside
+  this driver-only pass.
+- exact remaining caller/blocker: none for this cleanup.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.
+
 ## Pass 322 - Stop Recursive Stage Embedding
 
 Commit(s):
