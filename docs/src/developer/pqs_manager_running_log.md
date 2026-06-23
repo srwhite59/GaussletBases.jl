@@ -10396,3 +10396,87 @@ Risk / guardrail:
   `sum_pq c_p c_q I_x[p,q] I_y[p,q] I_z[p,q]`. Do not independently contract
   x/y/z axes, add persistent caches, broaden the raw-block owner, or change
   Residual Gaussian/Qiu-White semantics.
+
+## Cartesian Hamiltonian Producer Pass 082B - Reuse Nuclear Axis Families
+
+Commit(s):
+- `82b3f697` - Reuse Gaussian nuclear axis families
+- this commit - Record nuclear family reuse implementation
+
+Summary:
+- Accepted the `HP-CGRB-FN-02` source implementation in
+  `src/cartesian_gaussian_raw_blocks/nuclear_blocks.jl`. The neutral uncharged
+  Gaussian nuclear `G-A`/`A-A` outputs are unchanged at roundoff, but the
+  production kernel now groups supplement one-dimensional axis families once,
+  fills unique `G-A` and `A-A` axis tables term-first, and reuses those tables
+  across flattened 3D orbitals and upper-triangle orbital pairs.
+- The Cr2 q4 raw nuclear step dropped from the recent `~44552.840 MiB`
+  baseline and the same-audit old reference `14.1394s / 48542.417 MiB` to
+  `0.6420s / 16.484 MiB`, with `G-A` parity `7.11e-15` and `A-A` parity
+  `1.07e-14`.
+- The implementation keeps the coupled primitive-pair contraction
+  `sum_pq c_p c_q I_x[p,q] I_y[p,q] I_z[p,q]`; no independent x/y/z scalar
+  contraction, cache framework, public API, artifact path, or route semantics
+  were added.
+
+Validation:
+- Doer ran `git diff --check`, package load,
+  `tmp/work/cgrb_factor_scalar_parity.jl`,
+  `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`,
+  `tmp/work/be2_r3u_facade_measurement.jl`,
+  `tmp/work/cgrb_qw_nuclear_parity_check.jl`,
+  `tmp/work/cr2_exact_operator_allocation_audit.jl`, and
+  `tmp/work/cr2_nuclear_family_reuse_count_audit.jl`.
+- Manager ran `git diff --check HEAD~1..HEAD`, numstat, suspicious-added-line
+  scan, new-test/file scan, package load,
+  `tmp/work/cgrb_factor_scalar_parity.jl`, and
+  `tmp/work/cgrb_qw_nuclear_parity_check.jl`. Manager did not rerun the H2,
+  Be2, or Cr2 long gates.
+
+Numerical/performance result:
+- Cr2 q4 unique family counts: x `8`, y `8`, z `16`.
+- Table fills: `G-A` `11880 -> 2160`, `A-A` `397980 -> 15480`.
+- Total scalar one-dimensional calls: `202,518,360 -> 9,724,410`.
+- H2 residual-GTO/MWG self-Coulomb stayed
+  `0.4574265214362078`, delta `3.33e-16`.
+- Be2 facade/readback deltas stayed `0.0`; augmented dimension stayed `1421`.
+- Qiu-White parity stayed at roundoff: neutral/reference `G-A`
+  `4.44e-16`, neutral/reference `A-A` `8.88e-16`, route deltas `0.0`.
+- Specialized scalar helper parity max error was `1.42e-14`.
+
+Goal advancement:
+- Cr2-readiness/MT4: removes the dominant repeated one-dimensional table and
+  scalar-integral work from the current Cr2 q4 exact nuclear raw-block path.
+- CGRB/LT6 and LT4: keeps raw analytic nuclear formula ownership in the
+  neutral nuclear owner while making the shared Residual Gaussian/Qiu-White
+  consumer path much more memory-efficient.
+
+Mechanical/anti-bloat gate:
+- `git diff --check`: clean.
+- Numstat: `150 98 src/cartesian_gaussian_raw_blocks/nuclear_blocks.jl`.
+- Suspicious-added-line scan found only the function-local
+  `Tuple(exponents)` / `Tuple(prefactors)` content key used to group 66
+  flattened orbitals by primitive-vector identity. Accepted because it is not a
+  staged route inventory, metadata/API shape, or persistent tuple collection;
+  it is confined to the local family-inventory builder.
+- New-test/file scan: none.
+
+Carrying-cost result:
+- deleted: old per-orbital `G-A` cross-cache path, old flattened `A-A`
+  pair helper, and unused per-orbital axis input helper.
+- simplified: neutral nuclear raw-block production now has one family-reuse
+  path.
+- quarantined: none.
+- not deleted because: Qiu-White and Residual Gaussian callers still need the
+  neutral raw-block entry point.
+- exact remaining caller/blocker: none for this pass.
+- added src lines: 150.
+- deleted src lines: 98.
+- new tests: none.
+- new metadata/status fields: none.
+
+Risk / guardrail:
+- The local content-key tuples should remain a small inventory-construction
+  detail. Do not grow this into staged tuple inventories, persistent caches,
+  metadata/report summaries, or a broader raw-block framework. Cr2 facade and
+  artifact workflow remain deferred.
