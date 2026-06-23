@@ -10861,3 +10861,101 @@ Risk / guardrail:
   matrix work. Keep `G-G` deferred unless a separate amendment approves it, and
   keep any non-nuclear optimization inside the neutral owner and approved
   caller surfaces.
+
+## Cartesian Hamiltonian Producer Pass 086A - Reuse Non-Nuclear A-A Families
+
+Commit(s):
+- `806b37e3` - Reuse Gaussian non-nuclear AA axis families
+- this commit - Record non-nuclear AA family reuse
+
+Summary:
+- Accepted the full non-nuclear `A-A` family-reuse source pass after amendment.
+  The physical non-nuclear supplement-supplement Gaussian blocks are unchanged
+  at roundoff, but production no longer calls
+  `_qwrg_cartesian_shell_self_moment_blocks_3d(...)` from
+  `gaussian_non_nuclear_raw_blocks(...)`.
+- The amended implementation now uses canonical supplement axis-family pair
+  tables with orientation flags, assembles only upper-triangular orbital pairs,
+  averages the two requested orientations to preserve the old symmetrized
+  Qiu-White convention, and mirrors the result. `G-A`, nuclear blocks, `G-G`,
+  artifacts, metadata, and public API were untouched.
+- Cr2 q4 non-nuclear raw-block construction improved to
+  `0.5336s / 3148.165 MiB`, from the earlier neutral all-non-nuclear baseline
+  of about `2.65s / 10941.7 MiB`. The full exact-operator wrapper improved to
+  `6.4265s / 11231.805 MiB`.
+
+Validation:
+- Doer ran `git diff --check`, package load,
+  `tmp/work/cgrb_qw_nuclear_parity_check.jl`,
+  `tmp/work/cr2_non_nuclear_aa_parity_breakdown.jl`,
+  `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`,
+  `tmp/work/be2_r3u_facade_measurement.jl`, and
+  `tmp/work/cr2_exact_operator_allocation_audit.jl`, then a post-amend diff
+  gate and suspicious-line scan.
+- Manager ran `git diff --check HEAD~1..HEAD`, numstat, suspicious-added-line
+  scan, and new-test/file scan. Per user direction, manager did not rerun
+  long validation already reported by the doer.
+
+Numerical/performance result:
+- Cr2 `A-A` parity by block family: overlap `0.0`, kinetic
+  `1.11e-16`, x/y/z `0.0/0.0/0.0`, x2/y2/z2 `0.0/0.0/0.0`.
+- Cr2 raw non-nuclear reference delta was `1.11e-16`; residual mixed-overlap
+  replay delta was `0.0`.
+- H2 residual-GTO/MWG self-Coulomb stayed at `0.4574265214362095`.
+- Be2 facade/readback passed with K/unit-U/one-body/V deltas all `0.0`.
+
+Goal advancement:
+- Cr2-readiness/MT4: removes the full non-nuclear `A-A` donor hotspot from the
+  exact-operator path and leaves `G-A` non-nuclear donor work plus separately
+  deferred `G-G` product matrices as the next measured costs.
+- CGRB/LT4/LT6: keeps non-nuclear raw-block optimization inside the neutral
+  owner and preserves Qiu-White/Residual Gaussian as consumers.
+
+Mechanical/anti-bloat gate:
+- `git diff --check`: clean.
+- Numstat: `138 13 src/cartesian_gaussian_raw_blocks/non_nuclear_blocks.jl`.
+- Suspicious-added-line scan: none.
+- New-test/file scan: none.
+
+Carrying-cost result:
+- deleted: direct production call to
+  `_qwrg_cartesian_shell_self_moment_blocks_3d(...)` from the neutral
+  non-nuclear wrapper.
+- simplified: `A-A` non-nuclear construction now lives in the neutral owner
+  with function-local family table reuse.
+- quarantined: ignored Cr2 `A-A` parity breakdown probe only.
+- not deleted because: QW self donor remains live for QW/reference paths; `G-A`
+  cross donor remains delegated by design for this pass.
+- exact remaining caller/blocker: `G-A` non-nuclear donor and `G-G` product
+  matrices remain the next measured costs.
+- added src lines: 138.
+- deleted src lines: 13.
+- new tests: none.
+- new metadata/status fields: none.
+
+Risk / guardrail:
+- Continue to keep `G-G` product-matrix work separate and deferred. The next
+  source pass may target non-nuclear `G-A` family reuse inside the neutral
+  owner, but must not broaden into Qiu-White semantic changes, CPB/atomic
+  rewrites, persistent caches, artifacts, public API, or Cr2 workflow.
+
+### Medium-Term Goal Checkpoint After Pass 086A
+
+- Active: Cr2-readiness/MT4 has shifted from raw nuclear allocation to
+  non-nuclear `G-A` donor allocation plus separately deferred `G-G` product
+  matrices. Nuclear `G-A`/`A-A`, residual setup mixed overlap `X`, and
+  non-nuclear `A-A` are no longer the dominant blockers.
+- Completed in the current CGRB lane: neutral nuclear owner extraction,
+  nuclear axis-family reuse, non-nuclear owner extraction, overlap-only mixed
+  `X`, and non-nuclear `A-A` family reuse.
+- Blocked/deferred: final-basis `G-G` product-matrix optimization remains
+  explicitly outside `HP-CGRB-NN-*` and needs a separate design amendment if
+  targeted.
+- Still active: keep Cr2 facade/artifact workflow, public API, artifacts,
+  metadata/report/status fields, and broad provider/cache frameworks out of the
+  raw-block optimization lane.
+- Next lane direction: one more narrow `HP-CGRB-NN-*` source pass may target
+  non-nuclear `G-A` family reuse inside
+  `src/cartesian_gaussian_raw_blocks/non_nuclear_blocks.jl`; after that,
+  reassess whether remaining Cr2 exact-operator allocation is dominated by
+  deferred `G-G` product matrices.
