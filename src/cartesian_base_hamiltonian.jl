@@ -81,11 +81,14 @@ function _cartesian_base_inputs(system::NamedTuple, basis::NamedTuple)
     if length(symbols) == 1
         _cartesian_base_check_basis_keys(
             basis, _CARTESIAN_BASE_H_BASIS_REQUIRED_KEYS, _CARTESIAN_BASE_H_OPTIONAL_BASIS_KEYS)
-        symbols == ["H"] && charges == [1.0] ||
-            throw(ArgumentError("only origin-centered H is supported"))
         locations[1] == (0.0, 0.0, 0.0) ||
-            throw(ArgumentError("H must be centered at (0,0,0)"))
-        nup + ndn == 1 || throw(ArgumentError("H requires one electron"))
+            throw(ArgumentError("one-center atom must be centered at (0,0,0)"))
+        charge = only(charges)
+        electron_count = round(Int, charge)
+        isapprox(charge, electron_count; atol = 1.0e-12, rtol = 0.0) ||
+            throw(ArgumentError("one-center atom requires integer-valued nuclear charge"))
+        nup + ndn == electron_count ||
+            throw(ArgumentError("one-center atom requires neutral all-electron count"))
         core_spacing = _cartesian_base_positive(basis.core_spacing, "basis.core_spacing")
         return merge(base, (; kind = :h, q = _cartesian_base_q(basis.q),
             core_spacing,
@@ -112,7 +115,7 @@ function _cartesian_base_inputs(system::NamedTuple, basis::NamedTuple)
             reference_spacing = _cartesian_base_get_positive(basis, :reference_spacing, 1.0),
             tail_spacing = _cartesian_base_get_positive(basis, :tail_spacing, 10.0)))
     end
-    throw(ArgumentError("only H and H2 are supported"))
+    throw(ArgumentError("only one-center atoms and H2 are supported"))
 end
 
 function _cartesian_base_route(kind)

@@ -12431,3 +12431,55 @@ Carrying-cost result:
 - deleted src lines: 14.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 106 - Relax One-Center Base Atoms
+
+Commit(s):
+- this commit - Relax one-center base atoms
+
+Summary:
+- Accepted the approved `HP-R1-ATOM-*` source relaxation in
+  `src/cartesian_base_hamiltonian.jl`. The one-center base facade no longer
+  hardcodes atom input to `symbols == ["H"]` and `charges == [1.0]`.
+- One-center atoms are now validated from explicit caller data: the center must
+  remain at the origin, the nuclear charge must be finite, positive, and
+  integer-valued, and `nup + ndn` must equal that all-electron charge. The
+  symbol remains only a label/provenance value.
+- H2/base and R3 supplemented homonuclear diatomic validation were intentionally
+  left separate.
+
+Validation:
+- Doer validation: `git diff --check`, package load, H atom no-public-`d`
+  artifact/readback (dimension 419), H atom legacy `d == core_spacing`
+  artifact/readback (dimension 419), H atom `d != core_spacing` rejection, H2
+  base artifact/readback (dimension 471), H2 public `d` rejection, Be
+  one-center atom smoke (dimension 419) with finite/symmetric `K`, unit `U_A`,
+  and `V`, K/V artifact readback, noninteger charge rejection, nonneutral
+  electron-count rejection, translated-atom rejection, and no Cr2 molecule run.
+- Manager validation: reviewed the one-file diff, confirmed `git diff
+  --check`, numstat +8/-5 in `src/cartesian_base_hamiltonian.jl`, suspicious
+  added-line scan clean by direct `-U0` diff review, and no new-test/tool
+  changes.
+
+Goal advancement:
+- LT1/LT3: removes the remaining H-only special case from the one-center base
+  producer while preserving the settled driver and staged producer workflow.
+- MT: advances the atomic/diatomic unification audit by replacing a chemistry
+  hardcode with explicit physical input validation. The next cleanup candidate
+  remains shared H2-like diatomic basis normalization, not another driver
+  rewrite.
+
+Carrying-cost result:
+- deleted: one-center H-only symbol/charge guard and H-only error wording.
+- simplified: one-center validation is now data-driven from explicit charge
+  and electron inputs.
+- quarantined: none.
+- not deleted because: H2/base and R3 supplemented diatomic checks are still
+  intentionally separate scope gates.
+- exact remaining caller/blocker: no blocker for this atom relaxation; broader
+  translated atoms, supplemented atoms, element defaults, and artifact schema
+  cleanup remain unapproved.
+- added src lines: 8.
+- deleted src lines: 5.
+- new tests: none.
+- new metadata/status fields: none.
