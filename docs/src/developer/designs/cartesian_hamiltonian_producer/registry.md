@@ -499,6 +499,83 @@ No committed test file, committed fixture, driver contract test,
 solver/RHF/ECP/EGOI validation, route-diagnostic validation, or Cr2 fixture is
 approved.
 
+## Approved Composition Lane: Supplemented One-Center Atoms
+
+This section promotes the supplemented one-center atom composition lane. The
+goal is to make `Natom = 1`, `basisname !== nothing`, and either
+`nesting = :pqs` or `nesting = :wl` use the same staged supplemented
+Hamiltonian machinery as supported diatomics, with one physical owner center.
+
+### HP-COMP-SUPPATOM-FN-01 — supplemented atom composition
+
+Approved source files:
+
+```text
+src/cartesian_base_hamiltonian.jl
+bin/cartesian_ham_builder.jl
+src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl
+```
+
+`src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` is
+optional in this lane and may be edited only if a direct one-owner RG/MWG
+genericity blocker appears. The default expected source changes are in
+`src/cartesian_base_hamiltonian.jl` and `bin/cartesian_ham_builder.jl`.
+
+Approved behavior:
+
+- allow origin-centered one-center all-electron atoms with supplement enabled;
+- preserve both `nesting = :pqs` and `nesting = :wl`;
+- use the existing base atom validation and terminal basis construction;
+- use the existing residual Gaussian augmentation, exact augmented operators,
+  residual MWG/IDA interaction, base K/U reuse, assembly, writer, readback,
+  manifest, and provenance;
+- use `legacy_atomic_gaussian_supplement(...)` when `length(input.symbols) == 1`;
+- keep `legacy_bond_aligned_diatomic_gaussian_supplement(...)` when
+  `length(input.symbols) == 2`;
+- relax only the canonical driver's supplemented `Natom == 2` guard so
+  `basisname !== nothing` works for both `Natom = 1` and `Natom = 2`;
+- keep driver public inputs, ordering, comments, hooks, spacing/layout, stage
+  labels, and artifact contract otherwise unchanged.
+
+Forbidden:
+
+- separate atom-only Hamiltonian builder or materialization path;
+- new driver inputs, route switches, diagnostics, stop-after controls, or
+  stage labels;
+- route skeleton, shellification, terminal lowering, raw-block,
+  residual-selection, MWG/IDA convention, artifact schema, writer, reader,
+  public API/export, solver/ECP, status/report payload, heteronuclear/general
+  geometry, translated atom, or Cr2-specific workflow changes;
+- committed tests or committed input fixtures.
+
+Failure rule: if supplemented atoms require new residual-selection semantics,
+atom-only MWG/IDA conventions, terminal-lowering changes, route changes,
+artifact schema changes, or a separate atom Hamiltonian path, make no source
+commit and report the exact blocker.
+
+Line budget: target under `80` added `src`/`bin` lines, with deletion or
+simplification expected where guards become obsolete.
+
+### HP-COMP-SUPPATOM-TEST-01 — supplemented atom validation
+
+Approved validation:
+
+- `git diff --check`;
+- package load;
+- base atom artifact/readback still passes;
+- H atom supplemented artifact/readback with `nesting = :pqs`;
+- H atom supplemented artifact/readback with `nesting = :wl`;
+- small Be atom supplemented artifact/readback for `nesting = :pqs` or
+  `nesting = :wl` if bounded;
+- H2 supplemented PQS and WL smoke still pass;
+- translated atom still rejects clearly;
+- supplement basis count mismatch still rejects clearly;
+- no Cr2 run.
+
+No committed test file, committed fixture, driver contract test,
+solver/RHF/ECP/EGOI validation, route-diagnostic validation, or Cr2 fixture is
+approved.
+
 ### HP-FN-03 — blockwise one-body assembly
 
 Approved file:
@@ -2699,9 +2776,11 @@ Compact summary printing and artifact readback checks remain allowed workflow
 behavior, but they are not open-ended hooks and must not introduce route,
 diagnostic, artifact-schema, or solver controls.
 
-`basisname = nothing` selects base mode. `basisname !== nothing` selects the
-supported supplemented diatomic mode and is the visible supplement basis label;
-that path must reject `Natom == 1`. Supplemented atoms remain unapproved.
+`basisname = nothing` selects base mode. `basisname !== nothing` selects a
+supported supplemented mode and is the visible supplement basis label. The
+original driver workflow lane covered supplemented diatomics only;
+`HP-COMP-SUPPATOM-*` separately approves relaxing the old `Natom == 1`
+rejection.
 
 `padding` is a public physical box-padding control. For one-center atoms it
 maps to the base facade `radius`. For z-axis diatomics it maps to the existing
@@ -3237,22 +3316,23 @@ supplement: off | on
 ```
 
 This registry section is planning only except for the promoted
-`HP-COMP-WLDIAT-*`, `HP-COMP-BASEDIAT-*`, and `HP-COMP-SUPPWL-*` pairs above.
+`HP-COMP-WLDIAT-*`, `HP-COMP-BASEDIAT-*`, `HP-COMP-SUPPWL-*`, and
+`HP-COMP-SUPPATOM-*` pairs above.
 Current support remains partial:
 
 - atom / no supplement / `:pqs`: implemented for explicit origin-centered base
   atoms;
 - atom / no supplement / `:wl`: implemented for one-center base atoms;
-- atom / supplement / either nesting: not approved / not wired;
+- atom / supplement / either nesting: approved under `HP-COMP-SUPPATOM-*`;
 - z-axis diatomic / no supplement / `:pqs`: implemented for explicit
   homonuclear z-axis all-electron inputs;
 - z-axis diatomic / no supplement / `:wl`: implemented for explicit
   homonuclear z-axis all-electron inputs through native WL terminal records;
 - z-axis diatomic / supplement / `:pqs`: supported for explicit homonuclear
   z-axis diatomics through the residual-GTO/MWG path;
-- z-axis diatomic / supplement / `:wl`: approved under
-  `HP-COMP-SUPPWL-*`; implementation may proceed only through the existing
-  RG/MWG boundary once a WL terminal basis exists.
+- z-axis diatomic / supplement / `:wl`: supported for explicit homonuclear
+  z-axis diatomics through the same residual-GTO/MWG boundary after WL terminal
+  realization.
 
 Composition IDs:
 
@@ -3265,9 +3345,9 @@ Composition IDs:
   White-Lindsey z-axis diatomic composition through the existing RG/MWG
   boundary;
 - `HP-COMP-SUPPATOM-FN-01` / `HP-COMP-SUPPATOM-TEST-01`: supplemented
-  one-center atom path through common Residual Gaussian augmentation
-  (candidate only).
+  one-center atom path through common Residual Gaussian augmentation.
 
-Each remaining candidate needs a later docs-only amendment that names exact
-files, functions, validation gates, forbidden surfaces, line budget, and
-deletion or shrinkage expectation before implementation may begin.
+The initial explicit `atom | z-axis diatomic`, `:pqs | :wl`,
+`supplement = off | on` composition lanes now all have approved implementation
+authority. Deferred geometry, solver, ECP, public export, and Cr2-specific
+work still need later docs-only amendments before implementation may begin.

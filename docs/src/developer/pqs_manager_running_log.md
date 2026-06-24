@@ -14926,3 +14926,74 @@ Carrying-cost result:
 - deleted src lines: 4.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 142 - Approve Supplemented Atom Lane
+
+Commit(s):
+- this commit - Approve supplemented atom composition lane
+
+Summary:
+- Promoted `HP-COMP-SUPPATOM-FN-01` and `HP-COMP-SUPPATOM-TEST-01` from
+  candidate to approved composition authority. The target cell is `Natom = 1`,
+  `basisname !== nothing`, and `nesting = :pqs` or `nesting = :wl` through the
+  existing staged supplemented Hamiltonian machinery.
+- Approved source surfaces are `src/cartesian_base_hamiltonian.jl` and
+  `bin/cartesian_ham_builder.jl`, with
+  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` allowed
+  only for a direct one-owner RG/MWG genericity blocker. The intended source
+  work is to load atomic supplements with
+  `legacy_atomic_gaussian_supplement(...)`, keep the existing diatomic
+  supplement loader for two-center inputs, and relax only the canonical
+  driver's supplemented `Natom == 2` guard.
+- The amendment preserves base atom validation, terminal basis construction,
+  residual Gaussian augmentation, exact augmented operators, residual MWG/IDA,
+  base K/U reuse, assembly, writer, readback, manifest/provenance, driver
+  public inputs, hooks, stage labels, and artifact contract. It explicitly
+  rejects an atom-only Hamiltonian builder or atom-specific artifact shape.
+
+Validation:
+- Design-manager validation for this docs-only pass: read current compact
+  composition authority and the doer blurb; update registry/current/
+  implementation slices/README/AGENTS/running log only; run `git diff --check`;
+  focused `rg` for `HP-COMP-SUPPATOM-*`, supplemented-atom candidate/blocker
+  wording, approved source/bin surfaces, and forbidden driver/route/RG/artifact/
+  Cr2 surfaces; confirm no source, bin, test, or tool files changed. No
+  implementation tests are part of this approval pass; package load and
+  artifact/readback checks belong to `HP-COMP-SUPPATOM-TEST-01`.
+
+Goal advancement:
+- LT1/LT3: moves the final explicit composition cell from policy blocker to
+  exact source authority without adding an atom-only construction path.
+- LT5/LT6: keeps atoms and diatomics on the same terminal-basis/RG/MWG/
+  Hamiltonian boundary, with one-center residual selection treated as the
+  one-owner case.
+
+Medium-goal update:
+- All initial explicit `atom | z-axis diatomic`, `:pqs | :wl`, and
+  `supplement = off | on` composition lanes now have approved implementation
+  authority under the current origin-centered atom and homonuclear z-axis
+  diatomic constraints. Remaining medium-lane choices are no longer basic
+  composition cells; they are geometry expansion, public/export polish,
+  basis/supplement realism, Cr2 readiness, or solver/ECP work.
+
+Carrying-cost result:
+- deleted: none; docs-only authority pass.
+- simplified: future source work has one exact atom supplement lane instead of
+  driver rejection plus diatomic-only supplement-loader coupling.
+- quarantined: atom-only Hamiltonian builders, new driver inputs, route
+  switches, diagnostics, stop-after controls, new stage labels, route
+  skeleton/shellification/terminal-lowering changes, raw blocks,
+  residual-selection changes, MWG/IDA convention changes, artifact schema or
+  reader changes, public API/export changes, solver/ECP work,
+  heteronuclear/general geometry, translated atoms, committed tests, and Cr2
+  workflow remain unapproved.
+- not deleted because: source cleanup has not run yet.
+- exact remaining caller/blocker: if supplemented atoms require new
+  residual-selection semantics, atom-only MWG/IDA conventions,
+  terminal-lowering changes, route changes, artifact schema changes, or a
+  separate atom Hamiltonian path, the source pass must stop and report the
+  exact blocker.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

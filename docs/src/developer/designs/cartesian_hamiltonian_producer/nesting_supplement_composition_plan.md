@@ -3,8 +3,9 @@
 This note freezes the target shape for the canonical Cartesian Hamiltonian
 producer after `nesting = :wl` became a real construction-family input.
 
-It is a planning and authority-boundary amendment. It approves source work only
-for explicitly promoted cells; all other cells remain candidate-only.
+It is a planning and authority-boundary amendment. The initial explicit
+composition cells are now promoted under the IDs listed below; deferred
+geometry, solver, ECP, export, and Cr2-specific work remain candidate-only.
 
 ## Target Contract
 
@@ -50,7 +51,7 @@ they must not be hidden by driver defaults or mislabeled artifact provenance.
 | Geometry | Supplement | `nesting = :pqs` | `nesting = :wl` |
 | --- | --- | --- | --- |
 | atom | off | implemented for explicit origin-centered all-electron base atoms, with H as the committed endpoint | implemented for one-center base atoms through the WL terminal-basis seam |
-| atom | on | not approved / not wired | not approved / not wired |
+| atom | on | approved implementation lane through the common Residual Gaussian path | approved implementation lane through the common Residual Gaussian path |
 | z-axis diatomic | off | implemented for explicit homonuclear z-axis all-electron inputs | implemented for explicit homonuclear z-axis all-electron inputs through native WL terminal records |
 | z-axis diatomic | on | supported for explicit homonuclear z-axis diatomics through the residual-GTO/MWG path | approved implementation lane through the same RG/MWG boundary after WL base terminal realization |
 
@@ -158,12 +159,37 @@ Line budget: target under `60` added `src` lines.
 
 ### 2. Supplemented Atoms
 
-Candidate goal: make `geometry = atom`, `supplement = on` work through the same
-Residual Gaussian path used by supplemented diatomics.
+Status: approved for implementation under `HP-COMP-SUPPATOM-FN-01` and
+`HP-COMP-SUPPATOM-TEST-01`.
 
-One-center residual selection is the one-owner case of the same owner-local
-residual Gaussian algorithm. It must not introduce a separate atom supplement
-algorithm, atom-specific Hamiltonian builder, or atom-only artifact schema.
+Goal: make `geometry = atom`, `supplement = on`, and either `nesting = :pqs`
+or `nesting = :wl` work through the same Residual Gaussian path used by
+supplemented diatomics. One-center residual selection is the one-owner case of
+the same owner-local residual Gaussian algorithm.
+
+Approved source files:
+
+```text
+src/cartesian_base_hamiltonian.jl
+bin/cartesian_ham_builder.jl
+src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl
+```
+
+The terminal residual file is optional and may be touched only if the existing
+RG/MWG compatibility entry point exposes a direct one-owner genericity blocker.
+The expected source work is to use `legacy_atomic_gaussian_supplement(...)` for
+one-center supplement loading, keep the existing diatomic supplement loader for
+two-center inputs, and relax only the canonical driver's supplemented
+`Natom == 2` guard.
+
+This lane must preserve the base atom validation, terminal basis construction,
+residual Gaussian augmentation, exact augmented operators, residual MWG/IDA
+interaction, base K/U reuse, assembly, writer, readback, manifest/provenance,
+driver public inputs, hooks, spacing/layout, stage labels, and artifact
+contract. It must not introduce a separate atom supplement algorithm,
+atom-specific Hamiltonian builder, atom-only materialization path, atom-only
+artifact schema, new driver inputs, route switches, diagnostics, or stop-after
+controls.
 
 ### 3. Supplemented White-Lindsey
 
@@ -195,9 +221,7 @@ or route-stage switches.
 
 ## Composition IDs
 
-Approved composition IDs authorize only the exact lanes named above. Candidate
-IDs do not authorize implementation until promoted in `registry.md` with exact
-files, functions, validation, forbidden surfaces, and line budgets.
+Approved composition IDs authorize only the exact lanes named above.
 
 - `HP-COMP-WLDIAT-FN-01` / `HP-COMP-WLDIAT-TEST-01`: approved WL z-axis
   diatomic base terminal-basis and artifact path.
@@ -207,6 +231,11 @@ files, functions, validation, forbidden surfaces, and line budgets.
   one-center atom path through common Residual Gaussian augmentation.
 - `HP-COMP-SUPPWL-FN-01` / `HP-COMP-SUPPWL-TEST-01`: supplemented
   White-Lindsey z-axis diatomic path through the common RG boundary.
+
+The initial explicit `atom | z-axis diatomic`, `:pqs | :wl`,
+`supplement = off | on` composition lanes now all have approved implementation
+authority. Future geometry, physics, export, solver, or Cr2-specific expansion
+still needs a separate docs-only amendment.
 
 ## Deferred
 

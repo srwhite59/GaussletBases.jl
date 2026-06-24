@@ -24,15 +24,13 @@ contracts. The supported supplemented workflow now accepts explicit homonuclear
 z-axis diatomics without element-specific branches. A compact artifact manifest
 lane is approved for JLD2 sidecar groups that make written Hamiltonians
 self-describing without changing matrix keys or reader behavior. Broad public
-API/export, supplemented atoms, Cr2-specific workflow, ECP, EGOI, RHF, and
+API/export, translated atoms, Cr2-specific workflow, ECP, EGOI, RHF, and
 solver work remain deferred.
-The next composition target is the documented 2 x 2 x 2 matrix over
-`geometry`, `nesting`, and supplement state; unsupported cells remain
-candidate-only until separately approved.
-The first missing composition cell, WL z-axis diatomic base with no supplement,
-is approved for implementation under `HP-COMP-WLDIAT-*`.
-The base diatomic input contract relaxation for explicit homonuclear z-axis
-all-electron diatomics is approved separately under `HP-COMP-BASEDIAT-*`.
+The documented 2 x 2 x 2 matrix over `geometry`, `nesting`, and supplement
+state now has approved implementation authority under the current
+origin-centered atom and homonuclear z-axis diatomic constraints.
+The approved composition IDs are `HP-COMP-WLDIAT-*`, `HP-COMP-BASEDIAT-*`,
+`HP-COMP-SUPPWL-*`, and `HP-COMP-SUPPATOM-*`.
 
 Agents should read first:
 
@@ -154,8 +152,8 @@ Approved amendments:
   `supplement = off | on`. The WL z-axis diatomic base cell is approved under
   `HP-COMP-WLDIAT-*`, and the base homonuclear z-axis diatomic validation
   relaxation is approved under `HP-COMP-BASEDIAT-*`. Supplemented WL z-axis
-  diatomics are approved under `HP-COMP-SUPPWL-*`; supplemented atoms remain
-  candidate-only.
+  diatomics are approved under `HP-COMP-SUPPWL-*`; supplemented one-center
+  atoms are approved under `HP-COMP-SUPPATOM-*`.
 - [Cartesian Hamiltonian artifact manifest](cartesian_hamiltonian_artifact_manifest.md)
   approves only compact JLD2 sidecar groups for matrix-order basis labels and
   uniform recipe provenance, and separately approves a compact source-mode
@@ -191,11 +189,11 @@ Approved amendments:
 
 Candidate amendments:
 
-- Supplemented atoms, translated atoms, Cr2-specific workflow, public
-  supplemented workflow/export, basis/supplement-realism beyond explicit
-  supplied labels/files, and broad driver diagnostics remain candidate-only
-  until separately approved. Supplemented WL z-axis diatomics are already
-  approved under `HP-COMP-SUPPWL-*`.
+- Translated atoms, Cr2-specific workflow, public supplemented
+  workflow/export, basis/supplement-realism beyond explicit supplied
+  labels/files, and broad driver diagnostics remain candidate-only until
+  separately approved. Supplemented atoms and supplemented WL z-axis diatomics
+  are approved under `HP-COMP-SUPPATOM-*` and `HP-COMP-SUPPWL-*`.
 
 Historical material:
 

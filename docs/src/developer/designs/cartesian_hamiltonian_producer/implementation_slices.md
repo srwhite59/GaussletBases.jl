@@ -830,11 +830,12 @@ Approved run-level hooks:
 - `print_timing`;
 - `expected_dimension`.
 
-`basisname = nothing` selects base mode. `basisname !== nothing` selects
-supported supplemented diatomic mode, is the visible supplement basis label,
-and must reject `Natom == 1`. `padding` is physical box padding: it maps to
-one-center `radius` for atoms and to z-axis diatomic facade extents around the
-two nuclei.
+`basisname = nothing` selects base mode. `basisname !== nothing` selects a
+supported supplemented mode and is the visible supplement basis label. The
+original driver-stage lane covered supplemented diatomics only;
+`HP-COMP-SUPPATOM-*` separately approves relaxing the old `Natom == 1`
+rejection. `padding` is physical box padding: it maps to one-center `radius`
+for atoms and to z-axis diatomic facade extents around the two nuclei.
 
 `nesting` is a construction-family choice, not a diagnostic route switch. It
 must not expose internal route-family names, route skeletons, retained-rule
@@ -888,8 +889,10 @@ Line budget:
 
 ## Nesting/Supplement Composition Target
 
-Status: planning section with the first composition lane approved under
-`HP-COMP-WLDIAT-FN-01` and `HP-COMP-WLDIAT-TEST-01`. Remaining lanes are
+Status: planning section for the explicit initial composition matrix. The
+WL base diatomic, base homonuclear diatomic, supplemented WL diatomic, and
+supplemented one-center atom lanes now all have approved IDs below. Deferred
+geometry, solver, ECP, public export, and Cr2-specific work remain
 candidate-only.
 
 The target producer shape is the 2 x 2 x 2 composition matrix recorded in
@@ -906,9 +909,9 @@ Current implementation status:
 | Geometry | Supplement | `nesting = :pqs` | `nesting = :wl` |
 | --- | --- | --- | --- |
 | atom | off | implemented for explicit origin-centered base atoms | implemented for one-center base atoms |
-| atom | on | not approved / not wired | not approved / not wired |
+| atom | on | approved implementation lane through the common RG/MWG path | approved implementation lane through the common RG/MWG path |
 | z-axis diatomic | off | implemented for explicit homonuclear z-axis all-electron inputs | implemented for explicit homonuclear z-axis all-electron inputs through native WL terminal records |
-| z-axis diatomic | on | supported for explicit homonuclear z-axis diatomics through RG/MWG | approved implementation lane through the same RG/MWG boundary after WL base terminal realization |
+| z-axis diatomic | on | supported for explicit homonuclear z-axis diatomics through RG/MWG | supported through the same RG/MWG boundary after WL base terminal realization |
 
 Dependency order:
 
@@ -919,10 +922,11 @@ Dependency order:
    `HP-COMP-BASEDIAT-FN-01`; relax base two-center validation from H2-only to
    explicit homonuclear z-axis all-electron diatomics in
    `src/cartesian_base_hamiltonian.jl` only.
-3. Supplemented atoms: candidate; use the same owner-local Residual Gaussian path as
-   supplemented diatomics, with one owner center as the simple case.
-4. Supplemented WL: candidate; after WL base terminal bases exist, prove RG
-   augmentation is nesting-neutral at the terminal-basis boundary.
+3. Supplemented WL: approved under `HP-COMP-SUPPWL-FN-01`; use the same RG
+   augmentation boundary after WL base terminal bases exist.
+4. Supplemented atoms: approved under `HP-COMP-SUPPATOM-FN-01`; use the same
+   owner-local Residual Gaussian path as supplemented diatomics, with one owner
+   center as the simple case.
 
 Approved first lane:
 
@@ -951,15 +955,15 @@ Additional approved composition lane:
   base homonuclear z-axis diatomic validation relaxation;
 - `HP-COMP-SUPPWL-FN-01` / `HP-COMP-SUPPWL-TEST-01` are approved for the
   supplemented White-Lindsey z-axis diatomic composition lane through the
-  existing RG/MWG boundary.
+  existing RG/MWG boundary;
+- `HP-COMP-SUPPATOM-FN-01` / `HP-COMP-SUPPATOM-TEST-01` are approved for the
+  supplemented one-center atom composition lane through the existing RG/MWG
+  boundary.
 
-Remaining candidate placeholder IDs:
-
-- `HP-COMP-SUPPATOM-FN-01` / `HP-COMP-SUPPATOM-TEST-01`.
-
-Remaining placeholders do not authorize implementation. Each lane needs a later
-docs-only amendment naming exact files, functions, validation gates, forbidden
-surfaces, and line budget.
+No initial composition placeholder remains candidate-only. Deferred geometry,
+solver, ECP, public export, and Cr2-specific work still need a later docs-only
+amendment naming exact files, functions, validation gates, forbidden surfaces,
+and line budget.
 
 ## Canonical Driver Atom Workflow
 
@@ -994,9 +998,10 @@ Allowed source shapes:
 
 Decision:
 
-- base atom driver output only is approved;
+- the original `HP-DRV-ATOM-*` lane approved base atom driver output only;
 - current validation remains origin-centered H;
-- supplemented atom Hamiltonians remain candidate-only.
+- supplemented atom Hamiltonians are separately approved under
+  `HP-COMP-SUPPATOM-*`.
 
 Forbidden:
 
@@ -1016,7 +1021,10 @@ Validation gates:
 - optional ignored negative checks for non-origin atom input, nonneutral
   electron count, mismatched temporary `d` if accepted, or unsupported atom
   input;
-- no supplemented atom or translated-atom validation.
+- no supplemented atom validation under the original base-atom driver lane;
+  supplemented atom validation is separately governed by
+  `HP-COMP-SUPPATOM-TEST-01`;
+- no translated-atom validation.
 
 Line budget:
 

@@ -246,15 +246,17 @@ Approved canonical driver usability lane:
   unsupported cells must keep clear rejection until separately approved;
 - the driver may call only approved base, staged, and supported supplemented
   producer surfaces and the approved artifact writer/readback;
-- `basisname = nothing` selects base mode; `basisname !== nothing` selects
-  supported supplemented diatomic mode and must reject `Natom == 1`;
+- `basisname = nothing` selects base mode; `basisname !== nothing` selects a
+  supported supplemented mode; `HP-COMP-SUPPATOM-FN-01` separately approves
+  relaxing the old supplemented `Natom == 2` guard so `Natom == 1` and
+  `Natom == 2` can use the same supplemented staged path;
 - `padding` is physical box padding around the atom or two nuclei and maps
   internally to the existing public facade fields;
 - route diagnostics, stop-after internals, ladder probes, raw-block switches,
   underscored package helper calls, status/report/payload fields, allocation
   probes, artifact schema dumps, solver work, public API/export changes,
-  artifact schema changes, supplemented atoms, old route-stage choreography,
-  and Cr2-specific workflow remain unapproved in the canonical driver.
+  artifact schema changes, old route-stage choreography, and Cr2-specific
+  workflow remain unapproved in the canonical driver.
 
 Approved White-Lindsey terminal-basis seam:
 
@@ -316,14 +318,38 @@ Approved first composition lane:
   residual-selection changes, MWG/IDA convention changes, artifact schema or
   reader changes, public API/export changes, old WL H1/H1+J materialization,
   committed tests, or Cr2 workflow.
+- `HP-COMP-SUPPATOM-FN-01` approves the supplemented one-center atom
+  composition lane for `Natom = 1`, `basisname !== nothing`, and
+  `nesting = :pqs` or `nesting = :wl`;
+- approved source surface is `src/cartesian_base_hamiltonian.jl` and
+  `bin/cartesian_ham_builder.jl`, with
+  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
+  optional only for a direct one-owner RG/MWG genericity blocker;
+- the implementation must use the existing base atom validation, terminal
+  basis construction, residual Gaussian augmentation, exact augmented
+  operators, residual MWG/IDA interaction, base K/U reuse, assembly, writer,
+  readback, manifest, and provenance;
+- it may select `legacy_atomic_gaussian_supplement(...)` for one-center inputs
+  and keep the existing diatomic supplement loader for two-center inputs;
+- it may relax only the canonical driver's supplemented `Natom == 2` guard and
+  must otherwise preserve driver public inputs, ordering, hooks, spacing,
+  stage labels, and artifact contract;
+- it does not approve a separate atom-only Hamiltonian builder, new driver
+  inputs, route switches, diagnostics, stop-after controls, route
+  skeleton/shellification/terminal lowering changes, raw-block changes,
+  residual-selection changes, MWG/IDA convention changes, artifact schema or
+  reader changes, public API/export changes, solver/ECP work,
+  heteronuclear/general geometry, translated atoms, committed tests, or Cr2
+  workflow.
 
-Remaining candidate composition lane:
+Composition lane status:
 
-- supplemented one-center atoms through the existing Residual Gaussian path,
-  not an atom-only supplement builder;
-
-This candidate lane is not source authority until promoted in
-`registry.md` with exact files, functions, validation, and forbidden surfaces.
+- the explicit `atom | z-axis diatomic`, `:pqs | :wl`, and
+  `supplement = off | on` composition lanes now all have approved
+  implementation authority under the current origin-centered atom and
+  homonuclear z-axis diatomic geometry constraints;
+- deferred geometry, solver, ECP, public export, and Cr2-specific work still
+  need later docs-only amendments before implementation may begin.
 
 Approved R1 one-center base atom relaxation:
 
@@ -347,9 +373,10 @@ Approved R1 one-center base atom relaxation:
   shape is approved;
 - `HP-R1-ATOM-TEST-01` keeps the committed H endpoint as the regression gate
   and allows ignored/user-run Be or Cr atom artifact checks;
-- no translated atoms, supplemented atoms, ECP, solver workflow, artifact
-  schema change, element lookup/default table, public API redesign, or source
-  file outside `src/cartesian_base_hamiltonian.jl` is approved.
+- the R1 atom IDs do not approve translated atoms, ECP, solver workflow,
+  artifact schema change, element lookup/default table, public API redesign,
+  or source files outside `src/cartesian_base_hamiltonian.jl`;
+- supplemented atoms are separately governed by `HP-COMP-SUPPATOM-*`.
 
 Approved route-recipe cleanup:
 
@@ -481,9 +508,11 @@ Approved canonical driver atom workflow:
   `cartesian_base_hamiltonian(system; basis, hamfile)` facade for
   origin-centered base atom construction where the base facade already
   supports the requested atom;
-- current validation remains origin-centered H; this does not approve broader
-  base atoms, translated atoms, supplemented atoms, element tables, ECP,
-  solver workflow, public API/export changes, or artifact schema changes.
+- current validation remains origin-centered H; these driver atom IDs do not
+  approve broader base atoms, translated atoms, element tables, ECP, solver
+  workflow, public API/export changes, or artifact schema changes;
+- supplemented atom driver wiring is separately governed by
+  `HP-COMP-SUPPATOM-*`.
 - `HP-DRV-ATOM-CLEAN-01` approves only removing the stale hidden
   `d = core_spacing` atom-basis field from the canonical driver; public
   inputs, defaults, overrides, hooks, timing labels, stage sequence, artifact

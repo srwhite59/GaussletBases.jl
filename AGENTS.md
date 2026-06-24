@@ -512,6 +512,8 @@ these approved design IDs:
 - `HP-COMP-BASEDIAT-TEST-01`
 - `HP-COMP-SUPPWL-FN-01`
 - `HP-COMP-SUPPWL-TEST-01`
+- `HP-COMP-SUPPATOM-FN-01`
+- `HP-COMP-SUPPATOM-TEST-01`
 
 No other production surface may be added in this lane without a prior
 documentation-only design amendment. This includes new structs, persistent
@@ -1242,12 +1244,14 @@ canonical repo surfaces.
 The only approved compact run-level hooks are `check_file`, `print_contract`,
 `print_timing`, and `expected_dimension`. They are for human expert review and
 Codex-controlled artifact checks only. The driver may use `basisname = nothing`
-as the base-mode selector; `basisname !== nothing` selects supported
-supplemented diatomic mode and must reject `Natom == 1`. `padding` is physical
-box padding around the atom or two nuclei and maps internally to the existing
-facade fields. The driver must not expose private route-stage choreography as a
-substitute for constructing public `system`, `basis`, and optional
-`supplement` objects.
+as the base-mode selector; `basisname !== nothing` selects a supported
+supplemented mode and is further governed by the composition IDs. The original
+driver-stage lane covered supplemented diatomics only; `HP-COMP-SUPPATOM-*`
+separately approves relaxing the old `Natom == 1` rejection. `padding` is
+physical box padding around the atom or two nuclei and maps internally to the
+existing facade fields. The driver must not expose private route-stage
+choreography as a substitute for constructing public `system`, `basis`, and
+optional `supplement` objects.
 
 `HP-DRV-NEST-FN-01` and `HP-DRV-NEST-WIRE-01` approve one visible construction
 family input, `nesting = :pqs` or `nesting = :wl`, in
@@ -1324,6 +1328,26 @@ residual-selection changes, MWG/IDA convention changes, artifact schema or
 reader changes, public API/export changes, old WL H1/H1+J materialization,
 solver/ECP work, diagnostics/status/report payloads, committed tests, or Cr2
 workflow. Target line budget is under 80 added `src` lines.
+
+`HP-COMP-SUPPATOM-FN-01` and `HP-COMP-SUPPATOM-TEST-01` approve only the
+supplemented one-center atom composition lane. Approved implementation surfaces
+are `src/cartesian_base_hamiltonian.jl` and `bin/cartesian_ham_builder.jl`,
+with `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
+allowed only for a direct one-owner RG/MWG genericity blocker. The lane may
+allow origin-centered one-center all-electron atoms with `basisname !==
+nothing` for both `nesting = :pqs` and `nesting = :wl`, using the existing base
+atom validation, terminal basis construction, residual Gaussian augmentation,
+exact augmented operators, MWG/IDA interaction, base K/U reuse, assembly,
+writer, readback, manifest, and provenance. It may select
+`legacy_atomic_gaussian_supplement(...)` for one-center inputs and keep the
+existing diatomic supplement loader for two-center inputs. It does not approve
+a separate atom-only Hamiltonian builder, new driver inputs, route switches,
+diagnostics, stop-after controls, new stage labels, route/shellification/
+terminal-lowering changes, raw-block changes, residual-selection changes,
+MWG/IDA convention changes, artifact schema or reader changes, public
+API/export changes, solver/ECP work, status/report payloads, heteronuclear or
+general geometry, translated atoms, committed tests, or Cr2 workflow. Target
+line budget is under 80 added `src`/`bin` lines.
 
 `HP-WLTERM-FILE-01`, `HP-WLTERM-FN-01`, and `HP-WLTERM-WIRE-01` approve only
 the narrow White-Lindsey terminal-basis seam needed by `nesting = :wl`.
