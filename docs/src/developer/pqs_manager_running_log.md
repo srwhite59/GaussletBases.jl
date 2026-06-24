@@ -15177,3 +15177,66 @@ Carrying-cost result:
 - new metadata/status fields: compact provenance keys `ns`, `q_rule`, and
   `ns_source` are approved only inside existing `producer_provenance/` and
   `recipe_provenance/` groups.
+
+## Cartesian Hamiltonian Producer Pass 145 - Public `ns` Normalization
+
+Commit(s):
+- this commit - Normalize public ns input
+
+Summary:
+- Accepted the `HP-COMP-NS-FN-01` source/bin pass. The canonical driver now
+  exposes `ns` as the public requested cube/source/nesting size and passes
+  `basis.ns` into the producer. Driver edits are limited to the visible input
+  name, `public_inputs`, basis construction, and contract print; stage order,
+  hooks, comments, and workflow shape were not redesigned.
+- `src/cartesian_base_hamiltonian.jl` now normalizes the public size contract:
+  `nesting = :pqs` derives route-local `q = ns`; `nesting = :wl` derives
+  `q = ns - 2` and rejects `ns < 3`. Legacy direct-facade `basis.q` remains
+  accepted as compatibility, deriving `ns = q` for PQS and `ns = q + 2` for
+  WL. Supplying both `ns` and inconsistent `q` throws.
+- Existing `producer_provenance/` and `recipe_provenance/` now record `ns`,
+  derived `q`, `q_rule`, `ns_source`, and existing `nesting`.
+
+Validation:
+- Doer: `git diff --check`; package load; atom base artifact/readback with
+  public `ns` for `nesting = :pqs` and `nesting = :wl`; H2 base
+  artifact/readback with public `ns` for `nesting = :pqs` and `nesting = :wl`;
+  H atom supplemented smoke with public `ns`; legacy direct-facade `q`
+  compatibility for PQS and WL; inconsistent `ns`/`q` rejection;
+  `nesting = :wl, ns < 3` rejection; direct provenance inspection for base WL
+  and supplemented PQS artifacts. No Cr2 run.
+- Manager: inspected the source/bin diff; `git diff --check`;
+  `git diff --numstat -- src bin tools test docs`; suspicious added-line scan;
+  new tests/tools scan; focused driver stale-public-`q` scan. No suspicious
+  hits and no new committed tests/tools. The remaining `2 * input.q + 1`
+  source hit is the separately approved atom-box lane, not part of this pass.
+
+Goal advancement:
+- LT1/LT3: makes the public size knob match user expectations across PQS and
+  WL while preserving route-local `q` for existing construction internals.
+- LT5/LT6: removes an ambiguity that distorted PQS/WL comparisons and prepares
+  the one-center atom box fix to use resolution metadata rather than public
+  `q` semantics.
+
+Remaining blocker / next:
+- `HP-COMP-ATOMBOX-*` should now proceed: remove the one-center
+  `2 * input.q + 1` parent-axis count artifact and make atom box size depend
+  on public radius/padding plus spacing policy, without changing driver
+  inputs.
+
+Carrying-cost result:
+- deleted: public driver `q` surface.
+- simplified: public size normalization is centralized in one producer helper.
+- quarantined: atom parent sizing, route skeletons, shellification, terminal
+  lowering, raw blocks, RG/MWG/IDA, reader behavior, diagnostics,
+  reports/status, and Cr2 workflow remain out of this pass.
+- not deleted because: route-local `q` remains the existing internal
+  construction input and legacy direct-facade `q` is temporarily supported for
+  compatibility.
+- exact remaining caller/blocker: atom parent sizing is still a separate
+  approved lane.
+- added src/bin lines: 51.
+- deleted src/bin lines: 15.
+- new tests: none.
+- new metadata/status fields: compact provenance keys `ns`, `q_rule`, and
+  `ns_source` in existing provenance groups.

@@ -11,7 +11,7 @@ Z = 1.0
 R = 4.0                        # full bond length in bohr when Natom == 2
 nup = 1
 ndn = 1
-q = 5                          # overall nesting order
+ns = 5                         # requested cube/source/nesting size
 nesting = :pqs                  # :pqs or :wl construction family
 core_spacing = 0.3             # near-nucleus spacing / atom mapping width
 padding = 10.0                 # extra box padding beyond each nucleus, in bohr
@@ -34,7 +34,7 @@ print_timing = true
 expected_dimension = nothing
 
 public_inputs = (
-    :Natom, :R, :Z, :atom, :nup, :ndn, :q, :core_spacing, :padding,
+    :Natom, :R, :Z, :atom, :nup, :ndn, :ns, :core_spacing, :padding,
     :gausslet_family, :nesting, :basisname, :lmax, :uncontracted,
     :supplement_width_max, :basisfile, :hamfile, :check_file,
     :print_contract, :print_timing, :expected_dimension,
@@ -78,7 +78,7 @@ else
     half_R = Float64(vars[:R]) / 2
     (;  atom_symbols = [label, label], nuclear_charges = [charge, charge], atom_locations = [(0.0, 0.0, -half_R), (0.0, 0.0, half_R)], nup = vars[:nup], ndn = vars[:ndn])
 end
-common_basis = (; q = vars[:q], core_spacing = vars[:core_spacing],
+common_basis = (; ns = vars[:ns], core_spacing = vars[:core_spacing],
     parent_axis_family = vars[:gausslet_family], nesting = nesting_value)
 basis = N == 1 ? (; common_basis..., radius = vars[:padding]) :
     (; common_basis..., xmax_parallel = Float64(vars[:R]) / 2 + vars[:padding],
@@ -96,7 +96,7 @@ contract_elapsed = time() - contract_start
 # Review public contract
 if vars[:print_contract]
     println("system: Natom=", N, " atom=", label, " Z=", charge, " R=", vars[:R], " nup=", vars[:nup], " ndn=", vars[:ndn])
-    println("basis: q=", vars[:q], " nesting=", nesting_value, " core_spacing=", vars[:core_spacing], " padding=", vars[:padding], " gausslet_family=", vars[:gausslet_family])
+    println("basis: ns=", vars[:ns], " nesting=", nesting_value, " core_spacing=", vars[:core_spacing], " padding=", vars[:padding], " gausslet_family=", vars[:gausslet_family])
     !isnothing(supplement) && println("supplement: basisname=", vars[:basisname], " lmax=", vars[:lmax], " uncontracted=", vars[:uncontracted], " supplement_width_max=", vars[:supplement_width_max], " basisfile=", vars[:basisfile])
     println("hamfile: ", hamfile_value)
     println("hooks: check_file=", vars[:check_file], " print_contract=", vars[:print_contract], " print_timing=", vars[:print_timing], " expected_dimension=", vars[:expected_dimension])

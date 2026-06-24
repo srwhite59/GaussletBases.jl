@@ -1,6 +1,7 @@
 const _CARTESIAN_BASE_SYSTEM_KEYS = Set((:atom_symbols, :nuclear_charges, :atom_locations, :nup, :ndn))
-const _CARTESIAN_BASE_H_BASIS_REQUIRED_KEYS = Set((:q, :core_spacing, :radius))
-const _CARTESIAN_BASE_H2_BASIS_REQUIRED_KEYS = Set((:q, :core_spacing, :xmax_parallel, :xmax_transverse))
+const _CARTESIAN_BASE_SIZE_KEYS = Set((:ns, :q))
+const _CARTESIAN_BASE_H_BASIS_REQUIRED_KEYS = Set((:core_spacing, :radius))
+const _CARTESIAN_BASE_H2_BASIS_REQUIRED_KEYS = Set((:core_spacing, :xmax_parallel, :xmax_transverse))
 const _CARTESIAN_BASE_OPTIONAL_BASIS_KEYS = Set((:parent_axis_family, :reference_spacing, :tail_spacing, :nesting))
 const _CARTESIAN_BASE_H_OPTIONAL_BASIS_KEYS = union(_CARTESIAN_BASE_OPTIONAL_BASIS_KEYS, Set((:d,)))
 _cartesian_base_check_keys(input, expected, label) =
@@ -9,7 +10,8 @@ _cartesian_base_check_keys(input, expected, label) =
 
 function _cartesian_base_check_basis_keys(basis, required, optional = _CARTESIAN_BASE_OPTIONAL_BASIS_KEYS)
     supplied = Set(Symbol.(keys(basis)))
-    required ⊆ supplied && supplied ⊆ union(required, optional) ||
+    required ⊆ supplied && supplied ⊆ union(required, optional, _CARTESIAN_BASE_SIZE_KEYS) &&
+        !isempty(intersect(supplied, _CARTESIAN_BASE_SIZE_KEYS)) ||
         throw(ArgumentError("basis has missing or unsupported keys"))
 end
 
@@ -52,6 +54,33 @@ function _cartesian_base_q(value)
     return q
 end
 
+function _cartesian_base_ns(value)
+    value isa Integer && !(value isa Bool) ||
+        throw(ArgumentError("basis.ns must be a positive integer"))
+    ns = Int(value)
+    ns > 0 || throw(ArgumentError("basis.ns must be positive"))
+    return ns
+end
+
+function _cartesian_base_size_parts(basis, nesting)
+    has_ns = haskey(basis, :ns)
+    has_q = haskey(basis, :q)
+    has_ns || has_q || throw(ArgumentError("basis has missing or unsupported keys"))
+    q_rule = nesting === :pqs ? :pqs_ns_equals_q : :wl_ns_minus_2
+    if has_ns
+        ns = _cartesian_base_ns(basis.ns)
+        nesting === :wl && ns < 3 &&
+            throw(ArgumentError("basis.ns must be at least 3 for nesting=:wl"))
+        q = nesting === :pqs ? ns : ns - 2
+        has_q && _cartesian_base_q(basis.q) != q &&
+            throw(ArgumentError("basis.q is inconsistent with basis.ns and basis.nesting"))
+        return (; ns, q, q_rule, ns_source = :public_ns)
+    end
+    q = _cartesian_base_q(basis.q)
+    ns = nesting === :pqs ? q : q + 2
+    return (; ns, q, q_rule, ns_source = :legacy_q_compatibility)
+end
+
 function _cartesian_base_integer_charge(charge, label)
     electron_count = round(Int, charge)
     isapprox(charge, electron_count; atol = 1.0e-12, rtol = 0.0) ||
@@ -61,12 +90,14 @@ end
 
 function _cartesian_base_diatomic_basis_parts(basis)
     _cartesian_base_check_basis_keys(basis, _CARTESIAN_BASE_H2_BASIS_REQUIRED_KEYS)
-    return (; q = _cartesian_base_q(basis.q),
+    nesting = _cartesian_base_nesting(basis)
+    size_parts = _cartesian_base_size_parts(basis, nesting)
+    return (; size_parts...,
         core_spacing = _cartesian_base_positive(basis.core_spacing, "basis.core_spacing"),
         radius = nothing, d = nothing,
         xmax_parallel = _cartesian_base_positive(basis.xmax_parallel, "basis.xmax_parallel"),
         xmax_transverse = _cartesian_base_positive(basis.xmax_transverse, "basis.xmax_transverse"),
-        nesting = _cartesian_base_nesting(basis),
+        nesting,
         parent_axis_family = _cartesian_base_parent_axis_family(basis),
         reference_spacing = _cartesian_base_get_positive(basis, :reference_spacing, 1.0),
         tail_spacing = _cartesian_base_get_positive(basis, :tail_spacing, 10.0))
@@ -115,12 +146,14 @@ function _cartesian_base_inputs(system::NamedTuple, basis::NamedTuple)
         electron_count = _cartesian_base_integer_charge(only(charges), "one-center atom")
         nup + ndn == electron_count ||
             throw(ArgumentError("one-center atom requires neutral all-electron count"))
+        nesting = _cartesian_base_nesting(basis)
+        size_parts = _cartesian_base_size_parts(basis, nesting)
         core_spacing = _cartesian_base_positive(basis.core_spacing, "basis.core_spacing")
-        return merge(base, (; kind = :h, q = _cartesian_base_q(basis.q),
+        return merge(base, (; kind = :h, size_parts...,
             core_spacing,
             radius = _cartesian_base_positive(basis.radius, "basis.radius"),
             d = _cartesian_base_atom_mapping_d(basis, core_spacing), xmax_parallel = nothing,
-            xmax_transverse = nothing, nesting = _cartesian_base_nesting(basis),
+            xmax_transverse = nothing, nesting,
             parent_axis_family = _cartesian_base_parent_axis_family(basis),
             reference_spacing = _cartesian_base_get_positive(basis, :reference_spacing, 1.0),
             tail_spacing = _cartesian_base_get_positive(basis, :tail_spacing, 10.0)))
@@ -170,8 +203,8 @@ function _cartesian_base_stages(input)
     nuclear_charges = Tuple(input.charges)
     atom_locations = Tuple(input.locations)
     spacing_inputs = (;
-        q = input.q, n_s = input.q, reference_spacing = input.reference_spacing, tail_spacing = input.tail_spacing,
-        q_to_core_spacing_rule = :standard_pqs_ns_equals_q, core_spacing = input.core_spacing,
+        q = input.q, n_s = input.ns, reference_spacing = input.reference_spacing, tail_spacing = input.tail_spacing,
+        q_to_core_spacing_rule = input.q_rule, core_spacing = input.core_spacing,
         xmax_parallel = input.xmax_parallel, xmax_transverse = input.xmax_transverse)
     parent_inputs = (;
         parent_axis_bundle_backend = :pgdg_localized_experimental, parent_axis_family = input.parent_axis_family,
@@ -486,7 +519,8 @@ end
 function _cartesian_recipe_provenance(input, parent, base_dimension;
     residual_dimension = 0, supplement_input = nothing, producer, route)
     return (;
-        provenance_version = 1, producer, nesting = input.nesting, route, q = input.q,
+        provenance_version = 1, producer, nesting = input.nesting, route,
+        ns = input.ns, q = input.q, q_rule = input.q_rule, ns_source = input.ns_source,
         core_spacing = input.core_spacing, padding = input.kind === :h ? input.radius : input.xmax_transverse,
         radius = input.radius, xmax_parallel = input.xmax_parallel,
         xmax_transverse = input.xmax_transverse,
@@ -546,7 +580,9 @@ function _cartesian_base_write_hamiltonian(path, ham, base)
     route = _cartesian_base_route_label(input)
     mapping_kind = input.kind === :h ? :white_lindsey_atomic_mapping : :multicenter_pqs_mapping
     values = (; provenance_version = 1, producer = :cartesian_base_hamiltonian,
-        nesting = input.nesting, route, q = input.q, core_spacing = input.core_spacing,
+        nesting = input.nesting, route, ns = input.ns, q = input.q,
+        q_rule = input.q_rule, ns_source = input.ns_source,
+        core_spacing = input.core_spacing,
         reference_spacing = input.reference_spacing, tail_spacing = input.tail_spacing,
         parent_axis_family = input.parent_axis_family,
         parent_axis_counts = _cartesian_base_axis_counts_tuple(parent.axis_counts),
