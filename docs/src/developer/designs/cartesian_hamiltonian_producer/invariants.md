@@ -135,6 +135,12 @@ The canonical RG algorithm contract is
   owned terminal supports. White-Lindsey boundary-stratum realization must not
   revive old WL H1/H1+J materialization, route reports, or route-stage
   diagnostics.
+- WL z-axis diatomic boundary-stratum/product units must not treat
+  full-support identity retention as the production compact retained basis.
+  The approved compact WL diatomic basis is generated from products of
+  one-dimensional contractions on the owned unit support. Do not fake
+  compactness by dropping support rows, relabeling identity units, or changing
+  the driver comparison.
 - Geometry (`atom` or z-axis diatomic), `nesting` (`:pqs` or `:wl`), and
   supplement state (`off` or `on`) are intended to compose through shared
   producer boundaries. Do not implement the 2 x 2 x 2 matrix as eight

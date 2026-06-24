@@ -60,6 +60,9 @@ Approved behavior:
 - keep route skeleton semantics, terminal support order, shellification
   behavior, retained-selection policy, public driver contract, and artifact
   schema unchanged.
+- for z-axis diatomics, the current boundary-stratum full-support identity
+  realization is only a mechanical terminal endpoint. Compact retained-basis
+  production authority is the separate `HP-WLDIAT-COMPACT-*` lane.
 
 Forbidden:
 
@@ -911,7 +914,7 @@ Current implementation status:
 | --- | --- | --- | --- |
 | atom | off | implemented for explicit origin-centered base atoms | implemented for one-center base atoms |
 | atom | on | approved implementation lane through the common RG/MWG path | approved implementation lane through the common RG/MWG path |
-| z-axis diatomic | off | implemented for explicit homonuclear z-axis all-electron inputs | implemented for explicit homonuclear z-axis all-electron inputs through native WL terminal records |
+| z-axis diatomic | off | implemented for explicit homonuclear z-axis all-electron inputs | mechanically implemented through native WL terminal records; compact retained-basis correction approved under `HP-WLDIAT-COMPACT-*` |
 | z-axis diatomic | on | supported for explicit homonuclear z-axis diatomics through RG/MWG | supported through the same RG/MWG boundary after WL base terminal realization |
 
 Dependency order:
@@ -950,8 +953,51 @@ Approved boundary:
   simplification of obsolete blocker-only WL diatomic guards expected where
   practical.
 
+### 1a. White-Lindsey Diatomic Compact Retained Basis
+
+Status: approved for implementation under `HP-WLDIAT-COMPACT-FN-01` and
+`HP-WLDIAT-COMPACT-TEST-01`.
+
+Goal: replace the mechanical elongated-shell boundary-stratum identity
+realization with the intended compact WL retained basis for z-axis diatomics.
+
+Approved source files:
+
+```text
+src/cartesian_shellification/terminal_geometry.jl
+src/cartesian_terminal_lowering/region_contracts.jl
+src/cartesian_retained_units/lower_contract_units.jl
+src/cartesian_retained_unit_transform_contracts/unit_contracts.jl
+src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl
+src/pqs_source_box_route_driver_helpers.jl
+```
+
+Approved boundary:
+
+- preserve WL faces/edges/corners and small boundary units after shellification;
+- each WL unit must carry or realize compact retained columns from products of
+  one-dimensional contractions on owned support;
+- do not force a persistent shell object after splitting;
+- do not retain full-support identity rows as the production compact basis;
+- do not fake compactness by dropping rows or relabeling identity units;
+- keep the public `ns` input as the fair starting comparison point while not
+  promising identical PQS/WL final dimensions.
+
+Forbidden: driver changes, artifact/provenance/schema changes, PQS behavior
+changes, Hamiltonian assembly changes, raw-block/RG/MWG/IDA changes, old WL
+H1/H1+J materialization, route diagnostics/status/report payloads, committed
+tests/fixtures, and Cr2 workflow.
+
+Validation: small H2 or Be2 WL base artifact/readback; small WL supplemented
+artifact/readback only if the compact base path works through existing
+supplemented boundaries; PQS base/supplemented smokes unchanged; WL retained
+dimension compared against expected shell-size scale for bounded `ns = 4/5`;
+finite/symmetric `K` and `V`; no Cr2 run.
+
 Additional approved composition lane:
 
+- `HP-WLDIAT-COMPACT-FN-01` / `HP-WLDIAT-COMPACT-TEST-01` are approved for
+  the WL z-axis diatomic compact retained-basis correction;
 - `HP-COMP-BASEDIAT-FN-01` / `HP-COMP-BASEDIAT-TEST-01` are approved for the
   base homonuclear z-axis diatomic validation relaxation;
 - `HP-COMP-SUPPWL-FN-01` / `HP-COMP-SUPPWL-TEST-01` are approved for the

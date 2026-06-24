@@ -52,7 +52,7 @@ they must not be hidden by driver defaults or mislabeled artifact provenance.
 | --- | --- | --- | --- |
 | atom | off | implemented for explicit origin-centered all-electron base atoms, with H as the committed endpoint | implemented for one-center base atoms through the WL terminal-basis seam |
 | atom | on | approved implementation lane through the common Residual Gaussian path | approved implementation lane through the common Residual Gaussian path |
-| z-axis diatomic | off | implemented for explicit homonuclear z-axis all-electron inputs | implemented for explicit homonuclear z-axis all-electron inputs through native WL terminal records |
+| z-axis diatomic | off | implemented for explicit homonuclear z-axis all-electron inputs | mechanically implemented through native WL terminal records; compact retained-basis correction approved under `HP-WLDIAT-COMPACT-*` |
 | z-axis diatomic | on | supported for explicit homonuclear z-axis diatomics through the residual-GTO/MWG path | approved implementation lane through the same RG/MWG boundary after WL base terminal realization |
 
 ## Common Boundary Rules
@@ -82,6 +82,12 @@ they must not be hidden by driver defaults or mislabeled artifact provenance.
   route-local `q`, block decomposition, and row order without changing the
   final retained support set, so equal public `ns` is not by itself a fair
   PQS/WL retained-basis comparison.
+- The current WL diatomic boundary-stratum identity realization is a
+  mechanical endpoint, not the compact WL retained-basis contract. The
+  `HP-WLDIAT-COMPACT-*` lane makes public `ns` the fair starting input for
+  PQS/WL construction comparison by requiring compact retained columns from
+  one-dimensional contractions, while still allowing legitimate WL-specific
+  geometry/contact differences.
 - The canonical driver remains compact and copyable. It can print public
   contracts and coarse physics-stage timings, but it must not grow stop-after
   controls, raw-provider switches, route diagnostics, allocation probes, or
@@ -135,6 +141,35 @@ Forbidden in this lane:
 
 Line budget: at most `250` added `src` lines, with deletion or simplification
 of obsolete blocker-only WL diatomic guards expected where practical.
+
+### 1a. White-Lindsey Diatomic Compact Retained Basis
+
+Status: approved for implementation under `HP-WLDIAT-COMPACT-FN-01` and
+`HP-WLDIAT-COMPACT-TEST-01`.
+
+The current WL diatomic artifact path can be mechanically realized, but the
+retained-basis shape is still an elongated shared-shell boundary-stratum
+identity realization. That is not the intended compact WL retained basis.
+
+Approved source files:
+
+```text
+src/cartesian_shellification/terminal_geometry.jl
+src/cartesian_terminal_lowering/region_contracts.jl
+src/cartesian_retained_units/lower_contract_units.jl
+src/cartesian_retained_unit_transform_contracts/unit_contracts.jl
+src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl
+src/pqs_source_box_route_driver_helpers.jl
+```
+
+The correction must preserve the WL faces/edges/corners and small boundary
+unit model, but the terminal units must carry or realize compact retained
+columns from products of one-dimensional contractions. It must not force a
+persistent shell object after splitting, retain full-support identity rows as
+the production compact basis, fake compactness by dropping rows, change the
+driver, revive old WL H1/H1+J materialization, change artifacts, change PQS
+behavior, touch raw blocks/RG/MWG/IDA, add diagnostics/status payloads, add
+committed fixtures/tests, or run Cr2.
 
 ### 1b. Base Homonuclear Z-Axis Diatomic Validation
 
@@ -245,11 +280,14 @@ Approved composition IDs authorize only the exact lanes named above.
   White-Lindsey z-axis diatomic path through the common RG boundary.
 - `HP-COMP-WLNS-FN-01` / `HP-COMP-WLNS-TEST-01`: WL z-axis diatomic `ns`
   early rejection and retained-support saturation wording.
+- `HP-WLDIAT-COMPACT-FN-01` / `HP-WLDIAT-COMPACT-TEST-01`: WL z-axis
+  diatomic compact retained-basis correction.
 
 The initial explicit `atom | z-axis diatomic`, `:pqs | :wl`,
 `supplement = off | on` composition lanes now all have approved implementation
-authority. Future geometry, physics, export, solver, or Cr2-specific expansion
-still needs a separate docs-only amendment.
+authority, with WL diatomic compact retained-basis correction tracked
+separately under `HP-WLDIAT-COMPACT-*`. Future geometry, physics, export,
+solver, or Cr2-specific expansion still needs a separate docs-only amendment.
 
 ## Deferred
 

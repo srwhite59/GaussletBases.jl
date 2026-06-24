@@ -15398,3 +15398,54 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 149 - Approve WL Diatomic Compact Retained Basis
+
+Commit(s):
+- this commit - Approve WL diatomic compact retained-basis authority
+
+Summary:
+- Approved `HP-WLDIAT-COMPACT-FN-01` and
+  `HP-WLDIAT-COMPACT-TEST-01` as the narrow correction lane for
+  White-Lindsey z-axis diatomic compact retained-basis construction.
+- The design now distinguishes a mechanically reachable WL diatomic artifact
+  path from the intended compact WL retained-basis contract. The current
+  elongated shared-shell boundary-stratum identity realization is explicitly
+  not the production PQS/WL comparison story.
+- The approved correction preserves the WL unit model, but requires each
+  diatomic WL unit to carry or realize compact retained columns from products
+  of one-dimensional contractions on owned support.
+
+Validation:
+- Docs-only amendment validation: update `AGENTS.md` and compact design docs;
+  run `git diff --check`; focused scans for `HP-WLDIAT-COMPACT-*`,
+  full-support identity wording, and WL diatomic compact retained-basis
+  wording; confirm no `src`, `bin`, `test`, `tests`, `tools`, or artifact files
+  changed. Local docs build should be run because the registry is large and
+  GitHub docs recently failed on size/rendering.
+
+Goal advancement:
+- LT1/LT3: prevents the public `nesting = :wl` diatomic path from being treated
+  as scientifically comparable while it still realizes boundary-stratum units
+  as identity blocks.
+- LT5/LT6: keeps the 2 x 2 x 2 composition plan intact while adding the missing
+  WL-specific compact retained-basis contract before further PQS/WL
+  comparisons.
+
+Carrying-cost result:
+- deleted: none; docs-only authority pass.
+- simplified: future source work has one explicit compact WL retained-basis
+  target instead of ambiguous terminal-basis or driver fixes.
+- quarantined: driver changes, artifact/provenance/schema changes, PQS
+  behavior changes, Hamiltonian assembly changes, raw blocks, RG/MWG/IDA,
+  old WL H1/H1+J materialization, diagnostics/status/report payloads,
+  committed fixtures/tests, and Cr2 workflow remain unapproved.
+- not deleted because: source cleanup has not run yet.
+- exact remaining caller/blocker: if compact retained units require
+  construction-native facts not currently available, the source pass must stop
+  and report the missing fact instead of dropping rows or relabeling identity
+  units.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

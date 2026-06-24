@@ -342,6 +342,103 @@ No supplemented WL run, committed test file, committed fixture, driver
 contract test, solver/RHF/ECP/EGOI validation, route-diagnostic validation, or
 Cr2 fixture is approved.
 
+## Approved Correction Lane: WL Z-Axis Diatomic Compact Retained Basis
+
+This section records the follow-up design decision after the WL diatomic
+terminal-record endpoint exposed the remaining placeholder-like retained-basis
+shape. The current `nesting = :wl`, `Natom = 2` path can be mechanically
+realized, but it still follows:
+
+```text
+elongated shared complete shell
+-> boundary CPB strata
+-> one retained identity unit per stratum
+-> identity terminal blocks
+```
+
+That is not the intended compact White-Lindsey retained basis and should not be
+used as the production PQS/WL comparison story. The observed audit evidence was
+that bounded WL diatomic `ns = 4/5` examples built an elongated shell with
+support-size scale `(5,5,9) - (3,3,7) = 162`, rather than the cubic shell-size
+scales `4^3 - 2^3 = 56` and `5^3 - 3^3 = 98`; WL retained-unit lowering then
+split that shell into 26 boundary-stratum units that the terminal realizer
+appended as full-support identity blocks. For `ns = 6`, contact-core geometry
+can consume the bounded support and collapse the terminal basis to one direct
+identity block.
+
+### HP-WLDIAT-COMPACT-FN-01 — WL diatomic compact retained basis
+
+Approved source files:
+
+```text
+src/cartesian_shellification/terminal_geometry.jl
+src/cartesian_terminal_lowering/region_contracts.jl
+src/cartesian_retained_units/lower_contract_units.jl
+src/cartesian_retained_unit_transform_contracts/unit_contracts.jl
+src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl
+src/pqs_source_box_route_driver_helpers.jl
+```
+
+`src/pqs_source_box_route_driver_helpers.jl` is approved only for narrow route
+wiring if the compact WL retained-unit facts must be passed to the existing WL
+terminal-basis seam.
+
+Approved behavior:
+
+- preserve the WL unit-based implementation model: faces, edges, corners, and
+  small boundary units after shellification;
+- do not force a persistent shell object after retained-unit splitting;
+- make each WL unit carry or realize the intended compact retained basis from
+  products of one-dimensional contractions on the authoritative owned unit
+  support;
+- preserve deterministic geometry, lowering, retained-unit, transform-contract,
+  and terminal-block ordering;
+- keep the same public `ns` as the fair starting input for PQS/WL comparison,
+  while allowing WL-specific geometry/contact cases and not promising equal
+  final dimensions.
+
+Forbidden:
+
+- driver changes;
+- artifact schema, provenance, matrix-key, reader, or manifest changes;
+- PQS behavior changes;
+- Hamiltonian assembly changes;
+- raw-block, Residual Gaussian, MWG/IDA, Qiu-White, supplement, solver/ECP,
+  or Cr2 workflow changes;
+- old WL H1/H1+J materialization revival or adaptation;
+- broad route diagnostics, report/status/payload fields, raw-block switches,
+  retained-rule dumps, or route-stage labels;
+- fake compactness by dropping support rows, relabeling full-support identity
+  units, or changing the driver comparison;
+- committed tests, committed fixtures, or committed driver input files.
+
+Failure rule: if compact WL retained units require construction-native facts
+that are not currently available, make no source commit and report the exact
+missing fact. Do not fake compactness by deleting rows, changing public input
+semantics, or rerouting through old WL materialization.
+
+Line budget: at most `250` added `src` lines unless a later source blurb
+narrows or revises the budget after auditing the exact live callers.
+
+### HP-WLDIAT-COMPACT-TEST-01 — WL compact-basis validation
+
+Approved validation:
+
+- `git diff --check`;
+- package load;
+- small H2 or Be2 WL base artifact/readback;
+- small H2 or Be2 WL supplemented artifact/readback if the compact base path
+  works through the existing supplemented boundary;
+- PQS base and supplemented smokes remain unchanged;
+- WL retained dimension is compared against expected shell-size scale for
+  bounded `ns = 4/5` examples;
+- finite/symmetric `K` and `V` checks;
+- no Cr2 run.
+
+No committed test file, committed fixture, driver contract test,
+solver/RHF/ECP/EGOI validation, route-diagnostic validation, or Cr2 fixture is
+approved.
+
 ## Approved Composition Lane: Base Homonuclear Z-Axis Diatomics
 
 This section promotes the base z-axis diatomic validation relaxation. It
@@ -3563,7 +3660,8 @@ supplement: off | on
 
 This registry section is planning only except for the promoted
 `HP-COMP-WLDIAT-*`, `HP-COMP-BASEDIAT-*`, `HP-COMP-SUPPWL-*`,
-`HP-COMP-SUPPATOM-*`, `HP-COMP-ATOMBOX-*`, and `HP-COMP-WLNS-*` pairs above.
+`HP-COMP-SUPPATOM-*`, `HP-COMP-ATOMBOX-*`, `HP-COMP-WLNS-*`, and
+`HP-WLDIAT-COMPACT-*` pairs above.
 Current support remains partial:
 
 - atom / no supplement / `:pqs`: implemented for explicit origin-centered base
@@ -3573,7 +3671,9 @@ Current support remains partial:
 - z-axis diatomic / no supplement / `:pqs`: implemented for explicit
   homonuclear z-axis all-electron inputs;
 - z-axis diatomic / no supplement / `:wl`: implemented for explicit
-  homonuclear z-axis all-electron inputs through native WL terminal records;
+  homonuclear z-axis all-electron inputs through native WL terminal records,
+  with compact retained-basis correction approved separately under
+  `HP-WLDIAT-COMPACT-*`;
 - z-axis diatomic / supplement / `:pqs`: supported for explicit homonuclear
   z-axis diatomics through the residual-GTO/MWG path;
 - z-axis diatomic / supplement / `:wl`: supported for explicit homonuclear
@@ -3583,6 +3683,8 @@ Current support remains partial:
 For `nesting = :wl` z-axis diatomics, `HP-COMP-WLNS-*` additionally approves
 early rejection of normalized `ns < 4` and records that final retained support
 may saturate across working `ns` ranges.
+`HP-WLDIAT-COMPACT-*` records that the current boundary-stratum identity
+realization is not the production compact retained-basis contract.
 
 Composition IDs:
 
@@ -3598,6 +3700,8 @@ Composition IDs:
   one-center atom path through common Residual Gaussian augmentation;
 - `HP-COMP-WLNS-FN-01` / `HP-COMP-WLNS-TEST-01`: WL z-axis diatomic `ns`
   early rejection and retained-support saturation wording.
+- `HP-WLDIAT-COMPACT-FN-01` / `HP-WLDIAT-COMPACT-TEST-01`: WL z-axis
+  diatomic compact retained-basis correction.
 
 The initial explicit `atom | z-axis diatomic`, `:pqs | :wl`,
 `supplement = off | on` composition lanes now all have approved implementation

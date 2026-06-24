@@ -292,14 +292,20 @@ Approved first composition lane:
 - the implementation must produce native WL diatomic terminal records and then
   use the same `CartesianTerminalBasisRealization`, staged base Hamiltonian
   construction, writer, and reader path as the PQS producer;
+- `HP-WLDIAT-COMPACT-FN-01` separately approves the compact retained-basis
+  correction for WL z-axis diatomics: the current elongated shared-shell
+  boundary-stratum identity realization is classified as a mechanical endpoint,
+  not the intended production compact WL retained basis;
+- each WL diatomic unit must carry or realize compact retained columns from
+  products of one-dimensional contractions, not full-support identity retention;
 - approved source files are the narrow diatomic complete-core-shell,
   terminal-shellification, terminal-lowering, route-helper, terminal-basis,
   final-basis include, and base-facade surfaces named in `registry.md`;
 - `:z_axis_diatomic_wl_base` is approved only as a truthful route-provenance
   value under existing artifact keys, not as an artifact schema change;
-- no driver special cases, old WL H1/H1+J materialization, RG/MWG/supplement
-  work, route diagnostics, public API/export changes, committed tests, or Cr2
-  workflow is approved.
+- no driver special cases, fake compactness by dropping rows, old WL H1/H1+J
+  materialization, RG/MWG/supplement work, route diagnostics, public
+  API/export changes, committed tests, or Cr2 workflow is approved.
 - `HP-COMP-BASEDIAT-FN-01` separately approves only
   `src/cartesian_base_hamiltonian.jl` to relax base two-center validation from
   H2-only to explicit homonuclear z-axis all-electron diatomics;

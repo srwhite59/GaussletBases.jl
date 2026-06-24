@@ -40,6 +40,10 @@ cube/source/nesting size, while route-local `q` is derived from `ns` and
 `HP-COMP-WLNS-*`: `nesting = :wl`, `Natom = 2`, and normalized `ns < 4`
 should reject early, while working WL diatomic `ns` ranges may saturate the
 final retained support when the physical parent extent dominates.
+The WL z-axis diatomic compact retained-basis correction is approved under
+`HP-WLDIAT-COMPACT-*`: the current mechanical boundary-stratum identity path is
+not the intended compact WL retained basis and must not be used as the final
+PQS/WL comparison story.
 
 Agents should read first:
 
@@ -146,7 +150,8 @@ Approved amendments:
 - [White-Lindsey terminal basis realization](white_lindsey_terminal_basis_realization.md)
   approves only the narrow seam that lets the existing
   `:white_lindsey_low_order` route produce the same
-  `CartesianTerminalBasisRealization` consumed by the staged Hamiltonian path.
+  `CartesianTerminalBasisRealization` consumed by the staged Hamiltonian path,
+  and records the separate WL diatomic compact retained-basis correction.
 - [Cartesian driver atom workflow](cartesian_driver_atom_workflow.md)
   approves only explicit origin-centered one-center base atom driver inputs
   through the existing base facade. Current validation remains the
@@ -165,7 +170,8 @@ Approved amendments:
   diatomics are approved under `HP-COMP-SUPPWL-*`; supplemented one-center
   atoms are approved under `HP-COMP-SUPPATOM-*`. WL diatomic `ns` early
   rejection and retained-support saturation wording are approved under
-  `HP-COMP-WLNS-*`.
+  `HP-COMP-WLNS-*`; the compact WL diatomic retained-basis correction is
+  approved under `HP-WLDIAT-COMPACT-*`.
 - [Cartesian Hamiltonian artifact manifest](cartesian_hamiltonian_artifact_manifest.md)
   approves only compact JLD2 sidecar groups for matrix-order basis labels and
   uniform recipe provenance, and separately approves a compact source-mode
