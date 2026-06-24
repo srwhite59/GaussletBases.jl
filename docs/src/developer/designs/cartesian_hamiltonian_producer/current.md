@@ -304,6 +304,11 @@ Approved first composition lane:
   source work may re-express the essential CPB-local product-of-1D coefficient
   primitive behind the current terminal-basis boundary, but must not revive the
   route-global WL stack, reports, adapters, or H1/H1+J materialization;
+- `HP-WLDIAT-PARITY-FN-01` separately approves the boundary-stratum retained
+  count parity cleanup: odd-side enforcement belongs to nucleus-centered
+  core/contact blocks, not to boundary shell strata; public WL `ns = 4`
+  therefore targets `4^3 - 2^3 = 56` boundary columns rather than the inherited
+  symmetric-odd donor result `26`;
 - approved source files are the narrow diatomic complete-core-shell,
   terminal-shellification, terminal-lowering, route-helper, terminal-basis,
   final-basis include, and base-facade surfaces named in `registry.md`;

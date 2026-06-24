@@ -447,6 +447,86 @@ No committed test file, committed fixture, driver contract test,
 solver/RHF/ECP/EGOI validation, route-diagnostic validation, or Cr2 fixture is
 approved.
 
+## Approved Correction Lane: WL Boundary-Stratum Retained-Count Parity
+
+This section records the follow-up policy correction after the compact WL
+diatomic terminal-basis source pass. The full-support identity bug is fixed,
+but `nesting = :wl`, `ns = 4` still follows the inherited symmetric-odd donor
+rule and produces 26 boundary columns rather than the nominal shell count
+`4^3 - 2^3 = 56`.
+
+That remaining behavior is not an acceptable WL policy. The odd-side rule is a
+core/contact-block centering requirement: a nucleus-centered core should have
+odd side length so the nucleus is centered. Boundary shells and boundary strata
+outside that core do not require odd side counts and must retain the requested
+shell contraction count.
+
+### HP-WLDIAT-PARITY-FN-01 — WL boundary retained-count parity
+
+Approved source file:
+
+```text
+src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl
+```
+
+Approved behavior:
+
+- preserve odd-side enforcement for true nucleus-centered core/contact blocks;
+- for WL boundary shell strata, use the requested boundary retained count
+  without symmetric-odd coercion;
+- for public `nesting = :wl`, `ns = 4`, route-local `q = 2` must retain the
+  shell count `4^3 - 2^3 = 56`;
+- for public `nesting = :wl`, `ns = 5`, retain `5^3 - 3^3 = 98`;
+- keep the compact WL product-of-1D coefficient construction and existing
+  terminal-basis boundary.
+
+Forbidden:
+
+- driver changes;
+- public `ns` normalization or route-local `q` rule changes;
+- route skeleton, shellification, terminal lowering, retained-unit metadata
+  shape, or contract-plan changes;
+- direct/core identity behavior changes;
+- artifact schema/provenance, matrix-key, reader, or manifest changes;
+- PQS behavior changes;
+- Hamiltonian assembly changes;
+- raw-block, Residual Gaussian, MWG/IDA, Qiu-White, supplement, solver/ECP,
+  or Cr2 workflow changes;
+- old WL route-global stack, reports, adapters, or H1/H1+J materialization
+  revival or adaptation;
+- broad route diagnostics, report/status/payload fields, raw-block switches,
+  retained-rule dumps, or route-stage labels;
+- committed tests, committed fixtures, or committed driver input files.
+
+Failure rule: if fixing boundary parity requires changing source files outside
+`src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl`,
+public `ns` semantics, route/shellification/terminal-lowering contracts,
+artifact schema, or old WL materialization, make no source commit and report
+the exact blocker.
+
+Line budget: target under `30` added `src` lines, with no new persistent shape.
+
+### HP-WLDIAT-PARITY-TEST-01 — WL parity validation
+
+Approved validation:
+
+- `git diff --check`;
+- package load;
+- WL H2 or Be2 z-axis diatomic `ns = 4` retained boundary count / dimension
+  demonstrates 56 boundary columns rather than 26;
+- WL H2 or Be2 z-axis diatomic `ns = 5` retained boundary count demonstrates
+  98 boundary columns;
+- small WL base artifact/readback smoke;
+- small WL supplemented artifact/readback smoke if bounded by the existing
+  supplemented boundary;
+- PQS H2 residual-GTO/MWG endpoint remains unchanged;
+- finite/symmetric `K` and `V` checks for the WL smoke;
+- no Cr2 run.
+
+No committed test file, committed fixture, driver contract test,
+solver/RHF/ECP/EGOI validation, route-diagnostic validation, or Cr2 fixture is
+approved.
+
 ## Approved Composition Lane: Base Homonuclear Z-Axis Diatomics
 
 This section promotes the base z-axis diatomic validation relaxation. It
@@ -3668,8 +3748,8 @@ supplement: off | on
 
 This registry section is planning only except for the promoted
 `HP-COMP-WLDIAT-*`, `HP-COMP-BASEDIAT-*`, `HP-COMP-SUPPWL-*`,
-`HP-COMP-SUPPATOM-*`, `HP-COMP-ATOMBOX-*`, `HP-COMP-WLNS-*`, and
-`HP-WLDIAT-COMPACT-*` pairs above.
+`HP-COMP-SUPPATOM-*`, `HP-COMP-ATOMBOX-*`, `HP-COMP-WLNS-*`,
+`HP-WLDIAT-COMPACT-*`, and `HP-WLDIAT-PARITY-*` pairs above.
 Current support remains partial:
 
 - atom / no supplement / `:pqs`: implemented for explicit origin-centered base
@@ -3693,6 +3773,8 @@ early rejection of normalized `ns < 4` and records that final retained support
 may saturate across working `ns` ranges.
 `HP-WLDIAT-COMPACT-*` records that the current boundary-stratum identity
 realization is not the production compact retained-basis contract.
+`HP-WLDIAT-PARITY-*` records that boundary strata retain the requested shell
+count without nucleus-centered symmetric-odd coercion.
 
 Composition IDs:
 
@@ -3710,6 +3792,8 @@ Composition IDs:
   early rejection and retained-support saturation wording.
 - `HP-WLDIAT-COMPACT-FN-01` / `HP-WLDIAT-COMPACT-TEST-01`: WL z-axis
   diatomic compact retained-basis correction.
+- `HP-WLDIAT-PARITY-FN-01` / `HP-WLDIAT-PARITY-TEST-01`: WL boundary-stratum
+  retained-count parity correction.
 
 The initial explicit `atom | z-axis diatomic`, `:pqs | :wl`,
 `supplement = off | on` composition lanes now all have approved implementation

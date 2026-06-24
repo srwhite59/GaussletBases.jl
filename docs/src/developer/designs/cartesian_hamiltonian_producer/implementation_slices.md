@@ -1000,10 +1000,45 @@ supplemented boundaries; PQS base/supplemented smokes unchanged; WL retained
 dimension compared against expected shell-size scale for bounded `ns = 4/5`;
 finite/symmetric `K` and `V`; no Cr2 run.
 
+### 1aa. White-Lindsey Boundary-Stratum Retained-Count Parity
+
+Status: approved for implementation under `HP-WLDIAT-PARITY-FN-01` and
+`HP-WLDIAT-PARITY-TEST-01`.
+
+Goal: correct the remaining inherited symmetric-odd donor rule for WL boundary
+strata after compact coefficient realization. Core/contact blocks centered on
+a nucleus keep odd-side centering. Boundary shell strata outside that core do
+not require odd side counts.
+
+Approved source file:
+
+```text
+src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl
+```
+
+Approved boundary:
+
+- for boundary strata, use the requested retained count without symmetric-odd
+  coercion;
+- public `nesting = :wl`, `ns = 4` has route-local `q = 2` and should produce
+  the shell count `4^3 - 2^3 = 56`, not `26`;
+- public `nesting = :wl`, `ns = 5` should produce `5^3 - 3^3 = 98`;
+- do not change core/contact odd-centering, direct/core identity behavior,
+  public `ns` normalization, route skeletons, shellification, terminal
+  lowering, retained-unit metadata shape, artifacts, PQS behavior, RG/MWG/IDA,
+  committed tests, or Cr2 workflow.
+
+Validation: WL H2 or Be2 `ns = 4` boundary count demonstrates `56`; WL H2 or
+Be2 `ns = 5` boundary count demonstrates `98`; small WL base artifact/readback;
+small WL supplemented artifact/readback if bounded; PQS H2 RG endpoint
+unchanged; finite/symmetric `K` and `V`; no Cr2 run.
+
 Additional approved composition lane:
 
 - `HP-WLDIAT-COMPACT-FN-01` / `HP-WLDIAT-COMPACT-TEST-01` are approved for
   the WL z-axis diatomic compact retained-basis correction;
+- `HP-WLDIAT-PARITY-FN-01` / `HP-WLDIAT-PARITY-TEST-01` are approved for the
+  WL boundary-stratum retained-count parity correction;
 - `HP-COMP-BASEDIAT-FN-01` / `HP-COMP-BASEDIAT-TEST-01` are approved for the
   base homonuclear z-axis diatomic validation relaxation;
 - `HP-COMP-SUPPWL-FN-01` / `HP-COMP-SUPPWL-TEST-01` are approved for the

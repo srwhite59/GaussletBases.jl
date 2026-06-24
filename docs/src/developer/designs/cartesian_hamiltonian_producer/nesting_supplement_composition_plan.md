@@ -175,6 +175,12 @@ driver, revive old WL H1/H1+J materialization, change artifacts, change PQS
 behavior, touch raw blocks/RG/MWG/IDA, add diagnostics/status payloads, add
 committed fixtures/tests, or run Cr2.
 
+The follow-up `HP-WLDIAT-PARITY-*` lane corrects boundary-stratum retained
+count parity. Core/contact blocks centered on nuclei keep odd-side centering;
+boundary shell strata do not inherit that rule. For public `nesting = :wl`,
+`ns = 4`, route-local `q = 2` should retain `4^3 - 2^3 = 56` boundary columns
+instead of the inherited symmetric-odd donor result `26`.
+
 ### 1b. Base Homonuclear Z-Axis Diatomic Validation
 
 Status: approved for implementation under `HP-COMP-BASEDIAT-FN-01` and
@@ -286,6 +292,8 @@ Approved composition IDs authorize only the exact lanes named above.
   early rejection and retained-support saturation wording.
 - `HP-WLDIAT-COMPACT-FN-01` / `HP-WLDIAT-COMPACT-TEST-01`: WL z-axis
   diatomic compact retained-basis correction.
+- `HP-WLDIAT-PARITY-FN-01` / `HP-WLDIAT-PARITY-TEST-01`: WL boundary-stratum
+  retained-count parity correction.
 
 The initial explicit `atom | z-axis diatomic`, `:pqs | :wl`,
 `supplement = off | on` composition lanes now all have approved implementation

@@ -15617,3 +15617,53 @@ Carrying-cost result:
 - new tests: none.
 - new metadata/status fields: one internal construction metadata scalar only;
   no artifact/status/report fields.
+
+## Cartesian Hamiltonian Producer Pass 153 - Approve WL Boundary Parity Cleanup
+
+Commit(s):
+- this commit - Approve WL boundary retained-count parity cleanup
+
+Summary:
+- Approved `HP-WLDIAT-PARITY-FN-01` and `HP-WLDIAT-PARITY-TEST-01` as a
+  narrow follow-up to the compact WL diatomic terminal-basis pass.
+- The design now records that the remaining `ns = 4 -> 26` behavior is an
+  over-applied symmetric-odd donor rule, not a valid WL policy. Odd side counts
+  are required for nucleus-centered core/contact blocks, but not for boundary
+  shell strata.
+- The approved source surface is only
+  `src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl`.
+  Boundary-stratum product construction should use the requested retained
+  count without symmetric-odd coercion, so WL `ns = 4`, route-local `q = 2`,
+  targets `4^3 - 2^3 = 56` boundary columns and `ns = 5` targets
+  `5^3 - 3^3 = 98`.
+
+Validation:
+- Docs-only amendment validation: `git diff --check`; focused scans for
+  `HP-WLDIAT-PARITY-*`, symmetric-odd/odd-side wording, and `56`/`98`
+  boundary-count expectations; confirm no `src`, `bin`, `test`, `tests`,
+  `tools`, or artifact files changed. Local docs build should be run because
+  compact design authority changed.
+
+Goal advancement:
+- LT1/LT3: fixes the next visible WL numerical semantics issue after the
+  identity-realization bug: boundary shells should keep shell retained counts,
+  not inherit nucleus-centered parity.
+- LT5/LT6: keeps the PQS/WL comparison tied to the shared public `ns` input
+  without changing driver, route skeleton, or artifact contracts.
+
+Carrying-cost result:
+- deleted: none; docs-only authority pass.
+- simplified: source work has one precise parity target in one owner file.
+- quarantined: driver changes, public `ns` normalization changes,
+  route/shellification/terminal-lowering changes, retained-unit metadata shape
+  changes, direct/core identity changes, artifact changes, PQS behavior,
+  raw blocks, RG/MWG/IDA, old WL materialization, diagnostics/status/report
+  payloads, committed tests/fixtures, and Cr2 workflow remain unapproved.
+- not deleted because: source cleanup has not run yet.
+- exact remaining caller/blocker: if parity cleanup needs files outside the WL
+  terminal realizer or a metadata/schema change, the source pass must stop and
+  report the exact blocker.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

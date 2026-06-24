@@ -526,6 +526,8 @@ these approved design IDs:
 - `HP-COMP-WLNS-TEST-01`
 - `HP-WLDIAT-COMPACT-FN-01`
 - `HP-WLDIAT-COMPACT-TEST-01`
+- `HP-WLDIAT-PARITY-FN-01`
+- `HP-WLDIAT-PARITY-TEST-01`
 
 No other production surface may be added in this lane without a prior
 documentation-only design amendment. This includes new structs, persistent
@@ -1337,6 +1339,21 @@ schema/provenance, PQS behavior, Hamiltonian assembly, raw blocks, RG/MWG/IDA,
 diagnostics/status/report payloads, committed tests/fixtures, or Cr2 workflow.
 The same public `ns` is the fair starting input for PQS/WL comparison after
 this correction, but it is not a promise of identical dimensions.
+
+`HP-WLDIAT-PARITY-FN-01` and `HP-WLDIAT-PARITY-TEST-01` approve the narrow
+White-Lindsey boundary-stratum retained-count parity cleanup in
+`src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl`.
+Core/contact blocks centered on a nucleus keep the odd-side requirement, but
+boundary shells/strata outside the nucleus-centered core must not inherit that
+symmetric-odd rule. For public `nesting = :wl`, `ns = 4`, route-local `q = 2`
+must retain the boundary shell count `4^3 - 2^3 = 56`, not the current
+inherited-donor result of `26`; `ns = 5` should retain `5^3 - 3^3 = 98`. This
+lane may only set the boundary-stratum product contraction to use the requested
+retained count without symmetric-odd coercion. It must not change core/direct
+identity rules, public `ns` normalization, route skeletons, shellification,
+retained-unit metadata shape, driver behavior, artifacts/provenance, PQS
+behavior, Hamiltonian assembly, raw blocks, RG/MWG/IDA, old WL materialization,
+diagnostics/status/report payloads, committed tests/fixtures, or Cr2 workflow.
 
 `HP-COMP-BASEDIAT-FN-01` and `HP-COMP-BASEDIAT-TEST-01` approve only
 `src/cartesian_base_hamiltonian.jl` for relaxing the base two-center branch

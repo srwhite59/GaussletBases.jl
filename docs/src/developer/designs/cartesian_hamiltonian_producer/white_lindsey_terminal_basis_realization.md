@@ -152,6 +152,30 @@ dimensions. Implementations must not fake compactness by dropping rows,
 relabeling full-support identity units, changing the driver comparison, or
 reviving old WL H1/H1+J materialization.
 
+## Boundary Retained-Count Parity
+
+The compact coefficient path exposed one remaining inherited-donor rule:
+boundary strata currently apply symmetric-odd enforcement to the retained
+count. That is wrong for boundary shells.
+
+The odd-side rule belongs to nucleus-centered core/contact blocks, where an odd
+side keeps the block centered on the nucleus. Boundary shells and their
+face/edge/corner strata are outside that core and should retain the requested
+shell contraction count.
+
+`HP-WLDIAT-PARITY-FN-01` approves only
+`src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl`
+for this correction. Boundary-stratum product construction must use the
+requested retained count without symmetric-odd coercion. For public
+`nesting = :wl`, `ns = 4`, route-local `q = 2` should produce
+`4^3 - 2^3 = 56` boundary columns, not `26`. For `ns = 5`, the boundary count
+should remain `5^3 - 3^3 = 98`.
+
+This lane does not approve route/shellification changes, public `ns`
+normalization changes, core/contact odd-centering changes, direct/core identity
+changes, artifact changes, PQS changes, residual-GTO/MWG changes, old WL
+materialization, diagnostics, committed tests, or Cr2 workflow.
+
 ## Forbidden
 
 This amendment does not approve:

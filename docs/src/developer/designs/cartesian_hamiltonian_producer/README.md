@@ -44,6 +44,10 @@ The WL z-axis diatomic compact retained-basis correction is approved under
 `HP-WLDIAT-COMPACT-*`: the current mechanical boundary-stratum identity path is
 not the intended compact WL retained basis and must not be used as the final
 PQS/WL comparison story.
+The follow-up WL boundary-stratum parity cleanup is approved under
+`HP-WLDIAT-PARITY-*`: nucleus-centered core/contact blocks keep odd-side
+centering, but boundary shells retain the requested shell count such as
+`ns = 4 -> 4^3 - 2^3 = 56`.
 
 Agents should read first:
 
