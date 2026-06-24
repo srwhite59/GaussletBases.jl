@@ -13668,3 +13668,63 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 124 - Approve Route/Stage Type-Surface Cleanup
+
+Commit(s):
+- this commit - Approve route/stage type-surface cleanup
+
+Summary:
+- Approved `HP-ROUTE-STAGE-TYPE-FN-01` /
+  `HP-ROUTE-STAGE-TYPE-TEST-01` as a narrow compile-latency cleanup lane based
+  on Be2 q5 p10 supplemented driver attribution.
+- The approved source files are only
+  `src/pqs_source_box_route_driver_helpers.jl` and
+  `src/cartesian_terminal_shellification_geometry.jl`.
+- The approved targets are
+  `_pqs_source_box_route_driver_terminal_lowering_contract_inventory_from_plan`,
+  `cartesian_units`,
+  `_pqs_source_box_route_driver_transform_stage_low_order_summary`,
+  `cartesian_transforms`,
+  `_cartesian_terminal_shellification_region_unit_inventory`, and related
+  terminal-region lowering inventory summary surfaces in
+  `src/cartesian_terminal_shellification_geometry.jl`.
+- The allowed action is deletion of stale route/stage compatibility
+  inventories and replacement of remaining runtime-sized `NamedTuple` / `Tuple`
+  carriers with vector-backed compact internal objects, stable dictionaries,
+  accessors, or smaller summaries.
+- The pass must preserve H2 base/supplemented artifact behavior, deterministic
+  terminal shellification/lowering order, public driver contract,
+  artifact/manifest schema, route semantics, and numerical matrices.
+
+Validation:
+- Design-manager validation only: docs-only `git diff --check`, focused `rg`
+  checks for `HP-ROUTE-STAGE-TYPE-*`, approved files/functions, preservation
+  rules, validation gates, forbidden surfaces, and no `src`, `test`, `tools`,
+  or `bin` changes. No implementation tests were run.
+
+Goal advancement:
+- LT1/LT3: responds to the current Be2 q5 evidence that warm construction is
+  acceptable but cold compile latency remains concentrated in route/stage type
+  surfaces.
+- RG/LT6: keeps practical artifact generation moving without reopening
+  numerical kernels, artifact schema, or driver workflow.
+
+Carrying-cost result:
+- deleted: none; docs-only authority pass.
+- simplified: doer now has one evidence-backed source lane for oversized
+  route/stage compatibility inventories after the prior vector cleanup lanes.
+- quarantined: driver changes, artifact/manifest changes, public API/export
+  changes, numerical kernels, raw blocks, RG/MWG/IDA semantics, route
+  diagnostics/status/report expansion, broad route-stage redesign, committed
+  tests, PackageCompiler/PrecompileTools/sysimage work, and Cr2 workflow remain
+  unapproved.
+- not deleted because: source cleanup has not run yet.
+- exact remaining caller/blocker: implementation must stop if cleanup requires
+  source files outside the approved boundary, broad route-stage redesign, new
+  public contracts, artifact changes, numerical changes, or precompile/sysimage
+  mechanisms.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

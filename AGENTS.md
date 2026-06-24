@@ -438,6 +438,8 @@ these approved design IDs:
 - `HP-RAW-SRCMODE-TEST-01`
 - `HP-CONTRACT-VEC-FN-01`
 - `HP-CONTRACT-VEC-TEST-01`
+- `HP-ROUTE-STAGE-TYPE-FN-01`
+- `HP-ROUTE-STAGE-TYPE-TEST-01`
 - `HP-R3-OBJ-01`
 - `HP-R3-FN-01`
 - `HP-R3-FN-02`
@@ -639,6 +641,33 @@ source-mode changes, numerical kernel or route semantic changes, driver
 changes, artifact/manifest schema changes, report/status/payload expansion,
 compatibility adapters preserving old tuple-backed plan field types, new
 committed tests, or Cr2 workflow.
+
+`HP-ROUTE-STAGE-TYPE-FN-01` approves only Be2 q5 compile-attributed
+route/stage type-surface cleanup in `src/pqs_source_box_route_driver_helpers.jl`
+and `src/cartesian_terminal_shellification_geometry.jl`. Approved targets are
+`_pqs_source_box_route_driver_terminal_lowering_contract_inventory_from_plan`,
+`cartesian_units`,
+`_pqs_source_box_route_driver_transform_stage_low_order_summary`,
+`cartesian_transforms`,
+`_cartesian_terminal_shellification_region_unit_inventory`, and related
+terminal-region lowering inventory summary surfaces in
+`src/cartesian_terminal_shellification_geometry.jl` only where the same
+runtime-sized type-surface pattern appears. Stale compatibility inventories may
+be deleted, and remaining runtime-sized `NamedTuple` / `Tuple` carriers may be
+replaced with vector-backed compact internal objects, stable dictionaries,
+accessors, or smaller summaries, provided H2 base/supplemented artifact
+behavior, terminal shellification/lowering order, public driver contract,
+artifact/manifest schema, route semantics, and numerical matrices stay
+unchanged. `HP-ROUTE-STAGE-TYPE-TEST-01` approves only `git diff --check`,
+package load, H2 base and supplemented artifact/readback, H2 R3 endpoint if
+terminal realization behavior is touched, focused terminal shellification/
+lowering order parity, focused scan for newly introduced runtime-sized
+`NamedTuple`/`Tuple` inventories in the approved files, optional Be2 q5
+compile/timing comparison after correctness passes, and no Cr2 run. This lane
+does not approve driver changes, artifact/manifest changes, public API/export
+changes, numerical/raw-block/RG/MWG/IDA changes, route diagnostic/status/report
+expansion, committed tests, PackageCompiler/PrecompileTools/sysimage work, or
+Cr2 workflow.
 
 R3/RG current source authority is compact by design. Read
 `docs/src/developer/designs/cartesian_hamiltonian_producer/residual_gaussian_domain_module.md`

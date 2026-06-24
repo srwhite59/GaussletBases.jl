@@ -704,6 +704,86 @@ tuple-backed contract-plan field shape. No new committed test file, Cr2
 fixture, driver-input fixture, benchmark, or route-diagnostic test is approved
 by this ID.
 
+### HP-ROUTE-STAGE-TYPE-FN-01 — route/stage type-surface cleanup
+
+Approved source files:
+
+```text
+src/pqs_source_box_route_driver_helpers.jl
+src/cartesian_terminal_shellification_geometry.jl
+```
+
+Approved cleanup targets:
+
+- `_pqs_source_box_route_driver_terminal_lowering_contract_inventory_from_plan`;
+- `cartesian_units` route/stage return surfaces that carry oversized
+  compatibility inventories;
+- `_pqs_source_box_route_driver_transform_stage_low_order_summary`;
+- `cartesian_transforms` route/stage return surfaces that carry oversized
+  compatibility inventories;
+- `_cartesian_terminal_shellification_region_unit_inventory`;
+- related terminal-region lowering inventory summary surfaces in
+  `src/cartesian_terminal_shellification_geometry.jl` only where the same
+  runtime-sized type-surface pattern appears.
+
+Approved replacement/deletion shapes:
+
+- delete stale route/stage compatibility inventories with no active approved
+  caller;
+- replace remaining runtime-sized `NamedTuple` / `Tuple` carriers with
+  vector-backed compact internal objects, stable dictionaries, accessors, or
+  smaller summaries;
+- shrink wide internal stage return signatures only where all live approved
+  callers can be updated within the approved source files;
+- preserve deterministic terminal shellification/lowering order and existing
+  behavior.
+
+Required preservation:
+
+- H2 base artifact/readback behavior;
+- H2 supplemented artifact/readback behavior;
+- deterministic terminal shellification/lowering order;
+- existing public driver contract;
+- existing artifact schema and manifest behavior;
+- existing numerical matrices.
+
+This ID does not approve source files outside the approved boundary, driver
+changes, artifact schema or manifest changes, public API/export changes,
+numerical kernel changes, matrix value changes, raw-block changes, Residual
+Gaussian/MWG/IDA semantic changes, route semantic changes, shellification
+behavior changes, route diagnostic/status/report expansion, broad route-stage
+redesign, new public contracts, PackageCompiler/PrecompileTools/sysimage or
+precompile workload work, new committed tests, Cr2 runs, or Cr2-specific
+workflow. No compatibility adapter may preserve the old runtime-sized type
+surface merely under a new name.
+
+Line budget: at most `200` added `src` lines, with net simplification expected.
+Failure rule: if cleanup requires source files outside the approved boundary,
+broad route-stage redesign, new public contracts, artifact changes, numerical
+changes, or a precompile/sysimage mechanism, make no source commit and report
+the exact blocker.
+
+### HP-ROUTE-STAGE-TYPE-TEST-01 — route/stage type-surface cleanup validation
+
+Approved validation:
+
+- `git diff --check`;
+- package load;
+- H2 base artifact write/readback through the existing reader;
+- H2 supplemented artifact write/readback through the existing reader;
+- H2 R3 endpoint if the pass touches terminal realization behavior;
+- focused terminal shellification/lowering order parity;
+- focused scan for newly introduced `NamedTuple{...}`, variable-size
+  `Tuple(...)`, `Tuple{Vararg{...}}`, and runtime-keyed inventories in the
+  approved files;
+- optional Be2 q5 compile/timing comparison after correctness passes;
+- no Cr2 run.
+
+Existing committed tests may be adjusted only if they directly assert the old
+stale compatibility inventory shape. No new committed test file, Cr2 fixture,
+driver-input fixture, benchmark, route-diagnostic test, or precompile workload
+is approved by this ID.
+
 ### HP-R1-ART-01 — public base producer artifact provenance
 
 Approved artifact extension for R1 public facade writes only. When

@@ -64,6 +64,9 @@ Agents should read first:
 - [Contract-plan vector cleanup](contract_plan_vector_cleanup.md)
   for the terminal-lowering and retained-unit transform contract-plan vector
   cleanup lane
+- [Route/stage type-surface cleanup](route_stage_type_surface_cleanup.md)
+  for the Be2 q5 compile-attributed route/stage compatibility-inventory
+  cleanup lane
 - [Algorithm implementation index](../../algorithm_implementation_index.md)
 
 Approved amendments:
@@ -143,6 +146,12 @@ Approved amendments:
   contract tuple inventories with vector-backed storage while preserving
   accessors, iteration order, summaries, and behavior. Per-contract
   `source_cpbs` tuples remain out of scope.
+- [Route/stage type-surface cleanup](route_stage_type_surface_cleanup.md)
+  approves a narrow cleanup of Be2 q5 compile-attributed route/stage
+  compatibility inventories in `src/pqs_source_box_route_driver_helpers.jl`
+  and `src/cartesian_terminal_shellification_geometry.jl`. It does not approve
+  driver changes, artifact changes, numerical changes, route diagnostics, or
+  precompile/sysimage work.
 
 Candidate amendments:
 

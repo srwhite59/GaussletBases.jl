@@ -39,6 +39,8 @@ Normal startup reading:
   source-mode inventory cleanup lane;
 - `contract_plan_vector_cleanup.md` for terminal-lowering and retained-unit
   transform contract-plan vector cleanup;
+- `route_stage_type_surface_cleanup.md` for Be2 q5 compile-attributed
+  route/stage compatibility-inventory cleanup;
 - `docs/src/developer/algorithm_implementation_index.md` for existing kernels
   and donor paths.
 
@@ -302,6 +304,29 @@ Approved contract-plan vector cleanup:
   behavior and semantics without preserving variable-length `Tuple` concrete
   field types;
 - `source_cpbs::Tuple{Vararg{CoordinateProductBox}}` remains out of scope.
+
+Approved route/stage type-surface cleanup:
+
+- `HP-ROUTE-STAGE-TYPE-FN-01` approves only
+  `src/pqs_source_box_route_driver_helpers.jl` and
+  `src/cartesian_terminal_shellification_geometry.jl`;
+- approved targets are Be2 q5 compile-attributed compatibility inventories and
+  wide route/stage return surfaces around
+  `_pqs_source_box_route_driver_terminal_lowering_contract_inventory_from_plan`,
+  `cartesian_units`,
+  `_pqs_source_box_route_driver_transform_stage_low_order_summary`,
+  `cartesian_transforms`, and
+  `_cartesian_terminal_shellification_region_unit_inventory`;
+- stale compatibility inventories may be deleted, and remaining runtime-sized
+  `NamedTuple` / `Tuple` carriers may be replaced with vector-backed compact
+  internal objects, stable dictionaries, accessors, or smaller summaries;
+- H2 base/supplemented artifact behavior, terminal shellification/lowering
+  order, artifact/manifest schema, public driver contract, route semantics, and
+  numerical matrices must remain unchanged;
+- driver changes, artifact/manifest changes, numerical/raw-block/RG/MWG/IDA
+  changes, route diagnostic/status/report expansion, committed tests,
+  PackageCompiler/PrecompileTools/sysimage work, and Cr2 workflow remain
+  unapproved.
 
 Approved canonical driver atom workflow:
 
