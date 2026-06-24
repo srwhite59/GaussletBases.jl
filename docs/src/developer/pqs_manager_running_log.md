@@ -14755,3 +14755,58 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 139 - Base Homonuclear Diatomic Relaxation
+
+Commit(s):
+- this commit - Relax base homonuclear diatomic validation
+
+Summary:
+- Accepted the `HP-COMP-BASEDIAT-FN-01` one-file source pass. The
+  two-center base branch in `src/cartesian_base_hamiltonian.jl` no longer
+  hardcodes H2 symbols, charges, or spin counts. It now accepts explicit
+  homonuclear z-axis all-electron diatomics with equal labels, equal
+  integer-valued nuclear charges, distinct z-axis centers, and
+  `nup + ndn == sum(charges)`. Symbols remain provenance labels and charges
+  remain authority.
+- The existing basis normalization and `kind = :h2` route shape are preserved,
+  so both `nesting = :pqs` and `nesting = :wl` continue through the same
+  staged base Hamiltonian path and existing route provenance labels.
+
+Validation:
+- Doer: `git diff --check`; package load; H2 base artifact/readback for
+  `nesting = :pqs` and `nesting = :wl`; small Be2 base artifact/readback with
+  bounded `q = 2`, `nesting = :pqs` and `nesting = :wl`; rejection checks for
+  heteronuclear labels, unequal charges, non-neutral electron count, and
+  non-z-axis centers. No Cr2 run.
+- Manager: inspected the source diff; `git diff --check`;
+  `git diff --numstat -- src bin tools test docs`; suspicious added-line scan;
+  new tests/tools scan; focused stale H2-only wording scan. No suspicious hits
+  and no new committed tests/tools.
+
+Goal advancement:
+- LT1/LT3: completes the base-mode geometry relaxation so atom/base and
+  diatomic/base inputs are now explicit-data contracts rather than
+  element-special-cased H/H2 contracts.
+- LT5/LT6: keeps the composition model intact: geometry validation happens in
+  the base input seam, nesting remains a construction-family choice, and the
+  driver does not grow an element case table.
+
+Remaining blocker / next:
+- The two remaining composition holes are supplemented atoms and supplemented
+  WL. The clearer next lane is supplemented WL for z-axis diatomics, because
+  base PQS/WL diatomics now both reach a terminal basis and the supplemented
+  path is currently blocked only by policy/wiring.
+
+Carrying-cost result:
+- deleted: hardcoded H2 symbol/charge/spin guard and H2-only error wording.
+- simplified: atom and diatomic integer-charge checks share one private helper.
+- quarantined: heteronuclear, non-z-axis/general geometry, Cr2 workflow,
+  supplemented atoms, and supplemented WL remain out of this pass.
+- not deleted because: `kind = :h2` and H2-named internal basis helper remain
+  the existing z-axis diatomic route shape, not public H2-only policy.
+- exact remaining caller/blocker: none for base homonuclear z-axis diatomics.
+- added src lines: 18.
+- deleted src lines: 10.
+- new tests: none.
+- new metadata/status fields: none.

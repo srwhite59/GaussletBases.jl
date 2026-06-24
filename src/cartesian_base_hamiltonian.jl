@@ -52,6 +52,13 @@ function _cartesian_base_q(value)
     return q
 end
 
+function _cartesian_base_integer_charge(charge, label)
+    electron_count = round(Int, charge)
+    isapprox(charge, electron_count; atol = 1.0e-12, rtol = 0.0) ||
+        throw(ArgumentError("$(label) requires integer-valued nuclear charge"))
+    return electron_count
+end
+
 function _cartesian_base_diatomic_basis_parts(basis)
     _cartesian_base_check_basis_keys(basis, _CARTESIAN_BASE_H2_BASIS_REQUIRED_KEYS)
     return (; q = _cartesian_base_q(basis.q),
@@ -105,10 +112,7 @@ function _cartesian_base_inputs(system::NamedTuple, basis::NamedTuple)
             basis, _CARTESIAN_BASE_H_BASIS_REQUIRED_KEYS, _CARTESIAN_BASE_H_OPTIONAL_BASIS_KEYS)
         locations[1] == (0.0, 0.0, 0.0) ||
             throw(ArgumentError("one-center atom must be centered at (0,0,0)"))
-        charge = only(charges)
-        electron_count = round(Int, charge)
-        isapprox(charge, electron_count; atol = 1.0e-12, rtol = 0.0) ||
-            throw(ArgumentError("one-center atom requires integer-valued nuclear charge"))
+        electron_count = _cartesian_base_integer_charge(only(charges), "one-center atom")
         nup + ndn == electron_count ||
             throw(ArgumentError("one-center atom requires neutral all-electron count"))
         core_spacing = _cartesian_base_positive(basis.core_spacing, "basis.core_spacing")
@@ -122,16 +126,20 @@ function _cartesian_base_inputs(system::NamedTuple, basis::NamedTuple)
             tail_spacing = _cartesian_base_get_positive(basis, :tail_spacing, 10.0)))
     elseif length(symbols) == 2
         basis_parts = _cartesian_base_diatomic_basis_parts(basis)
-        symbols == ["H", "H"] && charges == [1.0, 1.0] ||
-            throw(ArgumentError("only z-axis H2 is supported"))
+        symbols[1] == symbols[2] ||
+            throw(ArgumentError("base diatomic requires equal atom-symbol labels"))
+        charges[1] == charges[2] ||
+            throw(ArgumentError("homonuclear base diatomic requires equal nuclear charges"))
+        electron_count = 2 * _cartesian_base_integer_charge(charges[1], "base diatomic")
         all(location -> location[1] == 0.0 && location[2] == 0.0, locations) ||
-            throw(ArgumentError("H2 centers must lie on the Cartesian z axis"))
+            throw(ArgumentError("base diatomic centers must lie on the Cartesian z axis"))
         locations[1][3] != locations[2][3] ||
-            throw(ArgumentError("H2 centers must be distinct"))
-        nup == 1 && ndn == 1 || throw(ArgumentError("H2 requires nup=1 and ndn=1"))
+            throw(ArgumentError("base diatomic centers must be distinct"))
+        nup + ndn == electron_count ||
+            throw(ArgumentError("base diatomic requires neutral all-electron count"))
         return merge(base, (; kind = :h2), basis_parts)
     end
-    throw(ArgumentError("only one-center atoms and H2 are supported"))
+    throw(ArgumentError("only one-center atoms and z-axis homonuclear diatomics are supported"))
 end
 
 function _cartesian_base_route(kind, nesting)
