@@ -13548,3 +13548,58 @@ Carrying-cost result:
 - deleted src lines: 9.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 123 - Be2 Fresh-Target Timing Attribution
+
+Commit(s):
+- none - measurement-only timing pass.
+
+Summary:
+- Accepted the post type-surface cleanup timing result on current `5938ddbc`.
+  The previously alarming Be2 q5 driver timing was not representative of warm
+  construction. With `check_file=false`, `readback=false`, unique hamfiles, and
+  one throwaway warmup in the same Julia process, three fresh Be2 q5 p10
+  supplemented runs averaged `1.995 s`.
+- The old suspected bottleneck, base working-basis construction, dropped from
+  `45.8 s` cold to `0.145 s` fresh. Artifact writing was also small
+  (`0.044 s` average), so the slow one-shot runs are best interpreted as
+  compile/type latency rather than production numerical construction.
+- The measured fresh Be2 input was CR2 pass010-style:
+  `R=5.0`, `q=5`, `core_spacing=0.15`, `xmax_parallel=10.5`,
+  `xmax_transverse=8.0`, Be/`cc-pVDZ`, `lmax=1`, contracted, no width filter,
+  external BasisSets path. Current dimensions were base `1467`, residual `18`,
+  final `1485`.
+
+Validation:
+- Doer validation: `git diff --check`; package load; timing harness
+  `tmp/work/be2_q5_p10_fresh_target_timing_attribution.jl`; final
+  `git status --short --branch`. No tracked files changed, and the timing
+  harness remained ignored under `tmp/`.
+- Manager validation: reviewed the reported cold/fresh timing separation,
+  unique-target settings, stage breakdown, HEAD, and final status. No
+  implementation tests were rerun because this was a read-only timing pass.
+
+Goal advancement:
+- LT1/LT3: changes the active performance interpretation. The current Be2 q5
+  construction path is not a multi-minute warm numerical bottleneck; remaining
+  pain is primarily first-run compilation/type latency.
+- RG/LT6: supports practical CR2/HF artifact generation by showing that, after
+  warmup, the canonical supplemented Be2 driver path has acceptable
+  construction-scale timing for this fixture. Further source work should be
+  justified by compile latency evidence, not by stale cold-run wall times.
+
+Carrying-cost result:
+- deleted: none; timing-only pass.
+- simplified: the next decision boundary is now compile/type attribution versus
+  stopping optimization, not another numerical construction rewrite.
+- quarantined: exact-repeat same-file timing remains cache/artifact behavior
+  only and is not accepted as construction timing.
+- not deleted because: no source code was changed.
+- exact remaining caller/blocker: if first-run latency remains operationally
+  painful, the next lane should profile compilation/type surfaces with evidence
+  before requesting authority; do not reopen raw-block, terminal-product, or
+  unit-nuclear numerical kernels from this measurement alone.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.
