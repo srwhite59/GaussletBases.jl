@@ -14124,3 +14124,56 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 131 - Approve RG Orthogonality Robustness
+
+Commit(s):
+- this commit - Approve residual Gaussian orthogonality robustness
+
+Summary:
+- Approved `HP-RG-ORTHO-FN-01` and `HP-RG-ORTHO-TEST-01` as a narrow Residual
+  Gaussian robustness lane for final residual identity validation. The
+  motivating strict N2 q5 p10 case at `core_spacing = 0.042857` has excellent
+  `G' S R` orthogonality (`1.776e-14`), positive full-rank owner metrics,
+  retained counts `9,9`, and a healthy final merge spectrum (`7.232e-2 ..
+  1.928`, condition `26.65`), but `R' S R - I = 1.673e-10` slightly exceeds
+  the old absolute-only `1.0e-10` check.
+- The amendment keeps owner-local residual selection, occupation cutoff,
+  negative-eigenvalue policy, and MWG/IDA conventions unchanged. It approves
+  only stable symmetric final residual-overlap validation and a combined
+  absolute/relative final identity check for small floating-point overshoots
+  after a healthy merge.
+
+Validation:
+- Design-manager validation: read compact RG authority, registry, current
+  status, invariants, implementation slices, AGENTS source-ID list, and the
+  running-log tail; updated only docs/AGENTS; planned validation is
+  `git diff --check`, focused `rg` for the new IDs and source surfaces, and a
+  check that no `src`, `test`, `tools`, or `bin` files changed. No
+  implementation tests were run because this is a docs-only approval pass.
+
+Goal advancement:
+- RG/LT6: makes the supplemented residual-Gaussian path robust enough for
+  strict molecule inputs without changing the residual physics or broadening
+  public workflow.
+- LT1/LT3: avoids source churn outside the now-dominant workflow lanes by
+  requiring a narrow source surface and explicit failure rule if the issue is
+  not a final floating-point validation overshoot.
+
+Carrying-cost result:
+- deleted: none; docs-only authority pass.
+- simplified: doer now has one exact source lane in `residual_basis.jl`, with
+  terminal residual keyword plumbing allowed only if needed.
+- quarantined: residual selection changes, global residual selection,
+  occupation-cutoff changes, merge eigenvalue flooring, width filtering as
+  conditioning repair, MWG/IDA/raw-block/nuclear/artifact/driver/public API
+  changes, status/report fields, committed tests, and Cr2 workflow remain
+  unapproved.
+- not deleted because: source correction has not run yet.
+- exact remaining caller/blocker: implementation must stop if strict N2
+  requires changing residual selection, supplement construction, or final-basis
+  construction.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

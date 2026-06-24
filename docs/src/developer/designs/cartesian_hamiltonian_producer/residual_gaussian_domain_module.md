@@ -48,6 +48,9 @@ module, or object names in the new owner.
 - `HP-RG-WIRE-01` - migration from `pqs_terminal_residual_gto.jl` to the
   domain module.
 - `HP-RG-TEST-01` - validation gates for the migration.
+- `HP-RG-ORTHO-FN-01` - narrow robust final residual
+  orthogonalization/identity validation.
+- `HP-RG-ORTHO-TEST-01` - validation gates for the robustness pass.
 
 These IDs are approved for implementation only within the surfaces below.
 
@@ -179,6 +182,16 @@ eigenvalue below `-tau_merge` is a construction error and any merge eigenvalue
 `<= tau_merge` is a near-singular merge error. Eigenvalue flooring must not be
 used to preserve directions.
 
+`HP-RG-ORTHO-FN-01` additionally permits robust final residual identity
+validation after this merge when the owner metrics are positive/full rank and
+the merge spectrum is healthy. The final `R' S R` check may symmetrize the
+computed overlap and use
+`err_RR <= 1.0e-10 + 1.0e-10 * max(1, scale_RR)`, where `err_RR` is the maximum
+absolute identity error and `scale_RR` is the maximum absolute entry or
+equivalent infinity-norm scale of the symmetrized residual overlap. This is
+not an occupation-cutoff change, a residual-selection change, or permission to
+floor merge eigenvalues.
+
 Do not approve a vague global entry point such as
 `stabilize_residual_metric(...)`. Global raw-candidate symmetric Lowdin and
 global raw-column pivoted-Cholesky selection are not the Residual Gaussian
@@ -301,6 +314,10 @@ Future source migration must validate:
   readback deltas;
 - ignored Be2 owner-local usability/performance measurement under `tmp/work`
   when the source pass changes the interaction path or facade wiring.
+- for `HP-RG-ORTHO-FN-01`, ignored strict N2 q5 p10 residual audit/artifact
+  smoke at `core_spacing = 0.042857`, plus one passing N2 comparison at
+  `core_spacing = 0.05` or `0.075`, reporting `G' S R`, `R' S R - I`, retained
+  counts, and merge spectrum.
 
 No Cr2 full Hamiltonian, Cr2 artifact, Cr2 facade support, public export,
 driver/bin/tool workflow, artifact schema expansion, report/status/payload

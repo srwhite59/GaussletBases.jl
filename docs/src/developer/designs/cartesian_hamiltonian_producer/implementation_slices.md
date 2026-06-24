@@ -220,6 +220,19 @@ Remaining cleanup:
 - keep artifact and facade hooks outside RG unless a separate design amendment
   approves moving them.
 
+Approved robustness lane:
+
+- `HP-RG-ORTHO-FN-01` approves only robust final residual
+  orthogonalization/identity validation for small floating-point overshoots
+  after healthy owner-local selection and final merge;
+- primary source file is
+  `src/cartesian_residual_gaussians/residual_basis.jl`;
+- `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` is
+  allowed only for narrow internal keyword plumbing if needed;
+- no residual selection semantic change, occupation-cutoff change, MWG/IDA,
+  raw-block, artifact, driver, public API, or committed-test expansion is
+  approved.
+
 ## Compact Hamiltonian Artifact Manifest
 
 Status: approved for implementation under `HP-HAM-MANIFEST-FN-01` and

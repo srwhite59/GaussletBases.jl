@@ -460,6 +460,8 @@ these approved design IDs:
 - `HP-RG-FN-04`
 - `HP-RG-WIRE-01`
 - `HP-RG-TEST-01`
+- `HP-RG-ORTHO-FN-01`
+- `HP-RG-ORTHO-TEST-01`
 - `HP-CGRB-FILE-01`
 - `HP-CGRB-FN-01`
 - `HP-CGRB-FN-02`
@@ -795,6 +797,14 @@ Approved Residual Gaussian module surfaces:
   file.
 - `HP-RG-TEST-01` approves only validation through the existing standalone H2
   residual-GTO/MWG endpoint and optional ignored Be2 measurement.
+- `HP-RG-ORTHO-FN-01` approves only robust final residual
+  orthogonalization/identity validation in
+  `src/cartesian_residual_gaussians/residual_basis.jl`, with
+  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` allowed
+  only for narrow internal keyword plumbing if needed.
+- `HP-RG-ORTHO-TEST-01` approves only the existing H2 residual-GTO/MWG endpoint,
+  H2 readback if the facade path is touched, ignored strict N2 q5 p10 residual
+  audit/artifact smoke, and one passing N2 comparison.
 
 Non-negotiable RG guardrails:
 
@@ -807,6 +817,11 @@ Non-negotiable RG guardrails:
   be computed from the final merged residual basis;
 - `V_GM` uses weight-aware final-basis density normalization for PQS shell
   blocks;
+- final residual identity validation may use the approved
+  `HP-RG-ORTHO-FN-01` combined absolute/relative check only for small
+  floating-point overshoots after owner-local selection and a healthy final
+  merge; it must not change occupation cutoff, selection semantics, or merge
+  failure rules;
 - RG does not own basis loading, parent lattice construction, terminal topology,
   raw analytic formula ownership, facade parsing, artifact writing,
   `supplement_provenance/`, report/status/payload objects, or public exports.

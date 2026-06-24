@@ -1,0 +1,115 @@
+# Residual Gaussian Orthogonality Robustness
+
+Status: approved narrow source authority under `HP-RG-ORTHO-FN-01` and
+`HP-RG-ORTHO-TEST-01`.
+
+## Reason
+
+Strict N2 q5 p10 at `core_spacing = 0.042857` failed only the final residual
+identity validation:
+
+```text
+max |G' S R|       = 1.776e-14
+max |R' S R - I|   = 1.673e-10
+current tolerance  = 1.0e-10
+owner retained     = 9, 9
+merge eigen range  = 7.232e-2 .. 1.928
+merge condition    = 26.65
+```
+
+The owner-local residual metrics are full rank and positive, the retained
+counts are unchanged, and the final merge spectrum is healthy. Comparison N2
+cases at `core_spacing = 0.075` and `0.05` pass with smaller final identity
+errors. This is a final floating-point validation overshoot, not evidence for
+rank loss, wrong owner grouping, severe conditioning, or a residual-selection
+algorithm change.
+
+## Approved IDs
+
+- `HP-RG-ORTHO-FN-01` - robust final residual orthogonalization and validation.
+- `HP-RG-ORTHO-TEST-01` - validation gates for the robustness pass.
+
+## Approved Source Surface
+
+Approved files:
+
+```text
+src/cartesian_residual_gaussians/residual_basis.jl
+src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl
+```
+
+`residual_basis.jl` is the primary owner. The terminal residual file is allowed
+only for narrow existing internal keyword plumbing if the current compatibility
+entry point needs to pass an approved tolerance/check option through to the RG
+domain function.
+
+No public export or public API change is approved.
+
+## Approved Behavior
+
+`HP-RG-ORTHO-FN-01` may make final residual normalization and identity
+validation robust for small floating-point overshoots when the owner-local
+selection and final merge are otherwise healthy.
+
+Allowed approaches:
+
+- use a numerically stable symmetric final merge normalization;
+- recompute or validate the final residual overlap through an explicitly
+  symmetrized matrix before measuring `R' S R - I`;
+- evaluate final identity with a combined absolute/relative check:
+
+```text
+err_RR <= tau_identity_abs + tau_identity_rel * max(1, scale_RR)
+```
+
+where `err_RR = max(abs.(symmetrized(R' S R) - I))`,
+`tau_identity_abs = 1.0e-10`, `tau_identity_rel = 1.0e-10`, and `scale_RR` is
+the maximum absolute entry or an equivalent infinity-norm scale of the
+symmetrized final residual overlap;
+- keep the existing `G' S R` validation strict, with the same absolute
+orthogonality tolerance used by the approved RG path unless a later amendment
+changes it;
+- report both absolute errors (`G' S R`, `R' S R - I`), retained owner counts,
+  and final merge spectrum in the implementation handoff.
+
+This is not a broad tolerance relaxation. The relative component is approved
+only for final residual identity validation after owner-local selection has
+succeeded and the final merge metric is positive and not near-singular under
+the existing merge failure rule.
+
+## Forbidden
+
+This amendment does not approve:
+
+- residual selection semantic changes;
+- global raw-candidate residual selection;
+- global raw-column pivoted-Cholesky residual selection;
+- occupation-cutoff changes;
+- numerical negative-eigenvalue tolerance changes;
+- final merge eigenvalue flooring to retain low-occupation directions;
+- width filtering as a conditioning repair;
+- MWG/IDA, nuclear, raw-block, exact-operator, artifact, driver, public API, or
+  route-stage changes;
+- status/report fields or payload objects;
+- committed fixtures/tests unless a later amendment names the exact file.
+
+If passing strict N2 requires changing residual selection, supplement
+construction, or final-basis construction, implementation must stop and report
+the blocker instead of widening this lane.
+
+## Validation
+
+`HP-RG-ORTHO-TEST-01` approves only:
+
+- existing H2 residual-GTO/MWG endpoint;
+- H2 base/supplemented readback only if the compatibility/facade path is
+  touched;
+- ignored strict N2 q5 p10 residual audit or artifact smoke at
+  `core_spacing = 0.042857`;
+- one passing N2 comparison at `core_spacing = 0.05` or `0.075`;
+- reporting `max |G' S R|`, `max |R' S R - I|`, owner retained counts, and the
+  final merge eigenvalue range/condition.
+
+No Cr2 full Hamiltonian, Cr2 artifact, Cr2 facade support, new committed test
+file, driver workflow, artifact schema change, solver/RHF, ECP, or EGOI work is
+approved by this robustness lane.

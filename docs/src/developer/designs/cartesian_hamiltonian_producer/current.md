@@ -12,6 +12,8 @@ Normal startup reading:
 - `invariants.md` for architecture-wide guardrails;
 - `residual_gaussian_domain_module.md` for the canonical Residual Gaussian
   algorithm contract;
+- `residual_gaussian_orthogonality_robustness.md` for the narrow final
+  residual identity-check robustness lane;
 - `cartesian_gaussian_raw_blocks_nuclear.md` for the neutral uncharged nuclear
   raw-block owner;
 - `cartesian_gaussian_raw_blocks_non_nuclear.md` for the neutral
@@ -87,6 +89,21 @@ Implemented Residual Gaussian path:
 - Cr2 may be used only as an explicit generic homonuclear z-axis ignored/user
   stress or usability run after H2/Be2 validation, not as a committed gate or
   special workflow.
+
+Approved Residual Gaussian robustness lane:
+
+- `HP-RG-ORTHO-FN-01` approves only final residual normalization/validation
+  robustness in `src/cartesian_residual_gaussians/residual_basis.jl`, with
+  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` allowed
+  only for narrow internal keyword plumbing if needed;
+- the target is strict N2 q5 p10 at `core_spacing = 0.042857`, where
+  `G' S R` passes, owner metrics are full rank, retained counts are `9,9`, the
+  merge metric is healthy, and only `R' S R - I` slightly exceeds the old
+  absolute tolerance;
+- the lane may use a symmetric final-overlap validation and a combined
+  absolute/relative final identity check, but it must not change residual
+  selection semantics, occupation cutoff, merge failure rule, MWG/IDA, raw
+  blocks, artifacts, driver workflow, or public API.
 
 Approved neutral Cartesian Gaussian raw-block owner:
 
@@ -404,6 +421,10 @@ Essential live guardrails:
 - RG does not own artifact writing, artifact provenance, basis loading, facade
   parsing, parent lattice construction, terminal topology, raw Gaussian block
   formula ownership, or public exports.
+- final residual identity validation may use the approved
+  `HP-RG-ORTHO-FN-01` absolute/relative check only for small floating-point
+  overshoots after owner-local selection and a healthy final merge; it is not
+  permission to relax residual selection or retain low-occupation directions.
 
 Exact Cartesian Gaussian raw blocks are separate neutral kernel authority:
 uncharged by-center nuclear blocks under

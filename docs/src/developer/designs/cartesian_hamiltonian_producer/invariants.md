@@ -82,6 +82,11 @@ The canonical RG algorithm contract is
   are not invariant under arbitrary residual rotations;
 - weight-aware final-basis density normalization is required for PQS-shell
   `V_GM` blocks;
+- final residual identity validation may use the narrow
+  `HP-RG-ORTHO-FN-01` combined absolute/relative check only for small
+  floating-point overshoots after owner-local selection and a healthy final
+  merge; it must not become an occupation-cutoff change, eigenvalue flooring,
+  or global residual-selection repair;
 - RG does not own artifact writing, artifact provenance, basis loading, facade
   parsing, public exports, driver workflow, or route-stage/report fields.
 

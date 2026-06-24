@@ -1616,6 +1616,63 @@ interaction path or facade wiring.
 No new committed test file, Be2 committed gate, or Cr2 full
 Hamiltonian/artifact/facade validation is approved.
 
+### HP-RG-ORTHO-FN-01 — residual final-orthogonality robustness
+
+Approved source files:
+
+```text
+src/cartesian_residual_gaussians/residual_basis.jl
+src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl
+```
+
+`residual_basis.jl` is the primary owner. The terminal residual file is
+approved only for narrow existing internal keyword plumbing if an approved
+tolerance/check option must be passed through a compatibility entry point.
+
+Approved target: make final residual orthogonalization and final
+`R' S R - I` identity validation robust for small floating-point overshoots
+with healthy owner-local selection and final merge spectra. The motivating
+strict N2 q5 p10 case at `core_spacing = 0.042857` has `max |G' S R| =
+1.776e-14`, `max |R' S R - I| = 1.673e-10`, retained counts `9,9`, and final
+merge eigenvalues `7.232e-2 .. 1.928`.
+
+Allowed changes:
+
+- stable symmetric final merge normalization/check;
+- explicitly symmetrized final residual-overlap validation;
+- combined absolute/relative final identity check
+  `err_RR <= 1.0e-10 + 1.0e-10 * max(1, scale_RR)`;
+- no public API unless the option is already routed through internal keywords.
+
+This ID does not approve blind broad tolerance relaxation, residual-selection
+semantic changes, global residual selection, occupation-cutoff changes,
+negative-eigenvalue tolerance changes, final merge eigenvalue flooring, width
+filtering as a conditioning repair, MWG/IDA/nuclear/raw-block changes, artifact
+schema changes, driver changes, status/report fields, public API/export
+changes, new committed tests, Cr2 workflow, or source files outside the two
+approved files.
+
+Failure rule: if the strict N2 case requires changing residual selection,
+supplement construction, or final-basis construction, make no source commit and
+report the blocker.
+
+### HP-RG-ORTHO-TEST-01 — residual final-orthogonality validation
+
+Approved validation:
+
+- existing H2 residual-GTO/MWG endpoint;
+- H2 base/supplemented readback if touched through the facade or compatibility
+  file;
+- ignored strict N2 q5 p10 residual audit or artifact smoke at
+  `core_spacing = 0.042857`;
+- one passing N2 comparison at `core_spacing = 0.05` or `0.075`;
+- report `max |G' S R|`, `max |R' S R - I|`, retained owner counts, and final
+  merge eigenvalue range/condition.
+
+No committed fixture/test, Cr2 full Hamiltonian, Cr2 artifact, Cr2 facade
+support, driver workflow, artifact schema change, solver/RHF, ECP, or EGOI
+work is approved.
+
 ## Approved For Cartesian Gaussian Raw-Block Nuclear Owner
 
 This section approves only the neutral uncharged by-center nuclear raw-block
