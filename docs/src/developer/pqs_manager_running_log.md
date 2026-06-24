@@ -13267,3 +13267,57 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 118 - Remove Runtime-Keyed Route Inventory Tuples
+
+Commit(s):
+- this commit - Replace runtime-keyed route inventories
+
+Summary:
+- Accepted the first `HP-ROUTE-INV-FN-01` source cleanup. The route-driver
+  helper no longer builds retained-unit inventory maps as
+  `NamedTuple{unit_keys}` or pair-family counts as `NamedTuple{families}`.
+- The replacement is one private vector/dictionary-backed
+  `_PQSRouteDriverInventoryRows` helper with property-style lookup preserved for
+  current callers. The public `propertynames` path was amended before
+  acceptance so it no longer constructs `Tuple(rows.labels)`.
+- This is a type-surface cleanup only: no numerical kernels, driver behavior,
+  artifact keys, manifest sidecars, raw product source tuples, terminal
+  lowering tuples, or retained-unit transform-contract tuples changed.
+
+Validation:
+- Doer validation: `git diff --check`; package load; H2 base artifact/readback
+  with dimension 471 and K/V deltas 0.0; H2 supplemented artifact/readback with
+  dimension 489 and K/V deltas 0.0; focused `rg` found no
+  `_pqs_source_box_route_driver_named_tuple_from_units`,
+  `NamedTuple{unit_keys}`, `NamedTuple{families}`, or `Tuple(rows.labels)` in
+  the allowed file.
+- Manager validation: `git diff --check`; `git diff --numstat` reported `55`
+  added and `23` deleted source lines in
+  `src/pqs_source_box_route_driver_helpers.jl`; suspicious-line scan was empty;
+  new-test/tool scan was empty.
+
+Goal advancement:
+- LT1/LT3: removes the clearest runtime-keyed `NamedTuple` inventory in the
+  current base/supplemented route path before timing/compile attribution.
+- RG/LT6: keeps CR2/HF artifact production work pointed at compile/runtime
+  usability without changing the accepted physics or artifact contract.
+
+Carrying-cost result:
+- deleted: `_pqs_source_box_route_driver_named_tuple_from_units(...)`.
+- simplified: repeated retained-unit map construction now goes through one
+  stable private row helper with direct `hasproperty` lookup.
+- quarantined: raw product source-mode tuple cleanup, terminal-lowering tuple
+  cleanup, retained-unit transform-contract tuple cleanup, public input
+  `NamedTuple` cleanup, artifact sidecar table changes, numerical kernels,
+  driver changes, and Cr2 workflow remain deferred.
+- not deleted because: current source callers still use property-style lookup,
+  so the replacement preserves that access without preserving the
+  runtime-keyed `NamedTuple` type shape.
+- exact remaining caller/blocker: broader type-surface cleanup still has known
+  deferred tuple lanes in `RawProductBoxPlan`, terminal lowering plans, and
+  retained-unit transform-contract plans.
+- added src lines: 55.
+- deleted src lines: 23.
+- new tests: none.
+- new metadata/status fields: none.

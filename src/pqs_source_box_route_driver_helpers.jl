@@ -40,6 +40,50 @@ function _pqs_route_driver_type_label(object)
     return string(nameof(typeof(object)))
 end
 
+struct _PQSRouteDriverInventoryRows
+    labels::Vector{Symbol}
+    values::Vector{Any}
+    index_by_label::Dict{Symbol,Int}
+end
+
+function _PQSRouteDriverInventoryRows(labels, values)
+    label_vector = Symbol[Symbol(label) for label in labels]
+    value_vector = Any[value for value in values]
+    length(label_vector) == length(value_vector) ||
+        throw(DimensionMismatch("inventory row label/value length mismatch"))
+    return _PQSRouteDriverInventoryRows(
+        label_vector,
+        value_vector,
+        Dict(label => index for (index, label) in pairs(label_vector)),
+    )
+end
+
+Base.keys(rows::_PQSRouteDriverInventoryRows) = rows.labels
+Base.length(rows::_PQSRouteDriverInventoryRows) = length(rows.labels)
+Base.propertynames(rows::_PQSRouteDriverInventoryRows, private::Bool = false) =
+    private ? (:labels, :values, :index_by_label) : copy(rows.labels)
+
+Base.hasproperty(rows::_PQSRouteDriverInventoryRows, label::Symbol) =
+    label in (:labels, :values, :index_by_label) || haskey(rows.index_by_label, label)
+
+function Base.getproperty(rows::_PQSRouteDriverInventoryRows, label::Symbol)
+    label in (:labels, :values, :index_by_label) && return getfield(rows, label)
+    index = get(rows.index_by_label, label, 0)
+    index > 0 || throw(ArgumentError("unknown route inventory label $(label)"))
+    return rows.values[index]
+end
+
+Base.getindex(rows::_PQSRouteDriverInventoryRows, label::Symbol) = getproperty(rows, label)
+
+_pqs_source_box_route_driver_inventory_rows(labels, values) =
+    _PQSRouteDriverInventoryRows(labels, values)
+
+_pqs_source_box_route_driver_unit_rows(retained_units, field) =
+    _pqs_source_box_route_driver_inventory_rows(
+        (unit.unit_key for unit in retained_units),
+        (getproperty(unit, field) for unit in retained_units),
+    )
+
 
 # Input checks and standard setup.
 
@@ -581,12 +625,6 @@ function _pqs_source_box_route_driver_unit_record(;
     )
 end
 
-function _pqs_source_box_route_driver_named_tuple_from_units(retained_units, field)
-    unit_keys = Tuple(unit.unit_key for unit in retained_units)
-    values = Tuple(getproperty(unit, field) for unit in retained_units)
-    return NamedTuple{unit_keys}(values)
-end
-
 function _pqs_source_box_route_driver_inventory_retained_dimension(retained_units)
     isempty(retained_units) && return 0
     any(unit -> isnothing(unit.retained_range), retained_units) && return nothing
@@ -606,16 +644,13 @@ function _pqs_source_box_route_driver_unit_inventory(retained_units)
     return (;
         retained_units,
         source_boxes =
-            _pqs_source_box_route_driver_named_tuple_from_units(retained_units, :source_box),
+            _pqs_source_box_route_driver_unit_rows(retained_units, :source_box),
         source_dimensions =
-            _pqs_source_box_route_driver_named_tuple_from_units(
-                retained_units, :source_dimensions),
+            _pqs_source_box_route_driver_unit_rows(retained_units, :source_dimensions),
         retained_counts =
-            _pqs_source_box_route_driver_named_tuple_from_units(
-                retained_units, :retained_count),
+            _pqs_source_box_route_driver_unit_rows(retained_units, :retained_count),
         ranges =
-            _pqs_source_box_route_driver_named_tuple_from_units(
-                retained_units, :retained_range),
+            _pqs_source_box_route_driver_unit_rows(retained_units, :retained_range),
         retained_dimension =
             _pqs_source_box_route_driver_inventory_retained_dimension(retained_units),
     )
@@ -645,8 +680,9 @@ function _pqs_source_box_route_driver_pair_inventory(
     families = isnothing(expected_families) ?
         Tuple(unique(entry.pair_family for entry in pair_entries)) :
         Tuple(expected_families)
-    pair_family_counts = NamedTuple{families}(
-        Tuple(count(entry -> entry.pair_family == family, pair_entries) for family in families),
+    pair_family_counts = _pqs_source_box_route_driver_inventory_rows(
+        families,
+        (count(entry -> entry.pair_family == family, pair_entries) for family in families),
     )
     return (; pair_entries, pair_family_counts)
 end
@@ -1521,11 +1557,9 @@ function _pqs_source_box_route_driver_transform_stage_low_order_summary(units)
         terminal_retained_rule_plan,
         retained_units,
         retained_counts =
-            _pqs_source_box_route_driver_named_tuple_from_units(
-                retained_units, :retained_count),
+            _pqs_source_box_route_driver_unit_rows(retained_units, :retained_count),
         ranges =
-            _pqs_source_box_route_driver_named_tuple_from_units(
-                retained_units, :retained_range),
+            _pqs_source_box_route_driver_unit_rows(retained_units, :retained_range),
         retained_dimension = get(low_order_units, :retained_dimension, nothing),
     )
 end
@@ -1594,11 +1628,9 @@ function cartesian_transforms(units, recipe)
         pair_family_counts = units.pair_family_counts,
         helper_by_pair_family = units.helper_by_pair_family,
         retained_counts =
-            _pqs_source_box_route_driver_named_tuple_from_units(
-                retained_units, :retained_count),
+            _pqs_source_box_route_driver_unit_rows(retained_units, :retained_count),
         ranges =
-            _pqs_source_box_route_driver_named_tuple_from_units(
-                retained_units, :retained_range),
+            _pqs_source_box_route_driver_unit_rows(retained_units, :retained_range),
         retained_dimension =
             _pqs_source_box_route_driver_inventory_retained_dimension(retained_units),
     )
