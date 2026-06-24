@@ -14409,3 +14409,59 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 134 - Approve Nesting Artifact Truth
+
+Commit(s):
+- this commit - Approve nesting artifact truth cleanup
+
+Summary:
+- Approved `HP-NEST-ART-FN-01` and `HP-NEST-ART-TEST-01` as the narrow
+  artifact/provenance cleanup lane after `nesting = :wl` became a real public
+  construction-family choice for one-center base artifacts. The current bug is
+  provenance truth: WL artifacts must not carry PQS-oriented route labels, and
+  artifacts must record the public `nesting` input.
+- The amendment requires `producer_provenance/` and `recipe_provenance/` to
+  record `nesting` and to derive the route label from
+  `(input.kind, input.nesting)`. Approved labels are
+  `:one_center_pqs_base`, `:one_center_wl_base`, and
+  `:z_axis_diatomic_pqs_base`. No WL H2 label is approved until WL H2 artifact
+  construction succeeds under separate authority.
+- The source lane is deliberately small: `src/cartesian_base_hamiltonian.jl`
+  may correct provenance and early supplemented-WL rejection, while
+  `src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl`
+  may receive only a docstring correction that removes PQS-only module
+  wording.
+
+Validation:
+- Design-manager validation for this docs-only pass: compact authority and
+  artifact-manifest reads, update only docs/AGENTS, run `git diff --check`,
+  focused `rg` for `HP-NEST-ART-*`, `nesting`, `one_center_wl_base`,
+  `recipe_provenance`, and `producer_provenance`, plus a no-source/test/bin
+  diff check. No implementation tests are part of this approval pass; package
+  load and artifact/readback checks belong to `HP-NEST-ART-TEST-01`.
+
+Goal advancement:
+- LT1/LT3: keeps the public construction-family contract honest at the
+  artifact boundary, so downstream consumers can distinguish PQS and
+  White-Lindsey construction without route-stage vocabulary.
+- LT5/LT6: preserves the common terminal/Hamiltonian artifact boundary while
+  preventing helper-file naming from becoming false provenance.
+
+Carrying-cost result:
+- deleted: none; docs-only authority pass.
+- simplified: doer now has one exact provenance-truth lane instead of treating
+  nesting as an implicit driver-only fact.
+- quarantined: driver public inputs, route skeletons, shellification,
+  terminal lowering, raw blocks, RG/MWG/IDA, artifact matrix keys, reader
+  behavior, public API/export changes, WL H2 support, diagnostics/reports,
+  committed tests, and Cr2 workflow remain unapproved.
+- not deleted because: source cleanup has not run yet.
+- exact remaining caller/blocker: if truthful nesting provenance requires
+  reader changes, matrix-key changes, or a broader manifest structure, the
+  source pass must stop and report the blocker.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: only approved artifact provenance keys, no staged
+  metadata.

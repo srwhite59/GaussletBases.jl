@@ -98,6 +98,10 @@ The canonical RG algorithm contract is
 - The base `producer_provenance/` group and supplemented
   `supplement_provenance/` group are compact artifact provenance, not algorithm
   inputs.
+- Artifact provenance must record public construction-family truth. `nesting`
+  is a public recipe fact, and route labels must be derived from
+  `(input.kind, input.nesting)`, not from PQS-oriented helper names or default
+  route-stage vocabulary.
 - Existing Hamiltonian readers must continue to read matrices normally and
   ignore provenance unless a later approved reader contract says otherwise.
 

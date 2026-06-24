@@ -988,6 +988,7 @@ keys under `producer_provenance/`:
 ```text
 provenance_version
 producer
+nesting
 route
 q
 core_spacing
@@ -1015,6 +1016,9 @@ Exact values and route-specific `nothing` fields are defined in
 `mapping_d = 0.3` for the reviewed endpoint. The `mapping_d` provenance value
 is the resolved internal White-Lindsey mapping parameter and equals
 `core_spacing` for one-center atoms; it is not a separate public input.
+`nesting` must record the public construction-family input, and `route` must be
+the truthful base route label derived from `(input.kind, input.nesting)`, not a
+PQS-oriented default string.
 Existing
 `read_cartesian_ida_hamiltonian` must continue reading the Hamiltonian matrices
 while ignoring these extra keys. This ID does not approve a separate manifest,
@@ -1374,6 +1378,7 @@ Approved `recipe_provenance/` keys:
 
 - `provenance_version = 1`;
 - `producer`;
+- `nesting`;
 - `route`;
 - `q`;
 - `core_spacing`;
@@ -1401,6 +1406,9 @@ The recipe group may repeat facts from `producer_provenance/` and
 `supplement_provenance/` so consumers have one uniform location. Values must
 come from the validated public construction contract and produced dimensions,
 not route reports, element tables, solver assumptions, or private diagnostics.
+`nesting` records the public construction family (`:pqs` or `:wl`), and
+`route` records the truthful base route label derived from `(input.kind,
+input.nesting)`.
 
 Center conventions and construction labels must be derived from existing
 terminal basis blocks, parent axes, residual metadata, and augmented moment/MWG
@@ -1538,6 +1546,59 @@ Approved validation:
 No new committed test file, public reader API, driver public input change,
 artifact schema dump, Cr2 fixture, solver/CR2 workflow validation, or broad
 route/report validation is approved by this ID.
+
+### HP-NEST-ART-FN-01 — nesting artifact-truth cleanup
+
+Approved source files:
+
+```text
+src/cartesian_base_hamiltonian.jl
+src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl
+```
+
+`src/cartesian_base_hamiltonian.jl` is approved only for artifact provenance
+truth for the public `nesting` construction-family input. It may:
+
+- record `nesting` in `producer_provenance/` and `recipe_provenance/`;
+- choose truthful base route labels from `(input.kind, input.nesting)`, with
+  approved labels `:one_center_pqs_base`, `:one_center_wl_base`, and
+  `:z_axis_diatomic_pqs_base`;
+- reject supplemented `nesting = :wl` before expensive base-stage
+  construction with a clear `ArgumentError`;
+- leave unsupported WL H2 without a provenance label until that path succeeds
+  under separate authority.
+
+`src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl` is
+approved only for a docstring correction so the module description no longer
+says it is exclusively PQS-specific now that the WL terminal-basis seam uses the
+same final-basis boundary.
+
+This ID does not approve driver public input changes, route skeleton changes,
+shellification changes, terminal lowering changes, raw-block changes,
+Residual Gaussian/MWG/IDA changes, artifact matrix-key changes,
+`read_cartesian_ida_hamiltonian` behavior changes, public API/export changes,
+Cr2 workflow, committed tests, diagnostic/report changes, or WL H2 support.
+
+Failure rule: if truthful nesting provenance requires changing reader behavior,
+artifact matrix keys, or the broader manifest structure, make no source commit
+and report the blocker.
+
+### HP-NEST-ART-TEST-01 — nesting artifact-truth validation
+
+Approved validation:
+
+- `git diff --check`;
+- package load;
+- small `nesting = :pqs` base artifact write/readback plus direct provenance
+  inspection;
+- small `nesting = :wl` one-center atom artifact write/readback plus direct
+  provenance inspection;
+- supplemented `nesting = :wl` rejects before base-stage construction;
+- no Cr2 run.
+
+No new committed test file, driver-input fixture, public reader API, artifact
+schema dump, WL H2 validation, supplemented WL validation, or Cr2 fixture is
+approved by this ID.
 
 ### HP-R3U-FILE-01 — supplemented workflow source and validation files
 

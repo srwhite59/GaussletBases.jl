@@ -504,6 +504,8 @@ these approved design IDs:
 - `HP-HAM-MANIFEST-TEST-01`
 - `HP-HAM-MANIFEST-SRC-FN-01`
 - `HP-HAM-MANIFEST-SRC-TEST-01`
+- `HP-NEST-ART-FN-01`
+- `HP-NEST-ART-TEST-01`
 
 No other production surface may be added in this lane without a prior
 documentation-only design amendment. This includes new structs, persistent
@@ -749,6 +751,22 @@ Approved R3 compatibility and endpoint surfaces:
   committed Cr2 fixtures, or
   Cr2-specific branches. One-center atom padding is provenance-only in this
   lane; do not change atom parent counts or atom size policy under these IDs.
+- `HP-NEST-ART-FN-01` approves only nesting artifact-truth cleanup in
+  `src/cartesian_base_hamiltonian.jl`, plus a docstring-only correction in
+  `src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl`.
+  Base and recipe provenance must record public `nesting`, and route labels
+  must be truthful values derived from `(input.kind, input.nesting)`, including
+  `:one_center_pqs_base`, `:one_center_wl_base`, and
+  `:z_axis_diatomic_pqs_base`. Supplemented `nesting = :wl` must reject before
+  expensive base-stage construction. This does not approve driver public input
+  changes, route skeleton/shellification/terminal-lowering changes, raw-block
+  changes, RG/MWG/IDA changes, artifact matrix or reader changes, public
+  API/export changes, diagnostics/reports, WL H2 support, committed tests, or
+  Cr2 workflow.
+- `HP-NEST-ART-TEST-01` approves only `git diff --check`, package load, small
+  `nesting = :pqs` base artifact/readback with provenance inspection, small
+  `nesting = :wl` one-center atom artifact/readback with provenance
+  inspection, supplemented `nesting = :wl` early rejection, and no Cr2 run.
 - `HP-HAM-MANIFEST-SRC-FN-01` approves only a compact construction-native
   source-mode provenance seam for optional manifest groups
   `hamiltonian_manifest/source_shells/`,

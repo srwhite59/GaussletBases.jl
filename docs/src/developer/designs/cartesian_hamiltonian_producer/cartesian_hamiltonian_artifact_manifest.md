@@ -297,6 +297,7 @@ Approved keys:
 ```text
 provenance_version = 1
 producer
+nesting
 route
 q
 core_spacing
@@ -326,6 +327,12 @@ The group may repeat facts already present in `producer_provenance/` and
 recipe location. It must be filled from the validated public construction
 contract and produced dimensions, not recovered from route reports or inferred
 from element tables.
+
+`nesting` records the public construction family (`:pqs` or `:wl`). `route`
+records the truthful base route label derived from `(input.kind,
+input.nesting)`, for example `:one_center_pqs_base`, `:one_center_wl_base`, or
+`:z_axis_diatomic_pqs_base`. The recipe group must not write a PQS route label
+for a WL artifact merely because the old route helpers were PQS-named.
 
 For base artifacts without a supplement, supplement-specific keys may be
 `nothing` and `residual_dimension` may be `0`; `augmented_dimension` equals the

@@ -285,7 +285,8 @@ Approved common keys:
 | --- | --- |
 | `producer_provenance/provenance_version` | `1` |
 | `producer_provenance/producer` | `:cartesian_base_hamiltonian` |
-| `producer_provenance/route` | `:one_center_pqs_base` or `:z_axis_diatomic_pqs_base` |
+| `producer_provenance/nesting` | public construction family, `:pqs` or `:wl` |
+| `producer_provenance/route` | truthful base route label derived from `(input.kind, input.nesting)` |
 | `producer_provenance/q` | public `basis.q::Int` |
 | `producer_provenance/core_spacing` | public `basis.core_spacing::Float64` |
 | `producer_provenance/reference_spacing` | resolved public `basis.reference_spacing::Float64` |
@@ -306,20 +307,35 @@ Approved common keys:
 
 Route-specific values:
 
-- one-center H:
+- one-center H or explicit one-center atom with `nesting = :pqs`:
   - `producer_provenance/route = :one_center_pqs_base`
+  - `producer_provenance/nesting = :pqs`
   - `producer_provenance/mapping_kind = :white_lindsey_atomic_mapping`
   - `producer_provenance/mapping_d = resolved basis.core_spacing`
   - `producer_provenance/radius = basis.radius`
   - `producer_provenance/xmax_parallel = nothing`
   - `producer_provenance/xmax_transverse = nothing`
-- z-axis H2:
+- one-center H or explicit one-center atom with `nesting = :wl`:
+  - `producer_provenance/route = :one_center_wl_base`
+  - `producer_provenance/nesting = :wl`
+  - `producer_provenance/mapping_kind = :white_lindsey_atomic_mapping`
+  - `producer_provenance/mapping_d = resolved basis.core_spacing`
+  - `producer_provenance/radius = basis.radius`
+  - `producer_provenance/xmax_parallel = nothing`
+  - `producer_provenance/xmax_transverse = nothing`
+- z-axis H2 with `nesting = :pqs`:
   - `producer_provenance/route = :z_axis_diatomic_pqs_base`
+  - `producer_provenance/nesting = :pqs`
   - `producer_provenance/mapping_kind = :multicenter_pqs_mapping`
   - `producer_provenance/mapping_d = nothing`
   - `producer_provenance/radius = nothing`
   - `producer_provenance/xmax_parallel = basis.xmax_parallel`
   - `producer_provenance/xmax_transverse = basis.xmax_transverse`
+
+No `:z_axis_diatomic_wl_base` provenance label is approved until the WL H2
+artifact path succeeds under a separate implementation validation. Unsupported
+`(kind, nesting)` combinations must throw before artifact writing rather than
+writing a PQS-oriented route label.
 
 `format_version` for the existing Cartesian IDA Hamiltonian matrix payload is
 not changed by R1. Existing `read_cartesian_ida_hamiltonian` must continue to

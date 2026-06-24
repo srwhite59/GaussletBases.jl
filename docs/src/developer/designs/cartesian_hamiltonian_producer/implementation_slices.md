@@ -317,9 +317,9 @@ Approved sidecar groups:
   `hamiltonian_manifest/source_modes/` groups only for construction-native
   relation/source-mode facts;
 - `recipe_provenance/` for the validated public recipe: `q`, `core_spacing`,
-  padding-derived extents, route, parent axis counts, atom symbols/charges/
-  locations, `nup`/`ndn`, supplement label/file/options, and
-  base/residual/augmented dimensions.
+  padding-derived extents, `nesting`, truthful route label, parent axis
+  counts, atom symbols/charges/locations, `nup`/`ndn`, supplement
+  label/file/options, and base/residual/augmented dimensions.
 
 Required implementation rule:
 
@@ -336,6 +336,22 @@ Required implementation rule:
 - do not serialize `T_G`, `T_A`, dense transforms, coefficients, raw
   inventories, dense moments, allocation probes, route reports, or status
   payloads.
+
+Nesting artifact-truth cleanup:
+
+- approved under `HP-NEST-ART-FN-01` and `HP-NEST-ART-TEST-01`;
+- approved source files are `src/cartesian_base_hamiltonian.jl` and
+  `src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl`,
+  with the latter limited to a docstring correction;
+- record public `nesting` in `producer_provenance/` and `recipe_provenance/`;
+- derive the base route label from `(input.kind, input.nesting)`, with
+  `:one_center_pqs_base`, `:one_center_wl_base`, and
+  `:z_axis_diatomic_pqs_base` approved;
+- reject supplemented `nesting = :wl` before expensive base-stage
+  construction; do not add WL H2 or supplemented WL support in this pass;
+- do not change driver public inputs, route skeletons, shellification,
+  terminal lowering, raw blocks, RG/MWG/IDA, artifact matrices, reader
+  behavior, public API/export, diagnostics, reports, or Cr2 workflow.
 
 Source-mode provenance seam:
 
@@ -825,7 +841,8 @@ must not expose internal route-family names, route skeletons, retained-rule
 plans, raw-block switches, stop-after controls, diagnostics, route reports, or
 route-stage labels. Supplemented `nesting = :wl` must be rejected clearly
 unless already valid through the existing supported supplemented facade/staged
-path.
+path. Artifact provenance must record `nesting` and must not label WL
+artifacts with PQS-oriented route values.
 
 Forbidden:
 

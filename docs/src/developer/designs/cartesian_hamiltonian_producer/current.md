@@ -177,7 +177,13 @@ Approved compact Hamiltonian artifact manifest lane:
 - optional `final_basis_source_relations/`, `source_shells/`, and
   `source_modes/` subgroups may be written only for native construction facts;
 - `recipe_provenance/` records the validated public construction recipe and
-  base/residual/augmented dimensions;
+  base/residual/augmented dimensions, including the public `nesting`
+  construction family and a truthful route label derived from `(input.kind,
+  input.nesting)`;
+- `HP-NEST-ART-FN-01` approves only the narrow source cleanup that records
+  `nesting` in base and recipe provenance, writes `:one_center_wl_base` rather
+  than a PQS-oriented label for WL one-center artifacts, and rejects
+  supplemented `nesting = :wl` before expensive base-stage construction;
 - existing matrix keys and `read_cartesian_ida_hamiltonian` behavior must not
   change;
 - no public reader API, driver public input change, route report/status
@@ -228,6 +234,9 @@ Approved canonical driver usability lane:
 - supplemented `nesting = :wl` must be rejected clearly unless it is already
   valid through the existing supported supplemented facade/staged path; adding
   broad supplemented White-Lindsey behavior requires a separate amendment;
+- artifact provenance must record the public `nesting` input truthfully under
+  `HP-NEST-ART-FN-01`; a WL artifact must not be labeled as PQS merely because
+  helper code remains PQS-named;
 - the driver may call only approved base, staged, and supported supplemented
   producer surfaces and the approved artifact writer/readback;
 - `basisname = nothing` selects base mode; `basisname !== nothing` selects
