@@ -180,7 +180,7 @@ function _cartesian_record_source_mode_facts(record, contract)
         return (; dims, modes = nothing,
             ordering = :x_major_y_major_z_fast, lowdin = false,
             construction_kind = support.lowering_contract_kind,
-            axis_intervals = support.outer_box)
+            axis_intervals = support.outer_box, seed_modes = nothing)
     elseif record.transform_kind === :pqs_source_modes_boundary_selection_shell_realization_contract
         isnothing(contract) && return nothing
         raw_plan = get(contract.metadata, :raw_product_source_plan, nothing)
@@ -190,9 +190,11 @@ function _cartesian_record_source_mode_facts(record, contract)
         ordering = isnothing(raw_plan) ? :x_major_y_major_z_fast :
             raw_plan.source_mode_ordering
         modes = isnothing(raw_plan) ? nothing : raw_plan.source_mode_indices
+        retained_rule = get(contract.metadata, :raw_product_source_retained_rule, nothing)
+        seed_modes = isnothing(retained_rule) ? nothing : retained_rule.retained_mode_indices
         return (; dims, modes, ordering, lowdin = true,
             construction_kind = :pqs_boundary_comx_source_box,
-            axis_intervals = support.outer_box)
+            axis_intervals = support.outer_box, seed_modes)
     end
     return nothing
 end
@@ -218,6 +220,20 @@ function _cartesian_append_source_modes!(mode_shells, mode_indices, mode_units, 
     return nothing
 end
 
+function _cartesian_append_seed_relations!(rel_cols, rel_shells, rel_labels, rel_axes,
+    block, id, source_label, facts)
+    isnothing(facts.seed_modes) && return nothing
+    length(facts.seed_modes) == length(block.column_range) ||
+        throw(DimensionMismatch("retained seed mode count does not match terminal columns"))
+    for (local_col, col) in enumerate(block.column_range)
+        mode = facts.seed_modes[local_col]
+        push!(rel_cols, col); push!(rel_shells, id)
+        push!(rel_labels, string(source_label, ":", mode[1], "_", mode[2], "_", mode[3]))
+        push!(rel_axes, mode)
+    end
+    return nothing
+end
+
 function _cartesian_source_mode_provenance(transforms)
     low = get(transforms, :low_order_transforms, nothing)
     basis = get(transforms, :terminal_basis_realization, nothing)
@@ -234,6 +250,8 @@ function _cartesian_source_mode_provenance(transforms)
     lowdin = Bool[]; shell_by_unit = Dict{Symbol,Tuple{Int,Symbol}}()
     mode_shells = Int[]; mode_indices = Int[]; mode_units = Symbol[]
     mode_labels = String[]; local_axes = Vector{NTuple{3,Int}}(); mode_lowdin = Bool[]
+    rel_cols = Int[]; rel_shells = Int[]; rel_labels = String[]
+    rel_axes = Vector{NTuple{3,Int}}()
     for record in plan.records
         block = get(blocks, record.support_record.unit_key, nothing)
         isnothing(block) && continue
@@ -254,10 +272,13 @@ function _cartesian_source_mode_provenance(transforms)
         shell_by_unit[record.support_record.unit_key] = (id, source_label)
         _cartesian_append_source_modes!(mode_shells, mode_indices, mode_units, mode_labels,
             local_axes, mode_lowdin, id, record.support_record.unit_key, source_label, facts)
+        _cartesian_append_seed_relations!(
+            rel_cols, rel_shells, rel_labels, rel_axes, block, id, source_label, facts)
     end
     isempty(shell_id) && return nothing
     n_shells = length(shell_id); n_modes = length(mode_shells)
     shell_matrix(rows) = [rows[row][axis] for row in eachindex(rows), axis in 1:3]
+    n_relations = length(rel_cols)
     return (;
         shell_by_unit,
         source_shells = (;
@@ -291,7 +312,26 @@ function _cartesian_source_mode_provenance(transforms)
             radial_order_status = fill(:unavailable, n_modes),
             inferred_from_centers = falses(n_modes), inferred_from_nearest_grid = falses(n_modes),
             inferred_from_support_order = falses(n_modes), inferred_from_support_indices = falses(n_modes),
-            inferred_from_raw_to_final_support = falses(n_modes)))
+            inferred_from_raw_to_final_support = falses(n_modes)),
+        final_basis_source_relations = (;
+            final_basis_col = rel_cols, relation_index = ones(Int, n_relations),
+            relation_kind = fill(:boundary_mode, n_relations),
+            source_shell_id = rel_shells, source_mode_label = rel_labels,
+            local_axis_x = [axis[1] for axis in rel_axes],
+            local_axis_y = [axis[2] for axis in rel_axes],
+            local_axis_z = [axis[3] for axis in rel_axes],
+            relation_status = fill(:native_retained_boundary_seed, n_relations),
+            shell_label_status = fill(:native, n_relations),
+            ray_label_status = fill(:unavailable, n_relations),
+            radial_order_status = fill(:unavailable, n_relations),
+            coefficient_status = fill(:not_serialized, n_relations),
+            weight_status = fill(:not_serialized, n_relations),
+            span_status = fill(:unavailable, n_relations),
+            inferred_from_centers = falses(n_relations),
+            inferred_from_nearest_grid = falses(n_relations),
+            inferred_from_support_order = falses(n_relations),
+            inferred_from_support_indices = falses(n_relations),
+            inferred_from_raw_to_final_support = falses(n_relations)))
 end
 
 _cartesian_base_atom_location_matrix(input) =
@@ -453,6 +493,9 @@ function _cartesian_write_hamiltonian_manifest(path, base, ham; residual = nothi
             _cartesian_write_sidecar_values!(
                 file, "hamiltonian_manifest/source_modes",
                 base.source_mode_provenance.source_modes)
+            relations = base.source_mode_provenance.final_basis_source_relations
+            isempty(relations.final_basis_col) || _cartesian_write_sidecar_values!(
+                file, "hamiltonian_manifest/final_basis_source_relations", relations)
         end
         _cartesian_write_sidecar_values!(file, "recipe_provenance", recipe)
     end

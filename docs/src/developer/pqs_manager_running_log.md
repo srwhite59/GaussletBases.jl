@@ -13159,3 +13159,62 @@ Carrying-cost result:
 - Deferred: ray IDs, radial labels, source relations, and AFQMC/locality
   policy remain outside producer authority until a native producer seam or
   explicit consumer contract is approved.
+
+## Cartesian Hamiltonian Producer Pass 116 - Add Retained Boundary Seed Relations
+
+Commit(s):
+- this commit - Add retained boundary seed manifest relations
+
+Summary:
+- Accepted the narrow manifest relation pass for shell-realized PQS rows.
+  `hamiltonian_manifest/final_basis_source_relations/` now records one native
+  retained boundary seed relation per final PQS shell column when the terminal
+  retained-rule facts provide an ordered retained mode identity.
+- This is a construction label, not coefficient reconstruction. Relation rows
+  identify the seed source shell/mode tuple used to produce the final column,
+  while explicitly marking coefficients, weights, spans, ray labels, and radial
+  labels as unavailable or not serialized.
+- Direct/support-dense rows and residual rows remain relation-unlabeled in this
+  pass because extending them would require different native facts or consumer
+  policy.
+
+Validation:
+- Doer validation: package load; H2 base artifact/readback with dimension 471,
+  K readback delta 0.0, 3 source shells, 525 source modes, and 196 relation
+  rows; H2 supplemented artifact/readback with dimension 489, base rows 471,
+  residual rows 18, K/V readback deltas 0.0, and 196 relation rows. Relation
+  kind/status were all `:boundary_mode` /
+  `:native_retained_boundary_seed`; relation labels matched existing native
+  `source_modes/`; all inference flags were false; `git diff --check`.
+- Manager validation: `git diff --check`; `git diff --numstat` reported `46`
+  added and `3` deleted source lines in `src/cartesian_base_hamiltonian.jl`;
+  suspicious-line scan found only the approved native
+  `raw_product_source_retained_rule` metadata read and approved artifact status
+  fields; new-test/tool scan was empty.
+
+Goal advancement:
+- LT1/LT3: closes the immediate CR2 feedback loop that source shell/mode tables
+  were useful but did not label final shell rows. Final shell columns now carry
+  a native seed-mode label without changing numerical matrices, the reader, or
+  the driver.
+- RG/LT6: gives downstream ray/locality work a stronger construction label
+  while preserving the no-inference rule for actual ray/radial ownership.
+
+Carrying-cost result:
+- deleted: none; this is an approved artifact provenance extension.
+- simplified: CR2 consumers no longer need to infer shell-realized final row
+  seed labels from ordering outside the artifact.
+- quarantined: direct/support-dense relation policy, residual relation policy,
+  ray IDs, radial labels, relation weights/spans, dense transforms, and
+  coefficient serialization remain deferred.
+- not deleted because: source shell/mode manifest writing remains the active
+  carrier for relation labels, and minimal low-level Hamiltonian writing remains
+  sidecar-free by design.
+- exact remaining caller/blocker: richer locality contraction still needs a
+  reviewed native relation producer or explicit consumer policy for
+  support-dense/direct rows, residual rows, and ray/radial grouping.
+- added src lines: 46.
+- deleted src lines: 3.
+- new tests: none.
+- new metadata/status fields: approved artifact
+  `final_basis_source_relations/` sidecar fields only.
