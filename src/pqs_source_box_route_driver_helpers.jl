@@ -678,8 +678,8 @@ function _pqs_source_box_route_driver_pair_inventory(
         )
     end
     families = isnothing(expected_families) ?
-        Tuple(unique(entry.pair_family for entry in pair_entries)) :
-        Tuple(expected_families)
+        Symbol[family for family in unique(entry.pair_family for entry in pair_entries)] :
+        Symbol[Symbol(family) for family in expected_families]
     pair_family_counts = _pqs_source_box_route_driver_inventory_rows(
         families,
         (count(entry -> entry.pair_family == family, pair_entries) for family in families),
@@ -1122,18 +1122,21 @@ function _pqs_source_box_route_driver_unit_for_terminal_lowering_contract(
     unit_inventory,
     contract,
 )
-    matches = Tuple(
-        unit for unit in unit_inventory.terminal_region_units
-        if _pqs_source_box_route_driver_terminal_region_key(unit) ==
-           contract.terminal_region_key
-    )
-    length(matches) == 1 ||
+    matched_unit = nothing
+    match_count = 0
+    for unit in unit_inventory.terminal_region_units
+        _pqs_source_box_route_driver_terminal_region_key(unit) ==
+            contract.terminal_region_key || continue
+        matched_unit = unit
+        match_count += 1
+    end
+    match_count == 1 ||
         throw(
             ArgumentError(
                 "expected exactly one terminal-region unit for $(contract.terminal_region_key)",
             ),
         )
-    return only(matches)
+    return matched_unit
 end
 
 function _pqs_source_box_route_driver_terminal_lowering_source_cpb_plan_kind(
@@ -1359,7 +1362,7 @@ function _pqs_source_box_route_driver_terminal_lowering_contract_inventory_from_
 
     typed_contracts =
         CartesianTerminalLowering.available_contracts(terminal_lowering_plan)
-    lowering_contracts = Tuple(
+    lowering_contracts = [
         _pqs_source_box_route_driver_terminal_lowering_contract_record(
             contract,
             _pqs_source_box_route_driver_unit_for_terminal_lowering_contract(
@@ -1369,8 +1372,8 @@ function _pqs_source_box_route_driver_terminal_lowering_contract_inventory_from_
             contract_index,
         )
         for (contract_index, contract) in enumerate(typed_contracts)
-    )
-    contract_counts_by_unit = Tuple(
+    ]
+    contract_counts_by_unit = [
         (;
             unit_key = unit.unit_key,
             lowering_contract_count =
@@ -1379,15 +1382,15 @@ function _pqs_source_box_route_driver_terminal_lowering_contract_inventory_from_
                     lowering_contracts,
                 ),
         ) for unit in unit_inventory.terminal_region_units
-    )
-    complete_shell_contracts = Tuple(
+    ]
+    complete_shell_contracts = [
         contract for contract in lowering_contracts
         if contract.terminal_region_kind == :complete_shell
-    )
-    lw_contracts = Tuple(
+    ]
+    lw_contracts = [
         contract for contract in lowering_contracts
         if contract.lowering_contract_kind == :white_lindsey_boundary_strata
-    )
+    ]
 
     return (;
         terminal_region_unit_count = unit_inventory.unit_count,
@@ -1402,7 +1405,7 @@ function _pqs_source_box_route_driver_terminal_lowering_contract_inventory_from_
         support_counts = unit_inventory.support_counts,
         contract_counts_by_unit,
         lowering_contract_kinds =
-            Tuple(contract.lowering_contract_kind for contract in lowering_contracts),
+            [contract.lowering_contract_kind for contract in lowering_contracts],
         lowering_contract_kind_counts =
             _cartesian_terminal_region_lowering_contract_kind_counts(
                 lowering_contracts,
@@ -1494,12 +1497,19 @@ end
 function cartesian_units(parent, shells, recipe)
     low_order_units =
         _pqs_source_box_route_driver_unit_stage_low_order_summary(shells)
+    retained_units = collect(shells.route_skeleton.retained_units)
+    pair_entries = collect(shells.route_skeleton.pair_entries)
+    unit_inventory = _pqs_source_box_route_driver_unit_inventory(retained_units)
+    pair_inventory =
+        _pqs_source_box_route_driver_pair_inventory(
+            pair_entries;
+            expected_families = propertynames(shells.route_skeleton.helper_by_pair_family),
+        )
 
     return (;
         parent,
         route_family = recipe.route_family,
         route_kind = recipe.route_kind,
-        route_skeleton = shells.route_skeleton,
         low_order_shellification = get(shells, :low_order_shellification, nothing),
         shellification_status =
             get(shells, :shellification_status, :not_requested),
@@ -1512,15 +1522,12 @@ function cartesian_units(parent, shells, recipe)
         shellification_scaffold = shells.shellification_scaffold,
         shellification_kind = shells.shellification_kind,
         route_shape = shells.route_shape,
-        source_boxes = shells.source_boxes,
-        source_dimensions = shells.route_skeleton.source_dimensions,
-        retained_units = shells.route_skeleton.retained_units,
-        retained_unit_order = shells.route_skeleton.retained_unit_order,
-        retained_counts = shells.route_skeleton.retained_counts,
-        ranges = shells.route_skeleton.ranges,
-        retained_dimension = shells.route_skeleton.retained_dimension,
-        pair_entries = shells.route_skeleton.pair_entries,
-        pair_family_counts = shells.route_skeleton.pair_family_counts,
+        retained_units,
+        retained_counts = unit_inventory.retained_counts,
+        ranges = unit_inventory.ranges,
+        retained_dimension = unit_inventory.retained_dimension,
+        pair_entries,
+        pair_family_counts = pair_inventory.pair_family_counts,
         helper_by_pair_family = shells.route_skeleton.helper_by_pair_family,
     )
 end
@@ -1529,7 +1536,6 @@ function _pqs_source_box_route_driver_transform_stage_low_order_summary(units)
     low_order_units = get(units, :low_order_units, nothing)
     isnothing(low_order_units) && return nothing
 
-    retained_units = get(low_order_units, :retained_units, ())
     retained_unit_plan = low_order_units.retained_unit_plan
     retained_unit_transform_contract_plan =
         retained_unit_plan isa CartesianRetainedUnits.RetainedUnitPlan ?
@@ -1555,12 +1561,6 @@ function _pqs_source_box_route_driver_transform_stage_low_order_summary(units)
         retained_unit_plan,
         retained_unit_transform_contract_plan,
         terminal_retained_rule_plan,
-        retained_units,
-        retained_counts =
-            _pqs_source_box_route_driver_unit_rows(retained_units, :retained_count),
-        ranges =
-            _pqs_source_box_route_driver_unit_rows(retained_units, :retained_range),
-        retained_dimension = get(low_order_units, :retained_dimension, nothing),
     )
 end
 
@@ -1623,7 +1623,6 @@ function cartesian_transforms(units, recipe)
         shellification_plan = units.shellification_plan,
         shellification_scaffold = units.shellification_scaffold,
         shellification_kind = units.shellification_kind,
-        route_skeleton = units.route_skeleton,
         pair_entries = units.pair_entries,
         pair_family_counts = units.pair_family_counts,
         helper_by_pair_family = units.helper_by_pair_family,
@@ -1637,7 +1636,7 @@ function cartesian_transforms(units, recipe)
 end
 
 function _pqs_source_box_route_driver_pair_keys_from_entries(pair_entries)
-    return Tuple(pair.pair_key for pair in pair_entries)
+    return [pair.pair_key for pair in pair_entries]
 end
 
 function _pqs_source_box_route_driver_pair_stage_low_order_summary(

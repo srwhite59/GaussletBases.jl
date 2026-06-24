@@ -13669,7 +13669,7 @@ Carrying-cost result:
 - new tests: none.
 - new metadata/status fields: none.
 
-## Cartesian Hamiltonian Producer Pass 124 - Approve Route/Stage Type-Surface Cleanup
+## Cartesian Hamiltonian Producer Pass 125 - Approve Route/Stage Type-Surface Cleanup
 
 Commit(s):
 - this commit - Approve route/stage type-surface cleanup
@@ -13726,5 +13726,67 @@ Carrying-cost result:
   mechanisms.
 - added src lines: 0.
 - deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 126 - Route/Stage Type-Surface Cleanup
+
+Commit(s):
+- this commit - Clean route stage type surfaces
+
+Summary:
+- Accepted `HP-ROUTE-STAGE-TYPE-FN-01`. The active route/stage carriers in
+  `src/pqs_source_box_route_driver_helpers.jl` and
+  `src/cartesian_terminal_shellification_geometry.jl` no longer materialize the
+  targeted length-encoded tuple mirrors for shellification unit inventory,
+  typed lowering contract inventory, retained-unit mirrors, and pair
+  inventories.
+- Deleted the dead terminal-shellification lowering inventory compatibility
+  block in `cartesian_terminal_shellification_geometry.jl`: the uncalled
+  contract builder helpers, aggregate lowering inventory, selected lowering
+  inventory, and selected-contract helper functions. The active
+  `_pqs_source_box_route_driver_terminal_lowering_contract_inventory_from_plan`
+  path remains in the route helper file.
+- Preserved `_cartesian_terminal_region_lowering_contract_kind_counts`, which
+  is still used by the active route helper path. H2 base/supplemented
+  construction and the R3 endpoint stayed unchanged in doer validation.
+
+Validation:
+- Doer validation: `git diff --check`; package load; H2 route/stage cleanup
+  validation script with base dimension `471`, supplemented dimension `489`,
+  stage unit count `3`, and contract count `3`; H2 R3 endpoint with
+  self-Coulomb `0.4574265214362095`; focused scans for deleted helper names
+  and newly introduced runtime tuple/NamedTuple inventory syntax.
+- Manager validation: `git diff --check`; `git diff --numstat` showed only the
+  two approved source files changed with `45` added and `570` deleted source
+  lines; suspicious-line scan was empty; new-test/tool scan was empty; deleted
+  helper-name scan had no hits; final diff inspection confirmed no driver,
+  artifact, numerical, raw-block, RG/MWG/IDA, or public API changes.
+
+Goal advancement:
+- LT1/LT3: removes a compile-attributed type-surface source by replacing
+  active tuple mirrors with vectors/smaller carriers and deleting obsolete
+  compatibility inventory code.
+- RG/LT6: keeps CR2/HF artifact usability work aimed at first-run latency
+  without disturbing the warm numerical construction path, driver contract, or
+  artifact schema.
+
+Carrying-cost result:
+- deleted: dead terminal-shellification lowering inventory compatibility block
+  and selected-lowering helper family.
+- simplified: active shellification unit, lowering-contract, pair-family, and
+  pair-key stage carriers now avoid the targeted length-encoded tuple mirrors.
+- quarantined: remaining pre-existing tuple uses in input normalization and the
+  uncalled complete-core-shell center helper are outside this pass; route
+  skeleton tuple shapes in `pqs_source_box_route_driver_skeletons.jl` remain a
+  separate potential lane.
+- not deleted because: `_cartesian_terminal_region_lowering_contract_kind_counts`
+  remains a live count helper for the active route helper path; route skeleton
+  data lives outside the approved files.
+- exact remaining caller/blocker: if cold compile latency remains high, the
+  next evidence-backed target is likely route skeleton tuple shapes or the
+  uncalled complete-core-shell helper, both requiring separate authority.
+- added src lines: 45.
+- deleted src lines: 570.
 - new tests: none.
 - new metadata/status fields: none.
