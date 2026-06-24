@@ -15121,3 +15121,59 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 144 - Approve Public ns Input Contract
+
+Commit(s):
+- this commit - Approve public ns input contract
+
+Summary:
+- Approved `HP-COMP-NS-FN-01` and `HP-COMP-NS-TEST-01` as a narrow public
+  size-parameter cleanup. The durable public contract should name `ns` as the
+  requested cube/source/nesting size. Route-local `q` is derived only after the
+  construction family is selected: `q = ns` for `nesting = :pqs`, and
+  `q = ns - 2` for `nesting = :wl`.
+- The approved source surface for later implementation is limited to
+  `src/cartesian_base_hamiltonian.jl` and `bin/cartesian_ham_builder.jl`.
+  Legacy public `q` may remain temporarily only as compatibility, with
+  normalization to `ns` and rejection of inconsistent `ns`/`q` pairs.
+- Physical controls remain separate: `core_spacing`, `reference_spacing`,
+  `tail_spacing`, atom `radius` / driver `padding`, and diatomic extents are
+  not aliases for `ns` or `q`.
+
+Validation:
+- Design-manager validation for this docs-only pass: read current compact
+  authority, registry, R1 base/atom contracts, driver workflow docs,
+  implementation slices, AGENTS, and the running log; update docs/AGENTS only;
+  run `git diff --check`; focused `rg` for `HP-COMP-NS-*`, public `ns`,
+  derived route-local `q`, `q_rule`, `ns_source`, and stale public-`q` wording;
+  confirm no source, bin, test, or tool files changed. No implementation tests
+  are part of this approval pass.
+
+Goal advancement:
+- LT1/LT3: removes a confusing public naming collision now that PQS and
+  White-Lindsey are both visible construction-family choices.
+- LT5/LT6: keeps atoms and diatomics on the same driver/facade contract while
+  allowing the selected nesting family to own its route-local interpretation.
+
+Carrying-cost result:
+- deleted: none; docs-only authority pass.
+- simplified: future source work has one public size field, `ns`, instead of
+  teaching users that one route-local `q` value has the same meaning across PQS
+  and White-Lindsey.
+- quarantined: route skeleton, shellification, terminal lowering, raw blocks,
+  residual-selection changes, MWG/IDA changes, numerical kernels, artifact
+  matrix keys, reader behavior, public API/export redesign, solver/ECP work,
+  route diagnostics, status/report payloads, committed tests, and Cr2 workflow
+  remain unapproved.
+- not deleted because: source cleanup has not run yet.
+- exact remaining caller/blocker: if `ns` normalization requires route-stage
+  redesign, terminal construction changes, artifact reader changes, or source
+  outside `src/cartesian_base_hamiltonian.jl` and `bin/cartesian_ham_builder.jl`,
+  the source pass must stop and report the exact blocker.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: compact provenance keys `ns`, `q_rule`, and
+  `ns_source` are approved only inside existing `producer_provenance/` and
+  `recipe_provenance/` groups.

@@ -33,7 +33,10 @@ The approved composition IDs are `HP-COMP-WLDIAT-*`, `HP-COMP-BASEDIAT-*`,
 `HP-COMP-SUPPWL-*`, and `HP-COMP-SUPPATOM-*`.
 The one-center atom parent-sizing correction is approved under
 `HP-COMP-ATOMBOX-*`: atom `radius`/driver `padding` is physical box extent
-authority, while `q` remains nesting/source-mode resolution.
+authority. Public size-parameter normalization is approved under
+`HP-COMP-NS-*`: user-facing input should name `ns` as the requested
+cube/source/nesting size, while route-local `q` is derived from `ns` and
+`nesting`.
 
 Agents should read first:
 
@@ -144,7 +147,8 @@ Approved amendments:
 - [Cartesian driver atom workflow](cartesian_driver_atom_workflow.md)
   approves only explicit origin-centered one-center base atom driver inputs
   through the existing base facade. Current validation remains the
-  origin-centered H endpoint; supplemented atom Hamiltonians are not approved.
+  origin-centered H endpoint for that base-only driver lane. Supplemented atoms
+  are governed separately by `HP-COMP-SUPPATOM-*`.
 - [R3 homonuclear z-axis diatomic supplemented workflow](r3_homonuclear_diatomic_supplemented_workflow.md)
   approves explicit homonuclear two-center z-axis diatomic supplemented inputs
   through the existing facade and canonical driver, with no element-specific

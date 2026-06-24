@@ -119,7 +119,7 @@ Scalar and collection validation rules:
 
 Required common fields:
 
-- `q`
+- `ns`
 - `core_spacing`
 
 Conditional fields:
@@ -130,12 +130,16 @@ Conditional fields:
   - `xmax_parallel`
   - `xmax_transverse`
 
-R1 derives `n_s = q` internally.
+`HP-COMP-NS-FN-01` amends the public size field. Durable public examples should
+use `ns`, the requested cube/source/nesting size. Route-local `q` is derived
+after selecting `nesting`: `q = ns` for `nesting = :pqs`, and `q = ns - 2` for
+`nesting = :wl`. Legacy public `q` may remain temporarily only as
+compatibility, with consistency checks when both `ns` and `q` are supplied.
 
 `HP-COMP-ATOMBOX-FN-01` amends the one-center atom sizing contract: `radius`
 is the public physical box extent authority for one-center atoms, and parent
 axis counts must be derived from that extent plus `core_spacing` / the existing
-spacing policy. `q` remains nesting/source-mode resolution and must not be
+spacing policy. `ns` remains source/nesting resolution metadata and must not be
 interpreted as the direct parent side-count rule.
 
 Optional public fields with R1 defaults:
@@ -153,7 +157,8 @@ If a temporary compatibility path accepts `d`, it must require
 Fixed private choices in R1:
 
 - `method = :pqs_source_box`
-- `q_to_core_spacing_rule = :standard_pqs_ns_equals_q`
+- `q_to_core_spacing_rule = :standard_pqs_ns_equals_q` for PQS after
+  normalizing public `ns`
 - `parent_axis_bundle_backend = :pgdg_localized_experimental`
 
 The current private H2 setup still needs an internal radius-like domain value.
@@ -180,6 +185,7 @@ concepts. The facade must not accept public `parent_mapping_d`.
 These are not public keywords or accepted `basis` fields in R1:
 
 - `n_s`
+- `q` in durable public examples after `HP-COMP-NS-FN-01`
 - `bond_axis`
 - `bond_length`
 - `map_backend`
@@ -220,7 +226,7 @@ h_system = (;
 )
 
 h_basis = (;
-    q = 5,
+    ns = 5,
     core_spacing = 0.3,
     radius = 4.0,
     reference_spacing = 1.0,
@@ -241,7 +247,7 @@ h2_system = (;
 )
 
 h2_basis = (;
-    q = 5,
+    ns = 5,
     core_spacing = 0.5,
     xmax_parallel = 6.0,
     xmax_transverse = 4.0,
@@ -293,7 +299,10 @@ Approved common keys:
 | `producer_provenance/producer` | `:cartesian_base_hamiltonian` |
 | `producer_provenance/nesting` | public construction family, `:pqs` or `:wl` |
 | `producer_provenance/route` | truthful base route label derived from `(input.kind, input.nesting)` |
-| `producer_provenance/q` | public `basis.q::Int` |
+| `producer_provenance/ns` | normalized public requested cube/source/nesting size |
+| `producer_provenance/q` | derived route-local `q` consumed by route construction |
+| `producer_provenance/q_rule` | `:pqs_ns_equals_q` or `:wl_ns_minus_2` |
+| `producer_provenance/ns_source` | `:public_ns` or `:legacy_q_compatibility` |
 | `producer_provenance/core_spacing` | public `basis.core_spacing::Float64` |
 | `producer_provenance/reference_spacing` | resolved public `basis.reference_spacing::Float64` |
 | `producer_provenance/tail_spacing` | resolved public `basis.tail_spacing::Float64` |

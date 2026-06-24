@@ -516,6 +516,8 @@ these approved design IDs:
 - `HP-COMP-SUPPATOM-TEST-01`
 - `HP-COMP-ATOMBOX-FN-01`
 - `HP-COMP-ATOMBOX-TEST-01`
+- `HP-COMP-NS-FN-01`
+- `HP-COMP-NS-TEST-01`
 
 No other production surface may be added in this lane without a prior
 documentation-only design amendment. This includes new structs, persistent
@@ -1356,8 +1358,7 @@ one-center atom parent-sizing correction in `src/cartesian_base_hamiltonian.jl`.
 The fixed `2*q + 1` atom parent-axis count artifact must be removed; public
 `basis.radius` is the one-center physical box extent authority, and parent
 axis counts must depend on radius plus `core_spacing`/existing spacing policy
-analogously to the z-axis diatomic physical-extent sizing. `q` remains
-nesting/source-mode resolution, not the direct parent box side count. This
+analogously to the z-axis diatomic physical-extent sizing. This
 lane preserves origin-centered atom validation, explicit charge/electron-count
 validation, `nesting = :pqs` and `nesting = :wl`, supplemented atoms, artifact
 keys, manifest/provenance, and canonical driver inputs. It does not approve
@@ -1367,6 +1368,22 @@ API/export changes, solver/ECP work, diagnostics/status/report payloads,
 committed tests, Cr2-specific workflow, translated atoms, non-origin atom
 support, element lookup/default tables, broad parent-construction rewrites, or
 diatomic sizing changes. Target line budget is under 80 added `src` lines.
+
+`HP-COMP-NS-FN-01` and `HP-COMP-NS-TEST-01` approve only public size-parameter
+normalization in `bin/cartesian_ham_builder.jl` and
+`src/cartesian_base_hamiltonian.jl`. The durable public field is `ns`, the
+requested cube/source/nesting size. Route-local `q` is derived after selecting
+`nesting`: `q = ns` for `nesting = :pqs`, and `q = ns - 2` for
+`nesting = :wl`. `nesting = :wl` must reject `ns < 3`. Legacy public `q` may
+remain temporarily only as compatibility: if `ns` is absent, derive `ns` from
+`q` and `nesting`; if both are present, require consistency with the selected
+nesting or throw `ArgumentError`. Driver examples and new docs should use
+`ns`, not `q`. Provenance may add compact `ns`, `q_rule`, and `ns_source`
+entries next to the existing derived `q` in `producer_provenance/` and
+`recipe_provenance/`. This lane must not change matrix keys, reader behavior,
+artifact format, route skeletons, shellification, terminal lowering, raw
+blocks, RG/MWG/IDA, solver/ECP workflow, Cr2 workflow, route diagnostics,
+status/report payloads, driver hooks/stage labels, or committed tests.
 
 `HP-WLTERM-FILE-01`, `HP-WLTERM-FN-01`, and `HP-WLTERM-WIRE-01` approve only
 the narrow White-Lindsey terminal-basis seam needed by `nesting = :wl`.

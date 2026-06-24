@@ -75,6 +75,10 @@ Implemented base path:
   `producer_provenance/` artifact group.
 - R1 one-center base atom relaxation for explicit origin-centered all-electron
   atoms through the existing base facade; current committed endpoint remains H.
+- `HP-COMP-NS-*` approves public size-parameter normalization: `ns` is the
+  durable user-facing cube/source/nesting size, while route-local `q` is
+  derived as `q = ns` for `nesting = :pqs` or `q = ns - 2` for
+  `nesting = :wl`.
 
 Implemented Residual Gaussian path:
 
@@ -353,7 +357,9 @@ Composition lane status:
   box extent authority, parent axis counts must depend on radius plus
   `core_spacing` / existing spacing policy, and the fixed `2*q + 1` atom
   parent side count artifact must be removed;
-- `q` remains nesting/source-mode resolution, not direct atom box side count;
+- `HP-COMP-NS-FN-01` separately approves public size naming: `ns` is the
+  requested source/nesting size, and route-local `q` is derived from `ns` and
+  `nesting`;
 - this atom box lane preserves origin-centered atom validation, explicit
   charge/electron-count validation, `nesting = :pqs` and `nesting = :wl`,
   supplemented atoms, artifact keys, manifest/provenance, and canonical driver

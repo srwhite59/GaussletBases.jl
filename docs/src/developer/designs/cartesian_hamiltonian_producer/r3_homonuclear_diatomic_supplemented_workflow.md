@@ -81,9 +81,10 @@ Unsupported without a later amendment:
 ## Basis And Supplement Inputs
 
 The base `basis` input remains explicit. For the diatomic scope it must provide
-the existing base-lattice controls such as `q`, `core_spacing`,
+the existing base-lattice controls such as `ns`, `core_spacing`,
 `xmax_parallel`, and `xmax_transverse`, with only previously approved defaults
-for nonphysical construction controls.
+for nonphysical construction controls. Route-local `q` is derived from `ns`
+and `nesting` under `HP-COMP-NS-*`.
 
 The supplement spec remains explicit and must provide:
 

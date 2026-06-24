@@ -369,7 +369,8 @@ Approved behavior:
 - require explicit `nup` and `ndn` nonnegative integers with
   `nup + ndn == sum(nuclear_charges)` after charge validation;
 - keep atom symbol as provenance label only and nuclear charge as authority;
-- keep the basis contract unchanged: `q`, `core_spacing`, `xmax_parallel`,
+- keep the basis contract unchanged except for `HP-COMP-NS-*` public size
+  naming: `ns`, `core_spacing`, `xmax_parallel`,
   `xmax_transverse`, optional `parent_axis_family`, `reference_spacing`,
   `tail_spacing`, and `nesting`;
 - preserve both `nesting = :pqs` and `nesting = :wl` as public construction
@@ -584,7 +585,8 @@ one-center atom producer still contains an old minimal-test artifact in which
 `padding` / `basis.radius` non-authoritative for atom box size. The approved
 contract is that one-center atom sizing uses the same physical-size idea as
 z-axis diatomics: the public physical extent and spacing policy determine the
-parent box/counts, while `q` controls nesting/source-mode resolution.
+parent box/counts. Public size-parameter naming is separately normalized under
+`HP-COMP-NS-*`.
 
 ### HP-COMP-ATOMBOX-FN-01 — one-center atom parent sizing
 
@@ -605,7 +607,8 @@ Approved behavior:
   extent authority;
 - make atom parent axis counts depend on radius plus `core_spacing` / existing
   spacing policy, analogous to the z-axis diatomic physical-extent sizing;
-- preserve `q` as nesting/source-mode resolution, not direct box side count;
+- preserve the public size/nesting control as resolution metadata, not direct
+  box side count;
 - preserve origin-centered atom validation, explicit charge/electron-count
   validation, `nesting = :pqs` and `nesting = :wl`, supplemented atoms,
   artifact keys, manifest/provenance, and canonical driver inputs;
@@ -642,6 +645,91 @@ Approved validation:
   values should show changed parent counts/dimension or a clear explanation if
   both values fall in the same count bin;
 - H2/Be2 diatomic smoke to confirm no diatomic sizing regression;
+- no Cr2 run.
+
+No committed test file, committed fixture, driver contract test,
+solver/RHF/ECP/EGOI validation, route-diagnostic validation, or Cr2 fixture is
+approved.
+
+## Approved Contract Lane: Public `ns` Input And Derived `q`
+
+This section approves a narrow public input cleanup. The prior public contract
+used `q` for the requested cube/source/nesting size, but White-Lindsey uses a
+route-local `q` that is naturally two smaller than the requested `ns` source
+size. That makes `q` an ambiguous public knob across the composed
+`nesting = :pqs | :wl` workflow.
+
+The durable public field is now `ns`: the requested cube/source/nesting size.
+Route-local `q` is derived after the construction family is selected.
+
+### HP-COMP-NS-FN-01 — public `ns` normalization
+
+Approved source files:
+
+```text
+src/cartesian_base_hamiltonian.jl
+bin/cartesian_ham_builder.jl
+```
+
+Approved behavior:
+
+- prefer `basis.ns` / driver `ns` in public examples, templates, and driver
+  contract construction;
+- derive route-local `q` from the normalized public `ns` and `nesting`:
+  - `nesting = :pqs`: `q = ns`;
+  - `nesting = :wl`: `q = ns - 2`;
+- reject `nesting = :wl` with `ns < 3`;
+- keep `ns` separate from physical box controls: atom `radius` / driver
+  `padding`, diatomic extents, `core_spacing`, `reference_spacing`, and
+  `tail_spacing`;
+- temporarily accept legacy public `q` only as compatibility:
+  - if `ns` is absent, derive `ns = q` for `nesting = :pqs`;
+  - if `ns` is absent, derive `ns = q + 2` for `nesting = :wl`;
+  - if both `ns` and `q` are present, require consistency with the selected
+    nesting or throw `ArgumentError`;
+- record compact provenance in existing groups:
+  - `ns`: normalized public requested source size;
+  - `q`: derived route-local value passed to route construction;
+  - `q_rule`: `:pqs_ns_equals_q` or `:wl_ns_minus_2`;
+  - `ns_source`: `:public_ns` or `:legacy_q_compatibility`.
+
+Forbidden:
+
+- route skeleton, shellification, terminal lowering, raw-block,
+  residual-selection, MWG/IDA, numerical-kernel, solver/ECP, or Cr2-specific
+  workflow changes;
+- public API/export redesign beyond accepting/prefering `ns` in the existing
+  public groups;
+- artifact matrix-key changes, reader behavior changes, new artifact format,
+  route diagnostics, status/report payloads, raw-block switches, or new driver
+  hooks/stage labels;
+- committed tests or fixtures.
+
+Failure rule: if this cleanup requires route-stage redesign, terminal
+construction changes, artifact reader changes, or a broad compatibility layer
+outside the approved files, make no source commit and report the blocker.
+
+Line budget: target under `80` added source/bin lines, with net simplification
+where legacy `q` plumbing becomes local normalization.
+
+### HP-COMP-NS-TEST-01 — public `ns` validation
+
+Approved validation:
+
+- `git diff --check`;
+- package load;
+- atom and z-axis diatomic base artifact/readback using public `ns` under
+  `nesting = :pqs`;
+- small atom and z-axis diatomic base artifact/readback using public `ns` under
+  `nesting = :wl` where the corresponding WL construction cell is already
+  supported;
+- supplemented atom/diatomic smoke using public `ns` only where the
+  corresponding supplemented composition cell is already supported and bounded;
+- legacy `q` compatibility smoke if the implementation keeps it;
+- clear rejection for inconsistent `ns`/`q`, `nesting = :wl` with `ns < 3`,
+  and unsupported geometry/supplement combinations;
+- direct provenance inspection for `ns`, derived `q`, `q_rule`, `ns_source`,
+  and `nesting`;
 - no Cr2 run.
 
 No committed test file, committed fixture, driver contract test,
@@ -1395,7 +1483,10 @@ provenance_version
 producer
 nesting
 route
+ns
 q
+q_rule
+ns_source
 core_spacing
 reference_spacing
 tail_spacing
@@ -1423,7 +1514,11 @@ is the resolved internal White-Lindsey mapping parameter and equals
 `core_spacing` for one-center atoms; it is not a separate public input.
 `nesting` must record the public construction-family input, and `route` must be
 the truthful base route label derived from `(input.kind, input.nesting)`, not a
-PQS-oriented default string.
+PQS-oriented default string. `ns` records the normalized public requested
+source size. `q` records the derived route-local value consumed by route
+construction, not a common public cube-size knob. `q_rule` records the
+derivation rule, and `ns_source` records whether `ns` came from the new public
+field or a temporary legacy-`q` compatibility path.
 Existing
 `read_cartesian_ida_hamiltonian` must continue reading the Hamiltonian matrices
 while ignoring these extra keys. This ID does not approve a separate manifest,
@@ -1488,7 +1583,8 @@ Approved behavior:
   `nup + ndn == round(Int, only(nuclear_charges))`;
 - treat the atom symbol as provenance/user labeling only, not as a source of
   charge, spin, basis, or ECP defaults;
-- keep required one-center basis fields `q`, `core_spacing`, and `radius`;
+- keep required one-center basis fields `ns`, `core_spacing`, and `radius`
+  after `HP-COMP-NS-*` normalization;
 - treat public `d`, if temporarily accepted, as a deprecated compatibility
   alias that must equal resolved `core_spacing`.
 
@@ -1785,7 +1881,10 @@ Approved `recipe_provenance/` keys:
 - `producer`;
 - `nesting`;
 - `route`;
+- `ns`;
 - `q`;
+- `q_rule`;
+- `ns_source`;
 - `core_spacing`;
 - `padding`;
 - `radius`;
@@ -1813,7 +1912,10 @@ come from the validated public construction contract and produced dimensions,
 not route reports, element tables, solver assumptions, or private diagnostics.
 `nesting` records the public construction family (`:pqs` or `:wl`), and
 `route` records the truthful base route label derived from `(input.kind,
-input.nesting)`.
+input.nesting)`. `ns` records the normalized public requested source size.
+`q` records the derived route-local value, not a common public cube-size knob.
+`q_rule` records the derivation rule, and `ns_source` records whether `ns` came
+from the new public field or a temporary legacy-`q` compatibility path.
 
 Center conventions and construction labels must be derived from existing
 terminal basis blocks, parent axes, residual metadata, and augmented moment/MWG
@@ -3200,7 +3302,7 @@ bin/cartesian_ham_builder.jl
 Approved behavior:
 
 - remove the hidden one-center atom basis field `d = vars[:core_spacing]`;
-- keep the visible driver atom basis in terms of `q`, `core_spacing`,
+- keep the visible driver atom basis in terms of `ns`, `core_spacing`,
   `radius`, and existing optional public fields only;
 - keep public inputs, defaults, overrides, hooks, timing labels, visible stage
   sequence, artifact schema, and driver contract unchanged.

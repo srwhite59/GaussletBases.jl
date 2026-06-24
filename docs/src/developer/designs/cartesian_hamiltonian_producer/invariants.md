@@ -119,9 +119,11 @@ The canonical RG algorithm contract is
   charges and explicit `nup`/`ndn` are authority. Do not add element lookup
   tables or inferred electron counts.
 - One-center atom parent sizing uses physical extent. Public `basis.radius`
-  / driver `padding` is the atom box-size authority, while `q` controls
-  nesting/source-mode resolution and must not be used as the direct parent box
-  side-count rule.
+  / driver `padding` is the atom box-size authority.
+- Public size input uses `ns` as the requested cube/source/nesting size.
+  Route-local `q` is derived only after selecting `nesting`: `q = ns` for PQS
+  and `q = ns - 2` for White-Lindsey. Do not treat `q` as the common public
+  cube-size field, direct parent side-count rule, or physical box extent.
 - `nesting = :wl` must converge to the same terminal-basis downstream boundary
   as `nesting = :pqs`: a `CartesianTerminalBasisRealization` with disjoint
   owned terminal supports. White-Lindsey boundary-stratum realization must not

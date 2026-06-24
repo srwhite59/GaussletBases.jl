@@ -123,9 +123,10 @@ hamfile
 
 For base runs, `basisname = nothing` selects the base facade path. For
 supplemented runs, `basisname !== nothing` selects the supported residual-GTO
-/ MWG supplemented diatomic facade and becomes the visible supplement basis
-label. `basisname !== nothing` must reject `Natom == 1`; supplemented atoms
-remain unapproved until a separate facade/RG amendment approves them.
+/ MWG supplemented facade and becomes the visible supplement basis label.
+Supported supplemented atom and diatomic cells are governed by the composition
+IDs in `nesting_supplement_composition_plan.md`; unsupported cells must reject
+clearly before route-internal work.
 
 ## Construction Family Input
 
@@ -173,6 +174,21 @@ the current origin-based z-axis contract this is equivalent to
 `xmax_parallel = max(abs(z_i)) + padding` and
 `xmax_transverse = padding`. If a future translated/general geometry needs
 different box-centering semantics, that requires a separate amendment.
+
+## Public Size Input
+
+The canonical driver should expose `ns` as the visible source/cube/nesting
+size. It should not teach users to edit public `q` as the common size control.
+The base facade normalizes `ns` and derives route-local `q` from the selected
+construction family:
+
+- `nesting = :pqs`: `q = ns`;
+- `nesting = :wl`: `q = ns - 2`.
+
+Legacy `q` may remain a temporary compatibility input, but driver defaults,
+examples, copied project templates, `print_contract`, and `check_file` output
+should prefer `ns`. If both fields are present they must agree under the
+selected `nesting`; otherwise the producer must throw `ArgumentError`.
 
 The driver may print the public contract when `print_contract = true`. The
 printed contract is limited to the public `system`, `basis`, optional

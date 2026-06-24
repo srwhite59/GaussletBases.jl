@@ -316,9 +316,10 @@ Approved sidecar groups:
   `hamiltonian_manifest/source_shells/`, and
   `hamiltonian_manifest/source_modes/` groups only for construction-native
   relation/source-mode facts;
-- `recipe_provenance/` for the validated public recipe: `q`, `core_spacing`,
-  padding-derived extents, `nesting`, truthful route label, parent axis
-  counts, atom symbols/charges/locations, `nup`/`ndn`, supplement
+- `recipe_provenance/` for the validated public recipe: public `ns`, derived
+  route-local `q`, `q_rule`, `ns_source`, `core_spacing`, padding-derived
+  extents, `nesting`, truthful route label, parent axis counts, atom
+  symbols/charges/locations, `nup`/`ndn`, supplement
   label/file/options, and base/residual/augmented dimensions.
 
 Required implementation rule:
@@ -961,9 +962,12 @@ Additional approved composition lane:
   boundary.
 - `HP-COMP-ATOMBOX-FN-01` / `HP-COMP-ATOMBOX-TEST-01` are approved for the
   one-center atom parent-sizing correction in `src/cartesian_base_hamiltonian.jl`.
-  Public `basis.radius` is the atom physical box extent authority, while `q`
-  remains nesting/source-mode resolution rather than a direct side-count
-  control.
+  Public `basis.radius` is the atom physical box extent authority.
+- `HP-COMP-NS-FN-01` / `HP-COMP-NS-TEST-01` are approved for public
+  size-parameter normalization in `src/cartesian_base_hamiltonian.jl` and
+  `bin/cartesian_ham_builder.jl`: public `ns` is the requested
+  cube/source/nesting size, while route-local `q` is derived as `q = ns` for
+  PQS and `q = ns - 2` for White-Lindsey.
 
 No initial composition placeholder remains candidate-only. Deferred geometry,
 solver, ECP, public export, and Cr2-specific work still need a later docs-only
@@ -1050,7 +1054,7 @@ Allowed source shape:
 
 - remove the hidden `d = vars[:core_spacing]` field from the one-center atom
   `basis` construction;
-- keep visible atom basis fields `q`, `core_spacing`, `radius`, and existing
+- keep visible atom basis fields `ns`, `core_spacing`, `radius`, and existing
   optional public fields unchanged.
 
 Validation gates:

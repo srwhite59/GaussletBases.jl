@@ -74,7 +74,7 @@ provenance, and endpoint validation.
 The driver may pass the explicit base `basis` group to the existing base facade.
 For the current approved H endpoint, the visible basis fields include:
 
-- `q`;
+- `ns`;
 - `core_spacing`;
 - `radius`;
 - optional `reference_spacing`;
@@ -85,7 +85,8 @@ For the current approved H endpoint, the visible basis fields include:
 driver should not expose `d` as a separate input; if an implementation still
 passes through a temporary compatibility `d`, the producer must require it to
 equal resolved `core_spacing`. `reference_spacing` remains a separate
-reference-grid spacing.
+reference-grid spacing. `ns` is the public source/cube/nesting size; route
+local `q` is derived from `ns` and `nesting` under `HP-COMP-NS-FN-01`.
 
 The canonical driver may carry visible, easily edited project defaults, such
 as `core_spacing = 0.3` and a template `padding`. Those defaults are treated as

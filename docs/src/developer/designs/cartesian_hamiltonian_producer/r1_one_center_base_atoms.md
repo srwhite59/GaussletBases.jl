@@ -101,7 +101,11 @@ Approved one-center atom `system` rules:
 
 Approved one-center atom `basis` rules:
 
-- required fields: `q`, `core_spacing`, and `radius`;
+- required durable public fields: `ns`, `core_spacing`, and `radius`;
+- route-local `q` is derived from `ns` and `nesting` under
+  `HP-COMP-NS-FN-01`;
+- temporary legacy `q` compatibility, if kept, must normalize to `ns` and
+  reject inconsistent `ns`/`q` pairs;
 - optional fields retain existing R1 defaults:
   `reference_spacing = 1.0`, `tail_spacing = 10.0`, and
   `parent_axis_family = :G10`;

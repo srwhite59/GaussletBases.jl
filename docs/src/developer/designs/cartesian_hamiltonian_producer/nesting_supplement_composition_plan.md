@@ -70,6 +70,9 @@ they must not be hidden by driver defaults or mislabeled artifact provenance.
 - Artifact provenance records the public choices (`geometry`, `nesting`, and
   supplement state) truthfully. It must not infer route identity from helper
   file names or preserve PQS labels for WL artifacts.
+- Public `ns` is the shared source/cube/nesting size input across composition
+  cells. Route-local `q` is derived from `ns` and `nesting`, so the driver does
+  not expose different cube-size meanings for PQS and White-Lindsey.
 - The canonical driver remains compact and copyable. It can print public
   contracts and coarse physics-stage timings, but it must not grow stop-after
   controls, raw-provider switches, route diagnostics, allocation probes, or
