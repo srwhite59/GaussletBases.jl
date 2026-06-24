@@ -13790,3 +13790,60 @@ Carrying-cost result:
 - deleted src lines: 570.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 127 - Post-Cleanup Compile Attribution
+
+Commit(s):
+- none - measurement-only compile/timing attribution pass.
+
+Summary:
+- Accepted the post-`HP-ROUTE-STAGE-TYPE-FN-01` attribution on current
+  `118a639b`. The cleanup materially reduced Be2 q5 p10 cold latency: cold
+  supplemented construction dropped from about `59.0 s` to `34.8 s`; trace
+  total dropped to `39.5 s`, with repo-owned trace time about `32.2 s`.
+- Warm construction remained about `2.02 s`, confirming that the remaining
+  problem is still compile/type latency rather than warm numerical work.
+- The targeted inventory owners fell sharply: terminal-lowering inventory fell
+  to about `235 ms`, and terminal shellification unit inventory fell to about
+  `286 ms`. The remaining top owners are broader route/stage signatures and
+  construction-plan carriers: `cartesian_transforms` (`~5.0 s`),
+  `cartesian_units` (`~3.4 s`), terminal topology support region planning
+  (`~2.5 s`), terminal realization (`~2.3 s`), and terminal retained-rule
+  planning (`~1.7 s`). `CartesianResidualGaussians` is also visible
+  (`~3.8 s`) but is not the first route/stage cleanup target.
+
+Validation:
+- Doer validation: `git diff --check`; package load; fresh-target timing
+  harness; trace workload; trace parser; final `git status --short --branch`.
+  No tracked source edits and no commit.
+- Manager validation: reviewed the comparison against the pre-cleanup
+  attribution and accepted that the previous top inventory owners moved out of
+  dominant territory. No implementation tests were rerun because this was a
+  measurement-only pass.
+
+Goal advancement:
+- LT1/LT3: confirms that type-surface cleanup is paying down first-run
+  latency, while narrowing the next possible source lane to broader
+  `cartesian_shells` / `cartesian_units` / `cartesian_transforms` stage
+  carriers and terminal support/retained-plan objects.
+- RG/LT6: keeps CR2/HF artifact usability work focused on first-run compile
+  experience, with warm construction still acceptable for the Be2 q5 proxy.
+
+Carrying-cost result:
+- deleted: none; measurement-only pass.
+- simplified: next decision is no longer generic precompile versus cleanup; the
+  trace identifies remaining route/stage carrier signatures as the leading
+  source target if more source work is desired.
+- quarantined: artifact/JLD2, Gaussian numerical kernels, raw blocks, terminal
+  G-G products, and unit-nuclear kernels remain non-targets for this compile
+  issue.
+- not deleted because: no source authority has been granted for the newly
+  identified carrier cleanup.
+- exact remaining caller/blocker: a docs-only amendment is needed before
+  touching `src/pqs_source_box_diatomic_complete_core_shell.jl`, terminal
+  support/retained planning carriers, or route skeleton tuple shapes outside
+  the prior approved files.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.
