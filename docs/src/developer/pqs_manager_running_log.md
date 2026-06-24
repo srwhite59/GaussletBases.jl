@@ -5311,68 +5311,6 @@ Deletion accounting:
 - new tests: none.
 - new metadata/status fields: none.
 
-## Cartesian Hamiltonian Producer Pass 129 - Route/Stage Carrier Cleanup
-
-Commit(s):
-- this commit - Slim route stage carriers
-
-Summary:
-- Accepted `HP-ROUTE-STAGE-CARRIER-FN-01`. The route skeleton is now unpacked
-  inside `cartesian_shells` instead of being carried forward as a wide stage
-  object, and later route stages no longer copy pass-through shellification,
-  lowering, support-plan, or retained-rule-plan mirrors.
-- Terminal topology support-region planning and terminal retained-rule planning
-  in `src/pqs_source_box_diatomic_complete_core_shell.jl` now use
-  vector-backed rows/counts through the existing route inventory row helper
-  instead of runtime-keyed `NamedTuple`/tuple count carriers.
-- The patch stayed inside the two required approved files; the optional
-  terminal basis realization file was not needed. Route skeleton construction
-  semantics and `src/pqs_source_box_route_driver_skeletons.jl` were untouched.
-
-Validation:
-- Doer validation: `git diff --check`; package load; H2 route-stage carrier
-  validation script with H2 base dimension `471` and supplemented behavior
-  unchanged; H2 R3 endpoint with augmented dimension `489`, self-Coulomb
-  `0.4574265214362095`, and facade readback deltas all `0.0`; focused scan
-  found no newly added `NamedTuple{...}`, `Tuple(...)`, or `Tuple{Vararg...}`
-  carriers in the edited files. Optional Be2 timing reported cold total
-  `23.40 s`, base working-basis `11.68 s`, and warm fresh mean `1.99 s`.
-- Manager validation: `git diff --check`; `git diff --numstat` showed only the
-  two approved source files changed with `63` added and `155` deleted source
-  lines; suspicious-line scan including `Dict{Symbol,Any}` and `Any[]` added
-  lines was empty; new-test/tool scan was empty. Manager requested tightening
-  the new pair-helper map to `Dict{Symbol,Symbol}` and blocked retained-rule
-  empty fields to `NamedTuple[]`, then rechecked the amended diff.
-
-Goal advancement:
-- LT1/LT3: continues reducing first-run route/stage specialization pressure by
-  removing wide stage-carried objects after the previous targeted inventory
-  cleanup.
-- RG/LT6: directly supports practical CR2/HF Hamiltonian generation by cutting
-  cold Be2 proxy latency while preserving warm construction behavior and
-  artifact contracts.
-
-Carrying-cost result:
-- deleted: pass-through route skeleton, shellification, lowering, support-plan,
-  retained-rule-plan, and duplicate lowering-inventory summary mirrors from
-  later route stages.
-- simplified: `cartesian_shells`, `cartesian_units`, `cartesian_transforms`,
-  support-region planning, and retained-rule planning now carry smaller
-  vector-backed or scalar summaries across the approved path.
-- quarantined: route skeleton construction in
-  `src/pqs_source_box_route_driver_skeletons.jl` remains out of scope; remaining
-  pre-existing `Any` dictionaries in retained-rule joins and complete-core
-  center helpers are not introduced by this pass.
-- not deleted because: terminal retained-rule plan and transform-contract plan
-  remain needed for basis realization and manifest source-mode provenance.
-- exact remaining caller/blocker: if cold compile latency remains high, rerun
-  attribution before approving more cleanup; likely remaining targets would
-  need new evidence and possibly route skeleton authority.
-- added src lines: 63.
-- deleted src lines: 155.
-- new tests: none.
-- new metadata/status fields: none.
-
 ## Cartesian Hamiltonian Producer Pass 124 - Be2 Compile Attribution
 
 Commit(s):
@@ -13966,6 +13904,121 @@ Carrying-cost result:
   source files outside the approved boundary, broad route-stage redesign,
   public API changes, artifact changes, numerical changes, or
   precompile/sysimage machinery.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 129 - Route/Stage Carrier Cleanup
+
+Commit(s):
+- `8c3df2ad` - Slim route stage carriers
+
+Summary:
+- Accepted `HP-ROUTE-STAGE-CARRIER-FN-01`. The route skeleton is now unpacked
+  inside `cartesian_shells` instead of being carried forward as a wide stage
+  object, and later route stages no longer copy pass-through shellification,
+  lowering, support-plan, or retained-rule-plan mirrors.
+- Terminal topology support-region planning and terminal retained-rule planning
+  in `src/pqs_source_box_diatomic_complete_core_shell.jl` now use
+  vector-backed rows/counts through the existing route inventory row helper
+  instead of runtime-keyed `NamedTuple`/tuple count carriers.
+- The patch stayed inside the two required approved files; the optional
+  terminal basis realization file was not needed. Route skeleton construction
+  semantics and `src/pqs_source_box_route_driver_skeletons.jl` were untouched.
+
+Validation:
+- Doer validation: `git diff --check`; package load; H2 route-stage carrier
+  validation script with H2 base dimension `471` and supplemented behavior
+  unchanged; H2 R3 endpoint with augmented dimension `489`, self-Coulomb
+  `0.4574265214362095`, and facade readback deltas all `0.0`; focused scan
+  found no newly added `NamedTuple{...}`, `Tuple(...)`, or `Tuple{Vararg...}`
+  carriers in the edited files. Optional Be2 timing reported cold total
+  `23.40 s`, base working-basis `11.68 s`, and warm fresh mean `1.99 s`.
+- Manager validation: `git diff --check`; `git diff --numstat` showed only the
+  two approved source files changed with `63` added and `155` deleted source
+  lines; suspicious-line scan including `Dict{Symbol,Any}` and `Any[]` added
+  lines was empty; new-test/tool scan was empty. Manager requested tightening
+  the new pair-helper map to `Dict{Symbol,Symbol}` and blocked retained-rule
+  empty fields to `NamedTuple[]`, then rechecked the amended diff.
+
+Goal advancement:
+- LT1/LT3: continues reducing first-run route/stage specialization pressure by
+  removing wide stage-carried objects after the previous targeted inventory
+  cleanup.
+- RG/LT6: directly supports practical CR2/HF Hamiltonian generation by cutting
+  cold Be2 proxy latency while preserving warm construction behavior and
+  artifact contracts.
+
+Carrying-cost result:
+- deleted: pass-through route skeleton, shellification, lowering, support-plan,
+  retained-rule-plan, and duplicate lowering-inventory summary mirrors from
+  later route stages.
+- simplified: `cartesian_shells`, `cartesian_units`, `cartesian_transforms`,
+  support-region planning, and retained-rule planning now carry smaller
+  vector-backed or scalar summaries across the approved path.
+- quarantined: route skeleton construction in
+  `src/pqs_source_box_route_driver_skeletons.jl` remains out of scope; remaining
+  pre-existing `Any` dictionaries in retained-rule joins and complete-core
+  center helpers are not introduced by this pass.
+- not deleted because: terminal retained-rule plan and transform-contract plan
+  remain needed for basis realization and manifest source-mode provenance.
+- exact remaining caller/blocker: if cold compile latency remains high, rerun
+  attribution before approving more cleanup; likely remaining targets would
+  need new evidence and possibly route skeleton authority.
+- added src lines: 63.
+- deleted src lines: 155.
+- new tests: none.
+- new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 130 - Post-Carrier Compile Attribution
+
+Commit(s):
+- none - measurement-only compile/timing attribution pass.
+
+Summary:
+- Accepted the post-`HP-ROUTE-STAGE-CARRIER-FN-01` attribution on current
+  `8c3df2ad`. Cold Be2 q5 p10 supplemented construction is now in the
+  expected `20-25 s` range: fresh cold construction was `22.928 s`, and the
+  trace run was `23.147 s`. Warm fresh construction remained about `1.99 s`.
+- The prior route/stage carrier owners no longer dominate. `cartesian_transforms`
+  dropped from about `4996 ms` to `590 ms`, `cartesian_units` from about
+  `3402 ms` to `1081 ms`, and terminal support/retained plans are no longer
+  dominant (`136 ms` / `74 ms`).
+- Remaining trace time is broad/mixed specialization, with top repo owners
+  including `CartesianResidualGaussians` (`~3.8 s`),
+  `CartesianFinalBasisRealization` (`~2.3 s`), parent construction
+  (`~1.4 s`), and Gaussian supplement conversion (`~1.2 s`). Artifact/JLD2 and
+  ordinary Gaussian numerical kernels are not the dominant issue.
+
+Validation:
+- Doer validation: `git diff --check`; package load; timing harness; trace
+  harness and parser; final `git status --short --branch`. No tracked source
+  edits and no commit.
+- Manager validation: reviewed the cold/warm comparison and owner shifts. No
+  implementation tests were rerun because this was a measurement-only pass.
+
+Goal advancement:
+- LT1/LT3: closes the current route/stage type-surface cleanup sequence. The
+  two source cleanup passes reduced cold Be2 q5 from about `59 s` to about
+  `23 s`, and the remaining cost no longer points to a single narrow
+  route/stage carrier.
+- RG/LT6: supports CR2/HF usability by showing warm construction remains
+  acceptable and first-run latency is now reduced enough that further source
+  cleanup needs new evidence.
+
+Carrying-cost result:
+- deleted: none; measurement-only pass.
+- simplified: current recommendation is to stop route/stage source cleanup for
+  now. If first-run latency is still operationally painful, evaluate workflow
+  precompile/sysimage rather than continuing source churn by default.
+- quarantined: residual specialization is visible but mixed with trace harness
+  stage closures; it needs separate attribution before any RG source authority.
+- not deleted because: no source work was requested or approved by this pass.
+- exact remaining caller/blocker: no narrow production source owner remains
+  dominant enough to justify another immediate cleanup lane. Next action should
+  be either stop/try CR2 workflow or run a docs-approved precompile/sysimage
+  audit.
 - added src lines: 0.
 - deleted src lines: 0.
 - new tests: none.
