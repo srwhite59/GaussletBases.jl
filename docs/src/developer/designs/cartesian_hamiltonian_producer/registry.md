@@ -623,6 +623,87 @@ tuple-backed source-mode inventory shape. No new committed test file, Cr2
 fixture, driver-input fixture, benchmark, or route-diagnostic test is approved
 by this ID.
 
+### HP-CONTRACT-VEC-FN-01 — contract-plan vector cleanup
+
+Approved source files:
+
+```text
+src/cartesian_terminal_lowering/contracts.jl
+src/cartesian_terminal_lowering/selection.jl
+src/cartesian_terminal_lowering/summaries.jl
+src/cartesian_retained_unit_transform_contracts/records.jl
+src/cartesian_retained_unit_transform_contracts/unit_contracts.jl
+src/cartesian_retained_unit_transform_contracts/summaries.jl
+```
+
+Approved narrow consumer files, only as required by the storage change:
+
+```text
+src/pqs_source_box_route_driver_helpers.jl
+src/cartesian_base_hamiltonian.jl
+src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl
+```
+
+Approved cleanup targets:
+
+- `TerminalLoweringPlan.available_contracts::Tuple{Vararg{TerminalLoweringContract}}`;
+- `TerminalLoweringPlan.contracts::Tuple{Vararg{TerminalLoweringContract}}`;
+- `RetainedUnitTransformContractPlan.contracts::Tuple{Vararg{RetainedUnitTransformContract}}`;
+- same-file and listed narrow consumers that currently depend on those
+  tuple-backed plan field shapes.
+
+Approved replacement:
+
+- vector-backed terminal-lowering available-contract storage;
+- vector-backed terminal-lowering selected-contract storage;
+- vector-backed retained-unit transform-contract storage;
+- stable accessors preserving ordered contract facts and current behavior:
+  `available_contracts(plan)`, `selected_contracts(plan)`, `contracts(plan)`,
+  and `transform_contracts(plan)`.
+
+Accessor compatibility means same ordered facts, iteration order, selected
+contract behavior, transform-contract behavior, and summaries. It does not
+mean preserving variable-length `Tuple` concrete field types or accessor return
+types.
+
+This ID does not approve changing
+`source_cpbs::Tuple{Vararg{CoordinateProductBox}}`, raw product source-mode
+storage, retained-unit route inventories, public input `NamedTuple`s, fixed
+coordinate/product-box value objects, numerical kernels, route semantic
+changes, shellification behavior changes, public API/export changes, canonical
+driver changes, Hamiltonian object changes, matrix-key changes, reader changes,
+artifact/manifest schema changes, route-stage objects,
+report/status/payload expansion, persistent caches, compatibility layers that
+preserve the old tuple-backed plan field types, new committed tests, Cr2 runs,
+or Cr2-specific workflow.
+
+Line budget: at most `150` added `src` lines, with net simplification expected.
+Failure rule: if vectorizing the plan inventories requires source files outside
+the approved surfaces, broad route/stage rewrites, public API or artifact
+changes, numerical changes, or compatibility layers preserving the old
+tuple-backed plan field types, make no source commit and report the exact
+caller/blocker.
+
+### HP-CONTRACT-VEC-TEST-01 — contract-plan vector cleanup validation
+
+Approved validation:
+
+- `git diff --check`;
+- package load;
+- H2 base artifact write/readback through the existing reader;
+- H2 supplemented artifact write/readback through the existing reader;
+- H2 R3 endpoint;
+- focused terminal-lowering contract order parity;
+- focused retained-unit transform-contract order parity;
+- focused search confirming targeted plan inventories no longer store
+  contracts as `Tuple{Vararg{...}}`;
+- no Cr2 run.
+
+Existing committed tests may be adjusted only if they directly assert the old
+tuple-backed contract-plan field shape. No new committed test file, Cr2
+fixture, driver-input fixture, benchmark, or route-diagnostic test is approved
+by this ID.
+
 ### HP-R1-ART-01 — public base producer artifact provenance
 
 Approved artifact extension for R1 public facade writes only. When

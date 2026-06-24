@@ -436,6 +436,8 @@ these approved design IDs:
 - `HP-ROUTE-INV-TEST-01`
 - `HP-RAW-SRCMODE-FN-01`
 - `HP-RAW-SRCMODE-TEST-01`
+- `HP-CONTRACT-VEC-FN-01`
+- `HP-CONTRACT-VEC-TEST-01`
 - `HP-R3-OBJ-01`
 - `HP-R3-FN-01`
 - `HP-R3-FN-02`
@@ -609,6 +611,33 @@ retained-unit transform-contract tuple cleanup, broad pair-block/source-box
 rewrites, public input `NamedTuple` changes, numerical kernel or route semantic
 changes, driver changes, artifact schema changes, report/status/payload
 expansion, compatibility adapters preserving the old tuple-backed shape, new
+committed tests, or Cr2 workflow.
+
+`HP-CONTRACT-VEC-FN-01` approves only contract-plan vector cleanup in
+`src/cartesian_terminal_lowering/contracts.jl`,
+`src/cartesian_terminal_lowering/selection.jl`,
+`src/cartesian_terminal_lowering/summaries.jl`,
+`src/cartesian_retained_unit_transform_contracts/records.jl`,
+`src/cartesian_retained_unit_transform_contracts/unit_contracts.jl`, and
+`src/cartesian_retained_unit_transform_contracts/summaries.jl`, with narrow
+consumer wiring only as needed in `src/pqs_source_box_route_driver_helpers.jl`,
+`src/cartesian_base_hamiltonian.jl`, and
+`src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`. The
+target is replacing `TerminalLoweringPlan.available_contracts`,
+`TerminalLoweringPlan.contracts`, and
+`RetainedUnitTransformContractPlan.contracts` variable-length tuple storage
+with vector-backed storage while preserving `available_contracts(plan)`,
+`selected_contracts(plan)`, `contracts(plan)`, `transform_contracts(plan)`,
+iteration order, summaries, and existing behavior.
+`source_cpbs::Tuple{Vararg{CoordinateProductBox}}` is explicitly out of
+scope. `HP-CONTRACT-VEC-TEST-01` approves only
+`git diff --check`, package load, H2 base and supplemented artifact/readback,
+H2 R3 endpoint, focused terminal-lowering and retained-unit transform-contract
+order parity, focused search for absence of targeted tuple-backed plan
+inventories, and no Cr2 run. This lane does not approve raw product
+source-mode changes, numerical kernel or route semantic changes, driver
+changes, artifact/manifest schema changes, report/status/payload expansion,
+compatibility adapters preserving old tuple-backed plan field types, new
 committed tests, or Cr2 workflow.
 
 R3/RG current source authority is compact by design. Read

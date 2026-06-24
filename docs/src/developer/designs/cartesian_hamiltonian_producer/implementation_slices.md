@@ -1038,6 +1038,8 @@ Deferred from `HP-ROUTE-INV-*`:
 
 Raw product source-mode inventory cleanup is separately approved under
 `HP-RAW-SRCMODE-FN-01` / `HP-RAW-SRCMODE-TEST-01`.
+Contract-plan tuple cleanup is separately approved under
+`HP-CONTRACT-VEC-FN-01` / `HP-CONTRACT-VEC-TEST-01`.
 
 Validation gates:
 
@@ -1129,6 +1131,80 @@ Failure rule:
 - if vectorizing the raw product plan forces broad pair-block/source-box
   rewrites or source files outside the approved surfaces, stop and report the
   exact callers/blockers instead of adding compatibility layers.
+
+## Contract-Plan Vector Cleanup
+
+Status: approved for implementation under `HP-CONTRACT-VEC-FN-01` and
+`HP-CONTRACT-VEC-TEST-01`.
+
+Approved boundary:
+
+- `src/cartesian_terminal_lowering/contracts.jl`;
+- `src/cartesian_terminal_lowering/selection.jl`;
+- `src/cartesian_terminal_lowering/summaries.jl`;
+- `src/cartesian_retained_unit_transform_contracts/records.jl`;
+- `src/cartesian_retained_unit_transform_contracts/unit_contracts.jl`;
+- `src/cartesian_retained_unit_transform_contracts/summaries.jl`;
+- narrow consumer wiring only as needed in
+  `src/pqs_source_box_route_driver_helpers.jl`,
+  `src/cartesian_base_hamiltonian.jl`, and
+  `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`.
+
+Approved changes:
+
+- replace
+  `TerminalLoweringPlan.available_contracts::Tuple{Vararg{TerminalLoweringContract}}`
+  with vector-backed storage;
+- replace
+  `TerminalLoweringPlan.contracts::Tuple{Vararg{TerminalLoweringContract}}`
+  with vector-backed storage;
+- replace
+  `RetainedUnitTransformContractPlan.contracts::Tuple{Vararg{RetainedUnitTransformContract}}`
+  with vector-backed storage;
+- preserve `available_contracts(plan)`, `selected_contracts(plan)`,
+  `contracts(plan)`, and `transform_contracts(plan)`;
+- preserve iteration order, selected-contract semantics, transform-contract
+  semantics, summaries, and existing behavior without preserving
+  variable-length `Tuple` concrete field types.
+
+Validation gates:
+
+- `git diff --check`;
+- package load;
+- H2 base artifact write/readback;
+- H2 supplemented artifact write/readback;
+- H2 R3 endpoint;
+- focused terminal-lowering contract order parity;
+- focused retained-unit transform-contract order parity;
+- focused search confirming the targeted plan inventories no longer store
+  contracts as `Tuple{Vararg{...}}`;
+- no Cr2 run.
+
+Forbidden:
+
+- `source_cpbs::Tuple{Vararg{CoordinateProductBox}}` changes, source files
+  outside the approved surfaces, raw product source-mode changes, retained-unit
+  route inventory changes, public input `NamedTuple` changes, fixed
+  coordinate/product-box value-object changes, numerical kernel changes, route
+  semantic changes, shellification behavior changes, raw Gaussian block,
+  Residual Gaussian, IDA/MWG, Qiu-White semantic changes, canonical driver
+  changes, Hamiltonian object changes, matrix-key changes, reader changes,
+  artifact/manifest schema changes, public API/export changes,
+  report/status/payload expansion, persistent caches, compatibility adapters
+  preserving the old tuple-backed plan field types, new committed tests, Cr2
+  runs, or Cr2-specific workflow.
+
+Line budget:
+
+- at most `150` added `src` lines, with net simplification expected;
+- no new committed test, tool, benchmark, or input-fixture file.
+
+Failure rule:
+
+- if vectorizing the plan inventories requires broad route/stage rewrites,
+  source files outside the approved surfaces, public API or artifact changes,
+  numerical changes, or compatibility layers preserving the old tuple-backed
+  plan field types, stop and report the exact callers/blockers.
 
 ## Homonuclear Z-Axis Diatomic Supplemented Workflow
 

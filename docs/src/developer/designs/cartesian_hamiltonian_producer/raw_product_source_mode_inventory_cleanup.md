@@ -48,17 +48,18 @@ currently used, and retained-rule parity. They do not require preserving a
 variable-length `Tuple` return type. Callers must not depend on source-mode
 inventory size being encoded in the concrete type.
 
-## Deferred
+## Deferred From This Lane
 
 This lane does not approve:
 
-- terminal-lowering `contracts` or `available_contracts` tuple cleanup;
-- retained-unit transform-contract tuple cleanup outside the listed narrow
-  consumer wiring;
 - broad pair-block or source-box rewrites;
 - public input `NamedTuple` changes;
 - fixed `NTuple{3,Int}` coordinate/dimension changes;
 - artifact schema changes or matrix-key changes.
+
+Terminal-lowering and retained-unit transform contract-plan vector cleanup is
+separately approved under `HP-CONTRACT-VEC-FN-01` /
+`HP-CONTRACT-VEC-TEST-01`.
 
 ## Forbidden
 

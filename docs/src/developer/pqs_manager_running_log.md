@@ -13435,3 +13435,64 @@ Carrying-cost result:
 - deleted src lines: 6.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 121 - Approve Contract-Plan Vector Cleanup
+
+Commit(s):
+- this commit - Approve contract-plan vector cleanup
+
+Summary:
+- Approved `HP-CONTRACT-VEC-FN-01` / `HP-CONTRACT-VEC-TEST-01` as the next
+  narrow type-surface cleanup lane after raw product source-mode vectorization.
+- The approved owner files are
+  `src/cartesian_terminal_lowering/contracts.jl`,
+  `src/cartesian_terminal_lowering/selection.jl`,
+  `src/cartesian_terminal_lowering/summaries.jl`,
+  `src/cartesian_retained_unit_transform_contracts/records.jl`,
+  `src/cartesian_retained_unit_transform_contracts/unit_contracts.jl`, and
+  `src/cartesian_retained_unit_transform_contracts/summaries.jl`.
+- Narrow consumer wiring is approved only as needed in
+  `src/pqs_source_box_route_driver_helpers.jl`,
+  `src/cartesian_base_hamiltonian.jl`, and
+  `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`.
+- The target is replacing variable-length tuple storage for
+  `TerminalLoweringPlan.available_contracts`, `TerminalLoweringPlan.contracts`,
+  and `RetainedUnitTransformContractPlan.contracts` with vector-backed storage.
+- Accessors `available_contracts(plan)`, `selected_contracts(plan)`,
+  `contracts(plan)`, and `transform_contracts(plan)` must preserve ordered
+  behavior and semantics without preserving the old tuple-backed concrete field
+  types.
+- `source_cpbs::Tuple{Vararg{CoordinateProductBox}}` is explicitly out of
+  scope.
+
+Validation:
+- Design-manager validation only: docs-only `git diff --check`, focused `rg`
+  checks for `HP-CONTRACT-VEC-*`, approved files, target fields, preserved
+  accessors, validation gates, forbidden surfaces, and no `src`, `test`,
+  `tools`, or `bin` changes. No implementation tests were run.
+
+Goal advancement:
+- LT1/LT3: continues compile/type-surface cleanup by removing plan-level
+  stage-boundary contract inventories from variable-length tuple field types.
+- RG/LT6: keeps the canonical base/supplemented path on the same physics and
+  artifact contracts while reducing staged type-shape pressure before fresh
+  timing/compile attribution.
+
+Carrying-cost result:
+- deleted: none; docs-only authority pass.
+- simplified: doer now has one approved contract-plan vector cleanup target
+  with exact files, accessors, validation, and failure rule.
+- quarantined: `source_cpbs`, raw product source-mode storage, retained-unit
+  route inventories, public input `NamedTuple` changes, numerical kernels,
+  route semantic changes, shellification, driver changes, artifact/manifest
+  schema changes, report/status/payload expansion, compatibility adapters
+  preserving old tuple-backed plan field types, committed tests, and Cr2
+  workflow remain unapproved.
+- not deleted because: source cleanup has not run yet.
+- exact remaining caller/blocker: implementation must stop if vectorizing the
+  plan inventories forces broad route/stage rewrites or source files outside
+  the approved surfaces.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

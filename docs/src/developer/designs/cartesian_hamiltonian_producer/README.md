@@ -61,6 +61,9 @@ Agents should read first:
   for the first retained-unit route inventory cleanup lane
 - [Raw product source-mode inventory cleanup](raw_product_source_mode_inventory_cleanup.md)
   for the vector-backed raw product source-mode inventory cleanup lane
+- [Contract-plan vector cleanup](contract_plan_vector_cleanup.md)
+  for the terminal-lowering and retained-unit transform contract-plan vector
+  cleanup lane
 - [Algorithm implementation index](../../algorithm_implementation_index.md)
 
 Approved amendments:
@@ -135,6 +138,11 @@ Approved amendments:
   tuple inventories with vector-backed storage while preserving deterministic
   source-mode ordering, retained-rule behavior, and manifest source-mode
   provenance.
+- [Contract-plan vector cleanup](contract_plan_vector_cleanup.md)
+  approves replacing terminal-lowering and retained-unit transform plan-level
+  contract tuple inventories with vector-backed storage while preserving
+  accessors, iteration order, summaries, and behavior. Per-contract
+  `source_cpbs` tuples remain out of scope.
 
 Candidate amendments:
 

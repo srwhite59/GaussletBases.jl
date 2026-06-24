@@ -37,6 +37,8 @@ Normal startup reading:
   type-surface cleanup lane;
 - `raw_product_source_mode_inventory_cleanup.md` for the raw product
   source-mode inventory cleanup lane;
+- `contract_plan_vector_cleanup.md` for terminal-lowering and retained-unit
+  transform contract-plan vector cleanup;
 - `docs/src/developer/algorithm_implementation_index.md` for existing kernels
   and donor paths.
 
@@ -278,6 +280,28 @@ Approved raw product source-mode inventory cleanup:
   preserving a variable-length `Tuple` concrete return type;
 - terminal-lowering contract tuple cleanup and broader source-box/pair-block
   rewrites remain out of scope.
+
+Approved contract-plan vector cleanup:
+
+- `HP-CONTRACT-VEC-FN-01` approves vector-backed plan-level contract
+  inventories in `src/cartesian_terminal_lowering/contracts.jl`,
+  `src/cartesian_terminal_lowering/selection.jl`,
+  `src/cartesian_terminal_lowering/summaries.jl`,
+  `src/cartesian_retained_unit_transform_contracts/records.jl`,
+  `src/cartesian_retained_unit_transform_contracts/unit_contracts.jl`, and
+  `src/cartesian_retained_unit_transform_contracts/summaries.jl`;
+- narrow consumer wiring is approved only if needed in
+  `src/pqs_source_box_route_driver_helpers.jl`,
+  `src/cartesian_base_hamiltonian.jl`, and
+  `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`;
+- the target is removal of variable-length tuple storage for
+  `TerminalLoweringPlan.available_contracts`, `TerminalLoweringPlan.contracts`,
+  and `RetainedUnitTransformContractPlan.contracts`;
+- accessors `available_contracts(plan)`, `selected_contracts(plan)`,
+  `contracts(plan)`, and `transform_contracts(plan)` must preserve ordered
+  behavior and semantics without preserving variable-length `Tuple` concrete
+  field types;
+- `source_cpbs::Tuple{Vararg{CoordinateProductBox}}` remains out of scope.
 
 Approved canonical driver atom workflow:
 

@@ -55,6 +55,9 @@ Not approved by `HP-ROUTE-INV-*`:
 Raw product source-mode inventory cleanup is separately approved under
 `HP-RAW-SRCMODE-FN-01` / `HP-RAW-SRCMODE-TEST-01` because it crosses different
 ownership boundaries.
+Terminal-lowering and retained-unit transform contract-plan vector cleanup is
+separately approved under `HP-CONTRACT-VEC-FN-01` /
+`HP-CONTRACT-VEC-TEST-01`.
 
 ## Forbidden
 
