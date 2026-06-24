@@ -5311,6 +5311,71 @@ Deletion accounting:
 - new tests: none.
 - new metadata/status fields: none.
 
+## Cartesian Hamiltonian Producer Pass 124 - Be2 Compile Attribution
+
+Commit(s):
+- none - measurement-only compile attribution pass.
+
+Summary:
+- Accepted the compile attribution result on current `b17b9161`. The Be2 q5
+  p10 supplemented path still has a large cold first-run cost, but warm
+  construction remains fast: cold construction was about `59.0 s`, while
+  same-process fresh unique targets averaged about `2.02 s`.
+- Package load after caches existed was small (`0.452 s`), and artifact
+  write/readback/Gaussian numerical kernels were not identified as the main
+  cold latency owners. The trace total was about `60.4 s`, with repo-owned
+  compile timing about `52.6 s`.
+- The top compile owners were route/stage type surfaces:
+  terminal-lowering contract inventory and closures in
+  `src/pqs_source_box_route_driver_helpers.jl` around line `1343`
+  (`~11.3 s`), terminal shellification region-unit inventory closures in
+  `src/cartesian_terminal_shellification_geometry.jl` around line `303`
+  (`~7.2 s`), and giant `cartesian_transforms` / `cartesian_units` stage
+  `NamedTuple` signatures in
+  `src/pqs_source_box_route_driver_helpers.jl` around lines `1587` and `1494`
+  (`~4.7 s` and `~3.6 s`).
+
+Validation:
+- Doer validation: `git diff --check`; package load; SnoopCompile attribution
+  harness `tmp/work/be2_q5_p10_snoopcompile_attribution.jl`; trace workload
+  `tmp/work/be2_q5_p10_compile_trace_workload.jl`; fresh-target timing harness
+  `tmp/work/be2_q5_p10_fresh_target_timing_attribution.jl`; final
+  `git status --short --branch`.
+- Manager validation: inspected the reported trace owners and spot-checked the
+  named code surfaces. The hot functions still visibly build large tuple-backed
+  compatibility inventories and wide stage `NamedTuple` returns. No
+  implementation tests were rerun because this was a read-only attribution
+  pass.
+
+Goal advancement:
+- LT1/LT3: identifies a concrete compile-latency owner class after the first
+  type-surface cleanups. The remaining issue is not generic package load or
+  numerical-kernel runtime; it is oversized staged route/shellification type
+  surfaces crossing `cartesian_units` and `cartesian_transforms`.
+- RG/LT6: keeps CR2/HF usability direction focused. Precompile/sysimage work
+  could hide the latency, but the trace now justifies first asking whether the
+  obvious stale compatibility inventories can be reduced or deleted.
+
+Carrying-cost result:
+- deleted: none; compile-attribution pass only.
+- simplified: next decision target is narrowed to route/stage inventory
+  carriers, especially terminal-lowering compatibility inventory,
+  terminal-region unit inventory, and the wide low-order stage summaries.
+- quarantined: artifact writing, readback, Gaussian raw blocks, terminal G-G
+  numerical kernels, and unit-nuclear kernels are not current compile-latency
+  targets.
+- not deleted because: no source authority has been granted for the newly
+  identified cleanup surfaces.
+- exact remaining caller/blocker: a docs-only design amendment is needed before
+  replacing or deleting these route/stage inventory carriers; the amendment
+  should name `src/pqs_source_box_route_driver_helpers.jl` and
+  `src/cartesian_terminal_shellification_geometry.jl` and require preserved H2
+  base/supplemented artifact behavior.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.
+
 ## Cartesian Hamiltonian Producer Pass 111 - Remove Hidden Driver Atom d
 
 Commit(s):
