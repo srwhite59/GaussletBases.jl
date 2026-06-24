@@ -18,8 +18,8 @@ This section is where to go when you want:
 ## Main developer-facing pages
 
 - [Architecture and current direction](architecture.md)
-- [Gausslet methods fundamentals](architecture/gausslet_methods_fundamentals.md)
 - [Gausslet algorithm refresher](architecture/gausslet_algorithm_refresher.md)
+- [Gausslet methods fundamentals](architecture/gausslet_methods_fundamentals.md)
 - [Algorithm implementation index](algorithm_implementation_index.md)
 - [Developer designs](designs/README.md)
 - [Developer roadmaps](roadmaps/README.md)
