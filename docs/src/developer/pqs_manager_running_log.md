@@ -14355,6 +14355,66 @@ Line-count / complexity note:
 - exact remaining caller/blocker: no native WL diatomic terminal records are
   produced for the staged Hamiltonian path.
 
+## Cartesian Hamiltonian Producer Pass 134 - Nesting Artifact Truth
+
+Commit(s):
+- this commit - Record nesting in Hamiltonian provenance
+
+Summary:
+- Accepted the `HP-NEST-ART-FN-01` cleanup correcting artifact truth for the
+  public `nesting` construction-family input. Base `producer_provenance/` and
+  manifest `recipe_provenance/` now record `nesting`, and base route labels
+  are derived from `(input.kind, input.nesting)` instead of using the old
+  PQS-oriented default. WL one-center artifacts now record
+  `:one_center_wl_base`; PQS one-center artifacts record
+  `:one_center_pqs_base`.
+- Supplemented `nesting = :wl` now rejects in `cartesian_base_working_basis`
+  after input normalization but before base-stage construction, so the staged
+  driver and one-call facade fail with the intended public-contract message
+  rather than falling into the later missing-terminal-basis blocker.
+- Updated the `CartesianFinalBasisRealization` module docstring to reflect its
+  current terminal/final-basis responsibilities, including PQS, WL terminal
+  realization, terminal one-body/IDA, and RG compatibility helpers.
+
+Validation:
+- Manager/doer combined: `git diff --check`; package load; ignored
+  `tmp/work/nesting_artifact_truth_validation.jl` checking small PQS atom
+  artifact/readback provenance (`:pqs`, `:one_center_pqs_base`), small WL atom
+  artifact/readback provenance (`:wl`, `:one_center_wl_base`), and supplemented
+  WL early `ArgumentError`. No Cr2 run.
+- Mechanical manager gate before commit: `git diff --numstat -- src bin tools
+  test docs`, suspicious added-line scan, and new tests/tools scan.
+
+Goal advancement:
+- LT5/LT6: artifact sidecars now tell the truth about the public construction
+  family, preventing WL artifacts from being misread as PQS.
+- LT1/LT3: keeps the human-facing driver contract aligned with the persisted
+  Hamiltonian contract.
+
+Medium-goal update:
+- none. This is a correctness cleanup after the nesting/WL seam, not a new
+  feature lane.
+
+Risk / guardrail:
+- No reader behavior or matrix keys changed. The provenance schema was already
+  amended before source work. WL H2 and supplemented WL remain unsupported.
+
+Remaining blocker / next:
+- The next WL question remains native WL diatomic terminal records, not driver
+  branching. CR2 stress/performance should use truthful provenance after this
+  point.
+
+Line-count / complexity note:
+- added src lines: 21; deleted src lines: 13; new tests: none; new
+  metadata/status fields: approved provenance key only.
+- deleted: stale PQS-only route labeling assumption.
+- simplified: base route labeling is centralized in `_cartesian_base_route_label`.
+- quarantined: WL H2 and supplemented WL remain blocked.
+- not deleted because: the later supplement-stage WL rejection remains as a
+  guard for manually assembled bases.
+- exact remaining caller/blocker: no successful WL diatomic artifact path
+  exists, so no `:z_axis_diatomic_wl_base` label is written.
+
 ## Cartesian Hamiltonian Producer Pass 133 - Approve WL Terminal Basis Seam
 
 Commit(s):

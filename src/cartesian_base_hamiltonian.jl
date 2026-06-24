@@ -478,7 +478,7 @@ end
 function _cartesian_recipe_provenance(input, parent, base_dimension;
     residual_dimension = 0, supplement_input = nothing, producer, route)
     return (;
-        provenance_version = 1, producer, route, q = input.q,
+        provenance_version = 1, producer, nesting = input.nesting, route, q = input.q,
         core_spacing = input.core_spacing, padding = input.kind === :h ? input.radius : input.xmax_transverse,
         radius = input.radius, xmax_parallel = input.xmax_parallel,
         xmax_transverse = input.xmax_transverse,
@@ -523,14 +523,21 @@ function _cartesian_write_hamiltonian_manifest(path, base, ham; residual = nothi
     return path
 end
 
+function _cartesian_base_route_label(input)
+    input.kind === :h && input.nesting === :pqs && return :one_center_pqs_base
+    input.kind === :h && input.nesting === :wl && return :one_center_wl_base
+    input.kind === :h2 && input.nesting === :pqs && return :z_axis_diatomic_pqs_base
+    throw(ArgumentError("unsupported base route label for kind=$(input.kind), nesting=$(input.nesting)"))
+end
+
 function _cartesian_base_write_hamiltonian(path, ham, base)
     input = base.input
     parent = base.parent
     write_cartesian_ida_hamiltonian(path, ham)
-    route = input.kind === :h ? :one_center_pqs_base : :z_axis_diatomic_pqs_base
+    route = _cartesian_base_route_label(input)
     mapping_kind = input.kind === :h ? :white_lindsey_atomic_mapping : :multicenter_pqs_mapping
     values = (; provenance_version = 1, producer = :cartesian_base_hamiltonian,
-        route, q = input.q, core_spacing = input.core_spacing,
+        nesting = input.nesting, route, q = input.q, core_spacing = input.core_spacing,
         reference_spacing = input.reference_spacing, tail_spacing = input.tail_spacing,
         parent_axis_family = input.parent_axis_family,
         parent_axis_counts = _cartesian_base_axis_counts_tuple(parent.axis_counts),
@@ -573,6 +580,8 @@ end
 function cartesian_base_working_basis(system::NamedTuple; basis::NamedTuple, supplemented::Bool = false)
     input = supplemented ? _cartesian_r3_diatomic_inputs(system, basis) :
         _cartesian_base_inputs(system, basis)
+    supplemented && input.nesting === :wl &&
+        throw(ArgumentError("supplemented nesting=:wl diatomic path is not yet wired"))
     parent, transforms = _cartesian_base_stages(input)
     source_mode_provenance = _cartesian_source_mode_provenance(transforms)
     return (; input, parent, terminal_basis = transforms.terminal_basis_realization,

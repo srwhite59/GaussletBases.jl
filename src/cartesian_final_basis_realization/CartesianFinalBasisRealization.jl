@@ -1,19 +1,18 @@
 """
     CartesianFinalBasisRealization
 
-Internal final-basis realization and operator-transfer seam for PQS work.
+Internal terminal/final-basis realization and operator-transfer seam.
 
-This module consumes raw product-source facts, PQS source-mode boundary rules,
-caller-supplied shell-realization data, and retained-boundary one-body
-operators. It produces shell-realized final-basis data, overlap/isometry
-diagnostics, oracle shell-support projections, and retained-boundary
-one-body transfers into the final basis. For the complete core/shell route it
-also owns the narrow localized IDA density-interaction seam used to audit
-final-basis orbital consumption before RHF.
+This module owns the common terminal-basis object consumed by the staged
+Cartesian Hamiltonian producer. It realizes PQS terminal shells, the narrow
+White-Lindsey low-order terminal-basis seam, terminal one-body products, IDA
+interaction assembly, and Residual-Gaussian augmented-operator compatibility
+helpers. It also keeps older PQS shell-support projection and complete
+core/shell final-basis utilities used by live reference and migration paths.
 
 It does not build raw source operator blocks, pair-block materialization
-records, by-center nuclear CPBM result blocks, RHF results, driver wiring,
-exports, or artifacts.
+records, by-center nuclear CPBM result blocks, RHF results, driver public
+inputs, exports, or artifact schemas.
 """
 module CartesianFinalBasisRealization
 
