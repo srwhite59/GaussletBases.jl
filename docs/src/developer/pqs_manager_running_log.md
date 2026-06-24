@@ -5311,6 +5311,55 @@ Deletion accounting:
 - new tests: none.
 - new metadata/status fields: none.
 
+## Cartesian Hamiltonian Producer Pass 132 - N2 Residual Validation Audit
+
+Commit(s):
+- none - measurement-only residual validation audit.
+
+Summary:
+- Accepted the strict N2 q5 p10 residual validation audit. The failing
+  `core_spacing = 0.042857` (`dZ = 0.300`) case is not an owner grouping
+  failure, rank loss, or near-singular final merge. It is a small final
+  residual identity-validation overshoot.
+- For the failing case, candidates are `18`, owner counts are `9,9`, retained
+  counts are `9,9`, final merge eigenvalues are `7.232e-2 / 1.928`, and merge
+  condition is `26.65`. `G' S R` passes comfortably at `1.776e-14`; `R' S R -
+  I` is `1.673e-10`, exceeding the current `1.0e-10` identity tolerance by
+  about `6.73e-11`.
+- Passing comparison cases were also healthy: `core_spacing = 0.075` had
+  `R' S R - I = 7.276e-12`, and `core_spacing = 0.05` had
+  `R' S R - I = 3.638e-11`.
+
+Validation:
+- Doer validation: `git diff --check`; package load; ignored audit script
+  `tmp/work/n2_q5_p10_residual_validation_audit.jl`; final
+  `git status --short --branch`. No tracked source edits and no commit.
+- Manager validation: reviewed the metric spectra, retained counts, overlap
+  errors, and current tolerances. No implementation tests were rerun.
+
+Goal advancement:
+- RG/LT6: identifies the next N2 all-electron workflow blocker as a narrow
+  residual-orthogonalization robustness policy issue, not a selection,
+  ownership, or severe conditioning failure.
+- LT1/LT3: avoids unnecessary source churn by requiring authority before any
+  tolerance or orthogonalization change.
+
+Carrying-cost result:
+- deleted: none; measurement-only pass.
+- simplified: next design request can be narrow: robust residual
+  orthogonalization/validation policy for small final `R' S R` overshoots with
+  healthy spectra.
+- quarantined: do not blindly relax `identity_atol` as an implementation
+  shortcut; preserve `G' S R` and `R' S R` validation as meaningful numerical
+  contracts.
+- not deleted because: no source code changed.
+- exact remaining caller/blocker: strict N2 q5 p10 `dZ=0.3` cannot write an
+  artifact until the residual validation policy is amended and implemented.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.
+
 ## Cartesian Hamiltonian Producer Pass 131 - CR2 Driver Timing and N2 Residual Intake
 
 Commit(s):
