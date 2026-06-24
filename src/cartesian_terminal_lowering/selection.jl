@@ -41,15 +41,16 @@ function lower_terminal_regions(
     metadata = (;),
 )
     regions = CartesianShellification.terminal_regions(shellification_plan)
-    selected = Tuple(_selected_contract(region, policy) for region in regions)
+    selected = TerminalLoweringContract[
+        _selected_contract(region, policy) for region in regions]
     available =
         enumerate_available_contracts ?
-        Tuple(
+        TerminalLoweringContract[
             contract
             for region in regions
             for contract in _available_contracts(region, policy)
-        ) :
-        selected
+        ] :
+        copy(selected)
     return TerminalLoweringPlan(
         policy,
         available,

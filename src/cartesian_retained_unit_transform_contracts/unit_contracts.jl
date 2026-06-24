@@ -14,10 +14,10 @@ function retained_unit_transform_contract_plan(
     metadata = (;),
 )
     units = CartesianRetainedUnits.units(retained_unit_plan)
-    contracts = Tuple(
+    contracts = RetainedUnitTransformContract[
         _retained_unit_transform_contract(unit, policy)
         for unit in units
-    )
+    ]
     plan_summary =
         _retained_unit_transform_contract_plan_summary(
             policy,

@@ -32,8 +32,8 @@ Unselected available contracts may be unparameterized.
 """
 struct TerminalLoweringPlan
     policy::TerminalLoweringPolicy
-    available_contracts::Tuple{Vararg{TerminalLoweringContract}}
-    contracts::Tuple{Vararg{TerminalLoweringContract}}
+    available_contracts::Vector{TerminalLoweringContract}
+    contracts::Vector{TerminalLoweringContract}
     summary::NamedTuple
     metadata::NamedTuple
 end

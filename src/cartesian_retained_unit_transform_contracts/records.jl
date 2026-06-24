@@ -50,7 +50,7 @@ Metadata-only transform-contract plan for one retained-unit plan.
 struct RetainedUnitTransformContractPlan
     policy::RetainedUnitTransformContractPolicy
     retained_unit_plan::CartesianRetainedUnits.RetainedUnitPlan
-    contracts::Tuple{Vararg{RetainedUnitTransformContract}}
+    contracts::Vector{RetainedUnitTransformContract}
     summary::NamedTuple
     metadata::NamedTuple
 end

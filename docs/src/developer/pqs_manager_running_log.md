@@ -13496,3 +13496,55 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 122 - Vectorize Contract Plan Inventories
+
+Commit(s):
+- this commit - Vectorize contract plan inventories
+
+Summary:
+- Accepted `HP-CONTRACT-VEC-FN-01`. Plan-level inventories in
+  `TerminalLoweringPlan` and `RetainedUnitTransformContractPlan` no longer use
+  variable-length `Tuple{Vararg...}` field storage; they now use typed vectors.
+- Preserved accessors and ordering:
+  `available_contracts(plan)`, `selected_contracts(plan)`, `contracts(plan)`,
+  and `transform_contracts(plan)` still expose the same deterministic contract
+  sequence.
+- Explicitly left `source_cpbs::Tuple{Vararg{CoordinateProductBox}}` unchanged,
+  as required by the docs-only authority. No consumer rewiring was needed.
+
+Validation:
+- Doer validation: `git diff --check`; package load; H2 base artifact/readback
+  with dimension 471 and K/V deltas 0.0; H2 supplemented artifact/readback with
+  dimension 489 and K/V deltas 0.0; H2 R3 endpoint passed with self-Coulomb
+  `0.4574265214362095`; focused order smoke confirmed terminal selected order
+  and retained transform order.
+- Manager validation: `git diff --check`; `git diff --numstat` reported `10`
+  added and `9` deleted source lines across the approved terminal-lowering and
+  retained transform-contract files; suspicious-line scan was empty; new-test/
+  tool scan was empty.
+
+Goal advancement:
+- LT1/LT3: removes the remaining approved plan-level variable-length tuple
+  inventories from the audited base working-basis path before fresh timing and
+  compile attribution.
+- RG/LT6: preserves current base/supplemented artifact behavior while reducing
+  staged type-shape pressure for practical CR2/HF artifact generation.
+
+Carrying-cost result:
+- deleted: plan-level tuple inventory field types and tuple comprehensions for
+  terminal lowering and retained transform-contract plans.
+- simplified: plan constructors now produce typed vectors directly.
+- quarantined: fixed tuple fields such as `source_cpbs`, summary tuple fields,
+  public input `NamedTuple`s, artifact sidecars, numerical kernels, driver
+  behavior, and Cr2 workflow remain outside this pass.
+- not deleted because: source CPB tuples are a separate per-contract shape and
+  were explicitly excluded by design authority.
+- exact remaining caller/blocker: if compile latency remains high after fresh
+  timing, the next work should be evidence-driven; summary/report tuple
+  surfaces are the likely remaining type-surface cleanup candidates, but they
+  need separate authority and proof of relevance.
+- added src lines: 10.
+- deleted src lines: 9.
+- new tests: none.
+- new metadata/status fields: none.
