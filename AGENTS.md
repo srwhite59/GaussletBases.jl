@@ -510,6 +510,8 @@ these approved design IDs:
 - `HP-COMP-WLDIAT-TEST-01`
 - `HP-COMP-BASEDIAT-FN-01`
 - `HP-COMP-BASEDIAT-TEST-01`
+- `HP-COMP-SUPPWL-FN-01`
+- `HP-COMP-SUPPWL-TEST-01`
 
 No other production surface may be added in this lane without a prior
 documentation-only design amendment. This includes new structs, persistent
@@ -1305,6 +1307,23 @@ lowering changes, raw-block changes, supplement/RG/MWG changes, artifact
 schema or reader changes, public API/export changes, element lookup/default
 tables, heteronuclear or translated/general geometry support, committed tests,
 or Cr2 workflow. Target line budget is under 60 added `src` lines.
+
+`HP-COMP-SUPPWL-FN-01` and `HP-COMP-SUPPWL-TEST-01` approve only the
+supplemented White-Lindsey z-axis diatomic composition lane. Approved source
+surface is `src/cartesian_base_hamiltonian.jl`, with
+`src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` allowed
+only if a direct genericity blocker appears in the existing RG/MWG compatibility
+entry point. The lane may remove the early supplemented-`nesting = :wl`
+blockers only if the existing Residual Gaussian/MWG path works with the WL
+`CartesianTerminalBasisRealization`. It must preserve the supplement contract,
+residual selection, exact augmented operators, residual MWG/IDA interaction,
+base K/U reuse, artifact keys, manifest/provenance, driver inputs, and stage
+labels. It does not approve driver changes, supplemented atoms, route skeleton
+or shellification changes, terminal lowering changes, raw-block changes,
+residual-selection changes, MWG/IDA convention changes, artifact schema or
+reader changes, public API/export changes, old WL H1/H1+J materialization,
+solver/ECP work, diagnostics/status/report payloads, committed tests, or Cr2
+workflow. Target line budget is under 80 added `src` lines.
 
 `HP-WLTERM-FILE-01`, `HP-WLTERM-FN-01`, and `HP-WLTERM-WIRE-01` approve only
 the narrow White-Lindsey terminal-basis seam needed by `nesting = :wl`.

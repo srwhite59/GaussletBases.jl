@@ -14810,3 +14810,61 @@ Carrying-cost result:
 - deleted src lines: 10.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 140 - Approve Supplemented WL Diatomic Lane
+
+Commit(s):
+- this commit - Approve supplemented WL diatomic composition lane
+
+Summary:
+- Promoted `HP-COMP-SUPPWL-FN-01` and `HP-COMP-SUPPWL-TEST-01` from candidate
+  to approved composition authority. The target cell is `Natom = 2`,
+  `basisname !== nothing`, and `nesting = :wl` through the existing
+  supplemented homonuclear z-axis diatomic staged facade.
+- The approved source surface is intentionally narrow:
+  `src/cartesian_base_hamiltonian.jl`, with
+  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` allowed
+  only for a direct RG/MWG compatibility genericity blocker. The expected
+  source work is to remove the two early supplemented-WL policy blockers only
+  if the existing Residual Gaussian/MWG path consumes the WL
+  `CartesianTerminalBasisRealization`.
+- The amendment preserves the supplement contract, residual selection, exact
+  augmented operators, residual MWG/IDA interaction, base K/U reuse, artifact
+  keys, manifest/provenance, driver inputs, and stage labels. `nesting`
+  remains a construction-family choice, not a diagnostic route switch.
+
+Validation:
+- Design-manager validation for this docs-only pass: read current compact
+  composition authority and the doer blurb; update registry/current/
+  implementation slices/README/AGENTS/running log only; run `git diff --check`;
+  focused `rg` for `HP-COMP-SUPPWL-*`, candidate/blocker wording, approved
+  source surfaces, and forbidden driver/route/RG/artifact/Cr2 surfaces; confirm
+  no source, test, tool, or bin files changed. No implementation tests are part
+  of this approval pass; package load and artifact/readback checks belong to
+  `HP-COMP-SUPPWL-TEST-01`.
+
+Goal advancement:
+- LT1/LT3: moves the next missing composition cell from policy blocker to
+  exact source authority without adding a driver case branch.
+- LT5/LT6: keeps PQS and WL distinct upstream but requires supplemented WL to
+  meet the same terminal-basis/RG/MWG/Hamiltonian boundary as supplemented PQS.
+
+Carrying-cost result:
+- deleted: none; docs-only authority pass.
+- simplified: future source work has one exact lane for supplemented WL
+  instead of hidden early rejection plus candidate-only planning language.
+- quarantined: driver changes, supplemented atoms, route skeleton/
+  shellification/terminal-lowering changes, raw blocks, residual-selection
+  changes, MWG/IDA convention changes, artifact schema or reader changes,
+  public API/export changes, old WL H1/H1+J materialization, committed tests,
+  solver/ECP work, diagnostics/status/report payloads, and Cr2 workflow remain
+  unapproved.
+- not deleted because: source cleanup has not run yet.
+- exact remaining caller/blocker: if the existing RG/MWG path cannot consume
+  WL terminal bases without new terminal records, route lowering semantics,
+  residual-selection changes, or artifact/schema changes, the source pass must
+  stop and report the exact blocker.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

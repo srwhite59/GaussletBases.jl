@@ -153,8 +153,9 @@ Approved amendments:
   `geometry = atom | z-axis diatomic`, `nesting = :pqs | :wl`, and
   `supplement = off | on`. The WL z-axis diatomic base cell is approved under
   `HP-COMP-WLDIAT-*`, and the base homonuclear z-axis diatomic validation
-  relaxation is approved under `HP-COMP-BASEDIAT-*`; supplemented atoms and
-  supplemented WL remain candidate lanes.
+  relaxation is approved under `HP-COMP-BASEDIAT-*`. Supplemented WL z-axis
+  diatomics are approved under `HP-COMP-SUPPWL-*`; supplemented atoms remain
+  candidate-only.
 - [Cartesian Hamiltonian artifact manifest](cartesian_hamiltonian_artifact_manifest.md)
   approves only compact JLD2 sidecar groups for matrix-order basis labels and
   uniform recipe provenance, and separately approves a compact source-mode
@@ -190,10 +191,11 @@ Approved amendments:
 
 Candidate amendments:
 
-- Supplemented atoms, supplemented WL, translated atoms, Cr2-specific
-  workflow, public supplemented workflow/export, basis/supplement-realism
-  beyond explicit supplied labels/files, and broad driver diagnostics remain
-  candidate-only until separately approved.
+- Supplemented atoms, translated atoms, Cr2-specific workflow, public
+  supplemented workflow/export, basis/supplement-realism beyond explicit
+  supplied labels/files, and broad driver diagnostics remain candidate-only
+  until separately approved. Supplemented WL z-axis diatomics are already
+  approved under `HP-COMP-SUPPWL-*`.
 
 Historical material:
 

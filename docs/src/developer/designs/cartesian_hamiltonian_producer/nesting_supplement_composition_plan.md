@@ -51,8 +51,8 @@ they must not be hidden by driver defaults or mislabeled artifact provenance.
 | --- | --- | --- | --- |
 | atom | off | implemented for explicit origin-centered all-electron base atoms, with H as the committed endpoint | implemented for one-center base atoms through the WL terminal-basis seam |
 | atom | on | not approved / not wired | not approved / not wired |
-| z-axis diatomic | off | H2 base works; explicit homonuclear z-axis all-electron input relaxation is approved | approved implementation lanes; base validation relaxation plus native WL diatomic terminal records not implemented yet |
-| z-axis diatomic | on | supported for explicit homonuclear z-axis diatomics through the residual-GTO/MWG path | blocked first by missing WL diatomic base terminal records |
+| z-axis diatomic | off | implemented for explicit homonuclear z-axis all-electron inputs | implemented for explicit homonuclear z-axis all-electron inputs through native WL terminal records |
+| z-axis diatomic | on | supported for explicit homonuclear z-axis diatomics through the residual-GTO/MWG path | approved implementation lane through the same RG/MWG boundary after WL base terminal realization |
 
 ## Common Boundary Rules
 
@@ -167,19 +167,35 @@ algorithm, atom-specific Hamiltonian builder, or atom-only artifact schema.
 
 ### 3. Supplemented White-Lindsey
 
-Candidate goal: after WL atom and WL diatomic base terminal bases are real,
-allow residual-GTO/MWG supplementation to consume WL terminal bases through the
-same Residual Gaussian/raw-block/IDA boundary used for PQS.
+Status: approved for implementation under `HP-COMP-SUPPWL-FN-01` and
+`HP-COMP-SUPPWL-TEST-01`.
 
-This lane should not start by branching the driver on WL supplemented cases.
-It should first prove that the RG augmentation boundary is genuinely
-nesting-neutral once supplied with a valid terminal basis and same-construction
-base operators.
+Goal: allow `geometry = z-axis diatomic`, `supplement = on`, and
+`nesting = :wl` to use the same supplemented homonuclear z-axis diatomic
+facade/staged path as `nesting = :pqs`.
 
-## Candidate IDs
+Approved source files:
 
-These IDs are placeholders for later docs-only amendments, except the
-`HP-COMP-WLDIAT-*` and `HP-COMP-BASEDIAT-*` pairs now approved above. Candidate
+```text
+src/cartesian_base_hamiltonian.jl
+src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl
+```
+
+The terminal residual file is optional and may be touched only if the existing
+RG/MWG compatibility entry point exposes a direct genericity blocker. The
+expected source work is removal of the early supplemented-WL blockers in
+`src/cartesian_base_hamiltonian.jl` after proving the existing Residual
+Gaussian/MWG path consumes the WL `CartesianTerminalBasisRealization`.
+
+This lane must preserve the existing supplement contract, residual selection,
+exact augmented operators, residual MWG/IDA interaction, base K/U reuse,
+artifact keys, manifest/provenance, driver inputs, and stage labels. It should
+not branch the driver on WL supplemented cases and should not add diagnostics
+or route-stage switches.
+
+## Composition IDs
+
+Approved composition IDs authorize only the exact lanes named above. Candidate
 IDs do not authorize implementation until promoted in `registry.md` with exact
 files, functions, validation, forbidden surfaces, and line budgets.
 
@@ -190,8 +206,7 @@ files, functions, validation, forbidden surfaces, and line budgets.
 - `HP-COMP-SUPPATOM-FN-01` / `HP-COMP-SUPPATOM-TEST-01`: supplemented
   one-center atom path through common Residual Gaussian augmentation.
 - `HP-COMP-SUPPWL-FN-01` / `HP-COMP-SUPPWL-TEST-01`: supplemented
-  White-Lindsey path through the common RG boundary after WL base terminal
-  bases exist.
+  White-Lindsey z-axis diatomic path through the common RG boundary.
 
 ## Deferred
 

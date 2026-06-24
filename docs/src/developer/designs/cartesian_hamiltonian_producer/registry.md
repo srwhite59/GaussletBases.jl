@@ -423,6 +423,82 @@ No committed test file, committed fixture, driver contract test, supplemented
 run, solver/RHF/ECP/EGOI validation, route-diagnostic validation, or Cr2
 fixture is approved.
 
+## Approved Composition Lane: Supplemented White-Lindsey Z-Axis Diatomics
+
+This section promotes the supplemented WL z-axis diatomic composition lane.
+The goal is to make `Natom = 2`, `basisname !== nothing`, and
+`nesting = :wl` use the same supplemented homonuclear z-axis diatomic staged
+facade as `nesting = :pqs`, after the WL base route has produced a valid
+`CartesianTerminalBasisRealization`.
+
+### HP-COMP-SUPPWL-FN-01 — supplemented WL z-axis diatomic composition
+
+Approved source files:
+
+```text
+src/cartesian_base_hamiltonian.jl
+src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl
+```
+
+`src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` is
+optional in this lane and may be edited only if a direct genericity blocker
+appears in the existing RG/MWG compatibility entry point. The default expected
+source change is in `src/cartesian_base_hamiltonian.jl`.
+
+Approved behavior:
+
+- allow `nesting = :wl` through the existing supplemented homonuclear z-axis
+  diatomic facade/staged path;
+- remove the early supplemented-`nesting = :wl` blockers in
+  `cartesian_base_working_basis(...; supplemented = true)` and
+  `cartesian_residual_gto_supplement_basis(...)` only if the existing
+  Residual Gaussian/MWG path works with the WL `CartesianTerminalBasisRealization`;
+- preserve the existing supplement contract: `basis_by_center`, `lmax`,
+  optional `uncontracted`, `width_filtering`, and `basisfile`;
+- preserve residual selection, exact augmented operators, residual MWG/IDA
+  interaction, base K/U reuse, artifact keys, manifest/provenance, driver
+  inputs, and stage labels;
+- keep `nesting` as a construction-family choice, not a diagnostic route
+  switch.
+
+Forbidden:
+
+- driver changes;
+- supplemented atoms;
+- route skeleton, shellification, terminal lowering, raw-block,
+  residual-selection, MWG/IDA convention, artifact schema, writer, reader,
+  public API/export, solver/ECP, diagnostics, status/report payload, or
+  Cr2-specific workflow changes;
+- old White-Lindsey H1/H1+J materialization revival or adaptation;
+- committed tests or committed input fixtures.
+
+Failure rule: if supplemented WL requires new terminal records, route lowering
+semantics, residual-selection changes, artifact/schema changes, or source files
+outside the approved surface, make no source commit and report the exact
+blocker.
+
+Line budget: target under `80` added `src` lines, with deletion or
+simplification of the early supplemented-WL blockers expected where practical.
+
+### HP-COMP-SUPPWL-TEST-01 — supplemented WL validation
+
+Approved validation:
+
+- `git diff --check`;
+- package load;
+- H2 supplemented artifact/readback with `nesting = :pqs`;
+- small H2 supplemented artifact/readback with `nesting = :wl`;
+- small non-H homonuclear z-axis supplemented artifact/readback with
+  `nesting = :wl` if bounded;
+- finite/symmetric `K` and `V` checks plus readback deltas for WL supplemented
+  output;
+- clear rejection remains for supplemented atoms and invalid diatomic inputs;
+- no Cr2 run.
+
+No committed test file, committed fixture, driver contract test,
+solver/RHF/ECP/EGOI validation, route-diagnostic validation, or Cr2 fixture is
+approved.
+
 ### HP-FN-03 — blockwise one-body assembly
 
 Approved file:
@@ -3149,7 +3225,7 @@ Remaining deferred lanes are:
 - allocation-free or bounded-allocation validation reductions for large dense
   matrices.
 
-### Nesting/supplement composition target — candidate
+### Nesting/supplement composition target
 
 The target producer contract is the three-choice composition documented in
 `nesting_supplement_composition_plan.md`:
@@ -3161,22 +3237,22 @@ supplement: off | on
 ```
 
 This registry section is planning only except for the promoted
-`HP-COMP-WLDIAT-*` pair above. Current support remains partial:
+`HP-COMP-WLDIAT-*`, `HP-COMP-BASEDIAT-*`, and `HP-COMP-SUPPWL-*` pairs above.
+Current support remains partial:
 
 - atom / no supplement / `:pqs`: implemented for explicit origin-centered base
   atoms;
 - atom / no supplement / `:wl`: implemented for one-center base atoms;
 - atom / supplement / either nesting: not approved / not wired;
-- z-axis diatomic / no supplement / `:pqs`: H2 base works; explicit
-  homonuclear z-axis all-electron input relaxation is approved under
-  `HP-COMP-BASEDIAT-*`;
-- z-axis diatomic / no supplement / `:wl`: approved implementation lanes under
-  `HP-COMP-BASEDIAT-*` and `HP-COMP-WLDIAT-*`; native WL diatomic terminal
-  records are not implemented yet;
+- z-axis diatomic / no supplement / `:pqs`: implemented for explicit
+  homonuclear z-axis all-electron inputs;
+- z-axis diatomic / no supplement / `:wl`: implemented for explicit
+  homonuclear z-axis all-electron inputs through native WL terminal records;
 - z-axis diatomic / supplement / `:pqs`: supported for explicit homonuclear
   z-axis diatomics through the residual-GTO/MWG path;
-- z-axis diatomic / supplement / `:wl`: blocked first by missing WL diatomic
-  base terminal records.
+- z-axis diatomic / supplement / `:wl`: approved under
+  `HP-COMP-SUPPWL-*`; implementation may proceed only through the existing
+  RG/MWG boundary once a WL terminal basis exists.
 
 Composition IDs:
 
@@ -3185,12 +3261,12 @@ Composition IDs:
 - `HP-COMP-BASEDIAT-FN-01` / `HP-COMP-BASEDIAT-TEST-01`: approved base
   homonuclear z-axis diatomic input validation relaxation in
   `src/cartesian_base_hamiltonian.jl`;
+- `HP-COMP-SUPPWL-FN-01` / `HP-COMP-SUPPWL-TEST-01`: approved supplemented
+  White-Lindsey z-axis diatomic composition through the existing RG/MWG
+  boundary;
 - `HP-COMP-SUPPATOM-FN-01` / `HP-COMP-SUPPATOM-TEST-01`: supplemented
   one-center atom path through common Residual Gaussian augmentation
-  (candidate only);
-- `HP-COMP-SUPPWL-FN-01` / `HP-COMP-SUPPWL-TEST-01`: supplemented
-  White-Lindsey path through the common RG boundary after WL base terminal
-  bases exist (candidate only).
+  (candidate only).
 
 Each remaining candidate needs a later docs-only amendment that names exact
 files, functions, validation gates, forbidden surfaces, line budget, and

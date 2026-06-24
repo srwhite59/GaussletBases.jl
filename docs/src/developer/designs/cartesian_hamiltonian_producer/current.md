@@ -299,15 +299,30 @@ Approved first composition lane:
   approve route/shellification/terminal-lowering changes, supplement/RG/MWG
   work, driver changes, element tables, heteronuclear support, translated or
   non-z-axis geometry, committed tests, or Cr2 workflow.
+- `HP-COMP-SUPPWL-FN-01` approves the supplemented White-Lindsey z-axis
+  diatomic composition lane for `Natom = 2`, `basisname !== nothing`, and
+  `nesting = :wl`;
+- approved source surface is `src/cartesian_base_hamiltonian.jl`, with
+  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
+  optional only for a direct RG/MWG compatibility genericity blocker;
+- the implementation may remove the two early supplemented-WL blockers only if
+  the existing Residual Gaussian/MWG path works with the WL
+  `CartesianTerminalBasisRealization`;
+- it must preserve the supplement contract, residual selection, exact
+  augmented operators, MWG/IDA convention, base K/U reuse, artifact keys,
+  manifest/provenance, driver inputs, and stage labels;
+- it does not approve driver changes, supplemented atoms, route
+  skeleton/shellification/terminal lowering changes, raw-block changes,
+  residual-selection changes, MWG/IDA convention changes, artifact schema or
+  reader changes, public API/export changes, old WL H1/H1+J materialization,
+  committed tests, or Cr2 workflow.
 
-Remaining candidate composition lanes:
+Remaining candidate composition lane:
 
 - supplemented one-center atoms through the existing Residual Gaussian path,
   not an atom-only supplement builder;
-- supplemented White-Lindsey after WL base atom/diatomic terminal bases exist,
-  using the same RG/raw-block/IDA boundary as supplemented PQS.
 
-None of these candidate lanes is source authority until promoted in
+This candidate lane is not source authority until promoted in
 `registry.md` with exact files, functions, validation, and forbidden surfaces.
 
 Approved R1 one-center base atom relaxation:

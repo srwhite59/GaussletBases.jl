@@ -907,8 +907,8 @@ Current implementation status:
 | --- | --- | --- | --- |
 | atom | off | implemented for explicit origin-centered base atoms | implemented for one-center base atoms |
 | atom | on | not approved / not wired | not approved / not wired |
-| z-axis diatomic | off | H2 base works; explicit homonuclear z-axis all-electron input relaxation is approved | approved implementation lanes; base validation relaxation plus native WL diatomic terminal records not implemented yet |
-| z-axis diatomic | on | supported for explicit homonuclear z-axis diatomics through RG/MWG | blocked first by missing WL diatomic base terminal records |
+| z-axis diatomic | off | implemented for explicit homonuclear z-axis all-electron inputs | implemented for explicit homonuclear z-axis all-electron inputs through native WL terminal records |
+| z-axis diatomic | on | supported for explicit homonuclear z-axis diatomics through RG/MWG | approved implementation lane through the same RG/MWG boundary after WL base terminal realization |
 
 Dependency order:
 
@@ -949,11 +949,13 @@ Additional approved composition lane:
 
 - `HP-COMP-BASEDIAT-FN-01` / `HP-COMP-BASEDIAT-TEST-01` are approved for the
   base homonuclear z-axis diatomic validation relaxation;
+- `HP-COMP-SUPPWL-FN-01` / `HP-COMP-SUPPWL-TEST-01` are approved for the
+  supplemented White-Lindsey z-axis diatomic composition lane through the
+  existing RG/MWG boundary.
 
 Remaining candidate placeholder IDs:
 
-- `HP-COMP-SUPPATOM-FN-01` / `HP-COMP-SUPPATOM-TEST-01`;
-- `HP-COMP-SUPPWL-FN-01` / `HP-COMP-SUPPWL-TEST-01`.
+- `HP-COMP-SUPPATOM-FN-01` / `HP-COMP-SUPPATOM-TEST-01`.
 
 Remaining placeholders do not authorize implementation. Each lane needs a later
 docs-only amendment naming exact files, functions, validation gates, forbidden
