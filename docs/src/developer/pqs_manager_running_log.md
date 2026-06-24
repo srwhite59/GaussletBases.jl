@@ -5311,6 +5311,58 @@ Deletion accounting:
 - new tests: none.
 - new metadata/status fields: none.
 
+## Cartesian Hamiltonian Producer Pass 131 - CR2 Driver Timing and N2 Residual Intake
+
+Commit(s):
+- none - external CR2/user-run intake.
+
+Summary:
+- Accepted CR2-side timing evidence at current `95dbc43c`: the compile cleanup
+  sequence produced large practical driver gains. Fresh-warm Be2 q5 p10
+  dropped from `43.709 s` to `6.478 s`, and Be2 q5 p20 from `57.603 s` to
+  `10.638 s`. The previous base working-basis cost fell from `40.968 s` to
+  `3.913 s` for q5 p10 and from `51.007 s` to `4.270 s` for q5 p20.
+- Accepted N2 q5 cc-pVDZ lmax=1 producer smokes through the canonical driver:
+  padding 10 produced dimension `1361`, `59 MiB`, `26.146 s`; padding 20
+  produced dimension `2037`, `130 MiB`, `29.245 s`. CR2 recommends N2 q5 p20
+  as a useful next HF/HFDMRG smoke target.
+- Recorded the new correctness/robustness issue: N2 q5 p10 at strict
+  `core_spacing = 0.042857` (`dZ = 0.300`) fails during residual augmentation
+  with `ArgumentError: residual-Gaussian R' S R validation failed`. Bracket
+  `core_spacing = 0.075` passed at dimension `2675`; near-target
+  `core_spacing = 0.05` passed at dimension `4739`.
+
+Validation:
+- CR2-side validation: all runs were serial; GaussletBases `git diff --check`
+  passed; GaussletBases status was clean/even except the known untracked
+  successor handoff; no leftover N2/cartesian Julia process was running.
+- Manager validation: inspected the residual validation path in
+  `src/cartesian_residual_gaussians/residual_basis.jl` and confirmed the
+  failure is the final `R' S R` identity check after owner-local residual
+  selection and final merge Lowdin. No implementation tests were rerun.
+
+Goal advancement:
+- LT1/LT3: compile cleanup has crossed the practical Be2 driver bottleneck; no
+  immediate source cleanup lane is justified by timing alone.
+- RG/LT6: shifts the next blocker from compilation to residual-basis numerical
+  robustness for tighter all-electron N2 inputs.
+
+Carrying-cost result:
+- deleted: none; intake-only pass.
+- simplified: next repo action is a focused residual validation audit, not
+  more route/stage cleanup or kernel optimization.
+- quarantined: strict N2 `dZ=0.3` must not be "fixed" by blindly relaxing
+  `identity_atol`; first measure the residual metric spectrum, retained counts,
+  `G' S R`, and `R' S R` error.
+- not deleted because: no source code changed.
+- exact remaining caller/blocker: reproduce and characterize the strict N2
+  residual failure using ignored probes; source work would require a later
+  authority decision if the failure is not just an input conditioning boundary.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.
+
 ## Cartesian Hamiltonian Producer Pass 124 - Be2 Compile Attribution
 
 Commit(s):
