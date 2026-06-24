@@ -294,10 +294,10 @@ Approved common keys:
 | `producer_provenance/parent_axis_family` | resolved public `basis.parent_axis_family::Symbol` |
 | `producer_provenance/parent_axis_counts` | realized `NTuple{3,Int}` |
 | `producer_provenance/mapping_kind` | route mapping symbol |
-| `producer_provenance/mapping_d` | `Float64` for H, `nothing` for H2 |
-| `producer_provenance/radius` | `Float64` for H, `nothing` for H2 |
-| `producer_provenance/xmax_parallel` | `nothing` for H, `Float64` for H2 |
-| `producer_provenance/xmax_transverse` | `nothing` for H, `Float64` for H2 |
+| `producer_provenance/mapping_d` | `Float64` for one-center atoms, `nothing` for z-axis diatomics |
+| `producer_provenance/radius` | `Float64` for one-center atoms, `nothing` for z-axis diatomics |
+| `producer_provenance/xmax_parallel` | `nothing` for one-center atoms, `Float64` for z-axis diatomics |
+| `producer_provenance/xmax_transverse` | `nothing` for one-center atoms, `Float64` for z-axis diatomics |
 | `producer_provenance/atom_symbols` | `Vector{String}` |
 | `producer_provenance/nuclear_charges` | `Vector{Float64}` |
 | `producer_provenance/atom_locations` | `Matrix{Float64}` with one row per center |
@@ -323,7 +323,8 @@ Route-specific values:
   - `producer_provenance/radius = basis.radius`
   - `producer_provenance/xmax_parallel = nothing`
   - `producer_provenance/xmax_transverse = nothing`
-- z-axis H2 with `nesting = :pqs`:
+- z-axis H2, or explicit homonuclear z-axis all-electron diatomic after
+  `HP-COMP-BASEDIAT-FN-01`, with `nesting = :pqs`:
   - `producer_provenance/route = :z_axis_diatomic_pqs_base`
   - `producer_provenance/nesting = :pqs`
   - `producer_provenance/mapping_kind = :multicenter_pqs_mapping`
@@ -331,7 +332,9 @@ Route-specific values:
   - `producer_provenance/radius = nothing`
   - `producer_provenance/xmax_parallel = basis.xmax_parallel`
   - `producer_provenance/xmax_transverse = basis.xmax_transverse`
-- z-axis H2 with `nesting = :wl`, after `HP-COMP-WLDIAT-FN-01` succeeds:
+- z-axis H2, or explicit homonuclear z-axis all-electron diatomic after
+  `HP-COMP-BASEDIAT-FN-01`, with `nesting = :wl`, after
+  `HP-COMP-WLDIAT-FN-01` succeeds:
   - `producer_provenance/route = :z_axis_diatomic_wl_base`
   - `producer_provenance/nesting = :wl`
   - `producer_provenance/mapping_kind = resolved WL diatomic parent mapping symbol`
@@ -376,12 +379,13 @@ Unsupported or malformed public requests must throw clear exceptions, normally
 - unknown `system` or `basis` fields;
 - unsupported atom count, route geometry, or unsupported system in the active
   R1/R1-atom scope;
-- non-z-axis H2 geometry, including x/y-aligned or generally oriented H2;
+- non-z-axis diatomic geometry, including x/y-aligned or generally oriented
+  diatomics;
 - inconsistent field lengths for symbols, charges, positions, or electron
   counts;
 - nonpositive or nonfinite spacing, radius, extent, coordinate, or charge
   values;
-- unsupported electron counts for H or H2;
+- unsupported electron counts, including non-neutral all-electron diatomics;
 - empty `hamfile`;
 - center-sized tuple inventories for atom symbols, charges, or locations.
 

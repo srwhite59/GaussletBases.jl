@@ -31,6 +31,8 @@ The next composition target is the documented 2 x 2 x 2 matrix over
 candidate-only until separately approved.
 The first missing composition cell, WL z-axis diatomic base with no supplement,
 is approved for implementation under `HP-COMP-WLDIAT-*`.
+The base diatomic input contract relaxation for explicit homonuclear z-axis
+all-electron diatomics is approved separately under `HP-COMP-BASEDIAT-*`.
 
 Agents should read first:
 
@@ -150,8 +152,9 @@ Approved amendments:
   records the target three-choice contract:
   `geometry = atom | z-axis diatomic`, `nesting = :pqs | :wl`, and
   `supplement = off | on`. The WL z-axis diatomic base cell is approved under
-  `HP-COMP-WLDIAT-*`; supplemented atoms and supplemented WL remain candidate
-  lanes.
+  `HP-COMP-WLDIAT-*`, and the base homonuclear z-axis diatomic validation
+  relaxation is approved under `HP-COMP-BASEDIAT-*`; supplemented atoms and
+  supplemented WL remain candidate lanes.
 - [Cartesian Hamiltonian artifact manifest](cartesian_hamiltonian_artifact_manifest.md)
   approves only compact JLD2 sidecar groups for matrix-order basis labels and
   uniform recipe provenance, and separately approves a compact source-mode

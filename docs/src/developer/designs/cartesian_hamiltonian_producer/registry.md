@@ -342,6 +342,87 @@ No supplemented WL run, committed test file, committed fixture, driver
 contract test, solver/RHF/ECP/EGOI validation, route-diagnostic validation, or
 Cr2 fixture is approved.
 
+## Approved Composition Lane: Base Homonuclear Z-Axis Diatomics
+
+This section promotes the base z-axis diatomic validation relaxation. It
+approves only the `geometry = z-axis diatomic`, `supplement = off` public input
+contract in the base facade. It does not approve route/shellification changes.
+
+### HP-COMP-BASEDIAT-FN-01 — base homonuclear z-axis diatomic validation
+
+Approved source file:
+
+```text
+src/cartesian_base_hamiltonian.jl
+```
+
+Approved behavior:
+
+- relax the `_cartesian_base_inputs(...)` two-center branch from H2-only to
+  explicit homonuclear z-axis all-electron diatomics;
+- require exactly two atom symbols and exactly two nuclear charges;
+- require equal atom symbols;
+- require equal finite positive nuclear charges that are integer-valued after
+  validation;
+- require two finite centers on the Cartesian z axis (`x = y = 0`) with
+  distinct `z`;
+- require explicit `nup` and `ndn` nonnegative integers with
+  `nup + ndn == sum(nuclear_charges)` after charge validation;
+- keep atom symbol as provenance label only and nuclear charge as authority;
+- keep the basis contract unchanged: `q`, `core_spacing`, `xmax_parallel`,
+  `xmax_transverse`, optional `parent_axis_family`, `reference_spacing`,
+  `tail_spacing`, and `nesting`;
+- preserve both `nesting = :pqs` and `nesting = :wl` as public construction
+  family choices;
+- preserve current H2 behavior and existing route provenance labels
+  (`:z_axis_diatomic_pqs_base`, and `:z_axis_diatomic_wl_base` only when the
+  WL diatomic terminal-record lane succeeds).
+
+The `nesting = :wl` path still depends on `HP-COMP-WLDIAT-FN-01` for native WL
+diatomic terminal records. This ID may allow validated non-H diatomic inputs to
+reach the same WL route path, but it must not implement terminal records,
+shellification, or route lowering outside `src/cartesian_base_hamiltonian.jl`.
+
+Forbidden:
+
+- driver changes;
+- source files outside `src/cartesian_base_hamiltonian.jl`;
+- supplement, Residual Gaussian, MWG/IDA, or artifact-manifest changes;
+- route skeleton, shellification, terminal lowering, raw-block, writer,
+  reader, public API/export, solver/ECP, diagnostics, status/report payload,
+  or Cr2-specific workflow changes;
+- element lookup/default tables or element-inferred electron counts;
+- heteronuclear, translated, non-z-axis, or general-geometry support;
+- committed tests or committed input fixtures.
+
+Failure rule: if non-H base diatomic construction requires route/shellification
+changes outside `src/cartesian_base_hamiltonian.jl`, make no source commit and
+report the exact blocker.
+
+Line budget: target under `60` added `src` lines.
+
+### HP-COMP-BASEDIAT-TEST-01 — base homonuclear z-axis diatomic validation
+
+Approved validation:
+
+- `git diff --check`;
+- package load;
+- H2 base artifact/readback unchanged for `nesting = :pqs`;
+- H2 base artifact/readback for `nesting = :wl` if the WL diatomic terminal
+  lane is implemented in the working tree; otherwise report the existing
+  `HP-COMP-WLDIAT-*` dependency;
+- one small explicit non-H homonuclear z-axis base artifact/readback,
+  preferably Be2 or N2 with bounded `q`, for `nesting = :pqs`;
+- the same small non-H base artifact/readback for `nesting = :wl` if runtime is
+  bounded and the WL diatomic terminal lane is implemented in the working tree;
+- clear rejection for heteronuclear symbols, unequal charges, non-neutral
+  electron count, and non-z-axis centers;
+- no Cr2 run.
+
+No committed test file, committed fixture, driver contract test, supplemented
+run, solver/RHF/ECP/EGOI validation, route-diagnostic validation, or Cr2
+fixture is approved.
+
 ### HP-FN-03 — blockwise one-body assembly
 
 Approved file:
@@ -3086,11 +3167,12 @@ This registry section is planning only except for the promoted
   atoms;
 - atom / no supplement / `:wl`: implemented for one-center base atoms;
 - atom / supplement / either nesting: not approved / not wired;
-- z-axis diatomic / no supplement / `:pqs`: H2 base works, with broader
-  generic base diatomic support still limited;
-- z-axis diatomic / no supplement / `:wl`: approved implementation lane under
-  `HP-COMP-WLDIAT-*`; native WL diatomic terminal records are not implemented
-  yet;
+- z-axis diatomic / no supplement / `:pqs`: H2 base works; explicit
+  homonuclear z-axis all-electron input relaxation is approved under
+  `HP-COMP-BASEDIAT-*`;
+- z-axis diatomic / no supplement / `:wl`: approved implementation lanes under
+  `HP-COMP-BASEDIAT-*` and `HP-COMP-WLDIAT-*`; native WL diatomic terminal
+  records are not implemented yet;
 - z-axis diatomic / supplement / `:pqs`: supported for explicit homonuclear
   z-axis diatomics through the residual-GTO/MWG path;
 - z-axis diatomic / supplement / `:wl`: blocked first by missing WL diatomic
@@ -3100,6 +3182,9 @@ Composition IDs:
 
 - `HP-COMP-WLDIAT-FN-01` / `HP-COMP-WLDIAT-TEST-01`: approved WL z-axis
   diatomic base terminal records and artifact path;
+- `HP-COMP-BASEDIAT-FN-01` / `HP-COMP-BASEDIAT-TEST-01`: approved base
+  homonuclear z-axis diatomic input validation relaxation in
+  `src/cartesian_base_hamiltonian.jl`;
 - `HP-COMP-SUPPATOM-FN-01` / `HP-COMP-SUPPATOM-TEST-01`: supplemented
   one-center atom path through common Residual Gaussian augmentation
   (candidate only);

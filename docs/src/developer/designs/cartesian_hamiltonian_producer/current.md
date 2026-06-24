@@ -289,6 +289,16 @@ Approved first composition lane:
 - no driver special cases, old WL H1/H1+J materialization, RG/MWG/supplement
   work, route diagnostics, public API/export changes, committed tests, or Cr2
   workflow is approved.
+- `HP-COMP-BASEDIAT-FN-01` separately approves only
+  `src/cartesian_base_hamiltonian.jl` to relax base two-center validation from
+  H2-only to explicit homonuclear z-axis all-electron diatomics;
+- the base diatomic relaxation requires equal symbols, equal finite positive
+  integer-valued charges, two finite distinct z-axis centers, and neutral
+  `nup + ndn == sum(charges)`;
+- it preserves both `nesting = :pqs` and `nesting = :wl`, but it does not
+  approve route/shellification/terminal-lowering changes, supplement/RG/MWG
+  work, driver changes, element tables, heteronuclear support, translated or
+  non-z-axis geometry, committed tests, or Cr2 workflow.
 
 Remaining candidate composition lanes:
 

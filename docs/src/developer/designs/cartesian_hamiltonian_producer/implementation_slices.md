@@ -907,7 +907,7 @@ Current implementation status:
 | --- | --- | --- | --- |
 | atom | off | implemented for explicit origin-centered base atoms | implemented for one-center base atoms |
 | atom | on | not approved / not wired | not approved / not wired |
-| z-axis diatomic | off | H2 base works; broader generic base diatomic support remains limited | approved implementation lane; native WL diatomic terminal records not implemented yet |
+| z-axis diatomic | off | H2 base works; explicit homonuclear z-axis all-electron input relaxation is approved | approved implementation lanes; base validation relaxation plus native WL diatomic terminal records not implemented yet |
 | z-axis diatomic | on | supported for explicit homonuclear z-axis diatomics through RG/MWG | blocked first by missing WL diatomic base terminal records |
 
 Dependency order:
@@ -915,9 +915,13 @@ Dependency order:
 1. WL z-axis diatomic base: approved under `HP-COMP-WLDIAT-FN-01`; produce
    native WL terminal records and the common `CartesianTerminalBasisRealization`
    for `supplement = off`.
-2. Supplemented atoms: candidate; use the same owner-local Residual Gaussian path as
+2. Base homonuclear z-axis diatomics: approved under
+   `HP-COMP-BASEDIAT-FN-01`; relax base two-center validation from H2-only to
+   explicit homonuclear z-axis all-electron diatomics in
+   `src/cartesian_base_hamiltonian.jl` only.
+3. Supplemented atoms: candidate; use the same owner-local Residual Gaussian path as
    supplemented diatomics, with one owner center as the simple case.
-3. Supplemented WL: candidate; after WL base terminal bases exist, prove RG
+4. Supplemented WL: candidate; after WL base terminal bases exist, prove RG
    augmentation is nesting-neutral at the terminal-basis boundary.
 
 Approved first lane:
@@ -940,6 +944,11 @@ Approved boundary:
 - line budget is at most `250` added `src` lines, with deletion or
   simplification of obsolete blocker-only WL diatomic guards expected where
   practical.
+
+Additional approved composition lane:
+
+- `HP-COMP-BASEDIAT-FN-01` / `HP-COMP-BASEDIAT-TEST-01` are approved for the
+  base homonuclear z-axis diatomic validation relaxation;
 
 Remaining candidate placeholder IDs:
 

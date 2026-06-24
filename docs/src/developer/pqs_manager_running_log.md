@@ -14702,3 +14702,56 @@ Line-count / complexity note:
 - not deleted because: the later supplemented WL rejection remains until a
   separate composition lane is approved.
 - exact remaining caller/blocker: no supplemented WL path is approved yet.
+
+## Cartesian Hamiltonian Producer Pass 138 - Approve Base Homonuclear Diatomic Relaxation
+
+Commit(s):
+- this commit - Approve base homonuclear diatomic relaxation
+
+Summary:
+- Approved `HP-COMP-BASEDIAT-FN-01` and `HP-COMP-BASEDIAT-TEST-01` as a
+  narrow base producer input-contract relaxation in
+  `src/cartesian_base_hamiltonian.jl` only. The source target is to relax the
+  two-center base branch from H2-only to explicit homonuclear z-axis
+  all-electron diatomics.
+- The approved contract requires equal symbols, equal finite positive
+  integer-valued nuclear charges, finite distinct z-axis centers, and neutral
+  `nup + ndn == sum(charges)`. Symbols remain labels only; charge and explicit
+  electron count remain authority. The basis contract is unchanged and both
+  `nesting = :pqs` and `nesting = :wl` remain visible construction choices.
+- The lane is explicitly not route/shellification authority. `nesting = :wl`
+  non-H diatomics still depend on `HP-COMP-WLDIAT-*` for native WL diatomic
+  terminal records.
+
+Validation:
+- Design-manager validation for this docs-only pass: read the compact
+  composition plan, R1 base provenance wording, current authority, registry,
+  implementation slices, and AGENTS; update docs/AGENTS/running log only; run
+  `git diff --check`, focused `rg` for `HP-COMP-BASEDIAT-*`, homonuclear
+  z-axis contract wording, forbidden element-table/driver/route/supplement
+  wording, and confirm no source, test, tool, or bin files changed. No
+  implementation tests are part of this approval pass; package load and
+  artifact/readback checks belong to `HP-COMP-BASEDIAT-TEST-01`.
+
+Goal advancement:
+- LT1/LT3: removes the artificial H2-only base diatomic contract without
+  changing the driver or adding element-specific defaults.
+- LT5/LT6: brings base mode closer to the supplemented homonuclear diatomic
+  contract while preserving the common geometry/terminal/Hamiltonian boundary.
+
+Carrying-cost result:
+- deleted: none; docs-only authority pass.
+- simplified: future source work has one exact one-file lane for base diatomic
+  validation instead of treating H2 as a permanent special case.
+- quarantined: driver changes, route skeleton/shellification/terminal-lowering
+  changes, raw blocks, supplement/RG/MWG work, artifact schema or reader
+  changes, element lookup/default tables, heteronuclear or translated/general
+  geometry support, committed tests, and Cr2 workflow remain unapproved.
+- not deleted because: source cleanup has not run yet.
+- exact remaining caller/blocker: if non-H base diatomics need route or
+  shellification changes outside `src/cartesian_base_hamiltonian.jl`, the
+  source pass must stop and report the exact blocker.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

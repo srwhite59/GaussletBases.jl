@@ -508,6 +508,8 @@ these approved design IDs:
 - `HP-NEST-ART-TEST-01`
 - `HP-COMP-WLDIAT-FN-01`
 - `HP-COMP-WLDIAT-TEST-01`
+- `HP-COMP-BASEDIAT-FN-01`
+- `HP-COMP-BASEDIAT-TEST-01`
 
 No other production surface may be added in this lane without a prior
 documentation-only design amendment. This includes new structs, persistent
@@ -1289,6 +1291,20 @@ RG/MWG/supplement work, add route diagnostics/status/report payloads, create a
 parallel Hamiltonian builder, add committed tests, or run Cr2. Line budget is
 at most 250 added `src` lines, with blocker-only guard cleanup expected where
 practical.
+
+`HP-COMP-BASEDIAT-FN-01` and `HP-COMP-BASEDIAT-TEST-01` approve only
+`src/cartesian_base_hamiltonian.jl` for relaxing the base two-center branch
+from H2-only to explicit homonuclear z-axis all-electron diatomics. The input
+contract must require equal symbols, equal finite positive integer-valued
+nuclear charges, two finite distinct z-axis centers, and neutral
+`nup + ndn == sum(charges)`. Symbols are labels only; charges and explicit
+electron counts are authority. The basis contract stays unchanged and both
+`nesting = :pqs` and `nesting = :wl` remain visible construction choices. This
+lane does not approve driver changes, route skeleton/shellification/terminal
+lowering changes, raw-block changes, supplement/RG/MWG changes, artifact
+schema or reader changes, public API/export changes, element lookup/default
+tables, heteronuclear or translated/general geometry support, committed tests,
+or Cr2 workflow. Target line budget is under 60 added `src` lines.
 
 `HP-WLTERM-FILE-01`, `HP-WLTERM-FN-01`, and `HP-WLTERM-WIRE-01` approve only
 the narrow White-Lindsey terminal-basis seam needed by `nesting = :wl`.

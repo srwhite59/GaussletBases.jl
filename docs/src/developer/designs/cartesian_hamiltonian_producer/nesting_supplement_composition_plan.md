@@ -51,7 +51,7 @@ they must not be hidden by driver defaults or mislabeled artifact provenance.
 | --- | --- | --- | --- |
 | atom | off | implemented for explicit origin-centered all-electron base atoms, with H as the committed endpoint | implemented for one-center base atoms through the WL terminal-basis seam |
 | atom | on | not approved / not wired | not approved / not wired |
-| z-axis diatomic | off | H2 base works; broader generic base diatomic support remains limited | approved implementation lane; native WL diatomic terminal records not implemented yet |
+| z-axis diatomic | off | H2 base works; explicit homonuclear z-axis all-electron input relaxation is approved | approved implementation lanes; base validation relaxation plus native WL diatomic terminal records not implemented yet |
 | z-axis diatomic | on | supported for explicit homonuclear z-axis diatomics through the residual-GTO/MWG path | blocked first by missing WL diatomic base terminal records |
 
 ## Common Boundary Rules
@@ -123,6 +123,39 @@ Forbidden in this lane:
 Line budget: at most `250` added `src` lines, with deletion or simplification
 of obsolete blocker-only WL diatomic guards expected where practical.
 
+### 1b. Base Homonuclear Z-Axis Diatomic Validation
+
+Status: approved for implementation under `HP-COMP-BASEDIAT-FN-01` and
+`HP-COMP-BASEDIAT-TEST-01`.
+
+Goal: relax the base producer's two-center validation from H2-only to explicit
+homonuclear z-axis all-electron diatomics, using the same public
+geometry/electron-count contract already used by the supplemented diatomic
+facade.
+
+Approved source file:
+
+```text
+src/cartesian_base_hamiltonian.jl
+```
+
+This lane keeps the basis contract unchanged and preserves both `nesting = :pqs`
+and `nesting = :wl`, but it does not approve route/shellification/terminal
+lowering changes. The WL path still depends on the separately approved
+`HP-COMP-WLDIAT-*` terminal-record lane.
+
+Forbidden in this lane:
+
+- driver changes;
+- supplement, Residual Gaussian, MWG/IDA, or artifact schema changes;
+- route skeleton, shellification, terminal lowering, raw-block, reader,
+  public API/export, solver/ECP, diagnostic/status/report, or Cr2-specific
+  workflow changes;
+- element lookup/default tables or inferred electron counts;
+- heteronuclear, translated, non-z-axis, or general-geometry support.
+
+Line budget: target under `60` added `src` lines.
+
 ### 2. Supplemented Atoms
 
 Candidate goal: make `geometry = atom`, `supplement = on` work through the same
@@ -146,12 +179,14 @@ base operators.
 ## Candidate IDs
 
 These IDs are placeholders for later docs-only amendments, except the
-`HP-COMP-WLDIAT-*` pair now approved above. Candidate IDs do not authorize
-implementation until promoted in `registry.md` with exact files, functions,
-validation, forbidden surfaces, and line budgets.
+`HP-COMP-WLDIAT-*` and `HP-COMP-BASEDIAT-*` pairs now approved above. Candidate
+IDs do not authorize implementation until promoted in `registry.md` with exact
+files, functions, validation, forbidden surfaces, and line budgets.
 
 - `HP-COMP-WLDIAT-FN-01` / `HP-COMP-WLDIAT-TEST-01`: approved WL z-axis
   diatomic base terminal-basis and artifact path.
+- `HP-COMP-BASEDIAT-FN-01` / `HP-COMP-BASEDIAT-TEST-01`: approved base
+  homonuclear z-axis diatomic validation relaxation.
 - `HP-COMP-SUPPATOM-FN-01` / `HP-COMP-SUPPATOM-TEST-01`: supplemented
   one-center atom path through common Residual Gaussian augmentation.
 - `HP-COMP-SUPPWL-FN-01` / `HP-COMP-SUPPWL-TEST-01`: supplemented
