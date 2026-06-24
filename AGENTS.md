@@ -442,6 +442,10 @@ these approved design IDs:
 - `HP-ROUTE-STAGE-TYPE-TEST-01`
 - `HP-ROUTE-STAGE-CARRIER-FN-01`
 - `HP-ROUTE-STAGE-CARRIER-TEST-01`
+- `HP-WLTERM-FILE-01`
+- `HP-WLTERM-FN-01`
+- `HP-WLTERM-WIRE-01`
+- `HP-WLTERM-TEST-01`
 - `HP-R3-OBJ-01`
 - `HP-R3-FN-01`
 - `HP-R3-FN-02`
@@ -1234,6 +1238,27 @@ already valid through the existing supported supplemented facade/staged path;
 new supplemented White-Lindsey behavior needs a separate docs-only amendment.
 `HP-DRV-NEST-TEST-01` approves default `:pqs` validation plus one small base
 artifact/readback path with `nesting = :wl`, and no Cr2 run.
+
+`HP-WLTERM-FILE-01`, `HP-WLTERM-FN-01`, and `HP-WLTERM-WIRE-01` approve only
+the narrow White-Lindsey terminal-basis seam needed by `nesting = :wl`.
+Approved files are `src/pqs_source_box_route_driver_helpers.jl`,
+`src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`,
+optional
+`src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl`,
+and the matching include in
+`src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl`.
+The goal is for the existing `:white_lindsey_low_order` route to produce the
+same `CartesianTerminalBasisRealization` consumed by the staged Hamiltonian
+path, using existing terminal support, retained-rule, and transform records.
+This does not approve old WL H1/H1+J materialization adaptation, route
+skeleton changes, shellification or retained-selection changes, raw-block
+changes, Residual Gaussian/MWG/IDA changes, supplemented WL behavior,
+diagnostics/status/report expansion, artifact schema changes, public API/export
+changes, or Cr2 workflow. `HP-WLTERM-TEST-01` approves default `:pqs`
+artifact/readback, `nesting = :wl` base atom artifact/readback, optional
+`nesting = :wl` base H2 artifact/readback only if current native records
+support it, H2 R3 PQS endpoint if terminal realization is touched, and no Cr2
+run.
 
 `HP-DRV-STAGE-FN-01` approves only a narrow non-exported, non-underscored
 driver-facing staged producer surface. Approved source files are

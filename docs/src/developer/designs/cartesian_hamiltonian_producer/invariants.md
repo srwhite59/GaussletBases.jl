@@ -110,6 +110,11 @@ The canonical RG algorithm contract is
   Hamiltonian builders, materialization paths, route-stage/report/status
   objects, or artifact shapes when the shared terminal-basis, one-body, IDA,
   Hamiltonian-construction, and writer machinery applies.
+- `nesting = :wl` must converge to the same terminal-basis downstream boundary
+  as `nesting = :pqs`: a `CartesianTerminalBasisRealization` with disjoint
+  owned terminal supports. White-Lindsey boundary-stratum realization must not
+  revive old WL H1/H1+J materialization, route reports, or route-stage
+  diagnostics.
 - R3/RG supplemented usability remains internal unless a later public/export
   amendment approves it.
 - The canonical Cartesian driver is an artifact-producing workflow over

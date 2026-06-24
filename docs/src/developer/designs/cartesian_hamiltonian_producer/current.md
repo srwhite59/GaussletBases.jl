@@ -33,6 +33,8 @@ Normal startup reading:
   driver inputs;
 - `r3_homonuclear_diatomic_supplemented_workflow.md` for the explicit
   homonuclear z-axis diatomic supplemented facade/driver relaxation;
+- `white_lindsey_terminal_basis_realization.md` for the narrow terminal-basis
+  seam required by the `nesting = :wl` construction family;
 - `cartesian_hamiltonian_artifact_manifest.md` for compact Hamiltonian
   artifact sidecar groups and recipe provenance;
 - `route_inventory_type_surface_cleanup.md` for the first route-inventory
@@ -237,6 +239,24 @@ Approved canonical driver usability lane:
   probes, artifact schema dumps, solver work, public API/export changes,
   artifact schema changes, supplemented atoms, old route-stage choreography,
   and Cr2-specific workflow remain unapproved in the canonical driver.
+
+Approved White-Lindsey terminal-basis seam:
+
+- `HP-WLTERM-FN-01` approves only terminal-basis realization for the existing
+  `:white_lindsey_low_order` route family, returning the same
+  `CartesianTerminalBasisRealization` consumed by the staged Hamiltonian path;
+- `HP-WLTERM-WIRE-01` approves only the route-helper seam that lets a WL route
+  with sufficient native terminal lowering/retained records produce that
+  terminal basis instead of being discarded by the PQS-only guard;
+- approved files are `src/pqs_source_box_route_driver_helpers.jl`,
+  `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`,
+  optional
+  `src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl`,
+  and the include in
+  `src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl`;
+- this is not approval to adapt the old WL H1/H1+J materialization path,
+  change route skeleton semantics, change shellification/retained-selection
+  behavior, add diagnostics, change artifacts, or add supplemented WL behavior.
 
 Approved R1 one-center base atom relaxation:
 

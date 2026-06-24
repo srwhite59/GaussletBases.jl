@@ -55,6 +55,8 @@ Agents should read first:
   for explicit origin-centered base atom driver inputs
 - [R3 homonuclear z-axis diatomic supplemented workflow](r3_homonuclear_diatomic_supplemented_workflow.md)
   for the explicit homonuclear diatomic molecule-scope relaxation
+- [White-Lindsey terminal basis realization](white_lindsey_terminal_basis_realization.md)
+  for the narrow terminal-basis seam needed by `nesting = :wl`
 - [Cartesian Hamiltonian artifact manifest](cartesian_hamiltonian_artifact_manifest.md)
   for compact JLD2 sidecar groups describing matrix-order basis rows and public
   recipe provenance, plus the narrow construction-native source-mode
@@ -125,6 +127,10 @@ Approved amendments:
   owners may be factored only to expose coarse product/moment, unit-nuclear,
   and electron-electron stage timings. This is not route-stage/report
   authority.
+- [White-Lindsey terminal basis realization](white_lindsey_terminal_basis_realization.md)
+  approves only the narrow seam that lets the existing
+  `:white_lindsey_low_order` route produce the same
+  `CartesianTerminalBasisRealization` consumed by the staged Hamiltonian path.
 - [Cartesian driver atom workflow](cartesian_driver_atom_workflow.md)
   approves only explicit origin-centered one-center base atom driver inputs
   through the existing base facade. Current validation remains the

@@ -140,6 +140,109 @@ It connects supported PQS terminal plans to
 transform records. It must serve one-center atomic, contact-core diatomic, and
 separated diatomic terminal plans through the same entry point.
 
+## Approved For White-Lindsey Terminal Basis Implementation
+
+This section approves only the narrow terminal-basis seam recorded in
+`white_lindsey_terminal_basis_realization.md`.
+
+### HP-WLTERM-FILE-01 — optional WL terminal realization file
+
+Approved source files:
+
+```text
+src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl
+src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl
+```
+
+This ID is optional. It approves creating a small WL-specific terminal
+realization sibling and adding its include to `CartesianFinalBasisRealization`
+only if extending `pqs_terminal_basis_realization.jl` directly would obscure
+the distinct WL boundary-stratum construction. No public export, root include,
+new module, new basis object, artifact, report, or status/payload object is
+approved.
+
+### HP-WLTERM-FN-01 — WL low-order terminal basis realization
+
+Approved source files:
+
+```text
+src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl
+src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl
+```
+
+Approved target: realize terminal final-basis blocks for the existing
+`:white_lindsey_low_order` route family and return the existing
+`CartesianTerminalBasisRealization`.
+
+Allowed behavior:
+
+- support direct identity terminal blocks on their authoritative owned rows;
+- realize WL boundary-stratum/product terminal blocks from existing native
+  terminal support, retained-rule, and transform records;
+- use only support-local coefficients on `support.support_indices` /
+  `support.support_states`;
+- preserve deterministic terminal support, lowering, retained-record, and
+  transform-contract order;
+- validate disjoint owned supports and block-local identity overlaps under the
+  same structural terminal-basis policy as PQS.
+
+This ID does not approve old WL H1/H1+J materialization adaptation, new
+Hamiltonian objects, new route-stage objects, route reports, status/result
+payloads, diagnostics, artifact/schema changes, public API/export changes,
+raw-block changes, Residual Gaussian/MWG/IDA changes, terminal
+shellification-policy changes, retained-selection-policy changes, route
+skeleton construction changes, or source files outside the approved surfaces.
+
+Failure rule: if WL boundary-stratum final basis cannot be materialized from
+existing terminal lowering, retained-unit, and transform records without
+broader route redesign, make no source commit and report the exact missing
+native fact.
+
+### HP-WLTERM-WIRE-01 — WL route helper terminal-basis wiring
+
+Approved source file:
+
+```text
+src/pqs_source_box_route_driver_helpers.jl
+```
+
+Approved behavior:
+
+- remove or narrow the PQS-only terminal-basis guard so
+  `route_family = :white_lindsey_low_order` can call the approved WL terminal
+  realizer when native terminal records are available;
+- keep `route_family = :pqs_source_box` behavior unchanged;
+- keep route skeleton construction semantics, route recipe semantics,
+  shellification behavior, terminal lowering order, retained-rule order,
+  public driver contract, and artifact schema unchanged;
+- reject or return a clear unsupported route error when the WL route lacks the
+  native facts required for terminal-basis realization.
+
+This ID does not approve adapting old WL materialization, broad route redesign,
+supplemented WL behavior, driver input changes, diagnostics/status/report
+expansion, raw-block switches, stop-after controls, or source files outside the
+approved route helper file.
+
+### HP-WLTERM-TEST-01 — WL terminal-basis validation
+
+Approved validation:
+
+- `git diff --check`;
+- package load;
+- current default `nesting = :pqs` atom or H2 base artifact/readback remains
+  unchanged;
+- `nesting = :wl` base atom artifact/readback;
+- `nesting = :wl` base H2 artifact/readback if the existing WL diatomic route
+  has sufficient native terminal records;
+- H2 residual-GTO/MWG PQS endpoint remains unchanged if terminal realization
+  code is touched;
+- clear unsupported-input/blocker report if WL H2 cannot be realized from
+  current native records.
+
+No Cr2 run, supplemented WL run, committed fixture, committed test file,
+solver/RHF/ECP/EGOI workflow, artifact schema validation, or broad WL workflow
+validation is approved.
+
 ### HP-FN-03 — blockwise one-body assembly
 
 Approved file:

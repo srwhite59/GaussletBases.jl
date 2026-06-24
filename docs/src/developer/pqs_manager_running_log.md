@@ -14284,3 +14284,58 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 133 - Approve WL Terminal Basis Seam
+
+Commit(s):
+- this commit - Approve White-Lindsey terminal basis realization
+
+Summary:
+- Approved `HP-WLTERM-FILE-01`, `HP-WLTERM-FN-01`,
+  `HP-WLTERM-WIRE-01`, and `HP-WLTERM-TEST-01` as the narrow source lane
+  exposed by the `nesting = :wl` WIP. The current driver/facade wiring can
+  reach `route_family = :white_lindsey_low_order`; the missing seam is that
+  `_pqs_source_box_route_driver_terminal_basis_realization(...)` deliberately
+  returns `nothing` for non-PQS routes.
+- The amendment approves only making the existing White-Lindsey low-order route
+  produce the same `CartesianTerminalBasisRealization` consumed by the staged
+  Hamiltonian path. It may realize direct blocks and WL
+  boundary-stratum/product blocks from existing terminal support, retained-rule,
+  and transform records. It does not approve adapting the old WL H1/H1+J
+  materialization path.
+
+Validation:
+- Design-manager validation: inspected the compact authority and the current
+  source seam showing the PQS-only guard plus existing WL lowering symbols;
+  updated only docs/AGENTS; ran `git diff --check` and focused `rg` for
+  `HP-WLTERM-*`, the approved source files, WL boundary-stratum wording, and
+  forbidden old-materialization wording. The working tree contained unstaged
+  source/bin WIP in `bin/cartesian_ham_builder.jl` and
+  `src/cartesian_base_hamiltonian.jl`; it was not staged or committed. No
+  implementation tests were run because this is docs-only approval.
+
+Goal advancement:
+- LT1/LT3: keeps PQS and White-Lindsey as construction families while forcing
+  both through the same terminal-basis/Hamiltonian downstream boundary.
+- RG/LT6: preserves supplemented PQS behavior and avoids cross-product
+  branching in the driver; WL supplemented behavior remains a separate design
+  decision.
+
+Carrying-cost result:
+- deleted: none; docs-only authority pass.
+- simplified: doer now has the exact missing seam to implement instead of
+  carrying a blocker-only driver WIP.
+- quarantined: route skeleton construction, shellification behavior,
+  retained-selection policy, old WL H1/H1+J materialization adaptation,
+  diagnostics/status/report expansion, raw-block changes, RG/MWG/IDA changes,
+  supplemented WL behavior, artifact schema changes, public API/export changes,
+  committed tests/fixtures, solver/ECP workflow, and Cr2 workflow remain
+  unapproved.
+- not deleted because: source realization has not run yet.
+- exact remaining caller/blocker: if WL boundary-stratum final basis cannot be
+  materialized from existing terminal lowering, retained-unit, and transform
+  records, implementation must stop and report the exact missing native fact.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

@@ -33,6 +33,59 @@ it is not a physical residual to compute or repair.
 Cross-block kinetic, nuclear-attraction, and IDA interactions may still be
 nonzero and remain assembled over terminal block pairs.
 
+### White-Lindsey Terminal Basis Seam
+
+Status: approved for implementation under `HP-WLTERM-FILE-01`,
+`HP-WLTERM-FN-01`, `HP-WLTERM-WIRE-01`, and `HP-WLTERM-TEST-01`.
+
+Approved boundary:
+
+- `src/pqs_source_box_route_driver_helpers.jl` for route-helper wiring;
+- `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
+  for direct extension of the existing terminal realizer;
+- optional
+  `src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl`
+  and its include in
+  `src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl` if
+  a small WL-specific sibling is clearer.
+
+Approved behavior:
+
+- let the existing `:white_lindsey_low_order` route produce the same
+  `CartesianTerminalBasisRealization` consumed by base one-body, IDA,
+  Hamiltonian assembly, artifact, and driver stages;
+- preserve PQS terminal realization behavior;
+- realize WL direct and boundary-stratum/product terminal blocks only from
+  existing terminal support, retained-rule, and transform records;
+- keep route skeleton semantics, terminal support order, shellification
+  behavior, retained-selection policy, public driver contract, and artifact
+  schema unchanged.
+
+Forbidden:
+
+- adapting the old WL H1/H1+J materialization path;
+- new route-stage object, report, status/result payload, diagnostic switch, or
+  public API/export;
+- raw-block, Residual Gaussian, MWG/IDA, Qiu-White, supplement, solver, ECP,
+  artifact schema, or Cr2 workflow changes.
+
+Validation gates:
+
+- `git diff --check`;
+- package load;
+- current default `nesting = :pqs` atom or H2 base artifact/readback;
+- `nesting = :wl` base atom artifact/readback;
+- `nesting = :wl` base H2 artifact/readback if current native records support
+  it;
+- H2 residual-GTO/MWG PQS endpoint if terminal realization code is touched;
+- no Cr2 run.
+
+Failure rule:
+
+- if WL boundary-stratum final basis cannot be materialized from existing
+  native terminal records without broader route redesign, stop and report the
+  exact missing fact.
+
 Validation gates used:
 
 - one-center atomic terminal basis through the shared entry point;
