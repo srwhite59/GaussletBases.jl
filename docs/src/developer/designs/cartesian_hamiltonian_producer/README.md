@@ -67,6 +67,8 @@ Agents should read first:
 - [Route/stage type-surface cleanup](route_stage_type_surface_cleanup.md)
   for the Be2 q5 compile-attributed route/stage compatibility-inventory
   cleanup lane
+- [Route/stage carrier cleanup](route_stage_carrier_cleanup.md)
+  for the post-cleanup route/stage carrier and plan-signature cleanup lane
 - [Algorithm implementation index](../../algorithm_implementation_index.md)
 
 Approved amendments:
@@ -152,6 +154,11 @@ Approved amendments:
   and `src/cartesian_terminal_shellification_geometry.jl`. It does not approve
   driver changes, artifact changes, numerical changes, route diagnostics, or
   precompile/sysimage work.
+- [Route/stage carrier cleanup](route_stage_carrier_cleanup.md)
+  approves a narrow follow-up cleanup of stage-carried shellification,
+  route-skeleton, support-plan, retained-rule-plan, and terminal-plan carriers
+  in the route helper and complete-core-shell path. It preserves driver,
+  artifact, route semantic, and numerical behavior.
 
 Candidate amendments:
 

@@ -13847,3 +13847,64 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 128 - Approve Route/Stage Carrier Cleanup
+
+Commit(s):
+- this commit - Approve route/stage carrier cleanup
+
+Summary:
+- Approved `HP-ROUTE-STAGE-CARRIER-FN-01` /
+  `HP-ROUTE-STAGE-CARRIER-TEST-01` as the follow-up compile-latency cleanup
+  lane after the post-cleanup attribution on `118a639b`.
+- The approved source files are
+  `src/pqs_source_box_route_driver_helpers.jl` and
+  `src/pqs_source_box_diatomic_complete_core_shell.jl`, with
+  `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
+  optional only where directly required to slim terminal realization plan
+  carriers in the approved path.
+- The approved targets are `cartesian_shells`, `cartesian_units`,
+  `cartesian_transforms`, terminal topology support-region planning, terminal
+  retained-rule planning, and directly required terminal realization plan
+  carriers.
+- The allowed action is to stop carrying giant shellification, route-skeleton,
+  support-plan, retained-rule-plan, and terminal-plan `NamedTuple` / tuple
+  shapes across approved stage signatures, replacing necessary facts with
+  compact typed/vector-backed carriers, smaller summaries, accessors, or local
+  recomputation from canonical objects.
+- Route skeleton construction semantics and
+  `src/pqs_source_box_route_driver_skeletons.jl` remain out of scope.
+
+Validation:
+- Design-manager validation only: docs-only `git diff --check`, focused `rg`
+  checks for `HP-ROUTE-STAGE-CARRIER-*`, approved files, approved targets,
+  route-skeleton guardrails, preservation rules, validation gates, forbidden
+  surfaces, and no `src`, `test`, `tools`, or `bin` changes. No implementation
+  tests were run.
+
+Goal advancement:
+- LT1/LT3: follows the current trace evidence by moving from the now-crossed
+  targeted compatibility-inventory cleanup to broader route/stage carrier
+  signatures still responsible for cold compile latency.
+- RG/LT6: keeps CR2/HF artifact usability focused on first-run route/stage
+  specialization without changing warm numerical construction, artifacts, or
+  driver behavior.
+
+Carrying-cost result:
+- deleted: none; docs-only authority pass.
+- simplified: doer now has one approved carrier cleanup lane with exact files,
+  optional terminal realization boundary, and a route-skeleton owner guardrail.
+- quarantined: `src/pqs_source_box_route_driver_skeletons.jl`, driver changes,
+  artifact/manifest changes, public API/export changes, numerical kernels, raw
+  blocks, RG/MWG/IDA semantics, route diagnostics/status/report expansion,
+  broad route-stage redesign, committed tests, PackageCompiler/PrecompileTools
+  sysimage work, and Cr2 workflow remain unapproved.
+- not deleted because: source cleanup has not run yet.
+- exact remaining caller/blocker: implementation must stop if cleanup requires
+  source files outside the approved boundary, broad route-stage redesign,
+  public API changes, artifact changes, numerical changes, or
+  precompile/sysimage machinery.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

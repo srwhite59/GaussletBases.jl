@@ -1296,6 +1296,101 @@ Failure rule:
   changes, or a precompile/sysimage mechanism, stop and report the exact
   blocker.
 
+## Route/Stage Carrier Cleanup
+
+Status: approved for implementation under `HP-ROUTE-STAGE-CARRIER-FN-01` and
+`HP-ROUTE-STAGE-CARRIER-TEST-01`.
+
+Evidence:
+
+- post-cleanup attribution on `118a639b` shows cold supplemented construction
+  remains dominated by route/stage type specialization, while warm
+  construction remains about `2 s`;
+- remaining top owners are broader stage signatures and plan carriers around
+  `cartesian_shells`, `cartesian_units`, `cartesian_transforms`, terminal
+  topology support-region planning, and terminal retained-rule planning.
+
+Approved boundary:
+
+- `src/pqs_source_box_route_driver_helpers.jl`;
+- `src/pqs_source_box_diatomic_complete_core_shell.jl`;
+- optional `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
+  only if directly required to slim terminal realization plan carriers in the
+  approved route/stage path.
+
+Approved targets:
+
+- `cartesian_shells` stage carrier and return signature;
+- `cartesian_units` stage carrier and return signature;
+- `cartesian_transforms` stage carrier and return signature;
+- terminal topology support-region planning;
+- terminal retained-rule planning;
+- terminal realization plan carriers only where directly required by the
+  approved path.
+
+Approved changes:
+
+- stop carrying giant shellification, route-skeleton, support-plan,
+  retained-rule-plan, and terminal-plan `NamedTuple` / tuple shapes across the
+  approved stage function signatures;
+- replace necessary carriers with compact typed/vector-backed records, stable
+  dictionaries, accessors, or smaller summaries;
+- recompute small derived summaries from canonical objects inside the approved
+  path when simpler than carrying wide stage payloads;
+- delete stale compatibility carriers with no active approved caller;
+- preserve deterministic terminal support, shellification, and lowering order.
+
+Required preservation:
+
+- H2 base artifact/readback behavior;
+- H2 supplemented artifact/readback behavior;
+- H2 R3 endpoint if terminal realization is touched;
+- deterministic terminal support/shellification/lowering order;
+- existing public driver contract;
+- existing artifact schema and manifest behavior;
+- existing route semantics and numerical matrices.
+
+Validation gates:
+
+- `git diff --check`;
+- package load;
+- H2 base artifact write/readback;
+- H2 supplemented artifact write/readback;
+- H2 R3 endpoint if terminal realization is touched;
+- focused terminal support/shellification/lowering order parity;
+- focused scan for newly introduced runtime-sized `NamedTuple{...}`,
+  `Tuple(...)`, `Tuple{Vararg{...}}`, and runtime-keyed inventories in the
+  approved files;
+- no Cr2 run.
+
+Optional after correctness passes:
+
+- Be2 q5 post-cleanup compile/timing comparison using the same explicit
+  p10-style supplemented driver fixture that produced the attribution.
+
+Forbidden:
+
+- source files outside the approved boundary, edits to
+  `src/pqs_source_box_route_driver_skeletons.jl`, driver changes, artifact
+  schema or manifest changes, public API/export changes, numerical kernel
+  changes, matrix value changes, raw-block changes, Residual Gaussian, MWG, IDA
+  semantic changes, route semantic changes, shellification behavior changes,
+  route diagnostic/status/report expansion, broad route-stage redesign, new
+  public contracts, PackageCompiler, PrecompileTools, sysimage or precompile
+  workload work, new committed tests, Cr2 runs, or Cr2-specific workflow.
+
+Line budget:
+
+- at most `250` added `src` lines, with net simplification expected;
+- no new committed test, tool, benchmark, precompile workload, or input-fixture
+  file.
+
+Failure rule:
+
+- if cleanup requires source files outside the approved boundary, broad
+  route-stage redesign, public API changes, artifact changes, numerical
+  changes, or precompile/sysimage machinery, stop and report the exact blocker.
+
 ## Homonuclear Z-Axis Diatomic Supplemented Workflow
 
 Status: approved for implementation under `HP-R3U-ZDI-FN-01`,

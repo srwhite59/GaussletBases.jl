@@ -41,6 +41,8 @@ Normal startup reading:
   transform contract-plan vector cleanup;
 - `route_stage_type_surface_cleanup.md` for Be2 q5 compile-attributed
   route/stage compatibility-inventory cleanup;
+- `route_stage_carrier_cleanup.md` for the post-cleanup route/stage carrier
+  and plan-signature cleanup lane;
 - `docs/src/developer/algorithm_implementation_index.md` for existing kernels
   and donor paths.
 
@@ -323,6 +325,34 @@ Approved route/stage type-surface cleanup:
 - H2 base/supplemented artifact behavior, terminal shellification/lowering
   order, artifact/manifest schema, public driver contract, route semantics, and
   numerical matrices must remain unchanged;
+- driver changes, artifact/manifest changes, numerical/raw-block/RG/MWG/IDA
+  changes, route diagnostic/status/report expansion, committed tests,
+  PackageCompiler/PrecompileTools/sysimage work, and Cr2 workflow remain
+  unapproved.
+
+Approved route/stage carrier cleanup:
+
+- `HP-ROUTE-STAGE-CARRIER-FN-01` approves only
+  `src/pqs_source_box_route_driver_helpers.jl` and
+  `src/pqs_source_box_diatomic_complete_core_shell.jl`, with
+  `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
+  optional only where directly required to slim terminal realization plan
+  carriers in the approved path;
+- approved targets are broad stage signatures and plan carriers around
+  `cartesian_shells`, `cartesian_units`, `cartesian_transforms`, terminal
+  topology support-region planning, terminal retained-rule planning, and
+  directly required terminal realization plan carriers;
+- giant shellification, route-skeleton, support-plan, retained-rule-plan, and
+  terminal-plan `NamedTuple` / tuple shapes may stop crossing stage function
+  signatures; necessary facts should move to compact typed/vector-backed
+  carriers, smaller summaries, accessors, or local recomputation from canonical
+  objects;
+- route skeleton construction semantics and
+  `src/pqs_source_box_route_driver_skeletons.jl` remain out of scope;
+- H2 base/supplemented artifact behavior, H2 R3 endpoint if touched,
+  terminal support/shellification/lowering order, public driver contract,
+  artifact/manifest schema, route semantics, and numerical matrices must remain
+  unchanged;
 - driver changes, artifact/manifest changes, numerical/raw-block/RG/MWG/IDA
   changes, route diagnostic/status/report expansion, committed tests,
   PackageCompiler/PrecompileTools/sysimage work, and Cr2 workflow remain

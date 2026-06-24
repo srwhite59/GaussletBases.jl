@@ -440,6 +440,8 @@ these approved design IDs:
 - `HP-CONTRACT-VEC-TEST-01`
 - `HP-ROUTE-STAGE-TYPE-FN-01`
 - `HP-ROUTE-STAGE-TYPE-TEST-01`
+- `HP-ROUTE-STAGE-CARRIER-FN-01`
+- `HP-ROUTE-STAGE-CARRIER-TEST-01`
 - `HP-R3-OBJ-01`
 - `HP-R3-FN-01`
 - `HP-R3-FN-02`
@@ -668,6 +670,31 @@ does not approve driver changes, artifact/manifest changes, public API/export
 changes, numerical/raw-block/RG/MWG/IDA changes, route diagnostic/status/report
 expansion, committed tests, PackageCompiler/PrecompileTools/sysimage work, or
 Cr2 workflow.
+
+`HP-ROUTE-STAGE-CARRIER-FN-01` approves only post-cleanup route/stage carrier
+cleanup in `src/pqs_source_box_route_driver_helpers.jl` and
+`src/pqs_source_box_diatomic_complete_core_shell.jl`, with
+`src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
+optional only where directly required to slim terminal realization plan
+carriers in the approved path. Approved targets are `cartesian_shells`,
+`cartesian_units`, `cartesian_transforms`, terminal topology support-region
+planning, terminal retained-rule planning, and directly required terminal
+realization plan carriers. Giant shellification, route-skeleton, support-plan,
+retained-rule-plan, and terminal-plan `NamedTuple` / tuple shapes may stop
+crossing approved stage signatures; necessary facts should move to compact
+typed/vector-backed carriers, smaller summaries, accessors, or local
+recomputation from canonical objects. Route skeleton construction semantics and
+`src/pqs_source_box_route_driver_skeletons.jl` remain out of scope.
+`HP-ROUTE-STAGE-CARRIER-TEST-01` approves only `git diff --check`, package
+load, H2 base and supplemented artifact/readback, H2 R3 endpoint if terminal
+realization is touched, focused terminal support/shellification/lowering order
+parity, focused scan for newly introduced runtime-sized `NamedTuple`/`Tuple`
+inventories in the approved files, optional Be2 q5 post-cleanup compile/timing
+comparison after correctness passes, and no Cr2 run. This lane does not
+approve driver changes, artifact/manifest changes, public API/export changes,
+numerical/raw-block/RG/MWG/IDA changes, route diagnostic/status/report
+expansion, broad route-stage redesign, committed tests,
+PackageCompiler/PrecompileTools/sysimage work, or Cr2 workflow.
 
 R3/RG current source authority is compact by design. Read
 `docs/src/developer/designs/cartesian_hamiltonian_producer/residual_gaussian_domain_module.md`
