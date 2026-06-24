@@ -15496,3 +15496,47 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 151 - Add Gausslet Algorithm Refresher
+
+Commit(s):
+- this commit - Add Gausslet algorithm refresher
+
+Summary:
+- Added `docs/src/developer/architecture/gausslet_algorithm_refresher.md` as a
+  concise agent-facing memory-refresh note. It is explicitly not design
+  authority and does not approve implementation surfaces.
+- The refresher summarizes operational distinctions among Qiu-White,
+  White-Lindsey, and PQS; the WL boundary-stratum coefficient-map rule; PQS
+  source-box and terminal-realization guardrails; direct/core identity sectors;
+  COMX, PGDG, IDA, MWG, GTO supplementation, and current core-spacing naming.
+- Linked the refresher from the developer index, hidden docs navigation, and
+  `AGENTS.md` as the short operational memory document before deeper
+  paper-centered fundamentals.
+
+Validation:
+- Docs-only pass: `git diff --check`; focused scan for the new refresher link
+  and key category-mistake terms; confirm no staged `src`, `bin`, `test`,
+  `tests`, or `tools` files. Local docs build should be run because the page is
+  linked into the rendered docs.
+
+Goal advancement:
+- LT1/LT3: reduces recurrence of WL/PQS category mistakes by giving agents a
+  short operational reminder before implementation work.
+- LT5/LT6: lowers cognitive load without restoring old route-global
+  scaffolding or adding new design authority.
+
+Carrying-cost result:
+- deleted: none; docs-only refresher.
+- simplified: startup reading now has a compact first stop before the long
+  fundamentals packet and design registry.
+- quarantined: no new source surfaces, tests, tools, public API, artifact
+  schema, or design IDs.
+- not deleted because: this is a memory/refresher document, not a source
+  cleanup.
+- exact remaining caller/blocker: if future source handoffs need algorithm
+  authority, they still must cite the compact design registry and approved IDs.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

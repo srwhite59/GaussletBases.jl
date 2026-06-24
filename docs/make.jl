@@ -54,6 +54,7 @@ makedocs(
         hide("Export layer" => "reference/export.md"),
         hide("Architecture and current direction" => "developer/architecture.md"),
         hide("Gausslet methods fundamentals" => "developer/architecture/gausslet_methods_fundamentals.md"),
+        hide("Gausslet algorithm refresher" => "developer/architecture/gausslet_algorithm_refresher.md"),
         hide("Cartesian route migration" => "developer/cartesian/route_migration.md"),
         hide("Cartesian feature donor inventory" => "developer/cartesian/feature_donor_inventory.md"),
         hide("PQS thin route demolition history" => "developer/archive/pqs_thin_route_demolition_history.md"),
