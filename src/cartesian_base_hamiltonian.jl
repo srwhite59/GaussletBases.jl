@@ -587,7 +587,7 @@ function _cartesian_base_terminal_basis(base)
 end
 
 function cartesian_base_working_basis(system::NamedTuple; basis::NamedTuple, supplemented::Bool = false)
-    input = supplemented ? _cartesian_r3_diatomic_inputs(system, basis) :
+    input = supplemented ? _cartesian_supplemented_inputs(system, basis) :
         _cartesian_base_inputs(system, basis)
     parent, transforms = _cartesian_base_stages(input)
     source_mode_provenance = _cartesian_source_mode_provenance(transforms)
@@ -648,6 +648,12 @@ function _cartesian_r3_diatomic_inputs(system::NamedTuple, basis::NamedTuple)
     locations[1][3] != locations[2][3] ||
         throw(ArgumentError("diatomic centers must be distinct"))
     return merge(base, (; kind = :h2), basis_parts)
+end
+
+function _cartesian_supplemented_inputs(system::NamedTuple, basis::NamedTuple)
+    base = _cartesian_base_system_parts(system)
+    length(base.symbols) == 1 && return _cartesian_base_inputs(system, basis)
+    return _cartesian_r3_diatomic_inputs(system, basis)
 end
 
 function _cartesian_r3_supplement_inputs(input, supplement::NamedTuple)
@@ -724,12 +730,21 @@ end
 function cartesian_residual_gto_supplement_basis(base, supplement::NamedTuple)
     input = base.input
     supplement_input = _cartesian_r3_supplement_inputs(input, supplement)
-    raw_supplement = legacy_bond_aligned_diatomic_gaussian_supplement(
-        first(input.symbols), first(supplement_input.basis_by_center), input.locations;
-        lmax = supplement_input.lmax,
-        basisfile = supplement_input.basisfile,
-        uncontracted = supplement_input.uncontracted,
-        max_width = supplement_input.max_width)
+    raw_supplement = if length(input.symbols) == 1
+        legacy_atomic_gaussian_supplement(
+            first(input.symbols), first(supplement_input.basis_by_center);
+            lmax = supplement_input.lmax,
+            basisfile = supplement_input.basisfile,
+            uncontracted = supplement_input.uncontracted,
+            max_width = supplement_input.max_width)
+    else
+        legacy_bond_aligned_diatomic_gaussian_supplement(
+            first(input.symbols), first(supplement_input.basis_by_center), input.locations;
+            lmax = supplement_input.lmax,
+            basisfile = supplement_input.basisfile,
+            uncontracted = supplement_input.uncontracted,
+            max_width = supplement_input.max_width)
+    end
     return (; input = supplement_input, basis = basis_representation(raw_supplement))
 end
 

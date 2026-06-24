@@ -14927,6 +14927,66 @@ Carrying-cost result:
 - new tests: none.
 - new metadata/status fields: none.
 
+## Cartesian Hamiltonian Producer Pass 142 - Supplemented Atom Composition
+
+Commit(s):
+- this commit - Enable supplemented atom composition
+
+Summary:
+- Accepted the `HP-COMP-SUPPATOM-FN-01` source pass. The canonical driver no
+  longer rejects `basisname !== nothing` for `Natom = 1`, and the producer now
+  selects supplemented input validation by center count: one-center systems use
+  the existing base atom validator, while two-center systems keep the existing
+  supplemented homonuclear diatomic validator.
+- `cartesian_residual_gto_supplement_basis(...)` now loads atomic supplements
+  with `legacy_atomic_gaussian_supplement(...)` for one center and preserves
+  `legacy_bond_aligned_diatomic_gaussian_supplement(...)` for two centers. No
+  atom-only Hamiltonian builder or materialization path was added.
+
+Validation:
+- Doer: `git diff --check`; package load; base H atom artifact/readback; H
+  atom supplemented artifact/readback for `nesting = :pqs` and `nesting = :wl`;
+  bounded Be atom supplemented WL artifact/readback; H2 supplemented PQS and
+  WL smokes; translated atom rejection; supplement basis-count mismatch
+  rejection. No Cr2 run.
+- Manager: inspected the source/bin diff; `git diff --check`;
+  `git diff --numstat -- src bin tools test docs`; suspicious added-line scan;
+  new tests/tools scan. No suspicious hits and no new committed tests/tools.
+
+Goal advancement:
+- LT1/LT3: fills the remaining `geometry = atom`, `supplement = on`
+  composition cell without a special atom Hamiltonian path.
+- LT5/LT6: confirms the intended product of public choices: geometry,
+  nesting, and supplement now compose through the same staged producer
+  boundaries for the approved atom and homonuclear z-axis diatomic geometries.
+
+Medium-goal checkpoint:
+- Completed: the 2 x 2 x 2 composition target is source-functional for
+  origin-centered atoms and homonuclear z-axis diatomics, `nesting = :pqs` and
+  `:wl`, supplement off/on.
+- Active next: CR2-facing usability and performance should now use the
+  canonical driver rather than requesting molecule-specific branches. Any
+  remaining difficulty should be reported as producer friction, artifact
+  provenance friction, or solver/consumer friction, not patched into the
+  driver by default.
+
+Carrying-cost result:
+- deleted: obsolete driver diatomic-only supplemented guard.
+- simplified: supplemented input selection shares atom/base and diatomic/R3
+  validators; supplement loading is keyed by validated center count.
+- quarantined: route changes, terminal lowering, raw blocks, residual
+  selection, MWG/IDA conventions, artifact schema, reader/API, solver/ECP,
+  translated atoms, heteronuclear/general geometry, and Cr2 workflow remain out
+  of scope.
+- not deleted because: the diatomic supplement loader remains the active
+  two-center path.
+- exact remaining caller/blocker: none found for bounded supplemented
+  one-center atoms.
+- added src/bin lines: 22.
+- deleted src/bin lines: 8.
+- new tests: none.
+- new metadata/status fields: none.
+
 ## Cartesian Hamiltonian Producer Pass 142 - Approve Supplemented Atom Lane
 
 Commit(s):

@@ -88,7 +88,6 @@ isempty(hamfile_value) && throw(ArgumentError("hamfile must not be empty"))
 supplemented = !isnothing(vars[:basisname])
 supplement = nothing
 if supplemented
-    N == 2 || throw(ArgumentError("supplemented calculation supports diatomics only"))
     width_filtering = isnothing(vars[:supplement_width_max]) ? nothing : (; max_width = vars[:supplement_width_max])
     supplement = (; basis_by_center = fill(String(vars[:basisname]), N), lmax = vars[:lmax], uncontracted = vars[:uncontracted], width_filtering, basisfile = vars[:basisfile])
 end
