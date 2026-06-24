@@ -736,6 +736,77 @@ No committed test file, committed fixture, driver contract test,
 solver/RHF/ECP/EGOI validation, route-diagnostic validation, or Cr2 fixture is
 approved.
 
+## Approved Contract Lane: WL Diatomic `ns` Early Rejection
+
+This section approves a narrow cleanup of the public `ns` contract for
+White-Lindsey z-axis diatomics. Current `nesting = :wl`, `Natom = 2`,
+`ns = 3` normalizes to route-local `q = 1` and `core_cube_side = 1`, then
+fails later in terminal shellification because a complete-shell inner box
+cannot be formed. That input should be rejected early as unsupported WL
+diatomic input, not discovered after route construction.
+
+The same audit showed that working WL diatomic `ns` ranges may change
+route-local `q`, shellification block decomposition, and final row order
+without changing the retained support set over a fixed physical parent extent.
+That is retained-support saturation, not ignored public input.
+
+### HP-COMP-WLNS-FN-01 — WL diatomic `ns` contract cleanup
+
+Approved source file:
+
+```text
+src/cartesian_base_hamiltonian.jl
+```
+
+Approved behavior:
+
+- for homonuclear z-axis diatomics with `nesting = :wl`, reject normalized
+  `ns < 4` early with a clear `ArgumentError`;
+- preserve current public size normalization:
+  - `nesting = :pqs`: route-local `q = ns`;
+  - `nesting = :wl`: route-local `q = ns - 2`;
+- preserve all working cells in the current composition matrix: atom and
+  z-axis diatomic geometry, base and supplemented mode, and `nesting = :pqs`
+  / `:wl`;
+- document and preserve the fact that WL diatomic retained support may
+  saturate over `ns` ranges when the physical parent extent dominates; the
+  same public `ns` value is not a fair PQS/WL basis-size comparison.
+
+Forbidden:
+
+- driver public-input changes, layout/comment/stage/timing changes, or
+  compatibility aliases;
+- route skeleton, shellification, terminal lowering, retained-unit,
+  terminal-basis, raw-block, Residual Gaussian, MWG/IDA, artifact schema,
+  writer, reader, public API/export, solver/ECP, diagnostics, report/status
+  payload, or Cr2-specific workflow changes;
+- attempts to "fix" WL `ns = 4:7` retained-support saturation in this lane;
+- committed tests or committed input fixtures.
+
+Failure rule: if early WL diatomic `ns` rejection cannot be implemented in
+`src/cartesian_base_hamiltonian.jl` without touching driver, shellification,
+terminal lowering, route semantics, or artifact schema, make no source commit
+and report the exact blocker.
+
+Line budget: target under `60` added `src` lines.
+
+### HP-COMP-WLNS-TEST-01 — WL diatomic `ns` validation
+
+Approved validation:
+
+- `git diff --check`;
+- package load;
+- WL Be2 or H2 z-axis diatomic with `ns = 3` rejects early;
+- WL z-axis diatomic `ns = 4` base artifact/readback still passes;
+- WL z-axis diatomic supplemented smoke still passes where that composition
+  cell is already implemented and bounded;
+- PQS atom and z-axis diatomic smoke still pass;
+- no Cr2 run.
+
+No committed test file, committed fixture, driver contract test,
+solver/RHF/ECP/EGOI validation, route-diagnostic validation, or Cr2 fixture is
+approved.
+
 ### HP-FN-03 — blockwise one-body assembly
 
 Approved file:
@@ -3492,7 +3563,7 @@ supplement: off | on
 
 This registry section is planning only except for the promoted
 `HP-COMP-WLDIAT-*`, `HP-COMP-BASEDIAT-*`, `HP-COMP-SUPPWL-*`,
-`HP-COMP-SUPPATOM-*`, and `HP-COMP-ATOMBOX-*` pairs above.
+`HP-COMP-SUPPATOM-*`, `HP-COMP-ATOMBOX-*`, and `HP-COMP-WLNS-*` pairs above.
 Current support remains partial:
 
 - atom / no supplement / `:pqs`: implemented for explicit origin-centered base
@@ -3509,6 +3580,10 @@ Current support remains partial:
   z-axis diatomics through the same residual-GTO/MWG boundary after WL terminal
   realization.
 
+For `nesting = :wl` z-axis diatomics, `HP-COMP-WLNS-*` additionally approves
+early rejection of normalized `ns < 4` and records that final retained support
+may saturate across working `ns` ranges.
+
 Composition IDs:
 
 - `HP-COMP-WLDIAT-FN-01` / `HP-COMP-WLDIAT-TEST-01`: approved WL z-axis
@@ -3520,7 +3595,9 @@ Composition IDs:
   White-Lindsey z-axis diatomic composition through the existing RG/MWG
   boundary;
 - `HP-COMP-SUPPATOM-FN-01` / `HP-COMP-SUPPATOM-TEST-01`: supplemented
-  one-center atom path through common Residual Gaussian augmentation.
+  one-center atom path through common Residual Gaussian augmentation;
+- `HP-COMP-WLNS-FN-01` / `HP-COMP-WLNS-TEST-01`: WL z-axis diatomic `ns`
+  early rejection and retained-support saturation wording.
 
 The initial explicit `atom | z-axis diatomic`, `:pqs | :wl`,
 `supplement = off | on` composition lanes now all have approved implementation

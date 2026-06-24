@@ -79,6 +79,11 @@ Implemented base path:
   durable user-facing cube/source/nesting size, while route-local `q` is
   derived as `q = ns` for `nesting = :pqs` or `q = ns - 2` for
   `nesting = :wl`.
+- `HP-COMP-WLNS-*` approves the narrow WL z-axis diatomic `ns` contract
+  cleanup: normalized `nesting = :wl`, `Natom = 2`, `ns < 4` should reject
+  early in `src/cartesian_base_hamiltonian.jl`, and WL diatomic retained
+  support may saturate across `ns` ranges when physical parent extent
+  dominates.
 
 Implemented Residual Gaussian path:
 

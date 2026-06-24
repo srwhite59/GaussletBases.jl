@@ -15297,3 +15297,57 @@ Carrying-cost result:
 - deleted src lines: 2.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 147 - Approve WL Diatomic `ns` Cleanup
+
+Commit(s):
+- this commit - Approve WL diatomic ns contract cleanup
+
+Summary:
+- Approved `HP-COMP-WLNS-FN-01` and `HP-COMP-WLNS-TEST-01` as a narrow
+  White-Lindsey z-axis diatomic `ns` contract cleanup. The read-only audit
+  showed that public `nesting = :wl`, `Natom = 2`, `ns = 3` normalizes to
+  route-local `q = 1` and `core_cube_side = 1`, then fails in terminal
+  shellification with `complete-shell inner box must be a filled CPB`.
+  Future source work should reject this input early in
+  `src/cartesian_base_hamiltonian.jl`.
+- The same audit showed that working WL diatomic `ns` values can saturate the
+  retained support when physical parent extent dominates. For the CR2-shape
+  Be2 stage probe, `ns = 4:7` all retained the same 6075 support points; `4/5`
+  shared row order and `6/7` shared row order, while `4` versus `6` changed
+  block decomposition/order. That is not ignored input and should not be
+  "fixed" in this lane.
+
+Validation:
+- Doer audit evidence: `git diff --check`; package load; ignored probes
+  `tmp/work/wl_diatomic_ns_response_audit.jl` and
+  `tmp/work/wl_diatomic_ns_response_cr2_shape_audit.jl`; no Cr2 run.
+- Docs-only amendment validation: update only docs; run `git diff --check`;
+  focused scans for `HP-COMP-WLNS-*`, WL diatomic `ns < 4`, and retained
+  support saturation wording; confirm no source, bin, test, tool, or artifact
+  files changed.
+
+Goal advancement:
+- LT1/LT3: moves an unsupported public input from a late route-internal
+  failure to a clear producer input contract.
+- LT5/LT6: clarifies that equal public `ns` is not a complete PQS/WL
+  retained-basis comparison and prevents a false optimization lane around
+  legitimate WL support saturation.
+
+Carrying-cost result:
+- deleted: none; docs-only authority pass.
+- simplified: future source work has one precise early-rejection lane instead
+  of treating `ns = 3` as a terminal-basis or shellification bug.
+- quarantined: driver changes, route skeleton/shellification/terminal-lowering
+  changes, retained-unit changes, terminal-basis changes, raw blocks,
+  RG/MWG/IDA changes, artifact schema or reader changes, public API/export,
+  diagnostics/report/status payloads, committed tests, and Cr2 workflow remain
+  unapproved.
+- not deleted because: source cleanup has not run yet.
+- exact remaining caller/blocker: if early WL diatomic `ns` rejection requires
+  anything outside `src/cartesian_base_hamiltonian.jl`, the source pass must
+  stop and report the exact boundary.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

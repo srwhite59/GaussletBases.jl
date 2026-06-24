@@ -190,6 +190,14 @@ examples, copied project templates, `print_contract`, and `check_file` output
 should prefer `ns`. If both fields are present they must agree under the
 selected `nesting`; otherwise the producer must throw `ArgumentError`.
 
+For z-axis diatomics with `nesting = :wl`, normalized `ns < 4` is not a
+supported construction point: it produces route-local `q = 1` and cannot form
+the complete-shell inner box required by the WL terminal shellification path.
+`HP-COMP-WLNS-*` approves rejecting that input early in the producer. For
+working WL diatomics, equal public `ns` should not be presented as an exact
+PQS/WL basis-size comparison, because WL retained support may saturate over
+`ns` ranges when the physical parent extent dominates.
+
 The driver may print the public contract when `print_contract = true`. The
 printed contract is limited to the public `system`, `basis`, optional
 `supplement`, `hamfile`, and run-level hooks. It must not print route-stage

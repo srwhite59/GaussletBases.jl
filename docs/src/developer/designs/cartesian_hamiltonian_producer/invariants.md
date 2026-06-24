@@ -124,6 +124,12 @@ The canonical RG algorithm contract is
   Route-local `q` is derived only after selecting `nesting`: `q = ns` for PQS
   and `q = ns - 2` for White-Lindsey. Do not treat `q` as the common public
   cube-size field, direct parent side-count rule, or physical box extent.
+- White-Lindsey z-axis diatomics with normalized `ns < 4` are unsupported and
+  should reject before route construction. Working WL diatomic `ns` ranges may
+  saturate the final retained support when physical parent extent dominates;
+  this is not an input-ignored bug and must not be "fixed" by changing
+  shellification, terminal lowering, or driver semantics without separate
+  authority.
 - `nesting = :wl` must converge to the same terminal-basis downstream boundary
   as `nesting = :pqs`: a `CartesianTerminalBasisRealization` with disjoint
   owned terminal supports. White-Lindsey boundary-stratum realization must not

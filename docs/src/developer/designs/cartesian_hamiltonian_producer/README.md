@@ -36,7 +36,10 @@ The one-center atom parent-sizing correction is approved under
 authority. Public size-parameter normalization is approved under
 `HP-COMP-NS-*`: user-facing input should name `ns` as the requested
 cube/source/nesting size, while route-local `q` is derived from `ns` and
-`nesting`.
+`nesting`. WL z-axis diatomic `ns` cleanup is approved under
+`HP-COMP-WLNS-*`: `nesting = :wl`, `Natom = 2`, and normalized `ns < 4`
+should reject early, while working WL diatomic `ns` ranges may saturate the
+final retained support when the physical parent extent dominates.
 
 Agents should read first:
 
@@ -160,7 +163,9 @@ Approved amendments:
   `HP-COMP-WLDIAT-*`, and the base homonuclear z-axis diatomic validation
   relaxation is approved under `HP-COMP-BASEDIAT-*`. Supplemented WL z-axis
   diatomics are approved under `HP-COMP-SUPPWL-*`; supplemented one-center
-  atoms are approved under `HP-COMP-SUPPATOM-*`.
+  atoms are approved under `HP-COMP-SUPPATOM-*`. WL diatomic `ns` early
+  rejection and retained-support saturation wording are approved under
+  `HP-COMP-WLNS-*`.
 - [Cartesian Hamiltonian artifact manifest](cartesian_hamiltonian_artifact_manifest.md)
   approves only compact JLD2 sidecar groups for matrix-order basis labels and
   uniform recipe provenance, and separately approves a compact source-mode

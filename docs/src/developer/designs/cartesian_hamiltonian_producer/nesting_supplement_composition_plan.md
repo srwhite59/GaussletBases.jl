@@ -73,6 +73,15 @@ they must not be hidden by driver defaults or mislabeled artifact provenance.
 - Public `ns` is the shared source/cube/nesting size input across composition
   cells. Route-local `q` is derived from `ns` and `nesting`, so the driver does
   not expose different cube-size meanings for PQS and White-Lindsey.
+- White-Lindsey z-axis diatomics require enough public `ns` to form the
+  complete-shell inner box used by the WL terminal shellification path.
+  `HP-COMP-WLNS-*` approves early rejection of normalized `nesting = :wl`,
+  `Natom = 2`, `ns < 4` in the base producer.
+- WL diatomic retained support may saturate across `ns` ranges when the
+  physical parent extent dominates. A changed public `ns` may still change
+  route-local `q`, block decomposition, and row order without changing the
+  final retained support set, so equal public `ns` is not by itself a fair
+  PQS/WL retained-basis comparison.
 - The canonical driver remains compact and copyable. It can print public
   contracts and coarse physics-stage timings, but it must not grow stop-after
   controls, raw-provider switches, route diagnostics, allocation probes, or
@@ -234,6 +243,8 @@ Approved composition IDs authorize only the exact lanes named above.
   one-center atom path through common Residual Gaussian augmentation.
 - `HP-COMP-SUPPWL-FN-01` / `HP-COMP-SUPPWL-TEST-01`: supplemented
   White-Lindsey z-axis diatomic path through the common RG boundary.
+- `HP-COMP-WLNS-FN-01` / `HP-COMP-WLNS-TEST-01`: WL z-axis diatomic `ns`
+  early rejection and retained-support saturation wording.
 
 The initial explicit `atom | z-axis diatomic`, `:pqs | :wl`,
 `supplement = off | on` composition lanes now all have approved implementation
