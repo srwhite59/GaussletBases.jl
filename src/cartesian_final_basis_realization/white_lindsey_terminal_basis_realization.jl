@@ -68,7 +68,7 @@ function _wl_boundary_stratum_block(unit, bundles)
         throw(ArgumentError("White-Lindsey boundary retained count must be positive"))
     side(axis) = ParentGaussletBases._nested_doside_1d(
         _nested_axis_pgdg(bundles, axis), intervals[_wl_axis_index(axis)], Int(q);
-        enforce_symmetric_odd = true)
+        enforce_symmetric_odd = false)
     stratum_kind = _wl_metadata_value(cpb.metadata, :stratum_kind)
     if stratum_kind === :facet_cpb
         fixed_axis = _wl_metadata_value(cpb.metadata, :axis)

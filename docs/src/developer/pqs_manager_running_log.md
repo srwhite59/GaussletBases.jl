@@ -15667,3 +15667,53 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 154 - Implement WL Boundary Parity Cleanup
+
+Commit(s):
+- this commit - Preserve WL boundary retained count
+
+Summary:
+- Accepted `HP-WLDIAT-PARITY-FN-01`. The WL boundary-stratum terminal
+  coefficient path now keeps the requested retained count instead of applying
+  nucleus-centered symmetric-odd coercion. Direct/core identity behavior and
+  compact face/edge/corner product construction are unchanged.
+- The visible endpoint moved as intended: WL diatomic `ns = 4`, route-local
+  `q = 2`, now gives `56` boundary columns rather than `26`; `ns = 5` remains
+  `98`.
+
+Validation:
+- Doer: `git diff --check`; package load; ignored
+  `tmp/work/wl_compact_block_size_audit.jl` with `ns=4`
+  `expected_shell=56`, `boundary_columns=56`, `final_dimension=119`, and
+  `ns=5` `expected_shell=98`, `boundary_columns=98`,
+  `final_dimension=161`; ignored `tmp/work/wl_diatomic_base_validation.jl`
+  with `pqs_dim=111`, `wl_dim=303`; ignored supplemented WL smoke with
+  dimension `309`, finite/symmetric `K`/`V`, and readback deltas `0.0`;
+  `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl` with
+  augmented dimension `489` and self-Coulomb `0.4574265214362095`.
+- Manager: reviewed the one-line diff; ran `git diff --check`;
+  `git diff --numstat -- src bin tools test docs`; suspicious added-line
+  scan; new tests/tools scan; package load; final status.
+
+Goal advancement:
+- LT1/LT3: completes the immediate WL compact retained-basis correction chain
+  by removing the over-applied parity rule from boundary shell strata.
+- LT5/LT6: restores the intended same-public-`ns` WL/PQS comparison starting
+  point without changing driver, route skeleton, shellification, terminal
+  lowering, artifacts, or residual-GTO/MWG paths.
+
+Carrying-cost result:
+- deleted: symmetric-odd coercion from WL boundary-stratum contraction.
+- simplified: boundary shell parity now follows the public `ns` retained-count
+  contract.
+- quarantined: driver, public `ns` normalization, route/shellification/
+  lowering, retained metadata shape, artifacts, PQS behavior, raw blocks,
+  RG/MWG/IDA, old WL materialization, committed tests/fixtures, and Cr2
+  workflow remain untouched.
+- not deleted because: direct/core identity realization remains valid.
+- exact remaining caller/blocker: none for this parity lane.
+- added src lines: 1.
+- deleted src lines: 1.
+- new tests: none.
+- new metadata/status fields: none.
