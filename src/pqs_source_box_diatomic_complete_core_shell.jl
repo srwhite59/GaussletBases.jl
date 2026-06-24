@@ -99,8 +99,9 @@ function _pqs_source_box_route_driver_terminal_topology_support_region_plan(
         status = :blocked_terminal_topology_support_region_plan,
         blocker,
         authority = :terminal_lowering_contract_inventory,
-        support_order = (),
-        support_counts = (;),
+        support_order = Symbol[],
+        support_counts =
+            _pqs_source_box_route_driver_inventory_rows(Symbol[], Int[]),
         counts_generated = false,
         counts_source = :terminal_topology_support_region_plan_blocked,
         coverage_complete = false,
@@ -128,31 +129,34 @@ function _pqs_source_box_route_driver_terminal_topology_support_region_plan(
         :pqs_filled_source_cpb,
         :distorted_product_box_comx,
     )
-    unsupported_lowering_kinds = Tuple(
-        unique(
+    unsupported_lowering_kinds = Symbol[
+        kind for kind in unique(
             contract.lowering_contract_kind for
             contract in lowering_inventory.lowering_contracts
             if !(contract.lowering_contract_kind in supported_lowering_kinds)
-        ),
-    )
+        )
+    ]
     isempty(unsupported_lowering_kinds) ||
         return merge(
             blocked(:unsupported_terminal_lowering_kind),
             (; unsupported_lowering_kinds),
         )
-    contracts = Tuple(lowering_inventory.lowering_contracts)
+    contracts = lowering_inventory.lowering_contracts
     isempty(contracts) && return blocked(:missing_terminal_support_contracts)
-    records = Tuple(
+    records = [
         _pqs_source_box_route_driver_terminal_support_record(
             contract,
             parent_dims,
         ) for contract in contracts
-    )
-    support_order = Tuple(record.unit_key for record in records)
+    ]
+    support_order = Symbol[record.unit_key for record in records]
     length(unique(support_order)) == length(support_order) ||
         return blocked(:duplicate_terminal_support_unit_keys)
     support_counts =
-        NamedTuple{support_order}(Tuple(record.support_count for record in records))
+        _pqs_source_box_route_driver_inventory_rows(
+            support_order,
+            (record.support_count for record in records),
+        )
     coverage =
         _pqs_source_box_route_driver_terminal_support_coverage(records, parent_dims)
     coverage.coverage_complete ||
@@ -179,11 +183,11 @@ function _pqs_source_box_route_driver_terminal_topology_support_region_plan(
         terminal_support_counts = support_counts,
         terminal_support_records = records,
         terminal_region_roles =
-            Tuple(record.terminal_region_role for record in records),
+            Symbol[record.terminal_region_role for record in records],
         terminal_region_kinds =
-            Tuple(record.terminal_region_kind for record in records),
+            Symbol[record.terminal_region_kind for record in records],
         lowering_contract_kinds =
-            Tuple(record.lowering_contract_kind for record in records),
+            Symbol[record.lowering_contract_kind for record in records],
         counts_generated = true,
         counts_source = :terminal_lowering_contract_inventory,
         coverage_complete = coverage.coverage_complete,
@@ -301,7 +305,7 @@ function _pqs_source_box_route_driver_terminal_retained_rule_dimension_budget(re
             ),
         )
     end
-    return Tuple(budget), cumulative
+    return budget, cumulative
 end
 
 function _pqs_source_box_route_driver_terminal_retained_rule_plan(
@@ -314,10 +318,11 @@ function _pqs_source_box_route_driver_terminal_retained_rule_plan(
         status = :blocked_terminal_retained_rule_plan,
         blocker,
         authority = :cartesian_retained_unit_transform_contract_plan,
-        records = (),
-        dimension_budget = (),
-        retained_order = (),
-        retained_counts = (;),
+        records = NamedTuple[],
+        dimension_budget = NamedTuple[],
+        retained_order = Symbol[],
+        retained_counts =
+            _pqs_source_box_route_driver_inventory_rows(Symbol[], Int[]),
         total_retained_dimension = nothing,
     )
     support_plan =
@@ -343,7 +348,7 @@ function _pqs_source_box_route_driver_terminal_retained_rule_plan(
                 retained_unit_transform_contract_plan,
             ),
         )
-    records = Tuple(
+    records = [
         begin
             retained_units =
                 get(retained_units_by_region, support_record.terminal_region_key, Any[])
@@ -389,14 +394,16 @@ function _pqs_source_box_route_driver_terminal_retained_rule_plan(
                 end
             end
         end for (order_index, support_record) in pairs(support_records)
-    )
-    blocked_records = Tuple(record for record in records if !isnothing(record.blocker))
+    ]
+    blocked_records = [record for record in records if !isnothing(record.blocker)]
     budget, total_retained_dimension =
         _pqs_source_box_route_driver_terminal_retained_rule_dimension_budget(records)
-    retained_order = Tuple(record.support_record.unit_key for record in records)
-    retained_counts = NamedTuple{retained_order}(
-        Tuple(record.retained_count for record in records),
-    )
+    retained_order = Symbol[record.support_record.unit_key for record in records]
+    retained_counts =
+        _pqs_source_box_route_driver_inventory_rows(
+            retained_order,
+            (record.retained_count for record in records),
+        )
     isempty(blocked_records) ||
         return (;
             status = :blocked_terminal_retained_rule_plan,

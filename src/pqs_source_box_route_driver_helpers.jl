@@ -687,6 +687,14 @@ function _pqs_source_box_route_driver_pair_inventory(
     return (; pair_entries, pair_family_counts)
 end
 
+function _pqs_source_box_route_driver_pair_helper_map(helper_by_pair_family)
+    helpers = Dict{Symbol,Symbol}()
+    for family in propertynames(helper_by_pair_family)
+        helpers[Symbol(family)] = Symbol(getproperty(helper_by_pair_family, family))
+    end
+    return helpers
+end
+
 # High-level driver facade.
 
 function cartesian_system(system_inputs)
@@ -981,11 +989,13 @@ function cartesian_shells(
             parent,
             recipe;
         )
+    retained_units = collect(route_skeleton.retained_units)
+    pair_entries = collect(route_skeleton.pair_entries)
 
     return (;
         spacing_inputs,
-        route_skeleton,
-        low_order_shellification = shellification,
+        route_family = route_skeleton.route_family,
+        route_kind = get(route_skeleton, :route_kind, recipe.route_kind),
         shellification_status =
             isnothing(shellification) ?
             :not_requested :
@@ -1011,7 +1021,12 @@ function cartesian_shells(
             nothing :
             shellification.shellification_kind,
         route_shape = route_skeleton.route_shape,
-        source_boxes = route_skeleton.source_boxes,
+        retained_units,
+        pair_entries,
+        helper_by_pair_family =
+            _pqs_source_box_route_driver_pair_helper_map(
+                route_skeleton.helper_by_pair_family,
+            ),
     )
 end
 
@@ -1373,71 +1388,15 @@ function _pqs_source_box_route_driver_terminal_lowering_contract_inventory_from_
         )
         for (contract_index, contract) in enumerate(typed_contracts)
     ]
-    contract_counts_by_unit = [
-        (;
-            unit_key = unit.unit_key,
-            lowering_contract_count =
-                count(
-                    contract -> contract.unit_key == unit.unit_key,
-                    lowering_contracts,
-                ),
-        ) for unit in unit_inventory.terminal_region_units
-    ]
-    complete_shell_contracts = [
-        contract for contract in lowering_contracts
-        if contract.terminal_region_kind == :complete_shell
-    ]
-    lw_contracts = [
-        contract for contract in lowering_contracts
-        if contract.lowering_contract_kind == :white_lindsey_boundary_strata
-    ]
-
     return (;
-        terminal_region_unit_count = unit_inventory.unit_count,
         lowering_contract_count = length(lowering_contracts),
         lowering_contracts,
-        contract_records = lowering_contracts,
-        unit_keys = unit_inventory.unit_keys,
-        unit_roles = unit_inventory.unit_roles,
-        unit_kinds = unit_inventory.unit_kinds,
-        terminal_region_roles = unit_inventory.terminal_region_roles,
-        terminal_region_kinds = unit_inventory.terminal_region_kinds,
-        support_counts = unit_inventory.support_counts,
-        contract_counts_by_unit,
         lowering_contract_kinds =
             [contract.lowering_contract_kind for contract in lowering_contracts],
         lowering_contract_kind_counts =
             _cartesian_terminal_region_lowering_contract_kind_counts(
                 lowering_contracts,
             ),
-        complete_shell_unit_count = unit_inventory.complete_shell_unit_count,
-        complete_shell_lowering_contract_count = length(complete_shell_contracts),
-        lw_complete_shell_lowering_contract_count = length(lw_contracts),
-        lw_complete_shell_cpb_count =
-            sum(contract -> contract.source_cpb_count, lw_contracts; init = 0),
-        lw_complete_shell_cpb_family_counts =
-            (
-                facet_cpb =
-                    sum(
-                        contract -> contract.source_cpb_family_counts.facet_cpb,
-                        lw_contracts;
-                        init = 0,
-                    ),
-                edge_cpb =
-                    sum(
-                        contract -> contract.source_cpb_family_counts.edge_cpb,
-                        lw_contracts;
-                        init = 0,
-                    ),
-                corner_cpb =
-                    sum(
-                        contract -> contract.source_cpb_family_counts.corner_cpb,
-                        lw_contracts;
-                        init = 0,
-                    ),
-            ),
-        all_units_have_lowering_contracts =
-            all(entry -> entry.lowering_contract_count >= 1, contract_counts_by_unit),
     )
 end
 
@@ -1454,7 +1413,7 @@ function _pqs_source_box_route_driver_unit_stage_low_order_summary(shells)
         )
     route_lowering_family =
         _pqs_source_box_route_driver_terminal_lowering_family(
-            shells.route_skeleton.route_family)
+            shells.route_family)
     lowering_plan =
         _pqs_source_box_route_driver_terminal_lowering_plan(
             shellification_plan,
@@ -1474,43 +1433,27 @@ function _pqs_source_box_route_driver_unit_stage_low_order_summary(shells)
 
     return (;
         shellification_kind,
-        shellification_plan,
-        shellification_scaffold,
-        unit_inventory,
-        route_lowering_family,
-        lowering_plan,
         lowering_contract_inventory,
         retained_unit_plan,
-        region_count = shellification_scaffold.region_count,
-        ordered_region_roles = shellification_scaffold.ordered_region_roles,
-        central_gap_region_count =
-            shellification_scaffold.central_gap_region_count,
-        central_midpoint_slab_count =
-            shellification_scaffold.central_midpoint_slab_count,
-        central_distorted_product_box_count =
-            shellification_scaffold.central_distorted_product_box_count,
-        central_distorted_product_box_metadata =
-            shellification_scaffold.central_distorted_product_box_metadata,
     )
 end
 
 function cartesian_units(parent, shells, recipe)
     low_order_units =
         _pqs_source_box_route_driver_unit_stage_low_order_summary(shells)
-    retained_units = collect(shells.route_skeleton.retained_units)
-    pair_entries = collect(shells.route_skeleton.pair_entries)
+    retained_units = shells.retained_units
+    pair_entries = shells.pair_entries
     unit_inventory = _pqs_source_box_route_driver_unit_inventory(retained_units)
     pair_inventory =
         _pqs_source_box_route_driver_pair_inventory(
             pair_entries;
-            expected_families = propertynames(shells.route_skeleton.helper_by_pair_family),
+            expected_families = keys(shells.helper_by_pair_family),
         )
 
     return (;
         parent,
         route_family = recipe.route_family,
         route_kind = recipe.route_kind,
-        low_order_shellification = get(shells, :low_order_shellification, nothing),
         shellification_status =
             get(shells, :shellification_status, :not_requested),
         shellification_blocker =
@@ -1518,8 +1461,6 @@ function cartesian_units(parent, shells, recipe)
         shellification_blocker_message =
             get(shells, :shellification_blocker_message, nothing),
         low_order_units,
-        shellification_plan = shells.shellification_plan,
-        shellification_scaffold = shells.shellification_scaffold,
         shellification_kind = shells.shellification_kind,
         route_shape = shells.route_shape,
         retained_units,
@@ -1528,7 +1469,7 @@ function cartesian_units(parent, shells, recipe)
         retained_dimension = unit_inventory.retained_dimension,
         pair_entries,
         pair_family_counts = pair_inventory.pair_family_counts,
-        helper_by_pair_family = shells.route_skeleton.helper_by_pair_family,
+        helper_by_pair_family = shells.helper_by_pair_family,
     )
 end
 
@@ -1551,14 +1492,6 @@ function _pqs_source_box_route_driver_transform_stage_low_order_summary(units)
             retained_unit_transform_contract_plan,
         )
     return (;
-        shellification_kind = low_order_units.shellification_kind,
-        shellification_plan = low_order_units.shellification_plan,
-        shellification_scaffold = low_order_units.shellification_scaffold,
-        unit_inventory = low_order_units.unit_inventory,
-        route_lowering_family = low_order_units.route_lowering_family,
-        lowering_plan = low_order_units.lowering_plan,
-        lowering_contract_inventory = low_order_units.lowering_contract_inventory,
-        retained_unit_plan,
         retained_unit_transform_contract_plan,
         terminal_retained_rule_plan,
     )
@@ -1598,8 +1531,6 @@ function cartesian_transforms(units, recipe)
         route_family = recipe.route_family,
         route_kind = recipe.route_kind,
         retained_units,
-        low_order_shellification =
-            get(units, :low_order_shellification, nothing),
         shellification_status =
             get(units, :shellification_status, :not_requested),
         shellification_blocker =
@@ -1611,17 +1542,11 @@ function cartesian_transforms(units, recipe)
             isnothing(low_order_transforms) ?
             nothing :
             low_order_transforms.terminal_retained_rule_plan,
-        retained_unit_plan =
-            isnothing(low_order_transforms) ?
-            nothing :
-            low_order_transforms.retained_unit_plan,
         retained_unit_transform_contract_plan =
             isnothing(low_order_transforms) ?
             nothing :
             low_order_transforms.retained_unit_transform_contract_plan,
         terminal_basis_realization,
-        shellification_plan = units.shellification_plan,
-        shellification_scaffold = units.shellification_scaffold,
         shellification_kind = units.shellification_kind,
         pair_entries = units.pair_entries,
         pair_family_counts = units.pair_family_counts,
@@ -1646,19 +1571,7 @@ function _pqs_source_box_route_driver_pair_stage_low_order_summary(
     isnothing(low_order_transforms) && return nothing
 
     return (;
-        shellification_kind = low_order_transforms.shellification_kind,
-        shellification_plan = low_order_transforms.shellification_plan,
-        shellification_scaffold = low_order_transforms.shellification_scaffold,
-        unit_inventory = low_order_transforms.unit_inventory,
-        route_lowering_family = low_order_transforms.route_lowering_family,
-        lowering_plan = low_order_transforms.lowering_plan,
-        lowering_contract_inventory =
-            low_order_transforms.lowering_contract_inventory,
-        retained_unit_plan = low_order_transforms.retained_unit_plan,
-        retained_unit_transform_contract_plan =
-            low_order_transforms.retained_unit_transform_contract_plan,
-        terminal_retained_rule_plan =
-            low_order_transforms.terminal_retained_rule_plan,
+        shellification_kind = get(transforms, :shellification_kind, nothing),
         pair_entries = transforms.pair_entries,
         pair_keys = _pqs_source_box_route_driver_pair_keys_from_entries(
             transforms.pair_entries),
@@ -1696,18 +1609,6 @@ function _pqs_source_box_route_driver_assembly_stage_low_order_summary(pairs)
                    pairs.pair_entries
     return (;
         shellification_kind = low_order_pairs.shellification_kind,
-        shellification_plan = low_order_pairs.shellification_plan,
-        shellification_scaffold = low_order_pairs.shellification_scaffold,
-        unit_inventory = low_order_pairs.unit_inventory,
-        route_lowering_family = low_order_pairs.route_lowering_family,
-        lowering_plan = low_order_pairs.lowering_plan,
-        lowering_contract_inventory =
-            low_order_pairs.lowering_contract_inventory,
-        retained_unit_plan = low_order_pairs.retained_unit_plan,
-        retained_unit_transform_contract_plan =
-            low_order_pairs.retained_unit_transform_contract_plan,
-        terminal_retained_rule_plan =
-            low_order_pairs.terminal_retained_rule_plan,
         pair_entries,
         pair_keys = _pqs_source_box_route_driver_pair_keys_from_entries(
             pair_entries),
@@ -1776,18 +1677,18 @@ function _pqs_source_box_route_driver_complete_core_shell_axis_layers(
 end
 
 function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
-    route_skeleton = shells.route_skeleton
     low_order_assembly =
         _pqs_source_box_route_driver_assembly_stage_low_order_summary(pairs)
     return (;
-        route_skeleton,
+        route_family = get(shells, :route_family, recipe.route_family),
+        route_kind = get(shells, :route_kind, recipe.route_kind),
+        route_shape = get(shells, :route_shape, nothing),
         low_order_assembly,
     )
 end
 
 function cartesian_report(system, parent, assembly, recipe)
     standard_setup = parent.standard_setup
-    route_skeleton = assembly.route_skeleton
     low_order_assembly = assembly.low_order_assembly
 
     source_recipe =
@@ -1840,14 +1741,14 @@ function cartesian_report(system, parent, assembly, recipe)
         physical_box = parent.physical_box,
     )
     route_summary = (;
-        route_shape = get(route_skeleton, :route_shape, nothing),
+        route_shape = get(assembly, :route_shape, nothing),
         shellification_kind = get(low_order_assembly, :shellification_kind, nothing),
     )
 
     return (;
         generated_at = Base.Libc.strftime("%Y-%m-%dT%H:%M:%S", time()),
-        route_family = route_skeleton.route_family,
-        route_kind = get(route_skeleton, :route_kind, recipe.route_kind),
+        route_family = get(assembly, :route_family, recipe.route_family),
+        route_kind = get(assembly, :route_kind, recipe.route_kind),
         standard_setup,
         system_metadata,
         recipe_metadata,
