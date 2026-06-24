@@ -1257,6 +1257,15 @@ new supplemented White-Lindsey behavior needs a separate docs-only amendment.
 `HP-DRV-NEST-TEST-01` approves default `:pqs` validation plus one small base
 artifact/readback path with `nesting = :wl`, and no Cr2 run.
 
+The target producer shape is the 2 x 2 x 2 composition of geometry
+(`atom` or z-axis diatomic), `nesting` (`:pqs` or `:wl`), and supplement state
+(`off` or `on`) recorded in
+`docs/src/developer/designs/cartesian_hamiltonian_producer/nesting_supplement_composition_plan.md`.
+This is planning authority only. WL diatomic base, supplemented atoms, and
+supplemented White-Lindsey remain candidate lanes until separately approved;
+do not implement those cells as driver-level special cases or parallel
+Hamiltonian builders.
+
 `HP-WLTERM-FILE-01`, `HP-WLTERM-FN-01`, and `HP-WLTERM-WIRE-01` approve only
 the narrow White-Lindsey terminal-basis seam needed by `nesting = :wl`.
 Approved files are `src/pqs_source_box_route_driver_helpers.jl`,

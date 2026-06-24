@@ -26,6 +26,9 @@ lane is approved for JLD2 sidecar groups that make written Hamiltonians
 self-describing without changing matrix keys or reader behavior. Broad public
 API/export, supplemented atoms, Cr2-specific workflow, ECP, EGOI, RHF, and
 solver work remain deferred.
+The next composition target is the documented 2 x 2 x 2 matrix over
+`geometry`, `nesting`, and supplement state; unsupported cells remain
+candidate-only until separately approved.
 
 Agents should read first:
 
@@ -57,6 +60,8 @@ Agents should read first:
   for the explicit homonuclear diatomic molecule-scope relaxation
 - [White-Lindsey terminal basis realization](white_lindsey_terminal_basis_realization.md)
   for the narrow terminal-basis seam needed by `nesting = :wl`
+- [Nesting/supplement composition plan](nesting_supplement_composition_plan.md)
+  for the target 2 x 2 x 2 composition matrix and dependency order
 - [Cartesian Hamiltonian artifact manifest](cartesian_hamiltonian_artifact_manifest.md)
   for compact JLD2 sidecar groups describing matrix-order basis rows and public
   recipe provenance, plus the narrow construction-native source-mode
@@ -139,6 +144,11 @@ Approved amendments:
   approves explicit homonuclear two-center z-axis diatomic supplemented inputs
   through the existing facade and canonical driver, with no element-specific
   defaults or Cr2-specific branch.
+- [Nesting/supplement composition plan](nesting_supplement_composition_plan.md)
+  records the target three-choice contract:
+  `geometry = atom | z-axis diatomic`, `nesting = :pqs | :wl`, and
+  `supplement = off | on`. It approves no source work; WL diatomic base,
+  supplemented atoms, and supplemented WL remain candidate lanes.
 - [Cartesian Hamiltonian artifact manifest](cartesian_hamiltonian_artifact_manifest.md)
   approves only compact JLD2 sidecar groups for matrix-order basis labels and
   uniform recipe provenance, and separately approves a compact source-mode
@@ -174,10 +184,10 @@ Approved amendments:
 
 Candidate amendments:
 
-- Supplemented atoms, translated atoms, Cr2-specific workflow, public
-  supplemented workflow/export, basis/supplement-realism beyond explicit
-  supplied labels/files, and broad driver diagnostics remain candidate-only
-  until separately approved.
+- WL diatomic base, supplemented atoms, supplemented WL, translated atoms,
+  Cr2-specific workflow, public supplemented workflow/export,
+  basis/supplement-realism beyond explicit supplied labels/files, and broad
+  driver diagnostics remain candidate-only until separately approved.
 
 Historical material:
 

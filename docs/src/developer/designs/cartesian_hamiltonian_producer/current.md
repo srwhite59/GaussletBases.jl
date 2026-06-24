@@ -35,6 +35,8 @@ Normal startup reading:
   homonuclear z-axis diatomic supplemented facade/driver relaxation;
 - `white_lindsey_terminal_basis_realization.md` for the narrow terminal-basis
   seam required by the `nesting = :wl` construction family;
+- `nesting_supplement_composition_plan.md` for the target 2 x 2 x 2
+  composition matrix over geometry, nesting, and supplement state;
 - `cartesian_hamiltonian_artifact_manifest.md` for compact Hamiltonian
   artifact sidecar groups and recipe provenance;
 - `route_inventory_type_surface_cleanup.md` for the first route-inventory
@@ -237,6 +239,11 @@ Approved canonical driver usability lane:
 - artifact provenance must record the public `nesting` input truthfully under
   `HP-NEST-ART-FN-01`; a WL artifact must not be labeled as PQS merely because
   helper code remains PQS-named;
+- the target producer contract is the three-choice composition recorded in
+  `nesting_supplement_composition_plan.md`: geometry (`atom` or z-axis
+  diatomic), nesting (`:pqs` or `:wl`), and supplement state (`off` or `on`);
+  this is planning authority only, and unsupported cells must keep clear
+  rejection until separately approved;
 - the driver may call only approved base, staged, and supported supplemented
   producer surfaces and the approved artifact writer/readback;
 - `basisname = nothing` selects base mode; `basisname !== nothing` selects
@@ -266,6 +273,19 @@ Approved White-Lindsey terminal-basis seam:
 - this is not approval to adapt the old WL H1/H1+J materialization path,
   change route skeleton semantics, change shellification/retained-selection
   behavior, add diagnostics, change artifacts, or add supplemented WL behavior.
+
+Candidate composition lanes:
+
+- WL z-axis diatomic base terminal records and artifact output, so
+  `geometry = diatomic`, `nesting = :wl`, `supplement = off` can reach the same
+  `CartesianTerminalBasisRealization` boundary;
+- supplemented one-center atoms through the existing Residual Gaussian path,
+  not an atom-only supplement builder;
+- supplemented White-Lindsey after WL base atom/diatomic terminal bases exist,
+  using the same RG/raw-block/IDA boundary as supplemented PQS.
+
+None of these candidate lanes is source authority until promoted in
+`registry.md` with exact files, functions, validation, and forbidden surfaces.
 
 Approved R1 one-center base atom relaxation:
 

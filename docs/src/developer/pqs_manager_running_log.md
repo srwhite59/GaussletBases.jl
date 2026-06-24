@@ -14525,3 +14525,56 @@ Carrying-cost result:
 - new tests: none.
 - new metadata/status fields: only approved artifact provenance keys, no staged
   metadata.
+
+## Cartesian Hamiltonian Producer Pass 135 - Record Nesting/Supplement Composition Target
+
+Commit(s):
+- this commit - Record nesting supplement composition plan
+
+Summary:
+- Added a compact composition plan for the intended 2 x 2 x 2 producer matrix:
+  `geometry = atom | z-axis diatomic`, `nesting = :pqs | :wl`, and
+  `supplement = off | on`. This is a design-direction amendment only, not
+  source authority.
+- Current support is now explicitly classified: atom/base works for PQS and
+  WL; atom/supplement remains unapproved; PQS H2/base works while broader
+  generic base diatomic support is still limited; WL diatomic base is blocked
+  by missing native WL diatomic terminal records; PQS supplemented homonuclear
+  z-axis diatomics are supported; supplemented WL is blocked first by WL
+  diatomic base.
+- The next dependency order is frozen: WL diatomic base terminal records first,
+  supplemented atoms through the common Residual Gaussian path second, and
+  supplemented WL after WL terminal bases are real.
+
+Validation:
+- Design-manager validation for this docs-only pass: read compact current
+  driver/WL/manifest authority, added the new plan page, updated README,
+  current authority, implementation slices, invariants, registry candidate
+  section, AGENTS guardrail, and this running log; run `git diff --check`,
+  focused `rg` for the new plan and candidate IDs, and confirm no source,
+  test, tool, or bin files changed. No implementation tests are part of this
+  planning amendment.
+
+Goal advancement:
+- LT1/LT3: prevents partial support from becoming the hidden driver contract
+  and makes the desired user-facing choices explicit.
+- LT5/LT6: preserves the common terminal-basis and Residual Gaussian
+  boundaries as the way to fill missing cells, rather than branching by
+  driver case or route report.
+
+Carrying-cost result:
+- deleted: none; docs-only planning pass.
+- simplified: later source blurbs can target one missing cell at a time with
+  known dependencies instead of arguing from the current partial matrix.
+- quarantined: WL diatomic base, supplemented atoms, supplemented WL,
+  translated atoms, non-z-axis geometry, heteronuclear supplement generality,
+  ECP/EGOI/RHF/solver work, public export/API redesign, route diagnostics,
+  and Cr2-specific branches remain unapproved.
+- not deleted because: no source cleanup has run in this pass.
+- exact remaining caller/blocker: the first source lane should be WL z-axis
+  diatomic base terminal records, unless a later manager decision chooses
+  supplemented atoms first with explicit source authority.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

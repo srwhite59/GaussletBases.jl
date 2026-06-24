@@ -119,6 +119,10 @@ The canonical RG algorithm contract is
   owned terminal supports. White-Lindsey boundary-stratum realization must not
   revive old WL H1/H1+J materialization, route reports, or route-stage
   diagnostics.
+- Geometry (`atom` or z-axis diatomic), `nesting` (`:pqs` or `:wl`), and
+  supplement state (`off` or `on`) are intended to compose through shared
+  producer boundaries. Do not implement the 2 x 2 x 2 matrix as eight
+  driver-level special cases or parallel Hamiltonian builders.
 - R3/RG supplemented usability remains internal unless a later public/export
   amendment approves it.
 - The canonical Cartesian driver is an artifact-producing workflow over

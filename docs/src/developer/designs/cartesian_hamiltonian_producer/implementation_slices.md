@@ -886,6 +886,47 @@ Line budget:
   artifact schema changes, public API/export changes, or Cr2-specific workflow
   support are required.
 
+## Nesting/Supplement Composition Target
+
+Status: candidate planning only. No source work is approved by this section.
+
+The target producer shape is the 2 x 2 x 2 composition matrix recorded in
+`nesting_supplement_composition_plan.md`:
+
+```text
+geometry:   atom | z-axis diatomic
+nesting:    :pqs | :wl
+supplement: off | on
+```
+
+Current implementation status:
+
+| Geometry | Supplement | `nesting = :pqs` | `nesting = :wl` |
+| --- | --- | --- | --- |
+| atom | off | implemented for explicit origin-centered base atoms | implemented for one-center base atoms |
+| atom | on | not approved / not wired | not approved / not wired |
+| z-axis diatomic | off | H2 base works; broader generic base diatomic support remains limited | blocked by missing native WL diatomic terminal records |
+| z-axis diatomic | on | supported for explicit homonuclear z-axis diatomics through RG/MWG | blocked first by missing WL diatomic base terminal records |
+
+Candidate dependency order:
+
+1. WL z-axis diatomic base: produce native WL terminal records and the common
+   `CartesianTerminalBasisRealization` for `supplement = off`.
+2. Supplemented atoms: use the same owner-local Residual Gaussian path as
+   supplemented diatomics, with one owner center as the simple case.
+3. Supplemented WL: after WL base terminal bases exist, prove RG augmentation
+   is nesting-neutral at the terminal-basis boundary.
+
+Candidate placeholder IDs:
+
+- `HP-COMP-WLDIAT-FN-01` / `HP-COMP-WLDIAT-TEST-01`;
+- `HP-COMP-SUPPATOM-FN-01` / `HP-COMP-SUPPATOM-TEST-01`;
+- `HP-COMP-SUPPWL-FN-01` / `HP-COMP-SUPPWL-TEST-01`.
+
+These placeholders do not authorize implementation. Each lane needs a later
+docs-only amendment naming exact files, functions, validation gates, forbidden
+surfaces, and line budget.
+
 ## Canonical Driver Atom Workflow
 
 Status: approved for implementation under `HP-DRV-ATOM-FN-01`,

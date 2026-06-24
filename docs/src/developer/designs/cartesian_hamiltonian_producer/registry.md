@@ -2968,3 +2968,44 @@ Remaining deferred lanes are:
   the current dense residual term storage costly;
 - allocation-free or bounded-allocation validation reductions for large dense
   matrices.
+
+### Nesting/supplement composition target — candidate
+
+The target producer contract is the three-choice composition documented in
+`nesting_supplement_composition_plan.md`:
+
+```text
+geometry:   atom | z-axis diatomic
+nesting:    :pqs | :wl
+supplement: off | on
+```
+
+This registry section is planning only. It does not authorize source work.
+Current support remains partial:
+
+- atom / no supplement / `:pqs`: implemented for explicit origin-centered base
+  atoms;
+- atom / no supplement / `:wl`: implemented for one-center base atoms;
+- atom / supplement / either nesting: not approved / not wired;
+- z-axis diatomic / no supplement / `:pqs`: H2 base works, with broader
+  generic base diatomic support still limited;
+- z-axis diatomic / no supplement / `:wl`: blocked by missing native WL
+  diatomic terminal records;
+- z-axis diatomic / supplement / `:pqs`: supported for explicit homonuclear
+  z-axis diatomics through the residual-GTO/MWG path;
+- z-axis diatomic / supplement / `:wl`: blocked first by missing WL diatomic
+  base terminal records.
+
+Candidate placeholder IDs, not approved:
+
+- `HP-COMP-WLDIAT-FN-01` / `HP-COMP-WLDIAT-TEST-01`: WL z-axis diatomic base
+  terminal records and artifact path;
+- `HP-COMP-SUPPATOM-FN-01` / `HP-COMP-SUPPATOM-TEST-01`: supplemented
+  one-center atom path through common Residual Gaussian augmentation;
+- `HP-COMP-SUPPWL-FN-01` / `HP-COMP-SUPPWL-TEST-01`: supplemented
+  White-Lindsey path through the common RG boundary after WL base terminal
+  bases exist.
+
+Each candidate needs a later docs-only amendment that names exact files,
+functions, validation gates, forbidden surfaces, line budget, and deletion or
+shrinkage expectation before implementation may begin.
