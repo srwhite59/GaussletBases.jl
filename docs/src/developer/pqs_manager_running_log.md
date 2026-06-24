@@ -15540,3 +15540,80 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 152 - Compact WL Diatomic Terminal Basis
+
+Commit(s):
+- this commit - Implement compact WL diatomic terminal basis
+
+Summary:
+- Accepted `HP-WLDIAT-COMPACT-FN-01`. White-Lindsey diatomic
+  boundary-stratum retained units no longer realize as full-support identity
+  blocks. They now build CPB-local face/edge/corner product coefficient maps
+  behind the common `CartesianTerminalBasisRealization` boundary. Direct/core
+  retained units still realize as identity blocks, which remains the intended
+  contract.
+- The source pass re-expresses the old WL product-of-1D primitive without
+  reviving the route-global WL H1/H1+J materialization stack, reports,
+  adapters, or status surfaces.
+- Small WL supplemented H2 reaches the existing residual-GTO/MWG stages with
+  finite symmetric matrices. The active PQS H2 RG endpoint remains unchanged:
+  augmented dimension `489` and self-Coulomb `0.4574265214362095`.
+
+Validation:
+- Doer: `git diff --check`; package load; ignored
+  `tmp/work/wl_compact_block_size_audit.jl`; ignored
+  `tmp/work/wl_diatomic_base_validation.jl` with `pqs_dim=111`, `wl_dim=199`;
+  `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`; small
+  supplemented WL H2 driver smoke with dimension `209`, finite/symmetric `K`
+  and `V`.
+- Manager: reread active `HP-WLDIAT-COMPACT-*` authority; reviewed the diff;
+  checked donor face/edge products return full-parent coefficient matrices
+  with support indices, so terminal-basis support-row subsetting is the right
+  shape; ran `git diff --check`, package load,
+  `git diff --numstat -- src bin tools test docs`, suspicious added-line scan,
+  new tests/tools scan, and final status.
+- Mechanical gate summary: source line impact is `145` insertions and `20`
+  deletions across the two approved source files; no new committed tests or
+  tools. Suspicious scan hits are confined to existing CPB/retained-unit
+  metadata reads and one compact construction-native scalar,
+  `white_lindsey_retained_count_1d`, carried through existing contract
+  metadata so the terminal realizer can reconstruct the WL product primitive.
+  No artifact/status/report fields were added.
+
+Goal advancement:
+- LT1/LT3: repairs the WL diatomic terminal-basis category mistake directly:
+  a WL boundary stratum is a compact product retained basis over its support,
+  not one identity basis function per parent site.
+- LT5/LT6: restores a meaningful PQS/WL comparison boundary for the approved
+  homonuclear z-axis diatomic workflow while preserving the common staged
+  Hamiltonian and residual-GTO/MWG paths.
+
+Medium-goal checkpoint:
+- Completed: the serious WL diatomic full-support identity realization error
+  is crossed for the current retained-unit path.
+- Active: recalibrate PQS/WL driver comparisons after this correction before
+  drawing physics conclusions; keep using the canonical driver for CR2-facing
+  artifact production and report friction at producer/consumer boundaries.
+- Needs refinement: the inherited even-`ns` WL retained-count rule still makes
+  `ns = 4` produce `26` boundary columns rather than the nominal `56`. This is
+  now an explicit WL policy question, not a hidden identity-realization bug.
+
+Carrying-cost result:
+- deleted: boundary-stratum identity realization as production behavior.
+- simplified: WL terminal append now has a clear split between direct/core
+  identity units and boundary product coefficient blocks.
+- quarantined: driver changes, artifact schema/provenance changes, PQS
+  behavior changes, raw blocks, Residual Gaussian/MWG/IDA changes, old WL
+  H1/H1+J materialization, committed tests/fixtures, and Cr2 workflow remain
+  out of scope.
+- not deleted because: direct/core identity realization is valid and remains
+  live.
+- exact remaining caller/blocker: even-`ns` WL retained-count policy follows
+  the inherited symmetric-odd donor behavior; changing that requires a later
+  explicit design/source lane.
+- added src lines: 145.
+- deleted src lines: 20.
+- new tests: none.
+- new metadata/status fields: one internal construction metadata scalar only;
+  no artifact/status/report fields.

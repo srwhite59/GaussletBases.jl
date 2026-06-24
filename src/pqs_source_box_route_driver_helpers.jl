@@ -1057,6 +1057,39 @@ function _pqs_source_box_route_driver_terminal_lowering_policy(
     return nothing
 end
 
+function _pqs_source_box_route_driver_wl_contract_with_retained_count(contract, q::Int)
+    contract.lowering_kind === :white_lindsey_boundary_strata || return contract
+    return CartesianTerminalLowering.TerminalLoweringContract(
+        contract.contract_key,
+        contract.terminal_region_key,
+        contract.terminal_region_role,
+        contract.terminal_region_kind,
+        contract.lowering_kind,
+        contract.owned_support,
+        contract.source_cpbs,
+        contract.retained_rule,
+        contract.realization_rule,
+        contract.final_unit_granularity,
+        contract.materialized,
+        merge(contract.metadata, (; white_lindsey_retained_count_1d = q)),
+    )
+end
+
+function _pqs_source_box_route_driver_wl_retained_count_plan(plan, shellification_plan)
+    CartesianTerminalLowering.policy_kind(plan.policy) === :white_lindsey_terminal_lowering ||
+        return plan
+    raw_plan = CartesianShellification.raw_plan(shellification_plan)
+    q = !isnothing(raw_plan) && hasproperty(raw_plan, :q) ? raw_plan.q : nothing
+    q isa Integer && q > 0 ||
+        throw(ArgumentError("White-Lindsey terminal lowering requires shellification q"))
+    selected = CartesianTerminalLowering.TerminalLoweringContract[
+        _pqs_source_box_route_driver_wl_contract_with_retained_count(contract, Int(q))
+        for contract in CartesianTerminalLowering.selected_contracts(plan)
+    ]
+    return CartesianTerminalLowering.TerminalLoweringPlan(
+        plan.policy, plan.available_contracts, selected, plan.summary, plan.metadata)
+end
+
 function _pqs_source_box_route_driver_terminal_lowering_plan(
     shellification_plan,
     route_lowering_family,
@@ -1069,7 +1102,8 @@ function _pqs_source_box_route_driver_terminal_lowering_plan(
             shellification_plan,
         )
     isnothing(policy) && return nothing
-    return CartesianTerminalLowering.lower_terminal_regions(shellification_plan, policy)
+    plan = CartesianTerminalLowering.lower_terminal_regions(shellification_plan, policy)
+    return _pqs_source_box_route_driver_wl_retained_count_plan(plan, shellification_plan)
 end
 
 function _pqs_source_box_route_driver_terminal_lowering_kind_counts(contracts)
