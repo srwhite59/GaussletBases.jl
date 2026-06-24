@@ -1,7 +1,9 @@
 # White-Lindsey Terminal Basis Realization
 
 Status: approved narrow source authority under `HP-WLTERM-FILE-01`,
-`HP-WLTERM-FN-01`, `HP-WLTERM-WIRE-01`, and `HP-WLTERM-TEST-01`.
+`HP-WLTERM-FN-01`, `HP-WLTERM-WIRE-01`, and `HP-WLTERM-TEST-01`. The
+z-axis diatomic extension is approved separately under
+`HP-COMP-WLDIAT-FN-01` and `HP-COMP-WLDIAT-TEST-01`.
 
 ## Reason
 
@@ -122,8 +124,8 @@ the exact missing native fact.
 - current default `nesting = :pqs` atom or H2 base artifact/readback remains
   unchanged;
 - `nesting = :wl` base atom artifact/readback;
-- `nesting = :wl` base H2 artifact/readback if the existing WL diatomic route
-  has sufficient native terminal records;
+- `nesting = :wl` base H2 artifact/readback only when paired with the later
+  `HP-COMP-WLDIAT-*` authority for native WL diatomic terminal records;
 - H2 residual-GTO/MWG PQS endpoint remains unchanged if terminal realization
   code is touched;
 - clear unsupported-input/blocker reporting if WL H2 cannot be realized from

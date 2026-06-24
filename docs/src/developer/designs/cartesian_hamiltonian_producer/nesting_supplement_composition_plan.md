@@ -3,8 +3,8 @@
 This note freezes the target shape for the canonical Cartesian Hamiltonian
 producer after `nesting = :wl` became a real construction-family input.
 
-It is a planning and authority-boundary amendment only. It approves no source
-work by itself.
+It is a planning and authority-boundary amendment. It approves source work only
+for explicitly promoted cells; all other cells remain candidate-only.
 
 ## Target Contract
 
@@ -51,7 +51,7 @@ they must not be hidden by driver defaults or mislabeled artifact provenance.
 | --- | --- | --- | --- |
 | atom | off | implemented for explicit origin-centered all-electron base atoms, with H as the committed endpoint | implemented for one-center base atoms through the WL terminal-basis seam |
 | atom | on | not approved / not wired | not approved / not wired |
-| z-axis diatomic | off | H2 base works; broader generic base diatomic support remains limited | blocked: no native WL diatomic terminal records |
+| z-axis diatomic | off | H2 base works; broader generic base diatomic support remains limited | approved implementation lane; native WL diatomic terminal records not implemented yet |
 | z-axis diatomic | on | supported for explicit homonuclear z-axis diatomics through the residual-GTO/MWG path | blocked first by missing WL diatomic base terminal records |
 
 ## Common Boundary Rules
@@ -78,14 +78,50 @@ they must not be hidden by driver defaults or mislabeled artifact provenance.
 
 ### 1. White-Lindsey Diatomic Base
 
-Candidate goal: make `nesting = :wl`, `supplement = off` work for z-axis
-diatomic base artifacts by producing native WL terminal records and the common
+Status: approved for implementation under `HP-COMP-WLDIAT-FN-01` and
+`HP-COMP-WLDIAT-TEST-01`.
+
+Goal: make `nesting = :wl`, `supplement = off` work for z-axis diatomic base
+artifacts by producing native WL terminal records and the common
 `CartesianTerminalBasisRealization`.
 
 This should extend the WL terminal-basis seam from one-center atoms to
 two-center z-axis diatomics. It should not adapt the old WL H1/H1+J
 materialization path, change the canonical driver contract, or add route
 diagnostics.
+
+Approved source files:
+
+```text
+src/pqs_source_box_diatomic_complete_core_shell.jl
+src/cartesian_terminal_shellification_geometry.jl
+src/cartesian_terminal_lowering/selection.jl
+src/cartesian_terminal_lowering/region_contracts.jl
+src/pqs_source_box_route_driver_helpers.jl
+src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl
+src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl
+src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl
+src/cartesian_base_hamiltonian.jl
+```
+
+`src/cartesian_base_hamiltonian.jl` is approved only for narrow staged/facade
+wiring needed by the WL z-axis diatomic base path and for truthful route
+provenance value `:z_axis_diatomic_wl_base`. This is not an artifact schema
+change.
+
+Forbidden in this lane:
+
+- driver public input changes or driver special cases;
+- old White-Lindsey H1/H1+J materialization revival or adaptation;
+- artifact schema changes, matrix-key changes, reader behavior changes, or
+  manifest shape changes;
+- Residual Gaussian, MWG/IDA, supplement, ECP, solver, or Cr2 workflow work;
+- route diagnostics, stop-after controls, report/status/payload fields,
+  raw-block switches, or route-stage labels;
+- committed tests or committed driver fixtures.
+
+Line budget: at most `250` added `src` lines, with deletion or simplification
+of obsolete blocker-only WL diatomic guards expected where practical.
 
 ### 2. Supplemented Atoms
 
@@ -109,12 +145,13 @@ base operators.
 
 ## Candidate IDs
 
-These IDs are placeholders for later docs-only amendments. They do not
-authorize implementation until promoted in `registry.md` with exact files,
-functions, validation, forbidden surfaces, and line budgets.
+These IDs are placeholders for later docs-only amendments, except the
+`HP-COMP-WLDIAT-*` pair now approved above. Candidate IDs do not authorize
+implementation until promoted in `registry.md` with exact files, functions,
+validation, forbidden surfaces, and line budgets.
 
-- `HP-COMP-WLDIAT-FN-01` / `HP-COMP-WLDIAT-TEST-01`: WL z-axis diatomic base
-  terminal-basis and artifact path.
+- `HP-COMP-WLDIAT-FN-01` / `HP-COMP-WLDIAT-TEST-01`: approved WL z-axis
+  diatomic base terminal-basis and artifact path.
 - `HP-COMP-SUPPATOM-FN-01` / `HP-COMP-SUPPATOM-TEST-01`: supplemented
   one-center atom path through common Residual Gaussian augmentation.
 - `HP-COMP-SUPPWL-FN-01` / `HP-COMP-SUPPWL-TEST-01`: supplemented

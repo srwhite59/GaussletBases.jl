@@ -243,6 +243,105 @@ No Cr2 run, supplemented WL run, committed fixture, committed test file,
 solver/RHF/ECP/EGOI workflow, artifact schema validation, or broad WL workflow
 validation is approved.
 
+## Approved First Composition Lane: WL Z-Axis Diatomic Base
+
+This section promotes the first
+`nesting_supplement_composition_plan.md` placeholder. It approves only the
+`geometry = z-axis diatomic`, `nesting = :wl`, `supplement = off` base path.
+
+### HP-COMP-WLDIAT-FN-01 — WL z-axis diatomic base terminal records
+
+Approved source files:
+
+```text
+src/pqs_source_box_diatomic_complete_core_shell.jl
+src/cartesian_terminal_shellification_geometry.jl
+src/cartesian_terminal_lowering/selection.jl
+src/cartesian_terminal_lowering/region_contracts.jl
+src/pqs_source_box_route_driver_helpers.jl
+src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl
+src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl
+src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl
+src/cartesian_base_hamiltonian.jl
+```
+
+Approved goal:
+
+```text
+Natom = 2
+nesting = :wl
+basisname = nothing
+```
+
+must produce an existing `CartesianIDAHamiltonian{Float64}` artifact/readback
+through the same `CartesianTerminalBasisRealization` and staged base
+Hamiltonian path used by the PQS producer.
+
+Allowed behavior:
+
+- produce native White-Lindsey z-axis diatomic terminal support,
+  shellification, lowering, retained-rule, and transform records needed by the
+  existing WL terminal realizer;
+- preserve the existing `:white_lindsey_low_order` construction-family route
+  and deterministic support/lowering/retained/transform order;
+- realize WL boundary-stratum/product terminal blocks as owned-support
+  terminal blocks in the existing `CartesianTerminalBasisRealization`;
+- reuse the existing staged product, unit-nuclear, IDA, Hamiltonian
+  construction, writer, and reader path;
+- in `src/cartesian_base_hamiltonian.jl`, add only narrow staged/facade wiring
+  required by WL z-axis diatomic base construction and the truthful route
+  provenance value `:z_axis_diatomic_wl_base`.
+
+The `:z_axis_diatomic_wl_base` route value is approved as a value under the
+existing `producer_provenance/route` and `recipe_provenance/route` keys. It is
+not an artifact schema change.
+
+Forbidden:
+
+- driver public input changes or driver special cases;
+- old WL H1/H1+J materialization revival or adaptation;
+- artifact schema changes, matrix-key changes, reader behavior changes,
+  manifest shape changes, public API/export changes, or new Hamiltonian
+  wrapper/result objects;
+- Residual Gaussian, MWG/IDA, supplement, ECP, solver/RHF, or Cr2 workflow
+  work;
+- route diagnostics, stop-after controls, report/status/payload fields,
+  raw-block switches, route-stage labels, or broad route skeleton redesign;
+- committed tests, committed fixtures, committed driver input files, or source
+  files outside the approved list.
+
+Failure rule: if WL z-axis diatomic base construction requires adapting the old
+WL H1/H1+J materialization path, changing artifact schema/reader behavior,
+adding driver special cases, or creating a parallel Hamiltonian builder, make
+no source commit and report the blocker.
+
+Line budget: at most `250` added `src` lines, with deletion or simplification
+of obsolete blocker-only WL diatomic guards expected where practical. Stop for
+a new amendment if the pass needs broader route skeleton redesign, source
+files outside the approved list, or persistent payload/cache objects.
+
+### HP-COMP-WLDIAT-TEST-01 — WL z-axis diatomic base validation
+
+Approved validation:
+
+- `git diff --check`;
+- package load;
+- current default `nesting = :pqs` H2 base artifact/readback remains
+  unchanged;
+- existing `nesting = :wl` one-center atom artifact/readback remains
+  unchanged;
+- `nesting = :wl` z-axis H2 base artifact/readback succeeds through the staged
+  base Hamiltonian path;
+- direct provenance inspection confirms `nesting = :wl` and
+  `route = :z_axis_diatomic_wl_base` for the WL H2 artifact;
+- H2 residual-GTO/MWG PQS endpoint remains unchanged if terminal realization
+  code is touched;
+- no Cr2 run.
+
+No supplemented WL run, committed test file, committed fixture, driver
+contract test, solver/RHF/ECP/EGOI validation, route-diagnostic validation, or
+Cr2 fixture is approved.
+
 ### HP-FN-03 — blockwise one-body assembly
 
 Approved file:
@@ -2980,8 +3079,8 @@ nesting:    :pqs | :wl
 supplement: off | on
 ```
 
-This registry section is planning only. It does not authorize source work.
-Current support remains partial:
+This registry section is planning only except for the promoted
+`HP-COMP-WLDIAT-*` pair above. Current support remains partial:
 
 - atom / no supplement / `:pqs`: implemented for explicit origin-centered base
   atoms;
@@ -2989,23 +3088,25 @@ Current support remains partial:
 - atom / supplement / either nesting: not approved / not wired;
 - z-axis diatomic / no supplement / `:pqs`: H2 base works, with broader
   generic base diatomic support still limited;
-- z-axis diatomic / no supplement / `:wl`: blocked by missing native WL
-  diatomic terminal records;
+- z-axis diatomic / no supplement / `:wl`: approved implementation lane under
+  `HP-COMP-WLDIAT-*`; native WL diatomic terminal records are not implemented
+  yet;
 - z-axis diatomic / supplement / `:pqs`: supported for explicit homonuclear
   z-axis diatomics through the residual-GTO/MWG path;
 - z-axis diatomic / supplement / `:wl`: blocked first by missing WL diatomic
   base terminal records.
 
-Candidate placeholder IDs, not approved:
+Composition IDs:
 
-- `HP-COMP-WLDIAT-FN-01` / `HP-COMP-WLDIAT-TEST-01`: WL z-axis diatomic base
-  terminal records and artifact path;
+- `HP-COMP-WLDIAT-FN-01` / `HP-COMP-WLDIAT-TEST-01`: approved WL z-axis
+  diatomic base terminal records and artifact path;
 - `HP-COMP-SUPPATOM-FN-01` / `HP-COMP-SUPPATOM-TEST-01`: supplemented
-  one-center atom path through common Residual Gaussian augmentation;
+  one-center atom path through common Residual Gaussian augmentation
+  (candidate only);
 - `HP-COMP-SUPPWL-FN-01` / `HP-COMP-SUPPWL-TEST-01`: supplemented
   White-Lindsey path through the common RG boundary after WL base terminal
-  bases exist.
+  bases exist (candidate only).
 
-Each candidate needs a later docs-only amendment that names exact files,
-functions, validation gates, forbidden surfaces, line budget, and deletion or
-shrinkage expectation before implementation may begin.
+Each remaining candidate needs a later docs-only amendment that names exact
+files, functions, validation gates, forbidden surfaces, line budget, and
+deletion or shrinkage expectation before implementation may begin.

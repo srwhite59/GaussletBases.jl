@@ -888,7 +888,9 @@ Line budget:
 
 ## Nesting/Supplement Composition Target
 
-Status: candidate planning only. No source work is approved by this section.
+Status: planning section with the first composition lane approved under
+`HP-COMP-WLDIAT-FN-01` and `HP-COMP-WLDIAT-TEST-01`. Remaining lanes are
+candidate-only.
 
 The target producer shape is the 2 x 2 x 2 composition matrix recorded in
 `nesting_supplement_composition_plan.md`:
@@ -905,25 +907,46 @@ Current implementation status:
 | --- | --- | --- | --- |
 | atom | off | implemented for explicit origin-centered base atoms | implemented for one-center base atoms |
 | atom | on | not approved / not wired | not approved / not wired |
-| z-axis diatomic | off | H2 base works; broader generic base diatomic support remains limited | blocked by missing native WL diatomic terminal records |
+| z-axis diatomic | off | H2 base works; broader generic base diatomic support remains limited | approved implementation lane; native WL diatomic terminal records not implemented yet |
 | z-axis diatomic | on | supported for explicit homonuclear z-axis diatomics through RG/MWG | blocked first by missing WL diatomic base terminal records |
 
-Candidate dependency order:
+Dependency order:
 
-1. WL z-axis diatomic base: produce native WL terminal records and the common
-   `CartesianTerminalBasisRealization` for `supplement = off`.
-2. Supplemented atoms: use the same owner-local Residual Gaussian path as
+1. WL z-axis diatomic base: approved under `HP-COMP-WLDIAT-FN-01`; produce
+   native WL terminal records and the common `CartesianTerminalBasisRealization`
+   for `supplement = off`.
+2. Supplemented atoms: candidate; use the same owner-local Residual Gaussian path as
    supplemented diatomics, with one owner center as the simple case.
-3. Supplemented WL: after WL base terminal bases exist, prove RG augmentation
-   is nesting-neutral at the terminal-basis boundary.
+3. Supplemented WL: candidate; after WL base terminal bases exist, prove RG
+   augmentation is nesting-neutral at the terminal-basis boundary.
 
-Candidate placeholder IDs:
+Approved first lane:
 
 - `HP-COMP-WLDIAT-FN-01` / `HP-COMP-WLDIAT-TEST-01`;
+
+Approved boundary:
+
+- source files are exactly those listed in `registry.md`;
+- support `Natom = 2`, `nesting = :wl`, `basisname = nothing` artifact/readback
+  through the same `CartesianTerminalBasisRealization` and staged base
+  Hamiltonian path;
+- produce native WL z-axis diatomic terminal records;
+- preserve the existing driver contract and avoid driver special cases;
+- do not adapt old WL H1/H1+J materialization;
+- do not change artifact schema, reader behavior, RG/MWG/supplement behavior,
+  route diagnostics, public API/export, or Cr2 workflow;
+- route provenance may use `:z_axis_diatomic_wl_base` under existing keys after
+  validation;
+- line budget is at most `250` added `src` lines, with deletion or
+  simplification of obsolete blocker-only WL diatomic guards expected where
+  practical.
+
+Remaining candidate placeholder IDs:
+
 - `HP-COMP-SUPPATOM-FN-01` / `HP-COMP-SUPPATOM-TEST-01`;
 - `HP-COMP-SUPPWL-FN-01` / `HP-COMP-SUPPWL-TEST-01`.
 
-These placeholders do not authorize implementation. Each lane needs a later
+Remaining placeholders do not authorize implementation. Each lane needs a later
 docs-only amendment naming exact files, functions, validation gates, forbidden
 surfaces, and line budget.
 

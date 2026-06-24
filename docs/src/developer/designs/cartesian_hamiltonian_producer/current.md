@@ -242,8 +242,8 @@ Approved canonical driver usability lane:
 - the target producer contract is the three-choice composition recorded in
   `nesting_supplement_composition_plan.md`: geometry (`atom` or z-axis
   diatomic), nesting (`:pqs` or `:wl`), and supplement state (`off` or `on`);
-  this is planning authority only, and unsupported cells must keep clear
-  rejection until separately approved;
+  this is planning authority except for explicitly promoted cells, and
+  unsupported cells must keep clear rejection until separately approved;
 - the driver may call only approved base, staged, and supported supplemented
   producer surfaces and the approved artifact writer/readback;
 - `basisname = nothing` selects base mode; `basisname !== nothing` selects
@@ -274,11 +274,24 @@ Approved White-Lindsey terminal-basis seam:
   change route skeleton semantics, change shellification/retained-selection
   behavior, add diagnostics, change artifacts, or add supplemented WL behavior.
 
-Candidate composition lanes:
+Approved first composition lane:
 
-- WL z-axis diatomic base terminal records and artifact output, so
-  `geometry = diatomic`, `nesting = :wl`, `supplement = off` can reach the same
-  `CartesianTerminalBasisRealization` boundary;
+- `HP-COMP-WLDIAT-FN-01` approves the native WL z-axis diatomic base path for
+  `Natom = 2`, `nesting = :wl`, `basisname = nothing`;
+- the implementation must produce native WL diatomic terminal records and then
+  use the same `CartesianTerminalBasisRealization`, staged base Hamiltonian
+  construction, writer, and reader path as the PQS producer;
+- approved source files are the narrow diatomic complete-core-shell,
+  terminal-shellification, terminal-lowering, route-helper, terminal-basis,
+  final-basis include, and base-facade surfaces named in `registry.md`;
+- `:z_axis_diatomic_wl_base` is approved only as a truthful route-provenance
+  value under existing artifact keys, not as an artifact schema change;
+- no driver special cases, old WL H1/H1+J materialization, RG/MWG/supplement
+  work, route diagnostics, public API/export changes, committed tests, or Cr2
+  workflow is approved.
+
+Remaining candidate composition lanes:
+
 - supplemented one-center atoms through the existing Residual Gaussian path,
   not an atom-only supplement builder;
 - supplemented White-Lindsey after WL base atom/diatomic terminal bases exist,

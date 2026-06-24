@@ -506,6 +506,8 @@ these approved design IDs:
 - `HP-HAM-MANIFEST-SRC-TEST-01`
 - `HP-NEST-ART-FN-01`
 - `HP-NEST-ART-TEST-01`
+- `HP-COMP-WLDIAT-FN-01`
+- `HP-COMP-WLDIAT-TEST-01`
 
 No other production surface may be added in this lane without a prior
 documentation-only design amendment. This includes new structs, persistent
@@ -1261,10 +1263,32 @@ The target producer shape is the 2 x 2 x 2 composition of geometry
 (`atom` or z-axis diatomic), `nesting` (`:pqs` or `:wl`), and supplement state
 (`off` or `on`) recorded in
 `docs/src/developer/designs/cartesian_hamiltonian_producer/nesting_supplement_composition_plan.md`.
-This is planning authority only. WL diatomic base, supplemented atoms, and
-supplemented White-Lindsey remain candidate lanes until separately approved;
-do not implement those cells as driver-level special cases or parallel
-Hamiltonian builders.
+This is planning authority except where a composition cell is explicitly
+promoted below. Supplemented atoms and supplemented White-Lindsey remain
+candidate lanes until separately approved; do not implement missing cells as
+driver-level special cases or parallel Hamiltonian builders.
+
+`HP-COMP-WLDIAT-FN-01` and `HP-COMP-WLDIAT-TEST-01` promote the first
+composition cell: `Natom = 2`, `nesting = :wl`, `basisname = nothing`.
+Approved source files are
+`src/pqs_source_box_diatomic_complete_core_shell.jl`,
+`src/cartesian_terminal_shellification_geometry.jl`,
+`src/cartesian_terminal_lowering/selection.jl`,
+`src/cartesian_terminal_lowering/region_contracts.jl`,
+`src/pqs_source_box_route_driver_helpers.jl`,
+`src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`,
+`src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl`,
+`src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl`, and
+`src/cartesian_base_hamiltonian.jl`. The pass may produce native WL z-axis
+diatomic terminal records, route them through the existing
+`CartesianTerminalBasisRealization` and staged base Hamiltonian path, and use
+`:z_axis_diatomic_wl_base` as a truthful existing-schema route provenance
+value. It must not add driver special cases, revive/adapt old WL H1/H1+J
+materialization, change artifact schema/matrix keys/reader behavior, touch
+RG/MWG/supplement work, add route diagnostics/status/report payloads, create a
+parallel Hamiltonian builder, add committed tests, or run Cr2. Line budget is
+at most 250 added `src` lines, with blocker-only guard cleanup expected where
+practical.
 
 `HP-WLTERM-FILE-01`, `HP-WLTERM-FN-01`, and `HP-WLTERM-WIRE-01` approve only
 the narrow White-Lindsey terminal-basis seam needed by `nesting = :wl`.

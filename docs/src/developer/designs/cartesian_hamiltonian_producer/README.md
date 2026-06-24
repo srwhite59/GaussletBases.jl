@@ -29,6 +29,8 @@ solver work remain deferred.
 The next composition target is the documented 2 x 2 x 2 matrix over
 `geometry`, `nesting`, and supplement state; unsupported cells remain
 candidate-only until separately approved.
+The first missing composition cell, WL z-axis diatomic base with no supplement,
+is approved for implementation under `HP-COMP-WLDIAT-*`.
 
 Agents should read first:
 
@@ -147,8 +149,9 @@ Approved amendments:
 - [Nesting/supplement composition plan](nesting_supplement_composition_plan.md)
   records the target three-choice contract:
   `geometry = atom | z-axis diatomic`, `nesting = :pqs | :wl`, and
-  `supplement = off | on`. It approves no source work; WL diatomic base,
-  supplemented atoms, and supplemented WL remain candidate lanes.
+  `supplement = off | on`. The WL z-axis diatomic base cell is approved under
+  `HP-COMP-WLDIAT-*`; supplemented atoms and supplemented WL remain candidate
+  lanes.
 - [Cartesian Hamiltonian artifact manifest](cartesian_hamiltonian_artifact_manifest.md)
   approves only compact JLD2 sidecar groups for matrix-order basis labels and
   uniform recipe provenance, and separately approves a compact source-mode
@@ -184,10 +187,10 @@ Approved amendments:
 
 Candidate amendments:
 
-- WL diatomic base, supplemented atoms, supplemented WL, translated atoms,
-  Cr2-specific workflow, public supplemented workflow/export,
-  basis/supplement-realism beyond explicit supplied labels/files, and broad
-  driver diagnostics remain candidate-only until separately approved.
+- Supplemented atoms, supplemented WL, translated atoms, Cr2-specific
+  workflow, public supplemented workflow/export, basis/supplement-realism
+  beyond explicit supplied labels/files, and broad driver diagnostics remain
+  candidate-only until separately approved.
 
 Historical material:
 

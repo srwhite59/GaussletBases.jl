@@ -331,11 +331,20 @@ Route-specific values:
   - `producer_provenance/radius = nothing`
   - `producer_provenance/xmax_parallel = basis.xmax_parallel`
   - `producer_provenance/xmax_transverse = basis.xmax_transverse`
+- z-axis H2 with `nesting = :wl`, after `HP-COMP-WLDIAT-FN-01` succeeds:
+  - `producer_provenance/route = :z_axis_diatomic_wl_base`
+  - `producer_provenance/nesting = :wl`
+  - `producer_provenance/mapping_kind = resolved WL diatomic parent mapping symbol`
+  - `producer_provenance/mapping_d = nothing`
+  - `producer_provenance/radius = nothing`
+  - `producer_provenance/xmax_parallel = basis.xmax_parallel`
+  - `producer_provenance/xmax_transverse = basis.xmax_transverse`
 
-No `:z_axis_diatomic_wl_base` provenance label is approved until the WL H2
-artifact path succeeds under a separate implementation validation. Unsupported
-`(kind, nesting)` combinations must throw before artifact writing rather than
-writing a PQS-oriented route label.
+The `:z_axis_diatomic_wl_base` value is a truthful route-label value under the
+existing schema, not an artifact schema change. It may be written only after the
+WL z-axis diatomic base path succeeds under `HP-COMP-WLDIAT-FN-01` /
+`HP-COMP-WLDIAT-TEST-01`. Unsupported `(kind, nesting)` combinations must throw
+before artifact writing rather than writing a PQS-oriented route label.
 
 `format_version` for the existing Cartesian IDA Hamiltonian matrix payload is
 not changed by R1. Existing `read_cartesian_ida_hamiltonian` must continue to

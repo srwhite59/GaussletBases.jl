@@ -14578,3 +14578,59 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 136 - Approve WL Diatomic Base Lane
+
+Commit(s):
+- this commit - Approve WL diatomic base composition lane
+
+Summary:
+- Promoted the first 2 x 2 x 2 composition placeholder:
+  `HP-COMP-WLDIAT-FN-01` and `HP-COMP-WLDIAT-TEST-01`. The approved source
+  target is `Natom = 2`, `nesting = :wl`, `basisname = nothing`
+  artifact/readback through native White-Lindsey z-axis diatomic terminal
+  records, the existing `CartesianTerminalBasisRealization`, and the staged
+  base Hamiltonian path.
+- The lane allows the narrow route/shellification/lowering/terminal-basis/base
+  source surfaces needed to produce native WL diatomic terminal records. It
+  explicitly forbids driver special cases, old WL H1/H1+J materialization,
+  artifact schema or reader changes, RG/MWG/supplement work, route
+  diagnostics, committed tests, and Cr2 runs.
+- The route provenance value `:z_axis_diatomic_wl_base` is approved as a
+  truthful value under existing provenance keys once the WL H2 path succeeds;
+  it is not an artifact schema change.
+
+Validation:
+- Design-manager validation for this docs-only pass: read current composition
+  and WL terminal-basis authority, updated registry/current/implementation
+  slices/README/R1 provenance wording/WL terminal note/AGENTS/running log, run
+  `git diff --check`, focused `rg` for `HP-COMP-WLDIAT-*`, approved source
+  files, forbidden WL materialization/driver-special-case wording, and confirm
+  no source, test, tool, or bin files changed. No implementation tests are part
+  of this approval pass; package load and artifact/readback checks belong to
+  `HP-COMP-WLDIAT-TEST-01`.
+
+Goal advancement:
+- LT1/LT3: moves the first missing composition cell from known blocker to
+  explicit implementation authority without changing the driver contract.
+- LT5/LT6: keeps White-Lindsey and PQS distinct upstream while forcing both to
+  meet at the same terminal-basis/Hamiltonian artifact boundary.
+
+Carrying-cost result:
+- deleted: none; docs-only authority pass.
+- simplified: WL H2 now has one exact source lane instead of being a vague
+  route/shellification blocker.
+- quarantined: supplemented WL, supplemented atoms, old WL H1/H1+J
+  materialization, driver special cases, artifact schema changes, route
+  diagnostics/status/report payloads, RG/MWG/supplement work, public
+  API/export changes, committed tests, solver/ECP/RHF/EGOI work, and Cr2
+  workflow remain unapproved.
+- not deleted because: source cleanup has not run yet.
+- exact remaining caller/blocker: if native WL diatomic terminal records need
+  broader route skeleton redesign, source files outside the approved list, or
+  a parallel Hamiltonian builder, the source pass must stop and report.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: no new schema fields; only an approved route
+  provenance value.
