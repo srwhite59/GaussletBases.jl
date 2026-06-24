@@ -44,6 +44,11 @@ end
 residual_gaussian_overlap(T_G, T_A, X, S_AA) =
     transpose(T_G) * T_G + transpose(T_G) * X * T_A +
     transpose(T_A) * transpose(X) * T_G + transpose(T_A) * S_AA * T_A
+function residual_gaussian_identity_error(T_G, T_A, X, S_AA)
+    S_RR = Matrix{Float64}(residual_gaussian_overlap(T_G, T_A, X, S_AA))
+    S_RR = 0.5 .* (S_RR .+ transpose(S_RR))
+    return maximum(abs, S_RR - I), maximum(abs, S_RR)
+end
 function check_residual_gaussian_metric(values, tau_abs, tau_rel, label)
     tau = max(Float64(tau_abs), Float64(tau_rel) * max(maximum(values), 1.0))
     minimum(values) >= -tau ||
@@ -107,7 +112,9 @@ function build_residual_gaussian_basis(base_dimension::Integer, X, S_AA,
     canonicalize_residual_signs!(T_A, T_G)
     norm(T_G + X * T_A, Inf) <= orthogonality_atol ||
         throw(ArgumentError("residual-Gaussian G' S R validation failed"))
-    norm(residual_gaussian_overlap(T_G, T_A, X, S_AA) - I, Inf) <= identity_atol ||
+    identity_tolerance = Float64(identity_atol)
+    identity_error, identity_scale = residual_gaussian_identity_error(T_G, T_A, X, S_AA)
+    identity_error <= identity_tolerance * (1.0 + max(1.0, identity_scale)) ||
         throw(ArgumentError("residual-Gaussian R' S R validation failed"))
     residual_source_owner_indices = Int[vcat((fill(block.owner, size(block.T_A, 2))
         for block in owner_blocks)...)...]

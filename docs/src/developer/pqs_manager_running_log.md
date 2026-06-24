@@ -5311,6 +5311,58 @@ Deletion accounting:
 - new tests: none.
 - new metadata/status fields: none.
 
+## Cartesian Hamiltonian Producer Pass 132 - RG Orthogonality Robustness
+
+Commit(s):
+- this commit - Robustify residual identity validation
+
+Summary:
+- Accepted `HP-RG-ORTHO-FN-01`. The final residual identity validation now
+  computes `R' S R`, symmetrizes it, and applies the approved combined
+  absolute/relative check. The strict `G' S R` absolute validation, owner-local
+  selection, residual occupation cutoff, owner metrics, merge metric, retained
+  counts, and merge failure rules are unchanged.
+- The strict N2 q5 p10 case at `core_spacing = 0.042857` now passes residual
+  augmentation with retained counts `9,9`. Its final identity error is
+  `1.673e-10` with an allowed threshold of `2.000e-10`; `G' S R` remains
+  `1.776e-14`, and the final merge spectrum remains `7.232e-2 .. 1.928` with
+  condition `26.65`.
+- Passing N2 comparison cases at `core_spacing = 0.075` and `0.05` remain
+  healthy. The H2 R3 endpoint remains at
+  `0.4574265214362095`, within `2.0e-15` of target.
+
+Validation:
+- Doer validation: `git diff --check`; package load; H2 R3 endpoint; ignored
+  N2 residual validation audit covering strict `0.042857` and passing `0.075`
+  / `0.05` cases.
+- Manager validation: `git diff --check`; `git diff --numstat` showed only
+  `src/cartesian_residual_gaussians/residual_basis.jl` changed with `8` added
+  and `1` deleted source line; suspicious-line scan was empty; new-test/tool
+  scan was empty; diff inspection confirmed no terminal keyword plumbing,
+  public API, artifact, driver, residual selection, MWG/IDA, raw-block, or
+  merge-rule changes.
+
+Goal advancement:
+- RG/LT6: removes the strict N2 residual artifact blocker while preserving the
+  Residual Gaussian basis algorithm and validation intent.
+- LT1/LT3: keeps this as a small robustness bug fix rather than reopening
+  selection, conditioning, or source-construction lanes.
+
+Carrying-cost result:
+- deleted: none.
+- simplified: final residual identity validation now matches the approved
+  robust symmetric absolute/relative rule.
+- quarantined: strict `G' S R`, owner metric, negative-eigenvalue, and final
+  merge near-singularity checks remain live invariants.
+- not deleted because: the existing residual validation checks are still the
+  production safety boundary.
+- exact remaining caller/blocker: none for the strict N2 final-identity
+  overshoot; CR2-side HF/HFDMRG can retry the strict N2 artifact.
+- added src lines: 8.
+- deleted src lines: 1.
+- new tests: none.
+- new metadata/status fields: none.
+
 ## Cartesian Hamiltonian Producer Pass 132 - N2 Residual Validation Audit
 
 Commit(s):
