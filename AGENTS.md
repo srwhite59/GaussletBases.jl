@@ -514,6 +514,8 @@ these approved design IDs:
 - `HP-COMP-SUPPWL-TEST-01`
 - `HP-COMP-SUPPATOM-FN-01`
 - `HP-COMP-SUPPATOM-TEST-01`
+- `HP-COMP-ATOMBOX-FN-01`
+- `HP-COMP-ATOMBOX-TEST-01`
 
 No other production surface may be added in this lane without a prior
 documentation-only design amendment. This includes new structs, persistent
@@ -1348,6 +1350,23 @@ MWG/IDA convention changes, artifact schema or reader changes, public
 API/export changes, solver/ECP work, status/report payloads, heteronuclear or
 general geometry, translated atoms, committed tests, or Cr2 workflow. Target
 line budget is under 80 added `src`/`bin` lines.
+
+`HP-COMP-ATOMBOX-FN-01` and `HP-COMP-ATOMBOX-TEST-01` approve only the
+one-center atom parent-sizing correction in `src/cartesian_base_hamiltonian.jl`.
+The fixed `2*q + 1` atom parent-axis count artifact must be removed; public
+`basis.radius` is the one-center physical box extent authority, and parent
+axis counts must depend on radius plus `core_spacing`/existing spacing policy
+analogously to the z-axis diatomic physical-extent sizing. `q` remains
+nesting/source-mode resolution, not the direct parent box side count. This
+lane preserves origin-centered atom validation, explicit charge/electron-count
+validation, `nesting = :pqs` and `nesting = :wl`, supplemented atoms, artifact
+keys, manifest/provenance, and canonical driver inputs. It does not approve
+driver changes, route-family switches, raw-block changes, residual-selection
+changes, MWG/IDA convention changes, artifact schema or reader changes, public
+API/export changes, solver/ECP work, diagnostics/status/report payloads,
+committed tests, Cr2-specific workflow, translated atoms, non-origin atom
+support, element lookup/default tables, broad parent-construction rewrites, or
+diatomic sizing changes. Target line budget is under 80 added `src` lines.
 
 `HP-WLTERM-FILE-01`, `HP-WLTERM-FN-01`, and `HP-WLTERM-WIRE-01` approve only
 the narrow White-Lindsey terminal-basis seam needed by `nesting = :wl`.

@@ -376,8 +376,8 @@ Source-mode provenance seam:
 Padding scope:
 
 - this lane records current recipe provenance only;
-- one-center atom padding remains a separate contract clarification and must
-  not be bundled into this source pass;
+- one-center atom padding/parent sizing is separately governed by
+  `HP-COMP-ATOMBOX-*` and must not be bundled into this manifest source pass;
 - diatomic padding-derived extents remain active through the existing facade.
 
 Validation gates:
@@ -959,6 +959,11 @@ Additional approved composition lane:
 - `HP-COMP-SUPPATOM-FN-01` / `HP-COMP-SUPPATOM-TEST-01` are approved for the
   supplemented one-center atom composition lane through the existing RG/MWG
   boundary.
+- `HP-COMP-ATOMBOX-FN-01` / `HP-COMP-ATOMBOX-TEST-01` are approved for the
+  one-center atom parent-sizing correction in `src/cartesian_base_hamiltonian.jl`.
+  Public `basis.radius` is the atom physical box extent authority, while `q`
+  remains nesting/source-mode resolution rather than a direct side-count
+  control.
 
 No initial composition placeholder remains candidate-only. Deferred geometry,
 solver, ECP, public export, and Cr2-specific work still need a later docs-only

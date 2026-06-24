@@ -348,6 +348,22 @@ Composition lane status:
   `supplement = off | on` composition lanes now all have approved
   implementation authority under the current origin-centered atom and
   homonuclear z-axis diatomic geometry constraints;
+- `HP-COMP-ATOMBOX-FN-01` separately approves one-center atom parent sizing in
+  `src/cartesian_base_hamiltonian.jl`: public `basis.radius` is the physical
+  box extent authority, parent axis counts must depend on radius plus
+  `core_spacing` / existing spacing policy, and the fixed `2*q + 1` atom
+  parent side count artifact must be removed;
+- `q` remains nesting/source-mode resolution, not direct atom box side count;
+- this atom box lane preserves origin-centered atom validation, explicit
+  charge/electron-count validation, `nesting = :pqs` and `nesting = :wl`,
+  supplemented atoms, artifact keys, manifest/provenance, and canonical driver
+  inputs;
+- it does not approve driver changes, route-family switches, raw-block
+  changes, residual-selection changes, MWG/IDA convention changes, artifact
+  schema or reader changes, public API/export changes, solver/ECP work,
+  diagnostics/status/report payloads, committed tests, Cr2-specific workflow,
+  translated atoms, non-origin atom support, element lookup/default tables,
+  broad parent-construction rewrites, or diatomic sizing changes;
 - deferred geometry, solver, ECP, public export, and Cr2-specific work still
   need later docs-only amendments before implementation may begin.
 

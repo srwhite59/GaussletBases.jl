@@ -118,6 +118,10 @@ The canonical RG algorithm contract is
   nuclear charges, centers, and electron counts. Symbols are provenance labels;
   charges and explicit `nup`/`ndn` are authority. Do not add element lookup
   tables or inferred electron counts.
+- One-center atom parent sizing uses physical extent. Public `basis.radius`
+  / driver `padding` is the atom box-size authority, while `q` controls
+  nesting/source-mode resolution and must not be used as the direct parent box
+  side-count rule.
 - `nesting = :wl` must converge to the same terminal-basis downstream boundary
   as `nesting = :pqs`: a `CartesianTerminalBasisRealization` with disjoint
   owned terminal supports. White-Lindsey boundary-stratum realization must not
@@ -139,9 +143,10 @@ The canonical RG algorithm contract is
 - The canonical driver may expose an explicit one-center base atom workflow
   only through the existing base facade. Current atom validation remains
   origin-centered H, while `HP-R1-ATOM-*` permits explicit origin-centered
-  all-electron base atoms in the facade. Translated atoms, supplemented atoms,
-  element lookup/default tables, ECP, solver workflow, and artifact-schema
-  changes require separate authority.
+  all-electron base atoms in the facade. `HP-COMP-SUPPATOM-*` separately
+  permits supplemented one-center atoms through the common RG/MWG boundary.
+  Translated atoms, element lookup/default tables, ECP, solver workflow, and
+  artifact-schema changes require separate authority.
 - The supplemented R3 usability facade may support explicit homonuclear
   two-center z-axis diatomics under `HP-R3U-ZDI-*`. This is not
   heteronuclear, non-z-axis, ECP, solver, public export, artifact-schema, or

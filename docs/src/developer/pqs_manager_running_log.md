@@ -15057,3 +15057,67 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 143 - Approve Atom Parent Sizing
+
+Commit(s):
+- this commit - Approve one-center atom parent sizing lane
+
+Summary:
+- Approved `HP-COMP-ATOMBOX-FN-01` and `HP-COMP-ATOMBOX-TEST-01` as a narrow
+  one-center atom parent-sizing correction. The live bug is that atom parent
+  counts are still fixed by the old minimal-test rule `side = 2*q + 1`, so
+  atom `padding` / public `basis.radius` is not authoritative for the physical
+  box size.
+- The approved source surface is only `src/cartesian_base_hamiltonian.jl`. I
+  checked for a separate parent/system sizing helper and did not find a
+  dedicated owner, so this amendment does not approve a vague optional helper
+  file. If later source work needs to move sizing into an existing helper, that
+  exact file needs a separate docs-only amendment.
+- The approved contract makes `basis.radius` the one-center physical box
+  extent authority. Parent axis counts must depend on radius plus
+  `core_spacing` / the existing spacing policy, analogous to z-axis diatomic
+  physical-extent sizing. `q` remains nesting/source-mode resolution, not a
+  direct parent side-count control.
+
+Validation:
+- Design-manager validation for this docs-only pass: read compact current
+  authority, registry, R1 base producer wording, implementation slices, AGENTS,
+  and the manager request; inspect source only enough to confirm the current
+  fixed count lives in `src/cartesian_base_hamiltonian.jl`; update docs/AGENTS/
+  running log only; run `git diff --check`; focused `rg` for
+  `HP-COMP-ATOMBOX-*`, `2*q + 1`, parent-axis-count/radius/padding wording,
+  and forbidden driver/artifact/route/Cr2 surfaces; confirm no source, bin,
+  test, or tool files changed. No implementation tests are part of this
+  approval pass; package load and artifact/readback checks belong to
+  `HP-COMP-ATOMBOX-TEST-01`.
+
+Goal advancement:
+- LT1/LT3: removes another hidden test artifact from the public atom producer
+  contract. Public radius/padding becomes a real physical-size input instead
+  of provenance-only metadata.
+- LT5/LT6: keeps atom and diatomic sizing conceptually aligned: geometry
+  chooses the extent rule, spacing sets the lattice count, and `q` remains a
+  resolution/nesting control rather than a box-size substitute.
+
+Carrying-cost result:
+- deleted: none; docs-only authority pass.
+- simplified: future source work has one exact atom-sizing lane instead of
+  treating the current `2*q + 1` count as an implicit public rule.
+- quarantined: driver changes, route-family switches, raw blocks,
+  residual-selection changes, MWG/IDA convention changes, artifact schema or
+  reader changes, public API/export changes, solver/ECP work,
+  diagnostics/status/report payloads, committed tests, Cr2-specific workflow,
+  translated atoms, non-origin atom support, element lookup/default tables,
+  broad parent-construction rewrites, and diatomic sizing changes remain
+  unapproved.
+- not deleted because: source cleanup has not run yet.
+- exact remaining caller/blocker: if fixing atom parent sizing requires broad
+  parent-construction redesign, route semantics changes, driver contract
+  changes, artifact schema changes, translated-atom support, or source files
+  outside `src/cartesian_base_hamiltonian.jl`, the source pass must stop and
+  report the exact blocker.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

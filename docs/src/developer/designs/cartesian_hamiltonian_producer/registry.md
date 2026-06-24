@@ -576,6 +576,78 @@ No committed test file, committed fixture, driver contract test,
 solver/RHF/ECP/EGOI validation, route-diagnostic validation, or Cr2 fixture is
 approved.
 
+## Approved Contract Lane: One-Center Atom Parent Sizing
+
+This section promotes a narrow atom box-sizing correction. The current
+one-center atom producer still contains an old minimal-test artifact in which
+`parent_axis_counts = (2*q + 1, 2*q + 1, 2*q + 1)`. That makes public
+`padding` / `basis.radius` non-authoritative for atom box size. The approved
+contract is that one-center atom sizing uses the same physical-size idea as
+z-axis diatomics: the public physical extent and spacing policy determine the
+parent box/counts, while `q` controls nesting/source-mode resolution.
+
+### HP-COMP-ATOMBOX-FN-01 — one-center atom parent sizing
+
+Approved source file:
+
+```text
+src/cartesian_base_hamiltonian.jl
+```
+
+No optional helper file is approved in this amendment. If a later source audit
+finds an existing parent/system sizing helper that should own the shared rule,
+that exact file must be named in a separate docs-only amendment.
+
+Approved behavior:
+
+- remove the fixed `2*q + 1` atom parent-axis count artifact;
+- use `input.radius` / public `basis.radius` as the one-center physical box
+  extent authority;
+- make atom parent axis counts depend on radius plus `core_spacing` / existing
+  spacing policy, analogous to the z-axis diatomic physical-extent sizing;
+- preserve `q` as nesting/source-mode resolution, not direct box side count;
+- preserve origin-centered atom validation, explicit charge/electron-count
+  validation, `nesting = :pqs` and `nesting = :wl`, supplemented atoms,
+  artifact keys, manifest/provenance, and canonical driver inputs;
+- ensure different atom padding/radius values can produce different atom
+  dimensions when the physical extent changes enough.
+
+Forbidden:
+
+- driver changes;
+- route-family switches, raw-block changes, residual-selection changes,
+  MWG/IDA convention changes, artifact schema changes, writer/reader changes,
+  public API/export changes, solver/ECP work, diagnostics/status/report
+  payloads, committed tests, or Cr2-specific workflow changes;
+- translated atoms, non-origin atom support, or element lookup/default tables;
+- broad parent-construction rewrites or diatomic sizing changes.
+
+Failure rule: if fixing atom parent sizing requires broad parent-construction
+redesign, route semantics changes, driver contract changes, artifact schema
+changes, translated-atom support, or source files outside the approved surface,
+make no source commit and report the exact blocker.
+
+Line budget: target under `80` added `src` lines.
+
+### HP-COMP-ATOMBOX-TEST-01 — atom parent-sizing validation
+
+Approved validation:
+
+- `git diff --check`;
+- package load;
+- H atom base artifact/readback still passes;
+- H atom supplemented PQS and WL artifact/readback still pass;
+- small Be atom base and supplemented smoke if bounded;
+- atom padding sensitivity check: same atom inputs with two padding/radius
+  values should show changed parent counts/dimension or a clear explanation if
+  both values fall in the same count bin;
+- H2/Be2 diatomic smoke to confirm no diatomic sizing regression;
+- no Cr2 run.
+
+No committed test file, committed fixture, driver contract test,
+solver/RHF/ECP/EGOI validation, route-diagnostic validation, or Cr2 fixture is
+approved.
+
 ### HP-FN-03 — blockwise one-body assembly
 
 Approved file:
@@ -1756,10 +1828,11 @@ artifact schema dumps in the driver, solver-specific fields,
 CR2-consumer-specific fields, Cr2-specific fields, committed Cr2 fixtures, or
 Cr2-specific branches.
 
-One-center atom padding is provenance-only for this lane. Source work under
-this ID must not change the current one-center atom size policy or parent-axis
-counts; diatomic padding-derived extents continue to use the existing facade
-contract.
+One-center atom padding is provenance-only for this manifest lane. Source work
+under `HP-HAM-MANIFEST-*` must not change atom size policy or parent-axis
+counts. Production atom parent sizing is separately governed by
+`HP-COMP-ATOMBOX-*`; diatomic padding-derived extents continue to use the
+existing facade contract.
 
 Line budget: at most `150` added `src` lines. Stop for a separate amendment if
 the implementation needs source files outside the approved surfaces, new
@@ -3316,8 +3389,8 @@ supplement: off | on
 ```
 
 This registry section is planning only except for the promoted
-`HP-COMP-WLDIAT-*`, `HP-COMP-BASEDIAT-*`, `HP-COMP-SUPPWL-*`, and
-`HP-COMP-SUPPATOM-*` pairs above.
+`HP-COMP-WLDIAT-*`, `HP-COMP-BASEDIAT-*`, `HP-COMP-SUPPWL-*`,
+`HP-COMP-SUPPATOM-*`, and `HP-COMP-ATOMBOX-*` pairs above.
 Current support remains partial:
 
 - atom / no supplement / `:pqs`: implemented for explicit origin-centered base

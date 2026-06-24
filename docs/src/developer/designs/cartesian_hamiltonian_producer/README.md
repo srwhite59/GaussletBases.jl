@@ -31,6 +31,9 @@ state now has approved implementation authority under the current
 origin-centered atom and homonuclear z-axis diatomic constraints.
 The approved composition IDs are `HP-COMP-WLDIAT-*`, `HP-COMP-BASEDIAT-*`,
 `HP-COMP-SUPPWL-*`, and `HP-COMP-SUPPATOM-*`.
+The one-center atom parent-sizing correction is approved under
+`HP-COMP-ATOMBOX-*`: atom `radius`/driver `padding` is physical box extent
+authority, while `q` remains nesting/source-mode resolution.
 
 Agents should read first:
 

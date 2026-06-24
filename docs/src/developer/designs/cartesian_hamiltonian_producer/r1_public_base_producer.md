@@ -132,6 +132,12 @@ Conditional fields:
 
 R1 derives `n_s = q` internally.
 
+`HP-COMP-ATOMBOX-FN-01` amends the one-center atom sizing contract: `radius`
+is the public physical box extent authority for one-center atoms, and parent
+axis counts must be derived from that extent plus `core_spacing` / the existing
+spacing policy. `q` remains nesting/source-mode resolution and must not be
+interpreted as the direct parent side-count rule.
+
 Optional public fields with R1 defaults:
 
 - `parent_axis_family = :G10`
