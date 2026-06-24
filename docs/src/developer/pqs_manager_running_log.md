@@ -14634,3 +14634,71 @@ Carrying-cost result:
 - new tests: none.
 - new metadata/status fields: no new schema fields; only an approved route
   provenance value.
+
+## Cartesian Hamiltonian Producer Pass 137 - WL Diatomic Base Path
+
+Commit(s):
+- this commit - Enable WL diatomic base terminal path
+
+Summary:
+- Accepted the minimal `HP-COMP-WLDIAT-FN-01` source pass. The existing
+  terminal shellification path is now allowed for White-Lindsey
+  bond-aligned diatomics as well as one-center systems, which lets the native
+  WL lowering, retained-unit, transform-contract, and WL terminal-basis
+  realization chain produce a `CartesianTerminalBasisRealization` for small
+  H2. The staged base products, unit nuclear, IDA, Hamiltonian assembly,
+  writer, and reader then run without a driver special case.
+- Added the already-approved `:z_axis_diatomic_wl_base` route label in the
+  centralized base route-label helper. No artifact keys, driver inputs,
+  terminal-lowering policy, old WL H1/H1+J materialization path, RG/MWG, or
+  supplement code changed.
+
+Validation:
+- Doer/manager: `git diff --check`; package load; ignored
+  `tmp/work/wl_diatomic_base_validation.jl` checking small H2 PQS
+  artifact/readback with `route = :z_axis_diatomic_pqs_base`, small H2 WL
+  artifact/readback with `route = :z_axis_diatomic_wl_base` (`pqs_dim=111`,
+  `wl_dim=1215`); existing H2 residual-GTO/MWG PQS endpoint
+  `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl` passed with
+  augmented dimension `489`, self-Coulomb `0.4574265214362095`, and facade
+  readback deltas all `0.0`. No Cr2 run.
+- Mechanical manager gate: `git diff --numstat -- src bin tools test docs`,
+  suspicious added-line scan, and new tests/tools scan; no suspicious hits and
+  no new committed tests/tools.
+
+Goal advancement:
+- LT1/LT3: fills the first missing composition cell,
+  `Natom = 2`, `nesting = :wl`, `basisname = nothing`, through the canonical
+  staged producer.
+- LT5/LT6: confirms the intended common boundary: WL and PQS differ upstream
+  in shellification/lowering, then converge to `CartesianTerminalBasisRealization`
+  and the same Hamiltonian artifact machinery.
+
+Medium-goal update:
+- The WL diatomic base cell is now implemented for small H2. Supplemented WL
+  remains blocked by policy until the next composition lane proves the RG
+  boundary can consume WL terminal bases.
+
+Risk / guardrail:
+- The WL H2 dimension is much larger than the small PQS H2 smoke at the same
+  `q=2`; that is expected from the WL boundary-stratum identity realization,
+  but future performance work should measure before expanding use. This pass
+  intentionally did not optimize or reinterpret WL retained units.
+
+Remaining blocker / next:
+- Next composition choice is supplemented atoms or supplemented WL. For CR2
+  readiness, continue using PQS supplemented runs unless a source lane promotes
+  supplemented WL.
+
+Line-count / complexity note:
+- added src lines: 2; deleted src lines: 1; new tests: none; new
+  metadata/status fields: none.
+- deleted: obsolete blocker state for WL z-axis diatomic base at the
+  shellification gate.
+- simplified: no driver case table; WL diatomic now uses the same staged base
+  Hamiltonian path.
+- quarantined: supplemented WL, old WL H1/H1+J materialization, Cr2 workflow,
+  and route diagnostics remain out of scope.
+- not deleted because: the later supplemented WL rejection remains until a
+  separate composition lane is approved.
+- exact remaining caller/blocker: no supplemented WL path is approved yet.

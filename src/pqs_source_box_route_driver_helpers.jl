@@ -930,7 +930,7 @@ function _pqs_source_box_route_driver_shell_stage_low_order_shellization(
     uses_terminal_shellification =
         (
             recipe.route_family == :white_lindsey_low_order &&
-            parent.system_classification == :one_center
+            parent.system_classification in (:one_center, :bond_aligned_diatomic)
         ) ||
         (
             recipe.route_family == :pqs_source_box &&

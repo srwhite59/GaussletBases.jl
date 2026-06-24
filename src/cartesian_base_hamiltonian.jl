@@ -527,6 +527,7 @@ function _cartesian_base_route_label(input)
     input.kind === :h && input.nesting === :pqs && return :one_center_pqs_base
     input.kind === :h && input.nesting === :wl && return :one_center_wl_base
     input.kind === :h2 && input.nesting === :pqs && return :z_axis_diatomic_pqs_base
+    input.kind === :h2 && input.nesting === :wl && return :z_axis_diatomic_wl_base
     throw(ArgumentError("unsupported base route label for kind=$(input.kind), nesting=$(input.nesting)"))
 end
 
