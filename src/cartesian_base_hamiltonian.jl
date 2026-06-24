@@ -1,7 +1,7 @@
 const _CARTESIAN_BASE_SYSTEM_KEYS = Set((:atom_symbols, :nuclear_charges, :atom_locations, :nup, :ndn))
 const _CARTESIAN_BASE_H_BASIS_REQUIRED_KEYS = Set((:q, :core_spacing, :radius))
 const _CARTESIAN_BASE_H2_BASIS_REQUIRED_KEYS = Set((:q, :core_spacing, :xmax_parallel, :xmax_transverse))
-const _CARTESIAN_BASE_OPTIONAL_BASIS_KEYS = Set((:parent_axis_family, :reference_spacing, :tail_spacing))
+const _CARTESIAN_BASE_OPTIONAL_BASIS_KEYS = Set((:parent_axis_family, :reference_spacing, :tail_spacing, :nesting))
 const _CARTESIAN_BASE_H_OPTIONAL_BASIS_KEYS = union(_CARTESIAN_BASE_OPTIONAL_BASIS_KEYS, Set((:d,)))
 _cartesian_base_check_keys(input, expected, label) =
     Set(Symbol.(keys(input))) == expected ||
@@ -20,6 +20,15 @@ function _cartesian_base_parent_axis_family(basis)
     family = haskey(basis, :parent_axis_family) ? basis.parent_axis_family : :G10
     family === :G10 || throw(ArgumentError("only parent_axis_family=:G10 is supported"))
     return family
+end
+
+function _cartesian_base_nesting(basis)
+    value = haskey(basis, :nesting) ? basis.nesting : :pqs
+    (value isa Symbol || value isa AbstractString) ||
+        throw(ArgumentError("basis.nesting must be :pqs or :wl"))
+    nesting = Symbol(value)
+    nesting in (:pqs, :wl) || throw(ArgumentError("basis.nesting must be :pqs or :wl"))
+    return nesting
 end
 
 function _cartesian_base_positive(value, label)
@@ -50,6 +59,7 @@ function _cartesian_base_diatomic_basis_parts(basis)
         radius = nothing, d = nothing,
         xmax_parallel = _cartesian_base_positive(basis.xmax_parallel, "basis.xmax_parallel"),
         xmax_transverse = _cartesian_base_positive(basis.xmax_transverse, "basis.xmax_transverse"),
+        nesting = _cartesian_base_nesting(basis),
         parent_axis_family = _cartesian_base_parent_axis_family(basis),
         reference_spacing = _cartesian_base_get_positive(basis, :reference_spacing, 1.0),
         tail_spacing = _cartesian_base_get_positive(basis, :tail_spacing, 10.0))
@@ -106,7 +116,8 @@ function _cartesian_base_inputs(system::NamedTuple, basis::NamedTuple)
             core_spacing,
             radius = _cartesian_base_positive(basis.radius, "basis.radius"),
             d = _cartesian_base_atom_mapping_d(basis, core_spacing), xmax_parallel = nothing,
-            xmax_transverse = nothing, parent_axis_family = _cartesian_base_parent_axis_family(basis),
+            xmax_transverse = nothing, nesting = _cartesian_base_nesting(basis),
+            parent_axis_family = _cartesian_base_parent_axis_family(basis),
             reference_spacing = _cartesian_base_get_positive(basis, :reference_spacing, 1.0),
             tail_spacing = _cartesian_base_get_positive(basis, :tail_spacing, 10.0)))
     elseif length(symbols) == 2
@@ -123,17 +134,27 @@ function _cartesian_base_inputs(system::NamedTuple, basis::NamedTuple)
     throw(ArgumentError("only one-center atoms and H2 are supported"))
 end
 
-function _cartesian_base_route(kind)
+function _cartesian_base_route(kind, nesting)
     route_shape = kind === :h ? (:pqs_left, :product, :pqs_right) :
         (:atom_contact_core, :shared_shell_1, :shared_shell_2)
     route_kind = kind === :h ? :one_center_fixed_q_complete_core_shell :
         :bond_aligned_diatomic_independent_pqs_source_box_core_shell
-    return (;
-        route_family = :pqs_source_box, route_kind, route_shape, product_body_rule = :centered_single_z_slab,
+    common = (; route_kind, terms = (:overlap,),
+        pair_factor_normalization = :density_normalized, supplement_policy = nothing,
+        run_final_basis = false, run_h1 = false, run_h1_j = false)
+    nesting === :pqs && return merge(common, (;
+        route_family = :pqs_source_box, route_shape,
+        product_body_rule = :centered_single_z_slab,
         pqs_retained_rule = :boundary_comx_product_mode_selection,
-        product_retained_rule = :product_doside_retained_unit, terms = (:overlap,),
-        pair_factor_normalization = :density_normalized,
-        supplement_policy = nothing, run_final_basis = false, run_h1 = false, run_h1_j = false)
+        product_retained_rule = :product_doside_retained_unit))
+    nesting === :wl && return merge(common, (;
+        route_family = :white_lindsey_low_order,
+        white_lindsey_route_shape = (:standard_cartesian_units, :low_order_comx_coarsening),
+        white_lindsey_mapping_rule = :standard_unit_backbone_mapping_family,
+        white_lindsey_nesting_rule = :unit_box_low_order_comx_coarsening,
+        white_lindsey_retained_rule = :low_order_unit_comx_retained_basis,
+        white_lindsey_operator_rule = :low_order_unit_operator_blocks))
+    throw(ArgumentError("basis.nesting must be :pqs or :wl"))
 end
 
 function _cartesian_base_stages(input)
@@ -165,7 +186,7 @@ function _cartesian_base_stages(input)
             parent_axis_counts = nothing, map_backend = :pgdg_localized_experimental)
     end
     system = cartesian_system(system_inputs)
-    recipe = cartesian_recipe(_cartesian_base_route(input.kind))
+    recipe = cartesian_recipe(_cartesian_base_route(input.kind, input.nesting))
     parent = cartesian_parent(system, spacing_inputs, parent_inputs, recipe)
     shells = cartesian_shells(parent, spacing_inputs, recipe)
     units = cartesian_units(parent, shells, recipe)
@@ -542,6 +563,13 @@ _cartesian_base_expansion() = coulomb_gaussian_expansion(doacc = false)
 _cartesian_base_pgdg(base) =
     Tuple(_nested_axis_pgdg(base.parent.parent_axis_bundle_object, axis) for axis in (:x, :y, :z))
 
+function _cartesian_base_terminal_basis(base)
+    basis = base.terminal_basis
+    !isnothing(basis) && return basis
+    nesting = hasproperty(base.input, :nesting) ? base.input.nesting : :pqs
+    throw(ArgumentError("nesting=$(repr(nesting)) base Hamiltonian path is not yet wired to a terminal basis"))
+end
+
 function cartesian_base_working_basis(system::NamedTuple; basis::NamedTuple, supplemented::Bool = false)
     input = supplemented ? _cartesian_r3_diatomic_inputs(system, basis) :
         _cartesian_base_inputs(system, basis)
@@ -552,14 +580,14 @@ function cartesian_base_working_basis(system::NamedTuple; basis::NamedTuple, sup
 end
 
 cartesian_base_products(base) =
-    _pqs_source_box_route_driver_terminal_products(base.terminal_basis, _cartesian_base_pgdg(base))
+    _pqs_source_box_route_driver_terminal_products(_cartesian_base_terminal_basis(base), _cartesian_base_pgdg(base))
 
 cartesian_base_unit_nuclear(base) =
-    _pqs_source_box_route_driver_terminal_unit_nuclear(base.terminal_basis,
+    _pqs_source_box_route_driver_terminal_unit_nuclear(_cartesian_base_terminal_basis(base),
         _cartesian_base_expansion(), _cartesian_base_pgdg(base), base.input.locations)
 
 cartesian_base_vee(base) =
-    _pqs_source_box_route_driver_terminal_vee(base.terminal_basis,
+    _pqs_source_box_route_driver_terminal_vee(_cartesian_base_terminal_basis(base),
         _cartesian_base_expansion(), _cartesian_base_pgdg(base))
 
 function cartesian_base_hamiltonian_assembly(base; hamfile::Union{Nothing,AbstractString} = nothing)::CartesianIDAHamiltonian{Float64}
@@ -679,6 +707,8 @@ end
 
 function cartesian_residual_gto_supplement_basis(base, supplement::NamedTuple)
     input = base.input
+    input.nesting === :wl &&
+        throw(ArgumentError("supplemented nesting=:wl diatomic path is not yet wired"))
     supplement_input = _cartesian_r3_supplement_inputs(input, supplement)
     raw_supplement = legacy_bond_aligned_diatomic_gaussian_supplement(
         first(input.symbols), first(supplement_input.basis_by_center), input.locations;

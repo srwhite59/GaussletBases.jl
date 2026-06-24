@@ -1502,19 +1502,29 @@ function _pqs_source_box_route_driver_terminal_basis_realization(
     low_order_transforms,
     recipe,
 )
-    recipe.route_family === :pqs_source_box || return nothing
     isnothing(low_order_transforms) && return nothing
-    plan = low_order_transforms.terminal_retained_rule_plan
-    plan.status === :available_terminal_retained_rule_plan || return nothing
     contract_plan = low_order_transforms.retained_unit_transform_contract_plan
     contracts =
         CartesianRetainedUnitTransformContracts.transform_contracts(contract_plan)
-    return CartesianFinalBasisRealization.pqs_terminal_basis_realization(
-        plan.support_plan.terminal_support_records,
-        plan.records,
-        contracts,
-        units.parent.parent_axis_bundle_object,
-    )
+    if recipe.route_family === :pqs_source_box
+        plan = low_order_transforms.terminal_retained_rule_plan
+        plan.status === :available_terminal_retained_rule_plan || return nothing
+        return CartesianFinalBasisRealization.pqs_terminal_basis_realization(
+            plan.support_plan.terminal_support_records,
+            plan.records,
+            contracts,
+            units.parent.parent_axis_bundle_object,
+        )
+    elseif recipe.route_family === :white_lindsey_low_order
+        retained_units =
+            CartesianRetainedUnits.units(contract_plan.retained_unit_plan)
+        return CartesianFinalBasisRealization.white_lindsey_terminal_basis_realization(
+            retained_units,
+            contracts,
+            units.parent.parent_axis_bundle_object,
+        )
+    end
+    return nothing
 end
 
 function cartesian_transforms(units, recipe)

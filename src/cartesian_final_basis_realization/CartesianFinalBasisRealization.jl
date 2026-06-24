@@ -19,6 +19,7 @@ module CartesianFinalBasisRealization
 
 using ..CartesianRawProductSources
 using ..CartesianResidualGaussians
+using ..CartesianCPB
 using LinearAlgebra
 import ..GaussletBases: _cartesian_unflat_index, _nested_axis_lengths,
        _nested_axis_pgdg, _nested_box_support_indices, _nested_product_coefficients,
@@ -43,6 +44,7 @@ include("pqs_source_shell_final_basis.jl")
 include("pqs_complete_core_shell_final_basis.jl")
 
 include("pqs_terminal_basis_realization.jl")
+include("white_lindsey_terminal_basis_realization.jl")
 include("pqs_terminal_residual_gto.jl")
 include("pqs_terminal_one_body.jl")
 include("pqs_terminal_ida.jl")

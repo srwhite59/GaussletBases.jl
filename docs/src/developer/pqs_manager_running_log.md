@@ -14285,6 +14285,76 @@ Carrying-cost result:
 - new tests: none.
 - new metadata/status fields: none.
 
+## Cartesian Hamiltonian Producer Pass 133 - Driver Nesting And WL Terminal Atom
+
+Commit(s):
+- this commit - Wire driver nesting and WL terminal basis
+
+Summary:
+- Accepted the `nesting = :pqs` / `nesting = :wl` driver/facade wiring together
+  with the narrow White-Lindsey terminal-basis seam. The canonical driver now
+  exposes `nesting` as a first-class construction-family input and passes it
+  through the base basis contract. `:pqs` preserves the existing PQS route, and
+  `:wl` maps to the existing `:white_lindsey_low_order` route.
+- The WL route now produces the same `CartesianTerminalBasisRealization` type
+  consumed by staged product, unit-nuclear, IDA, Hamiltonian, artifact, and
+  readback stages for the one-center base atom path. This is a real base
+  Hamiltonian endpoint, not a blocker-only commit, and it deliberately does not
+  revive the old WL H1/H1+J materialization path.
+- WL H2 remains blocked because the current native WL shellification/terminal
+  record path is produced for one-center systems only; H2 still reaches the
+  missing-terminal-basis blocker. This is now a precise route/shellification
+  support gap, not a driver contract ambiguity.
+
+Validation:
+- Doer: `git diff --check`; package load; `nesting=:pqs` atom artifact/readback
+  (`dim 35`); `nesting=:pqs` H2 artifact/readback (`dim 95`);
+  `nesting=:wl` atom artifact/readback (`dim 125`); `nesting=:wl` H2 clear
+  blocker; H2 residual-GTO/MWG PQS endpoint with augmented dimension `489` and
+  self-Coulomb `0.4574265214362095`.
+- Manager: reviewed the WIP diff against `HP-DRV-NEST-*` and `HP-WLTERM-*`,
+  confirmed changed source/bin surfaces, ran `git diff --check`,
+  `git diff --numstat -- src bin tools test docs`, suspicious added-line scan,
+  new tests/tools scan, and final status. Julia validations were not rerun per
+  the standing instruction not to duplicate doer runs.
+
+Goal advancement:
+- LT1/LT3: restores the intended public construction-family choice in the
+  canonical driver without exposing private route controls.
+- LT5/LT6: keeps PQS and White-Lindsey identities explicit while forcing both
+  through the same terminal-basis and Hamiltonian artifact boundary.
+
+Medium-goal update:
+- none. This pass is a driver/WL usability seam; it does not change the current
+  CR2/HF readiness direction except by making the public construction contract
+  more honest.
+
+Risk / guardrail:
+- The WL terminal realizer currently treats direct retained units and WL
+  boundary-stratum units as identity terminal blocks on owned support. That is
+  the approved low-order seam, but future WL diatomic support must extend
+  native shellification/lowering records rather than adding driver-level
+  cross-product cases.
+
+Remaining blocker / next:
+- WL diatomic base construction needs a separate route/shellification authority
+  if `nesting=:wl` H2 artifacts are desired. Supplemented WL remains outside
+  the current workflow until base WL diatomics have native terminal records.
+
+Line-count / complexity note:
+- added src lines: 148, deleted src lines: 21; added bin lines: 6, deleted bin
+  lines: 3; new tests: none; new metadata/status fields: none.
+- deleted: the PQS-only terminal-realization gate no longer blocks the WL atom
+  route.
+- simplified: driver construction family now flows through `basis.nesting`
+  into the route family rather than relying on hidden hardwiring.
+- quarantined: old WL H1/H1+J materialization path, WL H2, supplemented WL,
+  and Cr2 workflow remain outside this pass.
+- not deleted because: existing PQS terminal realization and old WL reference
+  materialization still have separate live/reference roles.
+- exact remaining caller/blocker: no native WL diatomic terminal records are
+  produced for the staged Hamiltonian path.
+
 ## Cartesian Hamiltonian Producer Pass 133 - Approve WL Terminal Basis Seam
 
 Commit(s):
