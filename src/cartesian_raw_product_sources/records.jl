@@ -28,7 +28,7 @@ end
 Metadata-only raw product-box source facts.
 
 A `RawProductBoxPlan` records the filled/source CPB, explicit source-mode
-dimensions, source-mode ordering, source-mode tuple order, and per-axis
+dimensions, source-mode ordering, deterministic source-mode order, and per-axis
 transform facts for a raw product source space. Source-mode dimensions are
 total source-mode lengths, not interior counts, and are not inferred from the
 CPB shape.
@@ -43,8 +43,8 @@ struct RawProductBoxPlan
     source_shape::NTuple{3,Int}
     source_mode_dims::NTuple{3,Int}
     source_mode_count::Int
-    source_mode_indices::Tuple{Vararg{NTuple{3,Int}}}
-    source_mode_column_indices::Tuple{Vararg{Int}}
+    source_mode_indices::Vector{NTuple{3,Int}}
+    source_mode_column_indices::Vector{Int}
     source_mode_ordering::Symbol
     axis_transform_facts::NTuple{3,AxisSourceTransformFact}
     materialized::Bool
@@ -171,7 +171,7 @@ function raw_product_box_plan(
         normalized_dims,
         count,
         indices,
-        Tuple(1:count),
+        collect(1:count),
         source_mode_ordering,
         transform_facts,
         any(fact -> fact.coefficient_status === :materialized, transform_facts),

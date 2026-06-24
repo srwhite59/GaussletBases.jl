@@ -21,12 +21,12 @@ function source_mode_indices(
     normalized_dims = _normalize_source_mode_dims(dims)
     _assert_supported_source_mode_ordering(source_mode_ordering)
     nx, ny, nz = normalized_dims
-    return Tuple(
+    return NTuple{3,Int}[
         (ix, iy, iz)
         for ix in 1:nx
         for iy in 1:ny
         for iz in 1:nz
-    )
+    ]
 end
 
 function source_mode_count(dims)

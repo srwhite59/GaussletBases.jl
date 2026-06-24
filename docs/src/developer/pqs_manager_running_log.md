@@ -13379,3 +13379,59 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 120 - Vectorize Raw Product Source Modes
+
+Commit(s):
+- this commit - Vectorize raw product source modes
+
+Summary:
+- Accepted `HP-RAW-SRCMODE-FN-01`. `RawProductBoxPlan.source_mode_indices`
+  and `source_mode_column_indices` no longer store variable-length
+  `Tuple{Vararg...}` inventories; they now use vector-backed storage.
+- `source_mode_indices(...)` still returns the same deterministic
+  x-major/y-major/z-fast order, but as `Vector{NTuple{3,Int}}`. Existing
+  consumers needed no source changes, which keeps the blast radius low.
+- This is a compile/type-surface cleanup only. It does not change numerical
+  kernels, route semantics, artifact schema, driver behavior, reader behavior,
+  or manifest source-mode/relation labels.
+
+Validation:
+- Doer validation: `git diff --check`; package load; H2 base artifact/readback
+  with dimension 471 and K/V deltas 0.0; H2 supplemented artifact/readback with
+  dimension 489 and K/V deltas 0.0; manifest source-mode rows stayed 525;
+  retained boundary relation rows stayed 196; relation labels still matched
+  native source-mode labels; H2 R3 endpoint passed with self-Coulomb
+  `0.4574265214362095`; focused parity for `(3,3,3)` and `(5,5,5)` source-mode
+  order and retained boundary columns matched the old deterministic sequence.
+- Manager validation: `git diff --check`; `git diff --numstat` reported `6`
+  added and `6` deleted source lines across
+  `src/cartesian_raw_product_sources/records.jl` and
+  `src/cartesian_raw_product_sources/source_mode_indices.jl`; suspicious-line
+  scan was empty; new-test/tool scan was empty.
+
+Goal advancement:
+- LT1/LT3: removes the strongest remaining q/source-mode-count-dependent
+  concrete tuple inventory from the audited base working-basis path before
+  fresh timing/compile attribution.
+- RG/LT6: preserves current manifest source-mode and retained-seed relation
+  behavior while reducing a compile-latency risk for the canonical
+  supplemented artifact path.
+
+Carrying-cost result:
+- deleted: variable-length tuple storage for raw source-mode inventories in
+  `RawProductBoxPlan`.
+- simplified: source-mode order is now a vector-backed deterministic inventory
+  with the existing accessor surface preserved.
+- quarantined: fixed `NTuple{3,Int}` dimensions/coordinates remain, and
+  terminal-lowering plus retained transform-contract tuple lanes remain
+  separate future cleanup targets.
+- not deleted because: retained boundary rule vectors already have the desired
+  storage shape and were intentionally left unchanged.
+- exact remaining caller/blocker: next compile cleanup, if still warranted
+  before timing, is likely terminal-lowering plan contract tuples or retained
+  transform-contract plan tuples.
+- added src lines: 6.
+- deleted src lines: 6.
+- new tests: none.
+- new metadata/status fields: none.
