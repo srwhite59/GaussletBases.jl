@@ -5311,6 +5311,53 @@ Deletion accounting:
 - new tests: none.
 - new metadata/status fields: none.
 
+## Cartesian Hamiltonian Producer Pass 148 - WL Diatomic `ns` Guard
+
+Commit(s):
+- this commit - Reject undersized WL diatomic ns
+
+Summary:
+- Accepted `HP-COMP-WLNS-FN-01` as the narrow source cleanup following the
+  WL diatomic `ns` audit. `src/cartesian_base_hamiltonian.jl` now rejects
+  normalized `nesting = :wl`, z-axis diatomic `ns < 4` in
+  `_cartesian_base_diatomic_basis_parts(...)` before route construction.
+- This moves the unsupported `ns = 3` case from a late terminal
+  shellification failure (`complete-shell inner box must be a filled CPB`) to
+  a clear public-input error. It intentionally leaves WL one-center atoms on
+  the existing `ns >= 3` rule and does not change the observed WL diatomic
+  retained-support saturation for `ns >= 4`.
+
+Validation:
+- Doer: `git diff --check`; package load; ignored validation script
+  `tmp/work/hp_comp_wlns_validation.jl`; WL H2 `ns = 3` early rejection with
+  the new message; WL H2 `ns = 4` base artifact/readback; WL H2 `ns = 4`
+  supplemented artifact/readback with finite/symmetric K and V; PQS H atom and
+  PQS H2 smokes. No Cr2 run.
+- Manager: inspected the two-line source diff; `git diff --check`;
+  `git diff --numstat -- src bin tools test docs`; suspicious added-line
+  scan; new tests/tools scan. No suspicious hits and no committed tests/tools.
+
+Goal advancement:
+- LT1/LT3: makes the public composition contract honest for the WL diatomic
+  corner case.
+- LT5/LT6: preserves the three-choice composition design without adding driver
+  special cases or route diagnostics.
+
+Carrying-cost result:
+- deleted: none.
+- simplified: unsupported WL diatomic `ns = 3` now stops at input
+  normalization instead of route-internal shellification.
+- quarantined: driver changes, route/shellification/terminal-lowering
+  changes, artifact/provenance changes, and WL `ns >= 4` saturation remain out
+  of scope.
+- not deleted because: the live shellification path remains correct for
+  supported WL diatomic sizes.
+- exact remaining caller/blocker: none for this guard.
+- added src lines: 2.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.
+
 ## Cartesian Hamiltonian Producer Pass 132 - RG Orthogonality Robustness
 
 Commit(s):

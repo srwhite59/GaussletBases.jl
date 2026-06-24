@@ -92,6 +92,8 @@ function _cartesian_base_diatomic_basis_parts(basis)
     _cartesian_base_check_basis_keys(basis, _CARTESIAN_BASE_H2_BASIS_REQUIRED_KEYS)
     nesting = _cartesian_base_nesting(basis)
     size_parts = _cartesian_base_size_parts(basis, nesting)
+    nesting === :wl && size_parts.ns < 4 &&
+        throw(ArgumentError("basis.ns must be at least 4 for z-axis diatomic nesting=:wl"))
     return (; size_parts...,
         core_spacing = _cartesian_base_positive(basis.core_spacing, "basis.core_spacing"),
         radius = nothing, d = nothing,
