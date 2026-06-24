@@ -15240,3 +15240,60 @@ Carrying-cost result:
 - new tests: none.
 - new metadata/status fields: compact provenance keys `ns`, `q_rule`, and
   `ns_source` in existing provenance groups.
+
+## Cartesian Hamiltonian Producer Pass 146 - Atom Parent Box Sizing
+
+Commit(s):
+- this commit - Size atom parent box from physical radius
+
+Summary:
+- Accepted the `HP-COMP-ATOMBOX-FN-01` source pass. The one-center atom branch
+  no longer sets `parent_axis_counts = (2*q + 1, 2*q + 1, 2*q + 1)`.
+  Instead it computes an odd mapped physical parent count from the
+  White-Lindsey atomic mapping, public radius, core spacing, tail spacing, and
+  reference spacing, then applies route-local `q` only as the minimum
+  core-shell side.
+- The implementation stays inside `src/cartesian_base_hamiltonian.jl`. It does
+  not touch the canonical driver or route helpers. This matters because the
+  route-helper fallback still treats radius as an index radius; the producer
+  now passes explicit counts for atoms to avoid that fallback.
+
+Validation:
+- Doer: `git diff --check`; package load; H atom base artifact/readback; H
+  atom supplemented PQS and WL artifact/readback; Be atom base and
+  supplemented PQS smokes; atom padding sensitivity at fixed `ns = 2`
+  showing parent counts/final dimensions change from `(5,5,5)`/`35` at
+  radius `1.0`, to `(7,7,7)`/`43` at radius `2.0`, to `(9,9,9)`/`51` at
+  radius `4.0`; H2 base smoke; Be2 WL base smoke. No Cr2 run.
+- Manager: inspected the source diff and the mapped-count helper precedent;
+  `git diff --check`; `git diff --numstat -- src bin tools test docs`;
+  suspicious added-line scan; new tests/tools scan; focused stale `2*q+1`
+  scan. No suspicious hits and no new committed tests/tools.
+
+Goal advancement:
+- LT1/LT3: fixes the atom public contract so driver `padding` / producer
+  `radius` is a real physical extent authority for one-center atoms.
+- LT5/LT6: completes the immediate `ns`/atom-box correction chain. Public
+  `ns` now controls source/nesting resolution, while atom radius controls
+  physical parent extent.
+
+Remaining blocker / next:
+- Re-run CR2-side calibrated driver comparisons before drawing PQS/WL
+  conclusions. Atom dimensions and WL/PQS comparison points should now be
+  recalibrated with public `ns` and physical padding.
+
+Carrying-cost result:
+- deleted: fixed one-center `2 * input.q + 1` parent side count.
+- simplified: atom parent sizing is tied to physical radius and mapping rather
+  than public source/nesting size.
+- quarantined: driver changes, route helpers, shellification, terminal
+  lowering, raw blocks, RG/MWG/IDA, artifact schema, reader/API, translated
+  atoms, and Cr2 workflow remain out of scope.
+- not deleted because: route-local `q` still defines the minimum core-shell
+  side needed by existing shellification.
+- exact remaining caller/blocker: none for one-center parent sizing in this
+  lane.
+- added src lines: 20.
+- deleted src lines: 2.
+- new tests: none.
+- new metadata/status fields: none.

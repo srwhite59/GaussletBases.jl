@@ -198,6 +198,25 @@ function _cartesian_base_route(kind, nesting)
     throw(ArgumentError("basis.nesting must be :pqs or :wl"))
 end
 
+function _cartesian_base_odd_core_side(q)
+    side = isodd(q) ? q : q + 1
+    side > 0 || throw(ArgumentError("derived route-local q must be positive"))
+    return side
+end
+
+function _cartesian_base_atom_parent_axis_counts(input)
+    mapping = white_lindsey_atomic_mapping(;
+        Z = only(input.charges),
+        d = input.core_spacing,
+        tail_spacing = input.tail_spacing)
+    count = _qwrg_mapped_odd_count_for_extent(
+        mapping,
+        input.radius;
+        reference_spacing = input.reference_spacing)
+    side = max(count, _cartesian_base_odd_core_side(input.q))
+    return (x = side, y = side, z = side)
+end
+
 function _cartesian_base_stages(input)
     atom_symbols = Tuple(Symbol.(input.symbols))
     nuclear_charges = Tuple(input.charges)
@@ -213,11 +232,10 @@ function _cartesian_base_stages(input)
         parent_mapping_Z = input.kind === :h ? only(input.charges) : nothing,
         parent_mapping_d = input.kind === :h ? input.core_spacing : nothing)
     if input.kind === :h
-        side = 2 * input.q + 1
         system_inputs = (; atom_symbols, nuclear_charges, atom_locations,
             nup = input.nup, ndn = input.ndn, bond_axis = nothing, bond_length = nothing,
             radius = input.radius,
-            parent_axis_counts = (x = side, y = side, z = side),
+            parent_axis_counts = _cartesian_base_atom_parent_axis_counts(input),
             map_backend = :pgdg_localized_experimental)
     else
         z = (input.locations[1][3], input.locations[2][3])
