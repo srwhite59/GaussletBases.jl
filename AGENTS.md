@@ -470,6 +470,8 @@ these approved design IDs:
 - `HP-RG-TEST-01`
 - `HP-RG-ORTHO-FN-01`
 - `HP-RG-ORTHO-TEST-01`
+- `HP-RG-IDTOL-FN-01`
+- `HP-RG-IDTOL-TEST-01`
 - `HP-CGRB-FILE-01`
 - `HP-CGRB-FN-01`
 - `HP-CGRB-FN-02`
@@ -852,6 +854,18 @@ Approved Residual Gaussian module surfaces:
 - `HP-RG-ORTHO-TEST-01` approves only the existing H2 residual-GTO/MWG endpoint,
   H2 readback if the facade path is touched, ignored strict N2 q5 p10 residual
   audit/artifact smoke, and one passing N2 comparison.
+- `HP-RG-IDTOL-FN-01` approves only the default final residual
+  `R' S R` identity validation tolerance update to `1.0e-8` in
+  `src/cartesian_residual_gaussians/residual_basis.jl`, with
+  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` allowed
+  only for narrow compatibility keyword default plumbing if needed. The
+  default `residual_occupation_cutoff` remains `1.0e-8`.
+- `HP-RG-IDTOL-TEST-01` approves only Be atom cc-pV5Z `lmax = 1`
+  residual audit/artifact validation with the same `21` retained residual
+  directions, Be atom cc-pVDZ `lmax = 1` comparison, the unchanged H2
+  residual-GTO/MWG endpoint, and reporting of `max |G' S R|`,
+  `max |R' S R - I|`, allowed tolerance, retained count, minimum retained
+  occupation, and final merge condition.
 
 Non-negotiable RG guardrails:
 
@@ -869,6 +883,10 @@ Non-negotiable RG guardrails:
   floating-point overshoots after owner-local selection and a healthy final
   merge; it must not change occupation cutoff, selection semantics, or merge
   failure rules;
+- `HP-RG-IDTOL-FN-01` sets the production default final residual identity
+  tolerance to `1.0e-8`. This is a final validation/cleanup tolerance only, not
+  a residual direction-selection criterion, a width/zeta filtering policy, or a
+  merge failure-rule change;
 - RG does not own basis loading, parent lattice construction, terminal topology,
   raw analytic formula ownership, facade parsing, artifact writing,
   `supplement_provenance/`, report/status/payload objects, or public exports.
@@ -879,8 +897,8 @@ Older R3-B scalars and global-selection construction paths are historical only.
 Do not add width scaling, tolerance relaxation, global raw-candidate Lowdin,
 global raw-column pivoted-Cholesky residual selection, public export,
 Cr2-specific facade support, full Cr2 Hamiltonian/artifact, new committed
-tests, driver/bin/tool workflow, or artifact schema expansion without a prior
-docs-only amendment.
+tests, driver/bin/tool workflow, artifact schema expansion, or further
+unapproved tolerance changes without a prior docs-only amendment.
 
 Approved neutral Cartesian Gaussian raw-block nuclear owner:
 

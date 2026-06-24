@@ -58,7 +58,7 @@ Agents should read first:
 - [Residual Gaussian domain module](residual_gaussian_domain_module.md) for
   current RG algorithm authority
 - [Residual Gaussian orthogonality robustness](residual_gaussian_orthogonality_robustness.md)
-  for the narrow final residual identity-check robustness lane
+  for the narrow final residual identity-check robustness and tolerance lanes
 - [Cartesian Gaussian raw blocks - nuclear slice](cartesian_gaussian_raw_blocks_nuclear.md)
   for the neutral uncharged nuclear raw-block owner
 - [Cartesian Gaussian raw blocks - non-nuclear slice](cartesian_gaussian_raw_blocks_non_nuclear.md)
@@ -122,7 +122,8 @@ Approved amendments:
   IDA interaction blocks.
 - [Residual Gaussian orthogonality robustness](residual_gaussian_orthogonality_robustness.md)
   approves only a narrow robust final residual identity validation pass for
-  small floating-point overshoots with healthy owner-local and merge metrics.
+  small floating-point overshoots with healthy owner-local and merge metrics,
+  plus the default final identity tolerance policy.
 - [Cartesian Gaussian raw blocks - nuclear slice](cartesian_gaussian_raw_blocks_nuclear.md)
   approves only the neutral owner for exact uncharged by-center Gaussian
   nuclear `G-A`/`A-A` raw blocks shared by Residual Gaussian and Qiu-White

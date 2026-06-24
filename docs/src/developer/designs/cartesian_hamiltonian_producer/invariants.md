@@ -87,6 +87,12 @@ The canonical RG algorithm contract is
   floating-point overshoots after owner-local selection and a healthy final
   merge; it must not become an occupation-cutoff change, eigenvalue flooring,
   or global residual-selection repair;
+- `HP-RG-IDTOL-FN-01` sets the default final residual identity validation
+  tolerance to `1.0e-8`. That tolerance applies only to the final `R' S R`
+  identity check after owner-local selection and final merge. It must not be
+  used to discard residual directions, change `residual_occupation_cutoff`,
+  change width/zeta filtering defaults, or weaken owner-local metric, merge
+  metric, or `G' S R` checks;
 - RG does not own artifact writing, artifact provenance, basis loading, facade
   parsing, public exports, driver workflow, or route-stage/report fields.
 

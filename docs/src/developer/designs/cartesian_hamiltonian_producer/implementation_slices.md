@@ -288,6 +288,19 @@ Approved robustness lane:
 - no residual selection semantic change, occupation-cutoff change, MWG/IDA,
   raw-block, artifact, driver, public API, or committed-test expansion is
   approved.
+- `HP-RG-IDTOL-FN-01` approves only the default final residual
+  `R' S R` identity validation tolerance update to `1.0e-8` in
+  `src/cartesian_residual_gaussians/residual_basis.jl`, with
+  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` allowed
+  only for compatibility keyword default plumbing if needed.
+- `HP-RG-IDTOL-TEST-01` approves only Be atom cc-pV5Z `lmax = 1`
+  residual audit/artifact validation with the same `21` retained residual
+  directions, Be atom cc-pVDZ `lmax = 1` comparison, unchanged H2
+  residual-GTO/MWG endpoint, required residual metric reporting, and no Cr2
+  run.
+- The default `residual_occupation_cutoff` remains `1.0e-8`. Width/zeta
+  filtering remains explicit and user-controlled. Owner-local metric checks,
+  final merge metric checks, and `G' S R` orthogonality checks remain active.
 
 ## Compact Hamiltonian Artifact Manifest
 

@@ -15717,3 +15717,47 @@ Carrying-cost result:
 - deleted src lines: 1.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 155 - Approve RG Final Identity Tolerance
+
+Commit(s):
+- this commit - Approve RG final identity tolerance
+
+Summary:
+- Approved `HP-RG-IDTOL-FN-01` and `HP-RG-IDTOL-TEST-01` as a narrow
+  Residual Gaussian policy update. The Be atom cc-pV5Z `lmax = 1` audit showed
+  a healthy residual space with `21` retained directions, minimum retained
+  occupation `6.151e-6`, final merge condition `1.0`, and `G' S R =
+  1.776e-14`; the only failure was `R' S R - I = 2.183e-10` against an old
+  allowed error of about `2.000e-10`.
+- The default final residual identity validation tolerance is approved as
+  `1.0e-8`. The default `residual_occupation_cutoff` remains `1.0e-8`; width
+  and zeta filtering remain explicit and user-controlled.
+
+Validation:
+- Docs-only amendment validation required: `git diff --check`; focused scans
+  for `HP-RG-IDTOL-*`, Be cc-pV5Z evidence, `residual_occupation_cutoff`, and
+  no `src`, `bin`, `test`, `tests`, `tools`, driver, or artifact changes. A
+  local docs build is appropriate because compact authority files changed.
+
+Goal advancement:
+- LT6/RG robustness: keeps owner-local residual selection stable while
+  recognizing that a tiny final identity overshoot with healthy merge metrics
+  is a validation tolerance issue, not a reason to drop real residual
+  directions.
+
+Carrying-cost result:
+- deleted: none; docs-only authority pass.
+- simplified: future source work has a one-file primary owner and one optional
+  compatibility plumbing file.
+- quarantined: residual selection changes, occupation-cutoff changes,
+  width/zeta filtering defaults, owner grouping, merge failure rules, MWG/IDA,
+  raw blocks, terminal basis, WL/PQS route behavior, artifacts, driver changes,
+  committed fixtures, and Cr2 workflow remain unapproved.
+- exact remaining caller/blocker: if Be cc-pV5Z cannot pass by changing only
+  the final identity tolerance default, source work must stop and report the
+  exact blocker.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

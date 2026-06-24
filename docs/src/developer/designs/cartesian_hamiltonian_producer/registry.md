@@ -2601,6 +2601,66 @@ No committed fixture/test, Cr2 full Hamiltonian, Cr2 artifact, Cr2 facade
 support, driver workflow, artifact schema change, solver/RHF, ECP, or EGOI
 work is approved.
 
+### HP-RG-IDTOL-FN-01 — residual final-identity tolerance default
+
+Approved source files:
+
+```text
+src/cartesian_residual_gaussians/residual_basis.jl
+src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl
+```
+
+`residual_basis.jl` is the primary owner. The terminal residual file is
+approved only for narrow compatibility keyword default plumbing if needed.
+
+Approved target: set the default final residual `R' S R` identity validation
+tolerance to `1.0e-8` when owner-local selection, final merge metric checks,
+and `G' S R` orthogonality remain healthy. This is a final
+validation/cleanup tolerance only. It is not a residual direction-selection
+criterion.
+
+Evidence: Be atom cc-pV5Z `lmax = 1`, `ns = 5`,
+`core_spacing = 0.075`, `radius = 20`, `Z = 4`, `nup = 2`, `ndn = 2`
+failed only with `max |R' S R - I| = 2.183e-10` against an allowed error of
+about `2.000e-10`. The same run had retained residual count `21`, minimum
+retained occupation `6.151e-6`, final merge condition `1.0`, and
+`max |G' S R| = 1.776e-14`.
+
+Required policy:
+
+- keep default `residual_occupation_cutoff = 1.0e-8`;
+- keep width/zeta filtering explicit and user-controlled;
+- keep owner-local metric checks, final merge metric checks, and `G' S R`
+  orthogonality checks active;
+- do not drop retained directions to pass final identity validation.
+
+This ID does not approve driver changes, artifact schema/provenance/reader/
+manifest changes, residual-selection algorithm changes, default residual
+occupation cutoff changes, width/zeta filtering default changes, owner grouping
+changes, merge metric failure-rule changes, MWG/IDA convention changes,
+Gaussian raw-block changes, terminal-basis changes, WL/PQS route changes,
+shellification changes, Hamiltonian assembly changes, committed tests/fixtures,
+Cr2 workflow, or source files outside the two approved files.
+
+Failure rule: if Be cc-pV5Z cannot pass by changing only the final identity
+tolerance default, make no source commit and report the exact blocker.
+
+### HP-RG-IDTOL-TEST-01 — residual final-identity tolerance validation
+
+Approved validation:
+
+- Be atom cc-pV5Z `lmax = 1` residual audit/artifact path passes with the same
+  `21` retained residual directions;
+- Be atom cc-pVDZ `lmax = 1` still passes;
+- H2 residual-GTO/MWG endpoint remains unchanged;
+- report `max |R' S R - I|`, allowed tolerance, retained count, minimum
+  retained occupation, final merge condition, and `max |G' S R|`;
+- no Cr2 run.
+
+No committed fixture/test, driver workflow, artifact schema change,
+solver/RHF, ECP, EGOI, Cr2 full Hamiltonian, Cr2 artifact, or Cr2 facade
+support is approved.
+
 ## Approved For Cartesian Gaussian Raw-Block Nuclear Owner
 
 This section approves only the neutral uncharged by-center nuclear raw-block

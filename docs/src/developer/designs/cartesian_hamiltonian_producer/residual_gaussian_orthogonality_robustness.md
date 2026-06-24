@@ -1,7 +1,8 @@
 # Residual Gaussian Orthogonality Robustness
 
-Status: approved narrow source authority under `HP-RG-ORTHO-FN-01` and
-`HP-RG-ORTHO-TEST-01`.
+Status: approved narrow source authority under `HP-RG-ORTHO-FN-01`,
+`HP-RG-ORTHO-TEST-01`, `HP-RG-IDTOL-FN-01`, and
+`HP-RG-IDTOL-TEST-01`.
 
 ## Reason
 
@@ -24,10 +25,32 @@ errors. This is a final floating-point validation overshoot, not evidence for
 rank loss, wrong owner grouping, severe conditioning, or a residual-selection
 algorithm change.
 
+Be atom cc-pV5Z `lmax = 1` later reproduced the same issue class with a
+higher-zeta supplement:
+
+```text
+fixture                  = Be atom, ns = 5, core_spacing = 0.075, radius = 20
+supplement               = cc-pV5Z, lmax = 1, contracted
+retained residual count  = 21
+minimum occupation       = 6.151e-6
+merge condition          = 1.0
+max |G' S R|             = 1.776e-14
+max |R' S R - I|         = 2.183e-10
+current allowed error    = about 2.000e-10
+```
+
+The base path is healthy, owner-local occupations are all above the
+legacy/current `1.0e-8` residual occupation cutoff, and the final merge is
+well-conditioned. Raising the residual occupation cutoff to `1.0e-5` would drop
+a real retained direction and is a stronger basis-selection change than this
+evidence supports.
+
 ## Approved IDs
 
 - `HP-RG-ORTHO-FN-01` - robust final residual orthogonalization and validation.
 - `HP-RG-ORTHO-TEST-01` - validation gates for the robustness pass.
+- `HP-RG-IDTOL-FN-01` - final residual identity tolerance default.
+- `HP-RG-IDTOL-TEST-01` - validation gates for the tolerance-default pass.
 
 ## Approved Source Surface
 
@@ -77,17 +100,41 @@ only for final residual identity validation after owner-local selection has
 succeeded and the final merge metric is positive and not near-singular under
 the existing merge failure rule.
 
+`HP-RG-IDTOL-FN-01` additionally approves changing the default final residual
+identity validation tolerance to:
+
+```text
+identity_atol = 1.0e-8
+```
+
+This supersedes only the default final `R' S R` identity acceptance threshold.
+It does not change the residual basis selection algorithm. The default
+`residual_occupation_cutoff` remains `1.0e-8`, legacy
+`PureGaussianGausslet.jl:addinGaussians(...; RGcut = 1.0e-8)` remains the
+supporting historical convention, and width/zeta filtering remains explicit
+and user-controlled.
+
+The identity tolerance is a final validation/cleanup tolerance. It may accept a
+small `R' S R - I` overshoot only when owner-local metric checks, final merge
+metric checks, and `G' S R` orthogonality checks remain healthy. It is not a
+direction-retention cutoff, an automatic zeta/width filter, eigenvalue
+flooring, or a reason to alter the final merge failure rule.
+
 ## Forbidden
 
 This amendment does not approve:
 
 - residual selection semantic changes;
+- default `residual_occupation_cutoff` changes;
 - global raw-candidate residual selection;
 - global raw-column pivoted-Cholesky residual selection;
 - occupation-cutoff changes;
 - numerical negative-eigenvalue tolerance changes;
 - final merge eigenvalue flooring to retain low-occupation directions;
 - width filtering as a conditioning repair;
+- width/zeta filtering default changes;
+- owner grouping changes;
+- final merge metric failure-rule changes;
 - MWG/IDA, nuclear, raw-block, exact-operator, artifact, driver, public API, or
   route-stage changes;
 - status/report fields or payload objects;
@@ -109,7 +156,19 @@ the blocker instead of widening this lane.
 - one passing N2 comparison at `core_spacing = 0.05` or `0.075`;
 - reporting `max |G' S R|`, `max |R' S R - I|`, owner retained counts, and the
   final merge eigenvalue range/condition.
+- Be atom cc-pV5Z `lmax = 1` residual audit/artifact path passes with the same
+  `21` retained residual directions;
+- Be atom cc-pVDZ `lmax = 1` still passes;
+- H2 residual-GTO/MWG endpoint remains unchanged;
+- reporting for the Be tolerance pass includes `max |R' S R - I|`, allowed
+  tolerance, retained count, minimum retained occupation, final merge
+  condition, and `max |G' S R|`.
 
 No Cr2 full Hamiltonian, Cr2 artifact, Cr2 facade support, new committed test
 file, driver workflow, artifact schema change, solver/RHF, ECP, or EGOI work is
 approved by this robustness lane.
+
+If Be cc-pV5Z cannot pass by changing only the final identity tolerance
+default, implementation must stop and report the exact blocker. Do not change
+residual selection, drop directions, alter width/zeta filtering defaults,
+change merge rules, alter MWG/IDA conventions, or expand the source surface.

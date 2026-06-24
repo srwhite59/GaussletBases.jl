@@ -117,6 +117,18 @@ Approved Residual Gaussian robustness lane:
   absolute/relative final identity check, but it must not change residual
   selection semantics, occupation cutoff, merge failure rule, MWG/IDA, raw
   blocks, artifacts, driver workflow, or public API.
+- `HP-RG-IDTOL-FN-01` approves only changing the default final residual
+  `R' S R` identity validation tolerance to `1.0e-8` in the same RG owner,
+  with optional narrow compatibility keyword plumbing in
+  `pqs_terminal_residual_gto.jl`. The default
+  `residual_occupation_cutoff` remains `1.0e-8`; width/zeta filtering remains
+  explicit and user-controlled; owner-local metric checks, final merge metric
+  checks, and `G' S R` orthogonality checks remain active.
+- The Be atom cc-pV5Z `lmax = 1` evidence for `HP-RG-IDTOL-*` is a tiny final
+  identity overshoot: `21` retained residual directions, minimum occupation
+  `6.151e-6`, final merge condition `1.0`, `max |G' S R| = 1.776e-14`, and
+  `max |R' S R - I| = 2.183e-10` against an old allowed error of about
+  `2.000e-10`.
 
 Approved neutral Cartesian Gaussian raw-block owner:
 
@@ -596,6 +608,10 @@ Essential live guardrails:
   `HP-RG-ORTHO-FN-01` absolute/relative check only for small floating-point
   overshoots after owner-local selection and a healthy final merge; it is not
   permission to relax residual selection or retain low-occupation directions.
+- `HP-RG-IDTOL-FN-01` sets the default final residual identity validation
+  tolerance to `1.0e-8`. This is a final validation/cleanup tolerance only; it
+  does not change the residual occupation cutoff, width/zeta filtering
+  defaults, owner grouping, merge failure rules, or MWG/IDA conventions.
 
 Exact Cartesian Gaussian raw blocks are separate neutral kernel authority:
 uncharged by-center nuclear blocks under

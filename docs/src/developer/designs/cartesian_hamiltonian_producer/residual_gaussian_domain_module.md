@@ -51,6 +51,8 @@ module, or object names in the new owner.
 - `HP-RG-ORTHO-FN-01` - narrow robust final residual
   orthogonalization/identity validation.
 - `HP-RG-ORTHO-TEST-01` - validation gates for the robustness pass.
+- `HP-RG-IDTOL-FN-01` - final residual identity tolerance default.
+- `HP-RG-IDTOL-TEST-01` - validation gates for the tolerance-default pass.
 
 These IDs are approved for implementation only within the surfaces below.
 
@@ -192,6 +194,14 @@ equivalent infinity-norm scale of the symmetrized residual overlap. This is
 not an occupation-cutoff change, a residual-selection change, or permission to
 floor merge eigenvalues.
 
+`HP-RG-IDTOL-FN-01` sets the default final residual `R' S R` identity
+validation tolerance to `1.0e-8`. This updates only the final identity
+acceptance threshold. The default `residual_occupation_cutoff` remains
+`1.0e-8`, width/zeta filtering remains explicit and user-controlled, and
+owner-local metric checks, final merge metric checks, and `G' S R`
+orthogonality checks remain active. The tolerance must not be used as a
+direction-selection criterion or a merge-conditioning repair.
+
 Do not approve a vague global entry point such as
 `stabilize_residual_metric(...)`. Global raw-candidate symmetric Lowdin and
 global raw-column pivoted-Cholesky selection are not the Residual Gaussian
@@ -318,6 +328,11 @@ Future source migration must validate:
   smoke at `core_spacing = 0.042857`, plus one passing N2 comparison at
   `core_spacing = 0.05` or `0.075`, reporting `G' S R`, `R' S R - I`, retained
   counts, and merge spectrum.
+- for `HP-RG-IDTOL-FN-01`, Be atom cc-pV5Z `lmax = 1` residual audit/artifact
+  validation with the same `21` retained residual directions, Be atom cc-pVDZ
+  `lmax = 1` comparison, unchanged H2 residual-GTO/MWG endpoint, and reporting
+  of `R' S R - I`, allowed tolerance, retained count, minimum retained
+  occupation, final merge condition, and `G' S R`.
 
 No Cr2 full Hamiltonian, Cr2 artifact, Cr2 facade support, public export,
 driver/bin/tool workflow, artifact schema expansion, report/status/payload
