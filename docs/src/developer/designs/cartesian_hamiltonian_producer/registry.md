@@ -2272,8 +2272,8 @@ Approved behavior:
 - optional readback check.
 
 Approved configuration concepts are `basisname`, `system`, base `basis`,
-optional `supplement`, `hamfile`, `padding`, `check_file`, `print_contract`,
-`print_timing`, and `expected_dimension`.
+optional `supplement`, `nesting`, `hamfile`, `padding`, `check_file`,
+`print_contract`, `print_timing`, and `expected_dimension`.
 
 Compact summary printing and artifact readback checks remain allowed workflow
 behavior, but they are not open-ended hooks and must not introduce route,
@@ -2313,6 +2313,95 @@ framework, source files outside the approved driver and staged producer
 surfaces, committed input fixtures, route-stage diagnostics,
 status/report/payload expansion, artifact schema changes, or Cr2-specific
 workflow support, stop and request a new docs-only amendment.
+
+### HP-DRV-NEST-FN-01 — construction-family driver input
+
+Approved source file:
+
+```text
+bin/cartesian_ham_builder.jl
+```
+
+Approved behavior:
+
+- add a visible public driver input `nesting`;
+- accepted values are `:pqs` and `:wl`;
+- default is `nesting = :pqs`;
+- `nesting = :pqs` means the PQS source-box construction family;
+- `nesting = :wl` means the White-Lindsey low-order construction family;
+- include `nesting` in public contract construction, optional
+  `print_contract`, and optional `check_file` output as a public contract fact.
+
+This is a first-class construction-family choice, not a diagnostic route
+switch. The driver must not expose internal route-family names, route
+skeletons, retained-rule plans, raw-block switches, stop-after controls,
+diagnostic knobs, old route-stage labels, private helper calls, allocation
+probes, or route reports.
+
+This ID does not approve public API/export changes, artifact schema changes,
+stage-label changes, solver/ECP workflow, Cr2-specific behavior, broad driver
+diagnostics, committed fixtures/tests, or source files outside the canonical
+driver.
+
+### HP-DRV-NEST-WIRE-01 — construction-family route mapping
+
+Approved source files:
+
+```text
+bin/cartesian_ham_builder.jl
+src/cartesian_base_hamiltonian.jl
+```
+
+Approved behavior:
+
+- map public `nesting = :pqs` to the existing internal `:pqs_source_box`
+  route family;
+- map public `nesting = :wl` to the existing internal
+  `:white_lindsey_low_order` route family;
+- keep route skeletons, retained rules, raw-block switches, stop-after
+  controls, diagnostics, and internal route-stage vocabulary hidden;
+- preserve the existing public stage labels, Hamiltonian object, matrix keys,
+  artifact schema, driver hooks, and solver-free workflow;
+- reject unsupported combinations with clear `ArgumentError`s.
+
+Supplemented `nesting = :wl` is approved only if it is already valid through
+the existing supported supplemented facade/staged path. If it is not already
+valid, implementation must reject the combination clearly and report it as a
+separate design decision instead of adding broad supplemented White-Lindsey
+route behavior.
+
+This ID does not approve new route algorithms, route-skeleton construction
+changes, White-Lindsey materialization deletion, terminal lowering policy
+changes, shellification behavior changes, numerical kernel changes, raw-block
+changes, Residual Gaussian/MWG/IDA changes, artifact/provenance schema changes,
+public API/export changes, committed tests, Cr2-specific workflow, or source
+files outside the two approved files.
+
+Line budget: at most `80` added source/bin lines, with net simplification
+preferred where old hidden assumptions can be removed.
+
+Failure rule: if `nesting = :wl` cannot produce a small base artifact/readback
+through the existing White-Lindsey low-order route without broader route or
+materialization work, make no source commit and report the exact blocker.
+
+### HP-DRV-NEST-TEST-01 — construction-family validation
+
+Approved validation:
+
+- `git diff --check`;
+- package load;
+- current default `nesting = :pqs` base driver or facade artifact/readback;
+- current default `nesting = :pqs` supplemented H2 driver/facade path if
+  supplemented-mode input plumbing is touched;
+- one small `nesting = :wl` base artifact/readback using a currently supported
+  base geometry;
+- explicit negative check or ignored smoke showing unsupported supplemented
+  `nesting = :wl` fails clearly if that combination is not already valid;
+- no Cr2 run.
+
+No new committed test file, committed input fixture, artifact schema
+validation, solver run, Cr2-specific driver run, or broad White-Lindsey
+workflow validation is approved.
 
 ### HP-DRV-STAGE-FN-01 — visible physics-stage producer surface
 

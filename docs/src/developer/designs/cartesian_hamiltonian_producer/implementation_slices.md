@@ -709,8 +709,10 @@ Failure rule:
 ## Canonical Cartesian Driver Usability
 
 Status: approved for implementation under `HP-DRV-FILE-01`,
-`HP-DRV-FN-01`, `HP-DRV-STAGE-FN-01`, `HP-DRV-STAGE-WIRE-01`,
-`HP-DRV-STAGE-TEST-01`, and `HP-DRV-TEST-01`.
+`HP-DRV-FN-01`, `HP-DRV-NEST-FN-01`, `HP-DRV-NEST-WIRE-01`,
+`HP-DRV-NEST-TEST-01`, `HP-DRV-STAGE-FN-01`,
+`HP-DRV-STAGE-WIRE-01`, `HP-DRV-STAGE-TEST-01`, and
+`HP-DRV-TEST-01`.
 
 Approved boundary:
 
@@ -727,11 +729,16 @@ Approved boundary:
   command-line overrides, visible public contract construction, compact run
   summary, visible physics-level construction stages, coarse phase timing,
   artifact write, and optional readback check.
+- public construction-family input `nesting = :pqs` or `nesting = :wl`, with
+  `:pqs` as the default.
 
 Allowed workflow:
 
 - construct public `system`, `basis`, and optional `supplement` objects before
   calling a facade or staged producer surface;
+- map `nesting = :pqs` to the existing `:pqs_source_box` route family and
+  `nesting = :wl` to the existing `:white_lindsey_low_order` route family
+  inside approved driver/facade plumbing;
 - call approved base and staged producer surfaces for base H/H2;
 - call the approved non-exported residual-GTO/MWG usability facade or the
   staged producer surface for supported supplemented H2 and
@@ -760,6 +767,13 @@ and must reject `Natom == 1`. `padding` is physical box padding: it maps to
 one-center `radius` for atoms and to z-axis diatomic facade extents around the
 two nuclei.
 
+`nesting` is a construction-family choice, not a diagnostic route switch. It
+must not expose internal route-family names, route skeletons, retained-rule
+plans, raw-block switches, stop-after controls, diagnostics, route reports, or
+route-stage labels. Supplemented `nesting = :wl` must be rejected clearly
+unless already valid through the existing supported supplemented facade/staged
+path.
+
 Forbidden:
 
 - private route-stage controls, stop-after internals, ladder probes, stage
@@ -784,7 +798,10 @@ Validation gates:
   when staged wiring changes;
 - H atom base driver artifact write/readback under `HP-DRV-ATOM-TEST-01`;
 - H2 base driver artifact write/readback;
+- one small base artifact/readback path with `nesting = :wl`;
 - H2 supplemented driver artifact write/readback;
+- negative unsupported-combination check for supplemented `nesting = :wl` if
+  not already valid;
 - optional ignored Be2 usability run for supplemented-mode changes.
 
 Line budget:

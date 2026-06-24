@@ -215,6 +215,17 @@ Approved canonical driver usability lane:
 - `HP-DRV-STAGE-WIRE-01` allows the canonical driver to call that staged
   surface as visible top-level stage calls and time/print those workflow stages
   without calling underscored package helpers;
+- `HP-DRV-NEST-FN-01` and `HP-DRV-NEST-WIRE-01` approve one visible
+  construction-family input, `nesting = :pqs` or `nesting = :wl`, in the
+  canonical driver and narrow base-facade plumbing; `:pqs` maps to the existing
+  PQS source-box route and remains the default, while `:wl` maps only to the
+  existing White-Lindsey low-order route;
+- `nesting` is not a diagnostic route switch and must not expose route
+  skeletons, retained rules, raw-block switches, stop-after controls,
+  diagnostics, route reports, or route-stage labels;
+- supplemented `nesting = :wl` must be rejected clearly unless it is already
+  valid through the existing supported supplemented facade/staged path; adding
+  broad supplemented White-Lindsey behavior requires a separate amendment;
 - the driver may call only approved base, staged, and supported supplemented
   producer surfaces and the approved artifact writer/readback;
 - `basisname = nothing` selects base mode; `basisname !== nothing` selects

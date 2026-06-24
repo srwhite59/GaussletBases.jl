@@ -117,13 +117,14 @@ Approved amendments:
 - [Cartesian driver usability workflow](cartesian_driver_usability_workflow.md)
   approves only the compact canonical `bin/cartesian_ham_builder.jl` workflow:
   visible defaults, optional trusted input file, command-line overrides,
-  visible public contract construction, compact run-level hooks, visible
-  physics-level construction stages, coarse timing/summary, and artifact
-  production through approved producer surfaces. The staged producer surface
-  remains driver-facing through `src/cartesian_base_hamiltonian.jl`; lower
-  operator owners may be factored only to expose coarse product/moment,
-  unit-nuclear, and electron-electron stage timings. This is not
-  route-stage/report authority.
+  visible public contract construction, the public `nesting = :pqs` / `:wl`
+  construction-family input, compact run-level hooks, visible physics-level
+  construction stages, coarse timing/summary, and artifact production through
+  approved producer surfaces. The staged producer surface remains
+  driver-facing through `src/cartesian_base_hamiltonian.jl`; lower operator
+  owners may be factored only to expose coarse product/moment, unit-nuclear,
+  and electron-electron stage timings. This is not route-stage/report
+  authority.
 - [Cartesian driver atom workflow](cartesian_driver_atom_workflow.md)
   approves only explicit origin-centered one-center base atom driver inputs
   through the existing base facade. Current validation remains the

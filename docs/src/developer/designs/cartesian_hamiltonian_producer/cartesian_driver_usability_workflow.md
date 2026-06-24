@@ -39,6 +39,10 @@ private route-stage diagnostics.
 
 - `HP-DRV-FILE-01` - canonical Cartesian driver source file.
 - `HP-DRV-FN-01` - compact functional driver workflow.
+- `HP-DRV-NEST-FN-01` - public construction-family `nesting` input.
+- `HP-DRV-NEST-WIRE-01` - driver/facade mapping from construction family to
+  internal route family.
+- `HP-DRV-NEST-TEST-01` - validation gates for the construction-family input.
 - `HP-DRV-STAGE-FN-01` - internal visible physics-stage producer surface.
 - `HP-DRV-STAGE-WIRE-01` - canonical driver wiring to the staged surface.
 - `HP-DRV-STAGE-TEST-01` - validation gates for staged driver execution.
@@ -87,6 +91,8 @@ Approved user-facing configuration concepts:
 - `system` specification;
 - base `basis` specification;
 - optional `supplement` specification for the supported residual-GTO/MWG path;
+- `nesting`, with `:pqs` as the default construction family and `:wl` as the
+  White-Lindsey low-order construction family;
 - `hamfile`;
 - `padding`;
 - `check_file`;
@@ -120,6 +126,44 @@ supplemented runs, `basisname !== nothing` selects the supported residual-GTO
 / MWG supplemented diatomic facade and becomes the visible supplement basis
 label. `basisname !== nothing` must reject `Natom == 1`; supplemented atoms
 remain unapproved until a separate facade/RG amendment approves them.
+
+## Construction Family Input
+
+The canonical driver exposes one first-class construction-family input:
+
+```julia
+nesting = :pqs  # or :wl
+```
+
+This is a user construction choice, not a diagnostic route switch. It
+preserves the parallel PQS source-box and White-Lindsey low-order development
+tracks without exposing private route choreography.
+
+Approved values:
+
+- `nesting = :pqs` maps internally to the existing `:pqs_source_box` route
+  family and remains the default.
+- `nesting = :wl` maps internally to the existing
+  `:white_lindsey_low_order` route family.
+
+The driver may include `nesting` in `print_contract` and `check_file` output as
+a public contract fact. It must not expose route skeletons, retained-rule
+plans, raw-block switches, stop-after controls, diagnostics, or private route
+helpers. Public stage labels remain the physics-level labels approved in this
+document; do not rename them to route-stage labels.
+
+`HP-DRV-NEST-FN-01` approves `nesting` as a driver input in
+`bin/cartesian_ham_builder.jl`. `HP-DRV-NEST-WIRE-01` approves only the narrow
+plumbing in `bin/cartesian_ham_builder.jl` and
+`src/cartesian_base_hamiltonian.jl` needed to map the public construction
+family to the existing internal route families.
+
+Supplemented `nesting = :wl` is approved only if the existing supplemented
+facade and staged path can already consume the White-Lindsey low-order base
+route without new route behavior. Otherwise the driver/facade must reject that
+combination clearly and report it as a separate design decision. This
+amendment does not approve broad supplemented White-Lindsey construction, new
+route objects, new terminal policies, new raw blocks, or new artifact shape.
 
 `padding` is a public physical box-padding control, not a route-stage field.
 For one-center atoms, it means the box padding around the atom and maps to the
@@ -254,6 +298,11 @@ The driver may call only supported producer surfaces:
   producer surface that factors that facade into visible physics-level stages;
 - the approved Hamiltonian artifact writer and readback check.
 
+The selected `nesting` family may affect only the internal construction family
+used by approved producer surfaces. It must not affect the user-facing stage
+sequence, artifact schema, solver workflow, public export/API surface, or
+Cr2-specific behavior.
+
 Allowed user-facing phases:
 
 - validate/normalize input;
@@ -310,6 +359,11 @@ scripts, not in the canonical driver.
 - package load;
 - public contract printing/checking for at least one base run when the driver
   construction code changes;
+- current default `nesting = :pqs` base path remains unchanged;
+- one small base artifact/readback path with `nesting = :wl`, using a
+  currently supported base geometry;
+- if supplemented `nesting = :wl` is requested and is not already valid through
+  the existing facade, it must fail with a clear unsupported-combination error;
 - visible stage timing or summary for base construction and supplemented H2
   construction when staged wiring changes;
 - H2 base driver run writes a `CartesianIDAHamiltonian` artifact and optional

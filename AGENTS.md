@@ -483,6 +483,9 @@ these approved design IDs:
 - `HP-DRV-FILE-01`
 - `HP-DRV-FN-01`
 - `HP-DRV-TEST-01`
+- `HP-DRV-NEST-FN-01`
+- `HP-DRV-NEST-WIRE-01`
+- `HP-DRV-NEST-TEST-01`
 - `HP-DRV-ATOM-FN-01`
 - `HP-DRV-ATOM-WIRE-01`
 - `HP-DRV-ATOM-TEST-01`
@@ -1217,6 +1220,20 @@ box padding around the atom or two nuclei and maps internally to the existing
 facade fields. The driver must not expose private route-stage choreography as a
 substitute for constructing public `system`, `basis`, and optional
 `supplement` objects.
+
+`HP-DRV-NEST-FN-01` and `HP-DRV-NEST-WIRE-01` approve one visible construction
+family input, `nesting = :pqs` or `nesting = :wl`, in
+`bin/cartesian_ham_builder.jl` plus narrow input plumbing in
+`src/cartesian_base_hamiltonian.jl`. `:pqs` maps to the existing
+`:pqs_source_box` route family and remains the default. `:wl` maps only to the
+existing `:white_lindsey_low_order` route family. This is not a diagnostic
+route switch: do not expose route skeletons, retained rules, raw-block
+switches, stop-after controls, diagnostics, route reports, or route-stage
+labels. Supplemented `nesting = :wl` must be rejected clearly unless it is
+already valid through the existing supported supplemented facade/staged path;
+new supplemented White-Lindsey behavior needs a separate docs-only amendment.
+`HP-DRV-NEST-TEST-01` approves default `:pqs` validation plus one small base
+artifact/readback path with `nesting = :wl`, and no Cr2 run.
 
 `HP-DRV-STAGE-FN-01` approves only a narrow non-exported, non-underscored
 driver-facing staged producer surface. Approved source files are

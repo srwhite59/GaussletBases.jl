@@ -14229,3 +14229,58 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 132 - Approve Driver Nesting Input
+
+Commit(s):
+- this commit - Approve canonical driver nesting input
+
+Summary:
+- Approved `HP-DRV-NEST-FN-01`, `HP-DRV-NEST-WIRE-01`, and
+  `HP-DRV-NEST-TEST-01` as a narrow canonical-driver construction-family lane.
+  The driver may expose `nesting = :pqs` or `nesting = :wl` as a first-class
+  user construction choice. `:pqs` remains the default and maps to the existing
+  PQS source-box route; `:wl` maps only to the existing
+  `:white_lindsey_low_order` route.
+- The amendment explicitly treats `nesting` as public construction-family
+  input, not a diagnostic route switch. Route skeletons, retained-rule plans,
+  raw-block switches, stop-after controls, diagnostics, route reports, and
+  route-stage labels remain hidden. Supplemented `:wl` must be rejected
+  clearly unless already valid through the existing supported supplemented
+  facade/staged path.
+
+Validation:
+- Design-manager validation: read the driver usability workflow, registry
+  driver section, current compact authority, implementation slices, AGENTS
+  driver section, and running-log tail; updated only docs/AGENTS; ran
+  `git diff --check`, focused `rg` for `HP-DRV-NEST-*`, `nesting`, the route
+  mappings, and forbidden route-diagnostic wording, plus a no-source/test/bin
+  diff check. No implementation tests were run because this is docs-only
+  approval.
+
+Goal advancement:
+- LT1/LT3: preserves the active PQS and White-Lindsey low-order construction
+  tracks as user-facing construction families without reviving route-stage
+  diagnostics.
+- RG/LT6: keeps the canonical driver useful for real artifact production while
+  preserving the supported supplemented facade boundaries.
+
+Carrying-cost result:
+- deleted: none; docs-only authority pass.
+- simplified: doer now has one exact driver/facade plumbing lane for
+  `nesting`, instead of smuggling route-family choice through private route
+  fields.
+- quarantined: route skeletons, retained rules, raw-block switches,
+  stop-after controls, diagnostics, route reports, route-stage labels, broad
+  supplemented White-Lindsey behavior, artifact schema changes, public
+  API/export changes, committed tests/fixtures, solver/ECP workflow, and
+  Cr2-specific behavior remain unapproved.
+- not deleted because: source wiring has not run yet.
+- exact remaining caller/blocker: if `nesting = :wl` cannot produce a small
+  base artifact/readback through the existing White-Lindsey low-order route
+  without broader route/materialization work, implementation must stop and
+  report the blocker.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.
