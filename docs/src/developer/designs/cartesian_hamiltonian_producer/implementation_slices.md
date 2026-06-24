@@ -977,6 +977,11 @@ Approved boundary:
 - preserve WL faces/edges/corners and small boundary units after shellification;
 - each WL unit must carry or realize compact retained columns from products of
   one-dimensional contractions on owned support;
+- identity realization is valid only for true direct/core identity units, not
+  for WL boundary-stratum retained units;
+- deleted WL coefficient helpers may be mined only as historical
+  donor/reference material for the compact CPB-local product-of-1D coefficient
+  primitive;
 - do not force a persistent shell object after splitting;
 - do not retain full-support identity rows as the production compact basis;
 - do not fake compactness by dropping rows or relabeling identity units;
@@ -985,8 +990,9 @@ Approved boundary:
 
 Forbidden: driver changes, artifact/provenance/schema changes, PQS behavior
 changes, Hamiltonian assembly changes, raw-block/RG/MWG/IDA changes, old WL
-H1/H1+J materialization, route diagnostics/status/report payloads, committed
-tests/fixtures, and Cr2 workflow.
+route-global stack/reports/adapters/H1/H1+J materialization, route
+diagnostics/status/report payloads, committed tests/fixtures, and Cr2
+workflow.
 
 Validation: small H2 or Be2 WL base artifact/readback; small WL supplemented
 artifact/readback only if the compact base path works through existing

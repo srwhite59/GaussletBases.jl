@@ -391,6 +391,10 @@ Approved behavior:
 - make each WL unit carry or realize the intended compact retained basis from
   products of one-dimensional contractions on the authoritative owned unit
   support;
+- treat identity realization as valid only for true direct/core identity
+  units, not for WL boundary-stratum retained units;
+- use deleted WL coefficient helpers only as historical donor/reference
+  material for the compact CPB-local product-of-1D coefficient primitive;
 - preserve deterministic geometry, lowering, retained-unit, transform-contract,
   and terminal-block ordering;
 - keep the same public `ns` as the fair starting input for PQS/WL comparison,
@@ -405,7 +409,8 @@ Forbidden:
 - Hamiltonian assembly changes;
 - raw-block, Residual Gaussian, MWG/IDA, Qiu-White, supplement, solver/ECP,
   or Cr2 workflow changes;
-- old WL H1/H1+J materialization revival or adaptation;
+- old WL route-global stack, reports, adapters, or H1/H1+J materialization
+  revival or adaptation;
 - broad route diagnostics, report/status/payload fields, raw-block switches,
   retained-rule dumps, or route-stage labels;
 - fake compactness by dropping support rows, relabeling full-support identity
@@ -415,7 +420,10 @@ Forbidden:
 Failure rule: if compact WL retained units require construction-native facts
 that are not currently available, make no source commit and report the exact
 missing fact. Do not fake compactness by deleting rows, changing public input
-semantics, or rerouting through old WL materialization.
+semantics, or rerouting through old WL materialization. If an essential
+primitive exists only in deleted WL files, restore or re-express only that
+primitive behind the current terminal-basis boundary; do not restore the old
+route-global framework around it.
 
 Line budget: at most `250` added `src` lines unless a later source blurb
 narrows or revises the budget after auditing the exact live callers.

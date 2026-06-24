@@ -164,7 +164,11 @@ src/pqs_source_box_route_driver_helpers.jl
 
 The correction must preserve the WL faces/edges/corners and small boundary
 unit model, but the terminal units must carry or realize compact retained
-columns from products of one-dimensional contractions. It must not force a
+columns from products of one-dimensional contractions. Identity realization is
+valid only for true direct/core units, not for WL boundary-stratum retained
+units. Deleted WL coefficient helpers may be mined only as historical
+donor/reference material for the compact local coefficient primitive; do not
+revive the old route-global WL stack. The correction must not force a
 persistent shell object after splitting, retain full-support identity rows as
 the production compact basis, fake compactness by dropping rows, change the
 driver, revive old WL H1/H1+J materialization, change artifacts, change PQS

@@ -15449,3 +15449,50 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 150 - Clarify WL Compact Donor Primitive
+
+Commit(s):
+- this commit - Clarify WL compact coefficient donor rule
+
+Summary:
+- Clarified the `HP-WLDIAT-COMPACT-*` authority after the postmortem on how
+  the identity-realization bug entered. The old WL route-global stack was
+  correctly retired as bloat, but it contained an essential numerical
+  primitive: boundary-stratum CPB to local product-of-1D coefficient map to
+  terminal block coefficients.
+- The compact authority now says source work may mine deleted WL coefficient
+  helpers only as historical donor/reference material for that primitive. It
+  must re-express the primitive behind the current
+  `CartesianTerminalBasisRealization` boundary and must not revive old
+  reports, adapters, status surfaces, or H1/H1+J materialization.
+- The docs also freeze that identity realization is valid only for true
+  direct/core identity units, not for metadata-only WL boundary-stratum
+  retained units.
+
+Validation:
+- Docs-only clarification validation: `git diff --check`; focused scans for
+  the donor/reference primitive wording and direct/core identity exception;
+  confirm no `src`, `bin`, `test`, `tests`, or `tools` files changed. Local
+  docs build should be run because this touches compact design authority.
+
+Goal advancement:
+- LT1/LT3: keeps the WL fix focused on the missing numerical primitive instead
+  of accidentally restoring the bloated route-global implementation.
+- LT5/LT6: documents the actual failure mode, reducing the chance that
+  metadata names are again mistaken for realized basis functions.
+
+Carrying-cost result:
+- deleted: none; docs-only clarification.
+- simplified: source handoff now has a sharper donor rule.
+- quarantined: old route-global WL stack, reports, adapters, status surfaces,
+  H1/H1+J materialization, driver changes, artifact changes, PQS changes,
+  raw blocks, RG/MWG/IDA, tests/fixtures, and Cr2 workflow remain unapproved.
+- not deleted because: no source work in this pass.
+- exact remaining caller/blocker: the future source pass must locate or
+  re-express the CPB-local product-of-1D coefficient primitive without
+  reintroducing retired framework code.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

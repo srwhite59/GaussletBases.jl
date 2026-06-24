@@ -298,6 +298,12 @@ Approved first composition lane:
   not the intended production compact WL retained basis;
 - each WL diatomic unit must carry or realize compact retained columns from
   products of one-dimensional contractions, not full-support identity retention;
+- identity realization remains valid only for true direct/core identity units,
+  not for WL boundary-stratum retained units;
+- deleted WL coefficient helpers are historical donor/reference material only:
+  source work may re-express the essential CPB-local product-of-1D coefficient
+  primitive behind the current terminal-basis boundary, but must not revive the
+  route-global WL stack, reports, adapters, or H1/H1+J materialization;
 - approved source files are the narrow diatomic complete-core-shell,
   terminal-shellification, terminal-lowering, route-helper, terminal-basis,
   final-basis include, and base-facade surfaces named in `registry.md`;
