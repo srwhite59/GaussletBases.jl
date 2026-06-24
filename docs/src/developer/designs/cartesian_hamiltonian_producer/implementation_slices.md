@@ -1028,16 +1028,16 @@ Approved boundary:
 - update same-file callers to use vector-backed records/tables, stable
   dictionaries, or storage-hidden helper accessors.
 
-Deferred:
+Deferred from `HP-ROUTE-INV-*`:
 
-- `RawProductBoxPlan.source_mode_indices` and
-  `source_mode_column_indices`;
-- `source_mode_indices(...)` return shape;
 - `TerminalLoweringPlan.available_contracts` and `contracts`;
 - `RetainedUnitTransformContractPlan.contracts`;
 - public input `NamedTuple`s;
 - small fixed `NTuple{3,Int}` coordinate/dimension values;
 - artifact sidecar tables.
+
+Raw product source-mode inventory cleanup is separately approved under
+`HP-RAW-SRCMODE-FN-01` / `HP-RAW-SRCMODE-TEST-01`.
 
 Validation gates:
 
@@ -1063,6 +1063,72 @@ Line budget:
 
 - at most `120` added `src` lines, with net simplification expected;
 - no new committed test, tool, benchmark, or input-fixture file.
+
+## Raw Product Source-Mode Inventory Cleanup
+
+Status: approved for implementation under `HP-RAW-SRCMODE-FN-01` and
+`HP-RAW-SRCMODE-TEST-01`.
+
+Approved boundary:
+
+- `src/cartesian_raw_product_sources/records.jl`;
+- `src/cartesian_raw_product_sources/source_mode_indices.jl`;
+- `src/cartesian_raw_product_sources/summaries.jl`;
+- narrow consumer wiring only as needed in
+  `src/cartesian_retained_unit_transform_contracts/unit_contracts.jl`,
+  `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`,
+  and `src/cartesian_base_hamiltonian.jl`.
+
+Approved changes:
+
+- replace `RawProductBoxPlan.source_mode_indices::Tuple{Vararg{NTuple{3,Int}}}`
+  with vector-backed storage;
+- replace `RawProductBoxPlan.source_mode_column_indices::Tuple{Vararg{Int}}`
+  with vector-backed storage, or remove it when it is only `1:count` and
+  accessors supply the same ordered column numbers;
+- preserve deterministic source-mode ordering, fixed `NTuple{3,Int}` mode
+  coordinates, existing source-mode facts, retained-rule behavior, and manifest
+  source-mode/source-relation output;
+- preserve semantic access through stable accessors without preserving
+  variable-length `Tuple` concrete return types.
+
+Validation gates:
+
+- `git diff --check`;
+- package load;
+- H2 base artifact write/readback;
+- H2 supplemented artifact write/readback;
+- H2 R3 endpoint;
+- focused raw-product source order and retained-rule parity;
+- manifest source-mode and final-basis source-relation inspection;
+- focused search confirming `RawProductBoxPlan` no longer stores source-mode
+  inventories as `Tuple{Vararg{...}}`;
+- no Cr2 run.
+
+Forbidden:
+
+- source files outside the approved surfaces, terminal-lowering contract tuple
+  cleanup, retained-unit transform-contract tuple cleanup beyond narrow caller
+  wiring, broad pair-block/source-box rewrites, public input `NamedTuple`
+  changes, fixed `NTuple{3,Int}` coordinate/dimension changes, numerical
+  kernel changes, route semantic changes, terminal lowering, shellification,
+  terminal basis, Residual Gaussian, raw Gaussian block, IDA/MWG, Qiu-White
+  semantic changes, canonical driver changes, Hamiltonian object changes,
+  matrix-key changes, reader changes, artifact schema changes, public
+  API/export changes, report/status/payload expansion, persistent caches,
+  compatibility adapters preserving the old tuple-backed shape, new committed
+  tests, Cr2 runs, or Cr2-specific workflow.
+
+Line budget:
+
+- at most `150` added `src` lines, with net simplification expected;
+- no new committed test, tool, benchmark, or input-fixture file.
+
+Failure rule:
+
+- if vectorizing the raw product plan forces broad pair-block/source-box
+  rewrites or source files outside the approved surfaces, stop and report the
+  exact callers/blockers instead of adding compatibility layers.
 
 ## Homonuclear Z-Axis Diatomic Supplemented Workflow
 

@@ -59,6 +59,8 @@ Agents should read first:
   provenance seam
 - [Route inventory type-surface cleanup](route_inventory_type_surface_cleanup.md)
   for the first retained-unit route inventory cleanup lane
+- [Raw product source-mode inventory cleanup](raw_product_source_mode_inventory_cleanup.md)
+  for the vector-backed raw product source-mode inventory cleanup lane
 - [Algorithm implementation index](../../algorithm_implementation_index.md)
 
 Approved amendments:
@@ -127,7 +129,12 @@ Approved amendments:
   approves only replacing runtime-keyed retained-unit and pair-family
   `NamedTuple` route inventories in `src/pqs_source_box_route_driver_helpers.jl`
   with vector/table or stable-dictionary storage. Raw product source-mode tuple
-  inventories and terminal-lowering contract tuples remain deferred.
+  inventories were deferred from that lane.
+- [Raw product source-mode inventory cleanup](raw_product_source_mode_inventory_cleanup.md)
+  approves replacing `RawProductBoxPlan` source-mode and source-mode-column
+  tuple inventories with vector-backed storage while preserving deterministic
+  source-mode ordering, retained-rule behavior, and manifest source-mode
+  provenance.
 
 Candidate amendments:
 

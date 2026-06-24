@@ -546,6 +546,83 @@ runtime-keyed inventory shape. No new committed test file, Cr2 fixture,
 driver-input fixture, benchmark, or route-diagnostic test is approved by this
 ID.
 
+### HP-RAW-SRCMODE-FN-01 — raw product source-mode inventory cleanup
+
+Approved source files:
+
+```text
+src/cartesian_raw_product_sources/records.jl
+src/cartesian_raw_product_sources/source_mode_indices.jl
+src/cartesian_raw_product_sources/summaries.jl
+```
+
+Approved narrow consumer files, only as required by the storage change:
+
+```text
+src/cartesian_retained_unit_transform_contracts/unit_contracts.jl
+src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl
+src/cartesian_base_hamiltonian.jl
+```
+
+Approved cleanup targets:
+
+- `RawProductBoxPlan.source_mode_indices::Tuple{Vararg{NTuple{3,Int}}}`;
+- `RawProductBoxPlan.source_mode_column_indices::Tuple{Vararg{Int}}`;
+- `source_mode_indices(...)` / source-mode summary accessors only to the extent
+  required to hide vector-backed storage from approved callers;
+- same-file and listed narrow consumers that currently depend on the
+  tuple-backed storage shape.
+
+Approved replacement:
+
+- vector-backed source-mode coordinate storage;
+- vector-backed source-mode column storage, or no stored column vector when the
+  column sequence is exactly `1:count` and accessors provide the same ordered
+  column numbers;
+- stable accessors preserving deterministic source-mode order, mode values,
+  length, indexing/iteration where currently used, and retained-rule parity.
+
+The fixed `NTuple{3,Int}` coordinate and dimension values remain valid. The
+variable-length source-mode inventory must not be encoded in `RawProductBoxPlan`
+field types or accessor return types. Accessor compatibility means same facts
+and order, not the old concrete `Tuple{Vararg{...}}` return shape.
+
+This ID does not approve terminal-lowering `contracts` /
+`available_contracts` tuple cleanup, retained-unit transform-contract tuple
+cleanup outside the listed narrow consumer wiring, broad pair-block/source-box
+rewrites, numerical kernel changes, route semantic changes, public API/export
+changes, canonical driver changes, Hamiltonian object changes, matrix-key
+changes, reader changes, artifact schema changes, route-stage objects,
+report/status/payload expansion, persistent caches, compatibility layers that
+preserve the old tuple-backed shape, new committed tests, Cr2 runs, or
+Cr2-specific workflow.
+
+Line budget: at most `150` added `src` lines, with net simplification expected.
+Failure rule: if vectorizing the raw product plan requires source files outside
+the approved surfaces, broad pair-block/source-box rewrites, public API or
+artifact changes, numerical changes, or compatibility layers preserving the old
+tuple-backed shape, make no source commit and report the exact caller/blocker.
+
+### HP-RAW-SRCMODE-TEST-01 — raw product source-mode inventory validation
+
+Approved validation:
+
+- `git diff --check`;
+- package load;
+- H2 base artifact write/readback through the existing reader;
+- H2 supplemented artifact write/readback through the existing reader;
+- H2 R3 endpoint;
+- focused raw-product source order and retained-rule parity;
+- manifest source-mode and final-basis source-relation inspection;
+- focused search confirming `RawProductBoxPlan` no longer stores source-mode
+  inventories as `Tuple{Vararg{...}}`;
+- no Cr2 run.
+
+Existing committed tests may be adjusted only if they directly assert the old
+tuple-backed source-mode inventory shape. No new committed test file, Cr2
+fixture, driver-input fixture, benchmark, or route-diagnostic test is approved
+by this ID.
+
 ### HP-R1-ART-01 — public base producer artifact provenance
 
 Approved artifact extension for R1 public facade writes only. When

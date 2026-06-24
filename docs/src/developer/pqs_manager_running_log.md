@@ -13321,3 +13321,61 @@ Carrying-cost result:
 - deleted src lines: 23.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 119 - Approve Raw Product Source-Mode Inventory Cleanup
+
+Commit(s):
+- this commit - Approve raw product source-mode inventory cleanup
+
+Summary:
+- Approved `HP-RAW-SRCMODE-FN-01` / `HP-RAW-SRCMODE-TEST-01` as the next
+  narrow type-surface cleanup lane after the retained-unit route inventory
+  cleanup.
+- The approved owner files are
+  `src/cartesian_raw_product_sources/records.jl`,
+  `src/cartesian_raw_product_sources/source_mode_indices.jl`, and
+  `src/cartesian_raw_product_sources/summaries.jl`.
+- Narrow consumer wiring is approved only as needed in
+  `src/cartesian_retained_unit_transform_contracts/unit_contracts.jl`,
+  `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`,
+  and `src/cartesian_base_hamiltonian.jl`.
+- The target is replacing `RawProductBoxPlan.source_mode_indices` and
+  `source_mode_column_indices` variable-length tuple storage with
+  vector-backed storage, or removing stored column indices if they are exactly
+  `1:count`.
+- Accessor compatibility is defined as preserving deterministic ordered facts,
+  column associations, retained-rule parity, and manifest source-mode/relation
+  output, not preserving the old variable-length tuple concrete type.
+
+Validation:
+- Design-manager validation only: docs-only `git diff --check`, focused `rg`
+  checks for `HP-RAW-SRCMODE-*`, approved files, target fields, validation
+  gates, forbidden surfaces, and no `src`, `test`, `tools`, or `bin` changes.
+  No implementation tests were run.
+
+Goal advancement:
+- LT1/LT3: continues the type-surface cleanup from the route inventory pass by
+  removing another variable-size route fact from concrete field types without
+  changing physics, artifacts, or public inputs.
+- RG/LT6: protects current manifest source-mode and relation provenance while
+  making the base/supplemented path less dependent on compile-costly staged
+  tuple inventories.
+
+Carrying-cost result:
+- deleted: none; docs-only authority pass.
+- simplified: doer now has one approved raw product source-mode inventory
+  cleanup target with exact files and validation.
+- quarantined: terminal-lowering contract tuple cleanup, retained-unit
+  transform-contract tuple cleanup outside narrow caller wiring, broad
+  pair-block/source-box rewrites, public input `NamedTuple` changes, numerical
+  kernels, route semantic changes, driver changes, artifact schema changes,
+  report/status/payload expansion, compatibility adapters preserving the old
+  tuple-backed shape, committed tests, and Cr2 workflow remain unapproved.
+- not deleted because: source cleanup has not run yet.
+- exact remaining caller/blocker: source implementation must stop if
+  vectorizing `RawProductBoxPlan` source-mode inventories forces broad
+  pair-block/source-box rewrites or files outside the approved surfaces.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

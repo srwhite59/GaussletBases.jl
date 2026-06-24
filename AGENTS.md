@@ -434,6 +434,8 @@ these approved design IDs:
 - `HP-ROUTE-RECIPE-TEST-01`
 - `HP-ROUTE-INV-FN-01`
 - `HP-ROUTE-INV-TEST-01`
+- `HP-RAW-SRCMODE-FN-01`
+- `HP-RAW-SRCMODE-TEST-01`
 - `HP-R3-OBJ-01`
 - `HP-R3-FN-01`
 - `HP-R3-FN-02`
@@ -582,6 +584,32 @@ transform-contract tuple cleanup, public input `NamedTuple` changes, artifact
 sidecar table changes, source files outside the approved file, numerical
 kernels, driver changes, report/status/payload expansion, compatibility
 adapters, new committed tests, or Cr2 workflow.
+
+`HP-RAW-SRCMODE-FN-01` approves only raw product source-mode inventory cleanup
+in `src/cartesian_raw_product_sources/records.jl`,
+`src/cartesian_raw_product_sources/source_mode_indices.jl`, and
+`src/cartesian_raw_product_sources/summaries.jl`, with narrow consumer wiring
+only as needed in
+`src/cartesian_retained_unit_transform_contracts/unit_contracts.jl`,
+`src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`, and
+`src/cartesian_base_hamiltonian.jl`. The target is replacing
+`RawProductBoxPlan.source_mode_indices` and `source_mode_column_indices`
+variable-length tuple storage with vector-backed storage, or removing the
+column storage when accessors can supply the same `1:count` ordering. Fixed
+`NTuple{3,Int}` source-mode coordinates remain valid. Accessor compatibility
+means preserving deterministic ordered facts, column associations, retained-rule
+parity, and manifest source-mode/relation output, not preserving the old
+variable-length `Tuple` concrete type. `HP-RAW-SRCMODE-TEST-01` approves only
+`git diff --check`, package load, H2 base and supplemented artifact/readback,
+H2 R3 endpoint, focused raw-product source order and retained-rule parity,
+manifest source-mode/relation inspection, focused search for absence of
+tuple-backed `RawProductBoxPlan` source-mode inventories, and no Cr2 run. This
+lane does not approve terminal-lowering contract tuple cleanup, broader
+retained-unit transform-contract tuple cleanup, broad pair-block/source-box
+rewrites, public input `NamedTuple` changes, numerical kernel or route semantic
+changes, driver changes, artifact schema changes, report/status/payload
+expansion, compatibility adapters preserving the old tuple-backed shape, new
+committed tests, or Cr2 workflow.
 
 R3/RG current source authority is compact by design. Read
 `docs/src/developer/designs/cartesian_hamiltonian_producer/residual_gaussian_domain_module.md`

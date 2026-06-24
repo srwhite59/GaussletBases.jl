@@ -35,6 +35,8 @@ Normal startup reading:
   artifact sidecar groups and recipe provenance;
 - `route_inventory_type_surface_cleanup.md` for the first route-inventory
   type-surface cleanup lane;
+- `raw_product_source_mode_inventory_cleanup.md` for the raw product
+  source-mode inventory cleanup lane;
 - `docs/src/developer/algorithm_implementation_index.md` for existing kernels
   and donor paths.
 
@@ -257,6 +259,25 @@ Approved route-inventory type-surface cleanup:
   artifact sidecar tables, `RawProductBoxPlan.source_mode_indices`, terminal
   lowering contract tuples, and retained-unit transform-contract tuples remain
   out of scope.
+
+Approved raw product source-mode inventory cleanup:
+
+- `HP-RAW-SRCMODE-FN-01` approves vector-backed source-mode inventory cleanup
+  in `src/cartesian_raw_product_sources/records.jl`,
+  `src/cartesian_raw_product_sources/source_mode_indices.jl`, and
+  `src/cartesian_raw_product_sources/summaries.jl`;
+- narrow consumer wiring is approved only in
+  `src/cartesian_retained_unit_transform_contracts/unit_contracts.jl`,
+  `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`,
+  and `src/cartesian_base_hamiltonian.jl`;
+- the target is removal of `RawProductBoxPlan.source_mode_indices` and
+  `source_mode_column_indices` variable-length tuple storage, while preserving
+  deterministic source-mode ordering, fixed `NTuple{3,Int}` mode coordinates,
+  retained-rule behavior, and manifest source-mode/relation facts;
+- accessor semantics mean the same ordered facts and column associations, not
+  preserving a variable-length `Tuple` concrete return type;
+- terminal-lowering contract tuple cleanup and broader source-box/pair-block
+  rewrites remain out of scope.
 
 Approved canonical driver atom workflow:
 

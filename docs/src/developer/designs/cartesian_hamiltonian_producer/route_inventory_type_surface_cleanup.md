@@ -43,11 +43,8 @@ labels may remain data values, but they must not become type parameters.
 
 ## Deferred Lanes
 
-Not approved in this pass:
+Not approved by `HP-ROUTE-INV-*`:
 
-- `RawProductBoxPlan.source_mode_indices::Tuple{Vararg{NTuple{3,Int}}}`;
-- `RawProductBoxPlan.source_mode_column_indices::Tuple{Vararg{Int}}`;
-- `source_mode_indices(...)` returning variable-length tuples;
 - `TerminalLoweringPlan.available_contracts::Tuple{Vararg{...}}`;
 - `TerminalLoweringPlan.contracts::Tuple{Vararg{...}}`;
 - `RetainedUnitTransformContractPlan.contracts::Tuple{Vararg{...}}`;
@@ -55,8 +52,9 @@ Not approved in this pass:
 - small fixed `NTuple{3,Int}` coordinate or dimension values;
 - artifact sidecar tables.
 
-Those are separate cleanup lanes because they cross different ownership
-boundaries.
+Raw product source-mode inventory cleanup is separately approved under
+`HP-RAW-SRCMODE-FN-01` / `HP-RAW-SRCMODE-TEST-01` because it crosses different
+ownership boundaries.
 
 ## Forbidden
 
