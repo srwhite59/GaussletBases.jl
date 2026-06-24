@@ -14868,3 +14868,61 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 141 - Supplemented WL Diatomic Path
+
+Commit(s):
+- this commit - Enable supplemented WL diatomic composition
+
+Summary:
+- Accepted the `HP-COMP-SUPPWL-FN-01` near-deletion source pass. The two
+  deliberate early `nesting = :wl` supplemented blockers were removed from
+  `src/cartesian_base_hamiltonian.jl`: one in
+  `cartesian_base_working_basis(...; supplemented = true)` and one in
+  `cartesian_residual_gto_supplement_basis(...)`.
+- No replacement branch was added. Supplemented WL now composes through the
+  existing staged path: WL base terminal basis, supplement basis, residual
+  augmentation, exact augmented operators, residual MWG/IDA, Hamiltonian
+  assembly, write, and readback.
+
+Validation:
+- Doer: `git diff --check`; package load; H2 supplemented artifact/readback
+  with `nesting = :pqs`; H2 supplemented artifact/readback with
+  `nesting = :wl`; direct WL finite/symmetric K and V plus readback deltas;
+  bounded Be2 supplemented WL artifact/readback with finite/symmetric K and V
+  plus readback deltas; supplemented atoms still reject at the two-center R3
+  facade; invalid heteronuclear, unequal-charge, non-neutral, and non-z-axis
+  diatomic inputs still reject. No Cr2 run.
+- Manager: inspected the deletion-only diff; `git diff --check`;
+  `git diff --numstat -- src bin tools test docs`; suspicious added-line scan;
+  new tests/tools scan; exact stale blocker string scan. No suspicious hits and
+  no new committed tests/tools.
+
+Goal advancement:
+- LT1/LT3: fills the supplemented WL z-axis diatomic composition cell without
+  changing driver inputs, route internals, residual selection, or artifact
+  schema.
+- LT5/LT6: confirms the intended common boundary: PQS and WL differ upstream,
+  then both feed the same terminal-basis/RG/MWG/Hamiltonian machinery.
+
+Medium-goal update:
+- The remaining composition hole is supplemented atoms. That is now the next
+  natural lane if the goal is to complete geometry/nesting/supplement
+  composition; Cr2-facing work can continue through the supplemented diatomic
+  paths without a Cr2-specific branch.
+
+Carrying-cost result:
+- deleted: two obsolete supplemented `nesting = :wl` policy blockers.
+- simplified: supplemented PQS and WL now use the same visible staged
+  composition path.
+- quarantined: supplemented atoms, heteronuclear/general geometry, Cr2
+  workflow, old WL H1/H1+J materialization, and diagnostics remain out of
+  scope.
+- not deleted because: existing staged helpers remain active composition
+  boundaries.
+- exact remaining caller/blocker: none found for supplemented WL z-axis
+  diatomics.
+- added src lines: 0.
+- deleted src lines: 4.
+- new tests: none.
+- new metadata/status fields: none.

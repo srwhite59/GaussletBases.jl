@@ -589,8 +589,6 @@ end
 function cartesian_base_working_basis(system::NamedTuple; basis::NamedTuple, supplemented::Bool = false)
     input = supplemented ? _cartesian_r3_diatomic_inputs(system, basis) :
         _cartesian_base_inputs(system, basis)
-    supplemented && input.nesting === :wl &&
-        throw(ArgumentError("supplemented nesting=:wl diatomic path is not yet wired"))
     parent, transforms = _cartesian_base_stages(input)
     source_mode_provenance = _cartesian_source_mode_provenance(transforms)
     return (; input, parent, terminal_basis = transforms.terminal_basis_realization,
@@ -725,8 +723,6 @@ end
 
 function cartesian_residual_gto_supplement_basis(base, supplement::NamedTuple)
     input = base.input
-    input.nesting === :wl &&
-        throw(ArgumentError("supplemented nesting=:wl diatomic path is not yet wired"))
     supplement_input = _cartesian_r3_supplement_inputs(input, supplement)
     raw_supplement = legacy_bond_aligned_diatomic_gaussian_supplement(
         first(input.symbols), first(supplement_input.basis_by_center), input.locations;
