@@ -298,7 +298,7 @@ function pqs_terminal_residual_gto_augmentation(
     tau_merge_abs::Real = 1.0e-12,
     tau_merge_rel::Real = 1.0e-12,
     orthogonality_atol::Real = 1.0e-10,
-    identity_atol::Real = 1.0e-10,
+    identity_atol::Real = 1.0e-8,
 )
     nuclei_value = CRG.residual_gaussian_float_centers(nuclei)
     labels = CRG.residual_gaussian_candidate_labels(supplement)

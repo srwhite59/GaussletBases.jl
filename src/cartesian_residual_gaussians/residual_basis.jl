@@ -82,7 +82,7 @@ function build_residual_gaussian_basis(base_dimension::Integer, X, S_AA,
     candidate_owner_indices::Vector{Int}; residual_occupation_cutoff::Real = 1.0e-8,
     tau_neg_abs::Real = 1.0e-12, tau_neg_rel::Real = 1.0e-12,
     tau_merge_abs::Real = 1.0e-12, tau_merge_rel::Real = 1.0e-12,
-    orthogonality_atol::Real = 1.0e-10, identity_atol::Real = 1.0e-10)
+    orthogonality_atol::Real = 1.0e-10, identity_atol::Real = 1.0e-8)
     candidate_count = length(candidate_labels)
     length(candidate_centers) == candidate_count &&
         length(candidate_owner_indices) == candidate_count ||

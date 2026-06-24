@@ -15761,3 +15761,60 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 156 - Implement RG Final Identity Tolerance
+
+Commit(s):
+- this commit - Update RG final identity tolerance
+
+Summary:
+- Accepted `HP-RG-IDTOL-FN-01`. The default final Residual Gaussian
+  `R' S R` identity validation tolerance is now `1.0e-8` in both the RG owner
+  and the compatibility wrapper default.
+- This is intentionally only a final identity validation tolerance change. It
+  does not change residual direction selection, the default
+  `residual_occupation_cutoff = 1.0e-8`, owner grouping, merge behavior,
+  width/zeta filtering, MWG/IDA, Hamiltonian assembly, artifacts, or driver
+  behavior.
+- The motivating Be atom cc-pV5Z `lmax = 1` case now passes with all `21`
+  residual directions retained. The minimum retained occupation remains
+  `6.151346475239507e-6`, so the marginal high-zeta direction was not dropped.
+
+Validation:
+- Doer: `git diff --check`; package load; ignored
+  `tmp/work/be_atom_high_zeta_residual_audit.jl`; ignored
+  `tmp/work/be_atom_high_zeta_artifact_smoke.jl`; and
+  `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`. The Be
+  cc-pV5Z audit reported retained count `21`, merge condition `1.0`,
+  `max |G' S R| = 1.7763568394002505e-14`,
+  `max |R' S R - I| = 2.1827872842550278e-10`, and allowed identity
+  tolerance `2.0000000002182788e-8`.
+- Manager: reviewed the two-line source diff; ran `git diff --check`,
+  `git diff --numstat -- src bin tools test docs`, suspicious added-line scan,
+  new tests/tools scan, package load, and
+  `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`. The H2 RG
+  endpoint remained at augmented dimension `489`, self-Coulomb
+  `0.4574265214362095`, and zero facade readback deltas.
+
+Goal advancement:
+- LT6/RG robustness: keeps the legacy-supported residual occupation cutoff and
+  selected residual space stable while allowing a numerically harmless final
+  orthonormality cleanup miss to pass when merge conditioning and `G' S R`
+  checks are healthy.
+- MT/CR2 readiness: removes the high-zeta Be atom supplement validation
+  friction without adding new workflow knobs or changing the canonical driver.
+
+Carrying-cost result:
+- deleted: old `1.0e-10` final identity default.
+- simplified: RG owner and terminal residual compatibility wrapper now agree
+  on the approved `1.0e-8` default.
+- quarantined: residual selection, occupation cutoff, width/zeta filtering,
+  owner grouping, merge rules, MWG/IDA, artifacts, driver, routes, raw blocks,
+  tests, and Cr2 workflow remain untouched.
+- not deleted because: strict `G' S R` validation and the existing merge
+  checks remain live invariants.
+- exact remaining caller/blocker: none for this tolerance-default lane.
+- added src lines: 2.
+- deleted src lines: 2.
+- new tests: none.
+- new metadata/status fields: none.
