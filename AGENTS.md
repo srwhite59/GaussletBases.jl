@@ -432,6 +432,8 @@ these approved design IDs:
 - `HP-R1-ATOM-TEST-01`
 - `HP-ROUTE-RECIPE-FN-01`
 - `HP-ROUTE-RECIPE-TEST-01`
+- `HP-ROUTE-INV-FN-01`
+- `HP-ROUTE-INV-TEST-01`
 - `HP-R3-OBJ-01`
 - `HP-R3-FN-01`
 - `HP-R3-FN-02`
@@ -565,6 +567,21 @@ shellification changes, materialization/artifact schema changes, route-stage
 diagnostics, status/report expansion, WL materialization deletion, Cr2 runs, or
 new committed tests. `HP-ROUTE-RECIPE-TEST-01` permits only existing direct
 route-input tests to be adjusted if necessary.
+
+`HP-ROUTE-INV-FN-01` approves only retained-unit route inventory type cleanup
+in `src/pqs_source_box_route_driver_helpers.jl`: remove runtime-keyed
+`NamedTuple{unit_keys}` retained-unit inventory shapes and runtime-keyed
+`pair_family_counts = NamedTuple{families}(...)`, replacing them with
+vector-backed records/tables, stable dictionaries, or helper accessors with
+stable concrete types. `HP-ROUTE-INV-TEST-01` approves only `git diff --check`,
+package load, H2 base artifact readback, H2 supplemented artifact/readback or
+canonical driver path, focused search for absence of those runtime-keyed route
+inventories, and no Cr2 run. This lane does not approve raw product source-mode
+tuple cleanup, terminal-lowering contract tuple cleanup, retained-unit
+transform-contract tuple cleanup, public input `NamedTuple` changes, artifact
+sidecar table changes, source files outside the approved file, numerical
+kernels, driver changes, report/status/payload expansion, compatibility
+adapters, new committed tests, or Cr2 workflow.
 
 R3/RG current source authority is compact by design. Read
 `docs/src/developer/designs/cartesian_hamiltonian_producer/residual_gaussian_domain_module.md`

@@ -33,6 +33,8 @@ Normal startup reading:
   homonuclear z-axis diatomic supplemented facade/driver relaxation;
 - `cartesian_hamiltonian_artifact_manifest.md` for compact Hamiltonian
   artifact sidecar groups and recipe provenance;
+- `route_inventory_type_surface_cleanup.md` for the first route-inventory
+  type-surface cleanup lane;
 - `docs/src/developer/algorithm_implementation_index.md` for existing kernels
   and donor paths.
 
@@ -241,6 +243,20 @@ Approved route-recipe cleanup:
   terminal-lowering changes, materialization/artifact schema changes,
   report/status expansion, WL materialization deletion, new tests, or Cr2 run
   are approved by this cleanup.
+
+Approved route-inventory type-surface cleanup:
+
+- `HP-ROUTE-INV-FN-01` approves only
+  `src/pqs_source_box_route_driver_helpers.jl`;
+- the target is removal of runtime-keyed retained-unit inventory
+  `NamedTuple{unit_keys}` shapes and runtime-keyed `pair_family_counts =
+  NamedTuple{families}(...)`;
+- approved replacements are vector-backed records/tables, stable dictionaries,
+  or helper accessors with stable concrete types;
+- public input `NamedTuple`s, fixed `NTuple{3,Int}` coordinates/dimensions,
+  artifact sidecar tables, `RawProductBoxPlan.source_mode_indices`, terminal
+  lowering contract tuples, and retained-unit transform-contract tuples remain
+  out of scope.
 
 Approved canonical driver atom workflow:
 

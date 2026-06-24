@@ -57,6 +57,8 @@ Agents should read first:
   for compact JLD2 sidecar groups describing matrix-order basis rows and public
   recipe provenance, plus the narrow construction-native source-mode
   provenance seam
+- [Route inventory type-surface cleanup](route_inventory_type_surface_cleanup.md)
+  for the first retained-unit route inventory cleanup lane
 - [Algorithm implementation index](../../algorithm_implementation_index.md)
 
 Approved amendments:
@@ -121,6 +123,11 @@ Approved amendments:
   provenance seam for optional source-shell/source-mode manifest groups. It
   does not change the Hamiltonian object, matrix keys, public inputs, or
   `read_cartesian_ida_hamiltonian`.
+- [Route inventory type-surface cleanup](route_inventory_type_surface_cleanup.md)
+  approves only replacing runtime-keyed retained-unit and pair-family
+  `NamedTuple` route inventories in `src/pqs_source_box_route_driver_helpers.jl`
+  with vector/table or stable-dictionary storage. Raw product source-mode tuple
+  inventories and terminal-lowering contract tuples remain deferred.
 
 Candidate amendments:
 

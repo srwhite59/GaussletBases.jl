@@ -1015,6 +1015,55 @@ Line budget:
 - at most `80` added `src` lines, with net simplification expected;
 - no new committed test file.
 
+## Route Inventory Type-Surface Cleanup
+
+Status: first lane approved for implementation under `HP-ROUTE-INV-FN-01` and
+`HP-ROUTE-INV-TEST-01`.
+
+Approved boundary:
+
+- source file `src/pqs_source_box_route_driver_helpers.jl` only;
+- remove runtime-keyed retained-unit inventory `NamedTuple{unit_keys}` shapes;
+- remove runtime-keyed `pair_family_counts = NamedTuple{families}(...)`;
+- update same-file callers to use vector-backed records/tables, stable
+  dictionaries, or storage-hidden helper accessors.
+
+Deferred:
+
+- `RawProductBoxPlan.source_mode_indices` and
+  `source_mode_column_indices`;
+- `source_mode_indices(...)` return shape;
+- `TerminalLoweringPlan.available_contracts` and `contracts`;
+- `RetainedUnitTransformContractPlan.contracts`;
+- public input `NamedTuple`s;
+- small fixed `NTuple{3,Int}` coordinate/dimension values;
+- artifact sidecar tables.
+
+Validation gates:
+
+- `git diff --check`;
+- package load;
+- H2 base artifact write/readback;
+- H2 supplemented artifact write/readback or canonical driver path;
+- focused search for absence of `NamedTuple{unit_keys}` and
+  `NamedTuple{families}` route inventories;
+- no Cr2 run.
+
+Forbidden:
+
+- source files outside the approved file, numerical kernel changes, route
+  recipe behavior changes, shellification, terminal lowering, terminal basis,
+  Residual Gaussian, raw product source, raw-block changes, canonical driver
+  changes, Hamiltonian object changes, matrix-key changes, reader changes,
+  artifact schema changes, public API/export changes, report/status/payload
+  expansion, compatibility adapters, new committed tests, Cr2 runs, or
+  Cr2-specific workflow.
+
+Line budget:
+
+- at most `120` added `src` lines, with net simplification expected;
+- no new committed test, tool, benchmark, or input-fixture file.
+
 ## Homonuclear Z-Axis Diatomic Supplemented Workflow
 
 Status: approved for implementation under `HP-R3U-ZDI-FN-01`,

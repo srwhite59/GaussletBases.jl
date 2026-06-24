@@ -13218,3 +13218,52 @@ Carrying-cost result:
 - new tests: none.
 - new metadata/status fields: approved artifact
   `final_basis_source_relations/` sidecar fields only.
+
+## Cartesian Hamiltonian Producer Pass 117 - Approve Route Inventory Type Cleanup
+
+Commit(s):
+- this commit - Approve route inventory type cleanup
+
+Summary:
+- Approved `HP-ROUTE-INV-FN-01` / `HP-ROUTE-INV-TEST-01` as the first narrow
+  type-surface cleanup lane.
+- The approved source file is only
+  `src/pqs_source_box_route_driver_helpers.jl`.
+- The target is removal of runtime-keyed retained-unit inventory
+  `NamedTuple{unit_keys}` shapes and runtime-keyed
+  `pair_family_counts = NamedTuple{families}(...)`, replacing them with
+  vector-backed records/tables, stable dictionaries, or helper accessors with
+  stable concrete types.
+- Explicitly deferred broader tuple cleanup in `RawProductBoxPlan`, terminal
+  lowering plans, and retained-unit transform-contract plans.
+
+Validation:
+- Design-manager validation only: docs-only `git diff --check`, focused `rg`
+  checks for `HP-ROUTE-INV-*`, approved helper/file names, deferred tuple
+  targets, forbidden surfaces, and no `src`, `test`, `tools`, or `bin` changes.
+  No implementation tests were run.
+
+Goal advancement:
+- LT1/LT3: removes the clearest remaining route-size-in-type pressure from the
+  live base/supplemented producer path before timing-oriented cleanup.
+- RG/LT6: keeps the canonical supplemented path moving toward practical use
+  without changing physics, artifacts, or public driver contract.
+
+Carrying-cost result:
+- deleted: none; docs-only authority pass.
+- simplified: doer now has one approved cleanup target for the runtime-keyed
+  retained-unit inventory shape.
+- quarantined: raw product source-mode tuple cleanup, terminal-lowering
+  contract tuple cleanup, retained-unit transform-contract tuple cleanup,
+  public input `NamedTuple` changes, artifact sidecar table changes, numerical
+  kernels, driver changes, report/status/payload expansion, compatibility
+  adapters, committed tests, and Cr2 workflow remain unapproved.
+- not deleted because: source cleanup has not run yet.
+- exact remaining caller/blocker: source implementation must stop if replacing
+  the runtime-keyed inventories requires files outside
+  `src/pqs_source_box_route_driver_helpers.jl`, broad route/stage rewiring, or
+  preserving the old type shape behind a compatibility adapter.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

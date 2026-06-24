@@ -478,6 +478,74 @@ WL fields if required by the source cleanup. No new committed test file, Cr2
 run, driver workflow change, route diagnostic, or physics-reference scalar is
 approved by this ID.
 
+### HP-ROUTE-INV-FN-01 — retained-unit route inventory type cleanup
+
+Approved source file:
+
+```text
+src/pqs_source_box_route_driver_helpers.jl
+```
+
+Approved cleanup targets:
+
+- `_pqs_source_box_route_driver_named_tuple_from_units(...)`;
+- runtime-keyed retained-unit inventory fields derived from unit labels,
+  including `source_boxes`, `source_dimensions`, `retained_counts`, and
+  `ranges`;
+- runtime-keyed `pair_family_counts = NamedTuple{families}(...)`;
+- same-file internal consumers that currently expect those runtime-keyed
+  `NamedTuple` shapes.
+
+Approved replacements:
+
+- vector-backed records or tables with stable field names;
+- stable dictionaries keyed by unit or pair-family labels only where lookup by
+  label is genuinely needed;
+- helper accessors that hide the storage shape from same-file callers;
+- compact summaries that expose counts/order without encoding route size in the
+  concrete type.
+
+The retained-unit vector remains the ordered inventory authority. Unit labels
+and pair-family labels may remain data values, but they must not become type
+parameters.
+
+This ID does not approve edits to `RawProductBoxPlan.source_mode_indices`,
+`source_mode_column_indices`, `source_mode_indices(...)`,
+`TerminalLoweringPlan.available_contracts`, `TerminalLoweringPlan.contracts`,
+or `RetainedUnitTransformContractPlan.contracts`. It also does not approve
+public input `NamedTuple` changes, fixed `NTuple{3,Int}` coordinate/dimension
+changes, artifact sidecar table changes, numerical kernels, route recipe
+behavior changes, shellification, terminal lowering, terminal basis, Residual
+Gaussian, raw-block changes, canonical driver changes, Hamiltonian object
+changes, matrix-key changes, reader changes, public API/export changes,
+report/status/payload expansion, compatibility adapters, new committed tests,
+Cr2 runs, or Cr2-specific workflow.
+
+Line budget: at most `120` added `src` lines, with net simplification expected.
+Failure rule: if the cleanup requires source files outside the approved file,
+broader route/stage rewiring, public API changes, artifact changes, or an
+adapter that preserves the old runtime-keyed type shape, make no source commit
+and report the blocker.
+
+### HP-ROUTE-INV-TEST-01 — retained-unit route inventory cleanup validation
+
+Approved validation:
+
+- `git diff --check`;
+- package load;
+- H2 base artifact write/readback through the existing reader;
+- H2 supplemented artifact write/readback through the existing reader or
+  canonical driver path;
+- focused search confirming no `NamedTuple{unit_keys}` or
+  `NamedTuple{families}` route inventory remains in
+  `src/pqs_source_box_route_driver_helpers.jl`;
+- no Cr2 run.
+
+Existing committed tests may be adjusted only if they directly assert the old
+runtime-keyed inventory shape. No new committed test file, Cr2 fixture,
+driver-input fixture, benchmark, or route-diagnostic test is approved by this
+ID.
+
 ### HP-R1-ART-01 — public base producer artifact provenance
 
 Approved artifact extension for R1 public facade writes only. When
