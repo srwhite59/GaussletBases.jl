@@ -161,6 +161,11 @@ The canonical RG algorithm contract is
 - Terminal shell decomposition is common geometry. Direct core regions,
   shell regions, owned support rows, ordering, and coverage must be computed
   by one route-family-free operation before PQS or White-Lindsey lowering.
+  For z-axis diatomics, PQS and White-Lindsey must call that common shellifier
+  with the same first-step arguments when the public system, parent axes,
+  public `ns`, direct core side, nuclear centers, and bond axis match.
+  Central-gap/contact, shared-shell, and outer-mismatch ownership are common
+  shell geometry, not retained-construction geometry.
   PQS may then use shell support plus a full source CPB for retained-mode
   realization; White-Lindsey may then split shell boundaries into faces, edges,
   corners, and strata for product-of-1D contractions. Those are

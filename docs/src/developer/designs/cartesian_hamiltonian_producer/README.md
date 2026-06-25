@@ -54,6 +54,9 @@ boundary retained sizes keep route-local construction.
 Common terminal shell decomposition is approved as a shared route-family-free
 first step under `HP-COMP-SHELLGEOM-*`: PQS and White-Lindsey differ only after
 common shell/core support regions exist.
+For z-axis diatomics, `HP-COMP-SHELLGEOM-DIAT-*` requires PQS and
+White-Lindsey to call the common shellifier with the same first-step arguments;
+central-gap/contact and shared-shell ownership are common shell geometry.
 The old complete-core-shell RHF payload stack is approved for retirement under
 `HP-RETIRE-CCS-RHF-*`; the current CR2-facing producer path is the canonical
 driver plus `CartesianIDAHamiltonian` artifacts, not the stale RHF payload

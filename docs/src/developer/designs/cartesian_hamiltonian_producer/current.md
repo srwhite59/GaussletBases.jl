@@ -102,6 +102,10 @@ Implemented base path:
   shared route-family-free first step. PQS and White-Lindsey may diverge in
   retained-construction geometry only after common direct core and shell-owned
   support regions exist.
+- `HP-COMP-SHELLGEOM-DIAT-*` extends that rule to z-axis diatomics: PQS and
+  White-Lindsey must enter the common shellifier with the same first-step
+  arguments, including public `ns`, before central-gap/contact and shared-shell
+  regions are planned.
 
 Implemented Residual Gaussian path:
 

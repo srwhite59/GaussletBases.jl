@@ -95,6 +95,11 @@ The full source CPB in PQS and the face/edge/corner units in White-Lindsey are
 not competing shellification algorithms. They are different retained-basis
 construction geometries after common shells already exist.
 
+For z-axis diatomics, central-gap/contact, shared-shell, and outer-mismatch
+ownership are also common shell geometry. PQS and White-Lindsey should enter
+the common shellifier with the same first-step arguments before either family
+starts retained-basis construction.
+
 ## PQS Source Boxes
 
 PQS should be remembered as:

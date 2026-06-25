@@ -669,6 +669,63 @@ planning use the same common shell decomposition. It must not change central
 gap/contact policy unless the fix is the same route-family-free shell input
 cleanup and does not touch lowering, retained units, or WL/PQS realization.
 
+### HP-COMP-SHELLGEOM-DIAT-FN-01 — diatomic common shellifier entry
+
+Approved source files:
+
+```text
+src/cartesian_shellification/terminal_geometry.jl
+src/pqs_source_box_route_driver_helpers.jl
+```
+
+Approved behavior:
+
+- for fixed public z-axis diatomic system, parent axes, public `ns`, direct
+  core side, nuclear centers, and bond axis, `nesting = :pqs` and
+  `nesting = :wl` must call the same common shellifier with the same
+  first-step arguments;
+- central-gap, contact-core, shared-shell, and outer-mismatch region ownership
+  are common shell decomposition facts;
+- PQS `q` and WL inner side are retained-construction inputs after common
+  shell records exist and must not change common diatomic shellifier entry;
+- if `raw_terminal_geometry(...)` currently uses a parameter named `q` for
+  common central-gap or shared-shell decisions, source work may rename or
+  reinterpret that shellifier boundary parameter as common `ns`;
+- keep the central-gap/contact algorithm unchanged except for replacing
+  route-family-dependent inputs with the shared common inputs.
+
+This does not approve changing terminal lowering, retained units, PQS
+source-box realization, WL face/edge/corner coefficient construction, route
+skeletons, artifacts, driver inputs, or public API.
+
+Failure rule: if same-function/same-argument z-axis diatomic entry requires
+changing the central-gap/contact algorithm rather than only its
+route-family-independent inputs, make no source commit and request a separate
+docs-only amendment.
+
+### HP-COMP-SHELLGEOM-DIAT-TEST-01 — diatomic shellifier-entry validation
+
+Approved validation:
+
+- `git diff --check`;
+- package load;
+- focused audit showing z-axis diatomic PQS/WL calls enter the common
+  shellifier with the same parent axes, nuclear centers, direct core side,
+  public `ns`, and bond axis;
+- same-`ns` PQS/WL z-axis diatomic direct core, central-gap/contact,
+  shared-shell, and outer-mismatch region counts match before
+  family-specific lowering for a bounded H2 or Be2 fixture;
+- base artifact/readback smoke for the same bounded fixture under
+  `nesting = :pqs` and `nesting = :wl` if the WL retained-basis path remains
+  available;
+- existing H2 Residual Gaussian endpoint smoke only if touched code crosses
+  supplemented path;
+- no Cr2 run.
+
+No committed test file, committed fixture, driver contract test,
+solver/RHF/ECP/EGOI validation, route-diagnostic validation, artifact schema
+validation, or Cr2 fixture is approved.
+
 Forbidden:
 
 - driver changes;
@@ -693,9 +750,9 @@ realization, WL boundary coefficient construction, route skeleton semantics,
 artifact schema, or driver inputs, make no source commit and report the exact
 blocker.
 
-Separate follow-up: if the z-axis diatomic central-gap/contact policy turns out
-to mix common shell decomposition with family-specific retained geometry, that
-needs a later docs-only amendment.
+Central-gap/contact algorithm redesign remains deferred. This lane approves
+only shared shellifier entry and route-family-independent inputs to the current
+algorithm.
 
 ### HP-COMP-SHELLGEOM-TEST-01 — common shell decomposition validation
 

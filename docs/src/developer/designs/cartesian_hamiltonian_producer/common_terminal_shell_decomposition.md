@@ -1,7 +1,9 @@
 # Common Terminal Shell Decomposition
 
 Status: approved narrow audit/source authority under
-`HP-COMP-SHELLGEOM-FN-01` and `HP-COMP-SHELLGEOM-TEST-01`.
+`HP-COMP-SHELLGEOM-FN-01` and `HP-COMP-SHELLGEOM-TEST-01`, with the
+z-axis diatomic same-function/same-argument correction approved under
+`HP-COMP-SHELLGEOM-DIAT-FN-01` and `HP-COMP-SHELLGEOM-DIAT-TEST-01`.
 
 ## Problem
 
@@ -82,6 +84,12 @@ Common terminal shell decomposition must be a shared route-family-free
 operation. Route-family code may consume the common shell records, but it must
 not recompute shell ownership or reinterpret owned support rows.
 
+For both one-center atoms and z-axis diatomics, PQS and White-Lindsey must call
+the same common shell decomposition function with the same first-step
+arguments when the public system, parent axes, nuclear centers, direct core
+side, and public `ns` match. The construction family must not alter those
+arguments before common shell decomposition.
+
 Public `ns` is the common user-facing size. Direct nucleus-centered core side
 comes from public `ns` under `HP-COMP-NSCORE-*`. PQS may derive `q = ns` for
 PQS retained/source-mode policy. White-Lindsey may derive its inner side
@@ -93,6 +101,9 @@ is the common shell/core ownership authority.
 - `HP-COMP-SHELLGEOM-FN-01` - common terminal shell decomposition audit and
   narrow cleanup.
 - `HP-COMP-SHELLGEOM-TEST-01` - validation gates.
+- `HP-COMP-SHELLGEOM-DIAT-FN-01` - z-axis diatomic same-function/same-argument
+  common shell entry cleanup.
+- `HP-COMP-SHELLGEOM-DIAT-TEST-01` - diatomic parity validation gates.
 
 ## Approved Source Surface
 
@@ -135,6 +146,34 @@ planning use the same common shell decomposition. It must not change central
 gap/contact policy unless the fix is the same route-family-free shell input
 cleanup and does not touch lowering, retained units, or WL/PQS realization.
 
+## Diatomic Same-Function/Same-Argument Requirement
+
+`HP-COMP-SHELLGEOM-DIAT-FN-01` promotes the z-axis diatomic part from audit to
+narrow cleanup authority.
+
+For a fixed public z-axis diatomic system, parent axes, public `ns`, direct
+core side, nuclear centers, and bond axis, `nesting = :pqs` and `nesting = :wl`
+must enter `raw_terminal_geometry(...)` or its common replacement with the same
+first-step arguments. In particular:
+
+- direct core side is the public-`ns` value from `HP-COMP-NSCORE-*`;
+- public `ns` is the common shell-size input;
+- PQS `q` and the WL inner side are family-specific retained-construction
+  inputs after common shell records exist;
+- central-gap, contact-core, shared-shell, and outer-mismatch region ownership
+  are common shell decomposition facts, not retained-construction facts.
+
+This authority allows only the caller plumbing and parameter naming needed to
+make the diatomic common shellifier entry route-family-free. If
+`raw_terminal_geometry(...)` currently uses a parameter named `q` for common
+central-gap or shared-shell decisions, the source pass should rename or
+reinterpret that parameter as common `ns` at the shellifier boundary rather
+than passing PQS `q` or WL inner side.
+
+This does not approve changing the central-gap/contact algorithm itself. It
+approves only making both construction families use the same algorithm with
+the same common inputs before lowering.
+
 ## Forbidden
 
 This amendment does not approve:
@@ -172,6 +211,18 @@ This amendment does not approve:
   supplemented path;
 - no Cr2 run.
 
+`HP-COMP-SHELLGEOM-DIAT-TEST-01` additionally approves:
+
+- focused audit showing z-axis diatomic PQS/WL calls enter the common
+  shellifier with the same parent axes, nuclear centers, direct core side,
+  public `ns`, and bond axis;
+- same-`ns` PQS/WL z-axis diatomic direct core, central-gap/contact,
+  shared-shell, and outer-mismatch region counts match before
+  family-specific lowering for a bounded H2 or Be2 fixture;
+- base artifact/readback smoke for the same bounded fixture under
+  `nesting = :pqs` and `nesting = :wl` if the WL retained-basis path remains
+  available.
+
 No committed test file, committed fixture, driver contract test,
 solver/RHF/ECP/EGOI validation, route-diagnostic validation, artifact schema
 validation, or Cr2 fixture is approved.
@@ -184,7 +235,7 @@ realization, WL boundary coefficient construction, route skeleton semantics,
 artifact schema, or driver inputs, make no source commit and report the exact
 blocker.
 
-Separate follow-up: if the z-axis diatomic central-gap/contact policy turns
-out to mix common shell decomposition with family-specific retained geometry,
-that needs a later docs-only amendment. Do not hide that inside the atom shell
-cleanup.
+If making z-axis diatomic PQS/WL use the same shellifier with the same
+first-step arguments requires changing the central-gap/contact algorithm rather
+than just its route-family-independent inputs, stop and request a separate
+docs-only amendment.

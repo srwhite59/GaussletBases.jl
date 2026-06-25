@@ -528,6 +528,8 @@ these approved design IDs:
 - `HP-COMP-NSCORE-TEST-01`
 - `HP-COMP-SHELLGEOM-FN-01`
 - `HP-COMP-SHELLGEOM-TEST-01`
+- `HP-COMP-SHELLGEOM-DIAT-FN-01`
+- `HP-COMP-SHELLGEOM-DIAT-TEST-01`
 - `HP-COMP-WLNS-FN-01`
 - `HP-COMP-WLNS-TEST-01`
 - `HP-WLDIAT-COMPACT-FN-01`
@@ -1496,6 +1498,21 @@ redesign, retained-unit or transform changes, PQS retained-mode realization
 changes, WL boundary coefficient changes, artifact/manifest/reader changes,
 Hamiltonian/IDA/MWG/RG/raw-block changes, old WL materialization, committed
 tests/fixtures, or Cr2 workflow.
+
+`HP-COMP-SHELLGEOM-DIAT-FN-01` and
+`HP-COMP-SHELLGEOM-DIAT-TEST-01` extend common shell decomposition authority to
+z-axis diatomic shellifier entry. For a fixed public z-axis diatomic system,
+parent axes, public `ns`, direct core side, nuclear centers, and bond axis,
+PQS and WL must call the same common shellifier with the same first-step
+arguments. Central-gap/contact, shared-shell, and outer-mismatch ownership are
+common shell geometry. PQS `q` and WL inner side are retained-construction
+inputs after common shell records exist. This lane allows only caller plumbing
+and shellifier-boundary naming/input cleanup in
+`src/cartesian_shellification/terminal_geometry.jl` and
+`src/pqs_source_box_route_driver_helpers.jl`; it does not approve changing the
+central-gap/contact algorithm, terminal lowering, retained units, PQS retained
+realization, WL boundary coefficients, route skeletons, artifacts, driver
+inputs, committed tests/fixtures, or Cr2 workflow.
 
 `HP-WLTERM-FILE-01`, `HP-WLTERM-FN-01`, and `HP-WLTERM-WIRE-01` approve only
 the narrow White-Lindsey terminal-basis seam needed by `nesting = :wl`.

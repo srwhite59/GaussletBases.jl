@@ -16277,3 +16277,55 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 162 - Approve Diatomic Common Shellifier Entry
+
+Commit(s):
+- this commit - Approve diatomic common shellifier entry
+
+Summary:
+- Accepted the source result `e41aba6eb` as the atom-side direct-core parity
+  fix, then recorded the remaining policy correction as docs authority:
+  diatomic PQS/WL must also run through the same common shell decomposition
+  function with the same first-step arguments.
+- Approved `HP-COMP-SHELLGEOM-DIAT-FN-01` and
+  `HP-COMP-SHELLGEOM-DIAT-TEST-01` as a narrow extension of the common-shell
+  lane. For a fixed public z-axis diatomic system, parent axes, public `ns`,
+  direct core side, nuclear centers, and bond axis, PQS and WL must enter the
+  common shellifier identically before lowering.
+- The design now classifies central-gap/contact, shared-shell, and
+  outer-mismatch ownership as common shell geometry. PQS `q` and WL inner side
+  are retained-construction inputs after common shell records exist.
+
+Validation:
+- Docs-only amendment validation required: `git diff --check`; focused scans
+  for `HP-COMP-SHELLGEOM-DIAT-*`, "same first-step arguments", and stale
+  wording that leaves diatomic central-gap/contact as a family-specific
+  retained-construction decision; confirm no `src`, `bin`, `test`, `tools`,
+  artifact, or implementation files changed. A docs build is appropriate
+  because compact authority and the algorithm refresher changed.
+
+Goal advancement:
+- LT5/LT6: prevents the next PQS/WL divergence after atom parity. The future
+  source pass should be caller-boundary cleanup, not retained-basis redesign:
+  both families pass the same common inputs to the shellifier, and only then
+  diverge into PQS source-box modes or WL boundary contractions.
+
+Carrying-cost result:
+- deleted: none; docs-only authority pass.
+- simplified: the remaining diatomic source target is now explicit and narrow:
+  shellifier-boundary naming/input cleanup in
+  `src/cartesian_shellification/terminal_geometry.jl` and
+  `src/pqs_source_box_route_driver_helpers.jl`.
+- quarantined: central-gap/contact algorithm redesign, terminal lowering,
+  retained units, PQS retained realization, WL boundary coefficients, route
+  skeletons, artifacts, driver inputs, committed tests/fixtures, and Cr2
+  workflow remain unapproved.
+- exact remaining caller/blocker: if same-function/same-argument diatomic
+  entry requires changing the central-gap/contact algorithm rather than only
+  route-family-independent shellifier inputs, the later source pass must stop
+  and request a separate amendment.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

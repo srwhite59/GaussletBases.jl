@@ -1118,6 +1118,13 @@ Additional approved composition lane:
   step owns direct core regions, shell regions, owned support rows, ordering,
   and coverage. PQS full source-box geometry and WL face/edge/corner geometry
   begin only after those common shell records exist.
+- `HP-COMP-SHELLGEOM-DIAT-FN-01` /
+  `HP-COMP-SHELLGEOM-DIAT-TEST-01` are approved for the z-axis diatomic
+  same-function/same-argument cleanup: PQS and WL must enter the common
+  shellifier with identical first-step arguments for the same public diatomic
+  system, parent axes, public `ns`, direct core side, centers, and bond axis.
+  Central-gap/contact and shared-shell ownership remain common shell geometry;
+  PQS `q` and WL inner side begin only in retained-construction policy.
 
 No initial composition placeholder remains candidate-only. Deferred geometry,
 solver, ECP, public export, and Cr2-specific work still need a later docs-only
