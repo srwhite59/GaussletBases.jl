@@ -39,6 +39,8 @@ Normal startup reading:
   composition matrix over geometry, nesting, and supplement state;
 - `public_ns_core_side_parity.md` for direct nucleus-centered core side
   parity from public `ns`;
+- `common_terminal_shell_decomposition.md` for route-family-free common
+  shell/core region decomposition before PQS/WL retained realization;
 - `cartesian_hamiltonian_artifact_manifest.md` for compact Hamiltonian
   artifact sidecar groups and recipe provenance;
 - `route_inventory_type_surface_cleanup.md` for the first route-inventory
@@ -96,6 +98,10 @@ Implemented base path:
   from public `ns` as `isodd(ns) ? ns : ns + 1`. This oddization rule is only
   for direct core identity blocks; boundary retained sizes keep route-local
   construction.
+- `HP-COMP-SHELLGEOM-*` approves only common terminal shell decomposition as a
+  shared route-family-free first step. PQS and White-Lindsey may diverge in
+  retained-construction geometry only after common direct core and shell-owned
+  support regions exist.
 
 Implemented Residual Gaussian path:
 

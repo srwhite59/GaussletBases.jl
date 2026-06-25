@@ -16168,3 +16168,58 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 161 - Approve Common Shell Decomposition Boundary
+
+Commit(s):
+- this commit - Approve common shell decomposition boundary
+
+Summary:
+- Approved `HP-COMP-SHELLGEOM-FN-01` and `HP-COMP-SHELLGEOM-TEST-01` as a
+  narrow docs-only audit/source authority amendment.
+- The design now records the two-geometry distinction explicitly. Common
+  terminal shell decomposition is the shared first step: parent lattice,
+  nuclear centers, direct core side, direct core regions, terminal shell
+  regions, owned support rows, ordering, and coverage. It must be
+  route-family-free.
+- PQS and White-Lindsey diverge only after common shell records exist. PQS uses
+  shell support plus a full source CPB for retained source-box modes. WL splits
+  shell boundaries into faces/edges/corners/strata and builds retained columns
+  by product-of-1D contractions.
+
+Validation:
+- Docs-only amendment validation required: `git diff --check`; focused scans
+  for `HP-COMP-SHELLGEOM-*`, "common terminal shell decomposition", and stale
+  wording that implies separate first-step PQS/WL shellifiers; confirm no
+  `src`, `bin`, `test`, `tools`, artifact, or implementation files changed. A
+  docs build is appropriate because compact authority, startup navigation, and
+  the algorithm refresher changed.
+
+Goal advancement:
+- LT5/LT6: prevents another WL/PQS divergence caused by route-era vocabulary.
+  The next source pass can ask a bounded question: does first-step atom shell
+  decomposition already share one route-family-free path, and if not, where
+  does route-family state leak in before lowering?
+
+Carrying-cost result:
+- deleted: none; docs-only authority pass.
+- simplified: future source work has a precise audit/cleanup target in
+  `src/cartesian_shellification/terminal_geometry.jl`, with narrow caller
+  plumbing allowed in `src/pqs_source_box_route_driver_helpers.jl`.
+- quarantined: driver changes, public input changes, route skeleton redesign,
+  terminal lowering redesign, retained-unit or transform changes, PQS retained
+  realization changes, WL boundary coefficient changes, artifact/manifest/
+  reader changes, Hamiltonian/IDA/MWG/RG/raw-block changes, old WL
+  materialization, committed tests, fixtures, and Cr2 workflow remain
+  unapproved.
+- exact remaining caller/blocker: if route-family-free common shell
+  decomposition requires terminal lowering, retained-unit records, PQS retained
+  modes, WL boundary coefficient construction, route skeleton semantics,
+  artifact schema, or driver inputs, the later source pass must stop and
+  report the exact blocker. If z-axis diatomic central-gap/contact policy
+  proves entangled with family-specific retained geometry, that needs a later
+  amendment.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

@@ -51,6 +51,9 @@ centering, but boundary shells retain the requested shell count such as
 Public-`ns` direct core side parity is approved under `HP-COMP-NSCORE-*`:
 direct nucleus-centered core blocks use the oddized public `ns` side, while
 boundary retained sizes keep route-local construction.
+Common terminal shell decomposition is approved as a shared route-family-free
+first step under `HP-COMP-SHELLGEOM-*`: PQS and White-Lindsey differ only after
+common shell/core support regions exist.
 The old complete-core-shell RHF payload stack is approved for retirement under
 `HP-RETIRE-CCS-RHF-*`; the current CR2-facing producer path is the canonical
 driver plus `CartesianIDAHamiltonian` artifacts, not the stale RHF payload
@@ -94,6 +97,9 @@ Agents should read first:
 - [Public ns direct-core side parity](public_ns_core_side_parity.md)
   for deriving direct nucleus-centered core side from public `ns` rather than
   route-local `q`
+- [Common terminal shell decomposition](common_terminal_shell_decomposition.md)
+  for keeping direct core and shell-owned support construction shared before
+  PQS/WL retained-realization geometry diverges
 - [Cartesian Hamiltonian artifact manifest](cartesian_hamiltonian_artifact_manifest.md)
   for compact JLD2 sidecar groups describing matrix-order basis rows and public
   recipe provenance, plus the narrow construction-native source-mode
@@ -179,6 +185,9 @@ Approved amendments:
   approves only deriving the direct nucleus-centered core side from public
   `ns`, with oddization limited to direct core identity blocks and no change to
   boundary retained-count construction.
+- [Common terminal shell decomposition](common_terminal_shell_decomposition.md)
+  approves only route-family-free common shell/core region decomposition and a
+  narrow audit/cleanup surface before PQS/WL retained-realization geometry.
 - [Complete-core-shell RHF retirement](complete_core_shell_rhf_retirement.md)
   approves only deleting the stale `pqs_multilayer_complete_core_shell_rhf.jl`
   stack and root include, with no replacements, adapters, new status/payload

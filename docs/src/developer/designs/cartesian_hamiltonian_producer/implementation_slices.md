@@ -1111,6 +1111,13 @@ Additional approved composition lane:
   parent minimum sizing consistency. Direct core side is derived from public
   `ns` as `isodd(ns) ? ns : ns + 1`; route-local `q` remains route-local and
   must not impose an oddized boundary retained count.
+- `HP-COMP-SHELLGEOM-FN-01` / `HP-COMP-SHELLGEOM-TEST-01` are approved for
+  common terminal shell decomposition audit/cleanup in
+  `src/cartesian_shellification/terminal_geometry.jl` and narrow caller
+  plumbing in `src/pqs_source_box_route_driver_helpers.jl`. The common first
+  step owns direct core regions, shell regions, owned support rows, ordering,
+  and coverage. PQS full source-box geometry and WL face/edge/corner geometry
+  begin only after those common shell records exist.
 
 No initial composition placeholder remains candidate-only. Deferred geometry,
 solver, ECP, public export, and Cr2-specific work still need a later docs-only

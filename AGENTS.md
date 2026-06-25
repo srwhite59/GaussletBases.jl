@@ -526,6 +526,8 @@ these approved design IDs:
 - `HP-COMP-NS-TEST-01`
 - `HP-COMP-NSCORE-FN-01`
 - `HP-COMP-NSCORE-TEST-01`
+- `HP-COMP-SHELLGEOM-FN-01`
+- `HP-COMP-SHELLGEOM-TEST-01`
 - `HP-COMP-WLNS-FN-01`
 - `HP-COMP-WLNS-TEST-01`
 - `HP-WLDIAT-COMPACT-FN-01`
@@ -1480,6 +1482,20 @@ WL boundary retained counts remain `ns = 4 -> 56`, `ns = 5 -> 98`, and
 changes, route skeleton redesign, terminal lowering, retained-unit or terminal
 realizer changes, artifact schema changes, manifest expansion, old WL
 materialization revival, committed tests/fixtures, or Cr2 workflow.
+
+`HP-COMP-SHELLGEOM-FN-01` and `HP-COMP-SHELLGEOM-TEST-01` approve only common
+terminal shell decomposition audit/cleanup in
+`src/cartesian_shellification/terminal_geometry.jl` and narrow caller plumbing
+in `src/pqs_source_box_route_driver_helpers.jl`. Direct core regions, terminal
+shell regions, owned support rows, ordering, and coverage are common geometry
+and must be computed before the PQS/WL route-family split. PQS full source-box
+geometry and WL face/edge/corner/stratum geometry are retained-construction
+geometry after common shell records exist. This lane does not approve driver
+changes, public input changes, route skeleton redesign, terminal lowering
+redesign, retained-unit or transform changes, PQS retained-mode realization
+changes, WL boundary coefficient changes, artifact/manifest/reader changes,
+Hamiltonian/IDA/MWG/RG/raw-block changes, old WL materialization, committed
+tests/fixtures, or Cr2 workflow.
 
 `HP-WLTERM-FILE-01`, `HP-WLTERM-FN-01`, and `HP-WLTERM-WIRE-01` approve only
 the narrow White-Lindsey terminal-basis seam needed by `nesting = :wl`.

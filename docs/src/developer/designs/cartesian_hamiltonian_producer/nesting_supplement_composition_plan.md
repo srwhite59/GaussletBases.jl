@@ -63,6 +63,11 @@ they must not be hidden by driver defaults or mislabeled artifact provenance.
   forbidden.
 - PQS and White-Lindsey must converge to the same terminal-basis boundary:
   a `CartesianTerminalBasisRealization` with disjoint owned terminal supports.
+- The first terminal shell decomposition is common. Direct core regions,
+  shell regions, owned support rows, ordering, and coverage must not branch on
+  PQS versus White-Lindsey. The route-family split begins when common shell
+  records are lowered into PQS source-box retained modes or WL
+  face/edge/corner retained contractions.
 - Residual-GTO/MWG supplementation consumes the terminal basis, public system
   facts, parent bundles, supplement specification, and same-construction base
   operators. It must not consume route skeletons, route reports, or old WL

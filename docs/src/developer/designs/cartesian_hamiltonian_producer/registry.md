@@ -607,6 +607,117 @@ No committed test file, committed fixture, driver contract test,
 solver/RHF/ECP/EGOI validation, route-diagnostic validation, artifact schema
 validation, or Cr2 fixture is approved.
 
+## Approved Composition Cleanup: Common Terminal Shell Decomposition
+
+This lane freezes the two-geometry distinction needed to keep PQS/WL
+composition from drifting.
+
+Common terminal shell decomposition is the first geometry:
+
+```text
+parent lattice + nuclear centers + direct core side
+-> direct core regions
+-> terminal shell regions
+-> owned support rows
+```
+
+PQS and White-Lindsey must share this first step. The family split begins only
+after common shell records exist:
+
+```text
+PQS: common shell support + full source CPB -> retained source-box modes
+WL:  common shell support -> faces/edges/corners/strata -> 1D contractions
+```
+
+### HP-COMP-SHELLGEOM-FN-01 — common shell decomposition audit/cleanup
+
+Approved source files:
+
+```text
+src/cartesian_shellification/terminal_geometry.jl
+src/pqs_source_box_route_driver_helpers.jl
+```
+
+Approved behavior:
+
+- audit whether first-step shell/core region construction is already identical
+  for `nesting = :pqs` and `nesting = :wl`;
+- keep direct core regions, shell regions, owned support rows, ordering, and
+  coverage route-family-free;
+- remove route-family branching from common terminal shell decomposition if it
+  exists;
+- rename or locally clarify shellifier parameters and summary labels so common
+  shell geometry is not presented as governed by PQS `q` or WL inner side;
+- keep direct-core side tied to public `ns` through `HP-COMP-NSCORE-*`;
+- leave PQS and White-Lindsey lowering/realization separate after common shell
+  records are produced.
+
+Approved source surface details:
+
+- `src/cartesian_shellification/terminal_geometry.jl` owns common
+  route-family-free shell/core region decomposition;
+- `src/pqs_source_box_route_driver_helpers.jl` may change only narrow caller
+  plumbing and summary/provenance wording needed to pass common shell inputs
+  before selecting PQS or White-Lindsey lowering.
+
+For one-center atoms, same public system, parent extent, and `ns` must produce
+the same direct core and shell-owned support regions before family-specific
+lowering.
+
+For z-axis diatomics, this lane may audit whether central-gap and shared-shell
+planning use the same common shell decomposition. It must not change central
+gap/contact policy unless the fix is the same route-family-free shell input
+cleanup and does not touch lowering, retained units, or WL/PQS realization.
+
+Forbidden:
+
+- driver changes;
+- public input changes;
+- route skeleton redesign;
+- terminal lowering redesign;
+- retained-unit record changes;
+- retained-unit transform changes;
+- PQS source-box retained-mode realization changes;
+- WL face/edge/corner coefficient or retained-basis changes;
+- direct-core parity changes beyond `HP-COMP-NSCORE-*`;
+- central-gap/contact policy redesign;
+- artifact schema, manifest, reader, or provenance expansion;
+- Hamiltonian, one-body, IDA, MWG, Residual Gaussian, raw-block, solver, ECP,
+  or Cr2 workflow changes;
+- old WL materialization revival;
+- committed tests or fixtures.
+
+Failure rule: if common shell decomposition cannot be made route-family-free
+without changing terminal lowering, retained-unit records, PQS retained-mode
+realization, WL boundary coefficient construction, route skeleton semantics,
+artifact schema, or driver inputs, make no source commit and report the exact
+blocker.
+
+Separate follow-up: if the z-axis diatomic central-gap/contact policy turns out
+to mix common shell decomposition with family-specific retained geometry, that
+needs a later docs-only amendment.
+
+### HP-COMP-SHELLGEOM-TEST-01 — common shell decomposition validation
+
+Approved validation:
+
+- `git diff --check`;
+- package load;
+- focused audit showing the one-center atom common shell decomposition is
+  route-family-free for the same public `ns`, parent extent, and center;
+- same-`ns` PQS/WL one-center atom direct core and shell-owned support counts
+  match before family-specific lowering;
+- same-`ns` PQS/WL one-center atom base artifact/readback still works for a
+  bounded fixture;
+- H2 or Be2 smoke to confirm the diatomic path still constructs;
+- existing H2 Residual Gaussian endpoint smoke only if touched code crosses
+  supplemented path;
+- no Cr2 run.
+
+No committed test file, committed fixture, driver contract test,
+solver/RHF/ECP/EGOI validation, route-diagnostic validation, artifact schema
+validation, or Cr2 fixture is approved.
+
 ## Approved Composition Lane: Base Homonuclear Z-Axis Diatomics
 
 This section promotes the base z-axis diatomic validation relaxation. It

@@ -68,6 +68,33 @@ valid for a metadata-only `:white_lindsey_boundary_stratum_retained_unit`.
 Treating boundary-stratum support rows as retained functions is the recent WL
 diatomic mistake.
 
+## Common Shells Before Family Geometry
+
+For the current Cartesian producer, do not collapse the two geometry levels.
+
+The first level is common terminal shell decomposition:
+
+```text
+parent lattice + nuclear centers
+-> direct core
+-> shell 1, shell 2, ...
+-> owned shell support rows
+```
+
+This step should be shared by PQS and White-Lindsey. It is not the place for a
+PQS/WL route-family branch.
+
+The second level is family-specific retained-construction geometry:
+
+- PQS uses the common shell support together with a full source CPB to build
+  boundary COMX/product-mode retained columns.
+- White-Lindsey splits the common shell boundary into faces, edges, corners,
+  and strata, then builds retained columns by product-of-1D contractions.
+
+The full source CPB in PQS and the face/edge/corner units in White-Lindsey are
+not competing shellification algorithms. They are different retained-basis
+construction geometries after common shells already exist.
+
 ## PQS Source Boxes
 
 PQS should be remembered as:

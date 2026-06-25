@@ -158,6 +158,13 @@ The canonical RG algorithm contract is
   route-local `q`: `direct_core_side = isodd(ns) ? ns : ns + 1`. Route-local
   `q` remains `q = ns` for PQS and `q = ns - 2` for White-Lindsey, but it does
   not define the shared direct core side.
+- Terminal shell decomposition is common geometry. Direct core regions,
+  shell regions, owned support rows, ordering, and coverage must be computed
+  by one route-family-free operation before PQS or White-Lindsey lowering.
+  PQS may then use shell support plus a full source CPB for retained-mode
+  realization; White-Lindsey may then split shell boundaries into faces, edges,
+  corners, and strata for product-of-1D contractions. Those are
+  retained-construction geometries, not separate first-step shellifiers.
 - Geometry (`atom` or z-axis diatomic), `nesting` (`:pqs` or `:wl`), and
   supplement state (`off` or `on`) are intended to compose through shared
   producer boundaries. Do not implement the 2 x 2 x 2 matrix as eight
