@@ -1178,6 +1178,61 @@ Failure rule:
 - if removing the hidden `d` field requires any visible driver contract change
   or producer/source change, make no source commit and report the blocker.
 
+## Complete-Core-Shell RHF Retirement
+
+Status: approved for implementation under `HP-RETIRE-CCS-RHF-FN-01` and
+`HP-RETIRE-CCS-RHF-TEST-01`.
+
+Decision:
+
+- the old complete-core-shell RHF payload stack is no longer a live producer
+  path;
+- current CR2-facing atom/diatomic, base/supplemented, PQS/WL work consumes
+  canonical driver `CartesianIDAHamiltonian` artifacts;
+- focused reference search found no live `src`, `bin`, `test`, or `tool`
+  caller outside the file itself and its root include.
+
+Approved boundary:
+
+- remove the include in `src/GaussletBases.jl`;
+- delete `src/pqs_multilayer_complete_core_shell_rhf.jl`;
+- remove only docs/index references that describe this RHF stack as active
+  current code, if encountered during the source pass.
+
+Validation gates:
+
+- `git diff --check`;
+- package load;
+- focused `rg` showing no remaining live references to
+  `pqs_multilayer_complete_core_shell_rhf`;
+- canonical small base artifact/readback smoke;
+- canonical small supplemented artifact/readback smoke;
+- H2 Residual Gaussian endpoint unchanged;
+- no Cr2 run.
+
+Forbidden:
+
+- canonical driver changes, source changes outside the approved file/include
+  except minimal stale active-reference cleanup, changes to
+  `pqs_multilayer_complete_core_shell_h1.jl`,
+  `pqs_complete_core_shell_final_basis.jl`,
+  `pqs_source_box_low_order_materialization.jl`, ordinary/Qiu-White donor
+  kernels, artifact schema/provenance/readers, route/shellification/
+  terminal-lowering/raw-block/RG/MWG/IDA paths, Hamiltonian assembly, committed
+  tests/fixtures, Cr2 workflow, replacements, adapters, compatibility
+  wrappers, reports, status fields, or payload objects.
+
+Line expectation:
+
+- net deletion of roughly `1879` source lines, with only a small include
+  deletion and possible minimal docs active-reference cleanup.
+
+Failure rule:
+
+- if any live source/bin/test/tool caller depends on the RHF stack, make no
+  source commit and report the exact caller;
+- do not preserve the path through an adapter.
+
 ## R1 One-Center Base Atoms
 
 Status: approved for implementation under `HP-R1-ATOM-FN-01`,

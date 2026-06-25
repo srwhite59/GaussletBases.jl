@@ -48,6 +48,10 @@ The follow-up WL boundary-stratum parity cleanup is approved under
 `HP-WLDIAT-PARITY-*`: nucleus-centered core/contact blocks keep odd-side
 centering, but boundary shells retain the requested shell count such as
 `ns = 4 -> 4^3 - 2^3 = 56`.
+The old complete-core-shell RHF payload stack is approved for retirement under
+`HP-RETIRE-CCS-RHF-*`; the current CR2-facing producer path is the canonical
+driver plus `CartesianIDAHamiltonian` artifacts, not the stale RHF payload
+workflow.
 
 Agents should read first:
 
@@ -97,6 +101,8 @@ Agents should read first:
   cleanup lane
 - [Route/stage carrier cleanup](route_stage_carrier_cleanup.md)
   for the post-cleanup route/stage carrier and plan-signature cleanup lane
+- [Complete-core-shell RHF retirement](complete_core_shell_rhf_retirement.md)
+  for the narrow deletion lane for the stale RHF payload stack
 - [Algorithm implementation index](../../algorithm_implementation_index.md)
 
 Approved amendments:
@@ -157,6 +163,10 @@ Approved amendments:
   `:white_lindsey_low_order` route produce the same
   `CartesianTerminalBasisRealization` consumed by the staged Hamiltonian path,
   and records the separate WL diatomic compact retained-basis correction.
+- [Complete-core-shell RHF retirement](complete_core_shell_rhf_retirement.md)
+  approves only deleting the stale `pqs_multilayer_complete_core_shell_rhf.jl`
+  stack and root include, with no replacements, adapters, new status/payload
+  objects, or workflow changes.
 - [Cartesian driver atom workflow](cartesian_driver_atom_workflow.md)
   approves only explicit origin-centered one-center base atom driver inputs
   through the existing base facade. Current validation remains the

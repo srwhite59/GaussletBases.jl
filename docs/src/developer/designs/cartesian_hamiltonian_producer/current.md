@@ -49,6 +49,8 @@ Normal startup reading:
   route/stage compatibility-inventory cleanup;
 - `route_stage_carrier_cleanup.md` for the post-cleanup route/stage carrier
   and plan-signature cleanup lane;
+- `complete_core_shell_rhf_retirement.md` for the narrow stale
+  complete-core-shell RHF payload-stack deletion lane;
 - `docs/src/developer/algorithm_implementation_index.md` for existing kernels
   and donor paths.
 
@@ -129,6 +131,20 @@ Approved Residual Gaussian robustness lane:
   `6.151e-6`, final merge condition `1.0`, `max |G' S R| = 1.776e-14`, and
   `max |R' S R - I| = 2.183e-10` against an old allowed error of about
   `2.000e-10`.
+
+Approved stale complete-core-shell RHF retirement:
+
+- `HP-RETIRE-CCS-RHF-FN-01` approves only removing the include for
+  `src/pqs_multilayer_complete_core_shell_rhf.jl` from `src/GaussletBases.jl`
+  and deleting that RHF payload-stack file;
+- the path is stale route-era workflow machinery with no live source/bin/test/
+  tool caller found outside the file itself, while current CR2-facing work
+  consumes canonical driver `CartesianIDAHamiltonian` artifacts;
+- do not add replacements, adapters, compatibility wrappers, new status or
+  payload objects, driver changes, artifact changes, route/shellification/
+  terminal-lowering/raw-block/RG/MWG/IDA changes, or Cr2 workflow;
+- do not change the older complete-core-shell H1/final-basis files or
+  source-box materialization under this ID.
 
 Approved neutral Cartesian Gaussian raw-block owner:
 

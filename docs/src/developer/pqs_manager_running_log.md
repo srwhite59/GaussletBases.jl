@@ -15818,3 +15818,51 @@ Carrying-cost result:
 - deleted src lines: 2.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 157 - Approve CCS RHF Stack Retirement
+
+Commit(s):
+- this commit - Approve CCS RHF stack retirement
+
+Summary:
+- Approved `HP-RETIRE-CCS-RHF-FN-01` and
+  `HP-RETIRE-CCS-RHF-TEST-01` as a narrow deletion authority lane for the old
+  complete-core-shell RHF payload stack.
+- The deletion target is `src/pqs_multilayer_complete_core_shell_rhf.jl` plus
+  its include in `src/GaussletBases.jl`. Focused search found no live source,
+  bin, test, or tool caller outside the file itself and the root include; the
+  remaining hits are docs/history and file-internal payload/status vocabulary.
+- Current CR2-facing work consumes canonical driver
+  `CartesianIDAHamiltonian` artifacts for atom/diatomic, base/supplemented,
+  and PQS/WL cases. The old RHF stack is stale route-era workflow machinery.
+
+Validation:
+- Docs-only amendment validation required: `git diff --check`; focused scans
+  for `HP-RETIRE-CCS-RHF-*` and `pqs_multilayer_complete_core_shell_rhf`;
+  confirm no `src`, `bin`, `test`, `tools`, artifact, or implementation files
+  changed. A docs build is appropriate because compact authority files changed.
+
+Goal advancement:
+- LT5/LT6: converts a stale payload/status route stack into an approved
+  deletion target instead of preserving it through compatibility adapters.
+- CR2 workflow clarity: reinforces that the supported handoff is the canonical
+  staged driver plus `CartesianIDAHamiltonian` artifacts, not the old RHF
+  payload stack.
+
+Carrying-cost result:
+- deleted: none in this docs pass.
+- simplified: future source work has a precise two-file deletion surface and
+  an expected net source deletion of roughly `1879` lines.
+- quarantined: canonical driver changes, H1/final-basis stack changes,
+  source-box materialization changes, Qiu-White donor kernels, artifacts,
+  route/shellification/terminal-lowering/raw-block/RG/MWG/IDA, Hamiltonian
+  assembly, committed tests, Cr2 workflow, replacements, adapters,
+  compatibility wrappers, reports, status fields, and payload objects remain
+  unapproved.
+- exact remaining caller/blocker: if any live source/bin/test/tool caller
+  depends on the RHF stack, the deletion pass must stop and report the exact
+  caller rather than preserving the path through an adapter.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

@@ -530,6 +530,8 @@ these approved design IDs:
 - `HP-WLDIAT-COMPACT-TEST-01`
 - `HP-WLDIAT-PARITY-FN-01`
 - `HP-WLDIAT-PARITY-TEST-01`
+- `HP-RETIRE-CCS-RHF-FN-01`
+- `HP-RETIRE-CCS-RHF-TEST-01`
 
 No other production surface may be added in this lane without a prior
 documentation-only design amendment. This includes new structs, persistent
@@ -1558,6 +1560,21 @@ atoms, Cr2-specific driver branches, or Cr2-specific workflow support. Generic
 explicit Cr2 may be used only as an ignored/user-run homonuclear z-axis stress
 through `HP-R3U-ZDI-*` after H2/Be2 validation. Diagnostics and ladder probing
 belong in `tools/` or ignored `tmp/work` probes, not in the canonical driver.
+
+`HP-RETIRE-CCS-RHF-FN-01` approves only removing the stale complete-core-shell
+RHF payload stack: delete `src/pqs_multilayer_complete_core_shell_rhf.jl` and
+remove its include from `src/GaussletBases.jl`. Minimal docs/index cleanup is
+allowed only for references that incorrectly describe that stack as active
+current code. Do not add replacements, adapters, compatibility wrappers,
+reports, status objects, payload objects, tests, driver changes, artifact
+changes, route/shellification/terminal-lowering/raw-block/RG/MWG/IDA changes,
+or Cr2 workflow. Do not change `pqs_multilayer_complete_core_shell_h1.jl`,
+`pqs_complete_core_shell_final_basis.jl`, or
+`pqs_source_box_low_order_materialization.jl` under this ID.
+`HP-RETIRE-CCS-RHF-TEST-01` approves only package load, focused reference scan,
+canonical small base and supplemented artifact/readback smokes, unchanged H2 RG
+endpoint, and no Cr2 run. If any live `src`, `bin`, `test`, or `tool` caller
+depends on the RHF stack, stop without a source commit and report the caller.
 
 ## Basis bundle policy
 

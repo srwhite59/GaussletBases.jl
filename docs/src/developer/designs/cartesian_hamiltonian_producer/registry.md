@@ -3633,6 +3633,70 @@ Failure rule: if removing the hidden `d` field requires any visible driver
 contract change or producer/source change, make no source commit and report the
 blocker.
 
+## Approved For Complete-Core-Shell RHF Retirement
+
+This section approves only the deletion lane recorded in
+`complete_core_shell_rhf_retirement.md`. The old complete-core-shell RHF stack
+is stale route-era workflow machinery, not a live Cartesian Hamiltonian
+producer path.
+
+### HP-RETIRE-CCS-RHF-FN-01 — remove stale RHF payload stack
+
+Approved source files:
+
+```text
+src/GaussletBases.jl
+src/pqs_multilayer_complete_core_shell_rhf.jl
+```
+
+Approved behavior:
+
+- remove the `pqs_multilayer_complete_core_shell_rhf.jl` include from
+  `src/GaussletBases.jl`;
+- delete `src/pqs_multilayer_complete_core_shell_rhf.jl`;
+- remove only docs/index references that describe this RHF stack as active
+  current code, if encountered during the deletion pass;
+- add no replacements, adapters, compatibility wrappers, status objects,
+  payload objects, reports, or tests.
+
+Evidence: focused search found no live `src`, `bin`, `test`, or `tool` caller
+outside the file itself and the root include. The file carries old payload and
+blocked-status vocabulary such as
+`pqs_multilayer_complete_core_shell_rhf_input_contract`,
+`pqs_multilayer_complete_core_shell_rhf_scf_payload`, and
+`pqs_multilayer_complete_core_shell_rhf_one_step_payload`. The current
+CR2-facing producer path is `bin/cartesian_ham_builder.jl`, staged producer
+functions, and `CartesianIDAHamiltonian` artifacts.
+
+This ID does not approve canonical driver changes, source changes outside the
+approved file/include except minimal stale active-reference cleanup, changes to
+`pqs_multilayer_complete_core_shell_h1.jl`,
+`pqs_complete_core_shell_final_basis.jl`, or
+`pqs_source_box_low_order_materialization.jl`, ordinary/Qiu-White donor-kernel
+changes, artifact schema/provenance/reader changes, route/shellification/
+terminal-lowering/raw-block/RG/MWG/IDA changes, Hamiltonian assembly changes,
+committed tests/fixtures, or Cr2 workflow.
+
+Failure rule: if any live `src`, `bin`, `test`, or `tool` caller depends on the
+RHF stack, make no source commit and report the exact caller. Do not preserve
+the path through an adapter.
+
+### HP-RETIRE-CCS-RHF-TEST-01 — retirement validation
+
+Approved validation:
+
+- `git diff --check`;
+- package load;
+- focused `rg` showing no remaining live references to
+  `pqs_multilayer_complete_core_shell_rhf`;
+- canonical small base artifact/readback smoke;
+- canonical small supplemented artifact/readback smoke;
+- H2 Residual Gaussian endpoint remains unchanged;
+- no Cr2 run.
+
+No committed test, fixture, replacement path, adapter, status/report/payload
+object, artifact-schema validation, or Cr2 workflow is approved.
+
 ## Approved For Homonuclear Z-Axis Diatomic Supplemented Workflow
 
 This section approves only the molecule-scope relaxation recorded in
