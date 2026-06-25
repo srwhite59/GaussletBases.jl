@@ -224,6 +224,31 @@ Do-not-forget rule:
 COMX boundary product modes define retained source modes. Support rows and
 shell-local final coefficients are later realization details.
 
+## Mapped-COMX Source Spans
+
+Why to check:
+The high-order lane produced a mapped-COMX source-span candidate that is now
+approved for mainline installation as a raw-source / carried-space option. It
+should be implemented once in the shared source-span layer, then consumed by
+high-order benchmarks. Do not duplicate it as a high-order route or Hamiltonian
+branch.
+
+Key docs:
+- `docs/src/developer/designs/cartesian_hamiltonian_producer/mapped_comx_source_span.md`
+- `docs/src/developer/raw_product_source_retained_transform_policy.md`
+
+Source anchors:
+- **approved owner**: `src/cartesian_raw_product_sources/`
+- **narrow wiring surface**:
+  `src/cartesian_pair_block_materialization/pqs_source_axis_transforms.jl`
+
+Do-not-forget rule:
+The first installed rule is protected physical `P2` plus mapped Chebyshev
+enrichment `T_k(s_lambda(u))` with `lambda = 0.5`, no `sqrtJ`, and physical-`u`
+COMX localization. Ordinary polynomial source spans remain available and
+unchanged. Hamiltonian and artifact layers should see only the usual carried
+source facts plus provenance.
+
 ## One-Body Operators And Unit Nuclear Convention
 
 Why to check:

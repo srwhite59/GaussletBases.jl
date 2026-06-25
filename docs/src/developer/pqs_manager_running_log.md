@@ -16385,3 +16385,53 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 163 - Approve Mapped-COMX Source Span
+
+Commit(s):
+- this commit - Approve mapped-COMX source span
+
+Summary:
+- Approved `HP-MCOMX-FILE-01`, `HP-MCOMX-OBJ-01`, `HP-MCOMX-FN-01`,
+  `HP-MCOMX-WIRE-01`, and `HP-MCOMX-TEST-01` as a narrow mainline
+  source-span facility.
+- The high-order branch produced the mapped-COMX idea and scratch evidence,
+  but mainline owns the installation shape. High-order should consume the
+  installed option for H/He/Cr benchmarking, like CR2 consumes Hamiltonian
+  artifacts, rather than maintaining a duplicate implementation.
+- The approved first rule is protected physical `P2` plus mapped Chebyshev
+  enrichment `T_k(s_lambda(u))` with `lambda = 0.5`, no `sqrtJ`, and
+  physical-`u` COMX localization. Ordinary polynomial source spans remain
+  available and unchanged.
+
+Validation:
+- Docs-only amendment validation required: `git diff --check`; focused scans
+  for `HP-MCOMX-*`, `mapped-COMX`, and forbidden-source-surface wording;
+  confirm no `src`, `bin`, `test`, `tools`, artifact, or implementation files
+  changed. A docs build is appropriate because compact authority and the
+  algorithm index changed.
+
+Goal advancement:
+- LT5/LT6: installs a promising high-order experimental primitive at the
+  correct mainline layer: source-span / carried-space facts, not Hamiltonian
+  route scaffolding. It also preserves the consumer model for high-order and
+  CR2.
+
+Carrying-cost result:
+- deleted: none; docs-only authority pass.
+- simplified: future source work has an explicit owner:
+  `CartesianRawProductSources`, with only narrow PQS axis-transform wiring.
+- quarantined: source-default replacement, public API/export changes,
+  canonical driver input changes, artifacts, Hamiltonian/one-body/IDA/MWG/RG/
+  raw-block/solver changes, injection/Ylm, `sqrtJ`, mapped-`s` production
+  localization, high-order scaffolding imports, committed Cr/Cr2 fixtures, and
+  Cr2 workflow remain unapproved.
+- exact remaining caller/blocker: if the source option cannot be installed
+  through `CartesianRawProductSources` and existing PQS raw-source
+  axis-transform wiring without changing Hamiltonian assembly, artifacts,
+  public driver inputs, or high-order-specific workflow, the later source pass
+  must stop and report the missing mainline seam.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

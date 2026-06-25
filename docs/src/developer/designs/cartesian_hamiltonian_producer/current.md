@@ -41,6 +41,8 @@ Normal startup reading:
   parity from public `ns`;
 - `common_terminal_shell_decomposition.md` for route-family-free common
   shell/core region decomposition before PQS/WL retained realization;
+- `mapped_comx_source_span.md` for the protected-`P2` plus mapped Chebyshev
+  source-span option owned by mainline `CartesianRawProductSources`;
 - `cartesian_hamiltonian_artifact_manifest.md` for compact Hamiltonian
   artifact sidecar groups and recipe provenance;
 - `route_inventory_type_surface_cleanup.md` for the first route-inventory
@@ -106,6 +108,10 @@ Implemented base path:
   White-Lindsey must enter the common shellifier with the same first-step
   arguments, including public `ns`, before central-gap/contact and shared-shell
   regions are planned.
+- `HP-MCOMX-*` approves a protected-`P2` plus mapped Chebyshev source-span
+  option as a mainline `CartesianRawProductSources` facility. High-order may
+  benchmark the installed option as a consumer, but the high-order branch does
+  not own the mainline implementation shape.
 
 Implemented Residual Gaussian path:
 

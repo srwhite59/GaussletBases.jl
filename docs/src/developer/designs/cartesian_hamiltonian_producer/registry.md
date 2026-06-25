@@ -775,6 +775,159 @@ No committed test file, committed fixture, driver contract test,
 solver/RHF/ECP/EGOI validation, route-diagnostic validation, artifact schema
 validation, or Cr2 fixture is approved.
 
+## Approved Source-Span Facility: Mapped-COMX
+
+This section approves a narrow mainline source-span option based on
+high-order-manager scratch evidence. The high-order branch is an experimental
+proving ground and benchmark consumer. It does not own the mainline
+implementation shape, and its scripts, route wrappers, reports, and benchmark
+scaffolding must not be copied into production.
+
+Approved first numerical rule:
+
+```text
+protected physical P2
++ mapped Chebyshev enrichment T_k(s_lambda(u))
++ lambda = 0.5
++ no sqrtJ
++ physical-u COMX localization
+```
+
+with:
+
+```text
+s_lambda(u) = (1 + lambda) * u / (1 + lambda * u^2)
+```
+
+The ordinary polynomial source-span path remains available and unchanged. This
+lane installs an additional source-span facility; it does not change defaults
+or make high-order benchmark results production acceptance tests.
+
+### HP-MCOMX-FILE-01 — mapped-COMX source-span files
+
+Approved source files:
+
+```text
+src/cartesian_raw_product_sources/CartesianRawProductSources.jl
+src/cartesian_raw_product_sources/mapped_comx_source_span.jl
+src/cartesian_raw_product_sources/axis_transform_facts.jl
+src/cartesian_raw_product_sources/records.jl
+src/cartesian_pair_block_materialization/pqs_source_axis_transforms.jl
+```
+
+Primary owner: `CartesianRawProductSources`.
+
+`records.jl` is approved only for narrow accessors, metadata fields, or record
+validation needed to carry source-span provenance. The pair-block
+materialization file is approved only for compatibility wiring from existing
+PQS raw-source axis-transform construction to the mainline source-span option.
+
+No root include change is approved except the module-local include in
+`CartesianRawProductSources.jl`.
+
+### HP-MCOMX-OBJ-01 — mapped-COMX source-span specification
+
+Approved object: a compact `MappedCOMXSourceSpec` or equivalent typed
+source-span specification.
+
+Approved fields/semantics:
+
+- `protected_degree`, initially `2`;
+- `lambda`, initially `0.5`;
+- `mapped_family`, initially `:chebyshev_s`;
+- `include_sqrt_jacobian = false`;
+- `localization_coordinate = :physical_u`;
+- requested and resolved one-dimensional source mode count;
+- deterministic mapped-order list or equivalent compact source-span metadata;
+- compact rank and overlap/orthogonality diagnostics.
+
+The object is source-span construction data, not a route report, status
+payload, public input object, artifact schema, or high-order benchmark record.
+
+### HP-MCOMX-FN-01 — mapped-COMX source-span construction
+
+Approved behavior:
+
+- build protected physical polynomial columns `1, u, u^2`;
+- add mapped Chebyshev columns `T_k(s_lambda(u))` until the requested source
+  mode count is reached;
+- project mapped columns against the protected physical block in the local
+  parent metric;
+- orthonormalize the combined one-dimensional source span;
+- localize by physical-coordinate COMX, not mapped-`s` COMX;
+- construct materialized `AxisSourceTransformFact`s compatible with existing
+  `RawProductBoxPlan` and PQS boundary product-mode retained rules;
+- preserve deterministic ordering and ordinary polynomial source-span behavior.
+
+The option is general in `n_s` and `protected_degree`. The current `n_s = 5`,
+`6`, and `7` scans are evidence points, not hard-coded cases.
+
+### HP-MCOMX-WIRE-01 — raw-source and PQS axis-transform wiring
+
+Approved behavior:
+
+- make the mapped-COMX option reachable through internal construction controls
+  needed by the approved validation gates;
+- carry descriptive source-span provenance such as
+  `source_span_family = :mapped_comx`, protected degree, lambda, mapped family,
+  mapped orders, `include_sqrt_jacobian = false`, and
+  `localization_coordinate = :physical_u`;
+- keep Hamiltonian, operator, and artifact layers consuming the usual
+  carried-space / raw product source facts;
+- avoid branching downstream Hamiltonian construction on ordinary polynomial
+  versus mapped-COMX source spans except for descriptive provenance already
+  carried by source facts.
+
+Forbidden for all `HP-MCOMX-*` IDs:
+
+- changing default source spans;
+- public API or export changes;
+- canonical driver input changes;
+- artifact schema, manifest, or reader changes;
+- Hamiltonian, one-body, IDA, MWG, Residual Gaussian, raw Gaussian block, or
+  solver changes;
+- ECP, EGOI, RHF, ED, DMRG, or Cr2 workflow;
+- explicit `Y_lm` / angular injection;
+- `sqrtJ` weighting;
+- mapped-`s` COMX as the production localization gauge;
+- importing high-order branch scaffolding, scripts, route wrappers, status
+  objects, diagnostics, or reports;
+- a duplicate high-order-maintained implementation of the same mainline
+  option;
+- committed Cr fixtures or broad high-order benchmark fixtures.
+
+Failure rule: if the source option cannot be installed through
+`CartesianRawProductSources` and existing PQS raw-source axis-transform wiring
+without changing Hamiltonian assembly, artifact schemas, public driver inputs,
+or high-order-specific workflow, make no source commit and report the exact
+missing mainline seam.
+
+### HP-MCOMX-TEST-01 — mapped-COMX validation
+
+Approved validation:
+
+- `git diff --check`;
+- package load;
+- local source-span validation for `n_s = 5`, `6`, and `7`:
+  - full retained rank;
+  - protected `P2` span preserved;
+  - source-axis overlap approximately identity after construction;
+  - physical-`u` COMX off-diagonal residual reported;
+  - metadata records the approved source-span rule;
+- bounded cubic H and He+ one-electron gate comparing ordinary polynomial and
+  mapped-COMX source spans with fixed support and retained count;
+- bounded He `1s^2` fixed-orbital IDA gate if the already-supported analytic
+  path can run without new solver or artifact workflow;
+- high-order-manager consumer benchmarks on the installed mainline option for
+  Cr occupied capture, reported back as evidence rather than committed mainline
+  fixtures;
+- no Cr2 run.
+
+No committed test file is approved by default. A later implementation blurb may
+name a small standalone script or ignored probe for the approved gates.
+Committed fixtures, public driver tests, solver tests, and Cr/Cr2 benchmark
+fixtures require a separate amendment.
+
 ## Approved Composition Lane: Base Homonuclear Z-Axis Diatomics
 
 This section promotes the base z-axis diatomic validation relaxation. It

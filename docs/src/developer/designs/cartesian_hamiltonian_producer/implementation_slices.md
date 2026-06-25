@@ -1125,6 +1125,13 @@ Additional approved composition lane:
   system, parent axes, public `ns`, direct core side, centers, and bond axis.
   Central-gap/contact and shared-shell ownership remain common shell geometry;
   PQS `q` and WL inner side begin only in retained-construction policy.
+- `HP-MCOMX-FILE-01`, `HP-MCOMX-OBJ-01`, `HP-MCOMX-FN-01`,
+  `HP-MCOMX-WIRE-01`, and `HP-MCOMX-TEST-01` are approved for the mainline
+  mapped-COMX source-span facility in `CartesianRawProductSources` plus narrow
+  PQS raw-source axis-transform wiring. The first rule is protected physical
+  `P2` plus mapped Chebyshev enrichment with `lambda = 0.5`, no `sqrtJ`, and
+  physical-`u` COMX localization. High-order is a consumer/benchmark lane, not
+  the owner of the installed implementation.
 
 No initial composition placeholder remains candidate-only. Deferred geometry,
 solver, ECP, public export, and Cr2-specific work still need a later docs-only

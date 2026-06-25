@@ -530,6 +530,11 @@ these approved design IDs:
 - `HP-COMP-SHELLGEOM-TEST-01`
 - `HP-COMP-SHELLGEOM-DIAT-FN-01`
 - `HP-COMP-SHELLGEOM-DIAT-TEST-01`
+- `HP-MCOMX-FILE-01`
+- `HP-MCOMX-OBJ-01`
+- `HP-MCOMX-FN-01`
+- `HP-MCOMX-WIRE-01`
+- `HP-MCOMX-TEST-01`
 - `HP-COMP-WLNS-FN-01`
 - `HP-COMP-WLNS-TEST-01`
 - `HP-WLDIAT-COMPACT-FN-01`
@@ -1513,6 +1518,26 @@ and shellifier-boundary naming/input cleanup in
 central-gap/contact algorithm, terminal lowering, retained units, PQS retained
 realization, WL boundary coefficients, route skeletons, artifacts, driver
 inputs, committed tests/fixtures, or Cr2 workflow.
+
+`HP-MCOMX-FILE-01`, `HP-MCOMX-OBJ-01`, `HP-MCOMX-FN-01`,
+`HP-MCOMX-WIRE-01`, and `HP-MCOMX-TEST-01` approve only the mainline
+mapped-COMX source-span facility described in
+`docs/src/developer/designs/cartesian_hamiltonian_producer/mapped_comx_source_span.md`.
+The approved owner is `CartesianRawProductSources`, with allowed files
+`src/cartesian_raw_product_sources/CartesianRawProductSources.jl`,
+`src/cartesian_raw_product_sources/mapped_comx_source_span.jl`,
+`src/cartesian_raw_product_sources/axis_transform_facts.jl`,
+`src/cartesian_raw_product_sources/records.jl`, and narrow wiring in
+`src/cartesian_pair_block_materialization/pqs_source_axis_transforms.jl`.
+The first source rule is protected physical `P2` plus mapped Chebyshev
+enrichment `T_k(s_lambda(u))` with `lambda = 0.5`, no `sqrtJ`, and
+physical-`u` COMX localization. High-order is a consumer/benchmark lane for
+the installed option, not the owner of a duplicate implementation. This lane
+does not approve source-default changes, public API/export changes, canonical
+driver input changes, artifact/manifest/reader changes, Hamiltonian/one-body/
+IDA/MWG/RG/raw-block/solver changes, injection/Ylm mechanisms, mapped-`s`
+localization as production gauge, high-order scaffolding imports, committed
+Cr/Cr2 fixtures, or Cr2 workflow.
 
 `HP-WLTERM-FILE-01`, `HP-WLTERM-FN-01`, and `HP-WLTERM-WIRE-01` approve only
 the narrow White-Lindsey terminal-basis seam needed by `nesting = :wl`.
