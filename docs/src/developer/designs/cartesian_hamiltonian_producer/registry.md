@@ -456,10 +456,10 @@ rule and produces 26 boundary columns rather than the nominal shell count
 `4^3 - 2^3 = 56`.
 
 That remaining behavior is not an acceptable WL policy. The odd-side rule is a
-core/contact-block centering requirement: a nucleus-centered core should have
-odd side length so the nucleus is centered. Boundary shells and boundary strata
-outside that core do not require odd side counts and must retain the requested
-shell contraction count.
+direct core-block centering requirement: a nucleus-centered direct core should
+have odd side length so the nucleus is centered. Boundary shells and boundary
+strata outside that core do not require odd side counts and must retain the
+requested shell contraction count.
 
 ### HP-WLDIAT-PARITY-FN-01 — WL boundary retained-count parity
 
@@ -471,7 +471,7 @@ src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.j
 
 Approved behavior:
 
-- preserve odd-side enforcement for true nucleus-centered core/contact blocks;
+- preserve odd-side enforcement for true direct nucleus-centered core blocks;
 - for WL boundary shell strata, use the requested boundary retained count
   without symmetric-odd coercion;
 - for public `nesting = :wl`, `ns = 4`, route-local `q = 2` must retain the
@@ -526,6 +526,86 @@ Approved validation:
 No committed test file, committed fixture, driver contract test,
 solver/RHF/ECP/EGOI validation, route-diagnostic validation, or Cr2 fixture is
 approved.
+
+## Approved Composition Cleanup: Public ns Direct-Core Side Parity
+
+This lane corrects an even-`ns` PQS/WL comparison bug. Public `ns` is the
+requested cube/source/nesting size, but shared route setup still derives the
+nucleus-centered direct/core side from route-local `q`. Since WL derives
+`q = ns - 2`, even-`ns` same-size PQS/WL comparisons can get different direct
+core boxes even though the direct core centering rule is not a route-family
+physics difference.
+
+The odd-side parity rule is necessary only for direct nucleus-centered core
+identity blocks. It must not apply to boundary shells, WL boundary-stratum
+retained products, or non-direct support regions.
+
+### HP-COMP-NSCORE-FN-01 — public ns direct core side
+
+Approved source files:
+
+```text
+src/pqs_source_box_route_driver_helpers.jl
+src/cartesian_base_hamiltonian.jl
+```
+
+`src/cartesian_base_hamiltonian.jl` is approved only if needed to keep
+one-center parent minimum sizing consistent with the same direct-core rule.
+
+Approved behavior:
+
+- keep public `ns` as the requested cube/source/nesting size;
+- keep route-local `q` derivation unchanged:
+  - PQS: `q = ns`;
+  - WL: `q = ns - 2`;
+- derive only direct nucleus-centered core side from public `ns`:
+  `direct_core_side = isodd(ns) ? ns : ns + 1`;
+- do not apply this oddization rule to boundary shells, WL boundary-stratum
+  retained products, or non-direct support regions;
+- preserve odd-`ns` dimensions where this cleanup should be a no-op;
+- preserve WL boundary retained count policy, including `ns = 4 -> 56`,
+  `ns = 5 -> 98`, and `ns = 6 -> 152`;
+- update internal provenance or summary labels such as `:odd_q_core_side` to
+  an `ns`-truthful rule if they are still written.
+
+Forbidden:
+
+- driver changes;
+- public input changes;
+- route skeleton redesign;
+- shellification geometry rewrites beyond direct-core side authority;
+- terminal lowering, retained-unit, or terminal-realizer changes;
+- artifact schema changes;
+- manifest expansion;
+- PQS/WL special cases in the driver;
+- old WL materialization revival;
+- committed tests or fixtures;
+- Cr2-specific workflow.
+
+Failure rule: if fixing the parity requires changing route skeleton semantics,
+terminal lowering, retained-unit records, WL boundary coefficient construction,
+artifact schema, or driver inputs, make no source commit and report the exact
+blocker.
+
+### HP-COMP-NSCORE-TEST-01 — public ns direct-core parity validation
+
+Approved validation:
+
+- `git diff --check`;
+- package load;
+- small one-center atom base artifact/readback for `ns = 5`, `6`, and `7` with
+  `nesting = :pqs` and `nesting = :wl`;
+- same-`ns` PQS/WL atom dimensions match for `ns = 5`, `6`, and `7` under a
+  bounded common fixture;
+- `ns = 6` no longer has the reported `66`-row skew;
+- small H2 or Be2 smoke to confirm the diatomic path still constructs;
+- existing H2 Residual Gaussian endpoint smoke if touched code crosses the
+  supplemented path;
+- no Cr2 run.
+
+No committed test file, committed fixture, driver contract test,
+solver/RHF/ECP/EGOI validation, route-diagnostic validation, artifact schema
+validation, or Cr2 fixture is approved.
 
 ## Approved Composition Lane: Base Homonuclear Z-Axis Diatomics
 

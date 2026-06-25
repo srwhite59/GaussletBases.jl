@@ -158,8 +158,8 @@ The compact coefficient path exposed one remaining inherited-donor rule:
 boundary strata currently apply symmetric-odd enforcement to the retained
 count. That is wrong for boundary shells.
 
-The odd-side rule belongs to nucleus-centered core/contact blocks, where an odd
-side keeps the block centered on the nucleus. Boundary shells and their
+The odd-side rule belongs only to direct nucleus-centered core blocks, where an
+odd side keeps the block centered on the nucleus. Boundary shells and their
 face/edge/corner strata are outside that core and should retain the requested
 shell contraction count.
 
@@ -172,7 +172,7 @@ requested retained count without symmetric-odd coercion. For public
 should remain `5^3 - 3^3 = 98`.
 
 This lane does not approve route/shellification changes, public `ns`
-normalization changes, core/contact odd-centering changes, direct/core identity
+normalization changes, direct-core odd-centering changes, direct/core identity
 changes, artifact changes, PQS changes, residual-GTO/MWG changes, old WL
 materialization, diagnostics, committed tests, or Cr2 workflow.
 

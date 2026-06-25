@@ -524,6 +524,8 @@ these approved design IDs:
 - `HP-COMP-ATOMBOX-TEST-01`
 - `HP-COMP-NS-FN-01`
 - `HP-COMP-NS-TEST-01`
+- `HP-COMP-NSCORE-FN-01`
+- `HP-COMP-NSCORE-TEST-01`
 - `HP-COMP-WLNS-FN-01`
 - `HP-COMP-WLNS-TEST-01`
 - `HP-WLDIAT-COMPACT-FN-01`
@@ -1369,8 +1371,8 @@ this correction, but it is not a promise of identical dimensions.
 `HP-WLDIAT-PARITY-FN-01` and `HP-WLDIAT-PARITY-TEST-01` approve the narrow
 White-Lindsey boundary-stratum retained-count parity cleanup in
 `src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl`.
-Core/contact blocks centered on a nucleus keep the odd-side requirement, but
-boundary shells/strata outside the nucleus-centered core must not inherit that
+Direct nucleus-centered core blocks keep the odd-side requirement, but
+boundary shells/strata and non-direct support regions must not inherit that
 symmetric-odd rule. For public `nesting = :wl`, `ns = 4`, route-local `q = 2`
 must retain the boundary shell count `4^3 - 2^3 = 56`, not the current
 inherited-donor result of `26`; `ns = 5` should retain `5^3 - 3^3 = 98`. This
@@ -1463,6 +1465,21 @@ entries next to the existing derived `q` in `producer_provenance/` and
 artifact format, route skeletons, shellification, terminal lowering, raw
 blocks, RG/MWG/IDA, solver/ECP workflow, Cr2 workflow, route diagnostics,
 status/report payloads, driver hooks/stage labels, or committed tests.
+
+`HP-COMP-NSCORE-FN-01` and `HP-COMP-NSCORE-TEST-01` approve only direct
+nucleus-centered core side parity cleanup in
+`src/pqs_source_box_route_driver_helpers.jl`, with
+`src/cartesian_base_hamiltonian.jl` allowed only if needed for one-center parent
+minimum sizing consistency. Route-local `q` derivation remains `q = ns` for
+PQS and `q = ns - 2` for WL, but direct core side must come from public `ns`:
+`direct_core_side = isodd(ns) ? ns : ns + 1`. This oddization rule is only for
+direct nucleus-centered core identity blocks. It must not apply to boundary
+shells, WL boundary-stratum retained products, or non-direct support regions.
+WL boundary retained counts remain `ns = 4 -> 56`, `ns = 5 -> 98`, and
+`ns = 6 -> 152`. This lane does not approve driver changes, public input
+changes, route skeleton redesign, terminal lowering, retained-unit or terminal
+realizer changes, artifact schema changes, manifest expansion, old WL
+materialization revival, committed tests/fixtures, or Cr2 workflow.
 
 `HP-WLTERM-FILE-01`, `HP-WLTERM-FN-01`, and `HP-WLTERM-WIRE-01` approve only
 the narrow White-Lindsey terminal-basis seam needed by `nesting = :wl`.

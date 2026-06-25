@@ -37,6 +37,8 @@ Normal startup reading:
   seam required by the `nesting = :wl` construction family;
 - `nesting_supplement_composition_plan.md` for the target 2 x 2 x 2
   composition matrix over geometry, nesting, and supplement state;
+- `public_ns_core_side_parity.md` for direct nucleus-centered core side
+  parity from public `ns`;
 - `cartesian_hamiltonian_artifact_manifest.md` for compact Hamiltonian
   artifact sidecar groups and recipe provenance;
 - `route_inventory_type_surface_cleanup.md` for the first route-inventory
@@ -89,6 +91,11 @@ Implemented base path:
   early in `src/cartesian_base_hamiltonian.jl`, and WL diatomic retained
   support may saturate across `ns` ranges when physical parent extent
   dominates.
+- `HP-COMP-NSCORE-*` approves direct nucleus-centered core side parity:
+  route-local `q` derivation remains unchanged, but direct core side comes
+  from public `ns` as `isodd(ns) ? ns : ns + 1`. This oddization rule is only
+  for direct core identity blocks; boundary retained sizes keep route-local
+  construction.
 
 Implemented Residual Gaussian path:
 
@@ -358,8 +365,9 @@ Approved first composition lane:
   primitive behind the current terminal-basis boundary, but must not revive the
   route-global WL stack, reports, adapters, or H1/H1+J materialization;
 - `HP-WLDIAT-PARITY-FN-01` separately approves the boundary-stratum retained
-  count parity cleanup: odd-side enforcement belongs to nucleus-centered
-  core/contact blocks, not to boundary shell strata; public WL `ns = 4`
+  count parity cleanup: odd-side enforcement belongs to direct
+  nucleus-centered core blocks, not to boundary shell strata; public WL
+  `ns = 4`
   therefore targets `4^3 - 2^3 = 56` boundary columns rather than the inherited
   symmetric-odd donor result `26`;
 - approved source files are the narrow diatomic complete-core-shell,

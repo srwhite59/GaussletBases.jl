@@ -147,11 +147,17 @@ The canonical RG algorithm contract is
   one-dimensional contractions on the owned unit support. Do not fake
   compactness by dropping support rows, relabeling identity units, or changing
   the driver comparison.
-- White-Lindsey odd-side centering is required for nucleus-centered
-  core/contact blocks, but not for boundary shell strata outside that core. A
+- White-Lindsey odd-side centering is required only for direct
+  nucleus-centered core blocks, where odd side length keeps the nucleus
+  centered on a grid point. Boundary shell strata, WL boundary-stratum retained
+  products, and non-direct support regions must not inherit this rule. A
   boundary retained count must preserve the requested shell contraction count;
   for WL public `ns = 4`, route-local `q = 2` gives `4^3 - 2^3 = 56`
   boundary columns, not `26`.
+- Direct nucleus-centered core side must be derived from public `ns`, not
+  route-local `q`: `direct_core_side = isodd(ns) ? ns : ns + 1`. Route-local
+  `q` remains `q = ns` for PQS and `q = ns - 2` for White-Lindsey, but it does
+  not define the shared direct core side.
 - Geometry (`atom` or z-axis diatomic), `nesting` (`:pqs` or `:wl`), and
   supplement state (`off` or `on`) are intended to compose through shared
   producer boundaries. Do not implement the 2 x 2 x 2 matrix as eight

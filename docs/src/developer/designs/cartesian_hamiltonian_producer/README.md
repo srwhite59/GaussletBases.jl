@@ -45,9 +45,12 @@ The WL z-axis diatomic compact retained-basis correction is approved under
 not the intended compact WL retained basis and must not be used as the final
 PQS/WL comparison story.
 The follow-up WL boundary-stratum parity cleanup is approved under
-`HP-WLDIAT-PARITY-*`: nucleus-centered core/contact blocks keep odd-side
+`HP-WLDIAT-PARITY-*`: direct nucleus-centered core blocks keep odd-side
 centering, but boundary shells retain the requested shell count such as
 `ns = 4 -> 4^3 - 2^3 = 56`.
+Public-`ns` direct core side parity is approved under `HP-COMP-NSCORE-*`:
+direct nucleus-centered core blocks use the oddized public `ns` side, while
+boundary retained sizes keep route-local construction.
 The old complete-core-shell RHF payload stack is approved for retirement under
 `HP-RETIRE-CCS-RHF-*`; the current CR2-facing producer path is the canonical
 driver plus `CartesianIDAHamiltonian` artifacts, not the stale RHF payload
@@ -88,6 +91,9 @@ Agents should read first:
   for the narrow terminal-basis seam needed by `nesting = :wl`
 - [Nesting/supplement composition plan](nesting_supplement_composition_plan.md)
   for the target 2 x 2 x 2 composition matrix and dependency order
+- [Public ns direct-core side parity](public_ns_core_side_parity.md)
+  for deriving direct nucleus-centered core side from public `ns` rather than
+  route-local `q`
 - [Cartesian Hamiltonian artifact manifest](cartesian_hamiltonian_artifact_manifest.md)
   for compact JLD2 sidecar groups describing matrix-order basis rows and public
   recipe provenance, plus the narrow construction-native source-mode
@@ -169,6 +175,10 @@ Approved amendments:
   `:white_lindsey_low_order` route produce the same
   `CartesianTerminalBasisRealization` consumed by the staged Hamiltonian path,
   and records the separate WL diatomic compact retained-basis correction.
+- [Public ns direct-core side parity](public_ns_core_side_parity.md)
+  approves only deriving the direct nucleus-centered core side from public
+  `ns`, with oddization limited to direct core identity blocks and no change to
+  boundary retained-count construction.
 - [Complete-core-shell RHF retirement](complete_core_shell_rhf_retirement.md)
   approves only deleting the stale `pqs_multilayer_complete_core_shell_rhf.jl`
   stack and root include, with no replacements, adapters, new status/payload

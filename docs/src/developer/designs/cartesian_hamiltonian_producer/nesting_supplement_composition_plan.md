@@ -176,10 +176,13 @@ behavior, touch raw blocks/RG/MWG/IDA, add diagnostics/status payloads, add
 committed fixtures/tests, or run Cr2.
 
 The follow-up `HP-WLDIAT-PARITY-*` lane corrects boundary-stratum retained
-count parity. Core/contact blocks centered on nuclei keep odd-side centering;
+count parity. Direct nucleus-centered core blocks keep odd-side centering;
 boundary shell strata do not inherit that rule. For public `nesting = :wl`,
 `ns = 4`, route-local `q = 2` should retain `4^3 - 2^3 = 56` boundary columns
-instead of the inherited symmetric-odd donor result `26`.
+instead of the inherited symmetric-odd donor result `26`. The separate
+`HP-COMP-NSCORE-*` lane requires the direct core side to come from public `ns`,
+not route-local `q`, so even-`ns` PQS/WL comparisons share the same direct core
+side while boundary retained sizes keep route-local construction.
 
 ### 1b. Base Homonuclear Z-Axis Diatomic Validation
 

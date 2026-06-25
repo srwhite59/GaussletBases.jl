@@ -16117,3 +16117,54 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 160 - Approve Public ns Direct-Core Side Parity
+
+Commit(s):
+- this commit - Approve public ns direct-core side parity
+
+Summary:
+- Approved `HP-COMP-NSCORE-FN-01` and `HP-COMP-NSCORE-TEST-01` as a narrow
+  docs-only source authority amendment for the remaining even-`ns` PQS/WL
+  parity bug.
+- Public `ns` remains the requested cube/source/nesting size. Route-local
+  `q` derivation remains `q = ns` for PQS and `q = ns - 2` for WL. The direct
+  nucleus-centered core side, however, must be derived from public `ns` as
+  `isodd(ns) ? ns : ns + 1`, not from route-local `q`.
+- The user correction is now explicit: odd-side parity is necessary only for
+  direct nucleus-centered core identity blocks. Boundary shells, WL
+  boundary-stratum retained products, and non-direct support regions must not
+  inherit that oddization rule. WL boundary retained counts remain
+  `ns = 4 -> 56`, `ns = 5 -> 98`, and `ns = 6 -> 152`.
+
+Validation:
+- Docs-only amendment validation required: `git diff --check`; focused scans
+  for `HP-COMP-NSCORE-*`, `direct_core_side`, and stale `core/contact`
+  wording in active compact authority; confirm no `src`, `bin`, `test`,
+  `tools`, artifact, or implementation files changed. A docs build is
+  appropriate because compact authority and startup navigation changed.
+
+Goal advancement:
+- LT5/LT6: keeps PQS/WL comparison tied to the same public `ns` while
+  preserving route-local WL boundary construction. This fixes the direct-core
+  parity issue without changing the driver, public input model, artifact
+  schema, or retained-basis coefficient construction.
+
+Carrying-cost result:
+- deleted: none; docs-only authority pass.
+- simplified: source work now has one precise target in
+  `src/pqs_source_box_route_driver_helpers.jl`, with
+  `src/cartesian_base_hamiltonian.jl` allowed only for one-center parent
+  minimum sizing consistency.
+- quarantined: driver changes, public input changes, route skeleton redesign,
+  terminal lowering, retained-unit or terminal-realizer changes, artifact
+  schema changes, manifest expansion, old WL materialization, committed tests,
+  fixtures, and Cr2 workflow remain unapproved.
+- exact remaining caller/blocker: if the parity fix requires route skeleton
+  semantics, terminal lowering, retained-unit records, WL boundary coefficient
+  construction, artifact schema, or driver inputs, the later source pass must
+  stop and report the exact blocker.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

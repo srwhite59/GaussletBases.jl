@@ -1055,9 +1055,9 @@ Status: approved for implementation under `HP-WLDIAT-PARITY-FN-01` and
 `HP-WLDIAT-PARITY-TEST-01`.
 
 Goal: correct the remaining inherited symmetric-odd donor rule for WL boundary
-strata after compact coefficient realization. Core/contact blocks centered on
-a nucleus keep odd-side centering. Boundary shell strata outside that core do
-not require odd side counts.
+strata after compact coefficient realization. Direct nucleus-centered core
+blocks keep odd-side centering. Boundary shell strata outside that core do not
+require odd side counts.
 
 Approved source file:
 
@@ -1072,7 +1072,7 @@ Approved boundary:
 - public `nesting = :wl`, `ns = 4` has route-local `q = 2` and should produce
   the shell count `4^3 - 2^3 = 56`, not `26`;
 - public `nesting = :wl`, `ns = 5` should produce `5^3 - 3^3 = 98`;
-- do not change core/contact odd-centering, direct/core identity behavior,
+- do not change direct-core odd-centering, direct/core identity behavior,
   public `ns` normalization, route skeletons, shellification, terminal
   lowering, retained-unit metadata shape, artifacts, PQS behavior, RG/MWG/IDA,
   committed tests, or Cr2 workflow.
@@ -1104,6 +1104,13 @@ Additional approved composition lane:
   `bin/cartesian_ham_builder.jl`: public `ns` is the requested
   cube/source/nesting size, while route-local `q` is derived as `q = ns` for
   PQS and `q = ns - 2` for White-Lindsey.
+- `HP-COMP-NSCORE-FN-01` / `HP-COMP-NSCORE-TEST-01` are approved for direct
+  nucleus-centered core side parity in
+  `src/pqs_source_box_route_driver_helpers.jl`, with
+  `src/cartesian_base_hamiltonian.jl` allowed only if needed for one-center
+  parent minimum sizing consistency. Direct core side is derived from public
+  `ns` as `isodd(ns) ? ns : ns + 1`; route-local `q` remains route-local and
+  must not impose an oddized boundary retained count.
 
 No initial composition placeholder remains candidate-only. Deferred geometry,
 solver, ECP, public export, and Cr2-specific work still need a later docs-only
