@@ -5311,6 +5311,62 @@ Deletion accounting:
 - new tests: none.
 - new metadata/status fields: none.
 
+## Cartesian Hamiltonian Producer Pass 163 - Diatomic Common Shellifier Entry
+
+Commit(s):
+- this commit - Fix diatomic common shellifier entry
+
+Summary:
+- Accepted `HP-COMP-SHELLGEOM-DIAT-FN-01`. The shared terminal shellifier now
+  receives public `n_s`/`ns` for z-axis diatomic first-step geometry, while
+  route-local `q` remains a separate retained/lowering input.
+- `raw_terminal_geometry(...)` now treats its former `q` input as the common
+  shell side for central-gap/contact decisions and distorted-gap metadata.
+  `raw_plan.q` remains populated for compatibility and now equals the common
+  shell side; `raw_plan.shell_side` records the same fact explicitly.
+- PQS lowering still receives `q = ns`; White-Lindsey retained boundary
+  construction still receives `q = ns - 2`. No retained-unit records,
+  terminal-lowering policy semantics, terminal realization, driver,
+  Hamiltonian, artifact, or RG/MWG code changed.
+
+Validation:
+- Doer: `git diff --check`; package load; focused H2 shellifier-entry and
+  region-count audit for `ns = 5, 6, 7`; H2 base artifact/readback for
+  `nesting = :pqs` and `nesting = :wl`, both dimension `471` for the default
+  bounded fixture; H2 RG endpoint/facade with self-Coulomb
+  `0.4574265214362095` and zero readback deltas; no Cr2 run.
+- Manager: reviewed the two-file source diff and the distorted-product
+  metadata consumer; reran `git diff --check`; package load; source diff
+  numstat; suspicious added-line scan; direct H2 same-`ns` parity probe for
+  `ns = 5, 6, 7`, confirming PQS/WL dimensions match as `471`, `789`, `855`;
+  and the H2 RG endpoint/facade with the same self-Coulomb and zero readback
+  deltas.
+
+Goal advancement:
+- LT5/LT6: closes the diatomic side of the shared first-step shell geometry
+  rule. PQS/WL divergence now begins after common shell records exist, at
+  retained construction and realization.
+- MT/CR2 readiness: same-`ns` PQS/WL diatomic comparisons no longer depend on
+  route-local `q` for central-gap/contact ownership before lowering.
+
+Carrying-cost result:
+- deleted: route-local `q` reads as the diatomic common shellifier geometry
+  authority.
+- simplified: common shell size and retained `q` are separated at the caller
+  boundary.
+- quarantined: none in this lane; central-gap/contact algorithm itself was not
+  redesigned.
+- not deleted because: compatibility `raw_plan.q` remains read by existing
+  lowering metadata paths and now aliases the common shell side.
+- exact remaining caller/blocker: none for same-function/same-argument
+  diatomic shellifier entry; any future change to the central-gap/contact
+  algorithm itself still requires separate authority.
+- added src lines: 20.
+- deleted src lines: 21.
+- new tests: none.
+- new metadata/status fields: one internal `shell_side` field on the raw
+  shellification plan only; no artifact/status/report field.
+
 ## Cartesian Hamiltonian Producer Pass 160 - Public ns Direct-Core Parity
 
 Commit(s):

@@ -23,9 +23,10 @@ function raw_terminal_geometry(
     bond_axis::Symbol = :auto,
     audit_coverage::Bool = true,
 )
+    shell_side = q
     core_side > 0 && isodd(core_side) ||
         throw(ArgumentError("core_side must be a positive odd integer"))
-    q > 0 || throw(ArgumentError("q must be a positive integer"))
+    shell_side > 0 || throw(ArgumentError("shell_side must be a positive integer"))
     all(!isempty, parent_axes) ||
         throw(ArgumentError("parent axes must be nonempty"))
 
@@ -243,12 +244,13 @@ function raw_terminal_geometry(
             )
 
         aspect_ratio = physical_sizes[axis] / transverse_size
-        L = max(q, round(Int, q * aspect_ratio))
-        source_mode_shape = ntuple(a -> a == axis ? L : q, 3)
+        L = max(shell_side, round(Int, shell_side * aspect_ratio))
+        source_mode_shape = ntuple(a -> a == axis ? L : shell_side, 3)
         return (;
             bond_axis = axis_symbol(axis),
             central_gap_width = gap_width,
-            q,
+            q = shell_side,
+            shell_side,
             L,
             source_mode_shape,
             physical_axis_sizes = physical_sizes,
@@ -265,7 +267,7 @@ function raw_terminal_geometry(
             throw(ArgumentError("atom-local boxes overlap before central gap handling"))
 
         gap_box = central_gap_box_between(left_box, right_box, axis)
-        if gap_width < q
+        if gap_width < shell_side
             for (slice_index, slice) in enumerate(gap_box[axis])
                 slab_box = ntuple(a -> a == axis ? (slice:slice) : gap_box[a], 3)
                 push_region!(
@@ -400,7 +402,7 @@ function raw_terminal_geometry(
         left_core = centered_box(nuclear_indices[left_atom], core_side)
         right_core = centered_box(nuclear_indices[right_atom], core_side)
         initial_gap = gap_between(left_core, right_core, axis)
-        if initial_gap < q
+        if initial_gap < shell_side
             # Alg PQS-SHELL diatomic atom-contact core: if q-side atom seed
             # boxes overlap, touch, or have a sub-q gap, use exactly their
             # discrete hull as the direct core. Do not force double-core
@@ -631,7 +633,8 @@ function raw_terminal_geometry(
         nuclear_indices,
         bond_axis = resolved_bond_axis,
         core_side,
-        q,
+        q = shell_side,
+        shell_side,
         regions = regions_tuple,
         region_count = length(regions_tuple),
         region_roles = Tuple(region.role for region in regions_tuple),

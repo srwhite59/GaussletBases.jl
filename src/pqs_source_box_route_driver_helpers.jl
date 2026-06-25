@@ -869,11 +869,11 @@ function _pqs_source_box_route_driver_shell_stage_terminal_shellification(
         parent.system_classification == :one_center ?
         CartesianShellification.OneCenterShellification(;
             core_side = parent.standard_setup.core_cube_side,
-            q = parent.standard_setup.q,
+            q = parent.standard_setup.n_s,
         ) :
         CartesianShellification.AtomOutwardShellification(;
             core_side = parent.standard_setup.core_cube_side,
-            q = parent.standard_setup.q,
+            q = parent.standard_setup.n_s,
             bond_axis = parent.bond_axis,
         )
     plan = CartesianShellification.shellify(parent_axes, nuclear_positions, policy)
@@ -1043,15 +1043,12 @@ end
 
 function _pqs_source_box_route_driver_terminal_lowering_policy(
     route_lowering_family,
-    shellification_plan,
+    retained_q,
 )
     route_lowering_family == :white_lindsey_low_order &&
         return CartesianTerminalLowering.WhiteLindseyLowering()
     if route_lowering_family == :pqs
-        raw_plan = CartesianShellification.raw_plan(shellification_plan)
-        q = !isnothing(raw_plan) && hasproperty(raw_plan, :q) ? raw_plan.q : nothing
-        isnothing(q) &&
-            throw(ArgumentError("PQS terminal lowering requires shellification q"))
+        q = _pqs_source_box_route_driver_positive_integer(retained_q, :q)
         return CartesianTerminalLowering.PQSLowering(q = q)
     end
     return nothing
@@ -1075,13 +1072,10 @@ function _pqs_source_box_route_driver_wl_contract_with_retained_count(contract, 
     )
 end
 
-function _pqs_source_box_route_driver_wl_retained_count_plan(plan, shellification_plan)
+function _pqs_source_box_route_driver_wl_retained_count_plan(plan, retained_q)
     CartesianTerminalLowering.policy_kind(plan.policy) === :white_lindsey_terminal_lowering ||
         return plan
-    raw_plan = CartesianShellification.raw_plan(shellification_plan)
-    q = !isnothing(raw_plan) && hasproperty(raw_plan, :q) ? raw_plan.q : nothing
-    q isa Integer && q > 0 ||
-        throw(ArgumentError("White-Lindsey terminal lowering requires shellification q"))
+    q = _pqs_source_box_route_driver_positive_integer(retained_q, :q)
     selected = CartesianTerminalLowering.TerminalLoweringContract[
         _pqs_source_box_route_driver_wl_contract_with_retained_count(contract, Int(q))
         for contract in CartesianTerminalLowering.selected_contracts(plan)
@@ -1093,17 +1087,18 @@ end
 function _pqs_source_box_route_driver_terminal_lowering_plan(
     shellification_plan,
     route_lowering_family,
+    retained_q,
 )
     shellification_plan isa CartesianShellification.ShellificationPlan || return nothing
 
     policy =
         _pqs_source_box_route_driver_terminal_lowering_policy(
             route_lowering_family,
-            shellification_plan,
+            retained_q,
         )
     isnothing(policy) && return nothing
     plan = CartesianTerminalLowering.lower_terminal_regions(shellification_plan, policy)
-    return _pqs_source_box_route_driver_wl_retained_count_plan(plan, shellification_plan)
+    return _pqs_source_box_route_driver_wl_retained_count_plan(plan, retained_q)
 end
 
 function _pqs_source_box_route_driver_terminal_lowering_kind_counts(contracts)
@@ -1452,6 +1447,7 @@ function _pqs_source_box_route_driver_unit_stage_low_order_summary(shells)
         _pqs_source_box_route_driver_terminal_lowering_plan(
             shellification_plan,
             route_lowering_family,
+            shells.spacing_inputs.q,
         )
     lowering_contract_inventory =
         lowering_plan isa CartesianTerminalLowering.TerminalLoweringPlan ?
