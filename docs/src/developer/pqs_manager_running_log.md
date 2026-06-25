@@ -5311,6 +5311,60 @@ Deletion accounting:
 - new tests: none.
 - new metadata/status fields: none.
 
+## Cartesian Hamiltonian Producer Pass 160 - Public ns Direct-Core Parity
+
+Commit(s):
+- this commit - Fix public ns direct-core parity
+
+Summary:
+- Accepted `HP-COMP-NSCORE-FN-01` with the one-center audit portion of
+  `HP-COMP-SHELLGEOM-FN-01`. The shared route setup now derives
+  `core_cube_side` from public `n_s`/`ns`, not route-local `q`. Route-local
+  `q` still derives as before (`q = ns` for PQS, `q = ns - 2` for WL) and
+  remains a retained/lowering policy parameter.
+- The one-center PQS/WL even-`ns` skew is fixed. PQS and WL now enter the same
+  terminal shellification function with the same parent axes, center, and
+  direct core side for the same public `ns`.
+- `src/cartesian_shellification/terminal_geometry.jl` did not need source
+  changes for the one-center case; it was already the common route-family-free
+  shellifier once caller inputs were corrected.
+- Diatomic central-gap/contact policy still uses route-local `q` in
+  `raw_terminal_geometry(...)`; that remains quarantined as a reported blocker
+  for a later authority lane if it proves to be first-step geometry rather than
+  retained-construction policy.
+
+Validation:
+- Doer: `git diff --check`; package load; one-center atom base artifact/readback
+  for `ns = 5, 6, 7` and `nesting = :pqs/:wl`; H2 base artifact/readback for
+  PQS and WL; H2 RG endpoint/facade with self-Coulomb
+  `0.4574265214362095` and zero readback deltas; no Cr2 run.
+- Manager: reviewed the two-file source diff; reran `git diff --check`;
+  package load; source diff numstat; suspicious added-line scan; a bounded H
+  atom parity probe confirming PQS/WL dimensions match for `ns = 5, 6, 7`
+  (`321`, `495`, `561`); and the H2 RG endpoint/facade with the same
+  self-Coulomb and zero readback deltas.
+
+Goal advancement:
+- LT5/LT6: removes an accidental route-local `q` leak from the common
+  one-center shell geometry setup. Same-`ns` PQS/WL atom comparisons are now
+  dimension-fair for even and odd `ns`.
+- MT/CR2 readiness: CR2 can compare PQS and WL atom runs without treating
+  even-`ns` cases as dimension-skewed by construction.
+
+Carrying-cost result:
+- deleted: stale `odd_q_core_side` helper name and summary label.
+- simplified: direct core side rule now names public `ns` as the authority.
+- quarantined: diatomic central-gap/contact `q` dependency remains reported
+  but unchanged.
+- not deleted because: no route/lowering/retained redesign was approved.
+- exact remaining caller/blocker: diatomic first-step geometry may still be
+  affected by route-local `q` in central-gap/contact policy; a later docs-only
+  amendment is needed before changing that behavior.
+- added src lines: 11.
+- deleted src lines: 11.
+- new tests: none.
+- new metadata/status fields: none.
+
 ## Cartesian Hamiltonian Producer Pass 148 - WL Diatomic `ns` Guard
 
 Commit(s):

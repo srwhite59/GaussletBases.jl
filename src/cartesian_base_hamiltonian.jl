@@ -200,9 +200,9 @@ function _cartesian_base_route(kind, nesting)
     throw(ArgumentError("basis.nesting must be :pqs or :wl"))
 end
 
-function _cartesian_base_odd_core_side(q)
-    side = isodd(q) ? q : q + 1
-    side > 0 || throw(ArgumentError("derived route-local q must be positive"))
+function _cartesian_base_direct_core_side(ns)
+    side = isodd(ns) ? ns : ns + 1
+    side > 0 || throw(ArgumentError("derived public ns must be positive"))
     return side
 end
 
@@ -215,7 +215,7 @@ function _cartesian_base_atom_parent_axis_counts(input)
         mapping,
         input.radius;
         reference_spacing = input.reference_spacing)
-    side = max(count, _cartesian_base_odd_core_side(input.q))
+    side = max(count, _cartesian_base_direct_core_side(input.ns))
     return (x = side, y = side, z = side)
 end
 

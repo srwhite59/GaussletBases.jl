@@ -111,18 +111,18 @@ function _pqs_source_box_route_driver_positive_integer(value, name::Symbol)
     return result
 end
 
-function _pqs_source_box_route_driver_odd_q_core_side(q)
-    q_int = _pqs_source_box_route_driver_positive_integer(q, :q)
-    core_cube_side = isodd(q_int) ? q_int : q_int + 1
-    core_cube_side > 0 && isodd(core_cube_side) && core_cube_side >= q_int ||
-        throw(ArgumentError("PQS core side must be positive, odd, and at least q"))
+function _pqs_source_box_route_driver_public_ns_core_side(n_s)
+    n_s_int = _pqs_source_box_route_driver_positive_integer(n_s, :n_s)
+    core_cube_side = isodd(n_s_int) ? n_s_int : n_s_int + 1
+    core_cube_side > 0 && isodd(core_cube_side) && core_cube_side >= n_s_int ||
+        throw(ArgumentError("direct core side must be positive, odd, and at least n_s"))
     return core_cube_side
 end
 
 function _pqs_source_box_route_driver_standard_setup(system_inputs, spacing_inputs)
     q = _pqs_source_box_route_driver_positive_integer(spacing_inputs.q, :q)
     n_s = _pqs_source_box_route_driver_positive_integer(spacing_inputs.n_s, :n_s)
-    core_cube_side = _pqs_source_box_route_driver_odd_q_core_side(q)
+    core_cube_side = _pqs_source_box_route_driver_public_ns_core_side(n_s)
     core_spacing = spacing_inputs.core_spacing
     parent_radius = max(Int(ceil(Float64(system_inputs.radius))), n_s)
     parent_axis = -parent_radius:parent_radius
@@ -139,7 +139,7 @@ function _pqs_source_box_route_driver_standard_setup(system_inputs, spacing_inpu
         xmax_transverse = get(spacing_inputs, :xmax_transverse, nothing),
         n_s,
         core_cube_side,
-        core_cube_side_rule = :odd_q_core_side,
+        core_cube_side_rule = :public_ns_direct_core_side,
         parent_box_rule = :radius_index_box,
         parent_box = (x = parent_axis, y = parent_axis, z = parent_axis),
         mapping_s = core_spacing,
