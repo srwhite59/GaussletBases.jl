@@ -3823,6 +3823,50 @@ Approved validation:
 
 No new committed test or fixture is approved.
 
+### HP-RETIRE-LADDER-RUNNERS-FN-01 — delete dangling ladder runners
+
+Approved tool files:
+
+```text
+tools/run_cartesian_driver_ladder.jl
+tools/run_cartesian_line_ladder.jl
+```
+
+Approved behavior:
+
+- delete both runner scripts;
+- do not add replacements;
+- do not modify `bin/cartesian_ham_builder.jl`;
+- do not modify `tools/cartesian_driver_ladder_lib.jl` unless a later
+  docs-only amendment explicitly approves deleting that quarantined library.
+
+These scripts are only entrypoints into the retired route-driver ladder
+workflow after `HP-RETIRE-DRV-MAT-*`. This ID does not approve canonical driver
+changes, source changes, test changes except validation scans, artifact/
+provenance/reader changes, route/shellification/terminal-lowering/raw-block/
+RG/MWG/IDA/Hamiltonian assembly changes, new wrappers, adapters, status fields,
+payloads, reports, tools, tests, or Cr2 workflow.
+
+Failure rule: if any live source, canonical workflow, or approved tool still
+depends on these runner scripts, make no commit and report the exact
+dependency. Do not preserve them through an adapter.
+
+### HP-RETIRE-LADDER-RUNNERS-TEST-01 — ladder runner deletion validation
+
+Approved validation:
+
+- `git diff --check`;
+- package load;
+- focused `rg` over `src`, `bin`, `test`, and `tools` for
+  `run_cartesian_driver_ladder`, `run_cartesian_line_ladder`, and
+  `cartesian_driver_ladder_lib`;
+- canonical small base artifact/readback smoke;
+- no Cr2 run.
+
+No committed test, replacement tool, adapter, or Cr2 workflow is approved.
+After this deletion pass, pause the cleanup lane unless a later amendment names
+another stale surface.
+
 ## Approved For Homonuclear Z-Axis Diatomic Supplemented Workflow
 
 This section approves only the molecule-scope relaxation recorded in

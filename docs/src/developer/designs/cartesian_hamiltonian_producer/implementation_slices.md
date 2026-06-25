@@ -246,6 +246,20 @@ Approved retirement:
 - keep the canonical driver, staged producer functions, artifacts, and
   numerical kernels unchanged.
 
+Follow-up ladder runner deletion:
+
+- `HP-RETIRE-LADDER-RUNNERS-FN-01` approves only deleting
+  `tools/run_cartesian_driver_ladder.jl` and
+  `tools/run_cartesian_line_ladder.jl`, the dangling entrypoints into the
+  retired ladder workflow;
+- do not modify `tools/cartesian_driver_ladder_lib.jl` in this pass unless a
+  later amendment explicitly approves deleting the quarantined library;
+- `HP-RETIRE-LADDER-RUNNERS-TEST-01` approves only `git diff --check`, package
+  load, focused runner/library reference scans, canonical small base
+  artifact/readback smoke, and no Cr2 run;
+- after this deletion pass, pause this cleanup lane unless a later amendment
+  names another stale surface.
+
 Deferred gates:
 
 - public-driver polish;

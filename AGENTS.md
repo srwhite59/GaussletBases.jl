@@ -536,6 +536,8 @@ these approved design IDs:
 - `HP-RETIRE-DRV-MAT-TOOL-01`
 - `HP-RETIRE-DRV-MAT-DOC-01`
 - `HP-RETIRE-DRV-MAT-TEST-01`
+- `HP-RETIRE-LADDER-RUNNERS-FN-01`
+- `HP-RETIRE-LADDER-RUNNERS-TEST-01`
 
 No other production surface may be added in this lane without a prior
 documentation-only design amendment. This includes new structs, persistent
@@ -1610,6 +1612,23 @@ or Qiu-White donor kernels, replacement wrappers, adapters, status fields,
 payloads, new tests, or Cr2 workflow. If any current canonical producer path
 or public artifact workflow depends on these wrappers, stop without a source
 commit and report the exact dependency.
+
+`HP-RETIRE-LADDER-RUNNERS-FN-01` approves only deleting the two dangling
+route-driver ladder runner scripts left after `HP-RETIRE-DRV-MAT-*`:
+`tools/run_cartesian_driver_ladder.jl` and
+`tools/run_cartesian_line_ladder.jl`. Do not add replacements, do not modify
+`bin/cartesian_ham_builder.jl`, and do not modify
+`tools/cartesian_driver_ladder_lib.jl` unless a later amendment explicitly
+approves deleting that quarantined library. `HP-RETIRE-LADDER-RUNNERS-TEST-01`
+approves only `git diff --check`, package load, focused scans for the two
+runner names and `cartesian_driver_ladder_lib`, canonical small base
+artifact/readback smoke, and no Cr2 run. This lane does not approve source
+changes, test changes except validation scans, artifact/provenance/reader
+changes, route/shellification/terminal-lowering/raw-block/RG/MWG/IDA/
+Hamiltonian assembly changes, new wrappers, adapters, status fields, payloads,
+reports, tools, tests, or Cr2 workflow. If any live source, canonical workflow,
+or approved tool still depends on these runner scripts, stop without a commit
+and report the exact dependency.
 
 ## Basis bundle policy
 

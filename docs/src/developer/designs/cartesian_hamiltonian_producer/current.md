@@ -164,6 +164,12 @@ Approved route-driver materialization/report/save retirement:
   removal/update of stale docs-policy wrapper assertions;
 - the canonical staged driver and current staged producer/artifact path must
   remain unchanged.
+- `HP-RETIRE-LADDER-RUNNERS-FN-01` approves only deleting
+  `tools/run_cartesian_driver_ladder.jl` and
+  `tools/run_cartesian_line_ladder.jl`, the two dangling runner entrypoints
+  into the retired ladder workflow. It does not approve edits to the canonical
+  driver, source files, tests, artifacts, or the quarantined
+  `tools/cartesian_driver_ladder_lib.jl`.
 
 Approved neutral Cartesian Gaussian raw-block owner:
 

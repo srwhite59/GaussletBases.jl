@@ -16032,3 +16032,47 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 159 - Approve Ladder Runner Deletion
+
+Commit(s):
+- this commit - Approve ladder runner deletion
+
+Summary:
+- Approved `HP-RETIRE-LADDER-RUNNERS-FN-01` and
+  `HP-RETIRE-LADDER-RUNNERS-TEST-01` as a tiny deletion authority follow-up
+  after `HP-RETIRE-DRV-MAT-*`.
+- The old route-driver materialization/report/save workflow is already
+  retired, and `tools/cartesian_driver_ladder_lib.jl` is quarantined. The two
+  remaining runner scripts,
+  `tools/run_cartesian_driver_ladder.jl` and
+  `tools/run_cartesian_line_ladder.jl`, are now only entrypoints into that
+  retired workflow.
+- This pass does not approve deleting the quarantined ladder library itself.
+
+Validation:
+- Docs-only amendment validation required: `git diff --check`; focused scans
+  for `HP-RETIRE-LADDER-RUNNERS-*`, the two runner names, and
+  `cartesian_driver_ladder_lib`; confirm no `src`, `bin`, `test`, `tools`,
+  artifact, or implementation files changed. A docs build is appropriate
+  because compact authority changed.
+
+Goal advancement:
+- LT5/LT6 cleanup: removes the last obvious entrypoint pressure around the
+  retired ladder workflow without reviving wrappers, adapters, or diagnostics.
+
+Carrying-cost result:
+- deleted: none in this docs pass.
+- simplified: future source work has exactly two tool files to delete.
+- quarantined: canonical driver changes, source changes, test changes except
+  validation scans, artifacts, route/shellification/terminal-lowering/raw-block
+  work, RG/MWG/IDA/Hamiltonian assembly, new wrappers, adapters, status fields,
+  payloads, reports, tools, tests, Cr2 workflow, and deletion of
+  `tools/cartesian_driver_ladder_lib.jl` remain unapproved.
+- exact remaining caller/blocker: if any live source, canonical workflow, or
+  approved tool still depends on these runner scripts, the deletion pass must
+  stop and report the exact dependency.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

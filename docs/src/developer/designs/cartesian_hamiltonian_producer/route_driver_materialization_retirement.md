@@ -155,3 +155,42 @@ preserve the wrapper workflow through compatibility adapters.
 Expected result: substantial net deletion, including hundreds of source lines
 and likely old tool/harness lines. No new implementation framework should
 appear.
+
+## Dangling Ladder Runner Follow-Up
+
+Status: approved deletion authority under `HP-RETIRE-LADDER-RUNNERS-FN-01` and
+`HP-RETIRE-LADDER-RUNNERS-TEST-01`.
+
+After the route-driver materialization/report/save workflow retirement, the
+ladder library is quarantined and no longer a live workflow. Two runner scripts
+remain only as entrypoints into that retired workflow:
+
+```text
+tools/run_cartesian_driver_ladder.jl
+tools/run_cartesian_line_ladder.jl
+```
+
+`HP-RETIRE-LADDER-RUNNERS-FN-01` approves deleting only those two files. It
+does not approve replacements, canonical driver edits, source edits, test
+edits, new tools, or changes to `tools/cartesian_driver_ladder_lib.jl`.
+
+`tools/cartesian_driver_ladder_lib.jl` remains under the previous
+`HP-RETIRE-DRV-MAT-TOOL-01` quarantine unless a later amendment explicitly
+approves deleting it.
+
+`HP-RETIRE-LADDER-RUNNERS-TEST-01` approves only:
+
+- `git diff --check`;
+- package load;
+- focused `rg` over `src`, `bin`, `test`, and `tools` for
+  `run_cartesian_driver_ladder`, `run_cartesian_line_ladder`, and
+  `cartesian_driver_ladder_lib`;
+- canonical small base artifact/readback smoke;
+- no Cr2 run.
+
+Failure rule: if any live source, canonical workflow, or approved tool still
+depends on these runner scripts, make no commit and report the exact
+dependency. Do not preserve the runners through an adapter.
+
+After the runner deletion pass, pause this cleanup lane unless a separate
+docs-only amendment names another remaining stale surface.
