@@ -15917,3 +15917,52 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 158 - Approve Route-Driver Materialization Retirement
+
+Commit(s):
+- this commit - Approve route-driver materialization retirement
+
+Summary:
+- Approved `HP-RETIRE-DRV-MAT-FN-01`, `HP-RETIRE-DRV-MAT-TOOL-01`,
+  `HP-RETIRE-DRV-MAT-DOC-01`, and `HP-RETIRE-DRV-MAT-TEST-01` as a narrow
+  retirement/quarantine lane for the old route-driver materialization/report/
+  save workflow.
+- Retired names are `cartesian_materialization`, `cartesian_print_summary`,
+  `cartesian_print_details`, `cartesian_save`, and the matching underscored
+  route-driver materialization/report/save helpers. Focused search found no
+  hits in `bin/cartesian_ham_builder.jl`; live hits are old wrapper
+  definitions, old tools/harnesses, stale docs-policy assertions, and stale
+  active-doc references.
+- Current CR2-facing artifact production remains the canonical staged driver
+  and `CartesianIDAHamiltonian` artifact path.
+
+Validation:
+- Docs-only amendment validation required: `git diff --check`; focused scans
+  for `HP-RETIRE-DRV-MAT-*` and the retired wrapper names; confirm no `src`,
+  `bin`, `test`, `tools`, artifact, or implementation files changed. A docs
+  build is appropriate because compact authority and docs navigation changed.
+
+Goal advancement:
+- LT5/LT6: retires another route-era workflow surface rather than preserving it
+  with compatibility adapters or policy tests.
+- CR2 workflow clarity: keeps the supported producer story centered on the
+  canonical staged driver and Hamiltonian artifacts.
+
+Carrying-cost result:
+- deleted: none in this docs pass.
+- simplified: active docs now mark the old Slice D wrapper boundary as
+  historical and approved for retirement.
+- quarantined: canonical driver changes, staged producer changes, artifacts,
+  route/shellification/terminal-lowering/raw-block/RG/MWG/IDA, Hamiltonian
+  assembly, complete-core-shell H1/final-basis files, broad ordinary/Qiu-White
+  donor-kernel retirement, replacement wrappers, adapters, status fields,
+  payloads, new tests, and Cr2 workflow remain unapproved.
+- exact remaining caller/blocker: if any current canonical producer path or
+  public artifact workflow depends on these wrappers, the deletion pass must
+  stop and report the exact dependency rather than preserving the workflow
+  through adapters.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

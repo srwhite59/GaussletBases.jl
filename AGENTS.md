@@ -532,6 +532,10 @@ these approved design IDs:
 - `HP-WLDIAT-PARITY-TEST-01`
 - `HP-RETIRE-CCS-RHF-FN-01`
 - `HP-RETIRE-CCS-RHF-TEST-01`
+- `HP-RETIRE-DRV-MAT-FN-01`
+- `HP-RETIRE-DRV-MAT-TOOL-01`
+- `HP-RETIRE-DRV-MAT-DOC-01`
+- `HP-RETIRE-DRV-MAT-TEST-01`
 
 No other production surface may be added in this lane without a prior
 documentation-only design amendment. This includes new structs, persistent
@@ -1575,6 +1579,37 @@ or Cr2 workflow. Do not change `pqs_multilayer_complete_core_shell_h1.jl`,
 canonical small base and supplemented artifact/readback smokes, unchanged H2 RG
 endpoint, and no Cr2 run. If any live `src`, `bin`, `test`, or `tool` caller
 depends on the RHF stack, stop without a source commit and report the caller.
+
+`HP-RETIRE-DRV-MAT-FN-01` approves only retirement of the old route-driver
+materialization/report/save wrapper workflow in
+`src/pqs_source_box_route_driver_helpers.jl`,
+`src/pqs_source_box_low_order_materialization.jl`, and
+`src/pqs_source_box_route_driver_reporting.jl`, with `src/GaussletBases.jl`
+allowed only if the reporting include becomes unused. The retired wrappers are
+`cartesian_materialization`, `cartesian_print_summary`,
+`cartesian_print_details`, `cartesian_save`,
+`_pqs_source_box_route_driver_materialization`,
+`_pqs_source_box_route_driver_print_materialization`, and
+`_pqs_source_box_route_driver_save`.
+`HP-RETIRE-DRV-MAT-TOOL-01` approves deleting or quarantining only old tools
+that drive that retired wrapper workflow:
+`tools/cartesian_driver_harness.jl`, `tools/cr2_cartesian_ida_stage_probe.jl`,
+`tools/cartesian_driver_ladder_lib.jl`, and
+`tools/h2_pqs_base_hamiltonian_smoke.jl`.
+`HP-RETIRE-DRV-MAT-DOC-01` approves only active docs/index cleanup that stops
+describing the old wrapper workflow as canonical or active authority.
+`HP-RETIRE-DRV-MAT-TEST-01` approves only validation through package load,
+focused live-reference scans, canonical small base and supplemented artifact
+readback smokes, unchanged H2 RG endpoint, and removal/update of stale
+route-wrapper assertions in `test/docs/cartesian_ham_builder_policy_runtests.jl`.
+This lane does not approve changes to `bin/cartesian_ham_builder.jl`, current
+staged producer functions, artifact schema/provenance/reader/manifest, route,
+shellification, terminal lowering, raw blocks, Residual Gaussian, MWG, IDA,
+Hamiltonian assembly, complete-core-shell H1/final-basis files, broad ordinary
+or Qiu-White donor kernels, replacement wrappers, adapters, status fields,
+payloads, new tests, or Cr2 workflow. If any current canonical producer path
+or public artifact workflow depends on these wrappers, stop without a source
+commit and report the exact dependency.
 
 ## Basis bundle policy
 

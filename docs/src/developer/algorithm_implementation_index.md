@@ -337,14 +337,18 @@ Key docs:
 Source anchors:
 - **active reusable kernel**: `src/cartesian_ida_hamiltonian.jl`,
   `CartesianIDAHamiltonian`, `write_cartesian_ida_hamiltonian`
-- **active implementation surface**:
+- **active implementation surface**: `src/cartesian_base_hamiltonian.jl`,
+  staged base/supplemented producer functions used by the canonical driver
+- **active implementation helper**:
   `src/pqs_source_box_low_order_materialization.jl`,
-  `_pqs_source_box_route_driver_terminal_ida_hamiltonian`,
-  `_pqs_source_box_route_driver_materialization`
-- **active implementation surface**:
+  `_pqs_source_box_route_driver_terminal_ida_hamiltonian`
+- **retired/do not call**:
   `src/pqs_source_box_route_driver_helpers.jl`,
   `cartesian_materialization(report, terminal_basis_realization,
   materialization_inputs)`
+- **retired/do not call**:
+  `cartesian_print_summary`, `cartesian_print_details`, `cartesian_save`, and
+  their underscored route-driver materialization/report/save helpers
 - **approved driver workflow surface**: `bin/cartesian_ham_builder.jl`,
   `HP-DRV-FILE-01` / `HP-DRV-FN-01` / `HP-DRV-ATOM-FN-01`
 

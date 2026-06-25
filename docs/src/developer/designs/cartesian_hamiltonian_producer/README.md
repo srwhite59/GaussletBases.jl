@@ -52,6 +52,9 @@ The old complete-core-shell RHF payload stack is approved for retirement under
 `HP-RETIRE-CCS-RHF-*`; the current CR2-facing producer path is the canonical
 driver plus `CartesianIDAHamiltonian` artifacts, not the stale RHF payload
 workflow.
+The old route-driver materialization/report/save wrapper workflow is approved
+for retirement/quarantine under `HP-RETIRE-DRV-MAT-*`; the canonical producer
+path is the staged human-facing driver plus `CartesianIDAHamiltonian` artifacts.
 
 Agents should read first:
 
@@ -103,6 +106,9 @@ Agents should read first:
   for the post-cleanup route/stage carrier and plan-signature cleanup lane
 - [Complete-core-shell RHF retirement](complete_core_shell_rhf_retirement.md)
   for the narrow deletion lane for the stale RHF payload stack
+- [Route-driver materialization workflow retirement](route_driver_materialization_retirement.md)
+  for retiring the old route-driver materialization/report/save wrapper
+  workflow and stale tool/test pressure
 - [Algorithm implementation index](../../algorithm_implementation_index.md)
 
 Approved amendments:
@@ -167,6 +173,11 @@ Approved amendments:
   approves only deleting the stale `pqs_multilayer_complete_core_shell_rhf.jl`
   stack and root include, with no replacements, adapters, new status/payload
   objects, or workflow changes.
+- [Route-driver materialization workflow retirement](route_driver_materialization_retirement.md)
+  approves only retiring the old `cartesian_materialization`,
+  `cartesian_print_summary`, `cartesian_print_details`, and `cartesian_save`
+  wrapper workflow plus stale tool/test/docs pressure. It does not change the
+  canonical driver, staged producer functions, artifacts, or numerical kernels.
 - [Cartesian driver atom workflow](cartesian_driver_atom_workflow.md)
   approves only explicit origin-centered one-center base atom driver inputs
   through the existing base facade. Current validation remains the

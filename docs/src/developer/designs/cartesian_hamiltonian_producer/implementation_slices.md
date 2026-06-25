@@ -199,13 +199,22 @@ Deferred gates:
 
 ## Slice D — Base Materialization Handoff
 
-Status: HP-WIRE-02 approved and implemented.
+Status: HP-WIRE-02 implemented historically; the route-driver wrapper workflow
+is approved for retirement under `HP-RETIRE-DRV-MAT-*`.
 
-Implemented boundary:
+Historical wrapper boundary:
 
 ```julia
 cartesian_materialization(report, terminal_basis_realization, materialization_inputs)
 ```
+
+Current canonical producer boundary:
+
+- staged driver-facing producer functions;
+- direct `CartesianIDAHamiltonian{Float64}` construction;
+- optional artifact write through the approved Hamiltonian artifact path.
+
+Do not add new callers to the old wrapper boundary.
 
 Validation gates used:
 
@@ -223,6 +232,19 @@ Deletion obligations completed:
 - physical-gausslet target/supplement payload chain removed;
 - H2 and Cr2 stage probes no longer treat blocked source-plan summaries as
   route authority.
+
+Approved retirement:
+
+- remove `cartesian_materialization`, `cartesian_print_summary`,
+  `cartesian_print_details`, `cartesian_save`, and their route-driver
+  materialization/report/save helpers under `HP-RETIRE-DRV-MAT-FN-01`;
+- delete or quarantine old tools that exist only to drive that wrapper workflow
+  under `HP-RETIRE-DRV-MAT-TOOL-01`;
+- update active docs/test policy that still treats the wrapper workflow as
+  active under `HP-RETIRE-DRV-MAT-DOC-01` and
+  `HP-RETIRE-DRV-MAT-TEST-01`;
+- keep the canonical driver, staged producer functions, artifacts, and
+  numerical kernels unchanged.
 
 Deferred gates:
 

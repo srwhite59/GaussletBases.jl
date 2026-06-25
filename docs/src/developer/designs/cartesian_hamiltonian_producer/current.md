@@ -51,6 +51,9 @@ Normal startup reading:
   and plan-signature cleanup lane;
 - `complete_core_shell_rhf_retirement.md` for the narrow stale
   complete-core-shell RHF payload-stack deletion lane;
+- `route_driver_materialization_retirement.md` for retiring the old
+  route-driver materialization/report/save wrapper workflow and stale tool/test
+  pressure;
 - `docs/src/developer/algorithm_implementation_index.md` for existing kernels
   and donor paths.
 
@@ -145,6 +148,22 @@ Approved stale complete-core-shell RHF retirement:
   terminal-lowering/raw-block/RG/MWG/IDA changes, or Cr2 workflow;
 - do not change the older complete-core-shell H1/final-basis files or
   source-box materialization under this ID.
+
+Approved route-driver materialization/report/save retirement:
+
+- `HP-RETIRE-DRV-MAT-FN-01` approves only removing the old
+  `cartesian_materialization`, `cartesian_print_summary`,
+  `cartesian_print_details`, `cartesian_save`, and matching underscored
+  route-driver materialization/report/save helpers;
+- `HP-RETIRE-DRV-MAT-TOOL-01` approves only deleting or quarantining old tools
+  that exist to drive that retired wrapper workflow;
+- `HP-RETIRE-DRV-MAT-DOC-01` approves only active docs/index cleanup that stops
+  presenting the wrapper workflow as canonical or active authority;
+- `HP-RETIRE-DRV-MAT-TEST-01` approves only focused live-reference scans,
+  canonical base/supplemented artifact smokes, unchanged H2 RG endpoint, and
+  removal/update of stale docs-policy wrapper assertions;
+- the canonical staged driver and current staged producer/artifact path must
+  remain unchanged.
 
 Approved neutral Cartesian Gaussian raw-block owner:
 

@@ -1082,9 +1082,9 @@ build_cartesian_ida_hamiltonian(
 Implementation may call the existing `CartesianIDAHamiltonian(...)`
 constructor directly if no helper is needed.
 
-### HP-WIRE-02 — direct materialization Hamiltonian handoff
+### HP-WIRE-02 — historical direct materialization Hamiltonian handoff
 
-Approved and implemented Slice D boundary:
+Historically approved and implemented Slice D wrapper boundary:
 
 ```julia
 cartesian_materialization(
@@ -1093,6 +1093,11 @@ cartesian_materialization(
     materialization_inputs,
 )::Union{Nothing,CartesianIDAHamiltonian{Float64}}
 ```
+
+This old route-driver wrapper workflow is now approved for retirement under
+`HP-RETIRE-DRV-MAT-*`. Current canonical producer work should use the staged
+driver-facing producer functions and `CartesianIDAHamiltonian` artifact path,
+not add new callers to `cartesian_materialization`.
 
 The call site passes `transforms.terminal_basis_realization` directly. The
 terminal basis must not be embedded in `cartesian_report`, reconstructed from
@@ -3696,6 +3701,127 @@ Approved validation:
 
 No committed test, fixture, replacement path, adapter, status/report/payload
 object, artifact-schema validation, or Cr2 workflow is approved.
+
+## Approved For Route-Driver Materialization Workflow Retirement
+
+This section approves only the retirement/quarantine lane recorded in
+`route_driver_materialization_retirement.md`. The old route-driver
+materialization/report/save wrapper workflow is not the canonical Cartesian
+producer path; the current path is the staged human-facing driver plus
+`CartesianIDAHamiltonian` artifacts.
+
+### HP-RETIRE-DRV-MAT-FN-01 — remove old materialization/report/save wrappers
+
+Approved source files:
+
+```text
+src/pqs_source_box_route_driver_helpers.jl
+src/pqs_source_box_low_order_materialization.jl
+src/pqs_source_box_route_driver_reporting.jl
+src/GaussletBases.jl
+```
+
+`src/GaussletBases.jl` is approved only if the reporting include becomes unused
+after the wrapper/report/save path is removed.
+
+Approved behavior:
+
+- remove `cartesian_materialization`, `cartesian_print_summary`,
+  `cartesian_print_details`, and `cartesian_save`;
+- remove `_pqs_source_box_route_driver_materialization`,
+  `_pqs_source_box_route_driver_print_materialization`, and
+  `_pqs_source_box_route_driver_save` if they are used only by those wrappers;
+- remove a related old White-Lindsey atomic pure-gausslet materialization
+  helper only if it becomes uncalled;
+- do not add replacement wrappers, adapters, status fields, payload objects, or
+  tests.
+
+Evidence: focused search found no hits for the audited names in
+`bin/cartesian_ham_builder.jl`. Current CR2-facing artifact workflow uses the
+canonical staged producer and `CartesianIDAHamiltonian` artifacts. Live hits are
+old wrapper definitions, old tools/harnesses, stale docs-policy assertions, and
+stale compact-doc references.
+
+This ID does not approve canonical driver changes, current staged producer
+function changes, artifact schema/provenance/reader/manifest changes, route,
+shellification, terminal-lowering, raw-block, Residual Gaussian, MWG, IDA, or
+Hamiltonian assembly changes, changes to
+`pqs_multilayer_complete_core_shell_h1.jl`,
+`pqs_complete_core_shell_final_basis.jl`, broad ordinary/Qiu-White donor-kernel
+retirement, replacement wrappers, adapters, status fields, payloads, new tests,
+or Cr2 workflow.
+
+Failure rule: if any current canonical producer path or public artifact
+workflow depends on these wrappers, make no source commit and report the exact
+dependency. Do not preserve the wrapper workflow through compatibility
+adapters.
+
+### HP-RETIRE-DRV-MAT-TOOL-01 — old wrapper-tool quarantine
+
+Approved tool files:
+
+```text
+tools/cartesian_driver_harness.jl
+tools/cr2_cartesian_ida_stage_probe.jl
+tools/cartesian_driver_ladder_lib.jl
+tools/h2_pqs_base_hamiltonian_smoke.jl
+```
+
+Approved behavior:
+
+- delete or quarantine only old tools that exist to drive the retired wrapper
+  workflow;
+- do not move route diagnostics, ladder probing, stage stops, or wrapper
+  behavior into `bin/cartesian_ham_builder.jl`;
+- do not create replacement tool frameworks.
+
+### HP-RETIRE-DRV-MAT-DOC-01 — active docs cleanup
+
+Approved docs files:
+
+```text
+docs/src/developer/algorithm_implementation_index.md
+docs/src/developer/designs/cartesian_hamiltonian_producer/implementation_slices.md
+docs/src/developer/designs/cartesian_hamiltonian_producer/registry.md
+docs/src/developer/designs/cartesian_hamiltonian_producer/r1_public_base_producer.md
+docs/src/developer/pqs_manager_running_log.md
+```
+
+Approved behavior:
+
+- stop describing the old wrapper workflow as canonical or active current
+  authority;
+- keep historical references historical;
+- keep the canonical staged driver and current producer/artifact path
+  unchanged.
+
+### HP-RETIRE-DRV-MAT-TEST-01 — retirement validation
+
+Approved test file:
+
+```text
+test/docs/cartesian_ham_builder_policy_runtests.jl
+```
+
+Approved behavior:
+
+- remove or update only old route-stage wrapper assertions that assume the
+  canonical driver should avoid calling these now-retired wrappers.
+
+Approved validation:
+
+- `git diff --check`;
+- package load;
+- focused `rg` over `src`, `bin`, `test`, and `tools` showing no remaining
+  live references to the retired wrapper names;
+- canonical small base artifact/readback smoke;
+- canonical small supplemented artifact/readback smoke;
+- H2 Residual Gaussian endpoint remains unchanged;
+- docs-policy test either passes after update or the stale assertion is removed
+  under this authority;
+- no Cr2 run.
+
+No new committed test or fixture is approved.
 
 ## Approved For Homonuclear Z-Axis Diatomic Supplemented Workflow
 

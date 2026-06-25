@@ -437,7 +437,7 @@ The current private driver and harness group inputs like this:
 | `materialization_inputs` | `hamfile` keyword only |
 | `save_inputs`, TSV/report options | not part of the minimal base producer |
 
-The current private execution spine is:
+The old route-driver execution spine was:
 
 ```text
 cartesian_system
@@ -451,6 +451,10 @@ cartesian_system
 -> cartesian_report
 -> cartesian_materialization
 ```
+
+`cartesian_materialization` and the paired route-driver print/save wrappers are
+now approved for retirement under `HP-RETIRE-DRV-MAT-*`. Do not copy this old
+spine into the canonical driver or future public workflow.
 
 The R1 facade should instead map to:
 
