@@ -341,7 +341,7 @@ Source anchors:
   staged base/supplemented producer functions used by the canonical driver
 - **active implementation helper**:
   `src/pqs_source_box_low_order_materialization.jl`,
-  `_pqs_source_box_route_driver_terminal_ida_hamiltonian`
+  `_cartesian_base_ida_hamiltonian`
 - **retired/do not call**:
   `src/pqs_source_box_route_driver_helpers.jl`,
   `cartesian_materialization(report, terminal_basis_realization,

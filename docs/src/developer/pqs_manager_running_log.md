@@ -15870,6 +15870,72 @@ Carrying-cost result:
 - new tests: none.
 - new metadata/status fields: none.
 
+## Cartesian Hamiltonian Producer Pass 158 - Retire Route-Driver Materialization Workflow
+
+Commit(s):
+- this commit - Retire route-driver materialization workflow
+
+Summary:
+- Accepted `HP-RETIRE-DRV-MAT-FN-01`, `HP-RETIRE-DRV-MAT-TOOL-01`,
+  `HP-RETIRE-DRV-MAT-DOC-01`, and `HP-RETIRE-DRV-MAT-TEST-01`. The old
+  route-driver materialization/report/save wrapper workflow was removed without
+  changing the canonical staged driver or the numerical producer path.
+- Removed `cartesian_materialization`, `cartesian_print_summary`,
+  `cartesian_print_details`, `cartesian_save`, the matching underscored
+  materialization/report/save helpers, and the now-uncalled WL atomic
+  pure-gausslet materialization helper stack. Deleted the old route-driver
+  reporting file and include.
+- Deleted old wrapper tools
+  `tools/cartesian_driver_harness.jl`,
+  `tools/cr2_cartesian_ida_stage_probe.jl`, and
+  `tools/h2_pqs_base_hamiltonian_smoke.jl`. Quarantined
+  `tools/cartesian_driver_ladder_lib.jl` as a one-line retirement error because
+  two unapproved runner scripts still include it.
+
+Validation:
+- Doer: `git diff --check`; package load; focused `rg` over `src`, `bin`,
+  `test`, and `tools` for all retired wrapper names; H atom canonical base
+  driver artifact/readback smoke with dimension `105`; H2/cc-pVTZ canonical
+  supplemented driver artifact/readback smoke with dimension `489`;
+  `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl` with
+  self-Coulomb `0.4574265214362095`; docs-policy gate with runner context.
+- Manager: reviewed the diff and authority boundary; reran focused retired-name
+  scans, including the deleted WL atomic helper stack; `git diff --check`;
+  `git diff --numstat -- src bin tools test docs`; suspicious added-line scan;
+  package load; docs-policy runner-context check; bounded canonical base and
+  supplemented driver smokes; and the H2 RG endpoint/facade with the same
+  self-Coulomb and zero readback deltas.
+- The docs-policy test update removed the old wrapper-stage assertions and
+  also dropped adjacent stale frozen-driver assertions that no longer match the
+  current approved driver: the header says "producer" rather than "template",
+  and the driver already has approved key=value Julia-value overrides using
+  `Meta.parse`. No driver code changed.
+
+Goal advancement:
+- LT2/LT5 cleanup: removes a stale route-stage workflow that could pull agents
+  away from the canonical staged producer and artifact path.
+- MT/CR2 readiness: preserves the CR2-facing driver/artifact route while
+  reducing old harness/report surface area.
+
+Carrying-cost result:
+- deleted: old wrapper/report/save source path, route-driver reporting file,
+  stale harness/probe/smoke tools, and old WL atomic pure-gausslet
+  materialization helper stack.
+- simplified: active algorithm index now points at the current base
+  Hamiltonian helper instead of the retired materialization helper; docs-policy
+  pressure no longer expects the canonical driver to call retired wrappers.
+- quarantined: `tools/cartesian_driver_ladder_lib.jl` now fails immediately
+  with a retirement message.
+- not deleted because: `tools/run_cartesian_driver_ladder.jl` and
+  `tools/run_cartesian_line_ladder.jl` still include the ladder library but
+  were outside the allowed tool surface for this pass.
+- exact remaining caller/blocker: a later tool-retirement pass should delete
+  the two runner scripts or approve their quarantine explicitly.
+- added src lines: 0.
+- deleted src lines: 463.
+- new tests: none.
+- new metadata/status fields: none.
+
 ## Cartesian Hamiltonian Producer Pass 157 - Approve CCS RHF Stack Retirement
 
 Commit(s):
