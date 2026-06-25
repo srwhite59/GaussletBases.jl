@@ -15819,6 +15819,57 @@ Carrying-cost result:
 - new tests: none.
 - new metadata/status fields: none.
 
+## Cartesian Hamiltonian Producer Pass 157 - Retire Complete-Core-Shell RHF Stack
+
+Commit(s):
+- this commit - Retire complete-core-shell RHF stack
+
+Summary:
+- Accepted `HP-RETIRE-CCS-RHF-FN-01`. The stale complete-core-shell RHF
+  payload/status workflow was removed by deleting
+  `src/pqs_multilayer_complete_core_shell_rhf.jl` and its root include.
+- The current Cartesian producer path is unchanged: canonical staged driver,
+  staged base/supplemented producer functions, and `CartesianIDAHamiltonian`
+  artifacts. No replacement, adapter, compatibility shim, report/status object,
+  committed test, driver change, or artifact change was added.
+
+Validation:
+- Doer: `git diff --check`; package load; focused `rg` over `src`, `bin`,
+  `test`, and `tools` for `pqs_multilayer_complete_core_shell_rhf`; canonical
+  base driver artifact/readback smoke with H atom dimension `105`; canonical
+  supplemented H2/cc-pVTZ artifact/readback smoke with dimension `489`; and
+  `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl` with H2
+  augmented dimension `489`, self-Coulomb `0.4574265214362095`, and zero
+  readback deltas.
+- Manager: reviewed the deletion diff; reran `git diff --check`; focused live
+  reference scan; `git diff --numstat -- src bin tools test docs`;
+  suspicious added-line scan; new tests/tools scan; package load; and the H2
+  RG endpoint/facade test with the same self-Coulomb and zero readback deltas.
+
+Goal advancement:
+- LT2/LT5 cleanup: removes a large stale route-era RHF payload stack now that
+  CR2-facing work uses the canonical Hamiltonian artifact producer rather than
+  complete-core-shell RHF payloads.
+- MT/Cartesian usability: reduces the active Cartesian sector's conceptual
+  load without changing the driver or numerical producer behavior.
+
+Carrying-cost result:
+- deleted: `src/pqs_multilayer_complete_core_shell_rhf.jl` and its root
+  include.
+- simplified: package load and source navigation no longer carry the inactive
+  complete-core-shell RHF workflow.
+- quarantined: canonical driver, artifacts/provenance/manifest, route,
+  shellification, terminal lowering, raw blocks, Residual Gaussian/MWG/IDA,
+  Hamiltonian assembly, QW donor kernels, and tests remain untouched.
+- not deleted because: active `pqs_multilayer_complete_core_shell_h1.jl`,
+  final-basis helpers, and low-order materialization paths were explicitly out
+  of scope for this first retirement pass.
+- exact remaining caller/blocker: none found for the deleted RHF stack.
+- added src lines: 0.
+- deleted src lines: 1880.
+- new tests: none.
+- new metadata/status fields: none.
+
 ## Cartesian Hamiltonian Producer Pass 157 - Approve CCS RHF Stack Retirement
 
 Commit(s):
