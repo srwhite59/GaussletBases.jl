@@ -15936,6 +15936,47 @@ Carrying-cost result:
 - new tests: none.
 - new metadata/status fields: none.
 
+## Cartesian Hamiltonian Producer Pass 159 - Delete Dangling Ladder Runners
+
+Commit(s):
+- this commit - Delete retired Cartesian ladder runners
+
+Summary:
+- Accepted `HP-RETIRE-LADDER-RUNNERS-FN-01`. Deleted the two dangling runner
+  entrypoints into the already-retired Cartesian route-stage ladder workflow:
+  `tools/run_cartesian_driver_ladder.jl` and
+  `tools/run_cartesian_line_ladder.jl`.
+- No source, docs, tests, canonical driver, numerical path, artifact path, or
+  `tools/cartesian_driver_ladder_lib.jl` changes were made.
+
+Validation:
+- Doer: `git diff --check`; package load; focused `rg` over `src`, `bin`,
+  `test`, and `tools` for `run_cartesian_driver_ladder`,
+  `run_cartesian_line_ladder`, and `cartesian_driver_ladder_lib`; canonical H
+  atom base artifact/readback smoke with dimension `105`.
+- Manager: reviewed the diff; reran `git diff --check`; `git diff --numstat
+  -- src bin tools test docs`; focused live-reference scan; package load; and
+  the same bounded canonical H atom base driver smoke with dimension `105`.
+
+Goal advancement:
+- LT2/LT5 cleanup: completes the route-driver materialization workflow
+  retirement by removing the final approved runner entrypoints.
+- MT update: per user direction, pause this cleanup lane after this pass unless
+  a later amendment names another stale surface.
+
+Carrying-cost result:
+- deleted: two obsolete ladder runner scripts.
+- simplified: no remaining live `src`, `bin`, `test`, or `tools` references to
+  the retired runner names or ladder library.
+- quarantined: `tools/cartesian_driver_ladder_lib.jl` remains untouched under
+  its prior retirement state.
+- not deleted because: no other files were in scope.
+- exact remaining caller/blocker: none found for the two deleted runners.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.
+
 ## Cartesian Hamiltonian Producer Pass 157 - Approve CCS RHF Stack Retirement
 
 Commit(s):
