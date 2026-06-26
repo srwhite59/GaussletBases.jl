@@ -1031,6 +1031,71 @@ Approved validation:
 No driver input test, artifact schema test, committed test file, committed
 fixture, high-order benchmark fixture, or Cr2 fixture is approved.
 
+### HP-MCOMX-DRV-FN-01 — mapped-COMX canonical driver selection
+
+Approved source files:
+
+```text
+bin/cartesian_ham_builder.jl
+src/cartesian_base_hamiltonian.jl
+src/pqs_source_box_route_driver_helpers.jl
+```
+
+`src/pqs_source_box_route_driver_helpers.jl` is approved only for narrow
+propagation of a normalized source-span selector to the already-approved
+source-axis transform fact path. This ID must not add route records,
+route-stage diagnostics, terminal-lowering contracts, artifact fields, or a
+new COMX implementation.
+
+Approved behavior:
+
+- add a visible canonical-driver input `source_span`;
+- support trusted input-file and command-line override handling through the
+  existing compact driver input mechanism;
+- print `source_span` in the compact public contract when `print_contract` is
+  enabled;
+- accept only `:ordinary` and `:mapped_comx` as driver-facing values;
+- default to `:ordinary`;
+- normalize and validate the selector in `src/cartesian_base_hamiltonian.jl`;
+- pass `:mapped_comx` through the existing PQS source-box path so terminal
+  realization receives materialized mapped-COMX axis facts;
+- reject `source_span = :mapped_comx` clearly for `nesting = :wl` until a
+  future WL-specific amendment approves otherwise;
+- keep ordinary driver artifact/readback behavior unchanged.
+
+This is a public construction choice, not a diagnostic route switch.
+
+Forbidden:
+
+- new driver hooks beyond `source_span`;
+- route skeleton, route record, terminal-lowering, retained-rule, shell
+  ownership, artifact schema, manifest, reader, Hamiltonian, IDA, MWG, RG, raw
+  Gaussian block, solver, EGOI, Cr2, high-order workflow, or source-default
+  changes;
+- another COMX path, route-stage diagnostics, stop-after controls, raw-block
+  switches, allocation probes, committed tests, or committed fixtures.
+
+Failure rule: if making `source_span` driver-selectable requires new route
+records, terminal-lowering changes, artifact schema changes, or another COMX
+path, make no source commit and report the exact blocker.
+
+### HP-MCOMX-DRV-TEST-01 — mapped-COMX driver validation
+
+Approved validation:
+
+- `git diff --check`;
+- package load;
+- default ordinary driver artifact/readback still passes;
+- mapped-COMX He or H PQS driver smoke proves carried facts are
+  basis-defining;
+- ordinary versus mapped He supplemented/MWG/IDA comparison through the real
+  driver if bounded;
+- H2 RG endpoint still passes;
+- no Cr2 run.
+
+No committed test file, committed fixture, high-order benchmark fixture,
+artifact schema test, route-diagnostic test, or Cr2 fixture is approved.
+
 ## Approved Composition Lane: Base Homonuclear Z-Axis Diatomics
 
 This section promotes the base z-axis diatomic validation relaxation. It

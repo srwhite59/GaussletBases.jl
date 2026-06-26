@@ -248,6 +248,9 @@ Source anchors:
 - **terminal-basis consumer seam**:
   `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`,
   `_shell_seed(...)`
+- **driver/facade selector seam**:
+  `bin/cartesian_ham_builder.jl`, `src/cartesian_base_hamiltonian.jl`, and
+  narrow propagation through `src/pqs_source_box_route_driver_helpers.jl`
 
 Do-not-forget rule:
 The first installed rule is protected physical `P2` plus mapped Chebyshev
@@ -257,6 +260,8 @@ function. Ordinary polynomial source spans remain available and unchanged.
 Mapped axis facts are not basis-defining until terminal realization consumes
 and validates the materialized `AxisSourceTransformFact`s. Hamiltonian and
 artifact layers should see only the usual carried source facts plus provenance.
+The canonical `source_span` driver control selects only `:ordinary` or
+`:mapped_comx`; it must not become a route diagnostic switch.
 
 ## One-Body Operators And Unit Nuclear Convention
 

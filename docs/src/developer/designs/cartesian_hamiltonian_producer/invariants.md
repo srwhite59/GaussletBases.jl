@@ -186,6 +186,11 @@ The canonical RG algorithm contract is
   change boundary mode selection, owned-support row restriction, shell-local
   Lowdin, sign canonicalization, support validation, artifacts, or driver
   inputs.
+- The canonical `source_span` selector is a construction choice over source
+  spans, not a diagnostic route switch. It must not expose route records,
+  retained-rule dumps, raw-block switches, stop-after controls, allocation
+  probes, high-order workflow controls, artifact schema changes, or another
+  COMX path.
 - R3/RG supplemented usability remains internal unless a later public/export
   amendment approves it.
 - The canonical Cartesian driver is an artifact-producing workflow over

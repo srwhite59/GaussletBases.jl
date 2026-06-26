@@ -119,6 +119,9 @@ is installed in mainline.
 - `HP-MCOMX-TERM-FN-01` - terminal-basis consumption of carried materialized
   source-axis transform facts.
 - `HP-MCOMX-TERM-TEST-01` - terminal seam validation gates.
+- `HP-MCOMX-DRV-FN-01` - canonical driver and staged-facade selection of the
+  source-span family.
+- `HP-MCOMX-DRV-TEST-01` - driver-level validation gates.
 
 ## Approved Source Surface
 
@@ -227,6 +230,48 @@ This lane makes mapped-COMX source-axis facts terminal-basis inputs. It does
 not change source-span construction, retained-rule semantics, shell ownership,
 or artifact/Hamiltonian behavior.
 
+## Driver Selection
+
+`HP-MCOMX-DRV-FN-01` approves a narrow public construction choice in the
+canonical driver and staged base/facade path:
+
+```julia
+source_span = :ordinary      # default
+source_span = :mapped_comx
+```
+
+Approved source files:
+
+```text
+bin/cartesian_ham_builder.jl
+src/cartesian_base_hamiltonian.jl
+src/pqs_source_box_route_driver_helpers.jl
+```
+
+`src/pqs_source_box_route_driver_helpers.jl` is approved only for narrow
+propagation of the normalized selector to the already-approved source-axis
+transform fact path. It must not add route records, route-stage diagnostics,
+or new terminal-lowering contracts.
+
+Approved behavior:
+
+- add `source_span` to the canonical driver's editable defaults, trusted input
+  file keys, command-line overrides, and compact `print_contract` output;
+- normalize and validate `source_span` in the staged base/facade input path;
+- accept only `:ordinary` and `:mapped_comx` as driver-facing values;
+- treat omitted `source_span` as `:ordinary`;
+- pass `:mapped_comx` through the existing PQS source-box path so the mapped
+  doside source span produces materialized axis facts consumed by terminal
+  realization;
+- reject `source_span = :mapped_comx` clearly when `nesting = :wl`, unless a
+  later WL-specific source-span amendment approves otherwise;
+- preserve ordinary driver behavior and artifact/readback by default.
+
+This is a construction choice, not a diagnostic route switch. It exposes the
+same kind of visible, copyable driver control as `nesting`; it must not expose
+route skeletons, retained-rule dumps, raw-block switches, stop-after controls,
+allocation probes, or high-order benchmark controls.
+
 ## Forbidden
 
 This amendment does not approve:
@@ -253,6 +298,10 @@ This amendment does not approve:
 - changing terminal shell ownership, retained-rule semantics, support
   restriction, shell-local Lowdin, sign canonicalization, or support
   validation under `HP-MCOMX-TERM-FN-01`;
+- route records, terminal-lowering changes, route-stage diagnostics, driver
+  hooks beyond `source_span`, artifact/schema/manifest/reader changes,
+  another COMX path, or high-order workflow controls under
+  `HP-MCOMX-DRV-FN-01`;
 - committed Cr fixtures or broad high-order benchmark fixtures.
 
 ## Validation
@@ -291,6 +340,18 @@ This amendment does not approve:
 - H2 supplemented RG endpoint if the touched path crosses it;
 - no Cr2 run.
 
+`HP-MCOMX-DRV-TEST-01` approves later source-pass validation:
+
+- `git diff --check`;
+- package load;
+- default ordinary driver artifact/readback still passes;
+- mapped-COMX He or H PQS driver smoke proves carried facts are
+  basis-defining;
+- ordinary versus mapped He supplemented/MWG/IDA comparison through the real
+  driver if bounded;
+- H2 RG endpoint still passes;
+- no Cr2 run.
+
 No committed test file is approved by default. A later implementation blurb may
 name a small standalone script or ignored probe when needed for the approved
 gates. Committed fixtures, public driver tests, solver tests, and Cr/Cr2
@@ -310,6 +371,10 @@ no source commit and request a separate design amendment.
 If terminal realization cannot consume the carried axis facts without changing
 shell ownership, retained-rule semantics, Lowdin realization, artifact schema,
 or driver inputs, make no source commit and report the exact blocker.
+
+If making `source_span` driver-selectable requires new route records,
+terminal-lowering changes, artifact schema changes, or another COMX path, make
+no source commit and report the exact blocker.
 
 If the real atom gates fail after a faithful implementation of the approved
 source-span rule, do not tune defaults or add injection in the same pass.

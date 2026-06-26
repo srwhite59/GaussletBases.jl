@@ -537,6 +537,8 @@ these approved design IDs:
 - `HP-MCOMX-TEST-01`
 - `HP-MCOMX-TERM-FN-01`
 - `HP-MCOMX-TERM-TEST-01`
+- `HP-MCOMX-DRV-FN-01`
+- `HP-MCOMX-DRV-TEST-01`
 - `HP-COMP-WLNS-FN-01`
 - `HP-COMP-WLNS-TEST-01`
 - `HP-WLDIAT-COMPACT-FN-01`
@@ -1565,6 +1567,24 @@ the H2 supplemented RG endpoint if the touched path crosses it. This lane does
 not approve driver inputs, source defaults, artifacts/manifests/readers,
 Hamiltonian/IDA/MWG/RG/raw-Gaussian/solver/EGOI/Cr2/high-order workflow
 changes, a second COMX wrapper, or committed tests/fixtures.
+
+`HP-MCOMX-DRV-FN-01` approves only a compact `source_span` construction choice
+in the canonical driver and staged base/facade plumbing. Approved files are
+`bin/cartesian_ham_builder.jl`, `src/cartesian_base_hamiltonian.jl`, and
+`src/pqs_source_box_route_driver_helpers.jl` only for narrow propagation to the
+already-approved mapped-COMX source-axis transform fact path. Public driver
+values are `:ordinary` and `:mapped_comx`; the default is `:ordinary`.
+`:mapped_comx` is currently a PQS source-box option and must reject clearly for
+`nesting = :wl` unless a later WL-specific amendment approves otherwise. The
+driver may include `source_span` in its editable defaults, trusted input-file
+keys, command-line overrides, and compact contract printout. This lane must not
+add route records, terminal-lowering changes, artifact/schema/manifest/reader
+changes, Hamiltonian/IDA/MWG/RG/raw-Gaussian/solver/EGOI/Cr2/high-order
+workflow changes, source-span default changes, another COMX path, or committed
+tests/fixtures. `HP-MCOMX-DRV-TEST-01` approves only default ordinary driver
+artifact/readback, mapped-COMX H or He PQS driver smoke proving carried facts
+are basis-defining, bounded ordinary-vs-mapped He supplemented/MWG/IDA driver
+comparison if practical, H2 RG endpoint, and no Cr2 run.
 
 `HP-WLTERM-FILE-01`, `HP-WLTERM-FN-01`, and `HP-WLTERM-WIRE-01` approve only
 the narrow White-Lindsey terminal-basis seam needed by `nesting = :wl`.

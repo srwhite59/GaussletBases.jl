@@ -16648,3 +16648,51 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 167 - Approve Mapped-COMX Driver Selector
+
+Commit(s):
+- this commit - Approve mapped-COMX driver selector
+
+Summary:
+- Approved `HP-MCOMX-DRV-FN-01` and `HP-MCOMX-DRV-TEST-01` as the narrow
+  canonical-driver/facade lane for selecting source-span family.
+- The visible driver choice is `source_span = :ordinary` or
+  `source_span = :mapped_comx`; ordinary remains the default. The mapped
+  choice is currently PQS-only and must reject clearly for `nesting = :wl`
+  unless a later WL-specific source-span amendment approves otherwise.
+- The approved source surface is `bin/cartesian_ham_builder.jl`,
+  `src/cartesian_base_hamiltonian.jl`, and narrow propagation in
+  `src/pqs_source_box_route_driver_helpers.jl` to the already-approved
+  mapped-COMX source-axis transform fact path.
+
+Validation:
+- Docs-only amendment validation required: `git diff --check`; focused scans
+  for `HP-MCOMX-DRV-*`, `source_span`, `:mapped_comx`, and the forbidden
+  route-record/artifact/new-COMX wording; docs build because compact authority
+  and the implementation index changed.
+- Later source validation should include default ordinary driver
+  artifact/readback, mapped-COMX H or He PQS driver smoke proving carried facts
+  are basis-defining, bounded ordinary-vs-mapped He supplemented/MWG/IDA
+  comparison if practical, H2 RG endpoint, and no Cr2 run.
+
+Goal advancement:
+- LT1/LT3/LT5: makes the mapped-COMX option usable through the compact,
+  copyable canonical driver while keeping the driver at construction-choice
+  level instead of route diagnostics.
+
+Carrying-cost result:
+- deleted: none; docs-only authority pass.
+- simplified: future source work has one visible selector and must use the
+  existing doside/source-axis/terminal wiring.
+- quarantined: new route records, terminal-lowering changes, artifact schema
+  changes, source defaults, another COMX path, high-order workflow controls,
+  and committed tests/fixtures remain unapproved.
+- exact remaining caller/blocker: if making `source_span` driver-selectable
+  requires new route records, terminal-lowering changes, artifact schema
+  changes, or another COMX path, the source pass must stop and report that
+  blocker.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

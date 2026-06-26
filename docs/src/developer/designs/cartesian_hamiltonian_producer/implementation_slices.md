@@ -1140,6 +1140,11 @@ Additional approved composition lane:
   seed coefficients from them, but must keep boundary mode selection, support
   restriction, shell-local Lowdin, canonicalization, support validation, and
   ordinary fallback unchanged.
+- `HP-MCOMX-DRV-FN-01` / `HP-MCOMX-DRV-TEST-01` are approved only for making
+  `source_span = :ordinary` or `:mapped_comx` selectable through the canonical
+  driver and staged base/facade path. The default remains `:ordinary`;
+  `:mapped_comx` is currently PQS-only. No route records, terminal-lowering
+  changes, artifact changes, source defaults, or new COMX path are approved.
 
 No initial composition placeholder remains candidate-only. Deferred geometry,
 solver, ECP, public export, and Cr2-specific work still need a later docs-only

@@ -119,6 +119,10 @@ Implemented base path:
   materialized `AxisSourceTransformFact`s as the basis-defining shell seed when
   they are present and validated, while ordinary
   `_nested_projected_q_shell_full_sides(...)` fallback remains unchanged.
+- `HP-MCOMX-DRV-*` approves only a compact `source_span` construction choice in
+  `bin/cartesian_ham_builder.jl` and the staged base/facade path. Public values
+  are `:ordinary` and `:mapped_comx`; ordinary remains the default, and
+  `:mapped_comx` is currently PQS-only.
 
 Implemented Residual Gaussian path:
 
