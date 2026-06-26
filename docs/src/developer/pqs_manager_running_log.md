@@ -5365,6 +5365,56 @@ Carrying-cost result:
   source-axis facts only when mapped-COMX is explicitly selected; no artifact
   or status schema changes.
 
+## Cartesian Hamiltonian Producer Pass 166 - Wire Mapped-COMX Terminal Seed Facts
+
+Commit(s):
+- this commit - Wire mapped-COMX terminal seed facts
+
+Summary:
+- Accepted the terminal-basis wiring pass under `HP-MCOMX-TERM-FN-01`.
+  `_shell_seed(...)` now uses carried materialized
+  `AxisSourceTransformFact`s when they exist, so mapped-COMX source-axis facts
+  become basis-defining for PQS terminal shell realization.
+- The ordinary fallback remains unchanged for default/non-materialized facts:
+  it still rebuilds ordinary sides through
+  `_nested_projected_q_shell_full_sides(...)`. Shell ownership, retained-rule
+  semantics, boundary selection, shell-local Lowdin, canonicalization, support
+  validation, artifacts, driver inputs, and Hamiltonian assembly were not
+  changed.
+
+Validation:
+- Manager reran `git diff --check`, package load,
+  `tmp/work/mapped_comx_source_span_probe.jl`,
+  `tmp/work/mapped_comx_terminal_seam_probe.jl`, and the existing H2
+  supplemented RG endpoint
+  `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`.
+- The terminal seam probe reported `mapped_terminal_match_delta = 0.0`,
+  `mapped_vs_ordinary_seed_delta = 1.835e-01`, and seed shape `(1331, 98)`.
+  The H2 endpoint kept self-Coulomb `0.4574265214362095` and artifact
+  readback deltas `0.0`.
+
+Goal advancement:
+- LT5/LT6: completes the mainline source-span-to-terminal-basis path needed
+  before any public driver exposure. High-order can now test mapped-COMX as an
+  actual basis-defining route rather than a metadata-only/source-fact probe.
+
+Carrying-cost result:
+- deleted: none.
+- simplified: terminal realization now consumes existing carried materialized
+  source-axis facts instead of always rebuilding ordinary sides.
+- quarantined: driver exposure, public API, artifacts, Hamiltonian/IDA/MWG/RG/
+  raw-block/solver work, high-order workflow, Cr/Cr2 fixtures, and Cr2
+  workflow remain unapproved.
+- not deleted because: ordinary fallback is required for default
+  non-materialized source-axis facts.
+- exact remaining caller/blocker: none for terminal consumption; next lane is
+  either high-order consumer benchmarking or a separately approved driver
+  exposure after benchmark evidence.
+- added src lines: 71.
+- deleted src lines: 4.
+- new tests: none committed; ignored seam probe only.
+- new metadata/status fields: none.
+
 ## Cartesian Hamiltonian Producer Pass 163 - Diatomic Common Shellifier Entry
 
 Commit(s):

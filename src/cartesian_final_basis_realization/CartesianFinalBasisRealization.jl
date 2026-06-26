@@ -20,7 +20,8 @@ using ..CartesianRawProductSources
 using ..CartesianResidualGaussians
 using ..CartesianCPB
 using LinearAlgebra
-import ..GaussletBases: _cartesian_unflat_index, _nested_axis_lengths,
+using SparseArrays
+import ..GaussletBases: _cartesian_flat_index, _cartesian_unflat_index, _nested_axis_lengths,
        _nested_axis_pgdg, _nested_box_support_indices, _nested_product_coefficients,
        _nested_projected_q_shell_boundary_comx_product_modes,
        _nested_projected_q_shell_full_sides, gto_overlap_matrix

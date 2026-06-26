@@ -140,13 +140,79 @@ function _validate_shell_seed_contract(support, rule, raw_plan, modes, source_sh
         throw(ArgumentError("terminal PQS seed raw source-mode count mismatch"))
     return nothing
 end
+function _shell_seed_axis_facts(contract)
+    facts = get(contract.metadata, :raw_product_source_axis_transform_facts, nothing)
+    isnothing(facts) && return nothing
+    facts isa Tuple && length(facts) == 3 ||
+        throw(ArgumentError("terminal PQS seed requires exactly three source-axis transform facts"))
+    all(fact -> fact isa CRPS.AxisSourceTransformFact &&
+        fact.coefficient_status === :not_materialized, facts) && return nothing
+    return facts
+end
+function _validate_shell_seed_axis_fact(fact, axis, interval, source_dim)
+    fact isa CRPS.AxisSourceTransformFact ||
+        throw(ArgumentError("terminal PQS seed source-axis transform fact type mismatch"))
+    fact.axis == axis ||
+        throw(ArgumentError("terminal PQS seed source-axis transform fact axis mismatch"))
+    fact.coefficient_status === :materialized ||
+        throw(ArgumentError("terminal PQS seed source-axis transform fact must be materialized"))
+    fact.source_interval == interval ||
+        throw(ArgumentError("terminal PQS seed source-axis transform fact interval mismatch"))
+    fact.source_mode_dim == source_dim ||
+        throw(ArgumentError("terminal PQS seed source-axis transform fact source-mode dimension mismatch"))
+    size(fact.coefficient_matrix) == (length(interval), source_dim) ||
+        throw(ArgumentError("terminal PQS seed source-axis transform fact coefficient shape mismatch"))
+    return Matrix{Float64}(fact.coefficient_matrix)
+end
+function _shell_seed_full_coefficients_from_axis_facts(facts, support, source_shape, dims)
+    matrices = ntuple(
+        axis -> _validate_shell_seed_axis_fact(
+            facts[axis],
+            axis,
+            support.outer_box[axis],
+            source_shape[axis],
+        ),
+        3,
+    )
+    ncols = prod(source_shape)
+    row_indices = Int[]
+    col_indices = Int[]
+    values = Float64[]
+    column = 0
+    for ixcol in 1:source_shape[1], iycol in 1:source_shape[2], izcol in 1:source_shape[3]
+        column += 1
+        for (ix_local, ix) in enumerate(support.outer_box[1])
+            vx = matrices[1][ix_local, ixcol]
+            iszero(vx) && continue
+            for (iy_local, iy) in enumerate(support.outer_box[2])
+                vy = matrices[2][iy_local, iycol]
+                iszero(vy) && continue
+                for (iz_local, iz) in enumerate(support.outer_box[3])
+                    vz = matrices[3][iz_local, izcol]
+                    iszero(vz) && continue
+                    push!(row_indices, _cartesian_flat_index(ix, iy, iz, dims))
+                    push!(col_indices, column)
+                    push!(values, vx * vy * vz)
+                end
+            end
+        end
+    end
+    return SparseArrays.sparse(row_indices, col_indices, values, prod(dims), ncols)
+end
+function _shell_seed_full_coefficients(record, contract, bundles, source_shape, dims)
+    support = record.support_record
+    facts = _shell_seed_axis_facts(contract)
+    if !isnothing(facts)
+        return _shell_seed_full_coefficients_from_axis_facts(facts, support, source_shape, dims)
+    end
+    full_sides = _nested_projected_q_shell_full_sides(bundles, support.outer_box, source_shape)
+    return _nested_product_coefficients(full_sides..., dims)
+end
 function _shell_seed(record, contract, bundles)
     support = record.support_record
     source_shape = Tuple(Int(value) for value in support.source_mode_shape)
     dims = _nested_axis_lengths(bundles)
-    full_sides =
-        _nested_projected_q_shell_full_sides(bundles, support.outer_box, source_shape)
-    full_coefficients = _nested_product_coefficients(full_sides..., dims)
+    full_coefficients = _shell_seed_full_coefficients(record, contract, bundles, source_shape, dims)
     modes = _nested_projected_q_shell_boundary_comx_product_modes(source_shape)
     indices = support.support_indices
     states = support.support_states
