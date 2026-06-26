@@ -15,6 +15,22 @@ Mainline owns the facility and contract. High-order remains a consumer and
 benchmark lane, like CR2: it should call the installed mainline option rather
 than maintain a duplicate scratch implementation.
 
+Correction after source review: this is not a new
+`CartesianRawProductSources` numerical facility. It is a new source-span option
+inside the existing nested doside / COMX path:
+
+```text
+pqs_source_axis_transform_facts_from_pgdg_axes(...)
+-> _nested_doside_1d(...)
+-> _nested_retained_span(...)
+-> _cleanup_comx_transform(...)
+```
+
+Mapped-COMX changes only the raw one-dimensional span passed into the existing
+physical-coordinate COMX cleanup. It must not add a second COMX wrapper, a
+parallel axis-transform constructor, or a numerical transform builder under
+`CartesianRawProductSources`.
+
 ## Numerical Rule
 
 The approved first source-span option is:
@@ -27,11 +43,22 @@ protected physical P2
 + physical-u COMX localization
 ```
 
-For a one-dimensional local physical coordinate `u`:
+For a one-dimensional interval with physical centers `x`, the nonlinear map
+uses a dimensionless local coordinate:
+
+```text
+u = (x - x_mid) / x_half
+```
+
+where `x_mid` and `x_half` come from the source interval. The map is:
 
 ```text
 s_lambda(u) = (1 + lambda) * u / (1 + lambda * u^2)
 ```
+
+The final COMX localization still uses the physical position matrix. Applying
+`s_lambda` directly to raw physical centers is not the tested construction and
+is forbidden because it makes the source span unit- and location-dependent.
 
 Default source-span specification:
 
@@ -51,10 +78,13 @@ Construction semantics:
 3. Project mapped columns against the protected physical block in the local
    parent metric.
 4. Orthonormalize the combined source span.
-5. Localize by physical-coordinate COMX, not mapped-`s` COMX.
+5. Continue through the existing `_cleanup_comx_transform(...)` using the
+   physical position matrix.
 
-The option is general in `n_s` and `protected_degree`. The tested
-`n_s = 5, 6, 7` values are evidence points, not hard-coded cases.
+The first implementation is restricted to `protected_degree = 2`. General
+protected degrees require a later parity-balanced mapped-order fill rule; they
+must not be implied by blindly adding `T_1`, `T_2`, and so on for every
+protected degree.
 
 ## Evidence Summary
 
@@ -92,43 +122,49 @@ is installed in mainline.
 Primary owner:
 
 ```text
-CartesianRawProductSources
+existing nested doside / COMX source-span seam
 ```
 
 Approved files:
 
 ```text
-src/cartesian_raw_product_sources/CartesianRawProductSources.jl
-src/cartesian_raw_product_sources/mapped_comx_source_span.jl
+src/cartesian_nested_faces.jl
+src/cartesian_pair_block_materialization/pqs_source_axis_transforms.jl
 src/cartesian_raw_product_sources/axis_transform_facts.jl
 src/cartesian_raw_product_sources/records.jl
-src/cartesian_pair_block_materialization/pqs_source_axis_transforms.jl
 ```
 
-`records.jl` is approved only for narrow accessors, metadata fields, or record
-validation needed to carry source-span provenance. `pqs_source_axis_transforms.jl`
-is approved only for narrow compatibility wiring from existing PQS raw-source
-axis-transform construction to the new mainline source-span option.
+`src/cartesian_nested_faces.jl` owns the existing low-level doside span and
+physical COMX cleanup. `pqs_source_axis_transforms.jl` is approved only for
+narrow keyword/spec plumbing into that existing seam and for reporting the
+returned source-span facts. `CartesianRawProductSources` files are approved
+only for compact provenance/accessors on existing `AxisSourceTransformFact`
+records if needed.
 
-No root include change is approved except the module-local include in
-`CartesianRawProductSources.jl`.
+No new source file is approved. In particular,
+`src/cartesian_raw_product_sources/mapped_comx_source_span.jl` is not an
+approved production surface.
 
 ## Approved Behavior
 
 The implementation may:
 
-- add a compact `MappedCOMXSourceSpec` or equivalent typed source-span object;
-- construct the one-dimensional source columns for protected physical
-  polynomials plus mapped Chebyshev enrichment;
+- add a compact internal `MappedCOMXSourceSpec` or equivalent source-span
+  selector at the existing doside seam;
+- extend `_nested_doside_1d(...)` / `_nested_retained_span(...)` with an
+  internal keyword or spec that changes only the raw source-span columns;
+- keep the current ordinary span as the default behavior;
+- construct mapped-COMX columns from normalized local `u`, not raw physical
+  centers;
 - project mapped columns against the protected physical block in the local
   parent metric;
-- build materialized `AxisSourceTransformFact`s whose coefficient matrices are
-  compatible with existing `RawProductBoxPlan` and PQS boundary product-mode
-  retained rules;
-- localize by physical `u` COMX;
+- use the existing physical-coordinate `_cleanup_comx_transform(...)` after the
+  mapped source span is built;
+- return the usual materialized `AxisSourceTransformFact`s compatible with
+  existing `RawProductBoxPlan` and PQS boundary product-mode retained rules;
 - record compact metadata:
   - `source_span_family = :mapped_comx`;
-  - `protected_degree`;
+  - `protected_degree = 2`;
   - `lambda`;
   - `mapped_family`;
   - `mapped_orders`;
@@ -139,6 +175,11 @@ The implementation may:
 - leave ordinary polynomial source spans available and unchanged;
 - expose the option only through internal construction controls needed by the
   approved validation gates.
+
+Internal consumers must not read provenance metadata as a data bus. If a later
+source pass needs mapped-order data after construction, the doside/span helper
+should return it as a real result field or accessor, and metadata should remain
+reporting/provenance.
 
 The Hamiltonian, operator, and artifact layers should consume the same
 carried-space / raw product source facts as before. They should not branch on
@@ -159,6 +200,12 @@ This amendment does not approve:
 - explicit `Y_lm` / angular injection;
 - `sqrtJ` weighting;
 - mapped-`s` COMX as the production localization gauge;
+- applying `s_lambda` to raw physical centers;
+- `protected_degree != 2` in the first implementation;
+- a parallel mapped-COMX axis-transform route outside the existing
+  `_nested_doside_1d(...)` / `_cleanup_comx_transform(...)` path;
+- numerical source-span builders under `CartesianRawProductSources`;
+- `src/cartesian_raw_product_sources/mapped_comx_source_span.jl`;
 - importing high-order branch scaffolding, scripts, route wrappers, status
   objects, diagnostics, or reports;
 - duplicate high-order-maintained implementation of the same mainline option;
@@ -173,6 +220,9 @@ This amendment does not approve:
 - local source-span validation for `n_s = 5`, `6`, and `7`:
   - full retained rank;
   - protected `P2` span preserved;
+  - mapped columns use normalized local `u in [-1, 1]`;
+  - source columns/centers match the high-order scratch convention within a
+    reviewed tolerance;
   - source-axis overlap approximately identity after construction;
   - physical-`u` COMX off-diagonal residual reported;
   - metadata records the approved source-span rule;
@@ -192,10 +242,14 @@ benchmark fixtures require a separate amendment.
 
 ## Failure Rule
 
-If the source option cannot be installed through `CartesianRawProductSources`
-and existing PQS raw-source axis-transform wiring without changing Hamiltonian
-assembly, artifact schemas, public driver inputs, or high-order-specific
-workflow, make no source commit and report the exact missing mainline seam.
+If the source option cannot be installed as a small branch in the existing
+doside source-span seam before `_cleanup_comx_transform(...)`, make no source
+commit and report the exact missing mainline seam.
+
+If implementation requires a new source file, a second COMX wrapper, a
+`CartesianRawProductSources` numerical builder, Hamiltonian assembly changes,
+artifact schemas, public driver inputs, or high-order-specific workflow, make
+no source commit and request a separate design amendment.
 
 If the real atom gates fail after a faithful implementation of the approved
 source-span rule, do not tune defaults or add injection in the same pass.

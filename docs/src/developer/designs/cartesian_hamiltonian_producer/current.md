@@ -42,7 +42,7 @@ Normal startup reading:
 - `common_terminal_shell_decomposition.md` for route-family-free common
   shell/core region decomposition before PQS/WL retained realization;
 - `mapped_comx_source_span.md` for the protected-`P2` plus mapped Chebyshev
-  source-span option owned by mainline `CartesianRawProductSources`;
+  source-span option at the existing nested doside / COMX seam;
 - `cartesian_hamiltonian_artifact_manifest.md` for compact Hamiltonian
   artifact sidecar groups and recipe provenance;
 - `route_inventory_type_surface_cleanup.md` for the first route-inventory
@@ -109,9 +109,11 @@ Implemented base path:
   arguments, including public `ns`, before central-gap/contact and shared-shell
   regions are planned.
 - `HP-MCOMX-*` approves a protected-`P2` plus mapped Chebyshev source-span
-  option as a mainline `CartesianRawProductSources` facility. High-order may
-  benchmark the installed option as a consumer, but the high-order branch does
-  not own the mainline implementation shape.
+  option at the existing nested doside / COMX seam. The nonlinear map uses
+  normalized local `u`, while `_cleanup_comx_transform(...)` still uses the
+  physical position matrix. High-order may benchmark the installed option as a
+  consumer, but the high-order branch does not own the mainline implementation
+  shape.
 
 Implemented Residual Gaussian path:
 

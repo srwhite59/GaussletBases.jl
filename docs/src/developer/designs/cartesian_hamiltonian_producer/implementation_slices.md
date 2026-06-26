@@ -1127,11 +1127,13 @@ Additional approved composition lane:
   PQS `q` and WL inner side begin only in retained-construction policy.
 - `HP-MCOMX-FILE-01`, `HP-MCOMX-OBJ-01`, `HP-MCOMX-FN-01`,
   `HP-MCOMX-WIRE-01`, and `HP-MCOMX-TEST-01` are approved for the mainline
-  mapped-COMX source-span facility in `CartesianRawProductSources` plus narrow
-  PQS raw-source axis-transform wiring. The first rule is protected physical
-  `P2` plus mapped Chebyshev enrichment with `lambda = 0.5`, no `sqrtJ`, and
-  physical-`u` COMX localization. High-order is a consumer/benchmark lane, not
-  the owner of the installed implementation.
+  mapped-COMX source-span option at the existing nested doside / COMX seam,
+  plus narrow PQS raw-source axis-transform wiring. The first rule is
+  protected physical `P2` plus mapped Chebyshev enrichment with `lambda = 0.5`,
+  normalized local `u`, no `sqrtJ`, and existing physical-coordinate COMX
+  cleanup. High-order is a consumer/benchmark lane, not the owner of the
+  installed implementation. A `CartesianRawProductSources` numerical builder
+  or new mapped-COMX source file is not approved.
 
 No initial composition placeholder remains candidate-only. Deferred geometry,
 solver, ECP, public export, and Cr2-specific work still need a later docs-only

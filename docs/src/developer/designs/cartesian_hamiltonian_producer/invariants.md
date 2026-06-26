@@ -175,10 +175,11 @@ The canonical RG algorithm contract is
   producer boundaries. Do not implement the 2 x 2 x 2 matrix as eight
   driver-level special cases or parallel Hamiltonian builders.
 - Source-span options are mainline carried-space/raw-source facts, not
-  high-order workflow branches. A mapped-COMX source span may change the
-  source-axis transform facts and their provenance, but Hamiltonian, operator,
-  artifact, and driver layers must not branch on mapped versus ordinary source
-  except through descriptive source provenance.
+  high-order workflow branches. A mapped-COMX source span changes only the
+  raw one-dimensional span passed into the existing physical-coordinate COMX
+  cleanup. It may change source-axis transform facts and provenance, but
+  Hamiltonian, operator, artifact, and driver layers must not branch on mapped
+  versus ordinary source except through descriptive source provenance.
 - R3/RG supplemented usability remains internal unless a later public/export
   amendment approves it.
 - The canonical Cartesian driver is an artifact-producing workflow over

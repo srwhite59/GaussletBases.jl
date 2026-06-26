@@ -783,6 +783,22 @@ proving ground and benchmark consumer. It does not own the mainline
 implementation shape, and its scripts, route wrappers, reports, and benchmark
 scaffolding must not be copied into production.
 
+Source-review correction: mapped-COMX is a new source-span option inside the
+existing nested doside / COMX path, not a new numerical facility under
+`CartesianRawProductSources`.
+
+Approved implementation path:
+
+```text
+pqs_source_axis_transform_facts_from_pgdg_axes(...)
+-> _nested_doside_1d(...)
+-> _nested_retained_span(...)
+-> _cleanup_comx_transform(...)
+```
+
+The option changes only the raw span passed into the existing physical COMX
+cleanup.
+
 Approved first numerical rule:
 
 ```text
@@ -799,6 +815,11 @@ with:
 s_lambda(u) = (1 + lambda) * u / (1 + lambda * u^2)
 ```
 
+Here `u` is the dimensionless local coordinate on the source interval,
+`u = (x - x_mid) / x_half`, not raw physical center `x`. The existing COMX
+cleanup still uses the physical position matrix. Applying `s_lambda` directly
+to physical centers is forbidden.
+
 The ordinary polynomial source-span path remains available and unchanged. This
 lane installs an additional source-span facility; it does not change defaults
 or make high-order benchmark results production acceptance tests.
@@ -808,22 +829,25 @@ or make high-order benchmark results production acceptance tests.
 Approved source files:
 
 ```text
-src/cartesian_raw_product_sources/CartesianRawProductSources.jl
-src/cartesian_raw_product_sources/mapped_comx_source_span.jl
+src/cartesian_nested_faces.jl
+src/cartesian_pair_block_materialization/pqs_source_axis_transforms.jl
 src/cartesian_raw_product_sources/axis_transform_facts.jl
 src/cartesian_raw_product_sources/records.jl
-src/cartesian_pair_block_materialization/pqs_source_axis_transforms.jl
 ```
 
-Primary owner: `CartesianRawProductSources`.
+Primary owner: the existing nested doside / COMX source-span seam in
+`src/cartesian_nested_faces.jl`.
 
-`records.jl` is approved only for narrow accessors, metadata fields, or record
-validation needed to carry source-span provenance. The pair-block
-materialization file is approved only for compatibility wiring from existing
-PQS raw-source axis-transform construction to the mainline source-span option.
+`src/cartesian_pair_block_materialization/pqs_source_axis_transforms.jl` is
+approved only for narrow keyword/spec plumbing into the existing doside seam
+and for reporting the returned source-span facts.
 
-No root include change is approved except the module-local include in
-`CartesianRawProductSources.jl`.
+`CartesianRawProductSources` files are approved only for compact provenance or
+accessors on existing `AxisSourceTransformFact` records if needed. They must
+not own the numerical mapped-COMX span builder.
+
+No new source file is approved. In particular,
+`src/cartesian_raw_product_sources/mapped_comx_source_span.jl` is not approved.
 
 ### HP-MCOMX-OBJ-01 — mapped-COMX source-span specification
 
@@ -841,26 +865,33 @@ Approved fields/semantics:
 - deterministic mapped-order list or equivalent compact source-span metadata;
 - compact rank and overlap/orthogonality diagnostics.
 
-The object is source-span construction data, not a route report, status
-payload, public input object, artifact schema, or high-order benchmark record.
+The object is source-span construction data at the doside seam, not a route
+report, status payload, public input object, artifact schema,
+`CartesianRawProductSources` numerical builder, or high-order benchmark record.
 
 ### HP-MCOMX-FN-01 — mapped-COMX source-span construction
 
 Approved behavior:
 
-- build protected physical polynomial columns `1, u, u^2`;
+- extend `_nested_doside_1d(...)` / `_nested_retained_span(...)` with an
+  internal keyword or spec that changes only the raw source-span columns;
+- keep the current ordinary span as the default behavior;
+- build protected physical polynomial columns `1, u, u^2` using normalized
+  local `u`;
 - add mapped Chebyshev columns `T_k(s_lambda(u))` until the requested source
   mode count is reached;
 - project mapped columns against the protected physical block in the local
   parent metric;
 - orthonormalize the combined one-dimensional source span;
-- localize by physical-coordinate COMX, not mapped-`s` COMX;
-- construct materialized `AxisSourceTransformFact`s compatible with existing
+- continue through the existing `_cleanup_comx_transform(...)` using the
+  physical position matrix;
+- return materialized `AxisSourceTransformFact`s compatible with existing
   `RawProductBoxPlan` and PQS boundary product-mode retained rules;
 - preserve deterministic ordering and ordinary polynomial source-span behavior.
 
-The option is general in `n_s` and `protected_degree`. The current `n_s = 5`,
-`6`, and `7` scans are evidence points, not hard-coded cases.
+The first implementation is restricted to `protected_degree = 2`. General
+protected degrees require a later parity-balanced mapped-order fill rule; they
+must not be implied by blindly adding `T_1`, `T_2`, and so on.
 
 ### HP-MCOMX-WIRE-01 — raw-source and PQS axis-transform wiring
 
@@ -878,6 +909,10 @@ Approved behavior:
   versus mapped-COMX source spans except for descriptive provenance already
   carried by source facts.
 
+Internal consumers must not read provenance metadata as a data bus. If mapped
+orders or source-span diagnostics are needed after construction, return them as
+real result fields or accessors; metadata remains reporting/provenance.
+
 Forbidden for all `HP-MCOMX-*` IDs:
 
 - changing default source spans;
@@ -890,17 +925,25 @@ Forbidden for all `HP-MCOMX-*` IDs:
 - explicit `Y_lm` / angular injection;
 - `sqrtJ` weighting;
 - mapped-`s` COMX as the production localization gauge;
+- applying `s_lambda` to raw physical centers;
+- `protected_degree != 2` in the first implementation;
+- a parallel mapped-COMX axis-transform route outside the existing doside /
+  COMX path;
+- numerical source-span builders under `CartesianRawProductSources`;
+- `src/cartesian_raw_product_sources/mapped_comx_source_span.jl`;
 - importing high-order branch scaffolding, scripts, route wrappers, status
   objects, diagnostics, or reports;
 - a duplicate high-order-maintained implementation of the same mainline
   option;
 - committed Cr fixtures or broad high-order benchmark fixtures.
 
-Failure rule: if the source option cannot be installed through
-`CartesianRawProductSources` and existing PQS raw-source axis-transform wiring
-without changing Hamiltonian assembly, artifact schemas, public driver inputs,
-or high-order-specific workflow, make no source commit and report the exact
-missing mainline seam.
+Failure rule: if the source option cannot be installed as a small branch in
+the existing doside source-span seam before `_cleanup_comx_transform(...)`,
+make no source commit and report the exact missing mainline seam. If the pass
+needs a new source file, a second COMX wrapper, a
+`CartesianRawProductSources` numerical builder, Hamiltonian assembly changes,
+artifact schemas, public driver inputs, or high-order-specific workflow,
+request a separate amendment.
 
 ### HP-MCOMX-TEST-01 — mapped-COMX validation
 
@@ -911,6 +954,9 @@ Approved validation:
 - local source-span validation for `n_s = 5`, `6`, and `7`:
   - full retained rank;
   - protected `P2` span preserved;
+  - mapped columns use normalized local `u in [-1, 1]`;
+  - source columns/centers match the high-order scratch convention within a
+    reviewed tolerance;
   - source-axis overlap approximately identity after construction;
   - physical-`u` COMX off-diagonal residual reported;
   - metadata records the approved source-span rule;

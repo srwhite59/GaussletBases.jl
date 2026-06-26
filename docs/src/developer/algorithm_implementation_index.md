@@ -229,25 +229,30 @@ shell-local final coefficients are later realization details.
 Why to check:
 The high-order lane produced a mapped-COMX source-span candidate that is now
 approved for mainline installation as a raw-source / carried-space option. It
-should be implemented once in the shared source-span layer, then consumed by
-high-order benchmarks. Do not duplicate it as a high-order route or Hamiltonian
-branch.
+should be implemented once at the existing nested doside source-span seam, then
+consumed by high-order benchmarks. Do not duplicate it as a high-order route,
+Hamiltonian branch, second COMX wrapper, or `CartesianRawProductSources`
+numerical builder.
 
 Key docs:
 - `docs/src/developer/designs/cartesian_hamiltonian_producer/mapped_comx_source_span.md`
 - `docs/src/developer/raw_product_source_retained_transform_policy.md`
 
 Source anchors:
-- **approved owner**: `src/cartesian_raw_product_sources/`
-- **narrow wiring surface**:
-  `src/cartesian_pair_block_materialization/pqs_source_axis_transforms.jl`
+- **approved owner**: `src/cartesian_nested_faces.jl`,
+  `_nested_doside_1d`, `_nested_retained_span`, and existing
+  `_cleanup_comx_transform`
+- **narrow wiring/provenance surfaces**:
+  `src/cartesian_pair_block_materialization/pqs_source_axis_transforms.jl`,
+  plus existing `AxisSourceTransformFact` provenance/accessors only if needed
 
 Do-not-forget rule:
 The first installed rule is protected physical `P2` plus mapped Chebyshev
-enrichment `T_k(s_lambda(u))` with `lambda = 0.5`, no `sqrtJ`, and physical-`u`
-COMX localization. Ordinary polynomial source spans remain available and
-unchanged. Hamiltonian and artifact layers should see only the usual carried
-source facts plus provenance.
+enrichment `T_k(s_lambda(u))` with `lambda = 0.5`, no `sqrtJ`, normalized
+local `u in [-1, 1]`, and physical-coordinate COMX through the existing cleanup
+function. Ordinary polynomial source spans remain available and unchanged.
+Hamiltonian and artifact layers should see only the usual carried source facts
+plus provenance.
 
 ## One-Body Operators And Unit Nuclear Convention
 

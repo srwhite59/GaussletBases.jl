@@ -1523,21 +1523,24 @@ inputs, committed tests/fixtures, or Cr2 workflow.
 `HP-MCOMX-WIRE-01`, and `HP-MCOMX-TEST-01` approve only the mainline
 mapped-COMX source-span facility described in
 `docs/src/developer/designs/cartesian_hamiltonian_producer/mapped_comx_source_span.md`.
-The approved owner is `CartesianRawProductSources`, with allowed files
-`src/cartesian_raw_product_sources/CartesianRawProductSources.jl`,
-`src/cartesian_raw_product_sources/mapped_comx_source_span.jl`,
-`src/cartesian_raw_product_sources/axis_transform_facts.jl`,
-`src/cartesian_raw_product_sources/records.jl`, and narrow wiring in
-`src/cartesian_pair_block_materialization/pqs_source_axis_transforms.jl`.
+The approved owner is the existing nested doside / COMX source-span seam, with
+allowed files `src/cartesian_nested_faces.jl`,
+`src/cartesian_pair_block_materialization/pqs_source_axis_transforms.jl`, and
+`src/cartesian_raw_product_sources/axis_transform_facts.jl` /
+`src/cartesian_raw_product_sources/records.jl` only for compact
+`AxisSourceTransformFact` provenance or accessors if needed.
 The first source rule is protected physical `P2` plus mapped Chebyshev
-enrichment `T_k(s_lambda(u))` with `lambda = 0.5`, no `sqrtJ`, and
-physical-`u` COMX localization. High-order is a consumer/benchmark lane for
-the installed option, not the owner of a duplicate implementation. This lane
-does not approve source-default changes, public API/export changes, canonical
-driver input changes, artifact/manifest/reader changes, Hamiltonian/one-body/
-IDA/MWG/RG/raw-block/solver changes, injection/Ylm mechanisms, mapped-`s`
-localization as production gauge, high-order scaffolding imports, committed
-Cr/Cr2 fixtures, or Cr2 workflow.
+enrichment `T_k(s_lambda(u))` with `lambda = 0.5`, normalized local
+`u in [-1, 1]`, no `sqrtJ`, and existing physical-position COMX cleanup.
+High-order is a consumer/benchmark lane for the installed option, not the owner
+of a duplicate implementation. This lane does not approve
+`src/cartesian_raw_product_sources/mapped_comx_source_span.jl`,
+`CartesianRawProductSources` numerical builders, a second COMX wrapper,
+source-default changes, public API/export changes, canonical driver input
+changes, artifact/manifest/reader changes, Hamiltonian/one-body/IDA/MWG/RG/
+raw-block/solver changes, `protected_degree != 2`, injection/Ylm mechanisms,
+mapped-`s` localization as production gauge, high-order scaffolding imports,
+committed Cr/Cr2 fixtures, or Cr2 workflow.
 
 `HP-WLTERM-FILE-01`, `HP-WLTERM-FN-01`, and `HP-WLTERM-WIRE-01` approve only
 the narrow White-Lindsey terminal-basis seam needed by `nesting = :wl`.

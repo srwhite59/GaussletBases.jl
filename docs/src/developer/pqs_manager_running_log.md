@@ -16435,3 +16435,59 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 164 - Correct Mapped-COMX Owner Seam
+
+Commit(s):
+- this commit - Correct mapped-COMX authority seam
+
+Summary:
+- Corrected the `HP-MCOMX-*` authority before accepting the current source
+  WIP. The mapped-COMX idea remains approved, but the source owner is not
+  `CartesianRawProductSources`. It is the existing nested doside / COMX seam:
+  `pqs_source_axis_transform_facts_from_pgdg_axes(...) ->
+  _nested_doside_1d(...) -> _nested_retained_span(...) ->
+  _cleanup_comx_transform(...)`.
+- The rejected WIP shape created a parallel numerical builder under
+  `CartesianRawProductSources`, applied the nonlinear map to raw physical
+  centers, duplicated COMX plumbing, and blurred metadata/provenance with
+  construction data. The corrected contract requires normalized local
+  `u in [-1, 1]` for `s_lambda(u)` and keeps the existing physical-position
+  COMX cleanup.
+- The first production pass is now restricted to `protected_degree = 2`.
+  General protected degrees need a later parity-balanced mapped-order fill
+  rule.
+
+Validation:
+- Required for this docs-only correction: `git diff --check` on touched docs
+  and focused scans for `HP-MCOMX`, `mapped_comx_source_span.jl`,
+  `CartesianRawProductSources`, `_nested_doside_1d`,
+  `_nested_retained_span`, and `_cleanup_comx_transform` in the compact
+  authority files.
+- Source validation remains for the later doer pass. This correction does not
+  approve or accept the current source WIP.
+
+Goal advancement:
+- LT5/LT6: preserves the mainline source-span facility goal while preventing a
+  new route-like implementation layer. The high-order branch remains an idea
+  source and benchmark consumer, not an implementation owner.
+
+Carrying-cost result:
+- deleted: none; docs-only correction.
+- simplified: future implementation should be a small branch in the existing
+  doside retained-span construction, not a new module/file.
+- quarantined: `src/cartesian_raw_product_sources/mapped_comx_source_span.jl`,
+  `CartesianRawProductSources` numerical builders, a second COMX wrapper,
+  source-default changes, public API/export changes, artifacts, Hamiltonian/
+  one-body/IDA/MWG/RG/raw-block/solver changes, `protected_degree != 2`,
+  injection/Ylm, `sqrtJ`, mapped-`s` production localization, high-order
+  scaffolding imports, committed Cr/Cr2 fixtures, and Cr2 workflow remain
+  unapproved.
+- exact remaining caller/blocker: if the option cannot be installed by adding
+  a source-span selector at the existing doside seam while preserving
+  `_cleanup_comx_transform(...)`, the source pass must stop and report the
+  missing seam instead of building a parallel path.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.
