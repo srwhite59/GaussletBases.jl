@@ -716,7 +716,8 @@ function cartesian_recipe(route_inputs)
             route_shape = route_inputs.route_shape,
             product_body_rule = route_inputs.product_body_rule,
             pqs_retained_rule = route_inputs.pqs_retained_rule,
-            product_retained_rule = route_inputs.product_retained_rule) : nothing
+            product_retained_rule = route_inputs.product_retained_rule,
+            source_span = get(route_inputs, :source_span, :ordinary)) : nothing
         white_lindsey_recipe = route_inputs.route_family == :white_lindsey_low_order ? (;
             route_shape = route_inputs.white_lindsey_route_shape,
             mapping_rule = route_inputs.white_lindsey_mapping_rule,
@@ -1429,7 +1430,86 @@ function _pqs_source_box_route_driver_terminal_lowering_contract_inventory_from_
     )
 end
 
-function _pqs_source_box_route_driver_unit_stage_low_order_summary(shells)
+function _pqs_source_box_route_driver_source_span(recipe)
+    recipe.route_family === :pqs_source_box || return :ordinary
+    source_span = get(recipe.source_box, :source_span, :ordinary)
+    source_span in (:ordinary, :mapped_comx) ||
+        throw(ArgumentError("PQS source_span must be :ordinary or :mapped_comx"))
+    return source_span
+end
+
+function _pqs_source_box_route_driver_pqs_source_shape(unit)
+    shape = haskey(unit.metadata, :source_mode_shape) ?
+        unit.metadata.source_mode_shape :
+        nothing
+    if shape isa Tuple && length(shape) == 3 &&
+       all(dim -> dim isa Integer && dim > 0, shape)
+        return Tuple(Int(dim) for dim in shape)::NTuple{3,Int}
+    end
+    q = haskey(unit.metadata, :q) ? unit.metadata.q : nothing
+    q isa Integer && q > 0 && return (Int(q), Int(q), Int(q))
+    throw(ArgumentError("mapped-COMX PQS source span requires source mode dimensions"))
+end
+
+function _pqs_source_box_route_driver_mapped_comx_axis_facts(parent, unit)
+    unit.unit_kind === :pqs_shell_retained_unit || return nothing
+    length(unit.source_cpbs) == 1 ||
+        throw(ArgumentError("mapped-COMX PQS source span requires one source CPB"))
+    source_cpb = only(unit.source_cpbs)
+    source_cpb isa CartesianCPB.CoordinateProductBox ||
+        throw(ArgumentError("mapped-COMX PQS source span requires a coordinate product source box"))
+    intervals = CartesianCPB.intervals(source_cpb)
+    axis_sources = (
+        _nested_axis_pgdg(parent.parent_axis_bundle_object, :x),
+        _nested_axis_pgdg(parent.parent_axis_bundle_object, :y),
+        _nested_axis_pgdg(parent.parent_axis_bundle_object, :z),
+    )
+    return CartesianPairBlockMaterialization.pqs_source_axis_transform_facts_from_pgdg_axes(
+        axis_sources;
+        source_intervals = intervals,
+        source_mode_dims = _pqs_source_box_route_driver_pqs_source_shape(unit),
+        source_span = :mapped_comx,
+    )
+end
+
+function _pqs_source_box_route_driver_retained_unit_with_metadata(unit, metadata)
+    return CartesianRetainedUnits.RetainedUnitRecord(
+        unit.unit_key, unit.unit_index, unit.unit_kind, unit.source_contract_key,
+        unit.terminal_region_key, unit.terminal_region_role,
+        unit.terminal_region_kind, unit.lowering_kind, unit.retained_rule,
+        unit.realization_rule, unit.owned_support, unit.source_cpbs,
+        unit.source_cpb_index, unit.dimension_status, unit.dimension,
+        unit.column_range_status, unit.column_range, unit.route_core_final_unit,
+        unit.materialized, metadata,
+    )
+end
+
+function _pqs_source_box_route_driver_source_span_retained_unit_plan(
+    parent,
+    retained_unit_plan,
+    source_span,
+)
+    source_span === :ordinary && return retained_unit_plan
+    units = CartesianRetainedUnits.RetainedUnitRecord[]
+    for unit in CartesianRetainedUnits.units(retained_unit_plan)
+        facts = _pqs_source_box_route_driver_mapped_comx_axis_facts(parent, unit)
+        metadata = isnothing(facts) ? unit.metadata :
+            merge(unit.metadata, (;
+                source_mode_shape = facts.source_mode_dims,
+                raw_product_source_axis_transform_facts = facts.axis_transform_facts,
+            ))
+        push!(units, _pqs_source_box_route_driver_retained_unit_with_metadata(unit, metadata))
+    end
+    return CartesianRetainedUnits.RetainedUnitPlan(
+        retained_unit_plan.policy,
+        retained_unit_plan.lowering_plan,
+        units,
+        retained_unit_plan.summary,
+        retained_unit_plan.metadata,
+    )
+end
+
+function _pqs_source_box_route_driver_unit_stage_low_order_summary(parent, shells, recipe)
     shellification_plan = get(shells, :shellification_plan, nothing)
     shellification_scaffold = get(shells, :shellification_scaffold, nothing)
     shellification_kind = get(shells, :shellification_kind, nothing)
@@ -1460,6 +1540,13 @@ function _pqs_source_box_route_driver_unit_stage_low_order_summary(shells)
         lowering_plan isa CartesianTerminalLowering.TerminalLoweringPlan ?
         CartesianRetainedUnits.retained_unit_plan(lowering_plan) :
         nothing
+    if retained_unit_plan isa CartesianRetainedUnits.RetainedUnitPlan
+        retained_unit_plan = _pqs_source_box_route_driver_source_span_retained_unit_plan(
+            parent,
+            retained_unit_plan,
+            _pqs_source_box_route_driver_source_span(recipe),
+        )
+    end
 
     return (;
         shellification_kind,
@@ -1470,7 +1557,7 @@ end
 
 function cartesian_units(parent, shells, recipe)
     low_order_units =
-        _pqs_source_box_route_driver_unit_stage_low_order_summary(shells)
+        _pqs_source_box_route_driver_unit_stage_low_order_summary(parent, shells, recipe)
     retained_units = shells.retained_units
     pair_entries = shells.pair_entries
     unit_inventory = _pqs_source_box_route_driver_unit_inventory(retained_units)

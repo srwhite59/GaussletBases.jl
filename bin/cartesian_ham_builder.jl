@@ -13,6 +13,7 @@ nup = 1
 ndn = 1
 ns = 5                         # requested cube/source/nesting size
 nesting = :pqs                  # :pqs or :wl construction family
+source_span = :ordinary         # :ordinary or :mapped_comx for PQS source spans
 core_spacing = 0.3             # near-nucleus spacing / atom mapping width
 padding = 10.0                 # extra box padding beyond each nucleus, in bohr
 
@@ -35,7 +36,7 @@ expected_dimension = nothing
 
 public_inputs = (
     :Natom, :R, :Z, :atom, :nup, :ndn, :ns, :core_spacing, :padding,
-    :gausslet_family, :nesting, :basisname, :lmax, :uncontracted,
+    :gausslet_family, :nesting, :source_span, :basisname, :lmax, :uncontracted,
     :supplement_width_max, :basisfile, :hamfile, :check_file,
     :print_contract, :print_timing, :expected_dimension,
 )
@@ -71,6 +72,8 @@ charge = Float64(vars[:Z])
 label = String(vars[:atom])
 nesting_value = Symbol(vars[:nesting])
 nesting_value in (:pqs, :wl) || throw(ArgumentError("nesting must be :pqs or :wl"))
+source_span_value = Symbol(vars[:source_span])
+source_span_value in (:ordinary, :mapped_comx) || throw(ArgumentError("source_span must be :ordinary or :mapped_comx"))
 N in (1, 2) || throw(ArgumentError("Natom must be 1 or 2"))
 system = if N == 1
     (;  atom_symbols = [label], nuclear_charges = [charge], atom_locations = [(0.0, 0.0, 0.0)], nup = vars[:nup], ndn = vars[:ndn])
@@ -79,7 +82,8 @@ else
     (;  atom_symbols = [label, label], nuclear_charges = [charge, charge], atom_locations = [(0.0, 0.0, -half_R), (0.0, 0.0, half_R)], nup = vars[:nup], ndn = vars[:ndn])
 end
 common_basis = (; ns = vars[:ns], core_spacing = vars[:core_spacing],
-    parent_axis_family = vars[:gausslet_family], nesting = nesting_value)
+    parent_axis_family = vars[:gausslet_family], nesting = nesting_value,
+    source_span = source_span_value)
 basis = N == 1 ? (; common_basis..., radius = vars[:padding]) :
     (; common_basis..., xmax_parallel = Float64(vars[:R]) / 2 + vars[:padding],
         xmax_transverse = vars[:padding])
@@ -96,7 +100,7 @@ contract_elapsed = time() - contract_start
 # Review public contract
 if vars[:print_contract]
     println("system: Natom=", N, " atom=", label, " Z=", charge, " R=", vars[:R], " nup=", vars[:nup], " ndn=", vars[:ndn])
-    println("basis: ns=", vars[:ns], " nesting=", nesting_value, " core_spacing=", vars[:core_spacing], " padding=", vars[:padding], " gausslet_family=", vars[:gausslet_family])
+    println("basis: ns=", vars[:ns], " nesting=", nesting_value, " source_span=", source_span_value, " core_spacing=", vars[:core_spacing], " padding=", vars[:padding], " gausslet_family=", vars[:gausslet_family])
     !isnothing(supplement) && println("supplement: basisname=", vars[:basisname], " lmax=", vars[:lmax], " uncontracted=", vars[:uncontracted], " supplement_width_max=", vars[:supplement_width_max], " basisfile=", vars[:basisfile])
     println("hamfile: ", hamfile_value)
     println("hooks: check_file=", vars[:check_file], " print_contract=", vars[:print_contract], " print_timing=", vars[:print_timing], " expected_dimension=", vars[:expected_dimension])

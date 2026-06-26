@@ -2,7 +2,7 @@ const _CARTESIAN_BASE_SYSTEM_KEYS = Set((:atom_symbols, :nuclear_charges, :atom_
 const _CARTESIAN_BASE_SIZE_KEYS = Set((:ns, :q))
 const _CARTESIAN_BASE_H_BASIS_REQUIRED_KEYS = Set((:core_spacing, :radius))
 const _CARTESIAN_BASE_H2_BASIS_REQUIRED_KEYS = Set((:core_spacing, :xmax_parallel, :xmax_transverse))
-const _CARTESIAN_BASE_OPTIONAL_BASIS_KEYS = Set((:parent_axis_family, :reference_spacing, :tail_spacing, :nesting))
+const _CARTESIAN_BASE_OPTIONAL_BASIS_KEYS = Set((:parent_axis_family, :reference_spacing, :tail_spacing, :nesting, :source_span))
 const _CARTESIAN_BASE_H_OPTIONAL_BASIS_KEYS = union(_CARTESIAN_BASE_OPTIONAL_BASIS_KEYS, Set((:d,)))
 _cartesian_base_check_keys(input, expected, label) =
     Set(Symbol.(keys(input))) == expected ||
@@ -31,6 +31,18 @@ function _cartesian_base_nesting(basis)
     nesting = Symbol(value)
     nesting in (:pqs, :wl) || throw(ArgumentError("basis.nesting must be :pqs or :wl"))
     return nesting
+end
+
+function _cartesian_base_source_span(basis, nesting)
+    value = haskey(basis, :source_span) ? basis.source_span : :ordinary
+    (value isa Symbol || value isa AbstractString) ||
+        throw(ArgumentError("basis.source_span must be :ordinary or :mapped_comx"))
+    source_span = Symbol(value)
+    source_span in (:ordinary, :mapped_comx) ||
+        throw(ArgumentError("basis.source_span must be :ordinary or :mapped_comx"))
+    source_span === :mapped_comx && nesting === :wl &&
+        throw(ArgumentError("basis.source_span=:mapped_comx is supported only with nesting=:pqs"))
+    return source_span
 end
 
 function _cartesian_base_positive(value, label)
@@ -94,12 +106,13 @@ function _cartesian_base_diatomic_basis_parts(basis)
     size_parts = _cartesian_base_size_parts(basis, nesting)
     nesting === :wl && size_parts.ns < 4 &&
         throw(ArgumentError("basis.ns must be at least 4 for z-axis diatomic nesting=:wl"))
+    source_span = _cartesian_base_source_span(basis, nesting)
     return (; size_parts...,
         core_spacing = _cartesian_base_positive(basis.core_spacing, "basis.core_spacing"),
         radius = nothing, d = nothing,
         xmax_parallel = _cartesian_base_positive(basis.xmax_parallel, "basis.xmax_parallel"),
         xmax_transverse = _cartesian_base_positive(basis.xmax_transverse, "basis.xmax_transverse"),
-        nesting,
+        nesting, source_span,
         parent_axis_family = _cartesian_base_parent_axis_family(basis),
         reference_spacing = _cartesian_base_get_positive(basis, :reference_spacing, 1.0),
         tail_spacing = _cartesian_base_get_positive(basis, :tail_spacing, 10.0))
@@ -150,12 +163,13 @@ function _cartesian_base_inputs(system::NamedTuple, basis::NamedTuple)
             throw(ArgumentError("one-center atom requires neutral all-electron count"))
         nesting = _cartesian_base_nesting(basis)
         size_parts = _cartesian_base_size_parts(basis, nesting)
+        source_span = _cartesian_base_source_span(basis, nesting)
         core_spacing = _cartesian_base_positive(basis.core_spacing, "basis.core_spacing")
         return merge(base, (; kind = :h, size_parts...,
             core_spacing,
             radius = _cartesian_base_positive(basis.radius, "basis.radius"),
             d = _cartesian_base_atom_mapping_d(basis, core_spacing), xmax_parallel = nothing,
-            xmax_transverse = nothing, nesting,
+            xmax_transverse = nothing, nesting, source_span,
             parent_axis_family = _cartesian_base_parent_axis_family(basis),
             reference_spacing = _cartesian_base_get_positive(basis, :reference_spacing, 1.0),
             tail_spacing = _cartesian_base_get_positive(basis, :tail_spacing, 10.0)))
@@ -177,7 +191,7 @@ function _cartesian_base_inputs(system::NamedTuple, basis::NamedTuple)
     throw(ArgumentError("only one-center atoms and z-axis homonuclear diatomics are supported"))
 end
 
-function _cartesian_base_route(kind, nesting)
+function _cartesian_base_route(kind, nesting, source_span)
     route_shape = kind === :h ? (:pqs_left, :product, :pqs_right) :
         (:atom_contact_core, :shared_shell_1, :shared_shell_2)
     route_kind = kind === :h ? :one_center_fixed_q_complete_core_shell :
@@ -187,6 +201,7 @@ function _cartesian_base_route(kind, nesting)
         run_final_basis = false, run_h1 = false, run_h1_j = false)
     nesting === :pqs && return merge(common, (;
         route_family = :pqs_source_box, route_shape,
+        source_span,
         product_body_rule = :centered_single_z_slab,
         pqs_retained_rule = :boundary_comx_product_mode_selection,
         product_retained_rule = :product_doside_retained_unit))
@@ -247,7 +262,7 @@ function _cartesian_base_stages(input)
             parent_axis_counts = nothing, map_backend = :pgdg_localized_experimental)
     end
     system = cartesian_system(system_inputs)
-    recipe = cartesian_recipe(_cartesian_base_route(input.kind, input.nesting))
+    recipe = cartesian_recipe(_cartesian_base_route(input.kind, input.nesting, input.source_span))
     parent = cartesian_parent(system, spacing_inputs, parent_inputs, recipe)
     shells = cartesian_shells(parent, spacing_inputs, recipe)
     units = cartesian_units(parent, shells, recipe)

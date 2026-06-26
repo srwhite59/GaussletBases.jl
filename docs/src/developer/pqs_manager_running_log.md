@@ -16696,3 +16696,67 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 168 - Wire Mapped-COMX Driver Selector
+
+Commit(s):
+- this commit - Wire mapped-COMX driver selector
+
+Summary:
+- Accepted the `HP-MCOMX-DRV-FN-01` source pass. The canonical driver now has
+  the visible construction choice `source_span = :ordinary` or
+  `source_span = :mapped_comx`, with ordinary still the default and
+  `:mapped_comx` clearly rejected for `nesting = :wl`.
+- The staged base input path normalizes the selector and passes it only into
+  the existing PQS source-box route. Mapped runs now attach materialized
+  mapped-COMX `AxisSourceTransformFact`s to PQS retained units through the
+  existing retained-unit metadata seam; the already-approved terminal
+  `_shell_seed(...)` consumer then makes those facts basis-defining.
+- No Hamiltonian assembly, artifact schema, manifest, reader, RG/MWG/IDA,
+  terminal-lowering, route-skeleton, or COMX numerical kernel changed.
+
+Validation:
+- Doer validation: `git diff --check`; package load; mapped source-span probe;
+  mapped terminal seam probe; driver wiring probe; H atom default ordinary
+  artifact/readback; He ordinary/mapped base artifact/readback; H2 mapped base
+  artifact/readback; H atom supplemented ordinary/mapped `cc-pVTZ`; public
+  `:pgdg` rejection; `:mapped_comx` plus `nesting = :wl` rejection; H2 RG
+  endpoint with self-Coulomb `0.4574265214362095`.
+- Manager validation rerun: `git diff --check`; package load; mapped terminal
+  seam probe (`mapped_terminal_match_delta = 0.0`,
+  `mapped_vs_ordinary_seed_delta = 1.835e-01`); mapped source-span probe for
+  `n_s = 5,6,7`; driver wiring probe (ordinary/mapped He dimension `419`,
+  shell coefficient delta `1.662340e-01`); H2 RG endpoint/readback.
+- Mechanical diff gate: source/bin/test scan had suspicious hits only for
+  `unit.metadata` reads and metadata merge in
+  `src/pqs_source_box_route_driver_helpers.jl`. These are accepted because
+  they reuse the existing retained-unit -> raw-product-source transform fact
+  seam already consumed by `retained_unit_transform_contract_plan(...)`; no
+  new route record, status cloud, artifact field, or metadata-as-report bus was
+  added.
+
+Goal advancement:
+- LT1/LT3/LT5: the mapped-COMX source-span option is now usable through the
+  canonical driver for real H/He/PQS comparisons, while staying at the same
+  level as `nesting`: a construction-family selector, not a route diagnostic
+  or high-order workflow hook.
+
+Carrying-cost result:
+- deleted: the previous user-facing blocker where the canonical driver rejected
+  `source_span` as an unknown input.
+- simplified: mapped-COMX uses the existing retained-unit raw axis-fact seam
+  and the existing terminal consumer; no parallel COMX or route path was added.
+- quarantined: public `:pgdg`, WL mapped-COMX, route records, terminal
+  lowering, artifacts/manifests/readers, Hamiltonian/IDA/MWG/RG/raw-block
+  changes, EGOI/Cr2/high-order workflow, and committed tests remain
+  unapproved.
+- not deleted because: ordinary fallback remains the default supported
+  production path and is required when materialized source-axis facts are
+  absent.
+- exact remaining caller/blocker: none for canonical PQS driver selection;
+  high-order can now run ordinary-vs-mapped driver comparisons.
+- added src lines: 110.
+- deleted src lines: 8.
+- new tests: none committed; ignored `tmp/work` probes only.
+- new metadata/status fields: none; existing retained-unit
+  `raw_product_source_axis_transform_facts` metadata is reused.
