@@ -15,10 +15,12 @@ function pqs_source_axis_transform_facts_from_pgdg_axes(
     source_intervals,
     source_mode_dims,
     enforce_symmetric_odd::Bool = false,
+    source_span = nothing,
 )
     sources = _pqs_source_axis_transform_axis_tuple(axis_sources, "axis_sources")
     intervals = _pqs_source_axis_transform_interval_tuple(source_intervals)
     requested_dims = _pqs_source_axis_transform_dim_tuple(source_mode_dims)
+    source_span_spec = _pqs_source_axis_transform_source_span(source_span)
     axis_symbols = (:x, :y, :z)
     axes = ntuple(
         axis -> _pqs_source_axis_transform_from_pgdg_axis(
@@ -28,6 +30,7 @@ function pqs_source_axis_transform_facts_from_pgdg_axes(
             axis,
             axis_symbols[axis],
             enforce_symmetric_odd,
+            source_span_spec,
         ),
         3,
     )
@@ -68,12 +71,14 @@ function _pqs_source_axis_transform_from_pgdg_axis(
     axis::Int,
     axis_symbol::Symbol,
     enforce_symmetric_odd::Bool,
+    source_span,
 )
     side = ParentGaussletBases._nested_doside_1d(
         axis_source,
         source_interval,
         source_mode_dim;
         enforce_symmetric_odd,
+        source_span,
     )
     coefficient_matrix = Matrix{Float64}(side.local_coefficients)
     coefficient_overlap_error = norm(
@@ -83,12 +88,8 @@ function _pqs_source_axis_transform_from_pgdg_axis(
         Matrix{Float64}(I, side.retained_count, side.retained_count),
         Inf,
     )
-    fact = CRPS.axis_source_transform_fact(
-        axis,
-        source_interval,
-        side.retained_count,
-        coefficient_matrix;
-        metadata = (;
+    metadata = merge(
+        (;
             transform_source = :repo_owned_pgdg_doside_source_axis_transform,
             axis_symbol,
             requested_source_mode_dim = source_mode_dim,
@@ -103,11 +104,30 @@ function _pqs_source_axis_transform_from_pgdg_axis(
             driver_route_materialized = false,
             artifacts_materialized = false,
         ),
+        _pqs_source_axis_transform_span_metadata(side.source_span_metadata),
+    )
+    fact = CRPS.axis_source_transform_fact(
+        axis,
+        source_interval,
+        side.retained_count,
+        coefficient_matrix;
+        metadata,
     )
     return (;
         fact,
         coefficient_overlap_error,
     )
+end
+
+function _pqs_source_axis_transform_span_metadata(metadata::NamedTuple)
+    metadata.source_span_family === :ordinary_pgdg && return (;)
+    return metadata
+end
+
+function _pqs_source_axis_transform_source_span(source_span)
+    (isnothing(source_span) || source_span === :ordinary || source_span === :pgdg) && return nothing
+    source_span === :mapped_comx && return ParentGaussletBases._nested_mapped_comx_source_span_spec()
+    throw(ArgumentError("unsupported PQS source_span selector"))
 end
 
 function _pqs_source_axis_transform_axis_tuple(value, name::AbstractString)

@@ -183,6 +183,22 @@ struct _CartesianNestedDoSide1D
     coefficient_matrix::_CartesianCoefficientMap
     localized_centers::Vector{Float64}
     localized_weights::Vector{Float64}
+    source_span_metadata::NamedTuple
+end
+
+function _nested_mapped_comx_source_span_spec(;
+    protected_degree::Integer = 2,
+    lambda::Real = 0.5,
+    mapped_family::Symbol = :chebyshev_s,
+)
+    protected_degree == 2 ||
+        throw(ArgumentError("mapped-COMX source span currently requires protected_degree = 2"))
+    lambda_value = Float64(lambda)
+    isfinite(lambda_value) && lambda_value > 0.0 ||
+        throw(ArgumentError("mapped-COMX source span lambda must be finite and positive"))
+    mapped_family === :chebyshev_s ||
+        throw(ArgumentError("mapped-COMX source span currently supports mapped_family = :chebyshev_s"))
+    return (; source_span_family = :mapped_comx, protected_degree = 2, lambda = lambda_value, mapped_family)
 end
 
 """
@@ -1209,7 +1225,7 @@ function _nested_standard_basis_direction(
     throw(ArgumentError("nested doside construction could not find an additional independent local direction"))
 end
 
-function _nested_retained_span(
+function _nested_ordinary_retained_span(
     local_weights::AbstractVector{<:Real},
     local_centers::AbstractVector{<:Real},
     local_position::AbstractMatrix{<:Real},
@@ -1245,6 +1261,103 @@ function _nested_retained_span(
         raw_basis[:, column] .= _nested_metric_normalize(candidate, local_overlap)
     end
     return raw_basis
+end
+
+function _nested_retained_span(args...; source_span = nothing)
+    isnothing(source_span) && return _nested_ordinary_retained_span(args...)
+    return _nested_mapped_comx_retained_span(args...; source_span)
+end
+
+function _nested_retained_span_data(args...; source_span = nothing)
+    basis = _nested_retained_span(args...; source_span)
+    metadata = isnothing(source_span) ?
+        (source_span_family = :ordinary_pgdg,) :
+        _nested_mapped_comx_source_span_metadata(basis, args...; source_span)
+    return (; basis, metadata)
+end
+
+function _nested_mapped_comx_retained_span(
+    _local_weights::AbstractVector{<:Real},
+    local_centers::AbstractVector{<:Real},
+    _local_position::AbstractMatrix{<:Real},
+    local_overlap::AbstractMatrix{<:Real},
+    retained_count::Int;
+    source_span,
+)
+    nlocal = length(local_centers)
+    retained_count >= 3 || throw(ArgumentError("mapped-COMX source span requires at least three retained modes"))
+    retained_count <= nlocal || throw(ArgumentError("nested doside retained_count must not exceed the interval size"))
+    u = _nested_mapped_comx_unit_coordinate(local_centers)
+    raw_columns, _ = _nested_mapped_comx_columns(u, retained_count, source_span)
+    basis = zeros(Float64, nlocal, retained_count)
+    for column in 1:retained_count
+        candidate = _nested_metric_orthogonalize(raw_columns[:, column], view(basis, :, 1:(column - 1)), local_overlap)
+        basis[:, column] .= _nested_metric_normalize(candidate, local_overlap)
+    end
+    return basis
+end
+
+function _nested_mapped_comx_source_span_metadata(
+    basis::AbstractMatrix{<:Real},
+    _local_weights::AbstractVector{<:Real},
+    local_centers::AbstractVector{<:Real},
+    _local_position::AbstractMatrix{<:Real},
+    local_overlap::AbstractMatrix{<:Real},
+    retained_count::Int;
+    source_span,
+)
+    u = _nested_mapped_comx_unit_coordinate(local_centers)
+    raw_columns, mapped_orders = _nested_mapped_comx_columns(u, retained_count, source_span)
+    raw_gram = Matrix{Float64}(transpose(raw_columns) * local_overlap * raw_columns)
+    raw_eigs = eigen(Symmetric(raw_gram)).values
+    protected = view(raw_columns, :, 1:3)
+    return (;
+        source_span_family = :mapped_comx,
+        protected_degree = source_span.protected_degree,
+        lambda = source_span.lambda,
+        mapped_family = source_span.mapped_family,
+        mapped_orders,
+        include_sqrt_jacobian = false,
+        localization_coordinate = :physical_u,
+        normalized_u_min = minimum(u),
+        normalized_u_max = maximum(u),
+        source_span_condition = maximum(raw_eigs) / minimum(raw_eigs),
+        protected_p2_span_error = _nested_source_span_error(protected, basis, local_overlap),
+    )
+end
+
+function _nested_mapped_comx_unit_coordinate(local_centers::AbstractVector{<:Real})
+    centers = Float64.(local_centers)
+    low, high = extrema(centers)
+    half_width = 0.5 * (high - low)
+    half_width > 0.0 || throw(ArgumentError("mapped-COMX source span requires a nonzero local interval width"))
+    return (centers .- (0.5 * (low + high))) ./ half_width
+end
+
+function _nested_mapped_comx_columns(u::AbstractVector{<:Real}, retained_count::Int, source_span)
+    columns = zeros(Float64, length(u), retained_count)
+    columns[:, 1] .= 1.0
+    columns[:, 2] .= u
+    columns[:, 3] .= Float64.(u) .^ 2
+    mapped_orders = collect(1:(retained_count - 3))
+    s = ((1.0 + source_span.lambda) .* u) ./ (1.0 .+ source_span.lambda .* Float64.(u).^2)
+    previous = ones(Float64, length(u))
+    current = Float64.(s)
+    for (offset, order) in enumerate(mapped_orders)
+        if order > 1
+            previous, current = current, 2.0 .* s .* current .- previous
+        end
+        columns[:, 3 + offset] .= current
+    end
+    return columns, mapped_orders
+end
+
+function _nested_source_span_error(columns, basis, overlap)
+    projector = basis * transpose(basis) * overlap
+    return maximum(
+        sqrt(max(0.0, dot(residual, overlap * residual)))
+        for residual in (columns[:, column] - projector * columns[:, column] for column in axes(columns, 2))
+    )
 end
 
 function _nested_interval_data(
@@ -1336,6 +1449,7 @@ function _nested_doside_1d(
     retained_count::Int,
     ;
     enforce_symmetric_odd::Bool = true,
+    source_span = nothing,
 )
     interval_data = _nested_interval_data(pgdg, interval)
     retained_count = _nested_doside_retained_count(
@@ -1343,13 +1457,15 @@ function _nested_doside_1d(
         retained_count;
         enforce_symmetric_odd = enforce_symmetric_odd,
     )
-    raw_basis = _nested_retained_span(
+    source_span_data = _nested_retained_span_data(
         interval_data.weights,
         interval_data.centers,
         interval_data.position,
         interval_data.overlap,
         retained_count,
+        source_span = source_span,
     )
+    raw_basis = source_span_data.basis
     overlap_seed = Matrix{Float64}(transpose(raw_basis) * interval_data.overlap * raw_basis)
     position_seed = Matrix{Float64}(transpose(raw_basis) * interval_data.position * raw_basis)
     sign_vector = vec(transpose(raw_basis) * interval_data.weights)
@@ -1368,6 +1484,7 @@ function _nested_doside_1d(
         coefficient_matrix,
         localized_centers,
         localized_weights,
+        source_span_data.metadata,
     )
 end
 
@@ -1377,12 +1494,14 @@ function _nested_doside_1d(
     retained_count::Int,
     ;
     enforce_symmetric_odd::Bool = true,
+    source_span = nothing,
 )
     return _nested_doside_1d(
         bundle.pgdg_intermediate,
         interval,
         retained_count;
         enforce_symmetric_odd = enforce_symmetric_odd,
+        source_span = source_span,
     )
 end
 

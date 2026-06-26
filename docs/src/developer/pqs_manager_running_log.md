@@ -5311,6 +5311,60 @@ Deletion accounting:
 - new tests: none.
 - new metadata/status fields: none.
 
+## Cartesian Hamiltonian Producer Pass 165 - Install Mapped-COMX At Doside Seam
+
+Commit(s):
+- this commit - Install mapped-COMX doside source span
+
+Summary:
+- Accepted the corrected mapped-COMX source implementation after rejecting the
+  earlier parallel `CartesianRawProductSources` numerical builder. The live
+  implementation now sits on the existing chain
+  `pqs_source_axis_transform_facts_from_pgdg_axes(...) ->
+  _nested_doside_1d(...) -> _nested_retained_span(...) ->
+  _cleanup_comx_transform(...)`.
+- Ordinary PGDG source spans remain the default. The mapped option is selected
+  only by the internal `source_span = :mapped_comx` control, uses normalized
+  local `u in [-1, 1]` for `s_lambda(u)`, is restricted to protected `P2`,
+  and continues through existing physical-position COMX cleanup.
+- The final small tightening rejects `lambda <= 0` because `lambda = 0`
+  duplicates the protected `u` column.
+
+Validation:
+- Manager reran `git diff --check`, package load, the ignored
+  `tmp/work/mapped_comx_source_span_probe.jl`, and the existing H2
+  supplemented RG endpoint `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`.
+  The probe confirmed ordinary PGDG repeat delta `0.0`, mapped spans for
+  `n_s = 5, 6, 7` with `u = [-1, 1]`, overlap errors below `1.3e-15`,
+  protected-P2 errors below `6.2e-16`, and physical-position COMX offdiagonal
+  residuals below `8.4e-15`. The H2 endpoint kept self-Coulomb
+  `0.4574265214362095` and artifact readback deltas `0.0`.
+
+Goal advancement:
+- LT5/LT6: installs the high-order mapped source idea at the correct mainline
+  seam without creating a duplicate route or operator path. High-order can now
+  benchmark the installed option as a consumer.
+
+Carrying-cost result:
+- deleted: superseded raw-source mapped-COMX file/export/parallel-route WIP.
+- simplified: mapped-COMX reuses existing doside retained-span and COMX cleanup
+  machinery rather than adding a second COMX wrapper.
+- quarantined: driver inputs, public APIs, artifacts, Hamiltonian/IDA/MWG/RG/
+  raw-block/solver work, `protected_degree != 2`, `sqrtJ`, mapped-`s`
+  localization, high-order scaffolding imports, committed Cr/Cr2 fixtures, and
+  Cr2 workflow remain unapproved.
+- not deleted because: ordinary PGDG source-span construction remains the live
+  default and comparator.
+- exact remaining caller/blocker: no blocker for the source-span seam; next
+  evidence should come from H/He/high-order consumer benchmarks, not more
+  source routing.
+- added src lines: 147.
+- deleted src lines: 8.
+- new tests: none committed; ignored probe only.
+- new metadata/status fields: compact source-span provenance on existing
+  source-axis facts only when mapped-COMX is explicitly selected; no artifact
+  or status schema changes.
+
 ## Cartesian Hamiltonian Producer Pass 163 - Diatomic Common Shellifier Entry
 
 Commit(s):
