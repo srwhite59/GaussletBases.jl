@@ -114,6 +114,11 @@ Implemented base path:
   physical position matrix. High-order may benchmark the installed option as a
   consumer, but the high-order branch does not own the mainline implementation
   shape.
+- `HP-MCOMX-TERM-*` approves only terminal-basis wiring in
+  `pqs_terminal_basis_realization.jl`: `_shell_seed(...)` may consume carried
+  materialized `AxisSourceTransformFact`s as the basis-defining shell seed when
+  they are present and validated, while ordinary
+  `_nested_projected_q_shell_full_sides(...)` fallback remains unchanged.
 
 Implemented Residual Gaussian path:
 

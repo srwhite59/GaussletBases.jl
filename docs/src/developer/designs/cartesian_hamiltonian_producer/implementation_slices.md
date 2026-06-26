@@ -1134,6 +1134,12 @@ Additional approved composition lane:
   cleanup. High-order is a consumer/benchmark lane, not the owner of the
   installed implementation. A `CartesianRawProductSources` numerical builder
   or new mapped-COMX source file is not approved.
+- `HP-MCOMX-TERM-FN-01` / `HP-MCOMX-TERM-TEST-01` are approved only for
+  terminal-basis consumption of carried materialized source-axis transform
+  facts in `_shell_seed(...)`. The pass may validate facts and build shell
+  seed coefficients from them, but must keep boundary mode selection, support
+  restriction, shell-local Lowdin, canonicalization, support validation, and
+  ordinary fallback unchanged.
 
 No initial composition placeholder remains candidate-only. Deferred geometry,
 solver, ECP, public export, and Cr2-specific work still need a later docs-only

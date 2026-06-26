@@ -180,6 +180,12 @@ The canonical RG algorithm contract is
   cleanup. It may change source-axis transform facts and provenance, but
   Hamiltonian, operator, artifact, and driver layers must not branch on mapped
   versus ordinary source except through descriptive source provenance.
+- Materialized source-axis transform facts become basis-defining only at the
+  terminal shell seed seam after validation against the shell `outer_box`,
+  source shape, and coefficient matrix sizes. Consuming carried facts must not
+  change boundary mode selection, owned-support row restriction, shell-local
+  Lowdin, sign canonicalization, support validation, artifacts, or driver
+  inputs.
 - R3/RG supplemented usability remains internal unless a later public/export
   amendment approves it.
 - The canonical Cartesian driver is an artifact-producing workflow over

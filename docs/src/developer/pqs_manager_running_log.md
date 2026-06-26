@@ -16545,3 +16545,56 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 166 - Approve Mapped-COMX Terminal Wiring
+
+Commit(s):
+- this commit - Approve mapped-COMX terminal wiring
+
+Summary:
+- Approved `HP-MCOMX-TERM-FN-01` and `HP-MCOMX-TERM-TEST-01` as a narrow
+  terminal-basis wiring lane. The mapped-COMX source-span path can produce
+  materialized `AxisSourceTransformFact`s, but PQS terminal realization still
+  needs to consume those carried facts in `_shell_seed(...)` for them to define
+  shell seed coefficients.
+- The approved seam is only
+  `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`,
+  with `CartesianFinalBasisRealization.jl` allowed only for import/include
+  cleanup if directly required.
+- The pass may validate three materialized axis facts, check intervals and
+  dimensions against the shell `outer_box` / source shape, build
+  `full_coefficients` from their coefficient matrices, and then continue
+  through the existing boundary-mode selection, support restriction,
+  shell-local Lowdin, canonicalization, and support validation.
+
+Validation:
+- Docs-only amendment validation required: `git diff --check`; focused scans
+  for `HP-MCOMX-TERM-*`, `_shell_seed`,
+  `raw_product_source_axis_transform_facts`, `AxisSourceTransformFact`, and
+  `_nested_projected_q_shell_full_sides` in compact authority.
+- Later source validation should include ordinary PQS H2 regression, mapped
+  source-span probe, a focused He or H terminal seam check proving mapped shell
+  coefficients differ from ordinary and match the carried materialized axis
+  facts, and the H2 supplemented RG endpoint if the touched path crosses it.
+
+Goal advancement:
+- LT5/LT6: closes the next authority gap between source-span construction and
+  terminal-basis realization without expanding driver, artifact, Hamiltonian,
+  or high-order workflow surfaces.
+
+Carrying-cost result:
+- deleted: none; docs-only authority pass.
+- simplified: source work now has a single terminal seam instead of pressure
+  to add route metadata, artifact fields, or driver switches.
+- quarantined: driver inputs, source defaults, artifacts/manifests/readers,
+  Hamiltonian/IDA/MWG/RG/raw-Gaussian/solver/EGOI/Cr2/high-order workflow
+  changes, second COMX wrappers, and committed tests/fixtures remain
+  unapproved.
+- exact remaining caller/blocker: if `_shell_seed(...)` cannot consume carried
+  axis facts without changing shell ownership, retained-rule semantics,
+  Lowdin realization, artifact schema, or driver inputs, the source pass must
+  stop and report that blocker.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

@@ -116,6 +116,9 @@ is installed in mainline.
 - `HP-MCOMX-WIRE-01` - narrow wiring into existing raw product source / PQS
   axis-transform construction.
 - `HP-MCOMX-TEST-01` - validation gates.
+- `HP-MCOMX-TERM-FN-01` - terminal-basis consumption of carried materialized
+  source-axis transform facts.
+- `HP-MCOMX-TERM-TEST-01` - terminal seam validation gates.
 
 ## Approved Source Surface
 
@@ -186,6 +189,44 @@ carried-space / raw product source facts as before. They should not branch on
 whether a source span was ordinary polynomial or mapped-COMX, except for
 descriptive provenance already carried by source facts.
 
+## Terminal-Basis Wiring
+
+`HP-MCOMX-TERM-FN-01` approves a narrow terminal-basis wiring pass so carried
+mapped-COMX `AxisSourceTransformFact`s become basis-defining for PQS shell
+realization.
+
+Approved source files:
+
+```text
+src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl
+src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl
+```
+
+The second file is approved only for import/include cleanup if directly
+required.
+
+Approved behavior in `_shell_seed(...)`:
+
+- prefer `contract.metadata.raw_product_source_axis_transform_facts` when it
+  is present;
+- validate exactly three axis facts;
+- validate each fact is an `AxisSourceTransformFact`;
+- validate `coefficient_status === :materialized`;
+- validate source intervals match `support.outer_box`;
+- validate source mode dimensions match `source_shape`;
+- validate coefficient matrix row/column sizes match interval length and
+  source mode dimension;
+- build `full_coefficients` from the carried axis coefficient matrices;
+- keep the existing boundary mode selection, support restriction,
+  shell-local Lowdin, canonicalization, and support validation;
+- preserve the ordinary fallback through
+  `_nested_projected_q_shell_full_sides(...)` when materialized facts are
+  absent.
+
+This lane makes mapped-COMX source-axis facts terminal-basis inputs. It does
+not change source-span construction, retained-rule semantics, shell ownership,
+or artifact/Hamiltonian behavior.
+
 ## Forbidden
 
 This amendment does not approve:
@@ -209,6 +250,9 @@ This amendment does not approve:
 - importing high-order branch scaffolding, scripts, route wrappers, status
   objects, diagnostics, or reports;
 - duplicate high-order-maintained implementation of the same mainline option;
+- changing terminal shell ownership, retained-rule semantics, support
+  restriction, shell-local Lowdin, sign canonicalization, or support
+  validation under `HP-MCOMX-TERM-FN-01`;
 - committed Cr fixtures or broad high-order benchmark fixtures.
 
 ## Validation
@@ -235,6 +279,18 @@ This amendment does not approve:
   fixtures;
 - no Cr2 run.
 
+`HP-MCOMX-TERM-TEST-01` approves later source-pass validation:
+
+- `git diff --check`;
+- package load;
+- ordinary PQS H2 endpoint/regression unchanged;
+- mapped source-span probe still passes;
+- focused He or H terminal seam check showing mapped terminal shell
+  coefficients differ from ordinary and match the carried materialized axis
+  facts;
+- H2 supplemented RG endpoint if the touched path crosses it;
+- no Cr2 run.
+
 No committed test file is approved by default. A later implementation blurb may
 name a small standalone script or ignored probe when needed for the approved
 gates. Committed fixtures, public driver tests, solver tests, and Cr/Cr2
@@ -250,6 +306,10 @@ If implementation requires a new source file, a second COMX wrapper, a
 `CartesianRawProductSources` numerical builder, Hamiltonian assembly changes,
 artifact schemas, public driver inputs, or high-order-specific workflow, make
 no source commit and request a separate design amendment.
+
+If terminal realization cannot consume the carried axis facts without changing
+shell ownership, retained-rule semantics, Lowdin realization, artifact schema,
+or driver inputs, make no source commit and report the exact blocker.
 
 If the real atom gates fail after a faithful implementation of the approved
 source-span rule, do not tune defaults or add injection in the same pass.

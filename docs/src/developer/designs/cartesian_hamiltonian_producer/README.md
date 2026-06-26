@@ -60,6 +60,8 @@ central-gap/contact and shared-shell ownership are common shell geometry.
 Mapped-COMX source spans are approved as a narrow option at the existing
 doside/COMX source-span seam under `HP-MCOMX-*`; high-order remains a
 consumer/benchmark lane, not the owner of the installed facility.
+`HP-MCOMX-TERM-*` approves only terminal-basis wiring so carried materialized
+mapped-COMX axis facts can define PQS shell seed coefficients.
 The old complete-core-shell RHF payload stack is approved for retirement under
 `HP-RETIRE-CCS-RHF-*`; the current CR2-facing producer path is the canonical
 driver plus `CartesianIDAHamiltonian` artifacts, not the stale RHF payload
@@ -109,7 +111,8 @@ Agents should read first:
 - [Mapped-COMX source span](mapped_comx_source_span.md)
   for the mainline protected-`P2` plus mapped Chebyshev source-span option at
   the existing doside/COMX seam and the high-order consumer validation
-  contract
+  contract, plus the terminal-basis wiring that consumes carried materialized
+  axis facts
 - [Cartesian Hamiltonian artifact manifest](cartesian_hamiltonian_artifact_manifest.md)
   for compact JLD2 sidecar groups describing matrix-order basis rows and public
   recipe provenance, plus the narrow construction-native source-mode
@@ -200,9 +203,10 @@ Approved amendments:
   narrow audit/cleanup surface before PQS/WL retained-realization geometry.
 - [Mapped-COMX source span](mapped_comx_source_span.md)
   approves only the mainline doside source-span option, compact provenance,
-  narrow wiring, and bounded real-atom validation gates. It does not import
-  high-order scaffolding, add a CRPS numerical builder, or change source
-  defaults.
+  narrow wiring, terminal-basis consumption of materialized axis facts, and
+  bounded real-atom validation gates. It does not import high-order
+  scaffolding, add a CRPS numerical builder, change source defaults, or change
+  artifacts.
 - [Complete-core-shell RHF retirement](complete_core_shell_rhf_retirement.md)
   approves only deleting the stale `pqs_multilayer_complete_core_shell_rhf.jl`
   stack and root include, with no replacements, adapters, new status/payload

@@ -535,6 +535,8 @@ these approved design IDs:
 - `HP-MCOMX-FN-01`
 - `HP-MCOMX-WIRE-01`
 - `HP-MCOMX-TEST-01`
+- `HP-MCOMX-TERM-FN-01`
+- `HP-MCOMX-TERM-TEST-01`
 - `HP-COMP-WLNS-FN-01`
 - `HP-COMP-WLNS-TEST-01`
 - `HP-WLDIAT-COMPACT-FN-01`
@@ -1541,6 +1543,28 @@ changes, artifact/manifest/reader changes, Hamiltonian/one-body/IDA/MWG/RG/
 raw-block/solver changes, `protected_degree != 2`, injection/Ylm mechanisms,
 mapped-`s` localization as production gauge, high-order scaffolding imports,
 committed Cr/Cr2 fixtures, or Cr2 workflow.
+
+`HP-MCOMX-TERM-FN-01` approves only terminal-basis wiring for mapped-COMX
+source-axis transform facts in
+`src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`,
+with
+`src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl`
+allowed only for import/include cleanup if directly required. In `_shell_seed`,
+production source may prefer carried
+`contract.metadata.raw_product_source_axis_transform_facts` when present,
+validate exactly three materialized `AxisSourceTransformFact`s whose intervals,
+mode dimensions, and coefficient matrix shapes match the shell source box, and
+build full shell seed coefficients from those axis coefficient matrices before
+continuing through the existing boundary-mode selection, owned-support row
+restriction, shell-local Lowdin, sign canonicalization, and support validation.
+The ordinary fallback through `_nested_projected_q_shell_full_sides(...)` must
+remain when materialized facts are absent. `HP-MCOMX-TERM-TEST-01` approves
+only ordinary PQS H2 regression, mapped source-span probe validation, a focused
+terminal seam check showing mapped shell coefficients are basis-defining, and
+the H2 supplemented RG endpoint if the touched path crosses it. This lane does
+not approve driver inputs, source defaults, artifacts/manifests/readers,
+Hamiltonian/IDA/MWG/RG/raw-Gaussian/solver/EGOI/Cr2/high-order workflow
+changes, a second COMX wrapper, or committed tests/fixtures.
 
 `HP-WLTERM-FILE-01`, `HP-WLTERM-FN-01`, and `HP-WLTERM-WIRE-01` approve only
 the narrow White-Lindsey terminal-basis seam needed by `nesting = :wl`.

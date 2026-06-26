@@ -245,14 +245,18 @@ Source anchors:
 - **narrow wiring/provenance surfaces**:
   `src/cartesian_pair_block_materialization/pqs_source_axis_transforms.jl`,
   plus existing `AxisSourceTransformFact` provenance/accessors only if needed
+- **terminal-basis consumer seam**:
+  `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`,
+  `_shell_seed(...)`
 
 Do-not-forget rule:
 The first installed rule is protected physical `P2` plus mapped Chebyshev
 enrichment `T_k(s_lambda(u))` with `lambda = 0.5`, no `sqrtJ`, normalized
 local `u in [-1, 1]`, and physical-coordinate COMX through the existing cleanup
 function. Ordinary polynomial source spans remain available and unchanged.
-Hamiltonian and artifact layers should see only the usual carried source facts
-plus provenance.
+Mapped axis facts are not basis-defining until terminal realization consumes
+and validates the materialized `AxisSourceTransformFact`s. Hamiltonian and
+artifact layers should see only the usual carried source facts plus provenance.
 
 ## One-Body Operators And Unit Nuclear Convention
 

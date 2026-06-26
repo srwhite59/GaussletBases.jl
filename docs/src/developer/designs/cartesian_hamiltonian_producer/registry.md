@@ -974,6 +974,63 @@ name a small standalone script or ignored probe for the approved gates.
 Committed fixtures, public driver tests, solver tests, and Cr/Cr2 benchmark
 fixtures require a separate amendment.
 
+### HP-MCOMX-TERM-FN-01 — mapped-COMX terminal-basis wiring
+
+Approved source files:
+
+```text
+src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl
+src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl
+```
+
+`CartesianFinalBasisRealization.jl` is approved only for import/include cleanup
+if directly required.
+
+Approved behavior:
+
+- in `_shell_seed(...)`, prefer
+  `contract.metadata.raw_product_source_axis_transform_facts` when present;
+- validate exactly three axis facts;
+- validate each fact is an `AxisSourceTransformFact`;
+- validate `coefficient_status === :materialized`;
+- validate source intervals match `support.outer_box`;
+- validate source mode dimensions match `source_shape`;
+- validate coefficient matrix row/column sizes match interval length and
+  source mode dimension;
+- build `full_coefficients` from the materialized axis coefficient matrices;
+- keep existing boundary mode selection, support restriction,
+  shell-local Lowdin, canonicalization, and support validation;
+- preserve ordinary fallback through
+  `_nested_projected_q_shell_full_sides(...)` when materialized facts are
+  absent.
+
+This ID makes carried mapped-COMX axis facts basis-defining at terminal shell
+realization. It does not approve changing source-span construction, shell
+ownership, retained-rule semantics, Lowdin realization, artifact schemas,
+driver inputs, Hamiltonian assembly, IDA, MWG, RG, raw Gaussian blocks, solver,
+EGOI, Cr2, high-order workflow, or defaults.
+
+Failure rule: if terminal realization cannot consume carried axis facts without
+changing shell ownership, retained-rule semantics, Lowdin realization, artifact
+schema, or driver inputs, make no source commit and report the exact blocker.
+
+### HP-MCOMX-TERM-TEST-01 — mapped-COMX terminal seam validation
+
+Approved validation:
+
+- `git diff --check`;
+- package load;
+- ordinary PQS H2 endpoint/regression unchanged;
+- mapped source-span probe still passes;
+- focused He or H terminal seam check showing mapped terminal shell
+  coefficients differ from ordinary and match the carried materialized axis
+  facts;
+- H2 supplemented RG endpoint if the touched path crosses it;
+- no Cr2 run.
+
+No driver input test, artifact schema test, committed test file, committed
+fixture, high-order benchmark fixture, or Cr2 fixture is approved.
+
 ## Approved Composition Lane: Base Homonuclear Z-Axis Diatomics
 
 This section promotes the base z-axis diatomic validation relaxation. It
