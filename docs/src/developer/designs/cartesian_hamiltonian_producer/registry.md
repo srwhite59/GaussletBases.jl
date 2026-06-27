@@ -3318,9 +3318,10 @@ Approved validation:
 - Be atom cc-pV5Z still passes;
 - H2 residual-GTO/MWG endpoint remains unchanged;
 - exactly update the existing committed H2 endpoint test
-  `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl` so its
-  `residual.occupation_cutoff` assertion expects `5.0e-8` instead of
-  `1.0e-8`;
+  `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl` so both cutoff
+  assertions expect `5.0e-8` instead of `1.0e-8`: the in-memory
+  `residual.occupation_cutoff` assertion and the artifact/provenance
+  `values[:occupation_cutoff]` assertion;
 - report retained counts, minimum retained occupation, `max |G' S R|`,
   `max |R' S R - I|`, allowed tolerance, and final merge condition;
 - no Cr2 run.

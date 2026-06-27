@@ -350,7 +350,8 @@ Approved robustness lane:
   new policy, Be cc-pV5Z still passes, H2 residual-GTO/MWG endpoint remains
   unchanged, exactly updating
   `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl` so its
-  `residual.occupation_cutoff` assertion expects `5.0e-8`, and no Cr2 run.
+  in-memory `residual.occupation_cutoff` assertion and artifact/provenance
+  `values[:occupation_cutoff]` assertion expect `5.0e-8`, and no Cr2 run.
 
 ## Compact Hamiltonian Artifact Manifest
 

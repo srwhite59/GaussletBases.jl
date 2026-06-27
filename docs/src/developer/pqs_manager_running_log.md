@@ -16912,16 +16912,18 @@ Commit(s):
 Summary:
 - Approved a narrow follow-up under `HP-RG-CUTOFF-TEST-01` for the exact
   committed H2 endpoint test mismatch found during source validation.
-- The only committed test edit approved is in
+- The only committed test edits approved are in
   `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`: update the
-  `residual.occupation_cutoff` assertion from `1.0e-8` to `5.0e-8`.
+  in-memory `residual.occupation_cutoff` assertion and the artifact/provenance
+  `values[:occupation_cutoff]` assertion from `1.0e-8` to `5.0e-8`.
 - No new test file, fixture, driver workflow, artifact/schema change, Cr2 run,
   or broader test rewrite is approved.
 
 Validation:
 - Docs-only amendment validation required: focused scan for
   `cartesian_r3a_h2_augmented_one_body_runtests.jl`, `occupation_cutoff`,
-  `5.0e-8`, and `HP-RG-CUTOFF-TEST-01`; `git diff --check` on touched docs.
+  `values[:occupation_cutoff]`, `5.0e-8`, and `HP-RG-CUTOFF-TEST-01`;
+  `git diff --check` on touched docs.
 
 Goal advancement:
 - LT1/LT3: removes a documentation-authority mismatch so the source pass can
@@ -16933,8 +16935,8 @@ Carrying-cost result:
   test surface is created.
 - quarantined: all other committed tests/fixtures, driver changes, artifacts,
   Cr2 workflow, and broader RG algorithm changes remain unapproved.
-- exact remaining caller/blocker: source doer may update only that assertion;
-  any other test failure needs a separate report or amendment.
+- exact remaining caller/blocker: source doer may update only those two
+  assertions; any other test failure needs a separate report or amendment.
 - added src lines: 0.
 - deleted src lines: 0.
 - new tests: none.

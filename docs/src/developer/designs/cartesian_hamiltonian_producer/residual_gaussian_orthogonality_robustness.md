@@ -191,7 +191,8 @@ the blocker instead of widening this lane.
 - H2 residual-GTO/MWG endpoint remains unchanged.
 - The existing H2 endpoint test
   `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl` may update only
-  its `residual.occupation_cutoff` assertion from `1.0e-8` to `5.0e-8`.
+  its two cutoff assertions from `1.0e-8` to `5.0e-8`:
+  `residual.occupation_cutoff` and `values[:occupation_cutoff]`.
 
 No Cr2 full Hamiltonian, Cr2 artifact, Cr2 facade support, new committed test
 file, other committed test/fixture edit, driver workflow, artifact schema
