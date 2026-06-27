@@ -16802,3 +16802,56 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 170 - Accept Cr Map-ns Residual Audit
+
+Commit(s):
+- none - read-only residual audit accepted
+
+Summary:
+- Accepted repo-doer's read-only audit of the Cr atom PQS
+  `basis_ns = 9`, `map_ns = 11`, `lmax = 1` residual-GTO construction
+  failure. The failure is now classified as a small final `R' S R` identity
+  acceptance miss, not owner grouping failure, merge singularity, or wrong
+  candidate selection.
+- The reconstructed fixture retained all `33` Cr/cc-pV5Z `lmax = 1`
+  residual directions on the single Cr owner. The owner-local residual metric
+  is not singular (`eig min/max = 3.637e-08 / 6.062e-05`, condition about
+  `1.67e3`), the merge metric is essentially identity, and `G' S R` is small
+  at `2.558e-13`.
+- Production throws because `max |R' S R - I| = 2.235e-08` is slightly above
+  the current combined `identity_atol = 1.0e-8` rule, whose allowed error for
+  this case is about `2.000e-08`.
+
+Validation:
+- Doer validation: `git diff --check`; package load; ignored audit probe
+  `tmp/work/cr_atom_pqs_map_ns_residual_validation_audit.jl`; failed case plus
+  nearby passing comparisons `basis_ns=9,map_ns=9,lmax=1` and
+  `basis_ns=7,map_ns=11,lmax=1`.
+- Manager validation: reviewed the audit table and current RG tolerance
+  authority. No tracked source/doc/bin/test/tool files were changed by the
+  audit.
+
+Goal advancement:
+- LT1/LT3: preserves the Cr atom map-ns ladder interpretation. The useful
+  science signal remains that `lmax = 2` is the large improvement; `map_ns=11`
+  is not yet a compelling run target. If `map_ns=11` should be admitted for
+  completeness, the change should be framed as final identity acceptance only,
+  not residual cutoff or selection policy.
+
+Carrying-cost result:
+- deleted: none.
+- simplified: the blocker is classified narrowly as final identity tolerance,
+  not residual algorithm redesign.
+- quarantined: cutoff changes, width/zeta filtering, residual selection,
+  owner grouping, merge rules, driver changes, artifacts, Cr2 workflow, and
+  solver work remain unapproved.
+- not deleted because: this was a read-only audit with an ignored `tmp/work`
+  probe.
+- exact remaining caller/blocker: policy decision needed only if the Cr
+  `basis_ns=9,map_ns=11,lmax=1` construction should pass production
+  validation.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.
