@@ -53,6 +53,9 @@ module, or object names in the new owner.
 - `HP-RG-ORTHO-TEST-01` - validation gates for the robustness pass.
 - `HP-RG-IDTOL-FN-01` - final residual identity tolerance default.
 - `HP-RG-IDTOL-TEST-01` - validation gates for the tolerance-default pass.
+- `HP-RG-CUTOFF-FN-01` - residual occupation cutoff and identity tolerance
+  defaults.
+- `HP-RG-CUTOFF-TEST-01` - validation gates for the cutoff/tolerance policy.
 
 These IDs are approved for implementation only within the surfaces below.
 
@@ -133,7 +136,7 @@ authority and enough compact policy facts to make the basis reproducible:
 - residual source owner indices;
 - owner retained counts;
 - retained residual occupations;
-- `occupation_cutoff = 1.0e-8`;
+- `occupation_cutoff = 5.0e-8`;
 - `tau_neg_abs = 1.0e-12`;
 - `tau_neg_rel = 1.0e-12`;
 - `tau_merge_abs = 1.0e-12`;
@@ -196,11 +199,18 @@ floor merge eigenvalues.
 
 `HP-RG-IDTOL-FN-01` sets the default final residual `R' S R` identity
 validation tolerance to `1.0e-8`. This updates only the final identity
-acceptance threshold. The default `residual_occupation_cutoff` remains
-`1.0e-8`, width/zeta filtering remains explicit and user-controlled, and
-owner-local metric checks, final merge metric checks, and `G' S R`
-orthogonality checks remain active. The tolerance must not be used as a
-direction-selection criterion or a merge-conditioning repair.
+acceptance threshold in the older Be tolerance lane. That production default
+is superseded by `HP-RG-CUTOFF-FN-01`.
+
+`HP-RG-CUTOFF-FN-01` supersedes the production defaults:
+`residual_occupation_cutoff = 5.0e-8` and `identity_atol = 5.0e-8`. The
+selection cutoff is an owner-local residual occupation policy: marginal
+directions below the default cutoff, including the Cr atom
+`basis_ns = 9`, `map_ns = 11`, `lmax = 1` direction at occupation `3.637e-8`,
+are discarded by default. This does not change owner grouping, negative
+eigenvalue tolerances, final merge metric checks, `G' S R` validation,
+width/zeta filtering, MWG/IDA, artifacts, driver workflow, public API, or the
+approved source owner.
 
 Do not approve a vague global entry point such as
 `stabilize_residual_metric(...)`. Global raw-candidate symmetric Lowdin and
@@ -333,6 +343,13 @@ Future source migration must validate:
   `lmax = 1` comparison, unchanged H2 residual-GTO/MWG endpoint, and reporting
   of `R' S R - I`, allowed tolerance, retained count, minimum retained
   occupation, final merge condition, and `G' S R`.
+- for `HP-RG-CUTOFF-FN-01`, Cr atom
+  `basis_ns = 9`, `map_ns = 11`, `lmax = 1` residual construction passes or
+  cleanly drops the marginal `s4` direction at occupation `3.637e-8` as
+  intended, Be atom cc-pV5Z still passes, H2 residual-GTO/MWG endpoint remains
+  unchanged, and the handoff reports retained counts, minimum retained
+  occupation, `G' S R`, `R' S R - I`, allowed tolerance, and final merge
+  condition.
 
 No Cr2 full Hamiltonian, Cr2 artifact, Cr2 facade support, public export,
 driver/bin/tool workflow, artifact schema expansion, report/status/payload

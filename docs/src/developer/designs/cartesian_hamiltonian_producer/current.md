@@ -162,15 +162,23 @@ Approved Residual Gaussian robustness lane:
 - `HP-RG-IDTOL-FN-01` approves only changing the default final residual
   `R' S R` identity validation tolerance to `1.0e-8` in the same RG owner,
   with optional narrow compatibility keyword plumbing in
-  `pqs_terminal_residual_gto.jl`. The default
-  `residual_occupation_cutoff` remains `1.0e-8`; width/zeta filtering remains
-  explicit and user-controlled; owner-local metric checks, final merge metric
-  checks, and `G' S R` orthogonality checks remain active.
+  `pqs_terminal_residual_gto.jl`. This older Be tolerance policy is superseded
+  for production defaults by `HP-RG-CUTOFF-FN-01`.
 - The Be atom cc-pV5Z `lmax = 1` evidence for `HP-RG-IDTOL-*` is a tiny final
   identity overshoot: `21` retained residual directions, minimum occupation
   `6.151e-6`, final merge condition `1.0`, `max |G' S R| = 1.776e-14`, and
   `max |R' S R - I| = 2.183e-10` against an old allowed error of about
   `2.000e-10`.
+- `HP-RG-CUTOFF-FN-01` supersedes those defaults for production:
+  `residual_occupation_cutoff = 5.0e-8` and `identity_atol = 5.0e-8`. The
+  Cr atom `basis_ns = 9`, `map_ns = 11`, `lmax = 1` evidence retained a
+  marginal residual direction at occupation `3.637e-8`; the intended policy is
+  to discard such marginal directions by default rather than preserve them by
+  accident.
+- `HP-RG-CUTOFF-FN-01` does not change owner-local grouping, merge checks,
+  `G' S R` validation, width/zeta filtering, MWG/IDA, artifacts, driver
+  workflow, public API, or source files outside the approved RG owner/plumbing
+  surface.
 
 Approved stale complete-core-shell RHF retirement:
 
@@ -688,9 +696,13 @@ Essential live guardrails:
   overshoots after owner-local selection and a healthy final merge; it is not
   permission to relax residual selection or retain low-occupation directions.
 - `HP-RG-IDTOL-FN-01` sets the default final residual identity validation
-  tolerance to `1.0e-8`. This is a final validation/cleanup tolerance only; it
-  does not change the residual occupation cutoff, width/zeta filtering
-  defaults, owner grouping, merge failure rules, or MWG/IDA conventions.
+  tolerance to `1.0e-8` in the older Be tolerance lane. It is superseded for
+  production defaults by `HP-RG-CUTOFF-FN-01`.
+- `HP-RG-CUTOFF-FN-01` supersedes the defaults:
+  `residual_occupation_cutoff = 5.0e-8` and
+  `identity_atol = 5.0e-8`. Owner grouping, merge metric failure rules,
+  `G' S R` validation, width/zeta filtering, MWG/IDA, artifacts, driver
+  workflow, and public API remain unchanged.
 
 Exact Cartesian Gaussian raw blocks are separate neutral kernel authority:
 uncharged by-center nuclear blocks under

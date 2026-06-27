@@ -2584,7 +2584,7 @@ Approved `supplement_provenance/` keys:
 - `augmented_basis_order = :base_then_residual`;
 - `residual_basis_convention = :owner_local_residual_occupation_final_merge_lowdin`;
 - `rank_rule` / owner-local selection rule;
-- `occupation_cutoff = 1.0e-8`;
+- `occupation_cutoff = 5.0e-8`;
 - `tau_neg_abs`, `tau_neg_rel`;
 - `tau_merge_abs = 1.0e-12`, `tau_merge_rel = 1.0e-12`;
 - `mwg_convention_version`;
@@ -3210,19 +3210,21 @@ retained occupation `6.151e-6`, final merge condition `1.0`, and
 
 Required policy:
 
-- keep default `residual_occupation_cutoff = 1.0e-8`;
+- keep the then-current `residual_occupation_cutoff = 1.0e-8` for the Be
+  tolerance pass only; this older production default is superseded by
+  `HP-RG-CUTOFF-FN-01`;
 - keep width/zeta filtering explicit and user-controlled;
 - keep owner-local metric checks, final merge metric checks, and `G' S R`
   orthogonality checks active;
 - do not drop retained directions to pass final identity validation.
 
 This ID does not approve driver changes, artifact schema/provenance/reader/
-manifest changes, residual-selection algorithm changes, default residual
-occupation cutoff changes, width/zeta filtering default changes, owner grouping
-changes, merge metric failure-rule changes, MWG/IDA convention changes,
-Gaussian raw-block changes, terminal-basis changes, WL/PQS route changes,
-shellification changes, Hamiltonian assembly changes, committed tests/fixtures,
-Cr2 workflow, or source files outside the two approved files.
+manifest changes, residual-selection algorithm changes, width/zeta filtering
+default changes, owner grouping changes, merge metric failure-rule changes,
+MWG/IDA convention changes, Gaussian raw-block changes, terminal-basis changes,
+WL/PQS route changes, shellification changes, Hamiltonian assembly changes,
+committed tests/fixtures, Cr2 workflow, or source files outside the two
+approved files.
 
 Failure rule: if Be cc-pV5Z cannot pass by changing only the final identity
 tolerance default, make no source commit and report the exact blocker.
@@ -3237,6 +3239,85 @@ Approved validation:
 - H2 residual-GTO/MWG endpoint remains unchanged;
 - report `max |R' S R - I|`, allowed tolerance, retained count, minimum
   retained occupation, final merge condition, and `max |G' S R|`;
+- no Cr2 run.
+
+No committed fixture/test, driver workflow, artifact schema change,
+solver/RHF, ECP, EGOI, Cr2 full Hamiltonian, Cr2 artifact, or Cr2 facade
+support is approved.
+
+### HP-RG-CUTOFF-FN-01 — residual occupation cutoff and identity tolerance defaults
+
+Approved source files:
+
+```text
+src/cartesian_residual_gaussians/residual_basis.jl
+src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl
+```
+
+`residual_basis.jl` is the primary owner. The terminal residual file is
+approved only for narrow compatibility keyword default plumbing if needed.
+
+Approved target: set the default Residual Gaussian owner-local residual
+selection cutoff and final identity validation tolerance to:
+
+```text
+residual_occupation_cutoff = 5.0e-8
+identity_atol = 5.0e-8
+```
+
+Evidence: Cr atom PQS `basis_ns = 9`, `map_ns = 11`, `lmax = 1` retained a
+marginal residual direction at occupation `3.637e-8`. If the production policy
+is to discard such marginal residual directions, the default cutoff must say
+so explicitly rather than preserving the direction through the older
+`1.0e-8` cutoff.
+
+Approved behavior:
+
+- discard owner-local residual directions below `5.0e-8` by default;
+- keep the final `R' S R` identity validation default aligned at
+  `identity_atol = 5.0e-8`;
+- preserve explicit caller overrides where already supported;
+- keep width/zeta filtering explicit and user-controlled;
+- keep owner-local metric checks, negative-eigenvalue tolerances, final merge
+  metric checks, and `G' S R` orthogonality checks active;
+- keep owner grouping, final merge failure rules, MWG/IDA conventions,
+  artifact schema/provenance/reader/manifest, driver workflow, and public API
+  unchanged.
+
+This ID supersedes the older `1.0e-8` production defaults recorded under
+`HP-RG-IDTOL-FN-01`. It does not change the residual-selection algorithm; it
+changes the default retained-occupation policy.
+
+Forbidden:
+
+- residual selection algorithm changes;
+- global raw-candidate residual selection;
+- global raw-column pivoted-Cholesky residual selection;
+- owner grouping changes;
+- negative-eigenvalue tolerance changes;
+- final merge metric failure-rule changes or merge eigenvalue flooring;
+- width/zeta filtering default changes or width filtering as conditioning
+  repair;
+- MWG/IDA, nuclear, raw-block, exact-operator, terminal-basis, WL/PQS route,
+  shellification, Hamiltonian assembly, artifact schema, reader, manifest,
+  driver, public API/export, solver/RHF, ECP, EGOI, or Cr2 workflow changes;
+- committed fixtures/tests unless a later amendment names the exact file.
+
+Failure rule: if the Cr atom case cannot pass or cleanly drop the marginal
+direction by changing only the two approved defaults, make no source commit in
+the later implementation pass and report the exact blocker.
+
+### HP-RG-CUTOFF-TEST-01 — residual cutoff/tolerance validation
+
+Approved validation:
+
+- Cr atom PQS `basis_ns = 9`, `map_ns = 11`, `lmax = 1` residual construction
+  passes or cleanly drops the marginal `s4` direction at occupation
+  `3.637e-8` as intended;
+- Be atom cc-pV5Z still passes;
+- H2 residual-GTO/MWG endpoint remains unchanged;
+- report retained counts, minimum retained occupation, `max |G' S R|`,
+  `max |R' S R - I|`, allowed tolerance, and final merge condition;
 - no Cr2 run.
 
 No committed fixture/test, driver workflow, artifact schema change,

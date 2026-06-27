@@ -328,15 +328,27 @@ Approved robustness lane:
   `R' S R` identity validation tolerance update to `1.0e-8` in
   `src/cartesian_residual_gaussians/residual_basis.jl`, with
   `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` allowed
-  only for compatibility keyword default plumbing if needed.
+  only for compatibility keyword default plumbing if needed. This older Be
+  tolerance default is superseded for production by `HP-RG-CUTOFF-FN-01`.
 - `HP-RG-IDTOL-TEST-01` approves only Be atom cc-pV5Z `lmax = 1`
   residual audit/artifact validation with the same `21` retained residual
   directions, Be atom cc-pVDZ `lmax = 1` comparison, unchanged H2
   residual-GTO/MWG endpoint, required residual metric reporting, and no Cr2
   run.
-- The default `residual_occupation_cutoff` remains `1.0e-8`. Width/zeta
-  filtering remains explicit and user-controlled. Owner-local metric checks,
-  final merge metric checks, and `G' S R` orthogonality checks remain active.
+- Width/zeta filtering remains explicit and user-controlled. Owner-local
+  metric checks, final merge metric checks, and `G' S R` orthogonality checks
+  remain active.
+- `HP-RG-CUTOFF-FN-01` supersedes the defaults:
+  `residual_occupation_cutoff = 5.0e-8` and
+  `identity_atol = 5.0e-8`, in
+  `src/cartesian_residual_gaussians/residual_basis.jl`, with
+  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` allowed
+  only for compatibility keyword default plumbing if needed.
+- `HP-RG-CUTOFF-TEST-01` approves only Cr atom
+  `basis_ns = 9`, `map_ns = 11`, `lmax = 1` residual validation showing the
+  marginal `3.637e-8` direction is dropped or the construction passes under the
+  new policy, Be cc-pV5Z still passes, H2 residual-GTO/MWG endpoint remains
+  unchanged, and no Cr2 run.
 
 ## Compact Hamiltonian Artifact Manifest
 

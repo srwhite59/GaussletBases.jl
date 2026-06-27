@@ -472,6 +472,8 @@ these approved design IDs:
 - `HP-RG-ORTHO-TEST-01`
 - `HP-RG-IDTOL-FN-01`
 - `HP-RG-IDTOL-TEST-01`
+- `HP-RG-CUTOFF-FN-01`
+- `HP-RG-CUTOFF-TEST-01`
 - `HP-CGRB-FILE-01`
 - `HP-CGRB-FN-01`
 - `HP-CGRB-FN-02`
@@ -881,14 +883,27 @@ Approved Residual Gaussian module surfaces:
   `R' S R` identity validation tolerance update to `1.0e-8` in
   `src/cartesian_residual_gaussians/residual_basis.jl`, with
   `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` allowed
-  only for narrow compatibility keyword default plumbing if needed. The
-  default `residual_occupation_cutoff` remains `1.0e-8`.
+  only for narrow compatibility keyword default plumbing if needed. This
+  older default policy is superseded for production by `HP-RG-CUTOFF-FN-01`.
 - `HP-RG-IDTOL-TEST-01` approves only Be atom cc-pV5Z `lmax = 1`
   residual audit/artifact validation with the same `21` retained residual
   directions, Be atom cc-pVDZ `lmax = 1` comparison, the unchanged H2
   residual-GTO/MWG endpoint, and reporting of `max |G' S R|`,
   `max |R' S R - I|`, allowed tolerance, retained count, minimum retained
   occupation, and final merge condition.
+- `HP-RG-CUTOFF-FN-01` supersedes the RG default cutoff/tolerance policy in
+  `src/cartesian_residual_gaussians/residual_basis.jl`, with
+  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` allowed
+  only for narrow compatibility keyword default plumbing if needed. The default
+  `residual_occupation_cutoff` is `5.0e-8`, and the default final residual
+  `R' S R` identity validation `identity_atol` is `5.0e-8`.
+- `HP-RG-CUTOFF-TEST-01` approves only Cr atom
+  `basis_ns = 9`, `map_ns = 11`, `lmax = 1` residual validation showing the
+  marginal `3.637e-8` direction is dropped or the construction passes under the
+  new policy, Be atom cc-pV5Z still passing, the unchanged H2 residual-GTO/MWG
+  endpoint, and reporting of retained counts, minimum retained occupation,
+  `max |G' S R|`, `max |R' S R - I|`, allowed tolerance, and final merge
+  condition.
 
 Non-negotiable RG guardrails:
 
@@ -907,9 +922,16 @@ Non-negotiable RG guardrails:
   merge; it must not change occupation cutoff, selection semantics, or merge
   failure rules;
 - `HP-RG-IDTOL-FN-01` sets the production default final residual identity
-  tolerance to `1.0e-8`. This is a final validation/cleanup tolerance only, not
-  a residual direction-selection criterion, a width/zeta filtering policy, or a
-  merge failure-rule change;
+  tolerance to `1.0e-8` in the older Be tolerance lane. This is now superseded
+  by `HP-RG-CUTOFF-FN-01` for production defaults;
+- `HP-RG-CUTOFF-FN-01` supersedes the production defaults:
+  `residual_occupation_cutoff = 5.0e-8` and
+  `identity_atol = 5.0e-8`. This is an explicit owner-local residual
+  selection policy for marginal occupations and a matching final identity
+  validation default; it does not change owner grouping, merge checks,
+  `G' S R` validation, width/zeta filtering, MWG/IDA, artifacts, driver
+  workflow, public API, or source files outside the approved RG owner/plumbing
+  surface;
 - RG does not own basis loading, parent lattice construction, terminal topology,
   raw analytic formula ownership, facade parsing, artifact writing,
   `supplement_provenance/`, report/status/payload objects, or public exports.

@@ -16855,3 +16855,51 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 171 - Approve RG 5e-8 Cutoff Policy
+
+Commit(s):
+- this commit - Approve RG 5e-8 cutoff policy
+
+Summary:
+- Approved `HP-RG-CUTOFF-FN-01` and `HP-RG-CUTOFF-TEST-01` as a docs-only
+  policy amendment. The default Residual Gaussian owner-local residual
+  occupation cutoff is now `5.0e-8`, and the default final residual
+  `R' S R` identity validation `identity_atol` is also `5.0e-8`.
+- This intentionally supersedes the prior interpretation of the Cr atom
+  `basis_ns = 9`, `map_ns = 11`, `lmax = 1` audit as only a final identity
+  tolerance miss. The retained Cr marginal occupation was `3.637e-8`; the new
+  production policy is to drop such marginal directions by default rather than
+  preserve them because the old cutoff was lower.
+- Owner-local grouping, negative-eigenvalue tolerances, final merge metric
+  checks, `G' S R` validation, width/zeta filtering, MWG/IDA, artifacts,
+  driver workflow, public API, and source ownership remain unchanged.
+
+Validation:
+- Docs-only amendment validation required: `git diff --check`; focused scans
+  for `HP-RG-CUTOFF-*`, `5.0e-8`, stale `residual_occupation_cutoff = 1.0e-8`
+  wording, and Cr/Be/H2 validation gates.
+- Later source validation should show the Cr atom `basis_ns = 9`,
+  `map_ns = 11`, `lmax = 1` residual construction passes or cleanly drops the
+  marginal `s4` direction, Be atom cc-pV5Z still passes, and the H2
+  residual-GTO/MWG endpoint remains unchanged.
+
+Goal advancement:
+- LT1/LT3: makes the retained-residual policy match the intended production
+  science: marginal owner-local residual directions around `3.6e-8` are not
+  part of the default retained RG space.
+
+Carrying-cost result:
+- deleted: none; docs-only authority pass.
+- simplified: future source work has a single explicit cutoff/tolerance pair
+  instead of an implicit small-constant change.
+- quarantined: residual algorithm changes, owner grouping changes, merge rule
+  changes, width/zeta filtering defaults, MWG/IDA, artifacts, driver/public
+  API work, committed tests, and Cr2 workflow remain unapproved.
+- exact remaining caller/blocker: if the Cr atom case cannot pass or drop the
+  marginal direction by changing only the two approved defaults, implementation
+  must stop and report the blocker.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

@@ -2,7 +2,8 @@
 
 Status: approved narrow source authority under `HP-RG-ORTHO-FN-01`,
 `HP-RG-ORTHO-TEST-01`, `HP-RG-IDTOL-FN-01`, and
-`HP-RG-IDTOL-TEST-01`.
+`HP-RG-IDTOL-TEST-01`, plus the superseding cutoff/tolerance policy
+`HP-RG-CUTOFF-FN-01` and `HP-RG-CUTOFF-TEST-01`.
 
 ## Reason
 
@@ -108,11 +109,11 @@ identity_atol = 1.0e-8
 ```
 
 This supersedes only the default final `R' S R` identity acceptance threshold.
-It does not change the residual basis selection algorithm. The default
-`residual_occupation_cutoff` remains `1.0e-8`, legacy
-`PureGaussianGausslet.jl:addinGaussians(...; RGcut = 1.0e-8)` remains the
-supporting historical convention, and width/zeta filtering remains explicit
-and user-controlled.
+It does not change the residual basis selection algorithm. This older default
+policy is superseded for production by `HP-RG-CUTOFF-FN-01`; legacy
+`PureGaussianGausslet.jl:addinGaussians(...; RGcut = 1.0e-8)` remains
+historical context only, and width/zeta filtering remains explicit and
+user-controlled.
 
 The identity tolerance is a final validation/cleanup tolerance. It may accept a
 small `R' S R - I` overshoot only when owner-local metric checks, final merge
@@ -120,15 +121,35 @@ metric checks, and `G' S R` orthogonality checks remain healthy. It is not a
 direction-retention cutoff, an automatic zeta/width filter, eigenvalue
 flooring, or a reason to alter the final merge failure rule.
 
+`HP-RG-CUTOFF-FN-01` supersedes the current production defaults:
+
+```text
+residual_occupation_cutoff = 5.0e-8
+identity_atol = 5.0e-8
+```
+
+Evidence: Cr atom PQS `basis_ns = 9`, `map_ns = 11`, `lmax = 1` retained a
+marginal residual direction at occupation `3.637e-8`. The production policy is
+to discard such marginal residual directions by default, rather than retain
+them because the older cutoff happened to be lower. `identity_atol = 5.0e-8`
+keeps the final validation tolerance aligned with that stricter retained-space
+policy.
+
+This update changes only the default owner-local residual occupation cutoff and
+the default final `R' S R` identity validation tolerance. Owner-local grouping,
+negative-eigenvalue tolerances, final merge metric checks, `G' S R`
+validation, width/zeta filtering, MWG/IDA, artifacts, driver workflow, public
+API, and source ownership remain unchanged.
+
 ## Forbidden
 
 This amendment does not approve:
 
 - residual selection semantic changes;
-- default `residual_occupation_cutoff` changes;
 - global raw-candidate residual selection;
 - global raw-column pivoted-Cholesky residual selection;
-- occupation-cutoff changes;
+- occupation-cutoff changes beyond the explicit `HP-RG-CUTOFF-FN-01` default
+  update;
 - numerical negative-eigenvalue tolerance changes;
 - final merge eigenvalue flooring to retain low-occupation directions;
 - width filtering as a conditioning repair;
@@ -163,6 +184,11 @@ the blocker instead of widening this lane.
 - reporting for the Be tolerance pass includes `max |R' S R - I|`, allowed
   tolerance, retained count, minimum retained occupation, final merge
   condition, and `max |G' S R|`.
+- Cr atom `basis_ns = 9`, `map_ns = 11`, `lmax = 1` residual construction
+  passes or cleanly drops the marginal `s4` direction at occupation `3.637e-8`
+  as intended;
+- Be atom cc-pV5Z still passes;
+- H2 residual-GTO/MWG endpoint remains unchanged.
 
 No Cr2 full Hamiltonian, Cr2 artifact, Cr2 facade support, new committed test
 file, driver workflow, artifact schema change, solver/RHF, ECP, or EGOI work is
@@ -172,3 +198,7 @@ If Be cc-pV5Z cannot pass by changing only the final identity tolerance
 default, implementation must stop and report the exact blocker. Do not change
 residual selection, drop directions, alter width/zeta filtering defaults,
 change merge rules, alter MWG/IDA conventions, or expand the source surface.
+
+If the Cr atom case cannot pass or cleanly drop the marginal direction by
+changing only the two approved defaults, make no source commit in the later
+implementation pass and report the exact blocker.
