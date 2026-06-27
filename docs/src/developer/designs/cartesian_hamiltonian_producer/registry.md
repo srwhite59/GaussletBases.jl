@@ -824,6 +824,14 @@ The ordinary polynomial source-span path remains available and unchanged. This
 lane installs an additional source-span facility; it does not change defaults
 or make high-order benchmark results production acceptance tests.
 
+Post-installation evidence from high-order-manager He/PQS testing on
+2026-06-26 found that the installed `n_s = 5` mapped-COMX recipe is not robust
+enough for all-electron scalar capture. It remains an opt-in construction
+choice and must not be promoted to a default route from the first angular proxy
+or driver-wiring success. The next mapped-COMX promotion evidence should be
+bounded He `n_s = 6` and `n_s = 7` H1/IDA testing with shell-restricted scalar
+capture diagnostics.
+
 ### HP-MCOMX-FILE-01 — mapped-COMX source-span files
 
 Approved source files:

@@ -262,6 +262,9 @@ and validates the materialized `AxisSourceTransformFact`s. Hamiltonian and
 artifact layers should see only the usual carried source facts plus provenance.
 The canonical `source_span` driver control selects only `:ordinary` or
 `:mapped_comx`; it must not become a route diagnostic switch.
+High-order He/PQS evidence from 2026-06-26 found `n_s = 5` mapped-COMX too weak
+for robust all-electron scalar capture, so ordinary remains the default and
+mapped-COMX stays opt-in pending bounded `n_s = 6`/`7` He H1/IDA evidence.
 
 ## One-Body Operators And Unit Nuclear Convention
 

@@ -16760,3 +16760,45 @@ Carrying-cost result:
 - new tests: none committed; ignored `tmp/work` probes only.
 - new metadata/status fields: none; existing retained-unit
   `raw_product_source_axis_transform_facts` metadata is reused.
+
+## Cartesian Hamiltonian Producer Pass 169 - Record He ns=5 Mapped-COMX Limit
+
+Commit(s):
+- this commit - Record He ns=5 mapped-COMX limit
+
+Summary:
+- Recorded high-order-manager's 2026-06-26 interpretation memo as mainline
+  authority context. The installed mapped-COMX path is mechanically wired
+  through the real driver, but bounded He/PQS `n_s = 5` testing did not improve
+  all-electron scalar H1/IDA capture and was worse than ordinary PQS on the
+  harder `core_spacing = 0.2` stress case.
+- This does not retract `HP-MCOMX-*` or the `source_span = :mapped_comx`
+  selector. It blocks default promotion: ordinary PQS remains the default and
+  mapped-COMX remains opt-in.
+- The next relevant mapped-COMX evidence is bounded He `n_s = 6` and `n_s = 7`
+  H1/IDA testing with shell-restricted scalar-capture diagnostics. Cr and
+  molecule-facing promotion remain later.
+
+Validation:
+- Docs-only status validation: `git diff --check`; focused scan for `n_s = 5`,
+  mapped-COMX, default-promotion wording, and He `n_s = 6`/`7` next evidence.
+- No source/bin/test/tool edits and no implementation tests.
+
+Goal advancement:
+- LT1/LT5: preserves mapped-COMX as a consumer-testable mainline facility
+  while preventing the first angular proxy or driver-wiring success from being
+  misread as production/default evidence.
+
+Carrying-cost result:
+- deleted: none; docs-only status correction.
+- simplified: future agents have a clear validation interpretation: opt-in
+  mapped-COMX is allowed, default promotion is not.
+- quarantined: mapped-COMX defaults, Cr/Cr2 promotion, shell-adapted injection,
+  target-adapted source rules, and high-order workflow controls remain
+  unapproved.
+- exact remaining caller/blocker: mapped-COMX needs bounded He `n_s = 6`/`7`
+  H1/IDA evidence before any default or molecule-facing promotion.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

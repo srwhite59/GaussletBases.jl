@@ -106,6 +106,21 @@ No Hamiltonian, IDA, HF, DMRG, ECP, EGOI, MWG, or Cr2 calculation was used as
 approval evidence. Those are later consumer gates after the source-span option
 is installed in mainline.
 
+Post-installation high-order-manager He/PQS evidence on 2026-06-26 found that
+the installed `n_s = 5` mapped-COMX recipe is not robust enough for
+all-electron scalar capture. In the tested He framework,
+`P2 + T1(s_lambda), T2(s_lambda)` with `lambda = 0.5` was mechanically wired
+through the real driver, but it did not improve the bounded all-electron He
+H1/IDA checks and was worse than ordinary PQS on the harder
+`core_spacing = 0.2` stress case.
+
+That evidence does not retract the mapped-COMX source-span option. It does
+block promoting mapped-COMX, or `n_s = 5` mapped-COMX in particular, as a
+default construction rule. Ordinary PQS remains the baseline/default. The next
+mapped-COMX evidence gate is bounded He `n_s = 6` and `n_s = 7` H1/IDA testing,
+with shell-restricted scalar-capture diagnostics, before any Cr or
+molecule-facing promotion.
+
 ## Approved IDs
 
 - `HP-MCOMX-FILE-01` - source files for the mainline mapped-COMX source-span

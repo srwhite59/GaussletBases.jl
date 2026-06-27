@@ -1585,6 +1585,10 @@ tests/fixtures. `HP-MCOMX-DRV-TEST-01` approves only default ordinary driver
 artifact/readback, mapped-COMX H or He PQS driver smoke proving carried facts
 are basis-defining, bounded ordinary-vs-mapped He supplemented/MWG/IDA driver
 comparison if practical, H2 RG endpoint, and no Cr2 run.
+Post-installation He/PQS evidence from 2026-06-26 found `n_s = 5`
+mapped-COMX too weak for robust all-electron scalar capture. Do not promote
+mapped-COMX or `n_s = 5` mapped-COMX to default behavior without a later
+docs-only amendment based on bounded `n_s = 6`/`7` He H1/IDA evidence.
 
 `HP-WLTERM-FILE-01`, `HP-WLTERM-FN-01`, and `HP-WLTERM-WIRE-01` approve only
 the narrow White-Lindsey terminal-basis seam needed by `nesting = :wl`.
