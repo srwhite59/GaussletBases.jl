@@ -79,10 +79,10 @@ function owner_residual_gaussian_block(X, S_AA, owner_indices, owner, nA, cutoff
 end
 function build_residual_gaussian_basis(base_dimension::Integer, X, S_AA,
     candidate_labels::Vector{String}, candidate_centers::Vector{NTuple{3,Float64}},
-    candidate_owner_indices::Vector{Int}; residual_occupation_cutoff::Real = 1.0e-8,
+    candidate_owner_indices::Vector{Int}; residual_occupation_cutoff::Real = 5.0e-8,
     tau_neg_abs::Real = 1.0e-12, tau_neg_rel::Real = 1.0e-12,
     tau_merge_abs::Real = 1.0e-12, tau_merge_rel::Real = 1.0e-12,
-    orthogonality_atol::Real = 1.0e-10, identity_atol::Real = 1.0e-8)
+    orthogonality_atol::Real = 1.0e-10, identity_atol::Real = 5.0e-8)
     candidate_count = length(candidate_labels)
     length(candidate_centers) == candidate_count &&
         length(candidate_owner_indices) == candidate_count ||

@@ -5311,6 +5311,62 @@ Deletion accounting:
 - new tests: none.
 - new metadata/status fields: none.
 
+## Cartesian Hamiltonian Producer Pass 173 - Update RG Cutoff Defaults
+
+Commit(s):
+- this commit - Update RG cutoff defaults
+
+Summary:
+- Accepted the `HP-RG-CUTOFF-FN-01` source pass. Production RG defaults are
+  now `residual_occupation_cutoff = 5.0e-8` and `identity_atol = 5.0e-8` in
+  both the RG owner and the terminal residual compatibility wrapper.
+- This intentionally changes owner-local residual selection: marginal
+  directions below `5.0e-8`, including the Cr atom
+  `basis_ns=9,map_ns=11,lmax=1` `s4` direction at occupation `3.637e-8`, are
+  not production-retained by default. Owner grouping, negative-eigenvalue
+  tolerances, merge checks, `G' S R` validation, width/zeta filtering,
+  MWG/IDA, artifacts, driver workflow, and public API are unchanged.
+- Updated the two explicitly approved H2 endpoint assertions in
+  `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl` from
+  `1.0e-8` to `5.0e-8`.
+
+Validation:
+- `git diff --check`; package load after precompilation; Cr atom residual
+  audit probe for `basis_ns=9,map_ns=11,lmax=1`; Be atom high-zeta residual
+  audit probe; H2 residual-GTO/MWG endpoint
+  `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`.
+- Cr audit result: production construction now reports `status ok` and
+  `residual_rank 32`, confirming the marginal `3.637e-8` direction is dropped
+  under the new default policy.
+- H2 endpoint result: base/residual/augmented dimensions `471/18/489`,
+  self-Coulomb `0.4574265214362095`, readback deltas all `0.0`, both testsets
+  passed.
+- Mechanical suspicious-line scan over `src` and `test` added lines found no
+  hits.
+
+Goal advancement:
+- LT1/LT3: aligns RG production defaults with the Cr atom ladder policy
+  decision while preserving the endpoint and artifact behavior expected by the
+  current driver and CR2 consumers.
+
+Carrying-cost result:
+- deleted: stale `1.0e-8` RG defaults in the two production keyword defaults
+  and the two approved H2 endpoint assertions.
+- simplified: Cr marginal residual handling is now a direct default cutoff
+  rule instead of an exceptional validation failure.
+- quarantined: residual-selection algorithm changes, owner grouping changes,
+  merge-rule changes, width/zeta filtering defaults, MWG/IDA, artifact schema,
+  driver workflow, EGOI, Cr2 workflow, and committed fixtures remain
+  unapproved.
+- not deleted because: explicit caller overrides remain supported.
+- exact remaining caller/blocker: none for the approved cutoff/tolerance
+  default change.
+- added src lines: 2.
+- deleted src lines: 2.
+- new tests: none; two existing assertions updated under
+  `HP-RG-CUTOFF-TEST-01`.
+- new metadata/status fields: none.
+
 ## Cartesian Hamiltonian Producer Pass 165 - Install Mapped-COMX At Doside Seam
 
 Commit(s):
