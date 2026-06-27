@@ -3301,7 +3301,8 @@ Forbidden:
 - MWG/IDA, nuclear, raw-block, exact-operator, terminal-basis, WL/PQS route,
   shellification, Hamiltonian assembly, artifact schema, reader, manifest,
   driver, public API/export, solver/RHF, ECP, EGOI, or Cr2 workflow changes;
-- committed fixtures/tests unless a later amendment names the exact file.
+- committed fixtures/tests except the exact existing H2 endpoint assertion
+  update named under `HP-RG-CUTOFF-TEST-01`.
 
 Failure rule: if the Cr atom case cannot pass or cleanly drop the marginal
 direction by changing only the two approved defaults, make no source commit in
@@ -3316,11 +3317,15 @@ Approved validation:
   `3.637e-8` as intended;
 - Be atom cc-pV5Z still passes;
 - H2 residual-GTO/MWG endpoint remains unchanged;
+- exactly update the existing committed H2 endpoint test
+  `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl` so its
+  `residual.occupation_cutoff` assertion expects `5.0e-8` instead of
+  `1.0e-8`;
 - report retained counts, minimum retained occupation, `max |G' S R|`,
   `max |R' S R - I|`, allowed tolerance, and final merge condition;
 - no Cr2 run.
 
-No committed fixture/test, driver workflow, artifact schema change,
+No other committed fixture/test, driver workflow, artifact schema change,
 solver/RHF, ECP, EGOI, Cr2 full Hamiltonian, Cr2 artifact, or Cr2 facade
 support is approved.
 

@@ -350,6 +350,9 @@ Future source migration must validate:
   unchanged, and the handoff reports retained counts, minimum retained
   occupation, `G' S R`, `R' S R - I`, allowed tolerance, and final merge
   condition.
+- for `HP-RG-CUTOFF-TEST-01`, the existing H2 endpoint test
+  `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl` may update only
+  its `residual.occupation_cutoff` assertion from `1.0e-8` to `5.0e-8`.
 
 No Cr2 full Hamiltonian, Cr2 artifact, Cr2 facade support, public export,
 driver/bin/tool workflow, artifact schema expansion, report/status/payload

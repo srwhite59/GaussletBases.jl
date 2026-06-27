@@ -189,10 +189,13 @@ the blocker instead of widening this lane.
   as intended;
 - Be atom cc-pV5Z still passes;
 - H2 residual-GTO/MWG endpoint remains unchanged.
+- The existing H2 endpoint test
+  `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl` may update only
+  its `residual.occupation_cutoff` assertion from `1.0e-8` to `5.0e-8`.
 
 No Cr2 full Hamiltonian, Cr2 artifact, Cr2 facade support, new committed test
-file, driver workflow, artifact schema change, solver/RHF, ECP, or EGOI work is
-approved by this robustness lane.
+file, other committed test/fixture edit, driver workflow, artifact schema
+change, solver/RHF, ECP, or EGOI work is approved by this robustness lane.
 
 If Be cc-pV5Z cannot pass by changing only the final identity tolerance
 default, implementation must stop and report the exact blocker. Do not change

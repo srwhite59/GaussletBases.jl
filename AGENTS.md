@@ -903,7 +903,10 @@ Approved Residual Gaussian module surfaces:
   new policy, Be atom cc-pV5Z still passing, the unchanged H2 residual-GTO/MWG
   endpoint, and reporting of retained counts, minimum retained occupation,
   `max |G' S R|`, `max |R' S R - I|`, allowed tolerance, and final merge
-  condition.
+  condition. It also approves exactly updating the existing H2 endpoint test
+  `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl` so its
+  `residual.occupation_cutoff` assertion expects `5.0e-8` instead of
+  `1.0e-8`. No other committed test or fixture change is approved.
 
 Non-negotiable RG guardrails:
 
