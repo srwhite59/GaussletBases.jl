@@ -64,8 +64,8 @@ those slabs as full identity rows.
 `HP-COMP-ANGBOX-AUDIT-01` approves ignored geometry audits for the next
 z-axis diatomic shellification correction: shared molecular shell bodies should
 be angular-balanced in physical coordinates from the outer nuclei, while
-midpoint slabs and planned non-boundary/boundary endcaps use the common
-thin-slab stack concept.
+midpoint slabs and planned non-boundary/boundary z-extension slabs use the
+common thin-slab stack concept.
 Mapped-COMX source spans are approved as a narrow option at the existing
 doside/COMX source-span seam under `HP-MCOMX-*`; high-order remains a
 consumer/benchmark lane, not the owner of the installed facility.

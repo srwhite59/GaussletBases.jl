@@ -17125,21 +17125,22 @@ Summary:
   stacks, not left as route-family-specific shells or direct identity sectors.
 - The thin-slab category is deliberately broader than the prior
   outer-mismatch wording. It covers central midpoint slabs, planned
-  non-boundary angular endcaps, planned boundary angular endcaps, and
-  unexpected outer-mismatch fallback slabs. Planned endcap stacks may be
-  chunked into slices with thickness `<= ns`; unexpected fallback slabs with
-  thickness greater than `ns` still stop for a policy decision.
+  non-boundary angular z-extension slabs, planned boundary angular z-extension
+  slabs, and unexpected outer-mismatch fallback slabs. Planned z-extension
+  stacks may be chunked into slices with thickness `<= ns`; unexpected
+  fallback slabs with thickness greater than `ns` still stop for a policy
+  decision.
 
 Validation:
 - Docs-only validation required: `git diff --check`; focused scans for
-  `HP-COMP-ANGBOX-*`, `angular-balanced`, `angular_endcap_slab`,
+  `HP-COMP-ANGBOX-*`, `angular-balanced`, `angular_z_extension_slab`,
   `outer_nucleus_45_degree`, `thin-slab`, and `t * ns * ns`; confirm no
   source/bin/test/tool files changed.
 - Later audit should report physical parent endpoints/counts, snapped nuclear
   indices, core boxes, molecular inner box, each proposed shared-shell
   expansion, transverse scale, low/high longitudinal margins, angular-balance
-  ratio, planned endcap stacks, and residual outer mismatch for bounded H2/Be2
-  and CR2-style fixtures.
+  ratio, planned z-extension stacks, and residual outer mismatch for bounded
+  H2/Be2 and CR2-style fixtures.
 
 Goal advancement:
 - LT5/LT6: moves the slab correction up to the owner of the geometry. The
@@ -17148,8 +17149,9 @@ Goal advancement:
 
 Carrying-cost result:
 - deleted: none; docs-only authority pass.
-- simplified: midpoint slabs, non-boundary endcaps, boundary endcaps, and
-  fallback outer mismatch now share one conceptual thin-slab category.
+- simplified: midpoint slabs, non-boundary z-extension slabs, boundary
+  z-extension slabs, and fallback outer mismatch now share one conceptual
+  thin-slab category.
 - quarantined: production source edits, driver changes, artifact/schema/reader
   changes, route skeleton redesign, RG/MWG/IDA/Hamiltonian/raw-block changes,
   direct slab deletion, committed Cr2 tests/fixtures, and Cr2 workflow remain
@@ -17158,6 +17160,49 @@ Carrying-cost result:
   audit. If angular-balanced shellification needs more than native endcap slab
   metadata and region emission in `terminal_geometry.jl`, the source lane must
   stop for a separate amendment.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 176 - Correct Angular-Box Direction
+
+Commit(s):
+- this commit - Correct angular-box z-extension wording
+
+Summary:
+- Corrected the docs-only `HP-COMP-ANGBOX-*` wording after reviewing the audit
+  interpretation with the user. The prior amendment put the repair at the
+  right layer, but described the geometry direction backwards: the current
+  shared-shell boxes are underextended in `z` relative to the
+  outer-nucleus 45-degree rule, not overextended.
+- Replaced the stale overextension wording with angular-balance required
+  z-extension beyond the ordinary index-layer shell body. Planned non-boundary
+  and boundary z-extension slabs remain thin-slab stack objects and continue
+  to lower through `HP-COMP-THINSLAB-*`.
+- Renamed the proposed metadata to `:angular_z_extension_slab` and
+  `angular_extension_physical` so the candidate contract does not encode the
+  wrong sign.
+
+Validation:
+- Docs-only validation required: `git diff --check`; focused scans for stale
+  overextension terminology and old endcap metadata names; confirm no
+  source/bin/test/tool files changed.
+
+Goal advancement:
+- LT5/LT6: preserves the common-shell and thin-slab plan while aligning the
+  source target with the audit evidence. Future doer work should generate
+  angular-balanced target boxes and planned z-extension slab stacks throughout
+  shared-shell growth, not only at the final parent boundary.
+
+Carrying-cost result:
+- deleted: stale wording only.
+- simplified: the geometry diagnosis is now one story: index-layer shell
+  growth underextends z, so angular balance creates planned z-extension slabs.
+- quarantined: source edits, driver changes, artifacts, route skeleton
+  redesign, and Cr2 workflow remain unapproved.
+- exact remaining caller/blocker: source work remains blocked pending an
+  implementation blurb that names the `raw_terminal_geometry(...)` source cut.
 - added src lines: 0.
 - deleted src lines: 0.
 - new tests: none.

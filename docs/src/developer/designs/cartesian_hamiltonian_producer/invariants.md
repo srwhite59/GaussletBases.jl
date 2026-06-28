@@ -189,13 +189,15 @@ The canonical RG algorithm contract is
 - Z-axis diatomic shellification, not lowering, owns the angular-balanced
   shared molecular box rule. Complete shared molecular shell bodies should be
   bounded in physical parent-axis coordinates so the longitudinal margin from
-  each outer nucleus is balanced against the selected transverse scale. Axial
-  excess is not a real shell and should be emitted as native thin-slab stacks.
-  The thin-slab category applies uniformly to midpoint slabs, planned
-  non-boundary angular endcaps, planned boundary angular endcaps, and any
-  unexpected outer-mismatch fallback slab. Planned endcap stack slices lower
-  through the same compact thin-slab machinery as midpoint slabs; real shells
-  remain route-specific only after common shellification.
+  each outer nucleus is balanced against the selected transverse scale. When
+  angular balance requires z-only extension beyond the ordinary index-layer
+  shell body, that extension is not a route-specific real shell and should be
+  emitted as native thin-slab stacks. The thin-slab category applies uniformly
+  to midpoint slabs, planned non-boundary angular z-extension slabs, planned
+  boundary angular z-extension slabs, and any unexpected outer-mismatch
+  fallback slab. Planned z-extension stack slices lower through the same
+  compact thin-slab machinery as midpoint slabs; real shells remain
+  route-specific only after common shellification.
 - Geometry (`atom` or z-axis diatomic), `nesting` (`:pqs` or `:wl`), and
   supplement state (`off` or `on`) are intended to compose through shared
   producer boundaries. Do not implement the 2 x 2 x 2 matrix as eight

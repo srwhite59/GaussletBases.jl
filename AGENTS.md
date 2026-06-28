@@ -1587,10 +1587,11 @@ z-axis diatomic angular-balanced shellification. It does not approve
 production source edits. The intended source lane remains candidate-only under
 `HP-COMP-ANGBOX-FN-01` / `HP-COMP-ANGBOX-TEST-01`: shared molecular shells
 should be angular-balanced in physical parent-axis coordinates from the outer
-nuclei, while axial excess is emitted as native thin-slab stacks. The same
+nuclei. When angular balance requires z-only extension beyond the ordinary
+index-layer shell body, shellification emits native thin-slab stacks. The same
 thin-slab concept applies to midpoint slabs, planned non-boundary angular
-endcap slabs, planned boundary angular endcap slabs, and unexpected
-outer-mismatch fallback slabs. Planned endcap stacks lower through
+extension slabs, planned boundary angular extension slabs, and unexpected
+outer-mismatch fallback slabs. Planned endcap/extension stacks lower through
 `HP-COMP-THINSLAB-*`; real shells remain route-specific after common
 shellification. This lane does not approve driver changes, artifact/schema/
 reader changes, RG/MWG/IDA/Hamiltonian/raw-block changes, route skeleton

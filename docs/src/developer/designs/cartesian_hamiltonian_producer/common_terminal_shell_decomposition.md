@@ -185,9 +185,10 @@ the same common inputs before lowering.
 ## Angular-Balanced Molecular Boxes
 
 The shared z-axis diatomic shellifier should not create large axial leftovers
-merely because rectangular index-layer growth reaches the transverse parent
-boundary before the bond-axis parent boundary. That is a shellification
-geometry problem, not a lowering problem.
+merely because rectangular index-layer growth keeps the bond-axis margin too
+short relative to the transverse scale, and then stops when a transverse axis
+reaches the parent boundary. That is a shellification geometry problem, not a
+lowering problem.
 
 For a shared molecular shell around a z-axis diatomic, the complete-shell body
 should be angular-balanced from the outer nuclei in physical parent-axis
@@ -205,23 +206,26 @@ amendment approves a different convention. This is the operational
 outer-nucleus `45` degree rule. It must be evaluated in physical coordinates,
 not raw index counts.
 
-When a proposed rectangular expansion has bond-axis excess beyond the
-angular-balanced shell body, shellification should emit the excess as native
+The current audit shows the regular shared-shell boxes are underextended in
+`z` relative to the angular-balance rule. When the angular-balanced target for
+a shared-shell step requires bond-axis-only extension beyond the ordinary
+index-layer shell body, shellification should emit that extension as native
 axial thin-slab stacks, rather than leaving it as a mysterious
-outer-mismatch identity region. The thin-slab concept is common and applies to:
+outer-mismatch identity region at the end. The thin-slab concept is common and
+applies to:
 
 - central midpoint slabs between atom-local regions;
-- planned non-boundary angular endcap slabs produced inside a larger parent
-  growth step;
-- planned boundary angular endcap slabs at the low/high parent boundary;
+- planned non-boundary angular z-extension slabs produced inside a larger
+  parent growth step;
+- planned boundary angular z-extension slabs at the low/high parent boundary;
 - unexpected outer-mismatch fallback slabs, which should become rare and
   diagnostic after angular-balanced shellification.
 
-Planned angular endcaps should carry native metadata instead of requiring
-later code to parse labels such as `z_low_outer_mismatch_slab`:
+Planned angular z-extension slabs should carry native metadata instead of
+requiring later code to parse labels such as `z_low_outer_mismatch_slab`:
 
 ```text
-slab_kind = :angular_endcap_slab
+slab_kind = :angular_z_extension_slab
 slab_normal_axis
 slab_side
 slab_thickness
@@ -232,14 +236,14 @@ reference_nucleus_index
 angular_balance_rule = :outer_nucleus_45_degree
 longitudinal_margin_physical
 transverse_scale_physical
-angular_excess_physical
+angular_extension_physical
 ```
 
-For a planned angular endcap, total cap thickness larger than `ns` should be
-split into multiple ordered compact slab units, each with thickness `<= ns`,
-unless a later whole-block compression policy is approved. An unplanned
-fallback slab with thickness `> ns` remains a setup/shellification failure
-under the existing thin-slab guardrail.
+For a planned angular z-extension, total extension thickness larger than `ns`
+should be split into multiple ordered compact slab units, each with thickness
+`<= ns`, unless a later whole-block compression policy is approved. An
+unplanned fallback slab with thickness `> ns` remains a setup/shellification
+failure under the existing thin-slab guardrail.
 
 `HP-COMP-ANGBOX-AUDIT-01` approves only ignored geometry probes to measure this
 rule for H2/Be2/Cr2-style z-axis diatomics. Later source repair under
@@ -270,10 +274,11 @@ The audited bad paths are:
 For z-axis diatomics this is not approved under either `PQSLowering` or
 `WhiteLindseyLowering`. A thin slab is a boundary-face-like object, not a
 direct core and not a real shell. Midpoint slabs, planned non-boundary
-endcaps, planned boundary endcaps, and fallback outer-mismatch slabs must be
-lowered through the same compact thin-slab function for both construction
-families, with the same terminal region, public `ns`, slab normal axis, slab
-thickness, and native source/support facts, when those facts are sufficient.
+z-extension slabs, planned boundary z-extension slabs, and fallback
+outer-mismatch slabs must be lowered through the same compact thin-slab
+function for both construction families, with the same terminal region, public
+`ns`, slab normal axis, slab thickness, and native source/support facts, when
+those facts are sufficient.
 
 This sameness rule is deliberately limited to thin slab stacks. Real shell
 regions still diverge after common shellification: PQS uses full source-box
@@ -294,8 +299,8 @@ the support rows themselves.
 
 An unplanned outer-mismatch fallback region of thickness `t <= ns` should be
 decomposed or realized as an oriented stack of compact one-slice slab
-functions, with scale about `t * ns * ns`. Planned angular endcaps with total
-thickness greater than `ns` should be chunked into ordered slab units of
+functions, with scale about `t * ns * ns`. Planned angular z-extensions with
+total thickness greater than `ns` should be chunked into ordered slab units of
 thickness `<= ns`; an unplanned fallback slab with thickness greater than `ns`
 must still stop and report the condition. A future policy could approve a
 whole-block `ns x ns x ns` compression, or treat that fallback case as a setup
@@ -413,12 +418,13 @@ validation, or Cr2 fixture is approved.
 - transverse physical scale;
 - low/high longitudinal margins from the outer nuclei;
 - angular-balance ratios;
-- planned non-boundary and boundary endcap slab stacks;
+- planned non-boundary and boundary z-extension slab stacks;
 - residual outer mismatch, if any.
 
-The audit must classify whether CR2-style axial caps are planned angular
-endcaps or unexplained fallback outer mismatch. It does not approve production
-source edits, committed tests, Cr2 Hamiltonian runs, or driver changes.
+The audit must classify whether CR2-style axial slabs are planned angular
+z-extension stacks or unexplained fallback outer mismatch. It does not approve
+production source edits, committed tests, Cr2 Hamiltonian runs, or driver
+changes.
 
 ## Failure Rule
 

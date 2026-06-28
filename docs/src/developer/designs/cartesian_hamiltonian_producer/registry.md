@@ -916,23 +916,24 @@ Candidate behavior:
   convention;
 - treat this as the operational `:outer_nucleus_45_degree` shellification
   rule;
-- when rectangular expansion has bond-axis excess beyond the angular-balanced
-  shell body, emit the excess as planned axial thin-slab stacks with native
-  metadata, not as route-family-specific shell regions or direct identity
-  sectors;
+- when the angular-balanced target requires bond-axis-only extension beyond
+  the ordinary index-layer shell body, emit that extension as planned axial
+  thin-slab stacks with native metadata, not as route-family-specific shell
+  regions or direct identity sectors;
 - apply the same thin-slab category to central midpoint slabs, planned
-  non-boundary angular endcaps, planned boundary angular endcaps, and
+  non-boundary angular z-extension slabs, planned boundary angular z-extension
+  slabs, and
   unexpected outer-mismatch fallback slabs;
-- planned endcap stacks with total thickness greater than `ns` should be split
-  into multiple ordered compact slab units with thickness `<= ns`;
+- planned z-extension stacks with total thickness greater than `ns` should be
+  split into multiple ordered compact slab units with thickness `<= ns`;
 - unexpected fallback slabs with thickness greater than `ns` remain a
   setup/shellification failure unless a later policy approves a whole-block
   compression.
 
-Planned angular endcap metadata should include:
+Planned angular z-extension metadata should include:
 
 ```text
-slab_kind = :angular_endcap_slab
+slab_kind = :angular_z_extension_slab
 slab_normal_axis
 slab_side
 slab_thickness
@@ -943,12 +944,13 @@ reference_nucleus_index
 angular_balance_rule = :outer_nucleus_45_degree
 longitudinal_margin_physical
 transverse_scale_physical
-angular_excess_physical
+angular_extension_physical
 ```
 
 This candidate lane must not parse region labels to infer slab geometry, must
-not change real shell retained policy, and must not turn axial caps into
-identity sectors. Thin-slab lowering remains under `HP-COMP-THINSLAB-*`.
+not change real shell retained policy, and must not turn axial z-extension
+slabs into identity sectors. Thin-slab lowering remains under
+`HP-COMP-THINSLAB-*`.
 
 Forbidden until separately approved:
 
@@ -981,9 +983,9 @@ Candidate validation for a later source lane:
   fixtures showing parent physical endpoints/counts, snapped nuclear indices,
   core boxes, molecular inner box, each proposed shared-shell expansion,
   transverse scale, low/high longitudinal margins, angular-balance ratios,
-  planned endcap slab stacks, and residual outer mismatch if any;
-- prove planned endcap stack slices use the same thin-slab lowering category
-  for PQS and WL;
+  planned z-extension slab stacks, and residual outer mismatch if any;
+- prove planned z-extension stack slices use the same thin-slab lowering
+  category for PQS and WL;
 - bounded H2 or Be2 base artifact/readback under `nesting = :pqs` and
   `nesting = :wl` after the source repair;
 - existing H2 Residual Gaussian endpoint smoke only if touched code crosses
@@ -4860,10 +4862,10 @@ Approved scope:
 - report parent axis physical endpoints and counts, snapped nuclear indices,
   core boxes, molecular inner box, each proposed shared-shell expansion,
   transverse physical scale, low/high longitudinal margins from outer nuclei,
-  angular-balance ratios, planned non-boundary and boundary endcap slab
+  angular-balance ratios, planned non-boundary and boundary z-extension slab
   stacks, and residual outer mismatch if any;
-- classify whether the CR2-style thickness-5 axial caps are planned angular
-  endcap stacks or unexplained fallback outer mismatch;
+- classify whether the CR2-style thickness-5 axial slabs are planned angular
+  z-extension stacks or unexplained fallback outer mismatch;
 - recommend a later source lane only if exact files, functions, forbidden
   surfaces, validation, and failure rules are clear.
 
