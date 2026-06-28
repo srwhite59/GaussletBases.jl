@@ -109,15 +109,16 @@ Implemented base path:
   arguments, including public `ns`, before central-gap/contact and shared-shell
   regions are planned.
 - `HP-COMP-THINSLAB-*` supersedes the outer-mismatch-only lane. It approves a
-  narrow unified z-axis diatomic thickness-1 slab lowering repair. For both
+  narrow unified z-axis diatomic thin-slab stack lowering repair. For both
   PQS and White-Lindsey, `:direct_midpoint_slab` and `:outer_mismatch_slab`
   must call the same compact slab lowering function with the same region,
-  public `ns`, and native source/support facts. These slabs retain at
-  `ns x ns x 1` scale after one-dimensional COMX/product compression; they are
-  not identity sectors. Direct/core sectors remain identity, and real shell
-  regions still diverge after common shellification. If a slab stack requires
-  more than `ns` one-slice slabs, source work must stop and request a policy
-  decision rather than silently deleting slabs or using identity blocks.
+  public `ns`, slab normal/thickness, and native source/support facts. The unit
+  slice scale is `ns x ns x 1`; a thickness-`t` outer-mismatch region with
+  `t <= ns` should scale about `t * ns * ns`, not become one identity block.
+  Direct/core sectors remain identity, and real shell regions still diverge
+  after common shellification. If slab thickness exceeds `ns`, source work
+  must stop and request a policy decision rather than silently deleting slabs
+  or using identity blocks.
 - `HP-MCOMX-*` approves a protected-`P2` plus mapped Chebyshev source-span
   option at the existing nested doside / COMX seam. The nonlinear map uses
   normalized local `u`, while `_cleanup_comx_transform(...)` still uses the

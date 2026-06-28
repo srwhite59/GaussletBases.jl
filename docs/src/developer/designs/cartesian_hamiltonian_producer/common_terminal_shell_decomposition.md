@@ -4,7 +4,7 @@ Status: approved narrow audit/source authority under
 `HP-COMP-SHELLGEOM-FN-01` and `HP-COMP-SHELLGEOM-TEST-01`, with the
 z-axis diatomic same-function/same-argument correction approved under
 `HP-COMP-SHELLGEOM-DIAT-FN-01` and `HP-COMP-SHELLGEOM-DIAT-TEST-01`, and
-narrow common thin-slab lowering repair approved under
+narrow common thin-slab stack lowering repair approved under
 `HP-COMP-THINSLAB-FN-01` and `HP-COMP-THINSLAB-TEST-01`.
 
 ## Problem
@@ -108,9 +108,10 @@ is the common shell/core ownership authority.
 - `HP-COMP-SHELLGEOM-DIAT-TEST-01` - diatomic parity validation gates.
 - `HP-COMP-OUTERMM-FN-01` / `HP-COMP-OUTERMM-TEST-01` - superseded
   outer-mismatch-only subset; do not implement as a separate source lane.
-- `HP-COMP-THINSLAB-FN-01` - z-axis diatomic thickness-1 slab compact lowering
+- `HP-COMP-THINSLAB-FN-01` - z-axis diatomic thin-slab stack compact lowering
   repair for both PQS and White-Lindsey.
-- `HP-COMP-THINSLAB-TEST-01` - thin-slab compact lowering validation gates.
+- `HP-COMP-THINSLAB-TEST-01` - thin-slab stack compact lowering validation
+  gates.
 
 ## Approved Source Surface
 
@@ -201,20 +202,20 @@ The audited bad paths are:
 ```
 
 For z-axis diatomics this is not approved under either `PQSLowering` or
-`WhiteLindseyLowering`. A thickness-1 slab is a boundary-face-like object, not
-a direct core and not a real shell. `:direct_midpoint_slab` and
+`WhiteLindseyLowering`. A thin slab is a boundary-face-like object, not a
+direct core and not a real shell. `:direct_midpoint_slab` and
 `:outer_mismatch_slab` must be lowered through the same compact thin-slab
 function for both construction families, with the same terminal region, public
-`ns`, slab normal axis, and native source/support facts, when those facts are
-sufficient.
+`ns`, slab normal axis, slab thickness, and native source/support facts, when
+those facts are sufficient.
 
-This sameness rule is deliberately limited to thickness-1 slabs. Real shell
+This sameness rule is deliberately limited to thin slab stacks. Real shell
 regions still diverge after common shellification: PQS uses full source-box
 shell projection, while White-Lindsey uses face/edge/corner product-of-1D
 contractions. Direct nucleus-centered core and atom-contact core sectors remain
 identity sectors.
 
-Normal thin slabs should retain the oriented scale:
+The compact unit slice should retain the oriented scale:
 
 ```text
 ns x ns x 1
@@ -225,8 +226,10 @@ full identity slabs. The `1` is along the slab normal. The support rows remain
 owned and disjoint, but the retained functions are compact slab functions, not
 the support rows themselves.
 
-If a slab stack requires more than `ns` one-slice slabs, implementation must
-stop and report the condition. A future policy could approve a whole-block
+An outer-mismatch region of thickness `t <= ns` should be decomposed or
+realized as an oriented stack of compact one-slice slab functions, with scale
+about `t * ns * ns`. If slab thickness exceeds `ns`, implementation must stop
+and report the condition. A future policy could approve a whole-block
 `ns x ns x ns` compression, or treat that case as a setup error, but this lane
 does not choose silently between those options.
 
@@ -241,10 +244,11 @@ src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl
 src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl
 ```
 
-Optional files are limited to existing summary/record plumbing if directly
-required:
+Optional files are limited to native slab-axis/thickness metadata or existing
+summary/record plumbing if directly required:
 
 ```text
+src/cartesian_shellification/terminal_geometry.jl
 src/pqs_source_box_route_driver_helpers.jl
 src/pqs_source_box_diatomic_complete_core_shell.jl
 ```
@@ -253,7 +257,9 @@ This repair deliberately treats WL the same as PQS for thin slabs. It approves
 only the narrow retained-unit, transform-contract, and terminal-realization
 work needed to consume the shared thin-slab retained object. If existing
 compact slab machinery cannot compact the slab from the available facts,
-source work must stop and report the missing native fact.
+source work must stop and report the missing native fact. Do not infer slab
+normal or thickness from role strings such as `z_low_outer_mismatch_slab`; add
+native metadata under the optional shellification surface if needed.
 
 ## Forbidden
 
@@ -313,12 +319,13 @@ This amendment does not approve:
   `:direct_boundary_slab_identity_cpb` under either lowering family;
 - focused audit showing PQS and White-Lindsey call the same compact thin-slab
   lowering function with the same region/public-`ns` inputs for matched
-  thickness-1 slabs;
+  slab regions or stack slices;
 - bounded H2 or Be2 artifact/readback under `nesting = :pqs` and
   `nesting = :wl` where midpoint slabs and outer-mismatch slabs are present or
   explicitly probed;
 - retained thin-slab count is compact relative to support count, with normal
-  oriented target `ns x ns x 1`;
+  oriented unit-slice target `ns x ns x 1` and thickness-`t <= ns`
+  outer-mismatch scale about `t * ns * ns`;
 - existing H2 Residual Gaussian endpoint smoke if touched code crosses
   supplemented construction;
 - optional CR2 user-run inventory only, not a committed gate.
@@ -343,5 +350,5 @@ docs-only amendment.
 If the shared compact thin-slab lowering cannot be built from existing native
 facts without broad route skeleton changes, artifact/schema changes, driver
 inputs, or general real-shell policy changes, make no source commit and report
-the missing fact. If a slab stack requires more than `ns` one-slice slabs, stop
-and request a separate whole-block compression or setup-error policy.
+the missing fact. If slab thickness exceeds `ns`, stop and request a separate
+whole-block compression or setup-error policy.

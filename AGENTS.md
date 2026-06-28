@@ -1554,27 +1554,31 @@ inputs, committed tests/fixtures, or Cr2 workflow.
 
 `HP-COMP-THINSLAB-FN-01` and `HP-COMP-THINSLAB-TEST-01` supersede the
 outer-mismatch-only `HP-COMP-OUTERMM-*` lane. They approve one unified
-thickness-1 slab compact-lowering repair for z-axis diatomics. Approved source
+thin-slab stack compact-lowering repair for z-axis diatomics. Approved source
 files are `src/cartesian_terminal_lowering/selection.jl`,
 `src/cartesian_terminal_lowering/region_contracts.jl`,
 `src/cartesian_retained_units/lower_contract_units.jl`,
 `src/cartesian_retained_unit_transform_contracts/unit_contracts.jl`,
 `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`, and
 `src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl`,
-with route-driver summary plumbing allowed only if directly required in
+with `src/cartesian_shellification/terminal_geometry.jl` allowed only for
+native slab-axis/thickness metadata if directly required, and route-driver
+summary plumbing allowed only if directly required in
 `src/pqs_source_box_route_driver_helpers.jl` or
 `src/pqs_source_box_diatomic_complete_core_shell.jl`.
 For both `PQSLowering` and `WhiteLindseyLowering`, `:direct_midpoint_slab` and
 `:outer_mismatch_slab` must not lower to `:direct_slab_identity_cpb` or
 `:direct_boundary_slab_identity_cpb`. They must lower through the same compact
-retained-block function and inputs, with retained scale `ns x ns x 1` after
-standard one-dimensional COMX/product compression. This identical-lowering rule
-is only for thickness-1 slabs; real shells remain route-specific after common
+retained-block function and inputs. The unit slice scale is `ns x ns x 1`
+after standard one-dimensional COMX/product compression; an outer-mismatch
+region of thickness `t <= ns` should be decomposed or realized as a stack with
+scale about `t * ns * ns`, not as one identity block. This identical-lowering
+rule is only for thin slabs; real shells remain route-specific after common
 shellification, and direct/core identity sectors remain identity. If a slab
-stack requires more than `ns` one-slice slabs, source work must stop and report
-whether an `ns x ns x ns` whole-block compression or a setup-error policy needs
-separate approval. This lane does not approve driver changes, artifact/schema/
-reader changes, RG/MWG/IDA changes, route skeleton redesign, broad terminal
+stack thickness exceeds `ns`, source work must stop and report whether an
+`ns x ns x ns` whole-block compression or a setup-error policy needs separate
+approval. This lane does not approve driver changes, artifact/schema/reader
+changes, RG/MWG/IDA changes, route skeleton redesign, broad terminal
 realization redesign, direct slab deletion, committed Cr2 fixtures/tests, or
 Cr2 workflow.
 

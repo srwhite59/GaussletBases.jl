@@ -735,7 +735,7 @@ The outer-mismatch-only lane correctly identified that identity lowering was
 wrong, but the same direct-identity mistake also applies to central midpoint
 slabs. Do not implement `HP-COMP-OUTERMM-*` as a separate source lane.
 
-### HP-COMP-THINSLAB-FN-01 — common thin-slab compact lowering
+### HP-COMP-THINSLAB-FN-01 — common thin-slab stack compact lowering
 
 Status: approved.
 
@@ -750,9 +750,11 @@ src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl
 src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl
 ```
 
-Optional only if directly required by existing summaries/records:
+Optional only if directly required for native slab-axis/thickness metadata or
+existing summaries/records:
 
 ```text
+src/cartesian_shellification/terminal_geometry.jl
 src/pqs_source_box_route_driver_helpers.jl
 src/pqs_source_box_diatomic_complete_core_shell.jl
 ```
@@ -770,8 +772,8 @@ Problem:
   regions as direct retained units;
 - terminal realization therefore writes a full identity block.
 
-For z-axis diatomics, thickness-1 slabs are not production identity sectors
-for either PQS or White-Lindsey. They are face-like compact slab objects.
+For z-axis diatomics, thin slabs are not production identity sectors for either
+PQS or White-Lindsey. They are face-like compact slab objects.
 Outer-mismatch evidence from CR2 found `z_low_outer_mismatch_slab` and
 `z_high_outer_mismatch_slab` contributing `7605` final rows each, or `15210`
 rows total. That is a producer basis-size bug, not a CR2/HFDMRG consumer
@@ -783,20 +785,23 @@ Approved behavior:
 - for `PQSLowering` and `WhiteLindseyLowering`, `:direct_midpoint_slab` and
   `:outer_mismatch_slab` must not lower to `:direct_slab_identity_cpb` or
   `:direct_boundary_slab_identity_cpb`;
-- for thickness-1 slabs, use the same compact slab lowering function for both
-  construction families, with the same terminal region, public `ns`, slab
-  normal axis, and native source/support facts, when those facts are
-  sufficient;
+- use the same compact slab lowering function for both construction families,
+  with the same terminal region, public `ns`, slab normal axis, slab
+  thickness, and native source/support facts, when those facts are sufficient;
 - keep real shell-region lowering route-specific after common shellification:
   PQS full source-box shell projection and WL face/edge/corner product
   contractions remain different constructions;
 - keep direct nucleus-centered core and atom-contact core sectors identity
   sectors;
-- normal thin slabs should have retained scale `ns x ns x 1` after standard
-  one-dimensional COMX/product compression, not full identity support rows;
-- if a slab stack requires more than `ns` one-slice slabs, source work must
-  stop and report whether a whole-block `ns x ns x ns` compression or a
-  setup-error policy needs separate approval;
+- the compact unit slice should have retained scale `ns x ns x 1` after
+  standard one-dimensional COMX/product compression, not full identity support
+  rows;
+- an outer-mismatch region of thickness `t <= ns` should be decomposed or
+  realized as an oriented stack of compact slices with scale about
+  `t * ns * ns`, not as one identity block;
+- if slab thickness exceeds `ns`, source work must stop and report whether a
+  whole-block `ns x ns x ns` compression or a setup-error policy needs
+  separate approval;
 - preserve shellification coverage, owned support disjointness, deterministic
   ordering, common PQS/WL first-step geometry, Hamiltonian assembly, artifacts,
   driver inputs, Residual Gaussian, MWG/IDA, and reader behavior;
@@ -823,10 +828,12 @@ Forbidden:
 Failure rule: if the slab cannot be compacted through existing compact slab
 machinery without changing shellification semantics, route skeletons, artifact
 schema, driver inputs, or real-shell policy, make no source commit and report
-the exact missing native fact. If a slab stack requires more than `ns`
-one-slice slabs, do not install a silent fallback under this ID.
+the exact missing native fact. Do not parse region role names to infer slab
+normal or thickness; add native shellification metadata under the optional
+source surface if needed. If slab thickness exceeds `ns`, do not install a
+silent fallback under this ID.
 
-### HP-COMP-THINSLAB-TEST-01 — common thin-slab validation
+### HP-COMP-THINSLAB-TEST-01 — common thin-slab stack validation
 
 Status: approved.
 
@@ -843,9 +850,10 @@ Approved validation:
   `:outer_mismatch_slab` regions under either lowering family;
 - focused audit showing PQS and White-Lindsey call the same compact
   thin-slab lowering function with the same region/public-`ns` inputs for
-  matched thickness-1 slabs;
+  matched slab regions;
 - confirm retained thin-slab count is compact relative to support count, with
-  normal oriented target `ns x ns x 1`;
+  normal oriented unit-slice target `ns x ns x 1` and thickness-`t <= ns`
+  outer-mismatch scale about `t * ns * ns`;
 - existing H2 Residual Gaussian endpoint smoke if touched code crosses
   supplemented construction;
 - optional CR2 user-run inventory only, not a committed gate.

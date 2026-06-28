@@ -57,10 +57,10 @@ common shell/core support regions exist.
 For z-axis diatomics, `HP-COMP-SHELLGEOM-DIAT-*` requires PQS and
 White-Lindsey to call the common shellifier with the same first-step arguments;
 central-gap/contact and shared-shell ownership are common shell geometry.
-`HP-COMP-THINSLAB-*` adds the matching lowering guardrail for thickness-1
-slabs such as midpoint and outer-mismatch slabs: PQS and White-Lindsey use the
-same compact `ns x ns x 1` slab lowering, and neither may retain those slabs
-as full identity rows.
+`HP-COMP-THINSLAB-*` adds the matching lowering guardrail for midpoint slabs
+and outer-mismatch slab stacks: PQS and White-Lindsey use the same compact
+slab lowering, with unit-slice scale `ns x ns x 1`, and neither may retain
+those slabs as full identity rows.
 Mapped-COMX source spans are approved as a narrow option at the existing
 doside/COMX source-span seam under `HP-MCOMX-*`; high-order remains a
 consumer/benchmark lane, not the owner of the installed facility.

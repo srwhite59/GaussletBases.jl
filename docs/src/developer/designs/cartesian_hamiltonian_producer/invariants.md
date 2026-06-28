@@ -174,15 +174,17 @@ The canonical RG algorithm contract is
   realization; White-Lindsey may then split shell boundaries into faces, edges,
   corners, and strata for product-of-1D contractions. Those are
   retained-construction geometries, not separate first-step shellifiers.
-- Thickness-1 z-axis diatomic slabs are not real shell regions and are not
+- Z-axis diatomic thin slab stacks are not real shell regions and are not
   direct identity sectors. For both PQS and White-Lindsey,
   `:direct_midpoint_slab` and `:outer_mismatch_slab` must lower through the
-  same compact slab function with the same terminal region, public `ns`, and
-  native source/support facts. The normal retained scale is `ns x ns x 1`
-  after one-dimensional COMX/product compression. Direct/core sectors remain
-  identity; real shell regions remain route-specific. If a slab stack requires
-  more than `ns` one-slice slabs, source work must stop for a policy decision;
-  it must not silently delete slabs, retain them as identity rows, or invent
+  same compact slab function with the same terminal region, public `ns`, slab
+  normal/thickness, and native source/support facts. The compact unit-slice
+  retained scale is `ns x ns x 1` after one-dimensional COMX/product
+  compression; a thickness-`t <= ns` outer-mismatch region should scale about
+  `t * ns * ns`. Direct/core sectors remain identity; real shell regions
+  remain route-specific. If slab thickness exceeds `ns`, source work must stop
+  for a policy decision; it must not silently delete slabs, retain them as
+  identity rows, infer slab geometry from labels, or invent
   route-family-specific lowering.
 - Geometry (`atom` or z-axis diatomic), `nesting` (`:pqs` or `:wl`), and
   supplement state (`off` or `on`) are intended to compose through shared

@@ -17059,7 +17059,8 @@ Commit(s):
 
 Summary:
 - Superseded the outer-mismatch-only `HP-COMP-OUTERMM-*` lane with
-  `HP-COMP-THINSLAB-FN-01` and `HP-COMP-THINSLAB-TEST-01`.
+  `HP-COMP-THINSLAB-FN-01` and `HP-COMP-THINSLAB-TEST-01`, then tightened it
+  to account for multi-slice outer-mismatch regions.
 - The follow-up audit showed `:direct_midpoint_slab` follows the same bad
   direct-identity path as `:outer_mismatch_slab`: it lowers through
   `:direct_slab_identity_cpb`, becomes a direct retained unit, and is then
@@ -17067,9 +17068,10 @@ Summary:
   for a thickness-1 slab.
 - The new authority is route-family-free for thin slabs: for both PQS and WL,
   `:direct_midpoint_slab` and `:outer_mismatch_slab` must use the same compact
-  slab lowering function and inputs, with retained scale `ns x ns x 1`.
-  Direct/core sectors remain identity, and real shell regions remain
-  route-specific after common shellification.
+  slab lowering function and inputs. The unit-slice scale is `ns x ns x 1`;
+  a thickness-`t <= ns` outer-mismatch stack should scale about
+  `t * ns * ns`. Direct/core sectors remain identity, and real shell regions
+  remain route-specific after common shellification.
 
 Validation:
 - Docs-only validation required: `git diff --check`; focused scans for
@@ -17080,12 +17082,15 @@ Validation:
 - Later source validation should prove bounded H2 or Be2 under
   `nesting = :pqs` and `nesting = :wl` no longer lowers midpoint or
   outer-mismatch slabs to identity CPBs, and should audit that both families
-  call the same compact thin-slab function with matched inputs.
+  call the same compact thin-slab function with matched inputs. If
+  shellification does not already expose slab normal/thickness, the source
+  pass may add native metadata in `terminal_geometry.jl`; it must not parse
+  role strings.
 
 Goal advancement:
 - LT5/LT6: tightens the common-shell doctrine by separating three cases:
   direct/core identity sectors, real shells with route-specific retained
-  construction, and thickness-1 slabs with shared compact lowering.
+  construction, and thin slab stacks with shared compact lowering.
 
 Carrying-cost result:
 - deleted: none; docs-only authority correction.
@@ -17095,9 +17100,9 @@ Carrying-cost result:
   broad terminal realization redesign, route skeleton redesign, real-shell
   PQS/WL policy changes, RG/MWG/IDA changes, committed Cr2 tests, and slab
   deletion remain unapproved.
-- exact remaining caller/blocker: if a slab stack requires more than `ns`
-  one-slice slabs, or if compact lowering needs missing native facts, source
-  work must stop for a separate policy decision.
+- exact remaining caller/blocker: if slab thickness exceeds `ns`, or if compact
+  lowering needs missing native facts beyond slab normal/thickness metadata,
+  source work must stop for a separate policy decision.
 - added src lines: 0.
 - deleted src lines: 0.
 - new tests: none.
