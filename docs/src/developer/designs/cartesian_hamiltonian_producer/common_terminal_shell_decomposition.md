@@ -3,7 +3,9 @@
 Status: approved narrow audit/source authority under
 `HP-COMP-SHELLGEOM-FN-01` and `HP-COMP-SHELLGEOM-TEST-01`, with the
 z-axis diatomic same-function/same-argument correction approved under
-`HP-COMP-SHELLGEOM-DIAT-FN-01` and `HP-COMP-SHELLGEOM-DIAT-TEST-01`.
+`HP-COMP-SHELLGEOM-DIAT-FN-01` and `HP-COMP-SHELLGEOM-DIAT-TEST-01`, and
+narrow common outer-mismatch lowering repair approved under
+`HP-COMP-OUTERMM-FN-01` and `HP-COMP-OUTERMM-TEST-01`.
 
 ## Problem
 
@@ -104,6 +106,10 @@ is the common shell/core ownership authority.
 - `HP-COMP-SHELLGEOM-DIAT-FN-01` - z-axis diatomic same-function/same-argument
   common shell entry cleanup.
 - `HP-COMP-SHELLGEOM-DIAT-TEST-01` - diatomic parity validation gates.
+- `HP-COMP-OUTERMM-FN-01` - z-axis diatomic outer-mismatch compact lowering
+  repair for both PQS and White-Lindsey.
+- `HP-COMP-OUTERMM-TEST-01` - outer-mismatch compact lowering validation
+  gates.
 
 ## Approved Source Surface
 
@@ -174,6 +180,68 @@ This does not approve changing the central-gap/contact algorithm itself. It
 approves only making both construction families use the same algorithm with
 the same common inputs before lowering.
 
+## Outer-Mismatch Lowering
+
+Common shell decomposition owns outer-mismatch support regions, but it does
+not make those rows retained basis functions.
+
+The audited bad path is:
+
+```text
+:outer_mismatch_slab
+-> :direct_boundary_slab_identity_cpb
+-> direct retained unit
+-> full identity terminal block
+```
+
+For z-axis diatomics this is not approved under either `PQSLowering` or
+`WhiteLindseyLowering`. A thickness-1 `:outer_mismatch_slab` is a boundary
+slab, not a real shell. It must be lowered through the same compact
+boundary-slab function for both construction families, with the same terminal
+region, public `ns`, and native source/support facts, when those facts are
+sufficient.
+
+This sameness rule is deliberately limited to thickness-1 outer-mismatch
+slabs. Real shell regions still diverge after common shellification: PQS uses
+full source-box shell projection, while White-Lindsey uses face/edge/corner
+product-of-1D contractions.
+
+Normal boundary slabs should retain the scale:
+
+```text
+ns x ns x 1
+```
+
+after standard one-dimensional COMX/product compression. They must not become
+full identity slabs. The support rows remain owned and disjoint, but the
+retained functions are compact boundary functions, not the support rows
+themselves.
+
+If an end has more than `ns` boundary slabs, implementation must stop and
+report the condition. A future policy could approve a whole-end
+`ns x ns x ns` compression, or treat that case as a setup error, but this lane
+does not choose silently between those options.
+
+Approved source files for this repair are:
+
+```text
+src/cartesian_terminal_lowering/selection.jl
+src/cartesian_terminal_lowering/region_contracts.jl
+```
+
+Optional files are limited to existing summary/record plumbing if directly
+required:
+
+```text
+src/pqs_source_box_route_driver_helpers.jl
+src/pqs_source_box_diatomic_complete_core_shell.jl
+```
+
+This repair deliberately treats WL the same as PQS at this boundary. It does
+not approve terminal realization changes or retained-unit record changes; if
+existing compact boundary machinery cannot compact the slab from the available
+facts, source work must stop and report the missing native fact.
+
 ## Forbidden
 
 This amendment does not approve:
@@ -181,7 +249,8 @@ This amendment does not approve:
 - driver changes;
 - public input changes;
 - route skeleton redesign;
-- terminal lowering redesign;
+- terminal lowering redesign beyond the narrow common outer-mismatch repair in
+  `HP-COMP-OUTERMM-FN-01`;
 - retained-unit record changes;
 - retained-unit transform changes;
 - PQS source-box retained-mode realization changes;

@@ -16997,3 +16997,57 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 173 - Approve Outer-Mismatch Compact Lowering
+
+Commit(s):
+- this commit - Approve common outer-mismatch compact lowering
+
+Summary:
+- Approved `HP-COMP-OUTERMM-FN-01` and `HP-COMP-OUTERMM-TEST-01` as a
+  docs-only authority amendment. The CR2/HFDMRG inventory exposed a producer
+  basis-size bug: z-axis diatomic `:outer_mismatch_slab` regions were being
+  lowered as `:direct_boundary_slab_identity_cpb` and then realized as full
+  identity terminal rows.
+- The first version of the request was PQS-centered, but live lowering code
+  shows White-Lindsey falls through the same direct identity seam. The approved
+  contract is therefore common: thickness-1 outer-mismatch slabs are boundary
+  slabs, not real shells, and PQS/WL must lower them through the same compact
+  boundary-slab function with the same terminal region, public `ns`, and
+  source/support facts.
+- Real shell regions remain route-specific after common shellification: PQS
+  uses full source-box shell projection, while WL uses face/edge/corner
+  product-of-1D contractions.
+
+Validation:
+- Docs-only validation required: `git diff --check`; focused scans for
+  `HP-COMP-OUTERMM-*`, `outer_mismatch_slab`,
+  `direct_boundary_slab_identity_cpb`, `ns x ns x 1`, `ns x ns x ns`, and
+  stale PQS-only wording; confirm no source/bin/test/tool files changed.
+- Later source validation should include bounded H2 or Be2 artifact/readback
+  under `nesting = :pqs` and `nesting = :wl`, prove neither family lowers
+  outer-mismatch slabs to direct identity CPBs, and audit the same compact
+  boundary-slab function/input seam.
+
+Goal advancement:
+- LT5/LT6: protects the canonical producer artifact path from a severe
+  producer-side basis inflation while preserving the common-shell doctrine:
+  shared first geometry, identical lowering for thickness-1 mismatch slabs,
+  and route-specific retained construction only for real shells.
+
+Carrying-cost result:
+- deleted: none; docs-only authority pass.
+- simplified: future source work has one common outer-mismatch lowering target
+  instead of a PQS-only patch plus hidden WL divergence.
+- quarantined: driver changes, artifact/schema/reader changes, terminal
+  realization changes, retained-unit record changes, route skeleton redesign,
+  residual/RG/MWG/IDA changes, committed Cr2 tests, and direct slab deletion
+  remain unapproved.
+- exact remaining caller/blocker: if existing compact boundary facts are
+  insufficient, source work must stop and report the missing native fact; if
+  one end has more than `ns` boundary slabs, a separate policy decision is
+  required.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

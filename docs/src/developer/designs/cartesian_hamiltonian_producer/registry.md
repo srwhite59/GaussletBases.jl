@@ -726,12 +726,120 @@ No committed test file, committed fixture, driver contract test,
 solver/RHF/ECP/EGOI validation, route-diagnostic validation, artifact schema
 validation, or Cr2 fixture is approved.
 
+### HP-COMP-OUTERMM-FN-01 — common outer-mismatch compact lowering
+
+Status: approved.
+
+Approved source files:
+
+```text
+src/cartesian_terminal_lowering/selection.jl
+src/cartesian_terminal_lowering/region_contracts.jl
+```
+
+Optional only if directly required by existing summaries/records:
+
+```text
+src/pqs_source_box_route_driver_helpers.jl
+src/pqs_source_box_diatomic_complete_core_shell.jl
+```
+
+Problem:
+
+- `src/cartesian_shellification/terminal_geometry.jl` creates
+  `region_kind = :outer_mismatch_slab`;
+- `src/cartesian_terminal_lowering/region_contracts.jl` currently maps that
+  region to `:direct_boundary_slab_identity_cpb`;
+- `src/cartesian_retained_units/lower_contract_units.jl` then treats the
+  region as a direct retained unit;
+- terminal realization therefore writes a full identity block.
+
+For z-axis diatomics, outer-mismatch slabs are not production identity sectors
+for either PQS or White-Lindsey. CR2 inventory found
+`z_low_outer_mismatch_slab` and
+`z_high_outer_mismatch_slab` contributing `7605` final rows each, or `15210`
+rows total. That is a producer basis-size bug, not a CR2/HFDMRG consumer
+issue.
+
+Approved behavior:
+
+- for `PQSLowering` and `WhiteLindseyLowering`, `:outer_mismatch_slab` must
+  not lower to
+  `:direct_boundary_slab_identity_cpb`;
+- for thickness-1 outer-mismatch slabs, use the same compact boundary-slab
+  lowering function for both construction families, with the same terminal
+  region, public `ns`, and native source/support facts, when those facts are
+  sufficient;
+- keep real shell-region lowering route-specific after common shellification:
+  PQS full source-box shell projection and WL face/edge/corner product
+  contractions remain different constructions;
+- normal boundary slabs should have retained scale `ns x ns x 1` after
+  standard one-dimensional COMX/product compression, not full identity support
+  rows;
+- if an end has more than `ns` boundary slabs, source work must stop and
+  report whether a whole-end `ns x ns x ns` compression or a setup-error
+  policy needs separate approval;
+- preserve shellification coverage, owned support disjointness, deterministic
+  ordering, common PQS/WL first-step geometry, Hamiltonian assembly, artifacts,
+  driver inputs, Residual Gaussian, MWG/IDA, and reader behavior;
+- keep PQS and White-Lindsey thickness-1 outer-mismatch slab lowering
+  identical at this boundary. Route-family-specific outer-mismatch lowering
+  requires a later amendment.
+
+Forbidden:
+
+- driver changes;
+- artifact, manifest, provenance, schema, or reader changes;
+- residual Gaussian, MWG, IDA, Hamiltonian assembly, raw-block, or solver
+  changes;
+- route-family-specific outer-mismatch behavior;
+- route skeleton redesign;
+- terminal realization changes;
+- retained-unit record changes;
+- old high-order workflow revival;
+- committed Cr2 tests or fixtures;
+- direct slab deletion unless a separate approval proves the slabs are
+  nonphysical padding regions.
+
+Failure rule: if the slab cannot be compacted through existing compact
+boundary-slab machinery without changing shellification semantics,
+retained-unit records, terminal realization, artifact schema, or route
+skeletons, make no source commit and report the exact missing native fact. If
+one end has more than `ns` boundary slabs, do not install a silent fallback
+under this ID.
+
+### HP-COMP-OUTERMM-TEST-01 — common outer-mismatch validation
+
+Status: approved.
+
+Approved validation:
+
+- `git diff --check`;
+- package load;
+- bounded H2 or Be2 artifact/readback under `nesting = :pqs` and
+  `nesting = :wl` where outer-mismatch slabs are present or explicitly probed;
+- confirm no `direct_boundary_slab_identity_cpb` rows for
+  `:outer_mismatch_slab` regions under either lowering family;
+- focused audit showing PQS and White-Lindsey call the same compact
+  boundary-slab lowering function with the same region/public-`ns` inputs for
+  thickness-1 outer-mismatch slabs in a matched fixture;
+- confirm outer-mismatch retained count is compact relative to support count,
+  with normal per-slab target `ns x ns x 1`;
+- existing H2 Residual Gaussian endpoint smoke if touched code crosses
+  supplemented construction;
+- optional CR2 user-run inventory only, not a committed gate.
+
+No committed test file, committed fixture, driver contract test,
+solver/RHF/ECP/EGOI validation, route-diagnostic validation, artifact schema
+validation, or Cr2 fixture is approved.
+
 Forbidden:
 
 - driver changes;
 - public input changes;
 - route skeleton redesign;
-- terminal lowering redesign;
+- terminal lowering redesign beyond the narrow common outer-mismatch repair in
+  `HP-COMP-OUTERMM-FN-01`;
 - retained-unit record changes;
 - retained-unit transform changes;
 - PQS source-box retained-mode realization changes;
