@@ -17051,3 +17051,54 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 174 - Generalize Thin-Slab Lowering
+
+Commit(s):
+- this commit - Generalize thin-slab lowering authority
+
+Summary:
+- Superseded the outer-mismatch-only `HP-COMP-OUTERMM-*` lane with
+  `HP-COMP-THINSLAB-FN-01` and `HP-COMP-THINSLAB-TEST-01`.
+- The follow-up audit showed `:direct_midpoint_slab` follows the same bad
+  direct-identity path as `:outer_mismatch_slab`: it lowers through
+  `:direct_slab_identity_cpb`, becomes a direct retained unit, and is then
+  realized as full identity support rows. That is the same conceptual error
+  for a thickness-1 slab.
+- The new authority is route-family-free for thin slabs: for both PQS and WL,
+  `:direct_midpoint_slab` and `:outer_mismatch_slab` must use the same compact
+  slab lowering function and inputs, with retained scale `ns x ns x 1`.
+  Direct/core sectors remain identity, and real shell regions remain
+  route-specific after common shellification.
+
+Validation:
+- Docs-only validation required: `git diff --check`; focused scans for
+  `HP-COMP-THINSLAB-*`, `HP-COMP-OUTERMM-*`, `:direct_midpoint_slab`,
+  `:outer_mismatch_slab`, `:direct_slab_identity_cpb`,
+  `:direct_boundary_slab_identity_cpb`, and `ns x ns x 1`; confirm no
+  source/bin/test/tool files changed.
+- Later source validation should prove bounded H2 or Be2 under
+  `nesting = :pqs` and `nesting = :wl` no longer lowers midpoint or
+  outer-mismatch slabs to identity CPBs, and should audit that both families
+  call the same compact thin-slab function with matched inputs.
+
+Goal advancement:
+- LT5/LT6: tightens the common-shell doctrine by separating three cases:
+  direct/core identity sectors, real shells with route-specific retained
+  construction, and thickness-1 slabs with shared compact lowering.
+
+Carrying-cost result:
+- deleted: none; docs-only authority correction.
+- simplified: future source work has one thin-slab target instead of separate
+  midpoint and outer-mismatch patches.
+- quarantined: driver changes, public inputs, artifact/schema/reader changes,
+  broad terminal realization redesign, route skeleton redesign, real-shell
+  PQS/WL policy changes, RG/MWG/IDA changes, committed Cr2 tests, and slab
+  deletion remain unapproved.
+- exact remaining caller/blocker: if a slab stack requires more than `ns`
+  one-slice slabs, or if compact lowering needs missing native facts, source
+  work must stop for a separate policy decision.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

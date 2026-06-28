@@ -726,7 +726,16 @@ No committed test file, committed fixture, driver contract test,
 solver/RHF/ECP/EGOI validation, route-diagnostic validation, artifact schema
 validation, or Cr2 fixture is approved.
 
-### HP-COMP-OUTERMM-FN-01 — common outer-mismatch compact lowering
+### HP-COMP-OUTERMM-FN-01 / HP-COMP-OUTERMM-TEST-01 — superseded subset
+
+Status: superseded by `HP-COMP-THINSLAB-FN-01` and
+`HP-COMP-THINSLAB-TEST-01`.
+
+The outer-mismatch-only lane correctly identified that identity lowering was
+wrong, but the same direct-identity mistake also applies to central midpoint
+slabs. Do not implement `HP-COMP-OUTERMM-*` as a separate source lane.
+
+### HP-COMP-THINSLAB-FN-01 — common thin-slab compact lowering
 
 Status: approved.
 
@@ -735,6 +744,10 @@ Approved source files:
 ```text
 src/cartesian_terminal_lowering/selection.jl
 src/cartesian_terminal_lowering/region_contracts.jl
+src/cartesian_retained_units/lower_contract_units.jl
+src/cartesian_retained_unit_transform_contracts/unit_contracts.jl
+src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl
+src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl
 ```
 
 Optional only if directly required by existing summaries/records:
@@ -747,44 +760,48 @@ src/pqs_source_box_diatomic_complete_core_shell.jl
 Problem:
 
 - `src/cartesian_shellification/terminal_geometry.jl` creates
-  `region_kind = :outer_mismatch_slab`;
+  `region_kind = :direct_midpoint_slab` for central-gap one-slice slabs and
+  `region_kind = :outer_mismatch_slab` for boundary mismatch slabs;
+- `src/cartesian_terminal_lowering/region_contracts.jl` currently maps
+  midpoint slabs to `:direct_slab_identity_cpb`;
 - `src/cartesian_terminal_lowering/region_contracts.jl` currently maps that
-  region to `:direct_boundary_slab_identity_cpb`;
+  outer-mismatch region to `:direct_boundary_slab_identity_cpb`;
 - `src/cartesian_retained_units/lower_contract_units.jl` then treats the
-  region as a direct retained unit;
+  regions as direct retained units;
 - terminal realization therefore writes a full identity block.
 
-For z-axis diatomics, outer-mismatch slabs are not production identity sectors
-for either PQS or White-Lindsey. CR2 inventory found
-`z_low_outer_mismatch_slab` and
+For z-axis diatomics, thickness-1 slabs are not production identity sectors
+for either PQS or White-Lindsey. They are face-like compact slab objects.
+Outer-mismatch evidence from CR2 found `z_low_outer_mismatch_slab` and
 `z_high_outer_mismatch_slab` contributing `7605` final rows each, or `15210`
 rows total. That is a producer basis-size bug, not a CR2/HFDMRG consumer
-issue.
+issue. The central midpoint slab has the same lowering category: a one-slice
+slab between atom-local boxes, not a direct core.
 
 Approved behavior:
 
-- for `PQSLowering` and `WhiteLindseyLowering`, `:outer_mismatch_slab` must
-  not lower to
+- for `PQSLowering` and `WhiteLindseyLowering`, `:direct_midpoint_slab` and
+  `:outer_mismatch_slab` must not lower to `:direct_slab_identity_cpb` or
   `:direct_boundary_slab_identity_cpb`;
-- for thickness-1 outer-mismatch slabs, use the same compact boundary-slab
-  lowering function for both construction families, with the same terminal
-  region, public `ns`, and native source/support facts, when those facts are
+- for thickness-1 slabs, use the same compact slab lowering function for both
+  construction families, with the same terminal region, public `ns`, slab
+  normal axis, and native source/support facts, when those facts are
   sufficient;
 - keep real shell-region lowering route-specific after common shellification:
   PQS full source-box shell projection and WL face/edge/corner product
   contractions remain different constructions;
-- normal boundary slabs should have retained scale `ns x ns x 1` after
-  standard one-dimensional COMX/product compression, not full identity support
-  rows;
-- if an end has more than `ns` boundary slabs, source work must stop and
-  report whether a whole-end `ns x ns x ns` compression or a setup-error
-  policy needs separate approval;
+- keep direct nucleus-centered core and atom-contact core sectors identity
+  sectors;
+- normal thin slabs should have retained scale `ns x ns x 1` after standard
+  one-dimensional COMX/product compression, not full identity support rows;
+- if a slab stack requires more than `ns` one-slice slabs, source work must
+  stop and report whether a whole-block `ns x ns x ns` compression or a
+  setup-error policy needs separate approval;
 - preserve shellification coverage, owned support disjointness, deterministic
   ordering, common PQS/WL first-step geometry, Hamiltonian assembly, artifacts,
   driver inputs, Residual Gaussian, MWG/IDA, and reader behavior;
-- keep PQS and White-Lindsey thickness-1 outer-mismatch slab lowering
-  identical at this boundary. Route-family-specific outer-mismatch lowering
-  requires a later amendment.
+- keep PQS and White-Lindsey thin-slab lowering identical at this boundary.
+  Route-family-specific thin-slab lowering requires a later amendment.
 
 Forbidden:
 
@@ -792,23 +809,24 @@ Forbidden:
 - artifact, manifest, provenance, schema, or reader changes;
 - residual Gaussian, MWG, IDA, Hamiltonian assembly, raw-block, or solver
   changes;
-- route-family-specific outer-mismatch behavior;
+- route-family-specific thin-slab behavior;
 - route skeleton redesign;
-- terminal realization changes;
-- retained-unit record changes;
+- broad terminal realization redesign beyond the shared thin-slab consumer;
+- retained-unit record changes beyond the shared thin-slab retained object;
+- retained-unit transform changes beyond the shared thin-slab transform
+  contract;
 - old high-order workflow revival;
 - committed Cr2 tests or fixtures;
 - direct slab deletion unless a separate approval proves the slabs are
   nonphysical padding regions.
 
-Failure rule: if the slab cannot be compacted through existing compact
-boundary-slab machinery without changing shellification semantics,
-retained-unit records, terminal realization, artifact schema, or route
-skeletons, make no source commit and report the exact missing native fact. If
-one end has more than `ns` boundary slabs, do not install a silent fallback
-under this ID.
+Failure rule: if the slab cannot be compacted through existing compact slab
+machinery without changing shellification semantics, route skeletons, artifact
+schema, driver inputs, or real-shell policy, make no source commit and report
+the exact missing native fact. If a slab stack requires more than `ns`
+one-slice slabs, do not install a silent fallback under this ID.
 
-### HP-COMP-OUTERMM-TEST-01 — common outer-mismatch validation
+### HP-COMP-THINSLAB-TEST-01 — common thin-slab validation
 
 Status: approved.
 
@@ -817,14 +835,17 @@ Approved validation:
 - `git diff --check`;
 - package load;
 - bounded H2 or Be2 artifact/readback under `nesting = :pqs` and
-  `nesting = :wl` where outer-mismatch slabs are present or explicitly probed;
+  `nesting = :wl` where midpoint slabs and outer-mismatch slabs are present or
+  explicitly probed;
+- confirm no `direct_slab_identity_cpb` rows for `:direct_midpoint_slab`
+  regions under either lowering family;
 - confirm no `direct_boundary_slab_identity_cpb` rows for
   `:outer_mismatch_slab` regions under either lowering family;
 - focused audit showing PQS and White-Lindsey call the same compact
-  boundary-slab lowering function with the same region/public-`ns` inputs for
-  thickness-1 outer-mismatch slabs in a matched fixture;
-- confirm outer-mismatch retained count is compact relative to support count,
-  with normal per-slab target `ns x ns x 1`;
+  thin-slab lowering function with the same region/public-`ns` inputs for
+  matched thickness-1 slabs;
+- confirm retained thin-slab count is compact relative to support count, with
+  normal oriented target `ns x ns x 1`;
 - existing H2 Residual Gaussian endpoint smoke if touched code crosses
   supplemented construction;
 - optional CR2 user-run inventory only, not a committed gate.
@@ -838,10 +859,11 @@ Forbidden:
 - driver changes;
 - public input changes;
 - route skeleton redesign;
-- terminal lowering redesign beyond the narrow common outer-mismatch repair in
-  `HP-COMP-OUTERMM-FN-01`;
-- retained-unit record changes;
-- retained-unit transform changes;
+- terminal lowering redesign beyond the narrow common thin-slab repair in
+  `HP-COMP-THINSLAB-FN-01`;
+- retained-unit record changes beyond the shared thin-slab retained object;
+- retained-unit transform changes beyond the shared thin-slab transform
+  contract;
 - PQS source-box retained-mode realization changes;
 - WL face/edge/corner coefficient or retained-basis changes;
 - direct-core parity changes beyond `HP-COMP-NSCORE-*`;

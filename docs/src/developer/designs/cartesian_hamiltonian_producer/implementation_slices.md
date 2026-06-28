@@ -1140,14 +1140,13 @@ Additional approved composition lane:
   system, parent axes, public `ns`, direct core side, centers, and bond axis.
   Central-gap/contact and shared-shell ownership remain common shell geometry;
   PQS `q` and WL inner side begin only in retained-construction policy.
-- `HP-COMP-OUTERMM-FN-01` / `HP-COMP-OUTERMM-TEST-01` are approved for
-  thickness-1 z-axis diatomic outer-mismatch compact lowering in
-  `src/cartesian_terminal_lowering/selection.jl` and
-  `src/cartesian_terminal_lowering/region_contracts.jl`, with narrow
-  summary/record plumbing allowed only if directly required. PQS and WL must
-  use the same compact boundary-slab lowering function and inputs for these
-  slabs, with normal retained scale `ns x ns x 1`. Real shell regions remain
-  route-specific after common shellification.
+- `HP-COMP-THINSLAB-FN-01` / `HP-COMP-THINSLAB-TEST-01` supersede
+  `HP-COMP-OUTERMM-*` and are approved for unified thickness-1 z-axis
+  diatomic slab lowering. `:direct_midpoint_slab` and
+  `:outer_mismatch_slab` must use the same compact slab lowering function and
+  inputs for PQS and WL, with normal retained scale `ns x ns x 1`. Direct/core
+  sectors remain identity, and real shell regions remain route-specific after
+  common shellification.
 - `HP-MCOMX-FILE-01`, `HP-MCOMX-OBJ-01`, `HP-MCOMX-FN-01`,
   `HP-MCOMX-WIRE-01`, and `HP-MCOMX-TEST-01` are approved for the mainline
   mapped-COMX source-span option at the existing nested doside / COMX seam,

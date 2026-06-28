@@ -4,8 +4,8 @@ Status: approved narrow audit/source authority under
 `HP-COMP-SHELLGEOM-FN-01` and `HP-COMP-SHELLGEOM-TEST-01`, with the
 z-axis diatomic same-function/same-argument correction approved under
 `HP-COMP-SHELLGEOM-DIAT-FN-01` and `HP-COMP-SHELLGEOM-DIAT-TEST-01`, and
-narrow common outer-mismatch lowering repair approved under
-`HP-COMP-OUTERMM-FN-01` and `HP-COMP-OUTERMM-TEST-01`.
+narrow common thin-slab lowering repair approved under
+`HP-COMP-THINSLAB-FN-01` and `HP-COMP-THINSLAB-TEST-01`.
 
 ## Problem
 
@@ -106,10 +106,11 @@ is the common shell/core ownership authority.
 - `HP-COMP-SHELLGEOM-DIAT-FN-01` - z-axis diatomic same-function/same-argument
   common shell entry cleanup.
 - `HP-COMP-SHELLGEOM-DIAT-TEST-01` - diatomic parity validation gates.
-- `HP-COMP-OUTERMM-FN-01` - z-axis diatomic outer-mismatch compact lowering
+- `HP-COMP-OUTERMM-FN-01` / `HP-COMP-OUTERMM-TEST-01` - superseded
+  outer-mismatch-only subset; do not implement as a separate source lane.
+- `HP-COMP-THINSLAB-FN-01` - z-axis diatomic thickness-1 slab compact lowering
   repair for both PQS and White-Lindsey.
-- `HP-COMP-OUTERMM-TEST-01` - outer-mismatch compact lowering validation
-  gates.
+- `HP-COMP-THINSLAB-TEST-01` - thin-slab compact lowering validation gates.
 
 ## Approved Source Surface
 
@@ -180,14 +181,19 @@ This does not approve changing the central-gap/contact algorithm itself. It
 approves only making both construction families use the same algorithm with
 the same common inputs before lowering.
 
-## Outer-Mismatch Lowering
+## Thin-Slab Lowering
 
-Common shell decomposition owns outer-mismatch support regions, but it does
-not make those rows retained basis functions.
+Common shell decomposition owns thin-slab support regions, but it does not
+make those rows retained basis functions.
 
-The audited bad path is:
+The audited bad paths are:
 
 ```text
+:direct_midpoint_slab
+-> :direct_slab_identity_cpb
+-> direct retained unit
+-> full identity terminal block
+
 :outer_mismatch_slab
 -> :direct_boundary_slab_identity_cpb
 -> direct retained unit
@@ -195,30 +201,32 @@ The audited bad path is:
 ```
 
 For z-axis diatomics this is not approved under either `PQSLowering` or
-`WhiteLindseyLowering`. A thickness-1 `:outer_mismatch_slab` is a boundary
-slab, not a real shell. It must be lowered through the same compact
-boundary-slab function for both construction families, with the same terminal
-region, public `ns`, and native source/support facts, when those facts are
+`WhiteLindseyLowering`. A thickness-1 slab is a boundary-face-like object, not
+a direct core and not a real shell. `:direct_midpoint_slab` and
+`:outer_mismatch_slab` must be lowered through the same compact thin-slab
+function for both construction families, with the same terminal region, public
+`ns`, slab normal axis, and native source/support facts, when those facts are
 sufficient.
 
-This sameness rule is deliberately limited to thickness-1 outer-mismatch
-slabs. Real shell regions still diverge after common shellification: PQS uses
-full source-box shell projection, while White-Lindsey uses face/edge/corner
-product-of-1D contractions.
+This sameness rule is deliberately limited to thickness-1 slabs. Real shell
+regions still diverge after common shellification: PQS uses full source-box
+shell projection, while White-Lindsey uses face/edge/corner product-of-1D
+contractions. Direct nucleus-centered core and atom-contact core sectors remain
+identity sectors.
 
-Normal boundary slabs should retain the scale:
+Normal thin slabs should retain the oriented scale:
 
 ```text
 ns x ns x 1
 ```
 
 after standard one-dimensional COMX/product compression. They must not become
-full identity slabs. The support rows remain owned and disjoint, but the
-retained functions are compact boundary functions, not the support rows
-themselves.
+full identity slabs. The `1` is along the slab normal. The support rows remain
+owned and disjoint, but the retained functions are compact slab functions, not
+the support rows themselves.
 
-If an end has more than `ns` boundary slabs, implementation must stop and
-report the condition. A future policy could approve a whole-end
+If a slab stack requires more than `ns` one-slice slabs, implementation must
+stop and report the condition. A future policy could approve a whole-block
 `ns x ns x ns` compression, or treat that case as a setup error, but this lane
 does not choose silently between those options.
 
@@ -227,6 +235,10 @@ Approved source files for this repair are:
 ```text
 src/cartesian_terminal_lowering/selection.jl
 src/cartesian_terminal_lowering/region_contracts.jl
+src/cartesian_retained_units/lower_contract_units.jl
+src/cartesian_retained_unit_transform_contracts/unit_contracts.jl
+src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl
+src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl
 ```
 
 Optional files are limited to existing summary/record plumbing if directly
@@ -237,10 +249,11 @@ src/pqs_source_box_route_driver_helpers.jl
 src/pqs_source_box_diatomic_complete_core_shell.jl
 ```
 
-This repair deliberately treats WL the same as PQS at this boundary. It does
-not approve terminal realization changes or retained-unit record changes; if
-existing compact boundary machinery cannot compact the slab from the available
-facts, source work must stop and report the missing native fact.
+This repair deliberately treats WL the same as PQS for thin slabs. It approves
+only the narrow retained-unit, transform-contract, and terminal-realization
+work needed to consume the shared thin-slab retained object. If existing
+compact slab machinery cannot compact the slab from the available facts,
+source work must stop and report the missing native fact.
 
 ## Forbidden
 
@@ -249,10 +262,11 @@ This amendment does not approve:
 - driver changes;
 - public input changes;
 - route skeleton redesign;
-- terminal lowering redesign beyond the narrow common outer-mismatch repair in
-  `HP-COMP-OUTERMM-FN-01`;
-- retained-unit record changes;
-- retained-unit transform changes;
+- terminal lowering redesign beyond the narrow common thin-slab repair in
+  `HP-COMP-THINSLAB-FN-01`;
+- retained-unit record changes beyond the shared thin-slab retained object;
+- retained-unit transform changes beyond the shared thin-slab transform
+  contract;
 - PQS source-box retained-mode realization changes;
 - WL face/edge/corner coefficient or retained-basis changes;
 - direct-core parity changes beyond `HP-COMP-NSCORE-*`;
@@ -292,6 +306,23 @@ This amendment does not approve:
   `nesting = :pqs` and `nesting = :wl` if the WL retained-basis path remains
   available.
 
+`HP-COMP-THINSLAB-TEST-01` additionally approves:
+
+- focused audit showing `:direct_midpoint_slab` and `:outer_mismatch_slab`
+  do not lower to `:direct_slab_identity_cpb` or
+  `:direct_boundary_slab_identity_cpb` under either lowering family;
+- focused audit showing PQS and White-Lindsey call the same compact thin-slab
+  lowering function with the same region/public-`ns` inputs for matched
+  thickness-1 slabs;
+- bounded H2 or Be2 artifact/readback under `nesting = :pqs` and
+  `nesting = :wl` where midpoint slabs and outer-mismatch slabs are present or
+  explicitly probed;
+- retained thin-slab count is compact relative to support count, with normal
+  oriented target `ns x ns x 1`;
+- existing H2 Residual Gaussian endpoint smoke if touched code crosses
+  supplemented construction;
+- optional CR2 user-run inventory only, not a committed gate.
+
 No committed test file, committed fixture, driver contract test,
 solver/RHF/ECP/EGOI validation, route-diagnostic validation, artifact schema
 validation, or Cr2 fixture is approved.
@@ -308,3 +339,9 @@ If making z-axis diatomic PQS/WL use the same shellifier with the same
 first-step arguments requires changing the central-gap/contact algorithm rather
 than just its route-family-independent inputs, stop and request a separate
 docs-only amendment.
+
+If the shared compact thin-slab lowering cannot be built from existing native
+facts without broad route skeleton changes, artifact/schema changes, driver
+inputs, or general real-shell policy changes, make no source commit and report
+the missing fact. If a slab stack requires more than `ns` one-slice slabs, stop
+and request a separate whole-block compression or setup-error policy.

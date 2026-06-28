@@ -108,17 +108,16 @@ Implemented base path:
   White-Lindsey must enter the common shellifier with the same first-step
   arguments, including public `ns`, before central-gap/contact and shared-shell
   regions are planned.
-- `HP-COMP-OUTERMM-*` approves only a narrow z-axis diatomic outer-mismatch
-  lowering repair: `:outer_mismatch_slab` is common geometry and must not
-  become a full identity slab for either PQS or White-Lindsey. Both
-  construction families must call the same compact boundary-slab lowering
-  function with the same region, public `ns`, and native source/support facts
-  for thickness-1 outer-mismatch slabs. Real shell regions still diverge after
-  common shellification. Normal boundary slabs use the same compact
-  `ns x ns x 1` one-dimensional COMX/product compression contract. If
-  one end has more than `ns` boundary slabs, source work must stop and request
-  a policy decision rather than silently deleting slabs or using identity
-  blocks.
+- `HP-COMP-THINSLAB-*` supersedes the outer-mismatch-only lane. It approves a
+  narrow unified z-axis diatomic thickness-1 slab lowering repair. For both
+  PQS and White-Lindsey, `:direct_midpoint_slab` and `:outer_mismatch_slab`
+  must call the same compact slab lowering function with the same region,
+  public `ns`, and native source/support facts. These slabs retain at
+  `ns x ns x 1` scale after one-dimensional COMX/product compression; they are
+  not identity sectors. Direct/core sectors remain identity, and real shell
+  regions still diverge after common shellification. If a slab stack requires
+  more than `ns` one-slice slabs, source work must stop and request a policy
+  decision rather than silently deleting slabs or using identity blocks.
 - `HP-MCOMX-*` approves a protected-`P2` plus mapped Chebyshev source-span
   option at the existing nested doside / COMX seam. The nonlinear map uses
   normalized local `u`, while `_cleanup_comx_transform(...)` still uses the
