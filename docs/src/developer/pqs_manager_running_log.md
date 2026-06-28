@@ -17207,3 +17207,42 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 177 - Clarify Angular Target Decomposition
+
+Commit(s):
+- this commit - Clarify angular target decomposition
+
+Summary:
+- Tightened the `HP-COMP-ANGBOX-*` docs before source work. The policy now
+  explicitly says each shared-shell step computes an angular-balanced target
+  box, and that the ordinary index-layer shell body plus planned z-extension
+  thin-slab stacks realizes the target coverage.
+- This avoids the remaining misread where a doer could make the whole
+  angular-balanced target a route-specific shell body. The ordinary body may
+  be underextended in `z`; the bond-axis-only difference is a planned
+  thin-slab stack.
+- Cleaned the remaining hybrid old/new wording in `AGENTS.md`.
+
+Validation:
+- Docs-only validation required: `git diff --check`; focused scans for stale
+  shell-body and endcap wording; confirm no source/bin/test/tool files
+  changed.
+
+Goal advancement:
+- LT5/LT6: preserves the shellifier-owned angular target while keeping the
+  retained-construction split intact. Planned z-extension slabs are not PQS or
+  WL real shells and not identity rows.
+
+Carrying-cost result:
+- deleted: stale wording only.
+- simplified: the source-facing model is now ordinary shell body plus planned
+  z-extension slabs equals angular target coverage.
+- quarantined: source edits, driver changes, artifact/schema changes, route
+  skeleton redesign, and Cr2 workflow remain unapproved.
+- exact remaining caller/blocker: source work still needs a separate doer
+  blurb naming the `raw_terminal_geometry(...)` cut and validation.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

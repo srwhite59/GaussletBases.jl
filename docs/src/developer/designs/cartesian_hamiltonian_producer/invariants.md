@@ -187,17 +187,17 @@ The canonical RG algorithm contract is
   identity rows, infer slab geometry from labels, or invent
   route-family-specific lowering.
 - Z-axis diatomic shellification, not lowering, owns the angular-balanced
-  shared molecular box rule. Complete shared molecular shell bodies should be
-  bounded in physical parent-axis coordinates so the longitudinal margin from
-  each outer nucleus is balanced against the selected transverse scale. When
-  angular balance requires z-only extension beyond the ordinary index-layer
-  shell body, that extension is not a route-specific real shell and should be
-  emitted as native thin-slab stacks. The thin-slab category applies uniformly
-  to midpoint slabs, planned non-boundary angular z-extension slabs, planned
-  boundary angular z-extension slabs, and any unexpected outer-mismatch
-  fallback slab. Planned z-extension stack slices lower through the same
-  compact thin-slab machinery as midpoint slabs; real shells remain
-  route-specific only after common shellification.
+  shared molecular box rule. Each shared-shell step should compute a target
+  box in physical parent-axis coordinates so the longitudinal margin from each
+  outer nucleus is balanced against the selected transverse scale. The
+  ordinary index-layer shell body may be underextended along the bond axis;
+  the ordinary body plus planned z-extension thin-slab stacks, not the
+  ordinary body alone, realizes the angular-balanced target coverage. The
+  thin-slab category applies uniformly to midpoint slabs, planned
+  non-boundary angular z-extension slabs, planned boundary angular z-extension
+  slabs, and any unexpected outer-mismatch fallback slab. Planned z-extension
+  stack slices lower through the same compact thin-slab machinery as midpoint
+  slabs; real shells remain route-specific only after common shellification.
 - Geometry (`atom` or z-axis diatomic), `nesting` (`:pqs` or `:wl`), and
   supplement state (`off` or `on`) are intended to compose through shared
   producer boundaries. Do not implement the 2 x 2 x 2 matrix as eight

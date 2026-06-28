@@ -121,10 +121,10 @@ Implemented base path:
   or using identity blocks.
 - `HP-COMP-ANGBOX-AUDIT-01` approves only ignored z-axis diatomic geometry
   audits for angular-balanced shared molecular boxes. The intended repair is
-  shellification-owned: complete molecular shell bodies should satisfy a
-  physical outer-nucleus angular-balance rule. When that rule requires z-only
-  extension beyond the ordinary index-layer shell body, shellification emits
-  native thin-slab stacks. The thin-slab category covers midpoint slabs,
+  shellification-owned: each shared-shell step computes a physical
+  outer-nucleus angular-balanced target box. The ordinary index-layer shell
+  body plus planned z-extension thin-slab stacks, not the ordinary body alone,
+  realizes that target coverage. The thin-slab category covers midpoint slabs,
   planned non-boundary angular z-extension slabs, planned boundary angular
   z-extension slabs, and unexpected outer-mismatch fallback slabs.
   `HP-COMP-ANGBOX-FN-01` remains candidate-only until the audit identifies the

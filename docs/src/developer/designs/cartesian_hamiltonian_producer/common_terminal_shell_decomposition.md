@@ -190,29 +190,31 @@ short relative to the transverse scale, and then stops when a transverse axis
 reaches the parent boundary. That is a shellification geometry problem, not a
 lowering problem.
 
-For a shared molecular shell around a z-axis diatomic, the complete-shell body
-should be angular-balanced from the outer nuclei in physical parent-axis
-coordinates. In each bond-axis/transverse plane, compare:
+For each shared molecular shellification step around a z-axis diatomic,
+shellification should compute an angular-balanced target box from the outer
+nuclei in physical parent-axis coordinates. In each bond-axis/transverse
+plane, compare:
 
 ```text
 longitudinal margin = physical distance from the outer nucleus to the box end
 transverse scale    = physical distance from the bond axis to the box side
 ```
 
-The molecular shell body should keep the longitudinal margin comparable to the
-selected transverse scale. If the `x` and `y` transverse scales differ, use the
-smaller scale as the conservative angular-resolution guard unless a later
-amendment approves a different convention. This is the operational
-outer-nucleus `45` degree rule. It must be evaluated in physical coordinates,
-not raw index counts.
+The target box should keep the longitudinal margin comparable to the selected
+transverse scale. If the `x` and `y` transverse scales differ, use the smaller
+scale as the conservative angular-resolution guard unless a later amendment
+approves a different convention. This is the operational outer-nucleus
+`45` degree rule. It must be evaluated in physical coordinates, not raw index
+counts.
 
-The current audit shows the regular shared-shell boxes are underextended in
-`z` relative to the angular-balance rule. When the angular-balanced target for
-a shared-shell step requires bond-axis-only extension beyond the ordinary
-index-layer shell body, shellification should emit that extension as native
-axial thin-slab stacks, rather than leaving it as a mysterious
-outer-mismatch identity region at the end. The thin-slab concept is common and
-applies to:
+The current audit shows the ordinary index-layer shared-shell bodies are
+underextended in `z` relative to the angular-balance rule. When the
+angular-balanced target for a shared-shell step requires bond-axis-only
+extension beyond the ordinary body, shellification should emit that difference
+as native axial thin-slab stacks. The ordinary body plus planned z-extension
+slabs, not the ordinary body alone, realizes the angular-balanced target
+coverage. These pieces must not be left as mysterious outer-mismatch identity
+regions at the end. The thin-slab concept is common and applies to:
 
 - central midpoint slabs between atom-local regions;
 - planned non-boundary angular z-extension slabs produced inside a larger

@@ -1590,8 +1590,8 @@ should be angular-balanced in physical parent-axis coordinates from the outer
 nuclei. When angular balance requires z-only extension beyond the ordinary
 index-layer shell body, shellification emits native thin-slab stacks. The same
 thin-slab concept applies to midpoint slabs, planned non-boundary angular
-extension slabs, planned boundary angular extension slabs, and unexpected
-outer-mismatch fallback slabs. Planned endcap/extension stacks lower through
+z-extension slabs, planned boundary angular z-extension slabs, and unexpected
+outer-mismatch fallback slabs. Planned z-extension stacks lower through
 `HP-COMP-THINSLAB-*`; real shells remain route-specific after common
 shellification. This lane does not approve driver changes, artifact/schema/
 reader changes, RG/MWG/IDA/Hamiltonian/raw-block changes, route skeleton

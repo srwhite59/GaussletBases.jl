@@ -1150,12 +1150,12 @@ Additional approved composition lane:
   route-specific after common shellification.
 - `HP-COMP-ANGBOX-AUDIT-01` is approved only for ignored z-axis diatomic
   geometry audits. It records the next shellification concept: shared
-  molecular shell bodies should be angular-balanced in physical parent-axis
-  coordinates from the outer nuclei. When angular balance requires z-only
-  extension beyond the ordinary index-layer shell body, that extension becomes
-  planned thin-slab stacks. Midpoint slabs, non-boundary z-extension slabs,
-  boundary z-extension slabs, and fallback outer-mismatch slabs all use the
-  same thin-slab category.
+  molecular shellification should compute an angular-balanced target box in
+  physical parent-axis coordinates from the outer nuclei. The ordinary
+  index-layer shell body plus planned z-extension thin-slab stacks, not the
+  ordinary body alone, realizes that target coverage. Midpoint slabs,
+  non-boundary z-extension slabs, boundary z-extension slabs, and fallback
+  outer-mismatch slabs all use the same thin-slab category.
   `HP-COMP-ANGBOX-FN-01` / `HP-COMP-ANGBOX-TEST-01` remain candidate-only for
   later source repair after the audit proves the exact geometry cut.
 - `HP-MCOMX-FILE-01`, `HP-MCOMX-OBJ-01`, `HP-MCOMX-FN-01`,

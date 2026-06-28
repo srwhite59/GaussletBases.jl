@@ -908,8 +908,9 @@ src/pqs_source_box_diatomic_complete_core_shell.jl
 
 Candidate behavior:
 
-- shared z-axis diatomic molecular shell bodies should be angular-balanced
-  from the outer nuclei in physical parent-axis coordinates;
+- each shared z-axis diatomic molecular shellification step should compute an
+  angular-balanced target box from the outer nuclei in physical parent-axis
+  coordinates;
 - compare the physical bond-axis longitudinal margin from each outer nucleus
   to the selected transverse physical scale; if `x` and `y` transverse scales
   differ, use the smaller scale unless a later amendment approves another
@@ -917,8 +918,11 @@ Candidate behavior:
 - treat this as the operational `:outer_nucleus_45_degree` shellification
   rule;
 - when the angular-balanced target requires bond-axis-only extension beyond
-  the ordinary index-layer shell body, emit that extension as planned axial
-  thin-slab stacks with native metadata, not as route-family-specific shell
+  the ordinary index-layer shell body, emit that difference as planned axial
+  thin-slab stacks with native metadata. The ordinary body plus planned
+  z-extension slabs, not the ordinary body alone, realizes the target
+  coverage;
+- do not treat planned z-extension slabs as route-family-specific shell
   regions or direct identity sectors;
 - apply the same thin-slab category to central midpoint slabs, planned
   non-boundary angular z-extension slabs, planned boundary angular z-extension
