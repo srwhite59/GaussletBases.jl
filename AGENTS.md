@@ -1582,6 +1582,20 @@ changes, RG/MWG/IDA changes, route skeleton redesign, broad terminal
 realization redesign, direct slab deletion, committed Cr2 fixtures/tests, or
 Cr2 workflow.
 
+`HP-COMP-ANGBOX-AUDIT-01` approves only ignored geometry-audit probes for
+z-axis diatomic angular-balanced shellification. It does not approve
+production source edits. The intended source lane remains candidate-only under
+`HP-COMP-ANGBOX-FN-01` / `HP-COMP-ANGBOX-TEST-01`: shared molecular shells
+should be angular-balanced in physical parent-axis coordinates from the outer
+nuclei, while axial excess is emitted as native thin-slab stacks. The same
+thin-slab concept applies to midpoint slabs, planned non-boundary angular
+endcap slabs, planned boundary angular endcap slabs, and unexpected
+outer-mismatch fallback slabs. Planned endcap stacks lower through
+`HP-COMP-THINSLAB-*`; real shells remain route-specific after common
+shellification. This lane does not approve driver changes, artifact/schema/
+reader changes, RG/MWG/IDA/Hamiltonian/raw-block changes, route skeleton
+redesign, direct slab deletion, committed Cr2 tests/fixtures, or Cr2 workflow.
+
 `HP-MCOMX-FILE-01`, `HP-MCOMX-OBJ-01`, `HP-MCOMX-FN-01`,
 `HP-MCOMX-WIRE-01`, and `HP-MCOMX-TEST-01` approve only the mainline
 mapped-COMX source-span facility described in

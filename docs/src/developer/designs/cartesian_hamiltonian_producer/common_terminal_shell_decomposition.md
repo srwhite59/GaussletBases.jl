@@ -182,6 +182,72 @@ This does not approve changing the central-gap/contact algorithm itself. It
 approves only making both construction families use the same algorithm with
 the same common inputs before lowering.
 
+## Angular-Balanced Molecular Boxes
+
+The shared z-axis diatomic shellifier should not create large axial leftovers
+merely because rectangular index-layer growth reaches the transverse parent
+boundary before the bond-axis parent boundary. That is a shellification
+geometry problem, not a lowering problem.
+
+For a shared molecular shell around a z-axis diatomic, the complete-shell body
+should be angular-balanced from the outer nuclei in physical parent-axis
+coordinates. In each bond-axis/transverse plane, compare:
+
+```text
+longitudinal margin = physical distance from the outer nucleus to the box end
+transverse scale    = physical distance from the bond axis to the box side
+```
+
+The molecular shell body should keep the longitudinal margin comparable to the
+selected transverse scale. If the `x` and `y` transverse scales differ, use the
+smaller scale as the conservative angular-resolution guard unless a later
+amendment approves a different convention. This is the operational
+outer-nucleus `45` degree rule. It must be evaluated in physical coordinates,
+not raw index counts.
+
+When a proposed rectangular expansion has bond-axis excess beyond the
+angular-balanced shell body, shellification should emit the excess as native
+axial thin-slab stacks, rather than leaving it as a mysterious
+outer-mismatch identity region. The thin-slab concept is common and applies to:
+
+- central midpoint slabs between atom-local regions;
+- planned non-boundary angular endcap slabs produced inside a larger parent
+  growth step;
+- planned boundary angular endcap slabs at the low/high parent boundary;
+- unexpected outer-mismatch fallback slabs, which should become rare and
+  diagnostic after angular-balanced shellification.
+
+Planned angular endcaps should carry native metadata instead of requiring
+later code to parse labels such as `z_low_outer_mismatch_slab`:
+
+```text
+slab_kind = :angular_endcap_slab
+slab_normal_axis
+slab_side
+slab_thickness
+slab_stack_index
+slab_stack_count
+bond_axis
+reference_nucleus_index
+angular_balance_rule = :outer_nucleus_45_degree
+longitudinal_margin_physical
+transverse_scale_physical
+angular_excess_physical
+```
+
+For a planned angular endcap, total cap thickness larger than `ns` should be
+split into multiple ordered compact slab units, each with thickness `<= ns`,
+unless a later whole-block compression policy is approved. An unplanned
+fallback slab with thickness `> ns` remains a setup/shellification failure
+under the existing thin-slab guardrail.
+
+`HP-COMP-ANGBOX-AUDIT-01` approves only ignored geometry probes to measure this
+rule for H2/Be2/Cr2-style z-axis diatomics. Later source repair under
+`HP-COMP-ANGBOX-FN-01` remains candidate-only until the audit identifies the
+exact geometry cut. The candidate source owner is
+`src/cartesian_shellification/terminal_geometry.jl`, with only narrow summary
+or caller plumbing if directly required.
+
 ## Thin-Slab Lowering
 
 Common shell decomposition owns thin-slab support regions, but it does not
@@ -203,11 +269,11 @@ The audited bad paths are:
 
 For z-axis diatomics this is not approved under either `PQSLowering` or
 `WhiteLindseyLowering`. A thin slab is a boundary-face-like object, not a
-direct core and not a real shell. `:direct_midpoint_slab` and
-`:outer_mismatch_slab` must be lowered through the same compact thin-slab
-function for both construction families, with the same terminal region, public
-`ns`, slab normal axis, slab thickness, and native source/support facts, when
-those facts are sufficient.
+direct core and not a real shell. Midpoint slabs, planned non-boundary
+endcaps, planned boundary endcaps, and fallback outer-mismatch slabs must be
+lowered through the same compact thin-slab function for both construction
+families, with the same terminal region, public `ns`, slab normal axis, slab
+thickness, and native source/support facts, when those facts are sufficient.
 
 This sameness rule is deliberately limited to thin slab stacks. Real shell
 regions still diverge after common shellification: PQS uses full source-box
@@ -226,12 +292,14 @@ full identity slabs. The `1` is along the slab normal. The support rows remain
 owned and disjoint, but the retained functions are compact slab functions, not
 the support rows themselves.
 
-An outer-mismatch region of thickness `t <= ns` should be decomposed or
-realized as an oriented stack of compact one-slice slab functions, with scale
-about `t * ns * ns`. If slab thickness exceeds `ns`, implementation must stop
-and report the condition. A future policy could approve a whole-block
-`ns x ns x ns` compression, or treat that case as a setup error, but this lane
-does not choose silently between those options.
+An unplanned outer-mismatch fallback region of thickness `t <= ns` should be
+decomposed or realized as an oriented stack of compact one-slice slab
+functions, with scale about `t * ns * ns`. Planned angular endcaps with total
+thickness greater than `ns` should be chunked into ordered slab units of
+thickness `<= ns`; an unplanned fallback slab with thickness greater than `ns`
+must still stop and report the condition. A future policy could approve a
+whole-block `ns x ns x ns` compression, or treat that fallback case as a setup
+error, but this lane does not choose silently between those options.
 
 Approved source files for this repair are:
 
@@ -270,6 +338,8 @@ This amendment does not approve:
 - route skeleton redesign;
 - terminal lowering redesign beyond the narrow common thin-slab repair in
   `HP-COMP-THINSLAB-FN-01`;
+- angular-balanced shellification source changes before
+  `HP-COMP-ANGBOX-FN-01` is separately approved;
 - retained-unit record changes beyond the shared thin-slab retained object;
 - retained-unit transform changes beyond the shared thin-slab transform
   contract;
@@ -333,6 +403,22 @@ This amendment does not approve:
 No committed test file, committed fixture, driver contract test,
 solver/RHF/ECP/EGOI validation, route-diagnostic validation, artifact schema
 validation, or Cr2 fixture is approved.
+
+`HP-COMP-ANGBOX-AUDIT-01` approves only ignored geometry probes that report:
+
+- parent axis physical endpoints and counts;
+- snapped nuclear indices and direct/core boxes;
+- molecular inner box;
+- each proposed shared-shell expansion;
+- transverse physical scale;
+- low/high longitudinal margins from the outer nuclei;
+- angular-balance ratios;
+- planned non-boundary and boundary endcap slab stacks;
+- residual outer mismatch, if any.
+
+The audit must classify whether CR2-style axial caps are planned angular
+endcaps or unexplained fallback outer mismatch. It does not approve production
+source edits, committed tests, Cr2 Hamiltonian runs, or driver changes.
 
 ## Failure Rule
 

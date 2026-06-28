@@ -119,6 +119,14 @@ Implemented base path:
   after common shellification. If slab thickness exceeds `ns`, source work
   must stop and request a policy decision rather than silently deleting slabs
   or using identity blocks.
+- `HP-COMP-ANGBOX-AUDIT-01` approves only ignored z-axis diatomic geometry
+  audits for angular-balanced shared molecular boxes. The intended repair is
+  shellification-owned: complete molecular shell bodies should satisfy a
+  physical outer-nucleus angular-balance rule, while axial excess is emitted
+  as native thin-slab stacks. The thin-slab category covers midpoint slabs,
+  planned non-boundary angular endcaps, planned boundary angular endcaps, and
+  unexpected outer-mismatch fallback slabs. `HP-COMP-ANGBOX-FN-01` remains
+  candidate-only until the audit identifies the exact source cut.
 - `HP-MCOMX-*` approves a protected-`P2` plus mapped Chebyshev source-span
   option at the existing nested doside / COMX seam. The nonlinear map uses
   normalized local `u`, while `_cleanup_comx_transform(...)` still uses the

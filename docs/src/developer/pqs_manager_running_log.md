@@ -17107,3 +17107,58 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 175 - Approve Angular-Balanced Geometry Audit
+
+Commit(s):
+- this commit - Approve angular-balanced shellification audit
+
+Summary:
+- Added `HP-COMP-ANGBOX-AUDIT-01` as measurement-only authority and recorded
+  `HP-COMP-ANGBOX-FN-01` / `HP-COMP-ANGBOX-TEST-01` as candidate-only source
+  and validation lanes. This responds to the CR2 slab inventory and the
+  follow-up discussion that compact lowering alone treats the symptom if the
+  shellifier keeps creating large axial leftovers.
+- The durable geometry rule is now explicit: shared z-axis diatomic molecular
+  shell bodies should be angular-balanced from the outer nuclei in physical
+  parent-axis coordinates. Axial excess should be emitted as native thin-slab
+  stacks, not left as route-family-specific shells or direct identity sectors.
+- The thin-slab category is deliberately broader than the prior
+  outer-mismatch wording. It covers central midpoint slabs, planned
+  non-boundary angular endcaps, planned boundary angular endcaps, and
+  unexpected outer-mismatch fallback slabs. Planned endcap stacks may be
+  chunked into slices with thickness `<= ns`; unexpected fallback slabs with
+  thickness greater than `ns` still stop for a policy decision.
+
+Validation:
+- Docs-only validation required: `git diff --check`; focused scans for
+  `HP-COMP-ANGBOX-*`, `angular-balanced`, `angular_endcap_slab`,
+  `outer_nucleus_45_degree`, `thin-slab`, and `t * ns * ns`; confirm no
+  source/bin/test/tool files changed.
+- Later audit should report physical parent endpoints/counts, snapped nuclear
+  indices, core boxes, molecular inner box, each proposed shared-shell
+  expansion, transverse scale, low/high longitudinal margins, angular-balance
+  ratio, planned endcap stacks, and residual outer mismatch for bounded H2/Be2
+  and CR2-style fixtures.
+
+Goal advancement:
+- LT5/LT6: moves the slab correction up to the owner of the geometry. The
+  target is no longer merely "compress the leftover slabs"; it is "create real
+  shell bodies and planned compact slab stacks with native metadata."
+
+Carrying-cost result:
+- deleted: none; docs-only authority pass.
+- simplified: midpoint slabs, non-boundary endcaps, boundary endcaps, and
+  fallback outer mismatch now share one conceptual thin-slab category.
+- quarantined: production source edits, driver changes, artifact/schema/reader
+  changes, route skeleton redesign, RG/MWG/IDA/Hamiltonian/raw-block changes,
+  direct slab deletion, committed Cr2 tests/fixtures, and Cr2 workflow remain
+  unapproved.
+- exact remaining caller/blocker: source work waits on the ignored geometry
+  audit. If angular-balanced shellification needs more than native endcap slab
+  metadata and region emission in `terminal_geometry.jl`, the source lane must
+  stop for a separate amendment.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

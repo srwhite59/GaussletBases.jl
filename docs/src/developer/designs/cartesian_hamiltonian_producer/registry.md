@@ -888,9 +888,112 @@ realization, WL boundary coefficient construction, route skeleton semantics,
 artifact schema, or driver inputs, make no source commit and report the exact
 blocker.
 
-Central-gap/contact algorithm redesign remains deferred. This lane approves
+### HP-COMP-ANGBOX-FN-01 — angular-balanced z-axis diatomic shellification
+
+Status: candidate-only. This source lane is not approved until
+`HP-COMP-ANGBOX-AUDIT-01` evidence identifies the exact geometry cut.
+
+Candidate source file:
+
+```text
+src/cartesian_shellification/terminal_geometry.jl
+```
+
+Optional only if directly required for existing summary/caller plumbing:
+
+```text
+src/pqs_source_box_route_driver_helpers.jl
+src/pqs_source_box_diatomic_complete_core_shell.jl
+```
+
+Candidate behavior:
+
+- shared z-axis diatomic molecular shell bodies should be angular-balanced
+  from the outer nuclei in physical parent-axis coordinates;
+- compare the physical bond-axis longitudinal margin from each outer nucleus
+  to the selected transverse physical scale; if `x` and `y` transverse scales
+  differ, use the smaller scale unless a later amendment approves another
+  convention;
+- treat this as the operational `:outer_nucleus_45_degree` shellification
+  rule;
+- when rectangular expansion has bond-axis excess beyond the angular-balanced
+  shell body, emit the excess as planned axial thin-slab stacks with native
+  metadata, not as route-family-specific shell regions or direct identity
+  sectors;
+- apply the same thin-slab category to central midpoint slabs, planned
+  non-boundary angular endcaps, planned boundary angular endcaps, and
+  unexpected outer-mismatch fallback slabs;
+- planned endcap stacks with total thickness greater than `ns` should be split
+  into multiple ordered compact slab units with thickness `<= ns`;
+- unexpected fallback slabs with thickness greater than `ns` remain a
+  setup/shellification failure unless a later policy approves a whole-block
+  compression.
+
+Planned angular endcap metadata should include:
+
+```text
+slab_kind = :angular_endcap_slab
+slab_normal_axis
+slab_side
+slab_thickness
+slab_stack_index
+slab_stack_count
+bond_axis
+reference_nucleus_index
+angular_balance_rule = :outer_nucleus_45_degree
+longitudinal_margin_physical
+transverse_scale_physical
+angular_excess_physical
+```
+
+This candidate lane must not parse region labels to infer slab geometry, must
+not change real shell retained policy, and must not turn axial caps into
+identity sectors. Thin-slab lowering remains under `HP-COMP-THINSLAB-*`.
+
+Forbidden until separately approved:
+
+- production source edits under this ID;
+- driver changes;
+- public input changes;
+- artifact, manifest, provenance, schema, or reader changes;
+- Hamiltonian, one-body, IDA, MWG, Residual Gaussian, raw-block, solver, ECP,
+  or Cr2 workflow changes;
+- route skeleton redesign;
+- PQS/WL real-shell retained-policy changes;
+- direct slab deletion;
+- committed tests or fixtures.
+
+Failure rule for later source approval: if angular-balanced shellification
+requires changing terminal lowering, retained-unit records, route skeletons,
+artifact schema, driver inputs, or real-shell retained policy beyond emitting
+native thin-slab stack regions, do not commit source work and report the exact
+missing native fact or policy.
+
+### HP-COMP-ANGBOX-TEST-01 — angular-balanced shellification validation
+
+Status: candidate-only. No committed test surface is approved yet.
+
+Candidate validation for a later source lane:
+
+- `git diff --check`;
+- package load;
+- ignored geometry audit output for bounded H2/Be2 and user-run Cr2-style
+  fixtures showing parent physical endpoints/counts, snapped nuclear indices,
+  core boxes, molecular inner box, each proposed shared-shell expansion,
+  transverse scale, low/high longitudinal margins, angular-balance ratios,
+  planned endcap slab stacks, and residual outer mismatch if any;
+- prove planned endcap stack slices use the same thin-slab lowering category
+  for PQS and WL;
+- bounded H2 or Be2 base artifact/readback under `nesting = :pqs` and
+  `nesting = :wl` after the source repair;
+- existing H2 Residual Gaussian endpoint smoke only if touched code crosses
+  supplemented construction;
+- no committed Cr2 fixture or Cr2 run.
+
+Separate existing `HP-COMP-SHELLGEOM-DIAT-*` note:
+central-gap/contact algorithm redesign remains deferred. That lane approves
 only shared shellifier entry and route-family-independent inputs to the current
-algorithm.
+algorithm. `HP-COMP-ANGBOX-*` does not change that central-gap/contact policy.
 
 ### HP-COMP-SHELLGEOM-TEST-01 — common shell decomposition validation
 
@@ -4747,6 +4850,27 @@ These entries authorize ignored measurement/probe work only. They do not
 authorize production source edits, committed tests, source files, persistent
 objects, metadata/report/status/payload fields, artifacts, public API, or Cr2
 workflow support.
+
+### HP-COMP-ANGBOX-AUDIT-01 — angular-balanced shellification geometry audit
+
+Approved scope:
+
+- use ignored `tmp/work` probes only to measure z-axis diatomic
+  shellification against the angular-balanced molecular box rule;
+- report parent axis physical endpoints and counts, snapped nuclear indices,
+  core boxes, molecular inner box, each proposed shared-shell expansion,
+  transverse physical scale, low/high longitudinal margins from outer nuclei,
+  angular-balance ratios, planned non-boundary and boundary endcap slab
+  stacks, and residual outer mismatch if any;
+- classify whether the CR2-style thickness-5 axial caps are planned angular
+  endcap stacks or unexplained fallback outer mismatch;
+- recommend a later source lane only if exact files, functions, forbidden
+  surfaces, validation, and failure rules are clear.
+
+This ID does not approve production source edits, shellification repair,
+thin-slab lowering changes, driver changes, artifact/schema/reader changes,
+route skeleton changes, RG/MWG/IDA/Hamiltonian/raw-block changes, public API,
+committed tests/fixtures, Cr2-specific workflow, or Cr2 Hamiltonian runs.
 
 ### HP-R3REM-AUDIT-01 — remaining exact-operator allocation audit
 
