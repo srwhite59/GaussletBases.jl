@@ -230,6 +230,9 @@ function raw_terminal_geometry(
         return span + (left_spacing + right_spacing) / 2
     end
 
+    physical_edge(a, i, side) = Float64(parent_axes[a][i]) +
+        (side == :low ? -1 : 1) * local_axis_spacing(parent_axes[a], i) / 2
+
     function central_distorted_product_metadata(box, axis, gap_width)
         physical_sizes =
             ntuple(a -> range_physical_size(parent_axes[a], box[a]), 3)
@@ -356,6 +359,71 @@ function raw_terminal_geometry(
         return Tuple(pieces)
     end
 
+    function push_diatomic_outer_remainder!(current, axis, left_atom, right_atom)
+        transverse_full =
+            all(a == axis || current[a] == parent_box[a] for a in 1:3)
+        if axis_symbol(axis) == :z && transverse_full
+            for (side, leftover, reference_nucleus_index) in (
+                (:low, first(parent_box[axis]):(first(current[axis]) - 1), left_atom),
+                (:high, (last(current[axis]) + 1):last(parent_box[axis]), right_atom),
+            )
+                isempty(leftover) && continue
+                stack_count = cld(length(leftover), shell_side)
+                for stack_index in 1:stack_count
+                    if side == :low
+                        hi = last(leftover) - (stack_index - 1) * shell_side
+                        lo = max(first(leftover), hi - shell_side + 1)
+                    else
+                        lo = first(leftover) + (stack_index - 1) * shell_side
+                        hi = min(last(leftover), lo + shell_side - 1)
+                    end
+                    slab_range = lo:hi
+                    box = ntuple(a -> a == axis ? slab_range : current[a], 3)
+                    reference = nuclei[reference_nucleus_index][axis]
+                    longitudinal_margin = side == :low ?
+                        reference - physical_edge(axis, lo, :low) :
+                        physical_edge(axis, hi, :high) - reference
+                    transverse_scale = minimum(
+                        min(
+                            nuclei[left_atom][a] -
+                            physical_edge(a, first(box[a]), :low),
+                            physical_edge(a, last(box[a]), :high) -
+                            nuclei[left_atom][a],
+                        )
+                        for a in 1:3 if a != axis
+                    )
+                    metadata = (;
+                        slab_kind = :angular_z_extension_slab,
+                        slab_normal_axis = axis_symbol(axis),
+                        slab_side = side,
+                        slab_thickness = length(slab_range), slab_stack_index = stack_index,
+                        slab_stack_count = stack_count, bond_axis = axis_symbol(axis),
+                        reference_nucleus_index,
+                        angular_balance_rule = :outer_nucleus_45_degree,
+                        longitudinal_margin_physical = longitudinal_margin,
+                        transverse_scale_physical = transverse_scale,
+                        angular_extension_physical =
+                            range_physical_size(parent_axes[axis], slab_range),
+                    )
+                    push_region!(
+                        role = :angular_z_extension_slab, region_kind = :angular_z_extension_slab,
+                        outer_box = box, shell_index = stack_index,
+                        metadata = metadata,
+                    )
+                end
+            end
+            return nothing
+        end
+        for piece in outer_mismatch_pieces(current)
+            push_region!(
+                role = piece.role,
+                region_kind = :outer_mismatch_slab,
+                outer_box = piece.box,
+                metadata = (; bond_axis = axis_symbol(axis)),
+            )
+        end
+    end
+
     function grow_single_atom!(atom_index::Int, center::NTuple{3,Int})
         core = centered_box(center, core_side)
         push_region!(
@@ -442,14 +510,7 @@ function raw_terminal_geometry(
                 current = next_box
             end
 
-            for piece in outer_mismatch_pieces(current)
-                push_region!(
-                    role = piece.role,
-                    region_kind = :outer_mismatch_slab,
-                    outer_box = piece.box,
-                    metadata = (; bond_axis = axis_symbol(axis)),
-                )
-            end
+            push_diatomic_outer_remainder!(current, axis, left_atom, right_atom)
 
             return (;
                 bond_axis = axis_symbol(axis),
@@ -533,14 +594,7 @@ function raw_terminal_geometry(
             current = next_box
         end
 
-        for piece in outer_mismatch_pieces(current)
-            push_region!(
-                role = piece.role,
-                region_kind = :outer_mismatch_slab,
-                outer_box = piece.box,
-                metadata = (; bond_axis = axis_symbol(axis)),
-            )
-        end
+        push_diatomic_outer_remainder!(current, axis, left_atom, right_atom)
 
         return (; bond_axis = axis_symbol(axis), left_atom, right_atom)
     end
@@ -670,6 +724,8 @@ function _cartesian_terminal_shellification_geometry_region_dependency(region)
         return :plan_lowerable_direct_slab
     region.region_kind == :central_distorted_product_box &&
         return :planned_distorted_product_box_lowering
+    region.region_kind == :angular_z_extension_slab &&
+        return :planned_angular_z_extension_slab_lowering
     region.region_kind == :outer_mismatch_slab &&
         return :plan_lowerable_direct_boundary_slab
     return :unsupported_terminal_shellification_region
@@ -827,6 +883,8 @@ function _cartesian_terminal_shellification_geometry_region_lowering_family(
         return :direct_midpoint_slab
     region_summary.region_kind == :central_distorted_product_box &&
         return :distorted_comx_product_box_deferred
+    region_summary.region_kind == :angular_z_extension_slab &&
+        return :angular_z_extension_thin_slab_deferred
     region_summary.region_kind == :outer_mismatch_slab &&
         return :direct_boundary_slab
     return :unsupported_terminal_shellification_region
@@ -849,6 +907,8 @@ function _cartesian_terminal_shellification_geometry_missing_lowering_reason(
 )
     dependency == :planned_distorted_product_box_lowering &&
         return :distorted_product_box_lowering_pending
+    dependency == :planned_angular_z_extension_slab_lowering &&
+        return :angular_z_extension_thin_slab_lowering_pending
     dependency == :unsupported_terminal_shellification_region &&
         return :unsupported_terminal_shellification_region
     return nothing
@@ -862,6 +922,8 @@ function _cartesian_terminal_shellification_geometry_region_retirement_target(
     ) && return :already_plan_lowered_region
     dependency == :planned_distorted_product_box_lowering &&
         return :pending_distorted_product_box_lowering_support
+    dependency == :planned_angular_z_extension_slab_lowering &&
+        return :pending_angular_z_extension_thin_slab_lowering_support
     return :requires_manager_review
 end
 
@@ -927,7 +989,7 @@ function _cartesian_terminal_shellification_geometry_scaffold_materialization_st
         regions,
     ) && return :blocked_unsupported_regions
     any(!getproperty(region, :independently_lowerable) for region in regions) &&
-        return :deferred_pending_distorted_product_box_lowering
+        return :deferred_pending_terminal_lowering
     return :ready_supported_terminal_subset
 end
 

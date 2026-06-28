@@ -5311,6 +5311,58 @@ Deletion accounting:
 - new tests: none.
 - new metadata/status fields: none.
 
+## Cartesian Hamiltonian Producer Pass 179 - Emit Angular Z-Extension Slabs
+
+Commit(s):
+- this commit - Emit angular z-extension slab geometry
+
+Summary:
+- Accepted the `HP-COMP-ANGBOX-FN-01` source pass. Z-axis diatomic
+  shellification now treats the understood bond-end leftovers produced after
+  transverse shared-shell growth saturates as planned
+  `:angular_z_extension_slab` stack regions, not generic
+  `z_low/z_high_outer_mismatch_slab` fallback regions.
+- The ordinary shared-shell body remains unchanged. PQS and WL still share
+  the same common shellification geometry; route-local `q` differences remain
+  downstream retained-construction facts.
+- Lowering is deliberately not implemented here. The emitted slabs are marked
+  as pending terminal lowering, so artifact/readback is blocked until
+  `HP-COMP-THINSLAB-*` lowers them compactly.
+
+Validation:
+- Manager reran: `git diff --check`; package load; ignored
+  `tmp/work/angular_box_geometry_audit.jl`.
+- Audit summaries: H2 support 900 / z mismatch 0; Cr2 q4-style support 722 /
+  z mismatch 0; Cr2 ns5-style support 2500 / z mismatch 0; Cr2 large-slab
+  ns9-style support 13448 / z mismatch 0; all PQS/WL geometry comparisons
+  match.
+- No artifact/readback was run because terminal lowering for
+  `:angular_z_extension_slab` is intentionally deferred.
+
+Goal advancement:
+- LT5/LT6: moves the CR2 slab blowup correction to the shellification owner.
+  The large z-end support is now named planned geometry instead of falling
+  through as direct identity-capable outer mismatch.
+
+Carrying-cost result:
+- deleted: old diatomic classification of understood z-end leftovers as
+  generic outer mismatch slabs.
+- simplified: common diatomic remainder handling now has one local helper and
+  one planned slab kind.
+- quarantined: thin-slab lowering, retained units, transform contracts,
+  terminal realization, artifacts, driver workflow, RG/MWG/IDA, and Cr2
+  workflow remain unmodified.
+- not deleted because: generic `:outer_mismatch_slab` remains for
+  unexpected/non-z leftovers.
+- exact remaining caller/blocker: `HP-COMP-THINSLAB-*` must lower
+  `:angular_z_extension_slab` compactly before artifacts with these regions
+  can be produced.
+- added src lines: 79.
+- deleted src lines: 17.
+- new tests: none; ignored audit only.
+- new metadata/status fields: native shellification slab metadata only; no
+  artifact/status payload fields.
+
 ## Cartesian Hamiltonian Producer Pass 173 - Update RG Cutoff Defaults
 
 Commit(s):
