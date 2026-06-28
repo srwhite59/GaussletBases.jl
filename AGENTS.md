@@ -534,6 +534,8 @@ these approved design IDs:
 - `HP-COMP-SHELLGEOM-DIAT-TEST-01`
 - `HP-COMP-THINSLAB-FN-01`
 - `HP-COMP-THINSLAB-TEST-01`
+- `HP-COMP-ANGBOX-FN-01`
+- `HP-COMP-ANGBOX-TEST-01`
 - `HP-MCOMX-FILE-01`
 - `HP-MCOMX-OBJ-01`
 - `HP-MCOMX-FN-01`
@@ -1582,20 +1584,24 @@ changes, RG/MWG/IDA changes, route skeleton redesign, broad terminal
 realization redesign, direct slab deletion, committed Cr2 fixtures/tests, or
 Cr2 workflow.
 
-`HP-COMP-ANGBOX-AUDIT-01` approves only ignored geometry-audit probes for
-z-axis diatomic angular-balanced shellification. It does not approve
-production source edits. The intended source lane remains candidate-only under
-`HP-COMP-ANGBOX-FN-01` / `HP-COMP-ANGBOX-TEST-01`: shared molecular shells
-should be angular-balanced in physical parent-axis coordinates from the outer
-nuclei. When angular balance requires z-only extension beyond the ordinary
-index-layer shell body, shellification emits native thin-slab stacks. The same
-thin-slab concept applies to midpoint slabs, planned non-boundary angular
-z-extension slabs, planned boundary angular z-extension slabs, and unexpected
-outer-mismatch fallback slabs. Planned z-extension stacks lower through
-`HP-COMP-THINSLAB-*`; real shells remain route-specific after common
-shellification. This lane does not approve driver changes, artifact/schema/
-reader changes, RG/MWG/IDA/Hamiltonian/raw-block changes, route skeleton
-redesign, direct slab deletion, committed Cr2 tests/fixtures, or Cr2 workflow.
+`HP-COMP-ANGBOX-FN-01` and `HP-COMP-ANGBOX-TEST-01` approve only
+z-axis diatomic angular-balanced shellification in
+`src/cartesian_shellification/terminal_geometry.jl`, with narrow route-driver
+or complete-core-shell summary plumbing only if directly required. The
+ordinary index-layer shared-shell body remains valid, but when shared-shell
+growth stops with transverse axes saturated and bond-axis parent support
+remaining, shellification must emit the bond-axis leftovers as planned
+`:angular_z_extension_slab` stack regions with native axis/side/thickness,
+stack, bond-axis, angular-rule, margin, transverse-scale, and extension-size
+metadata. The same thin-slab concept applies to midpoint slabs, planned
+non-boundary angular z-extension slabs, planned boundary angular z-extension
+slabs, and unexpected outer-mismatch fallback slabs. Planned z-extension
+stacks lower through `HP-COMP-THINSLAB-*`, which remains a separate blocker;
+real shells remain route-specific after common shellification. This lane does
+not approve driver changes, artifact/schema/reader/provenance changes,
+terminal lowering, retained units, transform contracts, terminal realization,
+RG/MWG/IDA/Hamiltonian/raw-block changes, route-family-specific PQS/WL
+geometry, committed tests/fixtures, Cr2-specific branches, or Cr2 workflow.
 
 `HP-MCOMX-FILE-01`, `HP-MCOMX-OBJ-01`, `HP-MCOMX-FN-01`,
 `HP-MCOMX-WIRE-01`, and `HP-MCOMX-TEST-01` approve only the mainline

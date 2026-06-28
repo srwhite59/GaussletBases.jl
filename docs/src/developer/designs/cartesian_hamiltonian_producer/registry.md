@@ -890,10 +890,9 @@ blocker.
 
 ### HP-COMP-ANGBOX-FN-01 — angular-balanced z-axis diatomic shellification
 
-Status: candidate-only. This source lane is not approved until
-`HP-COMP-ANGBOX-AUDIT-01` evidence identifies the exact geometry cut.
+Status: approved.
 
-Candidate source file:
+Approved source file:
 
 ```text
 src/cartesian_shellification/terminal_geometry.jl
@@ -906,7 +905,7 @@ src/pqs_source_box_route_driver_helpers.jl
 src/pqs_source_box_diatomic_complete_core_shell.jl
 ```
 
-Candidate behavior:
+Approved behavior:
 
 - each shared z-axis diatomic molecular shellification step should compute an
   angular-balanced target box from the outer nuclei in physical parent-axis
@@ -922,6 +921,9 @@ Candidate behavior:
   thin-slab stacks with native metadata. The ordinary body plus planned
   z-extension slabs, not the ordinary body alone, realizes the target
   coverage;
+- specifically, when ordinary shared-shell expansion stops with transverse
+  axes saturated and bond-axis parent support remaining, emit the bond-axis
+  leftovers as planned `:angular_z_extension_slab` stack regions;
 - do not treat planned z-extension slabs as route-family-specific shell
   regions or direct identity sectors;
 - apply the same thin-slab category to central midpoint slabs, planned
@@ -951,25 +953,27 @@ transverse_scale_physical
 angular_extension_physical
 ```
 
-This candidate lane must not parse region labels to infer slab geometry, must
-not change real shell retained policy, and must not turn axial z-extension
-slabs into identity sectors. Thin-slab lowering remains under
-`HP-COMP-THINSLAB-*`.
+This lane must not parse region labels to infer slab geometry, must not change
+real shell retained policy, and must not turn axial z-extension slabs into
+identity sectors. Thin-slab lowering remains under `HP-COMP-THINSLAB-*`.
 
-Forbidden until separately approved:
+Forbidden:
 
-- production source edits under this ID;
 - driver changes;
 - public input changes;
 - artifact, manifest, provenance, schema, or reader changes;
+- terminal lowering, retained-unit, transform-contract, or terminal-realization
+  changes;
 - Hamiltonian, one-body, IDA, MWG, Residual Gaussian, raw-block, solver, ECP,
   or Cr2 workflow changes;
 - route skeleton redesign;
+- route-family-specific PQS/WL geometry;
 - PQS/WL real-shell retained-policy changes;
 - direct slab deletion;
+- Cr2-specific branches;
 - committed tests or fixtures.
 
-Failure rule for later source approval: if angular-balanced shellification
+Failure rule: if angular-balanced shellification
 requires changing terminal lowering, retained-unit records, route skeletons,
 artifact schema, driver inputs, or real-shell retained policy beyond emitting
 native thin-slab stack regions, do not commit source work and report the exact
@@ -977,9 +981,9 @@ missing native fact or policy.
 
 ### HP-COMP-ANGBOX-TEST-01 — angular-balanced shellification validation
 
-Status: candidate-only. No committed test surface is approved yet.
+Status: approved.
 
-Candidate validation for a later source lane:
+Approved validation:
 
 - `git diff --check`;
 - package load;
@@ -988,12 +992,11 @@ Candidate validation for a later source lane:
   core boxes, molecular inner box, each proposed shared-shell expansion,
   transverse scale, low/high longitudinal margins, angular-balance ratios,
   planned z-extension slab stacks, and residual outer mismatch if any;
+- ignored angular geometry audit showing planned z-extension support, zero
+  residual z mismatch after classification, and PQS/WL geometry parity;
 - prove planned z-extension stack slices use the same thin-slab lowering
   category for PQS and WL;
-- bounded H2 or Be2 base artifact/readback under `nesting = :pqs` and
-  `nesting = :wl` after the source repair;
-- existing H2 Residual Gaussian endpoint smoke only if touched code crosses
-  supplemented construction;
+- no artifact/readback is required while lowering is intentionally deferred;
 - no committed Cr2 fixture or Cr2 run.
 
 Separate existing `HP-COMP-SHELLGEOM-DIAT-*` note:
@@ -5023,5 +5026,5 @@ Composition IDs:
 
 The initial explicit `atom | z-axis diatomic`, `:pqs | :wl`,
 `supplement = off | on` composition lanes now all have approved implementation
-authority. Deferred geometry, solver, ECP, public export, and Cr2-specific
+authority. Remaining geometry, solver, ECP, public export, and Cr2-specific
 work still need later docs-only amendments before implementation may begin.

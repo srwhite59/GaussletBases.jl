@@ -17246,3 +17246,61 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 178 - Promote Angular-Box Source Lane
+
+Commit(s):
+- this commit - Promote angular-box shellification lane
+
+Summary:
+- Promoted `HP-COMP-ANGBOX-FN-01` and `HP-COMP-ANGBOX-TEST-01` from
+  candidate-only to approved source/validation authority. The ignored audit
+  established the exact cut: the large z-end leftovers are a common
+  shellifier geometry issue, identical for PQS and WL, not a retained-basis
+  or route-family mismatch.
+- Approved source surface is `src/cartesian_shellification/terminal_geometry.jl`
+  only, with `src/pqs_source_box_route_driver_helpers.jl` and
+  `src/pqs_source_box_diatomic_complete_core_shell.jl` optional only for
+  directly required summary/caller plumbing.
+- Approved behavior is narrow: when ordinary z-axis diatomic shared-shell
+  expansion stops with transverse axes saturated and bond-axis parent support
+  remaining, emit the bond-axis leftovers as planned
+  `:angular_z_extension_slab` stack regions, chunked so each slab has
+  thickness `<= ns`, with native axis/side/thickness, stack, bond-axis,
+  angular-rule, margin, transverse-scale, and extension-size metadata.
+  Generic `:outer_mismatch_slab` remains only for unexpected or non-z
+  leftovers. Thin-slab lowering remains a separate blocker under
+  `HP-COMP-THINSLAB-*`.
+
+Validation:
+- Docs-only validation required: `git diff --check`; focused scans for
+  `HP-COMP-ANGBOX-*`, `Status: approved`, `:angular_z_extension_slab`,
+  `terminal_geometry.jl`, and no live candidate-only ANGBOX wording; confirm
+  no source/bin/test/tool files are staged in this docs pass.
+- Later source validation requires package load and the ignored angular
+  geometry audit showing H2/Cr2-style fixtures, planned z-extension support,
+  zero residual z mismatch after classification, and PQS/WL geometry parity.
+  No artifact/readback is required while lowering is intentionally deferred.
+
+Goal advancement:
+- LT5/LT6: opens the source lane at the correct owner layer. The shellifier
+  may now classify the missing z coverage as planned geometry while keeping
+  lowering, retained units, terminal realization, artifacts, and driver
+  workflow out of scope.
+
+Carrying-cost result:
+- deleted: none; docs-only promotion.
+- simplified: one approved shellification owner replaces the previous
+  candidate-only audit interpretation.
+- quarantined: driver changes, artifact/schema/provenance/reader changes,
+  terminal lowering, retained units, transform contracts, terminal
+  realization, Hamiltonian/RG/MWG/IDA/raw-block changes, route-family-specific
+  PQS/WL geometry, committed tests/fixtures, Cr2-specific branches, and Cr2
+  workflow remain unapproved.
+- exact remaining caller/blocker: doer may implement the shellification
+  emission only; compact lowering of the emitted slabs is still blocked until
+  the `HP-COMP-THINSLAB-*` implementation pass.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

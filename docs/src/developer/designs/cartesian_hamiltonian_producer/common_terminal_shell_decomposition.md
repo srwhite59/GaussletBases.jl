@@ -247,12 +247,11 @@ should be split into multiple ordered compact slab units, each with thickness
 unplanned fallback slab with thickness `> ns` remains a setup/shellification
 failure under the existing thin-slab guardrail.
 
-`HP-COMP-ANGBOX-AUDIT-01` approves only ignored geometry probes to measure this
-rule for H2/Be2/Cr2-style z-axis diatomics. Later source repair under
-`HP-COMP-ANGBOX-FN-01` remains candidate-only until the audit identifies the
-exact geometry cut. The candidate source owner is
+`HP-COMP-ANGBOX-FN-01` approves this shellification repair in
 `src/cartesian_shellification/terminal_geometry.jl`, with only narrow summary
-or caller plumbing if directly required.
+or caller plumbing if directly required. `HP-COMP-ANGBOX-TEST-01` approves
+ignored geometry probes for H2/Be2/Cr2-style z-axis diatomics. Lowering planned
+z-extension slabs remains deferred to `HP-COMP-THINSLAB-*`.
 
 ## Thin-Slab Lowering
 
@@ -345,8 +344,9 @@ This amendment does not approve:
 - route skeleton redesign;
 - terminal lowering redesign beyond the narrow common thin-slab repair in
   `HP-COMP-THINSLAB-FN-01`;
-- angular-balanced shellification source changes before
-  `HP-COMP-ANGBOX-FN-01` is separately approved;
+- angular-balanced shellification source changes outside
+  `src/cartesian_shellification/terminal_geometry.jl` except narrow approved
+  summary/caller plumbing;
 - retained-unit record changes beyond the shared thin-slab retained object;
 - retained-unit transform changes beyond the shared thin-slab transform
   contract;
@@ -411,7 +411,7 @@ No committed test file, committed fixture, driver contract test,
 solver/RHF/ECP/EGOI validation, route-diagnostic validation, artifact schema
 validation, or Cr2 fixture is approved.
 
-`HP-COMP-ANGBOX-AUDIT-01` approves only ignored geometry probes that report:
+`HP-COMP-ANGBOX-TEST-01` approves only ignored geometry probes that report:
 
 - parent axis physical endpoints and counts;
 - snapped nuclear indices and direct/core boxes;
@@ -424,9 +424,11 @@ validation, or Cr2 fixture is approved.
 - residual outer mismatch, if any.
 
 The audit must classify whether CR2-style axial slabs are planned angular
-z-extension stacks or unexplained fallback outer mismatch. It does not approve
-production source edits, committed tests, Cr2 Hamiltonian runs, or driver
-changes.
+z-extension stacks or unexplained fallback outer mismatch. It should show
+planned z-extension support, zero residual z mismatch after classification,
+and PQS/WL geometry parity. No artifact/readback is required while lowering is
+intentionally deferred. This validation does not approve committed tests,
+Cr2 Hamiltonian runs, or driver changes.
 
 ## Failure Rule
 

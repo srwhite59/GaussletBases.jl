@@ -61,11 +61,11 @@ central-gap/contact and shared-shell ownership are common shell geometry.
 and outer-mismatch slab stacks: PQS and White-Lindsey use the same compact
 slab lowering, with unit-slice scale `ns x ns x 1`, and neither may retain
 those slabs as full identity rows.
-`HP-COMP-ANGBOX-AUDIT-01` approves ignored geometry audits for the next
-z-axis diatomic shellification correction: shared molecular shell bodies should
-be angular-balanced in physical coordinates from the outer nuclei, while
-midpoint slabs and planned non-boundary/boundary z-extension slabs use the
-common thin-slab stack concept.
+`HP-COMP-ANGBOX-*` approves the shellification side of that correction:
+z-axis diatomic shared-shell growth may emit planned angular z-extension slab
+stacks when the ordinary index-layer shell body underreaches the physical
+outer-nucleus angular target. Lowering those slabs remains governed by
+`HP-COMP-THINSLAB-*`.
 Mapped-COMX source spans are approved as a narrow option at the existing
 doside/COMX source-span seam under `HP-MCOMX-*`; high-order remains a
 consumer/benchmark lane, not the owner of the installed facility.

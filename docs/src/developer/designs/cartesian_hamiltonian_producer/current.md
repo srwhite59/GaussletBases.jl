@@ -119,16 +119,15 @@ Implemented base path:
   after common shellification. If slab thickness exceeds `ns`, source work
   must stop and request a policy decision rather than silently deleting slabs
   or using identity blocks.
-- `HP-COMP-ANGBOX-AUDIT-01` approves only ignored z-axis diatomic geometry
-  audits for angular-balanced shared molecular boxes. The intended repair is
-  shellification-owned: each shared-shell step computes a physical
-  outer-nucleus angular-balanced target box. The ordinary index-layer shell
-  body plus planned z-extension thin-slab stacks, not the ordinary body alone,
-  realizes that target coverage. The thin-slab category covers midpoint slabs,
-  planned non-boundary angular z-extension slabs, planned boundary angular
-  z-extension slabs, and unexpected outer-mismatch fallback slabs.
-  `HP-COMP-ANGBOX-FN-01` remains candidate-only until the audit identifies the
-  exact source cut.
+- `HP-COMP-ANGBOX-*` approves the shellification side of the angular-balanced
+  z-axis diatomic repair in `terminal_geometry.jl`. Each shared-shell step
+  computes a physical outer-nucleus angular-balanced target box. The ordinary
+  index-layer shell body plus planned z-extension thin-slab stacks, not the
+  ordinary body alone, realizes that target coverage. When ordinary
+  shared-shell growth stops with transverse axes saturated and bond-axis parent
+  support remaining, shellification emits the bond-axis leftovers as planned
+  `:angular_z_extension_slab` stack regions. Lowering those slabs remains
+  deferred to `HP-COMP-THINSLAB-*`.
 - `HP-MCOMX-*` approves a protected-`P2` plus mapped Chebyshev source-span
   option at the existing nested doside / COMX seam. The nonlinear map uses
   normalized local `u`, while `_cleanup_comx_transform(...)` still uses the
@@ -512,7 +511,7 @@ Composition lane status:
   diagnostics/status/report payloads, committed tests, Cr2-specific workflow,
   translated atoms, non-origin atom support, element lookup/default tables,
   broad parent-construction rewrites, or diatomic sizing changes;
-- deferred geometry, solver, ECP, public export, and Cr2-specific work still
+- remaining geometry, solver, ECP, public export, and Cr2-specific work still
   need later docs-only amendments before implementation may begin.
 
 Approved R1 one-center base atom relaxation:

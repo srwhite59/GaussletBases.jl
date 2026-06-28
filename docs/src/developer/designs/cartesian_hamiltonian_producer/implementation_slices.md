@@ -1148,16 +1148,14 @@ Additional approved composition lane:
   a thickness-`t <= ns` outer-mismatch stack should scale about `t * ns * ns`.
   Direct/core sectors remain identity, and real shell regions remain
   route-specific after common shellification.
-- `HP-COMP-ANGBOX-AUDIT-01` is approved only for ignored z-axis diatomic
-  geometry audits. It records the next shellification concept: shared
-  molecular shellification should compute an angular-balanced target box in
-  physical parent-axis coordinates from the outer nuclei. The ordinary
+- `HP-COMP-ANGBOX-FN-01` / `HP-COMP-ANGBOX-TEST-01` are approved for the
+  shellification side of angular-balanced z-axis diatomic shared-shell growth
+  in `src/cartesian_shellification/terminal_geometry.jl`. The ordinary
   index-layer shell body plus planned z-extension thin-slab stacks, not the
-  ordinary body alone, realizes that target coverage. Midpoint slabs,
-  non-boundary z-extension slabs, boundary z-extension slabs, and fallback
-  outer-mismatch slabs all use the same thin-slab category.
-  `HP-COMP-ANGBOX-FN-01` / `HP-COMP-ANGBOX-TEST-01` remain candidate-only for
-  later source repair after the audit proves the exact geometry cut.
+  ordinary body alone, realizes the physical outer-nucleus angular target.
+  Midpoint slabs, non-boundary z-extension slabs, boundary z-extension slabs,
+  and fallback outer-mismatch slabs all use the same thin-slab category.
+  Lowering those slabs remains deferred to `HP-COMP-THINSLAB-*`.
 - `HP-MCOMX-FILE-01`, `HP-MCOMX-OBJ-01`, `HP-MCOMX-FN-01`,
   `HP-MCOMX-WIRE-01`, and `HP-MCOMX-TEST-01` are approved for the mainline
   mapped-COMX source-span option at the existing nested doside / COMX seam,
@@ -1179,7 +1177,7 @@ Additional approved composition lane:
   `:mapped_comx` is currently PQS-only. No route records, terminal-lowering
   changes, artifact changes, source defaults, or new COMX path are approved.
 
-No initial composition placeholder remains candidate-only. Deferred geometry,
+No initial composition placeholder remains candidate-only. Remaining geometry,
 solver, ECP, public export, and Cr2-specific work still need a later docs-only
 amendment naming exact files, functions, validation gates, forbidden surfaces,
 and line budget.
