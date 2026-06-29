@@ -352,6 +352,18 @@ Approved robustness lane:
   `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl` so its
   in-memory `residual.occupation_cutoff` assertion and artifact/provenance
   `values[:occupation_cutoff]` assertion expect `5.0e-8`, and no Cr2 run.
+- `HP-RG-CUTOFF-FN-02` supersedes only the residual occupation cutoff:
+  `residual_occupation_cutoff = 1.0e-6`, while
+  `identity_atol = 5.0e-8` remains unchanged. The same source owner/plumbing
+  surface as `HP-RG-CUTOFF-FN-01` applies.
+- `HP-RG-CUTOFF-TEST-02` approves only residual-only validation after this
+  cutoff change: Cr2 owner retained counts should drop from `68 + 68` to
+  `62 + 62`; report `min eig(K_RR)`, `min eig(H1_RR)`, and low-mode candidate
+  composition; Be high-zeta and H2 residual-GTO/MWG endpoints must still pass;
+  exactly update the existing H2 cutoff/provenance assertions from `5.0e-8` to
+  `1.0e-6`. No full HF, Cr2 artifact/workflow, kinetic/`H1_RR` spectral guard,
+  width-filtering default, new committed fixture, or broad test change is
+  approved.
 
 ## Compact Hamiltonian Artifact Manifest
 

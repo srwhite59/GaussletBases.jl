@@ -3009,7 +3009,7 @@ Approved `supplement_provenance/` keys:
 - `augmented_basis_order = :base_then_residual`;
 - `residual_basis_convention = :owner_local_residual_occupation_final_merge_lowdin`;
 - `rank_rule` / owner-local selection rule;
-- `occupation_cutoff = 5.0e-8`;
+- `occupation_cutoff = 1.0e-6`;
 - `tau_neg_abs`, `tau_neg_rel`;
 - `tau_merge_abs = 1.0e-12`, `tau_merge_rel = 1.0e-12`;
 - `mwg_convention_version`;
@@ -3690,13 +3690,17 @@ residual_occupation_cutoff = 5.0e-8
 identity_atol = 5.0e-8
 ```
 
+This was the production default after the Cr atom marginal-direction pass. The
+residual occupation cutoff is superseded by `HP-RG-CUTOFF-FN-02`; the final
+identity validation tolerance remains `5.0e-8`.
+
 Evidence: Cr atom PQS `basis_ns = 9`, `map_ns = 11`, `lmax = 1` retained a
 marginal residual direction at occupation `3.637e-8`. If the production policy
 is to discard such marginal residual directions, the default cutoff must say
 so explicitly rather than preserving the direction through the older
 `1.0e-8` cutoff.
 
-Approved behavior:
+Approved behavior for this now-superseded default:
 
 - discard owner-local residual directions below `5.0e-8` by default;
 - keep the final `R' S R` identity validation default aligned at
@@ -3754,6 +3758,103 @@ Approved validation:
 No other committed fixture/test, driver workflow, artifact schema change,
 solver/RHF, ECP, EGOI, Cr2 full Hamiltonian, Cr2 artifact, or Cr2 facade
 support is approved.
+
+### HP-RG-CUTOFF-FN-02 — production residual cutoff tightening
+
+Status: approved.
+
+Approved source files:
+
+```text
+src/cartesian_residual_gaussians/residual_basis.jl
+src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl
+```
+
+`residual_basis.jl` is the primary owner. The terminal residual file is
+approved only for narrow compatibility keyword default plumbing if needed.
+
+Approved target:
+
+```text
+residual_occupation_cutoff = 1.0e-6
+identity_atol = 5.0e-8
+```
+
+Evidence: Cr2 residual spectra show the worst low-H1 modes are built from
+marginal owner-local residual directions with occupations around
+`1.27e-7` to `8.98e-7`. The current `5.0e-8` cutoff retains those directions;
+`1.0e-6` drops `6` directions per owner in the cited audit. Broad residual
+widths still matter, but broad width alone is not the first production rule
+because one-center atoms can have broad candidates without the same bad
+`H1_RR` sector.
+
+Approved behavior:
+
+- set the default owner-local residual occupation cutoff to `1.0e-6`;
+- keep the final `R' S R` identity validation default at
+  `identity_atol = 5.0e-8`;
+- preserve explicit caller overrides where already supported;
+- keep width/zeta filtering explicit and user-controlled;
+- keep owner-local metric checks, negative-eigenvalue tolerances, final merge
+  metric checks, and `G' S R` orthogonality checks active;
+- keep owner grouping, final merge failure rules, MWG/IDA conventions,
+  artifact schema/provenance/reader/manifest, driver workflow, and public API
+  unchanged.
+
+This ID supersedes only the `HP-RG-CUTOFF-FN-01` residual occupation default.
+It does not change the residual-selection algorithm, identity tolerance,
+negative-eigenvalue tolerances, or merge policy.
+
+Forbidden:
+
+- residual selection algorithm changes;
+- kinetic or `H1_RR` spectral guards;
+- global raw-candidate residual selection;
+- global raw-column pivoted-Cholesky residual selection;
+- owner grouping changes;
+- negative-eigenvalue tolerance changes;
+- final merge metric failure-rule changes or merge eigenvalue flooring;
+- width/zeta filtering default changes or width filtering as conditioning
+  repair;
+- MWG/IDA, nuclear, raw-block, exact-operator, terminal-basis, WL/PQS route,
+  shellification, Hamiltonian assembly, artifact schema, reader, manifest,
+  driver, public API/export, solver/RHF, ECP, EGOI, Cr2 workflow, Cr2 artifact,
+  or full HF changes;
+- committed fixtures/tests except the exact existing H2 endpoint assertion
+  update named under `HP-RG-CUTOFF-TEST-02`.
+
+Failure rule: if the Cr2 residual-only audit does not cleanly remove the
+identified low-occupation directions or if low-`H1_RR` ghost modes remain
+after the cutoff change, make no further source changes in this lane. Report
+the residual spectra and request separate kinetic/`H1_RR` spectral-guard
+authority if needed.
+
+### HP-RG-CUTOFF-TEST-02 — production residual cutoff validation
+
+Status: approved.
+
+Approved validation:
+
+- Cr2 residual-only audit, not full HF or a Cr2 artifact/workflow run;
+- Cr2 owner retained counts should drop from `68 + 68` to `62 + 62`;
+- recompute and report residual spectra:
+  - `min eig(K_RR)`;
+  - `min eig(H1_RR)`;
+  - low-mode candidate composition;
+- if low-H1 ghost modes remain, stop and request separate kinetic/`H1_RR`
+  spectral-guard authority;
+- Be high-zeta residual construction still passes;
+- H2 residual-GTO/MWG endpoint remains unchanged except for the approved
+  default cutoff/provenance value;
+- exactly update the existing committed H2 endpoint test
+  `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl` so both cutoff
+  assertions expect `1.0e-6` instead of `5.0e-8`: the in-memory
+  `residual.occupation_cutoff` assertion and the artifact/provenance
+  `values[:occupation_cutoff]` assertion.
+
+No other committed fixture/test, driver workflow, artifact schema change,
+solver/RHF, ECP, EGOI, full HF, Cr2 full Hamiltonian, Cr2 artifact, or Cr2
+facade support is approved.
 
 ## Approved For Cartesian Gaussian Raw-Block Nuclear Owner
 

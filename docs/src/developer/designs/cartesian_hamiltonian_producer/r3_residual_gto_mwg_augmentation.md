@@ -263,7 +263,7 @@ exact one-body, moment, and MWG construction.
 Approved cutoff and tolerance policy:
 
 ```text
-eta_RG = 5.0e-8
+eta_RG = 1.0e-6
 tau_neg_abs = 1.0e-12
 tau_neg_rel = 1.0e-12
 tau_merge_abs = 1.0e-12
@@ -285,9 +285,12 @@ eigenvalues to preserve directions. After final merge, require `G' S R` and
 `R' S R - I` to pass the current RG validation policy.
 
 The original R3 approval used `eta_RG = 1.0e-8` as owner-local selection
-evidence. `HP-RG-CUTOFF-FN-01` supersedes the production default to
+evidence. `HP-RG-CUTOFF-FN-01` later superseded the production default to
 `eta_RG = 5.0e-8` and `identity_atol = 5.0e-8` so marginal residual
 directions such as the Cr atom `3.637e-8` direction are discarded by default.
+`HP-RG-CUTOFF-FN-02` now supersedes the residual occupation default to
+`eta_RG = 1.0e-6`, while keeping `identity_atol = 5.0e-8`, so the cited Cr2
+`1.27e-7` to `8.98e-7` marginal directions are not retained by default.
 
 Measurement evidence for this approval:
 
@@ -319,7 +322,7 @@ Approved exact fields:
 | `residual_labels::Vector{String}` | deterministic residual labels derived from owner and local retained mode order |
 | `T_G::Matrix{Float64}` | shape `n_G x n_R`; base-side residual transform |
 | `T_A::Matrix{Float64}` | shape `n_A x n_R`; supplement-side residual transform |
-| `occupation_cutoff::Float64` | approved residual-occupation cutoff `eta_RG = 5.0e-8` |
+| `occupation_cutoff::Float64` | approved residual-occupation cutoff `eta_RG = 1.0e-6` |
 | `tau_neg_abs::Float64` | absolute negative-eigenvalue error tolerance |
 | `tau_neg_rel::Float64` | relative negative-eigenvalue error tolerance |
 | `tau_merge_abs::Float64` | absolute final-merge near-singular threshold |
@@ -675,7 +678,7 @@ Approved compact provenance keys:
 | `supplement_provenance/augmented_basis_order` | `:base_then_residual` |
 | `supplement_provenance/residual_basis_convention` | `:owner_local_residual_occupation_final_merge_lowdin` |
 | `supplement_provenance/rank_rule` | owner-local residual occupation selector |
-| `supplement_provenance/occupation_cutoff` | `5.0e-8` |
+| `supplement_provenance/occupation_cutoff` | `1.0e-6` |
 | `supplement_provenance/tau_neg_abs` | `Float64` |
 | `supplement_provenance/tau_neg_rel` | `Float64` |
 | `supplement_provenance/tau_merge_abs` | `Float64` |

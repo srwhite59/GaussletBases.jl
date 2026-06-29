@@ -17658,3 +17658,59 @@ Carrying-cost result:
 - new tests: none.
 - new metadata/status fields: one compact in-memory `base.terminal_inventory`
   summary for driver printing only; no artifact/status/schema fields.
+
+## Cartesian Hamiltonian Producer Pass 183 - Approve RG 1e-6 Production Cutoff
+
+Commit(s):
+- this commit - Approve RG 1e-6 cutoff policy
+
+Summary:
+- Approved `HP-RG-CUTOFF-FN-02` and `HP-RG-CUTOFF-TEST-02` as the next
+  Residual Gaussian production cutoff policy. The default
+  `residual_occupation_cutoff` moves from `5.0e-8` to `1.0e-6`; the final
+  residual identity validation `identity_atol` remains `5.0e-8`.
+- The evidence is Cr2-specific but the policy is generic RG production
+  behavior: the worst low-H1 residual modes were built from marginal
+  owner-local residual directions with occupations about `1.27e-7` to
+  `8.98e-7`, and a `1.0e-6` cutoff drops `6` directions per owner. Broad
+  widths remain diagnostic evidence, but width filtering is not the first
+  production rule because one-center atoms can have broad candidates without
+  the same bad `H1_RR` sector.
+- The approved validation is residual-only first. Cr2 owner retained counts
+  should drop from `68 + 68` to `62 + 62`; doer should recompute and report
+  `min eig(K_RR)`, `min eig(H1_RR)`, and low-mode candidate composition. If
+  low-H1 ghost modes remain, the next authority should be a separate
+  kinetic/`H1_RR` spectral-guard lane, not width scaling or a hidden tolerance
+  change.
+
+Validation:
+- Docs-only validation required: `git diff --check`; focused scans for
+  `HP-RG-CUTOFF-FN-02`, `HP-RG-CUTOFF-TEST-02`, `1.0e-6`, `identity_atol =
+  5.0e-8`, `68 + 68`, `62 + 62`, `K_RR`, `H1_RR`, and forbidden full-HF/Cr2
+  workflow wording; confirm no source/bin/test/tool files are staged.
+- Later source validation requires Be high-zeta and H2 residual-GTO/MWG
+  endpoints to pass, H2 cutoff/provenance assertions updated from `5.0e-8` to
+  `1.0e-6`, and the Cr2 residual-only audit above. No full HF, Cr2 artifact,
+  or Cr2 workflow is approved.
+
+Goal advancement:
+- LT5/LT6: tightens the residual basis to avoid carrying marginal RG
+  directions that create low-H1 sectors in realistic Cr2-style use, while
+  preserving the owner-local selection algorithm, exact one-body transforms,
+  MWG/IDA conventions, and artifact/schema boundaries.
+
+Carrying-cost result:
+- deleted: none; docs-only policy pass.
+- simplified: production RG cutoff policy now has one current value,
+  `1.0e-6`, with the older `5.0e-8` approval preserved as history/evidence.
+- quarantined: width-filtering defaults, kinetic/`H1_RR` spectral guards, full
+  HF, Cr2 artifacts/workflow, source changes outside the RG owner/plumbing,
+  residual-selection algorithm changes, and new committed fixtures/tests
+  remain unapproved.
+- exact remaining caller/blocker: if residual-only spectra still show low-H1
+  ghost modes after the cutoff change, source work must stop and request a
+  separate spectral-guard amendment.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

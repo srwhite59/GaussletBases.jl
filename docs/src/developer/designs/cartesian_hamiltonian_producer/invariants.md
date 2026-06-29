@@ -89,12 +89,14 @@ The canonical RG algorithm contract is
   or global residual-selection repair;
 - `HP-RG-IDTOL-FN-01` sets the default final residual identity validation
   tolerance to `1.0e-8` in the older Be tolerance lane. It is superseded for
-  production defaults by `HP-RG-CUTOFF-FN-01`;
-- `HP-RG-CUTOFF-FN-01` supersedes the RG defaults:
-  `residual_occupation_cutoff = 5.0e-8` and
-  `identity_atol = 5.0e-8`. Occupations below the new default cutoff, including
-  the Cr atom `3.637e-8` marginal direction, are not production-retained
-  residual directions by default. Owner-local grouping, merge checks,
+  production defaults by `HP-RG-CUTOFF-FN-01` and then
+  `HP-RG-CUTOFF-FN-02`;
+- `HP-RG-CUTOFF-FN-02` supersedes the RG residual occupation default:
+  `residual_occupation_cutoff = 1.0e-6`; `identity_atol = 5.0e-8` remains
+  unchanged. Occupations below the new default cutoff, including the Cr atom
+  `3.637e-8` marginal direction and the cited Cr2 `1.27e-7` to `8.98e-7`
+  directions, are not production-retained residual directions by default.
+  Owner-local grouping, merge checks,
   `G' S R` validation, width/zeta filtering, MWG/IDA, artifacts, driver
   workflow, and public API remain unchanged;
 - RG does not own artifact writing, artifact provenance, basis loading, facade

@@ -52,6 +52,10 @@ evidence supports.
 - `HP-RG-ORTHO-TEST-01` - validation gates for the robustness pass.
 - `HP-RG-IDTOL-FN-01` - final residual identity tolerance default.
 - `HP-RG-IDTOL-TEST-01` - validation gates for the tolerance-default pass.
+- `HP-RG-CUTOFF-FN-01` - prior residual cutoff/tolerance default.
+- `HP-RG-CUTOFF-TEST-01` - validation gates for the prior cutoff policy.
+- `HP-RG-CUTOFF-FN-02` - production residual occupation cutoff tightening.
+- `HP-RG-CUTOFF-TEST-02` - residual-only validation for the tightened cutoff.
 
 ## Approved Source Surface
 
@@ -121,7 +125,7 @@ metric checks, and `G' S R` orthogonality checks remain healthy. It is not a
 direction-retention cutoff, an automatic zeta/width filter, eigenvalue
 flooring, or a reason to alter the final merge failure rule.
 
-`HP-RG-CUTOFF-FN-01` supersedes the current production defaults:
+`HP-RG-CUTOFF-FN-01` superseded the earlier production defaults:
 
 ```text
 residual_occupation_cutoff = 5.0e-8
@@ -141,6 +145,26 @@ negative-eigenvalue tolerances, final merge metric checks, `G' S R`
 validation, width/zeta filtering, MWG/IDA, artifacts, driver workflow, public
 API, and source ownership remain unchanged.
 
+`HP-RG-CUTOFF-FN-02` supersedes only the residual occupation cutoff for
+production:
+
+```text
+residual_occupation_cutoff = 1.0e-6
+identity_atol = 5.0e-8
+```
+
+Evidence: Cr2 residual spectra showed the worst low-H1 modes were built from
+marginal owner-local residual directions with occupations around `1.27e-7` to
+`8.98e-7`; a `1.0e-6` cutoff drops `6` directions per owner. Broad residual
+widths remain diagnostic evidence, but width filtering is not the first
+production rule because one-center atoms can have broad candidates without the
+same bad `H1_RR` sector.
+
+This update keeps final identity validation at `5.0e-8` and changes only the
+default owner-local residual occupation cutoff. It does not approve kinetic or
+`H1_RR` spectral guards, width-filtering defaults, full HF, Cr2 artifact
+workflow, or residual-selection algorithm changes.
+
 ## Forbidden
 
 This amendment does not approve:
@@ -149,7 +173,8 @@ This amendment does not approve:
 - global raw-candidate residual selection;
 - global raw-column pivoted-Cholesky residual selection;
 - occupation-cutoff changes beyond the explicit `HP-RG-CUTOFF-FN-01` default
-  update;
+  and `HP-RG-CUTOFF-FN-02` default updates;
+- kinetic or `H1_RR` spectral guards without a separate amendment;
 - numerical negative-eigenvalue tolerance changes;
 - final merge eigenvalue flooring to retain low-occupation directions;
 - width filtering as a conditioning repair;
@@ -193,6 +218,15 @@ the blocker instead of widening this lane.
   `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl` may update only
   its two cutoff assertions from `1.0e-8` to `5.0e-8`:
   `residual.occupation_cutoff` and `values[:occupation_cutoff]`.
+- Cr2 residual-only audit after `HP-RG-CUTOFF-FN-02`, not full HF or a Cr2
+  artifact/workflow run;
+- Cr2 owner retained counts should drop from `68 + 68` to `62 + 62`;
+- report `min eig(K_RR)`, `min eig(H1_RR)`, and low-mode candidate
+  composition;
+- if low-H1 ghost modes remain, stop and request separate kinetic/`H1_RR`
+  spectral-guard authority;
+- the same H2 endpoint test may update only its two cutoff assertions from
+  `5.0e-8` to `1.0e-6`.
 
 No Cr2 full Hamiltonian, Cr2 artifact, Cr2 facade support, new committed test
 file, other committed test/fixture edit, driver workflow, artifact schema

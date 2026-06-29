@@ -474,6 +474,8 @@ these approved design IDs:
 - `HP-RG-IDTOL-TEST-01`
 - `HP-RG-CUTOFF-FN-01`
 - `HP-RG-CUTOFF-TEST-01`
+- `HP-RG-CUTOFF-FN-02`
+- `HP-RG-CUTOFF-TEST-02`
 - `HP-CGRB-FILE-01`
 - `HP-CGRB-FN-01`
 - `HP-CGRB-FN-02`
@@ -894,7 +896,8 @@ Approved Residual Gaussian module surfaces:
   `src/cartesian_residual_gaussians/residual_basis.jl`, with
   `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` allowed
   only for narrow compatibility keyword default plumbing if needed. This
-  older default policy is superseded for production by `HP-RG-CUTOFF-FN-01`.
+  older default policy is superseded for production by `HP-RG-CUTOFF-FN-01`
+  and then `HP-RG-CUTOFF-FN-02`.
 - `HP-RG-IDTOL-TEST-01` approves only Be atom cc-pV5Z `lmax = 1`
   residual audit/artifact validation with the same `21` retained residual
   directions, Be atom cc-pVDZ `lmax = 1` comparison, the unchanged H2
@@ -905,8 +908,10 @@ Approved Residual Gaussian module surfaces:
   `src/cartesian_residual_gaussians/residual_basis.jl`, with
   `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` allowed
   only for narrow compatibility keyword default plumbing if needed. The default
-  `residual_occupation_cutoff` is `5.0e-8`, and the default final residual
-  `R' S R` identity validation `identity_atol` is `5.0e-8`.
+  `residual_occupation_cutoff` was `5.0e-8`, and the default final residual
+  `R' S R` identity validation `identity_atol` was `5.0e-8`. This older
+  production cutoff is superseded by `HP-RG-CUTOFF-FN-02`; the identity
+  tolerance remains `5.0e-8`.
 - `HP-RG-CUTOFF-TEST-01` approves only Cr atom
   `basis_ns = 9`, `map_ns = 11`, `lmax = 1` residual validation showing the
   marginal `3.637e-8` direction is dropped or the construction passes under the
@@ -919,6 +924,20 @@ Approved Residual Gaussian module surfaces:
   `residual.occupation_cutoff` assertion and the artifact/provenance
   `values[:occupation_cutoff]` assertion. No other committed test or fixture
   change is approved.
+- `HP-RG-CUTOFF-FN-02` supersedes the production residual occupation cutoff in
+  `src/cartesian_residual_gaussians/residual_basis.jl`, with
+  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` allowed
+  only for narrow compatibility keyword default plumbing if needed. The default
+  `residual_occupation_cutoff` is `1.0e-6`; the default final residual
+  identity validation `identity_atol` remains `5.0e-8`.
+- `HP-RG-CUTOFF-TEST-02` approves only residual-only validation after that
+  cutoff change: Cr2 owner retained counts should drop from `68 + 68` to
+  `62 + 62`; recompute and report residual spectra including `min eig(K_RR)`,
+  `min eig(H1_RR)`, and low-mode candidate composition; Be high-zeta and H2
+  residual-GTO/MWG endpoints must still pass; existing H2 cutoff/provenance
+  assertions may be updated from `5.0e-8` to `1.0e-6`. It does not approve
+  full HF, Cr2 artifact/workflow, kinetic/H1 spectral guards, width-filtering
+  defaults, or new committed fixtures/tests.
 
 Non-negotiable RG guardrails:
 
@@ -938,12 +957,12 @@ Non-negotiable RG guardrails:
   failure rules;
 - `HP-RG-IDTOL-FN-01` sets the production default final residual identity
   tolerance to `1.0e-8` in the older Be tolerance lane. This is now superseded
-  by `HP-RG-CUTOFF-FN-01` for production defaults;
-- `HP-RG-CUTOFF-FN-01` supersedes the production defaults:
-  `residual_occupation_cutoff = 5.0e-8` and
-  `identity_atol = 5.0e-8`. This is an explicit owner-local residual
-  selection policy for marginal occupations and a matching final identity
-  validation default; it does not change owner grouping, merge checks,
+  by `HP-RG-CUTOFF-FN-01` and `HP-RG-CUTOFF-FN-02` for production defaults;
+- `HP-RG-CUTOFF-FN-02` supersedes the production residual occupation cutoff:
+  `residual_occupation_cutoff = 1.0e-6`, while
+  `identity_atol = 5.0e-8` remains unchanged. This is an explicit owner-local
+  residual selection policy for marginal Cr2 directions; it does not change
+  owner grouping, merge checks,
   `G' S R` validation, width/zeta filtering, MWG/IDA, artifacts, driver
   workflow, public API, or source files outside the approved RG owner/plumbing
   surface;

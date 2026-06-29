@@ -56,6 +56,8 @@ module, or object names in the new owner.
 - `HP-RG-CUTOFF-FN-01` - residual occupation cutoff and identity tolerance
   defaults.
 - `HP-RG-CUTOFF-TEST-01` - validation gates for the cutoff/tolerance policy.
+- `HP-RG-CUTOFF-FN-02` - production residual occupation cutoff tightening.
+- `HP-RG-CUTOFF-TEST-02` - residual-only validation for the tightened cutoff.
 
 These IDs are approved for implementation only within the surfaces below.
 
@@ -136,7 +138,7 @@ authority and enough compact policy facts to make the basis reproducible:
 - residual source owner indices;
 - owner retained counts;
 - retained residual occupations;
-- `occupation_cutoff = 5.0e-8`;
+- `occupation_cutoff = 1.0e-6`;
 - `tau_neg_abs = 1.0e-12`;
 - `tau_neg_rel = 1.0e-12`;
 - `tau_merge_abs = 1.0e-12`;
@@ -202,15 +204,19 @@ validation tolerance to `1.0e-8`. This updates only the final identity
 acceptance threshold in the older Be tolerance lane. That production default
 is superseded by `HP-RG-CUTOFF-FN-01`.
 
-`HP-RG-CUTOFF-FN-01` supersedes the production defaults:
-`residual_occupation_cutoff = 5.0e-8` and `identity_atol = 5.0e-8`. The
-selection cutoff is an owner-local residual occupation policy: marginal
-directions below the default cutoff, including the Cr atom
-`basis_ns = 9`, `map_ns = 11`, `lmax = 1` direction at occupation `3.637e-8`,
-are discarded by default. This does not change owner grouping, negative
-eigenvalue tolerances, final merge metric checks, `G' S R` validation,
-width/zeta filtering, MWG/IDA, artifacts, driver workflow, public API, or the
-approved source owner.
+`HP-RG-CUTOFF-FN-01` set the prior production defaults:
+`residual_occupation_cutoff = 5.0e-8` and `identity_atol = 5.0e-8`, addressing
+the Cr atom `basis_ns = 9`, `map_ns = 11`, `lmax = 1` direction at occupation
+`3.637e-8`.
+
+`HP-RG-CUTOFF-FN-02` supersedes the residual occupation default:
+`residual_occupation_cutoff = 1.0e-6`; `identity_atol = 5.0e-8` remains
+unchanged. The selection cutoff is an owner-local residual occupation policy:
+directions below the default cutoff, including the cited Cr2
+`1.27e-7` to `8.98e-7` marginal directions, are discarded by default. This
+does not change owner grouping, negative eigenvalue tolerances, final merge
+metric checks, `G' S R` validation, width/zeta filtering, MWG/IDA, artifacts,
+driver workflow, public API, or the approved source owner.
 
 Do not approve a vague global entry point such as
 `stabilize_residual_metric(...)`. Global raw-candidate symmetric Lowdin and
@@ -354,6 +360,17 @@ Future source migration must validate:
   `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl` may update only
   its two cutoff assertions from `1.0e-8` to `5.0e-8`:
   `residual.occupation_cutoff` and `values[:occupation_cutoff]`.
+- for `HP-RG-CUTOFF-FN-02`, the default residual occupation cutoff changes to
+  `1.0e-6` while `identity_atol` remains `5.0e-8`.
+- for `HP-RG-CUTOFF-TEST-02`, run a Cr2 residual-only audit, not full HF or a
+  Cr2 artifact/workflow run. Owner retained counts should drop from
+  `68 + 68` to `62 + 62`; recompute and report `min eig(K_RR)`,
+  `min eig(H1_RR)`, and low-mode candidate composition. If low-H1 ghost modes
+  remain, stop and request separate kinetic/`H1_RR` spectral-guard authority.
+  Be high-zeta and H2 residual-GTO/MWG endpoints must still pass. The existing
+  H2 endpoint test may update only its two cutoff assertions from `5.0e-8` to
+  `1.0e-6`: `residual.occupation_cutoff` and
+  `values[:occupation_cutoff]`.
 
 No Cr2 full Hamiltonian, Cr2 artifact, Cr2 facade support, public export,
 driver/bin/tool workflow, artifact schema expansion, report/status/payload

@@ -206,19 +206,24 @@ Approved Residual Gaussian robustness lane:
   `R' S R` identity validation tolerance to `1.0e-8` in the same RG owner,
   with optional narrow compatibility keyword plumbing in
   `pqs_terminal_residual_gto.jl`. This older Be tolerance policy is superseded
-  for production defaults by `HP-RG-CUTOFF-FN-01`.
+  for production defaults by `HP-RG-CUTOFF-FN-01` and then
+  `HP-RG-CUTOFF-FN-02`.
 - The Be atom cc-pV5Z `lmax = 1` evidence for `HP-RG-IDTOL-*` is a tiny final
   identity overshoot: `21` retained residual directions, minimum occupation
   `6.151e-6`, final merge condition `1.0`, `max |G' S R| = 1.776e-14`, and
   `max |R' S R - I| = 2.183e-10` against an old allowed error of about
   `2.000e-10`.
-- `HP-RG-CUTOFF-FN-01` supersedes those defaults for production:
-  `residual_occupation_cutoff = 5.0e-8` and `identity_atol = 5.0e-8`. The
-  Cr atom `basis_ns = 9`, `map_ns = 11`, `lmax = 1` evidence retained a
-  marginal residual direction at occupation `3.637e-8`; the intended policy is
-  to discard such marginal directions by default rather than preserve them by
-  accident.
-- `HP-RG-CUTOFF-FN-01` does not change owner-local grouping, merge checks,
+- `HP-RG-CUTOFF-FN-01` set the prior production defaults:
+  `residual_occupation_cutoff = 5.0e-8` and `identity_atol = 5.0e-8`. That
+  pass addressed the Cr atom `basis_ns = 9`, `map_ns = 11`, `lmax = 1`
+  marginal direction at occupation `3.637e-8`.
+- `HP-RG-CUTOFF-FN-02` supersedes the residual occupation default for
+  production: `residual_occupation_cutoff = 1.0e-6`, while `identity_atol`
+  remains `5.0e-8`. The Cr2 residual audit found low-H1 modes built from
+  marginal directions at occupations about `1.27e-7` to `8.98e-7`; the first
+  production move is to discard those directions by default before considering
+  kinetic/`H1_RR` spectral guards.
+- `HP-RG-CUTOFF-FN-02` does not change owner-local grouping, merge checks,
   `G' S R` validation, width/zeta filtering, MWG/IDA, artifacts, driver
   workflow, public API, or source files outside the approved RG owner/plumbing
   surface.
@@ -740,12 +745,13 @@ Essential live guardrails:
   permission to relax residual selection or retain low-occupation directions.
 - `HP-RG-IDTOL-FN-01` sets the default final residual identity validation
   tolerance to `1.0e-8` in the older Be tolerance lane. It is superseded for
-  production defaults by `HP-RG-CUTOFF-FN-01`.
-- `HP-RG-CUTOFF-FN-01` supersedes the defaults:
-  `residual_occupation_cutoff = 5.0e-8` and
-  `identity_atol = 5.0e-8`. Owner grouping, merge metric failure rules,
-  `G' S R` validation, width/zeta filtering, MWG/IDA, artifacts, driver
-  workflow, and public API remain unchanged.
+  production defaults by `HP-RG-CUTOFF-FN-01` and then
+  `HP-RG-CUTOFF-FN-02`.
+- `HP-RG-CUTOFF-FN-02` supersedes the residual occupation default:
+  `residual_occupation_cutoff = 1.0e-6`; `identity_atol = 5.0e-8` remains
+  unchanged. Owner grouping, merge metric failure rules, `G' S R` validation,
+  width/zeta filtering, MWG/IDA, artifacts, driver workflow, and public API
+  remain unchanged.
 
 Exact Cartesian Gaussian raw blocks are separate neutral kernel authority:
 uncharged by-center nuclear blocks under
