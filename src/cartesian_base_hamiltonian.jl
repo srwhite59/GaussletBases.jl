@@ -431,6 +431,66 @@ function _cartesian_source_mode_provenance(transforms)
             inferred_from_raw_to_final_support = falses(n_relations)))
 end
 
+function _cartesian_terminal_inventory_rows(transforms)
+    low = get(transforms, :low_order_transforms, nothing)
+    basis = get(transforms, :terminal_basis_realization, nothing)
+    (isnothing(low) || isnothing(basis)) && return NamedTuple[]
+    contract_plan = low.retained_unit_transform_contract_plan
+    isnothing(contract_plan) && return NamedTuple[]
+    units = CartesianRetainedUnits.units(contract_plan.retained_unit_plan)
+    contracts = Dict(contract.unit_key => contract for contract in
+        CartesianRetainedUnitTransformContracts.transform_contracts(contract_plan))
+    blocks = Dict(block.unit_key => block for block in basis.blocks)
+    block_key_by_retained = Dict{Symbol,Symbol}()
+    plan = low.terminal_retained_rule_plan
+    if !isnothing(plan) && hasproperty(plan, :records)
+        for record in plan.records
+            isnothing(record.retained_unit_key) && continue
+            block_key_by_retained[record.retained_unit_key] = record.support_record.unit_key
+        end
+    end
+    rows = NamedTuple[]
+    key_index = Dict{Tuple,Int}()
+    for unit in units
+        contract = get(contracts, unit.unit_key, nothing)
+        block = get(blocks, get(block_key_by_retained, unit.unit_key, unit.unit_key), nothing)
+        (isnothing(contract) || isnothing(block)) && continue
+        meta = contract.metadata
+        key = (
+            unit.terminal_region_key, unit.terminal_region_kind, unit.lowering_kind,
+            unit.unit_kind, contract.transform_path,
+            isnothing(block.coefficients) ? :identity : :compact_product,
+            get(meta, :slab_normal_axis, :unavailable),
+            get(meta, :slab_side, :unavailable),
+            Int(get(meta, :slab_thickness, 0)),
+            Int(get(meta, :slab_stack_index, 0)),
+            Int(get(meta, :slab_stack_count, 0)),
+        )
+        support_rows = length(block.support_indices)
+        final_cols = length(block.column_range)
+        if haskey(key_index, key)
+            old = rows[key_index[key]]
+            rows[key_index[key]] = merge(old, (;
+                support_rows = old.support_rows + support_rows,
+                final_cols = old.final_cols + final_cols,
+                compression_ratio = (old.support_rows + support_rows) /
+                    (old.final_cols + final_cols),
+            ))
+        else
+            key_index[key] = length(rows) + 1
+            push!(rows, (;
+                region_key = key[1], region_kind = key[2], lowering_kind = key[3],
+                retained_unit_kind = key[4], realization_kind = key[5],
+                realization_class = key[6], support_rows, final_cols,
+                compression_ratio = support_rows / final_cols,
+                slab_axis = key[7], slab_side = key[8], slab_thickness = key[9],
+                slab_stack_index = key[10], slab_stack_count = key[11],
+            ))
+        end
+    end
+    return rows
+end
+
 _cartesian_base_atom_location_matrix(input) =
     [input.locations[row][axis] for row in eachindex(input.locations), axis in 1:3]
 
@@ -662,8 +722,12 @@ function cartesian_base_working_basis(system::NamedTuple; basis::NamedTuple, sup
         _cartesian_base_inputs(system, basis)
     parent, transforms = _cartesian_base_stages(input)
     source_mode_provenance = _cartesian_source_mode_provenance(transforms)
+    basis_realization = transforms.terminal_basis_realization
+    terminal_inventory = isnothing(basis_realization) ? nothing :
+        (; final_dimension = basis_realization.final_dimension,
+            rows = _cartesian_terminal_inventory_rows(transforms))
     return (; input, parent, terminal_basis = transforms.terminal_basis_realization,
-        source_mode_provenance)
+        source_mode_provenance, terminal_inventory)
 end
 
 cartesian_base_products(base) =

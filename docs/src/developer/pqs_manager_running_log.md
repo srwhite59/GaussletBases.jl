@@ -17600,3 +17600,61 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 182 - Driver Terminal Inventory Output
+
+Commit(s):
+- this commit - Add driver terminal inventory output
+
+Summary:
+- Accepted the `HP-DRV-INV-FN-01` implementation. The canonical driver now
+  prints a bounded terminal-region inventory immediately after the base
+  working-basis stage when `print_contract = true`.
+- The summary is intentionally small: base final dimension, region key,
+  region kind, lowering kind, support rows, final columns, compression ratio,
+  identity/compact class, and native slab axis/side/thickness/stack facts.
+  It does not print source-mode rows, pair inventories, raw-block details,
+  coefficients, all support rows, route skeletons, or full metadata.
+- Manager amendment replaced direct plan-field reads with the existing
+  `CartesianRetainedUnits.units(...)` and
+  `CartesianRetainedUnitTransformContracts.transform_contracts(...)`
+  accessors, and kept the approved line budget at exactly `80` added
+  `src`/`bin` lines.
+
+Validation:
+- `git diff --check` passed.
+- Package load passed.
+- Canonical H2 base driver, `nesting = :pqs`, wrote/read back and printed
+  the compact inventory; angular z-extension slabs show `289` support rows
+  to `25` final columns.
+- Canonical H2 base driver, `nesting = :wl`, wrote/read back and printed
+  the same slab rows while complete shells show
+  `white_lindsey_boundary_strata`.
+- Canonical H2 supplemented driver with `cc-pVTZ`, `nesting = :pqs`, printed
+  the base inventory and completed with final dimension `981`.
+- Existing H2 RG endpoint test passed with augmented dimension `489`,
+  self-Coulomb `0.4574265214362095`, and facade readback deltas `0.0`.
+- Anti-bloat scan found only intentional compact-summary reads:
+  `contract.metadata` for native slab facts, `block.coefficients` for
+  identity-vs-compact class, and `block.support_indices` for row counts.
+
+Goal advancement:
+- LT5/LT6: makes accidental identity sectors and compact slab compression
+  visible in ordinary driver runs, without turning the driver into a route
+  debugger or changing artifact schemas.
+
+Carrying-cost result:
+- deleted: none; this is bounded user-facing visibility.
+- simplified: driver users no longer need ignored inventory probes to see
+  whether slabs and shells are compact or identity-realized.
+- quarantined: source-mode inventory, pair inventory, raw-block details,
+  coefficient dumps, all-row support dumps, route skeletons, artifact/schema
+  changes, numerical construction, and Cr2 workflow remain outside this lane.
+- not deleted because: ordinary and compact terminal realization paths remain
+  live; the inventory only summarizes them.
+- exact remaining caller/blocker: none for the bounded inventory output.
+- added src lines: `65` in `src`, `15` in `bin`, `80` total.
+- deleted src lines: `1` in `src`, `0` in `bin`.
+- new tests: none.
+- new metadata/status fields: one compact in-memory `base.terminal_inventory`
+  summary for driver printing only; no artifact/status/schema fields.

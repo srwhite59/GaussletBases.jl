@@ -64,6 +64,20 @@ for arg in args
     vars[Symbol(key)] = Core.eval(Main, Meta.parse(value))
 end
 
+function print_terminal_inventory(base)
+    inventory = hasproperty(base, :terminal_inventory) ? base.terminal_inventory : nothing
+    isnothing(inventory) && return nothing
+    println("terminal inventory: base_final_dimension=", inventory.final_dimension)
+    println("  region kind lowering support final ratio class slab")
+    for row in inventory.rows
+        ratio = round(row.compression_ratio; digits = 3)
+        slab = row.slab_axis === :unavailable ? "" :
+            " slab=$(row.slab_axis)/$(row.slab_side)/t=$(row.slab_thickness)/$(row.slab_stack_index)-$(row.slab_stack_count)"
+        println("  ", row.region_key, " ", row.region_kind, " ", row.lowering_kind, " support=", row.support_rows, " final=", row.final_cols, " ratio=", ratio, " ", row.realization_class, slab)
+    end
+    return nothing
+end
+
 total_start = time()
 # Construct public contract
 contract_start = time()
@@ -113,6 +127,7 @@ build_start = time()
 stage_start = time()
 base = GaussletBases.cartesian_base_working_basis(system; basis, supplemented)
 push!(stage_timings, "base working basis" => time() - stage_start)
+vars[:print_contract] && print_terminal_inventory(base)
 
 stage_start = time()
 base_products = GaussletBases.cartesian_base_products(base)
