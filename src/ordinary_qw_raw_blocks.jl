@@ -146,10 +146,16 @@ function _qwrg_cross_1d_blocks_midpoint(
     return current
 end
 
-function _qwrg_proxy_gaussian_primitives(
-    proxy_layer::_MappedLegacyProxyLayer1D,
-)
+function _qwrg_proxy_gaussian_primitives(proxy_layer)
     return Gaussian[primitive for primitive in primitives(primitive_set(proxy_layer))]
+end
+
+function _qwrg_validate_supplement_proxy_layer(proxy_layer, label::AbstractString)
+    nprimitive = length(_qwrg_proxy_gaussian_primitives(proxy_layer))
+    size(stencil_matrix(proxy_layer), 1) == nprimitive || throw(
+        DimensionMismatch("$label proxy coefficient rows must match primitive count"),
+    )
+    return proxy_layer
 end
 
 function _qwrg_supplement_primitives_and_contraction(
@@ -303,7 +309,7 @@ function _qwrg_atomic_orbital_axis_power(
 end
 
 function _qwrg_atomic_axis_cross_data(
-    proxy_layer::_MappedLegacyProxyLayer1D,
+    proxy_layer,
     orbital::_AtomicCartesianShellOrbital3D,
     axis::Symbol,
     expansion::CoulombGaussianExpansion,
@@ -495,7 +501,7 @@ function _qwrg_atomic_axis_aa_data(
 end
 
 function _qwrg_atomic_axis_factor_cross_data(
-    proxy_layer::_MappedLegacyProxyLayer1D,
+    proxy_layer,
     orbital::_AtomicCartesianShellOrbital3D,
     axis::Symbol,
     expansion::CoulombGaussianExpansion,
@@ -899,18 +905,13 @@ function _qwrg_cartesian_shell_self_moment_blocks_3d(
 end
 
 function _qwrg_mapped_supplement_proxy_layer(
-    basis::MappedUniformBasis,
+    _basis::MappedUniformBasis,
     gausslet_bundle::_MappedOrdinaryGausslet1DBundle,
 )
-    if gausslet_bundle.backend == :pgdg_localized_experimental
-        return _mapped_legacy_proxy_localized(_mapped_legacy_proxy_layer(basis)).layer
-    end
-
-    proxy_layer = gausslet_bundle.pgdg_intermediate.auxiliary_layer
-    proxy_layer isa _MappedLegacyProxyLayer1D || throw(
-        ArgumentError("explicit atomic Cartesian shell supplement currently requires the base refinement_levels = 0 PGDG proxy line on the gausslet side"),
+    return _qwrg_validate_supplement_proxy_layer(
+        gausslet_bundle.pgdg_intermediate.auxiliary_layer,
+        "explicit atomic Cartesian shell supplement",
     )
-    return proxy_layer
 end
 
 function _qwrg_atomic_cartesian_blocks_3d(
@@ -958,7 +959,7 @@ function _qwrg_atomic_cartesian_blocks_3d(
 end
 
 function _qwrg_left_contract_cross_matrix(
-    proxy_layer::_MappedLegacyProxyLayer1D,
+    proxy_layer,
     primitive_cross::AbstractMatrix{<:Real},
 )
     coefficient_matrix = Matrix{Float64}(stencil_matrix(proxy_layer))
@@ -969,19 +970,14 @@ function _qwrg_left_contract_cross_matrix(
 end
 
 function _qwrg_diatomic_supplement_proxy_layer(
-    axis_basis::MappedUniformBasis,
+    _axis_basis::MappedUniformBasis,
     bundle::_MappedOrdinaryGausslet1DBundle,
     axis::Symbol,
 )
-    if bundle.backend == :pgdg_localized_experimental
-        return _mapped_legacy_proxy_localized(_mapped_legacy_proxy_layer(axis_basis)).layer
-    end
-
-    proxy_layer = bundle.pgdg_intermediate.auxiliary_layer
-    proxy_layer isa _MappedLegacyProxyLayer1D || throw(
-        ArgumentError("bond-aligned diatomic molecular supplement currently requires the base refinement_levels = 0 PGDG proxy line on the $(axis) axis"),
+    return _qwrg_validate_supplement_proxy_layer(
+        bundle.pgdg_intermediate.auxiliary_layer,
+        "bond-aligned diatomic molecular supplement $(axis) axis",
     )
-    return proxy_layer
 end
 
 function _qwrg_right_contract_cross_matrix(
@@ -1033,7 +1029,7 @@ function _qwrg_gaussian_cross_matrices(
 end
 
 function _qwrg_cross_1d_blocks_proxy(
-    proxy_layer::_MappedLegacyProxyLayer1D,
+    proxy_layer,
     supplement,
     expansion::CoulombGaussianExpansion,
 )

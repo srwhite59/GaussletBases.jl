@@ -5311,6 +5311,67 @@ Deletion accounting:
 - new tests: none.
 - new metadata/status fields: none.
 
+## Cartesian Hamiltonian Producer Pass 186 - Reuse PGDG Layer for QW RG Cross Blocks
+
+Commit(s):
+- this commit - Reuse PGDG layer for QW RG cross blocks
+
+Summary:
+- Accepted the narrow cleanup that removes duplicate localized-PGDG parent
+  layer construction from the QW/RG supplement `G-A` cross-block path. The
+  mixed Gaussian blocks now use `bundle.pgdg_intermediate.auxiliary_layer`
+  directly instead of rebuilding
+  `_mapped_legacy_proxy_localized(_mapped_legacy_proxy_layer(...))` for
+  `:pgdg_localized_experimental`.
+- This is not a physics-policy change and did not fix the Cr2 low residual
+  sector. It makes the intended invariant explicit: `G-G` and `G-A` are built
+  against the same carried PGDG parent layer. The old reconstructed layer and
+  the bundled layer matched exactly for representative Cr2 axes, and the
+  Cr2 residual-only replay stayed at the known post-cutoff values
+  `min eig(K_RR) = 0.3700413519`,
+  `min eig(H1_RR) = -7.1647854052`.
+- The remaining Cr2 bug hunt should therefore move deeper than PGDG-layer
+  reconstruction, toward one-vector kinetic parity and block/projection
+  consistency in the high-cancellation residual modes.
+
+Validation:
+- `git diff --check` passed.
+- Package load passed.
+- Ignored parity probe `tmp/work/qwrg_proxy_layer_parity_probe.jl` passed:
+  x/y old `_MappedLegacyProxyLayer1D` versus new `MappedPGDGLocalized1D`
+  dimensions `265 x 39`, z `373 x 75`, with max delta `0.0` across primitive
+  centers, widths, coefficients, localized centers, and weights.
+- Existing H2 residual-GTO/MWG endpoint
+  `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl` passed:
+  augmented dimension `489`, self-Coulomb `0.4574265214362095`, and readback
+  deltas `0.0`.
+- Ignored Cr2 residual-only replay `tmp/work/rg_spectral_cutoff1e6_audit.jl`
+  passed: atom retained `61`; dimer retained `[62, 62]`; low residual spectra
+  unchanged from the post-cutoff evidence.
+
+Goal advancement:
+- LT6: removes a duplicated construction seam from the high-cancellation
+  Residual Gaussian path before adding any spectral guard or policy rule. This
+  reduces ambiguity in the exact augmented-operator input blocks while keeping
+  cutoff, selection, MWG/IDA, artifact, driver, and solver behavior unchanged.
+
+Carrying-cost result:
+- deleted: duplicate localized PGDG proxy reconstruction branches in
+  `src/ordinary_qw_raw_blocks.jl`.
+- simplified: `G-A` proxy selection now trusts the carried PGDG intermediate;
+  helper signatures use the existing PGDG-like layer protocol instead of
+  requiring `_MappedLegacyProxyLayer1D`.
+- quarantined: ignored parity probe only; no committed tests or fixtures.
+- not deleted because: analytic Gaussian primitive cross-integral helpers
+  remain live and are the shared path for current supplement blocks.
+- exact remaining caller/blocker: Cr2 low residual spectra persist, so the
+  next evidence pass should be a one-vector kinetic parity audit rather than
+  another PGDG-layer identity check.
+- added src lines: 21.
+- deleted src lines: 25.
+- new tests: none.
+- new metadata/status fields: none.
+
 ## Cartesian Hamiltonian Producer Pass 179 - Emit Angular Z-Extension Slabs
 
 Commit(s):
