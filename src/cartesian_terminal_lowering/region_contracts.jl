@@ -19,10 +19,41 @@ end
 function _direct_lowering_kind(region)
     region.region_kind in (:direct_core, :direct_atom_contact_core) &&
         return :direct_core_identity_cpb
-    region.region_kind == :direct_midpoint_slab && return :direct_slab_identity_cpb
-    region.region_kind == :outer_mismatch_slab &&
-        return :direct_boundary_slab_identity_cpb
     throw(ArgumentError("not a direct terminal lowering region: $(region.region_kind)"))
+end
+
+function _thin_slab_axis(metadata)
+    axis = get(metadata, :slab_normal_axis, get(metadata, :bond_axis, nothing))
+    axis in (:x, :y, :z) ||
+        throw(ArgumentError("thin-slab lowering requires native slab axis metadata"))
+    return axis
+end
+
+function _thin_slab_contract(region)
+    raw = _raw_region(region)
+    axis = _thin_slab_axis(raw.metadata)
+    axis_index = axis === :x ? 1 : axis === :y ? 2 : 3
+    thickness = length(raw.outer_box[axis_index])
+    q = get(raw.metadata, :thin_slab_retained_count_1d, nothing)
+    q isa Integer && q > 0 ||
+        throw(ArgumentError("thin-slab lowering requires public ns retained count"))
+    thickness <= q ||
+        throw(ArgumentError("thin-slab thickness exceeds public ns retained count"))
+    source_cpb = _source_cpb_from_box(
+        raw.outer_box;
+        role = _terminal_source_role(region, :thin_slab_source_cpb),
+        metadata = (; terminal_region_key = region.key, slab_normal_axis = axis),
+    )
+    return _terminal_lowering_contract(
+        contract_key = Symbol(String(region.key), "_compact_thin_slab_product"),
+        terminal_region = region,
+        lowering_kind = :compact_thin_slab_product_cpb,
+        source_cpbs = (source_cpb,),
+        retained_rule = :compact_thin_slab_face_product,
+        realization_rule = :compact_thin_slab_face_stack,
+        final_unit_granularity = :one_terminal_region,
+        metadata = merge(raw.metadata, (; slab_normal_axis = axis, slab_thickness = thickness)),
+    )
 end
 
 function _direct_terminal_contract(region)
@@ -169,10 +200,11 @@ function available_contracts(region::CartesianShellification.TerminalRegion; pqs
     if region.region_kind in (
         :direct_core,
         :direct_atom_contact_core,
-        :direct_midpoint_slab,
-        :outer_mismatch_slab,
     )
         return (_direct_terminal_contract(region),)
+    end
+    if region.region_kind in (:direct_midpoint_slab, :outer_mismatch_slab, :angular_z_extension_slab)
+        return (_thin_slab_contract(region),)
     end
     if region.region_kind == :complete_shell
         return (

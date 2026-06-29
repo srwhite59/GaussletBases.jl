@@ -22,7 +22,8 @@ using ..CartesianCPB
 using LinearAlgebra
 using SparseArrays
 import ..GaussletBases: _cartesian_flat_index, _cartesian_unflat_index, _nested_axis_lengths,
-       _nested_axis_pgdg, _nested_box_support_indices, _nested_product_coefficients,
+       _nested_axis_pgdg, _nested_box_support_indices, _nested_doside_1d,
+       _nested_face_product, _nested_product_coefficients,
        _nested_projected_q_shell_boundary_comx_product_modes,
        _nested_projected_q_shell_full_sides, gto_overlap_matrix
 
@@ -43,6 +44,7 @@ include("pqs_source_shell_final_basis.jl")
 #     transfer, H1 solve, and localized IDA density-interaction seam.
 include("pqs_complete_core_shell_final_basis.jl")
 
+include("terminal_face_product_blocks.jl")
 include("pqs_terminal_basis_realization.jl")
 include("white_lindsey_terminal_basis_realization.jl")
 include("pqs_terminal_residual_gto.jl")

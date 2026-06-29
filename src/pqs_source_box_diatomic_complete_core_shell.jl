@@ -126,6 +126,7 @@ function _pqs_source_box_route_driver_terminal_topology_support_region_plan(
         :direct_core_identity_cpb,
         :direct_slab_identity_cpb,
         :direct_boundary_slab_identity_cpb,
+        :compact_thin_slab_product_cpb,
         :pqs_filled_source_cpb,
         :distorted_product_box_comx,
     )
@@ -236,6 +237,24 @@ function _pqs_source_box_route_driver_terminal_retained_rule_record(
             retained_count = support_record.support_count,
             transform_kind = transform_contract.transform_path,
             realization_status = :identity_retained_sector_available,
+            blocker = nothing,
+        )
+    elseif kind === :compact_thin_slab_product_cpb
+        q = get(transform_contract.metadata, :thin_slab_retained_count_1d, nothing)
+        thickness = get(transform_contract.metadata, :slab_thickness, nothing)
+        q isa Integer && thickness isa Integer ||
+            return blocked(:missing_thin_slab_retained_count)
+        return (;
+            order_index,
+            support_record,
+            retained_unit_key = retained_unit.unit_key,
+            transform_contract_unit_key = transform_contract.unit_key,
+            role = support_record.terminal_region_role,
+            lowering_contract_kind = kind,
+            support_count = support_record.support_count,
+            retained_count = Int(q) * Int(q) * Int(thickness),
+            transform_kind = transform_contract.transform_path,
+            realization_status = :compact_thin_slab_retained_sector_available,
             blocker = nothing,
         )
     elseif kind === :pqs_filled_source_cpb

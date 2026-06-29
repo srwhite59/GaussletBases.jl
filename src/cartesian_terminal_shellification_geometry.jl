@@ -119,6 +119,16 @@ function _cartesian_terminal_region_direct_source_metadata(
     )
 end
 
+function _cartesian_terminal_region_thin_slab_metadata(region)
+    return merge(
+        _cartesian_terminal_region_direct_source_metadata(region, :compact_thin_slab_product_cpb),
+        (;
+            source_cpb_plan_kind = :compact_thin_slab_source,
+            retained_rule = :compact_thin_slab_face_product,
+        ),
+    )
+end
+
 function _cartesian_terminal_region_unit_mapping(region)
     if region.region_kind in (:direct_core, :direct_atom_contact_core)
         unit_kind =
@@ -161,15 +171,11 @@ function _cartesian_terminal_region_unit_mapping(region)
     if region.region_kind == :direct_midpoint_slab
         return (;
             unit_kind = :direct_midpoint_slab_unit,
-            lowering_family_planned = :direct_slab_identity_cpb,
-            identity_lowering_planned = true,
+            lowering_family_planned = :compact_thin_slab_product_cpb,
+            identity_lowering_planned = false,
             owned_support_is_cpb = false,
             owned_support_status = :owned_support_equals_region_box,
-            source_cpb_plan =
-                _cartesian_terminal_region_direct_source_metadata(
-                    region,
-                    :direct_slab_identity_cpb,
-                ),
+            source_cpb_plan = _cartesian_terminal_region_thin_slab_metadata(region),
             lw_complete_shell_lowering = nothing,
             pqs_complete_shell_lowering = nothing,
         )
@@ -211,15 +217,23 @@ function _cartesian_terminal_region_unit_mapping(region)
     if region.region_kind == :outer_mismatch_slab
         return (;
             unit_kind = :outer_mismatch_boundary_slab_unit,
-            lowering_family_planned = :direct_boundary_slab_identity_cpb,
-            identity_lowering_planned = true,
+            lowering_family_planned = :compact_thin_slab_product_cpb,
+            identity_lowering_planned = false,
             owned_support_is_cpb = false,
             owned_support_status = :owned_support_equals_region_box,
-            source_cpb_plan =
-                _cartesian_terminal_region_direct_source_metadata(
-                    region,
-                    :direct_boundary_slab_identity_cpb,
-                ),
+            source_cpb_plan = _cartesian_terminal_region_thin_slab_metadata(region),
+            lw_complete_shell_lowering = nothing,
+            pqs_complete_shell_lowering = nothing,
+        )
+    end
+    if region.region_kind == :angular_z_extension_slab
+        return (;
+            unit_kind = :angular_z_extension_slab_unit,
+            lowering_family_planned = :compact_thin_slab_product_cpb,
+            identity_lowering_planned = false,
+            owned_support_is_cpb = false,
+            owned_support_status = :owned_support_equals_region_box,
+            source_cpb_plan = _cartesian_terminal_region_thin_slab_metadata(region),
             lw_complete_shell_lowering = nothing,
             pqs_complete_shell_lowering = nothing,
         )
@@ -404,6 +418,13 @@ function _cartesian_terminal_region_lowering_contract_kind_counts(contracts)
                 contract ->
                     contract.lowering_contract_kind ==
                     :direct_boundary_slab_identity_cpb,
+                contracts,
+            ),
+        compact_thin_slab_product_cpb_count =
+            count(
+                contract ->
+                    contract.lowering_contract_kind ==
+                    :compact_thin_slab_product_cpb,
                 contracts,
             ),
         white_lindsey_boundary_strata_count =

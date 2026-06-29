@@ -2,8 +2,6 @@
 
 const _DIRECT_LOWERING_KINDS = (
     :direct_core_identity_cpb,
-    :direct_slab_identity_cpb,
-    :direct_boundary_slab_identity_cpb,
 )
 
 """
@@ -67,6 +65,10 @@ function _append_retained_units_for_contract!(
             planned_units,
             _distorted_product_retained_unit(contract, length(planned_units) + 1),
         )
+        return planned_units
+    end
+    if kind === :compact_thin_slab_product_cpb
+        push!(planned_units, _compact_thin_slab_retained_unit(contract, length(planned_units) + 1))
         return planned_units
     end
     throw(ArgumentError("unsupported retained-unit lowering kind $kind"))
@@ -171,6 +173,24 @@ function _distorted_product_retained_unit(
         realization_rule = contract.realization_rule,
         dimension_status = :planned_not_materialized,
         metadata = retained_metadata,
+    )
+end
+
+function _compact_thin_slab_retained_unit(
+    contract::CartesianTerminalLowering.TerminalLoweringContract,
+    unit_index::Int,
+)
+    return _make_retained_unit(
+        contract,
+        _unit_key(contract, :retained_unit),
+        unit_index,
+        :compact_thin_slab_retained_unit,
+        contract.source_cpbs,
+        nothing;
+        owned_support = contract.owned_support,
+        retained_rule = :compact_thin_slab_face_product,
+        realization_rule = :compact_thin_slab_face_stack,
+        dimension_status = :planned_not_materialized,
     )
 end
 

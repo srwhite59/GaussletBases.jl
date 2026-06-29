@@ -282,6 +282,11 @@ function raw_terminal_geometry(
                         bond_axis = axis_symbol(axis),
                         central_gap_width = gap_width,
                         central_gap_slice_index = slice_index,
+                        slab_kind = :direct_midpoint_slab,
+                        slab_normal_axis = axis_symbol(axis),
+                        slab_side = :midpoint,
+                        slab_thickness = 1,
+                        thin_slab_retained_count_1d = shell_side,
                     ),
                 )
             end
@@ -328,6 +333,13 @@ function raw_terminal_geometry(
                         role =
                             Symbol((:x, :y, :z)[axis], "_low_outer_mismatch_slab"),
                         box,
+                        metadata = (;
+                            slab_kind = :outer_mismatch_slab,
+                            slab_normal_axis = axis_symbol(axis),
+                            slab_side = :low,
+                            slab_thickness = length(low_range),
+                            thin_slab_retained_count_1d = shell_side,
+                        ),
                     ),
                 )
             end
@@ -352,6 +364,13 @@ function raw_terminal_geometry(
                         role =
                             Symbol((:x, :y, :z)[axis], "_high_outer_mismatch_slab"),
                         box,
+                        metadata = (;
+                            slab_kind = :outer_mismatch_slab,
+                            slab_normal_axis = axis_symbol(axis),
+                            slab_side = :high,
+                            slab_thickness = length(high_range),
+                            thin_slab_retained_count_1d = shell_side,
+                        ),
                     ),
                 )
             end
@@ -398,6 +417,7 @@ function raw_terminal_geometry(
                         slab_side = side,
                         slab_thickness = length(slab_range), slab_stack_index = stack_index,
                         slab_stack_count = stack_count, bond_axis = axis_symbol(axis),
+                        thin_slab_retained_count_1d = shell_side,
                         reference_nucleus_index,
                         angular_balance_rule = :outer_nucleus_45_degree,
                         longitudinal_margin_physical = longitudinal_margin,
@@ -419,7 +439,7 @@ function raw_terminal_geometry(
                 role = piece.role,
                 region_kind = :outer_mismatch_slab,
                 outer_box = piece.box,
-                metadata = (; bond_axis = axis_symbol(axis)),
+                metadata = merge(piece.metadata, (; bond_axis = axis_symbol(axis))),
             )
         end
     end
@@ -457,6 +477,7 @@ function raw_terminal_geometry(
                 role = piece.role,
                 region_kind = :outer_mismatch_slab,
                 outer_box = piece.box,
+                metadata = piece.metadata,
                 atom_index = atom_index,
                 atom_side = :single,
             )

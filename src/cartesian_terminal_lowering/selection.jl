@@ -5,6 +5,8 @@ function _direct_selected_contract(region, ::WhiteLindseyLowering)
         return _white_lindsey_complete_shell_contract(region)
     region.region_kind == :central_distorted_product_box &&
         return _distorted_product_contract(region)
+    region.region_kind in (:direct_midpoint_slab, :outer_mismatch_slab, :angular_z_extension_slab) &&
+        return _thin_slab_contract(region)
     return _direct_terminal_contract(region)
 end
 
@@ -13,6 +15,8 @@ function _direct_selected_contract(region, policy::PQSLowering)
         return _pqs_complete_shell_contract(region, policy)
     region.region_kind == :central_distorted_product_box &&
         return _distorted_product_contract(region)
+    region.region_kind in (:direct_midpoint_slab, :outer_mismatch_slab, :angular_z_extension_slab) &&
+        return _thin_slab_contract(region)
     return _direct_terminal_contract(region)
 end
 

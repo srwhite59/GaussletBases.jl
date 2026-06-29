@@ -274,6 +274,19 @@ function pqs_terminal_basis_realization(
                 blocks, record.support_record.unit_key, indices, states,
                 coefficients, nextcol)
             _validate_block_support!(last(blocks), support, seen_support)
+        elseif record.transform_kind === :compact_thin_slab_face_product_contract
+            contract = get(contracts, record.transform_contract_unit_key, nothing)
+            isnothing(contract) && throw(ArgumentError("missing terminal transform contract"))
+            indices, states, coefficients =
+                _terminal_compact_thin_slab_block(contract.source_cpbs, contract.metadata, bundles)
+            error = _matrix_identity_error(transpose(coefficients) *
+                    _support_action(states, states, coefficients, overlaps))
+            error <= identity_atol ||
+                throw(ArgumentError("terminal compact thin slab overlap is not identity"))
+            nextcol = _push_block!(
+                blocks, record.support_record.unit_key, indices, states,
+                coefficients, nextcol)
+            _validate_block_support!(last(blocks), support, seen_support)
         else
             throw(ArgumentError("unsupported terminal transform kind for PQS basis realization"))
         end

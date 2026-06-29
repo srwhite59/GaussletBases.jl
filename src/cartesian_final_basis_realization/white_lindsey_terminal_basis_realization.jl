@@ -25,17 +25,7 @@ function _wl_terminal_support_record(unit, indices, states)
     )
 end
 
-_wl_axis_index(axis::Symbol) =
-    axis === :x ? 1 :
-    axis === :y ? 2 :
-    axis === :z ? 3 :
-    throw(ArgumentError("White-Lindsey boundary axis must be :x, :y, or :z"))
-
-_wl_facet_active_axes(axis::Symbol) =
-    axis === :x ? (:y, :z) :
-    axis === :y ? (:x, :z) :
-    axis === :z ? (:x, :y) :
-    throw(ArgumentError("unsupported White-Lindsey facet axis"))
+_wl_axis_index(axis::Symbol) = _terminal_face_axis_index(axis)
 
 _wl_edge_fixed_axes(axis::Symbol) =
     axis === :x ? (:y, :z) :
@@ -72,13 +62,14 @@ function _wl_boundary_stratum_block(unit, bundles)
     stratum_kind = _wl_metadata_value(cpb.metadata, :stratum_kind)
     if stratum_kind === :facet_cpb
         fixed_axis = _wl_metadata_value(cpb.metadata, :axis)
-        face_kind = fixed_axis === :z ? :xy : fixed_axis === :y ? :xz : :yz
-        active_axes = _wl_facet_active_axes(fixed_axis)
-        product = ParentGaussletBases._nested_face_product(
-            face_kind, _wl_metadata_value(cpb.metadata, :side),
-            side(active_axes[1]), side(active_axes[2]),
-            first(intervals[_wl_axis_index(fixed_axis)]), dims)
-        return _wl_block_from_product(product, bundles)
+        return _terminal_face_product_block(
+            cpb,
+            bundles;
+            normal_axis = fixed_axis,
+            fixed_indices = (first(intervals[_wl_axis_index(fixed_axis)]),),
+            retained_count = Int(q),
+            fixed_side = _wl_metadata_value(cpb.metadata, :side),
+        )
     elseif stratum_kind === :edge_cpb
         free_axis = _wl_metadata_value(cpb.metadata, :free_axis)
         fixed_axes = _wl_edge_fixed_axes(free_axis)
@@ -138,6 +129,13 @@ function _append_white_lindsey_unit!(
         contract.transform_path === :white_lindsey_boundary_stratum_product_contract ||
             throw(ArgumentError("White-Lindsey boundary unit requires product transform"))
         indices, states, coefficients = _wl_boundary_stratum_block(unit, bundles)
+        _wl_validate_coefficients(states, coefficients, overlaps, identity_atol)
+        nextcol = _push_block!(blocks, unit.unit_key, indices, states, coefficients, nextcol)
+    elseif unit.unit_kind === :compact_thin_slab_retained_unit
+        contract.transform_path === :compact_thin_slab_face_product_contract ||
+            throw(ArgumentError("compact thin slab unit requires face-product transform"))
+        indices, states, coefficients =
+            _terminal_compact_thin_slab_block(contract.source_cpbs, contract.metadata, bundles)
         _wl_validate_coefficients(states, coefficients, overlaps, identity_atol)
         nextcol = _push_block!(blocks, unit.unit_key, indices, states, coefficients, nextcol)
     else

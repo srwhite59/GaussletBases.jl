@@ -191,6 +191,11 @@ function _retained_unit_transform_paths(unit_kind::Symbol)
         :distorted_product_realization_planned,
         nothing,
     )
+    unit_kind === :compact_thin_slab_retained_unit && return (
+        :compact_thin_slab_face_product_contract,
+        :compact_thin_slab_face_stack_realization,
+        nothing,
+    )
     return (
         :pending_retained_unit_transform_contract,
         :pending_retained_unit_realization_contract,

@@ -5363,6 +5363,74 @@ Carrying-cost result:
 - new metadata/status fields: native shellification slab metadata only; no
   artifact/status payload fields.
 
+## Cartesian Hamiltonian Producer Pass 180 - Compact Thin-Slab Lowering
+
+Commit(s):
+- this commit - Add compact thin-slab terminal lowering
+
+Summary:
+- Accepted the `HP-COMP-FACEPROD-*`, `HP-COMP-THINSLAB-*`, and
+  `HP-COMP-THINSLAB-META-*` source pass. Z-axis diatomic midpoint,
+  outer-mismatch fallback, and angular z-extension slabs now lower through a
+  shared compact thin-slab retained unit instead of direct identity slab CPBs.
+- Added the neutral terminal face-product helper under
+  `CartesianFinalBasisRealization`. WL facet blocks now use that helper as the
+  reuse proof, and both PQS and WL thin slabs consume the same compact
+  face-stack realization path.
+- The physical driver, artifact schema, reader, Hamiltonian assembly,
+  RG/MWG/IDA, route skeletons, and Cr2 workflow were not changed.
+
+Validation:
+- Manager reran: `git diff --check`; package load; WL facet parity probe;
+  ignored angular geometry audit; thin-slab terminal inventory; H2/Be2
+  artifact/readback for `nesting = :pqs` and `nesting = :wl`; H2 residual-GTO
+  endpoint.
+- WL facet parity: 30 facet blocks, max coefficient delta 0.0.
+- Thin-slab inventory: for `ns = 5`, both PQS and WL have
+  `:angular_z_extension_slab` regions lowered as
+  `:compact_thin_slab_product_cpb`; each side has 450 support rows and 50
+  final columns, matching `2 * ns^2`, not full identity retention.
+- Artifact/readback: H2 PQS/WL dimension 915, Be2 PQS/WL dimension 619, all
+  readback deltas 0.0; matrix symmetry errors were roundoff scale.
+- H2 residual-GTO endpoint stayed at self-Coulomb
+  0.4574265214362095 with readback deltas 0.0.
+
+Goal advancement:
+- LT5/LT6: closes the producer-side slab blowup path that created huge
+  direct identity z caps. The shellifier names planned z-end support, and the
+  lowering/retained/final-basis path now realizes it compactly for both PQS
+  and WL.
+
+Medium-goal checkpoint:
+- Completed: common PQS/WL first-step geometry and compact thin-slab lowering
+  for z-axis diatomics.
+- Active: driver-facing terminal inventory output should be designed as a
+  separate public usability lane; the ignored inventory probe proved the right
+  fields but no driver/report surface was added here.
+- Active: CR2 can retry the previous slab-heavy inventory as a user run after
+  this commit, but Cr2 remains measurement-only rather than a committed gate.
+- Guardrail: keep real shells route-specific after common shellification; only
+  thin slabs share this retained/terminal face-product path.
+
+Carrying-cost result:
+- deleted: active direct identity lowering for midpoint and outer-mismatch
+  thin slabs.
+- simplified: WL facet coefficient construction and PQS/WL thin-slab
+  terminal realization now share the neutral face-product helper.
+- quarantined: driver inventory printing, artifact/report/schema changes,
+  route skeleton changes, RG/MWG/IDA, raw blocks, solver/Cr2 workflow, and
+  committed tests remain out of scope.
+- not deleted because: old direct-slab count fields remain as compatibility
+  summary fields and should report zero for these slab regions.
+- exact remaining caller/blocker: no blocker found for compact thin-slab
+  lowering; durable driver inventory output requires a later docs/source lane.
+- added src lines: 240.
+- deleted src lines: 41.
+- new tests: none; ignored probes only.
+- new metadata/status fields: internal compact thin-slab lowering kind,
+  retained unit kind, transform path, and native slab facts only; no
+  artifact, driver, manifest, or status-payload fields.
+
 ## Cartesian Hamiltonian Producer Pass 173 - Update RG Cutoff Defaults
 
 Commit(s):
