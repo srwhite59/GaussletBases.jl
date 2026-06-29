@@ -217,7 +217,7 @@ elapsed = @elapsed @testset "R3-A H2 augmented one-body and moments" begin
         for owner in unique(residual.candidate_owner_indices)) == Dict(1 => 9, 2 => 9)
     @test residual.residual_source_owner_indices == vcat(fill(1, 9), fill(2, 9))
     @test residual.owner_retained_counts == [9, 9]
-    @test residual.occupation_cutoff == 5.0e-8
+    @test residual.occupation_cutoff == 1.0e-6
     @test residual.base_dimension == 471
     @test residual.residual_dimension == 18
     @test size(operators.kinetic) == (489, 489)
@@ -346,7 +346,7 @@ facade_elapsed = @elapsed @testset "R3 H2 supplemented Hamiltonian facade" begin
         @test values[:augmented_basis_order] === :base_then_residual
         @test values[:residual_basis_convention] === :owner_local_residual_occupation_final_merge_lowdin
         @test values[:rank_rule] === :owner_local_residual_occupation
-        @test values[:occupation_cutoff] == 5.0e-8
+        @test values[:occupation_cutoff] == 1.0e-6
         @test values[:tau_merge_abs] == 1.0e-12
         @test values[:tau_merge_rel] == 1.0e-12
         @test values[:interaction_source] === :weight_aware_residual_mwg_ida_blocks

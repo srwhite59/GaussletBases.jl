@@ -17714,3 +17714,66 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 184 - Implement RG 1e-6 Production Cutoff
+
+Commit(s):
+- this commit - Set RG residual cutoff to 1e-6
+
+Summary:
+- Accepted the `HP-RG-CUTOFF-FN-02` source pass. The production default
+  `residual_occupation_cutoff` is now `1.0e-6` in the Residual Gaussian owner
+  and in the compatibility wrapper. The final residual identity validation
+  remains `identity_atol = 5.0e-8`.
+- The existing H2 residual-GTO/MWG endpoint assertions were updated exactly as
+  approved under `HP-RG-CUTOFF-TEST-02`: both the in-memory
+  `residual.occupation_cutoff` check and the written
+  `supplement_provenance/occupation_cutoff` check now expect `1.0e-6`.
+- Cr2 residual-only validation shows the cutoff performs the intended first
+  selection cleanup but does not solve the whole low-H1 problem. The retained
+  residual rank drops from the previous `68 + 68` to `62 + 62`, with minimum
+  retained occupation `2.5714596279604456e-6`. The residual-only spectra still
+  have a low two-owner mode: `min eig(K_RR) = 0.37004135191195486` and
+  `min eig(H1_RR) = -7.164785405168449`, with owner weights about
+  `0.50000003 / 0.49999997`. This keeps the next decision focused on a
+  kinetic/`H1_RR` spectral guard rather than width filtering or another
+  hidden tolerance change.
+
+Validation:
+- `git diff --check` passed.
+- Package load passed.
+- Existing H2 endpoint
+  `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl` passed:
+  augmented dimension `489`, self-Coulomb `0.4574265214362095`, and facade
+  readback deltas `0.0`.
+- Ignored residual-only Cr2 audit
+  `tmp/work/cr2_residual_low_ke_replay_audit.jl` passed without full HF,
+  without dense Vee, and without writing a new Hamiltonian artifact. It wrote
+  summary evidence under
+  `/Users/srw/dmrgtmp/cr2_r1p68_ns7_lmax2_d0p00847_fixed95fec2b8/`:
+  `cr2_residual_low_ke_replay_cutoff1e6_summary.txt`,
+  `cr2_residual_low_ke_replay_cutoff1e6_owner_metrics.tsv`, and
+  `cr2_residual_low_ke_replay_cutoff1e6_modes.tsv`.
+
+Goal advancement:
+- LT5/LT6: removes marginal owner-local residual directions from production
+  by default while preserving the RG owner-local selection/merge structure,
+  exact augmented one-body convention, MWG/IDA behavior, artifact schema, and
+  driver workflow.
+
+Carrying-cost result:
+- deleted: old `5.0e-8` production residual-occupation default.
+- simplified: RG owner and compatibility wrapper now agree on the approved
+  `1.0e-6` production cutoff.
+- quarantined: `identity_atol`, owner grouping, merge checks, `G' S R`
+  validation, width/zeta filtering, MWG/IDA, artifacts, driver, full Cr2 HF,
+  and kinetic/`H1_RR` spectral-guard policy remain unchanged.
+- not deleted because: the H2 endpoint test remains the live RG endpoint gate,
+  with only its approved cutoff assertions updated.
+- exact remaining caller/blocker: post-cutoff Cr2 residual-only spectra still
+  show a low two-owner `H1_RR` mode, so a separate kinetic/`H1_RR` guard lane
+  is needed before treating Cr2 supplemented RGs as physically safe.
+- added src lines: 2.
+- deleted src lines: 2.
+- new tests: none; two existing H2 assertions updated.
+- new metadata/status fields: none.
