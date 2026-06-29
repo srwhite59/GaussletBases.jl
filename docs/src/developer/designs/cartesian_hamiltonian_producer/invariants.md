@@ -186,6 +186,13 @@ The canonical RG algorithm contract is
   for a policy decision; it must not silently delete slabs, retain them as
   identity rows, infer slab geometry from labels, or invent
   route-family-specific lowering.
+- Terminal-shellification metadata inventories must agree with this thin-slab
+  contract. Metadata/scaffold summaries may describe planned compact
+  thin-slab lowering, but they must not preserve stale direct identity mapping
+  for midpoint slabs, outer-mismatch fallback slabs, or
+  `:angular_z_extension_slab`. Those inventories are not numerical authority:
+  they must not materialize coefficients, carry Hamiltonian data, or create a
+  parallel report/payload workflow.
 - Compact face-product terminal coefficient assembly is neutral
   `CartesianFinalBasisRealization` machinery. White-Lindsey facets and
   thin-slab stacks should reuse the same internal face-like product helper

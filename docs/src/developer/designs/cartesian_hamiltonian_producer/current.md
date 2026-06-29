@@ -119,6 +119,14 @@ Implemented base path:
   after common shellification. If slab thickness exceeds `ns`, source work
   must stop and request a policy decision rather than silently deleting slabs
   or using identity blocks.
+- `HP-COMP-THINSLAB-META-*` approves only live metadata/scaffold inventory
+  cleanup in `cartesian_terminal_shellification_geometry.jl`. The route helper
+  still consumes `_cartesian_terminal_shellification_region_unit_inventory(...)`,
+  so `_cartesian_terminal_region_unit_mapping(region)` must describe midpoint,
+  outer-mismatch, and angular z-extension slabs as compact thin-slab lowering
+  regions, not direct identity CPBs. This does not approve coefficient
+  materialization, shellification geometry changes, route skeleton redesign, or
+  a new reporting framework.
 - `HP-COMP-FACEPROD-*` approves a neutral internal
   `CartesianFinalBasisRealization` face-product helper seam in
   `terminal_face_product_blocks.jl`. The helper owns compact face-like

@@ -17413,3 +17413,67 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 180 - Approve Thin-Slab Metadata Inventory
+
+Commit(s):
+- this commit - Approve thin-slab metadata inventory
+
+Summary:
+- Approved `HP-COMP-THINSLAB-META-FN-01` and
+  `HP-COMP-THINSLAB-META-TEST-01` for the live terminal-shellification
+  metadata/scaffold inventory update in
+  `src/cartesian_terminal_shellification_geometry.jl`. The immediate blocker
+  was not numerical lowering, but the old inventory mapping in
+  `_cartesian_terminal_region_unit_mapping(region)`: midpoint slabs and
+  outer-mismatch slabs still described direct identity CPBs, and planned
+  `:angular_z_extension_slab` had no case.
+- The approved source lane is deliberately metadata-only. It lets route
+  summaries agree with compact thin-slab lowering, while forbidding
+  coefficient materialization, Hamiltonian data construction, shellification
+  geometry changes, route skeleton redesign, artifact/report payloads, and a
+  new reporting framework. Direct core and atom-contact core identity mappings
+  remain unchanged.
+
+Validation:
+- Docs-only validation used: `git diff --check`; focused scans for
+  `HP-COMP-THINSLAB-META-*`, `_cartesian_terminal_region_unit_mapping`,
+  `_cartesian_terminal_shellification_region_unit_inventory`,
+  `:angular_z_extension_slab`, and direct identity slab vocabulary; staged
+  diff check limited to docs/`AGENTS.md`.
+- Later source validation requires package load, the existing angular geometry
+  audit, a thin-slab inventory/probe that no longer fails on
+  `angular_z_extension_slab`, and a focused scan confirming no planned direct
+  identity mapping for midpoint, outer-mismatch, or angular z-extension slabs.
+  No Cr2 run is required.
+
+Goal advancement:
+- LT5/LT6: closes the authority gap between common shellification,
+  angular z-extension classification, neutral face-product assembly, and
+  compact thin-slab lowering. The inventory layer now has permission to stop
+  broadcasting stale identity-sector semantics while remaining non-numerical.
+
+Medium-term checkpoint:
+- Active: the common-shell/thin-slab lane now has aligned authority for
+  shellification classification, metadata inventory, neutral face-product
+  coefficient assembly, and compact lowering.
+- In progress: source WIP still needs review and validation; no lowering pass
+  is accepted merely because this metadata amendment exists.
+- Deferred: Cr2 full workflow, artifact/schema changes, driver reporting,
+  solver/ECP, and far-separated central product policy remain outside this
+  lane.
+
+Carrying-cost result:
+- deleted: none; docs-only authority pass.
+- simplified: one live metadata inventory can now match compact thin-slab
+  lowering instead of preserving stale direct-identity categories.
+- quarantined: source edits outside the named metadata/scaffold surface,
+  shellification algorithm changes, terminal realization changes, driver
+  changes, artifacts, route reports, and Cr2 workflow remain unapproved.
+- exact remaining caller/blocker: doer may update the inventory mapping only;
+  if that requires materialized retained units, artifact/report payloads,
+  shellification changes, or route skeleton redesign, the pass must stop.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

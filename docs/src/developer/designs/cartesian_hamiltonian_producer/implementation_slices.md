@@ -1148,6 +1148,13 @@ Additional approved composition lane:
   a thickness-`t <= ns` outer-mismatch stack should scale about `t * ns * ns`.
   Direct/core sectors remain identity, and real shell regions remain
   route-specific after common shellification.
+- `HP-COMP-THINSLAB-META-FN-01` /
+  `HP-COMP-THINSLAB-META-TEST-01` are approved for the live
+  terminal-shellification metadata/scaffold inventory update in
+  `src/cartesian_terminal_shellification_geometry.jl`. The inventory must map
+  midpoint, outer-mismatch fallback, and angular z-extension slabs to the
+  compact thin-slab category, not direct identity categories. It remains
+  metadata-only and must not materialize coefficients or alter shellification.
 - `HP-COMP-FACEPROD-FN-01` / `HP-COMP-FACEPROD-TEST-01` are approved for a
   neutral internal face-product terminal helper under
   `CartesianFinalBasisRealization`. The helper lives in

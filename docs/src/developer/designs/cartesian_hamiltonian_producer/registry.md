@@ -888,6 +888,93 @@ realization, WL boundary coefficient construction, route skeleton semantics,
 artifact schema, or driver inputs, make no source commit and report the exact
 blocker.
 
+### HP-COMP-THINSLAB-META-FN-01 — thin-slab metadata inventory cleanup
+
+Status: approved.
+
+Approved source file:
+
+```text
+src/cartesian_terminal_shellification_geometry.jl
+```
+
+Only in support of the already approved thin-slab lowering pass:
+
+```text
+src/pqs_source_box_route_driver_helpers.jl
+src/pqs_source_box_diatomic_complete_core_shell.jl
+```
+
+Problem:
+
+`src/cartesian_terminal_shellification_geometry.jl` is not the new
+shellifier owner, but it is still a live metadata/scaffold inventory path.
+The route helper calls
+`_cartesian_terminal_shellification_region_unit_inventory(...)`, and
+`_cartesian_terminal_region_unit_mapping(region)` still encodes the old direct
+identity slab contract:
+
+```text
+:direct_midpoint_slab -> :direct_slab_identity_cpb
+:outer_mismatch_slab -> :direct_boundary_slab_identity_cpb
+```
+
+It also has no planned `:angular_z_extension_slab` case. This makes route
+inventory disagree with the approved compact thin-slab lowering contract.
+
+Approved behavior:
+
+- update `_cartesian_terminal_region_unit_mapping(...)` so midpoint slabs,
+  outer-mismatch fallback slabs, and angular z-extension slabs map to the
+  compact thin-slab lowering category, not direct identity categories;
+- add only the minimal compact thin-slab inventory/count vocabulary needed for
+  existing route summaries to agree with terminal lowering;
+- recognize `:angular_z_extension_slab` as a planned compact thin-slab region;
+- preserve the metadata-only nature of the file: it describes planned
+  lowering consistently, but does not materialize coefficients or construct
+  Hamiltonian data;
+- keep direct core and atom-contact core identity mappings unchanged.
+
+Forbidden:
+
+- driver changes;
+- artifact, manifest, provenance, schema, or reader changes;
+- shellification algorithm changes;
+- route skeleton redesign;
+- Residual Gaussian, MWG, IDA, Hamiltonian, raw-block, or solver changes;
+- committed tests or fixtures;
+- Cr2 workflow;
+- new reporting framework;
+- reintroduction of direct identity slab lowering under a new name;
+- broad cleanup or deletion of the terminal-shellification metadata file in
+  this pass.
+
+Failure rule: if updating this metadata inventory requires materializing
+retained units, adding artifact/report payloads, changing shellification
+geometry, or redesigning route skeletons, make no source commit and report the
+blocker. This ID is only for keeping the live metadata/scaffold inventory
+consistent with compact thin-slab lowering.
+
+### HP-COMP-THINSLAB-META-TEST-01 — thin-slab metadata inventory validation
+
+Status: approved.
+
+Approved validation:
+
+- `git diff --check`;
+- package load;
+- existing angular geometry audit still passes;
+- thin-slab inventory/probe no longer blocks on unsupported terminal
+  shellification region kind `angular_z_extension_slab`;
+- focused scan confirms no planned direct identity lowering for midpoint,
+  outer-mismatch, or angular z-extension slabs in this metadata inventory;
+- bounded H2/Be2 artifact/readback validation remains under the main
+  `HP-COMP-THINSLAB-*` implementation pass;
+- no Cr2 run.
+
+No committed test file, committed fixture, public driver test, artifact schema
+test, or Cr2 fixture is approved.
+
 ### HP-COMP-FACEPROD-FN-01 — neutral terminal face-product helper
 
 Status: approved.

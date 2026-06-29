@@ -534,6 +534,8 @@ these approved design IDs:
 - `HP-COMP-SHELLGEOM-DIAT-TEST-01`
 - `HP-COMP-THINSLAB-FN-01`
 - `HP-COMP-THINSLAB-TEST-01`
+- `HP-COMP-THINSLAB-META-FN-01`
+- `HP-COMP-THINSLAB-META-TEST-01`
 - `HP-COMP-FACEPROD-FN-01`
 - `HP-COMP-FACEPROD-TEST-01`
 - `HP-COMP-ANGBOX-FN-01`
@@ -1585,6 +1587,22 @@ approval. This lane does not approve driver changes, artifact/schema/reader
 changes, RG/MWG/IDA changes, route skeleton redesign, broad terminal
 realization redesign, direct slab deletion, committed Cr2 fixtures/tests, or
 Cr2 workflow.
+
+`HP-COMP-THINSLAB-META-FN-01` and `HP-COMP-THINSLAB-META-TEST-01` approve
+only the live terminal-shellification metadata/scaffold inventory update in
+`src/cartesian_terminal_shellification_geometry.jl`, with
+`src/pqs_source_box_route_driver_helpers.jl` and
+`src/pqs_source_box_diatomic_complete_core_shell.jl` allowed only in support
+of the already approved thin-slab lowering pass. The stale owner is
+`_cartesian_terminal_region_unit_mapping(region)`: midpoint slabs,
+outer-mismatch slabs, and `:angular_z_extension_slab` must map to the compact
+thin-slab lowering category, not direct identity categories. This file remains
+metadata-only: it may add minimal compact thin-slab inventory/count vocabulary
+needed for route summaries to agree with terminal lowering, but it must not
+materialize coefficients, construct Hamiltonian data, add artifact/report
+payloads, change shellification geometry, redesign route skeletons, add a new
+reporting framework, or reintroduce direct identity slab lowering under a new
+name. Direct core and atom-contact core identity mappings remain unchanged.
 
 `HP-COMP-FACEPROD-FN-01` and `HP-COMP-FACEPROD-TEST-01` approve only a
 neutral `CartesianFinalBasisRealization` face-product terminal helper seam for

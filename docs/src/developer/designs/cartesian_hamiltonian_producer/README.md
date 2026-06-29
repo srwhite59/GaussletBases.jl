@@ -61,6 +61,9 @@ central-gap/contact and shared-shell ownership are common shell geometry.
 and outer-mismatch slab stacks: PQS and White-Lindsey use the same compact
 slab lowering, with unit-slice scale `ns x ns x 1`, and neither may retain
 those slabs as full identity rows.
+`HP-COMP-THINSLAB-META-*` approves the matching metadata/scaffold inventory
+cleanup so terminal-shellification summaries no longer claim midpoint,
+outer-mismatch, or angular z-extension slabs are direct identity sectors.
 `HP-COMP-FACEPROD-*` approves the neutral terminal face-product helper seam
 needed by that lowering: WL facets and future thin slabs should reuse the same
 module-internal face-like product block builder instead of putting shared
