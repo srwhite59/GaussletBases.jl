@@ -1148,6 +1148,14 @@ Additional approved composition lane:
   a thickness-`t <= ns` outer-mismatch stack should scale about `t * ns * ns`.
   Direct/core sectors remain identity, and real shell regions remain
   route-specific after common shellification.
+- `HP-COMP-FACEPROD-FN-01` / `HP-COMP-FACEPROD-TEST-01` are approved for a
+  neutral internal face-product terminal helper under
+  `CartesianFinalBasisRealization`. The helper lives in
+  `src/cartesian_final_basis_realization/terminal_face_product_blocks.jl`, is
+  included by `CartesianFinalBasisRealization.jl`, and is reused by
+  White-Lindsey facet realization plus the later thin-slab realization path.
+  It changes ownership of reusable coefficient assembly; it does not change
+  shellification, lowering policy, artifacts, or public workflow.
 - `HP-COMP-ANGBOX-FN-01` / `HP-COMP-ANGBOX-TEST-01` are approved for the
   shellification side of angular-balanced z-axis diatomic shared-shell growth
   in `src/cartesian_shellification/terminal_geometry.jl`. The ordinary

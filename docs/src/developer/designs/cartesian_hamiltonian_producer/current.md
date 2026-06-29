@@ -119,6 +119,14 @@ Implemented base path:
   after common shellification. If slab thickness exceeds `ns`, source work
   must stop and request a policy decision rather than silently deleting slabs
   or using identity blocks.
+- `HP-COMP-FACEPROD-*` approves a neutral internal
+  `CartesianFinalBasisRealization` face-product helper seam in
+  `terminal_face_product_blocks.jl`. The helper owns compact face-like
+  terminal blocks over one fixed normal-axis index or an ordered stack of
+  fixed normal indices, using `_nested_doside_1d(...)` and
+  `_nested_face_product(...)`. WL facet realization and future
+  `HP-COMP-THINSLAB-*` slab realization should reuse this helper; it must not
+  live in a WL- or PQS-specific terminal file.
 - `HP-COMP-ANGBOX-*` approves the shellification side of the angular-balanced
   z-axis diatomic repair in `terminal_geometry.jl`. Each shared-shell step
   computes a physical outer-nucleus angular-balanced target box. The ordinary

@@ -17356,3 +17356,60 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 179 - Approve Neutral Face-Product Helper
+
+Commit(s):
+- this commit - Approve neutral face-product helper
+
+Summary:
+- Approved `HP-COMP-FACEPROD-FN-01` and `HP-COMP-FACEPROD-TEST-01` as the
+  neutral terminal face-product helper seam needed before the thin-slab source
+  pass should proceed. The source attempt showed the right numerical primitive
+  was reusable, but the wrong ownership: putting a shared slab helper in
+  `white_lindsey_terminal_basis_realization.jl` and calling it from PQS makes
+  neutral coefficient assembly look WL-owned.
+- New approved helper owner is
+  `src/cartesian_final_basis_realization/terminal_face_product_blocks.jl`,
+  included from `CartesianFinalBasisRealization.jl`, with narrow consumers in
+  the WL and PQS terminal realization files. The helper is private/internal
+  and should reuse `_nested_doside_1d(...)` and `_nested_face_product(...)`.
+- Required reuse proof: White-Lindsey facet terminal realization should be
+  refactored to use the neutral helper. Future `HP-COMP-THINSLAB-*` slab
+  realization may then use the same helper for midpoint, outer-mismatch
+  fallback, and angular z-extension slabs.
+
+Validation:
+- Docs-only validation required: `git diff --check` on staged docs; focused
+  scans for `HP-COMP-FACEPROD-*`, `terminal_face_product_blocks.jl`,
+  `_nested_face_product(...)`, `_nested_doside_1d(...)`, and no implication
+  that PQS calls a WL-owned helper; confirm source WIP is not staged in this
+  docs commit.
+- Later source validation requires package load, WL facet parity before/after
+  refactor, bounded WL H2/Be2 artifact/readback, bounded PQS H2/Be2
+  artifact/readback if PQS terminal realization imports the helper, and no
+  Cr2 run.
+
+Goal advancement:
+- LT5/LT6: reduces cognitive complexity by placing the reusable face-like
+  product block exactly where both WL facets and shared thin slabs can consume
+  it. This keeps real shells route-specific while making the face-product
+  coefficient assembly route-neutral.
+
+Carrying-cost result:
+- deleted: none; docs-only authority pass.
+- simplified: future doer work has one neutral helper target instead of a
+  WL-owned helper plus PQS call-through.
+- quarantined: driver changes, public API/export, artifacts, shellification,
+  terminal lowering policy, route skeletons, RG/MWG/IDA/Hamiltonian/raw-block
+  changes, old high-order workflow, committed tests/fixtures, Cr2 workflow,
+  duplicate face-product assembly, PQS-specific slab projection, and treating
+  thin slabs as WL boundary strata remain unapproved.
+- exact remaining caller/blocker: if the helper cannot serve both current WL
+  facets and future thin slabs without numerical changes, source work must
+  stop and report whether the blocker is helper signature, support-record
+  shape, retained-unit metadata, or terminal-realization ownership.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

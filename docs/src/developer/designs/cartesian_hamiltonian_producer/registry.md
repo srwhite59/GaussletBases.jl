@@ -888,6 +888,94 @@ realization, WL boundary coefficient construction, route skeleton semantics,
 artifact schema, or driver inputs, make no source commit and report the exact
 blocker.
 
+### HP-COMP-FACEPROD-FN-01 — neutral terminal face-product helper
+
+Status: approved.
+
+Approved source files:
+
+```text
+src/cartesian_final_basis_realization/terminal_face_product_blocks.jl
+src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl
+src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl
+src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl
+```
+
+Problem:
+
+`HP-COMP-THINSLAB-*` needs a compact product-block seam for slabs, but the
+first source attempt placed a reusable helper in
+`white_lindsey_terminal_basis_realization.jl` and then called it from PQS.
+That makes shared numerical work look White-Lindsey-owned. The correct owner is
+a neutral internal helper under `CartesianFinalBasisRealization`.
+
+Approved behavior:
+
+- add a private/module-internal neutral helper for compact face-product
+  terminal blocks;
+- reuse `_nested_doside_1d(...)` and `_nested_face_product(...)`;
+- support normal axes `:x`, `:y`, and `:z`;
+- support one fixed normal-axis index for a face-like block;
+- support an ordered stack of fixed normal-axis indices for a thickness-`t`
+  slab;
+- take the retained count from the caller, normally public `ns`;
+- refactor White-Lindsey facet terminal realization to use the neutral helper;
+- allow later `HP-COMP-THINSLAB-*` implementation to use the same helper for
+  midpoint, outer-mismatch fallback, and angular z-extension thin slabs;
+- preserve existing support validation, overlap identity validation,
+  deterministic ordering, and owned-support disjointness.
+
+This helper seam does not replace `HP-COMP-THINSLAB-*`. It only approves the
+shared face-product coefficient assembly needed so thin-slab lowering can be
+implemented through reuse instead of duplicated PQS/WL terminal code.
+
+Forbidden:
+
+- driver changes;
+- public API/export;
+- artifact, manifest, provenance, schema, or reader changes;
+- shellification algorithm changes;
+- terminal lowering policy changes by itself beyond enabling the later
+  `HP-COMP-THINSLAB-*` pass;
+- route skeleton changes;
+- Residual Gaussian, MWG, IDA, Hamiltonian, raw-block, or solver changes;
+- old high-order workflow revival;
+- committed tests or fixtures;
+- Cr2 workflow;
+- duplicate implementation of face-product coefficient assembly;
+- PQS-specific thin-slab projection path;
+- treating thin slabs as White-Lindsey boundary strata for naming convenience.
+
+Line budget: target at most `80` added source lines for the neutral helper and
+WL facet refactor. If the helper needs substantially more, stop and report the
+missing abstraction before continuing.
+
+Failure rule: if a neutral helper cannot serve both current White-Lindsey
+facets and future thin slabs without changing numerical semantics, make no
+source commit and report whether the blocker is helper signature,
+support-record shape, retained-unit metadata, or terminal-realization
+ownership.
+
+### HP-COMP-FACEPROD-TEST-01 — neutral terminal face-product validation
+
+Status: approved.
+
+Approved validation:
+
+- `git diff --check`;
+- package load;
+- focused ignored helper probe if needed;
+- White-Lindsey facet parity before/after the refactor, showing identical
+  dimensions and coefficients or roundoff agreement;
+- H2 or Be2 base artifact/readback for `nesting = :wl` to confirm WL facet
+  behavior is unchanged;
+- H2 or Be2 base artifact/readback for `nesting = :pqs` if PQS terminal
+  realization imports or consumes the helper;
+- no Cr2 run.
+
+No committed test file, committed fixture, public driver test, artifact schema
+test, or Cr2 fixture is approved.
+
 ### HP-COMP-ANGBOX-FN-01 — angular-balanced z-axis diatomic shellification
 
 Status: approved.

@@ -186,6 +186,13 @@ The canonical RG algorithm contract is
   for a policy decision; it must not silently delete slabs, retain them as
   identity rows, infer slab geometry from labels, or invent
   route-family-specific lowering.
+- Compact face-product terminal coefficient assembly is neutral
+  `CartesianFinalBasisRealization` machinery. White-Lindsey facets and
+  thin-slab stacks should reuse the same internal face-like product helper
+  over fixed normal-axis indices. Shared face-product assembly must not live
+  in `white_lindsey_terminal_basis_realization.jl`, must not be duplicated as
+  a PQS-specific slab projection path, and must not relabel thin slabs as WL
+  boundary strata merely to reuse names.
 - Z-axis diatomic shellification, not lowering, owns the angular-balanced
   shared molecular box rule. Each shared-shell step should compute a target
   box in physical parent-axis coordinates so the longitudinal margin from each

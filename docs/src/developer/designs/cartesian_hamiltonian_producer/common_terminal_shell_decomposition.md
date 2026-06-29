@@ -4,6 +4,8 @@ Status: approved narrow audit/source authority under
 `HP-COMP-SHELLGEOM-FN-01` and `HP-COMP-SHELLGEOM-TEST-01`, with the
 z-axis diatomic same-function/same-argument correction approved under
 `HP-COMP-SHELLGEOM-DIAT-FN-01` and `HP-COMP-SHELLGEOM-DIAT-TEST-01`, and
+neutral compact face-product helper authority approved under
+`HP-COMP-FACEPROD-FN-01` and `HP-COMP-FACEPROD-TEST-01`, and
 narrow common thin-slab stack lowering repair approved under
 `HP-COMP-THINSLAB-FN-01` and `HP-COMP-THINSLAB-TEST-01`.
 
@@ -108,6 +110,8 @@ is the common shell/core ownership authority.
 - `HP-COMP-SHELLGEOM-DIAT-TEST-01` - diatomic parity validation gates.
 - `HP-COMP-OUTERMM-FN-01` / `HP-COMP-OUTERMM-TEST-01` - superseded
   outer-mismatch-only subset; do not implement as a separate source lane.
+- `HP-COMP-FACEPROD-FN-01` - neutral compact face-product terminal helper.
+- `HP-COMP-FACEPROD-TEST-01` - face-product helper reuse/parity validation.
 - `HP-COMP-THINSLAB-FN-01` - z-axis diatomic thin-slab stack compact lowering
   repair for both PQS and White-Lindsey.
 - `HP-COMP-THINSLAB-TEST-01` - thin-slab stack compact lowering validation
@@ -252,6 +256,58 @@ failure under the existing thin-slab guardrail.
 or caller plumbing if directly required. `HP-COMP-ANGBOX-TEST-01` approves
 ignored geometry probes for H2/Be2/Cr2-style z-axis diatomics. Lowering planned
 z-extension slabs remains deferred to `HP-COMP-THINSLAB-*`.
+
+## Neutral Face-Product Helper
+
+Compact thin slabs and White-Lindsey facets share a numerical shape: two
+active axes use retained one-dimensional contractions, while the normal axis is
+fixed to one or more parent indices. A thickness-1 slab is one face-like
+product block. A thickness-`t` slab is an ordered stack of face-like blocks.
+
+The reusable coefficient assembly is not PQS-owned and not White-Lindsey-owned.
+`HP-COMP-FACEPROD-FN-01` approves a private/module-internal neutral helper in:
+
+```text
+src/cartesian_final_basis_realization/terminal_face_product_blocks.jl
+```
+
+with the include in:
+
+```text
+src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl
+```
+
+and narrow consumers in:
+
+```text
+src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl
+src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl
+```
+
+The helper should reuse the existing numerical primitives:
+
+```text
+_nested_doside_1d(...)
+_nested_face_product(...)
+```
+
+It should support normal axes `:x`, `:y`, and `:z`; one fixed normal-axis
+index for a face-like block; an ordered stack of fixed normal-axis indices for
+a thickness-`t` slab; and a caller-supplied retained count, normally public
+`ns`.
+
+White-Lindsey facet terminal realization should be refactored to use this
+neutral helper. That is the reuse proof: if the helper cannot serve current WL
+facets and future thin slabs without changing numerical semantics, the source
+patch should stop and report whether the blocker is the helper signature,
+support-record shape, retained-unit metadata, or terminal-realization
+ownership.
+
+Do not put the shared helper in
+`white_lindsey_terminal_basis_realization.jl`; do not create a PQS-specific
+thin-slab projection path; do not pretend thin slabs are WL boundary strata
+for naming convenience; and do not duplicate `_nested_face_product(...)`
+assembly.
 
 ## Thin-Slab Lowering
 

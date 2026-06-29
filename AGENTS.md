@@ -534,6 +534,8 @@ these approved design IDs:
 - `HP-COMP-SHELLGEOM-DIAT-TEST-01`
 - `HP-COMP-THINSLAB-FN-01`
 - `HP-COMP-THINSLAB-TEST-01`
+- `HP-COMP-FACEPROD-FN-01`
+- `HP-COMP-FACEPROD-TEST-01`
 - `HP-COMP-ANGBOX-FN-01`
 - `HP-COMP-ANGBOX-TEST-01`
 - `HP-MCOMX-FILE-01`
@@ -1583,6 +1585,26 @@ approval. This lane does not approve driver changes, artifact/schema/reader
 changes, RG/MWG/IDA changes, route skeleton redesign, broad terminal
 realization redesign, direct slab deletion, committed Cr2 fixtures/tests, or
 Cr2 workflow.
+
+`HP-COMP-FACEPROD-FN-01` and `HP-COMP-FACEPROD-TEST-01` approve only a
+neutral `CartesianFinalBasisRealization` face-product terminal helper seam for
+compact thin-slab lowering and WL facet reuse. Approved source files are
+`src/cartesian_final_basis_realization/terminal_face_product_blocks.jl`,
+`src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl`,
+`src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl`,
+and `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`.
+The helper is private/module-internal, reuses `_nested_doside_1d(...)` and
+`_nested_face_product(...)`, supports normal axes `:x`, `:y`, and `:z`, one
+fixed normal-axis index or an ordered stack of fixed normal indices, and a
+caller-supplied retained count normally equal to public `ns`. WL facet terminal
+realization should use this neutral helper, and `HP-COMP-THINSLAB-*` may use it
+for midpoint, outer-mismatch fallback, and angular z-extension slabs. This
+lane does not approve driver changes, public API/export, artifact/schema/
+reader/provenance changes, shellification changes, terminal lowering policy
+changes by itself, route skeleton changes, RG/MWG/IDA/Hamiltonian/raw-block
+changes, old high-order workflow revival, committed tests/fixtures, Cr2
+workflow, duplicate face-product assembly, PQS-specific thin-slab projection,
+or treating thin slabs as WL boundary strata for naming convenience.
 
 `HP-COMP-ANGBOX-FN-01` and `HP-COMP-ANGBOX-TEST-01` approve only
 z-axis diatomic angular-balanced shellification in
