@@ -227,6 +227,16 @@ Approved Residual Gaussian robustness lane:
   `G' S R` validation, width/zeta filtering, MWG/IDA, artifacts, driver
   workflow, public API, or source files outside the approved RG owner/plumbing
   surface.
+- `HP-RG-SPECTRAL-AUDIT-01` is approved as measurement-only follow-up after
+  the cutoff cleanup. The cited Cr2 residual-only replay now has owner counts
+  `62 + 62`, but still shows a low two-owner residual mode:
+  `min eig(K_RR) = 0.3700413519`,
+  `min eig(H1_RR) = -7.1647854052`, with owner weights about `0.5 / 0.5`.
+  The audit may classify low residual-sector modes by owner weights and
+  residual-occupation composition using ignored probes and durable text/TSV
+  output. It does not approve pruning, kinetic/`H1_RR` guards, cutoff or
+  tolerance changes, full HF, Vee/solver work, artifacts, source
+  instrumentation, or driver changes.
 
 Approved stale complete-core-shell RHF retirement:
 
@@ -752,6 +762,12 @@ Essential live guardrails:
   unchanged. Owner grouping, merge metric failure rules, `G' S R` validation,
   width/zeta filtering, MWG/IDA, artifacts, driver workflow, and public API
   remain unchanged.
+- `HP-RG-SPECTRAL-AUDIT-01` is measurement-only authority for residual-sector
+  spectra after that cutoff: count residuals by owner, compute low `K_RR` and
+  `H1_RR`, report owner weights and residual-occupation composition for
+  low/flagged modes, and compare with one-center atom baselines when
+  available. It is not permission to implement a spectral guard or change
+  selection policy.
 
 Exact Cartesian Gaussian raw blocks are separate neutral kernel authority:
 uncharged by-center nuclear blocks under

@@ -17777,3 +17777,51 @@ Carrying-cost result:
 - deleted src lines: 2.
 - new tests: none; two existing H2 assertions updated.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 185 - Approve RG Residual-Sector Spectral Audit
+
+Commit(s):
+- this commit - Approve RG spectral audit lane
+
+Summary:
+- Approved `HP-RG-SPECTRAL-AUDIT-01` as a docs-only, measurement-only
+  follow-up after the `HP-RG-CUTOFF-FN-02` production cutoff cleanup. The
+  cutoff correctly drops Cr2 retained residuals from `68 + 68` to `62 + 62`,
+  but the post-cutoff residual-only replay still shows a low two-owner mode:
+  `min eig(K_RR) = 0.3700413519`,
+  `min eig(H1_RR) = -7.1647854052`, with owner weights about `0.5 / 0.5`.
+- The new lane authorizes ignored `tmp/work` probes and durable text/TSV
+  output only. The audit may compute residual counts by owner, low `K_RR`, low
+  `H1_RR = K_RR + sum_A Z_A U_A_RR`, low-mode owner weights,
+  residual-occupation composition, and one-center atom baselines when
+  available. It must classify whether flagged modes come from the smallest
+  retained occupations or otherwise healthy retained modes.
+
+Validation:
+- `git diff --check` passed for the docs-only amendment.
+- Focused searches confirmed `HP-RG-SPECTRAL-AUDIT-01` is recorded as
+  measurement-only and that the forbidden surfaces remain explicit.
+- Staged file scan confirmed no source, test, tool, bin, artifact, or driver
+  files are part of the amendment.
+
+Goal advancement:
+- LT6: keeps Cr2 residual safety work disciplined. The cutoff change is now
+  separated from the next evidence pass; no kinetic/`H1_RR` guard, automatic
+  pruning, source instrumentation, full HF, dense Vee, artifacts, driver work,
+  or cutoff/tolerance change is authorized yet.
+
+Carrying-cost result:
+- deleted: none; docs-only policy pass.
+- simplified: the next step is a named residual-sector audit instead of an
+  implicit extension of the cutoff source lane.
+- quarantined: production source edits, committed tests/fixtures, artifact
+  schema/provenance/reader/manifest changes, driver changes, MWG/IDA changes,
+  dense Vee/full HF/solver work, automatic pruning, kinetic/`H1_RR` guards,
+  and cutoff/tolerance changes remain forbidden.
+- exact remaining caller/blocker: if existing construction seams cannot
+  cheaply reconstruct `K_RR`/`H1_RR`, the audit must stop and report the
+  missing reusable seam rather than adding source instrumentation.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

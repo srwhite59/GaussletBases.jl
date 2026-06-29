@@ -165,6 +165,14 @@ default owner-local residual occupation cutoff. It does not approve kinetic or
 `H1_RR` spectral guards, width-filtering defaults, full HF, Cr2 artifact
 workflow, or residual-selection algorithm changes.
 
+`HP-RG-SPECTRAL-AUDIT-01` is the approved measurement-only follow-up after the
+`1.0e-6` cutoff cleanup. It may use ignored probes to classify low residual
+sector modes by owner weights, residual occupation composition, low `K_RR`, and
+low `H1_RR = K_RR + sum_A Z_A U_A_RR`, comparing against one-center atom
+baselines when available. It does not change this policy, and it does not
+authorize pruning, spectral guards, cutoff/tolerance updates, source
+instrumentation, artifacts, driver work, full HF, or MWG/IDA changes.
+
 ## Forbidden
 
 This amendment does not approve:

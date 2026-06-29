@@ -58,6 +58,7 @@ module, or object names in the new owner.
 - `HP-RG-CUTOFF-TEST-01` - validation gates for the cutoff/tolerance policy.
 - `HP-RG-CUTOFF-FN-02` - production residual occupation cutoff tightening.
 - `HP-RG-CUTOFF-TEST-02` - residual-only validation for the tightened cutoff.
+- `HP-RG-SPECTRAL-AUDIT-01` - measurement-only residual-sector spectral audit.
 
 These IDs are approved for implementation only within the surfaces below.
 
@@ -218,6 +219,16 @@ does not change owner grouping, negative eigenvalue tolerances, final merge
 metric checks, `G' S R` validation, width/zeta filtering, MWG/IDA, artifacts,
 driver workflow, public API, or the approved source owner.
 
+`HP-RG-SPECTRAL-AUDIT-01` is measurement-only authority after the cutoff
+cleanup. It records that the Cr2 retained count drops to `62 + 62`, but
+residual-only spectra still show a low two-owner mode with
+`min eig(K_RR) = 0.3700413519`, `min eig(H1_RR) = -7.1647854052`, and owner
+weights about `0.5 / 0.5`. Ignored probes may classify low residual-sector
+modes by owner weights, residual-occupation composition, and one-center atom
+baselines when available. This audit does not approve a kinetic/`H1_RR` guard,
+automatic pruning, cutoff/tolerance changes, source instrumentation, full HF,
+artifacts, driver work, or MWG/IDA changes.
+
 Do not approve a vague global entry point such as
 `stabilize_residual_metric(...)`. Global raw-candidate symmetric Lowdin and
 global raw-column pivoted-Cholesky selection are not the Residual Gaussian
@@ -371,6 +382,12 @@ Future source migration must validate:
   H2 endpoint test may update only its two cutoff assertions from `5.0e-8` to
   `1.0e-6`: `residual.occupation_cutoff` and
   `values[:occupation_cutoff]`.
+- for `HP-RG-SPECTRAL-AUDIT-01`, run only measurement probes under ignored
+  `tmp/work` scripts, with durable text/TSV output under `/Users/srw/dmrgtmp`
+  or CR2 run directories. Report residual count by owner, low `K_RR`, low
+  `H1_RR`, owner weights, residual-occupation composition, and one-center atom
+  baselines when available. Do not run full HF, write a new Hamiltonian
+  artifact, add source instrumentation, or implement pruning/guards.
 
 No Cr2 full Hamiltonian, Cr2 artifact, Cr2 facade support, public export,
 driver/bin/tool workflow, artifact schema expansion, report/status/payload

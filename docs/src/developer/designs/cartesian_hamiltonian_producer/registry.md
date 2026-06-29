@@ -3856,6 +3856,67 @@ No other committed fixture/test, driver workflow, artifact schema change,
 solver/RHF, ECP, EGOI, full HF, Cr2 full Hamiltonian, Cr2 artifact, or Cr2
 facade support is approved.
 
+### HP-RG-SPECTRAL-AUDIT-01 — residual-sector spectral audit
+
+Status: approved measurement-only authority. This is not production source
+authority.
+
+Evidence after `HP-RG-CUTOFF-FN-02`: the tightened
+`residual_occupation_cutoff = 1.0e-6` performs the intended first cleanup,
+dropping Cr2 retained residuals from `68 + 68` to `62 + 62`, but residual-only
+spectra still show a low two-owner residual mode:
+
+```text
+min eig(K_RR)  =  0.3700413519
+min eig(H1_RR) = -7.1647854052
+owner weights  = approximately 0.5 / 0.5
+```
+
+Approved behavior:
+
+- measurement-only residual-sector audit;
+- compute retained residual count by owner;
+- compute low eigenvalues of `K_RR`;
+- compute low eigenvalues of
+  `H1_RR = K_RR + sum_A Z_A U_A_RR`;
+- report owner weights for low or flagged eigenvectors;
+- report residual occupation composition of low or flagged eigenvectors;
+- compare Cr2 residual spectra against one-center atom residual baselines when
+  available;
+- classify whether low modes are dominated by the smallest retained
+  occupations or by otherwise healthy retained modes.
+
+Approved surfaces:
+
+- ignored `tmp/work/*.jl` probes only;
+- durable text/TSV output under `/Users/srw/dmrgtmp/...` or CR2 run
+  directories.
+
+Forbidden:
+
+- production source changes;
+- committed tests or fixtures;
+- artifact schema/provenance/reader/manifest changes;
+- driver changes;
+- MWG/IDA changes;
+- dense Vee, full HF, or solver workflow;
+- automatic residual pruning;
+- kinetic or `H1_RR` spectral-guard implementation;
+- cutoff, tolerance, owner grouping, residual-selection, or merge-policy
+  changes.
+
+Validation for later audit:
+
+- `git diff --check`;
+- package load;
+- residual-only audit for one-center Cr atom baseline if available;
+- residual-only audit for the current Cr2 fixture;
+- no full HF and no new Hamiltonian artifact.
+
+Failure rule: if the audit cannot reconstruct `K_RR`/`H1_RR` cheaply enough
+from existing construction seams, stop and report the exact missing reusable
+seam. Do not add source instrumentation as part of this lane.
+
 ## Approved For Cartesian Gaussian Raw-Block Nuclear Owner
 
 This section approves only the neutral uncharged by-center nuclear raw-block

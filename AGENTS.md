@@ -938,6 +938,16 @@ Approved Residual Gaussian module surfaces:
   assertions may be updated from `5.0e-8` to `1.0e-6`. It does not approve
   full HF, Cr2 artifact/workflow, kinetic/H1 spectral guards, width-filtering
   defaults, or new committed fixtures/tests.
+- `HP-RG-SPECTRAL-AUDIT-01` is measurement-only authority after the
+  `1.0e-6` cutoff cleanup. Ignored probes may report retained residual counts
+  by owner, low `K_RR`, low `H1_RR = K_RR + sum_A Z_A U_A_RR`, low-mode owner
+  weights, residual-occupation composition, and one-center atom baselines when
+  available. It approves only ignored `tmp/work/*.jl` probes and durable
+  text/TSV output under `/Users/srw/dmrgtmp/...` or CR2 run directories. It
+  does not approve production source changes, committed tests, artifacts,
+  driver changes, MWG/IDA changes, full HF, dense Vee/solver work, automatic
+  residual pruning, kinetic/`H1_RR` guards, cutoff/tolerance changes, or
+  source instrumentation.
 
 Non-negotiable RG guardrails:
 
@@ -966,6 +976,10 @@ Non-negotiable RG guardrails:
   `G' S R` validation, width/zeta filtering, MWG/IDA, artifacts, driver
   workflow, public API, or source files outside the approved RG owner/plumbing
   surface;
+- `HP-RG-SPECTRAL-AUDIT-01` is a follow-up residual-sector measurement lane,
+  not a guard implementation. It may classify the remaining low Cr2
+  residual-only `H1_RR` mode after the `1.0e-6` cutoff, but it must not change
+  selection policy, add pruning, or add production instrumentation;
 - RG does not own basis loading, parent lattice construction, terminal topology,
   raw analytic formula ownership, facade parsing, artifact writing,
   `supplement_provenance/`, report/status/payload objects, or public exports.

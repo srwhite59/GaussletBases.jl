@@ -364,6 +364,13 @@ Approved robustness lane:
   `1.0e-6`. No full HF, Cr2 artifact/workflow, kinetic/`H1_RR` spectral guard,
   width-filtering default, new committed fixture, or broad test change is
   approved.
+- `HP-RG-SPECTRAL-AUDIT-01` approves only measurement after the cutoff cleanup:
+  ignored probes may reconstruct residual-sector `K_RR` and
+  `H1_RR = K_RR + sum_A Z_A U_A_RR`, report retained counts by owner, low-mode
+  owner weights, residual-occupation composition, and one-center atom
+  baselines when available. It does not approve production source changes,
+  automatic residual pruning, kinetic/`H1_RR` guards, cutoff/tolerance changes,
+  MWG/IDA changes, full HF, artifacts, driver changes, or committed tests.
 
 ## Compact Hamiltonian Artifact Manifest
 
