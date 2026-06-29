@@ -74,6 +74,28 @@ RSS is genuinely needed, use a stable wrapper script such as `tools/time_julia`
 and get that wrapper prefix approved once instead of requesting broad
 `/usr/bin/time` approval.
 
+## Long-running job monitoring
+
+For long Julia/Python runners, avoid broad process scans and piped shell probes
+that trigger approval stalls.
+
+Preferred pattern:
+
+- poll the active tool/session directly when possible
+- make long runners print `getpid()` at startup and write a small PID file next
+  to the runtime log or output artifact
+- if process inspection is needed, use an exact PID command such as
+  `ps -p <pid> -o pid,etime,rss,vsz,pcpu,pmem,command`
+- do not use broad scans such as `ps ... | rg ...` when a PID file or active
+  session exists
+- for progress checks, read known logs directly with `tail`, `sed`, `wc`, or
+  similar simple file commands
+- if a reusable runner lacks PID/log reporting, prefer patching that runner to
+  report PID and progress rather than repeatedly using ad hoc process searches
+
+Long-run handbacks should report the log path, PID path if any, and the exact
+polling command used or recommended.
+
 ## Runtime environment policy
 
 Do not create generated runtime environments inside Dropbox-synced trees.
