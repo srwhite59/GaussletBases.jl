@@ -242,6 +242,12 @@ The canonical RG algorithm contract is
   diagnostics, private stage controls, raw provider switches, report/status
   payloads, solver workflow, artifact schema, public exports, or
   Cr2-specific support.
+- Canonical driver terminal-region inventories are bounded human-facing
+  summaries, not route reports. They may print region kind, support/final
+  counts, compression, identity-vs-compact realization, and native slab facts
+  needed to catch accidental identity sectors. They must not dump source modes,
+  pair inventories, raw blocks, all rows, full metadata, artifact schema, or
+  private route-stage objects.
 - The canonical driver may expose an explicit one-center base atom workflow
   only through the existing base facade. Current atom validation remains
   origin-centered H, while `HP-R1-ATOM-*` permits explicit origin-centered

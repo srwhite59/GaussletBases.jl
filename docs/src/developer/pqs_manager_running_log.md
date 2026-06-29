@@ -17545,3 +17545,58 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 181 - Approve Driver Region Inventory
+
+Commit(s):
+- this commit - Approve driver terminal-region inventory
+
+Summary:
+- Approved `HP-DRV-INV-FN-01` and `HP-DRV-INV-TEST-01` for a compact
+  terminal-region / shellification inventory in canonical driver output. The
+  Cr2 slab blowup showed that normal users need to see region kind, support
+  rows, final columns, compression ratios, and identity-vs-compact realization
+  without running ignored probes.
+- The lane is driver-output authority, not route diagnostics. Approved source
+  files are `bin/cartesian_ham_builder.jl` and
+  `src/cartesian_base_hamiltonian.jl`, with optional compact accessors in the
+  route helper or final-basis modules only if directly required. The summary is
+  bounded and human-facing: region label/index, region kind, lowering or
+  realization kind, support rows, final columns, compression ratio, realization
+  class, and native slab facts when applicable.
+- Forbidden surfaces remain broad: no new driver inputs, flags, stop-after
+  controls, route switches, source-mode or pair inventories, raw-block or
+  all-row dumps, artifact/schema/reader changes, numerical construction
+  changes, route-report framework, solver settings, Cr2-specific workflow, or
+  committed tests.
+
+Validation:
+- Docs-only validation required: `git diff --check`; focused scans for
+  `HP-DRV-INV-*`, terminal-region inventory wording, bounded-output
+  restrictions, and absence of source/bin/test/tool staging in this docs pass.
+- Later source validation requires package load, bounded H2 or Be2 driver
+  inventory output for `nesting = :pqs` and `nesting = :wl`, supplemented smoke
+  if supplemented-stage objects are touched, unchanged artifact/readback
+  deltas, and a scan confirming the output excludes source modes, pair
+  inventories, raw-block details, all-row listings, and full metadata. No Cr2
+  run is required.
+
+Goal advancement:
+- LT5/LT6: moves the slab-size lesson into the normal human workflow without
+  promoting route internals. Users should see accidental identity sectors and
+  compact slab compression during ordinary canonical-driver runs.
+
+Carrying-cost result:
+- deleted: none; docs-only authority pass.
+- simplified: future doer work has a bounded inventory target instead of an
+  open-ended reporting request.
+- quarantined: artifact schemas, route reports, source-mode/pair/raw-block
+  dumps, all-row metadata, driver inputs, numerical construction, and Cr2
+  workflow remain unapproved.
+- exact remaining caller/blocker: if existing stage/final-basis summaries
+  cannot support the compact output without a broad payload or report
+  framework, source work must stop and identify the missing summary seam.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

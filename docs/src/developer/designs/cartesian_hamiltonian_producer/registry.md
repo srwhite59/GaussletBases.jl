@@ -4607,6 +4607,97 @@ Approved validation:
 No committed test file, committed input fixture, Cr2-specific driver run,
 solver run, or diagnostic harness is approved by this ID.
 
+### HP-DRV-INV-FN-01 — canonical driver terminal-region inventory
+
+Status: approved.
+
+Approved source files:
+
+```text
+bin/cartesian_ham_builder.jl
+src/cartesian_base_hamiltonian.jl
+```
+
+Optional only if a compact accessor is directly required:
+
+```text
+src/pqs_source_box_route_driver_helpers.jl
+src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl
+src/cartesian_final_basis_realization/terminal_face_product_blocks.jl
+```
+
+Problem:
+
+Large accidental identity sectors, such as the Cr2 z-end slab blowup, are
+hard to notice from the current canonical driver output. Normal driver users
+should see a compact basis-region inventory without running ignored probes and
+without receiving a route-debug dump.
+
+Approved behavior:
+
+- print a compact terminal-region / shellification inventory as part of
+  canonical driver output;
+- include it for base construction;
+- for supplemented construction, report at least the base terminal inventory
+  plus final supplemented dimension;
+- keep the output bounded and human-facing;
+- preserve the existing driver stage sequence and public inputs;
+- preserve artifact schema, matrix keys, reader behavior, and readback checks.
+
+Minimum useful columns:
+
+- region key/index or compact label;
+- region kind;
+- lowering kind or final realization kind;
+- support row count;
+- retained/final column count;
+- compression ratio;
+- identity versus compact/product realization;
+- slab normal axis, side, thickness, and stack index/count when applicable.
+
+The summary should also print total base final dimension, supplemented final
+dimension when applicable, and a clear count or visible rows showing any
+direct identity slab sectors if they exist.
+
+This ID does not approve route skeleton exposure, source-mode inventories,
+pair inventories, raw-block details, all-row listings, full metadata dumps,
+recursive route-stage dumps, new driver inputs, flags, stop-after controls,
+route switches, diagnostic switches, solver settings, broad status/report
+payloads, artifact schema changes, reader changes, public API/export changes,
+numerical construction changes, shellification changes, terminal lowering,
+retained-unit changes, transform-contract changes, terminal-realization
+changes, Residual Gaussian, MWG, IDA, Hamiltonian assembly, raw-block changes,
+Cr2-specific workflow, committed Cr2 fixtures, or committed tests.
+
+Line budget: target at most `80` added `src`/`bin` lines. This should be
+formatting plus compact accessor work, not a reporting subsystem.
+
+Failure rule: if the driver cannot print this from existing compact stage or
+final-basis summaries without adding a broad payload, artifact fields, or a
+route-report framework, make no source commit and report the missing summary
+seam.
+
+### HP-DRV-INV-TEST-01 — terminal-region inventory validation
+
+Status: approved.
+
+Approved validation:
+
+- `git diff --check`;
+- package load;
+- bounded H2 or Be2 driver run showing the summary for `nesting = :pqs`;
+- bounded H2 or Be2 driver run showing the summary for `nesting = :wl`;
+- supplemented smoke if the printed summary touches supplemented-stage
+  objects;
+- artifact/readback deltas unchanged;
+- output remains bounded and excludes source modes, pair inventories,
+  raw-block details, all-row listings, and full metadata;
+- no Cr2 run required; optional user-side Cr2 run only.
+
+No committed test file, committed driver-input fixture, Cr2-specific driver
+run, artifact schema validation, solver run, or diagnostic harness is approved
+by this ID.
+
 ### HP-DRV-TEST-01 — driver workflow validation
 
 Approved validation:

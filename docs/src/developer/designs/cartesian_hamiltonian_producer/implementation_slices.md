@@ -848,8 +848,8 @@ Failure rule:
 Status: approved for implementation under `HP-DRV-FILE-01`,
 `HP-DRV-FN-01`, `HP-DRV-NEST-FN-01`, `HP-DRV-NEST-WIRE-01`,
 `HP-DRV-NEST-TEST-01`, `HP-DRV-STAGE-FN-01`,
-`HP-DRV-STAGE-WIRE-01`, `HP-DRV-STAGE-TEST-01`, and
-`HP-DRV-TEST-01`.
+`HP-DRV-STAGE-WIRE-01`, `HP-DRV-STAGE-TEST-01`,
+`HP-DRV-INV-FN-01`, `HP-DRV-INV-TEST-01`, and `HP-DRV-TEST-01`.
 
 Approved boundary:
 
@@ -860,6 +860,10 @@ Approved boundary:
   `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl`, and
   `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` only for
   behavior-preserving physical operator-class stage factoring;
+- optional compact inventory accessors, only if directly required, in
+  `src/pqs_source_box_route_driver_helpers.jl`,
+  `src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl`,
+  and `src/cartesian_final_basis_realization/terminal_face_product_blocks.jl`;
 - compact driver invocation
   `julia --project=. bin/cartesian_ham_builder.jl [input.jl] [key=value ...]`;
 - visible editable defaults, one optional trusted project input file,
@@ -887,6 +891,14 @@ Allowed workflow:
   electron-electron / IDA or residual-MWG interactions, base Hamiltonian
   assembly, Gaussian supplement, residual augmentation, supplemented
   Hamiltonian assembly, and artifact write/check;
+- print a bounded terminal-region inventory for base construction, and for
+  supplemented construction at least the base terminal inventory plus final
+  supplemented dimension;
+- include region label/index, region kind, lowering or realization kind,
+  support row count, final column count, compression ratio,
+  identity-vs-compact/product realization, and native slab
+  axis/side/thickness/stack facts when available;
+- make any direct identity slab sectors visible if they exist;
 - write existing `CartesianIDAHamiltonian` artifacts with approved provenance
   groups;
 - print user-facing summaries and timing.
@@ -918,8 +930,9 @@ Forbidden:
 - private route-stage controls, stop-after internals, ladder probes, stage
   markers, fixture hacks, diagnostic knobs, underscored package helper calls,
   raw-block provider switches, report/status/payload dumps, metadata clouds,
-  allocation probes, per-kernel timing frameworks, benchmark harness behavior,
-  solver/RHF/ECP/EGOI/HamV6,
+  recursive route-stage dumps, all-row/source-mode/all-pair/raw-block/full
+  metadata dumps, allocation probes, per-kernel timing frameworks, benchmark
+  harness behavior, solver/RHF/ECP/EGOI/HamV6,
   private contract construction, artifact schema dumps, public API/export
   changes, artifact schema changes, committed tests, committed input fixtures,
   supplemented atoms, old route-stage choreography, Cr2-specific driver runs,
@@ -935,6 +948,14 @@ Validation gates:
   staged wiring changes;
 - visible supplemented-stage timing/summary for H2 supplemented construction
   when staged wiring changes;
+- bounded H2 or Be2 driver run showing the terminal-region inventory for
+  `nesting = :pqs`;
+- bounded H2 or Be2 driver run showing the terminal-region inventory for
+  `nesting = :wl`;
+- supplemented smoke if the printed inventory touches supplemented-stage
+  objects;
+- confirm output remains bounded and excludes source modes, pair inventories,
+  raw-block details, all-row listings, and full metadata;
 - H atom base driver artifact write/readback under `HP-DRV-ATOM-TEST-01`;
 - H2 base driver artifact write/readback;
 - one small base artifact/readback path with `nesting = :wl`;
@@ -946,6 +967,7 @@ Validation gates:
 Line budget:
 
 - at most `150` added `bin` lines;
+- at most `80` added `src`/`bin` lines for the terminal inventory summary;
 - at most `200` added `src` lines across the approved staged-driver source
   files;
 - no new committed test or tool file;

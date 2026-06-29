@@ -20,7 +20,11 @@ Gaussian-sum allocation lane is approved after the remaining-allocation audit.
 The canonical Cartesian driver usability lane is approved so the standard
 driver can directly produce base and supported supplemented Hamiltonian
 artifacts from visible public `system`, `basis`, and optional `supplement`
-contracts. The supported supplemented workflow now accepts explicit homonuclear
+contracts. `HP-DRV-INV-*` approves a bounded terminal-region inventory summary
+in the canonical driver output so users can see region kind, support rows,
+final columns, compression, and identity-vs-compact realization without
+turning the driver into a route diagnostic dump. The supported supplemented
+workflow now accepts explicit homonuclear
 z-axis diatomics without element-specific branches. A compact artifact manifest
 lane is approved for JLD2 sidecar groups that make written Hamiltonians
 self-describing without changing matrix keys or reader behavior. Broad public

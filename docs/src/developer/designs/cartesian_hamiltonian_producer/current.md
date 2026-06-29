@@ -159,6 +159,13 @@ Implemented base path:
   `bin/cartesian_ham_builder.jl` and the staged base/facade path. Public values
   are `:ordinary` and `:mapped_comx`; ordinary remains the default, and
   `:mapped_comx` is currently PQS-only.
+- `HP-DRV-INV-*` approves a compact terminal-region / shellification inventory
+  summary in the canonical driver output. This is bounded human-facing output:
+  region label, kind, lowering or realization kind, support rows, final
+  columns, compression ratio, identity-vs-compact/product realization, and slab
+  axis/side/thickness/stack facts when applicable. It does not approve new
+  driver inputs, route diagnostics, source-mode or pair dumps, artifact schema
+  changes, numerical construction changes, or Cr2 workflow.
 - 2026-06-26 He/PQS evidence found `n_s = 5` mapped-COMX not robust enough for
   all-electron scalar capture. This keeps mapped-COMX opt-in only and blocks
   default promotion until bounded He `n_s = 6`/`7` H1/IDA evidence is reviewed.
