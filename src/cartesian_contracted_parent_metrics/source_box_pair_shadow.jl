@@ -2295,16 +2295,3 @@ function _pqs_pqs_source_box_nuclear_attraction_by_center(
         source = :pqs_pqs_source_box_nuclear_attraction_by_center,
     )
 end
-
-function _pqs_product_source_box_product_block(
-    product_unit::_CartesianNestedProductStagedByCenterUnit3D,
-    metrics::NamedTuple{(:x,:y,:z)},
-    term::Symbol,
-)
-    return _product_doside_source_box_reference_block(
-        product_unit,
-        product_unit,
-        metrics;
-        term,
-    ).block
-end

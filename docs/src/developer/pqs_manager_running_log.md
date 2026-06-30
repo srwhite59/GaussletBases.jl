@@ -19565,3 +19565,64 @@ Carrying-cost result:
   definition-only adjacent leftover and should be handled only as a separate
   approved deletion slice; density, local-Gaussian, nuclear, and skeleton
   metadata families still need their own caller-proof maps.
+
+## Cartesian Hamiltonian Producer Pass 215 - Delete Definition-Only PQS/Product Helper
+
+Commit(s):
+- this commit - Delete definition-only PQS/product helper
+
+Summary:
+- Accepted the `bloat-fixer` deletion of the adjacent definition-only
+  `_pqs_product_source_box_product_block` helper from
+  `src/cartesian_contracted_parent_metrics/source_box_pair_shadow.jl`. This
+  removes the small tail left after Pass 214 retired the PQS/product low-order
+  route-shadow oracle family.
+
+Validation:
+- Bloat-fixer ran `git diff --check` and package load. Manager inspected the
+  diff, reran a source/test/docs caller scan excluding this running log, reran
+  `git diff --check`, and reran package load. No source/test/docs caller
+  remains outside historical manager notes.
+
+Goal advancement:
+- LT2/MT5: keeps the source-shadow cleanup net-negative and removes a stale
+  compatibility wrapper instead of leaving a false blocker in the source.
+- MT6/AG7: continues the subfamily-by-subfamily deletion approach for
+  `source_box_pair_shadow.jl` while leaving raw product-box donors,
+  density-density, local-Gaussian, nuclear, and skeleton metadata families
+  untouched.
+
+Risk / guardrail:
+- No numerical kernels, route semantics, public APIs, artifact schemas, docs,
+  tests, tmp probes, Cr2, screened-reference, density, local-Gaussian, or
+  nuclear paths changed.
+
+Carrying-cost result:
+- added source lines: 0.
+- deleted source lines: 13.
+- net source lines: -13.
+- exact remaining blocker: larger `source_box_pair_shadow.jl` density,
+  local-Gaussian, nuclear, and skeleton-metadata-connected families still need
+  their own caller-proof maps before deletion.
+
+### Medium-Term Goal Checkpoint After Pass 215
+
+- MT1 fake-PQS quarantine: active/maintained. The recent deletion passes did
+  not revive fake-PQS, source-backed WL/QW, or route-shadow oracles as
+  production PQS authority.
+- MT2 independent H2 PQS recovery and MT3 common physical support vocabulary:
+  completed as active guardrails. They remain important constraints, but they
+  are not the active work queue.
+- MT4 supplement staging after authority: active. The current scientific lane
+  is residual interaction adequacy and screened-reference density-gauge
+  projection, with Be/Be2 as fast probes and Cr2 as the motivating stress case.
+- MT5 cleanup pressure: active and strong. Bloat-fixer is now removing both
+  large docs/history bulk and staged no-caller source-shadow slices; keep
+  requiring net-negative deletion/shrinkage accounting.
+- MT6 audit/classify old Cartesian flat paths: active. The useful source
+  target remains `source_box_pair_shadow.jl`, but only by staged caller-proof
+  subfamilies. Raw product-box donor plan/view helpers remain protected.
+- Medium-goal wording: needs refinement soon. The top-level MT section still
+  reflects the old H2 recovery era; current practice has shifted to
+  CR2-facing residual/screened-reference measurement plus stable-source
+  deletion. No wording is changed in this mechanical cleanup commit.
