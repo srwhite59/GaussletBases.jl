@@ -19376,3 +19376,52 @@ Carrying-cost result:
 - MT6 audit/classify old Cartesian flat paths: active. The next large source
   target should be a read-only classification of `source_box_pair_shadow.jl`
   subfamilies before any broad deletion.
+
+## Cartesian Hamiltonian Producer Pass 211 - Block Screened-Reference Be/Be2 Audit
+
+Commit(s):
+- this commit - Record screened-reference q0 blocker
+
+Summary:
+- Accepted the measurement-only Be/Be2 screened-reference audit stop. The fast
+  Be and Be2 artifacts exist, but the audit correctly stopped before forming
+  `Delta h = J_Galerkin[rho0] - J_IDA/MWG[q0]`: the artifacts do not carry a
+  cheap, valid projection of the fixed Gaussian reference density `rho0` into
+  the same IDA/MWG density coordinates as `q0`.
+- This is the right blocker. Center metadata alone is not a density coordinate,
+  and retained/final weights are not automatically positive IDA quadrature
+  weights. Guessing `q0` from centers would repeat the category mistakes the
+  PQS framework and numerical-contract notes now forbid.
+
+Validation / evidence:
+- Doer inspected the fast artifacts under the June 24 driver ns-matrix run:
+  Be atom base/supplemented `ns4` and Be2 base/supplemented `ns4`, with
+  dimensions `237/246/549/567` and supplemented residual dimensions `9/18`.
+- Closest existing primitives are Gaussian factor one-body pieces,
+  centered electron-nuclear source blocks, dense small pure-Gaussian ERI
+  reference helpers, and saved `electron_electron_ida` matrices. None supplies
+  `rho0 -> q0` in the final/augmented IDA/MWG density gauge.
+- Doer ran package load, created no ignored probe, made no tracked edits, and
+  did not run Cr2. Manager verified live repo state is cleaner than the doer
+  handback: tracked files are clean after Pass 210; only the two longstanding
+  untracked successor handoff docs remain.
+
+Goal advancement:
+- MT4/LT5: sharpens the screened-reference lane. The missing design object is
+  not the exact Gaussian Hartree screen, but the reference-density projection
+  into the approximate interaction's density coordinates.
+- LT6: preserves density-gauge honesty by refusing a center-only or
+  retained-weight-only `q0` shortcut.
+
+Risk / guardrail:
+- No source, artifacts, defaults, public API, residual pruning, interaction
+  scaling, injection change, or Cr2 run. The next task should be a bounded
+  design/measurement map for a valid `rho0 -> q0` projection path, not a
+  production screened-reference implementation.
+
+Carrying-cost result:
+- added tracked source lines: 0.
+- deleted tracked source lines: 0.
+- exact remaining blocker: define a small, valid IDA/MWG reference-density
+  coordinate projection for fixed Gaussian `rho0`, preferably first as an
+  ignored-probe measurement object.
