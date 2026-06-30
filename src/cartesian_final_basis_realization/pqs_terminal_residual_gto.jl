@@ -55,10 +55,12 @@ function _r3_validate_augmented_operator_dimensions(operators, base_hamiltonian,
     for matrix in (operators.kinetic, operators.nuclear_attraction_unit_by_center...)
         _r3_require_size(matrix, (n, n), "R3 augmented operator dimension mismatch")
     end
-    _r3_require_close(view(operators.kinetic, 1:nG, 1:nG), base_hamiltonian.kinetic, "R3 augmented kinetic G-G block mismatch")
-    for (matrix, base) in zip(operators.nuclear_attraction_unit_by_center,
-                              base_hamiltonian.nuclear_attraction_unit_by_center)
-        _r3_require_close(view(matrix, 1:nG, 1:nG), base, "R3 augmented unit nuclear G-G block mismatch")
+    if residual.injected_dimension == 0
+        _r3_require_close(view(operators.kinetic, 1:nG, 1:nG), base_hamiltonian.kinetic, "R3 augmented kinetic G-G block mismatch")
+        for (matrix, base) in zip(operators.nuclear_attraction_unit_by_center,
+                                  base_hamiltonian.nuclear_attraction_unit_by_center)
+            _r3_require_close(view(matrix, 1:nG, 1:nG), base, "R3 augmented unit nuclear G-G block mismatch")
+        end
     end
     for matrix in (operators.position.x, operators.position.y, operators.position.z,
                    operators.x2.x, operators.x2.y, operators.x2.z)
@@ -178,6 +180,7 @@ function write_pqs_terminal_residual_gto_augmented_hamiltonian(
     Hamiltonian = getfield(_GB_PARENT, :CartesianIDAHamiltonian)
     hamiltonian isa Hamiltonian{Float64} ||
         throw(ArgumentError("R3 augmented artifact writer requires CartesianIDAHamiltonian{Float64}"))
+    residual.residual_injection_cutoff <= 0 || throw(ArgumentError("R3 augmented artifact writer does not support injected residual sectors"))
     augmented_dimension = size(hamiltonian.kinetic, 1)
     augmented_dimension == residual.base_dimension + residual.residual_dimension ||
         throw(DimensionMismatch("R3 augmented artifact dimension mismatch"))
@@ -308,8 +311,8 @@ function pqs_terminal_residual_gto_augmentation(
     tau_neg_rel::Real = 1.0e-12,
     tau_merge_abs::Real = 1.0e-12,
     tau_merge_rel::Real = 1.0e-12,
-    orthogonality_atol::Real = 1.0e-10,
-    identity_atol::Real = 5.0e-8,
+    orthogonality_atol::Real = 1.0e-10, identity_atol::Real = 5.0e-8,
+    residual_injection_cutoff::Real = 0.0,
 )
     nuclei_value = CRG.residual_gaussian_float_centers(nuclei)
     labels = CRG.residual_gaussian_candidate_labels(supplement)
@@ -320,7 +323,8 @@ function pqs_terminal_residual_gto_augmentation(
         getfield(_GB_PARENT, :_cartesian_supplement_cross_overlap)(supplement, supplement))
     return CRG.build_residual_gaussian_basis(basis.final_dimension, X, S_AA,
         labels, centers, owners; residual_occupation_cutoff, tau_neg_abs,
-        tau_neg_rel, tau_merge_abs, tau_merge_rel, orthogonality_atol, identity_atol)
+        tau_neg_rel, tau_merge_abs, tau_merge_rel, orthogonality_atol, identity_atol,
+        residual_injection_cutoff)
 end
 
 function _r3a_centered_factor_terms(axis, expansion, center)

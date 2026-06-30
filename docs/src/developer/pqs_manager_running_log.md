@@ -18610,3 +18610,54 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 197 - Implement Default-Off Residual Injection
+
+Commit(s):
+- this commit - Implement default-off residual injection
+
+Summary:
+- Accepted the `HP-RG-INJECT-FN-01` source implementation after one manager
+  correction. The first WIP was not accepted because it carried persistent
+  dense fixed-sector transforms. The corrected WIP carries compact injected
+  authority as `injected_A` plus `injected_G = G' S Y`; reconstructs
+  `Q_perp` locally when transforming exact operators; rejects
+  injection-enabled artifact writing; and enforces `dim(Y_inj) < nG`.
+- A follow-up review found candidate-overlap `rtol` had been collapsed into an
+  absolute cutoff. The final accepted source computes the owner-local
+  candidate rank threshold as
+  `max(candidate_overlap_atol, candidate_overlap_rtol * maximum(s))`.
+
+Validation:
+- Doer and manager ran `git diff --check`, package load, the H2
+  residual-GTO/MWG endpoint, and `tmp/work/rg_injection_enabled_h2_smoke.jl`.
+  Manager rerun passed with H2 endpoint `52/52`, facade/readback `67/67`, and
+  injection smoke reporting `injected_dimension = 2`,
+  `residual_dimension = 16`, artifact rejection, `F' S F = 2.89e-15`,
+  `F' S R = 1.21e-14`, `R' S R = 1.14e-12`, kinetic symmetry `0.0`, and Vee
+  symmetry `6.66e-15`.
+
+Goal advancement:
+- LT6: installs the default-off in-memory injection construction so
+  near-gausslet GTO directions have a third fate besides discard or
+  singular residual-complement normalization. This is not evidence that the
+  Cr2 low-H1 residual sector is solved, and it does not promote injection to a
+  production default.
+
+Carrying-cost result:
+- deleted: none.
+- simplified: exact one-body and inherited fixed-sector IDA now operate on the
+  injected replacement sector without persistent dense fixed-transform state.
+- quarantined: default-on injection, driver/public API, artifact provenance,
+  injection-enabled artifact writing, MWG channels for injected directions,
+  spectral pruning, full HF, dense Vee/solver work, Cr2 artifacts/workflow,
+  route/shellification/raw-block changes, and committed tests remain
+  unapproved.
+- exact remaining caller/blocker: future work must decide separately whether
+  injection should become a default, whether artifact provenance can describe
+  injected sectors, and whether a kinetic/`H1_RR` spectral gate is needed.
+- added src lines: 151.
+- deleted src lines: 20.
+- new tests: none.
+- new metadata/status fields: compact injected basis fields only; no route,
+  report, artifact, or public status fields.
