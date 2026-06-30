@@ -14,12 +14,6 @@ function _wl_terminal_source_support(source_cpbs, bundles)
     return indices, states
 end
 
-_wl_edge_fixed_axes(axis::Symbol) =
-    axis === :x ? (:y, :z) :
-    axis === :y ? (:x, :z) :
-    axis === :z ? (:x, :y) :
-    throw(ArgumentError("unsupported White-Lindsey edge free axis"))
-
 function _wl_block_from_product(product, bundles)
     dims = _nested_axis_lengths(bundles)
     indices = Int.(product.support_indices)
@@ -29,8 +23,6 @@ function _wl_block_from_product(product, bundles)
 end
 
 function _wl_boundary_stratum_block(unit, bundles)
-    length(unit.source_cpbs) == 1 ||
-        throw(ArgumentError("White-Lindsey boundary unit requires one source CPB"))
     cpb = only(unit.source_cpbs)
     intervals = CartesianCPB.intervals(cpb)
     dims = _nested_axis_lengths(bundles)
@@ -51,7 +43,7 @@ function _wl_boundary_stratum_block(unit, bundles)
         )
     elseif stratum_kind === :edge_cpb
         free_axis = cpb.metadata.free_axis
-        fixed_axes = _wl_edge_fixed_axes(free_axis)
+        fixed_axes = _terminal_face_active_axes(free_axis)
         meta_axes = cpb.metadata.fixed_axes
         meta_sides = cpb.metadata.sides
         fixed_sides = ntuple(
@@ -65,11 +57,8 @@ function _wl_boundary_stratum_block(unit, bundles)
         return _wl_block_from_product(product, bundles)
     elseif stratum_kind === :corner_cpb
         indices, states = _wl_terminal_source_support((cpb,), bundles)
-        length(indices) == 1 ||
-            throw(ArgumentError("White-Lindsey corner CPB must have one support row"))
         return indices, states, reshape([1.0], 1, 1)
     end
-    throw(ArgumentError("unsupported White-Lindsey boundary stratum $stratum_kind"))
 end
 
 function _wl_validate_coefficients(states, coefficients, overlaps, identity_atol)

@@ -18968,3 +18968,60 @@ Carrying-cost result:
 - added src lines: 7.
 - deleted src lines: 13.
 - net src lines: -6.
+
+## Cartesian Hamiltonian Producer Pass 205 - Trim WL Terminal Prechecks
+
+Commit(s):
+- this commit - Trim WL terminal prechecks
+
+Summary:
+- Accepted a wider `bloat-fixer` stable-code cleanup in the White-Lindsey
+  terminal realization surface. The private `_wl_edge_fixed_axes` alias was
+  deleted in favor of the shared terminal face-axis helper, and three
+  internal prettier-crash checks in `_wl_boundary_stratum_block` were removed:
+  source-CPB count, corner support-size, and unsupported-stratum custom error.
+- No scientific behavior change is intended. Bad internal metadata now fails
+  through `only(...)`, shared axis lookup, coefficient/action bounds, or
+  caller tuple destructuring before any malformed block can be pushed.
+
+Validation:
+- Bloat-fixer and manager both ran `git diff --check`, package load, and
+  `tmp/work/terminal_inventory_native_shell_index_probe.jl`. Manager rerun
+  reported PQS/WL `final_dimension = 471`.
+
+Carrying-cost result:
+- deleted: `_wl_edge_fixed_axes`, one source-CPB length precheck, one corner
+  support-size precheck, and one unsupported-stratum custom throw.
+- simplified: edge fixed-axis lookup now calls `_terminal_face_active_axes`
+  directly; single-CPB assumptions rely on `only(unit.source_cpbs)`.
+- quarantined: coefficient identity validation, support-disjointness
+  validation, transform-path checks, unit/source CPB mismatch checks, and
+  top-level missing-contract lookup remain untouched.
+- exact remaining caller/blocker: no remaining caller of `_wl_edge_fixed_axes`;
+  further bloat-fixer work should continue on older stable helper/check
+  families, not active RG/Cr2 diagnostic source.
+- added src lines: 1.
+- deleted src lines: 12.
+- net src lines: -11.
+
+### Medium-Term Goal Checkpoint After Pass 205
+
+- MT1 fake-PQS quarantine: active/maintained. Passes 200-205 did not promote
+  fake-PQS, route-shadow, or old source-backed oracle paths.
+- MT2 independent H2 PQS recovery and MT3 common physical support vocabulary:
+  active as background guardrails. Recent WL cleanups stayed downstream of the
+  corrected terminal-basis construction boundary and did not reopen support
+  authority.
+- MT4 supplement staging after authority: active, with the current tactical
+  science lane now Cr2 residual-sector diagnosis. The injection audit closed
+  the default-off injection question; next evidence should decompose kinetic
+  and nuclear contributions rather than proposing a safety gate.
+- MT5 cleanup pressure: active and stronger. The `bloat-fixer` role has moved
+  from wrapper deletion to stable helper/check-family trimming, while still
+  preserving numerical checks that prevent silent wrong bases.
+- MT6 audit/classify old Cartesian flat paths: active. The useful current
+  classification is stable WL terminal realization for deletion-oriented
+  cleanup, versus active RG/Cr2 diagnostic code for repo-doer measurement.
+- Medium-goal wording: still needs a future top-level refresh. The durable
+  near-term lane is now Cr2 residual one-body diagnosis plus stable-code
+  carrying-cost reduction under manager review.
