@@ -18878,3 +18878,60 @@ Carrying-cost result:
 - added src lines: 2.
 - deleted src lines: 4.
 - net src lines: -2.
+
+## Cartesian Hamiltonian Producer Pass 203 - Measure RG Injection Spectral Outcome
+
+Commit(s):
+- this commit - Record RG injection spectral audit
+
+Summary:
+- Accepted the measurement-only RG injection audit. The result is decisive:
+  optional injection does not remove the bad Cr2 residual-sector `H1_RR` mode.
+  In the dimer replay, the lowest `H1_RR` eigenvalue moves only from
+  `-7.3689569529` at `residual_injection_cutoff = 0` to `-6.9926510108` at
+  `1.0e-3`; the mode remains strongly negative and balanced across the two
+  atoms.
+- Higher injection cutoffs reduce the true residual count and improve
+  `K_RR`, but at `1.0e-4` and `1.0e-3` the production path fails its default
+  `F' S R` validation. Those rows are therefore measurement-only relaxed
+  replays, not source behavior to promote.
+
+Validation:
+- Doer ran package load, the H2 injection smoke, and the full ignored audit in
+  `413.36 s`. No tracked source edits, committed tests, Cr2 Hamiltonian
+  artifact, full HF, or solver run was made.
+- Manager inspected saved outputs under
+  `/Users/srw/dmrgtmp/cr2_r1p68_ns7_lmax2_d0p00847_fixed95fec2b8/`, including
+  `rg_injection_audit_summary.txt`, `rg_injection_audit_sweeps.tsv`,
+  `rg_injection_audit_modes.tsv`,
+  `rg_injection_audit_production_comparison.tsv`, and
+  `rg_injection_audit_stages.tsv`. The production/manual comparison matched
+  nonzero cutoffs within the `1.0e-7` audit tolerance; worst dimer residual
+  subspace error was about `2.21e-8`, and worst injected-subspace error was
+  about `6.71e-12`.
+
+Goal advancement:
+- LT6: closes the immediate question about whether default-off injection is a
+  cure for the Cr2 low residual-sector `H1` mode. It is not.
+- LT5: preserves route/provenance honesty by keeping the high-cutoff rows as
+  measurement-only evidence because they fail the current production
+  orthogonality gate.
+
+Risk / guardrail:
+- The audit summary records head `7653c2098`, before later WL-only
+  bloat-fixer commits. Those later commits touched stable WL terminal
+  realization cleanup, not the RG injection source or the PQS Cr/Cr2 artifact
+  replay path, so the measurement remains accepted.
+
+Carrying-cost result:
+- deleted: none.
+- simplified: none.
+- quarantined: injection remains default-off; high-cutoff relaxed rows remain
+  measurement-only and are not production behavior.
+- exact remaining caller/blocker: injection improves `K_RR` somewhat but does
+  not remove the low Cr2 `H1_RR` residual-sector mode. The next manager
+  decision is whether to pursue a kinetic/`H1_RR` spectral safety gate or a
+  different residual-selection policy; another injection implementation pass
+  is not justified by this evidence.
+- added tracked source lines: 0.
+- deleted tracked source lines: 0.
