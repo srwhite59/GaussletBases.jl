@@ -18115,3 +18115,53 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 187 - Harden Supplemented Route Provenance Test
+
+Commit(s):
+- this commit - Harden supplemented route provenance test
+
+Summary:
+- Accepted a narrow validation hardening pass after the supplemented route
+  provenance fix. The existing H2 supplemented RG/MWG endpoint test now opens
+  the written artifact and directly checks `recipe_provenance/route`,
+  `recipe_provenance/nesting`, `recipe_provenance/producer`, and
+  `hamiltonian_manifest/manifest_version`. This would have failed under the
+  old hardcoded `:z_axis_diatomic_residual_gto_mwg` route label while keeping
+  the test on the existing physics endpoint and artifact path.
+- The pass deliberately does not require `producer_provenance/` for
+  supplemented artifacts because that group is not currently written there;
+  adding it would be producer/schema behavior outside the validation-only
+  lane. The live truth source for supplemented construction is
+  `recipe_provenance/` plus `supplement_provenance/`.
+
+Validation:
+- `git diff --check` passed.
+- Package load passed.
+- `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl` passed,
+  including augmented dimension `489`, self-Coulomb `0.4574265214362095`, and
+  artifact readback deltas `0.0`.
+- Diff gate: `git diff --numstat -- src bin tools test docs` showed `0`
+  source/bin/tool lines, `+9/-0` in the existing H2 endpoint test, and
+  `+46/-0` in this running-log entry. The only added test lines are direct
+  JLD2 group/key/value assertions; no suspicious source patterns apply.
+
+Goal advancement:
+- LT5/LT6: strengthens artifact truthfulness around public construction
+  family and route labels without changing Hamiltonian matrices, artifact
+  schema, reader behavior, driver inputs, or CR2 workflow.
+
+Carrying-cost result:
+- deleted: none.
+- simplified: no new test file or fixture matrix; the check lives in the
+  existing H2 supplemented endpoint artifact block.
+- quarantined: atom/WL route-label matrix coverage remains an ignored/manual
+  validation candidate until separately approved for committed tests.
+- not deleted because: this is validation hardening only.
+- exact remaining caller/blocker: committed atom/PQS, atom/WL, and diatomic/WL
+  provenance route checks need a later exact test-authority amendment if
+  desired.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: no new file; existing test gained focused assertions.
+- new metadata/status fields: none.

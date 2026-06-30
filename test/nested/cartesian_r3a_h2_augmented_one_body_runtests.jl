@@ -326,6 +326,15 @@ facade_elapsed = @elapsed @testset "R3 H2 supplemented Hamiltonian facade" begin
         :validation_check_labels, :h2_self_coulomb_reference,
     )
     JLD2.jldopen(artifact, "r") do file
+        @test haskey(file, "supplement_provenance")
+        @test haskey(file, "recipe_provenance")
+        @test haskey(file, "hamiltonian_manifest")
+        @test haskey(file, "hamiltonian_manifest/manifest_version")
+        @test file["hamiltonian_manifest/manifest_version"] == 1
+        @test file["recipe_provenance/route"] === :z_axis_diatomic_pqs_residual_gto_mwg
+        @test file["recipe_provenance/nesting"] === :pqs
+        @test file["recipe_provenance/producer"] === :cartesian_residual_gto_mwg_hamiltonian
+
         values = Dict{Symbol,Any}()
         for key in required
             path = "supplement_provenance/$(key)"
