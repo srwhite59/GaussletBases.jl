@@ -18563,3 +18563,50 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 196 - Approve Default-Off Residual Injection Implementation
+
+Commit(s):
+- this commit - Approve default-off residual injection implementation
+
+Summary:
+- Approved `HP-RG-INJECT-FN-01` as a narrow default-off in-memory source lane
+  for the injection-plus-Residual-Gaussian hybrid. The decision records the
+  interpretation of the first audit: injection did not immediately remove the
+  current Cr2 low-H1 residual sector, but it remains the right general
+  construction because RG alone has a singular-complement limit for
+  near-gausslet GTO directions.
+- The approved implementation may classify owner-local principal modes,
+  globally merge injected modes, construct an injected replacement base sector
+  `F`, transform exact one-body operators into `[F, R]`, and keep residual
+  MWG/IDA only for true residual directions. The source must preserve current
+  behavior when `residual_injection_cutoff <= 0`.
+
+Validation:
+- `git diff --check` for this docs-only authority pass.
+- Focused readback of `HP-RG-INJECT-FN-01` in the memo, registry, current
+  status, implementation slices, RG domain module, and AGENTS startup rules.
+- No Julia run; no source, bin, test, tool, artifact, or driver file was
+  touched.
+
+Goal advancement:
+- LT6: moves from measurement-only rationale to an implementable, default-off
+  RG-domain source lane while explicitly preserving current production
+  behavior and quarantining artifact/default/workflow decisions.
+
+Carrying-cost result:
+- deleted: none.
+- simplified: future source work now has exact files, allowed transforms,
+  forbidden surfaces, validation, and dense-transform stop conditions.
+- quarantined: default-on injection, driver/public API, artifact schema or
+  injection-enabled artifact writing, MWG channels for injected directions,
+  global residual selection, spectral pruning, full HF, dense Vee/solver work,
+  Cr2 artifacts/workflow, route/shellification/raw-block changes, committed
+  tests, and broad payload/report shapes remain unapproved.
+- exact remaining caller/blocker: implementation must stop if exact one-body
+  transformation into `[F, R]` requires an unacceptable persistent dense
+  `nG x nG` transform/workspace or source outside the approved files.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

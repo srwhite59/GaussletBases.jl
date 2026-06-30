@@ -498,6 +498,7 @@ these approved design IDs:
 - `HP-RG-CUTOFF-TEST-01`
 - `HP-RG-CUTOFF-FN-02`
 - `HP-RG-CUTOFF-TEST-02`
+- `HP-RG-INJECT-FN-01`
 - `HP-CGRB-FILE-01`
 - `HP-CGRB-FN-01`
 - `HP-CGRB-FN-02`
@@ -988,6 +989,21 @@ Approved Residual Gaussian module surfaces:
   automatic pruning, spectral-guard implementation, MWG/IDA convention
   changes, full HF, dense Vee/solver work, Cr2 full Hamiltonian, Cr2 artifact,
   or Cr2-specific workflow.
+- `HP-RG-INJECT-FN-01` approves only a default-off in-memory implementation of
+  the injection-plus-RG hybrid in `src/cartesian_residual_gaussians/`:
+  `residual_basis.jl`, `augmented_operators.jl`, and `mwg_interaction.jl`;
+  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` is
+  allowed only for narrow internal keyword plumbing, same-construction
+  validation, and compatibility wiring. The source path may classify
+  owner-local principal modes, globally merge injected modes, construct a
+  replacement base sector `F`, transform exact one-body operators into
+  `[F, R]`, and inherit gausslet-sector IDA for injected directions. It must
+  preserve current behavior when `residual_injection_cutoff <= 0`. It does not
+  approve default-on injection, driver input, public API/export changes,
+  artifact schema/provenance/reader/manifest changes, injection-enabled
+  artifact writing, MWG channels for injected directions, global residual
+  selection, spectral pruning, full HF, dense Vee/solver work, Cr2 artifact or
+  workflow, route/shellification/raw-block changes, or committed tests.
 
 Non-negotiable RG guardrails:
 

@@ -3988,6 +3988,103 @@ residual-sector one-body blocks cheaply from existing construction seams, stop
 and report the exact missing reusable seam. Do not add source instrumentation
 as part of this lane.
 
+### HP-RG-INJECT-FN-01 — default-off injection-plus-RG implementation
+
+Status: approved source authority. This is default-off in-memory
+implementation authority, not approval for a production default or public
+workflow.
+
+Decision: the first injection audit did not remove the current Cr2 low-H1
+residual sector, but injection remains the better general construction because
+near-gausslet GTO directions should not be forced into the singular residual
+complement. RG alone remains dangerous in that limit; cutoff-only policy is a
+compromise, not the long-term basis model.
+
+Approved source surface:
+
+- `src/cartesian_residual_gaussians/residual_basis.jl`;
+- `src/cartesian_residual_gaussians/augmented_operators.jl`;
+- `src/cartesian_residual_gaussians/mwg_interaction.jl`;
+- `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` only
+  for narrow internal keyword plumbing, same-construction validation, and
+  compatibility wiring.
+
+Approved behavior:
+
+- add an internal `residual_injection_cutoff` option whose default preserves
+  current behavior, with `residual_injection_cutoff <= 0` meaning injection
+  disabled;
+- with injection disabled, preserve current production residual selection,
+  transforms, exact one-body operators, MWG/IDA interaction, H2 endpoint
+  values, and artifact behavior within roundoff;
+- with injection enabled, form owner-local stable candidate principal modes
+  after `S_AA` rank cleanup and classify `y_i = A_tilde v_i`, not raw GTO
+  columns;
+- globally merge provisional injected modes, drop duplicate injected modes by
+  an explicit injected-overlap rank rule, and validate rank/condition of
+  `B = G' S Y_inj`;
+- construct the injected gausslet sector as replacement sector
+  `F = [Y, G Q_perp]` or an equivalent numerically stable representation;
+- residualize true RG candidates against `F`, not against the original `G`;
+- keep true RG residual selection owner-local, followed by one final
+  inter-owner merge;
+- transform exact one-body/moment/unit-nuclear operators into the in-memory
+  `[F, R]` basis when injection is enabled;
+- inherit gausslet-sector IDA for the injected base sector as the documented
+  two-body approximation;
+- use residual MWG/IDA only for true residual directions;
+- carry only compact numerical authority needed for the injected base sector
+  and true residual transforms.
+
+Approved object/policy facts, if needed:
+
+- `residual_injection_cutoff`;
+- candidate-overlap rank threshold values;
+- injected-overlap rank threshold value;
+- injected dimension and optional compact injected owner counts;
+- numerical authority for the injected base-sector transform or equivalent
+  low-rank representation;
+- existing `T_G`/`T_A` authority for true residual directions.
+
+Forbidden:
+
+- default-on injection;
+- driver input or canonical driver workflow changes;
+- public API/export changes;
+- artifact schema/provenance/reader/manifest changes;
+- writing injection-enabled supplemented artifacts without a later provenance
+  amendment;
+- full HF, dense Vee, solver workflow, Cr2 full Hamiltonian, Cr2 artifact, or
+  Cr2-specific workflow;
+- automatic pruning by kinetic or `H1_RR` spectrum;
+- kinetic/`H1_RR` spectral-guard implementation;
+- MWG descriptors or residual-MWG channels for injected directions;
+- global residual selection;
+- width/zeta filtering default changes;
+- route, shellification, terminal-lowering, raw-block, Qiu-White, or
+  Hamiltonian artifact writer rewrites;
+- committed tests or fixtures unless separately approved.
+
+Validation for later source pass:
+
+- `git diff --check`;
+- package load;
+- current H2 residual-GTO/MWG endpoint unchanged with injection disabled;
+- ignored default-off replay showing the source path matches current
+  production RG counts and residual spectra for the target Cr/Cr2 fixture;
+- ignored enabled-injection replay showing finite/symmetric in-memory
+  one-body operators, `F' S F`, `F' S R`, `R' S R`, injected counts, true RG
+  counts, `B` rank/condition, and `K_RR`/`H1_RR` spectra;
+- no full HF and no new Hamiltonian artifact.
+
+Failure rule: if implementation requires artifact schema changes,
+driver/public API changes, source outside the approved files, raw-block
+rewrites, terminal-basis changes, or a broad payload/report framework, make no
+source commit and report the blocker. If exact one-body transformation into
+`[F, R]` cannot be done without storing an unacceptable dense `nG x nG`
+persistent transform/workspace, stop and request a compact-transform design
+amendment.
+
 ## Approved For Cartesian Gaussian Raw-Block Nuclear Owner
 
 This section approves only the neutral uncharged by-center nuclear raw-block

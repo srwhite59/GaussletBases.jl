@@ -249,6 +249,17 @@ Approved Residual Gaussian robustness lane:
   errors for `K`, each unit `U_A`, and `H1`. This does not approve
   injected-sector source behavior, defaults, artifacts, driver input, public
   API, automatic pruning, MWG/IDA convention changes, full HF, or Cr2 workflow.
+- `HP-RG-INJECT-FN-01` approves a narrow default-off in-memory implementation
+  of the injection-plus-RG hybrid. The audit did not remove the current Cr2
+  low-H1 residual sector, but injection remains the better general
+  construction because RG alone has a singular-complement limit. The source
+  lane may implement owner-local principal-mode classification, global
+  injected-subspace merge, replacement base sector `F`, exact one-body
+  transformation into `[F, R]`, and true-residual MWG/IDA only for directions
+  not injected. It must preserve current behavior when
+  `residual_injection_cutoff <= 0` and must not change driver input, public
+  API, artifact schema, production defaults, MWG channels for injected
+  directions, spectral pruning, full HF, or Cr2 workflow.
 
 Approved stale complete-core-shell RHF retirement:
 

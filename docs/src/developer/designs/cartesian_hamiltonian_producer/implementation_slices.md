@@ -382,6 +382,19 @@ Approved robustness lane:
   source changes, committed tests, default changes, automatic pruning,
   artifacts, driver changes, public API, MWG/IDA changes, full HF, Cr2
   artifacts, or Cr2-specific workflow.
+- `HP-RG-INJECT-FN-01` approves a narrow default-off in-memory source
+  implementation in `src/cartesian_residual_gaussians/residual_basis.jl`,
+  `augmented_operators.jl`, and `mwg_interaction.jl`, with
+  `pqs_terminal_residual_gto.jl` allowed only for narrow internal keyword
+  plumbing and compatibility wiring. It may implement owner-local principal
+  mode classification, global injected-subspace merge, replacement base sector
+  `F`, exact one-body transformation into `[F, R]`, and inherited
+  gausslet-sector IDA for injected directions. It must preserve current
+  behavior when `residual_injection_cutoff <= 0`, and it must not approve
+  default-on injection, driver input, public API, artifact schema/provenance,
+  injection-enabled artifact writing, MWG channels for injected directions,
+  global residual selection, spectral pruning, full HF, Cr2 artifact/workflow,
+  or committed tests.
 
 ## Compact Hamiltonian Artifact Manifest
 

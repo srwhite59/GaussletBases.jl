@@ -60,6 +60,8 @@ module, or object names in the new owner.
 - `HP-RG-CUTOFF-TEST-02` - residual-only validation for the tightened cutoff.
 - `HP-RG-SPECTRAL-AUDIT-01` - measurement-only residual-sector spectral audit.
 - `HP-RG-INJECT-AUDIT-01` - measurement-only optional injection audit.
+- `HP-RG-INJECT-FN-01` - default-off in-memory injection-plus-RG
+  implementation.
 
 These IDs are approved for implementation only within the surfaces below.
 
@@ -239,6 +241,15 @@ and then returning to owner-local residual selection for true RGs.
 proposal. It is not production source authority and does not change the
 approved RG defaults, MWG/IDA convention, artifacts, driver workflow, or
 public API.
+
+`HP-RG-INJECT-FN-01` approves the default-off in-memory implementation of the
+same scheme in the RG owner. It may add the numerical authority needed for an
+injected replacement base sector and exact one-body transformation into
+`[F, R]`, but injected directions must not become residual-GTO/MWG channels.
+When `residual_injection_cutoff <= 0`, the current production RG behavior must
+remain unchanged within roundoff. This ID does not approve driver input,
+public API, artifact schema/provenance changes, production-default changes,
+full HF, Cr2 workflow, or spectral pruning.
 
 Do not approve a vague global entry point such as
 `stabilize_residual_metric(...)`. Global raw-candidate symmetric Lowdin and
