@@ -51,10 +51,11 @@ Relevant tracked log directory:
 docs/src/developer/blurb_logs/2026-06-12_pqs_source_box_pivot/
 ```
 
-The tracked pass-095 review is:
+The tracked pass-095 review has since been compressed into the curated
+summary:
 
 ```text
-docs/src/developer/blurb_logs/2026-06-12_pqs_source_box_pivot/review.095.md
+docs/src/developer/blurb_logs/2026-06-12_pqs_source_box_pivot/summary.md
 ```
 
 If a future unattended baton loop is restarted, remember the current rules:

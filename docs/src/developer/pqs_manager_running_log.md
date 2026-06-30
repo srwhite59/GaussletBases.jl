@@ -19239,3 +19239,38 @@ Carrying-cost result:
 - added src lines: 20.
 - deleted src lines: 42.
 - net src lines: -22.
+
+## Docs-History Compression - PQS Passes 230-265
+
+Commit(s):
+- this commit - Compress PQS blurb logs 230-265
+
+Summary:
+- Appended the pass 230-265 durable summary to
+  `docs/src/developer/blurb_logs/2026-06-12_pqs_source_box_pivot/summary.md`.
+- The summary preserves fake-PQS quarantine, independent H2 PQS counts
+  `(275, 98, 98)`, final dimension `471`, support counts `(275, 578, 362)`,
+  support-partition/tile facts, pass-234/pass-241/pass-261 exceptions and
+  paydown, route-shadow/current-route/legacy fixture deletions, and
+  provider-block guardrails.
+- Deleted the remaining raw `blurb`, `response`, `review`, attention, and
+  exception files in that archive directory. This supersedes the earlier note
+  that the active 230-current raw tail remained intact.
+
+Validation:
+- Bloat-fixer: docs reference grep and `git diff --check`.
+
+Goal advancement:
+- LT2/MT5: removes tracked docs-history bulk while preserving strategic
+  interpretation in the curated summary and this running log.
+- MT6/AG7: keeps fake-PQS and old route-shadow retirement history available
+  without requiring future agents to reread obsolete raw baton files.
+
+Risk / guardrail:
+- This is docs-history compression only. No source, tests, artifacts, route
+  semantics, numerical thresholds, public API, or active RG/Cr2 diagnostics are
+  changed.
+
+Line-count / complexity note:
+- Deleted 10,722 raw archive lines and kept `summary.md` as the local durable
+  archive record.
