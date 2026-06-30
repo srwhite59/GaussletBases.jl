@@ -20,12 +20,6 @@ _wl_edge_fixed_axes(axis::Symbol) =
     axis === :z ? (:x, :y) :
     throw(ArgumentError("unsupported White-Lindsey edge free axis"))
 
-function _wl_metadata_value(metadata::NamedTuple, key::Symbol)
-    haskey(metadata, key) ||
-        throw(ArgumentError("White-Lindsey boundary metadata missing $key"))
-    return getfield(metadata, key)
-end
-
 function _wl_block_from_product(product, bundles)
     dims = _nested_axis_lengths(bundles)
     indices = Int.(product.support_indices)
@@ -40,26 +34,26 @@ function _wl_boundary_stratum_block(unit, bundles)
     cpb = only(unit.source_cpbs)
     intervals = CartesianCPB.intervals(cpb)
     dims = _nested_axis_lengths(bundles)
-    q = _wl_metadata_value(unit.metadata, :white_lindsey_retained_count_1d)
+    q = unit.metadata.white_lindsey_retained_count_1d
     side(axis) = ParentGaussletBases._nested_doside_1d(
         _nested_axis_pgdg(bundles, axis), intervals[_terminal_face_axis_index(axis)], q;
         enforce_symmetric_odd = false)
-    stratum_kind = _wl_metadata_value(cpb.metadata, :stratum_kind)
+    stratum_kind = cpb.metadata.stratum_kind
     if stratum_kind === :facet_cpb
-        fixed_axis = _wl_metadata_value(cpb.metadata, :axis)
+        fixed_axis = cpb.metadata.axis
         return _terminal_face_product_block(
             cpb,
             bundles;
             normal_axis = fixed_axis,
             fixed_indices = (first(intervals[_terminal_face_axis_index(fixed_axis)]),),
             retained_count = q,
-            fixed_side = _wl_metadata_value(cpb.metadata, :side),
+            fixed_side = cpb.metadata.side,
         )
     elseif stratum_kind === :edge_cpb
-        free_axis = _wl_metadata_value(cpb.metadata, :free_axis)
+        free_axis = cpb.metadata.free_axis
         fixed_axes = _wl_edge_fixed_axes(free_axis)
-        meta_axes = _wl_metadata_value(cpb.metadata, :fixed_axes)
-        meta_sides = _wl_metadata_value(cpb.metadata, :sides)
+        meta_axes = cpb.metadata.fixed_axes
+        meta_sides = cpb.metadata.sides
         fixed_sides = ntuple(
             i -> meta_sides[findfirst(==(fixed_axes[i]), meta_axes)],
             2,

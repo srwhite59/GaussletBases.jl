@@ -18935,3 +18935,36 @@ Carrying-cost result:
   is not justified by this evidence.
 - added tracked source lines: 0.
 - deleted tracked source lines: 0.
+
+## Cartesian Hamiltonian Producer Pass 204 - Delete WL Metadata Accessor Wrapper
+
+Commit(s):
+- this commit - Delete WL metadata accessor wrapper
+
+Summary:
+- Accepted a narrow `bloat-fixer` stable-code cleanup in the White-Lindsey
+  terminal realization surface. The private `_wl_metadata_value` helper was
+  deleted, and seven internal metadata reads now use direct `NamedTuple` field
+  access.
+- No strategic change. This reinforces the mature-code cleanup rule: internal
+  metadata bugs do not need custom prettier-crash wrappers when a natural
+  missing-field failure is sufficient.
+
+Validation:
+- Bloat-fixer and manager both ran `git diff --check`, package load, and
+  `tmp/work/terminal_inventory_native_shell_index_probe.jl`. Manager rerun
+  reported PQS/WL `final_dimension = 471`.
+
+Carrying-cost result:
+- deleted: `_wl_metadata_value`.
+- simplified: seven White-Lindsey boundary metadata reads now use direct field
+  access.
+- quarantined: coefficient identity checks, support-disjointness checks,
+  transform-kind checks, source-CPB count checks, corner support-size checks,
+  and contract lookup checks remain untouched.
+- exact remaining caller/blocker: no remaining caller of `_wl_metadata_value`;
+  broader stable-code trimming should now move from single wrappers to bounded
+  helper-family cleanup.
+- added src lines: 7.
+- deleted src lines: 13.
+- net src lines: -6.
