@@ -13,6 +13,7 @@ Default repo role signoffs are:
 
 - manager handbacks: `-- repo-manager@<host>`
 - implementation doer handbacks: `-- repo-doer@<host>`
+- bloat cleanup handbacks: `-- bloat-fixer@<host>`
 
 Use a more specific role name only when the startup prompt, role identity file,
 or user explicitly gives one. For example, an informal "repo-doer2" terminal is
@@ -355,6 +356,40 @@ Default rule:
 See also:
 
 - `docs/code_bloat_and_wrong_contract_cleanup_note.md`
+
+## Bloat-fixer role
+
+New bloat-fixer agents should be started only by the user or under
+archive-manager/user coordination. The repo-local `bloat-fixer` role is
+defined in
+`docs/src/developer/bloat_fixer_role_memo_2026-06-30.md` and should read that
+memo at startup when archive-manager or the user starts it.
+
+`bloat-fixer` is not `repo-manager` and not the implementation `repo-doer`.
+Repo-manager classifies targets as stable, active/new, or scientifically
+sensitive, assigns exact cleanup surfaces, reviews every diff, and decides
+whether to commit or push.
+
+`bloat-fixer` may remove or simplify carrying-cost code inside manager-approved
+stable contracts: redundant internal assertions, stale transition checks, dead
+helpers/tests/probes, duplicated local boilerplate, and repeated metadata
+plumbing. It must not change scientific contracts, numerical thresholds,
+defaults, public APIs, artifact schemas, route semantics, or active-lane
+behavior unless repo-manager gives an explicit close-supervision blurb.
+Bloat-fixer must not create new abstractions to remove old ones unless
+repo-manager explicitly approves that replacement and the net result is
+smaller.
+
+Durable cleanup rule:
+
+- keep checks that prevent silent wrong science
+- keep public/input and artifact boundary validation
+- keep rank, near-singular metric, orthogonality, identity, and symmetry checks
+  where computation could otherwise continue with useless results
+- delete mature internal checks that only turn an inevitable Julia or linear
+  algebra crash into a nicer crash
+- delete tests or diagnostics that preserve obsolete helper names, stale
+  transition vocabulary, or inactive metadata shape
 
 ## Physics-target work discipline
 
