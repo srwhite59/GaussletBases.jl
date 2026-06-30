@@ -708,7 +708,9 @@ Fourth caller-driven audit:
 - `_pqs_pqs_source_box_reference_blocks_from_pair_plan(...)` and
   `_pqs_pqs_source_box_reference_blocks(...)` were also `KEEP_ORACLE_ONLY`.
   Exact source callers were the PQS/PQS reference wrapper and the then-live
-  `_pqs_pqs_product_source_box_shadow_blocks(...)`.
+  `_pqs_pqs_product_source_box_shadow_blocks(...)`. A later 2026-06-30
+  source-shadow cleanup retired this PQS/PQS low-order reference/oracle family
+  after no current source or test caller remained.
 - `_pqs_pqs_product_raw_box_route_producer(...)` is `SHRINK_TEST_ONLY`, not a
   deletion target in this pass. Exact source callers are
   `_pqs_pqs_product_raw_box_route_from_geometry_facts(...)` and the
@@ -735,8 +737,8 @@ Fifth batched caller-driven sweep:
 | `_pqs_product_source_box_reference_blocks(...)` | `KEEP_ORACLE_ONLY` | Kept. Source caller remains the PQS/product wrapper path and product entries in the all-pairs inventory metadata. |
 | `_pqs_product_source_box_reference_blocks_from_pair_plan(...)` | `KEEP_ORACLE_ONLY` | Kept. Source caller remains `_pqs_product_source_box_reference_blocks(...)`. |
 | `_pqs_pqs_source_box_reference_block(...)` | `DELETE_NOW` | Deleted. Exact caller audit showed only slow-test/docs references; the multi-term PQS/PQS oracle remains. |
-| `_pqs_pqs_source_box_reference_blocks(...)` | `KEEP_ORACLE_ONLY` | Kept. Source caller remains its wrapper/from-pair-plan path and PQS/PQS entries in the all-pairs inventory metadata. |
-| `_pqs_pqs_source_box_reference_blocks_from_pair_plan(...)` | `KEEP_ORACLE_ONLY` | Kept. Source caller remains `_pqs_pqs_source_box_reference_blocks(...)`. |
+| `_pqs_pqs_source_box_reference_blocks(...)` | `RETIRED_LATER` | Later deleted by source-shadow cleanup after no source/test caller remained. |
+| `_pqs_pqs_source_box_reference_blocks_from_pair_plan(...)` | `RETIRED_LATER` | Later deleted by source-shadow cleanup after no source/test caller remained. |
 | `_pqs_pqs_product_source_box_shadow_blocks(...)` | `DELETE_NOW` | Deleted. After the route-shaped safe-term consumer deletion, exact caller audit showed no source caller and only slow-test/docs pressure. |
 | `_pqs_pqs_product_source_box_all_pairs_inventory(...)` | `SHRINK_TEST_ONLY` / `KEEP_ORACLE_ONLY` | Kept. `_pqs_pqs_product_raw_box_route_producer(...)` still uses it for descriptor inventory validation. |
 | `_pqs_pqs_product_raw_box_route_producer(...)` | `SHRINK_TEST_ONLY` | Kept. Source callers remain `_pqs_pqs_product_raw_box_route_from_geometry_facts(...)` and the density-density route producer. |

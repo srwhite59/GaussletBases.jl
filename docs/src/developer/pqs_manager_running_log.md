@@ -19425,3 +19425,49 @@ Carrying-cost result:
 - exact remaining blocker: define a small, valid IDA/MWG reference-density
   coordinate projection for fixed Gaussian `rho0`, preferably first as an
   ignored-probe measurement object.
+
+## Cartesian Hamiltonian Producer Pass 212 - Delete PQS/PQS Low-Order Shadow Oracle
+
+Commit(s):
+- this commit - Delete PQS/PQS low-order shadow oracle
+
+Summary:
+- Accepted the `bloat-fixer` deletion of the PQS/PQS low-order
+  route-shadow oracle family from
+  `src/cartesian_contracted_parent_metrics/source_box_pair_shadow.jl`. Deleted
+  helpers include the PQS/PQS axis cross factors, pair plan, factor/block
+  assembly, explicit boundary-selection reference, and reference-block wrapper
+  family.
+- Manager review also deleted the now-unused
+  `_PQS_PQS_SOURCE_BOX_REFERENCE_TERMS` alias and updated the historical
+  route-retirement ledger so it no longer says this oracle remains kept.
+
+Validation:
+- Bloat-fixer ran deleted-symbol scans, `git diff --check`, and package load.
+  Manager reran deleted-symbol scans over `src test docs`, `git diff --check`,
+  and package load. Remaining refs are only historical retirement-ledger
+  entries marked as later-retired; ignored `tmp/work` validation scripts still
+  contain stale references and were not edited.
+
+Goal advancement:
+- LT2/MT5: removes the first large no-live-caller slice from
+  `source_box_pair_shadow.jl` without adding an adapter or new abstraction.
+- MT6/AG7: proves source-shadow deletion can proceed by subfamily caller proof.
+  The raw product-box donor path, density-density helpers, local-Gaussian
+  helpers, nuclear helpers, and route skeleton metadata remain untouched for
+  separate classification.
+
+Risk / guardrail:
+- No numerical kernels, route semantics, public APIs, artifact schemas,
+  residual-GTO, Cr2, screened-reference, density, local-Gaussian, or nuclear
+  helper paths changed. Do not reopen `_pqs_raw_product_box_plan`,
+  `_pqs_product_box_realization_plan`, or `_pqs_raw_product_box_plan_view`
+  casually; they remain active donor/source callers.
+
+Carrying-cost result:
+- added source lines: 0.
+- deleted source lines: 424.
+- net source lines: -424.
+- exact remaining blocker: the larger `source_box_pair_shadow.jl` density,
+  local-Gaussian, and nuclear shadow families still need staged caller-proof
+  deletion maps before source edits.
