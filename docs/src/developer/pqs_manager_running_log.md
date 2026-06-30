@@ -17957,3 +17957,50 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 186 - Amend Driver Inventory Geometry Columns
+
+Commit(s):
+- this commit - Require geometry columns in driver inventory
+
+Summary:
+- Amended the existing `HP-DRV-INV-FN-01` / `HP-DRV-INV-TEST-01` driver
+  inventory authority. The original compact inventory columns were sufficient
+  to catch catastrophic direct-identity slabs, but not the subtler angular-box
+  failure where all z-extension slabs are compact yet emitted only after the
+  final shared shell.
+- The canonical driver inventory row contract now includes shell index or
+  explicit unavailable status, index ranges for `x`/`y`/`z`, physical
+  coordinate ranges for `x`/`y`/`z`, and the existing slab normal/side/
+  thickness/stack facts when applicable. Physical `x`/`y` ranges are required
+  because angular-balance review compares transverse physical scale against
+  the bond-axis margin; `z` alone is not enough.
+
+Validation:
+- `git diff --check` passed for the docs-only amendment.
+- Focused search confirmed the `HP-DRV-INV-*` authority now names shell index,
+  axis index ranges, physical coordinate ranges, and the forbidden non-goals.
+- Staged path scan confirmed no source, test, tool, bin, artifact, or driver
+  files are part of the docs-only amendment.
+
+Goal advancement:
+- LT5/LT6: keeps the canonical driver useful as a compact human-facing
+  construction view without turning it into route diagnostics. This should
+  make both identity-slab blowups and angular z-extension ordering errors
+  visible during ordinary H2/Be2/Cr2-style runs.
+
+Carrying-cost result:
+- deleted: none; docs-only policy pass.
+- simplified: driver inventory expectations are now one explicit geometry row
+  contract instead of relying on ignored probes to notice z-extension ordering.
+- quarantined: artifact schema changes, source-mode/pair/raw-block dumps,
+  route-stage diagnostics, new driver inputs, numerical construction changes,
+  shellification changes, terminal lowering changes, Cr2-specific workflow,
+  and committed fixtures/tests remain forbidden.
+- exact remaining caller/blocker: source work still needs a compact way to
+  derive index and physical ranges from existing terminal/parent summaries
+  without adding a broad report payload.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

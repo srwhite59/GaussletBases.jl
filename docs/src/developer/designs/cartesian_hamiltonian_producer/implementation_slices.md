@@ -915,8 +915,11 @@ Allowed workflow:
   supplemented dimension;
 - include region label/index, region kind, lowering or realization kind,
   support row count, final column count, compression ratio,
-  identity-vs-compact/product realization, and native slab
-  axis/side/thickness/stack facts when available;
+  shell index or explicit unavailable status, index ranges for all three axes,
+  physical coordinate ranges for all three axes, identity-vs-compact/product
+  realization, and native slab axis/side/thickness/stack facts when available;
+- include physical `x`/`y` ranges as well as `z`, so angular-balanced z-axis
+  shellification can be reviewed from ordinary driver output;
 - make any direct identity slab sectors visible if they exist;
 - write existing `CartesianIDAHamiltonian` artifacts with approved provenance
   groups;

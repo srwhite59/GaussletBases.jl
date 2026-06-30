@@ -1410,18 +1410,21 @@ output. Approved files are `bin/cartesian_ham_builder.jl` and
 `src/cartesian_final_basis_realization/terminal_face_product_blocks.jl` only if
 directly required. The summary may print bounded rows with region label/index,
 region kind, lowering or realization kind, support rows, final columns,
-compression ratio, identity-vs-compact/product realization, and slab
-axis/side/thickness/stack facts when applicable. It should include total base
-final dimension, supplemented final dimension when applicable, and visible
-direct identity slab sectors if any remain. This is human-facing driver output,
-not an artifact schema, route diagnostic, public input, stop-after control,
-solver hook, broad status/report payload, source-mode dump, pair inventory,
-raw-block dump, all-row listing, or full metadata dump. It must not change
-numerical construction, shellification, terminal lowering, retained units,
-transform contracts, terminal realization, RG/MWG/IDA, Hamiltonian assembly,
-artifacts/readers, public exports, Cr2 workflow, stage sequence, or driver
-inputs. Later implementation line budget is target `80` added `src`/`bin`
-lines.
+compression ratio, shell index or explicit unavailable status, index ranges
+for `x`/`y`/`z`, physical coordinate ranges for `x`/`y`/`z`,
+identity-vs-compact/product realization, and slab axis/side/thickness/stack
+facts when applicable. Physical `x`/`y` ranges are required, not only `z`,
+because angular-balance review compares transverse physical scale against the
+bond-axis margin. It should include total base final dimension, supplemented
+final dimension when applicable, and visible direct identity slab sectors if
+any remain. This is human-facing driver output, not an artifact schema, route
+diagnostic, public input, stop-after control, solver hook, broad status/report
+payload, source-mode dump, pair inventory, raw-block dump, all-row listing, or
+full metadata dump. It must not change numerical construction, shellification,
+terminal lowering, retained units, transform contracts, terminal realization,
+RG/MWG/IDA, Hamiltonian assembly, artifacts/readers, public exports, Cr2
+workflow, stage sequence, or driver inputs. Later implementation line budget
+is target `80` added `src`/`bin` lines.
 
 `HP-DRV-NEST-FN-01` and `HP-DRV-NEST-WIRE-01` approve one visible construction
 family input, `nesting = :pqs` or `nesting = :wl`, in

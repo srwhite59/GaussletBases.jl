@@ -4811,15 +4811,25 @@ Minimum useful columns:
 - region key/index or compact label;
 - region kind;
 - lowering kind or final realization kind;
+- shell index or explicit unavailable status;
 - support row count;
 - retained/final column count;
 - compression ratio;
 - identity versus compact/product realization;
+- index ranges for each axis, `x = i:j`, `y = k:l`, `z = m:n`;
+- physical coordinate ranges for each axis, `x`, `y`, and `z`;
 - slab normal axis, side, thickness, and stack index/count when applicable.
 
 The summary should also print total base final dimension, supplemented final
 dimension when applicable, and a clear count or visible rows showing any
 direct identity slab sectors if they exist.
+
+The geometry columns are part of the canonical inventory contract. They are
+needed to catch shellification errors where every region is compact but the
+z-axis slab stack is emitted only after the final shared shell instead of being
+interleaved with the angular-balanced shell steps. Physical `x`/`y` ranges are
+required, not only `z`, because the angular-balance rule compares the
+transverse physical scale against the bond-axis margin.
 
 This ID does not approve route skeleton exposure, source-mode inventories,
 pair inventories, raw-block details, all-row listings, full metadata dumps,
@@ -4854,6 +4864,9 @@ Approved validation:
 - artifact/readback deltas unchanged;
 - output remains bounded and excludes source modes, pair inventories,
   raw-block details, all-row listings, and full metadata;
+- output includes shell index or explicit unavailable status, index ranges for
+  all axes, physical coordinate ranges for all axes, and slab stack facts when
+  applicable;
 - no Cr2 run required; optional user-side Cr2 run only.
 
 No committed test file, committed driver-input fixture, Cr2-specific driver
