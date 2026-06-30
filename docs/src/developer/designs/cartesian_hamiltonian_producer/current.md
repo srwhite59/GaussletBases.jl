@@ -240,6 +240,11 @@ Approved Residual Gaussian robustness lane:
   output. It does not approve pruning, kinetic/`H1_RR` guards, cutoff or
   tolerance changes, full HF, Vee/solver work, artifacts, source
   instrumentation, or driver changes.
+- `residual_gaussian_injection_hybrid.md` records a proposed optional
+  injection-plus-RG scheme for near-gausslet supplement directions. It is
+  design memory only: no injected-sector source behavior, default, artifact,
+  driver input, public API, or Cr2 workflow is approved until a later
+  docs-only amendment names exact IDs, files, validation, and failure rules.
 
 Approved stale complete-core-shell RHF retirement:
 

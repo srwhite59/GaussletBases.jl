@@ -18422,3 +18422,47 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 193 - Record Residual Injection Hybrid Memo
+
+Commit(s):
+- this commit - Record residual injection hybrid memo
+
+Summary:
+- Added a durable design memo for the proposed optional
+  injection-plus-Residual-Gaussian construction. The memo records the intended
+  split: classify candidate modes owner-locally by residual norm, globally
+  orthonormalize the injected near-gausslet subspace, replace the corresponding
+  gausslet-sector directions, and then return to owner-local residual
+  selection for true RG/MWG directions.
+- The memo also records that initial GTO candidate orthonormalization needs its
+  own candidate-overlap rank policy, separate from residual occupation,
+  injection, injected-subspace merge, and final identity tolerances.
+
+Validation:
+- `git diff --check` for this docs-only pass.
+- Focused link/readback review of the new memo, README link, current-status
+  note, and RG domain-module note.
+- No Julia run; no source, bin, test, tool, artifact, or driver file was
+  touched.
+
+Goal advancement:
+- LT6: preserves the conceptual cure for near-gausslet residual-complement
+  instability without turning it into an unapproved source lane. The
+  documented path explicitly avoids a global residual-selection algorithm while
+  allowing global injected-subspace orthonormality.
+
+Carrying-cost result:
+- deleted: none.
+- simplified: future RG work has a named memo separating candidate GTO rank,
+  optional injection, true residual selection, and interaction conventions.
+- quarantined: production source behavior, defaults, committed tests, artifact
+  schema, driver inputs, public API, Cr2 workflow, full HF, spectral guards,
+  and MWG convention changes remain unapproved.
+- exact remaining caller/blocker: a later docs-only amendment must approve
+  exact `HP-RG-INJECT-*` IDs, files, validation, thresholds, and failure rules
+  before implementation.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

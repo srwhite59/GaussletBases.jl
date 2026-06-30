@@ -103,6 +103,9 @@ Agents should read first:
 - [Residual Gaussian orthogonality robustness](residual_gaussian_orthogonality_robustness.md)
   for the narrow final residual identity-check robustness, tolerance, and
   cutoff-policy lanes
+- [Residual Gaussian injection hybrid memo](residual_gaussian_injection_hybrid.md)
+  for the optional near-gausslet injection proposal; this is design memory, not
+  production source authority
 - [Cartesian Gaussian raw blocks - nuclear slice](cartesian_gaussian_raw_blocks_nuclear.md)
   for the neutral uncharged nuclear raw-block owner
 - [Cartesian Gaussian raw blocks - non-nuclear slice](cartesian_gaussian_raw_blocks_non_nuclear.md)

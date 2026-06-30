@@ -229,6 +229,14 @@ baselines when available. This audit does not approve a kinetic/`H1_RR` guard,
 automatic pruning, cutoff/tolerance changes, source instrumentation, full HF,
 artifacts, driver work, or MWG/IDA changes.
 
+The optional injection-plus-RG idea is recorded separately in
+`residual_gaussian_injection_hybrid.md`. That memo proposes classifying
+near-gausslet supplement modes by owner-local residual norm, globally merging
+the injected subspace, replacing the corresponding gausslet-sector directions,
+and then returning to owner-local residual selection for true RGs. It is not
+source authority and does not change the approved RG defaults, MWG/IDA
+convention, artifacts, driver workflow, or public API.
+
 Do not approve a vague global entry point such as
 `stabilize_residual_metric(...)`. Global raw-candidate symmetric Lowdin and
 global raw-column pivoted-Cholesky selection are not the Residual Gaussian
