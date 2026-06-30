@@ -19924,3 +19924,66 @@ Carrying-cost result:
   complete below the raw donor path. Future cleanup should look for stale
   ignored probes/docs around deleted symbols, or move to a new caller-proved
   source family rather than reopening protected raw donor helpers.
+
+## Cartesian Hamiltonian Producer Pass 221 - Cr2 Base-Only q0 Fit Blocker
+
+Commit(s):
+- this commit - Record Cr2 base-only q0 fit blocker
+
+Summary:
+- Accepted the measurement-only Cr2 `q0` coordinate-set adequacy audit. No
+  base-only nonnegative charge-constrained fit is good enough to justify
+  another screened-reference `Delta h` replay on the bad Cr2 case.
+- The audit classifies the previous direct-core failure: direct identity core
+  columns are too singular/local for the smooth Gaussian reference screen in
+  the `V_IDA*q0` density gauge. Allowing atom-local compact base columns fixes
+  the direct-core row overshoot, but residual-sector and shared-region rows
+  remain poorly represented.
+
+Validation / evidence:
+- Doer used ignored probe `tmp/work/cr2_screened_reference_q0_fit_audit.jl`.
+  Manager inspected the probe and did not rerun it because the full audit took
+  about `185 s`, with `j0` construction about `107 s`. Manager reran
+  `git diff --check` and package load.
+- Setup: Cr2 artifact
+  `/Users/srw/dmrgtmp/cr2_r1p68_ns7_lmax2_d0p00847_fixed95fec2b8/cr2_fixed95fec2b8_ida.jld2`,
+  artifact-compatible residual cutoff `5.0e-8`, dimension `6811`, base
+  dimension `6675`, residual dimension `136`, `alpha = 8.0`.
+- Direct core only and all-direct-identity fits are identical: `686`
+  coordinates, exact rank `686`, condition about `3.06e2`,
+  `fit_rel = 3.498`, near-core row relative error `5.924`, residual-row
+  relative error `0.491`, and all charge placed in `atom_local_core`.
+- Direct plus atom-local compact columns improves the global fit to
+  `2.875e-2` and near-core relative error to `8.88e-4`, but residual-row
+  relative error remains `0.473`. Charge moves almost entirely to
+  `atom_local_shell` (`1.9975`) with only `0.0025` in direct core.
+- All-base nearest-center and forbidden all-augmented diagnostics do not solve
+  the problem. The all-base diagnostic has `fit_rel = 2.868e-2`,
+  near-core relative error `8.77e-4`, residual-row relative error `0.476`,
+  and zero charge on shared/midpoint columns; residual coordinates receive zero
+  charge in the forbidden augmented diagnostic.
+- Bad-row concentration after best base-only fits remains in residual rows,
+  shared molecular shell rows, and angular z-extension slab rows, so the exact
+  rows needed for interpreting residual over-occupation are not fit well.
+
+Goal advancement:
+- MT4/LT5: closes the immediate screened-reference direct-core/base-only
+  branch. The screened-reference idea is not disproved physically, but the
+  current density-coordinate fit is not adequate for Cr2 residual diagnostics.
+- LT6: preserves density-gauge discipline by refusing to interpret
+  `Delta h` when `V_IDA*q0` fails on the residual/shared rows that the
+  correction is supposed to diagnose.
+
+Risk / guardrail:
+- No tracked source edits, production defaults, artifact schema changes, public
+  inputs, residual pruning, Vee scaling, HF workflow, Galerkin screen rebuild,
+  or Cr2 production claim. The handoff's tracked-dirty note conflicted with
+  live repo state after Pass 220; live tracked state was clean except for the
+  two untracked successor handoff docs.
+
+Carrying-cost result:
+- added tracked source lines: 0.
+- deleted tracked source lines: 0.
+- exact remaining blocker: screened-reference needs a better density-gauge
+  design for residual/shared rows before another Cr2 `Delta h` run. The next
+  pass should be design/diagnostic rather than more base-only fitting.
