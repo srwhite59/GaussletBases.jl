@@ -18165,3 +18165,67 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: no new file; existing test gained focused assertions.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 188 - Use Native Shell Index In Driver Inventory
+
+Commit(s):
+- this commit - Use native shell index in driver inventory
+
+Summary:
+- Accepted the narrow driver-inventory provenance fix. The inventory reader
+  already consumed `terminal_region_shell_index` when present, but the current
+  construction path did not populate it, so complete shells and angular
+  z-extension slabs printed `shell=unavailable`.
+- The route helper now builds a small terminal-region-key to native
+  `raw_region.shell_index` map from the typed shellification plan and merges
+  positive shell indices into retained-unit metadata before transform
+  contracts are built. No traversal-derived shell counter is used. Direct
+  core and other non-shell regions remain explicit `shell=unavailable`.
+- This keeps the canonical driver inventory tied to shellifier-native region
+  provenance, so angular z-extension slabs can show the shell step they belong
+  to without adding artifact fields or a route-debug report.
+
+Validation:
+- `git diff --check` passed.
+- Package load passed.
+- Ignored probe `tmp/work/terminal_inventory_native_shell_index_probe.jl`
+  showed H2/PQS complete shells as `shell=1` and `shell=2`, angular
+  z-extension slabs as `shell=1`, and H2/WL boundary-stratum rows carrying
+  the same native shell indices.
+- Canonical driver H2/PQS and H2/WL base artifact/readback runs passed with
+  `check_file=true`, `print_contract=true`, and printed x/y/z index and
+  physical ranges alongside native shell indices.
+- Existing H2 RG endpoint
+  `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl` passed:
+  augmented dimension `489`, self-Coulomb `0.4574265214362095`, and readback
+  deltas `0.0`.
+- Diff gate: `git diff --numstat -- src bin tools test docs` showed `+37/-0`
+  in `src/pqs_source_box_route_driver_helpers.jl` before this log entry; no
+  bin/tool/test files changed.
+
+Goal advancement:
+- LT5/LT6: strengthens the driver as a bounded construction sanity surface for
+  shellification geometry. The inventory can now expose whether angular slabs
+  are attached to the expected native shell step instead of relying on
+  retained-unit ordering.
+
+Carrying-cost result:
+- deleted: no traversal-derived shell-index logic; none existed in the
+  accepted source, and this pass keeps it out.
+- simplified: the existing inventory consumer now receives the native fact it
+  was already prepared to display.
+- quarantined: artifact schema, matrix keys, reader behavior, driver inputs,
+  shellification algorithms, terminal lowering semantics, retained-unit
+  semantics, source-mode/pair/raw-block dumps, Cr2 workflow, and committed
+  tests remain unchanged.
+- not deleted because: the retained-unit metadata seam is the existing compact
+  route-to-inventory carrier.
+- exact remaining caller/blocker: none for native shell-index inventory
+  display; broader committed route-label/shell-index test matrices would need
+  separate test authority.
+- added src lines: 37.
+- deleted src lines: 0.
+- new tests: none; ignored probe only.
+- new metadata/status fields: no artifact/status/schema fields; the existing
+  in-memory `terminal_region_shell_index` inventory metadata key is now
+  populated from native shellifier data where positive shell indices exist.

@@ -1484,6 +1484,39 @@ function _pqs_source_box_route_driver_retained_unit_with_metadata(unit, metadata
     )
 end
 
+function _pqs_source_box_route_driver_native_shell_index_by_region(shellification_plan)
+    indices = Dict{Symbol,Int}()
+    for region in CartesianShellification.terminal_regions(shellification_plan)
+        raw_index = region.raw_region.shell_index
+        raw_index isa Integer && raw_index > 0 || continue
+        indices[region.key] = Int(raw_index)
+    end
+    return indices
+end
+
+function _pqs_source_box_route_driver_shell_index_retained_unit_plan(
+    shellification_plan,
+    retained_unit_plan,
+)
+    shell_index_by_region =
+        _pqs_source_box_route_driver_native_shell_index_by_region(shellification_plan)
+    isempty(shell_index_by_region) && return retained_unit_plan
+    units = CartesianRetainedUnits.RetainedUnitRecord[]
+    for unit in CartesianRetainedUnits.units(retained_unit_plan)
+        shell_index = get(shell_index_by_region, unit.terminal_region_key, nothing)
+        metadata = isnothing(shell_index) ? unit.metadata :
+            merge(unit.metadata, (; terminal_region_shell_index = shell_index))
+        push!(units, _pqs_source_box_route_driver_retained_unit_with_metadata(unit, metadata))
+    end
+    return CartesianRetainedUnits.RetainedUnitPlan(
+        retained_unit_plan.policy,
+        retained_unit_plan.lowering_plan,
+        units,
+        retained_unit_plan.summary,
+        retained_unit_plan.metadata,
+    )
+end
+
 function _pqs_source_box_route_driver_source_span_retained_unit_plan(
     parent,
     retained_unit_plan,
@@ -1541,6 +1574,10 @@ function _pqs_source_box_route_driver_unit_stage_low_order_summary(parent, shell
         CartesianRetainedUnits.retained_unit_plan(lowering_plan) :
         nothing
     if retained_unit_plan isa CartesianRetainedUnits.RetainedUnitPlan
+        retained_unit_plan = _pqs_source_box_route_driver_shell_index_retained_unit_plan(
+            shellification_plan,
+            retained_unit_plan,
+        )
         retained_unit_plan = _pqs_source_box_route_driver_source_span_retained_unit_plan(
             parent,
             retained_unit_plan,
