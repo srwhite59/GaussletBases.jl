@@ -19787,3 +19787,64 @@ Carrying-cost result:
   families remain in `source_box_pair_shadow.jl`; they require separate
   caller-proof maps because they share by-center/local-Gaussian wrapper
   plumbing.
+
+## Cartesian Hamiltonian Producer Pass 219 - Cr2 Screened-Reference Direct-Core Fit Failure
+
+Commit(s):
+- this commit - Record Cr2 screened-reference fit failure
+
+Summary:
+- Accepted the measurement-only Cr2 screened-reference correction probe as a
+  negative result. The correction can be formed in the saved bad Cr2 artifact
+  gauge as `Delta h = J_Galerkin[rho0] - Diagonal(V_IDA * q0)`, but the
+  current direct-core constrained `q0` fit is not credible enough to interpret
+  the resulting physics.
+- The constrained fit has exact per-center charge on 686 direct identity core
+  columns, but `rel ||Vq0-j0|| = 3.50`, near-core row relative error `5.92`,
+  and residual-row relative error `0.491`. That means the approximate-screen
+  subtraction is dominated by gauge-fit failure rather than by a meaningful
+  Galerkin-vs-IDA comparison.
+
+Validation / evidence:
+- Doer used ignored probe
+  `tmp/work/cr2_screened_reference_delta_h_probe.jl`. Manager inspected the
+  probe and did not rerun it because the full run took about `386.6 s`, with
+  about `217.5 s` in exact Galerkin screen construction. Manager reran
+  `git diff --check` and package load.
+- The probe reconstructed the artifact-compatible residual cutoff
+  `occupation_cutoff = 5.0e-8`; the current default residual dimension would
+  be `124`, incompatible with the saved bad density, while the artifact path
+  uses base dimension `6675` and residual dimension `136`.
+- Low `H1_RR` values moved from
+  `[-7.2678, -6.8146, -6.4618, -6.2684, -6.2684]` to
+  `[-6.4612, -6.1214, -6.0413, -6.0207, -5.8777]` at `N_screen = 10`, but
+  worsened to `[-7.4903, -7.2163, -6.8462, -6.7115, -6.6133]` at
+  `N_screen = 18` and `[-8.0964, -7.8453, -7.3770, -7.2293, -7.1328]` at
+  `N_screen = 22`.
+- Fixed-density one-body shifts on the saved bad UHF density were huge and
+  negative: about `-804`, `-1448`, and `-1769` Ha for `N_screen = 10, 18,
+  22`. Some occupied low-`H1_RR` residual modes had positive projected shifts,
+  but the full correction is not trustworthy while the `q0` fit is this poor.
+
+Goal advancement:
+- MT4/LT5: prevents the screened-reference lane from overclaiming a Cr2 fix
+  from a bad density-coordinate fit. The result changes the next question from
+  "does direct-core Delta h help Cr2?" to "can any artifact-compatible,
+  nonnegative charge-constrained `q0` fit `j0` in the Cr2 gauge well enough to
+  interpret Delta h?"
+- LT6: preserves density-gauge honesty by rejecting center/weight shortcuts and
+  rejecting a fitted object whose own `Vq0 ~= j0` diagnostic fails badly.
+
+Risk / guardrail:
+- No tracked source edits, production defaults, artifact schema changes, public
+  inputs, residual pruning, Vee scaling, HF workflow, or Cr2 production claim.
+  The doer handoff's tracked-dirty note conflicted with live repo state after
+  the manager accepted and pushed Pass 218; live tracked state was clean except
+  for the two untracked successor handoff docs.
+
+Carrying-cost result:
+- added tracked source lines: 0.
+- deleted tracked source lines: 0.
+- exact remaining blocker: direct-core-only constrained `q0` is not credible
+  for Cr2. The next measurement should classify why it fails and test bounded
+  allowed coordinate sets before rebuilding another expensive Delta-h screen.
