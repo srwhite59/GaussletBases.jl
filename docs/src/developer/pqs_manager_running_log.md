@@ -19987,3 +19987,76 @@ Carrying-cost result:
 - exact remaining blocker: screened-reference needs a better density-gauge
   design for residual/shared rows before another Cr2 `Delta h` run. The next
   pass should be design/diagnostic rather than more base-only fitting.
+
+## Cartesian Hamiltonian Producer Pass 222 - Cr2 Direct u0 Screened-Reference Diagnostic
+
+Commit(s):
+- this commit - Record Cr2 direct u0 screened-reference diagnostic
+
+Summary:
+- Accepted the measurement-only Cr2 direct row-gauge `u0` diagnostic. The
+  useful correction from Pass 221 is now explicit: the screened-reference
+  subtraction should use the direct IDA/MWG row-gauge potential vector
+  `u0[i] = (eta_i | rho0)`, not a fitted base-only `q0` substitute.
+- Direct `u0` is buildable and numerically sensible in the Cr2 artifact gauge.
+  It fixes the sign failure from the earlier `V_IDA*q0` Delta-h probe: the
+  saved bad UHF density receives a positive one-body penalty. It does not by
+  itself produce a clean Cr2 fix; the residual-sector shape of `Delta_RR`
+  remains the blocker.
+
+Validation / evidence:
+- Doer used ignored probe
+  `tmp/work/cr2_screened_reference_u0_diagnostic.jl`. Manager inspected the
+  probe and did not rerun it because the full run took about `387 s`, with
+  direct `u0` construction about `105 s` and exact Galerkin screen construction
+  about `216 s`. Manager reran `git diff --check` and package load on the live
+  worktree.
+- Setup: same bad Cr2 artifact, artifact-compatible residual cutoff
+  `5.0e-8`, total dimension `6811`, base dimension `6675`, residual dimension
+  `136`, `rho0_A(r) = N_screen*(alpha/pi)^(3/2)*exp(-alpha|r-R_A|^2)`,
+  `alpha = 8.0`, and screen sweep `N_screen = 10, 18, 22` per Cr.
+- Direct `u0` construction uses terminal local density proxy rows for direct
+  base rows, `C' n / C' w` terminal final-weight normalization for compact
+  base rows, and normalized residual MWG moment-matched Gaussian density
+  proxies for residual rows. `u0` was finite with minimum about `0.054`,
+  maximum about `2.573`, and norm about `142`.
+- Row-family `u0` means were physically ordered: direct core about `2.568`,
+  atom-local shell about `1.864`, shared/midbond about `0.284`, angular
+  z-extension slab about `0.0805`, and residual about `0.384`.
+- Compared with failed `q0` fits, direct-core `q0` still had
+  `fit_rel = 3.498` and residual-row relative error `0.491`; atom-local `q0`
+  had `fit_rel = 0.02875` but residual-row relative error `0.4728`. This
+  preserves the Pass 221 conclusion while replacing the subtraction object.
+- Fixed-density one-body shift on the saved bad UHF density is now positive:
+  unit `screen = 98.3604`, `diagonal_u0 = 82.1774`, `delta = 16.1830`,
+  giving about `+161.83`, `+291.29`, and `+356.03` Ha for `N_screen = 10,
+  18, 22`.
+- Low `H1_RR` improves at `N_screen = 10`
+  (`[-6.2548, -5.8466, -5.8117, ...]` vs uncorrected
+  `[-7.2678, -6.8146, -6.4618, ...]`), is only weakly improved at `18`, and
+  worsens at `22`. The remaining signal is therefore not a `q0` problem but
+  the residual-sector shape of `Delta_RR`.
+
+Goal advancement:
+- MT4/LT5: reopens screened-reference as a plausible physical diagnostic by
+  using the correct potential-vector object, while keeping the Cr2 result
+  measurement-only and refusing a production fix claim.
+- LT6: sharpens density-gauge vocabulary. `rho0` is the fitted physical
+  reference density, `u0` is the IDA/MWG row-gauge approximate screen, and
+  `q0` should be reserved for actual coordinates in the saved interaction
+  gauge.
+
+Risk / guardrail:
+- No tracked science source edits, production defaults, artifact schema
+  changes, public inputs, residual pruning, Vee scaling, HF workflow, or Cr2
+  production claim. The live tracked dirty file during review was unrelated
+  bloat-fixer WIP in
+  `src/cartesian_contracted_parent_metrics/product_staged_metric_fallbacks.jl`;
+  this log entry was committed separately.
+
+Carrying-cost result:
+- added tracked source lines: 0.
+- deleted tracked source lines: 0.
+- exact remaining blocker: inspect why the direct-`u0` `Delta_RR` develops
+  negative low modes and test alpha/charge sensitivity before any production
+  screened-reference design.
