@@ -18661,3 +18661,52 @@ Carrying-cost result:
 - new tests: none.
 - new metadata/status fields: compact injected basis fields only; no route,
   report, artifact, or public status fields.
+
+## Cartesian Hamiltonian Producer Pass 198 - Reduce Residual Injection Carrying Cost
+
+Commit(s):
+- this commit - Reduce residual injection carrying cost
+
+Summary:
+- Accepted a bounded cleanup of the just-added `HP-RG-INJECT-FN-01` source
+  implementation. The stored `injected_dimension` and `injected_owner_counts`
+  fields were removed; injected dimension is now derived from the compact
+  injected-sector authority `injected_G`. The duplicated final residual merge,
+  Lowdin normalization, sign canonicalization, and identity validation logic
+  is shared by the disabled-injection and enabled-injection paths.
+- The cleanup preserves the accepted physical contract: disabled injection is
+  unchanged, injected sectors remain in-memory only, artifact writing still
+  rejects injection-enabled residual sectors, and `injected_A`/`injected_G`
+  remain the only persistent injected-sector basis authority.
+
+Validation:
+- Doer ran `git diff --check`, package load, H2 residual-GTO/MWG endpoint,
+  supplemented facade/readback, and the H2 injection smoke.
+- Manager reran `git diff --check`, package load, and
+  `tmp/work/rg_injection_enabled_h2_smoke.jl`. The smoke reported
+  `off_zero_delta = 0.0`, `injected_dimension = 2`,
+  `residual_dimension = 16`, `F' S F = 2.89e-15`,
+  `F' S R = 1.21e-14`, `R' S R = 1.14e-12`, kinetic symmetry `0.0`, and
+  Vee symmetry `6.66e-15`.
+
+Goal advancement:
+- LT6: keeps the optional injection construction available while reducing the
+  amount of permanent state and duplicate cleanup logic carried by the RG
+  domain module. This does not change the strategic conclusion that injection
+  is still default-off and not yet a demonstrated cure for the Cr2 low-H1
+  residual sector.
+
+Carrying-cost result:
+- deleted: stored injected dimension, stored injected owner-counts, injected
+  owner-count accumulation, and the single-use residual identity helper.
+- simplified: residual dimension reporting is derived; final residual
+  orthonormalization/identity validation is shared.
+- quarantined: no default-on behavior, driver/public API, artifact provenance,
+  injection-enabled artifact writing, committed tests, spectral gates, full HF,
+  dense Vee/solver work, or Cr2 workflow was added.
+- exact remaining caller/blocker: none for this cleanup; future manager work
+  should separately decide whether to clean up older retained-unit metadata
+  double-rebuilds found during the bloat review.
+- added src lines: 36.
+- deleted src lines: 51.
+- net src lines: -15.

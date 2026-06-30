@@ -55,7 +55,7 @@ function _r3_validate_augmented_operator_dimensions(operators, base_hamiltonian,
     for matrix in (operators.kinetic, operators.nuclear_attraction_unit_by_center...)
         _r3_require_size(matrix, (n, n), "R3 augmented operator dimension mismatch")
     end
-    if residual.injected_dimension == 0
+    if CRG.injected_dimension(residual) == 0
         _r3_require_close(view(operators.kinetic, 1:nG, 1:nG), base_hamiltonian.kinetic, "R3 augmented kinetic G-G block mismatch")
         for (matrix, base) in zip(operators.nuclear_attraction_unit_by_center,
                                   base_hamiltonian.nuclear_attraction_unit_by_center)
