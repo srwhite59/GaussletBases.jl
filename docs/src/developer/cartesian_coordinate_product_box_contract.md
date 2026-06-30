@@ -16,8 +16,7 @@ but very different lowering geometry.
 Read this note together with:
 
 - [`pqs_source_box_operator_framework.md`](pqs_source_box_operator_framework.md)
-- [`raw_product_source_retained_transform_policy.md`](raw_product_source_retained_transform_policy.md)
-- [`projected_q_shell_policy.md`](projected_q_shell_policy.md)
+- [`projected_q_shell_policy.md`](projected_q_shell_policy.md) for historical inbound links
 
 If these notes disagree, stop and update the documentation explicitly before
 continuing implementation. Do not resolve the conflict silently in code.

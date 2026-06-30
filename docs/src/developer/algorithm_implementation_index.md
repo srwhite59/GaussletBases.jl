@@ -206,8 +206,6 @@ later step and should not be mixed into raw source-box retained-transform
 authority.
 
 Key docs:
-- `docs/src/developer/raw_product_source_retained_transform_policy.md`
-- `docs/src/developer/projected_q_shell_policy.md`
 - `docs/src/developer/pqs_source_box_operator_framework.md`
 
 Source anchors:
@@ -236,7 +234,7 @@ numerical builder.
 
 Key docs:
 - `docs/src/developer/designs/cartesian_hamiltonian_producer/mapped_comx_source_span.md`
-- `docs/src/developer/raw_product_source_retained_transform_policy.md`
+- `docs/src/developer/pqs_source_box_operator_framework.md`
 
 Source anchors:
 - **approved owner**: `src/cartesian_nested_faces.jl`,
@@ -337,7 +335,6 @@ Key docs:
 - `docs/src/developer/designs/cartesian_hamiltonian_producer/`
 - `docs/src/developer/numerical_contracts.md`
 - `docs/src/developer/white_lindsey_low_order_density_density_builder_contract_2026-06-04.md`
-- `docs/src/developer/raw_product_source_retained_transform_policy.md`
 - `docs/src/developer/pqs_source_box_operator_framework.md`
 
 Source anchors:

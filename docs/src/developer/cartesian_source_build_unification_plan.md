@@ -778,7 +778,6 @@ not consumed by the opt-in builder and should fail rather than silently
 falling back to q4 or complete-rectangular behavior.
 
 Historical note, superseded by
-[`projected_q_shell_policy.md`](projected_q_shell_policy.md) and
 [`pqs_source_box_operator_framework.md`](pqs_source_box_operator_framework.md):
 the older version of this plan described Projected q-Shell (PQS) as boundary
 COMX-product modes projected to raw boundary rows and then cleaned with
@@ -1021,14 +1020,14 @@ can then be assembled in the smaller product source spaces and finished by
 small dense transforms, rather than creating a new special case for every
 mixed pair such as PQS/product.
 
-This direction is documented in
-[Raw product source and retained transform policy](raw_product_source_retained_transform_policy.md).
-That note also records the quadrature-weight contract: gausslet-derived slabs,
-shells, and PQS units start from raw product sources with positive
-source-point weights in non-pathological cases. Retained-column weights need an
-explicit role and finite-positive check before any IDA-style division, while
-angular GTO supplements and other non-quadrature final functions must not be
-treated as positive-weight quadrature carriers.
+This direction is now folded into
+[PQS source-box operator framework](pqs_source_box_operator_framework.md).
+That framework also records the quadrature-weight contract: gausslet-derived
+slabs, shells, and PQS units start from raw product sources with source-point
+weights in non-pathological cases. Retained-column weights need an explicit
+role and finite-positive check before any IDA-style division, while angular
+GTO supplements and other non-quadrature final functions must not be treated
+as positive-weight quadrature carriers.
 
 A private raw-source pair checkpoint now exists. It includes raw product source
 metadata, retained transform metadata, an upper-triangular pair plan, a

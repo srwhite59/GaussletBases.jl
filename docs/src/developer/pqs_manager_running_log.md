@@ -19274,3 +19274,42 @@ Risk / guardrail:
 Line-count / complexity note:
 - Deleted 10,722 raw archive lines and kept `summary.md` as the local durable
   archive record.
+
+## Docs-Authority Compression - PQS Source-Box Framework
+
+Commit(s):
+- this commit - Compress PQS source-box docs
+
+Summary:
+- Accepted the `bloat-fixer` compression of the three long PQS policy notes
+  into one compact current authority. `pqs_source_box_operator_framework.md`
+  now carries the source-box-first contract; the old
+  `raw_product_source_retained_transform_policy.md` transition note is
+  deleted; `projected_q_shell_policy.md` remains only as a 26-line
+  compatibility/provenance pointer because current design docs still cite that
+  filename.
+- Durable facts preserved: raw product-box stage is separate from shell
+  realization; boundary COMX/product-mode selection is retained-source
+  authority; shell support is owned support, not a CPB; shell-local Lowdin is
+  realization/debug/oracle machinery; final PQS IDA weights are final
+  retained-function integrals; PGDG analytic pair factors remain the normal
+  path unless an explicit debug/reference path is selected.
+
+Validation:
+- Manager inspected the compressed authority and reference updates, checked
+  that the deleted raw-product policy filename has no remaining refs, and used
+  `git diff --check`.
+
+Goal advancement:
+- LT2/MT5/AG7: removes a large duplicated route-shadow documentation surface
+  while making the active PQS contract easier for future agents to find.
+- MT6: reduces the chance that old smoke/prototype narratives will be mistaken
+  for implementation authority.
+
+Risk / guardrail:
+- Docs-only compression. No source, tests, artifacts, route semantics,
+  numerical thresholds, public API, or design-registry authority changed.
+
+Line-count / complexity note:
+- Deleted one retired policy doc and reduced the remaining two policy docs
+  from about 3,100 lines to 237 lines, with total pass net `-4,673` docs lines.
