@@ -1,32 +1,12 @@
 # Region-to-contract lowering rules.
 
-function _source_cpb_from_box(box; role::Symbol, metadata = (;))
-    return CartesianCPB.cpb(box; role, metadata)
-end
-
-function _filled_source_cpb_from_box(box; role::Symbol, metadata = (;))
-    return CartesianCPB.filled_cpb(box...; role, metadata)
-end
-
 function _terminal_source_role(region, suffix::Symbol)
     return Symbol(String(region.key), "_", String(suffix))
 end
 
-function _raw_region(region)
-    return region.raw_region
-end
-
-function _direct_lowering_kind(region)
-    region.region_kind in (:direct_core, :direct_atom_contact_core) &&
-        return :direct_core_identity_cpb
-    throw(ArgumentError("not a direct terminal lowering region: $(region.region_kind)"))
-end
-
-_thin_slab_axis(metadata) = get(metadata, :slab_normal_axis, get(metadata, :bond_axis, nothing))
-
 function _thin_slab_contract(region)
-    raw = _raw_region(region)
-    axis = _thin_slab_axis(raw.metadata)
+    raw = region.raw_region
+    axis = get(raw.metadata, :slab_normal_axis, get(raw.metadata, :bond_axis, nothing))
     axis_index = findfirst(==(axis), (:x, :y, :z))
     thickness = length(raw.outer_box[axis_index])
     q = get(raw.metadata, :thin_slab_retained_count_1d, nothing)
@@ -34,7 +14,7 @@ function _thin_slab_contract(region)
         throw(ArgumentError("thin-slab lowering requires public ns retained count"))
     thickness <= q ||
         throw(ArgumentError("thin-slab thickness exceeds public ns retained count"))
-    source_cpb = _source_cpb_from_box(
+    source_cpb = CartesianCPB.cpb(
         raw.outer_box;
         role = _terminal_source_role(region, :thin_slab_source_cpb),
         metadata = (; terminal_region_key = region.key, slab_normal_axis = axis),
@@ -52,10 +32,10 @@ function _thin_slab_contract(region)
 end
 
 function _direct_terminal_contract(region)
-    raw = _raw_region(region)
-    kind = _direct_lowering_kind(region)
-    source_cpb = _source_cpb_from_box(
-        raw.outer_box;
+    region.region_kind in (:direct_core, :direct_atom_contact_core) ||
+        throw(ArgumentError("not a direct terminal lowering region: $(region.region_kind)"))
+    source_cpb = CartesianCPB.cpb(
+        region.raw_region.outer_box;
         role = _terminal_source_role(region, :direct_source_cpb),
         metadata = (;
             terminal_region_key = region.key,
@@ -63,9 +43,9 @@ function _direct_terminal_contract(region)
         ),
     )
     return _terminal_lowering_contract(
-        contract_key = Symbol(String(region.key), "_", String(kind)),
+        contract_key = Symbol(String(region.key), "_direct_core_identity_cpb"),
         terminal_region = region,
-        lowering_kind = kind,
+        lowering_kind = :direct_core_identity_cpb,
         source_cpbs = (source_cpb,),
         retained_rule = :direct_source_modes,
         realization_rule = :direct_or_trivial_embedding,
@@ -78,17 +58,17 @@ function _direct_terminal_contract(region)
 end
 
 function _white_lindsey_complete_shell_contract(region)
-    raw = _raw_region(region)
+    raw = region.raw_region
     isnothing(raw.inner_exclusion_box) &&
         throw(ArgumentError("complete-shell lowering requires an inner exclusion box"))
 
-    outer = _filled_source_cpb_from_box(
-        raw.outer_box;
+    outer = CartesianCPB.filled_cpb(
+        raw.outer_box...;
         role = _terminal_source_role(region, :outer_box),
         metadata = (; terminal_region_key = region.key),
     )
-    inner = _filled_source_cpb_from_box(
-        raw.inner_exclusion_box;
+    inner = CartesianCPB.filled_cpb(
+        raw.inner_exclusion_box...;
         role = _terminal_source_role(region, :inner_box),
         metadata = (; terminal_region_key = region.key),
     )
@@ -113,9 +93,8 @@ function _white_lindsey_complete_shell_contract(region)
 end
 
 function _pqs_complete_shell_contract(region, policy::PQSLowering)
-    raw = _raw_region(region)
-    source = _filled_source_cpb_from_box(
-        raw.outer_box;
+    source = CartesianCPB.filled_cpb(
+        region.raw_region.outer_box...;
         role = _terminal_source_role(region, :pqs_filled_source_cpb),
         metadata = (; terminal_region_key = region.key),
     )
@@ -142,9 +121,8 @@ function _pqs_complete_shell_contract(region; q = nothing)
 end
 
 function _pqs_unparameterized_complete_shell_contract(region)
-    raw = _raw_region(region)
-    source = _filled_source_cpb_from_box(
-        raw.outer_box;
+    source = CartesianCPB.filled_cpb(
+        region.raw_region.outer_box...;
         role = _terminal_source_role(region, :pqs_filled_source_cpb),
         metadata = (; terminal_region_key = region.key),
     )
@@ -167,8 +145,8 @@ function _pqs_unparameterized_complete_shell_contract(region)
 end
 
 function _distorted_product_contract(region)
-    raw = _raw_region(region)
-    source = _source_cpb_from_box(
+    raw = region.raw_region
+    source = CartesianCPB.cpb(
         raw.outer_box;
         role = _terminal_source_role(region, :distorted_product_source_cpb),
         metadata = (; terminal_region_key = region.key),

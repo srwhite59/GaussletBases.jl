@@ -19204,3 +19204,38 @@ Carrying-cost result:
   or correction is justified.
 - added tracked source lines: 0.
 - deleted tracked source lines: 0.
+
+## Cartesian Hamiltonian Producer Pass 209 - Delete Terminal Lowering Wrappers
+
+Commit(s):
+- this commit - Delete terminal lowering wrappers
+
+Summary:
+- Accepted a larger `bloat-fixer` stable-code cleanup in
+  `src/cartesian_terminal_lowering/region_contracts.jl`. Five private wrapper
+  helpers were deleted: `_source_cpb_from_box`, `_filled_source_cpb_from_box`,
+  `_raw_region`, `_thin_slab_axis`, and `_direct_lowering_kind`.
+- No strategic change. The pass keeps the same CPB construction calls, preserves
+  filled-CPB box splatting, preserves thin-slab axis fallback order, and keeps
+  the local guard that prevents unsupported regions from becoming direct
+  contracts.
+
+Validation:
+- Bloat-fixer and manager both ran `git diff --check`, package load, and
+  `tmp/work/terminal_inventory_native_shell_index_probe.jl`. Manager rerun
+  reported PQS/WL `final_dimension = 471`.
+
+Carrying-cost result:
+- deleted: five stable terminal-lowering wrapper helpers.
+- simplified: contract builders now use direct `region.raw_region` access and
+  direct `CartesianCPB.cpb` / `CartesianCPB.filled_cpb` calls.
+- quarantined: `_terminal_source_role` remains because it avoids repetitive
+  key construction; retained-count positivity, slab-thickness, complete-shell
+  inner-exclusion, direct-region, and unsupported-region guards remain because
+  they protect retained dimensions or route semantics.
+- exact remaining caller/blocker: no remaining callers of the deleted helpers.
+  The terminal-lowering surface is now a cleaner stable-code baseline for any
+  future bloat-fixer scans.
+- added src lines: 20.
+- deleted src lines: 42.
+- net src lines: -22.
