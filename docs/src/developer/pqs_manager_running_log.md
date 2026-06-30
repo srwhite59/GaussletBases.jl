@@ -18229,3 +18229,55 @@ Carrying-cost result:
 - new metadata/status fields: no artifact/status/schema fields; the existing
   in-memory `terminal_region_shell_index` inventory metadata key is now
   populated from native shellifier data where positive shell indices exist.
+
+## Cartesian Hamiltonian Producer Pass 189 - Align Thin-Slab Summary Vocabulary
+
+Commit(s):
+- this commit - Align thin-slab summary vocabulary
+
+Summary:
+- Accepted a narrow cleanup of private terminal-shellification summary
+  vocabulary. The live lowering/retained/terminal paths already realize
+  midpoint slabs, angular z-extension slabs, and outer-mismatch fallback slabs
+  through compact thin-slab lowering. The private summary helpers still used
+  old direct/deferred labels that implied direct identity sectors or pending
+  support.
+- The cleanup renames those private dependency/count/lowering-family symbols
+  to compact thin-slab vocabulary and deletes no-op pending reasons for
+  angular z-extension slabs, which are now independently lowerable in this
+  private summary classification. The module docstring now explicitly names
+  planned angular z-extension slabs and compact thin-slab lowering categories.
+
+Validation:
+- `git diff --check` passed.
+- Package load passed.
+- Focused `rg` found no remaining matches for the four stale direct/deferred
+  slab labels named in the cleanup handoff.
+- Bounded H2/PQS canonical driver artifact/readback smoke passed with
+  compact angular z-extension slab inventory rows and dimension `471`.
+- Diff gate: `git diff --numstat -- src bin tools test docs` showed `+15/-16`
+  in `src/cartesian_shellification/terminal_geometry.jl` before this log
+  entry; no bin/tool/test files changed.
+
+Goal advancement:
+- LT5/LT6: reduces conceptual drift around thin slabs so future agents see
+  midpoint, angular z-extension, and outer-mismatch fallback slabs as compact
+  slab categories rather than reviving the old identity/deferred-slab story.
+
+Carrying-cost result:
+- deleted: stale private summary vocabulary for direct slab/boundary-slab and
+  angular z-extension pending/deferred states.
+- simplified: angular z-extension slabs no longer carry a private
+  missing-lowering reason or retirement target because they are classified as
+  independently lowerable compact thin slabs.
+- quarantined: shellification algorithm, region kinds, region ordering,
+  region metadata, terminal lowering semantics, retained-unit records,
+  terminal realization, driver output, artifacts/readers, numerical
+  construction, Cr2 workflow, and committed tests remain unchanged.
+- not deleted because: private summary/scaffold helpers remain live as bounded
+  shellification metadata summaries.
+- exact remaining caller/blocker: none for this vocabulary cleanup.
+- added src lines: 15.
+- deleted src lines: 16.
+- new tests: none.
+- new metadata/status fields: none.

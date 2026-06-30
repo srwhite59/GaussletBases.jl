@@ -5,7 +5,9 @@ Geometry-only terminal shellification for one atom or a bond-aligned diatomic.
 
 This module-owned helper owns only terminal shellification geometry and owned
 support. It returns atom-local shells/cores, optional midpoint/contact slabs, shared
-molecular shells, and outer mismatch slabs. It does not build coordinate
+molecular shells, planned angular z-extension slabs, and unexpected outer
+mismatch fallback slabs. Slabs are compact thin-slab lowering regions, not
+direct identity sectors. It does not build coordinate
 product box lowering objects, retained spaces, coefficient maps, operator
 blocks, Hamiltonians, or artifacts.
 
@@ -753,13 +755,13 @@ function _cartesian_terminal_shellification_geometry_region_dependency(region)
         return :plan_lowerable_complete_shell
     end
     region.region_kind == :direct_midpoint_slab &&
-        return :plan_lowerable_direct_slab
+        return :plan_lowerable_compact_thin_slab
     region.region_kind == :central_distorted_product_box &&
         return :planned_distorted_product_box_lowering
     region.region_kind == :angular_z_extension_slab &&
         return :planned_angular_z_extension_slab_lowering
     region.region_kind == :outer_mismatch_slab &&
-        return :plan_lowerable_direct_boundary_slab
+        return :plan_lowerable_compact_thin_slab_fallback
     return :unsupported_terminal_shellification_region
 end
 
@@ -771,12 +773,12 @@ function _cartesian_terminal_shellification_geometry_dependency_counts(dependenc
             count(==(:plan_lowerable_complete_shell), dependencies),
         plan_lowerable_shared_complete_shell_count =
             count(==(:plan_lowerable_shared_complete_shell), dependencies),
-        plan_lowerable_direct_slab_count =
-            count(==(:plan_lowerable_direct_slab), dependencies),
+        plan_lowerable_compact_thin_slab_count =
+            count(==(:plan_lowerable_compact_thin_slab), dependencies),
         planned_distorted_product_box_lowering_count =
             count(==(:planned_distorted_product_box_lowering), dependencies),
-        plan_lowerable_direct_boundary_slab_count =
-            count(==(:plan_lowerable_direct_boundary_slab), dependencies),
+        plan_lowerable_compact_thin_slab_fallback_count =
+            count(==(:plan_lowerable_compact_thin_slab_fallback), dependencies),
         unsupported_terminal_shellification_region_count =
             count(==(:unsupported_terminal_shellification_region), dependencies),
     )
@@ -912,13 +914,13 @@ function _cartesian_terminal_shellification_geometry_region_lowering_family(
         return :white_lindsey_complete_shell
     end
     region_summary.region_kind == :direct_midpoint_slab &&
-        return :direct_midpoint_slab
+        return :compact_midpoint_thin_slab
     region_summary.region_kind == :central_distorted_product_box &&
         return :distorted_comx_product_box_deferred
     region_summary.region_kind == :angular_z_extension_slab &&
-        return :angular_z_extension_thin_slab_deferred
+        return :compact_angular_z_extension_thin_slab
     region_summary.region_kind == :outer_mismatch_slab &&
-        return :direct_boundary_slab
+        return :compact_outer_mismatch_fallback_thin_slab
     return :unsupported_terminal_shellification_region
 end
 
@@ -929,8 +931,9 @@ function _cartesian_terminal_shellification_geometry_independently_lowerable(
         :plan_lowerable_direct_core,
         :plan_lowerable_complete_shell,
         :plan_lowerable_shared_complete_shell,
-        :plan_lowerable_direct_slab,
-        :plan_lowerable_direct_boundary_slab,
+        :plan_lowerable_compact_thin_slab,
+        :plan_lowerable_compact_thin_slab_fallback,
+        :planned_angular_z_extension_slab_lowering,
     )
 end
 
@@ -939,8 +942,6 @@ function _cartesian_terminal_shellification_geometry_missing_lowering_reason(
 )
     dependency == :planned_distorted_product_box_lowering &&
         return :distorted_product_box_lowering_pending
-    dependency == :planned_angular_z_extension_slab_lowering &&
-        return :angular_z_extension_thin_slab_lowering_pending
     dependency == :unsupported_terminal_shellification_region &&
         return :unsupported_terminal_shellification_region
     return nothing
@@ -954,8 +955,6 @@ function _cartesian_terminal_shellification_geometry_region_retirement_target(
     ) && return :already_plan_lowered_region
     dependency == :planned_distorted_product_box_lowering &&
         return :pending_distorted_product_box_lowering_support
-    dependency == :planned_angular_z_extension_slab_lowering &&
-        return :pending_angular_z_extension_thin_slab_lowering_support
     return :requires_manager_review
 end
 
