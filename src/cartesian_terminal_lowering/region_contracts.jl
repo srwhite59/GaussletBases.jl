@@ -22,17 +22,12 @@ function _direct_lowering_kind(region)
     throw(ArgumentError("not a direct terminal lowering region: $(region.region_kind)"))
 end
 
-function _thin_slab_axis(metadata)
-    axis = get(metadata, :slab_normal_axis, get(metadata, :bond_axis, nothing))
-    axis in (:x, :y, :z) ||
-        throw(ArgumentError("thin-slab lowering requires native slab axis metadata"))
-    return axis
-end
+_thin_slab_axis(metadata) = get(metadata, :slab_normal_axis, get(metadata, :bond_axis, nothing))
 
 function _thin_slab_contract(region)
     raw = _raw_region(region)
     axis = _thin_slab_axis(raw.metadata)
-    axis_index = axis === :x ? 1 : axis === :y ? 2 : 3
+    axis_index = findfirst(==(axis), (:x, :y, :z))
     thickness = length(raw.outer_box[axis_index])
     q = get(raw.metadata, :thin_slab_retained_count_1d, nothing)
     q isa Integer && q > 0 ||

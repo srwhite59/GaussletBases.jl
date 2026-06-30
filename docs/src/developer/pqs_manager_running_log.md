@@ -19025,3 +19025,41 @@ Carrying-cost result:
 - Medium-goal wording: still needs a future top-level refresh. The durable
   near-term lane is now Cr2 residual one-body diagnosis plus stable-code
   carrying-cost reduction under manager review.
+
+## Cartesian Hamiltonian Producer Pass 206 - Trim Thin-Slab Prechecks
+
+Commit(s):
+- this commit - Trim thin-slab prechecks
+
+Summary:
+- Accepted a `bloat-fixer` stable-code cleanup in thin-slab and terminal-face
+  helper plumbing. The pass removed redundant source-CPB and metadata
+  prettier-crash checks, removed local `Int(retained_count)` normalization, and
+  let the touched coefficient allocation rely on Julia's default `Float64`
+  `zeros` element type.
+- No strategic change. This continues MT5/LT2 stable-code carrying-cost
+  reduction while staying out of the active RG/Cr2 diagnostic lane.
+
+Validation:
+- Bloat-fixer ran `git diff --check`, package load, and
+  `tmp/work/terminal_inventory_native_shell_index_probe.jl` before the
+  one-line `zeros` addendum; after the addendum bloat-fixer reran
+  `git diff --check` and package load. Manager reran `git diff --check` and
+  package load after the addendum.
+
+Carrying-cost result:
+- deleted: source-CPB length precheck before `only(source_cpbs)`, required
+  metadata `get(..., nothing)` checks in compact thin-slab realization, native
+  slab-axis custom throw, local retained-count normalization, and explicit
+  `Float64` in the touched `zeros` allocation.
+- simplified: `_thin_slab_axis` is now the preserved `:slab_normal_axis` then
+  `:bond_axis` fallback accessor; invalid axes fail naturally through index
+  lookup before contract construction.
+- quarantined: retained-count positivity, slab thickness, fixed-index,
+  fixed-side, coefficient identity, support-disjointness, transform-path, and
+  source/contract mismatch checks remain untouched.
+- exact remaining caller/blocker: `_thin_slab_axis` is now a one-call helper
+  and may be an easy future inline/delete target.
+- added src lines: 6.
+- deleted src lines: 16.
+- net src lines: -10.
