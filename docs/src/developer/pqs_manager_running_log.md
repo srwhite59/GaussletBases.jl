@@ -19684,3 +19684,57 @@ Carrying-cost result:
   treating `q0` as accepted. The direct next step is a small constrained-fit
   improvement or comparison of allowed coordinate sets; generate a clean
   current Be2 artifact only if persistent readback is needed.
+
+## Cartesian Hamiltonian Producer Pass 217 - Be2 Screened-Reference Delta-H Probe
+
+Commit(s):
+- this commit - Record Be2 screened-reference Delta-H probe
+
+Summary:
+- Accepted the measurement-only current-source Be2 screened-reference
+  one-body correction probe. The correction is formable in memory as
+  `Delta h = J_Galerkin[rho0] - Diagonal(V_IDA * q0)` using the constrained
+  nonnegative direct-core `q0` from Pass 216 and an analytic Gaussian-density
+  convolution for `J_Galerkin[rho0]`.
+- The result looks numerically sane as a measurement: `Delta h` is symmetric,
+  scales linearly with `N_screen`, and pushes the lowest residual-sector
+  `H1_RR` eigenvalues upward. It does not eliminate the negative Be2 residual
+  sector; at `N_screen = 4` the lowest residual `H1_RR` mode remains about
+  `-0.348`.
+
+Validation / evidence:
+- Doer used ignored probe `tmp/work/be2_screened_reference_delta_h_probe.jl`.
+  Manager inspected the probe and reran `git diff --check`, package load, and
+  the probe on current `main`; probe elapsed time was about `29.86 s`.
+- Setup: current Be2 supplemented dimension `437`, base dimension `419`,
+  residual dimension `18`, `alpha = 8.0`, `q0` coordinates `275` direct
+  atom-contact core columns, inherited constrained fit relative error about
+  `2.7687e-3`, and residual-row relative error about `1.3609e-3`.
+- Low `H1_RR` eigenvalues moved from
+  `[-0.4133, -0.3776, -0.3757, -0.3757, -0.1807]` to approximately
+  `[-0.3667, -0.3647, -0.3647, -0.3255, -0.1452]` at `N = 1`,
+  `[-0.3566, -0.3566, -0.3204, -0.2756, -0.1144]` at `N = 2`, and
+  `[-0.3477, -0.3477, -0.2290, -0.1818, -0.0627]` at `N = 4`.
+- Fixed-density energy shift was not run because no current-source Be2 HF
+  density was loaded cheaply and stale June 24 Be2 artifacts were not used.
+
+Goal advancement:
+- MT4/LT5: moves the screened-reference idea from a density-gauge diagnostic
+  to a formable one-body correction on a fast current-source molecule.
+- LT6: preserves gauge discipline by subtracting the approximate screen in
+  the same `V_IDA * q0` density coordinates and by refusing stale artifacts or
+  center-only approximations.
+
+Risk / guardrail:
+- No tracked source edits, production defaults, artifact schema changes,
+  public inputs, HF workflow, Cr2 run, residual pruning, Vee scaling, or
+  production screened-reference claim. The Be2 result justifies a
+  measurement-only Cr2 probe, not implementation.
+
+Carrying-cost result:
+- added tracked source lines: 0.
+- deleted tracked source lines: 0.
+- exact remaining blocker: test whether the same measurement gives useful
+  physical signal on the bad Cr2 case: low residual `H1_RR` shifts,
+  fixed-density correction on the saved bad UHF state, and residual-sector
+  occupation signal if a bounded relaxation is cheap.
