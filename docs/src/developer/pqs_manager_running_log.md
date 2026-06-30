@@ -19063,3 +19063,70 @@ Carrying-cost result:
 - added src lines: 6.
 - deleted src lines: 16.
 - net src lines: -10.
+
+## Cartesian Hamiltonian Producer Pass 207 - Decompose Cr2 Residual One-Body Modes
+
+Commit(s):
+- this commit - Record Cr2 residual one-body decomposition
+
+Summary:
+- Accepted the measurement-only Cr2 residual-sector one-body decomposition.
+  The result rules out the clean kinetic/sign bug class: `K_RR` stays positive
+  in both the existing cutoff-0 artifact sector and the `1.0e-3`
+  measurement-only injection replay. The large negative `H1_RR` modes come
+  from nuclear attraction, and the attraction is balanced across the two Cr
+  centers rather than concentrated on one center.
+- This changes the interpretation of the Cr2 residual blocker. Negative
+  `H1_RR` alone is not evidence of an unphysical state. The Cr2 issue is that
+  residual directions remain much more strongly nuclear-bound than the N2
+  comparator after the current residual-selection policy.
+
+Validation / evidence:
+- Doer used the existing artifact
+  `/Users/srw/dmrgtmp/cr2_r1p68_ns7_lmax2_d0p00847_fixed95fec2b8/cr2_fixed95fec2b8_ida.jld2`
+  plus the June 29 Cr2 counterpoise workdir. The ignored probe
+  `tmp/work/cr2_residual_onebody_decomposition_probe.jl` is ignored by
+  `.gitignore:12`.
+- Manager inspected the ignored probe and did not rerun it because the
+  `1.0e-3` replay took about `466.65 s`. The script computes `K_RR`, per-center
+  `Z_i U_i`, total `H1_RR`, owner weights, dominant labels/components, and
+  closure errors.
+- Cutoff `0.0`: base/residual dimensions `6675/136`, `min K_RR =
+  0.3216563629490918`, no `K_RR < -1e-10`, `78` negative `H1_RR` modes. The
+  lowest mode has `H1 = -7.267806471`, `K = 5.741393382`, and balanced nuclear
+  terms near `-6.5045999` from each center.
+- Cutoff `1.0e-3`: measurement-only relaxed replay, dimensions `6675/58`,
+  `min K_RR = 0.8756522802172541`, no `K_RR < -1e-10`, `37` negative `H1_RR`
+  modes. The lowest mode has `H1 = -6.992651011`, `K = 4.276517222`, and
+  balanced nuclear terms near `-5.6345841` from each center.
+
+Goal advancement:
+- LT5/LT6: narrows the residual-sector blocker from broad "bad low H1 mode" to
+  "strong balanced nuclear attraction in residual directions despite positive
+  kinetic energy." This discourages a safety gate and instead points to
+  residual selection, nuclear geometry/scale, and owner-local candidate
+  interpretation.
+- MT4: keeps Cr2 supplement staging evidence-based. Injection remains
+  default-off and not a cure; the next source pass should diagnose or alter
+  residual selection rather than treating negative `H1_RR` as a standalone
+  failure.
+
+Risk / guardrail:
+- The `1.0e-3` row remains measurement-only because it uses the same relaxed
+  replay context as the injection audit where default production `F' S R`
+  validation fails. It is useful for diagnosis, not production behavior.
+- Live manager state after acceptance is cleaner than the doer handback's
+  dirty note: the thin-slab bloat-fixer changes were accepted and pushed in
+  `28f2ddffc`; only the two untracked successor handoff docs remain.
+
+Carrying-cost result:
+- deleted: none.
+- simplified: none.
+- quarantined: ignored measurement probe only; no source, tests, artifacts,
+  commits, or solver runs were created by the doer.
+- exact remaining caller/blocker: no kinetic/sign bug was found. The remaining
+  blocker is explaining why Cr2 owner-balanced residual directions retain such
+  large nuclear attraction relative to N2 and deciding whether residual
+  selection should account for one-body/nuclear binding.
+- added tracked source lines: 0.
+- deleted tracked source lines: 0.
