@@ -19130,3 +19130,77 @@ Carrying-cost result:
   selection should account for one-body/nuclear binding.
 - added tracked source lines: 0.
 - deleted tracked source lines: 0.
+
+## Cartesian Hamiltonian Producer Pass 208 - Audit Cr2 Residual MWG Adequacy
+
+Commit(s):
+- this commit - Record Cr2 residual MWG adequacy audit
+
+Summary:
+- Accepted the measurement-only Cr2 residual-interaction adequacy audit. The
+  bad saved HF density has about `3.7956 e` in residual rows. Residual-involving
+  `H1` lowers the energy by about `-30.18 Ha`, while residual-involving MWG/IDA
+  `Vee` charges only about `+20.38 Ha`, leaving a net residual-containing gain
+  near `-9.80 Ha`.
+- This materially sharpens the Cr2 failure hypothesis: the low one-body modes
+  are not the bug by themselves. The likely failure is that exact `H1` finds
+  broad, two-center, midbond/interstitial residual directions, while the MWG
+  residual interaction under-penalizes occupation of those directions.
+
+Validation / evidence:
+- Doer used the existing Cr2 Hamiltonian artifact and bad UHF state under
+  `/Users/srw/dmrgtmp/cr2_r1p68_ns7_lmax2_d0p00847_fixed95fec2b8/`, plus mode
+  width data from the June 29 Cr2 counterpoise workdir. The ignored probe
+  `tmp/work/cr2_mwg_residual_adequacy_probe.jl` is ignored by `.gitignore:12`.
+- Manager inspected the ignored probe and did not rerun the long relaxation
+  sweeps. The script reads the saved artifact/state, computes residual density
+  trace, low-`H1_RR` mode occupations and widths, decomposes one-body/Hartree/
+  exchange/two-body terms into base-base, base-residual, and
+  residual-residual parts, and runs residual-containing `Vee` scaling probes.
+- Key saved-density result: residual trace `3.795634732401 e`
+  (`1.897817366201` alpha and beta). Residual-containing one-body contribution
+  is about `-30.1824 Ha`; residual-containing two-body contribution is about
+  `+20.3843 Ha`.
+- Mode evidence: the exact lowest broad `H1_RR` mode is almost empty, but
+  nearby broad low-`H1_RR` modes are heavily occupied. Examples include mode 2
+  with `H1=-6.8146`, occupation `1.0322 e`, widths about
+  `(2.95, 2.95, 2.00)`, and MWG self-Coulomb about `0.1115`; modes 4/5 also
+  have substantial occupation and broad anisotropic widths.
+- Scaling evidence: scaling residual-containing `Vee` by `1.25` reduced
+  residual occupation to about `0.893 e` in 20 bounded sweeps; scaling by `1.5`
+  reduced it to about `0.0446 e`. The `2.0` relaxed run did not complete
+  promptly, so only fixed-density penalty evidence is used there.
+
+Goal advancement:
+- LT5/LT6: replaces the earlier "low residual `H1_RR` is bad" framing with a
+  more physical failure mode: broad residual directions may be legitimate
+  attractive midbond functions, but the residual MWG/IDA interaction appears
+  too soft to keep HF from overoccupying them.
+- MT4: points the active Cr2 lane toward residual interaction adequacy. The
+  next source decision should not be an `H1_RR` negativity guard or another
+  injection cutoff tweak; it should compare or improve residual-containing
+  interaction treatment for the broad occupied modes.
+
+Risk / guardrail:
+- This is still measurement-only. The scaling probe is not a production fix,
+  and the exact Coulomb comparator was blocked because the saved artifact does
+  not include raw exact two-electron blocks or quadrature data for these broad
+  mode comparisons.
+- Live worktree includes an unrelated bloat-fixer dirty edit in
+  `src/cartesian_terminal_lowering/region_contracts.jl`; this acceptance
+  records only the measurement interpretation and does not accept that source
+  diff.
+
+Carrying-cost result:
+- deleted: none.
+- simplified: none.
+- quarantined: ignored measurement probe only; no source defaults, artifact
+  schema, MWG redesign, spectral guard, commits, or production Cr2 claim were
+  made by the doer.
+- exact remaining caller/blocker: need an interaction-side comparator or
+  policy for broad residual modes. The current blocker is determining whether
+  MWG self/base-residual/residual-residual terms are quantitatively too weak
+  for the occupied broad midbond residual density and what bounded replacement
+  or correction is justified.
+- added tracked source lines: 0.
+- deleted tracked source lines: 0.
