@@ -67,13 +67,18 @@ end
 function print_terminal_inventory(base)
     inventory = hasproperty(base, :terminal_inventory) ? base.terminal_inventory : nothing
     isnothing(inventory) && return nothing
+    fmt_range(r) = string(first(r), ":", last(r))
+    fmt_phys(r) = string(round(r[1]; sigdigits = 6), ":", round(r[2]; sigdigits = 6))
+    fmt_box(ranges) = string("x=", fmt_range(ranges.x), " y=", fmt_range(ranges.y), " z=", fmt_range(ranges.z))
+    fmt_phys_box(ranges) = string("x=", fmt_phys(ranges.x), " y=", fmt_phys(ranges.y), " z=", fmt_phys(ranges.z))
     println("terminal inventory: base_final_dimension=", inventory.final_dimension)
-    println("  region kind lowering support final ratio class slab")
+    println("  region kind lowering shell support final ratio class")
     for row in inventory.rows
         ratio = round(row.compression_ratio; digits = 3)
         slab = row.slab_axis === :unavailable ? "" :
             " slab=$(row.slab_axis)/$(row.slab_side)/t=$(row.slab_thickness)/$(row.slab_stack_index)-$(row.slab_stack_count)"
-        println("  ", row.region_key, " ", row.region_kind, " ", row.lowering_kind, " support=", row.support_rows, " final=", row.final_cols, " ratio=", ratio, " ", row.realization_class, slab)
+        println("  ", row.region_key, " ", row.region_kind, " ", row.lowering_kind, " shell=", row.shell_index, " support=", row.support_rows, " final=", row.final_cols, " ratio=", ratio, " ", row.realization_class)
+        println("    idx ", fmt_box(row.index_ranges), " phys ", fmt_phys_box(row.physical_ranges), slab)
     end
     return nothing
 end

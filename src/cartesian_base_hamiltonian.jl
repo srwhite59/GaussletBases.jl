@@ -431,7 +431,31 @@ function _cartesian_source_mode_provenance(transforms)
             inferred_from_raw_to_final_support = falses(n_relations)))
 end
 
-function _cartesian_terminal_inventory_rows(transforms)
+function _cartesian_inventory_axis_edge(values, index, side)
+    n = length(values)
+    n == 1 && return Float64(only(values))
+    spacing = index == 1 ? abs(values[2] - values[1]) :
+        index == n ? abs(values[n] - values[n - 1]) :
+        (abs(values[index] - values[index - 1]) +
+            abs(values[index + 1] - values[index])) / 2
+    return Float64(values[index] + (side === :low ? -spacing / 2 : spacing / 2))
+end
+
+function _cartesian_inventory_geometry(block, centers)
+    box = ntuple(axis -> begin
+        vals = (state[axis] for state in block.support_states)
+        minimum(vals):maximum(state[axis] for state in block.support_states)
+    end, 3)
+    axis_values = (centers.x, centers.y, centers.z)
+    physical = ntuple(axis -> (
+        _cartesian_inventory_axis_edge(axis_values[axis], first(box[axis]), :low),
+        _cartesian_inventory_axis_edge(axis_values[axis], last(box[axis]), :high),
+    ), 3)
+    return (; index_ranges = (; x = box[1], y = box[2], z = box[3]),
+        physical_ranges = (; x = physical[1], y = physical[2], z = physical[3]))
+end
+
+function _cartesian_terminal_inventory_rows(transforms, bundles)
     low = get(transforms, :low_order_transforms, nothing)
     basis = get(transforms, :terminal_basis_realization, nothing)
     (isnothing(low) || isnothing(basis)) && return NamedTuple[]
@@ -451,15 +475,19 @@ function _cartesian_terminal_inventory_rows(transforms)
     end
     rows = NamedTuple[]
     key_index = Dict{Tuple,Int}()
+    centers = _cartesian_manifest_axis_centers(bundles)
     for unit in units
         contract = get(contracts, unit.unit_key, nothing)
         block = get(blocks, get(block_key_by_retained, unit.unit_key, unit.unit_key), nothing)
         (isnothing(contract) || isnothing(block)) && continue
         meta = contract.metadata
+        geometry = _cartesian_inventory_geometry(block, centers)
+        shell_index = get(meta, :terminal_region_shell_index, :unavailable)
         key = (
             unit.terminal_region_key, unit.terminal_region_kind, unit.lowering_kind,
             unit.unit_kind, contract.transform_path,
             isnothing(block.coefficients) ? :identity : :compact_product,
+            shell_index, geometry.index_ranges, geometry.physical_ranges,
             get(meta, :slab_normal_axis, :unavailable),
             get(meta, :slab_side, :unavailable),
             Int(get(meta, :slab_thickness, 0)),
@@ -481,10 +509,11 @@ function _cartesian_terminal_inventory_rows(transforms)
             push!(rows, (;
                 region_key = key[1], region_kind = key[2], lowering_kind = key[3],
                 retained_unit_kind = key[4], realization_kind = key[5],
-                realization_class = key[6], support_rows, final_cols,
+                realization_class = key[6], shell_index = key[7],
+                index_ranges = key[8], physical_ranges = key[9], support_rows, final_cols,
                 compression_ratio = support_rows / final_cols,
-                slab_axis = key[7], slab_side = key[8], slab_thickness = key[9],
-                slab_stack_index = key[10], slab_stack_count = key[11],
+                slab_axis = key[10], slab_side = key[11], slab_thickness = key[12],
+                slab_stack_index = key[13], slab_stack_count = key[14],
             ))
         end
     end
@@ -725,7 +754,7 @@ function cartesian_base_working_basis(system::NamedTuple; basis::NamedTuple, sup
     basis_realization = transforms.terminal_basis_realization
     terminal_inventory = isnothing(basis_realization) ? nothing :
         (; final_dimension = basis_realization.final_dimension,
-            rows = _cartesian_terminal_inventory_rows(transforms))
+            rows = _cartesian_terminal_inventory_rows(transforms, parent.parent_axis_bundle_object))
     return (; input, parent, terminal_basis = transforms.terminal_basis_realization,
         source_mode_provenance, terminal_inventory)
 end

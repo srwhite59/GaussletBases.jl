@@ -5311,6 +5311,63 @@ Deletion accounting:
 - new tests: none.
 - new metadata/status fields: none.
 
+## Cartesian Hamiltonian Producer Pass 187 - Implement Driver Inventory Geometry Ranges
+
+Commit(s):
+- this commit - Add geometry ranges to driver inventory
+
+Summary:
+- Accepted the source implementation for the geometry-range portion of the
+  `HP-DRV-INV-FN-01` driver inventory amendment. The canonical driver now
+  prints parent index ranges and physical edge ranges for `x`/`y`/`z` on
+  every terminal inventory row, alongside the existing support/final count,
+  compression ratio, identity/compact class, and slab stack facts.
+- The earlier review rejected the first WIP because it reconstructed
+  `shell_index` heuristically from retained-unit order. The accepted version
+  deletes that heuristic. It prints `shell=unavailable` unless a native
+  `terminal_region_shell_index` is present in the construction metadata. This
+  keeps the output honest: geometry ranges are now useful, while shell index
+  remains a known missing native fact.
+- The sample H2 output shows angular z-extension slabs with their transverse
+  physical range and z physical span, so the driver can expose where slabs sit
+  in the parent geometry even before native shell-index propagation lands.
+
+Validation:
+- `git diff --check` passed.
+- Package load passed.
+- Bounded H2 canonical driver artifact/readback passed for `nesting = :pqs`
+  and showed index/physical ranges for complete shells and angular z-extension
+  slabs.
+- Doer also validated bounded H2 `nesting = :wl` and bounded Be2 PQS driver
+  artifact/readback for inventory inspection.
+- Focused diff scan found no added coefficient dumps, source-mode tables,
+  raw-block details, pair inventories, route skeleton dumps, or all
+  support-row listings.
+
+Goal advancement:
+- LT5/LT6: improves the driver as a bounded construction sanity surface. It
+  now exposes x/y/z geometry needed to review angular-balance behavior without
+  adding artifact schema fields or a route-debug report framework.
+
+Carrying-cost result:
+- deleted: the rejected heuristic shared-shell counter from the first WIP.
+- simplified: shell index display is now native-only or unavailable; no
+  inferred shell ownership is presented as fact.
+- quarantined: native shell-index propagation, artifact/schema changes,
+  shellification/lowering/terminal-realizer changes, RG/MWG/IDA, solver, Cr2
+  workflow, route-debug dumps, and committed tests remain outside this pass.
+- not deleted because: the existing compact driver inventory is the approved
+  human-facing surface; this pass extends it rather than replacing it.
+- exact remaining caller/blocker: raw `region.shell_index` is dropped before
+  the current inventory seam. A later narrow pass should carry
+  `terminal_region_shell_index` through terminal lowering/retained transform
+  metadata before the driver can print native shell indices.
+- added src/bin lines: `41`.
+- deleted src/bin lines: `7`.
+- new tests: none.
+- new metadata/status fields: no artifact/status/schema fields; only compact
+  in-memory inventory row fields for driver printing.
+
 ## Cartesian Hamiltonian Producer Pass 186 - Interleave Angular Z-Extension Shellification
 
 Commit(s):
