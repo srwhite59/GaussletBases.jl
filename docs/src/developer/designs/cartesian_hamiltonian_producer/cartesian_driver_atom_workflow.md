@@ -19,12 +19,12 @@ amendment may broaden the base facade to explicit origin-centered
 all-electron atoms; the driver may consume that support through the same
 base-facade call without new driver authority.
 
-Supplemented atom Hamiltonians are not approved in this pass. The Residual
-Gaussian owner-local selection algorithm is compatible in spirit with a single
-owner, but the current supported supplemented facade is scoped to diatomics.
-One-center supplemented atoms need a separate amendment that names the facade
-surface, basis-loading path, validation scalar or endpoint, and artifact
-provenance behavior.
+Historical boundary: this base-atom driver lane did not itself approve
+supplemented atom Hamiltonians. That restriction is superseded for supported
+origin-centered one-center supplemented atoms by `HP-COMP-SUPPATOM-*`, which
+uses `legacy_atomic_gaussian_supplement(...)` and the common Residual
+Gaussian/MWG path. This document still owns only the original base-atom driver
+workflow.
 
 ## Approved IDs
 
@@ -137,13 +137,16 @@ workflow:
   atom endpoint, or translated-atom gate.
 
 Temporary project input files for validation should live under ignored
-`tmp/work`.
+`tmp/work`. Supplemented atom validation is governed separately by
+`HP-COMP-SUPPATOM-TEST-01`.
 
 ## Forbidden
 
 This amendment does not approve:
 
-- supplemented atom Hamiltonians;
+- supplemented atom Hamiltonians under the original base-only atom workflow;
+  supported supplemented one-center atoms are governed separately by
+  `HP-COMP-SUPPATOM-*`;
 - changes to Residual Gaussian selection, MWG/IDA conventions, raw blocks, or
   terminal kernels;
 - changes to `src/cartesian_base_hamiltonian.jl` or any other source file
@@ -170,7 +173,8 @@ Line budget:
 - no new committed test, tool, or input-fixture file.
 
 Failure rule: if implementation requires source changes outside
-`bin/cartesian_ham_builder.jl`, supplemented atom support, translated atoms,
-ECP, solver workflow, artifact schema changes, route diagnostics,
-metadata/status/report fields, committed fixtures/tests, or element
-lookup/default tables, stop and request a separate docs-only amendment.
+`bin/cartesian_ham_builder.jl`, translated atoms, ECP, solver workflow,
+artifact schema changes, route diagnostics, metadata/status/report fields,
+committed fixtures/tests, or element lookup/default tables, stop and request a
+separate docs-only amendment. Supported one-center supplemented atom work is
+handled by `HP-COMP-SUPPATOM-*`, not by this base-only lane.

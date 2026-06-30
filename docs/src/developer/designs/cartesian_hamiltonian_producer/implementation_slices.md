@@ -434,8 +434,10 @@ Nesting artifact-truth cleanup:
 - derive the base route label from `(input.kind, input.nesting)`, with
   `:one_center_pqs_base`, `:one_center_wl_base`, and
   `:z_axis_diatomic_pqs_base` approved;
-- reject supplemented `nesting = :wl` before expensive base-stage
-  construction; do not add WL H2 or supplemented WL support in this pass;
+- historical boundary for this provenance lane: supplemented `nesting = :wl`
+  rejection before expensive construction. That boundary is superseded for the
+  supported z-axis diatomic supplemented WL composition cell by
+  `HP-COMP-SUPPWL-*`;
 - do not change driver public inputs, route skeletons, shellification,
   terminal lowering, raw blocks, RG/MWG/IDA, artifact matrices, reader
   behavior, public API/export, diagnostics, reports, or Cr2 workflow.
@@ -942,9 +944,10 @@ for atoms and to z-axis diatomic facade extents around the two nuclei.
 `nesting` is a construction-family choice, not a diagnostic route switch. It
 must not expose internal route-family names, route skeletons, retained-rule
 plans, raw-block switches, stop-after controls, diagnostics, route reports, or
-route-stage labels. Supplemented `nesting = :wl` must be rejected clearly
-unless already valid through the existing supported supplemented facade/staged
-path. Artifact provenance must record `nesting` and must not label WL
+route-stage labels. Supplemented `nesting = :wl` is governed by
+`HP-COMP-SUPPWL-*` for the supported homonuclear z-axis diatomic composition
+cell; unsupported geometry or supplement combinations must still reject
+clearly. Artifact provenance must record `nesting` and must not label WL
 artifacts with PQS-oriented route values.
 
 Forbidden:
@@ -957,9 +960,9 @@ Forbidden:
   harness behavior, solver/RHF/ECP/EGOI/HamV6,
   private contract construction, artifact schema dumps, public API/export
   changes, artifact schema changes, committed tests, committed input fixtures,
-  supplemented atoms, old route-stage choreography, Cr2-specific driver runs,
-  or Cr2-specific workflow support. Generic explicit homonuclear z-axis Cr2
-  stress through
+  unsupported atom/supplement combinations, old route-stage choreography,
+  Cr2-specific driver runs, or Cr2-specific workflow support. Generic
+  explicit homonuclear z-axis Cr2 stress through
   `HP-R3U-ZDI-WIRE-01` is separate ignored/user-run validation authority.
 
 Validation gates:
@@ -982,8 +985,8 @@ Validation gates:
 - H2 base driver artifact write/readback;
 - one small base artifact/readback path with `nesting = :wl`;
 - H2 supplemented driver artifact write/readback;
-- negative unsupported-combination check for supplemented `nesting = :wl` if
-  not already valid;
+- unsupported-combination check for supplemented `nesting = :wl` only outside
+  the supported `HP-COMP-SUPPWL-*` cell;
 - optional ignored Be2 usability run for supplemented-mode changes.
 
 Line budget:
@@ -1283,7 +1286,9 @@ Forbidden:
 
 - source edits outside `bin/cartesian_ham_builder.jl`, except under separate
   `HP-R1-ATOM-*` authority;
-- supplemented atom Hamiltonians;
+- supplemented atom Hamiltonians under the original base-only driver lane;
+  supported one-center supplemented atoms are governed by
+  `HP-COMP-SUPPATOM-*`;
 - translated atoms;
 - broader base atom support beyond the existing base facade;
 - element lookup/default tables, ECP, pseudopotentials, solver/RHF workflow,

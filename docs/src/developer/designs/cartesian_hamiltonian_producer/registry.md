@@ -2852,8 +2852,9 @@ Approved behavior:
   alias that must equal resolved `core_spacing`.
 
 This ID does not approve translated atoms, element lookup/default tables,
-inferred charge or spin, ECP, solver workflow, supplemented atoms, public API
-redesign, or new artifact fields.
+inferred charge or spin, ECP, solver workflow, supplemented atom construction
+under the base facade, public API redesign, or new artifact fields. Supported
+supplemented one-center atoms are governed separately by `HP-COMP-SUPPATOM-*`.
 
 ### HP-R1-ATOM-WIRE-01 — one-center atom shared workflow wiring
 
@@ -2887,9 +2888,9 @@ Line budget for `HP-R1-ATOM-FN-01` plus `HP-R1-ATOM-WIRE-01`: at most `80`
 added `src` lines. If implementation needs source edits outside
 `src/cartesian_base_hamiltonian.jl`, changes to private materialization
 owners, atom-only materialization, new artifact keys, translated atoms,
-supplemented atoms, ECP behavior, solver workflow, element lookup/default
-tables, committed fixtures/tests, or route/report/status/payload expansion,
-stop and request a new docs-only amendment.
+ECP behavior, solver workflow, element lookup/default tables, committed
+fixtures/tests, route/report/status/payload expansion, or supplemented atom
+work outside `HP-COMP-SUPPATOM-*`, stop and request a new docs-only amendment.
 
 ### HP-R1-ATOM-TEST-01 — one-center base atom validation
 
@@ -2908,8 +2909,10 @@ Approved validation:
   element-table/default requests where practical.
 
 No new committed test file, committed non-H atom fixture, public non-H
-reference scalar, solver run, supplemented atom endpoint, ECP gate,
-translated-atom gate, or driver change is approved by this ID.
+reference scalar, solver run, supplemented atom endpoint under this base-atom
+lane, ECP gate, translated-atom gate, or driver change is approved by this ID.
+Supported supplemented atom validation is governed by
+`HP-COMP-SUPPATOM-TEST-01`.
 
 ## Approved For R3/RG Implementation
 
@@ -3334,8 +3337,9 @@ truth for the public `nesting` construction-family input. It may:
 - choose truthful base route labels from `(input.kind, input.nesting)`, with
   approved labels `:one_center_pqs_base`, `:one_center_wl_base`, and
   `:z_axis_diatomic_pqs_base`;
-- reject supplemented `nesting = :wl` before expensive base-stage
-  construction with a clear `ArgumentError`;
+- historically enforced a supplemented-WL early stop under this narrow
+  provenance lane; that stop is superseded for the supported z-axis diatomic
+  supplemented WL composition cell by `HP-COMP-SUPPWL-*`;
 - leave unsupported WL H2 without a provenance label until that path succeeds
   under separate authority.
 
@@ -3364,12 +3368,14 @@ Approved validation:
   inspection;
 - small `nesting = :wl` one-center atom artifact write/readback plus direct
   provenance inspection;
-- supplemented `nesting = :wl` rejects before base-stage construction;
+- the historical supplemented-WL rejection from this lane is superseded by
+  `HP-COMP-SUPPWL-*` for the supported z-axis diatomic supplemented WL cell;
 - no Cr2 run.
 
 No new committed test file, driver-input fixture, public reader API, artifact
-schema dump, WL H2 validation, supplemented WL validation, or Cr2 fixture is
-approved by this ID.
+schema dump, WL H2 validation, supplemented WL validation, or Cr2 fixture was
+approved by this ID. Later supplemented WL validation is owned by
+`HP-COMP-SUPPWL-TEST-01`.
 
 ### HP-R3U-FILE-01 — supplemented workflow source and validation files
 
@@ -4549,8 +4555,8 @@ package helper calls from the driver, raw-block provider switches,
 report/status/payload dumps, metadata field clouds, allocation probes,
 benchmark harness behavior, solver/RHF/ECP/EGOI/HamV6 workflow, public
 API/export changes, artifact schema changes or dumps, committed test files,
-committed driver-input fixtures, supplemented atoms, or Cr2-specific workflow
-support. Generic explicit homonuclear z-axis Cr2 stress through
+committed driver-input fixtures, unsupported atom/supplement combinations, or
+Cr2-specific workflow support. Generic explicit homonuclear z-axis Cr2 stress through
 `HP-R3U-ZDI-WIRE-01` is separate ignored/user-run validation authority, not
 driver-owned Cr2 support.
 
@@ -4610,11 +4616,10 @@ Approved behavior:
   artifact schema, driver hooks, and solver-free workflow;
 - reject unsupported combinations with clear `ArgumentError`s.
 
-Supplemented `nesting = :wl` is approved only if it is already valid through
-the existing supported supplemented facade/staged path. If it is not already
-valid, implementation must reject the combination clearly and report it as a
-separate design decision instead of adding broad supplemented White-Lindsey
-route behavior.
+Supplemented `nesting = :wl` is governed by `HP-COMP-SUPPWL-*` for the
+supported homonuclear z-axis diatomic composition cell. Unsupported geometry
+or supplement combinations must still reject clearly rather than adding broad
+White-Lindsey route behavior.
 
 This ID does not approve new route algorithms, route-skeleton construction
 changes, White-Lindsey materialization deletion, terminal lowering policy
@@ -4642,7 +4647,8 @@ Approved validation:
 - one small `nesting = :wl` base artifact/readback using a currently supported
   base geometry;
 - explicit negative check or ignored smoke showing unsupported supplemented
-  `nesting = :wl` fails clearly if that combination is not already valid;
+  `nesting = :wl` combinations fail clearly outside the supported
+  `HP-COMP-SUPPWL-*` cell;
 - no Cr2 run.
 
 No new committed test file, committed input fixture, artifact schema
@@ -4945,9 +4951,12 @@ Approved behavior:
 - no package-internal route-stage helper, terminal basis object, raw-block
   provider, report/status/payload object, or new artifact field is approved.
 
-Supplemented atom Hamiltonians are not approved. If the requested atom is
-outside the existing base facade support, the implementation must stop at a
-clear unsupported-input error rather than adding broader atom construction.
+This base-atom driver wiring ID did not itself approve supplemented atom
+Hamiltonians. Supported origin-centered one-center supplemented atom wiring is
+now governed by `HP-COMP-SUPPATOM-*`. If a requested atom is outside the
+existing base or supported supplemented facade scope, the implementation must
+stop at a clear unsupported-input error rather than adding broader atom
+construction.
 
 Line budget for `HP-DRV-ATOM-FN-01` plus `HP-DRV-ATOM-WIRE-01`: at most `80`
 added `bin` lines, with no committed test, tool, or input-fixture file.
@@ -4963,7 +4972,9 @@ Approved validation:
   electron count, mismatched temporary `d` if accepted, or unsupported atom
   input.
 
-No supplemented atom endpoint, translated-atom gate, committed atom fixture,
+No supplemented atom endpoint was approved by this base-atom driver test ID;
+supported supplemented atom validation is owned by
+`HP-COMP-SUPPATOM-TEST-01`. No translated-atom gate, committed atom fixture,
 new committed test file, solver run, artifact-schema validation, or broader
 base-atom validation is approved by this ID.
 

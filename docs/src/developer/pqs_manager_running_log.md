@@ -18281,3 +18281,57 @@ Carrying-cost result:
 - deleted src lines: 16.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 190 - Retire Stale Composition Rejections
+
+Commit(s):
+- this commit - Retire stale supplemented composition rejection docs
+
+Summary:
+- Accepted a docs-only cleanup of current/startup composition authority after
+  the supported supplemented atom and supplemented White-Lindsey lanes landed.
+  The old base-atom driver and nesting-artifact lanes originally rejected
+  those cells, but that rejection is now historical: supported one-center
+  supplemented atoms are governed by `HP-COMP-SUPPATOM-*`, and supported
+  homonuclear z-axis diatomic supplemented WL construction is governed by
+  `HP-COMP-SUPPWL-*`.
+- Updated `cartesian_driver_atom_workflow.md`, `current.md`, `registry.md`,
+  `implementation_slices.md`, and `AGENTS.md` so current/startup docs no
+  longer imply those paths are globally unapproved. The composition plan was
+  already current and was left unchanged.
+- Preserved true deferred boundaries: translated atoms, heteronuclear/general
+  geometry, ECP/solver/HF workflow, Cr2-specific workflow, unsupported
+  geometry/supplement combinations, and artifact schema redesign.
+
+Validation:
+- `git diff --check` passed before this log entry.
+- Focused stale-phrase scan over `AGENTS.md` and the compact Cartesian
+  producer docs found no remaining live matches for the old supplemented atom
+  and supplemented-WL rejection phrases named in the handoff.
+- Broader `rg` over `supplemented atom`, `nesting = :wl`,
+  `HP-COMP-SUPPATOM`, and `HP-COMP-SUPPWL` was reviewed; remaining hits are
+  current composition authority, lane-scoped boundaries, or unrelated WL
+  policy such as mapped-COMX/WL rejection.
+- Changed path list was docs/startup only; no source, bin, test, tools,
+  artifact, driver behavior, RG/MWG, shellification, or route changes.
+- No Julia run; not needed for docs-only cleanup.
+
+Goal advancement:
+- LT5/LT6: reduces current-authority drift after composition support landed.
+  Future agents should see the implemented 2 x 2 x 2 composition cells rather
+  than revive obsolete rejection policy from earlier driver/nesting lanes.
+
+Carrying-cost result:
+- deleted: live/current phrasing that presented supplemented atoms and
+  supplemented WL as still rejected by default.
+- simplified: current docs now point those supported cells directly at
+  `HP-COMP-SUPPATOM-*` and `HP-COMP-SUPPWL-*`.
+- quarantined: historical lane boundaries remain described as lane-local
+  history where useful.
+- not deleted because: older lane sections still matter as history and as
+  boundaries for their original base-only/provenance-only scopes.
+- exact remaining caller/blocker: none for stale current composition wording.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

@@ -840,16 +840,18 @@ Approved R3 compatibility and endpoint surfaces:
   Base and recipe provenance must record public `nesting`, and route labels
   must be truthful values derived from `(input.kind, input.nesting)`, including
   `:one_center_pqs_base`, `:one_center_wl_base`, and
-  `:z_axis_diatomic_pqs_base`. Supplemented `nesting = :wl` must reject before
-  expensive base-stage construction. This does not approve driver public input
-  changes, route skeleton/shellification/terminal-lowering changes, raw-block
-  changes, RG/MWG/IDA changes, artifact matrix or reader changes, public
-  API/export changes, diagnostics/reports, WL H2 support, committed tests, or
-  Cr2 workflow.
+  `:z_axis_diatomic_pqs_base`. The original supplemented-WL early-rejection
+  boundary in this lane is superseded for the supported z-axis diatomic
+  supplemented WL composition cell by `HP-COMP-SUPPWL-*`. This does not
+  approve driver public input changes, route skeleton/shellification/terminal-
+  lowering changes, raw-block changes, RG/MWG/IDA changes, artifact matrix or
+  reader changes, public API/export changes, diagnostics/reports, committed
+  tests, or Cr2 workflow.
 - `HP-NEST-ART-TEST-01` approves only `git diff --check`, package load, small
   `nesting = :pqs` base artifact/readback with provenance inspection, small
   `nesting = :wl` one-center atom artifact/readback with provenance
-  inspection, supplemented `nesting = :wl` early rejection, and no Cr2 run.
+  inspection, historical supplemented-WL early rejection before
+  `HP-COMP-SUPPWL-*`, and no Cr2 run.
 - `HP-HAM-MANIFEST-SRC-FN-01` approves only a compact construction-native
   source-mode provenance seam for optional manifest groups
   `hamiltonian_manifest/source_shells/`,
@@ -1434,9 +1436,9 @@ family input, `nesting = :pqs` or `nesting = :wl`, in
 existing `:white_lindsey_low_order` route family. This is not a diagnostic
 route switch: do not expose route skeletons, retained rules, raw-block
 switches, stop-after controls, diagnostics, route reports, or route-stage
-labels. Supplemented `nesting = :wl` must be rejected clearly unless it is
-already valid through the existing supported supplemented facade/staged path;
-new supplemented White-Lindsey behavior needs a separate docs-only amendment.
+labels. Supplemented `nesting = :wl` is governed by `HP-COMP-SUPPWL-*` for the
+supported homonuclear z-axis diatomic composition cell; unsupported geometry or
+supplement combinations must still reject clearly.
 `HP-DRV-NEST-TEST-01` approves default `:pqs` validation plus one small base
 artifact/readback path with `nesting = :wl`, and no Cr2 run.
 
@@ -1445,9 +1447,10 @@ The target producer shape is the 2 x 2 x 2 composition of geometry
 (`off` or `on`) recorded in
 `docs/src/developer/designs/cartesian_hamiltonian_producer/nesting_supplement_composition_plan.md`.
 This is planning authority except where a composition cell is explicitly
-promoted below. Supplemented atoms and supplemented White-Lindsey remain
-candidate lanes until separately approved; do not implement missing cells as
-driver-level special cases or parallel Hamiltonian builders.
+promoted below. Supplemented atoms and supplemented White-Lindsey are approved
+only where `HP-COMP-SUPPATOM-*` and `HP-COMP-SUPPWL-*` name the exact cells;
+do not implement any remaining missing cells as driver-level special cases or
+parallel Hamiltonian builders.
 
 `HP-COMP-WLDIAT-FN-01` and `HP-COMP-WLDIAT-TEST-01` promote the first
 composition cell: `Natom = 2`, `nesting = :wl`, `basisname = nothing`.
@@ -1868,8 +1871,9 @@ The driver may normalize explicit `atom_symbols`, `nuclear_charges`,
 existing `cartesian_base_hamiltonian(system; basis, hamfile)` facade where that
 facade already supports the atom. Current validation remains origin-centered H.
 These driver IDs do not approve edits to `src/cartesian_base_hamiltonian.jl`;
-producer-side atom support is governed separately by `HP-R1-ATOM-*`. They also
-do not approve translated atoms, supplemented atom Hamiltonians, element
+producer-side atom support is governed separately by `HP-R1-ATOM-*`, and
+supported supplemented one-center atoms are governed by
+`HP-COMP-SUPPATOM-*`. They also do not approve translated atoms, element
 lookup/default tables, ECP, solver workflow, artifact schema changes, public
 API/export changes, route diagnostics, metadata/status/report fields,
 committed atom fixtures, or committed tests. `HP-DRV-ATOM-TEST-01` approves

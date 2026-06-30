@@ -351,9 +351,10 @@ Approved compact Hamiltonian artifact manifest lane:
   construction family and a truthful route label derived from `(input.kind,
   input.nesting)`;
 - `HP-NEST-ART-FN-01` approves only the narrow source cleanup that records
-  `nesting` in base and recipe provenance, writes `:one_center_wl_base` rather
-  than a PQS-oriented label for WL one-center artifacts, and rejects
-  supplemented `nesting = :wl` before expensive base-stage construction;
+  `nesting` in base and recipe provenance and writes `:one_center_wl_base`
+  rather than a PQS-oriented label for WL one-center artifacts. Its original
+  supplemented-WL early-rejection boundary is historical and is superseded for
+  supported z-axis diatomic supplemented WL construction by `HP-COMP-SUPPWL-*`;
 - existing matrix keys and `read_cartesian_ida_hamiltonian` behavior must not
   change;
 - no public reader API, driver public input change, route report/status
@@ -401,9 +402,9 @@ Approved canonical driver usability lane:
 - `nesting` is not a diagnostic route switch and must not expose route
   skeletons, retained rules, raw-block switches, stop-after controls,
   diagnostics, route reports, or route-stage labels;
-- supplemented `nesting = :wl` must be rejected clearly unless it is already
-  valid through the existing supported supplemented facade/staged path; adding
-  broad supplemented White-Lindsey behavior requires a separate amendment;
+- supplemented `nesting = :wl` is now governed by `HP-COMP-SUPPWL-*` for the
+  supported homonuclear z-axis diatomic composition cell; unsupported geometry
+  or supplement combinations must still reject clearly;
 - artifact provenance must record the public `nesting` input truthfully under
   `HP-NEST-ART-FN-01`; a WL artifact must not be labeled as PQS merely because
   helper code remains PQS-named;
@@ -810,7 +811,8 @@ Deferred lanes:
 
 - broad driver diagnostics and public-driver polish beyond the approved
   compact artifact-producing workflow;
-- supplemented atom Hamiltonians and translated atoms;
+- translated atoms; supported one-center supplemented atoms are governed by
+  `HP-COMP-SUPPATOM-*`;
 - Cr2-specific workflow, committed Cr2 gates, and Cr2 support decisions beyond
   the generic explicit homonuclear z-axis path;
 - non-base/supplement public workflow;
