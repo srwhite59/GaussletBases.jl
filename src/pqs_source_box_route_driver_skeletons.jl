@@ -24,23 +24,6 @@ function _pqs_source_box_route_driver_skeleton_pair_family(left_kind::Symbol, ri
     throw(ArgumentError("unsupported source-box route unit pair $(left_kind), $(right_kind)"))
 end
 
-function _pqs_source_box_route_driver_skeleton_density_density_helper(
-    pair_family::Symbol,
-    pair_factor_normalization::Symbol,
-)
-    raw = pair_factor_normalization == :raw_weighted
-    pair_family == :pqs_pqs && return raw ?
-        :_pqs_pqs_source_box_raw_weighted_density_density_interaction_block :
-        :_pqs_pqs_source_box_density_density_interaction_block
-    pair_family in (:pqs_product, :product_pqs) && return raw ?
-        :_pqs_product_source_box_raw_weighted_density_density_interaction_block :
-        :_pqs_product_source_box_density_density_interaction_block
-    pair_family == :product_product && return raw ?
-        :_product_doside_source_box_raw_weighted_density_density_interaction_block :
-        :_product_doside_source_box_density_density_interaction_block
-    throw(ArgumentError("unsupported density-density pair family $(pair_family)"))
-end
-
 function _pqs_source_box_route_driver_skeleton_unit(;
     unit_key,
     unit_role,
@@ -180,11 +163,6 @@ function _pqs_source_box_route_driver_generic_source_box_skeleton(
                 pair_family == :pqs_product ?
                 :pqs_product_source_box_density_density_pair :
                 :product_doside_source_box_density_density_pair,
-            density_density_helper =
-                _pqs_source_box_route_driver_skeleton_density_density_helper(
-                    pair_family,
-                    route_recipe.pair_factor_normalization,
-                ),
             source_box_algorithmic_path = true,
             fallback_oracle_path = false,
             transpose_policy = left_key == right_key ? :none :
@@ -197,18 +175,6 @@ function _pqs_source_box_route_driver_generic_source_box_skeleton(
         expected_families = (:pqs_pqs, :pqs_product, :product_pqs, :product_product),
     )
     unit_inventory = _pqs_source_box_route_driver_unit_inventory(retained_units)
-    helper_by_pair_family = (;
-        pqs_pqs =
-            _pqs_source_box_route_driver_skeleton_density_density_helper(
-                :pqs_pqs, route_recipe.pair_factor_normalization),
-        pqs_product =
-            _pqs_source_box_route_driver_skeleton_density_density_helper(
-                :pqs_product, route_recipe.pair_factor_normalization),
-        product_pqs = :transpose_of_pqs_product_helper_for_lower_blocks_only,
-        product_product =
-            _pqs_source_box_route_driver_skeleton_density_density_helper(
-                :product_product, route_recipe.pair_factor_normalization),
-    )
     return (;
         route_family = route_recipe.route_family,
         route_kind = route_recipe.route_kind,
@@ -224,7 +190,6 @@ function _pqs_source_box_route_driver_generic_source_box_skeleton(
         retained_dimension = unit_inventory.retained_dimension,
         pair_entries = pair_inventory.pair_entries,
         pair_family_counts = pair_inventory.pair_family_counts,
-        helper_by_pair_family,
     )
 end
 
@@ -344,7 +309,6 @@ function _pqs_source_box_route_driver_physical_gausslet_core_shell_skeleton(
         retained_dimension = unit_inventory.retained_dimension,
         pair_entries,
         pair_family_counts,
-        helper_by_pair_family = (;),
         physical_target_inventory = target_inventory,
     )
 end
@@ -382,7 +346,6 @@ function _pqs_source_box_route_driver_white_lindsey_low_order_skeleton(
         pair_key = (:low_order_units, :low_order_units),
         pair_family = :white_lindsey_low_order,
         pair_kind = :low_order_unit_operator_pair,
-        density_density_helper = :not_applicable_low_order_route,
         source_box_algorithmic_path = false,
         fallback_oracle_path = false,
         transpose_policy = :none,
@@ -394,9 +357,6 @@ function _pqs_source_box_route_driver_white_lindsey_low_order_skeleton(
         product_pqs = 0,
         product_product = 0,
         white_lindsey_low_order = length(pair_entries),
-    )
-    helper_by_pair_family = (
-        white_lindsey_low_order = :pending_white_lindsey_low_order_operator_builder,
     )
     return (;
         route_family = route_recipe.route_family,
@@ -412,7 +372,6 @@ function _pqs_source_box_route_driver_white_lindsey_low_order_skeleton(
         retained_dimension = unit_inventory.retained_dimension,
         pair_entries,
         pair_family_counts,
-        helper_by_pair_family,
         low_order_recipe,
     )
 end

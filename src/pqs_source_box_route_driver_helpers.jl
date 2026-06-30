@@ -565,7 +565,6 @@ function _pqs_source_box_route_driver_pair_entry_fields()
         :pair_key,
         :pair_family,
         :pair_kind,
-        :density_density_helper,
         :source_box_algorithmic_path,
         :fallback_oracle_path,
         :transpose_policy,
@@ -685,14 +684,6 @@ function _pqs_source_box_route_driver_pair_inventory(
         (count(entry -> entry.pair_family == family, pair_entries) for family in families),
     )
     return (; pair_entries, pair_family_counts)
-end
-
-function _pqs_source_box_route_driver_pair_helper_map(helper_by_pair_family)
-    helpers = Dict{Symbol,Symbol}()
-    for family in propertynames(helper_by_pair_family)
-        helpers[Symbol(family)] = Symbol(getproperty(helper_by_pair_family, family))
-    end
-    return helpers
 end
 
 # High-level driver facade.
@@ -1024,10 +1015,7 @@ function cartesian_shells(
         route_shape = route_skeleton.route_shape,
         retained_units,
         pair_entries,
-        helper_by_pair_family =
-            _pqs_source_box_route_driver_pair_helper_map(
-                route_skeleton.helper_by_pair_family,
-            ),
+        pair_family_counts = route_skeleton.pair_family_counts,
     )
 end
 
@@ -1584,7 +1572,7 @@ function cartesian_units(parent, shells, recipe)
     pair_inventory =
         _pqs_source_box_route_driver_pair_inventory(
             pair_entries;
-            expected_families = keys(shells.helper_by_pair_family),
+            expected_families = keys(shells.pair_family_counts),
         )
 
     return (;
@@ -1606,7 +1594,6 @@ function cartesian_units(parent, shells, recipe)
         retained_dimension = unit_inventory.retained_dimension,
         pair_entries,
         pair_family_counts = pair_inventory.pair_family_counts,
-        helper_by_pair_family = shells.helper_by_pair_family,
     )
 end
 
@@ -1697,7 +1684,6 @@ function cartesian_transforms(units, recipe)
         shellification_kind = units.shellification_kind,
         pair_entries = units.pair_entries,
         pair_family_counts = units.pair_family_counts,
-        helper_by_pair_family = units.helper_by_pair_family,
         retained_counts =
             _pqs_source_box_route_driver_unit_rows(retained_units, :retained_count),
         ranges =
@@ -1723,7 +1709,6 @@ function _pqs_source_box_route_driver_pair_stage_low_order_summary(
         pair_keys = _pqs_source_box_route_driver_pair_keys_from_entries(
             transforms.pair_entries),
         pair_family_counts = transforms.pair_family_counts,
-        helper_by_pair_family = transforms.helper_by_pair_family,
     )
 end
 
@@ -1742,7 +1727,6 @@ function cartesian_pair_terms(units, transforms, recipe)
         pair_keys = _pqs_source_box_route_driver_pair_keys_from_entries(
             transforms.pair_entries),
         pair_family_counts = transforms.pair_family_counts,
-        helper_by_pair_family = transforms.helper_by_pair_family,
     )
 end
 
@@ -1762,10 +1746,6 @@ function _pqs_source_box_route_driver_assembly_stage_low_order_summary(pairs)
         pair_family_counts = hasproperty(low_order_pairs, :pair_family_counts) ?
                              low_order_pairs.pair_family_counts :
                              pairs.pair_family_counts,
-        helper_by_pair_family =
-            hasproperty(low_order_pairs, :helper_by_pair_family) ?
-            low_order_pairs.helper_by_pair_family :
-            pairs.helper_by_pair_family,
     )
 end
 

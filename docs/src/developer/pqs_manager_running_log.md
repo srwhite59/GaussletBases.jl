@@ -19738,3 +19738,52 @@ Carrying-cost result:
   physical signal on the bad Cr2 case: low residual `H1_RR` shifts,
   fixed-density correction on the saved bad UHF state, and residual-sector
   occupation signal if a bounded relaxation is cheap.
+
+## Cartesian Hamiltonian Producer Pass 218 - Delete Source-Box Density Shadow Helpers
+
+Commit(s):
+- this commit - Delete source-box density shadow helpers
+
+Summary:
+- Accepted the `bloat-fixer` deletion of the remaining PQS/product and
+  PQS/PQS density-density shadow helper families from
+  `src/cartesian_contracted_parent_metrics/source_box_pair_shadow.jl`.
+  Deleted functions include the density axis-factor, density weight-view,
+  density-normalized interaction, and raw-weighted wrapper helpers for both
+  pair families.
+- Removed the route-skeleton helper-name metadata surface that pointed at
+  those deleted helpers. Pair entries, pair-family counts, retained units, and
+  route shape remain; route summaries no longer carry nonexistent
+  `density_density_helper` or `helper_by_pair_family` symbols.
+
+Validation:
+- Bloat-fixer ran deleted-symbol scans, `git diff --check`, package load, and
+  the terminal inventory probe. Manager inspected the source and skeleton
+  diffs, reran deleted-symbol/metadata scans over `src test docs` excluding
+  this log, reran `git diff --check`, package load, and the terminal inventory
+  probe. The terminal inventory probe still reports PQS/WL final dimension
+  `471`.
+
+Goal advancement:
+- LT2/MT5: removes another large stale route-shadow source slice instead of
+  preserving helper-name compatibility around dead code.
+- MT6/AG7: advances the staged cleanup of `source_box_pair_shadow.jl` while
+  preserving the protected raw product-box donor plan/view path and the
+  local-Gaussian/nuclear families that need separate maps.
+
+Risk / guardrail:
+- No numerical production path, public API, artifact schema, driver input,
+  Cr2, screened-reference, local-Gaussian, nuclear, project-axis helper, or
+  raw donor behavior changed. Ignored `tmp/work` references remain stale and
+  non-blocking.
+
+Carrying-cost result:
+- source lines: `+2 / -612`, net `-610`.
+- deleted: two density-density shadow helper families plus skeleton/stage
+  helper-name metadata.
+- simplified: route skeleton/stage summaries now carry pair families/counts
+  without stale executable-helper symbol names.
+- exact remaining blocker: local-Gaussian and nuclear source-box shadow
+  families remain in `source_box_pair_shadow.jl`; they require separate
+  caller-proof maps because they share by-center/local-Gaussian wrapper
+  plumbing.
