@@ -76,6 +76,16 @@ function _r3_validate_base_hamiltonian(base_hamiltonian, residual)
     return center_count
 end
 
+function _r3_validate_same_construction_nuclear_charges(nuclear_charges, base_hamiltonian)
+    charges = Float64.(collect(nuclear_charges))
+    base_charges = Float64.(collect(base_hamiltonian.nuclear_charges))
+    length(charges) == length(base_charges) ||
+        throw(DimensionMismatch("R3 same-construction nuclear charge count must match base Hamiltonian"))
+    charges == base_charges ||
+        throw(ArgumentError("R3 same-construction nuclear charges must match base Hamiltonian"))
+    return nothing
+end
+
 function pqs_terminal_residual_gto_augmented_hamiltonian(
     base_hamiltonian,
     basis::CartesianTerminalBasisRealization,
@@ -119,6 +129,7 @@ function pqs_terminal_residual_gto_augmented_hamiltonian(
     nuclear_charges;
     expansion = nothing,
 )
+    _r3_validate_same_construction_nuclear_charges(nuclear_charges, base_hamiltonian)
     expansion_value = isnothing(expansion) ?
         getfield(_GB_PARENT, :coulomb_gaussian_expansion)(doacc = false) : expansion
     supplement_blocks = _r3a_qw_blocks(basis, bundles, supplement, atom_locations,
