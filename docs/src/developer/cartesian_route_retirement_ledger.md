@@ -704,7 +704,9 @@ Fourth caller-driven audit:
 - `_pqs_product_source_box_reference_blocks_from_pair_plan(...)` and
   `_pqs_product_source_box_reference_blocks(...)` were `KEEP_ORACLE_ONLY` at
   that point. Their exact source callers were inside the then-live
-  `_pqs_pqs_product_source_box_shadow_blocks(...)`.
+  `_pqs_pqs_product_source_box_shadow_blocks(...)`. A later 2026-06-30
+  source-shadow cleanup retired this PQS/product low-order reference/oracle
+  family after no current source or test caller remained.
 - `_pqs_pqs_source_box_reference_blocks_from_pair_plan(...)` and
   `_pqs_pqs_source_box_reference_blocks(...)` were also `KEEP_ORACLE_ONLY`.
   Exact source callers were the PQS/PQS reference wrapper and the then-live
@@ -733,9 +735,9 @@ Fifth batched caller-driven sweep:
 | Helper family | Caller classification | Action |
 | --- | --- | --- |
 | `_product_doside_source_box_reference_block(...)` | `KEEP_ORACLE_ONLY` / `MOVE_LATER_TO_CPB` | Kept. Source callers remain in product/doside shadow/reference comparisons, route authority comparisons, and product-product entries in `_pqs_pqs_product_source_box_all_pairs_inventory(...)`. |
-| `_pqs_product_source_box_reference_block(...)` | `DELETE_NOW` | Deleted. Exact caller audit showed only slow-test/docs references; the surviving multi-term PQS/product oracle covers the remaining narrow private check. |
-| `_pqs_product_source_box_reference_blocks(...)` | `KEEP_ORACLE_ONLY` | Kept. Source caller remains the PQS/product wrapper path and product entries in the all-pairs inventory metadata. |
-| `_pqs_product_source_box_reference_blocks_from_pair_plan(...)` | `KEEP_ORACLE_ONLY` | Kept. Source caller remains `_pqs_product_source_box_reference_blocks(...)`. |
+| `_pqs_product_source_box_reference_block(...)` | `DELETE_NOW` | Deleted. Exact caller audit showed only slow-test/docs references; the later multi-term PQS/product oracle was also retired after no source/test caller remained. |
+| `_pqs_product_source_box_reference_blocks(...)` | `RETIRED_LATER` | Later deleted by source-shadow cleanup after no source/test caller remained. |
+| `_pqs_product_source_box_reference_blocks_from_pair_plan(...)` | `RETIRED_LATER` | Later deleted by source-shadow cleanup after no source/test caller remained. |
 | `_pqs_pqs_source_box_reference_block(...)` | `DELETE_NOW` | Deleted. Exact caller audit showed only slow-test/docs references; the multi-term PQS/PQS oracle remains. |
 | `_pqs_pqs_source_box_reference_blocks(...)` | `RETIRED_LATER` | Later deleted by source-shadow cleanup after no source/test caller remained. |
 | `_pqs_pqs_source_box_reference_blocks_from_pair_plan(...)` | `RETIRED_LATER` | Later deleted by source-shadow cleanup after no source/test caller remained. |

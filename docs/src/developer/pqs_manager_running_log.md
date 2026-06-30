@@ -19521,3 +19521,47 @@ Carrying-cost result:
 - exact remaining blocker: no accepted `q0` until nonnegative/charge
   constraints are satisfied; no Be2 audit until artifact gauge data and replay
   dimensions agree.
+
+## Cartesian Hamiltonian Producer Pass 214 - Delete PQS/Product Low-Order Shadow Oracle
+
+Commit(s):
+- this commit - Delete PQS/product low-order shadow oracle
+
+Summary:
+- Accepted the `bloat-fixer` deletion of the PQS/product low-order
+  route-shadow oracle family from
+  `src/cartesian_contracted_parent_metrics/source_box_pair_shadow.jl`.
+  Deleted helpers include the PQS/product axis cross factors, pair plan,
+  factor/block assembly, reference-block wrapper family, term constants, and
+  now-unused low-order term validation.
+- Updated `docs/src/developer/cartesian_route_retirement_ledger.md` so the
+  old PQS/product multi-term oracle is recorded as later-retired history
+  instead of a surviving oracle surface.
+
+Validation:
+- Bloat-fixer ran deleted-symbol scans, `git diff --check`, and package load.
+  Manager reran source/test/docs caller scans, inspected the diff, ran
+  `git diff --check`, and reran package load. Remaining deleted-symbol refs
+  are only historical ledger entries and ignored `tmp/work` scripts.
+
+Goal advancement:
+- LT2/MT5: removes the product sibling of the retired PQS/PQS low-order
+  route-shadow oracle without adding an adapter or preserving stale vocabulary.
+- MT6/AG7: continues the staged shrinkage of `source_box_pair_shadow.jl` by
+  caller-proved subfamilies while leaving active raw product-box donor paths
+  untouched.
+
+Risk / guardrail:
+- No numerical kernels, route semantics, public APIs, artifact schemas,
+  density-density helpers, local-Gaussian helpers, nuclear helpers, residual
+  GTO, Cr2, or screened-reference code changed. The raw product-box donor
+  path remains active and should not be reopened casually.
+
+Carrying-cost result:
+- added source lines: 0.
+- deleted source lines: 335.
+- net total lines: -333 after the small historical-ledger update.
+- exact remaining blocker: `_pqs_product_source_box_product_block` is now a
+  definition-only adjacent leftover and should be handled only as a separate
+  approved deletion slice; density, local-Gaussian, nuclear, and skeleton
+  metadata families still need their own caller-proof maps.
