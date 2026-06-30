@@ -18710,3 +18710,70 @@ Carrying-cost result:
 - added src lines: 36.
 - deleted src lines: 51.
 - net src lines: -15.
+
+## Cartesian Hamiltonian Producer Pass 199 - Consolidate Retained Unit Metadata Enrichment
+
+Commit(s):
+- this commit - Consolidate retained unit metadata enrichment
+
+Summary:
+- Accepted the first `bloat-fixer` source cleanup pass. The older driver
+  inventory path from Pass 188 rebuilt the retained-unit plan twice: once to
+  attach native shell indices and once to attach mapped-COMX source-span facts.
+  The cleanup replaces those two wrappers with one local enrichment pass in
+  `src/pqs_source_box_route_driver_helpers.jl`.
+- Behavior is intentionally unchanged. Ordinary source spans still receive
+  shell-index metadata when available and do not receive mapped-COMX source
+  facts. Mapped source spans still carry `source_mode_shape` and
+  `raw_product_source_axis_transform_facts`. If no unit metadata changes, the
+  original retained-unit plan is returned.
+
+Validation:
+- Bloat-fixer ran `git diff --check`, package load, a focused caller scan, and
+  `tmp/work/terminal_inventory_native_shell_index_probe.jl`.
+- Manager reviewed the actual diff and reran `git diff --check`, package load,
+  and the same inventory probe. The probe reported PQS and WL
+  `final_dimension = 471`; PQS complete shells carried native shell indices
+  `1` and `2`, angular z-extension slabs carried shell `1`, and WL boundary
+  strata plus angular slabs retained the expected native shell indices.
+
+Goal advancement:
+- LT2/MT5: reduces carrying cost in stable driver-inventory metadata plumbing
+  without widening the route/report surface.
+- LT5/LT6: preserves the compact human-facing inventory contract while keeping
+  source-mode facts and shellifier-native provenance internal to existing
+  metadata.
+
+Carrying-cost result:
+- deleted: two retained-unit plan wrapper helpers.
+- simplified: shell-index and source-span metadata enrichment are now one pass
+  over retained units.
+- quarantined: no scientific behavior, public API, driver input, artifact
+  schema, route semantics, shellification, terminal lowering, transform
+  contract, RG/MWG/IDA, Hamiltonian, solver, test, or docs expansion.
+- exact remaining caller/blocker: the new enrichment helper is called only from
+  `_pqs_source_box_route_driver_unit_stage_low_order_summary`; no cleanup
+  blocker remains for this helper family.
+- added src lines: 18.
+- deleted src lines: 35.
+- net src lines: -17.
+
+### Medium-Term Goal Checkpoint After Pass 199
+
+- MT1 fake-PQS quarantine: active/maintained. Recent RG/injection and cleanup
+  passes did not promote fake-PQS or source-backed oracle paths.
+- MT2 independent H2 PQS recovery and MT3 common physical support vocabulary:
+  active as background guardrails, but not the current tactical lane.
+- MT4 supplement staging after authority: active, with the current residual
+  injection work still default-off and not artifact/public workflow authority.
+- MT5 cleanup pressure: active and strengthened. Pass 198 removed residual
+  injection state/duplication, Pass 199 removed older retained-unit metadata
+  double-rebuilds, and the new `bloat-fixer` role gives cleanup work a
+  manager-reviewed lane.
+- MT6 audit/classify old Cartesian flat paths: active. Bloat-fixer is now a
+  concrete mechanism for stable-code cleanup, while repo-doer remains focused
+  on the RG/injection spectral audit.
+- Medium-goal wording: needs refinement soon. The top-level MT section still
+  reflects an older H2/PQS recovery frame; the immediate active lane is now RG
+  injection evidence plus stable-code simplification. No MT wording is changed
+  in this mechanical cleanup commit.
