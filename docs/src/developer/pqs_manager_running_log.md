@@ -19848,3 +19848,79 @@ Carrying-cost result:
 - exact remaining blocker: direct-core-only constrained `q0` is not credible
   for Cr2. The next measurement should classify why it fails and test bounded
   allowed coordinate sets before rebuilding another expensive Delta-h screen.
+
+## Cartesian Hamiltonian Producer Pass 220 - Delete Source-Box Post-Raw Shadow Tail
+
+Commit(s):
+- this commit - Delete source-box post-raw shadow tail
+
+Summary:
+- Accepted the `bloat-fixer` deletion of the full stale post-raw tail from
+  `src/cartesian_contracted_parent_metrics/source_box_pair_shadow.jl`. The
+  file now ends at `_pqs_raw_product_box_plan_view`, so the surviving content
+  is the protected raw product-box donor/plan/view family used by active source
+  callers.
+- Deleted the PQS/product and PQS/PQS project-axis, local-Gaussian,
+  centered-local-Gaussian, compatibility, and nuclear-attraction shadow
+  wrappers. The deleted helpers had no active `src`, `test`, or `docs` callers
+  outside the target file.
+
+Validation:
+- Bloat-fixer ran deleted-symbol scans, `git diff --check`, package load, and
+  the terminal inventory probe. Manager inspected the remaining file tail,
+  confirmed the diff is one source file with `984` deletions and no additions,
+  reran the deleted-symbol scan over `src test docs`, reran `git diff --check`,
+  package load, and the terminal inventory probe. The terminal inventory probe
+  still reports PQS/WL final dimension `471`.
+- Ignored `tmp/work` references remain in
+  `tmp/work/validate_pqs_raw_product_box_shared_plan.jl` and old conflicted
+  copies. They are stale probe/archive pressure, not active source/test/docs
+  callers.
+
+Goal advancement:
+- LT2/MT5: removes nearly one thousand lines of route-shadow source instead of
+  preserving old oracle vocabulary through adapters.
+- MT6/AG7: completes the staged cleanup of the post-raw
+  `source_box_pair_shadow.jl` families. The remaining file is now the active
+  raw donor path, with live callers in `cartesian_gto_probes.jl` and
+  `product_staged_metric_fallbacks.jl`.
+- LT5: reduces conceptual drift around old PQS/source-box local-Gaussian and
+  nuclear wrappers that no longer define current construction authority.
+
+Risk / guardrail:
+- No numerical production path, public API, artifact schema, route semantics,
+  driver input, Cr2, screened-reference, residual-GTO, terminal lowering, or
+  raw product-box donor behavior changed. The raw donor/plan/view helpers are
+  protected and should not be reopened casually.
+
+Carrying-cost result:
+- source lines: `+0 / -984`, net `-984`.
+- deleted: stale PQS/product and PQS/PQS post-raw source-box shadow tail.
+- simplified: `source_box_pair_shadow.jl` now contains only the protected raw
+  product-box donor/plan/view family.
+- exact remaining blocker: none in active `src/test/docs` for the deleted
+  symbols. Stale ignored `tmp/work` references can be cleaned or left as
+  archive clutter in a separate low-priority cleanup.
+
+### Medium-Term Goal Checkpoint After Pass 220
+
+- MT1 fake-PQS quarantine: active/maintained. Passes 216-220 did not promote
+  fake-PQS, source-backed WL/QW, or route-shadow oracle machinery as production
+  authority.
+- MT2 independent H2 PQS recovery and MT3 common physical support vocabulary:
+  completed as guardrails. The terminal inventory probe remained the useful
+  smoke for deletion passes, and the final dimension stayed `471`.
+- MT4 supplement staging after authority: active. Passes 216-217 showed that a
+  current Be2 screened-reference density-gauge path is formable and sane as a
+  measurement; Pass 219 showed that direct-core `q0` is not credible for Cr2.
+  The next scientific decision is a bounded Cr2 `q0` coordinate-set adequacy
+  audit, not another expensive Delta-h screen or production screening change.
+- MT5 cleanup pressure: active and strong. Passes 218 and 220 alone removed
+  about `1,594` source lines from stale source-box shadow families, while
+  Passes 216-217 and 219 added only running-log records for measurement
+  interpretation.
+- MT6 audit/classify old Cartesian flat paths: active but narrower. The
+  immediate `source_box_pair_shadow.jl` route-shadow cleanup is now largely
+  complete below the raw donor path. Future cleanup should look for stale
+  ignored probes/docs around deleted symbols, or move to a new caller-proved
+  source family rather than reopening protected raw donor helpers.
