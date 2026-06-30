@@ -19626,3 +19626,61 @@ Carrying-cost result:
   reflects the old H2 recovery era; current practice has shifted to
   CR2-facing residual/screened-reference measurement plus stable-source
   deletion. No wording is changed in this mechanical cleanup commit.
+
+## Cartesian Hamiltonian Producer Pass 216 - Current Be2 Screened-Reference Gauge Diagnostic
+
+Commit(s):
+- this commit - Record current Be2 screened-reference gauge diagnostic
+
+Summary:
+- Accepted the measurement-only current-source Be2 screened-reference gauge
+  diagnostic. The old June 24 Be2 artifacts are no longer needed for this
+  measurement path: their `base_dim = 549` stale direct-identity slab behavior
+  is superseded by current compact thin-slab lowering, where current Be2 builds
+  `base_dim = 419 = 275 + 56 + 16 + 16 + 56`.
+- The current in-memory path can build `j0` in the same terminal/MWG
+  density-proxy gauge as `electron_electron_ida`. A constrained diagnostic
+  `q0` fit was run only on direct atom-contact core base columns with
+  nonnegative per-center charge constraints. This is a credible measurement
+  step, not a production screened-reference correction or final accepted `q0`.
+
+Validation / evidence:
+- Doer used ignored probe
+  `tmp/work/be2_current_screened_reference_gauge_probe.jl`. Manager inspected
+  the probe and reran it successfully on current `main`; elapsed time was about
+  `29.77 s`.
+- Be2 base current: dimension `419`, residual `0`, active `q0` coordinates
+  `275` direct core columns with owner counts `125/150`. For `N_screen = 1`
+  per Be center and `alpha = 8.0`, constrained fit had
+  `rel ||Vq0-j0|| = 2.77503591e-3`, exact charges `[1, 1]` to roundoff,
+  `q_min = 0`, `q_max = 5.17047091e-2`, and no negative coordinates.
+- Be2 supplemented current: dimension `437`, base `419`, residual `18`. For
+  the same reference density, constrained fit had
+  `rel ||Vq0-j0|| = 2.76870241e-3` and residual-row relative error
+  `1.36090535e-3`; charges were `[1, 1]` to roundoff and no negative
+  coordinates.
+- `N_screen = 0` gave exact zero. `N_screen = 2` and `4` scaled linearly.
+  Unconstrained ridge fits were tighter, about `6.9e-4` relative error, but
+  had `42` negative coordinates and remain diagnostic only.
+
+Goal advancement:
+- MT4/LT5: clears the stale-artifact blocker from Pass 213 and demonstrates a
+  current Be2 path for density-gauge `j0` plus a sane constrained diagnostic
+  `q0`.
+- LT6: preserves gauge honesty by fitting through the existing interaction
+  map `V[:, A] q0 ~= j0` rather than using center metadata or final weights as
+  density coordinates.
+
+Risk / guardrail:
+- No tracked source edits, defaults, artifact schema changes, public inputs,
+  Cr2 run, HF relaxation, residual pruning, Vee scaling, or production
+  screened-reference correction. The fit excludes residual coordinates and is
+  not yet an accepted general `q0` policy.
+
+Carrying-cost result:
+- added tracked source lines: 0.
+- deleted tracked source lines: 0.
+- exact remaining blocker: improve or classify the constrained fit before
+  treating `q0` as accepted. The direct next step is a small constrained-fit
+  improvement or comparison of allowed coordinate sets; generate a clean
+  current Be2 artifact only if persistent readback is needed.
