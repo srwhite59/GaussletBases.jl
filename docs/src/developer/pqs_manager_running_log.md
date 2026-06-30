@@ -19471,3 +19471,53 @@ Carrying-cost result:
 - exact remaining blocker: the larger `source_box_pair_shadow.jl` density,
   local-Gaussian, and nuclear shadow families still need staged caller-proof
   deletion maps before source edits.
+
+## Cartesian Hamiltonian Producer Pass 213 - Be j0/q0 Gauge Diagnostic
+
+Commit(s):
+- this commit - Record Be screened-reference gauge diagnostic
+
+Summary:
+- Accepted the measurement-only Be/Be2 screened-reference gauge audit as a
+  partial result. The Be atom path can build `j0` in the same terminal/MWG
+  density-proxy gauge as `electron_electron_ida`, including residual MWG rows
+  for the supplemented atom. The fit remains a diagnostic, not an accepted
+  `q0`, because it used unconstrained ridge least squares and has a small
+  negative tail.
+- Be2 is blocked for this audit path: current repo replay gives `base_dim=419`,
+  while the saved Be2 artifacts have `base_dim=549`. The artifacts do not
+  serialize the terminal support states/final coefficients needed to reconstruct
+  the original density-proxy gauge, so no Be2 `j0` was fabricated.
+
+Validation / evidence:
+- Doer used ignored probe `tmp/work/be_screened_reference_q0_gauge_probe.jl`
+  and the fast June 24 Be/Be2 artifacts. Reference density used
+  `alpha=8.0` and `N_screen = 0, 1, 2, 4` per Be center.
+- Be atom base: `dim=237`, active set `A=125`, rank `125`, condition about
+  `1.91e2`. For `N=1`, `q_sum=1.005231`, `q_min=-1.70e-3`, `q_max=4.57e-2`,
+  `q_neg=8`, relative error about `9.06e-4`; scaling for `N=2/4` was linear to
+  printed precision.
+- Be atom supplemented: `dim=246`, residual `9`, active set `A=125`, rank
+  `125`, condition about `1.92e2`. For `N=1`, relative error about `9.16e-4`
+  and residual-row relative error about `2.27e-3`.
+
+Goal advancement:
+- MT4/LT5: moves screened-reference work from "no q0 path" to a concrete
+  atom-only gauge diagnostic with small fit error and a clear constrained-fit
+  next step.
+- LT6: preserves gauge honesty by refusing to fabricate Be2 density proxies
+  from mismatched replay geometry or center metadata.
+
+Risk / guardrail:
+- No source edits, defaults, artifact schema changes, Cr2 run, HF relaxation,
+  residual pruning, interaction scaling, or production screened-reference claim.
+  The next task should either add a constrained nonnegative/charge-constrained
+  diagnostic solve for Be atom or regenerate/load a Be2 artifact with the
+  terminal density-proxy gauge data needed for `j0`.
+
+Carrying-cost result:
+- added tracked source lines: 0.
+- deleted tracked source lines: 0.
+- exact remaining blocker: no accepted `q0` until nonnegative/charge
+  constraints are satisfied; no Be2 audit until artifact gauge data and replay
+  dimensions agree.
