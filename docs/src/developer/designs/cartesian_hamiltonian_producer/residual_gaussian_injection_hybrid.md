@@ -61,9 +61,12 @@ lambda_inj <= 0    injection disabled; current RG behavior
 lambda_inj > 0     near-gausslet modes with lambda <= lambda_inj are injected
 ```
 
-When injection is enabled, `lambda_inj` should be at least the active
+For the first audit policy, `lambda_inj` should be at least the active
 `residual_occupation_cutoff`. Otherwise there is an ambiguous band of modes
-that are neither injected nor retained as true residuals.
+that are neither injected nor retained as true residuals. This is not a
+permanent mathematical requirement: a later design could intentionally approve
+a discard buffer between injection and true-RG retention, but that policy must
+be explicit rather than accidental.
 
 The first practical sweep values should be treated as audit choices, not
 defaults. A plausible starting range is:
@@ -132,6 +135,22 @@ Then:
  13. perform the final inter-owner residual merge.
 ```
 
+Classification is applied to the owner-local orthonormal candidate principal
+modes, not to raw contracted GTO columns. If
+
+```text
+M v_i = lambda_i v_i
+```
+
+then the classified supplement-space mode is
+
+```text
+y_i = A_tilde v_i
+```
+
+These `y_i` modes are the provisional injected modes or provisional residual
+candidates.
+
 This deliberately does not diagonalize one global residual metric over all
 atoms to decide residual Gaussians. Global injection is acceptable because
 injected functions do not become MWG residual channels. Global residual
@@ -151,10 +170,36 @@ It has dimension `nG`, not `nG + dim(Y_inj)`. The injected functions replace
 the corresponding approximate directions in the gausslet sector. They are not
 added on top of the original gausslets.
 
+A concrete construction should use the projection of the global injected
+subspace into the original gausslet coefficient space. Let `Y` be the global
+orthonormal injected modes and
+
+```text
+B = G' S Y
+```
+
+Then build an orthonormal complement `Q_perp` inside the original gausslet
+coefficient space:
+
+```text
+Q_perp' Q_perp = I
+B' Q_perp = 0
+```
+
+The injected gausslet sector can then be represented as
+
+```text
+F = [Y, G Q_perp]
+```
+
+This makes the `nG`-dimensional replacement explicit and gives a direct rank
+and conditioning diagnostic for whether the injected modes lie stably in the
+gausslet span.
+
 Required guards for any future source lane:
 
 - `dim(Y_inj) < nG`;
-- the projection of `Y_inj` into the original gausslet span has full rank;
+- the projection `B = G' S Y_inj` has full rank and acceptable condition;
 - the final injected gausslet sector is orthonormal;
 - remaining true residuals are orthogonal to the injected sector `F`, not only
   to the original `G`;
@@ -175,9 +220,12 @@ The proposed convention is:
 - injected-sector two-body IDA inherits the original gausslet IDA semantics;
 - only true residual directions get residual-GTO/MWG interaction channels.
 
-This is an approximation for the injected sector, but it is stable in the
-limit `lambda -> 0`: a direction already represented by gausslets should not
-create a normalized residual function or a residual MWG density.
+The inherited IDA treatment for injected directions is an approximation. The
+one-body basis changes exactly and one-body operators use the injected/raw
+representation exactly; the two-body IDA keeps the original gausslet-sector
+IDA treatment for the replaced subspace. This is stable in the limit
+`lambda -> 0`: a direction already represented by gausslets should not create
+a normalized residual function or a residual MWG density.
 
 Do not give injected functions their own MWG descriptors in the first design.
 That would reintroduce the near-zero residual-density problem through another
@@ -214,9 +262,12 @@ counterpoise if available, and Cr2:
 - stable owner-local candidate counts after `S_AA` rank cleanup;
 - provisional injected count by owner for trial `lambda_inj`;
 - globally retained injected count after duplicate merge;
+- rank and condition of `B = G' S Y_inj`;
 - true RG count by owner;
 - residual occupation spectra before and after injection;
 - `K_RR` and `H1_RR` low eigenvalues for true RGs;
+- projected one-body errors of the injected sector versus the original GTO
+  span, separated into `K`, each unit `U_A`, and `H1`;
 - owner weights and residual-occupation composition of low modes;
 - GTO-span one-body accuracy or mismatch against the non-injected path where
   cheap;

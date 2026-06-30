@@ -18466,3 +18466,49 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 194 - Clarify Residual Injection Memo
+
+Commit(s):
+- this commit - Clarify residual injection memo
+
+Summary:
+- Tightened the injection memo after external review. The memo now states that
+  injection/residual classification applies to owner-local orthonormal
+  principal modes `y_i = A_tilde v_i`, not raw GTO columns.
+- It also spells out the concrete injected-sector construction:
+  `B = G' S Y`, an orthonormal complement `Q_perp` inside the original
+  gausslet coefficient space, and `F = [Y, G Q_perp]`. The rank/condition of
+  `B` is now a required audit diagnostic.
+- The memo now labels inherited injected-sector IDA as an approximation:
+  one-body operators use the injected/raw representation exactly, while
+  two-body IDA keeps original gausslet-sector IDA semantics for the replaced
+  subspace.
+- The first-audit `lambda_inj >= residual_occupation_cutoff` rule is recorded
+  as a default audit policy rather than a permanent mathematical requirement.
+
+Validation:
+- `git diff --check` for this docs-only clarification.
+- Focused readback of the memo sections on optional switch, classification,
+  injected sector, interaction convention, and measurement-only audit.
+- No Julia run; no source, bin, test, tool, artifact, or driver file was
+  touched.
+
+Goal advancement:
+- LT6: makes the future injection audit harder to misimplement by naming the
+  actual classified modes and the algebraic injected-sector replacement, while
+  preserving the no-source-authority status.
+
+Carrying-cost result:
+- deleted: none.
+- simplified: reduced ambiguity around raw GTO labels, global injected
+  orthonormality, and inherited IDA.
+- quarantined: production behavior, defaults, source code, tests, artifacts,
+  driver inputs, public API, Cr2 workflow, and MWG convention changes remain
+  unapproved.
+- exact remaining caller/blocker: a later docs-only `HP-RG-INJECT-*`
+  amendment must still approve any measurement probe or source implementation.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.
