@@ -20060,3 +20060,50 @@ Carrying-cost result:
 - exact remaining blocker: inspect why the direct-`u0` `Delta_RR` develops
   negative low modes and test alpha/charge sensitivity before any production
   screened-reference design.
+
+## Cartesian Hamiltonian Producer Pass 223 - Delete Kinetic Shadow Matrix Wrappers
+
+Commit(s):
+- this commit - Delete kinetic shadow matrix wrappers
+
+Summary:
+- Accepted the `bloat-fixer` deletion of two no-caller kinetic shadow matrix
+  wrappers from
+  `src/cartesian_contracted_parent_metrics/product_staged_metric_fallbacks.jl`:
+  `_product_doside_retained_kinetic_shadow_matrix` and
+  `_staged_retained_kinetic_shadow_matrix`.
+- Active metric packet construction remains untouched. The surviving path uses
+  the retained/fallback kinetic block helpers directly through
+  `_fill_product_staged_metric_blocks!` and the active `core.jl` callers.
+
+Validation:
+- Bloat-fixer ran caller scans, `git diff --check`, and package load. Manager
+  inspected the diff, confirmed the change is one file with `147` deletions
+  and no additions, reran the deleted-symbol scan over `src test docs tmp/work`,
+  reran `git diff --check`, and reran package load.
+- No active `src`, `test`, `docs`, or current `tmp/work` probe caller remains.
+  The only symbol hits are in ignored old conflicted-copy archives under
+  `tmp/work/dropbox_conflicted_copies_2026-06-02`.
+
+Goal advancement:
+- LT2/MT5: removes another pure shadow-wrapper slice without adding an adapter
+  or compatibility surface.
+- MT6/AG7: continues the staged cleanup of
+  `product_staged_metric_fallbacks.jl` by caller-proved subfamilies while
+  protecting active metric packet helpers and the recently protected raw
+  product-box donor path.
+
+Risk / guardrail:
+- No numerical kernel, route semantics, artifact schema, public API, Cr2,
+  screened-reference, source-box donor, packet construction, or active
+  `core.jl` caller behavior changed.
+
+Carrying-cost result:
+- source lines: `+0 / -147`, net `-147`.
+- deleted: two no-caller kinetic shadow matrix wrappers.
+- simplified: the file no longer carries full-matrix kinetic shadow packet
+  vocabulary around the active retained/fallback block helpers.
+- exact remaining blocker: broader `product_staged_metric_fallbacks.jl`
+  deletion remains blocked by active `core.jl` packet-construction callers.
+  The next cleanup candidates are the read-only mapped reference-block and
+  sidecar wrapper families, not the active block helpers.
