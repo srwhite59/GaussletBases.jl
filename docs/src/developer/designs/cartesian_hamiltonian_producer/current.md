@@ -289,6 +289,13 @@ Approved neutral Cartesian Gaussian raw-block owner:
   `HP-CGAI-FN-01` helper work needed by that family-reuse kernel;
 - the owner may be consumed by Residual Gaussian and Qiu-White code after
   behavior-preserving parity;
+- the already-crossed cleanup applies to the main diatomic Qiu-White
+  non-nuclear path. Remaining QW-local non-nuclear helpers used by atomic QW
+  reference paths, factor-term outputs, hybrid sidecars, dense-parent probes,
+  and CPB/provider surfaces are retained reference/sidecar/provider surfaces,
+  not dead duplicates under `HP-CGRB-NN-*`. Rewiring them requires later
+  authority for factor-block ownership or for those specific sidecar/provider
+  callers;
 - it does not own terminal projection, residual Gaussian transforms,
   Qiu-White route objects, final-basis `G-G` product-matrix optimization,
   caches, reports, artifacts, or public API.

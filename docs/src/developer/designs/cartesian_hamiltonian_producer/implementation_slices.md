@@ -588,6 +588,13 @@ Implementation sequence:
 4. Delete duplicate route-local non-nuclear loops once parity is established.
 5. Optimize allocation inside the neutral owner only after extraction parity.
 
+Post-extraction clarification: step 3/4 is complete for the main diatomic
+Qiu-White non-nuclear path. Remaining QW-local non-nuclear helpers serving
+atomic QW reference paths, factor-term output, hybrid sidecars, dense-parent
+probes, and CPB/provider surfaces are not dead duplicates in this lane. They
+remain retained reference/sidecar/provider surfaces until later authority names
+those callers and, if needed, adds neutral factor-block ownership.
+
 Validation gates:
 
 - existing H2 Residual Gaussian endpoint unchanged;

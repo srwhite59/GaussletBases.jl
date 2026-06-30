@@ -18335,3 +18335,90 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 191 - Validate R3 Same-Construction Nuclear Charges
+
+Commit(s):
+- `c0e05846b` - Validate R3 same-construction nuclear charges
+
+Summary:
+- Accepted the narrow R3 consistency fix after the conformance audit found that
+  same-length `nuclear_charges` passed into the same-construction supplemented
+  Hamiltonian boundary could differ from `base_hamiltonian.nuclear_charges`
+  while final assembly still used the base Hamiltonian values.
+- The same-construction boundary
+  `pqs_terminal_residual_gto_augmented_hamiltonian(base_hamiltonian, basis,
+  bundles, supplement, atom_locations, nuclear_charges; ...)` now validates
+  both charge count and charge values against the base Hamiltonian through a
+  small `_r3_validate_same_construction_nuclear_charges(...)` helper.
+
+Validation:
+- `git diff --check` passed.
+- Package load passed.
+- Ignored smoke `tmp/work/r3_same_construction_charge_mismatch_smoke.jl`
+  verified mismatched charge behavior.
+- Existing H2 RG endpoint
+  `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl` passed.
+
+Goal advancement:
+- LT6: closes a provenance/consistency hole in the supplemented
+  same-construction path without changing residual selection, exact operator
+  formulas, MWG/IDA, artifact schema, driver input, or route behavior.
+
+Carrying-cost result:
+- deleted: none.
+- simplified: inconsistent same-construction nuclear charge inputs now fail
+  early instead of being ignored downstream.
+- quarantined: artifact schema, driver input, RG/MWG conventions, residual
+  selection, exact operator formulas, raw blocks, route/shellification, broad
+  tests, and Cr2 runs remain unchanged.
+- exact remaining caller/blocker: none for charge consistency.
+- added src lines: small validation helper only.
+- new tests: none; ignored smoke only.
+- new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 192 - Clarify Remaining QW Non-Nuclear Donors
+
+Commit(s):
+- this commit - Clarify QW non-nuclear donor retention
+
+Summary:
+- Recorded the follow-up decision from the conformance audit of
+  `HP-CGRB-NN-*`: no source cleanup should be done for the remaining
+  QW-local non-nuclear cross/self helpers in this pass. The already-crossed
+  lane applies to the main diatomic Qiu-White non-nuclear path, which consumes
+  the neutral `CartesianGaussianRawBlocks` owner.
+- The remaining helpers are still live through atomic QW reference paths,
+  factor-term output, hybrid sidecars, dense-parent probes, and CPB/provider
+  surfaces. Part of their output, especially `factor_ga`/`factor_aa`, is
+  outside current neutral CGRB-NN authority, which only owns overlap, kinetic,
+  coordinate moments, and second moments.
+
+Validation:
+- `git diff --check` passed for this docs-only clarification.
+- Focused searches reviewed `HP-CGRB-NN-*`, remaining QW helper names,
+  `factor_ga`/`factor_aa`, and sidecar/provider wording.
+- Changed path list was docs/startup only; no source, bin, test, tools,
+  artifacts, or driver behavior changed.
+
+Goal advancement:
+- LT6: prevents over-deletion by separating the completed diatomic neutral
+  raw-block lane from still-live atomic/reference/sidecar/provider surfaces.
+  Future cleanup must name those surfaces and any factor-block ownership
+  explicitly.
+
+Carrying-cost result:
+- deleted: none; docs-only classification.
+- simplified: future agents now have a clear reason not to delete the
+  remaining QW donor helpers under old CGRB-NN wording.
+- quarantined: atomic QW factor-term output, hybrid sidecars, dense-parent
+  probes, CPB/provider surfaces, neutral factor-block ownership, public API,
+  route/report/status payloads, nuclear/raw-block semantic changes, RG/MWG/IDA,
+  Hamiltonian behavior, Cr2 runs, and committed tests remain out of scope.
+- exact remaining caller/blocker: remaining QW helpers can only be rewired or
+  deleted after a new lane approves the specific atomic/sidecar/provider
+  surfaces and any missing neutral factor-block ownership.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

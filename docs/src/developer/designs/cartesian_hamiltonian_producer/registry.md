@@ -4189,6 +4189,15 @@ transform changes, Qiu-White semantic changes, Qiu-White route objects, parent
 construction, persistent cache, report/status/payload fields, public API,
 artifact workflow, or Cr2 facade/artifact workflow may be added under this ID.
 
+Post-extraction clarification: the accepted diatomic Qiu-White non-nuclear
+path consumes the neutral owner. Remaining QW-local non-nuclear cross/self
+helpers used by `_qwrg_atomic_cartesian_blocks_3d`, atomic QW reference
+operators, factor-term output, hybrid sidecars, dense-parent probes, and
+CPB/provider surfaces are retained live reference/sidecar/provider surfaces.
+They are not dead duplicates approved for deletion under this ID. Future
+rewiring must first name the affected sidecar/provider surfaces and, if needed,
+approve neutral ownership for factor blocks such as `factor_ga`/`factor_aa`.
+
 ### HP-CGRB-NN-TEST-01 — non-nuclear extraction validation
 
 Approved validation:

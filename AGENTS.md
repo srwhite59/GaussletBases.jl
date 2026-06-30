@@ -1068,6 +1068,13 @@ Approved neutral Cartesian Gaussian raw-block non-nuclear owner:
   `src/ordinary_qw_raw_blocks.jl`, and
   `src/ordinary_qw_operator_assembly.jl`, with duplicate route-local
   non-nuclear loops deleted after parity.
+- The main diatomic Qiu-White non-nuclear path has crossed this lane. Remaining
+  QW-local non-nuclear cross/self helpers used by atomic QW reference,
+  factor-term, hybrid sidecar, dense-parent probe, or CPB/provider surfaces are
+  not dead duplicates under `HP-CGRB-NN-WIRE-01`. They remain retained
+  reference/sidecar/provider surfaces until a later amendment either adds
+  neutral factor-block ownership or explicitly approves rewiring those
+  callers.
 - `HP-CGRB-NN-TEST-01` approves the existing H2 Residual Gaussian endpoint,
   ignored Be2 Residual Gaussian parity/performance if needed, ignored Cr2 q4
   non-nuclear raw-block parity, residual mixed-overlap parity, and one small
