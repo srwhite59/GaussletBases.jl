@@ -18512,3 +18512,54 @@ Carrying-cost result:
 - deleted src lines: 0.
 - new tests: none.
 - new metadata/status fields: none.
+
+## Cartesian Hamiltonian Producer Pass 195 - Approve Residual Injection Audit
+
+Commit(s):
+- this commit - Approve residual injection audit
+
+Summary:
+- Approved `HP-RG-INJECT-AUDIT-01` as the first measurement-only authority
+  lane for the optional injection-plus-Residual-Gaussian scheme. The audit may
+  use ignored probes to classify owner-local principal modes
+  `y_i = A_tilde v_i`, sweep trial `lambda_inj` values, globally merge
+  injected modes, report `B = G' S Y_inj` rank/condition, construct trial
+  `F = [Y, G Q_perp]`, and measure true RG counts plus `K_RR`/`H1_RR`
+  spectra after injection.
+- The approved audit must also report injected-sector one-body projection
+  errors for `K`, each unit `U_A`, and `H1`, so the result tests the actual
+  one-body failure mode rather than only residual counts.
+
+Validation:
+- `git diff --check` for this docs-only authority pass.
+- Focused searches/readback for `HP-RG-INJECT-AUDIT-01`,
+  `residual_injection_cutoff`, `B = G' S Y_inj`, `F = [Y, G Q_perp]`, and the
+  forbidden surfaces in `current.md`, `registry.md`,
+  `implementation_slices.md`, `residual_gaussian_domain_module.md`,
+  `residual_gaussian_injection_hybrid.md`, and `AGENTS.md`.
+- No Julia run; no source, bin, test, tool, artifact, or driver file was
+  touched.
+
+Goal advancement:
+- LT6: turns the injection memo into an actionable measurement lane while
+  preserving the no-production-source boundary. The audit is designed to decide
+  whether injection actually removes or sharply reduces the Cr/Cr2 low residual
+  ghost sector before implementation.
+
+Carrying-cost result:
+- deleted: none.
+- simplified: repo-manager can now hand doer an exact ignored-audit task
+  instead of inventing measurement scope from the memo.
+- quarantined: production source behavior, source instrumentation, committed
+  tests, artifacts, driver inputs, public API, RG defaults, automatic pruning,
+  spectral guards, MWG/IDA conventions, full HF, dense Vee/solver work, Cr2
+  full Hamiltonians, Cr2 artifacts, and Cr2-specific workflow remain
+  unapproved.
+- exact remaining caller/blocker: an ignored audit must now determine whether
+  existing construction seams can reconstruct the owner-local candidate spans,
+  injected-sector projection, trial injected sector, and residual-sector
+  one-body blocks cheaply enough.
+- added src lines: 0.
+- deleted src lines: 0.
+- new tests: none.
+- new metadata/status fields: none.

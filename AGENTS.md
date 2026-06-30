@@ -972,6 +972,22 @@ Approved Residual Gaussian module surfaces:
   driver changes, MWG/IDA changes, full HF, dense Vee/solver work, automatic
   residual pruning, kinetic/`H1_RR` guards, cutoff/tolerance changes, or
   source instrumentation.
+- `HP-RG-INJECT-AUDIT-01` is measurement-only authority for the optional
+  injection-plus-RG scheme recorded in
+  `docs/src/developer/designs/cartesian_hamiltonian_producer/residual_gaussian_injection_hybrid.md`.
+  Ignored probes may classify owner-local principal modes
+  `y_i = A_tilde v_i`, sweep trial `residual_injection_cutoff` values,
+  globally merge injected modes, report rank/condition of
+  `B = G' S Y_inj`, residualize true RG candidates against
+  `F = [Y, G Q_perp]`, and report true RG counts, `K_RR`/`H1_RR` spectra, and
+  injected-sector one-body projection errors. It approves only ignored
+  `tmp/work/*.jl` probes and durable text/TSV output under
+  `/Users/srw/dmrgtmp/...` or CR2 run directories. It does not approve
+  production source changes, source instrumentation, committed tests,
+  artifacts, driver changes, public API/export changes, RG default changes,
+  automatic pruning, spectral-guard implementation, MWG/IDA convention
+  changes, full HF, dense Vee/solver work, Cr2 full Hamiltonian, Cr2 artifact,
+  or Cr2-specific workflow.
 
 Non-negotiable RG guardrails:
 

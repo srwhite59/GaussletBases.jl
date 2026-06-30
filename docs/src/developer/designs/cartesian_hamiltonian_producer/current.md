@@ -240,11 +240,15 @@ Approved Residual Gaussian robustness lane:
   output. It does not approve pruning, kinetic/`H1_RR` guards, cutoff or
   tolerance changes, full HF, Vee/solver work, artifacts, source
   instrumentation, or driver changes.
-- `residual_gaussian_injection_hybrid.md` records a proposed optional
-  injection-plus-RG scheme for near-gausslet supplement directions. It is
-  design memory only: no injected-sector source behavior, default, artifact,
-  driver input, public API, or Cr2 workflow is approved until a later
-  docs-only amendment names exact IDs, files, validation, and failure rules.
+- `HP-RG-INJECT-AUDIT-01` approves the first measurement-only lane for the
+  optional injection-plus-RG scheme recorded in
+  `residual_gaussian_injection_hybrid.md`. Ignored probes may classify
+  owner-local principal modes, merge the trial injected subspace, report
+  `B = G' S Y_inj` rank/condition, report true RG counts and `K_RR`/`H1_RR`
+  spectra after injection, and measure injected-sector one-body projection
+  errors for `K`, each unit `U_A`, and `H1`. This does not approve
+  injected-sector source behavior, defaults, artifacts, driver input, public
+  API, automatic pruning, MWG/IDA convention changes, full HF, or Cr2 workflow.
 
 Approved stale complete-core-shell RHF retirement:
 

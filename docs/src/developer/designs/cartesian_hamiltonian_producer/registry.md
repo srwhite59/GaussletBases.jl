@@ -3923,6 +3923,71 @@ Failure rule: if the audit cannot reconstruct `K_RR`/`H1_RR` cheaply enough
 from existing construction seams, stop and report the exact missing reusable
 seam. Do not add source instrumentation as part of this lane.
 
+### HP-RG-INJECT-AUDIT-01 — optional injection-plus-RG measurement audit
+
+Status: approved measurement-only authority. This is not production source
+authority.
+
+Purpose: evaluate whether the optional injection-plus-Residual-Gaussian
+scheme in `residual_gaussian_injection_hybrid.md` cures near-gausslet
+residual-complement instability before any implementation or default change.
+
+Approved behavior:
+
+- measurement-only owner-local GTO candidate rank and injection audit;
+- form stable owner-local orthonormal candidate modes after `S_AA` rank
+  cleanup;
+- classify owner-local principal modes `y_i = A_tilde v_i`, not raw GTO
+  columns;
+- sweep trial `residual_injection_cutoff = lambda_inj` values, including
+  injection off;
+- report provisional injected counts by owner;
+- globally merge trial injected modes and report retained injected count;
+- report rank and condition of `B = G' S Y_inj`;
+- construct the trial injected gausslet sector algebraically as
+  `F = [Y, G Q_perp]` inside the audit;
+- residualize remaining true RG candidates against `F`;
+- report true RG counts by owner, residual occupations, low `K_RR`, and low
+  `H1_RR = K_RR + sum_A Z_A U_A_RR`;
+- report low-mode owner weights and residual-occupation composition;
+- report injected-sector one-body projection errors versus the original GTO
+  span for `K`, each unit `U_A`, and `H1`;
+- classify whether the low two-owner residual ghost sector disappears,
+  shrinks, or persists.
+
+Approved surfaces:
+
+- ignored `tmp/work/*.jl` probes only;
+- durable text/TSV output under `/Users/srw/dmrgtmp/...` or CR2 run
+  directories.
+
+Forbidden:
+
+- production source changes or source instrumentation;
+- committed tests or fixtures;
+- artifact schema/provenance/reader/manifest changes;
+- driver changes;
+- public API/export changes;
+- RG default changes;
+- automatic pruning or residual-selection implementation;
+- kinetic or `H1_RR` spectral-guard implementation;
+- MWG/IDA convention changes;
+- dense Vee, full HF, or solver workflow;
+- Cr2 full Hamiltonian, Cr2 artifact, or Cr2-specific workflow.
+
+Validation for later audit:
+
+- `git diff --check`;
+- package load;
+- ignored injection audit probe for the target Cr/Cr2 fixture;
+- no full HF and no new Hamiltonian artifact.
+
+Failure rule: if the audit cannot reconstruct the owner-local candidate
+spans, injected-sector projection `B`, trial injected sector `F`, or needed
+residual-sector one-body blocks cheaply from existing construction seams, stop
+and report the exact missing reusable seam. Do not add source instrumentation
+as part of this lane.
+
 ## Approved For Cartesian Gaussian Raw-Block Nuclear Owner
 
 This section approves only the neutral uncharged by-center nuclear raw-block

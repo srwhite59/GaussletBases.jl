@@ -371,6 +371,17 @@ Approved robustness lane:
   baselines when available. It does not approve production source changes,
   automatic residual pruning, kinetic/`H1_RR` guards, cutoff/tolerance changes,
   MWG/IDA changes, full HF, artifacts, driver changes, or committed tests.
+- `HP-RG-INJECT-AUDIT-01` approves only measurement of the optional
+  injection-plus-RG scheme recorded in
+  `residual_gaussian_injection_hybrid.md`: ignored probes may classify
+  owner-local principal modes `y_i = A_tilde v_i`, trial-inject modes under
+  `lambda_inj`, globally merge injected modes, report rank/condition of
+  `B = G' S Y_inj`, residualize true RG candidates against
+  `F = [Y, G Q_perp]`, and report true RG counts, `K_RR`/`H1_RR` spectra, and
+  injected-sector one-body projection errors. It does not approve production
+  source changes, committed tests, default changes, automatic pruning,
+  artifacts, driver changes, public API, MWG/IDA changes, full HF, Cr2
+  artifacts, or Cr2-specific workflow.
 
 ## Compact Hamiltonian Artifact Manifest
 

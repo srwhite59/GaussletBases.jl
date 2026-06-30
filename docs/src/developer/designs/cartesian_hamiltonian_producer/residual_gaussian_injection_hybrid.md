@@ -1,10 +1,11 @@
 # Residual Gaussian Injection Hybrid Memo
 
-Status: design memo, not production source authority. This document records
-the proposed optional injection-plus-residual construction for near-gausslet
-GTO supplement directions. It does not approve source changes, tests, artifact
-schema changes, driver inputs, public API, Cr2 workflow, or a production
-default.
+Status: design memo plus approved measurement-only audit authority under
+`HP-RG-INJECT-AUDIT-01`. This document records the proposed optional
+injection-plus-residual construction for near-gausslet GTO supplement
+directions and approves ignored audit probes only. It does not approve
+production source changes, committed tests, artifact schema changes, driver
+inputs, public API, Cr2 workflow, or a production default.
 
 ## Motivation
 
@@ -246,14 +247,10 @@ identity_atol                  final residual identity validation tolerance
 These thresholds answer different questions. They should not be collapsed into
 one "stability" knob.
 
-## Measurement-Only First Step
+## HP-RG-INJECT-AUDIT-01 - Measurement-Only First Step
 
-The first approved lane should be measurement-only, likely under a candidate
-ID such as:
-
-```text
-HP-RG-INJECT-AUDIT-01
-```
+Status: approved by user direction, measurement-only. This is not production
+source authority.
 
 It should use ignored probes only and report, for Cr atom, Cr2 monomer
 counterpoise if available, and Cr2:
@@ -274,9 +271,37 @@ counterpoise if available, and Cr2:
 - whether the low two-owner residual ghost sector disappears, shrinks, or
   persists.
 
-No production source change, committed test, artifact write, full HF, solver,
-driver input, public API, MWG convention change, or Cr2 workflow should be
-included in the audit lane.
+Approved surfaces:
+
+- ignored `tmp/work/*.jl` probes only;
+- durable text/TSV output under `/Users/srw/dmrgtmp/...` or CR2 run
+  directories.
+
+Forbidden:
+
+- production source changes;
+- committed tests or fixtures;
+- artifact schema/provenance/reader/manifest changes;
+- driver changes;
+- public API/export changes;
+- RG default changes;
+- automatic pruning or residual-selection implementation;
+- MWG/IDA convention changes;
+- dense Vee, full HF, or solver workflow;
+- Cr2 full Hamiltonian, Cr2 artifact, or Cr2-specific workflow.
+
+Validation for the audit:
+
+- `git diff --check`;
+- package load;
+- ignored injection audit probe for the target Cr/Cr2 fixture;
+- no full HF and no new Hamiltonian artifact.
+
+Failure rule: if the audit cannot reconstruct the needed owner-local
+candidate spans, injected-sector projection `B`, or residual-sector one-body
+blocks cheaply from existing construction seams, stop and report the exact
+missing reusable seam. Do not add production source instrumentation as part of
+this lane.
 
 ## Do Not Confuse
 
