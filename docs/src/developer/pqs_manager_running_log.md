@@ -18845,3 +18845,36 @@ Carrying-cost result:
 - added src lines: 10.
 - deleted src lines: 15.
 - net src lines: -5.
+
+## Cartesian Hamiltonian Producer Pass 202 - Remove WL Retained Count Precheck
+
+Commit(s):
+- this commit - Remove WL retained count precheck
+
+Summary:
+- Accepted a narrow `bloat-fixer` cleanup in the stable White-Lindsey terminal
+  realization surface. The local `q isa Integer && q > 0` retained-count
+  precheck and two `Int(q)` call-site normalizations were removed from
+  `_wl_boundary_stratum_block`.
+- No strategic change. This is the intended mature-code policy in practice:
+  the check only made an internal metadata bug crash with a custom message.
+  Normal construction accepts `q` directly, while downstream construction will
+  still fail naturally if the metadata is not a valid retained count.
+
+Validation:
+- Bloat-fixer and manager both ran `git diff --check`, package load, and
+  `tmp/work/terminal_inventory_native_shell_index_probe.jl`. Manager rerun
+  reported PQS/WL `final_dimension = 471`.
+
+Carrying-cost result:
+- deleted: one retained-count prettier-crash precheck.
+- simplified: `_nested_doside_1d` and `_terminal_face_product_block` now
+  receive the retained count directly.
+- quarantined: `_wl_metadata_value`, source-CPB checks, corner support-size
+  checks, identity/coefficient checks, support-disjointness checks, and
+  transform-kind checks remain untouched.
+- exact remaining caller/blocker: normal WL construction accepts `q` directly;
+  no downstream blocker found.
+- added src lines: 2.
+- deleted src lines: 4.
+- net src lines: -2.

@@ -41,10 +41,8 @@ function _wl_boundary_stratum_block(unit, bundles)
     intervals = CartesianCPB.intervals(cpb)
     dims = _nested_axis_lengths(bundles)
     q = _wl_metadata_value(unit.metadata, :white_lindsey_retained_count_1d)
-    q isa Integer && q > 0 ||
-        throw(ArgumentError("White-Lindsey boundary retained count must be positive"))
     side(axis) = ParentGaussletBases._nested_doside_1d(
-        _nested_axis_pgdg(bundles, axis), intervals[_terminal_face_axis_index(axis)], Int(q);
+        _nested_axis_pgdg(bundles, axis), intervals[_terminal_face_axis_index(axis)], q;
         enforce_symmetric_odd = false)
     stratum_kind = _wl_metadata_value(cpb.metadata, :stratum_kind)
     if stratum_kind === :facet_cpb
@@ -54,7 +52,7 @@ function _wl_boundary_stratum_block(unit, bundles)
             bundles;
             normal_axis = fixed_axis,
             fixed_indices = (first(intervals[_terminal_face_axis_index(fixed_axis)]),),
-            retained_count = Int(q),
+            retained_count = q,
             fixed_side = _wl_metadata_value(cpb.metadata, :side),
         )
     elseif stratum_kind === :edge_cpb
