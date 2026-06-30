@@ -87,19 +87,14 @@ export PairBlockMaterializationPolicy,
        pqs_source_pair_position_blocks,
        pqs_source_pair_x2_blocks,
        pqs_source_pair_kinetic_blocks,
-       pqs_source_pair_retained_one_body_block,
-       pqs_source_pair_retained_one_body_blocks,
        pqs_source_pair_retained_overlap_block,
        pqs_source_pair_retained_kinetic_block,
        pqs_source_pair_retained_electron_nuclear_by_center_block,
        pqs_source_pair_retained_centered_electron_nuclear_by_center_block,
-       pqs_retained_source_one_body_matrix,
        pqs_source_shell_realization_final_basis,
        pqs_source_shell_projected_one_body_matrix,
        pqs_source_shell_final_one_body_from_boundary_matrix,
        pqs_source_shell_final_electron_nuclear_by_center_from_boundary_block,
-       pqs_source_pair_one_body_block,
-       pqs_source_pair_one_body_blocks,
        pqs_source_pair_shell_realization_bridge_summary,
        pqs_source_pair_final_block_readiness_summary,
        one_body_electron_nuclear_by_center_placement_plan,
@@ -225,10 +220,6 @@ export PairBlockMaterializationPolicy,
 #
 # direct_one_body.jl
 #     Direct/direct one-body term selector.
-#
-# pqs_source_one_body.jl
-#     PQS/PQS raw/retained source-mode one-body term selectors and one-unit
-#     retained source-mode matrix helper.
 include("records.jl")
 include("preflight.jl")
 include("summaries.jl")
@@ -252,6 +243,5 @@ include("direct_position.jl")
 include("direct_x2.jl")
 include("direct_kinetic.jl")
 include("direct_one_body.jl")
-include("pqs_source_one_body.jl")
 
 end # module CartesianPairBlockMaterialization

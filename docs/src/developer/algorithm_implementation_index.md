@@ -215,8 +215,6 @@ Source anchors:
   `_pqs_raw_product_box_plan`, `_pqs_product_box_realization_plan`
 - **oracle/reference only**:
   `src/cartesian_pair_block_materialization/pqs_source_safe_terms.jl`
-- **retired/do not call**:
-  `src/cartesian_pair_block_materialization/pqs_source_one_body.jl`
 
 Do-not-forget rule:
 COMX boundary product modes define retained source modes. Support rows and

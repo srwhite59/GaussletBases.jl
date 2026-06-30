@@ -1,9 +1,5 @@
 # Shared one-body term descriptors for future mixed pair-block consumers.
 #
-# Existing local selectors that a mixed consumer should call:
-# - direct_direct_one_body_block / direct_direct_one_body_blocks
-# - pqs_source_pair_one_body_block / pqs_source_pair_one_body_blocks
-#
 # This file only describes term vocabulary and selector surfaces. It does not
 # construct 1D factors, pair blocks, Hamiltonian data, exports, artifacts, or
 # PQS Lowdin realization.
@@ -179,32 +175,4 @@ function _one_body_axis_index(axis)
     axis === :y && return 2
     axis === :z && return 3
     throw(ArgumentError("unsupported one-body axis: $(axis)"))
-end
-
-function _one_body_selector_surface_summary()
-    return (;
-        object_kind = :cartesian_pair_block_one_body_selector_surface_summary,
-        status = :available_internal_one_body_selector_surface_audit,
-        supported_terms = _ONE_BODY_TERMS,
-        selector_family_count = 2,
-        selector_families = (:direct_direct, :pqs_source_pair),
-        record_selectors = (;
-            direct_direct = :direct_direct_one_body_block,
-            pqs_source_pair = :pqs_source_pair_one_body_block,
-        ),
-        batch_selectors = (;
-            direct_direct = :direct_direct_one_body_blocks,
-            pqs_source_pair = :pqs_source_pair_one_body_blocks,
-        ),
-        factor_provider_scope = :caller_supplied_or_family_provider,
-        factors_constructed = false,
-        numerical_blocks_materialized = false,
-        mixed_dispatcher_materialized = false,
-        route_driver_wiring = false,
-        hamiltonian_data_materialized = false,
-        artifacts_materialized = false,
-        coulomb_materialized = false,
-        ida_mwg_data_materialized = false,
-        pqs_lowdin_materialized = false,
-    )
 end

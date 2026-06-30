@@ -381,9 +381,9 @@ shell-realized final basis:
 O_final = L' * O_boundary * L
 ```
 
-The input must be a `pqs_retained_source_one_body_matrix(...)` result in
-`:retained_pqs_source_modes`. This helper is restricted to overlap and kinetic
-for the first PQS final one-body seam.
+The input must be a retained-boundary result in `:retained_pqs_source_modes`
+with object kind `:pqs_retained_source_one_body_matrix`. This helper is
+restricted to overlap and kinetic for the first PQS final one-body seam.
 """
 function pqs_source_shell_final_one_body_from_boundary_matrix(
     final_basis::NamedTuple,

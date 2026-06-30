@@ -1448,16 +1448,34 @@ function _one_body_pqs_source_pair_block(
         selector_family = :pqs_source_pair,
         parent_axis_counts_required = false,
     )
-    return pqs_source_pair_one_body_block(
-        record,
-        term;
-        overlap_1d = getproperty(factor_input_summary.factor_values, :overlap_1d),
-        position_1d =
-            _one_body_optional_factor(factor_input_summary.factor_values, :position_1d),
-        x2_1d =
-            _one_body_optional_factor(factor_input_summary.factor_values, :x2_1d),
-        kinetic_1d =
-            _one_body_optional_factor(factor_input_summary.factor_values, :kinetic_1d),
+    factors = factor_input_summary.factor_values
+    descriptor = dispatch_summary.term_descriptor
+    if descriptor.family === :overlap
+        return pqs_source_pair_overlap_block(
+            record;
+            overlap_1d = getproperty(factors, :overlap_1d),
+        )
+    end
+    if descriptor.family === :position
+        return pqs_source_pair_position_block(
+            record;
+            axis = descriptor.axis,
+            overlap_1d = getproperty(factors, :overlap_1d),
+            position_1d = getproperty(factors, :position_1d),
+        )
+    end
+    if descriptor.family === :x2
+        return pqs_source_pair_x2_block(
+            record;
+            axis = descriptor.axis,
+            overlap_1d = getproperty(factors, :overlap_1d),
+            x2_1d = getproperty(factors, :x2_1d),
+        )
+    end
+    return pqs_source_pair_kinetic_block(
+        record;
+        overlap_1d = getproperty(factors, :overlap_1d),
+        kinetic_1d = getproperty(factors, :kinetic_1d),
     )
 end
 
@@ -1958,7 +1976,7 @@ end
 
 function _one_body_numerical_family_selector(selector_family)
     selector_family === :direct_direct && return :direct_direct_one_body_block
-    selector_family === :pqs_source_pair && return :pqs_source_pair_one_body_block
+    selector_family === :pqs_source_pair && return :pqs_source_pair_safe_term_dispatch
     return nothing
 end
 

@@ -19313,3 +19313,66 @@ Risk / guardrail:
 Line-count / complexity note:
 - Deleted one retired policy doc and reduced the remaining two policy docs
   from about 3,100 lines to 237 lines, with total pass net `-4,673` docs lines.
+
+## Cartesian Hamiltonian Producer Pass 210 - Delete Retired PQS One-Body Wrapper
+
+Commit(s):
+- this commit - Delete retired PQS one-body wrapper
+
+Summary:
+- Accepted the `bloat-fixer` deletion of the retired
+  `src/cartesian_pair_block_materialization/pqs_source_one_body.jl` selector
+  wrapper file. The one live mixed-dispatch path now calls the surviving
+  safe-term helpers directly for overlap, position, `x2`, and kinetic. Exports,
+  include wiring, stale selector comments, and the old selector-surface summary
+  were removed.
+- Manager review added one small source-doc clarification in
+  `pqs_source_shell_final_basis.jl`: the retained-boundary object-kind contract
+  remains named, but the deleted constructor function is no longer advertised.
+
+Validation:
+- Bloat-fixer ran deleted-symbol/file scans, `git diff --check`, package load,
+  and the terminal inventory probe. Manager reran the stale-symbol scan,
+  `git diff --check`, and package load. The remaining
+  `:unsupported_pqs_source_one_body_term` symbol is a blocker code in the
+  surviving safe-term helper, not a deleted wrapper reference.
+
+Goal advancement:
+- LT2/MT5: removes another route-era selector layer instead of preserving
+  compatibility vocabulary around a retired path.
+- MT6/AG7: narrows the PQS source one-body surface to the actual live helpers
+  and leaves `source_box_pair_shadow.jl` untouched for a later classified
+  deletion map.
+
+Risk / guardrail:
+- No route semantics, numerical kernels, public APIs, artifact schemas,
+  reports, statuses, residual-GTO, Cr2, or source-box shadow donor paths were
+  changed. The exported final-basis boundary helper still accepts the old
+  retained-boundary object-kind shape if a caller constructs it manually; this
+  pass only deletes the retired selector/constructor surface.
+
+Carrying-cost result:
+- added source lines: 32.
+- deleted source lines: 517.
+- net source lines: -485.
+- exact remaining blocker: `source_box_pair_shadow.jl` and
+  `pqs_source_safe_terms.jl` remain the larger oracle/donor surfaces; they need
+  separate caller-proof maps before deletion.
+
+### Medium-Term Goal Checkpoint After Pass 210
+
+- MT1 fake-PQS quarantine: active/maintained. Recent cleanup and Cr2 audits did
+  not revive fake-PQS or source-backed WL/QW as independent PQS authority.
+- MT2 independent H2 PQS recovery and MT3 common physical support vocabulary:
+  completed as active guardrails. The independent H2 PQS route remains the
+  provenance baseline, while current work should avoid reopening old route
+  scaffolds unless a live physics target requires it.
+- MT4 supplement staging after authority: active, with the current scientific
+  lane shifted from injection/cutoff tuning toward residual interaction
+  adequacy and screened-reference fluctuation audits.
+- MT5 cleanup pressure: active and strong. Bloat-fixer has now moved from
+  small stable-helper deletion into large docs compression and retired source
+  wrapper deletion; keep requiring net-negative accounting.
+- MT6 audit/classify old Cartesian flat paths: active. The next large source
+  target should be a read-only classification of `source_box_pair_shadow.jl`
+  subfamilies before any broad deletion.
