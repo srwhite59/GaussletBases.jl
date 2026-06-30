@@ -378,70 +378,113 @@ function raw_terminal_geometry(
         return Tuple(pieces)
     end
 
-    function push_diatomic_outer_remainder!(current, axis, left_atom, right_atom)
-        transverse_full =
-            all(a == axis || current[a] == parent_box[a] for a in 1:3)
-        if axis_symbol(axis) == :z && transverse_full
-            for (side, leftover, reference_nucleus_index) in (
-                (:low, first(parent_box[axis]):(first(current[axis]) - 1), left_atom),
-                (:high, (last(current[axis]) + 1):last(parent_box[axis]), right_atom),
+    function push_diatomic_outer_remainder!(current, axis)
+        for piece in outer_mismatch_pieces(current)
+            push_region!(role = piece.role, region_kind = :outer_mismatch_slab,
+                outer_box = piece.box,
+                metadata = merge(piece.metadata, (; bond_axis = axis_symbol(axis))))
+        end
+    end
+
+    function transverse_scale_for_box(box, axis, atom)
+        return minimum(
+            min(
+                nuclei[atom][a] - physical_edge(a, first(box[a]), :low),
+                physical_edge(a, last(box[a]), :high) - nuclei[atom][a],
             )
-                isempty(leftover) && continue
-                stack_count = cld(length(leftover), shell_side)
-                for stack_index in 1:stack_count
-                    if side == :low
-                        hi = last(leftover) - (stack_index - 1) * shell_side
-                        lo = max(first(leftover), hi - shell_side + 1)
-                    else
-                        lo = first(leftover) + (stack_index - 1) * shell_side
-                        hi = min(last(leftover), lo + shell_side - 1)
-                    end
-                    slab_range = lo:hi
-                    box = ntuple(a -> a == axis ? slab_range : current[a], 3)
-                    reference = nuclei[reference_nucleus_index][axis]
-                    longitudinal_margin = side == :low ?
-                        reference - physical_edge(axis, lo, :low) :
-                        physical_edge(axis, hi, :high) - reference
-                    transverse_scale = minimum(
-                        min(
-                            nuclei[left_atom][a] -
-                            physical_edge(a, first(box[a]), :low),
-                            physical_edge(a, last(box[a]), :high) -
-                            nuclei[left_atom][a],
-                        )
-                        for a in 1:3 if a != axis
-                    )
+            for a in 1:3 if a != axis
+        )
+    end
+
+    function angular_target_box(ordinary_body, axis, left_atom, right_atom)
+        axis_symbol(axis) == :z || return ordinary_body
+        transverse_scale = transverse_scale_for_box(ordinary_body, axis, left_atom)
+        transverse_scale > 0.0 || return ordinary_body
+        lo = first(ordinary_body[axis])
+        hi = last(ordinary_body[axis])
+        low_target = nuclei[left_atom][axis] - transverse_scale
+        high_target = nuclei[right_atom][axis] + transverse_scale
+        while lo > first(parent_box[axis]) && physical_edge(axis, lo, :low) > low_target
+            lo -= 1
+        end
+        while hi < last(parent_box[axis]) && physical_edge(axis, hi, :high) < high_target
+            hi += 1
+        end
+        future_shell_layers = minimum(
+            min(
+                first(ordinary_body[a]) - first(parent_box[a]),
+                last(parent_box[a]) - last(ordinary_body[a]),
+            )
+            for a in 1:3 if a != axis
+        )
+        lo = max(lo, first(parent_box[axis]) + future_shell_layers)
+        hi = min(hi, last(parent_box[axis]) - future_shell_layers)
+        return ntuple(a -> a == axis ? (lo:hi) : ordinary_body[a], 3)
+    end
+
+    function push_angular_z_extension_slabs!(
+        ordinary_body, angular_target, axis, left_atom, right_atom, shell_index,
+    )
+        same_box(ordinary_body, angular_target) && return nothing
+        transverse_scale = transverse_scale_for_box(ordinary_body, axis, left_atom)
+        for (side, extension, atom) in (
+            (:low, first(angular_target[axis]):(first(ordinary_body[axis]) - 1), left_atom),
+            (:high, (last(ordinary_body[axis]) + 1):last(angular_target[axis]), right_atom),
+        )
+            isempty(extension) && continue
+            stack_count = cld(length(extension), shell_side)
+            for stack_index in 1:stack_count
+                if side == :low
+                    hi = last(extension) - (stack_index - 1) * shell_side
+                    lo = max(first(extension), hi - shell_side + 1)
+                else
+                    lo = first(extension) + (stack_index - 1) * shell_side
+                    hi = min(last(extension), lo + shell_side - 1)
+                end
+                slab_range = lo:hi
+                box = ntuple(a -> a == axis ? slab_range : ordinary_body[a], 3)
+                longitudinal_margin = side == :low ?
+                    nuclei[atom][axis] - physical_edge(axis, lo, :low) :
+                    physical_edge(axis, hi, :high) - nuclei[atom][axis]
+                push_region!(role = :angular_z_extension_slab,
+                    region_kind = :angular_z_extension_slab, outer_box = box,
+                    shell_index = shell_index,
                     metadata = (;
-                        slab_kind = :angular_z_extension_slab,
-                        slab_normal_axis = axis_symbol(axis),
-                        slab_side = side,
+                        slab_kind = :angular_z_extension_slab, slab_side = side,
+                        slab_normal_axis = axis_symbol(axis), bond_axis = axis_symbol(axis),
                         slab_thickness = length(slab_range), slab_stack_index = stack_index,
-                        slab_stack_count = stack_count, bond_axis = axis_symbol(axis),
+                        slab_stack_count = stack_count,
                         thin_slab_retained_count_1d = shell_side,
-                        reference_nucleus_index,
+                        reference_nucleus_index = atom,
                         angular_balance_rule = :outer_nucleus_45_degree,
                         longitudinal_margin_physical = longitudinal_margin,
                         transverse_scale_physical = transverse_scale,
                         angular_extension_physical =
                             range_physical_size(parent_axes[axis], slab_range),
-                    )
-                    push_region!(
-                        role = :angular_z_extension_slab, region_kind = :angular_z_extension_slab,
-                        outer_box = box, shell_index = stack_index,
-                        metadata = metadata,
-                    )
-                end
+                    ))
             end
-            return nothing
         end
-        for piece in outer_mismatch_pieces(current)
-            push_region!(
-                role = piece.role,
-                region_kind = :outer_mismatch_slab,
-                outer_box = piece.box,
-                metadata = merge(piece.metadata, (; bond_axis = axis_symbol(axis))),
+        return nothing
+    end
+
+    function grow_shared_molecular_shells!(current, axis, left_atom, right_atom)
+        shared_shell_index = 0
+        while can_expand(current)
+            ordinary_body = expand_box(current)
+            angular_target = angular_target_box(ordinary_body, axis, left_atom, right_atom)
+            shared_shell_index += 1
+            push_region!(role = :shared_molecular_shell, region_kind = :complete_shell,
+                outer_box = ordinary_body, inner_box = current, shell_index = shared_shell_index,
+                metadata = (; bond_axis = axis_symbol(axis)),
             )
+            push_angular_z_extension_slabs!(
+                ordinary_body, angular_target, axis, left_atom, right_atom,
+                shared_shell_index,
+            )
+            current = angular_target
         end
+        push_diatomic_outer_remainder!(current, axis)
+        return current
     end
 
     function grow_single_atom!(atom_index::Int, center::NTuple{3,Int})
@@ -515,23 +558,7 @@ function raw_terminal_geometry(
                 ),
             )
 
-            current = contact_core
-            shared_shell_index = 0
-            while can_expand(current)
-                next_box = expand_box(current)
-                shared_shell_index += 1
-                push_region!(
-                    role = :shared_molecular_shell,
-                    region_kind = :complete_shell,
-                    outer_box = next_box,
-                    inner_box = current,
-                    shell_index = shared_shell_index,
-                    metadata = (; bond_axis = axis_symbol(axis)),
-                )
-                current = next_box
-            end
-
-            push_diatomic_outer_remainder!(current, axis, left_atom, right_atom)
+            grow_shared_molecular_shells!(contact_core, axis, left_atom, right_atom)
 
             return (;
                 bond_axis = axis_symbol(axis),
@@ -599,23 +626,7 @@ function raw_terminal_geometry(
             hull_box(left_box, right_box) :
             hull_box(left_box, central_gap, right_box)
 
-        current = molecular_inner
-        shared_shell_index = 0
-        while can_expand(current)
-            next_box = expand_box(current)
-            shared_shell_index += 1
-            push_region!(
-                role = :shared_molecular_shell,
-                region_kind = :complete_shell,
-                outer_box = next_box,
-                inner_box = current,
-                shell_index = shared_shell_index,
-                metadata = (; bond_axis = axis_symbol(axis)),
-            )
-            current = next_box
-        end
-
-        push_diatomic_outer_remainder!(current, axis, left_atom, right_atom)
+        grow_shared_molecular_shells!(molecular_inner, axis, left_atom, right_atom)
 
         return (; bond_axis = axis_symbol(axis), left_atom, right_atom)
     end

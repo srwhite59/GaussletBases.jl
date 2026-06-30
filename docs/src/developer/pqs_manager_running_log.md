@@ -5311,6 +5311,77 @@ Deletion accounting:
 - new tests: none.
 - new metadata/status fields: none.
 
+## Cartesian Hamiltonian Producer Pass 186 - Interleave Angular Z-Extension Shellification
+
+Commit(s):
+- this commit - Interleave angular z-extension shellification
+
+Summary:
+- Accepted the `HP-COMP-ANGBOX-FN-01` source correction after explicit user
+  approval of the added-line budget overage. The previous source had fixed the
+  catastrophic direct-identity outer slab behavior, but still used a catch-up
+  geometry model: grow all shared molecular shells, then emit one low and one
+  high z-extension remainder after the shared-shell loop ended.
+- The new implementation replaces the duplicated z-axis diatomic shared-shell
+  loops with one common helper. Each shared-shell step now computes an
+  ordinary index-layer shell body, extends it along the bond axis to the
+  angular target when needed, emits planned `:angular_z_extension_slab`
+  slices for `angular_target \ ordinary_body`, and advances the owned current
+  box to the angular target. This preserves the intended no-overlap ownership:
+  later shells grow from the already-owned angular target, not from the
+  smaller ordinary body.
+- PQS and White-Lindsey still share the same shellification geometry. The
+  route-family split remains downstream in retained/lowering behavior.
+
+Validation:
+- `git diff --check` passed.
+- Package load passed.
+- Ignored angular geometry audit passed and wrote
+  `tmp/work/angular_box_geometry_audit_report.txt` and
+  `tmp/work/angular_box_geometry_audit_steps.tsv`. The audit shows H2
+  z-extension slabs at shell indices `1` and `4`, Cr2-style `ns=5` slabs at
+  shell indices `1` and `2`, and Cr2-style `ns=9` slabs at shell indices
+  `1`, `2`, and `4`, with zero residual z/non-z mismatch.
+- PQS/WL geometry parity checks passed in the audit for H2, Be2, and Cr2-style
+  fixtures.
+- H2 base artifact/readback passed for `nesting = :pqs` and `nesting = :wl`,
+  both with dimension `767`.
+- Be2 base artifact/readback passed for `nesting = :pqs` and `nesting = :wl`,
+  both with dimension `863`.
+- Existing H2 RG endpoint passed:
+  `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`.
+- Manager mechanical scan found only the intentional fallback
+  `piece.metadata` merge for unexpected outer-mismatch residuals; no new
+  algorithmic metadata bus, status cloud, public surface, committed test, or
+  artifact/schema field was added.
+
+Goal advancement:
+- LT5/LT6: moves angular-balanced z-axis diatomic geometry into the layer that
+  owns it. Long bond-axis support is now allocated during shared-shell growth,
+  not repaired downstream by lowering or by a final catch-up cap. This keeps
+  Cr2/Be2/H2 shellification physically interpretable while preserving the
+  shared PQS/WL geometry boundary.
+
+Carrying-cost result:
+- deleted: duplicated shared-shell growth loops and the normal final
+  planned-z catch-up behavior.
+- simplified: normal z-extension support is emitted by one shared helper
+  during shell growth; `outer_mismatch_slab` is fallback-only.
+- quarantined: lowering, retained units, terminal realization, Hamiltonian
+  assembly, RG/MWG/IDA, driver, artifacts/readers, Cr2 workflow, and committed
+  tests remain untouched.
+- not deleted because: generic `outer_mismatch_slab` remains needed for
+  genuinely unexpected leftovers.
+- exact remaining caller/blocker: none found for the interleaved
+  shellification correction.
+- added src lines: `96`, explicitly approved over the requested `60` line
+  budget because the patch replaces duplicated loops and keeps the geometry
+  reviewable.
+- deleted src lines: `85`.
+- new tests: none.
+- new metadata/status fields: none; only existing native slab metadata is
+  populated for planned z-extension slabs.
+
 ## Cartesian Hamiltonian Producer Pass 186 - Reuse PGDG Layer for QW RG Cross Blocks
 
 Commit(s):
