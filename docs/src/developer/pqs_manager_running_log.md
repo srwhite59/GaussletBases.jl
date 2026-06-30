@@ -18810,3 +18810,38 @@ Carrying-cost result:
 - added src lines: 1.
 - deleted src lines: 8.
 - net src lines: -7.
+
+## Cartesian Hamiltonian Producer Pass 201 - Fold WL Support Expansion Helpers
+
+Commit(s):
+- this commit - Fold WL support expansion helpers
+
+Summary:
+- Accepted a bundled low-risk `bloat-fixer` cleanup in the stable
+  White-Lindsey terminal realization surface. The one-use
+  `_wl_terminal_cpb_support!` helper was folded into
+  `_wl_terminal_source_support`, preserving CPB support index/state append
+  order, and the `_wl_axis_index` alias was removed in favor of direct calls
+  to the shared terminal face-axis helper.
+- No strategic change. This continues MT5/LT2 cleanup pressure while leaving
+  metadata validation, retained-count handling, identity/coefficient checks,
+  support-disjointness checks, and transform-path checks untouched.
+
+Validation:
+- Bloat-fixer and manager both ran `git diff --check`, package load, and
+  `tmp/work/terminal_inventory_native_shell_index_probe.jl`. Manager rerun
+  reported PQS/WL `final_dimension = 471`.
+
+Carrying-cost result:
+- deleted: `_wl_terminal_cpb_support!` and `_wl_axis_index`.
+- simplified: `_wl_terminal_source_support` now owns its single support
+  expansion loop directly; axis lookup uses the shared helper directly.
+- quarantined: `_wl_metadata_value`, retained-count validation, `Int(q)`
+  normalization, identity/coefficient checks, support-disjointness checks, and
+  transform-kind checks remain untouched.
+- exact remaining caller/blocker: no remaining callers of the deleted helpers;
+  the retained-count validation/normalization is the next possible
+  manager-approved stable-code cleanup target.
+- added src lines: 10.
+- deleted src lines: 15.
+- net src lines: -5.

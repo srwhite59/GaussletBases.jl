@@ -1,24 +1,18 @@
 const ParentGaussletBases = Base.parentmodule(@__MODULE__)
 
-function _wl_terminal_cpb_support!(indices, states, cpb, bundles)
-    intervals = CartesianCPB.intervals(cpb)
-    dims = _nested_axis_lengths(bundles)
-    cpb_indices = _nested_box_support_indices(intervals[1], intervals[2], intervals[3], dims)
-    append!(indices, cpb_indices)
-    append!(states, NTuple{3,Int}[_cartesian_unflat_index(index, dims) for index in cpb_indices])
-    return indices, states
-end
-
 function _wl_terminal_source_support(source_cpbs, bundles)
     indices = Int[]
     states = NTuple{3,Int}[]
+    dims = _nested_axis_lengths(bundles)
     for cpb in source_cpbs
-        _wl_terminal_cpb_support!(indices, states, cpb, bundles)
+        intervals = CartesianCPB.intervals(cpb)
+        cpb_indices =
+            _nested_box_support_indices(intervals[1], intervals[2], intervals[3], dims)
+        append!(indices, cpb_indices)
+        append!(states, NTuple{3,Int}[_cartesian_unflat_index(index, dims) for index in cpb_indices])
     end
     return indices, states
 end
-
-_wl_axis_index(axis::Symbol) = _terminal_face_axis_index(axis)
 
 _wl_edge_fixed_axes(axis::Symbol) =
     axis === :x ? (:y, :z) :
@@ -50,7 +44,7 @@ function _wl_boundary_stratum_block(unit, bundles)
     q isa Integer && q > 0 ||
         throw(ArgumentError("White-Lindsey boundary retained count must be positive"))
     side(axis) = ParentGaussletBases._nested_doside_1d(
-        _nested_axis_pgdg(bundles, axis), intervals[_wl_axis_index(axis)], Int(q);
+        _nested_axis_pgdg(bundles, axis), intervals[_terminal_face_axis_index(axis)], Int(q);
         enforce_symmetric_odd = false)
     stratum_kind = _wl_metadata_value(cpb.metadata, :stratum_kind)
     if stratum_kind === :facet_cpb
@@ -59,7 +53,7 @@ function _wl_boundary_stratum_block(unit, bundles)
             cpb,
             bundles;
             normal_axis = fixed_axis,
-            fixed_indices = (first(intervals[_wl_axis_index(fixed_axis)]),),
+            fixed_indices = (first(intervals[_terminal_face_axis_index(fixed_axis)]),),
             retained_count = Int(q),
             fixed_side = _wl_metadata_value(cpb.metadata, :side),
         )
@@ -72,7 +66,8 @@ function _wl_boundary_stratum_block(unit, bundles)
             i -> meta_sides[findfirst(==(fixed_axes[i]), meta_axes)],
             2,
         )
-        fixed_indices = ntuple(i -> first(intervals[_wl_axis_index(fixed_axes[i])]), 2)
+        fixed_indices =
+            ntuple(i -> first(intervals[_terminal_face_axis_index(fixed_axes[i])]), 2)
         product = ParentGaussletBases._nested_edge_product(
             free_axis, fixed_sides, side(free_axis), fixed_indices, dims)
         return _wl_block_from_product(product, bundles)
