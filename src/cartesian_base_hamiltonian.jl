@@ -697,6 +697,14 @@ function _cartesian_base_route_label(input)
     throw(ArgumentError("unsupported base route label for kind=$(input.kind), nesting=$(input.nesting)"))
 end
 
+function _cartesian_supplemented_route_label(input)
+    input.kind === :h && input.nesting === :pqs && return :one_center_pqs_residual_gto_mwg
+    input.kind === :h && input.nesting === :wl && return :one_center_wl_residual_gto_mwg
+    input.kind === :h2 && input.nesting === :pqs && return :z_axis_diatomic_pqs_residual_gto_mwg
+    input.kind === :h2 && input.nesting === :wl && return :z_axis_diatomic_wl_residual_gto_mwg
+    throw(ArgumentError("unsupported supplemented route label for kind=$(input.kind), nesting=$(input.nesting)"))
+end
+
 function _cartesian_base_write_hamiltonian(path, ham, base)
     input = base.input
     parent = base.parent
@@ -975,6 +983,6 @@ function cartesian_residual_gto_mwg_hamiltonian_assembly(base, base_ham::Cartesi
     isnothing(hamfile) || _cartesian_write_hamiltonian_manifest(
         String(hamfile), base, ham; residual, augmented_products, supplement_input,
         producer = :cartesian_residual_gto_mwg_hamiltonian,
-        route = :z_axis_diatomic_residual_gto_mwg)
+        route = _cartesian_supplemented_route_label(input))
     return ham
 end

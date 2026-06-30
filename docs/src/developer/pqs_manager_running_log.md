@@ -5311,6 +5311,60 @@ Deletion accounting:
 - new tests: none.
 - new metadata/status fields: none.
 
+## Cartesian Hamiltonian Producer Pass 188 - Fix Supplemented Route Provenance
+
+Commit(s):
+- this commit - Fix supplemented route provenance
+
+Summary:
+- Accepted the narrow source fix for supplemented Hamiltonian artifact recipe
+  provenance. The previous manifest writer hardcoded
+  `:z_axis_diatomic_residual_gto_mwg` for every supplemented artifact,
+  including one-center atoms and White-Lindsey diatomics.
+- A new local supplemented route-label helper now derives the route from the
+  already validated construction kind and nesting. The written
+  `recipe_provenance/route` values are:
+  `:one_center_pqs_residual_gto_mwg`,
+  `:one_center_wl_residual_gto_mwg`,
+  `:z_axis_diatomic_pqs_residual_gto_mwg`, and
+  `:z_axis_diatomic_wl_residual_gto_mwg`.
+- No artifact schema, matrix keys, reader behavior, driver inputs, RG/MWG
+  convention, shellification/thin-slab behavior, solver path, or Cr2 workflow
+  changed.
+
+Validation:
+- `git diff --check` passed.
+- Package load passed.
+- Four small supplemented artifact/readback smokes passed with direct JLD2
+  provenance inspection: H atom/PQS, H atom/WL, H2/PQS, and H2/WL, all using
+  bundled `cc-pVTZ`.
+- Inspected existing JLD2 keys:
+  `recipe_provenance/route`, `recipe_provenance/nesting`,
+  `recipe_provenance/producer`, `supplement_provenance/basis_by_center`, and
+  `hamiltonian_manifest/manifest_version`.
+- Existing H2 RG endpoint passed:
+  `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`.
+
+Goal advancement:
+- LT5/LT6: artifact recipe provenance now matches the public construction
+  choice for atom/diatomic and PQS/WL supplemented routes. This closes a
+  manifest truth bug without broadening the artifact schema or driver surface.
+
+Carrying-cost result:
+- deleted: hardcoded supplemented diatomic route literal from the manifest
+  write path.
+- simplified: supplemented recipe route provenance now uses validated
+  `input.kind` and `input.nesting`.
+- quarantined: manifest validation hardening remains a later lane if desired;
+  driver inventory native shell-index propagation remains separate.
+- not deleted because: base route-label helper remains the existing base
+  provenance path.
+- exact remaining caller/blocker: none for the provenance fix.
+- added src lines: `9`.
+- deleted src lines: `1`.
+- new tests: none.
+- new metadata/status fields: none.
+
 ## Cartesian Hamiltonian Producer Pass 187 - Implement Driver Inventory Geometry Ranges
 
 Commit(s):
