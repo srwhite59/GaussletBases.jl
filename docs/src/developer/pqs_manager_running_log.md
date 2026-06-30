@@ -18777,3 +18777,36 @@ Carrying-cost result:
   reflects an older H2/PQS recovery frame; the immediate active lane is now RG
   injection evidence plus stable-code simplification. No MT wording is changed
   in this mechanical cleanup commit.
+
+## Cartesian Hamiltonian Producer Pass 200 - Delete WL Support Record Wrapper
+
+Commit(s):
+- this commit - Delete WL support record wrapper
+
+Summary:
+- Accepted a narrow `bloat-fixer` cleanup in the stable White-Lindsey terminal
+  realization surface. The private `_wl_terminal_support_record` wrapper was
+  removed and its exact support tuple was inlined at the single
+  `_validate_block_support!` call.
+- No strategic change. This leaves MT5/LT2 cleanup pressure active while
+  preserving the scientifically sensitive identity, coefficient,
+  support-disjointness, retained-count, and transform-path checks.
+
+Validation:
+- Bloat-fixer and manager both ran `git diff --check`, package load, and
+  `tmp/work/terminal_inventory_native_shell_index_probe.jl`. Manager rerun
+  reported PQS/WL `final_dimension = 471`.
+
+Carrying-cost result:
+- deleted: one private WL support-record wrapper.
+- simplified: one validation call site now passes the exact support tuple
+  directly.
+- quarantined: no terminal-basis semantics, support validation,
+  coefficient/identity checks, retained-count checks, transform checks,
+  public API, artifact, route, RG/MWG/IDA, Hamiltonian, test, or docs change.
+- exact remaining caller/blocker: no remaining caller of
+  `_wl_terminal_support_record`; broader WL cleanup remains blocked by
+  scientifically sensitive final-basis checks unless separately assigned.
+- added src lines: 1.
+- deleted src lines: 8.
+- net src lines: -7.

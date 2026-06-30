@@ -18,13 +18,6 @@ function _wl_terminal_source_support(source_cpbs, bundles)
     return indices, states
 end
 
-function _wl_terminal_support_record(unit, indices, states)
-    return (;
-        support_indices = indices,
-        support_states = states,
-    )
-end
-
 _wl_axis_index(axis::Symbol) = _terminal_face_axis_index(axis)
 
 _wl_edge_fixed_axes(axis::Symbol) =
@@ -143,7 +136,7 @@ function _append_white_lindsey_unit!(
     end
     _validate_block_support!(
         last(blocks),
-        _wl_terminal_support_record(unit, indices, states),
+        (; support_indices = indices, support_states = states),
         seen_support,
     )
     return nextcol
