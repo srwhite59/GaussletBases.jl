@@ -20176,3 +20176,50 @@ Carrying-cost result:
   `rho0` shape or residual-sector correction model. Do not proceed to
   production screened-reference plumbing until the negative broad
   `Delta_RR_unit` subspace is explained or removed.
+
+## Cartesian Hamiltonian Producer Pass 225 - Delete Sidecar Metric Reference Wrappers
+
+Commit(s):
+- this commit - Delete sidecar metric reference wrappers
+
+Summary:
+- Accepted the `bloat-fixer` deletion of the dead sidecar/reference wrapper
+  family from
+  `src/cartesian_contracted_parent_metrics/product_staged_metric_fallbacks.jl`:
+  `_entries_from_resolved_payload`,
+  `_resolved_payload_low_order_metric_block`, and
+  `_projected_q_shell_sidecar_low_order_metric_reference`.
+- Active metric packet construction helpers remain untouched. The surviving
+  path uses `_staged_unit_entries` and `_contract_pair_block` directly where
+  those primitives are still live.
+
+Validation:
+- Bloat-fixer ran caller scans, `git diff --check`, and package load. Manager
+  inspected the diff, confirmed the change is one file with `158` deletions
+  and no additions, reran the deleted-symbol scan over `src test docs tmp/work`,
+  reran `git diff --check`, and reran package load.
+- No active `src`, `test`, `docs`, or current `tmp/work` probe caller remains.
+  The only symbol hits are in ignored old conflicted-copy archives under
+  `tmp/work/dropbox_conflicted_copies_2026-06-02`.
+
+Goal advancement:
+- LT2/MT5: removes another reference-wrapper layer that preserved stale sidecar
+  vocabulary after the active metric packet path had moved on.
+- MT6/AG7: continues `product_staged_metric_fallbacks.jl` shrinkage by
+  caller-proved slices, while preserving active `core.jl` packet-construction
+  helpers and source-box donor paths.
+
+Risk / guardrail:
+- No numerical kernel, route semantics, artifact schema, public API, Cr2,
+  screened-reference, source-box donor, packet construction, or active
+  `core.jl` caller behavior changed.
+
+Carrying-cost result:
+- source lines: `+0 / -158`, net `-158`.
+- deleted: dead sidecar/reference wrapper family.
+- simplified: stale projected-q-shell sidecar metric-reference vocabulary no
+  longer sits beside the active staged-entry and pair-block primitives.
+- exact remaining blocker: broader `product_staged_metric_fallbacks.jl`
+  deletion remains blocked by active `core.jl` callers. The larger
+  PQS/product/raw-product reference block family is the next mapped candidate
+  but is closer to protected donor concepts and needs separate approval.
