@@ -20662,3 +20662,66 @@ Carrying-cost result:
   `residual_basis.jl` ordered-selection seam, then rerun H2 gate plus Cr2
   sector and HF checks. Broad near-gausslet fate/injection remains a separate
   design question and should not be folded into this implementation.
+
+## Cartesian Hamiltonian Producer Pass 233 - Default-Off Ordered Compact-First RG Selector
+
+Commit(s):
+- this commit - Add ordered compact-first RG selector
+
+Summary:
+- Accepted the narrow source implementation of the ordered compact-first RG
+  selector in `src/cartesian_residual_gaussians/residual_basis.jl`. The option
+  is private/default-off and is activated only by
+  `residual_compactness = (; metric = :midpoint_weighted_tail, cutoff = 0.2,
+  supplement, selector = :ordered_compact_first_mgs)`. Default behavior remains
+  the existing owner-local residual-occupation selector.
+- The implementation follows the accepted Pass 232 algorithm: per-owner
+  compact candidates are ordered by weighted width and tail metrics, projected
+  off the fixed gausslet sector with `q = (-X_i, e_i)`, MGS-orthogonalized
+  against already accepted compact RGs with one reorthogonalization pass, and
+  then merged with the existing final inverse-square-root cleanup. The ordered
+  selector explicitly rejects `residual_injection_cutoff > 0`, so it does not
+  fold in broad near-gausslet injection redesign.
+
+Validation / evidence:
+- Doer validation: `git diff --check`; package load; H2 R3 augmented endpoint
+  `52/52`; H2 supplemented facade/readback `67/67` with kinetic, `unit_U`,
+  one-body, and `V` deltas all `0.0`; source-backed Cr2 sector probe matching
+  the accepted ordered-MGS measurement. Manager reran `git diff --check` and
+  the H2 R3 augmented/facade gate.
+- Cr2 sector evidence for the source-backed option: default residual dimension
+  `136`, broad columns `126`, `K_min = 0.4046`, `H1_min = -7.4587`;
+  compactness-only residual dimension `30`, broad columns `0`,
+  `K_min = 3.0271`, `H1_min = -5.7936`; ordered MGS residual dimension `30`,
+  owner counts `15,15`, broad columns `0`, near-fraction counts above `1e-4`,
+  `1e-3`, and `1e-2` all `0`, non-injected `G' S R = 4.26e-14`,
+  `R' S R-I = 8.15e-10`, `K_min = 3.0271`, and `H1_min = -5.7936`.
+- The bounded Cr2 HF replay was intentionally not rerun for this source pass:
+  the source-backed sector result matches the accepted measurement, while HF is
+  an expensive separate gate.
+
+Goal advancement:
+- MT4/LT5: moves the Cr2 collapse fix from ignored-probe evidence into a
+  controlled internal construction option. The implementation isolates compact
+  owner-local residual corrections before broad near-gausslet candidates can
+  affect the RG/MWG residual subspace.
+- LT6: preserves public and artifact discipline. No production default, public
+  driver input, artifact schema, provenance key, or Cr2 production claim was
+  added.
+
+Risk / guardrail:
+- The option is diatomic/tail-metric dependent through the compactness input and
+  remains unsuitable as a generic molecule-wide default. Broad near-gausslet
+  fate remains unresolved and must not be silently treated as residual-Gaussian
+  MWG channels by this pass.
+
+Carrying-cost result:
+- source line delta: `+85 / -5`, net `+80` in
+  `src/cartesian_residual_gaussians/residual_basis.jl`.
+- deleted: none.
+- simplified: ordered selection is one private branch shared through the
+  existing residual-basis construction seam.
+- quarantined: non-injected/default-off only.
+- exact remaining blocker: decide whether to run a separately justified Cr2 HF
+  replay on the source-backed option and then design broad near-gausslet fate
+  or artifact provenance only after that evidence is accepted.

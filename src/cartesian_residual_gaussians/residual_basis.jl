@@ -35,6 +35,11 @@ function _rg_weighted_contracted_tail(orbital, distance)
     weights = coefficients ./ max(sum(coefficients), eps(Float64))
     return sum(weights .* exp.(-Float64.(orbital.exponents) .* distance^2))
 end
+function _rg_weighted_width(orbital)
+    coefficients = abs.(Float64.(orbital.coefficients))
+    weights = coefficients ./ max(sum(coefficients), eps(Float64))
+    return sum(weights .* inv.(sqrt.(Float64.(orbital.exponents))))
+end
 function residual_candidate_owner(center, nuclei)
     matches = findall(==(center), nuclei)
     length(matches) == 1 ||
@@ -83,6 +88,26 @@ function residual_gaussian_compactness_keep_mask(residual_compactness, candidate
     all(isfinite, values) || throw(ArgumentError("residual-Gaussian compactness values must be finite"))
     return values .<= cutoff
 end
+function residual_gaussian_compactness_selector(residual_compactness)
+    isnothing(residual_compactness) && return :owner_local_residual_occupation
+    return hasproperty(residual_compactness, :selector) ?
+        Symbol(getproperty(residual_compactness, :selector)) : :owner_local_residual_occupation
+end
+function residual_gaussian_order_values(residual_compactness, candidate_count, candidate_centers, candidate_owner_indices)
+    isnothing(residual_compactness) &&
+        throw(ArgumentError("ordered compact-first residual selection requires residual_compactness"))
+    hasproperty(residual_compactness, :supplement) ||
+        throw(ArgumentError("ordered compact-first residual selection requires residual_compactness.supplement"))
+    supplement = getproperty(residual_compactness, :supplement)
+    length(supplement.orbitals) == candidate_count ||
+        throw(DimensionMismatch("residual-Gaussian compactness supplement count mismatch"))
+    return (;
+        width = Float64[_rg_weighted_width(orbital) for orbital in supplement.orbitals],
+        midpoint_tail = residual_gaussian_candidate_tail_compactness_values(
+            supplement, candidate_centers, candidate_owner_indices, :midpoint_weighted_tail),
+        other_center_tail = residual_gaussian_candidate_tail_compactness_values(
+            supplement, candidate_centers, candidate_owner_indices, :other_center_weighted_tail))
+end
 function canonicalize_residual_signs!(T_A, T_G)
     for column in axes(T_A, 2)
         row = argmax(abs.(view(T_A, :, column)))
@@ -96,6 +121,8 @@ end
 residual_gaussian_overlap(T_G, T_A, X, S_AA) =
     transpose(T_G) * T_G + transpose(T_G) * X * T_A +
     transpose(T_A) * transpose(X) * T_G + transpose(T_A) * S_AA * T_A
+residual_gaussian_inner(lG, lA, rG, rA, X, S_AA) =
+    dot(lG, rG) + dot(lG, X * rA) + dot(lA, transpose(X) * rG) + dot(lA, S_AA * rA)
 injection_complement(B, nG) = size(B, 2) == 0 ? Matrix{Float64}(I, nG, nG) :
     (qr(B).Q * I)[:, (size(B, 2) + 1):end]
 injection_complement(residual) = injection_complement(residual.injected_G, residual.base_dimension)
@@ -128,6 +155,41 @@ function owner_residual_gaussian_block(X, S_AA, owner_indices, owner, nA, cutoff
         String["r$(owner)_$(column)_$(index)" for (column, index) in pairs(indices)] :
         String["r$(owner)_mode$(column)" for column in eachindex(natural)]
     return (; owner, T_A, occupations = Float64[values[natural]...], labels)
+end
+function owner_ordered_mgs_residual_gaussian_block(X, S_AA, owner_indices, owner, nA, cutoff,
+    tau_neg_abs, tau_neg_rel, order_values; candidate_keep = trues(nA))
+    indices = [index for index in findall(==(owner), owner_indices) if candidate_keep[index]]
+    isempty(indices) && return nothing
+    accepted_G = Vector{Vector{Float64}}()
+    accepted_A = Vector{Vector{Float64}}()
+    occupations = Float64[]
+    labels = String[]
+    order = sort(indices; by = index ->
+        (order_values.width[index], order_values.midpoint_tail[index],
+            order_values.other_center_tail[index], index))
+    for index in order
+        G = -Vector{Float64}(X[:, index])
+        A = zeros(Float64, nA); A[index] = 1.0
+        for _pass in 1:2, column in eachindex(accepted_A)
+            coeff = residual_gaussian_inner(
+                accepted_G[column], accepted_A[column], G, A, X, S_AA)
+            G .-= coeff .* accepted_G[column]
+            A .-= coeff .* accepted_A[column]
+        end
+        residual_norm = residual_gaussian_inner(G, A, G, A, X, S_AA)
+        check_residual_gaussian_metric(
+            [residual_norm], tau_neg_abs, tau_neg_rel, "owner-local ordered residual metric")
+        residual_norm = max(residual_norm, 0.0)
+        residual_norm > cutoff || continue
+        scale = inv(sqrt(residual_norm))
+        G .*= scale; A .*= scale
+        push!(accepted_G, G)
+        push!(accepted_A, A)
+        push!(occupations, residual_norm)
+        push!(labels, "r$(owner)_mgs$(length(accepted_A))_$(index)")
+    end
+    isempty(accepted_A) && return nothing
+    return (; owner, T_A = hcat(accepted_A...), occupations, labels)
 end
 function injection_principal_block(X, S_AA, owner_indices, owner, nA, candidate_overlap_tol, tau_abs, tau_rel; candidate_keep = trues(nA))
     indices = [index for index in findall(==(owner), owner_indices) if candidate_keep[index]]
@@ -247,17 +309,36 @@ function build_residual_gaussian_basis(base_dimension::Integer, X, S_AA,
         throw(DimensionMismatch("residual-Gaussian supplement overlap has wrong shape"))
     cutoff = Float64(residual_occupation_cutoff)
     injection_cutoff = Float64(residual_injection_cutoff)
+    selector = residual_gaussian_compactness_selector(residual_compactness)
+    selector in (:owner_local_residual_occupation, :ordered_compact_first_mgs) ||
+        throw(ArgumentError("unknown residual-Gaussian selector $(selector)"))
     candidate_keep = residual_gaussian_compactness_keep_mask(
         residual_compactness, candidate_count, candidate_centers, candidate_owner_indices)
+    injection_cutoff > 0 && selector == :ordered_compact_first_mgs &&
+        throw(ArgumentError("ordered compact-first residual selection does not support residual injection"))
     injection_cutoff > 0 && return build_injected_residual_gaussian_basis(
         base_dimension, X, S_AA, candidate_labels, candidate_centers,
         candidate_owner_indices, cutoff, injection_cutoff, candidate_overlap_atol,
         candidate_overlap_rtol, injected_overlap_atol, injected_overlap_rtol,
         tau_neg_abs, tau_neg_rel, tau_merge_abs, tau_merge_rel,
         orthogonality_atol, identity_atol, candidate_keep)
-    owner_blocks = filter(!isnothing, [owner_residual_gaussian_block(
-        X, S_AA, candidate_owner_indices, owner, candidate_count, cutoff,
-        tau_neg_abs, tau_neg_rel; candidate_keep) for owner in unique(candidate_owner_indices)])
+    owner_blocks, selection_rule, orientation = if selector == :ordered_compact_first_mgs
+        order_values = residual_gaussian_order_values(
+            residual_compactness, candidate_count, candidate_centers, candidate_owner_indices)
+        blocks = filter(!isnothing, [owner_ordered_mgs_residual_gaussian_block(
+            X, S_AA, candidate_owner_indices, owner, candidate_count, cutoff,
+            tau_neg_abs, tau_neg_rel, order_values; candidate_keep)
+            for owner in unique(candidate_owner_indices)])
+        blocks, :owner_local_ordered_compact_first_mgs,
+            :owner_local_ordered_mgs_final_merge_inverse_sqrt
+    else
+        blocks = filter(!isnothing, [owner_residual_gaussian_block(
+            X, S_AA, candidate_owner_indices, owner, candidate_count, cutoff,
+            tau_neg_abs, tau_neg_rel; candidate_keep)
+            for owner in unique(candidate_owner_indices)])
+        blocks, :owner_local_residual_occupation,
+            :owner_local_residual_occupation_final_merge_lowdin
+    end
     isempty(owner_blocks) &&
         throw(ArgumentError("residual-Gaussian candidate metric has no retained directions"))
     T_A0 = hcat((block.T_A for block in owner_blocks)...)
@@ -274,6 +355,5 @@ function build_residual_gaussian_basis(base_dimension::Integer, X, S_AA,
         residual_occupations, owner_counts, residual_labels, T_G, T_A,
         nothing, nothing, cutoff, 0.0, Float64(tau_neg_abs),
         Float64(tau_neg_rel), Float64(tau_merge_abs), Float64(tau_merge_rel),
-        :owner_local_residual_occupation,
-        :owner_local_residual_occupation_final_merge_lowdin, :largest_T_A_entry_positive)
+        selection_rule, orientation, :largest_T_A_entry_positive)
 end
