@@ -21005,3 +21005,72 @@ Carrying-cost result:
   protected-original injection set using representability plus fake-RDM/weight
   importance, or runs an `ns` ladder to see whether these low-weight but
   central broad modes become representable in a larger main basis.
+
+## Cartesian Hamiltonian Producer Pass 238 - Reduced Protected-Original Geometry Audit
+
+Commit(s):
+- this commit - Record reduced protected-original geometry audit
+
+Summary:
+- Accepted the measurement-only reduced protected-original replacement
+  geometry audit for current Cr2 `ns=7,lmax=2`. The useful policy candidate is
+  not fake-RDM alone and not a fixed top-`N` prefix. It is the dual diagnostic
+  cut: keep broad original directions only when they are both important enough
+  by the fake-RDM proxy and stably represented by `M = [G, R_compact]`.
+- The tested rule, `fake-RDM >= 1e-3` and representability `>= 0.99`, keeps
+  the `30` protected originals plus `88` broad directions and drops `20`
+  broad directions. The resulting replacement geometry
+  `F = [Z, M Q_perp]` is clean: the complement is well-conditioned, the full
+  fixed space is orthonormal to roundoff, and the protected original span is
+  preserved to roundoff.
+
+Validation / evidence:
+- Doer wrote ignored probe
+  `tmp/work/cr2_reduced_protected_original_injection_geometry_probe.jl` and
+  outputs under
+  `/Users/srw/dmrgtmp/cr2_reduced_protected_original_injection_geometry_fbfb88b36/`.
+  Manager inspected `summary.txt`, `geometry_diagnostics.tsv`,
+  `protected_span_diagnostics.tsv`, `owner_channel_counts.tsv`, and
+  `dropped_directions.tsv`.
+- Dimensions: `G=6675`, `R_compact=30`, `M=6705`, protected originals `30`,
+  kept broad `88`, dropped broad `20`, `Z=118`, and `Q_perp=6587`.
+  The reduced `B = M' S Z` singular min/median/max are about
+  `0.9910 / 0.99991 / 1.0`, with condition about `1.009` and no singular
+  values below `0.99`.
+- Orthogonality and span checks are clean: blockwise `||F' S F-I||_inf` about
+  `9.1e-12`, `||Z' S M Q_perp||_inf` about `8.4e-16`,
+  `Q_perp` identity error about `2.4e-15`, protected/complement overlap about
+  `8.4e-16`, and protected-span singular min/max `1.0 / 1.0`.
+- Fake-RDM weight accounting supports the reduced set as an accuracy-level
+  choice rather than arbitrary pruning: kept broad directions carry about
+  `92.60` fake-RDM weight while the dropped broad directions carry about
+  `0.831`. The dropped directions are mostly broad `s`, `px`, and `py` plus
+  one `dyy`, including the four prior worst representability modes.
+
+Goal advancement:
+- MT4/LT6: advances the protected-original design from a full-set failure to
+  a plausible reduced-set target. Current `ns=7` does not support the entire
+  original broad supplement set, but it does support a high-importance,
+  representable broad subset over the compact main space.
+- The next source question is now precise: whether to amend
+  `HP-RG-PROTECT-INJECT-DESIGN-01` into a source slice for reduced
+  protected-original replacement, with fake-RDM/representability still named
+  as diagnostic gates and not broad RG/MWG admission rules.
+
+Risk / guardrail:
+- No source edits, public wiring, artifact/provenance/schema work, injection
+  implementation, HF replay, screened-reference work, Vee scaling, or Cr2
+  production claim. The fake-RDM proxy remains diagnostic authority only until
+  a source amendment explicitly defines any selection rule and provenance
+  requirements.
+
+Carrying-cost result:
+- tracked source line delta: 0.
+- deleted: none.
+- simplified: the immediate Cr2 path no longer has to choose only between
+  full failed injection and an `ns` ladder; there is a viable reduced geometry
+  target.
+- quarantined: ignored geometry probe and `/Users/srw/dmrgtmp` output tables.
+- exact remaining blocker: decide whether to write a source-design amendment
+  for reduced protected-original replacement, or first compare this reduced
+  set against an `ns` representability ladder.
