@@ -395,6 +395,16 @@ Approved robustness lane:
   injection-enabled artifact writing, MWG channels for injected directions,
   global residual selection, spectral pruning, full HF, Cr2 artifact/workflow,
   or committed tests.
+- `HP-RG-PROTECT-INJECT-DESIGN-01` approves only the protected-original
+  compact-main injection design. It is not a source slice. The intended source
+  direction is: build compact/narrow RGs first with the existing ordered
+  compact-first selector; define `M = [G, R_compact]`; construct protected
+  original Gaussian directions first; Gram-clean remaining originals in the
+  Gaussian overlap metric; require stable representability by
+  `B = M' S Z`; and inject by replacement `F = [Z, M Q_perp]`. A good-norm
+  original direction that fails representability is a main-basis insufficiency
+  diagnostic, not an MWG residual opportunity. Any source pass needs a fresh
+  implementation amendment with exact files, validation, and line budget.
 
 ## Compact Hamiltonian Artifact Manifest
 

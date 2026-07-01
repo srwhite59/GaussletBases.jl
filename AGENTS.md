@@ -1024,8 +1024,9 @@ Approved Residual Gaussian module surfaces:
   automatic pruning, spectral-guard implementation, MWG/IDA convention
   changes, full HF, dense Vee/solver work, Cr2 full Hamiltonian, Cr2 artifact,
   or Cr2-specific workflow.
-- `HP-RG-INJECT-FN-01` approves only a default-off in-memory implementation of
-  the injection-plus-RG hybrid in `src/cartesian_residual_gaussians/`:
+- `HP-RG-INJECT-FN-01` approves only the historical default-off direct
+  `G`-injection implementation of the injection-plus-RG hybrid in
+  `src/cartesian_residual_gaussians/`:
   `residual_basis.jl`, `augmented_operators.jl`, and `mwg_interaction.jl`;
   `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` is
   allowed only for narrow internal keyword plumbing, same-construction
@@ -1039,6 +1040,19 @@ Approved Residual Gaussian module surfaces:
   artifact writing, MWG channels for injected directions, global residual
   selection, spectral pruning, full HF, dense Vee/solver work, Cr2 artifact or
   workflow, route/shellification/raw-block changes, or committed tests.
+- `HP-RG-PROTECT-INJECT-DESIGN-01` is design-only authority for the current
+  compact-first injection direction. It does not belong in the approved source
+  ID list and does not approve implementation. The design builds compact/narrow
+  RGs first, defines `M = [G, R_compact]`, then injects original supplement
+  Gaussian directions by replacement `F = [Z, M Q_perp]`. Protected narrow
+  originals are orthonormalized first in original GTO overlap without
+  subtracting `M`; remaining originals are orthogonalized against that block,
+  Gram-cleaned in Gaussian overlap, and tested by `B = M' S Z` for
+  representability in the compact main space. A good-norm original that fails
+  this representability test is an insufficient-main-basis diagnostic and must
+  not become a broad MWG residual Gaussian. Do not turn on the existing direct
+  `G`-injection path as-is for this design; any source work needs a fresh
+  source amendment with exact files, validation, and line budget.
 
 Non-negotiable RG guardrails:
 

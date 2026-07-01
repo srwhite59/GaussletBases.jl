@@ -3990,9 +3990,9 @@ as part of this lane.
 
 ### HP-RG-INJECT-FN-01 — default-off injection-plus-RG implementation
 
-Status: approved source authority. This is default-off in-memory
-implementation authority, not approval for a production default or public
-workflow.
+Status: historical default-off direct `G`-injection source authority. This is
+not the current compact-first implementation target and is not approval for a
+production default or public workflow.
 
 Decision: the first injection audit did not remove the current Cr2 low-H1
 residual sector, but injection remains the better general construction because
@@ -4084,6 +4084,78 @@ source commit and report the blocker. If exact one-body transformation into
 `[F, R]` cannot be done without storing an unacceptable dense `nG x nG`
 persistent transform/workspace, stop and request a compact-transform design
 amendment.
+
+### HP-RG-PROTECT-INJECT-DESIGN-01 — protected-original compact-main injection design
+
+Status: approved design authority only. This is not source authority and does
+not approve tests, artifact/schema/provenance changes, driver input, public
+API, or a Cr2 production claim.
+
+Purpose: replace the old "turn on injection over `G`" framing for the
+compact-first Cr2 direction. The intended construction first builds compact
+or narrow residual Gaussians with the existing ordered compact-first selector,
+then injects original Gaussian supplement directions by replacement inside the
+compact main space:
+
+```text
+G            = original orthonormal terminal gausslet/final-PQS basis
+R_compact    = compact/narrow RGs selected first
+M            = [G, R_compact]
+Z            = protected and accepted original Gaussian directions
+B            = M' S Z
+F            = [Z, M Q_perp]
+```
+
+`Q_perp` is an orthonormal complement to `B` inside the coordinate space of
+`M`, satisfying `B' Q_perp = 0`. Injection is replacement, not append.
+
+Approved design:
+
+- build compact/narrow RGs first with the existing ordered compact-first
+  selector, without changing that selector;
+- use original supplement Gaussians as injection candidates, including the
+  originals corresponding to accepted compact RGs;
+- put protected narrow originals first and orthonormalize them among
+  themselves in the original GTO overlap metric, without subtracting `M`;
+- orthogonalize remaining originals against the protected block;
+- Gram-rank-clean the remaining block using a candidate-overlap rule such as
+  `max(atol, rtol * maxeig)`;
+- separately test injection representability by checking rank/condition of
+  `B = M' S Z`;
+- if a good-norm original Gaussian direction is not stably represented by
+  `M`, stop and report insufficient compact main-basis support, including
+  failed owner/channel labels;
+- preserve the protected narrow-original span. A final well-conditioned
+  Lowdin/inverse-square-root cleanup may make only a tiny rotation, and must
+  report protected-span overlap before and after cleanup;
+- broad non-injectable candidates must not become MWG residual Gaussians.
+
+Gaussian Gram cleanup and injection representability are distinct policies.
+The first removes Gaussian linear-dependence directions; the second asks
+whether real Gaussian directions are supported by the compact main basis.
+
+Cr2 `lmax = 2` diagnostics for a later audit or source handoff must report
+`ns`, `lmax`, owners, candidate labels/channels, protected counts by
+owner/channel, Gaussian Gram spectra and discarded directions, remaining broad
+counts by owner/channel, failed representability directions by owner/channel
+especially `d`-like channels, rank/condition of `B = M' S Z`, protected-span
+preservation, and explicit confirmation that broad non-injectable directions
+were not converted into MWG residual channels.
+
+Forbidden:
+
+- source edits under this ID;
+- public API or driver changes;
+- artifact/provenance/schema changes;
+- changing current ordered compact-first selector behavior;
+- turning on the existing direct `G`-injection implementation as-is;
+- broad non-injectable candidates becoming MWG RGs;
+- Cr2 production claims.
+
+Implementation rule: any future source blurb must cite this design ID and must
+request fresh source authority with exact files, validation, line budget, and
+failure rule. Do not implement protected-original compact-main injection under
+`HP-RG-INJECT-FN-01`.
 
 ## Approved For Cartesian Gaussian Raw-Block Nuclear Owner
 

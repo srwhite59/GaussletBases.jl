@@ -62,8 +62,12 @@ module, or object names in the new owner.
 - `HP-RG-INJECT-AUDIT-01` - measurement-only optional injection audit.
 - `HP-RG-INJECT-FN-01` - default-off in-memory injection-plus-RG
   implementation.
+- `HP-RG-PROTECT-INJECT-DESIGN-01` - design-only protected-original
+  injection over compact main space.
 
-These IDs are approved for implementation only within the surfaces below.
+Implementation IDs in this list are approved only within the surfaces below.
+Design-only IDs record authority for future source blurbs but do not approve
+implementation by themselves.
 
 ## Ownership
 
@@ -242,14 +246,24 @@ proposal. It is not production source authority and does not change the
 approved RG defaults, MWG/IDA convention, artifacts, driver workflow, or
 public API.
 
-`HP-RG-INJECT-FN-01` approves the default-off in-memory implementation of the
-same scheme in the RG owner. It may add the numerical authority needed for an
-injected replacement base sector and exact one-body transformation into
-`[F, R]`, but injected directions must not become residual-GTO/MWG channels.
-When `residual_injection_cutoff <= 0`, the current production RG behavior must
-remain unchanged within roundoff. This ID does not approve driver input,
-public API, artifact schema/provenance changes, production-default changes,
-full HF, Cr2 workflow, or spectral pruning.
+`HP-RG-INJECT-FN-01` approves the historical default-off in-memory direct
+`G`-injection implementation in the RG owner. It may add the numerical
+authority needed for an injected replacement base sector and exact one-body
+transformation into `[F, R]`, but injected directions must not become
+residual-GTO/MWG channels. When `residual_injection_cutoff <= 0`, the current
+production RG behavior must remain unchanged within roundoff. This ID does not
+approve driver input, public API, artifact schema/provenance changes,
+production-default changes, full HF, Cr2 workflow, or spectral pruning.
+
+`HP-RG-PROTECT-INJECT-DESIGN-01` records the current compact-first direction:
+build compact/narrow RGs first, define `M = [G, R_compact]`, then inject
+original supplement Gaussians by replacement `F = [Z, M Q_perp]`. Protected
+narrow originals are orthonormalized first in original GTO overlap, remaining
+originals are Gram-cleaned separately from injection representability, and
+`B = M' S Z` must be full rank and well conditioned. If a good-norm broad
+original is not represented by `M`, that is an insufficient-main-basis
+diagnostic, not permission to make the candidate a MWG residual Gaussian. This
+ID is design-only and requires a later source amendment before implementation.
 
 Do not approve a vague global entry point such as
 `stabilize_residual_metric(...)`. Global raw-candidate symmetric Lowdin and

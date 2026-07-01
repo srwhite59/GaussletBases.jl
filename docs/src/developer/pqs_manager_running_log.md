@@ -20787,3 +20787,62 @@ Carrying-cost result:
   likely next lane is broad-candidate fate classification/provenance design,
   but only after explicitly separating "internal diagnostic option" from any
   saved artifact or public workflow.
+
+## Cartesian Hamiltonian Producer Pass 235 - Protected-Original Compact-Main Injection Design
+
+Commit(s):
+- this commit - Approve protected-original compact-main injection design
+
+Summary:
+- Approved `HP-RG-PROTECT-INJECT-DESIGN-01` as docs-only design authority for
+  the next injection concept. This supersedes the idea of merely turning on
+  the existing default-off direct `G`-injection path for the compact-first Cr2
+  lane.
+- The durable construction is now: build compact/narrow RGs first with the
+  existing ordered compact-first selector; define `M = [G, R_compact]`; form a
+  protected block from the original Gaussians corresponding to accepted compact
+  RGs; Gram-clean remaining original Gaussian directions separately; test
+  representability by `B = M' S Z`; and inject by replacement
+  `F = [Z, M Q_perp]`, not append.
+- The policy explicitly says that a good-norm original Gaussian direction that
+  fails representability in `M` is an insufficient compact-main-basis
+  diagnostic. It must not be converted into a broad residual-Gaussian/MWG
+  channel.
+
+Validation / evidence:
+- Docs changed: `residual_gaussian_injection_hybrid.md`, `registry.md`,
+  `current.md`, `implementation_slices.md`,
+  `residual_gaussian_domain_module.md`, `AGENTS.md`, and this running log.
+- The amendment records the required definitions of `G`, `R_compact`, `M`,
+  protected/broad originals, `Z`, `B = M' S Z`, `Q_perp`, and
+  `F = [Z, M Q_perp]`.
+- It separates Gaussian Gram cleanup from injection representability, requires
+  protected-span preservation diagnostics, and names Cr2 `lmax = 2`
+  owner/channel failure reporting as a required future diagnostic.
+
+Goal advancement:
+- LT6: replaces cutoff/injection toggling with a clearer basis-fate policy.
+  Compact RGs remain the protected local correction space; original Gaussians
+  are then tested as representable directions in the improved main basis.
+- MT4: preserves the ordered compact-first evidence while preventing broad
+  non-injectable supplement directions from re-entering the MWG residual
+  channel.
+
+Risk / guardrail:
+- This is design authority only. It approves no source edits, tests, driver
+  input, artifact/provenance/schema change, public API, Cr2 production claim,
+  or change to the current ordered compact-first selector.
+- `HP-RG-INJECT-FN-01` remains historical direct `G`-injection authority and is
+  not the implementation authority for protected-original compact-main
+  injection.
+
+Carrying-cost result:
+- source line delta: 0.
+- deleted: none.
+- simplified: authority story for broad candidate fate is sharper; old
+  direct-injection wording is marked historical where needed.
+- quarantined: source implementation, public/default behavior, artifacts, and
+  Cr2 production claims.
+- exact remaining blocker: a future source amendment must name exact files,
+  validation, line budget, and failure rule for protected-original
+  compact-main injection before any implementation blurb is issued.

@@ -260,6 +260,19 @@ Approved Residual Gaussian robustness lane:
   `residual_injection_cutoff <= 0` and must not change driver input, public
   API, artifact schema, production defaults, MWG channels for injected
   directions, spectral pruning, full HF, or Cr2 workflow.
+- `HP-RG-PROTECT-INJECT-DESIGN-01` is the current design authority for the
+  compact-first Cr2 injection direction. It is design-only authority, not
+  source authority. The construction first builds compact/narrow RGs with the
+  existing ordered compact-first selector, defines `M = [G, R_compact]`, then
+  injects original supplement Gaussian directions by replacement
+  `F = [Z, M Q_perp]`. Protected narrow originals are orthonormalized first in
+  original GTO overlap without subtracting `M`; remaining originals are
+  orthogonalized against that protected block, Gram-rank-cleaned, and then
+  tested for representability by `B = M' S Z`. Good-norm originals that fail
+  this projection test mean insufficient compact main-basis support and must
+  not be converted into broad MWG RG channels. Do not turn on the existing
+  direct `G`-injection path as-is for this design, and do not issue source
+  work without a fresh implementation authority.
 
 Approved stale complete-core-shell RHF retirement:
 

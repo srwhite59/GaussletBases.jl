@@ -1,11 +1,12 @@
 # Residual Gaussian Injection Hybrid Memo
 
 Status: design memo plus approved measurement-only audit authority under
-`HP-RG-INJECT-AUDIT-01` and approved default-off in-memory implementation
-authority under `HP-RG-INJECT-FN-01`. This document records the proposed
-optional injection-plus-residual construction for near-gausslet GTO supplement
-directions. It does not approve a production default, artifact schema changes,
-driver inputs, public API, full HF, or Cr2 workflow.
+`HP-RG-INJECT-AUDIT-01`, historical default-off `G`-injection authority under
+`HP-RG-INJECT-FN-01`, and the current protected-original compact-main design
+authority under `HP-RG-PROTECT-INJECT-DESIGN-01`. The protected-original design
+is the current direction for compact-first RG/injection work. This document
+does not approve source edits for that new design, a production default,
+artifact schema changes, driver inputs, public API, full HF, or Cr2 workflow.
 
 ## Motivation
 
@@ -334,8 +335,12 @@ problem. A later spectral stop-and-report gate may still be needed.
 
 ## HP-RG-INJECT-FN-01 - Default-Off In-Memory Injection Implementation
 
-Status: approved source authority for default-off in-memory implementation.
-This is not approval for a production default or public workflow.
+Status: historical default-off `G`-injection source authority. It is not the
+current compact-first implementation target and must not be used to turn on
+the existing injection path as-is for the protected-original design below.
+Any implementation blurb for the current Cr2 compact-first direction must use
+`HP-RG-PROTECT-INJECT-DESIGN-01` as governing design and must name a fresh
+source surface or source-amendment authority.
 
 Approved source surface:
 
@@ -428,7 +433,9 @@ workspace persistently, stop and request a compact-transform design amendment.
 - Candidate GTO overlap rank is not residual occupation.
 - Residual occupation is not numerical rank and not residual integral weight.
 - Injected directions are not residual Gaussians.
-- Injected directions are not added to `G`; they replace a subspace of `G`.
+- Injected directions are not appended. In the historical direct-injection
+  path they replace a subspace of `G`; in the protected-original compact-main
+  design they replace a subspace of `M = [G, R_compact]`.
 - Global injection merging is not permission for global residual selection.
 - Exact one-body injection is not a new residual-MWG density convention.
 - A kinetic or `H1_RR` spectral guard remains a later safety gate, not the
@@ -437,6 +444,162 @@ workspace persistently, stop and request a compact-transform design amendment.
 ## Source Authority Status
 
 `HP-RG-INJECT-FN-01` approves only the default-off in-memory source lane
-above. It does not approve changing the production default, artifact
+above as historical `G`-injection authority. It does not approve the protected
+compact-main construction, changing the production default, artifact
 provenance, driver workflow, public API, full HF, Cr2 artifact/workflow, or
 spectral pruning policy.
+
+## HP-RG-PROTECT-INJECT-DESIGN-01 - Protected-Original Injection Over Compact Main Space
+
+Status: approved design authority only. This is a docs-only amendment before
+any implementation blurb. It approves no source edits, no tests, no artifact
+schema/provenance changes, no driver input, no public API, and no Cr2
+production claim.
+
+### Purpose
+
+The previous injection framing treated injection as replacement inside the
+original gausslet sector `G`. That is not the right construction for the
+compact-first Cr2 path. The compact-first selector first builds a protected
+local correction space from narrow residual Gaussians. Injection should then
+ask whether the original Gaussian supplement can be represented by that
+improved main space.
+
+Plainly:
+
+```text
+build compact RGs first;
+define M = [G, R_compact];
+inject original Gaussian functions by replacing directions inside M;
+do not make broad non-injectable originals into MWG residual Gaussians.
+```
+
+### Definitions
+
+- `G`: the original orthonormal terminal gausslet/final-PQS basis.
+- `R_compact`: compact or narrow residual-Gaussian functions selected first by
+  the existing ordered compact-first selector. This design does not change the
+  current ordered selector behavior.
+- `M = [G, R_compact]`: the compact main space used as the parent space for
+  injection. `M` is the space whose directions may be replaced.
+- `A_all`: the original supplement Gaussian candidates, before residualizing
+  against `G` or `M`.
+- `A_protected`: the original Gaussian functions corresponding to the accepted
+  compact/narrow RGs. These are protected originals.
+- `A_broad`: remaining original supplement Gaussian candidates after the
+  protected originals are identified.
+- `Z_protected`: an orthonormal basis for `A_protected` in the original GTO
+  overlap metric. It is built without subtracting `M`.
+- `Z_broad`: accepted remaining original directions after orthogonalization
+  against `Z_protected`, Gaussian Gram cleanup, and representability testing.
+- `Z = [Z_protected, Z_broad]`: the full injected original-Gaussian block.
+- `B = M' S Z`: the projection of injected originals into the compact main
+  space.
+- `Q_perp`: an orthonormal complement to `B` inside the coordinate space of
+  `M`, satisfying `B' Q_perp = 0`.
+- `F = [Z, M Q_perp]`: the injected fixed sector. This is replacement, not
+  append.
+
+### Algorithm
+
+1. Build compact/narrow RGs first using the existing ordered compact-first
+   selector. Do not change that selector in this design pass.
+2. Define `M = [G, R_compact]`.
+3. Use the original supplement Gaussians as injection candidates, including
+   originals corresponding to accepted compact RGs.
+4. Put protected narrow originals first. Orthonormalize them among themselves
+   in original GTO overlap. Do not subtract `M` from this protected block.
+5. Orthogonalize all remaining original Gaussians against the protected block.
+6. Gram-rank-clean the remaining block in its own Gaussian overlap metric,
+   using a candidate-overlap rule such as
+   `max(candidate_overlap_atol, candidate_overlap_rtol * maxeig)`. This
+   removes linearly dependent Gaussian directions only.
+7. Test injection representability in the compact main space by forming
+   `B = M' S Z`. `B` must be full rank and acceptably conditioned.
+8. If representability passes, inject by replacement:
+
+   ```text
+   F = [Z, M Q_perp]
+   ```
+
+   not by appending `Z` to `M`.
+9. Build any remaining MWG residual channels only from compact/local
+   directions that remain approved as true residuals. Broad non-injectable
+   candidates must not become MWG RGs.
+
+### Gaussian Gram Cleanup Versus Injection Representability
+
+These are different tests:
+
+- Gaussian Gram cleanup asks whether an original Gaussian candidate direction
+  is a real independent direction in the supplement overlap metric. Tiny
+  eigenvalues here mean raw Gaussian linear dependence or numerical junk.
+- Injection representability asks whether a real Gaussian direction is stably
+  represented by the compact main space `M`. This is tested by `B = M' S Z`.
+
+A direction can pass Gaussian Gram cleanup and still fail injection
+representability. That failure must not be interpreted as an opportunity to
+make a broad residual-Gaussian/MWG channel.
+
+### Failure Interpretation
+
+If a good-norm original Gaussian direction is not stably represented by
+`M = [G, R_compact]`, stop and report:
+
+```text
+insufficient compact main-basis support for desired Gaussian addition
+```
+
+For Cr2 `lmax = 2`, this is a useful diagnostic. At small `ns` such as `4` or
+`5`, `d`-like original directions may be real Gaussian directions but poorly
+represented by the current main basis. The correct action is to report the
+failed owner/channel and improve the main gausslet basis, for example by
+increasing `ns`, not to force a broad RG/MWG residual.
+
+### Protected-Span Preservation
+
+The invariant is protected-span preservation, not exact column identity.
+`Z_protected` should remain the protected narrow original span. A final
+well-conditioned Lowdin or inverse-square-root cleanup may make a tiny
+rotation, but diagnostics must show that the protected subspace overlap before
+and after cleanup is near identity and that broad directions did not
+substantially rotate the protected span away.
+
+Required diagnostic:
+
+```text
+sigma(proj(final_Z_protected_span, initial_Z_protected_span))
+```
+
+or an equivalent principal-angle/subspace-overlap report, plus the final
+orthonormality and condition of the cleanup.
+
+### Cr2 `lmax = 2` Diagnostics
+
+A Cr2 `lmax = 2` protected-original injection audit or future implementation
+handoff must report:
+
+- `ns`, `lmax`, owners, and candidate labels/channels;
+- protected original counts by owner and angular channel;
+- Gaussian Gram eigenvalue ranges and discarded Gram-null directions;
+- broad remaining counts by owner/channel after protected-block
+  orthogonalization;
+- failed representability directions by owner/channel, especially `d`-like
+  channels;
+- rank and condition of `B = M' S Z`, globally and by useful owner/channel
+  summaries;
+- protected-span preservation before and after final cleanup;
+- final `F' S F`, `F' S R`, and `R' S R` errors if an in-memory construction
+  is attempted;
+- explicit statement that broad non-injectable candidates were not converted
+  into MWG residual channels.
+
+### Forbidden In This Design
+
+- source edits;
+- public API or driver changes;
+- artifact/provenance/schema changes;
+- changing current ordered compact-first selector behavior;
+- turning on the existing `G`-injection implementation as-is;
+- broad non-injectable candidates becoming MWG RGs;
+- Cr2 production claims.
