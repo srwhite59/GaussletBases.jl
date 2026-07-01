@@ -20346,3 +20346,67 @@ Carrying-cost result:
   default behavior until Cr2 HF/residual-occupation evidence shows the rule
   improves the actual energy failure rather than only the residual one-body
   spectrum.
+
+## Cartesian Hamiltonian Producer Pass 228 - Default-Off RG Compactness Filter
+
+Commit(s):
+- this commit - Add default-off RG compactness filter
+
+Summary:
+- Accepted the default-off internal compactness filter in
+  `src/cartesian_residual_gaussians/residual_basis.jl`, plus a compact design
+  amendment in the R3 residual-GTO/MWG design doc. The implementation adds
+  weighted-contracted tail metrics for diatomics and a candidate keep mask that
+  is shared by ordinary owner-local residual selection and injection principal
+  construction. Current default behavior remains unchanged when
+  `residual_compactness = nothing`.
+- The Cr2 measurement is the strongest signal so far that broad RG/MWG
+  residual channels were the immediate HF failure mechanism. With midpoint
+  weighted tail `<= 0.2`, the residual basis keeps the same `30` candidates
+  found by the audits, rejects/deferred `108` broad candidates, has no broad
+  retained RG modes, and the bounded Cr2 HF replay ends with zero residual
+  occupation. The saved bad UHF state had residual occupation about `3.7956`
+  and total energy `-2089.237075203`; the compactness HF replay ended at
+  `-2085.914282185`.
+
+Validation / evidence:
+- Doer ran `git diff --check`, package load, the focused H2 R3 augmented
+  one-body/facade gate (`52/52` and `67/67`), a Cr2 sector probe, and a Cr2
+  compactness HF probe. Manager inspected the source diff, caller shape,
+  Cr2 HF summary, and probe use, then reran `git diff --check`, package load,
+  and the focused H2 R3 gate. Manager did not rerun the Cr2 HF probe because
+  the doer run took about `1260 s`.
+- Compactness-enabled Cr2 sector: candidates `30`, residual dimension `30`,
+  owner counts `15,15`, injected dimension `0`, `K_RR` min about `3.027`,
+  low `H1_RR` starting at about `-5.794`, and lowest mode classified as
+  balanced-midbond compact rather than broad.
+
+Goal advancement:
+- MT4/LT5: validates the basis-selection hypothesis over the screened-reference
+  hypothesis for the immediate Cr2 collapse: preventing broad contracted
+  supplement functions from entering the MWG residual sector removes the
+  observed residual over-occupation in bounded HF.
+- LT6: preserves production caution. This is not a Cr2 production claim and
+  not a public/default behavior change. The option is an explicitly requested
+  internal construction gate until more cases and provenance decisions are
+  reviewed.
+
+Risk / guardrail:
+- The current compact supplemented artifact provenance does not record
+  compactness policy. Therefore compactness-filtered residual artifacts must
+  not be written through the current R3 writer without a separate artifact
+  provenance amendment. No public driver input, production default, Vee
+  scaling, screened-reference change, broad injection redesign, or Cr2
+  production claim is approved by this pass.
+- Live unrelated bloat-fixer WIP remained dirty in
+  `src/cartesian_contracted_parent_metrics/product_staged_metric_fallbacks.jl`;
+  it was not staged or committed with this pass.
+
+Carrying-cost result:
+- source lines in `residual_basis.jl`: `+62 / -9`, net `+53`.
+- docs design/running-log lines added to preserve the internal-only boundary.
+- simplified: compactness filtering is a single owner-local keep mask reused by
+  ordinary and injection selection.
+- exact remaining blocker: decide whether compactness should gain artifact
+  provenance and/or internal caller wiring after additional molecule/atom
+  checks. Until then, use it only through explicit low-level measurement paths.

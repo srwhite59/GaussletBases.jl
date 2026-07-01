@@ -350,6 +350,33 @@ contract because a retained residual mode may be a linear combination of
 several atom-local candidates. Full discarded owner spectra belong in ignored
 diagnostics unless a later consumer-driven artifact amendment promotes them.
 
+### Default-Off Compactness Selection Measurement Extension
+
+Cr2 diagnostics showed that broad contracted supplement directions can enter
+the ordinary residual-GTO/MWG sector and be over-occupied by HF. The R3
+residual constructor may therefore accept a default-off internal compactness
+gate for measurement and explicitly requested construction experiments.
+
+The approved compactness gate is candidate-local and owner-local:
+
+- current default behavior is unchanged when the gate is absent;
+- the gate acts before owner-local residual modes are accepted into the MWG
+  residual sector;
+- supported diagnostic metrics are weighted-contracted Gaussian tails for
+  diatomics, using primitive envelope `exp(-alpha*r^2)`, width
+  `1/sqrt(alpha)`, and absolute-coefficient weighted primitive tails;
+- the current Cr2 measurement candidate is midpoint weighted tail `<= 0.2`
+  or equivalent other-center weighted tail `<= 0.05`;
+- broad rejected candidates are deferred/discarded by this gate. Injection of
+  broad rejected directions remains a separate design question.
+
+This extension does not approve a public driver option, production default,
+artifact schema/provenance key, residual writer path, broad injection redesign,
+screened-reference change, Vee scaling, or Cr2 production claim. A
+compactness-filtered residual artifact must not be written through the current
+compact `supplement_provenance/` schema because that schema has no compactness
+provenance.
+
 ## R3-A Exact One-Body And Moment Assembly
 
 R3-A must assemble exact augmented operators by transforming raw `[G, A]`

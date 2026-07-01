@@ -29,11 +29,59 @@ residual_gaussian_candidate_labels(supplement) = String[String(orbital.label) fo
 residual_gaussian_candidate_centers(supplement) = NTuple{3,Float64}[residual_gaussian_center(orbital.center) for orbital in supplement.orbitals]
 terminal_residual_mixed_overlap(basis, bundles, supplement, block_builder, expansion) = block_builder(basis, bundles, supplement, (), expansion).mixed.overlap
 _rg_sym(matrix) = Matrix{Float64}(0.5 .* (matrix .+ transpose(matrix)))
+_rg_distance(a, b) = sqrt(sum((a[i] - b[i])^2 for i in 1:3))
+function _rg_weighted_contracted_tail(orbital, distance)
+    coefficients = abs.(Float64.(orbital.coefficients))
+    weights = coefficients ./ max(sum(coefficients), eps(Float64))
+    return sum(weights .* exp.(-Float64.(orbital.exponents) .* distance^2))
+end
 function residual_candidate_owner(center, nuclei)
     matches = findall(==(center), nuclei)
     length(matches) == 1 ||
         throw(ArgumentError("residual-Gaussian candidate center must exactly match one nucleus"))
     return first(matches)
+end
+function residual_gaussian_owner_centers(candidate_centers, candidate_owner_indices)
+    owner_centers = Vector{Union{Nothing,NTuple{3,Float64}}}(nothing, maximum(candidate_owner_indices))
+    for (center, owner) in zip(candidate_centers, candidate_owner_indices)
+        if isnothing(owner_centers[owner])
+            owner_centers[owner] = center
+        else
+            owner_centers[owner] == center ||
+                throw(ArgumentError("residual-Gaussian compactness owner centers are inconsistent"))
+        end
+    end
+    return NTuple{3,Float64}[center::NTuple{3,Float64} for center in owner_centers]
+end
+function residual_gaussian_candidate_tail_compactness_values(supplement, candidate_centers, candidate_owner_indices, metric)
+    metric_symbol = Symbol(metric)
+    owner_centers = residual_gaussian_owner_centers(candidate_centers, candidate_owner_indices)
+    length(owner_centers) == 2 || throw(ArgumentError("residual-Gaussian tail compactness currently supports diatomics"))
+    length(supplement.orbitals) == length(candidate_centers) ||
+        throw(DimensionMismatch("residual-Gaussian compactness supplement count mismatch"))
+    midpoint = ntuple(i -> 0.5 * (owner_centers[1][i] + owner_centers[2][i]), 3)
+    distances = if metric_symbol == :midpoint_weighted_tail
+        [_rg_distance(owner_centers[owner], midpoint) for owner in candidate_owner_indices]
+    elseif metric_symbol == :other_center_weighted_tail
+        [_rg_distance(owner_centers[owner], owner_centers[3 - owner]) for owner in candidate_owner_indices]
+    else
+        throw(ArgumentError("unknown residual-Gaussian compactness metric $(metric)"))
+    end
+    return Float64[_rg_weighted_contracted_tail(orbital, distance)
+        for (orbital, distance) in zip(supplement.orbitals, distances)]
+end
+function residual_gaussian_compactness_keep_mask(residual_compactness, candidate_count, candidate_centers, candidate_owner_indices)
+    isnothing(residual_compactness) && return trues(candidate_count)
+    cutoff = Float64(getproperty(residual_compactness, :cutoff))
+    values = hasproperty(residual_compactness, :values) ?
+        Float64.(getproperty(residual_compactness, :values)) :
+        residual_gaussian_candidate_tail_compactness_values(
+            getproperty(residual_compactness, :supplement), candidate_centers,
+            candidate_owner_indices, getproperty(residual_compactness, :metric))
+    length(values) == candidate_count ||
+        throw(DimensionMismatch("residual-Gaussian compactness value count mismatch"))
+    all(isfinite, values) || throw(ArgumentError("residual-Gaussian compactness values must be finite"))
+    return values .<= cutoff
 end
 function canonicalize_residual_signs!(T_A, T_G)
     for column in axes(T_A, 2)
@@ -59,8 +107,9 @@ function check_residual_gaussian_metric(values, tau_abs, tau_rel, label)
     return tau
 end
 function owner_residual_gaussian_block(X, S_AA, owner_indices, owner, nA, cutoff,
-    tau_neg_abs, tau_neg_rel)
-    indices = findall(==(owner), owner_indices)
+    tau_neg_abs, tau_neg_rel; candidate_keep = trues(nA))
+    indices = [index for index in findall(==(owner), owner_indices) if candidate_keep[index]]
+    isempty(indices) && return nothing
     M = Matrix{Float64}(S_AA[indices, indices] - transpose(X[:, indices]) * X[:, indices])
     M = 0.5 .* (M .+ transpose(M))
     values, vectors = eigen(Symmetric(M))
@@ -80,8 +129,9 @@ function owner_residual_gaussian_block(X, S_AA, owner_indices, owner, nA, cutoff
         String["r$(owner)_mode$(column)" for column in eachindex(natural)]
     return (; owner, T_A, occupations = Float64[values[natural]...], labels)
 end
-function injection_principal_block(X, S_AA, owner_indices, owner, nA, candidate_overlap_tol, tau_abs, tau_rel)
-    indices = findall(==(owner), owner_indices)
+function injection_principal_block(X, S_AA, owner_indices, owner, nA, candidate_overlap_tol, tau_abs, tau_rel; candidate_keep = trues(nA))
+    indices = [index for index in findall(==(owner), owner_indices) if candidate_keep[index]]
+    isempty(indices) && return nothing
     values, vectors = eigen(Symmetric(_rg_sym(S_AA[indices, indices])))
     check_residual_gaussian_metric(values, tau_abs, tau_rel, "owner-local candidate metric")
     rank_tol = max(candidate_overlap_tol.atol, candidate_overlap_tol.rtol * maximum(values))
@@ -146,12 +196,12 @@ function finalize_residual_gaussian_transform(T_G0, T_A0, X, S_AA, tau_merge_abs
     identity_error <= Float64(identity_atol) * (1.0 + max(1.0, identity_scale)) || throw(ArgumentError("residual-Gaussian R' S R validation failed"))
     return T_G, T_A
 end
-function build_injected_residual_gaussian_basis(base_dimension, X, S_AA, labels, centers, owners, cutoff, injection_cutoff, candidate_overlap_atol, candidate_overlap_rtol, injected_overlap_atol, injected_overlap_rtol, tau_neg_abs, tau_neg_rel, tau_merge_abs, tau_merge_rel, orthogonality_atol, identity_atol)
+function build_injected_residual_gaussian_basis(base_dimension, X, S_AA, labels, centers, owners, cutoff, injection_cutoff, candidate_overlap_atol, candidate_overlap_rtol, injected_overlap_atol, injected_overlap_rtol, tau_neg_abs, tau_neg_rel, tau_merge_abs, tau_merge_rel, orthogonality_atol, identity_atol, candidate_keep)
     injection_cutoff >= cutoff || throw(ArgumentError("residual_injection_cutoff must be at least residual_occupation_cutoff"))
     nG, nA = Int(base_dimension), length(labels)
     ctol = (; atol = Float64(candidate_overlap_atol), rtol = Float64(candidate_overlap_rtol))
     principal = filter(!isnothing, [injection_principal_block(X, S_AA, owners,
-        owner, nA, ctol, tau_neg_abs, tau_neg_rel) for owner in unique(owners)])
+        owner, nA, ctol, tau_neg_abs, tau_neg_rel; candidate_keep) for owner in unique(owners)])
     injected = Matrix{Float64}[]
     for block in principal, index in findall(<=(injection_cutoff), block.occupations)
         push!(injected, block.modes[:, index:index])
@@ -185,7 +235,8 @@ function build_residual_gaussian_basis(base_dimension::Integer, X, S_AA,
     injected_overlap_rtol::Real = 1.0e-10,
     tau_neg_abs::Real = 1.0e-12, tau_neg_rel::Real = 1.0e-12,
     tau_merge_abs::Real = 1.0e-12, tau_merge_rel::Real = 1.0e-12,
-    orthogonality_atol::Real = 1.0e-10, identity_atol::Real = 5.0e-8)
+    orthogonality_atol::Real = 1.0e-10, identity_atol::Real = 5.0e-8,
+    residual_compactness = nothing)
     candidate_count = length(candidate_labels)
     length(candidate_centers) == candidate_count &&
         length(candidate_owner_indices) == candidate_count ||
@@ -196,15 +247,17 @@ function build_residual_gaussian_basis(base_dimension::Integer, X, S_AA,
         throw(DimensionMismatch("residual-Gaussian supplement overlap has wrong shape"))
     cutoff = Float64(residual_occupation_cutoff)
     injection_cutoff = Float64(residual_injection_cutoff)
+    candidate_keep = residual_gaussian_compactness_keep_mask(
+        residual_compactness, candidate_count, candidate_centers, candidate_owner_indices)
     injection_cutoff > 0 && return build_injected_residual_gaussian_basis(
         base_dimension, X, S_AA, candidate_labels, candidate_centers,
         candidate_owner_indices, cutoff, injection_cutoff, candidate_overlap_atol,
         candidate_overlap_rtol, injected_overlap_atol, injected_overlap_rtol,
         tau_neg_abs, tau_neg_rel, tau_merge_abs, tau_merge_rel,
-        orthogonality_atol, identity_atol)
+        orthogonality_atol, identity_atol, candidate_keep)
     owner_blocks = filter(!isnothing, [owner_residual_gaussian_block(
         X, S_AA, candidate_owner_indices, owner, candidate_count, cutoff,
-        tau_neg_abs, tau_neg_rel) for owner in unique(candidate_owner_indices)])
+        tau_neg_abs, tau_neg_rel; candidate_keep) for owner in unique(candidate_owner_indices)])
     isempty(owner_blocks) &&
         throw(ArgumentError("residual-Gaussian candidate metric has no retained directions"))
     T_A0 = hcat((block.T_A for block in owner_blocks)...)
