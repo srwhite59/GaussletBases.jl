@@ -20284,3 +20284,65 @@ Carrying-cost result:
   `owner_residual_gaussian_block` hands retained modes to MWG; broad
   near-gausslet modes need explicit injection/defer accounting rather than
   current RG acceptance.
+
+## Cartesian Hamiltonian Producer Pass 227 - Cr2 Contracted-Tail RG Compactness Audit
+
+Commit(s):
+- this commit - Record Cr2 contracted-tail RG compactness audit
+
+Summary:
+- Accepted the measurement-only follow-up that tested whether a Gaussian tail
+  rule gives a natural compactness boundary for Cr2 residual-GTO selection.
+  The strict "negligible at midbond" idea is too strong for the contracted
+  cc-pV5Z candidates: midpoint weighted tail `<= 1e-6` keeps zero candidates,
+  and `<= 1e-4` keeps only two. The conservative max-primitive tail is also
+  unusable because every contracted candidate carries a diffuse primitive.
+- The useful separator is instead a looser weighted-contracted tail rule.
+  Midpoint weighted tail `<= 0.2`, or equivalently other-center weighted tail
+  `<= 0.05` for this geometry, reproduces the previous diagnostic
+  `width_weighted <= 1.5` set exactly: `30` candidates, `15/15` by owner, no
+  broad retained RG modes, `K_min` about `3.027`, and `H1_min` about
+  `-5.794`.
+
+Validation / evidence:
+- Doer extended the ignored probe
+  `tmp/work/cr2_rg_selection_width_audit.jl`; no tracked source was edited.
+  Manager inspected the summary, policy TSV, and probe tail formulas, then
+  reran `git diff --check` and package load.
+- Formula used in the probe: primitive envelope `exp(-alpha*r^2)`,
+  `width = 1/sqrt(alpha)`, so `G(d)/G(0) = exp(-alpha*d^2)`. Contracted tail
+  is an absolute-coefficient weighted primitive tail.
+- Artifact-compatible dimensions remained base `6675`, candidates `138`, and
+  current residual replay `136`. Internuclear distance was about `3.1747`,
+  with midpoint distance `1.5874`.
+- Separator evidence: among candidates kept by `width_weighted <= 1.5`, the
+  largest midpoint weighted tail is about `0.18565` and the first outside is
+  about `0.32309`; the largest other-center weighted tail kept is about
+  `0.03382` and the first outside is about `0.09045`.
+
+Goal advancement:
+- MT4/LT5: turns the Cr2 compactness idea into a more implementation-ready
+  candidate: filter owner-local RG candidates by weighted-contracted tail scale,
+  not by a strict negligible-tail threshold and not by max-primitive diffuse
+  tails.
+- LT6: preserves the guardrail that this is still not a production default.
+  The next Cr2 source lane should be a narrow default-off or explicitly
+  requested compactness-selection path, followed by a small Hamiltonian/HF
+  measurement, not a silent global pruning rule.
+
+Risk / guardrail:
+- No tracked science source edits, production defaults, artifact schema
+  changes, public driver input, Vee scaling, screened-reference change, or Cr2
+  production claim. The live tracked dirty file during review remained
+  unrelated bloat-fixer WIP in
+  `src/cartesian_contracted_parent_metrics/product_staged_metric_fallbacks.jl`.
+
+Carrying-cost result:
+- added tracked source lines: 0.
+- deleted tracked source lines: 0.
+- exact remaining blocker: choose the implementation surface for a
+  weighted-contracted tail compactness policy in
+  `src/cartesian_residual_gaussians/residual_basis.jl`, preserving current
+  default behavior until Cr2 HF/residual-occupation evidence shows the rule
+  improves the actual energy failure rather than only the residual one-body
+  spectrum.
