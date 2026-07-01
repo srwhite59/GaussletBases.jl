@@ -21134,3 +21134,68 @@ Carrying-cost result:
 - exact remaining blocker: test whether loosening the compact-main stage can
   recover H2+ completeness while preserving the Cr2 safety signal, or accept
   that these are separate options.
+
+## Cartesian Hamiltonian Producer Pass 240 - H2+ ns=7 Protected-Original Completeness Check
+
+Commit(s):
+- this commit - Record H2plus ns7 protected-original completeness check
+
+Summary:
+- Accepted the H2+ `ns=7`, `q=7`, `core_spacing=0.3` one-electron audit as a
+  sharper separation between representability and completeness. Raising the
+  main basis resolution fixes the reduced protected-original representability
+  problem from `ns=5`: full and reduced protected-original sets are identical,
+  no broad directions are dropped, and the full set is clean at the `0.99`
+  representability level.
+- However, the protected-original replacement geometry still does not recover
+  the default supplemented RG one-electron endpoint. The remaining gap is not
+  a dropped-direction problem; it is the difference between replacement inside
+  the compact main space and additive default RG variational flexibility.
+
+Validation / evidence:
+- Doer wrote ignored probe output under
+  `/Users/srw/dmrgtmp/h2plus_reduced_protected_original_completeness_532e4861d_ns7_core0p3/`.
+- Case: H2+ one-electron H1 endpoint, nuclei at `z=+/-2.0`, `nup=1`,
+  `ndn=0`, `ns=7`, `q=7`, `core_spacing=0.3`, cc-pVTZ supplement, `lmax=1`.
+  Base dimension is `1487`.
+- Counts: default residual dimension `18`, compact-first residual dimension
+  `8`, protected originals `8`, broad originals `10`, and dual-cut
+  kept/dropped `10 / 0`.
+- Representability: full/reduced `B` singular min/median/max about
+  `0.99791 / 0.99996 / 1.0`, with counts below `0.999 / 0.99 / 0.9` equal to
+  `1 / 0 / 0`.
+- Energies: base `G` only about `-0.7955516475`, default supplemented RG about
+  `-0.7959747801`, compact-first about `-0.7958939095`, and full/reduced
+  protected-original about `-0.7959105863`. The protected-original endpoint is
+  about `6.42e-5 Ha` above default RG.
+- Shell attribution: the `ns=5` high-fake-RDM pz/s-like dropped direction now
+  has clean `ns=7` analogues, including a pz/s-like mode with
+  representability about `0.99974` and fake-RDM about `0.749`. The weakest
+  remaining support is still diffuse s/pz-mixed broad shell content, but it is
+  no longer a hard representability failure.
+
+Goal advancement:
+- MT4/LT6: clarifies that protected-original replacement can be numerically
+  representable and still fail a one-electron completeness endpoint. For H2+,
+  default additive RG remains the completeness-preserving construction. The
+  Cr2 reduced/protected path should be treated as an interacting-case MWG
+  safety mechanism, not as a universal residual replacement.
+
+Risk / guardrail:
+- No source edits, rule changes, public wiring, artifact/provenance/schema
+  work, Cr2 run, HF/Vee work, or production claim. Do not solve the H2+
+  endpoint gap by loosening a fake-RDM/representability rule; no directions
+  were dropped at `ns=7`.
+
+Carrying-cost result:
+- tracked source line delta: 0.
+- deleted: none.
+- simplified: the failure mode is now narrower and clearer: replacement
+  geometry changes the one-electron variational space even when all originals
+  are representable.
+- quarantined: ignored H2+ `ns=7` probe and `/Users/srw/dmrgtmp` output
+  tables.
+- exact remaining blocker: decide whether protected-original replacement is
+  intentionally a Cr2/interacting-case safety option, or investigate a hybrid
+  mode that keeps additive RG completeness for one-electron cases while
+  preventing broad MWG residual occupation in Cr2.
