@@ -20937,3 +20937,71 @@ Carrying-cost result:
 - Current next decision: choose a bounded diagnostic comparison, likely an
   `ns` representability ladder or a reduced-candidate injection audit, before
   any protected-original source implementation.
+
+## Cartesian Hamiltonian Producer Pass 237 - Cr2 Protected-Original Worst-Mode Shape Audit
+
+Commit(s):
+- this commit - Record Cr2 protected-original worst-mode shapes
+
+Summary:
+- Accepted the measurement-only line-plot and fake-RDM diagnostic for the four
+  worst protected-original representability modes (`135`-`138`) from the
+  current Cr2 `ns=7,lmax=2` audit. The plots show that the defects are not
+  simply discardable outer tails: they have central bond/contact and transverse
+  middle structure, with the original and defect functions centered around the
+  bond midpoint and balanced across the two Cr atoms.
+- The fake-RDM proxy adds an important qualifier. Using the convention
+  `P_fake = sum_i |A_i/sqrt(S_ii)><A_i/sqrt(S_ii)|`, all four worst modes have
+  small weights: mode `135` about `0.00372`, `136` about `0.00303`, `137`
+  about `0.000949`, and `138` about `0.00208`. Thus the worst
+  representability directions are spatially real and central/transverse, but
+  low-weight by this crude independent-GTO occupancy proxy.
+
+Validation / evidence:
+- Doer wrote ignored probe
+  `tmp/work/cr2_protected_original_line_plot_probe.jl` and outputs under
+  `/Users/srw/dmrgtmp/cr2_protected_original_line_plots_1e73ccee9/`. Manager
+  inspected `summary.txt`, `line_plot_metadata.tsv`, and
+  `fake_rdm_weights.tsv`.
+- The plots include `z_original`, `G_fit`, `G_defect`, `M_fit`, and
+  `M_defect` overlays for bond-axis and transverse cuts. The probe-local
+  evaluator expanded terminal final-basis coefficients into the parent PGDG
+  axis basis without adding tracked evaluator surface.
+- The four worst singular values/defects remain `0.850/0.527`,
+  `0.831/0.556`, `0.799/0.602`, and `0.756/0.655`. Their defect RMS widths
+  are broad in transverse x/y as well as z: roughly `(3.29,3.29,2.04)`,
+  `(4.10,4.10,3.78)`, `(4.03,4.03,2.27)`, and `(3.24,3.24,2.81)`.
+- Largest compact-main line defects occur in central/contact regions rather
+  than only far outside: mode `135` bond-axis max `|M_defect|` about `1.77` at
+  `z=-1.60` with outer `|z|>=7` max about `1.05e-2`; mode `136` bond-axis max
+  about `0.85` at `z=-1.60`; transverse defects for modes `135` and `137` peak
+  around `|x,y|=2.5..3.3`.
+- Dominant fake-RDM contributors are symmetric broad s and some broad d/p
+  channels. Mode `135` is led by `a_s8/b_s8`; mode `136` by
+  `a_dzz6/b_dzz6` and `a_dzz5/b_dzz5`; mode `137` by `a_s7/b_s7`; mode `138`
+  by `a_s7/b_s7` and `a_s8/b_s8`.
+
+Goal advancement:
+- MT4/LT6: localizes the protected-original failure more sharply. The missing
+  representability is not a pure outer-tail discard case and not merely a
+  z-distortion issue; it is broad smooth central/transverse bond-support that
+  current `M = [G, R_compact]` does not fit well. However, the low fake-RDM
+  weights suggest that an importance-gated or reduced injection candidate set
+  may be worth testing before escalating to larger `ns`.
+
+Risk / guardrail:
+- No source edits, public wiring, artifact/provenance/schema work, injection
+  implementation, HF rerun, screened-reference work, Vee scaling, or Cr2
+  production claim. The fake-RDM measure is diagnostic only and is not yet an
+  approved selection rule.
+
+Carrying-cost result:
+- tracked source line delta: 0.
+- deleted: none.
+- simplified: none.
+- quarantined: ignored line-plot/fake-RDM probe and `/Users/srw/dmrgtmp`
+  output SVG/TSV files.
+- exact remaining blocker: choose whether the next audit tests a reduced
+  protected-original injection set using representability plus fake-RDM/weight
+  importance, or runs an `ns` ladder to see whether these low-weight but
+  central broad modes become representable in a larger main basis.
