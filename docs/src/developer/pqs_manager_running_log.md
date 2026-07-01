@@ -20602,3 +20602,63 @@ Carrying-cost result:
   commits.
 - MT6 audit/classify old Cartesian flat paths: active but secondary while the
   Cr2 residual-fate lane is live.
+
+## Cartesian Hamiltonian Producer Pass 232 - Cr2 Ordered Compact-First MGS RG Selection Audit
+
+Commit(s):
+- this commit - Record Cr2 ordered MGS RG selection audit
+
+Summary:
+- Accepted the measurement-only ordered compact-first modified Gram-Schmidt
+  audit as a positive result. This directly tests the user's concern that the
+  previous owner-local candidate-block eigenspace selector mixed narrow and
+  wide candidates too early. The ordered audit sorts each owner's raw
+  candidates by `width_weighted`, midpoint tail, and other-center tail; removes
+  the fixed gausslet sector with `q = (-X_i, e_i)`; then removes already
+  accepted compact RGs for that owner with one reorthogonalization pass. The
+  final `inv(sqrt(Symmetric(S_merge)))` cleanup is used only after ordered
+  selection, not as the selector.
+- Ordered MGS keeps the same `30` compact Cr2 residual corrections as
+  compactness-only, avoids broad near-gausslet leakage into the RG/MWG
+  residual sector, and reproduces the compactness-only sector behavior without
+  relying on the earlier mixed candidate-block eigenspace.
+
+Validation / evidence:
+- Doer wrote ignored probe `tmp/work/cr2_ordered_mgs_rg_selection_probe.jl`
+  and output tables under
+  `/Users/srw/dmrgtmp/cr2_ordered_mgs_rg_selection_6466d3b33/`. Manager
+  inspected `summary.txt`, `policies.tsv`, `candidate_decisions.tsv`,
+  `low_modes.tsv`, and `stages.tsv`, then reran `git diff --check` and package
+  load.
+- Ordered MGS result: residual dimension `30`, owner counts `15,15`, broad
+  residual columns `0`, max near fraction `0`, near-fraction counts above
+  `1e-4`, `1e-3`, and `1e-2` all `0`, `GSR = 4.26e-14`,
+  `R'SR-I = 1.28e-9`, `K_min = 3.0271`, and `H1_min = -5.7936`. The low
+  `H1_RR` values are `[-5.7936, -2.2757, 0.8945, 4.4317, 4.4317, 5.2145]`,
+  matching compactness-only within roundoff.
+- Accepted shell pattern per owner is compact and regular: `3` s-like modes,
+  `2` of each p component, and `1` of each d component. Ordered MGS selection
+  itself took about `0.69 s`; the long runtime remains Cr2 operator setup.
+
+Goal advancement:
+- MT4/LT5: promotes the next Cr2 implementation candidate from a scalar
+  compactness gate toward ordered owner-local residual selection. The result
+  validates the Gram-Schmidt critique and explains why split-fate injection
+  failed: narrow compact directions must be isolated before broad
+  near-gausslet candidates can influence the selected residual subspace.
+- LT6: no promotion to public/default/artifact/provenance. The result supports
+  a narrow internal selection seam only.
+
+Risk / guardrail:
+- No tracked science source edits, production defaults, public inputs,
+  artifact writing, provenance keys, HF continuation, or Cr2 production claim.
+  HF was intentionally not rerun because the sector evidence matches the
+  previous compactness-only construction and a bounded HF replay is expensive.
+
+Carrying-cost result:
+- added tracked source lines: 0.
+- deleted tracked source lines: 0.
+- exact remaining blocker: implement a narrow default-off
+  `residual_basis.jl` ordered-selection seam, then rerun H2 gate plus Cr2
+  sector and HF checks. Broad near-gausslet fate/injection remains a separate
+  design question and should not be folded into this implementation.
