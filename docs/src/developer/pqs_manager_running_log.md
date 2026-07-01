@@ -20223,3 +20223,64 @@ Carrying-cost result:
   deletion remains blocked by active `core.jl` callers. The larger
   PQS/product/raw-product reference block family is the next mapped candidate
   but is closer to protected donor concepts and needs separate approval.
+
+## Cartesian Hamiltonian Producer Pass 226 - Cr2 Width-Aware RG Selection Audit
+
+Commit(s):
+- this commit - Record Cr2 width-aware RG selection audit
+
+Summary:
+- Accepted the measurement-only Cr2 residual-Gaussian width audit. The result
+  changes the manager interpretation: broad supplement directions are entering
+  the ordinary RG/MWG residual sector, and those broad residual directions
+  reproduce the balanced midbond low-`H1_RR` shape. This supports the design
+  split that true RGs should be compact atom-local corrections, while broad
+  smooth directions should be injected, deferred, or discarded rather than
+  treated as MWG residual channels.
+- The probe's `width_weighted <= 1.5` policy is diagnostic, not a production
+  constant. It removes broad retained RG modes in this Cr2 replay, keeps
+  `30` RGs (`15/15` by owner), raises `K_min` from about `0.405` to `3.027`,
+  and raises `H1_min` from about `-7.459` to `-5.794`. But the durable cutoff
+  should be tied to a physical cross-atom tail criterion, such as requiring a
+  candidate Gaussian to be negligible at the other atom or at midbond
+  (`G(R/2)` at a specified tolerance), using the code's actual width
+  convention.
+
+Validation / evidence:
+- Doer used ignored probe `tmp/work/cr2_rg_selection_width_audit.jl` against
+  the bad Cr2 artifact with `occupation_cutoff = 5.0e-8`; no tracked science
+  source was edited. Manager verified the probe is ignored, inspected its
+  classification constants and policy construction, and reran `git diff
+  --check` plus package load.
+- Dimensions: base `6675`, candidates `138`, current residual replay `136`.
+  Weighted widths ranged from `0.140` to `6.390`, with q25 `1.629`, median
+  `1.743`, and q75 `2.338`. Current retained RG modes classify as broad for
+  `122 / 136` owner-local modes.
+- Policy evidence: `width <= 1.0` over-prunes (`18` RGs, `H1_min` positive);
+  broad modes begin re-entering between about `1.63` and `1.74`, after which
+  the balanced midbond broad low-mode shape returns. The tight-first current
+  count policy still keeps `118` broad RG modes, so ordering alone does not
+  solve the problem.
+
+Goal advancement:
+- MT4/LT5: moves the Cr2 lane from "screening may be wrong" to a more
+  structural basis-selection hypothesis: broad near-gausslet or diffuse
+  molecular directions should not become ordinary residual-GTO/MWG channels.
+- LT6: keeps the result measurement-only. The next implementation/audit lane
+  should derive an owner-local compactness criterion from geometry and
+  Gaussian tail overlap, then test injection/defer handling for broad
+  near-gausslet modes before changing defaults.
+
+Risk / guardrail:
+- No production default, artifact schema, public driver input, residual pruning
+  rule, HF workflow, Vee scaling, or Cr2 production claim is approved by this
+  pass. `width <= 1.5` is useful evidence, not a durable contract.
+
+Carrying-cost result:
+- added tracked source lines: 0.
+- deleted tracked source lines: 0.
+- exact remaining blocker: define and test a physics-derived compactness
+  threshold in the owner-local candidate/mode selection seam before
+  `owner_residual_gaussian_block` hands retained modes to MWG; broad
+  near-gausslet modes need explicit injection/defer accounting rather than
+  current RG acceptance.
