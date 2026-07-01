@@ -20846,3 +20846,94 @@ Carrying-cost result:
 - exact remaining blocker: a future source amendment must name exact files,
   validation, line budget, and failure rule for protected-original
   compact-main injection before any implementation blurb is issued.
+
+## Cartesian Hamiltonian Producer Pass 236 - Cr2 Protected-Original Representability Audit
+
+Commit(s):
+- this commit - Record Cr2 protected-original representability audit
+
+Summary:
+- Accepted the measurement-only protected-original compact-main projection
+  audit as a clean negative result for current Cr2 `ns = 7`, `lmax = 2`. The
+  audit used the design from `HP-RG-PROTECT-INJECT-DESIGN-01`: build compact
+  ordered-MGS RGs first, set `M = [G, R_compact]`, construct protected original
+  Gaussian directions first, Gram-clean the remaining originals, and test
+  injection representability by `B = M' S Z`.
+- The important conclusion is that all original supplement directions are real
+  in the Gaussian Gram metric, but some are not stably represented by the
+  compact main space. This is exactly the design's "insufficient compact main
+  basis support" failure case, not permission to create broad MWG residual
+  Gaussian channels.
+
+Validation / evidence:
+- Doer wrote ignored probe
+  `tmp/work/cr2_protected_original_projection_probe.jl` and outputs under
+  `/Users/srw/dmrgtmp/cr2_protected_original_projection_1e73ccee9/`. Manager
+  inspected `summary.txt`, `gram_summary.tsv`, `protected_counts.tsv`,
+  `projection_by_owner_channel.tsv`, `failed_singular_directions.tsv`,
+  `b_singular_values.tsv`, and `stages.tsv`.
+- Dimensions: `G` dimension `6675`; `R_compact` dimension `30`; original
+  candidates `138`; protected originals `30`; broad originals `108`.
+  Protected counts match the compact RG pattern: per owner, `3` s functions,
+  `2` of each p component, and `1` of each d component.
+- Gaussian Gram cleanup kept everything: protected `30/30` with eigenvalue
+  range about `0.1186 .. 7.9683`; broad-after-protected `108/108` with range
+  about `6.75e-7 .. 7.3486`. Final `Z' S Z-I` is about `2.45e-10`.
+  Protected-span preservation is clean: protected self identity about
+  `5.1e-15`, protected-broad overlap about `1.6e-12`, and protected-span
+  singular min/max `1.0 / 1.0`.
+- Projection into `M`: `B` is `6705 x 138` with singular min/median/max
+  `0.7558 / 0.99976 / 1.0`; counts below thresholds are `<0.999: 50`,
+  `<0.99: 20`, `<0.9: 4`, `<0.5: 0`. Column projection defect median is about
+  `0.036`, max about `0.616`.
+- Failure pattern is mostly broad s and p, not d: `20` singular directions are
+  below `0.99`, dominated by `s=11`, `px=4`, `py=4`, and `dyy=1`. Worst
+  channel defects are broad owner-2 s (`0.616` max), broad owner-1 s (`0.583`
+  max), broad owner-1 py (`0.297` max), and broad owner-2 px (`0.297` max).
+
+Goal advancement:
+- MT4/LT6: confirms the protected-original design is diagnostically useful
+  before implementation. It distinguishes real Gaussian directions from
+  directions that the current compact main basis can represent. For current
+  Cr2 `ns=7,lmax=2`, protected-original injection should stop rather than
+  proceed.
+- The next Cr2 physics implication is not "turn broad candidates into RGs" but
+  "the compact main basis is insufficient for some desired original
+  supplement directions." Candidate remedies are increasing/improving the main
+  gausslet basis or reducing the intended injection set; those require manager
+  choice.
+
+Risk / guardrail:
+- No source edits, public wiring, artifact/provenance/schema work, injection
+  implementation, HF rerun, screened-reference work, Vee scaling, or Cr2
+  production claim. Broad non-injectable candidates remain forbidden as
+  ordinary MWG residual channels.
+
+Carrying-cost result:
+- tracked source line delta: 0.
+- deleted: none.
+- simplified: none.
+- quarantined: ignored probe and `/Users/srw/dmrgtmp` output tables.
+- exact remaining blocker: decide whether to compare representability across
+  `ns` or across reduced injection candidate sets before any source amendment.
+
+### Medium-Term Goal Checkpoint After Pass 236
+
+- MT1 fake-PQS quarantine: active/maintained. The Cr2 RG/injection lane has
+  not reopened fake-PQS route authority.
+- MT2 independent H2 PQS recovery and MT3 common physical support vocabulary:
+  active/maintained. H2 gates remain the regression guard for default-off RG
+  changes, and no public artifact semantics were changed.
+- MT4 supplement staging after authority: active and updated. Ordered
+  compact-first RGs now have source-backed evidence and an HF replay removing
+  the bad Cr2 residual occupation. Protected-original injection is design-only
+  and has failed the first current Cr2 representability audit.
+- MT5 cleanup pressure: active and separate. Bloat-fixer WIP in
+  `product_staged_metric_fallbacks.jl` remains unrelated and must stay out of
+  Cr2 science commits.
+- MT6 audit/classify old Cartesian flat paths: active but secondary. The
+  immediate algorithmic blocker is now representability of original Gaussian
+  additions in the compact main basis.
+- Current next decision: choose a bounded diagnostic comparison, likely an
+  `ns` representability ladder or a reduced-candidate injection audit, before
+  any protected-original source implementation.
