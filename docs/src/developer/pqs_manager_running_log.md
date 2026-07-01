@@ -20410,3 +20410,59 @@ Carrying-cost result:
 - exact remaining blocker: decide whether compactness should gain artifact
   provenance and/or internal caller wiring after additional molecule/atom
   checks. Until then, use it only through explicit low-level measurement paths.
+
+## Cartesian Hamiltonian Producer Pass 229 - Compactness Validation Matrix
+
+Commit(s):
+- this commit - Record compactness validation matrix
+
+Summary:
+- Accepted the measurement-only compactness validation matrix as a qualifying
+  result, not as support for promotion. The default-off compactness mechanism
+  remains effective for the bad Cr2 replay, but the same Cr2 thresholds are
+  not robust as a generic molecule-wide policy. They substantially prune
+  H2/Be2/N2 residual sectors, including an over-aggressive N2 midpoint rule.
+- The key manager conclusion is therefore negative: do not proceed to public
+  driver support, artifact provenance, production defaults, or broad use of
+  the Cr2 `midpoint_weighted_tail <= 0.2` rule. The option remains useful as a
+  Cr2 diagnostic and as a mechanism for future case-aware/fate-classification
+  work.
+
+Validation / evidence:
+- Doer wrote only ignored measurement outputs under
+  `/Users/srw/dmrgtmp/rg_compactness_validation_matrix_6466d3b33/` and kept
+  tracked source unchanged. Manager inspected `summary.txt`, `policies.tsv`,
+  and `label_groups.tsv`, then reran `git diff --check` and package load.
+- Cr2 result was reused from Pass 228: default residual occupation about
+  `3.7956`, compactness replay residual occupation `0.0`, and compactness
+  sector `30` candidates with no broad retained RG modes.
+- Light-case sector evidence: H2 midpoint keeps `8/18` candidates and
+  other-center keeps `16/18`; Be2 midpoint/other-center keep only `4/18`;
+  N2 midpoint keeps only `2/18` and rejects `8` width-class compact
+  candidates, while other-center keeps `10/18`. The N2 midpoint row is the
+  strongest mismatch because it clearly rejects ordinary compact p/s
+  supplement directions rather than only dangerous broad Cr2-like functions.
+
+Goal advancement:
+- MT4/LT5: separates two facts that must not be conflated. Compactness gating
+  can remove the immediate Cr2 residual-occupation collapse, but the current
+  Cr2 threshold is not a universal residual-GTO selection theory.
+- LT6: strengthens the provenance guardrail. Artifact/provenance work is now
+  explicitly blocked until compactness policy is either case-aware, tied to
+  supplement basis semantics, or replaced by a better fate classifier.
+
+Risk / guardrail:
+- No tracked science source edits, production defaults, public inputs,
+  artifact writing, provenance keys, screened-reference work, Vee scaling, or
+  Cr2 production claim. The live dirty file during review remained unrelated
+  bloat-fixer WIP in
+  `src/cartesian_contracted_parent_metrics/product_staged_metric_fallbacks.jl`.
+
+Carrying-cost result:
+- added tracked source lines: 0.
+- deleted tracked source lines: 0.
+- exact remaining blocker: design a selective fate classifier for supplement
+  directions: compact atom-local directions may become RG/MWG channels; broad
+  near-gausslet directions may be injection candidates; broad non-near-gausslet
+  directions need explicit discard/defer treatment. The current scalar
+  midpoint-tail cutoff is too blunt for general use.
