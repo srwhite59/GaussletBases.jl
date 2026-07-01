@@ -20466,3 +20466,61 @@ Carrying-cost result:
   near-gausslet directions may be injection candidates; broad non-near-gausslet
   directions need explicit discard/defer treatment. The current scalar
   midpoint-tail cutoff is too blunt for general use.
+
+## Cartesian Hamiltonian Producer Pass 230 - RG Supplement Fate Classification Audit
+
+Commit(s):
+- this commit - Record RG supplement fate classification audit
+
+Summary:
+- Accepted the measurement-only fate-classification audit. It confirms the
+  durable split: compact atom-local directions are eligible for RG/MWG; broad
+  near-gausslet directions should be injection/absorption candidates; broad
+  non-near-gausslet directions need explicit defer/discard or a future broad
+  auxiliary/better-interaction lane.
+- This result explains the prior matrix. The Cr2 compactness filter works
+  because the `108` rejected Cr2 candidates are mostly broad directions with
+  high fixed-sector overlap / low residual occupation, i.e. near-gausslet
+  injection candidates. H2/Be2/N2 lose useful-looking valence/shell
+  directions because the scalar tail rule also catches broad non-near-gausslet
+  directions with real residual occupation.
+
+Validation / evidence:
+- Doer wrote ignored probe
+  `tmp/work/rg_supplement_fate_classification_audit.jl` and output tables under
+  `/Users/srw/dmrgtmp/rg_supplement_fate_classification_6466d3b33/`. Manager
+  inspected `fate_counts.tsv`, `shell_group_counts.tsv`, and `stages.tsv`,
+  then reran `git diff --check` and package load.
+- Candidate fate counts: H2 has `8` compact RG, `4` near-gausslet, and `6`
+  broad-defer/discard; Be2 has `2` compact RG and `16` broad-defer/discard;
+  N2 has `2` compact RG, `2` near-gausslet, and `14` broad-defer/discard; Cr2
+  has `30` compact RG and `108` near-gausslet.
+- Owner-local mode fate counts: Cr2 has `6` compact RG, `126` near-gausslet,
+  `4` broad-defer/discard, and `2` residual-occupation-discarded modes. The
+  four Cr2 broad-defer modes are dzz-dominated with occupations around
+  `1.33e-3` and `3.86e-3`; most rejected Cr2 broad directions fall below the
+  `1e-3` near-gausslet occupation diagnostic.
+
+Goal advancement:
+- MT4/LT5: converts compactness from a scalar cutoff story into a fate
+  classification story. This is the right abstraction boundary for future Cr2
+  work: do not let broad near-gausslet directions become MWG residual channels,
+  but also do not discard broad non-near-gausslet light-molecule directions by
+  a Cr2-specific scalar threshold.
+- LT6: keeps provenance and public workflow blocked. A production-worthy policy
+  must say where broad directions go, not only whether they fail a tail cutoff.
+
+Risk / guardrail:
+- No tracked science source edits, production defaults, public inputs,
+  artifact writing, provenance keys, new injection implementation,
+  screened-reference work, Vee scaling, or Cr2 production claim. The live dirty
+  file during review remained unrelated bloat-fixer WIP in
+  `src/cartesian_contracted_parent_metrics/product_staged_metric_fallbacks.jl`.
+
+Carrying-cost result:
+- added tracked source lines: 0.
+- deleted tracked source lines: 0.
+- exact remaining blocker: decide the next Cr2-specific fate action. The most
+  plausible next measurement is to use existing injection machinery for the
+  Cr2 near-gausslet broad class while keeping compact directions in RG/MWG and
+  explicitly reporting the four broad-defer dzz-like modes.
