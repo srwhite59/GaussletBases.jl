@@ -20107,3 +20107,72 @@ Carrying-cost result:
   deletion remains blocked by active `core.jl` packet-construction callers.
   The next cleanup candidates are the read-only mapped reference-block and
   sidecar wrapper families, not the active block helpers.
+
+## Cartesian Hamiltonian Producer Pass 224 - Cr2 Direct-u0 Delta_RR Shape Diagnostic
+
+Commit(s):
+- this commit - Record Cr2 direct-u0 Delta_RR shape diagnostic
+
+Summary:
+- Accepted the measurement-only Cr2 direct-`u0` shape diagnostic. The high
+  screen-charge worsening seen in Pass 222 is caused by negative
+  `Delta_RR_unit` modes. Those modes persist across the tested alpha range and
+  look like real broad residual combinations, not obvious numerical noise.
+- The simple spherical atom-centered `rho0` remains useful as a diagnostic
+  because fixed-density shifts stay positive and `N_screen = 10` improves the
+  low `H1_RR` spectrum. It is not yet a clean screened-reference shape for Cr2:
+  larger `N_screen` scales the negative `Delta_RR` modes enough to worsen the
+  low residual spectrum.
+
+Validation / evidence:
+- Doer used ignored probe
+  `tmp/work/cr2_screened_reference_shape_diagnostic.jl`. Manager inspected the
+  probe and did not rerun it because the full run took about `820 s`, with
+  exact Galerkin screen construction about `216-218 s` per alpha. Manager
+  reran `git diff --check` and package load on the live worktree.
+- Setup: same bad Cr2 artifact and UHF state, artifact-compatible residual
+  cutoff `5.0e-8`, total dimension `6811`, base dimension `6675`, residual
+  dimension `136`, and direct row-gauge `u0` construction from Pass 222.
+- Alpha grid was limited to `2, 8, 32` because of exact-screen cost. At
+  `N_screen = 10`, all three alphas had `31` negative `Delta_RR_unit`
+  eigenvalues. Minimum `Delta_RR_unit` eigenvalues were about `-0.1609`,
+  `-0.1639`, and `-0.1647`; fixed-density unit shifts were positive at about
+  `+12.96`, `+16.18`, and `+17.72`.
+- Minimum corrected `H1_RR` at `N_screen = 10` improved from uncorrected
+  `-7.2678` to about `-6.222`, `-6.255`, and `-6.266`. The `N` sweep then
+  showed high-screen worsening: for alpha `2`, min corrected `H1_RR` was
+  about `-6.214`, `-6.222`, `-7.034`, and `-7.510` for `N = 5, 10, 18, 22`;
+  for alpha `32`, about `-6.140`, `-6.266`, `-7.177`, and `-7.689`.
+- Mode-shape evidence: low uncorrected `H1_RR` modes are balanced midbond
+  broad residual modes. The lowest `Delta_RR_unit` mode is also balanced
+  midbond and broad across alphas, with owner weights about `0.5/0.5` and
+  residual proxy sigmas around `3.5-3.8`. Nearby negative `Delta_RR` modes are
+  broad atom-local residual directions with owner purity around `0.94-0.97`.
+  Overlap with individual low `H1_RR` modes is diffuse rather than one-to-one,
+  so this is a negative broad residual subspace, not one isolated bad vector.
+
+Goal advancement:
+- MT4/LT5: narrows the screened-reference blocker from "find the right
+  subtraction object" to "find a reference-screen shape whose
+  `J_Galerkin[rho0]_RR - diag(u0_R)` does not introduce a broad negative
+  residual subspace." Direct `u0` remains the right gauge object, but the
+  spherical `rho0` shape is not enough.
+- LT6: keeps the measurement disciplined: positive fixed-density shifts are
+  not by themselves a production criterion when residual-sector eigenmodes
+  still worsen under physically larger screen charges.
+
+Risk / guardrail:
+- No tracked science source edits, production defaults, artifact schema
+  changes, public inputs, residual pruning, Vee scaling, HF workflow, or Cr2
+  production claim. The live tracked dirty file during review was unrelated
+  bloat-fixer WIP in
+  `src/cartesian_contracted_parent_metrics/product_staged_metric_fallbacks.jl`;
+  this log entry was committed separately.
+
+Carrying-cost result:
+- added tracked source lines: 0.
+- deleted tracked source lines: 0.
+- exact remaining blocker: direct-`u0` screened reference needs a better
+  `rho0` shape or residual-sector correction model. Do not proceed to
+  production screened-reference plumbing until the negative broad
+  `Delta_RR_unit` subspace is explained or removed.
