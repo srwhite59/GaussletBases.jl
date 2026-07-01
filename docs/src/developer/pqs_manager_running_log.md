@@ -21074,3 +21074,63 @@ Carrying-cost result:
 - exact remaining blocker: decide whether to write a source-design amendment
   for reduced protected-original replacement, or first compare this reduced
   set against an `ns` representability ladder.
+
+## Cartesian Hamiltonian Producer Pass 239 - H2+ Completeness Check For Reduced Protected-Original Policy
+
+Commit(s):
+- this commit - Record H2+ completeness check for reduced protected-original policy
+
+Summary:
+- Accepted the H2+ `ns=5` one-electron completeness audit as a negative
+  guardrail for generalizing the Cr2 reduced protected-original policy. The
+  reduced protected-original construction is cleanly representable, but it is
+  worse than default supplemented RG for the H2+ one-electron endpoint.
+- The key interpretation is that the reduced dual cut itself is not the only
+  issue. Reduced and full protected-original diagnostic energies are identical
+  to roundoff in both checked `core_spacing` cases. The energy loss comes from
+  using the compact-main/protected-original replacement construction instead
+  of the default additive RG completion. For H2+, broad residual flexibility is
+  variationally useful and there is no MWG/Vee over-occupation pathology to
+  avoid.
+
+Validation / evidence:
+- Doer wrote ignored probes and outputs under
+  `/Users/srw/dmrgtmp/h2plus_reduced_protected_original_completeness_277cb11c2/`
+  and
+  `/Users/srw/dmrgtmp/h2plus_reduced_protected_original_completeness_277cb11c2_core0p3/`.
+- Case: H2+ one-electron H1 endpoint, nuclei at `z=+/-2.0`, `nup=1`,
+  `ndn=0`, `ns=5`, `q=5`, cc-pVTZ supplement, `lmax=1`.
+- With `core_spacing=0.5`: default supplemented RG energy is about
+  `-0.7959028345`, compact-first `-0.7954876740`, and reduced/full
+  protected-original `-0.7957259033`. The reduced protected-original result is
+  about `1.77e-4 Ha` worse than default RG.
+- With `core_spacing=0.3`: default supplemented RG energy is about
+  `-0.7959522761`, compact-first `-0.7947536920`, and reduced/full
+  protected-original `-0.7954975379`. The reduced protected-original result is
+  about `4.55e-4 Ha` worse than default RG.
+- Representability is clean for the reduced sets but not for the full sets:
+  at `core_spacing=0.3`, full protected-original `B_min` is about `0.9504`
+  with five singular values below `0.99`, while the reduced dual cut has
+  `B_min` about `0.9904` and no singular values below `0.99`.
+
+Goal advancement:
+- MT4/LT6: narrows the role of reduced protected-original replacement. It is a
+  plausible MWG-safety option for Cr2-like interacting cases, not a general
+  completeness-preserving replacement for default RG. One-electron cases like
+  H2+ should keep the default additive RG path unless a separate completeness
+  option proves equivalent.
+
+Risk / guardrail:
+- No source edits, public wiring, artifact/provenance/schema work, injection
+  implementation, HF/Vee work, or production default change. The Cr2 dual-cut
+  policy must not be described as generally completeness preserving.
+
+Carrying-cost result:
+- tracked source line delta: 0.
+- deleted: none.
+- simplified: the policy boundary is clearer: Cr2 MWG-safety and H2+
+  one-electron completeness are different acceptance targets.
+- quarantined: ignored H2+ probes and `/Users/srw/dmrgtmp` output tables.
+- exact remaining blocker: test whether loosening the compact-main stage can
+  recover H2+ completeness while preserving the Cr2 safety signal, or accept
+  that these are separate options.
