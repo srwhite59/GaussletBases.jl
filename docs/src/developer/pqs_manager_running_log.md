@@ -20725,3 +20725,65 @@ Carrying-cost result:
 - exact remaining blocker: decide whether to run a separately justified Cr2 HF
   replay on the source-backed option and then design broad near-gausslet fate
   or artifact provenance only after that evidence is accepted.
+
+## Cartesian Hamiltonian Producer Pass 234 - Source-Backed Ordered-MGS Cr2 HF Replay
+
+Commit(s):
+- this commit - Record ordered-MGS Cr2 HF replay
+
+Summary:
+- Accepted the bounded Cr2 HF replay using the source-backed private
+  `:ordered_compact_first_mgs` selector from commit `317fb56fc`. This is the
+  strongest Cr2 evidence so far: the prior saved bad UHF state had
+  `3.795634732401` electrons in residual rows, while the ordered-MGS replay
+  ended with exactly `0.0` residual occupation in both spins. The residual
+  density classification is `no_residual_density`.
+- The selector used the private default-off policy
+  `residual_compactness = (; metric = :midpoint_weighted_tail, cutoff = 0.2,
+  supplement, selector = :ordered_compact_first_mgs)`. No public driver/API
+  path, artifact/provenance/schema work, injection, screened-reference
+  correction, or Vee scaling was used.
+
+Validation / evidence:
+- Doer wrote ignored probe `tmp/work/cr2_ordered_mgs_hf_replay_probe.jl` and
+  outputs under
+  `/Users/srw/dmrgtmp/cr2_ordered_mgs_hf_replay_317fb56fc/`. Manager inspected
+  `summary.txt`, `energy_components.tsv`, `low_h1_mode_occupations.tsv`,
+  `residual_columns.tsv`, `top_residual_orbitals.tsv`, and `stages.tsv`.
+- Construction evidence: residual dimension `30`, owner counts `15,15`,
+  injected dimension `0`, broad residual columns `0`, near-fraction counts
+  above `1e-4`, `1e-3`, and `1e-2` all `0`.
+- HF evidence: saved bad total energy `-2089.237075203`; ordered-MGS HF total
+  `-2085.914282185`, or `+3.322793018` Ha above the bad state. Final residual
+  trace is `0.0` total, `0.0 / 0.0` alpha/beta. Residual-containing one-body
+  contribution is `0.0`; residual-containing Vee contribution is `0.0`; low
+  residual-mode occupations in the replay table are all `0.0`.
+- Timing: HF relaxation took about `1067.7 s`; full replay took about
+  `1256.1 s`. Doer validation included `git diff --check` and package load.
+  No tracked source edits were made by the replay.
+
+Goal advancement:
+- MT4/LT5: confirms that broad RG/MWG residual channels were the immediate Cr2
+  HF collapse mechanism for this bad state. Source-backed ordered compact-first
+  selection removes the residual overoccupation without changing Vee or adding
+  screened-reference physics.
+- LT6: still not a production claim. The evidence supports the private
+  construction option and the next design discussion, not public/default
+  promotion.
+
+Risk / guardrail:
+- Do not add artifact provenance, driver keywords, or production defaults from
+  this pass alone. The option remains diatomic and Cr2-targeted through the
+  compactness policy. The broad near-gausslet candidates are not yet assigned a
+  durable fate; this pass only shows they must not become ordinary MWG residual
+  channels in the bad Cr2 lane.
+
+Carrying-cost result:
+- tracked source line delta: 0.
+- deleted: none.
+- simplified: none.
+- quarantined: ignored HF replay probe and `/Users/srw/dmrgtmp` outputs.
+- exact remaining blocker: manager decision on the next design step. The
+  likely next lane is broad-candidate fate classification/provenance design,
+  but only after explicitly separating "internal diagnostic option" from any
+  saved artifact or public workflow.
