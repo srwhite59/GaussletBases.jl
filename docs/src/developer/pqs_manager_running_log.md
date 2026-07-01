@@ -20524,3 +20524,81 @@ Carrying-cost result:
   plausible next measurement is to use existing injection machinery for the
   Cr2 near-gausslet broad class while keeping compact directions in RG/MWG and
   explicitly reporting the four broad-defer dzz-like modes.
+
+## Cartesian Hamiltonian Producer Pass 231 - Cr2 Split-Fate Residual Construction Audit
+
+Commit(s):
+- this commit - Record Cr2 split-fate residual audit
+
+Summary:
+- Accepted the measurement-only split-fate audit as a negative result. The
+  candidate-level split did not improve on compactness-only for Cr2. It
+  injected `54` broad near-gausslet principal modes and kept the `30` compact
+  residual candidates, but the resulting residual sector still contained broad
+  near-gausslet character and failed the sector gate.
+- The important correction is that "broad near-gausslet" does not automatically
+  become safe simply by routing some principal modes through the existing
+  injection machinery. In this construction, broad character leaks back into
+  the residual/MWG sector; compactness-only remains the cleaner Cr2 diagnostic
+  construction.
+
+Validation / evidence:
+- Doer wrote ignored probe `tmp/work/cr2_split_fate_residual_probe.jl` and
+  output tables under
+  `/Users/srw/dmrgtmp/cr2_split_fate_residual_6466d3b33/`. Manager inspected
+  `summary.txt`, `policies.tsv`, and `low_modes.tsv`, then reran
+  `git diff --check` and package load.
+- Policy comparison: default has residual dimension `136`, broad residual
+  columns `126`, `K_min = 0.4046`, and `H1_min = -7.4587`; compactness-only
+  has residual dimension `30`, broad residual columns `0`,
+  `K_min = 3.0271`, and `H1_min = -5.7936`; split-fate has injected dimension
+  `54`, residual dimension `30`, broad residual columns `26`,
+  `K_min = 2.2185`, and `H1_min = -6.4748`.
+- Split-fate validation narrowly fails the source orthogonality tolerance:
+  `F' S R = 1.040e-10` versus `1e-10`; `R' S R` is about `4.22e-10`.
+  More importantly, low split modes are broad and near-heavy: the lowest split
+  mode has width about `2.42`, near-candidate fraction about `0.723`, and
+  shape `balanced_midbond_broad`; modes 4-5 have near fractions about `0.994`.
+- The split-deferred principal-mode set has `54` modes and is not the earlier
+  small dzz-only set. It includes higher-occupation s/p/d principal modes and
+  symmetric partners. HF was correctly not run because the sector gate failed.
+
+Goal advancement:
+- MT4/LT5: rules out the naive candidate-level "compact -> RG, near-gausslet
+  -> existing injection" construction as the next Cr2 fix. The immediate
+  reliable mechanism remains excluding broad directions from MWG residual
+  channels, as compactness-only did.
+- LT6: preserves provenance discipline. No artifact/provenance/public work is
+  justified by this split-fate result.
+
+Risk / guardrail:
+- No tracked science source edits, production defaults, public inputs,
+  artifact writing, provenance keys, screened-reference work, Vee scaling,
+  broad injection redesign, HF continuation, or Cr2 production claim. The live
+  dirty file during review remained unrelated bloat-fixer WIP in
+  `src/cartesian_contracted_parent_metrics/product_staged_metric_fallbacks.jl`.
+
+Carrying-cost result:
+- added tracked source lines: 0.
+- deleted tracked source lines: 0.
+- exact remaining blocker: understand why current injection plus compact
+  residual orthogonalization reintroduces broad near-gausslet content before
+  attempting another split-fate implementation. Do not promote split-fate
+  injection or compactness provenance from this result.
+
+### Medium-Term Goal Checkpoint After Pass 231
+
+- MT1 fake-PQS quarantine: active/maintained. Recent Cr2 residual work did not
+  touch fake-PQS route authority.
+- MT2 independent H2 PQS recovery and MT3 common physical support vocabulary:
+  active/maintained. The Cr2 lane continues to consume the common terminal/RG
+  construction boundary rather than reopening old source-box route semantics.
+- MT4 supplement staging after authority: active, with updated state. The Cr2
+  evidence now favors basis-selection/fate control over screened-reference as
+  the immediate collapse fix, but only compactness-only has removed the
+  residual-occupation failure. Split-fate injection is blocked.
+- MT5 cleanup pressure: active. Bloat-fixer WIP remains separate in
+  `product_staged_metric_fallbacks.jl` and must not be mixed with Cr2 science
+  commits.
+- MT6 audit/classify old Cartesian flat paths: active but secondary while the
+  Cr2 residual-fate lane is live.
