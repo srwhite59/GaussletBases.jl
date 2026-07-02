@@ -536,6 +536,8 @@ these approved design IDs:
 - `HP-RG-INJECT-FN-01`
 - `HP-RG-PROTECT-INJECT-FN-01`
 - `HP-RG-PROTECT-INJECT-TEST-01`
+- `HP-RG-PROTECT-ONEBODY-FN-01`
+- `HP-RG-PROTECT-ONEBODY-TEST-01`
 - `HP-CGRB-FILE-01`
 - `HP-CGRB-FN-01`
 - `HP-CGRB-FN-02`
@@ -1084,6 +1086,21 @@ Approved Residual Gaussian module surfaces:
   Hamiltonian claims. If a later source lane is justified, likely exact
   one-body ownership is `src/cartesian_residual_gaussians/augmented_operators.jl`,
   but that decision is deferred until after the audit.
+- `HP-RG-PROTECT-ONEBODY-FN-01` and `HP-RG-PROTECT-ONEBODY-TEST-01` approve
+  only narrow internal exact one-body transformation for the protected fixed
+  sector. Primary source ownership is
+  `src/cartesian_residual_gaussians/augmented_operators.jl`; optional
+  `src/cartesian_residual_gaussians/residual_basis.jl` edits are allowed only
+  for transform-ready geometry fields or accessors. The source path may
+  transform exact dense in-memory `K`, per-center uncharged `U_A`, and
+  assembled `H1` into `F = [Z, M Qperp]`, with diagnostics for symmetry,
+  orthogonality, traces, and low `H1_FF` replay. It does not approve public
+  driver/API/export changes, artifacts/provenance/writers/readers/manifests,
+  exact IDA/MWG interaction transforms, matrix-vector action frameworks,
+  screened-reference/rho0 work, Cr2 HF, production Hamiltonian claims, residual
+  default changes, staged-geometry selector changes, rejected broad directions
+  as MWG residual channels, committed tests by default, or more than target
+  `180` added source lines across the approved files.
 
 Non-negotiable RG guardrails:
 

@@ -22048,3 +22048,66 @@ Carrying-cost result:
 - exact remaining blocker: if the ignored audit cannot build fixed-sector
   one-body blocks from existing geometry and one-body data, report the missing
   reusable seam instead of adding source instrumentation under this ID.
+
+## Cartesian Hamiltonian Producer Pass 255 - Protected Fixed-Sector One-Body Source Authority
+
+Commit(s):
+- this commit - Approve protected one-body source lane
+
+Summary:
+- Accepted the completed `HP-RG-PROTECT-ONEBODY-AUDIT-01` measurement and
+  approved `HP-RG-PROTECT-ONEBODY-FN-01` /
+  `HP-RG-PROTECT-ONEBODY-TEST-01` as a narrow internal source lane.
+- The audit report is now durable at
+  `docs/src/developer/reports/cr2_protected_onebody_audit_eaf05a38c/`, with
+  raw TSV output retained under
+  `/Users/srw/dmrgtmp/cr2_protected_onebody_audit_eaf05a38c/`.
+- Design answers: source authority is granted now because the audit evidence
+  is committed in compact report form; primary ownership is
+  `src/cartesian_residual_gaussians/augmented_operators.jl`; optional
+  `residual_basis.jl` edits are allowed only for transform-ready geometry
+  fields or accessors; first source lane is dense in-memory matrix transforms,
+  not a matrix-vector action framework; H2 default residual/facade smoke is
+  required in addition to the ignored Cr2 replay.
+
+Validation / evidence:
+- Cr2 audit geometry: base `6915`, compact residual `30`, protected originals
+  `30`, broad retained `87`, `Z = 117`, `F = 6945`,
+  `B_min = 0.993465824505872`, and no `B` singular value below `0.99`.
+- Orthogonality and symmetry: `F' S F - I` block estimate `1.164e-9`,
+  `Z' S M Qperp = 9.873e-16`, `K` sample symmetry `1.97e-10`, max unit
+  nuclear sample symmetry `3.74e-12`, and `H1` sample symmetry `6.60e-11`.
+- The converged `H1_FF` low values were
+  `-295.556920`, `-295.556904`, `-79.864900`, `-79.864890`,
+  `-79.545924`, `-79.545366`, `-79.268808`, and `-79.268748`. The lowest
+  modes are dominated by protected originals, not broad injected directions.
+
+Goal advancement:
+- LT5/LT6 and MT4/MT6: moves protected-original injection from geometry-only
+  to exact one-body feasibility while preserving the hard boundary before
+  IDA/MWG interaction and artifact/HF work.
+- The source lane remains internal/default-off. It may produce dense in-memory
+  exact `K`, per-center uncharged `U_A`, and assembled `H1` transforms for
+  `F = [Z, M Qperp]`; it is not a production Hamiltonian lane.
+
+Risk / guardrail:
+- Still forbidden: public driver/API/export changes, artifact schema,
+  provenance, writer, reader, manifest, or sidecar changes, exact IDA/MWG
+  interaction transform, screened-reference/rho0 work, Cr2 HF, solver work,
+  production Cr2 Hamiltonian claims, residual default changes, staged geometry
+  selector changes, matrix-vector action frameworks, rejected broad directions
+  as MWG residuals, and committed tests by default.
+- Line budget is target `180` added source lines across
+  `augmented_operators.jl` plus optional narrow geometry access in
+  `residual_basis.jl`.
+
+Carrying-cost result:
+- source line delta: 0 in this docs pass.
+- deleted: none.
+- simplified: source ownership is now split cleanly: `residual_basis.jl` owns
+  protected geometry, `augmented_operators.jl` owns exact one-body transforms.
+- quarantined: matrix-action frameworks, artifacts, IDA/MWG, HF, and
+  production Hamiltonian claims.
+- exact remaining blocker: implement only the dense in-memory one-body helper
+  path and replay the Cr2 audit; stop if broader object state, public wiring,
+  or interaction/Hamiltonian plumbing is needed.

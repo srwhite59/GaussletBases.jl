@@ -821,3 +821,112 @@ from the existing source-backed geometry and available exact one-body data,
 stop and report the exact missing reusable seam. Do not add source
 instrumentation, artifact fields, public wiring, or a temporary operator
 helper under this audit ID.
+
+## HP-RG-PROTECT-ONEBODY-FN-01 - Protected Fixed-Sector Exact One-Body Transform
+
+Status: approved narrow internal source authority. This is not public
+driver/API authority, not artifact/provenance authority, not IDA/MWG
+interaction authority, not Cr2 HF, and not a production default.
+
+### Measurement Basis
+
+The audit recorded in
+`docs/src/developer/reports/cr2_protected_onebody_audit_eaf05a38c/` showed
+that the source-backed staged geometry can receive exact one-body operators
+from existing in-memory data:
+
+```text
+F' K F
+F' U_A F by nuclear center
+F' H1 F
+```
+
+The source geometry matched the staged-filter target with `Z = 117`,
+`F = 6945`, `B_min = 0.993465824505872`, and `B < 0.99 = 0`. The in-memory
+checks reported `F' S F - I` block estimate `1.164e-9`,
+`Z' S M Qperp = 9.873e-16`, finite/symmetric one-body blocks, and converged
+low `H1_FF` values. The lowest `H1_FF` modes were dominated by protected
+originals, with no obvious low-`H1` broad injected mode before any IDA/MWG
+design.
+
+### Approved Source Surface
+
+Primary file:
+
+```text
+src/cartesian_residual_gaussians/augmented_operators.jl
+```
+
+Optional only if transform-ready geometry fields or accessors are missing:
+
+```text
+src/cartesian_residual_gaussians/residual_basis.jl
+```
+
+`residual_basis.jl` remains the geometry owner. `augmented_operators.jl` owns
+the exact one-body transformation once the geometry is available.
+
+### Approved Behavior
+
+- add private helper(s) to transform exact dense one-body matrices/blocks into
+  the protected fixed sector `F = [Z, M Qperp]`;
+- consume the source-backed protected geometry from `residual_basis.jl`;
+- support exact kinetic `K`, per-center uncharged nuclear `U_A`, and assembled
+  `H1`;
+- produce in-memory dense transformed matrices and diagnostics only;
+- keep the path internal/default-off and unreachable from public driver/API or
+  artifact writing;
+- preserve the existing default Residual Gaussian behavior and existing
+  `[G, R]` exact operator transforms when protected-original geometry is not
+  explicitly used;
+- report or expose internal diagnostics needed for symmetry,
+  orthogonality, low-spectrum replay, protected-span behavior, and block
+  composition.
+
+The first source lane is a dense in-memory transform lane. It does not approve
+a new matrix-vector action framework. If Cr2 replay requires a general action
+interface, stop and request a follow-up amendment.
+
+### Explicitly Not Approved
+
+- public driver/API/input keywords or exports;
+- artifact schema, provenance, writer, reader, manifest, or sidecar changes;
+- exact IDA/MWG interaction transform;
+- screened-reference/rho0 work;
+- Cr2 HF, solver work, or production Cr2 Hamiltonian claim;
+- residual default changes;
+- staged geometry selector changes;
+- using rejected broad directions as MWG residual channels;
+- source files outside the approved surface;
+- committed tests or fixtures by default.
+
+### Failure Rule
+
+If exact protected fixed-sector one-body transformation cannot be implemented
+as private internal helpers in `augmented_operators.jl`, with only narrow
+geometry access in `residual_basis.jl` if needed, stop and report the missing
+object. Do not add artifact state, public wiring, route/terminal/raw-block
+changes, a matrix-action framework, or IDA/MWG interaction plumbing under this
+ID.
+
+Line budget: target at most `180` added source lines across the approved files.
+
+## HP-RG-PROTECT-ONEBODY-TEST-01 - Protected One-Body Transform Validation
+
+Approved validation for `HP-RG-PROTECT-ONEBODY-FN-01`:
+
+- `git diff --check`;
+- package load;
+- H2 default residual/facade smoke unchanged;
+- ignored Cr2 one-body replay reproducing the audit geometry:
+  protected `30`, broad `87`, `Z = 117`, `F = 6945`,
+  `B_min = 0.993465824505872`, and `B < 0.99 = 0`;
+- replay `F' S F - I`, `Z' S M Qperp`, one-body symmetry, trace, and low
+  `H1_FF` diagnostics against the audit report within reviewed numerical
+  tolerances;
+- finite/symmetric dense in-memory `K`, per-center `U_A`, and `H1` transformed
+  blocks;
+- no protected-original injection artifact write/readback;
+- no IDA/MWG interaction transform;
+- no Cr2 HF;
+- no committed tests unless a later source-review pass requests one.

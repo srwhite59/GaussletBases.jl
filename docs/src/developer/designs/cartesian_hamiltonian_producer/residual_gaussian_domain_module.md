@@ -70,6 +70,10 @@ module, or object names in the new owner.
   prototype.
 - `HP-RG-PROTECT-ONEBODY-AUDIT-01` - measurement-only audit for exact
   one-body transformation into the protected fixed sector.
+- `HP-RG-PROTECT-ONEBODY-FN-01` - narrow internal exact one-body transform for
+  the protected fixed sector.
+- `HP-RG-PROTECT-ONEBODY-TEST-01` - validation gates for the protected
+  one-body transform replay.
 
 Implementation IDs in this list are approved only within the surfaces below.
 Design-only IDs record authority for future source blurbs but do not approve
@@ -290,6 +294,15 @@ changes, public wiring, IDA/MWG interaction transforms, Cr2 HF, residual
 default changes, or production Hamiltonian claims. If a later source lane is
 needed, exact one-body ownership likely belongs in `augmented_operators.jl`,
 while `residual_basis.jl` remains the geometry owner.
+
+`HP-RG-PROTECT-ONEBODY-FN-01` approves that narrow source lane after the
+successful audit. `augmented_operators.jl` owns private exact dense in-memory
+transforms of `K`, per-center uncharged `U_A`, and assembled `H1` into the
+protected fixed sector `F = [Z, M Qperp]`. `residual_basis.jl` may change only
+if transform-ready geometry accessors or fields are missing. This lane does
+not approve IDA/MWG interaction transforms, artifact support, public wiring,
+matrix-action frameworks, Cr2 HF, residual default changes, or production
+Hamiltonian claims.
 
 Do not approve a vague global entry point such as
 `stabilize_residual_metric(...)`. Global raw-candidate symmetric Lowdin and

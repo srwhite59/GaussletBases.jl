@@ -333,6 +333,15 @@ Approved Residual Gaussian robustness lane:
   Hamiltonian claims. Future exact one-body ownership is likely
   `augmented_operators.jl`, but that is deliberately deferred until the audit
   clarifies the dataflow.
+- `HP-RG-PROTECT-ONEBODY-FN-01` and `HP-RG-PROTECT-ONEBODY-TEST-01` approve
+  the next narrow internal source lane after the successful audit. Ownership
+  is `src/cartesian_residual_gaussians/augmented_operators.jl`, with
+  `residual_basis.jl` optional only for transform-ready geometry access. The
+  lane may transform exact dense in-memory `K`, per-center uncharged `U_A`,
+  and assembled `H1` into `F = [Z, M Qperp]` and replay the Cr2 one-body audit.
+  It does not approve public wiring, artifacts/provenance, IDA/MWG interaction
+  transforms, matrix-action frameworks, Cr2 HF, default changes, or production
+  Hamiltonian claims. Line budget target is `180` added source lines.
 
 Approved stale complete-core-shell RHF retirement:
 

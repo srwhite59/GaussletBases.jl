@@ -430,6 +430,17 @@ Approved robustness lane:
   residual default changes, or production Hamiltonian claims. A later source
   lane, if justified, should decide whether exact one-body ownership belongs
   in `src/cartesian_residual_gaussians/augmented_operators.jl`.
+- `HP-RG-PROTECT-ONEBODY-FN-01` / `HP-RG-PROTECT-ONEBODY-TEST-01` approve that
+  narrow source lane after the successful Cr2 audit. Primary ownership is
+  `src/cartesian_residual_gaussians/augmented_operators.jl`; optional
+  `residual_basis.jl` edits are allowed only for transform-ready geometry
+  fields or accessors. The first source lane may transform exact dense
+  in-memory `K`, per-center uncharged `U_A`, and assembled `H1` into
+  `F = [Z, M Qperp]` and reproduce the audit diagnostics. It must not add
+  public wiring, artifacts/provenance, exact IDA/MWG interaction transforms,
+  matrix-vector action frameworks, Cr2 HF, residual default changes,
+  production Hamiltonian claims, or committed tests by default. Line budget
+  target is `180` added source lines.
 
 ## Compact Hamiltonian Artifact Manifest
 
