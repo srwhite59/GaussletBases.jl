@@ -21745,3 +21745,51 @@ Carrying-cost result:
 - exact remaining blocker: determine whether the old Cr2 bad broad
   protected-original directions disappear or shrink under the repaired
   complete-shell source modes.
+
+## Cartesian Hamiltonian Producer Pass 249 - Cr2 Broad Injection Localization Audit
+
+Commit(s):
+- `6c3f943e4` - docs: add Cr2 broad injection localization audit
+
+Summary:
+- Accepted the measurement/report-only localization audit for the current
+  aspect-shell Cr2 protected-original broad candidate set. The report adds the
+  missing third diagnostic for broad original directions: spatial localization
+  after z-diagonalization, alongside fake-RDM importance and representability
+  in `M = [G, R_compact]`.
+- The result narrows the rule design. The old 14 nonlocalized dropped SVD
+  directions mostly localize into atom-local modes, not one smooth Cr-Cr
+  bridge: summed localization overlap is about `12.245/14` atom-local,
+  `0.807/14` bond-axis/midbond, and `0.944/14` outer-tail. However, a global
+  relaxed representability cutoff is still unsafe because high-fake
+  bond-spanning modes exist around representability `0.9759`.
+
+Validation / evidence:
+- Report directory:
+  `docs/src/developer/reports/cr2_broad_injection_localization_ad9ceccc1/`.
+- Probe elapsed about `67s`; package load and `git diff --check` passed in
+  the doer pass.
+- The report records 108 localized broad modes: 88 atom-local, 8 bond-axis,
+  8 transverse-bond, and 4 outer-tail. Strict `fake>=1e-3 && repr>=0.99`
+  keeps 80 localized modes; relaxed atom-local `fake>=1e-3 && repr>=0.95`
+  identifies 20 additional candidates.
+
+Goal advancement:
+- LT5/LT6 and MT4/MT6: replaces a brittle scalar injection cutoff story with
+  a clearer fate-classification problem for Cr2: importance, representability,
+  and shape class must be considered separately before any source rule.
+
+Risk / guardrail:
+- This is not source authority for a selector, public option, artifact schema,
+  or production Cr2 claim. Localization classes remain diagnostic; fake-RDM is
+  an importance proxy, not IDA quadrature authority.
+
+Carrying-cost result:
+- tracked source line delta: 0.
+- deleted: none.
+- simplified: the next design question is now shape-aware fate classification
+  rather than global `0.99` versus `0.95` representability.
+- quarantined: ignored probe and `/Users/srw/dmrgtmp` output tables.
+- exact remaining blocker: decide whether to authorize a source-backed
+  protected-original injection option with atom-local relaxed representability,
+  strict bond-spanning criteria, and explicit dropped-direction reporting.
