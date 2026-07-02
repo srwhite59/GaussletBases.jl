@@ -22159,3 +22159,55 @@ Carrying-cost result:
   entries, and typed status/result helpers remain the active private surface.
 - exact remaining blocker: any further CPBM status shrinkage must map live
   summary consumers before changing diagnostic shape.
+
+## Cartesian Hamiltonian Producer Pass 257 - CPBM Local One-Body Collection Accessor Cleanup
+
+Commit(s):
+- this commit - Remove unused CPBM local one-body collection accessors
+
+Summary:
+- Accepted the second bloat-fixer cleanup in
+  `src/cartesian_pair_block_materialization/one_body_block_collection.jl`.
+  This pass deleted the unused private local collection summary/status/lookup
+  and term/pair accessor layer. It preserved the collection constructor, entry
+  shape, collection status/blocker helpers, materialization flags, and
+  `_one_body_assert_local_block_collection`, which remain the placement-facing
+  contract.
+- This follows the stable-code cleanup rule: old private diagnostics that only
+  say what was done or not done do not need exhaustive preservation when no
+  live source/test/docs/tmp consumers remain. The live boundary is still the
+  collection entries consumed by `one_body_placement_plan.jl`.
+
+Validation / evidence:
+- Source delta: `429` deletions, `0` additions in
+  `one_body_block_collection.jl`; the file is now focused on construction,
+  entry normalization, status/blocker, and assertion.
+- Focused `rg` over `src`, `test`, `docs`, and `tmp/work` found no exact
+  definitions or callers for the removed helper names.
+- A broader `_one_body_local_block_collection` scan shows only constructor,
+  entry, status/blocker, assertion, and materialization-flag helpers remain.
+- `git diff --check` passed.
+- Package load passed with `package_load_elapsed_s=7.781578583`.
+
+Goal advancement:
+- LT6 and cleanup/carrying-cost guardrail: removes a private diagnostic layer
+  that no longer participates in active CPBM one-body placement or physics
+  endpoints.
+
+Risk / guardrail:
+- The pass does not change public one-body materialization entry points,
+  numerical kernels, collection construction, entry fields, or placement-plan
+  consumption. It also does not touch the unrelated protected-original
+  residual Gaussian WIP present in the worktree.
+
+Carrying-cost result:
+- deleted: local one-body collection summary/status/accessor/lookup helpers and
+  their small private support helpers.
+- simplified: the collection file now carries only construction and
+  placement-facing validation/status machinery.
+- quarantined: constructor, entry shape, status/blocker, materialization flags,
+  and `_one_body_assert_local_block_collection`.
+- not deleted because: `one_body_placement_plan.jl` still consumes collection
+  entries and asserts collection shape.
+- exact remaining blocker: broader CPBM one-body simplification must avoid
+  changing placement entry fields or public materialization semantics.
