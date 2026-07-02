@@ -21204,3 +21204,67 @@ Carrying-cost result:
   intentionally a Cr2/interacting-case safety option, or investigate a hybrid
   mode that keeps additive RG completeness for one-electron cases while
   preventing broad MWG residual occupation in Cr2.
+
+## Cartesian Hamiltonian Producer Pass 241 - H2+ Missing-Support Block Breakdown
+
+Commit(s):
+- this commit - Record H2plus missing-support block breakdown
+
+Summary:
+- Accepted the corrected H2+ missing-support audit with actual terminal
+  block/shell attribution. The main result is not that one outer shell is
+  missing at `ns=5`. Instead, `ns=7` fixes most ns=5 representability failures
+  by changing the central/contact block support itself, especially the
+  `direct_atom_contact_core` block for transverse modes.
+- This is important because it makes a simple "mostly ns=5 plus one ns=7
+  shell" design look less natural. The `ns=7` direct contact/core block has a
+  larger spatial footprint, roughly matching ns=5 shell-1 scale in x/y, so the
+  gain is better described as a larger/better resolved core-contact region
+  rather than an isolated outer-shell addition.
+
+Validation / evidence:
+- Doer wrote ignored probe outputs under
+  `/Users/srw/dmrgtmp/h2plus_missing_support_block_breakdown_81ccccf56/`,
+  including `bad_direction_block_breakdown.tsv`,
+  `bad_direction_block_delta.tsv`, `bad_direction_analogues.tsv`, and
+  `summary.txt`.
+- Target modes were the ns=5 bad representability directions `6`-`10`.
+  Modes `6`-`7` improve from about `0.987918` to `0.999491`; modes `8`-`9`
+  improve from about `0.984314` to `0.999441`; mode `10` improves from about
+  `0.950383` to `0.997912`.
+- For transverse modes `6`-`9`, the largest ns=7 fitted-norm gain is
+  `direct_atom_contact_core`, about `+0.67` in fitted G-norm fraction. Example:
+  ns=5 mode `6` fits through shell 1 (`0.582`), direct core (`0.216`), shell 2
+  (`0.170`), and z-extension (`0.032`), while the ns=7 analogue is mostly
+  direct core (`0.892`) plus shell 1 (`0.106`).
+- The pz/s mode `10` is less localized: ns=7 support shifts across direct
+  core (`0.781`), shell 1 (`0.148`), shell 2 (`0.056`), and z-extension
+  (`0.013`), with the largest individual gain in complete shell 2.
+
+Goal advancement:
+- MT4/LT6: refines the completeness-proxy story. H2+ ns=5 incompleteness is
+  not simply caused by dropping a high-fake-RDM direction or by one missing
+  outer shell. The central/contact region geometry changes with ns, and that
+  change improves representability.
+- This points away from a naive mixed-ns shell splice and toward either using
+  higher ns where completeness matters, or considering a distinct core/contact
+  refinement concept only after a design pass.
+
+Risk / guardrail:
+- No source edits, mixed-ns implementation, public wiring, artifact/schema
+  change, Cr2 run, or production claim. Do not infer that a selected ns=7
+  terminal block can be spliced into ns=5 without a validated cross-overlap and
+  operator-assembly design.
+
+Carrying-cost result:
+- tracked source line delta: 0.
+- deleted: none.
+- simplified: the missing-support location is sharper: enlarged/better
+  resolved direct contact/core support, with pz/s support spread over nearby
+  central blocks.
+- quarantined: ignored block-breakdown probe and `/Users/srw/dmrgtmp` output
+  tables.
+- exact remaining blocker: decide whether to pursue a core/contact refinement
+  design, run the same block-breakdown idea on Cr2, or keep the reduced
+  protected-original option scoped to Cr2 safety without trying to recover all
+  H2+ proxy completeness at low ns.
