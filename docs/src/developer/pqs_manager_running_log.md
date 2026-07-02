@@ -21404,3 +21404,56 @@ Carrying-cost result:
 - exact remaining blocker: a later source pass must implement the table within
   the narrow helper/table seam and report if retained-rule/support records
   cannot be joined without a broader report/payload framework.
+
+## Cartesian Hamiltonian Producer Pass 244 - Terminal Due Diligence Context Expansion
+
+Commit(s):
+- this commit - Expand terminal due diligence context
+
+Summary:
+- Expanded `HP-DRV-SHELLDD-*` from a shell-by-shell table into a compact
+  terminal due-diligence report. The shell table remains central, but the
+  report must also show the derived system, parent axes/box, 1D centers,
+  gausslet/IDA weight statistics, and dimension/compression accounting.
+- This records the practical review lesson: the first thing a consumer needs
+  is confirmation that the constructed basis is what they think it is. Input
+  values alone are not enough; snapped nuclei, derived axis extents, parent
+  counts, box sizes, spacing summaries, and weight anomalies are the useful
+  due-diligence facts.
+
+Validation / evidence:
+- Updated `terminal_shellification_due_diligence.md`, `registry.md`,
+  `current.md`, `implementation_slices.md`, `README.md`, `AGENTS.md`, and this
+  running log.
+- Added required sections for normalized system/geometry, parent-axis and
+  weight tables, dimension/compression accounting, and the existing shell
+  table.
+- Added warning vocabulary for axis-center truncation, gausslet-weight
+  anomalies, and padding/radius values not reflected in the derived physical
+  box.
+
+Goal advancement:
+- LT5/LT6: makes the due-diligence contract strong enough to catch both
+  shell-shape problems and "wrong system/box/axis" mistakes before energy or
+  residual interpretation.
+- MT4: gives future Cr2/H2+ investigations a single standard review surface
+  instead of a sequence of custom probes.
+
+Risk / guardrail:
+- This remains docs/source-design authority only. It does not approve artifact
+  schema changes, dense coefficient/transform/support dumps, route reports,
+  shellification policy changes, aspect-balanced source-mode implementation,
+  public driver semantics, or Cr2 workflow.
+- Gausslet/IDA weight summaries are explicitly diagnostic only; they are not
+  residual integral weights, MWG weights, or proof of quadrature quality.
+
+Carrying-cost result:
+- source line delta: 0.
+- deleted: none.
+- simplified: due-diligence reporting is now one report contract rather than
+  separate ad hoc shell, axis, and weight probes.
+- quarantined: implementation, artifact persistence, enforcement of warnings,
+  and source-mode policy fixes.
+- exact remaining blocker: future implementation must decide which existing
+  staged objects expose the axis-center and weight facts without creating a
+  broad payload/report framework.

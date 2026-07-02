@@ -7,15 +7,15 @@ in this pass and no artifact schema change.
 ## Purpose
 
 Basis due diligence is part of the Cartesian/PQS producer contract. The repo
-should expose a standard shell-by-shell table from driver/producer workflows so
-repo consumers can inspect the actual terminal basis construction before
-interpreting energies, residual occupations, injection behavior, or Cr2-style
-failure modes.
+should expose a standard compact due-diligence report from driver/producer
+workflows so repo consumers can confirm the derived system, parent axes,
+weights, dimensions, and shellification before interpreting energies,
+residual occupations, injection behavior, or Cr2-style failure modes.
 
 The old legacy driver practice was useful because it printed enough
 construction detail that a human could see suspicious basis geometry. The new
-canonical driver should recover that property through a structured bounded
-table rather than a noisy route-stage dump.
+canonical driver should recover that property through structured bounded
+report sections rather than a noisy route-stage dump.
 
 ## Why This Is Needed
 
@@ -38,18 +38,127 @@ energies or residual/injection behavior.
 
 ## Contract
 
-- The repo/driver must expose a shell-by-shell basis due-diligence table for
+- The repo/driver must expose a terminal basis due-diligence report for
   Cartesian/PQS terminal bases.
-- Consumers are expected to inspect this table before interpreting energies,
+- Consumers are expected to inspect this report before interpreting energies,
   residual-Gaussian behavior, injection behavior, or high-cost production
   artifacts.
 - Warning flags are advisory diagnostics. They are not automatic construction
   failures unless a caller, test, or later policy explicitly chooses to enforce
   them.
-- The table is a user-facing basis review surface, not a route-stage
-  diagnostic dump. It must remain bounded and row-oriented.
+- The report is a user-facing basis review surface, not a route-stage
+  diagnostic dump. It must remain bounded and mostly row-oriented.
 
-## Required Table Fields
+## Required Report Sections
+
+The due-diligence report should have four compact sections:
+
+1. normalized system and geometry context;
+2. parent axes, physical box, 1D centers, and gausslet/IDA weight statistics;
+3. final-basis dimension and compression accounting;
+4. shell-by-shell terminal region table.
+
+The first implementation may print compact summaries with wrapped rows. It
+should still build an in-memory row/section representation so later callers
+can inspect the same facts without scraping text.
+
+## System And Geometry Header
+
+The header should report derived, normalized facts, not just echo user input:
+
+```text
+geometry_kind
+nesting
+atom_symbols
+nuclear_charges
+nup
+ndn
+validated_atom_locations
+bond_axis
+bond_length_physical
+box_center_convention
+parent_box_physical_bounds
+parent_box_physical_lengths
+padding_or_radius_resolved_extents
+snapped_nuclear_indices
+snap_errors_physical
+core_spacing / reference_spacing / tail_spacing summary
+parent_axis_counts
+```
+
+For one-center atoms, the report should make it clear whether public
+padding/radius actually changed parent counts and physical box size. For
+z-axis diatomics, the report should make the bond length, bond axis, and
+transverse versus longitudinal extents visible.
+
+## Parent Axis And Weight Tables
+
+For each parent axis `x`, `y`, and `z`, report:
+
+```text
+axis
+count
+physical_min
+physical_max
+physical_length
+center_preview_or_full_bounded_list
+min_spacing
+median_spacing
+max_spacing
+nearest_spacing_at_each_nucleus
+nearest_index_for_each_nucleus
+core_region_index_span
+tail_region_index_span
+```
+
+The full 1D center locations are useful derived facts. The normal driver
+printout may use a bounded preview when an axis is long, but the in-memory
+report row should keep enough structured data to emit a full per-axis table in
+a focused report without changing artifact schema.
+
+Gausslet/IDA weight statistics should be reported where available:
+
+```text
+axis or total scope
+weight_count
+weight_sum
+weight_min
+weight_max
+weight_abs_sum
+negative_weight_count
+near_zero_weight_count
+near_zero_threshold
+large_weight_warning
+```
+
+If meaningful, include per-axis 1D weight stats and aggregate 3D/base IDA
+weight stats. These are diagnostics only. They are not residual integral
+weights, not MWG weights, and not automatic proof of quadrature quality.
+
+## Dimension And Compression Accounting
+
+Report a compact dimension summary:
+
+```text
+parent_grid_size
+direct_or_core_columns
+complete_shell_columns
+slab_columns
+compact_product_columns
+identity_columns
+base_final_dimension
+supplement_dimension_when_present
+residual_dimension_when_present
+augmented_dimension_when_present
+compression_by_class
+large_identity_sector_count
+```
+
+This section should let a consumer see whether the basis size is coming from
+core/contact sectors, complete shells, slabs, residuals, or supplement-derived
+columns before inspecting detailed shell rows.
+
+## Required Shell Table Fields
 
 The due-diligence table should include one row per terminal region or shell
 unit at the granularity needed to review shellification. The first
@@ -125,6 +234,9 @@ missing_physical_bounds
 missing_source_mode_shape
 slab_without_native_metadata
 unavailable_expected_shape
+axis_center_table_truncated
+gausslet_weight_anomaly
+padding_or_radius_not_reflected_in_box
 ```
 
 This list is not a new enforcement policy. It is a bounded diagnostic
@@ -141,10 +253,15 @@ Implementation shape:
 
 - join existing terminal inventory rows with terminal retained-rule
   plan/support records;
-- produce an in-memory/report table first;
-- have the canonical driver print the bounded due-diligence table through the
+- gather normalized system/geometry context and parent-axis summaries from
+  existing staged producer objects;
+- gather gausslet/IDA weight statistics only from existing weights already
+  present in the construction path;
+- produce an in-memory/report object first;
+- have the canonical driver print the bounded due-diligence report through the
   existing driver summary path;
-- keep the table row-oriented and compact enough for normal driver output;
+- keep the report compact enough for normal driver output, with bounded
+  previews for long axis-center lists;
 - do not change artifact schema in the first implementation.
 
 Approved source surface for the later implementation:
@@ -169,14 +286,15 @@ sidecar group is approved by this design.
 
 Approved behavior:
 
-- add one helper/table surface for terminal shellification due-diligence rows;
-- expose the table from canonical driver/producer workflows;
-- include the required shell-by-shell fields listed above where available;
+- add one helper/report surface for terminal due diligence;
+- expose the report from canonical driver/producer workflows;
+- include the required system, axis/box/weight, dimension-accounting, and
+  shell-by-shell fields listed above where available;
 - compute advisory warning flags, including rectangular physical shells
-  represented by cubic source modes;
+  represented by cubic source modes and anomalous derived axis/weight facts;
 - keep warning flags advisory by default;
 - preserve existing compact terminal-region inventory behavior unless it is
-  intentionally extended by this table;
+  intentionally extended by this report;
 - preserve all numerical construction behavior.
 
 Forbidden:
@@ -191,15 +309,16 @@ Forbidden:
 - route skeleton exposure, source-mode inventory dumps, pair inventories,
   raw-block details, all-row support listings, full metadata dumps, or
   recursive route-stage reports;
+- dense coefficient, transform, pair, or raw support dumps;
 - automatic failure on warning flags unless a later policy approves it.
 
-Failure rule: if the due-diligence table cannot be built by extending/wrapping
+Failure rule: if the due-diligence report cannot be built by extending/wrapping
 `_cartesian_terminal_inventory_rows(...)` and compact accessors without adding
 a broad report/payload framework, artifact fields, or shellification policy
 changes, stop and report the missing seam.
 
-Line budget: target at most `120` added `src`/`bin` lines. This should be a
-small table/report surface, not a new reporting subsystem.
+Line budget: target at most `180` added `src`/`bin` lines. This should be a
+small report/table surface, not a new reporting subsystem.
 
 ### HP-DRV-SHELLDD-TEST-01
 
@@ -207,9 +326,12 @@ Approved validation:
 
 - `git diff --check`;
 - package load if source is touched;
-- bounded H2 or H2+ driver/producer smoke showing due-diligence rows;
+- bounded H2 or H2+ driver/producer smoke showing due-diligence report
+  sections and shell rows;
 - focused row inspection showing a rectangular physical shell warning when an
   existing bounded fixture has one;
+- focused inspection of normalized system/geometry, axis/box summaries, and
+  gausslet/IDA weight statistics;
 - confirm ordinary compact terminal inventory output remains bounded;
 - confirm artifact/readback matrix deltas are unchanged if artifact writing is
   exercised;

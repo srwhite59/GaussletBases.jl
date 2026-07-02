@@ -24,9 +24,11 @@ contracts. `HP-DRV-INV-*` approves a bounded terminal-region inventory summary
 in the canonical driver output so users can see region kind, support rows,
 final columns, compression, and identity-vs-compact realization without
 turning the driver into a route diagnostic dump. `HP-DRV-SHELLDD-*` approves
-a standard terminal shellification due-diligence table so consumers can review
-shell-by-shell physical aspect ratios, source-mode shapes, retained counts,
-and warning flags before interpreting energies or residual/injection behavior.
+a standard terminal due-diligence report so consumers can review derived
+system/geometry facts, parent axes and 1D centers, gausslet/IDA weight stats,
+dimension accounting, shell-by-shell physical aspect ratios, source-mode
+shapes, retained counts, and warning flags before interpreting energies or
+residual/injection behavior.
 The supported supplemented
 workflow now accepts explicit homonuclear
 z-axis diatomics without element-specific branches. A compact artifact manifest
@@ -111,7 +113,7 @@ Agents should read first:
   for the optional near-gausslet injection proposal; this is design memory, not
   production source authority
 - [Terminal shellification due diligence](terminal_shellification_due_diligence.md)
-  for the shell-by-shell basis review table and advisory warning contract
+  for the derived basis review report and advisory warning contract
 - [Cartesian Gaussian raw blocks - nuclear slice](cartesian_gaussian_raw_blocks_nuclear.md)
   for the neutral uncharged nuclear raw-block owner
 - [Cartesian Gaussian raw blocks - non-nuclear slice](cartesian_gaussian_raw_blocks_non_nuclear.md)

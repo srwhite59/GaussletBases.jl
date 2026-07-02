@@ -1519,28 +1519,35 @@ workflow, stage sequence, or driver inputs. Later implementation line budget
 is target `80` added `src`/`bin` lines.
 
 `HP-DRV-SHELLDD-FN-01` and `HP-DRV-SHELLDD-TEST-01` approve only a standard
-terminal shellification due-diligence table for Cartesian/PQS terminal bases,
+terminal due-diligence report for Cartesian/PQS terminal bases,
 as recorded in
 `docs/src/developer/designs/cartesian_hamiltonian_producer/terminal_shellification_due_diligence.md`.
 The first implementation seam is extending or wrapping
 `src/cartesian_base_hamiltonian.jl`'s `_cartesian_terminal_inventory_rows(...)`
 and joining existing terminal inventory rows with terminal retained-rule
 plan/support records. `bin/cartesian_ham_builder.jl` may print the bounded
-table through the canonical driver summary path. `src/pqs_source_box_route_driver_helpers.jl`
-is optional only if a compact accessor is directly required. The table must
-include shell-by-shell order/key, role, region kind, shell index,
-owner/contact/shared classification, index and physical boxes, physical side
-lengths/aspect ratios, actual and expected aspect-balanced source-mode shape,
-source-mode count, retained count, final column range, lowering/retained/
-realization rule, slab metadata, and advisory warning flags. Consumers are
-expected to inspect this table before interpreting energies, residual
+report through the canonical driver summary path. `src/pqs_source_box_route_driver_helpers.jl`
+is optional only if a compact accessor is directly required. The report must
+include normalized system/geometry facts, validated atom locations, bond axis/
+length, snapped nuclear indices, parent physical bounds, parent axis counts,
+1D center summaries or bounded tables, spacing summaries, gausslet/IDA weight
+statistics, dimension/compression accounting, shell-by-shell order/key, role,
+region kind, shell index, owner/contact/shared classification, index and
+physical boxes, physical side lengths/aspect ratios, actual and expected
+aspect-balanced source-mode shape, source-mode count, retained count, final
+column range, lowering/retained/realization rule, slab metadata, and advisory
+warning flags. Consumers are expected to inspect this report before
+interpreting energies, residual
 behavior, or injection behavior. Warning flags are advisory by default. This
 lane does not approve artifact schema/provenance/reader changes, public input
 or semantic changes, shellification policy changes, source-mode selection
 changes, aspect-balanced source-mode implementation, numerical construction
-changes, source-mode/pair/raw-block/all-row/full-metadata dumps, broad report
-payloads, Cr2 workflow, or committed fixtures/tests by default. Later
-implementation line budget is target `120` added `src`/`bin` lines.
+changes, dense coefficient/transform/support dumps, source-mode/pair/
+raw-block/all-row/full-metadata dumps, broad report payloads, Cr2 workflow, or
+committed fixtures/tests by default. Gausslet/IDA weight summaries are
+diagnostic only and are not residual integral weights, MWG weights, or proof of
+quadrature quality. Later implementation line budget is target `180` added
+`src`/`bin` lines.
 
 `HP-DRV-NEST-FN-01` and `HP-DRV-NEST-WIRE-01` approve one visible construction
 family input, `nesting = :pqs` or `nesting = :wl`, in
