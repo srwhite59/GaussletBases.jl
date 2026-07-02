@@ -21521,6 +21521,60 @@ Carrying-cost result:
   `raw_source_dims` through the existing complete-shell source plan without
   changing ownership, artifacts, or public driver semantics.
 
+## Cartesian Hamiltonian Producer Pass 246 - PQS Aspect-Shell Route-Driver Seam Amendment
+
+Commit(s):
+- this commit - Amend PQS aspect-shell route-driver seam
+
+Summary:
+- Amended `HP-PQS-ASPECTSHELL-FN-01` after the first source attempt correctly
+  blocked. The earlier approved files were directionally right but did not name
+  the real agreement seam. `_pqs_complete_shell_contract(...)` is too early to
+  choose the old angular-band `L` honestly because it lacks the parent/bundle
+  and selector context. `pqs_multilayer_shell_source_plan.jl` is too late to be
+  the only fix because support records, retained-unit metadata, raw-product
+  retained rules, due-diligence actual source shape, and final realization
+  validation must already agree on `source_mode_shape`.
+- Approved `src/pqs_source_box_route_driver_helpers.jl` as the route-driver
+  aspect-source seam, with optional
+  `src/pqs_source_box_diatomic_complete_core_shell.jl` only if support-record
+  consistency directly requires it.
+
+Validation / evidence:
+- Updated `pqs_complete_shell_aspect_source_modes.md`, `registry.md`,
+  `implementation_slices.md`, `current.md`, `AGENTS.md`, and this running log.
+- The intended seam is now recorded around
+  `_pqs_source_box_route_driver_unit_stage_low_order_summary(...)`,
+  `_pqs_source_box_route_driver_terminal_lowering_plan(...)`, and
+  `_pqs_source_box_route_driver_enriched_retained_unit_plan(...)`, after
+  shellification and before lowering-contract inventory, retained-unit plans,
+  retained-unit transform contracts, and terminal retained-rule plans are
+  frozen.
+
+Goal advancement:
+- LT5/LT6: prevents a narrow source pass from guessing `L` in the wrong layer
+  or creating inconsistent source-mode facts across terminal stages.
+- MT4/MT6: keeps the due-diligence report truthful by requiring one
+  construction-wide `source_mode_shape`, not a late source-plan-only correction.
+
+Risk / guardrail:
+- Still no source implementation in this pass. The amendment does not approve
+  public driver/API changes, artifact schema changes, shellification ownership
+  changes, WL policy changes, thin-slab/angular-z-extension/direct-core
+  changes, residual/RG/MWG/IDA changes, old route-global materialization, or
+  Cr2 production claims.
+
+Carrying-cost result:
+- source line delta: 0.
+- deleted: none.
+- simplified: the approved implementation surface now matches the true stage
+  boundary instead of pushing doer toward an early/late workaround.
+- quarantined: source edits, scalar remeasurement, and Cr2 production claims.
+- exact remaining blocker: implement the route-driver enrichment so complete
+  shell lowering contracts, retained-unit metadata, support records, transform
+  retained rules, due diligence, and terminal realization all agree on
+  `(q,q,L)`.
+
 ## Cartesian Hamiltonian Producer Pass 245 - Terminal Due Diligence Report Implementation
 
 Commit(s):

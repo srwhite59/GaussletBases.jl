@@ -1563,15 +1563,23 @@ angular-resolution code to recover explicitly is in
 `src/cartesian_nested_diatomic.jl` and
 `src/cartesian_nested_faces.jl`, especially the
 `_nested_diatomic_*reference_band`, adaptive retained-count, source-dimension
-plan, and `_nested_projected_q_shell_layer(...)` helpers. Approved source files
-are `src/cartesian_terminal_lowering/region_contracts.jl`,
+plan, and `_nested_projected_q_shell_layer(...)` helpers. The approved seam is
+in `src/pqs_source_box_route_driver_helpers.jl`, after shellification has
+produced complete-shell regions and parent/bundle facts but before
+lowering-contract inventory, retained-unit plans, retained-unit transform
+contracts, and terminal retained-rule plans are frozen. Additional approved
+files are `src/cartesian_terminal_lowering/region_contracts.jl`,
 `src/pqs_multilayer_shell_source_plan.jl`, and
-`src/pqs_multilayer_shell_region_plan.jl`; those old nested helper files are
-optional only if directly needed. Later implementation may change retained
-counts, final dimensions, Hamiltonian matrices, and energies, so old scalar
-targets tied to cubic complete-shell source modes must be remeasured. This lane
-does not approve artifact schema/provenance/reader changes, public input or
-driver semantic changes, WL source-mode policy changes, thin-slab/angular
+`src/pqs_multilayer_shell_region_plan.jl`; the old nested helper files are
+optional only if directly needed, and
+`src/pqs_source_box_diatomic_complete_core_shell.jl` is optional only for
+support-record consistency. `region_contracts.jl` is too early to choose `L`
+by itself, while `pqs_multilayer_shell_source_plan.jl` is too late to be the
+only fix. Later implementation may change retained counts, final dimensions,
+Hamiltonian matrices, and energies, so old scalar targets tied to cubic
+complete-shell source modes must be remeasured. This lane does not approve
+artifact schema/provenance/reader changes, public input or driver semantic
+changes, WL source-mode policy changes, thin-slab/angular
 z-extension/direct-core/RG/MWG/IDA/global-injection changes, old route-global
 materialization revival, broad source-mode/report/payload frameworks, Cr2
 production claims, committed fixtures/tests by default, or more than target

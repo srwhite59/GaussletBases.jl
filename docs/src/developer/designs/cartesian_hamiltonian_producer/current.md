@@ -196,11 +196,16 @@ Implemented base path:
   `(q,q,q)` source modes in `_pqs_complete_shell_contract(...)`; the restored
   policy should choose explicit aspect-aware `(q,q,L)` dimensions for z-axis
   diatomic complete shells, with `L` derived from the older angular-resolution
-  rule or a documented validated equivalent. This lane may change retained
-  counts, final dimensions, Hamiltonian matrices, and energies. It does not
-  approve artifact schema changes, public driver inputs, WL policy changes,
-  residual/MWG/IDA changes, old route-global materialization, or Cr2
-  production claims.
+  rule or a documented validated equivalent. The approved seam is in the
+  terminal low-order route-driver path after shellification has produced
+  complete-shell regions and parent/bundle facts, but before lowering,
+  retained-unit, transform-contract, and terminal retained-rule records are
+  frozen. `region_contracts.jl` is too early to own the `L` choice by itself,
+  and `pqs_multilayer_shell_source_plan.jl` is too late to be the only fix.
+  This lane may change retained counts, final dimensions, Hamiltonian matrices,
+  and energies. It does not approve artifact schema changes, public driver
+  inputs, WL policy changes, residual/MWG/IDA changes, old route-global
+  materialization, or Cr2 production claims.
 - 2026-06-26 He/PQS evidence found `n_s = 5` mapped-COMX not robust enough for
   all-electron scalar capture. This keeps mapped-COMX opt-in only and blocks
   default promotion until bounded He `n_s = 6`/`7` H1/IDA evidence is reviewed.

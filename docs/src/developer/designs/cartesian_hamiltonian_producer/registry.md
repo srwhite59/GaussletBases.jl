@@ -5333,6 +5333,7 @@ Old code to recover explicitly:
 Approved source files:
 
 ```text
+src/pqs_source_box_route_driver_helpers.jl
 src/cartesian_terminal_lowering/region_contracts.jl
 src/pqs_multilayer_shell_source_plan.jl
 src/pqs_multilayer_shell_region_plan.jl
@@ -5346,6 +5347,28 @@ src/cartesian_nested_diatomic.jl
 src/cartesian_nested_faces.jl
 ```
 
+Optional only if directly needed for support-record consistency:
+
+```text
+src/pqs_source_box_diatomic_complete_core_shell.jl
+```
+
+Amended seam: compute aspect-aware complete-shell source shapes inside the
+terminal low-order route-driver path after shellification has produced
+complete-shell regions and parent/bundle facts, but before
+`lowering_contract_inventory`, `retained_unit_plan`,
+`retained_unit_transform_contract_plan`, and `terminal_retained_rule_plan` are
+frozen. The intended area is around
+`_pqs_source_box_route_driver_unit_stage_low_order_summary(...)`,
+`_pqs_source_box_route_driver_terminal_lowering_plan(...)`, and
+`_pqs_source_box_route_driver_enriched_retained_unit_plan(...)`.
+`_pqs_complete_shell_contract(...)` remains a metadata contract builder unless
+a narrow synchronization change is still required; it is too early to choose
+`L` honestly by itself. `pqs_multilayer_shell_source_plan.jl` remains
+responsible for accepting/passing non-cubic `raw_source_dims` and calling
+`_nested_projected_q_shell_layer(...)` with the correct `L`, but it is too late
+to be the only fix.
+
 Approved behavior:
 
 - change z-axis diatomic PQS complete-shell source-mode shape from cubic
@@ -5353,6 +5376,13 @@ Approved behavior:
 - keep `q` as the selected transverse PQS source size;
 - derive `L` from the restored angular-resolution rule, or from a documented
   validated equivalent;
+- recover the old angular-band `L` choice from the old helper logic, not from
+  index aspect guessing;
+- rewrite or enrich PQS complete-shell lowering contracts so
+  `source_mode_shape` is `(q,q,L)`;
+- ensure retained-unit metadata, support records, transform-contract
+  raw-product retained rules, due-diligence actual source shape, and final
+  realization validation all see the same `source_mode_shape`;
 - pass non-cubic `raw_source_dims`, explicit `q`, explicit `L`, and
   `selected_q` through the multilayer source plan into
   `_nested_projected_q_shell_layer(...)`;
