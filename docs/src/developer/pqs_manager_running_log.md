@@ -22493,3 +22493,53 @@ Carrying-cost result:
 - exact remaining blocker: a Vee audit must show that broad injected directions
   are not artificially cheap before any source implementation blurb is
   considered.
+
+## Cartesian Hamiltonian Producer Pass 263 - CPBM One-Body Nonclaim Field Cleanup
+
+Commit(s):
+- this commit - Remove CPBM one-body false nonclaim fields
+
+Summary:
+- Accepted the source cleanup authorized by Pass 261. The approved false-only
+  route/global/materialization nonclaim field cloud was removed from
+  `one_body_dispatch.jl` and `one_body_block_collection.jl`.
+- Live materialization booleans remain: source operator blocks, final pair
+  blocks, operator blocks, Hamiltonian data, artifacts, and placement-facing
+  collection fields. The cleanup also simplified internal summary propagation
+  by using existing local materialization fields directly instead of mirrored
+  `global_*` false/nonclaim fields.
+
+Validation / evidence:
+- Source delta: `3` additions and `82` deletions across the two approved files,
+  net `79` lines removed.
+- Focused `rg` over the two target files found no surviving removed nonclaim
+  names such as `route_driver_wiring`, `density_density_materialized`,
+  `ida_mwg_data_materialized`, `global_operator_blocks_materialized`, or
+  `full_white_lindsey_route_assembled`.
+- Broader property-read scan over `src`, `test`, `docs`, and `tmp/work` found
+  only two stale ignored tmp probes reading `density_density_materialized`.
+- `git diff --check` passed.
+- Package load passed with `package_load_elapsed_s=6.6042655`.
+
+Goal advancement:
+- LT6 and cleanup/carrying-cost guardrail: reduces route-era status vocabulary
+  in the active CPBM one-body path without changing one-body materialization,
+  placement, public entry points, or numerical kernels.
+
+Risk / guardrail:
+- Adjacent provider/final-basis/placement nonclaim vocabulary remains out of
+  scope. Object-kind assertions, live materialization booleans, repeated
+  summary/status construction, and placement-facing entry fields were not
+  changed.
+
+Carrying-cost result:
+- deleted: false-only route/global/materialization nonclaim fields in the two
+  approved CPBM one-body files.
+- simplified: internal summaries now use live local materialization booleans
+  directly instead of mirrored global false fields.
+- quarantined: adjacent provider/final-basis/placement nonclaim vocabulary and
+  repeated summary/status architecture.
+- not deleted because: live materialization booleans and placement-facing
+  fields are still part of the active local collection/placement contract.
+- exact remaining blocker: broader nonclaim vocabulary outside the two CPBM
+  one-body files needs separate authorization and consumer mapping.

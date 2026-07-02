@@ -4,25 +4,6 @@
 # work. The materialization entry points below call the direct, PQS source-space,
 # and White--Lindsey local selectors when caller-supplied inputs are ready.
 
-function _one_body_dispatch_core_nonclaim_flags()
-    return (;
-        route_driver_wiring = false,
-        pqs_lowdin_materialized = false,
-        full_white_lindsey_route_assembled = false,
-    )
-end
-
-function _one_body_dispatch_operator_nonclaim_flags()
-    return (;
-        route_driver_wiring = false,
-        coulomb_materialized = false,
-        density_density_materialized = false,
-        ida_mwg_data_materialized = false,
-        pqs_lowdin_materialized = false,
-        full_white_lindsey_route_assembled = false,
-    )
-end
-
 function _one_body_pair_block_dispatch_summary(
     record::PairBlockMaterializationRecord,
     term::Symbol;
@@ -105,7 +86,6 @@ function _one_body_pair_block_dispatch_summary(
         hamiltonian_data_materialized = false,
         artifacts_materialized = false,
         mixed_dispatcher_materialized = false,
-        _one_body_dispatch_core_nonclaim_flags()...,
     )
 end
 
@@ -175,7 +155,6 @@ function _one_body_pair_block_plan_dispatch_summary(
         hamiltonian_data_materialized = false,
         artifacts_materialized = false,
         mixed_dispatcher_materialized = false,
-        _one_body_dispatch_core_nonclaim_flags()...,
     )
 end
 
@@ -285,11 +264,7 @@ function _one_body_pair_block_set_preflight_summary(
         operator_blocks_materialized = false,
         hamiltonian_data_materialized = false,
         artifacts_materialized = false,
-        global_operator_blocks_materialized = false,
-        global_hamiltonian_data_materialized = false,
-        global_artifacts_materialized = false,
         mixed_dispatcher_materialized = false,
-        _one_body_dispatch_operator_nonclaim_flags()...,
     )
 end
 
@@ -436,13 +411,7 @@ function _one_body_pair_block_set_consumption(
         hamiltonian_data_materialized =
             block_set_summary.hamiltonian_data_materialized,
         artifacts_materialized = block_set_summary.artifacts_materialized,
-        global_operator_blocks_materialized =
-            block_set_summary.global_operator_blocks_materialized,
-        global_hamiltonian_data_materialized =
-            block_set_summary.global_hamiltonian_data_materialized,
-        global_artifacts_materialized = block_set_summary.global_artifacts_materialized,
         mixed_dispatcher_materialized = false,
-        _one_body_dispatch_operator_nonclaim_flags()...,
     )
     isempty(materialized_terms) && return base
     return merge(base, (; term_batch_results))
@@ -513,19 +482,7 @@ function _one_body_pair_block_set_consumption_summary(consumption::NamedTuple)
         operator_blocks_materialized = consumption.operator_blocks_materialized,
         hamiltonian_data_materialized = consumption.hamiltonian_data_materialized,
         artifacts_materialized = consumption.artifacts_materialized,
-        global_operator_blocks_materialized =
-            consumption.global_operator_blocks_materialized,
-        global_hamiltonian_data_materialized =
-            consumption.global_hamiltonian_data_materialized,
-        global_artifacts_materialized = consumption.global_artifacts_materialized,
         mixed_dispatcher_materialized = consumption.mixed_dispatcher_materialized,
-        route_driver_wiring = consumption.route_driver_wiring,
-        coulomb_materialized = consumption.coulomb_materialized,
-        density_density_materialized = consumption.density_density_materialized,
-        ida_mwg_data_materialized = consumption.ida_mwg_data_materialized,
-        pqs_lowdin_materialized = consumption.pqs_lowdin_materialized,
-        full_white_lindsey_route_assembled =
-            consumption.full_white_lindsey_route_assembled,
     )
 end
 
@@ -597,7 +554,6 @@ function _one_body_block_set_deferred_preflight_summary(
         hamiltonian_data_materialized = false,
         artifacts_materialized = false,
         mixed_dispatcher_materialized = false,
-        _one_body_dispatch_operator_nonclaim_flags()...,
     )
 end
 
@@ -810,7 +766,6 @@ function _one_body_pair_blocks(
                     result_tuple,
                     :pqs_source_pair,
                 ),
-            route_driver_wiring = false,
             hamiltonian_data_materialized = false,
             artifacts_materialized = false,
         ),
@@ -950,11 +905,6 @@ function _one_body_pair_block_batch_summary(
         hamiltonian_data_materialized =
             batch_result.hamiltonian_data_materialized,
         artifacts_materialized = batch_result.artifacts_materialized,
-        global_operator_blocks_materialized =
-            batch_result.operator_blocks_materialized,
-        global_hamiltonian_data_materialized =
-            batch_result.hamiltonian_data_materialized,
-        global_artifacts_materialized = batch_result.artifacts_materialized,
         materialization_path =
             _one_body_get_metadata(batch_result, :materialization_path, nothing),
         mixed_one_body_dispatcher =
@@ -965,8 +915,6 @@ function _one_body_pair_block_batch_summary(
             _one_body_get_metadata(batch_result, :pair_block_record_count, nothing),
         factors_constructed =
             _one_body_get_metadata(batch_result, :factors_constructed, false),
-        route_driver_wiring =
-            _one_body_get_metadata(batch_result, :route_driver_wiring, false),
     )
 end
 
@@ -1061,11 +1009,7 @@ function _one_body_pair_block_set_summary(
         operator_blocks_materialized = any_operator_materialized,
         hamiltonian_data_materialized = any_hamiltonian_materialized,
         artifacts_materialized = any_artifacts_materialized,
-        global_operator_blocks_materialized = any_operator_materialized,
-        global_hamiltonian_data_materialized = any_hamiltonian_materialized,
-        global_artifacts_materialized = any_artifacts_materialized,
         mixed_dispatcher_materialized = false,
-        _one_body_dispatch_operator_nonclaim_flags()...,
     )
 end
 
@@ -1248,11 +1192,9 @@ function _one_body_pair_block_consumption(
         source_operator_blocks_materialized =
             summary.source_operator_blocks_materialized,
         final_pair_blocks_materialized = summary.final_pair_blocks_materialized,
-        operator_blocks_materialized = summary.global_operator_blocks_materialized,
-        hamiltonian_data_materialized =
-            summary.global_hamiltonian_data_materialized,
-        artifacts_materialized = summary.global_artifacts_materialized,
-        route_driver_wiring = summary.route_driver_wiring,
+        operator_blocks_materialized = summary.operator_blocks_materialized,
+        hamiltonian_data_materialized = summary.hamiltonian_data_materialized,
+        artifacts_materialized = summary.artifacts_materialized,
         factors_constructed = summary.factors_constructed,
         materialization_path = summary.materialization_path,
         mixed_one_body_dispatcher = summary.mixed_one_body_dispatcher,
@@ -1405,7 +1347,6 @@ function _one_body_skipped_pair_block_summary(
         hamiltonian_data_materialized = false,
         artifacts_materialized = false,
         mixed_dispatcher_materialized = false,
-        _one_body_dispatch_core_nonclaim_flags()...,
     )
 end
 

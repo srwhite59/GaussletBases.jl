@@ -19,14 +19,6 @@ function _one_body_local_block_collection_entry_materialization_flags(;
         hamiltonian_data_materialized,
         artifacts_materialized,
         block_copied_into_entry = false,
-        local_operator_assembled = false,
-        global_operator_assembled = false,
-        route_driver_wiring = false,
-        coulomb_materialized = false,
-        ida_mwg_data_materialized = false,
-        pqs_lowdin_materialized = false,
-        pqs_shell_projection_materialized = false,
-        full_white_lindsey_route_assembled = false,
     )
 end
 
@@ -35,23 +27,11 @@ function _one_body_local_block_collection_summary_materialization_flags(;
     final_pair_blocks_materialized = false,
 )
     return (;
-        local_operator_assembled = false,
-        global_operator_assembled = false,
-        route_driver_wiring = false,
         source_operator_blocks_materialized,
         final_pair_blocks_materialized,
         operator_blocks_materialized = false,
         hamiltonian_data_materialized = false,
         artifacts_materialized = false,
-        global_operator_blocks_materialized = false,
-        global_hamiltonian_data_materialized = false,
-        global_artifacts_materialized = false,
-        coulomb_materialized = false,
-        density_density_materialized = false,
-        ida_mwg_data_materialized = false,
-        pqs_lowdin_materialized = false,
-        pqs_shell_projection_materialized = false,
-        full_white_lindsey_route_assembled = false,
     )
 end
 
