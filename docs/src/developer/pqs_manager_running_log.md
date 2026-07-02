@@ -21793,3 +21793,95 @@ Carrying-cost result:
 - exact remaining blocker: decide whether to authorize a source-backed
   protected-original injection option with atom-local relaxed representability,
   strict bond-spanning criteria, and explicit dropped-direction reporting.
+
+## Cartesian Hamiltonian Producer Pass 250 - Cr2 Staged Subspace Filter Report
+
+Commit(s):
+- `e1bd4800e` - docs: add Cr2 staged subspace filter report
+
+Summary:
+- Accepted the staged subspace-filter measurement report for protected-original
+  Cr2 broad injection. The report records a better geometry strategy than the
+  failed scalar and combined-score rules: filter the full broad subspace first
+  by collective representability in `M = [G, R_compact]`, optionally localize
+  for diagnostics, then diagonalize fake-RDM in the surviving subspace.
+- The best measured variant was `s_cut=0.95`, no shape filter, and
+  `occ_cut=0.003`, with broad dimension `87`, `Z` dimension `117`, fake-RDM
+  trace `93.3726973285`, `B_min = 0.9934658245`, and no singular values below
+  `0.99`. This improves on both the old nonlocalized strict geometry and the
+  failed scalar relaxed rule.
+
+Validation / evidence:
+- Report directory:
+  `docs/src/developer/reports/cr2_staged_subspace_filter_870498b54/`.
+- Committed files are bounded: README, stage table, final geometry, and
+  important dropped directions. The raw retained-direction table remains only
+  under `/Users/srw/dmrgtmp`.
+- Doer validation: package load, probe elapsed about `70s`, and
+  `git diff --check`.
+
+Goal advancement:
+- LT5/LT6 and MT4/MT6: converts the protected-original broad-injection lane
+  from scalar threshold tuning into subspace-conditioned geometry selection.
+
+Risk / guardrail:
+- The best no-shape-filter variant reassembles final fake-RDM eigenvectors
+  into balanced bond-axis/transverse combinations. That is acceptable only
+  because this lane is injection by replacement, not residual-MWG broad
+  channels. No HF, artifact, public input, or production claim follows from
+  this report alone.
+
+Carrying-cost result:
+- tracked source line delta: 0.
+- deleted: none.
+- simplified: the next source target is geometry-only staged filtering, not
+  scoring or scalar per-mode cuts.
+- quarantined: large raw retained-direction output remains under
+  `/Users/srw/dmrgtmp`.
+- exact remaining blocker: source authority was still needed before turning
+  the staged filter into an internal reproducible construction.
+
+## Cartesian Hamiltonian Producer Pass 251 - Staged Protected Injection Geometry Authority
+
+Commit(s):
+- `a111d2398` - docs: approve staged protected injection geometry
+
+Summary:
+- Approved `HP-RG-PROTECT-INJECT-FN-01` and
+  `HP-RG-PROTECT-INJECT-TEST-01` as a narrow source-design amendment for an
+  internal, default-off staged protected-original geometry prototype.
+- The authority is limited to `src/cartesian_residual_gaussians/residual_basis.jl`.
+  It may source-back the measured staged geometry: construct
+  `M = [G, R_compact]`, protected originals, broad subspace `W`,
+  representability filtering by singular values of `B = M' S W`, optional
+  localization/shape diagnostics, fake-RDM eigenspace filtering, and geometry
+  diagnostics for `Z = [Z_protected, Z_broad]` and `F = [Z, M Q_perp]`.
+
+Validation / evidence:
+- Updated `residual_gaussian_injection_hybrid.md`, `registry.md`,
+  `current.md`, `implementation_slices.md`,
+  `residual_gaussian_domain_module.md`, `README.md`, and `AGENTS.md`.
+- Focused `rg` confirmed the new IDs, parameter names, and report path are
+  recorded. `git diff --check` passed.
+
+Goal advancement:
+- LT5/LT6 and MT4/MT6: creates a source-backed path for reproducible geometry
+  without prematurely approving Hamiltonian/operator transforms or Cr2 HF.
+
+Risk / guardrail:
+- Explicitly forbidden: public driver/API, exports, artifact schema/provenance
+  or writing, exact one-body or IDA/MWG protected-injection Hamiltonian
+  transformation, Cr2 HF, default behavior changes, source files outside
+  `residual_basis.jl`, screened-reference/rho0 work, and MWG channels for
+  rejected broad directions.
+
+Carrying-cost result:
+- source line delta: 0.
+- deleted: none.
+- simplified: staged geometry source authority is now separated from the
+  historical direct `G` injection path and from later Hamiltonian/provenance
+  work.
+- quarantined: operator/Hamiltonian transformation, artifacts, and HF remain
+  future lanes.
+- exact remaining blocker: implement the internal geometry prototype and
+  compare it against the staged-filter report before any broader source lane.
