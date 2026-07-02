@@ -76,6 +76,8 @@ module, or object names in the new owner.
   one-body transform replay.
 - `HP-RG-PROTECT-VEE-AUDIT-01` - measurement-only protected fixed-sector Vee
   interaction audit.
+- `HP-RG-RHO0-GAL-AUDIT-01` - measurement-only rho0/Galerkin IDA correction
+  audit over the protected-localized baseline.
 
 Implementation IDs in this list are approved only within the surfaces below.
 Design-only IDs record authority for future source blurbs but do not approve
@@ -317,6 +319,23 @@ source edits, source-backed IDA/MWG interaction implementation, artifact
 support, public wiring, production Hamiltonian workflow, screened-reference/
 rho0 work, Vee scaling as the primary fix, rejected broad directions as MWG
 residual channels, or Cr2 production claims.
+
+The recorded protected-Vee audit invalidated the direct `C' V C` interaction
+transform and that convention must not be reused. The viable protected
+interaction baseline is protected-localized injection: build localized injected
+basis `L`, transform exact one-body operators into `L`, and inherit the
+pre-injection site-order `Vee_M` interaction.
+
+`HP-RG-RHO0-GAL-AUDIT-01` approves only an ignored measurement audit for a
+rho0/Galerkin IDA correction on top of that protected-localized baseline. It
+may use existing protected-localized geometry and one-body/Vee data, analytic
+IDA/Coulomb sanity checks, small H/He/H2 checks, Cr2 fixed-density
+diagnostics, and one bounded Cr2 HF replay only if static rho0/Galerkin
+diagnostics are sane. It does not approve source edits, source-backed IDA/MWG
+implementation, artifact support, public wiring, production Hamiltonian
+workflow, `C' V C` revival, broad rejected directions as MWG channels, Vee
+scaling as the fix, screened-reference production claims, Cr2 production
+energy claims, or publication-scale validation sweeps.
 
 Do not approve a vague global entry point such as
 `stabilize_residual_metric(...)`. Global raw-candidate symmetric Lowdin and

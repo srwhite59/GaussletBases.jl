@@ -353,6 +353,20 @@ Approved Residual Gaussian robustness lane:
   source-backed IDA/MWG implementation, production Hamiltonian workflow,
   screened-reference/rho0 work, Vee scaling as the primary fix, rejected broad
   directions as MWG residual channels, or Cr2 production claims.
+  The recorded outcome invalidated the direct `C' V C` protected interaction
+  transform. Do not reuse that convention. The viable baseline is now
+  protected-localized injection: exact one-body operators in localized
+  injected basis `L`, with inherited pre-injection site-order `Vee_M`.
+- `HP-RG-RHO0-GAL-AUDIT-01` approves only a measurement audit for rho0/Galerkin
+  IDA correction over the protected-localized inherited-site baseline. It may
+  use ignored probes, `/Users/srw/dmrgtmp` outputs, analytic IDA/Coulomb
+  sanity checks, small H/He/H2 checks, Cr2 fixed-density diagnostics, and one
+  bounded Cr2 HF replay only if static rho0/Galerkin diagnostics are sane. It
+  does not approve source edits, public wiring, artifacts/provenance,
+  production Hamiltonian workflow, `C' V C` revival, rejected broad directions
+  as MWG residual channels, Vee scaling as the fix, screened-reference
+  production claims, Cr2 production energy claims, or publication-scale
+  validation sweeps.
 
 Approved stale complete-core-shell RHF retirement:
 

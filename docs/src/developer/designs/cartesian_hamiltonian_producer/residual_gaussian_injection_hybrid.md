@@ -7,9 +7,10 @@ authority under `HP-RG-PROTECT-INJECT-DESIGN-01`. The protected-original design
 is the current direction for compact-first RG/injection work. Measurement-only
 protected fixed-sector one-body and Vee audits are approved under
 `HP-RG-PROTECT-ONEBODY-AUDIT-01` and
-`HP-RG-PROTECT-VEE-AUDIT-01`. This document does not approve source edits for
-that new design, a production default, artifact schema changes, driver inputs,
-public API, full HF, or Cr2 workflow.
+`HP-RG-PROTECT-VEE-AUDIT-01`; rho0/Galerkin IDA correction measurement is
+approved under `HP-RG-RHO0-GAL-AUDIT-01`. This document does not approve
+source edits for that new design, a production default, artifact schema
+changes, driver inputs, public API, full HF, or Cr2 workflow.
 
 ## Motivation
 
@@ -936,7 +937,12 @@ Approved validation for `HP-RG-PROTECT-ONEBODY-FN-01`:
 
 ## HP-RG-PROTECT-VEE-AUDIT-01 - Protected Fixed-Sector Vee Interaction Audit
 
-Status: approved measurement-only audit authority. This is not source
+Status: approved measurement-only audit authority, now interpreted through the
+recorded audit results. The direct `C' V C` protected interaction transform
+was invalidated and must not be reused. The viable convention from the later
+protected-localized probe is angular-gausslet-style: build a protected
+localized injected basis `L`, use exact one-body operators in `L`, and inherit
+the pre-injection site-order `Vee_M` interaction. This is not source
 implementation authority, not source-backed IDA/MWG authority, not artifact
 authority, and not production Hamiltonian authority.
 
@@ -1034,3 +1040,114 @@ The first pass may use only ignored probes plus `/Users/srw/dmrgtmp/...`
 tables. A compact committed report under `docs/src/developer/reports/` is not
 required for the initial measurement, but should be added before using the
 result to justify source authority.
+
+### Recorded Outcome
+
+The `C' V C` interaction transform for the replacement fixed sector failed
+the algebraic null/projected energy checks. A two-index IDA/MWG
+density-density matrix cannot be rotated as `V_F = C' V_M C` for arbitrary
+`F = [Z, M Qperp]` densities and expected to preserve many-electron energies.
+Do not resume that lane or interpret the resulting broad-`Z` occupation as a
+basis-fate signal.
+
+The current viable protected interaction baseline is the protected-localized
+inherited-site-order convention:
+
+```text
+M = [G, R_compact]
+L = protected localized injected basis
+one-body(L) = exact transformed one-body operators
+Vee(L) = inherited pre-injection site-order Vee_M
+```
+
+This baseline is judged by bounded physics diagnostics, not by arbitrary
+interaction rotation invariance.
+
+## HP-RG-RHO0-GAL-AUDIT-01 - Rho0/Galerkin IDA Correction Audit
+
+Status: approved measurement-only audit authority. This is not source
+implementation authority, not source-backed IDA/MWG authority, not artifact
+authority, not production Hamiltonian authority, and not a Cr2 production
+claim.
+
+### Purpose
+
+Test whether a reference-density / Galerkin correction can improve the
+existing IDA interaction after the protected-localized injection convention
+has removed the broad residual-collapse mechanism. This is an IDA-improvement
+lane on top of the sane protected-localized inherited-site baseline. It is not
+a basis-fate rule, not a replacement for compact RG/injection selection, and
+not permission to revive `C' V C`.
+
+### Baseline
+
+The audit starts from the protected-localized convention:
+
+- build protected-localized injected basis `L`;
+- use exact one-body operators in `L`;
+- inherit pre-injection site-order `Vee_M` as the IDA/MWG interaction;
+- judge by small-system and Cr2 physics diagnostics.
+
+The rho0/Galerkin correction is tested as an additive or replacement
+candidate for improving IDA accounting relative to that inherited-site
+baseline. The audit must state the exact convention used before reporting
+energies or occupations.
+
+### Approved Surfaces
+
+Allowed:
+
+- ignored `tmp/work/*.jl` measurement probes only;
+- outputs under `/Users/srw/dmrgtmp/...`;
+- in-memory experiments over existing protected-localized geometry and
+  one-body/Vee data;
+- analytic IDA/Coulomb sanity checks;
+- small H, He, and H2 checks;
+- Cr2 fixed-density diagnostics;
+- one bounded Cr2 HF replay only if static rho0/Galerkin diagnostics are
+  sane.
+
+Forbidden:
+
+- tracked source edits;
+- public driver/API/input wiring or exports;
+- artifact schema, provenance, writer, reader, manifest, or sidecar changes;
+- production Hamiltonian workflow;
+- `C' V C` interaction transform revival;
+- treating rejected broad directions as MWG residual channels;
+- treating Vee scaling as the fix;
+- screened-reference production claims;
+- Cr2 production energy claims;
+- publication-scale validation sweeps;
+- committed tests or fixtures.
+
+### Required Diagnostics
+
+The audit must report:
+
+- exact rho0 definition and normalization;
+- whether rho0 is a spherical one-Gaussian, multi-Gaussian, or fitted atomic
+  density;
+- Galerkin/reference vector or matrix convention used;
+- finite and symmetry checks;
+- analytic 1s self-Coulomb checks where applicable;
+- H, He, and H2 IDA sanity shifts;
+- Cr2 low `H1` / interaction incentive diagnostics;
+- fixed-density energy shift on the saved bad density if available;
+- bounded HF residual, compact-`R`, and injected-site occupation;
+- comparison to the protected-localized inherited-site `Vee_M` baseline.
+
+### Decision Rule
+
+If rho0/Galerkin improves the small IDA sanity checks and Cr2 diagnostics
+without reviving broad/residual occupation, the result may justify a later
+source-design amendment. That later amendment must name the source owner,
+operator convention, artifact/public exclusions, validation, and line budget.
+
+If rho0/Galerkin introduces negative broad residual/interaction modes,
+inconsistent energy accounting, or large occupation incentives, stop and
+record rho0/Galerkin as the current interaction-design blocker.
+
+This is repo-level algorithm engineering validation. Larger molecule and
+convergence sweeps belong to a consumer-oriented workflow after the repo path
+is stable.

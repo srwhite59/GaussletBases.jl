@@ -4401,8 +4401,12 @@ Approved validation:
 
 ### HP-RG-PROTECT-VEE-AUDIT-01 — protected fixed-sector Vee interaction audit
 
-Status: approved measurement-only audit authority. This is not source
-authority and not production Hamiltonian authority.
+Status: approved measurement-only audit authority, now interpreted through the
+recorded audit results. The direct `C' V C` protected interaction transform
+was invalidated and must not be reused. The viable convention is
+protected-localized inherited-site-order IDA: build localized injected basis
+`L`, use exact one-body operators in `L`, and inherit pre-injection `Vee_M`.
+This is not source authority and not production Hamiltonian authority.
 
 Purpose: test whether an in-memory protected-original electron-electron
 interaction candidate is numerically sane before any source implementation.
@@ -4471,6 +4475,80 @@ Output policy: an initial audit may leave only ignored probes and
 `/Users/srw/dmrgtmp/...` tables. A compact committed report under
 `docs/src/developer/reports/` should be added before using the result to
 justify source authority.
+
+Recorded outcome: `C' V C` failed null/projected energy-invariance checks and
+must not be reused. The later protected-localized probe established the current
+measurement baseline: exact one-body operators in localized injected basis `L`
+with inherited pre-injection site-order `Vee_M`, judged by physics
+diagnostics.
+
+### HP-RG-RHO0-GAL-AUDIT-01 — rho0/Galerkin IDA correction audit
+
+Status: approved measurement-only audit authority. This is not source
+authority and not production Hamiltonian authority.
+
+Purpose: test whether a reference-density / Galerkin correction can improve
+the existing IDA interaction after the protected-localized injection
+convention has removed the broad residual-collapse mechanism. This is an
+IDA-improvement lane on top of the protected-localized inherited-site baseline,
+not a basis-fate rule, not a replacement for compact RG/injection selection,
+and not permission to revive `C' V C`.
+
+Baseline convention:
+
+- build protected-localized injected basis `L`;
+- use exact one-body operators in `L`;
+- inherit pre-injection site-order `Vee_M` as the IDA/MWG interaction;
+- judge by small-system and Cr2 physics diagnostics.
+
+Approved audit surfaces:
+
+- ignored `tmp/work/*.jl` measurement probes only;
+- outputs under `/Users/srw/dmrgtmp/...`;
+- in-memory experiments over existing protected-localized geometry and
+  one-body/Vee data;
+- analytic IDA/Coulomb sanity checks;
+- small H, He, and H2 checks;
+- Cr2 fixed-density diagnostics;
+- one bounded Cr2 HF replay only if static rho0/Galerkin diagnostics are sane.
+
+Required diagnostics:
+
+- exact rho0 definition and normalization;
+- whether rho0 is a spherical one-Gaussian, multi-Gaussian, or fitted atomic
+  density;
+- Galerkin/reference vector or matrix convention used;
+- finite and symmetry checks;
+- analytic 1s self-Coulomb checks where applicable;
+- H, He, and H2 IDA sanity shifts;
+- Cr2 low `H1` / interaction incentive diagnostics;
+- fixed-density energy shift on the saved bad density if available;
+- bounded HF residual, compact-`R`, and injected-site occupation;
+- comparison to the protected-localized inherited-site `Vee_M` baseline.
+
+Decision rule: if rho0/Galerkin improves small IDA sanity checks and Cr2
+diagnostics without reviving broad/residual occupation, the result may justify
+a later source-design amendment. If it introduces negative broad
+residual/interaction modes, inconsistent energy accounting, or large
+occupation incentives, stop and record rho0/Galerkin as the current blocker.
+
+Forbidden:
+
+- tracked source edits;
+- public driver/API/input wiring or exports;
+- artifact schema, provenance, writer, reader, manifest, or sidecar changes;
+- production Hamiltonian workflow;
+- `C' V C` interaction transform revival;
+- treating rejected broad directions as MWG residual channels;
+- treating Vee scaling as the fix;
+- screened-reference production claims;
+- Cr2 production energy claims;
+- publication-scale validation sweeps;
+- committed tests or fixtures.
+
+This is repo-level algorithm engineering validation. Larger molecule and
+convergence sweeps belong to a consumer-oriented workflow after the repo path
+is stable.
 
 ## Approved For Cartesian Gaussian Raw-Block Nuclear Owner
 

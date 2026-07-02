@@ -453,6 +453,21 @@ Approved robustness lane:
   workflow, screened-reference/rho0 work, Vee scaling as the primary fix,
   rejected broad directions as MWG residual channels, or Cr2 production
   claims.
+  The recorded outcome invalidated the direct `C' V C` interaction transform.
+  Future protected interaction work should use the protected-localized
+  inherited-site-order IDA baseline: exact one-body operators in localized
+  injected basis `L`, inherited pre-injection `Vee_M`, and physics diagnostics.
+- `HP-RG-RHO0-GAL-AUDIT-01` approves only a measurement-only rho0/Galerkin IDA
+  correction audit on top of that protected-localized baseline. The audit may
+  use ignored probes, `/Users/srw/dmrgtmp` outputs, in-memory experiments over
+  existing protected-localized geometry and one-body/Vee data, analytic
+  IDA/Coulomb checks, small H/He/H2 checks, Cr2 fixed-density diagnostics, and
+  one bounded Cr2 HF replay only if static diagnostics are sane. It does not
+  approve source edits, public wiring, artifact/provenance changes, production
+  Hamiltonian workflow, `C' V C` revival, rejected broad directions as MWG
+  residual channels, Vee scaling as the fix, screened-reference production
+  claims, Cr2 production energy claims, publication-scale sweeps, or committed
+  tests.
 
 ## Compact Hamiltonian Artifact Manifest
 

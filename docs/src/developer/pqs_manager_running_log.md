@@ -22967,3 +22967,60 @@ Carrying-cost result:
   workflow is unimplemented and unauthorized; H2+ public non-neutral endpoint
   remains unavailable; rho0/Galerkin screening remains a separate IDA
   improvement lane worth testing on top of the sane localized basis.
+
+## Cartesian Hamiltonian Producer Pass 271 - Rho0 Galerkin Audit Authority
+
+Commit(s):
+- this commit - Approve rho0 Galerkin audit
+
+Summary:
+- Design-manager approved `HP-RG-RHO0-GAL-AUDIT-01` as a measurement-only
+  authority lane for testing a reference-density / Galerkin IDA correction on
+  top of the protected-localized inherited-site interaction baseline.
+- The lane explicitly starts from the Pass 270 convention: build localized
+  injected basis `L`, use exact one-body operators in `L`, and inherit the
+  pre-injection site-order `Vee_M` interaction. The rho0/Galerkin idea is an
+  IDA-improvement measurement, not a basis-fate rule, not a replacement for
+  compact RG/injection selection, and not permission to revive `C'VC`.
+
+Validation / evidence:
+- The docs now make the Pass 269/270 correction durable outside the running
+  log: direct `C' V C` interaction rotation is invalid and must not be reused;
+  protected-localized inherited-site-order IDA is the current measurement
+  baseline.
+- The new audit requires the exact rho0 definition and normalization,
+  rho0 type, Galerkin/reference vector or matrix convention, finite/symmetry
+  checks, analytic 1s self-Coulomb checks where applicable, H/He/H2 IDA sanity
+  shifts, Cr2 low `H1` / interaction incentive diagnostics, fixed-density
+  shift on the saved bad density if available, bounded HF occupation
+  diagnostics, and comparison to the inherited-site `Vee_M` baseline.
+
+Goal advancement:
+- LT5/LT6 and MT4: keeps protected-original interaction work on the
+  physics-tested localized baseline while allowing a narrow next measurement
+  for IDA correction quality. This avoids mixing a speculative rho0/Galerkin
+  improvement into the basis-selection or compact-RG/injection policy.
+
+Risk / guardrail:
+- Still forbidden: tracked source edits, public driver/API/export changes,
+  artifact/provenance/writer/reader/manifest changes, production Hamiltonian
+  workflow, `C'VC` interaction revival, rejected broad directions as MWG
+  residual channels, Vee scaling as the fix, screened-reference production
+  claims, Cr2 production energy claims, publication-scale sweeps, and
+  committed tests.
+- One bounded Cr2 HF replay is allowed only if static rho0/Galerkin diagnostics
+  are sane. If rho0/Galerkin introduces negative broad residual/interaction
+  modes, inconsistent energy accounting, or large occupation incentives, it is
+  the current interaction-design blocker.
+
+Carrying-cost result:
+- source line delta: 0 in this docs decision.
+- deleted: none.
+- simplified: the next doer has a bounded rho0/Galerkin measurement target
+  instead of ambiguous permission to tune Vee or revive `C'VC`.
+- quarantined: source-backed IDA/MWG, artifacts/public workflow,
+  screened-reference production, publication-scale sweeps, and Cr2 production
+  claims.
+- exact remaining blocker: rho0/Galerkin must show small-system sanity and
+  Cr2 diagnostic improvement without reviving broad/residual occupation before
+  any source-design amendment is considered.

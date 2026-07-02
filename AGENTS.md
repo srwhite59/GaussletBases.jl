@@ -1114,6 +1114,25 @@ Approved Residual Gaussian module surfaces:
   rejected broad directions as MWG residual channels, committed tests, or Cr2
   production claims. Because this is measurement-only authority, do not add it
   to the approved source-ID list.
+  The recorded outcome invalidated the direct `C' V C` protected interaction
+  transform; do not reuse or source-back that convention. The current viable
+  protected interaction baseline is protected-localized injection: exact
+  one-body operators in localized injected basis `L`, with inherited
+  pre-injection site-order `Vee_M` IDA/MWG interaction, judged by bounded
+  physics diagnostics.
+- `HP-RG-RHO0-GAL-AUDIT-01` approves only ignored measurement probes for a
+  rho0/Galerkin IDA correction over the protected-localized inherited-site
+  baseline. It may use `/Users/srw/dmrgtmp` outputs, in-memory experiments over
+  existing protected-localized geometry and one-body/Vee data, analytic
+  IDA/Coulomb sanity checks, small H/He/H2 checks, Cr2 fixed-density
+  diagnostics, and one bounded Cr2 HF replay only if static rho0/Galerkin
+  diagnostics are sane. It does not approve tracked source edits, public
+  driver/API/export changes, artifacts/provenance/writers/readers/manifests,
+  production Hamiltonian workflow, `C' V C` revival, rejected broad directions
+  as MWG residual channels, Vee scaling as the fix, screened-reference
+  production claims, Cr2 production energy claims, publication-scale sweeps,
+  or committed tests. Because this is measurement-only authority, do not add it
+  to the approved source-ID list.
 
 Non-negotiable RG guardrails:
 
