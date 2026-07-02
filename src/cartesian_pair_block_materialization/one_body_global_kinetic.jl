@@ -123,18 +123,5 @@ function _one_body_global_kinetic_result(
         operator_matrix_materialized = materialized,
         global_kinetic_matrix_materialized = materialized,
         global_operator_assembled = materialized,
-        operator_blocks_materialized = false,
-        hamiltonian_data_materialized = false,
-        artifacts_materialized = false,
-        exports_materialized = false,
-        global_operator_blocks_materialized = false,
-        global_hamiltonian_data_materialized = false,
-        global_artifacts_materialized = false,
-        coulomb_materialized = false,
-        density_density_materialized = false,
-        ida_mwg_data_materialized = false,
-        pqs_lowdin_materialized = false,
-        pqs_shell_projection_materialized = false,
-        full_white_lindsey_route_assembled = false,
     )
 end

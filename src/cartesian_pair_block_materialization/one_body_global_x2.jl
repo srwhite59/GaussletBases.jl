@@ -171,22 +171,7 @@ function _one_body_global_x2_result(
         placement_plan_blocker =
             _one_body_placement_value(placement_plan, :blocker, nothing),
         operator_matrix_materialized = materialized,
-    )
-    nonclaims = (;
         global_operator_assembled = materialized,
-        operator_blocks_materialized = false,
-        hamiltonian_data_materialized = false,
-        artifacts_materialized = false,
-        exports_materialized = false,
-        global_operator_blocks_materialized = false,
-        global_hamiltonian_data_materialized = false,
-        global_artifacts_materialized = false,
-        coulomb_materialized = false,
-        density_density_materialized = false,
-        ida_mwg_data_materialized = false,
-        pqs_lowdin_materialized = false,
-        pqs_shell_projection_materialized = false,
-        full_white_lindsey_route_assembled = false,
     )
-    return merge(base, term_flag, nonclaims)
+    return merge(base, term_flag)
 end

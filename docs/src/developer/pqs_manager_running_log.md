@@ -22543,3 +22543,54 @@ Carrying-cost result:
   fields are still part of the active local collection/placement contract.
 - exact remaining blocker: broader nonclaim vocabulary outside the two CPBM
   one-body files needs separate authorization and consumer mapping.
+
+## Cartesian Hamiltonian Producer Pass 264 - CPBM Global One-Body Nonclaim Tail Cleanup
+
+Commit(s):
+- this commit - Remove CPBM global one-body false nonclaim tails
+
+Summary:
+- Accepted the next stable-code nonclaim cleanup in the four CPBM global
+  one-body result constructors: overlap, kinetic, position, and x2.
+- The pass removes false-only route/global/materialization tail fields from
+  result summaries while preserving actual global one-body facts:
+  `operator_matrix_materialized`, term-specific global matrix flags, and
+  `global_operator_assembled`. No numerical kernels, placement validation,
+  public entry points, or active materialization booleans in the dispatch and
+  collection path were changed.
+
+Validation / evidence:
+- Source delta: `2` insertions and `58` deletions across
+  `one_body_global_overlap.jl`, `one_body_global_kinetic.jl`,
+  `one_body_global_position.jl`, and `one_body_global_x2.jl`, net `56` lines
+  removed.
+- Focused `rg` over the four target files found no surviving removed false
+  nonclaim names.
+- Broader property-read scan showed live reads of actual materialization fields
+  in dispatch/collection and stale ignored `tmp/work` probes, but no active
+  source blocker for the deleted global false tails.
+- `git diff --check` passed.
+- Package load passed with `package_load_elapsed_s=8.091997042`.
+
+Goal advancement:
+- LT6 and cleanup/carrying-cost guardrail: continues pruning route-era status
+  vocabulary from stable CPBM one-body surfaces while preserving the physics
+  and placement contracts.
+
+Risk / guardrail:
+- This does not authorize cleanup of adjacent provider/final-basis nonclaim
+  vocabulary, dispatch/collection live materialization fields, placement
+  fields, public APIs, artifacts, or numerical one-body assembly.
+
+Carrying-cost result:
+- deleted: false-only one-body global result tail fields including
+  density-density, Lowdin, shell-projection, Coulomb, and global artifact/block
+  nonclaims.
+- simplified: position/x2 no longer build a separate nonclaims tuple just to
+  merge one real `global_operator_assembled` flag with false disclaimers.
+- quarantined: actual global result fields and active dispatch/collection
+  materialization booleans.
+- not deleted because: adjacent provider/final-basis/placement nonclaim
+  vocabulary is outside this pass.
+- exact remaining blocker: broader nonclaim cleanup still requires separate
+  authorization and consumer mapping outside these four global one-body files.
