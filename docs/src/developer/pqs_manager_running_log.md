@@ -21936,3 +21936,60 @@ Carrying-cost result:
   prototype and must compare it against
   `docs/src/developer/reports/cr2_staged_subspace_filter_870498b54/` before
   any broader lane is considered.
+
+## Cartesian Hamiltonian Producer Pass 253 - Source-Backed Staged Protected Injection Geometry
+
+Commit(s):
+- `91890acb1` - Add staged protected injection geometry prototype
+
+Summary:
+- Accepted the `HP-RG-PROTECT-INJECT-FN-01` implementation. The source-backed
+  prototype stays inside `src/cartesian_residual_gaussians/residual_basis.jl`
+  and reproduces the staged-filter report geometry without public wiring,
+  artifacts, operator/Hamiltonian transforms, IDA/MWG changes, default
+  behavior changes, or Cr2 HF.
+- The implementation adds private helpers for protected-original Gram cleanup,
+  broad-subspace construction, representability filtering, fake-RDM eigenspace
+  filtering, and geometry diagnostics for `Z = [Z_protected, Z_broad]` and
+  `F = [Z, M Q_perp]`. It also carries compact source indices from the ordered
+  compact-first selector so protected originals are identified without label
+  parsing.
+- During review, repo-manager fixed one diagnostic-only issue: dropped
+  fake-RDM direction summaries now use the post fake-RDM eigenvector rotation.
+  The core geometry was unaffected.
+
+Validation / evidence:
+- Source line delta: `+169/-1`, under the accepted `<=220` added-line target.
+- `git diff --check` passed.
+- Package load passed after precompile with
+  `package_load_elapsed_s=6.716650959`.
+- H2 default residual facade smoke passed:
+  base `487`, residual `18`, augmented `505`, rank rule
+  `owner_local_residual_occupation`, convention
+  `owner_local_residual_occupation_final_merge_lowdin`, one-body minimum
+  `-0.7959028345077626`.
+- Ignored Cr2 source-backed geometry probe reproduced the report target:
+  protected `30`, broad Gram kept `108`, representability kept `102`, fake
+  kept `87`, `Z=117`, fake trace `93.37269732851`,
+  `B_min=0.9934658245059`, and `B < 0.99 = 0`.
+
+Goal advancement:
+- LT5/LT6 and MT4/MT6: moves staged protected-original injection from
+  probe-only logic to a reproducible internal geometry surface while preserving
+  the separation from Hamiltonian/operator and artifact/provenance lanes.
+
+Risk / guardrail:
+- This remains geometry-only. It does not approve or implement exact one-body
+  transforms, inherited IDA/MWG for protected injection, artifact writing,
+  public inputs, default-on behavior, or Cr2 HF. Rejected broad directions are
+  still not MWG residual channels.
+
+Carrying-cost result:
+- deleted: none.
+- simplified: protected-original source mapping now comes from compact
+  selector return data instead of label parsing.
+- quarantined: ignored probe and `/Users/srw/dmrgtmp` outputs; all
+  Hamiltonian/operator/artifact/HF work remains future authority.
+- exact remaining blocker: any protected-original operator/Hamiltonian
+  construction or public/provenance wiring needs separate design-manager
+  authority.
