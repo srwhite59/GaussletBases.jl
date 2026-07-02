@@ -30,6 +30,11 @@ residual_gaussian_candidate_centers(supplement) = NTuple{3,Float64}[residual_gau
 terminal_residual_mixed_overlap(basis, bundles, supplement, block_builder, expansion) = block_builder(basis, bundles, supplement, (), expansion).mixed.overlap
 _rg_sym(matrix) = Matrix{Float64}(0.5 .* (matrix .+ transpose(matrix)))
 _rg_distance(a, b) = sqrt(sum((a[i] - b[i])^2 for i in 1:3))
+function _rg_median(values)
+    sorted = sort(values)
+    mid = length(sorted) ÷ 2
+    return isodd(length(sorted)) ? sorted[mid + 1] : 0.5 * (sorted[mid] + sorted[mid + 1])
+end
 function _rg_weighted_contracted_tail(orbital, distance)
     coefficients = abs.(Float64.(orbital.coefficients))
     weights = coefficients ./ max(sum(coefficients), eps(Float64))
@@ -164,6 +169,7 @@ function owner_ordered_mgs_residual_gaussian_block(X, S_AA, owner_indices, owner
     accepted_A = Vector{Vector{Float64}}()
     occupations = Float64[]
     labels = String[]
+    source_indices = Int[]
     order = sort(indices; by = index ->
         (order_values.width[index], order_values.midpoint_tail[index],
             order_values.other_center_tail[index], index))
@@ -187,9 +193,10 @@ function owner_ordered_mgs_residual_gaussian_block(X, S_AA, owner_indices, owner
         push!(accepted_A, A)
         push!(occupations, residual_norm)
         push!(labels, "r$(owner)_mgs$(length(accepted_A))_$(index)")
+        push!(source_indices, index)
     end
     isempty(accepted_A) && return nothing
-    return (; owner, T_A = hcat(accepted_A...), occupations, labels)
+    return (; owner, T_A = hcat(accepted_A...), occupations, labels, source_indices)
 end
 function injection_principal_block(X, S_AA, owner_indices, owner, nA, candidate_overlap_tol, tau_abs, tau_rel; candidate_keep = trues(nA))
     indices = [index for index in findall(==(owner), owner_indices) if candidate_keep[index]]
@@ -257,6 +264,167 @@ function finalize_residual_gaussian_transform(T_G0, T_A0, X, S_AA, tau_merge_abs
     identity_error, identity_scale = maximum(abs, S_RR - I), maximum(abs, S_RR)
     identity_error <= Float64(identity_atol) * (1.0 + max(1.0, identity_scale)) || throw(ArgumentError("residual-Gaussian R' S R validation failed"))
     return T_G, T_A
+end
+function protected_original_gram_clean(S_AA, indices, nA, atol, rtol)
+    isempty(indices) && return (; Z = zeros(Float64, nA, 0), values = Float64[], keep = Int[])
+    values, vectors = eigen(Symmetric(_rg_sym(S_AA[indices, indices])))
+    rank_tol = max(Float64(atol), Float64(rtol) * maximum(values))
+    keep = findall(>(rank_tol), values)
+    isempty(keep) && throw(ArgumentError("protected-original candidate Gram cleanup removed all columns"))
+    Z = zeros(Float64, nA, length(keep))
+    Z[indices, :] .= vectors[:, keep] * Diagonal(1.0 ./ sqrt.(values[keep]))
+    return (; Z, values = Float64[values...], keep)
+end
+function protected_original_broad_subspace(S_AA, broad_indices, protected_Z, atol, rtol)
+    nA = size(S_AA, 1)
+    E = zeros(Float64, nA, length(broad_indices))
+    for (column, index) in pairs(broad_indices)
+        E[index, column] = 1.0
+    end
+    Q0 = E - protected_Z * (transpose(protected_Z) * S_AA[:, broad_indices])
+    values, vectors = eigen(Symmetric(_rg_sym(transpose(Q0) * S_AA * Q0)))
+    rank_tol = max(Float64(atol), Float64(rtol) * maximum(values))
+    keep = findall(>(rank_tol), values)
+    isempty(keep) && throw(ArgumentError("protected-original broad Gram cleanup removed all columns"))
+    return (; Z = Matrix{Float64}(Q0 * vectors[:, keep] * Diagonal(1.0 ./ sqrt.(values[keep]))),
+        values = Float64[values...], keep)
+end
+protected_original_projection_block(X, S_AA, T_G, T_A, Z) = begin
+    XZ = X * Z
+    vcat(XZ, transpose(T_G) * XZ + transpose(T_A) * (S_AA * Z))
+end
+function protected_original_fake_rdm_operator(S_AA, Z)
+    W = S_AA * Z
+    return _rg_sym(transpose(W) * (W ./ reshape(diag(S_AA), :, 1)))
+end
+function protected_original_m_errors(T_G, T_A, X, S_AA)
+    GR = T_G + X * T_A
+    RR = residual_gaussian_overlap(T_G, T_A, X, S_AA)
+    return (; g_r_max = maximum(abs, GR), r_r_max = maximum(abs, RR - I))
+end
+function protected_original_q_sample_error(qrobj, nrows, start_column)
+    start_column > nrows && return (; count = 0, max = 0.0, fro = 0.0)
+    sample = sort(unique(vcat(collect(start_column:min(nrows, start_column + 9)),
+        collect(max(start_column, nrows - 9):nrows))))
+    E = zeros(Float64, nrows, length(sample))
+    for (j, column) in pairs(sample)
+        E[column, j] = 1.0
+    end
+    Q = Matrix(qrobj.Q * E)
+    err = transpose(Q) * Q - I
+    return (; count = length(sample), max = maximum(abs, err), fro = norm(err))
+end
+function protected_original_geometry_diagnostics(X, S_AA, T_G, T_A, Z_protected, Z, B)
+    nZ, nM = size(Z, 2), size(B, 1)
+    bsv = svdvals(B)
+    zerr = transpose(Z) * S_AA * Z - I
+    qrb = qr(B)
+    qtb = Matrix(adjoint(qrb.Q) * B)
+    qtail = qtb[(nZ + 1):end, :]
+    qsample = protected_original_q_sample_error(qrb, nM, nZ + 1)
+    merr = protected_original_m_errors(T_G, T_A, X, S_AA)
+    nP = size(Z_protected, 2)
+    protected_block = transpose(Z_protected) * S_AA * Z[:, 1:nP]
+    protected_cross = nP == nZ ? zeros(Float64, nP, 0) :
+        transpose(Z_protected) * S_AA * Z[:, (nP + 1):end]
+    protected_svals = svdvals(protected_block)
+    return (; b_singular_values = bsv, b_min = minimum(bsv), b_median = _rg_median(bsv),
+        b_max = maximum(bsv), b_lt_0p999 = count(<(0.999), bsv),
+        b_lt_0p99 = count(<(0.99), bsv), b_lt_0p98 = count(<(0.98), bsv),
+        b_lt_0p95 = count(<(0.95), bsv), b_lt_0p9 = count(<(0.9), bsv),
+        z_identity_max = maximum(abs, zerr), z_identity_fro = norm(zerr),
+        z_m_qperp_max = maximum(abs, qtail), z_m_qperp_fro = norm(qtail),
+        qperp_identity_sample_count = qsample.count,
+        qperp_identity_sample_max = qsample.max,
+        qperp_identity_sample_fro = qsample.fro,
+        f_s_f_identity_block_max = maximum((maximum(abs, zerr), maximum(abs, qtail),
+            qsample.max, merr.g_r_max, merr.r_r_max)),
+        protected_span_min_sv = minimum(protected_svals),
+        protected_span_max_sv = maximum(protected_svals),
+        protected_identity_max = maximum(abs, protected_block - I),
+        protected_cross_max = isempty(protected_cross) ? 0.0 : maximum(abs, protected_cross),
+        m_g_r_max = merr.g_r_max, m_r_r_max = merr.r_r_max)
+end
+function protected_original_direction_summary(candidate_labels, candidate_owner_indices, A, values)
+    rows = NamedTuple[]
+    for column in axes(A, 2)
+        weights = abs2.(view(A, :, column))
+        index = argmax(weights)
+        channel = split(replace(candidate_labels[index], r"\d+$" => ""), "_")[end]
+        push!(rows, (; value = values[column], owner = candidate_owner_indices[index],
+            label = candidate_labels[index], channel, coefficient_fraction =
+                weights[index] / max(sum(weights), eps(Float64))))
+    end
+    return rows
+end
+function staged_protected_original_injection_geometry(base_dimension::Integer, X, S_AA,
+    candidate_labels::Vector{String}, candidate_centers::Vector{NTuple{3,Float64}},
+    candidate_owner_indices::Vector{Int}; residual_occupation_cutoff::Real = 1.0e-6,
+    residual_compactness, s_cut::Real = 0.95, occ_cut::Real = 0.003,
+    candidate_overlap_atol::Real = 1.0e-12, candidate_overlap_rtol::Real = 1.0e-8,
+    tau_neg_abs::Real = 1.0e-12, tau_neg_rel::Real = 1.0e-12,
+    tau_merge_abs::Real = 1.0e-12, tau_merge_rel::Real = 1.0e-12,
+    identity_atol::Real = 5.0e-8)
+    nG, nA = Int(base_dimension), length(candidate_labels)
+    size(X) == (nG, nA) || throw(DimensionMismatch("protected-original mixed overlap has wrong shape"))
+    size(S_AA) == (nA, nA) || throw(DimensionMismatch("protected-original supplement overlap has wrong shape"))
+    residual_gaussian_compactness_selector(residual_compactness) == :ordered_compact_first_mgs ||
+        throw(ArgumentError("staged protected-original geometry requires ordered compact-first residual selection"))
+    candidate_keep = residual_gaussian_compactness_keep_mask(
+        residual_compactness, nA, candidate_centers, candidate_owner_indices)
+    order_values = residual_gaussian_order_values(
+        residual_compactness, nA, candidate_centers, candidate_owner_indices)
+    blocks = filter(!isnothing, [owner_ordered_mgs_residual_gaussian_block(
+        X, S_AA, candidate_owner_indices, owner, nA, Float64(residual_occupation_cutoff),
+        tau_neg_abs, tau_neg_rel, order_values; candidate_keep)
+        for owner in unique(candidate_owner_indices)])
+    isempty(blocks) && throw(ArgumentError("protected-original compact RG selection retained no columns"))
+    T_A0 = hcat((block.T_A for block in blocks)...)
+    T_G0 = Matrix{Float64}(-X * T_A0)
+    T_G, T_A = finalize_residual_gaussian_transform(
+        T_G0, T_A0, X, S_AA, tau_merge_abs, tau_merge_rel, identity_atol)
+    protected_indices = sort(unique(vcat((block.source_indices for block in blocks)...)))
+    Zp = protected_original_gram_clean(
+        S_AA, protected_indices, nA, candidate_overlap_atol, candidate_overlap_rtol).Z
+    broad_indices = setdiff(collect(1:nA), protected_indices)
+    broad = protected_original_broad_subspace(
+        S_AA, broad_indices, Zp, candidate_overlap_atol, candidate_overlap_rtol)
+    B_W = protected_original_projection_block(X, S_AA, T_G, T_A, broad.Z)
+    fake_W = protected_original_fake_rdm_operator(S_AA, broad.Z)
+    rep_values, rep_vectors = eigen(Symmetric(_rg_sym(transpose(B_W) * B_W)))
+    rep_singulars = sqrt.(max.(rep_values, 0.0))
+    keep_rep = sort(findall(>=(Float64(s_cut)), rep_singulars);
+        by = index -> (-rep_singulars[index], index))
+    isempty(keep_rep) && throw(ArgumentError("protected-original representability filter retained no columns"))
+    Vrep = Matrix{Float64}(rep_vectors[:, keep_rep])
+    Zrep = broad.Z * Vrep
+    fake_rep = _rg_sym(transpose(Vrep) * fake_W * Vrep)
+    fake_values, fake_vectors = eigen(Symmetric(fake_rep))
+    fake_values = max.(fake_values, 0.0)
+    keep_fake = sort(findall(>=(Float64(occ_cut)), fake_values);
+        by = index -> (-fake_values[index], index))
+    isempty(keep_fake) && throw(ArgumentError("protected-original fake-RDM filter retained no columns"))
+    Zb = Zrep * Matrix{Float64}(fake_vectors[:, keep_fake])
+    Z = hcat(Zp, Zb)
+    B = protected_original_projection_block(X, S_AA, T_G, T_A, Z)
+    diagnostics = protected_original_geometry_diagnostics(X, S_AA, T_G, T_A, Zp, Z, B)
+    dropped_fake = setdiff(eachindex(fake_values), keep_fake)
+    dropped_Z = Zrep * Matrix{Float64}(fake_vectors[:, dropped_fake])
+    return merge(diagnostics, (;
+        protected_original_count = size(Zp, 2),
+        broad_gram_kept_count = size(broad.Z, 2),
+        representability_kept_count = length(keep_rep),
+        fake_rdm_kept_count = length(keep_fake),
+        z_dimension = size(Z, 2),
+        fake_rdm_trace_retained = sum(fake_values[keep_fake]; init = 0.0),
+        fake_rdm_trace_dropped = sum(diag(fake_W)) - sum(fake_values[keep_fake]; init = 0.0),
+        representability_singular_values = rep_singulars,
+        dropped_representability_singular_values = rep_singulars[setdiff(eachindex(rep_singulars), keep_rep)],
+        retained_fake_rdm_occupations = fake_values[keep_fake],
+        dropped_fake_rdm_occupations = fake_values[dropped_fake],
+        protected_original_source_indices = protected_indices,
+        dropped_fake_direction_summary = protected_original_direction_summary(
+            candidate_labels, candidate_owner_indices, dropped_Z, fake_values[dropped_fake])))
 end
 function build_injected_residual_gaussian_basis(base_dimension, X, S_AA, labels, centers, owners, cutoff, injection_cutoff, candidate_overlap_atol, candidate_overlap_rtol, injected_overlap_atol, injected_overlap_rtol, tau_neg_abs, tau_neg_rel, tau_merge_abs, tau_merge_rel, orthogonality_atol, identity_atol, candidate_keep)
     injection_cutoff >= cutoff || throw(ArgumentError("residual_injection_cutoff must be at least residual_occupation_cutoff"))
