@@ -22594,3 +22594,62 @@ Carrying-cost result:
   vocabulary is outside this pass.
 - exact remaining blocker: broader nonclaim cleanup still requires separate
   authorization and consumer mapping outside these four global one-body files.
+
+## Cartesian Hamiltonian Producer Pass 265 - Protected Vee Audit Failure
+
+Commit(s):
+- this commit - Record protected Vee audit failure
+
+Summary:
+- Accepted the `HP-RG-PROTECT-VEE-AUDIT-01` measurement result as a negative
+  interaction-design finding. The in-memory protected-original Vee candidate
+  for `F = [Z, M Qperp]` passed the static sanity gate but failed the bounded
+  Cr2 HF replay.
+- Static diagnostics looked plausible: finite/symmetric Vee, high broad-`Z`
+  self-costs relative to compact/default residual diagonals, positive
+  broad-`Z` block spectrum, and low exact one-body modes dominated by
+  protected originals with large Coulomb self-costs. Despite that, the HF
+  replay placed about `26.56` electrons in broad-`Z` and about `13.08` in
+  `Qperp`, so this interaction convention does not remove the broad/residual
+  over-occupation mechanism.
+
+Validation / evidence:
+- Output retained under
+  `/Users/srw/dmrgtmp/cr2_protected_vee_audit_fc52b685b/`.
+- Geometry: `G = 6915`, `R_compact = 30`, `M = 6945`,
+  `protected_Z = 30`, `broad_Z = 87`, `Qperp = 6828`, `F = 6945`,
+  `B_min = 0.993465824505872`, and no `B` singular value below `0.99`.
+- Vee diagnostics: finite `true`, symmetry error `0.0`, broad-`Z` diagonal
+  min/median/max `7.661 / 31.680 / 262.867`, compact-R diagonal median
+  `0.383`, default-R diagonal median `0.149`, and broad-`Z` block eigenvalue
+  minimum `3.215`.
+- Low `H1_FF` minimum was `-295.55692015608696`; its Vee self-cost was
+  `11430.943952581187` and broad-`Z` weight only `1.8e-4`.
+- HF gate passed and the bounded in-memory HF replay ran. It returned
+  `-2100.348594751507`; the probe recomputed total was
+  `-1883.8049494968511`. The energy mismatch should be treated as a diagnostic
+  caveat, but the large broad-`Z` occupation is already enough to reject this
+  Vee candidate as a Cr2 fix.
+
+Goal advancement:
+- LT5/LT6 and MT4/MT6: converts protected-original Vee from "possibly viable
+  after one-body success" to a failed first interaction convention. The basis
+  fate story remains useful, but interaction design is still the blocker before
+  any protected-original Hamiltonian path.
+
+Risk / guardrail:
+- No source implementation, artifact path, public wiring, production claim,
+  screened-reference/rho0 change, Vee scaling fix, or rejected-broad-to-MWG
+  fallback is justified by this result.
+- The next measurement should explain the HF occupation failure mechanism
+  before proposing another interaction convention.
+
+Carrying-cost result:
+- deleted: none.
+- simplified: none; measurement-only result.
+- quarantined: protected Vee candidate remains ignored-probe/output only.
+- not deleted because: the negative audit record is needed to prevent
+  promoting this interaction convention.
+- exact remaining blocker: identify why the many-electron HF solution occupies
+  broad-`Z` despite high one-direction/self-cost diagnostics; protected-original
+  IDA/MWG interaction ownership remains unresolved.
