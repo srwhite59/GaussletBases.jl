@@ -22775,3 +22775,54 @@ Carrying-cost result:
   final-basis status fields are broader surfaces requiring a separate map.
 - exact remaining blocker: manager approval is needed before any final-basis or
   PQS provider status cleanup.
+
+## Cartesian Hamiltonian Producer Pass 268 - CPBM Final-Basis Density Nonclaim Cleanup
+
+Commit(s):
+- this commit - Remove CPBM final-basis density false fields
+
+Summary:
+- Accepted the narrow CPBM final-basis helper cleanup in
+  `src/cartesian_pair_block_materialization/pqs_source_shell_final_basis.jl`.
+  The two `density_density_materialized = false` payload fields were removed
+  from the exported helper status bundles and nothing else changed.
+- The helper payloads still carry their actual one-body/H1/IDA/RHF/driver,
+  export, and artifact status fields. The deleted field was an unconsumed
+  false-only density-density disclaimer in the CPBM layer, not the live
+  density-density status vocabulary in final-basis realization.
+
+Validation / evidence:
+- Source delta: `2` deletions, `0` additions in
+  `src/cartesian_pair_block_materialization/pqs_source_shell_final_basis.jl`.
+- Focused target-file scan found no remaining `density_density_materialized`
+  mentions in the CPBM final-basis helper file or broader
+  `src/cartesian_pair_block_materialization`.
+- Exact property-read scan for `.density_density_materialized` found only the
+  known stale ignored `tmp/work` probes.
+- Broader string scan still finds real final-basis realization and PQS support
+  status fields; those are intentionally out of scope.
+- `git diff --check` passed.
+- Package load passed with `package_load_elapsed_s=7.7175395`.
+
+Goal advancement:
+- LT6 and MT5/MT6: continues removing false-only CPBM status vocabulary after
+  the descriptor/input, global result, and placement-plan passes. This keeps
+  the cleanup inside stable reporting/status payloads and avoids touching
+  active numerical or final-basis realization behavior.
+
+Risk / guardrail:
+- This does not touch `src/cartesian_final_basis_realization/`, true
+  density-density producers, PQS support one-body helpers, public APIs,
+  artifacts, exports, or numerical kernels.
+
+Carrying-cost result:
+- deleted: two false-only `density_density_materialized` fields in CPBM
+  final-basis helper status payloads.
+- simplified: CPBM helper payloads no longer claim density-density status they
+  never materialize.
+- quarantined: broader final-basis realization density-density vocabulary.
+- not deleted because: final-basis realization includes real
+  density-density status behavior, including true-producing paths, and needs
+  its own map before any cleanup.
+- exact remaining blocker: no active source/test/docs caller for the deleted
+  CPBM fields; only stale ignored tmp probes still read the field.
