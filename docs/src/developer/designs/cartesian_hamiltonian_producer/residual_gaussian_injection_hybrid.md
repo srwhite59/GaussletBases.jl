@@ -725,3 +725,99 @@ Approved validation for `HP-RG-PROTECT-INJECT-FN-01`:
 - no Cr2 HF;
 - no artifact write/readback for protected-original injection;
 - no committed tests unless a later source-review pass requests one.
+
+## HP-RG-PROTECT-ONEBODY-AUDIT-01 - Protected Fixed-Sector One-Body Audit
+
+Status: approved measurement-only audit authority. This is not source
+implementation authority and does not approve production Hamiltonian
+construction.
+
+### Purpose
+
+The source-backed staged protected-original geometry now reproduces the
+measured Cr2 target:
+
+```text
+Z = [Z_protected, Z_broad]
+F = [Z, M Q_perp]
+M = [G, R_compact]
+```
+
+The next question is whether exact one-body operators can be transformed
+consistently into the injected fixed sector `F`, using only existing geometry
+and existing exact one-body data available in the Cartesian/Cr2 construction
+path. The audit should clarify the operator dataflow before any source helper
+or ownership decision is made.
+
+### Answered Design Questions
+
+The first pass is measurement-only:
+
+- use an ignored `tmp/work/*.jl` probe;
+- do not approve a source helper yet;
+- do not approve changes to `augmented_operators.jl`,
+  `residual_basis.jl`, terminal residual code, artifacts, or public wiring.
+
+If a later source lane is justified, likely ownership for exact one-body
+transformation is `src/cartesian_residual_gaussians/augmented_operators.jl`,
+not `residual_basis.jl`. `residual_basis.jl` remains the geometry owner. This
+audit may discover a missing geometry/export seam, but it must report that
+seam rather than adding source instrumentation.
+
+The accepted comparison target is not an energy or a production Hamiltonian.
+The target is in-memory consistency of exact one-body blocks in the protected
+fixed sector:
+
+- `F' S F - I`;
+- finite/symmetric `F' K F`;
+- finite/symmetric `F' U_A F` for each available nuclear unit block;
+- finite/symmetric `F' H1 F`;
+- protected original block `H1` before and after replacement/cleanup;
+- compact RG block `H1` before and after replacement;
+- trace and low-spectrum diagnostics for `K`, each `U_A`, and `H1`;
+- low-mode weights in protected original, accepted broad, and
+  `M Q_perp` complement pieces;
+- protected-span preservation before and after any final cleanup;
+- `B = M' S Z` singular values and `Q_perp` orthogonality diagnostics.
+
+Coordinate and second-moment transforms may be included if they are already
+available through the same exact one-body dataflow, but they are not required
+for the first audit.
+
+Cr2 is the primary target because it is where the staged protected-original
+geometry was measured. A bounded H2 or H2+ sanity run is useful if cheap and
+already available, but it is not a committed endpoint or a prerequisite for
+the Cr2 audit.
+
+### Approved Surfaces
+
+Allowed:
+
+- ignored `tmp/work/*.jl` probes;
+- durable measurement output under `/Users/srw/dmrgtmp/...` or a bounded
+  report directory if later accepted by manager review;
+- consume the current source-backed staged geometry helper;
+- consume existing exact one-body matrices or raw blocks already obtainable in
+  the Cr2/Cartesian path;
+- build in-memory transformed one-body matrices for `F`;
+- report symmetry, orthogonality, trace, low-spectrum, protected-span, and
+  block-composition diagnostics.
+
+Forbidden:
+
+- production source changes;
+- public driver/API/input wiring or exports;
+- artifact schema, provenance, writer, reader, or manifest changes;
+- exact IDA/MWG interaction transform;
+- screened-reference/rho0 work;
+- Cr2 HF, solver work, or production Cr2 Hamiltonian claim;
+- changing residual defaults;
+- changing the staged geometry selector;
+- treating rejected broad directions as MWG residuals;
+- committed tests or fixtures.
+
+Failure rule: if the audit cannot construct the fixed-sector one-body blocks
+from the existing source-backed geometry and available exact one-body data,
+stop and report the exact missing reusable seam. Do not add source
+instrumentation, artifact fields, public wiring, or a temporary operator
+helper under this audit ID.

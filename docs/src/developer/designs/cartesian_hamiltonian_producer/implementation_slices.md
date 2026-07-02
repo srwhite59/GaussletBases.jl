@@ -420,6 +420,16 @@ Approved robustness lane:
   added source lines in `residual_basis.jl`; if reproducing the measured
   geometry needs a larger helper layer or cross-file plumbing, stop for a
   follow-up amendment.
+- `HP-RG-PROTECT-ONEBODY-AUDIT-01` approves only an ignored measurement audit
+  over the source-backed protected geometry. It may build in-memory exact
+  one-body matrices in `F = [Z, M Q_perp]` from existing staged geometry and
+  existing exact one-body data, and report `F' S F`, `F' K F`, `F' U_A F`,
+  `F' H1 F`, symmetry, low spectra, trace shifts, protected-span preservation,
+  and block-composition diagnostics. It does not approve source changes,
+  public wiring, artifacts/provenance, exact IDA/MWG transforms, Cr2 HF,
+  residual default changes, or production Hamiltonian claims. A later source
+  lane, if justified, should decide whether exact one-body ownership belongs
+  in `src/cartesian_residual_gaussians/augmented_operators.jl`.
 
 ## Compact Hamiltonian Artifact Manifest
 

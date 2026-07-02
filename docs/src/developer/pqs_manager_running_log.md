@@ -21993,3 +21993,58 @@ Carrying-cost result:
 - exact remaining blocker: any protected-original operator/Hamiltonian
   construction or public/provenance wiring needs separate design-manager
   authority.
+
+## Cartesian Hamiltonian Producer Pass 254 - Protected Fixed-Sector One-Body Audit Authority
+
+Commit(s):
+- this commit - Approve protected fixed-sector one-body audit
+
+Summary:
+- Approved `HP-RG-PROTECT-ONEBODY-AUDIT-01` as the next measurement-only lane
+  after the source-backed staged protected-original geometry prototype. The
+  audit asks whether exact one-body operators can be transformed consistently
+  into the injected fixed sector
+  `F = [Z, M Q_perp]`, with `M = [G, R_compact]`, using existing staged
+  geometry and already available exact one-body data.
+- The decision is deliberately not source authority. The first pass is an
+  ignored `tmp/work` probe. It should clarify the operator dataflow before
+  design-manager decides whether a source helper is needed and, if so, whether
+  ownership belongs in `src/cartesian_residual_gaussians/augmented_operators.jl`.
+  `residual_basis.jl` remains the geometry owner.
+
+Validation / evidence:
+- Updated `residual_gaussian_injection_hybrid.md`, `registry.md`,
+  `current.md`, `implementation_slices.md`,
+  `residual_gaussian_domain_module.md`, `AGENTS.md`, and this running log.
+- The required diagnostics are fixed-sector orthogonality, finite/symmetric
+  `F' K F`, `F' U_A F`, and `F' H1 F`, protected original and compact RG block
+  `H1` before/after replacement, trace and low-spectrum diagnostics, low-mode
+  weights across protected/broad/complement pieces, protected-span
+  preservation, `B = M' S Z` singular values, and `Q_perp` orthogonality.
+
+Goal advancement:
+- LT5/LT6 and MT4/MT6: moves protected-original injection from geometry-only
+  toward operator feasibility without collapsing directly into production
+  Hamiltonian construction.
+- The audit answers the next practical question: whether `F` is a numerically
+  consistent exact one-body fixed sector before any IDA/MWG or artifact lane is
+  considered.
+
+Risk / guardrail:
+- Forbidden remains broad: no production source changes, public driver/API,
+  artifacts/provenance/reader/writer/manifest changes, exact IDA/MWG transform,
+  screened-reference/rho0 work, Cr2 HF, residual defaults, staged-geometry
+  selector changes, or use of rejected broad directions as MWG residuals.
+- Cr2 is the primary target. H2 or H2+ sanity is useful if cheap, but it is not
+  a committed endpoint or a reason to block the Cr2 audit.
+
+Carrying-cost result:
+- source line delta: 0.
+- deleted: none.
+- simplified: the next pass is a probe-only dataflow audit, not a premature
+  `augmented_operators.jl` source lane.
+- quarantined: source helpers, artifacts, IDA/MWG interaction transforms, HF,
+  and production Hamiltonian claims.
+- exact remaining blocker: if the ignored audit cannot build fixed-sector
+  one-body blocks from existing geometry and one-body data, report the missing
+  reusable seam instead of adding source instrumentation under this ID.

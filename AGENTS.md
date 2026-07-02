@@ -1074,6 +1074,16 @@ Approved Residual Gaussian module surfaces:
   implementation line budget is target `220` added source lines in
   `residual_basis.jl`; if the measured geometry cannot be reproduced inside
   that narrow file-local surface, stop and request a follow-up amendment.
+- `HP-RG-PROTECT-ONEBODY-AUDIT-01` approves only ignored measurement probes
+  for exact one-body transformation into the protected fixed sector
+  `F = [Z, M Q_perp]`. It may consume the source-backed staged geometry helper
+  and existing exact one-body data to build in-memory diagnostics such as
+  `F' K F`, `F' U_A F`, and `F' H1 F`. It does not approve source helpers,
+  `augmented_operators.jl` edits, public wiring, artifacts/provenance,
+  exact IDA/MWG transforms, Cr2 HF, residual default changes, or production
+  Hamiltonian claims. If a later source lane is justified, likely exact
+  one-body ownership is `src/cartesian_residual_gaussians/augmented_operators.jl`,
+  but that decision is deferred until after the audit.
 
 Non-negotiable RG guardrails:
 

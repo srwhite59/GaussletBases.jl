@@ -68,6 +68,8 @@ module, or object names in the new owner.
   protected-original geometry prototype.
 - `HP-RG-PROTECT-INJECT-TEST-01` - validation gates for the staged geometry
   prototype.
+- `HP-RG-PROTECT-ONEBODY-AUDIT-01` - measurement-only audit for exact
+  one-body transformation into the protected fixed sector.
 
 Implementation IDs in this list are approved only within the surfaces below.
 Design-only IDs record authority for future source blurbs but do not approve
@@ -279,6 +281,15 @@ by fake-RDM eigenspace occupancy; and report geometry diagnostics for
 operator/Hamiltonian transformation, inherited IDA/MWG for protected-original
 injection, artifact support, public wiring, Cr2 HF, or default behavior
 changes.
+
+`HP-RG-PROTECT-ONEBODY-AUDIT-01` approves only an ignored measurement audit
+that consumes the source-backed staged geometry and existing exact one-body
+data to test in-memory fixed-sector transforms such as `F' K F`, `F' U_A F`,
+and `F' H1 F`. It does not approve source helpers, artifact/provenance
+changes, public wiring, IDA/MWG interaction transforms, Cr2 HF, residual
+default changes, or production Hamiltonian claims. If a later source lane is
+needed, exact one-body ownership likely belongs in `augmented_operators.jl`,
+while `residual_basis.jl` remains the geometry owner.
 
 Do not approve a vague global entry point such as
 `stabilize_residual_metric(...)`. Global raw-candidate symmetric Lowdin and

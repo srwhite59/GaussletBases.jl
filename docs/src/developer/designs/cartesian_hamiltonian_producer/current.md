@@ -323,6 +323,16 @@ Approved Residual Gaussian robustness lane:
   does not approve public wiring, artifacts/provenance, exact operator or
   IDA/MWG Hamiltonian transformation, Cr2 HF, default changes, or use of
   rejected broad directions as MWG residual channels.
+- `HP-RG-PROTECT-ONEBODY-AUDIT-01` approves only an ignored measurement audit
+  of exact one-body transformation into the source-backed protected fixed
+  sector `F = [Z, M Q_perp]`. It may consume the current staged geometry helper
+  and existing exact one-body data to build in-memory `F' K F`, `F' U_A F`,
+  and `F' H1 F` diagnostics. It does not approve source helpers,
+  `augmented_operators.jl` changes, artifacts/provenance, public wiring,
+  IDA/MWG transforms, Cr2 HF, residual default changes, or production
+  Hamiltonian claims. Future exact one-body ownership is likely
+  `augmented_operators.jl`, but that is deliberately deferred until the audit
+  clarifies the dataflow.
 
 Approved stale complete-core-shell RHF retirement:
 

@@ -4229,6 +4229,85 @@ Approved validation:
 - no protected-original injection artifact write/readback;
 - no committed tests unless requested by a later source-review pass.
 
+### HP-RG-PROTECT-ONEBODY-AUDIT-01 — protected fixed-sector one-body audit
+
+Status: approved measurement-only audit authority. This is not source
+authority.
+
+Purpose: given the source-backed staged protected-original geometry
+
+```text
+Z = [Z_protected, Z_broad]
+F = [Z, M Q_perp]
+M = [G, R_compact]
+```
+
+test whether exact one-body operators can be transformed consistently into the
+injected fixed sector `F` without changing production Hamiltonian
+construction.
+
+Decision:
+
+- the first pass must be an ignored measurement probe, not a source helper;
+- source ownership for a later implementation remains undecided until the
+  audit clarifies the dataflow;
+- likely future owner for exact one-body transformation is
+  `src/cartesian_residual_gaussians/augmented_operators.jl`, while
+  `src/cartesian_residual_gaussians/residual_basis.jl` remains the geometry
+  owner;
+- the accepted comparison target is in-memory operator consistency, not an
+  energy or production Hamiltonian claim;
+- Cr2 is the primary target; bounded H2 or H2+ sanity is useful if cheap but
+  not required as a committed endpoint.
+
+Approved audit surfaces:
+
+- ignored `tmp/work/*.jl` probes;
+- durable output under `/Users/srw/dmrgtmp/...` or a bounded report directory
+  if later accepted by manager review;
+- consume the current source-backed staged geometry helper;
+- consume existing exact one-body matrices or blocks already available in the
+  Cr2/Cartesian path;
+- build in-memory transformed one-body matrices for `F`;
+- report symmetry, orthogonality, trace, low-spectrum, protected-span, and
+  block-composition diagnostics.
+
+Required diagnostics:
+
+- `F' S F - I`;
+- finite/symmetric `F' K F`;
+- finite/symmetric `F' U_A F` for each available nuclear unit block;
+- finite/symmetric `F' H1 F`;
+- protected original block `H1` before and after replacement/cleanup;
+- compact RG block `H1` before and after replacement;
+- trace and low-spectrum diagnostics for `K`, each `U_A`, and `H1`;
+- low-mode weights in protected original, accepted broad, and
+  `M Q_perp` complement pieces;
+- protected-span preservation before and after any final cleanup;
+- `B = M' S Z` singular values and `Q_perp` orthogonality diagnostics.
+
+Coordinate and second-moment transforms may be included only if they are
+already available through the same exact one-body dataflow.
+
+Forbidden:
+
+- production source changes;
+- public driver/API/input wiring or exports;
+- artifact schema, provenance, writer, reader, manifest, or sidecar changes;
+- exact IDA/MWG interaction transform;
+- screened-reference/rho0 work;
+- Cr2 HF, solver work, or production Cr2 Hamiltonian claim;
+- residual default changes;
+- staged geometry selector changes;
+- converting rejected broad directions into MWG residual channels;
+- committed tests or fixtures.
+
+Failure rule: if the audit cannot construct the fixed-sector one-body blocks
+from existing source-backed geometry and available exact one-body data, stop
+and report the exact missing reusable seam. Do not add source instrumentation,
+artifact fields, public wiring, or temporary operator helpers under this audit
+ID.
+
 ## Approved For Cartesian Gaussian Raw-Block Nuclear Owner
 
 This section approves only the neutral uncharged by-center nuclear raw-block
