@@ -102,7 +102,6 @@ function one_body_placement_plan(
         global_matrix_assembly_status = :not_materialized,
         records_store_existing_collection_entry_references = true,
         records_copy_block_matrices = false,
-        _one_body_placement_nonclaim_flags()...,
     )
 end
 
@@ -209,7 +208,6 @@ function _one_body_placement_record(
         result = _one_body_placement_value(entry, :result, nothing),
         skipped_record = _one_body_placement_value(entry, :skipped_record, nothing),
         record_copies_block_matrix = false,
-        _one_body_placement_nonclaim_flags()...,
     )
 end
 
@@ -386,24 +384,4 @@ end
 
 function _one_body_placement_value(source, _key::Symbol, default = nothing)
     return default
-end
-
-function _one_body_placement_nonclaim_flags()
-    return (;
-        operator_matrix_materialized = false,
-        operator_blocks_materialized = false,
-        hamiltonian_data_materialized = false,
-        artifacts_materialized = false,
-        exports_materialized = false,
-        global_operator_assembled = false,
-        global_operator_blocks_materialized = false,
-        global_hamiltonian_data_materialized = false,
-        global_artifacts_materialized = false,
-        coulomb_materialized = false,
-        density_density_materialized = false,
-        ida_mwg_data_materialized = false,
-        pqs_lowdin_materialized = false,
-        pqs_shell_projection_materialized = false,
-        full_white_lindsey_route_assembled = false,
-    )
 end

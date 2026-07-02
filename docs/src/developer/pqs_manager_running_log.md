@@ -22725,3 +22725,53 @@ Carrying-cost result:
 - MT6 audit/classify old Cartesian flat paths: active as cleanup support.
   The current bounded target is placement-plan nonclaim vocabulary; broader
   provider/final-basis status fields still need separate mapping/authority.
+
+## Cartesian Hamiltonian Producer Pass 267 - CPBM Placement Nonclaim Cleanup
+
+Commit(s):
+- this commit - Remove CPBM one-body placement false fields
+
+Summary:
+- Accepted the bounded placement-plan cleanup. `_one_body_placement_nonclaim_flags()`
+  and its two splats were removed from placement-plan and placement-record
+  construction.
+- The live placement contract remains intact: placement status/blocker logic,
+  record fields, column ranges, source collection entry references, and global
+  matrix assembly inputs were left unchanged. The placement plan now reports
+  placement facts only, without route/global false disclaimers.
+
+Validation / evidence:
+- Source delta: `22` deletions, `0` additions in
+  `src/cartesian_pair_block_materialization/one_body_placement_plan.jl`.
+- Focused scan in the target file found no surviving removed nonclaim fields
+  or `_one_body_placement_nonclaim_flags`.
+- Exact property-read scan over `src`, `test`, `docs`, and `tmp/work` found
+  the expected live materialization reads in dispatch/collection and stale
+  ignored tmp probes, but no active placement-plan dependency on the deleted
+  fields.
+- `git diff --check` passed.
+- Package load passed with `package_load_elapsed_s=0.632732625`.
+- Tiny placement smoke passed:
+  `placement_nonclaim_smoke_ok status=placeable_local_one_body_placement_plan
+  records=1`, elapsed `0.989156209` s.
+
+Goal advancement:
+- LT6 and MT5/MT6: completes the bounded CPBM one-body false-nonclaim cleanup
+  through descriptor/input, global result, and placement-plan layers while
+  preserving active placement and materialization contracts.
+
+Risk / guardrail:
+- This does not touch PQS/final-basis status fields, provider summaries,
+  numerical kernels, public entry points, artifact/export behavior, or active
+  dispatch/collection materialization booleans.
+
+Carrying-cost result:
+- deleted: `_one_body_placement_nonclaim_flags()` and its two splats.
+- simplified: placement plan/record payloads no longer carry route/global
+  false disclaimers.
+- quarantined: live CPBM dispatch/collection materialization fields and
+  broader final-basis/PQS status vocabulary.
+- not deleted because: `pqs_source_shell_final_basis.jl` and adjacent
+  final-basis status fields are broader surfaces requiring a separate map.
+- exact remaining blocker: manager approval is needed before any final-basis or
+  PQS provider status cleanup.
