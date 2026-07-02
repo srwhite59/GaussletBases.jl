@@ -21341,3 +21341,66 @@ Carrying-cost result:
 - exact remaining blocker: approve a docs/source design pass that makes
   terminal shellification due diligence an explicit repo-consumer contract and
   decides where the report table should be emitted.
+
+## Cartesian Hamiltonian Producer Pass 243 - Terminal Shellification Due Diligence Design
+
+Commit(s):
+- this commit - Approve terminal shellification due diligence design
+
+Summary:
+- Approved `HP-DRV-SHELLDD-FN-01` and `HP-DRV-SHELLDD-TEST-01` for a standard
+  shell-by-shell terminal shellification due-diligence table. This restores
+  the useful old-driver practice that a human can inspect basis construction,
+  but through a structured bounded table rather than freeform route-stage
+  output.
+- The motivating H2+ `ns = 5`/`ns = 7` audit caught a suspicious
+  `complete_shell_1` immediately: physical side lengths
+  `3.464 x 3.464 x 6.646`, actual source shape `(5, 5, 5)`, expected
+  aspect-balanced shape `(5, 5, 10)`, retained `98`, and expected retained
+  scale `178`. The design records that this is inadequate basis construction,
+  not a normal code bug that should stay hidden until energy/residual
+  interpretation.
+
+Validation / evidence:
+- Added `terminal_shellification_due_diligence.md` and linked it from the
+  Cartesian producer README.
+- Updated `current.md`, `registry.md`, `implementation_slices.md`, `AGENTS.md`,
+  and this running log with the new IDs, table contract, warning policy,
+  implementation seam, forbidden surfaces, and validation gates.
+- The required table fields include terminal order/key, role, region kind,
+  shell index, owner/contact/shared classification, index and physical boxes,
+  physical side lengths/aspect ratios, actual and expected aspect-balanced
+  source-mode shapes, source-mode count, retained count, final column range,
+  lowering/retained/realization rules, slab metadata, and advisory warning
+  flags.
+
+Goal advancement:
+- LT5/LT6: makes basis adequacy review a repo-consumer contract, not an
+  optional ignored probe. Consumers are expected to inspect the due-diligence
+  table before interpreting energies, residual-Gaussian behavior, or
+  injection behavior.
+- MT4: protects the Cr2/residual investigation from repeating the same class
+  of hidden basis-construction mistake. Rectangular physical shells represented
+  by cubic source modes should become visible immediately.
+
+Risk / guardrail:
+- This is reporting/source-design authority only. It does not implement
+  aspect-balanced complete-shell source modes, change shellification policy,
+  change source-mode selection, alter artifacts, add driver inputs, or make
+  warning flags automatic failures.
+- The approved implementation seam is narrow: extend or wrap
+  `_cartesian_terminal_inventory_rows(...)` in
+  `src/cartesian_base_hamiltonian.jl`, join existing terminal inventory rows
+  with retained-rule plan/support records, and print an in-memory/report table
+  first. Artifact schema is explicitly out of scope.
+
+Carrying-cost result:
+- source line delta: 0.
+- deleted: none.
+- simplified: due-diligence expectations are now explicit instead of living in
+  ignored probe practice.
+- quarantined: aspect-balanced source-mode implementation, production
+  enforcement, artifacts, route reports, and Cr2 workflow.
+- exact remaining blocker: a later source pass must implement the table within
+  the narrow helper/table seam and report if retained-rule/support records
+  cannot be joined without a broader report/payload framework.

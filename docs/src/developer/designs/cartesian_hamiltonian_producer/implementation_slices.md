@@ -912,6 +912,8 @@ Status: approved for implementation under `HP-DRV-FILE-01`,
 `HP-DRV-NEST-TEST-01`, `HP-DRV-STAGE-FN-01`,
 `HP-DRV-STAGE-WIRE-01`, `HP-DRV-STAGE-TEST-01`,
 `HP-DRV-INV-FN-01`, `HP-DRV-INV-TEST-01`, and `HP-DRV-TEST-01`.
+`HP-DRV-SHELLDD-FN-01` and `HP-DRV-SHELLDD-TEST-01` additionally approve the
+terminal shellification due-diligence table.
 
 Approved boundary:
 
@@ -964,6 +966,15 @@ Allowed workflow:
 - include physical `x`/`y` ranges as well as `z`, so angular-balanced z-axis
   shellification can be reviewed from ordinary driver output;
 - make any direct identity slab sectors visible if they exist;
+- expose a shell-by-shell terminal shellification due-diligence table for
+  Cartesian/PQS terminal bases, using the
+  `terminal_shellification_due_diligence.md` contract;
+- include actual and expected aspect-balanced source-mode shape, physical side
+  lengths/aspect ratios, retained count, final column range, lowering/
+  retained/realization rule, slab metadata, and advisory warning flags in that
+  table where available;
+- keep due-diligence warning flags advisory unless a later policy or caller
+  explicitly enforces them;
 - write existing `CartesianIDAHamiltonian` artifacts with approved provenance
   groups;
 - print user-facing summaries and timing.
@@ -1022,6 +1033,10 @@ Validation gates:
   objects;
 - confirm output remains bounded and excludes source modes, pair inventories,
   raw-block details, all-row listings, and full metadata;
+- bounded H2 or H2+ driver/producer smoke showing shellification
+  due-diligence rows if `HP-DRV-SHELLDD-*` code is touched;
+- focused row inspection showing a rectangular physical shell warning when an
+  existing bounded fixture has one, if `HP-DRV-SHELLDD-*` code is touched;
 - H atom base driver artifact write/readback under `HP-DRV-ATOM-TEST-01`;
 - H2 base driver artifact write/readback;
 - one small base artifact/readback path with `nesting = :wl`;
@@ -1034,6 +1049,8 @@ Line budget:
 
 - at most `150` added `bin` lines;
 - at most `80` added `src`/`bin` lines for the terminal inventory summary;
+- at most `120` added `src`/`bin` lines for the shellification
+  due-diligence table;
 - at most `200` added `src` lines across the approved staged-driver source
   files;
 - no new committed test or tool file;

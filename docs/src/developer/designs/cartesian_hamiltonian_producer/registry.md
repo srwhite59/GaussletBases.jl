@@ -5122,6 +5122,127 @@ No committed test file, committed driver-input fixture, Cr2-specific driver
 run, artifact schema validation, solver run, or diagnostic harness is approved
 by this ID.
 
+### HP-DRV-SHELLDD-FN-01 — terminal shellification due-diligence table
+
+Status: approved for future implementation. No source is implemented by the
+approving docs pass.
+
+Design note:
+
+```text
+docs/src/developer/designs/cartesian_hamiltonian_producer/terminal_shellification_due_diligence.md
+```
+
+Problem: compact terminal inventory rows can show that a region is compact
+without showing whether the shell basis is physically adequate. The H2+
+`ns = 5`/`ns = 7` audit showed a `complete_shell_1` with physical side lengths
+`3.464 x 3.464 x 6.646`, source shape `(5, 5, 5)`, expected aspect-balanced
+shape `(5, 5, 10)`, retained `98`, and expected retained scale `178`.
+That was inadequate basis construction, and it should be visible in ordinary
+producer/driver due diligence before interpreting energies or residual/
+injection behavior.
+
+Approved source files:
+
+```text
+src/cartesian_base_hamiltonian.jl
+bin/cartesian_ham_builder.jl
+```
+
+Optional only if a compact accessor is directly required:
+
+```text
+src/pqs_source_box_route_driver_helpers.jl
+```
+
+Approved behavior:
+
+- add one helper/table surface for terminal shellification due-diligence rows;
+- extend or wrap `_cartesian_terminal_inventory_rows(...)`;
+- join existing terminal inventory rows with terminal retained-rule
+  plan/support records;
+- produce an in-memory/report table first;
+- expose the table from canonical driver/producer workflows;
+- keep warning flags advisory by default;
+- keep output bounded and row-oriented;
+- preserve existing compact terminal-region inventory behavior unless it is
+  intentionally extended by this table;
+- preserve all numerical construction behavior.
+
+Required table fields:
+
+- terminal order/key;
+- role, region kind, and shell index;
+- owner/contact/shared classification;
+- index outer and inner boxes and shapes;
+- physical bounds and physical side lengths for `x`, `y`, and `z`;
+- physical aspect ratios;
+- actual `source_mode_shape`;
+- expected aspect-balanced `source_mode_shape` when applicable;
+- source-mode count;
+- retained count and final column range;
+- lowering kind, retained rule, and realization rule/status;
+- slab normal axis, side, thickness, stack index, and stack count when
+  applicable;
+- warning flags and warning summary.
+
+Initial advisory warning flags should include rectangular physical shells
+represented by cubic source modes, expected source shape larger than actual,
+retained count below aspect-balanced scale, large identity sectors, missing
+shell index, missing physical bounds, missing source-mode shape, slab rows
+without native metadata, and unavailable expected-shape diagnostics.
+
+Contract:
+
+- repo/driver workflows must expose this shell-by-shell basis table for
+  Cartesian/PQS terminal bases;
+- consumers are expected to inspect it before interpreting energies, residual
+  behavior, or injection behavior;
+- warning flags are advisory diagnostics unless a caller/test/later policy
+  explicitly enforces them.
+
+Forbidden:
+
+- artifact schema/provenance/reader changes;
+- public input, public semantics, or driver contract changes;
+- shellification policy changes;
+- source-mode selection changes;
+- aspect-balanced source-mode implementation;
+- terminal lowering, retained-unit, terminal-realization, RG/MWG/IDA,
+  Hamiltonian, raw-block, solver, or Cr2 workflow changes;
+- route skeleton exposure, source-mode inventory dumps, pair inventories,
+  raw-block details, all-row support listings, full metadata dumps, or
+  recursive route-stage reports;
+- automatic failure on warning flags unless a later policy approves it.
+
+Failure rule: if the due-diligence table cannot be built by extending/wrapping
+`_cartesian_terminal_inventory_rows(...)` and compact accessors without adding
+a broad report/payload framework, artifact fields, or shellification policy
+changes, make no source commit and report the missing seam.
+
+Line budget: target at most `120` added `src`/`bin` lines. This is one table
+surface, not a new reporting subsystem.
+
+Open follow-up: aspect-balanced complete-shell source modes are likely a
+separate source-policy fix. Do not mix that with this reporting lane.
+
+### HP-DRV-SHELLDD-TEST-01 — terminal shellification due-diligence validation
+
+Status: approved.
+
+Approved validation:
+
+- `git diff --check`;
+- package load if source is touched;
+- bounded H2 or H2+ driver/producer smoke showing due-diligence rows;
+- focused row inspection showing a rectangular physical shell warning when an
+  existing bounded fixture has one;
+- ordinary compact terminal inventory output remains bounded;
+- artifact/readback matrix deltas unchanged if artifact writing is exercised;
+- no Cr2 run required.
+
+No committed fixtures or tests are approved by default.
+
 ### HP-DRV-TEST-01 — driver workflow validation
 
 Approved validation:

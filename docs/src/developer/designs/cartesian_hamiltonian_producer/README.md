@@ -23,7 +23,11 @@ artifacts from visible public `system`, `basis`, and optional `supplement`
 contracts. `HP-DRV-INV-*` approves a bounded terminal-region inventory summary
 in the canonical driver output so users can see region kind, support rows,
 final columns, compression, and identity-vs-compact realization without
-turning the driver into a route diagnostic dump. The supported supplemented
+turning the driver into a route diagnostic dump. `HP-DRV-SHELLDD-*` approves
+a standard terminal shellification due-diligence table so consumers can review
+shell-by-shell physical aspect ratios, source-mode shapes, retained counts,
+and warning flags before interpreting energies or residual/injection behavior.
+The supported supplemented
 workflow now accepts explicit homonuclear
 z-axis diatomics without element-specific branches. A compact artifact manifest
 lane is approved for JLD2 sidecar groups that make written Hamiltonians
@@ -106,6 +110,8 @@ Agents should read first:
 - [Residual Gaussian injection hybrid memo](residual_gaussian_injection_hybrid.md)
   for the optional near-gausslet injection proposal; this is design memory, not
   production source authority
+- [Terminal shellification due diligence](terminal_shellification_due_diligence.md)
+  for the shell-by-shell basis review table and advisory warning contract
 - [Cartesian Gaussian raw blocks - nuclear slice](cartesian_gaussian_raw_blocks_nuclear.md)
   for the neutral uncharged nuclear raw-block owner
 - [Cartesian Gaussian raw blocks - non-nuclear slice](cartesian_gaussian_raw_blocks_non_nuclear.md)

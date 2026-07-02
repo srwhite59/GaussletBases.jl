@@ -169,6 +169,22 @@ Implemented base path:
   transverse physical scale against the bond-axis margin. This does not
   approve new driver inputs, route diagnostics, source-mode or pair dumps,
   artifact schema changes, numerical construction changes, or Cr2 workflow.
+- `HP-DRV-SHELLDD-*` approves a standard terminal shellification
+  due-diligence table for Cartesian/PQS terminal bases. The table is the live
+  replacement for the old "driver printed enough for a human to inspect"
+  practice: consumers are expected to inspect shell-by-shell geometry before
+  interpreting energies, residual occupations, or injection behavior. It must
+  expose terminal order/key, role, region kind, shell index, owner/contact/
+  shared classification, index and physical boxes, physical side lengths and
+  aspect ratios, actual and expected aspect-balanced source-mode shapes,
+  source-mode count, retained count, final column range, lowering/retained/
+  realization rules, slab metadata, and advisory warning flags. The first
+  implementation seam is extending or wrapping
+  `_cartesian_terminal_inventory_rows(...)` in
+  `src/cartesian_base_hamiltonian.jl` and joining existing terminal inventory
+  rows with terminal retained-rule plan/support records. This does not approve
+  artifact schema changes, public semantics changes, shellification policy
+  changes, aspect-balanced source-mode implementation, or Cr2 workflow.
 - 2026-06-26 He/PQS evidence found `n_s = 5` mapped-COMX not robust enough for
   all-electron scalar capture. This keeps mapped-COMX opt-in only and blocks
   default promotion until bounded He `n_s = 6`/`7` H1/IDA evidence is reviewed.
