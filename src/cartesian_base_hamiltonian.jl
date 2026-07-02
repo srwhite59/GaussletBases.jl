@@ -520,6 +520,146 @@ function _cartesian_terminal_inventory_rows(transforms, bundles)
     return rows
 end
 
+_cartesian_range_shape(box) = isnothing(box) ? nothing : Tuple(length.(box))
+_cartesian_axis_spacing(values, index) = length(values) == 1 ? NaN : index == 1 ? abs(values[2] - values[1]) : index == length(values) ? abs(values[end] - values[end - 1]) : (abs(values[index] - values[index - 1]) + abs(values[index + 1] - values[index])) / 2
+function _cartesian_median(values); isempty(values) && return NaN; sorted = sort!(collect(Float64.(values))); n = length(sorted); return isodd(n) ? sorted[(n + 1) ÷ 2] : (sorted[n ÷ 2] + sorted[n ÷ 2 + 1]) / 2; end
+function _cartesian_axis_weight_stats(weights; threshold = 1.0e-14)
+    values = Float64.(weights)
+    negative_count = count(<(-threshold), values)
+    near_zero_count = count(w -> abs(w) <= threshold, values)
+    return (; count = length(values), sum = sum(values), min = minimum(values),
+        max = maximum(values), abs_sum = sum(abs, values), negative_count,
+        near_zero_count, threshold,
+        warning = any(!isfinite, values) || negative_count > 0 || near_zero_count > 0)
+end
+function _cartesian_axis_due_diligence(parent, axis::Symbol, locations)
+    pgdg = _nested_axis_pgdg(parent.parent_axis_bundle_object, axis); centers = Float64.(pgdg.centers)
+    spacings = abs.(diff(centers)); axis_index = axis === :x ? 1 : axis === :y ? 2 : 3
+    preview_count = min(length(centers), 8)
+    nuclei = [begin
+        coord = location[axis_index]
+        _, index = findmin(abs.(centers .- coord))
+        (; coordinate = coord, nearest_index = index, nearest_center = centers[index],
+            snap_error = centers[index] - coord,
+            nearest_spacing = _cartesian_axis_spacing(centers, index))
+    end for location in locations]
+    return (;
+        axis, count = length(centers), centers, physical_min = centers[1],
+        physical_max = centers[end], physical_length = centers[end] - centers[1],
+        center_preview = centers[1:preview_count],
+        center_table_truncated = preview_count < length(centers),
+        spacing_min = isempty(spacings) ? NaN : minimum(spacings),
+        spacing_median = _cartesian_median(spacings),
+        spacing_max = isempty(spacings) ? NaN : maximum(spacings),
+        nuclei, weight_stats = _cartesian_axis_weight_stats(pgdg.weights))
+end
+function _cartesian_expected_source_shape(row, source_shape)
+    row.region_kind === :complete_shell || return nothing
+    isnothing(source_shape) && return nothing
+    axis = get(row, :bond_axis, :z)
+    axis_index = axis === :x ? 1 : axis === :y ? 2 : 3
+    lengths = (row.physical_x_length, row.physical_y_length, row.physical_z_length)
+    other = Tuple(i for i in 1:3 if i != axis_index); transverse = (lengths[other[1]] + lengths[other[2]]) / 2
+    transverse > 0 || return nothing
+    dims = collect(Int.(source_shape))
+    dims[axis_index] = max(dims[axis_index], round(Int, dims[axis_index] * lengths[axis_index] / transverse))
+    return Tuple(dims)
+end
+_cartesian_source_mode_count(shape) = isnothing(shape) ? 0 : prod(Int.(shape))
+_cartesian_owner_class(role, kind) = kind === :direct_atom_contact_core ? :atom_contact_core : kind === :complete_shell ? :shared_molecular : kind === :angular_z_extension_slab ? :shared_angular_z_extension_slab : role
+function _cartesian_due_warning_summary(flags)
+    active = Symbol[]
+    for key in keys(flags); getproperty(flags, key) && push!(active, key); end
+    return isempty(active) ? (:none,) : Tuple(active)
+end
+function _cartesian_terminal_due_rows(transforms, bundles)
+    low = get(transforms, :low_order_transforms, nothing)
+    basis = get(transforms, :terminal_basis_realization, nothing)
+    (isnothing(low) || isnothing(basis) || isnothing(low.terminal_retained_rule_plan)) &&
+        return NamedTuple[]
+    inventory = Dict(row.region_key => row for row in _cartesian_terminal_inventory_rows(transforms, bundles))
+    blocks = Dict(block.unit_key => block for block in basis.blocks)
+    rows = NamedTuple[]
+    for record in low.terminal_retained_rule_plan.records
+        support = record.support_record
+        invrow = get(inventory, support.terminal_region_key, nothing)
+        block = get(blocks, support.unit_key, nothing)
+        (isnothing(invrow) || isnothing(block)) && continue
+        physical = invrow.physical_ranges; lengths = (physical.x[2] - physical.x[1],
+            physical.y[2] - physical.y[1], physical.z[2] - physical.z[1])
+        row0 = merge(invrow, (;
+            terminal_order = record.order_index, role = support.terminal_region_role,
+            owner_contact_shared = _cartesian_owner_class(support.terminal_region_role, invrow.region_kind),
+            outer_box = support.outer_box, outer_shape = _cartesian_range_shape(support.outer_box),
+            inner_box = support.inner_exclusion_box, inner_shape = _cartesian_range_shape(support.inner_exclusion_box),
+            physical_x_length = Float64(lengths[1]), physical_y_length = Float64(lengths[2]),
+            physical_z_length = Float64(lengths[3]),
+            bond_axis_transverse_aspect = lengths[3] / max((lengths[1] + lengths[2]) / 2, eps(Float64)),
+            max_physical_aspect = maximum(lengths) / max(minimum(lengths), eps(Float64)),
+            source_mode_shape = support.source_mode_shape,
+            source_mode_count = _cartesian_source_mode_count(support.source_mode_shape),
+            retained_count = record.retained_count, final_column_range = block.column_range,
+            retained_rule = support.retained_rule, realization_status = record.realization_status,
+            bond_axis = support.bond_axis,
+        ))
+        expected = _cartesian_expected_source_shape(row0, support.source_mode_shape)
+        expected_retained = isnothing(expected) ? 0 :
+            prod(Int.(expected)) - prod(max(dim - 2, 0) for dim in Int.(expected))
+        flags = (;
+            rectangular_physical_shell_cubic_source_modes =
+                invrow.region_kind === :complete_shell && !isnothing(support.source_mode_shape) && length(unique(support.source_mode_shape)) == 1 && row0.max_physical_aspect >= 1.25,
+            expected_source_shape_larger_than_actual =
+                !isnothing(expected) && _cartesian_source_mode_count(expected) > row0.source_mode_count,
+            retained_count_below_aspect_balanced_scale =
+                expected_retained > 0 && record.retained_count < expected_retained,
+            missing_shell_index =
+                invrow.region_kind === :complete_shell && invrow.shell_index === :unavailable,
+            missing_physical_bounds = any(!isfinite, lengths),
+            missing_source_mode_shape =
+                invrow.region_kind === :complete_shell && isnothing(support.source_mode_shape),
+            slab_without_native_metadata =
+                occursin("slab", String(invrow.region_kind)) && (invrow.slab_axis === :unavailable || invrow.slab_stack_count == 0),
+            unavailable_expected_shape = invrow.region_kind === :complete_shell && isnothing(expected))
+        push!(rows, merge(row0, (;
+            expected_aspect_balanced_source_mode_shape = expected,
+            expected_aspect_retained_count = expected_retained,
+            warning_flags = flags, warning_summary = _cartesian_due_warning_summary(flags))))
+    end
+    return rows
+end
+function _cartesian_due_dimensions(parent, basis, rows)
+    parent_grid_size = prod(_cartesian_base_axis_counts_tuple(parent.axis_counts))
+    sumkind(f) = sum(row -> f(row) ? row.final_cols : 0, rows; init = 0)
+    direct = sumkind(row -> row.region_kind in (:direct_core, :direct_atom_contact_core)); complete = sumkind(row -> row.region_kind === :complete_shell)
+    slab = sumkind(row -> occursin("slab", String(row.region_kind))); compact = sumkind(row -> row.realization_class === :compact_product)
+    identity = sumkind(row -> row.realization_class === :identity)
+    return (; parent_grid_size, direct_core_columns = direct, complete_shell_columns = complete,
+        slab_columns = slab, compact_product_columns = compact, identity_columns = identity, base_final_dimension = basis.final_dimension,
+        residual_dimension = :unavailable, augmented_dimension = :unavailable,
+        large_identity_sector = identity > basis.final_dimension ÷ 2)
+end
+function _cartesian_terminal_due_diligence_report(input, parent, transforms)
+    basis = transforms.terminal_basis_realization
+    axes = Tuple(_cartesian_axis_due_diligence(parent, axis, input.locations) for axis in (:x, :y, :z))
+    bounds = (; x = (axes[1].physical_min, axes[1].physical_max), y = (axes[2].physical_min, axes[2].physical_max), z = (axes[3].physical_min, axes[3].physical_max))
+    rows = _cartesian_terminal_due_rows(transforms, parent.parent_axis_bundle_object)
+    dimensions = _cartesian_due_dimensions(parent, basis, rows)
+    geometry = (; kind = input.kind, nesting = input.nesting, source_span = input.source_span,
+        atom_symbols = input.symbols, nuclear_charges = input.charges, nup = input.nup,
+        ndn = input.ndn, atom_locations = input.locations, bond_axis = input.kind === :h2 ? :z : nothing,
+        bond_length = input.kind === :h2 ? abs(input.locations[2][3] - input.locations[1][3]) : nothing,
+        radius = input.radius, xmax_parallel = input.xmax_parallel, xmax_transverse = input.xmax_transverse, core_spacing = input.core_spacing,
+        reference_spacing = input.reference_spacing, tail_spacing = input.tail_spacing,
+        q = input.q, ns = input.ns, parent_axis_counts = _cartesian_base_axis_counts_tuple(parent.axis_counts),
+        parent_physical_bounds = bounds)
+    return (; geometry, parent_axes = axes, dimensions, terminal_rows = rows,
+        warnings = (;
+            axis_center_table_truncated = any(axis -> axis.center_table_truncated, axes),
+            gausslet_weight_anomaly = any(axis -> axis.weight_stats.warning, axes),
+            padding_or_radius_not_reflected_in_box = input.kind === :h ? minimum((max(abs(bounds.x[1]), abs(bounds.x[2])), max(abs(bounds.y[1]), abs(bounds.y[2])), max(abs(bounds.z[1]), abs(bounds.z[2])))) + 1.0e-12 < input.radius : minimum((max(abs(bounds.x[1]), abs(bounds.x[2])), max(abs(bounds.y[1]), abs(bounds.y[2])))) + 1.0e-12 < input.xmax_transverse || max(abs(bounds.z[1]), abs(bounds.z[2])) + 1.0e-12 < input.xmax_parallel,
+            large_identity_sector = dimensions.large_identity_sector))
+end
+
 _cartesian_base_atom_location_matrix(input) =
     [input.locations[row][axis] for row in eachindex(input.locations), axis in 1:3]
 
@@ -763,8 +903,10 @@ function cartesian_base_working_basis(system::NamedTuple; basis::NamedTuple, sup
     terminal_inventory = isnothing(basis_realization) ? nothing :
         (; final_dimension = basis_realization.final_dimension,
             rows = _cartesian_terminal_inventory_rows(transforms, parent.parent_axis_bundle_object))
+    terminal_due_diligence = isnothing(basis_realization) ? nothing :
+        _cartesian_terminal_due_diligence_report(input, parent, transforms)
     return (; input, parent, terminal_basis = transforms.terminal_basis_realization,
-        source_mode_provenance, terminal_inventory)
+        source_mode_provenance, terminal_inventory, terminal_due_diligence)
 end
 
 cartesian_base_products(base) =

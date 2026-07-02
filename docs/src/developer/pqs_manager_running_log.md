@@ -21457,3 +21457,60 @@ Carrying-cost result:
 - exact remaining blocker: future implementation must decide which existing
   staged objects expose the axis-center and weight facts without creating a
   broad payload/report framework.
+
+## Cartesian Hamiltonian Producer Pass 245 - Terminal Due Diligence Report Implementation
+
+Commit(s):
+- this commit - Implement terminal due diligence report
+
+Summary:
+- Accepted the first `HP-DRV-SHELLDD-FN-01` source pass. The canonical
+  Cartesian/PQS driver now prints a compact terminal due-diligence report
+  through the existing `print_contract` path, and
+  `cartesian_base_working_basis(...)` carries the same structured report as
+  `terminal_due_diligence`.
+- The report includes normalized system/geometry facts, parent axis summaries
+  with bounded printed center previews, 1D gausslet weight statistics,
+  dimension/compression accounting, and shell-by-shell terminal rows. The
+  structured parent-axis rows retain the full axis center vectors for later
+  focused inspection while keeping normal driver output bounded.
+- The H2 smoke catches the known rectangular complete-shell issue: complete
+  shell 1 has physical length `3.464 x 3.464 x 6.646`, actual source shape
+  `(5, 5, 5)`, expected aspect-balanced shape `(5, 5, 10)`, retained `98`,
+  expected retained scale `178`, and advisory warning flags.
+
+Validation / evidence:
+- `git diff --check` on the touched source/bin files passed.
+- Package load passed with `package_load_elapsed_s=6.640831417`.
+- Bounded H2 driver smoke passed with artifact
+  `/Users/srw/dmrgtmp/hp_drv_shelldd_review_h2_smoke_after_axis_fix.jld2`;
+  it printed all report sections and seven shell rows and completed readback.
+- Line count for the implementation files is `179` insertions and `14`
+  deletions, within the `180` added `src`/`bin` target.
+
+Goal advancement:
+- LT5/LT6: makes basis due diligence a live consumer-facing report rather
+  than an ignored-probe practice. Consumers can now see the constructed
+  system, axes, weights, dimensions, and shell shapes before interpreting
+  energy or residual/injection behavior.
+- MT4: gives the Cr2/H2+ investigation a standard way to expose hidden basis
+  construction problems before tuning RG, injection, or interaction fixes.
+
+Risk / guardrail:
+- The implementation is reporting-only. It does not change shellification
+  policy, source-mode selection, aspect-balanced source modes, artifacts,
+  public inputs, RG/MWG/IDA, Hamiltonian assembly, solver behavior, or Cr2
+  workflow.
+- Warning flags remain advisory. Weight summaries remain diagnostic only; they
+  are not residual quadrature, MWG weights, or proof of integration quality.
+
+Carrying-cost result:
+- source/bin line delta: `+179/-14`.
+- deleted: old terse builder terminal-inventory printer path.
+- simplified: terminal review now goes through one structured due-diligence
+  report object instead of ad hoc shell-only printing.
+- quarantined: validation artifacts under `/Users/srw/dmrgtmp`.
+- exact remaining blocker: aspect-balanced complete-shell source modes remain
+  a separate source-policy question; supplemented/residual/augmented
+  dimensions stay unavailable until a future pass wires those objects without
+  crossing RG/MWG boundaries.

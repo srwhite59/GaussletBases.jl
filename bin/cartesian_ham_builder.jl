@@ -64,22 +64,45 @@ for arg in args
     vars[Symbol(key)] = Core.eval(Main, Meta.parse(value))
 end
 
-function print_terminal_inventory(base)
-    inventory = hasproperty(base, :terminal_inventory) ? base.terminal_inventory : nothing
-    isnothing(inventory) && return nothing
+function print_terminal_due_diligence(base)
+    report = hasproperty(base, :terminal_due_diligence) ? base.terminal_due_diligence : nothing
+    isnothing(report) && return nothing
+    fmt(x::Real) = string(round(Float64(x); sigdigits = 6))
+    fmt(x) = string(x)
     fmt_range(r) = string(first(r), ":", last(r))
-    fmt_phys(r) = string(round(r[1]; sigdigits = 6), ":", round(r[2]; sigdigits = 6))
-    fmt_box(ranges) = string("x=", fmt_range(ranges.x), " y=", fmt_range(ranges.y), " z=", fmt_range(ranges.z))
-    fmt_phys_box(ranges) = string("x=", fmt_phys(ranges.x), " y=", fmt_phys(ranges.y), " z=", fmt_phys(ranges.z))
-    println("terminal inventory: base_final_dimension=", inventory.final_dimension)
-    println("  region kind lowering shell support final ratio class")
-    for row in inventory.rows
-        ratio = round(row.compression_ratio; digits = 3)
+    fmt_pair(p) = string(fmt(p[1]), ":", fmt(p[2]))
+    fmt_box(box) = isnothing(box) ? "nothing" :
+        string("x=", fmt_range(box[1]), " y=", fmt_range(box[2]), " z=", fmt_range(box[3]))
+    fmt_shape(shape) = isnothing(shape) ? "nothing" : string(shape)
+    fmt_preview(values) = "[" * join((fmt(value) for value in values), ", ") * "]"
+    fmt_flags(flags) = flags == (:none,) ? "none" : join(String.(flags), ",")
+    g = report.geometry
+    println("terminal due diligence:")
+    println("  normalized system: kind=$(g.kind) nesting=$(g.nesting) source_span=$(g.source_span) atoms=$(g.atom_symbols) charges=$(g.nuclear_charges) nup=$(g.nup) ndn=$(g.ndn)")
+    println("  geometry: locations=$(g.atom_locations) bond_axis=$(g.bond_axis) bond_length=$(g.bond_length) q=$(g.q) ns=$(g.ns)")
+    println("  spacing/box: core=$(g.core_spacing) reference=$(g.reference_spacing) tail=$(g.tail_spacing) radius=$(g.radius) xmax_parallel=$(g.xmax_parallel) xmax_transverse=$(g.xmax_transverse) parent_axis_counts=$(g.parent_axis_counts)")
+    println("  parent physical bounds: x=$(fmt_pair(g.parent_physical_bounds.x)) y=$(fmt_pair(g.parent_physical_bounds.y)) z=$(fmt_pair(g.parent_physical_bounds.z))")
+    println("  parent axes and weights:")
+    for axis in report.parent_axes
+        w = axis.weight_stats
+        println("    $(axis.axis): count=$(axis.count) phys=$(fmt(axis.physical_min)):$(fmt(axis.physical_max)) len=$(fmt(axis.physical_length)) spacing[min/med/max]=$(fmt(axis.spacing_min))/$(fmt(axis.spacing_median))/$(fmt(axis.spacing_max)) centers=$(fmt_preview(axis.center_preview))$(axis.center_table_truncated ? " truncated" : "")")
+        println("      weights count=$(w.count) sum=$(fmt(w.sum)) min/max=$(fmt(w.min))/$(fmt(w.max)) abs_sum=$(fmt(w.abs_sum)) neg=$(w.negative_count) near_zero=$(w.near_zero_count) threshold=$(w.threshold) warning=$(w.warning)")
+        for nucleus in axis.nuclei
+            println("      nucleus coord=$(fmt(nucleus.coordinate)) nearest_index=$(nucleus.nearest_index) center=$(fmt(nucleus.nearest_center)) snap_error=$(fmt(nucleus.snap_error)) spacing=$(fmt(nucleus.nearest_spacing))")
+        end
+    end
+    d = report.dimensions
+    println("  dimensions: parent_grid=$(d.parent_grid_size) base_final=$(d.base_final_dimension) direct/core=$(d.direct_core_columns) complete_shell=$(d.complete_shell_columns) slab=$(d.slab_columns) compact_product=$(d.compact_product_columns) identity=$(d.identity_columns) residual=$(d.residual_dimension) augmented=$(d.augmented_dimension) large_identity_sector=$(d.large_identity_sector)")
+    println("  shell rows:")
+    for row in report.terminal_rows
         slab = row.slab_axis === :unavailable ? "" :
             " slab=$(row.slab_axis)/$(row.slab_side)/t=$(row.slab_thickness)/$(row.slab_stack_index)-$(row.slab_stack_count)"
-        println("  ", row.region_key, " ", row.region_kind, " ", row.lowering_kind, " shell=", row.shell_index, " support=", row.support_rows, " final=", row.final_cols, " ratio=", ratio, " ", row.realization_class)
-        println("    idx ", fmt_box(row.index_ranges), " phys ", fmt_phys_box(row.physical_ranges), slab)
+        println("    $(row.terminal_order) $(row.region_key) role=$(row.role) kind=$(row.region_kind) shell=$(row.shell_index) owner=$(row.owner_contact_shared)")
+        println("      idx outer=$(fmt_box(row.outer_box)) shape=$(row.outer_shape) inner=$(fmt_box(row.inner_box)) shape=$(row.inner_shape) phys=$(row.physical_ranges) phys_len=($(fmt(row.physical_x_length)),$(fmt(row.physical_y_length)),$(fmt(row.physical_z_length))) aspect[z/trans,max/min]=$(fmt(row.bond_axis_transverse_aspect))/$(fmt(row.max_physical_aspect))")
+        println("      source=$(fmt_shape(row.source_mode_shape)) expected=$(fmt_shape(row.expected_aspect_balanced_source_mode_shape)) source_count=$(row.source_mode_count) support=$(row.support_rows) retained=$(row.retained_count) expected_retained=$(row.expected_aspect_retained_count) final=$(fmt_range(row.final_column_range))")
+        println("      lowering=$(row.lowering_kind) retained_rule=$(row.retained_rule) realization=$(row.realization_status)$(slab) warnings=$(fmt_flags(row.warning_summary))")
     end
+    println("  report warnings: ", report.warnings)
     return nothing
 end
 
@@ -132,7 +155,7 @@ build_start = time()
 stage_start = time()
 base = GaussletBases.cartesian_base_working_basis(system; basis, supplemented)
 push!(stage_timings, "base working basis" => time() - stage_start)
-vars[:print_contract] && print_terminal_inventory(base)
+vars[:print_contract] && print_terminal_due_diligence(base)
 
 stage_start = time()
 base_products = GaussletBases.cartesian_base_products(base)
