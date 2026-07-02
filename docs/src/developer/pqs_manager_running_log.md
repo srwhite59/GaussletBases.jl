@@ -21268,3 +21268,76 @@ Carrying-cost result:
   design, run the same block-breakdown idea on Cr2, or keep the reduced
   protected-original option scoped to Cr2 safety without trying to recover all
   H2+ proxy completeness at low ns.
+
+## Cartesian Hamiltonian Producer Pass 242 - Complete-Shell Aspect And Due-Diligence Table Audits
+
+Commit(s):
+- this commit - Record complete-shell aspect and due-diligence audits
+
+Summary:
+- Accepted two measurement/read-only audits that shift the diagnosis from
+  residual/injection policy to terminal shellification due diligence. First,
+  the PQS complete-shell aspect audit found no design authority requiring
+  rectangular shared molecular complete shells to stay cubic in PQS source
+  mode shape. Current live code does force `(q,q,q)` in
+  `_pqs_complete_shell_contract`, while the existing central distorted-product
+  policy already computes an aspect-aware `(q,q,L)` source mode shape.
+- Second, the due-diligence table probe proved that the consumer-facing shell
+  breakdown we need is buildable today from in-memory objects. The table
+  catches the suspicious H2+ `q=5,n_s=5` shell immediately: complete shell 1
+  is physically about `3.464 x 3.464 x 6.646` with bond-axis aspect about
+  `1.9185`, but still uses cubic `(5,5,5)` source modes. The aspect-balanced
+  analogue would be `(5,5,10)` with `178` retained boundary columns rather
+  than `98`.
+
+Validation / evidence:
+- Aspect audit source surfaces:
+  `src/cartesian_terminal_lowering/region_contracts.jl` hard-codes
+  `source_mode_shape = ntuple(_ -> policy.q, 3)` for PQS complete shells;
+  `src/cartesian_shellification/terminal_geometry.jl` already computes
+  `L = max(q, round(Int, q * aspect_ratio))` for central distorted product
+  boxes; `pqs_multilayer_shell_source_plan.jl` currently rejects non-cubic raw
+  source dimensions in that realization path; raw product boundary selection
+  itself supports general `source_mode_dims`.
+- Due-diligence outputs are under
+  `/Users/srw/dmrgtmp/h2plus_terminal_shellification_due_diligence_80dc2cbc6/`,
+  including `terminal_shellification_due_diligence.tsv`, `run_summary.tsv`,
+  and `summary.txt`.
+- Key table rows: `h2plus_ns5_q5` final dimension `767`, complete shell 1
+  source `(5,5,5)`, expected `(5,5,10)`, retained `98`, expected retained
+  `178`; fixed-distortion `q=7,n_s=5` final dimension `1247`, complete shell
+  1 source `(7,7,7)`, expected `(7,7,13)`, retained `218`, expected retained
+  `362`; normal `ns=7,q=7` final dimension `1487`, complete shell 1 source
+  `(7,7,7)`, expected `(7,7,10)`, retained `218`, expected retained `290`.
+- The table columns include terminal order/key, role/kind/shell index,
+  owner/shared classification, index boxes, physical bounds and lengths,
+  aspect ratios, source mode shape, expected aspect-balanced shape, source and
+  retained counts, final column range, lowering/retained/realization rules,
+  slab metadata, and warning flags.
+
+Goal advancement:
+- MT4/LT6: identifies a lower-level shellification/source-mode issue that may
+  explain part of the H2+ completeness proxy behavior and may affect Cr2
+  representability. The immediate lesson is not to tune RG/injection rules in
+  isolation; consumers need a standard basis due-diligence table before
+  interpreting physics.
+- MT6: upgrades shellification reporting from ad hoc probe reconstruction to a
+  concrete candidate consumer contract.
+
+Risk / guardrail:
+- No source edits, artifact/schema changes, driver report changes, mixed-ns
+  implementation, aspect-policy implementation, endpoint rerun, or production
+  claim. The aspect-balanced complete-shell shape is a likely policy repair,
+  not yet approved source behavior.
+
+Carrying-cost result:
+- tracked source line delta: 0.
+- deleted: none.
+- simplified: the next debugging/reporting seam is clearer:
+  `_cartesian_terminal_inventory_rows(...)` plus terminal retained-rule support
+  records can produce the due-diligence table without artifact schema changes.
+- quarantined: ignored due-diligence probe and `/Users/srw/dmrgtmp` output
+  tables.
+- exact remaining blocker: approve a docs/source design pass that makes
+  terminal shellification due diligence an explicit repo-consumer contract and
+  decides where the report table should be emitted.
