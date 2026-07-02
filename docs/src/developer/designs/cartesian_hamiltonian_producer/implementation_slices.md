@@ -405,6 +405,18 @@ Approved robustness lane:
   original direction that fails representability is a main-basis insufficiency
   diagnostic, not an MWG residual opportunity. Any source pass needs a fresh
   implementation amendment with exact files, validation, and line budget.
+- `HP-RG-PROTECT-INJECT-FN-01` / `HP-RG-PROTECT-INJECT-TEST-01` approve only a
+  narrow internal staged protected-original geometry prototype in
+  `src/cartesian_residual_gaussians/residual_basis.jl`. The source path may
+  build `M = [G, R_compact]`, protected originals, the broad original subspace
+  `W`, representability filtering by singular values of `B = M' S W`,
+  optional localization/shape diagnostics, fake-RDM eigenspace filtering, and
+  final geometry diagnostics for `Z = [Z_protected, Z_broad]` and
+  `F = [Z, M Q_perp]`. It must not add public driver/API wiring, exports,
+  artifact schema/provenance, artifact writing, exact one-body or IDA/MWG
+  protected-injection Hamiltonian transformation, Cr2 HF, default behavior
+  changes, source files outside `residual_basis.jl`, or MWG channels for
+  rejected broad directions.
 
 ## Compact Hamiltonian Artifact Manifest
 

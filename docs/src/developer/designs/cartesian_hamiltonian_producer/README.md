@@ -112,8 +112,8 @@ Agents should read first:
   for the narrow final residual identity-check robustness, tolerance, and
   cutoff-policy lanes
 - [Residual Gaussian injection hybrid memo](residual_gaussian_injection_hybrid.md)
-  for the optional near-gausslet injection proposal; this is design memory, not
-  production source authority
+  for the optional near-gausslet injection proposal, protected-original
+  compact-main design, and the narrow staged geometry source prototype
 - [Terminal shellification due diligence](terminal_shellification_due_diligence.md)
   for the derived basis review report and advisory warning contract
 - [PQS complete-shell aspect source modes](pqs_complete_shell_aspect_source_modes.md)

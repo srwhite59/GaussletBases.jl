@@ -603,3 +603,119 @@ handoff must report:
 - turning on the existing `G`-injection implementation as-is;
 - broad non-injectable candidates becoming MWG RGs;
 - Cr2 production claims.
+
+## HP-RG-PROTECT-INJECT-FN-01 - Staged Protected-Original Geometry Prototype
+
+Status: approved narrow source authority for an internal, default-off,
+in-memory geometry prototype only. This is not public driver/API authority, not
+artifact/provenance authority, not a Hamiltonian writer path, not Cr2 HF, and
+not a production default.
+
+### Measurement Basis
+
+The staged-filter report in
+`docs/src/developer/reports/cr2_staged_subspace_filter_870498b54/` changes the
+source direction. Scalar per-mode fake/representability cuts and combined
+score prefixes failed because they allowed collectively weak injected
+subspaces. The viable geometry applied subspace filters in this order:
+
+```text
+1. representability subspace filter in W using B = M' S W;
+2. optional localization/shape filter;
+3. fake-RDM eigenspace filter in the surviving subspace.
+```
+
+The best measurement variant was:
+
+```text
+s_cut       = 0.95
+shape       = none
+occ_cut     = 0.003
+broad dim   = 87
+Z dim       = 117
+B_min       = 0.9934658245
+B < 0.99    = 0
+fake trace  = 93.3726973285
+```
+
+This is geometry authority only. The result does not prove that a production
+Hamiltonian, artifact, or HF workflow should use this construction.
+
+### Approved Source Surface
+
+Approved file:
+
+```text
+src/cartesian_residual_gaussians/residual_basis.jl
+```
+
+Approved work:
+
+- add private helpers for protected-original staged injection geometry;
+- reuse the existing ordered compact-first selector to construct
+  `R_compact`;
+- identify protected original candidate indices corresponding to accepted
+  compact RGs;
+- build `M = [G, R_compact]` in the existing mixed `(G,A)` coordinate
+  convention;
+- build the broad original subspace `W` by orthogonalizing remaining original
+  supplement Gaussians against protected originals and Gaussian Gram cleaning;
+- apply a representability subspace filter using singular values of
+  `B = M' S W`, with private parameters such as `s_cut`;
+- optionally localize and classify shape for diagnostics only;
+- apply a fake-RDM eigenspace filter with private parameter `occ_cut`;
+- form the geometry diagnostics for
+
+  ```text
+  Z = [Z_protected, Z_broad]
+  F = [Z, M Q_perp]
+  ```
+
+- report `B` singular values, fake-RDM trace retained/dropped, protected-span
+  preservation, `Z' S M Q_perp`, sampled or block-estimated `F' S F`, and
+  dropped-direction summaries.
+
+The implementation may add compact internal helper return records inside
+`residual_basis.jl` if needed to avoid parsing labels for compact source
+indices. These records must stay private and must not become artifact,
+manifest, public API, or driver payload shapes.
+
+### Explicitly Not Approved
+
+- public driver/API/input keywords;
+- exports or broad module API;
+- artifact schema, artifact writing, provenance keys, or reader support;
+- exact one-body or IDA/MWG Hamiltonian transformation for the protected
+  geometry;
+- Cr2 HF, solver work, or production Cr2 claim;
+- screened-reference/rho0 work;
+- changing the default residual basis;
+- enabling this construction through existing `residual_injection_cutoff`;
+- converting rejected broad directions into MWG residual channels;
+- source files outside `src/cartesian_residual_gaussians/residual_basis.jl`
+  without a later amendment.
+
+### Failure Rule
+
+If the geometry prototype cannot reproduce the staged-filter measurement
+within roundoff, or if implementation requires operator/Hamiltonian plumbing,
+artifact state, public wiring, or source files outside the approved surface,
+stop and report the exact missing object. Do not broaden this ID in source.
+
+## HP-RG-PROTECT-INJECT-TEST-01 - Staged Geometry Validation
+
+Approved validation for `HP-RG-PROTECT-INJECT-FN-01`:
+
+- `git diff --check`;
+- package load;
+- H2 residual endpoint/facade smoke showing default behavior unchanged;
+- ignored Cr2 staged-geometry probe comparing source-backed geometry against
+  the measurement report values for at least the best variant:
+
+  ```text
+  s_cut = 0.95, shape = none, occ_cut = 0.003
+  ```
+
+- no Cr2 HF;
+- no artifact write/readback for protected-original injection;
+- no committed tests unless a later source-review pass requests one.

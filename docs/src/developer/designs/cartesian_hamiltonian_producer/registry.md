@@ -4157,6 +4157,73 @@ request fresh source authority with exact files, validation, line budget, and
 failure rule. Do not implement protected-original compact-main injection under
 `HP-RG-INJECT-FN-01`.
 
+### HP-RG-PROTECT-INJECT-FN-01 — staged protected-original geometry prototype
+
+Status: approved narrow source authority for an internal, default-off,
+in-memory geometry prototype only. This is not public driver/API authority,
+not artifact/provenance authority, not Hamiltonian assembly, not Cr2 HF, and
+not a production default.
+
+Purpose: source-back the staged protected-original geometry that was measured
+in `docs/src/developer/reports/cr2_staged_subspace_filter_870498b54/`. The
+source path must operate on subspaces rather than scalar per-mode cuts:
+
+```text
+1. build compact RGs and M = [G, R_compact];
+2. build protected originals and broad original subspace W;
+3. filter W by representability singular values of B = M' S W;
+4. optionally localize/classify shape for diagnostics;
+5. filter by fake-RDM eigenspace occupancy;
+6. form Z = [Z_protected, Z_broad] and F = [Z, M Q_perp] geometry diagnostics.
+```
+
+Approved file:
+
+```text
+src/cartesian_residual_gaussians/residual_basis.jl
+```
+
+Approved work:
+
+- private helpers for staged protected-original geometry;
+- private parameter handling for `s_cut`, optional shape diagnostics, and
+  `occ_cut`;
+- compact private helper return records if needed to carry accepted compact
+  source indices without parsing labels;
+- geometry diagnostics for `B` singular values, fake-RDM trace retained and
+  dropped, protected-span preservation, `Z' S M Q_perp`, sampled/block
+  `F' S F`, and dropped-direction summaries.
+
+Forbidden:
+
+- source files outside `src/cartesian_residual_gaussians/residual_basis.jl`;
+- public driver/API/input keywords or exports;
+- artifact schema, provenance, reader, or writer support;
+- exact one-body or IDA/MWG Hamiltonian transformation for protected-original
+  injection;
+- Cr2 HF or solver work;
+- changing default residual basis behavior;
+- enabling this construction through the existing `residual_injection_cutoff`;
+- converting rejected broad directions into MWG residual channels;
+- screened-reference/rho0 work.
+
+Failure rule: if reproducing the staged geometry requires operator/Hamiltonian
+plumbing, artifact state, public wiring, or broader source files, stop and
+report the missing object instead of broadening the implementation.
+
+### HP-RG-PROTECT-INJECT-TEST-01 — staged geometry validation
+
+Approved validation:
+
+- `git diff --check`;
+- package load;
+- H2 residual endpoint/facade smoke showing default behavior unchanged;
+- ignored Cr2 source-backed staged-geometry probe matching the measurement
+  report for the best variant `s_cut=0.95`, `shape=none`, `occ_cut=0.003`;
+- no Cr2 HF;
+- no protected-original injection artifact write/readback;
+- no committed tests unless requested by a later source-review pass.
+
 ## Approved For Cartesian Gaussian Raw-Block Nuclear Owner
 
 This section approves only the neutral uncharged by-center nuclear raw-block

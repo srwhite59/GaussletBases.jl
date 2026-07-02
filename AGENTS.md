@@ -534,6 +534,8 @@ these approved design IDs:
 - `HP-RG-CUTOFF-FN-02`
 - `HP-RG-CUTOFF-TEST-02`
 - `HP-RG-INJECT-FN-01`
+- `HP-RG-PROTECT-INJECT-FN-01`
+- `HP-RG-PROTECT-INJECT-TEST-01`
 - `HP-CGRB-FILE-01`
 - `HP-CGRB-FN-01`
 - `HP-CGRB-FN-02`
@@ -1057,6 +1059,18 @@ Approved Residual Gaussian module surfaces:
   not become a broad MWG residual Gaussian. Do not turn on the existing direct
   `G`-injection path as-is for this design; any source work needs a fresh
   source amendment with exact files, validation, and line budget.
+- `HP-RG-PROTECT-INJECT-FN-01` and `HP-RG-PROTECT-INJECT-TEST-01` approve only
+  a narrow internal staged protected-original geometry prototype in
+  `src/cartesian_residual_gaussians/residual_basis.jl`. The approved source
+  work may build `M = [G, R_compact]`, protected originals, the broad original
+  subspace `W`, representability filtering by singular values of
+  `B = M' S W`, optional localization/shape diagnostics, fake-RDM eigenspace
+  filtering, and final geometry diagnostics for
+  `Z = [Z_protected, Z_broad]` and `F = [Z, M Q_perp]`. It does not approve
+  public driver/API wiring, exports, artifact schema/provenance, artifact
+  writing, exact one-body or IDA/MWG protected-injection Hamiltonian
+  transformation, Cr2 HF, default behavior changes, source files outside
+  `residual_basis.jl`, or MWG channels for rejected broad directions.
 
 Non-negotiable RG guardrails:
 

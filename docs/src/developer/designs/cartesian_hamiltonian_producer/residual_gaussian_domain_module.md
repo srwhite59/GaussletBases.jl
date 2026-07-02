@@ -64,6 +64,10 @@ module, or object names in the new owner.
   implementation.
 - `HP-RG-PROTECT-INJECT-DESIGN-01` - design-only protected-original
   injection over compact main space.
+- `HP-RG-PROTECT-INJECT-FN-01` - narrow internal staged
+  protected-original geometry prototype.
+- `HP-RG-PROTECT-INJECT-TEST-01` - validation gates for the staged geometry
+  prototype.
 
 Implementation IDs in this list are approved only within the surfaces below.
 Design-only IDs record authority for future source blurbs but do not approve
@@ -264,6 +268,17 @@ originals are Gram-cleaned separately from injection representability, and
 original is not represented by `M`, that is an insufficient-main-basis
 diagnostic, not permission to make the candidate a MWG residual Gaussian. This
 ID is design-only and requires a later source amendment before implementation.
+
+`HP-RG-PROTECT-INJECT-FN-01` approves only an internal geometry prototype for
+the staged protected-original construction in `residual_basis.jl`. It may
+source-back the measured sequence: construct `M`, protected originals, and the
+broad original subspace `W`; filter by representability singular values of
+`B = M' S W`; optionally localize and classify shape for diagnostics; filter
+by fake-RDM eigenspace occupancy; and report geometry diagnostics for
+`Z = [Z_protected, Z_broad]` and `F = [Z, M Q_perp]`. It does not approve
+operator/Hamiltonian transformation, inherited IDA/MWG for protected-original
+injection, artifact support, public wiring, Cr2 HF, or default behavior
+changes.
 
 Do not approve a vague global entry point such as
 `stabilize_residual_metric(...)`. Global raw-candidate symmetric Lowdin and

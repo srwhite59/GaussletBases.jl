@@ -310,6 +310,19 @@ Approved Residual Gaussian robustness lane:
   not be converted into broad MWG RG channels. Do not turn on the existing
   direct `G`-injection path as-is for this design, and do not issue source
   work without a fresh implementation authority.
+- `HP-RG-PROTECT-INJECT-FN-01` and `HP-RG-PROTECT-INJECT-TEST-01` approve
+  only a narrow internal source-backed geometry prototype for staged
+  protected-original injection in
+  `src/cartesian_residual_gaussians/residual_basis.jl`. The staged rule first
+  filters the full broad original subspace by representability in
+  `M = [G, R_compact]`, then optionally localizes/classifies shape for
+  diagnostics, then filters the surviving subspace by fake-RDM eigenspace
+  occupancy. The approved source work is geometry and diagnostics only:
+  `Z = [Z_protected, Z_broad]`, `F = [Z, M Q_perp]`, `B` singular values,
+  fake-RDM trace, protected-span preservation, and orthogonality checks. It
+  does not approve public wiring, artifacts/provenance, exact operator or
+  IDA/MWG Hamiltonian transformation, Cr2 HF, default changes, or use of
+  rejected broad directions as MWG residual channels.
 
 Approved stale complete-core-shell RHF retirement:
 
