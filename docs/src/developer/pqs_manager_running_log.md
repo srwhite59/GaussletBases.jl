@@ -21694,3 +21694,54 @@ Carrying-cost result:
 - exact remaining blocker: old scalar tests/expectations using cubic complete
   shells need targeted remeasurement; physical-aspect diagnostic warnings
   remain a review signal, not an enforced construction rule.
+
+## Cartesian Hamiltonian Producer Pass 248 - H2+ Aspect-Shell Completeness Replay
+
+Commit(s):
+- this commit - Record H2plus aspect-shell completeness replay
+
+Summary:
+- Accepted the measurement-only H2+ replay after `9bcc1e66f`. The cheap
+  one-electron completeness canary is substantially improved by the
+  aspect-aware complete-shell source-mode repair. The old `ns=5,q=5` full
+  protected-original representability problem moved from `B_min ≈ 0.95038`
+  with five directions below `0.99` to `B_min = 0.989078` with one direction
+  below `0.99`.
+- The fixed-distortion `n_s=5,q=7` and normal `ns=7,q=7` cases are clean by
+  the old `0.99` representability criterion. The remaining `ns=5,q=5` bad
+  direction is a pz/s mixed broad direction with fake-RDM weight about
+  `0.3475`, representability `0.989078`, and negligible endpoint
+  participation in this probe.
+
+Validation / evidence:
+- Output directory:
+  `/Users/srw/dmrgtmp/h2plus_aspect_shell_completeness_9bcc1e66f/`.
+- Probe: `tmp/work/h2plus_aspect_shell_completeness_replay.jl`, ignored.
+- Package load reported `package_load_elapsed_s=0.454682291`; stage elapsed
+  sum was about `46.9s`.
+- Key rows: `ns5_q5` final dimension `897`, reduced gap versus default RG
+  `+1.8947e-4 Ha`; fixed-distortion `n_s=5,q=7` final dimension `1433`,
+  `B_min = 0.99907378`; normal `ns=7,q=7` final dimension `1577`,
+  `B_min = 0.99929510`.
+
+Goal advancement:
+- LT5/LT6: confirms the cubic complete-shell source-mode policy was a real
+  contributor to the protected-original representability problem.
+- MT4/MT6: clears the cheap H2+ canary well enough to resume the Cr2
+  protected-original replay on the new shell baseline.
+
+Risk / guardrail:
+- This is not a production completeness claim. The physical-aspect diagnostic
+  still warns that the old angular-band actual shapes are smaller than the
+  simple physical-aspect estimate for inner shells. The remaining `ns5,q5`
+  pz/s direction is a review note, not a source-change request.
+
+Carrying-cost result:
+- tracked source line delta: 0.
+- deleted: none.
+- simplified: the next lane is now clear: replay Cr2 protected-original
+  representability after `5x5xL`.
+- quarantined: ignored probe and `/Users/srw/dmrgtmp` output tables.
+- exact remaining blocker: determine whether the old Cr2 bad broad
+  protected-original directions disappear or shrink under the repaired
+  complete-shell source modes.
