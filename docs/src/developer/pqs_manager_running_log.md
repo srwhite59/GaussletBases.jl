@@ -21075,23 +21075,24 @@ Carrying-cost result:
   for reduced protected-original replacement, or first compare this reduced
   set against an `ns` representability ladder.
 
-## Cartesian Hamiltonian Producer Pass 239 - H2+ Completeness Check For Reduced Protected-Original Policy
+## Cartesian Hamiltonian Producer Pass 239 - H2+ Completeness Proxy Check For Reduced Protected-Original Policy
 
 Commit(s):
 - this commit - Record H2+ completeness check for reduced protected-original policy
 
 Summary:
-- Accepted the H2+ `ns=5` one-electron completeness audit as a negative
-  guardrail for generalizing the Cr2 reduced protected-original policy. The
-  reduced protected-original construction is cleanly representable, but it is
-  worse than default supplemented RG for the H2+ one-electron endpoint.
+- Accepted the H2+ `ns=5` one-electron audit as a completeness proxy for
+  generalizing the Cr2 reduced protected-original policy. H2+ is not a physics
+  target in itself here; it is a cheap way to measure how much one-electron
+  variational completeness the protected-original construction gives up.
 - The key interpretation is that the reduced dual cut itself is not the only
   issue. Reduced and full protected-original diagnostic energies are identical
   to roundoff in both checked `core_spacing` cases. The energy loss comes from
   using the compact-main/protected-original replacement construction instead
-  of the default additive RG completion. For H2+, broad residual flexibility is
-  variationally useful and there is no MWG/Vee over-occupation pathology to
-  avoid.
+  of the default additive RG completion. For the H2+ proxy, broad residual
+  flexibility is variationally useful and there is no MWG/Vee over-occupation
+  pathology to avoid, so the energy delta should be read as a completeness
+  scale, not as an H2+ endpoint failure.
 
 Validation / evidence:
 - Doer wrote ignored probes and outputs under
@@ -21115,10 +21116,11 @@ Validation / evidence:
 
 Goal advancement:
 - MT4/LT6: narrows the role of reduced protected-original replacement. It is a
-  plausible MWG-safety option for Cr2-like interacting cases, not a general
-  completeness-preserving replacement for default RG. One-electron cases like
-  H2+ should keep the default additive RG path unless a separate completeness
-  option proves equivalent.
+  plausible MWG-safety option for Cr2-like interacting cases, while H2+ gives a
+  cheap scale for the one-electron completeness cost of that option. The
+  measured `1.77e-4` to `4.55e-4 Ha` gaps at `ns=5` are not large by
+  themselves, but they show that one-electron completeness and Cr2 MWG safety
+  are different acceptance targets.
 
 Risk / guardrail:
 - No source edits, public wiring, artifact/provenance/schema work, injection
@@ -21128,14 +21130,14 @@ Risk / guardrail:
 Carrying-cost result:
 - tracked source line delta: 0.
 - deleted: none.
-- simplified: the policy boundary is clearer: Cr2 MWG-safety and H2+
-  one-electron completeness are different acceptance targets.
+- simplified: the policy boundary is clearer: Cr2 MWG-safety and one-electron
+  completeness-proxy accuracy are different acceptance targets.
 - quarantined: ignored H2+ probes and `/Users/srw/dmrgtmp` output tables.
 - exact remaining blocker: test whether loosening the compact-main stage can
   recover H2+ completeness while preserving the Cr2 safety signal, or accept
   that these are separate options.
 
-## Cartesian Hamiltonian Producer Pass 240 - H2+ ns=7 Protected-Original Completeness Check
+## Cartesian Hamiltonian Producer Pass 240 - H2+ ns=7 Protected-Original Completeness Proxy Check
 
 Commit(s):
 - this commit - Record H2plus ns7 protected-original completeness check
@@ -21147,10 +21149,12 @@ Summary:
   problem from `ns=5`: full and reduced protected-original sets are identical,
   no broad directions are dropped, and the full set is clean at the `0.99`
   representability level.
-- However, the protected-original replacement geometry still does not recover
-  the default supplemented RG one-electron endpoint. The remaining gap is not
-  a dropped-direction problem; it is the difference between replacement inside
-  the compact main space and additive default RG variational flexibility.
+- The protected-original replacement geometry still leaves a small
+  one-electron completeness gap relative to default supplemented RG:
+  `6.42e-5 Ha`. The point is not that H2+ is important or that this energy
+  loss is large; the point is that the remaining gap is not a dropped-direction
+  problem. It measures the difference between replacement inside the compact
+  main space and additive default RG variational flexibility.
 
 Validation / evidence:
 - Doer wrote ignored probe output under
@@ -21176,10 +21180,11 @@ Validation / evidence:
 
 Goal advancement:
 - MT4/LT6: clarifies that protected-original replacement can be numerically
-  representable and still fail a one-electron completeness endpoint. For H2+,
-  default additive RG remains the completeness-preserving construction. The
-  Cr2 reduced/protected path should be treated as an interacting-case MWG
-  safety mechanism, not as a universal residual replacement.
+  representable and still carry a small one-electron completeness cost. H2+
+  serves here as a proxy for other systems' one-electron completeness, not as
+  an endpoint target. The Cr2 reduced/protected path should be treated as an
+  interacting-case MWG safety mechanism unless further audits show the
+  completeness cost is acceptable or avoidable.
 
 Risk / guardrail:
 - No source edits, rule changes, public wiring, artifact/provenance/schema
@@ -21190,9 +21195,9 @@ Risk / guardrail:
 Carrying-cost result:
 - tracked source line delta: 0.
 - deleted: none.
-- simplified: the failure mode is now narrower and clearer: replacement
-  geometry changes the one-electron variational space even when all originals
-  are representable.
+- simplified: the measured effect is now narrower and clearer: replacement
+  geometry changes the one-electron variational space slightly even when all
+  originals are representable.
 - quarantined: ignored H2+ `ns=7` probe and `/Users/srw/dmrgtmp` output
   tables.
 - exact remaining blocker: decide whether protected-original replacement is
