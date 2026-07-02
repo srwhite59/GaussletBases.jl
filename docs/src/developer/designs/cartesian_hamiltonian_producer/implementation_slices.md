@@ -914,6 +914,9 @@ Status: approved for implementation under `HP-DRV-FILE-01`,
 `HP-DRV-INV-FN-01`, `HP-DRV-INV-TEST-01`, and `HP-DRV-TEST-01`.
 `HP-DRV-SHELLDD-FN-01` and `HP-DRV-SHELLDD-TEST-01` additionally approve the
 terminal due-diligence report.
+`HP-PQS-ASPECTSHELL-FN-01` and `HP-PQS-ASPECTSHELL-TEST-01` separately approve
+the future source-policy lane for aspect-aware PQS complete-shell source
+modes.
 
 Approved boundary:
 
@@ -977,6 +980,9 @@ Allowed workflow:
   report where available;
 - keep due-diligence warning flags advisory unless a later policy or caller
   explicitly enforces them;
+- do not change complete-shell source-mode shape under the due-diligence IDs.
+  Changing `(q,q,q)` complete-shell source modes to `(q,q,L)` belongs to
+  `HP-PQS-ASPECTSHELL-*`;
 - write existing `CartesianIDAHamiltonian` artifacts with approved provenance
   groups;
 - print user-facing summaries and timing.
@@ -1064,6 +1070,60 @@ Line budget:
   raw-block changes, kernel rewrites, status/report/payload expansion,
   artifact schema changes, public API/export changes, or Cr2-specific workflow
   support are required.
+
+### PQS complete-shell aspect source modes
+
+`HP-PQS-ASPECTSHELL-FN-01` approves the future source-policy pass that restores
+explicit angular-resolution source dimensions for PQS complete shells.
+
+Approved files:
+
+```text
+src/cartesian_terminal_lowering/region_contracts.jl
+src/pqs_multilayer_shell_source_plan.jl
+src/pqs_multilayer_shell_region_plan.jl
+```
+
+Optional only if directly needed:
+
+```text
+src/cartesian_nested_diatomic.jl
+src/cartesian_nested_faces.jl
+```
+
+Approved behavior:
+
+- replace hard-coded cubic `source_mode_shape = (q,q,q)` for z-axis diatomic
+  PQS complete shells with explicit aspect-aware `(q,q,L)`;
+- keep `q` as the selected transverse source size;
+- derive `L` from the old angular-resolution rule, or a documented validated
+  equivalent;
+- pass non-cubic `raw_source_dims`, explicit `q`, explicit `L`, and
+  `selected_q` into `_nested_projected_q_shell_layer(...)`;
+- preserve support ownership and shell-local projection/Lowdin cleanup.
+
+Forbidden:
+
+- driver/public input changes;
+- artifact schema/provenance/reader changes;
+- WL policy changes;
+- thin-slab, angular z-extension, direct/core identity, Residual Gaussian,
+  MWG/IDA, global injection, raw-block, solver, or Cr2 workflow changes;
+- old route-global materialization revival;
+- broad source-mode framework or report/payload expansion.
+
+Validation:
+
+- package load;
+- focused source-shape probe showing `(q,q,L)`;
+- retained count matches the boundary count implied by source-mode shape;
+- due-diligence report no longer emits a stale cubic-shape warning for the
+  repaired shell;
+- bounded H2 or H2+ artifact/readback smoke.
+
+Line budget:
+
+- target at most `160` added `src` lines.
 
 ## Nesting/Supplement Composition Target
 

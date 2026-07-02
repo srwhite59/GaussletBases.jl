@@ -5295,6 +5295,117 @@ Approved validation:
 
 No committed fixtures or tests are approved by default.
 
+### HP-PQS-ASPECTSHELL-FN-01 — PQS complete-shell aspect-aware source modes
+
+Status: approved for future implementation. No source is implemented by the
+approving docs pass.
+
+Design note:
+
+```text
+docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_complete_shell_aspect_source_modes.md
+```
+
+Problem: `HP-DRV-SHELLDD-*` can report that a physically rectangular complete
+shell is represented by cubic `(q,q,q)` source modes, but fixing that mismatch
+changes basis construction. Current `_pqs_complete_shell_contract(...)` in
+`src/cartesian_terminal_lowering/region_contracts.jl` hard-codes
+`source_mode_shape = ntuple(_ -> policy.q, 3)`. The multilayer shell source
+plan still rejects non-cubic `raw_source_dims` and passes `L = q`.
+
+Old code to recover explicitly:
+
+- `src/cartesian_nested_diatomic.jl` contains
+  `_nested_diatomic_reference_band(...)`,
+  `_nested_diatomic_shared_shell_reference_band(...)`,
+  `_nested_diatomic_choose_shell_axis_retain_count(...)`,
+  `_nested_diatomic_adaptive_shell_retention(...)`,
+  `_nested_diatomic_source_box_dimension_plan(...)`,
+  `_nested_diatomic_projected_q_shell_adaptive_source_dimensions(...)`, and
+  `_nested_projected_q_shell_source_mode_plan(...)`;
+- `src/cartesian_nested_faces.jl`'s `_nested_projected_q_shell_layer(...)`
+  already accepts `raw_source_dims`, `selected_q`, and separate `q`/`L`;
+- central distorted product metadata in
+  `src/cartesian_shellification/terminal_geometry.jl` already computes
+  `L = max(shell_side, round(Int, shell_side * aspect_ratio))` as a simpler
+  aspect-aware diagnostic cross-check.
+
+Approved source files:
+
+```text
+src/cartesian_terminal_lowering/region_contracts.jl
+src/pqs_multilayer_shell_source_plan.jl
+src/pqs_multilayer_shell_region_plan.jl
+```
+
+Optional only if directly needed to reuse or narrowly expose the old
+angular-resolution helpers:
+
+```text
+src/cartesian_nested_diatomic.jl
+src/cartesian_nested_faces.jl
+```
+
+Approved behavior:
+
+- change z-axis diatomic PQS complete-shell source-mode shape from cubic
+  `(q,q,q)` to explicit aspect-aware `(q,q,L)`;
+- keep `q` as the selected transverse PQS source size;
+- derive `L` from the restored angular-resolution rule, or from a documented
+  validated equivalent;
+- pass non-cubic `raw_source_dims`, explicit `q`, explicit `L`, and
+  `selected_q` through the multilayer source plan into
+  `_nested_projected_q_shell_layer(...)`;
+- preserve shell support ownership and shell-local projection/Lowdin cleanup;
+- preserve due-diligence reporting of actual and expected source-mode shapes.
+
+Forbidden:
+
+- artifact schema/provenance/reader changes;
+- public input or driver semantic changes;
+- WL source-mode or retained-basis policy changes;
+- thin-slab, angular z-extension, direct/core identity, residual/MWG/IDA, or
+  global injection changes;
+- old route-global materialization revival;
+- broad source-mode framework or report/payload expansion;
+- Cr2 production claims.
+
+Expected consequences:
+
+- retained counts and final dimensions may change;
+- Hamiltonian matrices and energies may change;
+- old scalar targets tied to cubic complete-shell source modes must be
+  remeasured rather than preserved.
+
+Failure rule: if non-cubic complete-shell source modes require changing
+support ownership, terminal realization semantics, artifact schema, public
+driver inputs, or a broad route/report framework, make no source commit and
+report the blocker. If restoring the angular selection requires a broader
+extraction from the old diatomic high-order path, stop and request a narrower
+helper-authority amendment.
+
+Line budget: target at most `160` added `src` lines.
+
+### HP-PQS-ASPECTSHELL-TEST-01 — PQS complete-shell aspect-source validation
+
+Status: approved.
+
+Approved validation:
+
+- `git diff --check`;
+- package load;
+- focused complete-shell source-shape probe showing a rectangular physical
+  shell uses `(q,q,L)` rather than `(q,q,q)`;
+- retained count matches `prod(source_mode_shape) -
+  prod(source_mode_shape .- 2)` for the selected shell;
+- due-diligence report shows actual shape, expected aspect shape, retained
+  count, and no stale cubic-shape warning for the repaired shell;
+- bounded H2 or H2+ artifact/readback smoke;
+- finite/symmetric base Hamiltonian matrices if an artifact is written;
+- no Cr2 run required.
+
+No committed fixtures or tests are approved by default.
+
 ### HP-DRV-TEST-01 — driver workflow validation
 
 Approved validation:

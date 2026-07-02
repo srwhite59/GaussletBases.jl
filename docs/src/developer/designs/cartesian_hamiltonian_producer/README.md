@@ -28,7 +28,9 @@ a standard terminal due-diligence report so consumers can review derived
 system/geometry facts, parent axes and 1D centers, gausslet/IDA weight stats,
 dimension accounting, shell-by-shell physical aspect ratios, source-mode
 shapes, retained counts, and warning flags before interpreting energies or
-residual/injection behavior.
+residual/injection behavior. `HP-PQS-ASPECTSHELL-*` separately approves the
+future source-policy lane that may change PQS complete shells from cubic
+`(q,q,q)` source modes to explicit aspect-aware `(q,q,L)` source modes.
 The supported supplemented
 workflow now accepts explicit homonuclear
 z-axis diatomics without element-specific branches. A compact artifact manifest
@@ -114,6 +116,8 @@ Agents should read first:
   production source authority
 - [Terminal shellification due diligence](terminal_shellification_due_diligence.md)
   for the derived basis review report and advisory warning contract
+- [PQS complete-shell aspect source modes](pqs_complete_shell_aspect_source_modes.md)
+  for the separate `(q,q,L)` source-policy lane
 - [Cartesian Gaussian raw blocks - nuclear slice](cartesian_gaussian_raw_blocks_nuclear.md)
   for the neutral uncharged nuclear raw-block owner
 - [Cartesian Gaussian raw blocks - non-nuclear slice](cartesian_gaussian_raw_blocks_non_nuclear.md)

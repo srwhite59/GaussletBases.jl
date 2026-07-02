@@ -191,6 +191,16 @@ Implemented base path:
   artifact schema changes, public semantics changes, shellification policy
   changes, aspect-balanced source-mode implementation, dense coefficient/
   transform/support dumps, or Cr2 workflow.
+- `HP-PQS-ASPECTSHELL-*` approves the separate future source-policy lane for
+  PQS complete-shell source modes. Current complete shells hard-code cubic
+  `(q,q,q)` source modes in `_pqs_complete_shell_contract(...)`; the restored
+  policy should choose explicit aspect-aware `(q,q,L)` dimensions for z-axis
+  diatomic complete shells, with `L` derived from the older angular-resolution
+  rule or a documented validated equivalent. This lane may change retained
+  counts, final dimensions, Hamiltonian matrices, and energies. It does not
+  approve artifact schema changes, public driver inputs, WL policy changes,
+  residual/MWG/IDA changes, old route-global materialization, or Cr2
+  production claims.
 - 2026-06-26 He/PQS evidence found `n_s = 5` mapped-COMX not robust enough for
   all-electron scalar capture. This keeps mapped-COMX opt-in only and blocks
   default promotion until bounded He `n_s = 6`/`7` H1/IDA evidence is reviewed.

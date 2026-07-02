@@ -572,6 +572,8 @@ these approved design IDs:
 - `HP-DRV-INV-TEST-01`
 - `HP-DRV-SHELLDD-FN-01`
 - `HP-DRV-SHELLDD-TEST-01`
+- `HP-PQS-ASPECTSHELL-FN-01`
+- `HP-PQS-ASPECTSHELL-TEST-01`
 - `HP-HAM-MANIFEST-FN-01`
 - `HP-HAM-MANIFEST-TEST-01`
 - `HP-HAM-MANIFEST-SRC-FN-01`
@@ -1548,6 +1550,32 @@ committed fixtures/tests by default. Gausslet/IDA weight summaries are
 diagnostic only and are not residual integral weights, MWG weights, or proof of
 quadrature quality. Later implementation line budget is target `180` added
 `src`/`bin` lines.
+
+`HP-PQS-ASPECTSHELL-FN-01` and `HP-PQS-ASPECTSHELL-TEST-01` approve the
+separate future source-policy lane for z-axis diatomic PQS complete-shell
+source modes, as recorded in
+`docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_complete_shell_aspect_source_modes.md`.
+This lane is not part of due-diligence reporting: `HP-DRV-SHELLDD-*` may report
+that a physically rectangular complete shell is represented by cubic
+`(q,q,q)` source modes, but only `HP-PQS-ASPECTSHELL-*` may change the actual
+basis construction to aspect-aware `(q,q,L)` source modes. The old
+angular-resolution code to recover explicitly is in
+`src/cartesian_nested_diatomic.jl` and
+`src/cartesian_nested_faces.jl`, especially the
+`_nested_diatomic_*reference_band`, adaptive retained-count, source-dimension
+plan, and `_nested_projected_q_shell_layer(...)` helpers. Approved source files
+are `src/cartesian_terminal_lowering/region_contracts.jl`,
+`src/pqs_multilayer_shell_source_plan.jl`, and
+`src/pqs_multilayer_shell_region_plan.jl`; those old nested helper files are
+optional only if directly needed. Later implementation may change retained
+counts, final dimensions, Hamiltonian matrices, and energies, so old scalar
+targets tied to cubic complete-shell source modes must be remeasured. This lane
+does not approve artifact schema/provenance/reader changes, public input or
+driver semantic changes, WL source-mode policy changes, thin-slab/angular
+z-extension/direct-core/RG/MWG/IDA/global-injection changes, old route-global
+materialization revival, broad source-mode/report/payload frameworks, Cr2
+production claims, committed fixtures/tests by default, or more than target
+`160` added `src` lines without a new amendment.
 
 `HP-DRV-NEST-FN-01` and `HP-DRV-NEST-WIRE-01` approve one visible construction
 family input, `nesting = :pqs` or `nesting = :wl`, in

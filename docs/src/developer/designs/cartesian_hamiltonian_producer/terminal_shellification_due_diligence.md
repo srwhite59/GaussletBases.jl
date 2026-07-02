@@ -341,7 +341,8 @@ No committed fixtures or tests are approved by default.
 
 ## Open Follow-Up
 
-Aspect-balanced complete-shell source modes are likely a separate source-policy
-fix. This due-diligence lane must not implement that policy. It should make
-the problem visible by reporting actual source-mode shape, expected
-aspect-balanced shape, retained count, final columns, and warning flags.
+Aspect-balanced complete-shell source modes are a separate source-policy fix
+under `HP-PQS-ASPECTSHELL-FN-01` and `HP-PQS-ASPECTSHELL-TEST-01`. This
+due-diligence lane must not implement that policy. It should make the problem
+visible by reporting actual source-mode shape, expected aspect-balanced shape,
+retained count, final columns, and warning flags.

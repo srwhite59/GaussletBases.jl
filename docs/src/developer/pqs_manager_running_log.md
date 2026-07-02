@@ -21458,6 +21458,69 @@ Carrying-cost result:
   staged objects expose the axis-center and weight facts without creating a
   broad payload/report framework.
 
+## Cartesian Hamiltonian Producer Pass 245 - PQS Complete-Shell Aspect Source-Mode Policy
+
+Commit(s):
+- this commit - Approve aspect-aware PQS shell source modes
+
+Summary:
+- Approved `HP-PQS-ASPECTSHELL-FN-01` and
+  `HP-PQS-ASPECTSHELL-TEST-01` as the source-policy lane for repairing PQS
+  complete-shell source dimensions. The boundary is now explicit:
+  `HP-DRV-SHELLDD-*` may report a `q x q x l` mismatch, but only
+  `HP-PQS-ASPECTSHELL-*` may change complete-shell construction from cubic
+  `(q,q,q)` source modes to aspect-aware `(q,q,L)` source modes.
+- Recorded the old angular-resolution machinery that should be recovered
+  explicitly: `_nested_diatomic_reference_band(...)`,
+  `_nested_diatomic_shared_shell_reference_band(...)`,
+  `_nested_diatomic_choose_shell_axis_retain_count(...)`,
+  `_nested_diatomic_adaptive_shell_retention(...)`,
+  `_nested_diatomic_source_box_dimension_plan(...)`,
+  `_nested_diatomic_projected_q_shell_adaptive_source_dimensions(...)`,
+  `_nested_projected_q_shell_source_mode_plan(...)`, and
+  `_nested_projected_q_shell_layer(...)`.
+- Identified the live blockers: `_pqs_complete_shell_contract(...)` currently
+  hard-codes `source_mode_shape = ntuple(_ -> policy.q, 3)`, while
+  `pqs_multilayer_shell_source_plan.jl` still rejects non-cubic
+  `raw_source_dims` and passes `L = q`.
+
+Validation / evidence:
+- Added `pqs_complete_shell_aspect_source_modes.md` and linked it from the
+  Cartesian producer README/startup path.
+- Updated `current.md`, `registry.md`, `implementation_slices.md`,
+  `terminal_shellification_due_diligence.md`, `AGENTS.md`, and this running
+  log.
+- The design records that changing source-mode shape changes retained counts,
+  final dimensions, Hamiltonian matrices, and downstream energies; old scalar
+  targets tied to cubic complete-shell source modes must be remeasured.
+
+Goal advancement:
+- LT5/LT6: moves the H2+/Cr2 shell-shape issue from hidden basis inadequacy to
+  an explicit construction-policy lane with old-code provenance and a narrow
+  implementation seam.
+- MT4/MT6: keeps due diligence as the reporting contract while separating the
+  actual source-mode repair from report formatting or driver output work.
+
+Risk / guardrail:
+- This is docs/source-policy authority only. It does not approve artifact
+  schema/provenance/reader changes, public driver semantics, WL policy changes,
+  thin-slab or angular-z-extension changes, residual/RG/MWG/IDA/global
+  injection changes, old route-global materialization revival, broad
+  source-mode/report frameworks, committed fixtures/tests by default, Cr2
+  production claims, or more than target `160` added source lines.
+
+Carrying-cost result:
+- source line delta: 0.
+- deleted: none.
+- simplified: the next source pass has exact files, old helper names, and a
+  validation target instead of a vague "aspect-aware" instruction.
+- quarantined: implementation, scalar remeasurement, Cr2 production, and any
+  broader source-mode framework.
+- exact remaining blocker: source implementation must recover or narrowly
+  re-express the angular retained-count rule and thread non-cubic
+  `raw_source_dims` through the existing complete-shell source plan without
+  changing ownership, artifacts, or public driver semantics.
+
 ## Cartesian Hamiltonian Producer Pass 245 - Terminal Due Diligence Report Implementation
 
 Commit(s):
