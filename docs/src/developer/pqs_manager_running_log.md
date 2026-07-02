@@ -22211,3 +22211,56 @@ Carrying-cost result:
   entries and asserts collection shape.
 - exact remaining blocker: broader CPBM one-body simplification must avoid
   changing placement entry fields or public materialization semantics.
+
+## Cartesian Hamiltonian Producer Pass 258 - CPBM Mixed Block-Set Diagnostic View Retirement Decision
+
+Commit(s):
+- this commit - Retire CPBM mixed block-set diagnostic view contract
+
+Summary:
+- Design-manager decision: the private mixed one-body block-set
+  view/accessor layer is no longer an intended contract. The documented names
+  `_one_body_pair_block_set_view(...)`,
+  `_one_body_pair_block_term_status(...)`,
+  `_one_body_pair_block_pair_status(...)`, and
+  `_one_body_pair_block_lookup(...)` were private diagnostic/retrieval helpers
+  over block-set consumption results. They should not be preserved as route
+  authority, public API, artifact vocabulary, or long-term test targets.
+- The live path is now block-set consumption -> local one-body block
+  collection -> placement plan. That path protects the physics-relevant local
+  block results, skipped records, collection entries, and placement-facing
+  fields without retaining the older mixed diagnostic view surface.
+
+Validation / evidence:
+- Focused scan shows the mixed view/accessor names are documented in
+  `cartesian_route_dictionary.md` but have no live source/test/tool caller
+  beyond definitions/support helpers in `one_body_dispatch.jl`.
+- Updated `cartesian_route_dictionary.md` and
+  `cartesian_route_retirement_ledger.md` to mark the mixed block-set
+  view/accessor surface as approved for retirement.
+
+Goal advancement:
+- LT6 and cleanup/carrying-cost guardrail: prevents private diagnostic
+  vocabulary from becoming durable contract pressure after the placement-plan
+  path has become the active CPBM one-body route.
+
+Risk / guardrail:
+- This decision does not approve changes to numerical one-body block
+  construction, block-set consumption needed by local collection construction,
+  local collection entries, placement planning, public materialization entry
+  points, Hamiltonian/Coulomb/IDA/MWG behavior, exports, artifacts, or route
+  wiring.
+- The materialization/nonclaim field cloud and repeated summary/status
+  construction remain separate decisions. Do not fold them into the diagnostic
+  view/accessor deletion pass.
+
+Carrying-cost result:
+- source line delta: 0 in this docs decision.
+- deleted: none yet.
+- simplified: the next CPBM cleanup source pass can delete only the mixed
+  diagnostic view/accessor helpers and support helpers with no live callers.
+- quarantined: broader CPBM status/nonclaim field cleanup and repeated summary
+  shape cleanup.
+- exact remaining blocker: bloat-fixer/repo-manager must verify no live
+  callers remain and preserve local collection construction plus placement
+  entry shape before deleting the helpers.

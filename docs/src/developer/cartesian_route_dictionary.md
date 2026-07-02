@@ -111,19 +111,18 @@ global operators or Hamiltonians, construct Coulomb, change IDA/MWG semantics,
 export artifacts, build PQS shell projection/Lowdin data, or assemble a full
 White--Lindsey route.
 
-The private mixed one-body block-set consumer keeps results term-separated.
-For routing/reporting, use `_one_body_pair_block_set_view(consumption)` as the
-compact status/count view; it is not a matrix or batch-result container. Term
-accessors retrieve materialized result records or skipped records for one
-requested term. Pair-key accessors retrieve materialized result records or
-skipped records for one retained-unit pair key across materialized terms.
-`_one_body_pair_block_lookup(consumption, term, pair_key)` is the explicit
-exact lookup for one term and one pair key. It may expose one matrix-bearing
-`result` field for a materialized hit, or one `skipped_record` field for a
-skipped hit. These helpers are retrieval and reporting conveniences only. They
-do not sum terms, assemble local/global operators, build Hamiltonians, add
-Coulomb, change IDA/MWG semantics, wire route drivers, export artifacts, build
-PQS shell projection/Lowdin data, or assemble a full White--Lindsey route.
+The private mixed one-body block-set consumer keeps results term-separated, but
+its older diagnostic view/accessor layer is no longer an intended contract.
+Helpers such as `_one_body_pair_block_set_view(...)`,
+`_one_body_pair_block_term_status(...)`,
+`_one_body_pair_block_pair_status(...)`, and
+`_one_body_pair_block_lookup(...)` were private retrieval/reporting
+conveniences over a block-set consumption result. They are approved for
+retirement in favor of the local one-body block collection plus placement-plan
+path. Do not preserve those helper names as route authority, public API,
+artifact vocabulary, or long-term test targets. The still-live boundary is the
+block-set consumption data needed to construct the local collection and the
+placement-facing collection entries.
 
 The private local one-body block collection is the next view layer over an
 existing mixed one-body block-set consumption result. It organizes the same
@@ -413,7 +412,7 @@ The PQS source geometry is “one filled box,” but the actual retained space c
 | **Final pair block**                | Operator block between final retained units after any realization/transform maps.                     | This is what assembly eventually places into the global matrix.  |
 | **Pair-block materialization**      | The step that preflights and then builds concrete pair blocks from pair-operator plans.                | Current numerical pilots include direct/direct local one-body blocks, PQS/PQS raw source-space one-body blocks, and local LW boundary-stratum one-body adapter blocks; not Coulomb/IDA, Hamiltonian assembly, or artifact export. |
 | **Mixed one-body pair-block consumer** | Private `CartesianPairBlockMaterialization` helper over a `PairBlockMaterializationPlan`, safe one-body term or term set, and caller-supplied factors/provider facts. | Dispatches to existing direct/direct, PQS/PQS source-space, and LW boundary-stratum local one-body selectors and returns term-separated local results plus compact views/accessors; not route-driver wiring, local/global assembly, Coulomb, IDA/MWG, PQS shell projection/Lowdin, Hamiltonian/export, artifact writing, or full LW route assembly. |
-| **Mixed one-body block-set view/accessors** | Private status/count view and explicit retrieval helpers for a mixed one-body block-set consumption result. | `_one_body_pair_block_set_view` is compact and matrix-free; term and pair-key accessors can explicitly retrieve result or skip records; `_one_body_pair_block_lookup` is the exact term/pair accessor that may expose one matrix-bearing `result`. None of these helpers perform assembly or route adoption. |
+| **Mixed one-body block-set view/accessors** | Retired/private diagnostic layer over a mixed one-body block-set consumption result. | Do not preserve `_one_body_pair_block_set_view`, term/pair status accessors, or `_one_body_pair_block_lookup` as intended contracts. The live path is block-set consumption -> local one-body block collection -> placement plan. Deleting the diagnostic accessors must not change numerical block construction, collection entry shape, placement planning, Hamiltonian/Coulomb/IDA/MWG behavior, export/artifacts, or route wiring. |
 | **Local one-body block collection** | Private view/index over an existing mixed one-body block-set consumption result.                       | Entries reference existing result or skipped records and preserve `block_set_term`, `result_term`, and `source_space_term`; accessors and exact lookup are term/pair separated, while summaries are matrix-free and entry-free. Not term summing, local/global assembly, route wiring, Hamiltonian/Coulomb/IDA/MWG, PQS shell projection/Lowdin, export/artifacts, or full LW route assembly. |
 | **Pair operator block**             | Numerical block for one pair of final retained units and one or more operator terms.                  | Not yet built when report says metadata-only.                    |
 | **PQS source-space block**          | A raw source-mode block for a PQS/PQS safe one-body term, built from caller-supplied 1D source factors. | Not a final shell-realized PQS pair block.                       |
