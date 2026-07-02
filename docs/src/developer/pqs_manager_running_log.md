@@ -22893,3 +22893,77 @@ Carrying-cost result:
 - exact remaining blocker: design a protected-original electron-electron
   interaction representation whose null/projection tests preserve energies
   before returning to Cr2 HF or production Hamiltonian wiring.
+
+## Cartesian Hamiltonian Producer Pass 270 - Protected Localized Injection Vee Probe
+
+Commit(s):
+- this commit - Record protected localized injection Vee probe
+
+Summary:
+- Accepted the protected-localized injection Vee measurement as the positive
+  angular-gausslet-style correction after Pass 269. The probe did not rotate
+  `electron_electron_ida` as `C' V C`. Instead it constructed a localized
+  injected basis `L` in the protected span, used exact one-body operators in
+  `L`, and inherited the pre-injection `Vee_M` in the localized site order.
+- This is the practical angular-gausslet interpretation: the injected basis is
+  a small localized correction to an IDA-admitting gausslet/compact-main basis,
+  so the inherited IDA is judged by physics diagnostics rather than by
+  arbitrary rotation invariance.
+
+Validation / evidence:
+- Probe/output:
+  `tmp/work/protected_localized_injection_vee_probe.jl` and
+  `/Users/srw/dmrgtmp/protected_localized_injection_vee_348c936b8/`.
+- Analytic/small checks were sane: H 1s self-Coulomb `0.6241543793` versus
+  `5Z/8 = 0.625`, He 1s `1.2537494662` versus `1.25`, and H2 base
+  self-Coulomb `0.4569012291` versus the known `0.4569117647` checkpoint.
+- H2 protected-localized closed-shell proxy improved modestly:
+  compact `M = -0.8834601962`, localized `L = -0.8843290834`.
+- Cr2 geometry: `G = 6915`, `R_compact = 30`, `M = 6945`,
+  `protected = 30`, `broad_Z = 87`, `Z = 117`,
+  `B_min = 0.993465824505872`, and no `B` singular below `0.99`.
+- Localized basis diagnostics: `F/L` identity error `5.35e-13`,
+  `max |diag(M'SL)-1| = 2.80e-4`, max off-diagonal `2.16e-4`,
+  `Vee_M` symmetry `2.63e-13`.
+- Cr2 low `H1_L` mode: `-295.556920156`, Vee self-cost `7.65734`,
+  broad-`Z` composition `1.80e-4`.
+- Bounded Cr2 HF replay returned/recomputed consistently:
+  returned electronic `-2265.671424629693`, recomputed electronic
+  `-2265.671424608935`, total `-2084.239238049550`.
+- Inherited compact-R-site occupation was tiny:
+  alpha `1.595e-3`, beta `1.595e-3`, total `3.19e-3`, not the old
+  order-`3.8` residual-occupation collapse.
+- Doer validation: `git diff --check`, package load
+  `0.447668458` s, probe elapsed `727.69` s, and no tracked source edits.
+
+Goal advancement:
+- LT5/LT6 and MT4: restores a plausible protected-original interaction path.
+  Pass 269 killed the invalid `C'VC` rotation, but this pass shows the
+  angular-gausslet inherited-site-order IDA convention can behave sensibly in
+  bounded repo-level physics checks.
+- This remains repo engineering validation, not paper-level algorithm
+  validation. Larger publication-quality sweeps should stay with a
+  consumer-oriented agent/workflow so the repo lane can keep moving.
+
+Risk / guardrail:
+- No source-backed protected interaction workflow, artifact path, public API,
+  or production Cr2 claim is approved by this measurement. The short Cr2 HF
+  replay is evidence that the old collapse mechanism is absent under this
+  convention, not a final Cr2 energy claim.
+- Do not resume the invalid `C'VC` interaction lane. Future protected
+  interaction work should preserve the localized-site inherited IDA logic and
+  test physics endpoints.
+
+Carrying-cost result:
+- deleted: none.
+- simplified: protected Vee interpretation no longer chases arbitrary
+  rotation-invariant two-index algebra; it uses localized injection plus
+  inherited site-order IDA.
+- quarantined: all probe logic and outputs remain ignored measurement
+  artifacts.
+- not deleted because: this positive measurement is needed to guide any later
+  source/design authority.
+- exact remaining blocker: source-backed protected-localized interaction/HF
+  workflow is unimplemented and unauthorized; H2+ public non-neutral endpoint
+  remains unavailable; rho0/Galerkin screening remains a separate IDA
+  improvement lane worth testing on top of the sane localized basis.
