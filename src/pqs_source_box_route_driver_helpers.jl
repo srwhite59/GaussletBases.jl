@@ -1073,7 +1073,108 @@ function _pqs_source_box_route_driver_wl_retained_count_plan(plan, retained_q)
         plan.policy, plan.available_contracts, selected, plan.summary, plan.metadata)
 end
 
+function _pqs_source_box_route_driver_complete_shell_source_dimensions(parent, region, q::Int)
+    raw = region.raw_region
+    isnothing(raw.inner_exclusion_box) &&
+        throw(ArgumentError("PQS complete-shell source dimensions require an inner exclusion box"))
+    basis = (; nuclei = parent.standard_setup.atom_locations)
+    retention = _nested_resolve_complete_shell_retention(q)
+    live_timing = timing_live_enabled()
+    set_timing_live!(false)
+    try
+        return _nested_diatomic_source_box_dimension_plan(
+            basis,
+            parent.parent_axis_bundle_object,
+            raw.outer_box,
+            raw.inner_exclusion_box,
+            retention;
+            bond_axis = get(raw.metadata, :bond_axis, parent.bond_axis),
+            nside = q,
+            selected_q = q,
+            shared_shell_angular_resolution_scale = 1.4,
+            support_count = raw.support_count,
+        )
+    finally
+        set_timing_live!(live_timing)
+    end
+end
+
+function _pqs_source_box_route_driver_aspect_shell_contract(contract, dimensions)
+    return CartesianTerminalLowering.TerminalLoweringContract(
+        contract.contract_key,
+        contract.terminal_region_key,
+        contract.terminal_region_role,
+        contract.terminal_region_kind,
+        contract.lowering_kind,
+        contract.owned_support,
+        contract.source_cpbs,
+        contract.retained_rule,
+        contract.realization_rule,
+        contract.final_unit_granularity,
+        contract.materialized,
+        merge(contract.metadata, (;
+            source_mode_shape = dimensions.source_mode_dims,
+            raw_source_dims = dimensions.raw_source_dims,
+            selected_q = dimensions.selected_q,
+            raw_q = dimensions.raw_q,
+            raw_L = dimensions.raw_L,
+            L = dimensions.raw_L,
+            axis_selector_retained_counts =
+                dimensions.axis_selector_retained_counts,
+            pqs_retained_count =
+                _nested_diatomic_projected_q_shell_retained_count(
+                    dimensions.source_mode_dims,
+                ),
+            source_mode_policy =
+                :diatomic_shared_shell_adaptive_angular_source_box,
+        )),
+    )
+end
+
+function _pqs_source_box_route_driver_aspect_shell_lowering_plan(
+    parent,
+    shellification_plan,
+    plan,
+    retained_q,
+)
+    plan isa CartesianTerminalLowering.TerminalLoweringPlan || return plan
+    CartesianTerminalLowering.policy_kind(plan.policy) === :pqs_terminal_lowering ||
+        return plan
+    parent.system_classification === :bond_aligned_diatomic || return plan
+    parent.bond_axis === :z || return plan
+    q = _pqs_source_box_route_driver_positive_integer(retained_q, :q)
+    region_by_key = Dict(
+        region.key => region for region in
+        CartesianShellification.terminal_regions(shellification_plan)
+    )
+    dimensions_by_region = Dict{Symbol,Any}()
+    function enriched(contract)
+        contract.lowering_kind === :pqs_filled_source_cpb || return contract
+        contract.terminal_region_kind === :complete_shell || return contract
+        region = get(region_by_key, contract.terminal_region_key, nothing)
+        isnothing(region) && return contract
+        region.role === :shared_molecular_shell || return contract
+        dimensions = get!(dimensions_by_region, contract.terminal_region_key) do
+            _pqs_source_box_route_driver_complete_shell_source_dimensions(
+                parent,
+                region,
+                q,
+            )
+        end
+        return _pqs_source_box_route_driver_aspect_shell_contract(contract, dimensions)
+    end
+    available = CartesianTerminalLowering.TerminalLoweringContract[
+        enriched(contract) for contract in CartesianTerminalLowering.available_contracts(plan)
+    ]
+    selected = CartesianTerminalLowering.TerminalLoweringContract[
+        enriched(contract) for contract in CartesianTerminalLowering.selected_contracts(plan)
+    ]
+    return CartesianTerminalLowering.TerminalLoweringPlan(
+        plan.policy, available, selected, plan.summary, plan.metadata)
+end
+
 function _pqs_source_box_route_driver_terminal_lowering_plan(
+    parent,
     shellification_plan,
     route_lowering_family,
     retained_q,
@@ -1087,7 +1188,13 @@ function _pqs_source_box_route_driver_terminal_lowering_plan(
         )
     isnothing(policy) && return nothing
     plan = CartesianTerminalLowering.lower_terminal_regions(shellification_plan, policy)
-    return _pqs_source_box_route_driver_wl_retained_count_plan(plan, retained_q)
+    plan = _pqs_source_box_route_driver_wl_retained_count_plan(plan, retained_q)
+    return _pqs_source_box_route_driver_aspect_shell_lowering_plan(
+        parent,
+        shellification_plan,
+        plan,
+        retained_q,
+    )
 end
 
 function _pqs_source_box_route_driver_terminal_lowering_kind_counts(contracts)
@@ -1532,6 +1639,7 @@ function _pqs_source_box_route_driver_unit_stage_low_order_summary(parent, shell
             shells.route_family)
     lowering_plan =
         _pqs_source_box_route_driver_terminal_lowering_plan(
+            parent,
             shellification_plan,
             route_lowering_family,
             shells.spacing_inputs.q,

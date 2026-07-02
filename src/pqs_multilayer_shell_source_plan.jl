@@ -69,9 +69,16 @@ function _pqs_multilayer_realize_shell_source_plan(
         raw_source_dims = isnothing(source_mode_shape) ?
                           length.(inner_box) :
                           Tuple(Int(dim) for dim in source_mode_shape)
-        all(dim -> dim == raw_source_dims[1], raw_source_dims) ||
-            throw(ArgumentError("multi-layer PQS shell layers currently require cubic raw source dimensions"))
-        q = raw_source_dims[1]
+        all(dim -> dim >= 3, raw_source_dims) ||
+            throw(ArgumentError("multi-layer PQS shell source dimensions must be at least 3"))
+        bond_axis_index = _nested_axis_index(bond_axis)
+        transverse_dims =
+            Tuple(raw_source_dims[axis] for axis in 1:3 if axis != bond_axis_index)
+        transverse_dims[1] == transverse_dims[2] ||
+            throw(ArgumentError("multi-layer PQS shell layers require equal transverse raw source dimensions"))
+        q = transverse_dims[1]
+        L = raw_source_dims[bond_axis_index]
+        selected_q = get(spec, :selected_q, q)
         source_mode_shape_source = isnothing(source_mode_shape) ?
                                    :inner_box_length :
                                    :terminal_lowering_contract
@@ -82,9 +89,9 @@ function _pqs_multilayer_realize_shell_source_plan(
             inner_box;
             bond_axis,
             q,
-            L = q,
+            L,
             raw_source_dims,
-            selected_q = q,
+            selected_q,
             term_coefficients,
         )
         descriptor = _nested_projected_q_shell_staged_unit_descriptor(layer)
@@ -101,6 +108,8 @@ function _pqs_multilayer_realize_shell_source_plan(
             inner_box,
             raw_source_dims,
             q,
+            L,
+            selected_q,
             source_mode_shape_source,
             fixed_source_mode_shape_used,
             descriptor,

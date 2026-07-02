@@ -101,8 +101,12 @@ end
 
 function _pqs_multilayer_contract_source_mode_shape(contract, raw_region)
     shape = get(contract.metadata, :source_mode_shape, nothing)
-    isnothing(shape) && return Tuple(length.(raw_region.outer_box))
-    return Tuple(Int(value) for value in shape)
+    source_shape = isnothing(shape) ?
+        Tuple(length.(raw_region.outer_box)) :
+        Tuple(Int(value) for value in shape)
+    length(source_shape) == 3 && all(dim -> dim >= 3, source_shape) ||
+        throw(ArgumentError("PQS shell source-mode shape must have three dimensions >= 3"))
+    return source_shape::NTuple{3,Int}
 end
 
 """

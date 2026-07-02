@@ -21631,3 +21631,66 @@ Carrying-cost result:
   a separate source-policy question; supplemented/residual/augmented
   dimensions stay unavailable until a future pass wires those objects without
   crossing RG/MWG boundaries.
+
+## Cartesian Hamiltonian Producer Pass 247 - PQS Aspect-Aware Complete-Shell Source Modes
+
+Commit(s):
+- this commit - Implement aspect-aware PQS shell source modes
+
+Summary:
+- Accepted the `HP-PQS-ASPECTSHELL-FN-01` implementation using the amended
+  route-driver seam. The old angular-band selector is now invoked after
+  shellification and parent/bundle construction but before lowering inventory,
+  retained units, transform contracts, support records, terminal retained-rule
+  plans, due diligence, and final realization are frozen.
+- For the bounded H2/H2+ fixture, shared complete shells no longer use hidden
+  cubic `(5,5,5)` source modes. The old angular-band rule selected
+  `(5,5,8)`, `(5,5,7)`, `(5,5,6)`, and `(5,5,6)`, with retained counts
+  `146`, `130`, `114`, and `114`. Final dimension changed from the old cubic
+  `767` base dimension to `879`.
+- Added a small due-diligence report correction: the advisory physical-aspect
+  expected shape now scales from transverse `q`, not from an already elongated
+  actual `L`. This keeps expected rows meaningful after actual source shapes
+  become non-cubic.
+
+Validation / evidence:
+- `git diff --check` passed on the touched source files.
+- Package load passed with `package_load_elapsed_s=6.615749125`.
+- Focused probe `tmp/work/pqs_aspect_shell_validation.jl` passed. It wrote
+  `/Users/srw/dmrgtmp/pqs_aspect_shell_validation_00bc65d0c/h2_pqs_aspect_shell_ida.jld2`,
+  reported final dimension `879`, readback one-body delta `0.0`, kinetic
+  symmetry `8.88e-15`, Vee symmetry `5.11e-15`, and nuclear symmetry
+  `2.22e-16`.
+- Driver smoke with
+  `/Users/srw/dmrgtmp/pqs_aspect_shell_driver_review_h2.jld2` printed the
+  consumer-facing due-diligence report. The stale
+  `rectangular_physical_shell_cubic_source_modes` warning is gone; physical
+  aspect warnings remain where the diagnostic physical-aspect estimate is
+  larger than the old angular-band selection.
+
+Goal advancement:
+- LT5/LT6: converts the q-by-q-by-L complete-shell issue from a visible
+  warning into corrected construction behavior while keeping due diligence
+  truthful about actual and diagnostic expected shapes.
+- MT4/MT6: gives the H2+/Cr2 basis investigation a more adequate terminal
+  shell basis before further RG/injection interpretation.
+
+Risk / guardrail:
+- This intentionally changes basis size, matrices, and energies. Scalar tests
+  tied to old cubic complete-shell dimensions must be remeasured rather than
+  preserved.
+- No artifact schema/provenance/reader changes, public driver semantics, WL
+  policy, thin-slab/angular-z-extension/direct-core behavior, residual/RG/MWG
+  or IDA behavior, broad report framework, or Cr2 production claim were made.
+
+Carrying-cost result:
+- source line delta: `+131/-9` across the accepted files after the report
+  correction.
+- deleted: cubic-only rejection in multilayer PQS shell realization.
+- simplified: canonical complete-shell source-mode facts now agree across
+  lowering contracts, retained-unit metadata, raw-product retained rules,
+  due diligence, and terminal realization.
+- quarantined: ignored validation probe and `/Users/srw/dmrgtmp` artifacts.
+- exact remaining blocker: old scalar tests/expectations using cubic complete
+  shells need targeted remeasurement; physical-aspect diagnostic warnings
+  remain a review signal, not an enforced construction rule.

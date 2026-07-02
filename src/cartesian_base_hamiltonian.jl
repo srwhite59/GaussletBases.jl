@@ -562,7 +562,8 @@ function _cartesian_expected_source_shape(row, source_shape)
     other = Tuple(i for i in 1:3 if i != axis_index); transverse = (lengths[other[1]] + lengths[other[2]]) / 2
     transverse > 0 || return nothing
     dims = collect(Int.(source_shape))
-    dims[axis_index] = max(dims[axis_index], round(Int, dims[axis_index] * lengths[axis_index] / transverse))
+    transverse_source = (dims[other[1]] + dims[other[2]]) / 2
+    dims[axis_index] = max(dims[axis_index], round(Int, transverse_source * lengths[axis_index] / transverse))
     return Tuple(dims)
 end
 _cartesian_source_mode_count(shape) = isnothing(shape) ? 0 : prod(Int.(shape))
