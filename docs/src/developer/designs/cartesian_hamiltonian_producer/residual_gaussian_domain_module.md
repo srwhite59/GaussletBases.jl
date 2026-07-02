@@ -74,6 +74,8 @@ module, or object names in the new owner.
   the protected fixed sector.
 - `HP-RG-PROTECT-ONEBODY-TEST-01` - validation gates for the protected
   one-body transform replay.
+- `HP-RG-PROTECT-VEE-AUDIT-01` - measurement-only protected fixed-sector Vee
+  interaction audit.
 
 Implementation IDs in this list are approved only within the surfaces below.
 Design-only IDs record authority for future source blurbs but do not approve
@@ -303,6 +305,18 @@ if transform-ready geometry accessors or fields are missing. This lane does
 not approve IDA/MWG interaction transforms, artifact support, public wiring,
 matrix-action frameworks, Cr2 HF, residual default changes, or production
 Hamiltonian claims.
+
+`HP-RG-PROTECT-VEE-AUDIT-01` approves only an ignored measurement audit for an
+in-memory Vee candidate in the same protected fixed sector. It may consume the
+source-backed protected geometry, one-body helpers, and existing in-memory
+interaction data to test whether transforming the `M = [G, R_compact]`
+interaction through `F = [Z, M Qperp]` is finite, symmetric, and not
+anomalously cheap for broad-`Z` directions. A bounded in-memory Cr2 HF replay
+is allowed only after that Vee diagnostic gate passes. This ID does not approve
+source edits, source-backed IDA/MWG interaction implementation, artifact
+support, public wiring, production Hamiltonian workflow, screened-reference/
+rho0 work, Vee scaling as the primary fix, rejected broad directions as MWG
+residual channels, or Cr2 production claims.
 
 Do not approve a vague global entry point such as
 `stabilize_residual_metric(...)`. Global raw-candidate symmetric Lowdin and

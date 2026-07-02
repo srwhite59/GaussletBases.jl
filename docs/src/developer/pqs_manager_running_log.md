@@ -22436,3 +22436,60 @@ Carrying-cost result:
 - exact remaining blocker: source cleanup must verify removed fields are not
   consumed by placement-facing entries and must stop if it requires touching
   files outside the two approved CPBM one-body files.
+
+## Cartesian Hamiltonian Producer Pass 262 - Protected Original Vee Audit Authority
+
+Commit(s):
+- this commit - Approve protected Vee audit
+
+Summary:
+- Design-manager approved `HP-RG-PROTECT-VEE-AUDIT-01` as a measurement-only
+  authority lane for protected-original electron-electron interaction checks.
+  The target fixed sector remains `F = [Z, M Qperp]` with
+  `M = [G, R_compact]`, where injected originals replace a subspace of `M`
+  rather than appending to it.
+- The audit may build an in-memory Vee candidate by transforming the existing
+  `M`-space interaction through `F`, using ignored `tmp/work` probes and
+  `/Users/srw/dmrgtmp` outputs. It may run one bounded in-memory Cr2 HF replay
+  only after Vee diagnostics show finite/symmetric interaction blocks and no
+  anomalously cheap broad-`Z` directions.
+
+Validation / evidence:
+- The request follows the already accepted protected fixed-sector geometry and
+  exact one-body transform lane. The one-body source boundary
+  `HP-RG-PROTECT-ONEBODY-FN-01` still explicitly forbids IDA/MWG interaction
+  transforms and production Hamiltonian workflow, so the next step must be an
+  ignored measurement audit rather than source implementation.
+- This docs pass records required diagnostics: geometry dimensions, `B`
+  singular spectrum, Vee symmetry/finite checks, protected/broad/Qperp block
+  costs, low-mode quadratic forms, broad-`Z` cost comparisons, low `H1_FF`
+  interaction self-costs, occupation incentive proxy, and comparisons to the
+  default bad residual sector, compact-only sector, and one-body audit.
+
+Goal advancement:
+- LT5/LT6 and MT4/MT6: advances protected-original injection from exact
+  one-body source support toward interaction design due diligence while
+  preserving the hard boundary before source-backed IDA/MWG or production
+  Hamiltonian work.
+
+Risk / guardrail:
+- Still forbidden: tracked source edits, public driver/API/export changes,
+  artifact/provenance/writer/reader/manifest changes, source-backed IDA/MWG,
+  screened-reference/rho0 work, Vee scaling as the primary fix, rejected broad
+  directions as MWG residual channels, Cr2 production claims, and committed
+  tests or fixtures.
+- If Vee is cheap in broad-`Z`, has bad low modes, or needs
+  source/Hamiltonian/artifact plumbing, the audit must stop and report
+  protected-original interaction design as the blocker.
+
+Carrying-cost result:
+- source line delta: 0 in this docs decision.
+- deleted: none.
+- simplified: the next doer has a bounded ignored-measurement gate rather than
+  ambiguous permission to implement interaction plumbing.
+- quarantined: source-backed IDA/MWG interaction, production Hamiltonian
+  workflow, artifacts, public wiring, screened-reference/rho0, and Cr2 HF
+  claims.
+- exact remaining blocker: a Vee audit must show that broad injected directions
+  are not artificially cheap before any source implementation blurb is
+  considered.

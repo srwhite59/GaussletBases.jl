@@ -1101,6 +1101,19 @@ Approved Residual Gaussian module surfaces:
   default changes, staged-geometry selector changes, rejected broad directions
   as MWG residual channels, committed tests by default, or more than target
   `180` added source lines across the approved files.
+- `HP-RG-PROTECT-VEE-AUDIT-01` approves only ignored measurement probes for an
+  in-memory protected-original Vee candidate in the fixed sector
+  `F = [Z, M Qperp]`, `M = [G, R_compact]`. It may consume current
+  source-backed protected geometry, one-body helpers, and existing in-memory
+  interaction data, and it may run one bounded in-memory Cr2 HF replay only
+  after the Vee diagnostics show finite/symmetric blocks and no anomalously
+  cheap broad-`Z` directions. It does not approve tracked source edits, public
+  driver/API/export changes, artifacts/provenance/writers/readers/manifests,
+  source-backed IDA/MWG interaction implementation, production Hamiltonian
+  workflow, screened-reference/rho0 work, Vee scaling as the primary fix,
+  rejected broad directions as MWG residual channels, committed tests, or Cr2
+  production claims. Because this is measurement-only authority, do not add it
+  to the approved source-ID list.
 
 Non-negotiable RG guardrails:
 

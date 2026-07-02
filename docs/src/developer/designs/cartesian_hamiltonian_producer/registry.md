@@ -4399,6 +4399,79 @@ Approved validation:
 - no Cr2 HF;
 - no committed tests unless a later source-review pass requests one.
 
+### HP-RG-PROTECT-VEE-AUDIT-01 — protected fixed-sector Vee interaction audit
+
+Status: approved measurement-only audit authority. This is not source
+authority and not production Hamiltonian authority.
+
+Purpose: test whether an in-memory protected-original electron-electron
+interaction candidate is numerically sane before any source implementation.
+The physical object remains:
+
+```text
+F = [Z, M Qperp]
+M = [G, R_compact]
+```
+
+Interaction interpretation for the audit:
+
+- `G`/base keeps the current IDA interaction;
+- `R_compact` keeps the current compact residual/MWG interaction;
+- injected original directions replace a subspace of `M`, not append;
+- rejected broad directions do not become residual MWG channels;
+- the Vee candidate is built in memory by transforming the `M`-space
+  interaction through `F`.
+
+Approved audit surfaces:
+
+- ignored `tmp/work/*.jl` probes only;
+- outputs under `/Users/srw/dmrgtmp/...`;
+- consume current source-backed protected geometry and one-body helpers;
+- consume existing in-memory interaction data already available through the
+  Cr2/Cartesian path;
+- compute Vee diagnostics only;
+- optional one bounded in-memory Cr2 HF replay in the same measurement lane if
+  and only if the Vee diagnostics pass the gate below.
+
+Required diagnostics:
+
+- geometry dimensions: `G`, `R_compact`, `M`, `Z`, `Qperp`, and `F`;
+- singular spectrum of `B = M' S Z`;
+- Vee finite and symmetry checks;
+- block diagnostics by protected-`Z`, broad-`Z`, and `Qperp` sectors;
+- diagonal ranges or self-costs for protected-`Z` and broad-`Z` directions;
+- low eigenvalues or representative quadratic-form checks;
+- broad-`Z` interaction costs compared to compact-RG and default residual
+  costs;
+- interaction self-costs of low `H1_FF` modes;
+- residual/broad-`Z` occupation incentive proxy;
+- comparison to the default bad residual sector, compact-only sector, and
+  protected one-body audit.
+
+Gate: if Vee is finite, symmetric, and broad-`Z` directions are not
+anomalously cheap, one bounded in-memory Cr2 HF replay is allowed as a
+measurement-only replay. If broad-`Z` remains too cheap, Vee has bad low modes,
+or the transform needs source/Hamiltonian/artifact plumbing, stop and report
+protected-original interaction design as the blocker.
+
+Forbidden:
+
+- tracked source edits;
+- public driver/API/input wiring or exports;
+- artifact schema, provenance, writer, reader, manifest, or sidecar changes;
+- production Hamiltonian workflow;
+- source-backed IDA/MWG interaction implementation;
+- screened-reference/rho0 work;
+- treating Vee scaling as the primary fix;
+- treating rejected broad directions as MWG residual channels;
+- Cr2 production claims;
+- committed tests or fixtures.
+
+Output policy: an initial audit may leave only ignored probes and
+`/Users/srw/dmrgtmp/...` tables. A compact committed report under
+`docs/src/developer/reports/` should be added before using the result to
+justify source authority.
+
 ## Approved For Cartesian Gaussian Raw-Block Nuclear Owner
 
 This section approves only the neutral uncharged by-center nuclear raw-block

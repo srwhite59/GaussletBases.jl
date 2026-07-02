@@ -441,6 +441,18 @@ Approved robustness lane:
   matrix-vector action frameworks, Cr2 HF, residual default changes,
   production Hamiltonian claims, or committed tests by default. Line budget
   target is `180` added source lines.
+- `HP-RG-PROTECT-VEE-AUDIT-01` approves only a measurement-only interaction
+  audit for the same protected fixed sector `F = [Z, M Qperp]`,
+  `M = [G, R_compact]`. The audit may use ignored `tmp/work` probes,
+  `/Users/srw/dmrgtmp` outputs, current source-backed protected geometry and
+  one-body helpers, and existing in-memory interaction data to build Vee
+  diagnostics. One bounded in-memory Cr2 HF replay is allowed only if Vee is
+  finite/symmetric and broad-`Z` directions are not anomalously cheap. This
+  slice does not approve source edits, public wiring, artifact/provenance
+  changes, source-backed IDA/MWG implementation, production Hamiltonian
+  workflow, screened-reference/rho0 work, Vee scaling as the primary fix,
+  rejected broad directions as MWG residual channels, or Cr2 production
+  claims.
 
 ## Compact Hamiltonian Artifact Manifest
 

@@ -4,9 +4,12 @@ Status: design memo plus approved measurement-only audit authority under
 `HP-RG-INJECT-AUDIT-01`, historical default-off `G`-injection authority under
 `HP-RG-INJECT-FN-01`, and the current protected-original compact-main design
 authority under `HP-RG-PROTECT-INJECT-DESIGN-01`. The protected-original design
-is the current direction for compact-first RG/injection work. This document
-does not approve source edits for that new design, a production default,
-artifact schema changes, driver inputs, public API, full HF, or Cr2 workflow.
+is the current direction for compact-first RG/injection work. Measurement-only
+protected fixed-sector one-body and Vee audits are approved under
+`HP-RG-PROTECT-ONEBODY-AUDIT-01` and
+`HP-RG-PROTECT-VEE-AUDIT-01`. This document does not approve source edits for
+that new design, a production default, artifact schema changes, driver inputs,
+public API, full HF, or Cr2 workflow.
 
 ## Motivation
 
@@ -930,3 +933,104 @@ Approved validation for `HP-RG-PROTECT-ONEBODY-FN-01`:
 - no IDA/MWG interaction transform;
 - no Cr2 HF;
 - no committed tests unless a later source-review pass requests one.
+
+## HP-RG-PROTECT-VEE-AUDIT-01 - Protected Fixed-Sector Vee Interaction Audit
+
+Status: approved measurement-only audit authority. This is not source
+implementation authority, not source-backed IDA/MWG authority, not artifact
+authority, and not production Hamiltonian authority.
+
+### Purpose
+
+After `HP-RG-PROTECT-ONEBODY-FN-01`, exact dense one-body transforms into the
+protected fixed sector are source-backed for
+
+```text
+F = [Z, M Qperp]
+M = [G, R_compact]
+```
+
+The next question is whether an in-memory electron-electron interaction
+candidate for the same protected-original fixed sector is numerically sane
+before any source implementation. The audit should test the interaction
+interpretation, block costs, and broad-injection incentives without changing
+production Hamiltonian construction.
+
+### Interaction Interpretation
+
+For this audit only:
+
+- the `G`/base part of `M` keeps the current IDA interaction;
+- `R_compact` keeps the current compact residual/MWG interaction;
+- injected original directions replace a subspace of `M`; they are not
+  appended on top of it;
+- rejected broad directions do not become residual MWG channels;
+- the in-memory Vee candidate is built by transforming the available
+  `M`-space interaction through `F = [Z, M Qperp]`.
+
+This is a measurement model for the protected-original interaction problem. It
+does not approve a production IDA/MWG convention or a Hamiltonian workflow.
+
+### Approved Surfaces
+
+Allowed:
+
+- ignored `tmp/work/*.jl` probes only;
+- outputs under `/Users/srw/dmrgtmp/...`;
+- consume current source-backed protected geometry and one-body helpers;
+- consume existing in-memory interaction data already available through the
+  Cr2/Cartesian path;
+- build in-memory transformed Vee candidates for `F`;
+- compute diagnostics only;
+- optionally run one bounded in-memory Cr2 HF replay in the same measurement
+  lane, but only after the Vee diagnostics pass the gate below.
+
+Forbidden:
+
+- tracked source edits;
+- public driver/API/input wiring or exports;
+- artifact schema, provenance, writer, reader, manifest, or sidecar changes;
+- production Hamiltonian workflow;
+- source-backed IDA/MWG interaction implementation;
+- screened-reference/rho0 work;
+- treating Vee scaling as the primary fix;
+- treating rejected broad directions as MWG residual channels;
+- Cr2 production claims;
+- committed tests or fixtures.
+
+### Required Diagnostics
+
+The audit must report:
+
+- geometry dimensions: `G`, `R_compact`, `M`, `Z`, `Qperp`, and `F`;
+- singular spectrum of `B = M' S Z`;
+- finite and symmetry checks for the Vee candidate;
+- block diagnostics by protected-`Z`, broad-`Z`, and `Qperp` sectors;
+- diagonal ranges or self-costs for protected-`Z` and broad-`Z` directions;
+- low eigenvalues or representative quadratic-form checks;
+- broad-`Z` interaction costs compared to compact-RG and default residual
+  costs;
+- interaction self-costs of low `H1_FF` modes;
+- a residual/broad-`Z` occupation incentive proxy;
+- comparison to the default bad residual sector, compact-only sector, and the
+  protected one-body audit.
+
+### Gate
+
+If the Vee candidate is finite, symmetric, and the broad-`Z` directions are not
+anomalously cheap, the same measurement lane may run one bounded in-memory Cr2
+HF replay. That replay remains an audit result, not a production workflow or
+artifact claim.
+
+If broad-`Z` remains too cheap, Vee has bad low modes, or the transform needs
+source/Hamiltonian/artifact plumbing, stop and report the protected-original
+interaction design as the blocker. Do not add source instrumentation,
+artifact fields, public wiring, Hamiltonian helpers, or source-backed IDA/MWG
+plumbing under this audit ID.
+
+### Output Policy
+
+The first pass may use only ignored probes plus `/Users/srw/dmrgtmp/...`
+tables. A compact committed report under `docs/src/developer/reports/` is not
+required for the initial measurement, but should be added before using the
+result to justify source authority.

@@ -342,6 +342,17 @@ Approved Residual Gaussian robustness lane:
   It does not approve public wiring, artifacts/provenance, IDA/MWG interaction
   transforms, matrix-action frameworks, Cr2 HF, default changes, or production
   Hamiltonian claims. Line budget target is `180` added source lines.
+- `HP-RG-PROTECT-VEE-AUDIT-01` approves only a measurement audit of an
+  in-memory protected-original Vee candidate for `F = [Z, M Qperp]`,
+  `M = [G, R_compact]`. It may use ignored `tmp/work` probes,
+  `/Users/srw/dmrgtmp` outputs, current source-backed protected geometry and
+  one-body helpers, and existing in-memory interaction data. It may run one
+  bounded in-memory Cr2 HF replay only after Vee diagnostics show finite,
+  symmetric interaction blocks and no anomalously cheap broad-`Z` directions.
+  It does not approve source edits, public wiring, artifacts/provenance,
+  source-backed IDA/MWG implementation, production Hamiltonian workflow,
+  screened-reference/rho0 work, Vee scaling as the primary fix, rejected broad
+  directions as MWG residual channels, or Cr2 production claims.
 
 Approved stale complete-core-shell RHF retirement:
 
