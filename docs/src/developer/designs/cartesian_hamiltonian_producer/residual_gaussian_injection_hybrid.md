@@ -702,6 +702,12 @@ within roundoff, or if implementation requires operator/Hamiltonian plumbing,
 artifact state, public wiring, or source files outside the approved surface,
 stop and report the exact missing object. Do not broaden this ID in source.
 
+Line budget: target at most `220` added source lines in
+`src/cartesian_residual_gaussians/residual_basis.jl`. If the implementation
+needs a larger helper layer, persistent result object surface, or cross-file
+plumbing to reproduce the measured geometry, stop and request a follow-up
+amendment.
+
 ## HP-RG-PROTECT-INJECT-TEST-01 - Staged Geometry Validation
 
 Approved validation for `HP-RG-PROTECT-INJECT-FN-01`:

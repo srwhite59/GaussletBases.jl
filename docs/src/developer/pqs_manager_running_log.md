@@ -21885,3 +21885,54 @@ Carrying-cost result:
   future lanes.
 - exact remaining blocker: implement the internal geometry prototype and
   compare it against the staged-filter report before any broader source lane.
+
+## Cartesian Hamiltonian Producer Pass 252 - Design-Manager Acceptance Of Protected Injection Authority
+
+Commit(s):
+- this commit - Accept protected injection geometry authority
+
+Summary:
+- Reviewed repo-manager's pushed authority commits for
+  `HP-RG-PROTECT-INJECT-FN-01` and `HP-RG-PROTECT-INJECT-TEST-01`. The process
+  was wrong: source authority belongs to design-manager review before it is
+  treated as live implementation authority. The content is accepted after
+  design-manager review because it is narrow, default-off, and limited to an
+  internal geometry prototype.
+- Added the missing line-budget guardrail: target at most `220` added source
+  lines in `src/cartesian_residual_gaussians/residual_basis.jl`. If reproducing
+  the measured staged geometry needs a larger helper layer, persistent object
+  surface, operator/Hamiltonian plumbing, artifact state, public wiring, or
+  cross-file source changes, doer must stop and request a follow-up amendment.
+
+Validation / evidence:
+- Reviewed `e1bd4800e`, `a111d2398`, and `3c8da343b`. The measurement report
+  is accepted as evidence. The source authority is accepted only with the
+  added line-budget/stop rule.
+- Updated `registry.md`, `residual_gaussian_injection_hybrid.md`,
+  `implementation_slices.md`, `AGENTS.md`, and this running log.
+
+Goal advancement:
+- LT5/LT6 and MT4/MT6: keeps the protected-original injection lane moving
+  without letting a manager-authored docs change bypass design authority.
+- The accepted source lane remains geometry-only. It may source-back
+  `Z = [Z_protected, Z_broad]` and `F = [Z, M Q_perp]` diagnostics, but it
+  does not approve Hamiltonian/operator transforms or production Cr2 behavior.
+
+Risk / guardrail:
+- This acceptance does not broaden the authority. Still forbidden: public
+  driver/API, exports, artifact schema/provenance or writing, exact one-body or
+  IDA/MWG protected-injection Hamiltonian transformation, Cr2 HF, default
+  behavior changes, source files outside `residual_basis.jl`,
+  screened-reference/rho0 work, and MWG channels for rejected broad directions.
+
+Carrying-cost result:
+- source line delta: 0.
+- deleted: none.
+- simplified: authority status is no longer ambiguous after the process
+  overstep.
+- quarantined: implementation, artifacts, operator/Hamiltonian transforms, and
+  Cr2 production claims.
+- exact remaining blocker: doer may implement only the narrow geometry
+  prototype and must compare it against
+  `docs/src/developer/reports/cr2_staged_subspace_filter_870498b54/` before
+  any broader lane is considered.

@@ -416,7 +416,10 @@ Approved robustness lane:
   artifact schema/provenance, artifact writing, exact one-body or IDA/MWG
   protected-injection Hamiltonian transformation, Cr2 HF, default behavior
   changes, source files outside `residual_basis.jl`, or MWG channels for
-  rejected broad directions.
+  rejected broad directions. Later implementation line budget is target `220`
+  added source lines in `residual_basis.jl`; if reproducing the measured
+  geometry needs a larger helper layer or cross-file plumbing, stop for a
+  follow-up amendment.
 
 ## Compact Hamiltonian Artifact Manifest
 

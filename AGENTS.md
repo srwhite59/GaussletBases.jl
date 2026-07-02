@@ -1070,7 +1070,10 @@ Approved Residual Gaussian module surfaces:
   public driver/API wiring, exports, artifact schema/provenance, artifact
   writing, exact one-body or IDA/MWG protected-injection Hamiltonian
   transformation, Cr2 HF, default behavior changes, source files outside
-  `residual_basis.jl`, or MWG channels for rejected broad directions.
+  `residual_basis.jl`, or MWG channels for rejected broad directions. Later
+  implementation line budget is target `220` added source lines in
+  `residual_basis.jl`; if the measured geometry cannot be reproduced inside
+  that narrow file-local surface, stop and request a follow-up amendment.
 
 Non-negotiable RG guardrails:
 

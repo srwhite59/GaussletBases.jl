@@ -4211,6 +4211,11 @@ Failure rule: if reproducing the staged geometry requires operator/Hamiltonian
 plumbing, artifact state, public wiring, or broader source files, stop and
 report the missing object instead of broadening the implementation.
 
+Line budget: target at most `220` added `src` lines in
+`src/cartesian_residual_gaussians/residual_basis.jl`. If reproducing the
+measured geometry requires a larger helper layer or new persistent object
+surface, stop and request a follow-up amendment rather than expanding this ID.
+
 ### HP-RG-PROTECT-INJECT-TEST-01 — staged geometry validation
 
 Approved validation:
