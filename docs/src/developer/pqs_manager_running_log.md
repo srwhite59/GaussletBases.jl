@@ -22111,3 +22111,51 @@ Carrying-cost result:
 - exact remaining blocker: implement only the dense in-memory one-body helper
   path and replay the Cr2 audit; stop if broader object state, public wiring,
   or interaction/Hamiltonian plumbing is needed.
+
+## Cartesian Hamiltonian Producer Pass 256 - CPBM One-Body Status Bloat Cleanup
+
+Commit(s):
+- this commit - Remove CPBM one-body private status bloat
+
+Summary:
+- Accepted the bloat-fixer cleanup of the CPBM one-body private status layer.
+  The pass deleted two no-design stable-code surfaces: storage-disclaimer false
+  fields in one-body summaries/status/lookups and generic private fallback
+  overloads that only converted bad internal calls into custom `ArgumentError`
+  messages.
+- The live typed methods, status/blocker logic, result and skipped records,
+  public functions, local collection entry shape consumed by placement
+  planning, and numerical kernels were left unchanged. Bad internal calls now
+  fail through ordinary Julia dispatch instead of bespoke prettier-crash
+  wrappers.
+
+Validation / evidence:
+- Source delta: `311` deletions, `0` additions across
+  `src/cartesian_pair_block_materialization/one_body_dispatch.jl` and
+  `src/cartesian_pair_block_materialization/one_body_block_collection.jl`.
+- Focused `rg` found no exact external refs in `src`, `test`, `docs`, or
+  `tmp/work` for the removed storage-disclaimer field names.
+- Focused `rg` found no surviving removed fallback error strings beyond the
+  still-live in-method block-set consumption checks.
+- `git diff --check` passed.
+- Package load passed with `package_load_elapsed_s=6.633392334`.
+
+Goal advancement:
+- LT6 and the cleanup/carrying-cost guardrail: reduces private diagnostic
+  vocabulary without changing any physics or active materialization contract.
+  This is intentionally a stable-code cleanup, not a design change.
+
+Risk / guardrail:
+- The pass does not relax checks that protect numerical correctness, object
+  kind within typed methods, duplicate terms, unsupported terms, or bad
+  batch-result contents. Those remaining guards are a separate question.
+
+Carrying-cost result:
+- deleted: storage-disclaimer false fields and private generic wrong-type
+  fallback overloads in the CPBM one-body dispatch/collection status layer.
+- simplified: mature internal misuse now relies on natural Julia dispatch.
+- quarantined: broader term-separation/nonclaim fields and live status shapes.
+- not deleted because: placement planning still consumes local collection
+  entries, and typed status/result helpers remain the active private surface.
+- exact remaining blocker: any further CPBM status shrinkage must map live
+  summary consumers before changing diagnostic shape.

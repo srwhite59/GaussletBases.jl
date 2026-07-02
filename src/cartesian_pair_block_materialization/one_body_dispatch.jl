@@ -109,14 +109,6 @@ function _one_body_pair_block_dispatch_summary(
     )
 end
 
-function _one_body_pair_block_dispatch_summary(record, term; kwargs...)
-    throw(
-        ArgumentError(
-            "one-body dispatch summary requires a PairBlockMaterializationRecord",
-        ),
-    )
-end
-
 function _one_body_pair_block_plan_dispatch_summary(
     plan::PairBlockMaterializationPlan,
     term::Symbol;
@@ -184,14 +176,6 @@ function _one_body_pair_block_plan_dispatch_summary(
         artifacts_materialized = false,
         mixed_dispatcher_materialized = false,
         _one_body_dispatch_core_nonclaim_flags()...,
-    )
-end
-
-function _one_body_pair_block_plan_dispatch_summary(plan, term; kwargs...)
-    throw(
-        ArgumentError(
-            "one-body plan dispatch summary requires a PairBlockMaterializationPlan",
-        ),
     )
 end
 
@@ -306,14 +290,6 @@ function _one_body_pair_block_set_preflight_summary(
         global_artifacts_materialized = false,
         mixed_dispatcher_materialized = false,
         _one_body_dispatch_operator_nonclaim_flags()...,
-    )
-end
-
-function _one_body_pair_block_set_preflight_summary(plan; kwargs...)
-    throw(
-        ArgumentError(
-            "one-body block-set preflight summary requires a PairBlockMaterializationPlan",
-        ),
     )
 end
 
@@ -472,14 +448,6 @@ function _one_body_pair_block_set_consumption(
     return merge(base, (; term_batch_results))
 end
 
-function _one_body_pair_block_set_consumption(plan; kwargs...)
-    throw(
-        ArgumentError(
-            "one-body block-set consumption requires a PairBlockMaterializationPlan",
-        ),
-    )
-end
-
 function _one_body_pair_block_set_consumption_summary(consumption::NamedTuple)
     _one_body_namedtuple_value(consumption, :object_kind, nothing) ===
     :cartesian_pair_block_mixed_one_body_block_set_consumption || throw(
@@ -535,7 +503,6 @@ function _one_body_pair_block_set_consumption_summary(consumption::NamedTuple)
         block_set_results_summed = consumption.block_set_results_summed,
         term_batch_results_available_on_consumption =
             consumption.term_batch_results_stored,
-        term_batch_results_stored_in_summary = false,
         factors_constructed = consumption.factors_constructed,
         numerical_blocks_materialized = consumption.numerical_blocks_materialized,
         materialized = consumption.materialized,
@@ -562,14 +529,6 @@ function _one_body_pair_block_set_consumption_summary(consumption::NamedTuple)
     )
 end
 
-function _one_body_pair_block_set_consumption_summary(consumption)
-    throw(
-        ArgumentError(
-            "one-body block-set consumption summary requires a NamedTuple consumption object",
-        ),
-    )
-end
-
 function _one_body_pair_block_set_view(consumption::NamedTuple)
     compact_summary =
         _one_body_pair_block_set_consumption_summary(consumption)
@@ -579,18 +538,6 @@ function _one_body_pair_block_set_view(consumption::NamedTuple)
             object_kind = :cartesian_pair_block_mixed_one_body_block_set_view,
             summary_object_kind = compact_summary.object_kind,
             view_status = :available_mixed_one_body_block_set_view,
-            term_batch_results_stored_in_view = false,
-            batch_result_objects_stored_in_view = false,
-            matrix_fields_stored_in_view = false,
-            nested_preflight_or_block_set_summaries_stored_in_view = false,
-        ),
-    )
-end
-
-function _one_body_pair_block_set_view(consumption)
-    throw(
-        ArgumentError(
-            "one-body block-set view requires a NamedTuple consumption object",
         ),
     )
 end
@@ -606,14 +553,6 @@ function _one_body_pair_block_results_for_term(
     return batch_result.materialized_results
 end
 
-function _one_body_pair_block_results_for_term(consumption, term)
-    throw(
-        ArgumentError(
-            "one-body block-set term result accessor requires a NamedTuple consumption object and Symbol term",
-        ),
-    )
-end
-
 function _one_body_pair_block_skips_for_term(
     consumption::NamedTuple,
     term::Symbol,
@@ -623,14 +562,6 @@ function _one_body_pair_block_skips_for_term(
         _one_body_block_set_consumption_batch_result_for_term(consumption, term)
     isnothing(batch_result) && return ()
     return batch_result.skipped_records
-end
-
-function _one_body_pair_block_skips_for_term(consumption, term)
-    throw(
-        ArgumentError(
-            "one-body block-set term skip accessor requires a NamedTuple consumption object and Symbol term",
-        ),
-    )
 end
 
 function _one_body_pair_block_term_status(
@@ -678,17 +609,6 @@ function _one_body_pair_block_term_status(
             requested = true,
             requested_materialization,
             blocker = _one_body_namedtuple_value(term_summary, :blocker, nothing),
-            term_batch_results_stored_in_status = false,
-            batch_result_objects_stored_in_status = false,
-            matrix_fields_stored_in_status = false,
-        ),
-    )
-end
-
-function _one_body_pair_block_term_status(consumption, term)
-    throw(
-        ArgumentError(
-            "one-body block-set term status requires a NamedTuple consumption object and Symbol term",
         ),
     )
 end
@@ -709,14 +629,6 @@ function _one_body_pair_block_results_for_pair(
     return Tuple(results)
 end
 
-function _one_body_pair_block_results_for_pair(consumption, pair_key)
-    throw(
-        ArgumentError(
-            "one-body block-set pair result accessor requires a NamedTuple consumption object and pair_key::Tuple{Symbol,Symbol}",
-        ),
-    )
-end
-
 function _one_body_pair_block_skips_for_pair(
     consumption::NamedTuple,
     pair_key::Tuple{Symbol,Symbol},
@@ -731,14 +643,6 @@ function _one_body_pair_block_skips_for_pair(
         )
     end
     return Tuple(skips)
-end
-
-function _one_body_pair_block_skips_for_pair(consumption, pair_key)
-    throw(
-        ArgumentError(
-            "one-body block-set pair skip accessor requires a NamedTuple consumption object and pair_key::Tuple{Symbol,Symbol}",
-        ),
-    )
 end
 
 function _one_body_pair_block_pair_status(
@@ -776,11 +680,6 @@ function _one_body_pair_block_pair_status(
         skipped_blocker_counts = _one_body_count_optional_by(skips, :blocker),
         term_separated_results = true,
         block_set_results_summed = false,
-        term_batch_results_stored_in_status = false,
-        batch_result_objects_stored_in_status = false,
-        result_records_stored_in_status = false,
-        skipped_records_stored_in_status = false,
-        matrix_fields_stored_in_status = false,
         source_operator_blocks_materialized =
             any(result -> result.source_operator_blocks_materialized, results),
         final_pair_blocks_materialized =
@@ -792,14 +691,6 @@ function _one_body_pair_block_pair_status(
         artifacts_materialized =
             any(result -> result.artifacts_materialized, results),
         _one_body_dispatch_operator_nonclaim_flags()...,
-    )
-end
-
-function _one_body_pair_block_pair_status(consumption, pair_key)
-    throw(
-        ArgumentError(
-            "one-body block-set pair status requires a NamedTuple consumption object and pair_key::Tuple{Symbol,Symbol}",
-        ),
     )
 end
 
@@ -827,14 +718,6 @@ function _one_body_pair_block_lookup(
     !isnothing(result) && return merge(base, (; result))
     !isnothing(skipped_record) && return merge(base, (; skipped_record))
     return base
-end
-
-function _one_body_pair_block_lookup(consumption, term, pair_key)
-    throw(
-        ArgumentError(
-            "one-body block-set lookup requires a NamedTuple consumption object, Symbol term, and pair_key::Tuple{Symbol,Symbol}",
-        ),
-    )
 end
 
 function _one_body_block_set_consumption_batch_results(consumption::NamedTuple)
@@ -935,11 +818,7 @@ function _one_body_pair_block_lookup_base(
         ),
         term_status = term_status.status,
         term_blocker = _one_body_namedtuple_value(term_status, :blocker, nothing),
-        term_batch_results_stored_in_lookup = false,
-        batch_result_objects_stored_in_lookup = false,
-        hidden_matrix_fields_stored_in_lookup = false,
         explicit_result_field_contains_matrix = result_available,
-        skipped_record_stored_in_lookup = skipped_record_available,
         term_separated_result = true,
         block_set_results_summed = false,
         source_operator_blocks_materialized =
@@ -1074,9 +953,6 @@ function _one_body_block_set_term_access_status(
         skipped_blocker_counts = (),
         block_set_status = compact_summary.status,
         block_set_blocker = compact_summary.blocker,
-        term_batch_results_stored_in_status = false,
-        batch_result_objects_stored_in_status = false,
-        matrix_fields_stored_in_status = false,
         materialized = false,
         source_operator_blocks_materialized = false,
         final_pair_blocks_materialized = false,
@@ -1170,14 +1046,6 @@ function _one_body_block_set_requested_materialize_terms(materialize_terms::Tupl
         ArgumentError("one-body block-set materialize_terms contain duplicate terms"),
     )
     return materialize_terms
-end
-
-function _one_body_block_set_requested_materialize_terms(materialize_terms)
-    throw(
-        ArgumentError(
-            "one-body block-set materialize_terms must be a Symbol, Tuple, or AbstractVector, got $(typeof(materialize_terms))",
-        ),
-    )
 end
 
 const _ONE_BODY_BLOCK_SET_MATERIALIZABLE_TERMS = (
@@ -1298,14 +1166,6 @@ function _one_body_pair_block(
         )
     result_or_skip isa PairBlockMaterializationResult || return result_or_skip
     return _one_body_result_with_mixed_metadata(result_or_skip, dispatch_summary)
-end
-
-function _one_body_pair_block(record, term; kwargs...)
-    throw(
-        ArgumentError(
-            "mixed one-body pair block requires a PairBlockMaterializationRecord",
-        ),
-    )
 end
 
 function _one_body_pair_blocks(
@@ -1479,14 +1339,6 @@ function _one_body_pqs_source_pair_block(
     )
 end
 
-function _one_body_pair_blocks(plan, term; kwargs...)
-    throw(
-        ArgumentError(
-            "mixed one-body pair blocks require a PairBlockMaterializationPlan",
-        ),
-    )
-end
-
 function _one_body_pair_block_batch_summary(
     batch_result::PairBlockMaterializationBatchResult,
 )
@@ -1543,14 +1395,6 @@ function _one_body_pair_block_batch_summary(
             _one_body_get_metadata(batch_result, :factors_constructed, false),
         route_driver_wiring =
             _one_body_get_metadata(batch_result, :route_driver_wiring, false),
-    )
-end
-
-function _one_body_pair_block_batch_summary(batch_result)
-    throw(
-        ArgumentError(
-            "one-body pair block batch summary requires a PairBlockMaterializationBatchResult",
-        ),
     )
 end
 
@@ -1637,7 +1481,6 @@ function _one_body_pair_block_set_summary(
         term_summaries,
         result_terms_remain_separated = true,
         block_set_results_summed = false,
-        term_batch_results_stored_in_summary = false,
         factor_provider_scope = term_set_descriptor.factor_provider_scope,
         factors_constructed = false,
         materialized = total_materialized_count > 0,
@@ -1651,14 +1494,6 @@ function _one_body_pair_block_set_summary(
         global_artifacts_materialized = any_artifacts_materialized,
         mixed_dispatcher_materialized = false,
         _one_body_dispatch_operator_nonclaim_flags()...,
-    )
-end
-
-function _one_body_pair_block_set_summary(plan; kwargs...)
-    throw(
-        ArgumentError(
-            "one-body pair block-set summary requires a PairBlockMaterializationPlan",
-        ),
     )
 end
 
@@ -1745,14 +1580,6 @@ function _one_body_block_set_batch_result_lookup(batch_results::Tuple)
         ArgumentError("one-body block-set term_batch_results contain duplicate terms"),
     )
     return NamedTuple{terms}(batch_results)
-end
-
-function _one_body_block_set_batch_result_lookup(term_batch_results)
-    throw(
-        ArgumentError(
-            "one-body block-set term_batch_results must be a NamedTuple, PairBlockMaterializationBatchResult, or tuple of PairBlockMaterializationBatchResult values",
-        ),
-    )
 end
 
 function _one_body_block_set_batch_result_for_term(
@@ -1858,14 +1685,6 @@ function _one_body_pair_block_consumption(
         materialization_path = summary.materialization_path,
         mixed_one_body_dispatcher = summary.mixed_one_body_dispatcher,
         numerical_dispatch_scope = summary.numerical_dispatch_scope,
-    )
-end
-
-function _one_body_pair_block_consumption(plan, term; kwargs...)
-    throw(
-        ArgumentError(
-            "one-body pair block consumption requires a PairBlockMaterializationPlan",
-        ),
     )
 end
 

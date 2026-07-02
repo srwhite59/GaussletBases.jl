@@ -106,14 +106,6 @@ function _one_body_local_block_collection_entry(
     )
 end
 
-function _one_body_local_block_collection_entry(result)
-    throw(
-        ArgumentError(
-            "local one-body block collection result entry requires a PairBlockMaterializationResult",
-        ),
-    )
-end
-
 function _one_body_local_block_collection_skipped_entry(
     skip::NamedTuple;
     block_set_term = _one_body_collection_value(skip, :requested_term, nothing),
@@ -141,14 +133,6 @@ function _one_body_local_block_collection_skipped_entry(
         result = nothing,
         skipped_record = skip,
         _one_body_local_block_collection_entry_materialization_flags()...,
-    )
-end
-
-function _one_body_local_block_collection_skipped_entry(skip)
-    throw(
-        ArgumentError(
-            "local one-body block collection skipped entry requires a NamedTuple",
-        ),
     )
 end
 
@@ -212,7 +196,6 @@ function _one_body_local_block_collection(consumption::NamedTuple)
         term_separated_entries = true,
         pair_separated_entries = true,
         block_set_results_summed = false,
-        block_matrices_copied_into_collection = false,
         _one_body_local_block_collection_summary_materialization_flags(
             source_operator_blocks_materialized = any(
                 entry -> entry.source_operator_blocks_materialized,
@@ -223,14 +206,6 @@ function _one_body_local_block_collection(consumption::NamedTuple)
                 materialized_tuple,
             ),
         )...,
-    )
-end
-
-function _one_body_local_block_collection(consumption)
-    throw(
-        ArgumentError(
-            "local one-body block collection requires a block-set consumption NamedTuple",
-        ),
     )
 end
 
@@ -276,14 +251,7 @@ function _one_body_local_block_collection_summary(collection::NamedTuple)
             _one_body_count_optional_by(collection.entries, :block_space),
         term_separated_entries = collection.term_separated_entries,
         pair_separated_entries = collection.pair_separated_entries,
-        entries_stored_in_summary = false,
-        materialized_entries_stored_in_summary = false,
-        skipped_entries_stored_in_summary = false,
-        result_records_stored_in_summary = false,
-        skipped_records_stored_in_summary = false,
-        matrix_fields_stored_in_summary = false,
         block_set_results_summed = collection.block_set_results_summed,
-        block_matrices_copied_into_summary = false,
         _one_body_local_block_collection_summary_materialization_flags(
             source_operator_blocks_materialized =
                 collection.source_operator_blocks_materialized,
@@ -293,28 +261,12 @@ function _one_body_local_block_collection_summary(collection::NamedTuple)
     )
 end
 
-function _one_body_local_block_collection_summary(collection)
-    throw(
-        ArgumentError(
-            "local one-body block collection summary requires a collection NamedTuple",
-        ),
-    )
-end
-
 function _one_body_local_block_collection_entries_for_term(
     collection::NamedTuple,
     term::Symbol,
 )
     _one_body_assert_local_block_collection(collection)
     return Tuple(entry for entry in collection.entries if entry.block_set_term === term)
-end
-
-function _one_body_local_block_collection_entries_for_term(collection, term)
-    throw(
-        ArgumentError(
-            "local one-body block collection term entry accessor requires a collection NamedTuple and term::Symbol",
-        ),
-    )
 end
 
 function _one_body_local_block_collection_materialized_entries_for_term(
@@ -328,17 +280,6 @@ function _one_body_local_block_collection_materialized_entries_for_term(
     )
 end
 
-function _one_body_local_block_collection_materialized_entries_for_term(
-    collection,
-    term,
-)
-    throw(
-        ArgumentError(
-            "local one-body block collection materialized term accessor requires a collection NamedTuple and term::Symbol",
-        ),
-    )
-end
-
 function _one_body_local_block_collection_skipped_entries_for_term(
     collection::NamedTuple,
     term::Symbol,
@@ -347,14 +288,6 @@ function _one_body_local_block_collection_skipped_entries_for_term(
     return Tuple(
         entry for entry in collection.skipped_entries
         if entry.block_set_term === term
-    )
-end
-
-function _one_body_local_block_collection_skipped_entries_for_term(collection, term)
-    throw(
-        ArgumentError(
-            "local one-body block collection skipped term accessor requires a collection NamedTuple and term::Symbol",
-        ),
     )
 end
 
@@ -408,10 +341,7 @@ function _one_body_local_block_collection_term_status(
         block_space_counts = _one_body_count_optional_by(entries, :block_space),
         term_separated_entries = true,
         pair_separated_entries = true,
-        entries_stored_in_status = false,
-        matrix_fields_stored_in_status = false,
         block_set_results_summed = false,
-        block_matrices_copied_into_status = false,
         _one_body_local_block_collection_summary_materialization_flags(
             source_operator_blocks_materialized = any(
                 entry -> entry.source_operator_blocks_materialized,
@@ -425,28 +355,12 @@ function _one_body_local_block_collection_term_status(
     )
 end
 
-function _one_body_local_block_collection_term_status(collection, term)
-    throw(
-        ArgumentError(
-            "local one-body block collection term status requires a collection NamedTuple and term::Symbol",
-        ),
-    )
-end
-
 function _one_body_local_block_collection_entries_for_pair(
     collection::NamedTuple,
     pair_key::Tuple{Symbol,Symbol},
 )
     _one_body_assert_local_block_collection(collection)
     return Tuple(entry for entry in collection.entries if entry.pair_key == pair_key)
-end
-
-function _one_body_local_block_collection_entries_for_pair(collection, pair_key)
-    throw(
-        ArgumentError(
-            "local one-body block collection pair entry accessor requires a collection NamedTuple and pair_key::Tuple{Symbol,Symbol}",
-        ),
-    )
 end
 
 function _one_body_local_block_collection_materialized_entries_for_pair(
@@ -460,17 +374,6 @@ function _one_body_local_block_collection_materialized_entries_for_pair(
     )
 end
 
-function _one_body_local_block_collection_materialized_entries_for_pair(
-    collection,
-    pair_key,
-)
-    throw(
-        ArgumentError(
-            "local one-body block collection materialized pair accessor requires a collection NamedTuple and pair_key::Tuple{Symbol,Symbol}",
-        ),
-    )
-end
-
 function _one_body_local_block_collection_skipped_entries_for_pair(
     collection::NamedTuple,
     pair_key::Tuple{Symbol,Symbol},
@@ -479,17 +382,6 @@ function _one_body_local_block_collection_skipped_entries_for_pair(
     return Tuple(
         entry for entry in collection.skipped_entries
         if entry.pair_key == pair_key
-    )
-end
-
-function _one_body_local_block_collection_skipped_entries_for_pair(
-    collection,
-    pair_key,
-)
-    throw(
-        ArgumentError(
-            "local one-body block collection skipped pair accessor requires a collection NamedTuple and pair_key::Tuple{Symbol,Symbol}",
-        ),
     )
 end
 
@@ -544,10 +436,7 @@ function _one_body_local_block_collection_pair_status(
         block_space_counts = _one_body_count_optional_by(entries, :block_space),
         term_separated_entries = true,
         pair_separated_entries = true,
-        entries_stored_in_status = false,
-        matrix_fields_stored_in_status = false,
         block_set_results_summed = false,
-        block_matrices_copied_into_status = false,
         _one_body_local_block_collection_summary_materialization_flags(
             source_operator_blocks_materialized = any(
                 entry -> entry.source_operator_blocks_materialized,
@@ -558,14 +447,6 @@ function _one_body_local_block_collection_pair_status(
                 materialized_entries,
             ),
         )...,
-    )
-end
-
-function _one_body_local_block_collection_pair_status(collection, pair_key)
-    throw(
-        ArgumentError(
-            "local one-body block collection pair status requires a collection NamedTuple and pair_key::Tuple{Symbol,Symbol}",
-        ),
     )
 end
 
@@ -647,10 +528,7 @@ function _one_body_local_block_collection_lookup(
         term_separated_entries = true,
         pair_separated_entries = true,
         lookup_chose_between_multiple_entries = false,
-        entry_stored_in_lookup = length(entries) == 1,
-        matrix_fields_stored_in_lookup = false,
         block_set_results_summed = false,
-        block_matrices_copied_into_lookup = false,
         _one_body_local_block_collection_summary_materialization_flags(
             source_operator_blocks_materialized = any(
                 entry -> entry.source_operator_blocks_materialized,
@@ -664,14 +542,6 @@ function _one_body_local_block_collection_lookup(
     )
     length(entries) == 1 && return merge(base, (; entry = only(entries)))
     return base
-end
-
-function _one_body_local_block_collection_lookup(collection, term, pair_key)
-    throw(
-        ArgumentError(
-            "local one-body block collection lookup requires a collection NamedTuple, term::Symbol, and pair_key::Tuple{Symbol,Symbol}",
-        ),
-    )
 end
 
 function _one_body_collection_result_block_space(
