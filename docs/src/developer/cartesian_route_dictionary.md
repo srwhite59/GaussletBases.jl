@@ -140,6 +140,19 @@ global retained matrices, wire route drivers, build Hamiltonians, add Coulomb,
 change IDA/MWG semantics, export artifacts, build PQS shell projection/Lowdin
 data, or assemble a full White--Lindsey route.
 
+The remaining local one-body block collection and mixed dispatch summaries
+should not carry broad route-level nonclaim field clouds. Fields such as
+`route_driver_wiring`, `pqs_lowdin_materialized`,
+`density_density_materialized`, global materialization flags, and
+`full_white_lindsey_route_assembled` were useful while the local block path was
+being separated from route assembly, but they are not the live collection or
+placement contract. They may be removed from the two local one-body dispatch
+and collection files when they are false-only disclaimers or unused private
+summary fields. This does not remove actual local block materialization facts,
+collection entry shape, placement-plan inputs, numerical blocks, public
+materialization entry points, or the same vocabulary from adjacent providers or
+final-basis surfaces.
+
 The next private layer places local one-body block collections into
 term-specific global retained matrices for the current safe one-body pilots.
 Synthetic global retained matrix coverage now exists for `:overlap`,

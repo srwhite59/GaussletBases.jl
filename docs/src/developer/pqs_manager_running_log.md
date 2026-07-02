@@ -22379,3 +22379,60 @@ Carrying-cost result:
 - exact remaining blocker:
   `src/cartesian_pair_block_materialization/one_body_block_collection.jl` still
   calls the preserved consumption summary and batch-result iteration helpers.
+
+## Cartesian Hamiltonian Producer Pass 261 - CPBM One-Body Nonclaim Field Cleanup Authority
+
+Commit(s):
+- this commit - Approve CPBM one-body nonclaim cleanup
+
+Summary:
+- Design-manager authorized only the materialization/nonclaim field-cloud
+  cleanup candidate. The approved source surface is narrow:
+  `src/cartesian_pair_block_materialization/one_body_dispatch.jl` and
+  `src/cartesian_pair_block_materialization/one_body_block_collection.jl`.
+- The target is false-only route/global nonclaim vocabulary in the local
+  one-body dispatch and collection summaries/entries, such as
+  `route_driver_wiring`, `pqs_lowdin_materialized`,
+  `density_density_materialized`, global materialization flags, and
+  `full_white_lindsey_route_assembled`, when those fields are unused private
+  disclaimers rather than live placement facts.
+
+Validation / evidence:
+- Current source state after Pass 260 has already removed the obvious private
+  diagnostic view/accessor layer. `one_body_block_collection.jl` is mostly
+  construction and placement-facing assertion now; `one_body_dispatch.jl`
+  remains the larger live dispatch/preflight/consumption surface.
+- Focused scans show the nonclaim vocabulary is still repeated in CPBM
+  one-body files and also appears in adjacent provider/final-basis code. The
+  current authorization is therefore intentionally limited to the two local
+  CPBM one-body files, not the whole repo vocabulary.
+
+Goal advancement:
+- LT6 and cleanup/carrying-cost guardrail: continues reducing route-era
+  diagnostic/status vocabulary while preserving the live local collection ->
+  placement-plan one-body path.
+
+Risk / guardrail:
+- Not authorized in this pass: adjacent providers or final-basis surfaces,
+  numerical one-body block construction, block-set consumption needed by local
+  collection construction, local collection entry fields consumed by placement,
+  placement semantics, public materialization entry points, Hamiltonian/Coulomb
+  /IDA/MWG behavior, artifacts, route wiring, object-kind/prettier assertion
+  checks, or repeated summary/status architecture redesign.
+- Candidate 2 is deferred because `_one_body_assert_local_block_collection`
+  and related object-kind checks still guard live NamedTuple boundaries.
+  Candidate 3 is deferred because meaningful summary/status de-duplication
+  needs the nonclaim-field decision first and likely a separate field-shape
+  design.
+
+Carrying-cost result:
+- source line delta: 0 in this docs decision.
+- deleted: none yet.
+- simplified: bloat-fixer/repo-manager now has a bounded source target instead
+  of three entangled cleanup options.
+- quarantined: object-kind/prettier checks, repeated summary/status
+  construction, adjacent provider/final-basis nonclaim vocabulary, and broader
+  status-shape redesign.
+- exact remaining blocker: source cleanup must verify removed fields are not
+  consumed by placement-facing entries and must stop if it requires touching
+  files outside the two approved CPBM one-body files.
