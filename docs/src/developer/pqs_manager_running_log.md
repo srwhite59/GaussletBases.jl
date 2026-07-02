@@ -22325,3 +22325,57 @@ Carrying-cost result:
 - exact remaining blocker: protected-original IDA/MWG interaction ownership and
   Hamiltonian/artifact/public integration remain unimplemented and
   unauthorized.
+
+## Cartesian Hamiltonian Producer Pass 260 - Retired CPBM Mixed View Source Deletion
+
+Commit(s):
+- this commit - Remove retired CPBM mixed one-body block-set view helpers
+
+Summary:
+- Accepted the source deletion authorized by the Pass 258 design-manager
+  retirement decision. `one_body_dispatch.jl` no longer carries the private
+  mixed one-body block-set view/accessor layer over block-set consumption
+  results.
+- Deleted helpers include `_one_body_pair_block_set_view(...)`,
+  term/pair result and skip accessors, term/pair status helpers,
+  `_one_body_pair_block_lookup(...)`, and support helpers used only by that
+  retired diagnostic surface. The live path remains block-set consumption ->
+  local one-body block collection -> placement plan.
+
+Validation / evidence:
+- Source delta: `428` deletions, `0` additions in
+  `src/cartesian_pair_block_materialization/one_body_dispatch.jl`.
+- Focused `rg` over `src`, `test`, and `tmp/work` found no remaining
+  definitions or callers for the deleted helper names.
+- Focused `rg` over `docs` found only intentional retirement notes in
+  `cartesian_route_dictionary.md`, `cartesian_route_retirement_ledger.md`, and
+  this running log.
+- `git diff --check` passed.
+- Package load passed with `package_load_elapsed_s=6.747649042`.
+- No broader nested H2 one-body test was run for this source deletion; the
+  deleted helpers had no live callers and the checked-in endpoint is broader
+  than this private diagnostic-surface retirement.
+
+Goal advancement:
+- LT6 and cleanup/carrying-cost guardrail: removes a retired private reporting
+  path so CPBM one-body flow is less conceptually split between old mixed
+  accessors and the active local collection/placement route.
+
+Risk / guardrail:
+- Preserved block-set consumption summary, batch-result iteration,
+  `_one_body_block_set_batch_result_lookup(...)`, local collection
+  construction, placement-plan path, numerical kernels, public materialization
+  entry points, and the remaining materialization/nonclaim field cloud.
+
+Carrying-cost result:
+- deleted: retired private mixed block-set diagnostic view/accessor surface.
+- simplified: `one_body_dispatch.jl` no longer carries a parallel retrieval
+  layer beside the live placement path.
+- quarantined: materialization/nonclaim fields and block-set consumption
+  summary remain separate cleanup questions.
+- not deleted because: `_one_body_pair_block_set_consumption_summary(...)` and
+  `_one_body_block_set_consumption_batch_results(...)` are still used by local
+  collection construction.
+- exact remaining blocker:
+  `src/cartesian_pair_block_materialization/one_body_block_collection.jl` still
+  calls the preserved consumption summary and batch-result iteration helpers.
