@@ -47,18 +47,6 @@ function _one_body_term_set_descriptor(terms::Tuple)
         result_terms_remain_separated = true,
         block_set_results_summed = false,
         factor_provider_scope = :caller_supplied_or_family_provider,
-        factors_constructed = false,
-        numerical_blocks_materialized = false,
-        mixed_dispatcher_materialized = false,
-        route_driver_wiring = false,
-        global_operator_blocks_materialized = false,
-        hamiltonian_data_materialized = false,
-        artifacts_materialized = false,
-        coulomb_materialized = false,
-        density_density_materialized = false,
-        ida_mwg_data_materialized = false,
-        pqs_lowdin_materialized = false,
-        full_white_lindsey_route_assembled = false,
     )
 end
 
@@ -141,12 +129,6 @@ function _one_body_term_descriptor_result(
         required_factor_roles,
         required_factor_names,
         factor_provider_scope = :caller_supplied_or_family_provider,
-        factors_constructed = false,
-        numerical_blocks_materialized = false,
-        mixed_dispatcher_materialized = false,
-        route_driver_wiring = false,
-        hamiltonian_data_materialized = false,
-        artifacts_materialized = false,
     )
 end
 

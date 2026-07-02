@@ -22653,3 +22653,75 @@ Carrying-cost result:
 - exact remaining blocker: identify why the many-electron HF solution occupies
   broad-`Z` despite high one-direction/self-cost diagnostics; protected-original
   IDA/MWG interaction ownership remains unresolved.
+
+## Cartesian Hamiltonian Producer Pass 266 - CPBM Descriptor/Input Nonclaim Cleanup
+
+Commit(s):
+- this commit - Remove CPBM one-body descriptor input false fields
+
+Summary:
+- Accepted the next stable CPBM false-disclaimer cleanup in the one-body
+  term/factor-input layer. `one_body_terms.jl` and
+  `one_body_factor_inputs.jl` now carry term metadata, factor names,
+  readiness, input-source, and parent-axis-count facts without appending
+  old "not materialized" route/global/Hamiltonian/PQS payload tails.
+- This keeps the descriptor/input layer aligned with its role: describe what
+  terms require and whether caller-supplied factors are available. It does not
+  report unrelated downstream materialization nonclaims.
+
+Validation / evidence:
+- Source delta: `37` deletions, `0` additions across
+  `one_body_terms.jl` and `one_body_factor_inputs.jl`.
+- Focused `rg` over the two target files found no surviving removed field names
+  such as `factor_values_stored`, `route_driver_wiring`,
+  `density_density_materialized`, or `pqs_lowdin_materialized`.
+- Broader property-read scan found live materialization reads in later CPBM
+  dispatch/collection surfaces and stale ignored `tmp/work` probes, but no
+  descriptor/input consumer of the deleted fields.
+- `git diff --check` passed.
+- Package load passed with `package_load_elapsed_s=6.582721084`.
+- Private descriptor/input smoke passed:
+  `cpbm_descriptor_input_smoke_ok terms=2
+  set_status=available_one_body_term_set_factor_inputs
+  factor_status=available_one_body_factor_inputs`, elapsed `0.639367334` s.
+
+Goal advancement:
+- LT6 and cleanup/carrying-cost guardrail: continues removing false-only status
+  vocabulary from stable one-body metadata layers while preserving active
+  readiness facts and dispatch inputs.
+
+Risk / guardrail:
+- Live dispatch/consumption materialization fields and placement-plan
+  nonclaim fields remain out of scope. No public entry points, numerical
+  kernels, artifacts, or placement semantics changed.
+
+Carrying-cost result:
+- deleted: false-only descriptor/input fields including factor-value storage,
+  route-driver, density-density, Lowdin, and adjacent materialization
+  disclaimers.
+- simplified: descriptor/input payloads now carry only term/factor/readiness
+  facts.
+- quarantined: live dispatch/consumption and placement-plan status vocabulary.
+- not deleted because: `one_body_placement_plan.jl` is a live boundary and
+  needs separate authorization if cleaned.
+- exact remaining blocker: placement-plan `_one_body_placement_nonclaim_flags`
+  remains the next bounded cleanup candidate.
+
+### Medium-Term Goal Checkpoint After Pass 266
+
+- MT1 fake-PQS quarantine: active/maintained. None of the recent protected
+  injection or CPBM cleanup passes reopens fake-PQS as a production path.
+- MT2 independent H2 PQS recovery and MT3 common physical support vocabulary:
+  stable but secondary. Recent shell/aspect and due-diligence work improved the
+  support vocabulary; current focus has shifted to Cr2 protected-basis
+  interaction and CPBM carrying-cost cleanup.
+- MT4 supplement staging after authority: active, but interaction-blocked. The
+  protected-original geometry and exact one-body source lanes are useful; the
+  first protected Vee HF replay is now treated as algebraically inconclusive
+  until null/projected-Z and energy-consistency audits explain the mismatch.
+- MT5 cleanup pressure: active and productive. Recent CPBM one-body passes
+  removed private diagnostic views, unused local collection accessors, and
+  several layers of false-only nonclaim fields without changing physics.
+- MT6 audit/classify old Cartesian flat paths: active as cleanup support.
+  The current bounded target is placement-plan nonclaim vocabulary; broader
+  provider/final-basis status fields still need separate mapping/authority.

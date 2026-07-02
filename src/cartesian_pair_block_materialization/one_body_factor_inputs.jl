@@ -54,19 +54,6 @@ function _one_body_term_set_factor_input_summary(
         parent_axis_counts_status,
         parent_axis_counts,
         factor_provider_scope = term_set_descriptor.factor_provider_scope,
-        factor_values_stored = false,
-        factors_constructed = false,
-        numerical_blocks_materialized = false,
-        mixed_dispatcher_materialized = false,
-        route_driver_wiring = false,
-        global_operator_blocks_materialized = false,
-        hamiltonian_data_materialized = false,
-        artifacts_materialized = false,
-        coulomb_materialized = false,
-        density_density_materialized = false,
-        ida_mwg_data_materialized = false,
-        pqs_lowdin_materialized = false,
-        full_white_lindsey_route_assembled = false,
     )
 end
 
@@ -130,12 +117,6 @@ function _one_body_factor_input_summary(
         missing_factor_names,
         required_factors_available,
         factor_values,
-        factors_constructed = false,
-        numerical_blocks_materialized = false,
-        mixed_dispatcher_materialized = false,
-        route_driver_wiring = false,
-        hamiltonian_data_materialized = false,
-        artifacts_materialized = false,
     )
 end
 
