@@ -22826,3 +22826,70 @@ Carrying-cost result:
   its own map before any cleanup.
 - exact remaining blocker: no active source/test/docs caller for the deleted
   CPBM fields; only stale ignored tmp probes still read the field.
+
+## Cartesian Hamiltonian Producer Pass 269 - Protected Vee Algebra Null Failure
+
+Commit(s):
+- this commit - Record protected Vee algebra null failure
+
+Summary:
+- Accepted the `HP-RG-PROTECT-VEE-AUDIT-01` algebra-debug result as a
+  decisive invalidation of the previous protected-Vee HF replay. The large
+  broad-`Z` occupation reported in that replay should not be interpreted as a
+  protected-basis policy failure, because the null/projection algebra fails
+  before true Gaussian `Z` enters the calculation.
+- The fixed-density energy formula is internally consistent: the solver-path
+  and probe decomposition agree to roundoff for the same density. The failure
+  is the interaction convention. A two-index IDA/MWG density-density matrix
+  cannot be rotated as `V_F = C' V_M C` for arbitrary
+  `F = [Z, M Qperp]` densities and expected to preserve many-electron
+  energies.
+
+Validation / evidence:
+- Probe/output:
+  `tmp/work/cr2_protected_vee_algebra_debug.jl` and
+  `/Users/srw/dmrgtmp/cr2_protected_vee_algebra_debug_7acdc8b92/`.
+- Dimensions: `G = 6915`, `R_compact = 30`, `M = 6945`,
+  `protected_Z = 30`, `broad_Z = 87`, `Z = 117`, `Qperp = 6828`,
+  `B_min = 0.993465824505872`, and no `B` singular value below `0.99`.
+- Orthogonality remains good for null/projected checks:
+  null `||F'SF-I||_inf = 6.88e-15`, projected `9.33e-15`, true-`Z`
+  `1.28e-9`.
+- Null/projected back-transform checks are near roundoff for the transformed
+  objects: null `H` error `5.17e-10`, null `V` error `2.30e-12`;
+  projected `H` error `9.24e-10`, projected `V` error `4.26e-12`.
+- Energy invariance nevertheless fails: null random density changes by
+  `-0.851` Ha, null closed-shell coordinate density by `-1216.68` Ha,
+  projected random density by `-7.71` Ha, and projected closed-shell coordinate
+  density by `-1225.99` Ha.
+- Fixed-density energy evaluation itself is not the problem:
+  maximum solver/probe decomposition delta is `8.731149137020111e-11`.
+- Doer validation: package load `package_load_elapsed_s=0.469954875`, probe
+  elapsed `outer_elapsed_s=918.102684`, and `git diff --check` clean.
+
+Goal advancement:
+- LT5/LT6 and MT4: sharpens the protected-original story. Geometry and
+  exact one-body transforms remain useful, but protected-original
+  electron-electron interaction design is now the explicit blocker. The first
+  protected-Vee HF replay is no longer evidence about basis fate or broad-`Z`
+  occupation; it is evidence that the inherited two-index interaction rotation
+  was the wrong algebra.
+
+Risk / guardrail:
+- Do not promote the previous protected Vee candidate, run more HF on that
+  interaction convention, add source-backed IDA/MWG transforms, or treat
+  broad `Z` occupation as a residual-overoccupation signal until an interaction
+  representation passes null/projected energy-invariance checks.
+
+Carrying-cost result:
+- deleted: none.
+- simplified: the protected-Vee lane now has a clear stop condition:
+  `C' V C` is not a valid density-density interaction transform for this
+  replacement fixed sector.
+- quarantined: algebra/debug work remains ignored-probe and `/Users/srw/dmrgtmp`
+  output only.
+- not deleted because: the negative audit record is needed to prevent
+  reusing the invalid HF replay as physics evidence.
+- exact remaining blocker: design a protected-original electron-electron
+  interaction representation whose null/projection tests preserve energies
+  before returning to Cr2 HF or production Hamiltonian wiring.
