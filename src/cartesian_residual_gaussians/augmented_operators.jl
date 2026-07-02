@@ -22,3 +22,56 @@ function transform_augmented_operator(O_GG, O_GA, O_AA, residual)
     out[residual_range, residual_range] .= O_RR
     return symmetrize_operator(out)
 end
+
+function protected_original_fixed_sector_components(geometry)
+    T_G, T_A, Z, B = geometry.T_G, geometry.T_A, geometry.Z, geometry.B
+    nG, nR, nZ, nM = size(T_G, 1), size(T_A, 2), size(Z, 2), size(B, 1)
+    size(T_G, 2) == nR || throw(DimensionMismatch("protected fixed-sector T_G/T_A size mismatch"))
+    size(B, 2) == nZ || throw(DimensionMismatch("protected fixed-sector B/Z size mismatch"))
+    nM == nG + nR || throw(DimensionMismatch("protected fixed-sector M dimension mismatch"))
+    qfull = Matrix(qr(B).Q * Matrix{Float64}(I, nM, nM))
+    Qp = Matrix{Float64}(view(qfull, :, (nZ + 1):nM))
+    Qp_G = view(Qp, 1:nG, :)
+    Qp_R = view(Qp, (nG + 1):nM, :)
+    G_perp = Matrix{Float64}(Qp_G) + T_G * Qp_R
+    A_perp = T_A * Qp_R
+    return (; Z, Qp, G_perp, A_perp,
+        protected_count = hasproperty(geometry, :Z_protected) ?
+            size(geometry.Z_protected, 2) : getproperty(geometry, :protected_original_count),
+        z_dimension = nZ, f_dimension = nM)
+end
+
+function transform_protected_original_fixed_sector_operator(O_GG, O_GA, O_AA, components)
+    Z, Gp, Ap = components.Z, components.G_perp, components.A_perp
+    O_ZZ = transpose(Z) * O_AA * Z
+    O_ZQ = transpose(Z) * (transpose(O_GA) * Gp + O_AA * Ap)
+    O_QQ = _augmented_operator_block(O_GG, O_GA, O_AA, Gp, Ap, Gp, Ap)
+    nZ, nQ = size(Z, 2), size(Gp, 2)
+    out = zeros(Float64, nZ + nQ, nZ + nQ)
+    qrange = (nZ + 1):(nZ + nQ)
+    out[1:nZ, 1:nZ] .= O_ZZ
+    out[1:nZ, qrange] .= O_ZQ
+    out[qrange, 1:nZ] .= transpose(O_ZQ)
+    out[qrange, qrange] .= O_QQ
+    return symmetrize_operator(out)
+end
+
+function transform_protected_original_fixed_sector_one_body(kinetic, unit_nuclear_by_center,
+    nuclear_charges, geometry)
+    components = protected_original_fixed_sector_components(geometry)
+    K = transform_protected_original_fixed_sector_operator(
+        kinetic.GG, kinetic.GA, kinetic.AA, components)
+    U = Matrix{Float64}[transform_protected_original_fixed_sector_operator(
+        unit.GG, unit.GA, unit.AA, components) for unit in unit_nuclear_by_center]
+    length(U) == length(nuclear_charges) ||
+        throw(DimensionMismatch("protected fixed-sector nuclear charge count mismatch"))
+    H1 = copy(K)
+    for (charge, unit) in zip(nuclear_charges, U)
+        H1 .+= Float64(charge) .* unit
+    end
+    return (; kinetic = K, nuclear_attraction_unit_by_center = U,
+        one_body_hamiltonian = symmetrize_operator(H1),
+        protected_count = components.protected_count,
+        z_dimension = components.z_dimension,
+        f_dimension = components.f_dimension)
+end

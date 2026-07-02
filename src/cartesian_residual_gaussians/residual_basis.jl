@@ -423,6 +423,10 @@ function staged_protected_original_injection_geometry(base_dimension::Integer, X
         retained_fake_rdm_occupations = fake_values[keep_fake],
         dropped_fake_rdm_occupations = fake_values[dropped_fake],
         protected_original_source_indices = protected_indices,
+        T_G, T_A,
+        Z_protected = Zp,
+        Z_broad = Zb,
+        Z, B,
         dropped_fake_direction_summary = protected_original_direction_summary(
             candidate_labels, candidate_owner_indices, dropped_Z, fake_values[dropped_fake])))
 end

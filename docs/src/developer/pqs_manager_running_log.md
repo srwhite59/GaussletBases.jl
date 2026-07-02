@@ -22264,3 +22264,64 @@ Carrying-cost result:
 - exact remaining blocker: bloat-fixer/repo-manager must verify no live
   callers remain and preserve local collection construction plus placement
   entry shape before deleting the helpers.
+
+## Cartesian Hamiltonian Producer Pass 259 - Source-Backed Protected One-Body Transforms
+
+Commit(s):
+- this commit - Add protected original fixed-sector one-body transforms
+
+Summary:
+- Accepted the `HP-RG-PROTECT-ONEBODY-FN-01` source implementation. Exact
+  dense one-body transforms are now source-backed for the protected fixed
+  sector `F = [Z, M Qperp]`, with `M = [G, R_compact]`.
+- `src/cartesian_residual_gaussians/augmented_operators.jl` now owns private
+  helpers that form dense `F' O F` matrices for kinetic, per-center uncharged
+  nuclear attraction `U_A`, and assembled `H1`. `residual_basis.jl` exposes the
+  transform-ready geometry fields needed by those helpers. No public wiring,
+  artifact/provenance, IDA/MWG, matrix-action, solver, default, or Cr2 HF path
+  was added.
+
+Validation / evidence:
+- Source delta: `57` additions, `0` deletions across
+  `augmented_operators.jl` and `residual_basis.jl`, under the approved
+  `<=180` line target.
+- `git diff --check` passed.
+- Package load passed with `package_load_elapsed_s=0.458231792`.
+- Doer H2 default residual/facade smoke passed: base `487`, residual `18`,
+  augmented `505`, default rank rule unchanged.
+- Ignored Cr2 dense replay output:
+  `/Users/srw/dmrgtmp/cr2_protected_onebody_dense_source_66b06c3cd/`.
+  Geometry reproduced the audit target: base `6915`, compact residual `30`,
+  protected originals `30`, broad retained `87`, `Z = 117`, `F = 6945`,
+  `B_min = 0.993465824505872`, and no `B` singular value below `0.99`.
+- Dense transform diagnostics: `F' S F - I` block estimate `1.164e-9`,
+  `Z' S M Qperp = 9.873e-16`, dense symmetries `K = 0.0`, max `U = 0.0`,
+  `H1 = 0.0`, and low `H1_FF` converged `8/8` with minimum
+  `-295.55692015608696`.
+- The lowest `H1_FF` modes remain protected-original dominated: first two
+  modes have protected weights about `0.999764`, with broad-Z weights below
+  `2e-4`.
+
+Goal advancement:
+- LT5/LT6 and MT4/MT6: moves protected-original injection from geometry-only
+  source support to exact dense one-body source support, while preserving the
+  hard stop before interaction transforms and production Hamiltonian workflow.
+
+Risk / guardrail:
+- This remains private/internal/default-off and dense-only. Still forbidden:
+  public driver/API/export changes, artifacts/provenance/writer/reader/manifest,
+  exact IDA/MWG interaction transform, screened-reference/rho0, matrix-vector
+  action framework, Cr2 HF, solver workflow, residual defaults, and rejected
+  broad directions as MWG residual channels.
+
+Carrying-cost result:
+- deleted: none.
+- simplified: ignored one-body replay probes can now use source helpers instead
+  of carrying local fixed-sector transform formulas.
+- quarantined: dense exact one-body transform remains private/internal and not
+  a production Hamiltonian path.
+- not deleted because: existing `[G, R]` augmented transform and protected
+  geometry diagnostics remain live contracts.
+- exact remaining blocker: protected-original IDA/MWG interaction ownership and
+  Hamiltonian/artifact/public integration remain unimplemented and
+  unauthorized.
