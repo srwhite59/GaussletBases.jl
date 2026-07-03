@@ -23318,3 +23318,73 @@ Carrying-cost result:
   direct-core, small Be/Be2 protected-localized, then optional Cr/Cr2
   diagnostics, and show reference representability plus exact/approximate
   finite-difference Fock consistency before any source-design amendment.
+
+## Cartesian Hamiltonian Producer Pass 277 - Reference-Density H Direct-Core Audit
+
+Commit(s):
+- this commit - Record reference-density H direct-core audit
+
+Summary:
+- Accepted the first `HP-RHO0-REFDENS-AUDIT-01` ignored probe. The H `q=5`,
+  `core_spacing=0.3` direct-core proxy case passed the fixed-`P0` correction
+  algebra: the corrected model anchors both energy and first derivative at the
+  represented reference density.
+- Be/Be2 protected-localized work was correctly not run. The doer found the
+  required exact mixed Hartree seam
+  `(final final | reference reference)` is not exposed for a real
+  final/protected basis audit, and did not replace it with row action,
+  `diag(J)`, `q0`, center metadata, or `C'VC`.
+
+Validation / evidence:
+- Output:
+  `/Users/srw/dmrgtmp/rho0_reference_density_matrix_audit_4c140ff30/`.
+  Manager spot-checked `summary.tsv`, `p0_definition.tsv`,
+  `p0_representability.tsv`, `finite_difference_checks.tsv`,
+  `correction_anchor.tsv`, `occupied_expectations.tsv`, and `stages.tsv`.
+- H setup: spin-resolved alpha-only `P0`, trace `1.0`, diagonal on 125
+  direct-core final rows, represented exactly by construction. The exact side
+  is a probe-local normalized Gaussian density-proxy Coulomb model, not the
+  future production mixed-ERI seam.
+- H results: `E_exact = 0.5277434265495312`,
+  `E_app = 0.5921624199162397`,
+  `C0 = 0.06441899336670881`, energy anchor error `0.0`,
+  Fock anchor max error `0.0`, and finite-difference max absolute error
+  `3.586952956879941e-11`.
+- `Delta` direct-core diagonal range is
+  `[-0.2627916798562331, -0.03978547081660522]`; the lowest H1 orbital has
+  `Delta` expectation `-0.05391928751767915`.
+- Required tables were written:
+  `summary.tsv`, `p0_definition.tsv`, `p0_representability.tsv`,
+  `exact_reference.tsv`, `approx_reference.tsv`,
+  `finite_difference_checks.tsv`, `correction_anchor.tsv`,
+  `delta_sector_spectra.tsv`, `delta_diagonal_by_sector.tsv`,
+  `occupied_expectations.tsv`, and `stages.tsv`.
+- Doer validation: package load passed in `0.447995791 s`, probe elapsed
+  `19.201586 s`, `git diff --check` passed, and no tracked source edits were
+  made. Manager validation: spot-read TSV outputs and retained the pass as a
+  measurement-only audit.
+
+Goal advancement:
+- LT5/LT6 and MT4: validates the new `P0`/`Delta_F0`/`C0` formulation on the
+  smallest direct-core proxy case and retires the old row-gauge lane for this
+  purpose. The next blocker is now concrete infrastructure: exact mixed
+  Hartree data for a real final/protected basis, not ambiguity about scalar
+  `rho0` row gauges.
+
+Risk / guardrail:
+- This is not production rho0, not Be/Cr evidence, and not a mixed-ERI source
+  implementation. The H exact side is probe-local proxy algebra, useful for
+  anchoring formulas only.
+- Still forbidden without new authority: tracked source edits, public
+  workflow, artifact/provenance, production Hamiltonian/solver workflow,
+  `C'VC`, row-action shortcuts, basis-fate changes, and Cr2 production claims.
+
+Carrying-cost result:
+- deleted: none.
+- simplified: the reference-density correction algebra now has a small
+  passing endpoint and a clear Be/Be2 stop reason.
+- quarantined: ignored probe and `/Users/srw/dmrgtmp` outputs only.
+- not deleted because: the TSVs are the current audit record.
+- exact remaining blocker: expose or design a neutral exact mixed Hartree seam
+  for `(final final | reference reference)` before Be/Be2 protected-localized
+  reference-density audits can proceed.
