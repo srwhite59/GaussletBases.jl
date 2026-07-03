@@ -80,6 +80,8 @@ module, or object names in the new owner.
   audit over the protected-localized baseline.
 - `HP-RHO0-REFDENS-AUDIT-01` - measurement-only reference-density-matrix IDA
   correction audit; successor to the row-gauge rho0/Galerkin probes.
+- `HP-RHO0-REFDENS-MIXH-AUDIT-01` - measurement-only exact mixed Hartree seam
+  audit for `(final final | reference reference)`.
 
 Implementation IDs in this list are approved only within the surfaces below.
 Design-only IDs record authority for future source blurbs but do not approve
@@ -353,6 +355,17 @@ production Hamiltonian or solver workflow, Cr2 production claims, direct
 directions as MWG residual channels. Candidate future IDs
 `HP-RHO0-REFDENS-FN-01` and `HP-RHO0-REFDENS-ERI-01` are named only for
 planning and are not approved.
+
+`HP-RHO0-REFDENS-MIXH-AUDIT-01` approves only an ignored measurement audit for
+the exact mixed Hartree seam needed by the reference-density lane:
+`(final final | reference reference)`. The scope is H/Be/Be2 only, exact
+Hartree only, with a helper/kernel inventory and a Be/Be2 fixed-`P0` audit
+only if the seam is feasible without source edits. If no existing seam can
+compute the operator, the audit must report the smallest neutral source owner
+needed. It does not approve source edits, artifacts, public workflow,
+Cr/Cr2 diagnostics, HF exchange, direct `C' V C`, row action, `diag(J)`, `q0`,
+center metadata, IDA proxy shortcuts, residual/MWG defaults, basis-fate
+changes, or broad rejected directions as MWG residuals.
 
 Do not approve a vague global entry point such as
 `stabilize_residual_metric(...)`. Global raw-candidate symmetric Lowdin and

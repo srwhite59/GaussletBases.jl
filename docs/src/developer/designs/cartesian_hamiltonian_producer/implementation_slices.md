@@ -485,6 +485,18 @@ Approved robustness lane:
   directions as MWG residuals, Cr2 production claims, publication-scale
   sweeps, or committed tests. `HP-RHO0-REFDENS-FN-01` and
   `HP-RHO0-REFDENS-ERI-01` are candidate future IDs only.
+- `HP-RHO0-REFDENS-MIXH-AUDIT-01` approves only a measurement-first exact
+  mixed Hartree seam audit. The target operator is
+  `(final final | reference reference)` for computing `F_exact[P0]` in a real
+  final/protected-localized basis. Allowed scope is ignored probes,
+  `/Users/srw/dmrgtmp` outputs, H/Be/Be2 only, exact Hartree only, helper/kernel
+  inventory, and a Be/Be2 fixed-`P0` audit only if the exact seam is feasible
+  without source edits. If not feasible, the pass must report the smallest
+  source owner needed. It does not approve source edits, artifacts, public
+  workflow, solver workflow, Cr/Cr2 diagnostics, HF exchange, row-action or
+  `diag(J)` substitutes, `q0`, center metadata, IDA proxy shortcuts, direct
+  `C' V C`, residual/MWG default changes, basis-fate changes, or committed
+  tests.
 
 ## Compact Hamiltonian Artifact Manifest
 

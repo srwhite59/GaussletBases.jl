@@ -23388,3 +23388,54 @@ Carrying-cost result:
 - exact remaining blocker: expose or design a neutral exact mixed Hartree seam
   for `(final final | reference reference)` before Be/Be2 protected-localized
   reference-density audits can proceed.
+
+## Cartesian Hamiltonian Producer Pass 278 - Exact Mixed Hartree Seam Audit Authority
+
+Commit(s):
+- this commit - Approve mixed Hartree seam audit
+
+Summary:
+- Design-manager approved `HP-RHO0-REFDENS-MIXH-AUDIT-01` as the next
+  measurement-only source-seam audit for the reference-density lane.
+- The target is the exact Hartree mixed operator
+  `(final final | reference reference)` needed to compute `F_exact[P0]` for a
+  real final/protected-localized basis against a reference GTO density matrix.
+  This is the required step before Be/Be2 protected-localized `P0` audits can
+  proceed under `HP-RHO0-REFDENS-AUDIT-01`.
+
+Validation / evidence:
+- Pass 277 already showed the fixed-`P0` / `Delta_F0` / `C0` algebra works on
+  the H direct-core proxy case and stopped correctly because the real exact
+  mixed Hartree seam is not exposed for Be/Be2.
+- The new authority requires doer to inventory existing kernels/helpers, state
+  whether they can handle final/protected-localized rows, compact RG rows,
+  injected localized rows, and reference GTO pairs, and either run a bounded
+  Be/Be2 fixed-`P0` audit or report the smallest neutral source owner needed.
+
+Goal advancement:
+- LT5/LT6 and MT4: turns the blocker from "rho0 design" into a specific
+  exact-integral seam question. It keeps the next measurement on H/Be/Be2
+  rather than jumping to Cr/Cr2 before the exact Hartree reference operator is
+  available.
+
+Risk / guardrail:
+- Still forbidden: tracked source edits, public driver/API/export changes,
+  artifact/provenance/writer/reader/manifest changes, production Hamiltonian
+  or solver workflow, Cr atom/Cr2 diagnostics, HF exchange, direct `C'VC`,
+  row action, `diag(J)`, `q0`, center metadata, IDA proxy shortcuts,
+  residual/MWG default changes, basis-fate changes, broad rejected directions
+  as MWG residuals, and committed tests.
+- If no existing helper can compute `(final final | reference reference)`, the
+  pass must stop with the smallest source owner needed rather than inventing a
+  shortcut for `F_exact[P0]`.
+
+Carrying-cost result:
+- source line delta: 0 in this docs decision.
+- deleted: none.
+- simplified: the next doer has a bounded seam audit instead of an ambiguous
+  mandate to continue Be/Cr rho0 probes without the exact operator.
+- quarantined: future source owner, exact mixed ERI kernel work, artifacts,
+  public workflow, Cr/Cr2 diagnostics, and HF exchange remain unauthorized.
+- exact remaining blocker: identify or prototype the exact mixed Hartree seam
+  for H/Be/Be2, then either run Be/Be2 fixed-`P0` or report the smallest
+  source owner needed.

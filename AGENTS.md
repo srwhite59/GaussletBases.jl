@@ -1153,6 +1153,19 @@ Approved Residual Gaussian module surfaces:
   tests. Candidate future IDs `HP-RHO0-REFDENS-FN-01` and
   `HP-RHO0-REFDENS-ERI-01` are not approved and must not be added to the
   approved source-ID list.
+- `HP-RHO0-REFDENS-MIXH-AUDIT-01` approves only ignored measurement probes for
+  the exact mixed Hartree seam needed to compute `F_exact[P0]`:
+  `(final final | reference reference)`. Scope is H/Be/Be2 only and exact
+  Hartree only. The audit may inventory existing kernels/helpers, prototype
+  the operator in ignored code, and run Be/Be2 fixed-`P0` only if that exact
+  seam is feasible without source edits. If not feasible, it must report the
+  smallest neutral source owner needed. It does not approve tracked source
+  edits, public driver/API/export changes, artifacts/provenance, production
+  Hamiltonian or solver workflow, Cr/Cr2 diagnostics, HF exchange, direct
+  `C' V C`, row action, `diag(J)`, `q0`, center metadata, IDA proxy shortcuts,
+  residual/MWG default changes, basis-fate policy changes, broad rejected
+  directions as MWG residuals, or committed tests. Because this is
+  measurement-only authority, do not add it to the approved source-ID list.
 
 Non-negotiable RG guardrails:
 

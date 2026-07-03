@@ -387,6 +387,17 @@ Approved Residual Gaussian robustness lane:
   residuals, Cr2 production claims, or publication-scale sweeps.
   `HP-RHO0-REFDENS-FN-01` and `HP-RHO0-REFDENS-ERI-01` are candidate future
   IDs only and are not approved.
+- `HP-RHO0-REFDENS-MIXH-AUDIT-01` approves only the measurement-first exact
+  mixed Hartree seam audit needed before Be/Be2 protected-localized `P0`
+  work. It may use ignored probes and `/Users/srw/dmrgtmp` outputs to find or
+  prototype `(final final | reference reference)` for H, Be, and Be2 only. It
+  must identify existing kernels/helpers if available, run Be/Be2 fixed-`P0`
+  only if the exact mixed Hartree seam is feasible in ignored code, or report
+  the smallest future source owner if not. It does not approve source edits,
+  public workflow, artifacts/provenance, solver workflow, Cr/Cr2 diagnostics,
+  HF exchange, direct `C' V C`, row action, `diag(J)`, `q0`, center metadata,
+  IDA proxy shortcuts, residual/MWG default changes, basis-fate changes, broad
+  rejected directions as MWG residuals, or committed tests.
 
 Approved stale complete-core-shell RHF retirement:
 

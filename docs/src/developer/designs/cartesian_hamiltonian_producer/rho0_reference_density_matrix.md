@@ -287,6 +287,70 @@ checks, or finds that `P0` is not represented by the protected-localized basis,
 stop and report the blocker. Do not add source instrumentation or reinterpret
 discarded broad directions as MWG residuals.
 
+## HP-RHO0-REFDENS-MIXH-AUDIT-01
+
+Status: approved measurement-only exact mixed Hartree seam audit.
+
+Purpose: find or prototype, in ignored measurement code only, the minimal way
+to compute the exact Hartree mixed operator needed by the reference-density
+audit:
+
+```text
+F_exact[P0]_{ij} = sum_ab P0_ab * (phi_i phi_j | chi_a chi_b)
+```
+
+where `phi_i, phi_j` are final/protected-localized basis functions and
+`chi_a, chi_b` are reference GTO functions. This seam is required before Be or
+Be2 protected-localized `P0` audits can run under
+`HP-RHO0-REFDENS-AUDIT-01`.
+
+Approved surfaces:
+
+- ignored `tmp/work/*.jl` probes;
+- durable text/TSV output under `/Users/srw/dmrgtmp/...`;
+- H, Be, and Be2 only;
+- exact Hartree only;
+- read and classify existing kernels/helpers that might build
+  `(final final | reference reference)`;
+- if feasible inside ignored measurement code, run a Be or Be2 fixed-`P0`
+  audit using the exact mixed Hartree operator;
+- if not feasible, report the smallest source owner and exact missing kernel
+  needed for a later source-design amendment.
+
+Required outputs:
+
+- existing helper/kernel inventory and call path candidates;
+- whether each candidate can represent final/protected-localized `phi_i` rows,
+  compact RG rows, injected localized rows, and reference GTO pairs;
+- exact mixed Hartree construction convention used by the probe, if any;
+- finite/symmetry checks for the mixed Hartree operator;
+- small H sanity if needed to verify the probe convention;
+- Be/Be2 fixed-`P0` audit result if feasible;
+- candidate future source owner, with rationale, if source is needed;
+- exact blocker if no existing seam can compute the operator.
+
+Forbidden:
+
+- tracked source edits;
+- public driver/API/input wiring or exports;
+- artifact schema, provenance, writer, reader, manifest, or sidecar changes;
+- production Hamiltonian or solver workflow;
+- Cr atom, Cr2, or Cr2 production diagnostics;
+- HF exchange;
+- direct `C' V C` interaction revival;
+- row action `(J*w)/w`, `diag(J)`, `q0`, center metadata, or IDA proxy
+  shortcuts as substitutes for `F_exact[P0]`;
+- residual/MWG default changes;
+- basis-fate policy changes;
+- broad rejected directions as MWG residuals;
+- committed tests or fixtures.
+
+Decision rule: if the exact mixed Hartree operator can be built in ignored
+measurement code, proceed only to the bounded Be/Be2 fixed-`P0` audit. If not,
+stop and report the smallest neutral source seam needed. Do not continue to
+Cr atom or Cr2 until Be/Be2 protected-localized `P0` measurement has a real
+exact Hartree mixed operator.
+
 ## Candidate Future Source IDs
 
 `HP-RHO0-REFDENS-FN-01` is a candidate future source lane only. It is not
