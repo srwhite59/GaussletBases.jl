@@ -23513,3 +23513,55 @@ Carrying-cost result:
   `src/cartesian_gaussian_raw_blocks`, exposing a shape like
   `mixed_hartree_blocks(final_or_terminal_basis, optional_supplement,
   reference_supplement, P0) -> GG/GA/AA or final-sector F_exact`.
+
+## Cartesian Hamiltonian Producer Pass 280 - Rho0 Reference-Density Implementation Plan
+
+Commit(s):
+- this commit - Add rho0 reference-density implementation plan
+
+Summary:
+- Added `rho0_reference_density_implementation_plan.md` as a review memo for
+  the likely source shape of the fixed-`P0` rho0/reference-density correction.
+  This is not source authority. It records the intended implementation path
+  before development starts so the design does not drift toward dense final
+  ERIs, row-gauge shortcuts, or residual-Gaussian ownership.
+- The memo states the key source target: a neutral fast separable
+  atomic-reference Hartree block builder that consumes one-center atomic
+  reference density matrices `P0_by_atom`, uses the Coulomb Gaussian expansion
+  and 1D product contractions, and produces exact `GG/GA/AA` Hartree
+  one-body blocks for existing protected/final transforms.
+
+Validation / evidence:
+- Cross-linked the memo from `rho0_reference_density_matrix.md` and
+  `current.md`, explicitly as planning/review material and not authority.
+- The memo incorporates Pass 279's conclusion: diagonal normalized `s`
+  densities are feasible today, but arbitrary same-center GTO pair densities
+  `chi_Aa chi_Ab` need a neutral exact mixed Hartree/ERI source seam.
+- It records the important design nuance: the intended reference density is a
+  sum of one-center atomic densities, so no cross-atom reference density
+  products are required, but cross-atom Coulomb interactions between atomic
+  densities are still part of the exact Hartree energy and potential.
+
+Goal advancement:
+- LT5/LT6 and MT4: turns the next source discussion into an implementation
+  plan with explicit boundaries. Dense `gaussian_coulomb_pair_matrix` remains
+  oracle/debug; production-shaped `F_exact[P0]` should use separable Coulomb
+  expansion, reference pair-density term streams, terminal/product
+  contractions, and existing `GG/GA/AA` protected transforms.
+
+Risk / guardrail:
+- The memo does not approve source edits, new modules, exports, artifacts,
+  public workflow, solver workflow, Cr/Cr2 diagnostics, or committed tests.
+- Review must still decide the source owner, API shape, pair-density term
+  representation, polynomial-Gaussian factor packet, reference self-energy
+  strategy, and approximate `F_app[P0]` seam before any source ID is approved.
+
+Carrying-cost result:
+- deleted: none.
+- simplified: the complicated rho0/reference-density implementation story is
+  now in one review memo instead of scattered chat/running-log context.
+- quarantined: all source work remains unauthorized pending review.
+- not deleted because: this memo is the requested design review artifact.
+- exact remaining blocker: review and approve or revise the source plan for a
+  neutral fast atomic-reference Hartree seam producing `GG/GA/AA` exact
+  blocks from one-center atomic `P0`.

@@ -4,6 +4,9 @@ Status: measurement-only authority for `HP-RHO0-REFDENS-AUDIT-01`.
 Candidate future source IDs `HP-RHO0-REFDENS-FN-01` and
 `HP-RHO0-REFDENS-ERI-01` are named for planning only and are not approved.
 
+Implementation planning memo for review, not authority:
+`rho0_reference_density_implementation_plan.md`.
+
 This page replaces the ambiguous row-gauge `rho0/Galerkin` line of thought as
 the target formulation. The earlier `HP-RG-RHO0-GAL-AUDIT-01` probes remain
 measurement evidence: they showed that `(J*w)/w`, `diag(J)`, and an IDA/MWG

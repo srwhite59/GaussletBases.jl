@@ -398,6 +398,9 @@ Approved Residual Gaussian robustness lane:
   HF exchange, direct `C' V C`, row action, `diag(J)`, `q0`, center metadata,
   IDA proxy shortcuts, residual/MWG default changes, basis-fate changes, broad
   rejected directions as MWG residuals, or committed tests.
+- `rho0_reference_density_implementation_plan.md` is a review memo for the
+  likely fast separable atomic-reference Hartree source shape. It is not source
+  authority.
 
 Approved stale complete-core-shell RHF retirement:
 
