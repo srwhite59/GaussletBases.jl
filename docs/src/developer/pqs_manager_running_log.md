@@ -23703,3 +23703,56 @@ Carrying-cost result:
 - exact remaining blocker: implement `HP-RHO0-MIXH-GG-FN-01` and validate the
   pair-density term stream and terminal/base `GG` contraction before any wider
   reference-density lane.
+
+## Cartesian Hamiltonian Producer Pass 284 - Rho0 GG Mixed Hartree Source
+
+Commit(s):
+- this commit - Add rho0 atomic reference GG Hartree blocks
+
+Summary:
+- Accepted the first `HP-RHO0-MIXH-GG-FN-01` source slice. The new neutral
+  owner `src/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl` builds
+  exact terminal/base `GG = <G_i|v_P0|G_j>` Hartree blocks from one-center
+  atomic reference density matrices `P_A`.
+- The implementation keeps the approved boundary: same-center pair-density
+  terms, Coulomb-expanded separable one-body packets, terminal Gaussian-sum
+  accumulation, and compact diagnostics only. It does not add `GA`/`AA`,
+  protected transforms, `F_app[P0]`, `Delta_F0`, `C0`, artifacts, public
+  workflow, solver/HF work, Cr/Cr2 diagnostics, exchange, or RG/MWG/basis-fate
+  behavior.
+
+Validation / evidence:
+- `git diff --check` passed.
+- Package load passed: `package_load_elapsed_s=0.451252583`.
+- Ignored source validation probe passed:
+  `julia --project=. tmp/work/rho0_mixh_gg_source_validation.jl`, elapsed
+  `37.681663 s`.
+- Probe results: H q5 `s*s` vs legacy scalar Gaussian screen
+  `||delta||_inf = 1.332e-15`; H q5 angular/off-diagonal `s/pz` dense
+  primitive oracle spots max error `4.219e-15`; Be q5 terminal `GG` dimension
+  `321` with symmetry error `0.0`.
+
+Goal advancement:
+- LT5/LT6 and MT4: converts the first missing rho0/reference-density exact
+  Hartree seam from ignored probe logic into a neutral internal source helper.
+  This gives the next lanes a real `GG` exact side without committing the
+  broader correction framework.
+
+Risk / guardrail:
+- The dense primitive oracle used by the validation probe is validation-only;
+  the source path itself uses separable Coulomb/product contractions.
+- The new helper is internal and module-local. Future lanes still need design
+  authority for `GA`/`AA`, protected-localized transforms, approximate Fock,
+  correction constants, artifacts/public workflow, and Cr/Cr2.
+
+Carrying-cost result:
+- source line delta: +217 source lines, including +212 for the new owner file
+  and +5 for module wiring.
+- deleted: none.
+- simplified: the first exact mixed-Hartree `GG` seam no longer lives only in
+  ignored probes or residual-Gaussian context.
+- quarantined: dense oracle, validation tables, and H/Be validation scripts
+  remain ignored measurement artifacts.
+- exact remaining blocker: approve and implement the next mixed Hartree lane,
+  likely `GA`/`AA` exact blocks or the protected/final transform, before
+  attempting full Be/Be2 fixed-`P0` correction assembly.
