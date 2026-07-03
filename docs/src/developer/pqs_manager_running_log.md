@@ -23077,3 +23077,70 @@ Carrying-cost result:
 - exact remaining blocker: identify the canonical final IDA row-gauge object
   for direct `u0` and the Galerkin potential before rerunning rho0/Galerkin
   physics diagnostics.
+
+## Cartesian Hamiltonian Producer Pass 273 - Direct-Core Rho0 Proxy Split
+
+Commit(s):
+- this commit - Record direct-core rho0 proxy split
+
+Summary:
+- Accepted the tiny H `q=5`, `core_spacing=0.3` direct-core audit as the
+  cleanest localization of the rho0/Galerkin blocker so far. The issue is not
+  "rho0 failed" and not terminal-vs-parent weight mismatch. The direct-core
+  terminal weights already equal the authoritative parent product weights, but
+  the row-action diagnostic and direct `u0` construction are evaluating
+  different proxy objects.
+- In the worst center row, `(J*w)/w` behaves like the unsmoothed point
+  potential at the gausslet center, while `u_direct` behaves like a
+  same-width Gaussian-smoothed potential. That makes the prior row-action
+  identity the wrong decisive test unless the intended direct-core IDA proxy is
+  the point/constant-function object rather than the smoothed proxy.
+
+Validation / evidence:
+- Doer output:
+  `/Users/srw/dmrgtmp/h_q5_direct_core_rho0_row_detail_657efa0e3/`.
+  Manager spot-checked `summary.tsv` and the worst row in
+  `direct_core_rows.tsv`.
+- Hypothesis A failed to help:
+  `terminal_row_rel = parent_product_row_rel = 3.580614678065e-2` and
+  `parent_terminal_weight_maxabs = 0`.
+- Hypothesis B separated the objects:
+  row action vs analytic point potential relative error
+  `1.5938e-3`; direct `u0` vs equal-width Gaussian-smoothed potential relative
+  error `3.7574e-4`.
+- Worst row `63` at the direct-core center has weight
+  `0.1591533792227156`, `u_direct = 2.2566297073515225`,
+  row action `3.2019488345557066`, point potential
+  `3.1915382432114616`, and equal-width smoothed potential
+  `2.256758334191025`. Direct core accounts for `99.45%` of the residual
+  square error; the center row alone accounts for about `18%`.
+- Doer validation: probe passed in `17.663673 s`, `git diff --check` passed,
+  and no tracked source edits were made. Manager validation: spot-read the TSV
+  summary and row 63; worktree remained clean except the two pre-existing
+  untracked successor handoff docs.
+
+Goal advancement:
+- LT5/LT6 and MT4: narrows rho0/Galerkin from a broad interaction failure to
+  a concrete IDA proxy convention decision. Direct `u0` may be correctly
+  representing the smoothed density proxy used by IDA, while the row-action
+  check is asking for point-potential/constant-function behavior.
+
+Risk / guardrail:
+- Do not use the row-action mismatch alone to reject direct `u0` or the rho0
+  correction idea. Also do not resume Cr2/HF rho0 runs until the intended
+  terminal direct-core IDA proxy convention is made explicit.
+- No source implementation, public workflow, artifact/provenance, Cr2
+  production claim, or `C'VC` revival is approved.
+
+Carrying-cost result:
+- deleted: none.
+- simplified: the audit reduced the suspected row-gauge problem to a single
+  direct-core H case and separated weight equality from proxy mismatch.
+- quarantined: all new logic and row-level TSVs remain ignored
+  measurement-only output.
+- not deleted because: the direct-core row table is the evidence needed for
+  deciding the intended rho0/IDA proxy convention.
+- exact remaining blocker: decide whether rho0/Galerkin direct-core `u0`
+  should follow the point/constant-function row-action object or the
+  Gaussian-smoothed IDA density proxy, then update the row-gauge diagnostic
+  and only then resume rho0 physics measurements.
