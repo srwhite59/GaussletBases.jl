@@ -90,6 +90,10 @@ module, or object names in the new owner.
   one-center atomic `P_A`.
 - `HP-RHO0-MIXH-GAAA-TEST-01` - validation gates for the `GA`/`AA` mixed
   Hartree extension.
+- `HP-RHO0-MIXH-FEXACT-FN-01` - exact-side final/protected Hartree transform
+  from raw mixed Hartree `GG`/`GA`/`AA` blocks.
+- `HP-RHO0-MIXH-FEXACT-TEST-01` - validation gates for the exact-side
+  final/protected Hartree transform.
 
 Implementation IDs in this list are approved only within the surfaces below.
 Design-only IDs record authority for future source blurbs but do not approve
@@ -388,6 +392,13 @@ that exact Hartree source seam only to `GA` and `AA`. It is not authority for
 Residual Gaussian transforms, protected-localized correction assembly,
 approximate Fock construction, artifacts, public workflow, Cr/Cr2, exchange,
 or residual/MWG/basis-fate policy.
+
+`HP-RHO0-MIXH-FEXACT-FN-01` is Residual Gaussian transform authority, but only
+for the exact-side reference Hartree one-body operator. It may consume raw
+mixed Hartree `GG`/`GA`/`AA` blocks and existing protected-original geometry to
+produce in-memory `F_exact_Hartree[P0]`. It is not authority for approximate
+Fock construction, correction constants, artifacts/public workflow, IDA/MWG
+interactions, geometry selection changes, Cr/Cr2, or solver work.
 
 Do not approve a vague global entry point such as
 `stabilize_residual_metric(...)`. Global raw-candidate symmetric Lowdin and

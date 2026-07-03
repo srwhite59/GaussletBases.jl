@@ -23846,3 +23846,49 @@ Carrying-cost result:
 - exact remaining blocker: design and approve the protected/final
   `F_exact[P0]` transform lane, or separately prove the approximate
   `F_app[P0]` seam, before any fixed-`P0` correction assembly.
+
+## Cartesian Hamiltonian Producer Pass 287 - Rho0 Exact-Side Final Transform Authority
+
+Commit(s):
+- this commit - Approve rho0 exact-side final transform lane
+
+Summary:
+- Design-manager approved `HP-RHO0-MIXH-FEXACT-FN-01` / `TEST-01`, the next
+  narrow rho0/reference-density source lane after raw `GG`/`GA`/`AA` exact
+  Hartree blocks.
+- The lane consumes existing exact raw block triples and uses the existing
+  protected one-body transform helpers to produce in-memory dense
+  `F_exact_Hartree[P0]` in the current final/protected-localized sector.
+
+Validation / evidence:
+- Current source already has
+  `protected_original_fixed_sector_components(...)` and
+  `transform_protected_original_fixed_sector_operator(...)` in
+  `src/cartesian_residual_gaussians/augmented_operators.jl`. The approved lane
+  is therefore a thin exact-side consumer, not a new algebra or correction
+  framework.
+- Required later validation is H/Be/Be2 only, with raw `GG` and `GA`/`AA`
+  replays, finite/symmetric final/protected `F_exact_Hartree[P0]`, and
+  dense-oracle spot checks.
+
+Goal advancement:
+- LT5/LT6 and MT4: completes the exact-side path needed before Be/Be2
+  fixed-`P0` correction audits can become meaningful. The next hard lane after
+  this remains the approximate `F_app[P0]` seam from the actual IDA/MWG
+  convention.
+
+Risk / guardrail:
+- This is still not correction assembly. `F_app[P0]`, `Delta_F0`, `C0`,
+  artifacts/public workflow, Cr/Cr2, exchange, approximate Fock construction,
+  IDA/MWG interaction transforms, geometry selection changes, and solver work
+  remain explicitly unauthorized.
+
+Carrying-cost result:
+- source line delta: 0 in this docs authority pass.
+- deleted: none.
+- simplified: the exact-side transform target is now a specific consumer of
+  existing raw blocks and existing protected one-body helpers.
+- quarantined: approximate Fock, correction constants, artifacts/public
+  workflow, Cr/Cr2, exchange, IDA/MWG interactions, and geometry selection.
+- exact remaining blocker: implement `HP-RHO0-MIXH-FEXACT-FN-01`, then design
+  the actual `F_app[P0]` seam before any `Delta_F0`/`C0` correction assembly.

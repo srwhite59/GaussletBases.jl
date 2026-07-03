@@ -542,6 +542,8 @@ these approved design IDs:
 - `HP-RHO0-MIXH-GG-TEST-01`
 - `HP-RHO0-MIXH-GAAA-FN-01`
 - `HP-RHO0-MIXH-GAAA-TEST-01`
+- `HP-RHO0-MIXH-FEXACT-FN-01`
+- `HP-RHO0-MIXH-FEXACT-TEST-01`
 - `HP-CGRB-FILE-01`
 - `HP-CGRB-FN-01`
 - `HP-CGRB-FN-02`
@@ -1209,6 +1211,25 @@ Approved Residual Gaussian module surfaces:
   H/Be `GA`/`AA` validation, dense Gaussian Coulomb oracle spot checks
   including angular reference pairs and angular supplement rows, and no Cr/Cr2
   run.
+- `HP-RHO0-MIXH-FEXACT-FN-01` approves only transforming exact mixed Hartree
+  raw blocks into the current final/protected-localized sector. Approved
+  source is `src/cartesian_residual_gaussians/augmented_operators.jl`, with
+  `src/cartesian_residual_gaussians/residual_basis.jl` optional only for a
+  narrow transform-ready geometry accessor or diagnostic field. The pass must
+  consume existing `GG`/`GA`/`AA` raw block triples, use the existing
+  `protected_original_fixed_sector_components(...)` and
+  `transform_protected_original_fixed_sector_operator(...)` helpers, and
+  return in-memory dense `F_exact_Hartree[P0]` plus compact diagnostics. It
+  does not approve new raw kernels, geometry selection changes, `F_app[P0]`,
+  `Delta_F0`, `C0`, reference-energy assembly, artifacts, public driver/API/
+  export/defaults, solver workflow, Cr/Cr2 diagnostics, HF exchange, IDA/MWG
+  interaction transforms, approximate Fock construction, row-action/`diag(J)`/
+  `q0`/center metadata/`C'VC` shortcuts, residual/MWG defaults, residual
+  selection changes, basis-fate policy, broad rejected directions as MWG
+  residuals, source outside the approved surface, or committed tests/fixtures.
+  `HP-RHO0-MIXH-FEXACT-TEST-01` approves only `git diff --check`, package
+  load, raw `GG` and `GA`/`AA` replay, H/Be/Be2-only final/protected transform
+  smoke, dense-oracle spot checks, and no Cr/Cr2 run.
 
 Non-negotiable RG guardrails:
 

@@ -964,3 +964,73 @@ new terminal projection owner, dense final four-index ERIs, protected
 transforms, artifact/schema work, or broader reference-density correction
 machinery, stop and report the exact missing seam. Do not widen the lane in
 source.
+
+## Design-Manager Source Authority - Exact-Side Final Transform - 2026-07-03
+
+After the raw mixed Hartree `GG`/`GA`/`AA` blocks landed, the next approved
+source lane is the exact-side protected/final transform.
+
+Approved IDs:
+
+- `HP-RHO0-MIXH-FEXACT-FN-01`
+- `HP-RHO0-MIXH-FEXACT-TEST-01`
+
+Approved source owner:
+
+- `src/cartesian_residual_gaussians/augmented_operators.jl`;
+- `src/cartesian_residual_gaussians/residual_basis.jl` only if a narrow
+  transform-ready geometry accessor or diagnostic field is missing.
+
+Approved behavior:
+
+- consume exact mixed Hartree raw block triples `GG`, `GA`, and `AA`;
+- use existing protected one-body machinery,
+  `protected_original_fixed_sector_components(...)` and
+  `transform_protected_original_fixed_sector_operator(...)`;
+- allow summation of one-center atomic `P_A` contributions before or during
+  the transform, without adding cross-atom reference density products;
+- return an in-memory dense exact Hartree operator
+  `F_exact_Hartree[P0]` in the current final/protected-localized sector plus
+  compact diagnostics;
+- validate raw block dimensions, transformed dimension, finite values,
+  transformed symmetry, and available protected geometry facts.
+
+Explicitly out of scope:
+
+- new raw mixed Hartree kernels;
+- protected geometry selection changes;
+- `F_app[P0]`, `Delta_F0`, `C0`, reference-energy assembly, or corrected
+  Hamiltonian construction;
+- IDA/MWG interaction transforms or approximate Fock construction;
+- artifact/provenance/schema/writer/reader/manifest changes;
+- public driver/API/export/defaults or solver workflow;
+- Cr atom, Cr2, Cr2 HF, or Cr2 production diagnostics;
+- HF exchange and `(final GTO | GTO final)` kernels;
+- row-action, `diag(J)`, `q0`, center metadata, direct `C' V C`, or IDA proxy
+  shortcuts;
+- residual/MWG defaults, residual selection, basis-fate changes, broad
+  rejected directions as MWG residuals, committed tests, or fixtures.
+
+Validation required:
+
+- `git diff --check`;
+- package load;
+- existing raw `GG` and `GA`/`AA` mixed Hartree validation still passes or is
+  covered by equivalent replay;
+- H, Be, or Be2 only;
+- at least one bounded final/protected transform smoke producing finite and
+  symmetric `F_exact_Hartree[P0]`;
+- final/protected-sector spot values compared against a direct dense
+  oracle/probe for a small case;
+- report raw block dimensions, transformed dimension, symmetry/finite
+  diagnostics, trace or representative low-spectrum diagnostics,
+  representability/protected geometry facts such as `B_min` when available,
+  and projected-density facts already exposed by the geometry;
+- no `F_app[P0]`, no `Delta_F0`, no `C0`, no artifact, no public workflow, and
+  no Cr/Cr2 run.
+
+Failure rule: if exact-side transformation cannot be implemented as a thin
+consumer of existing raw blocks and existing protected one-body transform
+helpers, stop and report the missing seam. Do not widen the lane into
+approximate Fock, correction assembly, artifacts, public wiring, a new
+geometry selector, new raw kernels, or IDA/MWG interaction plumbing.

@@ -525,6 +525,94 @@ Required validation:
   deltas;
 - no protected transform, no artifacts, no public workflow, and no Cr/Cr2 run.
 
+## HP-RHO0-MIXH-FEXACT-FN-01
+
+Status: approved narrow source authority for the exact-side protected/final
+reference Hartree transform.
+
+Purpose: consume exact mixed Hartree raw blocks from the approved `GG` and
+`GA`/`AA` lanes and transform them into the current final/protected-localized
+fixed sector:
+
+```text
+raw blocks:  GG, GA, AA
+geometry:    F = [Z, M Q_perp]
+output:      F_exact_Hartree[P0] in the F sector
+```
+
+This is exact-side only. It does not build the approximate IDA/MWG reference
+Fock, the correction `Delta_F0`, or the energy anchor `C0`.
+
+Approved source owner:
+
+- `src/cartesian_residual_gaussians/augmented_operators.jl`;
+- `src/cartesian_residual_gaussians/residual_basis.jl` only if a narrow
+  transform-ready geometry accessor or diagnostic field is missing.
+
+Approved behavior:
+
+- add private/internal helper(s) that consume one or more exact raw block
+  triples `(; GG, GA, AA)` or equivalent `O_GG`, `O_GA`, `O_AA` matrices;
+- use the existing protected fixed-sector machinery:
+  `protected_original_fixed_sector_components(...)` and
+  `transform_protected_original_fixed_sector_operator(...)`;
+- allow caller-side summation of one-center atomic `P_A` raw-block
+  contributions before or during the transform, without introducing cross-atom
+  reference density products;
+- return an in-memory dense exact Hartree operator in the protected/final
+  sector plus compact diagnostics;
+- validate raw block dimensions against the geometry, finite values,
+  symmetry of the transformed operator, and basic protected/final geometry
+  diagnostics such as `B` singular values when available;
+- preserve existing default residual and protected-original behavior unless
+  this internal helper is explicitly called.
+
+Forbidden:
+
+- new raw mixed Hartree kernels beyond the already approved `GG`/`GA`/`AA`
+  source lanes;
+- protected geometry selection changes;
+- `F_app[P0]`, `Delta_F0`, `C0`, reference-energy assembly, or corrected
+  Hamiltonian construction;
+- IDA/MWG interaction transforms or approximate Fock construction;
+- artifact schema, provenance, writer, reader, manifest, or sidecar changes;
+- public driver, public API, exports, defaults, or solver workflow;
+- Cr atom, Cr2, Cr2 HF, or Cr2 production diagnostics;
+- HF exchange or `(final GTO | GTO final)` kernels;
+- row action `(J*w)/w`, `diag(J)`, `q0`, center metadata, direct `C' V C`, or
+  IDA proxy shortcuts;
+- residual/MWG defaults, residual selection, basis-fate policy, or broad
+  rejected directions as MWG residuals;
+- committed tests or fixtures.
+
+Failure rule: if exact-side transformation cannot be implemented as a thin
+consumer of existing raw `GG`/`GA`/`AA` blocks and existing protected
+one-body transform helpers, stop and report the missing seam. Do not add
+artifact state, public wiring, approximate-Fock construction, correction
+assembly, a new geometry selector, or new raw kernels under this ID.
+
+## HP-RHO0-MIXH-FEXACT-TEST-01
+
+Status: approved validation gates for `HP-RHO0-MIXH-FEXACT-FN-01`.
+
+Required validation:
+
+- `git diff --check`;
+- package load;
+- existing raw `GG` and `GA`/`AA` mixed Hartree validation still passes or is
+  covered by equivalent replay;
+- H, Be, or Be2 only;
+- at least one bounded final/protected transform smoke producing finite and
+  symmetric `F_exact_Hartree[P0]`;
+- compare final/protected-sector spot values against a direct dense
+  oracle/probe for a small case;
+- report raw block dimensions, transformed dimension, symmetry/finite
+  diagnostics, trace or representative low-spectrum diagnostics,
+  representability/protected geometry facts such as `B_min` when available,
+  and any projected-density facts already exposed by the geometry;
+- no `F_app[P0]`, no `Delta_F0`, no `C0`, no artifact, no public workflow, and
+  no Cr/Cr2 run.
+
 ## Candidate Future Source IDs
 
 `HP-RHO0-REFDENS-FN-01` is a candidate future source lane only. It is not

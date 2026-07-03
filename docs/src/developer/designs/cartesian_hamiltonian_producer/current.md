@@ -420,11 +420,21 @@ Approved Residual Gaussian robustness lane:
   `HP-RHO0-MIXH-GAAA-TEST-01` requires bounded H/Be `GA`/`AA` validation and
   dense-oracle spot checks including angular reference pairs and angular
   supplement rows.
+- `HP-RHO0-MIXH-FEXACT-FN-01` approves only the exact-side transform from raw
+  mixed Hartree `GG`/`GA`/`AA` blocks into the current final/protected-localized
+  fixed sector using existing protected one-body transform helpers. It may
+  return in-memory dense `F_exact_Hartree[P0]` plus compact diagnostics. It
+  does not approve new raw kernels, geometry selection changes, `F_app[P0]`,
+  `Delta_F0`, `C0`, artifacts, public workflow, Cr/Cr2, exchange, IDA/MWG
+  interaction transforms, approximate Fock construction, or residual/MWG/
+  basis-fate changes. `HP-RHO0-MIXH-FEXACT-TEST-01` requires H/Be/Be2-only
+  final/protected transform validation and dense-oracle spot checks.
 - `rho0_reference_density_implementation_plan.md` is a review memo for the
   likely fast separable atomic-reference Hartree source shape. The current
   approved source target is raw exact mixed Hartree `GG` plus `GA`/`AA` from
-  one-center atomic `P_A`; protected transforms, `F_app[P0]`, `C0`, Cr/Cr2,
-  artifacts, and public workflow remain later lanes.
+  one-center atomic `P_A`, followed by the exact-side final/protected transform;
+  `F_app[P0]`, `Delta_F0`, `C0`, Cr/Cr2, artifacts, and public workflow remain
+  later lanes.
 
 Approved stale complete-core-shell RHF retirement:
 

@@ -517,6 +517,14 @@ Approved robustness lane:
   `HP-RHO0-MIXH-GAAA-TEST-01` requires bounded H/Be `GA`/`AA` validation and
   dense-oracle spot checks, including angular reference pairs and angular
   supplement rows.
+- `HP-RHO0-MIXH-FEXACT-FN-01` approves only transforming exact mixed Hartree
+  raw blocks into the current final/protected-localized sector using existing
+  protected one-body transform helpers in `augmented_operators.jl`. It does
+  not approve approximate Fock, correction constants, artifacts, public
+  workflow, Cr/Cr2, exchange, new raw kernels, geometry selection changes, or
+  IDA/MWG interaction transforms. `HP-RHO0-MIXH-FEXACT-TEST-01` requires
+  H/Be/Be2-only final/protected `F_exact_Hartree[P0]` validation and
+  dense-oracle spot checks.
 
 ## Compact Hamiltonian Artifact Manifest
 
