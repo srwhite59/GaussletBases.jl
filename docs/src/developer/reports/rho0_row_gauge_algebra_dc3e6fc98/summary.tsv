@@ -1,0 +1,2 @@
+case_label	alpha	base_dimension	compact_R_dimension	M_dimension	protected_originals	broad_Z	Z_dimension	L_dimension	B_min	B_lt_0p99	M_row_rel	L_u0M_row_rel	L_projected_row_rel	weight_rel	note
+Be2_row_gauge	8.0	431	4	435	4	13	17	435	0.9525394022398224	6	0.5626603070620595	0.561317734511763	1.1563262858691983e-16	0.001413654516807044	No HF; row-gauge algebra only

@@ -23024,3 +23024,56 @@ Carrying-cost result:
 - exact remaining blocker: rho0/Galerkin must show small-system sanity and
   Cr2 diagnostic improvement without reviving broad/residual occupation before
   any source-design amendment is considered.
+
+## Cartesian Hamiltonian Producer Pass 272 - Rho0 Row-Gauge Review Packet
+
+Commit(s):
+- this commit - Add rho0 row-gauge algebra report
+
+Summary:
+- Accepted the cheap Be2 row-gauge audit as an invalidation of the first
+  direct-`u0` rho0/Galerkin physics interpretation. The failure appears in
+  the same-basis `M` algebra before Cr2, localization, or HF:
+  `||(J_M - Diag(u0_M)) * w_M|| / ||J_M*w_M|| = 0.5626603070620595`.
+- Added a curated docs report under
+  `docs/src/developer/reports/rho0_row_gauge_algebra_dc3e6fc98/` so an
+  external/static reviewer can inspect the probe source and TSV outputs
+  without relying on ignored `tmp/work` or machine-local `/Users/srw/dmrgtmp`
+  paths.
+
+Validation / evidence:
+- Report includes the copied ignored probe
+  `be2_rho0_row_gauge_algebra_probe.jl` and TSV outputs:
+  `summary.tsv`, `row_gauge_checks.tsv`, `weights.tsv`,
+  `weight_compare.tsv`, `analytic_gaussian_checks.tsv`, `linearity.tsv`,
+  `occupied_orbital_shift_proxies.tsv`, and `stages.tsv`.
+- Same-basis `M` direct-`u0` row relative error is `0.5626603070620595`.
+  Localized `L` using inherited `u0_M` has similar error
+  `0.561317734511763`, while defining `u = (J*w)./w` makes the row action
+  zero by construction.
+- Basic non-row-gauge checks passed: `N_screen = 0` is exactly zero,
+  linearity holds to roundoff, Gaussian charge/self-energy checks are at
+  roundoff, and `w_L_projected` differs from `w_M` by only
+  `1.41e-3` relative.
+
+Goal advancement:
+- LT5/LT6 and MT4: keeps rho0/Galerkin from being misread as a failed
+  physics idea when the current problem is a row-gauge convention mismatch.
+  The report focuses the next step on finding the authoritative final IDA
+  row weights/proxies before any Cr2/HF interpretation resumes.
+
+Risk / guardrail:
+- No source implementation, public workflow, artifact/provenance, Cr2
+  production claim, or `C'VC` revival is approved. The previous Cr2
+  rho0/Galerkin HF output remains invalid as physics evidence.
+
+Carrying-cost result:
+- deleted: none.
+- simplified: reviewer-facing evidence is now in a compact report instead of
+  scattered ignored output paths.
+- quarantined: rho0/Galerkin code remains measurement/probe-only.
+- not deleted because: the probe source and TSVs are needed for static audit
+  of the suspected row-gauge bug.
+- exact remaining blocker: identify the canonical final IDA row-gauge object
+  for direct `u0` and the Galerkin potential before rerunning rho0/Galerkin
+  physics diagnostics.

@@ -1,0 +1,13 @@
+label	seconds	alloc_mib	gc_s
+build Be2 inputs/base/supplement	17.474574291	3159.8094482421875	0.154583626
+compact residual parent M	0.507936	85.03921508789062	0.0
+compact M operators and inherited Vee	0.64821125	155.9422149658203	0.0
+staged protected geometry	0.505240041	139.79441833496094	0.0
+localized protected L transform	0.033741458	33.51936340332031	0.0
+exact Galerkin rho0 screen unit in M	0.276343458	144.98809814453125	0.0
+direct row-gauge u0 unit in M	0.0037805	19.443634033203125	0.0
+exact Galerkin rho0 screen unit in L	0.452483125	197.3585968017578	0.254901584
+compact M one-body	0.000204458	4.3596038818359375	0.0
+exact one-body in F=[Z,MQperp]	0.006080625	53.11866760253906	0.0
+exact one-body in L	0.001138125	5.81280517578125	0.0
+M row density weights	4.5583e-5	0.0240020751953125	0.0

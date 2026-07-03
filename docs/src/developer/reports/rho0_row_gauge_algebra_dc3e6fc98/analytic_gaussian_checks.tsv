@@ -1,0 +1,2 @@
+alpha	numeric_charge	analytic_charge	charge_error	numeric_self_energy	analytic_self_energy	self_energy_error	expansion_center_potential	analytic_center_potential	center_potential_error
+8.0	0.999999999999949	1.0	-5.0959236830294685e-14	2.2567583341908257	2.256758334191025	-1.9939605522267811e-13	3.1915381381530916	3.1915382432114616	-1.0505837000351903e-7
