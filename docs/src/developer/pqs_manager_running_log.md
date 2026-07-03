@@ -23192,3 +23192,72 @@ Carrying-cost result:
 - exact remaining blocker: external/static review of the terminal direct-core
   IDA proxy convention before changing rho0/Galerkin diagnostics or rerunning
   physics.
+
+## Cartesian Hamiltonian Producer Pass 275 - Retire Rho0 Row-Action Blocker
+
+Commit(s):
+- this commit - Retire rho0 row-action blocker
+
+Summary:
+- Accepted the follow-up H `q=5`, `core_spacing=0.3` direct-core diagnostic
+  and Be2 `Delta = J - Diag(u)` audit. The old row-action invariant
+  `J*w = u*w` is now retired as a rho0/Galerkin blocker. It measures a
+  point/constant-function action, not the IDA/MWG density-proxy potential.
+- The requested replacement invariant `diag(J) ~= u_direct` also did not
+  become the final convention. The H center row shows three different
+  physical objects: `(J*w)/w` is point-like, `u_direct` is Gaussian-smoothed,
+  and `diag(J)` is the exact Galerkin expectation over the actual basis
+  function. The rho0 correction should be treated as the nonzero operator
+  `Delta h = J_Galerkin[rho0] - Diag(u0)`, where `u0` is the IDA/MWG
+  density-proxy potential.
+
+Validation / evidence:
+- H direct-core output:
+  `/Users/srw/dmrgtmp/h_q5_direct_core_rho0_row_detail_203a50d9c/`.
+  Manager spot-checked `summary.tsv` and row 63 in `direct_core_rows.tsv`.
+- H scalar checks: terminal weights still equal parent product weights exactly;
+  row action vs point potential relative error is `1.59e-3`; `u_direct` vs
+  equal-width smoothed potential relative error is `3.76e-4`; `diag(J)` vs
+  `u_direct` relative error is `1.04e-1`; `diag(J)` vs point relative error is
+  `3.49e-2`.
+- Worst center row `63`: `diag(J)=2.912130776220568`,
+  `u_direct=2.2566297073515225`, `row_action=3.2019488345557066`,
+  point potential `3.1915382432114616`, and equal-width smoothed potential
+  `2.256758334191025`.
+- Be2 output:
+  `/Users/srw/dmrgtmp/rho0_sector_gauge_audit_203a50d9c/`. The rerun reports
+  `Delta` diagonal/spectra/expectations rather than row-action-on-weights:
+  base diag norm/maxabs `1.71221 / 0.544301`, residual diag norm/maxabs
+  `1.51341 / 1.03434`, `Delta_RR` min eigenvalue `0.181769`,
+  full `Delta_M` min eigenvalue `-0.0863056`, and occupied low-H1 proxy shift
+  sum `1.01412`.
+- Doer validation: package load passed, `git diff --check` passed, no tracked
+  source edits. Manager validation: spot-read the H and Be2 TSV summaries and
+  retained the pass as measurement-only evidence.
+
+Goal advancement:
+- LT5/LT6 and MT4: resolves the false blocker that rho0/Galerkin must satisfy
+  a vanishing row-weight identity. The next rho0 question is physical:
+  whether `Delta h` has safe sector spectra, reasonable occupied expectations,
+  and bounded endpoint behavior when used as an exact-minus-IDA correction.
+
+Risk / guardrail:
+- Do not reintroduce `J*w = u*w` or `diag(J) ~= u` as acceptance criteria.
+  They compare different objects. Also do not treat a nonzero `Delta h` as a
+  bug by itself; it is the proposed correction.
+- Still forbidden: source implementation, public workflow, artifact/provenance,
+  Cr2 production claim, `C'VC` revival, and Cr2/HF until static `Delta`
+  diagnostics look sane.
+
+Carrying-cost result:
+- deleted: none.
+- simplified: rho0 diagnostics now use `Delta` diagonal, spectra, and
+  occupied expectations instead of row-action-on-weights.
+- quarantined: ignored probes and `/Users/srw/dmrgtmp` outputs only.
+- not deleted because: audit tables are needed to inspect the correction
+  convention.
+- exact remaining blocker: run the next rho0 measurement under the explicit
+  convention "`J` is exact Galerkin, `u0` is IDA/MWG density-proxy screening,
+  and `Delta = J - Diag(u0)` is the correction"; judge it by sector spectra,
+  occupied expectations, fixed-density shifts, and only then bounded endpoint
+  behavior.
