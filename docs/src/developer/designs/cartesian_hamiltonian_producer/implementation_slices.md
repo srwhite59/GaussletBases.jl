@@ -544,6 +544,19 @@ Approved robustness lane:
   `HP-RHO0-FAPP-TEST-01` approves only package load, compact alpha/beta
   finite-difference checks, and H/Be/Be2-only ignored endpoint replay if the
   helper is consumed by the rho0 audit.
+- `HP-RHO0-ANCHOR-FN-01` approves only the in-memory Hartree reference
+  correction anchor: represented `P0_final`, source-backed
+  `F_exact_Hartree[P0]`, Cartesian IDA approximate interaction energy/Fock,
+  `Delta_F0_alpha/beta`, `C0`, and verification of
+  `E_new_int[P0] = E_exact_Hartree[P0]` plus
+  `dE_new_int/dP_sigma = F_exact_Hartree[P0]`. Primary source surface is
+  `src/cartesian_residual_gaussians/augmented_operators.jl`;
+  `src/cartesian_ida_hamiltonian.jl` is optional only for a missing
+  interaction-only accessor. It does not approve artifacts, public workflow,
+  production Hamiltonian integration, solver workflow, Cr/Cr2, exchange, or a
+  broad reference-density framework. `HP-RHO0-ANCHOR-TEST-01` requires
+  H/Be/Be2-only in-memory replay plus `Delta_F0` spectra/diagonal/occupied
+  expectation diagnostics.
 
 ## Compact Hamiltonian Artifact Manifest
 

@@ -100,6 +100,9 @@ module, or object names in the new owner.
   seam for fixed represented spin densities.
 - `HP-RHO0-FAPP-TEST-01` - validation gates for the Cartesian IDA approximate
   energy/Fock seam.
+- `HP-RHO0-ANCHOR-FN-01` - in-memory Hartree reference correction-anchor lane.
+- `HP-RHO0-ANCHOR-TEST-01` - validation gates for the Hartree correction
+  anchor.
 
 Implementation IDs in this list are approved only within the surfaces below.
 Design-only IDs record authority for future source blurbs but do not approve
@@ -421,6 +424,14 @@ the Hamiltonian's stored `electron_electron_ida` convention. The helper may be
 used later by rho0 audits, but it does not approve correction assembly,
 artifacts/public workflow, Cr/Cr2, residual selection changes, or broad
 rejected directions as MWG residuals.
+
+`HP-RHO0-ANCHOR-FN-01` is Residual Gaussian adjacent only because the
+protected/final exact-side helper currently lives in
+`augmented_operators.jl`. It approves an in-memory Hartree reference anchor
+that consumes exact Hartree and Cartesian IDA approximate interaction helpers
+to form `Delta_F0` and `C0` for H/Be/Be2 diagnostics. It does not approve
+artifacts, public workflow, solver integration, Cr/Cr2, exchange, residual
+selection changes, or production correction use.
 
 Do not approve a vague global entry point such as
 `stabilize_residual_metric(...)`. Global raw-candidate symmetric Lowdin and

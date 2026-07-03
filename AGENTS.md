@@ -546,6 +546,8 @@ these approved design IDs:
 - `HP-RHO0-MIXH-FEXACT-TEST-01`
 - `HP-RHO0-FAPP-FN-01`
 - `HP-RHO0-FAPP-TEST-01`
+- `HP-RHO0-ANCHOR-FN-01`
+- `HP-RHO0-ANCHOR-TEST-01`
 - `HP-CGRB-FILE-01`
 - `HP-CGRB-FN-01`
 - `HP-CGRB-FN-02`
@@ -1260,6 +1262,28 @@ Approved Residual Gaussian module surfaces:
   `git diff --check`, package load, compact alpha/beta finite-difference
   validation against the paired energy helper, and H/Be/Be2-only ignored
   endpoint replay if the helper is consumed by the rho0 audit.
+- `HP-RHO0-ANCHOR-FN-01` approves only an in-memory Hartree reference
+  correction-anchor lane. The primary source surface is
+  `src/cartesian_residual_gaussians/augmented_operators.jl`;
+  `src/cartesian_ida_hamiltonian.jl` is optional only if a narrow
+  interaction-only approximate accessor is missing. The lane may build or
+  consume represented `P0_final`, compute source-backed
+  `F_exact_Hartree[P0]`, consume Cartesian IDA approximate interaction
+  energy/Fock helpers, form `Delta_F0_alpha`, `Delta_F0_beta`, and `C0`, and
+  verify the interaction anchor
+  `E_new_int[P0] = E_exact_Hartree[P0]` and
+  `dE_new_int/dP_sigma = F_exact_Hartree[P0]`. It must keep
+  interaction-only and total-with-common-one-body checks separated. It does
+  not approve public driver/API/export/default changes, artifact/provenance/
+  schema/writer/reader/manifest changes, production Hamiltonian integration,
+  solver workflow, Cr/Cr2, exchange, broad reference-density framework work,
+  row-action/`diag(J)`/`q0`/center metadata/direct-`C' V C` substitutes,
+  residual/MWG default changes, basis-fate changes, broad rejected directions
+  as MWG residuals, or source files outside the approved surface.
+  `HP-RHO0-ANCHOR-TEST-01` approves only `git diff --check`, package load,
+  prior exact/app helper replay or equivalent, H/Be/Be2-only in-memory anchor
+  replay, `Delta_F0` spectra/diagonal/occupied-expectation diagnostics, and no
+  artifact/public workflow/solver/Cr2 run.
 
 Non-negotiable RG guardrails:
 

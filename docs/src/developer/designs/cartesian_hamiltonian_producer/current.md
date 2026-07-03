@@ -449,13 +449,26 @@ Approved Residual Gaussian robustness lane:
   `HP-RHO0-FAPP-TEST-01` requires package load plus compact alpha/beta
   finite-difference validation, with H/Be/Be2-only ignored endpoint replay if
   the helper is consumed by the rho0 audit.
+- `HP-RHO0-ANCHOR-FN-01` approves only an in-memory Hartree correction-anchor
+  lane in `src/cartesian_residual_gaussians/augmented_operators.jl`, with
+  `src/cartesian_ida_hamiltonian.jl` optional only for a missing
+  interaction-only accessor. It builds/consumes represented `P0_final`,
+  computes `F_exact_Hartree[P0]`, consumes Cartesian IDA approximate
+  interaction energy/Fock helpers, forms `Delta_F0_alpha/beta` and `C0`, and
+  verifies `E_new_int[P0] = E_exact_Hartree[P0]` plus
+  `dE_new_int/dP_sigma = F_exact_Hartree[P0]` on H/Be/Be2. It does not approve
+  artifacts, public workflow, production Hamiltonian integration, solver
+  workflow, Cr/Cr2, exchange, or broad reference-density framework work.
+  `HP-RHO0-ANCHOR-TEST-01` requires in-memory H/Be/Be2 anchor replay and
+  `Delta_F0` spectra/diagonal/occupied-expectation diagnostics.
 - `rho0_reference_density_implementation_plan.md` is a review memo for the
   likely fast separable atomic-reference Hartree source shape. The current
   approved source target is raw exact mixed Hartree `GG` plus `GA`/`AA` from
   one-center atomic `P_A`, followed by the exact-side final/protected transform;
-  the paired Cartesian IDA `F_app[P0]` seam is now source-approved under
-  `HP-RHO0-FAPP-FN-01`, while `Delta_F0`, `C0`, Cr/Cr2, artifacts, and public
-  workflow remain later lanes.
+  the paired Cartesian IDA `F_app[P0]` seam is source-backed, and the in-memory
+  Hartree anchor is approved under `HP-RHO0-ANCHOR-FN-01`. Cr/Cr2, artifacts,
+  public workflow, solver integration, exchange, and production Hamiltonian
+  integration remain later lanes.
 
 Approved stale complete-core-shell RHF retirement:
 

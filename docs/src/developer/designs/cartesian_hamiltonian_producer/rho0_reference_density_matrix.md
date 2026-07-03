@@ -783,6 +783,115 @@ Required validation:
   helper returns interaction-only, total, or both separated contributions;
 - no `Delta_F0`, no `C0`, no artifact, no public workflow, and no Cr/Cr2 run.
 
+## HP-RHO0-ANCHOR-FN-01
+
+Status: approved narrow in-memory source/measurement authority for the
+Hartree reference correction anchor.
+
+Purpose: combine the source-backed exact Hartree side and the source-backed
+Cartesian IDA approximate interaction side to form and validate the fixed-`P0`
+anchor:
+
+```text
+Delta_F0_sigma = F_exact_Hartree[P0] - F_app_interaction_sigma[P0]
+
+C0 =
+    E_exact_Hartree[P0]
+  - E_app_interaction[P0]
+  - sum_sigma Tr(P0_sigma * Delta_F0_sigma)
+```
+
+The corrected interaction model
+
+```text
+E_new_int[P] =
+    E_app_interaction[P]
+  + sum_sigma Tr(P_sigma * Delta_F0_sigma)
+  + C0
+```
+
+must satisfy, in the represented final/protected basis:
+
+```text
+E_new_int[P0] = E_exact_Hartree[P0]
+dE_new_int/dP_sigma at P0 = F_exact_Hartree[P0]
+```
+
+Approved source surface:
+
+- `src/cartesian_residual_gaussians/augmented_operators.jl`.
+
+Optional only if a narrow interaction-only accessor is missing:
+
+- `src/cartesian_ida_hamiltonian.jl`.
+
+Approved behavior:
+
+- build or consume represented `P0_final` spin densities in the current
+  final/protected basis;
+- compute `F_exact_Hartree[P0]` from the approved mixed Hartree `GG`/`GA`/`AA`
+  plus final/protected transform path;
+- compute `E_app_interaction[P0]` and
+  `F_app_interaction_alpha/beta[P0]` from the paired
+  `CartesianIDAHamiltonian` approximate interaction helpers;
+- form `Delta_F0_alpha`, `Delta_F0_beta`, and `C0` in memory;
+- verify the energy and derivative anchor in memory;
+- keep interaction-only and total-with-common-one-body checks separated. The
+  exact side in this lane is Hartree interaction only, so the primary anchor
+  must not subtract `one_body_hamiltonian(ham)` or nuclear repulsion;
+- report `Delta_F0` spectra, diagonal/range summaries, occupied/reference
+  expectations, protected/broad/compact sector expectations when labels are
+  available, density traces, representability facts, and anchor errors.
+
+Allowed validation scope:
+
+- H, Be, and Be2 only;
+- ignored `tmp/work/*.jl` probes and `/Users/srw/dmrgtmp` outputs;
+- committed compact validation only if it is limited to the in-memory helper
+  contract and does not add fixtures.
+
+Forbidden:
+
+- public driver, public API, exports, or default changes;
+- artifact, provenance, schema, writer, reader, manifest, or sidecar changes;
+- production Hamiltonian integration or solver workflow;
+- Cr atom, Cr2, Cr2 HF, or Cr2 production diagnostics;
+- HF exchange or exact exchange correction;
+- reference density self-energy production beyond the `C0` anchor needed for
+  this in-memory Hartree lane;
+- row action `(J*w)/w`, `diag(J)`, `q0`, center metadata, direct `C' V C`, or
+  IDA proxy shortcuts;
+- residual/MWG default changes, residual selection changes, basis-fate policy,
+  or broad rejected directions as MWG residuals;
+- source files outside the approved surface unless a later amendment approves
+  a neutral reference-density owner.
+
+Failure rule: if the anchor cannot be formed from the existing exact
+Hartree-transform helper and the Cartesian IDA interaction energy/Fock helpers,
+stop and report the missing seam. Do not widen into artifact writing, public
+workflow, solver integration, exchange, Cr/Cr2, or a broad reference-density
+framework.
+
+## HP-RHO0-ANCHOR-TEST-01
+
+Status: approved validation gates for `HP-RHO0-ANCHOR-FN-01`.
+
+Required validation:
+
+- `git diff --check`;
+- package load;
+- prior exact-side and approximate-side helper validations still pass or are
+  covered by equivalent replay;
+- H/Be/Be2-only in-memory anchor replay;
+- report represented `P0_final` trace/normalization and representability;
+- report `F_exact_Hartree[P0]`, `F_app_interaction[P0]`, `Delta_F0`, and `C0`
+  dimensions and finite/symmetry diagnostics;
+- verify `E_new_int[P0] = E_exact_Hartree[P0]` and
+  `dE_new_int/dP_sigma = F_exact_Hartree[P0]` by direct algebra and/or
+  finite-difference checks;
+- report `Delta_F0` spectra/diagonals/occupied expectations;
+- no artifact, no public workflow, no solver workflow, and no Cr/Cr2 run.
+
 ## Candidate Future Source IDs
 
 `HP-RHO0-REFDENS-FN-01` is a candidate future source lane only. It is not

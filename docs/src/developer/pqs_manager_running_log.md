@@ -24093,3 +24093,50 @@ Carrying-cost result:
 - exact remaining blocker: design and approve the correction-anchor lane for
   `Delta_F0 = F_exact_Hartree[P0] - F_app[P0]` and `C0`, still without
   artifacts/public workflow/Cr2.
+
+## Cartesian Hamiltonian Producer Pass 292 - Rho0 Hartree Correction Anchor Authority
+
+Commit(s):
+- this commit - Approve rho0 Hartree correction anchor lane
+
+Summary:
+- Design-manager approved `HP-RHO0-ANCHOR-FN-01` / `TEST-01`, the next
+  in-memory rho0/reference-density lane after both source sides landed.
+- The lane forms
+  `Delta_F0_sigma = F_exact_Hartree[P0] - F_app_interaction_sigma[P0]` and
+  `C0 = E_exact_Hartree[P0] - E_app_interaction[P0] -
+  sum_sigma Tr(P0_sigma * Delta_F0_sigma)`, then verifies the corrected
+  interaction anchor at represented `P0_final`.
+- The approved validation remains H/Be/Be2 only and in-memory only.
+
+Validation / evidence:
+- Exact side is source-backed through mixed Hartree `GG`/`GA`/`AA` plus the
+  protected/final transform.
+- Approximate side is source-backed through paired
+  `CartesianIDAHamiltonian` interaction/electronic energy and Fock helpers.
+- The authority explicitly keeps interaction-only and total-with-common-
+  one-body checks separated; this prevents the Hartree anchor from
+  accidentally subtracting `K + nuclear` terms.
+
+Goal advancement:
+- LT5/LT6 and MT4: moves the rho0 lane from separate exact/app derivative
+  seams to the first actual reference-density anchor, while keeping it a
+  diagnostic in-memory object rather than production Hamiltonian integration.
+
+Risk / guardrail:
+- This lane is Hartree-only. HF exchange, production artifacts, public
+  workflow, solver integration, Cr/Cr2, and broad reference-density framework
+  work remain unauthorized.
+- If the anchor cannot be formed from existing exact Hartree and Cartesian IDA
+  interaction helper seams, source work must stop and report the missing seam.
+
+Carrying-cost result:
+- source line delta: 0 in this docs authority pass.
+- deleted: none.
+- simplified: the next rho0 target is now a single in-memory anchor check with
+  explicit interaction-only algebra.
+- quarantined: artifacts/public workflow, production Hamiltonian integration,
+  solver workflow, Cr/Cr2, exchange, and broad reference-density ownership.
+- exact remaining blocker: implement and validate `HP-RHO0-ANCHOR-FN-01`;
+  only after that should a production integration or broader source-owner lane
+  be considered.

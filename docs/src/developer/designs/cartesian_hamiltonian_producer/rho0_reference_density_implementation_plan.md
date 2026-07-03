@@ -1140,3 +1140,79 @@ Explicitly out of scope:
 Failure rule: if paired energy/Fock cannot be implemented from
 `CartesianIDAHamiltonian`'s stored matrices and the live IDA/MWG convention,
 stop and report the missing owner. Do not approve a Fock helper alone.
+
+## Design-Manager Source Authority - Hartree Correction Anchor - 2026-07-03
+
+With both sides source-backed, the next approved lane is the in-memory
+Hartree correction anchor.
+
+Approved IDs:
+
+- `HP-RHO0-ANCHOR-FN-01`
+- `HP-RHO0-ANCHOR-TEST-01`
+
+Approved source surface:
+
+- `src/cartesian_residual_gaussians/augmented_operators.jl`;
+- `src/cartesian_ida_hamiltonian.jl` only if a narrow interaction-only
+  approximate accessor is missing.
+
+Approved behavior:
+
+- build or consume represented `P0_final` spin densities in the current
+  final/protected basis;
+- compute `F_exact_Hartree[P0]` through the approved mixed Hartree `GG`/`GA`/
+  `AA` plus final/protected transform path;
+- compute `E_app_interaction[P0]` and
+  `F_app_interaction_alpha/beta[P0]` through the paired
+  `CartesianIDAHamiltonian` approximate interaction helpers;
+- form, in memory:
+
+```text
+Delta_F0_sigma = F_exact_Hartree[P0] - F_app_interaction_sigma[P0]
+
+C0 =
+    E_exact_Hartree[P0]
+  - E_app_interaction[P0]
+  - sum_sigma Tr(P0_sigma * Delta_F0_sigma)
+```
+
+- verify:
+
+```text
+E_new_int[P0] = E_exact_Hartree[P0]
+dE_new_int/dP_sigma at P0 = F_exact_Hartree[P0]
+```
+
+- report `Delta_F0` spectra, diagonals/ranges, occupied/reference
+  expectations, available sector expectations, density traces,
+  representability facts, and anchor errors.
+
+Explicitly out of scope:
+
+- public driver/API/export/default changes;
+- artifact/provenance/schema/writer/reader/manifest changes;
+- production Hamiltonian integration or solver workflow;
+- Cr atom, Cr2, Cr2 HF, or Cr2 production diagnostics;
+- HF exchange or exact exchange correction;
+- broad reference-density framework work;
+- row-action, `diag(J)`, `q0`, center metadata, direct `C' V C`, or IDA proxy
+  shortcuts;
+- residual/MWG defaults, residual selection, basis-fate changes, broad
+  rejected directions as MWG residuals, committed fixtures, or Cr2 workflow.
+
+Validation required:
+
+- `git diff --check`;
+- package load;
+- prior exact-side and approximate-side helper validations still pass or are
+  covered by equivalent replay;
+- H/Be/Be2-only in-memory anchor replay;
+- anchor equality and derivative checks;
+- `Delta_F0` spectra/diagonal/occupied-expectation diagnostics;
+- no artifact, public workflow, solver workflow, or Cr/Cr2 run.
+
+Failure rule: if the anchor cannot be formed from the existing exact Hartree
+and Cartesian IDA interaction helper seams, stop and report the missing seam.
+Do not widen into artifacts, public workflow, solver integration, exchange,
+Cr/Cr2, or a broad reference-density framework.
