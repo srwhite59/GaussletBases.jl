@@ -23439,3 +23439,77 @@ Carrying-cost result:
 - exact remaining blocker: identify or prototype the exact mixed Hartree seam
   for H/Be/Be2, then either run Be/Be2 fixed-`P0` or report the smallest
   source owner needed.
+
+## Cartesian Hamiltonian Producer Pass 279 - Mixed Hartree Seam Audit
+
+Commit(s):
+- this commit - Record mixed Hartree seam audit
+
+Summary:
+- Accepted the `HP-RHO0-REFDENS-MIXH-AUDIT-01` ignored probe. The exact
+  mixed Hartree seam is partially available: a diagonal normalized `s`
+  Gaussian reference density can be handled honestly because `chi^2` reduces
+  to a centered spherical Gaussian screen. That limited case passed H and Be2
+  symmetry, finite-difference, and anchor checks.
+- The general reference-density seam remains blocked. There is still no
+  exposed helper for arbitrary GTO reference pair products
+  `chi_a * chi_b`, including angular, off-center, or off-diagonal terms, to
+  produce exact `(final final | reference reference)` Hartree blocks for a
+  real final/protected-localized `P0`.
+
+Validation / evidence:
+- Output:
+  `/Users/srw/dmrgtmp/rho0_mixed_hartree_seam_audit_fb412c59c/`.
+  Manager spot-checked `summary.tsv`, `feasibility.tsv`,
+  `p0_representability.tsv`, `finite_difference_checks.tsv`,
+  `delta_diagonal_by_sector.tsv`, `occupied_expectations.tsv`, and
+  `blocked_general_seam.tsv`.
+- H limited `s` reference: final dimension `517`, reference dimension `1`,
+  electron count `1.0`, `E_exact = 1.1283791485235533`,
+  `E_app = 1.127917504071294`, `C0 = -0.0016534613737411892`,
+  energy anchor error `0`, and `F_anchor_inf = 0`.
+- Be2 compact `M` limited `s` reference: base dimension `431`, compact
+  residual dimension `4`, `M` dimension `435`, reference dimension `2`,
+  electron count `4.0`, `E_exact = 9.827033149780657`,
+  `E_app = 9.433859504166264`, `C0 = -0.13350589353079312`,
+  energy anchor error `0`, and `F_anchor_inf = 0`.
+- Finite-difference checks: exact reference self-energy and app solver
+  Hartree convention agree at about `1e-10` absolute error or better.
+  Projected-reference derivative differences are explicitly attributed to
+  representability loss.
+- Be2 representability is not perfect: trace loss
+  `0.04377517320720692` out of `4.0`, density norm loss
+  `0.17414250081007232`, and per-orbital overlap loss about `1.09%`.
+- Be2 `Delta` diagnostics for the limited case: full `M` diagonal range
+  `[-0.8626906076839873, 2.058457058455745]`; compact-R diagonal range
+  `[0.5569279480029804, 2.058457058455745]`; low occupied H1 expectation
+  shifts are positive, about `0.0473`, `0.0469`, `0.0290`, and `0.0323`.
+- Doer validation: `julia --project=. tmp/work/rho0_mixed_hartree_seam_audit.jl`
+  completed in `42.09 s`, package load passed in `0.457 s`,
+  `git diff --check` passed, and no tracked source edits were made.
+
+Goal advancement:
+- LT5/LT6 and MT4: separates two questions that were previously tangled. The
+  fixed-`P0` algebra works for a limited honest exact screen, but a production
+  or general Be/Cr reference-density audit needs a neutral mixed Hartree/ERI
+  owner. The remaining blocker is infrastructure, not row-gauge semantics.
+
+Risk / guardrail:
+- Do not treat diagonal `s`-Gaussian support as the general `P0` seam. It
+  does not cover angular or off-diagonal reference density products.
+- Still forbidden without new authority: tracked source edits, public
+  workflow, artifacts/provenance, solver workflow, Cr/Cr2 diagnostics, HF
+  exchange, `C'VC`, row-action/`diag(J)`/`q0` shortcuts, IDA proxy shortcuts
+  for `F_exact`, and basis-fate changes.
+
+Carrying-cost result:
+- deleted: none.
+- simplified: the seam is now classified cleanly as "limited diagonal
+  `s` density feasible" versus "general GTO-pair reference density blocked".
+- quarantined: ignored probe and `/Users/srw/dmrgtmp` output only.
+- not deleted because: the audit tables are the current seam evidence.
+- exact remaining blocker: design a neutral exact mixed Hartree/ERI source
+  owner adjacent to `src/gaussian_coulomb_reference.jl` and
+  `src/cartesian_gaussian_raw_blocks`, exposing a shape like
+  `mixed_hartree_blocks(final_or_terminal_basis, optional_supplement,
+  reference_supplement, P0) -> GG/GA/AA or final-sector F_exact`.
