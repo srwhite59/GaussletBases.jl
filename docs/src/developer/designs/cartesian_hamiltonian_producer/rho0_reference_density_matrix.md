@@ -892,6 +892,84 @@ Required validation:
 - report `Delta_F0` spectra/diagonals/occupied expectations;
 - no artifact, no public workflow, no solver workflow, and no Cr/Cr2 run.
 
+## HP-RHO0-CORR-AUDIT-01
+
+Status: approved docs-only / measurement-only corrected-Hamiltonian audit.
+
+Purpose: test whether the anchored Hartree correction behaves sanely when
+applied in memory to small Cartesian IDA systems. This lane does not approve
+new source. It consumes the existing in-memory anchor pieces:
+
+```text
+F_exact_Hartree[P0]
+F_app_interaction[P0]
+Delta_F0_alpha
+Delta_F0_beta
+C0
+```
+
+and evaluates, for represented spin densities:
+
+```text
+E_corr[P_alpha, P_beta] =
+    E_app[P_alpha, P_beta]
+  + Tr(P_alpha * Delta_F0_alpha)
+  + Tr(P_beta  * Delta_F0_beta)
+  + C0
+```
+
+When `E_app` is total electronic energy, the audit must keep the common
+one-body term separate from the interaction anchor. The anchor itself remains
+the Hartree interaction correction defined by `HP-RHO0-ANCHOR-*`.
+
+Allowed:
+
+- ignored `tmp/work/*.jl` probes only;
+- `/Users/srw/dmrgtmp` outputs only;
+- H, Be, and Be2 only;
+- consume current source-backed exact side, approximate side, and anchor
+  helper;
+- apply the correction to current in-memory Cartesian IDA energy/Fock
+  evaluation;
+- use existing in-memory endpoint, HF-like, or bounded SCF helpers only if no
+  production workflow, artifact, public API, or source changes are needed.
+
+Required diagnostics:
+
+- verify the anchor still holds at `P0`;
+- report `Delta_F0` spectra, diagonal/range summaries, occupied/reference
+  expectations, and sector expectations when labels are available;
+- report corrected versus uncorrected low spectra of the effective Fock or
+  one-particle operator used by the probe;
+- report corrected versus uncorrected energies, occupations, density traces,
+  and any bounded endpoint/SCF convergence behavior available in memory;
+- check finite values, symmetry, density trace/normalization, and
+  representability facts;
+- identify any negative/broad occupation incentive or unstable low mode
+  introduced by the correction.
+
+Forbidden:
+
+- tracked source edits;
+- public driver, public API, exports, or default changes;
+- artifact, provenance, schema, writer, reader, manifest, or sidecar changes;
+- production Hamiltonian integration or solver workflow;
+- Cr atom, Cr2, Cr2 HF, or Cr2 production diagnostics;
+- HF exchange or exact exchange correction;
+- publication-scale validation or paper claims;
+- row action `(J*w)/w`, `diag(J)`, `q0`, center metadata, direct `C' V C`, or
+  IDA proxy shortcuts;
+- residual/MWG default changes, residual selection changes, basis-fate policy,
+  or broad rejected directions as MWG residuals;
+- committed tests or fixtures.
+
+Decision rule: if H/Be/Be2 corrected in-memory behavior is finite, stable, and
+does not introduce suspicious low modes or occupation incentives, a later
+design lane may choose between a limited Cr measurement or a stronger
+small-system benchmark set. If the correction destabilizes the small systems,
+stop and record the failing diagnostic; do not proceed to Cr/Cr2 or production
+integration.
+
 ## Candidate Future Source IDs
 
 `HP-RHO0-REFDENS-FN-01` is a candidate future source lane only. It is not

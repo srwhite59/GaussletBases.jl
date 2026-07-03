@@ -5195,6 +5195,82 @@ Required validation:
 - report `Delta_F0` spectra/diagonals/occupied expectations;
 - no artifact/public workflow, no solver workflow, and no Cr/Cr2 run.
 
+### HP-RHO0-CORR-AUDIT-01 — corrected-Hamiltonian small-system audit
+
+Status: approved docs-only / measurement-only audit.
+
+Purpose: apply the anchored Hartree correction in memory to H/Be/Be2
+Cartesian IDA systems and decide whether the corrected model behaves sanely
+before any production integration.
+
+The audit consumes existing in-memory anchor pieces:
+
+```text
+F_exact_Hartree[P0]
+F_app_interaction[P0]
+Delta_F0_alpha
+Delta_F0_beta
+C0
+```
+
+and evaluates:
+
+```text
+E_corr[P_alpha, P_beta] =
+    E_app[P_alpha, P_beta]
+  + Tr(P_alpha * Delta_F0_alpha)
+  + Tr(P_beta  * Delta_F0_beta)
+  + C0
+```
+
+If `E_app` includes one-body terms, the audit must keep common one-body
+accounting separate from the interaction anchor.
+
+Allowed:
+
+- ignored `tmp/work/*.jl` probes only;
+- `/Users/srw/dmrgtmp` outputs only;
+- H, Be, and Be2 only;
+- consume source-backed exact, approximate, and anchor helpers;
+- apply the correction to current in-memory Cartesian IDA energy/Fock
+  evaluation;
+- use existing in-memory endpoint, HF-like, or bounded SCF helpers only without
+  production workflow, artifact, public API, or source changes.
+
+Required diagnostics:
+
+- anchor check at `P0`;
+- `Delta_F0` spectra, diagonal/range summaries, occupied/reference
+  expectations, and sector expectations when labels are available;
+- corrected versus uncorrected low spectra of the effective Fock or
+  one-particle operator used by the probe;
+- corrected versus uncorrected energies, occupations, density traces, and any
+  bounded endpoint/SCF convergence behavior available in memory;
+- finite/symmetry checks, density trace/normalization, and representability;
+- any negative/broad occupation incentive or unstable low mode introduced by
+  the correction.
+
+Forbidden:
+
+- tracked source edits;
+- public driver/API/export/default changes;
+- artifacts, manifests, provenance, writers, readers, or sidecars;
+- production Hamiltonian integration or solver workflow;
+- Cr atom, Cr2, Cr2 HF, or Cr2 production diagnostics;
+- HF exchange or exact exchange correction;
+- publication-scale validation or paper claims;
+- row action, `diag(J)`, `q0`, center metadata, direct `C' V C`, or IDA proxy
+  shortcuts;
+- residual/MWG defaults, residual selection, basis-fate policy, or broad
+  rejected directions as MWG residuals;
+- committed tests or fixtures.
+
+Decision rule: if H/Be/Be2 corrected in-memory behavior is finite, stable, and
+does not introduce suspicious low modes or occupation incentives, a later lane
+may choose between limited Cr measurement and stronger small-system
+benchmarks. If it destabilizes small systems, stop and record the failing
+diagnostic.
+
 Candidate future IDs, not approved:
 
 - `HP-RHO0-REFDENS-FN-01` - possible future source authority for reference

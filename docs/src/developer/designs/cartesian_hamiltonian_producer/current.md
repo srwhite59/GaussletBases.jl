@@ -461,13 +461,24 @@ Approved Residual Gaussian robustness lane:
   workflow, Cr/Cr2, exchange, or broad reference-density framework work.
   `HP-RHO0-ANCHOR-TEST-01` requires in-memory H/Be/Be2 anchor replay and
   `Delta_F0` spectra/diagonal/occupied-expectation diagnostics.
+- `HP-RHO0-CORR-AUDIT-01` approves only ignored measurement probes for applying
+  the anchored Hartree correction to current in-memory Cartesian IDA
+  H/Be/Be2 systems. It may compute
+  `E_corr = E_app + Tr(P_alpha * Delta_F0_alpha) +
+  Tr(P_beta * Delta_F0_beta) + C0`, verify that the anchor still holds at
+  `P0`, report corrected versus uncorrected spectra/energies/occupations, and
+  use existing bounded in-memory endpoint/HF-like/SCF helpers if no source,
+  artifact, public API, or production solver workflow changes are needed. It
+  does not approve source edits, artifacts/public workflow, production
+  integration, Cr/Cr2, exchange, solver workflow, or paper claims.
 - `rho0_reference_density_implementation_plan.md` is a review memo for the
   likely fast separable atomic-reference Hartree source shape. The current
   approved source target is raw exact mixed Hartree `GG` plus `GA`/`AA` from
   one-center atomic `P_A`, followed by the exact-side final/protected transform;
   the paired Cartesian IDA `F_app[P0]` seam is source-backed, and the in-memory
-  Hartree anchor is approved under `HP-RHO0-ANCHOR-FN-01`. Cr/Cr2, artifacts,
-  public workflow, solver integration, exchange, and production Hamiltonian
+  Hartree anchor is source-backed. Corrected-Hamiltonian behavior is now
+  measurement-only under `HP-RHO0-CORR-AUDIT-01`. Cr/Cr2, artifacts, public
+  workflow, solver integration, exchange, and production Hamiltonian
   integration remain later lanes.
 
 Approved stale complete-core-shell RHF retirement:

@@ -1216,3 +1216,58 @@ Failure rule: if the anchor cannot be formed from the existing exact Hartree
 and Cartesian IDA interaction helper seams, stop and report the missing seam.
 Do not widen into artifacts, public workflow, solver integration, exchange,
 Cr/Cr2, or a broad reference-density framework.
+
+## Design-Manager Measurement Authority - Corrected Hamiltonian Audit - 2026-07-03
+
+The Hartree anchor pieces are now available in source. The next approved step
+is measurement-only: apply the anchored correction in memory on small systems
+and decide whether the corrected model behaves sanely.
+
+Approved ID:
+
+- `HP-RHO0-CORR-AUDIT-01`
+
+Allowed behavior:
+
+- use ignored probes under `tmp/work/` and output under `/Users/srw/dmrgtmp`;
+- H, Be, and Be2 only;
+- consume existing source-backed exact Hartree, approximate interaction, and
+  anchor helpers;
+- evaluate:
+
+```text
+E_corr[P_alpha, P_beta] =
+    E_app[P_alpha, P_beta]
+  + Tr(P_alpha * Delta_F0_alpha)
+  + Tr(P_beta  * Delta_F0_beta)
+  + C0
+```
+
+- keep common one-body energy accounting separate from the interaction anchor
+  when `E_app` is a total electronic energy;
+- verify the anchor still holds at `P0`;
+- compare corrected and uncorrected energies, low spectra, occupations,
+  density traces, and available bounded endpoint/HF-like/SCF behavior;
+- report `Delta_F0` spectra, diagonals/ranges, occupied/reference
+  expectations, sector expectations when available, and any instability or
+  negative/broad occupation incentive.
+
+Explicitly out of scope:
+
+- tracked source edits;
+- public driver/API/export/default changes;
+- artifact/provenance/schema/writer/reader/manifest changes;
+- production Hamiltonian integration or solver workflow;
+- Cr atom, Cr2, Cr2 HF, or Cr2 production diagnostics;
+- HF exchange or exact exchange correction;
+- publication-scale validation or paper claims;
+- row-action, `diag(J)`, `q0`, center metadata, direct `C' V C`, or IDA proxy
+  shortcuts;
+- residual/MWG defaults, residual selection, basis-fate changes, broad
+  rejected directions as MWG residuals, committed tests, or fixtures.
+
+Decision rule: if H/Be/Be2 corrected in-memory behavior is finite, stable, and
+does not introduce suspicious low modes or occupation incentives, the next
+design choice is either limited Cr measurement or a stronger small-system
+benchmark set. If small systems destabilize, stop and record the blocker
+before any Cr/Cr2 or production integration lane.

@@ -557,6 +557,16 @@ Approved robustness lane:
   broad reference-density framework. `HP-RHO0-ANCHOR-TEST-01` requires
   H/Be/Be2-only in-memory replay plus `Delta_F0` spectra/diagonal/occupied
   expectation diagnostics.
+- `HP-RHO0-CORR-AUDIT-01` approves only a measurement-only corrected-
+  Hamiltonian audit. Ignored probes may apply
+  `E_corr = E_app + Tr(P_alpha * Delta_F0_alpha) +
+  Tr(P_beta * Delta_F0_beta) + C0` to current in-memory Cartesian IDA
+  H/Be/Be2 systems, verify the anchor at `P0`, report low spectra,
+  `Delta_F0` diagnostics, corrected versus uncorrected energies/occupations,
+  and use existing bounded in-memory endpoint/HF-like/SCF helpers if no source
+  or production workflow changes are needed. It does not approve source edits,
+  artifacts/public workflow, production Hamiltonian integration, solver
+  workflow, Cr/Cr2, exchange, or paper claims.
 
 ## Compact Hamiltonian Artifact Manifest
 

@@ -24197,3 +24197,50 @@ Carrying-cost result:
 - exact remaining blocker: decide the next lane, likely a measurement-only
   H/Be/Be2 corrected-Hamiltonian application or a docs-only integration design
   before any artifact/public/Cr2 work.
+
+## Cartesian Hamiltonian Producer Pass 294 - Corrected Hamiltonian Audit Authority
+
+Commit(s):
+- this commit - Approve rho0 corrected Hamiltonian audit
+
+Summary:
+- Design-manager approved `HP-RHO0-CORR-AUDIT-01`, a docs-only
+  measurement lane for applying the anchored Hartree correction to current
+  in-memory Cartesian IDA H/Be/Be2 systems.
+- The audit may evaluate
+  `E_corr = E_app + Tr(P_alpha * Delta_F0_alpha) +
+  Tr(P_beta * Delta_F0_beta) + C0`, verify that the anchor still holds at
+  `P0`, and compare corrected versus uncorrected spectra, energies,
+  occupations, density traces, and bounded endpoint/HF-like/SCF behavior when
+  existing in-memory helpers make that possible.
+
+Validation / evidence:
+- The previous pass landed `hartree_reference_correction_anchor(...)`, with
+  energy-anchor error `0.0`, F-anchor error `5.55e-17`, and derivative FD
+  absolute error `7.04e-9` on the H/Be/Be2 validation probe.
+- This authority deliberately asks a physics-behavior question rather than a
+  source-mechanics question: does the anchored correction remain sane when
+  applied away from `P0` on small systems?
+
+Goal advancement:
+- LT5/LT6 and MT4: advances rho0/reference-density work from algebraic anchor
+  construction to first small-system corrected-model behavior. This is still
+  below production integration and below Cr/Cr2.
+
+Risk / guardrail:
+- The audit is measurement-only. No source edits, artifacts/public workflow,
+  production Hamiltonian integration, solver workflow, Cr/Cr2, exchange, or
+  paper claims are approved.
+- If corrected H/Be/Be2 behavior shows suspicious low modes or occupation
+  incentives, the lane stops there; no Cr measurement follows from a bad small
+  result.
+
+Carrying-cost result:
+- source line delta: 0 in this docs authority pass.
+- deleted: none.
+- simplified: the next rho0 question is now a bounded behavior audit using
+  existing in-memory helpers.
+- quarantined: source work, production integration, artifacts/public workflow,
+  Cr/Cr2, exchange, solver workflow, and paper-scale validation.
+- exact remaining blocker: run `HP-RHO0-CORR-AUDIT-01`; if it passes, choose
+  limited Cr measurement versus a stronger H/Be/Be2 benchmark set.

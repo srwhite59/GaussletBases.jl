@@ -103,6 +103,8 @@ module, or object names in the new owner.
 - `HP-RHO0-ANCHOR-FN-01` - in-memory Hartree reference correction-anchor lane.
 - `HP-RHO0-ANCHOR-TEST-01` - validation gates for the Hartree correction
   anchor.
+- `HP-RHO0-CORR-AUDIT-01` - measurement-only corrected-Hamiltonian small-system
+  audit.
 
 Implementation IDs in this list are approved only within the surfaces below.
 Design-only IDs record authority for future source blurbs but do not approve
@@ -432,6 +434,12 @@ that consumes exact Hartree and Cartesian IDA approximate interaction helpers
 to form `Delta_F0` and `C0` for H/Be/Be2 diagnostics. It does not approve
 artifacts, public workflow, solver integration, Cr/Cr2, exchange, residual
 selection changes, or production correction use.
+
+`HP-RHO0-CORR-AUDIT-01` is measurement-only. It may use ignored probes to
+apply the anchored Hartree correction to H/Be/Be2 in-memory Cartesian IDA
+energy/Fock evaluations and compare corrected versus uncorrected behavior. It
+does not approve source edits, artifacts/public workflow, production
+integration, Cr/Cr2, exchange, solver workflow, or paper claims.
 
 Do not approve a vague global entry point such as
 `stabilize_residual_metric(...)`. Global raw-candidate symmetric Lowdin and

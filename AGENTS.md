@@ -1284,6 +1284,22 @@ Approved Residual Gaussian module surfaces:
   prior exact/app helper replay or equivalent, H/Be/Be2-only in-memory anchor
   replay, `Delta_F0` spectra/diagonal/occupied-expectation diagnostics, and no
   artifact/public workflow/solver/Cr2 run.
+- `HP-RHO0-CORR-AUDIT-01` approves only ignored measurement probes for applying
+  the anchored Hartree correction to current in-memory Cartesian IDA H/Be/Be2
+  systems. It may evaluate
+  `E_corr = E_app + Tr(P_alpha * Delta_F0_alpha) +
+  Tr(P_beta * Delta_F0_beta) + C0`, verify the anchor at `P0`, report
+  corrected versus uncorrected low spectra, energies, occupations, density
+  traces, `Delta_F0` spectra/diagonal/occupied-expectation diagnostics, and
+  bounded endpoint/HF-like/SCF behavior when existing in-memory helpers can do
+  that without source or production workflow changes. It does not approve
+  tracked source edits, public driver/API/export/default changes, artifact/
+  provenance/schema/writer/reader/manifest changes, production Hamiltonian
+  integration, solver workflow, Cr/Cr2, exchange, paper claims, row-action/
+  `diag(J)`/`q0`/center metadata/direct-`C' V C` substitutes, residual/MWG
+  default changes, basis-fate changes, broad rejected directions as MWG
+  residuals, or committed tests/fixtures. Because this is measurement-only
+  authority, do not add it to the approved source-ID list.
 
 Non-negotiable RG guardrails:
 
