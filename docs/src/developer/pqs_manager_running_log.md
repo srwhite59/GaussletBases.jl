@@ -23892,3 +23892,59 @@ Carrying-cost result:
   workflow, Cr/Cr2, exchange, IDA/MWG interactions, and geometry selection.
 - exact remaining blocker: implement `HP-RHO0-MIXH-FEXACT-FN-01`, then design
   the actual `F_app[P0]` seam before any `Delta_F0`/`C0` correction assembly.
+
+## Cartesian Hamiltonian Producer Pass 288 - Rho0 Exact-Side Final Transform Source
+
+Commit(s):
+- this commit - Add rho0 exact Hartree final transform
+
+Summary:
+- Accepted `HP-RHO0-MIXH-FEXACT-FN-01`. The exact Hartree final/protected
+  transform is now source-backed in
+  `src/cartesian_residual_gaussians/augmented_operators.jl`.
+- The new helpers consume existing exact mixed Hartree `GG`/`GA`/`AA` blocks,
+  project raw parent-row `GA` into terminal-final `G-A`, and use the existing
+  protected fixed-sector one-body transform to return dense in-memory
+  `F_exact_Hartree[P0]` plus diagnostics.
+- The pass stayed exact-side only. It did not add `F_app[P0]`, `Delta_F0`,
+  `C0`, artifacts, public workflow, solver/HF work, exchange, IDA/MWG
+  interaction transforms, Cr/Cr2 diagnostics, or geometry-selection changes.
+
+Validation / evidence:
+- `git diff --check` passed.
+- Package load passed: `package_load_elapsed_s=0.642547917`.
+- Raw `GG` validation still passed:
+  `julia --project=. tmp/work/rho0_mixh_gg_source_validation.jl`, elapsed
+  `44.348775 s`; H `s*s` delta `1.332e-15`, H angular/offdiag oracle max
+  `4.219e-15`, Be `GG` dim `321`, symmetry `0.0`.
+- Raw `GA`/`AA` validation still passed:
+  `julia --project=. tmp/work/rho0_mixh_gaaa_source_validation.jl`, elapsed
+  `23.190140 s`; H `GA` oracle max `3.886e-16`, H `AA` oracle max
+  `6.661e-16`, Be raw `GA` dims `(729,3)`, `AA` dim `3`, symmetry `0.0`.
+- New exact-side transform validation passed:
+  `julia --project=. tmp/work/rho0_mixh_fexact_source_validation.jl`, elapsed
+  `27.406485 s`; H final dimension `517`, symmetry `0.0`, raw-block spot
+  oracle max `8.882e-16`; Be final dimension `321`, symmetry `0.0`.
+
+Goal advancement:
+- LT5/LT6 and MT4: completes the reusable exact Hartree side through the
+  current final/protected-localized basis. Be/Be2 fixed-`P0` audits can now
+  use a source-backed `F_exact_Hartree[P0]`; the remaining blocker is the
+  approximate side and correction anchor, not exact mixed Hartree machinery.
+
+Risk / guardrail:
+- This is still not a production correction or Hamiltonian workflow. The
+  source returns dense in-memory exact-side matrices only.
+- Dense oracle remains validation-only in ignored probes.
+
+Carrying-cost result:
+- source line delta: +79 in `augmented_operators.jl`.
+- deleted: none.
+- simplified: reused the existing protected fixed-sector operator transform
+  instead of adding a parallel final-transform path.
+- quarantined: validation oracle/probe logic remains ignored under `tmp/work`
+  and `/Users/srw/dmrgtmp`; approximate Fock and correction assembly remain
+  unauthorized.
+- exact remaining blocker: design and approve the actual approximate
+  `F_app[P0]` seam from the solver/IDA-MWG convention before `Delta_F0` and
+  `C0` assembly.

@@ -75,3 +75,82 @@ function transform_protected_original_fixed_sector_one_body(kinetic, unit_nuclea
         z_dimension = components.z_dimension,
         f_dimension = components.f_dimension)
 end
+
+function _exact_hartree_raw_block_matrices(raw_blocks)
+    GG = Matrix{Float64}(raw_blocks.GG)
+    GA = Matrix{Float64}(raw_blocks.GA)
+    AA = Matrix{Float64}(raw_blocks.AA)
+    return (; GG, GA, AA)
+end
+
+function _validate_exact_hartree_raw_blocks(raw, components)
+    nG, nA = size(components.G_perp, 1), size(components.Z, 1)
+    size(raw.GG) == (nG, nG) ||
+        throw(DimensionMismatch("exact Hartree GG dimension mismatch"))
+    size(raw.GA) == (nG, nA) ||
+        throw(DimensionMismatch("exact Hartree GA dimension mismatch"))
+    size(raw.AA) == (nA, nA) ||
+        throw(DimensionMismatch("exact Hartree AA dimension mismatch"))
+    all(isfinite, raw.GG) && all(isfinite, raw.GA) && all(isfinite, raw.AA) ||
+        throw(ArgumentError("exact Hartree raw blocks must be finite"))
+    return nothing
+end
+
+function _protected_original_hartree_transform_diagnostics(raw, hartree, geometry, components)
+    b_singulars = hasproperty(geometry, :B) ? svdvals(Matrix{Float64}(geometry.B)) : Float64[]
+    b_sorted = sort(b_singulars)
+    b_median = isempty(b_sorted) ? NaN : b_sorted[cld(length(b_sorted), 2)]
+    return (;
+        base_dimension = size(raw.GG, 1),
+        supplement_dimension = size(raw.AA, 1),
+        z_dimension = components.z_dimension,
+        qperp_dimension = size(components.G_perp, 2),
+        f_dimension = size(hartree, 1),
+        protected_count = components.protected_count,
+        raw_gg_symmetry_error = norm(raw.GG - transpose(raw.GG), Inf),
+        raw_aa_symmetry_error = norm(raw.AA - transpose(raw.AA), Inf),
+        raw_blocks_finite = all(isfinite, raw.GG) && all(isfinite, raw.GA) &&
+            all(isfinite, raw.AA),
+        hartree_trace = tr(hartree),
+        hartree_symmetry_error = norm(hartree - transpose(hartree), Inf),
+        hartree_finite = all(isfinite, hartree),
+        qperp_identity_error = norm(transpose(components.Qp) * components.Qp -
+            Matrix{Float64}(I, size(components.Qp, 2), size(components.Qp, 2)), Inf),
+        b_min = isempty(b_singulars) ? NaN : minimum(b_singulars),
+        b_median,
+        b_max = isempty(b_singulars) ? NaN : maximum(b_singulars),
+        b_below_0p999 = count(<(0.999), b_singulars),
+        b_below_0p99 = count(<(0.99), b_singulars),
+        b_below_0p95 = count(<(0.95), b_singulars),
+        b_below_0p9 = count(<(0.9), b_singulars))
+end
+
+function transform_protected_original_fixed_sector_exact_hartree(raw_blocks, geometry)
+    components = protected_original_fixed_sector_components(geometry)
+    raw = _exact_hartree_raw_block_matrices(raw_blocks)
+    _validate_exact_hartree_raw_blocks(raw, components)
+    hartree = transform_protected_original_fixed_sector_operator(
+        raw.GG, raw.GA, raw.AA, components)
+    diagnostics = _protected_original_hartree_transform_diagnostics(
+        raw, hartree, geometry, components)
+    return (; hartree, exact_hartree = hartree, diagnostics,
+        protected_count = components.protected_count,
+        z_dimension = components.z_dimension,
+        f_dimension = components.f_dimension)
+end
+
+function atomic_reference_protected_original_fixed_sector_exact_hartree(
+    basis, bundles, proxy, supplement, reference_supplement, reference_density, geometry;
+    expansion = getfield(parentmodule(@__MODULE__), :coulomb_gaussian_expansion)(doacc = false))
+    raw_owner = getfield(parentmodule(@__MODULE__), :CartesianGaussianRawBlocks)
+    gg = raw_owner.atomic_reference_hartree_gg_block(
+        basis, bundles, reference_supplement, reference_density; expansion)
+    ga_aa = raw_owner.atomic_reference_hartree_ga_aa_blocks(
+        proxy, supplement, reference_supplement, reference_density; expansion)
+    final_ga = getfield(getfield(parentmodule(@__MODULE__), :CartesianFinalBasisRealization),
+        :_r3a_project_parent_ga)(basis, ga_aa.GA)
+    result = transform_protected_original_fixed_sector_exact_hartree(
+        (; GG = gg.GG, GA = final_ga, AA = ga_aa.AA), geometry)
+    return merge(result, (; raw_parent_ga_dimension = size(ga_aa.GA),
+        raw_diagnostics = (; gg = gg.diagnostics, ga_aa = ga_aa.diagnostics)))
+end
