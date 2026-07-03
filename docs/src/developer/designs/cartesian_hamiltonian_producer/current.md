@@ -398,11 +398,22 @@ Approved Residual Gaussian robustness lane:
   HF exchange, direct `C' V C`, row action, `diag(J)`, `q0`, center metadata,
   IDA proxy shortcuts, residual/MWG default changes, basis-fate changes, broad
   rejected directions as MWG residuals, or committed tests.
+- `HP-RHO0-MIXH-GG-FN-01` approves the first source-backed exact mixed Hartree
+  seam only for terminal/base `GG` blocks from one-center atomic `P_A`.
+  Authority is limited to a neutral `CartesianGaussianRawBlocks` helper file,
+  internal module include wiring, and narrow Gaussian Coulomb oracle/pair-term
+  reuse. The pass may build same-center reference pair-density terms, separable
+  Coulomb one-body packets, and exact `GG` output plus compact diagnostics. It
+  does not approve `GA`/`AA`, protected-localized transforms, `F_app[P0]`,
+  `Delta_F0`, `C0`, artifacts, public workflow, Cr/Cr2, HF exchange, dense
+  final ERIs, or residual/MWG/basis-fate changes. `HP-RHO0-MIXH-GG-TEST-01`
+  requires H/Be/Be2-scale `GG` validation, dense-oracle spot checks, and an
+  angular/off-diagonal same-center pair check.
 - `rho0_reference_density_implementation_plan.md` is a review memo for the
   likely fast separable atomic-reference Hartree source shape. The current
-  reviewed first source target is `GG`-only from one-center atomic `P0`;
+  approved first source target is `GG`-only from one-center atomic `P_A`;
   `GA`/`AA`, protected transforms, `F_app[P0]`, `C0`, Cr/Cr2, artifacts, and
-  public workflow remain later lanes. It is not source authority.
+  public workflow remain later lanes.
 
 Approved stale complete-core-shell RHF retirement:
 

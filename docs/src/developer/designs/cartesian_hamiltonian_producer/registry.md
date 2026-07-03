@@ -4721,6 +4721,82 @@ cannot, stop and report the smallest neutral source seam needed. Do not run Cr
 atom or Cr2 diagnostics until the Be/Be2 protected-localized `P0` audit has a
 real exact Hartree mixed operator.
 
+### HP-RHO0-MIXH-GG-FN-01 — first exact mixed Hartree GG block
+
+Status: approved narrow source authority.
+
+Purpose: implement the first source-backed exact Hartree seam for the
+reference-density lane:
+
+```text
+one-center atomic P_A
+-> same-center reference pair-density terms
+-> Coulomb-expanded separable one-body packets
+-> terminal/base GG Hartree block
+```
+
+Approved source surface:
+
+- `src/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl`;
+- `src/cartesian_gaussian_raw_blocks/CartesianGaussianRawBlocks.jl` only for
+  internal include/import wiring;
+- `src/gaussian_coulomb_reference.jl` only for narrow oracle or pair-term
+  algebra extraction/reuse if needed.
+
+Approved behavior:
+
+- add private, module-internal vector-backed records/helpers for atomic
+  reference pair-density terms and compact diagnostics;
+- validate finite/symmetric one-center atomic `P_A` inputs and report
+  electron-count normalization diagnostics;
+- support angular and off-diagonal same-center reference pairs;
+- use the existing Coulomb Gaussian expansion convention to build separable
+  one-body factor packets;
+- construct only exact terminal/base `GG` Hartree blocks;
+- keep dense Gaussian Coulomb matrices as bounded oracle/debug validation
+  only.
+
+Forbidden:
+
+- `GA`, `AA`, protected-localized transforms, injected-sector transforms, or
+  residual augmented output;
+- `F_app[P0]`, `Delta_F0`, `C0`, reference-energy assembly, or corrected
+  Hamiltonian construction;
+- public driver/API/export/defaults, solver workflow, artifacts, manifests,
+  provenance, writers, readers, or sidecars;
+- Cr atom, Cr2, Cr2 HF, or Cr2 production diagnostics;
+- HF exchange and `(final GTO | GTO final)` kernels;
+- row action, `diag(J)`, `q0`, center metadata, direct `C' V C`, or IDA proxy
+  shortcuts as substitutes for exact Hartree;
+- residual/MWG default changes, basis-fate changes, or broad rejected
+  directions as MWG residuals;
+- dense final four-index ERI materialization;
+- runtime-keyed `NamedTuple` or basis-size tuple inventories;
+- committed tests or fixtures.
+
+Failure rule: stop if `GG` construction requires dense final four-index ERIs,
+source outside the approved surface, `GA`/`AA`, protected transforms,
+artifact/schema work, or broader reference-density correction machinery.
+
+### HP-RHO0-MIXH-GG-TEST-01 — first exact mixed Hartree GG validation
+
+Status: approved validation gates for `HP-RHO0-MIXH-GG-FN-01`.
+
+Required validation:
+
+- `git diff --check`;
+- package load;
+- ignored H direct-core or one-center terminal `GG` replay;
+- bounded one-center Be or Be2 terminal/base `GG` smoke with finite/symmetric
+  output;
+- dense Gaussian Coulomb oracle spot checks for small `GG` subsets;
+- at least one angular/off-diagonal same-center reference-pair oracle check;
+- report pair-term counts, Coulomb expansion packet counts, reference
+  electron-count normalization, dense-oracle deltas, and whether dense paths
+  were validation-only;
+- no `GA`/`AA`, no protected transform, no artifacts, no public workflow, and
+  no Cr/Cr2 run.
+
 Candidate future IDs, not approved:
 
 - `HP-RHO0-REFDENS-FN-01` - possible future source authority for reference

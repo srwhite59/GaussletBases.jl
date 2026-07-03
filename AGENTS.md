@@ -538,6 +538,8 @@ these approved design IDs:
 - `HP-RG-PROTECT-INJECT-TEST-01`
 - `HP-RG-PROTECT-ONEBODY-FN-01`
 - `HP-RG-PROTECT-ONEBODY-TEST-01`
+- `HP-RHO0-MIXH-GG-FN-01`
+- `HP-RHO0-MIXH-GG-TEST-01`
 - `HP-CGRB-FILE-01`
 - `HP-CGRB-FN-01`
 - `HP-CGRB-FN-02`
@@ -1166,6 +1168,26 @@ Approved Residual Gaussian module surfaces:
   residual/MWG default changes, basis-fate policy changes, broad rejected
   directions as MWG residuals, or committed tests. Because this is
   measurement-only authority, do not add it to the approved source-ID list.
+- `HP-RHO0-MIXH-GG-FN-01` approves only the first source-backed exact Hartree
+  `GG` seam under the neutral `CartesianGaussianRawBlocks` owner. Approved
+  source files are `src/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl`,
+  `src/cartesian_gaussian_raw_blocks/CartesianGaussianRawBlocks.jl` only for
+  internal include/import wiring, and `src/gaussian_coulomb_reference.jl` only
+  for narrow oracle or pair-term algebra extraction/reuse. The pass may build
+  vector-backed same-center atomic reference pair-density terms from
+  one-center `P_A`, Coulomb-expanded separable one-body factor packets, and a
+  terminal/base exact `GG` Hartree block plus compact diagnostics. It does not
+  approve `GA`/`AA`, protected-localized or injected transforms,
+  `F_app[P0]`, `Delta_F0`, `C0`, reference-energy assembly, artifacts,
+  public driver/API/export/defaults, solver workflow, Cr/Cr2 diagnostics, HF
+  exchange, dense final four-index ERIs, row-action/`diag(J)`/`q0`/center
+  metadata/`C'VC` shortcuts, residual/MWG defaults, basis-fate changes, broad
+  rejected directions as MWG residuals, source outside the approved surface,
+  runtime-keyed `NamedTuple` inventories, or committed tests/fixtures.
+  `HP-RHO0-MIXH-GG-TEST-01` approves only `git diff --check`, package load,
+  ignored H/Be/Be2-scale `GG` validation, dense Gaussian Coulomb oracle spot
+  checks including at least one angular/off-diagonal same-center reference
+  pair, and no Cr/Cr2 run.
 
 Non-negotiable RG guardrails:
 

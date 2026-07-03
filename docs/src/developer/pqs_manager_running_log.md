@@ -23655,3 +23655,51 @@ Carrying-cost result:
 - exact remaining blocker: design-manager review/approval of a neutral
   terminal `GG` mixed Hartree source lane, including exact owner/API and
   validation scope.
+
+## Cartesian Hamiltonian Producer Pass 283 - Rho0 GG Mixed Hartree Source Authority
+
+Commit(s):
+- this commit - Approve rho0 GG mixed Hartree source lane
+
+Summary:
+- Design-manager accepted the revised rho0/reference-density implementation
+  plan as a source-design basis and approved only the first `GG` mixed Hartree
+  source slice: one-center atomic `P_A` to same-center reference pair-density
+  terms, Coulomb-expanded separable one-body packets, and a terminal/base exact
+  Hartree `GG` block.
+- The approved owner is neutral `CartesianGaussianRawBlocks`, with a new
+  internal helper file and only narrow module include/oracle reuse. This keeps
+  reference-density math out of Residual Gaussian ownership and avoids
+  approving a broad correction framework.
+
+Validation / evidence:
+- Design review used the revised plan in
+  `rho0_reference_density_implementation_plan.md` and the existing
+  `CartesianGaussianRawBlocks` module contract, which already owns exact
+  Gaussian raw matrices and excludes terminal projection, assembly, artifacts,
+  and public API.
+- Required later validation is H/Be/Be2-scale `GG` only, with dense Gaussian
+  Coulomb oracle spot checks and at least one angular/off-diagonal same-center
+  reference-pair check.
+
+Goal advancement:
+- LT5/LT6 and MT4: turns the mixed Hartree seam from measurement blocker into
+  a small implementable source lane without absorbing `GA`/`AA`, protected
+  transforms, `F_app[P0]`, `C0`, artifacts, public workflow, or Cr/Cr2.
+
+Risk / guardrail:
+- The approval is intentionally narrow. It forbids dense final four-index ERIs,
+  row-action or `diag(J)` substitutions, direct `C'VC`, public/artifact work,
+  residual/MWG default changes, and any broad reference-density correction
+  machinery.
+
+Carrying-cost result:
+- source line delta: 0 in this docs authority pass.
+- deleted: none.
+- simplified: the doer-facing source boundary is now one neutral `GG` block
+  seam instead of a vague rho0 implementation.
+- quarantined: `GA`/`AA`, protected-localized transforms, approximate Fock,
+  correction constants, Cr/Cr2, exchange, artifacts, and public workflow.
+- exact remaining blocker: implement `HP-RHO0-MIXH-GG-FN-01` and validate the
+  pair-density term stream and terminal/base `GG` contraction before any wider
+  reference-density lane.

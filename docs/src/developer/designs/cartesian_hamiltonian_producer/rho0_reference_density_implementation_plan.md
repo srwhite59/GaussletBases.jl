@@ -826,3 +826,73 @@ Before implementation, tighten the first source lane around one reusable exact
 mixed Hartree block builder. Keep the first approved source slice small enough
 that a doer can prove the pair-density term stream and `GG` contraction before
 adding the rest of the correction machinery.
+
+## Design-Manager Source Authority - 2026-07-03
+
+The revised plan is accepted as a review basis, and the first source lane is
+approved only for the `GG` mixed Hartree seam. This approval deliberately does
+not promote the whole reference-density correction framework.
+
+Approved IDs:
+
+- `HP-RHO0-MIXH-GG-FN-01`
+- `HP-RHO0-MIXH-GG-TEST-01`
+
+Approved source owner:
+
+- `src/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl`
+- `src/cartesian_gaussian_raw_blocks/CartesianGaussianRawBlocks.jl` only for
+  internal include/import wiring;
+- optional narrow reuse or extraction from `src/gaussian_coulomb_reference.jl`
+  only if needed to avoid duplicating existing Gaussian Coulomb oracle or
+  pair-term algebra.
+
+Approved behavior:
+
+- consume one-center atomic reference density matrices `P_A`;
+- build a vector-backed same-center reference pair-density term stream,
+  including angular and off-diagonal same-center pairs;
+- validate finite/symmetric `P_A`, dimensions, and electron-count
+  normalization diagnostics;
+- use the existing Coulomb Gaussian expansion convention to build separable
+  one-body factor packets;
+- build only the terminal/base exact Hartree `GG` block;
+- return compact internal diagnostics such as pair-term counts, expansion
+  packet counts, reference electron count, symmetry, and dense-oracle deltas;
+- keep dense Gaussian Coulomb matrices as bounded oracle/debug validation only.
+
+Explicitly out of scope:
+
+- `GA` and `AA`;
+- protected-localized, injected, residual, or final-basis transforms;
+- `F_app[P0]`, `Delta_F0`, `C0`, reference self-energy production, or
+  corrected Hamiltonian assembly;
+- artifact/provenance/schema/writer/reader/manifest changes;
+- public driver/API/export/defaults or solver workflow;
+- Cr atom, Cr2, Cr2 HF, or Cr2 production diagnostics;
+- HF exchange and `(final GTO | GTO final)` kernels;
+- row-action, `diag(J)`, `q0`, center metadata, direct `C' V C`, or IDA proxy
+  shortcuts;
+- residual/MWG default changes, basis-fate changes, broad rejected directions
+  as MWG residuals, dense final four-index ERIs, runtime-keyed construction
+  inventories, committed tests, or fixtures.
+
+Validation required:
+
+- `git diff --check`;
+- package load;
+- ignored H direct-core or one-center terminal `GG` replay;
+- bounded one-center Be or Be2 terminal/base `GG` smoke with finite/symmetric
+  output;
+- dense Gaussian Coulomb oracle spot checks for small `GG` subsets;
+- at least one angular/off-diagonal same-center reference-pair oracle check;
+- report pair-term counts, Coulomb expansion packet counts, reference
+  electron-count normalization, dense-oracle deltas, and whether dense paths
+  were validation-only;
+- no `GA`/`AA`, no protected transform, no artifacts, no public workflow, and
+  no Cr/Cr2 run.
+
+Failure rule: if the source pass needs dense final four-index ERIs, files
+outside the approved surface, `GA`/`AA`, protected transforms, artifact/schema
+work, or broader reference-density correction machinery, stop and report the
+exact missing owner or kernel. Do not widen the lane in source.

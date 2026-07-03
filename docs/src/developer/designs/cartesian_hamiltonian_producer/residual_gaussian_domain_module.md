@@ -82,6 +82,10 @@ module, or object names in the new owner.
   correction audit; successor to the row-gauge rho0/Galerkin probes.
 - `HP-RHO0-REFDENS-MIXH-AUDIT-01` - measurement-only exact mixed Hartree seam
   audit for `(final final | reference reference)`.
+- `HP-RHO0-MIXH-GG-FN-01` - first source-backed exact Hartree `GG` block
+  builder for one-center atomic `P_A`.
+- `HP-RHO0-MIXH-GG-TEST-01` - validation gates for the first `GG` mixed
+  Hartree source seam.
 
 Implementation IDs in this list are approved only within the surfaces below.
 Design-only IDs record authority for future source blurbs but do not approve
@@ -366,6 +370,14 @@ needed. It does not approve source edits, artifacts, public workflow,
 Cr/Cr2 diagnostics, HF exchange, direct `C' V C`, row action, `diag(J)`, `q0`,
 center metadata, IDA proxy shortcuts, residual/MWG defaults, basis-fate
 changes, or broad rejected directions as MWG residuals.
+
+`HP-RHO0-MIXH-GG-FN-01` is source authority, but not RG ownership. It approves
+only a neutral `CartesianGaussianRawBlocks` exact Hartree `GG` helper for
+one-center atomic `P_A`: same-center reference pair-density terms,
+Coulomb-expanded separable one-body packets, and terminal/base `GG` output.
+`GA`/`AA`, protected transforms, `F_app[P0]`, correction constants, artifacts,
+public workflow, Cr/Cr2, exchange, residual/MWG default changes, and
+basis-fate policy remain outside this source lane.
 
 Do not approve a vague global entry point such as
 `stabilize_residual_metric(...)`. Global raw-candidate symmetric Lowdin and

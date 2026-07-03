@@ -497,6 +497,16 @@ Approved robustness lane:
   `diag(J)` substitutes, `q0`, center metadata, IDA proxy shortcuts, direct
   `C' V C`, residual/MWG default changes, basis-fate changes, or committed
   tests.
+- `HP-RHO0-MIXH-GG-FN-01` approves only the first source-backed exact Hartree
+  `GG` seam under `CartesianGaussianRawBlocks`: one-center atomic `P_A`,
+  same-center reference pair-density terms, Coulomb-expanded separable
+  one-body packets, and terminal/base `GG` output plus compact diagnostics.
+  It does not approve `GA`/`AA`, protected-localized transforms,
+  `F_app[P0]`, `Delta_F0`, `C0`, artifacts, public workflow, Cr/Cr2, HF
+  exchange, dense final ERIs, or residual/MWG/basis-fate changes.
+  `HP-RHO0-MIXH-GG-TEST-01` requires bounded H/Be/Be2 `GG` validation, dense
+  oracle spot checks, and at least one angular/off-diagonal same-center
+  reference-pair check.
 
 ## Compact Hamiltonian Artifact Manifest
 
