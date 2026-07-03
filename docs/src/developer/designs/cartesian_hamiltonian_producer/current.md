@@ -399,8 +399,10 @@ Approved Residual Gaussian robustness lane:
   IDA proxy shortcuts, residual/MWG default changes, basis-fate changes, broad
   rejected directions as MWG residuals, or committed tests.
 - `rho0_reference_density_implementation_plan.md` is a review memo for the
-  likely fast separable atomic-reference Hartree source shape. It is not source
-  authority.
+  likely fast separable atomic-reference Hartree source shape. The current
+  reviewed first source target is `GG`-only from one-center atomic `P0`;
+  `GA`/`AA`, protected transforms, `F_app[P0]`, `C0`, Cr/Cr2, artifacts, and
+  public workflow remain later lanes. It is not source authority.
 
 Approved stale complete-core-shell RHF retirement:
 

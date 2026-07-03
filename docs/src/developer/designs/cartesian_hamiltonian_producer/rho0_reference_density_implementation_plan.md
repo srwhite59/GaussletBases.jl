@@ -7,6 +7,12 @@ This memo records the intended implementation shape for the
 reference-density-matrix correction lane before source work begins. It should
 be reviewed before approving any source ID.
 
+Revision note: this version incorporates the initial design-manager review and
+the external ChatGPT review saved on 2026-07-03. The main change is that the
+first source target is now explicitly `GG`-only. The full `GG` / `GA` / `AA`,
+protected-transform, approximate-Fock, and constant-assembly path remains the
+longer plan, not the first implementation slice.
+
 Governing authority today remains:
 
 - `HP-RHO0-REFDENS-AUDIT-01` - measurement-only fixed `P0` audit;
@@ -106,6 +112,32 @@ Required metadata for each atomic `P_A`:
 - GTO basis, `lmax`, contraction flag, and basisfile if relevant;
 - whether `P_A` came from internal or external atomic calculation;
 - normalization check, including `Tr(P_A S_A)` when applicable.
+
+### Two Distinct `P0` Objects
+
+Keep these objects separate in every source design and audit:
+
+```text
+P_A       atomic reference density in the atomic AO/GTO basis
+P0_final  represented reference density in the final/protected basis
+```
+
+`P_A` is used to build the exact reference density:
+
+```text
+rho_A(r) = sum_ab P_A[ab] chi_Aa(r) chi_Ab(r)
+```
+
+`P0_final` is the object that can appear in final-basis traces such as:
+
+```text
+Tr(P0_final * Delta_F0)
+```
+
+Do not put the atomic AO matrix `P_A` directly into a trace with a final-basis
+operator. If the correction constant or derivative anchor is evaluated in the
+final basis, the represented/projected density must be in that same basis, or
+the probe must state an explicitly equivalent representation.
 
 ## Production-Shaped Math
 
@@ -213,7 +245,39 @@ src/gaussian_coulomb_reference.jl
 src/cartesian_gaussian_raw_blocks/
 ```
 
-It should not live in residual Gaussian code. A possible API shape is:
+It should not live in residual Gaussian code.
+
+The first reviewed source target should be narrow:
+
+```text
+reference_hartree_GG_block(
+    terminal_basis_or_proxy,
+    reference_supplements_by_atom,
+    P0_by_atom;
+    expansion = coulomb_gaussian_expansion(doacc = false),
+) -> (; GG, diagnostics)
+```
+
+or an equivalent internal name under a neutral raw-block owner such as:
+
+```text
+src/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl
+```
+
+The first source slice should prove only:
+
+```text
+one-center atomic P_A
+  -> same-center reference pair-density term stream
+  -> Coulomb-expanded separable one-body terms
+  -> terminal/base GG Hartree block
+```
+
+Do not include `GA`, `AA`, protected-localized transforms, `F_app[P0]`, `C0`,
+artifacts, public workflow, Cr/Cr2 diagnostics, or HF exchange in the first
+source slice.
+
+A later full mixed-block API may look like:
 
 ```text
 mixed_hartree_blocks(
@@ -225,7 +289,9 @@ mixed_hartree_blocks(
 ) -> (; GG, GA, AA, reference_self_energy, diagnostics)
 ```
 
-The exact output shape needs review. Two reasonable options:
+That is a future shape, not the first implementation target.
+
+For the later full path, two reasonable options remain:
 
 1. Return raw `GG`, `GA`, `AA` blocks and let existing augmented/protected
    transform code build final-sector `F_exact`.
@@ -296,11 +362,16 @@ runtime-keyed tuple types.
 
 ### 4. Build Exact Raw Hartree Blocks
 
-For the current terminal/proxy basis `G` and optional Gaussian supplement `A`,
-build:
+For the first source slice, build only:
 
 ```text
 GG = <G_i | v_P0 | G_j>
+```
+
+For later slices, extend the same term stream and factor packets to optional
+Gaussian supplement `A`:
+
+```text
 GA = <G_i | v_P0 | A_j>
 AA = <A_i | v_P0 | A_j>
 ```
@@ -313,6 +384,10 @@ Requirements:
 - block over terms and support states so memory does not explode;
 - expose enough diagnostics to compare against dense Gaussian oracle on small
   systems.
+
+If the first `GG` slice cannot be implemented without a dense final-basis
+four-index tensor, stop. Do not expand scope to hide that failure in later
+`GA` / `AA` or protected-transform code.
 
 ### 5. Build Reference Self-Energy
 
@@ -395,6 +470,8 @@ separable contraction.
 Checks:
 
 - H direct-core and H q5 compare to limited `s` reference measurement;
+- at least one same-center angular/off-diagonal pair (`s*p`, `p*p`, or
+  similar) agrees with dense Gaussian oracle;
 - small Be/Be2 terminal `GG` block finite/symmetric;
 - dense oracle spot checks for small support subsets;
 - no dense final-basis four-index tensor.
@@ -444,7 +521,8 @@ Do:
 - keep Coulomb expansion separable by axis;
 - compress repeated reference pair terms and axis descriptors;
 - reuse terminal Gaussian-sum contraction patterns;
-- build `GG/GA/AA` one-body blocks, not dense final ERIs;
+- build `GG` first, then extend to `GA/AA` only after the terminal seam is
+  trusted;
 - block over terms/support states;
 - keep dense Gaussian ERI only as small oracle/debug;
 - use vector-backed term lists and summaries, not runtime-size `NamedTuple`
@@ -469,8 +547,9 @@ These should be answered before source authority:
    - companion to `gaussian_coulomb_reference.jl`?
 
 2. Public/internal API shape:
-   - return raw `GG/GA/AA` only?
-   - also provide final-sector convenience wrapper?
+   - first source slice returns `(; GG, diagnostics)` only?
+   - later full mixed-block slice returns raw `GG/GA/AA`?
+   - final-sector convenience wrapper remains later?
 
 3. Pair-density term representation:
    - can existing `_GaussianCoulombPairTerm3D` be generalized without
@@ -485,6 +564,8 @@ These should be answered before source authority:
 5. Reference self-energy:
    - dense oracle acceptable for first source slice?
    - or should self-energy use the same compressed term stream immediately?
+   - if included in the first slice, is it explicitly bounded to H/Be-size
+     oracle validation only?
 
 6. Approximate `F_app[P0]` seam:
    - is the solver convention already callable for a provided represented
@@ -506,6 +587,8 @@ Stop and request design review if:
 
 - exact mixed Hartree construction would require dense final four-index
   tensors;
+- the first source slice starts growing past terminal `GG` before the term
+  stream and terminal contraction are validated;
 - `F_app[P0]` cannot be obtained from the actual approximate Hamiltonian
   convention;
 - one-center atomic density assumptions are violated by the desired `P0`;
@@ -519,12 +602,42 @@ Stop and request design review if:
 Before source work, reviewers should decide:
 
 ```text
-Is the first source target a neutral fast atomic-reference Hartree block
-builder producing GG/GA/AA blocks from one-center atomic P0?
+Is the first source target a neutral fast atomic-reference Hartree GG block
+builder from one-center atomic P0?
 ```
 
-If yes, the source design should be written around that target, with dense
-Gaussian ERIs retained as oracle/debug only.
+If yes, the source design should be written around a candidate
+`HP-RHO0-MIXH-GG-FN-01` lane:
+
+```text
+P_A in same-center atomic GTO basis
+  -> reference pair-density term stream
+  -> Coulomb-expanded separable one-body factor packets
+  -> terminal/base GG Hartree block
+```
+
+Dense Gaussian ERIs remain oracle/debug only. `GA` / `AA`,
+protected-localized transforms, `F_app[P0]`, `C0`, artifacts, public workflow,
+Cr/Cr2 diagnostics, and HF exchange remain later lanes.
+
+## External ChatGPT Review Incorporation - 2026-07-03
+
+The external review agreed with the fixed-`P0` direction and the retirement of
+`J*w`, `diag(J)`, and `C' V C` as governing tests. It also tightened the first
+implementation target. Accepted changes in this revision:
+
+- first source slice is `GG`-only, not full `GG/GA/AA`;
+- likely owner is a neutral raw-block file such as
+  `src/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl`;
+- the pair-density term stream should be a small vector-backed internal record,
+  not a runtime-size `NamedTuple` inventory;
+- at least one angular/off-diagonal same-center pair must be checked against a
+  dense oracle before trusting the term stream;
+- `P_A` in the atomic AO/GTO basis and `P0_final` in the final basis are
+  distinct objects and must not be mixed in traces;
+- dense self-energy oracle is acceptable for the first source slice only as a
+  bounded H/Be-size validation aid;
+- `F_app[P0]` and `C0` are not part of the first exact Hartree source slice.
 
 ## Initial Design-Manager Review - 2026-07-03
 

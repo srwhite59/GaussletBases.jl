@@ -23610,3 +23610,48 @@ Carrying-cost result:
 - exact remaining blocker: chat review should decide whether the first source
   lane is `GG`-first or full `GG/GA/AA`, and where the neutral owner should
   live.
+
+## Cartesian Hamiltonian Producer Pass 282 - Chat-Reviewed Rho0 Plan Revision
+
+Commit(s):
+- this commit - Revise rho0 implementation plan after chat review
+
+Summary:
+- Revised `rho0_reference_density_implementation_plan.md` after the external
+  ChatGPT review. The old plan and the review were copied for temporary
+  comparison under `tmp/work/rho0_reference_density_plan_review/`; the durable
+  docs now carry the revised plan.
+- The substantive change is that the first source target is explicitly
+  `GG`-only: a neutral raw-block exact Hartree seam from one-center atomic
+  `P_A` to a terminal/base `GG` block. Full `GA`/`AA`, protected-localized
+  transforms, `F_app[P0]`, `C0`, Cr/Cr2, artifacts, public workflow, and HF
+  exchange stay as later lanes.
+
+Validation / evidence:
+- The plan now records the key ChatGPT review points: likely owner near
+  `src/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl`, vector-backed
+  reference pair-density term stream, angular/off-diagonal same-center oracle
+  checks, bounded dense self-energy oracle only for small validation, and a
+  strict distinction between atomic AO `P_A` and represented final-basis
+  `P0_final` in traces.
+- `current.md` now points to the `GG`-first reviewed target.
+
+Goal advancement:
+- LT5/LT6 and MT4: removes the main ambiguity before source authority. The
+  next review question is no longer "implement rho0"; it is whether to approve
+  a small `HP-RHO0-MIXH-GG-FN-01`-style source lane.
+
+Risk / guardrail:
+- Still no source authority. The revision explicitly forbids using the first
+  slice to smuggle in `GA`/`AA`, approximate-Fock construction, correction
+  constants, public/artifact workflow, or Cr2 diagnostics.
+
+Carrying-cost result:
+- deleted: none.
+- simplified: the reviewed first source slice is now in the main plan rather
+  than split across chat and appended review notes.
+- quarantined: old plan and ChatGPT review copies are ignored temporary
+  reference files only.
+- exact remaining blocker: design-manager review/approval of a neutral
+  terminal `GG` mixed Hartree source lane, including exact owner/API and
+  validation scope.
