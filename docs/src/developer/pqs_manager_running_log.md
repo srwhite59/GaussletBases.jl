@@ -23794,3 +23794,55 @@ Carrying-cost result:
   reference density products.
 - exact remaining blocker: implement `HP-RHO0-MIXH-GAAA-FN-01` and prove
   `GA`/`AA` oracle parity before asking for the protected/final transform lane.
+
+## Cartesian Hamiltonian Producer Pass 286 - Rho0 GA/AA Mixed Hartree Source
+
+Commit(s):
+- this commit - Add rho0 atomic reference GA AA Hartree blocks
+
+Summary:
+- Accepted `HP-RHO0-MIXH-GAAA-FN-01`. The existing neutral owner
+  `src/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl` now reuses the
+  one-center atomic `P_A` validation and reference pair-density term stream to
+  build raw exact `GA = <G|v_P_A|A>` and `AA = <A|v_P_A|A>` blocks.
+- The pass stayed inside the raw mixed-Hartree lane. It did not add
+  protected/final transforms, `F_app[P0]`, `Delta_F0`, `C0`,
+  artifacts/provenance, public workflow, solver/HF work, Cr/Cr2 diagnostics,
+  exchange, dense final ERIs, or residual/MWG/basis-fate changes.
+
+Validation / evidence:
+- `git diff --check` passed.
+- Package load passed: `package_load_elapsed_s=0.467997084`.
+- Existing `GG` validation still passed:
+  `julia --project=. tmp/work/rho0_mixh_gg_source_validation.jl`, elapsed
+  `39.043365 s`; H `s*s` scalar-screen delta `1.332e-15`, H angular/offdiag
+  `GG` oracle max `4.219e-15`, Be `GG` dim `321`, symmetry `0.0`.
+- New `GA`/`AA` validation passed:
+  `julia --project=. tmp/work/rho0_mixh_gaaa_source_validation.jl`, elapsed
+  `21.167265 s`; H `GA` primitive-oracle max `3.886e-16`, H `AA` dense
+  Gaussian oracle max `6.661e-16`, Be raw `GA` dims `(729,3)`, `AA` dim `3`,
+  and `AA` symmetry `0.0`.
+
+Goal advancement:
+- LT5/LT6 and MT4: completes the raw exact one-body Hartree side for a
+  one-center atomic reference density across `GG`, `GA`, and `AA`. This makes
+  a future protected/final `F_exact[P0]` transform lane meaningful without yet
+  approving correction assembly.
+
+Risk / guardrail:
+- Dense Gaussian oracle remains validation-only. The source path uses
+  separable Coulomb/product contractions and raw Gaussian block machinery.
+- Multi-atom `P0` remains a caller-side sum of one-center atomic blocks; no
+  cross-atom reference density products were introduced.
+
+Carrying-cost result:
+- source line delta: +204/-2 in this pass.
+- deleted: none.
+- simplified: the exact raw mixed-Hartree side now has one owner and shared
+  term-stream machinery for `GG`, `GA`, and `AA`.
+- quarantined: validation probes/oracles remain ignored under `tmp/work` and
+  `/Users/srw/dmrgtmp`; correction assembly and protected/final transforms
+  remain unauthorized.
+- exact remaining blocker: design and approve the protected/final
+  `F_exact[P0]` transform lane, or separately prove the approximate
+  `F_app[P0]` seam, before any fixed-`P0` correction assembly.

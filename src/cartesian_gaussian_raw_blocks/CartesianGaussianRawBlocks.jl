@@ -12,8 +12,8 @@ File map:
   raw blocks.
 - `non_nuclear_blocks.jl`: overlap, kinetic, coordinate, and second-moment
   Gaussian `G-A`/`A-A` raw blocks.
-- `mixed_hartree_blocks.jl`: exact one-center reference-density Hartree `G-G`
-  terminal blocks.
+- `mixed_hartree_blocks.jl`: exact one-center reference-density Hartree
+  terminal `G-G` and raw `G-A`/`A-A` blocks.
 """
 module CartesianGaussianRawBlocks
 

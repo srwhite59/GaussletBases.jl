@@ -5,6 +5,13 @@ struct _AtomicReferencePairDensityTerm
     powers::NTuple{3,Int}
 end
 
+struct _AtomicReferenceHartreePotentialTerm
+    coefficient::Float64
+    exponent::Float64
+    center::NTuple{3,Float64}
+    powers::NTuple{3,Int}
+end
+
 struct _AtomicReferenceHartreeGGDiagnostics
     reference_orbital_count::Int
     reference_pair_count::Int
@@ -20,6 +27,26 @@ struct _AtomicReferenceHartreeGGDiagnostics
     gg_trace::Float64
     gg_symmetry_error::Float64
     gg_finite::Bool
+end
+
+struct _AtomicReferenceHartreeGAAADiagnostics
+    reference_orbital_count::Int
+    supplement_orbital_count::Int
+    reference_pair_count::Int
+    primitive_pair_term_count::Int
+    compressed_pair_term_count::Int
+    coulomb_expansion_term_count::Int
+    one_body_packet_term_count::Int
+    reference_electron_count::Float64
+    reference_density_trace::Float64
+    density_symmetry_error::Float64
+    density_finite::Bool
+    ga_dimension::Tuple{Int,Int}
+    aa_dimension::Int
+    ga_finite::Bool
+    aa_trace::Float64
+    aa_symmetry_error::Float64
+    aa_finite::Bool
 end
 
 function _atomic_reference_center(supplement)
@@ -156,6 +183,28 @@ function _mixed_hartree_cached_axis_factor!(cache, axis, exponent, center, power
     end
 end
 
+function _atomic_reference_hartree_potential_terms(terms, expansion)
+    potential_terms = _AtomicReferenceHartreePotentialTerm[]
+    for term in terms, expansion_index in eachindex(expansion.coefficients)
+        coupling = Float64(expansion.exponents[expansion_index])
+        factor_exponent = term.exponent * coupling / (term.exponent + coupling)
+        axis_components = ntuple(axis -> _mixed_hartree_axis_convolution_components(
+            term.powers[axis], term.exponent, coupling), 3)
+        for xcomp in axis_components[1], ycomp in axis_components[2], zcomp in axis_components[3]
+            coefficient = term.coefficient * Float64(expansion.coefficients[expansion_index]) *
+                xcomp.second * ycomp.second * zcomp.second
+            coefficient == 0.0 && continue
+            push!(potential_terms, _AtomicReferenceHartreePotentialTerm(
+                coefficient,
+                factor_exponent,
+                term.center,
+                (xcomp.first, ycomp.first, zcomp.first),
+            ))
+        end
+    end
+    return potential_terms
+end
+
 function _atomic_reference_hartree_factor_packets(bundles, terms, expansion)
     axes = Tuple(getfield(_GB_PARENT, :_nested_axis_pgdg)(bundles, axis) for axis in (:x, :y, :z))
     coefficients = Float64[]
@@ -180,6 +229,128 @@ function _atomic_reference_hartree_factor_packets(bundles, terms, expansion)
         end
     end
     return (; coefficients, x = factors[1], y = factors[2], z = factors[3])
+end
+
+function _mixed_hartree_polynomial_factor_integral(
+    left_exponent, left_center, left_power, left_prefactor,
+    right_exponent, right_center, right_power, right_prefactor,
+    factor_exponent, factor_center, factor_power)
+    gamma = left_exponent + right_exponent + factor_exponent
+    weighted_center = (left_exponent * left_center + right_exponent * right_center +
+        factor_exponent * factor_center) / gamma
+    constant = left_exponent * left_center^2 + right_exponent * right_center^2 +
+        factor_exponent * factor_center^2 - gamma * weighted_center^2
+    left_shift = weighted_center - left_center
+    right_shift = weighted_center - right_center
+    factor_shift = weighted_center - factor_center
+    value = 0.0
+    for i in 0:left_power, j in 0:right_power, k in 0:factor_power
+        moment_power = i + j + k
+        isodd(moment_power) && continue
+        value += binomial(left_power, i) * binomial(right_power, j) *
+            binomial(factor_power, k) *
+            left_shift^(left_power - i) * right_shift^(right_power - j) *
+            factor_shift^(factor_power - k) *
+            _mixed_hartree_even_moment(gamma, moment_power)
+    end
+    return left_prefactor * right_prefactor * exp(-constant) * value
+end
+
+function _fill_mixed_hartree_axis_factor_table!(destination, left, right,
+    factor_exponent::Float64, factor_center::Float64, factor_power::Int)
+    @inbounds for column in axes(destination, 2), row in axes(destination, 1)
+        destination[row, column] = _mixed_hartree_polynomial_factor_integral(
+            left.exponents[row],
+            left.centers[row],
+            left.powers[row],
+            left.prefactors[row],
+            right.exponents[column],
+            right.centers[column],
+            right.powers[column],
+            right.prefactors[column],
+            factor_exponent,
+            factor_center,
+            factor_power,
+        )
+    end
+    return destination
+end
+
+function _mixed_hartree_ga_block(proxy, supplement, inventory, potential_terms)
+    ncart, norbital = proxy.ncart, length(supplement.orbitals)
+    GA = zeros(Float64, ncart, norbital)
+    fill_product! = getfield(_GB_PARENT, :_qwrg_fill_product_column!)
+    left_contract! = getfield(_GB_PARENT, :mul!)
+    stencils = [Matrix{Float64}(_GB_PARENT.stencil_matrix(_axis_layer(proxy, axis)))
+        for axis in 1:3]
+    proxy_inputs = [_proxy_axis_factor_inputs(_axis_layer(proxy, axis)) for axis in 1:3]
+    scratch = zeros(Float64, ncart)
+    primitive_tables = [Dict{Tuple{Int,Int},Matrix{Float64}}() for _ in 1:3]
+    contracted_tables = [Dict{Tuple{Int,Int},Matrix{Float64}}() for _ in 1:3]
+
+    for (term_index, term) in pairs(potential_terms)
+        for axis in 1:3, family_index in eachindex(inventory.families[axis])
+            family = inventory.families[axis][family_index]
+            primitive = get!(primitive_tables[axis], (term_index, family_index)) do
+                zeros(Float64, length(proxy_inputs[axis].exponents), length(family.exponents))
+            end
+            _fill_mixed_hartree_axis_factor_table!(primitive,
+                proxy_inputs[axis], family, term.exponent, term.center[axis],
+                term.powers[axis])
+            contracted = get!(contracted_tables[axis], (term_index, family_index)) do
+                zeros(Float64, size(stencils[axis], 2), length(family.exponents))
+            end
+            left_contract!(contracted, transpose(stencils[axis]), primitive)
+        end
+        for (orbital_index, orbital) in pairs(supplement.orbitals)
+            ids = ntuple(axis -> inventory.maps[axis][orbital_index], 3)
+            factors = ntuple(axis -> contracted_tables[axis][(term_index, ids[axis])], 3)
+            column = view(GA, :, orbital_index)
+            for primitive in eachindex(orbital.coefficients)
+                fill_product!(scratch, view(factors[1], :, primitive),
+                    view(factors[2], :, primitive), view(factors[3], :, primitive))
+                scale = term.coefficient * Float64(orbital.coefficients[primitive])
+                @inbounds for row in eachindex(scratch)
+                    column[row] += scale * scratch[row]
+                end
+            end
+        end
+    end
+    return GA
+end
+
+function _mixed_hartree_aa_block(supplement, inventory, potential_terms)
+    norbital = length(supplement.orbitals)
+    AA = zeros(Float64, norbital, norbital)
+    table_cache = [Dict{Tuple{Int,Int,Int},Matrix{Float64}}() for _ in 1:3]
+
+    for left_index in 1:norbital, right_index in left_index:norbital
+        left = supplement.orbitals[left_index]
+        right = supplement.orbitals[right_index]
+        left_ids = ntuple(axis -> inventory.maps[axis][left_index], 3)
+        right_ids = ntuple(axis -> inventory.maps[axis][right_index], 3)
+        value = 0.0
+        for (term_index, term) in pairs(potential_terms)
+            tables = ntuple(3) do axis
+                key = (term_index, left_ids[axis], right_ids[axis])
+                get!(table_cache[axis], key) do
+                    family_left = inventory.families[axis][left_ids[axis]]
+                    family_right = inventory.families[axis][right_ids[axis]]
+                    table = zeros(Float64, length(family_left.exponents),
+                        length(family_right.exponents))
+                    _fill_mixed_hartree_axis_factor_table!(table,
+                        family_left, family_right, term.exponent, term.center[axis],
+                        term.powers[axis])
+                end
+            end
+            value += term.coefficient * _weighted_hadamard3(left.coefficients,
+                tables[1], false, tables[2], false, tables[3], false,
+                right.coefficients)
+        end
+        AA[left_index, right_index] = value
+        AA[right_index, left_index] = value
+    end
+    return _symmetrize_raw_block(AA)
 end
 
 function atomic_reference_hartree_gg_block(basis, bundles, reference_supplement,
@@ -209,4 +380,35 @@ function atomic_reference_hartree_gg_block(basis, bundles, reference_supplement,
         all(isfinite, GG),
     )
     return (; GG, diagnostics)
+end
+
+function atomic_reference_hartree_ga_aa_blocks(proxy, supplement, reference_supplement,
+    reference_density; expansion = getfield(_GB_PARENT, :coulomb_gaussian_expansion)(doacc = false))
+    density = _validate_atomic_reference_density(reference_supplement, reference_density)
+    terms, primitive_count = _atomic_reference_pair_density_terms(
+        reference_supplement, density.density)
+    potential_terms = _atomic_reference_hartree_potential_terms(terms, expansion)
+    inventory = _axis_family_inventory(supplement)
+    GA = _mixed_hartree_ga_block(proxy, supplement, inventory, potential_terms)
+    AA = _mixed_hartree_aa_block(supplement, inventory, potential_terms)
+    diagnostics = _AtomicReferenceHartreeGAAADiagnostics(
+        length(reference_supplement.orbitals),
+        length(supplement.orbitals),
+        length(reference_supplement.orbitals)^2,
+        primitive_count,
+        length(terms),
+        length(expansion.coefficients),
+        length(potential_terms),
+        density.electron_count,
+        tr(density.density * density.overlap),
+        density.symmetry_error,
+        all(isfinite, density.density),
+        size(GA),
+        size(AA, 1),
+        all(isfinite, GA),
+        tr(AA),
+        norm(AA - transpose(AA), Inf),
+        all(isfinite, AA),
+    )
+    return (; GA, AA, diagnostics)
 end
