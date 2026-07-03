@@ -896,3 +896,71 @@ Failure rule: if the source pass needs dense final four-index ERIs, files
 outside the approved surface, `GA`/`AA`, protected transforms, artifact/schema
 work, or broader reference-density correction machinery, stop and report the
 exact missing owner or kernel. Do not widen the lane in source.
+
+## Design-Manager Source Authority - GA/AA Extension - 2026-07-03
+
+After the `GG` source slice landed, the next approved source lane is the raw
+exact Hartree `GA`/`AA` extension.
+
+Approved IDs:
+
+- `HP-RHO0-MIXH-GAAA-FN-01`
+- `HP-RHO0-MIXH-GAAA-TEST-01`
+
+Approved source owner:
+
+- `src/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl`;
+- `src/cartesian_gaussian_raw_blocks/CartesianGaussianRawBlocks.jl` only for
+  internal file-map/docstring cleanup if needed.
+
+Approved behavior:
+
+- preserve `atomic_reference_hartree_gg_block(...)` behavior;
+- reuse the existing one-center `P_A` validation, same-center pair-density term
+  stream, and Coulomb-expanded separable one-body factor packets;
+- add internal helper(s), or a combined internal raw-block helper, producing
+  exact `GA = <G|v_P_A|A>` and `AA = <A|v_P_A|A>` blocks;
+- support angular/off-diagonal reference density pairs and angular supplement
+  Gaussian rows;
+- validate `GA`/`AA` dimensions, finite values, `AA` symmetry, and compact
+  diagnostics;
+- keep dense Gaussian Coulomb matrices as bounded oracle/debug validation only.
+
+Explicitly out of scope:
+
+- protected-localized, injected, residual, or final correction transforms;
+- `F_app[P0]`, `Delta_F0`, `C0`, reference self-energy production, or
+  corrected Hamiltonian assembly;
+- artifact/provenance/schema/writer/reader/manifest changes;
+- public driver/API/export/defaults or solver workflow;
+- Cr atom, Cr2, Cr2 HF, or Cr2 production diagnostics;
+- HF exchange and `(final GTO | GTO final)` kernels;
+- row-action, `diag(J)`, `q0`, center metadata, direct `C' V C`, or IDA proxy
+  shortcuts;
+- residual/MWG defaults, residual selection, basis-fate changes, broad
+  rejected directions as MWG residuals, dense final four-index ERIs,
+  cross-atom reference density pair products, committed tests, or fixtures.
+
+Validation required:
+
+- `git diff --check`;
+- package load;
+- previous `GG` source validation still passes or is covered by an equivalent
+  replay;
+- bounded H or Be one-center `GA`/`AA` smoke with finite output and symmetric
+  `AA`;
+- dense Gaussian Coulomb oracle spot checks for `GA` and `AA`, including at
+  least one angular/off-diagonal same-center reference-pair case and one
+  angular supplement row;
+- if a combined raw-block helper is added, verify its `GG` output matches
+  `atomic_reference_hartree_gg_block(...)` within roundoff;
+- report `GA`/`AA` dimensions, finite/symmetry diagnostics, pair-term counts,
+  packet counts, reference electron-count normalization, and dense-oracle
+  deltas;
+- no protected transform, no artifacts, no public workflow, and no Cr/Cr2 run.
+
+Failure rule: if the source pass needs source outside the approved surface, a
+new terminal projection owner, dense final four-index ERIs, protected
+transforms, artifact/schema work, or broader reference-density correction
+machinery, stop and report the exact missing seam. Do not widen the lane in
+source.

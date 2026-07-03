@@ -23753,6 +23753,44 @@ Carrying-cost result:
   ignored probes or residual-Gaussian context.
 - quarantined: dense oracle, validation tables, and H/Be validation scripts
   remain ignored measurement artifacts.
-- exact remaining blocker: approve and implement the next mixed Hartree lane,
-  likely `GA`/`AA` exact blocks or the protected/final transform, before
-  attempting full Be/Be2 fixed-`P0` correction assembly.
+
+## Cartesian Hamiltonian Producer Pass 285 - Rho0 GA/AA Mixed Hartree Authority
+
+Commit(s):
+- this commit - Approve rho0 GA/AA mixed Hartree lane
+
+Summary:
+- Design-manager approved the next raw exact Hartree source lane:
+  `HP-RHO0-MIXH-GAAA-FN-01` / `TEST-01`.
+- The lane extends the existing neutral `mixed_hartree_blocks.jl` machinery
+  from `GG = <G|v_P_A|G>` to `GA = <G|v_P_A|A>` and
+  `AA = <A|v_P_A|A>`, still for one-center atomic `P_A` contributions only.
+  Multi-atom `P0` remains a caller-side sum of one-center atomic blocks.
+
+Validation / evidence:
+- The prior `GG` source commit already proved the pair-density term stream and
+  Coulomb-expanded factor packets against H/Be dense-oracle checks. The new
+  lane requires reusing that machinery and validating `GA`/`AA` with dense
+  Gaussian Coulomb oracle spot checks, including angular reference pairs and
+  angular supplement rows.
+
+Goal advancement:
+- LT5/LT6 and MT4: completes the raw exact side needed before a later
+  protected/final `F_exact[P0]` transform can be evaluated honestly on Be/Be2.
+
+Risk / guardrail:
+- This is still not reference-density correction assembly. `F_app[P0]`,
+  `Delta_F0`, `C0`, protected transforms, artifacts, public workflow, Cr/Cr2,
+  exchange, dense final ERIs, cross-atom reference density products, and
+  residual/MWG/basis-fate changes remain explicitly unauthorized.
+
+Carrying-cost result:
+- source line delta: 0 in this docs authority pass.
+- deleted: none.
+- simplified: the doer now has a specific raw-block extension target instead
+  of a broad "finish rho0 exact side" instruction.
+- quarantined: correction assembly, approximate Fock, protected/final
+  transforms, artifacts/public workflow, Cr/Cr2, exchange, and cross-atom
+  reference density products.
+- exact remaining blocker: implement `HP-RHO0-MIXH-GAAA-FN-01` and prove
+  `GA`/`AA` oracle parity before asking for the protected/final transform lane.

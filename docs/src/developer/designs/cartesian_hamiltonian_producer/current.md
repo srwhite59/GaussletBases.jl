@@ -409,11 +409,22 @@ Approved Residual Gaussian robustness lane:
   final ERIs, or residual/MWG/basis-fate changes. `HP-RHO0-MIXH-GG-TEST-01`
   requires H/Be/Be2-scale `GG` validation, dense-oracle spot checks, and an
   angular/off-diagonal same-center pair check.
+- `HP-RHO0-MIXH-GAAA-FN-01` approves extending the same neutral mixed Hartree
+  owner from `GG` to exact `GA = <G|v_P_A|A>` and
+  `AA = <A|v_P_A|A>` blocks. It may reuse the source-backed `P_A` validation,
+  same-center pair-density term stream, and Coulomb-expanded factor packets,
+  but still only for one-center atomic reference contributions. It does not
+  approve protected/final transforms, `F_app[P0]`, `Delta_F0`, `C0`,
+  artifacts, public workflow, Cr/Cr2, exchange, dense final ERIs, cross-atom
+  reference density products, or residual/MWG/basis-fate changes.
+  `HP-RHO0-MIXH-GAAA-TEST-01` requires bounded H/Be `GA`/`AA` validation and
+  dense-oracle spot checks including angular reference pairs and angular
+  supplement rows.
 - `rho0_reference_density_implementation_plan.md` is a review memo for the
   likely fast separable atomic-reference Hartree source shape. The current
-  approved first source target is `GG`-only from one-center atomic `P_A`;
-  `GA`/`AA`, protected transforms, `F_app[P0]`, `C0`, Cr/Cr2, artifacts, and
-  public workflow remain later lanes.
+  approved source target is raw exact mixed Hartree `GG` plus `GA`/`AA` from
+  one-center atomic `P_A`; protected transforms, `F_app[P0]`, `C0`, Cr/Cr2,
+  artifacts, and public workflow remain later lanes.
 
 Approved stale complete-core-shell RHF retirement:
 

@@ -4797,6 +4797,86 @@ Required validation:
 - no `GA`/`AA`, no protected transform, no artifacts, no public workflow, and
   no Cr/Cr2 run.
 
+### HP-RHO0-MIXH-GAAA-FN-01 — exact mixed Hartree GA/AA blocks
+
+Status: approved narrow source authority.
+
+Purpose: extend the source-backed exact Hartree seam from `GG` to the
+supplement block shapes needed by later protected/final transforms:
+
+```text
+GA = <G_i | v_P_A | A_j>
+AA = <A_i | v_P_A | A_j>
+```
+
+This lane consumes one atom's same-center `P_A` per call. A molecular `P0`
+remains a sum of one-center atomic contributions; cross-atom reference density
+products are not approved.
+
+Approved source surface:
+
+- `src/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl`;
+- `src/cartesian_gaussian_raw_blocks/CartesianGaussianRawBlocks.jl` only for
+  internal file-map/docstring cleanup if needed.
+
+Approved behavior:
+
+- preserve existing `atomic_reference_hartree_gg_block(...)` behavior;
+- reuse the existing reference-density validation, pair-density term stream,
+  and Coulomb-expanded factor packets;
+- add internal helper(s), or a combined internal raw-block helper, returning
+  exact `GA` and `AA` Hartree blocks;
+- support angular/off-diagonal reference pair-density terms and angular
+  supplement rows;
+- validate `GA`/`AA` dimensions, finite values, `AA` symmetry, and compact
+  diagnostics;
+- keep dense Gaussian Coulomb matrices as bounded oracle/debug validation
+  only.
+
+Forbidden:
+
+- protected-localized, injected, residual, or final correction transforms;
+- `F_app[P0]`, `Delta_F0`, `C0`, reference self-energy production, or
+  corrected Hamiltonian construction;
+- public driver/API/export/defaults, solver workflow, artifacts, manifests,
+  provenance, writers, readers, or sidecars;
+- Cr atom, Cr2, Cr2 HF, or Cr2 production diagnostics;
+- HF exchange and `(final GTO | GTO final)` kernels;
+- row action, `diag(J)`, `q0`, center metadata, direct `C' V C`, or IDA proxy
+  shortcuts as substitutes for exact Hartree;
+- residual/MWG default changes, residual selection changes, basis-fate policy,
+  or broad rejected directions as MWG residuals;
+- dense final four-index ERI materialization;
+- cross-atom reference density pair products;
+- source files outside the approved surface;
+- committed tests or fixtures.
+
+Failure rule: stop if `GA`/`AA` construction needs source outside the approved
+surface, a new terminal projection owner, dense final four-index ERIs,
+protected transforms, artifact/schema work, or broader reference-density
+correction machinery.
+
+### HP-RHO0-MIXH-GAAA-TEST-01 — exact mixed Hartree GA/AA validation
+
+Status: approved validation gates for `HP-RHO0-MIXH-GAAA-FN-01`.
+
+Required validation:
+
+- `git diff --check`;
+- package load;
+- prior `GG` validation still passes or is covered by an equivalent replay;
+- bounded H or Be one-center `GA`/`AA` smoke with finite output and symmetric
+  `AA`;
+- dense Gaussian Coulomb oracle spot checks for `GA` and `AA`, including at
+  least one angular/off-diagonal same-center reference-pair case and one
+  angular supplement row;
+- if a combined raw-block helper is added, verify its `GG` output matches
+  `atomic_reference_hartree_gg_block(...)` within roundoff;
+- report `GA`/`AA` dimensions, finite/symmetry diagnostics, pair-term counts,
+  packet counts, reference electron-count normalization, and dense-oracle
+  deltas;
+- no protected transform, no artifacts, no public workflow, and no Cr/Cr2 run.
+
 Candidate future IDs, not approved:
 
 - `HP-RHO0-REFDENS-FN-01` - possible future source authority for reference

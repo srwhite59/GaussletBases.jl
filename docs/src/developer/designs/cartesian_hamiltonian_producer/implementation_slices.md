@@ -507,6 +507,16 @@ Approved robustness lane:
   `HP-RHO0-MIXH-GG-TEST-01` requires bounded H/Be/Be2 `GG` validation, dense
   oracle spot checks, and at least one angular/off-diagonal same-center
   reference-pair check.
+- `HP-RHO0-MIXH-GAAA-FN-01` approves only the raw exact Hartree `GA`/`AA`
+  extension under the same neutral owner. It reuses one-center `P_A`
+  validation, same-center pair-density terms, and factor packets to build
+  `GA = <G|v_P_A|A>` and `AA = <A|v_P_A|A>`. It does not approve
+  protected/final transforms, `F_app[P0]`, `Delta_F0`, `C0`, artifacts,
+  public workflow, Cr/Cr2, exchange, dense final ERIs, cross-atom reference
+  density products, or residual/MWG/basis-fate changes.
+  `HP-RHO0-MIXH-GAAA-TEST-01` requires bounded H/Be `GA`/`AA` validation and
+  dense-oracle spot checks, including angular reference pairs and angular
+  supplement rows.
 
 ## Compact Hamiltonian Artifact Manifest
 

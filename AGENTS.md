@@ -540,6 +540,8 @@ these approved design IDs:
 - `HP-RG-PROTECT-ONEBODY-TEST-01`
 - `HP-RHO0-MIXH-GG-FN-01`
 - `HP-RHO0-MIXH-GG-TEST-01`
+- `HP-RHO0-MIXH-GAAA-FN-01`
+- `HP-RHO0-MIXH-GAAA-TEST-01`
 - `HP-CGRB-FILE-01`
 - `HP-CGRB-FN-01`
 - `HP-CGRB-FN-02`
@@ -1188,6 +1190,25 @@ Approved Residual Gaussian module surfaces:
   ignored H/Be/Be2-scale `GG` validation, dense Gaussian Coulomb oracle spot
   checks including at least one angular/off-diagonal same-center reference
   pair, and no Cr/Cr2 run.
+- `HP-RHO0-MIXH-GAAA-FN-01` approves only extending the same neutral mixed
+  Hartree owner to exact `GA = <G|v_P_A|A>` and `AA = <A|v_P_A|A>` blocks.
+  Approved source is `src/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl`
+  and `src/cartesian_gaussian_raw_blocks/CartesianGaussianRawBlocks.jl` only
+  for internal file-map/docstring cleanup if needed. The pass may reuse the
+  one-center `P_A` validation, same-center pair-density term stream, and
+  Coulomb-expanded separable factor packets from the `GG` lane, and may add
+  compact diagnostics for `GA`/`AA`. It does not approve protected/final
+  transforms, `F_app[P0]`, `Delta_F0`, `C0`, reference self-energy production,
+  artifacts, public driver/API/export/defaults, solver workflow, Cr/Cr2
+  diagnostics, HF exchange, dense final four-index ERIs, cross-atom reference
+  density products, row-action/`diag(J)`/`q0`/center metadata/`C'VC`
+  shortcuts, residual/MWG defaults, residual selection changes, basis-fate
+  policy, broad rejected directions as MWG residuals, source outside the
+  approved surface, or committed tests/fixtures. `HP-RHO0-MIXH-GAAA-TEST-01`
+  approves only `git diff --check`, package load, prior `GG` replay, bounded
+  H/Be `GA`/`AA` validation, dense Gaussian Coulomb oracle spot checks
+  including angular reference pairs and angular supplement rows, and no Cr/Cr2
+  run.
 
 Non-negotiable RG guardrails:
 

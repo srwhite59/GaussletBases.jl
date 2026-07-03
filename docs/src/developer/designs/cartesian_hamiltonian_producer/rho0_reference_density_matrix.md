@@ -440,6 +440,91 @@ Required validation:
 - no `GA`/`AA`, no protected transform, no artifacts, no public workflow, and
   no Cr/Cr2 run.
 
+## HP-RHO0-MIXH-GAAA-FN-01
+
+Status: approved narrow source authority for extending the exact mixed
+Hartree raw-block seam from `GG` to `GA` and `AA`.
+
+Purpose: reuse the `HP-RHO0-MIXH-GG-FN-01` one-center atomic reference density
+machinery so the same exact Hartree potential can produce:
+
+```text
+GG = <G_i | v_P_A | G_j>     already source-backed
+GA = <G_i | v_P_A | A_j>
+AA = <A_i | v_P_A | A_j>
+```
+
+where `P_A` is one atom's same-center reference density matrix, `G` is the
+terminal/base gausslet basis, and `A` is the supplement Gaussian candidate
+basis. A molecular `P0` remains a caller-side sum of one-center atomic
+contributions; this lane does not add cross-atom reference density products.
+
+Approved source owner:
+
+- `src/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl`;
+- `src/cartesian_gaussian_raw_blocks/CartesianGaussianRawBlocks.jl` only for
+  internal file-map/docstring cleanup if needed.
+
+Approved behavior:
+
+- preserve `atomic_reference_hartree_gg_block(...)` behavior;
+- add private/internal helper(s), or a combined internal raw-block helper, that
+  return exact `GA` and `AA` Hartree blocks for a single one-center atomic
+  `P_A`;
+- reuse the existing reference density validation, same-center pair-density
+  term stream, and Coulomb-expanded separable one-body factor packets;
+- support angular/off-diagonal reference pair-density terms and angular
+  supplement Gaussian rows;
+- validate output dimensions, finite values, `AA` symmetry, and compact
+  diagnostics for `GA` and `AA`;
+- keep dense Gaussian Coulomb matrices as bounded oracle/debug validation only.
+
+Forbidden:
+
+- protected-localized, injected, residual, or final correction transforms;
+- `F_app[P0]`, `Delta_F0`, `C0`, reference self-energy production, or
+  corrected Hamiltonian assembly;
+- artifact schema, provenance, writer, reader, manifest, or sidecar changes;
+- public driver, public API, exports, defaults, or solver workflow;
+- Cr atom, Cr2, Cr2 HF, or Cr2 production diagnostics;
+- HF exchange or `(final GTO | GTO final)` kernels;
+- row action `(J*w)/w`, `diag(J)`, `q0`, center metadata, direct `C' V C`, or
+  IDA proxy shortcuts as substitutes for exact Hartree blocks;
+- residual/MWG defaults, residual selection, basis-fate policy, or broad
+  rejected directions as MWG residuals;
+- dense final four-index ERI materialization;
+- cross-atom reference density pair products;
+- source files outside the approved surface;
+- committed tests or fixtures.
+
+Failure rule: if `GA`/`AA` construction requires source outside the approved
+surface, a new terminal projection owner, dense final four-index ERIs,
+protected transforms, artifact/schema work, or broader reference-density
+correction machinery, stop and report the exact missing seam. Do not widen
+this lane in source.
+
+## HP-RHO0-MIXH-GAAA-TEST-01
+
+Status: approved validation gates for `HP-RHO0-MIXH-GAAA-FN-01`.
+
+Required validation:
+
+- `git diff --check`;
+- package load;
+- prior `GG` source validation still passes or is covered by an equivalent
+  replay;
+- bounded H or Be one-center `GA`/`AA` smoke with finite output and symmetric
+  `AA`;
+- dense Gaussian Coulomb oracle spot checks for both `GA` and `AA`, including
+  at least one angular/off-diagonal same-center reference-pair case and at
+  least one angular supplement row;
+- if a combined raw-block helper is added, verify its `GG` output matches
+  `atomic_reference_hartree_gg_block(...)` within roundoff;
+- report `GA`/`AA` dimensions, finite/symmetry diagnostics, pair-term counts,
+  packet counts, reference electron-count normalization, and dense-oracle
+  deltas;
+- no protected transform, no artifacts, no public workflow, and no Cr/Cr2 run.
+
 ## Candidate Future Source IDs
 
 `HP-RHO0-REFDENS-FN-01` is a candidate future source lane only. It is not
