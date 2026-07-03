@@ -1230,6 +1230,18 @@ Approved Residual Gaussian module surfaces:
   `HP-RHO0-MIXH-FEXACT-TEST-01` approves only `git diff --check`, package
   load, raw `GG` and `GA`/`AA` replay, H/Be/Be2-only final/protected transform
   smoke, dense-oracle spot checks, and no Cr/Cr2 run.
+- `HP-RHO0-FAPP-AUDIT-01` approves only ignored measurement probes for the
+  approximate-side fixed-`P0` Fock seam. The audit must obtain `F_app[P0]` as
+  the derivative of the actual current IDA/MWG approximate energy convention
+  for represented `P0_final`, and finite-difference validate
+  `dE_app[P0; dP] = Tr(dP * F_app[P0])` on H/Be/Be2. It does not approve
+  tracked source edits, public driver/API/export/default changes, artifact/
+  provenance/schema/writer/reader/manifest changes, production Hamiltonian or
+  solver workflow, `Delta_F0`, `C0`, corrected Hamiltonian assembly, Cr/Cr2,
+  row-action/`diag(J)`/`q0`/center metadata/direct-`C' V C` substitutes,
+  residual/MWG default or basis-fate changes, broad rejected directions as MWG
+  residuals, or committed tests/fixtures. Because this is measurement-only
+  authority, do not add it to the approved source-ID list.
 
 Non-negotiable RG guardrails:
 

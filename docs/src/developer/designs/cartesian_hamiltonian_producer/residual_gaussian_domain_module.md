@@ -94,6 +94,8 @@ module, or object names in the new owner.
   from raw mixed Hartree `GG`/`GA`/`AA` blocks.
 - `HP-RHO0-MIXH-FEXACT-TEST-01` - validation gates for the exact-side
   final/protected Hartree transform.
+- `HP-RHO0-FAPP-AUDIT-01` - measurement-only approximate-side `F_app[P0]`
+  seam audit; this is not source authority.
 
 Implementation IDs in this list are approved only within the surfaces below.
 Design-only IDs record authority for future source blurbs but do not approve
@@ -399,6 +401,14 @@ mixed Hartree `GG`/`GA`/`AA` blocks and existing protected-original geometry to
 produce in-memory `F_exact_Hartree[P0]`. It is not authority for approximate
 Fock construction, correction constants, artifacts/public workflow, IDA/MWG
 interactions, geometry selection changes, Cr/Cr2, or solver work.
+
+`HP-RHO0-FAPP-AUDIT-01` is measurement-only authority to identify the
+approximate-side derivative seam. It may use ignored probes to compute
+`E_app[P0]` and validate `F_app[P0]` as the derivative of the actual current
+IDA/MWG approximate energy convention for represented `P0_final`. It is not
+source authority and does not approve correction constants, artifacts/public
+workflow, Cr/Cr2, row-action/`diag(J)`/`q0`/center-metadata/direct-`C' V C`
+shortcuts, or residual/MWG/basis-fate changes.
 
 Do not approve a vague global entry point such as
 `stabilize_residual_metric(...)`. Global raw-candidate symmetric Lowdin and

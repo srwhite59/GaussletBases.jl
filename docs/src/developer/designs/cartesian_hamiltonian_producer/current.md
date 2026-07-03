@@ -429,12 +429,20 @@ Approved Residual Gaussian robustness lane:
   interaction transforms, approximate Fock construction, or residual/MWG/
   basis-fate changes. `HP-RHO0-MIXH-FEXACT-TEST-01` requires H/Be/Be2-only
   final/protected transform validation and dense-oracle spot checks.
+- `HP-RHO0-FAPP-AUDIT-01` approves only a measurement audit for the
+  approximate-side fixed-`P0` Fock seam. It must identify `F_app[P0]` as the
+  derivative of the actual current IDA/MWG approximate energy convention for
+  represented `P0_final`, and finite-difference validate that derivative on
+  H/Be/Be2. It may use ignored probes and `/Users/srw/dmrgtmp` output only. It
+  does not approve source edits, `Delta_F0`, `C0`, corrected Hamiltonian
+  assembly, artifacts/public workflow, Cr/Cr2, residual/MWG default changes, or
+  row-action/`diag(J)`/`q0`/center-metadata/direct-`C' V C` shortcuts.
 - `rho0_reference_density_implementation_plan.md` is a review memo for the
   likely fast separable atomic-reference Hartree source shape. The current
   approved source target is raw exact mixed Hartree `GG` plus `GA`/`AA` from
   one-center atomic `P_A`, followed by the exact-side final/protected transform;
-  `F_app[P0]`, `Delta_F0`, `C0`, Cr/Cr2, artifacts, and public workflow remain
-  later lanes.
+  `F_app[P0]` is now measurement-only under `HP-RHO0-FAPP-AUDIT-01`, while
+  `Delta_F0`, `C0`, Cr/Cr2, artifacts, and public workflow remain later lanes.
 
 Approved stale complete-core-shell RHF retirement:
 

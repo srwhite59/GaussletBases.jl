@@ -613,6 +613,76 @@ Required validation:
 - no `F_app[P0]`, no `Delta_F0`, no `C0`, no artifact, no public workflow, and
   no Cr/Cr2 run.
 
+## HP-RHO0-FAPP-AUDIT-01
+
+Status: approved measurement-only approximate-side seam audit.
+
+Purpose: identify and validate the approximate Hartree/Fock-from-density seam
+for fixed reference density `P0` before any correction assembly. The object is:
+
+```text
+F_app[P0] = d E_app[P] / dP at P = P0
+```
+
+where `E_app[P]` is the energy produced by the actual current IDA/MWG
+Hamiltonian convention for the represented density. This audit is required
+before `Delta_F0`, `C0`, or any corrected Hamiltonian construction can be
+approved.
+
+Allowed measurement surface:
+
+- ignored `tmp/work/*.jl` probes only;
+- durable text/TSV output under `/Users/srw/dmrgtmp` if useful;
+- H, Be, and Be2 only;
+- consume existing final/protected geometry and the source-backed
+  `F_exact_Hartree[P0]` output for shape/comparison diagnostics only;
+- build and report the represented `P0_final` used by the approximate
+  Hamiltonian convention;
+- compute `E_app[P0]` and a candidate `F_app[P0]` from the actual current
+  IDA/MWG energy/Fock convention;
+- validate the candidate by finite differences:
+
+```text
+(E_app[P0 + eps*dP] - E_app[P0 - eps*dP]) / (2eps)
+    ~= Tr(dP * F_app[P0])
+```
+
+Required diagnostics:
+
+- exact approximate-energy convention used for `E_app[P]`, including whether
+  the first audit is Hartree-only/spin-summed or spin-resolved;
+- `P0_final` construction, normalization, trace, and representability facts;
+- finite-difference perturbation directions and epsilon sweep;
+- finite-difference residuals for each perturbation;
+- finite and symmetry diagnostics for `F_app[P0]`;
+- dimensions and sector labels needed to compare against `F_exact_Hartree[P0]`
+  without defining `F_app` from the exact-side matrix;
+- the exact missing seam if no actual approximate-energy derivative evaluator
+  exists.
+
+Forbidden:
+
+- tracked source edits;
+- public driver, public API, exports, or default changes;
+- artifact, provenance, schema, writer, reader, manifest, or sidecar changes;
+- production Hamiltonian or solver workflow;
+- `Delta_F0`, `C0`, `E_new`, corrected Hamiltonian assembly, or reference
+  self-energy assembly;
+- Cr atom, Cr2, Cr2 HF, or Cr2 production diagnostics;
+- HF exchange unless the existing current convention already includes it in
+  the audited evaluator; the first target remains Hartree-only;
+- row action `(J*w)/w`, `diag(J)`, `q0`, center metadata, direct `C' V C`, or
+  IDA proxy shortcuts as substitutes for `F_app[P0]`;
+- residual/MWG default changes, residual selection changes, basis-fate policy,
+  or broad rejected directions as MWG residuals;
+- committed tests or fixtures.
+
+Decision rule: if the actual approximate evaluator can be identified and
+finite-difference validated on H/Be/Be2, a later lane may approve either a
+source helper or the correction-anchor audit. If not, report the missing seam
+and stop. Do not substitute a row-gauge, diagonal, center-metadata, or direct
+interaction-transform formula for the solver convention.
+
 ## Candidate Future Source IDs
 
 `HP-RHO0-REFDENS-FN-01` is a candidate future source lane only. It is not

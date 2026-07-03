@@ -1034,3 +1034,49 @@ consumer of existing raw blocks and existing protected one-body transform
 helpers, stop and report the missing seam. Do not widen the lane into
 approximate Fock, correction assembly, artifacts, public wiring, a new
 geometry selector, new raw kernels, or IDA/MWG interaction plumbing.
+
+## Design-Manager Measurement Authority - Approximate Fock Seam - 2026-07-03
+
+The exact-side path now has source-backed raw `GG`/`GA`/`AA` mixed Hartree
+blocks and a final/protected transform to produce dense in-memory
+`F_exact_Hartree[P0]`. The next approved step is measurement-only: identify
+and validate the approximate-side seam for `F_app[P0]`.
+
+Approved ID:
+
+- `HP-RHO0-FAPP-AUDIT-01`
+
+Approved behavior:
+
+- use ignored probes to construct represented `P0_final` for H, Be, or Be2;
+- compute `E_app[P0]` using the actual current IDA/MWG approximate Hamiltonian
+  energy convention;
+- compute a candidate `F_app[P0]` from that same convention;
+- finite-difference validate
+  `dE_app[P0; dP] = Tr(dP * F_app[P0])` with an epsilon sweep and multiple
+  perturbation directions;
+- report the exact approximate-energy convention used, spin/Hartree treatment,
+  `P0_final` normalization and representability, finite/symmetry diagnostics,
+  finite-difference residuals, and the missing seam if no true evaluator
+  exists.
+
+Explicitly out of scope:
+
+- tracked source edits;
+- public driver/API/export/default changes;
+- artifact/provenance/schema/writer/reader/manifest changes;
+- production Hamiltonian or solver workflow;
+- `Delta_F0`, `C0`, `E_new`, corrected Hamiltonian assembly, or reference
+  self-energy assembly;
+- Cr atom, Cr2, Cr2 HF, or Cr2 production diagnostics;
+- exchange unless already present in the audited current approximate
+  evaluator;
+- row-action, `diag(J)`, `q0`, center metadata, direct `C' V C`, or IDA proxy
+  shortcuts as substitutes for `F_app[P0]`;
+- residual/MWG defaults, residual selection changes, basis-fate policy, broad
+  rejected directions as MWG residuals, committed tests, or fixtures.
+
+Failure rule: if the actual `F_app[P0]` derivative seam cannot be found or
+finite-difference validated from the current IDA/MWG convention, stop and
+report the missing evaluator. Do not invent a row-gauge, diagonal,
+center-metadata, or direct-interaction-transform substitute.

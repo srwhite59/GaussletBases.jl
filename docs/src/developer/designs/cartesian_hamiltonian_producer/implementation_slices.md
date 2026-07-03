@@ -525,6 +525,13 @@ Approved robustness lane:
   IDA/MWG interaction transforms. `HP-RHO0-MIXH-FEXACT-TEST-01` requires
   H/Be/Be2-only final/protected `F_exact_Hartree[P0]` validation and
   dense-oracle spot checks.
+- `HP-RHO0-FAPP-AUDIT-01` approves only the measurement audit for the
+  approximate-side `F_app[P0]` seam. The audit must derive `F_app[P0]` from the
+  actual current IDA/MWG approximate energy convention for represented
+  `P0_final` and finite-difference validate
+  `dE_app[P0; dP] = Tr(dP * F_app[P0])` on H/Be/Be2. It does not approve
+  source edits, correction constants, artifacts/public workflow, Cr/Cr2, or
+  row-action/`diag(J)`/`q0`/center-metadata/direct-`C' V C` substitutes.
 
 ## Compact Hamiltonian Artifact Manifest
 

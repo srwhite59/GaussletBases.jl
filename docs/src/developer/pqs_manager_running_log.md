@@ -23948,3 +23948,48 @@ Carrying-cost result:
 - exact remaining blocker: design and approve the actual approximate
   `F_app[P0]` seam from the solver/IDA-MWG convention before `Delta_F0` and
   `C0` assembly.
+
+## Cartesian Hamiltonian Producer Pass 289 - Rho0 Approximate Fock Seam Audit Authority
+
+Commit(s):
+- this commit - Approve rho0 F app audit lane
+
+Summary:
+- Design-manager approved `HP-RHO0-FAPP-AUDIT-01`, a measurement-only lane for
+  the approximate side of the fixed-`P0` reference-density correction.
+- The lane requires `F_app[P0]` to be identified as the derivative of the
+  actual current IDA/MWG approximate energy convention for represented
+  `P0_final`, with finite-difference validation on H/Be/Be2.
+- It is not source authority and does not approve `Delta_F0`, `C0`, corrected
+  Hamiltonian assembly, artifacts/public workflow, Cr/Cr2 diagnostics, or
+  solver work.
+
+Validation / evidence:
+- The previous exact-side source pass (`40a6f7e99`) completed
+  `F_exact_Hartree[P0]` through the final/protected basis, leaving
+  approximate-side convention validation as the next blocker.
+- The approved audit explicitly rejects row-action, `diag(J)`, `q0`, center
+  metadata, direct `C' V C`, and IDA proxy shortcuts as substitutes for the
+  solver convention.
+
+Goal advancement:
+- LT5/LT6 and MT4: moves the rho0/reference-density work from exact-side
+  kernel construction to the real approximate-Hamiltonian seam. The audit must
+  prove the derivative relation for `E_app[P]` before any correction anchoring
+  lane can be approved.
+
+Risk / guardrail:
+- If no actual approximate-energy derivative evaluator exists, the correct
+  outcome is a missing-seam report, not a local formula invented in probe code.
+- Cr/Cr2 remains intentionally out of scope until H/Be/Be2 establish the
+  approximate-side convention.
+
+Carrying-cost result:
+- source line delta: 0 in this docs authority pass.
+- deleted: none.
+- simplified: the next rho0 blocker is now a single measurement question:
+  "what is the actual IDA/MWG derivative at represented `P0`?"
+- quarantined: correction constants, artifacts/public workflow, source
+  helpers, Cr/Cr2, exchange, and solver/HF remain unauthorized.
+- exact remaining blocker: run `HP-RHO0-FAPP-AUDIT-01`; if it passes, request
+  a separate correction-anchor lane for `Delta_F0` and `C0`.
