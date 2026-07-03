@@ -154,3 +154,116 @@ function atomic_reference_protected_original_fixed_sector_exact_hartree(
     return merge(result, (; raw_parent_ga_dimension = size(ga_aa.GA),
         raw_diagnostics = (; gg = gg.diagnostics, ga_aa = ga_aa.diagnostics)))
 end
+
+function _hartree_anchor_density(density, dimension::Int, name::AbstractString)
+    matrix = Matrix{Float64}(density)
+    size(matrix) == (dimension, dimension) ||
+        throw(DimensionMismatch("$(name) must have size $((dimension, dimension))"))
+    all(isfinite, matrix) ||
+        throw(ArgumentError("$(name) contains non-finite entries"))
+    norm(matrix - transpose(matrix), Inf) <= 1.0e-8 ||
+        throw(ArgumentError("$(name) must be symmetric"))
+    return 0.5 .* (matrix .+ transpose(matrix))
+end
+
+function _hartree_anchor_matrix(matrix, dimension::Int, name::AbstractString)
+    dense = _hartree_anchor_density(matrix, dimension, name)
+    norm(dense - transpose(dense), Inf) <= 1.0e-8 ||
+        throw(ArgumentError("$(name) must be symmetric"))
+    return dense
+end
+
+function _hartree_anchor_trace(density, matrix)
+    return Float64(sum(density .* matrix))
+end
+
+function _hartree_anchor_diagnostics(exact, fapp_alpha, fapp_beta, delta_alpha,
+    delta_beta, density_alpha, density_beta, exact_energy, app_energy, c0)
+    alpha_trace = tr(density_alpha)
+    beta_trace = tr(density_beta)
+    new_energy = app_energy + _hartree_anchor_trace(density_alpha, delta_alpha) +
+        _hartree_anchor_trace(density_beta, delta_beta) + c0
+    alpha_anchor = fapp_alpha + delta_alpha - exact
+    beta_anchor = fapp_beta + delta_beta - exact
+    alpha_eigs = eigvals(Symmetric(delta_alpha))
+    beta_eigs = eigvals(Symmetric(delta_beta))
+    return (;
+        dimension = size(exact, 1),
+        trace_alpha = alpha_trace,
+        trace_beta = beta_trace,
+        exact_hartree_energy = exact_energy,
+        app_interaction_energy = app_energy,
+        anchored_interaction_energy = new_energy,
+        energy_anchor_error = new_energy - exact_energy,
+        f_anchor_alpha_error = norm(alpha_anchor, Inf),
+        f_anchor_beta_error = norm(beta_anchor, Inf),
+        exact_hartree_symmetry_error = norm(exact - transpose(exact), Inf),
+        f_app_alpha_symmetry_error = norm(fapp_alpha - transpose(fapp_alpha), Inf),
+        f_app_beta_symmetry_error = norm(fapp_beta - transpose(fapp_beta), Inf),
+        delta_alpha_symmetry_error = norm(delta_alpha - transpose(delta_alpha), Inf),
+        delta_beta_symmetry_error = norm(delta_beta - transpose(delta_beta), Inf),
+        exact_hartree_finite = all(isfinite, exact),
+        f_app_finite = all(isfinite, fapp_alpha) && all(isfinite, fapp_beta),
+        delta_finite = all(isfinite, delta_alpha) && all(isfinite, delta_beta),
+        delta_alpha_eig_min = minimum(alpha_eigs),
+        delta_alpha_eig_max = maximum(alpha_eigs),
+        delta_beta_eig_min = minimum(beta_eigs),
+        delta_beta_eig_max = maximum(beta_eigs),
+        delta_alpha_diag_min = minimum(diag(delta_alpha)),
+        delta_alpha_diag_max = maximum(diag(delta_alpha)),
+        delta_beta_diag_min = minimum(diag(delta_beta)),
+        delta_beta_diag_max = maximum(diag(delta_beta)),
+        delta_alpha_reference_expectation = _hartree_anchor_trace(
+            density_alpha, delta_alpha),
+        delta_beta_reference_expectation = _hartree_anchor_trace(
+            density_beta, delta_beta),
+        delta_alpha_trace_normalized_expectation =
+            alpha_trace == 0.0 ? NaN :
+            _hartree_anchor_trace(density_alpha, delta_alpha) / alpha_trace,
+        delta_beta_trace_normalized_expectation =
+            beta_trace == 0.0 ? NaN :
+            _hartree_anchor_trace(density_beta, delta_beta) / beta_trace)
+end
+
+function hartree_reference_correction_anchor(
+    ham,
+    exact_hartree,
+    density_alpha,
+    density_beta;
+    exact_hartree_energy = nothing,
+)
+    dimension = size(ham.kinetic, 1)
+    size(ham.electron_electron_ida) == (dimension, dimension) ||
+        throw(DimensionMismatch("Hamiltonian interaction dimension mismatch"))
+    exact = _hartree_anchor_matrix(exact_hartree, dimension, "exact_hartree")
+    alpha = _hartree_anchor_density(density_alpha, dimension, "density_alpha")
+    beta = _hartree_anchor_density(density_beta, dimension, "density_beta")
+    parent = parentmodule(@__MODULE__)
+    app_energy = getfield(parent, :_cartesian_ida_approximate_interaction_energy)(
+        ham, alpha, beta)
+    fapp_alpha = getfield(parent, :_cartesian_ida_approximate_interaction_fock_alpha)(
+        ham, alpha, beta)
+    fapp_beta = getfield(parent, :_cartesian_ida_approximate_interaction_fock_beta)(
+        ham, alpha, beta)
+    delta_alpha = symmetrize_operator(exact - fapp_alpha)
+    delta_beta = symmetrize_operator(exact - fapp_beta)
+    exact_energy = isnothing(exact_hartree_energy) ?
+        0.5 * _hartree_anchor_trace(alpha + beta, exact) :
+        Float64(exact_hartree_energy)
+    isfinite(exact_energy) ||
+        throw(ArgumentError("exact_hartree_energy must be finite"))
+    c0 = exact_energy - app_energy -
+        _hartree_anchor_trace(alpha, delta_alpha) -
+        _hartree_anchor_trace(beta, delta_beta)
+    diagnostics = _hartree_anchor_diagnostics(exact, fapp_alpha, fapp_beta,
+        delta_alpha, delta_beta, alpha, beta, exact_energy, app_energy, c0)
+    return (; exact_hartree = exact,
+        f_app_interaction_alpha = fapp_alpha,
+        f_app_interaction_beta = fapp_beta,
+        delta_F0_alpha = delta_alpha,
+        delta_F0_beta = delta_beta,
+        C0 = c0,
+        exact_hartree_energy = exact_energy,
+        app_interaction_energy = app_energy,
+        diagnostics)
+end

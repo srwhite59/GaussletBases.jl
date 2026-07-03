@@ -24140,3 +24140,60 @@ Carrying-cost result:
 - exact remaining blocker: implement and validate `HP-RHO0-ANCHOR-FN-01`;
   only after that should a production integration or broader source-owner lane
   be considered.
+
+## Cartesian Hamiltonian Producer Pass 293 - Rho0 Hartree Correction Anchor Source
+
+Commit(s):
+- this commit - Add rho0 Hartree correction anchor
+
+Summary:
+- Accepted `HP-RHO0-ANCHOR-FN-01`. `src/cartesian_residual_gaussians/
+  augmented_operators.jl` now has an internal in-memory helper
+  `hartree_reference_correction_anchor(...)`.
+- The helper consumes source-backed `F_exact_Hartree[P0]`, represented spin
+  densities, and the Cartesian IDA interaction-only energy/Fock helpers. It
+  returns `Delta_F0_alpha`, `Delta_F0_beta`, `C0`, and diagnostics that verify
+  the interaction-energy and derivative anchor.
+- The pass stayed within the Hartree anchor lane: no full one-body `h`, nuclear
+  repulsion, artifacts/public workflow, solver/HF workflow, exchange, Cr/Cr2,
+  row-action/`diag(J)`/`q0`, center metadata, or direct `C'VC` substitute was
+  introduced.
+
+Validation / evidence:
+- `git diff --check` passed.
+- Package load passed: `package_load_elapsed_s=0.46938025`.
+- Prior `F_app` replay still passed:
+  `julia --project=. tmp/work/rho0_fapp_fn_validation.jl`; max FD absolute
+  error `1.5519574181332985e-8`, max relative error `3.006465054705811e-8`.
+- Prior `F_exact` replay still passed:
+  `julia --project=. tmp/work/rho0_mixh_fexact_source_validation.jl`, elapsed
+  `25.210983 s`; H/Be symmetry `0.0`, H raw-block spot max `8.882e-16`.
+- New anchor validation passed:
+  `julia --project=. tmp/work/rho0_anchor_fn_validation.jl`, elapsed
+  `42.713228625 s`; max energy-anchor error `0.0`, max F-anchor error
+  `5.551115123125783e-17`, max derivative FD absolute error
+  `7.040073635167232e-9`.
+
+Goal advancement:
+- LT5/LT6 and MT4: completes the first source-backed fixed-`P0` Hartree
+  reference correction object on H/Be/Be2. Exact Hartree, approximate
+  interaction derivative, and the anchoring constant now meet the intended
+  fixed-reference algebra in memory.
+
+Risk / guardrail:
+- This is still not a production Hamiltonian or artifact path. It is an
+  internal dense in-memory anchor helper.
+- The exact energy default is `0.5 * Tr((P_alpha + P_beta) * F_exact_Hartree)`
+  for the represented `P0_final`; future reference-density work must continue
+  to report density convention, trace loss, and representability.
+
+Carrying-cost result:
+- source line delta: +113 in `augmented_operators.jl`.
+- deleted: none.
+- simplified: anchor algebra is centralized in one source helper instead of
+  staying probe-local.
+- quarantined: validation probes and `/Users/srw/dmrgtmp` outputs remain
+  ignored; production integration remains unauthorized.
+- exact remaining blocker: decide the next lane, likely a measurement-only
+  H/Be/Be2 corrected-Hamiltonian application or a docs-only integration design
+  before any artifact/public/Cr2 work.
