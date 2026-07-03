@@ -525,3 +525,191 @@ builder producing GG/GA/AA blocks from one-center atomic P0?
 
 If yes, the source design should be written around that target, with dense
 Gaussian ERIs retained as oracle/debug only.
+
+## Initial Design-Manager Review - 2026-07-03
+
+Status: initial planning review. This review does not approve source edits,
+new modules, public API, artifacts, solver workflow, committed tests, or Cr2
+production work.
+
+### Verdict
+
+The plan is pointed in the right direction. The correct first source target is
+not another row-gauge probe and not a dense final-basis ERI path. It is a
+neutral exact Hartree mixed-block seam that takes one-center atomic reference
+density matrices and produces exact one-body Hartree blocks in the existing
+`GG` / `GA` / `AA` block language.
+
+The most important design choice in the memo is sound:
+
+```text
+atomic P0 pair-density terms
+  -> Coulomb-expanded separable one-body terms
+  -> GG / GA / AA exact Hartree blocks
+  -> existing protected/final one-body transforms
+```
+
+That keeps reference-density math out of Residual Gaussian ownership, preserves
+the protected-localized injection convention, and avoids treating broad
+rejected Gaussian directions as MWG residual channels.
+
+### Strong Points
+
+- The fixed-`P0` algebra is correctly separated from row-action diagnostics.
+  The source path is designed around `Delta_F0` and `C0`, so the corrected
+  model can match both energy and first derivative at the reference density.
+- The one-center atomic-density assumption is a good first production-shaped
+  simplification. It avoids molecular reference density products while still
+  preserving cross-atom Coulomb interactions in the reference energy and
+  potential.
+- The memo correctly treats dense Gaussian Coulomb matrices as oracle/debug,
+  not as the production path.
+- The proposed `GG` / `GA` / `AA` output is the right interoperability seam:
+  existing augmented/protected one-body transforms can consume those blocks.
+- The validation ladder has the right ordering. H and Be/Be2 must settle the
+  exact Hartree seam before Cr atom or Cr2 diagnostics make sense.
+- The stop rules are mostly the right ones: no dense final four-index tensor,
+  no row-action replacement for `F_exact[P0]`, no `C'VC`, and no public or
+  artifact workflow before the Hamiltonian convention is stable.
+
+### Decisions Needed Before Source Authority
+
+1. **Split the first implementation into source slices.**
+
+   Do not approve one broad `HP-RHO0-REFDENS-FN-01` that attempts all of the
+   memo at once. The first source authority should likely be a small exact
+   mixed Hartree kernel slice, with later slices for `GA`/`AA`, reference
+   self-energy, approximate `F_app[P0]`, and correction assembly.
+
+2. **Choose the neutral owner carefully.**
+
+   The owner should be neutral exact Gaussian/Hartree infrastructure, not
+   `cartesian_residual_gaussians`. Two plausible shapes are:
+
+   ```text
+   src/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl
+   ```
+
+   or a small new neutral reference-density owner that depends on
+   `gaussian_coulomb_reference.jl` and Cartesian raw-block machinery.
+
+   The owner decision should be based on the lowest-level reusable object. If
+   the first source slice only builds mixed Hartree raw blocks, it belongs near
+   raw blocks. If it also owns `P0` construction and correction constants, that
+   is a higher-level reference-density owner and should be a later slice.
+
+3. **Define the reference pair-density term object before coding.**
+
+   The plan should become more explicit about the term stream produced from
+   `P_A[ab] chi_Aa chi_Ab`:
+
+   - primitive coefficient convention;
+   - symmetric off-diagonal handling;
+   - center and angular-power representation;
+   - compression key;
+   - sign handling for density-matrix coefficients;
+   - normalization audit against `Tr(P_A S_A)`.
+
+   This object is likely the durable seam shared by mixed Hartree blocks and
+   reference self-energy. It should not be a runtime-keyed `NamedTuple` or a
+   large route-style metadata cloud.
+
+4. **Keep `F_exact[P0]` and `F_app[P0]` as separate design seams.**
+
+   The memo correctly says `F_app[P0]` must come from the actual solver
+   convention. That is a separate missing seam risk. Do not let the first exact
+   Hartree source pass invent an approximate-side evaluator. If `F_app[P0]` is
+   not callable, record a separate authority request.
+
+5. **Treat reference self-energy as an audit requirement, not necessarily the
+   first fast kernel.**
+
+   It is acceptable for the first source slice to use a dense Gaussian oracle
+   for small `E_exact0_H` self-energy checks, provided the limitation is
+   explicit. The fast self-energy path can share the reference pair-density
+   stream later if needed.
+
+6. **Make the block shape exact.**
+
+   Before source approval, name whether the first source output is:
+
+   ```text
+   (; GG, GA, AA, reference_self_energy, diagnostics)
+   ```
+
+   or only:
+
+   ```text
+   (; GG, diagnostics)
+   ```
+
+   For the first slice, a `GG`-only source pass may be more reviewable if it
+   can validate the term stream and terminal contraction against dense oracles.
+   `GA`/`AA` can follow once the mixed operator is trusted.
+
+7. **Preserve protected-localized ownership boundaries.**
+
+   The mixed Hartree owner should not know about broad rejected directions,
+   injection selection, MWG channels, or final solver policy. It should build
+   exact one-body blocks. Residual/protected code can transform those blocks
+   after the fact.
+
+### Suggested First Source Authority Shape
+
+If chat review agrees, the first future source lane should be narrower than the
+whole memo:
+
+```text
+HP-RHO0-MIXH-GG-FN-01
+```
+
+Possible scope:
+
+- neutral owner file only;
+- construct same-center atomic reference pair-density term stream;
+- integrate Coulomb-expanded reference side into separable one-body factor
+  packets;
+- build exact `GG` Hartree block for terminal/base `G`;
+- compare H and small Be/Be2 `GG` subsets against dense Gaussian oracle;
+- report symmetry, finite checks, term counts, compression counts, and
+  reference electron-count normalization.
+
+Explicitly out of that first source slice:
+
+- `GA` / `AA`;
+- final protected-localized transform;
+- `F_app[P0]`;
+- `C0` assembly;
+- artifact/provenance;
+- public driver/API;
+- Cr/Cr2 diagnostics;
+- HF exchange.
+
+That slice would prove the hard numerical seam without carrying the whole
+reference-density correction framework at once.
+
+### Review Questions For Chat
+
+- Is `GG`-first too narrow, or should the first source lane include `GA` and
+  `AA` because protected-localized Be/Be2 needs the full block set to be
+  meaningful?
+- Should the neutral owner live under `cartesian_gaussian_raw_blocks`, or
+  should reference-density get a new module from the beginning?
+- Can the pair-density term stream reuse private
+  `gaussian_coulomb_reference.jl` structures safely, or should it define a new
+  compact public-to-the-package internal record?
+- Is dense oracle self-energy acceptable for the first source slice, or must
+  reference self-energy share the compressed term stream immediately?
+- What is the smallest validation that catches angular/off-diagonal pair-term
+  mistakes without committing slow development-era tests?
+
+### Bottom Line
+
+The plan should be kept. It correctly identifies the missing source seam and
+prevents the main category mistakes: row-gauge substitution, `C'VC` revival,
+dense final ERIs, and RG-owned reference-density math.
+
+Before implementation, tighten the first source lane around one reusable exact
+mixed Hartree block builder. Keep the first approved source slice small enough
+that a doer can prove the pair-density term stream and `GG` contraction before
+adding the rest of the correction machinery.

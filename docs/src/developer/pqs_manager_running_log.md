@@ -23565,3 +23565,48 @@ Carrying-cost result:
 - exact remaining blocker: review and approve or revise the source plan for a
   neutral fast atomic-reference Hartree seam producing `GG/GA/AA` exact
   blocks from one-center atomic `P0`.
+
+## Cartesian Hamiltonian Producer Pass 281 - Initial Rho0 Implementation Plan Review
+
+Commit(s):
+- this commit - Review rho0 implementation plan
+
+Summary:
+- Appended an initial design-manager review to
+  `rho0_reference_density_implementation_plan.md`. The review accepts the
+  plan direction but does not approve source authority.
+- The review says the durable source target is a neutral exact Hartree
+  mixed-block seam that consumes one-center atomic `P0` and produces exact
+  one-body `GG` / `GA` / `AA` blocks, with dense Gaussian Coulomb matrices kept
+  as oracle/debug only.
+
+Validation / evidence:
+- The review identifies the key strengths: fixed-`P0` algebra, atomic-density
+  simplification, fast separable Coulomb path, `GG/GA/AA` output shape,
+  H/Be/Be2-before-Cr validation order, and stop rules against row-gauge
+  substitution, `C'VC`, dense final ERIs, and RG-owned reference-density math.
+- The review also flags required decisions before source authority: first
+  slice size, neutral owner, reference pair-density term object, separation of
+  `F_exact[P0]` from `F_app[P0]`, reference self-energy strategy, exact output
+  block shape, and protected-localized ownership boundaries.
+
+Goal advancement:
+- LT5/LT6 and MT4: turns the broad implementation plan into a reviewable
+  source-slice proposal. The suggested first future lane is a narrow `GG`
+  mixed Hartree source slice, not the full rho0/reference-density framework.
+
+Risk / guardrail:
+- Still no source authority. The review explicitly keeps `GA`/`AA`, final
+  protected transforms, `F_app[P0]`, `C0` assembly, artifacts, public workflow,
+  Cr/Cr2 diagnostics, and HF exchange out of the first suggested source slice.
+
+Carrying-cost result:
+- source line delta: 0 in this docs review.
+- deleted: none.
+- simplified: review questions are now appended to the plan rather than
+  scattered across chat context.
+- quarantined: source implementation, module ownership, exact mixed ERI kernel
+  work, artifacts/public workflow, and Cr/Cr2 remain unauthorized.
+- exact remaining blocker: chat review should decide whether the first source
+  lane is `GG`-first or full `GG/GA/AA`, and where the neutral owner should
+  live.
