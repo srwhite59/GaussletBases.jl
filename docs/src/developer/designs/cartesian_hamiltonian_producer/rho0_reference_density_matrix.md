@@ -683,6 +683,106 @@ source helper or the correction-anchor audit. If not, report the missing seam
 and stop. Do not substitute a row-gauge, diagonal, center-metadata, or direct
 interaction-transform formula for the solver convention.
 
+## HP-RHO0-FAPP-FN-01
+
+Status: approved narrow source authority for the Cartesian IDA approximate
+energy/Fock seam.
+
+Purpose: add source-owned internal helper(s) on `CartesianIDAHamiltonian` that
+evaluate the approximate IDA/MWG density-density convention for fixed
+represented spin densities in the Hamiltonian's own orthonormal basis. Energy
+and Fock must be paired:
+
+```text
+E_app(ham, P_alpha, P_beta)
+F_app_alpha(ham, P_alpha, P_beta)
+F_app_beta(ham, P_alpha, P_beta)
+```
+
+or equivalent private/internal names. A Fock helper alone is not approved.
+
+Approved source surface:
+
+- `src/cartesian_ida_hamiltonian.jl`.
+
+Approved validation surface:
+
+- `test/ida/cartesian_ida_hamiltonian_runtests.jl` only for compact
+  finite-difference checks if a committed unit validation is useful;
+- ignored `tmp/work/*.jl` probes and `/Users/srw/dmrgtmp` output for H/Be/Be2
+  endpoint-style finite-difference validation.
+
+Required behavior:
+
+- accept fixed represented density matrices `P_alpha` and `P_beta` in the
+  `CartesianIDAHamiltonian` basis;
+- validate square dimensions, finite values, and symmetric densities;
+- use the actual two-index IDA/MWG convention represented by
+  `ham.electron_electron_ida`;
+- keep interaction-only and total-energy contributions unambiguous. If a total
+  energy/Fock helper includes `one_body_hamiltonian(ham)` or
+  `nuclear_repulsion(ham)`, it must also expose or document the
+  density-dependent interaction contribution needed by the reference-density
+  correction;
+- return symmetric Fock matrices in the same basis;
+- finite-difference validate the returned Fock matrices against the matching
+  source-owned energy helper:
+
+```text
+(E_app[P0 + eps*dP_alpha, P_beta] -
+ E_app[P0 - eps*dP_alpha, P_beta]) / (2eps)
+    ~= Tr(dP_alpha * F_app_alpha)
+```
+
+and similarly for beta-spin perturbations.
+
+Expected current density-density convention:
+
+- Hartree/direct row density uses `n = diag(P_alpha + P_beta)` and
+  `ham.electron_electron_ida`;
+- same-spin exchange-like terms are only the current two-index IDA/MWG
+  convention, not a new exact exchange extension.
+
+If implementation discovers that the live solver/Fock convention differs from
+this expected density-density shape, stop and report the exact existing owner
+instead of inventing a new convention in this file.
+
+Forbidden:
+
+- public driver, public API, exports, or default changes;
+- artifact, provenance, schema, writer, reader, manifest, or sidecar changes;
+- `Delta_F0`, `C0`, `E_new`, corrected Hamiltonian assembly, reference
+  self-energy assembly, or rho0 workflow wiring;
+- Cr atom, Cr2, Cr2 HF, or Cr2 production diagnostics;
+- exact exchange extensions beyond the current IDA/MWG convention;
+- row action `(J*w)/w`, `diag(J)`, `q0`, center metadata, direct `C' V C`, or
+  IDA proxy shortcuts as substitutes for the paired energy/Fock convention;
+- residual/MWG default changes, residual selection changes, basis-fate policy,
+  or broad rejected directions as MWG residuals;
+- source files outside the approved surface.
+
+Failure rule: if the paired energy/Fock seam cannot be implemented in
+`CartesianIDAHamiltonian` from the stored matrices and current IDA/MWG
+convention, stop and report the missing source owner. Do not approve a Fock
+helper without matching energy finite-difference validation.
+
+## HP-RHO0-FAPP-TEST-01
+
+Status: approved validation gates for `HP-RHO0-FAPP-FN-01`.
+
+Required validation:
+
+- `git diff --check`;
+- package load;
+- compact finite-difference validation for alpha and beta density
+  perturbations against the paired energy helper;
+- H/Be/Be2-only ignored endpoint-style replay if the helper is consumed by the
+  rho0 audit probe;
+- report matrix dimension, density traces, energy contribution convention,
+  Fock symmetry, epsilon sweep, finite-difference residuals, and whether the
+  helper returns interaction-only, total, or both separated contributions;
+- no `Delta_F0`, no `C0`, no artifact, no public workflow, and no Cr/Cr2 run.
+
 ## Candidate Future Source IDs
 
 `HP-RHO0-REFDENS-FN-01` is a candidate future source lane only. It is not

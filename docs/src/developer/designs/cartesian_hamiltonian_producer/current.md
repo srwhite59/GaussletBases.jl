@@ -437,12 +437,25 @@ Approved Residual Gaussian robustness lane:
   does not approve source edits, `Delta_F0`, `C0`, corrected Hamiltonian
   assembly, artifacts/public workflow, Cr/Cr2, residual/MWG default changes, or
   row-action/`diag(J)`/`q0`/center-metadata/direct-`C' V C` shortcuts.
+- `HP-RHO0-FAPP-FN-01` approves only a narrow source seam in
+  `src/cartesian_ida_hamiltonian.jl` for paired approximate energy/Fock
+  helper(s) on `CartesianIDAHamiltonian`: fixed represented `P_alpha` and
+  `P_beta` in the Hamiltonian basis, the actual two-index IDA/MWG
+  density-density convention, and alpha/beta Fock matrices
+  finite-difference checked against the matching energy helper. It does not
+  approve public API/export/default changes, artifacts, `Delta_F0`, `C0`,
+  corrected Hamiltonian assembly, Cr/Cr2, exact exchange extensions, or
+  row-action/`diag(J)`/`q0`/center-metadata/direct-`C' V C` substitutes.
+  `HP-RHO0-FAPP-TEST-01` requires package load plus compact alpha/beta
+  finite-difference validation, with H/Be/Be2-only ignored endpoint replay if
+  the helper is consumed by the rho0 audit.
 - `rho0_reference_density_implementation_plan.md` is a review memo for the
   likely fast separable atomic-reference Hartree source shape. The current
   approved source target is raw exact mixed Hartree `GG` plus `GA`/`AA` from
   one-center atomic `P_A`, followed by the exact-side final/protected transform;
-  `F_app[P0]` is now measurement-only under `HP-RHO0-FAPP-AUDIT-01`, while
-  `Delta_F0`, `C0`, Cr/Cr2, artifacts, and public workflow remain later lanes.
+  the paired Cartesian IDA `F_app[P0]` seam is now source-approved under
+  `HP-RHO0-FAPP-FN-01`, while `Delta_F0`, `C0`, Cr/Cr2, artifacts, and public
+  workflow remain later lanes.
 
 Approved stale complete-core-shell RHF retirement:
 

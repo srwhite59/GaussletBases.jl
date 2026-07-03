@@ -1080,3 +1080,63 @@ Failure rule: if the actual `F_app[P0]` derivative seam cannot be found or
 finite-difference validated from the current IDA/MWG convention, stop and
 report the missing evaluator. Do not invent a row-gauge, diagonal,
 center-metadata, or direct-interaction-transform substitute.
+
+## Design-Manager Source Authority - Cartesian IDA Approximate Fock Seam - 2026-07-03
+
+The `HP-RHO0-FAPP-AUDIT-01` measurement audit did the right thing: it blocked
+instead of inventing `F_app[P0]`. The next approved source lane is a narrow
+source-owned energy/Fock seam on `CartesianIDAHamiltonian`.
+
+Approved IDs:
+
+- `HP-RHO0-FAPP-FN-01`
+- `HP-RHO0-FAPP-TEST-01`
+
+Approved source owner:
+
+- `src/cartesian_ida_hamiltonian.jl`
+
+Approved validation surface:
+
+- `test/ida/cartesian_ida_hamiltonian_runtests.jl` only for compact
+  finite-difference checks if committed validation is useful;
+- ignored H/Be/Be2 probes under `tmp/work/` and `/Users/srw/dmrgtmp` if the
+  helper is consumed by the rho0 audit replay.
+
+Approved behavior:
+
+- add private/internal paired helper(s) equivalent to:
+
+```text
+E_app(ham, P_alpha, P_beta)
+F_app_alpha(ham, P_alpha, P_beta)
+F_app_beta(ham, P_alpha, P_beta)
+```
+
+- require fixed represented spin densities in the Hamiltonian's own
+  orthonormal basis;
+- use the stored `ham.electron_electron_ida` two-index IDA/MWG convention;
+- keep interaction-only and total-energy contributions unambiguous. The later
+  rho0 correction needs the density-dependent approximate reference
+  interaction derivative; a total helper must not hide the one-body/nuclear
+  pieces;
+- finite-difference validate alpha and beta Fock matrices against the paired
+  source-owned energy helper.
+
+Explicitly out of scope:
+
+- public driver/API/export/default changes;
+- artifact/provenance/schema/writer/reader/manifest changes;
+- `Delta_F0`, `C0`, `E_new`, corrected Hamiltonian assembly, reference
+  self-energy assembly, or rho0 workflow wiring;
+- Cr atom, Cr2, Cr2 HF, or Cr2 production diagnostics;
+- exact exchange extensions beyond the current two-index IDA/MWG convention;
+- row-action, `diag(J)`, `q0`, center metadata, direct `C' V C`, or IDA proxy
+  shortcuts;
+- residual/MWG defaults, residual selection, basis-fate changes, broad
+  rejected directions as MWG residuals, source files outside the approved
+  owner, or broad solver workflow.
+
+Failure rule: if paired energy/Fock cannot be implemented from
+`CartesianIDAHamiltonian`'s stored matrices and the live IDA/MWG convention,
+stop and report the missing owner. Do not approve a Fock helper alone.

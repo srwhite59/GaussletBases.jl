@@ -23993,3 +23993,50 @@ Carrying-cost result:
   helpers, Cr/Cr2, exchange, and solver/HF remain unauthorized.
 - exact remaining blocker: run `HP-RHO0-FAPP-AUDIT-01`; if it passes, request
   a separate correction-anchor lane for `Delta_F0` and `C0`.
+
+## Cartesian Hamiltonian Producer Pass 290 - Cartesian IDA Approximate Fock Source Authority
+
+Commit(s):
+- this commit - Approve Cartesian IDA F app source seam
+
+Summary:
+- The `HP-RHO0-FAPP-AUDIT-01` block was accepted as a useful result: the audit
+  refused to invent `F_app[P0]` from row gauges, diagonals, center metadata, or
+  direct interaction transforms.
+- Design-manager approved `HP-RHO0-FAPP-FN-01` / `TEST-01`, a narrow source
+  lane in `src/cartesian_ida_hamiltonian.jl` for paired approximate
+  energy/Fock helper(s) on `CartesianIDAHamiltonian`.
+- Energy and Fock must be paired and finite-difference validated for alpha and
+  beta spin densities. A Fock helper alone is explicitly not approved.
+
+Validation / evidence:
+- `CartesianIDAHamiltonian` already owns the one-basis matrices relevant to
+  the convention: `kinetic`, unit nuclear attraction matrices, and
+  `electron_electron_ida`.
+- Existing design history defines `electron_electron_ida` as the two-index
+  localized density-density interaction, while current rho0 authority requires
+  `F_app[P0]` to be the derivative of the actual approximate energy
+  convention.
+
+Goal advancement:
+- LT5/LT6 and MT4: turns the previous missing-seam audit result into a
+  minimal source target. This is the necessary approximate-side counterpart to
+  source-backed `F_exact_Hartree[P0]`.
+
+Risk / guardrail:
+- Interaction-only and total-energy contributions must remain unambiguous,
+  because the later rho0 correction needs the density-dependent approximate
+  reference derivative and must not accidentally subtract the one-body
+  Hamiltonian.
+- No `Delta_F0`, `C0`, corrected Hamiltonian, artifact/public workflow, Cr/Cr2,
+  exact exchange extension, or solver workflow is approved.
+
+Carrying-cost result:
+- source line delta: 0 in this docs authority pass.
+- deleted: none.
+- simplified: the approximate-side blocker is now a single owner and paired
+  finite-difference contract.
+- quarantined: correction anchoring, artifacts/public workflow, Cr/Cr2, exact
+  exchange, broad solver work, and residual/basis-fate changes.
+- exact remaining blocker: implement `HP-RHO0-FAPP-FN-01`; if it validates,
+  request a separate correction-anchor lane for `Delta_F0` and `C0`.

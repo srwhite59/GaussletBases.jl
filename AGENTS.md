@@ -544,6 +544,8 @@ these approved design IDs:
 - `HP-RHO0-MIXH-GAAA-TEST-01`
 - `HP-RHO0-MIXH-FEXACT-FN-01`
 - `HP-RHO0-MIXH-FEXACT-TEST-01`
+- `HP-RHO0-FAPP-FN-01`
+- `HP-RHO0-FAPP-TEST-01`
 - `HP-CGRB-FILE-01`
 - `HP-CGRB-FN-01`
 - `HP-CGRB-FN-02`
@@ -1242,6 +1244,22 @@ Approved Residual Gaussian module surfaces:
   residual/MWG default or basis-fate changes, broad rejected directions as MWG
   residuals, or committed tests/fixtures. Because this is measurement-only
   authority, do not add it to the approved source-ID list.
+- `HP-RHO0-FAPP-FN-01` approves only a narrow source seam in
+  `src/cartesian_ida_hamiltonian.jl` for paired approximate energy/Fock
+  helper(s) on `CartesianIDAHamiltonian`, using fixed represented `P_alpha`
+  and `P_beta` matrices in the Hamiltonian basis and the stored two-index
+  IDA/MWG density-density convention. Energy and Fock must be paired; a Fock
+  helper alone is not approved. Interaction-only and total-energy
+  contributions must remain unambiguous if both are supported. It does not
+  approve public driver/API/export/default changes, artifact/provenance/schema/
+  writer/reader/manifest changes, `Delta_F0`, `C0`, corrected Hamiltonian
+  assembly, Cr/Cr2, exact exchange extensions, row-action/`diag(J)`/`q0`/
+  center metadata/direct-`C' V C` substitutes, residual/MWG default changes,
+  basis-fate changes, broad rejected directions as MWG residuals, or source
+  files outside the approved surface. `HP-RHO0-FAPP-TEST-01` approves only
+  `git diff --check`, package load, compact alpha/beta finite-difference
+  validation against the paired energy helper, and H/Be/Be2-only ignored
+  endpoint replay if the helper is consumed by the rho0 audit.
 
 Non-negotiable RG guardrails:
 

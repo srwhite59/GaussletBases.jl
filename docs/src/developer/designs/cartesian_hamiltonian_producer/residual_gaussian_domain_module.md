@@ -96,6 +96,10 @@ module, or object names in the new owner.
   final/protected Hartree transform.
 - `HP-RHO0-FAPP-AUDIT-01` - measurement-only approximate-side `F_app[P0]`
   seam audit; this is not source authority.
+- `HP-RHO0-FAPP-FN-01` - narrow Cartesian IDA approximate energy/Fock source
+  seam for fixed represented spin densities.
+- `HP-RHO0-FAPP-TEST-01` - validation gates for the Cartesian IDA approximate
+  energy/Fock seam.
 
 Implementation IDs in this list are approved only within the surfaces below.
 Design-only IDs record authority for future source blurbs but do not approve
@@ -409,6 +413,14 @@ IDA/MWG approximate energy convention for represented `P0_final`. It is not
 source authority and does not approve correction constants, artifacts/public
 workflow, Cr/Cr2, row-action/`diag(J)`/`q0`/center-metadata/direct-`C' V C`
 shortcuts, or residual/MWG/basis-fate changes.
+
+`HP-RHO0-FAPP-FN-01` is not Residual Gaussian ownership. It approves only a
+paired approximate energy/Fock seam on `CartesianIDAHamiltonian` in
+`src/cartesian_ida_hamiltonian.jl`, for fixed represented spin densities and
+the Hamiltonian's stored `electron_electron_ida` convention. The helper may be
+used later by rho0 audits, but it does not approve correction assembly,
+artifacts/public workflow, Cr/Cr2, residual selection changes, or broad
+rejected directions as MWG residuals.
 
 Do not approve a vague global entry point such as
 `stabilize_residual_metric(...)`. Global raw-candidate symmetric Lowdin and

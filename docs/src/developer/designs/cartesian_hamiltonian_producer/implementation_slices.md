@@ -532,6 +532,18 @@ Approved robustness lane:
   `dE_app[P0; dP] = Tr(dP * F_app[P0])` on H/Be/Be2. It does not approve
   source edits, correction constants, artifacts/public workflow, Cr/Cr2, or
   row-action/`diag(J)`/`q0`/center-metadata/direct-`C' V C` substitutes.
+- `HP-RHO0-FAPP-FN-01` approves only paired approximate energy/Fock helper(s)
+  in `src/cartesian_ida_hamiltonian.jl` for fixed represented spin densities
+  in a `CartesianIDAHamiltonian` basis. The helper(s) must use the actual
+  two-index IDA/MWG density-density convention, keep interaction-only and
+  total contributions unambiguous, and return alpha/beta Fock matrices that
+  finite-difference match the source-owned energy helper. It does not approve
+  public API/export/default changes, artifacts, correction constants, Cr/Cr2,
+  exact exchange extensions, residual/MWG defaults, or row-action/`diag(J)`/
+  `q0`/center-metadata/direct-`C' V C` substitutes.
+  `HP-RHO0-FAPP-TEST-01` approves only package load, compact alpha/beta
+  finite-difference checks, and H/Be/Be2-only ignored endpoint replay if the
+  helper is consumed by the rho0 audit.
 
 ## Compact Hamiltonian Artifact Manifest
 
