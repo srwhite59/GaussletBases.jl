@@ -1133,6 +1133,26 @@ Approved Residual Gaussian module surfaces:
   production claims, Cr2 production energy claims, publication-scale sweeps,
   or committed tests. Because this is measurement-only authority, do not add it
   to the approved source-ID list.
+  Later row-gauge audits showed this is not the final correction formulation:
+  `(J*w)/w`, `diag(J)`, and the IDA/MWG density-proxy potential are different
+  objects. Treat this ID as historical measurement evidence and guardrail text.
+- `HP-RHO0-REFDENS-AUDIT-01` approves only ignored measurement probes for the
+  successor reference-density-matrix correction. The object is fixed `P0`, not
+  scalar `rho0` or row coordinates. The audit must compare exact and
+  approximate reference Fock/energy for the same represented `P0`, build
+  `Delta_F0 = F_exact0 - F_app0`, and include
+  `C0 = E_exact0 - E_app0 - sum_sigma Tr(P0_sigma * Delta_F0_sigma)` so the
+  corrected model matches both energy and first derivative at `P0`. First
+  audit is Hartree-only. It may use `/Users/srw/dmrgtmp` outputs, existing
+  small H/He/H2/Be/Be2 constructions, and optional Cr/Cr2 read-only diagnostics
+  after small systems pass. It does not approve tracked source edits, public
+  driver/API/export changes, artifacts/provenance/writers/readers/manifests,
+  production Hamiltonian or solver workflow, direct `C' V C`, residual/MWG
+  default changes, basis-fate policy changes, broad rejected directions as MWG
+  residuals, Cr2 production claims, publication-scale sweeps, or committed
+  tests. Candidate future IDs `HP-RHO0-REFDENS-FN-01` and
+  `HP-RHO0-REFDENS-ERI-01` are not approved and must not be added to the
+  approved source-ID list.
 
 Non-negotiable RG guardrails:
 

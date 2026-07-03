@@ -8,9 +8,12 @@ is the current direction for compact-first RG/injection work. Measurement-only
 protected fixed-sector one-body and Vee audits are approved under
 `HP-RG-PROTECT-ONEBODY-AUDIT-01` and
 `HP-RG-PROTECT-VEE-AUDIT-01`; rho0/Galerkin IDA correction measurement is
-approved under `HP-RG-RHO0-GAL-AUDIT-01`. This document does not approve
-source edits for that new design, a production default, artifact schema
-changes, driver inputs, public API, full HF, or Cr2 workflow.
+approved under `HP-RG-RHO0-GAL-AUDIT-01`, with the successor
+reference-density-matrix target recorded in
+`rho0_reference_density_matrix.md` under `HP-RHO0-REFDENS-AUDIT-01`. This
+document does not approve source edits for that new design, a production
+default, artifact schema changes, driver inputs, public API, full HF, or Cr2
+workflow.
 
 ## Motivation
 
@@ -1068,7 +1071,11 @@ interaction rotation invariance.
 Status: approved measurement-only audit authority. This is not source
 implementation authority, not source-backed IDA/MWG authority, not artifact
 authority, not production Hamiltonian authority, and not a Cr2 production
-claim.
+claim. Later row-gauge audits showed this formulation was algebraically
+under-specified as a correction target. Keep this lane as historical
+measurement evidence; use `HP-RHO0-REFDENS-AUDIT-01` in
+`rho0_reference_density_matrix.md` for the current reference-density-matrix
+target.
 
 ### Purpose
 
@@ -1151,3 +1158,28 @@ record rho0/Galerkin as the current interaction-design blocker.
 This is repo-level algorithm engineering validation. Larger molecule and
 convergence sweeps belong to a consumer-oriented workflow after the repo path
 is stable.
+
+### Successor Target
+
+The successor lane replaces scalar/row-gauge `rho0` reasoning with a fixed
+reference density matrix `P0`. It requires:
+
+```text
+Delta_F0_sigma = F_exact0_sigma[P0] - F_app0_sigma[P0]
+
+C0 =
+    E_exact0[P0]
+  - E_app0[P0]
+  - sum_sigma Tr(P0_sigma * Delta_F0_sigma)
+```
+
+so that the corrected model satisfies both:
+
+```text
+E_new[P0] = E_exact0[P0]
+dE_new/dP_sigma at P0 = F_exact0_sigma[P0]
+```
+
+Do not continue row-action `(J*w)/w`, `diag(J)`, or scalar `u0/q0` matching as
+the acceptance target. Those are diagnostics of different objects, not the
+definition of the correction.

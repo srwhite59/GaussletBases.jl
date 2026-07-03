@@ -78,6 +78,8 @@ module, or object names in the new owner.
   interaction audit.
 - `HP-RG-RHO0-GAL-AUDIT-01` - measurement-only rho0/Galerkin IDA correction
   audit over the protected-localized baseline.
+- `HP-RHO0-REFDENS-AUDIT-01` - measurement-only reference-density-matrix IDA
+  correction audit; successor to the row-gauge rho0/Galerkin probes.
 
 Implementation IDs in this list are approved only within the surfaces below.
 Design-only IDs record authority for future source blurbs but do not approve
@@ -336,6 +338,21 @@ implementation, artifact support, public wiring, production Hamiltonian
 workflow, `C' V C` revival, broad rejected directions as MWG channels, Vee
 scaling as the fix, screened-reference production claims, Cr2 production
 energy claims, or publication-scale validation sweeps.
+
+Later row-gauge measurements retired that lane as the target formulation.
+`HP-RHO0-REFDENS-AUDIT-01` is the active screened-correction measurement
+target: use a fixed reference density matrix `P0`, compare exact and
+approximate reference Fock/energy for the same represented `P0`, and include
+the energy anchoring constant
+`C0 = E_exact0 - E_app0 - sum_sigma Tr(P0_sigma * Delta_F0_sigma)`.
+The first audit is Hartree-only and must validate `P0` representability in the
+protected-localized basis plus exact/approximate finite-difference Fock checks.
+This ID does not approve source edits, artifact support, public wiring,
+production Hamiltonian or solver workflow, Cr2 production claims, direct
+`C' V C`, residual/MWG default changes, basis-fate changes, or broad rejected
+directions as MWG residual channels. Candidate future IDs
+`HP-RHO0-REFDENS-FN-01` and `HP-RHO0-REFDENS-ERI-01` are named only for
+planning and are not approved.
 
 Do not approve a vague global entry point such as
 `stabilize_residual_metric(...)`. Global raw-candidate symmetric Lowdin and

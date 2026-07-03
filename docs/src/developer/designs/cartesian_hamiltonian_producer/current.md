@@ -367,6 +367,26 @@ Approved Residual Gaussian robustness lane:
   as MWG residual channels, Vee scaling as the fix, screened-reference
   production claims, Cr2 production energy claims, or publication-scale
   validation sweeps.
+  Subsequent row-gauge audits showed this line was algebraically
+  under-specified: `(J*w)/w`, `diag(J)`, and the IDA/MWG density-proxy
+  potential are different objects. Treat this ID as historical measurement
+  evidence, not the final correction formulation.
+- `HP-RHO0-REFDENS-AUDIT-01` is the current rho0 successor lane. It approves
+  only a measurement audit for a fixed reference density matrix `P0` in the
+  protected-localized final basis. The correction target is
+  `Delta_F0_sigma = F_exact0_sigma[P0] - F_app0_sigma[P0]` plus
+  `C0 = E_exact0[P0] - E_app0[P0] - sum_sigma Tr(P0_sigma * Delta_F0_sigma)`,
+  so the corrected model matches both reference energy and first derivative
+  at `P0`. First audit is Hartree-only. It must report `P0`
+  construction/normalization, representability in the protected-localized
+  basis, exact and approximate finite-difference Fock checks, corrected
+  energy anchoring, and sector safety diagnostics. It does not approve source
+  edits, public driver/API/export changes, artifact/provenance changes,
+  production Hamiltonian or solver workflow, direct `C' V C`, residual/MWG
+  default changes, basis-fate policy changes, broad rejected directions as MWG
+  residuals, Cr2 production claims, or publication-scale sweeps.
+  `HP-RHO0-REFDENS-FN-01` and `HP-RHO0-REFDENS-ERI-01` are candidate future
+  IDs only and are not approved.
 
 Approved stale complete-core-shell RHF retirement:
 

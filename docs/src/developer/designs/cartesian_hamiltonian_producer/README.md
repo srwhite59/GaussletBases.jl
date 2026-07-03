@@ -99,6 +99,11 @@ workflow.
 The old route-driver materialization/report/save wrapper workflow is approved
 for retirement/quarantine under `HP-RETIRE-DRV-MAT-*`; the canonical producer
 path is the staged human-facing driver plus `CartesianIDAHamiltonian` artifacts.
+The row-gauge `rho0/Galerkin` measurement lane remains historical evidence
+only. The current screened-correction target is the reference-density-matrix
+audit in `rho0_reference_density_matrix.md`: fixed `P0`, exact-minus-IDA
+reference Fock `Delta_F`, and anchoring constant `C0`, with no source,
+artifact, solver, or Cr2 production authority.
 
 Agents should read first:
 
@@ -114,6 +119,10 @@ Agents should read first:
 - [Residual Gaussian injection hybrid memo](residual_gaussian_injection_hybrid.md)
   for the optional near-gausslet injection proposal, protected-original
   compact-main design, and the narrow staged geometry source prototype
+- [Reference-density-matrix IDA correction](rho0_reference_density_matrix.md)
+  for the successor to row-gauge rho0/Galerkin probes: fixed `P0`, exact and
+  approximate reference Fock/energy matching, and the measurement-only
+  `HP-RHO0-REFDENS-AUDIT-01` lane
 - [Terminal shellification due diligence](terminal_shellification_due_diligence.md)
   for the derived basis review report and advisory warning contract
 - [PQS complete-shell aspect source modes](pqs_complete_shell_aspect_source_modes.md)

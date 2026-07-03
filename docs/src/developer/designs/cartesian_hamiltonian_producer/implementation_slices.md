@@ -468,6 +468,23 @@ Approved robustness lane:
   residual channels, Vee scaling as the fix, screened-reference production
   claims, Cr2 production energy claims, publication-scale sweeps, or committed
   tests.
+  Later row-gauge audits retired this as the target formulation. It remains
+  measurement evidence, not source direction.
+- `HP-RHO0-REFDENS-AUDIT-01` approves only a measurement-only
+  reference-density-matrix correction audit. The object is a fixed `P0`, not a
+  scalar rho0 or row gauge. The audit must compare
+  `F_exact0[P0]` and `F_app0[P0]` for the same represented reference density,
+  build `Delta_F0 = F_exact0 - F_app0`, and include the anchoring constant
+  `C0 = E_exact0 - E_app0 - Tr(P0 * Delta_F0)` so both energy and first
+  derivative match at `P0`. First audit is Hartree-only. The lane may use
+  ignored probes, `/Users/srw/dmrgtmp` outputs, small H/He/H2/Be/Be2
+  constructions, and optional Cr/Cr2 read-only diagnostics after small systems
+  pass. It does not approve source edits, public wiring, artifact/provenance
+  changes, production Hamiltonian or solver workflow, direct `C' V C`,
+  residual/MWG default changes, basis-fate policy changes, broad rejected
+  directions as MWG residuals, Cr2 production claims, publication-scale
+  sweeps, or committed tests. `HP-RHO0-REFDENS-FN-01` and
+  `HP-RHO0-REFDENS-ERI-01` are candidate future IDs only.
 
 ## Compact Hamiltonian Artifact Manifest
 

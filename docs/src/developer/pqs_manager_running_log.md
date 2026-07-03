@@ -23261,3 +23261,60 @@ Carrying-cost result:
   and `Delta = J - Diag(u0)` is the correction"; judge it by sector spectra,
   occupied expectations, fixed-density shifts, and only then bounded endpoint
   behavior.
+
+## Cartesian Hamiltonian Producer Pass 276 - Reference Density Matrix Rho0 Authority
+
+Commit(s):
+- this commit - Add rho0 reference density matrix lane
+
+Summary:
+- Design-manager replaced the ambiguous row-gauge rho0/Galerkin target with a
+  new measurement-only reference-density-matrix lane:
+  `HP-RHO0-REFDENS-AUDIT-01`.
+- The new target is a fixed represented reference density matrix `P0`, not a
+  scalar `rho0`, row coordinate `q0`, row action `(J*w)/w`, or `diag(J)`.
+  The audit must form `Delta_F0 = F_exact0[P0] - F_app0[P0]` and the anchoring
+  constant `C0 = E_exact0 - E_app0 - sum_sigma Tr(P0_sigma * Delta_F0_sigma)`,
+  so the corrected model matches exact reference energy and first derivative
+  at `P0`.
+
+Validation / evidence:
+- The H `q5` direct-core packet clarified that `(J*w)/w`, `u_direct`, and
+  `diag(J)` are distinct physical objects. That evidence is now encoded as
+  the reason `HP-RG-RHO0-GAL-AUDIT-01` remains historical measurement evidence
+  rather than the final correction formulation.
+- The new page `rho0_reference_density_matrix.md` records Hartree-only as the
+  first audit, names required exact integral families
+  `(final final | GTO GTO)` and `(GTO GTO | GTO GTO)`, requires
+  representability of `P0` in the protected-localized basis, and requires
+  finite-difference checks for both exact and approximate reference Fock
+  operators.
+
+Goal advancement:
+- LT5/LT6 and MT4: removes the row-gauge ambiguity from the screened
+  correction lane and gives doer a precise measurement target for repo-level
+  algorithm engineering. The lane remains on top of protected-localized
+  inherited-site IDA and does not reopen compact RG/injection basis-fate
+  decisions.
+
+Risk / guardrail:
+- Still forbidden: tracked source edits, public driver/API/export changes,
+  artifact/provenance/writer/reader/manifest changes, production Hamiltonian
+  or solver workflow, direct `C'VC`, residual/MWG default changes, basis-fate
+  policy changes, broad rejected directions as MWG residuals, Cr2 production
+  energy claims, publication-scale sweeps, and committed tests.
+- `HP-RHO0-REFDENS-FN-01` and `HP-RHO0-REFDENS-ERI-01` are only candidate
+  future IDs. They do not approve source or exact mixed-ERI kernel work.
+
+Carrying-cost result:
+- source line delta: 0 in this docs decision.
+- deleted: none.
+- simplified: the next audit should target `P0`, `Delta_F0`, and `C0` rather
+  than continue scalar row-gauge matching.
+- quarantined: row-gauge probes remain measurement history; source-backed
+  reference-density correction, exact mixed ERI kernels, artifacts, public
+  workflow, and Cr2 production claims remain unauthorized.
+- exact remaining blocker: run the Hartree-only measurement sequence for H
+  direct-core, small Be/Be2 protected-localized, then optional Cr/Cr2
+  diagnostics, and show reference representability plus exact/approximate
+  finite-difference Fock consistency before any source-design amendment.

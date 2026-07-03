@@ -4550,6 +4550,124 @@ This is repo-level algorithm engineering validation. Larger molecule and
 convergence sweeps belong to a consumer-oriented workflow after the repo path
 is stable.
 
+Historical status update: later row-gauge measurements showed this lane is
+algebraically under-specified as a correction target. `(J*w)/w`, `diag(J)`,
+and the IDA/MWG density-proxy potential are different objects. Keep
+`HP-RG-RHO0-GAL-AUDIT-01` as measurement evidence and guardrail text, not as
+source direction.
+
+### HP-RHO0-REFDENS-AUDIT-01 — reference-density-matrix correction audit
+
+Status: approved measurement-only authority. This is not source authority,
+artifact authority, solver authority, or Cr2 production authority.
+
+Purpose: replace the ambiguous row-gauge `rho0/Galerkin` target with a fixed
+reference density matrix `P0`. The corrected model must match both exact
+reference energy and exact reference first derivative at the same represented
+`P0`.
+
+Target equations:
+
+```text
+Delta_F0_sigma = F_exact0_sigma[P0] - F_app0_sigma[P0]
+
+C0 =
+    E_exact0[P0]
+  - E_app0[P0]
+  - sum_sigma Tr(P0_sigma * Delta_F0_sigma)
+```
+
+The audit target is:
+
+```text
+E_new[P0] = E_exact0[P0]
+dE_new/dP_sigma at P0 = F_exact0_sigma[P0]
+```
+
+First audit: Hartree-only, spin-summed where practical. HF exchange correction
+is a later candidate lane.
+
+Approved measurement surfaces:
+
+- ignored `tmp/work/*.jl` probes;
+- durable text/TSV output under `/Users/srw/dmrgtmp/...`;
+- committed docs report only if manager review asks for durable evidence;
+- existing small H, He, H2, Be, or Be2 constructions;
+- optional Cr/Cr2 read-only diagnostics after small systems pass.
+
+Required first systems:
+
+- H `q5` direct-core sanity;
+- Be atom or Be2 small protected-localized basis;
+- only then Cr atom / Cr2 measurement.
+
+Required outputs:
+
+- `P0` definition: atom, basis, `lmax`, electron count, spin treatment, and
+  core/full choice;
+- reference density construction and normalization;
+- representability in the protected-localized final basis: projected trace
+  loss, occupied orbital overlap loss, and per-owner/angular-channel loss;
+- exact reference: `E_exact[P0]`, `F_exact[P0]`, and finite-difference
+  derivative check;
+- approximate reference: `E_app[P0]`, `F_app[P0]` from the actual
+  solver/Hamiltonian convention, and finite-difference derivative check;
+- correction: `Delta_F`, `C0`, verification of
+  `E_new[P0] = E_exact[P0]`, and verification of
+  `F_new[P0] = F_exact[P0]`;
+- safety diagnostics: `Delta_F` spectra by sector, occupied-orbital
+  expectations, compact RG row expectations, protected-injected row
+  expectations, and whether broad negative modes are introduced.
+
+Reference-density rules:
+
+- use a density matrix `P0`, not only scalar `rho0(r)`;
+- record whether the reference is full atom, core-only, or valence-screened;
+- record whether `P0` came from an internal or external atomic Hartree/HF
+  calculation;
+- stop or mark approximate if the reference uses directions not represented by
+  the protected-localized basis.
+
+Exact integral families to name in the audit:
+
+```text
+(phi_i phi_j | chi_a chi_b)     final pair against reference GTO pair
+(chi_a chi_b | chi_c chi_d)     reference self-energy
+```
+
+Do not hide future exact mixed-integral work in ad hoc RG probe code. If
+source work becomes justified, the exact mixed-integral owner should be
+decided explicitly.
+
+Forbidden:
+
+- tracked source edits;
+- public driver/API/input wiring or exports;
+- artifact schema, provenance, writer, reader, manifest, or sidecar changes;
+- production Hamiltonian workflow;
+- solver workflow changes;
+- Cr2 production energy claims;
+- direct `C' V C` interaction revival;
+- residual/MWG default changes;
+- basis-fate policy changes;
+- broad rejected directions as MWG residuals;
+- publication-scale validation sweeps;
+- committed tests or fixtures.
+
+Failure rule: if the audit cannot define `F_app[P0]` from the actual
+IDA/MWG solver convention, cannot validate exact/approximate derivative
+checks, or finds that `P0` is not represented by the protected-localized
+basis, stop and report the blocker. Do not add source instrumentation or
+reinterpret discarded broad directions as MWG residuals.
+
+Candidate future IDs, not approved:
+
+- `HP-RHO0-REFDENS-FN-01` - possible future source authority for reference
+  density construction and correction assembly;
+- `HP-RHO0-REFDENS-ERI-01` - possible future neutral exact mixed-ERI owner for
+  `(final final | GTO GTO)`, `(GTO GTO | GTO GTO)`, and optional
+  `(final GTO | GTO final)` exchange blocks.
+
 ## Approved For Cartesian Gaussian Raw-Block Nuclear Owner
 
 This section approves only the neutral uncharged by-center nuclear raw-block
