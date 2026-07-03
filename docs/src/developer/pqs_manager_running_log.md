@@ -23144,3 +23144,51 @@ Carrying-cost result:
   should follow the point/constant-function row-action object or the
   Gaussian-smoothed IDA density proxy, then update the row-gauge diagnostic
   and only then resume rho0 physics measurements.
+
+## Cartesian Hamiltonian Producer Pass 274 - Direct-Core Rho0 GitHub Review Packet
+
+Commit(s):
+- this commit - Add direct-core rho0 review packet
+
+Summary:
+- Packaged the Pass 273 H `q=5`, `core_spacing=0.3` direct-core rho0 row
+  detail into a committed report for external/static review through GitHub.
+  The report is intentionally small: README, copied ignored probe, scalar
+  `summary.tsv`, and `direct_core_rows.tsv`.
+- The packet frames the narrow review question: whether direct-core rho0
+  `u0` should follow the point/constant-function row-action object or the
+  Gaussian-smoothed IDA density proxy. It explicitly says the older broad
+  "direct `u0` is simply wrong gauge" interpretation is too coarse.
+
+Validation / evidence:
+- Report path:
+  `docs/src/developer/reports/h_q5_direct_core_rho0_row_detail_657efa0e3/`.
+- Files copied from the ignored probe/output:
+  `h_q5_direct_core_rho0_row_detail.jl`, `summary.tsv`, and
+  `direct_core_rows.tsv`. The runtime PID file was omitted.
+- Doer validation from Pass 273 remains the measurement validation:
+  probe passed in `17.663673 s`, `git diff --check` passed, and no tracked
+  source edits were made. Manager validation for this packaging pass was
+  docs/report diff review and `git diff --check`.
+
+Goal advancement:
+- LT5/LT6 and MT4: makes the narrowed rho0/IDA proxy-convention evidence
+  reviewable outside the local machine without reopening source authority,
+  Cr2/HF, or artifact/provenance work.
+
+Risk / guardrail:
+- This is a review packet only. It does not approve source implementation,
+  public workflow, artifact/provenance, Cr2 production claims, more rho0 HF
+  runs, or `C'VC` revival.
+
+Carrying-cost result:
+- deleted: none.
+- simplified: external reviewers can inspect one compact H direct-core packet
+  instead of local `/Users/srw/dmrgtmp` output.
+- quarantined: measurement logic remains a copied report probe, not a test or
+  production helper.
+- not deleted because: the copied probe and TSVs are the requested static
+  review material.
+- exact remaining blocker: external/static review of the terminal direct-core
+  IDA proxy convention before changing rho0/Galerkin diagnostics or rerunning
+  physics.
