@@ -161,6 +161,121 @@ function nuclear_repulsion(
     )
 end
 
+function _cartesian_ida_density_matrix(
+    ham::CartesianIDAHamiltonian,
+    density,
+    name::AbstractString,
+)
+    matrix = _cartesian_dense_float_matrix(density)
+    size(matrix) == size(ham.kinetic) ||
+        throw(DimensionMismatch("$(name) must have size $(size(ham.kinetic))"))
+    all(isfinite, matrix) ||
+        throw(ArgumentError("$(name) contains non-finite entries"))
+    norm(matrix - transpose(matrix), Inf) <= 1.0e-8 ||
+        throw(ArgumentError("$(name) must be symmetric"))
+    return 0.5 .* (matrix .+ transpose(matrix))
+end
+
+function _cartesian_ida_spin_densities(
+    ham::CartesianIDAHamiltonian,
+    density_alpha,
+    density_beta,
+)
+    alpha = _cartesian_ida_density_matrix(ham, density_alpha, "density_alpha")
+    beta = _cartesian_ida_density_matrix(ham, density_beta, "density_beta")
+    return alpha, beta
+end
+
+function _cartesian_ida_approximate_interaction_energy(
+    ham::CartesianIDAHamiltonian,
+    density_alpha,
+    density_beta,
+)
+    alpha, beta = _cartesian_ida_spin_densities(ham, density_alpha, density_beta)
+    interaction = ham.electron_electron_ida
+    total_row_density = diag(alpha) + diag(beta)
+    direct = 0.5 * dot(total_row_density, interaction * total_row_density)
+    exchange_alpha = 0.5 * sum(interaction .* alpha .* transpose(alpha))
+    exchange_beta = 0.5 * sum(interaction .* beta .* transpose(beta))
+    return Float64(direct - exchange_alpha - exchange_beta)
+end
+
+function _cartesian_ida_approximate_interaction_fock(
+    ham::CartesianIDAHamiltonian,
+    same_spin_density::AbstractMatrix{Float64},
+    total_row_density::AbstractVector{Float64},
+)
+    interaction = ham.electron_electron_ida
+    fock = Matrix(Diagonal(interaction * total_row_density)) .-
+        interaction .* same_spin_density
+    return 0.5 .* (fock .+ transpose(fock))
+end
+
+function _cartesian_ida_approximate_interaction_fock_alpha(
+    ham::CartesianIDAHamiltonian,
+    density_alpha,
+    density_beta,
+)
+    alpha, beta = _cartesian_ida_spin_densities(ham, density_alpha, density_beta)
+    return _cartesian_ida_approximate_interaction_fock(
+        ham,
+        alpha,
+        diag(alpha) + diag(beta),
+    )
+end
+
+function _cartesian_ida_approximate_interaction_fock_beta(
+    ham::CartesianIDAHamiltonian,
+    density_alpha,
+    density_beta,
+)
+    alpha, beta = _cartesian_ida_spin_densities(ham, density_alpha, density_beta)
+    return _cartesian_ida_approximate_interaction_fock(
+        ham,
+        beta,
+        diag(alpha) + diag(beta),
+    )
+end
+
+function _cartesian_ida_approximate_electronic_energy(
+    ham::CartesianIDAHamiltonian,
+    density_alpha,
+    density_beta,
+)
+    alpha, beta = _cartesian_ida_spin_densities(ham, density_alpha, density_beta)
+    one_body = one_body_hamiltonian(ham)
+    return Float64(
+        sum(one_body .* (alpha + beta)) +
+        _cartesian_ida_approximate_interaction_energy(ham, alpha, beta)
+    )
+end
+
+function _cartesian_ida_approximate_electronic_fock_alpha(
+    ham::CartesianIDAHamiltonian,
+    density_alpha,
+    density_beta,
+)
+    return one_body_hamiltonian(ham) +
+        _cartesian_ida_approximate_interaction_fock_alpha(
+            ham,
+            density_alpha,
+            density_beta,
+        )
+end
+
+function _cartesian_ida_approximate_electronic_fock_beta(
+    ham::CartesianIDAHamiltonian,
+    density_alpha,
+    density_beta,
+)
+    return one_body_hamiltonian(ham) +
+        _cartesian_ida_approximate_interaction_fock_beta(
+            ham,
+            density_alpha,
+            density_beta,
+        )
+end
+
 function _cartesian_ida_center_weights(center_weights, charges)
     weights = _cartesian_float_vector(center_weights)
     length(weights) == length(charges) ||

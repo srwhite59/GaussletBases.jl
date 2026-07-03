@@ -24040,3 +24040,56 @@ Carrying-cost result:
   exchange, broad solver work, and residual/basis-fate changes.
 - exact remaining blocker: implement `HP-RHO0-FAPP-FN-01`; if it validates,
   request a separate correction-anchor lane for `Delta_F0` and `C0`.
+
+## Cartesian Hamiltonian Producer Pass 291 - Cartesian IDA Approximate Fock Source
+
+Commit(s):
+- this commit - Add Cartesian IDA approximate energy Fock seam
+
+Summary:
+- Accepted `HP-RHO0-FAPP-FN-01`. `src/cartesian_ida_hamiltonian.jl` now owns
+  paired internal helpers for fixed represented spin densities in the
+  `CartesianIDAHamiltonian` basis: approximate electronic energy,
+  interaction-only energy, and matching alpha/beta electronic Fock matrices.
+- The convention is the current Cartesian IDA/MWG approximation:
+  `E_elec = Tr[h(Pa+Pb)] + 1/2 n' V n - 1/2 Pa:V:Pa - 1/2 Pb:V:Pb`, with
+  `n = diag(Pa + Pb)`. Nuclear repulsion is reported separately as a constant.
+- The pass did not add public API/export/defaults, artifact/provenance/schema,
+  `Delta_F0`, `C0`, rho0 correction assembly, Cr/Cr2, row-action/`diag(J)`/
+  `q0` shortcuts, center-metadata substitutions, direct `C'VC`, or solver
+  workflow changes.
+
+Validation / evidence:
+- `git diff --check` passed.
+- Package load passed: `package_load_elapsed_s=0.662156083`.
+- Checked-in Cartesian IDA test passed:
+  `julia --project=. test/ida/cartesian_ida_hamiltonian_runtests.jl`,
+  `23/23` pass.
+- Ignored H/Be/Be2 finite-difference probe passed:
+  `julia --project=. tmp/work/rho0_fapp_fn_validation.jl`; output in
+  `/Users/srw/dmrgtmp/rho0_fapp_fn_validation_79d206f18`; max finite-
+  difference absolute error `1.5519574181332985e-8`, max relative error
+  `3.006465054705811e-8`.
+
+Goal advancement:
+- LT5/LT6 and MT4: completes the paired approximate-side seam needed to pair
+  with source-backed `F_exact_Hartree[P0]`. The rho0/reference-density lane
+  can now ask a correction-anchor question using source-owned exact and
+  approximate derivatives.
+
+Risk / guardrail:
+- These helpers are internal/private and dense in-memory. They are not a
+  production workflow or public solver API.
+- The finite-difference validation used symmetric density perturbations; later
+  correction-anchor audits should continue to report density convention and
+  trace/representability explicitly.
+
+Carrying-cost result:
+- source line delta: +115 in `src/cartesian_ida_hamiltonian.jl`.
+- deleted: none.
+- simplified: the previous missing approximate-Fock seam is now an explicit
+  source-owned energy/Fock pair instead of probe-local formulas.
+- quarantined: H/Be/Be2 validation probe and outputs remain ignored.
+- exact remaining blocker: design and approve the correction-anchor lane for
+  `Delta_F0 = F_exact_Hartree[P0] - F_app[P0]` and `C0`, still without
+  artifacts/public workflow/Cr2.
