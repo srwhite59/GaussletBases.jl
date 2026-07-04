@@ -521,6 +521,106 @@ function _protected_localized_read_metadata(file)
     return (; basis_controls, geometry_inputs, localized_ordering)
 end
 
+function _protected_localized_float_vector(values, name::AbstractString, dimension::Int)
+    vector = Float64.(collect(values))
+    length(vector) == dimension ||
+        throw(DimensionMismatch("$(name) length must equal final dimension"))
+    all(isfinite, vector) || throw(ArgumentError("$(name) must be finite"))
+    return vector
+end
+
+function _protected_localized_permutation(values, name::AbstractString, dimension::Int)
+    vector = Int.(collect(values))
+    length(vector) == dimension ||
+        throw(DimensionMismatch("$(name) length must equal final dimension"))
+    sort(vector) == collect(1:dimension) ||
+        throw(ArgumentError("$(name) must be a permutation of 1:final_dimension"))
+    return vector
+end
+
+function _protected_localized_optional_prop(values, name::Symbol)
+    return hasproperty(values, name) ? getproperty(values, name) : nothing
+end
+
+function _protected_localized_validate_row_locality(row_locality, counts)
+    dimension = counts.final_dimension
+    center_x = _protected_localized_float_vector(row_locality.center_x,
+        "row_locality.center_x", dimension)
+    center_y = _protected_localized_float_vector(row_locality.center_y,
+        "row_locality.center_y", dimension)
+    center_z = _protected_localized_float_vector(row_locality.center_z,
+        "row_locality.center_z", dimension)
+    z_order_to_native = _protected_localized_permutation(
+        row_locality.z_order_to_native, "row_locality.z_order_to_native", dimension)
+    native_to_z_order = _protected_localized_permutation(
+        row_locality.native_to_z_order, "row_locality.native_to_z_order", dimension)
+    for (z_index, native_index) in pairs(z_order_to_native)
+        native_to_z_order[native_index] == z_index ||
+            throw(ArgumentError("row_locality permutations are not inverses"))
+        if z_index > 1
+            previous = z_order_to_native[z_index - 1]
+            (center_z[previous], previous) <= (center_z[native_index], native_index) ||
+                throw(ArgumentError("row_locality z order is not monotone"))
+        end
+    end
+    sector_label = String.(collect(row_locality.sector_label))
+    native_sector_index = Int.(collect(row_locality.native_sector_index))
+    length(sector_label) == dimension && length(native_sector_index) == dimension ||
+        throw(DimensionMismatch("row_locality sector metadata length mismatch"))
+    for row in 1:dimension
+        expected_label = row <= counts.base ? "base_G" : "compact_R"
+        expected_index = row <= counts.base ? row : row - counts.base
+        sector_label[row] == expected_label &&
+            native_sector_index[row] == expected_index ||
+            throw(ArgumentError("row_locality sector metadata does not match native order"))
+    end
+    data = (; center_x, center_y, center_z, native_to_z_order,
+        z_order_to_native, sector_label, native_sector_index)
+    spread_names = (:spread_x, :spread_y, :spread_z)
+    spread_values = map(name -> _protected_localized_optional_prop(row_locality, name),
+        spread_names)
+    all(isnothing, spread_values) && return data
+    any(isnothing, spread_values) &&
+        throw(ArgumentError("row_locality spreads must be all present or all absent"))
+    spreads = NamedTuple{spread_names}(Tuple(_protected_localized_float_vector(
+        value, "row_locality.$(name)", dimension) for
+        (name, value) in zip(spread_names, spread_values)))
+    all(all(>=(0.0), getproperty(spreads, name)) for name in spread_names) ||
+        throw(ArgumentError("row_locality spreads must be nonnegative"))
+    return merge(data, spreads)
+end
+
+function _protected_localized_read_row_locality(file, counts)
+    center_x = try
+        file["row_locality/center_x"]
+    catch
+        return nothing
+    end
+    row_locality = (;
+        center_x,
+        center_y = file["row_locality/center_y"],
+        center_z = file["row_locality/center_z"],
+        native_to_z_order = file["row_locality/native_to_z_order"],
+        z_order_to_native = file["row_locality/z_order_to_native"],
+        sector_label = file["row_locality/sector_label"],
+        native_sector_index = file["row_locality/native_sector_index"])
+    spread_names = (:spread_x, :spread_y, :spread_z)
+    spread_values = map(spread_names) do name
+        try
+            file["row_locality/$(name)"]
+        catch
+            nothing
+        end
+    end
+    if any(!isnothing, spread_values)
+        all(!isnothing, spread_values) ||
+            throw(ArgumentError("row_locality spreads must be all present or all absent"))
+        row_locality = merge(row_locality,
+            NamedTuple{spread_names}(Tuple(spread_values)))
+    end
+    return _protected_localized_validate_row_locality(row_locality, counts)
+end
+
 function write_protected_localized_ida_hamiltonian(
     path;
     H1_L,
@@ -535,6 +635,7 @@ function write_protected_localized_ida_hamiltonian(
     basis_controls,
     geometry_inputs,
     localized_ordering = (;),
+    row_locality = nothing,
 )
     H1 = _cartesian_check_symmetric_finite_matrix(
         "protected-localized H1_L", H1_L)
@@ -552,6 +653,8 @@ function write_protected_localized_ida_hamiltonian(
     size(positions, 1) == length(charges) ||
         throw(DimensionMismatch("protected-localized center count mismatch"))
     counts = _protected_localized_sector_counts(sector_counts, dimension)
+    locality = isnothing(row_locality) ? nothing :
+        _protected_localized_validate_row_locality(row_locality, counts)
     foreach(key -> _protected_localized_prop(provenance, key, "provenance"),
         (:source_artifact, :source_commit, :current_commit))
     foreach(key -> _protected_localized_prop(basis_controls, key, "basis_controls"),
@@ -579,6 +682,9 @@ function write_protected_localized_ida_hamiltonian(
         _protected_localized_write_simple_group(file, "geometry_inputs", geometry_inputs)
         _protected_localized_write_simple_group(
             file, "localized_ordering", _protected_localized_ordering(localized_ordering))
+        if !isnothing(locality)
+            _protected_localized_write_simple_group(file, "row_locality", locality)
+        end
     end
     return path
 end
@@ -628,6 +734,7 @@ function read_protected_localized_ida_hamiltonian(path)
             sector_ranges = _protected_localized_read_ranges(file),
             diagnostics,
             provenance,
+            row_locality = _protected_localized_read_row_locality(file, counts),
             metadata...)
     end
 end

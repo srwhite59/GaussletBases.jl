@@ -123,6 +123,62 @@ function protected_localized_inherited_site_hamiltonian(
             Vee_L_symmetry_error = norm(Vee - transpose(Vee), Inf)))
 end
 
+function _protected_localized_axis_expectations(operator, ML, name::AbstractString)
+    dense = symmetrize_operator(operator)
+    size(dense) == (size(ML, 1), size(ML, 1)) ||
+        throw(DimensionMismatch("$(name) dimension mismatch"))
+    all(isfinite, dense) || throw(ArgumentError("$(name) must be finite"))
+    return vec(sum(ML .* (dense * ML), dims = 1))
+end
+
+function _protected_localized_native_sector_rows(sector_counts, dimension::Int)
+    base = Int(sector_counts.base)
+    compact_R = Int(sector_counts.compact_R)
+    base + compact_R == dimension ||
+        throw(DimensionMismatch("protected-localized sector count mismatch"))
+    labels = Vector{String}(undef, dimension)
+    indices = Vector{Int}(undef, dimension)
+    for row in 1:dimension
+        if row <= base
+            labels[row] = "base_G"
+            indices[row] = row
+        else
+            labels[row] = "compact_R"
+            indices[row] = row - base
+        end
+    end
+    return labels, indices
+end
+
+function protected_localized_row_locality(
+    loc,
+    position;
+    sector_counts,
+    x2 = nothing,
+)
+    ML = hcat(loc.C, loc.Qp) * loc.W
+    center_x = _protected_localized_axis_expectations(position.x, ML, "position.x")
+    center_y = _protected_localized_axis_expectations(position.y, ML, "position.y")
+    center_z = _protected_localized_axis_expectations(position.z, ML, "position.z")
+    z_order_to_native = sort(collect(eachindex(center_z)), by = row -> (center_z[row], row))
+    native_to_z_order = zeros(Int, length(center_z))
+    for (z_index, native_index) in pairs(z_order_to_native)
+        native_to_z_order[native_index] = z_index
+    end
+    sector_label, native_sector_index =
+        _protected_localized_native_sector_rows(sector_counts, length(center_z))
+    row_locality = (; center_x, center_y, center_z,
+        native_to_z_order, z_order_to_native, sector_label, native_sector_index)
+    isnothing(x2) && return row_locality
+    second_x = _protected_localized_axis_expectations(x2.x, ML, "x2.x")
+    second_y = _protected_localized_axis_expectations(x2.y, ML, "x2.y")
+    second_z = _protected_localized_axis_expectations(x2.z, ML, "x2.z")
+    spreads = (; spread_x = sqrt.(max.(0.0, second_x .- center_x .^ 2)),
+        spread_y = sqrt.(max.(0.0, second_y .- center_y .^ 2)),
+        spread_z = sqrt.(max.(0.0, second_z .- center_z .^ 2)))
+    return merge(row_locality, spreads)
+end
+
 function _exact_hartree_raw_block_matrices(raw_blocks)
     GG = Matrix{Float64}(raw_blocks.GG)
     GA = Matrix{Float64}(raw_blocks.GA)

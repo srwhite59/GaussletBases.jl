@@ -24581,3 +24581,56 @@ Carrying-cost result:
   workflow, solver methods, and Cr2 production claims.
 - exact remaining blocker: implement locality metadata only if native position
   operators and the `ML` transform are available at the artifact seam.
+
+## Cartesian Hamiltonian Producer Pass 301 - Protected Artifact Locality Metadata Source
+
+Commit(s):
+- this commit - Add protected artifact row locality metadata
+
+Summary:
+- Accepted `HP-RG-PROTECT-ARTLOC-FN-01`. The protected-localized artifact
+  writer now accepts optional native-order `row_locality` metadata, and the
+  readback validates it when present while preserving old protected-localized
+  artifacts as `row_locality = nothing`.
+- Source computes locality from the actual native `L` basis using
+  `ML = hcat(loc.C, loc.Qp) * loc.W` and diagonal expectations of the inherited
+  `M` position operators. Optional spreads are written only when second-moment
+  operators are supplied.
+- `H1_L` and `Vee_L` remain native-order canonical matrices. The z-order
+  vectors are metadata only.
+
+Validation / evidence:
+- Doer Cr2 validation wrote
+  `/Users/srw/dmrgtmp/protected_localized_artifact_0d01ce587/cr2_protected_localized_inherited_site_ida.jld2`
+  with dimension `6945`, `B_min=0.993465824505872`, H1/Vee roundtrip
+  `0.0`, finite centers, inverse z permutation, monotone z order, valid native
+  sector metadata, nonnegative spreads, center roundtrip `0.0`, and center-z
+  range `[-24.154569190798746, 24.154569190798707]`.
+- Manager validation: `git diff --check`; package load
+  `package_load_elapsed_s=0.501050084`; `julia --project=.
+  test/ida/cartesian_ida_hamiltonian_runtests.jl` passed `23/23`; tiny
+  row-locality write/readback smoke passed; tiny no-row-locality readback
+  confirmed `row_locality = nothing`.
+
+Goal advancement:
+- LT5/LT6 and MT4: removes the immediate Cr2 consumer friction around
+  z-ordering and reasonable centers. The artifact now carries enough native
+  locality metadata for solver/MP2-NO consumers to create z-ordered working
+  copies without reconstructing protected geometry.
+
+Risk / guardrail:
+- Native sector ranges and matrices are still native order. Any future
+  z-sorted matrix artifact or solver workflow needs separate authority.
+- This pass does not add rho0, public workflow, solver integration, Cr2
+  production claims, or selection-policy changes.
+
+Carrying-cost result:
+- source line delta: `+163` across the two source files before this log entry.
+- deleted: none.
+- simplified: row-locality computation is source-backed instead of CR2-side
+  sidecar-only reconstruction.
+- quarantined: row locality is optional protected-localized metadata only;
+  default PQS/WL/RG artifacts are unchanged.
+- exact remaining blocker: consumer/resume or MP2-NO workflow wiring remains a
+  separate approved lane; no operational use of the z-order metadata is wired
+  in repo source yet.
