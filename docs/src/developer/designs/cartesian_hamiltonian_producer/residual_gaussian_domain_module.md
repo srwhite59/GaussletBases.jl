@@ -109,6 +109,8 @@ module, or object names in the new owner.
 - `HP-RHO0-JANCHOR-FN-01` - direct-Hartree reference anchor replacement.
 - `HP-RHO0-JANCHOR-TEST-01` - validation gates for the direct-Hartree anchor
   replacement.
+- `HP-RHO0-XPAIR-AUDIT-01` - measurement-only exchange/direct pairing audit
+  after direct-Hartree anchor validation.
 
 Implementation IDs in this list are approved only within the surfaces below.
 Design-only IDs record authority for future source blurbs but do not approve
@@ -456,6 +458,18 @@ H/Be/Be2 corrected behavior with `Delta_J0`/`C0_J`. It does not approve
 artifacts, public workflow, solver integration, Cr/Cr2, exact exchange
 correction, changes to the current approximate exchange convention, residual
 selection changes, or production correction use.
+
+`HP-RHO0-XPAIR-AUDIT-01` is measurement-only. It records the current rho0
+interpretation: supplement-space atomic `P0` is viable, direct-Hartree anchor
+algebra is viable, but corrected Hamiltonian behavior with inherited
+approximate exchange-like terms is not ready. The audit may use ignored
+H/Be/Be2 probes to compare direct-Hartree correction, inherited approximate
+exchange-like expectations, exact/supplement-space exchange diagnostics where
+feasible, and an explicitly non-production direct-only corrected-operator
+diagnostic. It does not approve source edits, artifacts/public workflow,
+solver integration, Cr/Cr2, exact exchange implementation, changes to the
+current approximate exchange convention, or direct-only physics as a
+Hamiltonian.
 
 Do not approve a vague global entry point such as
 `stabilize_residual_metric(...)`. Global raw-candidate symmetric Lowdin and

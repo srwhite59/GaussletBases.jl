@@ -1306,6 +1306,23 @@ Approved Residual Gaussian module surfaces:
   representation, full corrected-interaction finite-difference check,
   H/Be/Be2 corrected audit replay with `Delta_J0`/`C0_J`, and no
   artifact/public workflow/solver/Cr2 run.
+- `HP-RHO0-XPAIR-AUDIT-01` approves only ignored measurement probes for the
+  exchange/direct pairing blocker after the direct-Hartree anchor. The current
+  interpretation is: supplement-space atomic `P0` is viable, direct-Hartree
+  anchor algebra is viable, and corrected Hamiltonian behavior with inherited
+  approximate exchange-like terms is not ready. The audit is H/Be/Be2 only and
+  may compare direct-Hartree correction, inherited approximate exchange-like
+  expectations, exact/supplement-space exchange diagnostics where feasible,
+  and an explicitly non-production direct-only corrected-operator diagnostic.
+  It does not approve tracked source edits, public driver/API/export/default
+  changes, artifacts/provenance/schema/writer/reader/manifest changes,
+  production Hamiltonian integration, solver workflow, Cr/Cr2, exact exchange
+  implementation, changes to the current approximate exchange convention,
+  using direct-only diagnostics as a Hamiltonian, row-action/`diag(J)`/`q0`/
+  center metadata/direct-`C' V C` substitutes, residual/MWG default changes,
+  basis-fate changes, broad rejected directions as MWG residuals, or committed
+  tests/fixtures. Because this is measurement-only authority, do not add it to
+  the approved source-ID list.
 
 Non-negotiable RG guardrails:
 

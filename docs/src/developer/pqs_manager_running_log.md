@@ -24358,3 +24358,57 @@ Carrying-cost result:
 - exact remaining blocker: understand or redesign the corrected small-system
   low-mode behavior before any production integration, Cr/Cr2 run, or paper
   interpretation of rho0.
+
+## Cartesian Hamiltonian Producer Pass 297 - Rho0 Exchange Pairing Audit Authority
+
+Commit(s):
+- this commit - Approve rho0 exchange pairing audit
+
+Summary:
+- Accepted the post-`HP-RHO0-JANCHOR-*` interpretation: supplement-space
+  atomic `P0` construction is viable, direct-Hartree anchor algebra is viable,
+  but the corrected Hamiltonian with inherited approximate exchange-like terms
+  is not ready.
+- Design-manager approved `HP-RHO0-XPAIR-AUDIT-01` as the next rho0 lane. It
+  is measurement-only, H/Be/Be2 only, and focused on exchange/direct pairing:
+  compare direct-Hartree correction, inherited approximate exchange-like
+  expectations, exact/supplement-space exchange diagnostics where feasible,
+  and an explicitly non-production direct-only corrected-operator diagnostic.
+- No source authority, artifacts, public workflow, solver integration, Cr/Cr2,
+  exact exchange implementation, or changes to the current approximate
+  exchange convention are approved.
+
+Validation / evidence:
+- Latest accepted source commit remains `16834e974 Fix rho0 Hartree anchor to
+  direct only`.
+- That pass showed direct anchor energy error `0.0`, direct Fock anchor error
+  `0.0`, direct-only finite-difference max absolute error
+  `1.1307165093121796e-8`, and full corrected interaction finite-difference
+  max absolute error `2.0180494081367684e-8`.
+- The same replay also showed the small-system stop signal: minimum corrected
+  total Fock eigenvalue `-5.732573215726758`, so the source algebra is not a
+  production rho0 correction.
+
+Goal advancement:
+- LT5/LT6 and MT4: replaces the stale "P0 not represented" story with a
+  sharper blocker. The next question is the pairing between exact/direct
+  Hartree replacement and inherited approximate exchange-like terms, not Cr2
+  and not another row-gauge probe.
+
+Risk / guardrail:
+- The direct-only diagnostic is allowed only as a diagnostic; it is not a full
+  Hamiltonian and must not be interpreted as an approved physics model.
+- If the exchange-pairing audit identifies inherited approximate exchange as
+  the low-mode driver, the next step is a separate source-design lane. If it
+  stays ambiguous, stop with the exact low-mode and sector diagnostics.
+
+Carrying-cost result:
+- source line delta: 0 in this docs authority pass.
+- deleted: none.
+- simplified: rho0 status now separates three facts: supplement-space `P0`
+  works, `Delta_J0` anchor works, corrected Hamiltonian promotion is blocked
+  by exchange/direct pairing.
+- quarantined: Cr/Cr2 rho0, production integration, exact exchange source
+  work, public/artifact workflow, and direct-only Hamiltonian interpretation.
+- exact remaining blocker: run `HP-RHO0-XPAIR-AUDIT-01` on H/Be/Be2 and
+  decide whether an exchange-pairing source-design lane is justified.

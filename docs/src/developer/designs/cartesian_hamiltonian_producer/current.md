@@ -477,6 +477,18 @@ Approved Residual Gaussian robustness lane:
   public workflow, production Hamiltonian integration, solver workflow,
   Cr/Cr2, exact exchange correction, or changes to the current approximate
   exchange convention.
+- Implementation evidence now shows supplement-space atomic `P0` is
+  represented at roundoff in H/Be/Be2 and the direct-Hartree anchor algebra is
+  viable. The corrected Hamiltonian with inherited approximate exchange-like
+  terms remains blocked: H/Be/Be2 replay still shows sizable negative low-mode
+  shifts. `HP-RHO0-XPAIR-AUDIT-01` is the next approved rho0 lane. It is
+  measurement-only, H/Be/Be2 only, and should compare direct-Hartree
+  correction, inherited approximate exchange-like contributions, exact/
+  supplement-space exchange diagnostics where feasible, and an explicitly
+  non-production direct-only corrected-operator diagnostic. It does not
+  approve source edits, artifacts, public workflow, solver integration,
+  Cr/Cr2, exact exchange implementation, changes to the current approximate
+  exchange convention, or direct-only physics as a Hamiltonian.
 - `rho0_reference_density_implementation_plan.md` is a review memo for the
   likely fast separable atomic-reference Hartree source shape. The current
   approved source target is raw exact mixed Hartree `GG` plus `GA`/`AA` from
@@ -484,9 +496,10 @@ Approved Residual Gaussian robustness lane:
   the paired Cartesian IDA `F_app[P0]` seam is source-backed. The old
   full-interaction anchor is superseded by the approved direct-Hartree anchor
   replacement in `HP-RHO0-JANCHOR-*`; corrected-Hamiltonian behavior must be
-  rerun with `Delta_J0`/`C0_J`. Cr/Cr2, artifacts, public workflow, solver
-  integration, exact exchange correction, and production Hamiltonian
-  integration remain later lanes.
+  rerun with `Delta_J0`/`C0_J`, and its current H/Be/Be2 result is a
+  stop-signal pending exchange/direct pairing diagnosis. Cr/Cr2, artifacts,
+  public workflow, solver integration, exact exchange correction, and
+  production Hamiltonian integration remain later lanes.
 
 Approved stale complete-core-shell RHF retirement:
 

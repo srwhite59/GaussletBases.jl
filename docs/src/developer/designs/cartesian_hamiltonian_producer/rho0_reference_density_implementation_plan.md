@@ -1341,3 +1341,47 @@ Still out of scope:
   shortcuts;
 - residual/MWG default changes, basis-fate changes, broad rejected directions
   as MWG residuals, or committed fixtures.
+
+## Design-Manager Measurement Authority - Exchange/Direct Pairing Audit - 2026-07-04
+
+Post-implementation interpretation:
+
+```text
+supplement-space atomic P0: viable
+direct-Hartree anchor algebra: viable
+corrected Hamiltonian with inherited approximate exchange: not ready
+next blocker: exchange/direct pairing design
+```
+
+The corrected-Hamiltonian replay after `HP-RHO0-JANCHOR-*` no longer points to
+unrepresented `P0` or broken direct-Hartree algebra. It points to the
+combination of exact/direct Hartree replacement with the old approximate
+exchange-like contribution, or to affine-correction behavior away from `P0`.
+
+Approved next ID:
+
+- `HP-RHO0-XPAIR-AUDIT-01`
+
+Scope:
+
+- measurement-only;
+- ignored `tmp/work` probes and `/Users/srw/dmrgtmp` output;
+- H, Be, and Be2 only;
+- compare direct-Hartree correction, inherited approximate exchange-like
+  contributions, exact/supplement-space exchange diagnostics where feasible,
+  and an explicitly non-production direct-only corrected-operator diagnostic.
+
+Forbidden:
+
+- source edits;
+- public driver/API/export/default changes;
+- artifacts/provenance/schema/writer/reader/manifest changes;
+- production Hamiltonian integration or solver workflow;
+- Cr atom, Cr2, Cr2 HF, or Cr2 production diagnostics;
+- exact exchange source implementation;
+- changes to the current approximate exchange convention;
+- using a direct-only diagnostic as a full Hamiltonian;
+- row-action, `diag(J)`, `q0`, center metadata, direct `C' V C`, or IDA proxy
+  shortcuts;
+- residual/MWG default changes, basis-fate changes, broad rejected directions
+  as MWG residuals, or committed fixtures.

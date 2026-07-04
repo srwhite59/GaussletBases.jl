@@ -568,6 +568,17 @@ Approved robustness lane:
   not approve artifacts/public workflow, production integration, solver
   workflow, Cr/Cr2, exact exchange correction, or changes to the current
   approximate exchange convention.
+- `HP-RHO0-XPAIR-AUDIT-01` approves only a measurement audit for the remaining
+  exchange/direct pairing blocker. It records that supplement-space atomic
+  `P0` and direct-Hartree anchor algebra are viable, while corrected
+  Hamiltonian behavior with inherited approximate exchange-like terms is not
+  ready. Ignored H/Be/Be2 probes may compare direct-Hartree correction,
+  inherited approximate exchange-like contributions, exact/supplement-space
+  exchange diagnostics where feasible, and an explicitly non-production
+  direct-only corrected-operator diagnostic. It does not approve source edits,
+  artifacts/public workflow, solver integration, Cr/Cr2, exact exchange
+  implementation, changes to the current approximate exchange convention, or
+  direct-only physics as a Hamiltonian.
 
 ## Compact Hamiltonian Artifact Manifest
 

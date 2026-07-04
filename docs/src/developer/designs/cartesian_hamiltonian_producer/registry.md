@@ -5364,7 +5364,7 @@ Hartree correction.
 
 ### HP-RHO0-JANCHOR-TEST-01 — direct-Hartree anchor validation
 
-Status: approved validation gates for `HP-RHO0-JANCHOR-FN-01`.
+Status: implemented validation gates for `HP-RHO0-JANCHOR-FN-01`.
 
 Required validation:
 
@@ -5385,6 +5385,78 @@ Required validation:
   when available, density traces, and representability facts;
 - no artifact/public workflow, solver workflow, Cr/Cr2, or production
   integration run.
+
+Interpretation after implementation: supplement-space atomic `P0` is
+represented at roundoff in H/Be/Be2, and the direct-Hartree anchor algebra is
+viable. Corrected-Hamiltonian replay with inherited approximate exchange-like
+terms is still not production-ready; negative low-mode shifts remain a stop
+signal.
+
+### HP-RHO0-XPAIR-AUDIT-01 — exchange/direct pairing measurement audit
+
+Status: approved measurement-only audit.
+
+Purpose: diagnose the remaining small-system blocker after
+`HP-RHO0-JANCHOR-*`: exact/direct Hartree replacement plus inherited
+approximate exchange-like terms is not yet a benign corrected Hamiltonian.
+
+Allowed:
+
+- ignored `tmp/work/*.jl` probes only;
+- `/Users/srw/dmrgtmp` output only;
+- H, Be, and Be2 only;
+- consume source-backed supplement-space atomic `P0`, exact Hartree
+  `F_exact_Hartree[P0]`, direct anchor `Delta_J0`/`C0_J`, and current
+  approximate full-interaction helpers;
+- compare inherited approximate exchange-like contributions against
+  exact/supplement-space exchange diagnostics where feasible for small
+  systems;
+- run a direct-only corrected-operator diagnostic explicitly labeled as not a
+  full Hamiltonian;
+- report fixed-density and low-mode diagnostics before any bounded endpoint or
+  HF-like replay.
+
+Required diagnostics:
+
+- `P0` representability and density trace facts;
+- direct-Hartree anchor errors and `Delta_J0` spectra/diagonal/occupied
+  expectations;
+- corrected versus uncorrected low spectra and low-mode sector weights;
+- expectation values of the direct Hartree correction and inherited
+  approximate exchange-like contributions on flagged low modes;
+- approximate exchange-like spectra/diagonals/occupied expectations by spin;
+- exact or supplement-space exchange comparison where a small dense oracle is
+  feasible, with basis/density convention recorded;
+- direct-only corrected-operator diagnostic clearly marked as not a production
+  Hamiltonian;
+- finite/symmetry checks and fixed-density energy shifts;
+- classification of whether the negative low-mode behavior is dominated by
+  exchange pairing, affine correction away from `P0`, or an unresolved
+  diagnostic.
+
+Forbidden:
+
+- tracked source edits;
+- public driver/API/export/default changes;
+- artifacts, manifests, provenance, writers, readers, or sidecars;
+- production Hamiltonian integration or solver workflow;
+- Cr atom, Cr2, Cr2 HF, or Cr2 production diagnostics;
+- exact exchange source implementation;
+- changes to the current approximate exchange convention;
+- using the direct-only diagnostic as a full Hamiltonian;
+- row action, `diag(J)`, `q0`, center metadata, direct `C' V C`, or IDA proxy
+  shortcuts;
+- residual/MWG defaults, residual selection, basis-fate policy, or broad
+  rejected directions as MWG residuals;
+- committed tests or fixtures.
+
+Decision rule: if diagnostics identify inherited approximate exchange pairing
+as the low-mode driver, request a later source-design lane for the exchange
+pairing convention or exact/supplement-space exchange audit. If the direct-
+only diagnostic is stable but the full corrected model is not, record that as
+evidence against promotion of the inherited-exchange model, not as approval to
+ship direct-only physics. If the blocker remains ambiguous, stop with the
+exact low-mode and sector diagnostics. Do not proceed to Cr/Cr2.
 
 Candidate future IDs, not approved:
 

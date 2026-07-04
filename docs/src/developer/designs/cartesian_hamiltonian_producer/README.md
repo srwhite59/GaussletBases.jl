@@ -104,8 +104,11 @@ only. The current screened-correction target is the reference-density-matrix
 path in `rho0_reference_density_matrix.md`: fixed `P0`, exact Hartree side,
 direct-only approximate Hartree anchor `Delta_J0`/`C0_J`, and later
 small-system corrected behavior. The older full-interaction anchor is
-superseded for Hartree-correction interpretation. Artifact, solver, public
-workflow, Cr2 production, and exact exchange correction remain deferred.
+superseded for Hartree-correction interpretation. H/Be/Be2 evidence now makes
+the remaining blocker exchange/direct pairing, not unrepresented `P0`;
+`HP-RHO0-XPAIR-AUDIT-01` is the measurement-only next lane. Artifact, solver,
+public workflow, Cr2 production, and exact exchange correction remain
+deferred.
 
 Agents should read first:
 
