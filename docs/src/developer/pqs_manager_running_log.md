@@ -24300,3 +24300,61 @@ Carrying-cost result:
 - exact remaining blocker: implement `HP-RHO0-JANCHOR-FN-01` and rerun
   H/Be/Be2 corrected behavior with `Delta_J0`/`C0_J` before any Cr/Cr2 or
   production-integration discussion.
+
+## Cartesian Hamiltonian Producer Pass 296 - Direct-Hartree Rho0 Anchor Source Fix
+
+Commit(s):
+- this commit - Fix rho0 Hartree anchor to direct only
+
+Summary:
+- Accepted the narrow `HP-RHO0-JANCHOR-FN-01` implementation. The Cartesian
+  IDA Hamiltonian now has internal direct-only interaction helpers for
+  `E_app_direct = 1/2 * q' * V * q` and `F_app_direct = Diagonal(V * q)`,
+  where `q = diag(P_alpha) + diag(P_beta)`.
+- `hartree_reference_correction_anchor(...)` now returns one spin-independent
+  `delta_J0` and `C0_J`, replacing the old full-interaction alpha/beta
+  `Delta_F0` output path. The corrected full interaction keeps the existing
+  approximate exchange-like contribution and adds only
+  `Tr((P_alpha + P_beta) * delta_J0) + C0_J`.
+- No artifacts, public workflow, solver integration, Cr/Cr2, exact exchange,
+  or production Hamiltonian path were added.
+
+Validation / evidence:
+- `git diff --check` passed.
+- Package load passed, `package_load_elapsed_s=0.461822708`.
+- `julia --project=. test/ida/cartesian_ida_hamiltonian_runtests.jl` passed
+  `23/23`.
+- `julia --project=. tmp/work/rho0_corr_audit.jl` completed in
+  `35.582653583` seconds with output under
+  `/Users/srw/dmrgtmp/rho0_corr_audit_b3fec7465/`.
+- Replay scalars: direct anchor energy error `0.0`, direct Fock anchor error
+  `0.0`, direct-only finite-difference max absolute error
+  `1.1307165093121796e-8`, and full corrected interaction finite-difference
+  max absolute error `2.0180494081367684e-8`.
+
+Goal advancement:
+- LT5/LT6 and MT4: fixes the Hartree-correction category error identified in
+  Pass 295. The rho0/reference-density anchor now replaces only approximate
+  direct Hartree while preserving the current approximate exchange-like
+  convention.
+
+Risk / guardrail:
+- The H/Be/Be2 corrected-Hamiltonian replay remains a stop signal for physics
+  promotion: the minimum corrected total Fock eigenvalue reached
+  `-5.732573215726758`. This source fix validates the direct-Hartree anchor
+  algebra, not a production-ready rho0 correction or Cr/Cr2 workflow.
+- `HP-RHO0-CORR-AUDIT-01` evidence must be interpreted with the new
+  `delta_J0`/`C0_J` object and still needs manager interpretation before any
+  further rho0 correction lane.
+
+Carrying-cost result:
+- source line delta: net `-1` across the two source files.
+- deleted: old full-interaction spin-split anchor output path inside the
+  helper.
+- simplified: one direct Hartree correction object replaces two spin-split
+  full-interaction deltas.
+- quarantined: validation replay remains ignored under `tmp/work` and
+  `/Users/srw/dmrgtmp`; production integration remains unauthorized.
+- exact remaining blocker: understand or redesign the corrected small-system
+  low-mode behavior before any production integration, Cr/Cr2 run, or paper
+  interpretation of rho0.

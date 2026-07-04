@@ -200,6 +200,26 @@ function _cartesian_ida_approximate_interaction_energy(
     return Float64(direct - exchange_alpha - exchange_beta)
 end
 
+function _cartesian_ida_approximate_direct_interaction_energy(
+    ham::CartesianIDAHamiltonian,
+    density_alpha,
+    density_beta,
+)
+    alpha, beta = _cartesian_ida_spin_densities(ham, density_alpha, density_beta)
+    row_density = diag(alpha) + diag(beta)
+    return Float64(0.5 * dot(row_density, ham.electron_electron_ida * row_density))
+end
+
+function _cartesian_ida_approximate_direct_interaction_fock(
+    ham::CartesianIDAHamiltonian,
+    density_alpha,
+    density_beta,
+)
+    alpha, beta = _cartesian_ida_spin_densities(ham, density_alpha, density_beta)
+    row_potential = ham.electron_electron_ida * (diag(alpha) + diag(beta))
+    return Matrix(Diagonal(row_potential))
+end
+
 function _cartesian_ida_approximate_interaction_fock(
     ham::CartesianIDAHamiltonian,
     same_spin_density::AbstractMatrix{Float64},
