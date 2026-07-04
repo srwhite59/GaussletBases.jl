@@ -24463,3 +24463,62 @@ Carrying-cost result:
 - exact remaining blocker: implement the opt-in variant only if it fits the
   existing `.jld2` Hamiltonian family with minimal convention/version readback
   validation.
+
+## Cartesian Hamiltonian Producer Pass 299 - Protected-Localized Artifact Source
+
+Commit(s):
+- this commit - Add protected-localized IDA artifact variant
+
+Summary:
+- Accepted `HP-RG-PROTECT-ART-FN-01` as an explicit opt-in `.jld2`
+  Hamiltonian artifact variant. The new artifact kind is
+  `:protected_localized_inherited_site_ida_hamiltonian`, with convention ID
+  `:protected_localized_inherited_site_ida_v1`.
+- Source now carries the protected-localized inherited-site transform helper,
+  dense `H1_L` plus inherited-site `Vee_L` construction, and protected
+  writer/readback helpers. The canonical `read_cartesian_ida_hamiltonian`
+  rejects this artifact kind.
+- Manager review found one real edge-case bug: the writer's default
+  `localized_ordering` could create an artifact missing keys required by the
+  reader. The accepted diff now installs complete convention defaults for
+  localized ordering before writing.
+
+Validation / evidence:
+- Doer Cr2 validation wrote
+  `/Users/srw/dmrgtmp/protected_localized_artifact_74fb49c31/cr2_protected_localized_inherited_site_ida.jld2`
+  with size `736M`, dimension `6945`, counts `base=6915`,
+  `compact_R=30`, `protected_Z=30`, `broad_Z=87`, `Z=117`,
+  `Qperp=6828`, `nup=24`, `ndn=24`, `B_min=0.993465824505872`,
+  `B < 0.99 = 0`, zero H1/Vee symmetry errors, and exact H1/Vee
+  roundtrip. The canonical reader and a bad convention were both rejected.
+- Manager validation: `git diff --check`; package load
+  `package_load_elapsed_s=0.621293209`; `julia --project=.
+  test/ida/cartesian_ida_hamiltonian_runtests.jl` passed `23/23`;
+  tiny protected artifact write/readback/canonical-rejection smoke passed; tiny
+  bad-convention rejection smoke passed.
+- The attempted H2 augmented one-body smoke failed only on stale exact scalar
+  expectations from recent aspect-shell dimension changes, not on this
+  opt-in artifact path.
+
+Goal advancement:
+- LT5/LT6 and MT4: converts the protected-localized Cr2 baseline from a
+  probe-only in-memory reconstruction into a durable, versioned Hamiltonian
+  artifact that solver and MP2-NO consumers can reuse.
+
+Risk / guardrail:
+- This is not a default producer change and not a public driver/solver
+  workflow. It does not add rho0, change RG/injection selection, or make a
+  Cr2 production energy claim.
+- Consumers must treat the artifact by its protected-localized convention ID;
+  it is not an ordinary Cartesian IDA artifact.
+
+Carrying-cost result:
+- source line delta: `+291` across the two source files before this log entry.
+- deleted: none.
+- simplified: source-backed artifact construction replaces repeated
+  protected-localized Hamiltonian reconstruction in Cr2 probe workflows.
+- quarantined: protected-localized artifacts remain explicit opt-in
+  convention/versioned files; default PQS/WL/RG artifact semantics are
+  unchanged.
+- exact remaining blocker: consumer/resume wiring for solver or MP2-NO use
+  needs a separate approved lane; no public workflow exists yet.

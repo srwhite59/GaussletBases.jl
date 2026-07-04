@@ -76,6 +76,53 @@ function transform_protected_original_fixed_sector_one_body(kinetic, unit_nuclea
         f_dimension = components.f_dimension)
 end
 
+function protected_localized_inherited_site_transform(geometry)
+    components = protected_original_fixed_sector_components(geometry)
+    C = Matrix{Float64}(geometry.B)
+    Qp = Matrix{Float64}(components.Qp)
+    A = vcat(transpose(C), transpose(Qp))
+    Sbar = symmetrize_operator(transpose(A) * A)
+    values, vectors = eigen(Symmetric(Sbar))
+    minimum(values) > 0.0 ||
+        throw(ArgumentError("protected-localized metric is not positive definite"))
+    invsqrt = vectors * Diagonal(1.0 ./ sqrt.(values)) * transpose(vectors)
+    W = A * invsqrt
+    ML = hcat(C, Qp) * W
+    off = copy(ML)
+    for i in axes(off, 1)
+        off[i, i] = 0.0
+    end
+    return (; W, C, Qp, Sbar_values = values,
+        L_identity_error = norm(transpose(W) * W - I, Inf),
+        M_L_diag_min = minimum(diag(ML)),
+        M_L_diag_max = maximum(diag(ML)),
+        M_L_diag_delta_max = maximum(abs.(diag(ML) .- 1.0)),
+        M_L_offdiag_max = maximum(abs, off),
+        M_L_fro_delta = norm(ML - I) / sqrt(length(ML)))
+end
+
+function protected_localized_inherited_site_hamiltonian(
+    protected_fixed_one_body,
+    inherited_site_vee,
+    geometry,
+)
+    loc = protected_localized_inherited_site_transform(geometry)
+    H1 = symmetrize_operator(transpose(loc.W) * protected_fixed_one_body * loc.W)
+    Vee = symmetrize_operator(inherited_site_vee)
+    size(H1) == size(Vee) ||
+        throw(DimensionMismatch("protected-localized H1/Vee dimension mismatch"))
+    all(isfinite, H1) && all(isfinite, Vee) ||
+        throw(ArgumentError("protected-localized matrices must be finite"))
+    return (; H1_L = H1, Vee_L = Vee, transform = loc,
+        diagnostics = (;
+            L_identity_error = loc.L_identity_error,
+            M_L_diag_delta_max = loc.M_L_diag_delta_max,
+            M_L_offdiag_max = loc.M_L_offdiag_max,
+            M_L_fro_delta = loc.M_L_fro_delta,
+            H1_L_symmetry_error = norm(H1 - transpose(H1), Inf),
+            Vee_L_symmetry_error = norm(Vee - transpose(Vee), Inf)))
+end
+
 function _exact_hartree_raw_block_matrices(raw_blocks)
     GG = Matrix{Float64}(raw_blocks.GG)
     GA = Matrix{Float64}(raw_blocks.GA)

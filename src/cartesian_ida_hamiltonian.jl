@@ -387,3 +387,247 @@ function read_cartesian_ida_hamiltonian(path)
         )
     end
 end
+
+const _PROTECTED_LOCALIZED_ARTIFACT_KIND = :protected_localized_inherited_site_ida_hamiltonian
+const _PROTECTED_LOCALIZED_CONVENTION_ID = :protected_localized_inherited_site_ida_v1
+
+function _protected_localized_int(value, name::AbstractString)
+    out = Int(value)
+    out >= 0 || throw(ArgumentError("$(name) must be non-negative"))
+    return out
+end
+
+function _protected_localized_prop(values, name::Symbol, context::AbstractString)
+    hasproperty(values, name) || throw(ArgumentError("$(context) is missing $(name)"))
+    return getproperty(values, name)
+end
+
+function _protected_localized_write_simple_group(file, prefix::AbstractString, values)
+    for name in propertynames(values)
+        file["$(prefix)/$(name)"] = getproperty(values, name)
+    end
+    return nothing
+end
+
+function _protected_localized_sector_counts(sector_counts, final_dimension::Int)
+    value(name) = _protected_localized_int(
+        _protected_localized_prop(sector_counts, name, "sector_counts"),
+        "sector_counts.$(name)",
+    )
+    base, compact_R = value(:base), value(:compact_R)
+    protected_Z, broad_Z = value(:protected_Z), value(:broad_Z)
+    M = base + compact_R
+    Z = protected_Z + broad_Z
+    Qperp = final_dimension - Z
+    M == final_dimension ||
+        throw(DimensionMismatch("protected-localized final dimension must equal base + compact_R"))
+    Qperp >= 0 ||
+        throw(DimensionMismatch("protected-localized Z dimension exceeds final dimension"))
+    return (; base, compact_R, M, protected_Z, broad_Z, Z, Qperp,
+        final_dimension)
+end
+
+function _protected_localized_write_sector_metadata(file, counts)
+    ranges = (;
+        base_G = (1, counts.base),
+        compact_R = (counts.base + 1, counts.M),
+        protected_Z = (1, counts.protected_Z),
+        broad_Z = (counts.protected_Z + 1, counts.Z),
+        Z = (1, counts.Z),
+        Qperp = (counts.Z + 1, counts.final_dimension),
+        L = (1, counts.final_dimension))
+    for (name, (first, last)) in pairs(ranges)
+        file["sector_ranges/$(name)"] = Int[first, last]
+    end
+    return nothing
+end
+
+function _protected_localized_ordering(localized_ordering)
+    return merge((;
+            order = :inherited_M_site_order,
+            transform = :angular_style_projected_localization,
+            parent_M_order = :base_G_then_compact_R,
+            fixed_F_order = :protected_Z_then_broad_Z_then_Qperp,
+            interaction = :inherited_pre_injection_site_order,
+            exact_one_body = :protected_localized_dense_transform),
+        localized_ordering)
+end
+
+function _protected_localized_read_key(file, key::AbstractString)
+    try
+        return file[key]
+    catch err
+        throw(ArgumentError("missing protected-localized artifact key $(key)"))
+    end
+end
+_protected_localized_read_symbol(file, key::AbstractString) =
+    Symbol(_protected_localized_read_key(file, key))
+
+function _protected_localized_read_matrix(file, key::AbstractString, dimension::Int)
+    matrix = _cartesian_check_symmetric_finite_matrix(key, file[key])
+    size(matrix) == (dimension, dimension) ||
+        throw(DimensionMismatch("$(key) must have size $((dimension, dimension))"))
+    return matrix
+end
+
+function _protected_localized_read_counts(file, dimension::Int)
+    counts = (; (name => _protected_localized_int(
+        file["sector_counts/$(name)"], String(name)) for
+        name in (:base, :compact_R, :protected_Z, :broad_Z))...)
+    return _protected_localized_sector_counts(counts, dimension)
+end
+
+function _protected_localized_read_diagnostics(file)
+    float_keys = (:B_min, :B_median, :B_max, :F_S_F_identity_error,
+        :Z_S_M_Qperp_error, :Qperp_identity_error, :protected_span_min_sv,
+        :L_identity_error, :M_L_diag_delta_max, :M_L_offdiag_max,
+        :M_L_fro_delta, :H1_L_symmetry_error, :Vee_L_symmetry_error)
+    int_keys = (:B_lt_0p999, :B_lt_0p99, :B_lt_0p98, :B_lt_0p95, :B_lt_0p9)
+    return merge(
+        NamedTuple{float_keys}(Tuple(Float64(file["diagnostics/$(key)"]) for key in float_keys)),
+        NamedTuple{int_keys}(Tuple(Int(file["diagnostics/$(key)"]) for key in int_keys)),
+    )
+end
+
+function _protected_localized_read_ranges(file)
+    range_keys = (:base_G, :compact_R, :protected_Z, :broad_Z, :Z, :Qperp, :L)
+    read_range(key) = begin
+        values = Int.(file["sector_ranges/$(key)"])
+        length(values) == 2 ||
+            throw(ArgumentError("sector range $(key) must have two endpoints"))
+        (; first = values[1], last = values[2])
+    end
+    return (; (key => read_range(key) for key in range_keys)...)
+end
+
+function _protected_localized_read_metadata(file)
+    basis_controls = (;
+        nesting = Symbol(file["basis_controls/nesting"]),
+        ns = Int(file["basis_controls/ns"]),
+        core_spacing = Float64(file["basis_controls/core_spacing"]),
+        basisname = String(file["basis_controls/basisname"]),
+        lmax = Int(file["basis_controls/lmax"]))
+    geometry_inputs = (;
+        atom_symbols = String.(file["geometry_inputs/atom_symbols"]),
+        nuclear_charges = Float64.(file["geometry_inputs/nuclear_charges"]),
+        atom_locations = file["geometry_inputs/atom_locations"])
+    localized_ordering = (;
+        order = Symbol(file["localized_ordering/order"]),
+        transform = Symbol(file["localized_ordering/transform"]),
+        parent_M_order = Symbol(file["localized_ordering/parent_M_order"]),
+        fixed_F_order = Symbol(file["localized_ordering/fixed_F_order"]),
+        interaction = Symbol(file["localized_ordering/interaction"]),
+        exact_one_body = Symbol(file["localized_ordering/exact_one_body"]))
+    return (; basis_controls, geometry_inputs, localized_ordering)
+end
+
+function write_protected_localized_ida_hamiltonian(
+    path;
+    H1_L,
+    Vee_L,
+    nup::Integer,
+    ndn::Integer,
+    nuclear_charges,
+    nuclear_positions,
+    sector_counts,
+    diagnostics,
+    provenance,
+    basis_controls,
+    geometry_inputs,
+    localized_ordering = (;),
+)
+    H1 = _cartesian_check_symmetric_finite_matrix(
+        "protected-localized H1_L", H1_L)
+    Vee = _cartesian_check_symmetric_finite_matrix(
+        "protected-localized inherited-site Vee_L", Vee_L)
+    size(H1) == size(Vee) ||
+        throw(DimensionMismatch("protected-localized H1_L/Vee_L size mismatch"))
+    dimension = size(H1, 1)
+    nup_value = _protected_localized_int(nup, "nup")
+    ndn_value = _protected_localized_int(ndn, "ndn")
+    nup_value <= dimension && ndn_value <= dimension ||
+        throw(ArgumentError("protected-localized electron counts exceed dimension"))
+    charges = _cartesian_float_vector(nuclear_charges)
+    positions = _cartesian_nuclear_position_matrix(nuclear_positions)
+    size(positions, 1) == length(charges) ||
+        throw(DimensionMismatch("protected-localized center count mismatch"))
+    counts = _protected_localized_sector_counts(sector_counts, dimension)
+    foreach(key -> _protected_localized_prop(provenance, key, "provenance"),
+        (:source_artifact, :source_commit, :current_commit))
+    foreach(key -> _protected_localized_prop(basis_controls, key, "basis_controls"),
+        (:nesting, :ns, :core_spacing, :basisname, :lmax))
+    foreach(key -> _protected_localized_prop(geometry_inputs, key, "geometry_inputs"),
+        (:atom_symbols, :nuclear_charges, :atom_locations))
+    jldopen(String(path), "w") do file
+        file["artifact_kind"] = _PROTECTED_LOCALIZED_ARTIFACT_KIND
+        file["format_version"] = 1
+        file["convention_id"] = _PROTECTED_LOCALIZED_CONVENTION_ID
+        file["convention_version"] = 1
+        file["H1_L"] = H1
+        file["Vee_L"] = Vee
+        file["nup"] = nup_value
+        file["ndn"] = ndn_value
+        file["final_dimension"] = dimension
+        file["nuclear_charges"] = charges
+        file["nuclear_positions"] = positions
+        file["nuclear_repulsion"] = _cartesian_ida_nuclear_repulsion(charges, positions)
+        _protected_localized_write_simple_group(file, "sector_counts", counts)
+        _protected_localized_write_sector_metadata(file, counts)
+        _protected_localized_write_simple_group(file, "diagnostics", diagnostics)
+        _protected_localized_write_simple_group(file, "provenance", provenance)
+        _protected_localized_write_simple_group(file, "basis_controls", basis_controls)
+        _protected_localized_write_simple_group(file, "geometry_inputs", geometry_inputs)
+        _protected_localized_write_simple_group(
+            file, "localized_ordering", _protected_localized_ordering(localized_ordering))
+    end
+    return path
+end
+
+function read_protected_localized_ida_hamiltonian(path)
+    return jldopen(String(path), "r") do file
+        _protected_localized_read_symbol(file, "artifact_kind") ===
+            _PROTECTED_LOCALIZED_ARTIFACT_KIND ||
+            throw(ArgumentError("artifact_kind must be $(_PROTECTED_LOCALIZED_ARTIFACT_KIND)"))
+        Int(_protected_localized_read_key(file, "format_version")) == 1 ||
+            throw(ArgumentError("unsupported protected-localized format version"))
+        _protected_localized_read_symbol(file, "convention_id") ===
+            _PROTECTED_LOCALIZED_CONVENTION_ID ||
+            throw(ArgumentError("unrecognized protected-localized convention_id"))
+        Int(_protected_localized_read_key(file, "convention_version")) == 1 ||
+            throw(ArgumentError("unsupported protected-localized convention version"))
+        dimension = Int(_protected_localized_read_key(file, "final_dimension"))
+        H1 = _protected_localized_read_matrix(file, "H1_L", dimension)
+        Vee = _protected_localized_read_matrix(file, "Vee_L", dimension)
+        counts = _protected_localized_read_counts(file, dimension)
+        nup_value = _protected_localized_int(file["nup"], "nup")
+        ndn_value = _protected_localized_int(file["ndn"], "ndn")
+        nup_value <= dimension && ndn_value <= dimension ||
+            throw(ArgumentError("protected-localized electron counts exceed dimension"))
+        charges = _cartesian_float_vector(file["nuclear_charges"])
+        positions = _cartesian_nuclear_position_matrix(file["nuclear_positions"])
+        diagnostics = _protected_localized_read_diagnostics(file)
+        metadata = _protected_localized_read_metadata(file)
+        provenance = (;
+            source_artifact = String(file["provenance/source_artifact"]),
+            source_commit = String(file["provenance/source_commit"]),
+            current_commit = String(file["provenance/current_commit"]))
+        return (;
+            artifact_kind = _PROTECTED_LOCALIZED_ARTIFACT_KIND,
+            format_version = 1,
+            convention_id = _PROTECTED_LOCALIZED_CONVENTION_ID,
+            convention_version = 1,
+            H1_L = H1,
+            Vee_L = Vee,
+            nup = nup_value,
+            ndn = ndn_value,
+            final_dimension = dimension,
+            nuclear_charges = charges,
+            nuclear_positions = positions,
+            nuclear_repulsion = _cartesian_ida_nuclear_repulsion(charges, positions),
+            sector_counts = counts,
+            sector_ranges = _protected_localized_read_ranges(file),
+            diagnostics,
+            provenance,
+            metadata...)
+    end
+end
