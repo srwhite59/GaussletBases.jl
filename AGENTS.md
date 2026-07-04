@@ -1181,6 +1181,26 @@ Approved Residual Gaussian module surfaces:
   ranges after z sorting, RG/injection/localization/Vee semantic changes,
   driver/API/solver workflow, rho0, new second-moment construction, committed
   tests by default, or Cr2 production energy claims.
+- `HP-RG-PROTECT-EGOI-AUDIT-01` approves only ignored measurement probes for
+  existing matrix-level EGOI routines over protected-localized artifacts. It
+  may use `/Users/srw/dmrgtmp` outputs, H/Be/Be2 first, reconstructed
+  `Qtarget` from current protected/injection geometry, exact Gaussian target
+  Coulomb for selected target orbitals, and existing
+  `egoi_target_product_matrix`, `egoi_target_coulomb_matrix`,
+  `egoi_density_density_correction`, and
+  `egoi_stationary_hamiltonian_correction`. It must report target definition,
+  `Qtarget` dimension/Gram/orthogonality, representability/projection loss,
+  target Coulomb construction, EGOI residual before/after, `DeltaV`
+  max/Frobenius/relative size, product-matrix rank/singular values,
+  finite/symmetric corrected `Vee`, low Fock spectra, H one-electron and
+  self-interaction checks, and Be/Be2 behavior compared to rho0/P0 audit
+  evidence. It does not approve source edits, artifact/schema changes,
+  EGOI-corrected artifact variants, public driver/API/export or solver
+  workflow, RG/injection selection changes, protected-localized artifact
+  convention changes, rho0/P0 revival, rejected broad directions as MWG
+  residual channels, committed tests, or Cr2 production claims. Do not run Cr2
+  until H/Be/Be2 diagnostics pass. Because this is measurement-only authority,
+  do not add it to the approved source-ID list.
 - `HP-RG-RHO0-GAL-AUDIT-01` approves only ignored measurement probes for a
   rho0/Galerkin IDA correction over the protected-localized inherited-site
   baseline. It may use `/Users/srw/dmrgtmp` outputs, in-memory experiments over

@@ -24634,3 +24634,52 @@ Carrying-cost result:
 - exact remaining blocker: consumer/resume or MP2-NO workflow wiring remains a
   separate approved lane; no operational use of the z-order metadata is wired
   in repo source yet.
+
+## Cartesian Hamiltonian Producer Pass 302 - Protected EGOI Audit Authority
+
+Commit(s):
+- this commit - Approve protected-localized EGOI audit
+
+Summary:
+- Approved `HP-RG-PROTECT-EGOI-AUDIT-01` as a measurement-only lane to test
+  whether the existing matrix-level EGOI correction is a better fit for
+  protected-localized interaction errors than the stalled rho0/P0 one-body
+  correction path.
+- The audit consumes the now-durable protected-localized artifact objects:
+  `H1_L`, `Vee_L`, native ordering, row-locality metadata, and sector maps.
+  It may use existing `egoi_target_product_matrix`,
+  `egoi_target_coulomb_matrix`, `egoi_density_density_correction`, and
+  `egoi_stationary_hamiltonian_correction`.
+- The audit starts with H/Be/Be2 and must reconstruct `Qtarget` from current
+  protected/injection geometry, build exact Gaussian target Coulomb for the
+  selected target orbitals, and report target residual, `DeltaV`, rank,
+  symmetry, low-Fock, and self-interaction diagnostics.
+
+Validation / evidence:
+- Source-backed EGOI matrix routines already exist in
+  `src/hamiltonian_corrections.jl`; this pass does not authorize source edits.
+- The small-system gate is explicit: no Cr2 diagnostic until H/Be/Be2 EGOI
+  residual reduction, `DeltaV`, and Fock behavior are sane.
+
+Goal advancement:
+- LT5/LT6 and MT4: opens a bounded alternative interaction-correction
+  measurement path after rho0/P0 stalled on exchange/direct pairing. This keeps
+  the next test at the matrix-correction level instead of reopening row-gauge
+  or reference-density design.
+
+Risk / guardrail:
+- EGOI remains diagnostic-only unless small cases show moderate correction
+  size and benign spectra. No EGOI-corrected artifact, public workflow, solver
+  workflow, selection-policy change, protected-artifact convention change, or
+  Cr2 production claim is approved.
+
+Carrying-cost result:
+- source line delta: 0 in this docs authority pass.
+- deleted: none.
+- simplified: the protected interaction-correction alternatives are now
+  separated: EGOI measurement is independent of the rho0/P0 correction path.
+- quarantined: EGOI source/artifact variants, Cr2 production use, solver
+  workflow, and rho0/P0 revival.
+- exact remaining blocker: run H/Be/Be2 EGOI probes and decide whether the
+  matrix-level correction is numerically benign enough to justify a later
+  source/artifact lane.

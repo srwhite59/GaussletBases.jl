@@ -84,6 +84,8 @@ module, or object names in the new owner.
   artifacts.
 - `HP-RG-PROTECT-ARTLOC-TEST-01` - validation gates for protected artifact
   row-locality metadata.
+- `HP-RG-PROTECT-EGOI-AUDIT-01` - measurement-only EGOI audit over
+  protected-localized artifacts.
 - `HP-RG-RHO0-GAL-AUDIT-01` - measurement-only rho0/Galerkin IDA correction
   audit over the protected-localized baseline.
 - `HP-RHO0-REFDENS-AUDIT-01` - measurement-only reference-density-matrix IDA
@@ -390,6 +392,15 @@ permutations, per-row sector labels or native-sector indices, and optional
 spread diagnostics when second moments already exist. `H1_L` and `Vee_L`
 remain native-order canonical matrices; z sorting is metadata for consumers
 and must not mutate matrix order or native sector ranges.
+
+`HP-RG-PROTECT-EGOI-AUDIT-01` approves only ignored measurement probes for
+existing matrix-level EGOI routines over the protected-localized artifact
+objects. It may reconstruct `Qtarget` from current protected/injection
+geometry, build exact Gaussian target Coulomb for selected target orbitals,
+and report H/Be/Be2 diagnostics before any optional bounded Cr2 diagnostic.
+It does not approve source edits, artifact variants, public workflow, solver
+workflow, RG/injection selection changes, protected-artifact convention
+changes, rho0/P0 revival, or Cr2 production claims.
 
 `HP-RG-RHO0-GAL-AUDIT-01` approves only an ignored measurement audit for a
 rho0/Galerkin IDA correction on top of that protected-localized baseline. It

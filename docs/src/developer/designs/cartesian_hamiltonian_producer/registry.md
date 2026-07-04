@@ -4694,6 +4694,75 @@ Approved validation:
 - no Cr2 converged energy claim, public workflow, solver method, rho0, or
   production default validation.
 
+### HP-RG-PROTECT-EGOI-AUDIT-01 — protected-localized EGOI measurement audit
+
+Status: approved measurement-only audit authority.
+
+Purpose: test whether the existing matrix-level EGOI correction is a better
+fit for protected-localized interaction errors than the stalled rho0/P0
+one-body correction path.
+
+The audit starts from protected-localized artifact objects:
+
+- `H1_L`;
+- `Vee_L`;
+- native ordering;
+- row-locality metadata;
+- sector maps.
+
+Approved existing EGOI routines:
+
+- `egoi_target_product_matrix`;
+- `egoi_target_coulomb_matrix`;
+- `egoi_density_density_correction`;
+- `egoi_stationary_hamiltonian_correction`.
+
+Allowed:
+
+- ignored `tmp/work/*.jl` measurement probes only;
+- `/Users/srw/dmrgtmp/...` output tables;
+- H, Be, and Be2 first;
+- existing EGOI matrix routines;
+- reconstruct `Qtarget` from current protected/injection geometry in the
+  probe;
+- exact Gaussian target Coulomb for the selected target orbitals;
+- optional bounded Cr2 diagnostic only if H/Be/Be2 look sane.
+
+Required diagnostics:
+
+- target definition and selection rule;
+- `Qtarget` dimension and Gram/orthogonality diagnostics;
+- target representability/projection loss;
+- exact target Coulomb construction details;
+- EGOI residual before and after correction;
+- `DeltaV` max norm, Frobenius norm, and relative size;
+- product-matrix singular values and rank;
+- corrected `Vee` finite/symmetric checks;
+- low Fock spectra before and after correction;
+- H one-electron/self-interaction sanity check;
+- Be/Be2 corrected behavior compared to rho0/P0 audit;
+- the small-system gate used before any optional Cr2 diagnostic.
+
+Forbidden:
+
+- source edits;
+- artifact/schema/provenance/writer/reader changes;
+- EGOI-corrected artifact variants;
+- public driver/API/export or solver workflow;
+- Cr2 production claims;
+- RG/injection selection-policy changes;
+- protected-localized artifact convention changes;
+- rho0/P0 revival as part of this audit;
+- rejected broad directions as MWG residual channels;
+- committed tests or fixtures.
+
+Decision rule: if H/Be/Be2 EGOI reduces target residuals with small/moderate
+`DeltaV` and benign Fock behavior, the result may justify a later
+source/artifact lane for protected-localized EGOI target metadata and
+corrected interaction variants. If EGOI requires large or
+cancellation-dominated `DeltaV` or creates bad low modes, keep it
+diagnostic-only. Do not run Cr2 until small cases pass.
+
 ### HP-RG-RHO0-GAL-AUDIT-01 — rho0/Galerkin IDA correction audit
 
 Status: approved measurement-only audit authority. This is not source

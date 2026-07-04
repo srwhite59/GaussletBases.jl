@@ -7,8 +7,9 @@ authority under `HP-RG-PROTECT-INJECT-DESIGN-01`. The protected-original design
 is the current direction for compact-first RG/injection work. Measurement-only
 protected fixed-sector one-body and Vee audits are approved under
 `HP-RG-PROTECT-ONEBODY-AUDIT-01` and
-`HP-RG-PROTECT-VEE-AUDIT-01`; rho0/Galerkin IDA correction measurement is
-approved under `HP-RG-RHO0-GAL-AUDIT-01`, with the successor
+`HP-RG-PROTECT-VEE-AUDIT-01`; protected-localized EGOI measurement is
+approved under `HP-RG-PROTECT-EGOI-AUDIT-01`; rho0/Galerkin IDA correction
+measurement is approved under `HP-RG-RHO0-GAL-AUDIT-01`, with the successor
 reference-density-matrix target recorded in
 `rho0_reference_density_matrix.md` under `HP-RHO0-REFDENS-AUDIT-01`. This
 document does not approve source edits for that new design, a production
@@ -1339,6 +1340,84 @@ Approved validation:
 - confirm loaded `H1_L`/`Vee_L` still match native-order in-memory replay;
 - no Cr2 converged energy claim, public workflow, solver method, rho0, or
   production default validation.
+
+## HP-RG-PROTECT-EGOI-AUDIT-01 - Protected-Localized EGOI Measurement Audit
+
+Status: approved measurement-only audit authority. This is not source
+authority, artifact authority, public workflow authority, solver authority, or
+a Cr2 production claim.
+
+### Goal
+
+Test whether the existing matrix-level EGOI correction is a better fit for
+protected-localized interaction errors than the stalled rho0/reference-density
+one-body correction path.
+
+The protected-localized artifact now provides the working objects needed by
+the audit:
+
+- `H1_L`;
+- `Vee_L`;
+- native ordering;
+- row-locality metadata;
+- sector maps.
+
+The audit may use the existing matrix-level EGOI routines:
+
+- `egoi_target_product_matrix`;
+- `egoi_target_coulomb_matrix`;
+- `egoi_density_density_correction`;
+- `egoi_stationary_hamiltonian_correction`.
+
+### Allowed
+
+- ignored `tmp/work/*.jl` measurement probes only;
+- outputs under `/Users/srw/dmrgtmp/...`;
+- H, Be, and Be2 first;
+- existing EGOI matrix routines;
+- reconstruct `Qtarget` from current protected/injection geometry in the
+  probe;
+- exact Gaussian target Coulomb for the selected target orbitals;
+- optional bounded Cr2 diagnostic only after H/Be/Be2 diagnostics look sane.
+
+### Required Diagnostics
+
+The audit must report:
+
+- target definition and target-selection rule;
+- `Qtarget` dimension, Gram matrix, and orthogonality diagnostics;
+- target representability and projection loss;
+- exact target Coulomb construction details;
+- EGOI residual before and after correction;
+- `DeltaV` max norm, Frobenius norm, and relative size;
+- product-matrix singular values and rank;
+- corrected `Vee` finite and symmetry checks;
+- low Fock spectra before and after correction;
+- H one-electron and self-interaction sanity check;
+- Be/Be2 corrected behavior compared with the rho0/P0 audit;
+- if Cr2 is reached, the exact small-system gate that justified it.
+
+### Forbidden
+
+- tracked source edits;
+- artifact/schema/provenance/writer/reader changes;
+- EGOI-corrected artifact variants;
+- public driver/API/export or solver workflow;
+- Cr2 production claims;
+- RG/injection selection-policy changes;
+- protected-localized artifact convention changes;
+- rho0/P0 revival as part of this audit;
+- treating rejected broad directions as MWG residual channels.
+
+### Decision Rule
+
+If H/Be/Be2 EGOI reduces target residuals with small or moderate `DeltaV` and
+benign Fock behavior, the result may justify a later source/artifact lane for
+protected-localized EGOI target metadata and corrected interaction variants.
+
+If EGOI requires large or cancellation-dominated `DeltaV`, creates bad low
+modes, or fails the H/Be/Be2 sanity checks, keep it diagnostic-only. Do not
+run Cr2 until small cases pass.
 
 ## HP-RG-RHO0-GAL-AUDIT-01 - Rho0/Galerkin IDA Correction Audit
 

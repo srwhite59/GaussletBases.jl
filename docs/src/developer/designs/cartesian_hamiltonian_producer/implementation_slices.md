@@ -482,6 +482,17 @@ Approved robustness lane:
   native order: do not mutate `H1_L`/`Vee_L`, do not write only z-sorted
   matrices under the existing convention ID, and do not treat native sector
   ranges as contiguous after z sorting.
+- `HP-RG-PROTECT-EGOI-AUDIT-01` approves only a measurement audit for existing
+  matrix-level EGOI routines applied to protected-localized artifacts. The
+  audit may use ignored probes, `/Users/srw/dmrgtmp` outputs, H/Be/Be2 first,
+  reconstructed `Qtarget`, exact Gaussian target Coulomb for selected target
+  orbitals, and existing `egoi_*` matrix routines. It must report target
+  definition, residual before/after, `DeltaV` norms, product-matrix
+  rank/singular values, finite/symmetric corrected `Vee`, low Fock spectra,
+  and H/Be/Be2 behavior against rho0/P0 audit evidence. It does not approve
+  source edits, artifact variants, public/solver workflow, selection changes,
+  protected-artifact convention changes, rho0/P0 revival, or Cr2 before small
+  cases pass.
 - `HP-RG-RHO0-GAL-AUDIT-01` approves only a measurement-only rho0/Galerkin IDA
   correction audit on top of that protected-localized baseline. The audit may
   use ignored probes, `/Users/srw/dmrgtmp` outputs, in-memory experiments over

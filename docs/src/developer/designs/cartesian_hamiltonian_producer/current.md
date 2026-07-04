@@ -380,6 +380,17 @@ Approved Residual Gaussian robustness lane:
   when second-moment data already exist. `H1_L` and `Vee_L` remain native-order
   canonical matrices; z-order metadata must not silently permute matrices or
   native contiguous sector ranges.
+- `HP-RG-PROTECT-EGOI-AUDIT-01` approves only a measurement audit of existing
+  matrix-level EGOI routines on protected-localized artifacts. It may use
+  ignored probes, `/Users/srw/dmrgtmp` outputs, H/Be/Be2 first, reconstructed
+  `Qtarget` from current protected/injection geometry, exact Gaussian target
+  Coulomb for selected target orbitals, and existing
+  `egoi_target_product_matrix`, `egoi_target_coulomb_matrix`,
+  `egoi_density_density_correction`, and
+  `egoi_stationary_hamiltonian_correction`. It does not approve source edits,
+  artifact variants, public workflow, solver workflow, Cr2 production claims,
+  selection changes, protected-artifact convention changes, or rho0/P0 revival.
+  Do not run Cr2 until H/Be/Be2 diagnostics are sane.
 - `HP-RG-RHO0-GAL-AUDIT-01` approves only a measurement audit for rho0/Galerkin
   IDA correction over the protected-localized inherited-site baseline. It may
   use ignored probes, `/Users/srw/dmrgtmp` outputs, analytic IDA/Coulomb
