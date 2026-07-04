@@ -472,6 +472,16 @@ Approved robustness lane:
   producer behavior, ordinary PQS/WL/RG artifact semantics, driver/public
   workflow, rho0, solver methods, selection policy, `C' V C`, or Cr2
   production claims.
+- `HP-RG-PROTECT-ARTLOC-FN-01` / `HP-RG-PROTECT-ARTLOC-TEST-01` approve only
+  row-locality metadata for the protected-localized artifact. Centers are
+  diagonal position expectations in the actual `L` basis, computed from
+  inherited main-space position operators and the native protected-localized
+  transform. The artifact may add native-order `center_x/y/z`, deterministic
+  z-order permutations, per-row sector labels or native-sector indices, and
+  optional spreads only if second moments already exist. The matrices remain
+  native order: do not mutate `H1_L`/`Vee_L`, do not write only z-sorted
+  matrices under the existing convention ID, and do not treat native sector
+  ranges as contiguous after z sorting.
 - `HP-RG-RHO0-GAL-AUDIT-01` approves only a measurement-only rho0/Galerkin IDA
   correction audit on top of that protected-localized baseline. The audit may
   use ignored probes, `/Users/srw/dmrgtmp` outputs, in-memory experiments over

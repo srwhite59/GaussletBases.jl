@@ -1203,6 +1203,143 @@ Approved validation:
 - no converged Cr2 energy claim required;
 - no public workflow, solver method, rho0, or production default validation.
 
+## HP-RG-PROTECT-ARTLOC-FN-01 - Protected Artifact Row-Locality Metadata
+
+Status: approved narrow source/artifact amendment.
+
+### Goal
+
+Add row-locality metadata to the protected-localized Hamiltonian artifact so
+Cr2 solver and MP2-NO consumers can make z-ordered working copies without
+reconstructing protected-localized geometry in memory or relying on stale
+manifest labels.
+
+The canonical matrices remain native-order:
+
+```text
+H1_L[native, native]
+Vee_L[native, native]
+```
+
+Any z-order information is metadata for consumers. It must not silently imply
+that `H1_L`, `Vee_L`, sector ranges, or existing sector counts have been
+permuted.
+
+### Center Definition
+
+The row centers are diagonal position expectations in the actual
+protected-localized working basis. Given inherited main-space position
+operators `X_M`, `Y_M`, `Z_M` and the native protected-localized transform
+`ML`, define:
+
+```text
+center_x = diag(ML' * X_M * ML)
+center_y = diag(ML' * Y_M * ML)
+center_z = diag(ML' * Z_M * ML)
+```
+
+Do not use construction labels, source-region labels, or manifest center
+metadata as numerical authority for these centers.
+
+### Approved Source Surface
+
+Primary approved files:
+
+- `src/cartesian_residual_gaussians/augmented_operators.jl`
+- `src/cartesian_ida_hamiltonian.jl`
+
+Optional only if directly required to expose already-computed transform or
+position data:
+
+- `src/cartesian_residual_gaussians/residual_basis.jl`
+- `src/cartesian_base_hamiltonian.jl`
+
+### Required Metadata
+
+Required native-order vectors:
+
+- `center_x`;
+- `center_y`;
+- `center_z`;
+- a per-row sector label or native-sector index, so consumers do not have to
+  reinterpret contiguous native sector ranges after z sorting.
+
+Required z-order vectors:
+
+- `z_order_to_native`, where entry `k` is the native row index at z-sorted
+  position `k`;
+- `native_to_z_order`, the inverse permutation.
+
+The z sort must be deterministic. Sort by `center_z`, then by native row index
+as the tie-breaker unless a later source review approves a more specific
+localized-order tie rule.
+
+Approved optional diagnostics, when existing second-moment data are already
+available without new raw-block or operator construction:
+
+- `spread_x`;
+- `spread_y`;
+- `spread_z`.
+
+Spreads should be finite, nonnegative diagnostics such as
+`sqrt(max(<axis^2> - center_axis^2, 0))`. If second moments are not already
+available in the approved path, do not synthesize spreads from labels or add a
+new raw-block lane under this ID; record the missing spread diagnostic as out
+of scope.
+
+### Readback Checks
+
+Readback must validate:
+
+- locality vector lengths equal the final dimension;
+- centers are finite;
+- spreads, when present, are finite and nonnegative;
+- `z_order_to_native` and `native_to_z_order` are inverse permutations of
+  `1:dim`;
+- z-order centers are monotone under the recorded permutation, with native
+  index tie-breaks;
+- per-row sector labels or indices are present and agree with the native
+  sector counts;
+- native-order `H1_L` and `Vee_L` dimensions and symmetry checks remain the
+  authoritative matrix checks.
+
+### Forbidden
+
+- mutating the existing artifact matrix order;
+- writing only z-sorted matrices under the existing convention ID;
+- reusing native contiguous sector ranges as if they remained contiguous after
+  z sorting;
+- changing RG/injection selection, localization, or Vee semantics;
+- new driver/API/solver workflow;
+- new raw-block or position-second-moment construction;
+- rho0/reference-density work;
+- Cr2 production energy claims.
+
+### Decision Rule
+
+If native position operators or the `ML` transform are not available at the
+protected artifact seam, stop and report the exact missing source fact. Do not
+fall back to manifest labels or route metadata as numerical center authority.
+
+## HP-RG-PROTECT-ARTLOC-TEST-01 - Row-Locality Validation
+
+Status: approved validation gates for `HP-RG-PROTECT-ARTLOC-FN-01`.
+
+Approved validation:
+
+- `git diff --check`;
+- package load;
+- one protected-localized artifact write/readback smoke;
+- readback confirms center vector lengths, finite centers, permutation inverse
+  checks, monotone z order, and sector-label/count consistency;
+- if spreads are present, readback confirms finite nonnegative spreads;
+- compare stored centers and z permutation against centers recomputed from the
+  in-memory `ML' * X_M/Y_M/Z_M * ML` diagonal constructions for the same
+  fixture;
+- confirm loaded `H1_L`/`Vee_L` still match native-order in-memory replay;
+- no Cr2 converged energy claim, public workflow, solver method, rho0, or
+  production default validation.
+
 ## HP-RG-RHO0-GAL-AUDIT-01 - Rho0/Galerkin IDA Correction Audit
 
 Status: approved measurement-only audit authority. This is not source

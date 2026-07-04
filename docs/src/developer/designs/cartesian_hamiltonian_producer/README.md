@@ -34,6 +34,9 @@ future source-policy lane that may change PQS complete shells from cubic
 `HP-RG-PROTECT-ART-*` approves a narrow opt-in protected-localized injection
 Hamiltonian artifact variant so the accepted `L`, `H1_L`, inherited-site
 `Vee_L` convention can be read back without in-memory reconstruction.
+`HP-RG-PROTECT-ARTLOC-*` approves native-order row-locality metadata for that
+artifact: diagonal position-expectation centers, deterministic z-order
+permutations, and per-row sector labels without changing matrix order.
 The supported supplemented
 workflow now accepts explicit homonuclear
 z-axis diatomics without element-specific branches. A compact artifact manifest

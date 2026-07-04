@@ -540,6 +540,8 @@ these approved design IDs:
 - `HP-RG-PROTECT-ONEBODY-TEST-01`
 - `HP-RG-PROTECT-ART-FN-01`
 - `HP-RG-PROTECT-ART-TEST-01`
+- `HP-RG-PROTECT-ARTLOC-FN-01`
+- `HP-RG-PROTECT-ARTLOC-TEST-01`
 - `HP-RHO0-MIXH-GG-FN-01`
 - `HP-RHO0-MIXH-GG-TEST-01`
 - `HP-RHO0-MIXH-GAAA-FN-01`
@@ -1158,6 +1160,27 @@ Approved Residual Gaussian module surfaces:
   channels, `C' V C` or alternative interaction rotations, artifact schema
   changes for existing default artifacts, committed tests by default, or
   Cr2-specific branches.
+- `HP-RG-PROTECT-ARTLOC-FN-01` and
+  `HP-RG-PROTECT-ARTLOC-TEST-01` approve only protected-localized artifact
+  row-locality metadata. Primary source ownership is
+  `src/cartesian_residual_gaussians/augmented_operators.jl` and
+  `src/cartesian_ida_hamiltonian.jl`; optional
+  `src/cartesian_residual_gaussians/residual_basis.jl` and
+  `src/cartesian_base_hamiltonian.jl` edits are allowed only for
+  already-computed transform or position data. Centers must be diagonal
+  position expectations in the actual native `L` basis, using
+  `diag(ML' * X_M * ML)`, `diag(ML' * Y_M * ML)`, and
+  `diag(ML' * Z_M * ML)`, not construction labels, route metadata, or
+  manifest centers. The artifact may add native-order `center_x/y/z`,
+  deterministic `z_order_to_native` and `native_to_z_order` permutations,
+  per-row sector labels or native-sector indices, and optional
+  `spread_x/y/z` diagnostics only when second moments already exist without a
+  new raw-block lane. `H1_L` and `Vee_L` remain native-order canonical
+  matrices. This lane does not approve matrix reordering, z-sorted-only
+  matrices under the existing convention ID, reusing native contiguous sector
+  ranges after z sorting, RG/injection/localization/Vee semantic changes,
+  driver/API/solver workflow, rho0, new second-moment construction, committed
+  tests by default, or Cr2 production energy claims.
 - `HP-RG-RHO0-GAL-AUDIT-01` approves only ignored measurement probes for a
   rho0/Galerkin IDA correction over the protected-localized inherited-site
   baseline. It may use `/Users/srw/dmrgtmp` outputs, in-memory experiments over

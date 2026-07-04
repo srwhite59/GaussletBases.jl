@@ -371,6 +371,15 @@ Approved Residual Gaussian robustness lane:
   must reject missing or unrecognized convention/version fields, and must not
   change ordinary PQS/WL/RG artifact semantics, driver/public workflow, rho0,
   solver methods, selection policy, or Cr2 production claims.
+- `HP-RG-PROTECT-ARTLOC-FN-01` and `HP-RG-PROTECT-ARTLOC-TEST-01` approve a
+  narrow row-locality metadata amendment for protected-localized artifacts.
+  Centers are diagonal position expectations in the actual `L` basis from
+  `X_M`, `Y_M`, and `Z_M`, not manifest labels. The artifact may add
+  native-order `center_x/y/z`, deterministic z-order permutations, per-row
+  sector labels or native-sector indices, and optional spread diagnostics only
+  when second-moment data already exist. `H1_L` and `Vee_L` remain native-order
+  canonical matrices; z-order metadata must not silently permute matrices or
+  native contiguous sector ranges.
 - `HP-RG-RHO0-GAL-AUDIT-01` approves only a measurement audit for rho0/Galerkin
   IDA correction over the protected-localized inherited-site baseline. It may
   use ignored probes, `/Users/srw/dmrgtmp` outputs, analytic IDA/Coulomb

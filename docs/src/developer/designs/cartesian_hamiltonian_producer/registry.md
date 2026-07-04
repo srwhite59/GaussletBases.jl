@@ -4590,6 +4590,110 @@ Approved validation:
 - no converged Cr2 energy claim;
 - no public workflow, solver method, rho0, or production default validation.
 
+### HP-RG-PROTECT-ARTLOC-FN-01 — protected artifact row-locality metadata
+
+Status: approved narrow source/artifact amendment.
+
+Purpose: add row-locality metadata to the protected-localized Hamiltonian
+artifact so consumers can derive z-ordered solver or MP2-NO working copies
+without reconstructing geometry in memory and without relying on stale
+manifest labels.
+
+The canonical matrices remain native-order:
+
+```text
+H1_L[native, native]
+Vee_L[native, native]
+```
+
+Z-order data is metadata only. It must not imply that `H1_L`, `Vee_L`, sector
+ranges, or sector counts were permuted.
+
+Center definition: row centers are diagonal position expectations in the
+actual protected-localized basis. With inherited main-space position operators
+`X_M`, `Y_M`, `Z_M` and native protected-localized transform `ML`:
+
+```text
+center_x = diag(ML' * X_M * ML)
+center_y = diag(ML' * Y_M * ML)
+center_z = diag(ML' * Z_M * ML)
+```
+
+Approved source surface:
+
+- `src/cartesian_residual_gaussians/augmented_operators.jl`;
+- `src/cartesian_ida_hamiltonian.jl`;
+- optional only for already-computed transform or position data:
+  - `src/cartesian_residual_gaussians/residual_basis.jl`;
+  - `src/cartesian_base_hamiltonian.jl`.
+
+Required metadata:
+
+- native-order `center_x`, `center_y`, and `center_z`;
+- per-row sector label or native-sector index;
+- `z_order_to_native`, where entry `k` is the native row index at sorted
+  position `k`;
+- `native_to_z_order`, the inverse permutation.
+
+The z sort must be deterministic: sort by `center_z`, then native row index
+as tie-breaker unless a later reviewed source pass approves a more specific
+localized tie rule.
+
+Optional diagnostics are approved only when existing second-moment data are
+already available without new raw-block or operator construction:
+
+- `spread_x`;
+- `spread_y`;
+- `spread_z`.
+
+Do not synthesize centers or spreads from labels, source regions, or manifest
+metadata.
+
+Readback checks:
+
+- locality vector lengths equal final dimension;
+- centers are finite;
+- spreads, when present, are finite and nonnegative;
+- z-order vectors are inverse permutations of `1:dim`;
+- centers are monotone under `z_order_to_native`, with native-index tie
+  breaks;
+- per-row sector labels or indices agree with native sector counts;
+- native-order `H1_L` and `Vee_L` matrix checks remain authoritative.
+
+Forbidden:
+
+- mutating the artifact matrix order;
+- writing only z-sorted matrices under the existing convention ID;
+- reusing native contiguous sector ranges as if they remained contiguous after
+  z sorting;
+- changing RG/injection selection, localization, or Vee semantics;
+- new driver/API/solver workflow;
+- new raw-block or second-moment construction;
+- rho0/reference-density work;
+- Cr2 production energy claims.
+
+Decision rule: if native position operators or `ML` are unavailable at the
+artifact seam, stop and report the missing source fact. Do not fall back to
+manifest labels or route metadata as numerical center authority.
+
+### HP-RG-PROTECT-ARTLOC-TEST-01 — row-locality validation
+
+Status: approved.
+
+Approved validation:
+
+- `git diff --check`;
+- package load;
+- protected-localized artifact write/readback smoke;
+- readback confirms center lengths, finite centers, inverse permutations,
+  monotone z order, and sector-label/count consistency;
+- if spreads are present, readback confirms finite nonnegative spreads;
+- compare stored centers and z permutation against centers recomputed from
+  the in-memory `ML' * X_M/Y_M/Z_M * ML` diagonal constructions;
+- confirm loaded `H1_L`/`Vee_L` still match native-order in-memory replay;
+- no Cr2 converged energy claim, public workflow, solver method, rho0, or
+  production default validation.
+
 ### HP-RG-RHO0-GAL-AUDIT-01 — rho0/Galerkin IDA correction audit
 
 Status: approved measurement-only audit authority. This is not source

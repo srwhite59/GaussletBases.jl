@@ -80,6 +80,10 @@ module, or object names in the new owner.
   variant.
 - `HP-RG-PROTECT-ART-TEST-01` - validation gates for the protected artifact
   variant.
+- `HP-RG-PROTECT-ARTLOC-FN-01` - row-locality metadata for protected
+  artifacts.
+- `HP-RG-PROTECT-ARTLOC-TEST-01` - validation gates for protected artifact
+  row-locality metadata.
 - `HP-RG-RHO0-GAL-AUDIT-01` - measurement-only rho0/Galerkin IDA correction
   audit over the protected-localized baseline.
 - `HP-RHO0-REFDENS-AUDIT-01` - measurement-only reference-density-matrix IDA
@@ -376,6 +380,16 @@ or public API work, default producer changes, rho0, solver methods, artifact
 semantic changes for ordinary PQS/WL/RG files, selection-policy changes,
 `C' V C`, or Cr2 production claims. Readback must reject missing or
 unrecognized convention/version fields before any consumer uses the file.
+
+`HP-RG-PROTECT-ARTLOC-FN-01` approves row-locality metadata for the same
+artifact. Centers must be diagonal position expectations in the actual
+protected-localized `L` basis, computed from inherited main-space position
+operators and the native `ML` transform. The artifact may add native-order
+`center_x/y/z`, deterministic `z_order_to_native` and `native_to_z_order`
+permutations, per-row sector labels or native-sector indices, and optional
+spread diagnostics when second moments already exist. `H1_L` and `Vee_L`
+remain native-order canonical matrices; z sorting is metadata for consumers
+and must not mutate matrix order or native sector ranges.
 
 `HP-RG-RHO0-GAL-AUDIT-01` approves only an ignored measurement audit for a
 rho0/Galerkin IDA correction on top of that protected-localized baseline. It

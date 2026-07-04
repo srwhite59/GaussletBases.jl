@@ -24522,3 +24522,62 @@ Carrying-cost result:
   unchanged.
 - exact remaining blocker: consumer/resume wiring for solver or MP2-NO use
   needs a separate approved lane; no public workflow exists yet.
+
+## Cartesian Hamiltonian Producer Pass 300 - Protected Artifact Locality Metadata Authority
+
+Commit(s):
+- this commit - Approve protected artifact locality metadata
+
+Summary:
+- Approved `HP-RG-PROTECT-ARTLOC-FN-01` and
+  `HP-RG-PROTECT-ARTLOC-TEST-01` as the row-locality metadata follow-up for
+  the protected-localized artifact. The motivation is consumer usability:
+  solver and MP2-NO workflows need z-ordering and locality centers without
+  reconstructing the protected-localized geometry in memory.
+- The center contract is numerical, not provenance-based:
+  centers are the `ML' * X_M/Y_M/Z_M * ML` diagonals in the actual native `L`
+  basis.
+  Native-order `H1_L` and `Vee_L` remain canonical; z-order permutations are
+  metadata only.
+- Required additions are finite native centers, deterministic
+  `z_order_to_native` / `native_to_z_order`, and per-row sector labels or
+  native-sector indices. Spreads are optional only when second-moment data
+  already exists without a new raw-block/source lane.
+
+Validation / evidence:
+- Cr2-doer identified the immediate friction: the protected artifact is usable
+  in native order, but CR2 z-ordered HF currently has to compute centers from
+  in-memory position matrices and save a CR2-local sidecar.
+- Approved validation is package load, protected-localized artifact
+  write/readback, center/permutation/sector consistency checks, optional
+  spread checks, and comparison to in-memory `ML' * X_M/Y_M/Z_M * ML`
+  diagonals.
+
+Goal advancement:
+- LT5/LT6 and MT4: improves the protected-localized artifact from matrix
+  persistence to a reusable locality-aware Hamiltonian object for consumers,
+  while keeping native-order matrices and the inherited-site IDA convention
+  unchanged.
+
+Risk / guardrail:
+- Do not mutate matrix order or silently reinterpret native sector ranges after
+  z sorting. If a future workflow wants z-sorted matrices, it needs a separate
+  convention/versioned artifact or sidecar decision.
+
+Medium-term checkpoint:
+- Active: protected-localized Cr2 consumer reuse, now split into artifact
+  persistence plus locality metadata.
+- Active but separate: rho0/reference-density correction remains blocked on
+  exchange/direct pairing diagnostics, not on this artifact metadata lane.
+- Deferred: public driver workflow, solver integration, Cr2 production energy
+  claims, and z-sorted matrix artifact conventions.
+
+Carrying-cost result:
+- source line delta: 0 in this docs authority pass.
+- deleted: none.
+- simplified: row ordering and sector interpretation are now explicit instead
+  of living in CR2-side reconstruction.
+- quarantined: z-sorted matrices, new second-moment construction, rho0, public
+  workflow, solver methods, and Cr2 production claims.
+- exact remaining blocker: implement locality metadata only if native position
+  operators and the `ML` transform are available at the artifact seam.

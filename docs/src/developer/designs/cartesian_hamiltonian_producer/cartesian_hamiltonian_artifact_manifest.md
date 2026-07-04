@@ -10,6 +10,10 @@ Protected-localized injection artifacts are governed separately by
 `HP-RG-PROTECT-ART-FN-01` and `HP-RG-PROTECT-ART-TEST-01`. They are explicit
 opt-in convention/versioned Hamiltonian variants, not a sidecar expansion of
 the default manifest contract described here.
+Protected-localized row-locality metadata is governed by
+`HP-RG-PROTECT-ARTLOC-FN-01` and `HP-RG-PROTECT-ARTLOC-TEST-01`; those centers
+are numerical position expectations in the `L` basis, not the construction
+labels below.
 
 ## Purpose
 
