@@ -357,6 +357,20 @@ Approved Residual Gaussian robustness lane:
   transform. Do not reuse that convention. The viable baseline is now
   protected-localized injection: exact one-body operators in localized
   injected basis `L`, with inherited pre-injection site-order `Vee_M`.
+- `HP-RG-PROTECT-ART-FN-01` and `HP-RG-PROTECT-ART-TEST-01` approve a narrow
+  opt-in protected-localized Hamiltonian artifact variant. It persists
+  `H1_L`, inherited-site `Vee_L`, electron counts, convention/version ID,
+  source recipe/provenance, basis controls, compact-RG and injection counts,
+  localized ordering, sector maps, representability diagnostics, and
+  orthogonality/localization diagnostics so solver and MP2-NO consumers can
+  resume without rebuilding the current protected-localized Hamiltonian in
+  memory. Source scope is `augmented_operators.jl` and
+  `cartesian_ida_hamiltonian.jl`, with `residual_basis.jl` and
+  `cartesian_base_hamiltonian.jl` optional only for already-computed geometry,
+  diagnostics, or producer plumbing. The lane must remain default-off/opt-in,
+  must reject missing or unrecognized convention/version fields, and must not
+  change ordinary PQS/WL/RG artifact semantics, driver/public workflow, rho0,
+  solver methods, selection policy, or Cr2 production claims.
 - `HP-RG-RHO0-GAL-AUDIT-01` approves only a measurement audit for rho0/Galerkin
   IDA correction over the protected-localized inherited-site baseline. It may
   use ignored probes, `/Users/srw/dmrgtmp` outputs, analytic IDA/Coulomb

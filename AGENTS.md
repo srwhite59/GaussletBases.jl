@@ -538,6 +538,8 @@ these approved design IDs:
 - `HP-RG-PROTECT-INJECT-TEST-01`
 - `HP-RG-PROTECT-ONEBODY-FN-01`
 - `HP-RG-PROTECT-ONEBODY-TEST-01`
+- `HP-RG-PROTECT-ART-FN-01`
+- `HP-RG-PROTECT-ART-TEST-01`
 - `HP-RHO0-MIXH-GG-FN-01`
 - `HP-RHO0-MIXH-GG-TEST-01`
 - `HP-RHO0-MIXH-GAAA-FN-01`
@@ -1132,6 +1134,30 @@ Approved Residual Gaussian module surfaces:
   one-body operators in localized injected basis `L`, with inherited
   pre-injection site-order `Vee_M` IDA/MWG interaction, judged by bounded
   physics diagnostics.
+- `HP-RG-PROTECT-ART-FN-01` and `HP-RG-PROTECT-ART-TEST-01` approve only a
+  narrow opt-in protected-localized Hamiltonian artifact variant. Primary
+  source ownership is
+  `src/cartesian_residual_gaussians/augmented_operators.jl` and
+  `src/cartesian_ida_hamiltonian.jl`; optional
+  `src/cartesian_residual_gaussians/residual_basis.jl` and
+  `src/cartesian_base_hamiltonian.jl` edits are allowed only for
+  already-computed geometry, diagnostics, or producer plumbing. The artifact
+  may persist `H1_L`, inherited-site `Vee_L`, `nup`, `ndn`, final dimension, a
+  recognized protected-localized convention/version ID, source
+  recipe/provenance, source/current commit facts, basis controls, compact-RG
+  and injection counts, localized ordering, sector maps for `G`/base,
+  compact-`R`, protected-`Z`, broad-`Z`, and `Qperp`/localized complement,
+  representability diagnostics including `B_min` and singular counts,
+  orthogonality/localization diagnostics, and inherited-site interaction
+  diagnostics. Readback must reject missing or unrecognized
+  convention/version fields before Cr2 or MP2-NO consumers use the file. This
+  lane does not approve changing default producer behavior, replacing ordinary
+  PQS/WL/RG artifact semantics, rho0, broad public workflow, driver flags,
+  exported API, solver methods, paper or production energy claims,
+  RG/injection selection changes, rejected broad directions as MWG residual
+  channels, `C' V C` or alternative interaction rotations, artifact schema
+  changes for existing default artifacts, committed tests by default, or
+  Cr2-specific branches.
 - `HP-RG-RHO0-GAL-AUDIT-01` approves only ignored measurement probes for a
   rho0/Galerkin IDA correction over the protected-localized inherited-site
   baseline. It may use `/Users/srw/dmrgtmp` outputs, in-memory experiments over

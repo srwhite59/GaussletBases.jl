@@ -24412,3 +24412,54 @@ Carrying-cost result:
   work, public/artifact workflow, and direct-only Hamiltonian interpretation.
 - exact remaining blocker: run `HP-RHO0-XPAIR-AUDIT-01` on H/Be/Be2 and
   decide whether an exchange-pairing source-design lane is justified.
+
+## Cartesian Hamiltonian Producer Pass 298 - Protected-Localized Artifact Authority
+
+Commit(s):
+- this commit - Approve protected-localized injection artifact lane
+
+Summary:
+- Approved `HP-RG-PROTECT-ART-FN-01` and
+  `HP-RG-PROTECT-ART-TEST-01` as a narrow opt-in artifact lane for the
+  accepted protected-localized convention:
+  `M = [G, R_compact]`, localized replacement basis `L`, exact `H1_L`, and
+  inherited localized-site `Vee_L`.
+- The lane exists to make the current protected-localized Hamiltonian reusable
+  by solver and MP2-NO consumers without rerunning the in-memory reconstruction
+  path. It records the positive angular-gausslet-style convention rather than
+  reopening the invalidated `C' V C` interaction rotation.
+- Required artifact facts now include a recognized convention/version ID,
+  source recipe/provenance, commit facts, basis controls, compact-RG and
+  injection counts, localized ordering, sector maps, representability
+  diagnostics, orthogonality/localization diagnostics, and inherited-site
+  interaction diagnostics.
+
+Validation / evidence:
+- Existing protected-Vee audit outcome remains the authority boundary:
+  `C' V C` is invalid; protected-localized inherited-site IDA is the viable
+  baseline.
+- Approved validation for the future source pass is package load, optional
+  H/Be smoke, one bounded Cr2 protected-localized write/readback or
+  readback/resume smoke, and comparison of loaded `H1_L`, `Vee_L`,
+  dimensions, maps, and occupations against the current in-memory replay.
+
+Goal advancement:
+- LT5/LT6 and MT4: converts a fragile measurement/replay workflow into a
+  versioned artifact target without changing the physics convention. This is
+  infrastructure for consumer reuse, not a new solver or production Cr2 claim.
+
+Risk / guardrail:
+- Readback must reject missing or unrecognized convention/version fields. The
+  protected-localized variant must not be silently interpreted as an ordinary
+  PQS/WL/RG artifact, and default producer behavior must remain unchanged.
+
+Carrying-cost result:
+- source line delta: 0 in this docs authority pass.
+- deleted: none.
+- simplified: protected-localized status now has a concrete artifact boundary
+  instead of repeated in-memory reconstruction.
+- quarantined: rho0, public driver/API, solver methods, default artifact
+  semantics, selection-policy changes, `C' V C`, and Cr2 production claims.
+- exact remaining blocker: implement the opt-in variant only if it fits the
+  existing `.jld2` Hamiltonian family with minimal convention/version readback
+  validation.

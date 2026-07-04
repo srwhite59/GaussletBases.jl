@@ -1066,6 +1066,143 @@ Vee(L) = inherited pre-injection site-order Vee_M
 This baseline is judged by bounded physics diagnostics, not by arbitrary
 interaction rotation invariance.
 
+## HP-RG-PROTECT-ART-FN-01 - Protected-Localized Hamiltonian Artifact Variant
+
+Status: approved narrow source/artifact authority.
+
+### Goal
+
+Persist the protected-localized injection Hamiltonian as an explicit,
+opt-in `.jld2` artifact variant so solver and MP2-NO consumers can resume
+from the current Cr2 protected-localized Hamiltonian without rebuilding the
+geometry, one-body transform, and inherited-site interaction in memory.
+
+The artifact records the positive angular-gausslet-style convention:
+
+```text
+M = [G, R_compact]
+Z = protected original injected directions
+L = localized protected replacement basis
+H1_L = exact one-body Hamiltonian transformed into L
+Vee_L = inherited localized-site IDA/MWG interaction matrix in L site order
+```
+
+Protected injection is a small localized one-particle improvement. The
+IDA/MWG density interaction remains attached to the localized gausslet-like
+site basis. This lane does not revive `C' V C`, does not define alternative
+interaction rotations, and does not create a general all-injection artifact
+contract.
+
+### Approved Source Surface
+
+Primary approved files:
+
+- `src/cartesian_residual_gaussians/augmented_operators.jl`
+- `src/cartesian_ida_hamiltonian.jl`
+
+Optional only if directly required to expose already-computed
+protected-localized geometry, diagnostics, or producer plumbing:
+
+- `src/cartesian_residual_gaussians/residual_basis.jl`
+- `src/cartesian_base_hamiltonian.jl`
+
+No driver or public API surface is approved in this lane. If a later consumer
+needs a command-line entry point, design-manager must approve that separately.
+
+### Required Artifact Contract
+
+The artifact must be versioned and convention-identified before any consumer
+uses it. Minimal required convention facts:
+
+- artifact variant, for example
+  `:protected_localized_injection_hamiltonian`;
+- convention ID, for example `:protected_localized_injection_v1`;
+- variant/schema version.
+
+Required numerical datasets:
+
+- `H1_L`;
+- `Vee_L`;
+- `nup`, `ndn`;
+- final dimension.
+
+Required provenance and controls:
+
+- source recipe/artifact provenance;
+- source commit and current commit;
+- public basis controls and geometry inputs;
+- basis/injection convention ID;
+- compact RG count and selection metadata;
+- protected original count;
+- broad injected count;
+- localized basis ordering.
+
+Required maps and diagnostics:
+
+- sector maps for `G`/base, compact-`R`, protected-`Z`, broad-`Z`, and
+  `Qperp`/localized complement;
+- representability diagnostics including `B_min`, singular-value thresholds,
+  and singular counts;
+- orthogonality and localization diagnostics;
+- inherited-site interaction diagnostics.
+
+### Readback Checks
+
+Readback must validate:
+
+- recognized artifact variant, convention ID, and version;
+- dimension consistency for `H1_L`, `Vee_L`, sector maps, and final dimension;
+- finite/symmetric `H1_L`;
+- finite/symmetric `Vee_L`;
+- `nup`/`ndn` present and consistent with the recorded system;
+- sector counts sum to the final dimension;
+- source recipe/provenance present;
+- `B_min`, singular-count, and orthogonality diagnostics present.
+
+If the existing reader cannot safely distinguish the protected-localized
+variant from ordinary Cartesian IDA Hamiltonian artifacts, the implementation
+must add the minimal convention/version field and reject unrecognized or
+missing conventions before Cr2 consumers use the file. It must not silently
+load this variant as a standard PQS/WL/RG artifact.
+
+### Forbidden
+
+- changing default producer behavior;
+- replacing existing PQS, WL, or ordinary RG artifact semantics;
+- rho0/reference-density correction work;
+- broad public workflow, driver flags, or exported API;
+- new solver methods;
+- paper or production energy claims;
+- changes to RG/injection selection policy;
+- treating rejected broad directions as MWG residual channels;
+- `C' V C` or other alternative interaction rotations;
+- artifact schema changes for existing default artifacts;
+- Cr2-specific branches.
+
+### Decision Rule
+
+Approve implementation only if it fits as a clearly versioned opt-in artifact
+variant of the existing `.jld2` Hamiltonian family. If that is not possible
+without broad reader/schema redesign, stop and report the exact reader or
+schema blocker rather than creating a compatibility wrapper.
+
+## HP-RG-PROTECT-ART-TEST-01 - Protected Artifact Validation
+
+Status: approved validation gates for `HP-RG-PROTECT-ART-FN-01`.
+
+Approved validation:
+
+- `git diff --check`;
+- package load;
+- one H or Be small smoke if convenient;
+- one bounded Cr2 protected-localized artifact write/readback or
+  readback/resume smoke;
+- compare loaded `.jld2` `H1_L`, `Vee_L`, dimensions, sector maps, and
+  occupations against the current in-memory protected-localized replay;
+- confirm unrecognized or missing convention/version fields are rejected;
+- no converged Cr2 energy claim required;
+- no public workflow, solver method, rho0, or production default validation.
+
 ## HP-RG-RHO0-GAL-AUDIT-01 - Rho0/Galerkin IDA Correction Audit
 
 Status: approved measurement-only audit authority. This is not source

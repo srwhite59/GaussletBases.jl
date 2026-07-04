@@ -457,6 +457,21 @@ Approved robustness lane:
   Future protected interaction work should use the protected-localized
   inherited-site-order IDA baseline: exact one-body operators in localized
   injected basis `L`, inherited pre-injection `Vee_M`, and physics diagnostics.
+- `HP-RG-PROTECT-ART-FN-01` / `HP-RG-PROTECT-ART-TEST-01` approve a narrow
+  opt-in `.jld2` artifact variant for the protected-localized baseline. The
+  variant persists `H1_L`, inherited-site `Vee_L`, electron counts, recognized
+  convention/version ID, source recipe/provenance, basis controls, compact-RG
+  and injection counts, localized ordering, sector maps, representability
+  diagnostics, and orthogonality/localization diagnostics. Primary source
+  ownership is `src/cartesian_residual_gaussians/augmented_operators.jl` and
+  `src/cartesian_ida_hamiltonian.jl`; optional
+  `src/cartesian_residual_gaussians/residual_basis.jl` and
+  `src/cartesian_base_hamiltonian.jl` edits are allowed only for
+  already-computed geometry, diagnostics, or producer plumbing. The slice must
+  reject missing/unrecognized convention fields and must not change default
+  producer behavior, ordinary PQS/WL/RG artifact semantics, driver/public
+  workflow, rho0, solver methods, selection policy, `C' V C`, or Cr2
+  production claims.
 - `HP-RG-RHO0-GAL-AUDIT-01` approves only a measurement-only rho0/Galerkin IDA
   correction audit on top of that protected-localized baseline. The audit may
   use ignored probes, `/Users/srw/dmrgtmp` outputs, in-memory experiments over

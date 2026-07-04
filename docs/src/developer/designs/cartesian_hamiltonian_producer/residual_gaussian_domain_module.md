@@ -76,6 +76,10 @@ module, or object names in the new owner.
   one-body transform replay.
 - `HP-RG-PROTECT-VEE-AUDIT-01` - measurement-only protected fixed-sector Vee
   interaction audit.
+- `HP-RG-PROTECT-ART-FN-01` - opt-in protected-localized Hamiltonian artifact
+  variant.
+- `HP-RG-PROTECT-ART-TEST-01` - validation gates for the protected artifact
+  variant.
 - `HP-RG-RHO0-GAL-AUDIT-01` - measurement-only rho0/Galerkin IDA correction
   audit over the protected-localized baseline.
 - `HP-RHO0-REFDENS-AUDIT-01` - measurement-only reference-density-matrix IDA
@@ -358,6 +362,20 @@ transform and that convention must not be reused. The viable protected
 interaction baseline is protected-localized injection: build localized injected
 basis `L`, transform exact one-body operators into `L`, and inherit the
 pre-injection site-order `Vee_M` interaction.
+
+`HP-RG-PROTECT-ART-FN-01` approves a narrow opt-in artifact variant for that
+protected-localized baseline. The artifact may persist `H1_L`, inherited-site
+`Vee_L`, electron counts, a recognized convention/version ID, recipe and
+commit provenance, basis controls, compact-RG and injection counts, localized
+ordering, sector maps, representability diagnostics, and
+orthogonality/localization diagnostics. Primary ownership is
+`augmented_operators.jl` and `cartesian_ida_hamiltonian.jl`; `residual_basis.jl`
+and `cartesian_base_hamiltonian.jl` are optional only for already-computed
+geometry, diagnostics, or producer plumbing. The lane does not approve driver
+or public API work, default producer changes, rho0, solver methods, artifact
+semantic changes for ordinary PQS/WL/RG files, selection-policy changes,
+`C' V C`, or Cr2 production claims. Readback must reject missing or
+unrecognized convention/version fields before any consumer uses the file.
 
 `HP-RG-RHO0-GAL-AUDIT-01` approves only an ignored measurement audit for a
 rho0/Galerkin IDA correction on top of that protected-localized baseline. It

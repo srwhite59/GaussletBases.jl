@@ -31,6 +31,9 @@ shapes, retained counts, and warning flags before interpreting energies or
 residual/injection behavior. `HP-PQS-ASPECTSHELL-*` separately approves the
 future source-policy lane that may change PQS complete shells from cubic
 `(q,q,q)` source modes to explicit aspect-aware `(q,q,L)` source modes.
+`HP-RG-PROTECT-ART-*` approves a narrow opt-in protected-localized injection
+Hamiltonian artifact variant so the accepted `L`, `H1_L`, inherited-site
+`Vee_L` convention can be read back without in-memory reconstruction.
 The supported supplemented
 workflow now accepts explicit homonuclear
 z-axis diatomics without element-specific branches. A compact artifact manifest

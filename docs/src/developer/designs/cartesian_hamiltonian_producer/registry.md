@@ -4482,6 +4482,114 @@ measurement baseline: exact one-body operators in localized injected basis `L`
 with inherited pre-injection site-order `Vee_M`, judged by physics
 diagnostics.
 
+### HP-RG-PROTECT-ART-FN-01 — protected-localized Hamiltonian artifact variant
+
+Status: approved narrow source/artifact authority.
+
+Purpose: persist the protected-localized injection Hamiltonian as an explicit,
+opt-in `.jld2` artifact variant so solver and MP2-NO consumers can resume from
+the current protected-localized Hamiltonian without reconstructing it in
+memory.
+
+Approved convention:
+
+```text
+M = [G, R_compact]
+Z = protected original injected directions
+L = localized protected replacement basis
+H1_L = exact one-body Hamiltonian transformed into L
+Vee_L = inherited localized-site IDA/MWG interaction matrix in L site order
+```
+
+This records the positive angular-gausslet-style convention: protected
+injection is a localized one-particle improvement, while the IDA/MWG
+interaction remains attached to the localized gausslet-like site basis.
+This is not permission to revive `C' V C`, define alternative interaction
+rotations, or create a general all-injection artifact contract.
+
+Approved source surface:
+
+- `src/cartesian_residual_gaussians/augmented_operators.jl`;
+- `src/cartesian_ida_hamiltonian.jl`;
+- optional only for already-computed geometry, diagnostics, or producer
+  plumbing:
+  - `src/cartesian_residual_gaussians/residual_basis.jl`;
+  - `src/cartesian_base_hamiltonian.jl`.
+
+No driver, public API, or export surface is approved.
+
+Required artifact contents:
+
+- recognized artifact variant and convention/version ID;
+- `H1_L`;
+- `Vee_L`;
+- `nup`, `ndn`;
+- final dimension;
+- source recipe/artifact provenance;
+- source commit and current commit;
+- public basis controls and geometry inputs;
+- compact RG count and selection metadata;
+- protected original count;
+- broad injected count;
+- localized basis ordering;
+- sector maps for `G`/base, compact-`R`, protected-`Z`, broad-`Z`, and
+  `Qperp`/localized complement;
+- representability diagnostics including `B_min`, singular thresholds, and
+  singular counts;
+- orthogonality/localization diagnostics;
+- inherited-site interaction diagnostics.
+
+Required readback checks:
+
+- recognized variant, convention ID, and version;
+- dimension consistency for matrices, final dimension, and sector maps;
+- finite/symmetric `H1_L`;
+- finite/symmetric `Vee_L`;
+- electron-count consistency;
+- sector counts sum to the final dimension;
+- source provenance present;
+- `B_min`, singular-count, and orthogonality diagnostics present.
+
+If existing readers cannot safely distinguish this convention from ordinary
+PQS/WL/RG artifacts, add the minimal convention/version field and reject
+unrecognized or missing conventions. Do not silently read a
+protected-localized artifact as an ordinary Cartesian IDA Hamiltonian.
+
+Forbidden:
+
+- changing default producer behavior;
+- replacing existing PQS, WL, or ordinary RG artifact semantics;
+- rho0/reference-density correction work;
+- broad public workflow, driver flags, or exported API;
+- new solver methods;
+- paper or production energy claims;
+- changes to RG/injection selection policy;
+- rejected broad directions as MWG residual channels;
+- `C' V C` or other alternative interaction rotations;
+- artifact schema changes for existing default artifacts;
+- Cr2-specific branches.
+
+Decision rule: approve implementation only if it fits as a clearly versioned
+opt-in variant of the existing `.jld2` Hamiltonian family. If this requires
+broad reader/schema redesign, stop and report the exact blocker.
+
+### HP-RG-PROTECT-ART-TEST-01 — protected artifact validation
+
+Status: approved.
+
+Approved validation:
+
+- `git diff --check`;
+- package load;
+- one H or Be small smoke if convenient;
+- one bounded Cr2 protected-localized artifact write/readback or
+  readback/resume smoke;
+- compare loaded `.jld2` `H1_L`, `Vee_L`, dimensions, sector maps, and
+  occupations against the current in-memory protected-localized replay;
+- confirm unrecognized or missing convention/version fields are rejected;
+- no converged Cr2 energy claim;
+- no public workflow, solver method, rho0, or production default validation.
+
 ### HP-RG-RHO0-GAL-AUDIT-01 — rho0/Galerkin IDA correction audit
 
 Status: approved measurement-only audit authority. This is not source

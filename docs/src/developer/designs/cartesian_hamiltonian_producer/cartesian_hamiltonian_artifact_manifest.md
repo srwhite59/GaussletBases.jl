@@ -6,6 +6,11 @@ Status: approved for implementation under `HP-HAM-MANIFEST-FN-01` and
 The optional source-mode provenance seam is approved separately under
 `HP-HAM-MANIFEST-SRC-FN-01` and `HP-HAM-MANIFEST-SRC-TEST-01`.
 
+Protected-localized injection artifacts are governed separately by
+`HP-RG-PROTECT-ART-FN-01` and `HP-RG-PROTECT-ART-TEST-01`. They are explicit
+opt-in convention/versioned Hamiltonian variants, not a sidecar expansion of
+the default manifest contract described here.
+
 ## Purpose
 
 Canonical-driver Hamiltonian artifacts need enough sidecar information for
