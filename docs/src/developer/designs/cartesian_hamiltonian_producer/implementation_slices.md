@@ -544,29 +544,30 @@ Approved robustness lane:
   `HP-RHO0-FAPP-TEST-01` approves only package load, compact alpha/beta
   finite-difference checks, and H/Be/Be2-only ignored endpoint replay if the
   helper is consumed by the rho0 audit.
-- `HP-RHO0-ANCHOR-FN-01` approves only the in-memory Hartree reference
-  correction anchor: represented `P0_final`, source-backed
-  `F_exact_Hartree[P0]`, Cartesian IDA approximate interaction energy/Fock,
-  `Delta_F0_alpha/beta`, `C0`, and verification of
-  `E_new_int[P0] = E_exact_Hartree[P0]` plus
-  `dE_new_int/dP_sigma = F_exact_Hartree[P0]`. Primary source surface is
-  `src/cartesian_residual_gaussians/augmented_operators.jl`;
-  `src/cartesian_ida_hamiltonian.jl` is optional only for a missing
-  interaction-only accessor. It does not approve artifacts, public workflow,
-  production Hamiltonian integration, solver workflow, Cr/Cr2, exchange, or a
-  broad reference-density framework. `HP-RHO0-ANCHOR-TEST-01` requires
-  H/Be/Be2-only in-memory replay plus `Delta_F0` spectra/diagonal/occupied
-  expectation diagnostics.
-- `HP-RHO0-CORR-AUDIT-01` approves only a measurement-only corrected-
-  Hamiltonian audit. Ignored probes may apply
-  `E_corr = E_app + Tr(P_alpha * Delta_F0_alpha) +
-  Tr(P_beta * Delta_F0_beta) + C0` to current in-memory Cartesian IDA
-  H/Be/Be2 systems, verify the anchor at `P0`, report low spectra,
-  `Delta_F0` diagnostics, corrected versus uncorrected energies/occupations,
-  and use existing bounded in-memory endpoint/HF-like/SCF helpers if no source
-  or production workflow changes are needed. It does not approve source edits,
-  artifacts/public workflow, production Hamiltonian integration, solver
-  workflow, Cr/Cr2, exchange, or paper claims.
+- `HP-RHO0-ANCHOR-FN-01` is implemented but superseded for Hartree-correction
+  physics/stability interpretation. It formed `Delta_F0_alpha/beta` by
+  subtracting the full approximate interaction Fock, including the current
+  same-spin exchange-like term, from `F_exact_Hartree[P0]`. Do not use that
+  `Delta_F0` as the Hartree reference-density correction.
+- `HP-RHO0-CORR-AUDIT-01` remains measurement-only, but is suspended until the
+  direct-Hartree anchor replacement lands. A corrected-Hamiltonian audit using
+  the old full-interaction `Delta_F0_alpha/beta` is invalid as physics/
+  stability evidence.
+- `HP-RHO0-JANCHOR-FN-01` approves the direct-Hartree replacement:
+  `src/cartesian_ida_hamiltonian.jl` may add private direct-only helpers with
+  `q = diag(P_alpha) + diag(P_beta)`,
+  `E_app_direct = 1/2 * q' * V * q`, and
+  `F_app_direct = Diagonal(V * q)`;
+  `src/cartesian_residual_gaussians/augmented_operators.jl` may form
+  `Delta_J0 = F_exact_Hartree[P0] - F_app_direct[P0]` and `C0_J`. The
+  corrected full interaction keeps existing approximate exchange:
+  `E_corr_int = E_app_full_int + Tr((P_alpha + P_beta) * Delta_J0) + C0_J`.
+  `HP-RHO0-JANCHOR-TEST-01` requires direct-only finite-difference validation,
+  direct anchor equality, shared alpha/beta `Delta_J0`, full corrected
+  interaction finite differences, and H/Be/Be2 corrected audit replay. It does
+  not approve artifacts/public workflow, production integration, solver
+  workflow, Cr/Cr2, exact exchange correction, or changes to the current
+  approximate exchange convention.
 
 ## Compact Hamiltonian Artifact Manifest
 

@@ -101,9 +101,11 @@ for retirement/quarantine under `HP-RETIRE-DRV-MAT-*`; the canonical producer
 path is the staged human-facing driver plus `CartesianIDAHamiltonian` artifacts.
 The row-gauge `rho0/Galerkin` measurement lane remains historical evidence
 only. The current screened-correction target is the reference-density-matrix
-audit in `rho0_reference_density_matrix.md`: fixed `P0`, exact-minus-IDA
-reference Fock `Delta_F`, and anchoring constant `C0`, with no source,
-artifact, solver, or Cr2 production authority.
+path in `rho0_reference_density_matrix.md`: fixed `P0`, exact Hartree side,
+direct-only approximate Hartree anchor `Delta_J0`/`C0_J`, and later
+small-system corrected behavior. The older full-interaction anchor is
+superseded for Hartree-correction interpretation. Artifact, solver, public
+workflow, Cr2 production, and exact exchange correction remain deferred.
 
 Agents should read first:
 

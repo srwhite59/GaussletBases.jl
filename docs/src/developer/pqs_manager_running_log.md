@@ -24244,3 +24244,59 @@ Carrying-cost result:
   Cr/Cr2, exchange, solver workflow, and paper-scale validation.
 - exact remaining blocker: run `HP-RHO0-CORR-AUDIT-01`; if it passes, choose
   limited Cr measurement versus a stronger H/Be/Be2 benchmark set.
+
+## Cartesian Hamiltonian Producer Pass 295 - Direct-Hartree Rho0 Anchor Correction Authority
+
+Commit(s):
+- this commit - Approve direct Hartree rho0 anchor fix
+
+Summary:
+- Accepted the reviewer correction that the previous rho0 anchor/audit object
+  was wrong for Hartree-correction physics. `HP-RHO0-ANCHOR-*` validated
+  algebra for the object it built, but that object subtracted the full
+  approximate interaction Fock, including the current same-spin exchange-like
+  term, from an exact Hartree operator.
+- Design-manager approved `HP-RHO0-JANCHOR-FN-01` / `TEST-01` as the narrow
+  replacement source lane: add direct-only Cartesian IDA helpers with
+  `q = diag(P_alpha) + diag(P_beta)`,
+  `E_app_direct = 1/2 * q' * V * q`, and
+  `F_app_direct = Diagonal(V * q)`, then form
+  `Delta_J0 = F_exact_Hartree[P0] - F_app_direct[P0]` and `C0_J`.
+- The corrected full interaction keeps the existing approximate exchange-like
+  contribution through `E_app_full_int`, adding only
+  `Tr((P_alpha + P_beta) * Delta_J0) + C0_J`.
+
+Validation / evidence:
+- The docs authority path was updated in `README.md`, `current.md`,
+  `registry.md`, `implementation_slices.md`,
+  `rho0_reference_density_matrix.md`,
+  `rho0_reference_density_implementation_plan.md`,
+  `residual_gaussian_domain_module.md`, and `AGENTS.md`.
+- No source or test behavior changed in this pass. The prior source exact-side
+  machinery remains useful; the approximate-side anchor object is what changed.
+
+Goal advancement:
+- LT5/LT6 and MT4: prevents the rho0/reference-density lane from interpreting
+  a full-interaction subtraction as a Hartree-only correction. This is a
+  course correction before any H/Be/Be2 small-system behavior audit or Cr
+  diagnostic.
+
+Risk / guardrail:
+- `HP-RHO0-CORR-AUDIT-01` is suspended until the direct-Hartree anchor lands.
+  Any audit using old `Delta_F0_alpha/beta` is invalid as physics/stability
+  evidence.
+- The new lane must not change the current approximate exchange convention,
+  add exact exchange correction, or widen into artifacts/public workflow,
+  solver integration, Cr/Cr2, or production Hamiltonian use.
+
+Carrying-cost result:
+- source line delta: 0 in this docs authority pass.
+- deleted: none.
+- simplified: the anchor question is now split into direct Hartree
+  subtraction plus existing approximate exchange, rather than one ambiguous
+  full-interaction `Delta_F0`.
+- quarantined: old full-interaction `Delta_F0` remains historical/source-
+  plumbing evidence only; old corrected-Hamiltonian audit shape is suspended.
+- exact remaining blocker: implement `HP-RHO0-JANCHOR-FN-01` and rerun
+  H/Be/Be2 corrected behavior with `Delta_J0`/`C0_J` before any Cr/Cr2 or
+  production-integration discussion.

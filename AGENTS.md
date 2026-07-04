@@ -548,6 +548,8 @@ these approved design IDs:
 - `HP-RHO0-FAPP-TEST-01`
 - `HP-RHO0-ANCHOR-FN-01`
 - `HP-RHO0-ANCHOR-TEST-01`
+- `HP-RHO0-JANCHOR-FN-01`
+- `HP-RHO0-JANCHOR-TEST-01`
 - `HP-CGRB-FILE-01`
 - `HP-CGRB-FN-01`
 - `HP-CGRB-FN-02`
@@ -1262,44 +1264,48 @@ Approved Residual Gaussian module surfaces:
   `git diff --check`, package load, compact alpha/beta finite-difference
   validation against the paired energy helper, and H/Be/Be2-only ignored
   endpoint replay if the helper is consumed by the rho0 audit.
-- `HP-RHO0-ANCHOR-FN-01` approves only an in-memory Hartree reference
-  correction-anchor lane. The primary source surface is
-  `src/cartesian_residual_gaussians/augmented_operators.jl`;
-  `src/cartesian_ida_hamiltonian.jl` is optional only if a narrow
-  interaction-only approximate accessor is missing. The lane may build or
-  consume represented `P0_final`, compute source-backed
-  `F_exact_Hartree[P0]`, consume Cartesian IDA approximate interaction
-  energy/Fock helpers, form `Delta_F0_alpha`, `Delta_F0_beta`, and `C0`, and
-  verify the interaction anchor
-  `E_new_int[P0] = E_exact_Hartree[P0]` and
-  `dE_new_int/dP_sigma = F_exact_Hartree[P0]`. It must keep
-  interaction-only and total-with-common-one-body checks separated. It does
-  not approve public driver/API/export/default changes, artifact/provenance/
-  schema/writer/reader/manifest changes, production Hamiltonian integration,
-  solver workflow, Cr/Cr2, exchange, broad reference-density framework work,
-  row-action/`diag(J)`/`q0`/center metadata/direct-`C' V C` substitutes,
-  residual/MWG default changes, basis-fate changes, broad rejected directions
-  as MWG residuals, or source files outside the approved surface.
-  `HP-RHO0-ANCHOR-TEST-01` approves only `git diff --check`, package load,
-  prior exact/app helper replay or equivalent, H/Be/Be2-only in-memory anchor
-  replay, `Delta_F0` spectra/diagonal/occupied-expectation diagnostics, and no
-  artifact/public workflow/solver/Cr2 run.
+- `HP-RHO0-ANCHOR-FN-01` is implemented but superseded for Hartree-correction
+  physics/stability interpretation. It formed `Delta_F0_alpha/beta` by
+  subtracting the full approximate interaction Fock, including the current
+  same-spin exchange-like term, from `F_exact_Hartree[P0]`. It remains
+  source-plumbing evidence only; do not use its `Delta_F0_alpha/beta` as the
+  Hartree reference-density correction.
 - `HP-RHO0-CORR-AUDIT-01` approves only ignored measurement probes for applying
   the anchored Hartree correction to current in-memory Cartesian IDA H/Be/Be2
-  systems. It may evaluate
-  `E_corr = E_app + Tr(P_alpha * Delta_F0_alpha) +
-  Tr(P_beta * Delta_F0_beta) + C0`, verify the anchor at `P0`, report
-  corrected versus uncorrected low spectra, energies, occupations, density
-  traces, `Delta_F0` spectra/diagonal/occupied-expectation diagnostics, and
-  bounded endpoint/HF-like/SCF behavior when existing in-memory helpers can do
-  that without source or production workflow changes. It does not approve
-  tracked source edits, public driver/API/export/default changes, artifact/
-  provenance/schema/writer/reader/manifest changes, production Hamiltonian
-  integration, solver workflow, Cr/Cr2, exchange, paper claims, row-action/
-  `diag(J)`/`q0`/center metadata/direct-`C' V C` substitutes, residual/MWG
-  default changes, basis-fate changes, broad rejected directions as MWG
-  residuals, or committed tests/fixtures. Because this is measurement-only
-  authority, do not add it to the approved source-ID list.
+  systems, but this authority is suspended until `HP-RHO0-JANCHOR-*` replaces
+  the old full-interaction anchor. Any audit using old `Delta_F0_alpha/beta`
+  is invalid as Hartree-correction physics/stability evidence. Because this is
+  measurement-only authority, do not add it to the approved source-ID list.
+- `HP-RHO0-JANCHOR-FN-01` approves only a narrow direct-Hartree replacement
+  for the reference anchor. Approved source files are
+  `src/cartesian_ida_hamiltonian.jl` for private/internal direct-only
+  approximate Hartree energy/Fock helpers and
+  `src/cartesian_residual_gaussians/augmented_operators.jl` for replacing or
+  supplementing the in-memory Hartree anchor helper. The direct helper must
+  use `q = diag(P_alpha) + diag(P_beta)`,
+  `E_app_direct = 1/2 * q' * V * q`, and
+  `F_app_direct = Diagonal(V * q)`. The anchor must form one
+  spin-independent
+  `Delta_J0 = F_exact_Hartree[P0] - F_app_direct[P0]` and
+  `C0_J = E_exact_Hartree[P0] - E_app_direct[P0] -
+  Tr((P0_alpha + P0_beta) * Delta_J0)`. The corrected full interaction keeps
+  the existing approximate exchange-like contribution:
+  `E_corr_int = E_app_full_int + Tr((P_alpha + P_beta) * Delta_J0) + C0_J`.
+  It must validate the direct-Hartree anchor and the full corrected derivative
+  `dE_corr_int/dP_sigma = F_exact_Hartree[P0] - K_app_sigma[P0]`. It does not
+  approve public driver/API/export/default changes, artifact/provenance/
+  schema/writer/reader/manifest changes, production Hamiltonian integration,
+  solver workflow, Cr/Cr2, exact exchange correction or changes to the current
+  approximate exchange convention, row-action/`diag(J)`/`q0`/center metadata/
+  direct-`C' V C` substitutes, residual/MWG default changes, basis-fate
+  changes, broad rejected directions as MWG residuals, or source files outside
+  the approved surface. `HP-RHO0-JANCHOR-TEST-01` approves only
+  `git diff --check`, package load, compact direct-only finite-difference
+  validation, prior exact-side replay or equivalent H/Be/Be2 replay, direct-
+  Hartree anchor equality at `P0`, shared alpha/beta `Delta_J0`
+  representation, full corrected-interaction finite-difference check,
+  H/Be/Be2 corrected audit replay with `Delta_J0`/`C0_J`, and no
+  artifact/public workflow/solver/Cr2 run.
 
 Non-negotiable RG guardrails:
 

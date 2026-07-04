@@ -100,11 +100,15 @@ module, or object names in the new owner.
   seam for fixed represented spin densities.
 - `HP-RHO0-FAPP-TEST-01` - validation gates for the Cartesian IDA approximate
   energy/Fock seam.
-- `HP-RHO0-ANCHOR-FN-01` - in-memory Hartree reference correction-anchor lane.
-- `HP-RHO0-ANCHOR-TEST-01` - validation gates for the Hartree correction
-  anchor.
-- `HP-RHO0-CORR-AUDIT-01` - measurement-only corrected-Hamiltonian small-system
-  audit.
+- `HP-RHO0-ANCHOR-FN-01` - superseded in-memory Hartree reference
+  correction-anchor lane.
+- `HP-RHO0-ANCHOR-TEST-01` - validation gates for the superseded Hartree
+  correction anchor.
+- `HP-RHO0-CORR-AUDIT-01` - suspended measurement-only corrected-Hamiltonian
+  small-system audit.
+- `HP-RHO0-JANCHOR-FN-01` - direct-Hartree reference anchor replacement.
+- `HP-RHO0-JANCHOR-TEST-01` - validation gates for the direct-Hartree anchor
+  replacement.
 
 Implementation IDs in this list are approved only within the surfaces below.
 Design-only IDs record authority for future source blurbs but do not approve
@@ -429,17 +433,29 @@ rejected directions as MWG residuals.
 
 `HP-RHO0-ANCHOR-FN-01` is Residual Gaussian adjacent only because the
 protected/final exact-side helper currently lives in
-`augmented_operators.jl`. It approves an in-memory Hartree reference anchor
-that consumes exact Hartree and Cartesian IDA approximate interaction helpers
-to form `Delta_F0` and `C0` for H/Be/Be2 diagnostics. It does not approve
-artifacts, public workflow, solver integration, Cr/Cr2, exchange, residual
-selection changes, or production correction use.
+`augmented_operators.jl`. It is implemented but superseded for Hartree-
+correction physics/stability interpretation: the old anchor subtracted the
+full approximate interaction Fock, including the current same-spin
+exchange-like term, from an exact Hartree operator. Do not use its
+`Delta_F0_alpha/beta` as the Hartree reference-density correction.
 
-`HP-RHO0-CORR-AUDIT-01` is measurement-only. It may use ignored probes to
-apply the anchored Hartree correction to H/Be/Be2 in-memory Cartesian IDA
-energy/Fock evaluations and compare corrected versus uncorrected behavior. It
-does not approve source edits, artifacts/public workflow, production
-integration, Cr/Cr2, exchange, solver workflow, or paper claims.
+`HP-RHO0-CORR-AUDIT-01` is measurement-only, but suspended until
+`HP-RHO0-JANCHOR-*` replaces the old full-interaction anchor. A corrected-
+Hamiltonian audit using the old `Delta_F0_alpha/beta` is invalid as
+Hartree-correction physics/stability evidence.
+
+`HP-RHO0-JANCHOR-FN-01` is not broad Residual Gaussian ownership. It approves
+only a direct-Hartree anchor replacement across
+`src/cartesian_ida_hamiltonian.jl` and
+`src/cartesian_residual_gaussians/augmented_operators.jl`. The direct
+approximate side is `E_app_direct = 1/2 * q' * V * q` and
+`F_app_direct = Diagonal(V * q)`, with
+`q = diag(P_alpha) + diag(P_beta)`. The anchor forms
+`Delta_J0 = F_exact_Hartree[P0] - F_app_direct[P0]` and `C0_J`, then reruns
+H/Be/Be2 corrected behavior with `Delta_J0`/`C0_J`. It does not approve
+artifacts, public workflow, solver integration, Cr/Cr2, exact exchange
+correction, changes to the current approximate exchange convention, residual
+selection changes, or production correction use.
 
 Do not approve a vague global entry point such as
 `stabilize_residual_metric(...)`. Global raw-candidate symmetric Lowdin and

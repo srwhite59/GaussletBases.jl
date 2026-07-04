@@ -449,36 +449,43 @@ Approved Residual Gaussian robustness lane:
   `HP-RHO0-FAPP-TEST-01` requires package load plus compact alpha/beta
   finite-difference validation, with H/Be/Be2-only ignored endpoint replay if
   the helper is consumed by the rho0 audit.
-- `HP-RHO0-ANCHOR-FN-01` approves only an in-memory Hartree correction-anchor
-  lane in `src/cartesian_residual_gaussians/augmented_operators.jl`, with
-  `src/cartesian_ida_hamiltonian.jl` optional only for a missing
-  interaction-only accessor. It builds/consumes represented `P0_final`,
-  computes `F_exact_Hartree[P0]`, consumes Cartesian IDA approximate
-  interaction energy/Fock helpers, forms `Delta_F0_alpha/beta` and `C0`, and
-  verifies `E_new_int[P0] = E_exact_Hartree[P0]` plus
-  `dE_new_int/dP_sigma = F_exact_Hartree[P0]` on H/Be/Be2. It does not approve
-  artifacts, public workflow, production Hamiltonian integration, solver
-  workflow, Cr/Cr2, exchange, or broad reference-density framework work.
-  `HP-RHO0-ANCHOR-TEST-01` requires in-memory H/Be/Be2 anchor replay and
-  `Delta_F0` spectra/diagonal/occupied-expectation diagnostics.
-- `HP-RHO0-CORR-AUDIT-01` approves only ignored measurement probes for applying
-  the anchored Hartree correction to current in-memory Cartesian IDA
-  H/Be/Be2 systems. It may compute
-  `E_corr = E_app + Tr(P_alpha * Delta_F0_alpha) +
-  Tr(P_beta * Delta_F0_beta) + C0`, verify that the anchor still holds at
-  `P0`, report corrected versus uncorrected spectra/energies/occupations, and
-  use existing bounded in-memory endpoint/HF-like/SCF helpers if no source,
-  artifact, public API, or production solver workflow changes are needed. It
-  does not approve source edits, artifacts/public workflow, production
-  integration, Cr/Cr2, exchange, solver workflow, or paper claims.
+- `HP-RHO0-ANCHOR-FN-01` is implemented but superseded for Hartree-correction
+  physics/stability interpretation. It formed `Delta_F0_alpha/beta` by
+  subtracting the full approximate interaction Fock, including the current
+  same-spin exchange-like term, from `F_exact_Hartree[P0]`. That source helper
+  remains useful plumbing evidence, but its `Delta_F0` must not be used as the
+  Hartree reference-density correction.
+- `HP-RHO0-CORR-AUDIT-01` remains measurement-only, but it is suspended until
+  `HP-RHO0-JANCHOR-*` is implemented. Any small-system corrected-Hamiltonian
+  audit using the old full-interaction `Delta_F0_alpha/beta` is invalid as
+  Hartree-correction physics/stability evidence.
+- `HP-RHO0-JANCHOR-FN-01` / `HP-RHO0-JANCHOR-TEST-01` approve the direct-
+  Hartree replacement. `src/cartesian_ida_hamiltonian.jl` may add private
+  direct-only helpers with `q = diag(P_alpha) + diag(P_beta)`,
+  `E_app_direct = 1/2 * q' * V * q`, and
+  `F_app_direct = Diagonal(V * q)`. `src/cartesian_residual_gaussians/
+  augmented_operators.jl` may replace or supplement the anchor helper to form
+  `Delta_J0 = F_exact_Hartree[P0] - F_app_direct[P0]` and
+  `C0_J = E_exact_Hartree[P0] - E_app_direct[P0] -
+  Tr((P0_alpha + P0_beta) * Delta_J0)`. The corrected full interaction keeps
+  the existing approximate exchange-like contribution:
+  `E_corr_int = E_app_full_int + Tr((P_alpha + P_beta) * Delta_J0) + C0_J`.
+  Validation must prove the direct anchor, shared spin-independent `Delta_J0`,
+  the full corrected finite-difference derivative
+  `F_exact_Hartree[P0] - K_app_sigma[P0]`, and rerun H/Be/Be2 corrected
+  audit behavior with `Delta_J0`/`C0_J`. It does not approve artifacts,
+  public workflow, production Hamiltonian integration, solver workflow,
+  Cr/Cr2, exact exchange correction, or changes to the current approximate
+  exchange convention.
 - `rho0_reference_density_implementation_plan.md` is a review memo for the
   likely fast separable atomic-reference Hartree source shape. The current
   approved source target is raw exact mixed Hartree `GG` plus `GA`/`AA` from
   one-center atomic `P_A`, followed by the exact-side final/protected transform;
-  the paired Cartesian IDA `F_app[P0]` seam is source-backed, and the in-memory
-  Hartree anchor is source-backed. Corrected-Hamiltonian behavior is now
-  measurement-only under `HP-RHO0-CORR-AUDIT-01`. Cr/Cr2, artifacts, public
-  workflow, solver integration, exchange, and production Hamiltonian
+  the paired Cartesian IDA `F_app[P0]` seam is source-backed. The old
+  full-interaction anchor is superseded by the approved direct-Hartree anchor
+  replacement in `HP-RHO0-JANCHOR-*`; corrected-Hamiltonian behavior must be
+  rerun with `Delta_J0`/`C0_J`. Cr/Cr2, artifacts, public workflow, solver
+  integration, exact exchange correction, and production Hamiltonian
   integration remain later lanes.
 
 Approved stale complete-core-shell RHF retirement:

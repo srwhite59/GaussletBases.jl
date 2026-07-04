@@ -1271,3 +1271,73 @@ does not introduce suspicious low modes or occupation incentives, the next
 design choice is either limited Cr measurement or a stronger small-system
 benchmark set. If small systems destabilize, stop and record the blocker
 before any Cr/Cr2 or production integration lane.
+
+## Design-Manager Source Authority - Direct-Hartree Anchor Replacement - 2026-07-04
+
+Reviewer correction: the previous anchor source lane validated algebra for the
+object it built, but that object was not the desired Hartree-only correction.
+It subtracted the full approximate interaction Fock, including the current
+same-spin exchange-like term, from `F_exact_Hartree[P0]`. That means
+`HP-RHO0-ANCHOR-*` and any corrected-Hamiltonian audit using its
+`Delta_F0_alpha/beta` are invalid as Hartree-correction physics/stability
+evidence.
+
+Approved replacement IDs:
+
+- `HP-RHO0-JANCHOR-FN-01`
+- `HP-RHO0-JANCHOR-TEST-01`
+
+Approved source surface:
+
+- `src/cartesian_ida_hamiltonian.jl` for private/internal direct-only
+  approximate Hartree energy/Fock helpers;
+- `src/cartesian_residual_gaussians/augmented_operators.jl` for replacing or
+  supplementing the in-memory Hartree anchor helper.
+
+Correct direct-Hartree approximate side:
+
+```text
+q = diag(P_alpha) + diag(P_beta)
+E_app_direct[P] = 1/2 * q' * V * q
+F_app_direct[P] = Diagonal(V * q)
+```
+
+Replacement anchor:
+
+```text
+Delta_J0 = F_exact_Hartree[P0] - F_app_direct[P0]
+
+C0_J =
+    E_exact_Hartree[P0]
+  - E_app_direct[P0]
+  - Tr((P0_alpha + P0_beta) * Delta_J0)
+```
+
+Corrected full interaction:
+
+```text
+E_corr_int[P] =
+    E_app_full_int[P]
+  + Tr((P_alpha + P_beta) * Delta_J0)
+  + C0_J
+```
+
+The current approximate exchange-like contribution remains in
+`E_app_full_int`; it is not part of the Hartree subtraction. Validation must
+show the direct-Hartree anchor, shared spin-independent `Delta_J0`, and the
+full corrected finite-difference derivative
+`F_exact_Hartree[P0] - K_app_sigma[P0]`, then rerun the H/Be/Be2 corrected
+audit with `Delta_J0`/`C0_J`.
+
+Still out of scope:
+
+- artifact, provenance, writer, reader, manifest, public driver/API/export, or
+  default changes;
+- production Hamiltonian or solver integration;
+- Cr atom, Cr2, Cr2 HF, or Cr2 production diagnostics;
+- exact exchange correction or changes to the current approximate exchange
+  convention;
+- row-action, `diag(J)`, `q0`, center metadata, direct `C' V C`, or IDA proxy
+  shortcuts;
+- residual/MWG default changes, basis-fate changes, broad rejected directions
+  as MWG residuals, or committed fixtures.

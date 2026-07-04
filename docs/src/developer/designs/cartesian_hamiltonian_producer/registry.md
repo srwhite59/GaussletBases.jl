@@ -5107,7 +5107,14 @@ Required validation:
 
 ### HP-RHO0-ANCHOR-FN-01 — Hartree reference correction anchor
 
-Status: approved narrow in-memory source/measurement authority.
+Status: implemented but superseded for Hartree-correction physics and
+stability interpretation by `HP-RHO0-JANCHOR-FN-01`.
+
+Correction note: this lane validated the algebra for the object it built, but
+the object subtracted the full approximate interaction Fock, including the
+current same-spin exchange-like term, from an exact Hartree operator. Do not
+use its `Delta_F0_alpha/beta` as evidence for the Hartree reference-density
+correction.
 
 Purpose: form and validate the fixed-`P0` Hartree correction anchor from the
 source-backed exact and approximate sides:
@@ -5197,30 +5204,34 @@ Required validation:
 
 ### HP-RHO0-CORR-AUDIT-01 — corrected-Hamiltonian small-system audit
 
-Status: approved docs-only / measurement-only audit.
+Status: approved docs-only / measurement-only audit, but suspended until
+`HP-RHO0-JANCHOR-*` replaces the old full-interaction anchor.
+
+Correction note: any result using old `Delta_F0_alpha/beta` is invalid as a
+Hartree-correction physics/stability result. A valid rerun must use
+`Delta_J0` and `C0_J` from `HP-RHO0-JANCHOR-*`.
 
 Purpose: apply the anchored Hartree correction in memory to H/Be/Be2
 Cartesian IDA systems and decide whether the corrected model behaves sanely
 before any production integration.
 
-The audit consumes existing in-memory anchor pieces:
+After `HP-RHO0-JANCHOR-*`, the audit consumes the direct-Hartree anchor
+pieces:
 
 ```text
 F_exact_Hartree[P0]
-F_app_interaction[P0]
-Delta_F0_alpha
-Delta_F0_beta
-C0
+F_app_direct[P0]
+Delta_J0
+C0_J
 ```
 
 and evaluates:
 
 ```text
-E_corr[P_alpha, P_beta] =
+E_corr_int[P_alpha, P_beta] =
     E_app[P_alpha, P_beta]
-  + Tr(P_alpha * Delta_F0_alpha)
-  + Tr(P_beta  * Delta_F0_beta)
-  + C0
+  + Tr((P_alpha + P_beta) * Delta_J0)
+  + C0_J
 ```
 
 If `E_app` includes one-body terms, the audit must keep common one-body
@@ -5231,7 +5242,7 @@ Allowed:
 - ignored `tmp/work/*.jl` probes only;
 - `/Users/srw/dmrgtmp` outputs only;
 - H, Be, and Be2 only;
-- consume source-backed exact, approximate, and anchor helpers;
+- consume source-backed exact, direct-Hartree approximate, and anchor helpers;
 - apply the correction to current in-memory Cartesian IDA energy/Fock
   evaluation;
 - use existing in-memory endpoint, HF-like, or bounded SCF helpers only without
@@ -5240,7 +5251,7 @@ Allowed:
 Required diagnostics:
 
 - anchor check at `P0`;
-- `Delta_F0` spectra, diagonal/range summaries, occupied/reference
+- `Delta_J0` spectra, diagonal/range summaries, occupied/reference
   expectations, and sector expectations when labels are available;
 - corrected versus uncorrected low spectra of the effective Fock or
   one-particle operator used by the probe;
@@ -5270,6 +5281,110 @@ does not introduce suspicious low modes or occupation incentives, a later lane
 may choose between limited Cr measurement and stronger small-system
 benchmarks. If it destabilizes small systems, stop and record the failing
 diagnostic.
+
+### HP-RHO0-JANCHOR-FN-01 — direct-Hartree reference anchor replacement
+
+Status: approved narrow source authority.
+
+Purpose: replace the full-interaction approximate subtraction in
+`HP-RHO0-ANCHOR-*` with the direct/Hartree part of the current Cartesian IDA
+interaction. The exact side remains `F_exact_Hartree[P0]`.
+
+Approved source surface:
+
+- `src/cartesian_ida_hamiltonian.jl` for private/internal direct-only
+  approximate Hartree energy/Fock helpers;
+- `src/cartesian_residual_gaussians/augmented_operators.jl` for replacing or
+  supplementing the in-memory Hartree anchor helper.
+
+Required direct-only convention:
+
+```text
+q = diag(P_alpha) + diag(P_beta)
+E_app_direct[P] = 1/2 * q' * V * q
+F_app_direct[P] = Diagonal(V * q)
+```
+
+Required anchor:
+
+```text
+Delta_J0 = F_exact_Hartree[P0] - F_app_direct[P0]
+
+C0_J =
+    E_exact_Hartree[P0]
+  - E_app_direct[P0]
+  - Tr((P0_alpha + P0_beta) * Delta_J0)
+```
+
+The full corrected interaction keeps the current approximate exchange-like
+contribution:
+
+```text
+E_corr_int[P] =
+    E_app_full_int[P]
+  + Tr((P_alpha + P_beta) * Delta_J0)
+  + C0_J
+```
+
+Approved behavior:
+
+- keep the paired energy/Fock finite-difference discipline from
+  `HP-RHO0-FAPP-*`;
+- form one spin-independent `Delta_J0` matrix and `C0_J`;
+- verify the direct-Hartree anchor at `P0`;
+- verify the full corrected interaction derivative at `P0`:
+  `dE_corr_int/dP_sigma = F_exact_Hartree[P0] - K_app_sigma[P0]`, where
+  `K_app_sigma[P0]` is the existing approximate same-spin exchange-like
+  contribution;
+- report `Delta_J0` spectra, diagonal/range summaries, occupied/reference
+  expectations, density traces, representability facts, and anchor errors;
+- rerun the H/Be/Be2 corrected-Hamiltonian audit with `Delta_J0` and `C0_J`
+  after the helper validates.
+
+Forbidden:
+
+- public driver/API/export/default changes;
+- artifacts, manifests, provenance, writers, readers, or sidecars;
+- production Hamiltonian integration or solver workflow;
+- Cr atom, Cr2, Cr2 HF, or Cr2 production diagnostics;
+- exact exchange correction or changes to the current approximate exchange
+  convention;
+- row action, `diag(J)`, `q0`, center metadata, direct `C' V C`, or IDA proxy
+  shortcuts;
+- residual/MWG defaults, residual selection, basis-fate policy, or broad
+  rejected directions as MWG residuals;
+- source outside the approved surface;
+- committed fixtures.
+
+Failure rule: if direct-only Hartree terms cannot be separated from the
+current Cartesian IDA interaction without changing solver semantics, artifact
+shape, public workflow, or the exchange-like convention, stop and report the
+missing seam. Do not reuse the old full-interaction `Delta_F0_alpha/beta` as a
+Hartree correction.
+
+### HP-RHO0-JANCHOR-TEST-01 — direct-Hartree anchor validation
+
+Status: approved validation gates for `HP-RHO0-JANCHOR-FN-01`.
+
+Required validation:
+
+- `git diff --check`;
+- package load;
+- compact direct-only finite-difference validation against
+  `F_app_direct[P]` for alpha and beta density perturbations;
+- prior exact-side mixed Hartree and final/protected transform replay, or an
+  equivalent bounded H/Be/Be2 replay;
+- direct-Hartree anchor equality at `P0`;
+- equality or shared representation showing
+  `Delta_J0_alpha == Delta_J0_beta`;
+- full corrected interaction finite-difference check against
+  `E_corr_int[P]`;
+- H/Be/Be2 corrected-Hamiltonian audit replay using `Delta_J0` and `C0_J`;
+- report `Delta_J0` spectra, diagonal/range summaries, occupied/reference
+  expectations, corrected versus uncorrected low spectra or endpoint behavior
+  when available, density traces, and representability facts;
+- no artifact/public workflow, solver workflow, Cr/Cr2, or production
+  integration run.
 
 Candidate future IDs, not approved:
 
