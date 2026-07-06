@@ -4763,6 +4763,120 @@ corrected interaction variants. If EGOI requires large or
 cancellation-dominated `DeltaV` or creates bad low modes, keep it
 diagnostic-only. Do not run Cr2 until small cases pass.
 
+### HP-RG-PROTECT-EGOI-FN-01 — retained-GTO local-product EGOI helper
+
+Status: approved narrow internal source authority.
+
+Purpose: turn the successful retained-original-GTO EGOI measurement
+convention into a source-backed, in-memory helper without changing public
+workflow, artifact semantics, or production defaults.
+
+The EGOI target is not broad protected-`Z`, not atom-HF orbitals, not final
+basis rows, and not residualized RG functions. The first approved target is
+retained original supplement GTOs mapped from compact retained source indices:
+owner-balanced retained `s1+s2`, molecular retained-original-GTO target, local
+`M2` mask, and symmetric/local-product formulation.
+
+Physical convention:
+
+- local products on each atom are first-class EGOI products;
+- the inter-atom local-product Coulomb block is included in the exact target
+  and acceptance metric;
+- AB overlap products are not first-class targets by default;
+- long-range/disallowed `DeltaV` remains exactly zero;
+- `s3`, `p`, `d`, and broader target classes remain measurement-only.
+
+Evidence:
+
+- Be2 retained-GTO target ladder:
+  `/Users/srw/dmrgtmp/protected_localized_retained_gto_target_ladder_22f051741`;
+- Cr2 molecular M2/M3/M4 isolation:
+  `/Users/srw/dmrgtmp/cr2_molecular_mask_radius_egoi_22f051741`;
+- Cr2 cross-term scaling audit:
+  `/Users/srw/dmrgtmp/cr2_egoi_cross_term_scaling_22f051741`.
+
+The accepted Cr2 `s1+s2`/`M2` measurement gives residual reduction about
+`99.603%`, `DeltaV/V` Frobenius about `9.076e-5`, relative `p95` about
+`2.421e-4`, and low-Fock shift about `+2.090e-5` Ha. The remaining residual
+is the AA-BB local-product Coulomb block and is `99.09%` diag-diag; AB overlap
+products are negligible.
+
+Approved source surface:
+
+- `src/hamiltonian_corrections.jl`;
+- optional only for protected-localized retained source mapping or
+  transform-ready `Qtarget`:
+  - `src/cartesian_residual_gaussians/augmented_operators.jl`;
+  - `src/cartesian_residual_gaussians/residual_basis.jl`.
+
+Helper responsibilities:
+
+- build retained original-GTO target metadata from protected geometry/source
+  indices;
+- select only owner-balanced retained `s1+s2`;
+- build `Qtarget` for those original GTOs in protected-localized native order;
+- build symmetric local-product products excluding AB overlap products as
+  first-class targets;
+- include AA-BB local-product Coulomb in the exact target and acceptance
+  metric;
+- build/apply the `M2` local mask
+  `r_ij <= 1.75 * max(ell_i, ell_j)`, with
+  `ell_i = max(nearest-neighbor ell_i, core_spacing)`;
+- solve local constrained EGOI with existing matrix routines or a narrow
+  symmetric/local-product wrapper;
+- return in-memory `DeltaV` and compact diagnostics.
+
+Required diagnostics:
+
+- target labels/source indices/owners/channels;
+- projection loss;
+- product counts and symmetric rank/singular values;
+- local-product residuals before/after for `AA-AA`, `BB-BB`, and `AA-BB`;
+- AA-BB diag-diag / diag-offdiag / offdiag-offdiag split;
+- `DeltaV/V` Frobenius, max, `p95`, and median by variable class;
+- saturated variables by class;
+- `max_disallowed_delta_v`;
+- corrected `Vee` finite/symmetric checks;
+- low-Fock shift;
+- cache/probe parity against the accepted measurement outputs.
+
+Forbidden:
+
+- public API/export/driver workflow;
+- artifact/schema/provenance/writer/reader changes;
+- corrected protected-localized artifact variants;
+- solver/HF/MP2-NO workflow integration;
+- Cr2 production energy claims;
+- RG/injection selection-policy changes;
+- broad protected-`Z` targets;
+- atom-HF/P0/rho0 revival;
+- AB overlap products as default targets;
+- `s3`, `p`, or `d` target promotion;
+- committed large Cr2 tests or fixtures.
+
+Decision rule: approve source only while this remains an internal in-memory
+helper with compact diagnostics and no artifact/workflow changes. If source
+requires a corrected artifact or solver workflow to be meaningful, stop and
+keep the lane measurement-only.
+
+### HP-RG-PROTECT-EGOI-TEST-01 — retained-GTO EGOI validation
+
+Status: approved.
+
+Approved validation:
+
+- package load;
+- `git diff --check`;
+- H, Be, and Be2 retained-GTO smoke for `s1` and `s1+s2`;
+- ignored Cr2 replay matching the accepted measurement:
+  - `s1+s2`/`M2` residual reduction about `99.603%`;
+  - `DeltaV/V` Frobenius about `9e-5`;
+  - relative `p95` `DeltaV` about `2.4e-4`;
+  - benign low-Fock shift;
+  - `max_disallowed_delta_v = 0`;
+- no production Cr2 HF;
+- no committed large Cr2 tests or fixtures.
+
 ### HP-RG-RHO0-GAL-AUDIT-01 — rho0/Galerkin IDA correction audit
 
 Status: approved measurement-only audit authority. This is not source

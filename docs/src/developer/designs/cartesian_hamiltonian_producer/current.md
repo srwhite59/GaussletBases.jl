@@ -391,6 +391,20 @@ Approved Residual Gaussian robustness lane:
   artifact variants, public workflow, solver workflow, Cr2 production claims,
   selection changes, protected-artifact convention changes, or rho0/P0 revival.
   Do not run Cr2 until H/Be/Be2 diagnostics are sane.
+- `HP-RG-PROTECT-EGOI-FN-01` and `HP-RG-PROTECT-EGOI-TEST-01` approve a
+  narrow internal source lane for retained original-GTO local-product EGOI.
+  The approved first target is owner-balanced retained `s1+s2` original
+  supplement GTOs mapped from compact retained source indices, in the
+  protected-localized native basis, using molecular local-product constraints
+  with the `M2` mask. Local products on each atom are first-class targets, the
+  AA-BB local-product Coulomb block is included in the acceptance metric, AB
+  overlap products are not default targets, and long-range/disallowed
+  `DeltaV` remains exactly zero. Source surface is
+  `src/hamiltonian_corrections.jl`, with optional
+  `augmented_operators.jl`/`residual_basis.jl` wiring only for retained-source
+  mapping or `Qtarget`. This lane does not approve public workflow, artifacts,
+  solver integration, selection changes, atom-HF/P0/rho0, broad protected-Z
+  targets, `s3`/`p`/`d` target promotion, or Cr2 production claims.
 - `HP-RG-RHO0-GAL-AUDIT-01` approves only a measurement audit for rho0/Galerkin
   IDA correction over the protected-localized inherited-site baseline. It may
   use ignored probes, `/Users/srw/dmrgtmp` outputs, analytic IDA/Coulomb

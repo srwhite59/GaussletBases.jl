@@ -493,6 +493,19 @@ Approved robustness lane:
   source edits, artifact variants, public/solver workflow, selection changes,
   protected-artifact convention changes, rho0/P0 revival, or Cr2 before small
   cases pass.
+- `HP-RG-PROTECT-EGOI-FN-01` / `HP-RG-PROTECT-EGOI-TEST-01` approve the first
+  source-backed retained-GTO local-product EGOI helper. The approved target is
+  owner-balanced retained original supplement `s1+s2` mapped from compact
+  retained source indices. The helper may build target metadata, `Qtarget`,
+  symmetric local products excluding AB overlap products as first-class
+  targets, the AA-BB local-product Coulomb acceptance block, the `M2` local
+  mask, in-memory `DeltaV`, and compact diagnostics. Primary source owner is
+  `src/hamiltonian_corrections.jl`; optional
+  `src/cartesian_residual_gaussians/augmented_operators.jl` and
+  `src/cartesian_residual_gaussians/residual_basis.jl` edits are allowed only
+  for retained-source mapping or transform-ready `Qtarget`. No artifacts,
+  public workflow, solver integration, selection changes, rho0/P0,
+  broad protected-Z, AB-overlap default targets, or `s3`/`p`/`d` promotion.
 - `HP-RG-RHO0-GAL-AUDIT-01` approves only a measurement-only rho0/Galerkin IDA
   correction audit on top of that protected-localized baseline. The audit may
   use ignored probes, `/Users/srw/dmrgtmp` outputs, in-memory experiments over

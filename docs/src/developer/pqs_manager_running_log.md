@@ -24683,3 +24683,354 @@ Carrying-cost result:
 - exact remaining blocker: run H/Be/Be2 EGOI probes and decide whether the
   matrix-level correction is numerically benign enough to justify a later
   source/artifact lane.
+
+## Cartesian Hamiltonian Producer Pass 303 - Retained-GTO EGOI Target Ladder
+
+Commit(s):
+- none; accepted ignored measurement output only
+
+Summary:
+- Accepted the retained-original-GTO target ladder as the first clean
+  small-system EGOI signal. The target definition is now aligned with the
+  construction: original supplement GTOs mapped from retained compact source
+  indices, not atom-HF orbitals, not final basis rows, and not residualized RG
+  functions.
+- The Be2 `q=5`, `R=4`, `core_spacing=0.075` compact target sets pass the
+  local EGOI gate. With mask `M4`, `s1` and `s1+s2` targets project at
+  roundoff, reduce exact-product residuals by about `97.6%`, require only
+  small `DeltaV/V` Frobenius changes (`3.18e-4` and `5.55e-4`), and keep
+  low-Fock shifts small (`-2.88e-4` and `-6.12e-4` Ha).
+- The permissive local-RG `s1+s2+s3` control also projects cleanly, but fails
+  the marginal target-cost gate: residual reduction drops to `91.66%` and
+  `DeltaV/V` grows to `3.03e-3`. Do not promote `s3` merely because it is
+  represented.
+
+Validation / evidence:
+- Doer output:
+  `/Users/srw/dmrgtmp/protected_localized_retained_gto_target_ladder_22f051741`.
+- H `q5/core0.3` `s1` and Be `q5/core0.075` `s1` / `s1+s2` controls removed
+  residuals completely with small corrections. No retained compact `p` or `d`
+  channels appeared in this `q5/lmax` setup.
+- Doer validation: package load `package_load_elapsed_s=0.476256791`, ignored
+  probe elapsed `263.49s`, `git diff --check`, and
+  `max_disallowed_delta_v = 0.0` for all summary rows.
+
+Goal advancement:
+- LT5/LT6 and MT4: shifts the protected interaction-correction story from
+  broad protected-Z or rho0/P0 affine corrections to local retained-GTO EGOI.
+  The current clean candidate is compact original supplement targets
+  `s1+s2` with local mask `M4`.
+
+Risk / guardrail:
+- This is still measurement-only. It is not an EGOI artifact, source lane,
+  solver workflow, or Cr2 production claim.
+- EGOI target fate is now separate from basis fate: a GTO can be represented
+  and still be excluded from EGOI if its marginal product fit is too expensive.
+
+Carrying-cost result:
+- source line delta: 0.
+- deleted: none.
+- simplified: target policy is now concrete enough to avoid atom-HF and broad
+  protected-prefix detours in the next probe.
+- quarantined: `s3` and broader retained/local-RG targets are diagnostic-only
+  until they pass the marginal EGOI cost gate.
+- exact remaining blocker: run a gated Cr2 measurement, if desired, using only
+  the compact retained-original-GTO target class (`s1+s2` where available) and
+  local `M4`/nearby masks before asking for any source-backed EGOI artifact or
+  workflow lane.
+
+## Cartesian Hamiltonian Producer Pass 304 - Cr2 Retained-GTO EGOI Gate
+
+Commit(s):
+- none; accepted ignored measurement output only
+
+Summary:
+- Accepted the gated Cr2 retained-original-GTO local EGOI measurement as a
+  positive static signal. The compact target class that passed Be2 also passes
+  on Cr2: original supplement `s1` and `s1+s2` targets project at roundoff,
+  fit using local `M4` only, reduce exact-product residuals by more than
+  `99%`, keep disallowed/long-range `DeltaV` exactly zero, and do not create a
+  new bad low-Fock mode.
+- The target source mapping is concrete: `a_s1` source `1`, `a_s2` source `2`,
+  `b_s1` source `70`, and `b_s2` source `71`. The final working dimension is
+  `6945`, with `base=6915`, `compact_R=30`, `protected=30`, `broad_Z=87`,
+  `B_min=0.993465824505872`, and no `B < 0.99`.
+- The design-size gate stopped broader targets before fitting:
+  `s1+s2+s3` estimated `31.68 GiB`, and `p`/`d` each estimated
+  `506.81 GiB`. This is the intended behavior; broad target classes are not
+  silently promoted just because compact targets work.
+
+Validation / evidence:
+- Doer output:
+  `/Users/srw/dmrgtmp/cr2_retained_gto_local_egoi_22f051741`.
+- Cr2 `s1`: rank `3/4`, residual reduction `99.91%`,
+  `DeltaV/V` Frobenius `6.33e-5`, relative `p95=1.05e-4`, and low-Fock shift
+  `+1.12e-5` Ha.
+- Cr2 `s1+s2`: rank `10/16`, residual reduction `99.60%`,
+  `DeltaV/V` Frobenius `6.29e-5`, relative `p95=1.09e-4`, and low-Fock shift
+  `+2.10e-5` Ha.
+- Compact-R rows were allowed in the variable mask but barely moved:
+  base-G/compact-R Frobenius `2.67e-4` / `5.02e-4`, compact-R/compact-R
+  Frobenius `1.16e-8` / `4.76e-8`, with no saturation.
+- Doer validation: package load `0.509544708s`, ignored probe elapsed
+  `305.698125083s`, and `git diff --check`.
+
+Goal advancement:
+- LT5/LT6 and MT4: promotes compact retained-original-GTO local EGOI from a
+  small-system curiosity to a Cr2-static candidate. The current candidate
+  convention is `s1+s2` compact original supplement targets with local `M4`
+  masking, not dense EGOI, not broad protected-Z targets, and not rho0/P0.
+
+Risk / guardrail:
+- This is still static and measurement-only. It does not validate a solver
+  workflow, corrected artifact, MP2-NO consumer path, or production Cr2 energy.
+- The design-size gate must remain part of the convention: larger source
+  classes need separate memory-aware design before they can be treated as
+  targets.
+
+Carrying-cost result:
+- source line delta: 0.
+- deleted: none.
+- simplified: the next design question is now narrow: whether and how to make
+  `s1+s2`/`M4` retained-GTO EGOI source-backed and artifact-visible.
+- quarantined: all Cr2 EGOI work remains ignored probe/output only.
+- exact remaining blocker: design-manager authority is needed before any
+  source helper, artifact field/variant, solver/consumer wiring, or production
+  Cr2 use of this EGOI correction.
+
+## Cartesian Hamiltonian Producer Pass 305 - Atom-Local EGOI Mask Audit
+
+Commit(s):
+- none; accepted ignored measurement output only
+
+Summary:
+- Accepted the atom-local owner-separated EGOI mask audit as a useful negative
+  design result. Owner-separated fitting is much cheaper and algebraically
+  clean: each atom-local retained-GTO target block can be fit essentially
+  exactly, with clean target projection and benign low-Fock behavior.
+- It does not match the prior molecular `M4` quality when the acceptance
+  metric includes cross-owner target products. For the required Cr2 `s1+s2`
+  target, atom-local `M3` gives `86.98%` molecular residual reduction versus
+  `99.60%` for the prior molecular `M4` pass.
+- This separates two concepts that had been blurred: atom-local EGOI is the
+  right scaling and locality convention for same-atom target products, but the
+  previous molecular residual metric also measures cross-owner products. Those
+  cannot be corrected if both cross-owner target constraints and cross-owner
+  `DeltaV` variables are forbidden.
+
+Validation / evidence:
+- Doer outputs:
+  `/Users/srw/dmrgtmp/cr2_atom_local_retained_gto_egoi_22f051741/`.
+- Probes:
+  `tmp/work/cr2_atom_local_retained_gto_egoi_mask_audit.jl` and
+  `tmp/work/cr2_atom_local_retained_gto_egoi_product_rank_probe.jl`.
+- Key comparison:
+  `s1 M3`: owner reduction `100.00%`, molecular reduction `89.18%`,
+  `DeltaV/V` Frobenius `4.28e-6`, low-Fock shift `+1.05e-5` Ha.
+  `s1+s2 M3`: owner reduction `100.00%`, molecular reduction `86.98%`,
+  `DeltaV/V` Frobenius `2.22e-5`, low-Fock shift `+1.93e-5` Ha.
+- The atom-local `s1+s2` M3 fit used `521,012` variables with estimated design
+  size `0.023 GiB`, versus prior molecular M4 `3,280,447` variables and
+  `6.257 GiB`. Target projection loss stayed near roundoff. Product ranks were
+  `1/1` for `s1`, `3/3` for `s1+s2`, and `6/6` for `s1+s2+s3`, with `s3`
+  notably weaker conditioned.
+- Doer validation: package load `0.475821417s`, main probe elapsed
+  `1125.956671s`, product-rank follow-up elapsed `95.866715s`, and
+  `git diff --check`.
+
+Goal advancement:
+- LT5/LT6 and MT4: rules out pure no-cross atom-local EGOI as a replacement
+  for the prior molecular `s1+s2`/`M4` candidate under the current molecular
+  residual acceptance metric. The target interaction design must either keep a
+  molecular/cross-owner component, or explicitly narrow the accepted physical
+  target to atom-local products only.
+
+Risk / guardrail:
+- Do not promote atom-local no-cross EGOI as the Cr2 interaction correction
+  unless the design intentionally drops cross-owner target products from the
+  acceptance metric.
+- This remains measurement-only: no source, artifact, solver, or production
+  workflow authority.
+
+Carrying-cost result:
+- source line delta: 0.
+- deleted: none.
+- simplified: the design question is sharper: "what cross-owner product
+  treatment is physically required?" rather than "can atom-local fitting scale?"
+- quarantined: atom-local EGOI remains diagnostic evidence only.
+- exact remaining blocker: decide whether the EGOI target convention should
+  include cross-owner target products, and if so find a scalable treatment that
+  keeps long-range physics controlled.
+
+## Cartesian Hamiltonian Producer Pass 306 - Molecular EGOI Mask-Radius Control
+
+Commit(s):
+- none; accepted ignored measurement output only
+
+Summary:
+- Accepted the molecular mask-radius control as the isolation pass for the
+  prior atom-local negative result. The quality drop was caused by changing
+  the objective to owner-separated atom-local fits, not by shrinking from `M4`
+  to `M3`.
+- With the original molecular retained-GTO target constraints, Cr2
+  `s1+s2`/`M3` reproduces the prior molecular `M4` quality almost exactly:
+  residual reduction `99.603%`, `DeltaV/V` Frobenius `7.028e-5`, relative
+  `p95=1.135e-4`, and low-Fock shift `+2.093e-5` Ha. The prior `M4` values
+  were `99.603%`, `6.293e-5`, `1.095e-4`, and `+2.098e-5` Ha.
+- `M3` uses `521,012` variables with estimated design size `0.994 GiB`,
+  compared with prior `M4` `3,280,447` variables and `6.257 GiB`. This makes
+  molecular `s1+s2`/`M3` the current clean static candidate, not atom-local
+  no-cross and not molecular `M4`.
+
+Validation / evidence:
+- Doer output:
+  `/Users/srw/dmrgtmp/cr2_molecular_mask_radius_egoi_22f051741/`.
+- Probe: `tmp/work/cr2_molecular_mask_radius_egoi_audit.jl`.
+- Required target source indices stayed fixed:
+  `a_s1=1`, `a_s2=2`, `b_s1=70`, `b_s2=71`; projection remained roundoff.
+- The inter-atom product-block residual is already small and essentially
+  unchanged (`1.723e-7` after `M1`/`M2`/`M3`). The molecular fits remove the
+  same-atom product-block residual to roundoff. This explains why atom-local
+  fitting looked clean per owner while failing the molecular residual metric.
+- Doer validation: package load `0.545186084s`, ignored probe runtime
+  `757.125761292s`, and `git diff --check`.
+
+Goal advancement:
+- LT5/LT6 and MT4: narrows the protected EGOI candidate to a practical static
+  convention: molecular retained-original-GTO `s1+s2` targets with local `M3`
+  masking. `M4` is no longer justified by current evidence, and pure
+  owner-separated no-cross fitting is diagnostic-only.
+
+Risk / guardrail:
+- This is still measurement-only. It does not approve source helpers, artifact
+  fields, corrected Hamiltonian writing, solver/consumer wiring, or production
+  Cr2 claims.
+- Future EGOI probes should cache reusable expensive ingredients in
+  `/Users/srw/dmrgtmp` when repeated passes are expected: protected-localized
+  readback facts, target maps, products, allowed-variable masks, and design
+  summaries. Caches must remain probe-local/ignored until a source or artifact
+  lane is explicitly approved.
+
+Carrying-cost result:
+- source line delta: 0.
+- deleted: none.
+- simplified: target/mask choice is now `s1+s2` molecular constraints plus
+  `M3`, which avoids both the heavier `M4` and the weaker atom-local objective.
+- quarantined: all EGOI correction data remains ignored measurement output.
+- exact remaining blocker: design-manager authority is needed before promoting
+  molecular `s1+s2`/`M3` EGOI to source-backed helpers, artifact metadata, a
+  corrected interaction artifact, or solver/MP2-NO consumer use.
+
+## Cartesian Hamiltonian Producer Pass 307 - EGOI Cross-Term Scaling Audit
+
+Commit(s):
+- none; accepted ignored measurement output only
+
+Summary:
+- Accepted the Cr2 EGOI cross-term/scaling audit. The working candidate is now
+  molecular retained-original-GTO `s1+s2` with local `M2`: it preserves the
+  earlier `99.6026%` residual reduction, `DeltaV/V` Frobenius `9.076e-5`,
+  relative `p95=2.421e-4`, and benign low-Fock shift `+2.090e-5` Ha.
+- The remaining post-fit residual is not an AB overlap-product artifact. It is
+  almost entirely the AA-BB inter-atom local-product Coulomb block:
+  `AA_AA ~ 7.6e-15`, `BB_BB ~ 8.1e-15`, `AA_BB = 1.723e-7`,
+  AA/BB-AB coupling `1.86e-10`, and `AB_AB ~ 5.5e-15`.
+- Within AA-BB, `diag-diag` terms account for `99.09%` of the remaining
+  residual, `diag-offdiag` for `0.91%`, and `offdiag-offdiag` is negligible.
+  This supports a future convention that treats local products on each atom as
+  EGOI targets while keeping their inter-atom Coulomb block in the acceptance
+  metric; AB overlap products should not be first-class targets by default.
+
+Validation / evidence:
+- Doer output:
+  `/Users/srw/dmrgtmp/cr2_egoi_cross_term_scaling_22f051741/`.
+- M2 variable count is `120435`: `6945` diagonal, `33428` nearest-local, and
+  `80062` next-local variables.
+- Scaling estimates: full ordered `p`/`d` exceed the current gate at
+  `18.61 GiB`; symmetric molecular `p`/`d` are about `2.76 GiB`;
+  local-product-only `p`/`d` are about `0.81 GiB`; owner-local product-only
+  `p`/`d` are about `0.207 GiB`.
+- Optional diagnostic fits are not promoted: `s1+s2+s3` symmetric M2 gives
+  only `67.97%` reduction with `DeltaV/V` Frobenius `8.03e-4`; owner-local
+  `p` gives `93.97%` but with capped variables and partially converged low
+  modes; owner-local `d` gives only `77.92%`.
+- Probe wrote ignored caches under the output directory:
+  `cache/target_*.jld2` for `Qtarget`, exact targets, labels, products, and
+  `cache/variables_M*.jld2` for M0/M1/M2 variable lists.
+- Doer validation: package load `0.451752125s`, probe elapsed
+  `1019.665699542s`, and `git diff --check`.
+
+Goal advancement:
+- LT5/LT6 and MT4: sharpens the EGOI physical convention. The candidate is
+  not "atom-local only" and not "all molecular overlap products"; it is local
+  retained original-GTO products with the inter-atom local-product Coulomb
+  block still measured. The first source/design target, if approved, should be
+  scalable symmetric/local-product EGOI around `s1+s2`/`M2`.
+
+Risk / guardrail:
+- Do not promote `s3`, `p`, or `d` yet. They need separate target-class and
+  solver/scaling decisions. In particular, `p` and `d` should use symmetric or
+  local-product formulations before any larger Cr2 fit.
+- Caches are measurement scaffolding only; they are not artifacts and not
+  source-owned durable state.
+
+Carrying-cost result:
+- source line delta: 0.
+- deleted: none.
+- simplified: AB overlap products are no longer the presumed missing
+  correction target.
+- quarantined: ignored EGOI probes, output tables, and JLD2 caches only.
+- exact remaining blocker: design-manager authority is needed for any
+  source-backed EGOI target metadata, symmetric/local-product solver helper,
+  corrected `Vee` artifact, or consumer workflow.
+
+## Cartesian Hamiltonian Producer Pass 308 - Retained-GTO EGOI Source Authority
+
+Commit(s):
+- this commit - Approve retained-GTO EGOI helper
+
+Summary:
+- Approved `HP-RG-PROTECT-EGOI-FN-01` and
+  `HP-RG-PROTECT-EGOI-TEST-01` as the first source-backed EGOI lane. The lane
+  turns the successful measurement convention into an internal in-memory
+  helper, not an artifact, solver workflow, or production Cr2 path.
+- The target is deliberately narrow: retained original supplement GTOs mapped
+  from compact retained source indices, first limited to owner-balanced
+  `s1+s2`. It is not broad protected-`Z`, atom-HF/P0/rho0, final rows, or
+  residualized RG functions.
+- The accepted physical convention is molecular local-product EGOI with local
+  atom products as first-class products, AA-BB local-product Coulomb included
+  in the acceptance metric, AB overlap products excluded as default targets,
+  the `M2` local mask, and disallowed/long-range `DeltaV = 0`.
+
+Validation / evidence:
+- Evidence comes from the retained-GTO ladder, molecular mask-radius audit, and
+  cross-term scaling audit:
+  `/Users/srw/dmrgtmp/protected_localized_retained_gto_target_ladder_22f051741`,
+  `/Users/srw/dmrgtmp/cr2_molecular_mask_radius_egoi_22f051741`, and
+  `/Users/srw/dmrgtmp/cr2_egoi_cross_term_scaling_22f051741`.
+- The accepted Cr2 `s1+s2`/`M2` replay target is residual reduction about
+  `99.603%`, `DeltaV/V` Frobenius about `9e-5`, relative `p95` about
+  `2.4e-4`, benign low-Fock shift, and `max_disallowed_delta_v = 0`.
+
+Goal advancement:
+- LT5/LT6 and MT4: promotes the protected interaction-correction story from
+  ignored probes to a small source-owned computational primitive while keeping
+  artifacts and workflows quarantined.
+
+Risk / guardrail:
+- Do not promote `s3`, `p`, or `d` under this source ID. Do not silently add AB
+  overlap products, broaden to protected-Z targets, or make corrected
+  Hamiltonian artifacts. If the helper cannot be meaningful without artifact
+  or solver workflow changes, stop and keep EGOI measurement-only.
+
+Carrying-cost result:
+- source line delta: 0 in this docs authority pass.
+- deleted: none.
+- simplified: the first source target is now one specific retained-GTO
+  local-product helper, not a general EGOI framework.
+- quarantined: artifacts, solver/MP2-NO workflow, production Cr2, rho0/P0,
+  broad targets, AB-overlap default targets, and larger channel classes.
+- exact remaining blocker: implement the in-memory helper and replay H/Be/Be2
+  plus ignored Cr2 `s1+s2`/`M2` parity before considering artifact or workflow
+  authority.

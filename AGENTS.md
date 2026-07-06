@@ -542,6 +542,8 @@ these approved design IDs:
 - `HP-RG-PROTECT-ART-TEST-01`
 - `HP-RG-PROTECT-ARTLOC-FN-01`
 - `HP-RG-PROTECT-ARTLOC-TEST-01`
+- `HP-RG-PROTECT-EGOI-FN-01`
+- `HP-RG-PROTECT-EGOI-TEST-01`
 - `HP-RHO0-MIXH-GG-FN-01`
 - `HP-RHO0-MIXH-GG-TEST-01`
 - `HP-RHO0-MIXH-GAAA-FN-01`
@@ -1201,6 +1203,26 @@ Approved Residual Gaussian module surfaces:
   residual channels, committed tests, or Cr2 production claims. Do not run Cr2
   until H/Be/Be2 diagnostics pass. Because this is measurement-only authority,
   do not add it to the approved source-ID list.
+- `HP-RG-PROTECT-EGOI-FN-01` and `HP-RG-PROTECT-EGOI-TEST-01` approve only a
+  narrow internal retained-GTO local-product EGOI helper. Primary source
+  ownership is `src/hamiltonian_corrections.jl`; optional
+  `src/cartesian_residual_gaussians/augmented_operators.jl` and
+  `src/cartesian_residual_gaussians/residual_basis.jl` edits are allowed only
+  to obtain protected-localized retained source mapping or transform-ready
+  `Qtarget`. The approved target is owner-balanced retained original
+  supplement `s1+s2` mapped from compact retained source indices, not broad
+  protected-`Z`, atom-HF orbitals, final basis rows, or residualized RG
+  functions. The helper may build target metadata, `Qtarget`, symmetric
+  local-product targets excluding AB overlap products as default first-class
+  products, AA-BB local-product Coulomb acceptance blocks, the `M2` local mask,
+  in-memory `DeltaV`, and compact diagnostics. Disallowed/long-range
+  `DeltaV` must remain exactly zero. This lane does not approve public
+  API/export/driver workflow, artifacts/schema/provenance/writer/reader
+  changes, corrected protected-localized artifact variants, solver/HF/MP2-NO
+  workflow integration, Cr2 production claims, RG/injection selection-policy
+  changes, broad protected-Z targets, atom-HF/P0/rho0 revival, AB overlap
+  products as default targets, `s3`/`p`/`d` target promotion, or committed
+  large Cr2 tests/fixtures.
 - `HP-RG-RHO0-GAL-AUDIT-01` approves only ignored measurement probes for a
   rho0/Galerkin IDA correction over the protected-localized inherited-site
   baseline. It may use `/Users/srw/dmrgtmp` outputs, in-memory experiments over

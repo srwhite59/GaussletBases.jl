@@ -86,6 +86,9 @@ module, or object names in the new owner.
   row-locality metadata.
 - `HP-RG-PROTECT-EGOI-AUDIT-01` - measurement-only EGOI audit over
   protected-localized artifacts.
+- `HP-RG-PROTECT-EGOI-FN-01` - retained-GTO local-product EGOI helper.
+- `HP-RG-PROTECT-EGOI-TEST-01` - validation gates for the retained-GTO EGOI
+  helper.
 - `HP-RG-RHO0-GAL-AUDIT-01` - measurement-only rho0/Galerkin IDA correction
   audit over the protected-localized baseline.
 - `HP-RHO0-REFDENS-AUDIT-01` - measurement-only reference-density-matrix IDA
@@ -401,6 +404,19 @@ and report H/Be/Be2 diagnostics before any optional bounded Cr2 diagnostic.
 It does not approve source edits, artifact variants, public workflow, solver
 workflow, RG/injection selection changes, protected-artifact convention
 changes, rho0/P0 revival, or Cr2 production claims.
+
+`HP-RG-PROTECT-EGOI-FN-01` approves the first source-backed retained-GTO EGOI
+helper. The target is owner-balanced retained original supplement `s1+s2`
+GTOs mapped from compact retained source indices, not broad protected-`Z`,
+atom-HF orbitals, final rows, or residualized RG functions. The source lane is
+internal and in-memory: local atom products are first-class targets, the
+AA-BB local-product Coulomb block is included in the acceptance metric, AB
+overlap products are not default targets, and disallowed/long-range `DeltaV`
+must remain zero. Primary ownership is `hamiltonian_corrections.jl`, with
+`augmented_operators.jl` and `residual_basis.jl` optional only for retained
+source mapping or transform-ready `Qtarget`. The lane does not approve
+artifacts, public workflow, solver integration, selection changes, rho0/P0,
+or `s3`/`p`/`d` target promotion.
 
 `HP-RG-RHO0-GAL-AUDIT-01` approves only an ignored measurement audit for a
 rho0/Galerkin IDA correction on top of that protected-localized baseline. It
