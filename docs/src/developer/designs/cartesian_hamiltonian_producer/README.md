@@ -67,6 +67,11 @@ cube/source/nesting size, while route-local `q` is derived from `ns` and
 `HP-COMP-WLNS-*`: `nesting = :wl`, `Natom = 2`, and normalized `ns < 4`
 should reject early, while working WL diatomic `ns` ranges may saturate the
 final retained support when the physical parent extent dominates.
+`HP-PQS-MAP-SFACTOR-*` approves a narrow expert mapping-strength scalar:
+`s_factor`, default `1.0`, with one-center
+`effective_s = s_factor * sqrt(Z * core_spacing)` and explicit provenance.
+This is the only approved public mapping-strength knob and does not revive
+public `d` or `parent_mapping_d`.
 The WL z-axis diatomic compact retained-basis correction is approved under
 `HP-WLDIAT-COMPACT-*`: the current mechanical boundary-stratum identity path is
 not the intended compact WL retained basis and must not be used as the final
@@ -157,6 +162,9 @@ Agents should read first:
   for the measurement-only decision after terminal `G-G` workspace reuse
 - [R3 unit-nuclear U_GG Gaussian sum](r3_unit_nuclear_ugg_gaussian_sum.md)
   for the narrow terminal final-basis unit-nuclear `U_GG` optimization lane
+- [PQS/WL mapping `s_factor`](pqs_mapping_s_factor.md)
+  for the expert mapping-strength scalar that preserves default behavior while
+  allowing CR2-style scans
 - [Cartesian driver usability workflow](cartesian_driver_usability_workflow.md)
   for the compact artifact-producing canonical driver lane
 - [R1 one-center base atoms](r1_one_center_base_atoms.md)

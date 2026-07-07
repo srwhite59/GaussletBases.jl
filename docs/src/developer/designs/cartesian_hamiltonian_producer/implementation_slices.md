@@ -1827,6 +1827,9 @@ Allowed source shapes:
 - map resolved public `core_spacing` to private `parent_mapping_d`;
 - keep `reference_spacing`, `tail_spacing`, and box/domain controls separate
   from `core_spacing`;
+- later `HP-PQS-MAP-SFACTOR-*` approves only the expert scalar `s_factor` as a
+  narrow mapping-strength override; it does not revive public `d`,
+  `parent_mapping_d`, element defaults, or automatic tuning;
 - reuse existing `HP-R1-ART-01` provenance keys and
   `route = :one_center_pqs_base`.
 

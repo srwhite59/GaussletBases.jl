@@ -28,6 +28,7 @@ Normal startup reading:
   workspace reuse;
 - `r3_unit_nuclear_ugg_gaussian_sum.md` for the narrow terminal final-basis
   unit-nuclear `U_GG` Gaussian-sum allocation lane;
+- `pqs_mapping_s_factor.md` for the expert `s_factor` mapping-strength knob;
 - `r1_one_center_base_atoms.md` for explicit origin-centered all-electron
   one-center base atoms beyond H;
 - `cartesian_driver_usability_workflow.md` for the compact artifact-producing
@@ -98,6 +99,16 @@ Implemented base path:
   early in `src/cartesian_base_hamiltonian.jl`, and WL diatomic retained
   support may saturate across `ns` ranges when physical parent extent
   dominates.
+- `HP-PQS-MAP-SFACTOR-FN-01` and `HP-PQS-MAP-SFACTOR-TEST-01` approve a
+  narrow expert mapping-strength scalar. Optional positive `s_factor` defaults
+  to `1.0`; omitted/default behavior must remain unchanged. For one-center
+  White-Lindsey/atom mapping,
+  `effective_s = s_factor * sqrt(Z * core_spacing)` while `core_spacing`
+  remains the physical near-core scale. Multicenter PQS mapping may apply the
+  analogous per-center factor only if the combined-invsqrt semantics are
+  unambiguous and provenance records the actual mapping. This does not revive
+  public `d`, `parent_mapping_d`, element defaults, automatic tuning, solver
+  workflow, EGOI, rho0/P0, or protected-localized interaction changes.
 - `HP-COMP-NSCORE-*` approves direct nucleus-centered core side parity:
   route-local `q` derivation remains unchanged, but direct core side comes
   from public `ns` as `isodd(ns) ? ns : ns + 1`. This oddization rule is only
@@ -908,7 +919,8 @@ Approved R1 one-center base atom relaxation:
 - `HP-R1-CORE-FN-01` freezes `core_spacing` as the single public
   near-nucleus physical scale while keeping `reference_spacing`, tail spacing,
   and box padding separate; White-Lindsey `Z` behavior is a mapping-shape rule
-  or preset rule, not a second public knob; visible driver/project defaults
+  or preset rule, not a second public knob except for the later narrow expert
+  `s_factor` override under `HP-PQS-MAP-SFACTOR-*`; visible driver/project defaults
   such as `core_spacing = 0.3` are explicit resolved inputs and may be
   overridden for quick tests; routine correctness-test scalars must be tied to
   their exact override inputs, not described as physics-default results;

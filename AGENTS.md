@@ -485,6 +485,8 @@ these approved design IDs:
 - `HP-R1-FILE-01`
 - `HP-R1-FN-01`
 - `HP-R1-CORE-FN-01`
+- `HP-PQS-MAP-SFACTOR-FN-01`
+- `HP-PQS-MAP-SFACTOR-TEST-01`
 - `HP-R1-WIRE-01`
 - `HP-R1-ART-01`
 - `HP-R1-TEST-01`
@@ -691,6 +693,17 @@ rule, not a second public knob. Driver/project defaults such as
 resolved, they are ordinary explicit inputs. Routine correctness tests may
 override driver physics defaults, but any asserted scalar must be tied to the
 exact test input and not described as a physics-default result.
+`HP-PQS-MAP-SFACTOR-FN-01` and `HP-PQS-MAP-SFACTOR-TEST-01` approve the only
+current public mapping-strength exception: optional positive expert
+`s_factor`, default `1.0`, with one-center
+`effective_s = s_factor * sqrt(Z * core_spacing)` and mapping provenance
+recording `mapping_s_factor`, `mapping_s_standard`, and
+`mapping_s_effective`. This does not revive public `d`, public
+`parent_mapping_d`, public `parent_mapping_Z`, route-specific mapping controls,
+element defaults, automatic tuning, solver workflow, EGOI, rho0/P0, or
+protected-localized convention changes. If multicenter combined-invsqrt
+mapping cannot unambiguously support the same semantics, implement only the
+one-center path and report the exact blocker.
 `HP-R1-WIRE-01` approves
 only the report-free shared base constructor seam and the approved callers.
 `HP-R1-ART-01` approves only the fixed `producer_provenance/` schema in the

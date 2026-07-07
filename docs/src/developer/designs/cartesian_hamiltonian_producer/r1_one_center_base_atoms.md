@@ -131,7 +131,9 @@ The White-Lindsey `Z` dependence remains the internal mapping-shape rule
 derive `core_spacing` from `Z`, for example through a fixed
 `core_spacing * Z` family, but after resolution `core_spacing` is the single
 authoritative near-nucleus spacing. `reference_spacing`, `tail_spacing`, and
-box controls remain separate concepts.
+box controls remain separate concepts. Later `HP-PQS-MAP-SFACTOR-*` approves
+only the expert scalar `s_factor` as a narrow mapping-strength override; it
+does not revive public `d`, public `parent_mapping_d`, or element defaults.
 
 ## Artifact Contract
 

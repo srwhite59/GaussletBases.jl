@@ -25243,6 +25243,53 @@ Carrying-cost result:
 - exact remaining blocker: implement the opt-in bundle writer/reader and
   validate readback plus ignored Cr2 `ns = 7 -> 9` parity.
 
+## Cartesian Hamiltonian Producer Pass 313 - Expert Mapping s_factor Authority
+
+Commit(s):
+- this commit - approve expert mapping `s_factor` keyword
+
+Summary:
+- Approved `HP-PQS-MAP-SFACTOR-FN-01` and
+  `HP-PQS-MAP-SFACTOR-TEST-01` as a narrow expert mapping-strength lane. The
+  knob is `s_factor`, default `1.0`, with one-center
+  `effective_s = s_factor * sqrt(Z * core_spacing)`.
+- This is a controlled exception to the older "no public mapping-strength
+  knob" rule. It does not revive public `d`, `parent_mapping_d`, or
+  route-specific mapping controls. `core_spacing` remains the physical
+  near-core scale; `s_factor` only scales mapping strength for expert scans.
+
+Validation / evidence:
+- Design authority was recorded in a dedicated mapping note, compact current
+  status, registry, implementation-slices summary, R1 atom/base notes, AGENTS,
+  and README.
+- The approved source surfaces are `src/mappings.jl`,
+  `src/pqs_source_box_route_driver_helpers.jl`,
+  `src/cartesian_base_hamiltonian.jl`, `bin/cartesian_ham_builder.jl` only for
+  expert input plumbing, and `src/cartesian_protected_ladder_bundle.jl` only
+  for recipe provenance preservation.
+
+Goal advancement:
+- LT5/LT6 and MT4: gives CR2 and future expert consumers a clean way to scan
+  mapping shape independently from `core_spacing` without creating hidden
+  defaults or source-level tuning policy.
+
+Risk / guardrail:
+- Multicenter PQS semantics are deliberately conditional. Doer may apply the
+  analogous per-center factor into the combined inverse-sqrt mapping only if
+  the mapping rule is unambiguous and provenance can report the actual
+  per-center/per-axis fitted values. If not, implement one-center only and
+  report the exact design question.
+
+Carrying-cost result:
+- source line delta: 0 in this docs-only authority pass.
+- deleted: none.
+- simplified: one scalar expert knob replaces ad hoc scans over coupled
+  `core_spacing`/mapping shape.
+- quarantined: element defaults, automatic tuning, solver workflow, EGOI,
+  rho0/P0, protected-localized convention changes, and CR2 production scripts.
+- exact remaining blocker: source implementation and validation, especially
+  the multicenter combined-invsqrt semantics and provenance shape.
+
 ## Cartesian Hamiltonian Producer Pass 313 - Protected Ladder Bundle Source Helper
 
 Commit(s):

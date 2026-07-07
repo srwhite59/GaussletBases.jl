@@ -180,7 +180,10 @@ resolved physical scale. The `Z` dependence is the mapping-shape rule
 `core_range = sqrt(core_spacing / Z)` and
 `mapping_strength = sqrt(core_spacing * Z)`, not a second public knob.
 `reference_spacing`, `tail_spacing`, and box/domain controls remain separate
-concepts. The facade must not accept public `parent_mapping_d`.
+concepts. The facade must not accept public `parent_mapping_d`. Later
+`HP-PQS-MAP-SFACTOR-*` approves only the expert scalar `s_factor` as a narrow
+mapping-strength override; it does not revive public `d` or
+`parent_mapping_d`.
 
 These are not public keywords or accepted `basis` fields in R1:
 

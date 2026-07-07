@@ -2220,6 +2220,79 @@ workflow, artifact schema changes, or source files outside
 `src/cartesian_base_hamiltonian.jl`. `reference_spacing`, `tail_spacing`, and
 physical box padding remain separate concepts.
 
+### HP-PQS-MAP-SFACTOR-FN-01 — expert mapping `s_factor` keyword
+
+Status: approved narrow source authority.
+
+Purpose: expose a low-cognitive-overhead expert knob for PQS/WL parent mapping
+shape. Cr and Cr2 evidence shows that scanning only `core_spacing` along the
+standard `s = sqrt(Z * core_spacing)` path is too restrictive for expert
+consumers. The repo should expose the controlled scalar and record provenance;
+it should not decide or tune the optimal value.
+
+Approved user-facing convention:
+
+- optional positive `s_factor`;
+- default `s_factor = 1.0`;
+- omitted `s_factor` and explicit `1.0` preserve current behavior;
+- `standard_s = sqrt(Z * core_spacing)`;
+- `effective_s = s_factor * standard_s`;
+- one-center WL/atom mapping is literal:
+  `AsinhMapping(c = core_spacing, s = effective_s)`;
+- `core_spacing` remains the near-core physical scale.
+
+Provenance must record:
+
+- `mapping_s_factor`;
+- `mapping_s_standard`;
+- `mapping_s_effective`;
+- `mapping_c` / `mapping_d` / `core_spacing` as already appropriate.
+
+For multicenter PQS mapping, doer may apply the analogous per-center mapping
+strength factor into the combined inverse-sqrt construction only if the
+semantics are unambiguous. The implementation report must state exactly how
+`s_factor` maps to the combined fit and how provenance records per-center or
+per-axis effective values. If this is ambiguous, implement only the
+one-center path and report the exact multicenter design question.
+
+Approved source surface:
+
+- `src/mappings.jl`;
+- `src/pqs_source_box_route_driver_helpers.jl`;
+- `src/cartesian_base_hamiltonian.jl`;
+- `bin/cartesian_ham_builder.jl` only if needed for normal expert input;
+- `src/cartesian_protected_ladder_bundle.jl` only to preserve/read recipe
+  provenance.
+
+Guardrails:
+
+- this is an expert knob, not a default or optimization policy;
+- do not add element-table defaults or automatic tuning;
+- do not revive public `d`, public `parent_mapping_d`, public
+  `parent_mapping_Z`, or route-specific mapping controls;
+- do not reinterpret this as "smaller `core_spacing` is bad";
+- do not change `Vee`, EGOI, rho0/P0, solver workflow, protected-localized
+  convention, or residual/injection selection policy.
+
+### HP-PQS-MAP-SFACTOR-TEST-01 — mapping `s_factor` validation
+
+Status: approved validation gates.
+
+Approved validation:
+
+- `git diff --check`;
+- package load;
+- default H/H2 or small base artifact/readback path unchanged with omitted
+  `s_factor`;
+- explicit one-center atom with `s_factor != 1` records provenance and changes
+  the mapping;
+- small multicenter smoke if the multicenter path supports the knob;
+- no Cr2 production run.
+
+Failure rule: if multicenter combined-invsqrt mapping cannot unambiguously
+support the same `s_factor` semantics, implement the one-center path only and
+report the exact blocker before touching CR2 production scripts.
+
 ### HP-R1-WIRE-01 — report-free base producer wiring
 
 Approved wiring for the R1 public facade:
