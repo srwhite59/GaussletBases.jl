@@ -25195,3 +25195,50 @@ Carrying-cost result:
 - exact remaining blocker: run the ignored ladder audit; if reusable source or
   durable sidecar support is needed, report the smallest owner and stored
   fields for a later lane.
+
+## Cartesian Hamiltonian Producer Pass 312 - Protected Ladder Bundle Authority
+
+Commit(s):
+- this commit - approve protected-localized ladder bundle facility
+
+Summary:
+- Approved `HP-RG-PROTECT-LADDER-BUNDLE-FN-01` and
+  `HP-RG-PROTECT-LADDER-BUNDLE-TEST-01` as an opt-in source/artifact lane.
+  The ladder transfer audit is no longer just a one-off CR2 diagnostic shape:
+  it is a recurring repo facility for building comparable protected-localized
+  Hamiltonian ladders, exact cross-overlap transfer sidecars, optional restart
+  sidecars, manifests, and summaries.
+- The approved convention preserves the protected-localized physics model:
+  each member uses exact `H1_L` and inherited-site `Vee_L` in native order,
+  and transfer uses only `S_BA = <L_B|L_A>` with `C_B = S_BA C_A`.
+
+Validation / evidence:
+- Design validation recorded in the protected injection memo, registry,
+  current status, implementation slices, residual-domain summary, AGENTS
+  source-ID list, and README.
+- The source lane prefers a new `src/cartesian_protected_ladder_bundle.jl`
+  orchestrator with `src/GaussletBases.jl` include, while reusing
+  `cartesian_ida_hamiltonian.jl` for protected member artifacts and
+  `cartesian_representation_transfer.jl` for exact final-basis cross overlaps.
+
+Goal advancement:
+- LT5/LT6 and MT4: turns the clean CR2 ladder-transfer diagnostic into a
+  reusable basis/Hamiltonian convergence tool without changing the solver or
+  interaction convention. This should reduce repeated rebuild friction for
+  CR2 and future protected-localized consumers.
+
+Risk / guardrail:
+- This is not a default driver workflow, package export, solver/MP2-NO
+  integration, corrected artifact, or Cr2 production claim. Source-Hamiltonian
+  transforms, transformed source `Vee`, `C' V C`, rho0/P0 revival, and EGOI
+  expansion remain forbidden.
+
+Carrying-cost result:
+- source line delta: 0 in this docs authority pass.
+- deleted: none.
+- simplified: future ladder work has one approved bundle shape instead of
+  repeated ad hoc CR2 scripts.
+- quarantined: solver workflow, production CR2 claims, EGOI/rho0 interaction
+  changes, and any package export.
+- exact remaining blocker: implement the opt-in bundle writer/reader and
+  validate readback plus ignored Cr2 `ns = 7 -> 9` parity.

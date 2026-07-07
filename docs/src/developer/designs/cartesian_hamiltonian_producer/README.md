@@ -42,7 +42,10 @@ EGOI helper as an internal in-memory correction primitive, not an artifact or
 solver workflow. `HP-RG-PROTECT-LADDER-XFER-AUDIT-01` approves only a
 same-parent protected-localized ladder transfer measurement audit, using
 final-basis cross overlaps to move occupied orbitals between comparable
-Cr2 ladder bases.
+Cr2 ladder bases. `HP-RG-PROTECT-LADDER-BUNDLE-*` approves an opt-in
+directory-bundle facility for this recurring ladder workflow: protected
+Hamiltonian member artifacts, exact cross-overlap sidecars, optional restart
+sidecars, manifest/provenance, and bounded summaries.
 The supported supplemented
 workflow now accepts explicit homonuclear
 z-axis diatomics without element-specific branches. A compact artifact manifest

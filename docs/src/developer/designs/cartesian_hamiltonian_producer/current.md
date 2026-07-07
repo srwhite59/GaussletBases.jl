@@ -418,6 +418,18 @@ Approved Residual Gaussian robustness lane:
   orthonormality checks pass. It does not approve source edits, public
   workflow, durable artifact schema, source-Hamiltonian or `Vee` transforms,
   `C' V C`, rho0/P0 revival, EGOI expansion, or Cr2 production claims.
+- `HP-RG-PROTECT-LADDER-BUNDLE-FN-01` and
+  `HP-RG-PROTECT-LADDER-BUNDLE-TEST-01` approve an opt-in source/artifact
+  facility for reusable protected-localized ladder bundles. A bundle may
+  contain one protected-localized inherited-site Hamiltonian artifact per
+  ladder member, exact final-basis cross-overlap sidecars, optional
+  transferred-orbital restart sidecars, a versioned manifest with
+  shared-parent proof and diagnostics, and bounded TSV summaries. Preferred
+  owner is `src/cartesian_protected_ladder_bundle.jl`, with reuse of
+  `cartesian_ida_hamiltonian.jl` and `cartesian_representation_transfer.jl`.
+  It does not approve package exports, driver defaults, solver workflow,
+  source-Hamiltonian or `Vee` transforms, `C' V C`, rho0/P0, EGOI expansion,
+  protected-`Vee` convention changes, or Cr2 production claims.
 - `HP-RG-RHO0-GAL-AUDIT-01` approves only a measurement audit for rho0/Galerkin
   IDA correction over the protected-localized inherited-site baseline. It may
   use ignored probes, `/Users/srw/dmrgtmp` outputs, analytic IDA/Coulomb

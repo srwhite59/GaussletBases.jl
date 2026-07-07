@@ -544,6 +544,8 @@ these approved design IDs:
 - `HP-RG-PROTECT-ARTLOC-TEST-01`
 - `HP-RG-PROTECT-EGOI-FN-01`
 - `HP-RG-PROTECT-EGOI-TEST-01`
+- `HP-RG-PROTECT-LADDER-BUNDLE-FN-01`
+- `HP-RG-PROTECT-LADDER-BUNDLE-TEST-01`
 - `HP-RHO0-MIXH-GG-FN-01`
 - `HP-RHO0-MIXH-GG-TEST-01`
 - `HP-RHO0-MIXH-GAAA-FN-01`
@@ -1239,6 +1241,24 @@ Approved Residual Gaussian module surfaces:
   rho0/P0 revival, EGOI expansion/corrected artifacts, or Cr2 production
   claims. Because this is measurement-only authority, do not add it to the
   approved source-ID list.
+- `HP-RG-PROTECT-LADDER-BUNDLE-FN-01` and
+  `HP-RG-PROTECT-LADDER-BUNDLE-TEST-01` approve an opt-in protected-localized
+  ladder bundle writer/reader facility. Preferred source owner is
+  `src/cartesian_protected_ladder_bundle.jl`, with `src/GaussletBases.jl` only
+  for the include; narrow reuse/wiring is allowed in
+  `src/cartesian_ida_hamiltonian.jl`, `src/cartesian_representation_transfer.jl`,
+  and `src/cartesian_residual_gaussians/augmented_operators.jl` only when
+  needed for protected-localized member artifact validation, exact final-basis
+  cross overlaps, orbital transfer, or the in-memory representation seam. The
+  bundle may write member protected-localized Hamiltonian artifacts, exact
+  `S_BA = <L_B|L_A>` sidecars, optional transferred-orbital restart sidecars,
+  a versioned manifest with shared-parent proof/provenance/diagnostics, and
+  bounded summary TSVs. A module-qualified opt-in function is allowed; package
+  exports and driver defaults are not. This lane does not approve changing the
+  protected-localized `Vee` convention, source-Hamiltonian transforms,
+  transformed source `Vee`, `C' V C`, rho0/P0 revival, EGOI expansion or
+  corrected artifacts, solver/HF/MP2-NO workflow integration, or Cr2
+  production claims.
 - `HP-RG-RHO0-GAL-AUDIT-01` approves only ignored measurement probes for a
   rho0/Galerkin IDA correction over the protected-localized inherited-site
   baseline. It may use `/Users/srw/dmrgtmp` outputs, in-memory experiments over

@@ -91,6 +91,10 @@ module, or object names in the new owner.
   helper.
 - `HP-RG-PROTECT-LADDER-XFER-AUDIT-01` - measurement-only same-parent
   protected-localized ladder transfer audit.
+- `HP-RG-PROTECT-LADDER-BUNDLE-FN-01` - opt-in protected-localized ladder
+  bundle writer/reader facility.
+- `HP-RG-PROTECT-LADDER-BUNDLE-TEST-01` - validation gates for the ladder
+  bundle facility.
 - `HP-RG-RHO0-GAL-AUDIT-01` - measurement-only rho0/Galerkin IDA correction
   audit over the protected-localized baseline.
 - `HP-RHO0-REFDENS-AUDIT-01` - measurement-only reference-density-matrix IDA
@@ -432,6 +436,21 @@ durable artifact schema, transformed source Hamiltonians, transformed source
 `Vee`, `C' V C`, rho0/P0 revival, EGOI expansion, or Cr2 production claims.
 Final working bases are treated as orthonormal, so the audit must not use a
 generalized self-overlap transfer.
+
+`HP-RG-PROTECT-LADDER-BUNDLE-FN-01` approves a reusable opt-in
+protected-localized ladder bundle facility. Preferred ownership is a small
+`cartesian_protected_ladder_bundle.jl` orchestrator that reuses
+`cartesian_ida_hamiltonian.jl` for protected-localized Hamiltonian artifacts
+and `cartesian_representation_transfer.jl` for exact final-basis cross
+overlaps and orbital transfer. The bundle may write member Hamiltonian
+artifacts, exact `S_BA = <L_B|L_A>` transfer sidecars, optional transferred
+occupied-orbital restart sidecars, a versioned manifest with shared-parent
+proof and diagnostics, and bounded summary TSVs. It does not approve package
+exports, driver defaults, solver workflow, transformed source Hamiltonians,
+transformed source `Vee`, `C' V C`, rho0/P0, EGOI expansion, protected-`Vee`
+convention changes, or Cr2 production claims. `HP-RG-PROTECT-LADDER-BUNDLE-TEST-01`
+approves only package load, `git diff --check`, small bundle/readback smoke if
+feasible, and ignored Cr2 `ns = 7 -> 9` bundle parity/readback validation.
 
 `HP-RG-RHO0-GAL-AUDIT-01` approves only an ignored measurement audit for a
 rho0/Galerkin IDA correction on top of that protected-localized baseline. It

@@ -4956,6 +4956,107 @@ UHF basin failure. If a reusable source helper or durable sidecar is needed,
 the audit must report the smallest source owner and exact fields for a later
 lane rather than adding them here.
 
+### HP-RG-PROTECT-LADDER-BUNDLE-FN-01 — protected-localized ladder bundle facility
+
+Status: approved opt-in source/artifact authority.
+
+Purpose: make same-parent protected-localized Hamiltonian ladders a reusable
+repo-owned facility rather than repeated CR2 one-off scripts. The facility
+builds or collects two or more protected-localized inherited-site Hamiltonian
+artifacts from a shared parent setup, computes exact final-basis cross
+overlaps, optionally transfers occupied orbitals into target bases, and writes
+restart-ready sidecars and summaries.
+
+Approved bundle shape:
+
+```text
+protected_ladder_bundle/
+  manifest.jld2
+  members/ns7/protected_localized_hamiltonian.jld2
+  members/ns9/protected_localized_hamiltonian.jld2
+  transfers/S_ns9_ns7.jld2
+  restarts/ns9_from_ns7_occupied_orbitals.jld2   optional
+  summaries/ladder_members.tsv
+  summaries/transfers.tsv
+```
+
+Implementation may choose exact member names, but the bundle must be a
+versioned directory contract with a manifest, member paths, transfer sidecar
+paths, shared-parent proof, commit/provenance facts, dimensions, controls, and
+diagnostics.
+
+Approved source surface:
+
+- preferred owner: `src/cartesian_protected_ladder_bundle.jl`;
+- `src/GaussletBases.jl` only to include the new file;
+- `src/cartesian_ida_hamiltonian.jl` only for missing protected-localized
+  artifact read/write validation hooks;
+- `src/cartesian_representation_transfer.jl` for final-basis cross-overlap
+  and orbital-transfer helpers;
+- `src/cartesian_residual_gaussians/augmented_operators.jl` only if needed to
+  expose the in-memory protected-localized representation used for cross
+  overlaps without duplicating construction logic.
+
+Allowed entry point: a module-qualified opt-in function or small pair of
+functions may build the bundle and optionally add transferred-orbital restarts.
+No package export or default driver behavior change is approved.
+
+Required behavior:
+
+- one protected-localized inherited-site Hamiltonian artifact per ladder
+  member;
+- exact cross-overlap sidecars `S_BA = <L_B | L_A>` for requested adjacent
+  pairs;
+- optional restart sidecars with transferred occupied orbitals in target
+  native order;
+- manifest/provenance with shared parent-lattice proof, `ns`,
+  `core_spacing`, basis/supplement/lmax controls, geometry, source/current
+  commits, artifact paths, dimensions, sector counts, protected/localized
+  counts, `B_min`, and transfer diagnostics;
+- bounded TSV summaries for human inspection;
+- transfer rule `C_B = S_BA C_A`;
+- target-basis evaluation convention remains target `H1_L` and target
+  inherited-site `Vee_L`.
+
+Forbidden:
+
+- changing the protected-localized `Vee` convention;
+- source-Hamiltonian transforms;
+- transforming source `Vee` into target bases;
+- `C' V C` or interaction rotation;
+- rho0/P0 revival;
+- EGOI expansion or corrected artifact behavior;
+- solver/HF/MP2-NO workflow integration;
+- default driver behavior changes;
+- package exports or broad public API;
+- Cr2 production claims.
+
+Decision rule: if exact final-basis cross overlaps cannot be computed from
+existing protected-localized construction facts without large reconstruction,
+add only the smallest source-owned representation seam and report it. If a
+new durable field is needed inside protected-localized Hamiltonian member
+artifacts, stop unless the field is explicitly included in this lane. Bundle
+manifest and sidecar fields are approved; existing protected-localized
+Hamiltonian artifact semantics are not changed.
+
+### HP-RG-PROTECT-LADDER-BUNDLE-TEST-01 — ladder bundle validation
+
+Status: approved validation gates.
+
+Approved validation:
+
+- `git diff --check`;
+- package load;
+- small H, Be, or Be2 bundle/readback smoke if feasible;
+- ignored Cr2 `ns = 7 -> ns = 9` bundle validation may check shared-parent
+  proof, member `H1_L`/`Vee_L` finite/symmetric checks, cross-overlap
+  dimensions and singular spectrum, transferred trace/orthonormality loss,
+  fixed-density target energy parity with the ladder audit, and readback
+  roundtrip of manifest, members, transfer sidecars, optional restarts, and
+  summaries;
+- no committed large Cr2 tests or fixtures;
+- no production Cr2 HF requirement.
+
 ### HP-RG-RHO0-GAL-AUDIT-01 — rho0/Galerkin IDA correction audit
 
 Status: approved measurement-only audit authority. This is not source

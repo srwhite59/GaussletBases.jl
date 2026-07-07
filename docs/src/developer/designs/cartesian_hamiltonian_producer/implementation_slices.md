@@ -516,6 +516,18 @@ Approved robustness lane:
   artifact schema changes, public workflow, transformed source Hamiltonians,
   transformed `Vee`, `C' V C`, rho0/P0, EGOI expansion, and Cr2 production
   claims.
+- `HP-RG-PROTECT-LADDER-BUNDLE-FN-01` /
+  `HP-RG-PROTECT-LADDER-BUNDLE-TEST-01` approve a reusable opt-in bundle
+  facility for the same workflow. Preferred source owner is
+  `src/cartesian_protected_ladder_bundle.jl`, included from
+  `src/GaussletBases.jl`, with narrow reuse in
+  `cartesian_ida_hamiltonian.jl` and `cartesian_representation_transfer.jl`.
+  The bundle directory may write protected-localized Hamiltonian member
+  artifacts, exact cross-overlap sidecars, optional transferred-orbital
+  restart sidecars, a versioned manifest, and summary TSVs. It does not
+  approve package exports, driver defaults, solver workflow, transformed
+  source Hamiltonians, transformed `Vee`, `C' V C`, rho0/P0, EGOI expansion,
+  protected-`Vee` convention changes, or Cr2 production claims.
 - `HP-RG-RHO0-GAL-AUDIT-01` approves only a measurement-only rho0/Galerkin IDA
   correction audit on top of that protected-localized baseline. The audit may
   use ignored probes, `/Users/srw/dmrgtmp` outputs, in-memory experiments over
