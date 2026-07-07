@@ -10,6 +10,8 @@ protected fixed-sector one-body and Vee audits are approved under
 `HP-RG-PROTECT-VEE-AUDIT-01`; protected-localized EGOI measurement is
 approved under `HP-RG-PROTECT-EGOI-AUDIT-01`, and the first retained-GTO
 local-product EGOI helper is approved under `HP-RG-PROTECT-EGOI-FN-01`;
+same-parent protected-localized ladder transfer is approved as a
+measurement-only audit under `HP-RG-PROTECT-LADDER-XFER-AUDIT-01`;
 rho0/Galerkin IDA correction measurement is approved under
 `HP-RG-RHO0-GAL-AUDIT-01`, with the successor reference-density-matrix target
 recorded in
@@ -1561,6 +1563,108 @@ Approved validation:
   - `max_disallowed_delta_v = 0`;
 - no production Cr2 HF;
 - no committed large Cr2 tests or fixtures.
+
+## HP-RG-PROTECT-LADDER-XFER-AUDIT-01 - Same-Parent Ladder Transfer Audit
+
+Status: approved measurement-only audit authority. This is not source
+authority, not artifact/schema authority, not public driver/API authority, and
+not a Cr2 production claim.
+
+### Purpose
+
+Test whether the current Cr2 protected-localized UHF discrepancy is primarily
+basis/contraction/Hamiltonian convergence rather than UHF basin failure. The
+starting evidence is a Cr2 UHF state with global spin diagnostics close to the
+Yann/Sandeep reference, including `<S^2>` about `4.866` and large AFM local
+moments, but energy about `36 mHa` below the cc-pwCV5Z UHF reference.
+
+The audit builds a same-parent protected-localized ladder, for example:
+
+- fixed parent lattice, same supplement, and same Cr2 geometry;
+- `ns = 7` protected-localized inherited-site Hamiltonian;
+- `ns = 9` protected-localized inherited-site Hamiltonian;
+- optional `ns = 11` if affordable.
+
+Then compute exact final-basis cross overlaps:
+
+```text
+S_9,7 = <L_ns9 | L_ns7>
+S_11,9 = <L_ns11 | L_ns9>   optional
+```
+
+and transfer occupied orbitals or density information by cross overlap only:
+
+```text
+C_B = S_BA C_A
+S_BA = <B | A>
+```
+
+The transferred state is evaluated with the target-basis `H1_L` and `Vee_L`.
+A few bounded UHF sweeps may run only after trace and orthonormality checks
+show that the transfer is meaningful.
+
+### Critical Transfer Convention
+
+Final working bases are intended orthonormal. Transfer must use only the
+cross overlap between final bases. Do not use generalized self-overlap
+transfer, do not transform source Hamiltonians into the target basis, do not
+transform source `Vee`, and do not use `C' V C` or any interaction rotation.
+After transfer, all fixed-density and UHF-continuation diagnostics must use
+the target protected-localized Hamiltonian.
+
+### Allowed
+
+- ignored `tmp/work` probes;
+- outputs under `/Users/srw/dmrgtmp`;
+- existing protected-localized inherited-site Hamiltonian construction and
+  writer;
+- in-memory or ignored sidecar cross-overlap matrices;
+- transfer of saved occupied orbitals from one ladder basis to the next;
+- fixed-density target-energy evaluation;
+- small bounded UHF continuation only if transferred trace and occupied
+  overlap checks pass.
+
+### Forbidden
+
+- tracked source edits;
+- new public API/export;
+- production workflow or driver wiring;
+- durable artifact schema changes;
+- changes to the protected-localized `Vee` convention;
+- transforming source `Vee` into the target basis;
+- `C' V C` or any interaction rotation;
+- rho0/P0 revival;
+- EGOI expansion or corrected artifact behavior;
+- Cr2 production claims.
+
+### Required Diagnostics
+
+- exact geometry and shared parent-lattice controls;
+- `ns` values and final dimensions;
+- protected/localized counts and `B_min` for each basis;
+- `H1_L` and `Vee_L` finite/symmetry checks;
+- cross-overlap dimensions and singular spectrum;
+- transferred electron trace loss and occupied-overlap loss;
+- `E_target[P_transferred]` before any sweep;
+- returned or recomputed energy if bounded sweeps are run;
+- `<S^2>`, local spin diagnostics, and sector occupations before and after
+  transfer;
+- wall times and output paths.
+
+### Decision Rule
+
+If `ns = 7 -> ns = 9` transfer has small trace/occupied loss and the evaluated
+energy moves toward the Yann/Sandeep reference, the discrepancy is likely
+basis/contraction/Hamiltonian convergence. If transfer loss is large, the
+ladder construction is not comparable and final-basis capture/cross-overlap
+diagnostics are needed before physics interpretation. If energy stays too low
+after clean transfer and a few bounded sweeps, suspect protected-localized
+`Vee`/IDA/EGOI/injection convention accuracy rather than UHF basin failure.
+
+If a reusable source helper or durable artifact sidecar appears necessary, the
+audit must report the smallest owner and exact stored fields for a later
+source or artifact lane. It must not promote source or artifact changes from
+this measurement authority.
 
 ## HP-RG-RHO0-GAL-AUDIT-01 - Rho0/Galerkin IDA Correction Audit
 

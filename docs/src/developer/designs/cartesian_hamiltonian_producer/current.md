@@ -14,6 +14,9 @@ Normal startup reading:
   algorithm contract;
 - `residual_gaussian_orthogonality_robustness.md` for the narrow final
   residual identity-check robustness lane;
+- `residual_gaussian_injection_hybrid.md` for the protected-original
+  compact-main injection, protected-localized artifact, EGOI, and
+  ladder-transfer measurement lanes;
 - `cartesian_gaussian_raw_blocks_nuclear.md` for the neutral uncharged nuclear
   raw-block owner;
 - `cartesian_gaussian_raw_blocks_non_nuclear.md` for the neutral
@@ -405,6 +408,16 @@ Approved Residual Gaussian robustness lane:
   mapping or `Qtarget`. This lane does not approve public workflow, artifacts,
   solver integration, selection changes, atom-HF/P0/rho0, broad protected-Z
   targets, `s3`/`p`/`d` target promotion, or Cr2 production claims.
+- `HP-RG-PROTECT-LADDER-XFER-AUDIT-01` approves only a measurement-first
+  same-parent protected-localized ladder transfer audit. It may build
+  `ns = 7 -> 9` and optional `9 -> 11` protected-localized inherited-site
+  Hamiltonians on the same parent lattice, same supplement, and same Cr2
+  geometry, compute exact final-basis cross overlaps, transfer occupied
+  orbitals as `C_B = <B|A> C_A`, evaluate the transferred density with the
+  target `H1_L`/`Vee_L`, and run a few bounded UHF sweeps only after trace and
+  orthonormality checks pass. It does not approve source edits, public
+  workflow, durable artifact schema, source-Hamiltonian or `Vee` transforms,
+  `C' V C`, rho0/P0 revival, EGOI expansion, or Cr2 production claims.
 - `HP-RG-RHO0-GAL-AUDIT-01` approves only a measurement audit for rho0/Galerkin
   IDA correction over the protected-localized inherited-site baseline. It may
   use ignored probes, `/Users/srw/dmrgtmp` outputs, analytic IDA/Coulomb

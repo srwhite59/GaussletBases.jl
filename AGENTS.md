@@ -1223,6 +1223,22 @@ Approved Residual Gaussian module surfaces:
   changes, broad protected-Z targets, atom-HF/P0/rho0 revival, AB overlap
   products as default targets, `s3`/`p`/`d` target promotion, or committed
   large Cr2 tests/fixtures.
+- `HP-RG-PROTECT-LADDER-XFER-AUDIT-01` approves only ignored measurement
+  probes for same-parent protected-localized ladder transfer. It may use
+  `/Users/srw/dmrgtmp` outputs, existing protected-localized inherited-site
+  Hamiltonian construction/writer, in-memory or ignored cross-overlap
+  sidecars, `ns = 7 -> 9` and optional `9 -> 11` same-parent Cr2 ladder
+  bases, occupied-orbital transfer by `C_B = <B|A> C_A`, fixed-density
+  target-Hamiltonian evaluation, and a few bounded UHF sweeps only after
+  transfer trace and orthonormality checks pass. Final working bases are
+  treated as orthonormal: use only the final-basis cross overlap, not
+  generalized self-overlap transfer. Evaluate with target `H1_L` and `Vee_L`;
+  do not transform source Hamiltonians, source `Vee`, or use `C' V C`. This
+  lane does not approve tracked source edits, public API/export, production
+  workflow, durable artifact schema, protected-`Vee` convention changes,
+  rho0/P0 revival, EGOI expansion/corrected artifacts, or Cr2 production
+  claims. Because this is measurement-only authority, do not add it to the
+  approved source-ID list.
 - `HP-RG-RHO0-GAL-AUDIT-01` approves only ignored measurement probes for a
   rho0/Galerkin IDA correction over the protected-localized inherited-site
   baseline. It may use `/Users/srw/dmrgtmp` outputs, in-memory experiments over

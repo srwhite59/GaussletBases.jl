@@ -506,6 +506,16 @@ Approved robustness lane:
   for retained-source mapping or transform-ready `Qtarget`. No artifacts,
   public workflow, solver integration, selection changes, rho0/P0,
   broad protected-Z, AB-overlap default targets, or `s3`/`p`/`d` promotion.
+- `HP-RG-PROTECT-LADDER-XFER-AUDIT-01` approves only a same-parent
+  protected-localized ladder transfer audit. It may use ignored probes and
+  `/Users/srw/dmrgtmp` outputs to build same-geometry/same-parent `ns = 7`
+  and `ns = 9` protected-localized inherited-site Hamiltonians, compute exact
+  final-basis cross overlaps, transfer occupied orbitals by
+  `C_B = <B|A> C_A`, and evaluate or briefly continue the transferred UHF
+  state with the target-basis `H1_L` and `Vee_L`. It forbids source edits,
+  artifact schema changes, public workflow, transformed source Hamiltonians,
+  transformed `Vee`, `C' V C`, rho0/P0, EGOI expansion, and Cr2 production
+  claims.
 - `HP-RG-RHO0-GAL-AUDIT-01` approves only a measurement-only rho0/Galerkin IDA
   correction audit on top of that protected-localized baseline. The audit may
   use ignored probes, `/Users/srw/dmrgtmp` outputs, in-memory experiments over

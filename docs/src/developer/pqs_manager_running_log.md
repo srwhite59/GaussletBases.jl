@@ -25034,3 +25034,164 @@ Carrying-cost result:
 - exact remaining blocker: implement the in-memory helper and replay H/Be/Be2
   plus ignored Cr2 `s1+s2`/`M2` parity before considering artifact or workflow
   authority.
+
+## Cartesian Hamiltonian Producer Pass 309 - Retained-GTO EGOI Source Helper
+
+Commit(s):
+- source WIP from repo-doer under `HP-RG-PROTECT-EGOI-FN-01`; not yet
+  committed by repo-manager in this pass.
+
+Summary:
+- Accepted the narrow internal retained-original-GTO local-product EGOI helper
+  in `src/hamiltonian_corrections.jl`. The helper stays in memory, unexported,
+  and limited to the approved owner-balanced retained `s1+s2` target class,
+  owner-local products, AA-BB local-product acceptance residual, AB overlap
+  products excluded by default, and M2 row mask with disallowed `DeltaV = 0`.
+- This changes status from "measurement-only candidate" to "source-backed
+  primitive available for controlled replay." It is still not an artifact,
+  solver workflow, MP2-NO handoff path, or Cr2 production claim.
+
+Validation / evidence:
+- Doer validation: `git diff --check`, package load about `0.473s`,
+  H/Be/Be2 smoke under
+  `/Users/srw/dmrgtmp/retained_gto_egoi_source_smoke_536bfb109`, and Cr2
+  replay under `/Users/srw/dmrgtmp/cr2_source_backed_retained_gto_egoi_536bfb109`.
+- Cr2 replay matches the accepted measurement behavior: final dimension
+  `6945`, `B_min = 0.993465824505872`, target count `4`, local products `6`,
+  variables `120435`, residual reduction `99.585%`, `DeltaV/V` Frobenius
+  `4.15e-5`, relative `p95` `1.68e-4`, benign low-Fock shift
+  `+2.08e-5 Ha`, finite/symmetric corrected `V`, and
+  `max_disallowed_delta_v = 0`.
+
+Goal advancement:
+- LT5/LT6 and MT4: the first EGOI correction surface now matches the
+  protected-localized interaction convention and fixes the most local retained
+  original s-GTO products without broadening the interaction model.
+
+Risk / guardrail:
+- This is intentionally partial. It does not establish that `p`, `d`, `s3`,
+  AB overlap products, or corrected artifacts are ready. Those need separate
+  measurement/source authority and scaling design before they become part of a
+  Cr2 workflow.
+
+Carrying-cost result:
+- source line delta: about `+501` in `src/hamiltonian_corrections.jl`.
+- deleted: none.
+- simplified: one approved retained-GTO EGOI convention replaces probe-local
+  duplication for the `s1+s2`/M2 case.
+- quarantined: artifacts, public API, solver/MP2-NO workflow, rho0/P0,
+  production Cr2, and larger channel classes.
+- exact remaining blocker: decide whether the next lane is corrected artifact
+  persistence / consumer workflow for this `s1+s2` primitive, or a separate
+  `p`/`d` target-class measurement with efficient symmetric/local-product
+  handling.
+
+## Cartesian Hamiltonian Producer Pass 310 - Retained-GTO EGOI Target Coverage Audit
+
+Commit(s):
+- none; CR2-side ignored measurement pass reported by repo-doer.
+
+Summary:
+- Accepted the retained-original-GTO EGOI coverage audit as the current
+  decision point after the successful `s1+s2` source helper and Cr2 smoke.
+  The audit answers the immediate coverage question: `s1+s2` is clean but
+  small, while `s3`, `p`, and `d` are not ready to add under the current
+  local-product M0/M1/M2 gate.
+- The durable interpretation is not "p/d are unimportant." The saved Cr2
+  density proxies show `p` and especially `d` are more relevant to the
+  protected-localized density than `s1+s2`. The blocker is correction quality
+  and conditioning under the current M2 formulation, not target
+  representability.
+
+Validation / evidence:
+- Output:
+  `/Users/srw/dmrgtmp/cr2_retained_gto_egoi_target_coverage_536bfb109/`.
+- Target projections are roundoff-level for all inspected retained original
+  classes, so source mapping into the protected-localized basis is not the
+  blocker.
+- M2 summary:
+  - `s1+s2`: `4` targets, `6` products, min product singular value
+    `9.20e-3`, residual reduction `99.585%`, `DeltaV/V` Frobenius
+    `4.15e-5`, relative `p95` `1.68e-4`, low-Fock shift `+2.08e-5`.
+  - `s1+s2+s3`: `6` targets, `12` products, min singular value `7.20e-5`,
+    residual reduction `68.319%`, relative `p95` `3.02e-3`; do not add
+    `s3`.
+  - `p`: `12` targets, `42` products, min singular value `5.03e-6`,
+    residual reduction `83.038%`, relative `p95` `6.26e-3`; relevant but not
+    clean.
+  - `d`: `12` targets, `42` products, min singular value `2.64e-5`,
+    residual reduction `76.920%`, relative `p95` `7.42e-3`; most
+    density-relevant in the proxy but still not clean.
+- Doer validation: package load `0.472476583s`, probe elapsed `1172.17s`,
+  and `git diff --check`.
+
+Goal advancement:
+- LT5/LT6 and MT4: prevents premature expansion of the EGOI helper. The
+  next useful work is a better scalable and constrained formulation for
+  density-relevant angular retained-GTO channels, not simply appending p/d to
+  the current helper.
+
+Risk / guardrail:
+- Do not promote `s3`, `p`, or `d` into source/artifact/workflow lanes from
+  this result. If p/d are pursued, require a new measurement/design pass that
+  changes the formulation while preserving long-range `DeltaV = 0` and the
+  local retained-original target semantics.
+
+Carrying-cost result:
+- source line delta: 0.
+- deleted: none.
+- simplified: the next expansion target is narrowed to p/d formulation
+  design, not indiscriminate target-class addition.
+- quarantined: ignored probe, `/Users/srw/dmrgtmp` TSV/cache outputs, and
+  CR2-side saved-density comparisons only.
+- exact remaining blocker: define and test a better p/d retained-GTO EGOI
+  formulation, or proceed with CR2 consumer testing of the existing `s1+s2`
+  helper while recording that coverage is limited.
+
+## Cartesian Hamiltonian Producer Pass 311 - Protected Ladder Transfer Authority
+
+Commit(s):
+- this commit - approve same-parent protected-localized ladder transfer audit
+
+Summary:
+- Approved `HP-RG-PROTECT-LADDER-XFER-AUDIT-01` as a measurement-only lane.
+  The purpose is to separate Cr2 basis/contraction/Hamiltonian convergence
+  from UHF basin failure now that CR2 has a spin-correct protected-localized
+  UHF state: `<S^2>` about `4.866` with large AFM local moments, but energy
+  about `36 mHa` below the cc-pwCV5Z UHF reference.
+- The audit builds a same-parent protected-localized ladder, typically
+  `ns = 7 -> 9` with optional `9 -> 11`, using fixed parent lattice, same
+  supplement, and same Cr2 geometry. It computes final-basis cross overlaps
+  and transfers occupied orbitals as `C_B = <B|A> C_A`, then evaluates the
+  transferred density only with the target `H1_L` and inherited-site `Vee_L`.
+
+Validation / evidence:
+- Design validation is textual: authority was recorded in the protected
+  injection memo, compact current status, registry, implementation slices,
+  residual-domain summary, and startup guardrails.
+- The required future audit diagnostics are cross-overlap singular spectrum,
+  trace/occupied loss, target transferred energy, optional bounded-sweep
+  energy, `<S^2>`, local spin diagnostics, sector occupations, dimensions,
+  `B_min`, symmetry checks, wall times, and output paths.
+
+Goal advancement:
+- LT5/LT6 and MT4: gives CR2 a direct comparability diagnostic before
+  interpreting the protected-localized energy discrepancy as a bad UHF basin
+  or as interaction-model error.
+
+Risk / guardrail:
+- Final working bases are orthonormal. The audit must use only cross overlaps,
+  not generalized self-overlap transfer. It must not transform source
+  Hamiltonians or source `Vee`, use `C' V C`, revive rho0/P0, expand EGOI, or
+  claim Cr2 production physics.
+
+Carrying-cost result:
+- source line delta: 0 in this docs-only authority pass.
+- deleted: none.
+- simplified: the next CR2 diagnostic is narrowed to same-parent ladder
+  transfer rather than another solver-basin or interaction-correction change.
+- quarantined: ignored probes, `/Users/srw/dmrgtmp` outputs, and any
+  cross-overlap sidecars.
+- exact remaining blocker: run the ignored ladder audit; if reusable source or
+  durable sidecar support is needed, report the smallest owner and stored
+  fields for a later lane.

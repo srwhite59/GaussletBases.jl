@@ -89,6 +89,8 @@ module, or object names in the new owner.
 - `HP-RG-PROTECT-EGOI-FN-01` - retained-GTO local-product EGOI helper.
 - `HP-RG-PROTECT-EGOI-TEST-01` - validation gates for the retained-GTO EGOI
   helper.
+- `HP-RG-PROTECT-LADDER-XFER-AUDIT-01` - measurement-only same-parent
+  protected-localized ladder transfer audit.
 - `HP-RG-RHO0-GAL-AUDIT-01` - measurement-only rho0/Galerkin IDA correction
   audit over the protected-localized baseline.
 - `HP-RHO0-REFDENS-AUDIT-01` - measurement-only reference-density-matrix IDA
@@ -417,6 +419,19 @@ must remain zero. Primary ownership is `hamiltonian_corrections.jl`, with
 source mapping or transform-ready `Qtarget`. The lane does not approve
 artifacts, public workflow, solver integration, selection changes, rho0/P0,
 or `s3`/`p`/`d` target promotion.
+
+`HP-RG-PROTECT-LADDER-XFER-AUDIT-01` approves only a measurement-first
+same-parent protected-localized ladder transfer audit. It may use ignored
+probes and `/Users/srw/dmrgtmp` outputs to build same-parent `ns = 7 -> 9`
+and optional `9 -> 11` protected-localized inherited-site Hamiltonians,
+compute exact final-basis cross overlaps, transfer occupied orbitals with
+`C_B = <B|A> C_A`, evaluate the transferred density with target `H1_L` and
+`Vee_L`, and run short bounded UHF continuation only after trace and
+orthonormality checks pass. It does not approve source edits, public workflow,
+durable artifact schema, transformed source Hamiltonians, transformed source
+`Vee`, `C' V C`, rho0/P0 revival, EGOI expansion, or Cr2 production claims.
+Final working bases are treated as orthonormal, so the audit must not use a
+generalized self-overlap transfer.
 
 `HP-RG-RHO0-GAL-AUDIT-01` approves only an ignored measurement audit for a
 rho0/Galerkin IDA correction on top of that protected-localized baseline. It

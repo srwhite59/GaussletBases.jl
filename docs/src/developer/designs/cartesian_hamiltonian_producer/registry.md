@@ -4877,6 +4877,85 @@ Approved validation:
 - no production Cr2 HF;
 - no committed large Cr2 tests or fixtures.
 
+### HP-RG-PROTECT-LADDER-XFER-AUDIT-01 — same-parent ladder transfer audit
+
+Status: approved measurement-only authority.
+
+Purpose: determine whether the current Cr2 protected-localized UHF discrepancy
+is primarily basis/contraction/Hamiltonian convergence rather than UHF basin
+failure. The starting state has good global spin diagnostics, including
+`<S^2>` about `4.866` and large AFM local moments, but energy about `36 mHa`
+below the cc-pwCV5Z UHF reference.
+
+Approved measurement object:
+
+- same Cr2 geometry, same supplement, and fixed parent lattice/shared parent
+  controls;
+- protected-localized inherited-site Hamiltonians at `ns = 7` and `ns = 9`,
+  with optional `ns = 11` if affordable;
+- exact final-basis cross overlaps such as `S_9,7 = <L_ns9 | L_ns7>`;
+- transfer of occupied orbitals or densities by `C_B = S_BA C_A`, where
+  `S_BA = <B | A>`;
+- fixed-density target-Hamiltonian evaluation and small bounded UHF
+  continuation only if transfer trace and orthonormality checks pass.
+
+Critical convention:
+
+- final working bases are orthonormal;
+- transfer uses only the cross overlap between final bases;
+- source Hamiltonians and source `Vee` are not transformed into target bases;
+- no generalized self-overlap transfer, `C' V C`, or interaction rotation is
+  allowed;
+- after transfer, evaluation uses the target-basis `H1_L` and `Vee_L`.
+
+Allowed:
+
+- ignored `tmp/work` probes;
+- output under `/Users/srw/dmrgtmp`;
+- existing protected-localized inherited-site Hamiltonian construction/writer;
+- in-memory or ignored sidecar cross-overlap matrices;
+- transfer of saved occupied orbitals;
+- fixed-density energy evaluation;
+- bounded UHF continuation after transfer-quality checks.
+
+Forbidden:
+
+- tracked source edits;
+- new public API/export;
+- production workflow or driver wiring;
+- durable artifact schema changes;
+- changes to the protected-localized `Vee` convention;
+- transforming source `Vee` into the target basis;
+- `C' V C` or any interaction rotation;
+- rho0/P0 revival;
+- EGOI expansion or corrected artifact behavior;
+- Cr2 production claims.
+
+Required diagnostics:
+
+- exact geometry and shared parent-lattice controls;
+- `ns` values and final dimensions;
+- protected/localized counts and `B_min` for each basis;
+- `H1_L`/`Vee_L` finite and symmetry checks;
+- cross-overlap dimensions and singular spectrum;
+- transferred electron trace loss and occupied-overlap loss;
+- target energy of the transferred density before any sweep;
+- returned/recomputed energy if bounded sweeps run;
+- `<S^2>`, local spin diagnostics, and sector occupations before and after
+  transfer;
+- wall times and output paths.
+
+Decision rule: if `ns = 7 -> ns = 9` transfer has small trace/occupied loss
+and the evaluated energy moves toward the Yann/Sandeep reference, the
+discrepancy is likely basis/contraction/Hamiltonian convergence. If transfer
+loss is large, the ladder construction is not comparable and final-basis
+capture/cross-overlap diagnostics are needed before physics interpretation.
+If energy stays too low after clean transfer and a few bounded sweeps, suspect
+protected-localized `Vee`/IDA/EGOI/injection convention accuracy rather than
+UHF basin failure. If a reusable source helper or durable sidecar is needed,
+the audit must report the smallest source owner and exact fields for a later
+lane rather than adding them here.
+
 ### HP-RG-RHO0-GAL-AUDIT-01 — rho0/Galerkin IDA correction audit
 
 Status: approved measurement-only audit authority. This is not source

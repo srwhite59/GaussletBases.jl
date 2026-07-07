@@ -37,13 +37,19 @@ Hamiltonian artifact variant so the accepted `L`, `H1_L`, inherited-site
 `HP-RG-PROTECT-ARTLOC-*` approves native-order row-locality metadata for that
 artifact: diagonal position-expectation centers, deterministic z-order
 permutations, and per-row sector labels without changing matrix order.
+`HP-RG-PROTECT-EGOI-*` approves the first retained-original-GTO local-product
+EGOI helper as an internal in-memory correction primitive, not an artifact or
+solver workflow. `HP-RG-PROTECT-LADDER-XFER-AUDIT-01` approves only a
+same-parent protected-localized ladder transfer measurement audit, using
+final-basis cross overlaps to move occupied orbitals between comparable
+Cr2 ladder bases.
 The supported supplemented
 workflow now accepts explicit homonuclear
 z-axis diatomics without element-specific branches. A compact artifact manifest
 lane is approved for JLD2 sidecar groups that make written Hamiltonians
 self-describing without changing matrix keys or reader behavior. Broad public
-API/export, translated atoms, Cr2-specific workflow, ECP, EGOI, RHF, and
-solver work remain deferred.
+API/export, translated atoms, Cr2-specific production workflow, ECP, broad
+EGOI workflow, RHF, and solver work remain deferred.
 The documented 2 x 2 x 2 matrix over `geometry`, `nesting`, and supplement
 state now has approved implementation authority under the current
 origin-centered atom and homonuclear z-axis diatomic constraints.
