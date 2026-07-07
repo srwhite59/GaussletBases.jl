@@ -25242,3 +25242,59 @@ Carrying-cost result:
   changes, and any package export.
 - exact remaining blocker: implement the opt-in bundle writer/reader and
   validate readback plus ignored Cr2 `ns = 7 -> 9` parity.
+
+## Cartesian Hamiltonian Producer Pass 313 - Protected Ladder Bundle Source Helper
+
+Commit(s):
+- source WIP from repo-doer under `HP-RG-PROTECT-LADDER-BUNDLE-FN-01`; to be
+  committed by repo-manager after this acceptance entry.
+
+Summary:
+- Accepted the opt-in protected-localized ladder bundle source helper in
+  `src/cartesian_protected_ladder_bundle.jl`, included from
+  `src/GaussletBases.jl`. The helper writes a directory bundle with member
+  protected-localized Hamiltonian artifacts, exact cross-overlap sidecars,
+  optional transferred-orbital restart sidecars, manifest/provenance, and TSV
+  summaries.
+- This turns the successful `ns = 7 -> 9` Cr2 ladder audit into a reusable
+  facility for CR2 and future protected-localized consumers. It does not
+  change protected-localized `Vee`, add solver workflow, export a public API,
+  or make a Cr2 production claim.
+
+Validation / evidence:
+- Doer validation: package load `0.539s`; H2 smoke bundle under
+  `/Users/srw/dmrgtmp/protected_ladder_bundle_h2_smoke_c34b22fce`; Cr2
+  `ns7/ns9` replay under
+  `/Users/srw/dmrgtmp/protected_ladder_bundle_cr2_c34b22fce`.
+- Cr2 replay reproduces the audit: dimensions `6945 -> 11545`, parent lattice
+  proof passed, cross-overlap min singular `0.9998275506465496`, transfer
+  trace losses `7.407e-8`, orthogonality errors `7.007e-8`, and fixed-density
+  ns9 total `-2086.4867403027556`, within `4.55e-13 Ha` of the audit target.
+- Manager validation: reviewed the bundle source shape, confirmed restart
+  order handling follows the existing `native_to_z_order` convention, ran
+  package load `0.550881584s`, and `git diff --check`.
+
+Goal advancement:
+- LT5/LT6 and MT4: reduces CR2 rebuild friction and gives the repo a reusable
+  basis/Hamiltonian convergence tool. This supports the current interpretation
+  that the old ns7 Cr2 energy problem was largely Hamiltonian/basis
+  convergence, since transferred ns9 continuation landed close to the
+  Yann/Sandeep UHF energy.
+
+Risk / guardrail:
+- The bundle currently reconstructs large in-memory protected-localized
+  representations to compute cross overlaps. Existing member artifacts still
+  do not contain enough representation data to build cross overlaps by
+  themselves. Any future representation sidecar or artifact-owned raw `L`
+  coefficient data needs a separate lane.
+
+Carrying-cost result:
+- source line delta: `+720` new source lines plus one include.
+- deleted: none.
+- simplified: replaces the one-off ladder audit/restart pattern with one
+  opt-in bundle facility.
+- quarantined: solver continuation, production Cr2 claims, EGOI/rho0 changes,
+  and default driver workflow remain outside this source helper.
+- exact remaining blocker: decide whether repeated ladder use justifies a
+  compact protected-localized representation sidecar so cross overlaps can be
+  built from saved bundle members without full reconstruction.
