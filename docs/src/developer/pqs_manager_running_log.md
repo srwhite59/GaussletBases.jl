@@ -25345,3 +25345,53 @@ Carrying-cost result:
 - exact remaining blocker: decide whether repeated ladder use justifies a
   compact protected-localized representation sidecar so cross overlaps can be
   built from saved bundle members without full reconstruction.
+
+## Cartesian Hamiltonian Producer Pass 314 - Expert Mapping s_factor Source Helper
+
+Commit(s):
+- source WIP from repo-doer under `HP-PQS-MAP-SFACTOR-FN-01`; to be committed
+  by repo-manager after this acceptance entry.
+
+Summary:
+- Accepted the narrow `s_factor` expert mapping-strength knob through the base
+  facade, canonical driver, route provenance, and protected ladder recipe
+  readback. Omitted `s_factor` and explicit `s_factor = 1.0` preserve current
+  H/H2 behavior, while nondefault values scale the mapping strength without
+  redefining `core_spacing`.
+- Multicenter PQS support uses the explicit combined-invsqrt analog: keep
+  `core_spacing` as the near-core target spacing, divide each per-center core
+  range by `s_factor`, and record standard/effective `s` provenance. This gives
+  CR2 an expert scan knob without adding source-side tuning policy.
+
+Validation / evidence:
+- Doer validation: `git diff --check`; package load `0.52528s`; default H/H2
+  parity with omitted versus explicit `1.0`; one-center `s_factor = 1.5`
+  provenance under `/Users/srw/dmrgtmp/pqs_mapping_s_factor_becff9436/`; small
+  multicenter smoke with `s_factor = 2.0`; protected ladder bundle/read smoke
+  under `/Users/srw/dmrgtmp/protected_ladder_bundle_h2_smoke_becff9436/`.
+- Manager validation: package load `0.506626375s`; focused public base
+  Hamiltonian test `test/driver_public/cartesian_base_hamiltonian_runtests.jl`
+  passed `95/95`; task-file `git diff --check` passed. The focused test also
+  repaired stale fixture assumptions: legacy one-center `d` must equal
+  `core_spacing`, omitted `d` is valid, and the current H2 shell geometry has
+  dimension `487`.
+
+Goal advancement:
+- LT5/LT6 and MT4: enables CR2 to scan the `ns = 9` mapping shape independently
+  from `core_spacing` while preserving provenance and avoiding hidden CR2-side
+  hacks.
+
+Risk / guardrail:
+- This is an expert knob only. No element defaults, automatic tuning, public
+  `d`, public `parent_mapping_d`, solver workflow, EGOI, rho0/P0, protected
+  `Vee`, or residual/injection selection policy changed.
+
+Carrying-cost result:
+- source/bin/test delta for accepted files: `+116/-21`.
+- deleted: none.
+- simplified: one documented scalar replaces ad hoc mapping-strength patches in
+  consumer scripts.
+- quarantined: value choice and any Cr2 optimization policy remain consumer
+  measurements, not repo defaults.
+- exact remaining blocker: none for CR2 expert use of `s_factor`; future work
+  is measurement policy and, if needed, additional due-diligence reporting.

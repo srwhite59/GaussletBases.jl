@@ -15,6 +15,7 @@ ns = 5                         # requested cube/source/nesting size
 nesting = :pqs                  # :pqs or :wl construction family
 source_span = :ordinary         # :ordinary or :mapped_comx for PQS source spans
 core_spacing = 0.3             # near-nucleus spacing / atom mapping width
+s_factor = 1.0                 # expert mapping-strength factor; 1.0 preserves standard mapping
 padding = 10.0                 # extra box padding beyond each nucleus, in bohr
 
 basisname = nothing            # set e.g. "cc-pVTZ" for supplemented diatomic
@@ -36,7 +37,7 @@ expected_dimension = nothing
 
 public_inputs = (
     :Natom, :R, :Z, :atom, :nup, :ndn, :ns, :core_spacing, :padding,
-    :gausslet_family, :nesting, :source_span, :basisname, :lmax, :uncontracted,
+    :s_factor, :gausslet_family, :nesting, :source_span, :basisname, :lmax, :uncontracted,
     :supplement_width_max, :basisfile, :hamfile, :check_file,
     :print_contract, :print_timing, :expected_dimension,
 )
@@ -124,6 +125,7 @@ else
     (;  atom_symbols = [label, label], nuclear_charges = [charge, charge], atom_locations = [(0.0, 0.0, -half_R), (0.0, 0.0, half_R)], nup = vars[:nup], ndn = vars[:ndn])
 end
 common_basis = (; ns = vars[:ns], core_spacing = vars[:core_spacing],
+    s_factor = vars[:s_factor],
     parent_axis_family = vars[:gausslet_family], nesting = nesting_value,
     source_span = source_span_value)
 basis = N == 1 ? (; common_basis..., radius = vars[:padding]) :
@@ -142,7 +144,7 @@ contract_elapsed = time() - contract_start
 # Review public contract
 if vars[:print_contract]
     println("system: Natom=", N, " atom=", label, " Z=", charge, " R=", vars[:R], " nup=", vars[:nup], " ndn=", vars[:ndn])
-    println("basis: ns=", vars[:ns], " nesting=", nesting_value, " source_span=", source_span_value, " core_spacing=", vars[:core_spacing], " padding=", vars[:padding], " gausslet_family=", vars[:gausslet_family])
+    println("basis: ns=", vars[:ns], " nesting=", nesting_value, " source_span=", source_span_value, " core_spacing=", vars[:core_spacing], " s_factor=", vars[:s_factor], " padding=", vars[:padding], " gausslet_family=", vars[:gausslet_family])
     !isnothing(supplement) && println("supplement: basisname=", vars[:basisname], " lmax=", vars[:lmax], " uncontracted=", vars[:uncontracted], " supplement_width_max=", vars[:supplement_width_max], " basisfile=", vars[:basisfile])
     println("hamfile: ", hamfile_value)
     println("hooks: check_file=", vars[:check_file], " print_contract=", vars[:print_contract], " print_timing=", vars[:print_timing], " expected_dimension=", vars[:expected_dimension])

@@ -62,6 +62,8 @@ function _plb_recipe_from_artifact(path::AbstractString)
             ns = Int(file["recipe_provenance/ns"]),
             nesting = Symbol(file["recipe_provenance/nesting"]),
             core_spacing = Float64(file["recipe_provenance/core_spacing"]),
+            s_factor = haskey(file, "recipe_provenance/s_factor") ?
+                Float64(file["recipe_provenance/s_factor"]) : 1.0,
             xmax_parallel = Float64(file["recipe_provenance/xmax_parallel"]),
             xmax_transverse = Float64(file["recipe_provenance/xmax_transverse"]),
             basisname = String(file["recipe_provenance/basisname"]),
@@ -92,6 +94,7 @@ end
 function _plb_basis_spec(recipe)
     if hasproperty(recipe, :radius)
         return (; q = recipe.ns, core_spacing = recipe.core_spacing,
+            s_factor = _plb_get(recipe, :s_factor, 1.0),
             radius = recipe.radius,
             reference_spacing = _plb_get(recipe, :reference_spacing, 1.0),
             d = recipe.core_spacing)
@@ -99,6 +102,7 @@ function _plb_basis_spec(recipe)
     return (; ns = recipe.ns, q = recipe.ns,
         nesting = _plb_get(recipe, :nesting, :pqs),
         core_spacing = recipe.core_spacing,
+        s_factor = _plb_get(recipe, :s_factor, 1.0),
         xmax_parallel = recipe.xmax_parallel,
         xmax_transverse = recipe.xmax_transverse,
         parent_axis_family = _plb_get(recipe, :parent_axis_family, :G10))
@@ -284,6 +288,7 @@ function _plb_write_member_artifact(case, path::AbstractString, source_artifact,
             source_commit = String(source_commit), current_commit = String(current_commit)),
         basis_controls = (; nesting = _plb_get(recipe, :nesting, :pqs),
             ns = recipe.ns, core_spacing = recipe.core_spacing,
+            s_factor = _plb_get(recipe, :s_factor, 1.0),
             basisname = recipe.basisname, lmax = recipe.lmax),
         geometry_inputs = (; atom_symbols = recipe.atom_symbols,
             nuclear_charges = recipe.nuclear_charges,
@@ -668,6 +673,7 @@ function build_protected_localized_ladder_bundle(
         nup = Int(recipe0.nup),
         ndn = Int(recipe0.ndn),
         core_spacing = Float64(recipe0.core_spacing),
+        s_factor = Float64(_plb_get(recipe0, :s_factor, 1.0)),
         basisname = String(recipe0.basisname),
         lmax = Int(recipe0.lmax),
         parent_lattice_ok = all(row -> row.ok, parent_rows),

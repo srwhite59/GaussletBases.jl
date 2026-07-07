@@ -111,6 +111,13 @@ function _pqs_source_box_route_driver_positive_integer(value, name::Symbol)
     return result
 end
 
+function _pqs_source_box_route_driver_positive_float(value, name::Symbol)
+    result = Float64(value)
+    isfinite(result) && result > 0.0 ||
+        throw(ArgumentError("$(name) must be finite and positive"))
+    return result
+end
+
 function _pqs_source_box_route_driver_public_ns_core_side(n_s)
     n_s_int = _pqs_source_box_route_driver_positive_integer(n_s, :n_s)
     core_cube_side = isodd(n_s_int) ? n_s_int : n_s_int + 1
@@ -124,6 +131,17 @@ function _pqs_source_box_route_driver_standard_setup(system_inputs, spacing_inpu
     n_s = _pqs_source_box_route_driver_positive_integer(spacing_inputs.n_s, :n_s)
     core_cube_side = _pqs_source_box_route_driver_public_ns_core_side(n_s)
     core_spacing = spacing_inputs.core_spacing
+    s_factor = _pqs_source_box_route_driver_positive_float(
+        get(spacing_inputs, :s_factor, 1.0), :s_factor)
+    mapping_s_standard_by_atom =
+        isnothing(core_spacing) ?
+        ntuple(_ -> nothing, length(system_inputs.nuclear_charges)) :
+        Tuple(sqrt(Float64(charge) * Float64(core_spacing)) for
+            charge in system_inputs.nuclear_charges)
+    mapping_s_effective_by_atom =
+        isnothing(core_spacing) ?
+        ntuple(_ -> nothing, length(system_inputs.nuclear_charges)) :
+        Tuple(s_factor * value for value in mapping_s_standard_by_atom)
     parent_radius = max(Int(ceil(Float64(system_inputs.radius))), n_s)
     parent_axis = -parent_radius:parent_radius
     return (;
@@ -135,6 +153,14 @@ function _pqs_source_box_route_driver_standard_setup(system_inputs, spacing_inpu
         tail_spacing = spacing_inputs.tail_spacing,
         q_to_core_spacing_rule = spacing_inputs.q_to_core_spacing_rule,
         core_spacing,
+        s_factor,
+        mapping_s_factor = s_factor,
+        mapping_s_standard = length(mapping_s_standard_by_atom) == 1 ?
+            only(mapping_s_standard_by_atom) : mapping_s_standard_by_atom,
+        mapping_s_effective = length(mapping_s_effective_by_atom) == 1 ?
+            only(mapping_s_effective_by_atom) : mapping_s_effective_by_atom,
+        mapping_s_standard_by_atom,
+        mapping_s_effective_by_atom,
         xmax_parallel = get(spacing_inputs, :xmax_parallel, nothing),
         xmax_transverse = get(spacing_inputs, :xmax_transverse, nothing),
         n_s,
@@ -142,8 +168,10 @@ function _pqs_source_box_route_driver_standard_setup(system_inputs, spacing_inpu
         core_cube_side_rule = :public_ns_direct_core_side,
         parent_box_rule = :radius_index_box,
         parent_box = (x = parent_axis, y = parent_axis, z = parent_axis),
-        mapping_s = core_spacing,
-        mapping_s_by_atom = ntuple(_ -> core_spacing, length(system_inputs.nuclear_charges)),
+        mapping_s = isnothing(core_spacing) ? nothing :
+            length(mapping_s_effective_by_atom) == 1 ?
+            only(mapping_s_effective_by_atom) : mapping_s_effective_by_atom,
+        mapping_s_by_atom = mapping_s_effective_by_atom,
     )
 end
 
@@ -151,13 +179,14 @@ function _cartesian_center_list_axis_records(
     center_table,
     axis_index::Int,
     core_spacing::Real,
+    s_factor::Real,
 )
     records = Dict{Float64,Tuple{Float64,Float64}}()
     for center in center_table
         coordinate = Float64(center.location[axis_index])
         charge = Float64(center.nuclear_charge)
         charge > 0.0 || throw(ArgumentError("Cartesian parent centers require positive nuclear charges"))
-        core_range = sqrt(Float64(core_spacing) / charge)
+        core_range = sqrt(Float64(core_spacing) / charge) / Float64(s_factor)
         target_spacing = Float64(core_spacing)
         records[coordinate] =
             haskey(records, coordinate) ?
@@ -197,6 +226,7 @@ function _cartesian_center_list_parent_axis(
             center_table,
             axis_index,
             standard_setup.core_spacing,
+            standard_setup.s_factor,
         )
     mapping = fit_combined_invsqrt_mapping(
         centers = coordinates,
@@ -249,6 +279,9 @@ function _cartesian_center_list_parent_basis_object(
             axis_basis_helper = :_cartesian_center_list_parent_basis_object,
             reference_spacing = standard_setup.reference_spacing,
             core_spacing = standard_setup.core_spacing,
+            mapping_s_factor = standard_setup.mapping_s_factor,
+            mapping_s_standard_by_atom = standard_setup.mapping_s_standard_by_atom,
+            mapping_s_effective_by_atom = standard_setup.mapping_s_effective_by_atom,
             atom_symbols = Tuple(center.atom_symbol for center in center_table),
             nuclear_charges = Tuple(center.nuclear_charge for center in center_table),
             atom_locations = Tuple(center.location for center in center_table),
@@ -395,6 +428,8 @@ function _cartesian_one_center_parent_mapping(center, standard_setup, parent_inp
         Z = Float64(Z),
         d = Float64(d),
         tail_spacing = Float64(tail_spacing),
+        s_factor = get(parent_inputs, :parent_mapping_s_factor,
+            standard_setup.s_factor),
     ), :white_lindsey_atomic_mapping
 end
 
@@ -444,6 +479,9 @@ function _cartesian_one_center_parent_basis_object(
             axis_basis_helper = :_cartesian_one_center_parent_basis_object,
             axis_family = Symbol(family),
             mapping = mapping_label,
+            mapping_s_factor = standard_setup.mapping_s_factor,
+            mapping_s_standard = standard_setup.mapping_s_standard,
+            mapping_s_effective = standard_setup.mapping_s_effective,
             reference_spacing = standard_setup.reference_spacing,
             atom_symbol = center.atom_symbol,
             nuclear_charge = center.nuclear_charge,
@@ -1951,6 +1989,9 @@ function cartesian_report(system, parent, assembly, recipe)
         tail_spacing = standard_setup.tail_spacing,
         q_to_core_spacing_rule = standard_setup.q_to_core_spacing_rule,
         core_spacing = standard_setup.core_spacing,
+        mapping_s_factor = standard_setup.mapping_s_factor,
+        mapping_s_standard = standard_setup.mapping_s_standard,
+        mapping_s_effective = standard_setup.mapping_s_effective,
         xmax_parallel = standard_setup.xmax_parallel,
         xmax_transverse = standard_setup.xmax_transverse,
         terms = recipe.terms,

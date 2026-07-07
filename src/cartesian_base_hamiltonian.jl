@@ -2,7 +2,8 @@ const _CARTESIAN_BASE_SYSTEM_KEYS = Set((:atom_symbols, :nuclear_charges, :atom_
 const _CARTESIAN_BASE_SIZE_KEYS = Set((:ns, :q))
 const _CARTESIAN_BASE_H_BASIS_REQUIRED_KEYS = Set((:core_spacing, :radius))
 const _CARTESIAN_BASE_H2_BASIS_REQUIRED_KEYS = Set((:core_spacing, :xmax_parallel, :xmax_transverse))
-const _CARTESIAN_BASE_OPTIONAL_BASIS_KEYS = Set((:parent_axis_family, :reference_spacing, :tail_spacing, :nesting, :source_span))
+const _CARTESIAN_BASE_OPTIONAL_BASIS_KEYS = Set((:parent_axis_family,
+    :reference_spacing, :tail_spacing, :nesting, :source_span, :s_factor))
 const _CARTESIAN_BASE_H_OPTIONAL_BASIS_KEYS = union(_CARTESIAN_BASE_OPTIONAL_BASIS_KEYS, Set((:d,)))
 _cartesian_base_check_keys(input, expected, label) =
     Set(Symbol.(keys(input))) == expected ||
@@ -49,6 +50,12 @@ function _cartesian_base_positive(value, label)
     x = Float64(value)
     isfinite(x) && x > 0.0 || throw(ArgumentError("$(label) must be finite and positive"))
     return x
+end
+
+function _cartesian_base_s_factor(basis)
+    return haskey(basis, :s_factor) ?
+        _cartesian_base_positive(basis.s_factor, "basis.s_factor") :
+        1.0
 end
 
 function _cartesian_base_atom_mapping_d(basis, core_spacing)
@@ -109,6 +116,7 @@ function _cartesian_base_diatomic_basis_parts(basis)
     source_span = _cartesian_base_source_span(basis, nesting)
     return (; size_parts...,
         core_spacing = _cartesian_base_positive(basis.core_spacing, "basis.core_spacing"),
+        s_factor = _cartesian_base_s_factor(basis),
         radius = nothing, d = nothing,
         xmax_parallel = _cartesian_base_positive(basis.xmax_parallel, "basis.xmax_parallel"),
         xmax_transverse = _cartesian_base_positive(basis.xmax_transverse, "basis.xmax_transverse"),
@@ -167,6 +175,7 @@ function _cartesian_base_inputs(system::NamedTuple, basis::NamedTuple)
         core_spacing = _cartesian_base_positive(basis.core_spacing, "basis.core_spacing")
         return merge(base, (; kind = :h, size_parts...,
             core_spacing,
+            s_factor = _cartesian_base_s_factor(basis),
             radius = _cartesian_base_positive(basis.radius, "basis.radius"),
             d = _cartesian_base_atom_mapping_d(basis, core_spacing), xmax_parallel = nothing,
             xmax_transverse = nothing, nesting, source_span,
@@ -225,7 +234,8 @@ function _cartesian_base_atom_parent_axis_counts(input)
     mapping = white_lindsey_atomic_mapping(;
         Z = only(input.charges),
         d = input.core_spacing,
-        tail_spacing = input.tail_spacing)
+        tail_spacing = input.tail_spacing,
+        s_factor = input.s_factor)
     count = _qwrg_mapped_odd_count_for_extent(
         mapping,
         input.radius;
@@ -241,13 +251,15 @@ function _cartesian_base_stages(input)
     spacing_inputs = (;
         q = input.q, n_s = input.ns, reference_spacing = input.reference_spacing, tail_spacing = input.tail_spacing,
         q_to_core_spacing_rule = input.q_rule, core_spacing = input.core_spacing,
+        s_factor = input.s_factor,
         xmax_parallel = input.xmax_parallel, xmax_transverse = input.xmax_transverse)
     parent_inputs = (;
         parent_axis_bundle_backend = :pgdg_localized_experimental, parent_axis_family = input.parent_axis_family,
         parent_mapping_tail_spacing = input.tail_spacing,
         parent_mapping_rule = input.kind === :h ? :white_lindsey_atomic_mapping : :identity_mapping,
         parent_mapping_Z = input.kind === :h ? only(input.charges) : nothing,
-        parent_mapping_d = input.kind === :h ? input.core_spacing : nothing)
+        parent_mapping_d = input.kind === :h ? input.core_spacing : nothing,
+        parent_mapping_s_factor = input.kind === :h ? input.s_factor : nothing)
     if input.kind === :h
         system_inputs = (; atom_symbols, nuclear_charges, atom_locations,
             nup = input.nup, ndn = input.ndn, bond_axis = nothing, bond_length = nothing,
@@ -667,6 +679,18 @@ _cartesian_base_atom_location_matrix(input) =
 _cartesian_base_axis_counts_tuple(axis_counts) =
     (Int(axis_counts.x), Int(axis_counts.y), Int(axis_counts.z))
 
+function _cartesian_base_mapping_s_standard(input)
+    values = Float64[sqrt(charge * input.core_spacing) for charge in input.charges]
+    return input.kind === :h ? only(values) : values
+end
+
+function _cartesian_base_mapping_s_effective(input)
+    standard = _cartesian_base_mapping_s_standard(input)
+    return input.kind === :h ?
+        input.s_factor * Float64(standard) :
+        Float64[input.s_factor * value for value in standard]
+end
+
 function _cartesian_write_sidecar_values!(file, group, values)
     for key in keys(values); file["$(group)/$(key)"] = getproperty(values, key); end
 end
@@ -787,6 +811,10 @@ function _cartesian_recipe_provenance(input, parent, base_dimension;
         provenance_version = 1, producer, nesting = input.nesting, route,
         ns = input.ns, q = input.q, q_rule = input.q_rule, ns_source = input.ns_source,
         core_spacing = input.core_spacing, padding = input.kind === :h ? input.radius : input.xmax_transverse,
+        s_factor = input.s_factor,
+        mapping_s_factor = input.s_factor,
+        mapping_s_standard = _cartesian_base_mapping_s_standard(input),
+        mapping_s_effective = _cartesian_base_mapping_s_effective(input),
         radius = input.radius, xmax_parallel = input.xmax_parallel,
         xmax_transverse = input.xmax_transverse,
         extent_source = input.kind === :h ? :one_center_radius : :z_axis_diatomic_padding_extents,
@@ -856,10 +884,14 @@ function _cartesian_base_write_hamiltonian(path, ham, base)
         nesting = input.nesting, route, ns = input.ns, q = input.q,
         q_rule = input.q_rule, ns_source = input.ns_source,
         core_spacing = input.core_spacing,
+        s_factor = input.s_factor,
         reference_spacing = input.reference_spacing, tail_spacing = input.tail_spacing,
         parent_axis_family = input.parent_axis_family,
         parent_axis_counts = _cartesian_base_axis_counts_tuple(parent.axis_counts),
         mapping_kind, mapping_d = input.d, radius = input.radius,
+        mapping_s_factor = input.s_factor,
+        mapping_s_standard = _cartesian_base_mapping_s_standard(input),
+        mapping_s_effective = _cartesian_base_mapping_s_effective(input),
         xmax_parallel = input.xmax_parallel, xmax_transverse = input.xmax_transverse,
         atom_symbols = copy(input.symbols), nuclear_charges = copy(input.charges),
         atom_locations = _cartesian_base_atom_location_matrix(input),

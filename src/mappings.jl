@@ -240,7 +240,7 @@ function AsinhMapping(;
 end
 
 """
-    white_lindsey_atomic_mapping(; Z, d, tail_spacing=10.0)
+    white_lindsey_atomic_mapping(; Z, d, tail_spacing=10.0, s_factor=1.0)
 
 Return the one-center atomic White-Lindsey-style mapping as a repo-native
 `AsinhMapping`.
@@ -250,8 +250,8 @@ modern repo parameterization:
 
 ```text
 u(x) = x / tail_spacing + asinh(x / a) / s
-a = sqrt(d / Z)
-s = sqrt(d Z)
+s = s_factor * sqrt(d Z)
+a = d / s
 ```
 
 Equivalently, the modern near-origin parameter is
@@ -261,20 +261,28 @@ c = a s = d
 ```
 
 so this helper is exactly the same map as
-`AsinhMapping(c=d, s=sqrt(d * Z), tail_spacing=tail_spacing)`.
+`AsinhMapping(c=d, s=s_factor * sqrt(d * Z), tail_spacing=tail_spacing)`.
 
 This helper is only for the one-center atomic White-Lindsey contract. The
 legacy multi-center `getmapping(...)` construction is a separate combined
 inverse-sqrt-density path and is not represented by this helper.
 """
-function white_lindsey_atomic_mapping(; Z::Real, d::Real, tail_spacing::Real = 10.0)
+function white_lindsey_atomic_mapping(;
+    Z::Real,
+    d::Real,
+    tail_spacing::Real = 10.0,
+    s_factor::Real = 1.0,
+)
     zval = Float64(Z)
     dval = Float64(d)
     tail = Float64(tail_spacing)
+    factor = Float64(s_factor)
     zval > 0.0 || throw(ArgumentError("white_lindsey_atomic_mapping requires Z > 0"))
     dval > 0.0 || throw(ArgumentError("white_lindsey_atomic_mapping requires d > 0"))
     tail > 0.0 || throw(ArgumentError("white_lindsey_atomic_mapping requires tail_spacing > 0"))
-    return AsinhMapping(c = dval, s = sqrt(dval * zval), tail_spacing = tail)
+    isfinite(factor) && factor > 0.0 ||
+        throw(ArgumentError("white_lindsey_atomic_mapping requires s_factor > 0"))
+    return AsinhMapping(c = dval, s = factor * sqrt(dval * zval), tail_spacing = tail)
 end
 
 function uofx(mapping::AsinhMapping, x::Real)

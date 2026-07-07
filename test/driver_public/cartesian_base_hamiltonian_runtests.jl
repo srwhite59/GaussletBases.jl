@@ -3,14 +3,16 @@ using JLD2
 using LinearAlgebra
 using Test
 
-const H_LOWEST = -0.49855234726272035
+const H_LOWEST = -0.49877574806444014
 const H2_LOWEST = -0.79460371733658908
-const H2_SELF_COULOMB = 0.4569117646737212
+const H2_SELF_COULOMB = 0.4569012290840094
 const ATOL = 1.0e-10
 const PROVENANCE_KEYS = (
     :provenance_version, :producer, :route, :q, :core_spacing,
     :reference_spacing, :tail_spacing, :parent_axis_family, :parent_axis_counts,
-    :mapping_kind, :mapping_d, :radius, :xmax_parallel, :xmax_transverse,
+    :s_factor, :mapping_kind, :mapping_d, :mapping_s_factor,
+    :mapping_s_standard, :mapping_s_effective,
+    :radius, :xmax_parallel, :xmax_transverse,
     :atom_symbols, :nuclear_charges, :atom_locations, :nup, :ndn,
     :final_dimension,
 )
@@ -20,7 +22,7 @@ const H_BASIS = (;
     core_spacing = 0.5,
     radius = 4.0,
     reference_spacing = 1.0,
-    d = 0.3,
+    d = 0.5,
 )
 
 const H2_BASIS = (;
@@ -84,7 +86,7 @@ end
     h2 = cartesian_base_hamiltonian(h2_system(); basis = H2_BASIS)
     h2_lowest, orbital, h2_one_body = lowest_one_body(h2)
     @test h2 isa CartesianIDAHamiltonian{Float64}
-    @test size(h2.kinetic) == (471, 471)
+    @test size(h2.kinetic) == (487, 487)
     @test h2_lowest ≈ H2_LOWEST atol = ATOL
     @test self_coulomb(h2.electron_electron_ida, orbital) ≈ H2_SELF_COULOMB atol = ATOL
     check_finite_symmetric(h2.kinetic)
@@ -97,7 +99,11 @@ end
         jldopen(h_path, "r") do file
             check_provenance_keys(file)
             @test file["producer_provenance/reference_spacing"] == 1.0
-            @test file["producer_provenance/mapping_d"] == 0.3
+            @test file["producer_provenance/mapping_d"] == 0.5
+            @test file["producer_provenance/s_factor"] == 1.0
+            @test file["producer_provenance/mapping_s_factor"] == 1.0
+            @test file["producer_provenance/mapping_s_standard"] == sqrt(0.5)
+            @test file["producer_provenance/mapping_s_effective"] == sqrt(0.5)
             @test file["producer_provenance/mapping_kind"] === :white_lindsey_atomic_mapping
             @test file["producer_provenance/route"] === :one_center_pqs_base
             @test file["producer_provenance/final_dimension"] == size(written_h.kinetic, 1)
@@ -120,7 +126,7 @@ end
     @test_throws ArgumentError cartesian_base_hamiltonian(
         h_system(); basis = merge(H_BASIS, (; xmax_parallel = 6.0)))
     @test_throws ArgumentError cartesian_base_hamiltonian(
-        h_system(); basis = (; q = 5, core_spacing = 0.5, radius = 4.0))
+        h_system(); basis = merge(H_BASIS, (; s_factor = 0.0)))
     @test_throws ArgumentError cartesian_base_hamiltonian(
         h2_system(); basis = merge(H2_BASIS, (; radius = 4.0)))
     @test_throws ArgumentError cartesian_base_hamiltonian(
