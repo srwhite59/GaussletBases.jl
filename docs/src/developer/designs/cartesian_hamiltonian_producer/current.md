@@ -28,6 +28,8 @@ Normal startup reading:
   workspace reuse;
 - `r3_unit_nuclear_ugg_gaussian_sum.md` for the narrow terminal final-basis
   unit-nuclear `U_GG` Gaussian-sum allocation lane;
+- `ida_nuclear_external_potential.md` for the same-gauge IDA nuclear
+  external-potential helper;
 - `pqs_mapping_s_factor.md` for the expert `s_factor` mapping-strength knob;
 - `r1_one_center_base_atoms.md` for explicit origin-centered all-electron
   one-center base atoms beyond H;
@@ -158,6 +160,12 @@ Implemented base path:
   support remaining, shellification emits the bond-axis leftovers as planned
   `:angular_z_extension_slab` stack regions. Lowering those slabs remains
   deferred to `HP-COMP-THINSLAB-*`.
+- `HP-PQS-IDA-NUCEXT-FN-01` and `HP-PQS-IDA-NUCEXT-TEST-01` approve only the
+  same-gauge IDA nuclear external-potential primitive `uN_IDA[A,i]` in
+  `pqs_terminal_ida.jl`. The helper uses the same normalized final-row IDA
+  density proxy and final weights as `electron_electron_ida`. It is not
+  Galerkin `Vnuc`, not `diag(Vnuc_G)`, not row action, not center `-Z/r`, and
+  not screened-field or corrected-Hamiltonian assembly.
 - `HP-MCOMX-*` approves a protected-`P2` plus mapped Chebyshev source-span
   option at the existing nested doside / COMX seam. The nonlinear map uses
   normalized local `u`, while `_cleanup_comx_transform(...)` still uses the

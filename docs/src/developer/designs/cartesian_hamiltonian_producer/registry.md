@@ -2062,6 +2062,72 @@ This is Slice C1 only: it produces final-basis `electron_electron_ida`. It does
 not authorize Hamiltonian construction, route wiring, artifacts, or a pair
 payload/cache.
 
+### HP-PQS-IDA-NUCEXT-FN-01 — same-gauge IDA nuclear external potential
+
+Status: approved narrow source authority.
+
+Purpose: provide the missing same-gauge IDA external-potential primitive needed
+by screened-field audits:
+
+```text
+uN_IDA[A, i]
+```
+
+`uN_IDA[A, i]` is the point-nucleus external potential of the same normalized
+final-row IDA density proxy used by `electron_electron_ida`. The helper must
+use the same final IDA weights and row-proxy convention as terminal
+electron-electron IDA assembly.
+
+Required definition:
+
+```text
+uN_IDA[A, i] =
+    raw point-nucleus external-potential numerator for final IDA row i
+    / same final IDA weight used by terminal electron_electron_ida
+```
+
+For charge `Z_A`, the sign convention is physical electron-nuclear attraction.
+
+Approved source surface:
+
+- preferred owner: `src/cartesian_final_basis_realization/pqs_terminal_ida.jl`;
+- narrow caller plumbing in the PQS low-order/base materialization path only if
+  needed for validation.
+
+Ownership guardrail: do not make `src/cartesian_ida_hamiltonian.jl` the owner.
+That file stores finished Hamiltonians and should not define the row-proxy
+convention.
+
+Explicit non-goals: not Galerkin `Vnuc`; not `diag(Vnuc_G)`; not row action;
+not center `-Z/r_i`; not screened-field `Delta_W`; not `W_IDA`; not `H1_eff`;
+not constants/corrected Hamiltonian; not rho0/P0; not EGOI; not artifact/public
+workflow/solver; not Cr/Cr2.
+
+Acceptance rule: accept only if the helper uses the same row proxy and
+normalization as `electron_electron_ida` and validates on tiny H.
+
+### HP-PQS-IDA-NUCEXT-TEST-01 — same-gauge IDA nuclear validation
+
+Status: approved validation gates.
+
+First target: H q5 with `core_spacing = 0.3`.
+
+Approved validation:
+
+- package load;
+- focused ignored probe;
+- `git diff --check`;
+- final IDA weights, with positivity and finiteness checks;
+- `uN_IDA` finite/range by row class;
+- direct-core rows compared to analytic Gaussian-proxy nuclear attraction where
+  possible;
+- diagnostic-only comparisons to `diag(Vnuc_G)` and center `-Z/r`, clearly
+  marked as non-acceptance criteria;
+- far-field behavior against `-Z/r` for localized rows.
+
+This test authority must not form `W_IDA`, `Delta_W`, `H1_eff`, constants,
+screened fields, artifacts, or corrected Hamiltonians.
+
 ### HP-FN-05 — final Hamiltonian construction
 
 Approved as the narrow Slice C2 construction boundary for the existing

@@ -175,6 +175,24 @@ Deferred gates:
 
 - non-base/supplement IDA variants.
 
+### Same-Gauge IDA Nuclear External Potential
+
+`HP-PQS-IDA-NUCEXT-FN-01` approves only the same-gauge IDA nuclear
+external-potential primitive `uN_IDA[A,i]` at the terminal IDA proxy seam. The
+preferred owner is `src/cartesian_final_basis_realization/pqs_terminal_ida.jl`
+because that file owns the final-row IDA density proxy and final-weight
+normalization used by `electron_electron_ida`.
+
+The helper must compute a point-nucleus attraction numerator for the same
+normalized row proxy and divide by the same final IDA row weight. It is not a
+Galerkin nuclear matrix, not `diag(Vnuc_G)`, not row action, not center
+evaluation, and not a screened-field or corrected-Hamiltonian assembly lane.
+
+`HP-PQS-IDA-NUCEXT-TEST-01` first validates H q5 with `core_spacing = 0.3`,
+including final IDA weights, row-class ranges, direct-core analytic
+Gaussian-proxy checks where possible, and diagnostic-only comparisons to
+`diag(Vnuc_G)` and center `-Z/r`.
+
 ## Slice C2 — CartesianIDAHamiltonian Construction
 
 Status: implemented.

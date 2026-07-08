@@ -25395,3 +25395,51 @@ Carrying-cost result:
   measurements, not repo defaults.
 - exact remaining blocker: none for CR2 expert use of `s_factor`; future work
   is measurement policy and, if needed, additional due-diligence reporting.
+
+## Cartesian Hamiltonian Producer Pass 315 - Same-Gauge IDA Nuclear External Authority
+
+Commit(s):
+- this commit - approve same-gauge IDA nuclear external helper
+
+Summary:
+- Approved `HP-PQS-IDA-NUCEXT-FN-01` and
+  `HP-PQS-IDA-NUCEXT-TEST-01` as a narrow source/validation lane for the
+  missing IDA row-proxy point-nucleus external-potential primitive
+  `uN_IDA[A,i]`.
+- The primitive is explicitly owned at the terminal IDA proxy seam, preferably
+  `src/cartesian_final_basis_realization/pqs_terminal_ida.jl`, because it must
+  use the same normalized final-row density proxy and final-row weights as
+  `electron_electron_ida`. `cartesian_ida_hamiltonian.jl` remains a finished
+  Hamiltonian container, not the convention owner.
+
+Validation / evidence:
+- Design evidence came from the screened-Vnuc promise audit: the probe stopped
+  rather than substituting Galerkin `Vnuc`, `diag(Vnuc_G)`, row action, exact
+  Galerkin values, or center metadata.
+- The approved source validation is H q5 with `core_spacing = 0.3`, reporting
+  final IDA weights, positivity/finiteness, row-class ranges, direct-core
+  analytic Gaussian-proxy checks where possible, and diagnostic-only
+  comparisons to `diag(Vnuc_G)` and center `-Z/r`.
+
+Goal advancement:
+- LT5/LT6: enables an honest screened-field audit by adding the one missing
+  same-gauge object instead of letting agents infer it from the wrong nuclear
+  one-body quantities.
+
+Risk / guardrail:
+- This is not screened-field assembly. It must not form `W_IDA`, `Delta_W`,
+  `H1_eff`, constants, corrected Hamiltonians, artifacts, public workflow,
+  solver inputs, rho0/P0, EGOI, or Cr/Cr2 runs. Acceptance depends on proving
+  the same row-proxy and normalization convention as terminal
+  `electron_electron_ida`.
+
+Carrying-cost result:
+- source line delta: 0 in this docs-only authority pass.
+- deleted: none.
+- simplified: one named primitive replaces a family of forbidden substitutes
+  in future screened-field probes.
+- quarantined: Galerkin nuclear matrices, diagonal/row-action shortcuts,
+  center-potential shortcuts, screened corrections, artifacts, solver workflow,
+  rho0/P0, EGOI, and Cr2 remain outside this lane.
+- exact remaining blocker: source implementation and the focused H validation
+  probe.

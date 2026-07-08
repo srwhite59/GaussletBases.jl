@@ -480,6 +480,8 @@ these approved design IDs:
 - `HP-WIRE-01`
 - `HP-FN-03`
 - `HP-FN-04`
+- `HP-PQS-IDA-NUCEXT-FN-01`
+- `HP-PQS-IDA-NUCEXT-TEST-01`
 - `HP-FN-05`
 - `HP-WIRE-02`
 - `HP-R1-FILE-01`
@@ -668,8 +670,16 @@ the approved file and line budget, and are reported in the implementation
 handoff.
 
 `HP-FN-04` approves only the internal Slice C1 localized IDA matrix assembly
-surface. `HP-FN-05` approves only the narrow Slice C2 construction boundary for
-the existing `CartesianIDAHamiltonian`. `HP-WIRE-02` approves only the narrow
+surface. `HP-PQS-IDA-NUCEXT-FN-01` and
+`HP-PQS-IDA-NUCEXT-TEST-01` approve only the same-gauge IDA point-nucleus
+external-potential helper `uN_IDA[A,i]`, preferably owned by
+`src/cartesian_final_basis_realization/pqs_terminal_ida.jl`. It must use the
+same normalized final-row IDA density proxy and final weights as
+`electron_electron_ida`; it is not Galerkin `Vnuc`, `diag(Vnuc_G)`, row
+action, center `-Z/r`, screened-field `Delta_W`, `W_IDA`, `H1_eff`, constants,
+rho0/P0, EGOI, artifacts, public workflow, solver integration, or Cr/Cr2.
+`HP-FN-05` approves only the narrow Slice C2 construction boundary for the
+existing `CartesianIDAHamiltonian`. `HP-WIRE-02` approves only the narrow
 Slice D base Hamiltonian materialization handoff: return `nothing` when no base
 Hamiltonian is requested, return the existing `CartesianIDAHamiltonian` on
 success, and use the existing Hamiltonian writer when artifact output is

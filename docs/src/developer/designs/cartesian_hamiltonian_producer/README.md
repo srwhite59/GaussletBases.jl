@@ -162,6 +162,8 @@ Agents should read first:
   for the measurement-only decision after terminal `G-G` workspace reuse
 - [R3 unit-nuclear U_GG Gaussian sum](r3_unit_nuclear_ugg_gaussian_sum.md)
   for the narrow terminal final-basis unit-nuclear `U_GG` optimization lane
+- [Same-gauge IDA nuclear external potential](ida_nuclear_external_potential.md)
+  for the row-proxy nuclear external potential `uN_IDA[A,i]`
 - [PQS/WL mapping `s_factor`](pqs_mapping_s_factor.md)
   for the expert mapping-strength scalar that preserves default behavior while
   allowing CR2-style scans
