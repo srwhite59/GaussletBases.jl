@@ -25443,3 +25443,73 @@ Carrying-cost result:
   rho0/P0, EGOI, and Cr2 remain outside this lane.
 - exact remaining blocker: source implementation and the focused H validation
   probe.
+
+### Medium-Term Goal Checkpoint After Pass 315
+
+- MT4 protected-localized Cr2 workflow remains active. The ladder bundle and
+  mapping `s_factor` lanes moved repeat Cr2 convergence work out of one-off
+  scripts, but value selection and production interpretation remain consumer
+  measurements.
+- The residual/protected-localized correction story has split cleanly into
+  separate candidate tracks: EGOI for matrix-level interaction repair,
+  screened-Vnuc for same-gauge external-field screening, and rho0/P0 as a
+  largely suspended affine-reference lane. These should not be recombined
+  without a fresh design pass.
+- The immediate screened-Vnuc blocker after Pass 315 is no longer the
+  row-proxy primitive; it is whether compact atom-local screening clouds stay
+  local and benign beyond H/Be/Be2, especially on Cr atom. This is a
+  measurement question, not source-correction authority.
+- Guardrail update: do not let positive static screened-field numbers become
+  artifact, solver, Cr2, or corrected-Hamiltonian claims. The next accepted
+  evidence should be tables showing cloud representation, `Delta_W` locality,
+  and low-mode sector makeup.
+
+## Cartesian Hamiltonian Producer Pass 316 - Continued Screened-Vnuc Measurement Authority
+
+Commit(s):
+- this commit - approve continued screened-Vnuc measurement lane
+
+Summary:
+- Approved `HP-PQS-SCREENED-VNUC-AUDIT-03` as a measurement-only continuation
+  after the same-gauge `uN_IDA[A,i]` primitive and positive H/Be/Be2 promise
+  audit. The lane measures the screened sum
+  `W_IDA = uN_IDA + V*q0`, `W_G = Vnuc_G + J0_G`, and
+  `Delta_W = W_G - W_IDA`.
+- The interpretation is deliberately narrow: cancellation is formed in the
+  same IDA Coulomb gauge, and only the screened atom-local one-body field is
+  compared to Galerkin. This is distinct from the old rho0/P0 affine anchor
+  line and from EGOI.
+
+Validation / evidence:
+- Recorded prior promise-audit evidence: H/Be/Be2 compact contracted-GTO
+  clouds projected to nearly integral charge, effective low one-body shifts
+  stayed small, negative `Delta_W` modes were compact/core-local, and Be2
+  far-radius bins remained at millihartree scale.
+- Approved measurement diagnostics require cloud definition, projected charge
+  and loss, `uN_IDA` final-weight sanity, `E_self_IDA`, `E_self_G`,
+  `C_screen`, `Delta_W` finite/symmetry/spectral/locality data, low-mode sector
+  makeup, occupied/reference orbital expectations, and comparison against
+  `SCREENED-VNUC-IDA-PROMISE-AUDIT-02`.
+
+Goal advancement:
+- LT5/LT6 and MT4: enables the next honest screened external-field audit on H,
+  Be, Be2, and optional Cr atom without source edits or Cr2 workflow. This
+  tests whether screened-Vnuc is a viable small-system correction candidate
+  before any source-backed Hamiltonian lane exists.
+
+Risk / guardrail:
+- Not approved: tracked source edits, artifacts/schema/public workflow, solver
+  workflow, Cr2, production corrected Hamiltonians, EGOI changes, rho0/P0
+  revival, exact exchange, substitutes for `uN_IDA`, protected-localized `Vee`
+  changes, residual/injection policy changes, or mapping default changes.
+
+Carrying-cost result:
+- source line delta: 0 in this docs-only authority pass.
+- deleted: none.
+- simplified: one named measurement lane replaces ad hoc screened-field probes
+  with explicit cloud/charge, locality, and stop-rule reporting.
+- quarantined: corrected Hamiltonian assembly, artifacts, solver workflow,
+  Cr2, EGOI, rho0/P0, exact exchange, and source edits remain outside this
+  lane.
+- exact remaining blocker: run the ignored measurement probe and identify
+  whether any cloud/charge convention remains stable through Cr atom.

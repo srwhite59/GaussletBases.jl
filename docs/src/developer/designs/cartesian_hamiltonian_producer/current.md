@@ -30,6 +30,8 @@ Normal startup reading:
   unit-nuclear `U_GG` Gaussian-sum allocation lane;
 - `ida_nuclear_external_potential.md` for the same-gauge IDA nuclear
   external-potential helper;
+- `screened_vnuc_measurement.md` for the continued measurement-only screened
+  electron-nuclear audit using same-gauge `uN_IDA`;
 - `pqs_mapping_s_factor.md` for the expert `s_factor` mapping-strength knob;
 - `r1_one_center_base_atoms.md` for explicit origin-centered all-electron
   one-center base atoms beyond H;
@@ -166,6 +168,13 @@ Implemented base path:
   density proxy and final weights as `electron_electron_ida`. It is not
   Galerkin `Vnuc`, not `diag(Vnuc_G)`, not row action, not center `-Z/r`, and
   not screened-field or corrected-Hamiltonian assembly.
+- `HP-PQS-SCREENED-VNUC-AUDIT-03` approves only continued ignored-probe
+  measurement of the screened electron-nuclear construction
+  `W_IDA = uN_IDA + V*q0`, `W_G = Vnuc_G + J0_G`,
+  `Delta_W = W_G - W_IDA` on H, Be, Be2, and optional Cr atom. It may vary
+  compact atom-local cloud and charge choices, but it does not approve source
+  edits, artifacts, solver workflow, Cr2, production corrected Hamiltonians,
+  EGOI, rho0/P0 revival, exact exchange, or substitutes for `uN_IDA`.
 - `HP-MCOMX-*` approves a protected-`P2` plus mapped Chebyshev source-span
   option at the existing nested doside / COMX seam. The nonlinear map uses
   normalized local `u`, while `_cleanup_comx_transform(...)` still uses the

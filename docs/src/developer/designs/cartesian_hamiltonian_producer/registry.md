@@ -2128,6 +2128,89 @@ Approved validation:
 This test authority must not form `W_IDA`, `Delta_W`, `H1_eff`, constants,
 screened fields, artifacts, or corrected Hamiltonians.
 
+### HP-PQS-SCREENED-VNUC-AUDIT-03 — continued screened-Vnuc measurement
+
+Status: approved measurement-only authority. This is not source authority.
+
+Purpose: continue the screened electron-nuclear measurement lane now that the
+same-gauge `uN_IDA[A,i]` primitive exists and H/Be/Be2 promise-audit evidence
+is positive.
+
+Measurement object:
+
+```text
+W_IDA = uN_IDA + V * q0
+W_G   = Vnuc_G + J0_G
+Delta_W = W_G - W_IDA
+```
+
+Interpretation: this is distinct from the old rho0/P0 affine correction. The
+cancellation is formed first in the same IDA Coulomb gauge, and only the
+screened atom-local one-body field is compared to Galerkin.
+
+Approved measurement surfaces:
+
+- ignored `tmp/work/*.jl` probes only;
+- durable `/Users/srw/dmrgtmp` output tables;
+- H, Be, Be2, and Cr atom only;
+- existing `uN_IDA` helper;
+- compact contracted atom-local GTO clouds.
+
+Allowed cloud/charge variations:
+
+- retained original compact `s1`/`s2` where available;
+- minimal or STO-like contracted core shells;
+- optional fake-RDM-selected compact shell directions when already available in
+  probe code;
+- neutral all-electron charge;
+- closed-shell core charge, e.g. Cr `[Ar]`-like 18e;
+- smaller shell-wise charges when physically meaningful.
+
+Required diagnostics:
+
+- cloud definition, including source labels, exponents/widths if available,
+  occupancy, and total charge;
+- `q0` projected charge, projection loss, and range;
+- `uN_IDA` final-weight sanity;
+- `E_self_IDA = 0.5 * q0' * V * q0`;
+- `E_self_G = 0.5 * (rho0 | rho0)_G`;
+- `C_screen = E_self_IDA - E_self_G`;
+- finite/symmetry checks for `W_IDA`, `W_G`, and `Delta_W`;
+- `Delta_W` diagonal, Frobenius, spectral range, locality/radius bins, and
+  row-class decomposition;
+- low one-body spectra and low-mode sector makeup;
+- occupied/reference orbital expectations of `Vnuc_G`, `J0_G`, `uN_IDA`,
+  `V * q0`, and `Delta_W`;
+- comparison against `SCREENED-VNUC-IDA-PROMISE-AUDIT-02` numbers.
+
+Decision rule: continue only if compact-GTO clouds remain well represented,
+`Delta_W` stays local/core-like, low one-body shifts remain modest, far bins
+decay, and Cr atom, if run, does not introduce broad or valence-destabilizing
+modes.
+
+Stop and report if `q0` representation becomes poor, `Delta_W` becomes
+nonlocal or large in valence/far bins, low modes become broad/protected or
+residual occupation incentives, or conclusions depend on correcting bare
+`Vnuc` or `J0` separately rather than the screened sum.
+
+Forbidden:
+
+- tracked source edits;
+- artifacts, schema, public workflow, or solver workflow;
+- Cr2;
+- production corrected Hamiltonian;
+- EGOI changes or expansion;
+- rho0/P0 affine-anchor revival;
+- exact exchange;
+- replacing `uN_IDA` with `diag(Vnuc_G)`, row action, exact `Vnuc_G`, or center
+  metadata;
+- protected-localized `Vee`, residual-selection, injection-policy, or mapping
+  default changes.
+
+Validation: package load, ignored probe run, `git diff --check`, and final git
+status. A later source-backed screened-Hamiltonian lane may be requested only
+after this measurement lane identifies a stable cloud/charge convention.
+
 ### HP-FN-05 — final Hamiltonian construction
 
 Approved as the narrow Slice C2 construction boundary for the existing

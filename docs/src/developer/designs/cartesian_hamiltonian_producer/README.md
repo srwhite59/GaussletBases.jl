@@ -164,6 +164,9 @@ Agents should read first:
   for the narrow terminal final-basis unit-nuclear `U_GG` optimization lane
 - [Same-gauge IDA nuclear external potential](ida_nuclear_external_potential.md)
   for the row-proxy nuclear external potential `uN_IDA[A,i]`
+- [Screened-Vnuc measurement lane](screened_vnuc_measurement.md)
+  for the continued measurement-only screened electron-nuclear audit using
+  same-gauge `uN_IDA`
 - [PQS/WL mapping `s_factor`](pqs_mapping_s_factor.md)
   for the expert mapping-strength scalar that preserves default behavior while
   allowing CR2-style scans
