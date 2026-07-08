@@ -2283,6 +2283,68 @@ Stop if the protected reference determinant cannot be represented exactly,
 `J0_G`, `E0_G`, and `q0` come from mismatched densities, or the correction
 creates broad or valence-destabilizing modes.
 
+### HP-PQS-SCREEN-HARTREE-NE-AUDIT-01 — Ne screened Hartree endpoint measurement
+
+Status: approved measurement-only authority. This is not source authority.
+
+Purpose: run one narrow Ne atom endpoint measurement under the screened
+Hartree residual-density formalism.
+
+Scope:
+
+- ignored `tmp/work/*.jl` probe only;
+- durable `/Users/srw/dmrgtmp` output;
+- Ne atom only;
+- closed-shell RHF;
+- cc-pV5Z supplement;
+- `lmax = 1`;
+- screen by all electrons: protect the pure-GTO all-electron Ne reference
+  determinant `1s^2 2s^2 2p^6` in the final basis.
+
+Required formalism:
+
+- keep `Vnuc_G` Galerkin;
+- construct `J0_G`, `E0_G`, and `q0` from the protected GTO determinant;
+- use IDA/MWG only on `q - q0`;
+- compare against radial-gausslet reference
+  `E_ref(Ne) = -128.547098109 Ha`.
+
+Required standard-scaled PQS points:
+
+```text
+core_spacing = 1.2 / (Z * (ns - 1)), Z = 10
+ns = 5: core_spacing = 0.030
+ns = 7: core_spacing = 0.020
+```
+
+Run at least `ns = 5`; run `ns = 7` if feasible.
+
+Required reporting:
+
+- dimensions, residual counts, and candidate counts;
+- protected determinant representation loss;
+- `Tr(P0)`, `q0` charge, and per-orbital projection loss;
+- anchor energy and derivative errors;
+- uncorrected RHF energy/error;
+- screened-Hartree RHF energy/error;
+- screened minus uncorrected shift;
+- `Delta_J0` eigenvalue range, diagonal range, and low-mode
+  locality/sector makeup;
+- whether `lmax = 1` residual directions are actually retained.
+
+Forbidden:
+
+- tracked source edits;
+- artifacts or public workflow;
+- solver/driver integration;
+- Cr/Cr2;
+- exchange correction;
+- EGOI changes;
+- rho0/P0 revival;
+- mapping default or fitting-policy changes;
+- treating Ne as a broad first-row endpoint claim before this bounded
+  measurement is reviewed.
+
 ### HP-FN-05 — final Hamiltonian construction
 
 Approved as the narrow Slice C2 construction boundary for the existing

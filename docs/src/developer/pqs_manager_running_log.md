@@ -25564,3 +25564,173 @@ Carrying-cost result:
 - exact remaining blocker: run the ignored H/Be/Be2 measurement audit and
   prove the protected reference determinant, `J0_G`/`E0_G`/`q0` consistency,
   and benign low modes before considering Cr atom.
+
+## Cartesian Hamiltonian Producer Pass 318 - Screened Hartree Static Audit And Be RHF Endpoint
+
+Commit(s):
+- `05509b028` - authority commit for the screened Hartree residual-density
+  audit; no source commit in these measurement reruns.
+
+Summary:
+- Accepted the measurement-only screened Hartree audit on H/Be/Be2 and the
+  corrected Be RHF endpoint rerun at the standard-scaled `ns=7` point. The
+  protected pure-GTO reference determinants are represented at roundoff, and
+  the direct Hartree energy/derivative anchor passes at roundoff to
+  `1e-10`-scale precision depending on the case.
+- The Be endpoint interpretation is deliberately modest. The stale fixed
+  `ns=7, core_spacing=0.075` result should be replaced by the standard ladder
+  `ns=7, core_spacing=0.05, s_factor=1.0` rerun. At that point the screened
+  correction improves the RHF endpoint by only `0.0119` mHa, from `0.7740`
+  mHa above the radial-gausslet/RHF reference to `0.7621` mHa above it.
+
+Validation / evidence:
+- H/Be/Be2 screened Hartree audit:
+  `tmp/work/screened_hartree_residual_density_audit_01.jl`, output under
+  `/Users/srw/dmrgtmp/screened_hartree_residual_density_audit_01_05509b028/`.
+  P0 trace errors were `~1e-14`, reference orbital representation loss was at
+  roundoff, and low one-body shifts were small: H `-2.74e-4` Ha, Be
+  `-9.05e-4` Ha, Be2 `-1.52e-3` Ha. Negative `Delta_J0` modes were
+  compact/direct-core local rather than broad valence instabilities.
+- Corrected Be endpoint rerun:
+  `tmp/work/be_screened_hartree_endpoint_ns7_scaled.jl`, output under
+  `/Users/srw/dmrgtmp/be_screened_hartree_endpoint_ns7_scaled_05509b028/`.
+  It used Be RHF, `ns=q=7`, `core_spacing=0.05`, `s_factor=1.0`, cc-pV5Z
+  contracted `s1` protected as `1s^2`, dimension `2087`, `B_min =
+  0.9999994229`, `Tr(P0)=2.0000000000000115`, and anchor errors around
+  `2e-13`.
+- Doer validation was package load, ignored probe execution, `git diff
+  --check`, and unchanged tracked source state for the measurement reruns.
+
+Goal advancement:
+- LT5/LT6 and MT4: keeps the screened Hartree residual-density branch alive as
+  a clean static algebraic correction, but prevents overclaiming endpoint
+  impact from Be. It is now evidence of stability and locality, not evidence
+  that protected `1s^2` screening alone fixes first-row atom RHF endpoints.
+
+Risk / guardrail:
+- Do not promote this to source-backed endpoint workflow, artifact schema,
+  solver integration, Cr/Cr2, exchange correction, or broad first-row atom
+  claims. The next useful evidence should either refine the protected core
+  cloud/reference convention or compare against another bounded atom endpoint.
+
+Carrying-cost result:
+- source line delta: 0 in these measurement reruns.
+- deleted: none.
+- simplified: stale fixed-core `ns=7` Be interpretation is replaced by the
+  standard-scaled `core_spacing=0.05` result.
+- quarantined: probes and outputs remain ignored measurement artifacts under
+  `tmp/work` and `/Users/srw/dmrgtmp`.
+- exact remaining blocker: screened Hartree is static-clean but endpoint-small
+  for Be at standard `ns=7`; it needs either a better cloud/reference
+  convention or another atom endpoint before any source-backed workflow lane.
+
+## Cartesian Hamiltonian Producer Pass 319 - Be RHF lmax=1 Residual-Space Endpoint Rerun
+
+Commit(s):
+- `05509b028` - authority commit for the screened Hartree residual-density
+  audit; no source commit in this measurement rerun.
+
+Summary:
+- Accepted the Be RHF endpoint rerun with `lmax=1` and residual-GTO main
+  space. This supersedes the `lmax=0` Be endpoint interpretation in Pass 318:
+  the prior run was a radial/s-only endpoint smoke, not a meaningful Be atom
+  endpoint.
+- The important result is that `lmax=1` residual augmentation changes the Be
+  endpoint substantially. At `ns=5, core_spacing=0.075`, screened Hartree
+  improves the RHF error from `+0.399` mHa to `-0.060` mHa. At
+  `ns=7, core_spacing=0.05`, the uncorrected residual-augmented Hamiltonian is
+  already extremely close to the radial-gausslet/RHF reference, `+0.005` mHa,
+  and screened Hartree slightly worsens it to `+0.019` mHa.
+
+Validation / evidence:
+- Main output:
+  `/Users/srw/dmrgtmp/be_screened_hartree_endpoint_lmax1_residual_05509b028/`.
+  Control output without retained p-channel supplement directions:
+  `/Users/srw/dmrgtmp/be_screened_hartree_endpoint_lmax1_05509b028/`.
+- Main fixture used cc-pV5Z, `lmax=1`, closed-shell Be RHF, inherited
+  same-spin IDA exchange convention, and the original `s1` protected as the
+  `1s^2` reference. Final dimensions were `832` for `ns=5` and `2107` for
+  `ns=7`, with `20`-`21` residual candidates retained.
+- Static checks remained clean: protected `s1` representation loss was
+  `1.55e-15` at `ns=5` and `4.88e-15` at `ns=7`, `B_min` stayed at
+  `0.99999997` or better, anchor errors were `~6e-14` to `2e-13`, and low
+  negative `Delta_J0` modes were base-dominated rather than residual-sector
+  instabilities.
+
+Goal advancement:
+- LT5/LT6 and MT4: shows that Be endpoint quality is dominated here by the
+  residual-augmented `lmax=1` basis/convention, not by the screened Hartree
+  correction alone. Screened Hartree remains stable and algebraically clean,
+  but at the converged `ns=7` Be point it is a tiny perturbation on an already
+  nearly exact endpoint.
+
+Risk / guardrail:
+- Do not cite the `lmax=0` endpoint as evidence about Be physics. Do not
+  promote screened Hartree to a source-backed endpoint workflow from this
+  result alone. The `lmax=1` result is encouraging for endpoint accuracy, but
+  the mechanism is still mixed: residual-space completeness, IDA/MWG behavior,
+  and the protected-core screened correction all changed together.
+
+Carrying-cost result:
+- source line delta: 0 in this measurement rerun.
+- deleted: none.
+- simplified: Pass 318's Be endpoint interpretation is narrowed to a stale
+  `lmax=0` smoke; the current Be endpoint record is the `lmax=1`
+  residual-main-space result.
+- quarantined: probes and outputs remain ignored measurement artifacts under
+  `tmp/work` and `/Users/srw/dmrgtmp`.
+- exact remaining blocker: isolate why p-channel residual augmentation
+  improves Be despite pure-GTO Be RHF not needing `l=1`; do not treat the
+  screened Hartree correction as the sole endpoint driver.
+
+## Cartesian Hamiltonian Producer Pass 320 - Ne Screened Hartree Endpoint Authority
+
+Commit(s):
+- this commit - approve Ne screened Hartree endpoint audit
+
+Summary:
+- Approved `HP-PQS-SCREEN-HARTREE-NE-AUDIT-01` as a narrow measurement-only
+  endpoint extension of the screened Hartree residual-density branch. The
+  target is Ne atom closed-shell RHF with cc-pV5Z, `lmax = 1`, and all-electron
+  screening by the protected pure-GTO determinant `1s^2 2s^2 2p^6`.
+- The formalism remains the Pass 317 branch: `Vnuc_G` stays Galerkin,
+  `J0_G`/`E0_G`/`q0` come from the same protected determinant, and IDA/MWG acts
+  only on `q - q0`. This is not the same-gauge `uN_IDA` screened-Vnuc branch
+  and does not revive rho0/P0 row-gauge shortcuts.
+
+Validation / evidence:
+- The approved measurement compares against radial-gausslet reference
+  `E_ref(Ne) = -128.547098109 Ha`.
+- Standard-scaled PQS points are requested with
+  `core_spacing = 1.2 / (Z * (ns - 1))`, `Z = 10`: `ns = 5` gives
+  `core_spacing = 0.030`; `ns = 7` gives `core_spacing = 0.020`.
+- Required reporting includes dimensions, residual and candidate counts,
+  protected determinant representation loss, `Tr(P0)`, `q0` charge,
+  per-orbital projection loss, anchor errors, uncorrected and screened RHF
+  energy errors, screened shift, `Delta_J0` ranges/locality, and whether
+  `lmax = 1` residual directions are retained.
+
+Goal advancement:
+- LT5/LT6 and MT4: supplies the next bounded first-row atom endpoint after Be,
+  without turning the screened Hartree branch into source-backed workflow or a
+  broad first-row claim. Ne tests whether all-electron protected screening and
+  `lmax = 1` residual augmentation remain stable when both core and valence
+  shells are represented.
+
+Risk / guardrail:
+- Not approved: tracked source edits, artifacts/public workflow, solver or
+  driver integration, Cr/Cr2, exchange correction, EGOI changes, rho0/P0
+  revival, mapping default or fitting-policy changes, or treating Ne as a broad
+  endpoint conclusion before this bounded measurement is reviewed.
+
+Carrying-cost result:
+- source line delta: 0 in this docs-only authority pass.
+- deleted: none.
+- simplified: turns the informal "try Ne" request into one bounded endpoint
+  fixture with explicit reference energy, spacing ladder, and reporting gates.
+- quarantined: production workflow, artifacts, solver integration, Cr/Cr2,
+  exchange, EGOI, rho0/P0, and source edits remain outside this lane.
+- exact remaining blocker: run the ignored Ne probe and review whether the
+  all-electron protected determinant, `lmax = 1` residual space, and screened
+  Hartree correction produce a stable endpoint at `ns = 5` and preferably
+  `ns = 7`.

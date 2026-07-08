@@ -258,3 +258,59 @@ core-local/moderate, and H/Be/Be2 low modes remain benign.
 Stop if the protected reference determinant cannot be represented exactly,
 `J0_G`, `E0_G`, and `q0` come from mismatched densities, or the correction
 creates broad or valence-destabilizing modes.
+
+## Ne Endpoint Measurement
+
+`HP-PQS-SCREEN-HARTREE-NE-AUDIT-01` approves one narrow endpoint extension of
+this measurement branch.
+
+Allowed:
+
+- ignored `tmp/work` probe only;
+- durable `/Users/srw/dmrgtmp` output;
+- Ne atom only;
+- closed-shell RHF;
+- cc-pV5Z supplement with `lmax = 1`;
+- screen by all electrons: protect the pure-GTO all-electron Ne reference
+  determinant `1s^2 2s^2 2p^6` in the final basis;
+- use this screened Hartree residual-density formalism:
+  - `Vnuc_G` remains Galerkin;
+  - `J0_G`, `E0_G`, and `q0` come from the protected GTO determinant;
+  - IDA/MWG acts only on `q - q0`;
+- compare against radial-gausslet Ne reference
+  `E_ref = -128.547098109 Ha`;
+- run standard-scaled PQS points, at least `ns = 5` and `ns = 7` if feasible.
+
+Standard core spacings for Ne, `Z = 10`, use
+`core_spacing = 1.2 / (Z * (ns - 1))`:
+
+```text
+ns = 5: core_spacing = 0.030
+ns = 7: core_spacing = 0.020
+```
+
+Required reporting:
+
+- dimensions, residual counts, and candidate counts;
+- protected determinant representation loss;
+- `Tr(P0)`, `q0` charge, and per-orbital projection loss;
+- anchor energy and derivative errors;
+- uncorrected RHF energy/error;
+- screened-Hartree RHF energy/error;
+- screened minus uncorrected shift;
+- `Delta_J0` eigenvalue range, diagonal range, and low-mode
+  locality/sector makeup;
+- whether `lmax = 1` residual directions are actually retained.
+
+Forbidden:
+
+- tracked source edits;
+- artifacts or public workflow;
+- solver or driver integration;
+- Cr/Cr2;
+- exchange correction;
+- EGOI changes;
+- rho0/P0 revival;
+- mapping default or fitting-policy changes;
+- treating Ne as a broad first-row endpoint claim before this bounded
+  measurement is reviewed.

@@ -188,6 +188,15 @@ Implemented base path:
   require `uN_IDA` and does not approve source edits, artifacts, solver
   workflow, Cr2, production corrected Hamiltonians, exchange, row-gauge rho0
   shortcuts, discarding reference GTO directions, or EGOI changes.
+- `HP-PQS-SCREEN-HARTREE-NE-AUDIT-01` approves only a narrow Ne endpoint
+  measurement under the same screened Hartree residual-density formalism. The
+  fixture is Ne closed-shell RHF, cc-pV5Z, `lmax = 1`, all-electron screening
+  by a protected pure-GTO `1s^2 2s^2 2p^6` determinant, and standard-scaled
+  PQS points `ns = 5` (`core_spacing = 0.030`) and `ns = 7`
+  (`core_spacing = 0.020`) if feasible. It compares against
+  `E_ref = -128.547098109 Ha` and does not approve source edits, artifacts,
+  solver/driver integration, Cr/Cr2, exchange correction, EGOI, rho0/P0
+  revival, mapping-default changes, or broad first-row endpoint claims.
 - `HP-MCOMX-*` approves a protected-`P2` plus mapped Chebyshev source-span
   option at the existing nested doside / COMX seam. The nonlinear map uses
   normalized local `u`, while `_cleanup_comx_transform(...)` still uses the
