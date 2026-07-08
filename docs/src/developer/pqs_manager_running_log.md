@@ -25734,3 +25734,72 @@ Carrying-cost result:
   all-electron protected determinant, `lmax = 1` residual space, and screened
   Hartree correction produce a stable endpoint at `ns = 5` and preferably
   `ns = 7`.
+
+### Medium-Term Goal Checkpoint After Pass 320
+
+- MT4 screened-Hartree endpoint work is active but still measurement-only. The
+  branch is algebraically cleaner than the older row-gauge/rho0 line: `Vnuc_G`
+  stays Galerkin, the reference determinant/cloud defines `rho0`, and IDA/MWG
+  only handles `q - q0` fluctuations.
+- The Be evidence now has a narrower interpretation. `lmax = 1` residual
+  augmentation is important for endpoint accuracy, while the screened-Hartree
+  correction itself is stable but not the sole driver. Avoid citing the
+  `lmax = 0` Be smoke as a Be physics result.
+- The next open question is practical representation of `rho0`. Exact
+  determinant-density evaluation is a useful oracle, but first-row endpoint
+  work needs a compressed cloud path that is numerically near-exact rather than
+  a tunable model.
+- Guardrail update: do not promote any endpoint measurement into source-backed
+  correction assembly, artifacts, solver workflow, exchange, EGOI, or broad
+  first-row claims until the fitted-cloud path and its fit errors are reviewed.
+
+## Cartesian Hamiltonian Producer Pass 321 - Ne Fitted-Cloud Screened Hartree Authority
+
+Commit(s):
+- this commit - approve Ne fitted-cloud screened Hartree audit
+
+Summary:
+- Approved `HP-PQS-SCREEN-HARTREE-NE-FITCLOUD-AUDIT-01` as a measurement-only
+  amendment to the Ne endpoint lane. The exact determinant-density path is now
+  explicitly the oracle/validation path; the practical endpoint path fits the
+  all-electron Ne reference density to a compact atom-centered spherical
+  Gaussian density cloud.
+- The fitted cloud is not a tunable physical model. It must be a near-exact
+  compressed representation of the same pure-GTO all-electron reference
+  density, with the GTO/cloud generators protected or represented exactly in
+  the final gausslet+supplement basis.
+
+Validation / evidence:
+- Fit standard recorded: increase the number/flexibility of Gaussian density
+  terms until about `1e-8` relative error in Coulomb-relevant diagnostics, or
+  until the fit is clearly limited by singular/ill-conditioned linear algebra.
+- Required fit diagnostics include term count, rank/condition/singular
+  spectrum, width/exponent range, charge error, radial/enclosed-charge or
+  sampled residual, Coulomb self-energy error against the exact determinant
+  oracle where feasible, `J0_G` matrix/action error on the smallest feasible
+  point, protection loss for every cloud generator, and whether the stop was
+  accuracy-satisfied or singular-math-limited.
+
+Goal advancement:
+- LT5/LT6 and MT4: moves screened-Hartree endpoint work from an expensive
+  oracle construction toward the intended practical route without changing the
+  physics target. The compression must preserve `rho0`; endpoint shifts are
+  not interpretable if fit error is comparable to the observed screened shift.
+
+Risk / guardrail:
+- Not approved: tracked source edits, artifacts/public workflow, solver or
+  driver integration, Cr/Cr2, exchange correction, EGOI changes, rho0/P0
+  row-gauge shortcuts, unreported density fits, discarding protected cloud
+  directions, or broad first-row claims.
+
+Carrying-cost result:
+- source line delta: 0 in this docs-only authority pass.
+- deleted: none.
+- simplified: separates the exact determinant-density oracle from the
+  near-exact compressed fitted-cloud endpoint path.
+- quarantined: source-backed implementation, production workflow, artifacts,
+  solver integration, Cr/Cr2, exchange, EGOI, and row-gauge rho0/P0 remain
+  outside this lane.
+- exact remaining blocker: run the ignored Ne fitted-cloud probe and show that
+  fit error is well below mHa endpoint interpretation and below the observed
+  screened-Hartree energy shift.

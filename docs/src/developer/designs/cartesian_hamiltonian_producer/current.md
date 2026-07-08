@@ -197,6 +197,18 @@ Implemented base path:
   `E_ref = -128.547098109 Ha` and does not approve source edits, artifacts,
   solver/driver integration, Cr/Cr2, exchange correction, EGOI, rho0/P0
   revival, mapping-default changes, or broad first-row endpoint claims.
+- `HP-PQS-SCREEN-HARTREE-NE-FITCLOUD-AUDIT-01` approves only a measurement
+  variant of the Ne endpoint where the all-electron Ne reference density is fit
+  to a compact atom-centered spherical Gaussian density cloud. The exact
+  determinant-density path is an oracle/validation path; the fitted cloud is
+  the practical endpoint path. The fit must be a near-exact compression of the
+  pure-GTO reference density, targeting about `1e-8` relative error in
+  Coulomb-relevant diagnostics unless limited by singular math. Endpoint
+  interpretation is forbidden if fit error is comparable to the observed
+  screened-Hartree shift. This does not approve source edits, artifacts, solver
+  or driver integration, Cr/Cr2, exchange correction, EGOI, row-gauge rho0/P0,
+  unreported fits, discarding protected cloud directions, or broad first-row
+  claims.
 - `HP-MCOMX-*` approves a protected-`P2` plus mapped Chebyshev source-span
   option at the existing nested doside / COMX seam. The nonlinear map uses
   normalized local `u`, while `_cleanup_comx_transform(...)` still uses the

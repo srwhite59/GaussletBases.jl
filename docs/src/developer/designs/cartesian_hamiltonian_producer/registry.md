@@ -2345,6 +2345,92 @@ Forbidden:
 - treating Ne as a broad first-row endpoint claim before this bounded
   measurement is reviewed.
 
+### HP-PQS-SCREEN-HARTREE-NE-FITCLOUD-AUDIT-01 — Ne fitted-cloud screened Hartree endpoint measurement
+
+Status: approved measurement-only authority. This is not source authority.
+
+Purpose: allow the practical Ne screened-Hartree endpoint path using a
+near-exact compressed Gaussian fit to the pure-GTO all-electron reference
+density.
+
+Interpretation:
+
+- the exact determinant-density path is an oracle/validation path;
+- the fitted compact Gaussian cloud is the practical endpoint path;
+- the fitted cloud is not a tunable physical model and not a rough screening
+  approximation;
+- the fit exists for computational compression, not for changing the physics.
+
+Scope:
+
+- ignored `tmp/work/*.jl` probe only;
+- durable `/Users/srw/dmrgtmp` output;
+- Ne atom only;
+- closed-shell RHF endpoint;
+- cc-pV5Z supplement;
+- `lmax = 1`;
+- standard-scaled `ns = 5` and `ns = 7` if feasible;
+- fit the all-electron Ne reference density, total charge `10e`, to a compact
+  atom-centered sum of spherical Gaussian density terms;
+- protect/represent exactly the GTO/cloud generators used by the fit so the
+  fitted density is exactly reproducible in the gausslet+supplement working
+  space;
+- build `J0_G`, `E0_G`, and `q0` from the fitted cloud, not from all occupied
+  determinant pair densities;
+- compare endpoint RHF energies to `E_ref(Ne) = -128.547098109 Ha`.
+
+Fit standard:
+
+- increase the number/flexibility of Gaussian density terms until the fit
+  reaches about `1e-8` relative error in Coulomb-relevant diagnostics, or until
+  the fit is clearly singular/ill-conditioned;
+- endpoint energies may be interpreted only if fit error is well below the
+  observed screened-Hartree energy shift and below the target mHa-scale endpoint
+  discussion.
+
+Required fit diagnostics:
+
+- number of Gaussian density terms;
+- fit rank and condition/singular spectrum;
+- max/min Gaussian exponents or widths;
+- total fitted charge error;
+- radial/enclosed-charge error if available;
+- density residual norm or sampled radial residual;
+- Coulomb self-energy absolute/relative error versus the exact
+  determinant-density oracle where feasible, at least on `ns = 5` or a small
+  oracle check;
+- `J0_G` matrix/action error versus the exact determinant-density oracle on the
+  smallest feasible point;
+- representation/protection loss of every cloud generator;
+- whether the stop was accuracy-satisfied or singular-math-limited.
+
+Required endpoint diagnostics:
+
+- uncorrected RHF energy/error;
+- screened-fitted-cloud RHF energy/error;
+- screened minus uncorrected shift;
+- anchor energy/derivative errors for the fitted cloud;
+- `Delta_J0` eigenvalue and diagonal range;
+- low-mode locality/sector makeup;
+- retained residual counts, including p-channel confirmation.
+
+Forbidden:
+
+- tracked source edits;
+- artifacts or public workflow;
+- solver/driver integration;
+- Cr/Cr2;
+- exchange correction;
+- EGOI changes;
+- rho0/P0 row-gauge shortcuts;
+- unreported density fits;
+- discarding any protected cloud direction;
+- broad first-row claims.
+
+Decision rule: if the fitted cloud differs materially from the exact
+determinant density, report the difference as fit error before interpreting
+energy shifts.
+
 ### HP-FN-05 — final Hamiltonian construction
 
 Approved as the narrow Slice C2 construction boundary for the existing
