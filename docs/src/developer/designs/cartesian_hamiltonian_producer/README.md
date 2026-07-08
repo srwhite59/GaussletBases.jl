@@ -167,6 +167,9 @@ Agents should read first:
 - [Screened-Vnuc measurement lane](screened_vnuc_measurement.md)
   for the continued measurement-only screened electron-nuclear audit using
   same-gauge `uN_IDA`
+- [Screened Hartree residual-density formalism](screened_hartree_residual_density.md)
+  for the measurement-only protected-GTO Hartree branch: keep `Vnuc_G`
+  Galerkin and use IDA/MWG only for residual density fluctuations `q - q0`
 - [PQS/WL mapping `s_factor`](pqs_mapping_s_factor.md)
   for the expert mapping-strength scalar that preserves default behavior while
   allowing CR2-style scans

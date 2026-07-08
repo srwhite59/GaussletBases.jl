@@ -32,6 +32,9 @@ Normal startup reading:
   external-potential helper;
 - `screened_vnuc_measurement.md` for the continued measurement-only screened
   electron-nuclear audit using same-gauge `uN_IDA`;
+- `screened_hartree_residual_density.md` for the measurement-only Hartree
+  protected-GTO residual-density audit that keeps `Vnuc_G` Galerkin and uses
+  IDA/MWG only on `q - q0` fluctuations;
 - `pqs_mapping_s_factor.md` for the expert `s_factor` mapping-strength knob;
 - `r1_one_center_base_atoms.md` for explicit origin-centered all-electron
   one-center base atoms beyond H;
@@ -175,6 +178,16 @@ Implemented base path:
   compact atom-local cloud and charge choices, but it does not approve source
   edits, artifacts, solver workflow, Cr2, production corrected Hamiltonians,
   EGOI, rho0/P0 revival, exact exchange, or substitutes for `uN_IDA`.
+- `HP-PQS-SCREEN-HARTREE-AUDIT-01` approves only measurement of the screened
+  Hartree residual-density formalism in
+  `screened_hartree_residual_density.md`. It starts from
+  `rho_hat = rho0 + delta_rho_hat`, keeps `Vnuc_G` exact/Galerkin, protects a
+  pure-GTO reference determinant exactly in the final basis, and applies
+  IDA/MWG only to `1/2 * (q - q0)' * V_IDA * (q - q0)`. It may use ignored
+  probes on H/Be/Be2 and optional Cr atom after small cases pass. It does not
+  require `uN_IDA` and does not approve source edits, artifacts, solver
+  workflow, Cr2, production corrected Hamiltonians, exchange, row-gauge rho0
+  shortcuts, discarding reference GTO directions, or EGOI changes.
 - `HP-MCOMX-*` approves a protected-`P2` plus mapped Chebyshev source-span
   option at the existing nested doside / COMX seam. The nonlinear map uses
   normalized local `u`, while `_cleanup_comx_transform(...)` still uses the

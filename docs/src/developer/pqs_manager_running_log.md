@@ -25513,3 +25513,54 @@ Carrying-cost result:
   lane.
 - exact remaining blocker: run the ignored measurement probe and identify
   whether any cloud/charge convention remains stable through Cr atom.
+
+## Cartesian Hamiltonian Producer Pass 317 - Screened Hartree Residual-Density Measurement Authority
+
+Commit(s):
+- this commit - approve protected-GTO screened Hartree residual-density audit
+
+Summary:
+- Approved `HP-PQS-SCREEN-HARTREE-AUDIT-01` as measurement-only authority for
+  the protected-GTO screened Hartree residual-density formalism. The formalism
+  starts from `rho_hat = rho0 + delta_rho_hat`, keeps `Vnuc_G` exact/Galerkin,
+  protects the pure-GTO reference determinant in the final working basis, and
+  uses IDA/MWG only for the residual direct term
+  `1/2 * (q - q0)' * V_IDA * (q - q0)`.
+- This deliberately reframes the main Hartree branch away from the all-IDA
+  screened-nucleus path. `uN_IDA` remains useful for its own same-gauge
+  screened-Vnuc measurements, but it is not required for this residual-density
+  Hartree branch.
+
+Validation / evidence:
+- Repo-manager added the formalism page and linked it from startup docs; this
+  pass promoted it from planning/formalism to a measurement-only audit with
+  explicit allowed systems, diagnostics, forbidden surfaces, and stop rules.
+- Approved measurement diagnostics require exact or roundoff representation of
+  `P0`, density consistency between `J0_G`, `E0_G`, and `q0`,
+  direct-Hartree energy/derivative identity checks, and low-mode/locality/
+  spectra/orbital-expectation diagnostics on H/Be/Be2 before any optional Cr
+  atom measurement.
+
+Goal advancement:
+- LT5/LT6 and MT4: gives the next Hartree correction investigation a cleaner
+  algebraic target. Point nuclei remain exact/Galerkin, and IDA/MWG is only
+  asked to describe residual density fluctuations rather than bare nuclear
+  attraction or row-gauge identities.
+
+Risk / guardrail:
+- Not approved: tracked source edits, artifacts/schema/public workflow, solver
+  workflow, Cr2, production corrected Hamiltonians, exchange correction,
+  row-gauge rho0 shortcuts, discarding reference GTO directions, making
+  `uN_IDA` required for this branch, or EGOI changes.
+
+Carrying-cost result:
+- source line delta: 0 in this docs-only authority pass.
+- deleted: none.
+- simplified: distinguishes two separate screened branches: same-gauge
+  screened-Vnuc measurement versus protected-GTO residual-density Hartree
+  measurement.
+- quarantined: source-backed correction assembly, artifacts, solver workflow,
+  Cr2, exchange, row-gauge rho0, and EGOI remain outside this lane.
+- exact remaining blocker: run the ignored H/Be/Be2 measurement audit and
+  prove the protected reference determinant, `J0_G`/`E0_G`/`q0` consistency,
+  and benign low modes before considering Cr atom.

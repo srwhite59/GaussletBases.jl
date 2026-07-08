@@ -2211,6 +2211,78 @@ Validation: package load, ignored probe run, `git diff --check`, and final git
 status. A later source-backed screened-Hamiltonian lane may be requested only
 after this measurement lane identifies a stable cloud/charge convention.
 
+### HP-PQS-SCREEN-HARTREE-AUDIT-01 — protected-GTO screened Hartree residual-density audit
+
+Status: approved measurement-only authority. This is not source authority.
+
+Purpose: audit the protected-GTO screened Hartree residual-density formalism
+recorded in `screened_hartree_residual_density.md`.
+
+Core formalism:
+
+```text
+rho_hat = rho0 + delta_rho_hat
+```
+
+Approximate only the residual direct Coulomb term with IDA/MWG:
+
+```text
+E_screen[P] =
+    Tr(P * (T + Vnuc_G + J0_G))
+  + 1/2 * (q(P) - q0)' * V_IDA * (q(P) - q0)
+  - 1/2 * E0_G
+```
+
+Equivalently, relative to current direct IDA Hartree:
+
+```text
+Delta_J0 = J0_G - Diagonal(V_IDA * q0)
+C = 1/2 * q0' * V_IDA * q0 - 1/2 * E0_G
+```
+
+Important distinction: this branch does not require `uN_IDA`. The point
+nucleus remains Galerkin. IDA/MWG is used only for residual density
+fluctuations.
+
+Approved measurement surfaces:
+
+- ignored `tmp/work/*.jl` probes only;
+- durable `/Users/srw/dmrgtmp` outputs;
+- H, Be, and Be2 first;
+- optional Cr atom only after small cases pass.
+
+Allowed measurement behavior:
+
+- build a pure-GTO closed-shell atomic RHF reference density once;
+- explicitly protect/reference occupied GTO directions so the determinant is
+  exactly represented in the final basis;
+- construct `P0_final` and `q0 = diag(P0_final)`;
+- construct `J0_G` and `E0_G` from the same `rho0`;
+- form `Delta_J0` and `C`;
+- validate the direct Hartree energy/derivative identity;
+- report low-mode, locality, spectra, and orbital-expectation diagnostics.
+
+Forbidden:
+
+- tracked source edits;
+- artifacts, schema, or public workflow;
+- solver workflow;
+- Cr2;
+- production corrected Hamiltonian;
+- exchange correction;
+- row-gauge rho0 shortcuts;
+- discarding reference GTO directions;
+- using `uN_IDA` as a requirement for this branch;
+- EGOI changes.
+
+Decision rule: continue only if `P0` is represented exactly or at roundoff,
+`J0_G`, `E0_G`, and `q0` refer to the same `rho0`, `Delta_J0` is
+core-local/moderate, and H/Be/Be2 low modes remain benign.
+
+Stop if the protected reference determinant cannot be represented exactly,
+`J0_G`, `E0_G`, and `q0` come from mismatched densities, or the correction
+creates broad or valence-destabilizing modes.
+
 ### HP-FN-05 — final Hamiltonian construction
 
 Approved as the narrow Slice C2 construction boundary for the existing
