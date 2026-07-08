@@ -375,6 +375,19 @@ Approved Residual Gaussian robustness lane:
   not be converted into broad MWG RG channels. Do not turn on the existing
   direct `G`-injection path as-is for this design, and do not issue source
   work without a fresh implementation authority.
+- `HP-RG-OCC-FIRST-INJECT-AUDIT-01` approves only measurement/design audit
+  authority for occupied-first global injection on one-center atoms. Be/Ne
+  pure-GTO RHF occupied subspaces `Y_occ` are mandatory reference directions:
+  they must be added before ordinary RG/injection decisions, recovered at
+  roundoff, and never protected only by cutoff. The audit may inspect the full
+  supplement projection spectrum into
+  `M = span(G + mandatory Y_occ residual/protected directions)`, select
+  optional global injection directions by projection eigenvalue, and rerun
+  screened-Hartree endpoints if feasible. It does not approve source edits,
+  shell-local injection, fake-RDM hierarchy, EGOI expansion, artifacts,
+  solver/driver workflow, Cr/Cr2, exchange, row-gauge rho0/P0 shortcuts,
+  label-based occupied selection as the construction rule, or treating fitted
+  density Gaussian terms as protected orbitals.
 - `HP-RG-PROTECT-INJECT-FN-01` and `HP-RG-PROTECT-INJECT-TEST-01` approve
   only a narrow internal source-backed geometry prototype for staged
   protected-original injection in

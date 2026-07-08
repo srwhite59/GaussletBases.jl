@@ -4599,6 +4599,115 @@ request fresh source authority with exact files, validation, line budget, and
 failure rule. Do not implement protected-original compact-main injection under
 `HP-RG-INJECT-FN-01`.
 
+### HP-RG-OCC-FIRST-INJECT-AUDIT-01 — occupied-first global injection measurement audit
+
+Status: approved measurement/design audit authority. This is not source
+authority.
+
+Purpose: make atom-local pure-GTO RHF occupied orbitals mandatory reference
+directions before ordinary RG/injection decisions, so screened-Hartree `P0` and
+`q0` can be formed from an exactly retained determinant instead of relying on
+label picks or residual cutoffs.
+
+Motivation: Ne fitted-cloud work clarified that `P0`/`q0` on the IDA side
+should come from the actual atom-local RHF determinant projected into the
+gausslet+supplement working basis, while `J0_G`/`E0_G` may come from a
+near-exact compressed Gaussian fit to that same determinant density. Hard-coded
+occupied labels such as `s1,s4,px3,py3,pz3` are not a robust construction rule.
+
+Core construction:
+
+- for one-center atoms, build the atom-local pure-GTO RHF occupied subspace
+  `Y_occ` in the supplement metric;
+- `Y_occ` directions are mandatory, not ordinary residual candidates, and
+  cannot be rejected by cutoff;
+- build `M = span(current gausslet final basis + mandatory Y_occ
+  residual/protected directions)`;
+- after `M` is formed, analyze the full supplement span against `M`;
+- in an orthonormal supplement basis, diagonalize the projection/overlap
+  operator into `M`;
+- `Y_occ` directions should appear as eigenvalue-`1` directions up to
+  roundoff;
+- select optional global injection directions from the full supplement by
+  projection eigenvalue, for example keeping eigenvectors with
+  `lambda >= cutoff`;
+- first audit cutoff may use `0.99` or the existing protected-injection cutoff
+  convention.
+
+Mandatory invariant: `Y_occ` must be represented/recoverable at roundoff. If
+any occupied RHF direction is not eigenvalue-`1`/recoverable after adding it to
+`M`, stop and report a construction bug. The cutoff must never be the only
+thing protecting `Y_occ`.
+
+Approved measurement surfaces:
+
+- ignored `tmp/work/*.jl` probes only;
+- durable `/Users/srw/dmrgtmp` outputs.
+
+First bounded fixtures:
+
+- Be RHF, cc-pV5Z, `lmax = 1`;
+- Ne RHF, cc-pV5Z, `lmax = 1`;
+- standard-scaled `ns = 5`;
+- `ns = 7` only if feasible.
+
+Required measurement sequence:
+
+1. Solve pure-GTO atom-local RHF in the supplement span.
+2. Build `Y_occ` from the RHF occupied orbitals, orthonormal in the supplement
+   metric.
+3. Add `Y_occ` as mandatory residual/protected directions to define `M`.
+4. Build the full-supplement projection spectrum into `M`.
+5. Select optional injection directions with `lambda >= cutoff`.
+6. Inject selected directions with the current global injection machinery only.
+7. Report whether the final basis recovers `Y_occ` at roundoff.
+8. If feasible, rerun the screened-Hartree endpoint using determinant `P0`/`q0`
+   from `Y_occ` and fitted-cloud `J0_G`/`E0_G` from a near-exact compression of
+   the same RHF determinant density.
+
+Required reporting:
+
+- RHF occupied orbital count and occupations;
+- supplement metric orthogonality of `Y_occ`;
+- projection/recovery loss of `Y_occ` before and after mandatory inclusion;
+- supplement projection eigenvalue spectrum into `M`;
+- number of optional injection directions above cutoff;
+- angular/channel makeup of kept and rejected directions;
+- rotation/protected-overlap diagnostics;
+- final basis dimension and sector counts;
+- `P0`/`q0` trace and determinant representation loss;
+- if endpoint is run: uncorrected/screened RHF energies, anchor errors,
+  low-mode diagnostics, and fitted-cloud mismatch diagnostics;
+- exact probe/script paths and key functions used.
+
+Forbidden:
+
+- shell-local injection;
+- fake-RDM hierarchy;
+- EGOI target expansion;
+- source edits;
+- artifacts or public workflow;
+- solver/driver integration;
+- Cr/Cr2;
+- exchange correction;
+- rho0/P0 row-gauge shortcuts;
+- label-based occupied selection as the accepted construction rule;
+- treating fitted density Gaussian terms as protected orbitals.
+
+Decision rule: green only if `Y_occ` is recovered at roundoff and optional
+injection directions are selected by a clear projection spectrum without large
+rotations or low-mode pathologies. If `Y_occ` is not exactly retained, stop
+before endpoint interpretation.
+
+Review rule: doer must name exact scripts/functions implementing `Y_occ`, `M`,
+the projection eigenproblem, and injection selection. Manager review should
+inspect probe code before accepting endpoint interpretation.
+
+Forbidden promotion: no source-backed RG/injection changes from this audit
+alone. A later source lane may be requested only after measurement shows the
+occupied-first construction is stable and simpler than the current
+label/cutoff-dependent path.
+
 ### HP-RG-PROTECT-INJECT-FN-01 — staged protected-original geometry prototype
 
 Status: approved narrow source authority for an internal, default-off,

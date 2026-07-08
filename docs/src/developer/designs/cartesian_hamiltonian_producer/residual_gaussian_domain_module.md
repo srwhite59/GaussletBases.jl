@@ -64,6 +64,8 @@ module, or object names in the new owner.
   implementation.
 - `HP-RG-PROTECT-INJECT-DESIGN-01` - design-only protected-original
   injection over compact main space.
+- `HP-RG-OCC-FIRST-INJECT-AUDIT-01` - measurement/design audit for
+  occupied-first global injection on one-center atoms.
 - `HP-RG-PROTECT-INJECT-FN-01` - narrow internal staged
   protected-original geometry prototype.
 - `HP-RG-PROTECT-INJECT-TEST-01` - validation gates for the staged geometry
@@ -330,6 +332,17 @@ originals are Gram-cleaned separately from injection representability, and
 original is not represented by `M`, that is an insufficient-main-basis
 diagnostic, not permission to make the candidate a MWG residual Gaussian. This
 ID is design-only and requires a later source amendment before implementation.
+
+`HP-RG-OCC-FIRST-INJECT-AUDIT-01` approves only measurement/design probes for
+occupied-first global injection on one-center atoms. Pure-GTO RHF occupied
+subspaces `Y_occ` are mandatory reference directions for Be/Ne-style screened
+Hartree endpoints: they must be represented at roundoff before ordinary
+RG/injection decisions, and cutoff must never be the only protection for them.
+The audit may examine the full supplement projection spectrum into
+`M = span(G + mandatory Y_occ residual/protected directions)` and choose
+optional global injection directions by projection eigenvalue. It does not
+approve source edits, shell-local injection, fake-RDM hierarchy, artifacts,
+driver/solver workflow, Cr/Cr2, exchange, EGOI, or row-gauge rho0/P0 changes.
 
 `HP-RG-PROTECT-INJECT-FN-01` approves only an internal geometry prototype for
 the staged protected-original construction in `residual_basis.jl`. It may

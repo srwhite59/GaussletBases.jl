@@ -25803,3 +25803,122 @@ Carrying-cost result:
 - exact remaining blocker: run the ignored Ne fitted-cloud probe and show that
   fit error is well below mHa endpoint interpretation and below the observed
   screened-Hartree energy shift.
+
+## Cartesian Hamiltonian Producer Pass 322 - Ne Fitted-Cloud ns5 Endpoint Measurement
+
+Commit(s):
+- `c9bb05c56` - authority commit for the Ne fitted-cloud screened Hartree
+  audit; no source commit in this measurement rerun.
+
+Summary:
+- Accepted the corrected Ne fitted-cloud endpoint measurement at the standard
+  `ns=5, core_spacing=0.030, lmax=1` point. The earlier failed fit/cloud gate
+  was reinterpreted correctly: fitted Gaussian density terms are a compression
+  device for `rho0`, not protected determinant orbitals. The protected-space
+  representation gate applies to the original pure-GTO reference determinant,
+  not to each signed density-fit term.
+- The saved `N=56` fitted density gives a real but incomplete endpoint
+  improvement. Ne RHF moves from `-8.975` mHa relative error to `+3.016` mHa
+  relative error, or `+2.973` mHa with the anchor-constant variant. This is a
+  meaningful correction without the old rho0/P0 low-mode collapse, but it is
+  still several mHa away from the radial-gausslet reference.
+
+Validation / evidence:
+- Output:
+  `/Users/srw/dmrgtmp/ne_screened_hartree_saved_n56_endpoint_c9bb05c56/`.
+  Saved fit:
+  `/Users/srw/dmrgtmp/ne_density_fitcloud_saved_n56_c9bb05c56/ne_ccpv5z_lmax1_rhf_density_fit_n56.jls`.
+- Fixture: Ne, `ns=q=5`, `core_spacing=0.030`, `s_factor=1.0`, cc-pV5Z,
+  `lmax=1`, final dimension `1027`, with base `1007` and residual `20`.
+  Residual-channel retention was p `15/15` and s `5/6`.
+- The protected determinant loss was `4.22e-15`; `q0` charge error was
+  `-1.07e-14`; derivative anchor error was `9.09e-13`. The fit formula anchor
+  mismatch was `4.38e-5` Ha (`0.044` mHa), small compared with the observed
+  `11.991` mHa screened shift, though not negligible at the final sub-mHa
+  interpretation level.
+- No new attractive low one-body mode appeared at this point: the low H1 shift
+  was `+0.000793` Ha.
+
+Goal advancement:
+- LT5/LT6 and MT4: validates the practical fitted-cloud route enough to make
+  the screened Hartree branch worth continuing. The all-electron Ne result is
+  not merely a static anchor check; it changes an endpoint in the right
+  direction by about `12` mHa. At the same time, the residual error and
+  `0.044` mHa fit/anchor mismatch mean this is not yet a production endpoint
+  or first-row claim.
+
+Risk / guardrail:
+- Do not promote from this single `ns=5` endpoint to source-backed workflow,
+  artifacts, solver integration, or first-row conclusions. The next evidence
+  should be `ns=7, core_spacing=0.020` or a clear cost/algorithm blocker, plus
+  any faster fitted-cloud `J0_G` construction if this path is to become a
+  source lane.
+
+Carrying-cost result:
+- source line delta: 0 in this measurement rerun.
+- deleted: none.
+- simplified: removed the artificial blocker that treated signed density-fit
+  terms as protected orbitals.
+- quarantined: saved fit, probes, and endpoint outputs remain ignored
+  measurement artifacts under `/Users/srw/dmrgtmp` and `tmp/work`.
+- exact remaining blocker: run or cost-gate the `ns=7, core_spacing=0.020`
+  Ne endpoint, and reduce or bound the fitted-cloud `J0_G` construction cost
+  before considering source-backed workflow.
+
+## Cartesian Hamiltonian Producer Pass 323 - Occupied-First Global Injection Audit Authority
+
+Commit(s):
+- this commit - approve occupied-first global injection audit
+
+Summary:
+- Approved `HP-RG-OCC-FIRST-INJECT-AUDIT-01` as a measurement/design audit for
+  one-center atoms. The audit makes pure-GTO RHF occupied orbitals mandatory
+  reference directions `Y_occ` before ordinary RG/injection decisions, so
+  screened-Hartree `P0`/`q0` can come from an exactly retained determinant
+  rather than hard-coded labels such as `s1,s4,px3,py3,pz3` or residual
+  cutoffs.
+- The construction then forms `M = span(G + mandatory Y_occ
+  residual/protected directions)`, analyzes the full supplement projection
+  spectrum into `M`, and selects optional global injection directions by
+  projection eigenvalue. `Y_occ` must appear as eigenvalue-`1`/recoverable at
+  roundoff; cutoff may select optional directions but must never be the only
+  protection for occupied directions.
+
+Validation / evidence:
+- The authority follows directly from the Ne fitted-cloud interpretation:
+  IDA-side `P0`/`q0` should come from the actual atom-local RHF determinant,
+  while `J0_G`/`E0_G` may come from a near-exact compressed Gaussian fit to
+  that same determinant density.
+- Approved fixtures are Be and Ne RHF, cc-pV5Z, `lmax = 1`, standard-scaled
+  `ns = 5`, with `ns = 7` only if feasible. Required reporting includes
+  occupied counts/occupations, `Y_occ` supplement-metric orthogonality,
+  recovery loss before/after mandatory inclusion, projection spectrum, kept
+  and rejected channel makeup, optional injection count, final sector counts,
+  determinant `P0`/`q0` trace/loss, and endpoint/fit diagnostics if rerun.
+
+Goal advancement:
+- LT5/LT6 and MT4: moves screened-Hartree endpoint construction away from
+  fragile label-based occupied selection and toward a subspace rule that can
+  be reviewed independently of endpoint energy. It also ties fitted-cloud
+  screening back to the determinant it is supposed to compress.
+
+Risk / guardrail:
+- Not approved: source edits, shell-local injection, fake-RDM hierarchy, EGOI
+  target expansion, artifacts/public workflow, solver or driver integration,
+  Cr/Cr2, exchange correction, row-gauge rho0/P0 shortcuts, label-based
+  occupied selection as the accepted rule, or treating fitted density Gaussian
+  terms as protected orbitals. Manager review must inspect probe code before
+  accepting endpoint interpretation.
+
+Carrying-cost result:
+- source line delta: 0 in this docs-only authority pass.
+- deleted: none.
+- simplified: replaces hard-coded occupied-label picks in future probes with a
+  mandatory `Y_occ` subspace invariant and a projection-spectrum optional
+  injection rule.
+- quarantined: source-backed RG/injection changes, artifacts, solver workflow,
+  Cr/Cr2, exchange, EGOI, fake-RDM hierarchy, and label-based occupied
+  construction remain outside this lane.
+- exact remaining blocker: run the ignored Be/Ne occupied-first probe and
+  verify `Y_occ` recovery at roundoff before interpreting any screened-Hartree
+  endpoint differences from the label-based probes.
