@@ -35,6 +35,9 @@ Normal startup reading:
 - `screened_hartree_residual_density.md` for the measurement-only Hartree
   protected-GTO residual-density audit that keeps `Vnuc_G` Galerkin and uses
   IDA/MWG only on `q - q0` fluctuations;
+- `screened_hartree_correction_assembly.md` for the internal source-backed
+  screened-Hartree `Delta_J0`/`C` correction object built from atomic
+  reference packets and same-basis `V_IDA`;
 - `external_gto_orbital_import.md` for the external-GTO orbital import
   facility that uses final/external cross overlaps to import PySCF-style AO
   orbitals into an orthonormal final basis;
@@ -249,6 +252,19 @@ Implemented base path:
   transforms, `C' V C`, `Vee`/source transforms, solver workflow,
   screened-Hartree/EGOI changes, residual/injection policy changes, PySCF
   dependency in repo tests, or Cr2 production claims.
+- `HP-PQS-SCREEN-HARTREE-CORR-FN-01` and
+  `HP-PQS-SCREEN-HARTREE-CORR-TEST-01` approve only a narrow internal
+  source-backed screened-Hartree correction assembly helper. It consumes a
+  final orthonormal working basis/operators, same-basis `V_IDA`, and explicit
+  placed `AtomicHFReferencePacket` reference determinants to return
+  `Delta_J0 = J0_G - Diagonal(V_IDA * q0)` and
+  `C = 0.5 * q0' * V_IDA * q0 - 0.5 * E0_G`, with anchor checks and packet
+  diagnostics. `Delta_J0 + C` belongs to screened direct electron-electron
+  accounting even though it is represented as one-body plus scalar. This does
+  not approve public driver defaults, production artifact schema/readers,
+  solver workflow, Cr2 claims, exchange, EGOI, screened-Vnuc or rho0 row-gauge
+  shortcuts, fitted terms as protected orbitals, Hamiltonian/source
+  transforms, `Vee` transforms, or `C' V C` interaction rotation.
 - `HP-MCOMX-*` approves a protected-`P2` plus mapped Chebyshev source-span
   option at the existing nested doside / COMX seam. The nonlinear map uses
   normalized local `u`, while `_cleanup_comx_transform(...)` still uses the

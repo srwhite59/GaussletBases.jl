@@ -2694,6 +2694,111 @@ If correct import requires Hamiltonian transformation, interaction rotation,
 generalized final-basis metric logic, or PySCF-dependent repo tests, stop and
 request a new design amendment.
 
+### HP-PQS-SCREEN-HARTREE-CORR-FN-01 / HP-PQS-SCREEN-HARTREE-CORR-TEST-01 — internal screened-Hartree correction assembly
+
+Status: approved narrow internal source/design authority. This is not public
+driver, artifact, or solver workflow authority.
+
+Purpose: promote the screened-Hartree residual-density machinery from ignored
+probes to a source-backed internal facility usable by consumers such as CR2.
+The facility assembles the screened direct-Hartree correction object:
+
+```text
+ScreenedHartreeCorrection:
+    delta_one_body      # Delta_J0
+    energy_constant     # C
+    q0
+    P0 diagnostics
+    J0_G diagnostics
+    E0_G diagnostics
+    anchor checks
+    packet/provenance summary
+```
+
+Energy accounting: `Delta_J0 + C` belongs to the screened direct
+electron-electron interaction, even though it is represented operationally as a
+one-body matrix plus scalar constant. It is not a change to the physical
+kinetic-plus-nuclear Hamiltonian and not an arbitrary energy offset.
+
+Approved inputs:
+
+- final orthonormal working basis/operators;
+- `V_IDA` in the same final basis and site/order convention;
+- one or more `AtomicHFReferencePacket` objects placed on molecule centers;
+- imported/protected occupied reference coefficients defining `P0` and `q0`.
+
+Required operation:
+
+- build `q0 = diag(P0)` from the represented reference determinant;
+- build `J0_G` and `E0_G` from the same packet density;
+- use validated fitted-potential terms for fast `J0_G` where available;
+- return
+
+  ```text
+  Delta_J0 = J0_G - Diagonal(V_IDA * q0)
+  C        = 0.5 * q0' * V_IDA * q0 - 0.5 * E0_G
+  ```
+
+- report anchor/derivative checks and projection/capture diagnostics;
+- keep the correction in memory unless a later artifact authority is approved.
+
+Approved source surface:
+
+- `src/cartesian_reference_density/CartesianReferenceDensity.jl`;
+- `src/cartesian_reference_density/screened_hartree_correction.jl`;
+- `src/GaussletBases.jl` only for include/qualified access wiring;
+- optional narrow use of
+  `src/cartesian_reference_density/atomic_hf_reference_packets.jl` for packet
+  readback/validation helpers.
+
+Approved test surface:
+
+- `test/nested/cartesian_screened_hartree_correction_runtests.jl`
+
+Required diagnostics and tests:
+
+- packet identity/provenance and placement facts;
+- electron count and `q0` charge by packet and total;
+- `P0` trace and final-basis representation/capture loss;
+- `J0_G`, `Delta_J0`, and `E0_G` finite/symmetry/consistency checks;
+- direct energy anchor:
+
+  ```text
+  E_current_direct[P0] + Tr(P0 * Delta_J0) + C == E_exact_direct[P0]
+  ```
+
+- derivative/field anchor:
+
+  ```text
+  F_current_direct[P0] + Delta_J0 == J0_G
+  ```
+
+- potential-fit agreement with exact density-fit `J0_G` on a small case;
+- rejection or clear failure on mismatched packet/working-basis facts;
+- no Be2/Cr2 energy assertions, SCF convergence gates, solver tests, or
+  production endpoint claims.
+
+Explicit exclusions:
+
+- public driver defaults or polished public workflow;
+- production artifact schema, writer, or reader changes;
+- solver workflow;
+- Cr2 production claims;
+- exchange correction;
+- EGOI changes;
+- screened-Vnuc row-gauge shortcuts;
+- rho0/P0 row-gauge shortcuts;
+- fitted density or fitted-potential terms as protected orbitals;
+- Hamiltonian source transforms;
+- `Vee` source transforms;
+- `C' V C` interaction rotation.
+
+Decision rule: if the correction can be assembled from represented packet
+determinants, validated packet density/potential fields, and same-basis
+`V_IDA` with clean anchor checks, proceed. If it requires artifact schema,
+solver integration, source interaction transforms, exchange correction, or
+row-gauge substitutions, stop and request a new design amendment.
+
 ### HP-FN-05 — final Hamiltonian construction
 
 Approved as the narrow Slice C2 construction boundary for the existing

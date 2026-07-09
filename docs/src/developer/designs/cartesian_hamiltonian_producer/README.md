@@ -170,6 +170,9 @@ Agents should read first:
 - [Screened Hartree residual-density formalism](screened_hartree_residual_density.md)
   for the measurement-only protected-GTO Hartree branch: keep `Vnuc_G`
   Galerkin and use IDA/MWG only for residual density fluctuations `q - q0`
+- [Screened Hartree correction assembly](screened_hartree_correction_assembly.md)
+  for the internal source-backed `Delta_J0`/`C` correction object built from
+  atomic reference packets and same-basis `V_IDA`
 - [External GTO orbital import](external_gto_orbital_import.md)
   for the representation-transfer facility that imports explicit external AO
   orbitals into an orthonormal final basis by `C_F = <F|G> C_G`
