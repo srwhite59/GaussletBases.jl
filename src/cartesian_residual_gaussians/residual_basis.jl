@@ -228,6 +228,210 @@ function injected_fixed_sector(X, S_AA, modes, nG, nA, atol, rtol)
         throw(ArgumentError("residual injection subspace must be smaller than fixed sector"))
     return (; injected_G = B, injected_A = Y)
 end
+
+function _rg_supplement_orthonormal_basis(S_AA, atol, rtol)
+    values, vectors = eigen(Symmetric(_rg_sym(S_AA)))
+    check_residual_gaussian_metric(
+        values, atol, rtol, "occupied-first supplement metric")
+    rank_tol = max(Float64(atol), Float64(rtol) * max(maximum(values), 1.0))
+    keep = findall(>(rank_tol), values)
+    isempty(keep) && throw(ArgumentError("supplement metric has no retained rank"))
+    return Matrix{Float64}(vectors[:, keep] * Diagonal(1.0 ./ sqrt.(values[keep]))),
+        Float64[values...], keep
+end
+
+function _rg_direction_metadata(labels, owners, channels, nA)
+    out_labels = isnothing(labels) ? String["candidate_$(i)" for i in 1:nA] :
+        String[String(label) for label in labels]
+    length(out_labels) == nA ||
+        throw(DimensionMismatch("occupied-first label count mismatch"))
+    out_owners = isnothing(owners) ? zeros(Int, nA) : Int.(owners)
+    length(out_owners) == nA ||
+        throw(DimensionMismatch("occupied-first owner count mismatch"))
+    out_channels = if isnothing(channels)
+        String[split(replace(label, r"\d+$" => ""), "_")[end] for label in out_labels]
+    else
+        String[String(channel) for channel in channels]
+    end
+    length(out_channels) == nA ||
+        throw(DimensionMismatch("occupied-first channel count mismatch"))
+    return out_labels, out_owners, out_channels
+end
+
+function _rg_occupied_first_direction_rows(A, values, labels, owners, channels)
+    rows = NamedTuple[]
+    for column in axes(A, 2)
+        weights = abs2.(view(A, :, column))
+        total = sum(weights)
+        index = total <= eps(Float64) ? 1 : argmax(weights)
+        push!(rows, (;
+            direction = column,
+            value = Float64(values[column]),
+            owner = owners[index],
+            label = labels[index],
+            channel = channels[index],
+            coefficient_fraction = total <= eps(Float64) ? 0.0 :
+                weights[index] / total,
+        ))
+    end
+    return rows
+end
+
+"""
+    occupied_first_injection_geometry(base_dimension, X, S_AA, Y_occ; ...)
+
+Build an occupied-first injection geometry for supplement-space occupied
+directions `Y_occ`. Occupied directions are mandatory; optional supplement
+directions are selected only by capture into the represented span
+`span(Y_occ) ⊕ (G ∩ Y_occ_perp)`. Weak optional directions are reported as
+rejected and are not converted into residual/MWG channels.
+"""
+function occupied_first_injection_geometry(
+    base_dimension::Integer,
+    X,
+    S_AA,
+    Y_occ;
+    optional_capture_cutoff::Real = 0.99,
+    labels = nothing,
+    owners = nothing,
+    channels = nothing,
+    provenance = (;),
+    occupied_overlap_atol::Real = 1.0e-10,
+    occupied_overlap_rtol::Real = 1.0e-10,
+    supplement_overlap_atol::Real = 1.0e-12,
+    supplement_overlap_rtol::Real = 1.0e-10,
+)
+    nG = Int(base_dimension)
+    Xmat = Matrix{Float64}(X)
+    S = Matrix{Float64}(S_AA)
+    Y0 = Matrix{Float64}(Y_occ)
+    nA = size(S, 1)
+    size(S) == (nA, nA) ||
+        throw(DimensionMismatch("occupied-first supplement metric must be square"))
+    size(Xmat) == (nG, nA) ||
+        throw(DimensionMismatch("occupied-first mixed overlap has wrong shape"))
+    size(Y0, 1) == nA ||
+        throw(DimensionMismatch("occupied-first occupied coefficients row count mismatch"))
+    all(isfinite, Xmat) && all(isfinite, S) && all(isfinite, Y0) ||
+        throw(ArgumentError("occupied-first inputs must be finite"))
+    k = size(Y0, 2)
+    k > 0 || throw(ArgumentError("occupied-first injection requires at least one occupied direction"))
+    k < nG || throw(ArgumentError("occupied-first occupied subspace must be smaller than base dimension"))
+    cutoff = Float64(optional_capture_cutoff)
+    0.0 <= cutoff <= 1.0 + 1.0e-12 ||
+        throw(ArgumentError("optional_capture_cutoff must be between 0 and 1"))
+    label_data = _rg_direction_metadata(labels, owners, channels, nA)
+    candidate_labels, candidate_owners, candidate_channels = label_data
+
+    occupied_metric = _rg_sym(transpose(Y0) * S * Y0)
+    occupied_orthogonality_error = maximum(abs, occupied_metric - I)
+    occupied_orthogonality_error <= Float64(occupied_overlap_atol) ||
+        throw(ArgumentError(
+            "occupied-first Y_occ is not orthonormal in S_AA; error $(occupied_orthogonality_error)",
+        ))
+    fixed = injected_fixed_sector(
+        Xmat,
+        S,
+        [Y0[:, column:column] for column in axes(Y0, 2)],
+        nG,
+        nA,
+        occupied_overlap_atol,
+        occupied_overlap_rtol,
+    )
+    mandatory_A = fixed.injected_A
+    mandatory_G = fixed.injected_G
+    Qp = injection_complement(mandatory_G, nG)
+    recovered = transpose(mandatory_A) * S * Y0
+    recovered_singulars = svdvals(recovered)
+    occupied_recovery_loss = isempty(recovered_singulars) ? 0.0 :
+        maximum(abs.(1.0 .- recovered_singulars))
+    weakest_occupied_capture = isempty(recovered_singulars) ? 1.0 :
+        minimum(abs2.(recovered_singulars))
+    recovery_tol = max(Float64(occupied_overlap_atol), Float64(occupied_overlap_rtol))
+    occupied_recovery_loss <= recovery_tol ||
+        throw(ArgumentError(
+            "occupied-first mandatory occupied recovery failed; loss $(occupied_recovery_loss)",
+        ))
+
+    U, supplement_metric_values, supplement_keep = _rg_supplement_orthonormal_basis(
+        S, supplement_overlap_atol, supplement_overlap_rtol)
+    full_C = vcat(transpose(mandatory_A) * (S * U), transpose(Qp) * (Xmat * U))
+    full_capture = _rg_sym(transpose(full_C) * full_C)
+    full_values = sort(Float64[eigvals(Symmetric(full_capture))...]; rev = true)
+
+    U_perp0 = U - mandatory_A * (transpose(mandatory_A) * S * U)
+    perp_values, perp_vectors = eigen(Symmetric(_rg_sym(transpose(U_perp0) * S * U_perp0)))
+    perp_rank_tol = max(Float64(supplement_overlap_atol),
+        Float64(supplement_overlap_rtol) * max(maximum(perp_values), 1.0))
+    perp_keep = findall(>(perp_rank_tol), perp_values)
+    Zperp = isempty(perp_keep) ? zeros(Float64, nA, 0) :
+        Matrix{Float64}(U_perp0 * perp_vectors[:, perp_keep] *
+            Diagonal(1.0 ./ sqrt.(perp_values[perp_keep])))
+    Cperp = isempty(perp_keep) ? zeros(Float64, k + size(Qp, 2), 0) :
+        vcat(transpose(mandatory_A) * (S * Zperp), transpose(Qp) * (Xmat * Zperp))
+    capture_values = Float64[]
+    capture_vectors = zeros(Float64, size(Zperp, 2), 0)
+    if size(Zperp, 2) > 0
+        values, vectors = eigen(Symmetric(_rg_sym(transpose(Cperp) * Cperp)))
+        order = sort(eachindex(values); by = index -> (-values[index], index))
+        capture_values = Float64[values[index] for index in order]
+        capture_vectors = Matrix{Float64}(vectors[:, order])
+    end
+    kept = findall(>=(cutoff), capture_values)
+    rejected = setdiff(eachindex(capture_values), kept)
+    optional_A = isempty(kept) ? zeros(Float64, nA, 0) :
+        Matrix{Float64}(Zperp * capture_vectors[:, kept])
+    injected_A = hcat(mandatory_A, optional_A)
+    final_rank = size(injected_A, 2)
+    final_rank < nG ||
+        throw(ArgumentError("occupied-first injected subspace must be smaller than base dimension"))
+    injected_G = Matrix{Float64}(Xmat * injected_A)
+    projection_singulars = svdvals(injected_G)
+    rank_tol = max(Float64(occupied_overlap_atol),
+        Float64(occupied_overlap_rtol) * max(maximum(projection_singulars), 1.0))
+    minimum(projection_singulars) > rank_tol ||
+        throw(ArgumentError("occupied-first injected projection is rank deficient"))
+    kept_A = isempty(kept) ? zeros(Float64, nA, 0) :
+        Matrix{Float64}(Zperp * capture_vectors[:, kept])
+    rejected_A = isempty(rejected) ? zeros(Float64, nA, 0) :
+        Matrix{Float64}(Zperp * capture_vectors[:, rejected])
+    weakest_kept = isempty(kept) ? NaN : minimum(capture_values[kept])
+    strongest_rejected = isempty(rejected) ? NaN : maximum(capture_values[rejected])
+    diagnostics = (;
+        provenance,
+        occupied_orthogonality_error,
+        occupied_recovery_loss,
+        weakest_occupied_capture,
+        full_capture_eigenvalues = full_values,
+        supplement_metric_eigenvalues = supplement_metric_values,
+        supplement_metric_kept_indices = supplement_keep,
+        complement_capture_eigenvalues = capture_values,
+        optional_capture_cutoff = cutoff,
+        optional_kept_count = length(kept),
+        optional_rejected_count = length(rejected),
+        weakest_kept_optional_capture = weakest_kept,
+        strongest_rejected_weak_capture = strongest_rejected,
+        final_rank,
+        mandatory_count = size(mandatory_A, 2),
+        rejected_weak_directions_not_mwg_residual_channels = true,
+        kept_direction_summary = _rg_occupied_first_direction_rows(
+            kept_A, capture_values[kept], candidate_labels, candidate_owners, candidate_channels),
+        rejected_direction_summary = _rg_occupied_first_direction_rows(
+            rejected_A, capture_values[rejected], candidate_labels, candidate_owners, candidate_channels),
+    )
+    return (;
+        mandatory_A,
+        optional_A,
+        injected_A,
+        injected_G,
+        capture_eigenvalues = capture_values,
+        full_capture_eigenvalues = full_values,
+        optional_kept_indices = kept,
+        optional_rejected_indices = rejected,
+        occupied_recovery_error = occupied_recovery_loss,
+        diagnostics,
+    )
+end
 function injected_owner_residual_block(block, fixed, X, S_AA, nA, cutoff, injection_cutoff, tau_abs, tau_rel)
     indices = findall(>(injection_cutoff), block.occupations); isempty(indices) && return nothing
     modes = block.modes[:, indices]
