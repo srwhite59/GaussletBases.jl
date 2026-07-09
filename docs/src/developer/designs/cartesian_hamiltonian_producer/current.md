@@ -35,6 +35,9 @@ Normal startup reading:
 - `screened_hartree_residual_density.md` for the measurement-only Hartree
   protected-GTO residual-density audit that keeps `Vnuc_G` Galerkin and uses
   IDA/MWG only on `q - q0` fluctuations;
+- `external_gto_orbital_import.md` for the external-GTO orbital import
+  facility that uses final/external cross overlaps to import PySCF-style AO
+  orbitals into an orthonormal final basis;
 - `pqs_mapping_s_factor.md` for the expert `s_factor` mapping-strength knob;
 - `r1_one_center_base_atoms.md` for explicit origin-centered all-electron
   one-center base atoms beyond H;
@@ -235,6 +238,17 @@ Implemented base path:
   artifact workflow integration beyond the packet itself, public driver
   defaults, solver workflow, EGOI, exchange, row-gauge rho0/P0, Cr/Cr2 claims,
   or treating fitted density/potential terms as protected GTOs.
+- `HP-REP-XGTO-IMPORT-FN-01` and `HP-REP-XGTO-IMPORT-TEST-01` approve only a
+  representation-transfer facility for importing explicit external Gaussian AO
+  orbitals into an orthonormal GaussletBases final working basis. The rule is
+  `S_FG = <F|G_external>` and `C_F = S_FG * C_G`. External AO self-overlap
+  `S_GG` is validation-only for checks such as `C_G' * S_GG * C_G ~= I`; it is
+  not a generalized final-basis transfer metric. The lane may add a compact
+  explicit packet reader/writer, import result, and capture diagnostics around
+  existing `gto_overlap_matrix(...)`. It does not approve Hamiltonian
+  transforms, `C' V C`, `Vee`/source transforms, solver workflow,
+  screened-Hartree/EGOI changes, residual/injection policy changes, PySCF
+  dependency in repo tests, or Cr2 production claims.
 - `HP-MCOMX-*` approves a protected-`P2` plus mapped Chebyshev source-span
   option at the existing nested doside / COMX seam. The nonlinear map uses
   normalized local `u`, while `_cleanup_comx_transform(...)` still uses the

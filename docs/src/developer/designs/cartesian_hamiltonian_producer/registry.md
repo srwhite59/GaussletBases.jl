@@ -2589,6 +2589,111 @@ endpoints removed hard-coded occupied labels, and the refined potential fit
 reduced `J0_G` from about `118` s exact to about `0.96` s with `33` terms and
 sub-microhartree anchor error.
 
+### HP-REP-XGTO-IMPORT-FN-01 / HP-REP-XGTO-IMPORT-TEST-01 — external GTO orbital import
+
+Status: approved narrow source/design authority. This is
+representation-transfer infrastructure, not a physics endpoint or correction
+method.
+
+Purpose: build exact overlaps between a GaussletBases final working basis and
+an explicit external Gaussian AO basis, then import external HF orbitals by:
+
+```text
+S_FG = <final basis F | external GTO basis G>
+C_F  = S_FG * C_G
+```
+
+The final working basis is intended to be orthonormal. External AO self-overlap
+`S_GG` is validation data only:
+
+```text
+C_G' * S_GG * C_G ~= I
+```
+
+Do not use `S_GG` to build a generalized final-basis solve or generalized
+final-basis transfer workflow.
+
+Approved source surface:
+
+- `src/cartesian_external_gto_import.jl`;
+- `src/GaussletBases.jl` for include/export wiring;
+- `src/cartesian_representation_transfer.jl` only for shared transfer
+  diagnostics, if needed;
+- `src/cartesian_gto_probes.jl` only for narrow reuse around
+  `gto_overlap_matrix(...)`, without changing its numerical contract.
+
+Expected implementation shape:
+
+- use existing `gto_overlap_matrix(working, probes)` kernels for `S_FG`;
+- consume an explicit external basis/state packet;
+- provide a compact read/write helper for testable packets;
+- provide a direct import helper such as
+  `import_external_gto_orbitals(working, packet)`;
+- return compact spin-aware imported coefficients and capture diagnostics.
+
+External packet requirements:
+
+- centers;
+- resolved angular powers or an already-resolved Cartesian/spherical
+  convention;
+- exponents;
+- contraction coefficients;
+- AO labels;
+- AO ordering/fingerprint;
+- `S_GG` and fingerprint;
+- spin-resolved MO coefficient matrices when applicable;
+- occupations;
+- provenance, including source code/tool, source basis, molecule/atom
+  geometry, and ordering convention.
+
+The repo reader must not depend on PySCF at test time and must not infer AO
+ordering from strings when explicit basis data is available. If a PySCF-side
+writer resolves spherical harmonic AO conventions into explicit Cartesian/GTO
+coefficient data, the repo should validate that resolved data rather than
+guessing the ordering.
+
+Required diagnostics:
+
+- `S_FG = <F|G_external>`;
+- `S_GG = <G_external|G_external>` for validation only;
+- `C_F_alpha = S_FG * C_G_alpha`;
+- `C_F_beta = S_FG * C_G_beta`, when beta orbitals are present;
+- `C_G' * S_GG * C_G` orthogonality errors;
+- `C_F' * C_F` capture/norm diagnostics;
+- density trace capture/loss by spin;
+- worst orbital capture;
+- labels/fingerprint/order checks;
+- packet provenance and basis dimensions.
+
+Approved test surface:
+
+- `test/nested/cartesian_external_gto_import_runtests.jl`
+
+Tests must be small and correctness-only. They should cover overlap
+shape/finiteness, `C_G' * S_GG * C_G`, `C_F = S_FG * C_G`, capture
+diagnostics, occupied-space rotation invariance, mismatch/fingerprint/order
+failure, and spin-resolved alpha/beta handling if present. They must not
+require PySCF at test time.
+
+Forbidden:
+
+- Hamiltonian transforms;
+- `C' V C`;
+- `Vee` or source-interaction transforms;
+- generalized final-basis overlap workflow;
+- solver workflow;
+- screened-Hartree changes;
+- EGOI changes;
+- residual selection or injection policy changes;
+- production Cr2 claims;
+- PySCF dependency in repo tests.
+
+Decision rule: if the import can be implemented as a bounded packet reader plus
+`gto_overlap_matrix`-based transfer with clear capture diagnostics, proceed.
+If correct import requires Hamiltonian transformation, interaction rotation,
+generalized final-basis metric logic, or PySCF-dependent repo tests, stop and
+request a new design amendment.
+
 ### HP-FN-05 — final Hamiltonian construction
 
 Approved as the narrow Slice C2 construction boundary for the existing

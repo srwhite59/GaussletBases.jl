@@ -170,6 +170,9 @@ Agents should read first:
 - [Screened Hartree residual-density formalism](screened_hartree_residual_density.md)
   for the measurement-only protected-GTO Hartree branch: keep `Vnuc_G`
   Galerkin and use IDA/MWG only for residual density fluctuations `q - q0`
+- [External GTO orbital import](external_gto_orbital_import.md)
+  for the representation-transfer facility that imports explicit external AO
+  orbitals into an orthonormal final basis by `C_F = <F|G> C_G`
 - [PQS/WL mapping `s_factor`](pqs_mapping_s_factor.md)
   for the expert mapping-strength scalar that preserves default behavior while
   allowing CR2-style scans
