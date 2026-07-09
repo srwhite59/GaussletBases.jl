@@ -398,6 +398,26 @@ default permission source for new code. Before adding a helper, adapter,
 metadata field, summary object, or test, state which live physics target or
 active module contract it advances.
 
+Before running Cartesian/PQS endpoint probes or drafting blurbs for atom,
+diatomic, screened-Hartree, EGOI, residual-GTO, or Cr/Cr2 work, read the short
+operational memory sheet:
+
+- `docs/src/developer/cartesian_pqs_operational_facts.md`
+
+It records easy-to-forget numerical facts such as the standard `core_spacing`
+ladder, driver-style diatomic padding, capture due diligence, and
+screened-Hartree energy accounting. It is not design authority; use it to avoid
+stale probe helpers and bad fixtures.
+
+For Cartesian/PQS implementation-doer work, the terminal due-diligence report
+is mandatory review material for every endpoint, energy, residual, injection,
+screened-Hartree, EGOI, Be2/Cr2-style, or curve test/probe. Doer reports must
+explicitly state that the due-diligence report was inspected and summarize the
+relevant parent bounds, axis counts, padding/radius, final dimension, retained
+counts, shell/slab topology, and warning flags. If the report is unavailable,
+the doer must say so and explain what equivalent construction facts were
+checked before interpreting numerical results.
+
 Agents touching Gausslet semantics should use
 `docs/src/developer/architecture/gausslet_algorithm_refresher.md` as the
 short operational memory refresh for Qiu-White, White-Lindsey, PQS, COMX,
@@ -480,8 +500,6 @@ these approved design IDs:
 - `HP-WIRE-01`
 - `HP-FN-03`
 - `HP-FN-04`
-- `HP-PQS-IDA-NUCEXT-FN-01`
-- `HP-PQS-IDA-NUCEXT-TEST-01`
 - `HP-FN-05`
 - `HP-WIRE-02`
 - `HP-R1-FILE-01`
@@ -670,22 +688,14 @@ the approved file and line budget, and are reported in the implementation
 handoff.
 
 `HP-FN-04` approves only the internal Slice C1 localized IDA matrix assembly
-surface. `HP-PQS-IDA-NUCEXT-FN-01` and
-`HP-PQS-IDA-NUCEXT-TEST-01` approve only the same-gauge IDA point-nucleus
-external-potential helper `uN_IDA[A,i]`, preferably owned by
-`src/cartesian_final_basis_realization/pqs_terminal_ida.jl`. It must use the
-same normalized final-row IDA density proxy and final weights as
-`electron_electron_ida`; it is not Galerkin `Vnuc`, `diag(Vnuc_G)`, row
-action, center `-Z/r`, screened-field `Delta_W`, `W_IDA`, `H1_eff`, constants,
-rho0/P0, EGOI, artifacts, public workflow, solver integration, or Cr/Cr2.
-`HP-FN-05` approves only the narrow Slice C2 construction boundary for the
-existing `CartesianIDAHamiltonian`. `HP-WIRE-02` approves only the narrow
-Slice D base Hamiltonian materialization handoff: return `nothing` when no base
-Hamiltonian is requested, return the existing `CartesianIDAHamiltonian` on
-success, and use the existing Hamiltonian writer when artifact output is
-requested. It does not authorize new artifact shapes, route-stage/report fields,
-wrapper payloads, persistent factor caches, solver work, or broad public-driver
-polish.
+surface. `HP-FN-05` approves only the narrow Slice C2 construction boundary
+for the existing `CartesianIDAHamiltonian`. `HP-WIRE-02` approves only the
+narrow Slice D base Hamiltonian materialization handoff: return `nothing` when
+no base Hamiltonian is requested, return the existing
+`CartesianIDAHamiltonian` on success, and use the existing Hamiltonian writer
+when artifact output is requested. It does not authorize new artifact shapes,
+route-stage/report fields, wrapper payloads, persistent factor caches, solver
+work, or broad public-driver polish.
 
 `HP-R1-FILE-01` approves only `src/cartesian_base_hamiltonian.jl`.
 `HP-R1-FN-01` approves only the public `cartesian_base_hamiltonian` facade with

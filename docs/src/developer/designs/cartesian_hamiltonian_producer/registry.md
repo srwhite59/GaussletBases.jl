@@ -2062,155 +2062,6 @@ This is Slice C1 only: it produces final-basis `electron_electron_ida`. It does
 not authorize Hamiltonian construction, route wiring, artifacts, or a pair
 payload/cache.
 
-### HP-PQS-IDA-NUCEXT-FN-01 — same-gauge IDA nuclear external potential
-
-Status: approved narrow source authority.
-
-Purpose: provide the missing same-gauge IDA external-potential primitive needed
-by screened-field audits:
-
-```text
-uN_IDA[A, i]
-```
-
-`uN_IDA[A, i]` is the point-nucleus external potential of the same normalized
-final-row IDA density proxy used by `electron_electron_ida`. The helper must
-use the same final IDA weights and row-proxy convention as terminal
-electron-electron IDA assembly.
-
-Required definition:
-
-```text
-uN_IDA[A, i] =
-    raw point-nucleus external-potential numerator for final IDA row i
-    / same final IDA weight used by terminal electron_electron_ida
-```
-
-For charge `Z_A`, the sign convention is physical electron-nuclear attraction.
-
-Approved source surface:
-
-- preferred owner: `src/cartesian_final_basis_realization/pqs_terminal_ida.jl`;
-- narrow caller plumbing in the PQS low-order/base materialization path only if
-  needed for validation.
-
-Ownership guardrail: do not make `src/cartesian_ida_hamiltonian.jl` the owner.
-That file stores finished Hamiltonians and should not define the row-proxy
-convention.
-
-Explicit non-goals: not Galerkin `Vnuc`; not `diag(Vnuc_G)`; not row action;
-not center `-Z/r_i`; not screened-field `Delta_W`; not `W_IDA`; not `H1_eff`;
-not constants/corrected Hamiltonian; not rho0/P0; not EGOI; not artifact/public
-workflow/solver; not Cr/Cr2.
-
-Acceptance rule: accept only if the helper uses the same row proxy and
-normalization as `electron_electron_ida` and validates on tiny H.
-
-### HP-PQS-IDA-NUCEXT-TEST-01 — same-gauge IDA nuclear validation
-
-Status: approved validation gates.
-
-First target: H q5 with `core_spacing = 0.3`.
-
-Approved validation:
-
-- package load;
-- focused ignored probe;
-- `git diff --check`;
-- final IDA weights, with positivity and finiteness checks;
-- `uN_IDA` finite/range by row class;
-- direct-core rows compared to analytic Gaussian-proxy nuclear attraction where
-  possible;
-- diagnostic-only comparisons to `diag(Vnuc_G)` and center `-Z/r`, clearly
-  marked as non-acceptance criteria;
-- far-field behavior against `-Z/r` for localized rows.
-
-This test authority must not form `W_IDA`, `Delta_W`, `H1_eff`, constants,
-screened fields, artifacts, or corrected Hamiltonians.
-
-### HP-PQS-SCREENED-VNUC-AUDIT-03 — continued screened-Vnuc measurement
-
-Status: approved measurement-only authority. This is not source authority.
-
-Purpose: continue the screened electron-nuclear measurement lane now that the
-same-gauge `uN_IDA[A,i]` primitive exists and H/Be/Be2 promise-audit evidence
-is positive.
-
-Measurement object:
-
-```text
-W_IDA = uN_IDA + V * q0
-W_G   = Vnuc_G + J0_G
-Delta_W = W_G - W_IDA
-```
-
-Interpretation: this is distinct from the old rho0/P0 affine correction. The
-cancellation is formed first in the same IDA Coulomb gauge, and only the
-screened atom-local one-body field is compared to Galerkin.
-
-Approved measurement surfaces:
-
-- ignored `tmp/work/*.jl` probes only;
-- durable `/Users/srw/dmrgtmp` output tables;
-- H, Be, Be2, and Cr atom only;
-- existing `uN_IDA` helper;
-- compact contracted atom-local GTO clouds.
-
-Allowed cloud/charge variations:
-
-- retained original compact `s1`/`s2` where available;
-- minimal or STO-like contracted core shells;
-- optional fake-RDM-selected compact shell directions when already available in
-  probe code;
-- neutral all-electron charge;
-- closed-shell core charge, e.g. Cr `[Ar]`-like 18e;
-- smaller shell-wise charges when physically meaningful.
-
-Required diagnostics:
-
-- cloud definition, including source labels, exponents/widths if available,
-  occupancy, and total charge;
-- `q0` projected charge, projection loss, and range;
-- `uN_IDA` final-weight sanity;
-- `E_self_IDA = 0.5 * q0' * V * q0`;
-- `E_self_G = 0.5 * (rho0 | rho0)_G`;
-- `C_screen = E_self_IDA - E_self_G`;
-- finite/symmetry checks for `W_IDA`, `W_G`, and `Delta_W`;
-- `Delta_W` diagonal, Frobenius, spectral range, locality/radius bins, and
-  row-class decomposition;
-- low one-body spectra and low-mode sector makeup;
-- occupied/reference orbital expectations of `Vnuc_G`, `J0_G`, `uN_IDA`,
-  `V * q0`, and `Delta_W`;
-- comparison against `SCREENED-VNUC-IDA-PROMISE-AUDIT-02` numbers.
-
-Decision rule: continue only if compact-GTO clouds remain well represented,
-`Delta_W` stays local/core-like, low one-body shifts remain modest, far bins
-decay, and Cr atom, if run, does not introduce broad or valence-destabilizing
-modes.
-
-Stop and report if `q0` representation becomes poor, `Delta_W` becomes
-nonlocal or large in valence/far bins, low modes become broad/protected or
-residual occupation incentives, or conclusions depend on correcting bare
-`Vnuc` or `J0` separately rather than the screened sum.
-
-Forbidden:
-
-- tracked source edits;
-- artifacts, schema, public workflow, or solver workflow;
-- Cr2;
-- production corrected Hamiltonian;
-- EGOI changes or expansion;
-- rho0/P0 affine-anchor revival;
-- exact exchange;
-- replacing `uN_IDA` with `diag(Vnuc_G)`, row action, exact `Vnuc_G`, or center
-  metadata;
-- protected-localized `Vee`, residual-selection, injection-policy, or mapping
-  default changes.
-
-Validation: package load, ignored probe run, `git diff --check`, and final git
-status. A later source-backed screened-Hamiltonian lane may be requested only
-after this measurement lane identifies a stable cloud/charge convention.
-
 ### HP-PQS-SCREEN-HARTREE-AUDIT-01 — protected-GTO screened Hartree residual-density audit
 
 Status: approved measurement-only authority. This is not source authority.
@@ -2240,8 +2091,7 @@ Delta_J0 = J0_G - Diagonal(V_IDA * q0)
 C = 1/2 * q0' * V_IDA * q0 - 1/2 * E0_G
 ```
 
-Important distinction: this branch does not require `uN_IDA`. The point
-nucleus remains Galerkin. IDA/MWG is used only for residual density
+The point nucleus remains Galerkin. IDA/MWG is used only for residual density
 fluctuations.
 
 Approved measurement surfaces:
@@ -2272,7 +2122,6 @@ Forbidden:
 - exchange correction;
 - row-gauge rho0 shortcuts;
 - discarding reference GTO directions;
-- using `uN_IDA` as a requirement for this branch;
 - EGOI changes.
 
 Decision rule: continue only if `P0` is represented exactly or at roundoff,
@@ -2786,7 +2635,6 @@ Explicit exclusions:
 - Cr2 production claims;
 - exchange correction;
 - EGOI changes;
-- screened-Vnuc row-gauge shortcuts;
 - rho0/P0 row-gauge shortcuts;
 - fitted density or fitted-potential terms as protected orbitals;
 - Hamiltonian source transforms;

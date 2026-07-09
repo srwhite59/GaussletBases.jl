@@ -4,9 +4,8 @@ Status: approved measurement-only audit authority under
 `HP-PQS-SCREEN-HARTREE-AUDIT-01`. This page records the crystallized
 Hartree-only screened-density branch. It is not source authority.
 
-This branch supersedes the all-IDA screened-nucleus route as the main
-Hartree-only correction target. The point nucleus remains an exact/Galerkin
-one-body operator. IDA/MWG is used only for the residual fluctuation density.
+The point nucleus remains an exact/Galerkin one-body operator. IDA/MWG is used
+only for the residual fluctuation density.
 
 ## Operator Identity
 
@@ -168,7 +167,16 @@ Thus
 E_screen[P] = E_current[P] + Tr(P * Delta_J0) + C.
 ```
 
-No `uN_IDA` appears in this formulation.
+Although `Delta_J0` is represented operationally as a one-particle matrix and
+`C` as a scalar constant, both belong to the screened direct electron-electron
+interaction in energy accounting. They are the correction produced by
+rewriting the Hartree term around `rho0`; they are not a change in the
+physical kinetic-plus-nuclear one-body Hamiltonian and not an arbitrary energy
+offset. Energy comparisons and error decompositions must group
+`Delta_J0 + C` with the Hartree/IDA interaction model.
+
+The nuclear attraction remains Galerkin; no IDA nuclear external-potential
+term appears in this formulation.
 
 ## Protected Reference Directions
 
@@ -244,7 +252,6 @@ Forbidden:
 - solver workflow;
 - Cr2;
 - production corrected Hamiltonian;
-- dependence on `uN_IDA`;
 - row-gauge rho0 shortcuts;
 - discarding reference GTO directions;
 - exchange correction;

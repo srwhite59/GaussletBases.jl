@@ -28,10 +28,6 @@ Normal startup reading:
   workspace reuse;
 - `r3_unit_nuclear_ugg_gaussian_sum.md` for the narrow terminal final-basis
   unit-nuclear `U_GG` Gaussian-sum allocation lane;
-- `ida_nuclear_external_potential.md` for the same-gauge IDA nuclear
-  external-potential helper;
-- `screened_vnuc_measurement.md` for the continued measurement-only screened
-  electron-nuclear audit using same-gauge `uN_IDA`;
 - `screened_hartree_residual_density.md` for the measurement-only Hartree
   protected-GTO residual-density audit that keeps `Vnuc_G` Galerkin and uses
   IDA/MWG only on `q - q0` fluctuations;
@@ -171,29 +167,17 @@ Implemented base path:
   support remaining, shellification emits the bond-axis leftovers as planned
   `:angular_z_extension_slab` stack regions. Lowering those slabs remains
   deferred to `HP-COMP-THINSLAB-*`.
-- `HP-PQS-IDA-NUCEXT-FN-01` and `HP-PQS-IDA-NUCEXT-TEST-01` approve only the
-  same-gauge IDA nuclear external-potential primitive `uN_IDA[A,i]` in
-  `pqs_terminal_ida.jl`. The helper uses the same normalized final-row IDA
-  density proxy and final weights as `electron_electron_ida`. It is not
-  Galerkin `Vnuc`, not `diag(Vnuc_G)`, not row action, not center `-Z/r`, and
-  not screened-field or corrected-Hamiltonian assembly.
-- `HP-PQS-SCREENED-VNUC-AUDIT-03` approves only continued ignored-probe
-  measurement of the screened electron-nuclear construction
-  `W_IDA = uN_IDA + V*q0`, `W_G = Vnuc_G + J0_G`,
-  `Delta_W = W_G - W_IDA` on H, Be, Be2, and optional Cr atom. It may vary
-  compact atom-local cloud and charge choices, but it does not approve source
-  edits, artifacts, solver workflow, Cr2, production corrected Hamiltonians,
-  EGOI, rho0/P0 revival, exact exchange, or substitutes for `uN_IDA`.
 - `HP-PQS-SCREEN-HARTREE-AUDIT-01` approves only measurement of the screened
   Hartree residual-density formalism in
   `screened_hartree_residual_density.md`. It starts from
   `rho_hat = rho0 + delta_rho_hat`, keeps `Vnuc_G` exact/Galerkin, protects a
   pure-GTO reference determinant exactly in the final basis, and applies
   IDA/MWG only to `1/2 * (q - q0)' * V_IDA * (q - q0)`. It may use ignored
-  probes on H/Be/Be2 and optional Cr atom after small cases pass. It does not
-  require `uN_IDA` and does not approve source edits, artifacts, solver
-  workflow, Cr2, production corrected Hamiltonians, exchange, row-gauge rho0
-  shortcuts, discarding reference GTO directions, or EGOI changes.
+  probes on H/Be/Be2 and optional Cr atom after small cases pass. It keeps the
+  nuclear attraction Galerkin and does not approve source edits, artifacts,
+  solver workflow, Cr2, production corrected Hamiltonians, exchange,
+  row-gauge rho0 shortcuts, discarding reference GTO directions, or EGOI
+  changes.
 - `HP-PQS-SCREEN-HARTREE-NE-AUDIT-01` approves only a narrow Ne endpoint
   measurement under the same screened Hartree residual-density formalism. The
   fixture is Ne closed-shell RHF, cc-pV5Z, `lmax = 1`, all-electron screening
@@ -262,9 +246,9 @@ Implemented base path:
   diagnostics. `Delta_J0 + C` belongs to screened direct electron-electron
   accounting even though it is represented as one-body plus scalar. This does
   not approve public driver defaults, production artifact schema/readers,
-  solver workflow, Cr2 claims, exchange, EGOI, screened-Vnuc or rho0 row-gauge
-  shortcuts, fitted terms as protected orbitals, Hamiltonian/source
-  transforms, `Vee` transforms, or `C' V C` interaction rotation.
+  solver workflow, Cr2 claims, exchange, EGOI, rho0 row-gauge shortcuts,
+  fitted terms as protected orbitals, Hamiltonian/source transforms, `Vee`
+  transforms, or `C' V C` interaction rotation.
 - `HP-MCOMX-*` approves a protected-`P2` plus mapped Chebyshev source-span
   option at the existing nested doside / COMX seam. The nonlinear map uses
   normalized local `u`, while `_cleanup_comx_transform(...)` still uses the

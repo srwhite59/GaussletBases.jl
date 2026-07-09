@@ -65,11 +65,6 @@ Gaussian work.
 - Slice C/base IDA assembly produces a real final-basis matrix and then uses the
   existing `CartesianIDAHamiltonian`; no Hamiltonian wrapper or result payload is
   approved.
-- Same-gauge IDA external-potential helpers, if present, must use the same
-  normalized final-row density proxy and final weights as `electron_electron_ida`.
-  They are not Galerkin one-body matrices, `diag(Vnuc_G)`, row-action
-  shortcuts, center metadata, screened fields, or corrected Hamiltonians.
-
 ## Residual Gaussian Guardrails
 
 The canonical RG algorithm contract is

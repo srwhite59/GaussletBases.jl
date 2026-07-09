@@ -95,8 +95,8 @@ Approved source surface:
   readback/validation helpers.
 
 Do not place this object in the Hamiltonian artifact writer, solver workflow,
-screened-Vnuc lane, EGOI lane, or external-GTO import lane. Those facilities
-may supply inputs, but they do not own this correction object.
+EGOI lane, or external-GTO import lane. Those facilities may supply inputs,
+but they do not own this correction object.
 
 ## Diagnostics
 
@@ -155,7 +155,6 @@ Forbidden in this lane:
 - Cr2 production claims;
 - exchange correction;
 - EGOI changes;
-- screened-Vnuc row-gauge shortcuts;
 - rho0/P0 row-gauge shortcuts;
 - fitted density or fitted-potential terms as protected orbitals;
 - Hamiltonian source transforms;

@@ -162,11 +162,6 @@ Agents should read first:
   for the measurement-only decision after terminal `G-G` workspace reuse
 - [R3 unit-nuclear U_GG Gaussian sum](r3_unit_nuclear_ugg_gaussian_sum.md)
   for the narrow terminal final-basis unit-nuclear `U_GG` optimization lane
-- [Same-gauge IDA nuclear external potential](ida_nuclear_external_potential.md)
-  for the row-proxy nuclear external potential `uN_IDA[A,i]`
-- [Screened-Vnuc measurement lane](screened_vnuc_measurement.md)
-  for the continued measurement-only screened electron-nuclear audit using
-  same-gauge `uN_IDA`
 - [Screened Hartree residual-density formalism](screened_hartree_residual_density.md)
   for the measurement-only protected-GTO Hartree branch: keep `Vnuc_G`
   Galerkin and use IDA/MWG only for residual density fluctuations `q - q0`

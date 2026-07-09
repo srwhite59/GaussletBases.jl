@@ -26410,3 +26410,353 @@ Carrying-cost result:
 - exact remaining blocker: implement the packet writer/readback/validation
   helper under the new neutral packet owner, then consume it in a Be/Ne smoke
   before any broader endpoint scan.
+
+## Cartesian Hamiltonian Producer Pass 331 - Atomic HF Reference Packet Source Implementation
+
+Commit(s):
+- none yet; source implementation review of the local post-`e9bc836b2` work.
+
+Summary:
+- Accepted the source-backed atomic HF reference packet facility after static
+  review and rerunning the standalone packet smoke. The implementation adds
+  `src/cartesian_reference_density/CartesianReferenceDensity.jl` and
+  `src/cartesian_reference_density/atomic_hf_reference_packets.jl`, with only
+  `src/GaussletBases.jl` include wiring. The packet module builds the
+  one-center supplement, solves supplement-space closed-shell RHF, writes the
+  occupied determinant, fits the spherical density, fits the fast radial
+  Hartree potential, and provides readback/validation/consumption helpers.
+- The determinant/density/potential split is preserved. `hf/occupied_*`
+  defines `P0/q0`; `density_fit/*` defines the reference cloud/self-energy;
+  `potential_fit/*` is only the fast `J0_G` evaluator. Fitted density and
+  potential Gaussians are not treated as protected orbitals.
+- Added an explicit formalism-doc clarification that `Delta_J0 + C_screen`
+  must be grouped with the direct electron-electron/Hartree interaction in
+  energy accounting, even though it is represented in solver form as a
+  one-particle matrix plus scalar constant.
+
+Validation / evidence:
+- Source surfaces reviewed:
+  `src/cartesian_reference_density/CartesianReferenceDensity.jl`,
+  `src/cartesian_reference_density/atomic_hf_reference_packets.jl`,
+  `src/GaussletBases.jl`, and
+  `test/nested/cartesian_atomic_hf_reference_packet_runtests.jl`.
+- Doer validation output:
+  `/Users/srw/dmrgtmp/atomref_packet_validation_e9bc836b2/`. Be core packet:
+  `21` supplement functions, `1` occupied orbital, RHF energy
+  `-13.611288994218713`, `56` density terms, `33` potential terms. Ne packet:
+  `21` supplement functions, `5` occupied orbitals, RHF energy
+  `-128.54661270243554`, `56` density terms, `33` potential terms.
+- Readback checks: occupied orthogonality `3.77e-15` for Be and `1.50e-14`
+  for Ne; density trace errors `-7.55e-15` and `-2.66e-14`;
+  supplement fingerprint matches for both. Be fast-potential versus exact
+  density-fit terminal `J0_G` relative Frobenius error `8.15e-8`, max abs
+  `6.90e-7`, finite and symmetric.
+- Manager validation reran
+  `julia --project=. test/nested/cartesian_atomic_hf_reference_packet_runtests.jl`
+  after review: `24/24` pass in about `25.5` s. Package load passed:
+  `julia --project=. -e 't = @elapsed using GaussletBases; println("package_load_elapsed_s=", t)'`.
+  `git diff --check` passed.
+
+Goal advancement:
+- MT4: this lands the source-backed reference-object layer. Future
+  screened-Hartree probes no longer need to reconstruct or guess the atomic
+  reference determinant and fits from ignored scripts. The next work can focus
+  on measurement-grade consumption and endpoint diagnostics rather than
+  packet shape.
+
+Risk / guardrail:
+- The committed standalone test depends on a cc-pV5Z BasisSets source that is
+  not present in the vendored `data/legacy/BasisSets`; on this machine the
+  packet spec resolves it through the local Dropbox/GaussletModules BasisSets
+  path. This is acceptable for the current machine-local nested smoke but is
+  a portability caveat before broad CI/default use. A future cleanup should
+  either vendor the needed basis content, require an explicit basisfile for
+  this nested test, or make the test skip with a clear missing-basis reason.
+- Do not treat this as screened-Hartree production Hamiltonian support. The
+  packet facility is normal repo infrastructure; `Delta_J0/C` assembly,
+  corrected artifacts, solver workflow, driver defaults, Cr/Cr2, exchange,
+  and EGOI remain separate authority questions.
+
+Carrying-cost result:
+- source line delta: new packet module plus one include and one standalone
+  nested smoke; no production Hamiltonian path.
+- deleted: none.
+- simplified: replaces Be/Ne ad hoc ignored packet writers with one
+  source-backed reference packet module.
+- quarantined: expensive matrix validation remains in ignored probe output;
+  the committed test is a bounded roundtrip/validation smoke.
+- exact remaining blocker: add a measurement-grade packet consumption helper
+  for `Delta_J0/C` only after separate authority, or run Be2 `R`-ladder
+  diagnostics through ignored packet consumers to assess the screened-Hartree
+  physics without promoting a correction workflow.
+
+## Cartesian Hamiltonian Producer Pass 332 - Vendor Full Legacy BasisSets Snapshot
+
+Commit(s):
+- none yet; manager portability follow-up to Pass 331.
+
+Summary:
+- Vendored the full current legacy `BasisSets` snapshot from
+  `/Users/srw/Dropbox/GaussletModules/BasisSets` into
+  `data/legacy/BasisSets`, replacing the narrow H/He-only curated file. The
+  repo-local file now contains the Be, Ne, Cr, and other cc-pV5Z blocks needed
+  by the atomic reference packet line and current Cartesian/PQS supplement
+  work. A short provenance header was added and trailing whitespace was
+  stripped from the copied data.
+- Removed the machine-local `default_reference_basisfile()` fallback from the
+  atomic HF reference packet module. Packet specs now default to `basisfile =
+  nothing`, so the normal repo basis resolver supplies the vendored data.
+
+Validation / evidence:
+- Confirmed `data/legacy/BasisSets` contains `Be  cc-pV5Z`, `Ne  cc-pV5Z`,
+  and `Cr  cc-pV5Z`; final file length is `2982` lines.
+- Reran
+  `julia --project=. test/nested/cartesian_atomic_hf_reference_packet_runtests.jl`:
+  `24/24` pass in about `25.5` s, now using repo-local basis data by default.
+- Package load passed:
+  `julia --project=. -e 't = @elapsed using GaussletBases; println("package_load_elapsed_s=", t)'`
+  with load time about `0.454` s. `git diff --check` passed after data
+  whitespace cleanup.
+
+Goal advancement:
+- MT4: closes the portability gap noted in Pass 331. Atomic reference packets
+  are now a self-contained repo facility for the approved Be/Ne packet scope,
+  rather than depending on an external Dropbox `BasisSets` file.
+
+Risk / guardrail:
+- This is a data vendoring expansion, not a new basis-library policy or
+  Hamiltonian workflow. Future basis additions should still be tied to active
+  physics targets and provenance, but the current full snapshot is small
+  enough that selective pruning would create more maintenance risk than value.
+
+Carrying-cost result:
+- deleted: the machine-local basis fallback helper.
+- simplified: packet construction now uses the normal vendored basis path.
+- quarantined: no new runtime environments, artifacts, or generated caches.
+- not deleted because: the full legacy file is small and avoids incomplete
+  repo-local basis coverage for active packet and Cr/Cr2 work.
+- exact remaining blocker: source-backed screened-Hartree consumption and
+  endpoint workflows remain separate authority questions.
+
+## Cartesian Hamiltonian Producer Pass 333 - Operational Fact Sheet For PQS Probes
+
+Commit(s):
+- none yet; manager documentation guardrail after the Be2 screened-Hartree
+  padding failure.
+
+Summary:
+- Added `docs/src/developer/cartesian_pqs_operational_facts.md` and linked it
+  from `AGENTS.md` under physics-target work discipline. The sheet records
+  compact operational facts that agents have repeatedly forgotten: the
+  standard scaled `core_spacing = 1.2 / (Z * (ns - 1))` ladder, `s_factor`
+  mapping convention, driver-style diatomic padding
+  `xmax_parallel = R/2 + padding`, capture due diligence, and
+  screened-Hartree energy accounting.
+- The doc explicitly quarantines old hard-coded `xmax_parallel = 6.0`,
+  `xmax_transverse = 4.0` helpers as algebra-smoke fixtures only. Endpoint and
+  curve probes must use driver-style extents or fixed/same-parent counts and
+  report actual parent bounds, atom padding, axis counts, final dimension, and
+  retained channel changes before interpreting a curve.
+- It also records that Be is diffuse and that the driver default
+  `padding = 10.0` bohr is only a starting point, not an adequacy proof; Be/Be2
+  endpoint work should scan or justify larger padding when needed.
+
+Validation / evidence:
+- Manager reviewed the canonical driver and provenance path:
+  `bin/cartesian_ham_builder.jl` uses public `padding = 10.0` and constructs
+  diatomic `xmax_parallel = R/2 + padding`, `xmax_transverse = padding`, while
+  `_cartesian_recipe_provenance` records `extent_source =
+  :z_axis_diatomic_padding_extents`.
+- Reviewed the offending ignored Be2 probe, which used an old helper
+  independent of `R` and therefore crossed a parent-axis threshold at
+  `R=5.55`. `git diff --check` passed after the docs edit.
+
+Goal advancement:
+- LT1/LT3/LT5: this is not new source capability; it is operational memory to
+  keep endpoint and measurement passes aligned with the driver contract and
+  due-diligence expectations.
+
+Risk / guardrail:
+- The fact sheet is not design authority and does not approve source edits,
+  artifact changes, solver workflow, Cr/Cr2, or new defaults. It should be
+  used to prevent stale probe helpers from masquerading as sensible fixtures.
+
+Carrying-cost result:
+- deleted: none.
+- simplified: future agents have one short preflight fact sheet instead of
+  relying on scattered pass history for core spacing, padding, and accounting
+  conventions.
+- quarantined: stale ignored helper geometry is documented as smoke-only.
+- not deleted because: no source helper has been retired yet; this is a docs
+  guardrail before a cleanup/source lane.
+- exact remaining blocker: future doer passes should either use the canonical
+  driver-style basis construction or explicitly justify any deviation in their
+  probe report.
+
+## Cartesian Hamiltonian Producer Pass 334 - Padding Rule-Of-Thumb Refinement
+
+No strategic change. Refined the operational fact sheet with the current
+padding rule of thumb: He may tolerate about `7` bohr, ordinary atoms and
+molecules should start at `10` bohr or larger, and `20` bohr is the
+conservative safe value when endpoint accuracy or curve continuity matters.
+`git diff --check` remains the intended validation.
+
+## Cartesian Hamiltonian Producer Pass 335 - Due-Diligence Contract Cross-Link
+
+No strategic change. Refined the operational fact sheet to explicitly name the
+formal repo due-diligence contract, `HP-DRV-SHELLDD-FN-01` /
+`HP-DRV-SHELLDD-TEST-01`, and point to
+`docs/src/developer/designs/cartesian_hamiltonian_producer/terminal_shellification_due_diligence.md`.
+This keeps the new operational padding/capture reminders subordinate to the
+existing terminal shellification due-diligence contract instead of creating a
+parallel story. Validation: `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 336 - Doer Due-Diligence Review Requirement
+
+No strategic change. Strengthened `AGENTS.md` so implementation doers are
+explicitly expected to inspect the terminal due-diligence report for every
+Cartesian/PQS endpoint, energy, residual, injection, screened-Hartree, EGOI,
+Be2/Cr2-style, or curve test/probe. Doer reports must now say the report was
+inspected and summarize the relevant parent bounds, axis counts,
+padding/radius, final dimension, retained counts, shell/slab topology, and
+warning flags; if the report is unavailable, they must state what equivalent
+construction facts were checked. Validation: `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 337 - External GTO Orbital Import Authority
+
+Commit(s):
+- this commit - approve external GTO orbital import lane
+
+Summary:
+- Approved `HP-REP-XGTO-IMPORT-FN-01` and
+  `HP-REP-XGTO-IMPORT-TEST-01` as a representation-transfer infrastructure
+  lane. The facility imports explicit external Gaussian AO orbitals, such as a
+  PySCF restart state supplied by CR2, into an orthonormal GaussletBases final
+  working basis using only the cross overlap:
+  `S_FG = <F|G_external>` and `C_F = S_FG * C_G`.
+- The external AO self-overlap `S_GG` is validation-only. It checks the source
+  packet and source MO coefficients through `C_G' * S_GG * C_G ~= I`; it must
+  not become a generalized final-basis metric or source-Hamiltonian transform.
+
+Validation / evidence:
+- Existing source ownership points to the representation-transfer/overlap
+  surface, not a physics lane: `gto_overlap_matrix(...)` already builds exact
+  final/GTO overlaps, and `cartesian_representation_transfer.jl` records the
+  cross-overlap-only final-basis transfer convention. `AGENTS.md` already
+  states final-basis transfer should use cross overlap only.
+- Approved source surface is `src/cartesian_external_gto_import.jl`,
+  `src/GaussletBases.jl` for include/export wiring, and optional narrow reuse
+  in `src/cartesian_representation_transfer.jl` or `src/cartesian_gto_probes.jl`
+  without changing `gto_overlap_matrix` semantics. Approved test surface is
+  `test/nested/cartesian_external_gto_import_runtests.jl`.
+
+Goal advancement:
+- MT4/LT5: provides a standard repo operation for importing external HF
+  initial states without turning the Cr2 `R=3.5` PySCF restart into an API.
+  This should reduce ad hoc consumer-side restart glue while preserving the
+  repo's final-basis overlap contract.
+
+Risk / guardrail:
+- Not approved: Hamiltonian transforms, `C' V C`, `Vee` or source-interaction
+  transforms, generalized final-basis overlap workflows, solver workflow,
+  screened-Hartree/EGOI changes, residual/injection policy changes,
+  PySCF-dependent repo tests, or Cr2 production claims. The external packet
+  must carry explicit resolved basis data and fingerprints; the repo reader
+  should not guess AO ordering from labels.
+
+Carrying-cost result:
+- source line delta: 0 in this docs-only authority pass.
+- deleted: none.
+- simplified: turns an expected recurring CR2/PySCF handoff into a small
+  representation-transfer facility with clear diagnostics.
+- quarantined: physics endpoints, Hamiltonian interaction transforms, solver
+  workflow, and Cr2 claims remain outside this lane.
+- exact remaining blocker: implement the packet reader/import/capture helper
+  and small correctness-only test, then let CR2 consume it as a normal repo
+  facility.
+
+## Cartesian Hamiltonian Producer Pass 338 - Internal Screened-Hartree Correction Authority
+
+Commit(s):
+- this commit - approve internal screened-Hartree correction assembly lane
+
+Summary:
+- Approved `HP-PQS-SCREEN-HARTREE-CORR-FN-01` and
+  `HP-PQS-SCREEN-HARTREE-CORR-TEST-01` as a narrow internal source-backed
+  correction assembly lane. This moves screened-Hartree from ignored probes
+  toward a callable repo facility that CR2 can use naturally, without making
+  it a public driver/default, solver workflow, or production artifact.
+- The approved object returns `Delta_J0` and `C` from represented
+  atom-local reference determinants and packet density/potential data:
+  `Delta_J0 = J0_G - Diagonal(V_IDA * q0)` and
+  `C = 0.5*q0'V_IDA*q0 - 0.5*E0_G`. The energy-accounting guardrail is
+  explicit: `Delta_J0 + C` belongs to the screened direct electron-electron
+  interaction even though it is represented as one-body plus scalar.
+
+Validation / evidence:
+- This authority follows from the accepted atomic reference packet and
+  external-GTO import directions. Atomic packets provide `P0/q0` and fast
+  `J0_G/E0_G`; external import supplies a standard way to bring reference or
+  PySCF orbitals into the final basis with capture diagnostics.
+- Approved source surface is
+  `src/cartesian_reference_density/CartesianReferenceDensity.jl`,
+  `src/cartesian_reference_density/screened_hartree_correction.jl`, and
+  `src/GaussletBases.jl` include/qualified access wiring, with optional narrow
+  packet-helper use. Approved test surface is
+  `test/nested/cartesian_screened_hartree_correction_runtests.jl`.
+
+Goal advancement:
+- MT4: this is the first source-backed screened-Hartree assembly authority.
+  It keeps the physics object narrow and auditable while letting consumer
+  workflows stop rebuilding the correction from ignored scripts.
+
+Risk / guardrail:
+- Not approved: public driver defaults, production artifact schema/readers,
+  solver workflow, Cr2 production claims, exchange, EGOI, screened-Vnuc or
+  rho0 row-gauge shortcuts, fitted terms as protected orbitals, Hamiltonian
+  source transforms, `Vee` transforms, or `C' V C`.
+
+Carrying-cost result:
+- source line delta: 0 in this docs-only authority pass.
+- deleted: none.
+- simplified: separates the internal correction object from endpoint physics,
+  artifacts, and solver workflows.
+- quarantined: public workflow, artifacts, solver, exchange, EGOI, Cr2 claims,
+  and source interaction rotations remain outside this lane.
+- exact remaining blocker: implement the in-memory correction object with
+  packet consistency, anchor, derivative, and potential-fit validation tests.
+
+## Cartesian Hamiltonian Producer Pass 339 - Retire IDA Nuclear Screening Branch
+
+Commit(s):
+- this commit - retire abandoned IDA nuclear screening branch.
+
+Summary:
+- Retired the abandoned non-Galerkin nuclear-screening method. The live
+  screened-Hartree contract keeps nuclear attraction Galerkin and applies
+  IDA/MWG only to residual Hartree fluctuations through `Delta_J0` and `C`.
+- Deleted the two obsolete authority pages, their registry/current/startup
+  entries, the implementation-slice and invariant text, five ignored probes,
+  and the uncommitted 96-line terminal nuclear helper. Caller review found no
+  live source or committed test consumer; ordinary terminal IDA still uses its
+  private final-weight routine unchanged.
+
+Validation / evidence:
+- Focused search found no abandoned helper, ID, formula, or filename outside
+  this append-only historical log. Package load passed in `7.16` s after
+  precompilation. The active screened-Hartree correction test passed `32/32`
+  in `60.97` s, and `git diff --check` passed.
+
+Goal advancement / guardrail:
+- MT4 is simplified to one Hartree screening branch: atomic reference packets
+  plus Galerkin `J0_G/E0_G`, represented `P0/q0`, and same-basis `V_IDA`.
+  Historical `/Users/srw/dmrgtmp` outputs remain only as small audit evidence;
+  they are not live authority or reusable probes.
+
+Carrying-cost result:
+- deleted: two authority docs, one registry block, one implementation section,
+  one invariant, five ignored probes, and the uncommitted source helper.
+- simplified: current docs now describe only the live Galerkin-nucleus path.
+- quarantined: append-only historical ledger entries and old audit outputs.
+- exact remaining blocker: none for retirement; active screened-Hartree
+  consumer wiring and physics validation remain separate work.
