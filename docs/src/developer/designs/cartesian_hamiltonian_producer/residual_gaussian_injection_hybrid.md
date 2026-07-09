@@ -755,6 +755,155 @@ audit alone. A later source lane may be requested only after measurement shows
 the occupied-first construction is stable and simpler than the current
 label/cutoff-dependent path.
 
+## HP-RG-OCC-FIRST-INJECT-FN-01 - Source-Backed Occupied-First Injection Geometry
+
+Status: approved narrow source/design authority for an internal geometry and
+selection helper. This is not public driver/API authority, not artifact
+authority, not a Hamiltonian writer path, not solver workflow, and not a
+production default.
+
+### Purpose
+
+Make atom-local pure-GTO HF occupied orbitals mandatory reference directions
+before ordinary RG/injection decisions, using the source-backed packet/import
+facilities now available. The goal is to replace label-based occupied choices
+and cutoff accidents with a stable subspace rule:
+
+```text
+occupied HF subspace is mandatory;
+optional supplement injection is selected by capture spectrum;
+weak-capture supplement directions are reported, not silently injected.
+```
+
+This is the source-backed follow-up to
+`HP-RG-OCC-FIRST-INJECT-AUDIT-01`. The audit showed that Be/Ne
+occupied-first construction is algebraically clean, `Y_occ` is recovered at
+roundoff after mandatory inclusion, Ne `ns = 7` has all supplement directions
+above `0.99`, and Be has weaker optional p-like directions that need gating.
+
+### Inputs
+
+Approved inputs:
+
+- final/base gausslet span `G` or equivalent fixed working span data;
+- full supplement basis `A`;
+- supplement metric `S_AA`;
+- mixed overlap `X_GA = <G|A>` or the equivalent source-backed overlap object;
+- HF occupied coefficients `Y_occ` from an `AtomicHFReferencePacket` or an
+  explicit external-GTO import packet;
+- existing compact/RG selection data when forming `M` requires it.
+
+`Y_occ` must be orthonormal in the supplement metric and must be tied to
+packet/import provenance. Hard-coded labels such as `s1,s4,px3,py3,pz3` are
+not an accepted construction rule.
+
+### Operation
+
+The helper should:
+
+1. validate `Y_occ` in `S_AA`;
+2. force `Y_occ` into the retained/protected reference span;
+3. form the current represented span `M`, including the final/base gausslet
+   span and any mandatory occupied residual/protected directions;
+4. compute the full supplement capture/projection operator into `M` in an
+   `S_AA`-orthonormal supplement basis;
+5. diagonalize the supplement capture spectrum;
+6. verify that occupied directions are recovered at roundoff/eigenvalue `1`;
+7. select optional global injection eigenvectors with `lambda >= cutoff`;
+8. reject/report weak-capture directions instead of converting them into
+   residual-GTO/MWG channels;
+9. return compact geometry/selection diagnostics and transform-ready
+   coefficient data for later consumers.
+
+The cutoff gates optional injection only. It must never be the only thing
+protecting `Y_occ`.
+
+### Approved Source Surface
+
+- `src/cartesian_residual_gaussians/residual_basis.jl`;
+- optional narrow use of
+  `src/cartesian_reference_density/atomic_hf_reference_packets.jl` for packet
+  occupied-coefficient access, without changing packet semantics;
+- optional narrow use of `src/cartesian_external_gto_import.jl` for imported
+  occupied coefficient data, without changing external-import semantics.
+
+No new file is approved in this lane.
+
+### Diagnostics
+
+Required diagnostics:
+
+- source of `Y_occ` and provenance fingerprint;
+- supplement metric orthogonality of `Y_occ`;
+- occupied recovery loss before and after mandatory inclusion;
+- full supplement capture eigenvalue spectrum;
+- optional injection cutoff and kept/rejected counts;
+- angular/channel makeup of kept and rejected directions;
+- weakest occupied and weakest optional-candidate captures;
+- final rank and sector counts;
+- projection/capture loss by spin or owner where applicable;
+- clear list of weak directions that were not injected;
+- assertion that rejected broad/weak-capture directions did not become MWG
+  residual channels.
+
+### Tests
+
+Approved test surface:
+
+- `test/nested/cartesian_occupied_first_injection_runtests.jl`
+
+Tests should be correctness-only and bounded:
+
+- Be and Ne one-center fixtures, cc-pV5Z, `lmax = 1`;
+- `Y_occ` recovery at roundoff after mandatory inclusion;
+- supplement capture spectrum and optional injection count for `ns = 5`;
+- `ns = 7` only if bounded enough for the local test budget, otherwise an
+  ignored probe;
+- rejection/reporting of weak-capture optional directions;
+- mismatch/fingerprint failure for inconsistent packet/import data.
+
+No endpoint energy assertions, SCF convergence claims, Cr2 gates, or
+production artifact tests are approved.
+
+### Explicit Exclusions
+
+Forbidden:
+
+- screened-Hartree correction changes;
+- EGOI changes;
+- solver workflow;
+- public driver/API/default changes;
+- artifact/provenance/schema changes;
+- automatic physics defaults;
+- shell-local injection;
+- fake-RDM hierarchy;
+- exchange correction;
+- row-gauge rho0/P0 shortcuts;
+- silent injection of weak-capture directions;
+- broad rejected directions becoming residual-GTO/MWG channels;
+- Cr/Cr2 production claims.
+
+### Decision Rule
+
+If `Y_occ` cannot be represented/recovered at roundoff after mandatory
+inclusion, stop and report a construction bug. If optional directions have weak
+capture, report the channels and reject them unless a later authority approves
+a different basis design. If implementing the helper requires changing
+screened-Hartree correction assembly, EGOI, solver workflow, artifacts, or
+public driver behavior, stop and request a new design amendment.
+
+## HP-RG-OCC-FIRST-INJECT-TEST-01 - Source Validation
+
+Approved validation for `HP-RG-OCC-FIRST-INJECT-FN-01`:
+
+- `git diff --check`;
+- package load;
+- focused occupied-first injection test/probe;
+- Be/Ne packet/import-driven occupied recovery checks;
+- supplement capture spectrum report;
+- no Cr/Cr2 run;
+- no screened-Hartree endpoint run required.
+
 ## HP-RG-PROTECT-INJECT-FN-01 - Staged Protected-Original Geometry Prototype
 
 Status: approved narrow source authority for an internal, default-off,

@@ -5076,6 +5076,123 @@ alone. A later source lane may be requested only after measurement shows the
 occupied-first construction is stable and simpler than the current
 label/cutoff-dependent path.
 
+### HP-RG-OCC-FIRST-INJECT-FN-01 / HP-RG-OCC-FIRST-INJECT-TEST-01 — occupied-first injection source geometry
+
+Status: approved narrow internal source/design authority. This is not public
+driver/API authority, not artifact/provenance authority, not Hamiltonian
+correction authority, and not a production default.
+
+Purpose: source-back the occupied-first injection geometry/selection rule
+validated by `HP-RG-OCC-FIRST-INJECT-AUDIT-01`. The helper makes atom-local
+pure-GTO RHF occupied orbitals mandatory reference directions before ordinary
+RG/injection decisions, then uses the full supplement capture spectrum to
+choose optional injection directions. The goal is to replace label-based
+occupied choices and cutoff accidents with a reproducible construction.
+
+Approved source surface:
+
+- `src/cartesian_residual_gaussians/residual_basis.jl`
+
+Optional narrow inputs only, if needed to consume already-owned packet/import
+objects:
+
+- `src/cartesian_reference_density/atomic_hf_reference_packets.jl`
+- `src/cartesian_external_gto_import.jl`
+
+No new source file is approved by this lane.
+
+Approved inputs:
+
+- final/base gausslet or represented fixed span data `G`;
+- full supplement basis `A`;
+- supplement metric `S_AA`;
+- mixed overlap/capture data such as `X_GA = <G|A>`, or the equivalent
+  existing representation data;
+- HF occupied coefficients `Y_occ` from an `AtomicHFReferencePacket` or
+  external-GTO import packet;
+- existing compact/RG selection data only if needed to form the current
+  represented span `M`.
+
+`Y_occ` must be orthonormal in the supplement metric and must carry packet or
+import provenance. Raw label picks are not an accepted construction rule.
+
+Approved operation:
+
+1. validate `Y_occ` in `S_AA`;
+2. force `Y_occ` into the mandatory retained/protected reference span;
+3. form the current represented span `M`;
+4. build the full-supplement projection/capture operator into `M`;
+5. diagonalize that capture operator in an orthonormal supplement basis;
+6. verify the occupied subspace is recovered at roundoff;
+7. select optional global injection directions only when
+   `lambda >= cutoff`;
+8. reject and report weak-capture supplement directions instead of silently
+   converting them into MWG residual channels;
+9. return compact diagnostics and transform-ready geometry for later internal
+   consumers.
+
+The cutoff gates optional injection only. It must never be the only mechanism
+protecting `Y_occ`.
+
+Required diagnostics:
+
+- source of `Y_occ` and provenance fingerprint;
+- supplement metric orthogonality of `Y_occ`;
+- occupied recovery before and after mandatory inclusion;
+- capture eigenvalue spectrum;
+- number and channel/owner makeup of optional accepted directions;
+- rejected weak-capture directions and angular/channel labels when available;
+- final rank, sector counts, and any rotation/protected-overlap diagnostics;
+- packet/import mismatch failures.
+
+Approved test surface:
+
+- `test/nested/cartesian_occupied_first_injection_runtests.jl`
+
+Test scope:
+
+- bounded Be and Ne one-center fixtures with `cc-pV5Z`, `lmax = 1`;
+- `ns = 5` as the required bounded check;
+- `ns = 7` only if bounded, otherwise ignored/probe-only;
+- `Y_occ` recovery at roundoff after mandatory inclusion;
+- full supplement capture spectrum sanity;
+- rejection/reporting of weak-capture optional directions;
+- packet/import mismatch failure.
+
+Forbidden:
+
+- screened-Hartree correction changes;
+- EGOI changes or target expansion;
+- solver workflow;
+- public driver/API/export/defaults;
+- artifacts, schema, provenance, writer, or reader changes;
+- shell-local injection;
+- fake-RDM hierarchy changes;
+- exchange correction;
+- rho0/P0 row-gauge shortcuts;
+- automatic physics defaults;
+- label-based occupied selection as the source-backed construction rule;
+- treating fitted density or potential terms as protected orbitals;
+- silently promoting weak-capture broad directions into MWG RGs;
+- Cr/Cr2 production claims.
+
+Decision rule: if `Y_occ` cannot be recovered at roundoff after mandatory
+inclusion, stop and report the exact packet/import/metric/construction
+failure. If optional directions have weak capture, report them as insufficient
+main-basis support rather than creating broad residual-MWG channels. If the
+helper needs source outside the approved files or a persistent artifact/public
+shape, stop and request a new docs-only authority amendment.
+
+Validation for this source lane:
+
+- `git diff --check`;
+- package load;
+- focused occupied-first injection test/probe;
+- Be/Ne packet or external-import occupied recovery checks;
+- capture spectrum and weak-capture reporting checks;
+- no screened-Hartree endpoint required;
+- no Cr/Cr2 run.
+
 ### HP-RG-PROTECT-INJECT-FN-01 — staged protected-original geometry prototype
 
 Status: approved narrow source authority for an internal, default-off,

@@ -444,6 +444,21 @@ Approved Residual Gaussian robustness lane:
   solver/driver workflow, Cr/Cr2, exchange, row-gauge rho0/P0 shortcuts,
   label-based occupied selection as the construction rule, or treating fitted
   density Gaussian terms as protected orbitals.
+- `HP-RG-OCC-FIRST-INJECT-FN-01` and
+  `HP-RG-OCC-FIRST-INJECT-TEST-01` approve a narrow internal source-backed
+  occupied-first injection geometry/selection helper in
+  `src/cartesian_residual_gaussians/residual_basis.jl`. The helper consumes
+  packet/import-provenance HF occupied coefficients `Y_occ`, supplement metric
+  `S_AA`, mixed overlap/capture data, and the current represented span `M`;
+  it forces `Y_occ` into the mandatory retained/protected reference span,
+  diagonalizes the full supplement capture spectrum into `M`, and selects
+  optional injection directions only when `lambda >= cutoff`. The cutoff gates
+  optional injection only and must never be the only thing protecting
+  `Y_occ`. Weak-capture directions are reported/rejected, not silently
+  converted into MWG residual channels. This does not approve
+  screened-Hartree correction changes, EGOI, solver workflow, public
+  driver/API/defaults, artifacts, shell-local injection, fake-RDM hierarchy,
+  exchange, row-gauge rho0/P0, automatic physics defaults, or Cr/Cr2 claims.
 - `HP-RG-PROTECT-INJECT-FN-01` and `HP-RG-PROTECT-INJECT-TEST-01` approve
   only a narrow internal source-backed geometry prototype for staged
   protected-original injection in
