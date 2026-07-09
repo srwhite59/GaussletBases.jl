@@ -26881,3 +26881,42 @@ Carrying-cost result:
   route-specific cleanup remains outside scope.
 - exact remaining blocker: implement the three stable formulas, pass the
   BigFloat core test, then resume the already-approved producer-wide wiring.
+
+## Cartesian Hamiltonian Producer Pass 342 - Stable High-Exponent Gaussian Formula Implementation
+
+Commit(s):
+- this commit - stabilize high-exponent Gaussian factor arithmetic.
+
+Summary:
+- Replaced cancellation-prone weighted-center and determinant subtractions in
+  `gaussian_factor`, `gaussian_pair_factor`, and `_factor_axis_integral` with
+  the approved algebraically equivalent pairwise-distance forms. Polynomial
+  moments, prefactors, Coulomb presets, and producer defaults are unchanged.
+- Added a focused 256-bit BigFloat oracle check in `test/core/runtests.jl`.
+  Translated high-exponent cases directly catch the old failure while compact,
+  moderate, zero-exponent, and polynomial-factor cases protect ordinary use.
+
+Validation / evidence:
+- Doer and manager both ran the canonical core group; the affected testset
+  passed `58/58`, with maximum reported relative oracle error `7.33e-16`.
+- Manager reran the source-backed ignored high audit. H/H2 factor scales stayed
+  below `2.6`, the tightest-term scale was `1.60e-7`, base and nuclear matrices
+  were finite/symmetric, and supplemented H2 residual-GTO/MWG assembly
+  completed in about `36.3` s. Terminal due diligence showed the expected
+  bounded H/H2 topology and no padding or weight anomaly.
+- `git diff --check` passed.
+
+Goal advancement / guardrail:
+- LT1/LT4/LT5 and MT4: removes the numerical blocker to one coherent 135-term
+  producer expansion at the analytic-kernel owner. This does not approve a
+  scaled/log carrier, terminal redesign, high default, or Cr/Cr2 endpoint
+  claim. The broader producer ownership/provenance wiring remains the next
+  approved pass.
+
+Carrying-cost result:
+- deleted: cancellation-prone determinant and weighted-center arithmetic.
+- simplified: approved source shrank by eight net lines.
+- quarantined: the temporary MWG explicit-expansion override remains only in
+  the ignored audit until producer-wide wiring lands.
+- exact remaining blocker: implement producer-wide expansion ownership,
+  parity checks, artifact provenance, and packet role-qualified provenance.

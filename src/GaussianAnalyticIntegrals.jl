@@ -36,18 +36,13 @@ function gaussian_factor(a, b, exponent::Float64, center_value::Float64)
     alpha_b = inv(b.width^2)
     alpha_g = 2.0 * exponent
     total_alpha = alpha_a + alpha_b + alpha_g
-    weighted_center =
-        (
-            alpha_a * a.center_value +
-            alpha_b * b.center_value +
-            alpha_g * center_value
-        ) / total_alpha
-    constant_term =
-        alpha_a * a.center_value^2 +
-        alpha_b * b.center_value^2 +
-        alpha_g * center_value^2
+    quadratic = (
+        alpha_a * alpha_b * (a.center_value - b.center_value)^2 +
+        alpha_a * alpha_g * (a.center_value - center_value)^2 +
+        alpha_b * alpha_g * (b.center_value - center_value)^2
+    ) / total_alpha
     return sqrt(2.0 * pi / total_alpha) *
-           exp(-0.5 * (constant_term - total_alpha * weighted_center^2))
+           exp(-0.5 * quadratic)
 end
 
 function gaussian_pair_factor(a, b, exponent::Float64)
@@ -55,18 +50,12 @@ function gaussian_pair_factor(a, b, exponent::Float64)
 
     alpha_a = inv(a.width^2)
     alpha_b = inv(b.width^2)
-    a11 = alpha_a + 2.0 * exponent
-    a22 = alpha_b + 2.0 * exponent
-    a12 = -2.0 * exponent
-    determinant = a11 * a22 - a12^2
+    determinant = alpha_a * alpha_b + 2.0 * exponent * (alpha_a + alpha_b)
     determinant > 0.0 ||
         throw(ArgumentError("pair-factor quadratic form must be positive definite"))
-
-    d1 = alpha_a * a.center_value
-    d2 = alpha_b * b.center_value
-    constant_term = alpha_a * a.center_value^2 + alpha_b * b.center_value^2
-    quadratic_term = (a22 * d1^2 - 2.0 * a12 * d1 * d2 + a11 * d2^2) / determinant
-    return (2.0 * pi / sqrt(determinant)) * exp(-0.5 * (constant_term - quadratic_term))
+    quadratic = 2.0 * exponent * alpha_a * alpha_b *
+        (a.center_value - b.center_value)^2 / determinant
+    return (2.0 * pi / sqrt(determinant)) * exp(-0.5 * quadratic)
 end
 
 gaussian_exponent(gaussian) = 1.0 / (2.0 * gaussian.width^2)

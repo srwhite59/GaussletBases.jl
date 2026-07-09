@@ -46,8 +46,11 @@ function _factor_axis_integral(left_exponent, left_center, left_power, left_pref
     gamma = left_exponent + right_exponent + factor_exponent
     weighted_center = (left_exponent * left_center + right_exponent * right_center +
         factor_exponent * factor_center) / gamma
-    constant = left_exponent * left_center^2 + right_exponent * right_center^2 +
-        factor_exponent * factor_center^2 - gamma * weighted_center^2
+    constant = (
+        left_exponent * right_exponent * (left_center - right_center)^2 +
+        left_exponent * factor_exponent * (left_center - factor_center)^2 +
+        right_exponent * factor_exponent * (right_center - factor_center)^2
+    ) / gamma
     left_shift = weighted_center - left_center
     right_shift = weighted_center - right_center
     value = 0.0

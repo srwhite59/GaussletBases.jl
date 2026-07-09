@@ -461,6 +461,57 @@ end
     @test Tb ≈ Tref atol = 1.0e-12 rtol = 1.0e-12
 end
 
+function _big_gaussian_factor(a, b, exponent, factor_center)
+    return setprecision(256) do
+        alpha_a = inv(BigFloat(a.width)^2)
+        alpha_b = inv(BigFloat(b.width)^2)
+        alpha_g = 2 * BigFloat(exponent)
+        total = alpha_a + alpha_b + alpha_g
+        quadratic = (
+            alpha_a * alpha_b * (BigFloat(a.center_value) - BigFloat(b.center_value))^2 +
+            alpha_a * alpha_g * (BigFloat(a.center_value) - BigFloat(factor_center))^2 +
+            alpha_b * alpha_g * (BigFloat(b.center_value) - BigFloat(factor_center))^2
+        ) / total
+        Float64(sqrt(2 * big(pi) / total) * exp(-quadratic / 2))
+    end
+end
+
+function _big_gaussian_pair_factor(a, b, exponent)
+    return setprecision(256) do
+        alpha_a = inv(BigFloat(a.width)^2)
+        alpha_b = inv(BigFloat(b.width)^2)
+        g = BigFloat(exponent)
+        determinant = alpha_a * alpha_b + 2 * g * (alpha_a + alpha_b)
+        quadratic = 2 * g * alpha_a * alpha_b *
+            (BigFloat(a.center_value) - BigFloat(b.center_value))^2 / determinant
+        Float64(2 * big(pi) / sqrt(determinant) * exp(-quadratic / 2))
+    end
+end
+
+function _big_factor_axis_integral(alpha_l, center_l, power_l, prefactor_l,
+    alpha_r, center_r, power_r, prefactor_r, alpha_f, center_f)
+    return setprecision(256) do
+        al, ar, af = BigFloat(alpha_l), BigFloat(alpha_r), BigFloat(alpha_f)
+        cl, cr, cf = BigFloat(center_l), BigFloat(center_r), BigFloat(center_f)
+        gamma = al + ar + af
+        mean = (al * cl + ar * cr + af * cf) / gamma
+        constant = (al * ar * (cl - cr)^2 + al * af * (cl - cf)^2 +
+            ar * af * (cr - cf)^2) / gamma
+        value = zero(BigFloat)
+        for i in 0:power_l, j in 0:power_r
+            moment_power = i + j
+            isodd(moment_power) && continue
+            moment = sqrt(big(pi) / gamma)
+            for k in 1:div(moment_power, 2)
+                moment *= BigFloat(2 * k - 1) / (2 * gamma)
+            end
+            value += binomial(power_l, i) * binomial(power_r, j) *
+                (mean - cl)^(power_l - i) * (mean - cr)^(power_r - j) * moment
+        end
+        Float64(BigFloat(prefactor_l) * BigFloat(prefactor_r) * exp(-constant) * value)
+    end
+end
+
 @testset "Ordinary Coulomb expansion and Gaussian factors" begin
     expansion = coulomb_gaussian_expansion()
     sample_points = [1.0e-3, 1.0e-2, 0.1, 1.0, 5.0, 20.0]
@@ -488,6 +539,48 @@ end
     distorted_matrix = gaussian_factor_matrix(distorted_set; exponent = 0.7, center = 0.25)
     @test distorted_matrix ≈ transpose(distorted_matrix) atol = 1.0e-10 rtol = 1.0e-10
     @test all(isfinite, distorted_matrix)
+
+    compact = coulomb_gaussian_expansion(doacc = false)
+    high = coulomb_gaussian_expansion(doacc = true)
+    oracle_errors = Float64[]
+    for offset in (0.0, 1.0e6), exponent in
+            (0.0, 0.7, compact.exponents[end], high.exponents[end])
+        a = Gaussian(center = offset - 0.37, width = 0.23)
+        b = Gaussian(center = offset + 0.41, width = 0.31)
+        factor_center = offset + 0.13
+        factor = GaussletBases.GaussianAnalyticIntegrals.gaussian_factor(
+            a, b, exponent, factor_center)
+        pair = GaussletBases.GaussianAnalyticIntegrals.gaussian_pair_factor(
+            a, b, exponent)
+        factor_oracle = _big_gaussian_factor(a, b, exponent, factor_center)
+        pair_oracle = _big_gaussian_pair_factor(a, b, exponent)
+        @test isfinite(factor) && factor >= 0.0
+        @test isfinite(pair) && pair >= 0.0
+        @test factor ≈ factor_oracle atol = 0.0 rtol = 5.0e-14
+        @test pair ≈ pair_oracle atol = 0.0 rtol = 5.0e-14
+        push!(oracle_errors, abs(factor - factor_oracle) / factor_oracle)
+        push!(oracle_errors, abs(pair - pair_oracle) / pair_oracle)
+
+        axis = GaussletBases.CartesianGaussianRawBlocks._factor_axis_integral(
+            9.0, offset - 0.37, 0, 1.2,
+            6.0, offset + 0.41, 0, 0.8, exponent, factor_center)
+        axis_oracle = _big_factor_axis_integral(
+            9.0, offset - 0.37, 0, 1.2,
+            6.0, offset + 0.41, 0, 0.8, exponent, factor_center)
+        @test isfinite(axis) && axis >= 0.0
+        @test axis ≈ axis_oracle atol = 0.0 rtol = 5.0e-14
+        push!(oracle_errors, abs(axis - axis_oracle) / axis_oracle)
+    end
+    polynomial = GaussletBases.CartesianGaussianRawBlocks._factor_axis_integral(
+        9.0, 1.0e4 - 0.37, 1, 1.2,
+        6.0, 1.0e4 + 0.41, 2, 0.8, high.exponents[end], 1.0e4 + 0.13)
+    polynomial_oracle = _big_factor_axis_integral(
+        9.0, 1.0e4 - 0.37, 1, 1.2,
+        6.0, 1.0e4 + 0.41, 2, 0.8, high.exponents[end], 1.0e4 + 0.13)
+    @test isfinite(polynomial)
+    @test polynomial ≈ polynomial_oracle atol = 1.0e-22 rtol = 5.0e-11
+    println("stable_gaussian_bigfloat_max_relative_error=", maximum(oracle_errors),
+        " high_tightest_exponent=", high.exponents[end])
 end
 
 @testset "Mapped uniform basis" begin
