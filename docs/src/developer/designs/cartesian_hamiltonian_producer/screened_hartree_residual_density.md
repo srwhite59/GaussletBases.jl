@@ -397,3 +397,76 @@ Forbidden:
 Interpretation rule: if the fitted cloud differs materially from the exact
 determinant density, report the difference as fit error before interpreting
 energy shifts.
+
+## Fitted-Potential Measurement Variant
+
+`HP-PQS-SCREEN-HARTREE-POTFIT-AUDIT-01` approves a narrow
+measurement/prototype amendment for accelerating screened-Hartree endpoint
+probes. It does not change the physics object:
+
+- the saved HF determinant still defines `P0` and `q0`;
+- the near-exact spherical Gaussian density fit still defines the reference
+  cloud and `E0_G`;
+- the fitted-potential object is only a fast radial Gaussian representation of
+  that same cloud's Hartree potential for building `J0_G`.
+
+Allowed:
+
+- ignored `tmp/work` probes only;
+- durable `/Users/srw/dmrgtmp` outputs;
+- atomic one-center reference packets first;
+- Be, Ne, and Be2 consumption after the one-center packet gates pass;
+- optional `potential_fit/*` groups in ignored atomic HF reference density-fit
+  prototype packets;
+- use of the fitted-potential packet only as a faster `J0_G` builder in
+  screened-Hartree probes.
+
+Construction convention:
+
+1. Start from the saved atomic HF determinant and its near-exact spherical
+   Gaussian density fit.
+2. Evaluate the analytic radial Hartree potential of that density fit:
+
+   ```text
+   J0(r) = sum_i w_i * erf(sqrt(beta_i) * r) / r
+   ```
+
+   with the `r = 0` limit handled analytically.
+3. Use the repo Coulomb Gaussian expansion, scaled by total cloud charge, as a
+   fixed long-range tail scaffold.
+4. Fit only the short/intermediate residual, or add/refit local terms, so the
+   far `Q/r` tail is protected.
+5. Fit on a radial grid out to a large radius, for example `100` bohr.
+6. Drive the potential-fit error to about `1e-8` in Coulomb-relevant
+   diagnostics unless the linear algebra becomes singular or ill-conditioned.
+
+Required packet/probe diagnostics:
+
+- charge and density-fit provenance;
+- Coulomb expansion or tail scaffold identity/fingerprint;
+- potential-fit term count, exponents, coefficients, and signed/positive
+  status;
+- radial absolute and relative errors, including near-core and tail bins;
+- `r * J_fit(r) -> Q` tail check;
+- self-energy or anchor mismatch;
+- matrix-level `J0_G` comparison against the existing density-fit exact
+  Galerkin path on at least one small case;
+- endpoint sensitivity only if the fit error is far below the
+  screened-Hartree shift.
+
+Forbidden:
+
+- tracked source edits;
+- production artifact schema or reader changes;
+- solver or public workflow;
+- changes to the saved HF determinant convention;
+- treating potential-fit Gaussians as supplement or protected orbitals;
+- rho0/P0 row-gauge shortcuts;
+- EGOI or exchange changes;
+- Cr/Cr2 production claims.
+
+Decision rule: if the fitted potential cannot make matrix/anchor errors
+negligible compared with endpoint shifts, stop and report fit limitations. If
+it passes, it may be used as the fast `J0_G` builder in the next Be2 or Ne
+screened-Hartree measurement, while the density fit remains the reference
+cloud.

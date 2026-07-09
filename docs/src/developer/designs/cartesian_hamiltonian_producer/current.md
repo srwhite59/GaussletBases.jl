@@ -209,6 +209,18 @@ Implemented base path:
   or driver integration, Cr/Cr2, exchange correction, EGOI, row-gauge rho0/P0,
   unreported fits, discarding protected cloud directions, or broad first-row
   claims.
+- `HP-PQS-SCREEN-HARTREE-POTFIT-AUDIT-01` approves only a
+  measurement/prototype fitted-potential amendment for faster screened-Hartree
+  `J0_G` construction. The saved HF determinant remains the definition of
+  `P0/q0`, and the near-exact density fit remains the reference cloud and
+  self-energy object. The optional ignored-packet `potential_fit/*` object is
+  only a radial Gaussian representation of that cloud's Hartree potential, with
+  the far `Q/r` tail protected by the repo Coulomb Gaussian expansion. It may
+  be consumed for Be/Ne and Be2 screened-Hartree probes after packet gates pass,
+  but it does not approve source edits, production artifact schema/readers,
+  solver/public workflow, determinant-convention changes, treating
+  potential-fit Gaussians as protected orbitals, row-gauge rho0/P0, EGOI,
+  exchange, or Cr/Cr2 claims.
 - `HP-MCOMX-*` approves a protected-`P2` plus mapped Chebyshev source-span
   option at the existing nested doside / COMX seam. The nonlinear map uses
   normalized local `u`, while `_cleanup_comx_transform(...)` still uses the

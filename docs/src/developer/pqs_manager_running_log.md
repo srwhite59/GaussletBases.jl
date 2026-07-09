@@ -25922,3 +25922,275 @@ Carrying-cost result:
 - exact remaining blocker: run the ignored Be/Ne occupied-first probe and
   verify `Y_occ` recovery at roundoff before interpreting any screened-Hartree
   endpoint differences from the label-based probes.
+
+## Cartesian Hamiltonian Producer Pass 324 - Occupied-First Injection Spectrum Audit
+
+Commit(s):
+- `31207eefa` - authority commit for the occupied-first global injection
+  audit; no source commit in this measurement pass.
+
+Summary:
+- Accepted the ignored-probe measurement for
+  `HP-RG-OCC-FIRST-INJECT-AUDIT-01` after static script review. The probe
+  solves supplement-space RHF for Be and Ne, constructs `Y_occ` from the
+  occupied RHF orbitals, and evaluates the projection spectrum of the full
+  supplement into `M = span(G, Y_occ residualized against G)`.
+- The main conclusion is sound: occupied-first construction fixes the
+  reference-determinant ambiguity at the spectrum/recoverability level.
+  `Y_occ` is recovered at roundoff after mandatory inclusion for Be and Ne at
+  `ns=5` and `ns=7`. This is not yet a source-backed injection transform and
+  not an endpoint result.
+
+Validation / evidence:
+- Probe:
+  `tmp/work/occupied_first_global_injection_audit.jl`. Output:
+  `/Users/srw/dmrgtmp/occupied_first_global_injection_audit_31207eefa/`.
+- Static review found the projection algebra consistent with the intended
+  object. The probe forms `XY = X*Cocc`, residual metric
+  `I - XY'XY`, and the supplement-side projector
+  `X'X + Dres' * Rinv * Dres`, then diagonalizes it in an
+  `S_AA`-orthonormal basis.
+- Summary results:
+  Be `ns=5`: base `811`, supplement `21`, occupied `2`, optional rank `15`,
+  lambda min `0.8470`, `Y_occ` loss in `M` `7.3e-15`.
+  Ne `ns=5`: base `1007`, occupied `5`, optional rank `12`, lambda min
+  `0.9383`, `Y_occ` loss `2.8e-14`.
+  Be `ns=7`: base `2087`, occupied `2`, optional rank `16`, lambda min
+  `0.6150`, `Y_occ` loss `8.9e-15`.
+  Ne `ns=7`: base `2523`, occupied `5`, optional rank `16`, lambda min
+  `0.9913`, `Y_occ` loss `3.0e-14`.
+- The weak directions are genuinely optional. Ne `ns=7` has all 21 supplement
+  directions above `0.99`; Be has weak p-like directions, especially three
+  modes near `0.615` at `ns=7`, which should not be silently injected.
+
+Goal advancement:
+- LT5/LT6 and MT4: gives a cleaner construction primitive for screened
+  Hartree and fitted-cloud endpoint work. The determinant-defining RHF
+  occupied subspace can be made mandatory before RG/injection decisions, while
+  the rest of the supplement is handled by a measured projection spectrum
+  rather than label ordering or cutoff accident.
+
+Risk / guardrail:
+- Do not claim this has implemented global injection or changed endpoint
+  energies. The audit measured spectra and recoverability only. The next
+  source/design question is how to turn this into an actual construction path
+  while keeping `Y_occ` mandatory and treating low-lambda p-like directions as
+  rejected or diagnostic-only.
+
+Carrying-cost result:
+- source line delta: 0 in this measurement pass.
+- deleted: none.
+- simplified: establishes that `Y_occ` can replace label-selected occupied
+  references as the mandatory determinant object.
+- quarantined: probe and output remain ignored measurement artifacts under
+  `tmp/work` and `/Users/srw/dmrgtmp`.
+- exact remaining blocker: source-backed occupied-first injection design, plus
+  a policy for optional low-projection p-like supplement directions, especially
+  Be `ns=7`.
+
+## Cartesian Hamiltonian Producer Pass 325 - Ne Atomic HF Reference Density-Fit Prototype Packet
+
+Commit(s):
+- none; ignored prototype packet pass based on the local post-`31207eefa`
+  state.
+
+Summary:
+- Accepted the ignored Ne prototype artifact shape after static script and
+  packet readback review. The packet now contains the actual supplement-space
+  closed-shell RHF determinant for Ne cc-pV5Z `lmax=1`, including
+  `hf/occupied_coefficients_AA`, occupations, orbital energies, `S_AA`, and
+  `hf/density_matrix_AA`. This fixes the immediate problem from the saved
+  N=56 density-fit packet, which contained only density-fit terms and metadata
+  and not the occupied orbitals needed to define `P0/q0`.
+- The N=56 signed spherical Gaussian density fit is present only as
+  `density_fit/*`, a compressed representation for `J0_G/E0_G`. It is not
+  treated as protected orbital content.
+
+Validation / evidence:
+- Probe:
+  `tmp/work/ne_atomic_hf_reference_density_fit_packet.jl`. Packet:
+  `/Users/srw/dmrgtmp/ne_atomic_hf_reference_density_fit_packet_31207eefa/ne_ccpv5z_lmax1_atomic_hf_reference_density_fit.jld2`.
+- Manager review checked both the writer and readback. The JLD2 readback has
+  `artifact_kind = :atomic_hf_reference_density_fit`,
+  `convention_id = :atomic_hf_reference_density_fit_v0`, `Cocc` size
+  `21 x 5`, supplement overlap size `21 x 21`, and `56` density-fit terms.
+- Key numerical checks: RHF energy `-128.54661270243554`, occupied
+  orthogonality error `1.50e-14`, density trace `9.999999999999973`,
+  density-from-coefficients error `0.0`, determinant self-Coulomb mismatch
+  against the saved fit target `0.0`, fit charge error `5.33e-15`, and fit
+  self-Coulomb relative error `8.83e-12`.
+
+Goal advancement:
+- MT4 screened-Hartree endpoint work now has the right reusable atomic
+  reference object shape in ignored form: determinant data defines `P0/q0`,
+  while a near-exact fitted density accelerates Galerkin `J0_G/E0_G`.
+  This is the bridge needed before rerunning Ne endpoints without hard-coded
+  occupied labels.
+
+Risk / guardrail:
+- This is not a registered repo artifact or source reader. Do not let endpoint
+  probes silently depend on label-selected `s1,s4,px3,py3,pz3`, and do not
+  interpret fitted density Gaussians as protected supplement orbitals.
+
+Carrying-cost result:
+- source line delta: 0 tracked source lines; ignored probe plus `/Users/srw/dmrgtmp`
+  packet only.
+- deleted: none.
+- simplified: combines HF determinant and density-fit provenance in one
+  auditable packet instead of two partially related saved objects.
+- quarantined: packet writer/readback remains ignored prototype code.
+- exact remaining blocker: consume this packet in the next Ne screened-Hartree
+  endpoint probe, then decide whether to request source authority for a small
+  standard atomic reference artifact facility.
+
+### Medium-Term Goal Checkpoint After Pass 325
+
+- MT4 screened-Hartree endpoint work remains active and measurement-only, but
+  the current blocker has shifted. The immediate issue is no longer whether
+  the residual-density algebra is sane on small systems; H/Be/Be2 and the Ne
+  `ns=5` fitted-cloud endpoint showed the construction can be stable. The
+  active blocker is now packaging and consumption of the atom-local reference
+  object: `P0/q0` must come from a saved HF determinant, while `J0_G/E0_G` may
+  come from a near-exact density fit to that same determinant.
+- The old label-selected Ne determinant (`s1,s4,px3,py3,pz3`) is now stale as
+  a construction story. It may remain a comparison record only. Future Ne
+  endpoint interpretation should consume the atomic HF reference density-fit
+  packet or an equivalent source-backed object.
+- Occupied-first injection is active as a design direction but not yet a
+  source implementation. The spectrum audit showed `Y_occ` can be made
+  mandatory at roundoff; it did not implement global injection, endpoint
+  construction, or optional low-projection policy.
+- Stale/blocked lanes: row-gauge rho0/P0 affine corrections remain historical;
+  exact exchange remains separate; shell-local fake-RDM injection remains a
+  later high-order/shell construction idea, not part of the current Ne endpoint
+  pass.
+- Next target: packet-driven Ne `ns=5/ns=7` endpoint review, then either a
+  source/design request for a small standard atomic reference artifact facility
+  or a narrowed performance pass for fitted-cloud `J0_G` construction.
+
+## Cartesian Hamiltonian Producer Pass 326 - Ne Packet-Driven Screened-Hartree Endpoint
+
+Commit(s):
+- none; ignored measurement probe consuming the Pass 325 prototype packet.
+
+Summary:
+- Accepted the packet-driven Ne screened-Hartree endpoint after static script
+  review. The probe consumes
+  `hf/occupied_coefficients_AA` and `hf/occupations` from the atomic reference
+  packet to define `P0/q0`, and uses only `density_fit/betas,widths,weights`
+  for `J0_G/E0_G`. The old hard-coded occupied labels are not the construction
+  authority.
+- The `ns=5` endpoint agrees with the previous label-based endpoint at
+  roundoff-scale total-energy differences, but the static anchor is cleaner:
+  formula energy anchor error is about `-5.85e-10` Ha instead of the earlier
+  `4.38e-5` Ha label/fit mismatch. The `ns=7` point also ran cleanly; the
+  screened-Hartree shift there is only `+0.0046` mHa.
+
+Validation / evidence:
+- Probe: `tmp/work/ne_packet_screened_hartree_endpoint.jl`. Output:
+  `/Users/srw/dmrgtmp/ne_packet_screened_hartree_endpoint_31207eefa/`.
+  Packet consumed:
+  `/Users/srw/dmrgtmp/ne_atomic_hf_reference_density_fit_packet_31207eefa/ne_ccpv5z_lmax1_atomic_hf_reference_density_fit.jld2`.
+- Static script review confirmed that `_read_reference_packet(...)` reads
+  packet `C_occ`, occupations, overlap, labels, and fit terms; `_packet_reference(...)`
+  constructs `P_AA = C_occ * Diagonal(occupations) * C_occ'`; and the final
+  `P0_L/q0` are built from those packet occupied coefficients. The script also
+  requires current supplement labels, angular powers, overlap, and overlap
+  fingerprint to match the packet.
+- Packet/readback checks were clean for both `ns=5` and `ns=7`: labels match,
+  overlap error `0.0`, fingerprint match `true`, occupied orthogonality
+  `1.50e-14`, and density-from-packet-coefficients error `0.0`.
+- Endpoint results versus `E_ref(Ne) = -128.547098109` Ha:
+  `ns=5/core=0.030` uncorrected `-128.556073196769` Ha (`-8.975` mHa),
+  screened `-128.544081741139` Ha (`+3.016` mHa), shift `+11.991` mHa.
+  `ns=7/core=0.020` uncorrected `-128.546798741742` Ha (`+0.299` mHa),
+  screened `-128.546794163057` Ha (`+0.304` mHa), shift `+0.0046` mHa.
+- The expensive stage remains fitted-cloud `J0_G`: `116.0` s at `ns=5` and
+  `291.2` s at `ns=7`. RHF endpoint stages were about `13.5` s at `ns=5` and
+  `81` s at `ns=7`.
+
+Goal advancement:
+- MT4: this is the first clean packet-driven Ne endpoint. It establishes the
+  intended data flow for source-backed work: saved atom-local HF determinant
+  for `P0/q0`, near-exact fitted density for Galerkin reference Hartree terms,
+  and no label-selected determinant fallback. It also shows that at `ns=7`,
+  Ne is already within about `0.3` mHa before screening and the screened
+  correction is essentially negligible.
+
+Risk / guardrail:
+- Do not treat this as source integration or a production artifact. The
+  residual/protected geometry remains ignored-probe code, and fitted-cloud
+  `J0_G` construction is still costly. This pass does not approve first-row
+  claims, artifacts/readers, driver workflow, solver workflow, exchange,
+  EGOI, rho0/P0, or Cr/Cr2.
+
+Carrying-cost result:
+- source line delta: 0 tracked source lines; ignored probe and `/Users/srw/dmrgtmp`
+  output only.
+- deleted: none.
+- simplified: removes the last Ne endpoint dependence on hard-coded occupied
+  labels.
+- quarantined: packet-driven endpoint runner remains ignored prototype code.
+- exact remaining blocker: decide whether to ask for source authority for a
+  standard atomic HF reference density-fit artifact facility, and separately
+  whether fitted-cloud `J0_G` needs a performance/source lane before broader
+  atom scans.
+
+## Cartesian Hamiltonian Producer Pass 327 - Fitted-Potential Screened-Hartree Measurement Authority
+
+Commit(s):
+- this commit - approve screened-Hartree fitted-potential audit
+
+Summary:
+- Approved `HP-PQS-SCREEN-HARTREE-POTFIT-AUDIT-01` as a narrow
+  measurement/prototype amendment for screened-Hartree endpoint probes. The
+  purpose is performance, not a new physics object: the saved atomic HF
+  determinant remains the definition of `P0/q0`, the near-exact spherical
+  density fit remains the reference cloud and self-energy object, and the new
+  optional `potential_fit/*` packet content is only a fast radial Gaussian
+  representation of that same cloud's Hartree potential for building `J0_G`.
+- The approved construction fits the analytic radial potential
+  `sum_i w_i erf(sqrt(beta_i) r) / r`, protects the far `Q/r` tail through the
+  repo Coulomb Gaussian expansion scaled by total cloud charge, and fits only
+  the local/short-intermediate residual unless a local refit is explicitly
+  recorded.
+
+Validation / evidence:
+- This authority follows from the packet-driven Ne endpoint: the screened
+  construction is now algebraically clean, but fitted-cloud `J0_G` remains the
+  expensive stage (`116` s at Ne `ns=5`, `291` s at Ne `ns=7`). A
+  fitted-potential packet can test whether the same reference cloud can be used
+  with a faster matrix builder without changing `P0/q0`, `E0_G`, or endpoint
+  interpretation.
+- Required diagnostics include density/charge provenance, Coulomb-tail
+  fingerprint, potential-fit term data, radial near-core/tail errors,
+  `r * J_fit(r) -> Q`, self-energy/anchor mismatch, matrix-level `J0_G`
+  comparison to the existing exact density-fit Galerkin path, and endpoint
+  sensitivity only when fit error is far below the screened-Hartree shift.
+
+Goal advancement:
+- MT4: advances the screened-Hartree endpoint lane from correctness-only
+  measurement toward a practical measurement workflow. The key guardrail is
+  that the density fit remains the reference cloud; potential fitting is a
+  computational representation of its Hartree field, not a new density or
+  protected orbital set.
+
+Risk / guardrail:
+- Not approved: source edits, production artifact schema/readers,
+  solver/public workflow, determinant-convention changes, treating
+  potential-fit Gaussians as supplement/protected orbitals, rho0/P0 row-gauge
+  shortcuts, EGOI, exchange, or Cr/Cr2 production claims. If matrix/anchor
+  errors are not negligible compared with endpoint shifts, the pass must stop
+  and report fit limitations.
+
+Carrying-cost result:
+- source line delta: 0 in this docs-only authority pass.
+- deleted: none.
+- simplified: separates the expensive `J0_G` evaluation representation from
+  the determinant and density objects that define the screened-Hartree
+  physics.
+- quarantined: potential-fit packet content remains optional and ignored under
+  measurement probes; no production artifact or reader vocabulary is approved.
+- exact remaining blocker: run the atomic one-center potential-fit packet gate
+  and compare matrix-level `J0_G` against the existing density-fit Galerkin
+  path before using it for Be2 or Ne endpoint timing/energy interpretation.
