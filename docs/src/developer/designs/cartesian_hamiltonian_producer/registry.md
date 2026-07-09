@@ -2929,6 +2929,31 @@ Approved construction behavior:
   remains empty, or require an explicit carried expansion argument if it is
   live. It must not independently select compact accuracy.
 
+Stable-formula amendment:
+
+- `GaussianAnalyticIntegrals.gaussian_factor` may replace its
+  cancellation-prone weighted variance with the algebraically equivalent
+  pairwise weighted squared-distance identity;
+- `GaussianAnalyticIntegrals.gaussian_pair_factor` must form
+  `D = alpha_a*alpha_b + 2g*(alpha_a + alpha_b)` directly and use the
+  corresponding center-difference exponent rather than subtracting two
+  `O(g^2)` terms and two nearly equal exponent terms;
+- `CartesianGaussianRawBlocks._factor_axis_integral` may use the same
+  pairwise weighted-distance identity for its three Gaussian factors;
+- moderate-exponent numerical meaning, polynomial moments, normalization, and
+  prefactors remain unchanged;
+- do not clamp, take absolute values, truncate tight terms, or add a scaled/log
+  carrier to hide cancellation.
+
+Existing ordinary/Qiu-White callers may inherit the stable shared-kernel
+evaluation, but this does not approve route-specific rewiring, cleanup,
+defaults, or new Qiu-White validation infrastructure.
+
+The bounded audit found H/H2 high-expansion factor scales below `2.6`,
+finite/symmetric base and nuclear matrices, and finite supplemented
+residual-GTO/MWG assembly in about `36.1 s`. This evidence removes the
+reported need for a new PGDG carrier or terminal-contraction design.
+
 The expansion must not become a field of `CartesianIDAHamiltonian`. That
 object remains the finished numerical Hamiltonian. One compact expansion object
 may cross construction stages; one compact summary may cross artifact
@@ -2969,6 +2994,8 @@ src/cartesian_residual_gaussians/mwg_interaction.jl
 src/cartesian_ida_hamiltonian.jl
 src/cartesian_protected_ladder_bundle.jl
 src/cartesian_reference_density/atomic_hf_reference_packets.jl
+src/GaussianAnalyticIntegrals.jl
+src/cartesian_gaussian_raw_blocks/nuclear_blocks.jl
 ```
 
 `src/cartesian_ida_hamiltonian.jl` is approved only for compact expansion
@@ -2982,6 +3009,7 @@ Forbidden:
 - custom expansion parameters or coefficient/exponent input;
 - canonical CLI changes;
 - ordinary Qiu-White, legacy, or experimental path cleanup;
+- scaled/log PGDG carriers, new stage objects, or terminal contraction changes;
 - shellification, terminal realization, retained selection, mapping,
   residual-selection, injection, EGOI, or screened-Hartree formula changes;
 - solver/HF/MP2-NO workflow;
@@ -2995,6 +3023,8 @@ need to be guessed, or if files outside the approved surface are required.
 
 Target source growth is at most about 300 added lines, offset where practical
 by deleting independent compact selectors and the uncalled private base helper.
+The stable-formula amendment itself should remain below about 60 added source
+lines and must not introduce a new carrier, cache, status object, or module.
 
 ### HP-PQS-COULOMB-ACCURACY-TEST-01 - Coulomb accuracy validation
 
@@ -3006,6 +3036,7 @@ Approved committed test surfaces:
 test/driver_public/cartesian_base_hamiltonian_runtests.jl
 test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl
 test/nested/cartesian_atomic_hf_reference_packet_runtests.jl
+test/core/runtests.jl
 ```
 
 Approved validation:
@@ -3026,6 +3057,9 @@ Approved validation:
   potential-tail expansion provenance;
 - at least one bounded compact/high comparison reports term-dependent timing
   and allocation;
+- a small core analytic-kernel test compares compact/high exponent cases to a
+  BigFloat oracle, preserves moderate-exponent parity, and covers finite
+  nonnegative s-type factors plus translated-center cancellation cases;
 - every endpoint-style probe used for interpretation includes terminal
   due-diligence review.
 

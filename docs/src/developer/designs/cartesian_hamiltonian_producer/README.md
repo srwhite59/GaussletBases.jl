@@ -76,7 +76,9 @@ public `d` or `parent_mapping_d`.
 choice, `coulomb_accuracy = :compact | :high`, default `:compact`. One
 resolved `CoulombGaussianExpansion` must govern parent/PGDG, base IDA,
 residual-GTO, and MWG construction, with one Hamiltonian-wide provenance
-summary.
+summary. Its narrow stability amendment replaces cancellation-prone analytic
+Gaussian determinant/weighted-variance forms; it does not add a scaled PGDG
+carrier or terminal-contraction redesign.
 The WL z-axis diatomic compact retained-basis correction is approved under
 `HP-WLDIAT-COMPACT-*`: the current mechanical boundary-stratum identity path is
 not the intended compact WL retained basis and must not be used as the final

@@ -57,6 +57,12 @@ The raw-block owner returns uncharged by-center matrices. Physical nuclear
 charges are applied by Hamiltonian or one-body assembly consumers, not inside
 this kernel.
 
+Later `HP-PQS-COULOMB-ACCURACY-FN-01` authority narrowly permits
+`_factor_axis_integral` to replace its cancellation-prone weighted-center
+variance with the algebraically equivalent pairwise weighted-distance
+identity. That amendment changes neither this owner's physical scope nor its
+polynomial moment, normalization, or term-first contraction conventions.
+
 ## Not Approved
 
 This nuclear-slice amendment does not approve:

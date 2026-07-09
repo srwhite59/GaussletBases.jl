@@ -127,6 +127,11 @@ The canonical RG algorithm contract is
   different: their RHF, density/self-energy, and fitted-potential scaffold
   expansion provenance is role-qualified because those are separate evaluated
   reference objects.
+- High Coulomb exponents must be handled by algebraically stable analytic
+  Gaussian identities. Do not infer a carrier limitation from cancellation in
+  determinant or weighted-variance formulas, and do not repair such failures
+  by clamping, exponent truncation, scaled/log PGDG carriers, or terminal
+  contraction changes without separate authority.
 
 ## Public Boundaries
 

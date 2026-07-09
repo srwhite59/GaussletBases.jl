@@ -26832,3 +26832,52 @@ Carrying-cost result:
 - MT6 old flat-path classification: active/maintenance. Ordinary QW, legacy,
   and experimental Coulomb paths remain outside this policy rather than being
   swept into a broad cleanup.
+
+## Cartesian Hamiltonian Producer Pass 341 - Stable High-Exponent Gaussian Formula Authority
+
+Commit(s):
+- this commit - amend Coulomb accuracy authority for stable analytic formulas.
+
+Summary:
+- Accepted the implementation stop/revert but narrowed the blocker diagnosis.
+  The 135-term failure came from catastrophic cancellation in analytic
+  Gaussian determinant and weighted-variance formulas, not from an inadequate
+  PGDG carrier or terminal contraction.
+- Amended `HP-PQS-COULOMB-ACCURACY-FN-01` to cover exactly
+  `gaussian_factor`, `gaussian_pair_factor`, and the neutral nuclear
+  `_factor_axis_integral`. The approved replacements are algebraically
+  identical pairwise squared-center-difference formulas and a directly
+  expanded positive determinant.
+- Approved one focused core test against a BigFloat oracle over compact,
+  moderate, translated-center, and high-exponent cases.
+
+Validation / evidence:
+- Manager inspected the cancellation sites in
+  `src/GaussianAnalyticIntegrals.jl` and
+  `src/cartesian_gaussian_raw_blocks/nuclear_blocks.jl`, plus the ignored
+  `tmp/work/coulomb_high_stable_formula_audit.jl` replay.
+- The audit reported H/H2 factor scales below `2.6`, tightest-term scale
+  `1.60e-7`, finite/symmetric base and nuclear matrices, finite supplemented
+  residual-GTO/MWG assembly, and `36.1 s` runtime without tracked edits.
+- Docs validation is `git diff --check` plus focused authority/formula scans.
+
+Goal advancement:
+- LT1/LT4/LT5: restores the high-accuracy producer path through stable
+  arithmetic at the true numerical owner, without adding carrier state or a
+  downstream workaround.
+- MT4: supplemented high-accuracy work may resume after the shared analytic
+  kernels pass oracle validation.
+
+Risk / guardrail:
+- The amendment is limited to three functions and algebraically equivalent
+  evaluation. No clamping, exponent truncation, scaled/log carrier, stage
+  object, terminal redesign, custom input, or Cr/Cr2 endpoint claim is
+  approved. Another failing analytic formula requires a separate review.
+
+Carrying-cost result:
+- source line delta: 0 in this docs-only authority pass.
+- simplified: removes the false carrier-blocker story.
+- quarantined: ordinary/Qiu-White callers may inherit stable shared math, but
+  route-specific cleanup remains outside scope.
+- exact remaining blocker: implement the three stable formulas, pass the
+  BigFloat core test, then resume the already-approved producer-wide wiring.

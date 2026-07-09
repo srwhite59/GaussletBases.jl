@@ -105,6 +105,81 @@ fate:
 Do not preserve an uncalled helper through an adapter, and do not leave any
 private base helper free to select its own expansion.
 
+## Stable Analytic Gaussian Amendment
+
+The first high-accuracy implementation attempt correctly stopped after the
+135-term expansion produced raw pair factors near `1e235` and terminal
+non-finite values. Follow-up measurement showed that the failure is
+catastrophic cancellation in analytic Gaussian formulas, not a fundamental
+PGDG carrier or terminal-contraction limit.
+
+This amendment approves algebraically equivalent stable formulas in exactly
+three functions:
+
+```text
+GaussianAnalyticIntegrals.gaussian_factor
+GaussianAnalyticIntegrals.gaussian_pair_factor
+CartesianGaussianRawBlocks._factor_axis_integral
+```
+
+For `gaussian_factor`, with `alpha_g = 2g` and
+`A = alpha_a + alpha_b + alpha_g`, replace
+`sum(alpha*c^2) - A*mean^2` by the pairwise weighted-distance identity:
+
+```text
+Q = (
+      alpha_a*alpha_b*(c_a - c_b)^2
+    + alpha_a*alpha_g*(c_a - c_g)^2
+    + alpha_b*alpha_g*(c_b - c_g)^2
+    ) / A
+```
+
+The value remains `sqrt(2pi/A) * exp(-Q/2)`.
+
+For `gaussian_pair_factor`, do not form the determinant as a subtraction
+of two `O(g^2)` terms. Use:
+
+```text
+D = alpha_a*alpha_b + 2g*(alpha_a + alpha_b)
+Q = 2g*alpha_a*alpha_b*(c_a - c_b)^2 / D
+value = 2pi/sqrt(D) * exp(-Q/2)
+```
+
+For `_factor_axis_integral`, with
+`gamma = alpha_l + alpha_r + alpha_f`, compute the constant as:
+
+```text
+constant = (
+      alpha_l*alpha_r*(c_l - c_r)^2
+    + alpha_l*alpha_f*(c_l - c_f)^2
+    + alpha_r*alpha_f*(c_r - c_f)^2
+    ) / gamma
+```
+
+The polynomial moment and prefactor convention remains unchanged.
+
+These are numerical rewrites of the same integrals. Do not clamp negative
+intermediate values, take absolute values, reduce the exponent range, or add a
+scaled/log PGDG carrier to mask the cancellation. If another analytic formula
+outside these three functions fails the high-range oracle, stop and request a
+separate amendment rather than sweeping the file.
+
+Because `GaussianAnalyticIntegrals` is shared, existing ordinary/Qiu-White
+callers may inherit the stable evaluation. That is algebraic kernel repair, not
+authority for route-specific rewiring, cleanup, default changes, or new
+ordinary/Qiu-White validation frameworks.
+
+The manager audit using only these stable identities found:
+
+- H/H2 135-term pair-factor maximum scale below `2.6`;
+- tightest-term scale about `1.60e-7`;
+- finite base IDA and unit-nuclear matrices with symmetry error near roundoff;
+- finite supplemented H2 residual-GTO products and MWG interaction;
+- bounded supplemented runtime about `36.1 s`.
+
+No scaled carrier, log carrier, terminal IDA redesign, or broad PGDG change is
+needed before resuming the approved producer-wide wiring.
+
 ## Numerical And Object Boundaries
 
 This lane does not add expansion fields to `CartesianIDAHamiltonian`. That
@@ -190,6 +265,8 @@ src/cartesian_residual_gaussians/mwg_interaction.jl
 src/cartesian_ida_hamiltonian.jl
 src/cartesian_protected_ladder_bundle.jl
 src/cartesian_reference_density/atomic_hf_reference_packets.jl
+src/GaussianAnalyticIntegrals.jl
+src/cartesian_gaussian_raw_blocks/nuclear_blocks.jl
 ```
 
 `src/cartesian_ida_hamiltonian.jl` is approved only for compact summary
@@ -228,7 +305,14 @@ Existing tests may be updated only where they already own these contracts:
 test/driver_public/cartesian_base_hamiltonian_runtests.jl
 test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl
 test/nested/cartesian_atomic_hf_reference_packet_runtests.jl
+test/core/runtests.jl
 ```
+
+The core test addition is limited to a small focused analytic-kernel test. It
+must compare the stable formulas with a BigFloat oracle across compact and high
+exponent ranges, preserve moderate-exponent values within roundoff, and cover
+finite nonnegative s-type factors plus translated centers that trigger the old
+cancellation.
 
 The high supplemented and protected-ladder checks may remain ignored bounded
 probes if adding them to a committed endpoint would materially increase normal
@@ -256,6 +340,7 @@ This authority does not approve:
 - custom expansion parameters or coefficient/exponent inputs;
 - canonical CLI changes;
 - ordinary Qiu-White, legacy, or experimental path cleanup;
+- scaled/log PGDG carriers, new stage objects, or terminal contraction changes;
 - shellification, terminal realization, retained selection, mapping, residual
   selection, injection, EGOI, or screened-Hartree formula changes;
 - solver/HF/MP2-NO workflow;
@@ -267,3 +352,6 @@ Target source growth is at most about 300 added lines across the approved
 files, offset where practical by deleting independent compact selectors and
 the uncalled private base helper. If the change requires a new policy framework
 or materially exceeds that size, stop for design review.
+
+The stable-formula amendment itself should remain below about 60 added source
+lines and must not introduce a new carrier, cache, status object, or module.

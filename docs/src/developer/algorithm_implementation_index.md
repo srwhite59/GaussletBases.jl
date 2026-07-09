@@ -33,6 +33,9 @@ Key docs:
 - `docs/src/developer/designs/cartesian_hamiltonian_producer/coulomb_accuracy_policy.md`
 
 Source anchors:
+- **active reusable kernel**: `src/GaussianAnalyticIntegrals.jl`,
+  `gaussian_factor` and `gaussian_pair_factor`; high-exponent paths
+  require their cancellation-free pairwise-distance/determinant forms
 - **active donor pattern**: `src/ordinary_mapped_backends.jl`,
   `_mapped_coulomb_expanded_symmetric_matrix`
 - **consumer example only**: `src/ordinary_cartesian_ida.jl`,
@@ -119,6 +122,10 @@ parent-supplement and supplement-supplement matrices. It does not apply
 physical nuclear charges, project through terminal blocks, transform into
 Residual Gaussian bases, construct overlap/kinetic/moment blocks, create route
 objects, or own artifacts/status/payloads.
+
+For very tight Coulomb terms, `_factor_axis_integral` must evaluate the
+three-Gaussian weighted variance through pairwise squared-center differences,
+not `sum(alpha*c^2) - total*mean^2`.
 
 ## Cartesian Gaussian Non-Nuclear Raw Blocks
 

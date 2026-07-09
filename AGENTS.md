@@ -742,6 +742,14 @@ role-qualified compact approximations. This authority does not approve custom
 expansion inputs, a high default, canonical CLI changes, ordinary QW/legacy
 cleanup, solver workflow, EGOI or screened-Hartree formula changes, or
 Cr2-specific behavior.
+The same IDs narrowly add `src/GaussianAnalyticIntegrals.jl` and
+`src/cartesian_gaussian_raw_blocks/nuclear_blocks.jl` for algebraically
+stable determinant and pairwise weighted-distance forms in
+`gaussian_factor`, `gaussian_pair_factor`, and
+`_factor_axis_integral`. They also allow one focused BigFloat-oracle test
+in `test/core/runtests.jl`. This is not authority for clamping, exponent
+truncation, scaled/log PGDG carriers, new stage objects, terminal contraction
+changes, or a broad analytic-integral rewrite.
 `HP-R1-WIRE-01` approves
 only the report-free shared base constructor seam and the approved callers.
 `HP-R1-ART-01` approves only the fixed `producer_provenance/` schema in the

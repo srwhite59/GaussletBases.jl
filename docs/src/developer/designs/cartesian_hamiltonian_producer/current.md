@@ -131,6 +131,10 @@ Implemented base path:
   never inferred as high accuracy. Atomic reference packets remain a separate
   role-qualified exception: packet RHF is high accuracy, while current
   density/self-energy and fitted-potential scaffold evaluations are compact.
+  A narrow amendment also stabilizes cancellation-prone analytic Gaussian
+  factor formulas in `GaussianAnalyticIntegrals.jl` and the neutral nuclear
+  raw-block owner. High-exponent failure is not authority for scaled/log PGDG
+  carriers or terminal-contraction redesign.
   This does not change the default, canonical CLI, custom parameters,
   shellification, residual/injection/EGOI/screened-Hartree policy, solver
   workflow, or Cr2-specific behavior.
