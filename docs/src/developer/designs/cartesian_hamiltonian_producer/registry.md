@@ -2878,6 +2878,162 @@ Failure rule: if multicenter combined-invsqrt mapping cannot unambiguously
 support the same `s_factor` semantics, implement the one-center path only and
 report the exact blocker before touching CR2 production scripts.
 
+### HP-PQS-COULOMB-ACCURACY-FN-01 - producer-wide Coulomb accuracy policy
+
+Status: approved narrow source/design authority.
+
+Canonical design: `coulomb_accuracy_policy.md`.
+
+Purpose: let expert consumers request the existing high-accuracy Coulomb
+Gaussian expansion while preserving one internally consistent approximation
+from parent/PGDG construction through base IDA and residual-GTO/MWG
+augmentation.
+
+Approved producer input:
+
+```text
+coulomb_accuracy = :compact | :high
+default = :compact
+```
+
+Exact presets:
+
+```text
+:compact -> doacc=false, 45 terms, del=0.6, s=0.5, c=0.03, maxu=27.0
+:high    -> doacc=true, 135 terms, del=1.0, s=0.16, c=0.01, maxu=135.0
+```
+
+Only those names are user-facing. This ID does not approve user inputs for
+`doacc`, `del`, `s`, `c`, `maxu`, coefficients, exponents, or custom
+expansion objects.
+
+The option is route-family-neutral wherever current PQS and White-Lindsey
+construction paths share parent/base/supplemented machinery. Neither route may
+re-resolve a different expansion.
+
+Approved construction behavior:
+
+- resolve one existing `CoulombGaussianExpansion` before
+  `cartesian_parent(...)` and parent-axis PGDG factor construction;
+- carry that object in the current base working-basis construction instead of
+  copying its scalar summary into route/stage records;
+- build every parent-axis PGDG packet from its exponents;
+- use the same expansion for base unit-nuclear attraction, base IDA
+  electron-electron assembly, residual-GTO mixed/self Coulomb blocks,
+  augmented unit-nuclear blocks, and residual MWG interaction;
+- validate exact term-count and exponent-order parity at PGDG/base/augmentation
+  boundaries and fail on mismatch;
+- replace the MWG blanket rejection of explicit expansions with a parity check
+  against the parent PGDG expansion;
+- delete `_cartesian_base_ida_hamiltonian(...)` if its focused caller scan
+  remains empty, or require an explicit carried expansion argument if it is
+  live. It must not independently select compact accuracy.
+
+The expansion must not become a field of `CartesianIDAHamiltonian`. That
+object remains the finished numerical Hamiltonian. One compact expansion object
+may cross construction stages; one compact summary may cross artifact
+boundaries.
+
+Approved artifact behavior:
+
+- new base and supplemented artifacts write one Hamiltonian-wide
+  `coulomb_expansion/` summary with `policy`, `doacc`, `term_count`,
+  `del`, `s`, `c`, and `maxu`;
+- supplemented artifacts do not write separate base and augmentation
+  expansion policies;
+- ordinary matrix-only Cartesian readback may remain unchanged;
+- protected-localized artifacts and protected ladder members/manifests preserve
+  and expose the summary on readback;
+- legacy artifacts without the summary remain readable where already readable,
+  but missing provenance is unavailable and must never be inferred as
+  `:high`;
+- new summaries must validate against the named deterministic preset.
+
+Atomic HF reference packets are a deliberate exception to the one-Hamiltonian
+summary because they record separately evaluated reference objects. Packet
+writer/readback must record packet pure-GTO RHF as `:high`,
+density-fit/self-energy evaluation as `:compact`, and the
+fitted-potential broad-tail scaffold as `:compact`. Those packet-local
+compact evaluations remain allowed under the measured Cr screened
+scalar-constant error of about `0.0402 mHa`; they do not authorize mixed
+compact/high construction inside one produced Hamiltonian.
+
+Approved source surface:
+
+```text
+src/cartesian_base_hamiltonian.jl
+src/pqs_source_box_route_driver_helpers.jl
+src/pqs_source_box_low_order_materialization.jl
+src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl
+src/cartesian_residual_gaussians/mwg_interaction.jl
+src/cartesian_ida_hamiltonian.jl
+src/cartesian_protected_ladder_bundle.jl
+src/cartesian_reference_density/atomic_hf_reference_packets.jl
+```
+
+`src/cartesian_ida_hamiltonian.jl` is approved only for compact expansion
+summary serialization/readback shared by current artifact owners. No new source
+file, struct, public export, canonical driver input, general report object, or
+route-stage field cloud is approved.
+
+Forbidden:
+
+- changing the producer default to `:high`;
+- custom expansion parameters or coefficient/exponent input;
+- canonical CLI changes;
+- ordinary Qiu-White, legacy, or experimental path cleanup;
+- shellification, terminal realization, retained selection, mapping,
+  residual-selection, injection, EGOI, or screened-Hartree formula changes;
+- solver/HF/MP2-NO workflow;
+- protected-localized interaction or ladder-transfer semantic changes;
+- Cr/Cr2-specific producer branches or committed endpoint claims.
+
+Failure rule: stop without a source commit if a single carried expansion cannot
+serve parent/PGDG, base, residual-GTO, and MWG construction without a new broad
+carrier, if MWG cannot prove PGDG exponent parity, if legacy provenance would
+need to be guessed, or if files outside the approved surface are required.
+
+Target source growth is at most about 300 added lines, offset where practical
+by deleting independent compact selectors and the uncalled private base helper.
+
+### HP-PQS-COULOMB-ACCURACY-TEST-01 - Coulomb accuracy validation
+
+Status: approved validation authority.
+
+Approved committed test surfaces:
+
+```text
+test/driver_public/cartesian_base_hamiltonian_runtests.jl
+test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl
+test/nested/cartesian_atomic_hf_reference_packet_runtests.jl
+```
+
+Approved validation:
+
+- `git diff --check`;
+- package load;
+- omitted policy and explicit `:compact` produce equal matrices in a bounded
+  base case;
+- bounded `:high` base construction records the exact 135-term summary and
+  parent/PGDG exponent parity;
+- bounded White-Lindsey base construction confirms the policy reaches the
+  shared parent/base path;
+- bounded supplemented construction proves one expansion reaches base,
+  residual-GTO exact blocks, augmented unit-nuclear work, and MWG;
+- protected-localized member and ladder manifest write/readback preserve the
+  summary;
+- atomic packet roundtrip preserves separate RHF, density/self-energy, and
+  potential-tail expansion provenance;
+- at least one bounded compact/high comparison reports term-dependent timing
+  and allocation;
+- every endpoint-style probe used for interpretation includes terminal
+  due-diligence review.
+
+High supplemented and protected-ladder checks may remain ignored bounded probes
+if committed execution would materially increase routine test time. No new
+committed test file, canonical CLI test, solver run, Cr/Cr2 endpoint assertion,
+or production energy claim is approved.
+
 ### HP-R1-WIRE-01 — report-free base producer wiring
 
 Approved wiring for the R1 public facade:
@@ -2907,6 +3063,11 @@ _cartesian_base_ida_hamiltonian(
     ndn::Int,
 )::CartesianIDAHamiltonian{Float64}
 ```
+
+`HP-PQS-COULOMB-ACCURACY-FN-01` supersedes the implicit expansion part of
+this historical signature. Delete the helper if no live caller remains; if it
+remains live, add the already-resolved `CoulombGaussianExpansion` explicitly.
+The helper must not select compact accuracy internally.
 
 Approved owner file:
 

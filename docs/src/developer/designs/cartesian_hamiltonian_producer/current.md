@@ -38,6 +38,8 @@ Normal startup reading:
   facility that uses final/external cross overlaps to import PySCF-style AO
   orbitals into an orthonormal final basis;
 - `pqs_mapping_s_factor.md` for the expert `s_factor` mapping-strength knob;
+- `coulomb_accuracy_policy.md` for the producer-wide compact/high Coulomb
+  expansion policy and provenance contract;
 - `r1_one_center_base_atoms.md` for explicit origin-centered all-electron
   one-center base atoms beyond H;
 - `cartesian_driver_usability_workflow.md` for the compact artifact-producing
@@ -118,6 +120,20 @@ Implemented base path:
   unambiguous and provenance records the actual mapping. This does not revive
   public `d`, `parent_mapping_d`, element defaults, automatic tuning, solver
   workflow, EGOI, rho0/P0, or protected-localized interaction changes.
+- `HP-PQS-COULOMB-ACCURACY-FN-01` and
+  `HP-PQS-COULOMB-ACCURACY-TEST-01` approve an expert
+  `coulomb_accuracy = :compact | :high` producer choice with default
+  `:compact`. The producer resolves one existing
+  `CoulombGaussianExpansion` before parent/PGDG construction and carries it
+  through base unit-nuclear/IDA, residual-GTO exact Coulomb-expanded blocks,
+  and MWG. New artifacts record one Hamiltonian-wide expansion summary;
+  protected/ladder readback exposes it, while missing legacy provenance is
+  never inferred as high accuracy. Atomic reference packets remain a separate
+  role-qualified exception: packet RHF is high accuracy, while current
+  density/self-energy and fitted-potential scaffold evaluations are compact.
+  This does not change the default, canonical CLI, custom parameters,
+  shellification, residual/injection/EGOI/screened-Hartree policy, solver
+  workflow, or Cr2-specific behavior.
 - `HP-COMP-NSCORE-*` approves direct nucleus-centered core side parity:
   route-local `q` derivation remains unchanged, but direct core side comes
   from public `ns` as `isodd(ns) ? ns : ns + 1`. This oddization rule is only

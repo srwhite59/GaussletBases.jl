@@ -72,6 +72,11 @@ final retained support when the physical parent extent dominates.
 `effective_s = s_factor * sqrt(Z * core_spacing)` and explicit provenance.
 This is the only approved public mapping-strength knob and does not revive
 public `d` or `parent_mapping_d`.
+`HP-PQS-COULOMB-ACCURACY-*` approves a separate expert producer accuracy
+choice, `coulomb_accuracy = :compact | :high`, default `:compact`. One
+resolved `CoulombGaussianExpansion` must govern parent/PGDG, base IDA,
+residual-GTO, and MWG construction, with one Hamiltonian-wide provenance
+summary.
 The WL z-axis diatomic compact retained-basis correction is approved under
 `HP-WLDIAT-COMPACT-*`: the current mechanical boundary-stratum identity path is
 not the intended compact WL retained basis and must not be used as the final
@@ -174,6 +179,9 @@ Agents should read first:
 - [PQS/WL mapping `s_factor`](pqs_mapping_s_factor.md)
   for the expert mapping-strength scalar that preserves default behavior while
   allowing CR2-style scans
+- [Producer-wide Coulomb accuracy](coulomb_accuracy_policy.md)
+  for the expert compact/high preset and one-expansion construction/provenance
+  contract
 - [Cartesian driver usability workflow](cartesian_driver_usability_workflow.md)
   for the compact artifact-producing canonical driver lane
 - [R1 one-center base atoms](r1_one_center_base_atoms.md)

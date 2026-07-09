@@ -26760,3 +26760,75 @@ Carrying-cost result:
 - quarantined: append-only historical ledger entries and old audit outputs.
 - exact remaining blocker: none for retirement; active screened-Hartree
   consumer wiring and physics validation remain separate work.
+
+## Cartesian Hamiltonian Producer Pass 340 - Producer-Wide Coulomb Accuracy Authority
+
+Commit(s):
+- this commit - approve producer-wide Coulomb accuracy policy.
+
+Summary:
+- Approved `HP-PQS-COULOMB-ACCURACY-FN-01` and
+  `HP-PQS-COULOMB-ACCURACY-TEST-01`. Expert producer callers may choose
+  `coulomb_accuracy = :compact | :high`, default `:compact`, using the
+  existing deterministic 45-term and 135-term expansions.
+- The strategic correction is consistency, not merely a larger expansion:
+  one `CoulombGaussianExpansion` is resolved before parent/PGDG construction
+  and carried through base unit-nuclear/IDA, residual-GTO exact
+  Coulomb-expanded blocks, and residual MWG. Construction stages may no longer
+  select compact accuracy independently.
+- New artifacts record one Hamiltonian-wide summary. Protected/ladder
+  readback exposes it; missing legacy provenance is never inferred as high.
+  Atomic reference packets remain role-qualified: RHF high accuracy, current
+  density/self-energy and potential-tail evaluations compact.
+
+Validation / evidence:
+- Manager traced the live independent selectors in
+  `pqs_source_box_route_driver_helpers.jl`,
+  `pqs_source_box_low_order_materialization.jl`,
+  `cartesian_base_hamiltonian.jl`,
+  `pqs_terminal_residual_gto.jl`, and `mwg_interaction.jl`.
+- Verified the preset values in `ordinary_coulomb.jl`, the current packet
+  high/compact split, and the protected/ladder provenance boundaries.
+- Docs validation uses `git diff --check` and focused ID/contract scans; no
+  Julia run is required for this authority-only pass.
+
+Goal advancement:
+- LT1/LT5/LT6: defines one scientifically coherent Coulomb approximation and
+  makes expensive protected/ladder artifacts self-describing.
+- LT4: allows bounded high-accuracy construction while requiring timing and
+  expansion-dependent allocation evidence.
+- MT4: supplement staging is now constrained by a shared base/augmentation
+  Coulomb policy rather than independent defaults.
+
+Risk / guardrail:
+- No high default, custom coefficients, canonical CLI, QW cleanup, solver
+  workflow, screened-Hartree/EGOI change, or Cr2-specific branch is approved.
+  The old private base helper should be deleted if its caller scan remains
+  empty, not preserved through an adapter.
+
+Carrying-cost result:
+- source line delta: 0 in this docs-only authority pass.
+- simplified: one carried domain object replaces repeated compact selectors.
+- quarantined: packet-local compact evaluation remains separate from
+  Hamiltonian-wide producer accuracy.
+- exact remaining blocker: implementation and bounded compact/high parity,
+  artifact, MWG, ladder, and packet-provenance validation.
+
+### Medium-Term Goal Checkpoint After Pass 340
+
+- MT1 fake-PQS quarantine: completed/maintained as a historical guardrail; no
+  work in passes 326-340 revived fake-PQS authority.
+- MT2 independent PQS recovery: completed for the current canonical producer;
+  future work should focus on numerical adequacy and consistent construction,
+  not rebuilding the old recovery lane.
+- MT3 common physical support vocabulary: active/maintained through the
+  due-diligence and shellification contracts.
+- MT4 supplement staging: active but refined. Base and supplemented producer
+  paths exist; the immediate concern is coherent residual/injection,
+  screened-Hartree, EGOI, and now Coulomb-expansion policy across those paths.
+- MT5 cleanup pressure: active. Pass 339 removed the abandoned nuclear-screen
+  branch; this authority explicitly targets deletion of independent compact
+  selectors and an uncalled helper.
+- MT6 old flat-path classification: active/maintenance. Ordinary QW, legacy,
+  and experimental Coulomb paths remain outside this policy rather than being
+  swept into a broad cleanup.

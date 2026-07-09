@@ -115,6 +115,18 @@ The canonical RG algorithm contract is
   route-stage vocabulary.
 - Existing Hamiltonian readers must continue to read matrices normally and
   ignore provenance unless a later approved reader contract says otherwise.
+- One Cartesian/PQS Hamiltonian construction has one Coulomb Gaussian
+  expansion. The producer must resolve `coulomb_accuracy` before parent/PGDG
+  construction and carry the same `CoulombGaussianExpansion` through base
+  unit-nuclear/IDA, residual-GTO exact Coulomb-expanded blocks, and MWG.
+  Construction stages must not independently choose compact or high accuracy.
+- A new base or supplemented artifact records one Hamiltonian-wide
+  `coulomb_expansion/` summary. Protected-localized members and ladder
+  manifests preserve that summary on readback. Missing legacy provenance is
+  unavailable, not evidence of high accuracy. Atomic reference packets are
+  different: their RHF, density/self-energy, and fitted-potential scaffold
+  expansion provenance is role-qualified because those are separate evaluated
+  reference objects.
 
 ## Public Boundaries
 

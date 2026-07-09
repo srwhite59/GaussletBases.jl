@@ -492,6 +492,12 @@ _cartesian_base_ida_hamiltonian(
 )::CartesianIDAHamiltonian{Float64}
 ```
 
+Later authority `HP-PQS-COULOMB-ACCURACY-FN-01` supersedes the implicit
+expansion part of this signature. A focused caller scan should delete this
+helper if it is no longer live. If it remains live, it must receive the
+already-resolved `CoulombGaussianExpansion` explicitly and must not select
+compact accuracy internally.
+
 Approved owner file:
 
 ```text

@@ -30,6 +30,7 @@ Key docs:
 - `docs/ordinary_cartesian_gg_pairfactor_legacy_optimization.md`
 - `docs/ordinary_cartesian_gg_scalar_legacy_optimization.md`
 - `docs/ordinary_cartesian_qiu_white_ga_cross_legacy_optimization.md`
+- `docs/src/developer/designs/cartesian_hamiltonian_producer/coulomb_accuracy_policy.md`
 
 Source anchors:
 - **active donor pattern**: `src/ordinary_mapped_backends.jl`,
@@ -50,6 +51,11 @@ sum(c .* Fx[:, ix, jx] .* Fy[:, iy, jy] .* Fz[:, iz, jz])
 
 The source usually implements this as an explicit loop to avoid broadcast
 temporaries.
+
+For the Cartesian/PQS producer, resolve one compact/high preset before
+parent/PGDG construction and carry that exact expansion through base and
+residual/MWG assembly. Do not let an inner kernel independently choose its
+default expansion.
 
 ## Gaussian Factor And Pair-Factor Reuse
 

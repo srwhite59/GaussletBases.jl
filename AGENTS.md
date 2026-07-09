@@ -507,6 +507,8 @@ these approved design IDs:
 - `HP-R1-CORE-FN-01`
 - `HP-PQS-MAP-SFACTOR-FN-01`
 - `HP-PQS-MAP-SFACTOR-TEST-01`
+- `HP-PQS-COULOMB-ACCURACY-FN-01`
+- `HP-PQS-COULOMB-ACCURACY-TEST-01`
 - `HP-R1-WIRE-01`
 - `HP-R1-ART-01`
 - `HP-R1-TEST-01`
@@ -724,6 +726,22 @@ element defaults, automatic tuning, solver workflow, EGOI, rho0/P0, or
 protected-localized convention changes. If multicenter combined-invsqrt
 mapping cannot unambiguously support the same semantics, implement only the
 one-center path and report the exact blocker.
+`HP-PQS-COULOMB-ACCURACY-FN-01` and
+`HP-PQS-COULOMB-ACCURACY-TEST-01` approve only the producer-wide
+`coulomb_accuracy = :compact | :high` policy in
+`docs/src/developer/designs/cartesian_hamiltonian_producer/coulomb_accuracy_policy.md`.
+The default remains `:compact`; the presets are the existing 45-term
+`doacc=false` and 135-term `doacc=true` expansions. One resolved
+`CoulombGaussianExpansion` must be carried from parent/PGDG construction
+through base unit-nuclear/IDA, residual-GTO exact Coulomb-expanded blocks, and
+MWG. New artifacts may add one Hamiltonian-wide compact expansion summary;
+protected/ladder readback must not infer missing legacy provenance as
+`:high`. Atomic packet RHF remains high accuracy while its current
+density/self-energy and fitted-potential scaffold evaluations remain
+role-qualified compact approximations. This authority does not approve custom
+expansion inputs, a high default, canonical CLI changes, ordinary QW/legacy
+cleanup, solver workflow, EGOI or screened-Hartree formula changes, or
+Cr2-specific behavior.
 `HP-R1-WIRE-01` approves
 only the report-free shared base constructor seam and the approved callers.
 `HP-R1-ART-01` approves only the fixed `producer_provenance/` schema in the
