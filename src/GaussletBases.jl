@@ -38,6 +38,13 @@ export AbstractFunction1D,
        cross_overlap,
        gto_overlap_matrix,
        gto_occupancy_matrix,
+       ExternalGTOOrbitalSpinBlock,
+       ExternalGTOOrbitalPacket,
+       ExternalGTOOrbitalSpinImport,
+       ExternalGTOOrbitalImportResult,
+       external_gto_overlap_fingerprint,
+       external_gto_ordering_fingerprint,
+       import_external_gto_orbitals,
        basis_projector,
        transfer_orbitals,
        gaussian_coulomb_pair_index,
@@ -660,6 +667,7 @@ include("cartesian_carried_spaces.jl")
 include("cartesian_representation_transfer.jl")
 include("cartesian_protected_ladder_bundle.jl")
 include("cartesian_gto_probes.jl")
+include("cartesian_external_gto_import.jl")
 include("cartesian_qw_hybrid_representation.jl")
 include("cartesian_qw_operator_carried_spaces.jl")
 include("gaussian_coulomb_reference.jl")
