@@ -221,6 +221,20 @@ Implemented base path:
   solver/public workflow, determinant-convention changes, treating
   potential-fit Gaussians as protected orbitals, row-gauge rho0/P0, EGOI,
   exchange, or Cr/Cr2 claims.
+- `HP-PQS-ATOMREF-PACKET-FN-01` and
+  `HP-PQS-ATOMREF-PACKET-TEST-01` approve only a narrow source/design lane for
+  reusable one-center atomic HF reference packets. The packet records system
+  facts, supplement basis/fingerprint, pure-GTO HF occupied orbitals and
+  density matrix, near-exact spherical Gaussian density fit, fast fitted
+  potential for `J0_G`, and provenance. HF occupied orbitals define `P0/q0`;
+  the density fit defines the reference cloud/self-energy; the potential fit
+  is only a fast representation of that same cloud's Hartree potential.
+  Initial scope is Be core `2e` and Ne all-electron `10e`, cc-pV5Z,
+  `lmax = 1`, writer/readback/validation helpers, and small packet-consumption
+  smokes. This does not approve screened-Hartree production Hamiltonians,
+  artifact workflow integration beyond the packet itself, public driver
+  defaults, solver workflow, EGOI, exchange, row-gauge rho0/P0, Cr/Cr2 claims,
+  or treating fitted density/potential terms as protected GTOs.
 - `HP-MCOMX-*` approves a protected-`P2` plus mapped Chebyshev source-span
   option at the existing nested doside / COMX seam. The nonlinear map uses
   normalized local `u`, while `_cleanup_comx_transform(...)` still uses the

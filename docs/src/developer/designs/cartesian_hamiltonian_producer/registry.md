@@ -2501,6 +2501,94 @@ it passes, it may be used as the fast `J0_G` builder in the next Be2 or Ne
 screened-Hartree measurement, while the density fit remains the reference
 cloud.
 
+### HP-PQS-ATOMREF-PACKET-FN-01 / HP-PQS-ATOMREF-PACKET-TEST-01 — reusable atomic HF reference packets
+
+Status: approved narrow source/design authority. This approves the packet
+facility only; it does not approve screened-Hartree production Hamiltonians.
+
+Purpose: make the screened-Hartree reference object reusable instead of
+ad hoc ignored packets. The packet is a standard atom/basis reference object:
+atom, basis, explicit filled-shell convention, pure-GTO HF occupied orbitals,
+near-exact density fit, and fast fitted potential for `J0_G`.
+
+Required conventions:
+
+- HF occupied orbitals define `P0` and `q0`;
+- the density fit defines the reference cloud and self-energy;
+- the potential fit is only a fast representation of that same cloud's Hartree
+  potential;
+- potential-fit Gaussians are not supplement orbitals and not protected basis
+  content;
+- fitted density Gaussians are density terms, not protected orbitals;
+- filled-shell and occupancy choices are explicit, with no element-table
+  inference.
+
+Approved initial packet contents:
+
+- `system`: atom, charge, electron count, spin/fill-shell convention, basis
+  name, `lmax`, and geometry center;
+- `supplement_basis`: labels, angular powers, exponents, coefficients,
+  overlap, and overlap fingerprint;
+- `hf`: occupied coefficients in supplement coordinates, occupations, orbital
+  energies, density matrix, and explicit RHF/UHF convention metadata;
+- `density_fit`: spherical Gaussian density coefficients/exponents, fit
+  diagnostics, charge, and self-Coulomb;
+- `potential_fit`: fitted radial `J0(r)` coefficients/exponents, fixed
+  broad-tail provenance, refit/trim metadata, and radial/matrix/anchor
+  diagnostics;
+- `provenance`: code version, input controls, fit tolerances, and reference
+  energies where available.
+
+Initial source scope:
+
+- one-center atom packets only;
+- Be core `Z=4`, `2e`;
+- Ne all-electron `10e`;
+- cc-pV5Z, `lmax = 1`;
+- writer/readback plus validation helpers;
+- no production Hamiltonian correction, solver workflow, or public driver
+  default.
+
+Approved source surface:
+
+- `src/cartesian_reference_density/CartesianReferenceDensity.jl`;
+- `src/cartesian_reference_density/atomic_hf_reference_packets.jl`;
+- `src/GaussletBases.jl` only for include/qualified access wiring;
+- optional narrow use of existing exact Hartree helpers in
+  `src/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl` for validation
+  and packet-consumption smokes, without changing their numerical contract.
+
+Approved test surface:
+
+- `test/nested/cartesian_atomic_hf_reference_packet_runtests.jl`, limited to
+  packet roundtrip, validation helpers, and small Be/Ne consumption smokes with
+  temporary packet output and no committed binary fixtures.
+
+Approved validation:
+
+- packet readback roundtrip;
+- occupied orthogonality and density trace;
+- current supplement overlap/fingerprint match;
+- density-fit charge and self-energy errors;
+- potential-fit radial tail and matrix/anchor checks against exact
+  density-fit `J0_G`;
+- small Be/Ne smoke consuming packet to build `P0/q0` and `J0_G`;
+- no committed large binary fixtures.
+
+Explicit exclusions:
+
+- screened-Hartree production Hamiltonian assembly;
+- artifact workflow integration beyond the packet itself;
+- public driver defaults;
+- solver workflow;
+- EGOI, exchange, rho0/P0 row-gauge shortcuts, Cr/Cr2 production claims;
+- treating fitted density or potential terms as protected GTOs.
+
+Evidence: ignored packets/probes show the shape works. Ne packet-driven
+endpoints removed hard-coded occupied labels, and the refined potential fit
+reduced `J0_G` from about `118` s exact to about `0.96` s with `33` terms and
+sub-microhartree anchor error.
+
 ### HP-FN-05 — final Hamiltonian construction
 
 Approved as the narrow Slice C2 construction boundary for the existing

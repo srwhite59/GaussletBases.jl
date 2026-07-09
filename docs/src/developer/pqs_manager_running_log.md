@@ -26194,3 +26194,219 @@ Carrying-cost result:
 - exact remaining blocker: run the atomic one-center potential-fit packet gate
   and compare matrix-level `J0_G` against the existing density-fit Galerkin
   path before using it for Be2 or Ne endpoint timing/energy interpretation.
+
+## Cartesian Hamiltonian Producer Pass 328 - Fitted-Potential Screened-Hartree Prototype Measurement
+
+Commit(s):
+- none; ignored measurement probe under the `38f694bc9` authority.
+
+Summary:
+- Accepted the fitted-potential prototype measurement after static review of
+  the Ne and Be2 scripts and output tables. The scripts keep the approved
+  object split: the HF determinant defines `P0/q0`, the density fit remains
+  the reference cloud/self-energy object, and the signed Gaussian
+  `potential_fit/*` is used only as a fast representation of the same cloud's
+  Hartree potential `J0_G`.
+- The performance signal is strong. For Ne `ns=5`, the exact density-fit
+  `J0_G` stage took `116.69` s while the potential-fit `J0_G` stage took
+  `9.53` s. For Be2 `ns=5`, the corresponding stages took `222.79` s and
+  `13.60` s. The Be2 endpoint shift agrees with the exact-density packet path
+  to about `0.00036` mHa.
+
+Validation / evidence:
+- Probes:
+  `tmp/work/screened_hartree_potfit_audit.jl`,
+  `tmp/work/screened_hartree_potfit_endpoint_only.jl`, and
+  `tmp/work/screened_hartree_potfit_be2_audit.jl`. Output:
+  `/Users/srw/dmrgtmp/screened_hartree_potfit_audit_38f694bc9/`.
+- Static review confirmed that the radial target is built from the density-fit
+  analytic potential `sum_i w_i erf(sqrt(beta_i) r) / r`, with the repo
+  Coulomb Gaussian expansion scaled by charge used as the far-tail scaffold.
+  The fit adds residual Gaussian terms; it does not reinterpret those terms as
+  supplement orbitals or protected basis content.
+- Prototype packets:
+  `ne_ccpv5z_lmax1_potential_fit_prototype.jld2` and
+  `be_ccpv5z_lmax1_core_potential_fit_prototype.jld2`. Each has `245` total
+  potential terms, including the fixed tail scaffold plus residual fit terms.
+  Radial tail checks over `30..100` bohr were `2.68e-9` for Ne and `8.45e-10`
+  for Be.
+- Matrix-level checks against the exact density-fit path:
+  Ne relative Frobenius error `1.00e-7`, max entry error `1.15e-5`, and
+  anchor difference `4.42e-6` Ha. The main Ne audit script therefore stopped
+  before endpoint under its strict `1e-5` max-entry gate; a separate
+  endpoint-only rerun showed the potential-fit endpoint differs from the prior
+  exact-density endpoint by only about `0.0044` mHa.
+  Be2 relative Frobenius error `2.47e-8`, max entry error `5.78e-7`, and
+  anchor difference `3.49e-7` Ha; Be2 passed the endpoint gate directly.
+
+Goal advancement:
+- MT4: this resolves the immediate performance question for the screened
+  Hartree measurement lane. A tail-protected fitted potential can make
+  `J0_G` construction an order of magnitude faster while preserving endpoint
+  interpretation at the sub-microhartree-to-few-microhartree level in these
+  prototypes. This makes packet-owned potential fits a credible candidate for
+  a future source/artifact lane, provided the reference determinant and density
+  fit remain the physics authority.
+
+Risk / guardrail:
+- Do not overstate the Ne gate. The strict main Ne matrix gate failed by a
+  small margin, even though endpoint sensitivity was tiny. Before source
+  promotion, the fit selection and acceptance rule should be made explicit:
+  either tighten the Ne potential fit until the strict gate passes, or choose a
+  physics-motivated matrix/anchor threshold and document it.
+- The Be2 endpoint remains scientifically cautionary: the screened-Hartree
+  shift is reproduced cheaply, but the underlying Be2 screened endpoint was
+  previously seen to move farther below the PySCF Cartesian cc-pV5Z RHF
+  reference. This pass validates the fast representation, not the final
+  correction policy.
+
+Carrying-cost result:
+- source line delta: 0 tracked source lines; ignored probes and
+  `/Users/srw/dmrgtmp` packets only.
+- deleted: none.
+- simplified: replaces an expensive exact density-fit `J0_G` measurement path
+  with a validated fast potential-fit prototype for Ne/Be2 checks.
+- quarantined: potential packets remain ignored prototypes; no production
+  artifact schema, reader, driver, solver, EGOI, exchange, or rho0/P0 surface
+  is approved.
+- exact remaining blocker: decide whether the next pass is a source/design
+  request for packet-owned potential fits, a tighter Ne fit/gate cleanup, or
+  additional endpoint due diligence on the screened-Hartree correction itself.
+
+## Cartesian Hamiltonian Producer Pass 329 - Short-Range Coulomb-Term Refit And Trim
+
+Commit(s):
+- none; ignored measurement refinement under the `38f694bc9` authority.
+
+Summary:
+- Accepted the refined potential-fit measurement after static review of the
+  matrix-ladder and trim-ladder scripts. The earlier `245`-term prototype
+  froze all Coulomb expansion terms and then used a `200`-term signed residual
+  basis to cancel the short-range point-charge behavior. The refined pass
+  fixes that shape: keep only the broad Coulomb tail fixed, refit the
+  short-range Coulomb coefficients, and then trim negligible tight terms.
+- Best endpoint-tested refit candidate: `fixed_broad5_opt40_extra0`, with
+  `45` total terms, `5` fixed broad terms, `40` optimized Coulomb terms, and
+  no extra local Gaussian terms. The optimized coefficient range is moderate
+  (`-2.85e-4` to `3.07`) and the tightest Coulomb terms are effectively turned
+  off instead of canceled by large opposite-sign terms.
+- Best fit-side trim candidate: `trim_nofit_drop12_terms33`, which keeps the
+  same refit coefficients, drops the `12` tightest source terms, and leaves
+  `33` total terms. No HF endpoint was run for the trim pass, per user
+  instruction; the matrix/anchor gate was the acceptance object.
+
+Validation / evidence:
+- Probes:
+  `tmp/work/screened_hartree_potfit_refit_matrix_ladder.jl` and
+  `tmp/work/screened_hartree_potfit_trim_ladder.jl`. Output:
+  `/Users/srw/dmrgtmp/screened_hartree_potfit_refit_audit_38f694bc9/`.
+- Matrix-ladder results for selected `45`-term refit: exact density-fit
+  `J0_G` `115.95` s, refit-potential `J0_G` `1.39` s, relative Frobenius
+  error `3.68e-7`, max entry error `1.14e-5` Ha, anchor difference
+  `-3.73e-7` Ha, endpoint shift `+11.991085` mHa, and Ne reference error
+  `+3.015997` mHa.
+- Split lesson is important: fixed broad `3`, `5`, `8`, and `10` are viable;
+  fixed broad `15` fails with `0.121` Ha anchor mismatch, and `22/30` are
+  wrong. The transition-width Coulomb terms must be allowed to move; only the
+  true broad tail should be frozen.
+- Trim-ladder selected `33` terms: dropped source indices `34..45`, smallest
+  kept width `0.0038863` bohr, largest dropped width `0.0028790` bohr,
+  matrix relative Frobenius error `3.68e-7`, max entry error `1.10e-5` Ha,
+  and anchor difference `-3.91e-7` Ha. Dropping `14` terms raises max entry
+  error to `4.51e-5`; dropping `16` terms raises it to `7.84e-4`, so `33`
+  terms is a real trim boundary, not an arbitrary cosmetic cut.
+
+Goal advancement:
+- MT4: this changes the performance story materially. The potential packet no
+  longer needs a separate large residual basis. A small refit/trimmed Coulomb
+  expansion can represent the finite-cloud Hartree potential fast enough for
+  endpoint measurements while keeping the density fit as the reference cloud.
+  The likely production shape, if later approved, is a packet-owned fitted
+  potential with fixed broad-tail provenance, optimized short-range Coulomb
+  coefficients, and explicit dropped-tight-term metadata.
+
+Risk / guardrail:
+- This is still measurement-only. The selected `33`-term trim has not been
+  endpoint-run, by design, and should be source-promoted only with a clear
+  matrix/anchor acceptance rule. The max entry error remains just over
+  `1e-5` Ha, although the anchor error is sub-microhartree. Do not use this
+  pass to claim the screened-Hartree correction itself improves Be2; it
+  validates the fast `J0_G` representation.
+
+Carrying-cost result:
+- source line delta: 0 tracked source lines; ignored probes and
+  `/Users/srw/dmrgtmp` packets only.
+- deleted: none.
+- simplified: preferred potential representation drops from `245` terms to
+  `45`, then to a `33`-term fit-side candidate; the wrong large cancellation
+  basis is now historical comparison data only.
+- quarantined: all packets remain ignored prototypes; no production artifact
+  schema, source reader, driver, solver, EGOI, exchange, or rho0/P0 path is
+  approved.
+- exact remaining blocker: decide whether to request source/design authority
+  for atomic reference packets with density fit plus fitted-potential fields,
+  or first run the same refit/trim validation on Be/Be2 and possibly one more
+  first-row atom.
+
+## Cartesian Hamiltonian Producer Pass 330 - Atomic HF Reference Packet Source Authority
+
+Commit(s):
+- this commit - approve reusable atomic HF reference packets
+
+Summary:
+- Approved `HP-PQS-ATOMREF-PACKET-FN-01` and
+  `HP-PQS-ATOMREF-PACKET-TEST-01` as a narrow source/design lane for reusable
+  one-center atomic HF reference packets. The packet is the standard
+  atom/basis reference object needed by screened-Hartree endpoint probes:
+  system facts, supplement basis/fingerprint, pure-GTO HF occupied orbitals
+  and density matrix, near-exact spherical Gaussian density fit, fitted
+  radial Hartree potential, and provenance.
+- The core convention is now explicit. HF occupied orbitals define `P0/q0`;
+  the density fit defines the reference cloud and self-energy; the potential
+  fit is only a fast representation of that same cloud's Hartree potential.
+  Fitted density and fitted-potential terms are not supplement orbitals and
+  not protected basis content.
+
+Validation / evidence:
+- This authority is based on the ignored packet and endpoint sequence already
+  accepted in Passes 325-329. The packet-driven Ne endpoints removed
+  hard-coded occupied labels, and the refined potential fit reduced `J0_G`
+  construction from roughly `118` s exact to about `0.96` s with `33` terms
+  and sub-microhartree anchor error.
+- Approved initial scope is one-center Be core `Z=4, 2e` and Ne all-electron
+  `10e`, cc-pV5Z, `lmax = 1`. Validation must include packet readback,
+  occupied orthogonality and density trace, current supplement
+  overlap/fingerprint match, density-fit charge/self-energy errors,
+  potential-fit radial-tail and matrix/anchor checks against exact
+  density-fit `J0_G`, and small Be/Ne packet-consumption smokes. The approved
+  owner is `src/cartesian_reference_density/CartesianReferenceDensity.jl` plus
+  `src/cartesian_reference_density/atomic_hf_reference_packets.jl`, with
+  `src/GaussletBases.jl` only for include/qualified access wiring.
+
+Goal advancement:
+- MT4: moves screened-Hartree reference construction from ignored
+  script-local packet shapes toward a reusable repo-owned reference object.
+  This is the source seam that lets future endpoint probes consume the same
+  determinant, density fit, and potential fit without reconstructing or
+  guessing the reference state each time.
+
+Risk / guardrail:
+- Not approved: screened-Hartree production Hamiltonian assembly, artifact
+  workflow integration beyond the packet itself, public driver defaults,
+  solver workflow, EGOI, exchange, rho0/P0 row-gauge shortcuts, Cr/Cr2
+  production claims, or treating fitted density/potential terms as protected
+  GTOs. Filled-shell/occupancy choice must be explicit; no element-table
+  inference.
+
+Carrying-cost result:
+- source line delta: 0 in this docs-only authority pass.
+- deleted: none.
+- simplified: promotes the packet shape from repeated ignored scripts to one
+  standard reusable reference object with clear determinant/density/potential
+  roles.
+- quarantined: production screened-Hartree corrections, solver workflow,
+  public driver defaults, Cr/Cr2, EGOI, exchange, and row-gauge rho0/P0 remain
+  outside this lane.
+- exact remaining blocker: implement the packet writer/readback/validation
+  helper under the new neutral packet owner, then consume it in a Be/Ne smoke
+  before any broader endpoint scan.
