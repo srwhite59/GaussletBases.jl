@@ -23,6 +23,12 @@ function _packet_roundtrip_smoke(spec, label)
     @test abs(validation.density_fit_charge_error) < 1.0e-10
     @test validation.density_fit_self_energy_relative_error < 1.0e-8
     @test validation.potential_fit_radial_relmax < 1.0e-4
+    @test packet.rhf_diagnostics.coulomb_expansion_doacc === true
+    @test packet.rhf_diagnostics.coulomb_expansion_terms >= 100
+    @test packet.rhf_diagnostics.coulomb_expansion_maxu >= 100.0
+    @test readback.rhf_coulomb_expansion_doacc === true
+    @test readback.rhf_coulomb_expansion_terms == packet.rhf_diagnostics.coulomb_expansion_terms
+    @test readback.rhf_coulomb_expansion_maxu == packet.rhf_diagnostics.coulomb_expansion_maxu
     @test abs(p0.trace - spec.electron_count) < 1.0e-10
     @test sum(p0.q_AA) > 0.0
     return readback

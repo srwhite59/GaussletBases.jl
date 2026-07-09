@@ -328,6 +328,9 @@ function _generalized_lowest_orbitals(F, S)
     return eig.values, C
 end
 
+_atomic_reference_rhf_coulomb_expansion() =
+    getfield(_GB_PARENT, :coulomb_gaussian_expansion)(doacc = true)
+
 function solve_atomic_supplement_rhf(
     supplement,
     spec::AtomicHFReferencePacketSpec;
@@ -336,7 +339,7 @@ function solve_atomic_supplement_rhf(
     density_tol::Float64 = 1.0e-10,
 )
     S, T = _supplement_overlap_kinetic(supplement)
-    expansion = getfield(_GB_PARENT, :coulomb_gaussian_expansion)(doacc = false)
+    expansion = _atomic_reference_rhf_coulomb_expansion()
     V = _nuclear_matrix(supplement, spec.nuclear_charge, spec.center, expansion)
     hcore = T + V
     eri = getfield(_GB_PARENT, :gaussian_coulomb_pair_matrix)(
@@ -378,6 +381,9 @@ function solve_atomic_supplement_rhf(
         nuclear = V,
         hcore,
         orbital_energies = values,
+        coulomb_expansion_doacc = true,
+        coulomb_expansion_terms = length(expansion),
+        coulomb_expansion_maxu = expansion.maxu,
         occupied_orbitals = Matrix{Float64}(C[:, 1:occ]),
         occupations = fill(2.0, occ),
         occupied_count = occ,
@@ -798,6 +804,9 @@ function build_atomic_hf_reference_packet(
             rhf_energy = rhf.energy,
             converged = rhf.converged,
             iterations = rhf.iterations,
+            coulomb_expansion_doacc = rhf.coulomb_expansion_doacc,
+            coulomb_expansion_terms = rhf.coulomb_expansion_terms,
+            coulomb_expansion_maxu = rhf.coulomb_expansion_maxu,
             occupied_count = rhf.occupied_count,
             overlap_eig_min = rhf.overlap_eig_min,
             overlap_eig_max = rhf.overlap_eig_max,
@@ -862,6 +871,9 @@ function write_atomic_hf_reference_packet(path::AbstractString,
         f["hf/rhf_energy"] = hf.rhf_energy
         f["hf/converged"] = hf.converged
         f["hf/iterations"] = hf.iterations
+        f["hf/coulomb_expansion_doacc"] = hf.coulomb_expansion_doacc
+        f["hf/coulomb_expansion_terms"] = hf.coulomb_expansion_terms
+        f["hf/coulomb_expansion_maxu"] = hf.coulomb_expansion_maxu
         f["hf/method"] = hf.method
         f["hf/spin_convention"] = hf.spin_convention
         f["hf/occupied_count"] = hf.occupied_count
@@ -965,6 +977,15 @@ function read_atomic_hf_reference_packet(path::AbstractString)
             rhf_energy = Float64(f["hf/rhf_energy"]),
             rhf_converged = Bool(f["hf/converged"]),
             rhf_iterations = Int(f["hf/iterations"]),
+            rhf_coulomb_expansion_doacc =
+                haskey(f, "hf/coulomb_expansion_doacc") ?
+                    Bool(f["hf/coulomb_expansion_doacc"]) : false,
+            rhf_coulomb_expansion_terms =
+                haskey(f, "hf/coulomb_expansion_terms") ?
+                    Int(f["hf/coulomb_expansion_terms"]) : 45,
+            rhf_coulomb_expansion_maxu =
+                haskey(f, "hf/coulomb_expansion_maxu") ?
+                    Float64(f["hf/coulomb_expansion_maxu"]) : 27.0,
             density_fit = (; betas = Vector{Float64}(f["density_fit/betas"]),
                 widths = Vector{Float64}(f["density_fit/widths"]),
                 weights = Vector{Float64}(f["density_fit/weights"]),
