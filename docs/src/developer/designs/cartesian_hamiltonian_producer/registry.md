@@ -2411,6 +2411,65 @@ Non-goals: production corrected Hamiltonians, artifact integration beyond the
 packet, public defaults, solver workflow, exchange, EGOI, row-gauge rho0/P0,
 Cr/Cr2 claims, inferred occupancy, or fitted terms as protected orbitals.
 
+### HP-PQS-ATOMREF-POTMOM-FN-01 / HP-PQS-ATOMREF-POTMOM-TEST-01 - determinant-moment fitted-potential polish
+
+Status: approved narrow internal source/packet amendment; not yet implemented.
+
+Owner and canonical contract:
+
+- `CartesianReferenceDensity` atomic packet subsystem;
+- [Atomic HF reference packets](atomic_hf_reference_packets.md), section
+  "Determinant-Moment Potential Polish."
+
+Approved source surface:
+
+- `src/cartesian_reference_density/atomic_hf_reference_packets.jl` only;
+- read-only reuse of existing exact unit spherical-Gaussian potential matrices
+  and explicit compact density-cloud Coulomb energy helpers; no change to
+  their owning source files is approved.
+
+Approved test/evidence surfaces:
+
+- `test/nested/cartesian_atomic_hf_reference_packet_runtests.jl`;
+- `test/nested/cartesian_screened_hartree_correction_runtests.jl`;
+- the existing ignored padded-Be2 additive-reference gate;
+- `tmp/work/be_potential_fit_self_anchor_probe.jl` remains measurement
+  evidence, not production input.
+
+Permission summary: after the existing radial potential fit, apply one
+deterministic weighted-SVD coefficient correction using exact packet-
+determinant moments and explicit compact density-fit self/cross energies on the
+fixed `13`-distance grid. Preserve `33` terms, every exponent, and coefficients
+`1:5`; adjust only `6:33`. Persist one optional nested moment-polish summary.
+Older packets remain readable, and missing polish provenance is unavailable,
+not inferred.
+
+Initial scope: current spherical closed-shell Be and Ne packets and
+identical-packet radial pairs. This does not define heteronuclear moment
+matching.
+
+Source budget: target at most `120` added source lines in the approved packet
+file. This is a separate packet-consistency budget and does not expand the
+`350`-line `HP-RG-PROTECT-ADDREF-*` implementation budget. If more source or a
+second persistent object is needed, stop and report the missing abstraction.
+
+Required acceptance:
+
+- Be/Ne build and packet roundtrip preserve the nested polish summary;
+- term count remains `33`, exponents and coefficients `1:5` are unchanged;
+- maximum moment error is at most `1e-9 Ha`, with no material radial/tail
+  regression;
+- padded Be2 with `diagnostic_only = false` passes the existing direct and
+  derivative anchor threshold `1e-8 Ha`;
+- ordinary no-reference protected `H1_L`/`Vee_L` parity remains exact.
+
+Non-goals: public options, element tuning, added Gaussian terms, changed tail,
+changed density/determinant semantics, scalar Hamiltonian patches, anchor-
+tolerance changes, correction-formula changes, fitted terms as orbitals,
+heteronuclear/Cr/Cr2 policy, artifacts beyond the backward-compatible packet
+summary, solver workflow, or endpoint claims. If the real padded-Be2 anchor
+still fails, stop rather than weakening any gate.
+
 ### HP-REP-XGTO-IMPORT-FN-01 / HP-REP-XGTO-IMPORT-TEST-01 — external GTO orbital import
 
 Status: approved narrow source/design authority. This is

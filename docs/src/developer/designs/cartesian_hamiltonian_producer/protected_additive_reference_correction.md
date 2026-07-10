@@ -218,6 +218,13 @@ J0_L   = W' * J0_F * W
 mixed-Hartree path remains the small-system oracle; it is not the practical
 Cr2 construction.
 
+The padded Be2 non-diagnostic gate must use packet potentials carrying the
+approved determinant-moment polish under `HP-PQS-ATOMREF-POTMOM-*`, or another
+packet that independently passes the unchanged anchor. Missing polish
+provenance on a legacy packet is reported as unavailable, never inferred. The
+polish belongs to packet construction and must not be reimplemented in this
+additive-reference lane.
+
 ## Additive Reference Self-Energy
 
 Packet density fits, not potential-fit Gaussians, define reference Coulomb

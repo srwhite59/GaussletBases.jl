@@ -525,6 +525,8 @@ these approved design IDs:
 - `HP-PQS-COULOMB-ACCURACY-TEST-01`
 - `HP-PQS-ATOMREF-PACKET-FN-01`
 - `HP-PQS-ATOMREF-PACKET-TEST-01`
+- `HP-PQS-ATOMREF-POTMOM-FN-01`
+- `HP-PQS-ATOMREF-POTMOM-TEST-01`
 - `HP-REP-XGTO-IMPORT-FN-01`
 - `HP-REP-XGTO-IMPORT-TEST-01`
 - `HP-PQS-SCREEN-HARTREE-CORR-FN-01`
@@ -769,6 +771,15 @@ Unconverged packets are rejected. Fitted density/potential terms are not
 protected orbitals. Density-fit `J0_G` must receive its role-qualified compact
 Coulomb expansion explicitly. No production correction, solver, public
 default, exchange, EGOI, row-gauge rho0/P0, or Cr/Cr2 claim is approved.
+`HP-PQS-ATOMREF-POTMOM-FN-01` and
+`HP-PQS-ATOMREF-POTMOM-TEST-01` approve only the fixed-policy determinant-
+moment polish recorded in the same canonical packet contract. The current
+`33` potential terms and first `5` broad-tail coefficients/exponents remain
+fixed; only coefficients `6:33` may change through the prescribed `13`-point,
+weight-`1e4` SVD correction. This is packet consistency between determinant
+`P0`, density-fit `E0`, and fitted-potential `J0`, not a scalar Hamiltonian
+patch, public fitting option, anchor-tolerance change, heteronuclear policy,
+or permission to treat fitted terms as orbitals.
 `HP-REP-XGTO-IMPORT-FN-01` and `HP-REP-XGTO-IMPORT-TEST-01` approve only the
 external-GTO representation-transfer facility in
 `src/cartesian_external_gto_import.jl`, narrow include/shared-overlap wiring,

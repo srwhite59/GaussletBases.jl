@@ -183,6 +183,13 @@ Implemented base path:
   `lmax = 1`. Unconverged packets are rejected; fitted density/potential terms
   are not protected orbitals; and density-fit `J0_G` receives the explicit
   role-qualified compact Coulomb expansion.
+- `HP-PQS-ATOMREF-POTMOM-FN-01` and
+  `HP-PQS-ATOMREF-POTMOM-TEST-01` approve a pending fixed-policy determinant-
+  moment polish for those packet potential fits. It preserves all `33`
+  exponents and the first `5` broad-tail coefficients, adjusts only
+  coefficients `6:33` against the fixed `13`-distance Coulomb-moment grid, and
+  keeps old packets readable without inferring polish. It does not weaken the
+  screened-Hartree anchor or add a public/tunable fitting policy.
 - `HP-REP-XGTO-IMPORT-FN-01` and `HP-REP-XGTO-IMPORT-TEST-01` approve only a
   representation-transfer facility for importing explicit external Gaussian AO
   orbitals into an orthonormal GaussletBases final working basis. The rule is

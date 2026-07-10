@@ -27267,3 +27267,49 @@ Goal advancement / guardrail:
   additive-reference implementation and padded-Be2 gate.
 - MT6 old flat-path classification: maintenance. No old route or interaction
   alternative was promoted; direct `C' V C` remains retired.
+
+## Cartesian Hamiltonian Producer Pass 351 - Atomic Potential Determinant-Moment Polish Authority
+
+Commit(s):
+- this commit - approve packet fitted-potential determinant-moment polishing.
+
+Summary:
+- Approved `HP-PQS-ATOMREF-POTMOM-FN-01` /
+  `HP-PQS-ATOMREF-POTMOM-TEST-01` as a narrow pending packet-consistency lane.
+  The current `33` retained potential terms and first `5` broad-tail
+  coefficients remain fixed; only coefficients `6:33` may receive one
+  deterministic weighted-SVD correction against exact determinant moments and
+  compact density-fit self/cross energies on a fixed `13`-distance grid.
+- The correction aligns determinant-defined `P0`, density-fit-defined `E0`,
+  and fitted-potential-defined `J0`. It is not a scalar Hamiltonian correction,
+  threshold relaxation, public fit option, or one-geometry Be2 tune.
+- Approved one optional nested packet provenance record. Legacy packets remain
+  readable, but absence of the record is never interpreted as polished.
+
+Validation / evidence:
+- The blocked padded Be2 source gate passed all structural tests but reported a
+  direct anchor error `1.2860337861e-7 Ha` against the unchanged `1e-8 Ha`
+  limit. The ignored `be_potential_fit_self_anchor_probe.jl` prototype with
+  moment weight `1e4` reported Be maximum moment error `5.37e-12 Ha`, predicted
+  Be2 anchor `3.11e-12 Ha`, and Ne maximum moment error `1.16e-12 Ha`, without
+  changing the radial maximum error, term count, exponents, or broad tail.
+- Design review checked the screened-Hartree anchor algebra, fixed-tail radial
+  fit, exact determinant-moment construction, compact density-energy target,
+  and source/test ownership. This commit is docs-only; `git diff --check`
+  passed on the authority patch.
+
+Goal advancement / guardrail:
+- LT2/LT5/LT8 and MT4: preserves the strict physical anchor and gives the
+  packet compression a reproducible consistency condition needed by the
+  protected additive-reference gate.
+- The existing `HP-RG-PROTECT-ADDREF-*` source budget remains unchanged.
+  Separate source authority targets at most `120` added packet lines. Stop if
+  the real padded Be2 matrix anchor still fails; do not add a scalar patch,
+  tune only `R = 4`, change the correction formula, or weaken tolerance.
+
+Carrying-cost result:
+- source/test line delta: `0` in this docs-only pass.
+- simplified target: one fixed packet post-fit policy and one nested summary;
+  no public controls or extra Gaussian terms.
+- exact next blocker: implement the packet polish, rebuild Be/Ne packets, and
+  rerun the padded Be2 gate with `diagnostic_only = false`.
